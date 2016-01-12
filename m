@@ -1,113 +1,51 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<kishon@ti.com>, <nsekhar@ti.com>
-Subject: [PATCH 1/2] pci: host: pci-dra7xx: use "num-lanes" property to find phy count
-Date: Wed, 6 Jan 2016 16:19:52 +0530
-Message-ID: <1452077393-25880-2-git-send-email-kishon@ti.com>
-In-Reply-To: <1452077393-25880-1-git-send-email-kishon@ti.com>
-References: <1452077393-25880-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+From: Keith Busch <keith.busch@intel.com>
+To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Jon Derrick <jonathan.derrick@intel.com>,
+	Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv8] Driver for new "VMD" device 
+Date: Tue, 12 Jan 2016 09:28:38 -0700
+Message-Id: <1452616119-11450-1-git-send-email-keith.busch@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-use "num-lanes" property to find phy count instead of the number
-phy-names property.
+This is just the commit for the VMD driver. The other patches are the
+same from previous series here:
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Sekhar Nori <nsekhar@ti.com>
----
- drivers/pci/host/pci-dra7xx.c |   23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
+  https://lkml.org/lkml/2015/12/21/353
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 5963adc..05bbeee 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -70,7 +70,7 @@
- struct dra7xx_pcie {
- 	void __iomem		*base;
- 	struct phy		**phy;
--	int			phy_count;
-+	int			lanes;
- 	struct device		*dev;
- 	struct pcie_port	pp;
- };
-@@ -364,7 +364,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	int ret;
- 	int irq;
- 	int i;
--	int phy_count;
-+	u32 lanes;
- 	struct phy **phy;
- 	void __iomem *base;
- 	struct resource *res;
-@@ -402,17 +402,16 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	if (!base)
- 		return -ENOMEM;
- 
--	phy_count = of_property_count_strings(np, "phy-names");
--	if (phy_count < 0) {
--		dev_err(dev, "unable to find the strings\n");
--		return phy_count;
-+	if (of_property_read_u32(np, "num-lanes", &lanes)) {
-+		dev_err(dev, "Failed to parse the number of lanes\n");
-+		return -EINVAL;
- 	}
- 
--	phy = devm_kzalloc(dev, sizeof(*phy) * phy_count, GFP_KERNEL);
-+	phy = devm_kzalloc(dev, sizeof(*phy) * lanes, GFP_KERNEL);
- 	if (!phy)
- 		return -ENOMEM;
- 
--	for (i = 0; i < phy_count; i++) {
-+	for (i = 0; i < lanes; i++) {
- 		snprintf(name, sizeof(name), "pcie-phy%d", i);
- 		phy[i] = devm_phy_get(dev, name);
- 		if (IS_ERR(phy[i]))
-@@ -432,7 +431,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	dra7xx->base = base;
- 	dra7xx->phy = phy;
- 	dra7xx->dev = dev;
--	dra7xx->phy_count = phy_count;
-+	dra7xx->lanes = lanes;
- 
- 	pm_runtime_enable(dev);
- 	ret = pm_runtime_get_sync(dev);
-@@ -489,7 +488,7 @@ static int __exit dra7xx_pcie_remove(struct platform_device *pdev)
- 	struct dra7xx_pcie *dra7xx = platform_get_drvdata(pdev);
- 	struct pcie_port *pp = &dra7xx->pp;
- 	struct device *dev = &pdev->dev;
--	int count = dra7xx->phy_count;
-+	int count = dra7xx->lanes;
- 
- 	if (pp->irq_domain)
- 		irq_domain_remove(pp->irq_domain);
-@@ -535,7 +534,7 @@ static int dra7xx_pcie_resume(struct device *dev)
- static int dra7xx_pcie_suspend_noirq(struct device *dev)
- {
- 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
--	int count = dra7xx->phy_count;
-+	int count = dra7xx->lanes;
- 
- 	while (count--) {
- 		phy_power_off(dra7xx->phy[count]);
-@@ -548,7 +547,7 @@ static int dra7xx_pcie_suspend_noirq(struct device *dev)
- static int dra7xx_pcie_resume_noirq(struct device *dev)
- {
- 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
--	int phy_count = dra7xx->phy_count;
-+	int phy_count = dra7xx->lanes;
- 	int ret;
- 	int i;
- 
+Patch 2/6 is no longer applicable since someone already beat me to
+exporting those functions to API in commit a4289dc2ec3a5. Otherwise the
+others are still needed and cleanly apply. I wasn't sure if I should
+repost the entire series or just the one file that changed.
+
+Changes since v7 are all checkpatch fixes:
+
+  Fixing 80 character lines.
+
+  Spacing, tabbing and new line fixes.
+
+  A macro semicolon fix.
+
+  An entry in the MAINTAINERS file.
+
+The only checkpatch issue reported is warning on a normally "const"
+struct, but the warning is not applicable for the usage.
+
+Keith Busch (1):
+  x86/PCI: Initial commit for new VMD device driver
+
+ MAINTAINERS                   |   6 +
+ arch/x86/Kconfig              |  13 +
+ arch/x86/include/asm/hw_irq.h |   5 +
+ arch/x86/pci/Makefile         |   2 +
+ arch/x86/pci/vmd.c            | 699 ++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 725 insertions(+)
+ create mode 100644 arch/x86/pci/vmd.c
+
 -- 
-1.7.9.5
-
+2.6.2.307.g37023ba
