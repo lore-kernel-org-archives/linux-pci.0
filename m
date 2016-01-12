@@ -1,56 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:50329 "EHLO
+Received: from mout.kundenserver.de ([212.227.126.135]:58490 "EHLO
 	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752458AbcALVx6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jan 2016 16:53:58 -0500
+	with ESMTP id S1750915AbcALW2X (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jan 2016 17:28:23 -0500
 From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: David Daney <ddaney.cavm@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v3 0/2] pci: Add host controller driver for Cavium ThunderX PCIe
-Date: Tue, 12 Jan 2016 22:53:15 +0100
-Message-ID: <4279902.J8lISZqg4v@wuerfel>
-In-Reply-To: <1452297553-19911-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1452297553-19911-1-git-send-email-ddaney.cavm@gmail.com>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: bhelgaas@google.com, michals@xilinx.com, lorenzo.pieralisi@arm.com,
+	paul.burton@imgtec.com, yinghai@kernel.org, wangyijing@huawei.com,
+	robh@kernel.org, russell.joyce@york.ac.uk, sorenb@xilinx.com,
+	jiang.liu@linux.intel.com, pawel.moll@arm.com,
+	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
+	galak@codeaurora.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH V2 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge driver to  work on both  Zynq and Microblaze
+Date: Tue, 12 Jan 2016 23:27:25 +0100
+Message-ID: <4734542.KZZp0TeeeM@wuerfel>
+In-Reply-To: <1452620173-4905-4-git-send-email-bharatku@xilinx.com>
+References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com> <1452620173-4905-4-git-send-email-bharatku@xilinx.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 08 January 2016 15:59:11 David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
+On Tuesday 12 January 2016 23:06:11 Bharat Kumar Gogada wrote:
+> Modifying Xilinx AXI PCIe Host Bridge Soft IP driver to work on both
+> Zynq and Microblaze Architectures.
+> With these modifications drivers/pci/host/pcie-xilinx.c, will
+> work on both Zynq and Microblaze Architectures.
 > 
-> Some Cavium ThunderX processors require quirky access methods for the
-> config space of the PCIe bridge.
-> 
-> There are two patches:
-> 
-> 1) Refactor code in pci-host-generic so that it can more easily be
->    used by other drivers.  This splits the driver for CAM and ECAM
->    access methods to a separate file from the common host driver code.
-> 
-> 2) Add the ThunderX PCIe driver, which leverages the code in
->    pci-host-generic
-> 
-> Changes from v2: Improve device tree binding example as noted by Rob
-> Herring.  Rename pcie-thunder-pem.* to pci-thunder-pem.* for better
-> consistency.  Update MAINTAINERS to reflect the changes.
-> 
-> Changes from v1: Split CAM and ECAM code from common driver code as
-> suggested by Arnd Bergmann.  Fix spelling errors in
-> pcie-thunder-pem.txt
-> 
+> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
 
-Sorry for the late reply (I didn't comment on v2 either). This version
-looks fine to me. There are probably cleanups we can do on the generic
-code later on, but splitting it up the way you do here fully addresses
-my earlier concerns. Thanks for your patience.
+I think this patch should be split into three, as you are doing three
+unrelated things here.
 
-Acked-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+> Changes:
+> Changed Total number of MSI IRQ count logic according to both architectures.
+> Updated MSI assigning functions accordingly to new count.
+> Modified irq_domain_add_linear with new MSI IRQ count.
+> Added #ifdef to pci_fixup_irqs which is ARM specific API.
+> ---
+>  drivers/pci/host/pcie-xilinx.c | 22 +++++++++++++++++-----
+>  1 file changed, 17 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+> index 3e3757f..1981948 100644
+> --- a/drivers/pci/host/pcie-xilinx.c
+> +++ b/drivers/pci/host/pcie-xilinx.c
+> @@ -92,7 +92,12 @@
+>  #define ECAM_DEV_NUM_SHIFT		12
+>  
+>  /* Number of MSI IRQs */
+> -#define XILINX_NUM_MSI_IRQS		128
+> +#define XILINX_NUM_MSI_IRQS	128
+> +#ifdef CONFIG_ARM
+> +#define TOT_NR_IRQS		XILINX_NUM_MSI_IRQS
+> +#else
+> +#define TOT_NR_IRQS		(NR_IRQS + XILINX_NUM_MSI_IRQS)
+> +#endif
+
+Something looks wrong here in the microblaze variant. What does NR_IRQS
+have to do with it?
+
+> @@ -238,15 +243,20 @@ static void xilinx_pcie_destroy_msi(unsigned int irq)
+>   */
+>  static int xilinx_pcie_assign_msi(struct xilinx_pcie_port *port)
+>  {
+> +	int irq;
+>  	int pos;
+>  
+>  	pos = find_first_zero_bit(msi_irq_in_use, XILINX_NUM_MSI_IRQS);
+> -	if (pos < XILINX_NUM_MSI_IRQS)
+> +	irq = pos;
+> +#ifdef CONFIG_MICROBLAZE
+> +	irq = XILINX_NUM_MSI_IRQS + pos;
+> +#endif
+
+
+	if (IS_ENABLED(CONFIG_MICROBLAZE))
+		irq = XILINX_NUM_MSI_IRQS + pos;
+
+> @@ -705,7 +715,9 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+>  #endif
+>  	pci_scan_child_bus(bus);
+>  	pci_assign_unassigned_bus_resources(bus);
+> +#ifdef CONFIG_ARM
+>  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+> +#endif
+>  	pci_bus_add_devices(bus);
+>  	platform_set_drvdata(pdev, port);
+
+Here it looks like microblaze gets it right. I'm not sure why we still
+need the pci_fixup_irqs() on ARM, but my feeling is that this should be
+fixed in common code.
+
+	Arnd
