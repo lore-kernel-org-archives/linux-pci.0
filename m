@@ -1,88 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f47.google.com ([209.85.215.47]:35610 "EHLO
-	mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750783AbcASLKs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2016 06:10:48 -0500
-Received: by mail-lf0-f47.google.com with SMTP id c192so336184348lfe.2
-        for <linux-pci@vger.kernel.org>; Tue, 19 Jan 2016 03:10:48 -0800 (PST)
-Subject: Re: [PATCH] MAINTAINERS: Update mailing list for Renesas SoC
- Development
-To: Simon Horman <horms+renesas@verge.net.au>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-References: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
-Cc: linux-renesas-soc@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Magnus Damm <magnus.damm@gmail.com>
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <569E19B5.1000206@cogentembedded.com>
-Date: Tue, 19 Jan 2016 14:10:45 +0300
+Received: from foss.arm.com ([217.140.101.70]:34536 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934689AbcALNsq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Jan 2016 08:48:46 -0500
+Date: Tue, 12 Jan 2016 13:50:23 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+Subject: Re: [PATCH V2 11/23] arm64, pci: Remove useless boot time IRQ
+ assignment when booting with DT.
+Message-ID: <20160112135023.GC3601@red-moon>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+ <1450278993-12664-12-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
-In-Reply-To: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1450278993-12664-12-git-send-email-tn@semihalf.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello.
-
-On 1/18/2016 4:04 AM, Simon Horman wrote:
-
-> Update the mailing list used for development of support for
-> Renesas SoCs and related drivers.
->
-> Up until now the linux-sh mailing list has been used, however,
-> Renesas SoCs are now much wider than the SH architecture and there
-> is some desire from some for the linux-sh list to refocus on
-> discussion of the work on the SH architecture.
->
-> Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-> Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Magnus Damm <magnus.damm@gmail.com>
-> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
->
+On Wed, Dec 16, 2015 at 04:16:21PM +0100, Tomasz Nowicki wrote:
+> In order to probe PCIe host controller when booting with DT,
+> ARM64 is using drivers which defer IRQ assignment to device
+> enable time. It means that boot time DT specific irq map initialization
+> is always overridden, so lets remove that code.
+> 
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 > ---
-> * This patch applies on top of Linus's tree where currently the head commit
->    is 984065055e6e ("Merge branch 'drm-next' of
->    git://people.freedesktop.org/~airlied/linux")
->
->    This has been used as a base instead of v4.4 so that it is based on the
->    following two commits which affect it:
->    - 1a4ca6dd3dc8 ("MAINTAINERS: Add co-maintainer for Renesas Pin Controllers")
->    - 3e46c3973cba ("MAINTAINERS: add Renesas usb2 phy driver")
-> ---
->   MAINTAINERS | 16 ++++++++--------
->   1 file changed, 8 insertions(+), 8 deletions(-)
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 1d23f701489c..52a6ba79fa3f 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-[...]
-> @@ -8413,7 +8413,7 @@ F:	drivers/pinctrl/intel/
->   PIN CONTROLLER - RENESAS
->   M:	Laurent Pinchart <laurent.pinchart@ideasonboard.com>
->   M:	Geert Uytterhoeven <geert+renesas@glider.be>
-> -L:	linux-sh@vger.kernel.org
-> +L:	linux-renesas-soc@vger.kernel.org
->   S:	Maintained
->   F:	drivers/pinctrl/sh-pfc/
->
-> @@ -9019,13 +9019,13 @@ F:	include/linux/rpmsg.h
->   RENESAS ETHERNET DRIVERS
->   R:	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
->   L:	netdev@vger.kernel.org
-> -L:	linux-sh@vger.kernel.org
-> +L:	linux-renesas-soc@vger.kernel.org
->   F:	drivers/net/ethernet/renesas/
->   F:	include/linux/sh_eth.h
+>  arch/arm64/kernel/pci.c | 10 ----------
+>  1 file changed, 10 deletions(-)
+> 
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index 023b983..f7948f5 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -51,16 +51,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+>  	return pci_enable_resources(dev, mask);
+>  }
+>  
+> -/*
+> - * Try to assign the IRQ number from DT when adding a new device
+> - */
+> -int pcibios_add_device(struct pci_dev *dev)
+> -{
+> -	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> -
+> -	return 0;
+> -}
+> -
 
-    If SH people are OK with these 2 chunks (these entries cover the drivers 
-used by SH as well):
+Actually, this patch should be part of Matthew's series:
 
-Acked-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+http://comments.gmane.org/gmane.linux.kernel.pci/46461
 
-MBR, Sergei
-
+Lorenzo
