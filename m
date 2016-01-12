@@ -1,103 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:39846 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755750AbcANSiY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Jan 2016 13:38:24 -0500
-Date: Thu, 14 Jan 2016 10:34:52 -0800
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	david.daney@cavium.com
-Subject: Re: [RFC PATCH] pci: Identify Enhanced Allocation (EA) BAR
- Equivalent resources
-Message-ID: <20160114183452.GA3075@sean.stalley.intel.com>
-References: <20160114172645.23429.9938.stgit@gimli.home>
+Received: from mout.kundenserver.de ([212.227.126.130]:50329 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752458AbcALVx6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jan 2016 16:53:58 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: David Daney <ddaney.cavm@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Will Deacon <will.deacon@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v3 0/2] pci: Add host controller driver for Cavium ThunderX PCIe
+Date: Tue, 12 Jan 2016 22:53:15 +0100
+Message-ID: <4279902.J8lISZqg4v@wuerfel>
+In-Reply-To: <1452297553-19911-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1452297553-19911-1-git-send-email-ddaney.cavm@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160114172645.23429.9938.stgit@gimli.home>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 14, 2016 at 10:26:56AM -0700, Alex Williamson wrote:
-> We've done a pretty good job of abstracting EA from drivers, but there
-> are some properties of BAR Equivalent resources that don't really jive
-> with traditional PCI BARs.  In particular, natural alignment is only
-> encouraged, not required.
+On Friday 08 January 2016 15:59:11 David Daney wrote:
+> From: David Daney <david.daney@cavium.com>
 > 
-> Why does this matter?  There are drivers like vfio-pci that will
-> happily gobble up the EA abstraction that's been implemented and
-> expose a device using EA to userspace as if those resources are
-> traditional BARs.  Pretty cool.  The vfio API is bus agnostic, so it
-> doesn't care about alignment.  The problem comes with PCI config space
-> emulation where we don't let userspace manipulate the BAR value, but
-> we do emulate BAR sizing.  The abstraction kind of falls apart if
-> userspace gets garbage when they try to size what appears to be a
-> traditional BAR, but is actually a BAR equivalent.
->
-> We could simply round up the size in vfio to make it naturally
-> aligned, but then we're imposing artificial sizes to the user and we
-> have the discontinuity that BAR size emulation and vfio region size
-> reporting don't agree on the size.  I think what we want to do is
-> expose EA to the user, reporting traditional BARs with BEIs as
-> zero-sized and providing additional regions for the user to access
-> each EA region, whether it has a BEI or not.
+> Some Cavium ThunderX processors require quirky access methods for the
+> config space of the PCIe bridge.
 > 
-> To facilitate that, a flag indicating whether a PCI resource is a
-> traditional BAR or BAR equivalent seems much nicer than attempting
-> to size the BAR ourselves or deducing it through the EA capability.
-
-If vfio does size the resource, EA entries that are aligned could
-still be emulated as BARs, correct?
-
-I would think that emulating a BAR would be preferred when possible,
-for backwards-compatibility.
-
-> Thoughts?
-
-I like the idea of adding an EA flag.
-
-There were some cases in the kernel where it would be nice to know if a
-resource was fixed because it was EA or if something else was fixing it.
-Adding that flag was discussed during the code review of the EA code,
-but it was decided that we could get by without it.
-
-IIRC, most of the cases that required the flag had to do with EA entries
-for bridges. Since bridge support wasn't added, we didn't need the flag.
-
--Sean
-
-
+> There are two patches:
 > 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
->  drivers/pci/pci.c      |    2 +-
->  include/linux/ioport.h |    2 ++
->  2 files changed, 3 insertions(+), 1 deletion(-)
+> 1) Refactor code in pci-host-generic so that it can more easily be
+>    used by other drivers.  This splits the driver for CAM and ECAM
+>    access methods to a separate file from the common host driver code.
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 314db8c..174c734 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2229,7 +2229,7 @@ void pci_pm_init(struct pci_dev *dev)
->  
->  static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
->  {
-> -	unsigned long flags = IORESOURCE_PCI_FIXED;
-> +	unsigned long flags = IORESOURCE_PCI_FIXED | IORESOURCE_PCI_EA_BEI;
->  
->  	switch (prop) {
->  	case PCI_EA_P_MEM:
-> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> index 24bea08..5acc194 100644
-> --- a/include/linux/ioport.h
-> +++ b/include/linux/ioport.h
-> @@ -105,6 +105,8 @@ struct resource {
->  /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
->  #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move resource */
->  
-> +/* PCI Enhanced Allocation defined BAR equivalent resource */
-> +#define IORESOURCE_PCI_EA_BEI		(1<<5)
->  
->  /* helpers to define resources */
->  #define DEFINE_RES_NAMED(_start, _size, _name, _flags)			\
+> 2) Add the ThunderX PCIe driver, which leverages the code in
+>    pci-host-generic
 > 
+> Changes from v2: Improve device tree binding example as noted by Rob
+> Herring.  Rename pcie-thunder-pem.* to pci-thunder-pem.* for better
+> consistency.  Update MAINTAINERS to reflect the changes.
+> 
+> Changes from v1: Split CAM and ECAM code from common driver code as
+> suggested by Arnd Bergmann.  Fix spelling errors in
+> pcie-thunder-pem.txt
+> 
+
+Sorry for the late reply (I didn't comment on v2 either). This version
+looks fine to me. There are probably cleanups we can do on the generic
+code later on, but splitting it up the way you do here fully addresses
+my earlier concerns. Thanks for your patience.
+
+Acked-by: Arnd Bergmann <arnd@arndb.de>
