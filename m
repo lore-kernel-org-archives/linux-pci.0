@@ -1,145 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47319 "EHLO mail.kernel.org"
+Received: from mga02.intel.com ([134.134.136.20]:13713 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934158AbcATRM6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Jan 2016 12:12:58 -0500
-Date: Wed, 20 Jan 2016 11:12:52 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	lenb@kernel.org, izumi.taku@jp.fujitsu.com, wency@cn.fujitsu.com,
-	caoj.fnst@cn.fujitsu.com, Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH] pci: fix unavailable irq number 255 reported by BIOS
-Message-ID: <20160120171252.GB7973@localhost>
-References: <1453167913-16248-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>
- <6239489.QX2A2kAHWp@vostro.rjw.lan>
- <20160120002431.GA7973@localhost>
- <569F0B44.1010109@cn.fujitsu.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <569F0B44.1010109@cn.fujitsu.com>
+	id S1753128AbcALUSN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Jan 2016 15:18:13 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Jon Derrick <jonathan.derrick@intel.com>,
+	Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv8 3/5] x86/PCI: Allow PCI domain specific dma ops
+Date: Tue, 12 Jan 2016 13:18:08 -0700
+Message-Id: <1452629890-17542-4-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1452629890-17542-1-git-send-email-keith.busch@intel.com>
+References: <1452629890-17542-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 20, 2016 at 12:21:24PM +0800, Chen Fan wrote:
-> 
-> On 01/20/2016 08:24 AM, Bjorn Helgaas wrote:
-> >[+cc Jiang]
-> >
-> >Hi Chen,
-> >
-> >On Tue, Jan 19, 2016 at 02:43:30PM +0100, Rafael J. Wysocki wrote:
-> >>On Tuesday, January 19, 2016 09:45:13 AM Chen Fan wrote:
-> >>>In our environment, when enable Secure boot, we found an abnormal
-> >This has more information than necessary.  I don't think Secure Boot is
-> >really relevant, and nor are the timestamps and stack addresses below.
-> I just think enable the Secure Boot, probably the firmware assigned
-> a 0xff interrupt to the device which unauthenticated.
+New x86 pci h/w will require dma operations specific to that domain. This
+patch allows those domains to register their operations, and sets devices
+as they are discovered in that domain to use them.
 
-The important thing is that you're changing the way we handle
-Interrupt Line being 0xff.  That affects more than just Secure Boot
-users.  It's fine to mention Secure Boot later, as one example of an
-affected scenario.
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ arch/x86/include/asm/device.h | 10 ++++++++++
+ arch/x86/pci/common.c         | 38 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 48 insertions(+)
 
-I don't know anything about Secure Boot, but setting Interrupt Line to
-0xff would obviously not be a robust way of hiding an unauthenticated
-device.  But it sounds like you're just speculating about that anyway.
+diff --git a/arch/x86/include/asm/device.h b/arch/x86/include/asm/device.h
+index 03dd729..3b23897 100644
+--- a/arch/x86/include/asm/device.h
++++ b/arch/x86/include/asm/device.h
+@@ -10,6 +10,16 @@ struct dev_archdata {
+ #endif
+ };
+ 
++#if defined(CONFIG_X86_DEV_DMA_OPS) && defined(CONFIG_PCI_DOMAINS)
++struct dma_domain {
++	struct list_head node;
++	struct dma_map_ops *dma_ops;
++	int domain_nr;
++};
++extern void add_dma_domain(struct dma_domain *domain);
++extern void del_dma_domain(struct dma_domain *domain);
++#endif
++
+ struct pdev_archdata {
+ };
+ 
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index eccd4d9..106fd13 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -641,6 +641,43 @@ unsigned int pcibios_assign_all_busses(void)
+ 	return (pci_probe & PCI_ASSIGN_ALL_BUSSES) ? 1 : 0;
+ }
+ 
++#if defined(CONFIG_X86_DEV_DMA_OPS) && defined(CONFIG_PCI_DOMAINS)
++LIST_HEAD(dma_domain_list);
++DEFINE_SPINLOCK(dma_domain_list_lock);
++
++void add_dma_domain(struct dma_domain *domain)
++{
++	spin_lock(&dma_domain_list_lock);
++	list_add(&domain->node, &dma_domain_list);
++	spin_unlock(&dma_domain_list_lock);
++}
++EXPORT_SYMBOL_GPL(add_dma_domain);
++
++void del_dma_domain(struct dma_domain *domain)
++{
++	spin_lock(&dma_domain_list_lock);
++	list_del(&domain->node);
++	spin_unlock(&dma_domain_list_lock);
++}
++EXPORT_SYMBOL_GPL(del_dma_domain);
++
++static void set_dma_domain_ops(struct pci_dev *pdev)
++{
++	struct dma_domain *domain;
++
++	spin_lock(&dma_domain_list_lock);
++	list_for_each_entry(domain, &dma_domain_list, node) {
++		if (pci_domain_nr(pdev->bus) == domain->domain_nr) {
++			pdev->dev.archdata.dma_ops = domain->dma_ops;
++			break;
++		}
++	}
++	spin_unlock(&dma_domain_list_lock);
++}
++#else
++static void set_dma_domain_ops(struct pci_dev *pdev) {}
++#endif
++
+ int pcibios_add_device(struct pci_dev *dev)
+ {
+ 	struct setup_data *data;
+@@ -670,6 +707,7 @@ int pcibios_add_device(struct pci_dev *dev)
+ 		pa_data = data->next;
+ 		iounmap(data);
+ 	}
++	set_dma_domain_ops(dev);
+ 	return 0;
+ }
+ 
+-- 
+2.6.2.307.g37023ba
 
-> >>>phenomenon as following call trace shows. after investigation, we
-> >>>found the firmware assigned an irq number 255 which means unknown
-> >>>or no connection in PCI local spec for i801_smbus, meanwhile the
-> >>>ACPI didn't configure the pci irq routing. and the 255 irq number
-> >>>was assigned for megasa msix without IRQF_SHARED. then in this case
-> >>>during i801_smbus probe, the i801_smbus driver would request irq with
-> >>>bad irq number 255. but the 255 irq number was assigned for memgasa
-> >>>with MSIX enable. which will cause request_irq fails, and call trace
-> >>>shows, actually, we should expose the error early, rather than in request
-> >>>irq, here we simply fix the problem by return err when find the irq is
-> >>>255.
-> >>>See the call trace:
-> >>>
-> >>>  [   32.459195] ipmi device interface
-> >>>  [   32.612907] shpchp: Standard Hot Plug PCI Controller Driver version: 0.4
-> >>>  [   32.800459] ixgbe: Intel(R) 10 Gigabit PCI Express Network Driver - version 4.0.1-k-rh
-> >>>  [   32.818319] ixgbe: Copyright (c) 1999-2014 Intel Corporation.
-> >>>  [   32.844009] lpc_ich 0001:80:1f.0: I/O space for ACPI uninitialized
-> >>>  [   32.850093] i801_smbus 0000:00:1f.3: enabling device (0140 -> 0143)
-> >>>  [   32.851134] i801_smbus 0000:00:1f.3: can't derive routing for PCI INT C
-> >>>  [   32.851136] i801_smbus 0000:00:1f.3: PCI INT C: no GSI
-> >>>  [   32.851164] genirq: Flags mismatch irq 255. 00000080 (i801_smbus) vs. 00000000 (megasa
-> >>>  [   32.851168] CPU: 0 PID: 2487 Comm: kworker/0:1 Not tainted 3.10.0-229.el7.x86_64 #1
-> >>>  [   32.851170] Hardware name: FUJITSU PRIMEQUEST 2800E2/D3736, BIOS PRIMEQUEST 2000 Serie5
-> >>>  [   32.851178] Workqueue: events work_for_cpu_fn
-> >>>  [   32.851208]  ffff88086c330b00 00000000e233a9df ffff88086d57bca0 ffffffff81603f36
-> >>>  [   32.851227]  ffff88086d57bcf8 ffffffff8110d23a ffff88686fe02000 0000000000000246
-> >>>  [   32.851246]  ffff88086a9a8c00 00000000e233a9df ffffffffa00ad220 0000000000000080
-> >>>  [   32.851247] Call Trace:
-> >>>  [   32.851261]  [<ffffffff81603f36>] dump_stack+0x19/0x1b
-> >>>  [   32.851271]  [<ffffffff8110d23a>] __setup_irq+0x54a/0x570
-> >>>  [   32.851282]  [<ffffffffa00ad220>] ? i801_check_pre.isra.5+0xe0/0xe0 [i2c_i801]
-> >>>  [   32.851289]  [<ffffffff8110d3bc>] request_threaded_irq+0xcc/0x170
-> >>>  [   32.851298]  [<ffffffffa00ae87f>] i801_probe+0x32f/0x508 [i2c_i801]
-> >>>  [   32.851308]  [<ffffffff81308385>] local_pci_probe+0x45/0xa0
-> >>>  [   32.851315]  [<ffffffff8108bfd4>] work_for_cpu_fn+0x14/0x20
-> >>>  [   32.851323]  [<ffffffff8108f0ab>] process_one_work+0x17b/0x470
-> >>>  [   32.851330]  [<ffffffff81090003>] worker_thread+0x293/0x400
-> >>>  [   32.851338]  [<ffffffff8108fd70>] ? rescuer_thread+0x400/0x400
-> >>>  [   32.851346]  [<ffffffff8109726f>] kthread+0xcf/0xe0
-> >>>  [   32.851353]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
-> >>>  [   32.851362]  [<ffffffff81613cfc>] ret_from_fork+0x7c/0xb0
-> >>>  [   32.851369]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
-> >>>  [   32.851373] i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
-> >>>  [   32.851435] i801_smbus: probe of 0000:00:1f.3 failed with error -16
-> >Since the Interrupt Line register is writable and might contain any
-> >value, it would be nice if Linux could at least tolerate anything
-> >firmware might leave there without a backtrace, even if we end up not
-> >being able to use the device.
-> >
-> >Your patch changes the acpi_pci_irq_enable() return value from 0 to
-> >-EINVAL for this case.  You're running v3.10, and this change probably
-> >makes pci_enable_device() fail.  I suppose the user-visible effect is
-> >that with your patch,
-> >
-> >   - there's no backtrace,
-> >   - i801_smbus fails with "Failed to enable SMBus PCI device" instead
-> >     of with "Failed to allocate irq 255", and
-> >   - i801_smbus fails even if no other device is using IRQ 255, instead
-> >     of "succeeding" and using an IRQ 255 that probably doesn't work
-> >     (this seems like maybe the most important difference)
-> >
-> >Jiang has changed this path with 890e4847587f ("PCI: Add
-> >pcibios_alloc_irq() and pcibios_free_irq()"), so I think on newer
-> >kernels, we'll never even call the i801_smbus probe function.
->
-> no, on newer kernels, this phenomenon also probably appearance,
-> with this patch 890e4847587f change, it didn't change the
-> acpi_pci_irq_enable() return value, with the problem it also return 0,
-> and then still call __pci_device_probe() to do i801_smbus probe
-> function in pci_device_probe() function.
-
-I meant that *with your patch*, newer kernels won't call the
-i801_smbus probe function.
-
-> >What behavior are you looking for from i801_smbus?  Decline to claim
-> >the device?  Try to use the device without interrupts?  Try to figure
-> >out an interrupt in some other way?
->
-> I think if BIOS assigned 0xff interrupt line to device, and kernel
-> can't look
-> up a valid interrupt for the device, we should not allow to use the device.
-> >
-> >I'm not 100% sure that 890e4847587f does the right thing by preventing
-> >a driver from claiming a device where we can't set up an IRQ.  It's
-> >conceivable that a driver could still operate a device even without an
-> >IRQ.
->
-> I don't understanding, does without IRQ for device still work?
-
-Polling drivers do not need IRQs.  The PCI core has no idea whether a
-driver is interrupt-driven or polling, so we can't assume that a
-device with no IRQ is useless.
-
-Bjorn
