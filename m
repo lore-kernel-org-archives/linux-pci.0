@@ -1,217 +1,160 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ausc60ps301.us.dell.com ([143.166.148.206]:28336 "EHLO
-	ausc60ps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759810AbcAUPr5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jan 2016 10:47:57 -0500
-From: <Jordan_Hargrave@Dell.com>
-To: <babu.moger@oracle.com>, <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<alexander.duyck@gmail.com>, <hare@suse.de>, <mkubecek@suse.com>,
-	<shane.seymour@hpe.com>, <myron.stowe@gmail.com>
-Date: Thu, 21 Jan 2016 09:47:50 -0600
-Subject: RE: [PATCH RFC] pci: Blacklist vpd access for buggy devices
-Message-ID: <8B8F62BE6EB1824D91A8BF961FDC40B9179D157776@AUSX7MCPS305.AMER.DELL.COM>
-References: <20160109010545.GA31085@localhost>
- <1452546789-62938-1-git-send-email-babu.moger@oracle.com>
- <56943184.3060303@oracle.com>
- <8B8F62BE6EB1824D91A8BF961FDC40B9179D157772@AUSX7MCPS305.AMER.DELL.COM>,<569E9EE6.2010900@oracle.com>
-In-Reply-To: <569E9EE6.2010900@oracle.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+Subject: [PATCH V3 18/21] ACPI, PCI: Refine the way to handle translation_offset for ACPI resources
+Date: Wed, 13 Jan 2016 14:21:04 +0100
+Message-Id: <1452691267-32240-19-git-send-email-tn@semihalf.com>
+In-Reply-To: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From: Babu Moger [babu.moger@oracle.com]
->Sent: Tuesday, January 19, 2016 2:39 PM
->To: Hargrave, Jordan; bhelgaas@google.com
->Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; alexander.duyck@gmail.com; hare@suse.de; mkubecek@suse.com; shane.seymour@hpe.com; myron.stowe@gmail.com
->Subject: Re: [PATCH RFC] pci: Blacklist vpd access for buggy devices
->
->Hi Jordan,
->
->On 1/19/2016 9:22 AM, Jordan_Hargrave@dell.com wrote:
->> From: Babu Moger [babu.moger@oracle.com]
->> Sent: Monday, January 11, 2016 4:49 PM
->> To: bhelgaas@google.com
->> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; alexander.duyck@gmail.com; hare@suse.de; mkubecek@suse.com; shane.seymour@hpe.com; myron.stowe@gmail.com; VenkatKumar.Duvvuru@avago.com; Hargrave, Jordan
->> Subject: Re: [PATCH RFC] pci: Blacklist vpd access for buggy devices
->>
->> Sorry. Missed Jordan.
->>
->> On 1/11/2016 3:13 PM, Babu Moger wrote:
->>> Reading or Writing of PCI VPD data causes system panic.
->>> We saw this problem by running "lspci -vvv" in the beginning.
->>> However this can be easily reproduced by running
->>>  cat /sys/bus/devices/XX../vpd
->>>
->>> VPD length has been set as 32768 by default. Accessing vpd
->>> will trigger read/write of 32k. This causes problem as we
->>> could read data beyond the VPD end tag. Behaviour is un-
->>> predictable when this happens. I see some other adapter doing
->>> similar quirks(commit bffadffd43d4 ("PCI: fix VPD limit quirk
->>> for Broadcom 5708S"))
->>>
->>> I see there is an attempt to fix this right way.
->>> https://patchwork.ozlabs.org/patch/534843/ or
->>> https://lkml.org/lkml/2015/10/23/97
->>>
->>> Tried to fix it this way, but problem is I dont see the proper
->>> start/end TAGs(at least for this adapter) at all. The data is
->>> mostly junk or zeros. This patch fixes the issue by setting the
->>> vpd length to 0x80.
->>>
->>> Also look at the threds
->>>
->>> https://lkml.org/lkml/2015/11/10/557
->>> https://lkml.org/lkml/2015/12/29/315
->>>
->>> Signed-off-by: Babu Moger <babu.moger@oracle.com>
->>> ---
->>>
->>> NOTE:
->>> Jordan, Are you sure all the devices in PCI_VENDOR_ID_ATHEROS and
->>> PCI_VENDOR_ID_ATTANSIC have this problem. You have used PCI_ANY_ID.
->>> I felt it is too broad. Can you please check.
->>>
->>
->> I don't actually have that hardware, it was a bugfix for biosdevname for RedHat.  We were getting
->> 'BUG: soft lockup - CPU#0 stuck for 23s!'  when attempting to read the vpd area.
->>
->> Certainly 0x1969:0x1026 experienced this.
->
->Ok. Thanks. I will update the patch 4/4.
->
+From: Liu Jiang <jiang.liu@linux.intel.com>
 
-Thanks! I also found 1969:2062. Maybe best to just block everything in drivers/net/ethernet/atheros/xxxx
+Some architectures, such as IA64 and ARM64, have no instructions to
+directly access PCI IO ports, so they map PCI IO ports into PCI MMIO
+address space. Typically PCI host bridges on those architectures take
+the responsibility to map (translate) PCI IO port transactions into
+Memory-Mapped IO transactions. ACPI specification provides support
+of such a usage case by using resource translation_offset.
 
-atl1c:
- static const struct pci_device_id atl1c_pci_tbl[] = {
-         {PCI_DEVICE(PCI_VENDOR_ID_ATTANSIC, PCI_DEVICE_ID_ATTANSIC_L1C)},
-         {PCI_DEVICE(PCI_VENDOR_ID_ATTANSIC, PCI_DEVICE_ID_ATTANSIC_L2C)},
-         {PCI_DEVICE(PCI_VENDOR_ID_ATTANSIC, PCI_DEVICE_ID_ATHEROS_L2C_B)},
-         {PCI_DEVICE(PCI_VENDOR_ID_ATTANSIC, PCI_DEVICE_ID_ATHEROS_L2C_B2)},
-         {PCI_DEVICE(PCI_VENDOR_ID_ATTANSIC, PCI_DEVICE_ID_ATHEROS_L1D)},
-         {PCI_DEVICE(PCI_VENDOR_ID_ATTANSIC, PCI_DEVICE_ID_ATHEROS_L1D_2_0)},
-         /* required last entry */
-         { 0 }
-};
+But current ACPI resource parsing interface isn't neutral enough,
+it still has some special logic for IA64. So refine the ACPI resource
+parsing interface and IA64 code to neutrally handle translation_offset
+by:
+1) ACPI resource parsing interface doesn't do any translation, it just
+   save the translation_offset to be used by arch code.
+2) Arch code will do the mapping(translation) based on arch specific
+   information. Typically it does:
+2.a) Translate per PCI domain IO port address space into system global
+   IO port address space.
+2.b) Setup MMIO address mapping for IO ports.
+void handle_io_resource(struct resource_entry *io_entry)
+{
+	struct resource *mmio_res;
 
-atl1e
- static const struct pci_device_id atl1e_pci_tbl[] = {
-         {PCI_DEVICE(PCI_VENDOR_ID_ATTANSIC, PCI_DEVICE_ID_ATTANSIC_L1E)},
-         {PCI_DEVICE(PCI_VENDOR_ID_ATTANSIC, 0x1066)},
-         /* required last entry */
-         { 0 }
- };
+	mmio_res = kzalloc(sizeof(*mmio_res), GFP_KERNEL);
+	mmio_res->flags = IORESOURCE_MEM;
+	mmio_res->start = io_entry->offset + io_entry->res->start;
+	mmio_res->end = io_entry->offset + io_entry->res->end;
+	insert_resource(&iomem_resource, mmio_res)
 
->>
->> 09:00.0 Ethernet controller: Atheros Communications AR8121/AR8113/AR8114 Gigabit or Fast Ethernet (rev b0)
->>         Subsystem: Atheros Communications AR8121/AR8113/AR8114 Gigabit or Fast Ethernet
->>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
->>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->>         Latency: 0, Cache Line Size: 64 bytes
->>         Interrupt: pin A routed to IRQ 46
->>         Region 0: Memory at c0300000 (64-bit, non-prefetchable) [size=256K]
->>         Region 2: I/O ports at 3000 [size=128]
->>         Capabilities: [40] Power Management version 2
->>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold+)
->>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
->>         Capabilities: [48] MSI: Enable+ Count=1/1 Maskable- 64bit+
->>                 Address: 00000000fee0300c  Data: 41a1
->>         Capabilities: [58] Express (v1) Endpoint, MSI 00
->>                 DevCap: MaxPayload 4096 bytes, PhantFunc 0, Latency L0s <4us, L1 unlimited
->>                         ExtTag- AttnBtn+ AttnInd+ PwrInd+ RBE- FLReset-
->>                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
->>                         RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
->>                         MaxPayload 128 bytes, MaxReadReq 512 bytes
->>                 DevSta: CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr+ TransPend-
->>                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s, Latency L0 unlimited, L1 unlimited
->>                         ClockPM- Surprise- LLActRep- BwNot-
->>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
->>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
->>                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
->>         Capabilities: [6c] Vital Product Data
->>                 Unknown small resource type 0b, will not decode more.
->>         Capabilities: [100 v1] Advanced Error Reporting
->>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
->>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
->>                 UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
->>                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
->>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
->>                 AERCap: First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
->>         Capabilities: [180 v1] Device Serial Number ff-2e-05-c3-00-23-8b-ff
->>         Kernel driver in use: ATL1E
->> 00: 69 19 26 10 07 04 10 00 b0 00 00 02 10 00 00 00
->> 10: 04 00 30 c0 00 00 00 00 01 30 00 00 00 00 00 00
->> 20: 00 00 00 00 00 00 00 00 00 00 00 00 69 19 26 10
->> 30: 00 00 00 00 40 00 00 00 00 00 00 00 0a 01 00 00
->> 40: 01 48 02 c0 00 00 00 00 05 58 81 00 0c 30 e0 fe
->> 50: 00 00 00 00 a1 41 00 00 10 6c 01 00 85 7f 04 05
->> 60: 00 20 1a 00 11 f4 03 00 40 00 11 10 03 00 00 80
->> 70: 5a ff 88 14 00 00 00 00 00 00 00 00 00 00 00 00
->> 80: 00 00 00 00 69 19 26 10 00 00 00 00 00 00 00 00
->> 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>
->>>  drivers/pci/quirks.c |   41 +++++++++++++++++++++++++++++++++++++++++
->>>  1 files changed, 41 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>> index b03373f..8abcee5 100644
->>> --- a/drivers/pci/quirks.c
->>> +++ b/drivers/pci/quirks.c
->>> @@ -2123,6 +2123,47 @@ static void quirk_via_cx700_pci_parking_caching(struct pci_dev *dev)
->>>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, 0x324e, quirk_via_cx700_pci_parking_caching);
->>>
->>>  /*
->>> + * A read/write to sysfs entry ('/sys/bus/pci/devices/<id>/vpd')
->>> + * will dump 32k of data. The default length is set as 32768.
->>> + * Reading a full 32k will cause an access beyond the VPD end tag.
->>> + * The system behaviour at that point is mostly unpredictable.
->>> + * Apparently, some vendors have not implemented this VPD headers properly.
->>> + * Adding a generic function disable vpd data for these buggy adapters
->>> + * Add the DECLARE_PCI_FIXUP_FINAL line below with the specific with
->>> + * vendor and device of interest to use this quirk.
->>> + */
->>> +static void quirk_blacklist_vpd(struct pci_dev *dev)
->>> +{
->>> +     if (dev->vpd) {
->>> +             dev->vpd->len = 0;
->>> +             dev_warn(&dev->dev, "PCI vpd access has been disabled due to firmware bug\n");
->>> +     }
->>> +}
->>> +
->>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060,
->>> +             quirk_blacklist_vpd);
->>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c,
->>> +             quirk_blacklist_vpd);
->>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413,
->>> +             quirk_blacklist_vpd);
->>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078,
->>> +             quirk_blacklist_vpd);
->>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079,
->>> +             quirk_blacklist_vpd);
->>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073,
->>> +             quirk_blacklist_vpd);
->>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071,
->>> +             quirk_blacklist_vpd);
->>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b,
->>> +             quirk_blacklist_vpd);
->>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f,
->>> +             quirk_blacklist_vpd);
->>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d,
->>> +             quirk_blacklist_vpd);
->>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f,
->>> +             quirk_blacklist_vpd);
->>> +
->>> +/*
->>>   * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
->>>   * VPD end tag will hang the device.  This problem was initially
->>>   * observed when a vpd entry was created in sysfs
->>>
->
+	base = map_to_system_ioport_address(entry);
+	io_entry->offset = base;
+	io_entry->res->start += base;
+	io_entry->res->end += base;
+}
+
+Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/ia64/pci/pci.c     | 26 ++++++++++++++++----------
+ drivers/acpi/resource.c | 12 +++++-------
+ 2 files changed, 21 insertions(+), 17 deletions(-)
+
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index be4c9ef..c75356b 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -154,7 +154,7 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 	struct resource_entry *iospace;
+ 	struct resource *resource, *res = entry->res;
+ 	char *name;
+-	unsigned long base, min, max, base_port;
++	unsigned long base_mmio, base_port;
+ 	unsigned int sparse = 0, space_nr, len;
+ 
+ 	len = strlen(info->common.name) + 32;
+@@ -172,12 +172,10 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 		goto free_resource;
+ 
+ 	name = (char *)(iospace + 1);
+-	min = res->start - entry->offset;
+-	max = res->end - entry->offset;
+-	base = __pa(io_space[space_nr].mmio_base);
++	base_mmio = __pa(io_space[space_nr].mmio_base);
+ 	base_port = IO_SPACE_BASE(space_nr);
+ 	snprintf(name, len, "%s I/O Ports %08lx-%08lx", info->common.name,
+-		 base_port + min, base_port + max);
++		 base_port + res->start, base_port + res->end);
+ 
+ 	/*
+ 	 * The SDM guarantees the legacy 0-64K space is sparse, but if the
+@@ -190,19 +188,27 @@ static int add_io_space(struct device *dev, struct pci_root_info *info,
+ 	resource = iospace->res;
+ 	resource->name  = name;
+ 	resource->flags = IORESOURCE_MEM;
+-	resource->start = base + (sparse ? IO_SPACE_SPARSE_ENCODING(min) : min);
+-	resource->end   = base + (sparse ? IO_SPACE_SPARSE_ENCODING(max) : max);
++	resource->start = base_mmio;
++	resource->end = base_mmio;
++	if (sparse) {
++		resource->start += IO_SPACE_SPARSE_ENCODING(res->start);
++		resource->end += IO_SPACE_SPARSE_ENCODING(res->end);
++	} else {
++		resource->start += res->start;
++		resource->end += res->end;
++	}
+ 	if (insert_resource(&iomem_resource, resource)) {
+ 		dev_err(dev,
+ 			"can't allocate host bridge io space resource  %pR\n",
+ 			resource);
+ 		goto free_resource;
+ 	}
++	resource_list_add_tail(iospace, &info->io_resources);
+ 
++	/* Adjust base of original IO port resource descriptor */
+ 	entry->offset = base_port;
+-	res->start = min + base_port;
+-	res->end = max + base_port;
+-	resource_list_add_tail(iospace, &info->io_resources);
++	res->start += base_port;
++	res->end += base_port;
+ 
+ 	return 0;
+ 
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index cdc5c25..6578f68 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -190,8 +190,7 @@ static bool acpi_decode_space(struct resource_win *win,
+ {
+ 	u8 iodec = attr->granularity == 0xfff ? ACPI_DECODE_10 : ACPI_DECODE_16;
+ 	bool wp = addr->info.mem.write_protect;
+-	u64 len = attr->address_length;
+-	u64 start, end, offset = 0;
++	u64 len = attr->address_length, offset = 0;
+ 	struct resource *res = &win->res;
+ 
+ 	/*
+@@ -215,14 +214,13 @@ static bool acpi_decode_space(struct resource_win *win,
+ 	else if (attr->translation_offset)
+ 		pr_debug("ACPI: translation_offset(%lld) is invalid for non-bridge device.\n",
+ 			 attr->translation_offset);
+-	start = attr->minimum + offset;
+-	end = attr->maximum + offset;
+ 
+ 	win->offset = offset;
+-	res->start = start;
+-	res->end = end;
++	res->start = attr->minimum;
++	res->end = attr->maximum;
+ 	if (sizeof(resource_size_t) < sizeof(u64) &&
+-	    (offset != win->offset || start != res->start || end != res->end)) {
++	    (offset != win->offset || attr->minimum != res->start ||
++	     attr->maximum != res->end)) {
+ 		pr_warn("acpi resource window ([%#llx-%#llx] ignored, not CPU addressable)\n",
+ 			attr->minimum, attr->maximum);
+ 		return false;
+-- 
+1.9.1
+
