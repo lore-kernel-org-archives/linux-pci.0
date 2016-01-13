@@ -1,204 +1,114 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+Subject: Re: [PATCH V2 11/23] arm64, pci: Remove useless boot time IRQ
+ assignment when booting with DT.
+To: David Daney <ddaney@caviumnetworks.com>
+References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
+ <1450278993-12664-12-git-send-email-tn@semihalf.com>
+ <20160112135023.GC3601@red-moon> <56952619.7010602@semihalf.com>
+ <56953E33.6030003@caviumnetworks.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, matt@masarand.com,
+	bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
 	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V3 20/21] pci, acpi: Match PCI config space accessors against platfrom specific quirks.
-Date: Wed, 13 Jan 2016 14:21:06 +0100
-Message-Id: <1452691267-32240-21-git-send-email-tn@semihalf.com>
-In-Reply-To: <1452691267-32240-1-git-send-email-tn@semihalf.com>
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, tglx@linutronix.de, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, jchandra@broadcom.com, jcm@redhat.com
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <56961C2B.3030600@semihalf.com>
+Date: Wed, 13 Jan 2016 10:43:07 +0100
+MIME-Version: 1.0
+In-Reply-To: <56953E33.6030003@caviumnetworks.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some platforms may not be fully compliant with generic set of PCI config
-accessors. For these cases we implement the way to overwrite accessors
-set prior to PCI buses enumeration. Algorithm traverses available quirk
-list, matches against <platform ID (DMI), domain, bus number> tuple and
-returns corresponding accessors. All quirks can be defined using:
-DECLARE_ACPI_MCFG_FIXUP() and keep self contained. Example,
+On 12.01.2016 18:56, David Daney wrote:
+> On 01/12/2016 08:13 AM, Tomasz Nowicki wrote:
+>> On 12.01.2016 14:50, Lorenzo Pieralisi wrote:
+>>> On Wed, Dec 16, 2015 at 04:16:21PM +0100, Tomasz Nowicki wrote:
+>>>> In order to probe PCIe host controller when booting with DT,
+>>>> ARM64 is using drivers which defer IRQ assignment to device
+>>>> enable time. It means that boot time DT specific irq map initialization
+>>>> is always overridden, so lets remove that code.
+>>>>
+>>>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>>>> ---
+>>>>   arch/arm64/kernel/pci.c | 10 ----------
+>>>>   1 file changed, 10 deletions(-)
+>>>>
+>>>> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+>>>> index 023b983..f7948f5 100644
+>>>> --- a/arch/arm64/kernel/pci.c
+>>>> +++ b/arch/arm64/kernel/pci.c
+>>>> @@ -51,16 +51,6 @@ int pcibios_enable_device(struct pci_dev *dev, int
+>>>> mask)
+>>>>       return pci_enable_resources(dev, mask);
+>>>>   }
+>>>>
+>>>> -/*
+>>>> - * Try to assign the IRQ number from DT when adding a new device
+>>>> - */
+>>>> -int pcibios_add_device(struct pci_dev *dev)
+>>>> -{
+>>>> -    dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+>>>> -
+>>>> -    return 0;
+>>>> -}
+>>>> -
+>
+> How was this tested?  Or in other words, what PCI devices that use
+> legacy INT{A,B,C,D} interrupts were used in testing this patch?
+>
 
-static const struct dmi_system_id foo_dmi[] = {
-        {
-                .ident = "<Platform ident string>",
-                .callback = <handler>,
-                .matches = {
-                        DMI_MATCH(DMI_SYS_VENDOR, "<system vendor>"),
-                        DMI_MATCH(DMI_PRODUCT_NAME, "<product name>"),
-                        DMI_MATCH(DMI_PRODUCT_VERSION, "product version"),
-                },
-        },
-        { }
-};
+I used QEMU and e1000 NIC:
 
-static struct pci_ops foo_ecam_pci_ops = {
-        .map_bus = pci_mcfg_dev_base,
-        .read = foo_ecam_config_read,
-        .write = foo_ecam_config_write,
-};
-DECLARE_ACPI_MCFG_FIXUP(foo_dmi, NULL, &foo_ecam_pci_ops, <domain_nr>, <bus_nr>);
+sudo ./qemu/aarch64-softmmu/qemu-system-aarch64 -smp 1 -m 1024 -M virt 
+-cpu cortex-a57 -nographic -device 
+e1000,netdev=net1,mac=52:54:00:12:34:56 -netdev 
+type=tap,ifname=tun1,id=net1,script=no,downscript=no -drive 
+file=qemu/ubuntu.img,id=root,if=none,format=raw -device 
+virtio-blk-device,drive=root -kernel linux-aarch64/arch/arm64/boot/Image 
+-append "console=ttyAMA0 earlycon=pl011,0x9000000 rw root=/dev/vda"
 
-More custom (non-DMI) matching can be done via an alternative call.
-Note that there is possibility to assign quirk related private data to
-root->sysdata which will be available along read/wriate accessor, example:
+root@ubuntu:~# ifconfig
+eth0      Link encap:Ethernet  HWaddr 52:54:00:12:34:56
+           inet addr:10.0.0.48  Bcast:10.0.255.255  Mask:255.255.0.0
+           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+           RX packets:107 errors:0 dropped:0 overruns:0 frame:0
+           TX packets:32 errors:0 dropped:0 overruns:0 carrier:0
+           collisions:0 txqueuelen:1000
+           RX bytes:18087 (18.0 KB)  TX bytes:3818 (3.8 KB)
 
-static int boo_match(struct pci_mcfg_fixup *fixup, struct acpi_pci_root *root)
-{
-        return [condition] ? 1 : 0;
-}
+root@ubuntu:~# cat /proc/interrupts
+            CPU0
+  39:        280       GIC  36 Level     eth0
 
-int boo_ecam_config_read(struct pci_bus *bus, unsigned int devfn,
-                          int where, int size, u32 *val)
-{
-        struct acpi_pci_root *root = bus->sysdata;
-        struct boo_priv_data *boo_data = root->sysdata;
+root@ubuntu:~# lspci -vvv
+00:00.0 Host bridge: Red Hat, Inc. Device 0008
+         Subsystem: Red Hat, Inc Device 1100
+         Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- 
+ParErr- Stepping- SERR- FastB2B- DisINTx-
+         Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR- INTx-
 
-        [..]
-}
+00:01.0 Ethernet controller: Intel Corporation 82540EM Gigabit Ethernet 
+Controller (rev 03)
+         Subsystem: Red Hat, Inc QEMU Virtual Machine
+         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- 
+ParErr- Stepping- SERR- FastB2B- DisINTx-
+         Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+         Latency: 0
+         Interrupt: pin A routed to IRQ 39
+         Region 0: Memory at 10040000 (32-bit, non-prefetchable) [size=128K]
+         Region 1: I/O ports at 1000 [size=64]
+         [virtual] Expansion ROM at 10000000 [disabled] [size=256K]
+         Kernel driver in use: e1000
 
-static struct pci_ops boo_ecam_pci_ops = {
-	.map_bus = pci_mcfg_dev_base,
-	.read = boo_ecam_config_read,
-	.write = boo_ecam_config_write,
-};
-DECLARE_ACPI_MCFG_FIXUP(NULL, boo_match, &boo_ecam_pci_ops, <domain_nr>, <bus_nr>);
+Any specific concern w.r.t. this patch?
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- drivers/acpi/mcfg.c               | 33 +++++++++++++++++++++++++++++++--
- include/acpi/acpi_bus.h           |  1 +
- include/asm-generic/vmlinux.lds.h |  7 +++++++
- include/linux/ecam.h              | 18 ++++++++++++++++++
- 4 files changed, 57 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
-index dfc2d14..ec5fe7b 100644
---- a/drivers/acpi/mcfg.c
-+++ b/drivers/acpi/mcfg.c
-@@ -8,6 +8,7 @@
-  */
- 
- #include <linux/acpi.h>
-+#include <linux/dmi.h>
- #include <linux/ecam.h>
- #include <linux/pci.h>
- #include <linux/pci-acpi.h>
-@@ -34,6 +35,29 @@ int __weak raw_pci_write(unsigned int domain, unsigned int bus,
- 	return PCIBIOS_DEVICE_NOT_FOUND;
- }
- 
-+extern struct pci_mcfg_fixup __start_acpi_mcfg_fixups[];
-+extern struct pci_mcfg_fixup __end_acpi_mcfg_fixups[];
-+
-+static struct pci_ops *pci_mcfg_check_quirks(struct acpi_pci_root *root)
-+{
-+	struct pci_mcfg_fixup *f;
-+	int bus_num = root->secondary.start;
-+	int domain = root->segment;
-+
-+	/*
-+	 * First match against PCI topology <domain:bus> then use DMI or
-+	 * custom match handler.
-+	 */
-+	for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups; f++) {
-+		if ((f->domain == domain || f->domain == PCI_MCFG_DOMAIN_ANY) &&
-+		    (f->bus_num == bus_num || f->bus_num == PCI_MCFG_BUS_ANY) &&
-+		    (f->system ? dmi_check_system(f->system) : 0 ||
-+		     f->match ? f->match(f, root) : 0))
-+			return f->ops;
-+	}
-+	return NULL;
-+}
-+
- void __iomem *
- pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn, int offset)
- {
-@@ -56,10 +80,15 @@ static struct pci_ops default_pci_mcfg_ops = {
- 
- struct pci_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
- {
-+	struct pci_ops *pci_mcfg_ops_quirk;
-+
- 	/*
--	 * TODO: Match against platform specific quirks and return
--	 * corresponding PCI config space accessor set.
-+	 * Match against platform specific quirks and return corresponding
-+	 * PCI config space accessor set.
- 	 */
-+	pci_mcfg_ops_quirk = pci_mcfg_check_quirks(root);
-+	if (pci_mcfg_ops_quirk)
-+		return pci_mcfg_ops_quirk;
- 
- 	return &default_pci_mcfg_ops;
- }
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index ad0a5ff..ea4d2b5 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -554,6 +554,7 @@ struct acpi_pci_root {
- 	struct pci_bus *bus;
- 	u16 segment;
- 	struct resource secondary;	/* downstream bus range */
-+	void *sysdata;
- 
- 	u32 osc_support_set;	/* _OSC state of support bits */
- 	u32 osc_control_set;	/* _OSC state of control bits */
-diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-index c4bd0e2..c93fc97 100644
---- a/include/asm-generic/vmlinux.lds.h
-+++ b/include/asm-generic/vmlinux.lds.h
-@@ -298,6 +298,13 @@
- 		VMLINUX_SYMBOL(__end_pci_fixups_suspend_late) = .;	\
- 	}								\
- 									\
-+	/* ACPI MCFG quirks */						\
-+	.acpi_fixup        : AT(ADDR(.acpi_fixup) - LOAD_OFFSET) {	\
-+		VMLINUX_SYMBOL(__start_acpi_mcfg_fixups) = .;		\
-+		*(.acpi_fixup_mcfg)					\
-+		VMLINUX_SYMBOL(__end_acpi_mcfg_fixups) = .;		\
-+	}								\
-+									\
- 	/* Built-in firmware blobs */					\
- 	.builtin_fw        : AT(ADDR(.builtin_fw) - LOAD_OFFSET) {	\
- 		VMLINUX_SYMBOL(__start_builtin_fw) = .;			\
-diff --git a/include/linux/ecam.h b/include/linux/ecam.h
-index e0f322e..21215be 100644
---- a/include/linux/ecam.h
-+++ b/include/linux/ecam.h
-@@ -20,6 +20,24 @@ struct pci_mmcfg_region {
- 	bool hot_added;
- };
- 
-+struct pci_mcfg_fixup {
-+	const struct dmi_system_id *system;
-+	int (*match)(struct pci_mcfg_fixup *, struct acpi_pci_root *);
-+	struct pci_ops *ops;
-+	int domain;
-+	int bus_num;
-+};
-+
-+#define PCI_MCFG_DOMAIN_ANY	-1
-+#define PCI_MCFG_BUS_ANY	-1
-+
-+/* Designate a routine to fix up buggy MCFG */
-+#define DECLARE_ACPI_MCFG_FIXUP(system, match, ops, dom, bus)		\
-+	static const struct pci_mcfg_fixup __mcfg_fixup_##system##dom##bus\
-+	 __used	__attribute__((__section__(".acpi_fixup_mcfg"),		\
-+				aligned((sizeof(void *))))) =		\
-+	{ system, match, ops, dom, bus };
-+
- struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
- struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
- 						   int end, u64 addr);
--- 
-1.9.1
-
+Tomasz
