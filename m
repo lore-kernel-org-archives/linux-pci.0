@@ -1,62 +1,204 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43287 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932417AbcAHUeB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Jan 2016 15:34:01 -0500
-Date: Fri, 8 Jan 2016 14:33:58 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Vineet.Gupta1@synopsys.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-snps-arc@lists.infradead.org,
-	CARLOS.PALMINHA@synopsys.com, Alexey.Brodkin@synopsys.com,
-	robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
-Subject: Re: [PATCH v3 0/2] adding PCI support to AXS10x
-Message-ID: <20160108203358.GI5354@localhost>
-References: <cover.1450694884.git.jpinto@synopsys.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1450694884.git.jpinto@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V3 20/21] pci, acpi: Match PCI config space accessors against platfrom specific quirks.
+Date: Wed, 13 Jan 2016 14:21:06 +0100
+Message-Id: <1452691267-32240-21-git-send-email-tn@semihalf.com>
+In-Reply-To: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joao,
+Some platforms may not be fully compliant with generic set of PCI config
+accessors. For these cases we implement the way to overwrite accessors
+set prior to PCI buses enumeration. Algorithm traverses available quirk
+list, matches against <platform ID (DMI), domain, bus number> tuple and
+returns corresponding accessors. All quirks can be defined using:
+DECLARE_ACPI_MCFG_FIXUP() and keep self contained. Example,
 
-On Mon, Dec 21, 2015 at 03:44:14PM +0000, Joao Pinto wrote:
-> This patch set has the goal to add suppport for DesignWare PCIe RC in ARC
-> AXS10x. It includes the necessary tweaks to the ARC architecture, necessary
-> tweaks to the PCI subsystem and a new driver (pcie-snpsdev).
-> This new driver will be used extensively in the PCIe RC Prototyping Kit.
-> 
-> The patches were produced against Bjorn Helgaas' repository. It was properly
-> tested in an IP Prototyping Kit.
-> 
-> Joao Pinto (2):
->   PCI support added to ARC
->   add new platform driver for PCI RC
-> 
->  .../devicetree/bindings/pci/pcie-snpsdev.txt       |  33 +++
->  MAINTAINERS                                        |   7 +
->  arch/arc/Kconfig                                   |  23 ++
->  arch/arc/include/asm/dma.h                         |   5 +
->  arch/arc/include/asm/io.h                          |  10 +
->  arch/arc/include/asm/pci.h                         |  43 ++++
->  arch/arc/kernel/Makefile                           |   1 +
->  arch/arc/kernel/pcibios.c                          |  55 ++++
->  arch/arc/mm/ioremap.c                              |  10 +-
->  arch/arc/plat-axs10x/Kconfig                       |   1 +
->  drivers/pci/Makefile                               |   1 +
->  drivers/pci/host/Kconfig                           |   5 +
->  drivers/pci/host/Makefile                          |   1 +
->  drivers/pci/host/pcie-designware.c                 |  11 +
->  drivers/pci/host/pcie-designware.h                 |   1 +
->  drivers/pci/host/pcie-snpsdev.c                    | 286 +++++++++++++++++++++
->  16 files changed, 492 insertions(+), 1 deletion(-)
->  create mode 100644 Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
->  create mode 100644 arch/arc/include/asm/pci.h
->  create mode 100644 arch/arc/kernel/pcibios.c
->  create mode 100644 drivers/pci/host/pcie-snpsdev.c
+static const struct dmi_system_id foo_dmi[] = {
+        {
+                .ident = "<Platform ident string>",
+                .callback = <handler>,
+                .matches = {
+                        DMI_MATCH(DMI_SYS_VENDOR, "<system vendor>"),
+                        DMI_MATCH(DMI_PRODUCT_NAME, "<product name>"),
+                        DMI_MATCH(DMI_PRODUCT_VERSION, "product version"),
+                },
+        },
+        { }
+};
 
-This failed the kbuild test, so I'm waiting for a refresh to fix that.
+static struct pci_ops foo_ecam_pci_ops = {
+        .map_bus = pci_mcfg_dev_base,
+        .read = foo_ecam_config_read,
+        .write = foo_ecam_config_write,
+};
+DECLARE_ACPI_MCFG_FIXUP(foo_dmi, NULL, &foo_ecam_pci_ops, <domain_nr>, <bus_nr>);
 
-Bjorn
+More custom (non-DMI) matching can be done via an alternative call.
+Note that there is possibility to assign quirk related private data to
+root->sysdata which will be available along read/wriate accessor, example:
+
+static int boo_match(struct pci_mcfg_fixup *fixup, struct acpi_pci_root *root)
+{
+        return [condition] ? 1 : 0;
+}
+
+int boo_ecam_config_read(struct pci_bus *bus, unsigned int devfn,
+                          int where, int size, u32 *val)
+{
+        struct acpi_pci_root *root = bus->sysdata;
+        struct boo_priv_data *boo_data = root->sysdata;
+
+        [..]
+}
+
+static struct pci_ops boo_ecam_pci_ops = {
+	.map_bus = pci_mcfg_dev_base,
+	.read = boo_ecam_config_read,
+	.write = boo_ecam_config_write,
+};
+DECLARE_ACPI_MCFG_FIXUP(NULL, boo_match, &boo_ecam_pci_ops, <domain_nr>, <bus_nr>);
+
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/acpi/mcfg.c               | 33 +++++++++++++++++++++++++++++++--
+ include/acpi/acpi_bus.h           |  1 +
+ include/asm-generic/vmlinux.lds.h |  7 +++++++
+ include/linux/ecam.h              | 18 ++++++++++++++++++
+ 4 files changed, 57 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
+index dfc2d14..ec5fe7b 100644
+--- a/drivers/acpi/mcfg.c
++++ b/drivers/acpi/mcfg.c
+@@ -8,6 +8,7 @@
+  */
+ 
+ #include <linux/acpi.h>
++#include <linux/dmi.h>
+ #include <linux/ecam.h>
+ #include <linux/pci.h>
+ #include <linux/pci-acpi.h>
+@@ -34,6 +35,29 @@ int __weak raw_pci_write(unsigned int domain, unsigned int bus,
+ 	return PCIBIOS_DEVICE_NOT_FOUND;
+ }
+ 
++extern struct pci_mcfg_fixup __start_acpi_mcfg_fixups[];
++extern struct pci_mcfg_fixup __end_acpi_mcfg_fixups[];
++
++static struct pci_ops *pci_mcfg_check_quirks(struct acpi_pci_root *root)
++{
++	struct pci_mcfg_fixup *f;
++	int bus_num = root->secondary.start;
++	int domain = root->segment;
++
++	/*
++	 * First match against PCI topology <domain:bus> then use DMI or
++	 * custom match handler.
++	 */
++	for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups; f++) {
++		if ((f->domain == domain || f->domain == PCI_MCFG_DOMAIN_ANY) &&
++		    (f->bus_num == bus_num || f->bus_num == PCI_MCFG_BUS_ANY) &&
++		    (f->system ? dmi_check_system(f->system) : 0 ||
++		     f->match ? f->match(f, root) : 0))
++			return f->ops;
++	}
++	return NULL;
++}
++
+ void __iomem *
+ pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn, int offset)
+ {
+@@ -56,10 +80,15 @@ static struct pci_ops default_pci_mcfg_ops = {
+ 
+ struct pci_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
+ {
++	struct pci_ops *pci_mcfg_ops_quirk;
++
+ 	/*
+-	 * TODO: Match against platform specific quirks and return
+-	 * corresponding PCI config space accessor set.
++	 * Match against platform specific quirks and return corresponding
++	 * PCI config space accessor set.
+ 	 */
++	pci_mcfg_ops_quirk = pci_mcfg_check_quirks(root);
++	if (pci_mcfg_ops_quirk)
++		return pci_mcfg_ops_quirk;
+ 
+ 	return &default_pci_mcfg_ops;
+ }
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index ad0a5ff..ea4d2b5 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -554,6 +554,7 @@ struct acpi_pci_root {
+ 	struct pci_bus *bus;
+ 	u16 segment;
+ 	struct resource secondary;	/* downstream bus range */
++	void *sysdata;
+ 
+ 	u32 osc_support_set;	/* _OSC state of support bits */
+ 	u32 osc_control_set;	/* _OSC state of control bits */
+diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+index c4bd0e2..c93fc97 100644
+--- a/include/asm-generic/vmlinux.lds.h
++++ b/include/asm-generic/vmlinux.lds.h
+@@ -298,6 +298,13 @@
+ 		VMLINUX_SYMBOL(__end_pci_fixups_suspend_late) = .;	\
+ 	}								\
+ 									\
++	/* ACPI MCFG quirks */						\
++	.acpi_fixup        : AT(ADDR(.acpi_fixup) - LOAD_OFFSET) {	\
++		VMLINUX_SYMBOL(__start_acpi_mcfg_fixups) = .;		\
++		*(.acpi_fixup_mcfg)					\
++		VMLINUX_SYMBOL(__end_acpi_mcfg_fixups) = .;		\
++	}								\
++									\
+ 	/* Built-in firmware blobs */					\
+ 	.builtin_fw        : AT(ADDR(.builtin_fw) - LOAD_OFFSET) {	\
+ 		VMLINUX_SYMBOL(__start_builtin_fw) = .;			\
+diff --git a/include/linux/ecam.h b/include/linux/ecam.h
+index e0f322e..21215be 100644
+--- a/include/linux/ecam.h
++++ b/include/linux/ecam.h
+@@ -20,6 +20,24 @@ struct pci_mmcfg_region {
+ 	bool hot_added;
+ };
+ 
++struct pci_mcfg_fixup {
++	const struct dmi_system_id *system;
++	int (*match)(struct pci_mcfg_fixup *, struct acpi_pci_root *);
++	struct pci_ops *ops;
++	int domain;
++	int bus_num;
++};
++
++#define PCI_MCFG_DOMAIN_ANY	-1
++#define PCI_MCFG_BUS_ANY	-1
++
++/* Designate a routine to fix up buggy MCFG */
++#define DECLARE_ACPI_MCFG_FIXUP(system, match, ops, dom, bus)		\
++	static const struct pci_mcfg_fixup __mcfg_fixup_##system##dom##bus\
++	 __used	__attribute__((__section__(".acpi_fixup_mcfg"),		\
++				aligned((sizeof(void *))))) =		\
++	{ system, match, ops, dom, bus };
++
+ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
+ struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
+ 						   int end, u64 addr);
+-- 
+1.9.1
+
