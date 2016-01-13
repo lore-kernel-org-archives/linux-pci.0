@@ -1,55 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:44544 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932311AbcA0O33 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jan 2016 09:29:29 -0500
-Subject: Re: [PATCH v6 1/2] PCI support added to ARC
-To: Vineet Gupta <Vineet.Gupta1@synopsys.com>,
-	"helgaas@kernel.org" <helgaas@kernel.org>
-References: <cover.1452611234.git.jpinto@synopsys.com>
- <24c9b782dfade515bbed20ce75d85200a00a2e66.1452611234.git.jpinto@synopsys.com>
- <C2D7FE5348E1B147BCA15975FBA23075F4E84E0E@us01wembx1.internal.synopsys.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-snps-arc@lists.infradead.org"
-	<linux-snps-arc@lists.infradead.org>,
-	"CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>,
-	"Alexey.Brodkin@synopsys.com" <Alexey.Brodkin@synopsys.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	"arnd@arndb.de" <arnd@arndb.de>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <56A8D441.8080608@synopsys.com>
-Date: Wed, 27 Jan 2016 14:29:21 +0000
-MIME-Version: 1.0
-In-Reply-To: <C2D7FE5348E1B147BCA15975FBA23075F4E84E0E@us01wembx1.internal.synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
+Received: from mx2.suse.de ([195.135.220.15]:48158 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755957AbcAMLZh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Jan 2016 06:25:37 -0500
+From: Hannes Reinecke <hare@suse.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Babu Moger <babu.moger@oracle.com>,
+	Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv2 2/4] pci: allow access to VPD attributes with size '0'
+Date: Wed, 13 Jan 2016 12:25:33 +0100
+Message-Id: <1452684335-46107-3-git-send-email-hare@suse.de>
+In-Reply-To: <1452684335-46107-1-git-send-email-hare@suse.de>
+References: <1452684335-46107-1-git-send-email-hare@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-Could you please tell me what are the perspectives of pulling this patch set to
-mainline?
+It is not always possible to determine the actual size of the VPD
+data, so allow access to them if the size is set to '0'.
 
-On 1/14/2016 11:11 AM, Vineet Gupta wrote:
-> On Thursday 14 January 2016 04:34 PM, Joao Pinto wrote:
->> This patch adds PCI support to ARC and updates drivers/pci Makefile
->> enabling the ARC arch to use the generic PCI setup functions.
->>
->> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> 
-> Acked-by: Vineet Gupta <vgupta@synopsys.com>
-> 
-> @Bjorn are you happy with the driver bits.
-> Although ARC support is independent of driver, and I can pick it up separately,
-> it would be better if you took it along with the driver. I don't see potential
-> for any conflicts.
-> 
-> Thx,
-> -Vineet
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/pci/pci-sysfs.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
-Thanks,
-Joao
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index eead54c..de327c3 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -772,10 +772,12 @@ static ssize_t read_vpd_attr(struct file *filp, struct kobject *kobj,
+ 	struct pci_dev *dev =
+ 		to_pci_dev(container_of(kobj, struct device, kobj));
+ 
+-	if (off > bin_attr->size)
+-		count = 0;
+-	else if (count > bin_attr->size - off)
+-		count = bin_attr->size - off;
++	if (bin_attr->size > 0) {
++		if (off > bin_attr->size)
++			count = 0;
++		else if (count > bin_attr->size - off)
++			count = bin_attr->size - off;
++	}
+ 
+ 	return pci_read_vpd(dev, off, count, buf);
+ }
+@@ -787,10 +789,12 @@ static ssize_t write_vpd_attr(struct file *filp, struct kobject *kobj,
+ 	struct pci_dev *dev =
+ 		to_pci_dev(container_of(kobj, struct device, kobj));
+ 
+-	if (off > bin_attr->size)
+-		count = 0;
+-	else if (count > bin_attr->size - off)
+-		count = bin_attr->size - off;
++	if (bin_attr->size > 0) {
++		if (off > bin_attr->size)
++			count = 0;
++		else if (count > bin_attr->size - off)
++			count = bin_attr->size - off;
++	}
+ 
+ 	return pci_write_vpd(dev, off, count, buf);
+ }
+-- 
+1.8.5.6
+
