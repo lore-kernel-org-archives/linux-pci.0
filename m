@@ -1,45 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:58848 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759914AbcAKMLw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jan 2016 07:11:52 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH] PCI: designware: remove unused variable
-Date: Mon, 11 Jan 2016 13:11:24 +0100
-Message-ID: <4643317.WUGgxPjcvu@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI hostbridge init based on ACPI
+Date: Wed, 13 Jan 2016 14:20:46 +0100
+Message-Id: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A cleanup patch removed the only use of the 'ret' variable
-in wr_conf but forgot to remove the variable:
+>From the functionality point of view this series might be split into the
+following logic parts:
+1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
+   PCI config regions and used when necessary.
+2. Move non-arch specific bits to the core code.
+3. Use MMCONFIG code and implement generic ACPI based PCI host controller driver.
+4. Enable above driver on ARM64
 
-pci/host/pcie-designware.c: In function 'dw_pcie_wr_conf':
-pci/host/pcie-designware.c:683:6: warning: unused variable 'ret' [-Wunused-variable]
+Patches has been built on top of 4.4 and can be found here:
+git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v3)
 
-This cleans that part up as well.
+NOTE, this patch set depends on Matthew's patches:
+http://www.spinics.net/lists/linux-pci/msg45950.html
+https://github.com/Vality/linux/tree/pci-fixes
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: 50a1a3b06ddd ("PCI: designware: Simplify control flow")
----
-This came up this morning on linux-next with ARM randconfig builds
+This has been tested on Cavium ThunderX server and QEMU.
+Any help in reviewing and testing is very appreciated.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 9a666dbff127..21716827847a 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -680,7 +680,6 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 			int where, int size, u32 val)
- {
- 	struct pcie_port *pp = bus->sysdata;
--	int ret;
- 
- 	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
+v2 -> v3
+- fix legacy IRQ assigning and IO ports registration
+- remove reference to arch specific companion device for ia64
+- move ACPI PCI host controller driver to pci_root.c
+- drop generic domain assignment for x86 and ia64 as I am not
+  able to run all necessary test variants
+- drop patch which cleaned legacy IRQ assignment since it belongs to
+  Mathew's series:
+  https://patchwork.ozlabs.org/patch/557504/
+- extend MCFG quirk code
+- rebased to 4.4
+
+v1 -> v2
+- moved non-arch specific piece of code to dirver/acpi/ directory
+- fixed IO resource handling
+- introduced PCI config accessors quirks matching
+- moved ACPI_COMPANION_SET to generic code
+
+Liu Jiang (1):
+  ACPI, PCI: Refine the way to handle translation_offset for ACPI
+    resources
+
+Tomasz Nowicki (20):
+  x86, pci: Reorder logic of pci_mmconfig_insert() function
+  x86, pci, acpi: Move arch-agnostic MMCONFIG (aka ECAM) and ACPI code
+    out of arch/x86/ directory
+  pci, acpi, mcfg: Provide generic implementation of MCFG code
+    initialization.
+  x86, pci: mmconfig_{32,64}.c code refactoring - remove code
+    duplication.
+  x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM
+    driver.
+  XEN / PCI: Remove the dependence on arch x86 when PCI_MMCONFIG=y
+  pci, acpi, mcfg: Provide default RAW ACPI PCI config space accessors.
+  arm64, acpi: Use empty PCI config space accessors from mcfg.c file.
+  pci, acpi, ecam: Add flag to indicate whether ECAM region was hot
+    added or not.
+  x86, pci: Cleanup platform specific MCFG data using previously added
+    ECAM hot_added flag.
+  pci, acpi: Move ACPI host bridge device companion assignment to core
+    code.
+  x86, ia64, pci: Remove ACPI companion device from platform specific
+    data.
+  pci, acpi: Provide generic way to assign bus domain number.
+  x86, ia64: Include acpi_pci_{add|remove}_bus to the default
+    pcibios_{add|remove}_bus implementation.
+  acpi, mcfg: Implement two calls that might be used to inject/remove
+    MCFG region.
+  x86, acpi, pci: Use equivalent function introduced in previous patch.
+  acpi, mcfg: Add default PCI config accessors implementation and
+    initial support for related quirks.
+  pci, acpi: Support for ACPI based generic PCI host controller init
+  pci, acpi: Match PCI config space accessors against platfrom specific
+    quirks.
+  arm64, pci, acpi: Start using ACPI based PCI host bridge driver for
+    ARM64.
+
+ arch/arm64/Kconfig                 |   7 ++
+ arch/arm64/kernel/pci.c            |  25 ----
+ arch/ia64/hp/common/sba_iommu.c    |   2 +-
+ arch/ia64/include/asm/pci.h        |   1 -
+ arch/ia64/pci/pci.c                |  52 +++-----
+ arch/ia64/sn/kernel/io_acpi_init.c |   4 +-
+ arch/x86/Kconfig                   |   4 +
+ arch/x86/include/asm/pci.h         |   3 -
+ arch/x86/include/asm/pci_x86.h     |  28 +----
+ arch/x86/pci/acpi.c                |  41 ++----
+ arch/x86/pci/common.c              |  10 --
+ arch/x86/pci/irq.c                 |  10 --
+ arch/x86/pci/mmconfig-shared.c     | 250 ++++++-------------------------------
+ arch/x86/pci/mmconfig_32.c         |  11 +-
+ arch/x86/pci/mmconfig_64.c         |  67 +---------
+ arch/x86/pci/numachip.c            |   1 +
+ drivers/acpi/Kconfig               |   5 +
+ drivers/acpi/Makefile              |   1 +
+ drivers/acpi/mcfg.c                | 201 +++++++++++++++++++++++++++++
+ drivers/acpi/pci_root.c            | 136 +++++++++++++++++++-
+ drivers/acpi/resource.c            |  12 +-
+ drivers/pci/Kconfig                |  10 ++
+ drivers/pci/Makefile               |   5 +
+ drivers/pci/ecam.c                 | 234 ++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.c                  |  29 ++++-
+ drivers/pci/probe.c                |   5 +
+ drivers/xen/pci.c                  |   7 +-
+ include/acpi/acpi_bus.h            |   1 +
+ include/asm-generic/vmlinux.lds.h  |   7 ++
+ include/linux/acpi.h               |   2 +
+ include/linux/ecam.h               |  62 +++++++++
+ include/linux/pci-acpi.h           |  17 +++
+ 32 files changed, 802 insertions(+), 448 deletions(-)
+ create mode 100644 drivers/acpi/mcfg.c
+ create mode 100644 drivers/pci/ecam.c
+ create mode 100644 include/linux/ecam.h
+
+-- 
+1.9.1
 
