@@ -1,120 +1,110 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20160119094150.GA4991@red-moon>
-References: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
-	<1453134965-6125-6-git-send-email-gkulkarni@caviumnetworks.com>
-	<569D23AF.9050503@gmail.com>
-	<CAFpQJXXESn1EA5kotVOH2oLbRUSpOLf6+MeWG1pY_GhUP+4vVQ@mail.gmail.com>
-	<20160119094150.GA4991@red-moon>
-Date: Tue, 19 Jan 2016 18:02:13 +0530
-Message-ID: <CAFpQJXV_5mryP5ZT5ezE7N9Csj97g7029D_9Fj_fNJ8+5n6O2w@mail.gmail.com>
-Subject: Re: [PATCH v9 5/6] PCI: generic: Make pci-host-generic driver numa aware
-From: Ganapatrao Kulkarni <gpkulkarni@gmail.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: David Daney <ddaney.cavm@gmail.com>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-ia64@vger.kernel.org,
-	linux-metag@vger.kernel.org,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	linux-s390@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-arch@vger.kernel.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Leif Lindholm <leif.lindholm@linaro.org>, rfranz@cavium.com,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Steve Capper <steve.capper@linaro.org>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Al Stone <al.stone@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>, tony.luck@intel.com,
-	fenghua.yu@intel.com, james.hogan@imgtec.com,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"tglx@linutronix.de" <tglx@linutronix.de>, mingo@redhat.com,
-	hpa@zytor.com, x86@kernel.org,
-	Jon Masters <jonathan@jonmasters.org>,
-	Robert Richter <rrichter@cavium.com>,
-	Prasun Kapoor <Prasun.Kapoor@caviumnetworks.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V3 15/21] acpi, mcfg: Implement two calls that might be used to inject/remove MCFG region.
+Date: Wed, 13 Jan 2016 14:21:01 +0100
+Message-Id: <1452691267-32240-16-git-send-email-tn@semihalf.com>
+In-Reply-To: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 19, 2016 at 3:11 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Tue, Jan 19, 2016 at 11:28:56AM +0530, Ganapatrao Kulkarni wrote:
->> On Mon, Jan 18, 2016 at 11:11 PM, David Daney <ddaney.cavm@gmail.com> wrote:
->> > On 01/18/2016 08:36 AM, Ganapatrao Kulkarni wrote:
->> >>
->> >> update numa_node of device associated with pci bus.
->> >> moved down devm_kzalloc to allocate from node memory.
->> >>
->> >> Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
->> >> ---
->> >>   drivers/pci/host/pci-host-generic.c | 9 ++++++---
->> >>   1 file changed, 6 insertions(+), 3 deletions(-)
->> >>
->> >> diff --git a/drivers/pci/host/pci-host-generic.c
->> >> b/drivers/pci/host/pci-host-generic.c
->> >> index 5434c90..0e1ce06 100644
->> >> --- a/drivers/pci/host/pci-host-generic.c
->> >> +++ b/drivers/pci/host/pci-host-generic.c
->> >> @@ -215,11 +215,9 @@ static int gen_pci_probe(struct platform_device
->> >> *pdev)
->> >>         const struct of_device_id *of_id;
->> >>         struct device *dev = &pdev->dev;
->> >>         struct device_node *np = dev->of_node;
->> >> -       struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
->> >> +       struct gen_pci *pci;
->> >>         struct pci_bus *bus, *child;
->> >>
->> >> -       if (!pci)
->> >> -               return -ENOMEM;
->> >>
->> >>         type = of_get_property(np, "device_type", NULL);
->> >>         if (!type || strcmp(type, "pci")) {
->> >> @@ -230,6 +228,11 @@ static int gen_pci_probe(struct platform_device
->> >> *pdev)
->> >>         of_pci_check_probe_only();
->> >>
->> >>         of_id = of_match_node(gen_pci_of_match, np);
->> >> +       set_dev_node(dev, of_node_to_nid(np));
->> >
->> >
->> > This shouldn't be done in individual platform_drivers, but instead in the
->> > device probing code.
->> >
->> > There is code that does this in drivers/of/platform.c and
->> > drivers/of/device.c  Is that not being called for the pci-host-gweneric
->> > devices?  If not, we should figure out why, and perhaps attempt to fix it
->> > rather than doing it here.
->> is it more appropriate to call of_platform_device_create ?
->
-> That's already done to create the platform device by OF core when
-> populating devices from DT, what David suggested is that you should
-> add set_dev_node() to core OF code instead of adding it specifically
-> to the PCI host generic code.
-This patch was worked on 4.2(inherited to 4.4) to have correct
-numa_node populated on sysfs.
-however, on 4.4, OF  is fixed to set numa_node(fixed by
-56f2de81e020c537f7e35550d13840143cb765cd)
+Lets abstract two calls which allow to inject and remove MCFG regions
+which may come from DSDT table. These calls will be used for x86 and ARM64
+PCI host bridge driver in the later patches.
 
-This patch (patch #5) is not required and will be dropped.
-thanks for your comments.
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/acpi/mcfg.c      | 38 ++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-acpi.h |  9 +++++++++
+ 2 files changed, 47 insertions(+)
 
-
->
-> Lorenzo
-thanks
-Ganapat
+diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
+index 3e1e7be..dca4c4e 100644
+--- a/drivers/acpi/mcfg.c
++++ b/drivers/acpi/mcfg.c
+@@ -10,6 +10,7 @@
+ #include <linux/acpi.h>
+ #include <linux/ecam.h>
+ #include <linux/pci.h>
++#include <linux/pci-acpi.h>
+ 
+ #define	PREFIX	"MCFG: "
+ 
+@@ -77,6 +78,43 @@ int __init acpi_parse_mcfg(struct acpi_table_header *header)
+ 	return 0;
+ }
+ 
++int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci)
++{
++	struct pci_mmcfg_region *cfg;
++	struct acpi_pci_root *root;
++	int seg, start, end, err;
++
++	root = ci->root;
++	seg = root->segment;
++	start = root->secondary.start;
++	end = root->secondary.end;
++
++	cfg = pci_mmconfig_lookup(seg, start);
++	if (cfg)
++		return 0;
++
++	cfg = pci_mmconfig_alloc(seg, start, end, root->mcfg_addr);
++	if (!cfg)
++		return -ENOMEM;
++
++	err = pci_mmconfig_inject(cfg);
++	return err;
++}
++
++void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci)
++{
++	struct acpi_pci_root *root = ci->root;
++	struct pci_mmcfg_region *cfg;
++
++	cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
++	if (!cfg)
++		return;
++
++	if (cfg->hot_added)
++		pci_mmconfig_delete(root->segment, root->secondary.start,
++				    root->secondary.end);
++}
++
+ int __init __weak acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
+ 					struct acpi_mcfg_allocation *cfg)
+ {
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 89ab057..c277415 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -79,6 +79,15 @@ extern struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+ void acpi_pci_add_bus(struct pci_bus *bus);
+ void acpi_pci_remove_bus(struct pci_bus *bus);
+ 
++#ifdef	CONFIG_PCI_MMCONFIG
++int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci);
++void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci);
++#else
++static inline int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci)
++{ return 0; }
++static inline void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci) { }
++#endif
++
+ #ifdef	CONFIG_ACPI_PCI_SLOT
+ void acpi_pci_slot_init(void);
+ void acpi_pci_slot_enumerate(struct pci_bus *bus);
+-- 
+1.9.1
