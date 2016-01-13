@@ -1,106 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0085.outbound.protection.outlook.com ([104.47.38.85]:1185
-	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752067AbcALRgv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Jan 2016 12:36:51 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <bhelgaas@google.com>, <michals@xilinx.com>,
-	<lorenzo.pieralisi@arm.com>, <paul.burton@imgtec.com>,
-	<yinghai@kernel.org>, <wangyijing@huawei.com>, <robh@kernel.org>,
-	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
-	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
-	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
-	<galak@codeaurora.org>
-CC: <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: [PATCH V2 4/5] PCI: xilinx: Updating Zynq PCI binding documentation with  Microblaze node.
-Date: Tue, 12 Jan 2016 23:06:12 +0530
-Message-ID: <1452620173-4905-5-git-send-email-bharatku@xilinx.com>
-In-Reply-To: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
-References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+To: Sinan Kaya <okaya@codeaurora.org>, bhelgaas@google.com,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, jiang.liu@linux.intel.com,
+	Stefano.Stabellini@eu.citrix.com
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+ <56966C1C.1050902@codeaurora.org>
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <56966CEF.1010701@semihalf.com>
+Date: Wed, 13 Jan 2016 16:27:43 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <56966C1C.1050902@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Updated Zynq PCI binding documentation with Microblaze node.
+On 13.01.2016 16:24, Sinan Kaya wrote:
+> on an ARM64 server with some nits.
+>
+> I started seeing these on an ACPI system. I didn't have these before when I tested Tomasz's
+> branch yesterday. It must have been introduced after a rebase or a recent change.
+>
+> _#_dmesg_|_grep_of_irq
+> [    3.130774] pci 0002:00:00.0: of_irq_parse_pci() failed with rc=-22
+> [    4.182526] pci 0002:00:00.0: of_irq_parse_pci() failed with rc=-22
+> [    5.187764] pci 0002:00:00.0: of_irq_parse_pci() failed with rc=-22
+> [    5.868518] pci 0003:00:00.0: of_irq_parse_pci() failed with rc=-22
+> [    5.910629] pci 0003:00:00.0: of_irq_parse_pci() failed with rc=-22
+> [    6.732817] pci 0006:00:00.0: of_irq_parse_pci() failed with rc=-22
+> [    7.777698] pci 0006:00:00.0: of_irq_parse_pci() failed with rc=-22
+> [    8.782882] pci 0006:00:00.0: of_irq_parse_pci() failed with rc=-22
+> / #
 
-Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
----
-Changes:
-Adding Microblaze device tree node Documnetation.
----
- .../devicetree/bindings/pci/xilinx-pcie.txt        | 36 ++++++++++++++++++++--
- 1 file changed, 33 insertions(+), 3 deletions(-)
+You got this because I had dropped patch from the previous series:
+https://patchwork.ozlabs.org/patch/557504/
+and this is expected.
 
-diff --git a/Documentation/devicetree/bindings/pci/xilinx-pcie.txt b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
-index 02f979a..d207bf4 100644
---- a/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
-@@ -17,7 +17,10 @@ Required properties:
- 	Please refer to the standard PCI bus binding document for a more
- 	detailed explanation
- 
--Optional properties:
-+Optional properties for Zynq:
-+- bus-range: PCI bus numbers covered
-+
-+Required property for Microblaze:
- - bus-range: PCI bus numbers covered
- 
- Interrupt controller child node
-@@ -38,13 +41,13 @@ the four INTx interrupts in ISR and route them to this domain.
- 
- Example:
- ++++++++
--
-+Zynq:
- 	pci_express: axi-pcie@50000000 {
- 		#address-cells = <3>;
- 		#size-cells = <2>;
- 		#interrupt-cells = <1>;
- 		compatible = "xlnx,axi-pcie-host-1.00.a";
--		reg = < 0x50000000 0x10000000 >;
-+		reg = < 0x50000000 0x1000000 >;
- 		device_type = "pci";
- 		interrupts = < 0 52 4 >;
- 		interrupt-map-mask = <0 0 0 7>;
-@@ -60,3 +63,30 @@ Example:
- 			#interrupt-cells = <1>;
- 		};
- 	};
-+
-+
-+Microblaze:
-+	pci_express: axi-pcie@10000000 {
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		#interrupt-cells = <1>;
-+		compatible = "xlnx,axi-pcie-host-1.00.a";
-+		reg = <0x10000000 0x4000000>;
-+		device_type = "pci";
-+		interrupt-parent = <&microbalze_0_intc>;
-+		interrupts = <1 2>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie_intc 1>,
-+				<0 0 0 2 &pcie_intc 2>,
-+				<0 0 0 3 &pcie_intc 3>,
-+				<0 0 0 4 &pcie_intc 4>;
-+		ranges = <0x02000000 0x00000000 0x80000000 0x80000000 0x00000000 0x10000000>;
-+		bus-range = <0x00 0xff>;
-+
-+		pcie_intc: interrupt-controller {
-+			interrupt-controller;
-+			#address-cells = <0>;
-+			#interrupt-cells = <1>;
-+		};
-+
-+	};
--- 
-2.1.1
-
+Tomasz
