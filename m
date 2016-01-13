@@ -1,44 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:22122 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759955AbcAKUtN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Jan 2016 15:49:13 -0500
-Date: Mon, 11 Jan 2016 20:49:11 +0000
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCHv7 0/6] Driver for new "VMD" device
-Message-ID: <20160111204911.GB8743@localhost.localdomain>
-References: <1450719900-2824-1-git-send-email-keith.busch@intel.com>
- <20160111170617.GA30780@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160111170617.GA30780@localhost>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:33298 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758982AbcAMNVd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jan 2016 08:21:33 -0500
+Received: by mail-wm0-f46.google.com with SMTP id f206so295437124wmf.0
+        for <linux-pci@vger.kernel.org>; Wed, 13 Jan 2016 05:21:32 -0800 (PST)
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V3 07/21] pci, acpi, mcfg: Provide default RAW ACPI PCI config space accessors.
+Date: Wed, 13 Jan 2016 14:20:53 +0100
+Message-Id: <1452691267-32240-8-git-send-email-tn@semihalf.com>
+In-Reply-To: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Lets keep RAW ACPI PCI config space accessors empty by default,
+since we are note sure if they are necessary accross all archs.
+Once we sort this out, we can provide generic version or let
+architectures to overwrite, like now x86.
 
-Thanks for the catches. Most were simple fixes, and I used your
-cleanup suggestions for others. Will resend shortly.
+Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+---
+ drivers/acpi/mcfg.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-On Mon, Jan 11, 2016 at 11:06:17AM -0600, Bjorn Helgaas wrote:
-> Checkpatch complained about a few things that should be easy to fix up:
-> 
->   x86-pci-allow-pci-domain
->   -:26: WARNING: struct dma_map_ops should normally be const
->   x86-pci-initial-commit-for-new
->   -:125: WARNING: added, moved or deleted file(s), does MAINTAINERS need updating?
+diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
+index 745b83e..3e1e7be 100644
+--- a/drivers/acpi/mcfg.c
++++ b/drivers/acpi/mcfg.c
+@@ -9,9 +9,30 @@
+ 
+ #include <linux/acpi.h>
+ #include <linux/ecam.h>
++#include <linux/pci.h>
+ 
+ #define	PREFIX	"MCFG: "
+ 
++/*
++ * raw_pci_read/write - raw ACPI PCI config space accessors.
++ *
++ * By defauly (__weak) these accessors are empty and should be overwritten
++ * by architectures which support operations on ACPI PCI_Config regions,
++ * see osl.c file.
++ */
++
++int __weak raw_pci_read(unsigned int domain, unsigned int bus,
++			unsigned int devfn, int reg, int len, u32 *val)
++{
++	return PCIBIOS_DEVICE_NOT_FOUND;
++}
++
++int __weak raw_pci_write(unsigned int domain, unsigned int bus,
++			 unsigned int devfn, int reg, int len, u32 val)
++{
++	return PCIBIOS_DEVICE_NOT_FOUND;
++}
++
+ int __init acpi_parse_mcfg(struct acpi_table_header *header)
+ {
+ 	struct acpi_table_mcfg *mcfg;
+-- 
+1.9.1
 
-Question on the maintenance: does this new driver file need a maintainer,
-or does it fall under arch/x86/pci/ umbrella? I'm happy to supply updates
-and/or fixes once this is merged, but I just want to understand who to
-direct patches/pull requests to if the need arises.
