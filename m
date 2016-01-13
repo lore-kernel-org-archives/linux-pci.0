@@ -1,95 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:34985 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757521AbcAKOcA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Jan 2016 09:32:00 -0500
-Subject: Re: [PATCH v3 0/2] adding PCI support to AXS10x
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-References: <cover.1450694884.git.jpinto@synopsys.com>
- <20160108203358.GI5354@localhost>
-CC: <Vineet.Gupta1@synopsys.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-snps-arc@lists.infradead.org>,
-	<CARLOS.PALMINHA@synopsys.com>, <Alexey.Brodkin@synopsys.com>,
-	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <5693BCD7.4050703@synopsys.com>
-Date: Mon, 11 Jan 2016 14:31:51 +0000
-MIME-Version: 1.0
-In-Reply-To: <20160108203358.GI5354@localhost>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V3 13/21] pci, acpi: Provide generic way to assign bus domain number.
+Date: Wed, 13 Jan 2016 14:20:59 +0100
+Message-Id: <1452691267-32240-14-git-send-email-tn@semihalf.com>
+In-Reply-To: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+As we now have valid PCI host bridge device reference we can
+introduce code that is going to find its bus domain number using
+ACPI _SEG method.
 
-On 1/8/2016 8:33 PM, Bjorn Helgaas wrote:
-> Hi Joao,
-> 
-> On Mon, Dec 21, 2015 at 03:44:14PM +0000, Joao Pinto wrote:
->> This patch set has the goal to add suppport for DesignWare PCIe RC in ARC
->> AXS10x. It includes the necessary tweaks to the ARC architecture, necessary
->> tweaks to the PCI subsystem and a new driver (pcie-snpsdev).
->> This new driver will be used extensively in the PCIe RC Prototyping Kit.
->>
->> The patches were produced against Bjorn Helgaas' repository. It was properly
->> tested in an IP Prototyping Kit.
->>
->> Joao Pinto (2):
->>   PCI support added to ARC
->>   add new platform driver for PCI RC
->>
->>  .../devicetree/bindings/pci/pcie-snpsdev.txt       |  33 +++
->>  MAINTAINERS                                        |   7 +
->>  arch/arc/Kconfig                                   |  23 ++
->>  arch/arc/include/asm/dma.h                         |   5 +
->>  arch/arc/include/asm/io.h                          |  10 +
->>  arch/arc/include/asm/pci.h                         |  43 ++++
->>  arch/arc/kernel/Makefile                           |   1 +
->>  arch/arc/kernel/pcibios.c                          |  55 ++++
->>  arch/arc/mm/ioremap.c                              |  10 +-
->>  arch/arc/plat-axs10x/Kconfig                       |   1 +
->>  drivers/pci/Makefile                               |   1 +
->>  drivers/pci/host/Kconfig                           |   5 +
->>  drivers/pci/host/Makefile                          |   1 +
->>  drivers/pci/host/pcie-designware.c                 |  11 +
->>  drivers/pci/host/pcie-designware.h                 |   1 +
->>  drivers/pci/host/pcie-snpsdev.c                    | 286 +++++++++++++++++++++
->>  16 files changed, 492 insertions(+), 1 deletion(-)
->>  create mode 100644 Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
->>  create mode 100644 arch/arc/include/asm/pci.h
->>  create mode 100644 arch/arc/kernel/pcibios.c
->>  create mode 100644 drivers/pci/host/pcie-snpsdev.c
-> 
-> This failed the kbuild test, so I'm waiting for a refresh to fix that.
+Note that _SEG method is optional, therefore _SEG absence means
+that all PCI buses belong to domain 0.
 
-Just checked the kbuild robot error and it is happening in ARC git tree when
-built for i386 arch and the problem is independent from my patches. The build
-error is the following:
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+---
+ drivers/pci/pci.c | 29 +++++++++++++++++++++++++----
+ 1 file changed, 25 insertions(+), 4 deletions(-)
 
-   drivers/pci/host/pcie-designware.c: In function 'dw_pcie_host_init':
->> drivers/pci/host/pcie-designware.c:556:7: error: implicit declaration of function
-'pci_has_flag' [-Werror=implicit-function-declaration]
-     if (!pci_has_flag(PCI_PROBE_ONLY)) {
-          ^
->> drivers/pci/host/pcie-designware.c:556:20: error: 'PCI_PROBE_ONLY' undeclared
-(first use in
-this function)
-     if (!pci_has_flag(PCI_PROBE_ONLY)) {
-                       ^
-This problem has been already identified by Stephen Rothwell as you can see in
-the following mailing list thread:
-
-http://www.gossamer-threads.com/lists/linux/kernel/2341200
-
-If there's something for me to do please let me know.
-
-> 
-> Bjorn
-> 
-
-Thanks,
-Joao
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7274006..39a985b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -25,6 +25,7 @@
+ #include <linux/device.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/pci_hotplug.h>
++#include <linux/acpi.h>
+ #include <asm-generic/pci-bridge.h>
+ #include <asm/setup.h>
+ #include <linux/aer.h>
+@@ -4796,14 +4797,34 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ 	 * API and update the use_dt_domains value to keep track of method we
+ 	 * are using to assign domain numbers (use_dt_domains = 0).
+ 	 *
++	 * IF ACPI, we expect non-DT method (use_dt_domains == -1)
++	 * and call _SEG method for corresponding host bridge device.
++	 * If _SEG method does not exist, following ACPI spec (6.5.6)
++	 * all PCI buses belong to domain 0.
++	 *
+ 	 * All other combinations imply we have a platform that is trying
+-	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
+-	 * which is a recipe for domain mishandling and it is prevented by
+-	 * invalidating the domain value (domain = -1) and printing a
+-	 * corresponding error.
++	 * to mix domain numbers obtained from DT, ACPI and
++	 * pci_get_new_domain_nr(), which is a recipe for domain mishandling and
++	 * it is prevented by invalidating the domain value (domain = -1) and
++	 * printing a corresponding error.
+ 	 */
++
+ 	if (domain >= 0 && use_dt_domains) {
+ 		use_dt_domains = 1;
++#ifdef CONFIG_ACPI
++	} else if (!acpi_disabled && use_dt_domains == -1) {
++		struct acpi_device *acpi_dev = to_acpi_device(parent);
++		unsigned long long segment = 0;
++		acpi_status status;
++
++		status = acpi_evaluate_integer(acpi_dev->handle,
++					       METHOD_NAME__SEG, NULL,
++					       &segment);
++		if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
++			dev_err(&acpi_dev->dev,  "can't evaluate _SEG\n");
++
++		domain = segment;
++#endif
+ 	} else if (domain < 0 && use_dt_domains != 1) {
+ 		use_dt_domains = 0;
+ 		domain = pci_get_new_domain_nr();
+-- 
+1.9.1
 
