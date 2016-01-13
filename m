@@ -1,76 +1,77 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	Michal Simek <michals@xilinx.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"paul.burton@imgtec.com" <paul.burton@imgtec.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"wangyijing@huawei.com" <wangyijing@huawei.com>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
+Subject: Re: [PATCH v3] PCI: hosts: mark pcie/pci (msi) irq cascade handler as
+ IRQF_NO_THREAD
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+References: <1449775100-30877-1-git-send-email-grygorii.strashko@ti.com>
+ <20160106221827.GD16231@localhost> <20160113133904.GD29964@linutronix.de>
+ <20160113175016.GB28453@localhost>
+CC: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	<tony@atomide.com>, <nsekhar@ti.com>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH V2 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge driver to  work on both  Zynq and Microblaze
-Date: Thu, 28 Jan 2016 14:49:45 +0100
-Message-ID: <1917083.LB4Ng3Y2yP@wuerfel>
-In-Reply-To: <8520D5D51A55D047800579B09414719825874148@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com> <5255218.OREPu5Af3W@wuerfel> <8520D5D51A55D047800579B09414719825874148@XAP-PVEXMBX01.xlnx.xilinx.com>
+	<linux-samsung-soc@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
+	<linux-sh@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Kukjin Kim <kgene@kernel.org>,
+	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Simon Horman <horms@verge.net.au>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?UTF-8?Q?S=c3=b6ren_Brinkmann?= <soren.brinkmann@xilinx.com>
+From: Grygorii Strashko <grygorii.strashko@ti.com>
+Message-ID: <56969BE3.6000804@ti.com>
+Date: Wed, 13 Jan 2016 20:48:03 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20160113175016.GB28453@localhost>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 28 January 2016 13:20:56 Bharat Kumar Gogada wrote:
-> > Subject: Re: [PATCH V2 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge driver
-> > to work on both Zynq and Microblaze
-> > 
-> > On Wednesday 27 January 2016 14:33:45 Bharat Kumar Gogada wrote:
-> > > > > @@ -705,7 +715,9 @@ static int xilinx_pcie_probe(struct
-> > > > > platform_device *pdev)  #endif
-> > > > >     pci_scan_child_bus(bus);
-> > > > >     pci_assign_unassigned_bus_resources(bus);
-> > > > > +#ifdef CONFIG_ARM
-> > > > >     pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-> > > > > +#endif
-> > > > >     pci_bus_add_devices(bus);
-> > > > >     platform_set_drvdata(pdev, port);
-> > > >
-> > > > Here it looks like microblaze gets it right. I'm not sure why we
-> > > > still need the
-> > > > pci_fixup_irqs() on ARM, but my feeling is that this should be fixed
-> > > > in common code.
-> > > In arm pci_fixup_irqs is called by pci_common_init_dev
-> > (arch/arm/kernel/bios32.c), since this API is removed now, I was calling it
-> > separately.
-> > 
-> > But who calls it in microblaze? If it works without the extra call there, can we
-> > make it work the same way for ARM?
-> > 
-> In microblaze I have added pcibios_add_device call (similar to call in
-> arch/arm64/kernel/pci.c ) in pci-common.c, which is being invoked by
-> kernel core itself.
+On 01/13/2016 07:50 PM, Bjorn Helgaas wrote:
+> On Wed, Jan 13, 2016 at 02:39:04PM +0100, Sebastian Andrzej Siewior wrote:
+>> * Bjorn Helgaas | 2016-01-06 16:18:27 [-0600]:
+>>
+>>> Hi Bjorn,
+>>
+>>>> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+>>>> index 8c36880..0415192 100644
+>>>> --- a/drivers/pci/host/pci-dra7xx.c
+>>>> +++ b/drivers/pci/host/pci-dra7xx.c
+>>>> @@ -301,8 +301,19 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+>>>>   		return -EINVAL;
+>>>>   	}
+>>>>
+>>>> +	/*
+>>>> +	 * Mark dra7xx_pcie_msi IRQ as IRQF_NO_THREAD
+>>>> +	 * On -RT and if kernel is booting with "threadirqs" cmd line parameter
+>>>> +	 * the dra7xx_pcie_msi_irq_handler() will be forced threaded but,
+>>>> +	 * in the same time, it's IRQ dispatcher and calls generic_handle_irq(),
+>>>> +	 * which, in turn, will be resolved to handle_simple_irq() call.
+>>>> +	 * The handle_simple_irq() expected to be called with IRQ disabled, as
+>>>> +	 * result kernle will display warning:
+>>>> +	 * "irq XXX handler YYY+0x0/0x14 enabled interrupts".
+>>>> +	 */
+>>
+>> could you _please_ remove this coment? This kind of comment (if at all)
+>> should be part of the commit message (which is the case more or less).
+>
+> IIRC, Grygorii specifically wanted to keep this comment in dra7xx, but
 
-I see. In the upstream code you seem to do it in pcibios_setup_bus_devices(),
-while arm64 and powerpc do it in pcibios_add_device().
+True.
 
-> May be we can add similar on arm and test out, but
-> we might need some cleanup in arch/arm/kernel/bios32.c
+> I do agree that this level of detail is more appropriate for a changelog.
+>
+> If Grygorii and Kishon don't object, I can update the patch to remove it.
 
-I think that would still just be a half-baked solution. This should
-really be fully automatic. We could do it in the __weak
-pcibios_add_device() for all architectures that don't override
-it when the bus was probed from DT, or we could do it in
-pci_read_irq().
+But no objections from my side. Thanks a lot.
 
-	Arnd
+-- 
+regards,
+-grygorii
