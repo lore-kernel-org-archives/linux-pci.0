@@ -1,175 +1,74 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20160120141806.GA8434@rob-hp-laptop>
-References: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
-	<1453134965-6125-3-git-send-email-gkulkarni@caviumnetworks.com>
-	<20160120141806.GA8434@rob-hp-laptop>
-Date: Tue, 26 Jan 2016 22:46:10 +0530
-Message-ID: <CAFpQJXXtrZk19XBM=BTGZMgtNy-xppoG7NZ_nDAv=Nt5P62e6g@mail.gmail.com>
-Subject: Re: [PATCH v9 2/6] Documentation, dt, arm64/arm: dt bindings for numa.
-From: Ganapatrao Kulkarni <gpkulkarni@gmail.com>
-To: Rob Herring <robh@kernel.org>, Mark Rutland <mark.rutland@arm.com>
-Cc: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-ia64@vger.kernel.org,
-	linux-metag@vger.kernel.org,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	linux-s390@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-arch@vger.kernel.org, Will Deacon <Will.Deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Leif Lindholm <leif.lindholm@linaro.org>, rfranz@cavium.com,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	Steve Capper <steve.capper@linaro.org>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Al Stone <al.stone@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, tony.luck@intel.com,
-	fenghua.yu@intel.com, james.hogan@imgtec.com,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	"tglx@linutronix.de" <tglx@linutronix.de>, mingo@redhat.com,
-	hpa@zytor.com, x86@kernel.org,
-	Jon Masters <jonathan@jonmasters.org>,
-	Robert Richter <rrichter@cavium.com>,
-	Prasun Kapoor <Prasun.Kapoor@caviumnetworks.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V3 09/21] pci, acpi, ecam: Add flag to indicate whether ECAM region was hot added or not.
+Date: Wed, 13 Jan 2016 14:20:55 +0100
+Message-Id: <1452691267-32240-10-git-send-email-tn@semihalf.com>
+In-Reply-To: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rob, Mark,
+There are two ways we can get ECAM (aka MCFG) regions using ACPI,
+from MCFG static table and from _CBA method. We cannot remove static
+regions, however regions coming from _CBA should be removed while removing
+bridge device.
 
+In the light of above we need flag to mark hot added ECAM entries
+so that user should use pci_mmconfig_inject while adding regions from
+_CBA method.
 
-On Wed, Jan 20, 2016 at 7:48 PM, Rob Herring <robh@kernel.org> wrote:
-> On Mon, Jan 18, 2016 at 10:06:01PM +0530, Ganapatrao Kulkarni wrote:
->> DT bindings for numa mapping of memory, cores and IOs.
->>
->> Reviewed-by: Robert Richter <rrichter@cavium.com>
->> Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
->> ---
->>  Documentation/devicetree/bindings/arm/numa.txt | 272 +++++++++++++++++++++++++
->>  1 file changed, 272 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/arm/numa.txt
->
-> This is looks okay to me, but some cosmetic things on the example.
-can i have your Ack please?
->
->> +==============================================================================
->> +4 - Example dts
->> +==============================================================================
->> +
->> +2 sockets system consists of 2 boards connected through ccn bus and
->> +each board having one socket/soc of 8 cpus, memory and pci bus.
->> +
->> +     memory@00c00000 {
->
-> Drop the leading 0s on unit addresses.
-i will correct these in next version.
->
->> +             device_type = "memory";
->> +             reg = <0x0 0x00c00000 0x0 0x80000000>;
->> +             /* node 0 */
->> +             numa-node-id = <0>;
->> +     };
->> +
->> +     memory@10000000000 {
->> +             device_type = "memory";
->> +             reg = <0x100 0x00000000 0x0 0x80000000>;
->> +             /* node 1 */
->> +             numa-node-id = <1>;
->> +     };
->> +
->> +     cpus {
->> +             #address-cells = <2>;
->> +             #size-cells = <0>;
->> +
->> +             cpu@000 {
->
-> Same here (leaving one of course).
->
->> +                     device_type = "cpu";
->> +                     compatible =  "arm,armv8";
->> +                     reg = <0x0 0x000>;
->> +                     enable-method = "psci";
->> +                     /* node 0 */
->> +                     numa-node-id = <0>;
->> +             };
->> +             cpu@001 {
->
-> and so on...
->
->> +                     device_type = "cpu";
->> +                     compatible =  "arm,armv8";
->> +                     reg = <0x0 0x001>;
->
-> Either all leading 0s or none.
->
->> +                     reg = <0x0 0x008>;
->> +                     enable-method = "psci";
->> +                     /* node 1 */
->
-> Kind of a pointless comment.
->
-> Wouldn't each cluster of cpus for a given numa node be in a different
-> cpu affinity? Certainly not required by the architecture, but the common
-> case at least.
->
->> +                     numa-node-id = <1>;
->> +             };
->
-> [...]
->
->> +     pcie0: pcie0@0x8480,00000000 {
->
-> Drop the 0x and the comma.
->
->> +             compatible = "arm,armv8";
->> +             device_type = "pci";
->> +             bus-range = <0 255>;
->> +             #size-cells = <2>;
->> +             #address-cells = <3>;
->> +             reg = <0x8480 0x00000000 0 0x10000000>;  /* Configuration space */
->> +             ranges = <0x03000000 0x8010 0x00000000 0x8010 0x00000000 0x70 0x00000000>;
->> +             /* node 0 */
->> +             numa-node-id = <0>;
->> +        };
->> +
->> +     pcie1: pcie1@0x9480,00000000 {
->
-> ditto
->
->> +             compatible = "arm,armv8";
->> +             device_type = "pci";
->> +             bus-range = <0 255>;
->> +             #size-cells = <2>;
->> +             #address-cells = <3>;
->> +             reg = <0x9480 0x00000000 0 0x10000000>;  /* Configuration space */
->> +             ranges = <0x03000000 0x9010 0x00000000 0x9010 0x00000000 0x70 0x00000000>;
->> +             /* node 1 */
->> +             numa-node-id = <1>;
->> +        };
->> +
->> +     distance-map {
->> +             compatible = "numa-distance-map-v1";
->> +             distance-matrix = <0 0 10>,
->> +                               <0 1 20>,
->> +                               <1 1 10>;
->> +     };
->> --
->> 1.8.1.4
-thanks
-Ganapat
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe devicetree" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+---
+ drivers/pci/ecam.c   | 2 ++
+ include/linux/ecam.h | 1 +
+ 2 files changed, 3 insertions(+)
+
+diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
+index 8a5eef7..da35b4c 100644
+--- a/drivers/pci/ecam.c
++++ b/drivers/pci/ecam.c
+@@ -131,6 +131,7 @@ struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
+ 	new->segment = segment;
+ 	new->start_bus = start;
+ 	new->end_bus = end;
++	new->hot_added = false;
+ 
+ 	res = &new->res;
+ 	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
+@@ -221,6 +222,7 @@ int pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
+ 		err = -ENOMEM;
+ 		goto out;
+ 	} else {
++		cfg->hot_added = true;
+ 		list_add_sorted(cfg);
+ 		pr_info("MMCONFIG at %pR (base %#lx)\n",
+ 			&cfg->res, (unsigned long)cfg->address);
+diff --git a/include/linux/ecam.h b/include/linux/ecam.h
+index 813acd1..e0f322e 100644
+--- a/include/linux/ecam.h
++++ b/include/linux/ecam.h
+@@ -17,6 +17,7 @@ struct pci_mmcfg_region {
+ 	u8 start_bus;
+ 	u8 end_bus;
+ 	char name[PCI_MMCFG_RESOURCE_NAME_LEN];
++	bool hot_added;
+ };
+ 
+ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
+-- 
+1.9.1
+
