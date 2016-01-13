@@ -1,49 +1,181 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <bhelgaas@google.com>, <michals@xilinx.com>,
-	<lorenzo.pieralisi@arm.com>, <yinghai@kernel.org>,
-	<wangyijing@huawei.com>, <robh@kernel.org>,
-	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
-	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
-	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
-	<galak@codeaurora.org>
-CC: <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Bharat Kumar Gogada" <bharatku@xilinx.com>
-Subject: [PATCH 0/5] PCIe Xilinx with generic driver for Microblaze and 
-Date: Tue, 12 Jan 2016 10:56:34 +0530
-Message-ID: <1452576399-1513-1-git-send-email-bharatku@xilinx.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Subject: [PATCH V3 01/21] x86, pci: Reorder logic of pci_mmconfig_insert() function
+Date: Wed, 13 Jan 2016 14:20:47 +0100
+Message-Id: <1452691267-32240-2-git-send-email-tn@semihalf.com>
+In-Reply-To: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series does modifications to pcie-xilinx.c, to support common
-driver on both Zynq and Microblaze architectures.
-Microblaze pci-common.c has been modified to support generic driver.
+This patch is the first step for MMCONFIG refactoring process.
 
-I'm aware Paul Burton <paul.burton@imgtec.com> has also sent patches
-related to pcie-xilinx.c, but I'm unable to comment on them. 
-I request Paul Burton to please add me in cc list so that I can comment on
-those patches.
+Code that uses pci_mmcfg_lock will be moved to common file and become
+accessible for all architectures. pci_mmconfig_insert() cannot be moved
+so easily since it is mixing generic mmconfig code with x86 specific logic
+inside of mutual exclusive block guarded by pci_mmcfg_lock.
 
-Bharat Kumar Gogada (5):
-  PCI: xilinx: Removing xilinx_pcie_parse_and_add_res function
-  PCI: xilinx: Removing struct hw_irq structure.
-  PCI: xilinx: Modifying AXI PCIe Host Bridge driver to work on both    
-     Zynq and Microblaze
-  PCI: xilinx: Updating Zynq PCI binding documentation with Microblaze
-    node.
-  Microblaze: Modifying microblaze PCI subsytem to support generic
-    Xilinx      AXI PCIe Host Bridge IP driver
+To get rid of that constraint, we reorder actions as follow:
+1. sanity check for mmconfig region presence, if we already have such
+region it doesn't make snese to alloc new mmconfig list entry
+2. mmconfig entry allocation, no need to lock
+3. insertion to iomem_resource has its own lock, no need to wrap it into mutex
+4. insertion to mmconfig list can be done as the final step in separate
+function (candidate for further refactoring) and needs another mmconfig
+lookup to avoid race condition.
 
- .../devicetree/bindings/pci/xilinx-pcie.txt        |  36 +++-
- arch/microblaze/Kconfig                            |   3 +
- arch/microblaze/pci/pci-common.c                   |  61 +++---
- drivers/pci/host/Kconfig                           |   2 +-
- drivers/pci/host/pcie-xilinx.c                     | 208 ++++-----------------
- 5 files changed, 97 insertions(+), 213 deletions(-)
+Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+---
+ arch/x86/pci/mmconfig-shared.c | 101 +++++++++++++++++++++++------------------
+ 1 file changed, 58 insertions(+), 43 deletions(-)
 
+diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
+index dd30b7e..c8bb9b0 100644
+--- a/arch/x86/pci/mmconfig-shared.c
++++ b/arch/x86/pci/mmconfig-shared.c
+@@ -720,6 +720,38 @@ static int __init pci_mmcfg_late_insert_resources(void)
+  */
+ late_initcall(pci_mmcfg_late_insert_resources);
+ 
++static int pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
++{
++	struct pci_mmcfg_region *cfg_conflict;
++	int err = 0;
++
++	mutex_lock(&pci_mmcfg_lock);
++	cfg_conflict = pci_mmconfig_lookup(cfg->segment, cfg->start_bus);
++	if (cfg_conflict) {
++		if (cfg_conflict->end_bus < cfg->end_bus)
++			pr_info(FW_INFO "MMCONFIG for "
++				"domain %04x [bus %02x-%02x] "
++				"only partially covers this bridge\n",
++				cfg_conflict->segment, cfg_conflict->start_bus,
++				cfg_conflict->end_bus);
++		err = -EEXIST;
++		goto out;
++	}
++
++	if (pci_mmcfg_arch_map(cfg)) {
++		pr_warn("fail to map MMCONFIG %pR.\n", &cfg->res);
++		err = -ENOMEM;
++		goto out;
++	} else {
++		list_add_sorted(cfg);
++		pr_info("MMCONFIG at %pR (base %#lx)\n",
++			&cfg->res, (unsigned long)cfg->address);
++	}
++out:
++	mutex_unlock(&pci_mmcfg_lock);
++	return err;
++}
++
+ /* Add MMCFG information for host bridges */
+ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 			phys_addr_t addr)
+@@ -734,63 +766,46 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 	if (start > end)
+ 		return -EINVAL;
+ 
+-	mutex_lock(&pci_mmcfg_lock);
++	rcu_read_lock();
+ 	cfg = pci_mmconfig_lookup(seg, start);
+-	if (cfg) {
+-		if (cfg->end_bus < end)
+-			dev_info(dev, FW_INFO
+-				 "MMCONFIG for "
+-				 "domain %04x [bus %02x-%02x] "
+-				 "only partially covers this bridge\n",
+-				  cfg->segment, cfg->start_bus, cfg->end_bus);
+-		mutex_unlock(&pci_mmcfg_lock);
++	rcu_read_unlock();
++	if (cfg)
+ 		return -EEXIST;
+-	}
+ 
+-	if (!addr) {
+-		mutex_unlock(&pci_mmcfg_lock);
++	if (!addr)
+ 		return -EINVAL;
+-	}
+ 
+-	rc = -EBUSY;
+ 	cfg = pci_mmconfig_alloc(seg, start, end, addr);
+-	if (cfg == NULL) {
++	if (!cfg) {
+ 		dev_warn(dev, "fail to add MMCONFIG (out of memory)\n");
+-		rc = -ENOMEM;
+-	} else if (!pci_mmcfg_check_reserved(dev, cfg, 0)) {
++		return -ENOMEM;
++	}
++
++	rc = -EBUSY;
++	if (!pci_mmcfg_check_reserved(dev, cfg, 0)) {
+ 		dev_warn(dev, FW_BUG "MMCONFIG %pR isn't reserved\n",
+ 			 &cfg->res);
+-	} else {
+-		/* Insert resource if it's not in boot stage */
+-		if (pci_mmcfg_running_state)
+-			tmp = insert_resource_conflict(&iomem_resource,
+-						       &cfg->res);
+-
+-		if (tmp) {
+-			dev_warn(dev,
+-				 "MMCONFIG %pR conflicts with "
+-				 "%s %pR\n",
+-				 &cfg->res, tmp->name, tmp);
+-		} else if (pci_mmcfg_arch_map(cfg)) {
+-			dev_warn(dev, "fail to map MMCONFIG %pR.\n",
+-				 &cfg->res);
+-		} else {
+-			list_add_sorted(cfg);
+-			dev_info(dev, "MMCONFIG at %pR (base %#lx)\n",
+-				 &cfg->res, (unsigned long)addr);
+-			cfg = NULL;
+-			rc = 0;
+-		}
++		goto error;
+ 	}
+ 
+-	if (cfg) {
+-		if (cfg->res.parent)
+-			release_resource(&cfg->res);
+-		kfree(cfg);
++	/* Insert resource if it's not in boot stage */
++	if (pci_mmcfg_running_state)
++		tmp = insert_resource_conflict(&iomem_resource, &cfg->res);
++
++	if (tmp) {
++		dev_warn(dev, "MMCONFIG %pR conflicts with %s %pR\n",
++			 &cfg->res, tmp->name, tmp);
++		goto error;
+ 	}
+ 
+-	mutex_unlock(&pci_mmcfg_lock);
++	rc = pci_mmconfig_inject(cfg);
++	if (!rc)
++		return 0;
+ 
++error:
++	if (cfg->res.parent)
++		release_resource(&cfg->res);
++	kfree(cfg);
+ 	return rc;
+ }
+ 
 -- 
-2.1.1
+1.9.1
