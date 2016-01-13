@@ -1,103 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:59302 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757664AbcASI5I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2016 03:57:08 -0500
-Subject: Re: [PATCH V3 20/21] pci, acpi: Match PCI config space accessors
- against platfrom specific quirks.
-To: Tomasz Nowicki <tn@semihalf.com>, Mark Salter <msalter@redhat.com>,
-	<bhelgaas@google.com>, <arnd@arndb.de>, <will.deacon@arm.com>,
-	<catalin.marinas@arm.com>, <rjw@rjwysocki.net>,
-	<hanjun.guo@linaro.org>, <Lorenzo.Pieralisi@arm.com>,
-	<okaya@codeaurora.org>, <jiang.liu@linux.intel.com>,
-	<Stefano.Stabellini@eu.citrix.com>
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
- <1452691267-32240-21-git-send-email-tn@semihalf.com>
- <1452785776.28109.22.camel@redhat.com> <569CDD8F.807@semihalf.com>
- <569D9634.3040304@huawei.com> <569DEBE9.5090909@semihalf.com>
-CC: <robert.richter@caviumnetworks.com>, <mw@semihalf.com>,
-	<Liviu.Dudau@arm.com>, <ddaney@caviumnetworks.com>,
-	<tglx@linutronix.de>, <wangyijing@huawei.com>,
-	<Suravee.Suthikulpanit@amd.com>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linaro-acpi@lists.linaro.org>, <jchandra@broadcom.com>,
-	<jcm@redhat.com>, Zhou Wang <wangzhou1@hisilicon.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>
-From: "liudongdong (C)" <liudongdong3@huawei.com>
-Message-ID: <569DF949.5080208@huawei.com>
-Date: Tue, 19 Jan 2016 16:52:25 +0800
+Received: from mail-io0-f176.google.com ([209.85.223.176]:32973 "EHLO
+	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753888AbcAMQed (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jan 2016 11:34:33 -0500
+Received: by mail-io0-f176.google.com with SMTP id q21so423767304iod.0
+        for <linux-pci@vger.kernel.org>; Wed, 13 Jan 2016 08:34:33 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <569DEBE9.5090909@semihalf.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <CAENNV6JHnwNWDi3ACRE+p3fvMzii+di-CRkH-wO4qwEa9nNN7g@mail.gmail.com>
+References: <CAENNV6JHnwNWDi3ACRE+p3fvMzii+di-CRkH-wO4qwEa9nNN7g@mail.gmail.com>
+Date: Wed, 13 Jan 2016 14:34:33 -0200
+Message-ID: <CAOMZO5AwpQdmcD2onLis-ZpktRjyAvfDKCxJa7QQGbY0QRo4LQ@mail.gmail.com>
+Subject: Re: i.MX6 PCI GPR8 Settings
+From: Fabio Estevam <festevam@gmail.com>
+To: Justin Waters <justin.waters@timesys.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Sean Cross <xobs@kosagi.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Jan 13, 2016 at 2:14 PM, Justin Waters
+<justin.waters@timesys.com> wrote:
+> Hello,
+>
+> I've been working with a custom board based on an i.MX6, and noticed
+> that the GPR8 settings for the PCIe pins are hard coded to specific
+> values. We would like to customize these values for our specific
+> hardware.
+>
+> While it's certainly possible to simply change the hard coding, it
+> strikes me that these should most likely be configurable via the
+> device tree. My initial thinking would be to create a number of
+> properties that would be defined in a dts file, e.g.
+> fsl,pci-deemph-gen1 = < 0>, but perhaps there's a better way to handle
+> this. I'm happy to put something together, but I'd like to know that
+> I'm on the right track. I'd appreciate any feedback.
 
+Looks like a good idea.
 
-在 2016/1/19 15:55, Tomasz Nowicki 写道:
-> On 19.01.2016 02:49, liudongdong (C) wrote:
->> Hi Tomasz, Mark
->>
->> 在 2016/1/18 20:41, Tomasz Nowicki 写道:
->>> On 14.01.2016 16:36, Mark Salter wrote:
->>>>> +extern struct pci_mcfg_fixup __start_acpi_mcfg_fixups[];
->>>>> >+extern struct pci_mcfg_fixup __end_acpi_mcfg_fixups[];
->>>>> >+
->>>>> >+static struct pci_ops *pci_mcfg_check_quirks(struct acpi_pci_root
->>>>> *root)
->>>>> >+{
->>>>> >+    struct pci_mcfg_fixup *f;
->>>>> >+    int bus_num = root->secondary.start;
->>>>> >+    int domain = root->segment;
->>>>> >+
->>>>> >+    /*
->>>>> >+     * First match against PCI topology <domain:bus> then use DMI or
->>>>> >+     * custom match handler.
->>>>> >+     */
->>>>> >+    for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups;
->>>>> f++) {
->>>>> >+        if ((f->domain == domain || f->domain ==
->>>>> PCI_MCFG_DOMAIN_ANY) &&
->>>>> >+            (f->bus_num == bus_num || f->bus_num ==
->>>>> PCI_MCFG_BUS_ANY) &&
->>>>> >+            (f->system ? dmi_check_system(f->system) : 0 ||
->>>>> >+             f->match ? f->match(f, root) : 0))
->>>>> >+            return f->ops;
->>>> I think this would be better as:
->>>>
->>>>             (f->system ? dmi_check_system(f->system) : 1 &&
->>>>              f->match ? f->match(f, root) : 1))
->>>>             return f->ops;
->>>>
->>>> Otherwise, one has to call dmi_check_system() from f->match() if
->>>> access to root is needed.
->>>
->>
->> Non-DMI, we need not to call dmi_check_system() from f->match(),
->> we can use _HID to decide to hook the pci_ops or not.
->
-> Sorry, but I dont understand your point. Can you elaborate?
->
-> With Mark modification, you can use the following cases to identify platform:
-> 1. DMI only
-> 2. f->match() only (_HID can be used there)
-> 3. DMI and f->match()
->
-> DMI used to be very convenient way to recognise platform, sometimes it is not enough, hence f->match() alternative.
->
-
-Yes, you are right,  I was wrong.
-In my case, I can use the second point.
-2. f->match() only (_HID can be used there)
-
-Thanks
-Dongdong
-
-> Tomasz
->
->
->
-> .
->
-
+Adding Lucas for his comments.
