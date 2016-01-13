@@ -1,46 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:24943 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751487AbcADOSR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jan 2016 09:18:17 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-CC: Wolfram Sang <wsa@the-dreams.de>,
-	Simon Horman <horms@verge.net.au>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>
-Subject: RE: [PATCH 2/4] PCI: rcar: Support runtime PM link state L1 handling
- in pcie-rcar
-Date: Mon, 4 Jan 2016 14:18:12 +0000
-Message-ID: <HK2PR0601MB1393CE3EA6A72D0F74498251F5F20@HK2PR0601MB1393.apcprd06.prod.outlook.com>
-References: <1450358557-28376-1-git-send-email-phil.edworthy@renesas.com>
-	<1450358557-28376-3-git-send-email-phil.edworthy@renesas.com>
-	<20151217133058.GA20372@katana>
-	<PS1PR06MB1180304088ECF5384C497E40F5E10@PS1PR06MB1180.apcprd06.prod.outlook.com>
-	<20151218140412.GA4595@katana>
-	<KL1PR06MB1174165C6112327548CD29DDF5E40@KL1PR06MB1174.apcprd06.prod.outlook.com>
- <CAMuHMdUKHO50n_OAhx-OcZX9FwN+dUbZCHnjP4HaPqgt3j=MzQ@mail.gmail.com>
-In-Reply-To: <CAMuHMdUKHO50n_OAhx-OcZX9FwN+dUbZCHnjP4HaPqgt3j=MzQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mx2.suse.de ([195.135.220.15]:48172 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756978AbcAMLZi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Jan 2016 06:25:38 -0500
+From: Hannes Reinecke <hare@suse.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Babu Moger <babu.moger@oracle.com>,
+	Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv2 3/4] pci: Determine actual VPD size on first access
+Date: Wed, 13 Jan 2016 12:25:34 +0100
+Message-Id: <1452684335-46107-4-git-send-email-hare@suse.de>
+In-Reply-To: <1452684335-46107-1-git-send-email-hare@suse.de>
+References: <1452684335-46107-1-git-send-email-hare@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgR2VlcnQsDQoNCk9uIDIxIERlY2VtYmVyIDIwMTUgMTM6MTcsIEdlZXJ0IFV5dHRlcmhvZXZl
-biB3cm90ZToNCj4gT24gTW9uLCBEZWMgMjEsIDIwMTUgYXQgMTE6NTIgQU0sIFBoaWwgRWR3b3J0
-aHkNCj4gPHBoaWwuZWR3b3J0aHlAcmVuZXNhcy5jb20+IHdyb3RlOg0KPiA+IE9uIDE4IERlY2Vt
-YmVyIDIwMTUgMTQ6MDQsIFdvbGZyYW0gU2FuZyB3cm90ZToNCj4gPj4gPiBTaW5jZSB0aGUgaGFy
-ZHdhcmUgZG9lc24ndCBzdXBwb3J0IGhvdCBwbHVnLCBJIGJlbGlldmUgdGhpcyBsb29wIHdpbGwN
-Cj4gPj4gPiBhbHdheXMgZXhpdCB2ZXJ5IHF1aWNrbHkuIFVubGVzcyBzb21lb25lIGhhcyB0YWtl
-biBhIGhhbW1lciB0byB0aGUgSFcNCj4gPj4gPiBvZiBjb3Vyc2UuDQo+ID4+DQo+ID4+IEkga25v
-dyB3aGF0IHlvdSBtZWFuLiBCdXQgc2luY2UgcmVhZGxfcG9sbF90aW1lb3V0KCkgbWFrZXMgaXQg
-ZWFzeSwgd2UNCj4gPj4gc2hvdWxkIGJldHRlciBiZSBzYWZlIHRoYW4gc29ycnkuDQo+ID4gSG1t
-LCBJIGNoYW5nZWQgdGhlIGNvZGUsIGJ1dCBub3cgaXQgZG9lc24ndCBjb21lIG91dCBvZiBzdXNw
-ZW5kIHVubGVzcw0KPiA+IHNsZWVwX3VzIHBhc3NlZCB0byByZWFkbF9wb2xsX3RpbWVvdXQgaXMg
-MC4gQW55IHJlYXNvbiB5b3UgY2FuIHRoaW5rIG9mPw0KPiANCj4gVGltZXJzIG9yIGludGVycnVw
-dHMgZGlzYWJsZWQ/DQo+IA0KPiBEb2VzIHRoZSBtaWdodF9zbGVlcF9pZigpIHNjcmVhbSBpZiBD
-T05GSUdfREVCVUdfQVRPTUlDX1NMRUVQPXk/DQpZZXMsIGl0IGRvZXMgaW5kZWVkIHNjcmVhbS4g
-V291bGQgeW91IHJlY29tbWVuZCB0byBzdGlsbCB1c2UgcmVhZGxfcG9sbF90aW1lb3V0DQp3aXRo
-IHNsZWVwX3VzIHNldCB0byAwPw0KDQpUaGFua3MNClBoaWwNCg==
+PCI-2.2 VPD entries have a maximum size of 32k, but might actually
+be smaller than that. To figure out the actual size one has to read
+the VPD area until the 'end marker' is reached.
+Trying to read VPD data beyond that marker results in 'interesting'
+effects, from simple read errors to crashing the card. And to make
+matters worse not every PCI card implements this properly, leaving
+us with no 'end' marker or even completely invalid data.
+This path tries to determine the size of the VPD data.
+If no valid data can be read an I/O error will be returned when
+reading the sysfs attribute.
+
+Cc: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/pci/access.c    | 76 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/pci/pci-sysfs.c |  2 +-
+ 2 files changed, 76 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 59ac36f..914e023 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -284,9 +284,65 @@ struct pci_vpd_pci22 {
+ 	struct mutex lock;
+ 	u16	flag;
+ 	bool	busy;
++	bool	valid;
+ 	u8	cap;
+ };
+ 
++/**
++ * pci_vpd_size - determine actual size of Vital Product Data
++ * @dev:	pci device struct
++ * @old_size:	current assumed size, also maximum allowed size
++ *
++ */
++static size_t
++pci_vpd_pci22_size(struct pci_dev *dev)
++{
++	size_t off = 0;
++	unsigned char header[1+2];	/* 1 byte tag, 2 bytes length */
++
++	while (off < PCI_VPD_PCI22_SIZE &&
++	       pci_read_vpd(dev, off, 1, header) == 1) {
++		unsigned char tag;
++
++		if (header[0] & PCI_VPD_LRDT) {
++			/* Large Resource Data Type Tag */
++			tag = pci_vpd_lrdt_tag(header);
++			/* Only read length from known tag items */
++			if ((tag == PCI_VPD_LTIN_ID_STRING) ||
++			    (tag == PCI_VPD_LTIN_RO_DATA) ||
++			    (tag == PCI_VPD_LTIN_RW_DATA)) {
++				if (pci_read_vpd(dev, off+1, 2,
++						 &header[1]) != 2) {
++					dev_dbg(&dev->dev,
++						"invalid large vpd tag %02x "
++						"size at offset %zu",
++						tag, off + 1);
++					break;
++				}
++				off += PCI_VPD_LRDT_TAG_SIZE +
++					pci_vpd_lrdt_size(header);
++			}
++		} else {
++			/* Short Resource Data Type Tag */
++			off += PCI_VPD_SRDT_TAG_SIZE +
++				pci_vpd_srdt_size(header);
++			tag = pci_vpd_srdt_tag(header);
++		}
++		if (tag == PCI_VPD_STIN_END)	/* End tag descriptor */
++			return off;
++		if ((tag != PCI_VPD_LTIN_ID_STRING) &&
++		    (tag != PCI_VPD_LTIN_RO_DATA) &&
++		    (tag != PCI_VPD_LTIN_RW_DATA)) {
++			dev_dbg(&dev->dev,
++				"invalid %s vpd tag %02x at offset %zu",
++				(header[0] & PCI_VPD_LRDT) ? "large" : "short",
++				tag, off);
++			break;
++		}
++	}
++	return 0;
++}
++
+ /*
+  * Wait for last operation to complete.
+  * This code has to spin since there is no other notification from the PCI
+@@ -337,9 +393,23 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
+ 	loff_t end = pos + count;
+ 	u8 *buf = arg;
+ 
+-	if (pos < 0 || pos > vpd->base.len || end > vpd->base.len)
++	if (pos < 0)
+ 		return -EINVAL;
+ 
++	if (!vpd->valid) {
++		vpd->valid = true;
++		vpd->base.len = pci_vpd_pci22_size(dev);
++	}
++	if (vpd->base.len == 0)
++		return -EIO;
++
++	if (end > vpd->base.len) {
++		if (pos > vpd->base.len)
++			return 0;
++		end = vpd->base.len;
++		count = end - pos;
++	}
++
+ 	if (mutex_lock_killable(&vpd->lock))
+ 		return -EINTR;
+ 
+@@ -389,6 +459,9 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
+ 	loff_t end = pos + count;
+ 	int ret = 0;
+ 
++	if (!vpd->valid)
++		return -EAGAIN;
++
+ 	if (pos < 0 || (pos & 3) || (count & 3) || end > vpd->base.len)
+ 		return -EINVAL;
+ 
+@@ -496,6 +569,7 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
+ 	mutex_init(&vpd->lock);
+ 	vpd->cap = cap;
+ 	vpd->busy = false;
++	vpd->valid = false;
+ 	dev->vpd = &vpd->base;
+ 	return 0;
+ }
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index de327c3..31a1f35 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1333,7 +1333,7 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
+ 			return -ENOMEM;
+ 
+ 		sysfs_bin_attr_init(attr);
+-		attr->size = dev->vpd->len;
++		attr->size = 0;
+ 		attr->attr.name = "vpd";
+ 		attr->attr.mode = S_IRUSR | S_IWUSR;
+ 		attr->read = read_vpd_attr;
+-- 
+1.8.5.6
+
