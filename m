@@ -1,79 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:56360 "EHLO comal.ext.ti.com"
+Received: from foss.arm.com ([217.140.101.70]:40041 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758213AbcAKIJX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Jan 2016 03:09:23 -0500
-Subject: Re: [PATCH 0/2] DRA72/DRA74: Add 2 lane support
-To: Tony Lindgren <tony@atomide.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-References: <1452077393-25880-1-git-send-email-kishon@ti.com>
- <20160107174126.GB14105@localhost> <20160107181320.GO12777@atomide.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<nsekhar@ti.com>, Richard Cochran <richardcochran@gmail.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <5693631E.2050807@ti.com>
-Date: Mon, 11 Jan 2016 13:39:02 +0530
+	id S1753905AbcAMLYS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Jan 2016 06:24:18 -0500
+Date: Wed, 13 Jan 2016 11:25:51 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Matthew Minter <matt@masarand.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com
+Subject: Re: [PATCH V4 28/29] of/pci: Fix comment for pci_fixup_irqs changing
+ to pci_assign_irq
+Message-ID: <20160113112551.GA13282@red-moon>
+References: <1445576642-29624-1-git-send-email-matt@masarand.com>
+ <1445576642-29624-29-git-send-email-matt@masarand.com>
 MIME-Version: 1.0
-In-Reply-To: <20160107181320.GO12777@atomide.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445576642-29624-29-git-send-email-matt@masarand.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tony,
-
-On Thursday 07 January 2016 11:43 PM, Tony Lindgren wrote:
-> * Bjorn Helgaas <helgaas@kernel.org> [160107 09:42]:
->> [+cc Richard]
->>
->> Hi Kishon,
->>
->> On Wed, Jan 06, 2016 at 04:19:51PM +0530, Kishon Vijay Abraham I wrote:
->>> Add driver modifications in pci-dra7xx to get x2 mode working in
->>> DRA72 and DRA74. Certain modifications is needed in PHY driver also
->>> which will be sent as a separate series.
->>>
->>> Certain board modifications has to be done in order to test
->>> x2 mode in dra72-evm.
->>>
->>> These patches were created on pci next.
->>>
->>> Changes from RFC:
->>> *) .b1co_mode_sel_mask is now set with the correct value.
->>> *) cleanup the patch
->>>
->>> Kishon Vijay Abraham I (2):
->>>   pci: host: pci-dra7xx: use "num-lanes" property to find phy count
->>>   pci: host: pci-dra7xx: Enable x2 mode support
->>>
->>>  Documentation/devicetree/bindings/pci/ti-pci.txt |    8 +-
->>>  drivers/pci/host/pci-dra7xx.c                    |  104 +++++++++++++++++++---
->>>  2 files changed, 97 insertions(+), 15 deletions(-)
->>
->> Apparently dra7xx in mainline doesn't work [1].  Until that's
->> resolved, I'm going to ignore dra7xx patches.
+On Fri, Oct 23, 2015 at 06:04:01AM +0100, Matthew Minter wrote:
+> Signed-off-by: Matthew Minter <matt@masarand.com>
+> ---
+>  drivers/of/of_pci_irq.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> Agreed. Guys, please do the development _and_ testing on the mainline
-> kernel. We do have the mainline kernel usable for probably a few
-> tens of omap SoC variants. If you have issues using dra7 with mainline,
-> please fix those issues ASAP.
+> diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
+> index 2306313..a742447 100644
+> --- a/drivers/of/of_pci_irq.c
+> +++ b/drivers/of/of_pci_irq.c
+> @@ -105,7 +105,7 @@ EXPORT_SYMBOL_GPL(of_irq_parse_pci);
+>   * @pin: PCI irq pin number; passed when used as map_irq callback. Unused
+>   *
+>   * @slot and @pin are unused, but included in the function so that this
+> - * function can be used directly as the map_irq callback to pci_fixup_irqs().
+> + * function can be used directly as the map_irq callback to pci_assign_irq().
 
-Here Bjorn meant pci-dra7xx is broken in mainline and not the dra7xx boot
-as such. (which is due to the absence of reset controller driver).
-All the patches to pci-dra7xx were tested on mainline kernel (having
-out-of-tree reset patches since the reset controller driver is not merged).
-> 
-> Ideally of course please also use the device you're working on to
-> send out the patches :)
+No,
 
-dra7x is the only device that use this pci driver and all the patches to
-pci-dra7xx have been tested on both dra7 and dra72 boards.
+>   */
+>  int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+				^^^^^
 
-Thanks
-Kishon
+it can't without getting compile warnings:
+
+drivers/pci/host/pci-host-generic.c: In function 'gen_pci_probe':
+drivers/pci/host/pci-host-generic.c:265:18: warning: assignment from
+incompatible pointer type [-Wincompatible-pointer-types]
+  bridge->map_irq = of_irq_parse_and_map_pci;
+
+You did not add the const qualifier in the bridge *map_irq prototype
+because the x86 implementation has to modify the dev passed to it,
+question is if the x86 implementation may be made to return the irq
+instead of modifying the dev directly, which is IMHO the expected
+behaviour (I know there is x86 legacy code to deal with, I will have a
+look to see if we can refactor that code).
+
+of_irq_parse_and_map_pci() is not supposed to change the dev passed to
+it so I think we should keep it as is.
+
+Lorenzo
