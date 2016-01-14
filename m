@@ -1,104 +1,73 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 14 Jan 2016 17:59:24 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Mark Salter <msalter@redhat.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>,
-	Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org, jchandra@broadcom.com, jcm@redhat.com
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 14 Jan 2016 14:00:39 +0000
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Graeme Gregory <gg@slimlogic.co.uk>
+Cc: Tomasz Nowicki <tn@semihalf.com>, linaro-acpi@lists.linaro.org,
+	linux-pci@vger.kernel.org, will.deacon@arm.com,
+	okaya@codeaurora.org, wangyijing@huawei.com,
+	Lorenzo.Pieralisi@arm.com, ddaney@caviumnetworks.com,
+	linux-acpi@vger.kernel.org, robert.richter@caviumnetworks.com,
+	jcm@redhat.com, arnd@arndb.de, Stefano.Stabellini@eu.citrix.com,
+	Liviu.Dudau@arm.com, msalter@redhat.com, bhelgaas@google.com,
+	tglx@linutronix.de, mw@semihalf.com,
+	linux-arm-kernel@lists.infradead.org, jchandra@broadcom.com,
+	rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
+	hanjun.guo@linaro.org, Suravee.Suthikulpanit@amd.com,
+	jiang.liu@linux.intel.com
 Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
  hostbridge init based on ACPI
-Message-ID: <20160114175924.GC20706@red-moon>
+Message-ID: <20160114140038.GE2071@e104818-lin.cambridge.arm.com>
 References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
- <1452785393.28109.16.camel@redhat.com>
- <5697C0EB.4020404@codeaurora.org>
- <20160114161238.GA20706@red-moon>
- <1452789524.28109.24.camel@redhat.com>
- <20160114170723.GB20706@red-moon>
- <1452792723.28109.31.camel@redhat.com>
+ <20160114134440.GA8520@xora-haswell.xora.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1452792723.28109.31.camel@redhat.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160114134440.GA8520@xora-haswell.xora.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 14, 2016 at 12:32:03PM -0500, Mark Salter wrote:
-> On Thu, 2016-01-14 at 17:07 +0000, Lorenzo Pieralisi wrote:
-> > On Thu, Jan 14, 2016 at 11:38:44AM -0500, Mark Salter wrote:
+On Thu, Jan 14, 2016 at 01:44:40PM +0000, Graeme Gregory wrote:
+> On Wed, Jan 13, 2016 at 02:20:46PM +0100, Tomasz Nowicki wrote:
+> > From the functionality point of view this series might be split into the
+> > following logic parts:
+> > 1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
+> >    PCI config regions and used when necessary.
+> > 2. Move non-arch specific bits to the core code.
+> > 3. Use MMCONFIG code and implement generic ACPI based PCI host controller driver.
+> > 4. Enable above driver on ARM64
 > > 
-> > [...]
+> > Patches has been built on top of 4.4 and can be found here:
+> > git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v3)
 > > 
-> > > You would lose that bet. AddressMinimum/Maximum describe the
-> > > PCI bus addresses.
+> > NOTE, this patch set depends on Matthew's patches:
+> > http://www.spinics.net/lists/linux-pci/msg45950.html
+> > https://github.com/Vality/linux/tree/pci-fixes
 > > 
-> > In the mainline DT (APM Mustang), the CPU physical address corresponding
-> > to IO space is 0xe010000000, PCI bus address is 0x0.
-> > 
-> > >                 QWordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode, EntireRange,
-> > >                     0x0000000000000000, // Granularity
-> > >                     0x0000000010000000, // Range Minimum
-> > 
-> > 
-> > >                     0x000000001000FFFF, // Range Maximum
-> > >                     0x000000E000000000, // Translation Offset
-> > 
-> > See above, I will get the APM specifications to countercheck.
+> > This has been tested on Cavium ThunderX server and QEMU.
+> > Any help in reviewing and testing is very appreciated.
 > 
-> The spec won't help other than to verify that the PCIe bridge supports
-> a 32-bit IO address space. The firmware sets the PCI bus base @
-> 0x10000000 with a CPU base address for that window @ 0xe010000000. The
-> pci-xgene.c driver sets the PCI bus IO base address to whatever DT
-> tells it too. For ACPI, we have to use whatever the firmware set it to
-> and described it in the ACPI table.
-
-It makes sense, thank you for clarifying (and sorry for jumping
-to conclusions, I am a bit worried about the ACPI IO space descriptors
-specification and usage on arm64).
-
-> When I looked at this a while back, neither ACPI nor PCI had anything
-> which disallowed 32-bit IO space on the PCI bus. The 16-bit limit is
-> an x86 limit in the instruction set.
-
-We should ask Jiang to remove that check or to make it x86 only (does
-current mainline - where the offset is added to the resource start/end -
-work on ia64 ?)
-
-Thanks,
-Lorenzo
-
+> I have tested this on my AMD Overdrive so
 > 
-> > 
-> > I agree with you we have to verify if this IO space limitation is
-> > real or it is just an x86ism, in which case we remove that check.
-> > 
-> > Lorenzo
-> > >                     0x0000000000010000, // Length
-> > >                     ,, , TypeStatic)
-> > 
-> > > 
-> > > 
-> > > > Jiang's patch:
-> > > > 
-> > > > https://lkml.org/lkml/2015/12/16/249
-> > > > 
-> > > > parses the IO descriptors and stores the AddressMinimum, AddressMaximum
-> > > > in the IO resource (with AddressTranslation as offset which must be the
-> > > > *CPU* physical address mapping IO), from the log above it seems to me in
-> > > > AddressMinimum APM specifies the *CPU* physical address generating IO
-> > > > cycles.
-> > > > 
-> > > > All in all, I was right to fear this would happen, and I already
-> > > > raised the point within the ACPI spec working group, ACPI IO
-> > > > descriptors specification is ambiguous and we must agree on how
-> > > > they have to be specified once for all.
-> > > > 
-> > > > Lorenzo
-> > > 
+> Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
 > 
+> But to actually get my r8169 network card working I also need the
+> following patch.
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 2fbf840..40e24e2 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1717,7 +1717,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>         set_dev_node(&dev->dev, pcibus_to_node(bus));
+>         dev->dev.dma_mask = &dev->dma_mask;
+>         dev->dev.dma_parms = &dev->dma_parms;
+> -       dev->dev.coherent_dma_mask = 0xffffffffull;
+> +       dev->dev.coherent_dma_mask = DMA_BIT_MASK(64);
+>         pci_dma_configure(dev);
+> 
+>         pci_set_dma_max_seg_size(dev, 65536);
+
+With OF, we get the coherent_dma_mask set by of_dma_configure(). But I
+have no idea how you do this with ACPI.
+
+-- 
+Catalin
