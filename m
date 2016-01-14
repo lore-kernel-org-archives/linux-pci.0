@@ -1,68 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH V3 11/21] pci, acpi: Move ACPI host bridge device
- companion assignment to core code.
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, rjw@rjwysocki.net
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
- <1452691267-32240-12-git-send-email-tn@semihalf.com>
- <20160119160224.GD5276@red-moon> <569F6D67.5000000@semihalf.com>
- <20160120123849.GA13437@red-moon> <569F8E38.5030101@semihalf.com>
- <20160120142243.GB13437@red-moon>
-Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, hanjun.guo@linaro.org,
-	okaya@codeaurora.org, jiang.liu@linux.intel.com,
-	Stefano.Stabellini@eu.citrix.com,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 14 Jan 2016 17:07:23 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Mark Salter <msalter@redhat.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+	Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com,
 	robert.richter@caviumnetworks.com, mw@semihalf.com,
 	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
 	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <569F9CB4.2010905@semihalf.com>
-Date: Wed, 20 Jan 2016 15:41:56 +0100
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, jchandra@broadcom.com, jcm@redhat.com
+Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+Message-ID: <20160114170723.GB20706@red-moon>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+ <1452785393.28109.16.camel@redhat.com>
+ <5697C0EB.4020404@codeaurora.org>
+ <20160114161238.GA20706@red-moon>
+ <1452789524.28109.24.camel@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20160120142243.GB13437@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1452789524.28109.24.camel@redhat.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20.01.2016 15:22, Lorenzo Pieralisi wrote:
-> On Wed, Jan 20, 2016 at 02:40:08PM +0100, Tomasz Nowicki wrote:
->
-> [...]
->
->>>>>> +	/* Root bridge device needs to be sure of parent ACPI type */
->>>>>> +	ACPI_COMPANION_SET(&device->dev, device);
->>>>>
->>>>> I do not understand why the code above is needed, can you elaborate
->>>>> please ?
->>>>>
->>>>
->>>> This makes sure that device->dev can be identified as ACPI device,
->>>> so we can use to_acpi_device_node() and assign companion safely
->>>> below.
->>>
->>> I do not follow. If you refer to the fwnode handle type, that is
->>> already set by ACPI core code (before acpi_pci_root_add() is called,
->>> in acpi_init_device_object()).
->>
->> acpi_init_device_object() sets ACPI fwnode handle type only for
->> "device", but not for "device->dev" which is what is passed as an
->> argument to pci_create_root_bus().
->>
->> Without ACPI_COMPANION_SET(&device->dev, device) here, no one can be
->> sure if we have ACPI device in pci_create_root_bus().
->
-> Ok, got it. The question is whether this should be done in ACPI
-> core instead (is there a reason why it should *not* be done ?), but I
-> now understand your point.
->
+On Thu, Jan 14, 2016 at 11:38:44AM -0500, Mark Salter wrote:
 
-I am not able to answer that question, but I see lots of changes in this 
-area made by Rafael.
+[...]
 
-Rafael, can you please shed some light on this?
+> You would lose that bet. AddressMinimum/Maximum describe the
+> PCI bus addresses.
 
-Thanks,
-Tomasz
+In the mainline DT (APM Mustang), the CPU physical address corresponding
+to IO space is 0xe010000000, PCI bus address is 0x0.
+
+>                 QWordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode, EntireRange,
+>                     0x0000000000000000, // Granularity
+>                     0x0000000010000000, // Range Minimum
+
+
+>                     0x000000001000FFFF, // Range Maximum
+>                     0x000000E000000000, // Translation Offset
+
+See above, I will get the APM specifications to countercheck.
+
+I agree with you we have to verify if this IO space limitation is
+real or it is just an x86ism, in which case we remove that check.
+
+Lorenzo
+>                     0x0000000000010000, // Length
+>                     ,, , TypeStatic)
+
+> 
+> 
+> > Jiang's patch:
+> > 
+> > https://lkml.org/lkml/2015/12/16/249
+> > 
+> > parses the IO descriptors and stores the AddressMinimum, AddressMaximum
+> > in the IO resource (with AddressTranslation as offset which must be the
+> > *CPU* physical address mapping IO), from the log above it seems to me in
+> > AddressMinimum APM specifies the *CPU* physical address generating IO
+> > cycles.
+> > 
+> > All in all, I was right to fear this would happen, and I already
+> > raised the point within the ACPI spec working group, ACPI IO
+> > descriptors specification is ambiguous and we must agree on how
+> > they have to be specified once for all.
+> > 
+> > Lorenzo
+> 
