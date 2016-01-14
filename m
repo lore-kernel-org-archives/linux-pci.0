@@ -1,94 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f49.google.com ([209.85.213.49]:33255 "EHLO
-	mail-vk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751419AbbLKEFN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Dec 2015 23:05:13 -0500
+Received: from mail-by2on0095.outbound.protection.outlook.com ([207.46.100.95]:49632
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932079AbcANSyz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 Jan 2016 13:54:55 -0500
+Message-ID: <5697EEF8.30406@caviumnetworks.com>
+Date: Thu, 14 Jan 2016 10:54:48 -0800
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-In-Reply-To: <20151209102359.GF8644@n2100.arm.linux.org.uk>
-References: <1449149725-27607-1-git-send-email-stanimir.varbanov@linaro.org>
-	<1449149725-27607-2-git-send-email-stanimir.varbanov@linaro.org>
-	<56669C50.9060700@linaro.org>
-	<CAHM4w1k_EAt+xBBYyG3B7W9Fegc4j+uRq5t_biUsxOGt+k+xUA@mail.gmail.com>
-	<20151209102359.GF8644@n2100.arm.linux.org.uk>
-Date: Fri, 11 Dec 2015 09:35:10 +0530
-Message-ID: <CAHM4w1m-NiwyCLz9tikbOcNtCmVu0Vd9FhmKKSuMi5ChzfDafA@mail.gmail.com>
-Subject: Re: [PATCH v4 1/5] PCI: designware: add memory barrier after enabling region
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Stanimir Varbanov <stanimir.varbanov@linaro.org>,
-	Arnd Bergmann <arnd@arndb.de>, linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>
-Content-Type: text/plain; charset=UTF-8
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<sean.stalley@intel.com>, <david.daney@cavium.com>
+Subject: Re: [RFC PATCH] pci: Identify Enhanced Allocation (EA) BAR Equivalent
+ resources
+References: <20160114172645.23429.9938.stgit@gimli.home>
+In-Reply-To: <20160114172645.23429.9938.stgit@gimli.home>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 9, 2015 at 3:53 PM, Russell King - ARM Linux
-<linux@arm.linux.org.uk> wrote:
+On 01/14/2016 09:26 AM, Alex Williamson wrote:
+> We've done a pretty good job of abstracting EA from drivers, but there
+> are some properties of BAR Equivalent resources that don't really jive
+> with traditional PCI BARs.  In particular, natural alignment is only
+> encouraged, not required.
+>
+> Why does this matter?  There are drivers like vfio-pci that will
+> happily gobble up the EA abstraction that's been implemented and
+> expose a device using EA to userspace as if those resources are
+> traditional BARs.  Pretty cool.  The vfio API is bus agnostic, so it
+> doesn't care about alignment.  The problem comes with PCI config space
+> emulation where we don't let userspace manipulate the BAR value, but
+> we do emulate BAR sizing.  The abstraction kind of falls apart if
+> userspace gets garbage when they try to size what appears to be a
+> traditional BAR, but is actually a BAR equivalent.
+>
+> We could simply round up the size in vfio to make it naturally
+> aligned, but then we're imposing artificial sizes to the user and we
+> have the discontinuity that BAR size emulation and vfio region size
+> reporting don't agree on the size.  I think what we want to do is
+> expose EA to the user, reporting traditional BARs with BEIs as
+> zero-sized and providing additional regions for the user to access
+> each EA region, whether it has a BEI or not.
+>
+> To facilitate that, a flag indicating whether a PCI resource is a
+> traditional BAR or BAR equivalent seems much nicer than attempting
+> to size the BAR ourselves or deducing it through the EA capability.
+>
+> Thoughts?
 
-[...]
+Is the flag exposed to userspace in any way?
 
->> > >       dw_pcie_writel_rc(pp, PCIE_ATU_ENABLE, PCIE_ATU_CR2);
->> > > +     /*
->> > > +      * ensure that the ATU enable has been happaned before accessing
->> > > +      * pci configuration/io spaces through dw_pcie_cfg_[read|write].
->> > > +      */
->> > > +     wmb();
->> > >  }
->> > >
->>
->>
->> My understnading is that since writel() of dw_pcie_writel_rc() in
->> above code and readl(), writel() of dw_pcie_cfg_[read|write]() (which
->> will follow) goes through same device (ie PCIe host here). So, it is
->> guaranteed that 1st writel() will be executed before later
->> readl()/writel(). If that is true then we do not need any explicit
->> barrier here.
->>
->> Arnd, Russel: whats your opinion here.
->               ^l
+I haven't dug into what uses the flags.
 
-Sorry :(
+One problem we have seen is with the lspci utility which cannot 
+distinguish between SROIV BARs and EA provisioned BARs.
+
+Would, or could, this be used there?
+
+David Daney
+
 
 >
-> writel() has a barrier _before_ the access but not after.
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+>   drivers/pci/pci.c      |    2 +-
+>   include/linux/ioport.h |    2 ++
+>   2 files changed, 3 insertions(+), 1 deletion(-)
 >
-> The fact is that there's nothing which guarantees that the write will hit
-> the hardware in a timely manner (forget any rules about PCI config space,
-> the PCI ordering rules apply to the PCI bus, not to the ARM buses.)
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 314db8c..174c734 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2229,7 +2229,7 @@ void pci_pm_init(struct pci_dev *dev)
 >
-> If you need this write to have hit the hardware before continuing, you
-> need to read back from the same register.
-
-OK, so better to replace wmb() with read back of control register.
-
+>   static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
+>   {
+> -	unsigned long flags = IORESOURCE_PCI_FIXED;
+> +	unsigned long flags = IORESOURCE_PCI_FIXED | IORESOURCE_PCI_EA_BEI;
 >
-> I'm just looking at this driver, trying to decipher what it's doing.  It
-> _looks_ to me like it's reprogramming one of the outbound windows (IO?)
-> so that configuration space can be accessed.  Doesn't this have the
-> effect of disabling access to the IO segment of the PCI bus from the
-> host CPU?
+>   	switch (prop) {
+>   	case PCI_EA_P_MEM:
+> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+> index 24bea08..5acc194 100644
+> --- a/include/linux/ioport.h
+> +++ b/include/linux/ioport.h
+> @@ -105,6 +105,8 @@ struct resource {
+>   /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
+>   #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move resource */
 >
-> What protections are there against other CPUs in the system issuing a
-> PCI I/O read/write while this outbound window is programmed as
-> configuration space?
+> +/* PCI Enhanced Allocation defined BAR equivalent resource */
+> +#define IORESOURCE_PCI_EA_BEI		(1<<5)
+>
+>   /* helpers to define resources */
+>   #define DEFINE_RES_NAMED(_start, _size, _name, _flags)			\
+>
 
-
-Yes, that is an issue with this driver. Most of the host controller
-has 4 or more viewpoints, and it is very easy to handle for them. But
-there are few which has only two viewpoints. Do not know how to solve
-it, so that it works for all.
-
-~Pratyush
