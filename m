@@ -1,61 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from slow1-d.mail.gandi.net ([217.70.178.86]:57667 "EHLO
-	slow1-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751969AbcADRRY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jan 2016 12:17:24 -0500
-Received: from relay5-d.mail.gandi.net (relay5-d.mail.gandi.net [217.70.183.197])
-	by slow1-d.mail.gandi.net (Postfix) with ESMTP id 6C5E247E74C
-	for <linux-pci@vger.kernel.org>; Mon,  4 Jan 2016 18:12:43 +0100 (CET)
-Received: from mfilter15-d.gandi.net (mfilter15-d.gandi.net [217.70.178.143])
-	by relay5-d.mail.gandi.net (Postfix) with ESMTP id ACEB641C09C
-	for <linux-pci@vger.kernel.org>; Mon,  4 Jan 2016 18:12:40 +0100 (CET)
-Received: from relay5-d.mail.gandi.net ([IPv6:::ffff:217.70.183.197])
-	by mfilter15-d.gandi.net (mfilter15-d.gandi.net [::ffff:10.0.15.180]) (amavisd-new, port 10024)
-	with ESMTP id mh3BmXSSyJNx for <linux-pci@vger.kernel.org>;
-	Mon,  4 Jan 2016 18:12:39 +0100 (CET)
-Received: from webmail.eu.com (webmail7-d.mgt.gandi.net [10.58.1.147])
-	(Authenticated sender: eocallaghan@alterapraxis.com)
-	by relay5-d.mail.gandi.net (Postfix) with ESMTPA id 0373D41C093
-	for <linux-pci@vger.kernel.org>; Mon,  4 Jan 2016 18:12:38 +0100 (CET)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+To: Mark Salter <msalter@redhat.com>, Tomasz Nowicki <tn@semihalf.com>,
+	bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, jiang.liu@linux.intel.com,
+	Stefano.Stabellini@eu.citrix.com
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+ <1452785393.28109.16.camel@redhat.com>
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, jchandra@broadcom.com, jcm@redhat.com
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <5697C0EB.4020404@codeaurora.org>
+Date: Thu, 14 Jan 2016 10:38:19 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 05 Jan 2016 04:12:38 +1100
-From: eocallaghan@alterapraxis.com
-To: linux-pci@vger.kernel.org
-Subject: [PATCH] drivers/pci: Avoid iterating through memory outside the
- resource window
-Message-ID: <ebd27b01905fd23bf9144800c1767e88@alterapraxis.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1452785393.28109.16.camel@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the 'image' pointer has been advanced more than 'size',
-we've already iterated through memory outside the resource window.
+On 1/14/2016 10:29 AM, Mark Salter wrote:
+On Wed, 2016-01-13 at 14:20 +0100, Tomasz Nowicki wrote:
+> IO resources on Mustang get disabled unless I do:
+> 
+> @@ -126,9 +126,10 @@ static void acpi_dev_ioresource_flags(struct
+> resource *res, u64 len, if (!acpi_dev_resource_len_valid(res->start,
+> res->end, len, true)) res->flags |= IORESOURCE_DISABLED |
+> IORESOURCE_UNSET;
+> 
+> +#if 0 if (res->end >= 0x10003) res->flags |= IORESOURCE_DISABLED |
+> IORESOURCE_UNSET; - +#endif
+> 
+> res->end is way beyond 0x10003 on Mustang:
+> 
+> pci_bus 0000:00: root bus resource [io  0x0000-0xffff window] (bus
+> address [0x10000000-0x1000ffff])
+> 
+> 
 
-We have zero control over whatever we find in the option ROM,
-if it's even an option ROM and not just an accident of random
-data just happening to look like an option ROM.
+Join the club. I complained about this and I got the message that we just do what Intel does. 
+See Arnd Bergmann's reply.
 
-Signed-off-by: Edward O'Callaghan <eocallaghan@alterapraxis.com>
----
-  drivers/pci/rom.c | 3 +++
-  1 file changed, 3 insertions(+)
+[PATCH V2 00/23] MMCONFIG refactoring and support for ARM64 PCI hostbridge init based on ACPI
 
-diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
-index eb0ad53..45987ad 100644
---- a/drivers/pci/rom.c
-+++ b/drivers/pci/rom.c
-@@ -96,6 +96,9 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void 
-__iomem *rom, size_t size)
-  		last_image = readb(pds + 21) & 0x80;
-  		length = readw(pds + 16);
-  		image += length * 512;
-+		/* Avoid iterating through memory outside the resource window */
-+		if (image > rom + size)
-+			break;
-  	} while (length && !last_image);
+1/12/2016 9:30 AM
 
-  	/* never return a size larger than the PCI resource window */
+It is an artificial limit coming from the x86 world introduced into common code.
+
+> -- To unsubscribe from this list: send the line "unsubscribe
+> linux-pci" in the body of a message to majordomo@vger.kernel.org More
+> majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
 -- 
-2.5.0
-
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
