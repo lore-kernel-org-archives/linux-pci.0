@@ -1,101 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.135]:58490 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915AbcALW2X (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Jan 2016 17:28:23 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: bhelgaas@google.com, michals@xilinx.com, lorenzo.pieralisi@arm.com,
-	paul.burton@imgtec.com, yinghai@kernel.org, wangyijing@huawei.com,
-	robh@kernel.org, russell.joyce@york.ac.uk, sorenb@xilinx.com,
-	jiang.liu@linux.intel.com, pawel.moll@arm.com,
-	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
-	galak@codeaurora.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH V2 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge driver to  work on both  Zynq and Microblaze
-Date: Tue, 12 Jan 2016 23:27:25 +0100
-Message-ID: <4734542.KZZp0TeeeM@wuerfel>
-In-Reply-To: <1452620173-4905-4-git-send-email-bharatku@xilinx.com>
-References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com> <1452620173-4905-4-git-send-email-bharatku@xilinx.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1452789524.28109.24.camel@redhat.com>
+Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+From: Mark Salter <msalter@redhat.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, jchandra@broadcom.com, jcm@redhat.com
+Date: Thu, 14 Jan 2016 11:38:44 -0500
+In-Reply-To: <20160114161238.GA20706@red-moon>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+	 <1452785393.28109.16.camel@redhat.com> <5697C0EB.4020404@codeaurora.org>
+	 <20160114161238.GA20706@red-moon>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 12 January 2016 23:06:11 Bharat Kumar Gogada wrote:
-> Modifying Xilinx AXI PCIe Host Bridge Soft IP driver to work on both
-> Zynq and Microblaze Architectures.
-> With these modifications drivers/pci/host/pcie-xilinx.c, will
-> work on both Zynq and Microblaze Architectures.
+On Thu, 2016-01-14 at 16:12 +0000, Lorenzo Pieralisi wrote:
+> On Thu, Jan 14, 2016 at 10:38:19AM -0500, Sinan Kaya wrote:
+> > On 1/14/2016 10:29 AM, Mark Salter wrote:
+> > On Wed, 2016-01-13 at 14:20 +0100, Tomasz Nowicki wrote:
+> > > IO resources on Mustang get disabled unless I do:
+> > > 
+> > > @@ -126,9 +126,10 @@ static void acpi_dev_ioresource_flags(struct
+> > > resource *res, u64 len, if (!acpi_dev_resource_len_valid(res->start,
+> > > res->end, len, true)) res->flags |= IORESOURCE_DISABLED |
+> > > IORESOURCE_UNSET;
+> > > 
+> > > +#if 0 if (res->end >= 0x10003) res->flags |= IORESOURCE_DISABLED |
+> > > IORESOURCE_UNSET; - +#endif
+> > > 
+> > > res->end is way beyond 0x10003 on Mustang:
+> > > 
+> > > pci_bus 0000:00: root bus resource [io  0x0000-0xffff window] (bus
+> > > address [0x10000000-0x1000ffff])
+> > > 
+> > > 
+> > 
+> > Join the club. I complained about this and I got the message that we
+> > just do what Intel does.  See Arnd Bergmann's reply.
+> > 
+> > [PATCH V2 00/23] MMCONFIG refactoring and support for ARM64 PCI
+> > hostbridge init based on ACPI
+> > 
+> > 1/12/2016 9:30 AM
+> > 
+> > It is an artificial limit coming from the x86 world introduced into
+> > common code.
 > 
-> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
-
-I think this patch should be split into three, as you are doing three
-unrelated things here.
-
-> ---
-> Changes:
-> Changed Total number of MSI IRQ count logic according to both architectures.
-> Updated MSI assigning functions accordingly to new count.
-> Modified irq_domain_add_linear with new MSI IRQ count.
-> Added #ifdef to pci_fixup_irqs which is ARM specific API.
-> ---
->  drivers/pci/host/pcie-xilinx.c | 22 +++++++++++++++++-----
->  1 file changed, 17 insertions(+), 5 deletions(-)
+> Guys, I think you are mixing things up here, we discussed this to
+> death, read the archives please.
 > 
-> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-> index 3e3757f..1981948 100644
-> --- a/drivers/pci/host/pcie-xilinx.c
-> +++ b/drivers/pci/host/pcie-xilinx.c
-> @@ -92,7 +92,12 @@
->  #define ECAM_DEV_NUM_SHIFT		12
->  
->  /* Number of MSI IRQs */
-> -#define XILINX_NUM_MSI_IRQS		128
-> +#define XILINX_NUM_MSI_IRQS	128
-> +#ifdef CONFIG_ARM
-> +#define TOT_NR_IRQS		XILINX_NUM_MSI_IRQS
-> +#else
-> +#define TOT_NR_IRQS		(NR_IRQS + XILINX_NUM_MSI_IRQS)
-> +#endif
+> The ACPI IO descriptors AddressMinimum/AddressMaximum describe
+> the IO space PCI bus addresses. The AddressTranslation field
+> provides the PCI IO space -> CPU physical address translation, or
+> put it differently, the secondary to primary bus translation in
+> ACPI jargon, that's how ACPI tables must be written for IO space,
+> at least that's what IA64 does (and on ia64 IO space is memory
+> mapped, as on arm64).
+> 
+> I bet APM IO descriptors specify the *CPU* physical address in
+> the AddressMinimum field, and that's where the problem lies.
+> 
 
-Something looks wrong here in the microblaze variant. What does NR_IRQS
-have to do with it?
+You would lose that bet. AddressMinimum/Maximum describe the
+PCI bus addresses.
 
-> @@ -238,15 +243,20 @@ static void xilinx_pcie_destroy_msi(unsigned int irq)
->   */
->  static int xilinx_pcie_assign_msi(struct xilinx_pcie_port *port)
->  {
-> +	int irq;
->  	int pos;
->  
->  	pos = find_first_zero_bit(msi_irq_in_use, XILINX_NUM_MSI_IRQS);
-> -	if (pos < XILINX_NUM_MSI_IRQS)
-> +	irq = pos;
-> +#ifdef CONFIG_MICROBLAZE
-> +	irq = XILINX_NUM_MSI_IRQS + pos;
-> +#endif
+                QWordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode, EntireRange,
+                    0x0000000000000000, // Granularity
+                    0x0000000010000000, // Range Minimum
+                    0x000000001000FFFF, // Range Maximum
+                    0x000000E000000000, // Translation Offset
+                    0x0000000000010000, // Length
+                    ,, , TypeStatic)
 
 
-	if (IS_ENABLED(CONFIG_MICROBLAZE))
-		irq = XILINX_NUM_MSI_IRQS + pos;
+> Jiang's patch:
+> 
+> https://lkml.org/lkml/2015/12/16/249
+> 
+> parses the IO descriptors and stores the AddressMinimum, AddressMaximum
+> in the IO resource (with AddressTranslation as offset which must be the
+> *CPU* physical address mapping IO), from the log above it seems to me in
+> AddressMinimum APM specifies the *CPU* physical address generating IO
+> cycles.
+> 
+> All in all, I was right to fear this would happen, and I already
+> raised the point within the ACPI spec working group, ACPI IO
+> descriptors specification is ambiguous and we must agree on how
+> they have to be specified once for all.
+> 
+> Lorenzo
 
-> @@ -705,7 +715,9 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
->  #endif
->  	pci_scan_child_bus(bus);
->  	pci_assign_unassigned_bus_resources(bus);
-> +#ifdef CONFIG_ARM
->  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-> +#endif
->  	pci_bus_add_devices(bus);
->  	platform_set_drvdata(pdev, port);
-
-Here it looks like microblaze gets it right. I'm not sure why we still
-need the pci_fixup_irqs() on ARM, but my feeling is that this should be
-fixed in common code.
-
-	Arnd
