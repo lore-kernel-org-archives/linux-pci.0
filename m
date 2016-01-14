@@ -1,97 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:44074 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:51408 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757456AbcASJWH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2016 04:22:07 -0500
-From: "Lawrynowicz, Jacek" <jacek.lawrynowicz@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"dwmw2@infradead.org" <dwmw2@infradead.org>,
-	"jroedel@suse.de" <jroedel@suse.de>
-Subject: RE: [PATCH] pci: Add support for multiple DMA aliases
-Date: Tue, 19 Jan 2016 09:21:59 +0000
-Message-ID: <36D38C1F74839847A52A484C31F3E51A6212318F@irsmsx105.ger.corp.intel.com>
-References: <1453118346-76897-1-git-send-email-jacek.lawrynowicz@intel.com>
- <1453133267-79756-1-git-send-email-jacek.lawrynowicz@intel.com>
- <20160119033315.GA6510@localhost>
-In-Reply-To: <20160119033315.GA6510@localhost>
-Content-Type: text/plain; charset="us-ascii"
+	id S1753641AbcANR05 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 Jan 2016 12:26:57 -0500
+Subject: [RFC PATCH] pci: Identify Enhanced Allocation (EA) BAR Equivalent
+ resources
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: sean.stalley@intel.com, david.daney@cavium.com
+Date: Thu, 14 Jan 2016 10:26:56 -0700
+Message-ID: <20160114172645.23429.9938.stgit@gimli.home>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Tuesday, January 19, 2016 4:33 AM
-> To: Lawrynowicz, Jacek <jacek.lawrynowicz@intel.com>
-> Cc: linux-pci@vger.kernel.org; bhelgaas@google.com;
-> dwmw2@infradead.org; jroedel@suse.de
-> Subject: Re: [PATCH] pci: Add support for multiple DMA aliases
-> 
-> On Mon, Jan 18, 2016 at 05:07:47PM +0100, Jacek Lawrynowicz wrote:
-> > This patch solves IOMMU support issues with PCIe non-transparent
-> > bridges that use Requester ID look-up tables (LUT), e.g. PEX8733.
-> > Before exiting the bridge, packet's RID is rewritten according to LUT
-> > programmed by a driver. Modified packets are then passed to a
-> > destination bus and processed upstream. The problem is that such
-> > packets seem to come from non-existent nodes that are hidden behind
-> > NTB and are not discoverable by a destination node, so IOMMU discards
-> > them. Adding DMA alias for a given LUT entry allows IOMMU to create a
-> > proper mapping that enables inter-node communication.
-> >
-> > The current DMA alias implementation supports only single alias, so
-> > it's not possible to connect more than two nodes when IOMMU is
-> > enabled. This implementation enables all possible aliases on a given
-> > bus (256) that are stored in a bitset. Alias devfn is directly
-> > translated to a bit number. The bitset is not allocated for devices
-> > that have no need for DMA aliases.
-> >
-> > More details can be found in following article:
-> >
-> http://www.plxtech.com/files/pdf/technical/expresslane/RTC_Enabling%20
-> > MulitHostSystemDesigns.pdf
-> >
-> > Signed-off-by: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-> > Acked-by: David Woodhouse <David.Woodhouse@intel.com>
-> > Acked-by: Joerg Roedel <jroedel@suse.de>
-> 
-> I applied this to pci/iommu and intend to merge it for v4.5.
-> 
-> I made the following change because the kcalloc() failure warning in your
-> patch looks wrong:
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c index b0d6a0a..29cfe1a 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4577,13 +4577,15 @@ int pci_set_vga_state(struct pci_dev *dev, bool
-> decode,
->   */
->  void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)  {
-> -	if (!dev->dma_alias_mask) {
-> +	if (!dev->dma_alias_mask)
->  		dev->dma_alias_mask = kcalloc(BITS_TO_LONGS(U8_MAX),
->  					      sizeof(long), GFP_KERNEL);
-> -		dev_warn(&dev->dev, "Unable to allocate DMA alias
-> mask.\n");
-> +	if (!dev->dma_alias_mask) {
-> +		dev_warn(&dev->dev, "Unable to allocate DMA alias
-> mask\n");
-> +		return;
->  	}
-> -	if (dev->dma_alias_mask)
-> -		set_bit(devfn, dev->dma_alias_mask);
-> +
-> +	set_bit(devfn, dev->dma_alias_mask);
->  }
->  EXPORT_SYMBOL_GPL(pci_add_dma_alias);
+We've done a pretty good job of abstracting EA from drivers, but there
+are some properties of BAR Equivalent resources that don't really jive
+with traditional PCI BARs.  In particular, natural alignment is only
+encouraged, not required.
 
-Yes, you're right. Thanks.
+Why does this matter?  There are drivers like vfio-pci that will
+happily gobble up the EA abstraction that's been implemented and
+expose a device using EA to userspace as if those resources are
+traditional BARs.  Pretty cool.  The vfio API is bus agnostic, so it
+doesn't care about alignment.  The problem comes with PCI config space
+emulation where we don't let userspace manipulate the BAR value, but
+we do emulate BAR sizing.  The abstraction kind of falls apart if
+userspace gets garbage when they try to size what appears to be a
+traditional BAR, but is actually a BAR equivalent.
 
---
-Jacek Lawrynowicz
-Intel Technology Poland sp. z o.o.
-KRS 101882 - ul. Slowackiego 173, 80-298 Gdansk
+We could simply round up the size in vfio to make it naturally
+aligned, but then we're imposing artificial sizes to the user and we
+have the discontinuity that BAR size emulation and vfio region size
+reporting don't agree on the size.  I think what we want to do is
+expose EA to the user, reporting traditional BARs with BEIs as
+zero-sized and providing additional regions for the user to access
+each EA region, whether it has a BEI or not.
 
+To facilitate that, a flag indicating whether a PCI resource is a
+traditional BAR or BAR equivalent seems much nicer than attempting
+to size the BAR ourselves or deducing it through the EA capability.
 
+Thoughts?
+
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ drivers/pci/pci.c      |    2 +-
+ include/linux/ioport.h |    2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 314db8c..174c734 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2229,7 +2229,7 @@ void pci_pm_init(struct pci_dev *dev)
+ 
+ static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
+ {
+-	unsigned long flags = IORESOURCE_PCI_FIXED;
++	unsigned long flags = IORESOURCE_PCI_FIXED | IORESOURCE_PCI_EA_BEI;
+ 
+ 	switch (prop) {
+ 	case PCI_EA_P_MEM:
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 24bea08..5acc194 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -105,6 +105,8 @@ struct resource {
+ /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
+ #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move resource */
+ 
++/* PCI Enhanced Allocation defined BAR equivalent resource */
++#define IORESOURCE_PCI_EA_BEI		(1<<5)
+ 
+ /* helpers to define resources */
+ #define DEFINE_RES_NAMED(_start, _size, _name, _flags)			\
 
