@@ -1,138 +1,113 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jayachandran C <jchandra@broadcom.com>
-To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Jayachandran C <jchandra@broadcom.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	<xen-devel@lists.xenproject.org>
-Subject: [PATCH v7 2/5] ACPI: PCI: Support platforms that need pci_remap_iospace
-Date: Fri, 29 Jan 2016 14:35:37 +0530
-Message-ID: <1454058340-7904-3-git-send-email-jchandra@broadcom.com>
-In-Reply-To: <1454058340-7904-1-git-send-email-jchandra@broadcom.com>
-References: <1454058340-7904-1-git-send-email-jchandra@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Message-ID: <1452797092.28109.42.camel@redhat.com>
+Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+From: Mark Salter <msalter@redhat.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+	Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, jchandra@broadcom.com, jcm@redhat.com
+Date: Thu, 14 Jan 2016 13:44:52 -0500
+In-Reply-To: <20160114175924.GC20706@red-moon>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+	 <1452785393.28109.16.camel@redhat.com> <5697C0EB.4020404@codeaurora.org>
+	 <20160114161238.GA20706@red-moon> <1452789524.28109.24.camel@redhat.com>
+	 <20160114170723.GB20706@red-moon> <1452792723.28109.31.camel@redhat.com>
+	 <20160114175924.GC20706@red-moon>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On some platforms (in this case ARM64), the PCI iospace needs to
-be mapped with pci_remap_iospace and the resources have to be
-adjusted for the iospace physical address.
+On Thu, 2016-01-14 at 17:59 +0000, Lorenzo Pieralisi wrote:
+> On Thu, Jan 14, 2016 at 12:32:03PM -0500, Mark Salter wrote:
+> > On Thu, 2016-01-14 at 17:07 +0000, Lorenzo Pieralisi wrote:
+> > > On Thu, Jan 14, 2016 at 11:38:44AM -0500, Mark Salter wrote:
+> > > 
+> > > [...]
+> > > 
+> > > > You would lose that bet. AddressMinimum/Maximum describe the
+> > > > PCI bus addresses.
+> > > 
+> > > In the mainline DT (APM Mustang), the CPU physical address corresponding
+> > > to IO space is 0xe010000000, PCI bus address is 0x0.
+> > > 
+> > > >                 QWordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode, EntireRange,
+> > > >                     0x0000000000000000, // Granularity
+> > > >                     0x0000000010000000, // Range Minimum
+> > > 
+> > > 
+> > > >                     0x000000001000FFFF, // Range Maximum
+> > > >                     0x000000E000000000, // Translation Offset
+> > > 
+> > > See above, I will get the APM specifications to countercheck.
+> > 
+> > The spec won't help other than to verify that the PCIe bridge supports
+> > a 32-bit IO address space. The firmware sets the PCI bus base @
+> > 0x10000000 with a CPU base address for that window @ 0xe010000000. The
+> > pci-xgene.c driver sets the PCI bus IO base address to whatever DT
+> > tells it too. For ACPI, we have to use whatever the firmware set it to
+> > and described it in the ACPI table.
+> 
+> It makes sense, thank you for clarifying (and sorry for jumping
+> to conclusions, I am a bit worried about the ACPI IO space descriptors
+> specification and usage on arm64).
+> 
+> > When I looked at this a while back, neither ACPI nor PCI had anything
+> > which disallowed 32-bit IO space on the PCI bus. The 16-bit limit is
+> > an x86 limit in the instruction set.
+> 
+> We should ask Jiang to remove that check or to make it x86 only (does
+> current mainline - where the offset is added to the resource start/end -
+> work on ia64 ?)
 
-This has to be done before acpi_pci_root_validate_resources()
-checks and removes resource windows. Handle this by adding
-a function acpi_pci_root_remap_iospace that is called in
-acpi_pci_probe_root_resources(), before the validate call.
+I think current mainline ia64 would work only for IO spaces which don't
+exceed 64KiB in size. Otherwise it would trip on the same check disabling
+Mustang IO space. ia64-specific code supports multiple IO spaces but they
+all are expected to start at PCI bus address zero. At least my reading of
+that code leads me to believe it is broken otherwise. In any case, those
+IO spaces on the PCI bus could exceed 64K in size and any of those which do
+would get caught by the 64K check in generic code and disabled.
 
-Also fix the address check in acpi_dev_ioresource_flags for
-similar platforms.
-
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
----
- drivers/acpi/pci_root.c | 62 +++++++++++++++++++++++++++++++++++++++++++++++--
- drivers/acpi/resource.c |  2 ++
- 2 files changed, 62 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index ae3fe4e..fcaa484 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -720,6 +720,61 @@ next:
- 	}
- }
- 
-+#ifdef PCI_IOBASE
-+/*
-+ * The IO ports are mapped to a memory range, fixup IO resources to
-+ * handle that
-+ */
-+static int acpi_pci_root_remap_iospace(struct acpi_pci_root_info *ci)
-+{
-+	struct resource_entry *entry;
-+	struct resource iores;
-+	resource_size_t iostart;
-+	int err;
-+
-+	iores.flags = IORESOURCE_IO;
-+	iores.start = (resource_size_t)-1;
-+	iores.end = 0;
-+	resource_list_for_each_entry(entry, &ci->resources) {
-+		if (entry->res->flags & IORESOURCE_IO) {
-+			iores.start = min(entry->res->start, iores.start);
-+			iores.end = max(entry->res->end, iores.end);
-+		}
-+	}
-+	if (iores.end == 0)
-+		return 0;
-+	iostart = iores.start;
-+
-+	resource_list_for_each_entry(entry, &ci->resources) {
-+		if (entry->res->flags & IORESOURCE_IO) {
-+			entry->res->start -= iostart;
-+			entry->res->end -= iostart;
-+			entry->offset -= iostart;
-+		}
-+	}
-+	iores.start -= iostart;
-+	iores.end -= iostart;
-+
-+	err = pci_remap_iospace(&iores, iostart);
-+	if (err) {
-+		pr_err("PCI: ACPI: err %d mapping IO %pR\n", err, &iores);
-+		return -ENODEV;
-+	}
-+	pr_info(PREFIX "Mapped %pR at %#lx for IO.\n",
-+			&iores, (unsigned long)iostart);
-+	return 0;
-+}
-+#else
-+/*
-+ * The IO ports are mapped to a memory range, fixup IO resources to
-+ * handle that
-+ */
-+static int acpi_pci_root_remap_iospace(struct acpi_pci_root_info *ci)
-+{
-+	return 0;
-+}
-+#endif /* PCI_IOBASE */
-+
- int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- {
- 	int ret;
-@@ -745,10 +800,13 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- 			else
- 				entry->res->name = info->name;
- 		}
--		acpi_pci_root_validate_resources(&device->dev, list,
-+		ret = acpi_pci_root_remap_iospace(info);
-+		if (ret >= 0) {
-+			acpi_pci_root_validate_resources(&device->dev, list,
- 						 IORESOURCE_MEM);
--		acpi_pci_root_validate_resources(&device->dev, list,
-+			acpi_pci_root_validate_resources(&device->dev, list,
- 						 IORESOURCE_IO);
-+		}
- 	}
- 
- 	return ret;
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index d02fd53..9672070 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -127,8 +127,10 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
- 	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
- 		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
- 
-+#ifndef PCI_IOBASE
- 	if (res->end >= 0x10003)
- 		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
-+#endif
- 
- 	if (io_decode == ACPI_DECODE_16)
- 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
--- 
-1.9.1
+> 
+> Thanks,
+> Lorenzo
+> 
+> > 
+> > > 
+> > > I agree with you we have to verify if this IO space limitation is
+> > > real or it is just an x86ism, in which case we remove that check.
+> > > 
+> > > Lorenzo
+> > > >                     0x0000000000010000, // Length
+> > > >                     ,, , TypeStatic)
+> > > 
+> > > > 
+> > > > 
+> > > > > Jiang's patch:
+> > > > > 
+> > > > > https://lkml.org/lkml/2015/12/16/249
+> > > > > 
+> > > > > parses the IO descriptors and stores the AddressMinimum, AddressMaximum
+> > > > > in the IO resource (with AddressTranslation as offset which must be the
+> > > > > *CPU* physical address mapping IO), from the log above it seems to me in
+> > > > > AddressMinimum APM specifies the *CPU* physical address generating IO
+> > > > > cycles.
+> > > > > 
+> > > > > All in all, I was right to fear this would happen, and I already
+> > > > > raised the point within the ACPI spec working group, ACPI IO
+> > > > > descriptors specification is ambiguous and we must agree on how
+> > > > > they have to be specified once for all.
+> > > > > 
+> > > > > Lorenzo
+> > > > 
+> > 
 
