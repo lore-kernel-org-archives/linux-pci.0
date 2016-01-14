@@ -1,106 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:52059 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752476AbcAENBF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jan 2016 08:01:05 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wolfram Sang <wsa@the-dreams.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-sh@vger.kernel.org>,
-	Phil Edworthy <phil.edworthy@renesas.com>
-Subject: [PATCH v2 2/4] PCI: rcar: Support runtime PM link state L1 handling in pcie-rcar
-Date: Tue,  5 Jan 2016 13:00:29 +0000
-Message-Id: <1451998831-27705-3-git-send-email-phil.edworthy@renesas.com>
-In-Reply-To: <1451998831-27705-1-git-send-email-phil.edworthy@renesas.com>
-References: <1451998831-27705-1-git-send-email-phil.edworthy@renesas.com>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:47641 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753584AbcANKvf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jan 2016 05:51:35 -0500
+From: Vineet Gupta <Vineet.Gupta1@synopsys.com>
+To: Joao Pinto <Joao.Pinto@synopsys.com>, Arnd Bergmann <arnd@arndb.de>
+CC: Joao Pinto <Joao.Pinto@synopsys.com>,
+	"helgaas@kernel.org" <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-snps-arc@lists.infradead.org"
+	<linux-snps-arc@lists.infradead.org>,
+	"CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>,
+	"Alexey.Brodkin@synopsys.com" <Alexey.Brodkin@synopsys.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>
+Subject: Re: [PATCH v5 1/2] PCI support added to ARC
+Date: Thu, 14 Jan 2016 10:51:32 +0000
+Message-ID: <C2D7FE5348E1B147BCA15975FBA23075F4E84DC7@us01wembx1.internal.synopsys.com>
+References: <cover.1452611234.git.jpinto@synopsys.com>
+ <24c9b782dfade515bbed20ce75d85200a00a2e66.1452611234.git.jpinto@synopsys.com>
+ <C2D7FE5348E1B147BCA15975FBA23075F4E84C55@us01wembx1.internal.synopsys.com>
+ <4314331.TCtUIaZPTC@wuerfel> <56977B80.2040600@synopsys.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The R-Car PCIe host controller does not handle L1 ASPM. Instead, the
-hardware needs assistance to transition to L1. When the controller
-has received a PM_ENTER_L1 DLLP, we can't access a card's config regs
-until we have got it out of L1 link state. The host controller will
-handle this as long as it has also been transitioned to L1 link state.
+On Thursday 14 January 2016 04:12 PM, Joao Pinto wrote:
+> Hi,
+>
+> On 1/14/2016 10:22 AM, Arnd Bergmann wrote:
+>> On Thursday 14 January 2016 05:26:58 Vineet Gupta wrote:
+>>>> +/*
+>>>> + * We don't have to worry about legacy ISA devices, so nothing to do here
+>>>> + */
+>>>> +resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>>>> +                             resource_size_t size, resource_size_t align)
+>>>> +{
+>>>> +     return res->start;
+>>>> +}
+>>> Doesn't this have to be EXPORT_SYMBOL_xxx as well given that the call
+>>> (setup-res.c) can build as module ?
+>> I only see a caller in drivers/pci/setup-res.c, and that is never part of a
+>> loadable module.
+>>
+>>>> +
+>>>> +void pcibios_fixup_bus(struct pci_bus *bus)
+>>>> +{
+>>>> +}
+>>>> +EXPORT_SYMBOL(pcibios_fixup_bus);
+>>> EXPORT_SYMBOL_GPL ?
+>>>
+>>> As a seperate enhancement, it would be nicer if these 2 functions are defined weak
+>>> in common code. That would make basic PCI support almost arch independent !
+>> I agree, that would be ideal. An easy way to do this would be to add
+>> them as __weak functions in drivers/pci/, similar to how we handle
+>> a lot of the other pcibios_* functions.
+>>
+>> A somewhat nicer method would be to have callback pointers in struct
+>> pci_host_bridge, and call those when they are non-NULL so we can
+>> remove the global pcibios_* functions from the API. That would also
+>> bring us a big step closer to having PCI support itself as a loadable
+>> module, and it would better reflect that those functions are really
+>> host bridge specific rather than architecture specific. When you use
+>> the same host bridge on multiple architectures, you typically have
+>> the same requirements for hacks in there, but each architectures may
+>> need to support multiple host bridges with different requirements.
+> Since we will be constantly improving the driver and the core itself, I suggest
+> that this functions be made __weak and in an update we can turn it struct
+> pointers just like Arnd suggested. Is this good for you?
 
-So, when attempting a config access, check to see if the card has gone
-into L1, and if so, do the same for the host controller.
+There is no point in making it weak, w/o a fallback version in generic code. For
+this series, I suggest you just remove the straggler EXPORT_SYMBOL and respin.
 
-This is based on a patch by Hien Dang <hien.dang.eb@rvc.renesas.com>
+And then as a follow up to make them weak (and hence eliminate the scattered
+definitions all over). And then add as callbacks as suggested by Arnd.
 
-Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
----
-v2:
- - Use readl_poll_timeout_atomic when waiting until we are in L1.
----
- drivers/pci/host/pcie-rcar.c | 31 +++++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+Thx,
+-Vineet
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index c72c0ae..31ad93a 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -15,6 +15,7 @@
- #include <linux/clk.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
-+#include <linux/iopoll.h>
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
-@@ -83,6 +84,14 @@
- #define MACSR			0x011054
- #define MACCTLR			0x011058
- #define  SCRAMBLE_DISABLE	(1 << 27)
-+#define PMSR			0x01105c
-+#define  L1FAEG			(1 << 31)
-+#define  PM_ENTER_L1RX		(1 << 23)
-+#define  PMSTATE		(7 << 16)
-+#define  PMSTATE_L1		(3 << 16)
-+#define PMCTLR			0x011060
-+#define  L1_INIT		(1 << 31)
-+
- 
- /* R-Car H1 PHY */
- #define H1_PCIEPHYADRR		0x04000c
-@@ -175,6 +184,8 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
- 		unsigned int devfn, int where, u32 *data)
- {
- 	int dev, func, reg, index;
-+	u32 val;
-+	int err;
- 
- 	dev = PCI_SLOT(devfn);
- 	func = PCI_FUNC(devfn);
-@@ -216,6 +227,26 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
- 	if (pcie->root_bus_nr < 0)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
-+	/*
-+	 * If we are not in L1 link state but have received PM_ENTER_L1 DLLP,
-+	 * transition to L1 link state. The HW will handle coming out of L1.
-+	 */
-+	val = rcar_pci_read_reg(pcie, PMSR);
-+	if ((val & PM_ENTER_L1RX) && ((val & PMSTATE) != PMSTATE_L1)) {
-+		rcar_pci_write_reg(pcie, L1_INIT, PMCTLR);
-+
-+		/* Wait until we are in L1 */
-+		err = readl_poll_timeout_atomic(pcie->base + PMSR,
-+			val, (val & L1FAEG), 5, 1000000);
-+		if (err) {
-+			dev_err(pcie->dev, "poll for L1 state timed out\n");
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+
-+		/* Clear flags indicating link has transitioned to L1 */
-+		rcar_pci_write_reg(pcie, L1FAEG | PM_ENTER_L1RX, PMSR);
-+	}
-+
- 	/* Clear errors */
- 	rcar_pci_write_reg(pcie, rcar_pci_read_reg(pcie, PCIEERRFR), PCIEERRFR);
- 
--- 
-2.5.0
+>
+>> 	Arnd
+>>
+> Thanks
+> Joao
+>
+>
+>
 
