@@ -1,97 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:48605 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754239AbcAOHHw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jan 2016 02:07:52 -0500
-Received: from localhost
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Fri, 15 Jan 2016 17:07:49 +1000
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
-	alex.williamson@redhat.com, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [RFC PATCH v3 0/5] vfio-pci: Allow to mmap sub-page MMIO BARs and MSI-X table on PPC64 platform
-Date: Fri, 15 Jan 2016 15:06:09 +0800
-Message-Id: <1452841574-2781-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Vineet Gupta <Vineet.Gupta1@synopsys.com>
+To: Joao Pinto <Joao.Pinto@synopsys.com>,
+	"Vineet.Gupta1@synopsys.com" <Vineet.Gupta1@synopsys.com>,
+	"helgaas@kernel.org" <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-snps-arc@lists.infradead.org"
+	<linux-snps-arc@lists.infradead.org>,
+	"CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>,
+	"Alexey.Brodkin@synopsys.com" <Alexey.Brodkin@synopsys.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v5 1/2] PCI support added to ARC
+Date: Thu, 14 Jan 2016 05:26:58 +0000
+Message-ID: <C2D7FE5348E1B147BCA15975FBA23075F4E84C55@us01wembx1.internal.synopsys.com>
+References: <cover.1452611234.git.jpinto@synopsys.com>
+ <24c9b782dfade515bbed20ce75d85200a00a2e66.1452611234.git.jpinto@synopsys.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current vfio-pci implementation disallows to mmap
-sub-page(size < PAGE_SIZE) MMIO BARs and MSI-X table. This is because
-sub-page BARs' mmio page may be shared with other BARs and MSI-X table
-should not be accessed directly from the guest for security reasons.
++CC Arnd
 
-But these will easily cause some performance issues for mmio accesses
-in guest when vfio passthrough sub-page BARs or BARs containing MSI-X
-table on PPC64 platform. This is because PAGE_SIZE is 64KB by default
-on PPC64 platform and the big page may easily hit the sub-page MMIO
-BARs' unmmapping and cause the unmmaping of the mmio page which
-MSI-X table locate in, which lead to mmio emulation in host.
+On Tuesday 12 January 2016 09:15 PM, Joao Pinto wrote:
+> This patch adds PCI support to ARC and updates drivers/pci Makefile
+> enabling the ARC arch to use the generic PCI setup functions.
+>
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 
-For sub-page MMIO BARs' unmmapping, this patchset adds a kernel
-parameter for PCI resource allocator to enforce the alignment of all
-MMIO BARs to be at least PAGE_SZIE and make it enabled by default on
-PPC64 platform so that sub-page BAR's mmio page will not be shared
-with other BARs. Then we can mmap sub-page MMIO BARs in vfio-pci driver
-with this parameter enabled.
+Much better now. I have one small question below and if that is not contended fine
+by me.
 
-For MSI-X table's unmmapping, we think MSI-X table is safe to access
-directly from userspace if PCI host bridge support filtering of MSIs
-which can ensure that a given pci device can only shoot the MSIs
-assigned for it. So we add a pci_host_bridge attribute to indicate
-if this PCI host bridge supports filtering of MSIs. Then we can mmap
-MSI-X table with this attribute set.
+> diff --git a/arch/arc/kernel/pcibios.c b/arch/arc/kernel/pcibios.c
+> new file mode 100644
+> index 0000000..12ea45a
+> --- /dev/null
+> +++ b/arch/arc/kernel/pcibios.c
+> @@ -0,0 +1,24 @@
+> +/*
+> + * Copyright (C) 2014-2015 Synopsys, Inc. (www.synopsys.com)
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + *
+> + */
+> +
+> +#include <linux/pci.h>
+> +
+> +/*
+> + * We don't have to worry about legacy ISA devices, so nothing to do here
+> + */
+> +resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+> +				resource_size_t size, resource_size_t align)
+> +{
+> +	return res->start;
+> +}
 
-With this patchset applied, we can get almost 100% improvement on
-performance for mmio accesses when we passthrough sub-page BARs to guest
-in our test.
+Doesn't this have to be EXPORT_SYMBOL_xxx as well given that the call
+(setup-res.c) can build as module ?
 
-The two vfio related patches(patch 2 and patch 5) are based on the
-proposed patchset[1].
+> +
+> +void pcibios_fixup_bus(struct pci_bus *bus)
+> +{
+> +}
+> +EXPORT_SYMBOL(pcibios_fixup_bus);
 
-Changelog v3: 
-- Rebase on new linux kernel mainline with the patchset[1] applied.
-- Add a function to check whether PCI BARs'mmio page is shared with
-  other BARs.
-- Add a host bridge attribute to indicate PCI host bridge support
-  filtering of MSIs.
-- Use the new host bridge attribute to check if MSI-X table can
-  be mmapped instead of CONFIG_EEH.
-- Remove Kconfig option VFIO_PCI_MMAP_MSIX
+EXPORT_SYMBOL_GPL ?
 
-Changelog v2:
-- Rebase on v4.4-rc6 with the patchset[1] applied.
-- Use kernel parameter to enforce all MMIO BARs to be page aligned
-  on PCI core code instead of doing it on PPC64 arch code.
-- Remove flags: VFIO_DEVICE_FLAGS_PCI_PAGE_ALIGNED
-                VFIO_DEVICE_FLAGS_PCI_MSIX_MMAP
-- Add a Kconfig option to support for mmapping MSI-X table.
+As a seperate enhancement, it would be nicer if these 2 functions are defined weak
+in common code. That would make basic PCI support almost arch independent !
 
-[1] https://lkml.org/lkml/2015/11/23/748
-
-Yongji Xie (5):
-  PCI: Add support for enforcing all MMIO BARs to be page aligned
-  vfio-pci: Allow to mmap sub-page MMIO BARs if the mmio page is exclusive
-  PCI: Add host bridge attribute to indicate filtering of MSIs is supported
-  powerpc/powernv/pci-ioda: Enable msi_filtered bit for any IODA host bridge
-  vfio-pci: Allow to mmap MSI-X table if host bridge supports filtering of MSIs
-
- Documentation/kernel-parameters.txt       |    5 +++++
- arch/powerpc/include/asm/pci.h            |   11 +++++++++
- arch/powerpc/platforms/powernv/pci-ioda.c |    6 +++++
- drivers/pci/host-bridge.c                 |    6 +++++
- drivers/pci/pci.c                         |   35 +++++++++++++++++++++++++++++
- drivers/pci/pci.h                         |    8 ++++++-
- drivers/vfio/pci/vfio_pci.c               |   13 ++++++++---
- include/linux/pci.h                       |    7 ++++++
- 8 files changed, 87 insertions(+), 4 deletions(-)
-
--- 
-1.7.9.5
-
+> diff --git a/arch/arc/plat-axs10x/Kconfig b/arch/arc/plat-axs10x/Kconfig
+> index d475f9d..426ac4b 100644
+> --- a/arch/arc/plat-axs10x/Kconfig
+> +++ b/arch/arc/plat-axs10x/Kconfig
+> @@ -11,6 +11,7 @@ menuconfig ARC_PLAT_AXS10X
+>  	select DW_APB_ICTL
+>  	select GPIO_DWAPB
+>  	select OF_GPIO
+> +	select MIGHT_HAVE_PCI
+>  	select GENERIC_IRQ_CHIP
+>  	select ARCH_REQUIRE_GPIOLIB
+>  	help
+> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> index be3f631..2154092 100644
+> --- a/drivers/pci/Makefile
+> +++ b/drivers/pci/Makefile
+> @@ -32,6 +32,7 @@ obj-$(CONFIG_PCI_IOV) += iov.o
+>  # Some architectures use the generic PCI setup functions
+>  #
+>  obj-$(CONFIG_ALPHA) += setup-irq.o
+> +obj-$(CONFIG_ARC) += setup-irq.o
+>  obj-$(CONFIG_ARM) += setup-irq.o
+>  obj-$(CONFIG_ARM64) += setup-irq.o
+>  obj-$(CONFIG_UNICORE32) += setup-irq.o
