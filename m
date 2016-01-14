@@ -1,74 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from sauhun.de ([89.238.76.85]:56478 "EHLO pokefinder.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754573AbcARL6Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 18 Jan 2016 06:58:16 -0500
-Date: Mon, 18 Jan 2016 12:58:02 +0100
-From: Wolfram Sang <wsa@the-dreams.de>
-To: Simon Horman <horms+renesas@verge.net.au>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-renesas-soc@vger.kernel.org, linux-sh@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Magnus Damm <magnus.damm@gmail.com>
-Subject: Re: [PATCH] MAINTAINERS: Update mailing list for Renesas SoC
- Development
-Message-ID: <20160118115802.GA1549@katana>
-References: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 14 Jan 2016 16:12:38 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Mark Salter <msalter@redhat.com>, Tomasz Nowicki <tn@semihalf.com>,
+	bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, jchandra@broadcom.com, jcm@redhat.com
+Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+Message-ID: <20160114161238.GA20706@red-moon>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+ <1452785393.28109.16.camel@redhat.com>
+ <5697C0EB.4020404@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="+QahgC5+KEYLbs62"
-In-Reply-To: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5697C0EB.4020404@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Jan 14, 2016 at 10:38:19AM -0500, Sinan Kaya wrote:
+> On 1/14/2016 10:29 AM, Mark Salter wrote:
+> On Wed, 2016-01-13 at 14:20 +0100, Tomasz Nowicki wrote:
+> > IO resources on Mustang get disabled unless I do:
+> > 
+> > @@ -126,9 +126,10 @@ static void acpi_dev_ioresource_flags(struct
+> > resource *res, u64 len, if (!acpi_dev_resource_len_valid(res->start,
+> > res->end, len, true)) res->flags |= IORESOURCE_DISABLED |
+> > IORESOURCE_UNSET;
+> > 
+> > +#if 0 if (res->end >= 0x10003) res->flags |= IORESOURCE_DISABLED |
+> > IORESOURCE_UNSET; - +#endif
+> > 
+> > res->end is way beyond 0x10003 on Mustang:
+> > 
+> > pci_bus 0000:00: root bus resource [io  0x0000-0xffff window] (bus
+> > address [0x10000000-0x1000ffff])
+> > 
+> > 
+> 
+> Join the club. I complained about this and I got the message that we
+> just do what Intel does.  See Arnd Bergmann's reply.
+> 
+> [PATCH V2 00/23] MMCONFIG refactoring and support for ARM64 PCI
+> hostbridge init based on ACPI
+> 
+> 1/12/2016 9:30 AM
+> 
+> It is an artificial limit coming from the x86 world introduced into
+> common code.
 
---+QahgC5+KEYLbs62
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Guys, I think you are mixing things up here, we discussed this to
+death, read the archives please.
 
-On Mon, Jan 18, 2016 at 10:04:33AM +0900, Simon Horman wrote:
-> Update the mailing list used for development of support for
-> Renesas SoCs and related drivers.
->=20
-> Up until now the linux-sh mailing list has been used, however,
-> Renesas SoCs are now much wider than the SH architecture and there
-> is some desire from some for the linux-sh list to refocus on
-> discussion of the work on the SH architecture.
->=20
-> Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-> Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Magnus Damm <magnus.damm@gmail.com>
-> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+The ACPI IO descriptors AddressMinimum/AddressMaximum describe
+the IO space PCI bus addresses. The AddressTranslation field
+provides the PCI IO space -> CPU physical address translation, or
+put it differently, the secondary to primary bus translation in
+ACPI jargon, that's how ACPI tables must be written for IO space,
+at least that's what IA64 does (and on ia64 IO space is memory
+mapped, as on arm64).
 
-Acked-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+I bet APM IO descriptors specify the *CPU* physical address in
+the AddressMinimum field, and that's where the problem lies.
 
+Jiang's patch:
 
---+QahgC5+KEYLbs62
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+https://lkml.org/lkml/2015/12/16/249
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+parses the IO descriptors and stores the AddressMinimum, AddressMaximum
+in the IO resource (with AddressTranslation as offset which must be the
+*CPU* physical address mapping IO), from the log above it seems to me in
+AddressMinimum APM specifies the *CPU* physical address generating IO
+cycles.
 
-iQIcBAEBAgAGBQJWnNNKAAoJEBQN5MwUoCm2V/cQALBylb7EVWpN7s02MrxVPESu
-/Z0+kHW+P0F2EuC6XcKSFRTlzIKtcXqoiatude5BS0v6+CwS6Y64GYspVX7kfQJq
-tgkSr/Xt6X+UFpeH47IeQqmGcgrhwGcTeODFD5T1xfMURScrZRhEQzOXIk6ZOCKD
-FkvJuTWP9y1wnTUD5/5FbEJe3ZyBC63G6i0nrjJ9fAtc3GnBDyFAce7zYq4YLvz6
-QMWoFg1Iv/maHxdczae0+F4m7VzOrq5qV4YIQEb+bHjTeiTpyTyPnT7fk2J5hllK
-pa7amxqXGcWJ4CaAFyUe94dxoc7j4duPlHolqiB+mE8MeGQb+Qhz6L7LYOSVWUMx
-YiYExLlRs8trlgBTr+ML7ieIOl9jiO/SsmGHYfAIDaQrnI+RIM+Utj77br3ifQYx
-jRSfT1kN0JCcxGogNflV5isP2y/HgZ+FS7eUJX4YZ7HDC0EwQjDXFMo6zD4xxXta
-IhUL2ikSnmfXRw4N/HOfkDfLwggrV4IAj5NYmfzTSNXZak9T4i0CtVfcGLCWrAnv
-BTRTiHymNtrZlOKahmSujWlJ/a6ka4D66Irewv5h1F6yZVt0v7izEQKoJm+USyMf
-1XqQmD7wVtBDPknitqj/mtZXwjl2N88KXgQAh2kf/ytCQyjNIwTgA1z2k1xWFs1X
-x2zI/awYwnTfplw0Sacb
-=nFuS
------END PGP SIGNATURE-----
+All in all, I was right to fear this would happen, and I already
+raised the point within the ACPI spec working group, ACPI IO
+descriptors specification is ambiguous and we must agree on how
+they have to be specified once for all.
 
---+QahgC5+KEYLbs62--
+Lorenzo
