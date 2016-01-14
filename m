@@ -1,84 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: <kishon@ti.com>
-CC: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<rogerq@ti.com>, <nsekhar@ti.com>
-Subject: [PATCH 1/2] phy: ti-pipe3: get tx and rx MEM resource
-Date: Wed, 6 Jan 2016 16:29:07 +0530
-Message-ID: <1452077948-26232-2-git-send-email-kishon@ti.com>
-In-Reply-To: <1452077948-26232-1-git-send-email-kishon@ti.com>
-References: <1452077948-26232-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:54441 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753533AbcANKmS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jan 2016 05:42:18 -0500
+Subject: Re: [PATCH v5 1/2] PCI support added to ARC
+To: Arnd Bergmann <arnd@arndb.de>,
+	Vineet Gupta <Vineet.Gupta1@synopsys.com>
+References: <cover.1452611234.git.jpinto@synopsys.com>
+ <24c9b782dfade515bbed20ce75d85200a00a2e66.1452611234.git.jpinto@synopsys.com>
+ <C2D7FE5348E1B147BCA15975FBA23075F4E84C55@us01wembx1.internal.synopsys.com>
+ <4314331.TCtUIaZPTC@wuerfel>
+CC: Joao Pinto <Joao.Pinto@synopsys.com>,
+	"helgaas@kernel.org" <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-snps-arc@lists.infradead.org"
+	<linux-snps-arc@lists.infradead.org>,
+	"CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>,
+	"Alexey.Brodkin@synopsys.com" <Alexey.Brodkin@synopsys.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <56977B80.2040600@synopsys.com>
+Date: Thu, 14 Jan 2016 10:42:08 +0000
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <4314331.TCtUIaZPTC@wuerfel>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-get tx and rx MEM resource since this has to be used to configure
-for DRA72x to work in X2 mode.
+Hi,
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Sekhar Nori <nsekhar@ti.com>
----
- drivers/phy/phy-ti-pipe3.c |   27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+On 1/14/2016 10:22 AM, Arnd Bergmann wrote:
+> On Thursday 14 January 2016 05:26:58 Vineet Gupta wrote:
+>>> +/*
+>>> + * We don't have to worry about legacy ISA devices, so nothing to do here
+>>> + */
+>>> +resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>>> +                             resource_size_t size, resource_size_t align)
+>>> +{
+>>> +     return res->start;
+>>> +}
+>>
+>> Doesn't this have to be EXPORT_SYMBOL_xxx as well given that the call
+>> (setup-res.c) can build as module ?
+> 
+> I only see a caller in drivers/pci/setup-res.c, and that is never part of a
+> loadable module.
+> 
+>>> +
+>>> +void pcibios_fixup_bus(struct pci_bus *bus)
+>>> +{
+>>> +}
+>>> +EXPORT_SYMBOL(pcibios_fixup_bus);
+>>
+>> EXPORT_SYMBOL_GPL ?
+>>
+>> As a seperate enhancement, it would be nicer if these 2 functions are defined weak
+>> in common code. That would make basic PCI support almost arch independent !
+> 
+> I agree, that would be ideal. An easy way to do this would be to add
+> them as __weak functions in drivers/pci/, similar to how we handle
+> a lot of the other pcibios_* functions.
+> 
+> A somewhat nicer method would be to have callback pointers in struct
+> pci_host_bridge, and call those when they are non-NULL so we can
+> remove the global pcibios_* functions from the API. That would also
+> bring us a big step closer to having PCI support itself as a loadable
+> module, and it would better reflect that those functions are really
+> host bridge specific rather than architecture specific. When you use
+> the same host bridge on multiple architectures, you typically have
+> the same requirements for hacks in there, but each architectures may
+> need to support multiple host bridges with different requirements.
 
-diff --git a/drivers/phy/phy-ti-pipe3.c b/drivers/phy/phy-ti-pipe3.c
-index 0a477d2..7d83d2b 100644
---- a/drivers/phy/phy-ti-pipe3.c
-+++ b/drivers/phy/phy-ti-pipe3.c
-@@ -91,6 +91,8 @@ struct pipe3_dpll_map {
- 
- struct ti_pipe3 {
- 	void __iomem		*pll_ctrl_base;
-+	void __iomem		*phy_rx;
-+	void __iomem		*phy_tx;
- 	struct device		*dev;
- 	struct device		*control_dev;
- 	struct clk		*wkupclk;
-@@ -536,6 +538,27 @@ static int ti_pipe3_get_pll_base(struct ti_pipe3 *phy)
- 	return 0;
- }
- 
-+static int ti_pipe3_get_rx_tx_base(struct ti_pipe3 *phy)
-+{
-+	struct resource *res;
-+	struct device *dev = phy->dev;
-+	struct platform_device *pdev = to_platform_device(dev);
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
-+					   "phy_rx");
-+	phy->phy_rx = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(phy->phy_rx))
-+		return PTR_ERR(phy->phy_rx);
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
-+					   "phy_tx");
-+	phy->phy_tx = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(phy->phy_tx))
-+		return PTR_ERR(phy->phy_tx);
-+
-+	return 0;
-+}
-+
- static int ti_pipe3_probe(struct platform_device *pdev)
- {
- 	struct ti_pipe3 *phy;
-@@ -555,6 +578,10 @@ static int ti_pipe3_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
-+	ret = ti_pipe3_get_rx_tx_base(phy);
-+	if (ret)
-+		return ret;
-+
- 	ret = ti_pipe3_get_sysctrl(phy);
- 	if (ret)
- 		return ret;
--- 
-1.7.9.5
+Since we will be constantly improving the driver and the core itself, I suggest
+that this functions be made __weak and in an update we can turn it struct
+pointers just like Arnd suggested. Is this good for you?
+
+> 
+> 	Arnd
+> 
+
+Thanks
+Joao
+
 
