@@ -1,134 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47154 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932437AbcA0Ww4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Jan 2016 17:52:56 -0500
-Date: Wed, 27 Jan 2016 16:52:50 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ray Jui <rjui@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rafal Milecki <zajec5@gmail.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-kernel@vger.kernel.org,
-	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: iproc: Fix BCMA PCIe bus scanning regression
-Message-ID: <20160127225250.GA6379@localhost>
-References: <1453851100-15196-1-git-send-email-rjui@broadcom.com>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:13539 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751159AbcANHIc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jan 2016 02:08:32 -0500
+From: Jayachandran C <jchandra@broadcom.com>
+To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	<linux-arm-kernel@lists.infradead.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Jayachandran C <jchandra@broadcom.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	<xen-devel@lists.xenproject.org>
+Subject: [PATCH v6 3/5] ACPI: PCI: Support platforms that need pci_remap_iospace
+Date: Thu, 14 Jan 2016 13:02:39 +0530
+Message-ID: <1452756761-29584-4-git-send-email-jchandra@broadcom.com>
+In-Reply-To: <1452756761-29584-1-git-send-email-jchandra@broadcom.com>
+References: <1452756761-29584-1-git-send-email-jchandra@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1453851100-15196-1-git-send-email-rjui@broadcom.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 26, 2016 at 03:31:40PM -0800, Ray Jui wrote:
-> Commit 943ebae781f5 ("PCI: iproc: Add PAXC interface support") causes
-> regression on EP device detection on BCMA based platforms. This patch
-> fixes the issue by allowing multiple devices to be configured on the
-> same bus, for all PAXB based child buses. In addition, this patch also
-> adds check to prevent non-zero function from being used on bus 0 (root
-> bus).
-> 
-> Function 'iproc_pcie_device_is_valid' is now removed with checks
-> folding into 'iproc_pcie_map_cfg_bus' to make them more clear and less
-> error-prone
-> 
-> Reported-by: Rafal Milecki <zajec5@gmail.com>
-> Fixes: 943ebae781f5 ("PCI: iproc: Add PAXC interface support")
-> Signed-off-by: Ray Jui <rjui@broadcom.com>
+On some platforms (in this case ARM64), the PCI iospace needs to
+be mapped with pci_remap_iospace and the resources have to be
+adjusted for the iospace physical address.
 
-Since this fixes a regression, I applied this to for-linus for v4.5,
-thanks, Ray.
+This has to be done before acpi_pci_root_validate_resources()
+checks and removes resource windows. Handle this by adding
+a function acpi_pci_root_remap_iospace that is called in
+acpi_pci_probe_root_resources(), before the validate call.
 
-I still have one clarification question below.
+Also fix the address check in acpi_dev_ioresource_flags for
+similar platforms.
 
-> ---
->  drivers/pci/host/pcie-iproc.c | 28 +++++++++++-----------------
->  1 file changed, 11 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-> index 5816bce..67396ab 100644
-> --- a/drivers/pci/host/pcie-iproc.c
-> +++ b/drivers/pci/host/pcie-iproc.c
-> @@ -170,20 +170,6 @@ static inline void iproc_pcie_ob_write(struct iproc_pcie *pcie,
->  	writel(val, pcie->base + offset + (window * 8));
->  }
->  
-> -static inline bool iproc_pcie_device_is_valid(struct iproc_pcie *pcie,
-> -					      unsigned int slot,
-> -					      unsigned int fn)
-> -{
-> -	if (slot > 0)
-> -		return false;
-> -
-> -	/* PAXC can only support limited number of functions */
-> -	if (pcie->type == IPROC_PCIE_PAXC && fn >= MAX_NUM_PAXC_PF)
-> -		return false;
-> -
-> -	return true;
-> -}
-> -
->  /**
->   * Note access to the configuration registers are protected at the higher layer
->   * by 'pci_lock' in drivers/pci/access.c
-> @@ -199,11 +185,11 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
->  	u32 val;
->  	u16 offset;
->  
-> -	if (!iproc_pcie_device_is_valid(pcie, slot, fn))
-> -		return NULL;
-> -
->  	/* root complex access */
->  	if (busno == 0) {
-> +		if (slot > 0 || fn > 0)
-> +			return NULL;
-> +
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+---
+ drivers/acpi/pci_root.c | 62 +++++++++++++++++++++++++++++++++++++++++++++++--
+ drivers/acpi/resource.c |  2 ++
+ 2 files changed, 62 insertions(+), 2 deletions(-)
 
-This looks good and makes sense since config access to root bus is
-fundamentally different from other access.
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index ae3fe4e..fcaa484 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -720,6 +720,61 @@ next:
+ 	}
+ }
+ 
++#ifdef PCI_IOBASE
++/*
++ * The IO ports are mapped to a memory range, fixup IO resources to
++ * handle that
++ */
++static int acpi_pci_root_remap_iospace(struct acpi_pci_root_info *ci)
++{
++	struct resource_entry *entry;
++	struct resource iores;
++	resource_size_t iostart;
++	int err;
++
++	iores.flags = IORESOURCE_IO;
++	iores.start = (resource_size_t)-1;
++	iores.end = 0;
++	resource_list_for_each_entry(entry, &ci->resources) {
++		if (entry->res->flags & IORESOURCE_IO) {
++			iores.start = min(entry->res->start, iores.start);
++			iores.end = max(entry->res->end, iores.end);
++		}
++	}
++	if (iores.end == 0)
++		return 0;
++	iostart = iores.start;
++
++	resource_list_for_each_entry(entry, &ci->resources) {
++		if (entry->res->flags & IORESOURCE_IO) {
++			entry->res->start -= iostart;
++			entry->res->end -= iostart;
++			entry->offset -= iostart;
++		}
++	}
++	iores.start -= iostart;
++	iores.end -= iostart;
++
++	err = pci_remap_iospace(&iores, iostart);
++	if (err) {
++		pr_err("PCI: ACPI: err %d mapping IO %pR\n", err, &iores);
++		return -ENODEV;
++	}
++	pr_info(PREFIX "Mapped %pR at %#lx for IO.\n",
++			&iores, (unsigned long)iostart);
++	return 0;
++}
++#else
++/*
++ * The IO ports are mapped to a memory range, fixup IO resources to
++ * handle that
++ */
++static int acpi_pci_root_remap_iospace(struct acpi_pci_root_info *ci)
++{
++	return 0;
++}
++#endif /* PCI_IOBASE */
++
+ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+ {
+ 	int ret;
+@@ -745,10 +800,13 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+ 			else
+ 				entry->res->name = info->name;
+ 		}
+-		acpi_pci_root_validate_resources(&device->dev, list,
++		ret = acpi_pci_root_remap_iospace(info);
++		if (ret >= 0) {
++			acpi_pci_root_validate_resources(&device->dev, list,
+ 						 IORESOURCE_MEM);
+-		acpi_pci_root_validate_resources(&device->dev, list,
++			acpi_pci_root_validate_resources(&device->dev, list,
+ 						 IORESOURCE_IO);
++		}
+ 	}
+ 
+ 	return ret;
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index cdc5c25..530cad4 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -126,8 +126,10 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+ 	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
+ 		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+ 
++#ifndef PCI_IOBASE
+ 	if (res->end >= 0x10003)
+ 		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
++#endif
+ 
+ 	if (io_decode == ACPI_DECODE_16)
+ 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
+-- 
+1.9.1
 
->  		iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_IND_ADDR,
->  				     where & CFG_IND_ADDR_MASK);
->  		offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_IND_DATA);
-> @@ -213,6 +199,14 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
->  			return (pcie->base + offset);
->  	}
->  
-> +	/*
-> +	 * PAXC is connected to internally emulated EP within the SoC. It
-> +	 * allows only one device and supports limited number of functions
-> +	 */
-> +	if (pcie->type == IPROC_PCIE_PAXC)
-> +		if (slot > 0 || fn >= MAX_NUM_PAXC_PF)
-> +			return NULL;
-
-Is this really necessary?  I assume 00:00.0 is a Root Port leading to
-bus 01, and 01:00.0, 01:00.1, 01:00.2, and 01:00.3 are the functions
-of the internal EP.  So this test prevents us from issuing a config
-request to devices like 01:00.4.
-
-I would assume the Root Port is standard and would handle a config
-request for 01:00.4 correctly, i.e., convert the type 1 request to
-type 0 (since it targets the Root Port's secondary bus), and forward
-it to the link.
-
-The endpoint should be responsible for handling it as an Unsupported
-Request, since it addresses an unimplemented function.  But maybe this
-embedded EP doesn't do that correctly?
-
-Also, assuming we *do* need this PAXC testing, do you want to test for
-"busno == 1" as well?  The PCI core shouldn't try to access bus 2
-unless there's a bridge from bus 1 to bus 2, but a user could use
-things like setpci to issue random config requests.
-
-> +
->  	/* EP device access */
->  	val = (busno << CFG_ADDR_BUS_NUM_SHIFT) |
->  		(slot << CFG_ADDR_DEV_NUM_SHIFT) |
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
