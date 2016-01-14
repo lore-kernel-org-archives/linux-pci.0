@@ -1,107 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 18 Jan 2016 14:04:05 +0000
-From: Graeme Gregory <gg@slimlogic.co.uk>
-To: Mark Salter <msalter@redhat.com>
-Cc: linaro-acpi@lists.linaro.org, catalin.marinas@arm.com,
-	will.deacon@arm.com, okaya@codeaurora.org, wangyijing@huawei.com,
-	Lorenzo.Pieralisi@arm.com, Tomasz Nowicki <tn@semihalf.com>,
-	ddaney@caviumnetworks.com, linux-acpi@vger.kernel.org,
-	robert.richter@caviumnetworks.com, linux-pci@vger.kernel.org,
-	jcm@redhat.com, arnd@arndb.de, Stefano.Stabellini@eu.citrix.com,
-	Liviu.Dudau@arm.com, bhelgaas@google.com, tglx@linutronix.de,
-	mw@semihalf.com, linux-arm-kernel@lists.infradead.org,
-	jchandra@broadcom.com, rjw@rjwysocki.net,
-	linux-kernel@vger.kernel.org, hanjun.guo@linaro.org,
-	Suravee.Suthikulpanit@amd.com, jiang.liu@linux.intel.com
-Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
- hostbridge init based on ACPI
-Message-ID: <20160118140405.GC11384@xora-haswell.xora.org.uk>
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
- <20160114134440.GA8520@xora-haswell.xora.org.uk>
- <1452780100.28109.3.camel@redhat.com>
- <20160114141501.GC8520@xora-haswell.xora.org.uk>
- <1452781481.28109.8.camel@redhat.com>
- <20160115121231.GD8520@xora-haswell.xora.org.uk>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from sauhun.de ([89.238.76.85]:48272 "EHLO pokefinder.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751799AbcANH27 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 Jan 2016 02:28:59 -0500
+Date: Thu, 14 Jan 2016 08:28:46 +0100
+From: Wolfram Sang <wsa@the-dreams.de>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Michael Ellerman <mpe@ellerman.id.au>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>, aik@ozlabs.ru,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Pantelis Antoniou <panto@antoniou-consulting.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [v7,49/50] drivers/of: Export OF changeset functions
+Message-ID: <20160114072846.GA1528@katana>
+References: <1446642770-4681-50-git-send-email-gwshan@linux.vnet.ibm.com>
+ <20160113135426.GA29030@katana>
+ <1452719886.8203.1.camel@ellerman.id.au>
+ <20160113212008.GC3881@katana>
+ <CAL_JsqLaCMYMGLu_2aoXopgMHmT09xU1CSO4NZokMVUOZTPSJg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20160115121231.GD8520@xora-haswell.xora.org.uk>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="6c2NcOVqGQ03X4Wi"
+In-Reply-To: <CAL_JsqLaCMYMGLu_2aoXopgMHmT09xU1CSO4NZokMVUOZTPSJg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 15, 2016 at 12:12:31PM +0000, Graeme Gregory wrote:
-> On Thu, Jan 14, 2016 at 09:24:41AM -0500, Mark Salter wrote:
-> > On Thu, 2016-01-14 at 14:15 +0000, Graeme Gregory wrote:
-> > > On Thu, Jan 14, 2016 at 09:01:40AM -0500, Mark Salter wrote:
-> > > > On Thu, 2016-01-14 at 13:44 +0000, Graeme Gregory wrote:
-> > > > > On Wed, Jan 13, 2016 at 02:20:46PM +0100, Tomasz Nowicki wrote:
-> > > > > > From the functionality point of view this series might be split into the
-> > > > > > following logic parts:
-> > > > > > 1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
-> > > > > >    PCI config regions and used when necessary.
-> > > > > > 2. Move non-arch specific bits to the core code.
-> > > > > > 3. Use MMCONFIG code and implement generic ACPI based PCI host controller driver.
-> > > > > > 4. Enable above driver on ARM64
-> > > > > > 
-> > > > > > Patches has been built on top of 4.4 and can be found here:
-> > > > > > git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v3)
-> > > > > > 
-> > > > > > NOTE, this patch set depends on Matthew's patches:
-> > > > > > http://www.spinics.net/lists/linux-pci/msg45950.html
-> > > > > > https://github.com/Vality/linux/tree/pci-fixes
-> > > > > > 
-> > > > > > This has been tested on Cavium ThunderX server and QEMU.
-> > > > > > Any help in reviewing and testing is very appreciated.
-> > > > > 
-> > > > > I have tested this on my AMD Overdrive so
-> > > > > 
-> > > > > Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-> > > > > 
-> > > > > But to actually get my r8169 network card working I also need the
-> > > > > following patch.
-> > > > > 
-> > > > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > > > > index 2fbf840..40e24e2 100644
-> > > > > --- a/drivers/pci/probe.c
-> > > > > +++ b/drivers/pci/probe.c
-> > > > > @@ -1717,7 +1717,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
-> > > > >         set_dev_node(&dev->dev, pcibus_to_node(bus));
-> > > > >         dev->dev.dma_mask = &dev->dma_mask;
-> > > > >         dev->dev.dma_parms = &dev->dma_parms;
-> > > > > -       dev->dev.coherent_dma_mask = 0xffffffffull;
-> > > > > +       dev->dev.coherent_dma_mask = DMA_BIT_MASK(64);
-> > > > >         pci_dma_configure(dev);
-> > > > > 
-> > > > >         pci_set_dma_max_seg_size(dev, 65536);
-> > > > > 
-> > > > > I suspect we need to set coherent_dma_mask somewhere in the platform but I do
-> > > > > not know where this should happen. Hopefully an ARM64 expert can help.
-> > > > 
-> > > > I've run into a number of cards which don't work on some arm64 machines where there are
-> > > > no DMA address below 4G. For the realtek card you can use r8169.use_dac=1 on the cmdline
-> > > > to get it to work.
-> > > > 
-> > > I need r8169.use_dac=1 and this patch to get card to work.
-> > > 
-> > 
-> > Hmm. I didn't need a patch in the past but I don't think I've used that card with
-> > this patch series. I will try that when I get a chance...
-> > 
-> 
-> From my previous debugging on this issue I was getting an address bigger
-> than 32bits. As r8169 is a whole range of chips are guess they are not
-> all equal?
-> 
-> I can stick debug stuff in if someone tells me where to put them.
-> 
 
-After some private debugging with Mark it turned out that the difference
-between our configurations was I did not have.
+--6c2NcOVqGQ03X4Wi
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-CONFIG_DMA_CMA=y
+> Given this has been on the list some time and still works, I've
+> applied this for 4.5. That should simplify dependencies for 4.6.
 
-With this enabled then the card works without coherent mask hack.
+Cool, thanks Rob!
 
-Thanks
 
-Graeme
+--6c2NcOVqGQ03X4Wi
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJWl04uAAoJEBQN5MwUoCm21rIP/jWVWg9M7qG/AScxyTkrvdCd
+QofpOUvZkCqM8Eq0aejSXKye8SX+U46zi2wb5UN1OqXcQC8XNAXM9kQqIrZ5wo/c
+ioM1TPBsjbuQ2gLFLHFIe3BOBTY5LBTio/7Oi92LqMi8gbk0VJetuTx20PgzDazn
+5q454OF5wKEz9nXDtkZCuWERaI78IQchIsUW+tuQzH+VMSzXvrmRM/QbieudoRmR
+By2/dDI5YGvNmFP7mugudPrK/3DXRwXxfvOWHP5FPAC0o3QBQaObU552+9ctcjTJ
+iJiW5ty0rd9FePUQNUwcNK8M10tSqybXbp/APtM3dizhGmlS+GkUv8m3BRRp37Ck
+WslfbAWLLn4z6Z/9fIkxV4imRofNA3/271CTWDZBurhS0gdjrHU3qQP95kYUd0EA
+sbdamDujp3c/Dg9ndg+4gLaM6mpvJJdfXJtAD3eE9AitqQrZPHSGWwXZBadF9R8L
+b+sRQVi/ByX1P0y2rjZEA8SCMWN4Xk/RgA1ABZwqL47lErP4w/RCHa5Illpwjz+j
+i4pbltbYDgc80gzCUB5jhjD86KaYS2aumZVtOIDuIRUJ4+kyj7X4uilQ+myl5JKO
+w4gH+qjQD0CjCh1pvlu6OVfkoWDqmoTauiN8TY3wrab1e9FLXuxE+x1K8KlJHUzy
+XCjMT7z8ScFWhKVFH86x
+=d7fS
+-----END PGP SIGNATURE-----
+
+--6c2NcOVqGQ03X4Wi--
