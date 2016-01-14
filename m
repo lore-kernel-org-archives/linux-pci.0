@@ -1,53 +1,68 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v5 0/5] ACPI based PCI support for arm64
-To: Jayachandran C <jchandra@broadcom.com>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-acpi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-References: <1451884403-21437-1-git-send-email-jchandra@broadcom.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>
-From: Hanjun Guo <hanjun.guo@linaro.org>
-Message-ID: <568A125A.9090608@linaro.org>
-Date: Mon, 4 Jan 2016 14:34:02 +0800
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Vineet Gupta <Vineet.Gupta1@synopsys.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
+	"helgaas@kernel.org" <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-snps-arc@lists.infradead.org"
+	<linux-snps-arc@lists.infradead.org>,
+	"CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>,
+	"Alexey.Brodkin@synopsys.com" <Alexey.Brodkin@synopsys.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>
+Subject: Re: [PATCH v5 1/2] PCI support added to ARC
+Date: Thu, 14 Jan 2016 11:22 +0100
+Message-ID: <4314331.TCtUIaZPTC@wuerfel>
+In-Reply-To: <C2D7FE5348E1B147BCA15975FBA23075F4E84C55@us01wembx1.internal.synopsys.com>
+References: <cover.1452611234.git.jpinto@synopsys.com> <24c9b782dfade515bbed20ce75d85200a00a2e66.1452611234.git.jpinto@synopsys.com> <C2D7FE5348E1B147BCA15975FBA23075F4E84C55@us01wembx1.internal.synopsys.com>
 MIME-Version: 1.0
-In-Reply-To: <1451884403-21437-1-git-send-email-jchandra@broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi JC,
+On Thursday 14 January 2016 05:26:58 Vineet Gupta wrote:
+> > +/*
+> > + * We don't have to worry about legacy ISA devices, so nothing to do here
+> > + */
+> > +resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+> > +                             resource_size_t size, resource_size_t align)
+> > +{
+> > +     return res->start;
+> > +}
+> 
+> Doesn't this have to be EXPORT_SYMBOL_xxx as well given that the call
+> (setup-res.c) can build as module ?
 
-On 2016/1/4 13:13, Jayachandran C wrote:
-> This patchset provides a generic ACPI based PCI host controller
-> implementation and uses it on arm64.
->
-> The first patch moves the common code to handle MCFG ACPI table from
-> arch/x86 to drivers/acpi/pci_mcfg.c. The last patch in the patchset
-> provides the generic implementation of an ACPI based PCI host
-> controller with a new file drivers/acpi/pci_host_acpi.c. The other
-> patches are to fix up arm64 and ACPI code to work with these two
-> patches.
->
-> The pci host controller implementation keeps a reference to
-> pci_mmcfg_region entry so that config space access is done with a
-> simple mapping and generic PCI config read/write. There is also an
-> implementation of raw_pci_read/raw_pci_write provided by walking the
-> pci_mmcfg_list
->
-> The patchset is against 4.4-rc6, but it can be applied to pci/next
-> with a very minor fixup.  This is tested with arm64 QEMU and OVMF
-> and on x86 with qemu.
+I only see a caller in drivers/pci/setup-res.c, and that is never part of a
+loadable module.
 
-Are there any specific problems that Tomasz didn't address in this
-patch set?
+> > +
+> > +void pcibios_fixup_bus(struct pci_bus *bus)
+> > +{
+> > +}
+> > +EXPORT_SYMBOL(pcibios_fixup_bus);
+> 
+> EXPORT_SYMBOL_GPL ?
+> 
+> As a seperate enhancement, it would be nicer if these 2 functions are defined weak
+> in common code. That would make basic PCI support almost arch independent !
 
-https://lkml.org/lkml/2015/12/16/246
+I agree, that would be ideal. An easy way to do this would be to add
+them as __weak functions in drivers/pci/, similar to how we handle
+a lot of the other pcibios_* functions.
 
-As Lorenzo pointed out, that patch set was going several rounds and
-addressed lots of comments, why not comment on it and push it forward
-together?
+A somewhat nicer method would be to have callback pointers in struct
+pci_host_bridge, and call those when they are non-NULL so we can
+remove the global pcibios_* functions from the API. That would also
+bring us a big step closer to having PCI support itself as a loadable
+module, and it would better reflect that those functions are really
+host bridge specific rather than architecture specific. When you use
+the same host bridge on multiple architectures, you typically have
+the same requirements for hacks in there, but each architectures may
+need to support multiple host bridges with different requirements.
 
-Thanks
-Hanjun
+	Arnd
