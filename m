@@ -1,93 +1,172 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0063.outbound.protection.outlook.com ([104.47.38.63]:29216
-	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755331AbcA1OSX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jan 2016 09:18:23 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	Michal Simek <michals@xilinx.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"paul.burton@imgtec.com" <paul.burton@imgtec.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"wangyijing@huawei.com" <wangyijing@huawei.com>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: RE: [PATCH V2 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge
- driver to  work on both  Zynq and Microblaze
-Date: Thu, 28 Jan 2016 14:18:15 +0000
-Message-ID: <8520D5D51A55D047800579B094147198258741F5@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
- <5255218.OREPu5Af3W@wuerfel>
- <8520D5D51A55D047800579B09414719825874148@XAP-PVEXMBX01.xlnx.xilinx.com>
- <1917083.LB4Ng3Y2yP@wuerfel>
-In-Reply-To: <1917083.LB4Ng3Y2yP@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:56451 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755681AbcANVOy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 Jan 2016 16:14:54 -0500
+Message-ID: <1452806092.14628.110.camel@redhat.com>
+Subject: Re: [RFC PATCH] pci: Identify Enhanced Allocation (EA) BAR
+ Equivalent resources
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Sean O. Stalley" <sean.stalley@intel.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	david.daney@cavium.com
+Date: Thu, 14 Jan 2016 14:14:52 -0700
+In-Reply-To: <20160114202347.GB3381@sean.stalley.intel.com>
+References: <20160114172645.23429.9938.stgit@gimli.home>
+	 <20160114183452.GA3075@sean.stalley.intel.com>
+	 <1452798962.14628.52.camel@redhat.com>
+	 <20160114202347.GB3381@sean.stalley.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Subject: Re: [PATCH V2 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge driver
-> to work on both Zynq and Microblaze
+On Thu, 2016-01-14 at 12:23 -0800, Sean O. Stalley wrote:
+> On Thu, Jan 14, 2016 at 12:16:02PM -0700, Alex Williamson wrote:
+> > On Thu, 2016-01-14 at 10:34 -0800, Sean O. Stalley wrote:
+> > > On Thu, Jan 14, 2016 at 10:26:56AM -0700, Alex Williamson wrote:
+> > > > We've done a pretty good job of abstracting EA from drivers, but
+> > > > there
+> > > > are some properties of BAR Equivalent resources that don't really
+> > > > jive
+> > > > with traditional PCI BARs.  In particular, natural alignment is
+> > > > only
+> > > > encouraged, not required.
+> > > > 
+> > > > Why does this matter?  There are drivers like vfio-pci that will
+> > > > happily gobble up the EA abstraction that's been implemented and
+> > > > expose a device using EA to userspace as if those resources are
+> > > > traditional BARs.  Pretty cool.  The vfio API is bus agnostic, so
+> > > > it
+> > > > doesn't care about alignment.  The problem comes with PCI config
+> > > > space
+> > > > emulation where we don't let userspace manipulate the BAR value,
+> > > > but
+> > > > we do emulate BAR sizing.  The abstraction kind of falls apart if
+> > > > userspace gets garbage when they try to size what appears to be a
+> > > > traditional BAR, but is actually a BAR equivalent.
+> > > > 
+> > > > We could simply round up the size in vfio to make it naturally
+> > > > aligned, but then we're imposing artificial sizes to the user and
+> > > > we
+> > > > have the discontinuity that BAR size emulation and vfio region size
+> > > > reporting don't agree on the size.  I think what we want to do is
+> > > > expose EA to the user, reporting traditional BARs with BEIs as
+> > > > zero-sized and providing additional regions for the user to access
+> > > > each EA region, whether it has a BEI or not.
+> > > > 
+> > > > To facilitate that, a flag indicating whether a PCI resource is a
+> > > > traditional BAR or BAR equivalent seems much nicer than attempting
+> > > > to size the BAR ourselves or deducing it through the EA capability.
+> > > 
+> > > If vfio does size the resource, EA entries that are aligned could
+> > > still be emulated as BARs, correct?
+> > > 
+> > > I would think that emulating a BAR would be preferred when possible,
+> > > for backwards-compatibility.
+> > 
+> > If a BEI is naturally aligned, I can't think of any problems with
+> > exposing it as a traditional BAR to userspace.  I agree that there may
+> > be some compatibility benefits there, so it may be useful to offer both
+> > options.  I don't think we can combine them though, it would violate
+> > the EA spec to expose the traditional BAR and and the matching BEI.
+> > We'd either need to hide the fake BAR or hide the EA entry defining
+> > that BEI.  A module option could define which is preferred or maybe an
+> > ioctl.
 > 
-> On Thursday 28 January 2016 13:20:56 Bharat Kumar Gogada wrote:
-> > > Subject: Re: [PATCH V2 3/5] PCI: xilinx: Modifying AXI PCIe Host
-> > > Bridge driver to work on both Zynq and Microblaze
-> > >
-> > > On Wednesday 27 January 2016 14:33:45 Bharat Kumar Gogada wrote:
-> > > > > > @@ -705,7 +715,9 @@ static int xilinx_pcie_probe(struct
-> > > > > > platform_device *pdev)  #endif
-> > > > > >     pci_scan_child_bus(bus);
-> > > > > >     pci_assign_unassigned_bus_resources(bus);
-> > > > > > +#ifdef CONFIG_ARM
-> > > > > >     pci_fixup_irqs(pci_common_swizzle,
-> > > > > > of_irq_parse_and_map_pci);
-> > > > > > +#endif
-> > > > > >     pci_bus_add_devices(bus);
-> > > > > >     platform_set_drvdata(pdev, port);
-> > > > >
-> > > > > Here it looks like microblaze gets it right. I'm not sure why we
-> > > > > still need the
-> > > > > pci_fixup_irqs() on ARM, but my feeling is that this should be
-> > > > > fixed in common code.
-> > > > In arm pci_fixup_irqs is called by pci_common_init_dev
-> > > (arch/arm/kernel/bios32.c), since this API is removed now, I was
-> > > calling it separately.
-> > >
-> > > But who calls it in microblaze? If it works without the extra call
-> > > there, can we make it work the same way for ARM?
-> > >
-> > In microblaze I have added pcibios_add_device call (similar to call in
-> > arch/arm64/kernel/pci.c ) in pci-common.c, which is being invoked by
-> > kernel core itself.
+> Would any functionality be lost if vfio:
+> 	- emulates BARs & hide EA entry when EA resources are aligned.
+> 	- exposes EA entries when the resources aren't aligned (no BAR emulation).
+> ?
 > 
-> I see. In the upstream code you seem to do it in
-> pcibios_setup_bus_devices(), while arm64 and powerpc do it in
-> pcibios_add_device().
-> 
-No that function is not getting called with generic API's, its getting called with pcibios_init flow which is tightly bound with struct pci_controller microblaze specific structure. So I added pcibios_add_device in pci-common.c.
+> I'm just wondering if giving userspace the option to pick is necessary,
+> or if there is a setting that is always ideal.
 
-> > May be we can add similar on arm and test out, but we might need some
-> > cleanup in arch/arm/kernel/bios32.c
-> 
-> I think that would still just be a half-baked solution. This should really be fully
-> automatic. We could do it in the __weak
-> pcibios_add_device() for all architectures that don't override it when the bus
-> was probed from DT, or we could do it in pci_read_irq().
-When will pci_read_irq() call get invoked ?
+That certainly might be a good default and the only use case I can
+think where it wouldn't be ideal is if we want to expose EA to a VM for
+the purpose of doing EA testing and development in a guest.  A module
+option would make more sense than defining a user interface for that
+case though.
 
-Bharat
+> > > > Thoughts?
+> > > 
+> > > I like the idea of adding an EA flag.
+> > > 
+> > > There were some cases in the kernel where it would be nice to know if a
+> > > resource was fixed because it was EA or if something else was fixing it.
+> > > Adding that flag was discussed during the code review of the EA code,
+> > > but it was decided that we could get by without it.
+> > > 
+> > > IIRC, most of the cases that required the flag had to do with EA entries
+> > > for bridges. Since bridge support wasn't added, we didn't need the flag.
+> > 
+> > By my reading of the spec, not all BEIs need to be fixed, is this just
+> > a simplification to avoid sizing and mapping a BAR that doesn't exist
+> > in the traditional sense?  A flag on the resource seems like it would
+> > be useful for that as well if we ever wanted to add the case where an
+> > AE BAR equivalent could be remapped.  Thanks,
+> 
+> All of the usable BEIs have a HwInit Base & MaxOffset, and therefore a
+> fixed range. The "unavailable for use" resources aren't explicitly HwInit,
+> but the spec doesn't define how/when you can move them.
+> 
+> The spec does define a writeable bit for resources,
+> but doesn't define how to use it either. I think the intention was to
+> be able to expand EA in the future to cover movable resources.
+
+Wow, that's really confusing to have a writable bit per entry and then
+define properties which forbid its use.  We'd need to go through the
+SIG and define a whole new set of properties just to get movable
+versions, crazy.  Thanks for the explanation.
+> 
+> Anyway, I think having an explicit flag that says "This Resource is from EA"
+> that is independent of "This resource is fixed" is a good idea.
+> 
+> 
+> Acked-by: Sean O. Stalley <sean.stalley@intel.com>
+
+Cool, thanks
+
+Alex
+
+> > > > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> > > > ---
+> > > >  drivers/pci/pci.c      |    2 +-
+> > > >  include/linux/ioport.h |    2 ++
+> > > >  2 files changed, 3 insertions(+), 1 deletion(-)
+> > > > 
+> > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > > index 314db8c..174c734 100644
+> > > > --- a/drivers/pci/pci.c
+> > > > +++ b/drivers/pci/pci.c
+> > > > @@ -2229,7 +2229,7 @@ void pci_pm_init(struct pci_dev *dev)
+> > > >  
+> > > >  static unsigned long pci_ea_flags(struct pci_dev *dev, u8
+> > > > prop)
+> > > >  {
+> > > > -	unsigned long flags = IORESOURCE_PCI_FIXED;
+> > > > +	unsigned long flags = IORESOURCE_PCI_FIXED |
+> > > > IORESOURCE_PCI_EA_BEI;
+> > > >  
+> > > >  	switch (prop) {
+> > > >  	case PCI_EA_P_MEM:
+> > > > diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+> > > > index 24bea08..5acc194 100644
+> > > > --- a/include/linux/ioport.h
+> > > > +++ b/include/linux/ioport.h
+> > > > @@ -105,6 +105,8 @@ struct resource {
+> > > >  /* PCI control bits.  Shares IORESOURCE_BITS with above PCI
+> > > > ROM.  */
+> > > >  #define IORESOURCE_PCI_FIXED		(1<<4)	/*
+> > > > Do
+> > > > not move resource */
+> > > >  
+> > > > +/* PCI Enhanced Allocation defined BAR equivalent resource *
+> > > > +#define IORESOURCE_PCI_EA_BEI		(1<<5)
+> > > >  
+> > > >  /* helpers to define resources */
+> > > >  #define DEFINE_RES_NAMED(_start, _size, _name, _flags)		
+> > > > 	\
+> > > > 
+> > 
 
