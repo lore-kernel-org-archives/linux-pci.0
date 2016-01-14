@@ -1,99 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57963 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755351AbcATUU2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Jan 2016 15:20:28 -0500
-Message-ID: <1453321227.32741.332.camel@redhat.com>
-Subject: Re: [RFC PATCH] pci: Identify Enhanced Allocation (EA) BAR
- Equivalent resources
-From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: sean.stalley@intel.com, david.daney@cavium.com
-Date: Wed, 20 Jan 2016 13:20:27 -0700
-In-Reply-To: <20160114172645.23429.9938.stgit@gimli.home>
-References: <20160114172645.23429.9938.stgit@gimli.home>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:57841 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753283AbcANOPE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jan 2016 09:15:04 -0500
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+	by mailout.nyi.internal (Postfix) with ESMTP id 50B0B20A72
+	for <linux-pci@vger.kernel.org>; Thu, 14 Jan 2016 09:15:03 -0500 (EST)
+Date: Thu, 14 Jan 2016 14:15:01 +0000
+From: Graeme Gregory <gg@slimlogic.co.uk>
+To: Mark Salter <msalter@redhat.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>, linaro-acpi@lists.linaro.org,
+	catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
+	wangyijing@huawei.com, Lorenzo.Pieralisi@arm.com,
+	ddaney@caviumnetworks.com, linux-acpi@vger.kernel.org,
+	robert.richter@caviumnetworks.com, linux-pci@vger.kernel.org,
+	jcm@redhat.com, arnd@arndb.de, Stefano.Stabellini@eu.citrix.com,
+	Liviu.Dudau@arm.com, bhelgaas@google.com, tglx@linutronix.de,
+	mw@semihalf.com, linux-arm-kernel@lists.infradead.org,
+	jchandra@broadcom.com, rjw@rjwysocki.net,
+	linux-kernel@vger.kernel.org, hanjun.guo@linaro.org,
+	Suravee.Suthikulpanit@amd.com, jiang.liu@linux.intel.com
+Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+Message-ID: <20160114141501.GC8520@xora-haswell.xora.org.uk>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+ <20160114134440.GA8520@xora-haswell.xora.org.uk>
+ <1452780100.28109.3.camel@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1452780100.28109.3.camel@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2016-01-14 at 10:26 -0700, Alex Williamson wrote:
-> We've done a pretty good job of abstracting EA from drivers, but there
-> are some properties of BAR Equivalent resources that don't really jive
-> with traditional PCI BARs.Â Â In particular, natural alignment is only
-> encouraged, not required.
+On Thu, Jan 14, 2016 at 09:01:40AM -0500, Mark Salter wrote:
+> On Thu, 2016-01-14 at 13:44 +0000, Graeme Gregory wrote:
+> > On Wed, Jan 13, 2016 at 02:20:46PM +0100, Tomasz Nowicki wrote:
+> > > From the functionality point of view this series might be split into the
+> > > following logic parts:
+> > > 1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
+> > >    PCI config regions and used when necessary.
+> > > 2. Move non-arch specific bits to the core code.
+> > > 3. Use MMCONFIG code and implement generic ACPI based PCI host controller driver.
+> > > 4. Enable above driver on ARM64
+> > > 
+> > > Patches has been built on top of 4.4 and can be found here:
+> > > git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v3)
+> > > 
+> > > NOTE, this patch set depends on Matthew's patches:
+> > > http://www.spinics.net/lists/linux-pci/msg45950.html
+> > > https://github.com/Vality/linux/tree/pci-fixes
+> > > 
+> > > This has been tested on Cavium ThunderX server and QEMU.
+> > > Any help in reviewing and testing is very appreciated.
+> > 
+> > I have tested this on my AMD Overdrive so
+> > 
+> > Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+> > 
+> > But to actually get my r8169 network card working I also need the
+> > following patch.
+> > 
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index 2fbf840..40e24e2 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -1717,7 +1717,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+> >         set_dev_node(&dev->dev, pcibus_to_node(bus));
+> >         dev->dev.dma_mask = &dev->dma_mask;
+> >         dev->dev.dma_parms = &dev->dma_parms;
+> > -       dev->dev.coherent_dma_mask = 0xffffffffull;
+> > +       dev->dev.coherent_dma_mask = DMA_BIT_MASK(64);
+> >         pci_dma_configure(dev);
+> > 
+> >         pci_set_dma_max_seg_size(dev, 65536);
+> > 
+> > I suspect we need to set coherent_dma_mask somewhere in the platform but I do
+> > not know where this should happen. Hopefully an ARM64 expert can help.
 > 
-> Why does this matter?Â Â There are drivers like vfio-pci that will
-> happily gobble up the EA abstraction that's been implemented and
-> expose a device using EA to userspace as if those resources are
-> traditional BARs.Â Â Pretty cool.Â Â The vfio API is bus agnostic, so it
-> doesn't care about alignment.Â Â The problem comes with PCI config space
-> emulation where we don't let userspace manipulate the BAR value, but
-> we do emulate BAR sizing.Â Â The abstraction kind of falls apart if
-> userspace gets garbage when they try to size what appears to be a
-> traditional BAR, but is actually a BAR equivalent.
+> I've run into a number of cards which don't work on some arm64 machines where there are
+> no DMA address below 4G. For the realtek card you can use r8169.use_dac=1 on the cmdline
+> to get it to work.
 > 
-> We could simply round up the size in vfio to make it naturally
-> aligned, but then we're imposing artificial sizes to the user and we
-> have the discontinuity that BAR size emulation and vfio region size
-> reporting don't agree on the size.Â Â I think what we want to do is
-> expose EA to the user, reporting traditional BARs with BEIs as
-> zero-sized and providing additional regions for the user to access
-> each EA region, whether it has a BEI or not.
-> 
-> To facilitate that, a flag indicating whether a PCI resource is a
-> traditional BAR or BAR equivalent seems much nicer than attempting
-> to size the BAR ourselves or deducing it through the EA capability.
-> 
-> Thoughts?
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
+I need r8169.use_dac=1 and this patch to get card to work.
 
-
-Just to loop back on this, it seems like we do have some support and
-use cases beyond what I proposed. Â Thanks for the discussion of that.
-However, I'm reluctant to post this formally because the change is user
-visible, it consumes a limited resource, and I don't know how quickly
-vfio-pci is going to be able to make use of this flag. Â The vfio-pci
-work may not happen until a device appears with poorly sized resources
-that has some use case with vfio-pci. Â Even then, we may be able to
-infer the BEI association without this flag. Â So, while I'm not opposed
-to this flag, I don't see a need to drive it right now and those that
-do have a more immediate need are welcome to take over. Â Thanks,
-
-Alex
-
-
-> Â drivers/pci/pci.cÂ Â Â Â Â Â |Â Â Â Â 2 +-
-> Â include/linux/ioport.h |Â Â Â Â 2 ++
-> Â 2 files changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 314db8c..174c734 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2229,7 +2229,7 @@ void pci_pm_init(struct pci_dev *dev)
-> Â 
-> Â static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
-> Â {
-> -	unsigned long flags = IORESOURCE_PCI_FIXED;
-> +	unsigned long flags = IORESOURCE_PCI_FIXED | IORESOURCE_PCI_EA_BEI;
-> Â 
-> Â 	switch (prop) {
-> Â 	case PCI_EA_P_MEM:
-> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> index 24bea08..5acc194 100644
-> --- a/include/linux/ioport.h
-> +++ b/include/linux/ioport.h
-> @@ -105,6 +105,8 @@ struct resource {
-> Â /* PCI control bits.Â Â Shares IORESOURCE_BITS with above PCI ROM.Â Â */
-> Â #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move resource */
-> Â 
-> +/* PCI Enhanced Allocation defined BAR equivalent resource */
-> +#define IORESOURCE_PCI_EA_BEI		(1<<5)
-> Â 
-> Â /* helpers to define resources */
-> Â #define DEFINE_RES_NAMED(_start, _size, _name, _flags)			\
-> 
+Graeme
 
