@@ -1,76 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:34753 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757278AbcAaMeu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 31 Jan 2016 07:34:50 -0500
-Received: by mail-pa0-f43.google.com with SMTP id uo6so67593898pac.1
-        for <linux-pci@vger.kernel.org>; Sun, 31 Jan 2016 04:34:50 -0800 (PST)
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>,
-	<linux-pci@vger.kernel.org>
-Cc: "'Pratyush Anand'" <pratyush.anand@gmail.com>,
-	"'Arnd Bergmann'" <arnd@arndb.de>,
-	"'Bjorn Helgaas'" <bhelgaas@google.com>,
-	"'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
-	"'Zhou Wang'" <wangzhou1@hisilicon.com>,
-	"'Jingoo Han'" <jingoohan1@gmail.com>
-References: <1454066972-3609-1-git-send-email-lorenzo.pieralisi@arm.com> <1454066972-3609-2-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1454066972-3609-2-git-send-email-lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH 2/2] drivers: pci: host: designware: remove PCI_PROBE_ONLY handling
-Date: Sun, 31 Jan 2016 21:34:40 +0900
-Message-ID: <000701d15c23$c67963f0$536c2bd0$@com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1452780100.28109.3.camel@redhat.com>
+Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+From: Mark Salter <msalter@redhat.com>
+To: Graeme Gregory <gg@slimlogic.co.uk>,
+	Tomasz Nowicki <tn@semihalf.com>
+Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, jchandra@broadcom.com, jcm@redhat.com
+Date: Thu, 14 Jan 2016 09:01:40 -0500
+In-Reply-To: <20160114134440.GA8520@xora-haswell.xora.org.uk>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+	 <20160114134440.GA8520@xora-haswell.xora.org.uk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, January 29, 2016 8:30 PM, Lorenzo Pieralisi wrote:
+On Thu, 2016-01-14 at 13:44 +0000, Graeme Gregory wrote:
+> On Wed, Jan 13, 2016 at 02:20:46PM +0100, Tomasz Nowicki wrote:
+> > From the functionality point of view this series might be split into the
+> > following logic parts:
+> > 1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
+> >    PCI config regions and used when necessary.
+> > 2. Move non-arch specific bits to the core code.
+> > 3. Use MMCONFIG code and implement generic ACPI based PCI host controller driver.
+> > 4. Enable above driver on ARM64
+> > 
+> > Patches has been built on top of 4.4 and can be found here:
+> > git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v3)
+> > 
+> > NOTE, this patch set depends on Matthew's patches:
+> > http://www.spinics.net/lists/linux-pci/msg45950.html
+> > https://github.com/Vality/linux/tree/pci-fixes
+> > 
+> > This has been tested on Cavium ThunderX server and QEMU.
+> > Any help in reviewing and testing is very appreciated.
 > 
-> The PCIe designware host driver is not used in system configurations
-> requiring the PCI_PROBE_ONLY flag to be set to prevent resources
-> assignment, therefore the driver code handling the flag can be
-> removed from the kernel.
+> I have tested this on my AMD Overdrive so
 > 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Pratyush Anand <pratyush.anand@gmail.com>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Jingoo Han <jingoohan1@gmail.com>
+> Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+> 
+> But to actually get my r8169 network card working I also need the
+> following patch.
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 2fbf840..40e24e2 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1717,7 +1717,7 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+>         set_dev_node(&dev->dev, pcibus_to_node(bus));
+>         dev->dev.dma_mask = &dev->dma_mask;
+>         dev->dev.dma_parms = &dev->dma_parms;
+> -       dev->dev.coherent_dma_mask = 0xffffffffull;
+> +       dev->dev.coherent_dma_mask = DMA_BIT_MASK(64);
+>         pci_dma_configure(dev);
+> 
+>         pci_set_dma_max_seg_size(dev, 65536);
+> 
+> I suspect we need to set coherent_dma_mask somewhere in the platform but I do
+> not know where this should happen. Hopefully an ARM64 expert can help.
 
-Acked-by: Jingoo Han Jingoo Han <jingoohan1@gmail.com>
+I've run into a number of cards which don't work on some arm64 machines where there are
+no DMA address below 4G. For the realtek card you can use r8169.use_dac=1 on the cmdline
+to get it to work.
 
-Best regards,
-Jingoo Han
-
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> Cc: Zhou Wang <wangzhou1@hisilicon.com>
-> ---
->  drivers/pci/host/pcie-designware.c | 10 ++++------
->  1 file changed, 4 insertions(+), 6 deletions(-)
 > 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 2171682..a445083 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -551,13 +551,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
->  #endif
+> Graeme
 > 
-> -	if (!pci_has_flag(PCI_PROBE_ONLY)) {
-> -		pci_bus_size_bridges(bus);
-> -		pci_bus_assign_resources(bus);
-> +	pci_bus_size_bridges(bus);
-> +	pci_bus_assign_resources(bus);
-> 
-> -		list_for_each_entry(child, &bus->children, node)
-> -			pcie_bus_configure_settings(child);
-> -	}
-> +	list_for_each_entry(child, &bus->children, node)
-> +		pcie_bus_configure_settings(child);
-> 
->  	pci_bus_add_devices(bus);
->  	return 0;
-> --
-> 2.5.1
 
