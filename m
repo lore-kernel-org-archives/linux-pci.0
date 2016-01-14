@@ -1,117 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:33140 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757233AbcAKBG2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Jan 2016 20:06:28 -0500
-Date: Mon, 11 Jan 2016 10:06:24 +0900
-From: Simon Horman <horms@verge.net.au>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH 2/4] PCI: rcar-gen2: Add device tree support for r8a7793
-Message-ID: <20160111010624.GA11387@verge.net.au>
-References: <1448954672-27236-1-git-send-email-horms+renesas@verge.net.au>
- <1448954672-27236-3-git-send-email-horms+renesas@verge.net.au>
- <20151204212649.GJ20125@localhost>
- <CAMuHMdWEXA-KTkqJsofXuBTQKBrtGW7x+2r+V42CuWwbjkqmvQ@mail.gmail.com>
- <20151207153833.GB7994@localhost>
- <20151208004519.GK10799@verge.net.au>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v3] PCI: hosts: mark pcie/pci (msi) irq cascade handler as
+ IRQF_NO_THREAD
+To: Grygorii Strashko <grygorii.strashko@ti.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+References: <1449775100-30877-1-git-send-email-grygorii.strashko@ti.com>
+ <20160106221827.GD16231@localhost> <20160113133904.GD29964@linutronix.de>
+ <20160113175016.GB28453@localhost> <56969BE3.6000804@ti.com>
+CC: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	<tony@atomide.com>, <nsekhar@ti.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-samsung-soc@vger.kernel.org>, <linux-tegra@vger.kernel.org>,
+	<linux-sh@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
+	Kukjin Kim <kgene@kernel.org>,
+	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Simon Horman <horms@verge.net.au>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	=?UTF-8?Q?S=c3=b6ren_Brinkmann?= <soren.brinkmann@xilinx.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <56973DEC.2000108@ti.com>
+Date: Thu, 14 Jan 2016 11:49:24 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151208004519.GK10799@verge.net.au>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <56969BE3.6000804@ti.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 08, 2015 at 09:45:19AM +0900, Simon Horman wrote:
-> On Mon, Dec 07, 2015 at 09:38:33AM -0600, Bjorn Helgaas wrote:
-> > On Sat, Dec 05, 2015 at 11:38:37AM +0100, Geert Uytterhoeven wrote:
-> > > Hi Bjorn,
-> > > 
-> > > On Fri, Dec 4, 2015 at 10:26 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > > On Tue, Dec 01, 2015 at 04:24:30PM +0900, Simon Horman wrote:
-> > > >> Simply document new compat strings.
-> > > >> There appears to be no need for a driver updates.
-> > > >>
-> > > >> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-> > > >> ---
-> > > >>  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 1 +
-> > > >>  1 file changed, 1 insertion(+)
-> > > >>
-> > > >> diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> > > >> index b19be08a8113..7c231b3e5872 100644
-> > > >> --- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> > > >> +++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> > > >> @@ -8,6 +8,7 @@ OHCI and EHCI controllers.
-> > > >>  Required properties:
-> > > >>  - compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
-> > > >>             "renesas,pci-r8a7791" for the R8A7791 SoC;
-> > > >> +           "renesas,pci-r8a7793" for the R8A7793 SoC;
-> > > >
-> > > > What's the benefit of adding a string here if the driver doesn't check
-> > > > for it?  Since the driver doesn't look for it, there's no way to test
-> > > > anything.
-> > > 
-> > > If we ever discover a difference between PCI on r8a7793 compared to PCI on
-> > > other SoCs of the R-Car Gen2 family, we can handle that difference in the
-> > > driver.
-> > > 
-> > > > It doesn't seem like this file is an authoritative source of names, so
-> > > 
-> > > Yes it is. When adding compatible values to a DTS, checkpatch.pl will check
-> > > for their existence in the binding documentation. Hence we always add the
-> > > compatible values to the DT binding docs, before we start using them.
-> > > 
-> > > > if we add it here, there's the possibility the r8a7793 will be
-> > > > canceled or renamed, and then we'd have to update this if the driver
-> > > > ever did need an r8a7793-specific quirk.  If we waited until the
-> > > 
-> > > I don't understand what you mean here.
-> > > 
-> > > > driver actually needs a quirk, then we'd know exactly what name to
-> > > > look for and we could update the driver, DT, and doc all together.
-> > > 
-> > > If we update driver, DT, and doc only after we discover the need for a quirk,
-> > > it's already too late, due to stable DT rules. Hence we always document and
-> > > use SoC-specific compatible values, sometimes combined with family-specific
-> > > compatible values. The driver only matches to the as least specific value as
-> > > possible.
-> > 
-> > The stable DT rules seem to be the key here, but I don't know what
-> > they are.  I found Documentation/devicetree/bindings/ABI.txt, but it
-> > doesn't clear it up for me.
-> > 
-> > I was assuming vendors could ship a DT in a platform ROM, in the same
-> > way platforms ship with an ACPI system description.  For ACPI, the
-> > _HID/_CID in the ROM in the field is authoritative in the sense that
-> > we have to regard it as a fixed, unchangeable feature of the platform.
-> > If we want a driver to recognize that device, we have to build the ID
-> > from the ROM into the driver, and it doesn't matter what is documented
-> > in the spec or in the kernel source.
-> > 
-> > If we had a one-sentence description of why adding the doc update when
-> > we actually need it is too late, that would probably be enough.
+Hi,
+
+On Thursday 14 January 2016 12:18 AM, Grygorii Strashko wrote:
+> On 01/13/2016 07:50 PM, Bjorn Helgaas wrote:
+>> On Wed, Jan 13, 2016 at 02:39:04PM +0100, Sebastian Andrzej Siewior wrote:
+>>> * Bjorn Helgaas | 2016-01-06 16:18:27 [-0600]:
+>>>
+>>>> Hi Bjorn,
+>>>
+>>>>> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+>>>>> index 8c36880..0415192 100644
+>>>>> --- a/drivers/pci/host/pci-dra7xx.c
+>>>>> +++ b/drivers/pci/host/pci-dra7xx.c
+>>>>> @@ -301,8 +301,19 @@ static int __init dra7xx_add_pcie_port(struct
+>>>>> dra7xx_pcie *dra7xx,
+>>>>>           return -EINVAL;
+>>>>>       }
+>>>>>
+>>>>> +    /*
+>>>>> +     * Mark dra7xx_pcie_msi IRQ as IRQF_NO_THREAD
+>>>>> +     * On -RT and if kernel is booting with "threadirqs" cmd line parameter
+>>>>> +     * the dra7xx_pcie_msi_irq_handler() will be forced threaded but,
+>>>>> +     * in the same time, it's IRQ dispatcher and calls generic_handle_irq(),
+>>>>> +     * which, in turn, will be resolved to handle_simple_irq() call.
+>>>>> +     * The handle_simple_irq() expected to be called with IRQ disabled, as
+>>>>> +     * result kernle will display warning:
+>>>>> +     * "irq XXX handler YYY+0x0/0x14 enabled interrupts".
+>>>>> +     */
+>>>
+>>> could you _please_ remove this coment? This kind of comment (if at all)
+>>> should be part of the commit message (which is the case more or less).
+>>
+>> IIRC, Grygorii specifically wanted to keep this comment in dra7xx, but
 > 
-> I agree that would be useful.
-
-Sorry for letting this slip. How about the following in the relevant changelogs:
-
-	By documenting this compat sting it may be used in DTSs shipped,
-	for example as part of ROMs. It must be used in conjunction with
-	the Gen2 fallback compat string. At this time there are no known
-	differences between the r8a7793 IP block and that implemented by
-	the driver for the Gen2 fallback compat string. Thus there is no
-	need to update the driver as the use of the Gen2 fallback compat
-	string will activate the correct code in the current driver while
-	leaving the option for r8a7793-specific driver code to be activated
-	in an updated driver should the need arise.
-
-> > I'm perfectly happy with the PCI changes, so if somebody else wants to
-> > just merge all these via a DT tree, I'm happy to ack the PCI ones.
+> True.
 > 
-> I have no fixed ideas about who should take these changes
-> but I think you could take them through the PCI tree if you
-> are so inclined.
+>> I do agree that this level of detail is more appropriate for a changelog.
+>>
+>> If Grygorii and Kishon don't object, I can update the patch to remove it.
+> 
+> But no objections from my side. Thanks a lot.
+
+I don't have any objections.
+
+Thanks
+Kishon
