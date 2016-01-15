@@ -1,87 +1,33 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 8 Jan 2016 12:14:42 -0600
+Date: Fri, 15 Jan 2016 16:06:31 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Colin King <colin.king@canonical.com>
-Cc: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Len Brown <len.brown@intel.com>,
+To: "Derrick, Jonathan" <jonathan.derrick@intel.com>
+Cc: "Busch, Keith" <keith.busch@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: acpiphp_ibm: fix null dereferences on null ibm_slot
-Message-ID: <20160108181442.GE5354@localhost>
-References: <1451694421-5277-1-git-send-email-colin.king@canonical.com>
+	"Williams, Dan J" <dan.j.williams@intel.com>,
+	"Veal, Bryan E" <bryan.e.veal@intel.com>
+Subject: Re: [PATCHv8 0/5] Driver for new "VMD" device
+Message-ID: <20160115220631.GA14080@localhost>
+References: <1452629890-17542-1-git-send-email-keith.busch@intel.com>
+ <20160115181938.GA5296@localhost>
+ <8D943B239464E04C9184454D8B3F5CFF0ABF18EC@ORSMSX101.amr.corp.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1451694421-5277-1-git-send-email-colin.king@canonical.com>
+In-Reply-To: <8D943B239464E04C9184454D8B3F5CFF0ABF18EC@ORSMSX101.amr.corp.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 02, 2016 at 12:27:01AM +0000, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> ibm_slot_from_id can return null if the des header signature is
-> not aPCI or if the kmalloc for the return acpi descriptore fails,
-> causing potential null pointer dereferences on the return null
-> descriptor.
-> 
-> Handle the null case with appropriate check and error return.
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+On Fri, Jan 15, 2016 at 07:48:11PM +0000, Derrick, Jonathan wrote:
+> Additionally, what are your thoughts of moving the menuconfig option from the root-tier to 'Processor Type and Features'?
 
-Applied to pci/hotplug for v4.5, thanks, Colin!
+I don't know how Intel is going to market this feature, but from a
+developer point of view, the code looks more like the PCI host bridge
+drivers in drivers/pci/host than it does like a processor feature.
+Most of those drivers are specific to a particular architecture or
+SoC.
 
-> ---
->  drivers/pci/hotplug/acpiphp_ibm.c | 17 ++++++++++++++---
->  1 file changed, 14 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/hotplug/acpiphp_ibm.c b/drivers/pci/hotplug/acpiphp_ibm.c
-> index 6ca2399..9d16c9d 100644
-> --- a/drivers/pci/hotplug/acpiphp_ibm.c
-> +++ b/drivers/pci/hotplug/acpiphp_ibm.c
-> @@ -154,7 +154,8 @@ static union apci_descriptor *ibm_slot_from_id(int id)
->  ibm_slot_done:
->  	if (ret) {
->  		ret = kmalloc(sizeof(union apci_descriptor), GFP_KERNEL);
-> -		memcpy(ret, des, sizeof(union apci_descriptor));
-> +		if (ret)
-> +			memcpy(ret, des, sizeof(union apci_descriptor));
->  	}
->  	kfree(table);
->  	return ret;
-> @@ -175,8 +176,13 @@ static int ibm_set_attention_status(struct hotplug_slot *slot, u8 status)
->  	acpi_status stat;
->  	unsigned long long rc;
->  	union apci_descriptor *ibm_slot;
-> +	int id = hpslot_to_sun(slot);
->  
-> -	ibm_slot = ibm_slot_from_id(hpslot_to_sun(slot));
-> +	ibm_slot = ibm_slot_from_id(id);
-> +	if (!ibm_slot) {
-> +		pr_err("APLS null ACPI descriptor for slot %d\n", id);
-> +		return -ENODEV;
-> +	}
->  
->  	pr_debug("%s: set slot %d (%d) attention status to %d\n", __func__,
->  			ibm_slot->slot.slot_num, ibm_slot->slot.slot_id,
-> @@ -215,8 +221,13 @@ static int ibm_set_attention_status(struct hotplug_slot *slot, u8 status)
->  static int ibm_get_attention_status(struct hotplug_slot *slot, u8 *status)
->  {
->  	union apci_descriptor *ibm_slot;
-> +	int id = hpslot_to_sun(slot);
->  
-> -	ibm_slot = ibm_slot_from_id(hpslot_to_sun(slot));
-> +	ibm_slot = ibm_slot_from_id(id);
-> +	if (!ibm_slot) {
-> +		pr_err("APLS null ACPI descriptor for slot %d\n", id);
-> +		return -ENODEV;
-> +	}
->  
->  	if (ibm_slot->slot.attn & 0xa0 || ibm_slot->slot.status[1] & 0x08)
->  		*status = 1;
-> -- 
-> 2.6.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bjorn
