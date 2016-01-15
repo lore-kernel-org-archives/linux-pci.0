@@ -1,138 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:55950 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751431AbcAVVbK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 22 Jan 2016 16:31:10 -0500
-Subject: Re: iProc bus scanning regression (after "PCI: iproc: Add PAXC
- interface support")
-To: Ray Jui <rjui@broadcom.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-References: <CACna6rx2t7Zg_xSVvYqZTW2dYEgRugaorV58Zy1YZ4Wy=+L4fQ@mail.gmail.com>
- <CACna6rzMK4Htci8AucHVi1TNjBkxdQiy60MWJ234J8=4B_vteA@mail.gmail.com>
- <569F41B1.6000005@broadcom.com>
- <CACna6rxyMoarw=Yq93gijXeXx5bm35hzAs-+9w3SaXg7e1thtQ@mail.gmail.com>
- <569FC9FA.4090607@broadcom.com>
-Cc: Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-From: Hauke Mehrtens <hauke@hauke-m.de>
-Message-ID: <56A29F99.8020207@hauke-m.de>
-Date: Fri, 22 Jan 2016 22:31:05 +0100
-MIME-Version: 1.0
-In-Reply-To: <569FC9FA.4090607@broadcom.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-qk0-f170.google.com ([209.85.220.170]:33902 "EHLO
+	mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779AbcAOP0R (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jan 2016 10:26:17 -0500
+Received: by mail-qk0-f170.google.com with SMTP id x1so39487579qkc.1
+        for <linux-pci@vger.kernel.org>; Fri, 15 Jan 2016 07:26:16 -0800 (PST)
+From: Justin Waters <justin.waters@timesys.com>
+To: linux-pci@vger.kernel.org
+Cc: festevam@gmail.com, l.stach@pengutronix.de,
+	Justin Waters <justin.waters@timesys.com>
+Subject: [PATCH v2] PCI: imx6: Add DT bindings to configure Tx Driver settings
+Date: Fri, 15 Jan 2016 10:24:35 -0500
+Message-Id: <1452871476-11752-1-git-send-email-justin.waters@timesys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/20/2016 06:55 PM, Ray Jui wrote:
-> Hi Rafal,
-> 
-> On 1/20/2016 8:43 AM, Rafał Miłecki wrote:
->> On 20 January 2016 at 09:13, Ray Jui <rjui@broadcom.com> wrote:
->>> On 1/19/2016 11:02 PM, Rafał Miłecki wrote:
->>>>
->>>> On 20 January 2016 at 07:53, Rafał Miłecki <zajec5@gmail.com> wrote:
->>>>>
->>>>> In OpenWrt trunk code we use iProc driver for PCIe controllers on bcma
->>>>> bus (PCIE_IPROC_BCMA). Right now we use 4.1 kernel but we backported
->>>>> all iProc changes. Unfortunately backporting set queued for 4.5 broke
->>>>> bus scanning on some routers.
->>>>>
->>>>> Most BCM4708 / BCM4709 chipsets have 3 PCIe controllers. All known
->>>>> routers use only first 2 of them. Even if router has 3 PCIe cards, the
->>>>> last two cards are connected to the 2nd PCIe controller.
->>>>>
->>>>> So that PAXC patch broke support for routers with 3 cards, 2 of them
->>>>> at the 2nd controller. It doesn't affect routers with just 2 cards.
->>>>> This problem was tracked down in:
->>>>> https://dev.openwrt.org/ticket/21393
->>>>>
->>>>> I'm attaching two OpenWrt boot logs.
->>>>> 1) r48381
->>>>> It contains all backported iProc changes. The log looks "nice", but
->>>>> only one card (0000:01:00.0) was detected.
->>>>> 2) r48382
->>>>> It contains "Revert "PCI: iproc: Add PAXC interface support"" patch.
->>>>> It contains many "[Firmware Bug]: reg 0x??: invalid BAR (can't size)"
->>>>> messages but there are all 3 cards detected: 0000:01:00.0,
->>>>> 0001:03:00.0 and 0001:04:00.0 (see brcmfmac messages).
->>>>>
->>>>> Can you take a look at this problem, please?
->>>>
->>>>
->>>> linux-arm-kernel@ stopped my e-mail due to its size. Sending
->>>> compressed attachments.
->>>>
->>>
->>> I'm a bit confused by these logs that you provided. Based on the log,
->>> there
->>> seems to be 3 PCIe root complexes populated on the platform, domain
->>> 0000:00:00.0, 0001:00:00:0, 0002:00:00:0 are the 3 root complexes. Root
->>> complex 0002 seems to have nothing connected since it does not detect
->>> any
->>> EP.
->>>
->>> Is the first card installed on root complex 0 (domain 0000), but the
->>> second
->>> card and 3rd card are both installed on root complex 1 (domain 0001) on
->>> different slots or something?
->>>
->>> I suspect a potential issue is in this function:
->>>
->>> 173 static inline bool iproc_pcie_device_is_valid(struct iproc_pcie
->>> *pcie,
->>> 174                                               unsigned int slot,
->>> 175                                               unsigned int fn)
->>> 176 {
->>> 177         if (slot > 0)
->>> 178                 return false;
->>> 179
->>> 180         /* PAXC can only support limited number of functions */
->>> 181         if (pcie->type == IPROC_PCIE_PAXC && fn >= MAX_NUM_PAXC_PF)
->>> 182                 return false;
->>> 183
->>> 184         return true;
->>> 185 }
->>>
->>> Compared to the original code, it's different. Can you try passing bus
->>> number into the function as another argument and do the following
->>> check on
->>> line 177:
->>>
->>> if (busnum == 0 && slot > 0)
->>>      return false;
->>>
->>> instead of
->>>
->>> if (slot > 0)
->>>      return false;
->>
->> This did work, thanks! I can see again all these scary
->> [Firmware Bug]: reg 0x??: invalid BAR (can't size)
->> messages but also all 3 cards were detected!
->>
->> Will you submit a patch for this, please?
->>
-> 
-> Thanks for helping to test.
-> 
-> Let me run a few tests on my platforms today and after that I'll submit
-> a fix.
-> 
-> Thanks,
-> 
-> Ray
+The settings in GPR8 are dependent upon the particular layout of the
+hardware platform. As such, they should be configurable via the device
+tree.
 
-Rafał is this a device with this PCIe switch chip? So are there really 2
-PCie devices connetced to the 2nd controller?
+As many boards have been using the default values, this implementation
+uses the old values if they are not specified in the device tree.
 
-To use the 3rd PCIe controller some special PCIe Phy setup is needed and
-as far as I understood USB 3.0 will not work any more in this case,
-because they are sharing the same Phy.
+Signed-off-by: Justin Waters <justin.waters@timesys.com>
+---
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  7 ++++
+ drivers/pci/host/pci-imx6.c                        | 42 +++++++++++++++++++---
+ 2 files changed, 44 insertions(+), 5 deletions(-)
 
-Hauke
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index 6fbba53..3be80c6 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -13,6 +13,13 @@ Required properties:
+ - clock-names: Must include the following additional entries:
+ 	- "pcie_phy"
+ 
++Optional properties:
++- fsl,tx-deemph-gen1: Gen1 De-emphasis value. Default: 0
++- fsl,tx-deemph-gen2-3p5db: Gen2 (3.5db) De-emphasis value. Default: 0
++- fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
++- fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
++- fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
++
+ Example:
+ 
+ 	pcie@0x01000000 {
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 230ebf9..cc04497 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -39,6 +39,11 @@ struct imx6_pcie {
+ 	struct pcie_port	pp;
+ 	struct regmap		*iomuxc_gpr;
+ 	void __iomem		*mem_base;
++	u32			tx_deemph_gen1;
++	u32			tx_deemph_gen2_3p5db;
++	u32			tx_deemph_gen2_6db;
++	u32			tx_swing_full;
++	u32			tx_swing_low;
+ };
+ 
+ /* PCIe Root Complex registers (memory-mapped) */
+@@ -317,15 +322,20 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ 			IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
+ 
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+-			IMX6Q_GPR8_TX_DEEMPH_GEN1, 0 << 0);
++			   IMX6Q_GPR8_TX_DEEMPH_GEN1,
++			   imx6_pcie->tx_deemph_gen1 << 0);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+-			IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB, 0 << 6);
++			   IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB,
++			   imx6_pcie->tx_deemph_gen2_3p5db << 6);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+-			IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB, 20 << 12);
++			   IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB,
++			   imx6_pcie->tx_deemph_gen2_6db << 12);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+-			IMX6Q_GPR8_TX_SWING_FULL, 127 << 18);
++			   IMX6Q_GPR8_TX_SWING_FULL,
++			   imx6_pcie->tx_swing_full << 18);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+-			IMX6Q_GPR8_TX_SWING_LOW, 127 << 25);
++			   IMX6Q_GPR8_TX_SWING_LOW,
++			   imx6_pcie->tx_swing_low << 25);
+ }
+ 
+ static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+@@ -565,6 +575,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 	struct imx6_pcie *imx6_pcie;
+ 	struct pcie_port *pp;
+ 	struct resource *dbi_base;
++	struct device_node *node = pdev->dev.of_node;
+ 	int ret;
+ 
+ 	imx6_pcie = devm_kzalloc(&pdev->dev, sizeof(*imx6_pcie), GFP_KERNEL);
+@@ -617,6 +628,27 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(imx6_pcie->iomuxc_gpr);
+ 	}
+ 
++	/* Grab PCIe PHY Tx Settings */
++	if (of_property_read_u32
++	    (node, "fsl,tx-deemph-gen1", &imx6_pcie->tx_deemph_gen1))
++		imx6_pcie->tx_deemph_gen1 = 0;
++
++	if (of_property_read_u32
++	    (node, "fsl,tx-deemph-gen2-3p5db", &imx6_pcie->tx_deemph_gen2_3p5db))
++		imx6_pcie->tx_deemph_gen2_3p5db = 0;
++
++	if (of_property_read_u32
++	    (node, "fsl,tx-deemph-gen2-6db", &imx6_pcie->tx_deemph_gen2_6db))
++		imx6_pcie->tx_deemph_gen2_6db = 20;
++
++	if (of_property_read_u32
++	    (node, "fsl,tx-swing-full", &imx6_pcie->tx_swing_full))
++		imx6_pcie->tx_swing_full = 127;
++
++	if (of_property_read_u32
++	    (node, "fsl,tx-swing-low", &imx6_pcie->tx_swing_low))
++		imx6_pcie->tx_swing_low = 127;
++
+ 	ret = imx6_add_pcie_port(pp, pdev);
+ 	if (ret < 0)
+ 		return ret;
+-- 
+2.5.0
+
