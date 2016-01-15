@@ -1,74 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out-mta23.ai270.net ([94.126.44.34]:51713 "EHLO
-	out-mta22.ai270.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932593AbcASKQV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2016 05:16:21 -0500
-Subject: Re: Hint HB6 - kernel doesn't see chips behind it.
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <5698191B.1070904@keynet-technology.com>
- <20160115172640.GC28453@localhost> <569CFB5B.7050903@keynet-technology.com>
- <20160119033839.GA3339@localhost>
-Cc: linux-pci@vger.kernel.org
-From: Richard F <lists@keynet-technology.com>
-Message-ID: <569E0CEF.6040801@keynet-technology.com>
-Date: Tue, 19 Jan 2016 10:16:15 +0000
-MIME-Version: 1.0
-In-Reply-To: <20160119033839.GA3339@localhost>
-Content-Type: text/plain; charset=utf-8
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:36474 "EHLO
+	metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752542AbcAOS4y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jan 2016 13:56:54 -0500
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Richard Zhu <Richard.Zhu@freescale.com>, linux-pci@vger.kernel.org,
+	kernel@pengutronix.de, patchwork-lst@pengutronix.de
+Subject: [PATCH 3/4] PCI: imx6: remove broken Gen2 workaround
+Date: Fri, 15 Jan 2016 19:56:49 +0100
+Message-Id: <1452884210-11359-4-git-send-email-l.stach@pengutronix.de>
+In-Reply-To: <1452884210-11359-1-git-send-email-l.stach@pengutronix.de>
+References: <1452884210-11359-1-git-send-email-l.stach@pengutronix.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'll see what I can do to capture the 4.4 crash, and post.
-It was quite early in the boot cycle as I recall.
+This removes the remnants of the workaround for erratum ERR005184
+which was never completely implemented. The checks alone don't
+carry any value as we don't act properly on the result.
 
-thanks
-Richard
+A proper implementation of the workaround should be added to
+the lane speed change in establish_link later.
 
-On 19/01/2016 03:38, Bjorn Helgaas wrote:
-> On Mon, Jan 18, 2016 at 02:48:59PM +0000, Richard F wrote:
->> I posted a DMESG with 4.3.3 to Bugzilla now.
->> 4.4.0 crashed on boot, not sure why yet.
-> 
-> Thanks for all the data you collected!  I haven't had a chance to look
-> at them yet, but maybe others will take a look also.
-> 
-> Crashing on boot is a much more serious problem than failure to find a
-> card.  Any information you can collect about the v4.4.0 problem would
-> be extremely useful.  A serial console log would be ideal, but even a
-> photo or video of the boot might be helpful.  Boot with
-> "ignore_loglevel" to make sure we see all the messages.
-> 
-> Bjorn
-> 
->> On 15/01/2016 17:26, Bjorn Helgaas wrote:
->>> Hi Richard,
->>>
->>> On Thu, Jan 14, 2016 at 09:54:35PM +0000, Richard F wrote:
->>>> I moved a Kodicom card (http://linuxtv.org/wiki/index.php/Kodicom_4400R)
->>>> from an older machine to a new with a PCIe bridge.  Bttv modprobe can no
->>>> longer find the BT878 chips behind the PCI bridge, though the bridge is
->>>> found.
->>>>
->>>> The bridge is a PCI6140 AKA "Hint HB6".
->>>> I noticed a PCI quirk for it, tried manually adding the IO/memory spaces
->>>> that were originally logged, but doesn't help.
->>>>
->>>> This machine runs kernel 3.12.52 (x64), but it also fails on 3.0.76.
->>>> The BT878 chips were recognised on the older machine also running 3.0.76
->>>> but with a vanilla PCI bus.
->>>
->>> Thanks for your report.  I opened this bug report:
->>>
->>>   https://bugzilla.kernel.org/show_bug.cgi?id=110851
->>>
->>> Can you please attach the complete dmesg logs from the old machine
->>> running 3.0.76 and the new machine running 3.0.76 to that bugzilla?
->>> Also please attach the complete "lspci -vvv" output for all the
->>> devices in the new machine.
->>>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ drivers/pci/host/pci-imx6.c | 17 +----------------
+ 1 file changed, 1 insertion(+), 16 deletions(-)
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 3bb8ccc68792..f38aa7678868 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -467,7 +467,7 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+ 
+ static int imx6_pcie_link_up(struct pcie_port *pp)
+ {
+-	u32 rc, debug_r0, rx_valid;
++	u32 rc;
+ 	int count = 5;
+ 
+ 	/*
+@@ -501,21 +501,6 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+ 		 */
+ 		usleep_range(1000, 2000);
+ 	}
+-	/*
+-	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
+-	 * Wait 2ms (LTSSM timeout is 24ms, PHY lock is ~5us in gen2).
+-	 * If (MAC/LTSSM.state == Recovery.RcvrLock)
+-	 * && (PHY/rx_valid==0) then pulse PHY/rx_reset. Transition
+-	 * to gen2 is stuck
+-	 */
+-	pcie_phy_read(pp->dbi_base, PCIE_PHY_RX_ASIC_OUT, &rx_valid);
+-	debug_r0 = readl(pp->dbi_base + PCIE_PHY_DEBUG_R0);
+-
+-	if (rx_valid & PCIE_PHY_RX_ASIC_OUT_VALID)
+-		return 0;
+-
+-	if ((debug_r0 & 0x3f) != 0x0d)
+-		return 0;
+ 
+ 	return 0;
+ }
+-- 
+2.6.4
 
