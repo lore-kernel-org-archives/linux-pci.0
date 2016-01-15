@@ -1,50 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: Vineet.Gupta1@synopsys.com, helgaas@kernel.org
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
-	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v6 0/2] adding PCI support to AXS10x
-Date: Thu, 14 Jan 2016 11:04:31 +0000
-Message-Id: <cover.1452611234.git.jpinto@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from www.linutronix.de ([62.245.132.108]:39862 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752509AbcAOUPX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jan 2016 15:15:23 -0500
+Date: Fri, 15 Jan 2016 21:14:22 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Keith Busch <keith.busch@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCHv8 0/5] Driver for new "VMD" device
+In-Reply-To: <CAErSpo7yGGr8iRuTJvKqwjJqVELTq35mNyxs9qg-1yhJODvGFQ@mail.gmail.com>
+Message-ID: <alpine.DEB.2.11.1601152113350.3575@nanos>
+References: <1452629890-17542-1-git-send-email-keith.busch@intel.com> <20160115181938.GA5296@localhost> <alpine.DEB.2.11.1601152042090.3575@nanos> <CAErSpo7yGGr8iRuTJvKqwjJqVELTq35mNyxs9qg-1yhJODvGFQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set has the goal to add suppport for DesignWare PCIe RC in ARC
-AXS10x. It includes the necessary tweaks to the ARC architecture, 
-necessary tweaks to the PCI subsystem and a new driver (pcie-snpsdev).
-This new driver will be used extensively in the PCIe RC Prototyping Kit.
+On Fri, 15 Jan 2016, Bjorn Helgaas wrote:
 
-The patches were produced against Bjorn Helgaas' repository. It was properly
-tested in an IP Prototyping Kit.
+> On Fri, Jan 15, 2016 at 11:44 AM, Thomas Gleixner <tglx@linutronix.de> wrote:
+> > On Fri, 15 Jan 2016, Bjorn Helgaas wrote:
+> >> +    [bhelgaas: add VMD BAR #defines, factor out vmd_cfg_addr(), whitespace]
+> >>      Signed-off-by: Keith Busch <keith.busch@intel.com>
+> >>      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >
+> > Just for the record. You forgot my Acked-bys
+> 
+> Sorry, I added them to the first two patches:
+> 
+>   irqdomain: Export irq_domain_set_info() for module use
+>   genirq/MSI: Relax msi_domain_alloc() to support parentless MSI irqdomains
+> 
+> Let me know if you intended to ack any of the others, too.
 
-Joao Pinto (2):
-  PCI support added to ARC
-  add new platform driver for PCI RC
+The vmd driver itself (at least for the irq related parts). But you don't have
+to redo it.
 
- .../devicetree/bindings/pci/pcie-snpsdev.txt       |  33 +++
- MAINTAINERS                                        |   7 +
- arch/arc/Kconfig                                   |  23 ++
- arch/arc/include/asm/dma.h                         |   5 +
- arch/arc/include/asm/io.h                          |   9 +
- arch/arc/include/asm/pci.h                         |  31 +++
- arch/arc/kernel/Makefile                           |   1 +
- arch/arc/kernel/pcibios.c                          |  23 ++
- arch/arc/plat-axs10x/Kconfig                       |   1 +
- drivers/pci/Makefile                               |   1 +
- drivers/pci/host/Kconfig                           |   8 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pcie-designware.c                 |   9 +
- drivers/pci/host/pcie-designware.h                 |   1 +
- drivers/pci/host/pcie-snpsdev.c                    | 286 +++++++++++++++++++++
- 15 files changed, 440 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
- create mode 100644 arch/arc/include/asm/pci.h
- create mode 100644 arch/arc/kernel/pcibios.c
- create mode 100644 drivers/pci/host/pcie-snpsdev.c
+Thanks,
 
--- 
-1.8.1.5
+	tglx
