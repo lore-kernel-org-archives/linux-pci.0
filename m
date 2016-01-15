@@ -1,111 +1,199 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx4-phx2.redhat.com ([209.132.183.25]:43255 "EHLO
-	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751256AbcA2TGG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jan 2016 14:06:06 -0500
-Date: Fri, 29 Jan 2016 14:05:44 -0500 (EST)
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:42043 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755080AbcAOHIS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jan 2016 02:08:18 -0500
+Received: from localhost
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Fri, 15 Jan 2016 17:08:16 +1000
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
-	aik@ozlabs.ru, benh@kernel.crashing.org, paulus@samba.org,
-	mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
-Message-ID: <163133676.20416948.1454094344181.JavaMail.zimbra@redhat.com>
-In-Reply-To: <56AB4182.5060501@linux.vnet.ibm.com>
-References: <1452841574-2781-1-git-send-email-xyjxie@linux.vnet.ibm.com> <1452841574-2781-4-git-send-email-xyjxie@linux.vnet.ibm.com> <1454021182.23148.6.camel@redhat.com> <56AB4182.5060501@linux.vnet.ibm.com>
-Subject: Re: [RFC PATCH v3 3/5] PCI: Add host bridge attribute to indicate
- filtering of MSIs is supported
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
+	alex.williamson@redhat.com, benh@kernel.crashing.org,
+	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [RFC PATCH v3 1/5] PCI: Add support for enforcing all MMIO BARs to be page aligned
+Date: Fri, 15 Jan 2016 15:06:10 +0800
+Message-Id: <1452841574-2781-2-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1452841574-2781-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1452841574-2781-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+When vfio passthrough a PCI device of which MMIO BARs
+are smaller than PAGE_SIZE, guest will not handle the
+mmio accesses to the BARs which leads to mmio emulations
+in host.
 
+This is because vfio will not allow to passthrough one
+BAR's mmio page which may be shared with other BARs.
 
------ Original Message -----
-> On 2016/1/29 6:46, Alex Williamson wrote:
-> > On Fri, 2016-01-15 at 15:06 +0800, Yongji Xie wrote:
-> >> MSI-X tables are not allowed to be mmapped in vfio-pci
-> >> driver in case that user get to touch this directly.
-> >> This will cause some performance issues when when PCI
-> >> adapters have critical registers in the same page as
-> >> the MSI-X table.
-> >>   
-> >> However, some kind of PCI host bridge such as IODA bridge
-> >> on Power support filtering of MSIs, which can ensure that a
-> >> given pci device can only shoot the MSIs assigned for it.
-> >> So we think it's safe to expose the MSI-X table to userspace
-> >> if filtering of MSIs is supported because the exposed MSI-X
-> >> table can't be used to do harm to other memory space.
-> >>   
-> >> To support this case, this patch adds a pci_host_bridge
-> >> attribute to indicate if this PCI host bridge supports
-> >> filtering of MSIs.
-> >>   
-> >> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-> >> ---
-> >>   drivers/pci/host-bridge.c |    6 ++++++
-> >>   include/linux/pci.h       |    3 +++
-> >>   2 files changed, 9 insertions(+)
-> >>   
-> >> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
-> >> index 5f4a2e0..c029267 100644
-> >> --- a/drivers/pci/host-bridge.c
-> >> +++ b/drivers/pci/host-bridge.c
-> >> @@ -96,3 +96,9 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct
-> >> resource *res,
-> >>   	res->end = region->end + offset;
-> >>   }
-> >>   EXPORT_SYMBOL(pcibios_bus_to_resource);
-> >> +
-> >> +bool pci_host_bridge_msi_filtered_enabled(struct pci_dev *pdev)
-> >> +{
-> >> +	return pci_find_host_bridge(pdev->bus)->msi_filtered;
-> >> +}
-> >> +EXPORT_SYMBOL_GPL(pci_host_bridge_msi_filtered_enabled);
-> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> >> index b640d65..b952b78 100644
-> >> --- a/include/linux/pci.h
-> >> +++ b/include/linux/pci.h
-> >> @@ -412,6 +412,7 @@ struct pci_host_bridge {
-> >>   	void (*release_fn)(struct pci_host_bridge *);
-> >>   	void *release_data;
-> >>   	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
-> >> +	unsigned int msi_filtered:1;	/* support filtering of MSIs */
-> >>   	/* Resource alignment requirements */
-> >>   	resource_size_t (*align_resource)(struct pci_dev *dev,
-> >>   			const struct resource *res,
-> >> @@ -430,6 +431,8 @@ void pci_set_host_bridge_release(struct
-> >> pci_host_bridge *bridge,
-> >>   
-> >>   int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
-> >>   
-> >> +bool pci_host_bridge_msi_filtered_enabled(struct pci_dev *pdev);
-> >> +
-> >>   /*
-> >>    * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that
-> >>    correspond
-> >>    * to P2P or CardBus bridge windows) go in a table.  Additional ones
-> >>    (for
-> > Don't we already have a flag for this in the IOMMU space?
-> >
-> > enum iommu_cap {
-> >          IOMMU_CAP_CACHE_COHERENCY,      /* IOMMU can enforce cache
-> >          coherent DMA
-> >                                             transactions */
-> > --->    IOMMU_CAP_INTR_REMAP,           /* IOMMU supports interrupt
-> > isolation */
-> >          IOMMU_CAP_NOEXEC,               /* IOMMU_NOEXEC flag */
-> > };
-> >
-> 
-> I saw this flag had been enabled in x86 and ARM arch.
-> 
-> I'm not sure whether we can mmap MSI-X table in those archs. I just
-> verify it on PPC64 arch.
+To solve this performance issue, this patch adds a kernel
+parameter "pci=resource_page_aligned=on" to enforce
+the alignment of all MMIO BARs to be at least PAGE_SIZE,
+so that one BAR's mmio page would not be shared with other
+BARs. We can also disable it through kernel parameter
+"pci=resource_page_aligned=off".
 
-Unfortunately that's not a very good excuse for creating an alternate implementation.  When x86 implements interrupt remapping, we get fine grained isolation of MSI vectors and we've always taken this flag to mean that the system is isolated from devices that may perform DoS attacks with MSI writes.  I'm not entirely sure whether ARM really provides that degree of isolation, but they would be incorrect is exposing the capability if they do not.  Thanks,
+For the default value of the parameter, we think it should be
+arch-independent, so we add a macro
+HAVE_PCI_DEFAULT_RESOURCES_PAGE_ALIGNED to change it. And we
+define this macro to enable this parameter by default on PPC64
+platform which can easily hit this performance issue because
+its PAGE_SIZE is 64KB.
 
-Alex
+Note that the kernel parameter won't works if kernel doesn't do
+resources reallocation.
+
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ Documentation/kernel-parameters.txt |    5 +++++
+ arch/powerpc/include/asm/pci.h      |   11 +++++++++++
+ drivers/pci/pci.c                   |   35 +++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h                   |    8 +++++++-
+ include/linux/pci.h                 |    4 ++++
+ 5 files changed, 62 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 742f69d..3f2a7c9 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2857,6 +2857,11 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				PAGE_SIZE is used as alignment.
+ 				PCI-PCI bridge can be specified, if resource
+ 				windows need to be expanded.
++		resource_page_aligned=	Enable/disable enforcing the alignment
++				of all PCI devices' memory resources to be
++				at least PAGE_SIZE if resources reallocation
++				is done by kernel.
++				Format: { "on" | "off" }
+ 		ecrc=		Enable/disable PCIe ECRC (transaction layer
+ 				end-to-end CRC checking).
+ 				bios: Use BIOS/firmware settings. This is the
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index 3453bd8..2d2b3ef 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -136,6 +136,17 @@ extern pgprot_t	pci_phys_mem_access_prot(struct file *file,
+ 					 unsigned long pfn,
+ 					 unsigned long size,
+ 					 pgprot_t prot);
++#ifdef CONFIG_PPC64
++
++/* For PPC64, We enforce all PCI MMIO BARs to be page aligned
++ * by default. This would be helpful to improve performance
++ * when we passthrough a PCI device of which BARs are smaller
++ * than PAGE_SIZE(64KB). And we can use kernel parameter
++ * "pci=resource_page_aligned=off" to disable it.
++ */
++#define HAVE_PCI_DEFAULT_RESOURCES_PAGE_ALIGNED	1
++
++#endif
+ 
+ #define HAVE_ARCH_PCI_RESOURCE_TO_USER
+ extern void pci_resource_to_user(const struct pci_dev *dev, int bar,
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 314db8c..7b21238 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -99,6 +99,9 @@ u8 pci_cache_line_size;
+  */
+ unsigned int pcibios_max_latency = 255;
+ 
++bool pci_resources_page_aligned =
++	IS_ENABLED(HAVE_PCI_DEFAULT_RESOURCES_PAGE_ALIGNED);
++
+ /* If set, the PCIe ARI capability will not be used. */
+ static bool pcie_ari_disabled;
+ 
+@@ -4746,6 +4749,35 @@ static ssize_t pci_resource_alignment_store(struct bus_type *bus,
+ BUS_ATTR(resource_alignment, 0644, pci_resource_alignment_show,
+ 					pci_resource_alignment_store);
+ 
++static void pci_resources_get_page_aligned(char *str)
++{
++	if (!strncmp(str, "off", 3))
++		pci_resources_page_aligned = false;
++	else if (!strncmp(str, "on", 2))
++		pci_resources_page_aligned = true;
++}
++
++/*
++ * This function checks whether PCI BARs' mmio page will be shared
++ * with other BARs.
++ */
++bool pci_resources_share_page(struct pci_dev *dev, int resno)
++{
++	struct resource *res = dev->resource + resno;
++
++	if (resource_size(res) >= PAGE_SIZE)
++		return false;
++	if (pci_resources_page_aligned && !(res->start & ~PAGE_MASK) &&
++	    res->flags & IORESOURCE_MEM) {
++		if (res->sibling)
++			return (res->sibling->start & ~PAGE_MASK);
++		else
++			return false;
++	}
++	return true;
++}
++EXPORT_SYMBOL_GPL(pci_resources_share_page);
++
+ static int __init pci_resource_alignment_sysfs_init(void)
+ {
+ 	return bus_create_file(&pci_bus_type,
+@@ -4859,6 +4891,9 @@ static int __init pci_setup(char *str)
+ 			} else if (!strncmp(str, "resource_alignment=", 19)) {
+ 				pci_set_resource_alignment_param(str + 19,
+ 							strlen(str + 19));
++			} else if (!strncmp(str, "resource_page_aligned=",
++				   22)) {
++				pci_resources_get_page_aligned(str + 22);
+ 			} else if (!strncmp(str, "ecrc=", 5)) {
+ 				pcie_ecrc_get_policy(str + 5);
+ 			} else if (!strncmp(str, "hpiosize=", 9)) {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index d390fc1..b9b333d 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -312,11 +312,17 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
+ #ifdef CONFIG_PCI_IOV
+ 	int resno = res - dev->resource;
+ 
+-	if (resno >= PCI_IOV_RESOURCES && resno <= PCI_IOV_RESOURCE_END)
++	if (resno >= PCI_IOV_RESOURCES && resno <= PCI_IOV_RESOURCE_END) {
++		if (pci_resources_page_aligned && res->flags & IORESOURCE_MEM)
++			return PAGE_ALIGN(pci_sriov_resource_alignment(dev,
++					  resno));
+ 		return pci_sriov_resource_alignment(dev, resno);
++	}
+ #endif
+ 	if (dev->class >> 8  == PCI_CLASS_BRIDGE_CARDBUS)
+ 		return pci_cardbus_resource_alignment(res);
++	if (pci_resources_page_aligned && res->flags & IORESOURCE_MEM)
++		return PAGE_ALIGN(resource_alignment(res));
+ 	return resource_alignment(res);
+ }
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 6ae25aa..b640d65 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1530,6 +1530,10 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ 	 (pci_resource_end((dev), (bar)) -		\
+ 	  pci_resource_start((dev), (bar)) + 1))
+ 
++extern bool pci_resources_page_aligned;
++
++bool pci_resources_share_page(struct pci_dev *dev, int resno);
++
+ /* Similar to the helpers above, these manipulate per-pci_dev
+  * driver-specific data.  They are really just a wrapper around
+  * the generic device structure functions of these calls.
+-- 
+1.7.9.5
+
