@@ -1,75 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:34293 "EHLO arroyo.ext.ti.com"
+Received: from mga02.intel.com ([134.134.136.20]:49306 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750707AbcAGGVw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 Jan 2016 01:21:52 -0500
-Subject: Re: [PATCH 2/2] pci: host: pci-dra7xx: Enable x2 mode support
-To: Rob Herring <robh@kernel.org>
-References: <1452077393-25880-1-git-send-email-kishon@ti.com>
- <1452077393-25880-3-git-send-email-kishon@ti.com>
- <20160106141324.GA24713@rob-hp-laptop>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<nsekhar@ti.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <568E03ED.9030207@ti.com>
-Date: Thu, 7 Jan 2016 11:51:33 +0530
-MIME-Version: 1.0
-In-Reply-To: <20160106141324.GA24713@rob-hp-laptop>
-Content-Type: text/plain; charset="windows-1252"
+	id S1751136AbcAOGXB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 15 Jan 2016 01:23:01 -0500
+From: Qipeng Zha <qipeng.zha@intel.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	mika.westerberg@intel.com, Qi Zheng <qi.zheng@intel.com>
+Subject: [PATCH 2/2] PCI/PM: enable runtime PM support for Intel Broxton platform.
+Date: Fri, 15 Jan 2016 22:27:45 +0800
+Message-Id: <1452868065-96999-2-git-send-email-qipeng.zha@intel.com>
+In-Reply-To: <1452868065-96999-1-git-send-email-qipeng.zha@intel.com>
+References: <1452868065-96999-1-git-send-email-qipeng.zha@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+The PCIe runtime PM is disabled by default, add special treatment
+to allow runtime PM for Intel Broxton platform.
 
-On Wednesday 06 January 2016 07:43 PM, Rob Herring wrote:
-> On Wed, Jan 06, 2016 at 04:19:53PM +0530, Kishon Vijay Abraham I wrote:
->> Perform syscon configurations to get x2 mode to working in DRA74x and
->> DRA72x. Also add a new compatible string to dfferentiate
->> DRA72x and DRA74x, since b1c0 mask is different for both these platforms.
->>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>  Documentation/devicetree/bindings/pci/ti-pci.txt |    8 ++-
->>  drivers/pci/host/pci-dra7xx.c                    |   81 +++++++++++++++++++++-
->>  2 files changed, 86 insertions(+), 3 deletions(-)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
->> index 60e2516..0b10e84 100644
->> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
->> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
->> @@ -1,7 +1,9 @@
->>  TI PCI Controllers
->>  
->>  PCIe Designware Controller
->> - - compatible: Should be "ti,dra7-pcie""
->> + - compatible: "ti,dra7-pcie" is deprecated
->> +	       Should be "ti,dra746-pcie" for DRA74x
->> +	       Should be "ti,dra726-pcie" for DRA72x
->>   - reg : Two register ranges as listed in the reg-names property
->>   - reg-names : The first entry must be "ti-conf" for the TI specific registers
->>  	       The second entry must be "rc-dbics" for the designware pcie
->> @@ -14,6 +16,10 @@ PCIe Designware Controller
->>  	       where <X> is the instance number of the pcie from the HW spec.
->>   - interrupts : Two interrupt entries must be specified. The first one is for
->>  		main interrupt line and the second for MSI interrupt line.
->> + - syscon-lane-conf : phandle/offset pair. Phandle to the system control module and the
->> +   register offset to specify 1 lane or 2 lane.
->> + - syscon-lane-sel : phandle/offset pair. Phandle to the system control module and the
->> +   register offset to specify lane selection.
-> 
-> These should have a ti prefix.
+Signed-off-by: Qi Zheng <qi.zheng@intel.com>
+Signed-off-by: Qipeng Zha <qipeng.zha@intel.com>
+---
+ drivers/pci/quirks.c    | 13 +++++++++++++
+ include/linux/pci_ids.h |  2 ++
+ 2 files changed, 15 insertions(+)
 
-Okay. Will fix that and post a new version.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 7e32730..a745d06 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -25,6 +25,7 @@
+ #include <linux/sched.h>
+ #include <linux/ktime.h>
+ #include <linux/mm.h>
++#include <linux/pm_runtime.h>
+ #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+ #include "pci.h"
+ 
+@@ -2989,6 +2990,18 @@ static void quirk_intel_ntb(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
+ 
++
++/*PCIe ports on Intel Broxton should support runtime PM*/
++static void quirk_pcie_enable_rtpm(struct pci_dev *dev)
++{
++	pm_runtime_put_noidle(&dev->dev);
++	pm_runtime_allow(&dev->dev);
++}
++DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_INTEL,
++	PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_0, quirk_pcie_enable_rtpm);
++DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_INTEL,
++	PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_1, quirk_pcie_enable_rtpm);
++
+ static ktime_t fixup_debug_start(struct pci_dev *dev,
+ 				 void (*fn)(struct pci_dev *dev))
+ {
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index d9ba49c..731f05f 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2596,6 +2596,8 @@
+ #define PCI_DEVICE_ID_INTEL_82840_HB	0x1a21
+ #define PCI_DEVICE_ID_INTEL_82845_HB	0x1a30
+ #define PCI_DEVICE_ID_INTEL_IOAT	0x1a38
++#define PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_0		0x1ad6
++#define PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_1		0x1ad7
+ #define PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MIN	0x1c41
+ #define PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MAX	0x1c5f
+ #define PCI_DEVICE_ID_INTEL_PATSBURG_LPC_0	0x1d40
+-- 
+1.8.3.2
 
-Thanks
-Kishon
-> 
->>   - #address-cells,
->>     #size-cells,
->>     #interrupt-cells,
