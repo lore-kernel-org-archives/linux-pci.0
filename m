@@ -1,57 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0045.outbound.protection.outlook.com ([104.47.37.45]:5876
-	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933298AbcA0OfW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jan 2016 09:35:22 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	Michal Simek <michals@xilinx.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"paul.burton@imgtec.com" <paul.burton@imgtec.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"wangyijing@huawei.com" <wangyijing@huawei.com>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH V2 0/5] PCIe Xilinx generic driver for Microblaze and
-Date: Wed, 27 Jan 2016 14:35:15 +0000
-Message-ID: <8520D5D51A55D047800579B09414719825873DB9@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
- <33382572.XZxh3toaBY@wuerfel>
-In-Reply-To: <33382572.XZxh3toaBY@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga01.intel.com ([192.55.52.88]:7792 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751018AbcAOTai (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 15 Jan 2016 14:30:38 -0500
+Date: Fri, 15 Jan 2016 11:31:03 -0800
+From: "Veal, Bryan E." <bryan.e.veal@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Keith Busch <keith.busch@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCHv8 0/5] Driver for new "VMD" device
+Message-ID: <20160115193103.GA2249@intel.com>
+Reply-To: bryan.e.veal@intel.com
+References: <1452629890-17542-1-git-send-email-keith.busch@intel.com>
+ <20160115181938.GA5296@localhost>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160115181938.GA5296@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Subject: Re: [PATCH V2 0/5] PCIe Xilinx generic driver for Microblaze and
-> 
-> On Tuesday 12 January 2016 23:06:08 Bharat Kumar Gogada wrote:
-> > This patch series does modifications to pcie-xilinx.c, to support
-> > common driver on both Zynq and Microblaze architectures.
-> > Microblaze pci-common.c has been modified to support generic driver.
-> >
-> > I'm aware Paul Burton <paul.burton@imgtec.com> has also sent patches
-> > related to pcie-xilinx.c, but I'm unable to comment on them.
-> > I request Paul Burton to please add me in cc list so that I can
-> > comment on those patches.
-> 
-> Very nice work overall!
-> 
-> I've commented on a few smaller things that I think could be improved.
-> 
-Thanks, I will do the accordingly.
+On Fri, Jan 15, 2016 at 12:19:38PM -0600, Bjorn Helgaas wrote:
+> I also have a more substantive question about the flags setup.  I
+> think you should not clear IORESOURCE_MEM_64.  The intent of
+> IORESOURCE_MEM_64 is to describe the *capability* of a BAR, not its
+> contents.  But I assume you cleared it for a reason.  vmd->resources[n]
+> are not BARs, so the PCI core won't assign resources to them like it
+> does for BAR, so we shouldn't care about IORESOURCE_MEM_64 for that
+> reason.  Is there some other reason IORESOURCE_MEM_64 makes a
+> difference there?
 
-Bharat
+Hi Bjorn & Keith:
+  
+I did this to fix an issue in pre-RFC code.
+
+The flag is subtly restrictive in one specific scenario: spec-compliant
+PCIe ports lack the ability to specify a 64-bit, non-prefetchable range.
+IORESOURCE_MEM_64 directs the PCI subsystem to put the address into the
+64-bit *prefetchable* range. Below the port, the "prefetchable" propoerty
+*is* restrictive: the addresses can't be used for non-prefetchable BARs.
+
+Thus, in the specific case where a 64-bit non-prefetchable VMD bar happens
+to contain a 32-bit address, removing the IORESOURCE_MEM_64 flag allows
+the address resource to be used for *any* non-prefetchable BARs (32-bit or
+64-bit) downstream.  
