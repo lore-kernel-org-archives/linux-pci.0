@@ -1,40 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f54.google.com ([209.85.213.54]:36850 "EHLO
-	mail-vk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751057AbcA3GPf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 30 Jan 2016 01:15:35 -0500
-MIME-Version: 1.0
-In-Reply-To: <20160129163159.GC12965@localhost>
-References: <20160128192951.CC6AF820DC@mx.svc.vniiem.ru>
-	<20160129163159.GC12965@localhost>
-Date: Fri, 29 Jan 2016 22:15:34 -0800
-Message-ID: <CAE9FiQXq5-h56P-94+_LVXRhVipJsfVFYx1HcwqewEfZp1PGkw@mail.gmail.com>
-Subject: Re: PCI device driver broken between 4.2 and 4.3
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from www.linutronix.de ([62.245.132.108]:39322 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752281AbcAOSD5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jan 2016 13:03:57 -0500
+Date: Fri, 15 Jan 2016 19:03:54 +0100
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: =?UTF-8?B?0JzQvtGA0L7QtyDQntC70LXQsw==?= <oleg.moroz@mcc.vniiem.ru>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci: aer: wait till the workqueue completes before free
+ memory
+Message-ID: <20160115180354.GF3781@linutronix.de>
+References: <20151217143243.GA9654@linutronix.de>
+ <20160106232758.GE16231@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160106232758.GE16231@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 29, 2016 at 8:31 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> 991de2e59090 is related to IRQs, so I'd start by printing dev->irq in your
-> driver before and after you call pci_enable_device().  Add some printks in
-> pcibios_alloc_irq() and pcibios_enable_device() just to confirm that we got
-> there and when, e.g., add lines like this:
+* Bjorn Helgaas | 2016-01-06 17:27:58 [-0600]:
 
-looks like that commit removed pcibios_enable_irq for parent bridge.
+>Hi Sebastian,
+Hi Bjorn,
 
-pci_enable_device==>pci_enable_bridge==>pci_enable_device==>pcibios_enable_device
-==>pcibios_enable_irq without msi enabled.
+>Your change looks reasonable.  But I'm curious about the wait_event()
+>just below it.  That *looks* like it's intended to do the same thing
+>as your flush_work().
+Indeed.
 
-so pci=routeirq may workaround the problem.
+>Can you explain why the wait_event() isn't working?  If we add the
 
-Thanks
+aer_isr() invokes get_e_source() which increments rpc->cons_idx. So
+the condition is valid after that and the function does not terminate
+yes it invokes aer_isr_one_error().
+That means if we have one CPU doing the ISR + workqueue task and another
+CPU doing the aer_remove() removal thingy then the latter CPU evaluates
+the condition to true and continues cleanup while the former is still in
+aer_isr_one_error() wondering where the memory went.
 
-Yinghai
+>flush_work(), can we remove the wait_event() stuff?
+
+I think so since its only purpose is to sync against removal which does
+not work on SMP. So let me remove this and the wait_release member.
+
+>Bjorn
+
+Sebastian
