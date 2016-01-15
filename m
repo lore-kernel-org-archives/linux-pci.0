@@ -1,91 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f172.google.com ([209.85.160.172]:36125 "EHLO
-	mail-yk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756301AbcAHS1M convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Jan 2016 13:27:12 -0500
-Received: by mail-yk0-f172.google.com with SMTP id v14so277981434ykd.3
-        for <linux-pci@vger.kernel.org>; Fri, 08 Jan 2016 10:27:12 -0800 (PST)
+Received: from mail-yk0-f193.google.com ([209.85.160.193]:33005 "EHLO
+	mail-yk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750834AbcAOSZM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Jan 2016 13:25:12 -0500
 MIME-Version: 1.0
-In-Reply-To: <7B5F9613-28B1-47BB-B081-ACB94DC45868@gmail.com>
-References: <1451251271-43502-1-git-send-email-brutallesale@gmail.com>
- <20160108163638.GB31005@localhost> <8694496E-F4DE-4C68-98DE-CA9F1DD1D8BA@gmail.com>
- <CAErSpo7oaZ220hv5=LfCdWiytjJGYciwUz4qHYx6E_ZW8GBe+g@mail.gmail.com> <7B5F9613-28B1-47BB-B081-ACB94DC45868@gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 8 Jan 2016 12:26:52 -0600
-Message-ID: <CAErSpo59One_XZgYE+ZpyAu4Xmr7EsxkbuKbe2Xp_yfjK5PdLg@mail.gmail.com>
-Subject: Re: [PATCH] drivers:pci Fix all whitespace issues
-To: sasa bogicevic <brutallesale@gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+In-Reply-To: <20150826042136.GA14584@gmail.com>
+References: <1440443613-13696-1-git-send-email-mcgrof@do-not-panic.com>
+ <1440443613-13696-11-git-send-email-mcgrof@do-not-panic.com>
+ <20150825075318.GA2735@gmail.com> <20150825154837.GL8051@wotan.suse.de>
+ <20150825134358.990073a55012c60a638b3144@linux-foundation.org>
+ <20150825231912.GW8051@wotan.suse.de> <20150825162540.0591c8c8276b1ff279785e49@linux-foundation.org>
+ <20150826042136.GA14584@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Date: Fri, 15 Jan 2016 10:24:52 -0800
+Message-ID: <CAB=NE6UucJOwy3O58Oydoy_yR_05k0ebbBXpFVcNWM_g6ez-aA@mail.gmail.com>
+Subject: Re: [PATCH v4 10/11] dma: rename dma_*_writecombine() to dma_*_wc()
+To: Ingo Molnar <mingo@kernel.org>, Julia Lawall <julia.lawall@lip6.fr>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	David Howells <dhowells@redhat.com>,
+	Borislav Petkov <bp@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	Dave Airlie <airlied@linux.ie>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	Andy Lutomirski <luto@amacapital.net>, vinod.koul@intel.com,
+	Dan Williams <dan.j.williams@intel.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	X86 ML <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No, this change would only affect Kconfig files.  For example,
-arch/x86/Kconfig contains:
-
-  source "drivers/pci/pcie/Kconfig"
-  source "drivers/pci/Kconfig"
-  source "drivers/pci/hotplug/Kconfig"
-
-I would like it to contain only the "drivers/pci/Kconfig" line.  The
-drivers/pci/Kconfig file should take care of including pcie/Kconfig
-and pci/hotplug/Kconfig itself.
-
-Other arches have the same issue.
-
-
-On Fri, Jan 8, 2016 at 11:54 AM, sasa bogicevic <brutallesale@gmail.com> wrote:
-> Thanks!
-> This is great, so basically all drivers from pcie need to be moved to pci folder, right ?
+On Tue, Aug 25, 2015 at 9:21 PM, Ingo Molnar <mingo@kernel.org> wrote:
 >
-> Thanks, Sasa
-> {
->         name: Bogicevic Sasa
->         phone: +381606006200
-> }
+> * Andrew Morton <akpm@linux-foundation.org> wrote:
 >
+>> > There's a catch-22 issue here either way, for instance this rename patch has
+>> > been being baked for probably 2 releases already but the difficulty has been
+>> > trying to find the appropriate time to merge it without conflict.
+>> >
+>> > If you do it in the beginning of the merge window, you have to ask yourself in
+>> > what tree it will be done. Since subsystems are topic specific that means that
+>> > subsystem will end up having a conflict at the end of the merge window.
+>>
+>> Yes it's a special case.  I think the best way of handling such things is to get
+>> them in to Linus either right at the end of the merge window or the day after he
+>> releases -rc1.  This is when most people's trees are mostly empty.
 >
+> Yes, that was the plan last time around as well - but the end of the merge window
+> is when we have the least maintainer bandwidth as well ...
 >
->> On Jan 8, 2016, at 18:38, Bjorn Helgaas <bhelgaas@google.com> wrote:
->>
->> I have sort of a to-do list here:
->>
->> https://docs.google.com/spreadsheets/d/1VgEMqaG5FFkde4Se64nNaMpNzBfXdlgihXuGKVEzMbA/edit?usp=sharing
->>
->> Most of those items are fairly significant, but I can help if you have
->> questions (please post on linux-pci so others can benefit as well).
->>
->> Integrating PCIe Kconfig into PCI Kconfig should be relatively
->> straightforward (though far from trivial).
->>
->> Welcome to Linux and PCI!
->>
->> Bjorn
->>
->> On Fri, Jan 8, 2016 at 10:58 AM, sasa bogicevic <brutallesale@gmail.com> wrote:
->>> Thanks!
->>> If you have some more tasks for me I would appreciate it. I am still new so I do only these kind of fixes for now but if there is something more complex that trivial coding style issues but not too complex for the start I would be glad to contribute some more. Just let me know and Ill get on it.
->>>
->>> Thanks, Sasa
->>> {
->>>        name: Bogicevic Sasa
->>>        phone: +381606006200
->>> }
->>>
->>>
->>>
->>>> On Jan 8, 2016, at 17:36, Bjorn Helgaas <helgaas@kernel.org> wrote:
->>>>
->>>> On Sun, Dec 27, 2015 at 01:21:11PM -0800, Bogicevic Sasa wrote:
->>>>> This patch fixes all whitespace issues( missing or needed whitespace) in
->>>>> all files in drivers/pci folder. Code is compiled with allyesconfig
->>>>> before and after code changes and objects are recorded and checked with
->>>>> objdiff and they are not changed after this commit.
->>>>>
->>>>> Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
->>>>
->>>> Applied to pci/trivial for v4.5, thanks!
->>>>
->>>> Bjorn
->>>
->
+> Anyway, I applied most of the patches (sans the rename), so the rename patch
+> should be a lot simpler to execute at the right moment this time around.
+
+Ingo, should we try this again some time? I have some ideas on how to
+make these sorts of changes easier to manage in the future, it
+involves having an automatic git rebase option to use Coccinelle for
+you if a patch is annotated to have been completely done with
+Coccinelle, but future tooling is needed for that [0]. In the meantime
+I (or you) can simply run the script at any point in time to catch all
+the names as-is in the kernel / point in time we decide to merge this
+simple rename.
+
+[0] http://kernelnewbies.org/KernelProjects/linux-oven
+
+ Luis
