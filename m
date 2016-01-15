@@ -1,43 +1,28 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f66.google.com ([209.85.213.66]:32830 "EHLO
-	mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750991AbcA2QQu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jan 2016 11:16:50 -0500
-Received: by mail-vk0-f66.google.com with SMTP id n1so3069696vkb.0
-        for <linux-pci@vger.kernel.org>; Fri, 29 Jan 2016 08:16:49 -0800 (PST)
+Received: from g4t3426.houston.hp.com ([15.201.208.54]:1384 "EHLO
+	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752505AbcAOBIJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jan 2016 20:08:09 -0500
+From: "Seymour, Shane M" <shane.seymour@hpe.com>
+To: Hannes Reinecke <hare@suse.de>, Bjorn Helgaas <helgaas@kernel.org>
+CC: Alexander Duyck <alexander.duyck@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Babu Moger <babu.moger@oracle.com>
+Subject: RE: [PATCHv2 0/4] PCI VPD access fixes
+Date: Fri, 15 Jan 2016 01:07:14 +0000
+Message-ID: <DDB9C85B850785449757F9914A034FCB4450CEC7@G9W0766.americas.hpqcorp.net>
+References: <1452684335-46107-1-git-send-email-hare@suse.de>
+In-Reply-To: <1452684335-46107-1-git-send-email-hare@suse.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1454066972-3609-2-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1454066972-3609-1-git-send-email-lorenzo.pieralisi@arm.com>
-	<1454066972-3609-2-git-send-email-lorenzo.pieralisi@arm.com>
-Date: Fri, 29 Jan 2016 21:46:49 +0530
-Message-ID: <CAHM4w1nGWtJP57jLJAoh4bu0YZCK6dMUYujxy-xnRgC4TrJBzA@mail.gmail.com>
-Subject: Re: [PATCH 2/2] drivers: pci: host: designware: remove PCI_PROBE_ONLY handling
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 29, 2016 at 4:59 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> The PCIe designware host driver is not used in system configurations
-> requiring the PCI_PROBE_ONLY flag to be set to prevent resources
-> assignment, therefore the driver code handling the flag can be
-> removed from the kernel.
->
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Pratyush Anand <pratyush.anand@gmail.com>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Jingoo Han <jingoohan1@gmail.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> Cc: Zhou Wang <wangzhou1@hisilicon.com>
-
-
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+For the series. Tested with AE311 PCI-Express 4Gb Fibre Channel HBA.
+Truncation of the vpd data returned works (154 bytes) and lspci -vvv
+prints out the VPD tags the same way with and without the changes.
+This card did not require any quirks it was capable of returning 32k
+of data (although it repeated every 4k).
+---
+Tested-by: Shane Seymour <shane.seymour@hpe.com>
