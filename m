@@ -1,52 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
- hostbridge init based on ACPI
-To: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
-Cc: jchandra@broadcom.com, jcm@redhat.com,
-	linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	robert.richter@caviumnetworks.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, wangyijing@huawei.com, tglx@linutronix.de,
-	mw@semihalf.com, linux-arm-kernel@lists.infradead.org
-From: Jeremy Linton <jeremy.linton@arm.com>
-Message-ID: <56982766.8060000@arm.com>
-Date: Thu, 14 Jan 2016 16:55:34 -0600
-MIME-Version: 1.0
-In-Reply-To: <1452691267-32240-1-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:54991 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750942AbcAORDi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 15 Jan 2016 12:03:38 -0500
+Message-ID: <1452877417.14628.144.camel@redhat.com>
+Subject: Re: [PATCH] PCI: Add function 1 DMA alias quirk for Lite-On/Plextor
+ M6e/Marvell 88SS9183
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Tim Sander <tim@krieglstein.org>, linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-kernel@vger.kernel.org
+Date: Fri, 15 Jan 2016 10:03:37 -0700
+In-Reply-To: <2496384.AM4JqWABTr@dabox>
+References: <11003431.x6xHs1WP1I@dabox> <20160108204924.GK5354@localhost>
+	 <1452287726.29599.230.camel@redhat.com> <2496384.AM4JqWABTr@dabox>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/13/2016 07:20 AM, Tomasz Nowicki wrote:
->  From the functionality point of view this series might be split into the
-> following logic parts:
-> 1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
->     PCI config regions and used when necessary.
-> 2. Move non-arch specific bits to the core code.
-> 3. Use MMCONFIG code and implement generic ACPI based PCI host controller driver.
-> 4. Enable above driver on ARM64
->
-> Patches has been built on top of 4.4 and can be found here:
-> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v3)
+On Fri, 2016-01-15 at 13:30 +0100, Tim Sander wrote:
+> Add function 1 DMA alias quirk for Lite-On/Plextor M6e/Marvell
+> 88SS9183
+> 
+> Signed-off-by: Tim Sander <tim@krieglstein.org>
+> ---
 
-I boot tested this on JunoR2 with a recent build of Tianocore EDK2.
+Acked-by: Alex Williamson <alex.williamson@redhat.com>
 
-It works enough to boot the machine with PCIe attached sata, and 
-ethernet, but is throwing messages like:
+>  drivers/pci/quirks.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 7e32730..40b1dfe 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3620,6 +3620,10 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TTI,
+> 0x0642,
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
+>                          PCI_DEVICE_ID_JMICRON_JMB388_ESD,
+>                          quirk_dma_func1_alias);
+> +/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c117 */
+> +DECLARE_PCI_FIXUP_HEADER(0x1c28, /* Lite-On */
+> +                        0x0122, /* Plextor M6E (Marvell 88SS9183)*/
+> +                        quirk_dma_func1_alias);
+>  
+>  /*
+>   * Some devices DMA with the wrong devfn, not just the wrong
+> function.
 
-[    1.094643] pci 0000:00:00.0: BAR 13: no space for [io  size 0x2000]
-[    1.101022] pci 0000:00:00.0: BAR 13: failed to assign [io  size 0x2000]
-
-Its also throwing:
-
-[    1.029958] pci 0000:00:00.0: of_irq_parse_pci() failed with rc=-22
-[    1.052784] pci 0000:00:00.0: of_irq_parse_pci() failed with rc=-22
-
-
-(see other response for the DwordIo resource i'm using).
