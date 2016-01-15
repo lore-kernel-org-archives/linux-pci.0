@@ -1,85 +1,83 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V3 20/21] pci, acpi: Match PCI config space accessors
- against platfrom specific quirks.
-To: "liudongdong (C)" <liudongdong3@huawei.com>,
-	Mark Salter <msalter@redhat.com>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
- <1452691267-32240-21-git-send-email-tn@semihalf.com>
- <1452785776.28109.22.camel@redhat.com> <569CDD8F.807@semihalf.com>
- <569D9634.3040304@huawei.com>
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org, jchandra@broadcom.com,
-	jcm@redhat.com, Zhou Wang <wangzhou1@hisilicon.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <569DEBE9.5090909@semihalf.com>
-Date: Tue, 19 Jan 2016 08:55:21 +0100
-MIME-Version: 1.0
-In-Reply-To: <569D9634.3040304@huawei.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andi Kleen <andi@firstfloor.org>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org, Andi Kleen <ak@linux.intel.com>
+Subject: [PATCH] x86, pci: Add quirk for unsizeable Broadwell EP bar
+Date: Fri, 15 Jan 2016 14:17:59 -0800
+Message-Id: <1452896279-22034-1-git-send-email-andi@firstfloor.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 19.01.2016 02:49, liudongdong (C) wrote:
-> Hi Tomasz, Mark
->
-> 在 2016/1/18 20:41, Tomasz Nowicki 写道:
->> On 14.01.2016 16:36, Mark Salter wrote:
->>>> +extern struct pci_mcfg_fixup __start_acpi_mcfg_fixups[];
->>>> >+extern struct pci_mcfg_fixup __end_acpi_mcfg_fixups[];
->>>> >+
->>>> >+static struct pci_ops *pci_mcfg_check_quirks(struct acpi_pci_root
->>>> *root)
->>>> >+{
->>>> >+    struct pci_mcfg_fixup *f;
->>>> >+    int bus_num = root->secondary.start;
->>>> >+    int domain = root->segment;
->>>> >+
->>>> >+    /*
->>>> >+     * First match against PCI topology <domain:bus> then use DMI or
->>>> >+     * custom match handler.
->>>> >+     */
->>>> >+    for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups;
->>>> f++) {
->>>> >+        if ((f->domain == domain || f->domain ==
->>>> PCI_MCFG_DOMAIN_ANY) &&
->>>> >+            (f->bus_num == bus_num || f->bus_num ==
->>>> PCI_MCFG_BUS_ANY) &&
->>>> >+            (f->system ? dmi_check_system(f->system) : 0 ||
->>>> >+             f->match ? f->match(f, root) : 0))
->>>> >+            return f->ops;
->>> I think this would be better as:
->>>
->>>             (f->system ? dmi_check_system(f->system) : 1 &&
->>>              f->match ? f->match(f, root) : 1))
->>>             return f->ops;
->>>
->>> Otherwise, one has to call dmi_check_system() from f->match() if
->>> access to root is needed.
->>
->
-> Non-DMI, we need not to call dmi_check_system() from f->match(),
-> we can use _HID to decide to hook the pci_ops or not.
+From: Andi Kleen <ak@linux.intel.com>
 
-Sorry, but I dont understand your point. Can you elaborate?
+The Home Agent and PCU PCI devices in Broadwell-EP have a BAR that returns a
+non zero value when read, but is still not sizeable (because it doesn't
+exist).  This causes several [Firmware error] messages at boot. It does
+not cause any functional problems, as the devices really have no BARs.
 
-With Mark modification, you can use the following cases to identify 
-platform:
-1. DMI only
-2. f->match() only (_HID can be used there)
-3. DMI and f->match()
+Add a PCI quirk to shut off the messages.
 
-DMI used to be very convenient way to recognise platform, sometimes it 
-is not enough, hence f->match() alternative.
+Since the message is printed before the normal header fixup add EARLY
+fixups. This requires changing the PCI probe code to not override
+the resource flags unconditionally, so that the quirk can set flags.
 
-Tomasz
+(I believe that's ok, they should be always zero before, but please double
+check)
 
+Also don't print the invalid BAR message for FIXED BARs.
 
+Signed-off-by: Andi Kleen <ak@linux.intel.com>
+---
+ arch/x86/pci/fixup.c | 12 ++++++++++++
+ drivers/pci/probe.c  |  8 +++++---
+ 2 files changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index e585655..86bbdd6 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -540,3 +540,15 @@ static void twinhead_reserve_killing_zone(struct pci_dev *dev)
+         }
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x27B9, twinhead_reserve_killing_zone);
++
++/*
++ * Intel Broadwell EP. Prevent reading/updating BAR on Home Agent and PCU devices
++ * which are not real BARs, but still return non-null.
++ * This prevents a harmless warning message at boot.
++ */
++static void pci_bdwep_ha_bar(struct pci_dev *dev)
++{
++	dev->resource[0].flags |= IORESOURCE_PCI_FIXED;
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_bdwep_ha_bar);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_bdwep_ha_bar);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index edb1984..f7926e8 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -214,7 +214,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 		l = 0;
+ 
+ 	if (type == pci_bar_unknown) {
+-		res->flags = decode_bar(dev, l);
++		res->flags |= decode_bar(dev, l);
+ 		res->flags |= IORESOURCE_SIZEALIGN;
+ 		if (res->flags & IORESOURCE_IO) {
+ 			l64 = l & PCI_BASE_ADDRESS_IO_MASK;
+@@ -251,8 +251,10 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 
+ 	sz64 = pci_size(l64, sz64, mask64);
+ 	if (!sz64) {
+-		dev_info(&dev->dev, FW_BUG "reg 0x%x: invalid BAR (can't size)\n",
+-			 pos);
++		/* Don't print this message for a fixed BAR */
++		if (!(res->flags & IORESOURCE_PCI_FIXED))
++			dev_info(&dev->dev, FW_BUG "reg 0x%x: invalid BAR (can't size)\n",
++				 pos);
+ 		goto fail;
+ 	}
+ 
+-- 
+2.4.3
