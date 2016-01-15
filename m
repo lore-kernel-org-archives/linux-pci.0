@@ -1,112 +1,38 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Babu Moger <babu.moger@oracle.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, hare@suse.de, alexander.duyck@gmail.com,
-	linux-kernel@vger.kernel.org, Jordan_Hargrave@dell.com
-Subject: [PATCH v4 4/4] pci: Blacklist vpd access for buggy devices
-Date: Thu, 21 Jan 2016 10:34:35 -0800
-Message-Id: <1453401275-255267-1-git-send-email-babu.moger@oracle.com>
-In-Reply-To: <1452684335-46107-1-git-send-email-hare@suse.de>
-References: <1452684335-46107-1-git-send-email-hare@suse.de>
+Date: Thu, 14 Jan 2016 20:33:17 -0600
+From: Rob Herring <robh@kernel.org>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: bhelgaas@google.com, michals@xilinx.com, lorenzo.pieralisi@arm.com,
+	paul.burton@imgtec.com, yinghai@kernel.org, wangyijing@huawei.com,
+	russell.joyce@york.ac.uk, sorenb@xilinx.com,
+	jiang.liu@linux.intel.com, arnd@arndb.de, pawel.moll@arm.com,
+	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
+	galak@codeaurora.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH V2 4/5] PCI: xilinx: Updating Zynq PCI binding
+ documentation with  Microblaze node.
+Message-ID: <20160115023317.GA1846@rob-hp-laptop>
+References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
+ <1452620173-4905-5-git-send-email-bharatku@xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1452620173-4905-5-git-send-email-bharatku@xilinx.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reading or Writing of PCI VPD data causes system panic.
-We saw this problem by running "lspci -vvv" in the beginning.
-However this can be easily reproduced by running
- cat /sys/bus/devices/XX../vpd
+On Tue, Jan 12, 2016 at 11:06:12PM +0530, Bharat Kumar Gogada wrote:
+> Updated Zynq PCI binding documentation with Microblaze node.
+> 
+> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> ---
+> Changes:
+> Adding Microblaze device tree node Documnetation.
+> ---
+>  .../devicetree/bindings/pci/xilinx-pcie.txt        | 36 ++++++++++++++++++++--
+>  1 file changed, 33 insertions(+), 3 deletions(-)
 
-As even a simple read on any VPD data triggers a system
-lockup on certain cards this patch implements a PCI quirk
-to disabling VPD acces altogether by setting the vpd length
-to '0'.
-
-Added all the PCI_VENDOR_ID_ATTANSIC varients.
-
-Signed-off-by: Babu Moger <babu.moger@oracle.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
----
- drivers/pci/access.c |    5 ++++-
- drivers/pci/quirks.c |   43 +++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 47 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 914e023..82f41a8 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -396,7 +396,7 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
- 	if (pos < 0)
- 		return -EINVAL;
- 
--	if (!vpd->valid) {
-+	if (!vpd->valid && vpd->base.len > 0) {
- 		vpd->valid = true;
- 		vpd->base.len = pci_vpd_pci22_size(dev);
- 	}
-@@ -459,6 +459,9 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
- 	loff_t end = pos + count;
- 	int ret = 0;
- 
-+	if (vpd->base.len == 0)
-+		return -EIO;
-+
- 	if (!vpd->valid)
- 		return -EAGAIN;
- 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index b03373f..f0007e9 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2123,6 +2123,49 @@ static void quirk_via_cx700_pci_parking_caching(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, 0x324e, quirk_via_cx700_pci_parking_caching);
- 
- /*
-+ * A read/write to sysfs entry ('/sys/bus/pci/devices/<id>/vpd')
-+ * will dump 32k of data. The default length is set as 32768.
-+ * Reading a full 32k will cause an access beyond the VPD end tag.
-+ * The system behaviour at that point is mostly unpredictable.
-+ * Apparently, some vendors have not implemented this VPD headers properly.
-+ * Adding a generic function disable vpd data for these buggy adapters
-+ * Add the DECLARE_PCI_FIXUP_FINAL line below with the specific with
-+ * vendor and device of interest to use this quirk.
-+ */
-+static void quirk_blacklist_vpd(struct pci_dev *dev)
-+{
-+	if (dev->vpd) {
-+		dev->vpd->len = 0;
-+		dev_warn(&dev->dev, "PCI vpd access has been disabled due to firmware bug\n");
-+	}
-+}
-+
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID,
-+		quirk_blacklist_vpd);
-+
-+/*
-  * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
-  * VPD end tag will hang the device.  This problem was initially
-  * observed when a vpd entry was created in sysfs
--- 
-1.7.1
+Acked-by: Rob Herring <robh@kernel.org>
