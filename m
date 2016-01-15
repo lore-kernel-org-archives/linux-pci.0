@@ -1,90 +1,55 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V3 19/21] pci, acpi: Support for ACPI based generic PCI
- host controller init
-To: Hanjun Guo <hanjun.guo@linaro.org>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
- <1452691267-32240-20-git-send-email-tn@semihalf.com>
- <5698C299.2080702@linaro.org>
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <569CB715.7040306@semihalf.com>
-Date: Mon, 18 Jan 2016 10:57:41 +0100
-MIME-Version: 1.0
-In-Reply-To: <5698C299.2080702@linaro.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
+	alex.williamson@redhat.com, benh@kernel.crashing.org,
+	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [RFC PATCH v3 5/5] vfio-pci: Allow to mmap MSI-X table if host bridge supports filtering of MSIs
+Date: Fri, 15 Jan 2016 15:06:14 +0800
+Message-Id: <1452841574-2781-6-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1452841574-2781-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1452841574-2781-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 15.01.2016 10:57, Hanjun Guo wrote:
-> Hi Tomasz,
->
-> On 2016/1/13 21:21, Tomasz Nowicki wrote:
->> Because of two patch series:
->> 1. Jiang Liu's common interface to support PCI host controller init
->> 2. MMCONFIG refactoring (part of this patch set)
->> now we can think about generic ACPI based PCI host controller init
->> implementation out of arch/ directory.
->>
->> These calls use information from MCFG table (PCI config space regions)
->> and _CRS method (IO/irq resources) to initialize PCI hostbridge.
->>
->> TBD: We are still not sure whether we should reassign resources
->> after PCI bus enumeration or trust firmware to do all that work for
->> us properly.
->>
->> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
->> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->> CC: Arnd Bergmann <arnd@arndb.de>
->> CC: Catalin Marinas <catalin.marinas@arm.com>
->> CC: Liviu Dudau <Liviu.Dudau@arm.com>
->> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
->> CC: Will Deacon <will.deacon@arm.com>
->> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->> Tested-by: Jeremy Linton <jeremy.linton@arm.com>
->> ---
->>   drivers/acpi/Kconfig    |   5 ++
->>   drivers/acpi/pci_root.c | 131
->> ++++++++++++++++++++++++++++++++++++++++++++++++
->>   2 files changed, 136 insertions(+)
->>
->> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
->> index c3664be..e315061 100644
->> --- a/drivers/acpi/Kconfig
->> +++ b/drivers/acpi/Kconfig
->> @@ -335,6 +335,11 @@ config ACPI_PCI_SLOT
->>         i.e., segment/bus/device/function tuples, with physical slots in
->>         the system.  If you are unsure, say N.
->>
->> +config ACPI_PCI_HOST_GENERIC
->> +    bool "Generic ACPI PCI host controller"
->> +    help
->> +      Say Y here if you want to support generic ACPI PCI host
->> controller.
->
-> Since x86 and IA64 will not use ACPI_PCI_HOST_GENERIC in this
-> patch, it should be defined as
->
-> config ACPI_PCI_HOST_GENERIC
->      bool
->
-> and select for ARCHs, or will default y on x86 and IA64 too.
+Current vfio-pci implementation disallows to mmap MSI-X
+table in case that user get to touch this directly.
 
-Right, I will fix that in v4.
+But we should allow to mmap these MSI-X tables if the PCI
+host bridge supports filtering of MSIs.
 
->
-> Compiling the kernel on a IA64 machine, will send out the
-> result when it's ready.
->
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/vfio/pci/vfio_pci.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Thanks,
-Tomasz
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 11fd0f0..4d68f6a 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -555,7 +555,8 @@ static long vfio_pci_ioctl(void *device_data,
+ 			    IORESOURCE_MEM && !pci_resources_share_page(pdev,
+ 			    info.index)) {
+ 				info.flags |= VFIO_REGION_INFO_FLAG_MMAP;
+-				if (info.index == vdev->msix_bar) {
++				if (!pci_host_bridge_msi_filtered_enabled(pdev) &&
++				    info.index == vdev->msix_bar) {
+ 					ret = msix_sparse_mmap_cap(vdev, &caps);
+ 					if (ret)
+ 						return ret;
+@@ -967,7 +968,8 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
+ 	if (phys_len < PAGE_SIZE || req_start + req_len > phys_len)
+ 		return -EINVAL;
+ 
+-	if (index == vdev->msix_bar) {
++	if (!pci_host_bridge_msi_filtered_enabled(pdev) &&
++	    index == vdev->msix_bar) {
+ 		/*
+ 		 * Disallow mmaps overlapping the MSI-X table; users don't
+ 		 * get to touch this directly.  We could find somewhere
+-- 
+1.7.9.5
