@@ -1,75 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from www.linutronix.de ([62.245.132.108]:49797 "EHLO
-	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754277AbcAMNjN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Jan 2016 08:39:13 -0500
-Date: Wed, 13 Jan 2016 14:39:04 +0100
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Grygorii Strashko <grygorii.strashko@ti.com>,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	tony@atomide.com, nsekhar@ti.com,
-	linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, linux-tegra@vger.kernel.org,
-	linux-sh@vger.kernel.org, linux-omap@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Kukjin Kim <kgene@kernel.org>,
-	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Simon Horman <horms@verge.net.au>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?utf-8?B?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>
-Subject: Re: [PATCH v3] PCI: hosts: mark pcie/pci (msi) irq cascade handler
- as IRQF_NO_THREAD
-Message-ID: <20160113133904.GD29964@linutronix.de>
-References: <1449775100-30877-1-git-send-email-grygorii.strashko@ti.com>
- <20160106221827.GD16231@localhost>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V3 19/21] pci, acpi: Support for ACPI based generic PCI
+ host controller init
+To: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+ <1452691267-32240-20-git-send-email-tn@semihalf.com>
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <5698C299.2080702@linaro.org>
+Date: Fri, 15 Jan 2016 17:57:45 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20160106221827.GD16231@localhost>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1452691267-32240-20-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-* Bjorn Helgaas | 2016-01-06 16:18:27 [-0600]:
+Hi Tomasz,
 
->Hi Bjorn,
+On 2016/1/13 21:21, Tomasz Nowicki wrote:
+> Because of two patch series:
+> 1. Jiang Liu's common interface to support PCI host controller init
+> 2. MMCONFIG refactoring (part of this patch set)
+> now we can think about generic ACPI based PCI host controller init
+> implementation out of arch/ directory.
+>
+> These calls use information from MCFG table (PCI config space regions)
+> and _CRS method (IO/irq resources) to initialize PCI hostbridge.
+>
+> TBD: We are still not sure whether we should reassign resources
+> after PCI bus enumeration or trust firmware to do all that work for
+> us properly.
+>
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> CC: Arnd Bergmann <arnd@arndb.de>
+> CC: Catalin Marinas <catalin.marinas@arm.com>
+> CC: Liviu Dudau <Liviu.Dudau@arm.com>
+> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+> CC: Will Deacon <will.deacon@arm.com>
+> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+> ---
+>   drivers/acpi/Kconfig    |   5 ++
+>   drivers/acpi/pci_root.c | 131 ++++++++++++++++++++++++++++++++++++++++++++++++
+>   2 files changed, 136 insertions(+)
+>
+> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
+> index c3664be..e315061 100644
+> --- a/drivers/acpi/Kconfig
+> +++ b/drivers/acpi/Kconfig
+> @@ -335,6 +335,11 @@ config ACPI_PCI_SLOT
+>   	  i.e., segment/bus/device/function tuples, with physical slots in
+>   	  the system.  If you are unsure, say N.
+>
+> +config ACPI_PCI_HOST_GENERIC
+> +	bool "Generic ACPI PCI host controller"
+> +	help
+> +	  Say Y here if you want to support generic ACPI PCI host controller.
 
->> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
->> index 8c36880..0415192 100644
->> --- a/drivers/pci/host/pci-dra7xx.c
->> +++ b/drivers/pci/host/pci-dra7xx.c
->> @@ -301,8 +301,19 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
->>  		return -EINVAL;
->>  	}
->>  
->> +	/*
->> +	 * Mark dra7xx_pcie_msi IRQ as IRQF_NO_THREAD
->> +	 * On -RT and if kernel is booting with "threadirqs" cmd line parameter
->> +	 * the dra7xx_pcie_msi_irq_handler() will be forced threaded but,
->> +	 * in the same time, it's IRQ dispatcher and calls generic_handle_irq(),
->> +	 * which, in turn, will be resolved to handle_simple_irq() call.
->> +	 * The handle_simple_irq() expected to be called with IRQ disabled, as
->> +	 * result kernle will display warning:
->> +	 * "irq XXX handler YYY+0x0/0x14 enabled interrupts".
->> +	 */
+Since x86 and IA64 will not use ACPI_PCI_HOST_GENERIC in this
+patch, it should be defined as
 
-could you _please_ remove this coment? This kind of comment (if at all)
-should be part of the commit message (which is the case more or less).
+config ACPI_PCI_HOST_GENERIC
+	bool
 
->>  	ret = devm_request_irq(&pdev->dev, pp->irq,
->> -			       dra7xx_pcie_msi_irq_handler, IRQF_SHARED,
->> +			       dra7xx_pcie_msi_irq_handler,
->> +			       IRQF_SHARED | IRQF_NO_THREAD,
->>  			       "dra7-pcie-msi",	pp);
->>  	if (ret) {
->>  		dev_err(&pdev->dev, "failed to request irq\n");
->> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+and select for ARCHs, or will default y on x86 and IA64 too.
 
-Sebastian
+Compiling the kernel on a IA64 machine, will send out the
+result when it's ready.
+
+Thanks
+Hanjun
