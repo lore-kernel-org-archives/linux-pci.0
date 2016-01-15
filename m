@@ -1,44 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f48.google.com ([209.85.213.48]:34318 "EHLO
-	mail-vk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751867AbcA2GcN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jan 2016 01:32:13 -0500
-Received: by mail-vk0-f48.google.com with SMTP id e185so36870683vkb.1
-        for <linux-pci@vger.kernel.org>; Thu, 28 Jan 2016 22:32:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <HK2PR0601MB1393A8E38392D17EC2DD7900F5C40@HK2PR0601MB1393.apcprd06.prod.outlook.com>
-References: <20160120160427.GD13437@red-moon>
-	<569FB210.9090605@codeaurora.org>
-	<20160120181003.GF13437@red-moon>
-	<HK2PR0601MB1393A8E38392D17EC2DD7900F5C40@HK2PR0601MB1393.apcprd06.prod.outlook.com>
-Date: Fri, 29 Jan 2016 12:02:12 +0530
-Message-ID: <CAHM4w1kJKcH4uA113-6QC_tseM+Cv1Jubare8ex6YxAfSpdbNw@mail.gmail.com>
-Subject: Re: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Sinan Kaya <okaya@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
+	alex.williamson@redhat.com, benh@kernel.crashing.org,
+	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [RFC PATCH v3 3/5] PCI: Add host bridge attribute to indicate filtering of MSIs is supported
+Date: Fri, 15 Jan 2016 15:06:12 +0800
+Message-Id: <1452841574-2781-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1452841574-2781-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1452841574-2781-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 22, 2016 at 9:58 PM, Phil Edworthy
-<phil.edworthy@renesas.com> wrote:
-> > Resources claiming and assignment should be managed in arch code,
-> > not in host controllers specific code, and that's the reason I
-> > complained in this RFC about the scattering of PCI_PROBE_ONLY flag
-> > checks in host drivers, it is becoming unmanageable (if useful
-> > at all on designware and rcar, I would like to know if there are
-> > PCI_PROBE_ONLY set-ups probing those host drivers).
->
-> I am pretty sure  there are no rcar set-ups that use PCI_PROBE_ONLY,
-> so I am happy for that code to go.
->
+MSI-X tables are not allowed to be mmapped in vfio-pci
+driver in case that user get to touch this directly.
+This will cause some performance issues when when PCI
+adapters have critical registers in the same page as
+the MSI-X table.
 
-I do not remember either any designware platform which has required
-and tested PCI_PROBE_ONLY.
+However, some kind of PCI host bridge such as IODA bridge
+on Power support filtering of MSIs, which can ensure that a
+given pci device can only shoot the MSIs assigned for it.
+So we think it's safe to expose the MSI-X table to userspace
+if filtering of MSIs is supported because the exposed MSI-X
+table can't be used to do harm to other memory space.
 
-~Pratyush
+To support this case, this patch adds a pci_host_bridge
+attribute to indicate if this PCI host bridge supports
+filtering of MSIs.
+
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/pci/host-bridge.c |    6 ++++++
+ include/linux/pci.h       |    3 +++
+ 2 files changed, 9 insertions(+)
+
+diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+index 5f4a2e0..c029267 100644
+--- a/drivers/pci/host-bridge.c
++++ b/drivers/pci/host-bridge.c
+@@ -96,3 +96,9 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
+ 	res->end = region->end + offset;
+ }
+ EXPORT_SYMBOL(pcibios_bus_to_resource);
++
++bool pci_host_bridge_msi_filtered_enabled(struct pci_dev *pdev)
++{
++	return pci_find_host_bridge(pdev->bus)->msi_filtered;
++}
++EXPORT_SYMBOL_GPL(pci_host_bridge_msi_filtered_enabled);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b640d65..b952b78 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -412,6 +412,7 @@ struct pci_host_bridge {
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+ 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
++	unsigned int msi_filtered:1;	/* support filtering of MSIs */
+ 	/* Resource alignment requirements */
+ 	resource_size_t (*align_resource)(struct pci_dev *dev,
+ 			const struct resource *res,
+@@ -430,6 +431,8 @@ void pci_set_host_bridge_release(struct pci_host_bridge *bridge,
+ 
+ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+ 
++bool pci_host_bridge_msi_filtered_enabled(struct pci_dev *pdev);
++
+ /*
+  * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that correspond
+  * to P2P or CardBus bridge windows) go in a table.  Additional ones (for
+-- 
+1.7.9.5
