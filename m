@@ -1,110 +1,115 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V3 15/21] acpi, mcfg: Implement two calls that might be used to inject/remove MCFG region.
-Date: Wed, 13 Jan 2016 14:21:01 +0100
-Message-Id: <1452691267-32240-16-git-send-email-tn@semihalf.com>
-In-Reply-To: <1452691267-32240-1-git-send-email-tn@semihalf.com>
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+From: Qipeng Zha <qipeng.zha@intel.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	mika.westerberg@intel.com, Qi Zheng <qi.zheng@intel.com>
+Subject: [PATCH 1/2] PCI/PM: Revert "PCI/PM: Drop unused runtime PM support code for PCIe ports"
+Date: Fri, 15 Jan 2016 22:27:44 +0800
+Message-Id: <1452868065-96999-1-git-send-email-qipeng.zha@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Lets abstract two calls which allow to inject and remove MCFG regions
-which may come from DSDT table. These calls will be used for x86 and ARM64
-PCI host bridge driver in the later patches.
+This reverts commit fe9a743a2601 ("PCI/PM: Drop unused runtime
+PM support code for PCIe ports"). To support PCIe ports
+runtime PM for Intel Broxton platform.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Signed-off-by: Qi Zheng <qi.zheng@intel.com>
+Signed-off-by: Qipeng Zha <qipeng.zha@intel.com>
 ---
- drivers/acpi/mcfg.c      | 38 ++++++++++++++++++++++++++++++++++++++
- include/linux/pci-acpi.h |  9 +++++++++
- 2 files changed, 47 insertions(+)
+ drivers/pci/pcie/portdrv_pci.c | 74 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 74 insertions(+)
 
-diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
-index 3e1e7be..dca4c4e 100644
---- a/drivers/acpi/mcfg.c
-+++ b/drivers/acpi/mcfg.c
-@@ -10,6 +10,7 @@
- #include <linux/acpi.h>
- #include <linux/ecam.h>
- #include <linux/pci.h>
-+#include <linux/pci-acpi.h>
- 
- #define	PREFIX	"MCFG: "
- 
-@@ -77,6 +78,43 @@ int __init acpi_parse_mcfg(struct acpi_table_header *header)
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index be35da2..2ccc9b9 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -93,6 +93,77 @@ static int pcie_port_resume_noirq(struct device *dev)
  	return 0;
  }
  
-+int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci)
++#ifdef CONFIG_PM_RUNTIME
++struct d3cold_info {
++	bool no_d3cold;
++	unsigned int d3cold_delay;
++};
++
++static int pci_dev_d3cold_info(struct pci_dev *pdev, void *data)
 +{
-+	struct pci_mmcfg_region *cfg;
-+	struct acpi_pci_root *root;
-+	int seg, start, end, err;
++	struct d3cold_info *info = data;
 +
-+	root = ci->root;
-+	seg = root->segment;
-+	start = root->secondary.start;
-+	end = root->secondary.end;
-+
-+	cfg = pci_mmconfig_lookup(seg, start);
-+	if (cfg)
-+		return 0;
-+
-+	cfg = pci_mmconfig_alloc(seg, start, end, root->mcfg_addr);
-+	if (!cfg)
-+		return -ENOMEM;
-+
-+	err = pci_mmconfig_inject(cfg);
-+	return err;
++	info->d3cold_delay = max_t(unsigned int, pdev->d3cold_delay,
++				   info->d3cold_delay);
++	if (pdev->no_d3cold)
++		info->no_d3cold = true;
++	return 0;
 +}
 +
-+void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci)
++static int pcie_port_runtime_suspend(struct device *dev)
 +{
-+	struct acpi_pci_root *root = ci->root;
-+	struct pci_mmcfg_region *cfg;
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct d3cold_info d3cold_info = {
++		.no_d3cold	= false,
++		.d3cold_delay	= PCI_PM_D3_WAIT,
++	};
 +
-+	cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
-+	if (!cfg)
-+		return;
-+
-+	if (cfg->hot_added)
-+		pci_mmconfig_delete(root->segment, root->secondary.start,
-+				    root->secondary.end);
++	/*
++	 * If any subordinate device disable D3cold, we should not put
++	 * the port into D3cold.  The D3cold delay of port should be
++	 * the max of that of all subordinate devices.
++	 */
++	pci_walk_bus(pdev->subordinate, pci_dev_d3cold_info, &d3cold_info);
++	pdev->no_d3cold = d3cold_info.no_d3cold;
++	pdev->d3cold_delay = d3cold_info.d3cold_delay;
++	return 0;
 +}
 +
- int __init __weak acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
- 					struct acpi_mcfg_allocation *cfg)
- {
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index 89ab057..c277415 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -79,6 +79,15 @@ extern struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- void acpi_pci_add_bus(struct pci_bus *bus);
- void acpi_pci_remove_bus(struct pci_bus *bus);
- 
-+#ifdef	CONFIG_PCI_MMCONFIG
-+int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci);
-+void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci);
++static int pcie_port_runtime_resume(struct device *dev)
++{
++	return 0;
++}
++
++static int pci_dev_pme_poll(struct pci_dev *pdev, void *data)
++{
++	bool *pme_poll = data;
++
++	if (pdev->pme_poll)
++		*pme_poll = true;
++	return 0;
++}
++
++static int pcie_port_runtime_idle(struct device *dev)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	bool pme_poll = false;
++
++	/*
++	 * If any subordinate device needs pme poll, we should keep
++	 * the port in D0, because we need port in D0 to poll it.
++	 */
++	pci_walk_bus(pdev->subordinate, pci_dev_pme_poll, &pme_poll);
++	/* Delay for a short while to prevent too frequent suspend/resume */
++	if (!pme_poll)
++		pm_schedule_suspend(dev, 10);
++	return -EBUSY;
++}
 +#else
-+static inline int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci)
-+{ return 0; }
-+static inline void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci) { }
++#define pcie_port_runtime_suspend	NULL
++#define pcie_port_runtime_resume	NULL
++#define pcie_port_runtime_idle		NULL
 +#endif
 +
- #ifdef	CONFIG_ACPI_PCI_SLOT
- void acpi_pci_slot_init(void);
- void acpi_pci_slot_enumerate(struct pci_bus *bus);
+ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ 	.suspend	= pcie_port_device_suspend,
+ 	.resume		= pcie_port_device_resume,
+@@ -101,6 +172,9 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ 	.poweroff	= pcie_port_device_suspend,
+ 	.restore	= pcie_port_device_resume,
+ 	.resume_noirq	= pcie_port_resume_noirq,
++	.runtime_suspend = pcie_port_runtime_suspend,
++	.runtime_resume = pcie_port_runtime_resume,
++	.runtime_idle	= pcie_port_runtime_idle,
+ };
+ 
+ #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
 -- 
-1.9.1
+1.8.3.2
