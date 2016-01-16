@@ -1,120 +1,90 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <569F138B.2010004@cn.fujitsu.com>
-Date: Wed, 20 Jan 2016 12:56:43 +0800
-From: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
-MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rafael@kernel.org>,
-	Sinan Kaya <okaya@codeaurora.org>
-CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>, <izumi.taku@jp.fujitsu.com>,
-	<wency@cn.fujitsu.com>, <caoj.fnst@cn.fujitsu.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:38662 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752816AbcAPWTN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 16 Jan 2016 17:19:13 -0500
+Date: Sat, 16 Jan 2016 14:19:38 -0800
+From: "Veal, Bryan E." <bryan.e.veal@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Keith Busch <keith.busch@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] pci: fix unavailable irq number 255 reported by BIOS
-References: <1453167913-16248-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>	<6239489.QX2A2kAHWp@vostro.rjw.lan>	<2316565.SNckEMXyKO@vostro.rjw.lan>	<569E4CCD.6040901@codeaurora.org> <CAJZ5v0h9RCaM9AwtV9=YSFhkiVoy0JeXt6muOqCVTt+MbOEKQA@mail.gmail.com>
-In-Reply-To: <CAJZ5v0h9RCaM9AwtV9=YSFhkiVoy0JeXt6muOqCVTt+MbOEKQA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+	Dan Williams <dan.j.williams@intel.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCHv8 0/5] Driver for new "VMD" device
+Message-ID: <20160116221937.GA31482@intel.com>
+Reply-To: bryan.e.veal@intel.com
+References: <1452629890-17542-1-git-send-email-keith.busch@intel.com>
+ <20160115181938.GA5296@localhost>
+ <20160115193103.GA2249@intel.com>
+ <20160115214902.GA10272@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160115214902.GA10272@localhost>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Jan 15, 2016 at 03:49:02PM -0600, Bjorn Helgaas wrote:
+> Even though you found this issue before posting the RFC code, I assume
+> the issue is still relevant in the current code, and you still want to
+> clear IORESOURCE_MEM_64, right?
 
-On 01/19/2016 11:39 PM, Rafael J. Wysocki wrote:
-> On Tue, Jan 19, 2016 at 3:48 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
->> On 1/19/2016 9:20 AM, Rafael J. Wysocki wrote:
->>> On Tuesday, January 19, 2016 02:43:30 PM Rafael J. Wysocki wrote:
->>>> On Tuesday, January 19, 2016 09:45:13 AM Chen Fan wrote:
->>>>> In our environment, when enable Secure boot, we found an abnormal
->>>>> phenomenon as following call trace shows. after investigation, we
->>>>> found the firmware assigned an irq number 255 which means unknown
->>>>> or no connection in PCI local spec for i801_smbus, meanwhile the
->>>>> ACPI didn't configure the pci irq routing. and the 255 irq number
->>>>> was assigned for megasa msix without IRQF_SHARED. then in this case
->>>>> during i801_smbus probe, the i801_smbus driver would request irq with
->>>>> bad irq number 255. but the 255 irq number was assigned for memgasa
->>>>> with MSIX enable. which will cause request_irq fails, and call trace
->>>>> shows, actually, we should expose the error early, rather than in request
->>>>> irq, here we simply fix the problem by return err when find the irq is
->>>>> 255.
->>>>>
->>>>> See the call trace:
->>>>>
->>>>>   [   32.459195] ipmi device interface
->>>>>   [   32.612907] shpchp: Standard Hot Plug PCI Controller Driver version: 0.4
->>>>>   [   32.800459] ixgbe: Intel(R) 10 Gigabit PCI Express Network Driver - version 4.0.1-k-rh
->>>>>   [   32.818319] ixgbe: Copyright (c) 1999-2014 Intel Corporation.
->>>>>   [   32.844009] lpc_ich 0001:80:1f.0: I/O space for ACPI uninitialized
->>>>>   [   32.850093] i801_smbus 0000:00:1f.3: enabling device (0140 -> 0143)
->>>>>   [   32.851134] i801_smbus 0000:00:1f.3: can't derive routing for PCI INT C
->>>>>   [   32.851136] i801_smbus 0000:00:1f.3: PCI INT C: no GSI
->>>>>   [   32.851164] genirq: Flags mismatch irq 255. 00000080 (i801_smbus) vs. 00000000 (megasa
->>>>>   [   32.851168] CPU: 0 PID: 2487 Comm: kworker/0:1 Not tainted 3.10.0-229.el7.x86_64 #1
->>>>>   [   32.851170] Hardware name: FUJITSU PRIMEQUEST 2800E2/D3736, BIOS PRIMEQUEST 2000 Serie5
->>>>>   [   32.851178] Workqueue: events work_for_cpu_fn
->>>>>   [   32.851208]  ffff88086c330b00 00000000e233a9df ffff88086d57bca0 ffffffff81603f36
->>>>>   [   32.851227]  ffff88086d57bcf8 ffffffff8110d23a ffff88686fe02000 0000000000000246
->>>>>   [   32.851246]  ffff88086a9a8c00 00000000e233a9df ffffffffa00ad220 0000000000000080
->>>>>   [   32.851247] Call Trace:
->>>>>   [   32.851261]  [<ffffffff81603f36>] dump_stack+0x19/0x1b
->>>>>   [   32.851271]  [<ffffffff8110d23a>] __setup_irq+0x54a/0x570
->>>>>   [   32.851282]  [<ffffffffa00ad220>] ? i801_check_pre.isra.5+0xe0/0xe0 [i2c_i801]
->>>>>   [   32.851289]  [<ffffffff8110d3bc>] request_threaded_irq+0xcc/0x170
->>>>>   [   32.851298]  [<ffffffffa00ae87f>] i801_probe+0x32f/0x508 [i2c_i801]
->>>>>   [   32.851308]  [<ffffffff81308385>] local_pci_probe+0x45/0xa0
->>>>>   [   32.851315]  [<ffffffff8108bfd4>] work_for_cpu_fn+0x14/0x20
->>>>>   [   32.851323]  [<ffffffff8108f0ab>] process_one_work+0x17b/0x470
->>>>>   [   32.851330]  [<ffffffff81090003>] worker_thread+0x293/0x400
->>>>>   [   32.851338]  [<ffffffff8108fd70>] ? rescuer_thread+0x400/0x400
->>>>>   [   32.851346]  [<ffffffff8109726f>] kthread+0xcf/0xe0
->>>>>   [   32.851353]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
->>>>>   [   32.851362]  [<ffffffff81613cfc>] ret_from_fork+0x7c/0xb0
->>>>>   [   32.851369]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
->>>>>   [   32.851373] i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
->>>>>   [   32.851435] i801_smbus: probe of 0000:00:1f.3 failed with error -16
->>>>>   [   33.180145] ixgbe 0000:5a:00.0: Multiq[   33.240538] ixgbe 0000:5a:00.0: (PCI Express:03:e0
->>>>>   [   33.280826] ixgbe 0000:5a:00.0: MAC: 3, PHY: 0, PBA No: 000000-000
->>>>>
->>>>> Signed-off-by: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
->>>>> ---
->>>>>   drivers/acpi/pci_irq.c | 10 +++++++++-
->>>>>   1 file changed, 9 insertions(+), 1 deletion(-)
->>>>>
->>>>> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
->>>>> index d30184c..d2f47f8 100644
->>>>> --- a/drivers/acpi/pci_irq.c
->>>>> +++ b/drivers/acpi/pci_irq.c
->>>>> @@ -439,9 +439,17 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
->>>>>              if (acpi_isa_register_gsi(dev))
->>>>>                      dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
->>>>>                               pin_name(pin));
->>>>> +           rc = 0;
->>>>> +           /*
->>>>> +            * Excluding the BIOS report the value 255, which meaning
->>>>> +            * "unknown" or "no connection" in PCI Local Bus Specification
->>>>> +            * Revision 3.0 February 3, 2004, P223.
->>>> You mean the footnote on page 223 talking about the Interrupt Line values, right?
->> "Unknown" does not necessarily mean invalid. I have a platform that is using 255 as a valid legacy
->> interrupt on PCI Express.
-> So first off this is about the Interrupt Line value not about an
-> interrupt vector.
->
-> Second, the footnote in question is talking about x86 PCs, so if your
-> platform is not one of them, there is no connection here.
->
-> Which means that the change should be limited to x86 probably.
-That's right, we should wrap this code in arch x86.
+Yes.
 
-Thanks,
-Chen
+> This is where I get confused.  IORESOURCE_MEM_64 *should* mean "the
+> hardware register associated with this resource can accommodate a
+> 64-bit value."  If we're using IORESOURCE_MEM_64 to decide whether to
+> use a prefetchable vs. a non-prefetchable window, that sounds broken.
+> 
+> Can you point me to the relevant code, and maybe give an example?  I'm
+> pretty sure the code doesn't completely match the spec, and maybe this
+> is a case where we have to set the flags non-intuitively to get the
+> desired result.
+> 
+> > Below the port, the "prefetchable" propoerty
+> > *is* restrictive: the addresses can't be used for non-prefetchable BARs.
+> > 
+> > Thus, in the specific case where a 64-bit non-prefetchable VMD bar happens
+> > to contain a 32-bit address, removing the IORESOURCE_MEM_64 flag allows
+> > the address resource to be used for *any* non-prefetchable BARs (32-bit or
+> > 64-bit) downstream.  
+> 
+> If I understand correctly, these VMD BARs (VMD_MEMBAR1 and
+> VMD_MEMBAR2) effectively become the host bridge windows available for
+> devices below the VMD.
+> 
+> I infer that if the VMD host bridge window is non-prefetchable and has
+> IORESOURCE_MEM_64 set, we won't put a 32-bit non-prefetchable BAR in
+> that window.  That sounds like a bug, but let me be the first to admit
+> that I don't understand our PCI resource allocation code.
 
->
-> Thanks,
-> Rafael
->
->
-> .
->
+I don't think anything is broken. You are correct that the MEMBARs are
+used as a host bridge window. The reason to clear the flag is a side
+effect of that.
 
+For BARs, the flags describe capabilities. For resources, they are
+interpreted as restrictions.
 
+If VMD has a 32-bit resource in a 64-bit non-prefetchable BAR, without
+clearing the flag, it yields a host bridge resource, and thus root bus
+resource, with IORESOURCE_MEM_64 set.
 
+Downstream of VMD, the root port's 32-bit non-prefetchable base/limit
+registers can't handle the 64-bit resource, but the 64-bit prefetchable
+window can, so that's where it ends up. (See pci_bus_alloc_resource().)
+
+Downstream of the root port, the resource is now "upcast" to
+IORESOURCE_PREFETCH, which can't be used in a non-prefetchable BAR.
+
+> BTW, I forgot to ask about the 0x2000 offset applied to VMD_MEMBAR2.
+> Can we add a comment about what that offset is doing?
+
+I'll rely on Keith to add the comments. This range is reserved for VMD's
+MSI-X table and PBA.
+
+> BTW2, is one of these (VMD_MEMBAR1 and VMD_MEMBAR2) prefetchable and
+> the other non-prefetchable?  If so, a comment would really help.
+
+BIOS can configure the types pre-boot, but having one of each type is
+the only real reason to need both BARs.
