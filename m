@@ -1,66 +1,25 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:46355 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934158AbcATQUa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Jan 2016 11:20:30 -0500
-Date: Wed, 20 Jan 2016 16:22:15 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Will Deacon <will.deacon@arm.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
+Received: from bombadil.infradead.org ([198.137.202.9]:34412 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752024AbcAQR6M (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 17 Jan 2016 12:58:12 -0500
+Date: Sun, 17 Jan 2016 09:58:11 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: [PATCH 3/3] arm/arm64: pci: remove arch specific
- pcibios_enable_device()
-Message-ID: <20160120162215.GE13437@red-moon>
-References: <1447779838-15585-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1447779838-15585-3-git-send-email-lorenzo.pieralisi@arm.com>
- <20151123134921.GB4236@arm.com>
+	Dan Williams <dan.j.williams@intel.com>,
+	Bryan Veal <bryan.e.veal@intel.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCHv8 0/5] Driver for new "VMD" device
+Message-ID: <20160117175811.GA10490@infradead.org>
+References: <1452629890-17542-1-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151123134921.GB4236@arm.com>
+In-Reply-To: <1452629890-17542-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Nov 23, 2015 at 01:49:21PM +0000, Will Deacon wrote:
-> On Tue, Nov 17, 2015 at 05:03:58PM +0000, Lorenzo Pieralisi wrote:
-> > The arm/arm64 pcibios_enable_device() implementations exist solely
-> > to prevent enabling PCI resources on PROBE_ONLY systems, since
-> > on those systems the PCI resources are currently not claimed (ie
-> > validated and inserted in the PCI resource tree) therefore they can
-> > not be enabled since this would trigger PCI set-ups failures.
-> > 
-> > By introducing resources claiming in the PCI host controllers set-ups
-> > that have PROBE_ONLY as a probe option, there is no need for arch specific
-> > pcibios_enable_device() implementations anymore in that the kernel can
-> > rely on the generic pcibios_enable_device() implementation without
-> > resorting to arch specific code to work around the missing resources
-> > claiming enumeration step.
-> > 
-> > This patch removes the pcibios_enable_device() implementations from
-> > the arm/arm64 arch back-ends.
-> > 
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: Will Deacon <will.deacon@arm.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Russell King <linux@arm.linux.org.uk>
-> > Cc: Catalin Marinas <catalin.marinas@arm.com>
-> > ---
-> >  arch/arm/kernel/bios32.c | 12 ------------
-> >  arch/arm64/kernel/pci.c  | 13 -------------
-> >  2 files changed, 25 deletions(-)
-> 
-> Acked-by: Will Deacon <will.deacon@arm.com>
-
-Thanks, unfortunately I spotted that ARM platforms can set
-PCI_PROBE_ONLY also via command line (pcibios_setup()), which means
-that I have to add resource claiming to all ARM PCI controllers that
-check PCI_PROBE_ONLY (inclusive of ARM bios32) to really make sure we
-can apply this patch or alternatevely we add the resource claiming
-to the pcibios_fixup_bus() callback (but we can claim resources only if
-PCI_PROBE_ONLY is set lest we trigger regressions) which would be the
-simpler solution.
-
-Lorenzo
+Btw, are there any pointer to what VMD is and why we need an almost,
+but not quite PCI-e root driver for it?
