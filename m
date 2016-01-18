@@ -1,58 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:53448 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751892AbcANMBI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jan 2016 07:01:08 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Vineet Gupta <Vineet.Gupta1@synopsys.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
-	"helgaas@kernel.org" <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-snps-arc@lists.infradead.org"
-	<linux-snps-arc@lists.infradead.org>,
-	"CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>,
-	"Alexey.Brodkin@synopsys.com" <Alexey.Brodkin@synopsys.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>
-Subject: Re: [PATCH v5 1/2] PCI support added to ARC
-Date: Thu, 14 Jan 2016 12:59:56 +0100
-Message-ID: <4888629.rSv29HOrHE@wuerfel>
-In-Reply-To: <C2D7FE5348E1B147BCA15975FBA23075F4E84DC7@us01wembx1.internal.synopsys.com>
-References: <cover.1452611234.git.jpinto@synopsys.com> <56977B80.2040600@synopsys.com> <C2D7FE5348E1B147BCA15975FBA23075F4E84DC7@us01wembx1.internal.synopsys.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-ia64@vger.kernel.org>,
+	<linux-metag@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-s390@vger.kernel.org>, <linux-sh@vger.kernel.org>,
+	<linux-arch@vger.kernel.org>, <Will.Deacon@arm.com>,
+	<catalin.marinas@arm.com>, <grant.likely@linaro.org>,
+	<leif.lindholm@linaro.org>, <rfranz@cavium.com>,
+	<ard.biesheuvel@linaro.org>, <msalter@redhat.com>,
+	<robh+dt@kernel.org>, <steve.capper@linaro.org>,
+	<hanjun.guo@linaro.org>, <al.stone@linaro.org>, <arnd@arndb.de>,
+	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rjw@rjwysocki.net>, <lenb@kernel.org>, <marc.zyngier@arm.com>,
+	<lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+	<tony.luck@intel.com>, <fenghua.yu@intel.com>,
+	<james.hogan@imgtec.com>, <benh@kernel.crashing.org>,
+	<tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
+	<x86@kernel.org>, <jonathan@jonmasters.org>, <rrichter@cavium.com>,
+	<Prasun.Kapoor@caviumnetworks.com>
+CC: <gpkulkarni@gmail.com>
+Subject: [PATCH v9 5/6] PCI: generic: Make pci-host-generic driver numa aware
+Date: Mon, 18 Jan 2016 22:06:04 +0530
+Message-ID: <1453134965-6125-6-git-send-email-gkulkarni@caviumnetworks.com>
+In-Reply-To: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
+References: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 14 January 2016 10:51:32 Vineet Gupta wrote:
-> >>
-> >> A somewhat nicer method would be to have callback pointers in struct
-> >> pci_host_bridge, and call those when they are non-NULL so we can
-> >> remove the global pcibios_* functions from the API. That would also
-> >> bring us a big step closer to having PCI support itself as a loadable
-> >> module, and it would better reflect that those functions are really
-> >> host bridge specific rather than architecture specific. When you use
-> >> the same host bridge on multiple architectures, you typically have
-> >> the same requirements for hacks in there, but each architectures may
-> >> need to support multiple host bridges with different requirements.
-> > Since we will be constantly improving the driver and the core itself, I suggest
-> > that this functions be made __weak and in an update we can turn it struct
-> > pointers just like Arnd suggested. Is this good for you?
-> 
-> There is no point in making it weak, w/o a fallback version in generic code. For
-> this series, I suggest you just remove the straggler EXPORT_SYMBOL and respin.
-> 
+update numa_node of device associated with pci bus.
+moved down devm_kzalloc to allocate from node memory.
 
-To clarify: I don't particularly like __weak functions anywhere, but they
-are already common in drivers/pci, so we can add a couple more to reach
-the goal of removing all architecture specific code.
+Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
+---
+ drivers/pci/host/pci-host-generic.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-However, there should never be a reason to add a __weak function in
-arch code that gets overridden by common code, that would be very confusing
-and not helpful.
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 5434c90..0e1ce06 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -215,11 +215,9 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 	const struct of_device_id *of_id;
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = dev->of_node;
+-	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
++	struct gen_pci *pci;
+ 	struct pci_bus *bus, *child;
+ 
+-	if (!pci)
+-		return -ENOMEM;
+ 
+ 	type = of_get_property(np, "device_type", NULL);
+ 	if (!type || strcmp(type, "pci")) {
+@@ -230,6 +228,11 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 	of_pci_check_probe_only();
+ 
+ 	of_id = of_match_node(gen_pci_of_match, np);
++	set_dev_node(dev, of_node_to_nid(np));
++	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
++	if (!pci)
++		return -ENOMEM;
++
+ 	pci->cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
+ 	pci->host.dev.parent = dev;
+ 	INIT_LIST_HEAD(&pci->host.windows);
+-- 
+1.8.1.4
 
-	Arnd
