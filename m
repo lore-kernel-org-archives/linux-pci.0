@@ -1,473 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f169.google.com ([209.85.192.169]:36522 "EHLO
-	mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752256AbcAZWDH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jan 2016 17:03:07 -0500
-From: David Daney <ddaney.cavm@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
-Subject: [PATCH] pci, pci-thunder-ecam: Add driver for ThunderX-pass1 on-chip ECAM devices
-Date: Tue, 26 Jan 2016 14:03:01 -0800
-Message-Id: <1453845781-24694-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+To: Simon Horman <horms+renesas@verge.net.au>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-renesas-soc@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>
+Subject: Re: [PATCH] MAINTAINERS: Update mailing list for Renesas SoC Development
+Date: Tue, 19 Jan 2016 00:44:44 +0200
+Message-ID: <12016344.fKDjJZKU1J@avalon>
+In-Reply-To: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
+References: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+Hi Simon,
 
-The cavium,pci-thunder-ecam devices are exactly ECAM based PCI roots.
-They are special in that all the BARs are at fixed addresses.  To
-handle this in a manner compatible with the core PCI code, we have the
-config access functions synthesize Enhanced Allocation capability
-entries for each BAR.
+Thank you for the patch.
 
-Signed-off-by: David Daney <david.daney@cavium.com>
----
+On Monday 18 January 2016 10:04:33 Simon Horman wrote:
+> Update the mailing list used for development of support for
+> Renesas SoCs and related drivers.
+> 
+> Up until now the linux-sh mailing list has been used, however,
+> Renesas SoCs are now much wider than the SH architecture and there
+> is some desire from some for the linux-sh list to refocus on
+> discussion of the work on the SH architecture.
+> 
+> Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Magnus Damm <magnus.damm@gmail.com>
+> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
-This patch depends on the patch set here:
+Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 
-https://lkml.org/lkml/2016/1/26/921
+> 
+> ---
+> * This patch applies on top of Linus's tree where currently the head commit
+>   is 984065055e6e ("Merge branch 'drm-next' of
+>   git://people.freedesktop.org/~airlied/linux")
+> 
+>   This has been used as a base instead of v4.4 so that it is based on the
+>   following two commits which affect it:
+>   - 1a4ca6dd3dc8 ("MAINTAINERS: Add co-maintainer for Renesas Pin
+> Controllers")
+>   - 3e46c3973cba ("MAINTAINERS: add Renesas usb2 phy driver")
+> ---
+>  MAINTAINERS | 16 ++++++++--------
+>  1 file changed, 8 insertions(+), 8 deletions(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 1d23f701489c..52a6ba79fa3f 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -1531,9 +1531,9 @@ F:	drivers/media/platform/s5p-jpeg/
+>  ARM/SHMOBILE ARM ARCHITECTURE
+>  M:	Simon Horman <horms@verge.net.au>
+>  M:	Magnus Damm <magnus.damm@gmail.com>
+> -L:	linux-sh@vger.kernel.org
+> +L:	linux-renesas-soc@vger.kernel.org
+>  W:	http://oss.renesas.com
+> -Q:	http://patchwork.kernel.org/project/linux-sh/list/
+> +Q:	http://patchwork.kernel.org/project/linux-renesas-soc/list/
+>  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas.git 
+next
+> S:	Supported
+>  F:	arch/arm/boot/dts/emev2*
+> @@ -3745,7 +3745,7 @@
+> F:	Documentation/devicetree/bindings/display/tegra/nvidia,tegra20-host1x.tx
+> t DRM DRIVERS FOR RENESAS
+>  M:	Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+>  L:	dri-devel@lists.freedesktop.org
+> -L:	linux-sh@vger.kernel.org
+> +L:	linux-renesas-soc@vger.kernel.org
+>  T:	git git://people.freedesktop.org/~airlied/linux
+>  S:	Supported
+>  F:	drivers/gpu/drm/rcar-du/
+> @@ -6858,7 +6858,7 @@ F:	drivers/iio/potentiometer/mcp4531.c
+>  MEDIA DRIVERS FOR RENESAS - VSP1
+>  M:	Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+>  L:	linux-media@vger.kernel.org
+> -L:	linux-sh@vger.kernel.org
+> +L:	linux-renesas-soc@vger.kernel.org
+>  T:	git git://linuxtv.org/media_tree.git
+>  S:	Supported
+>  F:	Documentation/devicetree/bindings/media/renesas,vsp1.txt
+> @@ -8235,7 +8235,7 @@ F:	drivers/pci/host/pci-dra7xx.c
+>  PCI DRIVER FOR RENESAS R-CAR
+>  M:	Simon Horman <horms@verge.net.au>
+>  L:	linux-pci@vger.kernel.org
+> -L:	linux-sh@vger.kernel.org
+> +L:	linux-renesas-soc@vger.kernel.org
+>  S:	Maintained
+>  F:	drivers/pci/host/*rcar*
+> 
+> @@ -8413,7 +8413,7 @@ F:	drivers/pinctrl/intel/
+>  PIN CONTROLLER - RENESAS
+>  M:	Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+>  M:	Geert Uytterhoeven <geert+renesas@glider.be>
+> -L:	linux-sh@vger.kernel.org
+> +L:	linux-renesas-soc@vger.kernel.org
+>  S:	Maintained
+>  F:	drivers/pinctrl/sh-pfc/
+> 
+> @@ -9019,13 +9019,13 @@ F:	include/linux/rpmsg.h
+>  RENESAS ETHERNET DRIVERS
+>  R:	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+>  L:	netdev@vger.kernel.org
+> -L:	linux-sh@vger.kernel.org
+> +L:	linux-renesas-soc@vger.kernel.org
+>  F:	drivers/net/ethernet/renesas/
+>  F:	include/linux/sh_eth.h
+> 
+>  RENESAS USB2 PHY DRIVER
+>  M:	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> -L:	linux-sh@vger.kernel.org
+> +L:	linux-renesas-soc@vger.kernel.org
+>  S:	Maintained
+>  F:	drivers/phy/phy-rcar-gen3-usb2.c
 
- .../devicetree/bindings/pci/pci-thunder-ecam.txt   |  30 ++
- drivers/pci/host/Kconfig                           |   7 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-thunder-ecam.c                | 358 +++++++++++++++++++++
- 4 files changed, 396 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
- create mode 100644 drivers/pci/host/pci-thunder-ecam.c
-
-diff --git a/Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt b/Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
-new file mode 100644
-index 0000000..34658f2
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
-@@ -0,0 +1,30 @@
-+* ThunderX PCI host controller for pass-1.x silicon
-+
-+Firmware-initialized PCI host controller to on-chip devices found on
-+some Cavium ThunderX processors.  These devices have ECAM based config
-+access, but the BARs are all at fixed addresses.  We handle the fixed
-+addresses by synthesizing Enhanced Allocation (EA) capabilities for
-+these devices.
-+
-+The properties and their meanings are identical to those described in
-+host-generic-pci.txt except as listed below.
-+
-+Properties of the host controller node that differ from
-+host-generic-pci.txt:
-+
-+- compatible     : Must be "cavium,pci-host-thunder-ecam"
-+
-+Example:
-+
-+	pci@84b0,00000000 {
-+		compatible = "cavium,pci-host-thunder-ecam";
-+		device_type = "pci";
-+		msi-parent = <&its>;
-+		msi-map = <0 &its 0x30000 0x10000>;
-+		bus-range = <0 31>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		#stream-id-cells = <1>;
-+		reg = <0x84b0 0x00000000 0 0x02000000>;  /* Configuration space */
-+		ranges = <0x03000000 0x8180 0x00000000 0x8180 0x00000000 0x80 0x00000000>; /* mem ranges */
-+	};
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 184df22..f8912c6 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -202,4 +202,11 @@ config PCI_HOST_THUNDER_PEM
- 	help
- 	  Say Y here if you want PCIe support for CN88XX Cavium Thunder SoCs.
- 
-+config PCI_HOST_THUNDER_ECAM
-+	bool "Cavium Thunder ECAMe controller to on-chip devices on pass-1.x silicon"
-+	depends on OF && ARM64
-+	select PCI_HOST_COMMON
-+	help
-+	  Say Y here if you want ECAM support for CN88XX-Pass-1.x Cavium Thunder SoCs.
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 8903172..d6af3ba 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -23,4 +23,5 @@ obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
- obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
- obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
- obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
-+obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
- obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
-diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/host/pci-thunder-ecam.c
-new file mode 100644
-index 0000000..0979349
---- /dev/null
-+++ b/drivers/pci/host/pci-thunder-ecam.c
-@@ -0,0 +1,358 @@
-+/*
-+ *
-+ * This file is subject to the terms and conditions of the GNU General Public
-+ * License.  See the file "COPYING" in the main directory of this archive
-+ * for more details.
-+ *
-+ * Copyright (C) 2015 Cavium, Inc.
-+ *
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/ioport.h>
-+#include <linux/of_pci.h>
-+#include <linux/of.h>
-+#include <linux/platform_device.h>
-+
-+#include "pci-host-common.h"
-+
-+static void set_val(u32 v, int where, int size, u32 *val)
-+{
-+	int shift = (where & 3) * 8;
-+
-+	pr_debug("set_val %04x: %08x\n", (unsigned)(where & ~3), v);
-+	v >>= shift;
-+	if (size == 1)
-+		v &= 0xff;
-+	else if (size == 2)
-+		v &= 0xffff;
-+	*val = v;
-+}
-+
-+static int handle_ea_bar(u32 e0, int bar, struct pci_bus *bus,
-+			 unsigned int devfn, int where, int size, u32 *val)
-+{
-+	void __iomem *addr;
-+	u32 v;
-+	/*
-+	 * Each entry is 16-byte aligned bits[2,3] select which word
-+	 * in the entry
-+	 */
-+	int where_a = where & 0xc;
-+
-+	if (where_a == 0) {
-+		set_val(e0, where, size, val);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	if (where_a == 0x4) {
-+		addr = bus->ops->map_bus(bus, devfn, bar); /* BAR 0 */
-+		if (!addr) {
-+			*val = ~0;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+		v = readl(addr);
-+		v &= ~0xf;
-+		v |= 2; /* EA entry-1. Base-L */
-+		set_val(v, where, size, val);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	if (where_a == 0x8) {
-+		u32 barl_orig;
-+		u32 barl_rb;
-+
-+		addr = bus->ops->map_bus(bus, devfn, bar); /* BAR 0 */
-+		if (!addr) {
-+			*val = ~0;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+		barl_orig = readl(addr + 0);
-+		writel(0xffffffff, addr + 0);
-+		barl_rb = readl(addr + 0);
-+		writel(barl_orig, addr + 0);
-+		/* zeros in unsettable bits. */
-+		v = ~barl_rb & ~3;
-+		v |= 0xc; /* EA entry-2. Offset-L */
-+		set_val(v, where, size, val);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	if (where_a == 0xc) {
-+		addr = bus->ops->map_bus(bus, devfn, bar + 4); /* BAR 1 */
-+		if (!addr) {
-+			*val = ~0;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+		v = readl(addr); /* EA entry-3. Base-H */
-+		set_val(v, where, size, val);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	return PCIBIOS_DEVICE_NOT_FOUND;
-+}
-+
-+static int thunder_ecam_config_write(struct pci_bus *bus, unsigned int devfn,
-+				     int where, int size, u32 val)
-+{
-+	/*
-+	 * All BARs have fixed addresses, ignore BAR writes so they
-+	 * don't get corrupted.
-+	 */
-+	if ((where >= 0x10 && where < 0x2c) ||
-+	    (where >= 0x1a4 && where < 0x1bc))
-+		/* BAR or SRIOV BAR */
-+		return PCIBIOS_SUCCESSFUL;
-+
-+	return pci_generic_config_write(bus, devfn, where, size, val);
-+}
-+
-+static int thunder_ecam_config_read(struct pci_bus *bus, unsigned int devfn,
-+				    int where, int size, u32 *val)
-+{
-+	u32 v;
-+	u32 vendor_device;
-+	void __iomem *addr;
-+	int cfg_type;
-+	int where_a = where & ~3;
-+
-+
-+	addr = bus->ops->map_bus(bus, devfn, 0xc);
-+	if (!addr) {
-+		*val = ~0;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	v = readl(addr);
-+
-+	/* Check for non type-00 header. */
-+	cfg_type = (v >> 16) & 0x7f;
-+
-+	/*
-+	 * All BARs have fixed addresses specified by the EA
-+	 * capability, they must return zero on read.
-+	 */
-+	if (cfg_type == 0 &&
-+	    ((where >= 0x10 && where < 0x2c) ||
-+	     (where >= 0x1a4 && where < 0x1bc))) {
-+		/* BAR or SRIOV BAR */
-+		*val = 0;
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+
-+	addr = bus->ops->map_bus(bus, devfn, 0);
-+	if (!addr) {
-+		*val = ~0;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	vendor_device = readl(addr);
-+	if (vendor_device == 0xffffffff)
-+		goto no_emulation;
-+
-+	addr = bus->ops->map_bus(bus, devfn, 8);
-+	if (!addr) {
-+		*val = ~0;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	v = readl(addr);
-+	if (v == 0xffffffff)
-+		goto no_emulation;
-+
-+	pr_debug("%04x:%04x - Fix pass#: %08x, where: %03x, devfn: %03x\n",
-+		 vendor_device & 0xffff, vendor_device >> 16, v,
-+		 (unsigned) where, devfn);
-+
-+	/* Check for non type-00 header. */
-+	if (cfg_type == 0) {
-+		bool has_msix;
-+		bool is_nic = (vendor_device == 0xa01e177d);
-+		bool is_tns = (vendor_device == 0xa01f177d);
-+
-+		addr = bus->ops->map_bus(bus, devfn, 0x70);
-+		if (!addr) {
-+			*val = ~0;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+		/* E_CAP */
-+		v = readl(addr);
-+		has_msix = (v & 0xff00) != 0;
-+
-+		if (!has_msix && where_a == 0x70) {
-+			v |= 0xbc00; /* next capability is EA at 0xbc */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xb0) {
-+			addr = bus->ops->map_bus(bus, devfn, where_a);
-+			if (!addr) {
-+				*val = ~0;
-+				return PCIBIOS_DEVICE_NOT_FOUND;
-+			}
-+			v = readl(addr);
-+			if (v & 0xff00)
-+				pr_err("Bad MSIX cap header: %08x\n", v);
-+			v |= 0xbc00; /* next capability is EA at 0xbc */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xbc) {
-+			if (is_nic)
-+				v = 0x40014; /* EA last in chain, 4 entries. */
-+			else if (is_tns)
-+				v = 0x30014; /* EA last in chain, 3 entries. */
-+			else if (has_msix)
-+				v = 0x20014; /* EA last in chain, 2 entries. */
-+			else
-+				v = 0x10014; /* EA last in chain, 1 entry. */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a >= 0xc0 && where_a < 0xd0)
-+			/* EA entry-0. PP=0, BAR0 Size:3 */
-+			return handle_ea_bar(0x80ff0003,
-+					     0x10, bus, devfn, where,
-+					     size, val);
-+		if (where_a >= 0xd0 && where_a < 0xe0 && has_msix)
-+			 /* EA entry-1. PP=0, BAR4 Size:3 */
-+			return handle_ea_bar(0x80ff0043,
-+					     0x20, bus, devfn, where,
-+					     size, val);
-+		if (where_a >= 0xe0 && where_a < 0xf0 && is_tns)
-+			/* EA entry-2. PP=0, BAR2, Size:3 */
-+			return handle_ea_bar(0x80ff0023,
-+					     0x18, bus, devfn, where,
-+					     size, val);
-+		if (where_a >= 0xe0 && where_a < 0xf0 && is_nic)
-+			/* EA entry-2. PP=4, VF_BAR0 (9), Size:3 */
-+			return handle_ea_bar(0x80ff0493,
-+					     0x1a4, bus, devfn, where,
-+					     size, val);
-+		if (where_a >= 0xf0 && where_a < 0x100 && is_nic)
-+			/* EA entry-3. PP=4, VF_BAR4 (d), Size:3 */
-+			return handle_ea_bar(0x80ff04d3,
-+					     0x1b4, bus, devfn, where,
-+					     size, val);
-+	} else if (cfg_type == 1) {
-+		bool is_rsl_bridge = devfn == 0x08;
-+		bool is_rad_bridge = devfn == 0xa0;
-+		bool is_zip_bridge = devfn == 0xa8;
-+		bool is_dfa_bridge = devfn == 0xb0;
-+		bool is_nic_bridge = devfn == 0x10;
-+
-+		if (where_a == 0x70) {
-+			addr = bus->ops->map_bus(bus, devfn, where_a);
-+			if (!addr) {
-+				*val = ~0;
-+				return PCIBIOS_DEVICE_NOT_FOUND;
-+			}
-+			v = readl(addr);
-+			if (v & 0xff00)
-+				pr_err("Bad PCIe cap header: %08x\n", v);
-+			v |= 0xbc00; /* next capability is EA at 0xbc */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xbc) {
-+			if (is_nic_bridge)
-+				v = 0x10014; /* EA last in chain, 1 entry */
-+			else
-+				v = 0x00014; /* EA last in chain, no entries */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xc0) {
-+			if (is_rsl_bridge || is_nic_bridge)
-+				v = 0x0101; /* subordinate:secondary = 1:1 */
-+			else if (is_rad_bridge)
-+				v = 0x0202; /* subordinate:secondary = 2:2 */
-+			else if (is_zip_bridge)
-+				v = 0x0303; /* subordinate:secondary = 3:3 */
-+			else if (is_dfa_bridge)
-+				v = 0x0404; /* subordinate:secondary = 4:4 */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xc4 && is_nic_bridge) {
-+			/* Enabled, not-Write, SP=ff, PP=05, BEI=6, ES=4 */
-+			v = 0x80ff0564;
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xc8 && is_nic_bridge) {
-+			v = 0x00000002; /* Base-L 64-bit */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xcc && is_nic_bridge) {
-+			v = 0xfffffffe; /* MaxOffset-L 64-bit */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xd0 && is_nic_bridge) {
-+			v = 0x00008430; /* NIC Base-H */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xd4 && is_nic_bridge) {
-+			v = 0x0000000f; /* MaxOffset-H */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+	}
-+no_emulation:
-+	return pci_generic_config_read(bus, devfn, where, size, val);
-+}
-+
-+/* Mapping is standard ECAM */
-+static void __iomem *thunder_ecam_map_bus(struct pci_bus *bus,
-+					  unsigned int devfn,
-+					  int where)
-+{
-+	struct gen_pci *pci = bus->sysdata;
-+	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
-+
-+	return pci->cfg.win[idx] + ((devfn << 12) | where);
-+}
-+
-+static struct gen_pci_cfg_bus_ops thunder_ecam_bus_ops = {
-+	.bus_shift	= 20,
-+	.ops		= {
-+		.map_bus        = thunder_ecam_map_bus,
-+		.read           = thunder_ecam_config_read,
-+		.write          = thunder_ecam_config_write,
-+	}
-+};
-+
-+static const struct of_device_id thunder_ecam_of_match[] = {
-+	{ .compatible = "cavium,pci-host-thunder-ecam",
-+	  .data = &thunder_ecam_bus_ops },
-+
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(of, thunder_ecam_of_match);
-+
-+static int thunder_ecam_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	const struct of_device_id *of_id;
-+	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-+
-+	if (!pci)
-+		return -ENOMEM;
-+
-+	of_id = of_match_node(thunder_ecam_of_match, dev->of_node);
-+	pci->cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
-+
-+	return pci_host_common_probe(pdev, pci);
-+}
-+
-+static struct platform_driver thunder_ecam_driver = {
-+	.driver = {
-+		.name = KBUILD_MODNAME,
-+		.of_match_table = thunder_ecam_of_match,
-+	},
-+	.probe = thunder_ecam_probe,
-+};
-+module_platform_driver(thunder_ecam_driver);
-+
-+MODULE_DESCRIPTION("Thunder ECAM PCI host driver");
-+MODULE_LICENSE("GPL v2");
 -- 
-1.8.3.1
+Regards,
 
+Laurent Pinchart
