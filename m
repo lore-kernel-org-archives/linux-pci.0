@@ -1,214 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp06.in.ibm.com ([125.16.236.6]:46913 "EHLO
-	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751603AbcAELFx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Jan 2016 06:05:53 -0500
-Received: from localhost
-	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Tue, 5 Jan 2016 16:35:49 +0530
-Subject: Re: [RFC PATCH v2 1/3] PCI: Add support for enforcing all MMIO BARs
- to be page aligned
-To: Alex Williamson <alex.williamson@redhat.com>, kvm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
-References: <1451551844-11732-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1451551844-11732-2-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1451940460.6585.6.camel@redhat.com>
-Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	nikunj@linux.vnet.ibm.com
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Message-ID: <568BA348.6030707@linux.vnet.ibm.com>
-Date: Tue, 5 Jan 2016 19:04:40 +0800
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1451940460.6585.6.camel@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
+References: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
+Date: Mon, 18 Jan 2016 09:09:29 +0100
+Message-ID: <CAMuHMdXF8QnKsLOYFnT7Rje5G9_7Xr0NesO2SKEkWSivKQYkbA@mail.gmail.com>
+Subject: Re: [PATCH] MAINTAINERS: Update mailing list for Renesas SoC Development
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Simon Horman <horms+renesas@verge.net.au>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-renesas-soc@vger.kernel.org,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	Linux Media Mailing List <linux-media@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/1/5 4:47, Alex Williamson wrote:
-> On Thu, 2015-12-31 at 16:50 +0800, Yongji Xie wrote:
->> When vfio passthrough a PCI device of which MMIO BARs
->> are smaller than PAGE_SIZE, guest will not handle the
->> mmio accesses to the BARs which leads to mmio emulations
->> in host.
->>
->> This is because vfio will not allow to passthrough one
->> BAR's mmio page which may be shared with other BARs.
->>
->> To solve this performance issue, this patch adds a kernel
->> parameter "pci=resource_page_aligned=on" to enforce
->> the alignments of all MMIO BARs to be at least PAGE_SIZE,
->> so that one BAR's mmio page would not be shared with other
->> BARs. We can also disable it through kernel parameter
->> "pci=resource_page_aligned=off".
-> Shouldn't this somehow be associated with the realloc option?  I don't
-> think PCI code will attempt to reprogram anything unless it needs to
-> otherwise.
+CC linux-arm-kernel
 
-So you mean we need to ignore firmware setup and force re-assigning all
-resources if we want to use the option "pci=resource_page_aligned=on"?
+On Mon, Jan 18, 2016 at 2:04 AM, Simon Horman
+<horms+renesas@verge.net.au> wrote:
+> Update the mailing list used for development of support for
+> Renesas SoCs and related drivers.
+>
+> Up until now the linux-sh mailing list has been used, however,
+> Renesas SoCs are now much wider than the SH architecture and there
+> is some desire from some for the linux-sh list to refocus on
+> discussion of the work on the SH architecture.
+>
+> Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Magnus Damm <magnus.damm@gmail.com>
+> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
->> For the default value of this parameter, we think it should be
->> arch-independent, so we add a macro PCI_RESOURCE_PAGE_ALIGNED
->> to change it. And we define this macro to enable this parameter
->> by default on PPC64 platform which can easily hit this
->> performance issue because its PAGE_SIZE is 64KB.
->>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->>   Documentation/kernel-parameters.txt |    4 ++++
->>   arch/powerpc/include/asm/pci.h      |   11 +++++++++++
->>   drivers/pci/pci.c                   |   17 +++++++++++++++++
->>   drivers/pci/pci.h                   |    7 ++++++-
->>   include/linux/pci.h                 |    2 ++
->>   5 files changed, 40 insertions(+), 1 deletion(-)
->>
->> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
->> index 742f69d..a53aaee 100644
->> --- a/Documentation/kernel-parameters.txt
->> +++ b/Documentation/kernel-parameters.txt
->> @@ -2857,6 +2857,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->>   				PAGE_SIZE is used as alignment.
->>   				PCI-PCI bridge can be specified, if resource
->>   				windows need to be expanded.
->> +		resource_page_aligned=	Enable/disable enforcing the alignment
->> +				of all PCI devices' memory resources to be
->> +				at least PAGE_SIZE.
->> +				Format: { "on" | "off" }
->>   		ecrc=		Enable/disable PCIe ECRC (transaction layer
->>   				end-to-end CRC checking).
->>   				bios: Use BIOS/firmware settings. This is the
->> diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
->> index 3453bd8..27bff59 100644
->> --- a/arch/powerpc/include/asm/pci.h
->> +++ b/arch/powerpc/include/asm/pci.h
->> @@ -136,6 +136,17 @@ extern pgprot_t	pci_phys_mem_access_prot(struct file *file,
->>   					 unsigned long pfn,
->>   					 unsigned long size,
->>   					 pgprot_t prot);
->> +#ifdef CONFIG_PPC64
->> +
->> +/* For PPC64, We enforce all PCI MMIO BARs to be page aligned
->> + * by default. This would be helpful to improve performance
->> + * when we passthrough a PCI device of which BARs are smaller
->> + * than PAGE_SIZE(64KB). And we can use bootcmd
->> + * "pci=resource_page_aligned=off" to disable it.
->> + */
->> +#define PCI_ENABLE_RESOURCE_PAGE_ALIGNED
->> +
->> +#endif
-> This should be done with something like HAVE_PCI_DEFAULT_RESOURCE_PAGE_
-> ALIGNED in arch/powerpc/include/asm
+Acked-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-OK, I will fix it in next version.
+> ---
+> * This patch applies on top of Linus's tree where currently the head commit
+>   is 984065055e6e ("Merge branch 'drm-next' of
+>   git://people.freedesktop.org/~airlied/linux")
+>
+>   This has been used as a base instead of v4.4 so that it is based on the
+>   following two commits which affect it:
+>   - 1a4ca6dd3dc8 ("MAINTAINERS: Add co-maintainer for Renesas Pin Controllers")
+>   - 3e46c3973cba ("MAINTAINERS: add Renesas usb2 phy driver")
 
->>   #define HAVE_ARCH_PCI_RESOURCE_TO_USER
->>   extern void pci_resource_to_user(const struct pci_dev *dev, int bar,
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 314db8c..9f14ba5 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -99,6 +99,13 @@ u8 pci_cache_line_size;
->>    */
->>   unsigned int pcibios_max_latency = 255;
->>   
->> +#ifdef PCI_ENABLE_RESOURCE_PAGE_ALIGNED
->> +bool pci_resource_page_aligned = true;
->> +#else
->> +bool pci_resource_page_aligned;
->> +#endif
->> +EXPORT_SYMBOL(pci_resource_page_aligned);
-> Couldn't this be done in a single line with IS_ENABLED() macro?
+I assume you'll send an update for the "ARM/RENESAS ARM64 ARCHITECTURE"
+section as soon as that has landed in mainline?
 
-I'm not sure whether IS_ENABLED() macro should be used there because
-it is always used for CONFIG_ options.
+> ---
+>  MAINTAINERS | 16 ++++++++--------
+>  1 file changed, 8 insertions(+), 8 deletions(-)
+>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 1d23f701489c..52a6ba79fa3f 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -1531,9 +1531,9 @@ F:        drivers/media/platform/s5p-jpeg/
+>  ARM/SHMOBILE ARM ARCHITECTURE
+>  M:     Simon Horman <horms@verge.net.au>
+>  M:     Magnus Damm <magnus.damm@gmail.com>
+> -L:     linux-sh@vger.kernel.org
+> +L:     linux-renesas-soc@vger.kernel.org
+>  W:     http://oss.renesas.com
+> -Q:     http://patchwork.kernel.org/project/linux-sh/list/
+> +Q:     http://patchwork.kernel.org/project/linux-renesas-soc/list/
+>  T:     git git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas.git next
+>  S:     Supported
+>  F:     arch/arm/boot/dts/emev2*
+> @@ -3745,7 +3745,7 @@ F:        Documentation/devicetree/bindings/display/tegra/nvidia,tegra20-host1x.txt
+>  DRM DRIVERS FOR RENESAS
+>  M:     Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+>  L:     dri-devel@lists.freedesktop.org
+> -L:     linux-sh@vger.kernel.org
+> +L:     linux-renesas-soc@vger.kernel.org
+>  T:     git git://people.freedesktop.org/~airlied/linux
+>  S:     Supported
+>  F:     drivers/gpu/drm/rcar-du/
+> @@ -6858,7 +6858,7 @@ F:        drivers/iio/potentiometer/mcp4531.c
+>  MEDIA DRIVERS FOR RENESAS - VSP1
+>  M:     Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+>  L:     linux-media@vger.kernel.org
+> -L:     linux-sh@vger.kernel.org
+> +L:     linux-renesas-soc@vger.kernel.org
+>  T:     git git://linuxtv.org/media_tree.git
+>  S:     Supported
+>  F:     Documentation/devicetree/bindings/media/renesas,vsp1.txt
+> @@ -8235,7 +8235,7 @@ F:        drivers/pci/host/pci-dra7xx.c
+>  PCI DRIVER FOR RENESAS R-CAR
+>  M:     Simon Horman <horms@verge.net.au>
+>  L:     linux-pci@vger.kernel.org
+> -L:     linux-sh@vger.kernel.org
+> +L:     linux-renesas-soc@vger.kernel.org
+>  S:     Maintained
+>  F:     drivers/pci/host/*rcar*
+>
+> @@ -8413,7 +8413,7 @@ F:        drivers/pinctrl/intel/
+>  PIN CONTROLLER - RENESAS
+>  M:     Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+>  M:     Geert Uytterhoeven <geert+renesas@glider.be>
+> -L:     linux-sh@vger.kernel.org
+> +L:     linux-renesas-soc@vger.kernel.org
+>  S:     Maintained
+>  F:     drivers/pinctrl/sh-pfc/
+>
+> @@ -9019,13 +9019,13 @@ F:      include/linux/rpmsg.h
+>  RENESAS ETHERNET DRIVERS
+>  R:     Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+>  L:     netdev@vger.kernel.org
+> -L:     linux-sh@vger.kernel.org
+> +L:     linux-renesas-soc@vger.kernel.org
+>  F:     drivers/net/ethernet/renesas/
+>  F:     include/linux/sh_eth.h
+>
+>  RENESAS USB2 PHY DRIVER
+>  M:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+> -L:     linux-sh@vger.kernel.org
+> +L:     linux-renesas-soc@vger.kernel.org
+>  S:     Maintained
+>  F:     drivers/phy/phy-rcar-gen3-usb2.c
+>
+> --
+> 2.1.4
 
-> Should this symbol be GPL-only?
+Gr{oetje,eeting}s,
 
-Yes, it will be fixed in next version.
+                        Geert
 
->> +
->>   /* If set, the PCIe ARI capability will not be used. */
->>   static bool pcie_ari_disabled;
->>   
->> @@ -4746,6 +4753,14 @@ static ssize_t pci_resource_alignment_store(struct bus_type *bus,
->>   BUS_ATTR(resource_alignment, 0644, pci_resource_alignment_show,
->>   					pci_resource_alignment_store);
->>   
->> +static void pci_resource_get_page_aligned(char *str)
->> +{
->> +	if (!strncmp(str, "off", 3))
->> +		pci_resource_page_aligned = false;
->> +	else if (!strncmp(str, "on", 2))
->> +		pci_resource_page_aligned = true;
->> +}
->> +
->>   static int __init pci_resource_alignment_sysfs_init(void)
->>   {
->>   	return bus_create_file(&pci_bus_type,
->> @@ -4859,6 +4874,8 @@ static int __init pci_setup(char *str)
->>   			} else if (!strncmp(str, "resource_alignment=", 19)) {
->>   				pci_set_resource_alignment_param(str + 19,
->>   							strlen(str + 19));
->> +			} else if (!strncmp(str, "resource_page_aligned=", 22)) {
->> +				pci_resource_get_page_aligned(str + 22);
->>   			} else if (!strncmp(str, "ecrc=", 5)) {
->>   				pcie_ecrc_get_policy(str + 5);
->>   			} else if (!strncmp(str, "hpiosize=", 9)) {
->> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->> index d390fc1..e16e48c 100644
->> --- a/drivers/pci/pci.h
->> +++ b/drivers/pci/pci.h
->> @@ -312,11 +312,16 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
->>   #ifdef CONFIG_PCI_IOV
->>   	int resno = res - dev->resource;
->>   
->> -	if (resno >= PCI_IOV_RESOURCES && resno <= PCI_IOV_RESOURCE_END)
->> +	if (resno >= PCI_IOV_RESOURCES && resno <= PCI_IOV_RESOURCE_END) {
->> +		if (pci_resource_page_aligned && res->flags & IORESOURCE_MEM)
->> +			return PAGE_ALIGN(pci_sriov_resource_alignment(dev, resno));
->>   		return pci_sriov_resource_alignment(dev, resno);
->> +	}
->>   #endif
->>   	if (dev->class >> 8  == PCI_CLASS_BRIDGE_CARDBUS)
->>   		return pci_cardbus_resource_alignment(res);
->> +	if (pci_resource_page_aligned && res->flags & IORESOURCE_MEM)
->> +		return PAGE_ALIGN(resource_alignment(res));
->>   	return resource_alignment(res);
->>   }
-> Why are we calling resource_alignment() and then doing another
-> alignment on top of that?  Shouldn't this alignment be done there?
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-We doing the alignment in pci_resource_alignment() because this is a
-PCI specific feature. And I don't think pci_resource_page_aligned should
-be used in resource_alignment().
-
-> I still don't really understand if this is enough to produce a
-> reallocation if the alignment is not sufficient, vfio would need to
-> know if pci_resource_page_aligned has any loopholes.
-
-Do you mean doing this in pci_resource_alignment() may not
-be enough to make sure the alignments of all PCI resources are page
-aligned? Thanks.
-
-Regards
-Yongji Xie
-
->>   
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 6ae25aa..0ca57f1 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -1517,6 +1517,8 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
->>   
->>   #include
->>   
->> +extern bool pci_resource_page_aligned;
->> +
->>   /* these helpers provide future and backwards compatibility
->>    * for accessing popular PCI BAR info */
->>   #define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
-
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
