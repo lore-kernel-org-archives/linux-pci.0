@@ -1,64 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH v3 3/5] PCI: Add host bridge attribute to indicate
- filtering of MSIs is supported
-To: David Laight <David.Laight@ACULAB.COM>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
-References: <1452841574-2781-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1452841574-2781-4-git-send-email-xyjxie@linux.vnet.ibm.com>
- <063D6719AE5E284EB5DD2968C1650D6D1CCC6833@AcuExch.aculab.com>
-Cc: "nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
-	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
-	"corbet@lwn.net" <corbet@lwn.net>, "aik@ozlabs.ru" <aik@ozlabs.ru>,
-	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"paulus@samba.org" <paulus@samba.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Message-ID: <569F5636.30701@linux.vnet.ibm.com>
-Date: Wed, 20 Jan 2016 17:41:10 +0800
-MIME-Version: 1.0
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D1CCC6833@AcuExch.aculab.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:54511 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752121AbcARFKL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jan 2016 00:10:11 -0500
+From: Simon Horman <horms+renesas@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org,
+	Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH v3 3/4] PCI: rcar: add gen2 fallback compatibility string
+Date: Mon, 18 Jan 2016 14:09:44 +0900
+Message-Id: <1453093785-21067-4-git-send-email-horms+renesas@verge.net.au>
+In-Reply-To: <1453093785-21067-1-git-send-email-horms+renesas@verge.net.au>
+References: <1453093785-21067-1-git-send-email-horms+renesas@verge.net.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/1/16 1:24, David Laight wrote:
-> From: Yongji Xie
->> Sent: 15 January 2016 07:06
->>
->> MSI-X tables are not allowed to be mmapped in vfio-pci
->> driver in case that user get to touch this directly.
->> This will cause some performance issues when when PCI
->> adapters have critical registers in the same page as
->> the MSI-X table.
-> ...
-> If the driver wants to generate an incorrect MSI-X interrupt
-> it can do so by requesting the device do a normal memory transfer
-> to the target address area that raises MSI-X interrupts.
+Add fallback compatibility string for R-Car Gen 2 family.
+This is in keeping with the fallback scheme being adopted wherever
+appropriate for drivers for Renesas SoCs.
 
-IOMMUs supporting interrupt remapping can prevent this case.
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Acked-by: Rob Herring <robh@kernel.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-> So disabling writes to the MSI-X table (and pending bit array)
-> areas only raises the bar very slightly.
-> A device may also give the driver write access to the MSI-X
-> table through other addresses.
->
-> This seems to make disallowing the mapping of the MSI-X table
-> rather pointless.
+---
+v2
+* Include "rcar-" in new compatibility string
+---
+ Documentation/devicetree/bindings/pci/rcar-pci.txt | 13 ++++++++++---
+ drivers/pci/host/pcie-rcar.c                       |  1 +
+ 2 files changed, 11 insertions(+), 3 deletions(-)
 
-If we allow the mapping of the MSI-X table, it seems the guest
-kernels of some architectures can write invalid data to MSI-X table
-when device drivers initialize MSI-X interrupts.
+diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+index 29d3b989d3b0..6b4d2f798386 100644
+--- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
++++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+@@ -1,8 +1,15 @@
+ * Renesas RCar PCIe interface
+ 
+ Required properties:
+-- compatible: should contain one of the following
+-	"renesas,pcie-r8a7779", "renesas,pcie-r8a7790", "renesas,pcie-r8a7791"
++compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
++	    "renesas,pcie-r8a7790" for the R8A7790 SoC;
++	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
++	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
++
++	    When compatible with the generic version, nodes must list the
++	    SoC-specific version corresponding to the platform first
++	    followed by the generic version.
++
+ - reg: base address and length of the pcie controller registers.
+ - #address-cells: set to <3>
+ - #size-cells: set to <2>
+@@ -25,7 +32,7 @@ Example:
+ SoC specific DT Entry:
+ 
+ 	pcie: pcie@fe000000 {
+-		compatible = "renesas,pcie-r8a7791";
++		compatible = "renesas,pcie-r8a7791", "renesas,pcie-rcar-gen2";
+ 		reg = <0 0xfe000000 0 0x80000>;
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 414c33686621..c16f93fe604a 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -919,6 +919,7 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
+ 
+ static const struct of_device_id rcar_pcie_of_match[] = {
+ 	{ .compatible = "renesas,pcie-r8a7779", .data = rcar_pcie_hw_init_h1 },
++	{ .compatible = "renesas,pcie-rcar-gen2", .data = rcar_pcie_hw_init },
+ 	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init },
+ 	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
+ 	{},
+-- 
+2.1.4
 
-Regards,
-Yongji Xie
-
-> I've also dumped out the MSI-X table (during development) to
-> check that the values are being written there correctly.
->
-> 	David
->
