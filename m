@@ -1,135 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor2.renesas.com ([210.160.252.172]:41770 "EHLO
-	relmlie1.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753305AbcARBx3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 17 Jan 2016 20:53:29 -0500
-Message-ID: <569C4595.70806@rvc.renesas.com>
-Date: Mon, 18 Jan 2016 08:53:25 +0700
-From: Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:36822 "EHLO
+	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755037AbcAROh4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jan 2016 09:37:56 -0500
+Received: by mail-pf0-f181.google.com with SMTP id n128so158753406pfn.3
+        for <linux-pci@vger.kernel.org>; Mon, 18 Jan 2016 06:37:56 -0800 (PST)
+Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+To: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+ <5698D163.6050404@linaro.org>
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <569CF8BC.8060102@linaro.org>
+Date: Mon, 18 Jan 2016 22:37:48 +0800
 MIME-Version: 1.0
-To: Simon Horman <horms+renesas@verge.net.au>
-CC: Linus Torvalds <torvalds@linux-foundation.org>,
-	"linux-renesas-soc@vger.kernel.org"
-	<linux-renesas-soc@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
-	"linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	Toru Oishi <toru.oishi.zj@rvc.renesas.com>,
-	Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>
-Subject: Re: [PATCH] MAINTAINERS: Update mailing list for Renesas SoC Development
-References: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
-In-Reply-To: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+In-Reply-To: <5698D163.6050404@linaro.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-cc Shimoda-san for his information.
+On 2016/1/15 19:00, Hanjun Guo wrote:
+> On 2016/1/13 21:20, Tomasz Nowicki wrote:
+>>  From the functionality point of view this series might be split into the
+>> following logic parts:
+>> 1. Make MMCONFIG code arch-agnostic which allows all architectures to
+>> collect
+>>     PCI config regions and used when necessary.
+>> 2. Move non-arch specific bits to the core code.
+>> 3. Use MMCONFIG code and implement generic ACPI based PCI host
+>> controller driver.
+>> 4. Enable above driver on ARM64
+>>
+>> Patches has been built on top of 4.4 and can be found here:
+>> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v3)
+>>
+>> NOTE, this patch set depends on Matthew's patches:
+>> http://www.spinics.net/lists/linux-pci/msg45950.html
+>> https://github.com/Vality/linux/tree/pci-fixes
+>>
+>> This has been tested on Cavium ThunderX server and QEMU.
+>> Any help in reviewing and testing is very appreciated.
+>>
+>> v2 -> v3
+>> - fix legacy IRQ assigning and IO ports registration
+>> - remove reference to arch specific companion device for ia64
+>> - move ACPI PCI host controller driver to pci_root.c
+>> - drop generic domain assignment for x86 and ia64 as I am not
+>>    able to run all necessary test variants
+>> - drop patch which cleaned legacy IRQ assignment since it belongs to
+>>    Mathew's series:
+>>    https://patchwork.ozlabs.org/patch/557504/
+>> - extend MCFG quirk code
+>> - rebased to 4.4
+>
+> Tested this patch set (and Matthew's) on a HP RX2660 IA64 machine,
+> with the CONFIG_ACPI_PCI_HOST_GENERIC disabled on IA64 ( it's a minor
+> comment needs to be addressed in my previous email), it can boot
+> the system ok with NIC working properly, with the /pro/ioports [1] and
+> the boot log [2] if anyone needs refer to it.
+>
+> For this patch set, on IA64 machine,
+>
+> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
 
-On 1/18/2016 8:04 AM, Simon Horman wrote:
-> Update the mailing list used for development of support for
-> Renesas SoCs and related drivers.
->
-> Up until now the linux-sh mailing list has been used, however,
-> Renesas SoCs are now much wider than the SH architecture and there
-> is some desire from some for the linux-sh list to refocus on
-> discussion of the work on the SH architecture.
->
-> Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-> Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> Cc: Magnus Damm <magnus.damm@gmail.com>
-> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
->
-> ---
-> * This patch applies on top of Linus's tree where currently the head commit
->    is 984065055e6e ("Merge branch 'drm-next' of
->    git://people.freedesktop.org/~airlied/linux")
->
->    This has been used as a base instead of v4.4 so that it is based on the
->    following two commits which affect it:
->    - 1a4ca6dd3dc8 ("MAINTAINERS: Add co-maintainer for Renesas Pin Controllers")
->    - 3e46c3973cba ("MAINTAINERS: add Renesas usb2 phy driver")
-> ---
->   MAINTAINERS | 16 ++++++++--------
->   1 file changed, 8 insertions(+), 8 deletions(-)
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 1d23f701489c..52a6ba79fa3f 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -1531,9 +1531,9 @@ F:	drivers/media/platform/s5p-jpeg/
->   ARM/SHMOBILE ARM ARCHITECTURE
->   M:	Simon Horman <horms@verge.net.au>
->   M:	Magnus Damm <magnus.damm@gmail.com>
-> -L:	linux-sh@vger.kernel.org
-> +L:	linux-renesas-soc@vger.kernel.org
->   W:	http://oss.renesas.com
-> -Q:	http://patchwork.kernel.org/project/linux-sh/list/
-> +Q:	http://patchwork.kernel.org/project/linux-renesas-soc/list/
->   T:	git git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas.git next
->   S:	Supported
->   F:	arch/arm/boot/dts/emev2*
-> @@ -3745,7 +3745,7 @@ F:	Documentation/devicetree/bindings/display/tegra/nvidia,tegra20-host1x.txt
->   DRM DRIVERS FOR RENESAS
->   M:	Laurent Pinchart <laurent.pinchart@ideasonboard.com>
->   L:	dri-devel@lists.freedesktop.org
-> -L:	linux-sh@vger.kernel.org
-> +L:	linux-renesas-soc@vger.kernel.org
->   T:	git git://people.freedesktop.org/~airlied/linux
->   S:	Supported
->   F:	drivers/gpu/drm/rcar-du/
-> @@ -6858,7 +6858,7 @@ F:	drivers/iio/potentiometer/mcp4531.c
->   MEDIA DRIVERS FOR RENESAS - VSP1
->   M:	Laurent Pinchart <laurent.pinchart@ideasonboard.com>
->   L:	linux-media@vger.kernel.org
-> -L:	linux-sh@vger.kernel.org
-> +L:	linux-renesas-soc@vger.kernel.org
->   T:	git git://linuxtv.org/media_tree.git
->   S:	Supported
->   F:	Documentation/devicetree/bindings/media/renesas,vsp1.txt
-> @@ -8235,7 +8235,7 @@ F:	drivers/pci/host/pci-dra7xx.c
->   PCI DRIVER FOR RENESAS R-CAR
->   M:	Simon Horman <horms@verge.net.au>
->   L:	linux-pci@vger.kernel.org
-> -L:	linux-sh@vger.kernel.org
-> +L:	linux-renesas-soc@vger.kernel.org
->   S:	Maintained
->   F:	drivers/pci/host/*rcar*
->
-> @@ -8413,7 +8413,7 @@ F:	drivers/pinctrl/intel/
->   PIN CONTROLLER - RENESAS
->   M:	Laurent Pinchart <laurent.pinchart@ideasonboard.com>
->   M:	Geert Uytterhoeven <geert+renesas@glider.be>
-> -L:	linux-sh@vger.kernel.org
-> +L:	linux-renesas-soc@vger.kernel.org
->   S:	Maintained
->   F:	drivers/pinctrl/sh-pfc/
->
-> @@ -9019,13 +9019,13 @@ F:	include/linux/rpmsg.h
->   RENESAS ETHERNET DRIVERS
->   R:	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
->   L:	netdev@vger.kernel.org
-> -L:	linux-sh@vger.kernel.org
-> +L:	linux-renesas-soc@vger.kernel.org
->   F:	drivers/net/ethernet/renesas/
->   F:	include/linux/sh_eth.h
->
->   RENESAS USB2 PHY DRIVER
->   M:	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> -L:	linux-sh@vger.kernel.org
-> +L:	linux-renesas-soc@vger.kernel.org
->   S:	Maintained
->   F:	drivers/phy/phy-rcar-gen3-usb2.c
->
->
+I tested this patch set on x86 server with CONFIG_ACPI_PCI_HOST_GENERIC
+disabled today, also booted ok with NIC working properly.
 
--- 
-Best regards,
-KHIEM Nguyen
+Thanks
+Hanjun
