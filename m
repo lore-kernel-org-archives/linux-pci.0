@@ -1,148 +1,59 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 27 Jan 2016 16:32:38 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Chen Fan <chen.fan.fnst@cn.fujitsu.com>,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	rjw@rjwysocki.net, lenb@kernel.org, izumi.taku@jp.fujitsu.com,
-	wency@cn.fujitsu.com, caoj.fnst@cn.fujitsu.com,
-	ddaney.cavm@gmail.com, okaya@codeaurora.org, bhelgaas@google.com,
-	jiang.liu@linux.intel.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] pci: fix unavailable irq number 255 reported by BIOS
-Message-ID: <20160127223237.GA6190@localhost>
-References: <1453705178-27389-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>
- <20160125205803.GA10272@localhost>
- <alpine.DEB.2.11.1601260825510.3886@nanos>
- <20160126152221.GB9279@localhost>
- <alpine.DEB.2.11.1601261628450.3886@nanos>
- <20160127002505.GA3329@localhost>
- <alpine.DEB.2.11.1601270941190.3886@nanos>
+Subject: Re: [PATCH V3 19/21] pci, acpi: Support for ACPI based generic PCI
+ host controller init
+To: "liudongdong (C)" <liudongdong3@huawei.com>, bhelgaas@google.com,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+ <1452691267-32240-20-git-send-email-tn@semihalf.com>
+ <569CAF7E.9040000@huawei.com>
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <569CBFB7.1020409@semihalf.com>
+Date: Mon, 18 Jan 2016 11:34:31 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.11.1601270941190.3886@nanos>
+In-Reply-To: <569CAF7E.9040000@huawei.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 27, 2016 at 10:13:36AM +0100, Thomas Gleixner wrote:
-> On Tue, 26 Jan 2016, Bjorn Helgaas wrote:
-> > On Tue, Jan 26, 2016 at 04:48:25PM +0100, Thomas Gleixner wrote:
-> > > Right. So we could certainly do something like this INVALID_IRQ thingy, but
-> > > that looks a bit weird. What would request_irq() return?
-> > > 
-> > > If it returns success, then drivers might make the wrong decision. If it
-> > > returns an error code, then the i801 one works, but we might have to fix
-> > > others anyway.
-> > 
-> > I was thinking request_irq() could return -EINVAL if the caller passed
-> > INVALID_IRQ.  That should tell drivers that this interrupt won't work.
-> > 
-> > We'd be making request_irq() return -EINVAL in some cases where it
-> > currently returns success.  But even though it returns success today,
-> > I don't think the driver is getting interrupts, because the wire isn't
-> > connected.
-> 
-> Correct. What I meant is that the i801 driver can handle the -EINVAL return
-> from request_irq() today, but other drivers don't. I agree that we need to fix
-> them anyway and a failure to request the interrupt is better than a silent 'no
-> interrupts delivered' issue.
->  
-> Though instead of returning -EINVAL I prefer an explicit error code for this
-> case. That way a driver can distinguish between the 'not connected' case and
-> other failure modes. Something like the patch below should work.
+On 18.01.2016 10:25, liudongdong (C) wrote:
+> I see here is different from V2 patch,
+> in V2 patch,  0x0000022004000000 is cpu addr.
+> but in V3 patch, 0x0000022004000000 is pci addr.
+> which one is right ?
 
-This patch looks great to me, thanks for all your help!
+You are right, I look back at v2 and see bug there. But v3 fixes it, for 
+MEM & IO we always need to calculate this way:
+CPU address defined as: cpu_addr = res->start + entry->offset;
+PCI address: pci_addr = res->start;
 
-Chen, do you want to put all this together as formal patches with
-changelogs and post to the mailing lists?
+>
+> 0x0000022004000000  is the value of AddressMinimum.
+> AddressMinimum evaluates to a 64-bit integer that specifies the lowest
+> possible base address of the Memory range
+> QWordMemory ( // 64-bit BAR Windows
+>      ResourceProducer, PosDecode,
+>      MinFixed, MaxFixed,
+>      Cacheable, ReadWrite,
+>      0x000000000000000, // Granularity
+>      0x0000022004000000, // Min Base Address
+>      0x000002200fffffff, // Max Base Address
+>      0x0000021ff9000000, // Translate
+>      0x000000000c000000 // Length
+> )
 
-Bjorn
+For your case:
+cpu_addr = 0x0000022004000000 + 0x0000021ff9000000:
+pci_addr = 0x0000022004000000;
 
-> 8<------------------
-> --- a/drivers/acpi/pci_irq.c
-> +++ b/drivers/acpi/pci_irq.c
-> @@ -387,6 +387,22 @@ static inline int acpi_isa_register_gsi(
->  }
->  #endif
->  
-> +static inline bool acpi_pci_irq_valid(struc pci_dev *dev)
-> +{
-> +#ifdef CONFIG_X86
-> +	/*
-> +	 * On x86 irq line 0xff means "unknown" or "no connection" (PCI 3.0,
-> +	 * Section 6.2.4, footnote on page 223).
-> +	 */
-> +	if (dev->irq == 0xff) {
-> +		dev->irq = IRQ_NOTCONNECTED;
-> +		dev_warn(&dev->dev, "PCI INT not connected\n");
-> +		return false;
-> +	}
-> +#endif
-> +	return true;
-> +}
-> +
->  int acpi_pci_irq_enable(struct pci_dev *dev)
->  {
->  	struct acpi_prt_entry *entry;
-> @@ -409,6 +425,9 @@ int acpi_pci_irq_enable(struct pci_dev *
->  	if (pci_has_managed_irq(dev))
->  		return 0;
->  
-> +	if (!acpi_pci_irq_valid(dev))
-> +		return 0;
-> +
->  	entry = acpi_pci_irq_lookup(dev, pin);
->  	if (!entry) {
->  		/*
-> --- a/include/linux/interrupt.h
-> +++ b/include/linux/interrupt.h
-> @@ -125,6 +125,16 @@ struct irqaction {
->  
->  extern irqreturn_t no_action(int cpl, void *dev_id);
->  
-> +/*
-> + * If a (PCI) device interrupt is not connected we set dev->irq to
-> + * IRQ_NOTCONNECTED. This causes request_irq() to fail with -ENOTCONN, so we
-> + * can distingiush that case from other error returns.
-> + *
-> + * 0x80000000 is guaranteed to be outside the available range of interrupts
-> + * and easy to distinguish from other possible incorrect values.
-> + */
-> +#define IRQ_NOTCONNECTED	(1U << 31)
-> +
->  extern int __must_check
->  request_threaded_irq(unsigned int irq, irq_handler_t handler,
->  		     irq_handler_t thread_fn,
-> --- a/kernel/irq/manage.c
-> +++ b/kernel/irq/manage.c
-> @@ -1609,6 +1609,9 @@ int request_threaded_irq(unsigned int ir
->  	struct irq_desc *desc;
->  	int retval;
->  
-> +	if (irq == IRQ_NOTCONNECTED)
-> +		return -ENOTCONN;
-> +
->  	/*
->  	 * Sanity-check: shared interrupts must pass in a real dev-ID,
->  	 * otherwise we'll have trouble later trying to figure out
-> @@ -1699,9 +1702,13 @@ EXPORT_SYMBOL(request_threaded_irq);
->  int request_any_context_irq(unsigned int irq, irq_handler_t handler,
->  			    unsigned long flags, const char *name, void *dev_id)
->  {
-> -	struct irq_desc *desc = irq_to_desc(irq);
-> +	struct irq_desc *desc;
->  	int ret;
->  
-> +	if (irq == IRQ_NOTCONNECTED)
-> +		return -ENOTCONN;
-> +
-> +	desc = irq_to_desc(irq);
->  	if (!desc)
->  		return -EINVAL;
->  
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+Tomasz
