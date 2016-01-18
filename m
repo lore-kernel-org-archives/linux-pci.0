@@ -1,33 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33733 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757654AbcBAEOy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 31 Jan 2016 23:14:54 -0500
-Message-ID: <1454300093.10542.3.camel@redhat.com>
-Subject: Re: Q: Relation between lanes to devices and to BARs
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Ran Shalit <ranshalit@gmail.com>, linux-pci@vger.kernel.org
-Date: Sun, 31 Jan 2016 21:14:53 -0700
-In-Reply-To: <CAJ2oMhL-oL68ZOLsFEn3uGE=O9sMjcwPDH6oznLhG15xnzSQtQ@mail.gmail.com>
-References: <CAJ2oMhL-oL68ZOLsFEn3uGE=O9sMjcwPDH6oznLhG15xnzSQtQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:34440 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754273AbcARLaV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jan 2016 06:30:21 -0500
+Subject: Re: [PATCH v6 1/2] PCI support added to ARC
+To: "helgaas@kernel.org" <helgaas@kernel.org>
+References: <cover.1452611234.git.jpinto@synopsys.com>
+ <24c9b782dfade515bbed20ce75d85200a00a2e66.1452611234.git.jpinto@synopsys.com>
+ <C2D7FE5348E1B147BCA15975FBA23075F4E84E0E@us01wembx1.internal.synopsys.com>
+CC: Vineet Gupta <Vineet.Gupta1@synopsys.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-snps-arc@lists.infradead.org"
+	<linux-snps-arc@lists.infradead.org>,
+	"CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>,
+	"Alexey.Brodkin@synopsys.com" <Alexey.Brodkin@synopsys.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	"arnd@arndb.de" <arnd@arndb.de>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <569CCCC5.3070906@synopsys.com>
+Date: Mon, 18 Jan 2016 11:30:13 +0000
+MIME-Version: 1.0
+In-Reply-To: <C2D7FE5348E1B147BCA15975FBA23075F4E84E0E@us01wembx1.internal.synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 2016-01-31 at 02:15 -0500, Ran Shalit wrote:
-> Hello,
-> 
-> I am new to pci express drivers, and would please like to ask a question.
-> We develop a linux driver for a PCIe device board with 4 lanes.
-> 1. Is it expected that this will be recognized as a single device or
-> multiple device ?
+Hi Bjorn,
 
-It depends whether your device is multifunction.
+On 1/14/2016 11:11 AM, Vineet Gupta wrote:
+> On Thursday 14 January 2016 04:34 PM, Joao Pinto wrote:
+>> This patch adds PCI support to ARC and updates drivers/pci Makefile
+>> enabling the ARC arch to use the generic PCI setup functions.
+>>
+>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> 
+> Acked-by: Vineet Gupta <vgupta@synopsys.com>
+> 
+> @Bjorn are you happy with the driver bits.
+> Although ARC support is independent of driver, and I can pick it up separately,
+> it would be better if you took it along with the driver. I don't see potential
+> for any conflicts.
+> 
+> Thx,
+> -Vineet
 
-> 2. Is it that each lane rales to a different BAR or there is no
-> connection between these two ?
+In your opinion the patch set is ready for merge or do you need me to make any
+more tweaks?
 
-No relation, all PCI/e devices have the same set of standard BARs
-available to them.
+Thanks a lot.
 
+Joao
