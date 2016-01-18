@@ -1,68 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:29076 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751777AbcAFUDo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Jan 2016 15:03:44 -0500
-Date: Wed, 6 Jan 2016 20:03:39 +0000
-From: Keith Busch <keith.busch@intel.com>
-To: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org
-Cc: Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCHv7 0/6] Driver for new "VMD" device
-Message-ID: <20160106200339.GA21311@localhost.localdomain>
-References: <1450719900-2824-1-git-send-email-keith.busch@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1450719900-2824-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
+References: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
+Date: Mon, 18 Jan 2016 14:09:50 +0900
+Message-ID: <CANqRtoT+fOYzpaTBGjm4FPvc3TzSAX2O27foVtS=gMT6gnC3Nw@mail.gmail.com>
+Subject: Re: [PATCH] MAINTAINERS: Update mailing list for Renesas SoC Development
+From: Magnus Damm <magnus.damm@gmail.com>
+To: Simon Horman <horms+renesas@verge.net.au>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-renesas-soc@vger.kernel.org,
+	SH-Linux <linux-sh@vger.kernel.org>,
+	Linux Media Mailing List <linux-media@vger.kernel.org>,
+	linux-pci@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+On Mon, Jan 18, 2016 at 10:04 AM, Simon Horman
+<horms+renesas@verge.net.au> wrote:
+> Update the mailing list used for development of support for
+> Renesas SoCs and related drivers.
+>
+> Up until now the linux-sh mailing list has been used, however,
+> Renesas SoCs are now much wider than the SH architecture and there
+> is some desire from some for the linux-sh list to refocus on
+> discussion of the work on the SH architecture.
+>
+> Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Magnus Damm <magnus.damm@gmail.com>
+> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+>
+> ---
+> * This patch applies on top of Linus's tree where currently the head commit
+>   is 984065055e6e ("Merge branch 'drm-next' of
+>   git://people.freedesktop.org/~airlied/linux")
+>
+>   This has been used as a base instead of v4.4 so that it is based on the
+>   following two commits which affect it:
+>   - 1a4ca6dd3dc8 ("MAINTAINERS: Add co-maintainer for Renesas Pin Controllers")
+>   - 3e46c3973cba ("MAINTAINERS: add Renesas usb2 phy driver")
+> ---
+>  MAINTAINERS | 16 ++++++++--------
+>  1 file changed, 8 insertions(+), 8 deletions(-)
+>
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 1d23f701489c..52a6ba79fa3f 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -1531,9 +1531,9 @@ F:        drivers/media/platform/s5p-jpeg/
+>  ARM/SHMOBILE ARM ARCHITECTURE
+>  M:     Simon Horman <horms@verge.net.au>
+>  M:     Magnus Damm <magnus.damm@gmail.com>
+> -L:     linux-sh@vger.kernel.org
+> +L:     linux-renesas-soc@vger.kernel.org
+>  W:     http://oss.renesas.com
+> -Q:     http://patchwork.kernel.org/project/linux-sh/list/
+> +Q:     http://patchwork.kernel.org/project/linux-renesas-soc/list/
+>  T:     git git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas.git next
+>  S:     Supported
+>  F:     arch/arm/boot/dts/emev2*
 
-I very much appreciate all the feedback received. I dropped the
-controversial PCI parts and the user space pci-utils from this series,
-and I think satisfied all the requests I am aware of. Is there anything
-else preventing a 4.5 inclusion?
+Hi Simon,
 
-Thanks a bunch!
-Keith
+Thanks a lot for handling this!
 
-On Mon, Dec 21, 2015 at 10:44:54AM -0700, Keith Busch wrote:
-> v6->v7:
-> 
->  Removed PCI resource window patch rejecting child bus that doesn't fit in
->  parent's window. There are additional caveats the maintainer brought up
->  that need more consideration. Since we are not dependent on that patch,
->  it is removed from the series.
-> 
->  Dropped the pciutils patch since it is an external projet not part
->  of this series anyway. Will send tooling updates to the appropriate
->  mailing list once this settles.
-> 
->  Modified commit log messages to align with maintainer's requested format.
-> 
->  Using u32's for domains instead of ints.
-> 
->  Fixed code comment on posted/non-posted clarification. 
-> 
->  Added a dmesg info message to show which domain a VMD end point bound to.
-> 
->  Fixed the vmd domain's root bus parent device so power management has
->  the correct dependency tree.
-> 
-> Keith Busch (5):
->   PCI/MSI: Export msi functions for module use
->   x86/IRQ: Export IRQ domain function for module use
->   x86/PCI: Allow PCI domain specific dma ops
->   x86/PCI: Initial commit for new VMD device driver
->   PCI/AER: Use 32 bit int type domains
-> 
-> Liu Jiang (1):
->   msi: Relax msi_domain_alloc() to support parentless MSI irqdomains
+Acked-by: Magnus Damm <damm@opensource.se>
+
+Cheers,
+
+/ magnus
