@@ -1,165 +1,323 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor4.renesas.com ([210.160.252.174]:57043 "EHLO
-	relmlie3.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1758851AbcAKLmH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Jan 2016 06:42:07 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>
-Subject: RE: [PATCH v2 2/4] PCI: rcar: Support runtime PM link state L1
- handling in pcie-rcar
-Date: Mon, 11 Jan 2016 11:42:01 +0000
-Message-ID: <HK2PR0601MB1393C12999D6E781695297C7F5C90@HK2PR0601MB1393.apcprd06.prod.outlook.com>
-References: <1451998831-27705-1-git-send-email-phil.edworthy@renesas.com>
- <1451998831-27705-3-git-send-email-phil.edworthy@renesas.com>
- <20160108213136.GM5354@localhost>
-In-Reply-To: <20160108213136.GM5354@localhost>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-ia64@vger.kernel.org>,
+	<linux-metag@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-s390@vger.kernel.org>, <linux-sh@vger.kernel.org>,
+	<linux-arch@vger.kernel.org>, <Will.Deacon@arm.com>,
+	<catalin.marinas@arm.com>, <grant.likely@linaro.org>,
+	<leif.lindholm@linaro.org>, <rfranz@cavium.com>,
+	<ard.biesheuvel@linaro.org>, <msalter@redhat.com>,
+	<robh+dt@kernel.org>, <steve.capper@linaro.org>,
+	<hanjun.guo@linaro.org>, <al.stone@linaro.org>, <arnd@arndb.de>,
+	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rjw@rjwysocki.net>, <lenb@kernel.org>, <marc.zyngier@arm.com>,
+	<lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+	<tony.luck@intel.com>, <fenghua.yu@intel.com>,
+	<james.hogan@imgtec.com>, <benh@kernel.crashing.org>,
+	<tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
+	<x86@kernel.org>, <jonathan@jonmasters.org>, <rrichter@cavium.com>,
+	<Prasun.Kapoor@caviumnetworks.com>
+CC: <gpkulkarni@gmail.com>
+Subject: [PATCH v9 2/6] Documentation, dt, arm64/arm: dt bindings for numa.
+Date: Mon, 18 Jan 2016 22:06:01 +0530
+Message-ID: <1453134965-6125-3-git-send-email-gkulkarni@caviumnetworks.com>
+In-Reply-To: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
+References: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+DT bindings for numa mapping of memory, cores and IOs.
 
-On 08 January 2016 21:32, Bjorn Helgaas wrote:
-> Hi Phil,
-> 
-> On Tue, Jan 05, 2016 at 01:00:29PM +0000, Phil Edworthy wrote:
-> > The R-Car PCIe host controller does not handle L1 ASPM. Instead, the
-> > hardware needs assistance to transition to L1. When the controller
-> > has received a PM_ENTER_L1 DLLP, we can't access a card's config regs
-> > until we have got it out of L1 link state. The host controller will
-> > handle this as long as it has also been transitioned to L1 link state.
-> >
-> > So, when attempting a config access, check to see if the card has gone
-> > into L1, and if so, do the same for the host controller.
-> 
-> I don't understand what's going on here.
-> 
-> For one thing, this sounds like a workaround for an R-Car hardware
-> defect.  ASPM is supposed to be an autonomous, hardware-based
-> mechanism (spec sec 5.10), so software shouldn't need to be involved
-> in the transitions.  Bugs are a fact of life, so it's not a problem to
-> have workarounds, but if it *is* a hardware erratum, it would help the
-> reader to mention that in a comment.
->From what I understand, ASPM L1 support is optional. The R-Car hardware
-can support it with some software help.
+Reviewed-by: Robert Richter <rrichter@cavium.com>
+Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
+---
+ Documentation/devicetree/bindings/arm/numa.txt | 272 +++++++++++++++++++++++++
+ 1 file changed, 272 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/arm/numa.txt
 
-> Beyond that, I'm confused about how this really does any good.  It
-> looks like you'd have this scenario:
-> 
->   - downstream device wants to enter L1, so it sends PM_ENTER_L1 DLLP
->     upstream to host controller
-> 
->   - host controller can't enter L1 by itself
-> 
->   - ... some arbitrary time elapses ...
-> 
->   - driver performs config access to downstream device
-> 
->   - rcar_pcie_config_access() notices downstream device wants to enter
->     L1, so it helps host controller transition link from L0 to L1
-> 
->   - rcar_pcie_config_access() issues config access
-> 
->   - config access causes link to transition from L1 to L0
-> 
-> So it seems like the link would only be in L1 for the tiny amount of
-> time between your write of L1_INIT and the actual config access.  I
-> must be missing something.
-What you say makes complete sense. Either the R-Car should not advertise
-L1 support, or the hardware actually enters L1 ok, but doesn't come back
-out without this bit of code. I'll ask the HW people what it does.
+diff --git a/Documentation/devicetree/bindings/arm/numa.txt b/Documentation/devicetree/bindings/arm/numa.txt
+new file mode 100644
+index 0000000..734e5b4
+--- /dev/null
++++ b/Documentation/devicetree/bindings/arm/numa.txt
+@@ -0,0 +1,272 @@
++==============================================================================
++NUMA binding description.
++==============================================================================
++
++==============================================================================
++1 - Introduction
++==============================================================================
++
++Systems employing a Non Uniform Memory Access (NUMA) architecture contain
++collections of hardware resources including processors, memory, and I/O buses,
++that comprise what is commonly known as a NUMA node.
++Processor accesses to memory within the local NUMA node is generally faster
++than processor accesses to memory outside of the local NUMA node.
++DT defines interfaces that allow the platform to convey NUMA node
++topology information to OS.
++
++==============================================================================
++2 - numa-node-id
++==============================================================================
++
++For the purpose of identification, each NUMA node is associated with a unique
++token known as a node id. For the purpose of this binding
++a node id is a 32-bit integer.
++
++A device node is associated with a NUMA node by the presence of a
++numa-node-id property which contains the node id of the device.
++
++Example:
++	/* numa node 0 */
++	numa-node-id = <0>;
++
++	/* numa node 1 */
++	numa-node-id = <1>;
++
++==============================================================================
++3 - distance-map
++==============================================================================
++
++The device tree node distance-map describes the relative
++distance (memory latency) between all numa nodes.
++
++- compatible : Should at least contain "numa-distance-map-v1".
++
++- distance-matrix
++  This property defines a matrix to describe the relative distances
++  between all numa nodes.
++  It is represented as a list of node pairs and their relative distance.
++
++  Note:
++	1. Each entry represents distance from first node to second node.
++	The distances are equal in either direction.
++	2. The distance from a node to self (local distance) is represented
++	with value 10 and all internode distance should be represented with
++	a value greater than 10.
++	3. distance-matrix should have entries in lexicographical ascending
++	order of nodes.
++	4. There must be only one device node distance-map which must reside in the root node.
++
++Example:
++	4 nodes connected in mesh/ring topology as below,
++
++		0_______20______1
++		|               |
++		|               |
++		20             20
++		|               |
++		|               |
++		|_______________|
++		3       20      2
++
++	if relative distance for each hop is 20,
++	then internode distance would be,
++	      0 -> 1 = 20
++	      1 -> 2 = 20
++	      2 -> 3 = 20
++	      3 -> 0 = 20
++	      0 -> 2 = 40
++	      1 -> 3 = 40
++
++     and dt presentation for this distance matrix is,
++
++		distance-map {
++			 compatible = "numa-distance-map-v1";
++			 distance-matrix = <0 0  10>,
++					   <0 1  20>,
++					   <0 2  40>,
++					   <0 3  20>,
++					   <1 0  20>,
++					   <1 1  10>,
++					   <1 2  20>,
++					   <1 3  40>,
++					   <2 0  40>,
++					   <2 1  20>,
++					   <2 2  10>,
++					   <2 3  20>,
++					   <3 0  20>,
++					   <3 1  40>,
++					   <3 2  20>,
++					   <3 3  10>;
++		};
++
++==============================================================================
++4 - Example dts
++==============================================================================
++
++2 sockets system consists of 2 boards connected through ccn bus and
++each board having one socket/soc of 8 cpus, memory and pci bus.
++
++	memory@00c00000 {
++		device_type = "memory";
++		reg = <0x0 0x00c00000 0x0 0x80000000>;
++		/* node 0 */
++		numa-node-id = <0>;
++	};
++
++	memory@10000000000 {
++		device_type = "memory";
++		reg = <0x100 0x00000000 0x0 0x80000000>;
++		/* node 1 */
++		numa-node-id = <1>;
++	};
++
++	cpus {
++		#address-cells = <2>;
++		#size-cells = <0>;
++
++		cpu@000 {
++			device_type = "cpu";
++			compatible =  "arm,armv8";
++			reg = <0x0 0x000>;
++			enable-method = "psci";
++			/* node 0 */
++			numa-node-id = <0>;
++		};
++		cpu@001 {
++			device_type = "cpu";
++			compatible =  "arm,armv8";
++			reg = <0x0 0x001>;
++			enable-method = "psci";
++			numa-node-id = <0>;
++		};
++		cpu@002 {
++			device_type = "cpu";
++			compatible =  "arm,armv8";
++			reg = <0x0 0x002>;
++			enable-method = "psci";
++			numa-node-id = <0>;
++		};
++		cpu@003 {
++			device_type = "cpu";
++			compatible =  "arm,armv8";
++			reg = <0x0 0x003>;
++			enable-method = "psci";
++			numa-node-id = <0>;
++		};
++		cpu@004 {
++			device_type = "cpu";
++			compatible =  "arm,armv8";
++			reg = <0x0 0x004>;
++			enable-method = "psci";
++			numa-node-id = <0>;
++		};
++		cpu@005 {
++			device_type = "cpu";
++			compatible =  "arm,armv8";
++			reg = <0x0 0x005>;
++			enable-method = "psci";
++			numa-node-id = <0>;
++		};
++		cpu@006 {
++			device_type = "cpu";
++			compatible =  "arm,armv8";
++			reg = <0x0 0x006>;
++			enable-method = "psci";
++			numa-node-id = <0>;
++		};
++		cpu@007 {
++			device_type = "cpu";
++			compatible =  "arm,armv8";
++			reg = <0x0 0x007>;
++			enable-method = "psci";
++			numa-node-id = <0>;
++		};
++		cpu@008 {
++			device_type = "cpu";
++			compatible =  "arm,armv8";
++			reg = <0x0 0x008>;
++			enable-method = "psci";
++			/* node 1 */
++			numa-node-id = <1>;
++		};
++		cpu@009 {
++			device_type = "cpu";
++			compatible =  "arm,armv8";
++			reg = <0x0 0x009>;
++			enable-method = "psci";
++			numa-node-id = <1>;
++		};
++		cpu@00a {
++			device_type = "cpu";
++			compatible =  "arm,armv8";
++			reg = <0x0 0x00a>;
++			enable-method = "psci";
++			numa-node-id = <1>;
++		};
++		cpu@00b {
++			device_type = "cpu";
++			compatible =  "arm,armv8";
++			reg = <0x0 0x00b>;
++			enable-method = "psci";
++			numa-node-id = <1>;
++		};
++		cpu@00c {
++			device_type = "cpu";
++			compatible =  "arm,armv8";
++			reg = <0x0 0x00c>;
++			enable-method = "psci";
++			numa-node-id = <1>;
++		};
++		cpu@00d {
++			device_type = "cpu";
++			compatible =  "arm,armv8";
++			reg = <0x0 0x00d>;
++			enable-method = "psci";
++			numa-node-id = <1>;
++		};
++		cpu@00e {
++			device_type = "cpu";
++			compatible =  "arm,armv8";
++			reg = <0x0 0x00e>;
++			enable-method = "psci";
++			numa-node-id = <1>;
++		};
++		cpu@00f {
++			device_type = "cpu";
++			compatible =  "arm,armv8";
++			reg = <0x0 0x00f>;
++			enable-method = "psci";
++			numa-node-id = <1>;
++		};
++	};
++
++	pcie0: pcie0@0x8480,00000000 {
++		compatible = "arm,armv8";
++		device_type = "pci";
++		bus-range = <0 255>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		reg = <0x8480 0x00000000 0 0x10000000>;  /* Configuration space */
++		ranges = <0x03000000 0x8010 0x00000000 0x8010 0x00000000 0x70 0x00000000>;
++		/* node 0 */
++		numa-node-id = <0>;
++        };
++
++	pcie1: pcie1@0x9480,00000000 {
++		compatible = "arm,armv8";
++		device_type = "pci";
++		bus-range = <0 255>;
++		#size-cells = <2>;
++		#address-cells = <3>;
++		reg = <0x9480 0x00000000 0 0x10000000>;  /* Configuration space */
++		ranges = <0x03000000 0x9010 0x00000000 0x9010 0x00000000 0x70 0x00000000>;
++		/* node 1 */
++		numa-node-id = <1>;
++        };
++
++	distance-map {
++		compatible = "numa-distance-map-v1";
++		distance-matrix = <0 0 10>,
++				  <0 1 20>,
++				  <1 1 10>;
++	};
+-- 
+1.8.1.4
 
-Thanks
-Phil
-
-> > This is based on a patch by Hien Dang <hien.dang.eb@rvc.renesas.com>
-> >
-> > Signed-off-by: Phil Edworthy <phil.edworthy@renesas.com>
-> > ---
-> > v2:
-> >  - Use readl_poll_timeout_atomic when waiting until we are in L1.
-> > ---
-> >  drivers/pci/host/pcie-rcar.c | 31 +++++++++++++++++++++++++++++++
-> >  1 file changed, 31 insertions(+)
-> >
-> > diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> > index c72c0ae..31ad93a 100644
-> > --- a/drivers/pci/host/pcie-rcar.c
-> > +++ b/drivers/pci/host/pcie-rcar.c
-> > @@ -15,6 +15,7 @@
-> >  #include <linux/clk.h>
-> >  #include <linux/delay.h>
-> >  #include <linux/interrupt.h>
-> > +#include <linux/iopoll.h>
-> >  #include <linux/irq.h>
-> >  #include <linux/irqdomain.h>
-> >  #include <linux/kernel.h>
-> > @@ -83,6 +84,14 @@
-> >  #define MACSR			0x011054
-> >  #define MACCTLR			0x011058
-> >  #define  SCRAMBLE_DISABLE	(1 << 27)
-> > +#define PMSR			0x01105c
-> > +#define  L1FAEG			(1 << 31)
-> > +#define  PM_ENTER_L1RX		(1 << 23)
-> > +#define  PMSTATE		(7 << 16)
-> > +#define  PMSTATE_L1		(3 << 16)
-> > +#define PMCTLR			0x011060
-> > +#define  L1_INIT		(1 << 31)
-> > +
-> >
-> >  /* R-Car H1 PHY */
-> >  #define H1_PCIEPHYADRR		0x04000c
-> > @@ -175,6 +184,8 @@ static int rcar_pcie_config_access(struct rcar_pcie *pcie,
-> >  		unsigned int devfn, int where, u32 *data)
-> >  {
-> >  	int dev, func, reg, index;
-> > +	u32 val;
-> > +	int err;
-> >
-> >  	dev = PCI_SLOT(devfn);
-> >  	func = PCI_FUNC(devfn);
-> > @@ -216,6 +227,26 @@ static int rcar_pcie_config_access(struct rcar_pcie
-> *pcie,
-> >  	if (pcie->root_bus_nr < 0)
-> >  		return PCIBIOS_DEVICE_NOT_FOUND;
-> >
-> > +	/*
-> > +	 * If we are not in L1 link state but have received PM_ENTER_L1 DLLP,
-> > +	 * transition to L1 link state. The HW will handle coming out of L1.
-> > +	 */
-> > +	val = rcar_pci_read_reg(pcie, PMSR);
-> > +	if ((val & PM_ENTER_L1RX) && ((val & PMSTATE) != PMSTATE_L1)) {
-> > +		rcar_pci_write_reg(pcie, L1_INIT, PMCTLR);
-> > +
-> > +		/* Wait until we are in L1 */
-> > +		err = readl_poll_timeout_atomic(pcie->base + PMSR,
-> > +			val, (val & L1FAEG), 5, 1000000);
-> > +		if (err) {
-> > +			dev_err(pcie->dev, "poll for L1 state timed out\n");
-> > +			return PCIBIOS_DEVICE_NOT_FOUND;
-> > +		}
-> > +
-> > +		/* Clear flags indicating link has transitioned to L1 */
-> > +		rcar_pci_write_reg(pcie, L1FAEG | PM_ENTER_L1RX, PMSR);
-> > +	}
-> > +
-> >  	/* Clear errors */
-> >  	rcar_pci_write_reg(pcie, rcar_pci_read_reg(pcie, PCIEERRFR),
-> PCIEERRFR);
-> >
-> > --
-> > 2.5.0
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
