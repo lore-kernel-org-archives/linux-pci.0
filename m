@@ -1,49 +1,74 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 26 Jan 2016 10:51:56 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
-cc: Bjorn Helgaas <helgaas@kernel.org>, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, rjw@rjwysocki.net, lenb@kernel.org,
-	izumi.taku@jp.fujitsu.com, wency@cn.fujitsu.com,
-	caoj.fnst@cn.fujitsu.com, ddaney.cavm@gmail.com,
-	okaya@codeaurora.org, bhelgaas@google.com,
-	jiang.liu@linux.intel.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] pci: fix unavailable irq number 255 reported by
- BIOS
-In-Reply-To: <56A7404A.8080205@cn.fujitsu.com>
-Message-ID: <alpine.DEB.2.11.1601261049540.3886@nanos>
-References: <1453705178-27389-1-git-send-email-chen.fan.fnst@cn.fujitsu.com> <20160125205803.GA10272@localhost> <alpine.DEB.2.11.1601260825510.3886@nanos> <56A7404A.8080205@cn.fujitsu.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from sauhun.de ([89.238.76.85]:56478 "EHLO pokefinder.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754573AbcARL6Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 Jan 2016 06:58:16 -0500
+Date: Mon, 18 Jan 2016 12:58:02 +0100
+From: Wolfram Sang <wsa@the-dreams.de>
+To: Simon Horman <horms+renesas@verge.net.au>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-renesas-soc@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>
+Subject: Re: [PATCH] MAINTAINERS: Update mailing list for Renesas SoC
+ Development
+Message-ID: <20160118115802.GA1549@katana>
+References: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="+QahgC5+KEYLbs62"
+In-Reply-To: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 26 Jan 2016, Chen Fan wrote:
-> On 01/26/2016 04:26 PM, Thomas Gleixner wrote:
-> > > >   	if (gsi < 0) {
-> > > > -		if (acpi_isa_register_gsi(dev))
-> > > > +#ifdef CONFIG_X86
-> > > > +		/*
-> > > > +		 * The Interrupt Line value of 0xff is defined to mean
-> > > > "unknown"
-> > > > +		 * or "no connection" (PCI 3.0, Section 6.2.4, footnote on
-> > > > page
-> > > > +		 * 223), using ~0U as invalid IRQ.
-> > > > +		 */
-> > And why would this be x86 specific? PCI3.0 is architecture independent,
-> > right?
-> quoting the spec document:
-> "For x86 based PCs, the values in this register correspond to IRQ numbers
-> (0-15) of the standard dual
-> 8259 configuration. The value 255 is defined as meaning "unknown" or "no
-> connection" to the interrupt
-> controller. Values between 15 and 254 are reserved."
 
-So if that is x86 specific then it needs to be documented proper. The fact
-that the comment is inside the #ifdef x86 does not tell.
+--+QahgC5+KEYLbs62
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
+On Mon, Jan 18, 2016 at 10:04:33AM +0900, Simon Horman wrote:
+> Update the mailing list used for development of support for
+> Renesas SoCs and related drivers.
+>=20
+> Up until now the linux-sh mailing list has been used, however,
+> Renesas SoCs are now much wider than the SH architecture and there
+> is some desire from some for the linux-sh list to refocus on
+> discussion of the work on the SH architecture.
+>=20
+> Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> Cc: Magnus Damm <magnus.damm@gmail.com>
+> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
-	tglx
+Acked-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
 
- 
+
+--+QahgC5+KEYLbs62
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJWnNNKAAoJEBQN5MwUoCm2V/cQALBylb7EVWpN7s02MrxVPESu
+/Z0+kHW+P0F2EuC6XcKSFRTlzIKtcXqoiatude5BS0v6+CwS6Y64GYspVX7kfQJq
+tgkSr/Xt6X+UFpeH47IeQqmGcgrhwGcTeODFD5T1xfMURScrZRhEQzOXIk6ZOCKD
+FkvJuTWP9y1wnTUD5/5FbEJe3ZyBC63G6i0nrjJ9fAtc3GnBDyFAce7zYq4YLvz6
+QMWoFg1Iv/maHxdczae0+F4m7VzOrq5qV4YIQEb+bHjTeiTpyTyPnT7fk2J5hllK
+pa7amxqXGcWJ4CaAFyUe94dxoc7j4duPlHolqiB+mE8MeGQb+Qhz6L7LYOSVWUMx
+YiYExLlRs8trlgBTr+ML7ieIOl9jiO/SsmGHYfAIDaQrnI+RIM+Utj77br3ifQYx
+jRSfT1kN0JCcxGogNflV5isP2y/HgZ+FS7eUJX4YZ7HDC0EwQjDXFMo6zD4xxXta
+IhUL2ikSnmfXRw4N/HOfkDfLwggrV4IAj5NYmfzTSNXZak9T4i0CtVfcGLCWrAnv
+BTRTiHymNtrZlOKahmSujWlJ/a6ka4D66Irewv5h1F6yZVt0v7izEQKoJm+USyMf
+1XqQmD7wVtBDPknitqj/mtZXwjl2N88KXgQAh2kf/ytCQyjNIwTgA1z2k1xWFs1X
+x2zI/awYwnTfplw0Sacb
+=nFuS
+-----END PGP SIGNATURE-----
+
+--+QahgC5+KEYLbs62--
