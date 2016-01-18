@@ -1,90 +1,115 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jayachandran C <jchandra@broadcom.com>
-To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Jayachandran C <jchandra@broadcom.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	<xen-devel@lists.xenproject.org>
-Subject: [PATCH v7 5/5] PCI: ACPI: Add a generic ACPI based host controller
-Date: Fri, 29 Jan 2016 14:35:40 +0530
-Message-ID: <1454058340-7904-6-git-send-email-jchandra@broadcom.com>
-In-Reply-To: <1454058340-7904-1-git-send-email-jchandra@broadcom.com>
-References: <1454058340-7904-1-git-send-email-jchandra@broadcom.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-ia64@vger.kernel.org>,
+	<linux-metag@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-s390@vger.kernel.org>, <linux-sh@vger.kernel.org>,
+	<linux-arch@vger.kernel.org>, <Will.Deacon@arm.com>,
+	<catalin.marinas@arm.com>, <grant.likely@linaro.org>,
+	<leif.lindholm@linaro.org>, <rfranz@cavium.com>,
+	<ard.biesheuvel@linaro.org>, <msalter@redhat.com>,
+	<robh+dt@kernel.org>, <steve.capper@linaro.org>,
+	<hanjun.guo@linaro.org>, <al.stone@linaro.org>, <arnd@arndb.de>,
+	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rjw@rjwysocki.net>, <lenb@kernel.org>, <marc.zyngier@arm.com>,
+	<lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+	<tony.luck@intel.com>, <fenghua.yu@intel.com>,
+	<james.hogan@imgtec.com>, <benh@kernel.crashing.org>,
+	<tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
+	<x86@kernel.org>, <jonathan@jonmasters.org>, <rrichter@cavium.com>,
+	<Prasun.Kapoor@caviumnetworks.com>
+CC: <gpkulkarni@gmail.com>
+Subject: [PATCH v9 3/6] arm64/arm, numa, dt: adding numa dt binding implementation for arm64 platforms.
+Date: Mon, 18 Jan 2016 22:06:02 +0530
+Message-ID: <1453134965-6125-4-git-send-email-gkulkarni@caviumnetworks.com>
+In-Reply-To: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
+References: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a simple ACPI based PCI host controller under config option
-ACPI_PCI_HOST_GENERIC. This is done by providing an implementation
-of pci_acpi_scan_root().
+Adding numa dt binding support for arm64 based platforms.
+dt node parsing for numa topology is done using device property
+numa-node-id and device node distance-map.
 
-The pci_mmcfg_list handling is done by the ACPI code, so we keep a
-reference to the pci_mmcfg_region in sysdata. The ECAM region will
-be already mapped, so map_bus can be implemented by using the
-virt pointer for the pci_mmcfg_region. pci_generic_config_read
-and pci_generic_config_write are used for config space read/write.
-
-Also, we provide implementations of raw_pci_read and raw_pci_write
-hat are needed by ACPI based on the pci_mmcfg_list.
-
-pci_acpi_set_companion() and acpi_pci_get_segment() are defined
-using sysdata of generic ACPI host controller so that PCI domain
-and ACPI companion are set in PCI code rather than platform code.
-
-This code is currently enabled only for ARM64.
-
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+Reviewed-by: Robert Richter <rrichter@cavium.com>
+Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
 ---
- drivers/acpi/Kconfig         |   8 ++
- drivers/acpi/Makefile        |   1 +
- drivers/acpi/pci_host_acpi.c | 186 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci-acpi.h     |  17 ++++
- 4 files changed, 212 insertions(+)
- create mode 100644 drivers/acpi/pci_host_acpi.c
+ arch/arm64/Kconfig            |  10 ++
+ arch/arm64/include/asm/numa.h |  10 ++
+ arch/arm64/kernel/Makefile    |   1 +
+ arch/arm64/kernel/of_numa.c   | 257 ++++++++++++++++++++++++++++++++++++++++++
+ arch/arm64/kernel/smp.c       |   2 +
+ arch/arm64/mm/numa.c          |  10 +-
+ 6 files changed, 289 insertions(+), 1 deletion(-)
+ create mode 100644 arch/arm64/kernel/of_numa.c
 
-diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-index 82b96ee..65fb483 100644
---- a/drivers/acpi/Kconfig
-+++ b/drivers/acpi/Kconfig
-@@ -294,6 +294,14 @@ config ACPI_NUMA
- 	depends on (X86 || IA64)
- 	default y if IA64_GENERIC || IA64_SGI_SN2
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 74f5d73..775cf4a 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -515,6 +515,16 @@ config NUMA
+ 	  local memory of the CPU and add some more
+ 	  NUMA awareness to the kernel.
  
-+config ACPI_PCI_HOST_GENERIC
-+	bool "Generic ACPI PCI host controller"
-+	depends on ARM64 && ACPI
++config OF_NUMA
++	bool "Device Tree NUMA support"
++	depends on NUMA
++	depends on OF
++	default y
 +	help
-+	  Say Y here if you want to support a simple generic ACPI PCI host
-+	  controller.
++	  Enable Device Tree NUMA support.
++	  This enables the numa mapping of cpu, memory, io and
++	  inter node distances using dt bindings.
 +
+ config NODES_SHIFT
+ 	int "Maximum NUMA Nodes (as a power of 2)"
+ 	range 1 10
+diff --git a/arch/arm64/include/asm/numa.h b/arch/arm64/include/asm/numa.h
+index f28f15b0..54deb38 100644
+--- a/arch/arm64/include/asm/numa.h
++++ b/arch/arm64/include/asm/numa.h
+@@ -37,4 +37,14 @@ void numa_store_cpu_info(unsigned int cpu);
+ static inline void numa_store_cpu_info(unsigned int cpu)		{ }
+ static inline void arm64_numa_init(void)		{ }
+ #endif	/* CONFIG_NUMA */
 +
- config ACPI_CUSTOM_DSDT_FILE
- 	string "Custom DSDT Table file to include"
- 	default ""
-diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-index 74976f1..346101c 100644
---- a/drivers/acpi/Makefile
-+++ b/drivers/acpi/Makefile
-@@ -41,6 +41,7 @@ acpi-y				+= ec.o
- acpi-$(CONFIG_ACPI_DOCK)	+= dock.o
- acpi-y				+= pci_root.o pci_link.o pci_irq.o
- acpi-$(CONFIG_PCI_MMCONFIG)	+= pci_mcfg.o
-+acpi-$(CONFIG_ACPI_PCI_HOST_GENERIC) += pci_host_acpi.o
- acpi-y				+= acpi_lpss.o acpi_apd.o
- acpi-y				+= acpi_platform.o
- acpi-y				+= acpi_pnp.o
-diff --git a/drivers/acpi/pci_host_acpi.c b/drivers/acpi/pci_host_acpi.c
++struct device_node;
++#ifdef CONFIG_OF_NUMA
++int __init arm64_of_numa_init(void);
++void __init of_numa_set_node_info(unsigned int cpu, struct device_node *dn);
++#else
++static inline void of_numa_set_node_info(unsigned int cpu,
++		struct device_node *dn) { }
++#endif
++
+ #endif	/* __ASM_NUMA_H */
+diff --git a/arch/arm64/kernel/Makefile b/arch/arm64/kernel/Makefile
+index 474691f..7987763 100644
+--- a/arch/arm64/kernel/Makefile
++++ b/arch/arm64/kernel/Makefile
+@@ -41,6 +41,7 @@ arm64-obj-$(CONFIG_EFI)			+= efi.o efi-entry.stub.o
+ arm64-obj-$(CONFIG_PCI)			+= pci.o
+ arm64-obj-$(CONFIG_ARMV8_DEPRECATED)	+= armv8_deprecated.o
+ arm64-obj-$(CONFIG_ACPI)		+= acpi.o
++arm64-obj-$(CONFIG_OF_NUMA)		+= of_numa.o
+ 
+ obj-y					+= $(arm64-obj-y) vdso/
+ obj-m					+= $(arm64-obj-m)
+diff --git a/arch/arm64/kernel/of_numa.c b/arch/arm64/kernel/of_numa.c
 new file mode 100644
-index 0000000..9dbdd81
+index 0000000..2f9e34b
 --- /dev/null
-+++ b/drivers/acpi/pci_host_acpi.c
-@@ -0,0 +1,186 @@
++++ b/arch/arm64/kernel/of_numa.c
+@@ -0,0 +1,257 @@
 +/*
-+ * Generic PCI host controller driver for ACPI based systems
++ * OF NUMA Parsing support.
++ *
++ * Copyright (C) 2015 Cavium Inc.
++ * Author: Ganapatrao Kulkarni <gkulkarni@cavium.com>
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License version 2 as
@@ -97,213 +122,278 @@ index 0000000..9dbdd81
 + *
 + * You should have received a copy of the GNU General Public License
 + * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ *
-+ * Copyright (c) 2015 Broadcom Corporation
-+ *
-+ * Based on drivers/pci/host/pci-host-generic.c
-+ * Copyright (C) 2014 ARM Limited
 + */
 +
-+#include <linux/kernel.h>
++#include <linux/ctype.h>
++#include <linux/memblock.h>
 +#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/acpi.h>
-+#include <linux/pci-acpi.h>
-+#include <linux/sfi_acpi.h>
-+#include <linux/slab.h>
++#include <linux/nodemask.h>
++#include <linux/of.h>
++#include <linux/of_fdt.h>
 +
-+#define PREFIX			"pci-host-acpi:"
++#include <asm/smp_plat.h>
 +
-+/* sysdata pointer is ->root_info */
-+struct gen_acpi_root_info {
-+	struct acpi_pci_root_info	common;
-+	struct pci_mmcfg_region		*mcfg;
-+	bool				mcfg_added;
-+};
++/* define default numa node to 0 */
++#define DEFAULT_NODE 0
++#define OF_NUMA_PROP "numa-node-id"
 +
-+/* find mapping of a MCFG area */
-+static void __iomem *gen_acpi_map_cfg_bus(struct pci_bus *bus,
-+			unsigned int devfn, int where)
++/* Returns nid in the range [0..MAX_NUMNODES-1],
++ * or NUMA_NO_NODE if no valid numa-node-id entry found
++ * or DEFAULT_NODE if no numa-node-id entry exists
++ */
++static int of_numa_prop_to_nid(const __be32 *of_numa_prop, int length)
 +{
-+	struct gen_acpi_root_info *pci = bus->sysdata;
-+	struct pci_mmcfg_region *mcfg = pci->mcfg;
++	int nid;
 +
-+	if (bus->number < mcfg->start_bus || bus->number > mcfg->end_bus)
-+		return NULL;
++	if (!of_numa_prop)
++		return DEFAULT_NODE;
 +
-+	return mcfg->virt +
-+		PCI_MMCFG_OFFSET(bus->number - mcfg->start_bus, devfn) +
-+		where;
++	if (length != sizeof(*of_numa_prop)) {
++		pr_warn("NUMA: Invalid of_numa_prop length %d found.\n",
++				length);
++		return NUMA_NO_NODE;
++	}
++
++	nid = of_read_number(of_numa_prop, 1);
++	if (nid >= MAX_NUMNODES) {
++		pr_warn("NUMA: Invalid numa node %d found.\n", nid);
++		return NUMA_NO_NODE;
++	}
++
++	return nid;
 +}
 +
-+static struct pci_ops gen_acpi_pci_ops = {
-+	.map_bus	= gen_acpi_map_cfg_bus,
-+	.read		= pci_generic_config_read,
-+	.write		= pci_generic_config_write,
-+};
-+
-+/* Insert the ECFG area for a root bus */
-+static int pci_acpi_root_init_info(struct acpi_pci_root_info *ci)
++/* Must hold reference to node during call */
++static int of_get_numa_nid(struct device_node *device)
 +{
-+	struct gen_acpi_root_info *info;
-+	struct acpi_pci_root *root = ci->root;
-+	struct device *dev = &ci->bridge->dev;
-+	int err;
++	int length;
++	const __be32 *of_numa_prop;
 +
-+	info = container_of(ci, struct gen_acpi_root_info, common);
-+	err = pci_mmconfig_insert(dev, root->segment, root->secondary.start,
-+			root->secondary.end, root->mcfg_addr);
-+	if (err && err != -EEXIST)
-+		return err;
++	of_numa_prop = of_get_property(device, OF_NUMA_PROP, &length);
 +
-+	info->mcfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
-+	WARN_ON(info->mcfg == NULL);
-+	info->mcfg_added = (err == -EEXIST);
++	return of_numa_prop_to_nid(of_numa_prop, length);
++}
++
++static int __init early_init_of_get_numa_nid(unsigned long node)
++{
++	int length;
++	const __be32 *of_numa_prop;
++
++	of_numa_prop = of_get_flat_dt_prop(node, OF_NUMA_PROP, &length);
++
++	return of_numa_prop_to_nid(of_numa_prop, length);
++}
++
++/* Walk the device tree upwards, looking for a numa-node-id property */
++int of_node_to_nid(struct device_node *device)
++{
++	struct device_node *parent;
++	int nid = NUMA_NO_NODE;
++
++	of_node_get(device);
++	while (device) {
++		const __be32 *of_numa_prop;
++		int length;
++
++		of_numa_prop = of_get_property(device, OF_NUMA_PROP, &length);
++		if (of_numa_prop) {
++			nid = of_numa_prop_to_nid(of_numa_prop, length);
++			break;
++		}
++
++		parent = device;
++		device = of_get_parent(parent);
++		of_node_put(parent);
++	}
++	of_node_put(device);
++
++	return nid;
++}
++
++void __init of_numa_set_node_info(unsigned int cpu, struct device_node *device)
++{
++	int nid = DEFAULT_NODE;
++
++	if (device)
++		nid = of_get_numa_nid(device);
++
++	cpu_to_node_map[cpu] = nid;
++}
++
++/*
++ * Even though we connect cpus to numa domains later in SMP
++ * init, we need to know the node ids now for all cpus.
++*/
++static int __init early_init_parse_cpu_node(unsigned long node)
++{
++	int nid;
++
++	const char *type = of_get_flat_dt_prop(node, "device_type", NULL);
++
++	/* We are scanning "cpu" nodes only */
++	if (type == NULL)
++		return 0;
++	else if (strcmp(type, "cpu") != 0)
++		return 0;
++
++	nid = early_init_of_get_numa_nid(node);
++
++	if (nid == NUMA_NO_NODE)
++		return -EINVAL;
++
++	node_set(nid, numa_nodes_parsed);
 +	return 0;
 +}
 +
-+static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
++static int __init early_init_parse_memory_node(unsigned long node)
 +{
-+	struct gen_acpi_root_info *info;
-+	struct acpi_pci_root *root = ci->root;
++	const __be32 *reg, *endp;
++	int length;
++	int nid;
 +
-+	info = container_of(ci, struct gen_acpi_root_info, common);
-+	if (info->mcfg_added)
-+		pci_mmconfig_delete(root->segment, root->secondary.start,
-+					root->secondary.end);
-+	info->mcfg = NULL;
-+}
++	const char *type = of_get_flat_dt_prop(node, "device_type", NULL);
 +
-+static struct acpi_pci_root_ops pci_acpi_root_ops = {
-+	.pci_ops = &gen_acpi_pci_ops,
-+	.init_info = pci_acpi_root_init_info,
-+	.release_info = pci_acpi_root_release_info,
-+};
++	/* We are scanning "memory" nodes only */
++	if (type == NULL)
++		return 0;
++	else if (strcmp(type, "memory") != 0)
++		return 0;
 +
-+struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
-+{
-+	struct acpi_device *device = root->device;
-+	struct gen_acpi_root_info *ri;
-+	struct pci_bus *bus, *child;
++	nid = early_init_of_get_numa_nid(node);
 +
-+	/* allocate acpi_info/sysdata */
-+	ri = devm_kzalloc(&device->dev, sizeof(*ri), GFP_KERNEL);
-+	if (!ri) {
-+		dev_err(&device->dev,
-+			"pci_bus %04x:%02x: ignored (out of memory)\n",
-+			root->segment, (int)root->secondary.start);
-+		return NULL;
++	if (nid == NUMA_NO_NODE)
++		return -EINVAL;
++
++	reg = of_get_flat_dt_prop(node, "reg", &length);
++	endp = reg + (length / sizeof(__be32));
++
++	while ((endp - reg) >= (dt_root_addr_cells + dt_root_size_cells)) {
++		u64 base, size;
++
++		base = dt_mem_next_cell(dt_root_addr_cells, &reg);
++		size = dt_mem_next_cell(dt_root_size_cells, &reg);
++		pr_debug("NUMA-DT:  base = %llx , node = %u\n",
++				base, nid);
++
++		if (numa_add_memblk(nid, base, size) < 0)
++			return -EINVAL;
 +	}
 +
-+	bus =  acpi_pci_root_create(root, &pci_acpi_root_ops,
-+					&ri->common, ri);
-+	if (!bus) {
-+		dev_err(&device->dev, "Scanning rootbus failed");
-+		return NULL;
-+	}
-+
-+	pci_bus_size_bridges(bus);
-+	pci_bus_assign_resources(bus);
-+	list_for_each_entry(child, &bus->children, node)
-+		pcie_bus_configure_settings(child);
-+
-+	return bus;
++	return 0;
 +}
 +
-+int raw_pci_read(unsigned int seg, unsigned int bus,
-+		  unsigned int devfn, int reg, int len, u32 *val)
++static int __init early_init_parse_distance_map_v1(unsigned long node,
++		const char *uname)
 +{
-+	struct pci_mmcfg_region *mcfg;
-+	void __iomem *addr;
-+	int err = -EINVAL;
 +
-+	rcu_read_lock();
-+	mcfg = pci_mmconfig_lookup(seg, bus);
-+	if (!mcfg || !mcfg->virt)
-+		goto err;
++	const __be32 *prop_dist_matrix;
++	int length = 0, i, matrix_count;
++	int nr_size_cells = OF_ROOT_NODE_SIZE_CELLS_DEFAULT;
 +
-+	addr = mcfg->virt + PCI_MMCFG_OFFSET(bus, devfn);
-+	switch (len) {
-+	case 1:
-+		*val = readb(addr + reg);
-+		break;
-+	case 2:
-+		*val = readw(addr + reg);
-+		break;
-+	case 4:
-+		*val = readl(addr + reg);
-+		break;
++	pr_info("NUMA: parsing numa-distance-map-v1\n");
++
++	prop_dist_matrix =
++		of_get_flat_dt_prop(node, "distance-matrix", &length);
++
++	if (!length) {
++		pr_err("NUMA: failed to parse distance-matrix\n");
++		return  -ENODEV;
 +	}
-+	err = 0;
-+err:
-+	rcu_read_unlock();
-+	return err;
++
++	matrix_count = ((length / sizeof(__be32)) / (3 * nr_size_cells));
++
++	if ((matrix_count * sizeof(__be32) * 3 * nr_size_cells) !=  length) {
++		pr_warn("NUMA: invalid distance-matrix length %d\n", length);
++		return -EINVAL;
++	}
++
++	for (i = 0; i < matrix_count; i++) {
++		u32 nodea, nodeb, distance;
++
++		nodea = dt_mem_next_cell(nr_size_cells, &prop_dist_matrix);
++		nodeb = dt_mem_next_cell(nr_size_cells, &prop_dist_matrix);
++		distance = dt_mem_next_cell(nr_size_cells, &prop_dist_matrix);
++		numa_set_distance(nodea, nodeb, distance);
++		pr_debug("NUMA-DT:  distance[node%d -> node%d] = %d\n",
++				nodea, nodeb, distance);
++
++		/* Set default distance of node B->A same as A->B */
++		if (nodeb > nodea)
++			numa_set_distance(nodeb, nodea, distance);
++	}
++
++	return 0;
 +}
 +
-+int raw_pci_write(unsigned int seg, unsigned int bus,
-+		unsigned int devfn, int reg, int len, u32 val)
++static int __init early_init_parse_distance_map(unsigned long node,
++		const char *uname)
 +{
-+	struct pci_mmcfg_region *mcfg;
-+	void __iomem *addr;
-+	int err = -EINVAL;
 +
-+	rcu_read_lock();
-+	mcfg = pci_mmconfig_lookup(seg, bus);
-+	if (!mcfg || !mcfg->virt)
-+		goto err;
++	if (strcmp(uname, "distance-map") != 0)
++		return 0;
 +
-+	addr = mcfg->virt + PCI_MMCFG_OFFSET(bus, devfn);
-+	switch (len) {
-+	case 1:
-+		writeb(val, addr + reg);
-+		break;
-+	case 2:
-+		writew(val, addr + reg);
-+		break;
-+	case 4:
-+		writel(val, addr + reg);
-+		break;
-+	}
-+	err = 0;
-+err:
-+	rcu_read_unlock();
-+	return err;
++	if (of_flat_dt_is_compatible(node, "numa-distance-map-v1"))
++		return early_init_parse_distance_map_v1(node, uname);
++
++	return -EINVAL;
 +}
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index d410885..f8d62e3 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -143,6 +143,22 @@ static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
- static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
- #endif	/* CONFIG_ACPI */
++
++/**
++ * early_init_of_scan_numa_map - parse memory node and map nid to memory range.
++ */
++int __init early_init_of_scan_numa_map(unsigned long node, const char *uname,
++				     int depth, void *data)
++{
++	int ret;
++
++	ret = early_init_parse_cpu_node(node);
++
++	if (!ret)
++		ret = early_init_parse_memory_node(node);
++
++	if (!ret)
++		ret = early_init_parse_distance_map(node, uname);
++
++	return ret;
++}
++
++/* DT node mapping is done already early_init_of_scan_memory */
++int __init arm64_of_numa_init(void)
++{
++	return of_scan_flat_dt(early_init_of_scan_numa_map, NULL);
++}
+diff --git a/arch/arm64/kernel/smp.c b/arch/arm64/kernel/smp.c
+index d6e7d6a..a2a8c2d 100644
+--- a/arch/arm64/kernel/smp.c
++++ b/arch/arm64/kernel/smp.c
+@@ -520,6 +520,8 @@ static void __init of_parse_and_init_cpus(void)
  
-+#if defined(CONFIG_ACPI) && defined(CONFIG_ACPI_PCI_HOST_GENERIC)
-+static inline void pci_acpi_set_companion(struct pci_host_bridge *bridge)
-+{
-+	struct pci_bus *b = bridge->bus;
-+	struct acpi_pci_root_info *ci = (struct acpi_pci_root_info *)b->sysdata;
-+
-+	ACPI_COMPANION_SET(&bridge->dev, ci->bridge);
-+}
-+
-+static inline u16 acpi_pci_get_segment(void *sysdata)
-+{
-+	struct acpi_pci_root_info *ci = (struct acpi_pci_root_info *)sysdata;
-+
-+	return ci->root->segment;
-+}
-+#else
- static inline void pci_acpi_set_companion(struct pci_host_bridge *bridge)
+ 		pr_debug("cpu logical map 0x%llx\n", hwid);
+ 		cpu_logical_map(cpu_count) = hwid;
++		/* map logical cpu to node */
++		of_numa_set_node_info(cpu_count, dn);
+ next:
+ 		cpu_count++;
+ 	}
+diff --git a/arch/arm64/mm/numa.c b/arch/arm64/mm/numa.c
+index 050b083..9e8704b 100644
+--- a/arch/arm64/mm/numa.c
++++ b/arch/arm64/mm/numa.c
+@@ -383,5 +383,13 @@ static int __init dummy_numa_init(void)
+  */
+ void __init arm64_numa_init(void)
  {
- 	/* leave it to the platform for now */
-@@ -152,6 +168,7 @@ static inline u16 acpi_pci_get_segment(void *sysdata)
- {
- 	return 0;
- }
+-	numa_init(dummy_numa_init);
++	int ret = -ENODEV;
++
++#ifdef CONFIG_OF_NUMA
++	if (!numa_off)
++		ret = numa_init(arm64_of_numa_init);
 +#endif
- 
- #ifdef CONFIG_ACPI_APEI
- extern bool aer_acpi_firmware_first(void);
++
++	if (ret)
++		numa_init(dummy_numa_init);
+ }
 -- 
-1.9.1
+1.8.1.4
 
