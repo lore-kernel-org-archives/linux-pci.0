@@ -1,172 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56451 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755681AbcANVOy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Jan 2016 16:14:54 -0500
-Message-ID: <1452806092.14628.110.camel@redhat.com>
-Subject: Re: [RFC PATCH] pci: Identify Enhanced Allocation (EA) BAR
- Equivalent resources
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Sean O. Stalley" <sean.stalley@intel.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	david.daney@cavium.com
-Date: Thu, 14 Jan 2016 14:14:52 -0700
-In-Reply-To: <20160114202347.GB3381@sean.stalley.intel.com>
-References: <20160114172645.23429.9938.stgit@gimli.home>
-	 <20160114183452.GA3075@sean.stalley.intel.com>
-	 <1452798962.14628.52.camel@redhat.com>
-	 <20160114202347.GB3381@sean.stalley.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from kirsty.vergenet.net ([202.4.237.240]:52813 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753065AbcARBFL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 17 Jan 2016 20:05:11 -0500
+From: Simon Horman <horms+renesas@verge.net.au>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-renesas-soc@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-media@vger.kernel.org, linux-pci@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Simon Horman <horms+renesas@verge.net.au>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>
+Subject: [PATCH] MAINTAINERS: Update mailing list for Renesas SoC Development
+Date: Mon, 18 Jan 2016 10:04:33 +0900
+Message-Id: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2016-01-14 at 12:23 -0800, Sean O. Stalley wrote:
-> On Thu, Jan 14, 2016 at 12:16:02PM -0700, Alex Williamson wrote:
-> > On Thu, 2016-01-14 at 10:34 -0800, Sean O. Stalley wrote:
-> > > On Thu, Jan 14, 2016 at 10:26:56AM -0700, Alex Williamson wrote:
-> > > > We've done a pretty good job of abstracting EA from drivers, but
-> > > > there
-> > > > are some properties of BAR Equivalent resources that don't really
-> > > > jive
-> > > > with traditional PCI BARs.  In particular, natural alignment is
-> > > > only
-> > > > encouraged, not required.
-> > > > 
-> > > > Why does this matter?  There are drivers like vfio-pci that will
-> > > > happily gobble up the EA abstraction that's been implemented and
-> > > > expose a device using EA to userspace as if those resources are
-> > > > traditional BARs.  Pretty cool.  The vfio API is bus agnostic, so
-> > > > it
-> > > > doesn't care about alignment.  The problem comes with PCI config
-> > > > space
-> > > > emulation where we don't let userspace manipulate the BAR value,
-> > > > but
-> > > > we do emulate BAR sizing.  The abstraction kind of falls apart if
-> > > > userspace gets garbage when they try to size what appears to be a
-> > > > traditional BAR, but is actually a BAR equivalent.
-> > > > 
-> > > > We could simply round up the size in vfio to make it naturally
-> > > > aligned, but then we're imposing artificial sizes to the user and
-> > > > we
-> > > > have the discontinuity that BAR size emulation and vfio region size
-> > > > reporting don't agree on the size.  I think what we want to do is
-> > > > expose EA to the user, reporting traditional BARs with BEIs as
-> > > > zero-sized and providing additional regions for the user to access
-> > > > each EA region, whether it has a BEI or not.
-> > > > 
-> > > > To facilitate that, a flag indicating whether a PCI resource is a
-> > > > traditional BAR or BAR equivalent seems much nicer than attempting
-> > > > to size the BAR ourselves or deducing it through the EA capability.
-> > > 
-> > > If vfio does size the resource, EA entries that are aligned could
-> > > still be emulated as BARs, correct?
-> > > 
-> > > I would think that emulating a BAR would be preferred when possible,
-> > > for backwards-compatibility.
-> > 
-> > If a BEI is naturally aligned, I can't think of any problems with
-> > exposing it as a traditional BAR to userspace.  I agree that there may
-> > be some compatibility benefits there, so it may be useful to offer both
-> > options.  I don't think we can combine them though, it would violate
-> > the EA spec to expose the traditional BAR and and the matching BEI.
-> > We'd either need to hide the fake BAR or hide the EA entry defining
-> > that BEI.  A module option could define which is preferred or maybe an
-> > ioctl.
-> 
-> Would any functionality be lost if vfio:
-> 	- emulates BARs & hide EA entry when EA resources are aligned.
-> 	- exposes EA entries when the resources aren't aligned (no BAR emulation).
-> ?
-> 
-> I'm just wondering if giving userspace the option to pick is necessary,
-> or if there is a setting that is always ideal.
+Update the mailing list used for development of support for
+Renesas SoCs and related drivers.
 
-That certainly might be a good default and the only use case I can
-think where it wouldn't be ideal is if we want to expose EA to a VM for
-the purpose of doing EA testing and development in a guest.  A module
-option would make more sense than defining a user interface for that
-case though.
+Up until now the linux-sh mailing list has been used, however,
+Renesas SoCs are now much wider than the SH architecture and there
+is some desire from some for the linux-sh list to refocus on
+discussion of the work on the SH architecture.
 
-> > > > Thoughts?
-> > > 
-> > > I like the idea of adding an EA flag.
-> > > 
-> > > There were some cases in the kernel where it would be nice to know if a
-> > > resource was fixed because it was EA or if something else was fixing it.
-> > > Adding that flag was discussed during the code review of the EA code,
-> > > but it was decided that we could get by without it.
-> > > 
-> > > IIRC, most of the cases that required the flag had to do with EA entries
-> > > for bridges. Since bridge support wasn't added, we didn't need the flag.
-> > 
-> > By my reading of the spec, not all BEIs need to be fixed, is this just
-> > a simplification to avoid sizing and mapping a BAR that doesn't exist
-> > in the traditional sense?  A flag on the resource seems like it would
-> > be useful for that as well if we ever wanted to add the case where an
-> > AE BAR equivalent could be remapped.  Thanks,
-> 
-> All of the usable BEIs have a HwInit Base & MaxOffset, and therefore a
-> fixed range. The "unavailable for use" resources aren't explicitly HwInit,
-> but the spec doesn't define how/when you can move them.
-> 
-> The spec does define a writeable bit for resources,
-> but doesn't define how to use it either. I think the intention was to
-> be able to expand EA in the future to cover movable resources.
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Magnus Damm <magnus.damm@gmail.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
-Wow, that's really confusing to have a writable bit per entry and then
-define properties which forbid its use.  We'd need to go through the
-SIG and define a whole new set of properties just to get movable
-versions, crazy.  Thanks for the explanation.
-> 
-> Anyway, I think having an explicit flag that says "This Resource is from EA"
-> that is independent of "This resource is fixed" is a good idea.
-> 
-> 
-> Acked-by: Sean O. Stalley <sean.stalley@intel.com>
+---
+* This patch applies on top of Linus's tree where currently the head commit
+  is 984065055e6e ("Merge branch 'drm-next' of
+  git://people.freedesktop.org/~airlied/linux")
 
-Cool, thanks
+  This has been used as a base instead of v4.4 so that it is based on the
+  following two commits which affect it:
+  - 1a4ca6dd3dc8 ("MAINTAINERS: Add co-maintainer for Renesas Pin Controllers")
+  - 3e46c3973cba ("MAINTAINERS: add Renesas usb2 phy driver")
+---
+ MAINTAINERS | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Alex
-
-> > > > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > > > ---
-> > > >  drivers/pci/pci.c      |    2 +-
-> > > >  include/linux/ioport.h |    2 ++
-> > > >  2 files changed, 3 insertions(+), 1 deletion(-)
-> > > > 
-> > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > > index 314db8c..174c734 100644
-> > > > --- a/drivers/pci/pci.c
-> > > > +++ b/drivers/pci/pci.c
-> > > > @@ -2229,7 +2229,7 @@ void pci_pm_init(struct pci_dev *dev)
-> > > >  
-> > > >  static unsigned long pci_ea_flags(struct pci_dev *dev, u8
-> > > > prop)
-> > > >  {
-> > > > -	unsigned long flags = IORESOURCE_PCI_FIXED;
-> > > > +	unsigned long flags = IORESOURCE_PCI_FIXED |
-> > > > IORESOURCE_PCI_EA_BEI;
-> > > >  
-> > > >  	switch (prop) {
-> > > >  	case PCI_EA_P_MEM:
-> > > > diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> > > > index 24bea08..5acc194 100644
-> > > > --- a/include/linux/ioport.h
-> > > > +++ b/include/linux/ioport.h
-> > > > @@ -105,6 +105,8 @@ struct resource {
-> > > >  /* PCI control bits.  Shares IORESOURCE_BITS with above PCI
-> > > > ROM.  */
-> > > >  #define IORESOURCE_PCI_FIXED		(1<<4)	/*
-> > > > Do
-> > > > not move resource */
-> > > >  
-> > > > +/* PCI Enhanced Allocation defined BAR equivalent resource *
-> > > > +#define IORESOURCE_PCI_EA_BEI		(1<<5)
-> > > >  
-> > > >  /* helpers to define resources */
-> > > >  #define DEFINE_RES_NAMED(_start, _size, _name, _flags)		
-> > > > 	\
-> > > > 
-> > 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 1d23f701489c..52a6ba79fa3f 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -1531,9 +1531,9 @@ F:	drivers/media/platform/s5p-jpeg/
+ ARM/SHMOBILE ARM ARCHITECTURE
+ M:	Simon Horman <horms@verge.net.au>
+ M:	Magnus Damm <magnus.damm@gmail.com>
+-L:	linux-sh@vger.kernel.org
++L:	linux-renesas-soc@vger.kernel.org
+ W:	http://oss.renesas.com
+-Q:	http://patchwork.kernel.org/project/linux-sh/list/
++Q:	http://patchwork.kernel.org/project/linux-renesas-soc/list/
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/horms/renesas.git next
+ S:	Supported
+ F:	arch/arm/boot/dts/emev2*
+@@ -3745,7 +3745,7 @@ F:	Documentation/devicetree/bindings/display/tegra/nvidia,tegra20-host1x.txt
+ DRM DRIVERS FOR RENESAS
+ M:	Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+ L:	dri-devel@lists.freedesktop.org
+-L:	linux-sh@vger.kernel.org
++L:	linux-renesas-soc@vger.kernel.org
+ T:	git git://people.freedesktop.org/~airlied/linux
+ S:	Supported
+ F:	drivers/gpu/drm/rcar-du/
+@@ -6858,7 +6858,7 @@ F:	drivers/iio/potentiometer/mcp4531.c
+ MEDIA DRIVERS FOR RENESAS - VSP1
+ M:	Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+ L:	linux-media@vger.kernel.org
+-L:	linux-sh@vger.kernel.org
++L:	linux-renesas-soc@vger.kernel.org
+ T:	git git://linuxtv.org/media_tree.git
+ S:	Supported
+ F:	Documentation/devicetree/bindings/media/renesas,vsp1.txt
+@@ -8235,7 +8235,7 @@ F:	drivers/pci/host/pci-dra7xx.c
+ PCI DRIVER FOR RENESAS R-CAR
+ M:	Simon Horman <horms@verge.net.au>
+ L:	linux-pci@vger.kernel.org
+-L:	linux-sh@vger.kernel.org
++L:	linux-renesas-soc@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*rcar*
+ 
+@@ -8413,7 +8413,7 @@ F:	drivers/pinctrl/intel/
+ PIN CONTROLLER - RENESAS
+ M:	Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+ M:	Geert Uytterhoeven <geert+renesas@glider.be>
+-L:	linux-sh@vger.kernel.org
++L:	linux-renesas-soc@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pinctrl/sh-pfc/
+ 
+@@ -9019,13 +9019,13 @@ F:	include/linux/rpmsg.h
+ RENESAS ETHERNET DRIVERS
+ R:	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+ L:	netdev@vger.kernel.org
+-L:	linux-sh@vger.kernel.org
++L:	linux-renesas-soc@vger.kernel.org
+ F:	drivers/net/ethernet/renesas/
+ F:	include/linux/sh_eth.h
+ 
+ RENESAS USB2 PHY DRIVER
+ M:	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+-L:	linux-sh@vger.kernel.org
++L:	linux-renesas-soc@vger.kernel.org
+ S:	Maintained
+ F:	drivers/phy/phy-rcar-gen3-usb2.c
+ 
+-- 
+2.1.4
 
