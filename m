@@ -1,59 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:24038 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751048AbcA2MNW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jan 2016 07:13:22 -0500
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>
-Subject: RE: [PATCH 2/2] drivers: pci: host: designware: remove
- PCI_PROBE_ONLY handling
-Date: Fri, 29 Jan 2016 12:13:07 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1EC90A3D@lhreml503-mbs>
-References: <1454066972-3609-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1454066972-3609-2-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1454066972-3609-2-git-send-email-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset="gb2312"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+To: Khiem Nguyen <khiem.nguyen.xt@rvc.renesas.com>,
+	Simon Horman <horms+renesas@verge.net.au>
+CC: Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-renesas-soc@vger.kernel.org"
+	<linux-renesas-soc@vger.kernel.org>,
+	"linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>,
+	"linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Sergei Shtylyov" <sergei.shtylyov@cogentembedded.com>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Toru Oishi <toru.oishi.zj@rvc.renesas.com>
+Subject: RE: [PATCH] MAINTAINERS: Update mailing list for Renesas SoC
+ Development
+Date: Mon, 18 Jan 2016 02:27:38 +0000
+Message-ID: <SG2PR06MB09194A1BDF3B76AC4273F32AD8C00@SG2PR06MB0919.apcprd06.prod.outlook.com>
+References: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
+ <569C4595.70806@rvc.renesas.com>
+In-Reply-To: <569C4595.70806@rvc.renesas.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-TG9va3MgZ29vZCB0byBtZQ0KDQpHYWINCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0K
-PiBGcm9tOiBMb3JlbnpvIFBpZXJhbGlzaSBbbWFpbHRvOmxvcmVuem8ucGllcmFsaXNpQGFybS5j
-b21dDQo+IFNlbnQ6IDI5IEphbnVhcnkgMjAxNiAxMTozMA0KPiBUbzogbGludXgtcGNpQHZnZXIu
-a2VybmVsLm9yZw0KPiBDYzogTG9yZW56byBQaWVyYWxpc2k7IFByYXR5dXNoIEFuYW5kOyBBcm5k
-IEJlcmdtYW5uOyBKaW5nb28gSGFuOyBCam9ybg0KPiBIZWxnYWFzOyBHYWJyaWVsZSBQYW9sb25p
-OyBXYW5nemhvdSAoQikNCj4gU3ViamVjdDogW1BBVENIIDIvMl0gZHJpdmVyczogcGNpOiBob3N0
-OiBkZXNpZ253YXJlOiByZW1vdmUgUENJX1BST0JFX09OTFkNCj4gaGFuZGxpbmcNCj4gDQo+IFRo
-ZSBQQ0llIGRlc2lnbndhcmUgaG9zdCBkcml2ZXIgaXMgbm90IHVzZWQgaW4gc3lzdGVtIGNvbmZp
-Z3VyYXRpb25zDQo+IHJlcXVpcmluZyB0aGUgUENJX1BST0JFX09OTFkgZmxhZyB0byBiZSBzZXQg
-dG8gcHJldmVudCByZXNvdXJjZXMNCj4gYXNzaWdubWVudCwgdGhlcmVmb3JlIHRoZSBkcml2ZXIg
-Y29kZSBoYW5kbGluZyB0aGUgZmxhZyBjYW4gYmUNCj4gcmVtb3ZlZCBmcm9tIHRoZSBrZXJuZWwu
-DQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBMb3JlbnpvIFBpZXJhbGlzaSA8bG9yZW56by5waWVyYWxp
-c2lAYXJtLmNvbT4NCj4gQ2M6IFByYXR5dXNoIEFuYW5kIDxwcmF0eXVzaC5hbmFuZEBnbWFpbC5j
-b20+DQo+IENjOiBBcm5kIEJlcmdtYW5uIDxhcm5kQGFybmRiLmRlPg0KPiBDYzogSmluZ29vIEhh
-biA8amluZ29vaGFuMUBnbWFpbC5jb20+DQo+IENjOiBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bn
-b29nbGUuY29tPg0KPiBDYzogR2FicmllbGUgUGFvbG9uaSA8Z2FicmllbGUucGFvbG9uaUBodWF3
-ZWkuY29tPg0KPiBDYzogWmhvdSBXYW5nIDx3YW5nemhvdTFAaGlzaWxpY29uLmNvbT4NCj4gLS0t
-DQo+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jIHwgMTAgKysrKy0tLS0tLQ0K
-PiAgMSBmaWxlIGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKSwgNiBkZWxldGlvbnMoLSkNCj4gDQo+
-IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jIGIvZHJpdmVy
-cy9wY2kvaG9zdC9wY2llLQ0KPiBkZXNpZ253YXJlLmMNCj4gaW5kZXggMjE3MTY4Mi4uYTQ0NTA4
-MyAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9wY2kvaG9zdC9wY2llLWRlc2lnbndhcmUuYw0KPiAr
-KysgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS5jDQo+IEBAIC01NTEsMTMgKzU1
-MSwxMSBAQCBpbnQgZHdfcGNpZV9ob3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHApDQo+ICAJ
-cGNpX2ZpeHVwX2lycXMocGNpX2NvbW1vbl9zd2l6emxlLCBvZl9pcnFfcGFyc2VfYW5kX21hcF9w
-Y2kpOw0KPiAgI2VuZGlmDQo+IA0KPiAtCWlmICghcGNpX2hhc19mbGFnKFBDSV9QUk9CRV9PTkxZ
-KSkgew0KPiAtCQlwY2lfYnVzX3NpemVfYnJpZGdlcyhidXMpOw0KPiAtCQlwY2lfYnVzX2Fzc2ln
-bl9yZXNvdXJjZXMoYnVzKTsNCj4gKwlwY2lfYnVzX3NpemVfYnJpZGdlcyhidXMpOw0KPiArCXBj
-aV9idXNfYXNzaWduX3Jlc291cmNlcyhidXMpOw0KPiANCj4gLQkJbGlzdF9mb3JfZWFjaF9lbnRy
-eShjaGlsZCwgJmJ1cy0+Y2hpbGRyZW4sIG5vZGUpDQo+IC0JCQlwY2llX2J1c19jb25maWd1cmVf
-c2V0dGluZ3MoY2hpbGQpOw0KPiAtCX0NCj4gKwlsaXN0X2Zvcl9lYWNoX2VudHJ5KGNoaWxkLCAm
-YnVzLT5jaGlsZHJlbiwgbm9kZSkNCj4gKwkJcGNpZV9idXNfY29uZmlndXJlX3NldHRpbmdzKGNo
-aWxkKTsNCj4gDQo+ICAJcGNpX2J1c19hZGRfZGV2aWNlcyhidXMpOw0KPiAgCXJldHVybiAwOw0K
-PiAtLQ0KPiAyLjUuMQ0KDQo=
+Hi Khiem-san,
+
+Thank you for the CC.
+
+> From: Khiem Nguyen
+> Sent: Monday, January 18, 2016 10:53 AM
+> 
+> cc Shimoda-san for his information.
+> 
+> On 1/18/2016 8:04 AM, Simon Horman wrote:
+> > Update the mailing list used for development of support for
+> > Renesas SoCs and related drivers.
+> >
+> > Up until now the linux-sh mailing list has been used, however,
+> > Renesas SoCs are now much wider than the SH architecture and there
+> > is some desire from some for the linux-sh list to refocus on
+> > discussion of the work on the SH architecture.
+> >
+> > Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> > Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+> > Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> > Cc: Magnus Damm <magnus.damm@gmail.com>
+> > Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+
+Acked-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+
+Best regards,
+Yoshihiro Shimoda
