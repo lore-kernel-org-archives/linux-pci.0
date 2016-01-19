@@ -1,157 +1,187 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59255 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751926AbcAENQw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 5 Jan 2016 08:16:52 -0500
-Date: Tue, 5 Jan 2016 15:16:47 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: "Dr. David Alan Gilbert" <dgilbert@redhat.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	x86@kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
-	Yang Zhang <yang.zhang.wz@gmail.com>,
-	Alexander Graf <agraf@suse.de>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page
- tracking
-Message-ID: <20160105150751-mutt-send-email-mst@redhat.com>
-References: <20151213212557.5410.48577.stgit@localhost.localdomain>
- <20160104204104.GB17427@char.us.oracle.com>
- <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
- <20160105113317-mutt-send-email-mst@redhat.com>
- <20160105100104.GA2439@work-vm>
- <20160105123243-mutt-send-email-mst@redhat.com>
- <20160105104525.GC2439@work-vm>
- <20160105130133-mutt-send-email-mst@redhat.com>
- <20160105124303.GE2439@work-vm>
+Received: from aserp1040.oracle.com ([141.146.126.69]:26767 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932734AbcASUjM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2016 15:39:12 -0500
+Subject: Re: [PATCH RFC] pci: Blacklist vpd access for buggy devices
+To: Jordan_Hargrave@dell.com, bhelgaas@google.com
+References: <20160109010545.GA31085@localhost>
+ <1452546789-62938-1-git-send-email-babu.moger@oracle.com>
+ <56943184.3060303@oracle.com>
+ <8B8F62BE6EB1824D91A8BF961FDC40B9179D157772@AUSX7MCPS305.AMER.DELL.COM>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	alexander.duyck@gmail.com, hare@suse.de, mkubecek@suse.com,
+	shane.seymour@hpe.com, myron.stowe@gmail.com
+From: Babu Moger <babu.moger@oracle.com>
+Message-ID: <569E9EE6.2010900@oracle.com>
+Date: Tue, 19 Jan 2016 14:39:02 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160105124303.GE2439@work-vm>
+In-Reply-To: <8B8F62BE6EB1824D91A8BF961FDC40B9179D157772@AUSX7MCPS305.AMER.DELL.COM>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 05, 2016 at 12:43:03PM +0000, Dr. David Alan Gilbert wrote:
-> * Michael S. Tsirkin (mst@redhat.com) wrote:
-> > On Tue, Jan 05, 2016 at 10:45:25AM +0000, Dr. David Alan Gilbert wrote:
-> > > * Michael S. Tsirkin (mst@redhat.com) wrote:
-> > > > On Tue, Jan 05, 2016 at 10:01:04AM +0000, Dr. David Alan Gilbert wrote:
-> > > > > * Michael S. Tsirkin (mst@redhat.com) wrote:
-> > > > > > On Mon, Jan 04, 2016 at 07:11:25PM -0800, Alexander Duyck wrote:
-> > > > > > > >> The two mechanisms referenced above would likely require coordination with
-> > > > > > > >> QEMU and as such are open to discussion.  I haven't attempted to address
-> > > > > > > >> them as I am not sure there is a consensus as of yet.  My personal
-> > > > > > > >> preference would be to add a vendor-specific configuration block to the
-> > > > > > > >> emulated pci-bridge interfaces created by QEMU that would allow us to
-> > > > > > > >> essentially extend shpc to support guest live migration with pass-through
-> > > > > > > >> devices.
-> > > > > > > >
-> > > > > > > > shpc?
-> > > > > > > 
-> > > > > > > That is kind of what I was thinking.  We basically need some mechanism
-> > > > > > > to allow for the host to ask the device to quiesce.  It has been
-> > > > > > > proposed to possibly even look at something like an ACPI interface
-> > > > > > > since I know ACPI is used by QEMU to manage hot-plug in the standard
-> > > > > > > case.
-> > > > > > > 
-> > > > > > > - Alex
-> > > > > > 
-> > > > > > 
-> > > > > > Start by using hot-unplug for this!
-> > > > > > 
-> > > > > > Really use your patch guest side, and write host side
-> > > > > > to allow starting migration with the device, but
-> > > > > > defer completing it.
-> > > > > > 
-> > > > > > So
-> > > > > > 
-> > > > > > 1.- host tells guest to start tracking memory writes
-> > > > > > 2.- guest acks
-> > > > > > 3.- migration starts
-> > > > > > 4.- most memory is migrated
-> > > > > > 5.- host tells guest to eject device
-> > > > > > 6.- guest acks
-> > > > > > 7.- stop vm and migrate rest of state
-> > > > > > 
-> > > > > > 
-> > > > > > It will already be a win since hot unplug after migration starts and
-> > > > > > most memory has been migrated is better than hot unplug before migration
-> > > > > > starts.
-> > > > > > 
-> > > > > > Then measure downtime and profile. Then we can look at ways
-> > > > > > to quiesce device faster which really means step 5 is replaced
-> > > > > > with "host tells guest to quiesce device and dirty (or just unmap!)
-> > > > > > all memory mapped for write by device".
-> > > > > 
-> > > > > 
-> > > > > Doing a hot-unplug is going to upset the guests network stacks view
-> > > > > of the world; that's something we don't want to change.
-> > > > > 
-> > > > > Dave
-> > > > 
-> > > > It might but if you store the IP and restore it quickly
-> > > > after migration e.g. using guest agent, as opposed to DHCP,
-> > > > then it won't.
-> > > 
-> > > I thought if you hot-unplug then it will lose any outstanding connections
-> > > on that device.
-> > 
-> > Which connections and which device?  TCP connections and an ethernet
-> > device?  These are on different layers so of course you don't lose them.
-> > Just do not change the IP address.
-> > 
-> > Some guests send a signal to applications to close connections
-> > when all links go down. One can work around this
-> > in a variety of ways.
+Hi Jordan,
+
+On 1/19/2016 9:22 AM, Jordan_Hargrave@dell.com wrote:
+> From: Babu Moger [babu.moger@oracle.com]
+> Sent: Monday, January 11, 2016 4:49 PM
+> To: bhelgaas@google.com
+> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; alexander.duyck@gmail.com; hare@suse.de; mkubecek@suse.com; shane.seymour@hpe.com; myron.stowe@gmail.com; VenkatKumar.Duvvuru@avago.com; Hargrave, Jordan
+> Subject: Re: [PATCH RFC] pci: Blacklist vpd access for buggy devices
 > 
-> So, OK, I was surprised that a simple connection didn't go down when
-> I tested and just removed the network card; I'd thought stuff was more
-> aggressive when there was no route.
-> But as you say, some stuff does close connections when the links go down/away
-> so we do need to work around that; and any new outgoing connections get
-> a 'no route to host'.
-
-
-You can create a dummy device in guest for the duration of migration.
-Use guest agent to move IP address there and that should be enough to trick most guests.
-
-
->  So I'm still nervous what will break.
+> Sorry. Missed Jordan.
 > 
-> Dave
+> On 1/11/2016 3:13 PM, Babu Moger wrote:
+>> Reading or Writing of PCI VPD data causes system panic.
+>> We saw this problem by running "lspci -vvv" in the beginning.
+>> However this can be easily reproduced by running
+>>  cat /sys/bus/devices/XX../vpd
+>>
+>> VPD length has been set as 32768 by default. Accessing vpd
+>> will trigger read/write of 32k. This causes problem as we
+>> could read data beyond the VPD end tag. Behaviour is un-
+>> predictable when this happens. I see some other adapter doing
+>> similar quirks(commit bffadffd43d4 ("PCI: fix VPD limit quirk
+>> for Broadcom 5708S"))
+>>
+>> I see there is an attempt to fix this right way.
+>> https://patchwork.ozlabs.org/patch/534843/ or
+>> https://lkml.org/lkml/2015/10/23/97
+>>
+>> Tried to fix it this way, but problem is I dont see the proper
+>> start/end TAGs(at least for this adapter) at all. The data is
+>> mostly junk or zeros. This patch fixes the issue by setting the
+>> vpd length to 0x80.
+>>
+>> Also look at the threds
+>>
+>> https://lkml.org/lkml/2015/11/10/557
+>> https://lkml.org/lkml/2015/12/29/315
+>>
+>> Signed-off-by: Babu Moger <babu.moger@oracle.com>
+>> ---
+>>
+>> NOTE:
+>> Jordan, Are you sure all the devices in PCI_VENDOR_ID_ATHEROS and
+>> PCI_VENDOR_ID_ATTANSIC have this problem. You have used PCI_ANY_ID.
+>> I felt it is too broad. Can you please check.
+>>
+> 
+> I don't actually have that hardware, it was a bugfix for biosdevname for RedHat.  We were getting
+> 'BUG: soft lockup - CPU#0 stuck for 23s!'  when attempting to read the vpd area.
+> 
+> Certainly 0x1969:0x1026 experienced this.
 
-I'm not saying nothing breaks.  Far being from it.  For example, some NAT
-or firewall implementations keep state per interface and these might
-lose state (if using NAT/stateful firewall within guest).
+Ok. Thanks. I will update the patch 4/4. 
 
-
-So yes it *would* be useful to teach guests, for example, that a device
-is "not dead, just resting" and that another device will shortly come
-and take its place.
-
-
-But the simple setup is already useful and worth supporting, and merging
-things gradually will help this project finally get off the ground.
-
-
-> > 
-> > > > It allows calming the device down in a generic way,
-> > > > specific drivers can then implement the fast quiesce.
-> > > 
-> > > Except that if it breaks the guest networking it's useless.
-> > > 
-> > > Dave
-> > > 
-> > > > 
-> > > > > > 
-> > > > > > -- 
-> > > > > > MST
-> > > > > --
-> > > > > Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
-> > > --
-> > > Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
-> --
-> Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
+> 
+> 09:00.0 Ethernet controller: Atheros Communications AR8121/AR8113/AR8114 Gigabit or Fast Ethernet (rev b0)
+>         Subsystem: Atheros Communications AR8121/AR8113/AR8114 Gigabit or Fast Ethernet
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 0, Cache Line Size: 64 bytes
+>         Interrupt: pin A routed to IRQ 46
+>         Region 0: Memory at c0300000 (64-bit, non-prefetchable) [size=256K]
+>         Region 2: I/O ports at 3000 [size=128]
+>         Capabilities: [40] Power Management version 2
+>                 Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold+)
+>                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+>         Capabilities: [48] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>                 Address: 00000000fee0300c  Data: 41a1
+>         Capabilities: [58] Express (v1) Endpoint, MSI 00
+>                 DevCap: MaxPayload 4096 bytes, PhantFunc 0, Latency L0s <4us, L1 unlimited
+>                         ExtTag- AttnBtn+ AttnInd+ PwrInd+ RBE- FLReset-
+>                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+>                         RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+>                         MaxPayload 128 bytes, MaxReadReq 512 bytes
+>                 DevSta: CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr+ TransPend-
+>                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s, Latency L0 unlimited, L1 unlimited
+>                         ClockPM- Surprise- LLActRep- BwNot-
+>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+>         Capabilities: [6c] Vital Product Data
+>                 Unknown small resource type 0b, will not decode more.
+>         Capabilities: [100 v1] Advanced Error Reporting
+>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
+>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                 UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+>                 AERCap: First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
+>         Capabilities: [180 v1] Device Serial Number ff-2e-05-c3-00-23-8b-ff
+>         Kernel driver in use: ATL1E
+> 00: 69 19 26 10 07 04 10 00 b0 00 00 02 10 00 00 00
+> 10: 04 00 30 c0 00 00 00 00 01 30 00 00 00 00 00 00
+> 20: 00 00 00 00 00 00 00 00 00 00 00 00 69 19 26 10
+> 30: 00 00 00 00 40 00 00 00 00 00 00 00 0a 01 00 00
+> 40: 01 48 02 c0 00 00 00 00 05 58 81 00 0c 30 e0 fe
+> 50: 00 00 00 00 a1 41 00 00 10 6c 01 00 85 7f 04 05
+> 60: 00 20 1a 00 11 f4 03 00 40 00 11 10 03 00 00 80
+> 70: 5a ff 88 14 00 00 00 00 00 00 00 00 00 00 00 00
+> 80: 00 00 00 00 69 19 26 10 00 00 00 00 00 00 00 00
+> 90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 
+>>  drivers/pci/quirks.c |   41 +++++++++++++++++++++++++++++++++++++++++
+>>  1 files changed, 41 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index b03373f..8abcee5 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -2123,6 +2123,47 @@ static void quirk_via_cx700_pci_parking_caching(struct pci_dev *dev)
+>>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, 0x324e, quirk_via_cx700_pci_parking_caching);
+>>
+>>  /*
+>> + * A read/write to sysfs entry ('/sys/bus/pci/devices/<id>/vpd')
+>> + * will dump 32k of data. The default length is set as 32768.
+>> + * Reading a full 32k will cause an access beyond the VPD end tag.
+>> + * The system behaviour at that point is mostly unpredictable.
+>> + * Apparently, some vendors have not implemented this VPD headers properly.
+>> + * Adding a generic function disable vpd data for these buggy adapters
+>> + * Add the DECLARE_PCI_FIXUP_FINAL line below with the specific with
+>> + * vendor and device of interest to use this quirk.
+>> + */
+>> +static void quirk_blacklist_vpd(struct pci_dev *dev)
+>> +{
+>> +     if (dev->vpd) {
+>> +             dev->vpd->len = 0;
+>> +             dev_warn(&dev->dev, "PCI vpd access has been disabled due to firmware bug\n");
+>> +     }
+>> +}
+>> +
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060,
+>> +             quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c,
+>> +             quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413,
+>> +             quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078,
+>> +             quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079,
+>> +             quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073,
+>> +             quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071,
+>> +             quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b,
+>> +             quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f,
+>> +             quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d,
+>> +             quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f,
+>> +             quirk_blacklist_vpd);
+>> +
+>> +/*
+>>   * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
+>>   * VPD end tag will hang the device.  This problem was initially
+>>   * observed when a vpd entry was created in sysfs
+>>
