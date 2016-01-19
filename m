@@ -1,63 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:38372 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754872AbcA2L1n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Jan 2016 06:27:43 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH 2/2] drivers: pci: host: designware: remove PCI_PROBE_ONLY handling
-Date: Fri, 29 Jan 2016 11:29:32 +0000
-Message-Id: <1454066972-3609-2-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1454066972-3609-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1454066972-3609-1-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from kirsty.vergenet.net ([202.4.237.240]:36339 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754668AbcASASU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jan 2016 19:18:20 -0500
+Date: Tue, 19 Jan 2016 09:18:16 +0900
+From: Simon Horman <horms@verge.net.au>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-renesas-soc@vger.kernel.org,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	Linux Media Mailing List <linux-media@vger.kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Magnus Damm <magnus.damm@gmail.com>
+Subject: Re: [PATCH] MAINTAINERS: Update mailing list for Renesas SoC
+ Development
+Message-ID: <20160119001815.GA14224@verge.net.au>
+References: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
+ <CAMuHMdXF8QnKsLOYFnT7Rje5G9_7Xr0NesO2SKEkWSivKQYkbA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMuHMdXF8QnKsLOYFnT7Rje5G9_7Xr0NesO2SKEkWSivKQYkbA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe designware host driver is not used in system configurations
-requiring the PCI_PROBE_ONLY flag to be set to prevent resources
-assignment, therefore the driver code handling the flag can be
-removed from the kernel.
+On Mon, Jan 18, 2016 at 09:09:29AM +0100, Geert Uytterhoeven wrote:
+> CC linux-arm-kernel
+> 
+> On Mon, Jan 18, 2016 at 2:04 AM, Simon Horman
+> <horms+renesas@verge.net.au> wrote:
+> > Update the mailing list used for development of support for
+> > Renesas SoCs and related drivers.
+> >
+> > Up until now the linux-sh mailing list has been used, however,
+> > Renesas SoCs are now much wider than the SH architecture and there
+> > is some desire from some for the linux-sh list to refocus on
+> > discussion of the work on the SH architecture.
+> >
+> > Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> > Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+> > Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> > Cc: Magnus Damm <magnus.damm@gmail.com>
+> > Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+> 
+> Acked-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> 
+> > ---
+> > * This patch applies on top of Linus's tree where currently the head commit
+> >   is 984065055e6e ("Merge branch 'drm-next' of
+> >   git://people.freedesktop.org/~airlied/linux")
+> >
+> >   This has been used as a base instead of v4.4 so that it is based on the
+> >   following two commits which affect it:
+> >   - 1a4ca6dd3dc8 ("MAINTAINERS: Add co-maintainer for Renesas Pin Controllers")
+> >   - 3e46c3973cba ("MAINTAINERS: add Renesas usb2 phy driver")
+> 
+> I assume you'll send an update for the "ARM/RENESAS ARM64 ARCHITECTURE"
+> section as soon as that has landed in mainline?
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Zhou Wang <wangzhou1@hisilicon.com>
----
- drivers/pci/host/pcie-designware.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 2171682..a445083 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -551,13 +551,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
- #endif
- 
--	if (!pci_has_flag(PCI_PROBE_ONLY)) {
--		pci_bus_size_bridges(bus);
--		pci_bus_assign_resources(bus);
-+	pci_bus_size_bridges(bus);
-+	pci_bus_assign_resources(bus);
- 
--		list_for_each_entry(child, &bus->children, node)
--			pcie_bus_configure_settings(child);
--	}
-+	list_for_each_entry(child, &bus->children, node)
-+		pcie_bus_configure_settings(child);
- 
- 	pci_bus_add_devices(bus);
- 	return 0;
--- 
-2.5.1
-
+Yes, that is my plan.
