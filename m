@@ -1,67 +1,331 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:37260 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757156AbcASVjG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Jan 2016 16:39:06 -0500
+Date: Tue, 19 Jan 2016 15:39:01 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>,
+	linux-pci@vger.kernel.org, bhelgaas@google.com,
+	dwmw2@infradead.org, jroedel@suse.de
+Subject: Re: [PATCH] pci: Add support for multiple DMA aliases
+Message-ID: <20160119213901.GG14080@localhost>
+References: <1453118346-76897-1-git-send-email-jacek.lawrynowicz@intel.com>
+ <1453133267-79756-1-git-send-email-jacek.lawrynowicz@intel.com>
+ <20160119033315.GA6510@localhost>
+ <20160119201254.GB6510@localhost>
+ <1453237471.32741.267.camel@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <56A281B6.6070709@gmail.com>
-References: <1453167913-16248-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>
-	<6239489.QX2A2kAHWp@vostro.rjw.lan>
-	<20160120002431.GA7973@localhost>
-	<56A0EE00.80709@cn.fujitsu.com>
-	<CAJZ5v0iq29mq_sFzk=mEbjPGJV9vPL9MCgU4WamrGV_fWcpEMA@mail.gmail.com>
-	<20160122175332.GA11004@localhost>
-	<56A281B6.6070709@gmail.com>
-Date: Sat, 23 Jan 2016 03:00:48 +0100
-Message-ID: <CAJZ5v0hW1jusNnW8TFTX_fwXzsfBjkFTjHTBQ+iWQyDKe3CETw@mail.gmail.com>
-Subject: Re: [PATCH] pci: fix unavailable irq number 255 reported by BIOS
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Cao jin <caoj.fnst@cn.fujitsu.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Chen Fan <chen.fan.fnst@cn.fujitsu.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Len Brown <lenb@kernel.org>, izumi.taku@jp.fujitsu.com,
-	wency@cn.fujitsu.com, Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1453237471.32741.267.camel@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 22, 2016 at 8:23 PM, David Daney <ddaney.cavm@gmail.com> wrote:
-> On 01/22/2016 09:53 AM, Bjorn Helgaas wrote:
->>
->> On Thu, Jan 21, 2016 at 11:58:26PM +0100, Rafael J. Wysocki wrote:
->>>
->>> On Thu, Jan 21, 2016 at 3:41 PM, Cao jin <caoj.fnst@cn.fujitsu.com>
->>> wrote:
->>>>
->>>> Hi,
->>>>
->>>>      IMHO, I think maybe modification on i801_smbus driver is easier.
->>>>
->>>>      Because when i801_smbus request_irq using pci_dev->irq, this
->>>> pci_dev->irq seems still holds the value read from register(
->>>> pci_setup_device->pci_read_irq), if the value is 255, it is invalid in
->>>> register,
->>>
->>>
->>> Right.
->>>
->>> Which is why the PCI core should not leak it into the driver's ->probe
->>> callback.
->>
->>
->> Is there a reserved IRQ value we could use to mean "invalid"?
->
->
-> In many (most) cases, zero indicates no irq.
+On Tue, Jan 19, 2016 at 02:04:31PM -0700, Alex Williamson wrote:
+> On Tue, 2016-01-19 at 14:12 -0600, Bjorn Helgaas wrote:
+> > [+cc Alex]
+> > 
+> > On Mon, Jan 18, 2016 at 09:33:15PM -0600, Bjorn Helgaas wrote:
+> > > On Mon, Jan 18, 2016 at 05:07:47PM +0100, Jacek Lawrynowicz wrote:
+> > > > This patch solves IOMMU support issues with PCIe non-transparent bridges
+> > > > that use Requester ID look-up tables (LUT), e.g. PEX8733. Before exiting
+> > > > the bridge, packet's RID is rewritten according to LUT programmed by
+> > > > a driver. Modified packets are then passed to a destination bus and
+> > > > processed upstream. The problem is that such packets seem to come from
+> > > > non-existent nodes that are hidden behind NTB and are not discoverable
+> > > > by a destination node, so IOMMU discards them. Adding DMA alias for a
+> > > > given LUT entry allows IOMMU to create a proper mapping that enables
+> > > > inter-node communication.
+> > > > 
+> > > > The current DMA alias implementation supports only single alias, so it's
+> > > > not possible to connect more than two nodes when IOMMU is enabled. This
+> > > > implementation enables all possible aliases on a given bus (256) that
+> > > > are stored in a bitset. Alias devfn is directly translated to a bit
+> > > > number. The bitset is not allocated for devices that have no need for
+> > > > DMA aliases.
+> 
+> My only concern here is that pci_add_dma_alias() makes aliases seem
+> more dynamic than they really are.  For instance, when we add a device
+> to an IOMMU domain, we evaluate the aliases at that point, if an NTB
+> later adds a new lookup entry and specifies a new alias, it's still not
+> going to work.  Similarly, IOMMU groups are evaluated as the device is
+> added, so if an alias is to a physical device and we need the cross
+> reference to bind them together into a single group, calling
+> pci_add_dma_alias() from a driver isn't going to work.
+> 
+> The existing code had this problem too, it's just more obvious now that
+> we have a helper function and that the helper is exported for use
+> outside of the PCI core.  Thanks,
 
-Zero is a valid timer IRQ on x86, though, so it's better not to give
-any special meaning to it in general.
+Oh, that's a really good point.  I hadn't noticed the export.  Is
+there any reason pci_add_dma_alias() needs to be declared in
+include/linux/pci.h and exported to modules?
 
-Using ~0 as suggested by Bjorn should work as it would cause
-request_irq() to return -EINVAL if passed to it AFAICS.
+I don't think the current patch requires the export, but I suppose you
+envision an NTB driver that might be a module?  I guess we can easily
+export it when that driver is merged if that seems the best solution.
 
-Thanks,
-Rafael
+In the meantime, I made the following change to stop exporting it:
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 29cfe1a..b6434c0 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4587,7 +4587,6 @@ void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
+ 
+ 	set_bit(devfn, dev->dma_alias_mask);
+ }
+-EXPORT_SYMBOL_GPL(pci_add_dma_alias);
+ 
+ bool pci_device_is_present(struct pci_dev *pdev)
+ {
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index fd2f03f..1aad757 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -339,4 +339,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ 
+ struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
+ 
++void pci_add_dma_alias(struct pci_dev *dev, u8 devfn);
++
+ #endif /* DRIVERS_PCI_H */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 66c07d0..00d0862 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1228,8 +1228,6 @@ resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
+ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+ 		      unsigned int command_bits, u32 flags);
+ 
+-void pci_add_dma_alias(struct pci_dev *dev, u8 devfn);
+-
+ /* kmem_cache style wrapper around pci_alloc_consistent() */
+ 
+ #include <linux/pci-dma.h>
+
+
+
+> > > > 
+> > > > More details can be found in following article:
+> > > > http://www.plxtech.com/files/pdf/technical/expresslane/RTC_Enabling%20MulitHostSystemDesigns.pdf
+> > > > 
+> > > > Signed-off-by: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+> > > > Acked-by: David Woodhouse <David.Woodhouse@intel.com>
+> > > > Acked-by: Joerg Roedel <jroedel@suse.de>
+> > > 
+> > > I applied this to pci/iommu and intend to merge it for v4.5.
+> > > 
+> > > I made the following change because the kcalloc() failure warning in
+> > > your patch looks wrong:
+> > > 
+> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > index b0d6a0a..29cfe1a 100644
+> > > --- a/drivers/pci/pci.c
+> > > +++ b/drivers/pci/pci.c
+> > > @@ -4577,13 +4577,15 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
+> > >   */
+> > >  void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
+> > >  {
+> > > -	if (!dev->dma_alias_mask) {
+> > > +	if (!dev->dma_alias_mask)
+> > >  		dev->dma_alias_mask = kcalloc(BITS_TO_LONGS(U8_MAX),
+> > >  					      sizeof(long), GFP_KERNEL);
+> > > -		dev_warn(&dev->dev, "Unable to allocate DMA alias mask.\n");
+> > > +	if (!dev->dma_alias_mask) {
+> > > +		dev_warn(&dev->dev, "Unable to allocate DMA alias mask\n");
+> > > +		return;
+> > >  	}
+> > > -	if (dev->dma_alias_mask)
+> > > -		set_bit(devfn, dev->dma_alias_mask);
+> > > +
+> > > +	set_bit(devfn, dev->dma_alias_mask);
+> > >  }
+> > >  EXPORT_SYMBOL_GPL(pci_add_dma_alias);
+> > >  
+> > > 
+> > > > ---
+> > > >  drivers/iommu/iommu.c |  8 ++++----
+> > > >  drivers/pci/pci.c     | 19 +++++++++++++++++++
+> > > >  drivers/pci/probe.c   |  1 +
+> > > >  drivers/pci/quirks.c  | 15 ++++++---------
+> > > >  drivers/pci/search.c  | 14 +++++++++-----
+> > > >  include/linux/pci.h   | 15 ++++++++-------
+> > > >  6 files changed, 47 insertions(+), 25 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+> > > > index abae363..98ae7ff 100644
+> > > > --- a/drivers/iommu/iommu.c
+> > > > +++ b/drivers/iommu/iommu.c
+> > > > @@ -686,10 +686,10 @@ static struct iommu_group *get_pci_alias_group(struct pci_dev *pdev,
+> > > >  			continue;
+> > > >  
+> > > >  		/* We alias them or they alias us */
+> > > > -		if (((pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
+> > > > -		     pdev->dma_alias_devfn == tmp->devfn) ||
+> > > > -		    ((tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
+> > > > -		     tmp->dma_alias_devfn == pdev->devfn)) {
+> > > > +		if ((pdev->dma_alias_mask &&
+> > > > +		     test_bit(tmp->devfn, pdev->dma_alias_mask)) ||
+> > > > +		    ((tmp->dma_alias_mask &&
+> > > > +		     test_bit(pdev->devfn, tmp->dma_alias_mask)))) {
+> > > >  
+> > > >  			group = get_pci_alias_group(tmp, devfns);
+> > > >  			if (group) {
+> > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > > index 49e3715..5b27d65 100644
+> > > > --- a/drivers/pci/pci.c
+> > > > +++ b/drivers/pci/pci.c
+> > > > @@ -4568,6 +4568,25 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
+> > > >  	return 0;
+> > > >  }
+> > > >  
+> > > > +/**
+> > > > + * pci_add_dma_alias - Allows to add multiple devfn aliases for given device
+> > > > + * @dev: the PCI device for which alias is added
+> > > > + * @devfn: alias slot and function
+> > > > + *
+> > > > + * This helper encodes 8-bit devfn as bit number in dma_alias_mask
+> > > > + */
+> > > > +void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
+> > > > +{
+> > > > +	if (!dev->dma_alias_mask) {
+> > > > +		dev->dma_alias_mask = kcalloc(BITS_TO_LONGS(U8_MAX),
+> > > > +					      sizeof(long), GFP_KERNEL);
+> > > > +		dev_warn(&dev->dev, "Unable to allocate DMA alias mask.\n");
+> > > > +	}
+> > > > +	if (dev->dma_alias_mask)
+> > > > +		set_bit(devfn, dev->dma_alias_mask);
+> > > > +}
+> > > > +EXPORT_SYMBOL_GPL(pci_add_dma_alias);
+> > > > +
+> > > >  bool pci_device_is_present(struct pci_dev *pdev)
+> > > >  {
+> > > >  	u32 v;
+> > > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > > > index 32b9f1b..5da4dd3 100644
+> > > > --- a/drivers/pci/probe.c
+> > > > +++ b/drivers/pci/probe.c
+> > > > @@ -1501,6 +1501,7 @@ static void pci_release_dev(struct device *dev)
+> > > >  	pcibios_release_device(pci_dev);
+> > > >  	pci_bus_put(pci_dev->bus);
+> > > >  	kfree(pci_dev->driver_override);
+> > > > +	kfree(pci_dev->dma_alias_mask);
+> > > >  	kfree(pci_dev);
+> > > >  }
+> > > >  
+> > > > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > > > index 83e93d7..3ed1f9a 100644
+> > > > --- a/drivers/pci/quirks.c
+> > > > +++ b/drivers/pci/quirks.c
+> > > > @@ -3579,8 +3579,7 @@ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+> > > >  static void quirk_dma_func0_alias(struct pci_dev *dev)
+> > > >  {
+> > > >  	if (PCI_FUNC(dev->devfn) != 0) {
+> > > > -		dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 0);
+> > > > -		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
+> > > > +		pci_add_dma_alias(dev, PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
+> > > >  	}
+> > > >  }
+> > > >  
+> > > > @@ -3595,8 +3594,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe476, quirk_dma_func0_alias);
+> > > >  static void quirk_dma_func1_alias(struct pci_dev *dev)
+> > > >  {
+> > > >  	if (PCI_FUNC(dev->devfn) != 1) {
+> > > > -		dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 1);
+> > > > -		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
+> > > > +		pci_add_dma_alias(dev, PCI_DEVFN(PCI_SLOT(dev->devfn), 1));
+> > > >  	}
+> > > >  }
+> > > >  
+> > > > @@ -3660,11 +3658,10 @@ static void quirk_fixed_dma_alias(struct pci_dev *dev)
+> > > >  
+> > > >  	id = pci_match_id(fixed_dma_alias_tbl, dev);
+> > > >  	if (id) {
+> > > > -		dev->dma_alias_devfn = id->driver_data;
+> > > > -		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
+> > > > -		dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
+> > > > -			 PCI_SLOT(dev->dma_alias_devfn),
+> > > > -			 PCI_FUNC(dev->dma_alias_devfn));
+> > > > +		pci_add_dma_alias(dev, id->driver_data);
+> > > > +		dev_info(&dev->dev, "Enabling fixed DMA alias to %02lx.%ld\n",
+> > > > +			 PCI_SLOT(id->driver_data),
+> > > > +			 PCI_FUNC(id->driver_data));
+> > > >  	}
+> > > >  }
+> > > >  
+> > > > diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+> > > > index a20ce7d..33e0f03 100644
+> > > > --- a/drivers/pci/search.c
+> > > > +++ b/drivers/pci/search.c
+> > > > @@ -40,11 +40,15 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+> > > >  	 * If the device is broken and uses an alias requester ID for
+> > > >  	 * DMA, iterate over that too.
+> > > >  	 */
+> > > > -	if (unlikely(pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN)) {
+> > > > -		ret = fn(pdev, PCI_DEVID(pdev->bus->number,
+> > > > -					 pdev->dma_alias_devfn), data);
+> > > > -		if (ret)
+> > > > -			return ret;
+> > > > +	if (unlikely(pdev->dma_alias_mask)) {
+> > > > +		u8 devfn;
+> > > > +
+> > > > +		for_each_set_bit(devfn, pdev->dma_alias_mask, U8_MAX) {
+> > > > +			ret = fn(pdev, PCI_DEVID(pdev->bus->number, devfn),
+> > > > +				 data);
+> > > > +			if (ret)
+> > > > +				return ret;
+> > > > +		}
+> > > >  	}
+> > > >  
+> > > >  	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
+> > > > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > > > index f9f79ad..6200175 100644
+> > > > --- a/include/linux/pci.h
+> > > > +++ b/include/linux/pci.h
+> > > > @@ -172,16 +172,14 @@ enum pci_dev_flags {
+> > > >  	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) (1 << 2),
+> > > >  	/* Flag for quirk use to store if quirk-specific ACS is enabled */
+> > > >  	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) (1 << 3),
+> > > > -	/* Flag to indicate the device uses dma_alias_devfn */
+> > > > -	PCI_DEV_FLAGS_DMA_ALIAS_DEVFN = (__force pci_dev_flags_t) (1 << 4),
+> > > >  	/* Use a PCIe-to-PCI bridge alias even if !pci_is_pcie */
+> > > > -	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 5),
+> > > > +	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 4),
+> > > >  	/* Do not use bus resets for device */
+> > > > -	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 6),
+> > > > +	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 5),
+> > > >  	/* Do not use PM reset even if device advertises NoSoftRst- */
+> > > > -	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
+> > > > +	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 6),
+> > > >  	/* Get VPD from function 0 VPD */
+> > > > -	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
+> > > > +	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 7),
+> > > >  };
+> > > >  
+> > > >  enum pci_irq_reroute_variant {
+> > > > @@ -279,7 +277,7 @@ struct pci_dev {
+> > > >  	u8		rom_base_reg;	/* which config register controls the ROM */
+> > > >  	u8		pin;		/* which interrupt pin this device uses */
+> > > >  	u16		pcie_flags_reg;	/* cached PCIe Capabilities Register */
+> > > > -	u8		dma_alias_devfn;/* devfn of DMA alias, if any */
+> > > > +	unsigned long	*dma_alias_mask;/* mask of enabled devfn aliases */
+> > > >  
+> > > >  	struct pci_driver *driver;	/* which driver has allocated this device */
+> > > >  	u64		dma_mask;	/* Mask of the bits of bus address this
+> > > > @@ -1229,6 +1227,9 @@ resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
+> > > >  
+> > > >  int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+> > > >  		      unsigned int command_bits, u32 flags);
+> > > > +
+> > > > +void pci_add_dma_alias(struct pci_dev *dev, u8 devfn);
+> > > > +
+> > > >  /* kmem_cache style wrapper around pci_alloc_consistent() */
+> > > >  
+> > > >  #include 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
