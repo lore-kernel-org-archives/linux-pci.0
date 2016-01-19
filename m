@@ -1,84 +1,85 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Tue, 26 Jan 2016 14:50:05 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
-Cc: linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-ia64@vger.kernel.org, linux-metag@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	linux-sh@vger.kernel.org, linux-arch@vger.kernel.org,
-	Will.Deacon@arm.com, catalin.marinas@arm.com,
-	grant.likely@linaro.org, leif.lindholm@linaro.org,
-	rfranz@cavium.com, ard.biesheuvel@linaro.org, msalter@redhat.com,
-	robh+dt@kernel.org, steve.capper@linaro.org, hanjun.guo@linaro.org,
-	al.stone@linaro.org, arnd@arndb.de, pawel.moll@arm.com,
-	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
-	galak@codeaurora.org, rjw@rjwysocki.net, lenb@kernel.org,
-	marc.zyngier@arm.com, lorenzo.pieralisi@arm.com,
-	bhelgaas@google.com, tony.luck@intel.com, fenghua.yu@intel.com,
-	james.hogan@imgtec.com, benh@kernel.crashing.org,
-	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	x86@kernel.org, jonathan@jonmasters.org, rrichter@cavium.com,
-	Prasun.Kapoor@caviumnetworks.com, gpkulkarni@gmail.com
-Subject: Re: [PATCH v9 5/6] PCI: generic: Make pci-host-generic driver numa
- aware
-Message-ID: <20160126205005.GD17600@localhost>
-References: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
- <1453134965-6125-6-git-send-email-gkulkarni@caviumnetworks.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V3 20/21] pci, acpi: Match PCI config space accessors
+ against platfrom specific quirks.
+To: "liudongdong (C)" <liudongdong3@huawei.com>,
+	Mark Salter <msalter@redhat.com>, bhelgaas@google.com,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+ <1452691267-32240-21-git-send-email-tn@semihalf.com>
+ <1452785776.28109.22.camel@redhat.com> <569CDD8F.807@semihalf.com>
+ <569D9634.3040304@huawei.com>
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, jchandra@broadcom.com,
+	jcm@redhat.com, Zhou Wang <wangzhou1@hisilicon.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <569DEBE9.5090909@semihalf.com>
+Date: Tue, 19 Jan 2016 08:55:21 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1453134965-6125-6-git-send-email-gkulkarni@caviumnetworks.com>
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <569D9634.3040304@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 18, 2016 at 10:06:04PM +0530, Ganapatrao Kulkarni wrote:
-> update numa_node of device associated with pci bus.
-> moved down devm_kzalloc to allocate from node memory.
-> 
-> Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
-> ---
->  drivers/pci/host/pci-host-generic.c | 9 ++++++---
->  1 file changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index 5434c90..0e1ce06 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -215,11 +215,9 @@ static int gen_pci_probe(struct platform_device *pdev)
->  	const struct of_device_id *of_id;
->  	struct device *dev = &pdev->dev;
->  	struct device_node *np = dev->of_node;
-> -	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-> +	struct gen_pci *pci;
->  	struct pci_bus *bus, *child;
->  
-> -	if (!pci)
-> -		return -ENOMEM;
->  
->  	type = of_get_property(np, "device_type", NULL);
->  	if (!type || strcmp(type, "pci")) {
-> @@ -230,6 +228,11 @@ static int gen_pci_probe(struct platform_device *pdev)
->  	of_pci_check_probe_only();
->  
->  	of_id = of_match_node(gen_pci_of_match, np);
-> +	set_dev_node(dev, of_node_to_nid(np));
+On 19.01.2016 02:49, liudongdong (C) wrote:
+> Hi Tomasz, Mark
+>
+> 在 2016/1/18 20:41, Tomasz Nowicki 写道:
+>> On 14.01.2016 16:36, Mark Salter wrote:
+>>>> +extern struct pci_mcfg_fixup __start_acpi_mcfg_fixups[];
+>>>> >+extern struct pci_mcfg_fixup __end_acpi_mcfg_fixups[];
+>>>> >+
+>>>> >+static struct pci_ops *pci_mcfg_check_quirks(struct acpi_pci_root
+>>>> *root)
+>>>> >+{
+>>>> >+    struct pci_mcfg_fixup *f;
+>>>> >+    int bus_num = root->secondary.start;
+>>>> >+    int domain = root->segment;
+>>>> >+
+>>>> >+    /*
+>>>> >+     * First match against PCI topology <domain:bus> then use DMI or
+>>>> >+     * custom match handler.
+>>>> >+     */
+>>>> >+    for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups;
+>>>> f++) {
+>>>> >+        if ((f->domain == domain || f->domain ==
+>>>> PCI_MCFG_DOMAIN_ANY) &&
+>>>> >+            (f->bus_num == bus_num || f->bus_num ==
+>>>> PCI_MCFG_BUS_ANY) &&
+>>>> >+            (f->system ? dmi_check_system(f->system) : 0 ||
+>>>> >+             f->match ? f->match(f, root) : 0))
+>>>> >+            return f->ops;
+>>> I think this would be better as:
+>>>
+>>>             (f->system ? dmi_check_system(f->system) : 1 &&
+>>>              f->match ? f->match(f, root) : 1))
+>>>             return f->ops;
+>>>
+>>> Otherwise, one has to call dmi_check_system() from f->match() if
+>>> access to root is needed.
+>>
+>
+> Non-DMI, we need not to call dmi_check_system() from f->match(),
+> we can use _HID to decide to hook the pci_ops or not.
 
-I like the idea of this patch, but why do we need to call
-set_dev_node() here in driver code?  Shouldn't that be done by the
-OF/platform device infrastructure so that all drivers for platform devices
-get this benefit?
+Sorry, but I dont understand your point. Can you elaborate?
 
-> +	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-> +	if (!pci)
-> +		return -ENOMEM;
-> +
->  	pci->cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
->  	pci->host.dev.parent = dev;
->  	INIT_LIST_HEAD(&pci->host.windows);
-> -- 
-> 1.8.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-arch" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+With Mark modification, you can use the following cases to identify 
+platform:
+1. DMI only
+2. f->match() only (_HID can be used there)
+3. DMI and f->match()
+
+DMI used to be very convenient way to recognise platform, sometimes it 
+is not enough, hence f->match() alternative.
+
+Tomasz
+
+
