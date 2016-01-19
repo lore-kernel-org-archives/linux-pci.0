@@ -1,73 +1,113 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-ia64@vger.kernel.org>,
-	<linux-metag@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-s390@vger.kernel.org>, <linux-sh@vger.kernel.org>,
-	<linux-arch@vger.kernel.org>, <Will.Deacon@arm.com>,
-	<catalin.marinas@arm.com>, <grant.likely@linaro.org>,
-	<leif.lindholm@linaro.org>, <rfranz@cavium.com>,
-	<ard.biesheuvel@linaro.org>, <msalter@redhat.com>,
-	<robh+dt@kernel.org>, <steve.capper@linaro.org>,
-	<hanjun.guo@linaro.org>, <al.stone@linaro.org>, <arnd@arndb.de>,
-	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<rjw@rjwysocki.net>, <lenb@kernel.org>, <marc.zyngier@arm.com>,
-	<lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-	<tony.luck@intel.com>, <fenghua.yu@intel.com>,
-	<james.hogan@imgtec.com>, <benh@kernel.crashing.org>,
-	<tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
-	<x86@kernel.org>, <jonathan@jonmasters.org>, <rrichter@cavium.com>,
-	<Prasun.Kapoor@caviumnetworks.com>
-CC: <gpkulkarni@gmail.com>
-Subject: [PATCH v9 5/6] PCI: generic: Make pci-host-generic driver numa aware
-Date: Mon, 18 Jan 2016 22:06:04 +0530
-Message-ID: <1453134965-6125-6-git-send-email-gkulkarni@caviumnetworks.com>
-In-Reply-To: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
-References: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V3 20/21] pci, acpi: Match PCI config space accessors
+ against platfrom specific quirks.
+To: Tomasz Nowicki <tn@semihalf.com>, Mark Salter <msalter@redhat.com>,
+	<bhelgaas@google.com>, <arnd@arndb.de>, <will.deacon@arm.com>,
+	<catalin.marinas@arm.com>, <rjw@rjwysocki.net>,
+	<hanjun.guo@linaro.org>, <Lorenzo.Pieralisi@arm.com>,
+	<okaya@codeaurora.org>, <jiang.liu@linux.intel.com>,
+	<Stefano.Stabellini@eu.citrix.com>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+ <1452691267-32240-21-git-send-email-tn@semihalf.com>
+ <1452785776.28109.22.camel@redhat.com> <569CDD8F.807@semihalf.com>
+CC: <robert.richter@caviumnetworks.com>, <mw@semihalf.com>,
+	<Liviu.Dudau@arm.com>, <ddaney@caviumnetworks.com>,
+	<tglx@linutronix.de>, <wangyijing@huawei.com>,
+	<Suravee.Suthikulpanit@amd.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linaro-acpi@lists.linaro.org>, <jchandra@broadcom.com>,
+	<jcm@redhat.com>, Zhou Wang <wangzhou1@hisilicon.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>
+From: "liudongdong (C)" <liudongdong3@huawei.com>
+Message-ID: <569D9634.3040304@huawei.com>
+Date: Tue, 19 Jan 2016 09:49:40 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <569CDD8F.807@semihalf.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-update numa_node of device associated with pci bus.
-moved down devm_kzalloc to allocate from node memory.
+Hi Tomasz, Mark
 
-Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
----
- drivers/pci/host/pci-host-generic.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+在 2016/1/18 20:41, Tomasz Nowicki 写道:
+> On 14.01.2016 16:36, Mark Salter wrote:
+>>> +extern struct pci_mcfg_fixup __start_acpi_mcfg_fixups[];
+>>> >+extern struct pci_mcfg_fixup __end_acpi_mcfg_fixups[];
+>>> >+
+>>> >+static struct pci_ops *pci_mcfg_check_quirks(struct acpi_pci_root *root)
+>>> >+{
+>>> >+    struct pci_mcfg_fixup *f;
+>>> >+    int bus_num = root->secondary.start;
+>>> >+    int domain = root->segment;
+>>> >+
+>>> >+    /*
+>>> >+     * First match against PCI topology <domain:bus> then use DMI or
+>>> >+     * custom match handler.
+>>> >+     */
+>>> >+    for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups; f++) {
+>>> >+        if ((f->domain == domain || f->domain == PCI_MCFG_DOMAIN_ANY) &&
+>>> >+            (f->bus_num == bus_num || f->bus_num == PCI_MCFG_BUS_ANY) &&
+>>> >+            (f->system ? dmi_check_system(f->system) : 0 ||
+>>> >+             f->match ? f->match(f, root) : 0))
+>>> >+            return f->ops;
+>> I think this would be better as:
+>>
+>>             (f->system ? dmi_check_system(f->system) : 1 &&
+>>              f->match ? f->match(f, root) : 1))
+>>             return f->ops;
+>>
+>> Otherwise, one has to call dmi_check_system() from f->match() if
+>> access to root is needed.
+>
 
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 5434c90..0e1ce06 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -215,11 +215,9 @@ static int gen_pci_probe(struct platform_device *pdev)
- 	const struct of_device_id *of_id;
- 	struct device *dev = &pdev->dev;
- 	struct device_node *np = dev->of_node;
--	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-+	struct gen_pci *pci;
- 	struct pci_bus *bus, *child;
- 
--	if (!pci)
--		return -ENOMEM;
- 
- 	type = of_get_property(np, "device_type", NULL);
- 	if (!type || strcmp(type, "pci")) {
-@@ -230,6 +228,11 @@ static int gen_pci_probe(struct platform_device *pdev)
- 	of_pci_check_probe_only();
- 
- 	of_id = of_match_node(gen_pci_of_match, np);
-+	set_dev_node(dev, of_node_to_nid(np));
-+	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-+	if (!pci)
-+		return -ENOMEM;
-+
- 	pci->cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
- 	pci->host.dev.parent = dev;
- 	INIT_LIST_HEAD(&pci->host.windows);
--- 
-1.8.1.4
+Non-DMI, we need not to call dmi_check_system() from f->match(),
+we can use _HID to decide to hook the pci_ops or not.
+
+Device (PCI1)
+{
+         Name (_HID, "HISI0080") // PCI Express Root Bridge
+         Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
+	...
+}
+
+static const struct acpi_device_id hisi_pcie_ids[] = {
+     {"HISI0080", 0},
+     {"", 0},
+};
+
+static int hisi_pcie_match(struct pci_mcfg_fixup *fixup, struct acpi_pci_root *root)
+{
+     int ret;
+     struct acpi_device *device;
+
+     device = root->device;
+     ret = acpi_match_device_ids(device, hisi_pcie_ids);
+     if (ret)
+         return 0;
+     ......
+     return 1;
+}
+
+static struct pci_ops hisi_ecam_pci_ops = {
+     .map_bus = pci_mcfg_dev_base,
+     .read = hisi_pci_read,
+     .write = hisi_pci_write,
+};
+
+DECLARE_ACPI_MCFG_FIXUP(NULL, hisi_pcie_match, &hisi_ecam_pci_ops,
+     PCI_MCFG_DOMAIN_ANY, PCI_MCFG_BUS_ANY);
+
+Thanks
+Dongdong
+> Makes a lot of sense to me, I will modify as you suggested.
+>
+> Tomasz
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> .
+>
 
