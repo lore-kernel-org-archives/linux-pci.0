@@ -1,222 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49670 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755455AbcARQIA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 18 Jan 2016 11:08:00 -0500
-From: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, dwmw2@infradead.org, jroedel@suse.de,
-	jacek.lawrynowicz@intel.com
-Subject: [PATCH] pci: Add support for multiple DMA aliases
-Date: Mon, 18 Jan 2016 17:07:47 +0100
-Message-Id: <1453133267-79756-1-git-send-email-jacek.lawrynowicz@intel.com>
-In-Reply-To: <1453118346-76897-1-git-send-email-jacek.lawrynowicz@intel.com>
-References: <1453118346-76897-1-git-send-email-jacek.lawrynowicz@intel.com>
+Received: from out-mta23.ai270.net ([94.126.44.34]:51713 "EHLO
+	out-mta22.ai270.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932593AbcASKQV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2016 05:16:21 -0500
+Subject: Re: Hint HB6 - kernel doesn't see chips behind it.
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <5698191B.1070904@keynet-technology.com>
+ <20160115172640.GC28453@localhost> <569CFB5B.7050903@keynet-technology.com>
+ <20160119033839.GA3339@localhost>
+Cc: linux-pci@vger.kernel.org
+From: Richard F <lists@keynet-technology.com>
+Message-ID: <569E0CEF.6040801@keynet-technology.com>
+Date: Tue, 19 Jan 2016 10:16:15 +0000
+MIME-Version: 1.0
+In-Reply-To: <20160119033839.GA3339@localhost>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch solves IOMMU support issues with PCIe non-transparent bridges
-that use Requester ID look-up tables (LUT), e.g. PEX8733. Before exiting
-the bridge, packet's RID is rewritten according to LUT programmed by
-a driver. Modified packets are then passed to a destination bus and
-processed upstream. The problem is that such packets seem to come from
-non-existent nodes that are hidden behind NTB and are not discoverable
-by a destination node, so IOMMU discards them. Adding DMA alias for a
-given LUT entry allows IOMMU to create a proper mapping that enables
-inter-node communication.
+I'll see what I can do to capture the 4.4 crash, and post.
+It was quite early in the boot cycle as I recall.
 
-The current DMA alias implementation supports only single alias, so it's
-not possible to connect more than two nodes when IOMMU is enabled. This
-implementation enables all possible aliases on a given bus (256) that
-are stored in a bitset. Alias devfn is directly translated to a bit
-number. The bitset is not allocated for devices that have no need for
-DMA aliases.
+thanks
+Richard
 
-More details can be found in following article:
-http://www.plxtech.com/files/pdf/technical/expresslane/RTC_Enabling%20MulitHostSystemDesigns.pdf
-
-Signed-off-by: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-Acked-by: David Woodhouse <David.Woodhouse@intel.com>
-Acked-by: Joerg Roedel <jroedel@suse.de>
----
- drivers/iommu/iommu.c |  8 ++++----
- drivers/pci/pci.c     | 19 +++++++++++++++++++
- drivers/pci/probe.c   |  1 +
- drivers/pci/quirks.c  | 15 ++++++---------
- drivers/pci/search.c  | 14 +++++++++-----
- include/linux/pci.h   | 15 ++++++++-------
- 6 files changed, 47 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index abae363..98ae7ff 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -686,10 +686,10 @@ static struct iommu_group *get_pci_alias_group(struct pci_dev *pdev,
- 			continue;
- 
- 		/* We alias them or they alias us */
--		if (((pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
--		     pdev->dma_alias_devfn == tmp->devfn) ||
--		    ((tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
--		     tmp->dma_alias_devfn == pdev->devfn)) {
-+		if ((pdev->dma_alias_mask &&
-+		     test_bit(tmp->devfn, pdev->dma_alias_mask)) ||
-+		    ((tmp->dma_alias_mask &&
-+		     test_bit(pdev->devfn, tmp->dma_alias_mask)))) {
- 
- 			group = get_pci_alias_group(tmp, devfns);
- 			if (group) {
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 49e3715..5b27d65 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4568,6 +4568,25 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
- 	return 0;
- }
- 
-+/**
-+ * pci_add_dma_alias - Allows to add multiple devfn aliases for given device
-+ * @dev: the PCI device for which alias is added
-+ * @devfn: alias slot and function
-+ *
-+ * This helper encodes 8-bit devfn as bit number in dma_alias_mask
-+ */
-+void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
-+{
-+	if (!dev->dma_alias_mask) {
-+		dev->dma_alias_mask = kcalloc(BITS_TO_LONGS(U8_MAX),
-+					      sizeof(long), GFP_KERNEL);
-+		dev_warn(&dev->dev, "Unable to allocate DMA alias mask.\n");
-+	}
-+	if (dev->dma_alias_mask)
-+		set_bit(devfn, dev->dma_alias_mask);
-+}
-+EXPORT_SYMBOL_GPL(pci_add_dma_alias);
-+
- bool pci_device_is_present(struct pci_dev *pdev)
- {
- 	u32 v;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 32b9f1b..5da4dd3 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1501,6 +1501,7 @@ static void pci_release_dev(struct device *dev)
- 	pcibios_release_device(pci_dev);
- 	pci_bus_put(pci_dev->bus);
- 	kfree(pci_dev->driver_override);
-+	kfree(pci_dev->dma_alias_mask);
- 	kfree(pci_dev);
- }
- 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 83e93d7..3ed1f9a 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3579,8 +3579,7 @@ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- static void quirk_dma_func0_alias(struct pci_dev *dev)
- {
- 	if (PCI_FUNC(dev->devfn) != 0) {
--		dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 0);
--		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-+		pci_add_dma_alias(dev, PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
- 	}
- }
- 
-@@ -3595,8 +3594,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe476, quirk_dma_func0_alias);
- static void quirk_dma_func1_alias(struct pci_dev *dev)
- {
- 	if (PCI_FUNC(dev->devfn) != 1) {
--		dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 1);
--		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-+		pci_add_dma_alias(dev, PCI_DEVFN(PCI_SLOT(dev->devfn), 1));
- 	}
- }
- 
-@@ -3660,11 +3658,10 @@ static void quirk_fixed_dma_alias(struct pci_dev *dev)
- 
- 	id = pci_match_id(fixed_dma_alias_tbl, dev);
- 	if (id) {
--		dev->dma_alias_devfn = id->driver_data;
--		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
--		dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
--			 PCI_SLOT(dev->dma_alias_devfn),
--			 PCI_FUNC(dev->dma_alias_devfn));
-+		pci_add_dma_alias(dev, id->driver_data);
-+		dev_info(&dev->dev, "Enabling fixed DMA alias to %02lx.%ld\n",
-+			 PCI_SLOT(id->driver_data),
-+			 PCI_FUNC(id->driver_data));
- 	}
- }
- 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index a20ce7d..33e0f03 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -40,11 +40,15 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- 	 * If the device is broken and uses an alias requester ID for
- 	 * DMA, iterate over that too.
- 	 */
--	if (unlikely(pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN)) {
--		ret = fn(pdev, PCI_DEVID(pdev->bus->number,
--					 pdev->dma_alias_devfn), data);
--		if (ret)
--			return ret;
-+	if (unlikely(pdev->dma_alias_mask)) {
-+		u8 devfn;
-+
-+		for_each_set_bit(devfn, pdev->dma_alias_mask, U8_MAX) {
-+			ret = fn(pdev, PCI_DEVID(pdev->bus->number, devfn),
-+				 data);
-+			if (ret)
-+				return ret;
-+		}
- 	}
- 
- 	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index f9f79ad..6200175 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -172,16 +172,14 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) (1 << 2),
- 	/* Flag for quirk use to store if quirk-specific ACS is enabled */
- 	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) (1 << 3),
--	/* Flag to indicate the device uses dma_alias_devfn */
--	PCI_DEV_FLAGS_DMA_ALIAS_DEVFN = (__force pci_dev_flags_t) (1 << 4),
- 	/* Use a PCIe-to-PCI bridge alias even if !pci_is_pcie */
--	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 5),
-+	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 4),
- 	/* Do not use bus resets for device */
--	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 6),
-+	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 5),
- 	/* Do not use PM reset even if device advertises NoSoftRst- */
--	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
-+	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 6),
- 	/* Get VPD from function 0 VPD */
--	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
-+	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 7),
- };
- 
- enum pci_irq_reroute_variant {
-@@ -279,7 +277,7 @@ struct pci_dev {
- 	u8		rom_base_reg;	/* which config register controls the ROM */
- 	u8		pin;		/* which interrupt pin this device uses */
- 	u16		pcie_flags_reg;	/* cached PCIe Capabilities Register */
--	u8		dma_alias_devfn;/* devfn of DMA alias, if any */
-+	unsigned long	*dma_alias_mask;/* mask of enabled devfn aliases */
- 
- 	struct pci_driver *driver;	/* which driver has allocated this device */
- 	u64		dma_mask;	/* Mask of the bits of bus address this
-@@ -1229,6 +1227,9 @@ resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
- 
- int pci_set_vga_state(struct pci_dev *pdev, bool decode,
- 		      unsigned int command_bits, u32 flags);
-+
-+void pci_add_dma_alias(struct pci_dev *dev, u8 devfn);
-+
- /* kmem_cache style wrapper around pci_alloc_consistent() */
- 
- #include <linux/pci-dma.h>
--- 
-2.1.4
+On 19/01/2016 03:38, Bjorn Helgaas wrote:
+> On Mon, Jan 18, 2016 at 02:48:59PM +0000, Richard F wrote:
+>> I posted a DMESG with 4.3.3 to Bugzilla now.
+>> 4.4.0 crashed on boot, not sure why yet.
+> 
+> Thanks for all the data you collected!  I haven't had a chance to look
+> at them yet, but maybe others will take a look also.
+> 
+> Crashing on boot is a much more serious problem than failure to find a
+> card.  Any information you can collect about the v4.4.0 problem would
+> be extremely useful.  A serial console log would be ideal, but even a
+> photo or video of the boot might be helpful.  Boot with
+> "ignore_loglevel" to make sure we see all the messages.
+> 
+> Bjorn
+> 
+>> On 15/01/2016 17:26, Bjorn Helgaas wrote:
+>>> Hi Richard,
+>>>
+>>> On Thu, Jan 14, 2016 at 09:54:35PM +0000, Richard F wrote:
+>>>> I moved a Kodicom card (http://linuxtv.org/wiki/index.php/Kodicom_4400R)
+>>>> from an older machine to a new with a PCIe bridge.  Bttv modprobe can no
+>>>> longer find the BT878 chips behind the PCI bridge, though the bridge is
+>>>> found.
+>>>>
+>>>> The bridge is a PCI6140 AKA "Hint HB6".
+>>>> I noticed a PCI quirk for it, tried manually adding the IO/memory spaces
+>>>> that were originally logged, but doesn't help.
+>>>>
+>>>> This machine runs kernel 3.12.52 (x64), but it also fails on 3.0.76.
+>>>> The BT878 chips were recognised on the older machine also running 3.0.76
+>>>> but with a vanilla PCI bus.
+>>>
+>>> Thanks for your report.  I opened this bug report:
+>>>
+>>>   https://bugzilla.kernel.org/show_bug.cgi?id=110851
+>>>
+>>> Can you please attach the complete dmesg logs from the old machine
+>>> running 3.0.76 and the new machine running 3.0.76 to that bugzilla?
+>>> Also please attach the complete "lspci -vvv" output for all the
+>>> devices in the new machine.
+>>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
