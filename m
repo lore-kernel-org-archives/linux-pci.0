@@ -1,98 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0095.outbound.protection.outlook.com ([207.46.100.95]:49632
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932079AbcANSyz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Jan 2016 13:54:55 -0500
-Message-ID: <5697EEF8.30406@caviumnetworks.com>
-Date: Thu, 14 Jan 2016 10:54:48 -0800
-From: David Daney <ddaney@caviumnetworks.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Tue, 19 Jan 2016 09:41:50 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ganapatrao Kulkarni <gpkulkarni@gmail.com>
+Cc: David Daney <ddaney.cavm@gmail.com>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-pci@vger.kernel.org, linux-ia64@vger.kernel.org,
+	linux-metag@vger.kernel.org,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	linux-s390@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-arch@vger.kernel.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Leif Lindholm <leif.lindholm@linaro.org>, rfranz@cavium.com,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Steve Capper <steve.capper@linaro.org>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Al Stone <al.stone@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>, tony.luck@intel.com,
+	fenghua.yu@intel.com, james.hogan@imgtec.com,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"tglx@linutronix.de" <tglx@linutronix.de>, mingo@redhat.com,
+	hpa@zytor.com, x86@kernel.org,
+	Jon Masters <jonathan@jonmasters.org>,
+	Robert Richter <rrichter@cavium.com>,
+	Prasun Kapoor <Prasun.Kapoor@caviumnetworks.com>
+Subject: Re: [PATCH v9 5/6] PCI: generic: Make pci-host-generic driver numa
+ aware
+Message-ID: <20160119094150.GA4991@red-moon>
+References: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
+ <1453134965-6125-6-git-send-email-gkulkarni@caviumnetworks.com>
+ <569D23AF.9050503@gmail.com>
+ <CAFpQJXXESn1EA5kotVOH2oLbRUSpOLf6+MeWG1pY_GhUP+4vVQ@mail.gmail.com>
 MIME-Version: 1.0
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<sean.stalley@intel.com>, <david.daney@cavium.com>
-Subject: Re: [RFC PATCH] pci: Identify Enhanced Allocation (EA) BAR Equivalent
- resources
-References: <20160114172645.23429.9938.stgit@gimli.home>
-In-Reply-To: <20160114172645.23429.9938.stgit@gimli.home>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAFpQJXXESn1EA5kotVOH2oLbRUSpOLf6+MeWG1pY_GhUP+4vVQ@mail.gmail.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/14/2016 09:26 AM, Alex Williamson wrote:
-> We've done a pretty good job of abstracting EA from drivers, but there
-> are some properties of BAR Equivalent resources that don't really jive
-> with traditional PCI BARs.  In particular, natural alignment is only
-> encouraged, not required.
->
-> Why does this matter?  There are drivers like vfio-pci that will
-> happily gobble up the EA abstraction that's been implemented and
-> expose a device using EA to userspace as if those resources are
-> traditional BARs.  Pretty cool.  The vfio API is bus agnostic, so it
-> doesn't care about alignment.  The problem comes with PCI config space
-> emulation where we don't let userspace manipulate the BAR value, but
-> we do emulate BAR sizing.  The abstraction kind of falls apart if
-> userspace gets garbage when they try to size what appears to be a
-> traditional BAR, but is actually a BAR equivalent.
->
-> We could simply round up the size in vfio to make it naturally
-> aligned, but then we're imposing artificial sizes to the user and we
-> have the discontinuity that BAR size emulation and vfio region size
-> reporting don't agree on the size.  I think what we want to do is
-> expose EA to the user, reporting traditional BARs with BEIs as
-> zero-sized and providing additional regions for the user to access
-> each EA region, whether it has a BEI or not.
->
-> To facilitate that, a flag indicating whether a PCI resource is a
-> traditional BAR or BAR equivalent seems much nicer than attempting
-> to size the BAR ourselves or deducing it through the EA capability.
->
-> Thoughts?
+On Tue, Jan 19, 2016 at 11:28:56AM +0530, Ganapatrao Kulkarni wrote:
+> On Mon, Jan 18, 2016 at 11:11 PM, David Daney <ddaney.cavm@gmail.com> wrote:
+> > On 01/18/2016 08:36 AM, Ganapatrao Kulkarni wrote:
+> >>
+> >> update numa_node of device associated with pci bus.
+> >> moved down devm_kzalloc to allocate from node memory.
+> >>
+> >> Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
+> >> ---
+> >>   drivers/pci/host/pci-host-generic.c | 9 ++++++---
+> >>   1 file changed, 6 insertions(+), 3 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/host/pci-host-generic.c
+> >> b/drivers/pci/host/pci-host-generic.c
+> >> index 5434c90..0e1ce06 100644
+> >> --- a/drivers/pci/host/pci-host-generic.c
+> >> +++ b/drivers/pci/host/pci-host-generic.c
+> >> @@ -215,11 +215,9 @@ static int gen_pci_probe(struct platform_device
+> >> *pdev)
+> >>         const struct of_device_id *of_id;
+> >>         struct device *dev = &pdev->dev;
+> >>         struct device_node *np = dev->of_node;
+> >> -       struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> >> +       struct gen_pci *pci;
+> >>         struct pci_bus *bus, *child;
+> >>
+> >> -       if (!pci)
+> >> -               return -ENOMEM;
+> >>
+> >>         type = of_get_property(np, "device_type", NULL);
+> >>         if (!type || strcmp(type, "pci")) {
+> >> @@ -230,6 +228,11 @@ static int gen_pci_probe(struct platform_device
+> >> *pdev)
+> >>         of_pci_check_probe_only();
+> >>
+> >>         of_id = of_match_node(gen_pci_of_match, np);
+> >> +       set_dev_node(dev, of_node_to_nid(np));
+> >
+> >
+> > This shouldn't be done in individual platform_drivers, but instead in the
+> > device probing code.
+> >
+> > There is code that does this in drivers/of/platform.c and
+> > drivers/of/device.c  Is that not being called for the pci-host-gweneric
+> > devices?  If not, we should figure out why, and perhaps attempt to fix it
+> > rather than doing it here.
+> is it more appropriate to call of_platform_device_create ?
 
-Is the flag exposed to userspace in any way?
+That's already done to create the platform device by OF core when
+populating devices from DT, what David suggested is that you should
+add set_dev_node() to core OF code instead of adding it specifically
+to the PCI host generic code.
 
-I haven't dug into what uses the flags.
-
-One problem we have seen is with the lspci utility which cannot 
-distinguish between SROIV BARs and EA provisioned BARs.
-
-Would, or could, this be used there?
-
-David Daney
-
-
->
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
->   drivers/pci/pci.c      |    2 +-
->   include/linux/ioport.h |    2 ++
->   2 files changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 314db8c..174c734 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2229,7 +2229,7 @@ void pci_pm_init(struct pci_dev *dev)
->
->   static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
->   {
-> -	unsigned long flags = IORESOURCE_PCI_FIXED;
-> +	unsigned long flags = IORESOURCE_PCI_FIXED | IORESOURCE_PCI_EA_BEI;
->
->   	switch (prop) {
->   	case PCI_EA_P_MEM:
-> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> index 24bea08..5acc194 100644
-> --- a/include/linux/ioport.h
-> +++ b/include/linux/ioport.h
-> @@ -105,6 +105,8 @@ struct resource {
->   /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
->   #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move resource */
->
-> +/* PCI Enhanced Allocation defined BAR equivalent resource */
-> +#define IORESOURCE_PCI_EA_BEI		(1<<5)
->
->   /* helpers to define resources */
->   #define DEFINE_RES_NAMED(_start, _size, _name, _flags)			\
->
-
+Lorenzo
