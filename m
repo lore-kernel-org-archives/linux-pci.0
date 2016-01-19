@@ -1,57 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 6 Jan 2016 09:35:01 +0100
-From: Wolfram Sang <wsa@the-dreams.de>
-To: Phil Edworthy <phil.edworthy@renesas.com>
-Cc: Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-sh@vger.kernel.org
-Subject: Re: [PATCH v2 3/4] PCI: rcar: Add runtime PM support to pcie-rcar
-Message-ID: <20160106083500.GB1525@katana>
-References: <1451998831-27705-1-git-send-email-phil.edworthy@renesas.com>
- <1451998831-27705-4-git-send-email-phil.edworthy@renesas.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60033 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755649AbcASDb6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 Jan 2016 22:31:58 -0500
+Date: Mon, 18 Jan 2016 21:31:54 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bogicevic Sasa <brutallesale@gmail.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers:pci Add pcie/Kconfig to pci/Kconfig
+Message-ID: <20160119033153.GE14080@localhost>
+References: <1452608545-32242-1-git-send-email-brutallesale@gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="oC1+HKm2/end4ao3"
-In-Reply-To: <1451998831-27705-4-git-send-email-phil.edworthy@renesas.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1452608545-32242-1-git-send-email-brutallesale@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Bogicevic,
 
---oC1+HKm2/end4ao3
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-> +err_pm_put:
-> +	pm_runtime_put(pcie->dev);
+On Tue, Jan 12, 2016 at 06:22:25AM -0800, Bogicevic Sasa wrote:
+> Architectures currently have to include both
+> drivers/pci/Kconfig and drivers/pci/pcie/Kconfig.
+> They should include only drivers/pci/Kconfig, and
+> that should handle PCIe as well.
+> 
+> Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
+> ---
+>  drivers/pci/Kconfig | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index 73de4ef..005dd7d 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -119,3 +119,5 @@ config PCI_LABEL
+>  	select NLS
+>  
+>  source "drivers/pci/host/Kconfig"
 > +
-> +err_pm_disable:
-> +	pm_runtime_disable(pcie->dev);
+> +source "drivers/pci/pcie/Kconfig"
 
-What about put/disable in the remove part?
+This project is something I'd like to get done, but it requires a
+little more work.  If it were this simple, I would have done it long
+ago :)
 
+For one thing, we need to update all the Kconfig files that already
+include drivers/pci/pcie/Kconfig at the same time.  On x86,
+arch/x86/Kconfig already includes both:
 
---oC1+HKm2/end4ao3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+  source "drivers/pci/pcie/Kconfig"
+  source "drivers/pci/Kconfig"
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+With your patch applied, I see these new warnings:
 
-iQIcBAEBAgAGBQJWjNG0AAoJEBQN5MwUoCm2uAcP/39wqME9jZZXyomPfL5dcUec
-W48LrlvV8jgjVSAFFAychVGSZZOnKWEaNHuoTbD6DhcA3Z/hwxRQP8Y9do8mHy0p
-Fo9vucPVNCCs1bhdMzBuq1z541YUkMsziadauT72daWXBscyh0zbryWm1QCYI7/c
-txlUeyHM1mXwB2sFiM46m4DMl4CHlDHjKj1pgvZunlaJKgwS7aod5rCO+eEPg/08
-jVRq3JqNKcn5bO8Ff1eHef7iBryiF0oI1Q0XYuuKt9u9uqW2vNsQNkLiNkwcKcpB
-ZjxZzH6XYEfCZi3GlGTIz11bGKYUOy3Ib0NID5XrlqsIWXf1NTq910N4ZgVyS9SY
-A9EuoCsOkf3L9XHyjRwz7WWhRXpQtG5ZRHFySwLoC6czx95vVh8swda5z+KqkDve
-5nYU31Gknjqp5LOeu1qLGBqlsv0O7Q3v0l6ENB4Fe2JGMfi6Rksy33RrPB1LpyR8
-DvfvxL8KM9R+e4aeGjrrBXCYrStxvbnpNaASuVo22OkJow3fGawVK6l6MTuThRoa
-SILvay4yB0U9/AEujxiO0gKzo01gsmeXk32QF02M77qKQ6YGUh/1z/Y69Pu1SCcE
-+UwB+d2P2jHWFW5nJAf8Ywxhh02hO9pCAmp9Z5wlsFQkyhu0vgQQ7gK871hbkt1T
-ikzcYDDwmiyJ20Ow/8qm
-=yYzp
------END PGP SIGNATURE-----
+  05:42:09 ~/linux (wip/bogicevic-kconfig)$ make menuconfig
+  ...
+  scripts/kconfig/mconf  Kconfig
+  drivers/pci/pcie/Kconfig:61:warning: choice value used outside its choice group
+  drivers/pci/pcie/Kconfig:67:warning: choice value used outside its choice group
+  drivers/pci/pcie/Kconfig:74:warning: choice value used outside its choice group
 
---oC1+HKm2/end4ao3--
+I see that you did verify that removing the source line from
+arch/x86/Kconfig does the right thing.  We need to put all the related
+changes in a single patch so it is self-contained.  The tree should be
+buildable and functional at every stage.
+
+Bjorn
