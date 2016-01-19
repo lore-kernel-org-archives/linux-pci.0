@@ -1,67 +1,90 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 7 Jan 2016 10:13:20 -0800
-From: Tony Lindgren <tony@atomide.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, linux-omap@vger.kernel.org,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, nsekhar@ti.com,
-	Richard Cochran <richardcochran@gmail.com>
-Subject: Re: [PATCH 0/2] DRA72/DRA74: Add 2 lane support
-Message-ID: <20160107181320.GO12777@atomide.com>
-References: <1452077393-25880-1-git-send-email-kishon@ti.com>
- <20160107174126.GB14105@localhost>
+Date: Tue, 19 Jan 2016 15:55:27 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Qipeng Zha <qipeng.zha@intel.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	bhelgaas@google.com, mika.westerberg@intel.com,
+	Qi Zheng <qi.zheng@intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH 2/2] PCI/PM: enable runtime PM support for Intel Broxton
+ platform.
+Message-ID: <20160119215527.GI14080@localhost>
+References: <1452868065-96999-1-git-send-email-qipeng.zha@intel.com>
+ <1452868065-96999-2-git-send-email-qipeng.zha@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160107174126.GB14105@localhost>
+In-Reply-To: <1452868065-96999-2-git-send-email-qipeng.zha@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-* Bjorn Helgaas <helgaas@kernel.org> [160107 09:42]:
-> [+cc Richard]
+[+cc Rafael]
+
+On Fri, Jan 15, 2016 at 10:27:45PM +0800, Qipeng Zha wrote:
+> The PCIe runtime PM is disabled by default, add special treatment
+> to allow runtime PM for Intel Broxton platform.
+
+Hmmm.  I assume this only applies to Broxton now, but will likely
+apply to future Intel platforms as well.  I really don't want to be
+adding quirks for every new Intel platform that comes along.
+
+> Signed-off-by: Qi Zheng <qi.zheng@intel.com>
+> Signed-off-by: Qipeng Zha <qipeng.zha@intel.com>
+> ---
+>  drivers/pci/quirks.c    | 13 +++++++++++++
+>  include/linux/pci_ids.h |  2 ++
+>  2 files changed, 15 insertions(+)
 > 
-> Hi Kishon,
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 7e32730..a745d06 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -25,6 +25,7 @@
+>  #include <linux/sched.h>
+>  #include <linux/ktime.h>
+>  #include <linux/mm.h>
+> +#include <linux/pm_runtime.h>
+>  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+>  #include "pci.h"
+>  
+> @@ -2989,6 +2990,18 @@ static void quirk_intel_ntb(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
+>  
+> +
+> +/*PCIe ports on Intel Broxton should support runtime PM*/
+
+Missing spaces at beginning and end of comment.
+
+> +static void quirk_pcie_enable_rtpm(struct pci_dev *dev)
+> +{
+> +	pm_runtime_put_noidle(&dev->dev);
+> +	pm_runtime_allow(&dev->dev);
+> +}
+> +DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_INTEL,
+> +	PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_0, quirk_pcie_enable_rtpm);
+> +DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_INTEL,
+> +	PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_1, quirk_pcie_enable_rtpm);
+> +
+>  static ktime_t fixup_debug_start(struct pci_dev *dev,
+>  				 void (*fn)(struct pci_dev *dev))
+>  {
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index d9ba49c..731f05f 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2596,6 +2596,8 @@
+>  #define PCI_DEVICE_ID_INTEL_82840_HB	0x1a21
+>  #define PCI_DEVICE_ID_INTEL_82845_HB	0x1a30
+>  #define PCI_DEVICE_ID_INTEL_IOAT	0x1a38
+> +#define PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_0		0x1ad6
+> +#define PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_1		0x1ad7
+>  #define PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MIN	0x1c41
+>  #define PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MAX	0x1c5f
+>  #define PCI_DEVICE_ID_INTEL_PATSBURG_LPC_0	0x1d40
+> -- 
+> 1.8.3.2
 > 
-> On Wed, Jan 06, 2016 at 04:19:51PM +0530, Kishon Vijay Abraham I wrote:
-> > Add driver modifications in pci-dra7xx to get x2 mode working in
-> > DRA72 and DRA74. Certain modifications is needed in PHY driver also
-> > which will be sent as a separate series.
-> > 
-> > Certain board modifications has to be done in order to test
-> > x2 mode in dra72-evm.
-> > 
-> > These patches were created on pci next.
-> > 
-> > Changes from RFC:
-> > *) .b1co_mode_sel_mask is now set with the correct value.
-> > *) cleanup the patch
-> > 
-> > Kishon Vijay Abraham I (2):
-> >   pci: host: pci-dra7xx: use "num-lanes" property to find phy count
-> >   pci: host: pci-dra7xx: Enable x2 mode support
-> > 
-> >  Documentation/devicetree/bindings/pci/ti-pci.txt |    8 +-
-> >  drivers/pci/host/pci-dra7xx.c                    |  104 +++++++++++++++++++---
-> >  2 files changed, 97 insertions(+), 15 deletions(-)
-> 
-> Apparently dra7xx in mainline doesn't work [1].  Until that's
-> resolved, I'm going to ignore dra7xx patches.
-
-Agreed. Guys, please do the development _and_ testing on the mainline
-kernel. We do have the mainline kernel usable for probably a few
-tens of omap SoC variants. If you have issues using dra7 with mainline,
-please fix those issues ASAP.
-
-Ideally of course please also use the device you're working on to
-send out the patches :)
-
-Regards,
-
-Tony
-
-> [1] http://lkml.kernel.org/r/20160106214518.GA6106@localhost.localdomain
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
