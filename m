@@ -1,57 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:45585 "EHLO mga04.intel.com"
+Received: from mga04.intel.com ([192.55.52.120]:11251 "EHLO mga04.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966830AbcAZRWN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Jan 2016 12:22:13 -0500
-From: "Lawrynowicz, Jacek" <jacek.lawrynowicz@intel.com>
-To: Alex Williamson <alex.williamson@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"dwmw2@infradead.org" <dwmw2@infradead.org>,
-	"jroedel@suse.de" <jroedel@suse.de>
-Subject: RE: [PATCH v2 2/2] pci: Add DMA alias quirk for mic_x200_dma
-Date: Tue, 26 Jan 2016 17:20:01 +0000
-Message-ID: <36D38C1F74839847A52A484C31F3E51A6213B660@irsmsx105.ger.corp.intel.com>
-References: <1453804310-12946-1-git-send-email-jacek.lawrynowicz@intel.com>
-	 <1453804310-12946-2-git-send-email-jacek.lawrynowicz@intel.com>
- <1453825703.26652.47.camel@redhat.com>
-In-Reply-To: <1453825703.26652.47.camel@redhat.com>
-Content-Type: text/plain; charset="utf-8"
+	id S933044AbcASWFL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Jan 2016 17:05:11 -0500
+Date: Tue, 19 Jan 2016 14:05:38 -0800
+From: "Veal, Bryan E." <bryan.e.veal@intel.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"Derrick, Jonathan" <jonathan.derrick@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Williams, Dan J" <dan.j.williams@intel.com>
+Subject: Re: [PATCHv8 0/5] Driver for new "VMD" device
+Message-ID: <20160119220538.GA23731@intel.com>
+Reply-To: bryan.e.veal@intel.com
+References: <1452629890-17542-1-git-send-email-keith.busch@intel.com>
+ <20160115181938.GA5296@localhost>
+ <8D943B239464E04C9184454D8B3F5CFF0ABF18EC@ORSMSX101.amr.corp.intel.com>
+ <20160115220631.GA14080@localhost>
+ <20160119153822.GA3979@localhost.localdomain>
+ <20160119160220.GA22059@infradead.org>
+ <20160119163635.GA4716@localhost.localdomain>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160119163635.GA4716@localhost.localdomain>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1wY2ktb3duZXJAdmdl
-ci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcGNpLQ0KPiBvd25lckB2Z2VyLmtlcm5lbC5vcmdd
-IE9uIEJlaGFsZiBPZiBBbGV4IFdpbGxpYW1zb24NCj4gU2VudDogVHVlc2RheSwgSmFudWFyeSAy
-NiwgMjAxNiA1OjI4IFBNDQo+IFRvOiBMYXdyeW5vd2ljeiwgSmFjZWsgPGphY2VrLmxhd3J5bm93
-aWN6QGludGVsLmNvbT47IGxpbnV4LQ0KPiBwY2lAdmdlci5rZXJuZWwub3JnDQo+IENjOiBiaGVs
-Z2Fhc0Bnb29nbGUuY29tOyBkd213MkBpbmZyYWRlYWQub3JnOyBqcm9lZGVsQHN1c2UuZGUNCj4g
-U3ViamVjdDogUmU6IFtQQVRDSCB2MiAyLzJdIHBjaTogQWRkIERNQSBhbGlhcyBxdWlyayBmb3Ig
-bWljX3gyMDBfZG1hDQo+IA0KPiBPbiBUdWUsIDIwMTYtMDEtMjYgYXQgMTE6MzEgKzAxMDAsIEph
-Y2VrIExhd3J5bm93aWN6IHdyb3RlOg0KPiA+IE1JQyB4MjAwIE5UQiBmb3J3YXJkcyBQQ0llIHRy
-YWZmaWMgdXNpbmcgbXVsdGlwbGUgYWxpZW4gUklELiBUaGV5IGhhdmUNCj4gPiB0byBiZSBhZGRl
-ZCBhcyBhbGlhc2VzIHRvIHRoZSBETUEgZGV2aWNlIGluIG9yZGVyIHRvIGFsbG93IGJ1ZmZlcg0K
-PiA+IGFjY2VzcyB3aGVuIElPTU1VIGlzIGVuYWJsZWQuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5
-OiBKYWNlayBMYXdyeW5vd2ljeiA8amFjZWsubGF3cnlub3dpY3pAaW50ZWwuY29tPg0KPiA+IC0t
-LQ0KPiA+IMKgZHJpdmVycy9wY2kvcXVpcmtzLmMgfCAxNSArKysrKysrKysrKysrKysNCj4gPiDC
-oDEgZmlsZSBjaGFuZ2VkLCAxNSBpbnNlcnRpb25zKCspDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEv
-ZHJpdmVycy9wY2kvcXVpcmtzLmMgYi9kcml2ZXJzL3BjaS9xdWlya3MuYyBpbmRleA0KPiA+IGIw
-OTQwNjEuLmJjMjNiYzggMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvcXVpcmtzLmMNCj4g
-PiArKysgYi9kcml2ZXJzL3BjaS9xdWlya3MuYw0KPiA+IEBAIC0zNzAzLDYgKzM3MDMsMjEgQEAg
-REVDTEFSRV9QQ0lfRklYVVBfSEVBREVSKDB4MTI4MywgMHg4ODkyLA0KPiA+IHF1aXJrX3VzZV9w
-Y2llX2JyaWRnZV9kbWFfYWxpYXMpOw0KPiA+IMKgREVDTEFSRV9QQ0lfRklYVVBfSEVBREVSKDB4
-ODA4NiwgMHgyNDRlLA0KPiA+IHF1aXJrX3VzZV9wY2llX2JyaWRnZV9kbWFfYWxpYXMpOw0KPiA+
-DQo+ID4gwqAvKg0KPiA+ICsgKiBNSUMgeDIwMCBOVEIgZm9yd2FyZHMgUENJZSB0cmFmZmljIHVz
-aW5nIG11bHRpcGxlIGFsaWVuIFJJRC4gVGhleQ0KPiA+ICtoYXZlIHRvDQo+ID4gKyAqIGJlIGFk
-ZGVkIGFzIGFsaWFzZXMgdG8gdGhlIERNQSBkZXZpY2UgaW4gb3JkZXIgdG8gYWxsb3cgYnVmZmVy
-DQo+ID4gK2FjY2Vzcw0KPiA+ICsgKiB3aGVuIElPTU1VIGlzIGVuYWJsZWQuDQo+ID4gKyAqLw0K
-PiA+ICtzdGF0aWMgdm9pZCBxdWlya19taWNfeDIwMF9kbWFfYWxpYXMoc3RydWN0IHBjaV9kZXYg
-KnBkZXYpIHsNCj4gPiArCWlmIChpb21tdV9wcmVzZW50KHBkZXYtPmRldi5idXMpKSB7DQo+IA0K
-PiBXaHkgZG8gd2UgbmVlZCB0aGlzIHRlc3Q/IMKgVGhlIGFsaWFzIHNpbXBseSBnb2VzIHVudXNl
-ZCB3aXRob3V0IGFuIElPTU1VLA0KPiByaWdodD8NCg0KUmlnaHQsIEkgd2FudGVkIHRvIGxpbWl0
-IHdoZW4gdGhlIHF1aXJrIGlzIGFwcGxpZWQgYnV0IGl0IHdvcmtzIHdpdGhvdXQgdGhlIGNoZWNr
-IGZvciBpb21tdS4NCkkgZ3Vlc3MgdGhhdCB0aGUgY29kZSB3aWxsIGJlIGEgYml0IHNpbXBsZXIg
-d2l0aG91dCB0aGlzIGNoZWNrLiBJIHdpbGwgcmVtb3ZlIGl0Lg0KDQotLQ0KSmFjZWsgTGF3cnlu
-b3dpY3oNCkludGVsIFRlY2hub2xvZ3kgUG9sYW5kIHNwLiB6IG8uby4NCktSUyAxMDE4ODIgLSB1
-bC4gU2xvd2Fja2llZ28gMTczLCA4MC0yOTggR2RhbnNrDQoNCg0KDQo=
+On Tue, Jan 19, 2016 at 04:36:36PM +0000, Keith Busch wrote:
+> On Tue, Jan 19, 2016 at 08:02:20AM -0800, Christoph Hellwig wrote:
+> > As this seems to require special drivers to bind to it, and Intel
+> > people refuse to even publicly tell what the code does I'd like
+> > to NAK this code until we get an explanation and use cases for it.
+> 
+> We haven't opened the h/w specification, but we've been pretty open with
+> what it provides, how the code works, and our intended use case. The
+> device provides additional pci domains for people who need more than
+> the 256 busses a single domain provides.
+> 
+> What information may I provide to satisfy your use case concerns? Are
+> you wanting to know what devices we have in mind that require additional
+> domains?
+
+VMD is simply a convenient way to create a new PCIe host bridge that
+happens to sit on the existing PCIe root bus. It changes how I/O is
+routed (i.e. BDF translation), but not its contents. We've actually gone
+through some effort in the code *avoid* special drivers by implementing
+the existing host bridge abstractions. The cases where existing drivers
+wouldn't work are due to limitations, not arbitrary filters. (For
+example, it doesn't know how to route legacy IO ports or INTx.)
