@@ -1,72 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44169 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751625AbcAEVmK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 5 Jan 2016 16:42:10 -0500
-Date: Tue, 5 Jan 2016 15:42:06 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Stanimir Varbanov <stanimir.varbanov@linaro.org>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Rob Herring <robh+dt@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Andersson <bjorn.andersson@sonymobile.com>
-Subject: Re: [PATCH v5 0/5] Qualcomm PCIe driver and designware fixes
-Message-ID: <20160105214206.GA23814@localhost>
-References: <1450442339-18765-1-git-send-email-stanimir.varbanov@linaro.org>
+Received: from v094114.home.net.pl ([79.96.170.134]:54775 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932252AbcASWJh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2016 17:09:37 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Qipeng Zha <qipeng.zha@intel.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	bhelgaas@google.com, mika.westerberg@intel.com,
+	Qi Zheng <qi.zheng@intel.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH 1/2] PCI/PM: Revert "PCI/PM: Drop unused runtime PM support code for PCIe ports"
+Date: Tue, 19 Jan 2016 23:10:20 +0100
+Message-ID: <41526334.QosPv6IFu0@vostro.rjw.lan>
+In-Reply-To: <20160119215234.GH14080@localhost>
+References: <1452868065-96999-1-git-send-email-qipeng.zha@intel.com> <20160119215234.GH14080@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1450442339-18765-1-git-send-email-stanimir.varbanov@linaro.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Dec 18, 2015 at 02:38:54PM +0200, Stanimir Varbanov wrote:
-> Hi,
+On Tuesday, January 19, 2016 03:52:34 PM Bjorn Helgaas wrote:
+> [+cc Rafael, author of fe9a743a2601]
 > 
-> I'm sending v5 with following changes:
-> - in 1/5 - replace wmb() call with PCIE_ATU_CR2 register read.
-> - in 3/5 - addressed comments from Born Helgaas about usage of a
-> standard PCI capabilities register names and rename link training
-> function to the way that other Designware based drivers use.
-> - in 5/5 - addressed a comment from Bjorn Andersson about regulator
-> label duplication.
+> On Fri, Jan 15, 2016 at 10:27:44PM +0800, Qipeng Zha wrote:
+> > This reverts commit fe9a743a2601 ("PCI/PM: Drop unused runtime
+> > PM support code for PCIe ports"). To support PCIe ports
+> > runtime PM for Intel Broxton platform.
 > 
-> Comments are welcome!
+> This changelog is not as useful as it could be.  It's true that this
+> reverts fe9a743a2601, but what's important is that this adds support
+> code for runtime PM of PCIe ports, so that should be mentioned first.
 > 
-> The previous v4 of the patch set can be found at [1].
-> 
-> regards,
-> Stan
-> 
-> [1] https://lkml.org/lkml/2015/12/3/370
-> 
-> Stanimir Varbanov (5):
->   PCI: designware: ensure ATU is enabled before IO/conf space accesses
->   DT: PCI: qcom: Document PCIe devicetree bindings
->   PCI: qcom: Add Qualcomm PCIe controller driver
->   ARM: dts: apq8064: add pcie devicetree node
->   ARM: dts: ifc6410: enable pcie dt node for this board
-> 
->  .../devicetree/bindings/pci/qcom,pcie.txt          |  233 ++++++++
->  MAINTAINERS                                        |    7 +
->  arch/arm/boot/dts/qcom-apq8064-ifc6410.dts         |   26 +
->  arch/arm/boot/dts/qcom-apq8064.dtsi                |   36 ++
->  drivers/pci/host/Kconfig                           |   10 +
->  drivers/pci/host/Makefile                          |    1 +
->  drivers/pci/host/pcie-designware.c                 |    7 +
->  drivers/pci/host/pcie-qcom.c                       |  617 ++++++++++++++++++++
->  8 files changed, 937 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/qcom,pcie.txt
->  create mode 100644 drivers/pci/host/pcie-qcom.c
+> The fe9a743a2601 changelog says "If we are to support runtime PM of
+> PCIe ports, it will have to be done in a different way most likely
+> anyway."  I don't know what Rafael had in mind there, but we certainly
+> need to ask him before adding it back the same way it was.
 
-Applied to pci/host-qcom for v4.5, with Pratyush's ack on the first patch.
 Thanks!
+
+The previous approach had a few problems that showed up in testing and
+that's why the code was first disabled and then removed from the kernel.
+
+We can't re-enable it or those problems will show up again.
+
+I have not looked at adding PCIe port runtime PM support in a cleaner
+way yet, but it is on my radar.
+
+Thanks,
+Rafael
+
