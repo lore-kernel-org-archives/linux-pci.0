@@ -1,90 +1,125 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 19 Jan 2016 15:55:27 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Qipeng Zha <qipeng.zha@intel.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	bhelgaas@google.com, mika.westerberg@intel.com,
-	Qi Zheng <qi.zheng@intel.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH 2/2] PCI/PM: enable runtime PM support for Intel Broxton
- platform.
-Message-ID: <20160119215527.GI14080@localhost>
-References: <1452868065-96999-1-git-send-email-qipeng.zha@intel.com>
- <1452868065-96999-2-git-send-email-qipeng.zha@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:33354 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754510AbcASQCF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2016 11:02:05 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1452868065-96999-2-git-send-email-qipeng.zha@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <569E5B9C.4030103@codeaurora.org>
+References: <1453167913-16248-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>
+	<6239489.QX2A2kAHWp@vostro.rjw.lan>
+	<2316565.SNckEMXyKO@vostro.rjw.lan>
+	<569E4CCD.6040901@codeaurora.org>
+	<CAJZ5v0h9RCaM9AwtV9=YSFhkiVoy0JeXt6muOqCVTt+MbOEKQA@mail.gmail.com>
+	<569E5B9C.4030103@codeaurora.org>
+Date: Tue, 19 Jan 2016 17:02:03 +0100
+Message-ID: <CAJZ5v0h0fEOpNit2QpM6skZj72a-vT1sMa3fRzbxuzpKZ9WXAA@mail.gmail.com>
+Subject: Re: [PATCH] pci: fix unavailable irq number 255 reported by BIOS
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Chen Fan <chen.fan.fnst@cn.fujitsu.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>, izumi.taku@jp.fujitsu.com,
+	wency@cn.fujitsu.com, caoj.fnst@cn.fujitsu.com,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael]
+On Tue, Jan 19, 2016 at 4:51 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+> On 1/19/2016 10:39 AM, Rafael J. Wysocki wrote:
+>> On Tue, Jan 19, 2016 at 3:48 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>>> On 1/19/2016 9:20 AM, Rafael J. Wysocki wrote:
+>>>> On Tuesday, January 19, 2016 02:43:30 PM Rafael J. Wysocki wrote:
+>>>>> On Tuesday, January 19, 2016 09:45:13 AM Chen Fan wrote:
+>>>>>> In our environment, when enable Secure boot, we found an abnormal
+>>>>>> phenomenon as following call trace shows. after investigation, we
+>>>>>> found the firmware assigned an irq number 255 which means unknown
+>>>>>> or no connection in PCI local spec for i801_smbus, meanwhile the
+>>>>>> ACPI didn't configure the pci irq routing. and the 255 irq number
+>>>>>> was assigned for megasa msix without IRQF_SHARED. then in this case
+>>>>>> during i801_smbus probe, the i801_smbus driver would request irq with
+>>>>>> bad irq number 255. but the 255 irq number was assigned for memgasa
+>>>>>> with MSIX enable. which will cause request_irq fails, and call trace
+>>>>>> shows, actually, we should expose the error early, rather than in request
+>>>>>> irq, here we simply fix the problem by return err when find the irq is
+>>>>>> 255.
+>>>>>>
+>>>>>> See the call trace:
+>>>>>>
+>>>>>>  [   32.459195] ipmi device interface
+>>>>>>  [   32.612907] shpchp: Standard Hot Plug PCI Controller Driver version: 0.4
+>>>>>>  [   32.800459] ixgbe: Intel(R) 10 Gigabit PCI Express Network Driver - version 4.0.1-k-rh
+>>>>>>  [   32.818319] ixgbe: Copyright (c) 1999-2014 Intel Corporation.
+>>>>>>  [   32.844009] lpc_ich 0001:80:1f.0: I/O space for ACPI uninitialized
+>>>>>>  [   32.850093] i801_smbus 0000:00:1f.3: enabling device (0140 -> 0143)
+>>>>>>  [   32.851134] i801_smbus 0000:00:1f.3: can't derive routing for PCI INT C
+>>>>>>  [   32.851136] i801_smbus 0000:00:1f.3: PCI INT C: no GSI
+>>>>>>  [   32.851164] genirq: Flags mismatch irq 255. 00000080 (i801_smbus) vs. 00000000 (megasa
+>>>>>>  [   32.851168] CPU: 0 PID: 2487 Comm: kworker/0:1 Not tainted 3.10.0-229.el7.x86_64 #1
+>>>>>>  [   32.851170] Hardware name: FUJITSU PRIMEQUEST 2800E2/D3736, BIOS PRIMEQUEST 2000 Serie5
+>>>>>>  [   32.851178] Workqueue: events work_for_cpu_fn
+>>>>>>  [   32.851208]  ffff88086c330b00 00000000e233a9df ffff88086d57bca0 ffffffff81603f36
+>>>>>>  [   32.851227]  ffff88086d57bcf8 ffffffff8110d23a ffff88686fe02000 0000000000000246
+>>>>>>  [   32.851246]  ffff88086a9a8c00 00000000e233a9df ffffffffa00ad220 0000000000000080
+>>>>>>  [   32.851247] Call Trace:
+>>>>>>  [   32.851261]  [<ffffffff81603f36>] dump_stack+0x19/0x1b
+>>>>>>  [   32.851271]  [<ffffffff8110d23a>] __setup_irq+0x54a/0x570
+>>>>>>  [   32.851282]  [<ffffffffa00ad220>] ? i801_check_pre.isra.5+0xe0/0xe0 [i2c_i801]
+>>>>>>  [   32.851289]  [<ffffffff8110d3bc>] request_threaded_irq+0xcc/0x170
+>>>>>>  [   32.851298]  [<ffffffffa00ae87f>] i801_probe+0x32f/0x508 [i2c_i801]
+>>>>>>  [   32.851308]  [<ffffffff81308385>] local_pci_probe+0x45/0xa0
+>>>>>>  [   32.851315]  [<ffffffff8108bfd4>] work_for_cpu_fn+0x14/0x20
+>>>>>>  [   32.851323]  [<ffffffff8108f0ab>] process_one_work+0x17b/0x470
+>>>>>>  [   32.851330]  [<ffffffff81090003>] worker_thread+0x293/0x400
+>>>>>>  [   32.851338]  [<ffffffff8108fd70>] ? rescuer_thread+0x400/0x400
+>>>>>>  [   32.851346]  [<ffffffff8109726f>] kthread+0xcf/0xe0
+>>>>>>  [   32.851353]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
+>>>>>>  [   32.851362]  [<ffffffff81613cfc>] ret_from_fork+0x7c/0xb0
+>>>>>>  [   32.851369]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
+>>>>>>  [   32.851373] i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
+>>>>>>  [   32.851435] i801_smbus: probe of 0000:00:1f.3 failed with error -16
+>>>>>>  [   33.180145] ixgbe 0000:5a:00.0: Multiq[   33.240538] ixgbe 0000:5a:00.0: (PCI Express:03:e0
+>>>>>>  [   33.280826] ixgbe 0000:5a:00.0: MAC: 3, PHY: 0, PBA No: 000000-000
+>>>>>>
+>>>>>> Signed-off-by: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
+>>>>>> ---
+>>>>>>  drivers/acpi/pci_irq.c | 10 +++++++++-
+>>>>>>  1 file changed, 9 insertions(+), 1 deletion(-)
+>>>>>>
+>>>>>> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+>>>>>> index d30184c..d2f47f8 100644
+>>>>>> --- a/drivers/acpi/pci_irq.c
+>>>>>> +++ b/drivers/acpi/pci_irq.c
+>>>>>> @@ -439,9 +439,17 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+>>>>>>             if (acpi_isa_register_gsi(dev))
+>>>>>>                     dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
+>>>>>>                              pin_name(pin));
+>>>>>> +           rc = 0;
+>>>>>> +           /*
+>>>>>> +            * Excluding the BIOS report the value 255, which meaning
+>>>>>> +            * "unknown" or "no connection" in PCI Local Bus Specification
+>>>>>> +            * Revision 3.0 February 3, 2004, P223.
+>>>>>
+>>>>> You mean the footnote on page 223 talking about the Interrupt Line values, right?
+>>>
+>>> "Unknown" does not necessarily mean invalid. I have a platform that is using 255 as a valid legacy
+>>> interrupt on PCI Express.
+>>
+>> So first off this is about the Interrupt Line value not about an
+>> interrupt vector.
+>
+> Got it. Just to be clear, I assume this is not the value that code reads from the ACPI table.
+>
+> +               rc = dev->irq == 0xff ? -EINVAL : 0;
+>
+> I was nervous to see this check in common code.
 
-On Fri, Jan 15, 2016 at 10:27:45PM +0800, Qipeng Zha wrote:
-> The PCIe runtime PM is disabled by default, add special treatment
-> to allow runtime PM for Intel Broxton platform.
+No, this value is read from the PCI register, but the interpretation
+of it is arch-specific according to the spec.
 
-Hmmm.  I assume this only applies to Broxton now, but will likely
-apply to future Intel platforms as well.  I really don't want to be
-adding quirks for every new Intel platform that comes along.
-
-> Signed-off-by: Qi Zheng <qi.zheng@intel.com>
-> Signed-off-by: Qipeng Zha <qipeng.zha@intel.com>
-> ---
->  drivers/pci/quirks.c    | 13 +++++++++++++
->  include/linux/pci_ids.h |  2 ++
->  2 files changed, 15 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 7e32730..a745d06 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -25,6 +25,7 @@
->  #include <linux/sched.h>
->  #include <linux/ktime.h>
->  #include <linux/mm.h>
-> +#include <linux/pm_runtime.h>
->  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
->  #include "pci.h"
->  
-> @@ -2989,6 +2990,18 @@ static void quirk_intel_ntb(struct pci_dev *dev)
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
->  
-> +
-> +/*PCIe ports on Intel Broxton should support runtime PM*/
-
-Missing spaces at beginning and end of comment.
-
-> +static void quirk_pcie_enable_rtpm(struct pci_dev *dev)
-> +{
-> +	pm_runtime_put_noidle(&dev->dev);
-> +	pm_runtime_allow(&dev->dev);
-> +}
-> +DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_INTEL,
-> +	PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_0, quirk_pcie_enable_rtpm);
-> +DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_INTEL,
-> +	PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_1, quirk_pcie_enable_rtpm);
-> +
->  static ktime_t fixup_debug_start(struct pci_dev *dev,
->  				 void (*fn)(struct pci_dev *dev))
->  {
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index d9ba49c..731f05f 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2596,6 +2596,8 @@
->  #define PCI_DEVICE_ID_INTEL_82840_HB	0x1a21
->  #define PCI_DEVICE_ID_INTEL_82845_HB	0x1a30
->  #define PCI_DEVICE_ID_INTEL_IOAT	0x1a38
-> +#define PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_0		0x1ad6
-> +#define PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_1		0x1ad7
->  #define PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MIN	0x1c41
->  #define PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MAX	0x1c5f
->  #define PCI_DEVICE_ID_INTEL_PATSBURG_LPC_0	0x1d40
-> -- 
-> 1.8.3.2
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Rafael
