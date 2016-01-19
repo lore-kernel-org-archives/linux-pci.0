@@ -1,137 +1,88 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jayachandran C <jchandra@broadcom.com>
-To: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-acpi@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	<linux-arm-kernel@lists.infradead.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Jayachandran C <jchandra@broadcom.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH v5 3/5] ACPI: PCI: Support platforms that need pci_remap_iospace
-Date: Mon, 4 Jan 2016 10:43:21 +0530
-Message-ID: <1451884403-21437-4-git-send-email-jchandra@broadcom.com>
-In-Reply-To: <1451884403-21437-1-git-send-email-jchandra@broadcom.com>
-References: <1451884403-21437-1-git-send-email-jchandra@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34606 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750888AbcASLNu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2016 06:13:50 -0500
+Date: Tue, 19 Jan 2016 12:13:45 +0100
+From: Ingo Molnar <mingo@kernel.org>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: Julia Lawall <julia.lawall@lip6.fr>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	David Howells <dhowells@redhat.com>,
+	Borislav Petkov <bp@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Tomi Valkeinen <tomi.valkeinen@ti.com>,
+	Dave Airlie <airlied@linux.ie>,
+	linux-fbdev <linux-fbdev@vger.kernel.org>,
+	Andy Lutomirski <luto@amacapital.net>, vinod.koul@intel.com,
+	Dan Williams <dan.j.williams@intel.com>,
+	Toshi Kani <toshi.kani@hp.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	X86 ML <x86@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"xen-devel@lists.xensource.com" <xen-devel@lists.xensource.com>
+Subject: Re: [PATCH v4 10/11] dma: rename dma_*_writecombine() to dma_*_wc()
+Message-ID: <20160119111345.GA16880@gmail.com>
+References: <1440443613-13696-1-git-send-email-mcgrof@do-not-panic.com>
+ <1440443613-13696-11-git-send-email-mcgrof@do-not-panic.com>
+ <20150825075318.GA2735@gmail.com>
+ <20150825154837.GL8051@wotan.suse.de>
+ <20150825134358.990073a55012c60a638b3144@linux-foundation.org>
+ <20150825231912.GW8051@wotan.suse.de>
+ <20150825162540.0591c8c8276b1ff279785e49@linux-foundation.org>
+ <20150826042136.GA14584@gmail.com>
+ <CAB=NE6UucJOwy3O58Oydoy_yR_05k0ebbBXpFVcNWM_g6ez-aA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAB=NE6UucJOwy3O58Oydoy_yR_05k0ebbBXpFVcNWM_g6ez-aA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On some platforms (in this case ARM64), the PCI iospace needs to
-be mapped with pci_remap_iospace and the resources have to be
-adjusted for the iospace physical address.
 
-This has to be done before acpi_pci_root_validate_resources()
-checks and removes resource windows. Handle this by adding
-a function acpi_pci_root_remap_iospace that is called in
-acpi_pci_probe_root_resources(), before the validate call.
+* Luis R. Rodriguez <mcgrof@do-not-panic.com> wrote:
 
-Also fix the address check in acpi_dev_ioresource_flags for
-similar platforms.
+> On Tue, Aug 25, 2015 at 9:21 PM, Ingo Molnar <mingo@kernel.org> wrote:
+> >
+> > * Andrew Morton <akpm@linux-foundation.org> wrote:
+> >
+> >> > There's a catch-22 issue here either way, for instance this rename patch has
+> >> > been being baked for probably 2 releases already but the difficulty has been
+> >> > trying to find the appropriate time to merge it without conflict.
+> >> >
+> >> > If you do it in the beginning of the merge window, you have to ask yourself in
+> >> > what tree it will be done. Since subsystems are topic specific that means that
+> >> > subsystem will end up having a conflict at the end of the merge window.
+> >>
+> >> Yes it's a special case.  I think the best way of handling such things is to get
+> >> them in to Linus either right at the end of the merge window or the day after he
+> >> releases -rc1.  This is when most people's trees are mostly empty.
+> >
+> > Yes, that was the plan last time around as well - but the end of the merge window
+> > is when we have the least maintainer bandwidth as well ...
+> >
+> > Anyway, I applied most of the patches (sans the rename), so the rename patch
+> > should be a lot simpler to execute at the right moment this time around.
+> 
+> Ingo, should we try this again some time? I have some ideas on how to
+> make these sorts of changes easier to manage in the future, it
+> involves having an automatic git rebase option to use Coccinelle for
+> you if a patch is annotated to have been completely done with
+> Coccinelle, but future tooling is needed for that [0]. In the meantime
+> I (or you) can simply run the script at any point in time to catch all
+> the names as-is in the kernel / point in time we decide to merge this
+> simple rename.
+> 
+> [0] http://kernelnewbies.org/KernelProjects/linux-oven
 
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
----
- drivers/acpi/pci_root.c | 62 +++++++++++++++++++++++++++++++++++++++++++++++--
- drivers/acpi/resource.c |  2 ++
- 2 files changed, 62 insertions(+), 2 deletions(-)
+So beyond the rename, can we also keep the old names as compatibility helpers, 
+with a #define mapping them to the new names?
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 850d7bf..58093ba 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -720,6 +720,61 @@ next:
- 	}
- }
- 
-+#ifdef PCI_IOBASE
-+/*
-+ * The IO ports are mapped to a memory range, fixup IO resources to
-+ * handle that
-+ */
-+static int acpi_pci_root_remap_iospace(struct acpi_pci_root_info *ci)
-+{
-+	struct resource_entry *entry;
-+	struct resource iores;
-+	resource_size_t iostart;
-+	int err;
-+
-+	iores.flags = IORESOURCE_IO;
-+	iores.start = (resource_size_t)-1;
-+	iores.end = 0;
-+	resource_list_for_each_entry(entry, &ci->resources) {
-+		if (entry->res->flags & IORESOURCE_IO) {
-+			iores.start = min(entry->res->start, iores.start);
-+			iores.end = max(entry->res->end, iores.end);
-+		}
-+	}
-+	if (iores.end == 0)
-+		return 0;
-+	iostart = iores.start;
-+
-+	resource_list_for_each_entry(entry, &ci->resources) {
-+		if (entry->res->flags & IORESOURCE_IO) {
-+			entry->res->start -= iostart;
-+			entry->res->end -= iostart;
-+			entry->offset -= iostart;
-+		}
-+	}
-+	iores.start -= iostart;
-+	iores.end -= iostart;
-+
-+	err = pci_remap_iospace(&iores, iostart);
-+	if (err) {
-+		pr_err("PCI: ACPI: err %d mapping IO %pR\n", err, &iores);
-+		return -ENODEV;
-+	}
-+	pr_info(PREFIX "Mapped %pR at %#lx for IO.\n",
-+			&iores, (unsigned long)iostart);
-+	return 0;
-+}
-+#else
-+/*
-+ * The IO ports are mapped to a memory range, fixup IO resources to
-+ * handle that
-+ */
-+static int acpi_pci_root_remap_iospace(struct acpi_pci_root_info *ci)
-+{
-+	return 0;
-+}
-+#endif /* PCI_IOBASE */
-+
- int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- {
- 	int ret;
-@@ -745,10 +800,13 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- 			else
- 				entry->res->name = info->name;
- 		}
--		acpi_pci_root_validate_resources(&device->dev, list,
-+		ret = acpi_pci_root_remap_iospace(info);
-+		if (ret >= 0) {
-+			acpi_pci_root_validate_resources(&device->dev, list,
- 						 IORESOURCE_MEM);
--		acpi_pci_root_validate_resources(&device->dev, list,
-+			acpi_pci_root_validate_resources(&device->dev, list,
- 						 IORESOURCE_IO);
-+		}
- 	}
- 
- 	return ret;
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index cdc5c25..530cad4 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -126,8 +126,10 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
- 	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
- 		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
- 
-+#ifndef PCI_IOBASE
- 	if (res->end >= 0x10003)
- 		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
-+#endif
- 
- 	if (io_decode == ACPI_DECODE_16)
- 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
--- 
-1.9.1
+If so then please (re-)send the changes.
 
+Thanks,
+
+	Ingo
