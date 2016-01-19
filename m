@@ -1,104 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f182.google.com ([209.85.223.182]:35017 "EHLO
-	mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753887AbcAEDL0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Jan 2016 22:11:26 -0500
-MIME-Version: 1.0
-In-Reply-To: <20160104204104.GB17427@char.us.oracle.com>
-References: <20151213212557.5410.48577.stgit@localhost.localdomain>
-	<20160104204104.GB17427@char.us.oracle.com>
-Date: Mon, 4 Jan 2016 19:11:25 -0800
-Message-ID: <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
-Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page tracking
-From: Alexander Duyck <alexander.duyck@gmail.com>
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	x86@kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
-	Yang Zhang <yang.zhang.wz@gmail.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	"Dr. David Alan Gilbert" <dgilbert@redhat.com>,
-	Alexander Graf <agraf@suse.de>,
-	Alex Williamson <alex.williamson@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from aserp1040.oracle.com ([141.146.126.69]:37052 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757076AbcASU5j (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2016 15:57:39 -0500
+From: Babu Moger <babu.moger@oracle.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, hare@suse.de, alexander.duyck@gmail.com,
+	linux-kernel@vger.kernel.org, Jordan_Hargrave@dell.com
+Subject: [PATCH v3 4/4] pci: Blacklist vpd access for buggy devices
+Date: Tue, 19 Jan 2016 12:57:24 -0800
+Message-Id: <1453237044-131645-1-git-send-email-babu.moger@oracle.com>
+In-Reply-To: <1452684335-46107-5-git-send-email-hare@suse.de>
+References: <1452684335-46107-5-git-send-email-hare@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 4, 2016 at 12:41 PM, Konrad Rzeszutek Wilk
-<konrad.wilk@oracle.com> wrote:
-> On Sun, Dec 13, 2015 at 01:28:09PM -0800, Alexander Duyck wrote:
->> This patch set is meant to be the guest side code for a proof of concept
->> involving leaving pass-through devices in the guest during the warm-up
->> phase of guest live migration.  In order to accomplish this I have added a
->
-> What does that mean? 'warm-up-phase'?
+Reading or Writing of PCI VPD data causes system panic.
+We saw this problem by running "lspci -vvv" in the beginning.
+However this can be easily reproduced by running
+ cat /sys/bus/devices/XX../vpd
 
-It is the first phase in a pre-copy migration.
-https://en.wikipedia.org/wiki/Live_migration
+As even a simple read on any VPD data triggers a system
+lockup on certain cards this patch implements a PCI quirk
+to disabling VPD acces altogether by setting the vpd length
+to '0'.
 
-Basically in this phase all the memory is marked as dirty and then
-copied.  Any memory that changes gets marked as dirty as well.
-Currently DMA circumvents this as the user space dirty page tracking
-isn't able to track DMA.
+Signed-off-by: Babu Moger <babu.moger@oracle.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
+---
+ drivers/pci/access.c |    5 ++++-
+ drivers/pci/quirks.c |   43 +++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 47 insertions(+), 1 deletions(-)
 
->> new function called dma_mark_dirty that will mark the pages associated with
->> the DMA transaction as dirty in the case of either an unmap or a
->> sync_.*_for_cpu where the DMA direction is either DMA_FROM_DEVICE or
->> DMA_BIDIRECTIONAL.  The pass-through device must still be removed before
->> the stop-and-copy phase, however allowing the device to be present should
->> significantly improve the performance of the guest during the warm-up
->> period.
->
-> .. if the warm-up phase is short I presume? If the warm-up phase takes
-> a long time (busy guest that is of 1TB size) it wouldn't help much as the
-> tracking of these DMA's may be quite long?
->
->>
->> This current implementation is very preliminary and there are number of
->> items still missing.  Specifically in order to make this a more complete
->> solution we need to support:
->> 1.  Notifying hypervisor that drivers are dirtying DMA pages received
->
-> .. And somehow giving the hypervisor the GPFN so it can retain the PFN in
-> the VT-d as long as possible.
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 914e023..82f41a8 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -396,7 +396,7 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
+ 	if (pos < 0)
+ 		return -EINVAL;
+ 
+-	if (!vpd->valid) {
++	if (!vpd->valid && vpd->base.len > 0) {
+ 		vpd->valid = true;
+ 		vpd->base.len = pci_vpd_pci22_size(dev);
+ 	}
+@@ -459,6 +459,9 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
+ 	loff_t end = pos + count;
+ 	int ret = 0;
+ 
++	if (vpd->base.len == 0)
++		return -EIO;
++
+ 	if (!vpd->valid)
+ 		return -EAGAIN;
+ 
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index b03373f..ed09258 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2123,6 +2123,49 @@ static void quirk_via_cx700_pci_parking_caching(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, 0x324e, quirk_via_cx700_pci_parking_caching);
+ 
+ /*
++ * A read/write to sysfs entry ('/sys/bus/pci/devices/<id>/vpd')
++ * will dump 32k of data. The default length is set as 32768.
++ * Reading a full 32k will cause an access beyond the VPD end tag.
++ * The system behaviour at that point is mostly unpredictable.
++ * Apparently, some vendors have not implemented this VPD headers properly.
++ * Adding a generic function disable vpd data for these buggy adapters
++ * Add the DECLARE_PCI_FIXUP_FINAL line below with the specific with
++ * vendor and device of interest to use this quirk.
++ */
++static void quirk_blacklist_vpd(struct pci_dev *dev)
++{
++	if (dev->vpd) {
++		dev->vpd->len = 0;
++		dev_warn(&dev->dev, "PCI vpd access has been disabled due to firmware bug\n");
++	}
++}
++
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, 0x1026,
++		quirk_blacklist_vpd);
++
++/*
+  * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
+  * VPD end tag will hang the device.  This problem was initially
+  * observed when a vpd entry was created in sysfs
+-- 
+1.7.1
 
-Yes, what has happened is that the host went through and marked all
-memory as read-only.  So trying to do any operation that requires
-write access triggers a page fault which is then used by the host to
-track pages that were dirtied.
-
->> 2.  Bypassing page dirtying when it is not needed.
->
-> How would this work with with device doing DMA operations _after_ the migration?
-> That is the driver submits and DMA READ.. migrates away, device is unplugged,
-> VT-d context is torn down - device does the DMA READ gets an VT-d error...
->
-> and what then? How should the device on the other host replay the DMA READ?
-
-The device has to quiesce before the migration can occur.  We cannot
-have any DMA mappings still open when we reach the stop-and-copy phase
-of the migration.  The solution I have proposed here works for
-streaming mappings but doesn't solve the case for things like
-dma_alloc_coherent where a bidirectional mapping is maintained between
-the CPU and the device.
-
->>
->> The two mechanisms referenced above would likely require coordination with
->> QEMU and as such are open to discussion.  I haven't attempted to address
->> them as I am not sure there is a consensus as of yet.  My personal
->> preference would be to add a vendor-specific configuration block to the
->> emulated pci-bridge interfaces created by QEMU that would allow us to
->> essentially extend shpc to support guest live migration with pass-through
->> devices.
->
-> shpc?
-
-That is kind of what I was thinking.  We basically need some mechanism
-to allow for the host to ask the device to quiesce.  It has been
-proposed to possibly even look at something like an ACPI interface
-since I know ACPI is used by QEMU to manage hot-plug in the standard
-case.
-
-- Alex
