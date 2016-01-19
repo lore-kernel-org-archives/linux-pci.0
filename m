@@ -1,33 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 6 Jan 2016 07:28:35 -0600
-From: Rob Herring <robh@kernel.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, linux-omap@vger.kernel.org,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, rogerq@ti.com, nsekhar@ti.com
-Subject: Re: [PATCH 2/2] phy: ti-pipe3: configure usb3 phy to be used as pcie
- phy
-Message-ID: <20160106132835.GA20318@rob-hp-laptop>
-References: <1452077948-26232-1-git-send-email-kishon@ti.com>
- <1452077948-26232-3-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:34805 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932734AbcASUho (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Jan 2016 15:37:44 -0500
+Date: Tue, 19 Jan 2016 14:37:41 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tim Sander <tim@krieglstein.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add function 1 DMA alias quirk for Lite-On/Plextor
+ M6e/Marvell 88SS9183
+Message-ID: <20160119203741.GF14080@localhost>
+References: <11003431.x6xHs1WP1I@dabox>
+ <20160108204924.GK5354@localhost>
+ <1452287726.29599.230.camel@redhat.com>
+ <2496384.AM4JqWABTr@dabox>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1452077948-26232-3-git-send-email-kishon@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <2496384.AM4JqWABTr@dabox>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 06, 2016 at 04:29:08PM +0530, Kishon Vijay Abraham I wrote:
-> DRA72 uses USB3 PHY for the 2nd lane of PCIE. The configuration
-> required to make USB3 PHY used for the 2nd lane of PCIe is done
-> here.
+On Fri, Jan 15, 2016 at 01:30:58PM +0100, Tim Sander wrote:
+> Add function 1 DMA alias quirk for Lite-On/Plextor M6e/Marvell 88SS9183
 > 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  Documentation/devicetree/bindings/phy/ti-phy.txt |    2 ++
->  drivers/phy/phy-ti-pipe3.c                       |   30 +++++++++++++++++++++-
->  2 files changed, 31 insertions(+), 1 deletion(-)
+> Signed-off-by: Tim Sander <tim@krieglstein.org>
 
-Acked-by: Rob Herring <robh@kernel.org>
+Applied with Alex's ack to pci/iommu for v4.5, thanks!
+
+> ---
+>  drivers/pci/quirks.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 7e32730..40b1dfe 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3620,6 +3620,10 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_TTI, 0x0642,
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_JMICRON,
+>                          PCI_DEVICE_ID_JMICRON_JMB388_ESD,
+>                          quirk_dma_func1_alias);
+> +/* https://bugzilla.kernel.org/show_bug.cgi?id=42679#c117 */
+> +DECLARE_PCI_FIXUP_HEADER(0x1c28, /* Lite-On */
+> +                        0x0122, /* Plextor M6E (Marvell 88SS9183)*/
+> +                        quirk_dma_func1_alias);
+>  
+>  /*
+>   * Some devices DMA with the wrong devfn, not just the wrong function.
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
