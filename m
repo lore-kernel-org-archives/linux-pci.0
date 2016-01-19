@@ -1,50 +1,34 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 15 Jan 2016 19:32:06 +0000
-From: Keith Busch <keith.busch@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from out-mta12.ai270.net ([94.126.40.179]:55232 "EHLO
+	out-mta10.ai270.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932271AbcASRlx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2016 12:41:53 -0500
+From: Richard F <lists@keynet-technology.com>
+Subject: Re: Hint HB6 - kernel doesn't see chips behind it.
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCHv8 0/5] Driver for new "VMD" device
-Message-ID: <20160115193206.GB13227@localhost.localdomain>
-References: <1452629890-17542-1-git-send-email-keith.busch@intel.com>
- <20160115181938.GA5296@localhost>
+References: <5698191B.1070904@keynet-technology.com>
+ <20160115172640.GC28453@localhost> <569CFB5B.7050903@keynet-technology.com>
+ <20160119033839.GA3339@localhost>
+Cc: linux-pci@vger.kernel.org
+Message-ID: <569E755D.4050207@keynet-technology.com>
+Date: Tue, 19 Jan 2016 17:41:49 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160115181938.GA5296@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160119033839.GA3339@localhost>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 15, 2016 at 12:19:38PM -0600, Bjorn Helgaas wrote:
-> I applied these to pci/host-vmd with the changes below.  Most of them
-> are cosmetic (rewrapping changelogs, fixing whitespace, etc.), but
-> there are a few I'd like you to take a close look at:
+I rebuilt 4.4.0, as I noticed a warning about microcode in the .config
+which I fixed (assumed changed function).  Another DMESG posted here
+https://bugzilla.kernel.org/show_bug.cgi?id=110851
+
+Still no joy unfortunately.
+
+thanks
+Richard
+
+On 19/01/2016 03:38, Bjorn Helgaas wrote:
+> On Mon, Jan 18, 2016 at 02:48:59PM +0000, Richard F wrote:
+>> I posted a DMESG with 4.3.3 to Bugzilla now.
+>> 4.4.0 crashed on boot, not sure why yet.
 > 
->   - Added VMD_CFGBAR and similar #defines
->   - Added vmd_cfg_addr() to factor out the addr computation and
->     validation
->   - Resource setup in vmd_enable_domain().  I suggested a temporary to
->     make the lines shorter.  I had the vmd->dev->resource[n] in mind,
->     but you added a temporary for vmd->resources[n].  Either way is
->     fine, but I liked the look of the v7 init, so I reverted to that,
->     with a temporary for vmd->dev->resource[n].
->   - Flags setup in vmd_enable_domain().  This was pretty confusing,
->     and I *think* what I did is equivalent, but you should verify.
-
-Thanks for the cleanups. All the new changes look good to me, and I will
-test your tree today to confirm no regressions.
- 
-> I'm still hoping to get this in during the merge window.
-
-Thanks a bunch. This would be great timing to align the hardware
-availability with various software and OEM vendors.
- 
-> If you want to test this, I recommend using my git branch
-> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-vmd
-> instead of applying the patch below on top of your v8.  If you want
-> to make changes, post an incremental patch based on that branch.
-
-I'll give this a test today.
