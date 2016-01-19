@@ -1,168 +1,176 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:53845 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751076AbcAHPQ7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Jan 2016 10:16:59 -0500
-From: John Crispin <blogic@openwrt.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org
-Subject: [PATCH 1/2] dt-bindings: add MedieTak PCIE binding documentation
-Date: Thu,  7 Jan 2016 22:06:12 +0100
-Message-Id: <1452200773-50794-1-git-send-email-blogic@openwrt.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: <Jordan_Hargrave@Dell.com>
+To: <babu.moger@oracle.com>, <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<alexander.duyck@gmail.com>, <hare@suse.de>, <mkubecek@suse.com>,
+	<shane.seymour@hpe.com>, <myron.stowe@gmail.com>,
+	<VenkatKumar.Duvvuru@avago.com>
+Date: Tue, 19 Jan 2016 09:22:31 -0600
+Subject: RE: [PATCH RFC] pci: Blacklist vpd access for buggy devices
+Message-ID: <8B8F62BE6EB1824D91A8BF961FDC40B9179D157772@AUSX7MCPS305.AMER.DELL.COM>
+References: <20160109010545.GA31085@localhost>
+ <1452546789-62938-1-git-send-email-babu.moger@oracle.com>,<56943184.3060303@oracle.com>
+In-Reply-To: <56943184.3060303@oracle.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: John Crispin <blogic@openwrt.org>
----
- .../devicetree/bindings/pci/mediatek-pcie.txt      |  140 ++++++++++++++++++++
- 1 file changed, 140 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+From: Babu Moger [babu.moger@oracle.com]
+Sent: Monday, January 11, 2016 4:49 PM
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; alexander.duyck@gmail.com; hare@suse.de; mkubecek@suse.com; shane.seymour@hpe.com; myron.stowe@gmail.com; VenkatKumar.Duvvuru@avago.com; Hargrave, Jordan
+Subject: Re: [PATCH RFC] pci: Blacklist vpd access for buggy devices
 
-diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-new file mode 100644
-index 0000000..1bd20b2
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-@@ -0,0 +1,140 @@
-+Mediatek PCIe controller
-+
-+Required properties:
-+- compatible: Should be one of:
-+	- "mediatek,mt2701-pcie"
-+	- "mediatek,mt7623-pcie"
-+- device_type: Must be "pci"
-+- reg: A list of physical base address and length for each set of controller
-+  registers. A list of register ranges to use. Must contain an
-+    entry for each entry in the reg-names property.
-+- reg-names: Must include the following entries:
-+  "pcie": PCIE registers
-+  "pcie phy0": PCIE PHY0 registers
-+  "pcie phy1": PCIE PHY0 registers
-+  "pcie phy2": PCIE PHY0 registers
-+- interrupts: A list of interrupt outputs of the controller. Must contain an
-+  entry for each entry in the interrupt-names property.
-+- interrupt-names: Must include the following entries:
-+  "pcie0": The interrupt that is asserted for port0
-+  "pcie1": The interrupt that is asserted for port1
-+  "pcie2": The interrupt that is asserted for port2
-+- bus-range: Range of bus numbers associated with this controller
-+- #address-cells: Address representation for root ports (must be 3)
-+- #size-cells: Size representation for root ports (must be 2)
-+- ranges: Describes the translation of addresses for root ports and standard
-+  PCI regions. The entries must be 6 cells each.
-+  Please refer to the standard PCI bus binding document for a more detailed
-+  explanation.
-+- #interrupt-cells: Size representation for interrupts (must be 1)
-+- clocks: Must contain an entry for each entry in clock-names.
-+  See ../clocks/clock-bindings.txt for details.
-+- clock-names: Must include the following entries:
-+  - pcie0
-+  - pcie1
-+  - pcie2
-+- resets: Must contain an entry for each entry in reset-names.
-+  See ../reset/reset.txt for details.
-+- reset-names: Must include the following entries:
-+  - pcie0
-+  - pcie1
-+  - pcie2
-+- mediatek,hifsys: Must contain a phandle to the HIFSYS syscon range.
-+Root ports are defined as subnodes of the PCIe controller node.
-+
-+Required properties:
-+- device_type: Must be "pci"
-+- assigned-addresses: Address and size of the port configuration registers
-+- reg: PCI bus address of the root port
-+- #address-cells: Must be 3
-+- #size-cells: Must be 2
-+- ranges: Sub-ranges distributed from the PCIe controller node. An empty
-+  property is sufficient.
-+
-+Example:
-+
-+SoC DTSI:
-+
-+	hifsys: clock-controller@1a000000 {
-+		compatible = "mediatek,mt7623-hifsys",
-+			     "mediatek,mt2701-hifsys",
-+			     "syscon";
-+		reg = <0 0x1a000000 0 0x1000>;
-+		#clock-cells = <1>;
-+		#reset-cells = <1>;
-+	};
-+
-+	pcie-controller@1a140000 {
-+		compatible = "mediatek,mt7623-pcie";
-+		device_type = "pci";
-+		reg = <0 0x1a140000 0 0x8000>, /* PCI-Express registers */
-+		      <0 0x1a149000 0 0x1000>, /* PCI-Express PHY0 */
-+		      <0 0x1a14a000 0 0x1000>, /* PCI-Express PHY1 */
-+		      <0 0x1a244000 0 0x1000>; /* PCI-Express PHY2 */
-+		reg-names = "pcie", "pcie phy0", "pcie phy1", "pcie phy2";
-+		interrupts = <GIC_SPI 193 IRQ_TYPE_LEVEL_LOW>,
-+			     <GIC_SPI 194 IRQ_TYPE_LEVEL_LOW>,
-+			     <GIC_SPI 195 IRQ_TYPE_LEVEL_LOW>;
-+		interrupt-names = "pcie0", "pcie1", "pcie2";
-+		clocks = <&topckgen CLK_TOP_ETHIF_SEL>;
-+		clock-names = "pcie";
-+		power-domains = <&scpsys MT2701_POWER_DOMAIN_HIF>;
-+		resets = <&hifsys MT2701_HIFSYS_PCIE0_RST>,
-+			 <&hifsys MT2701_HIFSYS_PCIE1_RST>,
-+			 <&hifsys MT2701_HIFSYS_PCIE2_RST>;
-+		reset-names = "pcie0", "pice1", "pcie2";
-+
-+		bus-range = <0x00 0xff>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+
-+                mediatek,hifsys = <&hifsys>;
-+
-+		ranges = <0x81000000 0 0x1a160000 0 0x1a160000 0 0x00010000 /* io space */
-+			  0x83000000 0 0x60000000 0 0x60000000 0 0x10000000>; /* pci memory */
-+
-+		status = "disabled";
-+
-+		pcie@1,0 {
-+			device_type = "pci";
-+			reg = <0x0800 0 0 0 0>;
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			status = "disabled";
-+		};
-+
-+		pcie@2,0{
-+			device_type = "pci";
-+			reg = <0x1000 0 0 0 0>;
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			status = "disabled";
-+		};
-+
-+		pcie@3,0{
-+			device_type = "pci";
-+			reg = <0x1800 0 0 0 0>;
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			status = "disabled";
-+		};
-+	};
-+
-+Board DTS:
-+
-+	pcie-controller {
-+		status = "okay";
-+
-+		pci@1,0 {
-+			status = "okay";
-+		};
-+	};
--- 
-1.7.10.4
+Sorry. Missed Jordan.
+
+On 1/11/2016 3:13 PM, Babu Moger wrote:
+> Reading or Writing of PCI VPD data causes system panic.
+> We saw this problem by running "lspci -vvv" in the beginning.
+> However this can be easily reproduced by running
+>  cat /sys/bus/devices/XX../vpd
+>
+> VPD length has been set as 32768 by default. Accessing vpd
+> will trigger read/write of 32k. This causes problem as we
+> could read data beyond the VPD end tag. Behaviour is un-
+> predictable when this happens. I see some other adapter doing
+> similar quirks(commit bffadffd43d4 ("PCI: fix VPD limit quirk
+> for Broadcom 5708S"))
+>
+> I see there is an attempt to fix this right way.
+> https://patchwork.ozlabs.org/patch/534843/ or
+> https://lkml.org/lkml/2015/10/23/97
+>
+> Tried to fix it this way, but problem is I dont see the proper
+> start/end TAGs(at least for this adapter) at all. The data is
+> mostly junk or zeros. This patch fixes the issue by setting the
+> vpd length to 0x80.
+>
+> Also look at the threds
+>
+> https://lkml.org/lkml/2015/11/10/557
+> https://lkml.org/lkml/2015/12/29/315
+>
+> Signed-off-by: Babu Moger <babu.moger@oracle.com>
+> ---
+>
+> NOTE:
+> Jordan, Are you sure all the devices in PCI_VENDOR_ID_ATHEROS and
+> PCI_VENDOR_ID_ATTANSIC have this problem. You have used PCI_ANY_ID.
+> I felt it is too broad. Can you please check.
+>
+
+I don't actually have that hardware, it was a bugfix for biosdevname for RedHat.  We were getting
+'BUG: soft lockup - CPU#0 stuck for 23s!'  when attempting to read the vpd area.
+
+Certainly 0x1969:0x1026 experienced this.
+
+09:00.0 Ethernet controller: Atheros Communications AR8121/AR8113/AR8114 Gigabit or Fast Ethernet (rev b0)
+        Subsystem: Atheros Communications AR8121/AR8113/AR8114 Gigabit or Fast Ethernet
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 46
+        Region 0: Memory at c0300000 (64-bit, non-prefetchable) [size=256K]
+        Region 2: I/O ports at 3000 [size=128]
+        Capabilities: [40] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [48] MSI: Enable+ Count=1/1 Maskable- 64bit+
+                Address: 00000000fee0300c  Data: 41a1
+        Capabilities: [58] Express (v1) Endpoint, MSI 00
+                DevCap: MaxPayload 4096 bytes, PhantFunc 0, Latency L0s <4us, L1 unlimited
+                        ExtTag- AttnBtn+ AttnInd+ PwrInd+ RBE- FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr+ FatalErr- UnsuppReq+ AuxPwr+ TransPend-
+                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s, Latency L0 unlimited, L1 unlimited
+                        ClockPM- Surprise- LLActRep- BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+        Capabilities: [6c] Vital Product Data
+                Unknown small resource type 0b, will not decode more.
+        Capabilities: [100 v1] Advanced Error Reporting
+                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
+                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+                UESvrt: DLP+ SDES- TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+                AERCap: First Error Pointer: 14, GenCap+ CGenEn- ChkCap+ ChkEn-
+        Capabilities: [180 v1] Device Serial Number ff-2e-05-c3-00-23-8b-ff
+        Kernel driver in use: ATL1E
+00: 69 19 26 10 07 04 10 00 b0 00 00 02 10 00 00 00
+10: 04 00 30 c0 00 00 00 00 01 30 00 00 00 00 00 00
+20: 00 00 00 00 00 00 00 00 00 00 00 00 69 19 26 10
+30: 00 00 00 00 40 00 00 00 00 00 00 00 0a 01 00 00
+40: 01 48 02 c0 00 00 00 00 05 58 81 00 0c 30 e0 fe
+50: 00 00 00 00 a1 41 00 00 10 6c 01 00 85 7f 04 05
+60: 00 20 1a 00 11 f4 03 00 40 00 11 10 03 00 00 80
+70: 5a ff 88 14 00 00 00 00 00 00 00 00 00 00 00 00
+80: 00 00 00 00 69 19 26 10 00 00 00 00 00 00 00 00
+90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+>  drivers/pci/quirks.c |   41 +++++++++++++++++++++++++++++++++++++++++
+>  1 files changed, 41 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index b03373f..8abcee5 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2123,6 +2123,47 @@ static void quirk_via_cx700_pci_parking_caching(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, 0x324e, quirk_via_cx700_pci_parking_caching);
+>
+>  /*
+> + * A read/write to sysfs entry ('/sys/bus/pci/devices/<id>/vpd')
+> + * will dump 32k of data. The default length is set as 32768.
+> + * Reading a full 32k will cause an access beyond the VPD end tag.
+> + * The system behaviour at that point is mostly unpredictable.
+> + * Apparently, some vendors have not implemented this VPD headers properly.
+> + * Adding a generic function disable vpd data for these buggy adapters
+> + * Add the DECLARE_PCI_FIXUP_FINAL line below with the specific with
+> + * vendor and device of interest to use this quirk.
+> + */
+> +static void quirk_blacklist_vpd(struct pci_dev *dev)
+> +{
+> +     if (dev->vpd) {
+> +             dev->vpd->len = 0;
+> +             dev_warn(&dev->dev, "PCI vpd access has been disabled due to firmware bug\n");
+> +     }
+> +}
+> +
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060,
+> +             quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c,
+> +             quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413,
+> +             quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078,
+> +             quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079,
+> +             quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073,
+> +             quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071,
+> +             quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b,
+> +             quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f,
+> +             quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d,
+> +             quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f,
+> +             quirk_blacklist_vpd);
+> +
+> +/*
+>   * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
+>   * VPD end tag will hang the device.  This problem was initially
+>   * observed when a vpd entry was created in sysfs
+>
