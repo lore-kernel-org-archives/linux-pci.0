@@ -1,63 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:32610 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751938AbcADW3v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 Jan 2016 17:29:51 -0500
-Date: Mon, 4 Jan 2016 22:29:49 +0000
-From: Keith Busch <keith.busch@intel.com>
-To: Martin Mares <mj@ucw.cz>
-Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCHv5 7/7] pciutils: Allow 32-bit domains
-Message-ID: <20160104222949.GA32608@localhost.localdomain>
-References: <1449523949-21898-1-git-send-email-keith.busch@intel.com>
- <1449523949-21898-8-git-send-email-keith.busch@intel.com>
- <mj+md-20160103.140612.56316.camelot@ucw.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <mj+md-20160103.140612.56316.camelot@ucw.cz>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1453246656.28109.81.camel@redhat.com>
+Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+From: Mark Salter <msalter@redhat.com>
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: Graeme Gregory <gg@slimlogic.co.uk>, linaro-acpi@lists.linaro.org,
+	linux-pci@vger.kernel.org, will.deacon@arm.com,
+	okaya@codeaurora.org, wangyijing@huawei.com,
+	Lorenzo.Pieralisi@arm.com, Tomasz Nowicki <tn@semihalf.com>,
+	ddaney@caviumnetworks.com, linux-acpi@vger.kernel.org,
+	robert.richter@caviumnetworks.com, catalin.marinas@arm.com,
+	jcm@redhat.com, arnd@arndb.de, Stefano.Stabellini@eu.citrix.com,
+	Liviu.Dudau@arm.com, bhelgaas@google.com, tglx@linutronix.de,
+	mw@semihalf.com, linux-arm-kernel@lists.infradead.org,
+	jchandra@broadcom.com, rjw@rjwysocki.net,
+	linux-kernel@vger.kernel.org, hanjun.guo@linaro.org,
+	Suravee.Suthikulpanit@amd.com, jiang.liu@linux.intel.com
+Date: Tue, 19 Jan 2016 18:37:36 -0500
+In-Reply-To: <20160119204015.GS19062@n2100.arm.linux.org.uk>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+	 <20160114134440.GA8520@xora-haswell.xora.org.uk>
+	 <1452780100.28109.3.camel@redhat.com>
+	 <20160114141501.GC8520@xora-haswell.xora.org.uk>
+	 <1452781481.28109.8.camel@redhat.com>
+	 <20160115121231.GD8520@xora-haswell.xora.org.uk>
+	 <20160118140405.GC11384@xora-haswell.xora.org.uk>
+	 <20160119202513.GC6510@localhost>
+	 <20160119204015.GS19062@n2100.arm.linux.org.uk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, thanks for the feedback. I've a few follow up questions.
-
-On Sun, Jan 03, 2016 at 03:11:24PM +0100, Martin Mares wrote:
-> This is definitely not enough. Try grepping the source for "domain" :-)
->
-> At least the following places need updating, too:
+On Tue, 2016-01-19 at 20:40 +0000, Russell King - ARM Linux wrote:
+> On Tue, Jan 19, 2016 at 02:25:13PM -0600, Bjorn Helgaas wrote:
+> > On Mon, Jan 18, 2016 at 02:04:05PM +0000, Graeme Gregory wrote:
+> > > After some private debugging with Mark it turned out that the difference
+> > > between our configurations was I did not have.
+> > > 
+> > > CONFIG_DMA_CMA=y
+> > > 
+> > > With this enabled then the card works without coherent mask hack.
+> > 
+> > I didn't follow the whole discussion here, but is this a case where
+> > the driver could fail more gracefully than it did?  Can we do anything
+> > to make this easier for the next person who trips over the same problem?
 > 
->   o  struct pci_filter and operations on it
+> I've not followed the discussion at all, but reading what was in the
+> quoted parts of the mail makes me somewhat suspicious.
+> 
+> The way PCI drivers (or in fact any driver) are supposed to work is:
+> 
+> - the bus code sets up a default mask (32-bit DMA in the case of PCI)
+> - the driver calls dma_set_mask() or similar function with the mask
+>   the _driver_ wants to use.  Arch DMA code decides whether the mask
+>   can be supported, and if it can, it re-sets the DMA mask.  If the
+>   mask can't be supported, it returns an error.
+> 
+> The driver is doing things correctly:
+> 
+>         if ((sizeof(dma_addr_t) > 4) &&
+>             !pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) && use_dac) {
+>                 tp->cp_cmd |= PCIDAC;
+>                 dev->features |= NETIF_F_HIGHDMA;
+>         } else {
+>                 rc = pci_set_dma_mask(pdev, DMA_BIT_MASK(32));
+> 
+> which says: if the size of a DMA address supports 64-bit, and we can
+> set a 64-bit DMA address mask (iow, the platform allows it), and
+> we're permitted to use DAC, use DAC, otherwise try to set a 32-bit
+> DMA mask.
+> 
+> It shouldn't matter one bit what the mask is before that point.
+> 
+> However, what the driver fails to do is to deal with the coherent
+> mask - it appears to be missing a call to pci_set_consistent_dma_mask().
+> That may be where the issue is.
 
-Not sure I follow. struct pci_filter's domain was already a 32-bit int.
- 
->   o  Format strings for printing domains at various places
+It is.
 
-Are you wanting a %04x for 16 bit domains and %08x for 32 bit ones? The
-%04x specifier still works with 32-bit values.
+The driver works with devicetree because of_dma_configure() sets up dma
+and coherent mask for PCI devices based on root bridge info in the DT.
+So the driver gets by without setting coherent mask explicitly. In the
+ACPI case, the coherent mask doesn't get set because there isn't DMA
+info in the ACPI tables (I think IORT table/IOMMU support will add this
+in the future). Using CONFIG_DMA_CMA avoids the issue by allowing CMA
+memory to be used for DMA while avoiding a check against coherent mask.
 
-We just need a bit so this new h/w can't collide with ACPI _SEG defined
-domains. I don't know of any real need for the full 32-bits; we'd do
-fine using only 17 bits, so thought the leading 0's wasn't useful.
+> 
+> It may be worth doing what I did with the DMA API, and introducing
+> pci_set_mask_and_coherent() which sets both masks together - which
+> will probably allow some PCI driver code to be simplified.
+> 
 
->   o  ABI compability ... changing a field in the middle of struct pci_dev
->      (or pci_filter) is going to break ABI, so you either need to change the
->      structures in a backward-compatible way, or to use ABI versioning.
 
-It looks like there's a 16-bit gap after device_class. Would it be
-acceptable place the domain's upper 16 bits in there to keep ABI
-compatibility?
-
-> Also, we should decide on what type the domain should have -- currently, some
-> places use "int", others use u16, and your patch introduces int32_t. I would
-> prefer u32 myself, but especially in the filters we should be careful about
-> how to encode "any domain".
-
-I left it as a signed int to allow a negative number for "any", and that's
-also what the linux kernel uses.
