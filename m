@@ -1,49 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:41449 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755898AbcAMTvC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Jan 2016 14:51:02 -0500
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: linux-pci@vger.kernel.org, mj@ucw.cz
-Cc: sean.stalley@intel.com, bhelgaas@google.com, david.daney@cavium.com
-Subject: [PATCH 1/1] Support region sizes that are not power-of-2 in lspci
-Date: Wed, 13 Jan 2016 11:47:13 -0800
-Message-Id: <1452714433-8144-1-git-send-email-sean.stalley@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V3 11/21] pci, acpi: Move ACPI host bridge device
+ companion assignment to core code.
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+ <1452691267-32240-12-git-send-email-tn@semihalf.com>
+ <20160119160224.GD5276@red-moon>
+Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <569F6D67.5000000@semihalf.com>
+Date: Wed, 20 Jan 2016 12:20:07 +0100
+MIME-Version: 1.0
+In-Reply-To: <20160119160224.GD5276@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enhanced Allocation allows PCI devices to reserve regions with DWORD
-granularity. Make sure lspci doesn't tuncate least significant bits
-of the region size.
+On 19.01.2016 17:02, Lorenzo Pieralisi wrote:
+> On Wed, Jan 13, 2016 at 02:20:57PM +0100, Tomasz Nowicki wrote:
+[...]
+>> device via pci_create_root_bus parameter (as the ACPI device type)
+>
+> I do not understand what you mean by "as the ACPI device type".
 
-ex: a 2000 byte region should display [size=2000] instead of [size=1K]
-Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
----
- lspci.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+See below.
 
-diff --git a/lspci.c b/lspci.c
-index fe7b7fe..d483f3a 100644
---- a/lspci.c
-+++ b/lspci.c
-@@ -336,7 +336,7 @@ show_size(pciaddr_t x)
-   if (!x)
-     return;
-   for (i = 0; i < (sizeof(suffix) / sizeof(*suffix) - 1); i++) {
--    if (x < 1024)
-+    if (x % 1024)
-       break;
-     x /= 1024;
-   }
-@@ -366,7 +366,7 @@ show_bases(struct device *d, int cnt)
- 	putchar('\t');
-       if (pos && !flg)			/* Reported by the OS, but not by the device */
- 	{
--	  printf("[virtual] ");
-+	  printf("[virtual] ");		/* could also be enhanced */
- 	  flg = pos;
- 	  virtual = 1;
- 	}
--- 
-1.9.1
+>
+>> and using ACPI_COMPANION_SET in core code for ACPI boot method.
+>> ACPI_COMPANION_SET is safe to run for all cases DT, ACPI and DT&ACPI.
+>>
+>> Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>> ---
+>>   drivers/acpi/pci_root.c | 5 ++++-
+>>   drivers/pci/probe.c     | 2 ++
+>>   2 files changed, 6 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+>> index ae3fe4e..a65c8c2 100644
+>> --- a/drivers/acpi/pci_root.c
+>> +++ b/drivers/acpi/pci_root.c
+>> @@ -846,7 +846,10 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+>>
+>>   	pci_acpi_root_add_resources(info);
+>>   	pci_add_resource(&info->resources, &root->secondary);
+>> -	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
+>> +
+>> +	/* Root bridge device needs to be sure of parent ACPI type */
+>> +	ACPI_COMPANION_SET(&device->dev, device);
+>
+> I do not understand why the code above is needed, can you elaborate
+> please ?
+>
+
+This makes sure that device->dev can be identified as ACPI device, so we 
+can use to_acpi_device_node() and assign companion safely below.
+
+>
+>> +	bus = pci_create_root_bus(&device->dev, busnum, ops->pci_ops,
+>>   				  sysdata, &info->resources);
+>>   	if (!bus)
+>>   		goto out_release_info;
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 553a029..cad836f 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -2107,6 +2107,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>>   	bridge->dev.parent = parent;
+>>   	bridge->dev.release = pci_release_host_bridge_dev;
+>>   	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+>> +	ACPI_COMPANION_SET(&bridge->dev,
+>> +			   parent ? to_acpi_device_node(parent->fwnode) : NULL);
+
+pci_create_root_bus() can be called with DT device, then 
+ACPI_COMPANION_SET assign no companion to bridge device.
+
+Thanks,
+Tomasz
 
