@@ -1,145 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from svc.vniiem.ru ([78.107.120.166]:52872 "EHLO mx.svc.vniiem.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751549AbcA0Ji2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Jan 2016 04:38:28 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by mx.svc.vniiem.ru (Postfix) with ESMTP id 52802820D2
-	for <linux-pci@vger.kernel.org>; Wed, 27 Jan 2016 12:38:26 +0300 (MSK)
-Received: from mx.svc.vniiem.ru ([127.0.0.1])
-	by localhost (mx.svc.vniiem.ru [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id kUX169prDrXW for <linux-pci@vger.kernel.org>;
-	Wed, 27 Jan 2016 12:38:25 +0300 (MSK)
-From: =?UTF-8?B?0JzQvtGA0L7QtyDQntC70LXQsw==?= <oleg.moroz@mcc.vniiem.ru>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: PCI device driver broken between 4.2 and 4.3
-References: <56A32702.7080909@mcc.vniiem.ru>
- <CAErSpo6MtFSxnH8uSqeLiJVR3P-R5DUX2Furw3yw8JiMN29H0A@mail.gmail.com>
- <56A4D690.1020804@mcc.vniiem.ru> <20160125215251.GB10272@localhost>
- <20160126153210.GA11375@localhost> <56A7C35F.3090708@mcc.vniiem.ru>
-Message-ID: <56A88FFE.7000800@mcc.vniiem.ru>
-Date: Wed, 27 Jan 2016 12:38:06 +0300
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <569F138B.2010004@cn.fujitsu.com>
+Date: Wed, 20 Jan 2016 12:56:43 +0800
+From: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-In-Reply-To: <56A7C35F.3090708@mcc.vniiem.ru>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rafael@kernel.org>,
+	Sinan Kaya <okaya@codeaurora.org>
+CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>, <izumi.taku@jp.fujitsu.com>,
+	<wency@cn.fujitsu.com>, <caoj.fnst@cn.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] pci: fix unavailable irq number 255 reported by BIOS
+References: <1453167913-16248-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>	<6239489.QX2A2kAHWp@vostro.rjw.lan>	<2316565.SNckEMXyKO@vostro.rjw.lan>	<569E4CCD.6040901@codeaurora.org> <CAJZ5v0h9RCaM9AwtV9=YSFhkiVoy0JeXt6muOqCVTt+MbOEKQA@mail.gmail.com>
+In-Reply-To: <CAJZ5v0h9RCaM9AwtV9=YSFhkiVoy0JeXt6muOqCVTt+MbOEKQA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Also, my drive has no
 
-pcibios_enable_device()
-pcibios_alloc_irq()
+On 01/19/2016 11:39 PM, Rafael J. Wysocki wrote:
+> On Tue, Jan 19, 2016 at 3:48 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>> On 1/19/2016 9:20 AM, Rafael J. Wysocki wrote:
+>>> On Tuesday, January 19, 2016 02:43:30 PM Rafael J. Wysocki wrote:
+>>>> On Tuesday, January 19, 2016 09:45:13 AM Chen Fan wrote:
+>>>>> In our environment, when enable Secure boot, we found an abnormal
+>>>>> phenomenon as following call trace shows. after investigation, we
+>>>>> found the firmware assigned an irq number 255 which means unknown
+>>>>> or no connection in PCI local spec for i801_smbus, meanwhile the
+>>>>> ACPI didn't configure the pci irq routing. and the 255 irq number
+>>>>> was assigned for megasa msix without IRQF_SHARED. then in this case
+>>>>> during i801_smbus probe, the i801_smbus driver would request irq with
+>>>>> bad irq number 255. but the 255 irq number was assigned for memgasa
+>>>>> with MSIX enable. which will cause request_irq fails, and call trace
+>>>>> shows, actually, we should expose the error early, rather than in request
+>>>>> irq, here we simply fix the problem by return err when find the irq is
+>>>>> 255.
+>>>>>
+>>>>> See the call trace:
+>>>>>
+>>>>>   [   32.459195] ipmi device interface
+>>>>>   [   32.612907] shpchp: Standard Hot Plug PCI Controller Driver version: 0.4
+>>>>>   [   32.800459] ixgbe: Intel(R) 10 Gigabit PCI Express Network Driver - version 4.0.1-k-rh
+>>>>>   [   32.818319] ixgbe: Copyright (c) 1999-2014 Intel Corporation.
+>>>>>   [   32.844009] lpc_ich 0001:80:1f.0: I/O space for ACPI uninitialized
+>>>>>   [   32.850093] i801_smbus 0000:00:1f.3: enabling device (0140 -> 0143)
+>>>>>   [   32.851134] i801_smbus 0000:00:1f.3: can't derive routing for PCI INT C
+>>>>>   [   32.851136] i801_smbus 0000:00:1f.3: PCI INT C: no GSI
+>>>>>   [   32.851164] genirq: Flags mismatch irq 255. 00000080 (i801_smbus) vs. 00000000 (megasa
+>>>>>   [   32.851168] CPU: 0 PID: 2487 Comm: kworker/0:1 Not tainted 3.10.0-229.el7.x86_64 #1
+>>>>>   [   32.851170] Hardware name: FUJITSU PRIMEQUEST 2800E2/D3736, BIOS PRIMEQUEST 2000 Serie5
+>>>>>   [   32.851178] Workqueue: events work_for_cpu_fn
+>>>>>   [   32.851208]  ffff88086c330b00 00000000e233a9df ffff88086d57bca0 ffffffff81603f36
+>>>>>   [   32.851227]  ffff88086d57bcf8 ffffffff8110d23a ffff88686fe02000 0000000000000246
+>>>>>   [   32.851246]  ffff88086a9a8c00 00000000e233a9df ffffffffa00ad220 0000000000000080
+>>>>>   [   32.851247] Call Trace:
+>>>>>   [   32.851261]  [<ffffffff81603f36>] dump_stack+0x19/0x1b
+>>>>>   [   32.851271]  [<ffffffff8110d23a>] __setup_irq+0x54a/0x570
+>>>>>   [   32.851282]  [<ffffffffa00ad220>] ? i801_check_pre.isra.5+0xe0/0xe0 [i2c_i801]
+>>>>>   [   32.851289]  [<ffffffff8110d3bc>] request_threaded_irq+0xcc/0x170
+>>>>>   [   32.851298]  [<ffffffffa00ae87f>] i801_probe+0x32f/0x508 [i2c_i801]
+>>>>>   [   32.851308]  [<ffffffff81308385>] local_pci_probe+0x45/0xa0
+>>>>>   [   32.851315]  [<ffffffff8108bfd4>] work_for_cpu_fn+0x14/0x20
+>>>>>   [   32.851323]  [<ffffffff8108f0ab>] process_one_work+0x17b/0x470
+>>>>>   [   32.851330]  [<ffffffff81090003>] worker_thread+0x293/0x400
+>>>>>   [   32.851338]  [<ffffffff8108fd70>] ? rescuer_thread+0x400/0x400
+>>>>>   [   32.851346]  [<ffffffff8109726f>] kthread+0xcf/0xe0
+>>>>>   [   32.851353]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
+>>>>>   [   32.851362]  [<ffffffff81613cfc>] ret_from_fork+0x7c/0xb0
+>>>>>   [   32.851369]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
+>>>>>   [   32.851373] i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
+>>>>>   [   32.851435] i801_smbus: probe of 0000:00:1f.3 failed with error -16
+>>>>>   [   33.180145] ixgbe 0000:5a:00.0: Multiq[   33.240538] ixgbe 0000:5a:00.0: (PCI Express:03:e0
+>>>>>   [   33.280826] ixgbe 0000:5a:00.0: MAC: 3, PHY: 0, PBA No: 000000-000
+>>>>>
+>>>>> Signed-off-by: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
+>>>>> ---
+>>>>>   drivers/acpi/pci_irq.c | 10 +++++++++-
+>>>>>   1 file changed, 9 insertions(+), 1 deletion(-)
+>>>>>
+>>>>> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+>>>>> index d30184c..d2f47f8 100644
+>>>>> --- a/drivers/acpi/pci_irq.c
+>>>>> +++ b/drivers/acpi/pci_irq.c
+>>>>> @@ -439,9 +439,17 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+>>>>>              if (acpi_isa_register_gsi(dev))
+>>>>>                      dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
+>>>>>                               pin_name(pin));
+>>>>> +           rc = 0;
+>>>>> +           /*
+>>>>> +            * Excluding the BIOS report the value 255, which meaning
+>>>>> +            * "unknown" or "no connection" in PCI Local Bus Specification
+>>>>> +            * Revision 3.0 February 3, 2004, P223.
+>>>> You mean the footnote on page 223 talking about the Interrupt Line values, right?
+>> "Unknown" does not necessarily mean invalid. I have a platform that is using 255 as a valid legacy
+>> interrupt on PCI Express.
+> So first off this is about the Interrupt Line value not about an
+> interrupt vector.
+>
+> Second, the footnote in question is talking about x86 PCs, so if your
+> platform is not one of them, there is no connection here.
+>
+> Which means that the change should be limited to x86 probably.
+That's right, we should wrap this code in arch x86.
 
-calls.
+Thanks,
+Chen
+
+>
+> Thanks,
+> Rafael
+>
+>
+> .
+>
 
 
-
-26.01.2016 22:05, Олег Мороз пишет:
-> I confirmed it works in
->
-> 890e4847587f
->
-> and do not works in
->
-> 991de2e59090
->
-> 26.01.2016 18:32, Bjorn Helgaas пишет:
->> [+cc Jiang]
->>
->> On Mon, Jan 25, 2016 at 03:52:51PM -0600, Bjorn Helgaas wrote:
->>> Hi Олег,
->>>
->>> On Sun, Jan 24, 2016 at 04:50:08PM +0300, Олег Мороз wrote:
->>>> Okay. I've sent logs (dmesg and lspci) from both 4.2 and 4.3 to 
->>>> bugzilla
->>> I don't see anything wrong in either log.  Both v4.2 and v4.3
->>> enumerate the device the same way, and the driver seems to claim it
->>> the same way:
->>>
->>>    pci 0000:0d:00.0: [10b5:9030] type 00 class 0x078000
->>>    pci 0000:0d:00.0: reg 0x14: [io  0x2100-0x217f]
->>>    pci 0000:0d:00.0: reg 0x18: [io  0x2380-0x239f]
->>>    pci 0000:0d:00.0: PME# supported from D0 D3hot
->>>    pci 0000:0d:01.0: [10b5:9030] type 00 class 0x078000
->>>    pci 0000:0d:01.0: reg 0x14: [io  0x2180-0x21ff]
->>>    pci 0000:0d:01.0: reg 0x18: [io  0x23a0-0x23bf]
->>>    pci 0000:0d:01.0: PME# supported from D0 D3hot
->>>    pci 0000:0d:02.0: [10b5:9030] type 00 class 0x078000
->>>    pci 0000:0d:02.0: reg 0x14: [io  0x2200-0x227f]
->>>    pci 0000:0d:02.0: reg 0x18: [io  0x2280-0x22ff]
->>>    pci 0000:0d:02.0: reg 0x1c: [io  0x2300-0x237f]
->>>    pci 0000:0d:02.0: PME# supported from D0 D3hot
->>>
->>>    sja1000_plx_pci 0000:0d:02.0: Detected "Eclus CAN-200-PCI" card 
->>> at slot #2
->>>    sja1000_plx_pci 0000:0d:02.0: Channel #1 at 0x0000000000012280, 
->>> irq 22 registered as can0
->>>    sja1000_plx_pci 0000:0d:02.0: Channel #2 at 0x0000000000012300, 
->>> irq 22 registered as can1
->>>    sja1000_plx_pci 0000:0d:02.0 can0: setting BTR0=0x03 BTR1=0x37
->>>
->>> One option is always to bisect between v4.2 and v4.3 to see which
->>> commit made it stop working.  See https://git-scm.com/docs/git-bisect
->> Jiang, Олег bisected this to 991de2e59090 ("PCI, x86: Implement
->> pcibios_alloc_irq() and pcibios_free_irq()").
->>
->> Олег, please double-check and confirm that 890e4847587f works and
->> 991de2e59090 fails.
->>
->> Then please add some printks in the pcibios_enable_device() and
->> pcibios_alloc_irq() paths and in your driver to see exactly what changed
->> between 890e4847587f and 991de2e59090
->>
->> Bjorn
->>
->>>> 23.01.2016 17:54, Bjorn Helgaas пишет:
->>>>> [+cc linux-kernel]
->>>>>
->>>>> Hi Олег,
->>>>>
->>>>> On Sat, Jan 23, 2016 at 1:08 AM, Олег Мороз 
->>>>> <oleg.moroz@mcc.vniiem.ru> wrote:
->>>>>> Hello. I've got a device driver for MIL-1553b card called 
->>>>>> TA1-PCI, which
->>>>>> could be found at
->>>>>> https://github.com/qmor/elcus-1553-driver-linux
->>>>>> Card is using PLX_PCI9030 PCI controller.
->>>>>> Today i've found that this driver compiles, installes, but is not 
->>>>>> working as
->>>>>> it should.
->>>>>> Looks like it not receives any interrupts from PCI. I've test it 
->>>>>> again with
->>>>>> kernel
->>>>>> 4.2 and it works okay. What changes was made in PCI subsystem 
->>>>>> from 4.2 to
->>>>>> 4.3
->>>>>> which could have impact this driver work.
->>>>> Thank you very much for this problem report.  There were many PCI
->>>>> changes between v4.2 and v4.3, and without more information, I can't
->>>>> guess what might be causing this problem.
->>>>>
->>>>> I opened a bug report at 
->>>>> https://bugzilla.kernel.org/show_bug.cgi?id=111211
->>>>>
->>>>> Please attach complete dmesg logs for both v4.2 and v4.3 to that bug
->>>>> report.  Also, please attach the complete "lspci -vv" output (as
->>>>> root).
->>>>>
->>>>> Thanks!
->>>>>
->>>>> Bjorn
->>>> -- 
->>>> To unsubscribe from this list: send the line "unsubscribe 
->>>> linux-pci" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
->>> -- 
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at http://vger.kernel.org/majordomo-info.html
->
 
