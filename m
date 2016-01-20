@@ -1,131 +1,122 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Chen Fan <chen.fan.fnst@cn.fujitsu.com>
-Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	lenb@kernel.org, izumi.taku@jp.fujitsu.com, wency@cn.fujitsu.com,
-	caoj.fnst@cn.fujitsu.com, ddaney.cavm@gmail.com,
-	okaya@codeaurora.org, bhelgaas@google.com,
-	jiang.liu@linux.intel.com, linux-pci@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [PATCH v4 1/1] pci: fix unavailable irq number 255 reported by BIOS
-Date: Fri, 29 Jan 2016 04:37:19 +0100
-Message-ID: <8924816.km1PStJUTB@vostro.rjw.lan>
-In-Reply-To: <20160128205736.GA12965@localhost>
-References: <1453944946-18852-1-git-send-email-chen.fan.fnst@cn.fujitsu.com> <20160128205736.GA12965@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:17797 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753255AbcATRzN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jan 2016 12:55:13 -0500
+Subject: Re: iProc bus scanning regression (after "PCI: iproc: Add PAXC
+ interface support")
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <CACna6rx2t7Zg_xSVvYqZTW2dYEgRugaorV58Zy1YZ4Wy=+L4fQ@mail.gmail.com>
+ <CACna6rzMK4Htci8AucHVi1TNjBkxdQiy60MWJ234J8=4B_vteA@mail.gmail.com>
+ <569F41B1.6000005@broadcom.com>
+ <CACna6rxyMoarw=Yq93gijXeXx5bm35hzAs-+9w3SaXg7e1thtQ@mail.gmail.com>
+CC: Scott Branden <sbranden@broadcom.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+From: Ray Jui <rjui@broadcom.com>
+Message-ID: <569FC9FA.4090607@broadcom.com>
+Date: Wed, 20 Jan 2016 09:55:06 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CACna6rxyMoarw=Yq93gijXeXx5bm35hzAs-+9w3SaXg7e1thtQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, January 28, 2016 02:57:36 PM Bjorn Helgaas wrote:
-> Hi Chen,
-> 
-> Thanks a lot for persevering and working this all out!
-> 
-> On Thu, Jan 28, 2016 at 09:35:46AM +0800, Chen Fan wrote:
-> > In our X86 environment, when enable Secure boot, we found an abnormal
-> > phenomenon as following call trace shows. after investigation, we
-> > found the firmware assigned an irq number 255 which means unknown
-> > or no connection in PCI local spec for i801_smbus, meanwhile the
-> > ACPI didn't configure the pci irq routing. and the 255 irq number
-> > was assigned for megasa msix without IRQF_SHARED. then in this case
-> > during i801_smbus probe, the i801_smbus driver would request irq with
-> > bad irq number 255. but the 255 irq number was assigned for memgasa
-> > with MSIX enable. which will cause request_irq fails and result in
-> > the call trace below, here we introduce an IRQ_NOTCONNECTED to identify
-> > the device interrupt is not connected.
-> > 
-> > i801_smbus 0000:00:1f.3: enabling device (0140 -> 0143)
-> > i801_smbus 0000:00:1f.3: can't derive routing for PCI INT C
-> > i801_smbus 0000:00:1f.3: PCI INT C: no GSI
-> > genirq: Flags mismatch irq 255. 00000080 (i801_smbus) vs. 00000000 (megasa)
-> > CPU: 0 PID: 2487 Comm: kworker/0:1 Not tainted 3.10.0-229.el7.x86_64 #1
-> > Hardware name: FUJITSU PRIMEQUEST 2800E2/D3736, BIOS PRIMEQUEST 2000 Serie5
-> > 
-> > Call Trace:
-> >   dump_stack+0x19/0x1b
-> >   __setup_irq+0x54a/0x570
-> >   request_threaded_irq+0xcc/0x170
-> >   i801_probe+0x32f/0x508 [i2c_i801]
-> >   local_pci_probe+0x45/0xa0
-> > i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
-> > i801_smbus: probe of 0000:00:1f.3 failed with error -16
-> > 
-> > Signed-off-by: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
-> > Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> > Cc: Bjorn Helgaas <helgaas@kernel.org>
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Rafael, I assume you'll take this if you think it's ready.
+Hi Rafal,
 
-I can do that.
+On 1/20/2016 8:43 AM, Rafał Miłecki wrote:
+> On 20 January 2016 at 09:13, Ray Jui <rjui@broadcom.com> wrote:
+>> On 1/19/2016 11:02 PM, Rafał Miłecki wrote:
+>>>
+>>> On 20 January 2016 at 07:53, Rafał Miłecki <zajec5@gmail.com> wrote:
+>>>>
+>>>> In OpenWrt trunk code we use iProc driver for PCIe controllers on bcma
+>>>> bus (PCIE_IPROC_BCMA). Right now we use 4.1 kernel but we backported
+>>>> all iProc changes. Unfortunately backporting set queued for 4.5 broke
+>>>> bus scanning on some routers.
+>>>>
+>>>> Most BCM4708 / BCM4709 chipsets have 3 PCIe controllers. All known
+>>>> routers use only first 2 of them. Even if router has 3 PCIe cards, the
+>>>> last two cards are connected to the 2nd PCIe controller.
+>>>>
+>>>> So that PAXC patch broke support for routers with 3 cards, 2 of them
+>>>> at the 2nd controller. It doesn't affect routers with just 2 cards.
+>>>> This problem was tracked down in:
+>>>> https://dev.openwrt.org/ticket/21393
+>>>>
+>>>> I'm attaching two OpenWrt boot logs.
+>>>> 1) r48381
+>>>> It contains all backported iProc changes. The log looks "nice", but
+>>>> only one card (0000:01:00.0) was detected.
+>>>> 2) r48382
+>>>> It contains "Revert "PCI: iproc: Add PAXC interface support"" patch.
+>>>> It contains many "[Firmware Bug]: reg 0x??: invalid BAR (can't size)"
+>>>> messages but there are all 3 cards detected: 0000:01:00.0,
+>>>> 0001:03:00.0 and 0001:04:00.0 (see brcmfmac messages).
+>>>>
+>>>> Can you take a look at this problem, please?
+>>>
+>>>
+>>> linux-arm-kernel@ stopped my e-mail due to its size. Sending
+>>> compressed attachments.
+>>>
+>>
+>> I'm a bit confused by these logs that you provided. Based on the log, there
+>> seems to be 3 PCIe root complexes populated on the platform, domain
+>> 0000:00:00.0, 0001:00:00:0, 0002:00:00:0 are the 3 root complexes. Root
+>> complex 0002 seems to have nothing connected since it does not detect any
+>> EP.
+>>
+>> Is the first card installed on root complex 0 (domain 0000), but the second
+>> card and 3rd card are both installed on root complex 1 (domain 0001) on
+>> different slots or something?
+>>
+>> I suspect a potential issue is in this function:
+>>
+>> 173 static inline bool iproc_pcie_device_is_valid(struct iproc_pcie *pcie,
+>> 174                                               unsigned int slot,
+>> 175                                               unsigned int fn)
+>> 176 {
+>> 177         if (slot > 0)
+>> 178                 return false;
+>> 179
+>> 180         /* PAXC can only support limited number of functions */
+>> 181         if (pcie->type == IPROC_PCIE_PAXC && fn >= MAX_NUM_PAXC_PF)
+>> 182                 return false;
+>> 183
+>> 184         return true;
+>> 185 }
+>>
+>> Compared to the original code, it's different. Can you try passing bus
+>> number into the function as another argument and do the following check on
+>> line 177:
+>>
+>> if (busnum == 0 && slot > 0)
+>>      return false;
+>>
+>> instead of
+>>
+>> if (slot > 0)
+>>      return false;
+>
+> This did work, thanks! I can see again all these scary
+> [Firmware Bug]: reg 0x??: invalid BAR (can't size)
+> messages but also all 3 cards were detected!
+>
+> Will you submit a patch for this, please?
+>
 
-> This is a subtle problem and, if I understand correctly, can manifest
-> intermittently depending on the machine configuration.  For example,
-> if you got rid of the "megasa" driver, I suspect i801_smbus would not
-> complain, but it wouldn't work.
-> 
-> I think we might want to consider doing something for non-x86 arches
-> as well, but we can do that later.  I propose a changelog like the
-> following.  Please correct anything I got wrong.  I suspect we will be
-> revisiting this issue eventually, so I'd like to have a good
-> description.
-> 
-> 
-> x86/PCI: Recognize that Interrupt Line 255 means "not connected"
-> 
-> Per the x86-specific footnote to PCI spec r3.0, sec 6.2.4, the value 255 in
-> the Interrupt Line register means "unknown" or "no connection."
-> Previously, when we couldn't derive an IRQ from the _PRT, we fell back to
-> using the value from Interrupt Line as an IRQ.  It's questionable whether
-> we should do that at all, but the spec clearly suggests we shouldn't do it
-> for the value 255 on x86.
-> 
-> Calling request_irq() with IRQ 255 may succeed, but the driver won't
-> receive any interrupts.  Or, if IRQ 255 is shared with another device, it
-> may succeed, and the driver's ISR will be called at random times when the
-> *other* device interrupts.  Or it may fail if another device is using IRQ
-> 255 with incompatible flags.  What we *want* is for request_irq() to fail
-> predictably so the driver can fall back to polling.
-> 
-> On x86, assume 255 in the Interrupt Line means the INTx line is not
-> connected.  In that case, set dev->irq to IRQ_NOTCONNECTED so request_irq()
-> will fail gracefully with -ENOTCONN.
-> 
-> We found this problem on a system where Secure Boot firmware assigned
-> Interrupt Line 255 to an i801_smbus device and another device was already
-> using MSI-X IRQ 255.  This was in v3.10, where i801_probe() fails if
-> request_irq() fails:
-> 
->   i801_smbus 0000:00:1f.3: enabling device (0140 -> 0143)
->   i801_smbus 0000:00:1f.3: can't derive routing for PCI INT C
->   i801_smbus 0000:00:1f.3: PCI INT C: no GSI
->   genirq: Flags mismatch irq 255. 00000080 (i801_smbus) vs. 00000000 (megasa)
->   CPU: 0 PID: 2487 Comm: kworker/0:1 Not tainted 3.10.0-229.el7.x86_64 #1
->   Hardware name: FUJITSU PRIMEQUEST 2800E2/D3736, BIOS PRIMEQUEST 2000 Serie5
->   Call Trace:
->     dump_stack+0x19/0x1b
->     __setup_irq+0x54a/0x570
->     request_threaded_irq+0xcc/0x170
->     i801_probe+0x32f/0x508 [i2c_i801]
->     local_pci_probe+0x45/0xa0
->   i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
->   i801_smbus: probe of 0000:00:1f.3 failed with error -16
-> 
-> After aeb8a3d16ae0 ("i2c: i801: Check if interrupts are disabled"),
-> i801_probe() will fall back to polling if request_irq() fails.  But we
-> still need this patch because request_irq() may succeed or fail depending
-> on other devices in the system.  If request_irq() fails, i801_smbus will
-> work by falling back to polling, but if it succeeds, i801_smbus won't work
-> because it expects interrupts that it may not receive.
+Thanks for helping to test.
 
-I like this. :-)
-
-Chen, can you please add the changelog as suggested by Bjorn to the patch
-and resend?
+Let me run a few tests on my platforms today and after that I'll submit 
+a fix.
 
 Thanks,
-Rafael
 
+Ray
