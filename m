@@ -1,84 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39163 "EHLO mail.kernel.org"
+Received: from mga01.intel.com ([192.55.52.88]:18169 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751969AbcAFVtg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Jan 2016 16:49:36 -0500
-Date: Wed, 6 Jan 2016 15:49:33 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Biedl <linux-kernel.bfrz@manchmal.in-ulm.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Fix minimum allocation address overwrite
-Message-ID: <20160106214933.GB16231@localhost>
-References: <1450885675@msgid.manchmal.in-ulm.de>
+	id S933718AbcATPDD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jan 2016 10:03:03 -0500
+From: "Lawrynowicz, Jacek" <jacek.lawrynowicz@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"dwmw2@infradead.org" <dwmw2@infradead.org>,
+	"jroedel@suse.de" <jroedel@suse.de>
+Subject: RE: [PATCH] pci: Add support for multiple DMA aliases
+Date: Wed, 20 Jan 2016 15:02:26 +0000
+Message-ID: <36D38C1F74839847A52A484C31F3E51A62131B9D@irsmsx105.ger.corp.intel.com>
+References: <1453118346-76897-1-git-send-email-jacek.lawrynowicz@intel.com>
+ <1453133267-79756-1-git-send-email-jacek.lawrynowicz@intel.com>
+ <20160119033315.GA6510@localhost> <20160119201254.GB6510@localhost>
+ <1453237471.32741.267.camel@redhat.com> <20160119213901.GG14080@localhost>
+In-Reply-To: <20160119213901.GG14080@localhost>
+Content-Type: text/plain; charset="iso-8859-2"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1450885675@msgid.manchmal.in-ulm.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Dec 23, 2015 at 04:51:57PM +0100, Christoph Biedl wrote:
-> Commit 36e097a8a297 ("PCI: Split out bridge window override of minimum
-> allocation address") claimed to do no functional changes but unfortunately
-> did: The "min" variable is altered. At least the AVM A1 PCMCIA adapter was
-> no longer detected, breaking ISDN operation.
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> owner@vger.kernel.org] On Behalf Of Bjorn Helgaas
+> Sent: Tuesday, January 19, 2016 10:39 PM
+> To: Alex Williamson <alex.williamson@redhat.com>
+> Cc: Lawrynowicz, Jacek <jacek.lawrynowicz@intel.com>; linux-
+> pci@vger.kernel.org; bhelgaas@google.com; dwmw2@infradead.org;
+> jroedel@suse.de
+> Subject: Re: [PATCH] pci: Add support for multiple DMA aliases
 > 
-> So use a local copy of min to restore the previous behaviour.
+> On Tue, Jan 19, 2016 at 02:04:31PM -0700, Alex Williamson wrote:
+> > On Tue, 2016-01-19 at 14:12 -0600, Bjorn Helgaas wrote:
+> > > [+cc Alex]
+> > >
+> > > On Mon, Jan 18, 2016 at 09:33:15PM -0600, Bjorn Helgaas wrote:
+> > > > On Mon, Jan 18, 2016 at 05:07:47PM +0100, Jacek Lawrynowicz wrote:
+> > > > > This patch solves IOMMU support issues with PCIe non-transparent
+> > > > > bridges that use Requester ID look-up tables (LUT), e.g.
+> > > > > PEX8733. Before exiting the bridge, packet's RID is rewritten
+> > > > > according to LUT programmed by a driver. Modified packets are
+> > > > > then passed to a destination bus and processed upstream. The
+> > > > > problem is that such packets seem to come from non-existent
+> > > > > nodes that are hidden behind NTB and are not discoverable by a
+> > > > > destination node, so IOMMU discards them. Adding DMA alias for a
+> > > > > given LUT entry allows IOMMU to create a proper mapping that
+> enables inter-node communication.
+> > > > >
+> > > > > The current DMA alias implementation supports only single alias,
+> > > > > so it's not possible to connect more than two nodes when IOMMU
+> > > > > is enabled. This implementation enables all possible aliases on
+> > > > > a given bus (256) that are stored in a bitset. Alias devfn is
+> > > > > directly translated to a bit number. The bitset is not allocated
+> > > > > for devices that have no need for DMA aliases.
+> >
+> > My only concern here is that pci_add_dma_alias() makes aliases seem
+> > more dynamic than they really are.  For instance, when we add a device
+> > to an IOMMU domain, we evaluate the aliases at that point, if an NTB
+> > later adds a new lookup entry and specifies a new alias, it's still
+> > not going to work.  Similarly, IOMMU groups are evaluated as the
+> > device is added, so if an alias is to a physical device and we need
+> > the cross reference to bind them together into a single group, calling
+> > pci_add_dma_alias() from a driver isn't going to work.
+> >
+> > The existing code had this problem too, it's just more obvious now
+> > that we have a helper function and that the helper is exported for use
+> > outside of the PCI core.  Thanks,
 > 
-> Cc: stable@vger.kernel.org      # v3.14+
-> Fixes: 36e097a8a297 ("PCI: Split out bridge window override of minimum allocation address")
-> Signed-off-by: Christoph Biedl <linux-kernel.bfrz@manchmal.in-ulm.de>
+> Oh, that's a really good point.  I hadn't noticed the export.  Is there any
+> reason pci_add_dma_alias() needs to be declared in include/linux/pci.h and
+> exported to modules?
+> 
+> I don't think the current patch requires the export, but I suppose you
+> envision an NTB driver that might be a module?  I guess we can easily export
+> it when that driver is merged if that seems the best solution.
 
-Applied to pci/misc for v4.5, thanks!
+This export would be useful for Xeon Phi x200 which uses on a NTB generating
+multiple RIDs. x200 is not yet ready for upstreming (x100 is already upstreamed) and
+having this export would make driver development less painful.
 
-I don't think the problem is specific to the AVM A1 adapter; it is probably
-related to the specific system memory layout and maybe PCMCIA.  If you have
-more information, e.g., a dmesg log and /proc/iomem contents, that would be
-useful documentation.
+--
+Jacek Lawrynowicz
+Intel Technology Poland sp. z o.o.
+KRS 101882 - ul. Slowackiego 173, 80-298 Gdansk
 
-> ---
-> Since I have access to that piece of hardware for a limited time only,
-> please get back to ASAP in case I should do more tests, by 2015-12-26
-> the latest.
-> 
-> Additional tests were done for -stable on the latest 3.14, 4.1 and 4.3
-> releases, with all results as expected.
-> ---
->  drivers/pci/bus.c |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index d3346d2..60263f7 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -140,6 +140,8 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
->  	type_mask |= IORESOURCE_TYPE_BITS;
->  
->  	pci_bus_for_each_resource(bus, r, i) {
-> +		resource_size_t min_used;
-> +
->  		if (!r)
->  			continue;
->  
-> @@ -162,13 +164,11 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
->  		 * this is an already-configured bridge window, its start
->  		 * overrides "min".
->  		 */
-> -		if (avail.start)
-> -			min = avail.start;
-> -
-> +		min_used = avail.start ? : min;
->  		max = avail.end;
->  
->  		/* Ok, try it out.. */
-> -		ret = allocate_resource(r, res, size, min, max,
-> +		ret = allocate_resource(r, res, size, min_used, max,
->  					align, alignf, alignf_data);
->  		if (ret == 0)
->  			return 0;
-> -- 
-> 1.7.10.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
