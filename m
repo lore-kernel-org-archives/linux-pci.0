@@ -1,323 +1,200 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-ia64@vger.kernel.org>,
-	<linux-metag@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-s390@vger.kernel.org>, <linux-sh@vger.kernel.org>,
-	<linux-arch@vger.kernel.org>, <Will.Deacon@arm.com>,
-	<catalin.marinas@arm.com>, <grant.likely@linaro.org>,
-	<leif.lindholm@linaro.org>, <rfranz@cavium.com>,
-	<ard.biesheuvel@linaro.org>, <msalter@redhat.com>,
-	<robh+dt@kernel.org>, <steve.capper@linaro.org>,
-	<hanjun.guo@linaro.org>, <al.stone@linaro.org>, <arnd@arndb.de>,
-	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<rjw@rjwysocki.net>, <lenb@kernel.org>, <marc.zyngier@arm.com>,
-	<lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-	<tony.luck@intel.com>, <fenghua.yu@intel.com>,
-	<james.hogan@imgtec.com>, <benh@kernel.crashing.org>,
-	<tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
-	<x86@kernel.org>, <jonathan@jonmasters.org>, <rrichter@cavium.com>,
-	<Prasun.Kapoor@caviumnetworks.com>
-CC: <gpkulkarni@gmail.com>
-Subject: [PATCH v9 2/6] Documentation, dt, arm64/arm: dt bindings for numa.
-Date: Mon, 18 Jan 2016 22:06:01 +0530
-Message-ID: <1453134965-6125-3-git-send-email-gkulkarni@caviumnetworks.com>
-In-Reply-To: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
-References: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cn.fujitsu.com ([59.151.112.132]:52897 "EHLO
+	heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933721AbcATE0B (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2016 23:26:01 -0500
+Message-ID: <569F0B44.1010109@cn.fujitsu.com>
+Date: Wed, 20 Jan 2016 12:21:24 +0800
+From: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<lenb@kernel.org>, <izumi.taku@jp.fujitsu.com>,
+	<wency@cn.fujitsu.com>, <caoj.fnst@cn.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH] pci: fix unavailable irq number 255 reported by BIOS
+References: <1453167913-16248-1-git-send-email-chen.fan.fnst@cn.fujitsu.com> <6239489.QX2A2kAHWp@vostro.rjw.lan> <20160120002431.GA7973@localhost>
+In-Reply-To: <20160120002431.GA7973@localhost>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DT bindings for numa mapping of memory, cores and IOs.
 
-Reviewed-by: Robert Richter <rrichter@cavium.com>
-Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
----
- Documentation/devicetree/bindings/arm/numa.txt | 272 +++++++++++++++++++++++++
- 1 file changed, 272 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/arm/numa.txt
+On 01/20/2016 08:24 AM, Bjorn Helgaas wrote:
+> [+cc Jiang]
+>
+> Hi Chen,
+>
+> On Tue, Jan 19, 2016 at 02:43:30PM +0100, Rafael J. Wysocki wrote:
+>> On Tuesday, January 19, 2016 09:45:13 AM Chen Fan wrote:
+>>> In our environment, when enable Secure boot, we found an abnormal
+> This has more information than necessary.  I don't think Secure Boot is
+> really relevant, and nor are the timestamps and stack addresses below.
+I just think enable the Secure Boot, probably the firmware assigned
+a 0xff interrupt to the device which unauthenticated.
+>
+>>> phenomenon as following call trace shows. after investigation, we
+>>> found the firmware assigned an irq number 255 which means unknown
+>>> or no connection in PCI local spec for i801_smbus, meanwhile the
+>>> ACPI didn't configure the pci irq routing. and the 255 irq number
+>>> was assigned for megasa msix without IRQF_SHARED. then in this case
+>>> during i801_smbus probe, the i801_smbus driver would request irq with
+>>> bad irq number 255. but the 255 irq number was assigned for memgasa
+>>> with MSIX enable. which will cause request_irq fails, and call trace
+>>> shows, actually, we should expose the error early, rather than in request
+>>> irq, here we simply fix the problem by return err when find the irq is
+>>> 255.
+>>> See the call trace:
+>>>
+>>>   [   32.459195] ipmi device interface
+>>>   [   32.612907] shpchp: Standard Hot Plug PCI Controller Driver version: 0.4
+>>>   [   32.800459] ixgbe: Intel(R) 10 Gigabit PCI Express Network Driver - version 4.0.1-k-rh
+>>>   [   32.818319] ixgbe: Copyright (c) 1999-2014 Intel Corporation.
+>>>   [   32.844009] lpc_ich 0001:80:1f.0: I/O space for ACPI uninitialized
+>>>   [   32.850093] i801_smbus 0000:00:1f.3: enabling device (0140 -> 0143)
+>>>   [   32.851134] i801_smbus 0000:00:1f.3: can't derive routing for PCI INT C
+>>>   [   32.851136] i801_smbus 0000:00:1f.3: PCI INT C: no GSI
+>>>   [   32.851164] genirq: Flags mismatch irq 255. 00000080 (i801_smbus) vs. 00000000 (megasa
+>>>   [   32.851168] CPU: 0 PID: 2487 Comm: kworker/0:1 Not tainted 3.10.0-229.el7.x86_64 #1
+>>>   [   32.851170] Hardware name: FUJITSU PRIMEQUEST 2800E2/D3736, BIOS PRIMEQUEST 2000 Serie5
+>>>   [   32.851178] Workqueue: events work_for_cpu_fn
+>>>   [   32.851208]  ffff88086c330b00 00000000e233a9df ffff88086d57bca0 ffffffff81603f36
+>>>   [   32.851227]  ffff88086d57bcf8 ffffffff8110d23a ffff88686fe02000 0000000000000246
+>>>   [   32.851246]  ffff88086a9a8c00 00000000e233a9df ffffffffa00ad220 0000000000000080
+>>>   [   32.851247] Call Trace:
+>>>   [   32.851261]  [<ffffffff81603f36>] dump_stack+0x19/0x1b
+>>>   [   32.851271]  [<ffffffff8110d23a>] __setup_irq+0x54a/0x570
+>>>   [   32.851282]  [<ffffffffa00ad220>] ? i801_check_pre.isra.5+0xe0/0xe0 [i2c_i801]
+>>>   [   32.851289]  [<ffffffff8110d3bc>] request_threaded_irq+0xcc/0x170
+>>>   [   32.851298]  [<ffffffffa00ae87f>] i801_probe+0x32f/0x508 [i2c_i801]
+>>>   [   32.851308]  [<ffffffff81308385>] local_pci_probe+0x45/0xa0
+>>>   [   32.851315]  [<ffffffff8108bfd4>] work_for_cpu_fn+0x14/0x20
+>>>   [   32.851323]  [<ffffffff8108f0ab>] process_one_work+0x17b/0x470
+>>>   [   32.851330]  [<ffffffff81090003>] worker_thread+0x293/0x400
+>>>   [   32.851338]  [<ffffffff8108fd70>] ? rescuer_thread+0x400/0x400
+>>>   [   32.851346]  [<ffffffff8109726f>] kthread+0xcf/0xe0
+>>>   [   32.851353]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
+>>>   [   32.851362]  [<ffffffff81613cfc>] ret_from_fork+0x7c/0xb0
+>>>   [   32.851369]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
+>>>   [   32.851373] i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
+>>>   [   32.851435] i801_smbus: probe of 0000:00:1f.3 failed with error -16
+> Since the Interrupt Line register is writable and might contain any
+> value, it would be nice if Linux could at least tolerate anything
+> firmware might leave there without a backtrace, even if we end up not
+> being able to use the device.
+>
+> Your patch changes the acpi_pci_irq_enable() return value from 0 to
+> -EINVAL for this case.  You're running v3.10, and this change probably
+> makes pci_enable_device() fail.  I suppose the user-visible effect is
+> that with your patch,
+>
+>    - there's no backtrace,
+>    - i801_smbus fails with "Failed to enable SMBus PCI device" instead
+>      of with "Failed to allocate irq 255", and
+>    - i801_smbus fails even if no other device is using IRQ 255, instead
+>      of "succeeding" and using an IRQ 255 that probably doesn't work
+>      (this seems like maybe the most important difference)
+>
+> Jiang has changed this path with 890e4847587f ("PCI: Add
+> pcibios_alloc_irq() and pcibios_free_irq()"), so I think on newer
+> kernels, we'll never even call the i801_smbus probe function.
+no, on newer kernels, this phenomenon also probably appearance,
+with this patch 890e4847587f change, it didn't change the
+acpi_pci_irq_enable() return value, with the problem it also return 0,
+and then still call __pci_device_probe() to do i801_smbus probe
+function in pci_device_probe() function.
 
-diff --git a/Documentation/devicetree/bindings/arm/numa.txt b/Documentation/devicetree/bindings/arm/numa.txt
-new file mode 100644
-index 0000000..734e5b4
---- /dev/null
-+++ b/Documentation/devicetree/bindings/arm/numa.txt
-@@ -0,0 +1,272 @@
-+==============================================================================
-+NUMA binding description.
-+==============================================================================
-+
-+==============================================================================
-+1 - Introduction
-+==============================================================================
-+
-+Systems employing a Non Uniform Memory Access (NUMA) architecture contain
-+collections of hardware resources including processors, memory, and I/O buses,
-+that comprise what is commonly known as a NUMA node.
-+Processor accesses to memory within the local NUMA node is generally faster
-+than processor accesses to memory outside of the local NUMA node.
-+DT defines interfaces that allow the platform to convey NUMA node
-+topology information to OS.
-+
-+==============================================================================
-+2 - numa-node-id
-+==============================================================================
-+
-+For the purpose of identification, each NUMA node is associated with a unique
-+token known as a node id. For the purpose of this binding
-+a node id is a 32-bit integer.
-+
-+A device node is associated with a NUMA node by the presence of a
-+numa-node-id property which contains the node id of the device.
-+
-+Example:
-+	/* numa node 0 */
-+	numa-node-id = <0>;
-+
-+	/* numa node 1 */
-+	numa-node-id = <1>;
-+
-+==============================================================================
-+3 - distance-map
-+==============================================================================
-+
-+The device tree node distance-map describes the relative
-+distance (memory latency) between all numa nodes.
-+
-+- compatible : Should at least contain "numa-distance-map-v1".
-+
-+- distance-matrix
-+  This property defines a matrix to describe the relative distances
-+  between all numa nodes.
-+  It is represented as a list of node pairs and their relative distance.
-+
-+  Note:
-+	1. Each entry represents distance from first node to second node.
-+	The distances are equal in either direction.
-+	2. The distance from a node to self (local distance) is represented
-+	with value 10 and all internode distance should be represented with
-+	a value greater than 10.
-+	3. distance-matrix should have entries in lexicographical ascending
-+	order of nodes.
-+	4. There must be only one device node distance-map which must reside in the root node.
-+
-+Example:
-+	4 nodes connected in mesh/ring topology as below,
-+
-+		0_______20______1
-+		|               |
-+		|               |
-+		20             20
-+		|               |
-+		|               |
-+		|_______________|
-+		3       20      2
-+
-+	if relative distance for each hop is 20,
-+	then internode distance would be,
-+	      0 -> 1 = 20
-+	      1 -> 2 = 20
-+	      2 -> 3 = 20
-+	      3 -> 0 = 20
-+	      0 -> 2 = 40
-+	      1 -> 3 = 40
-+
-+     and dt presentation for this distance matrix is,
-+
-+		distance-map {
-+			 compatible = "numa-distance-map-v1";
-+			 distance-matrix = <0 0  10>,
-+					   <0 1  20>,
-+					   <0 2  40>,
-+					   <0 3  20>,
-+					   <1 0  20>,
-+					   <1 1  10>,
-+					   <1 2  20>,
-+					   <1 3  40>,
-+					   <2 0  40>,
-+					   <2 1  20>,
-+					   <2 2  10>,
-+					   <2 3  20>,
-+					   <3 0  20>,
-+					   <3 1  40>,
-+					   <3 2  20>,
-+					   <3 3  10>;
-+		};
-+
-+==============================================================================
-+4 - Example dts
-+==============================================================================
-+
-+2 sockets system consists of 2 boards connected through ccn bus and
-+each board having one socket/soc of 8 cpus, memory and pci bus.
-+
-+	memory@00c00000 {
-+		device_type = "memory";
-+		reg = <0x0 0x00c00000 0x0 0x80000000>;
-+		/* node 0 */
-+		numa-node-id = <0>;
-+	};
-+
-+	memory@10000000000 {
-+		device_type = "memory";
-+		reg = <0x100 0x00000000 0x0 0x80000000>;
-+		/* node 1 */
-+		numa-node-id = <1>;
-+	};
-+
-+	cpus {
-+		#address-cells = <2>;
-+		#size-cells = <0>;
-+
-+		cpu@000 {
-+			device_type = "cpu";
-+			compatible =  "arm,armv8";
-+			reg = <0x0 0x000>;
-+			enable-method = "psci";
-+			/* node 0 */
-+			numa-node-id = <0>;
-+		};
-+		cpu@001 {
-+			device_type = "cpu";
-+			compatible =  "arm,armv8";
-+			reg = <0x0 0x001>;
-+			enable-method = "psci";
-+			numa-node-id = <0>;
-+		};
-+		cpu@002 {
-+			device_type = "cpu";
-+			compatible =  "arm,armv8";
-+			reg = <0x0 0x002>;
-+			enable-method = "psci";
-+			numa-node-id = <0>;
-+		};
-+		cpu@003 {
-+			device_type = "cpu";
-+			compatible =  "arm,armv8";
-+			reg = <0x0 0x003>;
-+			enable-method = "psci";
-+			numa-node-id = <0>;
-+		};
-+		cpu@004 {
-+			device_type = "cpu";
-+			compatible =  "arm,armv8";
-+			reg = <0x0 0x004>;
-+			enable-method = "psci";
-+			numa-node-id = <0>;
-+		};
-+		cpu@005 {
-+			device_type = "cpu";
-+			compatible =  "arm,armv8";
-+			reg = <0x0 0x005>;
-+			enable-method = "psci";
-+			numa-node-id = <0>;
-+		};
-+		cpu@006 {
-+			device_type = "cpu";
-+			compatible =  "arm,armv8";
-+			reg = <0x0 0x006>;
-+			enable-method = "psci";
-+			numa-node-id = <0>;
-+		};
-+		cpu@007 {
-+			device_type = "cpu";
-+			compatible =  "arm,armv8";
-+			reg = <0x0 0x007>;
-+			enable-method = "psci";
-+			numa-node-id = <0>;
-+		};
-+		cpu@008 {
-+			device_type = "cpu";
-+			compatible =  "arm,armv8";
-+			reg = <0x0 0x008>;
-+			enable-method = "psci";
-+			/* node 1 */
-+			numa-node-id = <1>;
-+		};
-+		cpu@009 {
-+			device_type = "cpu";
-+			compatible =  "arm,armv8";
-+			reg = <0x0 0x009>;
-+			enable-method = "psci";
-+			numa-node-id = <1>;
-+		};
-+		cpu@00a {
-+			device_type = "cpu";
-+			compatible =  "arm,armv8";
-+			reg = <0x0 0x00a>;
-+			enable-method = "psci";
-+			numa-node-id = <1>;
-+		};
-+		cpu@00b {
-+			device_type = "cpu";
-+			compatible =  "arm,armv8";
-+			reg = <0x0 0x00b>;
-+			enable-method = "psci";
-+			numa-node-id = <1>;
-+		};
-+		cpu@00c {
-+			device_type = "cpu";
-+			compatible =  "arm,armv8";
-+			reg = <0x0 0x00c>;
-+			enable-method = "psci";
-+			numa-node-id = <1>;
-+		};
-+		cpu@00d {
-+			device_type = "cpu";
-+			compatible =  "arm,armv8";
-+			reg = <0x0 0x00d>;
-+			enable-method = "psci";
-+			numa-node-id = <1>;
-+		};
-+		cpu@00e {
-+			device_type = "cpu";
-+			compatible =  "arm,armv8";
-+			reg = <0x0 0x00e>;
-+			enable-method = "psci";
-+			numa-node-id = <1>;
-+		};
-+		cpu@00f {
-+			device_type = "cpu";
-+			compatible =  "arm,armv8";
-+			reg = <0x0 0x00f>;
-+			enable-method = "psci";
-+			numa-node-id = <1>;
-+		};
-+	};
-+
-+	pcie0: pcie0@0x8480,00000000 {
-+		compatible = "arm,armv8";
-+		device_type = "pci";
-+		bus-range = <0 255>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		reg = <0x8480 0x00000000 0 0x10000000>;  /* Configuration space */
-+		ranges = <0x03000000 0x8010 0x00000000 0x8010 0x00000000 0x70 0x00000000>;
-+		/* node 0 */
-+		numa-node-id = <0>;
-+        };
-+
-+	pcie1: pcie1@0x9480,00000000 {
-+		compatible = "arm,armv8";
-+		device_type = "pci";
-+		bus-range = <0 255>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		reg = <0x9480 0x00000000 0 0x10000000>;  /* Configuration space */
-+		ranges = <0x03000000 0x9010 0x00000000 0x9010 0x00000000 0x70 0x00000000>;
-+		/* node 1 */
-+		numa-node-id = <1>;
-+        };
-+
-+	distance-map {
-+		compatible = "numa-distance-map-v1";
-+		distance-matrix = <0 0 10>,
-+				  <0 1 20>,
-+				  <1 1 10>;
-+	};
--- 
-1.8.1.4
+>
+> What behavior are you looking for from i801_smbus?  Decline to claim
+> the device?  Try to use the device without interrupts?  Try to figure
+> out an interrupt in some other way?
+I think if BIOS assigned 0xff interrupt line to device, and kernel can't 
+look
+up a valid interrupt for the device, we should not allow to use the device.
+>
+> I'm not 100% sure that 890e4847587f does the right thing by preventing
+> a driver from claiming a device where we can't set up an IRQ.  It's
+> conceivable that a driver could still operate a device even without an
+> IRQ.
+I don't understanding, does without IRQ for device still work?
+
+Thanks,
+Chen
+
+>
+>>>   [   33.180145] ixgbe 0000:5a:00.0: Multiq[   33.240538] ixgbe 0000:5a:00.0: (PCI Express:03:e0
+>>>   [   33.280826] ixgbe 0000:5a:00.0: MAC: 3, PHY: 0, PBA No: 000000-000
+>>>
+>>> Signed-off-by: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
+>>> ---
+>>>   drivers/acpi/pci_irq.c | 10 +++++++++-
+>>>   1 file changed, 9 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+>>> index d30184c..d2f47f8 100644
+>>> --- a/drivers/acpi/pci_irq.c
+>>> +++ b/drivers/acpi/pci_irq.c
+>>> @@ -439,9 +439,17 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+>>>   		if (acpi_isa_register_gsi(dev))
+>>>   			dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
+>>>   				 pin_name(pin));
+>>> +		rc = 0;
+>>> +		/*
+>>> +		 * Excluding the BIOS report the value 255, which meaning
+>>> +		 * "unknown" or "no connection" in PCI Local Bus Specification
+>>> +		 * Revision 3.0 February 3, 2004, P223.
+>> You mean the footnote on page 223 talking about the Interrupt Line values, right?
+>>
+>>> +		 */
+>>> +		if (dev->irq == 0xFF)
+>>> +			rc = -EINVAL;
+>>>   
+>>>   		kfree(entry);
+>>> -		return 0;
+>>> +		return rc;
+>>>   	}
+>>>   
+>>>   	rc = acpi_register_gsi(&dev->dev, gsi, triggering, polarity);
+>>>
+>> Well, if you look at acpi_isa_register_gsi(), you'll see that it
+>> actually does the check you're adding, so maybe the following should
+>> be done instead?
+>>
+>> ---
+>>   drivers/acpi/pci_irq.c |    5 +++--
+>>   1 file changed, 3 insertions(+), 2 deletions(-)
+>>
+>> Index: linux-pm/drivers/acpi/pci_irq.c
+>> ===================================================================
+>> --- linux-pm.orig/drivers/acpi/pci_irq.c
+>> +++ linux-pm/drivers/acpi/pci_irq.c
+>> @@ -436,12 +436,13 @@ int acpi_pci_irq_enable(struct pci_dev *
+>>   	 * driver reported one, then use it. Exit in any case.
+>>   	 */
+>>   	if (gsi < 0) {
+>> -		if (acpi_isa_register_gsi(dev))
+>> +		rc = acpi_isa_register_gsi(dev);
+>> +		if (rc)
+>>   			dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
+>>   				 pin_name(pin));
+>>   
+>>   		kfree(entry);
+>> -		return 0;
+>> +		return rc;
+>>   	}
+>>   
+>>   	rc = acpi_register_gsi(&dev->dev, gsi, triggering, polarity);
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> .
+>
+
+
 
