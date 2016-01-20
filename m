@@ -1,74 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Colin King <colin.king@canonical.com>
-To: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Len Brown <len.brown@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: acpiphp_ibm: fix null dereferences on null ibm_slot
-Date: Sat,  2 Jan 2016 00:27:01 +0000
-Message-Id: <1451694421-5277-1-git-send-email-colin.king@canonical.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:46250 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934158AbcATQCl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 Jan 2016 11:02:41 -0500
+Date: Wed, 20 Jan 2016 16:04:27 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: Zhou Wang <wangzhou1@hisilicon.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
+Message-ID: <20160120160427.GD13437@red-moon>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Hi,
 
-ibm_slot_from_id can return null if the des header signature is
-not aPCI or if the kmalloc for the return acpi descriptore fails,
-causing potential null pointer dereferences on the return null
-descriptor.
+I noticed that:
 
-Handle the null case with appropriate check and error return.
+79953dd22c1d ("PCI: rcar: Remove dependency on ARM-specific struct hw_pci")
+cbce7900598c ("PCI: designware: Make driver arch-agnostic")
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/pci/hotplug/acpiphp_ibm.c | 17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
+added code in the respective host controller drivers to size bridges
+and assign resources only if the PCI_PROBE_ONLY flag is clear, which makes
+me wonder if there exists PCI_PROBE_ONLY set-ups for the respective
+host controllers:
 
-diff --git a/drivers/pci/hotplug/acpiphp_ibm.c b/drivers/pci/hotplug/acpiphp_ibm.c
-index 6ca2399..9d16c9d 100644
---- a/drivers/pci/hotplug/acpiphp_ibm.c
-+++ b/drivers/pci/hotplug/acpiphp_ibm.c
-@@ -154,7 +154,8 @@ static union apci_descriptor *ibm_slot_from_id(int id)
- ibm_slot_done:
- 	if (ret) {
- 		ret = kmalloc(sizeof(union apci_descriptor), GFP_KERNEL);
--		memcpy(ret, des, sizeof(union apci_descriptor));
-+		if (ret)
-+			memcpy(ret, des, sizeof(union apci_descriptor));
- 	}
- 	kfree(table);
- 	return ret;
-@@ -175,8 +176,13 @@ static int ibm_set_attention_status(struct hotplug_slot *slot, u8 status)
- 	acpi_status stat;
- 	unsigned long long rc;
- 	union apci_descriptor *ibm_slot;
-+	int id = hpslot_to_sun(slot);
- 
--	ibm_slot = ibm_slot_from_id(hpslot_to_sun(slot));
-+	ibm_slot = ibm_slot_from_id(id);
-+	if (!ibm_slot) {
-+		pr_err("APLS null ACPI descriptor for slot %d\n", id);
-+		return -ENODEV;
-+	}
- 
- 	pr_debug("%s: set slot %d (%d) attention status to %d\n", __func__,
- 			ibm_slot->slot.slot_num, ibm_slot->slot.slot_id,
-@@ -215,8 +221,13 @@ static int ibm_set_attention_status(struct hotplug_slot *slot, u8 status)
- static int ibm_get_attention_status(struct hotplug_slot *slot, u8 *status)
- {
- 	union apci_descriptor *ibm_slot;
-+	int id = hpslot_to_sun(slot);
- 
--	ibm_slot = ibm_slot_from_id(hpslot_to_sun(slot));
-+	ibm_slot = ibm_slot_from_id(id);
-+	if (!ibm_slot) {
-+		pr_err("APLS null ACPI descriptor for slot %d\n", id);
-+		return -ENODEV;
-+	}
- 
- 	if (ibm_slot->slot.attn & 0xa0 || ibm_slot->slot.status[1] & 0x08)
- 		*status = 1;
--- 
-2.6.4
+- On ARM PCI_PROBE_ONLY can be set-up only via the command line or
+  by DT (but the host controllers drivers have to check the DT and
+  set it - see of_pci_check_probe_only()
 
+  in drivers/pci/host/pci-host-generic.c
+
+  neither designware nor rcar calls that function and I do not see
+  any dts file with that property). Given that I can't see a way
+  to set up PCI_PROBE_ONLY other than the command line on designware
+  or rcar I assume the PCI_PROBE_ONLY set-ups have been tested by
+  forcing it through command line parameter
+
+- On ARM64 PCI_PROBE_ONLY can *only* be set via DT, so see above
+
+We want to get rid of PCI_PROBE_ONLY on ARM/ARM64:
+
+https://patchwork.ozlabs.org/patch/545671/
+
+so unless you really have *existing* set-ups that require it, please
+remove the respective checks from the host controller drivers, this is
+becoming a serious issue, because either:
+
+- we claim resources if and only if PCI_PROBE_ONLY is set
+
+Either like this (to be done for every host controllers and ARM
+bios32):
+
+https://patchwork.ozlabs.org/patch/545670/
+
+or in core ARM/ARM64 code - eg pcibios_fixup_bus() - (to avoid adding a
+resource claiming call in ALL PCI host controllers)
+
+- or we *always* carry out resource claiming regardless of PCI_PROBE_ONLY
+  (but on ARM we can't really do that since PCI FW set-up on most of the
+  platforms is not present)
+
+On PCI_PROBE_ONLY systems resources claiming is mandatory if we want
+to get rid of arches workarounds:
+
+https://patchwork.ozlabs.org/patch/545671/
+
+Comments very appreciated.
+
+Thanks,
+Lorenzo
