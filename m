@@ -1,110 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 5 Jan 2016 12:59:54 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: "Dr. David Alan Gilbert" <dgilbert@redhat.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	x86@kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
-	Yang Zhang <yang.zhang.wz@gmail.com>,
-	Alexander Graf <agraf@suse.de>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page
- tracking
-Message-ID: <20160105125937-mutt-send-email-mst@redhat.com>
-References: <20151213212557.5410.48577.stgit@localhost.localdomain>
- <20160104204104.GB17427@char.us.oracle.com>
- <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
- <20160105113317-mutt-send-email-mst@redhat.com>
- <20160105100104.GA2439@work-vm>
- <20160105123243-mutt-send-email-mst@redhat.com>
- <20160105104525.GC2439@work-vm>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60326 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933838AbcATQNI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jan 2016 11:13:08 -0500
+Subject: Re: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	linux-pci@vger.kernel.org
+References: <20160120160427.GD13437@red-moon>
+Cc: Zhou Wang <wangzhou1@hisilicon.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <569FB210.9090605@codeaurora.org>
+Date: Wed, 20 Jan 2016 11:13:04 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160105104525.GC2439@work-vm>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160120160427.GD13437@red-moon>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 05, 2016 at 10:45:25AM +0000, Dr. David Alan Gilbert wrote:
-> * Michael S. Tsirkin (mst@redhat.com) wrote:
-> > On Tue, Jan 05, 2016 at 10:01:04AM +0000, Dr. David Alan Gilbert wrote:
-> > > * Michael S. Tsirkin (mst@redhat.com) wrote:
-> > > > On Mon, Jan 04, 2016 at 07:11:25PM -0800, Alexander Duyck wrote:
-> > > > > >> The two mechanisms referenced above would likely require coordination with
-> > > > > >> QEMU and as such are open to discussion.  I haven't attempted to address
-> > > > > >> them as I am not sure there is a consensus as of yet.  My personal
-> > > > > >> preference would be to add a vendor-specific configuration block to the
-> > > > > >> emulated pci-bridge interfaces created by QEMU that would allow us to
-> > > > > >> essentially extend shpc to support guest live migration with pass-through
-> > > > > >> devices.
-> > > > > >
-> > > > > > shpc?
-> > > > > 
-> > > > > That is kind of what I was thinking.  We basically need some mechanism
-> > > > > to allow for the host to ask the device to quiesce.  It has been
-> > > > > proposed to possibly even look at something like an ACPI interface
-> > > > > since I know ACPI is used by QEMU to manage hot-plug in the standard
-> > > > > case.
-> > > > > 
-> > > > > - Alex
-> > > > 
-> > > > 
-> > > > Start by using hot-unplug for this!
-> > > > 
-> > > > Really use your patch guest side, and write host side
-> > > > to allow starting migration with the device, but
-> > > > defer completing it.
-> > > > 
-> > > > So
-> > > > 
-> > > > 1.- host tells guest to start tracking memory writes
-> > > > 2.- guest acks
-> > > > 3.- migration starts
-> > > > 4.- most memory is migrated
-> > > > 5.- host tells guest to eject device
-> > > > 6.- guest acks
-> > > > 7.- stop vm and migrate rest of state
-> > > > 
-> > > > 
-> > > > It will already be a win since hot unplug after migration starts and
-> > > > most memory has been migrated is better than hot unplug before migration
-> > > > starts.
-> > > > 
-> > > > Then measure downtime and profile. Then we can look at ways
-> > > > to quiesce device faster which really means step 5 is replaced
-> > > > with "host tells guest to quiesce device and dirty (or just unmap!)
-> > > > all memory mapped for write by device".
-> > > 
-> > > 
-> > > Doing a hot-unplug is going to upset the guests network stacks view
-> > > of the world; that's something we don't want to change.
-> > > 
-> > > Dave
-> > 
-> > It might but if you store the IP and restore it quickly
-> > after migration e.g. using guest agent, as opposed to DHCP,
-> > then it won't.
+On 1/20/2016 11:04 AM, Lorenzo Pieralisi wrote:
+> Hi,
 > 
-> I thought if you hot-unplug then it will lose any outstanding connections
-> on that device.
+> I noticed that:
 > 
-> > It allows calming the device down in a generic way,
-> > specific drivers can then implement the fast quiesce.
+> 79953dd22c1d ("PCI: rcar: Remove dependency on ARM-specific struct hw_pci")
+> cbce7900598c ("PCI: designware: Make driver arch-agnostic")
 > 
-> Except that if it breaks the guest networking it's useless.
+> added code in the respective host controller drivers to size bridges
+> and assign resources only if the PCI_PROBE_ONLY flag is clear, which makes
+> me wonder if there exists PCI_PROBE_ONLY set-ups for the respective
+> host controllers:
 > 
-> Dave
+> - On ARM PCI_PROBE_ONLY can be set-up only via the command line or
+>   by DT (but the host controllers drivers have to check the DT and
+>   set it - see of_pci_check_probe_only()
+> 
+>   in drivers/pci/host/pci-host-generic.c
+> 
+>   neither designware nor rcar calls that function and I do not see
+>   any dts file with that property). Given that I can't see a way
+>   to set up PCI_PROBE_ONLY other than the command line on designware
+>   or rcar I assume the PCI_PROBE_ONLY set-ups have been tested by
+>   forcing it through command line parameter
+> 
+> - On ARM64 PCI_PROBE_ONLY can *only* be set via DT, so see above
+> 
+> We want to get rid of PCI_PROBE_ONLY on ARM/ARM64:
 
-Is hot unplug useless then?
+For platforms that does not have UEFI BIOS, it makes sense to remove the probe only
+option as the firmware is not doing anything.
 
-> > 
-> > > > 
-> > > > -- 
-> > > > MST
-> > > --
-> > > Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
+For server like arm64 platforms, the behavior should be identical to x86 world. The UEFI
+BIOS sets up the resources, kernel uses the resources.
+
+Can we set this flag all the time for ACPI builds instead?
+
+What's so special about arm64 that we can't do probe only builds and x86 can do?
+
+> 
+> https://patchwork.ozlabs.org/patch/545671/
+> 
+> so unless you really have *existing* set-ups that require it, please
+> remove the respective checks from the host controller drivers, this is
+> becoming a serious issue, because either:
+> 
+> - we claim resources if and only if PCI_PROBE_ONLY is set
+> 
+> Either like this (to be done for every host controllers and ARM
+> bios32):
+> 
+> https://patchwork.ozlabs.org/patch/545670/
+> 
+> or in core ARM/ARM64 code - eg pcibios_fixup_bus() - (to avoid adding a
+> resource claiming call in ALL PCI host controllers)
+> 
+> - or we *always* carry out resource claiming regardless of PCI_PROBE_ONLY
+>   (but on ARM we can't really do that since PCI FW set-up on most of the
+>   platforms is not present)
+> 
+> On PCI_PROBE_ONLY systems resources claiming is mandatory if we want
+> to get rid of arches workarounds:
+
+I'm hoping to see x86 like behavior on ARM64 without any gotchas as there is nothing
+special about CPU type when it comes to PCI.
+
+> 
+> https://patchwork.ozlabs.org/patch/545671/
+> 
+> Comments very appreciated.
+> 
+> Thanks,
+> Lorenzo
 > --
-> Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
