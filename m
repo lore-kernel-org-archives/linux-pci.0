@@ -1,92 +1,157 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47664 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932339AbcAZNF5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Jan 2016 08:05:57 -0500
-Subject: Re: [PATCH] PCI: aer_inject: Log actual error causes
-From: Jean Delvare <jdelvare@suse.de>
-To: Borislav Petkov <bp@suse.de>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	john.ronciak@intel.com, tony.luck@intel.com,
-	Thomas Renninger <trenn@suse.de>
-In-Reply-To: <20160126124901.GE8475@pd.tnic>
-References: <20160126095205.0e5923bd@endymion.delvare>
-	 <20160126101244.GB8475@pd.tnic> <1453811238.4772.124.camel@chaos.site>
-	 <20160126124901.GE8475@pd.tnic>
-Content-Type: text/plain; charset="UTF-8"
-Date: Tue, 26 Jan 2016 14:05:54 +0100
-Message-ID: <1453813554.4772.131.camel@chaos.site>
-Mime-Version: 1.0
+Received: from cn.fujitsu.com ([59.151.112.132]:13236 "EHLO
+	heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758282AbcAUIHF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jan 2016 03:07:05 -0500
+Message-ID: <56A0908B.8060904@cn.fujitsu.com>
+Date: Thu, 21 Jan 2016 16:02:19 +0800
+From: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<lenb@kernel.org>, <izumi.taku@jp.fujitsu.com>,
+	<wency@cn.fujitsu.com>, <caoj.fnst@cn.fujitsu.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH] pci: fix unavailable irq number 255 reported by BIOS
+References: <1453167913-16248-1-git-send-email-chen.fan.fnst@cn.fujitsu.com> <6239489.QX2A2kAHWp@vostro.rjw.lan> <20160120002431.GA7973@localhost> <569F0B44.1010109@cn.fujitsu.com> <20160120171252.GB7973@localhost>
+In-Reply-To: <20160120171252.GB7973@localhost>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Le Tuesday 26 January 2016 à 13:49 +0100, Borislav Petkov a écrit :
-> On Tue, Jan 26, 2016 at 01:27:18PM +0100, Jean Delvare wrote:
-> > But I'd say -EPERM is hardly better. The problem with -ENODEV is that it
-> > is already returned by this function for several other error causes.
-> > Also the aer-inject user-space tool will print the error message from
-> > the error code, and I don't think "No such device" is helpful in that
-> > case. What about -ENOTSUPP ("Operation not supported") or
-> > -EEPROTONOSUPPORT ("Protocol not supported")?
-> 
-> Makes sense.
-> 
-> > I can change it if nobody objects. I think the change can be included in
-> > this patch as it is quite related.
-> 
-> I'd do a separate patch but this is only my opinion. I guess that's
-> Bjorn's call.
 
-I am almost always advocating for separate patches, but here it seemed
-like hairsplitting so I wasn't sure. I'm fine both ways really.
+On 01/21/2016 01:12 AM, Bjorn Helgaas wrote:
+> On Wed, Jan 20, 2016 at 12:21:24PM +0800, Chen Fan wrote:
+>> On 01/20/2016 08:24 AM, Bjorn Helgaas wrote:
+>>> [+cc Jiang]
+>>>
+>>> Hi Chen,
+>>>
+>>> On Tue, Jan 19, 2016 at 02:43:30PM +0100, Rafael J. Wysocki wrote:
+>>>> On Tuesday, January 19, 2016 09:45:13 AM Chen Fan wrote:
+>>>>> In our environment, when enable Secure boot, we found an abnormal
+>>> This has more information than necessary.  I don't think Secure Boot is
+>>> really relevant, and nor are the timestamps and stack addresses below.
+>> I just think enable the Secure Boot, probably the firmware assigned
+>> a 0xff interrupt to the device which unauthenticated.
+> The important thing is that you're changing the way we handle
+> Interrupt Line being 0xff.  That affects more than just Secure Boot
+> users.  It's fine to mention Secure Boot later, as one example of an
+> affected scenario.
+>
+> I don't know anything about Secure Boot, but setting Interrupt Line to
+> 0xff would obviously not be a robust way of hiding an unauthenticated
+> device.  But it sounds like you're just speculating about that anyway.
+>
+>>>>> phenomenon as following call trace shows. after investigation, we
+>>>>> found the firmware assigned an irq number 255 which means unknown
+>>>>> or no connection in PCI local spec for i801_smbus, meanwhile the
+>>>>> ACPI didn't configure the pci irq routing. and the 255 irq number
+>>>>> was assigned for megasa msix without IRQF_SHARED. then in this case
+>>>>> during i801_smbus probe, the i801_smbus driver would request irq with
+>>>>> bad irq number 255. but the 255 irq number was assigned for memgasa
+>>>>> with MSIX enable. which will cause request_irq fails, and call trace
+>>>>> shows, actually, we should expose the error early, rather than in request
+>>>>> irq, here we simply fix the problem by return err when find the irq is
+>>>>> 255.
+>>>>> See the call trace:
+>>>>>
+>>>>>   [   32.459195] ipmi device interface
+>>>>>   [   32.612907] shpchp: Standard Hot Plug PCI Controller Driver version: 0.4
+>>>>>   [   32.800459] ixgbe: Intel(R) 10 Gigabit PCI Express Network Driver - version 4.0.1-k-rh
+>>>>>   [   32.818319] ixgbe: Copyright (c) 1999-2014 Intel Corporation.
+>>>>>   [   32.844009] lpc_ich 0001:80:1f.0: I/O space for ACPI uninitialized
+>>>>>   [   32.850093] i801_smbus 0000:00:1f.3: enabling device (0140 -> 0143)
+>>>>>   [   32.851134] i801_smbus 0000:00:1f.3: can't derive routing for PCI INT C
+>>>>>   [   32.851136] i801_smbus 0000:00:1f.3: PCI INT C: no GSI
+>>>>>   [   32.851164] genirq: Flags mismatch irq 255. 00000080 (i801_smbus) vs. 00000000 (megasa
+>>>>>   [   32.851168] CPU: 0 PID: 2487 Comm: kworker/0:1 Not tainted 3.10.0-229.el7.x86_64 #1
+>>>>>   [   32.851170] Hardware name: FUJITSU PRIMEQUEST 2800E2/D3736, BIOS PRIMEQUEST 2000 Serie5
+>>>>>   [   32.851178] Workqueue: events work_for_cpu_fn
+>>>>>   [   32.851208]  ffff88086c330b00 00000000e233a9df ffff88086d57bca0 ffffffff81603f36
+>>>>>   [   32.851227]  ffff88086d57bcf8 ffffffff8110d23a ffff88686fe02000 0000000000000246
+>>>>>   [   32.851246]  ffff88086a9a8c00 00000000e233a9df ffffffffa00ad220 0000000000000080
+>>>>>   [   32.851247] Call Trace:
+>>>>>   [   32.851261]  [<ffffffff81603f36>] dump_stack+0x19/0x1b
+>>>>>   [   32.851271]  [<ffffffff8110d23a>] __setup_irq+0x54a/0x570
+>>>>>   [   32.851282]  [<ffffffffa00ad220>] ? i801_check_pre.isra.5+0xe0/0xe0 [i2c_i801]
+>>>>>   [   32.851289]  [<ffffffff8110d3bc>] request_threaded_irq+0xcc/0x170
+>>>>>   [   32.851298]  [<ffffffffa00ae87f>] i801_probe+0x32f/0x508 [i2c_i801]
+>>>>>   [   32.851308]  [<ffffffff81308385>] local_pci_probe+0x45/0xa0
+>>>>>   [   32.851315]  [<ffffffff8108bfd4>] work_for_cpu_fn+0x14/0x20
+>>>>>   [   32.851323]  [<ffffffff8108f0ab>] process_one_work+0x17b/0x470
+>>>>>   [   32.851330]  [<ffffffff81090003>] worker_thread+0x293/0x400
+>>>>>   [   32.851338]  [<ffffffff8108fd70>] ? rescuer_thread+0x400/0x400
+>>>>>   [   32.851346]  [<ffffffff8109726f>] kthread+0xcf/0xe0
+>>>>>   [   32.851353]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
+>>>>>   [   32.851362]  [<ffffffff81613cfc>] ret_from_fork+0x7c/0xb0
+>>>>>   [   32.851369]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
+>>>>>   [   32.851373] i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
+>>>>>   [   32.851435] i801_smbus: probe of 0000:00:1f.3 failed with error -16
+>>> Since the Interrupt Line register is writable and might contain any
+>>> value, it would be nice if Linux could at least tolerate anything
+>>> firmware might leave there without a backtrace, even if we end up not
+>>> being able to use the device.
+>>>
+>>> Your patch changes the acpi_pci_irq_enable() return value from 0 to
+>>> -EINVAL for this case.  You're running v3.10, and this change probably
+>>> makes pci_enable_device() fail.  I suppose the user-visible effect is
+>>> that with your patch,
+>>>
+>>>    - there's no backtrace,
+>>>    - i801_smbus fails with "Failed to enable SMBus PCI device" instead
+>>>      of with "Failed to allocate irq 255", and
+>>>    - i801_smbus fails even if no other device is using IRQ 255, instead
+>>>      of "succeeding" and using an IRQ 255 that probably doesn't work
+>>>      (this seems like maybe the most important difference)
+>>>
+>>> Jiang has changed this path with 890e4847587f ("PCI: Add
+>>> pcibios_alloc_irq() and pcibios_free_irq()"), so I think on newer
+>>> kernels, we'll never even call the i801_smbus probe function.
+>> no, on newer kernels, this phenomenon also probably appearance,
+>> with this patch 890e4847587f change, it didn't change the
+>> acpi_pci_irq_enable() return value, with the problem it also return 0,
+>> and then still call __pci_device_probe() to do i801_smbus probe
+>> function in pci_device_probe() function.
+> I meant that *with your patch*, newer kernels won't call the
+> i801_smbus probe function.
+>
+>>> What behavior are you looking for from i801_smbus?  Decline to claim
+>>> the device?  Try to use the device without interrupts?  Try to figure
+>>> out an interrupt in some other way?
+>> I think if BIOS assigned 0xff interrupt line to device, and kernel
+>> can't look
+>> up a valid interrupt for the device, we should not allow to use the device.
+>>> I'm not 100% sure that 890e4847587f does the right thing by preventing
+>>> a driver from claiming a device where we can't set up an IRQ.  It's
+>>> conceivable that a driver could still operate a device even without an
+>>> IRQ.
+>> I don't understanding, does without IRQ for device still work?
+> Polling drivers do not need IRQs.  The PCI core has no idea whether a
+> driver is interrupt-driven or polling, so we can't assume that a
+> device with no IRQ is useless.
+Got it, I observed the smbus driver has changed to polling when request_irq
+failed on new kernel.
+can we use a broken_irq flag in pci_dev to mark the device irq if invalid ?
+then if a device broken_irq set, we don't need to call request_irq and
+directly return failure. of course, maybe we need to check this for all 
+devices.
 
-> > I'd rather ask, why printk? ;-) Using raw printk is considered bad and
-> > should be avoided whenever possible.
-> 
-> Hmm, interesting. Why?
+BTW, can we skip the 0xff irq number when allocating irq in x86 arch ?
 
-I guess the idea is that it makes message formats more consistent and
-valuable.
+Thanks,
+Chen
 
-> > So says checkpatch.pl.
-> 
-> Please don't tell me you believe what checkpatch says.
 
-Of course I believe it, as long as it says what I want to hear. If not
-then I just claim it's a piece of crap and ignore it ;-) As everybody
-does, it seems.
+>
+> Bjorn
+>
+>
+> .
+>
 
-> > > Why not pr_err() and define pr_fmt to "aer_inject: " and then drop
-> > > that prefix from the messages?
-> > 
-> > Because I believe that including the device name in the error messages
-> > makes them more helpful to understand and diagnose the problem. If the
-> > device where we try to inject the error has a problem, it's PCI name
-> > will be included in the error message. If the error is with the root
-> > port, then we include the root port's PCI name. If I used pr_err()
-> > instead then the device information would be missing.
-> 
-> True, that's a good argument.
-> 
-> However, if you're doing aer injection, you already *know* the device
-> you're injecting too. Unless you want to inject in multiple devices and
-> then it is helpful.
 
-You know the device, but you don't know its root device, which
-apparently matters a lot for AER, and is used for 2 of the messages I
-introduced.
-
-Even for the device itself, a confirmation of the PCI device name is
-always good to have, to avoid confusion if you made a typo in your
-injection data for example.
-
-> So sure, dev_* sounds better as it gives more info about which device
-> fails, but then please convert the whole driver.
-
-OK, I'll work on this once the first round of reviews if done. I don't
-know if others have more comments, so let's wait a bit.
-
--- 
-Jean Delvare
-SUSE L3 Support
 
