@@ -1,48 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52622 "EHLO mail.kernel.org"
+Received: from mga02.intel.com ([134.134.136.20]:8775 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752850AbcAIWx0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 9 Jan 2016 17:53:26 -0500
-Date: Sat, 9 Jan 2016 16:53:21 -0600
-From: Rob Herring <robh@kernel.org>
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v3 2/2] pci, pci-thunder-pem: Add PCIe host driver for
- ThunderX processors.
-Message-ID: <20160109225321.GA22053@rob-hp-laptop>
-References: <1452297553-19911-1-git-send-email-ddaney.cavm@gmail.com>
- <1452297553-19911-3-git-send-email-ddaney.cavm@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1452297553-19911-3-git-send-email-ddaney.cavm@gmail.com>
+	id S1750838AbcAUWRP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 21 Jan 2016 17:17:15 -0500
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: linux-pci@vger.kernel.org, mj@ucw.cz, bhelgaas@google.com,
+	alex.williamson@redhat.com
+Cc: sean.stalley@intel.com, david.daney@cavium.com
+Subject: [PATCH 0/2] pci/lspci: Identify Enhanced Allocation (EA) Resources
+Date: Thu, 21 Jan 2016 14:13:28 -0800
+Message-Id: <1453414410-27072-1-git-send-email-sean.stalley@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 08, 2016 at 03:59:13PM -0800, David Daney wrote:
-> From: David Daney <david.daney@cavium.com>
-> 
-> Some Cavium ThunderX processors require quirky access methods for the
-> config space of the PCIe bridge.  Add a driver to provide these config
-> space accessor functions.  The pci-host-common code is used to
-> configure the PCI machinery.
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> ---
->  .../devicetree/bindings/pci/pci-thunder-pem.txt    |  43 ++++
+Identify BAR-equivalent resources that are described by EA entries
+with the IORESOURCE_PCI_EA_BEI flag.
 
-Acked-by: Rob Herring <robh@kernel.org>
+lspci cannot distinguish between resources from VF BARs and resources from EA.
+This results in EA Resources being incorrectly identified as [virtual].
+Adding this flag allows EA resources to be marked more accurately as [enhanced].
 
->  MAINTAINERS                                        |   8 +
->  drivers/pci/host/Kconfig                           |   7 +
->  drivers/pci/host/Makefile                          |   1 +
->  drivers/pci/host/pci-thunder-pem.c                 | 283 +++++++++++++++++++++
->  5 files changed, 342 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-pem.txt
->  create mode 100644 drivers/pci/host/pci-thunder-pem.c
+Although this patchset only add support for this flag to lspci,
+there are other use cases (such as vfio) where knowing a resource
+comes from EA would be useful.
+
+[PATCH 1/2] is for the kernel, [PATCH 2/2] is for lspci.
+
+
+Alex Williamson (1):
+  pci: Identify Enhanced Allocation (EA) BAR Equivalent resources
+
+Sean O. Stalley (1):
+  Add support for enhanced allocation regions
+
+linux changes:
+ drivers/pci/pci.c      | 2 +-
+ include/linux/ioport.h | 2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+lspci changes:
+ lib/header.h |  4 ++++
+ lib/pci.h    |  2 ++
+ lib/sysfs.c  |  5 ++++-
+ lspci.c      | 17 ++++++++++++++---
+ 4 files changed, 24 insertions(+), 4 deletions(-)
+
+
+-- 
+1.9.1
+
