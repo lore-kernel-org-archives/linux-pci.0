@@ -1,102 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v5 1/2] PCI support added to ARC
-To: Vineet Gupta <Vineet.Gupta1@synopsys.com>,
-	Arnd Bergmann <arnd@arndb.de>
-References: <cover.1452611234.git.jpinto@synopsys.com>
- <24c9b782dfade515bbed20ce75d85200a00a2e66.1452611234.git.jpinto@synopsys.com>
- <C2D7FE5348E1B147BCA15975FBA23075F4E84C55@us01wembx1.internal.synopsys.com>
- <4314331.TCtUIaZPTC@wuerfel> <56977B80.2040600@synopsys.com>
- <C2D7FE5348E1B147BCA15975FBA23075F4E84DC7@us01wembx1.internal.synopsys.com>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>,
-	"helgaas@kernel.org" <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-snps-arc@lists.infradead.org"
-	<linux-snps-arc@lists.infradead.org>,
-	"CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>,
-	"Alexey.Brodkin@synopsys.com" <Alexey.Brodkin@synopsys.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <56977E5B.7050309@synopsys.com>
-Date: Thu, 14 Jan 2016 10:54:19 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:38972 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753414AbcAUU5k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 21 Jan 2016 15:57:40 -0500
+Date: Thu, 21 Jan 2016 14:57:17 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] pci: aer: wait till the workqueue completes before
+ free memory
+Message-ID: <20160121205717.GA21798@localhost>
+References: <20151217143243.GA9654@linutronix.de>
+ <20160106232758.GE16231@localhost>
+ <20160115183625.GG3781@linutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <C2D7FE5348E1B147BCA15975FBA23075F4E84DC7@us01wembx1.internal.synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160115183625.GG3781@linutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Sebastian,
 
-Hi,
+On Fri, Jan 15, 2016 at 07:36:25PM +0100, Sebastian Andrzej Siewior wrote:
+> I start a binary which should flash the FPGA and re-enumare the PCI-BUS
+> and find a new device. It works most of the time. With SLUB debug it
+> crashes on each iteration with something like this (compressed output):
+> 
+> | pcieport 0000:00:00.0: AER: Multiple Corrected error received: id=0000
+> | Unable to handle kernel paging request for data at address 0x27ef9e3e
+> | Faulting instruction address: 0x602f5328
+> | Oops: Kernel access of bad area, sig: 11 [#1]
+> | Workqueue: events aer_isr
+> | GPR24: dd6aa000 6b6b6b6b 605f8378 605f8360 d99b12c0 604fc674 606b1704 d99b12c0
+> | NIP [602f5328] pci_walk_bus+0xd4/0x104
+> 
+> Register 25 has the user-after magic. As it turns out, the old PCIe
+> device is leaving, generates an error before it left, aer_irq() is fired,
+> it schedules a work item. What happens now is that free_irq() is
+> invoked, all resources are gone *before* the aes_isr() work item is
+> completed.
+> So to fix this, I flush the workqueue to ensure that there is no more
+> work pending.
+> The wait_event() on wait_release should actually synchronized against
+> removal. However the condition (->prod_idx == ->cons_idx) is made true
+> before the function completes (aer_isr_one_error() is invoked right
+> after that) so it does not fulfill its purpose. Therefore I remove it.
+> 
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-On 1/14/2016 10:51 AM, Vineet Gupta wrote:
-> On Thursday 14 January 2016 04:12 PM, Joao Pinto wrote:
->> Hi,
->>
->> On 1/14/2016 10:22 AM, Arnd Bergmann wrote:
->>> On Thursday 14 January 2016 05:26:58 Vineet Gupta wrote:
->>>>> +/*
->>>>> + * We don't have to worry about legacy ISA devices, so nothing to do here
->>>>> + */
->>>>> +resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->>>>> +                             resource_size_t size, resource_size_t align)
->>>>> +{
->>>>> +     return res->start;
->>>>> +}
->>>> Doesn't this have to be EXPORT_SYMBOL_xxx as well given that the call
->>>> (setup-res.c) can build as module ?
->>> I only see a caller in drivers/pci/setup-res.c, and that is never part of a
->>> loadable module.
->>>
->>>>> +
->>>>> +void pcibios_fixup_bus(struct pci_bus *bus)
->>>>> +{
->>>>> +}
->>>>> +EXPORT_SYMBOL(pcibios_fixup_bus);
->>>> EXPORT_SYMBOL_GPL ?
->>>>
->>>> As a seperate enhancement, it would be nicer if these 2 functions are defined weak
->>>> in common code. That would make basic PCI support almost arch independent !
->>> I agree, that would be ideal. An easy way to do this would be to add
->>> them as __weak functions in drivers/pci/, similar to how we handle
->>> a lot of the other pcibios_* functions.
->>>
->>> A somewhat nicer method would be to have callback pointers in struct
->>> pci_host_bridge, and call those when they are non-NULL so we can
->>> remove the global pcibios_* functions from the API. That would also
->>> bring us a big step closer to having PCI support itself as a loadable
->>> module, and it would better reflect that those functions are really
->>> host bridge specific rather than architecture specific. When you use
->>> the same host bridge on multiple architectures, you typically have
->>> the same requirements for hacks in there, but each architectures may
->>> need to support multiple host bridges with different requirements.
->> Since we will be constantly improving the driver and the core itself, I suggest
->> that this functions be made __weak and in an update we can turn it struct
->> pointers just like Arnd suggested. Is this good for you?
-> 
-> There is no point in making it weak, w/o a fallback version in generic code. For
-> this series, I suggest you just remove the straggler EXPORT_SYMBOL and respin.
-> 
-> And then as a follow up to make them weak (and hence eliminate the scattered
-> definitions all over). And then add as callbacks as suggested by Arnd.
-> 
+I propose to merge this patch unchanged, but with the following
+changelog.  I want to add a bit more detail about the concurrency
+problem and remove a bit of the specific detail about your FPGA:
 
-Ok, I'll removed the EXPORT_SYMBOL and submit a new patch version.
-Thanks for your comments!
 
-> Thx,
-> -Vineet
-> 
->>
->>> 	Arnd
->>>
->> Thanks
->> Joao
->>
->>
->>
-> 
-> 
+commit 9963c9487f733ef8fe3a06ce3398072a40f955bf
+Author: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Date:   Fri Jan 15 19:36:25 2016 +0100
+
+PCI/AER: Flush workqueue on device remove to avoid use-after-free
+
+A Root Port's AER structure (rpc) contains a queue of events.  aer_irq()
+enqueues AER status information and schedules aer_isr() to dequeue and
+process it.  When we remove a device, aer_remove() waits for the queue to
+be empty, then frees the rpc struct.
+
+But aer_isr() references the rpc struct after dequeueing and possibly
+emptying the queue, which can cause a use-after-free error as in the
+following scenario with two threads, aer_isr() on the left and a
+concurrent aer_remove() on the right:
+
+  Thread A                      Thread B
+  --------                      --------
+  aer_irq():
+    rpc->prod_idx++
+				aer_remove():
+				  wait_event(rpc->prod_idx == rpc->cons_idx)
+				  # now blocked until queue becomes empty
+  aer_isr():                      # ...
+    rpc->cons_idx++               # unblocked because queue is now empty
+    ...                           kfree(rpc)
+    mutex_unlock(&rpc->rpc_mutex)
+
+Wait until the last scheduled instance of aer_isr() has completed before
+freeing the rpc struct by using flush_work() in aer_remove().
+
+I reproduced this use-after-free by flashing a device FPGA and
+re-enumerating the bus to find the new device.  With SLUB debug, this
+crashes with 0x6b bytes (POISON_FREE, the use-after-free magic number) in
+GPR25:
+
+  pcieport 0000:00:00.0: AER: Multiple Corrected error received: id=0000
+  Unable to handle kernel paging request for data at address 0x27ef9e3e
+  Workqueue: events aer_isr
+  GPR24: dd6aa000 6b6b6b6b 605f8378 605f8360 d99b12c0 604fc674 606b1704 d99b12c0
+  NIP [602f5328] pci_walk_bus+0xd4/0x104
+
+[bhelgaas: changelog]
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
