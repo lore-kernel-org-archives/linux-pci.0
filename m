@@ -1,105 +1,144 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 26 Jan 2016 09:32:10 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: =?utf-8?B?0J7Qu9C10LMg0JzQvtGA0L7Qtw==?= <oleg.moroz@mcc.vniiem.ru>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: PCI device driver broken between 4.2 and 4.3
-Message-ID: <20160126153210.GA11375@localhost>
-References: <56A32702.7080909@mcc.vniiem.ru>
- <CAErSpo6MtFSxnH8uSqeLiJVR3P-R5DUX2Furw3yw8JiMN29H0A@mail.gmail.com>
- <56A4D690.1020804@mcc.vniiem.ru>
- <20160125215251.GB10272@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:34485 "EHLO
+	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759510AbcAUSkz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jan 2016 13:40:55 -0500
+Received: by mail-wm0-f48.google.com with SMTP id u188so238324002wmu.1
+        for <linux-pci@vger.kernel.org>; Thu, 21 Jan 2016 10:40:54 -0800 (PST)
+Subject: Re: [PATCH V3 13/21] pci, acpi: Provide generic way to assign bus
+ domain number.
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+ <1452691267-32240-14-git-send-email-tn@semihalf.com>
+ <20160121182218.GA21175@red-moon>
+Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <56A125BB.9040109@semihalf.com>
+Date: Thu, 21 Jan 2016 19:38:51 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20160125215251.GB10272@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160121182218.GA21175@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jiang]
+On 21.01.2016 19:22, Lorenzo Pieralisi wrote:
+> Hi Tomasz,
+>
+> On Wed, Jan 13, 2016 at 02:20:59PM +0100, Tomasz Nowicki wrote:
+>
+> [...]
+>
+>> @@ -4796,14 +4797,34 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+>>   	 * API and update the use_dt_domains value to keep track of method we
+>>   	 * are using to assign domain numbers (use_dt_domains = 0).
+>>   	 *
+>> +	 * IF ACPI, we expect non-DT method (use_dt_domains == -1)
+>> +	 * and call _SEG method for corresponding host bridge device.
+>> +	 * If _SEG method does not exist, following ACPI spec (6.5.6)
+>> +	 * all PCI buses belong to domain 0.
+>> +	 *
+>>   	 * All other combinations imply we have a platform that is trying
+>> -	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
+>> -	 * which is a recipe for domain mishandling and it is prevented by
+>> -	 * invalidating the domain value (domain = -1) and printing a
+>> -	 * corresponding error.
+>> +	 * to mix domain numbers obtained from DT, ACPI and
+>> +	 * pci_get_new_domain_nr(), which is a recipe for domain mishandling and
+>> +	 * it is prevented by invalidating the domain value (domain = -1) and
+>> +	 * printing a corresponding error.
+>>   	 */
+>> +
+>>   	if (domain >= 0 && use_dt_domains) {
+>>   		use_dt_domains = 1;
+>> +#ifdef CONFIG_ACPI
+>> +	} else if (!acpi_disabled && use_dt_domains == -1) {
+>> +		struct acpi_device *acpi_dev = to_acpi_device(parent);
+>> +		unsigned long long segment = 0;
+>> +		acpi_status status;
+>> +
+>> +		status = acpi_evaluate_integer(acpi_dev->handle,
+>> +					       METHOD_NAME__SEG, NULL,
+>> +					       &segment);
+>> +		if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
+>> +			dev_err(&acpi_dev->dev,  "can't evaluate _SEG\n");
+>> +
+>> +		domain = segment;
+>> +#endif
+>
+> I think you can reshuffle a bit the code to make it easier to follow.
+>
+> How about this ? (on top of mainline, I just compiled it do not
+> take it verbatim):
+>
+> -- >8 --
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index d1a7105..467a316 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -7,6 +7,7 @@
+>    *	Copyright 1997 -- 2000 Martin Mares <mj@ucw.cz>
+>    */
+>
+> +#include <linux/acpi.h>
+>   #include <linux/kernel.h>
+>   #include <linux/delay.h>
+>   #include <linux/init.h>
+> @@ -4769,7 +4770,27 @@ int pci_get_new_domain_nr(void)
+>   }
+>
+>   #ifdef CONFIG_PCI_DOMAINS_GENERIC
+> -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> +/* Feel free to add this to drivers/acpi as a helper */
+> +#ifdef CONFIG_ACPI
+> +int pci_bus_acpi_domain_nr(struct device *parent)
+> +{
+> +	struct acpi_device *acpi_dev = to_acpi_device(parent);
+> +	unsigned long long segment = 0;
+> +	acpi_status status;
+> +
+> +	status = acpi_evaluate_integer(acpi_dev->handle,
+> +				       METHOD_NAME__SEG, NULL,
+> +				       &segment);
+> +	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
+> +		dev_err(&acpi_dev->dev,  "can't evaluate _SEG\n");
+> +
+> +	return segment;
+> +}
+> +#else
+> +int pci_bus_acpi_domain_nr(struct device *parent) { return -1; }
+> +#endif
+> +
+> +int pci_bus_of_domain_nr(struct device *parent)
+>   {
+>   	static int use_dt_domains = -1;
+>   	int domain = of_get_pci_domain_nr(parent->of_node);
+> @@ -4811,7 +4832,13 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+>   		domain = -1;
+>   	}
+>
+> -	bus->domain_nr = domain;
+> +	return domain;
+> +}
+> +
+> +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> +{
+> +	bus->domain_nr = acpi_disabled ? pci_bus_of_domain_nr(parent) :
+> +					 pci_bus_acpi_domain_nr(parent);
+>   }
+>   #endif
+>   #endif
+>
 
-On Mon, Jan 25, 2016 at 03:52:51PM -0600, Bjorn Helgaas wrote:
-> Hi Олег,
-> 
-> On Sun, Jan 24, 2016 at 04:50:08PM +0300, Олег Мороз wrote:
-> > Okay. I've sent logs (dmesg and lspci) from both 4.2 and 4.3 to bugzilla
-> 
-> I don't see anything wrong in either log.  Both v4.2 and v4.3
-> enumerate the device the same way, and the driver seems to claim it
-> the same way:
-> 
->   pci 0000:0d:00.0: [10b5:9030] type 00 class 0x078000
->   pci 0000:0d:00.0: reg 0x14: [io  0x2100-0x217f]
->   pci 0000:0d:00.0: reg 0x18: [io  0x2380-0x239f]
->   pci 0000:0d:00.0: PME# supported from D0 D3hot
->   pci 0000:0d:01.0: [10b5:9030] type 00 class 0x078000
->   pci 0000:0d:01.0: reg 0x14: [io  0x2180-0x21ff]
->   pci 0000:0d:01.0: reg 0x18: [io  0x23a0-0x23bf]
->   pci 0000:0d:01.0: PME# supported from D0 D3hot
->   pci 0000:0d:02.0: [10b5:9030] type 00 class 0x078000
->   pci 0000:0d:02.0: reg 0x14: [io  0x2200-0x227f]
->   pci 0000:0d:02.0: reg 0x18: [io  0x2280-0x22ff]
->   pci 0000:0d:02.0: reg 0x1c: [io  0x2300-0x237f]
->   pci 0000:0d:02.0: PME# supported from D0 D3hot
-> 
->   sja1000_plx_pci 0000:0d:02.0: Detected "Eclus CAN-200-PCI" card at slot #2
->   sja1000_plx_pci 0000:0d:02.0: Channel #1 at 0x0000000000012280, irq 22 registered as can0
->   sja1000_plx_pci 0000:0d:02.0: Channel #2 at 0x0000000000012300, irq 22 registered as can1
->   sja1000_plx_pci 0000:0d:02.0 can0: setting BTR0=0x03 BTR1=0x37
-> 
-> One option is always to bisect between v4.2 and v4.3 to see which
-> commit made it stop working.  See https://git-scm.com/docs/git-bisect
+It looks nice, I will integrate your patch. Thanks!
 
-Jiang, Олег bisected this to 991de2e59090 ("PCI, x86: Implement
-pcibios_alloc_irq() and pcibios_free_irq()").
-
-Олег, please double-check and confirm that 890e4847587f works and
-991de2e59090 fails.
-
-Then please add some printks in the pcibios_enable_device() and
-pcibios_alloc_irq() paths and in your driver to see exactly what changed
-between 890e4847587f and 991de2e59090
-
-Bjorn
-
-> > 23.01.2016 17:54, Bjorn Helgaas пишет:
-> > >[+cc linux-kernel]
-> > >
-> > >Hi Олег,
-> > >
-> > >On Sat, Jan 23, 2016 at 1:08 AM, Олег Мороз <oleg.moroz@mcc.vniiem.ru> wrote:
-> > >>Hello. I've got a device driver for MIL-1553b card called TA1-PCI, which
-> > >>could be found at
-> > >>https://github.com/qmor/elcus-1553-driver-linux
-> > >>Card is using PLX_PCI9030 PCI controller.
-> > >>Today i've found that this driver compiles, installes, but is not working as
-> > >>it should.
-> > >>Looks like it not receives any interrupts from PCI. I've test it again with
-> > >>kernel
-> > >>4.2 and it works okay. What changes was made in PCI subsystem from 4.2 to
-> > >>4.3
-> > >>which could have impact this driver work.
-> > >Thank you very much for this problem report.  There were many PCI
-> > >changes between v4.2 and v4.3, and without more information, I can't
-> > >guess what might be causing this problem.
-> > >
-> > >I opened a bug report at https://bugzilla.kernel.org/show_bug.cgi?id=111211
-> > >
-> > >Please attach complete dmesg logs for both v4.2 and v4.3 to that bug
-> > >report.  Also, please attach the complete "lspci -vv" output (as
-> > >root).
-> > >
-> > >Thanks!
-> > >
-> > >Bjorn
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Tomasz
