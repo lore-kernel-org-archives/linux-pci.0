@@ -1,89 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43198 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751572AbcAEKBK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 5 Jan 2016 05:01:10 -0500
-Date: Tue, 5 Jan 2016 10:01:04 +0000
-From: "Dr. David Alan Gilbert" <dgilbert@redhat.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	x86@kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
-	Yang Zhang <yang.zhang.wz@gmail.com>,
-	Alexander Graf <agraf@suse.de>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page
- tracking
-Message-ID: <20160105100104.GA2439@work-vm>
-References: <20151213212557.5410.48577.stgit@localhost.localdomain>
- <20160104204104.GB17427@char.us.oracle.com>
- <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
- <20160105113317-mutt-send-email-mst@redhat.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 21 Jan 2016 18:22:18 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+Subject: Re: [PATCH V3 13/21] pci, acpi: Provide generic way to assign bus
+ domain number.
+Message-ID: <20160121182218.GA21175@red-moon>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+ <1452691267-32240-14-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160105113317-mutt-send-email-mst@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1452691267-32240-14-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-* Michael S. Tsirkin (mst@redhat.com) wrote:
-> On Mon, Jan 04, 2016 at 07:11:25PM -0800, Alexander Duyck wrote:
-> > >> The two mechanisms referenced above would likely require coordination with
-> > >> QEMU and as such are open to discussion.  I haven't attempted to address
-> > >> them as I am not sure there is a consensus as of yet.  My personal
-> > >> preference would be to add a vendor-specific configuration block to the
-> > >> emulated pci-bridge interfaces created by QEMU that would allow us to
-> > >> essentially extend shpc to support guest live migration with pass-through
-> > >> devices.
-> > >
-> > > shpc?
-> > 
-> > That is kind of what I was thinking.  We basically need some mechanism
-> > to allow for the host to ask the device to quiesce.  It has been
-> > proposed to possibly even look at something like an ACPI interface
-> > since I know ACPI is used by QEMU to manage hot-plug in the standard
-> > case.
-> > 
-> > - Alex
-> 
-> 
-> Start by using hot-unplug for this!
-> 
-> Really use your patch guest side, and write host side
-> to allow starting migration with the device, but
-> defer completing it.
-> 
-> So
-> 
-> 1.- host tells guest to start tracking memory writes
-> 2.- guest acks
-> 3.- migration starts
-> 4.- most memory is migrated
-> 5.- host tells guest to eject device
-> 6.- guest acks
-> 7.- stop vm and migrate rest of state
-> 
-> 
-> It will already be a win since hot unplug after migration starts and
-> most memory has been migrated is better than hot unplug before migration
-> starts.
-> 
-> Then measure downtime and profile. Then we can look at ways
-> to quiesce device faster which really means step 5 is replaced
-> with "host tells guest to quiesce device and dirty (or just unmap!)
-> all memory mapped for write by device".
+Hi Tomasz,
 
+On Wed, Jan 13, 2016 at 02:20:59PM +0100, Tomasz Nowicki wrote:
 
-Doing a hot-unplug is going to upset the guests network stacks view
-of the world; that's something we don't want to change.
+[...]
 
-Dave
+> @@ -4796,14 +4797,34 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+>  	 * API and update the use_dt_domains value to keep track of method we
+>  	 * are using to assign domain numbers (use_dt_domains = 0).
+>  	 *
+> +	 * IF ACPI, we expect non-DT method (use_dt_domains == -1)
+> +	 * and call _SEG method for corresponding host bridge device.
+> +	 * If _SEG method does not exist, following ACPI spec (6.5.6)
+> +	 * all PCI buses belong to domain 0.
+> +	 *
+>  	 * All other combinations imply we have a platform that is trying
+> -	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
+> -	 * which is a recipe for domain mishandling and it is prevented by
+> -	 * invalidating the domain value (domain = -1) and printing a
+> -	 * corresponding error.
+> +	 * to mix domain numbers obtained from DT, ACPI and
+> +	 * pci_get_new_domain_nr(), which is a recipe for domain mishandling and
+> +	 * it is prevented by invalidating the domain value (domain = -1) and
+> +	 * printing a corresponding error.
+>  	 */
+> +
+>  	if (domain >= 0 && use_dt_domains) {
+>  		use_dt_domains = 1;
+> +#ifdef CONFIG_ACPI
+> +	} else if (!acpi_disabled && use_dt_domains == -1) {
+> +		struct acpi_device *acpi_dev = to_acpi_device(parent);
+> +		unsigned long long segment = 0;
+> +		acpi_status status;
+> +
+> +		status = acpi_evaluate_integer(acpi_dev->handle,
+> +					       METHOD_NAME__SEG, NULL,
+> +					       &segment);
+> +		if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
+> +			dev_err(&acpi_dev->dev,  "can't evaluate _SEG\n");
+> +
+> +		domain = segment;
+> +#endif
 
-> 
-> -- 
-> MST
---
-Dr. David Alan Gilbert / dgilbert@redhat.com / Manchester, UK
+I think you can reshuffle a bit the code to make it easier to follow.
+
+How about this ? (on top of mainline, I just compiled it do not
+take it verbatim):
+
+-- >8 --
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d1a7105..467a316 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -7,6 +7,7 @@
+  *	Copyright 1997 -- 2000 Martin Mares <mj@ucw.cz>
+  */
+ 
++#include <linux/acpi.h>
+ #include <linux/kernel.h>
+ #include <linux/delay.h>
+ #include <linux/init.h>
+@@ -4769,7 +4770,27 @@ int pci_get_new_domain_nr(void)
+ }
+ 
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++/* Feel free to add this to drivers/acpi as a helper */
++#ifdef CONFIG_ACPI
++int pci_bus_acpi_domain_nr(struct device *parent)
++{
++	struct acpi_device *acpi_dev = to_acpi_device(parent);
++	unsigned long long segment = 0;
++	acpi_status status;
++
++	status = acpi_evaluate_integer(acpi_dev->handle,
++				       METHOD_NAME__SEG, NULL,
++				       &segment);
++	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
++		dev_err(&acpi_dev->dev,  "can't evaluate _SEG\n");
++
++	return segment;
++}
++#else
++int pci_bus_acpi_domain_nr(struct device *parent) { return -1; }
++#endif
++
++int pci_bus_of_domain_nr(struct device *parent)
+ {
+ 	static int use_dt_domains = -1;
+ 	int domain = of_get_pci_domain_nr(parent->of_node);
+@@ -4811,7 +4832,13 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ 		domain = -1;
+ 	}
+ 
+-	bus->domain_nr = domain;
++	return domain;
++}
++
++void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++{
++	bus->domain_nr = acpi_disabled ? pci_bus_of_domain_nr(parent) :
++					 pci_bus_acpi_domain_nr(parent);
+ }
+ #endif
+ #endif
