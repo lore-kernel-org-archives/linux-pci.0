@@ -1,176 +1,173 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36777 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751665AbcAOR0t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 15 Jan 2016 12:26:49 -0500
-Date: Fri, 15 Jan 2016 11:26:40 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Richard F <lists@keynet-technology.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: Hint HB6 - kernel doesn't see chips behind it.
-Message-ID: <20160115172640.GC28453@localhost>
-References: <5698191B.1070904@keynet-technology.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5698191B.1070904@keynet-technology.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:37435 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759351AbcAUPcm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jan 2016 10:32:42 -0500
+Message-ID: <1453390357.4639.101.camel@infradead.org>
+Subject: Re: [PATCH] pci: Add support for multiple DMA aliases
+From: David Woodhouse <dwmw2@infradead.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "Lawrynowicz, Jacek" <jacek.lawrynowicz@intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"jroedel@suse.de" <jroedel@suse.de>
+Date: Thu, 21 Jan 2016 15:32:37 +0000
+In-Reply-To: <20160121152236.GA6629@localhost>
+References: <1453118346-76897-1-git-send-email-jacek.lawrynowicz@intel.com>
+	 <1453133267-79756-1-git-send-email-jacek.lawrynowicz@intel.com>
+	 <20160119033315.GA6510@localhost> <20160119201254.GB6510@localhost>
+	 <1453237471.32741.267.camel@redhat.com> <20160119213901.GG14080@localhost>
+	 <36D38C1F74839847A52A484C31F3E51A62131B9D@irsmsx105.ger.corp.intel.com>
+	 <20160120174622.GC7973@localhost> <1453369141.4639.73.camel@infradead.org>
+	 <20160121152236.GA6629@localhost>
+Content-Type: multipart/signed; micalg="sha-1"; protocol="application/x-pkcs7-signature";
+	boundary="=-UoqzLuVfCDrsWK7IFkes"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Richard,
 
-On Thu, Jan 14, 2016 at 09:54:35PM +0000, Richard F wrote:
-> I moved a Kodicom card (http://linuxtv.org/wiki/index.php/Kodicom_4400R)
-> from an older machine to a new with a PCIe bridge.  Bttv modprobe can no
-> longer find the BT878 chips behind the PCI bridge, though the bridge is
-> found.
-> 
-> The bridge is a PCI6140 AKA "Hint HB6".
-> I noticed a PCI quirk for it, tried manually adding the IO/memory spaces
-> that were originally logged, but doesn't help.
-> 
-> This machine runs kernel 3.12.52 (x64), but it also fails on 3.0.76.
-> The BT878 chips were recognised on the older machine also running 3.0.76
-> but with a vanilla PCI bus.
+--=-UoqzLuVfCDrsWK7IFkes
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for your report.  I opened this bug report:
+On Thu, 2016-01-21 at 09:22 -0600, Bjorn Helgaas wrote:
+>=20
+> This definitely isn't part of the driver code; I didn't mean to
+> suggest that.=C2=A0 I'd like to see this as a separate patch, but as part
+> of a series that adds a user of the multiple-alias functionality.
+>=20
+> All I'm saying is that as-is, this patch makes the quirks easier to
+> read but doesn't actually change any behavior: we set up at most one
+> alias, and we do it as a header quirk at enumeration-time, so there
+> are no new lifetime issues.=C2=A0 Normally we merge things when they're
+> needed, and multiple alias support is a bit of infrastructure that
+> isn't used yet.
 
-  https://bugzilla.kernel.org/show_bug.cgi?id=110851
+Ah, right. I see your point.
 
-Can you please attach the complete dmesg logs from the old machine
-running 3.0.76 and the new machine running 3.0.76 to that bugzilla?
-Also please attach the complete "lspci -vvv" output for all the
-devices in the new machine.
+I don't actually see why pci_add_dma_alias() should be exported at all.
 
-Is there any chance you can try a current kernel, e.g., v4.4, on the
-new machine?  Even if you can't install a new kernel permanently, the
-dmesg log of PCI enumeration is enough to show whether we detect the
-Kodicom devices or not.
+I suspect the best approach is for Jacek to add a second patch in this
+series, adding the required quirk to drivers/pci/quirks.c for the
+device in question, and then resubmit them to you when Linus releases
+4.5-rc1.
 
-Bjorn
+This is completely independent of any native driver for the device, of
+course.
 
-> Relevant dmesg lines when not working (can post entire logs if helpful)
-> 
-> [    0.089046] pci 0000:00:1c.2: scanning [bus 03-05] behind bridge, pass 0
-> [    0.089105] pci_bus 0000:03: scanning bus
-> [    0.089136] pci 0000:03:00.0: [1283:8893] type 01 class 0x060401
-> [    0.089335] pci 0000:03:00.0: supports D1 D2
-> [    0.089336] pci 0000:03:00.0: PME# supported from D0 D1 D2 D3hot D3cold
-> [    0.089343] pci 0000:03:00.0: PME# disabled
-> [    0.089382] pci_bus 0000:03: fixups for bus
-> [    0.089383] pci 0000:00:1c.2: PCI bridge to [bus 03-05]
-> [    0.089397] pci 0000:03:00.0: scanning [bus 04-05] behind bridge, pass 0
-> [    0.089487] pci_bus 0000:04: scanning bus
-> [    0.089523] pci 0000:04:01.0: [3388:0021] type 01 class 0x060400
-> [    0.089729] pci 0000:04:01.0: supports D1 D2
-> [    0.089730] pci 0000:04:01.0: PME# supported from D1 D2 D3hot D3cold
-> [    0.089738] pci 0000:04:01.0: PME# disabled
-> [    0.089871] pci_bus 0000:04: fixups for bus
-> [    0.089872] pci 0000:03:00.0: PCI bridge to [bus 04-05] (subtractive decode)
-> [    0.089906] pci 0000:03:00.0:   bridge window [??? 0x00000000 flags 0x0] (subtractive decode)
-> [    0.089907] pci 0000:03:00.0:   bridge window [??? 0x00000000 flags 0x0] (subtractive decode)
-> [    0.089908] pci 0000:03:00.0:   bridge window [??? 0x00000000 flags 0x0] (subtractive decode)
-> [    0.089910] pci 0000:03:00.0:   bridge window [??? 0x00000000 flags 0x0] (subtractive decode)
-> [    0.089914] pci 0000:04:01.0: scanning [bus 05-05] behind bridge, pass 0
-> [    0.090011] pci_bus 0000:05: scanning bus
-> [    0.090116] pci_bus 0000:05: fixups for bus
-> [    0.090117] pci 0000:04:01.0: PCI bridge to [bus 05]
-> [    0.090139] pci_bus 0000:05: bus scan returning with max=05
-> [    0.090148] pci 0000:04:01.0: scanning [bus 05-05] behind bridge, pass 1
-> [    0.090159] pci_bus 0000:04: bus scan returning with max=05
-> [    0.090167] pci 0000:03:00.0: scanning [bus 04-05] behind bridge, pass 1
-> [    0.090177] pci_bus 0000:03: bus scan returning with max=05
-> [    0.090181] pci 0000:00:1c.0: scanning [bus 01-01] behind bridge, pass 1
-> [    0.090187] pci 0000:00:1c.1: scanning [bus 02-02] behind bridge, pass 1
-> [    0.090193] pci 0000:00:1c.2: scanning [bus 03-05] behind bridge, pass 1
-> [    0.090197] pci_bus 0000:00: bus scan returning with max=05
-> 
-> Working - in older machine
-> 
-> [    0.203039] pci 0000:04:00.0: [1409:7268] type 0 class 0x000701
-> [    0.203055] pci 0000:04:00.0: reg 10: [io  0xef00-0xef07]
-> [    0.203066] pci 0000:04:00.0: reg 14: [io  0xee00-0xee07]
-> [    0.203139] pci 0000:04:01.0: [3388:0021] type 1 class 0x000604
-> [    0.203219] pci 0000:04:01.0: supports D1 D2
-> [    0.203222] pci 0000:04:01.0: PME# supported from D1 D2 D3hot D3cold
-> [    0.203227] pci 0000:04:01.0: PME# disabled
-> [    0.203257] pci 0000:04:04.0: [1106:3044] type 0 class 0x000c00
-> [    0.203277] pci 0000:04:04.0: reg 10: [mem 0xfd8ff000-0xfd8ff7ff]
-> [    0.203289] pci 0000:04:04.0: reg 14: [io  0xed00-0xed7f]
-> [    0.203365] pci 0000:04:04.0: supports D2
-> [    0.203367] pci 0000:04:04.0: PME# supported from D2 D3hot D3cold
-> [    0.203372] pci 0000:04:04.0: PME# disabled
-> [    0.203416] pci 0000:00:1e.0: PCI bridge to [bus 04-05] (subtractive decode)
-> [    0.203423] pci 0000:00:1e.0:   bridge window [io  0xd000-0xefff]
-> [    0.203428] pci 0000:00:1e.0:   bridge window [mem 0xfd700000-0xfd8fffff]
-> [    0.203435] pci 0000:00:1e.0:   bridge window [mem 0xfd600000-0xfd6fffff 64bit pref]
-> [    0.203438] pci 0000:00:1e.0:   bridge window [io  0x0000-0xffff] (subtractive decode)
-> [    0.203441] pci 0000:00:1e.0:   bridge window [mem 0x00000000-0xfffffffff] (subtractive decode)
-> [    0.203520] pci 0000:05:0c.0: [109e:036e] type 0 class 0x000400
-> [    0.203546] pci 0000:05:0c.0: reg 10: [mem 0xfd6ff000-0xfd6fffff pref]
-> [    0.203690] pci 0000:05:0c.1: [109e:0878] type 0 class 0x000480
-> [    0.203717] pci 0000:05:0c.1: reg 10: [mem 0xfd6fe000-0xfd6fefff pref]
-> [    0.203871] pci 0000:05:0d.0: [109e:036e] type 0 class 0x000400
-> [    0.203898] pci 0000:05:0d.0: reg 10: [mem 0xfd6fd000-0xfd6fdfff pref]
-> [    0.204041] pci 0000:05:0d.1: [109e:0878] type 0 class 0x000480
-> [    0.204067] pci 0000:05:0d.1: reg 10: [mem 0xfd6fc000-0xfd6fcfff pref]
-> [    0.204222] pci 0000:05:0e.0: [109e:036e] type 0 class 0x000400
-> [    0.204249] pci 0000:05:0e.0: reg 10: [mem 0xfd6fb000-0xfd6fbfff pref]
-> [    0.204392] pci 0000:05:0e.1: [109e:0878] type 0 class 0x000480
-> [    0.204419] pci 0000:05:0e.1: reg 10: [mem 0xfd6fa000-0xfd6fafff pref]
-> [    0.204572] pci 0000:05:0f.0: [109e:036e] type 0 class 0x000400
-> [    0.204599] pci 0000:05:0f.0: reg 10: [mem 0xfd6f9000-0xfd6f9fff pref]
-> [    0.204741] pci 0000:05:0f.1: [109e:0878] type 0 class 0x000480
-> [    0.204768] pci 0000:05:0f.1: reg 10: [mem 0xfd6f8000-0xfd6f8fff pref]
-> [    0.204933] pci 0000:04:01.0: PCI bridge to [bus 05-05]
-> [    0.204939] pci 0000:04:01.0:   bridge window [io  0xd000-0xdfff]
-> [    0.204945] pci 0000:04:01.0:   bridge window [mem 0xfd700000-0xfd7fffff]
-> [    0.204950] pci 0000:04:01.0:   bridge window [mem 0xfd600000-0xfd6fffff pref]
-> 
-> 
-> lspci -vvv (NOT working)
-> 
-> 04:01.0 PCI bridge: Hint Corp HB6 Universal PCI-PCI bridge (non-transparent mode) (rev 11) (prog-if 00 [Normal decode])
->         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
->         Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->         Latency: 32, Cache Line Size: 64 bytes
->         Bus: primary=04, secondary=05, subordinate=05, sec-latency=32
->         I/O behind bridge: 0000f000-00000fff
->         Memory behind bridge: fff00000-000fffff
->         Prefetchable memory behind bridge: fff00000-000fffff
->         Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- <SERR- <PERR-
->         BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
->                 PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
->         Capabilities: [80] Power Management version 2
->                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1+,D2+,D3hot+,D3cold+)
->                 Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
->                 Bridge: PM- B3+
->         Capabilities: [90] CompactPCI hot-swap <?>
-> 
-> lspci -vvv (working)
-> 
-> 04:01.0 PCI bridge: Hint Corp HB6 Universal PCI-PCI bridge (non-transparent mode) (rev 11) (prog-if 00 [Normal decode])
-> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-> 	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-> 	Latency: 64, Cache Line Size: 64 bytes
-> 	Bus: primary=04, secondary=05, subordinate=05, sec-latency=32
-> 	I/O behind bridge: 0000d000-0000dfff
-> 	Memory behind bridge: fd700000-fd7fffff
-> 	Prefetchable memory behind bridge: fd600000-fd6fffff
-> 	Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-> 	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-> 		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-> 	Capabilities: [80] Power Management version 2
-> 		Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1+,D2+,D3hot+,D3cold+)
-> 		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-> 		Bridge: PM- B3+
-> 	Capabilities: [90] CompactPCI hot-swap <?>
-> 	Kernel modules: shpchp
->  
-> 
-> Thanks for any help / guidance on debugging
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=20
+David Woodhouse                            Open Source Technology Centre
+David.Woodhouse@intel.com                              Intel Corporation
+
+
+--=-UoqzLuVfCDrsWK7IFkes
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExCzAJBgUrDgMCGgUAMIAGCSqGSIb3DQEHAQAAoIISjjCCBicw
+ggUPoAMCAQICAw3vNzANBgkqhkiG9w0BAQUFADCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0
+YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcx
+ODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENB
+MB4XDTE1MDUwNTA5NDM0MVoXDTE2MDUwNTA5NTMzNlowQjEcMBoGA1UEAwwTZHdtdzJAaW5mcmFk
+ZWFkLm9yZzEiMCAGCSqGSIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcN
+AQEBBQADggEPADCCAQoCggEBAMkbm9kPbx1j/X4RVyf/pPKSYwelcco69TvnQQbKM8m8xkWjXJI1
+jpJ1jMaGUZGFToINMSZi7lZawUozudWbXSKy1SikENSTJHffsdRAIlsp+hR8vWvjsKUry6sEdqPG
+doa5RY7+N4WRusWZDYW/RRWE6i9EL9qV86CVPYqw22UBOUw4/j/HVGCV6TSB8yE5iEwhk/hUuzRr
+FZm1MJMR7mCS7BCR8Lr5jFY61lWpBiXNXIxLZCvDc26KR5L5tYX43iUVO3fzES1GRVoYnxxk2tmz
+fcsZG5vK+Trc9L8OZJfkYrEHH3+Iw41MQ0w/djVtYr1+HYldx0QmYXAtnhIj+UMCAwEAAaOCAtkw
+ggLVMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgSwMB0GA1UdJQQWMBQGCCsGAQUFBwMCBggrBgEFBQcD
+BDAdBgNVHQ4EFgQUszC96C3w5/2+d+atSr0IpT26YI4wHwYDVR0jBBgwFoAUU3Ltkpzg2ssBXHx+
+ljVO8tS4UYIwHgYDVR0RBBcwFYETZHdtdzJAaW5mcmFkZWFkLm9yZzCCAUwGA1UdIASCAUMwggE/
+MIIBOwYLKwYBBAGBtTcBAgMwggEqMC4GCCsGAQUFBwIBFiJodHRwOi8vd3d3LnN0YXJ0c3NsLmNv
+bS9wb2xpY3kucGRmMIH3BggrBgEFBQcCAjCB6jAnFiBTdGFydENvbSBDZXJ0aWZpY2F0aW9uIEF1
+dGhvcml0eTADAgEBGoG+VGhpcyBjZXJ0aWZpY2F0ZSB3YXMgaXNzdWVkIGFjY29yZGluZyB0byB0
+aGUgQ2xhc3MgMSBWYWxpZGF0aW9uIHJlcXVpcmVtZW50cyBvZiB0aGUgU3RhcnRDb20gQ0EgcG9s
+aWN5LCByZWxpYW5jZSBvbmx5IGZvciB0aGUgaW50ZW5kZWQgcHVycG9zZSBpbiBjb21wbGlhbmNl
+IG9mIHRoZSByZWx5aW5nIHBhcnR5IG9ibGlnYXRpb25zLjA2BgNVHR8ELzAtMCugKaAnhiVodHRw
+Oi8vY3JsLnN0YXJ0c3NsLmNvbS9jcnR1MS1jcmwuY3JsMIGOBggrBgEFBQcBAQSBgTB/MDkGCCsG
+AQUFBzABhi1odHRwOi8vb2NzcC5zdGFydHNzbC5jb20vc3ViL2NsYXNzMS9jbGllbnQvY2EwQgYI
+KwYBBQUHMAKGNmh0dHA6Ly9haWEuc3RhcnRzc2wuY29tL2NlcnRzL3N1Yi5jbGFzczEuY2xpZW50
+LmNhLmNydDAjBgNVHRIEHDAahhhodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS8wDQYJKoZIhvcNAQEF
+BQADggEBAHMQmxHHodpS85X8HRyxhvfkys7r+taCNOaNU9cxQu/cZ/6k5nS2qGNMzZ6jb7ueY/V7
+7p+4DW/9ZWODDTf4Fz00mh5SSVc20Bz7t+hhxwHd62PZgENh5i76Qq2tw48U8AsYo5damHby1epf
+neZafLpUkLLO7AGBJIiRVTevdvyXQ0qnixOmKMWyvrhSNGuVIKVdeqLP+102Dwf+dpFyw+j1hz28
+jEEKpHa+NR1b2kXuSPi/rMGhexwlJOh4tK8KQ6Ryr0rIN//NSbOgbyYZrzc/ZUWX9V5OA84ChFb2
+vkFl0OcYrttp/rhDBLITwffPxSZeoBh9H7zYzkbCXKL3BUIwggYnMIIFD6ADAgECAgMN7zcwDQYJ
+KoZIhvcNAQEFBQAwgYwxCzAJBgNVBAYTAklMMRYwFAYDVQQKEw1TdGFydENvbSBMdGQuMSswKQYD
+VQQLEyJTZWN1cmUgRGlnaXRhbCBDZXJ0aWZpY2F0ZSBTaWduaW5nMTgwNgYDVQQDEy9TdGFydENv
+bSBDbGFzcyAxIFByaW1hcnkgSW50ZXJtZWRpYXRlIENsaWVudCBDQTAeFw0xNTA1MDUwOTQzNDFa
+Fw0xNjA1MDUwOTUzMzZaMEIxHDAaBgNVBAMME2R3bXcyQGluZnJhZGVhZC5vcmcxIjAgBgkqhkiG
+9w0BCQEWE2R3bXcyQGluZnJhZGVhZC5vcmcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIB
+AQDJG5vZD28dY/1+EVcn/6TykmMHpXHKOvU750EGyjPJvMZFo1ySNY6SdYzGhlGRhU6CDTEmYu5W
+WsFKM7nVm10istUopBDUkyR337HUQCJbKfoUfL1r47ClK8urBHajxnaGuUWO/jeFkbrFmQ2Fv0UV
+hOovRC/alfOglT2KsNtlATlMOP4/x1Rglek0gfMhOYhMIZP4VLs0axWZtTCTEe5gkuwQkfC6+YxW
+OtZVqQYlzVyMS2Qrw3NuikeS+bWF+N4lFTt38xEtRkVaGJ8cZNrZs33LGRubyvk63PS/DmSX5GKx
+Bx9/iMONTENMP3Y1bWK9fh2JXcdEJmFwLZ4SI/lDAgMBAAGjggLZMIIC1TAJBgNVHRMEAjAAMAsG
+A1UdDwQEAwIEsDAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwHQYDVR0OBBYEFLMwvegt
+8Of9vnfmrUq9CKU9umCOMB8GA1UdIwQYMBaAFFNy7ZKc4NrLAVx8fpY1TvLUuFGCMB4GA1UdEQQX
+MBWBE2R3bXcyQGluZnJhZGVhZC5vcmcwggFMBgNVHSAEggFDMIIBPzCCATsGCysGAQQBgbU3AQID
+MIIBKjAuBggrBgEFBQcCARYiaHR0cDovL3d3dy5zdGFydHNzbC5jb20vcG9saWN5LnBkZjCB9wYI
+KwYBBQUHAgIwgeowJxYgU3RhcnRDb20gQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkwAwIBARqBvlRo
+aXMgY2VydGlmaWNhdGUgd2FzIGlzc3VlZCBhY2NvcmRpbmcgdG8gdGhlIENsYXNzIDEgVmFsaWRh
+dGlvbiByZXF1aXJlbWVudHMgb2YgdGhlIFN0YXJ0Q29tIENBIHBvbGljeSwgcmVsaWFuY2Ugb25s
+eSBmb3IgdGhlIGludGVuZGVkIHB1cnBvc2UgaW4gY29tcGxpYW5jZSBvZiB0aGUgcmVseWluZyBw
+YXJ0eSBvYmxpZ2F0aW9ucy4wNgYDVR0fBC8wLTAroCmgJ4YlaHR0cDovL2NybC5zdGFydHNzbC5j
+b20vY3J0dTEtY3JsLmNybDCBjgYIKwYBBQUHAQEEgYEwfzA5BggrBgEFBQcwAYYtaHR0cDovL29j
+c3Auc3RhcnRzc2wuY29tL3N1Yi9jbGFzczEvY2xpZW50L2NhMEIGCCsGAQUFBzAChjZodHRwOi8v
+YWlhLnN0YXJ0c3NsLmNvbS9jZXJ0cy9zdWIuY2xhc3MxLmNsaWVudC5jYS5jcnQwIwYDVR0SBBww
+GoYYaHR0cDovL3d3dy5zdGFydHNzbC5jb20vMA0GCSqGSIb3DQEBBQUAA4IBAQBzEJsRx6HaUvOV
+/B0csYb35MrO6/rWgjTmjVPXMULv3Gf+pOZ0tqhjTM2eo2+7nmP1e+6fuA1v/WVjgw03+Bc9NJoe
+UklXNtAc+7foYccB3etj2YBDYeYu+kKtrcOPFPALGKOXWph28tXqX53mWny6VJCyzuwBgSSIkVU3
+r3b8l0NKp4sTpijFsr64UjRrlSClXXqiz/tdNg8H/naRcsPo9Yc9vIxBCqR2vjUdW9pF7kj4v6zB
+oXscJSToeLSvCkOkcq9KyDf/zUmzoG8mGa83P2VFl/VeTgPOAoRW9r5BZdDnGK7baf64QwSyE8H3
+z8UmXqAYfR+82M5Gwlyi9wVCMIIGNDCCBBygAwIBAgIBHjANBgkqhkiG9w0BAQUFADB9MQswCQYD
+VQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRkLjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwg
+Q2VydGlmaWNhdGUgU2lnbmluZzEpMCcGA1UEAxMgU3RhcnRDb20gQ2VydGlmaWNhdGlvbiBBdXRo
+b3JpdHkwHhcNMDcxMDI0MjEwMTU1WhcNMTcxMDI0MjEwMTU1WjCBjDELMAkGA1UEBhMCSUwxFjAU
+BgNVBAoTDVN0YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRl
+IFNpZ25pbmcxODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUg
+Q2xpZW50IENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxwmDzM4t2BqxKaQuE6uW
+vooyg4ymiEGWVUet1G8SD+rqvyNH4QrvnEIaFHxOhESip7vMz39ScLpNLbL1QpOlPW/tFIzNHS3q
+d2XRNYG5Sv9RcGE+T4qbLtsjjJbi6sL7Ls/f/X9ftTyhxvxWkf8KW37iKrueKsxw2HqolH7GM6FX
+5UfNAwAu4ZifkpmZzU1slBhyWwaQPEPPZRsWoTb7q8hmgv6Nv3Hg9rmA1/VPBIOQ6SKRkHXG0Hhm
+q1dOFoAFI411+a/9nWm5rcVjGcIWZ2v/43Yksq60jExipA4l5uv9/+Hm33mbgmCszdj/Dthf13tg
+Av2O83hLJ0exTqfrlwIDAQABo4IBrTCCAakwDwYDVR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMC
+AQYwHQYDVR0OBBYEFFNy7ZKc4NrLAVx8fpY1TvLUuFGCMB8GA1UdIwQYMBaAFE4L7xqkQFulF2mH
+MMo0aEPQQa7yMGYGCCsGAQUFBwEBBFowWDAnBggrBgEFBQcwAYYbaHR0cDovL29jc3Auc3RhcnRz
+c2wuY29tL2NhMC0GCCsGAQUFBzAChiFodHRwOi8vd3d3LnN0YXJ0c3NsLmNvbS9zZnNjYS5jcnQw
+WwYDVR0fBFQwUjAnoCWgI4YhaHR0cDovL3d3dy5zdGFydHNzbC5jb20vc2ZzY2EuY3JsMCegJaAj
+hiFodHRwOi8vY3JsLnN0YXJ0c3NsLmNvbS9zZnNjYS5jcmwwgYAGA1UdIAR5MHcwdQYLKwYBBAGB
+tTcBAgEwZjAuBggrBgEFBQcCARYiaHR0cDovL3d3dy5zdGFydHNzbC5jb20vcG9saWN5LnBkZjA0
+BggrBgEFBQcCARYoaHR0cDovL3d3dy5zdGFydHNzbC5jb20vaW50ZXJtZWRpYXRlLnBkZjANBgkq
+hkiG9w0BAQUFAAOCAgEACoMIfXirLAZcuGOMXq4cuSN3TaFx2H2GvD5VSy/6rV55BYHbWNaPeQn3
+oBSU8KgQZn/Kck1JxbLpAxVCNtsxeW1R87ifhsYZ0qjdrA9anrW2MAWCtosmAOT4OxK9QPoSjCMx
+M3HbkZCDJgnlE8jMopH21BbyAYr7b5EfGRQJNtgWcvqSXwKHnTutR08+Kkn0KAkXCzeQNLeA5LlY
+UzFyM7kPAp8pIRMQ+seHunmyG642S2+y/qHEdMuGIwpfz3eDF1PdctL04qYK/zu+Qg1Bw0RwgigV
+Zs/0c5HP2/e9DBHh7eSwtzYlk4AUr6yxLlcwSjOfOmKEQ/Q8tzh0IFiNu9IPuTGAPBn4CPxD0+Ru
+8T2wg8/s43R/PT3kd1OEqOJUl7q+h+r6fpvU0Fzxd2tC8Ga6fDEPme+1Nbi+03pVjuZQKbGwKJ66
+gEn06WqaxVZC+J8hh/jR0k9mST1iAZPNYulcNJ8tKmVtjYsv0L1TSm2+NwON58tO+pIVzu3DWwSE
+XSf+qkDavQam+QtEOZxLBXI++aMUEapSn+k3Lxm48ZCYfAWLb/Xj7F5JQMbZvCexglAbYR0kIHqW
+5DnsYSdMD/IplJMojx0NBrxJ3fN9dvX2Y6BIXRsF1du4qESm4/3CKuyUV7p9DW3mPlHTGLvYxnyK
+Qy7VFBkoLINszBrOUeIxggNvMIIDawIBATCBlDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0
+YXJ0Q29tIEx0ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcx
+ODA2BgNVBAMTL1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENB
+AgMN7zcwCQYFKw4DAhoFAKCCAa8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
+CQUxDxcNMTYwMTIxMTUzMjM3WjAjBgkqhkiG9w0BCQQxFgQU4Mo19AWVCyQS1m2V8t2jbc/FKQ4w
+gaUGCSsGAQQBgjcQBDGBlzCBlDCBjDELMAkGA1UEBhMCSUwxFjAUBgNVBAoTDVN0YXJ0Q29tIEx0
+ZC4xKzApBgNVBAsTIlNlY3VyZSBEaWdpdGFsIENlcnRpZmljYXRlIFNpZ25pbmcxODA2BgNVBAMT
+L1N0YXJ0Q29tIENsYXNzIDEgUHJpbWFyeSBJbnRlcm1lZGlhdGUgQ2xpZW50IENBAgMN7zcwgacG
+CyqGSIb3DQEJEAILMYGXoIGUMIGMMQswCQYDVQQGEwJJTDEWMBQGA1UEChMNU3RhcnRDb20gTHRk
+LjErMCkGA1UECxMiU2VjdXJlIERpZ2l0YWwgQ2VydGlmaWNhdGUgU2lnbmluZzE4MDYGA1UEAxMv
+U3RhcnRDb20gQ2xhc3MgMSBQcmltYXJ5IEludGVybWVkaWF0ZSBDbGllbnQgQ0ECAw3vNzANBgkq
+hkiG9w0BAQEFAASCAQC3ZuzTLq/4uyGXiUBihuNeckoN//UIsqXCe7gcHzcHJHfmLhG76A1vDek7
+kMdIDnYZGMULzBsHc+UoGKXlfQahvQ6pnCGexDYlmENkY6MejIstzD71Rjd2DGEbrUJRPGliP43D
+fB892R5upCiDD7xowMRffAJta+C4L+uZTxdVjQ6e+9UjRclkaGWHN0eaItzkll9+/gbFIE067TSf
+J8Ib9SefrOG1MGrL+gd3F7IHfq1tkcN9YJyf+tiBvW7fyrE4sT6y8EYyQyrB3XCxJ+/Sf+eS2VKp
+Wq7PWI2iqAACktMYxpf2YReIg93DFyWi7ZHQ0vdMDxFRpL+/JN3IZfjzAAAAAAAA
+
+
+--=-UoqzLuVfCDrsWK7IFkes--
+
