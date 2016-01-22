@@ -1,124 +1,71 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <56A7404A.8080205@cn.fujitsu.com>
-Date: Tue, 26 Jan 2016 17:45:46 +0800
-From: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
-MIME-Version: 1.0
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <helgaas@kernel.org>
-CC: <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<rjw@rjwysocki.net>, <lenb@kernel.org>,
-	<izumi.taku@jp.fujitsu.com>, <wency@cn.fujitsu.com>,
-	<caoj.fnst@cn.fujitsu.com>, <ddaney.cavm@gmail.com>,
-	<okaya@codeaurora.org>, <bhelgaas@google.com>,
-	<jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2] pci: fix unavailable irq number 255 reported by BIOS
-References: <1453705178-27389-1-git-send-email-chen.fan.fnst@cn.fujitsu.com> <20160125205803.GA10272@localhost> <alpine.DEB.2.11.1601260825510.3886@nanos>
-In-Reply-To: <alpine.DEB.2.11.1601260825510.3886@nanos>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:43526 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755015AbcAVWIf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 22 Jan 2016 17:08:35 -0500
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: linux-pci@vger.kernel.org, mj@ucw.cz, bhelgaas@google.com,
+	alex.williamson@redhat.com
+Cc: sean.stalley@intel.com, david.daney@cavium.com
+Subject: [PATCH 1/2] pci: Identify Enhanced Allocation (EA) BAR Equivalent resources
+Date: Fri, 22 Jan 2016 14:04:53 -0800
+Message-Id: <1453500294-3140-2-git-send-email-sean.stalley@intel.com>
+In-Reply-To: <1453500294-3140-1-git-send-email-sean.stalley@intel.com>
+References: <1453500294-3140-1-git-send-email-sean.stalley@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Alex Williamson <alex.williamson@redhat.com>
 
-On 01/26/2016 04:26 PM, Thomas Gleixner wrote:
-> On Mon, 25 Jan 2016, Bjorn Helgaas wrote:
->> On Mon, Jan 25, 2016 at 02:59:38PM +0800, Chen Fan wrote:
->>> i801_smbus 0000:00:1f.3: PCI INT C: no GSI
->>> i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
->>> i801_smbus: probe of 0000:00:1f.3 failed with error -16
-> The current code does not not fail when the interrupt request fails. It
-> reports it and clears the IRQ feature flag.
->
->>> @@ -436,7 +437,15 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
->>>   	 * driver reported one, then use it. Exit in any case.
->>>   	 */
->>>   	if (gsi < 0) {
->>> -		if (acpi_isa_register_gsi(dev))
->>> +#ifdef CONFIG_X86
->>> +		/*
->>> +		 * The Interrupt Line value of 0xff is defined to mean "unknown"
->>> +		 * or "no connection" (PCI 3.0, Section 6.2.4, footnote on page
->>> +		 * 223), using ~0U as invalid IRQ.
->>> +		 */
-> And why would this be x86 specific? PCI3.0 is architecture independent, right?
-quoting the spec document:
-"For x86 based PCs, the values in this register correspond to IRQ 
-numbers (0-15) of the standard dual
-8259 configuration. The value 255 is defined as meaning "unknown" or "no 
-connection" to the interrupt
-controller. Values between 15 and 254 are reserved."
+We've done a pretty good job of abstracting EA from drivers,
+but there are some cases where flaging resources as EA would be
+useful. Specifically, EA is flexabable when it comes to resource
+alignment & sizing. This can create issues when existing software
+makes assumptions about the PCI resources.
 
->
->>> +		dev->irq = (dev->irq == 0xff) ? IRQ_INVALID : dev->irq;
->> It's much simpler and clearer to write:
->>
->>    if (dev->irq == 0xff)
->>      dev->irq = IRQ_INVALID;
-> I do not understand that IRQ_INVALID business at all.
->
->>> +#endif
->>> +		if (!irq_is_valid(dev->irq) || acpi_isa_register_gsi(dev))
->>>   			dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
->>>   				 pin_name(pin));
->>>   
-> The existing code already drops into this place because
-> acpi_isa_register_gsi() fails.
->
->>> i801_smbus 0000:00:1f.3: PCI INT C: no GSI
-> What extra value does that !irq_is_valid() provide?
->
-> And how does setting dev->irq to ~0U prevent that request_irq() is called in
-> the i801 device driver? Not at all, AFAICT. It will just fail with a different
-> error.
->
-> So the whole 'fix' relies on the fact that irq ~0U does not exist (at least
-> not today) and therefor the false sharing with some other driver using irq 255
-> will not happen.
->
-> Relying on undocumented behaviour is not a fix, that's voodoo programming.
->
-> The proper solution here is to flag that this device does not have an
-> interrupt connected and act accordingly in the device driver, i.e. do not call
-> request_irq() in the first place.
-yes, this is what I thought in previous email, I has asked that
-whether we can use a broken_irq flag in pci_dev to mark the device irq 
-if invalid.
-and then if the device broken_irq set, we could directly skip call the 
-request_irq.
-maybe we can set the broken_irq in pci_read_irq if the irq is 0xff.
+For example, lspci assumes any PCI resource exposed by the kernel
+that isn't visible in standard configspace comes from a VF BAR.
+vfio makes assumptions about alignment and sizing, and runs into
+problems when attempting to emulate a BAR Equivalent EA resource.
 
-Thanks,
-Chen
+To facilitate that, a flag indicating whether a PCI resource is a
+traditional BAR or BAR equivalent seems much nicer than attempting
+to deduce where the resource came from from the size & address fields
+(which is impossible if a EA resource happens naturally aligned).
 
->
->>> +static inline bool irq_is_valid(unsigned int irq)
->>> +{
->>> +#ifdef CONFIG_X86
->>> +	if (irq == IRQ_INVALID)
->>> +		return false;
->>> +#endif
->>> +	return true;
->>> +}
->> I don't like the x86 ifdef.  I'd prefer:
->>
->>    static inline bool irq_valid(unsigned int irq)
->>    {
->>      if (irq < NR_IRQS)
->>        return true;
->>      return false;
->>    }
->>
->> This could be used in many of the places that currently use NR_IRQS.
-> No. NR_IRQS cannot be used at all if sparse irqs are enabled. Nothing in any
-> generic code is supposed to rely on NR_IRQS.
->
-> Thanks,
->
-> 	tglx
->
->
->
-> .
->
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+---
+ drivers/pci/pci.c      | 2 +-
+ include/linux/ioport.h | 2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d1a7105..8ff678c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2229,7 +2229,7 @@ void pci_pm_init(struct pci_dev *dev)
+ 
+ static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
+ {
+-	unsigned long flags = IORESOURCE_PCI_FIXED;
++	unsigned long flags = IORESOURCE_PCI_FIXED | IORESOURCE_PCI_EA_BEI;
+ 
+ 	switch (prop) {
+ 	case PCI_EA_P_MEM:
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 24bea08..5acc194 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -105,6 +105,8 @@ struct resource {
+ /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
+ #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move resource */
+ 
++/* PCI Enhanced Allocation defined BAR equivalent resource */
++#define IORESOURCE_PCI_EA_BEI		(1<<5)
+ 
+ /* helpers to define resources */
+ #define DEFINE_RES_NAMED(_start, _size, _name, _flags)			\
+-- 
+1.9.1
 
