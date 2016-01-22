@@ -1,72 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from sauhun.de ([89.238.76.85]:52124 "EHLO pokefinder.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754511AbcAMNyg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Jan 2016 08:54:36 -0500
-Date: Wed, 13 Jan 2016 14:54:26 +0100
-From: Wolfram Sang <wsa@the-dreams.de>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, devicetree@vger.kernel.org,
-	aik@ozlabs.ru, linux-pci@vger.kernel.org,
-	panto@antoniou-consulting.com, grant.likely@linaro.org,
-	robherring2@gmail.com, bhelgaas@google.com, frowand.list@gmail.com
-Subject: Re: [v7,49/50] drivers/of: Export OF changeset functions
-Message-ID: <20160113135426.GA29030@katana>
-References: <1446642770-4681-50-git-send-email-gwshan@linux.vnet.ibm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 22 Jan 2016 11:53:32 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Cao jin <caoj.fnst@cn.fujitsu.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Chen Fan <chen.fan.fnst@cn.fujitsu.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>, izumi.taku@jp.fujitsu.com,
+	wency@cn.fujitsu.com, Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH] pci: fix unavailable irq number 255 reported by BIOS
+Message-ID: <20160122175332.GA11004@localhost>
+References: <1453167913-16248-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>
+ <6239489.QX2A2kAHWp@vostro.rjw.lan>
+ <20160120002431.GA7973@localhost>
+ <56A0EE00.80709@cn.fujitsu.com>
+ <CAJZ5v0iq29mq_sFzk=mEbjPGJV9vPL9MCgU4WamrGV_fWcpEMA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="M9NhX3UHpAaciwkO"
-In-Reply-To: <1446642770-4681-50-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0iq29mq_sFzk=mEbjPGJV9vPL9MCgU4WamrGV_fWcpEMA@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Jan 21, 2016 at 11:58:26PM +0100, Rafael J. Wysocki wrote:
+> On Thu, Jan 21, 2016 at 3:41 PM, Cao jin <caoj.fnst@cn.fujitsu.com> wrote:
+> > Hi,
+> >
+> >     IMHO, I think maybe modification on i801_smbus driver is easier.
+> >
+> >     Because when i801_smbus request_irq using pci_dev->irq, this
+> > pci_dev->irq seems still holds the value read from register(
+> > pci_setup_device->pci_read_irq), if the value is 255, it is invalid in
+> > register,
+> 
+> Right.
+> 
+> Which is why the PCI core should not leak it into the driver's ->probe callback.
 
---M9NhX3UHpAaciwkO
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Is there a reserved IRQ value we could use to mean "invalid"?
 
-On Thu, Nov 05, 2015 at 12:12:49AM +1100, Gavin Shan wrote:
-> The PowerNV PCI hotplug driver is going to use the OF changeset
-> to manage the changed device sub-tree. This exports those OF
-> changeset functions for that.
->=20
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Acked-by: Rob Herring <robh@kernel.org>
+I guess we have NR_IRQS as a ceiling, so the range of valid IRQs would be
+[0 .. NR_IRQS - 1].  It looks like irq_desc() and a few drivers already
+rely on NR_IRQS being the bound:
 
-I needed something like this, too [1] and rebased my series on top of
-this patch. So:
+  lpc32xx_kscan_probe
+  lpc32xx_nand_probe
+  pcmcia_setup_isa_irq
+  lpc32xx_rtc_probe
+  apbuart_verify_port
+  ar933x_uart_verify_port
+  lqasc_verify_port
 
-Acked-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
-Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+So I guess we could use ~0 as "invalid IRQ", and maybe the PCI core could
+set dev->irq to ~0 in these cases, and drivers like i801_smbus could check
+for that.  Maybe a wrapper like irq_valid() would be useful.
 
-Thanks,
-
-   Wolfram
-
-[1] https://lkml.org/lkml/2016/1/6/385
-
-
---M9NhX3UHpAaciwkO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJWllcSAAoJEBQN5MwUoCm2rxoP/RfY0ZSyfXAqqmqLvmc5sXfh
-ldr1hK/rwAr/wuyfcDwE6Fqyt+HUNIP3g0B4p1FTJ6oJL0/6WpJb7SA2ytE3w/xP
-4ue9lFD+5g+KDvHnYm4I+ldiQj9E8I7vsgbcuiz+vZFwSRIhVMzJfziRZe2N48/X
-gsmz6313CGP8nekHEX5htpPSAswuhTzRL+0iPwX3TKK3gjasVMJo6Te3vK/4TjC0
-FNkm/2Vqea7Y4Ryucj7N3mbdeqT+DHB+x0MC1GtTYa3oXeN9zJuKoE7TanZXZkl7
-8g+Uw24YQFlZyz59YQBDkfKx4PYzVpIbcB8IpdwfeVwowOgz4hCOZP3c8zO9ivE0
-/8/QcV4ufPyDXO4nDoxxo6J8AGmCOGlCTpcNDGLOPyio/hcGjxCUm1QC5lt/+6/1
-IkhZL+rJ+nys0/H3AqPBdZi7BjtldEKan7+m7vw6ZS/fcO/haCB3+nM1I61WnA8V
-aBdFUKzXo/9gbyBNVr+A6QylLvxbn3WS0NtOOTayR3YGaqI0QUPcUslcf9snomT8
-UVAr0OMG1IxRkt4gTTQrm3gMG9CTos32fBZr83uo99cwG1FxLHsO5pf2SjlqpJ6B
-Og4eqS6qjYdWD960D+VoqAviSRpdPyL60OB8Flgv6sIiLi9FiN+Sxkio8OAvIIfu
-2JZQqGuwmr7Kcb9zlVzG
-=74ah
------END PGP SIGNATURE-----
-
---M9NhX3UHpAaciwkO--
+Bjorn
