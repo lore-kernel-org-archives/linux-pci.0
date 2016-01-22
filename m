@@ -1,44 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49795 "EHLO mail.kernel.org"
+Received: from mga11.intel.com ([192.55.52.93]:14594 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758791AbcAKVPd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Jan 2016 16:15:33 -0500
-Date: Mon, 11 Jan 2016 15:15:29 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, Martin Mares <mj@ucw.cz>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCHv7 0/6] Driver for new "VMD" device
-Message-ID: <20160111211529.GA13475@localhost>
-References: <1450719900-2824-1-git-send-email-keith.busch@intel.com>
- <20160111170617.GA30780@localhost>
- <20160111204911.GB8743@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160111204911.GB8743@localhost.localdomain>
+	id S1754957AbcAVWIe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 22 Jan 2016 17:08:34 -0500
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: linux-pci@vger.kernel.org, mj@ucw.cz, bhelgaas@google.com,
+	alex.williamson@redhat.com
+Cc: sean.stalley@intel.com, david.daney@cavium.com
+Subject: [PATCH 0/2] pci/lspci: Identify Enhanced Allocation (EA) Resources
+Date: Fri, 22 Jan 2016 14:04:52 -0800
+Message-Id: <1453500294-3140-1-git-send-email-sean.stalley@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 11, 2016 at 08:49:11PM +0000, Keith Busch wrote:
-> >   x86-pci-initial-commit-for-new
-> >   -:125: WARNING: added, moved or deleted file(s), does MAINTAINERS need updating?
-> 
-> Question on the maintenance: does this new driver file need a maintainer,
-> or does it fall under arch/x86/pci/ umbrella? I'm happy to supply updates
-> and/or fixes once this is merged, but I just want to understand who to
-> direct patches/pull requests to if the need arises.
+Identify BAR-equivalent resources that are described by EA entries
+with the IORESOURCE_PCI_EA_BEI flag.
 
-It might be worth adding a MAINTAINERS update, similar to the
-"PCI DRIVER" entries we have for host bridge drivers.  In those
-cases, I take care of merging updates and sending them to Linus,
-but I do ask for an ack from the listed maintainer for non-trivial
-changes.
+lspci cannot distinguish between resources from VF BARs and resources from EA.
+This results in EA Resources being incorrectly identified as [virtual].
+Adding this flag allows EA resources to be marked more accurately as [enhanced].
 
-Bjorn
+Although this patchset only add support for this flag to lspci,
+there are other use cases (such as vfio) where knowing a resource
+comes from EA would be useful.
+
+[PATCH 1/2] is for the kernel, [PATCH 2/2] is for lspci.
+
+
+Alex Williamson (1):
+  pci: Identify Enhanced Allocation (EA) BAR Equivalent resources
+
+Sean O. Stalley (1):
+  Add support for enhanced allocation regions
+
+linux changes:
+ drivers/pci/pci.c      | 2 +-
+ include/linux/ioport.h | 2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+lspci changes:
+ lib/header.h |  4 ++++
+ lib/pci.h    |  2 ++
+ lib/sysfs.c  |  5 ++++-
+ lspci.c      | 17 ++++++++++++++---
+ 4 files changed, 24 insertions(+), 4 deletions(-)
+
+
+-- 
+1.9.1
+
