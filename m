@@ -1,186 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0051.outbound.protection.outlook.com ([104.47.38.51]:16806
-	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752067AbcALRhD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Jan 2016 12:37:03 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <bhelgaas@google.com>, <michals@xilinx.com>,
-	<lorenzo.pieralisi@arm.com>, <paul.burton@imgtec.com>,
-	<yinghai@kernel.org>, <wangyijing@huawei.com>, <robh@kernel.org>,
-	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
-	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
-	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
-	<galak@codeaurora.org>
-CC: <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: [PATCH V2 5/5] Microblaze: Modifying microblaze PCI subsytem to support  generic Xilinx  AXI PCIe Host Bridge IP driver
-Date: Tue, 12 Jan 2016 23:06:13 +0530
-Message-ID: <1452620173-4905-6-git-send-email-bharatku@xilinx.com>
-In-Reply-To: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
-References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 22 Jan 2016 11:25:37 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+Subject: Re: [PATCH V3 13/21] pci, acpi: Provide generic way to assign bus
+ domain number.
+Message-ID: <20160122112536.GA2610@red-moon>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+ <1452691267-32240-14-git-send-email-tn@semihalf.com>
+ <20160121182218.GA21175@red-moon>
+ <56A125BB.9040109@semihalf.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56A125BB.9040109@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch does required modifications to microblaze PCI subsystem, to
-work with generic driver (drivers/pci/host/pcie-xilinx.c) on Microblaze
-and Zynq.
+On Thu, Jan 21, 2016 at 07:38:51PM +0100, Tomasz Nowicki wrote:
 
-Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
----
-Changes:
-Modified pcibios_fixup_bus in pci-common.c, as per generic architecuture.
-Modified pcibios_align_resource in pci-common.c, as per generic
-architecuture.
-Modified pcibios_get_phb_of_node function in pci-common.c, to remove
-dependency on struct pci_controller.
-Removed pci_domain_nr in pci-common.c, instead using generic code.
-Added pcibios_add_device in pci-common.c, as per generic architecuture.
-Adding Kernel configuration in arch/microblaze as required for generic PCI
-domains.
-Added kernel configuration for driver to support Microblaze.
----
- arch/microblaze/Kconfig          |  3 ++
- arch/microblaze/pci/pci-common.c | 61 +++++++++++++++-------------------------
- drivers/pci/host/Kconfig         |  2 +-
- 3 files changed, 27 insertions(+), 39 deletions(-)
+[...]
 
-diff --git a/arch/microblaze/Kconfig b/arch/microblaze/Kconfig
-index 0bce820..c3702b9 100644
---- a/arch/microblaze/Kconfig
-+++ b/arch/microblaze/Kconfig
-@@ -271,6 +271,9 @@ config PCI
- config PCI_DOMAINS
- 	def_bool PCI
- 
-+config PCI_DOMAINS_GENERIC
-+	def_bool PCI_DOMAINS
-+
- config PCI_SYSCALL
- 	def_bool PCI
- 
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index ae838ed..bc72856 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -123,17 +123,6 @@ unsigned long pci_address_to_pio(phys_addr_t address)
- }
- EXPORT_SYMBOL_GPL(pci_address_to_pio);
- 
--/*
-- * Return the domain number for this bus.
-- */
--int pci_domain_nr(struct pci_bus *bus)
--{
--	struct pci_controller *hose = pci_bus_to_host(bus);
--
--	return hose->global_number;
--}
--EXPORT_SYMBOL(pci_domain_nr);
--
- /* This routine is meant to be used early during boot, when the
-  * PCI bus numbers have not yet been assigned, and you need to
-  * issue PCI config cycles to an OF device.
-@@ -863,26 +852,10 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
- 
- void pcibios_fixup_bus(struct pci_bus *bus)
- {
--	/* When called from the generic PCI probe, read PCI<->PCI bridge
--	 * bases. This is -not- called when generating the PCI tree from
--	 * the OF device-tree.
--	 */
--	if (bus->self != NULL)
--		pci_read_bridge_bases(bus);
--
--	/* Now fixup the bus bus */
--	pcibios_setup_bus_self(bus);
--
--	/* Now fixup devices on that bus */
--	pcibios_setup_bus_devices(bus);
-+	/* nothing to do */
- }
- EXPORT_SYMBOL(pcibios_fixup_bus);
- 
--static int skip_isa_ioresource_align(struct pci_dev *dev)
--{
--	return 0;
--}
--
- /*
-  * We need to avoid collisions with `mirrored' VGA ports
-  * and other strange ISA hardware, so we always want the
-@@ -899,20 +872,20 @@ static int skip_isa_ioresource_align(struct pci_dev *dev)
- resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				resource_size_t size, resource_size_t align)
- {
--	struct pci_dev *dev = data;
- 	resource_size_t start = res->start;
- 
--	if (res->flags & IORESOURCE_IO) {
--		if (skip_isa_ioresource_align(dev))
--			return start;
--		if (start & 0x300)
--			start = (start + 0x3ff) & ~0x3ff;
--	}
--
- 	return start;
- }
- EXPORT_SYMBOL(pcibios_align_resource);
- 
-+int pcibios_add_device(struct pci_dev *dev)
-+{
-+	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(pcibios_add_device);
-+
- /*
-  * Reparent resource children of pr that conflict with res
-  * under res, and make res replace those children.
-@@ -1335,9 +1308,21 @@ static void pcibios_setup_phb_resources(struct pci_controller *hose,
- 
- struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
- {
--	struct pci_controller *hose = bus->sysdata;
-+	struct device_node *np;
-+
-+	for_each_node_by_type(np, "pci") {
-+		const void *prop;
-+		unsigned int bus_min;
-+
-+		prop = of_get_property(np, "bus-range", NULL);
-+		if (!prop)
-+			continue;
-+		bus_min = be32_to_cpup(prop);
-+		if (bus->number == bus_min)
-+			return np;
-+	}
- 
--	return of_node_get(hose->dn);
-+	return NULL;
- }
- 
- static void pcibios_scan_phb(struct pci_controller *hose)
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index d5e58ba..7c56c2e 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -79,7 +79,7 @@ config PCI_KEYSTONE
- 
- config PCIE_XILINX
- 	bool "Xilinx AXI PCIe host bridge support"
--	depends on ARCH_ZYNQ
-+	depends on ARCH_ZYNQ || MICROBLAZE
- 	help
- 	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
- 	  Host Bridge driver.
--- 
-2.1.1
+> >I think you can reshuffle a bit the code to make it easier to follow.
+> >
+> >How about this ? (on top of mainline, I just compiled it do not
+> >take it verbatim):
+> >
+> >-- >8 --
+> >diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> >index d1a7105..467a316 100644
+> >--- a/drivers/pci/pci.c
+> >+++ b/drivers/pci/pci.c
+> >@@ -7,6 +7,7 @@
+> >   *	Copyright 1997 -- 2000 Martin Mares <mj@ucw.cz>
+> >   */
+> >
+> >+#include <linux/acpi.h>
+> >  #include <linux/kernel.h>
+> >  #include <linux/delay.h>
+> >  #include <linux/init.h>
+> >@@ -4769,7 +4770,27 @@ int pci_get_new_domain_nr(void)
+> >  }
+> >
+> >  #ifdef CONFIG_PCI_DOMAINS_GENERIC
+> >-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> >+/* Feel free to add this to drivers/acpi as a helper */
+> >+#ifdef CONFIG_ACPI
+> >+int pci_bus_acpi_domain_nr(struct device *parent)
+> >+{
+> >+	struct acpi_device *acpi_dev = to_acpi_device(parent);
+> >+	unsigned long long segment = 0;
+> >+	acpi_status status;
+> >+
+> >+	status = acpi_evaluate_integer(acpi_dev->handle,
+> >+				       METHOD_NAME__SEG, NULL,
+> >+				       &segment);
+> >+	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
+> >+		dev_err(&acpi_dev->dev,  "can't evaluate _SEG\n");
+> >+
+> >+	return segment;
+> >+}
+> >+#else
+> >+int pci_bus_acpi_domain_nr(struct device *parent) { return -1; }
+> >+#endif
+> >+
+> >+int pci_bus_of_domain_nr(struct device *parent)
+> >  {
+> >  	static int use_dt_domains = -1;
+> >  	int domain = of_get_pci_domain_nr(parent->of_node);
+> >@@ -4811,7 +4832,13 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> >  		domain = -1;
+> >  	}
+> >
+> >-	bus->domain_nr = domain;
+> >+	return domain;
+> >+}
+> >+
+> >+void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> >+{
+> >+	bus->domain_nr = acpi_disabled ? pci_bus_of_domain_nr(parent) :
+> >+					 pci_bus_acpi_domain_nr(parent);
+> >  }
+> >  #endif
+> >  #endif
+> >
+> 
+> It looks nice, I will integrate your patch. Thanks!
 
+While at it, as I mentioned, please move the ACPI helper function to
+drivers/acpi, thanks.
+
+Lorenzo
