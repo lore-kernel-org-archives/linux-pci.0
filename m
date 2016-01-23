@@ -1,58 +1,67 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <569D25C4.3060806@gmail.com>
-Date: Mon, 18 Jan 2016 09:49:56 -0800
-From: David Daney <ddaney.cavm@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-To: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
-CC: linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-ia64@vger.kernel.org, linux-metag@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	linux-sh@vger.kernel.org, linux-arch@vger.kernel.org,
-	Will.Deacon@arm.com, catalin.marinas@arm.com,
-	grant.likely@linaro.org, leif.lindholm@linaro.org,
-	rfranz@cavium.com, ard.biesheuvel@linaro.org, msalter@redhat.com,
-	robh+dt@kernel.org, steve.capper@linaro.org, hanjun.guo@linaro.org,
-	al.stone@linaro.org, arnd@arndb.de, pawel.moll@arm.com,
-	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
-	galak@codeaurora.org, rjw@rjwysocki.net, lenb@kernel.org,
-	marc.zyngier@arm.com, lorenzo.pieralisi@arm.com,
-	bhelgaas@google.com, tony.luck@intel.com, fenghua.yu@intel.com,
-	james.hogan@imgtec.com, benh@kernel.crashing.org,
-	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
-	x86@kernel.org, jonathan@jonmasters.org, rrichter@cavium.com,
-	Prasun.Kapoor@caviumnetworks.com, gpkulkarni@gmail.com
-Subject: Re: [PATCH v9 4/6] arm64, dt, thunderx: Add initial dts for Cavium
- Thunderx in 2 node topology.
-References: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com> <1453134965-6125-5-git-send-email-gkulkarni@caviumnetworks.com>
-In-Reply-To: <1453134965-6125-5-git-send-email-gkulkarni@caviumnetworks.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <56A281B6.6070709@gmail.com>
+References: <1453167913-16248-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>
+	<6239489.QX2A2kAHWp@vostro.rjw.lan>
+	<20160120002431.GA7973@localhost>
+	<56A0EE00.80709@cn.fujitsu.com>
+	<CAJZ5v0iq29mq_sFzk=mEbjPGJV9vPL9MCgU4WamrGV_fWcpEMA@mail.gmail.com>
+	<20160122175332.GA11004@localhost>
+	<56A281B6.6070709@gmail.com>
+Date: Sat, 23 Jan 2016 03:00:48 +0100
+Message-ID: <CAJZ5v0hW1jusNnW8TFTX_fwXzsfBjkFTjHTBQ+iWQyDKe3CETw@mail.gmail.com>
+Subject: Re: [PATCH] pci: fix unavailable irq number 255 reported by BIOS
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Cao jin <caoj.fnst@cn.fujitsu.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Chen Fan <chen.fan.fnst@cn.fujitsu.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Len Brown <lenb@kernel.org>, izumi.taku@jp.fujitsu.com,
+	wency@cn.fujitsu.com, Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/18/2016 08:36 AM, Ganapatrao Kulkarni wrote:
-> Adding dt file for Cavium's Thunderx dual socket platform.
+On Fri, Jan 22, 2016 at 8:23 PM, David Daney <ddaney.cavm@gmail.com> wrote:
+> On 01/22/2016 09:53 AM, Bjorn Helgaas wrote:
+>>
+>> On Thu, Jan 21, 2016 at 11:58:26PM +0100, Rafael J. Wysocki wrote:
+>>>
+>>> On Thu, Jan 21, 2016 at 3:41 PM, Cao jin <caoj.fnst@cn.fujitsu.com>
+>>> wrote:
+>>>>
+>>>> Hi,
+>>>>
+>>>>      IMHO, I think maybe modification on i801_smbus driver is easier.
+>>>>
+>>>>      Because when i801_smbus request_irq using pci_dev->irq, this
+>>>> pci_dev->irq seems still holds the value read from register(
+>>>> pci_setup_device->pci_read_irq), if the value is 255, it is invalid in
+>>>> register,
+>>>
+>>>
+>>> Right.
+>>>
+>>> Which is why the PCI core should not leak it into the driver's ->probe
+>>> callback.
+>>
+>>
+>> Is there a reserved IRQ value we could use to mean "invalid"?
 >
-> Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
-> ---
->   arch/arm64/boot/dts/cavium/Makefile             |   2 +-
->   arch/arm64/boot/dts/cavium/thunder-88xx-2n.dts  |  83 +++
->   arch/arm64/boot/dts/cavium/thunder-88xx-2n.dtsi | 806 ++++++++++++++++++++++++
->   3 files changed, 890 insertions(+), 1 deletion(-)
->   create mode 100644 arch/arm64/boot/dts/cavium/thunder-88xx-2n.dts
->   create mode 100644 arch/arm64/boot/dts/cavium/thunder-88xx-2n.dtsi
 >
+> In many (most) cases, zero indicates no irq.
 
-These files are useless, they don't contain device nodes for anything 
-other than the UARTs.  There is no existing system that has only UARTs 
-and no other devices, so these files cannot be (and can never be) used 
-anywhere.
+Zero is a valid timer IRQ on x86, though, so it's better not to give
+any special meaning to it in general.
 
-Since the boot firmware in all real, and emulated, systems is supplying 
-correct DTBs, we should consider not merging these files, and removing 
-the likewise useless thunder-88xx.dts  thunder-88xx.dtsi
+Using ~0 as suggested by Bjorn should work as it would cause
+request_irq() to return -EINVAL if passed to it AFAICS.
 
-David Daney
-
-
-[...]
+Thanks,
+Rafael
