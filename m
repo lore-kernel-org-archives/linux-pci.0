@@ -1,47 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50378 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:48188 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752510AbcALTmb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Jan 2016 14:42:31 -0500
-Date: Tue, 12 Jan 2016 13:42:28 -0600
+	id S1753293AbcAYVxA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Jan 2016 16:53:00 -0500
+Date: Mon, 25 Jan 2016 15:52:51 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
-	LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bryan Veal <bryan.e.veal@intel.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCHv8] x86/PCI: Initial commit for new VMD device driver
-Message-ID: <20160112194228.GA28453@localhost>
-References: <1452616119-11450-2-git-send-email-keith.busch@intel.com>
- <201601130151.Y87x1uES%fengguang.wu@intel.com>
- <20160112180829.GB28857@localhost.localdomain>
+To: =?utf-8?B?0J7Qu9C10LMg0JzQvtGA0L7Qtw==?= <oleg.moroz@mcc.vniiem.ru>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: PCI device driver broken between 4.2 and 4.3
+Message-ID: <20160125215251.GB10272@localhost>
+References: <56A32702.7080909@mcc.vniiem.ru>
+ <CAErSpo6MtFSxnH8uSqeLiJVR3P-R5DUX2Furw3yw8JiMN29H0A@mail.gmail.com>
+ <56A4D690.1020804@mcc.vniiem.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160112180829.GB28857@localhost.localdomain>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <56A4D690.1020804@mcc.vniiem.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 12, 2016 at 06:08:29PM +0000, Keith Busch wrote:
-> On Wed, Jan 13, 2016 at 01:40:33AM +0800, kbuild test robot wrote:
-> > [auto build test ERROR on tip/x86/core]
+Hi Олег,
+
+On Sun, Jan 24, 2016 at 04:50:08PM +0300, Олег Мороз wrote:
+> Okay. I've sent logs (dmesg and lspci) from both 4.2 and 4.3 to bugzilla
+
+I don't see anything wrong in either log.  Both v4.2 and v4.3
+enumerate the device the same way, and the driver seems to claim it
+the same way:
+
+  pci 0000:0d:00.0: [10b5:9030] type 00 class 0x078000
+  pci 0000:0d:00.0: reg 0x14: [io  0x2100-0x217f]
+  pci 0000:0d:00.0: reg 0x18: [io  0x2380-0x239f]
+  pci 0000:0d:00.0: PME# supported from D0 D3hot
+  pci 0000:0d:01.0: [10b5:9030] type 00 class 0x078000
+  pci 0000:0d:01.0: reg 0x14: [io  0x2180-0x21ff]
+  pci 0000:0d:01.0: reg 0x18: [io  0x23a0-0x23bf]
+  pci 0000:0d:01.0: PME# supported from D0 D3hot
+  pci 0000:0d:02.0: [10b5:9030] type 00 class 0x078000
+  pci 0000:0d:02.0: reg 0x14: [io  0x2200-0x227f]
+  pci 0000:0d:02.0: reg 0x18: [io  0x2280-0x22ff]
+  pci 0000:0d:02.0: reg 0x1c: [io  0x2300-0x237f]
+  pci 0000:0d:02.0: PME# supported from D0 D3hot
+
+  sja1000_plx_pci 0000:0d:02.0: Detected "Eclus CAN-200-PCI" card at slot #2
+  sja1000_plx_pci 0000:0d:02.0: Channel #1 at 0x0000000000012280, irq 22 registered as can0
+  sja1000_plx_pci 0000:0d:02.0: Channel #2 at 0x0000000000012300, irq 22 registered as can1
+  sja1000_plx_pci 0000:0d:02.0 can0: setting BTR0=0x03 BTR1=0x37
+
+One option is always to bisect between v4.2 and v4.3 to see which
+commit made it stop working.  See https://git-scm.com/docs/git-bisect
+
+> 23.01.2016 17:54, Bjorn Helgaas пишет:
+> >[+cc linux-kernel]
+> >
+> >Hi Олег,
+> >
+> >On Sat, Jan 23, 2016 at 1:08 AM, Олег Мороз <oleg.moroz@mcc.vniiem.ru> wrote:
+> >>Hello. I've got a device driver for MIL-1553b card called TA1-PCI, which
+> >>could be found at
+> >>https://github.com/qmor/elcus-1553-driver-linux
+> >>Card is using PLX_PCI9030 PCI controller.
+> >>Today i've found that this driver compiles, installes, but is not working as
+> >>it should.
+> >>Looks like it not receives any interrupts from PCI. I've test it again with
+> >>kernel
+> >>4.2 and it works okay. What changes was made in PCI subsystem from 4.2 to
+> >>4.3
+> >>which could have impact this driver work.
+> >Thank you very much for this problem report.  There were many PCI
+> >changes between v4.2 and v4.3, and without more information, I can't
+> >guess what might be causing this problem.
+> >
+> >I opened a bug report at https://bugzilla.kernel.org/show_bug.cgi?id=111211
+> >
+> >Please attach complete dmesg logs for both v4.2 and v4.3 to that bug
+> >report.  Also, please attach the complete "lspci -vv" output (as
+> >root).
+> >
+> >Thanks!
+> >
+> >Bjorn
 > 
-> Looks a reason to repost the entire series, or maybe I should have
-> replied to the existing thread with the dependencies.
-
-Reposting the series as a whole makes my life much easier.  I select
-all the patches in a series and apply them as a group, and that's
-much harder if individual patches in the series get superceded.
-
-> > url:    https://github.com/0day-ci/linux/commits/Keith-Busch/x86-PCI-Initial-commit-for-new-VMD-device-driver/20160113-003207
-> > config: x86_64-allmodconfig (attached as .config)
-> > reproduce:
-> >         # save the attached .config to linux build tree
-> >         make ARCH=x86_64 
-> > 
-> > All errors (new ones prefixed by >>):
-> > 
-> > >> arch/x86/pci/vmd.c:85:20: error: field 'dma_domain' has incomplete type
-> >      struct dma_domain dma_domain;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
