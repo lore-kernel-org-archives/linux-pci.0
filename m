@@ -1,185 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0041.outbound.protection.outlook.com ([104.47.36.41]:53888
-	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932708AbcALF2K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Jan 2016 00:28:10 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <bhelgaas@google.com>, <michals@xilinx.com>,
-	<lorenzo.pieralisi@arm.com>, <yinghai@kernel.org>,
-	<wangyijing@huawei.com>, <robh@kernel.org>,
-	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
-	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
-	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
-	<galak@codeaurora.org>
-CC: <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: [PATCH 5/5] Microblaze: Modifying microblaze PCI subsytem to support generic Xilinx  AXI PCIe Host Bridge IP driver
-Date: Tue, 12 Jan 2016 10:56:39 +0530
-Message-ID: <1452576399-1513-6-git-send-email-bharatku@xilinx.com>
-In-Reply-To: <1452576399-1513-1-git-send-email-bharatku@xilinx.com>
-References: <1452576399-1513-1-git-send-email-bharatku@xilinx.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 25 Jan 2016 09:52:52 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tn@semihalf.com>, jiang.liu@linux.intel.com
+Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	okaya@codeaurora.org, Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+Subject: Re: [PATCH V3 18/21] ACPI, PCI: Refine the way to handle
+ translation_offset for ACPI resources
+Message-ID: <20160125095252.GB32652@red-moon>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+ <1452691267-32240-19-git-send-email-tn@semihalf.com>
+ <20160119122026.GA5185@red-moon>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160119122026.GA5185@red-moon>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch does required modifications to microblaze PCI subsystem, to
-work with generic driver (drivers/pci/host/pcie-xilinx.c) on Microblaze
-and Zynq.
+On Tue, Jan 19, 2016 at 12:20:26PM +0000, Lorenzo Pieralisi wrote:
+> Gerry,
+> 
+> On Wed, Jan 13, 2016 at 02:21:04PM +0100, Tomasz Nowicki wrote:
+> > From: Liu Jiang <jiang.liu@linux.intel.com>
+> > 
+> > Some architectures, such as IA64 and ARM64, have no instructions to
+> > directly access PCI IO ports, so they map PCI IO ports into PCI MMIO
+> > address space. Typically PCI host bridges on those architectures take
+> > the responsibility to map (translate) PCI IO port transactions into
+> > Memory-Mapped IO transactions. ACPI specification provides support
+> > of such a usage case by using resource translation_offset.
+> > 
+> > But current ACPI resource parsing interface isn't neutral enough,
+> > it still has some special logic for IA64. So refine the ACPI resource
+> > parsing interface and IA64 code to neutrally handle translation_offset
+> > by:
+> > 1) ACPI resource parsing interface doesn't do any translation, it just
+> >    save the translation_offset to be used by arch code.
+> > 2) Arch code will do the mapping(translation) based on arch specific
+> >    information. Typically it does:
+> > 2.a) Translate per PCI domain IO port address space into system global
+> >    IO port address space.
+> > 2.b) Setup MMIO address mapping for IO ports.
+> 
+> This patch fixes IO space handling on IA64 and should go in as a fix.
+> 
+> IA64 PCI IO space is currently broken (Hanjun tested this on an IA64 box).
+> 
+> The first broken commit is:
+> 
+> 3772aea7d6f3 ("ia64/PCI/ACPI: Use common ACPI resource parsing interface for host bridge")
+> 
+> because acpi core code checks (in acpi_dev_ioresource_flags()) the
+> resource.end>=0x10003, which fails on ia64 - currently resource.end is
+> set in acpi_decode_space() to:
+> 
+> AddressMaximum + AddressTranslation
+> 
+> where AddressTranslation is the CPU physical address mapping IO space
+> on IA64, the >=0x10003 check in acpi_dev_ioresource_flags always
+> triggers and the IO resource is then disabled.
+> 
+> Do you want me to re-send this patch as a fix, with updated commit log ?
 
-Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
----
-Modified pcibios_fixup_bus in pci-common.c, as per generic architecuture.
-Modified pcibios_align_resource in pci-common.c, as per generic
-architecuture.
-Modified pcibios_get_phb_of_node function in pci-common.c, to remove
-dependency on struct pci_controller.
-Removed pci_domain_nr in pci-common.c, instead using generic code.
-Added pcibios_add_device in pci-common.c, as per generic architecuture.
-Adding Kernel configuration in arch/microblaze as required for generic PCI
-domains.
-Added kernel configuration for driver to support Microblaze.
----
- arch/microblaze/Kconfig          |  3 ++
- arch/microblaze/pci/pci-common.c | 61 +++++++++++++++-------------------------
- drivers/pci/host/Kconfig         |  2 +-
- 3 files changed, 27 insertions(+), 39 deletions(-)
+Two more points to discuss here. IA64, in its prepare_resources() callback
+calls acpi_pci_probe_root_resources() in turn. That function parses the
+_CRS and validate the resources (acpi_pci_root_validate_resources()).
 
-diff --git a/arch/microblaze/Kconfig b/arch/microblaze/Kconfig
-index 0bce820..c3702b9 100644
---- a/arch/microblaze/Kconfig
-+++ b/arch/microblaze/Kconfig
-@@ -271,6 +271,9 @@ config PCI
- config PCI_DOMAINS
- 	def_bool PCI
- 
-+config PCI_DOMAINS_GENERIC
-+	def_bool PCI_DOMAINS
-+
- config PCI_SYSCALL
- 	def_bool PCI
- 
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index ae838ed..bc72856 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -123,17 +123,6 @@ unsigned long pci_address_to_pio(phys_addr_t address)
- }
- EXPORT_SYMBOL_GPL(pci_address_to_pio);
- 
--/*
-- * Return the domain number for this bus.
-- */
--int pci_domain_nr(struct pci_bus *bus)
--{
--	struct pci_controller *hose = pci_bus_to_host(bus);
--
--	return hose->global_number;
--}
--EXPORT_SYMBOL(pci_domain_nr);
--
- /* This routine is meant to be used early during boot, when the
-  * PCI bus numbers have not yet been assigned, and you need to
-  * issue PCI config cycles to an OF device.
-@@ -863,26 +852,10 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
- 
- void pcibios_fixup_bus(struct pci_bus *bus)
- {
--	/* When called from the generic PCI probe, read PCI<->PCI bridge
--	 * bases. This is -not- called when generating the PCI tree from
--	 * the OF device-tree.
--	 */
--	if (bus->self != NULL)
--		pci_read_bridge_bases(bus);
--
--	/* Now fixup the bus bus */
--	pcibios_setup_bus_self(bus);
--
--	/* Now fixup devices on that bus */
--	pcibios_setup_bus_devices(bus);
-+	/* nothing to do */
- }
- EXPORT_SYMBOL(pcibios_fixup_bus);
- 
--static int skip_isa_ioresource_align(struct pci_dev *dev)
--{
--	return 0;
--}
--
- /*
-  * We need to avoid collisions with `mirrored' VGA ports
-  * and other strange ISA hardware, so we always want the
-@@ -899,20 +872,20 @@ static int skip_isa_ioresource_align(struct pci_dev *dev)
- resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				resource_size_t size, resource_size_t align)
- {
--	struct pci_dev *dev = data;
- 	resource_size_t start = res->start;
- 
--	if (res->flags & IORESOURCE_IO) {
--		if (skip_isa_ioresource_align(dev))
--			return start;
--		if (start & 0x300)
--			start = (start + 0x3ff) & ~0x3ff;
--	}
--
- 	return start;
- }
- EXPORT_SYMBOL(pcibios_align_resource);
- 
-+int pcibios_add_device(struct pci_dev *dev)
-+{
-+	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(pcibios_add_device);
-+
- /*
-  * Reparent resource children of pr that conflict with res
-  * under res, and make res replace those children.
-@@ -1335,9 +1308,21 @@ static void pcibios_setup_phb_resources(struct pci_controller *hose,
- 
- struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
- {
--	struct pci_controller *hose = bus->sysdata;
-+	struct device_node *np;
-+
-+	for_each_node_by_type(np, "pci") {
-+		const void *prop;
-+		unsigned int bus_min;
-+
-+		prop = of_get_property(np, "bus-range", NULL);
-+		if (!prop)
-+			continue;
-+		bus_min = be32_to_cpup(prop);
-+		if (bus->number == bus_min)
-+			return np;
-+	}
- 
--	return of_node_get(hose->dn);
-+	return NULL;
- }
- 
- static void pcibios_scan_phb(struct pci_controller *hose)
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index d5e58ba..7c56c2e 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -79,7 +79,7 @@ config PCI_KEYSTONE
- 
- config PCIE_XILINX
- 	bool "Xilinx AXI PCIe host bridge support"
--	depends on ARCH_ZYNQ
-+	depends on ARCH_ZYNQ || MICROBLAZE
- 	help
- 	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
- 	  Host Bridge driver.
--- 
-2.1.1
+That does not make sense IMO, because IA64 changes the IO port resources
+after calling acpi_pci_probe_root_resources(), hence the validation
+carried out in acpi_pci_probe_root_resources(), at least for IO ports
+seems wrong (what's the point of validating the CRS against
+ioport_resource if we change the _CRS IO space resources afterwards ?).
 
+Second point: we are aware that by removing the offset addition in
+acpi_decode_space(), if for any reason on x86 or IA64 a resource has
+that offset !=0 (speaking in terms of memory resources for instance)
+we are in trouble. Jiang mentioned that on x86 and IA64 offset is always
+0x0 for memory resources, but just want to make sure we are all aware
+of this potential pitfall.
+
+Comments appreciated, it is time to a) fix IA64 and b) get this _CRS
+parsing consolidation done.
+
+Thanks,
+Lorenzo
