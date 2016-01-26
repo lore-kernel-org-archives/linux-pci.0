@@ -1,80 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:36430 "EHLO foss.arm.com"
+Received: from mx2.suse.de ([195.135.220.15]:47664 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752287AbcALShR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Jan 2016 13:37:17 -0500
-Date: Tue, 12 Jan 2016 18:38:54 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Sinan Kaya <okaya@codeaurora.org>,
-	Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
-	will.deacon@arm.com, catalin.marinas@arm.com, rjw@rjwysocki.net,
-	hanjun.guo@linaro.org, jiang.liu@linux.intel.com,
-	stefano.stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	liviu.dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, suravee.suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com
-Subject: Re: [PATCH V2 00/23] MMCONFIG refactoring and support for ARM64 PCI
- hostbridge init based on ACPI
-Message-ID: <20160112183854.GB5139@red-moon>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
- <20160111153949.GA2366@red-moon>
- <5693D0AE.4020306@codeaurora.org>
- <4945809.OlUZI8D7JL@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4945809.OlUZI8D7JL@wuerfel>
+	id S932339AbcAZNF5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Jan 2016 08:05:57 -0500
+Subject: Re: [PATCH] PCI: aer_inject: Log actual error causes
+From: Jean Delvare <jdelvare@suse.de>
+To: Borislav Petkov <bp@suse.de>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	john.ronciak@intel.com, tony.luck@intel.com,
+	Thomas Renninger <trenn@suse.de>
+In-Reply-To: <20160126124901.GE8475@pd.tnic>
+References: <20160126095205.0e5923bd@endymion.delvare>
+	 <20160126101244.GB8475@pd.tnic> <1453811238.4772.124.camel@chaos.site>
+	 <20160126124901.GE8475@pd.tnic>
+Content-Type: text/plain; charset="UTF-8"
+Date: Tue, 26 Jan 2016 14:05:54 +0100
+Message-ID: <1453813554.4772.131.camel@chaos.site>
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 12, 2016 at 03:30:25PM +0100, Arnd Bergmann wrote:
-> On Monday 11 January 2016 10:56:30 Sinan Kaya wrote:
-> > 
-> > #_dmesg_|_grep_resource
-> > [    2.945762] pci_bus 0000:00: root bus resource [io  0x0000-0xefff window] (bus address [0x1000-0xffff])
-> > [    3.652201] pci_bus 0002:00: root bus resource [io  0xf000-0x1dfff window] (bus address [0x1000-0xffff])
-> > [    6.546716] pci_bus 0006:00: root bus resource [io  0x1e000-0x2cfff window] (bus address [0x1000-0xffff])
-> > / #
+Le Tuesday 26 January 2016 à 13:49 +0100, Borislav Petkov a écrit :
+> On Tue, Jan 26, 2016 at 01:27:18PM +0100, Jean Delvare wrote:
+> > But I'd say -EPERM is hardly better. The problem with -ENODEV is that it
+> > is already returned by this function for several other error causes.
+> > Also the aer-inject user-space tool will print the error message from
+> > the error code, and I don't think "No such device" is helpful in that
+> > case. What about -ENOTSUPP ("Operation not supported") or
+> > -EEPROTONOSUPPORT ("Protocol not supported")?
 > 
-> This is bad. We normally want to stay out of the first 0x1000 bytes of
-> the Linux space, to prevent drivers from poking into the ISA
-> registers.
+> Makes sense.
+> 
+> > I can change it if nobody objects. I think the change can be included in
+> > this patch as it is quite related.
+> 
+> I'd do a separate patch but this is only my opinion. I guess that's
+> Bjorn's call.
 
-You are referring to:
+I am almost always advocating for separate patches, but here it seemed
+like hairsplitting so I wasn't sure. I'm fine both ways really.
 
-pci_bus 0000:00: root bus resource [io  0x0000-0xefff window]
-                                        ^^^^^^
-here, right ? [0x0 - PCIBIOS_MIN_IO] is not assigned by the PCI
-code that reassigns resources anyway, so devices with IO BARs won't
-get assigned [0x0 - PCIBIOS_MIN_IO] address space (Linux space).
+> > I'd rather ask, why printk? ;-) Using raw printk is considered bad and
+> > should be avoided whenever possible.
+> 
+> Hmm, interesting. Why?
 
-Are you saying we should disallow the [0x0 - 0x1000] in the PCI busses
-IO resource (Linux space) ?
+I guess the idea is that it makes message formats more consistent and
+valuable.
 
-In pci_address_to_pio() the offset (Linux IO resource) we assign starts
-from 0x0, so we always allocate that chunk of IO address space (that is
-an offset into the Linux virtual address space), am I correct ?
+> > So says checkpatch.pl.
+> 
+> Please don't tell me you believe what checkpatch says.
 
-> We can have one of the buses be the "primary" bus that has its first
-> 0x1000 bytes of I/O space mapped into the respective Linux addresses,
-> but mapping the second 0x1000 bytes into the reserved space is the
-> worst possible outcome here, as legacy ISA drivers will now poke at
-> random other devices that are intentionally moved to high addresses to
-> stay of of that range.
+Of course I believe it, as long as it says what I want to hear. If not
+then I just claim it's a piece of crap and ignore it ;-) As everybody
+does, it seems.
 
-And you are referring to:
+> > > Why not pr_err() and define pr_fmt to "aer_inject: " and then drop
+> > > that prefix from the messages?
+> > 
+> > Because I believe that including the device name in the error messages
+> > makes them more helpful to understand and diagnose the problem. If the
+> > device where we try to inject the error has a problem, it's PCI name
+> > will be included in the error message. If the error is with the root
+> > port, then we include the root port's PCI name. If I used pr_err()
+> > instead then the device information would be missing.
+> 
+> True, that's a good argument.
+> 
+> However, if you're doing aer injection, you already *know* the device
+> you're injecting too. Unless you want to inject in multiple devices and
+> then it is helpful.
 
-root bus resource [io  0x0000-0xefff window] (bus address [0x1000-0xffff])
-		       ^^^^^^                              ^^^^^^
+You know the device, but you don't know its root device, which
+apparently matters a lot for AER, and is used for 2 of the messages I
+introduced.
 
-here ? If ISA drivers poke at addresses in the [0x0 - 0x1000]
-range (Linux space IO offset) they end up on the PCI bus with addresses
-above 0x1000, is that what you are saying when you refer to "moved to
-high addresses to stay out of that range" ?
+Even for the device itself, a confirmation of the PCI device name is
+always good to have, to avoid confusion if you made a typo in your
+injection data for example.
 
-Thanks,
-Lorenzo
+> So sure, dev_* sounds better as it gives more info about which device
+> fails, but then please convert the whole driver.
+
+OK, I'll work on this once the first round of reviews if done. I don't
+know if others have more comments, so let's wait a bit.
+
+-- 
+Jean Delvare
+SUSE L3 Support
+
