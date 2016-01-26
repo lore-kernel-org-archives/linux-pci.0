@@ -1,75 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V3 03/21] pci, acpi, mcfg: Provide generic implementation of MCFG code initialization.
-Date: Wed, 13 Jan 2016 14:20:49 +0100
-Message-Id: <1452691267-32240-4-git-send-email-tn@semihalf.com>
-In-Reply-To: <1452691267-32240-1-git-send-email-tn@semihalf.com>
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:33606 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966230AbcAZQ2Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Jan 2016 11:28:24 -0500
+Message-ID: <1453825703.26652.47.camel@redhat.com>
+Subject: Re: [PATCH v2 2/2] pci: Add DMA alias quirk for mic_x200_dma
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>,
+	linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, dwmw2@infradead.org, jroedel@suse.de
+Date: Tue, 26 Jan 2016 09:28:23 -0700
+In-Reply-To: <1453804310-12946-2-git-send-email-jacek.lawrynowicz@intel.com>
+References: <1453804310-12946-1-git-send-email-jacek.lawrynowicz@intel.com>
+	 <1453804310-12946-2-git-send-email-jacek.lawrynowicz@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-First function acpi_mcfg_check_entry() does not apply any quirks by default.
+On Tue, 2016-01-26 at 11:31 +0100, Jacek Lawrynowicz wrote:
+> MIC x200 NTB forwards PCIe traffic using multiple alien RID. They have to
+> be added as aliases to the DMA device in order to allow buffer access
+> when IOMMU is enabled.
+> 
+> Signed-off-by: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+> ---
+>  drivers/pci/quirks.c | 15 +++++++++++++++
+>  1 file changed, 15 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index b094061..bc23bc8 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3703,6 +3703,21 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
+>  DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
+>  
+>  /*
+> + * MIC x200 NTB forwards PCIe traffic using multiple alien RID. They have to
+> + * be added as aliases to the DMA device in order to allow buffer access
+> + * when IOMMU is enabled.
+> + */
+> +static void quirk_mic_x200_dma_alias(struct pci_dev *pdev)
+> +{
+> +	if (iommu_present(pdev->dev.bus)) {
 
-Last two functions are required by ACPI subsystem to make PCI config
-space accessible. Generic code assume to do nothing for early init call but
-late init call does as follow:
-- parse MCFG table and add regions to ECAM resource list
-- map regions
-- add regions to iomem_resource
+Why do we need this test?  The alias simply goes unused without an
+IOMMU, right?
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Tested-by: Jeremy Linton <jeremy.linton@arm.com>
----
- drivers/acpi/mcfg.c | 26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
-
-diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
-index 5ecef20..fad9917 100644
---- a/drivers/acpi/mcfg.c
-+++ b/drivers/acpi/mcfg.c
-@@ -57,3 +57,29 @@ int __init acpi_parse_mcfg(struct acpi_table_header *header)
- 
- 	return 0;
- }
-+
-+int __init __weak acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
-+					struct acpi_mcfg_allocation *cfg)
-+{
-+	return 0;
-+}
-+
-+void __init __weak pci_mmcfg_early_init(void)
-+{
-+
-+}
-+
-+void __init __weak pci_mmcfg_late_init(void)
-+{
-+	struct pci_mmcfg_region *cfg;
-+
-+	acpi_table_parse(ACPI_SIG_MCFG, acpi_parse_mcfg);
-+
-+	if (list_empty(&pci_mmcfg_list))
-+		return;
-+	if (!pci_mmcfg_arch_init())
-+		free_all_mmcfg();
-+
-+	list_for_each_entry(cfg, &pci_mmcfg_list, list)
-+		insert_resource(&iomem_resource, &cfg->res);
-+}
--- 
-1.9.1
+> +		pci_enable_dma_alias(pdev, PCI_DEVFN(0x10, 0x0));
+> +		pci_enable_dma_alias(pdev, PCI_DEVFN(0x11, 0x0));
+> +		pci_enable_dma_alias(pdev, PCI_DEVFN(0x12, 0x3));
+> +	}
+> +}
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2264, quirk_mic_x200_dma_alias);
+> +
+> +/*
+>   * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
+>   * class code.  Fix it.
+>   */
 
