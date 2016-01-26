@@ -1,77 +1,102 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v2] pci: fix unavailable irq number 255 reported by BIOS
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>
-References: <1453705178-27389-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>
- <20160125205803.GA10272@localhost> <alpine.DEB.2.11.1601260825510.3886@nanos>
- <20160126152221.GB9279@localhost> <alpine.DEB.2.11.1601261628450.3886@nanos>
- <20160127002505.GA3329@localhost>
-CC: Chen Fan <chen.fan.fnst@cn.fujitsu.com>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<rjw@rjwysocki.net>, <lenb@kernel.org>,
-	<izumi.taku@jp.fujitsu.com>, <wency@cn.fujitsu.com>,
-	<ddaney.cavm@gmail.com>, <okaya@codeaurora.org>,
-	<bhelgaas@google.com>, <jiang.liu@linux.intel.com>,
-	<linux-pci@vger.kernel.org>
-From: Cao jin <caoj.fnst@cn.fujitsu.com>
-Message-ID: <56A85494.8070606@cn.fujitsu.com>
-Date: Wed, 27 Jan 2016 13:24:36 +0800
+Date: Tue, 26 Jan 2016 12:22:39 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ray Jui <rjui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Rafal Milecki <zajec5@gmail.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: iproc: Fix BCMA PCIe bus scanning regression
+Message-ID: <20160126182239.GA17600@localhost>
+References: <1453330510-21926-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20160127002505.GA3329@localhost>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1453330510-21926-1-git-send-email-rjui@broadcom.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Ray,
 
+On Wed, Jan 20, 2016 at 02:55:10PM -0800, Ray Jui wrote:
+> Commit 943ebae781f5 ("PCI: iproc: Add PAXC interface support") causes
+> regression on EP device detection on BCMA based platforms. This patch
+> fixes the issue by allowing multiple devices to be configured on the
+> same bus, for all PAXB based child buses
+> 
+> Reported-by: Rafal Milecki <zajec5@gmail.com>
+> Fixes: 943ebae781f5 ("PCI: iproc: Add PAXC interface support")
+> Signed-off-by: Ray Jui <rjui@broadcom.com>
+> ---
+>  drivers/pci/host/pcie-iproc.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index 5816bce..4627561 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -171,10 +171,11 @@ static inline void iproc_pcie_ob_write(struct iproc_pcie *pcie,
+>  }
+>  
+>  static inline bool iproc_pcie_device_is_valid(struct iproc_pcie *pcie,
+> +					      unsigned int busnum,
+>  					      unsigned int slot,
+>  					      unsigned int fn)
+>  {
+> -	if (slot > 0)
+> +	if ((pcie->type == IPROC_PCIE_PAXC || busnum == 0) && slot > 0)
+>  		return false;
+>  
+>  	/* PAXC can only support limited number of functions */
 
-On 01/27/2016 08:25 AM, Bjorn Helgaas wrote:
-> On Tue, Jan 26, 2016 at 04:48:25PM +0100, Thomas Gleixner wrote:
->> On Tue, 26 Jan 2016, Bjorn Helgaas wrote:
+I don't understand this.  Here's the whole function (with this patch
+applied):
 
+    static inline bool iproc_pcie_device_is_valid(struct iproc_pcie *pcie,
+						  unsigned int busnum,
+						  unsigned int slot,
+						  unsigned int fn)
+    {
+	    if ((pcie->type == IPROC_PCIE_PAXC || busnum == 0) && slot > 0)
+		    return false;
 
->>
->> Right. So we could certainly do something like this INVALID_IRQ thingy, but
->> that looks a bit weird. What would request_irq() return?
->>
->> If it returns success, then drivers might make the wrong decision. If it
->> returns an error code, then the i801 one works, but we might have to fix
->> others anyway.
->
-> I was thinking request_irq() could return -EINVAL if the caller passed
-> INVALID_IRQ.  That should tell drivers that this interrupt won't work.
->
-> We'd be making request_irq() return -EINVAL in some cases where it
-> currently returns success.  But even though it returns success today,
-> I don't think the driver is getting interrupts, because the wire isn't
-> connected.
->
->> I think it's better to have a software flag in pci_dev to indicate that there
->> is no irq line and fix up the (probably few) affected drivers so they avoid
->> calling request_irq() and take the right action.
->
-> We could add an "irq_valid" flag in struct pci_dev and make a new
-> rule that drivers should check dev->irq_valid before using dev->irq.
-> But realistically, i801 is the only place that will check irq_valid
-> because that's the only driver where we know about a problem, so that
-> seems like sort of a point solution.
->
-> Bjorn
->
+	    /* PAXC can only support limited number of functions */
+	    if (pcie->type == IPROC_PCIE_PAXC && fn >= MAX_NUM_PAXC_PF)
+		    return false;
 
-How about using IRQ_BITMAP_BITS as that "irq_valid" flag? because it is 
-the ceiling of struct irq_desc irq_desc[], and request_irq() will return 
--EINVAL in case of the ceiling.
+	    return true;
+    }
 
-#ifdef CONFIG_SPARSE_IRQ
-# define IRQ_BITMAP_BITS	(NR_IRQS + 8196)
-#else
-# define IRQ_BITMAP_BITS	NR_IRQS
-#endif
+This says:
 
-> .
->
+  - On bus 00, device 0 is the only valid device.  That seems
+    plausible because the devices on bus 00 are probably built-in to
+    the SoC.
 
--- 
-Yours Sincerely,
+  - On PAXC-based systems, device 0 is the only valid device on *any*
+    bus.  Is that really true?  If there's any way to add a plug-in
+    card, this seems overly restrictive.
 
-Cao jin
+    PCIe devices are generally all device 0, but this would mean you
+    cannot plug in a PCIe-to-PCI bridge leading to a PCI device with a
+    non-zero device number.
+
+    I think it also means you could not plug in a PCIe device with ARI
+    enabled, because I think we store the upper 5 bits of the 8-bit
+    ARI function number in the PCI_SLOT bits.
+
+  - On PAXC-based systems, only functions 0, 1, 2, and 3 are valid
+    anywhere in the hierarchy.  I think this again restricts what what
+    cards can be plugged in.
+
+If iProc only supports devices built directly into the SoC, maybe
+these constraints are valid.  But if it supports any plugin or
+external devices, they don't seem to make sense.
+
+Also, is it the case that an iProc root bus is always bus number zero?
+That's certainly not the case for many other host controllers, but
+maybe you only have one possible host controller per system and the
+base number is not programmable.
+
+Bjorn
