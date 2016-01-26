@@ -1,115 +1,202 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f182.google.com ([209.85.223.182]:36079 "EHLO
-	mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757344AbcATJE2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Jan 2016 04:04:28 -0500
-Received: by mail-io0-f182.google.com with SMTP id g73so13503137ioe.3
-        for <linux-pci@vger.kernel.org>; Wed, 20 Jan 2016 01:04:27 -0800 (PST)
+Received: from mga11.intel.com ([192.55.52.93]:58693 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934375AbcAZMEu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Jan 2016 07:04:50 -0500
+From: "Lawrynowicz, Jacek" <jacek.lawrynowicz@intel.com>
+To: David Woodhouse <dwmw2@infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	"jroedel@suse.de" <jroedel@suse.de>
+Subject: RE: [PATCH v2 1/2] pci: Add support for multiple DMA aliases
+Date: Tue, 26 Jan 2016 12:04:47 +0000
+Message-ID: <36D38C1F74839847A52A484C31F3E51A6213B1EF@irsmsx105.ger.corp.intel.com>
+References: <1453804310-12946-1-git-send-email-jacek.lawrynowicz@intel.com>
+ <1453809557.60902.58.camel@infradead.org>
+In-Reply-To: <1453809557.60902.58.camel@infradead.org>
+Content-Type: multipart/signed; micalg=SHA1;
+	protocol="application/x-pkcs7-signature";
+	boundary="----=_NextPart_000_0025_01D1583A.21A3DEB0"
 MIME-Version: 1.0
-In-Reply-To: <569F41B1.6000005@broadcom.com>
-References: <CACna6rx2t7Zg_xSVvYqZTW2dYEgRugaorV58Zy1YZ4Wy=+L4fQ@mail.gmail.com>
-	<CACna6rzMK4Htci8AucHVi1TNjBkxdQiy60MWJ234J8=4B_vteA@mail.gmail.com>
-	<569F41B1.6000005@broadcom.com>
-Date: Wed, 20 Jan 2016 10:04:27 +0100
-Message-ID: <CACna6rzjEZohOT=Sc-0K1HaDYwDoYe219ogUeCSB087FG+ttBw@mail.gmail.com>
-Subject: Re: iProc bus scanning regression (after "PCI: iproc: Add PAXC
- interface support")
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Ray Jui <rjui@broadcom.com>
-Cc: Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20 January 2016 at 09:13, Ray Jui <rjui@broadcom.com> wrote:
-> On 1/19/2016 11:02 PM, Rafał Miłecki wrote:
->>
->> On 20 January 2016 at 07:53, Rafał Miłecki <zajec5@gmail.com> wrote:
->>>
->>> In OpenWrt trunk code we use iProc driver for PCIe controllers on bcma
->>> bus (PCIE_IPROC_BCMA). Right now we use 4.1 kernel but we backported
->>> all iProc changes. Unfortunately backporting set queued for 4.5 broke
->>> bus scanning on some routers.
->>>
->>> Most BCM4708 / BCM4709 chipsets have 3 PCIe controllers. All known
->>> routers use only first 2 of them. Even if router has 3 PCIe cards, the
->>> last two cards are connected to the 2nd PCIe controller.
->>>
->>> So that PAXC patch broke support for routers with 3 cards, 2 of them
->>> at the 2nd controller. It doesn't affect routers with just 2 cards.
->>> This problem was tracked down in:
->>> https://dev.openwrt.org/ticket/21393
->>>
->>> I'm attaching two OpenWrt boot logs.
->>> 1) r48381
->>> It contains all backported iProc changes. The log looks "nice", but
->>> only one card (0000:01:00.0) was detected.
->>> 2) r48382
->>> It contains "Revert "PCI: iproc: Add PAXC interface support"" patch.
->>> It contains many "[Firmware Bug]: reg 0x??: invalid BAR (can't size)"
->>> messages but there are all 3 cards detected: 0000:01:00.0,
->>> 0001:03:00.0 and 0001:04:00.0 (see brcmfmac messages).
->>>
->>> Can you take a look at this problem, please?
->>
->>
->> linux-arm-kernel@ stopped my e-mail due to its size. Sending
->> compressed attachments.
->>
->
-> I'm a bit confused by these logs that you provided. Based on the log, there
-> seems to be 3 PCIe root complexes populated on the platform, domain
-> 0000:00:00.0, 0001:00:00:0, 0002:00:00:0 are the 3 root complexes. Root
-> complex 0002 seems to have nothing connected since it does not detect any
-> EP.
->
-> Is the first card installed on root complex 0 (domain 0000), but the second
-> card and 3rd card are both installed on root complex 1 (domain 0001) on
-> different slots or something?
+------=_NextPart_000_0025_01D1583A.21A3DEB0
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 
-I believe this is the case. Devices 0001:03:00.0 and 0001:04:00.0
-suggest it's one bus (domain 0001) and just different slots. Please
-note BCM4708/BCM4709 is a SoC, there aren't physical connectors, I
-don't know hardware design details.
+> -----Original Message-----
+> From: David Woodhouse [mailto:dwmw2@infradead.org]
+> Sent: Tuesday, January 26, 2016 12:59 PM
+> To: Lawrynowicz, Jacek <jacek.lawrynowicz@intel.com>; linux-
+> pci@vger.kernel.org
+> Cc: bhelgaas@google.com; alex.williamson@redhat.com; jroedel@suse.de
+> Subject: Re: [PATCH v2 1/2] pci: Add support for multiple DMA aliases
+> 
+> On Tue, 2016-01-26 at 11:31 +0100, Jacek Lawrynowicz wrote:
+> >
+> > +bool pci_dma_alias_is_enabled(struct pci_dev *dev, u8 devfn)
+> > +{
+> > +       return dev->dma_alias_mask &&
+> > +              test_bit(devfn, dev->dma_alias_mask);
+> > +}
+> > +EXPORT_SYMBOL_GPL(pci_dma_alias_is_enabled);
+> 
+> Why export this?
+
+So it can be used in drivers/iommu/iommu.c in get_pci_alias_group().
+Bjorn didn't want dma_alias_mask to be used there directly.
+
+--
+Jacek Lawrynowicz
+Intel Technology Poland sp. z o.o.
+KRS 101882 - ul. Slowackiego 173, 80-298 Gdansk
 
 
-> I suspect a potential issue is in this function:
->
-> 173 static inline bool iproc_pcie_device_is_valid(struct iproc_pcie *pcie,
-> 174                                               unsigned int slot,
-> 175                                               unsigned int fn)
-> 176 {
-> 177         if (slot > 0)
-> 178                 return false;
-> 179
-> 180         /* PAXC can only support limited number of functions */
-> 181         if (pcie->type == IPROC_PCIE_PAXC && fn >= MAX_NUM_PAXC_PF)
-> 182                 return false;
-> 183
-> 184         return true;
-> 185 }
->
-> Compared to the original code, it's different. Can you try passing bus
-> number into the function as another argument and do the following check on
-> line 177:
->
-> if (busnum == 0 && slot > 0)
->     return false;
->
-> instead of
->
-> if (slot > 0)
->     return false;
 
-I'll prepare an image and ask R8000 owner to give it a try.
+------=_NextPart_000_0025_01D1583A.21A3DEB0
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
 
--- 
-Rafał
+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
+VMv3yxHO8jex40LgMIIFijCCBHKgAwIBAgITMwAAHtrUMHJqXk2MNwAAAAAe2jANBgkqhkiG9w0B
+AQUFADB5MQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExFDASBgNVBAcTC1NhbnRhIENsYXJhMRow
+GAYDVQQKExFJbnRlbCBDb3Jwb3JhdGlvbjErMCkGA1UEAxMiSW50ZWwgRXh0ZXJuYWwgQmFzaWMg
+SXNzdWluZyBDQSA0QjAeFw0xNTEwMTIxMzEwNDlaFw0xODA5MjYxMzEwNDlaMEkxGzAZBgNVBAMT
+Ekxhd3J5bm93aWN6LCBKYWNlazEqMCgGCSqGSIb3DQEJARYbamFjZWsubGF3cnlub3dpY3pAaW50
+ZWwuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1tjwqdbx6/OJGZH6bcoU0kUw
+Rfszjz7Ws3+m5aZzzysxb1a4/KemhppgfL8kAjJ4Ha35ixtjn2ZO+uAQ7IgJs512oyUkUZydLypc
+4kobk1ZQiAeX1J/r0gwPQsbBBJu0rJ4uP9wMn6P1YQRHbjJ443cDPlYKjEzoFxnTlWwpQ4Zc3C8Y
+DCLuZk6NPduNJ0++LIVOKi9s35cht7W8CxoVOjV9s9sZlEeN5oCGLVB9ORpt3GPh+8ap/WXTB6FW
+Z8Zn/eH0FqPH/UOfbNlb6sJz9RnZ0RcIa+KJpj2QA38JfmSuGc+u+7Ds7/I+0GL3BIzOv9eGBA8h
+DAAV8IwXGhwmQQIDAQABo4ICOTCCAjUwCwYDVR0PBAQDAgeAMDwGCSsGAQQBgjcVBwQvMC0GJSsG
+AQQBgjcVCIbDjHWEmeVRg/2BKIWOn1OCkcAJZ4HevTmV8EMCAWQCAQgwHQYDVR0OBBYEFM3NoUwk
+hZ72HaT2GREobB3IUpkTMB8GA1UdIwQYMBaAFNpBI5xaj3GvV4M+INPjZdsMywvbMGUGA1UdHwRe
+MFwwWqBYoFaGVGh0dHA6Ly93d3cuaW50ZWwuY29tL3JlcG9zaXRvcnkvQ1JML0ludGVsJTIwRXh0
+ZXJuYWwlMjBCYXNpYyUyMElzc3VpbmclMjBDQSUyMDRCLmNybDCBnwYIKwYBBQUHAQEEgZIwgY8w
+IgYIKwYBBQUHMAGGFmh0dHA6Ly9vY3NwLmludGVsLmNvbS8waQYIKwYBBQUHMAKGXWh0dHA6Ly93
+d3cuaW50ZWwuY29tL3JlcG9zaXRvcnkvY2VydGlmaWNhdGVzL0ludGVsJTIwRXh0ZXJuYWwlMjBC
+YXNpYyUyMElzc3VpbmclMjBDQSUyMDRCLmNydDAfBgNVHSUEGDAWBggrBgEFBQcDBAYKKwYBBAGC
+NwoDDDApBgkrBgEEAYI3FQoEHDAaMAoGCCsGAQUFBwMEMAwGCisGAQQBgjcKAwwwUwYDVR0RBEww
+SqArBgorBgEEAYI3FAIDoB0MG2phY2VrLmxhd3J5bm93aWN6QGludGVsLmNvbYEbamFjZWsubGF3
+cnlub3dpY3pAaW50ZWwuY29tMA0GCSqGSIb3DQEBBQUAA4IBAQCXms3sgvqozD+mirP5B9PANgCE
+RVBbEkYt8TzJE0B1lcLfXavkPldx1vC2vpblXofPfVyRbaUbobbIqohYCiblPvqso5raQmr8GeR1
+RiWmiqiye2sA2nvQh1m7Skc6h7XBI3knNDzhG87zmvweY0Fgmbvdi7PGfMxjT4eiLjvzhWCthkmJ
+NYoJ7Whtn60/vHl1OO6b7JeTqfNDc1NxV/g4dlMyFsr+XtyMGFzI0ch6eIzlpqeFDzKLI/5i8tzc
+cZikcJThuwA/SfHHWEHs33gEHxa4F1x6ngyN8OdZgwdBc6nk6wgx6vLeDnN67fCNhQAadMeHjdP+
+QqAEvc7XavdRMIIGfTCCBWWgAwIBAgIKGZmpegAAAAAy3TANBgkqhkiG9w0BAQUFADB5MQswCQYD
+VQQGEwJVUzELMAkGA1UECBMCQ0ExFDASBgNVBAcTC1NhbnRhIENsYXJhMRowGAYDVQQKExFJbnRl
+bCBDb3Jwb3JhdGlvbjErMCkGA1UEAxMiSW50ZWwgRXh0ZXJuYWwgQmFzaWMgSXNzdWluZyBDQSA0
+QTAeFw0xMzEwMjEwODU4NThaFw0xNjEwMDUwODU4NThaMEkxGzAZBgNVBAMTEkxhd3J5bm93aWN6
+LCBKYWNlazEqMCgGCSqGSIb3DQEJARYbamFjZWsubGF3cnlub3dpY3pAaW50ZWwuY29tMIIBIjAN
+BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAplKHW1GF9qUj6MGOr6H3a+meHkH/FZW7bNFAFGic
+hxCpbgkwPVjFPo5gqoTk1/vZazgMlr6BrETZHAT78vC2OfpHEOgRcBvE3aJw8AMk9q8Scsx43UWY
+iK9Ys1i7idBWNH45OfCyHu7Z0pHCFywyQgFUK4FM10MlFNBXzET+rmgqU9RBIRFWkMOi0G4gmL7c
+lLApKKFjjfhTx75W2WK3vsNK4Uw+omqR/Kli7IeXExsKOXjv8kuzifYZNAUHMiAGUZURbp5hv7IY
+wG7SI9CDwDrtpFbu9k8RRRLNJnt8n+cueMPmNMeMv6PVy/8hmKn0tW+wIIO6hPbe8MbCqLcQJwID
+AQABo4IDNTCCAzEwCwYDVR0PBAQDAgQwMD0GCSsGAQQBgjcVBwQwMC4GJisGAQQBgjcVCIbDjHWE
+meVRg/2BKIWOn1OCkcAJZ4S52UGHhP9OAgFkAgENMEQGCSqGSIb3DQEJDwQ3MDUwDgYIKoZIhvcN
+AwICAgCAMA4GCCqGSIb3DQMEAgIAgDAHBgUrDgMCBzAKBggqhkiG9w0DBzAdBgNVHQ4EFgQUa/PH
+evLj3Q34U/tCjZKn2DnMMIwwHwYDVR0jBBgwFoAUHmkqtNwo/kcYTiELP7ysES/wmPUwgckGA1Ud
+HwSBwTCBvjCBu6CBuKCBtYZUaHR0cDovL3d3dy5pbnRlbC5jb20vcmVwb3NpdG9yeS9DUkwvSW50
+ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIwSXNzdWluZyUyMENBJTIwNEEuY3Jshl1odHRwOi8vY2Vy
+dGlmaWNhdGVzLmludGVsLmNvbS9yZXBvc2l0b3J5L0NSTC9JbnRlbCUyMEV4dGVybmFsJTIwQmFz
+aWMlMjBJc3N1aW5nJTIwQ0ElMjA0QS5jcmwwge8GCCsGAQUFBwEBBIHiMIHfMGkGCCsGAQUFBzAC
+hl1odHRwOi8vd3d3LmludGVsLmNvbS9yZXBvc2l0b3J5L2NlcnRpZmljYXRlcy9JbnRlbCUyMEV4
+dGVybmFsJTIwQmFzaWMlMjBJc3N1aW5nJTIwQ0ElMjA0QS5jcnQwcgYIKwYBBQUHMAKGZmh0dHA6
+Ly9jZXJ0aWZpY2F0ZXMuaW50ZWwuY29tL3JlcG9zaXRvcnkvY2VydGlmaWNhdGVzL0ludGVsJTIw
+RXh0ZXJuYWwlMjBCYXNpYyUyMElzc3VpbmclMjBDQSUyMDRBLmNydDAfBgNVHSUEGDAWBggrBgEF
+BQcDBAYKKwYBBAGCNwoDBDApBgkrBgEEAYI3FQoEHDAaMAoGCCsGAQUFBwMEMAwGCisGAQQBgjcK
+AwQwUwYDVR0RBEwwSqArBgorBgEEAYI3FAIDoB0MG2phY2VrLmxhd3J5bm93aWN6QGludGVsLmNv
+bYEbamFjZWsubGF3cnlub3dpY3pAaW50ZWwuY29tMA0GCSqGSIb3DQEBBQUAA4IBAQCZxulYBdgq
+w81+yDpeBMgPwjP6kyC2V0UHwaRygJD6LJEq5KNaJBQl1leJ8esPXOyFCSHyhkAE89FrFvNRhvJs
+1B2vpT7sPMy0S8LHwJ/y+vokKXE+b69KwtOIhvzFuZ2SjloRtrN9gIL3lJSy/8hNDnh5Gmzq/KgY
+Fv2hOoi1vQYta94hBCgLAjMdbZPuPhdHZxq7QRK871Ghg1tD0Rj1fxEp4aX+UVlcJruVTVdWCjaC
+nv0dmSxtIG0tDh8bb8ZfPDbijqz8ul26z+7wHJCDB6dT6zwDCXnWIoD8nzLlaCyRvWUtiTC3wXpy
+mh1fAkT91KBs8uiS6O8FccYZoylvMYID5zCCA+MCAQEwgZAweTELMAkGA1UEBhMCVVMxCzAJBgNV
+BAgTAkNBMRQwEgYDVQQHEwtTYW50YSBDbGFyYTEaMBgGA1UEChMRSW50ZWwgQ29ycG9yYXRpb24x
+KzApBgNVBAMTIkludGVsIEV4dGVybmFsIEJhc2ljIElzc3VpbmcgQ0EgNEICEzMAAB7a1DByal5N
+jDcAAAAAHtowCQYFKw4DAhoFAKCCAiswGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG
+9w0BCQUxDxcNMTYwMTI2MTIwNDQ2WjAjBgkqhkiG9w0BCQQxFgQUz6wbVzLpfcGIAkCvEoj7nSMW
+Hu0wgZMGCSqGSIb3DQEJDzGBhTCBgjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAoGCCqGSIb3
+DQMHMAsGCWCGSAFlAwQBAjAOBggqhkiG9w0DAgICAIAwDQYIKoZIhvcNAwICAUAwBwYFKw4DAhow
+CwYJYIZIAWUDBAIDMAsGCWCGSAFlAwQCAjALBglghkgBZQMEAgEwgZgGCSsGAQQBgjcQBDGBijCB
+hzB5MQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExFDASBgNVBAcTC1NhbnRhIENsYXJhMRowGAYD
+VQQKExFJbnRlbCBDb3Jwb3JhdGlvbjErMCkGA1UEAxMiSW50ZWwgRXh0ZXJuYWwgQmFzaWMgSXNz
+dWluZyBDQSA0QQIKGZmpegAAAAAy3TCBmgYLKoZIhvcNAQkQAgsxgYqggYcweTELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRQwEgYDVQQHEwtTYW50YSBDbGFyYTEaMBgGA1UEChMRSW50ZWwgQ29y
+cG9yYXRpb24xKzApBgNVBAMTIkludGVsIEV4dGVybmFsIEJhc2ljIElzc3VpbmcgQ0EgNEECChmZ
+qXoAAAAAMt0wDQYJKoZIhvcNAQEBBQAEggEApxmy2OU2mGNH1DHYMFBz7E9KOMJrAifL/Mc8oBHL
+EUHCqf7EHiGds9oSNtbDdSGOGITVQadk8L+/dbCPqzBXVhNs/ck4lTQNNFW/SOQn72oygckkN9iN
+ug3GKNYtO08yOaOX1CFqk8144J3nY/yfJPo43EsGiXzxLy3qNaJTNfZOK5LoC7FRuPld4e4vKN5Z
+tp8BKM3HyOVVX4NADqSLDOPlXjYH4lLOwUTZn/5YDP4BKez8rYGaNtNq6RZ5fwMZh7cJelTr1wOk
+WWsVq9d3p4LhuOSZaDO/1xtPIVXpqwM2JNkvpJG5GI40BQWkYS7reOBBjf6QqdP0D1iQjyV1yQAA
+AAAAAA==
+
+------=_NextPart_000_0025_01D1583A.21A3DEB0--
