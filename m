@@ -1,95 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45247 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751413AbcA2QYG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Jan 2016 11:24:06 -0500
-Date: Fri, 29 Jan 2016 10:24:00 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Richard F <lists@keynet-technology.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: Hint HB6 - kernel doesn't see chips behind it.
-Message-ID: <20160129162400.GB12965@localhost>
-References: <5698191B.1070904@keynet-technology.com>
- <20160115172640.GC28453@localhost>
- <569CFB5B.7050903@keynet-technology.com>
- <20160119033839.GA3339@localhost>
- <56A8DA21.7060607@keynet-technology.com>
- <20160127215522.GA4875@localhost>
- <56A9EC07.8080509@keynet-technology.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: =?UTF-8?B?0J7Qu9C10LMg0JzQvtGA0L7Qtw==?= <oleg.moroz@mcc.vniiem.ru>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: PCI device driver broken between 4.2 and 4.3
+References: <56A32702.7080909@mcc.vniiem.ru>
+ <CAErSpo6MtFSxnH8uSqeLiJVR3P-R5DUX2Furw3yw8JiMN29H0A@mail.gmail.com>
+ <56A4D690.1020804@mcc.vniiem.ru> <20160125215251.GB10272@localhost>
+ <20160126153210.GA11375@localhost>
+Message-ID: <56A7C35F.3090708@mcc.vniiem.ru>
+Date: Tue, 26 Jan 2016 22:05:03 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56A9EC07.8080509@keynet-technology.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160126153210.GA11375@localhost>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 28, 2016 at 10:23:03AM +0000, Richard F wrote:
-> Bjorn,
-> 
-> Thanks for looking at it. Actually I've tried 3 different PCI cards in
-> both slots and they all work fine.  I have 2 different single channel
-> BT878 based PCI cards in there now capturing CCTV 24 x 7, the machine
-> stays up for months. That's why it's so odd.  Any other pointers?  Does
-> the kernel need the BIOS to detect the card right?
+I confirmed it works in
 
-The kernel should at least discover the card even if the BIOS doesn't
-do anything.  But on x86, the BIOS usually *does* configure things, so
-it's very possible we could trip over a Linux defect if it doesn't.
+890e4847587f
 
-Try booting with "pci=pcie_scan_all".  That *shouldn't* make a
-difference because this isn't a PCIe device, but maybe our logic is
-broken.
+and do not works in
 
-Your topology looks a little strange:
+991de2e59090
 
-  00:1c.0 PCIe root port to [bus 01]    slot 0
-  00:1c.1 PCIe root port to [bus 02]    slot 1
-  00:1c.2 PCIe root port to [bus 03-05] slot 2
-  03:00.0 PCI bridge to [bus 04-05] (Integrated Technology Express)
-  04:01.0 PCI bridge to [bus 05] (Hint Corp)
-
-00:1c.2 is a normal PCIe Root Port, so the device it's connected to
-*should* be a PCIe device, but 03:00.0 doesn't have a PCIe capability.
-Is this an adapter card of some kind?
-
-03:00.0 is an ITE 8893, and we do have a quirk related to a similar
-device:
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/pci/quirks.c?h=v4.4#n3662
-
-Can you try the patch below, please?
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6d7ab9b..f6d8e85 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1530,6 +1530,7 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
- 	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
- 		return false;
- 
-+	dev_info(&bus->dev, "%s %02x %#010x\n", __func__, devfn, *l);
- 	/* some broken boards return 0 or ~0 if a slot is empty: */
- 	if (*l == 0xffffffff || *l == 0x00000000 ||
- 	    *l == 0x0000ffff || *l == 0xffff0000)
-@@ -1571,6 +1572,7 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 	struct pci_dev *dev;
- 	u32 l;
- 
-+	dev_info(&bus->dev, "%s %02x\n", __func__, devfn);
- 	if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60*1000))
- 		return NULL;
- 
-@@ -1751,6 +1753,7 @@ struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn)
- {
- 	struct pci_dev *dev;
- 
-+	dev_info(&bus->dev, "%s %02x\n", __func__, devfn);
- 	dev = pci_get_slot(bus, devfn);
- 	if (dev) {
- 		pci_dev_put(dev);
-@@ -1825,6 +1828,7 @@ int pci_scan_slot(struct pci_bus *bus, int devfn)
- 	unsigned fn, nr = 0;
- 	struct pci_dev *dev;
- 
-+	dev_info(&bus->dev, "%s %02x\n", __func__, devfn);
- 	if (only_one_child(bus) && (devfn > 0))
- 		return 0; /* Already scanned the entire slot */
- 
+26.01.2016 18:32, Bjorn Helgaas пишет:
+> [+cc Jiang]
+>
+> On Mon, Jan 25, 2016 at 03:52:51PM -0600, Bjorn Helgaas wrote:
+>> Hi Олег,
+>>
+>> On Sun, Jan 24, 2016 at 04:50:08PM +0300, Олег Мороз wrote:
+>>> Okay. I've sent logs (dmesg and lspci) from both 4.2 and 4.3 to bugzilla
+>> I don't see anything wrong in either log.  Both v4.2 and v4.3
+>> enumerate the device the same way, and the driver seems to claim it
+>> the same way:
+>>
+>>    pci 0000:0d:00.0: [10b5:9030] type 00 class 0x078000
+>>    pci 0000:0d:00.0: reg 0x14: [io  0x2100-0x217f]
+>>    pci 0000:0d:00.0: reg 0x18: [io  0x2380-0x239f]
+>>    pci 0000:0d:00.0: PME# supported from D0 D3hot
+>>    pci 0000:0d:01.0: [10b5:9030] type 00 class 0x078000
+>>    pci 0000:0d:01.0: reg 0x14: [io  0x2180-0x21ff]
+>>    pci 0000:0d:01.0: reg 0x18: [io  0x23a0-0x23bf]
+>>    pci 0000:0d:01.0: PME# supported from D0 D3hot
+>>    pci 0000:0d:02.0: [10b5:9030] type 00 class 0x078000
+>>    pci 0000:0d:02.0: reg 0x14: [io  0x2200-0x227f]
+>>    pci 0000:0d:02.0: reg 0x18: [io  0x2280-0x22ff]
+>>    pci 0000:0d:02.0: reg 0x1c: [io  0x2300-0x237f]
+>>    pci 0000:0d:02.0: PME# supported from D0 D3hot
+>>
+>>    sja1000_plx_pci 0000:0d:02.0: Detected "Eclus CAN-200-PCI" card at slot #2
+>>    sja1000_plx_pci 0000:0d:02.0: Channel #1 at 0x0000000000012280, irq 22 registered as can0
+>>    sja1000_plx_pci 0000:0d:02.0: Channel #2 at 0x0000000000012300, irq 22 registered as can1
+>>    sja1000_plx_pci 0000:0d:02.0 can0: setting BTR0=0x03 BTR1=0x37
+>>
+>> One option is always to bisect between v4.2 and v4.3 to see which
+>> commit made it stop working.  See https://git-scm.com/docs/git-bisect
+> Jiang, Олег bisected this to 991de2e59090 ("PCI, x86: Implement
+> pcibios_alloc_irq() and pcibios_free_irq()").
+>
+> Олег, please double-check and confirm that 890e4847587f works and
+> 991de2e59090 fails.
+>
+> Then please add some printks in the pcibios_enable_device() and
+> pcibios_alloc_irq() paths and in your driver to see exactly what changed
+> between 890e4847587f and 991de2e59090
+>
+> Bjorn
+>
+>>> 23.01.2016 17:54, Bjorn Helgaas пишет:
+>>>> [+cc linux-kernel]
+>>>>
+>>>> Hi Олег,
+>>>>
+>>>> On Sat, Jan 23, 2016 at 1:08 AM, Олег Мороз <oleg.moroz@mcc.vniiem.ru> wrote:
+>>>>> Hello. I've got a device driver for MIL-1553b card called TA1-PCI, which
+>>>>> could be found at
+>>>>> https://github.com/qmor/elcus-1553-driver-linux
+>>>>> Card is using PLX_PCI9030 PCI controller.
+>>>>> Today i've found that this driver compiles, installes, but is not working as
+>>>>> it should.
+>>>>> Looks like it not receives any interrupts from PCI. I've test it again with
+>>>>> kernel
+>>>>> 4.2 and it works okay. What changes was made in PCI subsystem from 4.2 to
+>>>>> 4.3
+>>>>> which could have impact this driver work.
+>>>> Thank you very much for this problem report.  There were many PCI
+>>>> changes between v4.2 and v4.3, and without more information, I can't
+>>>> guess what might be causing this problem.
+>>>>
+>>>> I opened a bug report at https://bugzilla.kernel.org/show_bug.cgi?id=111211
+>>>>
+>>>> Please attach complete dmesg logs for both v4.2 and v4.3 to that bug
+>>>> report.  Also, please attach the complete "lspci -vv" output (as
+>>>> root).
+>>>>
+>>>> Thanks!
+>>>>
+>>>> Bjorn
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
