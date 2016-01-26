@@ -1,75 +1,46 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 14 Jan 2016 17:07:23 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Mark Salter <msalter@redhat.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>,
-	Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org, jchandra@broadcom.com, jcm@redhat.com
-Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
- hostbridge init based on ACPI
-Message-ID: <20160114170723.GB20706@red-moon>
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
- <1452785393.28109.16.camel@redhat.com>
- <5697C0EB.4020404@codeaurora.org>
- <20160114161238.GA20706@red-moon>
- <1452789524.28109.24.camel@redhat.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:58266 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966657AbcAZQqK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jan 2016 11:46:10 -0500
+Date: Tue, 26 Jan 2016 08:46:09 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>,
+	Keith Busch <keith.busch@intel.com>,
+	"Derrick, Jonathan" <jonathan.derrick@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Williams, Dan J" <dan.j.williams@intel.com>,
+	"Veal, Bryan E" <bryan.e.veal@intel.com>
+Subject: Re: [PATCHv8 0/5] Driver for new "VMD" device
+Message-ID: <20160126164609.GC15979@infradead.org>
+References: <1452629890-17542-1-git-send-email-keith.busch@intel.com>
+ <20160115181938.GA5296@localhost>
+ <8D943B239464E04C9184454D8B3F5CFF0ABF18EC@ORSMSX101.amr.corp.intel.com>
+ <20160115220631.GA14080@localhost>
+ <20160119153822.GA3979@localhost.localdomain>
+ <20160119160220.GA22059@infradead.org>
+ <20160120204308.GD7973@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1452789524.28109.24.camel@redhat.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160120204308.GD7973@localhost>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 14, 2016 at 11:38:44AM -0500, Mark Salter wrote:
-
-[...]
-
-> You would lose that bet. AddressMinimum/Maximum describe the
-> PCI bus addresses.
-
-In the mainline DT (APM Mustang), the CPU physical address corresponding
-to IO space is 0xe010000000, PCI bus address is 0x0.
-
->                 QWordIO (ResourceProducer, MinFixed, MaxFixed, PosDecode, EntireRange,
->                     0x0000000000000000, // Granularity
->                     0x0000000010000000, // Range Minimum
-
-
->                     0x000000001000FFFF, // Range Maximum
->                     0x000000E000000000, // Translation Offset
-
-See above, I will get the APM specifications to countercheck.
-
-I agree with you we have to verify if this IO space limitation is
-real or it is just an x86ism, in which case we remove that check.
-
-Lorenzo
->                     0x0000000000010000, // Length
->                     ,, , TypeStatic)
-
+On Wed, Jan 20, 2016 at 02:43:08PM -0600, Bjorn Helgaas wrote:
+> I saw responses from Keith and Bryan, and I hope they answer your
+> questions.  As far as I can tell, the VMD driver is grossly similar to
+> other host bridge drivers we've already merged, and I don't think we
+> have public specs for all of them.
 > 
-> 
-> > Jiang's patch:
-> > 
-> > https://lkml.org/lkml/2015/12/16/249
-> > 
-> > parses the IO descriptors and stores the AddressMinimum, AddressMaximum
-> > in the IO resource (with AddressTranslation as offset which must be the
-> > *CPU* physical address mapping IO), from the log above it seems to me in
-> > AddressMinimum APM specifies the *CPU* physical address generating IO
-> > cycles.
-> > 
-> > All in all, I was right to fear this would happen, and I already
-> > raised the point within the ACPI spec working group, ACPI IO
-> > descriptors specification is ambiguous and we must agree on how
-> > they have to be specified once for all.
-> > 
-> > Lorenzo
-> 
+> Unless you have further concerns, I'm going to ask Linus to pull this
+> tomorrow, along with the rest of the PCI changes for v4.5.
+
+I still think it's a bad idea to merge something odd like this without
+a good explanation or showing what devices can actually sit under it.
+
+But you're the maintainer in the end..
