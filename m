@@ -1,80 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:54511 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752121AbcARFKL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jan 2016 00:10:11 -0500
-From: Simon Horman <horms+renesas@verge.net.au>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org,
-	Simon Horman <horms+renesas@verge.net.au>
-Subject: [PATCH v3 3/4] PCI: rcar: add gen2 fallback compatibility string
-Date: Mon, 18 Jan 2016 14:09:44 +0900
-Message-Id: <1453093785-21067-4-git-send-email-horms+renesas@verge.net.au>
-In-Reply-To: <1453093785-21067-1-git-send-email-horms+renesas@verge.net.au>
-References: <1453093785-21067-1-git-send-email-horms+renesas@verge.net.au>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <56A7404A.8080205@cn.fujitsu.com>
+Date: Tue, 26 Jan 2016 17:45:46 +0800
+From: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
+MIME-Version: 1.0
+To: Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <helgaas@kernel.org>
+CC: <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<rjw@rjwysocki.net>, <lenb@kernel.org>,
+	<izumi.taku@jp.fujitsu.com>, <wency@cn.fujitsu.com>,
+	<caoj.fnst@cn.fujitsu.com>, <ddaney.cavm@gmail.com>,
+	<okaya@codeaurora.org>, <bhelgaas@google.com>,
+	<jiang.liu@linux.intel.com>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v2] pci: fix unavailable irq number 255 reported by BIOS
+References: <1453705178-27389-1-git-send-email-chen.fan.fnst@cn.fujitsu.com> <20160125205803.GA10272@localhost> <alpine.DEB.2.11.1601260825510.3886@nanos>
+In-Reply-To: <alpine.DEB.2.11.1601260825510.3886@nanos>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add fallback compatibility string for R-Car Gen 2 family.
-This is in keeping with the fallback scheme being adopted wherever
-appropriate for drivers for Renesas SoCs.
 
-Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Acked-by: Rob Herring <robh@kernel.org>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+On 01/26/2016 04:26 PM, Thomas Gleixner wrote:
+> On Mon, 25 Jan 2016, Bjorn Helgaas wrote:
+>> On Mon, Jan 25, 2016 at 02:59:38PM +0800, Chen Fan wrote:
+>>> i801_smbus 0000:00:1f.3: PCI INT C: no GSI
+>>> i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
+>>> i801_smbus: probe of 0000:00:1f.3 failed with error -16
+> The current code does not not fail when the interrupt request fails. It
+> reports it and clears the IRQ feature flag.
+>
+>>> @@ -436,7 +437,15 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+>>>   	 * driver reported one, then use it. Exit in any case.
+>>>   	 */
+>>>   	if (gsi < 0) {
+>>> -		if (acpi_isa_register_gsi(dev))
+>>> +#ifdef CONFIG_X86
+>>> +		/*
+>>> +		 * The Interrupt Line value of 0xff is defined to mean "unknown"
+>>> +		 * or "no connection" (PCI 3.0, Section 6.2.4, footnote on page
+>>> +		 * 223), using ~0U as invalid IRQ.
+>>> +		 */
+> And why would this be x86 specific? PCI3.0 is architecture independent, right?
+quoting the spec document:
+"For x86 based PCs, the values in this register correspond to IRQ 
+numbers (0-15) of the standard dual
+8259 configuration. The value 255 is defined as meaning "unknown" or "no 
+connection" to the interrupt
+controller. Values between 15 and 254 are reserved."
 
----
-v2
-* Include "rcar-" in new compatibility string
----
- Documentation/devicetree/bindings/pci/rcar-pci.txt | 13 ++++++++++---
- drivers/pci/host/pcie-rcar.c                       |  1 +
- 2 files changed, 11 insertions(+), 3 deletions(-)
+>
+>>> +		dev->irq = (dev->irq == 0xff) ? IRQ_INVALID : dev->irq;
+>> It's much simpler and clearer to write:
+>>
+>>    if (dev->irq == 0xff)
+>>      dev->irq = IRQ_INVALID;
+> I do not understand that IRQ_INVALID business at all.
+>
+>>> +#endif
+>>> +		if (!irq_is_valid(dev->irq) || acpi_isa_register_gsi(dev))
+>>>   			dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
+>>>   				 pin_name(pin));
+>>>   
+> The existing code already drops into this place because
+> acpi_isa_register_gsi() fails.
+>
+>>> i801_smbus 0000:00:1f.3: PCI INT C: no GSI
+> What extra value does that !irq_is_valid() provide?
+>
+> And how does setting dev->irq to ~0U prevent that request_irq() is called in
+> the i801 device driver? Not at all, AFAICT. It will just fail with a different
+> error.
+>
+> So the whole 'fix' relies on the fact that irq ~0U does not exist (at least
+> not today) and therefor the false sharing with some other driver using irq 255
+> will not happen.
+>
+> Relying on undocumented behaviour is not a fix, that's voodoo programming.
+>
+> The proper solution here is to flag that this device does not have an
+> interrupt connected and act accordingly in the device driver, i.e. do not call
+> request_irq() in the first place.
+yes, this is what I thought in previous email, I has asked that
+whether we can use a broken_irq flag in pci_dev to mark the device irq 
+if invalid.
+and then if the device broken_irq set, we could directly skip call the 
+request_irq.
+maybe we can set the broken_irq in pci_read_irq if the irq is 0xff.
 
-diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-index 29d3b989d3b0..6b4d2f798386 100644
---- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
-@@ -1,8 +1,15 @@
- * Renesas RCar PCIe interface
- 
- Required properties:
--- compatible: should contain one of the following
--	"renesas,pcie-r8a7779", "renesas,pcie-r8a7790", "renesas,pcie-r8a7791"
-+compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
-+	    "renesas,pcie-r8a7790" for the R8A7790 SoC;
-+	    "renesas,pcie-r8a7791" for the R8A7791 SoC;
-+	    "renesas,pcie-rcar-gen2" for a generic R-Car Gen2 compatible device.
-+
-+	    When compatible with the generic version, nodes must list the
-+	    SoC-specific version corresponding to the platform first
-+	    followed by the generic version.
-+
- - reg: base address and length of the pcie controller registers.
- - #address-cells: set to <3>
- - #size-cells: set to <2>
-@@ -25,7 +32,7 @@ Example:
- SoC specific DT Entry:
- 
- 	pcie: pcie@fe000000 {
--		compatible = "renesas,pcie-r8a7791";
-+		compatible = "renesas,pcie-r8a7791", "renesas,pcie-rcar-gen2";
- 		reg = <0 0xfe000000 0 0x80000>;
- 		#address-cells = <3>;
- 		#size-cells = <2>;
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 414c33686621..c16f93fe604a 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -919,6 +919,7 @@ static int rcar_pcie_parse_map_dma_ranges(struct rcar_pcie *pcie,
- 
- static const struct of_device_id rcar_pcie_of_match[] = {
- 	{ .compatible = "renesas,pcie-r8a7779", .data = rcar_pcie_hw_init_h1 },
-+	{ .compatible = "renesas,pcie-rcar-gen2", .data = rcar_pcie_hw_init },
- 	{ .compatible = "renesas,pcie-r8a7790", .data = rcar_pcie_hw_init },
- 	{ .compatible = "renesas,pcie-r8a7791", .data = rcar_pcie_hw_init },
- 	{},
--- 
-2.1.4
+Thanks,
+Chen
+
+>
+>>> +static inline bool irq_is_valid(unsigned int irq)
+>>> +{
+>>> +#ifdef CONFIG_X86
+>>> +	if (irq == IRQ_INVALID)
+>>> +		return false;
+>>> +#endif
+>>> +	return true;
+>>> +}
+>> I don't like the x86 ifdef.  I'd prefer:
+>>
+>>    static inline bool irq_valid(unsigned int irq)
+>>    {
+>>      if (irq < NR_IRQS)
+>>        return true;
+>>      return false;
+>>    }
+>>
+>> This could be used in many of the places that currently use NR_IRQS.
+> No. NR_IRQS cannot be used at all if sparse irqs are enabled. Nothing in any
+> generic code is supposed to rely on NR_IRQS.
+>
+> Thanks,
+>
+> 	tglx
+>
+>
+>
+> .
+>
+
+
 
