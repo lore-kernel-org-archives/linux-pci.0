@@ -1,144 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:34485 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759510AbcAUSkz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Jan 2016 13:40:55 -0500
-Received: by mail-wm0-f48.google.com with SMTP id u188so238324002wmu.1
-        for <linux-pci@vger.kernel.org>; Thu, 21 Jan 2016 10:40:54 -0800 (PST)
-Subject: Re: [PATCH V3 13/21] pci, acpi: Provide generic way to assign bus
- domain number.
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
- <1452691267-32240-14-git-send-email-tn@semihalf.com>
- <20160121182218.GA21175@red-moon>
-Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	okaya@codeaurora.org, jiang.liu@linux.intel.com,
-	Stefano.Stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <56A125BB.9040109@semihalf.com>
-Date: Thu, 21 Jan 2016 19:38:51 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 26 Jan 2016 10:23:00 -0800
+From: "Veal, Bryan E." <bryan.e.veal@intel.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Keith Busch <keith.busch@intel.com>,
+	"Derrick, Jonathan" <jonathan.derrick@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Williams, Dan J" <dan.j.williams@intel.com>
+Subject: Re: [PATCHv8 0/5] Driver for new "VMD" device
+Message-ID: <20160126182259.GA15260@intel.com>
+Reply-To: bryan.e.veal@intel.com
+References: <1452629890-17542-1-git-send-email-keith.busch@intel.com>
+ <20160115181938.GA5296@localhost>
+ <8D943B239464E04C9184454D8B3F5CFF0ABF18EC@ORSMSX101.amr.corp.intel.com>
+ <20160115220631.GA14080@localhost>
+ <20160119153822.GA3979@localhost.localdomain>
+ <20160119160220.GA22059@infradead.org>
+ <20160120204308.GD7973@localhost>
+ <20160126164609.GC15979@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20160121182218.GA21175@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160126164609.GC15979@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 21.01.2016 19:22, Lorenzo Pieralisi wrote:
-> Hi Tomasz,
->
-> On Wed, Jan 13, 2016 at 02:20:59PM +0100, Tomasz Nowicki wrote:
->
-> [...]
->
->> @@ -4796,14 +4797,34 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
->>   	 * API and update the use_dt_domains value to keep track of method we
->>   	 * are using to assign domain numbers (use_dt_domains = 0).
->>   	 *
->> +	 * IF ACPI, we expect non-DT method (use_dt_domains == -1)
->> +	 * and call _SEG method for corresponding host bridge device.
->> +	 * If _SEG method does not exist, following ACPI spec (6.5.6)
->> +	 * all PCI buses belong to domain 0.
->> +	 *
->>   	 * All other combinations imply we have a platform that is trying
->> -	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
->> -	 * which is a recipe for domain mishandling and it is prevented by
->> -	 * invalidating the domain value (domain = -1) and printing a
->> -	 * corresponding error.
->> +	 * to mix domain numbers obtained from DT, ACPI and
->> +	 * pci_get_new_domain_nr(), which is a recipe for domain mishandling and
->> +	 * it is prevented by invalidating the domain value (domain = -1) and
->> +	 * printing a corresponding error.
->>   	 */
->> +
->>   	if (domain >= 0 && use_dt_domains) {
->>   		use_dt_domains = 1;
->> +#ifdef CONFIG_ACPI
->> +	} else if (!acpi_disabled && use_dt_domains == -1) {
->> +		struct acpi_device *acpi_dev = to_acpi_device(parent);
->> +		unsigned long long segment = 0;
->> +		acpi_status status;
->> +
->> +		status = acpi_evaluate_integer(acpi_dev->handle,
->> +					       METHOD_NAME__SEG, NULL,
->> +					       &segment);
->> +		if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
->> +			dev_err(&acpi_dev->dev,  "can't evaluate _SEG\n");
->> +
->> +		domain = segment;
->> +#endif
->
-> I think you can reshuffle a bit the code to make it easier to follow.
->
-> How about this ? (on top of mainline, I just compiled it do not
-> take it verbatim):
->
-> -- >8 --
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index d1a7105..467a316 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -7,6 +7,7 @@
->    *	Copyright 1997 -- 2000 Martin Mares <mj@ucw.cz>
->    */
->
-> +#include <linux/acpi.h>
->   #include <linux/kernel.h>
->   #include <linux/delay.h>
->   #include <linux/init.h>
-> @@ -4769,7 +4770,27 @@ int pci_get_new_domain_nr(void)
->   }
->
->   #ifdef CONFIG_PCI_DOMAINS_GENERIC
-> -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> +/* Feel free to add this to drivers/acpi as a helper */
-> +#ifdef CONFIG_ACPI
-> +int pci_bus_acpi_domain_nr(struct device *parent)
-> +{
-> +	struct acpi_device *acpi_dev = to_acpi_device(parent);
-> +	unsigned long long segment = 0;
-> +	acpi_status status;
-> +
-> +	status = acpi_evaluate_integer(acpi_dev->handle,
-> +				       METHOD_NAME__SEG, NULL,
-> +				       &segment);
-> +	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
-> +		dev_err(&acpi_dev->dev,  "can't evaluate _SEG\n");
-> +
-> +	return segment;
-> +}
-> +#else
-> +int pci_bus_acpi_domain_nr(struct device *parent) { return -1; }
-> +#endif
-> +
-> +int pci_bus_of_domain_nr(struct device *parent)
->   {
->   	static int use_dt_domains = -1;
->   	int domain = of_get_pci_domain_nr(parent->of_node);
-> @@ -4811,7 +4832,13 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
->   		domain = -1;
->   	}
->
-> -	bus->domain_nr = domain;
-> +	return domain;
-> +}
-> +
-> +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> +{
-> +	bus->domain_nr = acpi_disabled ? pci_bus_of_domain_nr(parent) :
-> +					 pci_bus_acpi_domain_nr(parent);
->   }
->   #endif
->   #endif
->
+On Tue, Jan 26, 2016 at 08:46:09AM -0800, Christoph Hellwig wrote:
+> On Wed, Jan 20, 2016 at 02:43:08PM -0600, Bjorn Helgaas wrote:
+> > I saw responses from Keith and Bryan, and I hope they answer your
+> > questions.  As far as I can tell, the VMD driver is grossly similar to
+> > other host bridge drivers we've already merged, and I don't think we
+> > have public specs for all of them.
+> > 
+> > Unless you have further concerns, I'm going to ask Linus to pull this
+> > tomorrow, along with the rest of the PCI changes for v4.5.
+> 
+> I still think it's a bad idea to merge something odd like this without
+> a good explanation or showing what devices can actually sit under it.
+> 
+> But you're the maintainer in the end..
 
-It looks nice, I will integrate your patch. Thanks!
-
-Tomasz
+Any PCIe devices and and bridges should work with existing upstream
+drivers. The only exceptions would be anything depndent on INTx or IO
+ports.
