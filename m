@@ -1,75 +1,144 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
-To: <linux-acpi@vger.kernel.org>
-CC: <linux-kernel@vger.kernel.org>, <rjw@rjwysocki.net>,
-	<lenb@kernel.org>, <izumi.taku@jp.fujitsu.com>,
-	<wency@cn.fujitsu.com>, <caoj.fnst@cn.fujitsu.com>,
-	<ddaney.cavm@gmail.com>, <chen.fan.fnst@cn.fujitsu.com>,
-	<helgaas@kernel.org>, <okaya@codeaurora.org>,
-	<bhelgaas@google.com>, <jiang.liu@linux.intel.com>,
-	<linux-pci@vger.kernel.org>, <tglx@linutronix.de>,
-	<linux@roeck-us.net>
-Subject: [PATCH v3 1/2] pci: add an irq_invalid flag to specify the IRQ is not connected
-Date: Wed, 27 Jan 2016 14:08:43 +0800
-Message-ID: <f83cc56ce64ab6d18e28ed5a7faa18fb81a7880d.1453862105.git.chen.fan.fnst@cn.fujitsu.com>
-In-Reply-To: <cover.1453862105.git.chen.fan.fnst@cn.fujitsu.com>
-References: <cover.1453862105.git.chen.fan.fnst@cn.fujitsu.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:32707 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751033AbcAZWjQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Jan 2016 17:39:16 -0500
+Subject: Re: [PATCH] PCI: iproc: Fix BCMA PCIe bus scanning regression
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1453330510-21926-1-git-send-email-rjui@broadcom.com>
+ <20160126182239.GA17600@localhost> <56A7BCE0.8090404@broadcom.com>
+ <20160126215405.GA26726@localhost>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Rafal Milecki <zajec5@gmail.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	<linux-kernel@vger.kernel.org>,
+	<bcm-kernel-feedback-list@broadcom.com>,
+	<linux-pci@vger.kernel.org>
+From: Ray Jui <rjui@broadcom.com>
+Message-ID: <56A7F58A.2080705@broadcom.com>
+Date: Tue, 26 Jan 2016 14:39:06 -0800
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20160126215405.GA26726@localhost>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Quoting the PCI3.0 SPEC on page 223:
-"For x86 based PCs, the values in this register correspond
-to IRQ numbers (0-15) of the standard dual 8259 configuration.
-The value 255 is defined as meaning "unknown" or "no connection"
-to the interrupt controller. Values between 15 and 254 are reserved."
-
-So we add an irq_invalid flag to tell driver that the device wire
-is not connected. then the driver could know whether it should call
-request_irq().
-
-Signed-off-by: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
----
- drivers/acpi/pci_irq.c | 10 ++++++++++
- include/linux/pci.h    |  1 +
- 2 files changed, 11 insertions(+)
-
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index d30184c..bb78376 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -436,6 +436,16 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 	 * driver reported one, then use it. Exit in any case.
- 	 */
- 	if (gsi < 0) {
-+#ifdef CONFIG_X86
-+		/*
-+		 * For X86 architecture, The Interrupt Line value of 0xff is
-+		 * defined to mean "unknown" or "no connection" (PCI 3.0,
-+		 * Section 6.2.4, footnote on page 223). we flag the IRQ
-+		 * as INVALID.
-+		 */
-+		if (dev->irq == 0xff)
-+			dev->irq_invalid = 1;
-+#endif
- 		if (acpi_isa_register_gsi(dev))
- 			dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
- 				 pin_name(pin));
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d86378c..06f137e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -359,6 +359,7 @@ struct pci_dev {
- 	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
- 	unsigned int	irq_managed:1;
- 	unsigned int	has_secondary_link:1;
-+	unsigned int	irq_invalid:1;
- 	pci_dev_flags_t dev_flags;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
- 
--- 
-1.9.3
 
 
+On 1/26/2016 1:54 PM, Bjorn Helgaas wrote:
+> On Tue, Jan 26, 2016 at 10:37:20AM -0800, Ray Jui wrote:
+>> Hi Bjorn,
+>>
+>> On 1/26/2016 10:22 AM, Bjorn Helgaas wrote:
+>>> Hi Ray,
+>>>
+>>> On Wed, Jan 20, 2016 at 02:55:10PM -0800, Ray Jui wrote:
+>>>> Commit 943ebae781f5 ("PCI: iproc: Add PAXC interface support") causes
+>>>> regression on EP device detection on BCMA based platforms. This patch
+>>>> fixes the issue by allowing multiple devices to be configured on the
+>>>> same bus, for all PAXB based child buses
+>>>>
+>>>> Reported-by: Rafal Milecki <zajec5@gmail.com>
+>>>> Fixes: 943ebae781f5 ("PCI: iproc: Add PAXC interface support")
+>>>> Signed-off-by: Ray Jui <rjui@broadcom.com>
+>>>> ---
+>>>>   drivers/pci/host/pcie-iproc.c | 5 +++--
+>>>>   1 file changed, 3 insertions(+), 2 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+>>>> index 5816bce..4627561 100644
+>>>> --- a/drivers/pci/host/pcie-iproc.c
+>>>> +++ b/drivers/pci/host/pcie-iproc.c
+>>>> @@ -171,10 +171,11 @@ static inline void iproc_pcie_ob_write(struct iproc_pcie *pcie,
+>>>>   }
+>>>>
+>>>>   static inline bool iproc_pcie_device_is_valid(struct iproc_pcie *pcie,
+>>>> +					      unsigned int busnum,
+>>>>   					      unsigned int slot,
+>>>>   					      unsigned int fn)
+>>>>   {
+>>>> -	if (slot > 0)
+>>>> +	if ((pcie->type == IPROC_PCIE_PAXC || busnum == 0) && slot > 0)
+>>>>   		return false;
+>>>>
+>>>>   	/* PAXC can only support limited number of functions */
+>>>
+>>> I don't understand this.  Here's the whole function (with this patch
+>>> applied):
+>>>
+>>>      static inline bool iproc_pcie_device_is_valid(struct iproc_pcie *pcie,
+>>> 						  unsigned int busnum,
+>>> 						  unsigned int slot,
+>>> 						  unsigned int fn)
+>>>      {
+>>> 	    if ((pcie->type == IPROC_PCIE_PAXC || busnum == 0) && slot > 0)
+>>> 		    return false;
+>>>
+>>> 	    /* PAXC can only support limited number of functions */
+>>> 	    if (pcie->type == IPROC_PCIE_PAXC && fn >= MAX_NUM_PAXC_PF)
+>>> 		    return false;
+>>>
+>>> 	    return true;
+>>>      }
+>>>
+>>> This says:
+>>>
+>>>    - On bus 00, device 0 is the only valid device.  That seems
+>>>      plausible because the devices on bus 00 are probably built-in to
+>>>      the SoC.
+>>>
+>>>    - On PAXC-based systems, device 0 is the only valid device on *any*
+>>>      bus.  Is that really true?  If there's any way to add a plug-in
+>>>      card, this seems overly restrictive.
+>>
+>> Yah, PAXC is connected with one internal device within the SoC.
+>> There's no connection brought out of the chip.
+>>
+>>>      PCIe devices are generally all device 0, but this would mean you
+>>>      cannot plug in a PCIe-to-PCI bridge leading to a PCI device with a
+>>>      non-zero device number.
+>>>
+>>>      I think it also means you could not plug in a PCIe device with ARI
+>>>      enabled, because I think we store the upper 5 bits of the 8-bit
+>>>      ARI function number in the PCI_SLOT bits.
+>>>
+>>>    - On PAXC-based systems, only functions 0, 1, 2, and 3 are valid
+>>>      anywhere in the hierarchy.  I think this again restricts what what
+>>>      cards can be plugged in.
+>>
+>> Yes, the internal device connected to PAXC supports 4 physical functions.
+>>
+>>> If iProc only supports devices built directly into the SoC, maybe
+>>> these constraints are valid.  But if it supports any plugin or
+>>> external devices, they don't seem to make sense.
+>>
+>> Correct. PAXC only connects to one built-in device, while PAXB can
+>> support external EP devices.
+>
+> OK, thanks for confirming all that.
+>
+> Something looks wrong in iproc_pcie_map_cfg_bus().
+> iproc_pcie_device_is_valid() returns true for device 00:00.1,
+> but the "busno == 0" case in iproc_pcie_map_cfg_bus() doesn't
+> use "fn".  So the function number is ignored?  That would mean
+> there's no difference between 000:00.0, 00:00.1, 00:00.2,
+> 00:00.3, etc.
 
+Okay, I should add a check to make sure only function zero is accepted 
+on bus 0.
+
+>
+> I think this would be clearer and less error-prone if
+> iproc_pcie_device_is_valid() were folded directly into
+> iproc_pcie_map_cfg_bus().
+
+Okay. I'll get rid of 'iproc_pcie_device_is_valid' and fold all of these 
+check into 'iproc_pcie_map_cfg_bus' and then send out patch v2 for review
+
+> Bjorn
+>
+
+Thanks!
+
+Ray
