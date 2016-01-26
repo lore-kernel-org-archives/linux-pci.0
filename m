@@ -1,50 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f169.google.com ([209.85.223.169]:33303 "EHLO
-	mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752362AbcA2OcC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jan 2016 09:32:02 -0500
-Received: by mail-io0-f169.google.com with SMTP id f81so90380766iof.0
-        for <linux-pci@vger.kernel.org>; Fri, 29 Jan 2016 06:32:01 -0800 (PST)
+Received: from mail.kernel.org ([198.145.29.136]:46572 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966008AbcAZOeY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Jan 2016 09:34:24 -0500
+Date: Tue, 26 Jan 2016 08:34:18 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Lawrynowicz, Jacek" <jacek.lawrynowicz@intel.com>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	"jroedel@suse.de" <jroedel@suse.de>
+Subject: Re: [PATCH v2 1/2] pci: Add support for multiple DMA aliases
+Message-ID: <20160126143418.GA9279@localhost>
+References: <1453804310-12946-1-git-send-email-jacek.lawrynowicz@intel.com>
+ <1453809557.60902.58.camel@infradead.org>
+ <36D38C1F74839847A52A484C31F3E51A6213B1EF@irsmsx105.ger.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160129142831.GF4541@arm.com>
-References: <1454077035-23872-1-git-send-email-ard.biesheuvel@linaro.org>
-	<20160129142831.GF4541@arm.com>
-Date: Fri, 29 Jan 2016 15:32:01 +0100
-Message-ID: <CAKv+Gu_V83bUktPX0EiHd6qCDT2y0NEx=4n-uVv=P2MF9AZbMQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: generic: map config window in one go
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: Will Deacon <will.deacon@arm.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Brown <mark.brown@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <36D38C1F74839847A52A484C31F3E51A6213B1EF@irsmsx105.ger.corp.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 29 January 2016 at 15:28, Will Deacon <will.deacon@arm.com> wrote:
-> Hi Ard,
->
-> On Fri, Jan 29, 2016 at 03:17:15PM +0100, Ard Biesheuvel wrote:
->> Instead of iterating over the PCI config window and performing individual
->> ioremap() calls on all the adjacent slices, perform a single ioremap() to
->> map the entire region, and divvy it up later. This not only prevents
->> leaving some of it mapped if we fail half way through, it also ensures that
->> archs that support huge-vmap can use section mappings to perform the
->> mapping.
->>
->> On my Seattle A0 box, this transforms 128 separate 1 MB mappings that are
->> mapped down to 4 KB pages into a single 128 MB mapping using 2 MB sections,
->> saving 512 KB worth of page tables.
->>
->> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
->> ---
->
-> The code was written this way in response to feedback during driver review
-> that we couldn't necessarily grab that much contiguous vmalloc space on
-> 32-bit ARM. Unless that's changed, we probably want to to predicate this
-> change on having a 64-bit arch.
->
+On Tue, Jan 26, 2016 at 12:04:47PM +0000, Lawrynowicz, Jacek wrote:
+> > -----Original Message-----
+> > From: David Woodhouse [mailto:dwmw2@infradead.org]
+> > Sent: Tuesday, January 26, 2016 12:59 PM
+> > To: Lawrynowicz, Jacek <jacek.lawrynowicz@intel.com>; linux-
+> > pci@vger.kernel.org
+> > Cc: bhelgaas@google.com; alex.williamson@redhat.com; jroedel@suse.de
+> > Subject: Re: [PATCH v2 1/2] pci: Add support for multiple DMA aliases
+> > 
+> > On Tue, 2016-01-26 at 11:31 +0100, Jacek Lawrynowicz wrote:
+> > >
+> > > +bool pci_dma_alias_is_enabled(struct pci_dev *dev, u8 devfn)
+> > > +{
+> > > +       return dev->dma_alias_mask &&
+> > > +              test_bit(devfn, dev->dma_alias_mask);
+> > > +}
+> > > +EXPORT_SYMBOL_GPL(pci_dma_alias_is_enabled);
+> > 
+> > Why export this?
+> 
+> So it can be used in drivers/iommu/iommu.c in get_pci_alias_group().
+> Bjorn didn't want dma_alias_mask to be used there directly.
 
-Ah right. How about testing for the ARCH_HAVE_HUGE_VMAP Kconfig symbol
-explicitly?
+Declaring pci_dma_alias_is_enabled() in include/linux/pci.h is
+sufficient to allow drivers/iommu/iommu.c to use it.  The
+EXPORT_SYMBOL_GPL() is not needed.
+
+Bjorn
