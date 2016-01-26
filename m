@@ -1,95 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33378 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755493AbcAHSBi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Jan 2016 13:01:38 -0500
-Date: Fri, 8 Jan 2016 12:01:31 -0600
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Tue, 26 Jan 2016 14:50:05 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Will.Deacon@arm.com,
-	catalin.marinas@arm.com, bhelgaas@google.com,
-	hanjun.guo@linaro.org, rrichter@cavium.com,
+Cc: linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-ia64@vger.kernel.org, linux-metag@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	linux-sh@vger.kernel.org, linux-arch@vger.kernel.org,
+	Will.Deacon@arm.com, catalin.marinas@arm.com,
+	grant.likely@linaro.org, leif.lindholm@linaro.org,
+	rfranz@cavium.com, ard.biesheuvel@linaro.org, msalter@redhat.com,
+	robh+dt@kernel.org, steve.capper@linaro.org, hanjun.guo@linaro.org,
+	al.stone@linaro.org, arnd@arndb.de, pawel.moll@arm.com,
+	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
+	galak@codeaurora.org, rjw@rjwysocki.net, lenb@kernel.org,
+	marc.zyngier@arm.com, lorenzo.pieralisi@arm.com,
+	bhelgaas@google.com, tony.luck@intel.com, fenghua.yu@intel.com,
+	james.hogan@imgtec.com, benh@kernel.crashing.org,
+	tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com,
+	x86@kernel.org, jonathan@jonmasters.org, rrichter@cavium.com,
 	Prasun.Kapoor@caviumnetworks.com, gpkulkarni@gmail.com
-Subject: Re: [PATCH] arm64, pci, numa: Adding helper functions as required by
- pci
-Message-ID: <20160108180131.GB5354@localhost>
-References: <1450780730-13667-1-git-send-email-gkulkarni@caviumnetworks.com>
+Subject: Re: [PATCH v9 5/6] PCI: generic: Make pci-host-generic driver numa
+ aware
+Message-ID: <20160126205005.GD17600@localhost>
+References: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
+ <1453134965-6125-6-git-send-email-gkulkarni@caviumnetworks.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1450780730-13667-1-git-send-email-gkulkarni@caviumnetworks.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1453134965-6125-6-git-send-email-gkulkarni@caviumnetworks.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 22, 2015 at 04:08:50PM +0530, Ganapatrao Kulkarni wrote:
-> Adding helper functions and necessary code to make
-> pci driver(pci-host-generic) numa aware.
-> 
-> This patch is on top of arm64-numa v7.
-> http://www.spinics.net/lists/arm-kernel/msg460813.html
+On Mon, Jan 18, 2016 at 10:06:04PM +0530, Ganapatrao Kulkarni wrote:
+> update numa_node of device associated with pci bus.
+> moved down devm_kzalloc to allocate from node memory.
 > 
 > Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
 > ---
->  arch/arm64/include/asm/numa.h       | 8 +++++---
->  arch/arm64/kernel/pci.c             | 8 ++++++++
->  drivers/pci/host/pci-host-generic.c | 1 +
->  3 files changed, 14 insertions(+), 3 deletions(-)
+>  drivers/pci/host/pci-host-generic.c | 9 ++++++---
+>  1 file changed, 6 insertions(+), 3 deletions(-)
 > 
-> diff --git a/arch/arm64/include/asm/numa.h b/arch/arm64/include/asm/numa.h
-> index b8c2a3f..1eca4db 100644
-> --- a/arch/arm64/include/asm/numa.h
-> +++ b/arch/arm64/include/asm/numa.h
-> @@ -15,9 +15,11 @@
->  extern int __node_distance(int from, int to);
->  #define node_distance(a, b) __node_distance(a, b)
->  
-> -/* dummy definitions for pci functions */
-> -#define pcibus_to_node(node)	0
-> -#define cpumask_of_pcibus(bus)	0
-> +struct pci_bus;
-> +extern int pcibus_to_node(struct pci_bus *bus);
-> +#define cpumask_of_pcibus(bus)	(pcibus_to_node(bus) == -1 ?		\
-> +				 cpu_all_mask :				\
-> +				 cpumask_of_node(pcibus_to_node(bus)))
-
-All the arch definitions of cpumask_of_pcibus() are pretty similar;
-could they be made more generic?  At the very least, can you drop the
-definition here and use the one in include/asm-generic/topology.h,
-which is identical to what you're defining here?
-
->  extern int cpu_to_node_map[NR_CPUS];
->  extern nodemask_t numa_nodes_parsed __initdata;
-> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> index b3d098b..37e2e9f 100644
-> --- a/arch/arm64/kernel/pci.c
-> +++ b/arch/arm64/kernel/pci.c
-> @@ -84,3 +84,11 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  	return NULL;
->  }
->  #endif
-> +
-> +#ifdef CONFIG_NUMA
-> +int pcibus_to_node(struct pci_bus *bus)
-> +{
-> +	return dev_to_node(&bus->dev);
-> +}
-> +EXPORT_SYMBOL(pcibus_to_node);
-> +#endif
 > diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index 5434c90..a821e49 100644
+> index 5434c90..0e1ce06 100644
 > --- a/drivers/pci/host/pci-host-generic.c
 > +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -230,6 +230,7 @@ static int gen_pci_probe(struct platform_device *pdev)
+> @@ -215,11 +215,9 @@ static int gen_pci_probe(struct platform_device *pdev)
+>  	const struct of_device_id *of_id;
+>  	struct device *dev = &pdev->dev;
+>  	struct device_node *np = dev->of_node;
+> -	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> +	struct gen_pci *pci;
+>  	struct pci_bus *bus, *child;
+>  
+> -	if (!pci)
+> -		return -ENOMEM;
+>  
+>  	type = of_get_property(np, "device_type", NULL);
+>  	if (!type || strcmp(type, "pci")) {
+> @@ -230,6 +228,11 @@ static int gen_pci_probe(struct platform_device *pdev)
 >  	of_pci_check_probe_only();
 >  
 >  	of_id = of_match_node(gen_pci_of_match, np);
 > +	set_dev_node(dev, of_node_to_nid(np));
+
+I like the idea of this patch, but why do we need to call
+set_dev_node() here in driver code?  Shouldn't that be done by the
+OF/platform device infrastructure so that all drivers for platform devices
+get this benefit?
+
+> +	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> +	if (!pci)
+> +		return -ENOMEM;
+> +
 >  	pci->cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
 >  	pci->host.dev.parent = dev;
 >  	INIT_LIST_HEAD(&pci->host.windows);
 > -- 
 > 1.8.1.4
+> 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> To unsubscribe from this list: send the line "unsubscribe linux-arch" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
