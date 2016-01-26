@@ -1,280 +1,237 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38583 "EHLO mx1.redhat.com"
+Received: from mga02.intel.com ([134.134.136.20]:63124 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966230AbcAZQ1U (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Jan 2016 11:27:20 -0500
-Message-ID: <1453825639.26652.45.camel@redhat.com>
-Subject: Re: [PATCH v2 1/2] pci: Add support for multiple DMA aliases
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>,
-	linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, dwmw2@infradead.org, jroedel@suse.de
-Date: Tue, 26 Jan 2016 09:27:19 -0700
-In-Reply-To: <1453804310-12946-1-git-send-email-jacek.lawrynowicz@intel.com>
-References: <1453804310-12946-1-git-send-email-jacek.lawrynowicz@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1754796AbcAZKPT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Jan 2016 05:15:19 -0500
+From: "Lawrynowicz, Jacek" <jacek.lawrynowicz@intel.com>
+To: David Woodhouse <dwmw2@infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"jroedel@suse.de" <jroedel@suse.de>
+Subject: RE: [PATCH] pci: Add support for multiple DMA aliases
+Date: Tue, 26 Jan 2016 10:15:14 +0000
+Message-ID: <36D38C1F74839847A52A484C31F3E51A6213B068@irsmsx105.ger.corp.intel.com>
+References: <1453118346-76897-1-git-send-email-jacek.lawrynowicz@intel.com>
+	 <1453133267-79756-1-git-send-email-jacek.lawrynowicz@intel.com>
+	 <20160119033315.GA6510@localhost> <20160119201254.GB6510@localhost>
+	 <1453237471.32741.267.camel@redhat.com> <20160119213901.GG14080@localhost>
+	 <36D38C1F74839847A52A484C31F3E51A62131B9D@irsmsx105.ger.corp.intel.com>
+	 <20160120174622.GC7973@localhost> <1453369141.4639.73.camel@infradead.org>
+	 <20160121152236.GA6629@localhost> <1453390357.4639.101.camel@infradead.org>
+In-Reply-To: <1453390357.4639.101.camel@infradead.org>
+Content-Type: multipart/signed; micalg=SHA1;
+	protocol="application/x-pkcs7-signature";
+	boundary="----=_NextPart_000_0014_01D1582A.D3D16040"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2016-01-26 at 11:31 +0100, Jacek Lawrynowicz wrote:
-> This patch solves IOMMU support issues with PCIe non-transparent bridges
-> that use Requester ID look-up tables (LUT), e.g. PEX8733. Before exiting
-> the bridge, packet's RID is rewritten according to LUT programmed by
-> a driver. Modified packets are then passed to a destination bus and
-> processed upstream. The problem is that such packets seem to come from
-> non-existent nodes that are hidden behind NTB and are not discoverable
-> by a destination node, so IOMMU discards them. Adding DMA alias for a
-> given LUT entry allows IOMMU to create a proper mapping that enables
-> inter-node communication.
-> 
-> The current DMA alias implementation supports only single alias, so it's
-> not possible to connect more than two nodes when IOMMU is enabled. This
-> implementation enables all possible aliases on a given bus (256) that
-> are stored in a bitset. Alias devfn is directly translated to a bit
-> number. The bitset is not allocated for devices that have no need for
-> DMA aliases.
-> 
-> More details can be found in following article:
-> http://www.plxtech.com/files/pdf/technical/expresslane/RTC_Enabling%20MulitHostSystemDesigns.pdf
-> 
-> Signed-off-by: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-> ---
->  drivers/iommu/iommu.c | 11 ++++-------
->  drivers/pci/pci.c     | 28 ++++++++++++++++++++++++++++
->  drivers/pci/pci.h     |  2 ++
->  drivers/pci/probe.c   |  1 +
->  drivers/pci/quirks.c  | 16 +++++++---------
->  drivers/pci/search.c  | 14 +++++++++-----
->  include/linux/pci.h   | 15 ++++++++-------
->  7 files changed, 59 insertions(+), 28 deletions(-)
-> 
-> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> index 0e3b009..93a89ed 100644
-> --- a/drivers/iommu/iommu.c
-> +++ b/drivers/iommu/iommu.c
-> @@ -660,8 +660,8 @@ static struct iommu_group *get_pci_function_alias_group(struct pci_dev *pdev,
->  }
->  
->  /*
-> - * Look for aliases to or from the given device for exisiting groups.  The
-> - * dma_alias_devfn only supports aliases on the same bus, therefore the search
-> + * Look for aliases to or from the given device for exisiting groups. DMA
-> + * aliases are only supported on the same bus, therefore the search
->   * space is quite small (especially since we're really only looking at pcie
->   * device, and therefore only expect multiple slots on the root complex or
->   * downstream switch ports).  It's conceivable though that a pair of
-> @@ -686,11 +686,8 @@ static struct iommu_group *get_pci_alias_group(struct pci_dev *pdev,
->  			continue;
->  
->  		/* We alias them or they alias us */
-> -		if (((pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
-> -		     pdev->dma_alias_devfn == tmp->devfn) ||
-> -		    ((tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
-> -		     tmp->dma_alias_devfn == pdev->devfn)) {
-> -
-> +		if (pci_dma_alias_is_enabled(pdev, tmp->devfn) ||
-> +		    pci_dma_alias_is_enabled(tmp, pdev->devfn)) {
->  			group = get_pci_alias_group(tmp, devfns);
->  			if (group) {
->  				pci_dev_put(tmp);
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 602eb42..f114068 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4568,6 +4568,34 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
->  	return 0;
->  }
->  
-> +/**
-> + * pci_enable_dma_alias - Allows to set multiple devfn aliases for given device
-> + * @dev: the PCI device for which alias is added
-> + * @devfn: alias slot and function
-> + *
-> + * This helper encodes 8-bit devfn as bit number in dma_alias_mask.
-> + * It should be called early, preferably as PCI fixup header quirk.
-> + */
-> +void pci_enable_dma_alias(struct pci_dev *dev, u8 devfn)
-> +{
-> +	if (!dev->dma_alias_mask)
-> +		dev->dma_alias_mask = kcalloc(BITS_TO_LONGS(U8_MAX),
-> +					      sizeof(long), GFP_KERNEL);
-> +	if (!dev->dma_alias_mask) {
-> +		dev_warn(&dev->dev, "Unable to allocate DMA alias mask.\n");
-> +		return;
-> +	}
-> +	if (dev->dma_alias_mask)
-> +		set_bit(devfn, dev->dma_alias_mask);
-> +}
-> +
-> +bool pci_dma_alias_is_enabled(struct pci_dev *dev, u8 devfn)
-> +{
-> +	return dev->dma_alias_mask &&
-> +	       test_bit(devfn, dev->dma_alias_mask);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_dma_alias_is_enabled);
-> +
+------=_NextPart_000_0014_01D1582A.D3D16040
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+
+> -----Original Message-----
+> From: David Woodhouse [mailto:dwmw2@infradead.org]
+> Sent: Thursday, January 21, 2016 4:33 PM
+> To: Bjorn Helgaas <helgaas@kernel.org>
+> Cc: Lawrynowicz, Jacek <jacek.lawrynowicz@intel.com>; Alex Williamson
+> <alex.williamson@redhat.com>; linux-pci@vger.kernel.org;
+> bhelgaas@google.com; jroedel@suse.de
+> Subject: Re: [PATCH] pci: Add support for multiple DMA aliases
+>
+> On Thu, 2016-01-21 at 09:22 -0600, Bjorn Helgaas wrote:
+> >
+> > This definitely isn't part of the driver code; I didn't mean to
+> > suggest that.  I'd like to see this as a separate patch, but as part
+> > of a series that adds a user of the multiple-alias functionality.
+> >
+> > All I'm saying is that as-is, this patch makes the quirks easier to
+> > read but doesn't actually change any behavior: we set up at most one
+> > alias, and we do it as a header quirk at enumeration-time, so there
+> > are no new lifetime issues.  Normally we merge things when they're
+> > needed, and multiple alias support is a bit of infrastructure that
+> > isn't used yet.
+>
+> Ah, right. I see your point.
+>
+> I don't actually see why pci_add_dma_alias() should be exported at all.
+>
+> I suspect the best approach is for Jacek to add a second patch in this
+> series, adding the required quirk to drivers/pci/quirks.c for the
+> device in question, and then resubmit them to you when Linus releases
+> 4.5-rc1.
+>
+> This is completely independent of any native driver for the device, of
+> course.
+
+OK guys, I've prepared a second version of the patch that includes fixes for 
+all
+your review comments. I will post it today to linux-pci. It also includes a 
+quirk
+for x200 dma driver that is undergoing internal review and will be posted to 
+dma
+tree probably early next week. It would be great if v2 could be included in 
+4.5 but
+I understand that it's a bit late and you may prefer to wait for x200 dma 
+driver to
+be posted.
+
+Thanks for all your feedback. The patch now make a lot more sense.
+
+Regards,
+Jacek
+
+--
+Jacek Lawrynowicz
+Intel Technology Poland sp. z o.o.
+KRS 101882 - ul. Slowackiego 173, 80-298 Gdansk
 
 
-This seems sort of redundant to pci_for_each_dma_alias().
 
+------=_NextPart_000_0014_01D1582A.D3D16040
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
 
->  bool pci_device_is_present(struct pci_dev *pdev)
->  {
->  	u32 v;
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 9a1660f..c31c1a5 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -335,4 +335,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
->  }
->  #endif
->  
-> +void pci_enable_dma_alias(struct pci_dev *dev, u8 devfn);
-> +
->  #endif /* DRIVERS_PCI_H */
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 6d7ab9b..23fc397 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1503,6 +1503,7 @@ static void pci_release_dev(struct device *dev)
->  	pcibios_release_device(pci_dev);
->  	pci_bus_put(pci_dev->bus);
->  	kfree(pci_dev->driver_override);
-> +	kfree(pci_dev->dma_alias_mask);
->  	kfree(pci_dev);
->  }
->  
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 0575a1e..b094061 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -25,6 +25,7 @@
->  #include 
->  #include 
->  #include 
-> +#include <linux/iommu.h>
+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
+VMv3yxHO8jex40LgMIIFijCCBHKgAwIBAgITMwAAHtrUMHJqXk2MNwAAAAAe2jANBgkqhkiG9w0B
+AQUFADB5MQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExFDASBgNVBAcTC1NhbnRhIENsYXJhMRow
+GAYDVQQKExFJbnRlbCBDb3Jwb3JhdGlvbjErMCkGA1UEAxMiSW50ZWwgRXh0ZXJuYWwgQmFzaWMg
+SXNzdWluZyBDQSA0QjAeFw0xNTEwMTIxMzEwNDlaFw0xODA5MjYxMzEwNDlaMEkxGzAZBgNVBAMT
+Ekxhd3J5bm93aWN6LCBKYWNlazEqMCgGCSqGSIb3DQEJARYbamFjZWsubGF3cnlub3dpY3pAaW50
+ZWwuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1tjwqdbx6/OJGZH6bcoU0kUw
+Rfszjz7Ws3+m5aZzzysxb1a4/KemhppgfL8kAjJ4Ha35ixtjn2ZO+uAQ7IgJs512oyUkUZydLypc
+4kobk1ZQiAeX1J/r0gwPQsbBBJu0rJ4uP9wMn6P1YQRHbjJ443cDPlYKjEzoFxnTlWwpQ4Zc3C8Y
+DCLuZk6NPduNJ0++LIVOKi9s35cht7W8CxoVOjV9s9sZlEeN5oCGLVB9ORpt3GPh+8ap/WXTB6FW
+Z8Zn/eH0FqPH/UOfbNlb6sJz9RnZ0RcIa+KJpj2QA38JfmSuGc+u+7Ds7/I+0GL3BIzOv9eGBA8h
+DAAV8IwXGhwmQQIDAQABo4ICOTCCAjUwCwYDVR0PBAQDAgeAMDwGCSsGAQQBgjcVBwQvMC0GJSsG
+AQQBgjcVCIbDjHWEmeVRg/2BKIWOn1OCkcAJZ4HevTmV8EMCAWQCAQgwHQYDVR0OBBYEFM3NoUwk
+hZ72HaT2GREobB3IUpkTMB8GA1UdIwQYMBaAFNpBI5xaj3GvV4M+INPjZdsMywvbMGUGA1UdHwRe
+MFwwWqBYoFaGVGh0dHA6Ly93d3cuaW50ZWwuY29tL3JlcG9zaXRvcnkvQ1JML0ludGVsJTIwRXh0
+ZXJuYWwlMjBCYXNpYyUyMElzc3VpbmclMjBDQSUyMDRCLmNybDCBnwYIKwYBBQUHAQEEgZIwgY8w
+IgYIKwYBBQUHMAGGFmh0dHA6Ly9vY3NwLmludGVsLmNvbS8waQYIKwYBBQUHMAKGXWh0dHA6Ly93
+d3cuaW50ZWwuY29tL3JlcG9zaXRvcnkvY2VydGlmaWNhdGVzL0ludGVsJTIwRXh0ZXJuYWwlMjBC
+YXNpYyUyMElzc3VpbmclMjBDQSUyMDRCLmNydDAfBgNVHSUEGDAWBggrBgEFBQcDBAYKKwYBBAGC
+NwoDDDApBgkrBgEEAYI3FQoEHDAaMAoGCCsGAQUFBwMEMAwGCisGAQQBgjcKAwwwUwYDVR0RBEww
+SqArBgorBgEEAYI3FAIDoB0MG2phY2VrLmxhd3J5bm93aWN6QGludGVsLmNvbYEbamFjZWsubGF3
+cnlub3dpY3pAaW50ZWwuY29tMA0GCSqGSIb3DQEBBQUAA4IBAQCXms3sgvqozD+mirP5B9PANgCE
+RVBbEkYt8TzJE0B1lcLfXavkPldx1vC2vpblXofPfVyRbaUbobbIqohYCiblPvqso5raQmr8GeR1
+RiWmiqiye2sA2nvQh1m7Skc6h7XBI3knNDzhG87zmvweY0Fgmbvdi7PGfMxjT4eiLjvzhWCthkmJ
+NYoJ7Whtn60/vHl1OO6b7JeTqfNDc1NxV/g4dlMyFsr+XtyMGFzI0ch6eIzlpqeFDzKLI/5i8tzc
+cZikcJThuwA/SfHHWEHs33gEHxa4F1x6ngyN8OdZgwdBc6nk6wgx6vLeDnN67fCNhQAadMeHjdP+
+QqAEvc7XavdRMIIGfTCCBWWgAwIBAgIKGZmpegAAAAAy3TANBgkqhkiG9w0BAQUFADB5MQswCQYD
+VQQGEwJVUzELMAkGA1UECBMCQ0ExFDASBgNVBAcTC1NhbnRhIENsYXJhMRowGAYDVQQKExFJbnRl
+bCBDb3Jwb3JhdGlvbjErMCkGA1UEAxMiSW50ZWwgRXh0ZXJuYWwgQmFzaWMgSXNzdWluZyBDQSA0
+QTAeFw0xMzEwMjEwODU4NThaFw0xNjEwMDUwODU4NThaMEkxGzAZBgNVBAMTEkxhd3J5bm93aWN6
+LCBKYWNlazEqMCgGCSqGSIb3DQEJARYbamFjZWsubGF3cnlub3dpY3pAaW50ZWwuY29tMIIBIjAN
+BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAplKHW1GF9qUj6MGOr6H3a+meHkH/FZW7bNFAFGic
+hxCpbgkwPVjFPo5gqoTk1/vZazgMlr6BrETZHAT78vC2OfpHEOgRcBvE3aJw8AMk9q8Scsx43UWY
+iK9Ys1i7idBWNH45OfCyHu7Z0pHCFywyQgFUK4FM10MlFNBXzET+rmgqU9RBIRFWkMOi0G4gmL7c
+lLApKKFjjfhTx75W2WK3vsNK4Uw+omqR/Kli7IeXExsKOXjv8kuzifYZNAUHMiAGUZURbp5hv7IY
+wG7SI9CDwDrtpFbu9k8RRRLNJnt8n+cueMPmNMeMv6PVy/8hmKn0tW+wIIO6hPbe8MbCqLcQJwID
+AQABo4IDNTCCAzEwCwYDVR0PBAQDAgQwMD0GCSsGAQQBgjcVBwQwMC4GJisGAQQBgjcVCIbDjHWE
+meVRg/2BKIWOn1OCkcAJZ4S52UGHhP9OAgFkAgENMEQGCSqGSIb3DQEJDwQ3MDUwDgYIKoZIhvcN
+AwICAgCAMA4GCCqGSIb3DQMEAgIAgDAHBgUrDgMCBzAKBggqhkiG9w0DBzAdBgNVHQ4EFgQUa/PH
+evLj3Q34U/tCjZKn2DnMMIwwHwYDVR0jBBgwFoAUHmkqtNwo/kcYTiELP7ysES/wmPUwgckGA1Ud
+HwSBwTCBvjCBu6CBuKCBtYZUaHR0cDovL3d3dy5pbnRlbC5jb20vcmVwb3NpdG9yeS9DUkwvSW50
+ZWwlMjBFeHRlcm5hbCUyMEJhc2ljJTIwSXNzdWluZyUyMENBJTIwNEEuY3Jshl1odHRwOi8vY2Vy
+dGlmaWNhdGVzLmludGVsLmNvbS9yZXBvc2l0b3J5L0NSTC9JbnRlbCUyMEV4dGVybmFsJTIwQmFz
+aWMlMjBJc3N1aW5nJTIwQ0ElMjA0QS5jcmwwge8GCCsGAQUFBwEBBIHiMIHfMGkGCCsGAQUFBzAC
+hl1odHRwOi8vd3d3LmludGVsLmNvbS9yZXBvc2l0b3J5L2NlcnRpZmljYXRlcy9JbnRlbCUyMEV4
+dGVybmFsJTIwQmFzaWMlMjBJc3N1aW5nJTIwQ0ElMjA0QS5jcnQwcgYIKwYBBQUHMAKGZmh0dHA6
+Ly9jZXJ0aWZpY2F0ZXMuaW50ZWwuY29tL3JlcG9zaXRvcnkvY2VydGlmaWNhdGVzL0ludGVsJTIw
+RXh0ZXJuYWwlMjBCYXNpYyUyMElzc3VpbmclMjBDQSUyMDRBLmNydDAfBgNVHSUEGDAWBggrBgEF
+BQcDBAYKKwYBBAGCNwoDBDApBgkrBgEEAYI3FQoEHDAaMAoGCCsGAQUFBwMEMAwGCisGAQQBgjcK
+AwQwUwYDVR0RBEwwSqArBgorBgEEAYI3FAIDoB0MG2phY2VrLmxhd3J5bm93aWN6QGludGVsLmNv
+bYEbamFjZWsubGF3cnlub3dpY3pAaW50ZWwuY29tMA0GCSqGSIb3DQEBBQUAA4IBAQCZxulYBdgq
+w81+yDpeBMgPwjP6kyC2V0UHwaRygJD6LJEq5KNaJBQl1leJ8esPXOyFCSHyhkAE89FrFvNRhvJs
+1B2vpT7sPMy0S8LHwJ/y+vokKXE+b69KwtOIhvzFuZ2SjloRtrN9gIL3lJSy/8hNDnh5Gmzq/KgY
+Fv2hOoi1vQYta94hBCgLAjMdbZPuPhdHZxq7QRK871Ghg1tD0Rj1fxEp4aX+UVlcJruVTVdWCjaC
+nv0dmSxtIG0tDh8bb8ZfPDbijqz8ul26z+7wHJCDB6dT6zwDCXnWIoD8nzLlaCyRvWUtiTC3wXpy
+mh1fAkT91KBs8uiS6O8FccYZoylvMYID5zCCA+MCAQEwgZAweTELMAkGA1UEBhMCVVMxCzAJBgNV
+BAgTAkNBMRQwEgYDVQQHEwtTYW50YSBDbGFyYTEaMBgGA1UEChMRSW50ZWwgQ29ycG9yYXRpb24x
+KzApBgNVBAMTIkludGVsIEV4dGVybmFsIEJhc2ljIElzc3VpbmcgQ0EgNEICEzMAAB7a1DByal5N
+jDcAAAAAHtowCQYFKw4DAhoFAKCCAiswGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG
+9w0BCQUxDxcNMTYwMTI2MTAxNTEzWjAjBgkqhkiG9w0BCQQxFgQUY9AhLruY90NDykD7s/4CzlQP
+DtYwgZMGCSqGSIb3DQEJDzGBhTCBgjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAoGCCqGSIb3
+DQMHMAsGCWCGSAFlAwQBAjAOBggqhkiG9w0DAgICAIAwDQYIKoZIhvcNAwICAUAwBwYFKw4DAhow
+CwYJYIZIAWUDBAIDMAsGCWCGSAFlAwQCAjALBglghkgBZQMEAgEwgZgGCSsGAQQBgjcQBDGBijCB
+hzB5MQswCQYDVQQGEwJVUzELMAkGA1UECBMCQ0ExFDASBgNVBAcTC1NhbnRhIENsYXJhMRowGAYD
+VQQKExFJbnRlbCBDb3Jwb3JhdGlvbjErMCkGA1UEAxMiSW50ZWwgRXh0ZXJuYWwgQmFzaWMgSXNz
+dWluZyBDQSA0QQIKGZmpegAAAAAy3TCBmgYLKoZIhvcNAQkQAgsxgYqggYcweTELMAkGA1UEBhMC
+VVMxCzAJBgNVBAgTAkNBMRQwEgYDVQQHEwtTYW50YSBDbGFyYTEaMBgGA1UEChMRSW50ZWwgQ29y
+cG9yYXRpb24xKzApBgNVBAMTIkludGVsIEV4dGVybmFsIEJhc2ljIElzc3VpbmcgQ0EgNEECChmZ
+qXoAAAAAMt0wDQYJKoZIhvcNAQEBBQAEggEACDxBO70RLuio56iIBxLwfE24slgE4fMj24w8+r3A
+HO+jVFzhUIDqU3BwhbpvHBLGgfXat/b+dWojJrD74TOYAJV7qmsCK/ZAxvJWHTGEgNBha+T+K2mU
+bN1uegDBWQiuDkk2bQwYRj4px5AuSzR1a8k6H8t9ppBFRWe5JQmiri2GDcR9ki6BfaB114nU4CCr
+sLEonSnCm51tNKH+CQE4cc4JwuH7ZyNKlgpFQX92of6e+jFfR3ErilWbw2JQbDBEstJYrMXiTyPk
+YNmj7KFBPUTcY4J5b1y1PWp7l0xN/nRi6TwO3ncHXwh0ZFcjpdeH3Jw797xShtw8x9FT+IBIdgAA
+AAAAAA==
 
-
-Stray change?
-
-
->  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
->  #include "pci.h"
->  
-> @@ -3582,8 +3583,7 @@ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
->  static void quirk_dma_func0_alias(struct pci_dev *dev)
->  {
->  	if (PCI_FUNC(dev->devfn) != 0) {
-> -		dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 0);
-> -		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-> +		pci_enable_dma_alias(dev, PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
->  	}
->  }
->  
-> @@ -3598,8 +3598,7 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe476, quirk_dma_func0_alias);
->  static void quirk_dma_func1_alias(struct pci_dev *dev)
->  {
->  	if (PCI_FUNC(dev->devfn) != 1) {
-> -		dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 1);
-> -		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-> +		pci_enable_dma_alias(dev, PCI_DEVFN(PCI_SLOT(dev->devfn), 1));
->  	}
->  }
->  
-> @@ -3667,11 +3666,10 @@ static void quirk_fixed_dma_alias(struct pci_dev *dev)
->  
->  	id = pci_match_id(fixed_dma_alias_tbl, dev);
->  	if (id) {
-> -		dev->dma_alias_devfn = id->driver_data;
-> -		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-> -		dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
-> -			 PCI_SLOT(dev->dma_alias_devfn),
-> -			 PCI_FUNC(dev->dma_alias_devfn));
-> +		pci_enable_dma_alias(dev, id->driver_data);
-> +		dev_info(&dev->dev, "Enabling fixed DMA alias to %02lx.%ld\n",
-> +			 PCI_SLOT(id->driver_data),
-> +			 PCI_FUNC(id->driver_data));
->  	}
->  }
->  
-> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-> index a20ce7d..33e0f03 100644
-> --- a/drivers/pci/search.c
-> +++ b/drivers/pci/search.c
-> @@ -40,11 +40,15 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
->  	 * If the device is broken and uses an alias requester ID for
->  	 * DMA, iterate over that too.
->  	 */
-> -	if (unlikely(pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN)) {
-> -		ret = fn(pdev, PCI_DEVID(pdev->bus->number,
-> -					 pdev->dma_alias_devfn), data);
-> -		if (ret)
-> -			return ret;
-> +	if (unlikely(pdev->dma_alias_mask)) {
-> +		u8 devfn;
-> +
-> +		for_each_set_bit(devfn, pdev->dma_alias_mask, U8_MAX) {
-> +			ret = fn(pdev, PCI_DEVID(pdev->bus->number, devfn),
-> +				 data);
-> +			if (ret)
-> +				return ret;
-> +		}
->  	}
->  
->  	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 27df4a6..6c9e9e6 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -172,16 +172,14 @@ enum pci_dev_flags {
->  	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) (1 << 2),
->  	/* Flag for quirk use to store if quirk-specific ACS is enabled */
->  	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) (1 << 3),
-> -	/* Flag to indicate the device uses dma_alias_devfn */
-> -	PCI_DEV_FLAGS_DMA_ALIAS_DEVFN = (__force pci_dev_flags_t) (1 << 4),
->  	/* Use a PCIe-to-PCI bridge alias even if !pci_is_pcie */
-> -	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 5),
-> +	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 4),
->  	/* Do not use bus resets for device */
-> -	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 6),
-> +	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 5),
->  	/* Do not use PM reset even if device advertises NoSoftRst- */
-> -	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
-> +	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 6),
->  	/* Get VPD from function 0 VPD */
-> -	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
-> +	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 7),
->  };
->  
->  enum pci_irq_reroute_variant {
-> @@ -279,7 +277,7 @@ struct pci_dev {
->  	u8		rom_base_reg;	/* which config register controls the ROM */
->  	u8		pin;		/* which interrupt pin this device uses */
->  	u16		pcie_flags_reg;	/* cached PCIe Capabilities Register */
-> -	u8		dma_alias_devfn;/* devfn of DMA alias, if any */
-> +	unsigned long	*dma_alias_mask;/* mask of enabled devfn aliases */
->  
->  	struct pci_driver *driver;	/* which driver has allocated this device */
->  	u64		dma_mask;	/* Mask of the bits of bus address this
-> @@ -1238,6 +1236,7 @@ resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
->  
->  int pci_set_vga_state(struct pci_dev *pdev, bool decode,
->  		      unsigned int command_bits, u32 flags);
-> +
-
-Another stray change
-
->  /* kmem_cache style wrapper around pci_alloc_consistent() */
->  
->  #include 
-> @@ -1965,6 +1964,8 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
->  			   int (*fn)(struct pci_dev *pdev,
->  				     u16 alias, void *data), void *data);
->  
-> +bool pci_dma_alias_is_enabled(struct pci_dev *dev, u8 devfn);
-> +
->  /* helper functions for operation of device flag */
->  static inline void pci_set_dev_assigned(struct pci_dev *pdev)
->  {
-
+------=_NextPart_000_0014_01D1582A.D3D16040--
