@@ -1,163 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:46975 "EHLO foss.arm.com"
+Received: from mx2.suse.de ([195.135.220.15]:56634 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964937AbcATSIS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Jan 2016 13:08:18 -0500
-Date: Wed, 20 Jan 2016 18:10:03 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, Zhou Wang <wangzhou1@hisilicon.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
-Message-ID: <20160120181003.GF13437@red-moon>
-References: <20160120160427.GD13437@red-moon>
- <569FB210.9090605@codeaurora.org>
+	id S932511AbcAZIwJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Jan 2016 03:52:09 -0500
+Date: Tue, 26 Jan 2016 09:52:05 +0100
+From: Jean Delvare <jdelvare@suse.de>
+To: linux-pci@vger.kernel.org
+Cc: Thomas Renninger <trenn@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, tony.luck@intel.com,
+	john.ronciak@intel.com
+Subject: [PATCH] PCI: aer_inject: Log actual error causes
+Message-ID: <20160126095205.0e5923bd@endymion.delvare>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <569FB210.9090605@codeaurora.org>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 20, 2016 at 11:13:04AM -0500, Sinan Kaya wrote:
-> On 1/20/2016 11:04 AM, Lorenzo Pieralisi wrote:
-> > Hi,
-> > 
-> > I noticed that:
-> > 
-> > 79953dd22c1d ("PCI: rcar: Remove dependency on ARM-specific struct hw_pci")
-> > cbce7900598c ("PCI: designware: Make driver arch-agnostic")
-> > 
-> > added code in the respective host controller drivers to size bridges
-> > and assign resources only if the PCI_PROBE_ONLY flag is clear, which makes
-> > me wonder if there exists PCI_PROBE_ONLY set-ups for the respective
-> > host controllers:
-> > 
-> > - On ARM PCI_PROBE_ONLY can be set-up only via the command line or
-> >   by DT (but the host controllers drivers have to check the DT and
-> >   set it - see of_pci_check_probe_only()
-> > 
-> >   in drivers/pci/host/pci-host-generic.c
-> > 
-> >   neither designware nor rcar calls that function and I do not see
-> >   any dts file with that property). Given that I can't see a way
-> >   to set up PCI_PROBE_ONLY other than the command line on designware
-> >   or rcar I assume the PCI_PROBE_ONLY set-ups have been tested by
-> >   forcing it through command line parameter
-> > 
-> > - On ARM64 PCI_PROBE_ONLY can *only* be set via DT, so see above
-> > 
-> > We want to get rid of PCI_PROBE_ONLY on ARM/ARM64:
-> 
-> For platforms that does not have UEFI BIOS, it makes sense to remove
-> the probe only option as the firmware is not doing anything.
-> 
-> For server like arm64 platforms, the behavior should be identical to
-> x86 world. The UEFI BIOS sets up the resources, kernel uses the
-> resources.
-> 
-> Can we set this flag all the time for ACPI builds instead?
-> 
-> What's so special about arm64 that we can't do probe only builds and
-> x86 can do?
+The aer_inject driver is very quiet. In most cases, it merely returns
+an error code to user-space, leaving the user with little clue about
+the actual reason for the failure.
 
-Ok, let me give you a bit of background otherwise we talk at cross
-purposes here.
+So, log error messages for 4 of the most frequent causes of failure:
+* Can't find the root port of the specified device.
+* Device doesn't support AER.
+* Root port doesn't support AER.
+* AER device not found.
+This gives the user a chance to understand why aer-inject failed.
 
-ARM and ARM64 arch code is currently forced to prevent calling:
+Based on a preliminary patch by Thomas Renninger.
 
-pci_enable_resources() (eg arch/arm/kernel/bios32.c)
+Signed-off-by: Jean Delvare <jdelvare@suse.de>
+Cc: Thomas Renninger <trenn@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/aer/aer_inject.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-because, on platforms that are "PCI_PROBE_ONLY" (whatever that means),
-resources are neither assigned nor claimed. This works in practice
-but it is basically a workaround (ie the resources hierarchy is not
-validated at all in the kernel on PCI_PROBE_ONLY systems) and we want
-to get rid of that, that's what I mean by "get rid of PCI_PROBE_ONLY".
+--- linux-4.5-rc0.orig/drivers/pci/pcie/aer/aer_inject.c	2016-01-20 09:25:54.815852332 +0100
++++ linux-4.5-rc0/drivers/pci/pcie/aer/aer_inject.c	2016-01-26 09:41:17.361994839 +0100
+@@ -334,12 +334,14 @@ static int aer_inject(struct aer_error_i
+ 		return -ENODEV;
+ 	rpdev = pcie_find_root_port(dev);
+ 	if (!rpdev) {
++		dev_err(&dev->dev, "aer_inject: Root port not found\n");
+ 		ret = -ENODEV;
+ 		goto out_put;
+ 	}
+ 
+ 	pos_cap_err = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+ 	if (!pos_cap_err) {
++		dev_err(&dev->dev, "aer_inject: Device doesn't support AER\n");
+ 		ret = -EPERM;
+ 		goto out_put;
+ 	}
+@@ -350,6 +352,8 @@ static int aer_inject(struct aer_error_i
+ 
+ 	rp_pos_cap_err = pci_find_ext_capability(rpdev, PCI_EXT_CAP_ID_ERR);
+ 	if (!rp_pos_cap_err) {
++		dev_err(&rpdev->dev,
++			"aer_inject: Root port doesn't support AER\n");
+ 		ret = -EPERM;
+ 		goto out_put;
+ 	}
+@@ -462,8 +466,10 @@ static int aer_inject(struct aer_error_i
+ 			goto out_put;
+ 		}
+ 		aer_irq(-1, edev);
+-	} else
++	} else {
++		dev_err(&rpdev->dev, "aer_inject: AER device not found\n");
+ 		ret = -EINVAL;
++	}
+ out_put:
+ 	kfree(err_alloc);
+ 	kfree(rperr_alloc);
 
-Now, how we can get rid of that plaster in pcibios_enable_device().
-
-To do that, we must claim resources on PCI_PROBE_ONLY systems, but
-I know for certain Bjorn does not like the idea (I let you trawl
-the archives - at least he does not accept the idea of claiming
-resources ONLY on PCI_PROBE_ONLY systems, he thinks we should
-always claim resources regardless of that flag and fall-back to
-reassigning them in case claiming fails. That's perfectly reasonable,
-at least on systems with FW initializing PCI). The problem is dealing
-with legacy, so switching to resources claiming by default is a tad
-complicated, at least for testing (code is easy to implement).
-
-So yes, on arm64 ACPI systems, regardless of PCI_PROBE_ONLY, resources
-must be claimed and reassigned if claiming fails (as x86), we start from
-fresh and we *must* do it from the beginning.
-
-We can do that on arm64 (for ACPI - where PCI FW set-up is _supposed_ to
-be correct).
-
-On other arm64 (and arm) platforms, the question is whether it is safe
-to claim resources or not. Remember that there are already PCI host
-controller drivers in the kernel (with equivalent FW set-up) so there
-is legacy.
-
-Resources claiming and assignment should be managed in arch code,
-not in host controllers specific code, and that's the reason I
-complained in this RFC about the scattering of PCI_PROBE_ONLY flag
-checks in host drivers, it is becoming unmanageable (if useful
-at all on designware and rcar, I would like to know if there are
-PCI_PROBE_ONLY set-ups probing those host drivers).
-
-Does it make the point clearer ?
-
-> > https://patchwork.ozlabs.org/patch/545671/
-> > 
-> > so unless you really have *existing* set-ups that require it, please
-> > remove the respective checks from the host controller drivers, this is
-> > becoming a serious issue, because either:
-> > 
-> > - we claim resources if and only if PCI_PROBE_ONLY is set
-> > 
-> > Either like this (to be done for every host controllers and ARM
-> > bios32):
-> > 
-> > https://patchwork.ozlabs.org/patch/545670/
-> > 
-> > or in core ARM/ARM64 code - eg pcibios_fixup_bus() - (to avoid adding a
-> > resource claiming call in ALL PCI host controllers)
-> > 
-> > - or we *always* carry out resource claiming regardless of PCI_PROBE_ONLY
-> >   (but on ARM we can't really do that since PCI FW set-up on most of the
-> >   platforms is not present)
-> > 
-> > On PCI_PROBE_ONLY systems resources claiming is mandatory if we want
-> > to get rid of arches workarounds:
-> 
-> I'm hoping to see x86 like behavior on ARM64 without any gotchas as
-> there is nothing special about CPU type when it comes to PCI.
-
-As I said, we must enforce it with ACPI, for DT platforms I am all
-ears to decide how we can implement it sanely (I think the only way
-to do it is by claiming the PCI resources on PCI_PROBE_ONLY systems,
-that's not ideal but it simplifies things a lot).
-
-Thanks,
-Lorenzo
-
-> 
-> > 
-> > https://patchwork.ozlabs.org/patch/545671/
-> > 
-> > Comments very appreciated.
-> > 
-> > Thanks,
-> > Lorenzo
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
-> 
-> -- 
-> Sinan Kaya
-> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
-> 
+-- 
+Jean Delvare
+SUSE L3 Support
