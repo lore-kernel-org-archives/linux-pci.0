@@ -1,111 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: =?UTF-8?B?0J7Qu9C10LMg0JzQvtGA0L7Qtw==?= <oleg.moroz@mcc.vniiem.ru>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: PCI device driver broken between 4.2 and 4.3
-References: <56A32702.7080909@mcc.vniiem.ru>
- <CAErSpo6MtFSxnH8uSqeLiJVR3P-R5DUX2Furw3yw8JiMN29H0A@mail.gmail.com>
- <56A4D690.1020804@mcc.vniiem.ru> <20160125215251.GB10272@localhost>
- <20160126153210.GA11375@localhost>
-Message-ID: <56A7C35F.3090708@mcc.vniiem.ru>
-Date: Tue, 26 Jan 2016 22:05:03 +0300
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:54318 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752511AbcA0Rki (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 27 Jan 2016 12:40:38 -0500
+Date: Wed, 27 Jan 2016 17:42:22 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tn@semihalf.com>, rjw@rjwysocki.net
+Cc: rjw@rjwysocki.net, bhelgaas@google.com, arnd@arndb.de,
+	will.deacon@arm.com, catalin.marinas@arm.com,
+	hanjun.guo@linaro.org, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+Subject: Re: [PATCH V3 11/21] pci, acpi: Move ACPI host bridge device
+ companion assignment to core code.
+Message-ID: <20160127174222.GA9982@red-moon>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+ <1452691267-32240-12-git-send-email-tn@semihalf.com>
+ <20160119160224.GD5276@red-moon>
+ <569F6D67.5000000@semihalf.com>
+ <20160120123849.GA13437@red-moon>
+ <569F8E38.5030101@semihalf.com>
+ <20160120142243.GB13437@red-moon>
+ <569F9CB4.2010905@semihalf.com>
 MIME-Version: 1.0
-In-Reply-To: <20160126153210.GA11375@localhost>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <569F9CB4.2010905@semihalf.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I confirmed it works in
+On Wed, Jan 20, 2016 at 03:41:56PM +0100, Tomasz Nowicki wrote:
+> On 20.01.2016 15:22, Lorenzo Pieralisi wrote:
+> >On Wed, Jan 20, 2016 at 02:40:08PM +0100, Tomasz Nowicki wrote:
+> >
+> >[...]
+> >
+> >>>>>>+	/* Root bridge device needs to be sure of parent ACPI type */
+> >>>>>>+	ACPI_COMPANION_SET(&device->dev, device);
+> >>>>>
+> >>>>>I do not understand why the code above is needed, can you elaborate
+> >>>>>please ?
+> >>>>>
+> >>>>
+> >>>>This makes sure that device->dev can be identified as ACPI device,
+> >>>>so we can use to_acpi_device_node() and assign companion safely
+> >>>>below.
+> >>>
+> >>>I do not follow. If you refer to the fwnode handle type, that is
+> >>>already set by ACPI core code (before acpi_pci_root_add() is called,
+> >>>in acpi_init_device_object()).
+> >>
+> >>acpi_init_device_object() sets ACPI fwnode handle type only for
+> >>"device", but not for "device->dev" which is what is passed as an
+> >>argument to pci_create_root_bus().
+> >>
+> >>Without ACPI_COMPANION_SET(&device->dev, device) here, no one can be
+> >>sure if we have ACPI device in pci_create_root_bus().
+> >
+> >Ok, got it. The question is whether this should be done in ACPI
+> >core instead (is there a reason why it should *not* be done ?), but I
+> >now understand your point.
+> >
+> 
+> I am not able to answer that question, but I see lots of changes in
+> this area made by Rafael.
 
-890e4847587f
+I had a further look and I am not sure why the fwnode_handle* in the
+dev member of the acpi_device is not made to point at the fwnode member
+of the acpi_device by *default* (acpi_init_device_object() ?), probably
+because it is never used as such but certainly Rafael knows, so I would
+ask him to clarify please it is unclear to me.
 
-and do not works in
+I do not see anything wrong in what you are doing in this patch.
 
-991de2e59090
+Rafael, any comments ?
 
-26.01.2016 18:32, Bjorn Helgaas пишет:
-> [+cc Jiang]
->
-> On Mon, Jan 25, 2016 at 03:52:51PM -0600, Bjorn Helgaas wrote:
->> Hi Олег,
->>
->> On Sun, Jan 24, 2016 at 04:50:08PM +0300, Олег Мороз wrote:
->>> Okay. I've sent logs (dmesg and lspci) from both 4.2 and 4.3 to bugzilla
->> I don't see anything wrong in either log.  Both v4.2 and v4.3
->> enumerate the device the same way, and the driver seems to claim it
->> the same way:
->>
->>    pci 0000:0d:00.0: [10b5:9030] type 00 class 0x078000
->>    pci 0000:0d:00.0: reg 0x14: [io  0x2100-0x217f]
->>    pci 0000:0d:00.0: reg 0x18: [io  0x2380-0x239f]
->>    pci 0000:0d:00.0: PME# supported from D0 D3hot
->>    pci 0000:0d:01.0: [10b5:9030] type 00 class 0x078000
->>    pci 0000:0d:01.0: reg 0x14: [io  0x2180-0x21ff]
->>    pci 0000:0d:01.0: reg 0x18: [io  0x23a0-0x23bf]
->>    pci 0000:0d:01.0: PME# supported from D0 D3hot
->>    pci 0000:0d:02.0: [10b5:9030] type 00 class 0x078000
->>    pci 0000:0d:02.0: reg 0x14: [io  0x2200-0x227f]
->>    pci 0000:0d:02.0: reg 0x18: [io  0x2280-0x22ff]
->>    pci 0000:0d:02.0: reg 0x1c: [io  0x2300-0x237f]
->>    pci 0000:0d:02.0: PME# supported from D0 D3hot
->>
->>    sja1000_plx_pci 0000:0d:02.0: Detected "Eclus CAN-200-PCI" card at slot #2
->>    sja1000_plx_pci 0000:0d:02.0: Channel #1 at 0x0000000000012280, irq 22 registered as can0
->>    sja1000_plx_pci 0000:0d:02.0: Channel #2 at 0x0000000000012300, irq 22 registered as can1
->>    sja1000_plx_pci 0000:0d:02.0 can0: setting BTR0=0x03 BTR1=0x37
->>
->> One option is always to bisect between v4.2 and v4.3 to see which
->> commit made it stop working.  See https://git-scm.com/docs/git-bisect
-> Jiang, Олег bisected this to 991de2e59090 ("PCI, x86: Implement
-> pcibios_alloc_irq() and pcibios_free_irq()").
->
-> Олег, please double-check and confirm that 890e4847587f works and
-> 991de2e59090 fails.
->
-> Then please add some printks in the pcibios_enable_device() and
-> pcibios_alloc_irq() paths and in your driver to see exactly what changed
-> between 890e4847587f and 991de2e59090
->
-> Bjorn
->
->>> 23.01.2016 17:54, Bjorn Helgaas пишет:
->>>> [+cc linux-kernel]
->>>>
->>>> Hi Олег,
->>>>
->>>> On Sat, Jan 23, 2016 at 1:08 AM, Олег Мороз <oleg.moroz@mcc.vniiem.ru> wrote:
->>>>> Hello. I've got a device driver for MIL-1553b card called TA1-PCI, which
->>>>> could be found at
->>>>> https://github.com/qmor/elcus-1553-driver-linux
->>>>> Card is using PLX_PCI9030 PCI controller.
->>>>> Today i've found that this driver compiles, installes, but is not working as
->>>>> it should.
->>>>> Looks like it not receives any interrupts from PCI. I've test it again with
->>>>> kernel
->>>>> 4.2 and it works okay. What changes was made in PCI subsystem from 4.2 to
->>>>> 4.3
->>>>> which could have impact this driver work.
->>>> Thank you very much for this problem report.  There were many PCI
->>>> changes between v4.2 and v4.3, and without more information, I can't
->>>> guess what might be causing this problem.
->>>>
->>>> I opened a bug report at https://bugzilla.kernel.org/show_bug.cgi?id=111211
->>>>
->>>> Please attach complete dmesg logs for both v4.2 and v4.3 to that bug
->>>> report.  Also, please attach the complete "lspci -vv" output (as
->>>> root).
->>>>
->>>> Thanks!
->>>>
->>>> Bjorn
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Lorenzo
