@@ -1,65 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43022 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751629AbcAFON3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Jan 2016 09:13:29 -0500
-Date: Wed, 6 Jan 2016 08:13:24 -0600
-From: Rob Herring <robh@kernel.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 27 Jan 2016 07:22:18 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: =?utf-8?B?0JzQvtGA0L7QtyDQntC70LXQsw==?= <oleg.moroz@mcc.vniiem.ru>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, linux-omap@vger.kernel.org,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, nsekhar@ti.com
-Subject: Re: [PATCH 2/2] pci: host: pci-dra7xx: Enable x2 mode support
-Message-ID: <20160106141324.GA24713@rob-hp-laptop>
-References: <1452077393-25880-1-git-send-email-kishon@ti.com>
- <1452077393-25880-3-git-send-email-kishon@ti.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: PCI device driver broken between 4.2 and 4.3
+Message-ID: <20160127132218.GA17377@localhost>
+References: <56A32702.7080909@mcc.vniiem.ru>
+ <CAErSpo6MtFSxnH8uSqeLiJVR3P-R5DUX2Furw3yw8JiMN29H0A@mail.gmail.com>
+ <56A4D690.1020804@mcc.vniiem.ru>
+ <20160125215251.GB10272@localhost>
+ <20160126153210.GA11375@localhost>
+ <56A7C35F.3090708@mcc.vniiem.ru>
+ <56A88FFE.7000800@mcc.vniiem.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1452077393-25880-3-git-send-email-kishon@ti.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <56A88FFE.7000800@mcc.vniiem.ru>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 06, 2016 at 04:19:53PM +0530, Kishon Vijay Abraham I wrote:
-> Perform syscon configurations to get x2 mode to working in DRA74x and
-> DRA72x. Also add a new compatible string to dfferentiate
-> DRA72x and DRA74x, since b1c0 mask is different for both these platforms.
+On Wed, Jan 27, 2016 at 12:38:06PM +0300, Мороз Олег wrote:
+> Also, my drive has no
 > 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  Documentation/devicetree/bindings/pci/ti-pci.txt |    8 ++-
->  drivers/pci/host/pci-dra7xx.c                    |   81 +++++++++++++++++++++-
->  2 files changed, 86 insertions(+), 3 deletions(-)
+> pcibios_enable_device()
+> pcibios_alloc_irq()
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
-> index 60e2516..0b10e84 100644
-> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
-> @@ -1,7 +1,9 @@
->  TI PCI Controllers
->  
->  PCIe Designware Controller
-> - - compatible: Should be "ti,dra7-pcie""
-> + - compatible: "ti,dra7-pcie" is deprecated
-> +	       Should be "ti,dra746-pcie" for DRA74x
-> +	       Should be "ti,dra726-pcie" for DRA72x
->   - reg : Two register ranges as listed in the reg-names property
->   - reg-names : The first entry must be "ti-conf" for the TI specific registers
->  	       The second entry must be "rc-dbics" for the designware pcie
-> @@ -14,6 +16,10 @@ PCIe Designware Controller
->  	       where <X> is the instance number of the pcie from the HW spec.
->   - interrupts : Two interrupt entries must be specified. The first one is for
->  		main interrupt line and the second for MSI interrupt line.
-> + - syscon-lane-conf : phandle/offset pair. Phandle to the system control module and the
-> +   register offset to specify 1 lane or 2 lane.
-> + - syscon-lane-sel : phandle/offset pair. Phandle to the system control module and the
-> +   register offset to specify lane selection.
+> calls.
 
-These should have a ti prefix.
+Those are internal interfaces used by the PCI core.  Drivers shouldn't
+call them directly.  Drivers normally call pci_enable_device(), and
+those internal interfaces are used in that path.
 
->   - #address-cells,
->     #size-cells,
->     #interrupt-cells,
+> 26.01.2016 22:05, Олег Мороз пишет:
+> >I confirmed it works in
+> >
+> >890e4847587f
+> >
+> >and do not works in
+> >
+> >991de2e59090
+> >
+> >26.01.2016 18:32, Bjorn Helgaas пишет:
+> >>[+cc Jiang]
+> >>
+> >>On Mon, Jan 25, 2016 at 03:52:51PM -0600, Bjorn Helgaas wrote:
+> >>>Hi Олег,
+> >>>
+> >>>On Sun, Jan 24, 2016 at 04:50:08PM +0300, Олег Мороз wrote:
+> >>>>Okay. I've sent logs (dmesg and lspci) from both 4.2 and 4.3
+> >>>>to bugzilla
+> >>>I don't see anything wrong in either log.  Both v4.2 and v4.3
+> >>>enumerate the device the same way, and the driver seems to claim it
+> >>>the same way:
+> >>>
+> >>>   pci 0000:0d:00.0: [10b5:9030] type 00 class 0x078000
+> >>>   pci 0000:0d:00.0: reg 0x14: [io  0x2100-0x217f]
+> >>>   pci 0000:0d:00.0: reg 0x18: [io  0x2380-0x239f]
+> >>>   pci 0000:0d:00.0: PME# supported from D0 D3hot
+> >>>   pci 0000:0d:01.0: [10b5:9030] type 00 class 0x078000
+> >>>   pci 0000:0d:01.0: reg 0x14: [io  0x2180-0x21ff]
+> >>>   pci 0000:0d:01.0: reg 0x18: [io  0x23a0-0x23bf]
+> >>>   pci 0000:0d:01.0: PME# supported from D0 D3hot
+> >>>   pci 0000:0d:02.0: [10b5:9030] type 00 class 0x078000
+> >>>   pci 0000:0d:02.0: reg 0x14: [io  0x2200-0x227f]
+> >>>   pci 0000:0d:02.0: reg 0x18: [io  0x2280-0x22ff]
+> >>>   pci 0000:0d:02.0: reg 0x1c: [io  0x2300-0x237f]
+> >>>   pci 0000:0d:02.0: PME# supported from D0 D3hot
+> >>>
+> >>>   sja1000_plx_pci 0000:0d:02.0: Detected "Eclus CAN-200-PCI"
+> >>>card at slot #2
+> >>>   sja1000_plx_pci 0000:0d:02.0: Channel #1 at
+> >>>0x0000000000012280, irq 22 registered as can0
+> >>>   sja1000_plx_pci 0000:0d:02.0: Channel #2 at
+> >>>0x0000000000012300, irq 22 registered as can1
+> >>>   sja1000_plx_pci 0000:0d:02.0 can0: setting BTR0=0x03 BTR1=0x37
+> >>>
+> >>>One option is always to bisect between v4.2 and v4.3 to see which
+> >>>commit made it stop working.  See https://git-scm.com/docs/git-bisect
+> >>Jiang, Олег bisected this to 991de2e59090 ("PCI, x86: Implement
+> >>pcibios_alloc_irq() and pcibios_free_irq()").
+> >>
+> >>Олег, please double-check and confirm that 890e4847587f works and
+> >>991de2e59090 fails.
+> >>
+> >>Then please add some printks in the pcibios_enable_device() and
+> >>pcibios_alloc_irq() paths and in your driver to see exactly what changed
+> >>between 890e4847587f and 991de2e59090
+> >>
+> >>Bjorn
+> >>
+> >>>>23.01.2016 17:54, Bjorn Helgaas пишет:
+> >>>>>[+cc linux-kernel]
+> >>>>>
+> >>>>>Hi Олег,
+> >>>>>
+> >>>>>On Sat, Jan 23, 2016 at 1:08 AM, Олег Мороз
+> >>>>><oleg.moroz@mcc.vniiem.ru> wrote:
+> >>>>>>Hello. I've got a device driver for MIL-1553b card
+> >>>>>>called TA1-PCI, which
+> >>>>>>could be found at
+> >>>>>>https://github.com/qmor/elcus-1553-driver-linux
+> >>>>>>Card is using PLX_PCI9030 PCI controller.
+> >>>>>>Today i've found that this driver compiles, installes,
+> >>>>>>but is not working as
+> >>>>>>it should.
+> >>>>>>Looks like it not receives any interrupts from PCI. I've
+> >>>>>>test it again with
+> >>>>>>kernel
+> >>>>>>4.2 and it works okay. What changes was made in PCI
+> >>>>>>subsystem from 4.2 to
+> >>>>>>4.3
+> >>>>>>which could have impact this driver work.
+> >>>>>Thank you very much for this problem report.  There were many PCI
+> >>>>>changes between v4.2 and v4.3, and without more information, I can't
+> >>>>>guess what might be causing this problem.
+> >>>>>
+> >>>>>I opened a bug report at
+> >>>>>https://bugzilla.kernel.org/show_bug.cgi?id=111211
+> >>>>>
+> >>>>>Please attach complete dmesg logs for both v4.2 and v4.3 to that bug
+> >>>>>report.  Also, please attach the complete "lspci -vv" output (as
+> >>>>>root).
+> >>>>>
+> >>>>>Thanks!
+> >>>>>
+> >>>>>Bjorn
+> >>>>-- 
+> >>>>To unsubscribe from this list: send the line "unsubscribe
+> >>>>linux-pci" in
+> >>>>the body of a message to majordomo@vger.kernel.org
+> >>>>More majordomo info at http://vger.kernel.org/majordomo-info.html
+> >>>-- 
+> >>>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> >>>the body of a message to majordomo@vger.kernel.org
+> >>>More majordomo info at http://vger.kernel.org/majordomo-info.html
+> >
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
