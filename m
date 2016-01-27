@@ -1,88 +1,46 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 8 Jan 2016 14:31:02 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Ley Foon Tan <lftan@altera.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Simon Horman <horms@verge.net.au>, linux-tegra@vger.kernel.org,
-	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Rocketboard Maillist <rfi@lists.rocketboards.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH 00/10] drivers/pci: avoid module_init in non-modular
- host/pci*
-Message-ID: <20160108203102.GH5354@localhost>
-References: <1449970917-12633-1-git-send-email-paul.gortmaker@windriver.com>
- <CAFiDJ5-Y8afg5kDRQLK1pain-k1kPQAn3vhWrVkB1ADPRHvx+A@mail.gmail.com>
- <20151214091940.GA15126@ulmo.nvidia.com>
- <3302340.SIljl1qYTl@wuerfel>
- <20151215151624.GB2772@windriver.com>
+Subject: Re: [PATCH] PCI: layerscape: add ls2085a compatible
+To: Mingkai.Hu@nxp.com, Minghuan Lian <minghuan.lian@nxp.com>,
+	bhelgaas@google.com
+References: <1453915925-19198-1-git-send-email-yang.shi@linaro.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linaro-kernel@lists.linaro.org
+From: "Shi, Yang" <yang.shi@linaro.org>
+Message-ID: <56A906F4.3050809@linaro.org>
+Date: Wed, 27 Jan 2016 10:05:40 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151215151624.GB2772@windriver.com>
+In-Reply-To: <1453915925-19198-1-git-send-email-yang.shi@linaro.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Dec 15, 2015 at 10:16:24AM -0500, Paul Gortmaker wrote:
-> [Re: [PATCH 00/10] drivers/pci: avoid module_init in non-modular host/pci*] On 14/12/2015 (Mon 11:27) Arnd Bergmann wrote:
-> 
-> > On Monday 14 December 2015 10:19:40 Thierry Reding wrote:
-> > > > PCIe host driver that use fixup (DECLARE_PCI_FIXUP_*) can't use tristate.
-> > > > Fixup region is in kernel region and this region if not updated when
-> > > > loading a module.
-> > > 
-> > > Interesting, I hadn't thought about that. I suppose this means that the
-> > > module will end up containing an unused section with the fixup code. It
-> > > might be useful to add a way for that to trigger a warning at build
-> > > time.
-> > > 
-> > > Perhaps to fix this a mechanism could be introduced to add a table of
-> > > fixups to a host controller driver and that will get applied to all
-> > > children of the bridge. It could be problematic to cover all of the
-> > > different fixup stages, though.
-> > 
-> > I think a lot of the fixups shouldn't really be there in the first place,
-> > they are about stuff that we can fix up in the probe function, or that should
-> > be fixed up in the probe function with some appropriate core support added.
-> 
-> So, the feedback on this is a bit all over the map, leaving me unsure
-> what to do next.  And is the choice we make on a per board/bsp basis or
-> ideally across all platforms?  I see the choices as:
-> 
-> 1) do nothing; which IMHO is least desirable as it leaves the code
-> misrepresenting itself as modular; one of the key issues I wanted to fix
-> 
-> 2) use the patches I've sent ; then as they are genuinely made modular,
-> the person doing so essentially "patch -R" or reverts the change as
-> step one.  This has the advantage of solving the "we'll get to it
-> someday" issue if someday never comes.
-> 
-> 3) make them all tristate;  beat it with a stick until it compiles [M]
-> and modposts -- leaving the fixups and functional testing to people with
-> the boards and low level knowledge to make it _work_ as a module.  The
-> downside here is the code is still kind of misrepresenting itself as
-> modularly functional -- a ban of unloading might mitigate that some.
+Correct FSL folks email address to nxp.com, sorry for the inconvenience.
 
-I'd like to preserve the mind-set that host controller drivers are
-*expected* to be modular, even if we aren't there yet.  I guess that
-means I'm in favor of option 3, at least for drivers that don't use
-fixups.
+Regards,
+Yang
 
-Bjorn
+
+On 1/27/2016 9:32 AM, Yang Shi wrote:
+> The layerscape PCI host driver needs recognize ls2085a compatible when using
+> firmware with ls2085a compatible property, otherwise the PCI bus won't be
+> detected even though ls2085a compatible is included by the dts.
+>
+> Signed-off-by: Yang Shi <yang.shi@linaro.org>
+> ---
+>   drivers/pci/host/pci-layerscape.c | 1 +
+>   1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/pci/host/pci-layerscape.c b/drivers/pci/host/pci-layerscape.c
+> index 3923bed..c40d8b2 100644
+> --- a/drivers/pci/host/pci-layerscape.c
+> +++ b/drivers/pci/host/pci-layerscape.c
+> @@ -203,6 +203,7 @@ static const struct of_device_id ls_pcie_of_match[] = {
+>   	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata },
+>   	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata },
+>   	{ .compatible = "fsl,ls2080a-pcie", .data = &ls2080_drvdata },
+> +	{ .compatible = "fsl,ls2085a-pcie", .data = &ls2080_drvdata },
+>   	{ },
+>   };
+>   MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
+>
