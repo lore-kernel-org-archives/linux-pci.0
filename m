@@ -1,95 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54037 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751859AbcAIA5k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Jan 2016 19:57:40 -0500
-Date: Fri, 8 Jan 2016 18:57:36 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jordan Hargrave <Jordan_Hargrave@dell.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, alexander.duyck@gmail.com,
-	Babu Moger <babu.moger@oracle.com>
-Subject: Re: [PATCH] Limit VPD length on Atheros wifi cards
-Message-ID: <20160109005736.GP5354@localhost>
-References: <1451427542-30482-1-git-send-email-Jordan_Hargrave@dell.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
+To: <linux-acpi@vger.kernel.org>
+CC: <linux-kernel@vger.kernel.org>, <rjw@rjwysocki.net>,
+	<lenb@kernel.org>, <izumi.taku@jp.fujitsu.com>,
+	<wency@cn.fujitsu.com>, <caoj.fnst@cn.fujitsu.com>,
+	<ddaney.cavm@gmail.com>, <chen.fan.fnst@cn.fujitsu.com>,
+	<helgaas@kernel.org>, <okaya@codeaurora.org>,
+	<bhelgaas@google.com>, <jiang.liu@linux.intel.com>,
+	<linux-pci@vger.kernel.org>, <tglx@linutronix.de>,
+	<linux@roeck-us.net>
+Subject: [PATCH v3 2/2] i801_smbus: fix unavailable irq number 255 reported by BIOS
+Date: Wed, 27 Jan 2016 14:08:44 +0800
+Message-ID: <736ccbb04de44a75e8d1389bb7b2746c0a9a8937.1453862105.git.chen.fan.fnst@cn.fujitsu.com>
+In-Reply-To: <cover.1453862105.git.chen.fan.fnst@cn.fujitsu.com>
+References: <cover.1453862105.git.chen.fan.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1451427542-30482-1-git-send-email-Jordan_Hargrave@dell.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Babu]
+In our environment, when enable Secure boot, we found an abnormal
+phenomenon as following call trace shows. after investigation, we
+found the firmware assigned an irq number 255 which means unknown
+or no connection in PCI local spec for i801_smbus, meanwhile the
+ACPI didn't configure the pci irq routing. and the 255 irq number
+was assigned for megasa msix without IRQF_SHARED. then in this case
+during i801_smbus probe, the i801_smbus driver would request irq with
+bad irq number 255. but the 255 irq number was assigned for memgasa
+with MSIX enable. which will cause request_irq fails and result in
+the call trace below, here we add check the irq_invalid flag to identify
+the smbus whether support IRQ-driven.
 
-Hi Jordan, Babu, et al,
+i801_smbus 0000:00:1f.3: enabling device (0140 -> 0143)
+i801_smbus 0000:00:1f.3: can't derive routing for PCI INT C
+i801_smbus 0000:00:1f.3: PCI INT C: no GSI
+genirq: Flags mismatch irq 255. 00000080 (i801_smbus) vs. 00000000 (megasa)
+CPU: 0 PID: 2487 Comm: kworker/0:1 Not tainted 3.10.0-229.el7.x86_64 #1
+Hardware name: FUJITSU PRIMEQUEST 2800E2/D3736, BIOS PRIMEQUEST 2000 Serie5
 
-On Tue, Dec 29, 2015 at 04:19:02PM -0600, Jordan Hargrave wrote:
-> Attempt to read VPD on these cards causes kernel hang or delay
-> 
-> Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
-> ---
->  drivers/pci/quirks.c |   10 ++++++++++
->  1 files changed, 10 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index e6376f6..a72667f 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -2161,6 +2161,16 @@ static void quirk_brcm_570x_limit_vpd(struct pci_dev *dev)
->  	}
->  }
->  
-> +static void quirk_atheros_vpd(struct pci_dev *dev)
-> +{
-> +	/* Atheros WiFi cards hang when reading VPD */
-> +	if (dev->vpd)
-> +		dev->vpd->len = 0;
-> +}
-> +
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATHEROS, PCI_ANY_ID, quirk_atheros_vpd);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID, quirk_atheros_vpd);
+Call Trace:
+  dump_stack+0x19/0x1b
+  __setup_irq+0x54a/0x570
+  request_threaded_irq+0xcc/0x170
+  i801_probe+0x32f/0x508 [i2c_i801]
+  local_pci_probe+0x45/0xa0
+i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
+i801_smbus: probe of 0000:00:1f.3 failed with error -16
 
-We're accumulating several quirks like this, and they don't do
-anything device-specific, so we could probably use a single quirk for
-all of them, i.e., Babu's quirk_megaraid_sas_limit_vpd() and your
-quirk_atheros_vpd() are needlessly duplicated.
+Signed-off-by: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
+---
+ drivers/i2c/busses/i2c-i801.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-I'd really like to have more details about what the "kernel hang or
-delay" that happens when we try to read VPD.
+diff --git a/drivers/i2c/busses/i2c-i801.c b/drivers/i2c/busses/i2c-i801.c
+index f62d697..22f9aea 100644
+--- a/drivers/i2c/busses/i2c-i801.c
++++ b/drivers/i2c/busses/i2c-i801.c
+@@ -1380,6 +1380,11 @@ static int i801_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 		}
+ 	}
+ 
++	if ((priv->features & FEATURE_IRQ) && dev->irq_invalid) {
++		dev_warn(&dev->dev, "Interrupt line is invalid!\n");
++		priv->features &= ~FEATURE_IRQ;
++	}
++
+ 	if (priv->features & FEATURE_IRQ) {
+ 		init_waitqueue_head(&priv->waitq);
+ 
+-- 
+1.9.3
 
-Looking at pci_vpd_pci22_read(), it basically just does config
-accesses, so I only see two ways things could go wrong:
 
-  1) If the device responds with data, but the PCI_VPD_ADDR_F flag
-  isn't set, we should be able to timeout gracefully.
 
-  2) If the device doesn't respond at all, we could see machine
-  checks, master aborts, processor read timeouts, or similar hardware
-  problems.
-
-If there are other failure modes, I'd like to learn what they are.
-
-If we're seeing problems like (1), there must be something we can
-improve in the way we handle timeouts.
-
-If we're seeing failures like (2), they're probably caused by a
-hardware or firmware problem on the device, and there's not much we
-can do in the kernel, so disabling VPD access completely is probably
-all we can do.
-
-So if/when we add quirks like this, I'm looking for bugzilla entries
-that clearly show that the problem is (2).  I'd also like to log
-something in dmesg as a clue about why lspci or other utilities don't
-find any VPD data.
-
-Bjorn
-
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
->  			PCI_DEVICE_ID_NX2_5706,
->  			quirk_brcm_570x_limit_vpd);
-> -- 
-> 1.7.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
