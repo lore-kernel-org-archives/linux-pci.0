@@ -1,78 +1,145 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 29 Jan 2016 16:08:12 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
-Cc: rjw@rjwysocki.net, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, lenb@kernel.org,
-	izumi.taku@jp.fujitsu.com, wency@cn.fujitsu.com,
-	caoj.fnst@cn.fujitsu.com, ddaney.cavm@gmail.com,
-	okaya@codeaurora.org, bhelgaas@google.com,
-	jiang.liu@linux.intel.com, linux-pci@vger.kernel.org,
-	tglx@linutronix.de, linux@roeck-us.net
-Subject: Re: [RESEND PATCH v4] x86/PCI: Recognize that Interrupt Line 255
- means "not connected"
-Message-ID: <20160129220812.GF12965@localhost>
-References: <1454038814-3486-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from svc.vniiem.ru ([78.107.120.166]:52872 "EHLO mx.svc.vniiem.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751549AbcA0Ji2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 27 Jan 2016 04:38:28 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by mx.svc.vniiem.ru (Postfix) with ESMTP id 52802820D2
+	for <linux-pci@vger.kernel.org>; Wed, 27 Jan 2016 12:38:26 +0300 (MSK)
+Received: from mx.svc.vniiem.ru ([127.0.0.1])
+	by localhost (mx.svc.vniiem.ru [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id kUX169prDrXW for <linux-pci@vger.kernel.org>;
+	Wed, 27 Jan 2016 12:38:25 +0300 (MSK)
+From: =?UTF-8?B?0JzQvtGA0L7QtyDQntC70LXQsw==?= <oleg.moroz@mcc.vniiem.ru>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: PCI device driver broken between 4.2 and 4.3
+References: <56A32702.7080909@mcc.vniiem.ru>
+ <CAErSpo6MtFSxnH8uSqeLiJVR3P-R5DUX2Furw3yw8JiMN29H0A@mail.gmail.com>
+ <56A4D690.1020804@mcc.vniiem.ru> <20160125215251.GB10272@localhost>
+ <20160126153210.GA11375@localhost> <56A7C35F.3090708@mcc.vniiem.ru>
+Message-ID: <56A88FFE.7000800@mcc.vniiem.ru>
+Date: Wed, 27 Jan 2016 12:38:06 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1454038814-3486-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <56A7C35F.3090708@mcc.vniiem.ru>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 29, 2016 at 11:40:14AM +0800, Chen Fan wrote:
-> Per the x86-specific footnote to PCI spec r3.0, sec 6.2.4, the value 255 in
-> the Interrupt Line register means "unknown" or "no connection."
-> Previously, when we couldn't derive an IRQ from the _PRT, we fell back to
-> using the value from Interrupt Line as an IRQ.  It's questionable whether
-> we should do that at all, but the spec clearly suggests we shouldn't do it
-> for the value 255 on x86.
-> 
-> Calling request_irq() with IRQ 255 may succeed, but the driver won't
-> receive any interrupts.  Or, if IRQ 255 is shared with another device, it
-> may succeed, and the driver's ISR will be called at random times when the
-> *other* device interrupts.  Or it may fail if another device is using IRQ
-> 255 with incompatible flags.  What we *want* is for request_irq() to fail
-> predictably so the driver can fall back to polling.
-> 
-> On x86, assume 255 in the Interrupt Line means the INTx line is not
-> connected.  In that case, set dev->irq to IRQ_NOTCONNECTED so request_irq()
-> will fail gracefully with -ENOTCONN.
-> 
-> We found this problem on a system where Secure Boot firmware assigned
-> Interrupt Line 255 to an i801_smbus device and another device was already
-> using MSI-X IRQ 255.  This was in v3.10, where i801_probe() fails if
-> request_irq() fails:
-> 
->   i801_smbus 0000:00:1f.3: enabling device (0140 -> 0143)
->   i801_smbus 0000:00:1f.3: can't derive routing for PCI INT C
->   i801_smbus 0000:00:1f.3: PCI INT C: no GSI
->   genirq: Flags mismatch irq 255. 00000080 (i801_smbus) vs. 00000000 (megasa)
->   CPU: 0 PID: 2487 Comm: kworker/0:1 Not tainted 3.10.0-229.el7.x86_64 #1
->   Hardware name: FUJITSU PRIMEQUEST 2800E2/D3736, BIOS PRIMEQUEST 2000 Serie5
->   Call Trace:
->     dump_stack+0x19/0x1b
->     __setup_irq+0x54a/0x570
->     request_threaded_irq+0xcc/0x170
->     i801_probe+0x32f/0x508 [i2c_i801]
->     local_pci_probe+0x45/0xa0
->   i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
->   i801_smbus: probe of 0000:00:1f.3 failed with error -16
-> 
-> After aeb8a3d16ae0 ("i2c: i801: Check if interrupts are disabled"),
-> i801_probe() will fall back to polling if request_irq() fails.  But we
-> still need this patch because request_irq() may succeed or fail depending
-> on other devices in the system.  If request_irq() fails, i801_smbus will
-> work by falling back to polling, but if it succeeds, i801_smbus won't work
-> because it expects interrupts that it may not receive.
-> 
-> Signed-off-by: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
-> Acked-by: Thomas Gleixner <tglx@linutronix.de>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Also, my drive has no
 
-Hi Chen,
+pcibios_enable_device()
+pcibios_alloc_irq()
 
-You already have my ack, but I'm just curious if you can tell whether
-i801_smbus works if IRQ 255 isn't in use, e.g., if you can remove the
-megasa driver or tell it not to use MSI?
+calls.
 
-Bjorn
+
+
+26.01.2016 22:05, Олег Мороз пишет:
+> I confirmed it works in
+>
+> 890e4847587f
+>
+> and do not works in
+>
+> 991de2e59090
+>
+> 26.01.2016 18:32, Bjorn Helgaas пишет:
+>> [+cc Jiang]
+>>
+>> On Mon, Jan 25, 2016 at 03:52:51PM -0600, Bjorn Helgaas wrote:
+>>> Hi Олег,
+>>>
+>>> On Sun, Jan 24, 2016 at 04:50:08PM +0300, Олег Мороз wrote:
+>>>> Okay. I've sent logs (dmesg and lspci) from both 4.2 and 4.3 to 
+>>>> bugzilla
+>>> I don't see anything wrong in either log.  Both v4.2 and v4.3
+>>> enumerate the device the same way, and the driver seems to claim it
+>>> the same way:
+>>>
+>>>    pci 0000:0d:00.0: [10b5:9030] type 00 class 0x078000
+>>>    pci 0000:0d:00.0: reg 0x14: [io  0x2100-0x217f]
+>>>    pci 0000:0d:00.0: reg 0x18: [io  0x2380-0x239f]
+>>>    pci 0000:0d:00.0: PME# supported from D0 D3hot
+>>>    pci 0000:0d:01.0: [10b5:9030] type 00 class 0x078000
+>>>    pci 0000:0d:01.0: reg 0x14: [io  0x2180-0x21ff]
+>>>    pci 0000:0d:01.0: reg 0x18: [io  0x23a0-0x23bf]
+>>>    pci 0000:0d:01.0: PME# supported from D0 D3hot
+>>>    pci 0000:0d:02.0: [10b5:9030] type 00 class 0x078000
+>>>    pci 0000:0d:02.0: reg 0x14: [io  0x2200-0x227f]
+>>>    pci 0000:0d:02.0: reg 0x18: [io  0x2280-0x22ff]
+>>>    pci 0000:0d:02.0: reg 0x1c: [io  0x2300-0x237f]
+>>>    pci 0000:0d:02.0: PME# supported from D0 D3hot
+>>>
+>>>    sja1000_plx_pci 0000:0d:02.0: Detected "Eclus CAN-200-PCI" card 
+>>> at slot #2
+>>>    sja1000_plx_pci 0000:0d:02.0: Channel #1 at 0x0000000000012280, 
+>>> irq 22 registered as can0
+>>>    sja1000_plx_pci 0000:0d:02.0: Channel #2 at 0x0000000000012300, 
+>>> irq 22 registered as can1
+>>>    sja1000_plx_pci 0000:0d:02.0 can0: setting BTR0=0x03 BTR1=0x37
+>>>
+>>> One option is always to bisect between v4.2 and v4.3 to see which
+>>> commit made it stop working.  See https://git-scm.com/docs/git-bisect
+>> Jiang, Олег bisected this to 991de2e59090 ("PCI, x86: Implement
+>> pcibios_alloc_irq() and pcibios_free_irq()").
+>>
+>> Олег, please double-check and confirm that 890e4847587f works and
+>> 991de2e59090 fails.
+>>
+>> Then please add some printks in the pcibios_enable_device() and
+>> pcibios_alloc_irq() paths and in your driver to see exactly what changed
+>> between 890e4847587f and 991de2e59090
+>>
+>> Bjorn
+>>
+>>>> 23.01.2016 17:54, Bjorn Helgaas пишет:
+>>>>> [+cc linux-kernel]
+>>>>>
+>>>>> Hi Олег,
+>>>>>
+>>>>> On Sat, Jan 23, 2016 at 1:08 AM, Олег Мороз 
+>>>>> <oleg.moroz@mcc.vniiem.ru> wrote:
+>>>>>> Hello. I've got a device driver for MIL-1553b card called 
+>>>>>> TA1-PCI, which
+>>>>>> could be found at
+>>>>>> https://github.com/qmor/elcus-1553-driver-linux
+>>>>>> Card is using PLX_PCI9030 PCI controller.
+>>>>>> Today i've found that this driver compiles, installes, but is not 
+>>>>>> working as
+>>>>>> it should.
+>>>>>> Looks like it not receives any interrupts from PCI. I've test it 
+>>>>>> again with
+>>>>>> kernel
+>>>>>> 4.2 and it works okay. What changes was made in PCI subsystem 
+>>>>>> from 4.2 to
+>>>>>> 4.3
+>>>>>> which could have impact this driver work.
+>>>>> Thank you very much for this problem report.  There were many PCI
+>>>>> changes between v4.2 and v4.3, and without more information, I can't
+>>>>> guess what might be causing this problem.
+>>>>>
+>>>>> I opened a bug report at 
+>>>>> https://bugzilla.kernel.org/show_bug.cgi?id=111211
+>>>>>
+>>>>> Please attach complete dmesg logs for both v4.2 and v4.3 to that bug
+>>>>> report.  Also, please attach the complete "lspci -vv" output (as
+>>>>> root).
+>>>>>
+>>>>> Thanks!
+>>>>>
+>>>>> Bjorn
+>>>> -- 
+>>>> To unsubscribe from this list: send the line "unsubscribe 
+>>>> linux-pci" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>>> -- 
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
+
