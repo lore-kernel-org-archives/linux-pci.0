@@ -1,227 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Message-ID: <1452158296.21272.15.camel@pengutronix.de>
-Subject: Re: [PATCH v3] PCI: hosts: mark pcie/pci (msi) irq cascade handler
- as IRQF_NO_THREAD
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Grygorii Strashko <grygorii.strashko@ti.com>
-Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	tony@atomide.com, nsekhar@ti.com,
-	linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org, linux-tegra@vger.kernel.org,
-	linux-sh@vger.kernel.org, linux-omap@vger.kernel.org,
+Received: from mail.kernel.org ([198.145.29.136]:47154 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932437AbcA0Ww4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 27 Jan 2016 17:52:56 -0500
+Date: Wed, 27 Jan 2016 16:52:50 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ray Jui <rjui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Rafal Milecki <zajec5@gmail.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
 	linux-kernel@vger.kernel.org,
-	Kishon Vijay Abraham I <kishon@ti.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Kukjin Kim <kgene@kernel.org>,
-	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Simon Horman <horms@verge.net.au>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	=?ISO-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>
-Date: Thu, 07 Jan 2016 10:18:16 +0100
-In-Reply-To: <1449775100-30877-1-git-send-email-grygorii.strashko@ti.com>
-References: <1449775100-30877-1-git-send-email-grygorii.strashko@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: iproc: Fix BCMA PCIe bus scanning regression
+Message-ID: <20160127225250.GA6379@localhost>
+References: <1453851100-15196-1-git-send-email-rjui@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1453851100-15196-1-git-send-email-rjui@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Donnerstag, den 10.12.2015, 21:18 +0200 schrieb Grygorii Strashko:
-> On -RT and if kernel is booting with "threadirqs" cmd line parameter
-> pcie/pci (msi) irq cascade handlers (like dra7xx_pcie_msi_irq_handler())
-> will be forced threaded and, as result, will generate warnings like:
+On Tue, Jan 26, 2016 at 03:31:40PM -0800, Ray Jui wrote:
+> Commit 943ebae781f5 ("PCI: iproc: Add PAXC interface support") causes
+> regression on EP device detection on BCMA based platforms. This patch
+> fixes the issue by allowing multiple devices to be configured on the
+> same bus, for all PAXB based child buses. In addition, this patch also
+> adds check to prevent non-zero function from being used on bus 0 (root
+> bus).
 > 
-> WARNING: CPU: 1 PID: 82 at kernel/irq/handle.c:150 handle_irq_event_percpu+0x14c/0x174()
-> irq 460 handler irq_default_primary_handler+0x0/0x14 enabled interrupts
-> Backtrace:
->  (warn_slowpath_common) from [<c0043758>] (warn_slowpath_fmt+0x38/0x40)
->  (warn_slowpath_fmt) from [<c0085fd0>] (handle_irq_event_percpu+0x14c/0x174)
->  (handle_irq_event_percpu) from [<c008607c>] (handle_irq_event+0x84/0xb8)
->  (handle_irq_event) from [<c0089240>] (handle_simple_irq+0x90/0x118)
->  (handle_simple_irq) from [<c0085514>] (generic_handle_irq+0x30/0x44)
->  (generic_handle_irq) from [<c034a7d4>] (dra7xx_pcie_msi_irq_handler+0x7c/0x8c)
->  (dra7xx_pcie_msi_irq_handler) from [<c0086f08>] (irq_forced_thread_fn+0x28/0x5c)
->  (irq_forced_thread_fn) from [<c00871dc>] (irq_thread+0x128/0x204)
+> Function 'iproc_pcie_device_is_valid' is now removed with checks
+> folding into 'iproc_pcie_map_cfg_bus' to make them more clear and less
+> error-prone
 > 
-> This happens because all of them invoke generic_handle_irq() from the
-> requsted handler. generic_handle_irq grabs raw_locks and this needs to
-> run in raw-irq context.
-> 
-> This issue was originally reproduced on TI dra7-evem, but, as was
-> identified during dicussion [1], other PCI(e) hosts can also suffer
-> from this issue. So let's fix all them at once and mark pcie/pci (msi)
-> irq cascade handlers IRQF_NO_THREAD explicitly.
-> 
-> [1] https://lkml.org/lkml/2015/11/20/356
-> 
-> Cc: Kishon Vijay Abraham I <kishon@ti.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Jingoo Han <jingoohan1@gmail.com>
-> Cc: Kukjin Kim <kgene@kernel.org>
-> Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>
-> Cc: Richard Zhu <Richard.Zhu@freescale.com>
-> Cc: Lucas Stach <l.stach@pengutronix.de>
-> Cc: Thierry Reding <thierry.reding@gmail.com>
-> Cc: Stephen Warren <swarren@wwwdotorg.org>
-> Cc: Alexandre Courbot <gnurou@gmail.com>
-> Cc: Simon Horman <horms@verge.net.au>
-> Cc: Pratyush Anand <pratyush.anand@gmail.com>
-> Cc: Michal Simek <michal.simek@xilinx.com>
-> Cc: "Sören Brinkmann" <soren.brinkmann@xilinx.com>
-> Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-> Signed-off-by: Grygorii Strashko <grygorii.strashko@ti.com>
+> Reported-by: Rafal Milecki <zajec5@gmail.com>
+> Fixes: 943ebae781f5 ("PCI: iproc: Add PAXC interface support")
+> Signed-off-by: Ray Jui <rjui@broadcom.com>
 
-Sorry this fell through the cracks, so here is my late
+Since this fixes a regression, I applied this to for-linus for v4.5,
+thanks, Ray.
 
-Acked-by: Lucas Stach <l.stach@pengutronix.de>
-
-for the imx6 part.
+I still have one clarification question below.
 
 > ---
-> Changes in v3:
->  - change applied to all affected pci(e) host drivers in drivers/pci/hosts.
->    After some invsetigation I've decided to not touch arch code - it is not easy
->    to identify all places which need to be fixed. 
->    if it's still required - i can send separate patches for 
->    arch/mips/pci/msi-octeon.c and arch/sparc/kernel/pci_msi.c.
-> Links
-> v2: https://lkml.org/lkml/2015/11/20/356
-> v1: https://lkml.org/lkml/2015/11/5/593
-> ref: https://lkml.org/lkml/2015/11/3/660
+>  drivers/pci/host/pcie-iproc.c | 28 +++++++++++-----------------
+>  1 file changed, 11 insertions(+), 17 deletions(-)
 > 
->  drivers/pci/host/pci-dra7xx.c     | 13 ++++++++++++-
->  drivers/pci/host/pci-exynos.c     |  3 ++-
->  drivers/pci/host/pci-imx6.c       |  3 ++-
->  drivers/pci/host/pci-tegra.c      |  2 +-
->  drivers/pci/host/pcie-rcar.c      |  6 ++++--
->  drivers/pci/host/pcie-spear13xx.c |  3 ++-
->  drivers/pci/host/pcie-xilinx.c    |  3 ++-
->  7 files changed, 25 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-> index 8c36880..0415192 100644
-> --- a/drivers/pci/host/pci-dra7xx.c
-> +++ b/drivers/pci/host/pci-dra7xx.c
-> @@ -301,8 +301,19 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
->  		return -EINVAL;
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index 5816bce..67396ab 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -170,20 +170,6 @@ static inline void iproc_pcie_ob_write(struct iproc_pcie *pcie,
+>  	writel(val, pcie->base + offset + (window * 8));
+>  }
+>  
+> -static inline bool iproc_pcie_device_is_valid(struct iproc_pcie *pcie,
+> -					      unsigned int slot,
+> -					      unsigned int fn)
+> -{
+> -	if (slot > 0)
+> -		return false;
+> -
+> -	/* PAXC can only support limited number of functions */
+> -	if (pcie->type == IPROC_PCIE_PAXC && fn >= MAX_NUM_PAXC_PF)
+> -		return false;
+> -
+> -	return true;
+> -}
+> -
+>  /**
+>   * Note access to the configuration registers are protected at the higher layer
+>   * by 'pci_lock' in drivers/pci/access.c
+> @@ -199,11 +185,11 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+>  	u32 val;
+>  	u16 offset;
+>  
+> -	if (!iproc_pcie_device_is_valid(pcie, slot, fn))
+> -		return NULL;
+> -
+>  	/* root complex access */
+>  	if (busno == 0) {
+> +		if (slot > 0 || fn > 0)
+> +			return NULL;
+> +
+
+This looks good and makes sense since config access to root bus is
+fundamentally different from other access.
+
+>  		iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_IND_ADDR,
+>  				     where & CFG_IND_ADDR_MASK);
+>  		offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_IND_DATA);
+> @@ -213,6 +199,14 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+>  			return (pcie->base + offset);
 >  	}
 >  
 > +	/*
-> +	 * Mark dra7xx_pcie_msi IRQ as IRQF_NO_THREAD
-> +	 * On -RT and if kernel is booting with "threadirqs" cmd line parameter
-> +	 * the dra7xx_pcie_msi_irq_handler() will be forced threaded but,
-> +	 * in the same time, it's IRQ dispatcher and calls generic_handle_irq(),
-> +	 * which, in turn, will be resolved to handle_simple_irq() call.
-> +	 * The handle_simple_irq() expected to be called with IRQ disabled, as
-> +	 * result kernle will display warning:
-> +	 * "irq XXX handler YYY+0x0/0x14 enabled interrupts".
+> +	 * PAXC is connected to internally emulated EP within the SoC. It
+> +	 * allows only one device and supports limited number of functions
 > +	 */
->  	ret = devm_request_irq(&pdev->dev, pp->irq,
-> -			       dra7xx_pcie_msi_irq_handler, IRQF_SHARED,
-> +			       dra7xx_pcie_msi_irq_handler,
-> +			       IRQF_SHARED | IRQF_NO_THREAD,
->  			       "dra7-pcie-msi",	pp);
->  	if (ret) {
->  		dev_err(&pdev->dev, "failed to request irq\n");
-> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-> index 01095e1..d997d22 100644
-> --- a/drivers/pci/host/pci-exynos.c
-> +++ b/drivers/pci/host/pci-exynos.c
-> @@ -522,7 +522,8 @@ static int __init exynos_add_pcie_port(struct pcie_port *pp,
->  
->  		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
->  					exynos_pcie_msi_irq_handler,
-> -					IRQF_SHARED, "exynos-pcie", pp);
-> +					IRQF_SHARED | IRQF_NO_THREAD,
-> +					"exynos-pcie", pp);
->  		if (ret) {
->  			dev_err(&pdev->dev, "failed to request msi irq\n");
->  			return ret;
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 22e8224..9ce7cd1 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -537,7 +537,8 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
->  
->  		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
->  				       imx6_pcie_msi_handler,
-> -				       IRQF_SHARED, "mx6-pcie-msi", pp);
-> +				       IRQF_SHARED | IRQF_NO_THREAD,
-> +				       "mx6-pcie-msi", pp);
->  		if (ret) {
->  			dev_err(&pdev->dev, "failed to request MSI irq\n");
->  			return ret;
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 3018ae5..3032311 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -1288,7 +1288,7 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
->  
->  	msi->irq = err;
->  
-> -	err = request_irq(msi->irq, tegra_pcie_msi_irq, 0,
-> +	err = request_irq(msi->irq, tegra_pcie_msi_irq, IRQF_NO_THREAD,
->  			  tegra_msi_irq_chip.name, pcie);
->  	if (err < 0) {
->  		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index f4fa6c5..414c336 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -720,14 +720,16 @@ static int rcar_pcie_enable_msi(struct rcar_pcie *pcie)
->  
->  	/* Two irqs are for MSI, but they are also used for non-MSI irqs */
->  	err = devm_request_irq(&pdev->dev, msi->irq1, rcar_pcie_msi_irq,
-> -			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
-> +			       IRQF_SHARED | IRQF_NO_THREAD,
-> +			       rcar_msi_irq_chip.name, pcie);
->  	if (err < 0) {
->  		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
->  		goto err;
->  	}
->  
->  	err = devm_request_irq(&pdev->dev, msi->irq2, rcar_pcie_msi_irq,
-> -			       IRQF_SHARED, rcar_msi_irq_chip.name, pcie);
-> +			       IRQF_SHARED | IRQF_NO_THREAD,
-> +			       rcar_msi_irq_chip.name, pcie);
->  	if (err < 0) {
->  		dev_err(&pdev->dev, "failed to request IRQ: %d\n", err);
->  		goto err;
-> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-> index b95b756..a6cd823 100644
-> --- a/drivers/pci/host/pcie-spear13xx.c
-> +++ b/drivers/pci/host/pcie-spear13xx.c
-> @@ -279,7 +279,8 @@ static int spear13xx_add_pcie_port(struct pcie_port *pp,
->  		return -ENODEV;
->  	}
->  	ret = devm_request_irq(dev, pp->irq, spear13xx_pcie_irq_handler,
-> -			       IRQF_SHARED, "spear1340-pcie", pp);
-> +			       IRQF_SHARED | IRQF_NO_THREAD,
-> +			       "spear1340-pcie", pp);
->  	if (ret) {
->  		dev_err(dev, "failed to request irq %d\n", pp->irq);
->  		return ret;
-> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-> index 3c7a0d5..4cfa463 100644
-> --- a/drivers/pci/host/pcie-xilinx.c
-> +++ b/drivers/pci/host/pcie-xilinx.c
-> @@ -781,7 +781,8 @@ static int xilinx_pcie_parse_dt(struct xilinx_pcie_port *port)
->  
->  	port->irq = irq_of_parse_and_map(node, 0);
->  	err = devm_request_irq(dev, port->irq, xilinx_pcie_intr_handler,
-> -			       IRQF_SHARED, "xilinx-pcie", port);
-> +			       IRQF_SHARED | IRQF_NO_THREAD,
-> +			       "xilinx-pcie", port);
->  	if (err) {
->  		dev_err(dev, "unable to request irq %d\n", port->irq);
->  		return err;
+> +	if (pcie->type == IPROC_PCIE_PAXC)
+> +		if (slot > 0 || fn >= MAX_NUM_PAXC_PF)
+> +			return NULL;
 
--- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
+Is this really necessary?  I assume 00:00.0 is a Root Port leading to
+bus 01, and 01:00.0, 01:00.1, 01:00.2, and 01:00.3 are the functions
+of the internal EP.  So this test prevents us from issuing a config
+request to devices like 01:00.4.
 
+I would assume the Root Port is standard and would handle a config
+request for 01:00.4 correctly, i.e., convert the type 1 request to
+type 0 (since it targets the Root Port's secondary bus), and forward
+it to the link.
+
+The endpoint should be responsible for handling it as an Unsupported
+Request, since it addresses an unimplemented function.  But maybe this
+embedded EP doesn't do that correctly?
+
+Also, assuming we *do* need this PAXC testing, do you want to test for
+"busno == 1" as well?  The PCI core shouldn't try to access bus 2
+unless there's a bridge from bus 1 to bus 2, but a user could use
+things like setpci to issue random config requests.
+
+> +
+>  	/* EP device access */
+>  	val = (busno << CFG_ADDR_BUS_NUM_SHIFT) |
+>  		(slot << CFG_ADDR_DEV_NUM_SHIFT) |
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
