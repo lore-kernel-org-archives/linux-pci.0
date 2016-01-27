@@ -1,83 +1,136 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:8775 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750838AbcAUWRQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 21 Jan 2016 17:17:16 -0500
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: linux-pci@vger.kernel.org, mj@ucw.cz, bhelgaas@google.com,
-	alex.williamson@redhat.com
-Cc: sean.stalley@intel.com, david.daney@cavium.com
-Subject: [PATCH 1/2] pci: Identify Enhanced Allocation (EA) BAR Equivalent resources
-Date: Thu, 21 Jan 2016 14:13:29 -0800
-Message-Id: <1453414410-27072-2-git-send-email-sean.stalley@intel.com>
-In-Reply-To: <1453414410-27072-1-git-send-email-sean.stalley@intel.com>
-References: <1453414410-27072-1-git-send-email-sean.stalley@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 27 Jan 2016 10:13:36 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Chen Fan <chen.fan.fnst@cn.fujitsu.com>,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	rjw@rjwysocki.net, lenb@kernel.org, izumi.taku@jp.fujitsu.com,
+	wency@cn.fujitsu.com, caoj.fnst@cn.fujitsu.com,
+	ddaney.cavm@gmail.com, okaya@codeaurora.org, bhelgaas@google.com,
+	jiang.liu@linux.intel.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] pci: fix unavailable irq number 255 reported by
+ BIOS
+In-Reply-To: <20160127002505.GA3329@localhost>
+Message-ID: <alpine.DEB.2.11.1601270941190.3886@nanos>
+References: <1453705178-27389-1-git-send-email-chen.fan.fnst@cn.fujitsu.com> <20160125205803.GA10272@localhost> <alpine.DEB.2.11.1601260825510.3886@nanos> <20160126152221.GB9279@localhost> <alpine.DEB.2.11.1601261628450.3886@nanos>
+ <20160127002505.GA3329@localhost>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Alex Williamson <alex.williamson@redhat.com>
+On Tue, 26 Jan 2016, Bjorn Helgaas wrote:
+> On Tue, Jan 26, 2016 at 04:48:25PM +0100, Thomas Gleixner wrote:
+> > Right. So we could certainly do something like this INVALID_IRQ thingy, but
+> > that looks a bit weird. What would request_irq() return?
+> > 
+> > If it returns success, then drivers might make the wrong decision. If it
+> > returns an error code, then the i801 one works, but we might have to fix
+> > others anyway.
+> 
+> I was thinking request_irq() could return -EINVAL if the caller passed
+> INVALID_IRQ.  That should tell drivers that this interrupt won't work.
+> 
+> We'd be making request_irq() return -EINVAL in some cases where it
+> currently returns success.  But even though it returns success today,
+> I don't think the driver is getting interrupts, because the wire isn't
+> connected.
 
-We've done a pretty good job of abstracting EA from drivers, but there
-are some properties of BAR Equivalent resources that don't really jive
-with traditional PCI BARs.  In particular, natural alignment is only
-encouraged, not required.
-
-Why does this matter?  There are drivers like vfio-pci that will
-happily gobble up the EA abstraction that's been implemented and
-expose a device using EA to userspace as if those resources are
-traditional BARs.  Pretty cool.  The vfio API is bus agnostic, so it
-doesn't care about alignment.  The problem comes with PCI config space
-emulation where we don't let userspace manipulate the BAR value, but
-we do emulate BAR sizing.  The abstraction kind of falls apart if
-userspace gets garbage when they try to size what appears to be a
-traditional BAR, but is actually a BAR equivalent.
-
-We could simply round up the size in vfio to make it naturally
-aligned, but then we're imposing artificial sizes to the user and we
-have the discontinuity that BAR size emulation and vfio region size
-reporting don't agree on the size.  I think what we want to do is
-expose EA to the user, reporting traditional BARs with BEIs as
-zero-sized and providing additional regions for the user to access
-each EA region, whether it has a BEI or not.
-
-To facilitate that, a flag indicating whether a PCI resource is a
-traditional BAR or BAR equivalent seems much nicer than attempting
-to size the BAR ourselves or deducing it through the EA capability.
-
-Thoughts?
-
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/pci.c      | 2 +-
- include/linux/ioport.h | 2 ++
- 2 files changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index d1a7105..8ff678c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2229,7 +2229,7 @@ void pci_pm_init(struct pci_dev *dev)
+Correct. What I meant is that the i801 driver can handle the -EINVAL return
+from request_irq() today, but other drivers don't. I agree that we need to fix
+them anyway and a failure to request the interrupt is better than a silent 'no
+interrupts delivered' issue.
  
- static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
+Though instead of returning -EINVAL I prefer an explicit error code for this
+case. That way a driver can distinguish between the 'not connected' case and
+other failure modes. Something like the patch below should work.
+
+Thanks,
+
+	tglx
+
+8<------------------
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -387,6 +387,22 @@ static inline int acpi_isa_register_gsi(
+ }
+ #endif
+ 
++static inline bool acpi_pci_irq_valid(struc pci_dev *dev)
++{
++#ifdef CONFIG_X86
++	/*
++	 * On x86 irq line 0xff means "unknown" or "no connection" (PCI 3.0,
++	 * Section 6.2.4, footnote on page 223).
++	 */
++	if (dev->irq == 0xff) {
++		dev->irq = IRQ_NOTCONNECTED;
++		dev_warn(&dev->dev, "PCI INT not connected\n");
++		return false;
++	}
++#endif
++	return true;
++}
++
+ int acpi_pci_irq_enable(struct pci_dev *dev)
  {
--	unsigned long flags = IORESOURCE_PCI_FIXED;
-+	unsigned long flags = IORESOURCE_PCI_FIXED | IORESOURCE_PCI_EA_BEI;
+ 	struct acpi_prt_entry *entry;
+@@ -409,6 +425,9 @@ int acpi_pci_irq_enable(struct pci_dev *
+ 	if (pci_has_managed_irq(dev))
+ 		return 0;
  
- 	switch (prop) {
- 	case PCI_EA_P_MEM:
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 24bea08..5acc194 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -105,6 +105,8 @@ struct resource {
- /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
- #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move resource */
++	if (!acpi_pci_irq_valid(dev))
++		return 0;
++
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+ 	if (!entry) {
+ 		/*
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -125,6 +125,16 @@ struct irqaction {
  
-+/* PCI Enhanced Allocation defined BAR equivalent resource */
-+#define IORESOURCE_PCI_EA_BEI		(1<<5)
+ extern irqreturn_t no_action(int cpl, void *dev_id);
  
- /* helpers to define resources */
- #define DEFINE_RES_NAMED(_start, _size, _name, _flags)			\
--- 
-1.9.1
++/*
++ * If a (PCI) device interrupt is not connected we set dev->irq to
++ * IRQ_NOTCONNECTED. This causes request_irq() to fail with -ENOTCONN, so we
++ * can distingiush that case from other error returns.
++ *
++ * 0x80000000 is guaranteed to be outside the available range of interrupts
++ * and easy to distinguish from other possible incorrect values.
++ */
++#define IRQ_NOTCONNECTED	(1U << 31)
++
+ extern int __must_check
+ request_threaded_irq(unsigned int irq, irq_handler_t handler,
+ 		     irq_handler_t thread_fn,
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -1609,6 +1609,9 @@ int request_threaded_irq(unsigned int ir
+ 	struct irq_desc *desc;
+ 	int retval;
+ 
++	if (irq == IRQ_NOTCONNECTED)
++		return -ENOTCONN;
++
+ 	/*
+ 	 * Sanity-check: shared interrupts must pass in a real dev-ID,
+ 	 * otherwise we'll have trouble later trying to figure out
+@@ -1699,9 +1702,13 @@ EXPORT_SYMBOL(request_threaded_irq);
+ int request_any_context_irq(unsigned int irq, irq_handler_t handler,
+ 			    unsigned long flags, const char *name, void *dev_id)
+ {
+-	struct irq_desc *desc = irq_to_desc(irq);
++	struct irq_desc *desc;
+ 	int ret;
+ 
++	if (irq == IRQ_NOTCONNECTED)
++		return -ENOTCONN;
++
++	desc = irq_to_desc(irq);
+ 	if (!desc)
+ 		return -EINVAL;
+ 
+
+
 
