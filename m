@@ -1,68 +1,148 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
- hostbridge init based on ACPI
-To: Mark Salter <msalter@redhat.com>, Tomasz Nowicki <tn@semihalf.com>,
-	bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
- <1452785393.28109.16.camel@redhat.com>
-Cc: jchandra@broadcom.com, linaro-acpi@lists.linaro.org,
-	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, robert.richter@caviumnetworks.com,
-	Suravee.Suthikulpanit@amd.com, jcm@redhat.com,
-	wangyijing@huawei.com, tglx@linutronix.de, mw@semihalf.com,
-	linux-arm-kernel@lists.infradead.org
-From: Jeremy Linton <jeremy.linton@arm.com>
-Message-ID: <56982664.5040009@arm.com>
-Date: Thu, 14 Jan 2016 16:51:16 -0600
+Date: Wed, 27 Jan 2016 16:32:38 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Chen Fan <chen.fan.fnst@cn.fujitsu.com>,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	rjw@rjwysocki.net, lenb@kernel.org, izumi.taku@jp.fujitsu.com,
+	wency@cn.fujitsu.com, caoj.fnst@cn.fujitsu.com,
+	ddaney.cavm@gmail.com, okaya@codeaurora.org, bhelgaas@google.com,
+	jiang.liu@linux.intel.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] pci: fix unavailable irq number 255 reported by BIOS
+Message-ID: <20160127223237.GA6190@localhost>
+References: <1453705178-27389-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>
+ <20160125205803.GA10272@localhost>
+ <alpine.DEB.2.11.1601260825510.3886@nanos>
+ <20160126152221.GB9279@localhost>
+ <alpine.DEB.2.11.1601261628450.3886@nanos>
+ <20160127002505.GA3329@localhost>
+ <alpine.DEB.2.11.1601270941190.3886@nanos>
 MIME-Version: 1.0
-In-Reply-To: <1452785393.28109.16.camel@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.11.1601270941190.3886@nanos>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/14/2016 09:29 AM, Mark Salter wrote:
-> IO resources on Mustang get disabled unless I do:
->
-> @@ -126,9 +126,10 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
->          if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
->                  res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
->
-> +#if 0
->          if (res->end >= 0x10003)
->                  res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
-> -
+On Wed, Jan 27, 2016 at 10:13:36AM +0100, Thomas Gleixner wrote:
+> On Tue, 26 Jan 2016, Bjorn Helgaas wrote:
+> > On Tue, Jan 26, 2016 at 04:48:25PM +0100, Thomas Gleixner wrote:
+> > > Right. So we could certainly do something like this INVALID_IRQ thingy, but
+> > > that looks a bit weird. What would request_irq() return?
+> > > 
+> > > If it returns success, then drivers might make the wrong decision. If it
+> > > returns an error code, then the i801 one works, but we might have to fix
+> > > others anyway.
+> > 
+> > I was thinking request_irq() could return -EINVAL if the caller passed
+> > INVALID_IRQ.  That should tell drivers that this interrupt won't work.
+> > 
+> > We'd be making request_irq() return -EINVAL in some cases where it
+> > currently returns success.  But even though it returns success today,
+> > I don't think the driver is getting interrupts, because the wire isn't
+> > connected.
+> 
+> Correct. What I meant is that the i801 driver can handle the -EINVAL return
+> from request_irq() today, but other drivers don't. I agree that we need to fix
+> them anyway and a failure to request the interrupt is better than a silent 'no
+> interrupts delivered' issue.
+>  
+> Though instead of returning -EINVAL I prefer an explicit error code for this
+> case. That way a driver can distinguish between the 'not connected' case and
+> other failure modes. Something like the patch below should work.
+
+This patch looks great to me, thanks for all your help!
+
+Chen, do you want to put all this together as formal patches with
+changelogs and post to the mailing lists?
+
+Bjorn
+
+> 8<------------------
+> --- a/drivers/acpi/pci_irq.c
+> +++ b/drivers/acpi/pci_irq.c
+> @@ -387,6 +387,22 @@ static inline int acpi_isa_register_gsi(
+>  }
+>  #endif
+>  
+> +static inline bool acpi_pci_irq_valid(struc pci_dev *dev)
+> +{
+> +#ifdef CONFIG_X86
+> +	/*
+> +	 * On x86 irq line 0xff means "unknown" or "no connection" (PCI 3.0,
+> +	 * Section 6.2.4, footnote on page 223).
+> +	 */
+> +	if (dev->irq == 0xff) {
+> +		dev->irq = IRQ_NOTCONNECTED;
+> +		dev_warn(&dev->dev, "PCI INT not connected\n");
+> +		return false;
+> +	}
 > +#endif
->
-> res->end is way beyond 0x10003 on Mustang:
->
->    pci_bus 0000:00: root bus resource [io  0x0000-0xffff window] (bus address [0x10000000-0x1000ffff])
-
-Juno is throwing "No Space" errors too with the following acpi definition.
-
-DWordIo ( // IO window
-	ResourceProducer,
-	MinFixed,
-	MaxFixed,
-	PosDecode,
-	EntireRange,
-	0x00000000,// Granularity
-	0x00000000,// Min Base Address
-	0x007fffff,// Max Base Address
-	0x5f800000, // Translate
-	0x00800000, // Length
-	,
-	,
-	,
-	TypeTranslation
-)
-
-Although, my reading of the ACPI dword section is suspect...
-
-
-
-
-
+> +	return true;
+> +}
+> +
+>  int acpi_pci_irq_enable(struct pci_dev *dev)
+>  {
+>  	struct acpi_prt_entry *entry;
+> @@ -409,6 +425,9 @@ int acpi_pci_irq_enable(struct pci_dev *
+>  	if (pci_has_managed_irq(dev))
+>  		return 0;
+>  
+> +	if (!acpi_pci_irq_valid(dev))
+> +		return 0;
+> +
+>  	entry = acpi_pci_irq_lookup(dev, pin);
+>  	if (!entry) {
+>  		/*
+> --- a/include/linux/interrupt.h
+> +++ b/include/linux/interrupt.h
+> @@ -125,6 +125,16 @@ struct irqaction {
+>  
+>  extern irqreturn_t no_action(int cpl, void *dev_id);
+>  
+> +/*
+> + * If a (PCI) device interrupt is not connected we set dev->irq to
+> + * IRQ_NOTCONNECTED. This causes request_irq() to fail with -ENOTCONN, so we
+> + * can distingiush that case from other error returns.
+> + *
+> + * 0x80000000 is guaranteed to be outside the available range of interrupts
+> + * and easy to distinguish from other possible incorrect values.
+> + */
+> +#define IRQ_NOTCONNECTED	(1U << 31)
+> +
+>  extern int __must_check
+>  request_threaded_irq(unsigned int irq, irq_handler_t handler,
+>  		     irq_handler_t thread_fn,
+> --- a/kernel/irq/manage.c
+> +++ b/kernel/irq/manage.c
+> @@ -1609,6 +1609,9 @@ int request_threaded_irq(unsigned int ir
+>  	struct irq_desc *desc;
+>  	int retval;
+>  
+> +	if (irq == IRQ_NOTCONNECTED)
+> +		return -ENOTCONN;
+> +
+>  	/*
+>  	 * Sanity-check: shared interrupts must pass in a real dev-ID,
+>  	 * otherwise we'll have trouble later trying to figure out
+> @@ -1699,9 +1702,13 @@ EXPORT_SYMBOL(request_threaded_irq);
+>  int request_any_context_irq(unsigned int irq, irq_handler_t handler,
+>  			    unsigned long flags, const char *name, void *dev_id)
+>  {
+> -	struct irq_desc *desc = irq_to_desc(irq);
+> +	struct irq_desc *desc;
+>  	int ret;
+>  
+> +	if (irq == IRQ_NOTCONNECTED)
+> +		return -ENOTCONN;
+> +
+> +	desc = irq_to_desc(irq);
+>  	if (!desc)
+>  		return -EINVAL;
+>  
+> 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
