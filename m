@@ -1,67 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:36339 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754668AbcASASU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jan 2016 19:18:20 -0500
-Date: Tue, 19 Jan 2016 09:18:16 +0900
-From: Simon Horman <horms@verge.net.au>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-renesas-soc@vger.kernel.org,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	Linux Media Mailing List <linux-media@vger.kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	Michal Simek <michals@xilinx.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"paul.burton@imgtec.com" <paul.burton@imgtec.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"wangyijing@huawei.com" <wangyijing@huawei.com>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Magnus Damm <magnus.damm@gmail.com>
-Subject: Re: [PATCH] MAINTAINERS: Update mailing list for Renesas SoC
- Development
-Message-ID: <20160119001815.GA14224@verge.net.au>
-References: <1453079073-30937-1-git-send-email-horms+renesas@verge.net.au>
- <CAMuHMdXF8QnKsLOYFnT7Rje5G9_7Xr0NesO2SKEkWSivKQYkbA@mail.gmail.com>
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH V2 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge
+ driver to  work on both  Zynq and Microblaze
+Date: Wed, 27 Jan 2016 14:33:45 +0000
+Message-ID: <8520D5D51A55D047800579B09414719825873DA8@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
+ <1452620173-4905-4-git-send-email-bharatku@xilinx.com>
+ <4734542.KZZp0TeeeM@wuerfel>
+In-Reply-To: <4734542.KZZp0TeeeM@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMuHMdXF8QnKsLOYFnT7Rje5G9_7Xr0NesO2SKEkWSivKQYkbA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 18, 2016 at 09:09:29AM +0100, Geert Uytterhoeven wrote:
-> CC linux-arm-kernel
+> Subject: Re: [PATCH V2 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge driver
+> to work on both Zynq and Microblaze
 > 
-> On Mon, Jan 18, 2016 at 2:04 AM, Simon Horman
-> <horms+renesas@verge.net.au> wrote:
-> > Update the mailing list used for development of support for
-> > Renesas SoCs and related drivers.
+> On Tuesday 12 January 2016 23:06:11 Bharat Kumar Gogada wrote:
+> > Modifying Xilinx AXI PCIe Host Bridge Soft IP driver to work on both
+> > Zynq and Microblaze Architectures.
+> > With these modifications drivers/pci/host/pcie-xilinx.c, will work on
+> > both Zynq and Microblaze Architectures.
 > >
-> > Up until now the linux-sh mailing list has been used, however,
-> > Renesas SoCs are now much wider than the SH architecture and there
-> > is some desire from some for the linux-sh list to refocus on
-> > discussion of the work on the SH architecture.
-> >
-> > Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-> > Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-> > Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> > Cc: Magnus Damm <magnus.damm@gmail.com>
-> > Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
 > 
-> Acked-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> I think this patch should be split into three, as you are doing three unrelated
+> things here.
 > 
+Agreed, will send as different patches in next series.
 > > ---
-> > * This patch applies on top of Linus's tree where currently the head commit
-> >   is 984065055e6e ("Merge branch 'drm-next' of
-> >   git://people.freedesktop.org/~airlied/linux")
+> > --- a/drivers/pci/host/pcie-xilinx.c
+> > +++ b/drivers/pci/host/pcie-xilinx.c
+> > @@ -92,7 +92,12 @@
+> >  #define ECAM_DEV_NUM_SHIFT		12
 > >
-> >   This has been used as a base instead of v4.4 so that it is based on the
-> >   following two commits which affect it:
-> >   - 1a4ca6dd3dc8 ("MAINTAINERS: Add co-maintainer for Renesas Pin Controllers")
-> >   - 3e46c3973cba ("MAINTAINERS: add Renesas usb2 phy driver")
+> >  /* Number of MSI IRQs */
+> > -#define XILINX_NUM_MSI_IRQS		128
+> > +#define XILINX_NUM_MSI_IRQS	128
+> > +#ifdef CONFIG_ARM
+> > +#define TOT_NR_IRQS		XILINX_NUM_MSI_IRQS
+> > +#else
+> > +#define TOT_NR_IRQS		(NR_IRQS + XILINX_NUM_MSI_IRQS)
+> > +#endif
 > 
-> I assume you'll send an update for the "ARM/RENESAS ARM64 ARCHITECTURE"
-> section as soon as that has landed in mainline?
+> Something looks wrong here in the microblaze variant. What does NR_IRQS
+> have to do with it?
+> 
+> > @@ -238,15 +243,20 @@ static void xilinx_pcie_destroy_msi(unsigned int
+> irq)
+> >   */
+> >  static int xilinx_pcie_assign_msi(struct xilinx_pcie_port *port)  {
+> > +	int irq;
+> >  	int pos;
+> >
+> >  	pos = find_first_zero_bit(msi_irq_in_use, XILINX_NUM_MSI_IRQS);
+> > -	if (pos < XILINX_NUM_MSI_IRQS)
+> > +	irq = pos;
+> > +#ifdef CONFIG_MICROBLAZE
+> > +	irq = XILINX_NUM_MSI_IRQS + pos;
+> > +#endif
+> 
+> 
+> 	if (IS_ENABLED(CONFIG_MICROBLAZE))
+> 		irq = XILINX_NUM_MSI_IRQS + pos;
+> 
+Agreed.
+> > @@ -705,7 +715,9 @@ static int xilinx_pcie_probe(struct
+> > platform_device *pdev)  #endif
+> >  	pci_scan_child_bus(bus);
+> >  	pci_assign_unassigned_bus_resources(bus);
+> > +#ifdef CONFIG_ARM
+> >  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+> > +#endif
+> >  	pci_bus_add_devices(bus);
+> >  	platform_set_drvdata(pdev, port);
+> 
+> Here it looks like microblaze gets it right. I'm not sure why we still need the
+> pci_fixup_irqs() on ARM, but my feeling is that this should be fixed in
+> common code.
+In arm pci_fixup_irqs is called by pci_common_init_dev (arch/arm/kernel/bios32.c), since this API is removed now, I was calling it separately.
 
-Yes, that is my plan.
+Bharat
