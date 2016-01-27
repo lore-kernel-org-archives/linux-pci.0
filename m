@@ -1,31 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from xspv0103.northgrum.com ([134.223.120.78]:44992 "EHLO
-	xspv0103.northgrum.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932533AbcASTgY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2016 14:36:24 -0500
-From: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
-To: Bruno Santos <bsantos@ipfn.ist.utl.pt>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v0 00/13] PCI: Static Enumeration
-Date: Tue, 19 Jan 2016 19:23:43 +0000
-Message-ID: <a232674379bb4ae1aeeb3c40aa1972c3@XCGVAG27.northgrum.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:44544 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932311AbcA0O33 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jan 2016 09:29:29 -0500
+Subject: Re: [PATCH v6 1/2] PCI support added to ARC
+To: Vineet Gupta <Vineet.Gupta1@synopsys.com>,
+	"helgaas@kernel.org" <helgaas@kernel.org>
+References: <cover.1452611234.git.jpinto@synopsys.com>
+ <24c9b782dfade515bbed20ce75d85200a00a2e66.1452611234.git.jpinto@synopsys.com>
+ <C2D7FE5348E1B147BCA15975FBA23075F4E84E0E@us01wembx1.internal.synopsys.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-snps-arc@lists.infradead.org"
+	<linux-snps-arc@lists.infradead.org>,
+	"CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>,
+	"Alexey.Brodkin@synopsys.com" <Alexey.Brodkin@synopsys.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	"arnd@arndb.de" <arnd@arndb.de>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <56A8D441.8080608@synopsys.com>
+Date: Wed, 27 Jan 2016 14:29:21 +0000
 MIME-Version: 1.0
+In-Reply-To: <C2D7FE5348E1B147BCA15975FBA23075F4E84E0E@us01wembx1.internal.synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> owner@vger.kernel.org] On Behalf Of Bruno Santos
-> Sent: Tuesday, January 19, 2016 13:31
-> To: linux-pci@vger.kernel.org
-> Subject: Re: [PATCH v0 00/13] PCI: Static Enumeration
-> 
-> 
-> 
-> Hello Jason,
-> Where I can get the source code and examples to test in RHEL 6.5?
+Hi Bjorn,
+Could you please tell me what are the perspectives of pulling this patch set to
+mainline?
 
-The source code to my enumeration changes can be found in the mailing list archives. The original patches are at http://www.spinics.net/lists/linux-pci/msg41689.html, the second (hotplug-based) version is at http://www.spinics.net/lists/linux-pci/msg44721.html.
+On 1/14/2016 11:11 AM, Vineet Gupta wrote:
+> On Thursday 14 January 2016 04:34 PM, Joao Pinto wrote:
+>> This patch adds PCI support to ARC and updates drivers/pci Makefile
+>> enabling the ARC arch to use the generic PCI setup functions.
+>>
+>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> 
+> Acked-by: Vineet Gupta <vgupta@synopsys.com>
+> 
+> @Bjorn are you happy with the driver bits.
+> Although ARC support is independent of driver, and I can pick it up separately,
+> it would be better if you took it along with the driver. I don't see potential
+> for any conflicts.
+> 
+> Thx,
+> -Vineet
 
-You will need to recompile your kernel with the patches applied. However, RHEL 6.5 is based upon the 2.6.32 kernel, and my work is based upon 4.0+ kernels. It is unlikely that my changes will work on such an old kernel version.
-
+Thanks,
+Joao
