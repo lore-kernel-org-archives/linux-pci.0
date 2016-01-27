@@ -1,194 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0064.outbound.protection.outlook.com ([104.47.36.64]:40304
+	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932494AbcA0Ole convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Jan 2016 09:41:34 -0500
 From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <bhelgaas@google.com>, <michals@xilinx.com>,
-	<lorenzo.pieralisi@arm.com>, <yinghai@kernel.org>,
-	<wangyijing@huawei.com>, <robh@kernel.org>,
-	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
-	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
-	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
-	<galak@codeaurora.org>
-CC: <devicetree@vger.kernel.org>,
+To: Arnd Bergmann <arnd@arndb.de>, Michal Simek <michals@xilinx.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"paul.burton@imgtec.com" <paul.burton@imgtec.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"wangyijing@huawei.com" <wangyijing@huawei.com>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: [PATCH 1/5] PCI: xilinx: Removing xilinx_pcie_parse_and_add_res function
-Date: Tue, 12 Jan 2016 10:56:35 +0530
-Message-ID: <1452576399-1513-2-git-send-email-bharatku@xilinx.com>
-In-Reply-To: <1452576399-1513-1-git-send-email-bharatku@xilinx.com>
-References: <1452576399-1513-1-git-send-email-bharatku@xilinx.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH V2 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge
+ driver to work on both Zynq and Microblaze
+Date: Wed, 27 Jan 2016 14:41:27 +0000
+Message-ID: <8520D5D51A55D047800579B09414719825873DCF@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
+ <4734542.KZZp0TeeeM@wuerfel> <56A74370.4090000@xilinx.com>
+ <2270955.TlqP7HlQk4@wuerfel>
+In-Reply-To: <2270955.TlqP7HlQk4@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Removing xilinx_pcie_parse_and_add_res function replacing with
-of_pci_get_host_bridge_resources API.
-
-Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
----
-Changes:
-Removing xilinx_pcie_parse_and_add_res function and replacing it
-with of_pci_get_host_bridge_resources kernel API which does the same.
----
- drivers/pci/host/pcie-xilinx.c | 108 ++---------------------------------------
- 1 file changed, 5 insertions(+), 103 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 3c7a0d5..588e568 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -94,8 +94,6 @@
- /* Number of MSI IRQs */
- #define XILINX_NUM_MSI_IRQS		128
- 
--/* Number of Memory Resources */
--#define XILINX_MAX_NUM_RESOURCES	3
- 
- /**
-  * struct xilinx_pcie_port - PCIe port information
-@@ -105,7 +103,6 @@
-  * @root_busno: Root Bus number
-  * @dev: Device pointer
-  * @irq_domain: IRQ domain pointer
-- * @bus_range: Bus range
-  * @resources: Bus Resources
-  */
- struct xilinx_pcie_port {
-@@ -115,7 +112,6 @@ struct xilinx_pcie_port {
- 	u8 root_busno;
- 	struct device *dev;
- 	struct irq_domain *irq_domain;
--	struct resource bus_range;
- 	struct list_head resources;
- };
- 
-@@ -658,98 +654,6 @@ static struct pci_bus *xilinx_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- 	return bus;
- }
- 
--/**
-- * xilinx_pcie_parse_and_add_res - Add resources by parsing ranges
-- * @port: PCIe port information
-- *
-- * Return: '0' on success and error value on failure
-- */
--static int xilinx_pcie_parse_and_add_res(struct xilinx_pcie_port *port)
--{
--	struct device *dev = port->dev;
--	struct device_node *node = dev->of_node;
--	struct resource *mem;
--	resource_size_t offset;
--	struct of_pci_range_parser parser;
--	struct of_pci_range range;
--	struct resource_entry *win;
--	int err = 0, mem_resno = 0;
--
--	/* Get the ranges */
--	if (of_pci_range_parser_init(&parser, node)) {
--		dev_err(dev, "missing \"ranges\" property\n");
--		return -EINVAL;
--	}
--
--	/* Parse the ranges and add the resources found to the list */
--	for_each_of_pci_range(&parser, &range) {
--
--		if (mem_resno >= XILINX_MAX_NUM_RESOURCES) {
--			dev_err(dev, "Maximum memory resources exceeded\n");
--			return -EINVAL;
--		}
--
--		mem = devm_kmalloc(dev, sizeof(*mem), GFP_KERNEL);
--		if (!mem) {
--			err = -ENOMEM;
--			goto free_resources;
--		}
--
--		of_pci_range_to_resource(&range, node, mem);
--
--		switch (mem->flags & IORESOURCE_TYPE_BITS) {
--		case IORESOURCE_MEM:
--			offset = range.cpu_addr - range.pci_addr;
--			mem_resno++;
--			break;
--		default:
--			err = -EINVAL;
--			break;
--		}
--
--		if (err < 0) {
--			dev_warn(dev, "Invalid resource found %pR\n", mem);
--			continue;
--		}
--
--		err = request_resource(&iomem_resource, mem);
--		if (err)
--			goto free_resources;
--
--		pci_add_resource_offset(&port->resources, mem, offset);
--	}
--
--	/* Get the bus range */
--	if (of_pci_parse_bus_range(node, &port->bus_range)) {
--		u32 val = pcie_read(port, XILINX_PCIE_REG_BIR);
--		u8 last;
--
--		last = (val & XILINX_PCIE_BIR_ECAM_SZ_MASK) >>
--			XILINX_PCIE_BIR_ECAM_SZ_SHIFT;
--
--		port->bus_range = (struct resource) {
--			.name	= node->name,
--			.start	= 0,
--			.end	= last,
--			.flags	= IORESOURCE_BUS,
--		};
--	}
--
--	/* Register bus resource */
--	pci_add_resource(&port->resources, &port->bus_range);
--
--	return 0;
--
--free_resources:
--	release_child_resources(&iomem_resource);
--	resource_list_for_each_entry(win, &port->resources)
--		devm_kfree(dev, win->res);
--	pci_free_resource_list(&port->resources);
--
--	return err;
--}
--
--/**
-  * xilinx_pcie_parse_dt - Parse Device tree
-  * @port: PCIe port information
-  *
-@@ -802,6 +706,8 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
- 	struct hw_pci hw;
- 	struct device *dev = &pdev->dev;
- 	int err;
-+	resource_size_t iobase = 0;
-+	LIST_HEAD(res);
- 
- 	if (!dev->of_node)
- 		return -ENODEV;
-@@ -826,14 +732,10 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
- 		return err;
- 	}
- 
--	/*
--	 * Parse PCI ranges, configuration bus range and
--	 * request their resources
--	 */
--	INIT_LIST_HEAD(&port->resources);
--	err = xilinx_pcie_parse_and_add_res(port);
-+	err = of_pci_get_host_bridge_resources(dev->of_node, 0, 0xff, &res,
-+					       &iobase);
- 	if (err) {
--		dev_err(dev, "Failed adding resources\n");
-+		dev_err(dev, "Getting bridge resources failed\n");
- 		return err;
- 	}
- 
--- 
-2.1.1
+> 
+> On Tuesday 26 January 2016 10:59:12 Michal Simek wrote:
+> > >> diff --git a/drivers/pci/host/pcie-xilinx.c
+> > >> b/drivers/pci/host/pcie-xilinx.c index 3e3757f..1981948 100644
+> > >> --- a/drivers/pci/host/pcie-xilinx.c
+> > >> +++ b/drivers/pci/host/pcie-xilinx.c
+> > >> @@ -92,7 +92,12 @@
+> > >>  #define ECAM_DEV_NUM_SHIFT          12
+> > >>
+> > >>  /* Number of MSI IRQs */
+> > >> -#define XILINX_NUM_MSI_IRQS         128
+> > >> +#define XILINX_NUM_MSI_IRQS 128
+> > >> +#ifdef CONFIG_ARM
+> > >> +#define TOT_NR_IRQS         XILINX_NUM_MSI_IRQS
+> > >> +#else
+> > >> +#define TOT_NR_IRQS         (NR_IRQS + XILINX_NUM_MSI_IRQS)
+> > >> +#endif
+> > >
+> > > Something looks wrong here in the microblaze variant. What does
+> > > NR_IRQS have to do with it?
+> >
+> > Arnd: What was the story regarding NR_IRQS?
+> > I remember some discussion about it but just forget.
+> >
+> > Default value in include/asm-generic/irq.h is 64.
+> > Current value is 32 because microblaze primary interrupt controller is
+> > axi_intc core which has up to 32 input lines.
+> 
+> The value in asm-generic is completely arbitrary, it's just something that
+> happens to work for a number of the simpler architectures.
+> 
+> Traditionally, there is a a fixed NR_IRQS which defines the maximum number
+> of interrupts that can be used, and each irqchip has a fixed start offset below
+> that number.
+> 
+> On modern systems, you have CONFIG_SPARSE_IRQ, which lets an irqchip
+> allocate its own interrupts, without an upper limit. This is more flexible and
+> avoids preallocating space for all irq_desc instances, so it saves memory.
+> 
+> This code however doesn't do either of the two on microblaze:
+> 
+> +       irq = pos;
+> +#ifdef CONFIG_MICROBLAZE
+> +#define TOT_NR_IRQS            (NR_IRQS + XILINX_NUM_MSI_IRQS)
+> +       irq = XILINX_NUM_MSI_IRQS + pos; #endif
+> +       if (irq < TOT_NR_IRQS)
+>                 set_bit(pos, msi_irq_in_use);
+> 
+> So you define XILINX_NUM_MSI_IRQS to mean the number of interrupts
+> that the xilinx_pcie_port can handle itself, but then pick a number
+> outside of this range by making the hwirq number something between
+> XILINX_NUM_MSI_IRQS and (2*XILINX_NUM_MSI_IRQS - 1), and in the
+> end compare it to (NR_IRQS + XILINX_NUM_MSI_IRQS), which is the
+> sum of two things that are not related: the total number of interrupts
+> including the MSIs and the number of MSI.
+> 
+Agreed, I have crosschecked something's which I missed previously, NR_IRQS have nothing to do with the count, and also no need to add, irq = XILINX_NUM_MSI_IRQS + pos; in microblaze, I will remove these checks in next patch series.
