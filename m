@@ -1,59 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:54511 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752049AbcARFKJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Jan 2016 00:10:09 -0500
-From: Simon Horman <horms+renesas@verge.net.au>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org,
-	Simon Horman <horms+renesas@verge.net.au>
-Subject: [PATCH v3 2/4] PCI: rcar-gen2: add device tree support for r8a7793
-Date: Mon, 18 Jan 2016 14:09:43 +0900
-Message-Id: <1453093785-21067-3-git-send-email-horms+renesas@verge.net.au>
-In-Reply-To: <1453093785-21067-1-git-send-email-horms+renesas@verge.net.au>
-References: <1453093785-21067-1-git-send-email-horms+renesas@verge.net.au>
+Received: from mga09.intel.com ([134.134.136.24]:5746 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S967169AbcA0UFv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 27 Jan 2016 15:05:51 -0500
+Date: Wed, 27 Jan 2016 21:05:46 +0100
+From: "Lawrynowicz, Jacek" <jacek.lawrynowicz@intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, dwmw2@infradead.org, jroedel@suse.de
+Subject: Re: [PATCH v2 1/2] pci: Add support for multiple DMA aliases
+Message-ID: <20160127200546.GA16324@jlawryno-MOBL1>
+References: <1453825639.26652.45.camel@redhat.com>
+ <1453828335-111522-1-git-send-email-jacek.lawrynowicz@intel.com>
+ <20160126233100.GC26726@localhost>
+ <1453851743.21982.1.camel@redhat.com>
+ <20160127000403.GA3102@localhost>
+ <1453856087.3107.1.camel@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1453856087.3107.1.camel@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simply document new compatibility string.
-As a previous patch adds a generic R-Car Gen2 compatibility string
-there appears to be no need for a driver updates.
+On Tue, Jan 26, 2016 at 05:54:47PM -0700, Alex Williamson wrote:
+> On Tue, 2016-01-26 at 18:04 -0600, Bjorn Helgaas wrote:
+> > On Tue, Jan 26, 2016 at 04:42:23PM -0700, Alex Williamson wrote:
+> > > On Tue, 2016-01-26 at 17:31 -0600, Bjorn Helgaas wrote:
+> > > > > + * aliases are only supported on the same bus, therefore the search
+> > > > >   * space is quite small (especially since we're really only looking at pcie
+> > > > >   * device, and therefore only expect multiple slots on the root complex or
+> > > > >   * downstream switch ports).  It's conceivable though that a pair of
+> > > > > @@ -686,11 +686,8 @@ static struct iommu_group *get_pci_alias_group(struct pci_dev *pdev,
+> > > > >  			continue;
+> > > > >  
+> > > > >  		/* We alias them or they alias us */
+> > > > > -		if (((pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
+> > > > > -		     pdev->dma_alias_devfn == tmp->devfn) ||
+> > > > > -		    ((tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
+> > > > > -		     tmp->dma_alias_devfn == pdev->devfn)) {
+> > > > > -
+> > > > > +		if (pci_dma_alias_is_enabled(pdev, tmp->devfn) ||
+> > > > > +		    pci_dma_alias_is_enabled(tmp, pdev->devfn)) {
+> > > >  
+> > > > I was hoping for something that took two pci_dev pointers and returned
+> > > > true if they were aliases of each other, e.g.,
+> > > >  
+> > > >   bool pci_dma_aliases(struct pci_dev *dev1, struct pci_dev *dev2);
+> > > 
+> > > Such a thing could already be created with pci_for_each_dma_alias().
+> > 
+> > Does that mean we could get replace the use of for_each_pci_dev() with some
+> > clever use of pci_for_each_dma_alias()?
+> 
+> Not remotely, but if we're going to have an is-alias function, should it
+> be limited to aliases on the same bus?  What if I call it on a
+> conventional PCI device where everything on the bus is an alias, this
+> implementation of relying only on the bitmap doesn't even work.  Thanks,
 
-By documenting this compat sting it may be used in DTSs shipped, for
-example as part of ROMs. It must be used in conjunction with the Gen2
-fallback compat string. At this time there are no known differences between
-the r8a7793 IP block and that implemented by the driver for the Gen2
-fallback compat string. Thus there is no need to update the driver as the
-use of the Gen2 fallback compat string will activate the correct code in
-the current driver while leaving the option for r8a7793-specific driver
-code to be activated in an updated driver should the need arise.
+So should I change it to pci_dma_aliases() or leave it?
 
-Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-Acked-by: Rob Herring <robh@kernel.org>
-
----
-* The r8a7792 is omitted from this change as the hardware in question
-  does not appear to be present on that SoC.
-
-v3
-* Enhance changelog to explain why this is useful
----
- Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-index 7f3d383e605f..82e49cfa97a1 100644
---- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-+++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-@@ -8,6 +8,7 @@ OHCI and EHCI controllers.
- Required properties:
- - compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
- 	      "renesas,pci-r8a7791" for the R8A7791 SoC;
-+	      "renesas,pci-r8a7793" for the R8A7793 SoC;
- 	      "renesas,pci-r8a7794" for the R8A7794 SoC;
- 	      "renesas,pci-rcar-gen2" for a generic R-Car Gen2 compatible device.
- 
--- 
-2.1.4
-
+Jacek
