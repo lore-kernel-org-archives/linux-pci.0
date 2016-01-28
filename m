@@ -1,90 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:54441 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753533AbcANKmS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jan 2016 05:42:18 -0500
-Subject: Re: [PATCH v5 1/2] PCI support added to ARC
-To: Arnd Bergmann <arnd@arndb.de>,
-	Vineet Gupta <Vineet.Gupta1@synopsys.com>
-References: <cover.1452611234.git.jpinto@synopsys.com>
- <24c9b782dfade515bbed20ce75d85200a00a2e66.1452611234.git.jpinto@synopsys.com>
- <C2D7FE5348E1B147BCA15975FBA23075F4E84C55@us01wembx1.internal.synopsys.com>
- <4314331.TCtUIaZPTC@wuerfel>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>,
-	"helgaas@kernel.org" <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-snps-arc@lists.infradead.org"
-	<linux-snps-arc@lists.infradead.org>,
-	"CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>,
-	"Alexey.Brodkin@synopsys.com" <Alexey.Brodkin@synopsys.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+Received: from mout.kundenserver.de ([212.227.126.135]:62062 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755432AbcA1OYd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jan 2016 09:24:33 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+	Michal Simek <michals@xilinx.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"paul.burton@imgtec.com" <paul.burton@imgtec.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"wangyijing@huawei.com" <wangyijing@huawei.com>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
 	"pawel.moll@arm.com" <pawel.moll@arm.com>,
 	"mark.rutland@arm.com" <mark.rutland@arm.com>,
 	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <56977B80.2040600@synopsys.com>
-Date: Thu, 14 Jan 2016 10:42:08 +0000
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH V2 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge driver to  work on both  Zynq and Microblaze
+Date: Thu, 28 Jan 2016 15:23:37 +0100
+Message-ID: <3706176.5tvYx0gSBz@wuerfel>
+In-Reply-To: <8520D5D51A55D047800579B094147198258741F5@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com> <1917083.LB4Ng3Y2yP@wuerfel> <8520D5D51A55D047800579B094147198258741F5@XAP-PVEXMBX01.xlnx.xilinx.com>
 MIME-Version: 1.0
-In-Reply-To: <4314331.TCtUIaZPTC@wuerfel>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Thursday 28 January 2016 14:18:15 Bharat Kumar Gogada wrote:
+> > 
+> > I see. In the upstream code you seem to do it in
+> > pcibios_setup_bus_devices(), while arm64 and powerpc do it in
+> > pcibios_add_device().
+> > 
+> No that function is not getting called with generic API's, its getting called with pcibios_init flow which is tightly bound with struct pci_controller microblaze specific structure. So I added pcibios_add_device in pci-common.c.
 
-On 1/14/2016 10:22 AM, Arnd Bergmann wrote:
-> On Thursday 14 January 2016 05:26:58 Vineet Gupta wrote:
->>> +/*
->>> + * We don't have to worry about legacy ISA devices, so nothing to do here
->>> + */
->>> +resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->>> +                             resource_size_t size, resource_size_t align)
->>> +{
->>> +     return res->start;
->>> +}
->>
->> Doesn't this have to be EXPORT_SYMBOL_xxx as well given that the call
->> (setup-res.c) can build as module ?
-> 
-> I only see a caller in drivers/pci/setup-res.c, and that is never part of a
-> loadable module.
-> 
->>> +
->>> +void pcibios_fixup_bus(struct pci_bus *bus)
->>> +{
->>> +}
->>> +EXPORT_SYMBOL(pcibios_fixup_bus);
->>
->> EXPORT_SYMBOL_GPL ?
->>
->> As a seperate enhancement, it would be nicer if these 2 functions are defined weak
->> in common code. That would make basic PCI support almost arch independent !
-> 
-> I agree, that would be ideal. An easy way to do this would be to add
-> them as __weak functions in drivers/pci/, similar to how we handle
-> a lot of the other pcibios_* functions.
-> 
-> A somewhat nicer method would be to have callback pointers in struct
-> pci_host_bridge, and call those when they are non-NULL so we can
-> remove the global pcibios_* functions from the API. That would also
-> bring us a big step closer to having PCI support itself as a loadable
-> module, and it would better reflect that those functions are really
-> host bridge specific rather than architecture specific. When you use
-> the same host bridge on multiple architectures, you typically have
-> the same requirements for hacks in there, but each architectures may
-> need to support multiple host bridges with different requirements.
+Ok
 
-Since we will be constantly improving the driver and the core itself, I suggest
-that this functions be made __weak and in an update we can turn it struct
-pointers just like Arnd suggested. Is this good for you?
+> > > May be we can add similar on arm and test out, but we might need some
+> > > cleanup in arch/arm/kernel/bios32.c
+> > 
+> > I think that would still just be a half-baked solution. This should really be fully
+> > automatic. We could do it in the __weak
+> > pcibios_add_device() for all architectures that don't override it when the bus
+> > was probed from DT, or we could do it in pci_read_irq().
+> When will pci_read_irq() call get invoked ?
 
-> 
-> 	Arnd
-> 
+This is called early on when a device gets created in pci_setup_device(),
+so platforms can still override the value later.
 
-Thanks
-Joao
+The idea here is that normally a BIOS stores the interrupt number in
+the PCI_INTERRUPT_LINE config space byte, and we just read it from
+there. Generally speaking though, for non-PC systems we tend to not
+have a BIOS that writes these values to start with, and any values
+stored in here have no meaning in combination with SPARSE_IRQ
+and/or IRQ_DOMAINS because the bootloader or BIOS doesn't know
+what IRQ number will refer to hardware IRQ line in Linux.
 
-
+	Arnd
