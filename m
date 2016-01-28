@@ -1,131 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jani Nikula <jani.nikula@linux.intel.com>
-To: "Robin H. Johnson" <robbat2@gentoo.org>,
-	linux-kernel@vger.kernel.org, mst@redhat.com, perex@perex.cz,
-	tiwai@suse.com, bhelgaas@google.com,
-	Dave Airlie <airlied@gmail.com>
-Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
-	Gerd Hoffmann <kraxel@redhat.com>
-Subject: Re: [PATCH] PCI: QEMU top-level IDs for (sub)vendor & device
-In-Reply-To: <1453739846-3549-1-git-send-email-robbat2@gentoo.org>
-References: <1453739846-3549-1-git-send-email-robbat2@gentoo.org>
-Date: Fri, 29 Jan 2016 11:02:54 +0200
-Message-ID: <87powkiwqp.fsf@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:35122 "EHLO
+	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934144AbcA1KXg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jan 2016 05:23:36 -0500
+Received: by mail-pf0-f173.google.com with SMTP id 65so21526694pfd.2
+        for <linux-pci@vger.kernel.org>; Thu, 28 Jan 2016 02:23:36 -0800 (PST)
+Subject: Re: [PATCH V3 18/21] ACPI, PCI: Refine the way to handle
+ translation_offset for ACPI resources
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>, jiang.liu@linux.intel.com
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+ <1452691267-32240-19-git-send-email-tn@semihalf.com>
+ <20160119122026.GA5185@red-moon>
+Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, okaya@codeaurora.org,
+	Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <56A9EC1C.4080806@linaro.org>
+Date: Thu, 28 Jan 2016 18:23:24 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160119122026.GA5185@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Lorenzo,
 
-This one's lacking some maintainers, adding for acks. There's already
-review from Gerd [1], and seems like a good idea anyway.
-
-Bjorn, I suppose it would make most sense to merge this via PCI tree,
-right?
-
-
-BR,
-Jani.
-
-
-[1] http://mid.gmane.org/1454057342.28516.45.camel@redhat.com
-
-
-
-On Mon, 25 Jan 2016, "Robin H. Johnson" <robbat2@gentoo.org> wrote:
-> Introduce PCI_VENDOR/PCI_SUBVENDOR/PCI_SUBDEVICE defines to replace the
-> constants scattered in the kernel already used to detect QEMU.
+On 2016/1/19 20:20, Lorenzo Pieralisi wrote:
+> Gerry,
 >
-> They are defined in the QEMU codebase per docs/specs/pci-ids.txt.
+> On Wed, Jan 13, 2016 at 02:21:04PM +0100, Tomasz Nowicki wrote:
+>> From: Liu Jiang <jiang.liu@linux.intel.com>
+>>
+>> Some architectures, such as IA64 and ARM64, have no instructions to
+>> directly access PCI IO ports, so they map PCI IO ports into PCI MMIO
+>> address space. Typically PCI host bridges on those architectures take
+>> the responsibility to map (translate) PCI IO port transactions into
+>> Memory-Mapped IO transactions. ACPI specification provides support
+>> of such a usage case by using resource translation_offset.
+>>
+>> But current ACPI resource parsing interface isn't neutral enough,
+>> it still has some special logic for IA64. So refine the ACPI resource
+>> parsing interface and IA64 code to neutrally handle translation_offset
+>> by:
+>> 1) ACPI resource parsing interface doesn't do any translation, it just
+>>     save the translation_offset to be used by arch code.
+>> 2) Arch code will do the mapping(translation) based on arch specific
+>>     information. Typically it does:
+>> 2.a) Translate per PCI domain IO port address space into system global
+>>     IO port address space.
+>> 2.b) Setup MMIO address mapping for IO ports.
 >
-> Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
-> ---
-> This change prompted by a near-miss in the review of recent change:
-> 'drm/i915: refine qemu south bridge detection'
+> This patch fixes IO space handling on IA64 and should go in as a fix.
 >
-> Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
-> ---
->  drivers/gpu/drm/bochs/bochs_drv.c   | 4 ++--
->  drivers/gpu/drm/cirrus/cirrus_drv.c | 5 +++--
->  drivers/virtio/virtio_pci_common.c  | 2 +-
->  include/linux/pci_ids.h             | 4 ++++
->  sound/pci/intel8x0.c                | 4 ++--
->  5 files changed, 12 insertions(+), 7 deletions(-)
+> IA64 PCI IO space is currently broken (Hanjun tested this on an IA64 box).
 >
-> diff --git a/drivers/gpu/drm/bochs/bochs_drv.c b/drivers/gpu/drm/bochs/bochs_drv.c
-> index 7f1a360..b332b4d3 100644
-> --- a/drivers/gpu/drm/bochs/bochs_drv.c
-> +++ b/drivers/gpu/drm/bochs/bochs_drv.c
-> @@ -182,8 +182,8 @@ static const struct pci_device_id bochs_pci_tbl[] = {
->  	{
->  		.vendor      = 0x1234,
->  		.device      = 0x1111,
-> -		.subvendor   = 0x1af4,
-> -		.subdevice   = 0x1100,
-> +		.subvendor   = PCI_SUBVENDOR_ID_REDHAT_QUMRANET,
-> +		.subdevice   = PCI_SUBDEVICE_ID_QEMU,
->  		.driver_data = BOCHS_QEMU_STDVGA,
->  	},
->  	{
-> diff --git a/drivers/gpu/drm/cirrus/cirrus_drv.c b/drivers/gpu/drm/cirrus/cirrus_drv.c
-> index b1619e2..7bc394e 100644
-> --- a/drivers/gpu/drm/cirrus/cirrus_drv.c
-> +++ b/drivers/gpu/drm/cirrus/cirrus_drv.c
-> @@ -33,8 +33,9 @@ static struct drm_driver driver;
->  
->  /* only bind to the cirrus chip in qemu */
->  static const struct pci_device_id pciidlist[] = {
-> -	{ PCI_VENDOR_ID_CIRRUS, PCI_DEVICE_ID_CIRRUS_5446, 0x1af4, 0x1100, 0,
-> -	  0, 0 },
-> +	{ PCI_VENDOR_ID_CIRRUS, PCI_DEVICE_ID_CIRRUS_5446,
-> +	  PCI_SUBVENDOR_ID_REDHAT_QUMRANET, PCI_SUBDEVICE_ID_QEMU,
-> +	  0, 0, 0 },
->  	{ PCI_VENDOR_ID_CIRRUS, PCI_DEVICE_ID_CIRRUS_5446, PCI_VENDOR_ID_XEN,
->  	  0x0001, 0, 0, 0 },
->  	{0,}
-> diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
-> index 36205c2..127dfe4 100644
-> --- a/drivers/virtio/virtio_pci_common.c
-> +++ b/drivers/virtio/virtio_pci_common.c
-> @@ -467,7 +467,7 @@ static const struct dev_pm_ops virtio_pci_pm_ops = {
->  
->  /* Qumranet donated their vendor ID for devices 0x1000 thru 0x10FF. */
->  static const struct pci_device_id virtio_pci_id_table[] = {
-> -	{ PCI_DEVICE(0x1af4, PCI_ANY_ID) },
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_REDHAT_QUMRANET, PCI_ANY_ID) },
->  	{ 0 }
->  };
->  
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 37f05cb..6d249d3 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2506,6 +2506,10 @@
->  
->  #define PCI_VENDOR_ID_AZWAVE		0x1a3b
->  
-> +#define PCI_VENDOR_ID_REDHAT_QUMRANET    0x1af4
-> +#define PCI_SUBVENDOR_ID_REDHAT_QUMRANET 0x1af4
-> +#define PCI_SUBDEVICE_ID_QEMU            0x1100
-> +
->  #define PCI_VENDOR_ID_ASMEDIA		0x1b21
->  
->  #define PCI_VENDOR_ID_CIRCUITCO		0x1cc8
-> diff --git a/sound/pci/intel8x0.c b/sound/pci/intel8x0.c
-> index 42bcbac..12c2c18 100644
-> --- a/sound/pci/intel8x0.c
-> +++ b/sound/pci/intel8x0.c
-> @@ -2980,8 +2980,8 @@ static int snd_intel8x0_inside_vm(struct pci_dev *pci)
->  		goto fini;
->  
->  	/* check for known (emulated) devices */
-> -	if (pci->subsystem_vendor == 0x1af4 &&
-> -	    pci->subsystem_device == 0x1100) {
-> +	if (pci->subsystem_vendor == PCI_SUBVENDOR_ID_REDHAT_QUMRANET &&
-> +	    pci->subsystem_device == PCI_SUBDEVICE_ID_QEMU) {
->  		/* KVM emulated sound, PCI SSID: 1af4:1100 */
->  		msg = "enable KVM";
->  	} else if (pci->subsystem_vendor == 0x1ab8) {
+> The first broken commit is:
+>
+> 3772aea7d6f3 ("ia64/PCI/ACPI: Use common ACPI resource parsing interface for host bridge")
+>
+> because acpi core code checks (in acpi_dev_ioresource_flags()) the
+> resource.end>=0x10003, which fails on ia64 - currently resource.end is
+> set in acpi_decode_space() to:
+>
+> AddressMaximum + AddressTranslation
+>
+> where AddressTranslation is the CPU physical address mapping IO space
+> on IA64, the >=0x10003 check in acpi_dev_ioresource_flags always
+> triggers and the IO resource is then disabled.
+>
+> Do you want me to re-send this patch as a fix, with updated commit log ?
 
--- 
-Jani Nikula, Intel Open Source Technology Center
+I talked to Gerry offline, he is busy these days, he said it's pretty
+OK for you to resend this patch and fix the problem.
+
+Thanks
+Hanjun
