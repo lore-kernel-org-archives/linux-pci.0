@@ -1,74 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44505 "EHLO mx1.redhat.com"
+Received: from mcc.vniiem.ru ([78.107.120.166]:39504 "EHLO mx.svc.vniiem.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965099AbcA0UZZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Jan 2016 15:25:25 -0500
-Message-ID: <1453926324.18221.2.camel@redhat.com>
-Subject: Re: [PATCH v2 1/2] pci: Add support for multiple DMA aliases
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Lawrynowicz, Jacek" <jacek.lawrynowicz@intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, dwmw2@infradead.org, jroedel@suse.de
-Date: Wed, 27 Jan 2016 13:25:24 -0700
-In-Reply-To: <20160127200546.GA16324@jlawryno-MOBL1>
-References: <1453825639.26652.45.camel@redhat.com>
-	 <1453828335-111522-1-git-send-email-jacek.lawrynowicz@intel.com>
-	 <20160126233100.GC26726@localhost> <1453851743.21982.1.camel@redhat.com>
-	 <20160127000403.GA3102@localhost> <1453856087.3107.1.camel@redhat.com>
-	 <20160127200546.GA16324@jlawryno-MOBL1>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1753479AbcA1T3y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Jan 2016 14:29:54 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by mx.svc.vniiem.ru (Postfix) with ESMTP id CC6AF820DC
+	for <linux-pci@vger.kernel.org>; Thu, 28 Jan 2016 22:29:51 +0300 (MSK)
+Received: from mx.svc.vniiem.ru ([127.0.0.1])
+	by localhost (mx.svc.vniiem.ru [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id lZ71kY47r24k for <linux-pci@vger.kernel.org>;
+	Thu, 28 Jan 2016 22:29:51 +0300 (MSK)
+Date: Thu, 28 Jan 2016 22:28:14 +0300
+Subject: Re: PCI device driver broken between 4.2 and 4.3
+From: =?UTF-8?B?0JzQvtGA0L7QtyDQntC70LXQsw==?= <oleg.moroz@mcc.vniiem.ru>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "	linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	" linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Message-Id: <20160128192951.CC6AF820DC@mx.svc.vniiem.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2016-01-27 at 21:05 +0100, Lawrynowicz, Jacek wrote:
-> On Tue, Jan 26, 2016 at 05:54:47PM -0700, Alex Williamson wrote:
-> > On Tue, 2016-01-26 at 18:04 -0600, Bjorn Helgaas wrote:
-> > > On Tue, Jan 26, 2016 at 04:42:23PM -0700, Alex Williamson wrote:
-> > > > On Tue, 2016-01-26 at 17:31 -0600, Bjorn Helgaas wrote:
-> > > > > > + * aliases are only supported on the same bus, therefore the search
-> > > > > >   * space is quite small (especially since we're really only looking at pcie
-> > > > > >   * device, and therefore only expect multiple slots on the root complex or
-> > > > > >   * downstream switch ports).  It's conceivable though that a pair of
-> > > > > > @@ -686,11 +686,8 @@ static struct iommu_group *get_pci_alias_group(struct pci_dev *pdev,
-> > > > > >  			continue;
-> > > > > >  
-> > > > > >  		/* We alias them or they alias us */
-> > > > > > -		if (((pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
-> > > > > > -		     pdev->dma_alias_devfn == tmp->devfn) ||
-> > > > > > -		    ((tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
-> > > > > > -		     tmp->dma_alias_devfn == pdev->devfn)) {
-> > > > > > -
-> > > > > > +		if (pci_dma_alias_is_enabled(pdev, tmp->devfn) ||
-> > > > > > +		    pci_dma_alias_is_enabled(tmp, pdev->devfn)) {
-> > > > >  
-> > > > > I was hoping for something that took two pci_dev pointers and returned
-> > > > > true if they were aliases of each other, e.g.,
-> > > > >  
-> > > > >   bool pci_dma_aliases(struct pci_dev *dev1, struct pci_dev *dev2);
-> > > >  
-> > > > Such a thing could already be created with pci_for_each_dma_alias().
-> > >  
-> > > Does that mean we could get replace the use of for_each_pci_dev() with some
-> > > clever use of pci_for_each_dma_alias()?
-> > 
-> > Not remotely, but if we're going to have an is-alias function, should it
-> > be limited to aliases on the same bus?  What if I call it on a
-> > conventional PCI device where everything on the bus is an alias, this
-> > implementation of relying only on the bitmap doesn't even work.  Thanks,
-> 
-> So should I change it to pci_dma_aliases() or leave it?
-
-My complaint is not about the name, but about the scope of the function.
-The function get_pci_alias_group() defines the scope to be aliases on
-the same bus, so it gets by with only testing dma_alias_devfn on
-devices.  You're trying to offload this to a helper function, which is
-usually a good thing, but that helper doesn't bring with it the same
-limited scope.  Anybody can call that helper, where maybe it's not
-appropriate that the scope is so limited.  So if you really just want to
-fix get_pci_alias_group() with the equivalent functionality for having
-multiple devfn aliases, the helper should be static so that it's not
-misinterpreted as a generic helper.  Thanks,
-
-Alex
+V2hhdCBpIG5lZWQgdG8gcHJpbnQgb3V0IGF0IGZpcnN0IG9yZGVyPyAyNyDRj9C90LIuIDIwMTYg
+0LMuIDE2OjIyINC/0L7Qu9GM0LfQvtCy0LDRgtC10LvRjCBCam9ybiBIZWxnYWFzIDxoZWxnYWFz
+QGtlcm5lbC5vcmc+INC90LDQv9C40YHQsNC7Ogo+Cj4gT24gV2VkLCBKYW4gMjcsIDIwMTYgYXQg
+MTI6Mzg6MDZQTSArMDMwMCwg0JzQvtGA0L7QtyDQntC70LXQsyB3cm90ZTogCj4gPiBBbHNvLCBt
+eSBkcml2ZSBoYXMgbm8gCj4gPiAKPiA+IHBjaWJpb3NfZW5hYmxlX2RldmljZSgpIAo+ID4gcGNp
+Ymlvc19hbGxvY19pcnEoKSAKPiA+IAo+ID4gY2FsbHMuIAo+Cj4gVGhvc2UgYXJlIGludGVybmFs
+IGludGVyZmFjZXMgdXNlZCBieSB0aGUgUENJIGNvcmUuwqAgRHJpdmVycyBzaG91bGRuJ3QgCj4g
+Y2FsbCB0aGVtIGRpcmVjdGx5LsKgIERyaXZlcnMgbm9ybWFsbHkgY2FsbCBwY2lfZW5hYmxlX2Rl
+dmljZSgpLCBhbmQgCj4gdGhvc2UgaW50ZXJuYWwgaW50ZXJmYWNlcyBhcmUgdXNlZCBpbiB0aGF0
+IHBhdGguIAo+Cj4gPiAyNi4wMS4yMDE2IDIyOjA1LCDQntC70LXQsyDQnNC+0YDQvtC3INC/0LjR
+iNC10YI6IAo+ID4gPkkgY29uZmlybWVkIGl0IHdvcmtzIGluIAo+ID4gPiAKPiA+ID44OTBlNDg0
+NzU4N2YgCj4gPiA+IAo+ID4gPmFuZCBkbyBub3Qgd29ya3MgaW4gCj4gPiA+IAo+ID4gPjk5MWRl
+MmU1OTA5MCAKPiA+ID4gCj4gPiA+MjYuMDEuMjAxNiAxODozMiwgQmpvcm4gSGVsZ2FhcyDQv9C4
+0YjQtdGCOiAKPiA+ID4+WytjYyBKaWFuZ10gCj4gPiA+PiAKPiA+ID4+T24gTW9uLCBKYW4gMjUs
+IDIwMTYgYXQgMDM6NTI6NTFQTSAtMDYwMCwgQmpvcm4gSGVsZ2FhcyB3cm90ZTogCj4gPiA+Pj5I
+aSDQntC70LXQsywgCj4gPiA+Pj4gCj4gPiA+Pj5PbiBTdW4sIEphbiAyNCwgMjAxNiBhdCAwNDo1
+MDowOFBNICswMzAwLCDQntC70LXQsyDQnNC+0YDQvtC3IHdyb3RlOiAKPiA+ID4+Pj5Pa2F5LiBJ
+J3ZlIHNlbnQgbG9ncyAoZG1lc2cgYW5kIGxzcGNpKSBmcm9tIGJvdGggNC4yIGFuZCA0LjMgCj4g
+PiA+Pj4+dG8gYnVnemlsbGEgCj4gPiA+Pj5JIGRvbid0IHNlZSBhbnl0aGluZyB3cm9uZyBpbiBl
+aXRoZXIgbG9nLsKgIEJvdGggdjQuMiBhbmQgdjQuMyAKPiA+ID4+PmVudW1lcmF0ZSB0aGUgZGV2
+aWNlIHRoZSBzYW1lIHdheSwgYW5kIHRoZSBkcml2ZXIgc2VlbXMgdG8gY2xhaW0gaXQgCj4gPiA+
+Pj50aGUgc2FtZSB3YXk6IAo+ID4gPj4+IAo+ID4gPj4+wqDCoCBwY2kgMDAwMDowZDowMC4wOiBb
+MTBiNTo5MDMwXSB0eXBlIDAwIGNsYXNzIDB4MDc4MDAwIAo+ID4gPj4+wqDCoCBwY2kgMDAwMDow
+ZDowMC4wOiByZWcgMHgxNDogW2lvwqAgMHgyMTAwLTB4MjE3Zl0gCj4gPiA+Pj7CoMKgIHBjaSAw
+MDAwOjBkOjAwLjA6IHJlZyAweDE4OiBbaW/CoCAweDIzODAtMHgyMzlmXSAKPiA+ID4+PsKgwqAg
+cGNpIDAwMDA6MGQ6MDAuMDogUE1FIyBzdXBwb3J0ZWQgZnJvbSBEMCBEM2hvdCAKPiA+ID4+PsKg
+wqAgcGNpIDAwMDA6MGQ6MDEuMDogWzEwYjU6OTAzMF0gdHlwZSAwMCBjbGFzcyAweDA3ODAwMCAK
+PiA+ID4+PsKgwqAgcGNpIDAwMDA6MGQ6MDEuMDogcmVnIDB4MTQ6IFtpb8KgIDB4MjE4MC0weDIx
+ZmZdIAo+ID4gPj4+wqDCoCBwY2kgMDAwMDowZDowMS4wOiByZWcgMHgxODogW2lvwqAgMHgyM2Ew
+LTB4MjNiZl0gCj4gPiA+Pj7CoMKgIHBjaSAwMDAwOjBkOjAxLjA6IFBNRSMgc3VwcG9ydGVkIGZy
+b20gRDAgRDNob3QgCj4gPiA+Pj7CoMKgIHBjaSAwMDAwOjBkOjAyLjA6IFsxMGI1OjkwMzBdIHR5
+cGUgMDAgY2xhc3MgMHgwNzgwMDAgCj4gPiA+Pj7CoMKgIHBjaSAwMDAwOjBkOjAyLjA6IHJlZyAw
+eDE0OiBbaW/CoCAweDIyMDAtMHgyMjdmXSAKPiA+ID4+PsKgwqAgcGNpIDAwMDA6MGQ6MDIuMDog
+cmVnIDB4MTg6IFtpb8KgIDB4MjI4MC0weDIyZmZdIAo+ID4gPj4+wqDCoCBwY2kgMDAwMDowZDow
+Mi4wOiByZWcgMHgxYzogW2lvwqAgMHgyMzAwLTB4MjM3Zl0gCj4gPiA+Pj7CoMKgIHBjaSAwMDAw
+OjBkOjAyLjA6IFBNRSMgc3VwcG9ydGVkIGZyb20gRDAgRDNob3QgCj4gPiA+Pj4gCj4gPiA+Pj7C
+oMKgIHNqYTEwMDBfcGx4X3BjaSAwMDAwOjBkOjAyLjA6IERldGVjdGVkICJFY2x1cyBDQU4tMjAw
+LVBDSSIgCj4gPiA+Pj5jYXJkIGF0IHNsb3QgIzIgCj4gPiA+Pj7CoMKgIHNqYTEwMDBfcGx4X3Bj
+aSAwMDAwOjBkOjAyLjA6IENoYW5uZWwgIzEgYXQgCj4gPiA+Pj4weDAwMDAwMDAwMDAwMTIyODAs
+IGlycSAyMiByZWdpc3RlcmVkIGFzIGNhbjAgCj4gPiA+Pj7CoMKgIHNqYTEwMDBfcGx4X3BjaSAw
+MDAwOjBkOjAyLjA6IENoYW5uZWwgIzIgYXQgCj4gPiA+Pj4weDAwMDAwMDAwMDAwMTIzMDAsIGly
+cSAyMiByZWdpc3RlcmVkIGFzIGNhbjEgCj4gPiA+Pj7CoMKgIHNqYTEwMDBfcGx4X3BjaSAwMDAw
+OjBkOjAyLjAgY2FuMDogc2V0dGluZyBCVFIwPTB4MDMgQlRSMT0weDM3IAo+ID4gPj4+IAo+ID4g
+Pj4+T25lIG9wdGlvbiBpcyBhbHdheXMgdG8gYmlzZWN0IGJldHdlZW4gdjQuMiBhbmQgdjQuMyB0
+byBzZWUgd2hpY2ggCj4gPiA+Pj5jb21taXQgbWFkZSBpdCBzdG9wIHdvcmtpbmcuwqAgU2VlIGh0
+dHBzOi8vZ2l0LXNjbS5jb20vZG9jcy9naXQtYmlzZWN0IAo+ID4gPj5KaWFuZywg0J7Qu9C10LMg
+YmlzZWN0ZWQgdGhpcyB0byA5OTFkZTJlNTkwOTAgKCJQQ0ksIHg4NjogSW1wbGVtZW50IAo+ID4g
+Pj5wY2liaW9zX2FsbG9jX2lycSgpIGFuZCBwY2liaW9zX2ZyZWVfaXJxKCkiKS4gCj4gPiA+PiAK
+PiA+ID4+0J7Qu9C10LMsIHBsZWFzZSBkb3VibGUtY2hlY2sgYW5kIGNvbmZpcm0gdGhhdCA4OTBl
+NDg0NzU4N2Ygd29ya3MgYW5kIAo+ID4gPj45OTFkZTJlNTkwOTAgZmFpbHMuIAo+ID4gPj4gCj4g
+PiA+PlRoZW4gcGxlYXNlIGFkZCBzb21lIHByaW50a3MgaW4gdGhlIHBjaWJpb3NfZW5hYmxlX2Rl
+dmljZSgpIGFuZCAKPiA+ID4+cGNpYmlvc19hbGxvY19pcnEoKSBwYXRocyBhbmQgaW4geW91ciBk
+cml2ZXIgdG8gc2VlIGV4YWN0bHkgd2hhdCBjaGFuZ2VkIAo+ID4gPj5iZXR3ZWVuIDg5MGU0ODQ3
+NTg3ZiBhbmQgOTkxZGUyZTU5MDkwIAo+ID4gPj4gCj4gPiA+PkJqb3JuIAo+ID4gPj4gCj4gPiA+
+Pj4+MjMuMDEuMjAxNiAxNzo1NCwgQmpvcm4gSGVsZ2FhcyDQv9C40YjQtdGCOiAKPiA+ID4+Pj4+
+WytjYyBsaW51eC1rZXJuZWxdIAo+ID4gPj4+Pj4gCj4gPiA+Pj4+PkhpINCe0LvQtdCzLCAKPiA+
+ID4+Pj4+IAo+ID4gPj4+Pj5PbiBTYXQsIEphbiAyMywgMjAxNiBhdCAxOjA4IEFNLCDQntC70LXQ
+syDQnNC+0YDQvtC3IAo+ID4gPj4+Pj48b2xlZy5tb3JvekBtY2Mudm5paWVtLnJ1PiB3cm90ZTog
+Cj4gPiA+Pj4+Pj5IZWxsby4gSSd2ZSBnb3QgYSBkZXZpY2UgZHJpdmVyIGZvciBNSUwtMTU1M2Ig
+Y2FyZCAKPiA+ID4+Pj4+PmNhbGxlZCBUQTEtUENJLCB3aGljaCAKPiA+ID4+Pj4+PmNvdWxkIGJl
+IGZvdW5kIGF0IAo+ID4gPj4+Pj4+aHR0cHM6Ly9naXRodWIuY29tL3Ftb3IvZWxjdXMtMTU1My1k
+cml2ZXItbGludXggCj4gPiA+Pj4+Pj5DYXJkIGlzIHVzaW5nIFBMWF9QQ0k5MDMwIFBDSSBjb250
+cm9sbGVyLiAKPiA+ID4+Pj4+PlRvZGF5IGkndmUgZm91bmQgdGhhdCB0aGlzIGRyaXZlciBjb21w
+aWxlcywgaW5zdGFsbGVzLCAKPiA+ID4+Pj4+PmJ1dCBpcyBub3Qgd29ya2luZyBhcyAKPiA+ID4+
+Pj4+Pml0IHNob3VsZC4gCj4gPiA+Pj4+Pj5Mb29rcyBsaWtlIGl0IG5vdCByZWNlaXZlcyBhbnkg
+aW50ZXJydXB0cyBmcm9tIFBDSS4gSSd2ZSAKPiA+ID4+Pj4+PnRlc3QgaXQgYWdhaW4gd2l0aCAK
+PiA+ID4+Pj4+Pmtlcm5lbCAKPiA+ID4+Pj4+PjQuMiBhbmQgaXQgd29ya3Mgb2theS4gV2hhdCBj
+aGFuZ2VzIHdhcyBtYWRlIGluIFBDSSAKPiA+ID4+Pj4+PnN1YnN5c3RlbSBmcm9tIDQuMiB0byAK
+PiA+ID4+Pj4+PjQuMyAKPiA+ID4+Pj4+PndoaWNoIGNvdWxkIGhhdmUgaW1wYWN0IHRoaXMgZHJp
+dmVyIHdvcmsuIAo+ID4gPj4+Pj5UaGFuayB5b3UgdmVyeSBtdWNoIGZvciB0aGlzIHByb2JsZW0g
+cmVwb3J0LsKgIFRoZXJlIHdlcmUgbWFueSBQQ0kgCj4gPiA+Pj4+PmNoYW5nZXMgYmV0d2VlbiB2
+NC4yIGFuZCB2NC4zLCBhbmQgd2l0aG91dCBtb3JlIGluZm9ybWF0aW9uLCBJIGNhbid0IAo+ID4g
+Pj4+Pj5ndWVzcyB3aGF0IG1pZ2h0IGJlIGNhdXNpbmcgdGhpcyBwcm9ibGVtLiAKPiA+ID4+Pj4+
+IAo+ID4gPj4+Pj5JIG9wZW5lZCBhIGJ1ZyByZXBvcnQgYXQgCj4gPiA+Pj4+Pmh0dHBzOi8vYnVn
+emlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9MTExMjExIAo+ID4gPj4+Pj4gCj4gPiA+
+Pj4+PlBsZWFzZSBhdHRhY2ggY29tcGxldGUgZG1lc2cgbG9ncyBmb3IgYm90aCB2NC4yIGFuZCB2
+NC4zIHRvIHRoYXQgYnVnIAo+ID4gPj4+Pj5yZXBvcnQuwqAgQWxzbywgcGxlYXNlIGF0dGFjaCB0
+aGUgY29tcGxldGUgImxzcGNpIC12diIgb3V0cHV0IChhcyAKPiA+ID4+Pj4+cm9vdCkuIAo+ID4g
+Pj4+Pj4gCj4gPiA+Pj4+PlRoYW5rcyEgCj4gPiA+Pj4+PiAKPiA+ID4+Pj4+Qmpvcm4gCj4gPiA+
+Pj4+LS0gCj4gPiA+Pj4+VG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxp
+bmUgInVuc3Vic2NyaWJlIAo+ID4gPj4+PmxpbnV4LXBjaSIgaW4gCj4gPiA+Pj4+dGhlIGJvZHkg
+b2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcgCj4gPiA+Pj4+TW9yZSBt
+YWpvcmRvbW8gaW5mbyBhdCBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0
+bWwgCj4gPiA+Pj4tLSAKPiA+ID4+PlRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5k
+IHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1wY2kiIGluIAo+ID4gPj4+dGhlIGJvZHkgb2Yg
+YSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcgCj4gPiA+Pj5Nb3JlIG1ham9y
+ZG9tbyBpbmZvIGF0IGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbCAK
+PiA+ID4gCj4gPiAKPiA+IC0tIAo+ID4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNl
+bmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXBjaSIgaW4gCj4gPiB0aGUgYm9keSBvZiBh
+IG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZyAKPiA+IE1vcmUgbWFqb3Jkb21v
+IGluZm8gYXTCoCBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwgCg==
 
