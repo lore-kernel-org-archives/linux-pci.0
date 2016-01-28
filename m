@@ -1,200 +1,155 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([59.151.112.132]:52897 "EHLO
-	heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933721AbcATE0B (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2016 23:26:01 -0500
-Message-ID: <569F0B44.1010109@cn.fujitsu.com>
-Date: Wed, 20 Jan 2016 12:21:24 +0800
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 From: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+To: <linux-acpi@vger.kernel.org>
+CC: <linux-kernel@vger.kernel.org>, <rjw@rjwysocki.net>,
 	<lenb@kernel.org>, <izumi.taku@jp.fujitsu.com>,
 	<wency@cn.fujitsu.com>, <caoj.fnst@cn.fujitsu.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH] pci: fix unavailable irq number 255 reported by BIOS
-References: <1453167913-16248-1-git-send-email-chen.fan.fnst@cn.fujitsu.com> <6239489.QX2A2kAHWp@vostro.rjw.lan> <20160120002431.GA7973@localhost>
-In-Reply-To: <20160120002431.GA7973@localhost>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+	<ddaney.cavm@gmail.com>, <chen.fan.fnst@cn.fujitsu.com>,
+	<helgaas@kernel.org>, <okaya@codeaurora.org>,
+	<bhelgaas@google.com>, <jiang.liu@linux.intel.com>,
+	<linux-pci@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>
+Subject: [PATCH v4 1/1] pci: fix unavailable irq number 255 reported by BIOS
+Date: Thu, 28 Jan 2016 09:35:46 +0800
+Message-ID: <1453944946-18852-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+In our X86 environment, when enable Secure boot, we found an abnormal
+phenomenon as following call trace shows. after investigation, we
+found the firmware assigned an irq number 255 which means unknown
+or no connection in PCI local spec for i801_smbus, meanwhile the
+ACPI didn't configure the pci irq routing. and the 255 irq number
+was assigned for megasa msix without IRQF_SHARED. then in this case
+during i801_smbus probe, the i801_smbus driver would request irq with
+bad irq number 255. but the 255 irq number was assigned for memgasa
+with MSIX enable. which will cause request_irq fails and result in
+the call trace below, here we introduce an IRQ_NOTCONNECTED to identify
+the device interrupt is not connected.
 
-On 01/20/2016 08:24 AM, Bjorn Helgaas wrote:
-> [+cc Jiang]
->
-> Hi Chen,
->
-> On Tue, Jan 19, 2016 at 02:43:30PM +0100, Rafael J. Wysocki wrote:
->> On Tuesday, January 19, 2016 09:45:13 AM Chen Fan wrote:
->>> In our environment, when enable Secure boot, we found an abnormal
-> This has more information than necessary.  I don't think Secure Boot is
-> really relevant, and nor are the timestamps and stack addresses below.
-I just think enable the Secure Boot, probably the firmware assigned
-a 0xff interrupt to the device which unauthenticated.
->
->>> phenomenon as following call trace shows. after investigation, we
->>> found the firmware assigned an irq number 255 which means unknown
->>> or no connection in PCI local spec for i801_smbus, meanwhile the
->>> ACPI didn't configure the pci irq routing. and the 255 irq number
->>> was assigned for megasa msix without IRQF_SHARED. then in this case
->>> during i801_smbus probe, the i801_smbus driver would request irq with
->>> bad irq number 255. but the 255 irq number was assigned for memgasa
->>> with MSIX enable. which will cause request_irq fails, and call trace
->>> shows, actually, we should expose the error early, rather than in request
->>> irq, here we simply fix the problem by return err when find the irq is
->>> 255.
->>> See the call trace:
->>>
->>>   [   32.459195] ipmi device interface
->>>   [   32.612907] shpchp: Standard Hot Plug PCI Controller Driver version: 0.4
->>>   [   32.800459] ixgbe: Intel(R) 10 Gigabit PCI Express Network Driver - version 4.0.1-k-rh
->>>   [   32.818319] ixgbe: Copyright (c) 1999-2014 Intel Corporation.
->>>   [   32.844009] lpc_ich 0001:80:1f.0: I/O space for ACPI uninitialized
->>>   [   32.850093] i801_smbus 0000:00:1f.3: enabling device (0140 -> 0143)
->>>   [   32.851134] i801_smbus 0000:00:1f.3: can't derive routing for PCI INT C
->>>   [   32.851136] i801_smbus 0000:00:1f.3: PCI INT C: no GSI
->>>   [   32.851164] genirq: Flags mismatch irq 255. 00000080 (i801_smbus) vs. 00000000 (megasa
->>>   [   32.851168] CPU: 0 PID: 2487 Comm: kworker/0:1 Not tainted 3.10.0-229.el7.x86_64 #1
->>>   [   32.851170] Hardware name: FUJITSU PRIMEQUEST 2800E2/D3736, BIOS PRIMEQUEST 2000 Serie5
->>>   [   32.851178] Workqueue: events work_for_cpu_fn
->>>   [   32.851208]  ffff88086c330b00 00000000e233a9df ffff88086d57bca0 ffffffff81603f36
->>>   [   32.851227]  ffff88086d57bcf8 ffffffff8110d23a ffff88686fe02000 0000000000000246
->>>   [   32.851246]  ffff88086a9a8c00 00000000e233a9df ffffffffa00ad220 0000000000000080
->>>   [   32.851247] Call Trace:
->>>   [   32.851261]  [<ffffffff81603f36>] dump_stack+0x19/0x1b
->>>   [   32.851271]  [<ffffffff8110d23a>] __setup_irq+0x54a/0x570
->>>   [   32.851282]  [<ffffffffa00ad220>] ? i801_check_pre.isra.5+0xe0/0xe0 [i2c_i801]
->>>   [   32.851289]  [<ffffffff8110d3bc>] request_threaded_irq+0xcc/0x170
->>>   [   32.851298]  [<ffffffffa00ae87f>] i801_probe+0x32f/0x508 [i2c_i801]
->>>   [   32.851308]  [<ffffffff81308385>] local_pci_probe+0x45/0xa0
->>>   [   32.851315]  [<ffffffff8108bfd4>] work_for_cpu_fn+0x14/0x20
->>>   [   32.851323]  [<ffffffff8108f0ab>] process_one_work+0x17b/0x470
->>>   [   32.851330]  [<ffffffff81090003>] worker_thread+0x293/0x400
->>>   [   32.851338]  [<ffffffff8108fd70>] ? rescuer_thread+0x400/0x400
->>>   [   32.851346]  [<ffffffff8109726f>] kthread+0xcf/0xe0
->>>   [   32.851353]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
->>>   [   32.851362]  [<ffffffff81613cfc>] ret_from_fork+0x7c/0xb0
->>>   [   32.851369]  [<ffffffff810971a0>] ? kthread_create_on_node+0x140/0x140
->>>   [   32.851373] i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
->>>   [   32.851435] i801_smbus: probe of 0000:00:1f.3 failed with error -16
-> Since the Interrupt Line register is writable and might contain any
-> value, it would be nice if Linux could at least tolerate anything
-> firmware might leave there without a backtrace, even if we end up not
-> being able to use the device.
->
-> Your patch changes the acpi_pci_irq_enable() return value from 0 to
-> -EINVAL for this case.  You're running v3.10, and this change probably
-> makes pci_enable_device() fail.  I suppose the user-visible effect is
-> that with your patch,
->
->    - there's no backtrace,
->    - i801_smbus fails with "Failed to enable SMBus PCI device" instead
->      of with "Failed to allocate irq 255", and
->    - i801_smbus fails even if no other device is using IRQ 255, instead
->      of "succeeding" and using an IRQ 255 that probably doesn't work
->      (this seems like maybe the most important difference)
->
-> Jiang has changed this path with 890e4847587f ("PCI: Add
-> pcibios_alloc_irq() and pcibios_free_irq()"), so I think on newer
-> kernels, we'll never even call the i801_smbus probe function.
-no, on newer kernels, this phenomenon also probably appearance,
-with this patch 890e4847587f change, it didn't change the
-acpi_pci_irq_enable() return value, with the problem it also return 0,
-and then still call __pci_device_probe() to do i801_smbus probe
-function in pci_device_probe() function.
+i801_smbus 0000:00:1f.3: enabling device (0140 -> 0143)
+i801_smbus 0000:00:1f.3: can't derive routing for PCI INT C
+i801_smbus 0000:00:1f.3: PCI INT C: no GSI
+genirq: Flags mismatch irq 255. 00000080 (i801_smbus) vs. 00000000 (megasa)
+CPU: 0 PID: 2487 Comm: kworker/0:1 Not tainted 3.10.0-229.el7.x86_64 #1
+Hardware name: FUJITSU PRIMEQUEST 2800E2/D3736, BIOS PRIMEQUEST 2000 Serie5
 
->
-> What behavior are you looking for from i801_smbus?  Decline to claim
-> the device?  Try to use the device without interrupts?  Try to figure
-> out an interrupt in some other way?
-I think if BIOS assigned 0xff interrupt line to device, and kernel can't 
-look
-up a valid interrupt for the device, we should not allow to use the device.
->
-> I'm not 100% sure that 890e4847587f does the right thing by preventing
-> a driver from claiming a device where we can't set up an IRQ.  It's
-> conceivable that a driver could still operate a device even without an
-> IRQ.
-I don't understanding, does without IRQ for device still work?
+Call Trace:
+  dump_stack+0x19/0x1b
+  __setup_irq+0x54a/0x570
+  request_threaded_irq+0xcc/0x170
+  i801_probe+0x32f/0x508 [i2c_i801]
+  local_pci_probe+0x45/0xa0
+i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
+i801_smbus: probe of 0000:00:1f.3 failed with error -16
 
-Thanks,
-Chen
+Signed-off-by: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>
+---
+ drivers/acpi/pci_irq.c    | 20 ++++++++++++++++++++
+ include/linux/interrupt.h | 10 ++++++++++
+ kernel/irq/manage.c       |  9 ++++++++-
+ 3 files changed, 38 insertions(+), 1 deletion(-)
 
->
->>>   [   33.180145] ixgbe 0000:5a:00.0: Multiq[   33.240538] ixgbe 0000:5a:00.0: (PCI Express:03:e0
->>>   [   33.280826] ixgbe 0000:5a:00.0: MAC: 3, PHY: 0, PBA No: 000000-000
->>>
->>> Signed-off-by: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
->>> ---
->>>   drivers/acpi/pci_irq.c | 10 +++++++++-
->>>   1 file changed, 9 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
->>> index d30184c..d2f47f8 100644
->>> --- a/drivers/acpi/pci_irq.c
->>> +++ b/drivers/acpi/pci_irq.c
->>> @@ -439,9 +439,17 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
->>>   		if (acpi_isa_register_gsi(dev))
->>>   			dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
->>>   				 pin_name(pin));
->>> +		rc = 0;
->>> +		/*
->>> +		 * Excluding the BIOS report the value 255, which meaning
->>> +		 * "unknown" or "no connection" in PCI Local Bus Specification
->>> +		 * Revision 3.0 February 3, 2004, P223.
->> You mean the footnote on page 223 talking about the Interrupt Line values, right?
->>
->>> +		 */
->>> +		if (dev->irq == 0xFF)
->>> +			rc = -EINVAL;
->>>   
->>>   		kfree(entry);
->>> -		return 0;
->>> +		return rc;
->>>   	}
->>>   
->>>   	rc = acpi_register_gsi(&dev->dev, gsi, triggering, polarity);
->>>
->> Well, if you look at acpi_isa_register_gsi(), you'll see that it
->> actually does the check you're adding, so maybe the following should
->> be done instead?
->>
->> ---
->>   drivers/acpi/pci_irq.c |    5 +++--
->>   1 file changed, 3 insertions(+), 2 deletions(-)
->>
->> Index: linux-pm/drivers/acpi/pci_irq.c
->> ===================================================================
->> --- linux-pm.orig/drivers/acpi/pci_irq.c
->> +++ linux-pm/drivers/acpi/pci_irq.c
->> @@ -436,12 +436,13 @@ int acpi_pci_irq_enable(struct pci_dev *
->>   	 * driver reported one, then use it. Exit in any case.
->>   	 */
->>   	if (gsi < 0) {
->> -		if (acpi_isa_register_gsi(dev))
->> +		rc = acpi_isa_register_gsi(dev);
->> +		if (rc)
->>   			dev_warn(&dev->dev, "PCI INT %c: no GSI\n",
->>   				 pin_name(pin));
->>   
->>   		kfree(entry);
->> -		return 0;
->> +		return rc;
->>   	}
->>   
->>   	rc = acpi_register_gsi(&dev->dev, gsi, triggering, polarity);
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> .
->
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index d30184c..dda6d25 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -33,6 +33,7 @@
+ #include <linux/pci.h>
+ #include <linux/acpi.h>
+ #include <linux/slab.h>
++#include <linux/interrupt.h>
+ 
+ #define PREFIX "ACPI: "
+ 
+@@ -387,6 +388,22 @@ static inline int acpi_isa_register_gsi(struct pci_dev *dev)
+ }
+ #endif
+ 
++static inline bool acpi_pci_irq_valid(struct pci_dev *dev)
++{
++#ifdef CONFIG_X86
++	/*
++	 * On x86 irq line 0xff means "unknown" or "no connection" (PCI 3.0,
++	 * Section 6.2.4, footnote on page 223).
++	 */
++	if (dev->irq == 0xff) {
++		dev->irq = IRQ_NOTCONNECTED;
++		dev_warn(&dev->dev, "PCI INT not connected\n");
++		return false;
++	}
++#endif
++	return true;
++}
++
+ int acpi_pci_irq_enable(struct pci_dev *dev)
+ {
+ 	struct acpi_prt_entry *entry;
+@@ -409,6 +426,9 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+ 	if (pci_has_managed_irq(dev))
+ 		return 0;
+ 
++	if (!acpi_pci_irq_valid(dev))
++		return 0;
++
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+ 	if (!entry) {
+ 		/*
+diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+index cb30edb..12f7da4 100644
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -125,6 +125,16 @@ struct irqaction {
+ 
+ extern irqreturn_t no_action(int cpl, void *dev_id);
+ 
++/*
++ * If a (PCI) device interrupt is not connected we set dev->irq to
++ * IRQ_NOTCONNECTED. This causes request_irq() to fail with -ENOTCONN, so we
++ * can distingiush that case from other error returns.
++ *
++ * 0x80000000 is guaranteed to be outside the available range of interrupts
++ * and easy to distinguish from other possible incorrect values.
++ */
++#define IRQ_NOTCONNECTED	(1U << 31)
++
+ extern int __must_check
+ request_threaded_irq(unsigned int irq, irq_handler_t handler,
+ 		     irq_handler_t thread_fn,
+diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+index 8411872..e79e60f 100644
+--- a/kernel/irq/manage.c
++++ b/kernel/irq/manage.c
+@@ -1609,6 +1609,9 @@ int request_threaded_irq(unsigned int irq, irq_handler_t handler,
+ 	struct irq_desc *desc;
+ 	int retval;
+ 
++	if (irq == IRQ_NOTCONNECTED)
++		return -ENOTCONN;
++
+ 	/*
+ 	 * Sanity-check: shared interrupts must pass in a real dev-ID,
+ 	 * otherwise we'll have trouble later trying to figure out
+@@ -1699,9 +1702,13 @@ EXPORT_SYMBOL(request_threaded_irq);
+ int request_any_context_irq(unsigned int irq, irq_handler_t handler,
+ 			    unsigned long flags, const char *name, void *dev_id)
+ {
+-	struct irq_desc *desc = irq_to_desc(irq);
++	struct irq_desc *desc;
+ 	int ret;
+ 
++	if (irq == IRQ_NOTCONNECTED)
++		return -ENOTCONN;
++
++	desc = irq_to_desc(irq);
+ 	if (!desc)
+ 		return -EINVAL;
+ 
+-- 
+1.9.3
 
 
 
