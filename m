@@ -1,78 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42619 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751456AbcAEJkI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 5 Jan 2016 04:40:08 -0500
-Date: Tue, 5 Jan 2016 11:40:03 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Alexander Duyck <aduyck@mirantis.com>, kvm@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	x86@kernel.org,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Thu, 28 Jan 2016 18:08:24 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: Ganapatrao Kulkarni <gpkulkarni@gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	qemu-devel@nongnu.org, Lan Tianyu <tianyu.lan@intel.com>,
-	Yang Zhang <yang.zhang.wz@gmail.com>,
-	"Dr. David Alan Gilbert" <dgilbert@redhat.com>,
-	Alexander Graf <agraf@suse.de>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [RFC PATCH 0/3] x86: Add support for guest DMA dirty page
- tracking
-Message-ID: <20160105113317-mutt-send-email-mst@redhat.com>
-References: <20151213212557.5410.48577.stgit@localhost.localdomain>
- <20160104204104.GB17427@char.us.oracle.com>
- <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
+	linux-pci@vger.kernel.org, linux-ia64@vger.kernel.org,
+	linux-metag@vger.kernel.org,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	linux-s390@vger.kernel.org, linux-sh@vger.kernel.org,
+	linux-arch@vger.kernel.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Leif Lindholm <leif.lindholm@linaro.org>, rfranz@cavium.com,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Steve Capper <steve.capper@linaro.org>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Al Stone <al.stone@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, tony.luck@intel.com,
+	fenghua.yu@intel.com, james.hogan@imgtec.com,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	"tglx@linutronix.de" <tglx@linutronix.de>, mingo@redhat.com,
+	hpa@zytor.com, x86@kernel.org,
+	Jon Masters <jonathan@jonmasters.org>,
+	Robert Richter <rrichter@cavium.com>,
+	Prasun Kapoor <Prasun.Kapoor@caviumnetworks.com>
+Subject: Re: [PATCH v9 3/6] arm64/arm, numa, dt: adding numa dt binding
+ implementation for arm64 platforms.
+Message-ID: <20160128180824.GP775@arm.com>
+References: <1453134965-6125-1-git-send-email-gkulkarni@caviumnetworks.com>
+ <1453134965-6125-4-git-send-email-gkulkarni@caviumnetworks.com>
+ <20160126203603.GC17600@localhost>
+ <20160128143925.GC775@arm.com>
+ <CAFpQJXVhEVw7vSq233wfkOGkTanf-msO+PEcWJ2OVAFUhn7n+w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKgT0UenF-Cj2fvFPEmY0g7FOf=85HbFJ9iFUjs4KgsaXrckqA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAFpQJXVhEVw7vSq233wfkOGkTanf-msO+PEcWJ2OVAFUhn7n+w@mail.gmail.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 04, 2016 at 07:11:25PM -0800, Alexander Duyck wrote:
-> >> The two mechanisms referenced above would likely require coordination with
-> >> QEMU and as such are open to discussion.  I haven't attempted to address
-> >> them as I am not sure there is a consensus as of yet.  My personal
-> >> preference would be to add a vendor-specific configuration block to the
-> >> emulated pci-bridge interfaces created by QEMU that would allow us to
-> >> essentially extend shpc to support guest live migration with pass-through
-> >> devices.
+On Thu, Jan 28, 2016 at 10:42:17PM +0530, Ganapatrao Kulkarni wrote:
+> On Thu, Jan 28, 2016 at 8:09 PM, Will Deacon <will.deacon@arm.com> wrote:
+> > On Tue, Jan 26, 2016 at 02:36:04PM -0600, Bjorn Helgaas wrote:
+> >> Subject is "arm64/arm, numa, dt: adding ..."  What is the significance
+> >> of the "arm" part?  The other patches only mention "arm64".
+> >>
+> >> General comment: the code below has little, if anything, that is
+> >> actually arm64-specific.  Maybe this is the first DT-based NUMA
+> >> platform?  I don't see other similar code for other arches, so maybe
+> >> it's too early to try to generalize it, but we should try to avoid
+> >> adding duplicates of this code if/when other arches do show up.
 > >
-> > shpc?
-> 
-> That is kind of what I was thinking.  We basically need some mechanism
-> to allow for the host to ask the device to quiesce.  It has been
-> proposed to possibly even look at something like an ACPI interface
-> since I know ACPI is used by QEMU to manage hot-plug in the standard
-> case.
-> 
-> - Alex
+> > Having it in the core code would allow us to share it with arch/arm/
+> > fairly straightforwardly.
+> This binding can be used for arm too.
+> however at this moment it is the need of arm64 platforms.
+> can we please keep this to arm64 as it's too early to try to
+> generalize it(as Bjorn suggested)
+> I prefer to keep it as it is, otherwise ok.
+> Please suggest.
 
+My suggestions time and time again on the NUMA patches from you have
+consistently been around consolidation of existing code, or moving things
+that aren't architecture-specific out of the architecture code.
 
-Start by using hot-unplug for this!
-
-Really use your patch guest side, and write host side
-to allow starting migration with the device, but
-defer completing it.
-
-So
-
-1.- host tells guest to start tracking memory writes
-2.- guest acks
-3.- migration starts
-4.- most memory is migrated
-5.- host tells guest to eject device
-6.- guest acks
-7.- stop vm and migrate rest of state
-
-
-It will already be a win since hot unplug after migration starts and
-most memory has been migrated is better than hot unplug before migration
-starts.
-
-Then measure downtime and profile. Then we can look at ways
-to quiesce device faster which really means step 5 is replaced
-with "host tells guest to quiesce device and dirty (or just unmap!)
-all memory mapped for write by device".
-
--- 
-MST
+Will
