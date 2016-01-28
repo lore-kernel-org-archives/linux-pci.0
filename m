@@ -1,61 +1,130 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
-Subject: [PATCH v3 0/2] pci: Add host controller driver for Cavium ThunderX PCIe
-Date: Fri,  8 Jan 2016 15:59:11 -0800
-Message-Id: <1452297553-19911-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:33859 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161307AbcA1RZN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Jan 2016 12:25:13 -0500
+Date: Thu, 28 Jan 2016 17:27:01 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Phil Edworthy <phil.edworthy@renesas.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
+Message-ID: <20160128172701.GA28468@red-moon>
+References: <20160120160427.GD13437@red-moon>
+ <569FB210.9090605@codeaurora.org>
+ <20160120181003.GF13437@red-moon>
+ <HK2PR0601MB1393A8E38392D17EC2DD7900F5C40@HK2PR0601MB1393.apcprd06.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <HK2PR0601MB1393A8E38392D17EC2DD7900F5C40@HK2PR0601MB1393.apcprd06.prod.outlook.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+[+ Pratyush, Jingoo, Gabriele]
 
-Some Cavium ThunderX processors require quirky access methods for the
-config space of the PCIe bridge.
+any comment on this for the designware driver ?
 
-There are two patches:
+Thanks,
+Lorenzo
 
-1) Refactor code in pci-host-generic so that it can more easily be
-   used by other drivers.  This splits the driver for CAM and ECAM
-   access methods to a separate file from the common host driver code.
-
-2) Add the ThunderX PCIe driver, which leverages the code in
-   pci-host-generic
-
-Changes from v2: Improve device tree binding example as noted by Rob
-Herring.  Rename pcie-thunder-pem.* to pci-thunder-pem.* for better
-consistency.  Update MAINTAINERS to reflect the changes.
-
-Changes from v1: Split CAM and ECAM code from common driver code as
-suggested by Arnd Bergmann.  Fix spelling errors in
-pcie-thunder-pem.txt
-
-
-
-David Daney (2):
-  PCI: generic: Refactor code to enable reuse by other drivers.
-  pci, pci-thunder-pem: Add PCIe host driver for ThunderX processors.
-
- .../devicetree/bindings/pci/pci-thunder-pem.txt    |  43 ++++
- MAINTAINERS                                        |   9 +
- drivers/pci/host/Kconfig                           |  11 +
- drivers/pci/host/Makefile                          |   2 +
- drivers/pci/host/pci-host-common.c                 | 194 ++++++++++++++
- drivers/pci/host/pci-host-common.h                 |  56 ++++
- drivers/pci/host/pci-host-generic.c                | 190 +-------------
- drivers/pci/host/pci-thunder-pem.c                 | 283 +++++++++++++++++++++
- 8 files changed, 602 insertions(+), 186 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-pem.txt
- create mode 100644 drivers/pci/host/pci-host-common.c
- create mode 100644 drivers/pci/host/pci-host-common.h
- create mode 100644 drivers/pci/host/pci-thunder-pem.c
-
--- 
-1.8.3.1
+On Fri, Jan 22, 2016 at 04:28:39PM +0000, Phil Edworthy wrote:
+> Hi Lorenzo,
+> 
+> On 20 January 2016 18:10, Lorenzo Pieralisi wrote:
+> > On Wed, Jan 20, 2016 at 11:13:04AM -0500, Sinan Kaya wrote:
+> > > On 1/20/2016 11:04 AM, Lorenzo Pieralisi wrote:
+> > > > Hi,
+> > > >
+> > > > I noticed that:
+> > > >
+> > > > 79953dd22c1d ("PCI: rcar: Remove dependency on ARM-specific struct
+> > hw_pci")
+> > > > cbce7900598c ("PCI: designware: Make driver arch-agnostic")
+> > > >
+> > > > added code in the respective host controller drivers to size bridges
+> > > > and assign resources only if the PCI_PROBE_ONLY flag is clear, which makes
+> > > > me wonder if there exists PCI_PROBE_ONLY set-ups for the respective
+> > > > host controllers:
+> > > >
+> <snip>
+>  
+> > Resources claiming and assignment should be managed in arch code,
+> > not in host controllers specific code, and that's the reason I
+> > complained in this RFC about the scattering of PCI_PROBE_ONLY flag
+> > checks in host drivers, it is becoming unmanageable (if useful
+> > at all on designware and rcar, I would like to know if there are
+> > PCI_PROBE_ONLY set-ups probing those host drivers).
+> 
+> I am pretty sure  there are no rcar set-ups that use PCI_PROBE_ONLY,
+> so I am happy for that code to go.
+> 
+> Thanks
+> Phil
+> 
+> > Does it make the point clearer ?
+> > 
+> > > > https://patchwork.ozlabs.org/patch/545671/
+> > > >
+> > > > so unless you really have *existing* set-ups that require it, please
+> > > > remove the respective checks from the host controller drivers, this is
+> > > > becoming a serious issue, because either:
+> > > >
+> > > > - we claim resources if and only if PCI_PROBE_ONLY is set
+> > > >
+> > > > Either like this (to be done for every host controllers and ARM
+> > > > bios32):
+> > > >
+> > > > https://patchwork.ozlabs.org/patch/545670/
+> > > >
+> > > > or in core ARM/ARM64 code - eg pcibios_fixup_bus() - (to avoid adding a
+> > > > resource claiming call in ALL PCI host controllers)
+> > > >
+> > > > - or we *always* carry out resource claiming regardless of PCI_PROBE_ONLY
+> > > >   (but on ARM we can't really do that since PCI FW set-up on most of the
+> > > >   platforms is not present)
+> > > >
+> > > > On PCI_PROBE_ONLY systems resources claiming is mandatory if we want
+> > > > to get rid of arches workarounds:
+> > >
+> > > I'm hoping to see x86 like behavior on ARM64 without any gotchas as
+> > > there is nothing special about CPU type when it comes to PCI.
+> > 
+> > As I said, we must enforce it with ACPI, for DT platforms I am all
+> > ears to decide how we can implement it sanely (I think the only way
+> > to do it is by claiming the PCI resources on PCI_PROBE_ONLY systems,
+> > that's not ideal but it simplifies things a lot).
+> > 
+> > Thanks,
+> > Lorenzo
+> > 
+> > >
+> > > >
+> > > > https://patchwork.ozlabs.org/patch/545671/
+> > > >
+> > > > Comments very appreciated.
+> > > >
+> > > > Thanks,
+> > > > Lorenzo
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > >
+> > >
+> > >
+> > > --
+> > > Sinan Kaya
+> > > Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+> > > Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux
+> > Foundation Collaborative Project
+> > >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
