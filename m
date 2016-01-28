@@ -1,135 +1,108 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI hostbridge init based on ACPI
-Date: Wed, 13 Jan 2016 14:20:46 +0100
-Message-Id: <1452691267-32240-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp07.in.ibm.com ([125.16.236.7]:51462 "EHLO
+	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967112AbcA1KC1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jan 2016 05:02:27 -0500
+Received: from localhost
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Thu, 28 Jan 2016 15:31:59 +0530
+Subject: Re: [RFC PATCH v3 0/5] vfio-pci: Allow to mmap sub-page MMIO BARs and
+ MSI-X table on PPC64 platform
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org
+References: <1452841574-2781-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
+	alex.williamson@redhat.com, benh@kernel.crashing.org,
+	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	David Laight <David.Laight@ACULAB.COM>
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Message-ID: <56A9E70F.9030503@linux.vnet.ibm.com>
+Date: Thu, 28 Jan 2016 18:01:51 +0800
+MIME-Version: 1.0
+In-Reply-To: <1452841574-2781-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From the functionality point of view this series might be split into the
-following logic parts:
-1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
-   PCI config regions and used when necessary.
-2. Move non-arch specific bits to the core code.
-3. Use MMCONFIG code and implement generic ACPI based PCI host controller driver.
-4. Enable above driver on ARM64
+Ping...
 
-Patches has been built on top of 4.4 and can be found here:
-git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v3)
+Alex, any comment?
 
-NOTE, this patch set depends on Matthew's patches:
-http://www.spinics.net/lists/linux-pci/msg45950.html
-https://github.com/Vality/linux/tree/pci-fixes
+Regards,
+Yongji Xie
 
-This has been tested on Cavium ThunderX server and QEMU.
-Any help in reviewing and testing is very appreciated.
-
-v2 -> v3
-- fix legacy IRQ assigning and IO ports registration
-- remove reference to arch specific companion device for ia64
-- move ACPI PCI host controller driver to pci_root.c
-- drop generic domain assignment for x86 and ia64 as I am not
-  able to run all necessary test variants
-- drop patch which cleaned legacy IRQ assignment since it belongs to
-  Mathew's series:
-  https://patchwork.ozlabs.org/patch/557504/
-- extend MCFG quirk code
-- rebased to 4.4
-
-v1 -> v2
-- moved non-arch specific piece of code to dirver/acpi/ directory
-- fixed IO resource handling
-- introduced PCI config accessors quirks matching
-- moved ACPI_COMPANION_SET to generic code
-
-Liu Jiang (1):
-  ACPI, PCI: Refine the way to handle translation_offset for ACPI
-    resources
-
-Tomasz Nowicki (20):
-  x86, pci: Reorder logic of pci_mmconfig_insert() function
-  x86, pci, acpi: Move arch-agnostic MMCONFIG (aka ECAM) and ACPI code
-    out of arch/x86/ directory
-  pci, acpi, mcfg: Provide generic implementation of MCFG code
-    initialization.
-  x86, pci: mmconfig_{32,64}.c code refactoring - remove code
-    duplication.
-  x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM
-    driver.
-  XEN / PCI: Remove the dependence on arch x86 when PCI_MMCONFIG=y
-  pci, acpi, mcfg: Provide default RAW ACPI PCI config space accessors.
-  arm64, acpi: Use empty PCI config space accessors from mcfg.c file.
-  pci, acpi, ecam: Add flag to indicate whether ECAM region was hot
-    added or not.
-  x86, pci: Cleanup platform specific MCFG data using previously added
-    ECAM hot_added flag.
-  pci, acpi: Move ACPI host bridge device companion assignment to core
-    code.
-  x86, ia64, pci: Remove ACPI companion device from platform specific
-    data.
-  pci, acpi: Provide generic way to assign bus domain number.
-  x86, ia64: Include acpi_pci_{add|remove}_bus to the default
-    pcibios_{add|remove}_bus implementation.
-  acpi, mcfg: Implement two calls that might be used to inject/remove
-    MCFG region.
-  x86, acpi, pci: Use equivalent function introduced in previous patch.
-  acpi, mcfg: Add default PCI config accessors implementation and
-    initial support for related quirks.
-  pci, acpi: Support for ACPI based generic PCI host controller init
-  pci, acpi: Match PCI config space accessors against platfrom specific
-    quirks.
-  arm64, pci, acpi: Start using ACPI based PCI host bridge driver for
-    ARM64.
-
- arch/arm64/Kconfig                 |   7 ++
- arch/arm64/kernel/pci.c            |  25 ----
- arch/ia64/hp/common/sba_iommu.c    |   2 +-
- arch/ia64/include/asm/pci.h        |   1 -
- arch/ia64/pci/pci.c                |  52 +++-----
- arch/ia64/sn/kernel/io_acpi_init.c |   4 +-
- arch/x86/Kconfig                   |   4 +
- arch/x86/include/asm/pci.h         |   3 -
- arch/x86/include/asm/pci_x86.h     |  28 +----
- arch/x86/pci/acpi.c                |  41 ++----
- arch/x86/pci/common.c              |  10 --
- arch/x86/pci/irq.c                 |  10 --
- arch/x86/pci/mmconfig-shared.c     | 250 ++++++-------------------------------
- arch/x86/pci/mmconfig_32.c         |  11 +-
- arch/x86/pci/mmconfig_64.c         |  67 +---------
- arch/x86/pci/numachip.c            |   1 +
- drivers/acpi/Kconfig               |   5 +
- drivers/acpi/Makefile              |   1 +
- drivers/acpi/mcfg.c                | 201 +++++++++++++++++++++++++++++
- drivers/acpi/pci_root.c            | 136 +++++++++++++++++++-
- drivers/acpi/resource.c            |  12 +-
- drivers/pci/Kconfig                |  10 ++
- drivers/pci/Makefile               |   5 +
- drivers/pci/ecam.c                 | 234 ++++++++++++++++++++++++++++++++++
- drivers/pci/pci.c                  |  29 ++++-
- drivers/pci/probe.c                |   5 +
- drivers/xen/pci.c                  |   7 +-
- include/acpi/acpi_bus.h            |   1 +
- include/asm-generic/vmlinux.lds.h  |   7 ++
- include/linux/acpi.h               |   2 +
- include/linux/ecam.h               |  62 +++++++++
- include/linux/pci-acpi.h           |  17 +++
- 32 files changed, 802 insertions(+), 448 deletions(-)
- create mode 100644 drivers/acpi/mcfg.c
- create mode 100644 drivers/pci/ecam.c
- create mode 100644 include/linux/ecam.h
-
--- 
-1.9.1
+On 2016/1/15 15:06, Yongji Xie wrote:
+> Current vfio-pci implementation disallows to mmap
+> sub-page(size < PAGE_SIZE) MMIO BARs and MSI-X table. This is because
+> sub-page BARs' mmio page may be shared with other BARs and MSI-X table
+> should not be accessed directly from the guest for security reasons.
+>
+> But these will easily cause some performance issues for mmio accesses
+> in guest when vfio passthrough sub-page BARs or BARs containing MSI-X
+> table on PPC64 platform. This is because PAGE_SIZE is 64KB by default
+> on PPC64 platform and the big page may easily hit the sub-page MMIO
+> BARs' unmmapping and cause the unmmaping of the mmio page which
+> MSI-X table locate in, which lead to mmio emulation in host.
+>
+> For sub-page MMIO BARs' unmmapping, this patchset adds a kernel
+> parameter for PCI resource allocator to enforce the alignment of all
+> MMIO BARs to be at least PAGE_SZIE and make it enabled by default on
+> PPC64 platform so that sub-page BAR's mmio page will not be shared
+> with other BARs. Then we can mmap sub-page MMIO BARs in vfio-pci driver
+> with this parameter enabled.
+>
+> For MSI-X table's unmmapping, we think MSI-X table is safe to access
+> directly from userspace if PCI host bridge support filtering of MSIs
+> which can ensure that a given pci device can only shoot the MSIs
+> assigned for it. So we add a pci_host_bridge attribute to indicate
+> if this PCI host bridge supports filtering of MSIs. Then we can mmap
+> MSI-X table with this attribute set.
+>
+> With this patchset applied, we can get almost 100% improvement on
+> performance for mmio accesses when we passthrough sub-page BARs to guest
+> in our test.
+>
+> The two vfio related patches(patch 2 and patch 5) are based on the
+> proposed patchset[1].
+>
+> Changelog v3:
+> - Rebase on new linux kernel mainline with the patchset[1] applied.
+> - Add a function to check whether PCI BARs'mmio page is shared with
+>    other BARs.
+> - Add a host bridge attribute to indicate PCI host bridge support
+>    filtering of MSIs.
+> - Use the new host bridge attribute to check if MSI-X table can
+>    be mmapped instead of CONFIG_EEH.
+> - Remove Kconfig option VFIO_PCI_MMAP_MSIX
+>
+> Changelog v2:
+> - Rebase on v4.4-rc6 with the patchset[1] applied.
+> - Use kernel parameter to enforce all MMIO BARs to be page aligned
+>    on PCI core code instead of doing it on PPC64 arch code.
+> - Remove flags: VFIO_DEVICE_FLAGS_PCI_PAGE_ALIGNED
+>                  VFIO_DEVICE_FLAGS_PCI_MSIX_MMAP
+> - Add a Kconfig option to support for mmapping MSI-X table.
+>
+> [1] https://lkml.org/lkml/2015/11/23/748
+>
+> Yongji Xie (5):
+>    PCI: Add support for enforcing all MMIO BARs to be page aligned
+>    vfio-pci: Allow to mmap sub-page MMIO BARs if the mmio page is exclusive
+>    PCI: Add host bridge attribute to indicate filtering of MSIs is supported
+>    powerpc/powernv/pci-ioda: Enable msi_filtered bit for any IODA host bridge
+>    vfio-pci: Allow to mmap MSI-X table if host bridge supports filtering of MSIs
+>
+>   Documentation/kernel-parameters.txt       |    5 +++++
+>   arch/powerpc/include/asm/pci.h            |   11 +++++++++
+>   arch/powerpc/platforms/powernv/pci-ioda.c |    6 +++++
+>   drivers/pci/host-bridge.c                 |    6 +++++
+>   drivers/pci/pci.c                         |   35 +++++++++++++++++++++++++++++
+>   drivers/pci/pci.h                         |    8 ++++++-
+>   drivers/vfio/pci/vfio_pci.c               |   13 ++++++++---
+>   include/linux/pci.h                       |    7 ++++++
+>   8 files changed, 87 insertions(+), 4 deletions(-)
+>
 
