@@ -1,42 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:39214 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752841AbcA2O2d (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Jan 2016 09:28:33 -0500
-Date: Fri, 29 Jan 2016 14:28:31 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, mark.brown@linaro.org
-Subject: Re: [PATCH] PCI: generic: map config window in one go
-Message-ID: <20160129142831.GF4541@arm.com>
-References: <1454077035-23872-1-git-send-email-ard.biesheuvel@linaro.org>
+Received: from mail-bn1on0080.outbound.protection.outlook.com ([157.56.110.80]:42696
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753102AbcA2ViB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 29 Jan 2016 16:38:01 -0500
+To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: Tirumalesh Chalamarla <tchalamarla@cavium.com>,
+	"Richter, Robert" <Robert.Richter@caviumnetworks.com>
+From: Manish Jaggi <mjaggi@caviumnetworks.com>
+Subject: [PATCH] PCI: Add cavium acs pci quirk
+Message-ID: <56ABC5AE.1050209@caviumnetworks.com>
+Date: Sat, 30 Jan 2016 01:33:58 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1454077035-23872-1-git-send-email-ard.biesheuvel@linaro.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ard,
 
-On Fri, Jan 29, 2016 at 03:17:15PM +0100, Ard Biesheuvel wrote:
-> Instead of iterating over the PCI config window and performing individual
-> ioremap() calls on all the adjacent slices, perform a single ioremap() to
-> map the entire region, and divvy it up later. This not only prevents
-> leaving some of it mapped if we fail half way through, it also ensures that
-> archs that support huge-vmap can use section mappings to perform the
-> mapping.
-> 
-> On my Seattle A0 box, this transforms 128 separate 1 MB mappings that are
-> mapped down to 4 KB pages into a single 128 MB mapping using 2 MB sections,
-> saving 512 KB worth of page tables.
-> 
-> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-> ---
+Cavium devices matching this quirk do not perform
+peer-to-peer with other functions, allowing masking out
+these bits as if they were unimplemented in the ACS capability.
 
-The code was written this way in response to feedback during driver review
-that we couldn't necessarily grab that much contiguous vmalloc space on
-32-bit ARM. Unless that's changed, we probably want to to predicate this
-change on having a 64-bit arch.
+Acked-by: Tirumalesh Chalamarla <tchalamarla@cavium.com>
+Signed-off-by: Manish Jaggi <mjaggi@caviumnetworks.com>
+---
+ drivers/pci/quirks.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-Will
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 7e32730..a300fa6 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3814,6 +3814,19 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+ #endif
+ }
+
++static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
++{
++	/*
++	 * Cavium devices matching this quirk do not perform
++	 * peer-to-peer with other functions, allowing masking out
++	 * these bits as if they were unimplemented in the ACS capability.
++	 */
++	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
++		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
++
++	return acs_flags ? 0 : 1;
++}
++
+ /*
+  * Many Intel PCH root ports do provide ACS-like features to disable peer
+  * transactions and validate bus numbers in requests, but do not provide an
+@@ -3966,6 +3979,8 @@ static const struct pci_dev_acs_enabled {
+ 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
+ 	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
+ 	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
++	/* Cavium ThunderX */
++	{ PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
+ 	{ 0 }
+ };
+
+-- 
+1.9.1
