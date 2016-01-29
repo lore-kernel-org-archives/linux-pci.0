@@ -1,252 +1,149 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 19 Jan 2016 11:58:15 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	okaya@codeaurora.org, jiang.liu@linux.intel.com,
-	Stefano.Stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com
-Subject: Re: [PATCH V3 19/21] pci, acpi: Support for ACPI based generic PCI
- host controller init
-Message-ID: <20160119115815.GC5276@red-moon>
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
- <1452691267-32240-20-git-send-email-tn@semihalf.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 29 Jan 2016 11:30:41 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ray Jui <rjui@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Rafal Milecki <zajec5@gmail.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-kernel@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: iproc: Remove redundant function number check for
+ PAXC
+Message-ID: <20160129173041.GD12965@localhost>
+References: <1454024240-12270-1-git-send-email-rjui@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1452691267-32240-20-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1454024240-12270-1-git-send-email-rjui@broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 13, 2016 at 02:21:05PM +0100, Tomasz Nowicki wrote:
-> Because of two patch series:
-> 1. Jiang Liu's common interface to support PCI host controller init
-> 2. MMCONFIG refactoring (part of this patch set)
-> now we can think about generic ACPI based PCI host controller init
-> implementation out of arch/ directory.
+Hi Ray,
+
+On Thu, Jan 28, 2016 at 03:37:20PM -0800, Ray Jui wrote:
+> This patch removes the conditional check that limits the number of
+> functions to be supported by the internally emulated endpoint device
+> connected to PAXC. Investigation shows that the emulated PAXC endpoint
+> device can properly reject request for unsupported functions, which
+> makes this conditional check redundant
 > 
-> These calls use information from MCFG table (PCI config space regions)
-> and _CRS method (IO/irq resources) to initialize PCI hostbridge.
-> 
-> TBD: We are still not sure whether we should reassign resources
-> after PCI bus enumeration or trust firmware to do all that work for
-> us properly.
-
-We should claim resources and assign unassigned ones. I put together a
-patch for resource claiming instead of reinventing the wheel, waiting
-for feedback:
-
-https://patchwork.ozlabs.org/patch/545669/
-
-If we merge the code with no resources claiming, we may end up in
-situations where claiming can trigger regressions so we won't be able
-to do it anymore.
-
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> CC: Arnd Bergmann <arnd@arndb.de>
-> CC: Catalin Marinas <catalin.marinas@arm.com>
-> CC: Liviu Dudau <Liviu.Dudau@arm.com>
-> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-> CC: Will Deacon <will.deacon@arm.com>
-> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+> Signed-off-by: Ray Jui <rjui@broadcom.com>
 > ---
->  drivers/acpi/Kconfig    |   5 ++
->  drivers/acpi/pci_root.c | 131 ++++++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 136 insertions(+)
+>  drivers/pci/host/pcie-iproc.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-> index c3664be..e315061 100644
-> --- a/drivers/acpi/Kconfig
-> +++ b/drivers/acpi/Kconfig
-> @@ -335,6 +335,11 @@ config ACPI_PCI_SLOT
->  	  i.e., segment/bus/device/function tuples, with physical slots in
->  	  the system.  If you are unsure, say N.
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index 9ae43ed..b65185d 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -204,7 +204,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+>  	 * allows only one device and supports a limited number of functions.
+>  	 */
+>  	if (pcie->type == IPROC_PCIE_PAXC)
+> -		if (slot > 0 || fn >= MAX_NUM_PAXC_PF)
+> +		if (slot > 0)
+>  			return NULL;
 >  
-> +config ACPI_PCI_HOST_GENERIC
-> +	bool "Generic ACPI PCI host controller"
-> +	help
-> +	  Say Y here if you want to support generic ACPI PCI host controller.
+>  	/* EP device access */
 
-You should add a proper description here.
+Thanks for checking this out.  I removed the now-unused
+MAX_NUM_PAXC_PF and folded this into the first patch, resulting in
+the combined patch below.
 
-> +
->  config X86_PM_TIMER
->  	bool "Power Management Timer Support" if EXPERT
->  	depends on X86
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index a65c8c2..d483e2a 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -24,6 +24,7 @@
->  #include <linux/init.h>
->  #include <linux/types.h>
->  #include <linux/mutex.h>
-> +#include <linux/of_address.h>
+I'm sorry to say that I have yet one more question.  It looks somewhat
+hacky to have the PAXC-specific "slot > 0" test, and I'm not sure it
+should be necessary (again, unless there's some implementation
+deficiency in that PAXC embedded endpoint).  I'm looking at section
+7.3 in the spec, and it seems like that endpoint *should* handle 
+a config transaction with a non-zero Device Number, i.e., "slot", as
+an Unsupported Request.  This should be standard behavior for all PCIe
+endpoints -- we can generate config transactions like that on all root
+complexes on all systems, so all endpoints should be able to handle
+it.
 
-We should move the IO space management to PCI core instead of having
-it in OF core, code carrying out PIO mapping does not depend on OF
-as far as I can see.
+Bjorn
 
->  #include <linux/pm.h>
->  #include <linux/pm_runtime.h>
->  #include <linux/pci.h>
-> @@ -514,6 +515,136 @@ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
->  	}
->  }
->  
-> +#ifdef CONFIG_ACPI_PCI_HOST_GENERIC
-> +static int pcibios_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
-> +{
-> +	if (pci_dev_msi_enabled(dev))
-> +		return 0;
-> +
-> +	acpi_pci_irq_enable(dev);
-> +	return dev->irq;
-> +}
-> +
-> +static void pci_mcfg_release_info(struct acpi_pci_root_info *ci)
-> +{
-> +	pci_mmcfg_teardown_map(ci);
-> +	kfree(ci);
-> +}
-> +
-> +static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
-> +{
-> +	struct list_head *list = &ci->resources;
-> +	struct acpi_device *device = ci->bridge;
-> +	struct resource_entry *entry, *tmp;
-> +	unsigned long flags;
-> +	int ret;
-> +
-> +	flags = IORESOURCE_IO | IORESOURCE_MEM;
-> +	ret = acpi_dev_get_resources(device, list,
-> +				     acpi_dev_filter_resource_type_cb,
-> +				     (void *)flags);
-> +	if (ret < 0) {
-> +		dev_warn(&device->dev,
-> +			 "failed to parse _CRS method, error code %d\n", ret);
-> +		return ret;
-> +	} else if (ret == 0)
-> +		dev_dbg(&device->dev,
-> +			"no IO and memory resources present in _CRS\n");
-		^^^^
-		what's the point in carrying on then ?
 
-> +
-> +	resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
-> +		resource_size_t cpu_addr, length;
-> +		struct resource *res = entry->res;
-> +
-> +		if (entry->res->flags & IORESOURCE_DISABLED)
-> +			resource_list_destroy_entry(entry);
-> +		else
-> +			res->name = ci->name;
-> +
-> +		/* PCI -> CPU space translation */
-> +		cpu_addr = res->start + entry->offset;
-> +		length = res->end - res->start + 1;
-> +
-> +		if (res->flags & IORESOURCE_MEM) {
-> +			res->start = cpu_addr;
-> +			res->end = cpu_addr + length - 1;
-> +		} else if (res->flags & IORESOURCE_IO) {
-> +			resource_size_t pci_addr = res->start;
-> +			unsigned long port;
-> +
-> +			if (pci_register_io_range(cpu_addr, length)) {
-> +				resource_list_destroy_entry(entry);
-> +				continue;
-> +			}
-> +
-> +			port = pci_address_to_pio(cpu_addr);
-> +			if (port == (unsigned long)-1) {
-> +				resource_list_destroy_entry(entry);
-> +				continue;
-> +			}
-> +
-> +			res->start = port;
-> +			res->end = port + length - 1;
-> +			entry->offset = port - pci_addr;
-> +
-> +			if (pci_remap_iospace(res, cpu_addr) < 0)
-> +				resource_list_destroy_entry(entry);
-> +		}
-> +	}
-> +	return ret;
-> +}
-> +
-> +static struct acpi_pci_root_ops acpi_pci_root_ops = {
-> +	.init_info = pci_mmcfg_setup_map,
-> +	.release_info = pci_mcfg_release_info,
-> +	.prepare_resources = pci_acpi_root_prepare_resources,
-> +};
-> +
-> +/* Root bridge scanning */
-> +struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
-> +{
-> +	int node = acpi_get_node(root->device->handle);
-> +	int domain = root->segment;
-> +	int busnum = root->secondary.start;
-> +	struct acpi_pci_root_info *info;
-> +	struct pci_host_bridge *bridge;
-> +	struct pci_bus *bus, *child;
-> +
-> +	if (domain && !pci_domains_supported) {
-> +		pr_warn("PCI %04x:%02x: multiple domains not supported.\n",
-> +			domain, busnum);
-> +		return NULL;
-> +	}
-> +
-> +	info = kzalloc_node(sizeof(*info), GFP_KERNEL, node);
-> +	if (!info) {
-> +		dev_err(&root->device->dev,
-> +			"pci_bus %04x:%02x: ignored (out of memory)\n",
-> +			domain, busnum);
-> +		return NULL;
-> +	}
-> +
-> +	acpi_pci_root_ops.pci_ops = pci_mcfg_get_ops(root);
-> +	bus = acpi_pci_root_create(root, &acpi_pci_root_ops, info, root);
-> +	if (!bus)
-> +		return NULL;
-		^^^
-		Leaking memory here.
+commit 46560388c476c8471fde7712c10f9fad8d0d1875
+Author: Ray Jui <rjui@broadcom.com>
+Date:   Wed Jan 27 16:52:24 2016 -0600
 
-> +
-> +	bridge = pci_find_host_bridge(bus);
-> +	bridge->map_irq = pcibios_map_irq;
+    PCI: iproc: Allow multiple devices except on PAXC
+    
+    Commit 943ebae781f5 ("PCI: iproc: Add PAXC interface support") only allowed
+    device 0, which is a regression on BCMA-based platforms.
+    
+    All systems support only one device, a Root Port at 00:00.0, on the root
+    bus.  PAXC-based systems support only the Root Port (00:00.0) and a single
+    device (with multiple functions) below it, e.g., 01:00.0, 01:00.1, etc.
+    Non-PAXC systems support arbitrary devices below the Root Port.
+    
+    [bhelgaas: changelog, fold in removal of MAX_NUM_PAXC_PF check]
+    Fixes: 943ebae781f5 ("PCI: iproc: Add PAXC interface support")
+    Reported-by: Rafal Milecki <zajec5@gmail.com>
+    Signed-off-by: Ray Jui <rjui@broadcom.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-It would be nice to use map_irq for that, but Matthew's series seems
-stuck in review mode, either we take that series on and make some
-progress on it or you should add the irq mapping code to arm64 arch
-code, *temporarily* :)
-
-Also, we should claim resources here.
-
-> +
-> +	pci_bus_size_bridges(bus);
-> +	pci_bus_assign_resources(bus);
-> +
-> +	/*
-> +	 * After the PCI-E bus has been walked and all devices discovered,
-> +	 * configure any settings of the fabric that might be necessary.
-> +	 */
-> +	list_for_each_entry(child, &bus->children, node)
-> +		pcie_bus_configure_settings(child);
-> +
-> +	return bus;
-> +}
-> +#endif /* CONFIG_ARCH_PCI_HOST_GENERIC_ACPI */
-             ^^^
-	     does not match the #ifdef
-
-Lorenzo
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 5816bce..a576aee 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -64,7 +64,6 @@
+ #define OARR_SIZE_CFG                BIT(OARR_SIZE_CFG_SHIFT)
+ 
+ #define MAX_NUM_OB_WINDOWS           2
+-#define MAX_NUM_PAXC_PF              4
+ 
+ #define IPROC_PCIE_REG_INVALID 0xffff
+ 
+@@ -170,20 +169,6 @@ static inline void iproc_pcie_ob_write(struct iproc_pcie *pcie,
+ 	writel(val, pcie->base + offset + (window * 8));
+ }
+ 
+-static inline bool iproc_pcie_device_is_valid(struct iproc_pcie *pcie,
+-					      unsigned int slot,
+-					      unsigned int fn)
+-{
+-	if (slot > 0)
+-		return false;
+-
+-	/* PAXC can only support limited number of functions */
+-	if (pcie->type == IPROC_PCIE_PAXC && fn >= MAX_NUM_PAXC_PF)
+-		return false;
+-
+-	return true;
+-}
+-
+ /**
+  * Note access to the configuration registers are protected at the higher layer
+  * by 'pci_lock' in drivers/pci/access.c
+@@ -199,11 +184,11 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+ 	u32 val;
+ 	u16 offset;
+ 
+-	if (!iproc_pcie_device_is_valid(pcie, slot, fn))
+-		return NULL;
+-
+ 	/* root complex access */
+ 	if (busno == 0) {
++		if (slot > 0 || fn > 0)
++			return NULL;
++
+ 		iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_IND_ADDR,
+ 				     where & CFG_IND_ADDR_MASK);
+ 		offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_IND_DATA);
+@@ -213,6 +198,14 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+ 			return (pcie->base + offset);
+ 	}
+ 
++	/*
++	 * PAXC is connected to an internally emulated EP within the SoC.  It
++	 * allows only one device.
++	 */
++	if (pcie->type == IPROC_PCIE_PAXC)
++		if (slot > 0)
++			return NULL;
++
+ 	/* EP device access */
+ 	val = (busno << CFG_ADDR_BUS_NUM_SHIFT) |
+ 		(slot << CFG_ADDR_DEV_NUM_SHIFT) |
