@@ -1,475 +1,692 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: Vineet.Gupta1@synopsys.com, helgaas@kernel.org
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
-	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v6 2/2] add new platform driver for PCI RC
-Date: Thu, 14 Jan 2016 11:04:33 +0000
-Message-Id: <9b45cc43f6aff7e5de15ac55e77fbab9cf008d2f.1452611234.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1452611234.git.jpinto@synopsys.com>
-References: <cover.1452611234.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1452611234.git.jpinto@synopsys.com>
-References: <cover.1452611234.git.jpinto@synopsys.com>
+Subject: Re: [PATCH V3 00/21] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+To: Tomasz Nowicki <tn@semihalf.com>, <bhelgaas@google.com>,
+	<arnd@arndb.de>, <will.deacon@arm.com>, <catalin.marinas@arm.com>,
+	<rjw@rjwysocki.net>, <hanjun.guo@linaro.org>,
+	<Lorenzo.Pieralisi@arm.com>, <okaya@codeaurora.org>,
+	<jiang.liu@linux.intel.com>, <Stefano.Stabellini@eu.citrix.com>
+References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+CC: <robert.richter@caviumnetworks.com>, <mw@semihalf.com>,
+	<Liviu.Dudau@arm.com>, <ddaney@caviumnetworks.com>,
+	<tglx@linutronix.de>, <wangyijing@huawei.com>,
+	<Suravee.Suthikulpanit@amd.com>, <msalter@redhat.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linaro-acpi@lists.linaro.org>, <jchandra@broadcom.com>,
+	<jcm@redhat.com>, <liudongdong3@huawei.com>
+From: "liudongdong (C)" <liudongdong3@huawei.com>
+Message-ID: <56AB0A12.8080600@huawei.com>
+Date: Fri, 29 Jan 2016 14:43:30 +0800
+MIME-Version: 1.0
+In-Reply-To: <1452691267-32240-1-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset="gbk"; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a new driver that will be the reference platform driver
-for all PCI RC IP Protoyping Kits based on ARC SDP.
-This patch is composed by:
 
--Changes to pcie-designware driver add a function that enables the
-feature of starting the LTSSM (Link Train Status State) used by the
-new driver
--MAINTAINERS file was updated to include the new driver
--Documentation/devicetree/bindings/pci was updated to include the new
-driver documentation
--New driver called pcie-snpsdev
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
----
-Change v5 -> v6:
-- Nothing changed (just to keep up with patch set version).
-Change v4 -> v5:
-- Nothing changed (just to keep up with patch set version).
-Changes v3 -> v4 (Bjorn Helgaas):
-- ARCH dependencies were added to the drivers/pci/host/kconfig for the
-PCIE_SNPSDEV.
-Changes v2 -> v3 (Bjorn Helgaas):
-- link init stuff was moved to a snpsdev_pcie_establish_link() function in
-pcie-snpsdev
-- pcie-snpsdev driver declaration was changed to be more 
-standard (Bjorn Helgaas)
-- pcie-designware' dw_pcie_link_retrain() now use standard registers from
-pci-regs.h (Bjorn Helgaas)
-- pcie-snpsdev.txt was complemented with more info (Mark Rutland)
-Changes v1 -> v2 (Bjorn Helgaas):
-- Fixups snpsdev_pcie_fixup_bridge() and snpsdev_pcie_fixup_res() were removed
-from the driver (these functions were for specific tests only and not usefull
-in mainline)
-- Driver' comments were reviewed (fix Typos and excessive comments removal)
-- Removed unnecessary definitions in the driver source (PCIE_PHY_CTRL and
-PCIE_PHY_STAT)
+ÔÚ 2016/1/13 21:20, Tomasz Nowicki Ð´µÀ:
+>>From the functionality point of view this series might be split into the
+> following logic parts:
+> 1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
+>     PCI config regions and used when necessary.
+> 2. Move non-arch specific bits to the core code.
+> 3. Use MMCONFIG code and implement generic ACPI based PCI host controller driver.
+> 4. Enable above driver on ARM64
+>
+> Patches has been built on top of 4.4 and can be found here:
+> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v3)
+>
+> NOTE, this patch set depends on Matthew's patches:
+> http://www.spinics.net/lists/linux-pci/msg45950.html
+> https://github.com/Vality/linux/tree/pci-fixes
+>
+> This has been tested on Cavium ThunderX server and QEMU.
+> Any help in reviewing and testing is very appreciated.
+>
+> v2 -> v3
+> - fix legacy IRQ assigning and IO ports registration
+> - remove reference to arch specific companion device for ia64
+> - move ACPI PCI host controller driver to pci_root.c
+> - drop generic domain assignment for x86 and ia64 as I am not
+>    able to run all necessary test variants
+> - drop patch which cleaned legacy IRQ assignment since it belongs to
+>    Mathew's series:
+>    https://patchwork.ozlabs.org/patch/557504/
+> - extend MCFG quirk code
+> - rebased to 4.4
 
- .../devicetree/bindings/pci/pcie-snpsdev.txt       |  33 +++
- MAINTAINERS                                        |   7 +
- drivers/pci/host/Kconfig                           |   8 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pcie-designware.c                 |   9 +
- drivers/pci/host/pcie-designware.h                 |   1 +
- drivers/pci/host/pcie-snpsdev.c                    | 286 +++++++++++++++++++++
- 7 files changed, 345 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
- create mode 100644 drivers/pci/host/pcie-snpsdev.c
+Based on the patchset and add the Hip05 ACPI specific quirks.
+Tested on the HiSilicon ARM64 D02 board.
+I made a test based on Intel 82599 networking card,it can work ok.
+this is the bootup log which contains PCIe host and Intel 82599 networking card part.
 
-diff --git a/Documentation/devicetree/bindings/pci/pcie-snpsdev.txt b/Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
-new file mode 100644
-index 0000000..cae548b
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
-@@ -0,0 +1,33 @@
-+Synopsys PCI RC IP Prototyping Kit
-+----------------------------------
-+
-+This is the reference platform driver to be used in the Synopsys PCI Root
-+Complex IP Prototyping Kit.
-+
-+Required properties:
-+- compatible: set to "snps,pcie-snpsdev";
-+- reg: base address and length of the pcie controller registers.
-+- #address-cells: set to <3>
-+- #size-cells: set to <2>
-+- device_type: set to "pci"
-+- ranges: ranges for the PCI memory and I/O regions.
-+- interrupts: one interrupt source for MSI interrupts, followed by interrupt
-+	source for hardware related interrupts.
-+- #interrupt-cells: set to <1>
-+- num-lanes: set to <1>;
-+
-+Example configuration:
-+
-+	pcie: pcie@0xdffff000 {
-+		compatible = "snps,pcie-snpsdev";
-+		reg = <0xdffff000 0x1000>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x00000800 0 0xd0000000 0xd0000000 0 0x00002000>,
-+			 <0x81000000 0 0x00000000 0xde000000 0 0x00010000>,
-+			 <0x82000000 0 0xd0400000 0xd0400000 0 0x0d000000>;
-+		interrupts = <25>, <24>;
-+		#interrupt-cells = <1>;
-+		num-lanes = <1>;
-+	};
-diff --git a/MAINTAINERS b/MAINTAINERS
-index e9caa4b..d2e4506 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8230,6 +8230,13 @@ S:	Maintained
- F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
- F:	drivers/pci/host/pcie-hisi.c
- 
-+PCI DRIVER FOR SYNOPSYS PROTOTYPING DEVICE
-+M:	Joao Pinto <jpinto@synopsys.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
-+F:	drivers/pci/host/pcie-snpsdev.c
-+
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
- L:	linux-pcmcia@lists.infradead.org
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index f131ba9..589bc15 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -172,4 +172,12 @@ config PCI_HISI
- 	help
- 	  Say Y here if you want PCIe controller support on HiSilicon HIP05 SoC
- 
-+config PCIE_SNPSDEV
-+	bool "Platform Driver for Synopsys Device"
-+	depends on ARC && OF
-+	select PCIEPORTBUS
-+	select PCIE_DW
-+	help
-+	  Say Y here if you want to enable PCIe controller support on the
-+	  Synopsys IP Prototyping Kits.
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 9d4d3c6..e422f65 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -20,3 +20,4 @@ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
- obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
- obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
- obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
-+obj-$(CONFIG_PCIE_SNPSDEV) += pcie-snpsdev.o
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 540f077..f73a3cf 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -706,6 +706,15 @@ static struct pci_ops dw_pcie_ops = {
- 	.write = dw_pcie_wr_conf,
- };
- 
-+void dw_pcie_link_retrain(struct pcie_port *pp)
-+{
-+	u32 val = 0;
-+
-+	dw_pcie_readl_rc(pp, PCI_EXP_LNKCTL+0x70, &val);
-+	val = val | PCI_EXP_LNKCTL_RL;
-+	dw_pcie_writel_rc(pp, val, PCI_EXP_LNKCTL+0x70);
-+}
-+
- void dw_pcie_setup_rc(struct pcie_port *pp)
- {
- 	u32 val;
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 2356d29..249b631 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -79,5 +79,6 @@ void dw_pcie_msi_init(struct pcie_port *pp);
- int dw_pcie_link_up(struct pcie_port *pp);
- void dw_pcie_setup_rc(struct pcie_port *pp);
- int dw_pcie_host_init(struct pcie_port *pp);
-+void dw_pcie_link_retrain(struct pcie_port *pp);
- 
- #endif /* _PCIE_DESIGNWARE_H */
-diff --git a/drivers/pci/host/pcie-snpsdev.c b/drivers/pci/host/pcie-snpsdev.c
-new file mode 100644
-index 0000000..4ca7ec5
---- /dev/null
-+++ b/drivers/pci/host/pcie-snpsdev.c
-@@ -0,0 +1,286 @@
-+/*
-+ * PCIe RC driver for Synopsys Designware Core
-+ *
-+ * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
-+ *
-+ * Authors: Manjunath Bettegowda <manjumb@synopsys.com>,
-+ *	    Jie Deng <jiedeng@synopsys.com>
-+ *	    Joao Pinto <jpinto@synopsys.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/clk.h>
-+#include <linux/delay.h>
-+#include <linux/gpio.h>
-+#include <linux/interrupt.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of_gpio.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/resource.h>
-+#include <linux/signal.h>
-+#include <linux/types.h>
-+
-+#include "pcie-designware.h"
-+
-+#define to_snpsdev_pcie(x)	container_of(x, struct snpsdev_pcie, pp)
-+
-+struct snpsdev_pcie {
-+	void __iomem		*mem_base; /* Memory Base to access Core's [RC]
-+					    * Config Space Layout
-+					    */
-+	struct pcie_port	pp;        /* RC Root Port specific structure -
-+					    * DWC_PCIE_RC stuff
-+					    */
-+};
-+
-+#define PCI_EQUAL_CONTROL_PHY 0x00000707
-+
-+/* PCIe Port Logic registers (memory-mapped) */
-+#define PLR_OFFSET 0x700
-+#define PCIE_PHY_DEBUG_R0 (PLR_OFFSET + 0x28) /* 0x728 */
-+#define PCIE_PHY_DEBUG_R1 (PLR_OFFSET + 0x2c) /* 0x72c */
-+
-+/* This handler was created for future work */
-+static irqreturn_t snpsdev_pcie_irq_handler(int irq, void *arg)
-+{
-+	return IRQ_NONE;
-+}
-+
-+static irqreturn_t snpsdev_pcie_msi_irq_handler(int irq, void *arg)
-+{
-+	struct pcie_port *pp = arg;
-+
-+	dw_handle_msi_irq(pp);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static void snpsdev_pcie_init_phy(struct pcie_port *pp)
-+{
-+	/* write Lane 0 Equalization Control fields register */
-+	writel(PCI_EQUAL_CONTROL_PHY, pp->dbi_base + 0x154);
-+}
-+
-+static int snpsdev_pcie_deassert_core_reset(struct pcie_port *pp)
-+{
-+	return 0;
-+}
-+
-+static void snpsdev_pcie_establish_link(struct pcie_port *pp)
-+{
-+	int count = 0;
-+
-+	/* Initialize Phy (Reset/poweron/control-inputs ) */
-+	snpsdev_pcie_init_phy(pp);
-+
-+	/* de-assert core reset */
-+	snpsdev_pcie_deassert_core_reset(pp);
-+
-+	/* We expect the PCIe Link to be up by this time */
-+	dw_pcie_setup_rc(pp);
-+
-+	/* Start LTSSM here */
-+	dw_pcie_link_retrain(pp);
-+
-+	while (!dw_pcie_link_up(pp)) {
-+		usleep_range(1000, 1100);
-+		count++;
-+		if (count == 20) {
-+			dev_err(pp->dev, "phy link never came up\n");
-+			dev_dbg(pp->dev,
-+				"PL_DEBUG0: 0x%08x, DEBUG_R1: 0x%08x\n",
-+				readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
-+				readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
-+			break;
-+		}
-+	}
-+}
-+
-+/*
-+ * snpsdev_pcie_host_init()
-+ * Platform specific host/RC initialization
-+ *	a. Assert the core reset
-+ *	b. Assert and deassert phy reset and initialize the phy
-+ *	c. De-Assert the core reset
-+ *	d. Initializet the Root Port (BARs/Memory Or IO/ Interrupt/ Commnad Reg)
-+ *	e. Initiate Link startup procedure
-+ *
-+ */
-+static void snpsdev_pcie_host_init(struct pcie_port *pp)
-+{
-+	/* Establish link */
-+	snpsdev_pcie_establish_link(pp);
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		dw_pcie_msi_init(pp);
-+}
-+
-+static int snpsdev_pcie_link_up(struct pcie_port *pp)
-+{
-+	u32 status;
-+
-+	/* Bit number 36: reports LTSSM PHY Link UP; Available in bit 3 of
-+	 * PCIE_PHY_DEBUG_R1
-+	 */
-+	status = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1) & (0x1 << 4);
-+	if (status != 0)
-+		return 1;
-+
-+	/* TODO:Now Link is in L0;Initiate GEN2/GEN3 migration if RC Supports*/
-+	return 0;
-+}
-+
-+/**
-+ * This is RC operation structure
-+ * snpsdev_pcie_link_up: the function which initiates the phy link up procedure
-+ * snpsdev_pcie_host_init: the function which does the host/RC Root port
-+ * initialization.
-+ */
-+static struct pcie_host_ops snpsdev_pcie_host_ops = {
-+	.link_up = snpsdev_pcie_link_up,
-+	.host_init = snpsdev_pcie_host_init,
-+};
-+
-+/**
-+ * snpsdev_add_pcie_port
-+ * This function
-+ * a. installs the interrupt handler
-+ * b. registers host operations in the pcie_port structure
-+ */
-+static int snpsdev_add_pcie_port(struct pcie_port *pp,
-+				 struct platform_device *pdev)
-+{
-+	int ret;
-+
-+	pp->irq = platform_get_irq(pdev, 1);
-+
-+	if (pp->irq < 0) {
-+		if (pp->irq != -EPROBE_DEFER)
-+			dev_err(&pdev->dev, "cannot get irq\n");
-+		return pp->irq;
-+	}
-+
-+	ret = devm_request_irq(&pdev->dev, pp->irq, snpsdev_pcie_irq_handler,
-+				IRQF_SHARED, "snpsdev-pcie", pp);
-+
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to request irq\n");
-+		return ret;
-+	}
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		pp->msi_irq = platform_get_irq(pdev, 0);
-+
-+		if (pp->msi_irq < 0) {
-+			if (pp->msi_irq != -EPROBE_DEFER)
-+				dev_err(&pdev->dev, "cannot get msi irq\n");
-+			return pp->msi_irq;
-+		}
-+
-+		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
-+					snpsdev_pcie_msi_irq_handler,
-+					IRQF_SHARED, "snpsdev-pcie-msi", pp);
-+		if (ret) {
-+			dev_err(&pdev->dev, "failed to request msi irq\n");
-+			return ret;
-+		}
-+	}
-+
-+	pp->root_bus_nr = -1;
-+	pp->ops = &snpsdev_pcie_host_ops;
-+
-+	/* Below function:
-+	 * Checks for range property from DT
-+	 * Gets the IO and MEMORY and CONFIG-Space ranges from DT
-+	 * Does IOREMAPS on the physical addresses
-+	 * Gets the num-lanes from DT
-+	 * Gets MSI capability from DT
-+	 * Calls the platform specific host initialization
-+	 * Program the correct class, BAR0, Link width, in Config space
-+	 * Then it calls pci common init routine
-+	 * Then it calls function to assign "unassigned resources"
-+	 */
-+	ret = dw_pcie_host_init(pp);
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to initialize host\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-+ * snpsdev_pcie_rc_probe()
-+ * This function gets called as part of pcie registration. if the id matches
-+ * the platform driver framework will call this function.
-+ *
-+ * @pdev: Pointer to the platform_device structure
-+ *
-+ * Returns zero on success; Negative errorno on failure
-+ */
-+static int snpsdev_pcie_rc_probe(struct platform_device *pdev)
-+{
-+	struct snpsdev_pcie *snpsdev_pcie;
-+	struct pcie_port *pp;
-+	struct resource *dwc_pcie_rc_res;  /* Resource from DT */
-+	int ret;
-+
-+	snpsdev_pcie = devm_kzalloc(&pdev->dev, sizeof(*snpsdev_pcie),
-+					GFP_KERNEL);
-+	if (!snpsdev_pcie)
-+		return -ENOMEM;
-+
-+	pp = &snpsdev_pcie->pp;
-+	pp->dev = &pdev->dev;
-+
-+	dwc_pcie_rc_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+
-+	if (!dwc_pcie_rc_res)
-+		return -ENODEV;
-+
-+	snpsdev_pcie->mem_base = devm_ioremap_resource(&pdev->dev,
-+							dwc_pcie_rc_res);
-+	if (IS_ERR(snpsdev_pcie->mem_base)) {
-+		ret = PTR_ERR(snpsdev_pcie->mem_base);
-+		return ret;
-+	}
-+	pp->dbi_base = snpsdev_pcie->mem_base;
-+
-+	ret = snpsdev_add_pcie_port(pp, pdev);
-+	if (ret < 0)
-+		return ret;
-+
-+	platform_set_drvdata(pdev, snpsdev_pcie);
-+
-+	return 0;
-+}
-+
-+static int snpsdev_pcie_rc_remove(struct platform_device *pdev)
-+{
-+	return 0;
-+}
-+
-+static const struct of_device_id snpsdev_pcie_rc_of_match[] = {
-+	{ .compatible = "snps,pcie-snpsdev", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, snpsdev_pcie_rc_of_match);
-+
-+static struct platform_driver snpsdev_pcie_rc_driver = {
-+	.driver = {
-+		.name	= "pcie-snpsdev",
-+		.of_match_table = snpsdev_pcie_rc_of_match,
-+	},
-+	.probe = snpsdev_pcie_rc_probe,
-+};
-+
-+module_platform_driver(snpsdev_pcie_rc_driver);
-+
-+MODULE_AUTHOR("Manjunath Bettegowda <manjumb@synopsys.com>");
-+MODULE_DESCRIPTION("Platform Driver for Synopsys Device");
-+MODULE_LICENSE("GPL v2");
--- 
-1.8.1.5
+Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+
+EFI stub: Booting Linux Kernel...
+EFI stub: Using DTB from command line
+EFI stub: Exiting boot services and installing virtual address map...
+GMAC ExitBootServicesEvent
+SMMU ExitBootServicesEvent
+Booting Linux on physical CPU 0x20000
+Initializing cgroup subsys cpu
+Linux version 4.4.0-rc2+ (l00290354@linux-ioko) (gcc version 4.9.3 20150211 (prerelease) (20150316) ) #194 SMP PREEMPT Thu Jan 28 09:51:15 CST 2016
+Boot CPU: AArch64 Processor [411fd071]
+earlycon: Early serial console at MMIO32 0x80300000 (options '')
+bootconsole [uart0] enabled
+efi: Getting EFI parameters from FDT:
+EFI v2.50 by ARM Versatile Express EFI Jan 13 2016 20:43:10
+efi:  SMBIOS=0x7aae0000  SMBIOS 3.0=0x7aac0000  ACPI=0x7ab20000  ACPI 2.0=0x7ab20014
+cma: Reserved 16 MiB at 0x000000007e800000
+ACPI: Early table checksum verification disabled
+ACPI: RSDP 0x000000007AB20014 000024 (v02 HISI  )
+ACPI: XSDT 0x000000007AB100E8 00006C (v01 HISI   HISI-D02 20140727      01000013)
+ACPI: FACP 0x000000007AA80000 00010C (v05 HISI   HISI-D02 20140727 HISI 00000099)
+ACPI: Override [DSDT-HISI-D02], this is unsafe: tainting kernel
+Disabling lock debugging due to kernel taint
+ACPI: DSDT 0x000000007AA10000 Logical table override, new table: 0xFFFFFFC0009CB8B8
+ACPI: DSDT 0xFFFFFFC0009CB8B8 0015B5 (v01 HISI   HISI-D02 20140727 INTL 20150619)
+ACPI: DBG2 0x000000007AAA0000 00005A (v00 HISI   HISI-D02 20140727 HISI 00000099)
+ACPI: GTDT 0x000000007AA70000 000060 (v02 HISI   HISI-D02 20140727 HISI 00000099)
+ACPI: APIC 0x000000007AA60000 000564 (v01 HISI   HISI-D02 20140727 HISI 00000099)
+ACPI: MCFG 0x000000007AA50000 00004C (v01 HISI   HISI-D02 20140727 HISI 00000099)
+ACPI: SLIT 0x000000007AA40000 0001BC (v01 HISI   HISI-D02 20140727 HISI 00000099)
+ACPI: SPCR 0x000000007AA30000 000050 (v02 HISI   HISI-D02 20140727 HISI 00000099)
+ACPI: SRAT 0x000000007AA20000 0001B0 (v03 HISI   HISI-D02 20140727 HISI 00000099)
+ACPI: IORT 0x000000007AA00000 0001FC (v00 INTEL  TEMPLATE 00000000 INTL 20150619)
+psci: probing for conduit method from ACPI.
+NOTICE:  [psci_smc_handler]:[349L] PSCI_VERSION CALL
+NOTICE:  [psci_version]:[101L] PSCI_MAJOR_VER: 10000: PSCI_MINOR_VER: 0
+
+0008;<54
+psci: PSCIv1.0 detected in firmware.
+psci: Using standard PSCI v0.2 function IDs
+
+0008;<54
+psci: MIGRATE_INFO_TYPE not supported.
+
+0008;<54
+
+0008;<54
+PERCPU: Embedded 15 pages/cpu @ffffffd1ffedb000 s24576 r8192 d28672 u61440
+Detected PIPT I-cache on CPU0
+CPU features: enabling workaround for ARM erratum 832075
+Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 2063376
+Kernel command line: dtb=hip05-d02.dtb console=ttyS0,115200 earlycon=uart8250,mmio32,0x80300000 initrd=filesystem.cpio.gz acpi=force
+log_buf_len individual max cpu contribution: 4096 bytes
+log_buf_len total cpu_extra contributions: 61440 bytes
+log_buf_len min size: 16384 bytes
+log_buf_len: 131072 bytes
+early log buf free: 12732(77%)
+PID hash table entries: 4096 (order: 3, 32768 bytes)
+Dentry cache hash table entries: 1048576 (order: 11, 8388608 bytes)
+Inode-cache hash table entries: 524288 (order: 10, 4194304 bytes)
+software IO TLB [mem 0x76a00000-0x7aa00000] (64MB) mapped at [ffffffc076a00000-ffffffc07a9fffff]
+Memory: 8052312K/8384512K available (6074K kernel code, 519K rwdata, 2556K rodata, 572K init, 212K bss, 315816K reserved, 16384K cma-reserved)
+Virtual kernel memory layout:
+     vmalloc : 0xffffff8000000000 - 0xffffffbdbfff0000   (   246 GB)
+     vmemmap : 0xffffffbdc0000000 - 0xffffffbfc0000000   (     8 GB maximum)
+               0xffffffbdc0000000 - 0xffffffbe08000000   (  1152 MB actual)
+     fixed   : 0xffffffbffa7fd000 - 0xffffffbffac00000   (  4108 KB)
+     PCI I/O : 0xffffffbffae00000 - 0xffffffbffbe00000   (    16 MB)
+     modules : 0xffffffbffc000000 - 0xffffffc000000000   (    64 MB)
+     memory  : 0xffffffc000000000 - 0xffffffd200000000   ( 73728 MB)
+       .init : 0xffffffc0008f0000 - 0xffffffc00097f000   (   572 KB)
+       .text : 0xffffffc000080000 - 0xffffffc0008efa34   (  8639 KB)
+       .data : 0xffffffc000994000 - 0xffffffc000a15c00   (   519 KB)
+SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=16, Nodes=1
+Preemptible hierarchical RCU implementation.
+	Build-time adjustment of leaf fanout to 64.
+	RCU restricting CPUs from NR_CPUS=64 to nr_cpu_ids=16.
+RCU: Adjusting geometry for rcu_fanout_leaf=64, nr_cpu_ids=16
+NR_IRQS:64 nr_irqs:64 0
+GIC: Using split EOI/Deactivate mode
+ITS@0x8c000000
+ITS: allocated 65536 Devices @11f6c80000 (psz 4K, shr 1)
+ITS: allocated 512 Virtual CPUs @11f6c0d000 (psz 4K, shr 1)
+ITS: allocated 512 Interrupt Collections @11f6c0e000 (psz 4K, shr 1)
+ITS@0xc6000000
+ITS: allocated 65536 Devices @11f6d00000 (psz 4K, shr 1)
+ITS: allocated 512 Virtual CPUs @11f6c0f000 (psz 4K, shr 1)
+ITS: allocated 512 Interrupt Collections @11f6c30000 (psz 4K, shr 1)
+ITS@0xa3000000
+ITS: allocated 65536 Devices @11f6d80000 (psz 4K, shr 1)
+ITS: allocated 512 Virtual CPUs @11f6c33000 (psz 4K, shr 1)
+ITS: allocated 512 Interrupt Collections @11f6c34000 (psz 4K, shr 1)
+ITS@0xb7000000
+ITS: allocated 65536 Devices @11f6e00000 (psz 4K, shr 1)
+ITS: allocated 512 Virtual CPUs @11f6c35000 (psz 4K, shr 1)
+ITS: allocated 512 Interrupt Collections @11f6c36000 (psz 4K, shr 1)
+GIC: using LPI property table @0x00000011f6c60000
+ITS: Allocated 1792 chunks for LPIs
+CPU0: found redistributor 20000 region 0:0x000000008d100000
+CPU0: using LPI pending table @0x00000011f6c70000
+Architected cp15 timer(s) running at 50.00MHz (phys).
+clocksource: arch_sys_counter: mask: 0xffffffffffffff max_cycles: 0xb8812736b, max_idle_ns: 440795202655 ns
+sched_clock: 56 bits at 50MHz, resolution 20ns, wraps every 4398046511100ns
+Console: colour dummy device 80x25
+Calibrating delay loop (skipped), value calculated using timer frequency.. 100.00 BogoMIPS (lpj=200000)
+pid_max: default: 32768 minimum: 301
+ACPI: Core revision 20150930
+ACPI: 1 ACPI AML tables successfully acquired and loaded
+Security Framework initialized
+Mount-cache hash table entries: 16384 (order: 5, 131072 bytes)
+Mountpoint-cache hash table entries: 16384 (order: 5, 131072 bytes)
+Initializing cgroup subsys memory
+Initializing cgroup subsys hugetlb
+Remapping and enabling EFI services.
+   EFI remap 0x000000007aab0000 => 0000000040000000
+   EFI remap 0x000000007aaf0000 => 0000000040040000
+   EFI remap 0x000000007ab00000 => 0000000040050000
+   EFI remap 0x000000007ab30000 => 0000000040060000
+   EFI remap 0x000000007ab70000 => 00000000400a0000
+   EFI remap 0x000000007aba0000 => 00000000400c0000
+   EFI remap 0x000000007fb90000 => 00000000400d0000
+   EFI remap 0x000000007fbb0000 => 00000000400e0000
+   EFI remap 0x0000000080300000 => 0000000040110000
+   EFI remap 0x00000000a00f0000 => 0000000040120000
+ASID allocator initialised with 65536 entries
+PCI/MSI: ITS@0x8c000000 domain created
+PCI/MSI: ITS@0xc6000000 domain created
+PCI/MSI: ITS@0xa3000000 domain created
+PCI/MSI: ITS@0xb7000000 domain created
+Platform MSI: irqchip@000000008c000000 domain created
+Platform MSI: irqchip@00000000c6000000 domain created
+Platform MSI: irqchip@00000000a3000000 domain created
+Platform MSI: irqchip@00000000b7000000 domain created
+NOTICE:  [psci_smc_handler]:[410L] PSCI_CPU_ON_AARCH64 CALL
+NOTICE:  [psci_smc_handler]:[411L] x1=0x20001 x2=0x827d0 x3=0x0
+NOTICE:  [scpi_set_css_power_state]:[89L] domain_cluster=0x1
+
+NOTICE:  [scpi_set_css_power_state]:[97L] domain_cluster=0x1
+
+
+0008;<AB54
+NOTICE:  [psci_afflvl_power_on_finish]:[508L]
+NOTICE:  [cm_prepare_el3_exit]:[266L] read_tpidr_el3 = 7fc3c080
+NOTICE:  [cm_prepare_el3_exit]:[321L] ctx add = 7fc3d190
+NOTICE:  [psci_afflvl_power_on_finish]:[566L]
+
+000827=0
+NOTICE:  [psci_smc_handler]:[410L] PSCI_CPU_ON_AARCH64 CALL
+NOTICE:  [psci_smc_handler]:[411L] x1=0x20002 x2=0x827d0 x3=0x0
+NOTICE:  [scpi_set_css_power_state]:[89L] domain_cluster=0x1
+
+NOTICE:  [scpi_set_css_power_state]:[97L] domain_cluster=0x1
+
+
+0008;<AB54
+NOTICE:  [psci_afflvl_power_on_finish]:[508L]
+NOTICE:  [cm_prepare_el3_exit]:[266L] read_tpidr_el3 = 7fc3c100
+NOTICE:  [cm_prepare_el3_exit]:[321L] ctx add = 7fc3d3a0
+NOTICE:  [psci_afflvl_power_on_finish]:[566L]
+
+000827=0
+NOTICE:  [psci_smc_handler]:[410L] PSCI_CPU_ON_AARCH64 CALL
+NOTICE:  [psci_smc_handler]:[411L] x1=0x20003 x2=0x827d0 x3=0x0
+NOTICE:  [scpi_set_css_power_state]:[89L] domain_cluster=0x1
+
+NOTICE:  [scpi_set_css_power_state]:[97L] domain_cluster=0x1
+
+
+0008;<AB54
+NOTICE:  [psci_afflvl_power_on_finish]:[508L]
+NOTICE:  [cm_prepare_el3_exit]:[266L] read_tpidr_el3 = 7fc3c180
+NOTICE:  [cm_prepare_el3_exit]:[321L] ctx add = 7fc3d5b0
+NOTICE:  [psci_afflvl_power_on_finish]:[566L]
+
+000827=0
+NOTICE:  [psci_smc_handler]:[410L] PSCI_CPU_ON_AARCH64 CALL
+NOTICE:  [psci_smc_handler]:[411L] x1=0x20100 x2=0x827d0 x3=0x0
+NOTICE:  [scpi_set_css_power_state]:[89L] domain_cluster=0x1
+
+NOTICE:  [scpi_set_css_power_state]:[97L] domain_cluster=0x3
+
+
+0008;<AB54
+NOTICE:  [psci_afflvl_power_on_finish]:[508L]
+NOTICE:  [cm_prepare_el3_exit]:[266L] read_tpidr_el3 = 7fc3c200
+NOTICE:  [cm_prepare_el3_exit]:[321L] ctx add = 7fc3d7c0
+NOTICE:  [psci_afflvl_power_on_finish]:[566L]
+
+000827=0
+NOTICE:  [psci_smc_handler]:[410L] PSCI_CPU_ON_AARCH64 CALL
+NOTICE:  [psci_smc_handler]:[411L] x1=0x20101 x2=0x827d0 x3=0x0
+NOTICE:  [scpi_set_css_power_state]:[89L] domain_cluster=0x3
+
+NOTICE:  [scpi_set_css_power_state]:[97L] domain_cluster=0x3
+
+
+0008;<AB54
+NOTICE:  [psci_afflvl_power_on_finish]:[508L]
+NOTICE:  [cm_prepare_el3_exit]:[266L] read_tpidr_el3 = 7fc3c280
+NOTICE:  [cm_prepare_el3_exit]:[321L] ctx add = 7fc3d9d0
+NOTICE:  [psci_afflvl_power_on_finish]:[566L]
+
+000827=0
+NOTICE:  [psci_smc_handler]:[410L] PSCI_CPU_ON_AARCH64 CALL
+NOTICE:  [psci_smc_handler]:[411L] x1=0x20102 x2=0x827d0 x3=0x0
+NOTICE:  [scpi_set_css_power_state]:[89L] domain_cluster=0x3
+
+NOTICE:  [scpi_set_css_power_state]:[97L] domain_cluster=0x3
+
+
+0008;<AB54
+NOTICE:  [psci_afflvl_power_on_finish]:[508L]
+NOTICE:  [cm_prepare_el3_exit]:[266L] read_tpidr_el3 = 7fc3c300
+NOTICE:  [cm_prepare_el3_exit]:[321L] ctx add = 7fc3dbe0
+NOTICE:  [psci_afflvl_power_on_finish]:[566L]
+
+000827=0
+NOTICE:  [psci_smc_handler]:[410L] PSCI_CPU_ON_AARCH64 CALL
+NOTICE:  [psci_smc_handler]:[411L] x1=0x20103 x2=0x827d0 x3=0x0
+NOTICE:  [scpi_set_css_power_state]:[89L] domain_cluster=0x3
+
+NOTICE:  [scpi_set_css_power_state]:[97L] domain_cluster=0x3
+
+
+0008;<AB54
+NOTICE:  [psci_afflvl_power_on_finish]:[508L]
+NOTICE:  [cm_prepare_el3_exit]:[266L] read_tpidr_el3 = 7fc3c380
+NOTICE:  [cm_prepare_el3_exit]:[321L] ctx add = 7fc3ddf0
+NOTICE:  [psci_afflvl_power_on_finish]:[566L]
+
+000827=0
+NOTICE:  [psci_smc_handler]:[410L] PSCI_CPU_ON_AARCH64 CALL
+NOTICE:  [psci_smc_handler]:[411L] x1=0x20200 x2=0x827d0 x3=0x0
+NOTICE:  [scpi_set_css_power_state]:[89L] domain_cluster=0x3
+
+NOTICE:  [scpi_set_css_power_state]:[97L] domain_cluster=0x7
+
+
+0008;<AB54
+NOTICE:  [psci_afflvl_power_on_finish]:[508L]
+NOTICE:  [cm_prepare_el3_exit]:[266L] read_tpidr_el3 = 7fc3c400
+NOTICE:  [cm_prepare_el3_exit]:[321L] ctx add = 7fc3e000
+NOTICE:  [psci_afflvl_power_on_finish]:[566L]
+
+000827=0
+NOTICE:  [psci_smc_handler]:[410L] PSCI_CPU_ON_AARCH64 CALL
+NOTICE:  [psci_smc_handler]:[411L] x1=0x20201 x2=0x827d0 x3=0x0
+NOTICE:  [scpi_set_css_power_state]:[89L] domain_cluster=0x7
+
+NOTICE:  [scpi_set_css_power_state]:[97L] domain_cluster=0x7
+
+
+0008;<AB54
+NOTICE:  [psci_afflvl_power_on_finish]:[508L]
+NOTICE:  [cm_prepare_el3_exit]:[266L] read_tpidr_el3 = 7fc3c480
+NOTICE:  [cm_prepare_el3_exit]:[321L] ctx add = 7fc3e210
+NOTICE:  [psci_afflvl_power_on_finish]:[566L]
+
+000827=0
+NOTICE:  [psci_smc_handler]:[410L] PSCI_CPU_ON_AARCH64 CALL
+NOTICE:  [psci_smc_handler]:[411L] x1=0x20202 x2=0x827d0 x3=0x0
+NOTICE:  [scpi_set_css_power_state]:[89L] domain_cluster=0x7
+
+NOTICE:  [scpi_set_css_power_state]:[97L] domain_cluster=0x7
+
+
+0008;<AB54
+NOTICE:  [psci_afflvl_power_on_finish]:[508L]
+NOTICE:  [cm_prepare_el3_exit]:[266L] read_tpidr_el3 = 7fc3c500
+NOTICE:  [cm_prepare_el3_exit]:[321L] ctx add = 7fc3e420
+NOTICE:  [psci_afflvl_power_on_finish]:[566L]
+
+000827=0
+NOTICE:  [psci_smc_handler]:[410L] PSCI_CPU_ON_AARCH64 CALL
+NOTICE:  [psci_smc_handler]:[411L] x1=0x20203 x2=0x827d0 x3=0x0
+NOTICE:  [scpi_set_css_power_state]:[89L] domain_cluster=0x7
+
+NOTICE:  [scpi_set_css_power_state]:[97L] domain_cluster=0x7
+
+
+0008;<AB54
+NOTICE:  [psci_afflvl_power_on_finish]:[508L]
+NOTICE:  [cm_prepare_el3_exit]:[266L] read_tpidr_el3 = 7fc3c580
+NOTICE:  [cm_prepare_el3_exit]:[321L] ctx add = 7fc3e630
+NOTICE:  [psci_afflvl_power_on_finish]:[566L]
+
+000827=0
+NOTICE:  [psci_smc_handler]:[410L] PSCI_CPU_ON_AARCH64 CALL
+NOTICE:  [psci_smc_handler]:[411L] x1=0x20300 x2=0x827d0 x3=0x0
+NOTICE:  [scpi_set_css_power_state]:[89L] domain_cluster=0x7
+
+NOTICE:  [scpi_set_css_power_state]:[97L] domain_cluster=0xf
+
+
+0008;<AB54
+NOTICE:  [psci_afflvl_power_on_finish]:[508L]
+NOTICE:  [cm_prepare_el3_exit]:[266L] read_tpidr_el3 = 7fc3c600
+NOTICE:  [cm_prepare_el3_exit]:[321L] ctx add = 7fc3e840
+NOTICE:  [psci_afflvl_power_on_finish]:[566L]
+
+000827=0
+NOTICE:  [psci_smc_handler]:[410L] PSCI_CPU_ON_AARCH64 CALL
+NOTICE:  [psci_smc_handler]:[411L] x1=0x20301 x2=0x827d0 x3=0x0
+NOTICE:  [scpi_set_css_power_state]:[89L] domain_cluster=0xf
+
+NOTICE:  [scpi_set_css_power_state]:[97L] domain_cluster=0xf
+
+
+0008;<AB54
+NOTICE:  [psci_afflvl_power_on_finish]:[508L]
+NOTICE:  [cm_prepare_el3_exit]:[266L] read_tpidr_el3 = 7fc3c680
+NOTICE:  [cm_prepare_el3_exit]:[321L] ctx add = 7fc3ea50
+NOTICE:  [psci_afflvl_power_on_finish]:[566L]
+
+000827=0
+NOTICE:  [psci_smc_handler]:[410L] PSCI_CPU_ON_AARCH64 CALL
+NOTICE:  [psci_smc_handler]:[411L] x1=0x20302 x2=0x827d0 x3=0x0
+NOTICE:  [scpi_set_css_power_state]:[89L] domain_cluster=0xf
+
+NOTICE:  [scpi_set_css_power_state]:[97L] domain_cluster=0xf
+
+
+0008;<AB54
+NOTICE:  [psci_afflvl_power_on_finish]:[508L]
+NOTICE:  [cm_prepare_el3_exit]:[266L] read_tpidr_el3 = 7fc3c700
+NOTICE:  [cm_prepare_el3_exit]:[321L] ctx add = 7fc3ec60
+NOTICE:  [psci_afflvl_power_on_finish]:[566L]
+
+000827=0
+NOTICE:  [psci_smc_handler]:[410L] PSCI_CPU_ON_AARCH64 CALL
+NOTICE:  [psci_smc_handler]:[411L] x1=0x20303 x2=0x827d0 x3=0x0
+NOTICE:  [scpi_set_css_power_state]:[89L] domain_cluster=0xf
+
+NOTICE:  [scpi_set_css_power_state]:[97L] domain_cluster=0xf
+
+
+0008;<AB54
+NOTICE:  [psci_afflvl_power_on_finish]:[508L]
+NOTICE:  [cm_prepare_el3_exit]:[266L] read_tpidr_el3 = 7fc3c780
+NOTICE:  [cm_prepare_el3_exit]:[321L] ctx add = 7fc3ee70
+NOTICE:  [psci_afflvl_power_on_finish]:[566L]
+
+000827=0
+Detected PIPT I-cache on CPU1
+CPU1: found redistributor 20001 region 0:0x000000008d130000
+CPU1: using LPI pending table @0x00000011f6400000
+CPU1: Booted secondary processor [411fd071]
+Detected PIPT I-cache on CPU2
+CPU2: found redistributor 20002 region 0:0x000000008d160000
+CPU2: using LPI pending table @0x00000011f6430000
+CPU2: Booted secondary processor [411fd071]
+Detected PIPT I-cache on CPU3
+CPU3: found redistributor 20003 region 0:0x000000008d190000
+CPU3: using LPI pending table @0x00000011f6460000
+CPU3: Booted secondary processor [411fd071]
+Detected PIPT I-cache on CPU4
+CPU4: found redistributor 20100 region 0:0x000000008d1c0000
+CPU4: using LPI pending table @0x00000011f64a0000
+CPU4: Booted secondary processor [411fd071]
+Detected PIPT I-cache on CPU5
+CPU5: found redistributor 20101 region 0:0x000000008d1f0000
+CPU5: using LPI pending table @0x00000011f64d0000
+CPU5: Booted secondary processor [411fd071]
+Detected PIPT I-cache on CPU6
+CPU6: found redistributor 20102 region 0:0x000000008d220000
+CPU6: using LPI pending table @0x00000011f6500000
+CPU6: Booted secondary processor [411fd071]
+Detected PIPT I-cache on CPU7
+CPU7: found redistributor 20103 region 0:0x000000008d250000
+CPU7: using LPI pending table @0x00000011f6540000
+CPU7: Booted secondary processor [411fd071]
+Detected PIPT I-cache on CPU8
+CPU8: found redistributor 20200 region 0:0x000000008d280000
+CPU8: using LPI pending table @0x00000011f6560000
+CPU8: Booted secondary processor [411fd071]
+Detected PIPT I-cache on CPU9
+CPU9: found redistributor 20201 region 0:0x000000008d2b0000
+CPU9: using LPI pending table @0x00000011f65a0000
+CPU9: Booted secondary processor [411fd071]
+Detected PIPT I-cache on CPU10
+CPU10: found redistributor 20202 region 0:0x000000008d2e0000
+CPU10: using LPI pending table @0x00000011f65d0000
+CPU10: Booted secondary processor [411fd071]
+Detected PIPT I-cache on CPU11
+CPU11: found redistributor 20203 region 0:0x000000008d310000
+CPU11: using LPI pending table @0x00000011f6600000
+CPU11: Booted secondary processor [411fd071]
+Detected PIPT I-cache on CPU12
+CPU12: found redistributor 20300 region 0:0x000000008d340000
+CPU12: using LPI pending table @0x00000011f6630000
+CPU12: Booted secondary processor [411fd071]
+Detected PIPT I-cache on CPU13
+CPU13: found redistributor 20301 region 0:0x000000008d370000
+CPU13: using LPI pending table @0x00000011f6670000
+CPU13: Booted secondary processor [411fd071]
+Detected PIPT I-cache on CPU14
+CPU14: found redistributor 20302 region 0:0x000000008d3a0000
+CPU14: using LPI pending table @0x00000011f66a0000
+CPU14: Booted secondary processor [411fd071]
+Detected PIPT I-cache on CPU15
+CPU15: found redistributor 20303 region 0:0x000000008d3d0000
+CPU15: using LPI pending table @0x00000011f66d0000
+CPU15: Booted secondary processor [411fd071]
+Brought up 16 CPUs
+SMP: Total of 16 processors activated.
+CPU features: detected feature: GIC system register CPU interface
+CPU: All CPU(s) started at EL2
+alternatives: patching kernel code
+devtmpfs: initialized
+SMBIOS 3.0.0 present.
+clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 7645041785100000 ns
+pinctrl core: initialized pinctrl subsystem
+NET: Registered protocol family 16
+cpuidle: using governor ladder
+cpuidle: using governor menu
+vdso: 2 pages (1 code @ ffffffc000999000, 1 data @ ffffffc000998000)
+hw-breakpoint: found 6 breakpoint and 4 watchpoint registers.
+DMA: preallocated 256 KiB pool for atomic allocations
+ACPI: bus type PCI registered
+Serial: AMBA PL011 UART driver
+ACPI: Added _OSI(Module Device)
+ACPI: Added _OSI(Processor Device)
+ACPI: Added _OSI(3.0 _SCP Extensions)
+ACPI: Added _OSI(Processor Aggregator Device)
+ACPI: Interpreter enabled
+ACPI: Using GIC for interrupt routing
+PCI: MMCONFIG for domain 0001 [bus 00-3f] at [mem 0x22000000000-0x22003ffffff] (base 0x22000000000)
+PCI: MMCONFIG for domain 0002 [bus 40-7f] at [mem 0x24004000000-0x24007ffffff] (base 0x24000000000)
+ACPI: IORT: can't find node related to (null) device
+ACPI: IORT: can't find node related to (null) device
+ACPI: IORT: can't find node related to (null) device
+ACPI: IORT: can't find node related to (null) device
+ACPI: IORT: can't find node related to (null) device
+ACPI: IORT: can't find node related to (null) device
+ACPI: IORT: can't find node related to (null) device
+ACPI: IORT: can't find node related to (null) device
+ACPI: IORT: can't find node related to (null) device
+ACPI: IORT: can't find node related to (null) device
+ACPI: IORT: can't find node related to (null) device
+ACPI: IORT: can't find node related to (null) device
+ACPI: IORT: can't find node related to (null) device
+ACPI: PCI Root Bridge [PCI1] (domain 0001 [bus 00-3f])
+acpi HISI0080:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
+acpi HISI0080:00: _OSC failed (AE_NOT_FOUND); disabling ASPM
+acpi HISI0080:00: PCI host bridge to bus 0001:00
+pci_bus 0001:00: root bus resource [mem 0x22004000000-0x2200ffeffff window] (bus address [0xb0000000-0xbbfeffff])
+pci_bus 0001:00: root bus resource [io  0x0000-0xffff window]
+pci_bus 0001:00: root bus resource [bus 00-3f]
+pci 0001:00:00.0: of_irq_parse_pci() failed with rc=-22
+pci 0001:00:00.0: of_irq_parse_pci() failed with rc=-22
+pci 0001:00:00.0: BAR 8: assigned [mem 0x22004000000-0x220041fffff]
+pci 0001:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
+pci 0001:01:00.0: BAR 6: assigned [mem 0x22004000000-0x220040fffff pref]
+pci 0001:01:00.0: BAR 1: assigned [mem 0x22004100000-0x2200410ffff 64bit]
+pci 0001:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
+pci 0001:00:00.0: PCI bridge to [bus 01]
+pci 0001:00:00.0:   bridge window [io  0x1000-0x1fff]
+pci 0001:00:00.0:   bridge window [mem 0x22004000000-0x220041fffff]
+ACPI: PCI Root Bridge [PCI2] (domain 0002 [bus 40-7f])
+acpi HISI0080:01: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
+acpi HISI0080:01: _OSC failed (AE_NOT_FOUND); disabling ASPM
+acpi HISI0080:01: PCI host bridge to bus 0002:40
+pci_bus 0002:40: root bus resource [mem 0x24008000000-0x2400ffeffff window] (bus address [0xc0000000-0xc7feffff])
+pci_bus 0002:40: root bus resource [io  0x10000-0x1ffff window] (bus address [0x0000-0xffff])
+pci_bus 0002:40: root bus resource [bus 40-7f]
+pci 0002:40:00.0: of_irq_parse_pci() failed with rc=-22
+pci 0002:40:00.0: Primary bus is hard wired to 0
+pci 0002:40:00.0: bridge configuration invalid ([bus 01-01]), reconfiguring
+pci 0002:40:00.0: of_irq_parse_pci() failed with rc=-22
+pci 0002:40:00.0: of_irq_parse_pci() failed with rc=-22
+pci 0002:40:00.0: BAR 8: assigned [mem 0x24008000000-0x240087fffff]
+pci 0002:40:00.0: BAR 9: assigned [mem 0x24008800000-0x240091fffff 64bit pref]
+pci 0002:40:00.0: BAR 7: assigned [io  0x10000-0x10fff]
+pci 0002:41:00.0: BAR 0: assigned [mem 0x24008800000-0x24008bfffff 64bit pref]
+pci 0002:41:00.0: BAR 6: assigned [mem 0x24008000000-0x240083fffff pref]
+pci 0002:41:00.1: BAR 0: assigned [mem 0x24008c00000-0x24008ffffff 64bit pref]
+pci 0002:41:00.1: BAR 6: assigned [mem 0x24008400000-0x240087fffff pref]
+pci 0002:41:00.0: BAR 4: assigned [mem 0x24009000000-0x24009003fff 64bit pref]
+pci 0002:41:00.1: BAR 4: assigned [mem 0x24009004000-0x24009007fff 64bit pref]
+pci 0002:41:00.0: BAR 2: assigned [io  0x10000-0x1001f]
+pci 0002:41:00.1: BAR 2: assigned [io  0x10020-0x1003f]
+pci 0002:40:00.0: PCI bridge to [bus 41]
+pci 0002:40:00.0:   bridge window [io  0x10000-0x10fff]
+pci 0002:40:00.0:   bridge window [mem 0x24008000000-0x240087fffff]
+pci 0002:40:00.0:   bridge window [mem 0x24008800000-0x240091fffff 64bit pref]
+vgaarb: loaded
+SCSI subsystem initialized
+ACPI: bus type USB registered
+usbcore: registered new interface driver usbfs
+usbcore: registered new interface driver hub
+usbcore: registered new device driver usb
+pps_core: LinuxPPS API ver. 1 registered
+pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+PTP clock support registered
+clocksource: Switched to clocksource arch_sys_counter
+pnp: PnP ACPI init
+pnp: PnP ACPI: found 0 devices
+NET: Registered protocol family 2
+TCP established hash table entries: 65536 (order: 7, 524288 bytes)
+TCP bind hash table entries: 65536 (order: 8, 1048576 bytes)
+TCP: Hash tables configured (established 65536 bind 65536)
+UDP hash table entries: 4096 (order: 5, 131072 bytes)
+UDP-Lite hash table entries: 4096 (order: 5, 131072 bytes)
+NET: Registered protocol family 1
+RPC: Registered named UNIX socket transport module.
+RPC: Registered udp transport module.
+RPC: Registered tcp transport module.
+RPC: Registered tcp NFSv4.1 backchannel transport module.
+Unpacking initramfs...
+Freeing initrd memory: 27492K (ffffffc01e520000 - ffffffc01fff9000)
+kvm [1]: error: no compatible GIC node found
+kvm [1]: error initializing Hyp mode: -19
+ACPI: IORT: can't find node related to (null) device
+futex hash table entries: 4096 (order: 7, 524288 bytes)
+audit: initializing netlink subsys (disabled)
+audit: type=2000 audit(1.720:1): initialized
+HugeTLB registered 2 MB page size, pre-allocated 0 pages
+VFS: Disk quotas dquot_6.6.0
+VFS: Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
+NFS: Registering the id_resolver key type
+Key type id_resolver registered
+Key type id_legacy registered
+fuse init (API version 7.23)
+9p: Installing v9fs 9p2000 file system support
+Block layer SCSI generic (bsg) driver version 0.4 loaded (major 251)
+io scheduler noop registered
+io scheduler cfq registered (default)
+pcieport 0001:00:00.0: can't derive routing for PCI INT A
+pcieport 0001:00:00.0: PCI INT A: no GSI
+pcieport 0002:40:00.0: can't derive routing for PCI INT A
+pcieport 0002:40:00.0: PCI INT A: no GSI
+Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
+console [ttyS0] disabled
+APMC0D08:00: ttyS0 at MMIO 0x80300000 (irq = 5, base_baud = 12500000) is a 16550A
+console [ttyS0] enabled
+console [ttyS0] enabled
+bootconsole [uart0] disabled
+bootconsole [uart0] disabled
+msm_serial: driver initialized
+Failed to find cpu0 device node
+Unable to detect cache hierarchy from DT for CPU 0
+loop: module loaded
+hisi_sas: driver version v1.0
+scsi host0: hisi_sas
+scsi host1: hisi_sas
+tun: Universal TUN/TAP device driver, 1.6
+tun: (C) 1999-2004 Max Krasnyansky <maxk@qualcomm.com>
+libphy: Hisilicon MII Bus: probed
+hisi_sas_v1_hw HISI0161:01: phyup: phy7 link_rate=10
+scsi 1:0:0:0: Direct-Access     SEAGATE  ST9500620SS      AS02 PQ: 0 ANSI: 5
+sd 1:0:0:0: [sda] 976773168 512-byte logical blocks: (500 GB/465 GiB)
+sd 1:0:0:0: [sda] Write Protect is off
+sd 1:0:0:0: [sda] Write cache: disabled, read cache: enabled, supports DPO and FUA
+sd 1:0:0:0: [sda] Attached SCSI disk
+hns-nic HISI00C1:00: No valid mac, use random mac da:3a:ad:09:a3:14
+netif_napi_add() called with weight 256 on device eth%d
+hns-nic HISI00C1:01: No valid mac, use random mac ea:58:90:0b:08:bc
+hns-nic HISI00C1:02: No valid mac, use random mac 2a:ef:14:d5:0f:41
+hns-nic HISI00C1:03: No valid mac, use random mac 7a:77:63:4e:57:89
+ixgbe: Intel(R) 10 Gigabit PCI Express Network Driver - version 4.2.1-k
+ixgbe: Copyright (c) 1999-2015 Intel Corporation.
+pcieport 0002:40:00.0: can't derive routing for PCI INT A
+ixgbe 0002:41:00.0: PCI INT A: no GSI
+ixgbe 0002:41:00.0: enabling device (0000 -> 0002)
+ixgbe 0002:41:00.0: Multiqueue Enabled: Rx Queue count = 16, Tx Queue count = 16
+ixgbe 0002:41:00.0: PCI Express bandwidth of 32GT/s available
+ixgbe 0002:41:00.0: (Speed:5.0GT/s, Width: x8, Encoding Loss:20%)
+ixgbe 0002:41:00.0: MAC: 2, PHY: 17, SFP+: 5, PBA No: FFFFFF-0FF
+ixgbe 0002:41:00.0: 68:a8:28:2e:c9:10
+ixgbe 0002:41:00.0: Intel(R) 10 Gigabit Network Connection
+pcieport 0002:40:00.0: can't derive routing for PCI INT B
+ixgbe 0002:41:00.1: PCI INT B: no GSI
+ixgbe 0002:41:00.1: enabling device (0000 -> 0002)
+ixgbe 0002:41:00.1: Multiqueue Enabled: Rx Queue count = 16, Tx Queue count = 16
+ixgbe 0002:41:00.1: PCI Express bandwidth of 32GT/s available
+ixgbe 0002:41:00.1: (Speed:5.0GT/s, Width: x8, Encoding Loss:20%)
+ixgbe 0002:41:00.1: MAC: 2, PHY: 1, PBA No: FFFFFF-0FF
+ixgbe 0002:41:00.1: 68:a8:28:2e:c9:11
+ixgbe 0002:41:00.1: Intel(R) 10 Gigabit Network Connection
+sky2: driver version 1.30
+ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
+ehci-pci: EHCI PCI platform driver
+ehci-platform: EHCI generic platform driver
+ehci-platform PNP0D20:00: EHCI Host Controller
+ehci-platform PNP0D20:00: new USB bus registered, assigned bus number 1
+ehci-platform PNP0D20:00: irq 6, io mem 0xa1000000
+ehci-platform PNP0D20:00: USB 2.0 started, EHCI 1.00
+hub 1-0:1.0: USB hub found
+hub 1-0:1.0: 1 port detected
+ohci_hcd: USB 1.1 'Open' Host Controller (OHCI) Driver
+ohci-pci: OHCI PCI platform driver
+ohci-platform: OHCI generic platform driver
+usbcore: registered new interface driver usb-storage
+mousedev: PS/2 mouse device common for all mice
+rtc-efi rtc-efi: rtc core: registered rtc-efi as rtc0
+sdhci: Secure Digital Host Controller Interface driver
+sdhci: Copyright(c) Pierre Ossman
+Synopsys Designware Multimedia Card Interface Driver
+sdhci-pltfm: SDHCI platform and OF driver helper
+ledtrig-cpu: registered to indicate activity on CPUs
+usbcore: registered new interface driver usbhid
+usbhid: USB HID core driver
+NET: Registered protocol family 17
+9pnet: Installing 9P2000 support
+Key type dns_resolver registered
+registered taskstats version 1
+rtc-efi rtc-efi: setting system clock to 2100-01-01 00:02:52 UTC (4102444972)
+ttyS0 - failed to request DMA
+Freeing unused kernel memory: 572K (ffffffc0008f0000 - ffffffc00097f000)
+Freeing alternatives memory: 60K (ffffffc00097f000 - ffffffc00098e000)
+root@(none)$ ifconfig eth4 192.168.20.188
+ixgbe 0002:41:00.0: registered PHC device on eth4
+root@(none)$ ixgbe 0002:41:00.0 eth4: detected SFP+: 5
+ixgbe 0002:41:00.0 eth4: NIC Link is Up 10 Gbps, Flow Control: RX/TX
+
+root@(none)$ ping 192.168.20.4
+PING 192.168.20.4 (192.168.20.4): 56 data bytes
+64 bytes from 192.168.20.4: seq=21 ttl=128 time=0.368 ms
+64 bytes from 192.168.20.4: seq=22 ttl=128 time=0.257 ms
+64 bytes from 192.168.20.4: seq=23 ttl=128 time=0.316 ms
+64 bytes from 192.168.20.4: seq=24 ttl=128 time=0.355 ms
+64 bytes from 192.168.20.4: seq=25 ttl=128 time=0.257 ms
+64 bytes from 192.168.20.4: seq=26 ttl=128 time=0.305 ms
+64 bytes from 192.168.20.4: seq=27 ttl=128 time=0.290 ms
+64 bytes from 192.168.20.4: seq=28 ttl=128 time=0.227 ms
+64 bytes from 192.168.20.4: seq=29 ttl=128 time=3.865 ms
+64 bytes from 192.168.20.4: seq=30 ttl=128 time=0.297 ms
