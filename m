@@ -1,60 +1,66 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1452262581.31901.26.camel@redhat.com>
-Subject: Re: [PATCH V2 22/23] pci, acpi: Match PCI config space accessors
- against platfrom specific quirks.
-From: Mark Salter <msalter@redhat.com>
-To: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org, jchandra@broadcom.com, jcm@redhat.com
-Date: Fri, 08 Jan 2016 09:16:21 -0500
-In-Reply-To: <1450278993-12664-23-git-send-email-tn@semihalf.com>
-References: <1450278993-12664-1-git-send-email-tn@semihalf.com>
-	 <1450278993-12664-23-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:38365 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754857AbcA2L1l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 29 Jan 2016 06:27:41 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 1/2] drivers: pci: host: rcar: remove PCI_PROBE_ONLY handling
+Date: Fri, 29 Jan 2016 11:29:31 +0000
+Message-Id: <1454066972-3609-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2015-12-16 at 16:16 +0100, Tomasz Nowicki wrote:
-> Some platforms may not be fully compliant with generic set of PCI config
-> accessors. For these cases we implement the way to overwrite accessors
-> set before PCI buses enumeration. Algorithm that overwrite accessors
-> matches against platform ID (DMI), domain and bus number, hopefully
-> enough for all cases. All quirks can be defined using:
-> DECLARE_ACPI_MCFG_FIXUP() and keep self contained.
-> 
-> example:
-> 
-> static const struct dmi_system_id yyy[] = {
->         {
->                 .ident = "<Platform ident string>",
->                 .callback = <handler>,
->                 .matches = {
->                         DMI_MATCH(DMI_SYS_VENDOR, "<system vendor>"),
->                         DMI_MATCH(DMI_PRODUCT_NAME, "<product name>"),
->                         DMI_MATCH(DMI_PRODUCT_VERSION, "product version"),
->                 },
->         },
->         { }
-> };
-> 
+The PCIe rcar host driver is not used in system configurations
+requiring the PCI_PROBE_ONLY flag to be set to prevent resources
+assignment, therefore the driver code handling the flag can be
+removed from the kernel.
 
-This seems awkward to me in the case where the quirk is SoC-based and there
-may be multiple platforms affected. Needing a DECLARE_ACPI_MCFG_FIXUP for
-each platform using such a SoC (i.e. Mustang and Moonshot) doesn't seem
-right. In that case, I think it'd be better to check CPUID and possibly
-some SoC register to cover all platforms affected.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-rcar.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
-Also, there doesn't seem to be a way to connect a given quirk check to the
-MCFG/device requesting the ops. So if there is a platform with multiple PCIE
-roots and not all of them have quirks, how does one no whether to override the
-default ecam ops?
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 4edb518..3509218 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -390,9 +390,7 @@ static int rcar_pcie_enable(struct rcar_pcie *pcie)
+ 
+ 	rcar_pcie_setup(&res, pcie);
+ 
+-	/* Do not reassign resources if probe only */
+-	if (!pci_has_flag(PCI_PROBE_ONLY))
+-		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
++	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		bus = pci_scan_root_bus_msi(pcie->dev, pcie->root_bus_nr,
+@@ -408,13 +406,11 @@ static int rcar_pcie_enable(struct rcar_pcie *pcie)
+ 
+ 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+ 
+-	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+-		pci_bus_size_bridges(bus);
+-		pci_bus_assign_resources(bus);
++	pci_bus_size_bridges(bus);
++	pci_bus_assign_resources(bus);
+ 
+-		list_for_each_entry(child, &bus->children, node)
+-			pcie_bus_configure_settings(child);
+-	}
++	list_for_each_entry(child, &bus->children, node)
++		pcie_bus_configure_settings(child);
+ 
+ 	pci_bus_add_devices(bus);
+ 
+-- 
+2.5.1
 
