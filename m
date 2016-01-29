@@ -1,76 +1,95 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 26 Jan 2016 18:25:05 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:45247 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751413AbcA2QYG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 29 Jan 2016 11:24:06 -0500
+Date: Fri, 29 Jan 2016 10:24:00 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Chen Fan <chen.fan.fnst@cn.fujitsu.com>,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	rjw@rjwysocki.net, lenb@kernel.org, izumi.taku@jp.fujitsu.com,
-	wency@cn.fujitsu.com, caoj.fnst@cn.fujitsu.com,
-	ddaney.cavm@gmail.com, okaya@codeaurora.org, bhelgaas@google.com,
-	jiang.liu@linux.intel.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] pci: fix unavailable irq number 255 reported by BIOS
-Message-ID: <20160127002505.GA3329@localhost>
-References: <1453705178-27389-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>
- <20160125205803.GA10272@localhost>
- <alpine.DEB.2.11.1601260825510.3886@nanos>
- <20160126152221.GB9279@localhost>
- <alpine.DEB.2.11.1601261628450.3886@nanos>
+To: Richard F <lists@keynet-technology.com>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: Hint HB6 - kernel doesn't see chips behind it.
+Message-ID: <20160129162400.GB12965@localhost>
+References: <5698191B.1070904@keynet-technology.com>
+ <20160115172640.GC28453@localhost>
+ <569CFB5B.7050903@keynet-technology.com>
+ <20160119033839.GA3339@localhost>
+ <56A8DA21.7060607@keynet-technology.com>
+ <20160127215522.GA4875@localhost>
+ <56A9EC07.8080509@keynet-technology.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.11.1601261628450.3886@nanos>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <56A9EC07.8080509@keynet-technology.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 26, 2016 at 04:48:25PM +0100, Thomas Gleixner wrote:
-> On Tue, 26 Jan 2016, Bjorn Helgaas wrote:
-> > On Tue, Jan 26, 2016 at 09:26:29AM +0100, Thomas Gleixner wrote:
-> > > The proper solution here is to flag that this device does not have an
-> > > interrupt connected and act accordingly in the device driver, i.e. do not call
-> > > request_irq() in the first place.
-> > 
-> > This is the crux of the problem.  As far as I know, PCI doesn't have
-> > a flag to indicate that dev->irq is a wire that's not connected, so
-> > there's no generic way for a driver to know whether it should call
-> > request_irq().
+On Thu, Jan 28, 2016 at 10:23:03AM +0000, Richard F wrote:
+> Bjorn,
 > 
-> Ok.
->  
-> > We could add one, of course, but that only helps in the drivers we
-> > update.  It'd be nice if we could figure out a way to fix this
-> > without having to touch all the drivers.
-> 
-> Hmm.
->  
-> > I think any driver that uses line-based interrupts can potentially
-> > fail if the platform uses Interrupt Line == 255 to indicate that the
-> > line is not connected.  If another driver happens to be using IRQ 255,
-> > request_irq() may fail as it does here.  Otherwise, I suspect
-> > request_irq() will return success, but the driver won't get any
-> > interrupts.
-> 
-> Right. So we could certainly do something like this INVALID_IRQ thingy, but
-> that looks a bit weird. What would request_irq() return?
-> 
-> If it returns success, then drivers might make the wrong decision. If it
-> returns an error code, then the i801 one works, but we might have to fix
-> others anyway.
+> Thanks for looking at it. Actually I've tried 3 different PCI cards in
+> both slots and they all work fine.  I have 2 different single channel
+> BT878 based PCI cards in there now capturing CCTV 24 x 7, the machine
+> stays up for months. That's why it's so odd.  Any other pointers?  Does
+> the kernel need the BIOS to detect the card right?
 
-I was thinking request_irq() could return -EINVAL if the caller passed
-INVALID_IRQ.  That should tell drivers that this interrupt won't work.
+The kernel should at least discover the card even if the BIOS doesn't
+do anything.  But on x86, the BIOS usually *does* configure things, so
+it's very possible we could trip over a Linux defect if it doesn't.
 
-We'd be making request_irq() return -EINVAL in some cases where it
-currently returns success.  But even though it returns success today,
-I don't think the driver is getting interrupts, because the wire isn't
-connected.
+Try booting with "pci=pcie_scan_all".  That *shouldn't* make a
+difference because this isn't a PCIe device, but maybe our logic is
+broken.
 
-> I think it's better to have a software flag in pci_dev to indicate that there
-> is no irq line and fix up the (probably few) affected drivers so they avoid
-> calling request_irq() and take the right action.
+Your topology looks a little strange:
 
-We could add an "irq_valid" flag in struct pci_dev and make a new
-rule that drivers should check dev->irq_valid before using dev->irq.
-But realistically, i801 is the only place that will check irq_valid
-because that's the only driver where we know about a problem, so that
-seems like sort of a point solution.
+  00:1c.0 PCIe root port to [bus 01]    slot 0
+  00:1c.1 PCIe root port to [bus 02]    slot 1
+  00:1c.2 PCIe root port to [bus 03-05] slot 2
+  03:00.0 PCI bridge to [bus 04-05] (Integrated Technology Express)
+  04:01.0 PCI bridge to [bus 05] (Hint Corp)
 
-Bjorn
+00:1c.2 is a normal PCIe Root Port, so the device it's connected to
+*should* be a PCIe device, but 03:00.0 doesn't have a PCIe capability.
+Is this an adapter card of some kind?
+
+03:00.0 is an ITE 8893, and we do have a quirk related to a similar
+device:
+http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/pci/quirks.c?h=v4.4#n3662
+
+Can you try the patch below, please?
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6d7ab9b..f6d8e85 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1530,6 +1530,7 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+ 	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
+ 		return false;
+ 
++	dev_info(&bus->dev, "%s %02x %#010x\n", __func__, devfn, *l);
+ 	/* some broken boards return 0 or ~0 if a slot is empty: */
+ 	if (*l == 0xffffffff || *l == 0x00000000 ||
+ 	    *l == 0x0000ffff || *l == 0xffff0000)
+@@ -1571,6 +1572,7 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
+ 	struct pci_dev *dev;
+ 	u32 l;
+ 
++	dev_info(&bus->dev, "%s %02x\n", __func__, devfn);
+ 	if (!pci_bus_read_dev_vendor_id(bus, devfn, &l, 60*1000))
+ 		return NULL;
+ 
+@@ -1751,6 +1753,7 @@ struct pci_dev *pci_scan_single_device(struct pci_bus *bus, int devfn)
+ {
+ 	struct pci_dev *dev;
+ 
++	dev_info(&bus->dev, "%s %02x\n", __func__, devfn);
+ 	dev = pci_get_slot(bus, devfn);
+ 	if (dev) {
+ 		pci_dev_put(dev);
+@@ -1825,6 +1828,7 @@ int pci_scan_slot(struct pci_bus *bus, int devfn)
+ 	unsigned fn, nr = 0;
+ 	struct pci_dev *dev;
+ 
++	dev_info(&bus->dev, "%s %02x\n", __func__, devfn);
+ 	if (only_one_child(bus) && (devfn > 0))
+ 		return 0; /* Already scanned the entire slot */
+ 
