@@ -1,28 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g4t3426.houston.hp.com ([15.201.208.54]:1384 "EHLO
-	g4t3426.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752505AbcAOBIJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Jan 2016 20:08:09 -0500
-From: "Seymour, Shane M" <shane.seymour@hpe.com>
-To: Hannes Reinecke <hare@suse.de>, Bjorn Helgaas <helgaas@kernel.org>
-CC: Alexander Duyck <alexander.duyck@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Babu Moger <babu.moger@oracle.com>
-Subject: RE: [PATCHv2 0/4] PCI VPD access fixes
-Date: Fri, 15 Jan 2016 01:07:14 +0000
-Message-ID: <DDB9C85B850785449757F9914A034FCB4450CEC7@G9W0766.americas.hpqcorp.net>
-References: <1452684335-46107-1-git-send-email-hare@suse.de>
-In-Reply-To: <1452684335-46107-1-git-send-email-hare@suse.de>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jani Nikula <jani.nikula@linux.intel.com>
+To: "Robin H. Johnson" <robbat2@gentoo.org>,
+	linux-kernel@vger.kernel.org, mst@redhat.com, perex@perex.cz,
+	tiwai@suse.com, bhelgaas@google.com,
+	Dave Airlie <airlied@gmail.com>
+Cc: dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
+	Gerd Hoffmann <kraxel@redhat.com>
+Subject: Re: [PATCH] PCI: QEMU top-level IDs for (sub)vendor & device
+In-Reply-To: <1453739846-3549-1-git-send-email-robbat2@gentoo.org>
+References: <1453739846-3549-1-git-send-email-robbat2@gentoo.org>
+Date: Fri, 29 Jan 2016 11:02:54 +0200
+Message-ID: <87powkiwqp.fsf@intel.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For the series. Tested with AE311 PCI-Express 4Gb Fibre Channel HBA.
-Truncation of the vpd data returned works (154 bytes) and lspci -vvv
-prints out the VPD tags the same way with and without the changes.
-This card did not require any quirks it was capable of returning 32k
-of data (although it repeated every 4k).
----
-Tested-by: Shane Seymour <shane.seymour@hpe.com>
+
+This one's lacking some maintainers, adding for acks. There's already
+review from Gerd [1], and seems like a good idea anyway.
+
+Bjorn, I suppose it would make most sense to merge this via PCI tree,
+right?
+
+
+BR,
+Jani.
+
+
+[1] http://mid.gmane.org/1454057342.28516.45.camel@redhat.com
+
+
+
+On Mon, 25 Jan 2016, "Robin H. Johnson" <robbat2@gentoo.org> wrote:
+> Introduce PCI_VENDOR/PCI_SUBVENDOR/PCI_SUBDEVICE defines to replace the
+> constants scattered in the kernel already used to detect QEMU.
+>
+> They are defined in the QEMU codebase per docs/specs/pci-ids.txt.
+>
+> Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
+> ---
+> This change prompted by a near-miss in the review of recent change:
+> 'drm/i915: refine qemu south bridge detection'
+>
+> Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
+> ---
+>  drivers/gpu/drm/bochs/bochs_drv.c   | 4 ++--
+>  drivers/gpu/drm/cirrus/cirrus_drv.c | 5 +++--
+>  drivers/virtio/virtio_pci_common.c  | 2 +-
+>  include/linux/pci_ids.h             | 4 ++++
+>  sound/pci/intel8x0.c                | 4 ++--
+>  5 files changed, 12 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/gpu/drm/bochs/bochs_drv.c b/drivers/gpu/drm/bochs/bochs_drv.c
+> index 7f1a360..b332b4d3 100644
+> --- a/drivers/gpu/drm/bochs/bochs_drv.c
+> +++ b/drivers/gpu/drm/bochs/bochs_drv.c
+> @@ -182,8 +182,8 @@ static const struct pci_device_id bochs_pci_tbl[] = {
+>  	{
+>  		.vendor      = 0x1234,
+>  		.device      = 0x1111,
+> -		.subvendor   = 0x1af4,
+> -		.subdevice   = 0x1100,
+> +		.subvendor   = PCI_SUBVENDOR_ID_REDHAT_QUMRANET,
+> +		.subdevice   = PCI_SUBDEVICE_ID_QEMU,
+>  		.driver_data = BOCHS_QEMU_STDVGA,
+>  	},
+>  	{
+> diff --git a/drivers/gpu/drm/cirrus/cirrus_drv.c b/drivers/gpu/drm/cirrus/cirrus_drv.c
+> index b1619e2..7bc394e 100644
+> --- a/drivers/gpu/drm/cirrus/cirrus_drv.c
+> +++ b/drivers/gpu/drm/cirrus/cirrus_drv.c
+> @@ -33,8 +33,9 @@ static struct drm_driver driver;
+>  
+>  /* only bind to the cirrus chip in qemu */
+>  static const struct pci_device_id pciidlist[] = {
+> -	{ PCI_VENDOR_ID_CIRRUS, PCI_DEVICE_ID_CIRRUS_5446, 0x1af4, 0x1100, 0,
+> -	  0, 0 },
+> +	{ PCI_VENDOR_ID_CIRRUS, PCI_DEVICE_ID_CIRRUS_5446,
+> +	  PCI_SUBVENDOR_ID_REDHAT_QUMRANET, PCI_SUBDEVICE_ID_QEMU,
+> +	  0, 0, 0 },
+>  	{ PCI_VENDOR_ID_CIRRUS, PCI_DEVICE_ID_CIRRUS_5446, PCI_VENDOR_ID_XEN,
+>  	  0x0001, 0, 0, 0 },
+>  	{0,}
+> diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
+> index 36205c2..127dfe4 100644
+> --- a/drivers/virtio/virtio_pci_common.c
+> +++ b/drivers/virtio/virtio_pci_common.c
+> @@ -467,7 +467,7 @@ static const struct dev_pm_ops virtio_pci_pm_ops = {
+>  
+>  /* Qumranet donated their vendor ID for devices 0x1000 thru 0x10FF. */
+>  static const struct pci_device_id virtio_pci_id_table[] = {
+> -	{ PCI_DEVICE(0x1af4, PCI_ANY_ID) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_REDHAT_QUMRANET, PCI_ANY_ID) },
+>  	{ 0 }
+>  };
+>  
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 37f05cb..6d249d3 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2506,6 +2506,10 @@
+>  
+>  #define PCI_VENDOR_ID_AZWAVE		0x1a3b
+>  
+> +#define PCI_VENDOR_ID_REDHAT_QUMRANET    0x1af4
+> +#define PCI_SUBVENDOR_ID_REDHAT_QUMRANET 0x1af4
+> +#define PCI_SUBDEVICE_ID_QEMU            0x1100
+> +
+>  #define PCI_VENDOR_ID_ASMEDIA		0x1b21
+>  
+>  #define PCI_VENDOR_ID_CIRCUITCO		0x1cc8
+> diff --git a/sound/pci/intel8x0.c b/sound/pci/intel8x0.c
+> index 42bcbac..12c2c18 100644
+> --- a/sound/pci/intel8x0.c
+> +++ b/sound/pci/intel8x0.c
+> @@ -2980,8 +2980,8 @@ static int snd_intel8x0_inside_vm(struct pci_dev *pci)
+>  		goto fini;
+>  
+>  	/* check for known (emulated) devices */
+> -	if (pci->subsystem_vendor == 0x1af4 &&
+> -	    pci->subsystem_device == 0x1100) {
+> +	if (pci->subsystem_vendor == PCI_SUBVENDOR_ID_REDHAT_QUMRANET &&
+> +	    pci->subsystem_device == PCI_SUBDEVICE_ID_QEMU) {
+>  		/* KVM emulated sound, PCI SSID: 1af4:1100 */
+>  		msg = "enable KVM";
+>  	} else if (pci->subsystem_vendor == 0x1ab8) {
+
+-- 
+Jani Nikula, Intel Open Source Technology Center
