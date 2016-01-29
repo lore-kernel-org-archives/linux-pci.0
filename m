@@ -1,98 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54199 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754089AbcAIBFu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Jan 2016 20:05:50 -0500
-Date: Fri, 8 Jan 2016 19:05:45 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jordan Hargrave <Jordan_Hargrave@dell.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, alexander.duyck@gmail.com,
-	Babu Moger <babu.moger@oracle.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Michal Kubecek <mkubecek@suse.com>,
-	"Shane M. Seymour" <shane.seymour@hpe.com>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	Venkat Duvvuru <VenkatKumar.Duvvuru@Emulex.com>
-Subject: Re: [PATCH] Limit VPD length on Atheros wifi cards
-Message-ID: <20160109010545.GA31085@localhost>
-References: <1451427542-30482-1-git-send-email-Jordan_Hargrave@dell.com>
- <20160109005736.GP5354@localhost>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:35894 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751880AbcA2OTh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jan 2016 09:19:37 -0500
+Received: by mail-ig0-f171.google.com with SMTP id z14so37465329igp.1
+        for <linux-pci@vger.kernel.org>; Fri, 29 Jan 2016 06:19:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160109005736.GP5354@localhost>
+In-Reply-To: <1454077035-23872-1-git-send-email-ard.biesheuvel@linaro.org>
+References: <1454077035-23872-1-git-send-email-ard.biesheuvel@linaro.org>
+Date: Fri, 29 Jan 2016 15:19:36 +0100
+Message-ID: <CAKv+Gu8LgoeU1XZJ=i+hbOj2X_wZ9aPPWQZ+9PMeQnPiGgUU2g@mail.gmail.com>
+Subject: Re: [PATCH] PCI: generic: map config window in one go
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Will Deacon <will.deacon@arm.com>, linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Brown <mark.brown@linaro.org>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Hannes, Michal, Shane, Myron, Venkat; sorry I missed you guys the
-first time around]
+On 29 January 2016 at 15:17, Ard Biesheuvel <ard.biesheuvel@linaro.org> wrote:
+> Instead of iterating over the PCI config window and performing individual
+> ioremap() calls on all the adjacent slices, perform a single ioremap() to
+> map the entire region, and divvy it up later. This not only prevents
+> leaving some of it mapped if we fail half way through, it also ensures that
+> archs that support huge-vmap can use section mappings to perform the
+> mapping.
+>
+> On my Seattle A0 box, this transforms 128 separate 1 MB mappings that are
+> mapped down to 4 KB pages into a single 128 MB mapping using 2 MB sections,
+> saving 512 KB worth of page tables.
+>
 
-On Fri, Jan 08, 2016 at 06:57:36PM -0600, Bjorn Helgaas wrote:
-> [+cc Babu]
-> 
-> Hi Jordan, Babu, et al,
-> 
-> On Tue, Dec 29, 2015 at 04:19:02PM -0600, Jordan Hargrave wrote:
-> > Attempt to read VPD on these cards causes kernel hang or delay
-> > 
-> > Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
-> > ---
-> >  drivers/pci/quirks.c |   10 ++++++++++
-> >  1 files changed, 10 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index e6376f6..a72667f 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -2161,6 +2161,16 @@ static void quirk_brcm_570x_limit_vpd(struct pci_dev *dev)
-> >  	}
-> >  }
-> >  
-> > +static void quirk_atheros_vpd(struct pci_dev *dev)
-> > +{
-> > +	/* Atheros WiFi cards hang when reading VPD */
-> > +	if (dev->vpd)
-> > +		dev->vpd->len = 0;
-> > +}
-> > +
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATHEROS, PCI_ANY_ID, quirk_atheros_vpd);
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID, quirk_atheros_vpd);
-> 
-> We're accumulating several quirks like this, and they don't do
-> anything device-specific, so we could probably use a single quirk for
-> all of them, i.e., Babu's quirk_megaraid_sas_limit_vpd() and your
-> quirk_atheros_vpd() are needlessly duplicated.
-> 
-> I'd really like to have more details about what the "kernel hang or
-> delay" that happens when we try to read VPD.
-> 
-> Looking at pci_vpd_pci22_read(), it basically just does config
-> accesses, so I only see two ways things could go wrong:
-> 
->   1) If the device responds with data, but the PCI_VPD_ADDR_F flag
->   isn't set, we should be able to timeout gracefully.
-> 
->   2) If the device doesn't respond at all, we could see machine
->   checks, master aborts, processor read timeouts, or similar hardware
->   problems.
-> 
-> If there are other failure modes, I'd like to learn what they are.
-> 
-> If we're seeing problems like (1), there must be something we can
-> improve in the way we handle timeouts.
-> 
-> If we're seeing failures like (2), they're probably caused by a
-> hardware or firmware problem on the device, and there's not much we
-> can do in the kernel, so disabling VPD access completely is probably
-> all we can do.
-> 
-> So if/when we add quirks like this, I'm looking for bugzilla entries
-> that clearly show that the problem is (2).  I'd also like to log
-> something in dmesg as a clue about why lspci or other utilities don't
-> find any VPD data.
-> 
-> Bjorn
-> 
-> >  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM,
-> >  			PCI_DEVICE_ID_NX2_5706,
-> >  			quirk_brcm_570x_limit_vpd);
+OK, this math is slightly off: 4 KB for each 2 MB section == 64 * 4 == 128 KB
+
+> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+> ---
+>
+> huge-vmap for arm64 proposed here:
+> http://article.gmane.org/gmane.linux.kernel.hardened.devel/1661
+>
+>  drivers/pci/host/pci-host-generic.c | 12 +++++++-----
+>  1 file changed, 7 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index 1652bc70b145..3251cd779278 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -161,6 +161,7 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+>         struct device *dev = pci->host.dev.parent;
+>         struct device_node *np = dev->of_node;
+>         u32 sz = 1 << pci->cfg.ops->bus_shift;
+> +       void *window;
+>
+>         err = of_address_to_resource(np, 0, &pci->cfg.res);
+>         if (err) {
+> @@ -186,14 +187,15 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+>                 return -ENOMEM;
+>
+>         bus_range = pci->cfg.bus_range;
+> +       window = devm_ioremap(dev, pci->cfg.res.start,
+> +                             (bus_range->end - bus_range->start + 1) * sz);
+> +       if (!window)
+> +               return -ENOMEM;
+> +
+>         for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
+>                 u32 idx = busn - bus_range->start;
+>
+> -               pci->cfg.win[idx] = devm_ioremap(dev,
+> -                                                pci->cfg.res.start + idx * sz,
+> -                                                sz);
+> -               if (!pci->cfg.win[idx])
+> -                       return -ENOMEM;
+> +               pci->cfg.win[idx] = window + idx * sz;
+>         }
+>
+>         return 0;
+> --
+> 2.5.0
+>
