@@ -1,78 +1,35 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:51537 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965660AbcA1RBA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Jan 2016 12:01:00 -0500
-Subject: Re: [PATCH v6 1/2] PCI support added to ARC
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-References: <cover.1452611234.git.jpinto@synopsys.com>
- <24c9b782dfade515bbed20ce75d85200a00a2e66.1452611234.git.jpinto@synopsys.com>
- <C2D7FE5348E1B147BCA15975FBA23075F4E84E0E@us01wembx1.internal.synopsys.com>
- <56A8D441.8080608@synopsys.com> <20160127215956.GB4875@localhost>
-CC: Vineet Gupta <Vineet.Gupta1@synopsys.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-snps-arc@lists.infradead.org"
-	<linux-snps-arc@lists.infradead.org>,
-	"CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>,
-	"Alexey.Brodkin@synopsys.com" <Alexey.Brodkin@synopsys.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	"arnd@arndb.de" <arnd@arndb.de>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <56AA4945.9060203@synopsys.com>
-Date: Thu, 28 Jan 2016 17:00:53 +0000
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20160127215956.GB4875@localhost>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAJZ5v0g0qXYh6ENymGgUv2CkJKPTJ=sJAoFiaaRQ+P6nnXLfgg@mail.gmail.com>
+References: <CAJZ5v0g0qXYh6ENymGgUv2CkJKPTJ=sJAoFiaaRQ+P6nnXLfgg@mail.gmail.com>
+Date: Sat, 30 Jan 2016 00:12:04 +0100
+Message-ID: <CAJZ5v0g3fSCNWzYzxkH0w8RQNPKP3zXEbdLj31Jv6cOCNDftiA@mail.gmail.com>
+Subject: Re: [GIT PULL] Power management and ACPI fixes for v4.5-rc2
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Fri, Jan 29, 2016 at 10:51 PM, Rafael J. Wysocki <rafael@kernel.org> wrote:
+> Hi Linus,
+>
+> Please pull from
+>
+>  git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+>  pm+acpi-4.5-rc2
+>
+> to receive the second batch of power management and ACPI updates for
+> v4.5-rc2 with top-most commit ad1ac94767aa9d74c6533e33e768a14d2715162f
 
-Thanks for the info.
+Of course, this is not the second batch, but really sloppy copy-paste
+activity example.  Sorry about that.
 
-Joao
+These are all PM+ACPI fixes for 4.5-rc2 and there were no other batches.
 
-On 1/27/2016 9:59 PM, Bjorn Helgaas wrote:
-> Hi Joao,
-> 
-> On Wed, Jan 27, 2016 at 02:29:21PM +0000, Joao Pinto wrote:
->> Hi Bjorn,
->> Could you please tell me what are the perspectives of pulling this patch set to
->> mainline?
-> 
-> Sorry for the delay.  I try to handle bug fixes before I look at
-> functionality, so sometimes things get backed up a little bit.  But I
-> should be able to take a look later this week or early next week.
-> 
-> Bjorn
-> 
->> On 1/14/2016 11:11 AM, Vineet Gupta wrote:
->>> On Thursday 14 January 2016 04:34 PM, Joao Pinto wrote:
->>>> This patch adds PCI support to ARC and updates drivers/pci Makefile
->>>> enabling the ARC arch to use the generic PCI setup functions.
->>>>
->>>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
->>>
->>> Acked-by: Vineet Gupta <vgupta@synopsys.com>
->>>
->>> @Bjorn are you happy with the driver bits.
->>> Although ARC support is independent of driver, and I can pick it up separately,
->>> it would be better if you took it along with the driver. I don't see potential
->>> for any conflicts.
->>>
->>> Thx,
->>> -Vineet
->>
->> Thanks,
->> Joao
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Thanks,
+Rafael
