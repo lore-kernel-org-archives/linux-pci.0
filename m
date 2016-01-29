@@ -1,48 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59365 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752770AbcATUnN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 20 Jan 2016 15:43:13 -0500
-Date: Wed, 20 Jan 2016 14:43:08 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Keith Busch <keith.busch@intel.com>,
-	"Derrick, Jonathan" <jonathan.derrick@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Williams, Dan J" <dan.j.williams@intel.com>,
-	"Veal, Bryan E" <bryan.e.veal@intel.com>
-Subject: Re: [PATCHv8 0/5] Driver for new "VMD" device
-Message-ID: <20160120204308.GD7973@localhost>
-References: <1452629890-17542-1-git-send-email-keith.busch@intel.com>
- <20160115181938.GA5296@localhost>
- <8D943B239464E04C9184454D8B3F5CFF0ABF18EC@ORSMSX101.amr.corp.intel.com>
- <20160115220631.GA14080@localhost>
- <20160119153822.GA3979@localhost.localdomain>
- <20160119160220.GA22059@infradead.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160119160220.GA22059@infradead.org>
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:34688 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751516AbcA2ORX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jan 2016 09:17:23 -0500
+Received: by mail-wm0-f51.google.com with SMTP id 128so54759122wmz.1
+        for <linux-pci@vger.kernel.org>; Fri, 29 Jan 2016 06:17:22 -0800 (PST)
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: linux-arm-kernel@lists.infradead.org, will.deacon@arm.com,
+	linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, mark.brown@linaro.org,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: [PATCH] PCI: generic: map config window in one go
+Date: Fri, 29 Jan 2016 15:17:15 +0100
+Message-Id: <1454077035-23872-1-git-send-email-ard.biesheuvel@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Christoph,
+Instead of iterating over the PCI config window and performing individual
+ioremap() calls on all the adjacent slices, perform a single ioremap() to
+map the entire region, and divvy it up later. This not only prevents
+leaving some of it mapped if we fail half way through, it also ensures that
+archs that support huge-vmap can use section mappings to perform the
+mapping.
 
-On Tue, Jan 19, 2016 at 08:02:20AM -0800, Christoph Hellwig wrote:
-> 
-> As this seems to require special drivers to bind to it, and Intel
-> people refuse to even publicly tell what the code does I'd like
-> to NAK this code until we get an explanation and use cases for it.
+On my Seattle A0 box, this transforms 128 separate 1 MB mappings that are
+mapped down to 4 KB pages into a single 128 MB mapping using 2 MB sections,
+saving 512 KB worth of page tables.
 
-I saw responses from Keith and Bryan, and I hope they answer your
-questions.  As far as I can tell, the VMD driver is grossly similar to
-other host bridge drivers we've already merged, and I don't think we
-have public specs for all of them.
+Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+---
 
-Unless you have further concerns, I'm going to ask Linus to pull this
-tomorrow, along with the rest of the PCI changes for v4.5.
+huge-vmap for arm64 proposed here:
+http://article.gmane.org/gmane.linux.kernel.hardened.devel/1661
+ 
+ drivers/pci/host/pci-host-generic.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 1652bc70b145..3251cd779278 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -161,6 +161,7 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+ 	struct device *dev = pci->host.dev.parent;
+ 	struct device_node *np = dev->of_node;
+ 	u32 sz = 1 << pci->cfg.ops->bus_shift;
++	void *window;
+ 
+ 	err = of_address_to_resource(np, 0, &pci->cfg.res);
+ 	if (err) {
+@@ -186,14 +187,15 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+ 		return -ENOMEM;
+ 
+ 	bus_range = pci->cfg.bus_range;
++	window = devm_ioremap(dev, pci->cfg.res.start,
++			      (bus_range->end - bus_range->start + 1) * sz);
++	if (!window)
++		return -ENOMEM;
++
+ 	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
+ 		u32 idx = busn - bus_range->start;
+ 
+-		pci->cfg.win[idx] = devm_ioremap(dev,
+-						 pci->cfg.res.start + idx * sz,
+-						 sz);
+-		if (!pci->cfg.win[idx])
+-			return -ENOMEM;
++		pci->cfg.win[idx] = window + idx * sz;
+ 	}
+ 
+ 	return 0;
+-- 
+2.5.0
+
