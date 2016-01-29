@@ -1,74 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:63343 "EHLO mga14.intel.com"
+Received: from foss.arm.com ([217.140.101.70]:38372 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967217AbcA0UBY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Jan 2016 15:01:24 -0500
-Date: Wed, 27 Jan 2016 21:01:14 +0100
-From: "Lawrynowicz, Jacek" <jacek.lawrynowicz@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	alex.williamson@redhat.com, dwmw2@infradead.org, jroedel@suse.de
-Subject: Re: [PATCH v2 1/2] pci: Add support for multiple DMA aliases
-Message-ID: <20160127200113.GA15468@jlawryno-MOBL1>
-References: <1453825639.26652.45.camel@redhat.com>
- <1453828335-111522-1-git-send-email-jacek.lawrynowicz@intel.com>
- <20160126233100.GC26726@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160126233100.GC26726@localhost>
+	id S1754872AbcA2L1n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 29 Jan 2016 06:27:43 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: [PATCH 2/2] drivers: pci: host: designware: remove PCI_PROBE_ONLY handling
+Date: Fri, 29 Jan 2016 11:29:32 +0000
+Message-Id: <1454066972-3609-2-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1454066972-3609-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1454066972-3609-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 26, 2016 at 05:31:00PM -0600, Bjorn Helgaas wrote:
-> Hi Jacek,
-> 
-> When you post updated versions, please post the whole series with a
-> new version number.  I think there are three postings of [v2 1/2], and
-> I think they're different.  In any case, it's hard for me to keep them
-> straight.
+The PCIe designware host driver is not used in system configurations
+requiring the PCI_PROBE_ONLY flag to be set to prevent resources
+assignment, therefore the driver code handling the flag can be
+removed from the kernel.
 
-OK, should I also create a new thread for each new version?
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Zhou Wang <wangzhou1@hisilicon.com>
+---
+ drivers/pci/host/pcie-designware.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-> > diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> > index 0e3b009..93a89ed 100644
-> > --- a/drivers/iommu/iommu.c
-> > +++ b/drivers/iommu/iommu.c
-> > @@ -660,8 +660,8 @@ static struct iommu_group *get_pci_function_alias_group(struct pci_dev *pdev,
-> >  }
-> >  
-> >  /*
-> > - * Look for aliases to or from the given device for exisiting groups.  The
-> > - * dma_alias_devfn only supports aliases on the same bus, therefore the search
-> > + * Look for aliases to or from the given device for exisiting groups. DMA
-> 
-> s/exisiting/existing/  (Not your change, but might as well fix the
-> typo since you're touching the line anyway.)
-
-Sure
-
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 602eb42..cd38767 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -4568,6 +4568,33 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
-> >  	return 0;
-> >  }
-> >  
-> > +/**
-> > + * pci_enable_dma_alias - Allows to set multiple devfn aliases for given device
-> > + * @dev: the PCI device for which alias is added
-> > + * @devfn: alias slot and function
-> > + *
-> > + * This helper encodes 8-bit devfn as bit number in dma_alias_mask.
-> > + * It should be called early, preferably as PCI fixup header quirk.
-> > + */
-> > +void pci_enable_dma_alias(struct pci_dev *dev, u8 devfn)
-> 
-> I kind of liked "pci_add_dma_alias()."  "Enable" suggests that we can
-> turn them on and off, which isn't really the case here.
-
-OK, I was going for enable/is_enabled but you are right that enable
-suggest that alias can be disabled.
-
-Jacek
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 2171682..a445083 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -551,13 +551,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+ #endif
+ 
+-	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+-		pci_bus_size_bridges(bus);
+-		pci_bus_assign_resources(bus);
++	pci_bus_size_bridges(bus);
++	pci_bus_assign_resources(bus);
+ 
+-		list_for_each_entry(child, &bus->children, node)
+-			pcie_bus_configure_settings(child);
+-	}
++	list_for_each_entry(child, &bus->children, node)
++		pcie_bus_configure_settings(child);
+ 
+ 	pci_bus_add_devices(bus);
+ 	return 0;
+-- 
+2.5.1
 
