@@ -1,109 +1,111 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V3 14/21] x86, ia64: Include acpi_pci_{add|remove}_bus to the default pcibios_{add|remove}_bus implementation.
-Date: Wed, 13 Jan 2016 14:21:00 +0100
-Message-Id: <1452691267-32240-15-git-send-email-tn@semihalf.com>
-In-Reply-To: <1452691267-32240-1-git-send-email-tn@semihalf.com>
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx4-phx2.redhat.com ([209.132.183.25]:43255 "EHLO
+	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751256AbcA2TGG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jan 2016 14:06:06 -0500
+Date: Fri, 29 Jan 2016 14:05:44 -0500 (EST)
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
+	aik@ozlabs.ru, benh@kernel.crashing.org, paulus@samba.org,
+	mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
+Message-ID: <163133676.20416948.1454094344181.JavaMail.zimbra@redhat.com>
+In-Reply-To: <56AB4182.5060501@linux.vnet.ibm.com>
+References: <1452841574-2781-1-git-send-email-xyjxie@linux.vnet.ibm.com> <1452841574-2781-4-git-send-email-xyjxie@linux.vnet.ibm.com> <1454021182.23148.6.camel@redhat.com> <56AB4182.5060501@linux.vnet.ibm.com>
+Subject: Re: [RFC PATCH v3 3/5] PCI: Add host bridge attribute to indicate
+ filtering of MSIs is supported
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Arches in subject are the only one who use pcibios_{add|remove}_bus hooks
-and implement it in the same way. Moreover ARM64 is going to do the same.
-So it seams that acpi_pci_{add|remove}_bus is generic enough to be default
-option for pcibios_{add|remove}_bus hooks. Also, it is always safe to run
-acpi_pci_{add|remove}_bus as they have empty stubs for !ACPI case and
-return if ACPI has been switched off in run time.
 
-After all we can remove x86 and ia64 pcibios_{add|remove}_bus
-implementation.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- arch/ia64/pci/pci.c   | 10 ----------
- arch/x86/pci/common.c | 10 ----------
- drivers/pci/probe.c   |  3 +++
- 3 files changed, 3 insertions(+), 20 deletions(-)
+----- Original Message -----
+> On 2016/1/29 6:46, Alex Williamson wrote:
+> > On Fri, 2016-01-15 at 15:06 +0800, Yongji Xie wrote:
+> >> MSI-X tables are not allowed to be mmapped in vfio-pci
+> >> driver in case that user get to touch this directly.
+> >> This will cause some performance issues when when PCI
+> >> adapters have critical registers in the same page as
+> >> the MSI-X table.
+> >>   
+> >> However, some kind of PCI host bridge such as IODA bridge
+> >> on Power support filtering of MSIs, which can ensure that a
+> >> given pci device can only shoot the MSIs assigned for it.
+> >> So we think it's safe to expose the MSI-X table to userspace
+> >> if filtering of MSIs is supported because the exposed MSI-X
+> >> table can't be used to do harm to other memory space.
+> >>   
+> >> To support this case, this patch adds a pci_host_bridge
+> >> attribute to indicate if this PCI host bridge supports
+> >> filtering of MSIs.
+> >>   
+> >> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+> >> ---
+> >>   drivers/pci/host-bridge.c |    6 ++++++
+> >>   include/linux/pci.h       |    3 +++
+> >>   2 files changed, 9 insertions(+)
+> >>   
+> >> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+> >> index 5f4a2e0..c029267 100644
+> >> --- a/drivers/pci/host-bridge.c
+> >> +++ b/drivers/pci/host-bridge.c
+> >> @@ -96,3 +96,9 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct
+> >> resource *res,
+> >>   	res->end = region->end + offset;
+> >>   }
+> >>   EXPORT_SYMBOL(pcibios_bus_to_resource);
+> >> +
+> >> +bool pci_host_bridge_msi_filtered_enabled(struct pci_dev *pdev)
+> >> +{
+> >> +	return pci_find_host_bridge(pdev->bus)->msi_filtered;
+> >> +}
+> >> +EXPORT_SYMBOL_GPL(pci_host_bridge_msi_filtered_enabled);
+> >> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >> index b640d65..b952b78 100644
+> >> --- a/include/linux/pci.h
+> >> +++ b/include/linux/pci.h
+> >> @@ -412,6 +412,7 @@ struct pci_host_bridge {
+> >>   	void (*release_fn)(struct pci_host_bridge *);
+> >>   	void *release_data;
+> >>   	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
+> >> +	unsigned int msi_filtered:1;	/* support filtering of MSIs */
+> >>   	/* Resource alignment requirements */
+> >>   	resource_size_t (*align_resource)(struct pci_dev *dev,
+> >>   			const struct resource *res,
+> >> @@ -430,6 +431,8 @@ void pci_set_host_bridge_release(struct
+> >> pci_host_bridge *bridge,
+> >>   
+> >>   int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+> >>   
+> >> +bool pci_host_bridge_msi_filtered_enabled(struct pci_dev *pdev);
+> >> +
+> >>   /*
+> >>    * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that
+> >>    correspond
+> >>    * to P2P or CardBus bridge windows) go in a table.  Additional ones
+> >>    (for
+> > Don't we already have a flag for this in the IOMMU space?
+> >
+> > enum iommu_cap {
+> >          IOMMU_CAP_CACHE_COHERENCY,      /* IOMMU can enforce cache
+> >          coherent DMA
+> >                                             transactions */
+> > --->    IOMMU_CAP_INTR_REMAP,           /* IOMMU supports interrupt
+> > isolation */
+> >          IOMMU_CAP_NOEXEC,               /* IOMMU_NOEXEC flag */
+> > };
+> >
+> 
+> I saw this flag had been enabled in x86 and ARM arch.
+> 
+> I'm not sure whether we can mmap MSI-X table in those archs. I just
+> verify it on PPC64 arch.
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 978d6af..be4c9ef 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -358,16 +358,6 @@ void pcibios_fixup_bus(struct pci_bus *b)
- 	platform_pci_fixup_bus(b);
- }
- 
--void pcibios_add_bus(struct pci_bus *bus)
--{
--	acpi_pci_add_bus(bus);
--}
--
--void pcibios_remove_bus(struct pci_bus *bus)
--{
--	acpi_pci_remove_bus(bus);
--}
--
- void pcibios_set_master (struct pci_dev *dev)
- {
- 	/* No special bus mastering setup handling */
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index eccd4d9..ed3236d 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -171,16 +171,6 @@ void pcibios_fixup_bus(struct pci_bus *b)
- 		pcibios_fixup_device_resources(dev);
- }
- 
--void pcibios_add_bus(struct pci_bus *bus)
--{
--	acpi_pci_add_bus(bus);
--}
--
--void pcibios_remove_bus(struct pci_bus *bus)
--{
--	acpi_pci_remove_bus(bus);
--}
--
- /*
-  * Only use DMI information to set this if nothing was passed
-  * on the kernel command line (which was parsed earlier).
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cad836f..2fbf840 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -12,6 +12,7 @@
- #include <linux/slab.h>
- #include <linux/module.h>
- #include <linux/cpumask.h>
-+#include <linux/pci-acpi.h>
- #include <linux/pci-aspm.h>
- #include <linux/aer.h>
- #include <linux/acpi.h>
-@@ -2067,10 +2068,12 @@ int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- 
- void __weak pcibios_add_bus(struct pci_bus *bus)
- {
-+	acpi_pci_add_bus(bus);
- }
- 
- void __weak pcibios_remove_bus(struct pci_bus *bus)
- {
-+	acpi_pci_remove_bus(bus);
- }
- 
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
--- 
-1.9.1
+Unfortunately that's not a very good excuse for creating an alternate implementation.  When x86 implements interrupt remapping, we get fine grained isolation of MSI vectors and we've always taken this flag to mean that the system is isolated from devices that may perform DoS attacks with MSI writes.  I'm not entirely sure whether ARM really provides that degree of isolation, but they would be incorrect is exposing the capability if they do not.  Thanks,
 
+Alex
