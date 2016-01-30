@@ -1,100 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38972 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753414AbcAUU5k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 21 Jan 2016 15:57:40 -0500
-Date: Thu, 21 Jan 2016 14:57:17 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] pci: aer: wait till the workqueue completes before
- free memory
-Message-ID: <20160121205717.GA21798@localhost>
-References: <20151217143243.GA9654@linutronix.de>
- <20160106232758.GE16231@localhost>
- <20160115183625.GG3781@linutronix.de>
+Received: from smtp.codeaurora.org ([198.145.29.96]:35730 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753591AbcA3AOc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Jan 2016 19:14:32 -0500
+Subject: Re: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20160120160427.GD13437@red-moon>
+ <569FB210.9090605@codeaurora.org> <20160129230645.GG12965@localhost>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	linux-pci@vger.kernel.org, Zhou Wang <wangzhou1@hisilicon.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <56AC0065.5030909@codeaurora.org>
+Date: Fri, 29 Jan 2016 19:14:29 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160115183625.GG3781@linutronix.de>
+In-Reply-To: <20160129230645.GG12965@localhost>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sebastian,
-
-On Fri, Jan 15, 2016 at 07:36:25PM +0100, Sebastian Andrzej Siewior wrote:
-> I start a binary which should flash the FPGA and re-enumare the PCI-BUS
-> and find a new device. It works most of the time. With SLUB debug it
-> crashes on each iteration with something like this (compressed output):
+On 1/29/2016 6:06 PM, Bjorn Helgaas wrote:
+> On Wed, Jan 20, 2016 at 11:13:04AM -0500, Sinan Kaya wrote:
+>> On 1/20/2016 11:04 AM, Lorenzo Pieralisi wrote:
+>>>
+>>> We want to get rid of PCI_PROBE_ONLY on ARM/ARM64:
+>>
+>> For platforms that does not have UEFI BIOS, it makes sense to remove the probe only
+>> option as the firmware is not doing anything.
 > 
-> | pcieport 0000:00:00.0: AER: Multiple Corrected error received: id=0000
-> | Unable to handle kernel paging request for data at address 0x27ef9e3e
-> | Faulting instruction address: 0x602f5328
-> | Oops: Kernel access of bad area, sig: 11 [#1]
-> | Workqueue: events aer_isr
-> | GPR24: dd6aa000 6b6b6b6b 605f8378 605f8360 d99b12c0 604fc674 606b1704 d99b12c0
-> | NIP [602f5328] pci_walk_bus+0xd4/0x104
+> I don't understand this statement.  It sounds like you mean "non-UEFI
+> BIOS firmware doesn't assign PCI BARs", but that's not true, so you
+> must mean something else.
+
+It depends on the firmware flavor. I know u-boot does some PCI assignment but it does minimum
+to use PCI itself not for OS consumption. It may not deal with with switches/bridges etc. or 
+will only assign mem32 resources and not touch prefetchable. 
+
+Most non-UEFI firmwares I have seen on ARM rely on device specific driver
+like synopsys etc. to do the device initialization and ask kernel to do the enumeration.
+
+ACPI systems on the other hand handle the resource assignment before the OS starts.
+
 > 
-> Register 25 has the user-after magic. As it turns out, the old PCIe
-> device is leaving, generates an error before it left, aer_irq() is fired,
-> it schedules a work item. What happens now is that free_irq() is
-> invoked, all resources are gone *before* the aes_isr() work item is
-> completed.
-> So to fix this, I flush the workqueue to ensure that there is no more
-> work pending.
-> The wait_event() on wait_release should actually synchronized against
-> removal. However the condition (->prod_idx == ->cons_idx) is made true
-> before the function completes (aer_isr_one_error() is invoked right
-> after that) so it does not fulfill its purpose. Therefore I remove it.
+>> For server like arm64 platforms, the behavior should be identical to
+>> x86 world. 
 > 
-> Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+>> The UEFI BIOS sets up the resources, kernel uses the resources.
+> 
+> Is there actually a requirement that a UEFI BIOS assign resources to
+> PCI BARs?   I know that historically, x86 BIOS has set up most or all
+> PCI BARs.  But I thought there was something in UEFI that relaxed
+> that, so it would only have to program BARs for the boot and console
+> devices it actually needed.  But I can't find a spec reference either
+> way.
 
-I propose to merge this patch unchanged, but with the following
-changelog.  I want to add a bit more detail about the concurrency
-problem and remove a bit of the specific detail about your FPGA:
+I don't have a spec reference. This statement was purely out of x86 experience not based on some
+spec. We are trying to follow the PC model.
+
+> 
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 
-commit 9963c9487f733ef8fe3a06ce3398072a40f955bf
-Author: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Date:   Fri Jan 15 19:36:25 2016 +0100
-
-PCI/AER: Flush workqueue on device remove to avoid use-after-free
-
-A Root Port's AER structure (rpc) contains a queue of events.  aer_irq()
-enqueues AER status information and schedules aer_isr() to dequeue and
-process it.  When we remove a device, aer_remove() waits for the queue to
-be empty, then frees the rpc struct.
-
-But aer_isr() references the rpc struct after dequeueing and possibly
-emptying the queue, which can cause a use-after-free error as in the
-following scenario with two threads, aer_isr() on the left and a
-concurrent aer_remove() on the right:
-
-  Thread A                      Thread B
-  --------                      --------
-  aer_irq():
-    rpc->prod_idx++
-				aer_remove():
-				  wait_event(rpc->prod_idx == rpc->cons_idx)
-				  # now blocked until queue becomes empty
-  aer_isr():                      # ...
-    rpc->cons_idx++               # unblocked because queue is now empty
-    ...                           kfree(rpc)
-    mutex_unlock(&rpc->rpc_mutex)
-
-Wait until the last scheduled instance of aer_isr() has completed before
-freeing the rpc struct by using flush_work() in aer_remove().
-
-I reproduced this use-after-free by flashing a device FPGA and
-re-enumerating the bus to find the new device.  With SLUB debug, this
-crashes with 0x6b bytes (POISON_FREE, the use-after-free magic number) in
-GPR25:
-
-  pcieport 0000:00:00.0: AER: Multiple Corrected error received: id=0000
-  Unable to handle kernel paging request for data at address 0x27ef9e3e
-  Workqueue: events aer_isr
-  GPR24: dd6aa000 6b6b6b6b 605f8378 605f8360 d99b12c0 604fc674 606b1704 d99b12c0
-  NIP [602f5328] pci_walk_bus+0xd4/0x104
-
-[bhelgaas: changelog]
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
