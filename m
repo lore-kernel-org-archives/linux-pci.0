@@ -1,75 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:34590 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754244AbcASXuh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Jan 2016 18:50:37 -0500
-Received: by mail-wm0-f48.google.com with SMTP id u188so164143207wmu.1
-        for <linux-pci@vger.kernel.org>; Tue, 19 Jan 2016 15:50:36 -0800 (PST)
-Subject: Re: ID conflict between bdc_pci and "720p FaceTime HD Camera"
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <569BB4C2.3020602@gmail.com> <20160119225806.GA1841@localhost>
-Cc: linux-pci@vger.kernel.org,
-	Ashwini Pahuja <ashwini.linux@gmail.com>,
-	Felipe Balbi <balbi@ti.com>
-From: Xavier Gnata <xavier.gnata@gmail.com>
-Message-ID: <569ECBC9.9090800@gmail.com>
-Date: Wed, 20 Jan 2016 00:50:33 +0100
+Received: from mail.kernel.org ([198.145.29.136]:60875 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754128AbcA3Naa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 30 Jan 2016 08:30:30 -0500
+Date: Sat, 30 Jan 2016 07:30:27 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	linux-pci@vger.kernel.org, Zhou Wang <wangzhou1@hisilicon.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
+Message-ID: <20160130133027.GA16394@localhost>
+References: <20160120160427.GD13437@red-moon>
+ <569FB210.9090605@codeaurora.org>
+ <20160129230645.GG12965@localhost>
+ <56AC0065.5030909@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <20160119225806.GA1841@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56AC0065.5030909@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Jan 29, 2016 at 07:14:29PM -0500, Sinan Kaya wrote:
+> On 1/29/2016 6:06 PM, Bjorn Helgaas wrote:
+> > On Wed, Jan 20, 2016 at 11:13:04AM -0500, Sinan Kaya wrote:
+> >> On 1/20/2016 11:04 AM, Lorenzo Pieralisi wrote:
+> >>>
+> >>> We want to get rid of PCI_PROBE_ONLY on ARM/ARM64:
+> >>
+> >> For platforms that does not have UEFI BIOS, it makes sense to remove the probe only
+> >> option as the firmware is not doing anything.
+> > 
+> > I don't understand this statement.  It sounds like you mean "non-UEFI
+> > BIOS firmware doesn't assign PCI BARs", but that's not true, so you
+> > must mean something else.
+> 
+> It depends on the firmware flavor. I know u-boot does some PCI
+> assignment but it does minimum to use PCI itself not for OS
+> consumption. It may not deal with with switches/bridges etc. or will
+> only assign mem32 resources and not touch prefetchable. 
 
+Ah, I see the problem.  When you wrote "non-UEFI BIOS," I thought
+"old-fashioned x86 BIOS," which generally do assign resources.  But I
+don't have much experience with other firmware like U-boot.  There are
+good reasons, e.g., portability and boot-time optimization, why
+firmware might not touch things it doesn't need.  That's especially
+true for PCI resource assignment, where we know the OS must do it
+itself anyway, and there's little point in doing it twice.
 
-On 19/01/2016 23:58, Bjorn Helgaas wrote:
-> [+cc Ashwini, Felipe]
->
-> On Sun, Jan 17, 2016 at 04:35:30PM +0100, Xavier Gnata wrote:
->> Hello,
->>
->> The development of a driver for
->> 02:00.0 Multimedia controller [0480]: Broadcom Corporation 720p
->> FaceTime HD Camera [14e4:1570]
->> has started. It is still in an early stage but it's progressing and
->> it already streams.
->> https://github.com/patjak/bcwc_pcie
->>
->> However, as you can see, this webcam shares the exact same ID as
->> bdc_pci 0x1570 .
->>
->> Could we use e.g. PCI_CLASS in bdc_pci to avoid grabbing the webcam
->> incorrectly?
->> The FaceTime HD Camera has PCI_CLASS 0x048000
->> I hope that bdc_pci has another PCI_CLASS.
->> Or maybe there is a better way to distinguish bdc_pci from FaceTime
->> HD Camera. What do you think?
->
-> This is what the PCI Vendor/Device IDs are for.  It's a shame that
-> Broadcom apparently screwed up and used the same IDs in two different
-> devices.
->
-> At least, I *assume* they're different.  I can't really tell what the
-> bdc_pci driver does, so it's conceivable that it's using the same
-> device in a different way than you are.
->
-> If they really are different devices, using the class code sounds like
-> a reasonable way to differentiate them.
->
-> Bjorn
->
+> Most non-UEFI firmwares I have seen on ARM rely on device specific
+> driver like synopsys etc. to do the device initialization and ask
+> kernel to do the enumeration.
+> 
+> ACPI systems on the other hand handle the resource assignment before
+> the OS starts.
 
-bdc is "Broadcom's USB3.0 device controller IP" in the SOC world which 
-is connected through PCIe on FPGA-PCIe based platform.
-Nothing to do with the Facetime HD webcam of a macbook air.
-Broadcom screwed up.
+My guess is that this is more of a tradition than anything actually
+required by the spec.
 
-The issue is that I don't have access to such a BDC.
-I also don't find it in
-http://pcidatabase.com/vendor_details.php?id=767
-which lists 0x1570 as being the webcam.
+The bottom line is that Linux can't rely on much consistency across
+the universe of architectures and firmwares.  I think the only thing
+that really makes sense for us to do is:
 
-Where can we find the PCI class of this "Broadcom's USB3.0 device 
-controller IP" ? Ashwini?
+  - Read whatever assignments the firmware may have made
+  - Keep them unchanged if they seem sensible
+  - Reassign them if they aren't sensible
+  - Use quirks to handle exceptions
 
-Xavier
+Bjorn
