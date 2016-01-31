@@ -1,82 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V3 19/21] pci, acpi: Support for ACPI based generic PCI
- host controller init
-To: Tomasz Nowicki <tn@semihalf.com>, bhelgaas@google.com,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rjw@rjwysocki.net, Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-References: <1452691267-32240-1-git-send-email-tn@semihalf.com>
- <1452691267-32240-20-git-send-email-tn@semihalf.com>
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, tglx@linutronix.de,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com
-From: Hanjun Guo <hanjun.guo@linaro.org>
-Message-ID: <5698C299.2080702@linaro.org>
-Date: Fri, 15 Jan 2016 17:57:45 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:34753 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757278AbcAaMeu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 31 Jan 2016 07:34:50 -0500
+Received: by mail-pa0-f43.google.com with SMTP id uo6so67593898pac.1
+        for <linux-pci@vger.kernel.org>; Sun, 31 Jan 2016 04:34:50 -0800 (PST)
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>,
+	<linux-pci@vger.kernel.org>
+Cc: "'Pratyush Anand'" <pratyush.anand@gmail.com>,
+	"'Arnd Bergmann'" <arnd@arndb.de>,
+	"'Bjorn Helgaas'" <bhelgaas@google.com>,
+	"'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>,
+	"'Zhou Wang'" <wangzhou1@hisilicon.com>,
+	"'Jingoo Han'" <jingoohan1@gmail.com>
+References: <1454066972-3609-1-git-send-email-lorenzo.pieralisi@arm.com> <1454066972-3609-2-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1454066972-3609-2-git-send-email-lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH 2/2] drivers: pci: host: designware: remove PCI_PROBE_ONLY handling
+Date: Sun, 31 Jan 2016 21:34:40 +0900
+Message-ID: <000701d15c23$c67963f0$536c2bd0$@com>
 MIME-Version: 1.0
-In-Reply-To: <1452691267-32240-20-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tomasz,
+On Friday, January 29, 2016 8:30 PM, Lorenzo Pieralisi wrote:
+> 
+> The PCIe designware host driver is not used in system configurations
+> requiring the PCI_PROBE_ONLY flag to be set to prevent resources
+> assignment, therefore the driver code handling the flag can be
+> removed from the kernel.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Pratyush Anand <pratyush.anand@gmail.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Jingoo Han <jingoohan1@gmail.com>
 
-On 2016/1/13 21:21, Tomasz Nowicki wrote:
-> Because of two patch series:
-> 1. Jiang Liu's common interface to support PCI host controller init
-> 2. MMCONFIG refactoring (part of this patch set)
-> now we can think about generic ACPI based PCI host controller init
-> implementation out of arch/ directory.
->
-> These calls use information from MCFG table (PCI config space regions)
-> and _CRS method (IO/irq resources) to initialize PCI hostbridge.
->
-> TBD: We are still not sure whether we should reassign resources
-> after PCI bus enumeration or trust firmware to do all that work for
-> us properly.
->
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> CC: Arnd Bergmann <arnd@arndb.de>
-> CC: Catalin Marinas <catalin.marinas@arm.com>
-> CC: Liviu Dudau <Liviu.Dudau@arm.com>
-> CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-> CC: Will Deacon <will.deacon@arm.com>
-> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+Acked-by: Jingoo Han Jingoo Han <jingoohan1@gmail.com>
+
+Best regards,
+Jingoo Han
+
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> Cc: Zhou Wang <wangzhou1@hisilicon.com>
 > ---
->   drivers/acpi/Kconfig    |   5 ++
->   drivers/acpi/pci_root.c | 131 ++++++++++++++++++++++++++++++++++++++++++++++++
->   2 files changed, 136 insertions(+)
->
-> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-> index c3664be..e315061 100644
-> --- a/drivers/acpi/Kconfig
-> +++ b/drivers/acpi/Kconfig
-> @@ -335,6 +335,11 @@ config ACPI_PCI_SLOT
->   	  i.e., segment/bus/device/function tuples, with physical slots in
->   	  the system.  If you are unsure, say N.
->
-> +config ACPI_PCI_HOST_GENERIC
-> +	bool "Generic ACPI PCI host controller"
-> +	help
-> +	  Say Y here if you want to support generic ACPI PCI host controller.
+>  drivers/pci/host/pcie-designware.c | 10 ++++------
+>  1 file changed, 4 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 2171682..a445083 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -551,13 +551,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+>  #endif
+> 
+> -	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+> -		pci_bus_size_bridges(bus);
+> -		pci_bus_assign_resources(bus);
+> +	pci_bus_size_bridges(bus);
+> +	pci_bus_assign_resources(bus);
+> 
+> -		list_for_each_entry(child, &bus->children, node)
+> -			pcie_bus_configure_settings(child);
+> -	}
+> +	list_for_each_entry(child, &bus->children, node)
+> +		pcie_bus_configure_settings(child);
+> 
+>  	pci_bus_add_devices(bus);
+>  	return 0;
+> --
+> 2.5.1
 
-Since x86 and IA64 will not use ACPI_PCI_HOST_GENERIC in this
-patch, it should be defined as
-
-config ACPI_PCI_HOST_GENERIC
-	bool
-
-and select for ARCHs, or will default y on x86 and IA64 too.
-
-Compiling the kernel on a IA64 machine, will send out the
-result when it's ready.
-
-Thanks
-Hanjun
