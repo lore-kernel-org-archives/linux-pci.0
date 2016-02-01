@@ -1,248 +1,185 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: Vineet.Gupta1@synopsys.com, helgaas@kernel.org
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
-	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v6 1/2] PCI support added to ARC
-Date: Thu, 14 Jan 2016 11:04:32 +0000
-Message-Id: <24c9b782dfade515bbed20ce75d85200a00a2e66.1452611234.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1452611234.git.jpinto@synopsys.com>
-References: <cover.1452611234.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1452611234.git.jpinto@synopsys.com>
-References: <cover.1452611234.git.jpinto@synopsys.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from hq.vniiem.ru ([78.107.120.166]:50991 "EHLO mx.svc.vniiem.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750757AbcBAFSt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2016 00:18:49 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by mx.svc.vniiem.ru (Postfix) with ESMTP id 2BE45820CB
+	for <linux-pci@vger.kernel.org>; Mon,  1 Feb 2016 08:18:47 +0300 (MSK)
+Received: from mx.svc.vniiem.ru ([127.0.0.1])
+	by localhost (mx.svc.vniiem.ru [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 3mC2GkWBWHpf for <linux-pci@vger.kernel.org>;
+	Mon,  1 Feb 2016 08:18:46 +0300 (MSK)
+From: =?utf-8?B?0J7Qu9C10LMg0JzQvtGA0L7Qtw==?= <oleg.moroz@mcc.vniiem.ru>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: PCI device driver broken between 4.2 and 4.3
+Date: Mon, 01 Feb 2016 08:18:35 +0300
+Message-ID: <2025502.hfirZrb1Qq@debian802>
+In-Reply-To: <20160129163159.GC12965@localhost>
+References: <20160128192951.CC6AF820DC@mx.svc.vniiem.ru> <20160129163159.GC12965@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds PCI support to ARC and updates drivers/pci Makefile
-enabling the ARC arch to use the generic PCI setup functions.
+Okay. I've started from driver level printk
+results are:
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
----
-Change v5 -> v6 (Vineet Gupta):
-- Removed EXPORT_SYMBOL(pcibios_fixup_bus) from pcibios.c
-Change v4 -> v5 (Vineet Gupta):
-- pcibios.c unused functions, variables and includes were removed
-- ioremap.c has no need for changes (no patch is necessary)
-- pci.h unused functions and variables were removed
-Change v3 -> v4:
-- Nothing changed (just to keep up with patch set version).
-Change v2 -> v3 (Bjorn Helgaas):
-- arch/arc/kernel/pcibios.c unused functions were removed and also the
-arch/arc/include/asm/mach/pci.h was removed because was no longer necessary
-Change v1 -> v2:
-- In arch/arc/Kconfig, the new menu entry (Bus Configuration) was moved to the
-slot between sourcing of drivers/Kconfig and fs/Kconfig (Vineet Gupta)
-- In arch/arc/plat-axs10x/Kconfig the "select MIGHT_HAVE_PCI" option was placed
-in order as suggested (Vineet Gupta)
-- ioport_map() and ioport_unmap() were static inlined and included in
-the io.h (Vineet Gupta)
-- pcibios_min_io and pcibios_min_mem declaration moved to
-pcibios.c (Vineet Gupta)
-- pr_err() replaced by dev_err() in pcibios_enable_device() (Bjorn Helgaas)
-- string simplified in pcibios_enable_device() (Vineet Gupta)
-- pci_host_bridge_window structure was replaced by resource_entry structure, and
-list_for_each_entry() for resource_list_for_each_entry() in pcibios.c
+On 4.2
 
- arch/arc/Kconfig             | 23 +++++++++++++++++++++++
- arch/arc/include/asm/dma.h   |  5 +++++
- arch/arc/include/asm/io.h    |  9 +++++++++
- arch/arc/include/asm/pci.h   | 31 +++++++++++++++++++++++++++++++
- arch/arc/kernel/Makefile     |  1 +
- arch/arc/kernel/pcibios.c    | 23 ++++++++++++++++++++++++
- arch/arc/plat-axs10x/Kconfig |  1 +
- drivers/pci/Makefile         |  1 +
- 8 files changed, 95 insertions(+)
- create mode 100644 arch/arc/include/asm/pci.h
- create mode 100644 arch/arc/kernel/pcibios.c
+[414006.575989] Before pci_enable_device IRQ 20
 
-diff --git a/arch/arc/Kconfig b/arch/arc/Kconfig
-index 2c2ac3f..98b32c1 100644
---- a/arch/arc/Kconfig
-+++ b/arch/arc/Kconfig
-@@ -19,6 +19,7 @@ config ARC
- 	select GENERIC_FIND_FIRST_BIT
- 	# for now, we don't need GENERIC_IRQ_PROBE, CONFIG_GENERIC_IRQ_CHIP
- 	select GENERIC_IRQ_SHOW
-+	select GENERIC_PCI_IOMAP
- 	select GENERIC_PENDING_IRQ if SMP
- 	select GENERIC_SMP_IDLE_THREAD
- 	select HAVE_ARCH_KGDB
-@@ -39,6 +40,9 @@ config ARC
- 	select PERF_USE_VMALLOC
- 	select HAVE_DEBUG_STACKOVERFLOW
- 
-+config MIGHT_HAVE_PCI
-+	bool
-+
- config TRACE_IRQFLAGS_SUPPORT
- 	def_bool y
- 
-@@ -570,6 +574,25 @@ endmenu	 # "ARC Architecture Configuration"
- source "mm/Kconfig"
- source "net/Kconfig"
- source "drivers/Kconfig"
-+
-+menu "Bus Support"
-+
-+config PCI
-+	bool "PCI support" if MIGHT_HAVE_PCI
-+	help
-+	  PCI is the name of a bus system, i.e. the way the CPU talks to the other stuff inside
-+	  your box.Find out if your board/platform have PCI.
-+	  Note: PCIE support for Synopsys Device will be available only when
-+	  HAPS DX is configured with PCIE RC bitmap. If you have PCI, say Y, otherwise N.
-+
-+config PCI_SYSCALL
-+	def_bool PCI
-+
-+source "drivers/pci/Kconfig"
-+source "drivers/pci/pcie/Kconfig"
-+
-+endmenu
-+
- source "fs/Kconfig"
- source "arch/arc/Kconfig.debug"
- source "security/Kconfig"
-diff --git a/arch/arc/include/asm/dma.h b/arch/arc/include/asm/dma.h
-index ca7c451..37942fa 100644
---- a/arch/arc/include/asm/dma.h
-+++ b/arch/arc/include/asm/dma.h
-@@ -10,5 +10,10 @@
- #define ASM_ARC_DMA_H
- 
- #define MAX_DMA_ADDRESS 0xC0000000
-+#ifdef CONFIG_PCI
-+extern int isa_dma_bridge_buggy;
-+#else
-+#define isa_dma_bridge_buggy    (0)
-+#endif
- 
- #endif
-diff --git a/arch/arc/include/asm/io.h b/arch/arc/include/asm/io.h
-index 694ece8..947bf0c 100644
---- a/arch/arc/include/asm/io.h
-+++ b/arch/arc/include/asm/io.h
-@@ -16,6 +16,15 @@
- extern void __iomem *ioremap(unsigned long physaddr, unsigned long size);
- extern void __iomem *ioremap_prot(phys_addr_t offset, unsigned long size,
- 				  unsigned long flags);
-+static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
-+{
-+	return (void __iomem *)port;
-+}
-+
-+static inline void ioport_unmap(void __iomem *addr)
-+{
-+}
-+
- extern void iounmap(const void __iomem *addr);
- 
- #define ioremap_nocache(phy, sz)	ioremap(phy, sz)
-diff --git a/arch/arc/include/asm/pci.h b/arch/arc/include/asm/pci.h
-new file mode 100644
-index 0000000..2f091e1
---- /dev/null
-+++ b/arch/arc/include/asm/pci.h
-@@ -0,0 +1,31 @@
-+/*
-+ * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#ifndef _ASM_ARC_PCI_H
-+#define _ASM_ARC_PCI_H
-+
-+#ifdef __KERNEL__
-+#include <asm-generic/pci-dma-compat.h>
-+#include <asm-generic/pci-bridge.h>
-+
-+#include <linux/ioport.h>
-+
-+#define PCIBIOS_MIN_IO 0x100
-+#define PCIBIOS_MIN_MEM 0x100000
-+
-+#define pcibios_assign_all_busses()	1
-+/*
-+ * The PCI address space does equal the physical memory address space.
-+ * The networking and block device layers use this boolean for bounce
-+ * buffer decisions.
-+ */
-+#define PCI_DMA_BUS_IS_PHYS     (1)
-+
-+#endif /* __KERNEL__ */
-+
-+#endif /* _ASM_ARC_PCI_H */
-diff --git a/arch/arc/kernel/Makefile b/arch/arc/kernel/Makefile
-index e7f3625..1bc2036 100644
---- a/arch/arc/kernel/Makefile
-+++ b/arch/arc/kernel/Makefile
-@@ -12,6 +12,7 @@ obj-y	:= arcksyms.o setup.o irq.o time.o reset.o ptrace.o process.o devtree.o
- obj-y	+= signal.o traps.o sys.o troubleshoot.o stacktrace.o disasm.o clk.o
- obj-$(CONFIG_ISA_ARCOMPACT)		+= entry-compact.o intc-compact.o
- obj-$(CONFIG_ISA_ARCV2)			+= entry-arcv2.o intc-arcv2.o
-+obj-$(CONFIG_PCI)  			+= pcibios.o
- 
- obj-$(CONFIG_MODULES)			+= arcksyms.o module.o
- obj-$(CONFIG_SMP) 			+= smp.o
-diff --git a/arch/arc/kernel/pcibios.c b/arch/arc/kernel/pcibios.c
-new file mode 100644
-index 0000000..12ea45a
---- /dev/null
-+++ b/arch/arc/kernel/pcibios.c
-@@ -0,0 +1,23 @@
-+/*
-+ * Copyright (C) 2014-2015 Synopsys, Inc. (www.synopsys.com)
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ */
-+
-+#include <linux/pci.h>
-+
-+/*
-+ * We don't have to worry about legacy ISA devices, so nothing to do here
-+ */
-+resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-+				resource_size_t size, resource_size_t align)
-+{
-+	return res->start;
-+}
-+
-+void pcibios_fixup_bus(struct pci_bus *bus)
-+{
-+}
-diff --git a/arch/arc/plat-axs10x/Kconfig b/arch/arc/plat-axs10x/Kconfig
-index d475f9d..426ac4b 100644
---- a/arch/arc/plat-axs10x/Kconfig
-+++ b/arch/arc/plat-axs10x/Kconfig
-@@ -11,6 +11,7 @@ menuconfig ARC_PLAT_AXS10X
- 	select DW_APB_ICTL
- 	select GPIO_DWAPB
- 	select OF_GPIO
-+	select MIGHT_HAVE_PCI
- 	select GENERIC_IRQ_CHIP
- 	select ARCH_REQUIRE_GPIOLIB
- 	help
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index be3f631..2154092 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -32,6 +32,7 @@ obj-$(CONFIG_PCI_IOV) += iov.o
- # Some architectures use the generic PCI setup functions
- #
- obj-$(CONFIG_ALPHA) += setup-irq.o
-+obj-$(CONFIG_ARC) += setup-irq.o
- obj-$(CONFIG_ARM) += setup-irq.o
- obj-$(CONFIG_ARM64) += setup-irq.o
- obj-$(CONFIG_UNICORE32) += setup-irq.o
--- 
-1.8.1.5
+[414006.575991] After pci_enable_device IRQ 20
+
+[414006.575997] Before pci_enable_device IRQ 21
+
+[414006.575999] After pci_enable_device IRQ 21
+
+on 4.3
+
+[  114.862289] Before pci_enable_device IRQ 5
+
+[  114.862303] After pci_enable_device IRQ 5
+
+[  114.862316] Before pci_enable_device IRQ 5
+
+[  114.862326] After pci_enable_device IRQ 5
+
+I've got two cards, because of that pci_enable_device() calls twice.
+
+On Friday 29 of January 2016 10:31:59 Bjorn Helgaas wrote:
+> On Thu, Jan 28, 2016 at 10:28:14PM +0300, Мороз Олег wrote:
+> > What i need to print out at first order?
+> 
+> Jiang, can you chime in here?
+> 
+> 991de2e59090 is related to IRQs, so I'd start by printing dev->irq in your
+> driver before and after you call pci_enable_device().  Add some printks in
+> pcibios_alloc_irq() and pcibios_enable_device() just to confirm that we got
+> there and when, e.g., add lines like this:
+> 
+>   dev_info(&dev->dev, "%s\n", __func__);
+> 
+> Bjorn
+> 
+> > 27 янв. 2016 г. 16:22 пользователь Bjorn Helgaas <helgaas@kernel.org> 
+написал:
+> > > On Wed, Jan 27, 2016 at 12:38:06PM +0300, Мороз Олег wrote:
+> > > > Also, my drive has no
+> > > > 
+> > > > pcibios_enable_device()
+> > > > pcibios_alloc_irq()
+> > > > 
+> > > > calls.
+> > > 
+> > > Those are internal interfaces used by the PCI core.  Drivers shouldn't
+> > > call them directly.  Drivers normally call pci_enable_device(), and
+> > > those internal interfaces are used in that path.
+> > > 
+> > > > 26.01.2016 22:05, Олег Мороз пишет:
+> > > > >I confirmed it works in
+> > > > >
+> > > > >890e4847587f
+> > > > >
+> > > > >and do not works in
+> > > > >
+> > > > >991de2e59090
+> > > > >
+> > > > >26.01.2016 18:32, Bjorn Helgaas пишет:
+> > > > >>[+cc Jiang]
+> > > > >>
+> > > > >>On Mon, Jan 25, 2016 at 03:52:51PM -0600, Bjorn Helgaas wrote:
+> > > > >>>Hi Олег,
+> > > > >>>
+> > > > >>>On Sun, Jan 24, 2016 at 04:50:08PM +0300, Олег Мороз wrote:
+> > > > >>>>Okay. I've sent logs (dmesg and lspci) from both 4.2 and 4.3
+> > > > >>>>to bugzilla
+> > > > >>>
+> > > > >>>I don't see anything wrong in either log.  Both v4.2 and v4.3
+> > > > >>>enumerate the device the same way, and the driver seems to claim it
+> > > > >>>the same way:
+> > > > >>>
+> > > > >>>   pci 0000:0d:00.0: [10b5:9030] type 00 class 0x078000
+> > > > >>>   pci 0000:0d:00.0: reg 0x14: [io  0x2100-0x217f]
+> > > > >>>   pci 0000:0d:00.0: reg 0x18: [io  0x2380-0x239f]
+> > > > >>>   pci 0000:0d:00.0: PME# supported from D0 D3hot
+> > > > >>>   pci 0000:0d:01.0: [10b5:9030] type 00 class 0x078000
+> > > > >>>   pci 0000:0d:01.0: reg 0x14: [io  0x2180-0x21ff]
+> > > > >>>   pci 0000:0d:01.0: reg 0x18: [io  0x23a0-0x23bf]
+> > > > >>>   pci 0000:0d:01.0: PME# supported from D0 D3hot
+> > > > >>>   pci 0000:0d:02.0: [10b5:9030] type 00 class 0x078000
+> > > > >>>   pci 0000:0d:02.0: reg 0x14: [io  0x2200-0x227f]
+> > > > >>>   pci 0000:0d:02.0: reg 0x18: [io  0x2280-0x22ff]
+> > > > >>>   pci 0000:0d:02.0: reg 0x1c: [io  0x2300-0x237f]
+> > > > >>>   pci 0000:0d:02.0: PME# supported from D0 D3hot
+> > > > >>>
+> > > > >>>   sja1000_plx_pci 0000:0d:02.0: Detected "Eclus CAN-200-PCI"
+> > > > >>>card at slot #2
+> > > > >>>   sja1000_plx_pci 0000:0d:02.0: Channel #1 at
+> > > > >>>0x0000000000012280, irq 22 registered as can0
+> > > > >>>   sja1000_plx_pci 0000:0d:02.0: Channel #2 at
+> > > > >>>0x0000000000012300, irq 22 registered as can1
+> > > > >>>   sja1000_plx_pci 0000:0d:02.0 can0: setting BTR0=0x03 BTR1=0x37
+> > > > >>>
+> > > > >>>One option is always to bisect between v4.2 and v4.3 to see which
+> > > > >>>commit made it stop working.  See
+> > > > >>>https://git-scm.com/docs/git-bisect
+> > > > >>
+> > > > >>Jiang, Олег bisected this to 991de2e59090 ("PCI, x86: Implement
+> > > > >>pcibios_alloc_irq() and pcibios_free_irq()").
+> > > > >>
+> > > > >>Олег, please double-check and confirm that 890e4847587f works and
+> > > > >>991de2e59090 fails.
+> > > > >>
+> > > > >>Then please add some printks in the pcibios_enable_device() and
+> > > > >>pcibios_alloc_irq() paths and in your driver to see exactly what
+> > > > >>changed
+> > > > >>between 890e4847587f and 991de2e59090
+> > > > >>
+> > > > >>Bjorn
+> > > > >>
+> > > > >>>>23.01.2016 17:54, Bjorn Helgaas пишет:
+> > > > >>>>>[+cc linux-kernel]
+> > > > >>>>>
+> > > > >>>>>Hi Олег,
+> > > > >>>>>
+> > > > >>>>>On Sat, Jan 23, 2016 at 1:08 AM, Олег Мороз
+> > > > >>>>>
+> > > > >>>>><oleg.moroz@mcc.vniiem.ru> wrote:
+> > > > >>>>>>Hello. I've got a device driver for MIL-1553b card
+> > > > >>>>>>called TA1-PCI, which
+> > > > >>>>>>could be found at
+> > > > >>>>>>https://github.com/qmor/elcus-1553-driver-linux
+> > > > >>>>>>Card is using PLX_PCI9030 PCI controller.
+> > > > >>>>>>Today i've found that this driver compiles, installes,
+> > > > >>>>>>but is not working as
+> > > > >>>>>>it should.
+> > > > >>>>>>Looks like it not receives any interrupts from PCI. I've
+> > > > >>>>>>test it again with
+> > > > >>>>>>kernel
+> > > > >>>>>>4.2 and it works okay. What changes was made in PCI
+> > > > >>>>>>subsystem from 4.2 to
+> > > > >>>>>>4.3
+> > > > >>>>>>which could have impact this driver work.
+> > > > >>>>>
+> > > > >>>>>Thank you very much for this problem report.  There were many PCI
+> > > > >>>>>changes between v4.2 and v4.3, and without more information, I
+> > > > >>>>>can't
+> > > > >>>>>guess what might be causing this problem.
+> > > > >>>>>
+> > > > >>>>>I opened a bug report at
+> > > > >>>>>https://bugzilla.kernel.org/show_bug.cgi?id=111211
+> > > > >>>>>
+> > > > >>>>>Please attach complete dmesg logs for both v4.2 and v4.3 to that
+> > > > >>>>>bug
+> > > > >>>>>report.  Also, please attach the complete "lspci -vv" output (as
+> > > > >>>>>root).
+> > > > >>>>>
+> > > > >>>>>Thanks!
+> > > > >>>>>
+> > > > >>>>>Bjorn
+
+
