@@ -1,50 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47644 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755538AbcBEWwH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Feb 2016 17:52:07 -0500
-Date: Fri, 5 Feb 2016 16:52:04 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: arnd@arndb.de, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, Vineet.Gupta1@synopsys.com,
-	CARLOS.PALMINHA@synopsys.com
-Subject: Re: [PATCH v3] synopsys pcie rc generic platform driver update
-Message-ID: <20160205225204.GB11780@localhost>
-References: <28b04a32cc7caf6db542d4b5aa1feddacd02b2c9.1454701564.git.jpinto@synopsys.com>
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:35752 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753108AbcBALhG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2016 06:37:06 -0500
+Received: by mail-pa0-f52.google.com with SMTP id ho8so80910871pac.2
+        for <linux-pci@vger.kernel.org>; Mon, 01 Feb 2016 03:37:05 -0800 (PST)
+Subject: Re: [PATCH] PCI: ACPI: IA64: fix IO port generic range check
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	linux-pci@vger.kernel.org
+References: <1454322357-10912-1-git-send-email-lorenzo.pieralisi@arm.com>
+Cc: linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Mark Salter <msalter@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <56AF4359.1020709@linaro.org>
+Date: Mon, 1 Feb 2016 19:36:57 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <28b04a32cc7caf6db542d4b5aa1feddacd02b2c9.1454701564.git.jpinto@synopsys.com>
+In-Reply-To: <1454322357-10912-1-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joao,
+On 2016/2/1 18:25, Lorenzo Pieralisi wrote:
+> The [0 - 64k] ACPI PCI IO port resource boundary check in:
+>
+> acpi_dev_ioresource_flags()
+>
+> is currently applied blindly in the ACPI resource parsing to all
+> architectures, but only x86 suffers from that IO space limitation.
+> The check in generic ACPI code leaves other arches (ie IA64) IO space
+> broken (ie kernel can't claim IO resources since the host bridge
+> IO resource is disabled and discarded by ACPI core code, eg log on
+> IA64):
+>
+> pci 0000:00:03.0: [1002:515e] type 00 class 0x030000
+>
+> pci 0000:00:03.0: reg 0x10: [mem 0x80000000-0x87ffffff pref]
+>
+> pci 0000:00:03.0: reg 0x14: [io  0x1000-0x10ff]
+>
+> pci 0000:00:03.0: reg 0x18: [mem 0x88020000-0x8802ffff]
+>
+> pci 0000:00:03.0: reg 0x30: [mem 0x88000000-0x8801ffff pref]
+>
+> pci 0000:00:03.0: supports D1 D2
+>
+> pci 0000:00:03.0: can't claim BAR 1 [io  0x1000-0x10ff]: no compatible
+> bridge window
+>
+> For this reason, the IO port resources boundaries check in generic ACPI
+> parsing code should be moved to x86 arch code so that more arches (ie
+> ARM64) can benefit from the generic ACPI resources parsing interface
+> without incurring in unexpected resource filtering, fixing at the same
+> time current breakage on IA64.
+>
+> This patch moves the IO ports boundary [0 - 64k] check to x86 arch code
+> code that validates the PCI host bridge resources.
+>
+> Fixes: 3772aea7d6f3 ("ia64/PCI/ACPI: Use common ACPI resource parsing
+> interface for host bridge")
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> Cc: Jiang Liu <jiang.liu@linux.intel.com>
+> Cc: Tony Luck <tony.luck@intel.com>
+> Cc: Tomasz Nowicki <tn@semihalf.com>
+> Cc: Mark Salter <msalter@redhat.com>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> ---
+>   arch/x86/pci/acpi.c     | 18 +++++++++++++-----
+>   drivers/acpi/resource.c |  3 ---
+>   2 files changed, 13 insertions(+), 8 deletions(-)
+>
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index 3cd6983..e20dbe5 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -275,11 +275,14 @@ static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
+>    *     to access PCI configuration space.
+>    *
+>    * So explicitly filter out PCI CFG IO ports[0xCF8-0xCFF].
+> + *
+> + * Furthermore, IO ports address space is limited to 16k on x86,
 
-On Fri, Feb 05, 2016 at 07:55:43PM +0000, Joao Pinto wrote:
-> This patch tries to improve the host/pcie-synopsys branch including a new
-> driver name, more accurate documentation and centralized link up validation.
-> Other platform drivers were also updated to include the new centralized link
-> up validation function.
+Minor typo for '16k', should be '64k'? or we can just specify
+the magic number 0x10003?
 
-It's true that I wanted you to incorporate a few tweaks I had made in
-my pci/host-synopsys branch, but generating incremental patches on top
-of that branch makes this too confusing to follow.
+By the way, I tested this patch both on x86 and ia64 box,
+and PCI for both box is working properly after boot,
 
-My pci/host-synopsys contains two patches on top of v4.5-rc1.  I would
-prefer that you
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
 
-  - fetch that branch,
-  - make whatever edits you need, and
-  - generate fresh patches based on v4.5-rc1
-  
-Then everybody can see the whole series at once without trying to
-integrate these changes with the ones you've previously posted, and I
-can start from scratch and apply those fresh patches on top of
-v4.5-rc1.
-
-It's good that you include summaries of what's changed between
-versions, but if people want to see *exactly* what's changed between
-your v3 and v4 postings, it's easy for them to download those series,
-apply them on different branches, and git diff the branches.
-
-Bjorn
+Thanks
+Hanjun
