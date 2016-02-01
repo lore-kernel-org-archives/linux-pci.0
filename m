@@ -1,106 +1,33 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 28 Jan 2016 22:28:14 +0300
-Subject: Re: PCI device driver broken between 4.2 and 4.3
-From: =?UTF-8?B?0JzQvtGA0L7QtyDQntC70LXQsw==?= <oleg.moroz@mcc.vniiem.ru>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "	linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	" linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Message-Id: <20160128192951.5F86D820D8@mx.svc.vniiem.ru>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:33733 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757654AbcBAEOy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 31 Jan 2016 23:14:54 -0500
+Message-ID: <1454300093.10542.3.camel@redhat.com>
+Subject: Re: Q: Relation between lanes to devices and to BARs
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Ran Shalit <ranshalit@gmail.com>, linux-pci@vger.kernel.org
+Date: Sun, 31 Jan 2016 21:14:53 -0700
+In-Reply-To: <CAJ2oMhL-oL68ZOLsFEn3uGE=O9sMjcwPDH6oznLhG15xnzSQtQ@mail.gmail.com>
+References: <CAJ2oMhL-oL68ZOLsFEn3uGE=O9sMjcwPDH6oznLhG15xnzSQtQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-V2hhdCBpIG5lZWQgdG8gcHJpbnQgb3V0IGF0IGZpcnN0IG9yZGVyPyAyNyDRj9C90LIuIDIwMTYg
-0LMuIDE2OjIyINC/0L7Qu9GM0LfQvtCy0LDRgtC10LvRjCBCam9ybiBIZWxnYWFzIDxoZWxnYWFz
-QGtlcm5lbC5vcmc+INC90LDQv9C40YHQsNC7Ogo+Cj4gT24gV2VkLCBKYW4gMjcsIDIwMTYgYXQg
-MTI6Mzg6MDZQTSArMDMwMCwg0JzQvtGA0L7QtyDQntC70LXQsyB3cm90ZTogCj4gPiBBbHNvLCBt
-eSBkcml2ZSBoYXMgbm8gCj4gPiAKPiA+IHBjaWJpb3NfZW5hYmxlX2RldmljZSgpIAo+ID4gcGNp
-Ymlvc19hbGxvY19pcnEoKSAKPiA+IAo+ID4gY2FsbHMuIAo+Cj4gVGhvc2UgYXJlIGludGVybmFs
-IGludGVyZmFjZXMgdXNlZCBieSB0aGUgUENJIGNvcmUuwqAgRHJpdmVycyBzaG91bGRuJ3QgCj4g
-Y2FsbCB0aGVtIGRpcmVjdGx5LsKgIERyaXZlcnMgbm9ybWFsbHkgY2FsbCBwY2lfZW5hYmxlX2Rl
-dmljZSgpLCBhbmQgCj4gdGhvc2UgaW50ZXJuYWwgaW50ZXJmYWNlcyBhcmUgdXNlZCBpbiB0aGF0
-IHBhdGguIAo+Cj4gPiAyNi4wMS4yMDE2IDIyOjA1LCDQntC70LXQsyDQnNC+0YDQvtC3INC/0LjR
-iNC10YI6IAo+ID4gPkkgY29uZmlybWVkIGl0IHdvcmtzIGluIAo+ID4gPiAKPiA+ID44OTBlNDg0
-NzU4N2YgCj4gPiA+IAo+ID4gPmFuZCBkbyBub3Qgd29ya3MgaW4gCj4gPiA+IAo+ID4gPjk5MWRl
-MmU1OTA5MCAKPiA+ID4gCj4gPiA+MjYuMDEuMjAxNiAxODozMiwgQmpvcm4gSGVsZ2FhcyDQv9C4
-0YjQtdGCOiAKPiA+ID4+WytjYyBKaWFuZ10gCj4gPiA+PiAKPiA+ID4+T24gTW9uLCBKYW4gMjUs
-IDIwMTYgYXQgMDM6NTI6NTFQTSAtMDYwMCwgQmpvcm4gSGVsZ2FhcyB3cm90ZTogCj4gPiA+Pj5I
-aSDQntC70LXQsywgCj4gPiA+Pj4gCj4gPiA+Pj5PbiBTdW4sIEphbiAyNCwgMjAxNiBhdCAwNDo1
-MDowOFBNICswMzAwLCDQntC70LXQsyDQnNC+0YDQvtC3IHdyb3RlOiAKPiA+ID4+Pj5Pa2F5LiBJ
-J3ZlIHNlbnQgbG9ncyAoZG1lc2cgYW5kIGxzcGNpKSBmcm9tIGJvdGggNC4yIGFuZCA0LjMgCj4g
-PiA+Pj4+dG8gYnVnemlsbGEgCj4gPiA+Pj5JIGRvbid0IHNlZSBhbnl0aGluZyB3cm9uZyBpbiBl
-aXRoZXIgbG9nLsKgIEJvdGggdjQuMiBhbmQgdjQuMyAKPiA+ID4+PmVudW1lcmF0ZSB0aGUgZGV2
-aWNlIHRoZSBzYW1lIHdheSwgYW5kIHRoZSBkcml2ZXIgc2VlbXMgdG8gY2xhaW0gaXQgCj4gPiA+
-Pj50aGUgc2FtZSB3YXk6IAo+ID4gPj4+IAo+ID4gPj4+wqDCoCBwY2kgMDAwMDowZDowMC4wOiBb
-MTBiNTo5MDMwXSB0eXBlIDAwIGNsYXNzIDB4MDc4MDAwIAo+ID4gPj4+wqDCoCBwY2kgMDAwMDow
-ZDowMC4wOiByZWcgMHgxNDogW2lvwqAgMHgyMTAwLTB4MjE3Zl0gCj4gPiA+Pj7CoMKgIHBjaSAw
-MDAwOjBkOjAwLjA6IHJlZyAweDE4OiBbaW/CoCAweDIzODAtMHgyMzlmXSAKPiA+ID4+PsKgwqAg
-cGNpIDAwMDA6MGQ6MDAuMDogUE1FIyBzdXBwb3J0ZWQgZnJvbSBEMCBEM2hvdCAKPiA+ID4+PsKg
-wqAgcGNpIDAwMDA6MGQ6MDEuMDogWzEwYjU6OTAzMF0gdHlwZSAwMCBjbGFzcyAweDA3ODAwMCAK
-PiA+ID4+PsKgwqAgcGNpIDAwMDA6MGQ6MDEuMDogcmVnIDB4MTQ6IFtpb8KgIDB4MjE4MC0weDIx
-ZmZdIAo+ID4gPj4+wqDCoCBwY2kgMDAwMDowZDowMS4wOiByZWcgMHgxODogW2lvwqAgMHgyM2Ew
-LTB4MjNiZl0gCj4gPiA+Pj7CoMKgIHBjaSAwMDAwOjBkOjAxLjA6IFBNRSMgc3VwcG9ydGVkIGZy
-b20gRDAgRDNob3QgCj4gPiA+Pj7CoMKgIHBjaSAwMDAwOjBkOjAyLjA6IFsxMGI1OjkwMzBdIHR5
-cGUgMDAgY2xhc3MgMHgwNzgwMDAgCj4gPiA+Pj7CoMKgIHBjaSAwMDAwOjBkOjAyLjA6IHJlZyAw
-eDE0OiBbaW/CoCAweDIyMDAtMHgyMjdmXSAKPiA+ID4+PsKgwqAgcGNpIDAwMDA6MGQ6MDIuMDog
-cmVnIDB4MTg6IFtpb8KgIDB4MjI4MC0weDIyZmZdIAo+ID4gPj4+wqDCoCBwY2kgMDAwMDowZDow
-Mi4wOiByZWcgMHgxYzogW2lvwqAgMHgyMzAwLTB4MjM3Zl0gCj4gPiA+Pj7CoMKgIHBjaSAwMDAw
-OjBkOjAyLjA6IFBNRSMgc3VwcG9ydGVkIGZyb20gRDAgRDNob3QgCj4gPiA+Pj4gCj4gPiA+Pj7C
-oMKgIHNqYTEwMDBfcGx4X3BjaSAwMDAwOjBkOjAyLjA6IERldGVjdGVkICJFY2x1cyBDQU4tMjAw
-LVBDSSIgCj4gPiA+Pj5jYXJkIGF0IHNsb3QgIzIgCj4gPiA+Pj7CoMKgIHNqYTEwMDBfcGx4X3Bj
-aSAwMDAwOjBkOjAyLjA6IENoYW5uZWwgIzEgYXQgCj4gPiA+Pj4weDAwMDAwMDAwMDAwMTIyODAs
-IGlycSAyMiByZWdpc3RlcmVkIGFzIGNhbjAgCj4gPiA+Pj7CoMKgIHNqYTEwMDBfcGx4X3BjaSAw
-MDAwOjBkOjAyLjA6IENoYW5uZWwgIzIgYXQgCj4gPiA+Pj4weDAwMDAwMDAwMDAwMTIzMDAsIGly
-cSAyMiByZWdpc3RlcmVkIGFzIGNhbjEgCj4gPiA+Pj7CoMKgIHNqYTEwMDBfcGx4X3BjaSAwMDAw
-OjBkOjAyLjAgY2FuMDogc2V0dGluZyBCVFIwPTB4MDMgQlRSMT0weDM3IAo+ID4gPj4+IAo+ID4g
-Pj4+T25lIG9wdGlvbiBpcyBhbHdheXMgdG8gYmlzZWN0IGJldHdlZW4gdjQuMiBhbmQgdjQuMyB0
-byBzZWUgd2hpY2ggCj4gPiA+Pj5jb21taXQgbWFkZSBpdCBzdG9wIHdvcmtpbmcuwqAgU2VlIGh0
-dHBzOi8vZ2l0LXNjbS5jb20vZG9jcy9naXQtYmlzZWN0IAo+ID4gPj5KaWFuZywg0J7Qu9C10LMg
-YmlzZWN0ZWQgdGhpcyB0byA5OTFkZTJlNTkwOTAgKCJQQ0ksIHg4NjogSW1wbGVtZW50IAo+ID4g
-Pj5wY2liaW9zX2FsbG9jX2lycSgpIGFuZCBwY2liaW9zX2ZyZWVfaXJxKCkiKS4gCj4gPiA+PiAK
-PiA+ID4+0J7Qu9C10LMsIHBsZWFzZSBkb3VibGUtY2hlY2sgYW5kIGNvbmZpcm0gdGhhdCA4OTBl
-NDg0NzU4N2Ygd29ya3MgYW5kIAo+ID4gPj45OTFkZTJlNTkwOTAgZmFpbHMuIAo+ID4gPj4gCj4g
-PiA+PlRoZW4gcGxlYXNlIGFkZCBzb21lIHByaW50a3MgaW4gdGhlIHBjaWJpb3NfZW5hYmxlX2Rl
-dmljZSgpIGFuZCAKPiA+ID4+cGNpYmlvc19hbGxvY19pcnEoKSBwYXRocyBhbmQgaW4geW91ciBk
-cml2ZXIgdG8gc2VlIGV4YWN0bHkgd2hhdCBjaGFuZ2VkIAo+ID4gPj5iZXR3ZWVuIDg5MGU0ODQ3
-NTg3ZiBhbmQgOTkxZGUyZTU5MDkwIAo+ID4gPj4gCj4gPiA+PkJqb3JuIAo+ID4gPj4gCj4gPiA+
-Pj4+MjMuMDEuMjAxNiAxNzo1NCwgQmpvcm4gSGVsZ2FhcyDQv9C40YjQtdGCOiAKPiA+ID4+Pj4+
-WytjYyBsaW51eC1rZXJuZWxdIAo+ID4gPj4+Pj4gCj4gPiA+Pj4+PkhpINCe0LvQtdCzLCAKPiA+
-ID4+Pj4+IAo+ID4gPj4+Pj5PbiBTYXQsIEphbiAyMywgMjAxNiBhdCAxOjA4IEFNLCDQntC70LXQ
-syDQnNC+0YDQvtC3IAo+ID4gPj4+Pj48b2xlZy5tb3JvekBtY2Mudm5paWVtLnJ1PiB3cm90ZTog
-Cj4gPiA+Pj4+Pj5IZWxsby4gSSd2ZSBnb3QgYSBkZXZpY2UgZHJpdmVyIGZvciBNSUwtMTU1M2Ig
-Y2FyZCAKPiA+ID4+Pj4+PmNhbGxlZCBUQTEtUENJLCB3aGljaCAKPiA+ID4+Pj4+PmNvdWxkIGJl
-IGZvdW5kIGF0IAo+ID4gPj4+Pj4+aHR0cHM6Ly9naXRodWIuY29tL3Ftb3IvZWxjdXMtMTU1My1k
-cml2ZXItbGludXggCj4gPiA+Pj4+Pj5DYXJkIGlzIHVzaW5nIFBMWF9QQ0k5MDMwIFBDSSBjb250
-cm9sbGVyLiAKPiA+ID4+Pj4+PlRvZGF5IGkndmUgZm91bmQgdGhhdCB0aGlzIGRyaXZlciBjb21w
-aWxlcywgaW5zdGFsbGVzLCAKPiA+ID4+Pj4+PmJ1dCBpcyBub3Qgd29ya2luZyBhcyAKPiA+ID4+
-Pj4+Pml0IHNob3VsZC4gCj4gPiA+Pj4+Pj5Mb29rcyBsaWtlIGl0IG5vdCByZWNlaXZlcyBhbnkg
-aW50ZXJydXB0cyBmcm9tIFBDSS4gSSd2ZSAKPiA+ID4+Pj4+PnRlc3QgaXQgYWdhaW4gd2l0aCAK
-PiA+ID4+Pj4+Pmtlcm5lbCAKPiA+ID4+Pj4+PjQuMiBhbmQgaXQgd29ya3Mgb2theS4gV2hhdCBj
-aGFuZ2VzIHdhcyBtYWRlIGluIFBDSSAKPiA+ID4+Pj4+PnN1YnN5c3RlbSBmcm9tIDQuMiB0byAK
-PiA+ID4+Pj4+PjQuMyAKPiA+ID4+Pj4+PndoaWNoIGNvdWxkIGhhdmUgaW1wYWN0IHRoaXMgZHJp
-dmVyIHdvcmsuIAo+ID4gPj4+Pj5UaGFuayB5b3UgdmVyeSBtdWNoIGZvciB0aGlzIHByb2JsZW0g
-cmVwb3J0LsKgIFRoZXJlIHdlcmUgbWFueSBQQ0kgCj4gPiA+Pj4+PmNoYW5nZXMgYmV0d2VlbiB2
-NC4yIGFuZCB2NC4zLCBhbmQgd2l0aG91dCBtb3JlIGluZm9ybWF0aW9uLCBJIGNhbid0IAo+ID4g
-Pj4+Pj5ndWVzcyB3aGF0IG1pZ2h0IGJlIGNhdXNpbmcgdGhpcyBwcm9ibGVtLiAKPiA+ID4+Pj4+
-IAo+ID4gPj4+Pj5JIG9wZW5lZCBhIGJ1ZyByZXBvcnQgYXQgCj4gPiA+Pj4+Pmh0dHBzOi8vYnVn
-emlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/aWQ9MTExMjExIAo+ID4gPj4+Pj4gCj4gPiA+
-Pj4+PlBsZWFzZSBhdHRhY2ggY29tcGxldGUgZG1lc2cgbG9ncyBmb3IgYm90aCB2NC4yIGFuZCB2
-NC4zIHRvIHRoYXQgYnVnIAo+ID4gPj4+Pj5yZXBvcnQuwqAgQWxzbywgcGxlYXNlIGF0dGFjaCB0
-aGUgY29tcGxldGUgImxzcGNpIC12diIgb3V0cHV0IChhcyAKPiA+ID4+Pj4+cm9vdCkuIAo+ID4g
-Pj4+Pj4gCj4gPiA+Pj4+PlRoYW5rcyEgCj4gPiA+Pj4+PiAKPiA+ID4+Pj4+Qmpvcm4gCj4gPiA+
-Pj4+LS0gCj4gPiA+Pj4+VG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxp
-bmUgInVuc3Vic2NyaWJlIAo+ID4gPj4+PmxpbnV4LXBjaSIgaW4gCj4gPiA+Pj4+dGhlIGJvZHkg
-b2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcgCj4gPiA+Pj4+TW9yZSBt
-YWpvcmRvbW8gaW5mbyBhdCBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0
-bWwgCj4gPiA+Pj4tLSAKPiA+ID4+PlRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5k
-IHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1wY2kiIGluIAo+ID4gPj4+dGhlIGJvZHkgb2Yg
-YSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcgCj4gPiA+Pj5Nb3JlIG1ham9y
-ZG9tbyBpbmZvIGF0IGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbCAK
-PiA+ID4gCj4gPiAKPiA+IC0tIAo+ID4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNl
-bmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXBjaSIgaW4gCj4gPiB0aGUgYm9keSBvZiBh
-IG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZyAKPiA+IE1vcmUgbWFqb3Jkb21v
-IGluZm8gYXTCoCBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwgCg==
+On Sun, 2016-01-31 at 02:15 -0500, Ran Shalit wrote:
+> Hello,
+> 
+> I am new to pci express drivers, and would please like to ask a question.
+> We develop a linux driver for a PCIe device board with 4 lanes.
+> 1. Is it expected that this will be recognized as a single device or
+> multiple device ?
+
+It depends whether your device is multifunction.
+
+> 2. Is it that each lane rales to a different BAR or there is no
+> connection between these two ?
+
+No relation, all PCI/e devices have the same set of standard BARs
+available to them.
+
