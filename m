@@ -1,194 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <bhelgaas@google.com>, <michals@xilinx.com>,
-	<lorenzo.pieralisi@arm.com>, <paul.burton@imgtec.com>,
-	<yinghai@kernel.org>, <wangyijing@huawei.com>, <robh@kernel.org>,
-	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
-	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
-	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
-	<galak@codeaurora.org>
-CC: <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: [PATCH V4 2/5] PCI: xilinx: Removing struct hw_pci structure.
-Date: Thu, 11 Feb 2016 21:58:08 +0530
-Message-ID: <1455208091-15556-3-git-send-email-bharatku@xilinx.com>
-In-Reply-To: <1455208091-15556-1-git-send-email-bharatku@xilinx.com>
-References: <1455208091-15556-1-git-send-email-bharatku@xilinx.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60442 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932212AbcBAVNB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 1 Feb 2016 16:13:01 -0500
+Date: Mon, 1 Feb 2016 15:12:58 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
+Message-ID: <20160201211258.GD4861@localhost>
+References: <20160120160427.GD13437@red-moon>
+ <569FB210.9090605@codeaurora.org>
+ <20160129230645.GG12965@localhost>
+ <56AC0065.5030909@codeaurora.org>
+ <20160130133027.GA16394@localhost>
+ <20160201152507.GA30869@red-moon>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160201152507.GA30869@red-moon>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Removing struct hw_pci and adding generic PCI core API's.
+On Mon, Feb 01, 2016 at 03:25:07PM +0000, Lorenzo Pieralisi wrote:
+> On Sat, Jan 30, 2016 at 07:30:27AM -0600, Bjorn Helgaas wrote:
+> 
+> [...]
+> 
+> > > Most non-UEFI firmwares I have seen on ARM rely on device specific
+> > > driver like synopsys etc. to do the device initialization and ask
+> > > kernel to do the enumeration.
+> > > 
+> > > ACPI systems on the other hand handle the resource assignment before
+> > > the OS starts.
+> > 
+> > My guess is that this is more of a tradition than anything actually
+> > required by the spec.
+> 
+> I share your opinion, and that tradition on ARM64 should be built
+> on top of existing DT based systems where the bootloader assigns
+> *NOTHING* in 90% of designs.
+> 
+> That's why I want to see resource claiming carried out by default
+> on ACPI on ARM64, this would foster the tradition :), hopefully.
+> 
+> > The bottom line is that Linux can't rely on much consistency across
+> > the universe of architectures and firmwares.  I think the only thing
+> > that really makes sense for us to do is:
+> > 
+> >   - Read whatever assignments the firmware may have made
+> >   - Keep them unchanged if they seem sensible
+> 
+> Here I take "sensible" as "it can be successfully claimed" - ie the resource
+> is allocated in a valid way, though it may not be optimal (eg bridge window
+> apertures).
 
-Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Yes.  But even if platforms assign resources in a way they can be
+successfully claimed, I don't think platforms should rely on that
+assignment being unchanged.  For example, even if the boot-time
+configuration is valid, the kernel may need to move things around to
+deal with hotplug.  I know we don't really do that today, but I think
+we should be able to do it in principle.
 
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
----
-Changes:
-Removing architecure dependecy structure struct hw_pci which is ARM 32-bit
-specific structure, and adding generic PCI core API's to register to
-PCI subsytem.
-Removing funtions which are not being used with generic API's.
----
- drivers/pci/host/pcie-xilinx.c | 82 +++++++++---------------------------------
- 1 file changed, 16 insertions(+), 66 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 627878d..13fec35 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -111,17 +111,11 @@ struct xilinx_pcie_port {
- 	u8 root_busno;
- 	struct device *dev;
- 	struct irq_domain *irq_domain;
--	struct resource bus_range;
- 	struct list_head resources;
- };
- 
- static DECLARE_BITMAP(msi_irq_in_use, XILINX_NUM_MSI_IRQS);
- 
--static inline struct xilinx_pcie_port *sys_to_pcie(struct pci_sys_data *sys)
--{
--	return sys->private_data;
--}
--
- static inline u32 pcie_read(struct xilinx_pcie_port *port, u32 reg)
- {
- 	return readl(port->reg_base + reg);
-@@ -163,7 +157,7 @@ static void xilinx_pcie_clear_err_interrupts(struct xilinx_pcie_port *port)
-  */
- static bool xilinx_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
- {
--	struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
-+	struct xilinx_pcie_port *port = bus->sysdata;
- 
- 	/* Check if link is up when trying to access downstream ports */
- 	if (bus->number != port->root_busno)
-@@ -196,7 +190,7 @@ static bool xilinx_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
- static void __iomem *xilinx_pcie_map_bus(struct pci_bus *bus,
- 					 unsigned int devfn, int where)
- {
--	struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
-+	struct xilinx_pcie_port *port = bus->sysdata;
- 	int relbus;
- 
- 	if (!xilinx_pcie_valid_device(bus, devfn))
-@@ -228,7 +222,7 @@ static void xilinx_pcie_destroy_msi(unsigned int irq)
- 
- 	if (!test_bit(irq, msi_irq_in_use)) {
- 		msi = irq_get_msi_desc(irq);
--		port = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
-+		port = msi_desc_to_pci_sysdata(msi);
- 		dev_err(port->dev, "Trying to free unused MSI#%d\n", irq);
- 	} else {
- 		clear_bit(irq, msi_irq_in_use);
-@@ -277,7 +271,7 @@ static int xilinx_pcie_msi_setup_irq(struct msi_controller *chip,
- 				     struct pci_dev *pdev,
- 				     struct msi_desc *desc)
- {
--	struct xilinx_pcie_port *port = sys_to_pcie(pdev->bus->sysdata);
-+	struct xilinx_pcie_port *port = pdev->bus->sysdata;
- 	unsigned int irq;
- 	int hwirq;
- 	struct msi_msg msg;
-@@ -614,47 +608,6 @@ static void xilinx_pcie_init_port(struct xilinx_pcie_port *port)
- }
- 
- /**
-- * xilinx_pcie_setup - Setup memory resources
-- * @nr: Bus number
-- * @sys: Per controller structure
-- *
-- * Return: '1' on success and error value on failure
-- */
--static int xilinx_pcie_setup(int nr, struct pci_sys_data *sys)
--{
--	struct xilinx_pcie_port *port = sys_to_pcie(sys);
--
--	list_splice_init(&port->resources, &sys->resources);
--
--	return 1;
--}
--
--/**
-- * xilinx_pcie_scan_bus - Scan PCIe bus for devices
-- * @nr: Bus number
-- * @sys: Per controller structure
-- *
-- * Return: Valid Bus pointer on success and NULL on failure
-- */
--static struct pci_bus *xilinx_pcie_scan_bus(int nr, struct pci_sys_data *sys)
--{
--	struct xilinx_pcie_port *port = sys_to_pcie(sys);
--	struct pci_bus *bus;
--
--	port->root_busno = sys->busnr;
--
--	if (IS_ENABLED(CONFIG_PCI_MSI))
--		bus = pci_scan_root_bus_msi(port->dev, sys->busnr,
--					    &xilinx_pcie_ops, sys,
--					    &sys->resources,
--					    &xilinx_pcie_msi_chip);
--	else
--		bus = pci_scan_root_bus(port->dev, sys->busnr,
--					&xilinx_pcie_ops, sys, &sys->resources);
--	return bus;
--}
--
--/**
-  * xilinx_pcie_parse_dt - Parse Device tree
-  * @port: PCIe port information
-  *
-@@ -704,8 +657,9 @@ static int xilinx_pcie_parse_dt(struct xilinx_pcie_port *port)
- static int xilinx_pcie_probe(struct platform_device *pdev)
- {
- 	struct xilinx_pcie_port *port;
--	struct hw_pci hw;
- 	struct device *dev = &pdev->dev;
-+	struct pci_bus *bus;
-+
- 	int err;
- 	resource_size_t iobase = 0;
- 	LIST_HEAD(res);
-@@ -739,24 +693,20 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
- 		dev_err(dev, "Getting bridge resources failed\n");
- 		return err;
- 	}
--
--	platform_set_drvdata(pdev, port);
--
--	/* Register the device */
--	memset(&hw, 0, sizeof(hw));
--	hw = (struct hw_pci) {
--		.nr_controllers	= 1,
--		.private_data	= (void **)&port,
--		.setup		= xilinx_pcie_setup,
--		.map_irq	= of_irq_parse_and_map_pci,
--		.scan		= xilinx_pcie_scan_bus,
--		.ops		= &xilinx_pcie_ops,
--	};
-+	bus = pci_create_root_bus(&pdev->dev, 0,
-+				  &xilinx_pcie_ops, port, &res);
-+	if (!bus)
-+		return -ENOMEM;
- 
- #ifdef CONFIG_PCI_MSI
- 	xilinx_pcie_msi_chip.dev = port->dev;
-+	bus->msi = &xilinx_pcie_msi_chip;
- #endif
--	pci_common_init_dev(dev, &hw);
-+	pci_scan_child_bus(bus);
-+	pci_assign_unassigned_bus_resources(bus);
-+	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-+	pci_bus_add_devices(bus);
-+	platform_set_drvdata(pdev, port);
- 
- 	return 0;
- }
--- 
-2.1.1
+Bjorn
