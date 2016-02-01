@@ -1,187 +1,191 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Subject: [PATCH V4 01/23] x86, pci: Reorder logic of pci_mmconfig_insert() function
-Date: Thu,  4 Feb 2016 18:28:39 +0100
-Message-Id: <1454606941-9523-2-git-send-email-tn@semihalf.com>
-In-Reply-To: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:59878 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932158AbcBAVI3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 1 Feb 2016 16:08:29 -0500
+Date: Mon, 1 Feb 2016 15:08:23 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: =?utf-8?B?0J7Qu9C10LMg0JzQvtGA0L7Qtw==?= <oleg.moroz@mcc.vniiem.ru>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: PCI device driver broken between 4.2 and 4.3
+Message-ID: <20160201210823.GC4861@localhost>
+References: <20160128192951.CC6AF820DC@mx.svc.vniiem.ru>
+ <20160129163159.GC12965@localhost>
+ <2025502.hfirZrb1Qq@debian802>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <2025502.hfirZrb1Qq@debian802>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch is the first step for MMCONFIG refactoring process.
+[+cc Yinghai]
 
-Code that uses pci_mmcfg_lock will be moved to common file and become
-accessible for all architectures. pci_mmconfig_insert() cannot be moved
-so easily since it is mixing generic mmconfig code with x86 specific logic
-inside of mutual exclusive block guarded by pci_mmcfg_lock.
+On Mon, Feb 01, 2016 at 08:18:35AM +0300, Олег Мороз wrote:
+> Okay. I've started from driver level printk
+> results are:
+> 
+> On 4.2
+> 
+> [414006.575989] Before pci_enable_device IRQ 20
+> 
+> [414006.575991] After pci_enable_device IRQ 20
+> 
+> [414006.575997] Before pci_enable_device IRQ 21
+> 
+> [414006.575999] After pci_enable_device IRQ 21
+> 
+> on 4.3
+> 
+> [  114.862289] Before pci_enable_device IRQ 5
+> 
+> [  114.862303] After pci_enable_device IRQ 5
+> 
+> [  114.862316] Before pci_enable_device IRQ 5
+> 
+> [  114.862326] After pci_enable_device IRQ 5
+> 
+> I've got two cards, because of that pci_enable_device() calls twice.
 
-To get rid of that constraint, we reorder actions as follow:
-1. sanity check for mmconfig region presence, if we already have such
-region it doesn't make snese to alloc new mmconfig list entry
-2. mmconfig entry allocation, no need to lock
-3. insertion to iomem_resource has its own lock, no need to wrap it into mutex
-4. insertion to mmconfig list can be done as the final step in separate
-function (candidate for further refactoring) and needs another mmconfig
-lookup to avoid race condition.
+Did you try booting with pci=routeirq as Yinghai suggested?  That's
+not a fix, but if it does make things work, it may give us an idea for
+how to fix it correctly.
 
-Signed-off-by: Tomasz Nowicki <tomasz.nowicki@linaro.org>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Tested-by: Jeremy Linton <jeremy.linton@arm.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
----
- arch/x86/pci/mmconfig-shared.c | 101 +++++++++++++++++++++++------------------
- 1 file changed, 58 insertions(+), 43 deletions(-)
-
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index dd30b7e..c8bb9b0 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -720,6 +720,38 @@ static int __init pci_mmcfg_late_insert_resources(void)
-  */
- late_initcall(pci_mmcfg_late_insert_resources);
- 
-+static int pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
-+{
-+	struct pci_mmcfg_region *cfg_conflict;
-+	int err = 0;
-+
-+	mutex_lock(&pci_mmcfg_lock);
-+	cfg_conflict = pci_mmconfig_lookup(cfg->segment, cfg->start_bus);
-+	if (cfg_conflict) {
-+		if (cfg_conflict->end_bus < cfg->end_bus)
-+			pr_info(FW_INFO "MMCONFIG for "
-+				"domain %04x [bus %02x-%02x] "
-+				"only partially covers this bridge\n",
-+				cfg_conflict->segment, cfg_conflict->start_bus,
-+				cfg_conflict->end_bus);
-+		err = -EEXIST;
-+		goto out;
-+	}
-+
-+	if (pci_mmcfg_arch_map(cfg)) {
-+		pr_warn("fail to map MMCONFIG %pR.\n", &cfg->res);
-+		err = -ENOMEM;
-+		goto out;
-+	} else {
-+		list_add_sorted(cfg);
-+		pr_info("MMCONFIG at %pR (base %#lx)\n",
-+			&cfg->res, (unsigned long)cfg->address);
-+	}
-+out:
-+	mutex_unlock(&pci_mmcfg_lock);
-+	return err;
-+}
-+
- /* Add MMCFG information for host bridges */
- int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
- 			phys_addr_t addr)
-@@ -734,63 +766,46 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
- 	if (start > end)
- 		return -EINVAL;
- 
--	mutex_lock(&pci_mmcfg_lock);
-+	rcu_read_lock();
- 	cfg = pci_mmconfig_lookup(seg, start);
--	if (cfg) {
--		if (cfg->end_bus < end)
--			dev_info(dev, FW_INFO
--				 "MMCONFIG for "
--				 "domain %04x [bus %02x-%02x] "
--				 "only partially covers this bridge\n",
--				  cfg->segment, cfg->start_bus, cfg->end_bus);
--		mutex_unlock(&pci_mmcfg_lock);
-+	rcu_read_unlock();
-+	if (cfg)
- 		return -EEXIST;
--	}
- 
--	if (!addr) {
--		mutex_unlock(&pci_mmcfg_lock);
-+	if (!addr)
- 		return -EINVAL;
--	}
- 
--	rc = -EBUSY;
- 	cfg = pci_mmconfig_alloc(seg, start, end, addr);
--	if (cfg == NULL) {
-+	if (!cfg) {
- 		dev_warn(dev, "fail to add MMCONFIG (out of memory)\n");
--		rc = -ENOMEM;
--	} else if (!pci_mmcfg_check_reserved(dev, cfg, 0)) {
-+		return -ENOMEM;
-+	}
-+
-+	rc = -EBUSY;
-+	if (!pci_mmcfg_check_reserved(dev, cfg, 0)) {
- 		dev_warn(dev, FW_BUG "MMCONFIG %pR isn't reserved\n",
- 			 &cfg->res);
--	} else {
--		/* Insert resource if it's not in boot stage */
--		if (pci_mmcfg_running_state)
--			tmp = insert_resource_conflict(&iomem_resource,
--						       &cfg->res);
--
--		if (tmp) {
--			dev_warn(dev,
--				 "MMCONFIG %pR conflicts with "
--				 "%s %pR\n",
--				 &cfg->res, tmp->name, tmp);
--		} else if (pci_mmcfg_arch_map(cfg)) {
--			dev_warn(dev, "fail to map MMCONFIG %pR.\n",
--				 &cfg->res);
--		} else {
--			list_add_sorted(cfg);
--			dev_info(dev, "MMCONFIG at %pR (base %#lx)\n",
--				 &cfg->res, (unsigned long)addr);
--			cfg = NULL;
--			rc = 0;
--		}
-+		goto error;
- 	}
- 
--	if (cfg) {
--		if (cfg->res.parent)
--			release_resource(&cfg->res);
--		kfree(cfg);
-+	/* Insert resource if it's not in boot stage */
-+	if (pci_mmcfg_running_state)
-+		tmp = insert_resource_conflict(&iomem_resource, &cfg->res);
-+
-+	if (tmp) {
-+		dev_warn(dev, "MMCONFIG %pR conflicts with %s %pR\n",
-+			 &cfg->res, tmp->name, tmp);
-+		goto error;
- 	}
- 
--	mutex_unlock(&pci_mmcfg_lock);
-+	rc = pci_mmconfig_inject(cfg);
-+	if (!rc)
-+		return 0;
- 
-+error:
-+	if (cfg->res.parent)
-+		release_resource(&cfg->res);
-+	kfree(cfg);
- 	return rc;
- }
- 
--- 
-1.9.1
-
+> On Friday 29 of January 2016 10:31:59 Bjorn Helgaas wrote:
+> > On Thu, Jan 28, 2016 at 10:28:14PM +0300, Мороз Олег wrote:
+> > > What i need to print out at first order?
+> > 
+> > Jiang, can you chime in here?
+> > 
+> > 991de2e59090 is related to IRQs, so I'd start by printing dev->irq in your
+> > driver before and after you call pci_enable_device().  Add some printks in
+> > pcibios_alloc_irq() and pcibios_enable_device() just to confirm that we got
+> > there and when, e.g., add lines like this:
+> > 
+> >   dev_info(&dev->dev, "%s\n", __func__);
+> > 
+> > Bjorn
+> > 
+> > > 27 янв. 2016 г. 16:22 пользователь Bjorn Helgaas <helgaas@kernel.org> 
+> написал:
+> > > > On Wed, Jan 27, 2016 at 12:38:06PM +0300, Мороз Олег wrote:
+> > > > > Also, my drive has no
+> > > > > 
+> > > > > pcibios_enable_device()
+> > > > > pcibios_alloc_irq()
+> > > > > 
+> > > > > calls.
+> > > > 
+> > > > Those are internal interfaces used by the PCI core.  Drivers shouldn't
+> > > > call them directly.  Drivers normally call pci_enable_device(), and
+> > > > those internal interfaces are used in that path.
+> > > > 
+> > > > > 26.01.2016 22:05, Олег Мороз пишет:
+> > > > > >I confirmed it works in
+> > > > > >
+> > > > > >890e4847587f
+> > > > > >
+> > > > > >and do not works in
+> > > > > >
+> > > > > >991de2e59090
+> > > > > >
+> > > > > >26.01.2016 18:32, Bjorn Helgaas пишет:
+> > > > > >>[+cc Jiang]
+> > > > > >>
+> > > > > >>On Mon, Jan 25, 2016 at 03:52:51PM -0600, Bjorn Helgaas wrote:
+> > > > > >>>Hi Олег,
+> > > > > >>>
+> > > > > >>>On Sun, Jan 24, 2016 at 04:50:08PM +0300, Олег Мороз wrote:
+> > > > > >>>>Okay. I've sent logs (dmesg and lspci) from both 4.2 and 4.3
+> > > > > >>>>to bugzilla
+> > > > > >>>
+> > > > > >>>I don't see anything wrong in either log.  Both v4.2 and v4.3
+> > > > > >>>enumerate the device the same way, and the driver seems to claim it
+> > > > > >>>the same way:
+> > > > > >>>
+> > > > > >>>   pci 0000:0d:00.0: [10b5:9030] type 00 class 0x078000
+> > > > > >>>   pci 0000:0d:00.0: reg 0x14: [io  0x2100-0x217f]
+> > > > > >>>   pci 0000:0d:00.0: reg 0x18: [io  0x2380-0x239f]
+> > > > > >>>   pci 0000:0d:00.0: PME# supported from D0 D3hot
+> > > > > >>>   pci 0000:0d:01.0: [10b5:9030] type 00 class 0x078000
+> > > > > >>>   pci 0000:0d:01.0: reg 0x14: [io  0x2180-0x21ff]
+> > > > > >>>   pci 0000:0d:01.0: reg 0x18: [io  0x23a0-0x23bf]
+> > > > > >>>   pci 0000:0d:01.0: PME# supported from D0 D3hot
+> > > > > >>>   pci 0000:0d:02.0: [10b5:9030] type 00 class 0x078000
+> > > > > >>>   pci 0000:0d:02.0: reg 0x14: [io  0x2200-0x227f]
+> > > > > >>>   pci 0000:0d:02.0: reg 0x18: [io  0x2280-0x22ff]
+> > > > > >>>   pci 0000:0d:02.0: reg 0x1c: [io  0x2300-0x237f]
+> > > > > >>>   pci 0000:0d:02.0: PME# supported from D0 D3hot
+> > > > > >>>
+> > > > > >>>   sja1000_plx_pci 0000:0d:02.0: Detected "Eclus CAN-200-PCI"
+> > > > > >>>card at slot #2
+> > > > > >>>   sja1000_plx_pci 0000:0d:02.0: Channel #1 at
+> > > > > >>>0x0000000000012280, irq 22 registered as can0
+> > > > > >>>   sja1000_plx_pci 0000:0d:02.0: Channel #2 at
+> > > > > >>>0x0000000000012300, irq 22 registered as can1
+> > > > > >>>   sja1000_plx_pci 0000:0d:02.0 can0: setting BTR0=0x03 BTR1=0x37
+> > > > > >>>
+> > > > > >>>One option is always to bisect between v4.2 and v4.3 to see which
+> > > > > >>>commit made it stop working.  See
+> > > > > >>>https://git-scm.com/docs/git-bisect
+> > > > > >>
+> > > > > >>Jiang, Олег bisected this to 991de2e59090 ("PCI, x86: Implement
+> > > > > >>pcibios_alloc_irq() and pcibios_free_irq()").
+> > > > > >>
+> > > > > >>Олег, please double-check and confirm that 890e4847587f works and
+> > > > > >>991de2e59090 fails.
+> > > > > >>
+> > > > > >>Then please add some printks in the pcibios_enable_device() and
+> > > > > >>pcibios_alloc_irq() paths and in your driver to see exactly what
+> > > > > >>changed
+> > > > > >>between 890e4847587f and 991de2e59090
+> > > > > >>
+> > > > > >>Bjorn
+> > > > > >>
+> > > > > >>>>23.01.2016 17:54, Bjorn Helgaas пишет:
+> > > > > >>>>>[+cc linux-kernel]
+> > > > > >>>>>
+> > > > > >>>>>Hi Олег,
+> > > > > >>>>>
+> > > > > >>>>>On Sat, Jan 23, 2016 at 1:08 AM, Олег Мороз
+> > > > > >>>>>
+> > > > > >>>>><oleg.moroz@mcc.vniiem.ru> wrote:
+> > > > > >>>>>>Hello. I've got a device driver for MIL-1553b card
+> > > > > >>>>>>called TA1-PCI, which
+> > > > > >>>>>>could be found at
+> > > > > >>>>>>https://github.com/qmor/elcus-1553-driver-linux
+> > > > > >>>>>>Card is using PLX_PCI9030 PCI controller.
+> > > > > >>>>>>Today i've found that this driver compiles, installes,
+> > > > > >>>>>>but is not working as
+> > > > > >>>>>>it should.
+> > > > > >>>>>>Looks like it not receives any interrupts from PCI. I've
+> > > > > >>>>>>test it again with
+> > > > > >>>>>>kernel
+> > > > > >>>>>>4.2 and it works okay. What changes was made in PCI
+> > > > > >>>>>>subsystem from 4.2 to
+> > > > > >>>>>>4.3
+> > > > > >>>>>>which could have impact this driver work.
+> > > > > >>>>>
+> > > > > >>>>>Thank you very much for this problem report.  There were many PCI
+> > > > > >>>>>changes between v4.2 and v4.3, and without more information, I
+> > > > > >>>>>can't
+> > > > > >>>>>guess what might be causing this problem.
+> > > > > >>>>>
+> > > > > >>>>>I opened a bug report at
+> > > > > >>>>>https://bugzilla.kernel.org/show_bug.cgi?id=111211
+> > > > > >>>>>
+> > > > > >>>>>Please attach complete dmesg logs for both v4.2 and v4.3 to that
+> > > > > >>>>>bug
+> > > > > >>>>>report.  Also, please attach the complete "lspci -vv" output (as
+> > > > > >>>>>root).
+> > > > > >>>>>
+> > > > > >>>>>Thanks!
+> > > > > >>>>>
+> > > > > >>>>>Bjorn
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
