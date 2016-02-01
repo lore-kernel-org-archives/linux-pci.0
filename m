@@ -1,158 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60110 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760375AbcBYPQ7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Feb 2016 10:16:59 -0500
-Date: Thu, 25 Feb 2016 09:16:54 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Justin Waters <justin.waters@timesys.com>
-Cc: linux-pci@vger.kernel.org, Fabio Estevam <festevam@gmail.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <Richard.Zhu@freescale.com>
-Subject: Re: [PATCH v2] PCI: imx6: Add DT bindings to configure Tx Driver
- settings
-Message-ID: <20160225151654.GA8120@localhost>
-References: <1452871476-11752-1-git-send-email-justin.waters@timesys.com>
- <20160204172544.GA19957@localhost>
- <CAENNV6+gn1hpz2PFp05F2Mf8zUcc8kN7MZEijDrY6JPMUcueAg@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC PATCH v3 3/5] PCI: Add host bridge attribute to indicate
+ filtering of MSIs is supported
+To: Alex Williamson <alex.williamson@redhat.com>
+References: <1452841574-2781-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1452841574-2781-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1454021182.23148.6.camel@redhat.com> <56AB4182.5060501@linux.vnet.ibm.com>
+ <163133676.20416948.1454094344181.JavaMail.zimbra@redhat.com>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
+	aik@ozlabs.ru, benh@kernel.crashing.org, paulus@samba.org,
+	mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Message-ID: <56AF21CE.8000206@linux.vnet.ibm.com>
+Date: Mon, 1 Feb 2016 17:13:50 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAENNV6+gn1hpz2PFp05F2Mf8zUcc8kN7MZEijDrY6JPMUcueAg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <163133676.20416948.1454094344181.JavaMail.zimbra@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 19, 2016 at 03:25:26PM -0500, Justin Waters wrote:
-> On Thu, Feb 4, 2016 at 12:25 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > [+cc Richard]
-> >
-> > On Fri, Jan 15, 2016 at 10:24:35AM -0500, Justin Waters wrote:
-> >> The settings in GPR8 are dependent upon the particular layout of the
-> >> hardware platform. As such, they should be configurable via the device
-> >> tree.
-> >>
-> >> As many boards have been using the default values, this implementation
-> >> uses the old values if they are not specified in the device tree.
-> >>
-> >> Signed-off-by: Justin Waters <justin.waters@timesys.com>
-> >
-> > Waiting for an ack from Lucas, since he had comments on the last version.
-> >
-> 
-> Lucas, I just wanted to check in and see if you had any additional
-> feedback for me. Did v2 address your concerns?
-
-Just to be clear, I'm waiting for an ack from the IMX6 maintainers
-(Richard or Lucas) before applying this.
-
-> >> ---
-> >>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  7 ++++
-> >>  drivers/pci/host/pci-imx6.c                        | 42 +++++++++++++++++++---
-> >>  2 files changed, 44 insertions(+), 5 deletions(-)
-> >>
-> >> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> >> index 6fbba53..3be80c6 100644
-> >> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> >> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> >> @@ -13,6 +13,13 @@ Required properties:
-> >>  - clock-names: Must include the following additional entries:
-> >>       - "pcie_phy"
-> >>
-> >> +Optional properties:
-> >> +- fsl,tx-deemph-gen1: Gen1 De-emphasis value. Default: 0
-> >> +- fsl,tx-deemph-gen2-3p5db: Gen2 (3.5db) De-emphasis value. Default: 0
-> >> +- fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
-> >> +- fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
-> >> +- fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
-> >> +
-> >>  Example:
-> >>
-> >>       pcie@0x01000000 {
-> >> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> >> index 230ebf9..cc04497 100644
-> >> --- a/drivers/pci/host/pci-imx6.c
-> >> +++ b/drivers/pci/host/pci-imx6.c
-> >> @@ -39,6 +39,11 @@ struct imx6_pcie {
-> >>       struct pcie_port        pp;
-> >>       struct regmap           *iomuxc_gpr;
-> >>       void __iomem            *mem_base;
-> >> +     u32                     tx_deemph_gen1;
-> >> +     u32                     tx_deemph_gen2_3p5db;
-> >> +     u32                     tx_deemph_gen2_6db;
-> >> +     u32                     tx_swing_full;
-> >> +     u32                     tx_swing_low;
-> >>  };
-> >>
-> >>  /* PCIe Root Complex registers (memory-mapped) */
-> >> @@ -317,15 +322,20 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
-> >>                       IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
-> >>
-> >>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-> >> -                     IMX6Q_GPR8_TX_DEEMPH_GEN1, 0 << 0);
-> >> +                        IMX6Q_GPR8_TX_DEEMPH_GEN1,
-> >> +                        imx6_pcie->tx_deemph_gen1 << 0);
-> >>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-> >> -                     IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB, 0 << 6);
-> >> +                        IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB,
-> >> +                        imx6_pcie->tx_deemph_gen2_3p5db << 6);
-> >>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-> >> -                     IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB, 20 << 12);
-> >> +                        IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB,
-> >> +                        imx6_pcie->tx_deemph_gen2_6db << 12);
-> >>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-> >> -                     IMX6Q_GPR8_TX_SWING_FULL, 127 << 18);
-> >> +                        IMX6Q_GPR8_TX_SWING_FULL,
-> >> +                        imx6_pcie->tx_swing_full << 18);
-> >>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-> >> -                     IMX6Q_GPR8_TX_SWING_LOW, 127 << 25);
-> >> +                        IMX6Q_GPR8_TX_SWING_LOW,
-> >> +                        imx6_pcie->tx_swing_low << 25);
-> >>  }
-> >>
-> >>  static int imx6_pcie_wait_for_link(struct pcie_port *pp)
-> >> @@ -565,6 +575,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
-> >>       struct imx6_pcie *imx6_pcie;
-> >>       struct pcie_port *pp;
-> >>       struct resource *dbi_base;
-> >> +     struct device_node *node = pdev->dev.of_node;
-> >>       int ret;
-> >>
-> >>       imx6_pcie = devm_kzalloc(&pdev->dev, sizeof(*imx6_pcie), GFP_KERNEL);
-> >> @@ -617,6 +628,27 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
-> >>               return PTR_ERR(imx6_pcie->iomuxc_gpr);
-> >>       }
-> >>
-> >> +     /* Grab PCIe PHY Tx Settings */
-> >> +     if (of_property_read_u32
-> >> +         (node, "fsl,tx-deemph-gen1", &imx6_pcie->tx_deemph_gen1))
-> >> +             imx6_pcie->tx_deemph_gen1 = 0;
-> >> +
-> >> +     if (of_property_read_u32
-> >> +         (node, "fsl,tx-deemph-gen2-3p5db", &imx6_pcie->tx_deemph_gen2_3p5db))
-> >> +             imx6_pcie->tx_deemph_gen2_3p5db = 0;
-> >> +
-> >> +     if (of_property_read_u32
-> >> +         (node, "fsl,tx-deemph-gen2-6db", &imx6_pcie->tx_deemph_gen2_6db))
-> >> +             imx6_pcie->tx_deemph_gen2_6db = 20;
-> >> +
-> >> +     if (of_property_read_u32
-> >> +         (node, "fsl,tx-swing-full", &imx6_pcie->tx_swing_full))
-> >> +             imx6_pcie->tx_swing_full = 127;
-> >> +
-> >> +     if (of_property_read_u32
-> >> +         (node, "fsl,tx-swing-low", &imx6_pcie->tx_swing_low))
-> >> +             imx6_pcie->tx_swing_low = 127;
-> >> +
-> >>       ret = imx6_add_pcie_port(pp, pdev);
-> >>       if (ret < 0)
-> >>               return ret;
-> >> --
-> >> 2.5.0
-> >>
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On 2016/1/30 3:05, Alex Williamson wrote:
+>
+> ----- Original Message -----
+>> On 2016/1/29 6:46, Alex Williamson wrote:
+>>> On Fri, 2016-01-15 at 15:06 +0800, Yongji Xie wrote:
+>>>> MSI-X tables are not allowed to be mmapped in vfio-pci
+>>>> driver in case that user get to touch this directly.
+>>>> This will cause some performance issues when when PCI
+>>>> adapters have critical registers in the same page as
+>>>> the MSI-X table.
+>>>>    
+>>>> However, some kind of PCI host bridge such as IODA bridge
+>>>> on Power support filtering of MSIs, which can ensure that a
+>>>> given pci device can only shoot the MSIs assigned for it.
+>>>> So we think it's safe to expose the MSI-X table to userspace
+>>>> if filtering of MSIs is supported because the exposed MSI-X
+>>>> table can't be used to do harm to other memory space.
+>>>>    
+>>>> To support this case, this patch adds a pci_host_bridge
+>>>> attribute to indicate if this PCI host bridge supports
+>>>> filtering of MSIs.
+>>>>    
+>>>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>>>> ---
+>>>>    drivers/pci/host-bridge.c |    6 ++++++
+>>>>    include/linux/pci.h       |    3 +++
+>>>>    2 files changed, 9 insertions(+)
+>>>>    
+>>>> diff --git a/drivers/pci/host-bridge.c b/drivers/pci/host-bridge.c
+>>>> index 5f4a2e0..c029267 100644
+>>>> --- a/drivers/pci/host-bridge.c
+>>>> +++ b/drivers/pci/host-bridge.c
+>>>> @@ -96,3 +96,9 @@ void pcibios_bus_to_resource(struct pci_bus *bus, struct
+>>>> resource *res,
+>>>>    	res->end = region->end + offset;
+>>>>    }
+>>>>    EXPORT_SYMBOL(pcibios_bus_to_resource);
+>>>> +
+>>>> +bool pci_host_bridge_msi_filtered_enabled(struct pci_dev *pdev)
+>>>> +{
+>>>> +	return pci_find_host_bridge(pdev->bus)->msi_filtered;
+>>>> +}
+>>>> +EXPORT_SYMBOL_GPL(pci_host_bridge_msi_filtered_enabled);
+>>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>>> index b640d65..b952b78 100644
+>>>> --- a/include/linux/pci.h
+>>>> +++ b/include/linux/pci.h
+>>>> @@ -412,6 +412,7 @@ struct pci_host_bridge {
+>>>>    	void (*release_fn)(struct pci_host_bridge *);
+>>>>    	void *release_data;
+>>>>    	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
+>>>> +	unsigned int msi_filtered:1;	/* support filtering of MSIs */
+>>>>    	/* Resource alignment requirements */
+>>>>    	resource_size_t (*align_resource)(struct pci_dev *dev,
+>>>>    			const struct resource *res,
+>>>> @@ -430,6 +431,8 @@ void pci_set_host_bridge_release(struct
+>>>> pci_host_bridge *bridge,
+>>>>    
+>>>>    int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge);
+>>>>    
+>>>> +bool pci_host_bridge_msi_filtered_enabled(struct pci_dev *pdev);
+>>>> +
+>>>>    /*
+>>>>     * The first PCI_BRIDGE_RESOURCE_NUM PCI bus resources (those that
+>>>>     correspond
+>>>>     * to P2P or CardBus bridge windows) go in a table.  Additional ones
+>>>>     (for
+>>> Don't we already have a flag for this in the IOMMU space?
+>>>
+>>> enum iommu_cap {
+>>>           IOMMU_CAP_CACHE_COHERENCY,      /* IOMMU can enforce cache
+>>>           coherent DMA
+>>>                                              transactions */
+>>> --->    IOMMU_CAP_INTR_REMAP,           /* IOMMU supports interrupt
+>>> isolation */
+>>>           IOMMU_CAP_NOEXEC,               /* IOMMU_NOEXEC flag */
+>>> };
+>>>
+>> I saw this flag had been enabled in x86 and ARM arch.
+>>
+>> I'm not sure whether we can mmap MSI-X table in those archs. I just
+>> verify it on PPC64 arch.
+> Unfortunately that's not a very good excuse for creating an alternate implementation.  When x86 implements interrupt remapping, we get fine grained isolation of MSI vectors and we've always taken this flag to mean that the system is isolated from devices that may perform DoS attacks with MSI writes.  I'm not entirely sure whether ARM really provides that degree of isolation, but they would be incorrect is exposing the capability if they do not.  Thanks,
+>
+> Alex
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> To unsubscribe from this list: send the line "unsubscribe kvm" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+OK, I will use this flag in next version. Thanks.
+
+Regards,
+Yongji Xie
