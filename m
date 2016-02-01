@@ -1,115 +1,72 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V4 14/23] x86, ia64: Include acpi_pci_{add|remove}_bus to the default pcibios_{add|remove}_bus implementation.
-Date: Thu,  4 Feb 2016 18:28:52 +0100
-Message-Id: <1454606941-9523-15-git-send-email-tn@semihalf.com>
-In-Reply-To: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:49852 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751814AbcBAQ0o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 1 Feb 2016 11:26:44 -0500
+Date: Mon, 1 Feb 2016 16:28:38 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
+Message-ID: <20160201162838.GB30869@red-moon>
+References: <20160120160427.GD13437@red-moon>
+ <569FB210.9090605@codeaurora.org>
+ <20160120181003.GF13437@red-moon>
+ <20160129232538.GH12965@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160129232538.GH12965@localhost>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-x86 and ia64 are the only arches that implement pcibios_{add|remove}_bus hooks
-and implement them in the same way. Moreover ARM64 is going to do the same.
-So it seems that acpi_pci_{add|remove}_bus is generic enough to be default
-option for pcibios_{add|remove}_bus hooks. Also, it is always safe to run
-acpi_pci_{add|remove}_bus as they have empty stubs for !ACPI case and
-return if ACPI has been switched off in run time.
+On Fri, Jan 29, 2016 at 05:25:38PM -0600, Bjorn Helgaas wrote:
+> On Wed, Jan 20, 2016 at 06:10:03PM +0000, Lorenzo Pieralisi wrote:
+> 
+> > To do that, we must claim resources on PCI_PROBE_ONLY systems, but
+> > I know for certain Bjorn does not like the idea (I let you trawl
+> > the archives - at least he does not accept the idea of claiming
+> > resources ONLY on PCI_PROBE_ONLY systems, he thinks we should
+> > always claim resources regardless of that flag and fall-back to
+> > reassigning them in case claiming fails. That's perfectly reasonable,
+> > at least on systems with FW initializing PCI). The problem is dealing
+> > with legacy, so switching to resources claiming by default is a tad
+> > complicated, at least for testing (code is easy to implement).
+> 
+> I'd like to think of PCI_PROBE_ONLY basically as "setting
+> IORESOURCE_PCI_FIXED for every BAR", i.e., we can do everything we
+> normally do *except* write to the BAR (of course we have to write to
+> it to size the BAR during enumeration, but we have to restore the
+> original value).
 
-After all we can remove x86 and ia64 pcibios_{add|remove}_bus
-implementation.
+I am honestly a bit confused about the distinction between
+PCI_PROBE_ONLY and "IORESOURCE_PCI_FIXED for every BAR", the more
+so if I read the resources assignment code, in particular:
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
----
- arch/ia64/pci/pci.c   | 10 ----------
- arch/x86/pci/common.c | 10 ----------
- drivers/pci/probe.c   |  3 +++
- 3 files changed, 3 insertions(+), 20 deletions(-)
+pci_assign_resource()
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 978d6af..be4c9ef 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -358,16 +358,6 @@ void pcibios_fixup_bus(struct pci_bus *b)
- 	platform_pci_fixup_bus(b);
- }
- 
--void pcibios_add_bus(struct pci_bus *bus)
--{
--	acpi_pci_add_bus(bus);
--}
--
--void pcibios_remove_bus(struct pci_bus *bus)
--{
--	acpi_pci_remove_bus(bus);
--}
--
- void pcibios_set_master (struct pci_dev *dev)
- {
- 	/* No special bus mastering setup handling */
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 2879efc..5aa25f1 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -171,16 +171,6 @@ void pcibios_fixup_bus(struct pci_bus *b)
- 		pcibios_fixup_device_resources(dev);
- }
- 
--void pcibios_add_bus(struct pci_bus *bus)
--{
--	acpi_pci_add_bus(bus);
--}
--
--void pcibios_remove_bus(struct pci_bus *bus)
--{
--	acpi_pci_remove_bus(bus);
--}
--
- /*
-  * Only use DMI information to set this if nothing was passed
-  * on the kernel command line (which was parsed earlier).
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 81dd3a2..ef22a22 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -12,6 +12,7 @@
- #include <linux/slab.h>
- #include <linux/module.h>
- #include <linux/cpumask.h>
-+#include <linux/pci-acpi.h>
- #include <linux/pci-aspm.h>
- #include <linux/aer.h>
- #include <linux/acpi.h>
-@@ -2060,10 +2061,12 @@ int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
- 
- void __weak pcibios_add_bus(struct pci_bus *bus)
- {
-+	acpi_pci_add_bus(bus);
- }
- 
- void __weak pcibios_remove_bus(struct pci_bus *bus)
- {
-+	acpi_pci_remove_bus(bus);
- }
- 
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
--- 
-1.9.1
+in drivers/pci/setup-res.c
 
+That function assigns the resource but does not update the BAR
+if IORESOURCE_PCI_FIXED is set. I wonder why the resource is
+assigned at all if IORESOURCE_PCI_FIXED is set, probably to
+initialize its parent pointer and set it, still, the value in
+the struct resource may differ from what's in the BAR, I am not sure
+I understand why we are happy with that or I am reading code the
+wrong way (does not this give a view of resource tree disconnected
+from how HW is actually programmed ?)
+
+> I don't think PCI_PROBE_ONLY should have anything to do with the
+> iomem_resource and ioport_resource trees.  /proc/iomem and
+> /proc/ioports should still contain every resource we know about,
+> regardless of whether PCI_PROBE_ONLY is set or not.
+
+I do not think PCI_PROBE_ONLY should have anything to do with the
+resource tree either, still, if resources are not assigned, they must be
+inserted in the resource tree anyway so that we are capable of enabling
+the PCI devices (ie pci_enable_resources()).
+
+Thanks,
+Lorenzo
