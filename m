@@ -1,102 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 8 Feb 2016 17:24:30 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60772 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751722AbcBAVTl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 1 Feb 2016 16:19:41 -0500
+Date: Mon, 1 Feb 2016 15:19:36 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: Rob Herring <robh@kernel.org>, David Daney <ddaney.cavm@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v5 3/3] pci, pci-thunder-ecam: Add driver for
- ThunderX-pass1 on-chip devices
-Message-ID: <20160208232430.GA1353@localhost>
-References: <1454715675-17512-1-git-send-email-ddaney.cavm@gmail.com>
- <1454715675-17512-4-git-send-email-ddaney.cavm@gmail.com>
- <20160208195642.GA15103@rob-hp-laptop>
- <56B8FED6.1050804@caviumnetworks.com>
- <CAL_JsqJNndZ59465YhpkP=dQYaijaar+LcQG4KQEJwF5e1ryLQ@mail.gmail.com>
- <56B90B09.7090500@caviumnetworks.com>
- <20160208221204.GA30821@localhost>
- <56B919A5.5090000@caviumnetworks.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
+Message-ID: <20160201211936.GE4861@localhost>
+References: <20160120160427.GD13437@red-moon>
+ <569FB210.9090605@codeaurora.org>
+ <20160120181003.GF13437@red-moon>
+ <20160129232538.GH12965@localhost>
+ <20160201162838.GB30869@red-moon>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56B919A5.5090000@caviumnetworks.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160201162838.GB30869@red-moon>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 08, 2016 at 02:41:41PM -0800, David Daney wrote:
-> On 02/08/2016 02:12 PM, Bjorn Helgaas wrote:
-> >On Mon, Feb 08, 2016 at 01:39:21PM -0800, David Daney wrote:
-> >>On 02/08/2016 01:12 PM, Rob Herring wrote:
-> >>>On Mon, Feb 8, 2016 at 2:47 PM, David Daney <ddaney@caviumnetworks.com> wrote:
-> >>>>On 02/08/2016 11:56 AM, Rob Herring wrote:
-> >>>>>On Fri, Feb 05, 2016 at 03:41:15PM -0800, David Daney wrote:
-> >>>>>>From: David Daney <david.daney@cavium.com>
-> >>>>>>+Properties of the host controller node that differ from
-> >>>>>>+host-generic-pci.txt:
-> >>>>>>+
-> >>>>>>+- compatible     : Must be "cavium,pci-host-thunder-ecam"
-> >>>>>>+
-> >>>>>>+Example:
-> >>>>>>+
-> >>>>>>+       pci@84b0,00000000 {
-> ...
-> >>>>>and the node name should be "pcie".
-> >>>>
-> >>>>Why pcie?
-> >>>>
-> >>>>There are no PCIe devices or buses reachable from this type of root complex.
-> >>>>There are however many PCI devices.
-> ...
-
-> >>Really, it is a bit of a gray area here as we don't have any bridges
-> >>to PCIe buses and there are multiple devices residing on each bus,
-> >>so from that point of view it cannot be PCIe.  There are, however,
-> >>devices that implement the PCI Express Capability structure, so does
-> >>that make it PCIe?  It is not clear what the specifications demand
-> >>here.
-> >
-> >The PCI core doesn't care about the node name in the device tree.  But
-> >it *does* care about some details of PCI/PCIe topology.  We consider
-> >anything with a PCIe capability to be PCIe.  For example,
-> >
-> >   - pci_cfg_space_size() thinks PCIe devices have 4K of config space
-> >
-> >   - only_one_child() thinks a PCIe bus, i.e., a link, only has a
-> >     single device on it
-> >
-> >   - a PCIe device should have a PCIe Root Port or PCIe Downstream Port
-> >     upstream from it (we did remove some of these restrictions with
-> >     b35b1df5e6c2 ("PCI: Tolerate hierarchies with no Root Port"), but
-> >     it's possible we didn't get them all)
-> >
-> >I assume your system conforms to expectations like these; I'm just
-> >pointing them out because you mentioned buses with multiple devices on
-> >them, which is definitely something one doesn't expect in PCIe.
+On Mon, Feb 01, 2016 at 04:28:38PM +0000, Lorenzo Pieralisi wrote:
+> On Fri, Jan 29, 2016 at 05:25:38PM -0600, Bjorn Helgaas wrote:
+> > On Wed, Jan 20, 2016 at 06:10:03PM +0000, Lorenzo Pieralisi wrote:
+> > 
+> > > To do that, we must claim resources on PCI_PROBE_ONLY systems, but
+> > > I know for certain Bjorn does not like the idea (I let you trawl
+> > > the archives - at least he does not accept the idea of claiming
+> > > resources ONLY on PCI_PROBE_ONLY systems, he thinks we should
+> > > always claim resources regardless of that flag and fall-back to
+> > > reassigning them in case claiming fails. That's perfectly reasonable,
+> > > at least on systems with FW initializing PCI). The problem is dealing
+> > > with legacy, so switching to resources claiming by default is a tad
+> > > complicated, at least for testing (code is easy to implement).
+> > 
+> > I'd like to think of PCI_PROBE_ONLY basically as "setting
+> > IORESOURCE_PCI_FIXED for every BAR", i.e., we can do everything we
+> > normally do *except* write to the BAR (of course we have to write to
+> > it to size the BAR during enumeration, but we have to restore the
+> > original value).
 > 
-> The topology we have is currently working with the kernel's core PCI
-> code.  I don't really want to get into discussing what the
-> definition of PCIe is.  We have multiple devices (more than 32) on a
-> single bus, and they have PCI Express and ARI Capabilities.  Is that
-> PCIe?  I don't know.
+> I am honestly a bit confused about the distinction between
+> PCI_PROBE_ONLY and "IORESOURCE_PCI_FIXED for every BAR", the more
+> so if I read the resources assignment code, in particular:
+> 
+> pci_assign_resource()
+> 
+> in drivers/pci/setup-res.c
+> 
+> That function assigns the resource but does not update the BAR
+> if IORESOURCE_PCI_FIXED is set. I wonder why the resource is
+> assigned at all if IORESOURCE_PCI_FIXED is set, probably to
+> initialize its parent pointer and set it, still, the value in
+> the struct resource may differ from what's in the BAR, I am not sure
+> I understand why we are happy with that or I am reading code the
+> wrong way (does not this give a view of resource tree disconnected
+> from how HW is actually programmed ?)
 
-I don't need to know the details of your topology.  As long as it
-conforms to the PCIe spec, it should be fine.  If it *doesn't* conform
-to the spec, but things currently seem to work, that's less fine,
-because a future Linux change is liable to break something for you.
+I'm not happy with that -- it's just one of our many problems.
 
-I was a little concerned about your statement that "there are multiple
-devices residing on each bus, so from that point of view it cannot be
-PCIe."  That made it sound like you're doing something outside the
-spec.  If you're just using regular multi-function devices or ARI,
-then I don't see any issue (or any reason to say it can't be PCIe).
+The assignment code doesn't doesn't really pay attention to
+IORESOURCE_PCI_FIXED.  I don't think it pays attention to
+PCI_PROBE_ONLY either, except that some arches don't even call the
+assignment code if it is set.
 
 Bjorn
