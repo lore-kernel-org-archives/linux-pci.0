@@ -1,31 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54895 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756930AbcBBTUc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Feb 2016 14:20:32 -0500
-Subject: [PATCH 0/3] PCI: Clean up warnings
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org
-Date: Tue, 02 Feb 2016 13:20:28 -0600
-Message-ID: <20160202191658.7887.28475.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Mark Salter <msalter@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: [PATCH] PCI: ACPI: IA64: fix IO port generic range check
+Date: Mon,  1 Feb 2016 10:25:57 +0000
+Message-Id: <1454322357-10912-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'm on a quest to clean up compiler warnings in drivers/pci.  I'd like to
-be able to treat warnings as errors, at least for the 0day build robot.
+The [0 - 64k] ACPI PCI IO port resource boundary check in:
 
+acpi_dev_ioresource_flags()
+
+is currently applied blindly in the ACPI resource parsing to all
+architectures, but only x86 suffers from that IO space limitation.
+The check in generic ACPI code leaves other arches (ie IA64) IO space
+broken (ie kernel can't claim IO resources since the host bridge
+IO resource is disabled and discarded by ACPI core code, eg log on
+IA64):
+
+pci 0000:00:03.0: [1002:515e] type 00 class 0x030000
+
+pci 0000:00:03.0: reg 0x10: [mem 0x80000000-0x87ffffff pref]
+
+pci 0000:00:03.0: reg 0x14: [io  0x1000-0x10ff]
+
+pci 0000:00:03.0: reg 0x18: [mem 0x88020000-0x8802ffff]
+
+pci 0000:00:03.0: reg 0x30: [mem 0x88000000-0x8801ffff pref]
+
+pci 0000:00:03.0: supports D1 D2
+
+pci 0000:00:03.0: can't claim BAR 1 [io  0x1000-0x10ff]: no compatible
+bridge window
+
+For this reason, the IO port resources boundaries check in generic ACPI
+parsing code should be moved to x86 arch code so that more arches (ie
+ARM64) can benefit from the generic ACPI resources parsing interface
+without incurring in unexpected resource filtering, fixing at the same
+time current breakage on IA64.
+
+This patch moves the IO ports boundary [0 - 64k] check to x86 arch code
+code that validates the PCI host bridge resources.
+
+Fixes: 3772aea7d6f3 ("ia64/PCI/ACPI: Use common ACPI resource parsing
+interface for host bridge")
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: Mark Salter <msalter@redhat.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 ---
+ arch/x86/pci/acpi.c     | 18 +++++++++++++-----
+ drivers/acpi/resource.c |  3 ---
+ 2 files changed, 13 insertions(+), 8 deletions(-)
 
-Bjorn Helgaas (3):
-      PCI: Check device_attach() return value always
-      PCI/PME: Remove redundant port lookup
-      PCI/PME: Restructure pcie_pme_suspend() to prevent compiler warning
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 3cd6983..e20dbe5 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -275,11 +275,14 @@ static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
+  *     to access PCI configuration space.
+  *
+  * So explicitly filter out PCI CFG IO ports[0xCF8-0xCFF].
++ *
++ * Furthermore, IO ports address space is limited to 16k on x86,
++ * any IO resource exceeding the boundary must therefore be discarded.
+  */
+-static bool resource_is_pcicfg_ioport(struct resource *res)
++static bool ioport_valid(struct resource *res)
+ {
+-	return (res->flags & IORESOURCE_IO) &&
+-		res->start == 0xCF8 && res->end == 0xCFF;
++	return !(res->start == 0xCF8 && res->end == 0xCFF) &&
++	       !(res->end >= 0x10003);
+ }
+ 
+ static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
+@@ -287,13 +290,18 @@ static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
+ 	struct acpi_device *device = ci->bridge;
+ 	int busnum = ci->root->secondary.start;
+ 	struct resource_entry *entry, *tmp;
++	struct resource *res;
+ 	int status;
+ 
+ 	status = acpi_pci_probe_root_resources(ci);
+ 	if (pci_use_crs) {
+-		resource_list_for_each_entry_safe(entry, tmp, &ci->resources)
+-			if (resource_is_pcicfg_ioport(entry->res))
++		resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
++			res = entry->res;
++
++			if (res->flags & IORESOURCE_IO && !ioport_valid(res))
+ 				resource_list_destroy_entry(entry);
++		}
++
+ 		return status;
+ 	}
+ 
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index d02fd53..c112e1d 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -127,9 +127,6 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+ 	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
+ 		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+ 
+-	if (res->end >= 0x10003)
+-		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+-
+ 	if (io_decode == ACPI_DECODE_16)
+ 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
+ 	if (translation_type == ACPI_SPARSE_TRANSLATION)
+-- 
+2.5.1
 
-
- drivers/pci/bus.c      |    7 ++++++-
- drivers/pci/pcie/pme.c |   11 ++++++-----
- 2 files changed, 12 insertions(+), 6 deletions(-)
