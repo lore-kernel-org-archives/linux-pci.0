@@ -1,27 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:34558 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754249AbcBBLja (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Feb 2016 06:39:30 -0500
-Received: by mail-ig0-f170.google.com with SMTP id ik10so58475243igb.1
-        for <linux-pci@vger.kernel.org>; Tue, 02 Feb 2016 03:39:29 -0800 (PST)
-MIME-Version: 1.0
-Date: Tue, 2 Feb 2016 13:39:29 +0200
-Message-ID: <CAJ2oMhKMcwX+5SUR6_jANqVu-F9nbmx5+k8G+wym6BvVuH3uoQ@mail.gmail.com>
-Subject: Emulate pci deviceID/vendor for driver debug ?
-From: Ran Shalit <ranshalit@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 1/3] PCI: Check device_attach() return value always
 To: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org
+Date: Tue, 02 Feb 2016 13:20:36 -0600
+Message-ID: <20160202192036.7887.10644.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160202191658.7887.28475.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160202191658.7887.28475.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Previously we checked the device_attach() return value only when
+CONFIG_BUG=y.  That caused this warning in builds where CONFIG_BUG is not
+set:
 
-Is there some simple way - just for debug purpose - to make the kernel
-think that the driver matches the board/vendor , so that the driver
-will be called ?
-I don't have the real harware yet (even not a pci physical interface
-for any card), but wanted to start debugging some template driver.
+  drivers/pci/bus.c:237:6: warning: variable 'retval' set but not used [-Wunused-but-set-variable]
 
-Thank you,
-Ran
+Check the return value of device_attach() always and clean up after
+failure.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/bus.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 89b3bef..f2187d4 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -291,7 +291,12 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 
+ 	dev->match_driver = true;
+ 	retval = device_attach(&dev->dev);
+-	WARN_ON(retval < 0);
++	if (retval < 0) {
++		dev_warn(&dev->dev, "device attach failed (%d)\n", retval);
++		pci_proc_detach_device(dev);
++		pci_remove_sysfs_dev_files(dev);
++		return;
++	}
+ 
+ 	dev->is_added = 1;
+ }
