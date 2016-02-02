@@ -1,32 +1,262 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:36082 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402AbcBNUxW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Feb 2016 15:53:22 -0500
-Received: by mail-wm0-f68.google.com with SMTP id a4so7428507wme.3
-        for <linux-pci@vger.kernel.org>; Sun, 14 Feb 2016 12:53:21 -0800 (PST)
-From: Christoph Fritz <chf.fritz@googlemail.com>
-To: Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lee Jones <lee.jones@linaro.org>
-Cc: Fabio Estevam <fabio.estevam@nxp.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 0/2] ARM: imx6sx - add initial PCIe support
-Date: Sun, 14 Feb 2016 21:52:42 +0100
-Message-Id: <1455483164-13755-1-git-send-email-chf.fritz@googlemail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-ia64@vger.kernel.org>,
+	<linux-metag@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-s390@vger.kernel.org>, <linux-sh@vger.kernel.org>,
+	<linux-arch@vger.kernel.org>, <Will.Deacon@arm.com>,
+	<catalin.marinas@arm.com>, <robh+dt@kernel.org>,
+	<mark.rutland@arm.com>, <grant.likely@linaro.org>,
+	<leif.lindholm@linaro.org>, <rfranz@cavium.com>,
+	<ard.biesheuvel@linaro.org>, <msalter@redhat.com>,
+	<steve.capper@linaro.org>, <hanjun.guo@linaro.org>,
+	<al.stone@linaro.org>, <arnd@arndb.de>, <pawel.moll@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rjw@rjwysocki.net>, <lenb@kernel.org>, <marc.zyngier@arm.com>,
+	<lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+	<tony.luck@intel.com>, <fenghua.yu@intel.com>,
+	<james.hogan@imgtec.com>, <benh@kernel.crashing.org>,
+	<tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
+	<x86@kernel.org>, <jonathan@jonmasters.org>, <rrichter@cavium.com>,
+	<Prasun.Kapoor@caviumnetworks.com>
+CC: <gpkulkarni@gmail.com>
+Subject: [PATCH v10 8/8] numa, mm, cleanup: remove redundant NODE_DATA macro from asm header files.
+Date: Tue, 2 Feb 2016 15:39:23 +0530
+Message-ID: <1454407763-1017-9-git-send-email-gkulkarni@caviumnetworks.com>
+In-Reply-To: <1454407763-1017-1-git-send-email-gkulkarni@caviumnetworks.com>
+References: <1454407763-1017-1-git-send-email-gkulkarni@caviumnetworks.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add PCIe driver support for imx6sx.
+NODE_DATA is defined across multiple asm header files.
+Moving generic definition to asm-generic/mmzone.h to
+remove redundant definitions.
 
-Christoph Fritz (2):
-  ARM: imx6sx: Add PCIe register definitions for iomuxc gpr
-  PCI: imx6: add initial imx6sx support
+Reviewed-by: Robert Richter <rrichter@cavium.com>
+Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
+---
+ arch/arm64/include/asm/mmzone.h   |  4 +---
+ arch/m32r/include/asm/mmzone.h    |  4 +---
+ arch/metag/include/asm/mmzone.h   |  4 +---
+ arch/powerpc/include/asm/mmzone.h |  8 ++------
+ arch/s390/include/asm/mmzone.h    |  6 +-----
+ arch/sh/include/asm/mmzone.h      |  4 +---
+ arch/sparc/include/asm/mmzone.h   |  6 ++----
+ arch/x86/include/asm/mmzone.h     |  3 +--
+ arch/x86/include/asm/mmzone_32.h  |  5 -----
+ arch/x86/include/asm/mmzone_64.h  | 17 -----------------
+ include/asm-generic/mmzone.h      | 24 ++++++++++++++++++++++++
+ 11 files changed, 34 insertions(+), 51 deletions(-)
+ delete mode 100644 arch/x86/include/asm/mmzone_64.h
+ create mode 100644 include/asm-generic/mmzone.h
 
- drivers/pci/host/pci-imx6.c                 | 172 +++++++++++++++++++++-------
- include/linux/mfd/syscon/imx6q-iomuxc-gpr.h |  15 +++
- 2 files changed, 144 insertions(+), 43 deletions(-)
-
+diff --git a/arch/arm64/include/asm/mmzone.h b/arch/arm64/include/asm/mmzone.h
+index a0de9e6..611a1cf 100644
+--- a/arch/arm64/include/asm/mmzone.h
++++ b/arch/arm64/include/asm/mmzone.h
+@@ -4,9 +4,7 @@
+ #ifdef CONFIG_NUMA
+ 
+ #include <asm/numa.h>
+-
+-extern struct pglist_data *node_data[];
+-#define NODE_DATA(nid)		(node_data[(nid)])
++#include  <asm-generic/mmzone.h>
+ 
+ #endif /* CONFIG_NUMA */
+ #endif /* __ASM_MMZONE_H */
+diff --git a/arch/m32r/include/asm/mmzone.h b/arch/m32r/include/asm/mmzone.h
+index 115ced3..e3d66a0 100644
+--- a/arch/m32r/include/asm/mmzone.h
++++ b/arch/m32r/include/asm/mmzone.h
+@@ -7,12 +7,10 @@
+ #define _ASM_MMZONE_H_
+ 
+ #include <asm/smp.h>
++#include  <asm-generic/mmzone.h>
+ 
+ #ifdef CONFIG_DISCONTIGMEM
+ 
+-extern struct pglist_data *node_data[];
+-#define NODE_DATA(nid)		(node_data[nid])
+-
+ #define node_localnr(pfn, nid)	((pfn) - NODE_DATA(nid)->node_start_pfn)
+ 
+ #define pmd_page(pmd)		(pfn_to_page(pmd_val(pmd) >> PAGE_SHIFT))
+diff --git a/arch/metag/include/asm/mmzone.h b/arch/metag/include/asm/mmzone.h
+index 9c88a9c..b1e95b3 100644
+--- a/arch/metag/include/asm/mmzone.h
++++ b/arch/metag/include/asm/mmzone.h
+@@ -3,9 +3,7 @@
+ 
+ #ifdef CONFIG_NEED_MULTIPLE_NODES
+ #include <linux/numa.h>
+-
+-extern struct pglist_data *node_data[];
+-#define NODE_DATA(nid)		(node_data[nid])
++#include  <asm-generic/mmzone.h>
+ 
+ static inline int pfn_to_nid(unsigned long pfn)
+ {
+diff --git a/arch/powerpc/include/asm/mmzone.h b/arch/powerpc/include/asm/mmzone.h
+index 7b58917..da0c5ba 100644
+--- a/arch/powerpc/include/asm/mmzone.h
++++ b/arch/powerpc/include/asm/mmzone.h
+@@ -19,12 +19,6 @@
+ 
+ #ifdef CONFIG_NEED_MULTIPLE_NODES
+ 
+-extern struct pglist_data *node_data[];
+-/*
+- * Return a pointer to the node data for node n.
+- */
+-#define NODE_DATA(nid)		(node_data[nid])
+-
+ /*
+  * Following are specific to this numa platform.
+  */
+@@ -42,5 +36,7 @@ u64 memory_hotplug_max(void);
+ #define memory_hotplug_max() memblock_end_of_DRAM()
+ #endif /* CONFIG_NEED_MULTIPLE_NODES */
+ 
++#include  <asm-generic/mmzone.h>
++
+ #endif /* __KERNEL__ */
+ #endif /* _ASM_MMZONE_H_ */
+diff --git a/arch/s390/include/asm/mmzone.h b/arch/s390/include/asm/mmzone.h
+index a9e834e..91f1fcc 100644
+--- a/arch/s390/include/asm/mmzone.h
++++ b/arch/s390/include/asm/mmzone.h
+@@ -7,10 +7,6 @@
+ #ifndef _ASM_S390_MMZONE_H
+ #define _ASM_S390_MMZONE_H
+ 
+-#ifdef CONFIG_NUMA
++#include  <asm-generic/mmzone.h>
+ 
+-extern struct pglist_data *node_data[];
+-#define NODE_DATA(nid) (node_data[nid])
+-
+-#endif /* CONFIG_NUMA */
+ #endif /* _ASM_S390_MMZONE_H */
+diff --git a/arch/sh/include/asm/mmzone.h b/arch/sh/include/asm/mmzone.h
+index 15a8496..c070d00 100644
+--- a/arch/sh/include/asm/mmzone.h
++++ b/arch/sh/include/asm/mmzone.h
+@@ -5,9 +5,7 @@
+ 
+ #ifdef CONFIG_NEED_MULTIPLE_NODES
+ #include <linux/numa.h>
+-
+-extern struct pglist_data *node_data[];
+-#define NODE_DATA(nid)		(node_data[nid])
++#include  <asm-generic/mmzone.h>
+ 
+ static inline int pfn_to_nid(unsigned long pfn)
+ {
+diff --git a/arch/sparc/include/asm/mmzone.h b/arch/sparc/include/asm/mmzone.h
+index 99d9b9f..ef1365b 100644
+--- a/arch/sparc/include/asm/mmzone.h
++++ b/arch/sparc/include/asm/mmzone.h
+@@ -5,13 +5,11 @@
+ 
+ #include <linux/cpumask.h>
+ 
+-extern struct pglist_data *node_data[];
+-
+-#define NODE_DATA(nid)		(node_data[nid])
+-
+ extern int numa_cpu_lookup_table[];
+ extern cpumask_t numa_cpumask_lookup_table[];
+ 
+ #endif /* CONFIG_NEED_MULTIPLE_NODES */
+ 
++#include  <asm-generic/mmzone.h>
++
+ #endif /* _SPARC64_MMZONE_H */
+diff --git a/arch/x86/include/asm/mmzone.h b/arch/x86/include/asm/mmzone.h
+index d497bc4..5a52815 100644
+--- a/arch/x86/include/asm/mmzone.h
++++ b/arch/x86/include/asm/mmzone.h
+@@ -1,5 +1,4 @@
+ #ifdef CONFIG_X86_32
+ # include <asm/mmzone_32.h>
+-#else
+-# include <asm/mmzone_64.h>
+ #endif
++#include  <asm-generic/mmzone.h>
+diff --git a/arch/x86/include/asm/mmzone_32.h b/arch/x86/include/asm/mmzone_32.h
+index 1ec990b..09f7cfb 100644
+--- a/arch/x86/include/asm/mmzone_32.h
++++ b/arch/x86/include/asm/mmzone_32.h
+@@ -8,11 +8,6 @@
+ 
+ #include <asm/smp.h>
+ 
+-#ifdef CONFIG_NUMA
+-extern struct pglist_data *node_data[];
+-#define NODE_DATA(nid)	(node_data[nid])
+-#endif /* CONFIG_NUMA */
+-
+ #ifdef CONFIG_DISCONTIGMEM
+ 
+ /*
+diff --git a/arch/x86/include/asm/mmzone_64.h b/arch/x86/include/asm/mmzone_64.h
+deleted file mode 100644
+index 129d9aa..0000000
+--- a/arch/x86/include/asm/mmzone_64.h
++++ /dev/null
+@@ -1,17 +0,0 @@
+-/* K8 NUMA support */
+-/* Copyright 2002,2003 by Andi Kleen, SuSE Labs */
+-/* 2.5 Version loosely based on the NUMAQ Code by Pat Gaughen. */
+-#ifndef _ASM_X86_MMZONE_64_H
+-#define _ASM_X86_MMZONE_64_H
+-
+-#ifdef CONFIG_NUMA
+-
+-#include <linux/mmdebug.h>
+-#include <asm/smp.h>
+-
+-extern struct pglist_data *node_data[];
+-
+-#define NODE_DATA(nid)		(node_data[nid])
+-
+-#endif
+-#endif /* _ASM_X86_MMZONE_64_H */
+diff --git a/include/asm-generic/mmzone.h b/include/asm-generic/mmzone.h
+new file mode 100644
+index 0000000..ec0fc4c
+--- /dev/null
++++ b/include/asm-generic/mmzone.h
+@@ -0,0 +1,24 @@
++/*
++ * linux/include/asm-generic/mmzone.h
++ *
++ * Author: Ganapatrao Kulkarni <gkulkarni@cavium.com>
++ * Copyright (C) 2016 Cavium Inc.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ */
++
++#ifndef _ASM_GENERIC_MMZONE_H
++#define _ASM_GENERIC_MMZONE_H
++
++#if defined(CONFIG_NUMA) || defined(CONFIG_NEED_MULTIPLE_NODES)
++
++#ifndef NODE_DATA
++extern struct pglist_data *node_data[];
++#define NODE_DATA(nid)          (node_data[(nid)])
++#endif
++
++#endif
++#endif /* _ASM_GENERIC_MMZONE_H */
 -- 
-2.1.4
+1.8.1.4
 
