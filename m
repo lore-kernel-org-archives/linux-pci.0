@@ -1,86 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34985 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932714AbcBIUxx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Feb 2016 15:53:53 -0500
-Date: Tue, 9 Feb 2016 14:53:47 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+Received: from mout.kundenserver.de ([212.227.126.187]:58860 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754186AbcBBX2Z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Feb 2016 18:28:25 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Vineet.Gupta1@synopsys.com,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Babu Moger <babu.moger@oracle.com>
-Subject: Re: [PATCHv2 2/4] pci: allow access to VPD attributes with size '0'
-Message-ID: <20160209205347.GA32530@localhost>
-References: <1452684335-46107-1-git-send-email-hare@suse.de>
- <1452684335-46107-3-git-send-email-hare@suse.de>
+	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
+	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
+	pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
+Subject: Re: [PATCH v7 2/2] add new platform driver for PCI RC
+Date: Wed, 03 Feb 2016 00:27:46 +0100
+Message-ID: <727234287.1RWoeYxhOH@wuerfel>
+In-Reply-To: <20160202231449.GA18009@localhost>
+References: <cover.1454349430.git.jpinto@synopsys.com> <8223655.W63T0XOVm1@wuerfel> <20160202231449.GA18009@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1452684335-46107-3-git-send-email-hare@suse.de>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Hannes,
-
-On Wed, Jan 13, 2016 at 12:25:33PM +0100, Hannes Reinecke wrote:
-> It is not always possible to determine the actual size of the VPD
-> data, so allow access to them if the size is set to '0'.
+On Tuesday 02 February 2016 17:14:49 Bjorn Helgaas wrote:
+> On Tue, Feb 02, 2016 at 09:25:25PM +0100, Arnd Bergmann wrote:
+> > On Monday 01 February 2016 18:07:45 Joao Pinto wrote:
+> > > +static void synopsys_pcie_establish_link(struct pcie_port *pp)
+> > > +{
+> > > +   int retries = 0;
+> > > +
+> > > +   /* check if the link is up or not */
+> > > +   for (retries = 0; retries < 10; retries++) {
+> > > +           if (dw_pcie_link_up(pp)) {
+> > > +                   dev_info(pp->dev, "Link up\n");
+> > > +                   return;
+> > > +           }
+> > > +           mdelay(100);
+> > > +   }
+> > > +}
+> > 
+> > That mdelay() needs to be an msleep(). You should never waste
+> > a whole second worth of CPU time in a driver.
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/pci/pci-sysfs.c | 20 ++++++++++++--------
->  1 file changed, 12 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index eead54c..de327c3 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -772,10 +772,12 @@ static ssize_t read_vpd_attr(struct file *filp, struct kobject *kobj,
->  	struct pci_dev *dev =
->  		to_pci_dev(container_of(kobj, struct device, kobj));
->  
-> -	if (off > bin_attr->size)
-> -		count = 0;
-> -	else if (count > bin_attr->size - off)
-> -		count = bin_attr->size - off;
-> +	if (bin_attr->size > 0) {
-> +		if (off > bin_attr->size)
-> +			count = 0;
-> +		else if (count > bin_attr->size - off)
-> +			count = bin_attr->size - off;
-> +	}
+> There are six other copies of this code, and two of them (exynos and
+> spear) have the same problem.
 
-I'm trying to figure out why we do any of this checking here.  It
-seems like we could do all of it in pci_read_vpd().
+Good point. Maybe move one (correct) copy into the main driver file and
+have it called by the other drivers?
 
-Where is bin_attr->size set?  I assume this is the "attr" allocated in
-pci_create_capabilities_sysfs().  I see that before your series, we
-set "attr->size = dev->vpd->len" there, but after patch 3/4 of your
-series, we set it to 0 there, and I don't see a place that sets it to
-anything else.
+IIRC there were some problems in drivers that did a similar
+function from the config space accessors where you cannot call
+msleep(), but this driver is not one of them.
 
->  	return pci_read_vpd(dev, off, count, buf);
->  }
-> @@ -787,10 +789,12 @@ static ssize_t write_vpd_attr(struct file *filp, struct kobject *kobj,
->  	struct pci_dev *dev =
->  		to_pci_dev(container_of(kobj, struct device, kobj));
->  
-> -	if (off > bin_attr->size)
-> -		count = 0;
-> -	else if (count > bin_attr->size - off)
-> -		count = bin_attr->size - off;
-> +	if (bin_attr->size > 0) {
-> +		if (off > bin_attr->size)
-> +			count = 0;
-> +		else if (count > bin_attr->size - off)
-> +			count = bin_attr->size - off;
-> +	}
->  
->  	return pci_write_vpd(dev, off, count, buf);
->  }
-> -- 
-> 1.8.5.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	Arnd
