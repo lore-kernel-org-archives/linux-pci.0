@@ -1,42 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50130 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750740AbcBWMY4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Feb 2016 07:24:56 -0500
-Subject: Re: [PATCH v4 10/11] PCI: Fold struct pci_vpd_pci22 into struct
- pci_vpd
-To: Bjorn Helgaas <bhelgaas@google.com>
-References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160223004735.10635.72128.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Cc: linux-pci@vger.kernel.org,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Babu Moger <babu.moger@oracle.com>,
-	Alexander Duyck <alexander.duyck@gmail.com>
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <56CC4F8F.3090302@suse.de>
-Date: Tue, 23 Feb 2016 20:24:47 +0800
-MIME-Version: 1.0
-In-Reply-To: <20160223004735.10635.72128.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:41440 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755750AbcBBRjX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Feb 2016 12:39:23 -0500
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: helgaas@kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH] Synopsys driver updated in Maintainers
+Date: Tue,  2 Feb 2016 17:39:16 +0000
+Message-Id: <eb5a3237d868dba88c0bdbe3862e14890b4adf05.1454434674.git.jpinto@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/23/2016 08:47 AM, Bjorn Helgaas wrote:
-> We only support one flavor of VPD, so there's no need to complicate things
-> by having a "generic" struct pci_vpd and a more specific struct
-> pci_vpd_pci22.
-> 
-> Fold struct pci_vpd_pci22 directly into struct pci_vpd.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Driver name changed but not updated in MAINTAINERS.
 
-Cheers,
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+ MAINTAINERS | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Hannes
+diff --git a/MAINTAINERS b/MAINTAINERS
+index d2e4506..caba688 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8234,8 +8234,8 @@ PCI DRIVER FOR SYNOPSYS PROTOTYPING DEVICE
+ M:	Joao Pinto <jpinto@synopsys.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+-F:	Documentation/devicetree/bindings/pci/pcie-snpsdev.txt
+-F:	drivers/pci/host/pcie-snpsdev.c
++F:	Documentation/devicetree/bindings/pci/pcie-synopsys.txt
++F:	drivers/pci/host/pcie-synopsys.c
+ 
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
 -- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+1.8.1.5
+
