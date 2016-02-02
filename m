@@ -1,66 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54942 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756080AbcBDWEy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Feb 2016 17:04:54 -0500
-Date: Thu, 4 Feb 2016 16:04:50 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Geliang Tang <geliangtang@163.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI/AER: Use list_first_entry_or_null() to simplify code
-Message-ID: <20160204220450.GD7031@localhost>
-References: <50073d35dca3c0ef34dddce4e6e2bf4bda6fdfe5.1453474124.git.geliangtang@163.com>
+Received: from mout.kundenserver.de ([217.72.192.75]:49785 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757484AbcBBU0D (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Feb 2016 15:26:03 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Vineet.Gupta1@synopsys.com, helgaas@kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
+	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
+	pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
+Subject: Re: [PATCH v7 2/2] add new platform driver for PCI RC
+Date: Tue, 02 Feb 2016 21:25:25 +0100
+Message-ID: <8223655.W63T0XOVm1@wuerfel>
+In-Reply-To: <10b29adcdb0a31eb8f8071b271da267e44ad8a04.1454349430.git.jpinto@synopsys.com>
+References: <cover.1454349430.git.jpinto@synopsys.com> <10b29adcdb0a31eb8f8071b271da267e44ad8a04.1454349430.git.jpinto@synopsys.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <50073d35dca3c0ef34dddce4e6e2bf4bda6fdfe5.1453474124.git.geliangtang@163.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 22, 2016 at 10:50:19PM +0800, Geliang Tang wrote:
-> Use list_first_entry_or_null() instead of list_empty() + list_entry()
-> to simplify the code.
+On Monday 01 February 2016 18:07:45 Joao Pinto wrote:
+> This patch adds a new driver that will be the reference platform driver
+> for all PCI RC IP Protoyping Kits based on ARC SDP.
+> This patch is composed by:
 > 
-> Signed-off-by: Geliang Tang <geliangtang@163.com>
+> -MAINTAINERS file was updated to include the new driver
+> -Documentation/devicetree/bindings/pci was updated to include the new
+> driver documentation
+> -New driver called pcie-synopsys
+> 
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 
-Applied to pci/aer for v4.6, thanks, Geliang!
+I must have completely missed all the earlier submissions and just happened
+to see this one now that it was merged.
 
-> ---
->  drivers/pci/pcie/aer/aer_inject.c | 13 +++++--------
->  1 file changed, 5 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aer_inject.c b/drivers/pci/pcie/aer/aer_inject.c
-> index 20db790..f5a245f 100644
-> --- a/drivers/pci/pcie/aer/aer_inject.c
-> +++ b/drivers/pci/pcie/aer/aer_inject.c
-> @@ -124,16 +124,13 @@ static struct pci_ops *__find_pci_bus_ops(struct pci_bus *bus)
->  static struct pci_bus_ops *pci_bus_ops_pop(void)
->  {
->  	unsigned long flags;
-> -	struct pci_bus_ops *bus_ops = NULL;
-> +	struct pci_bus_ops *bus_ops;
->  
->  	spin_lock_irqsave(&inject_lock, flags);
-> -	if (list_empty(&pci_bus_ops_list))
-> -		bus_ops = NULL;
-> -	else {
-> -		struct list_head *lh = pci_bus_ops_list.next;
-> -		list_del(lh);
-> -		bus_ops = list_entry(lh, struct pci_bus_ops, list);
-> -	}
-> +	bus_ops = list_first_entry_or_null(&pci_bus_ops_list,
-> +					   struct pci_bus_ops, list);
-> +	if (bus_ops)
-> +		list_del(&bus_ops->list);
->  	spin_unlock_irqrestore(&inject_lock, flags);
->  	return bus_ops;
->  }
-> -- 
-> 2.5.0
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I have a couple of comments, maybe you can send a follow up patch to address
+them:
+
+> +----------------------------------
+> +
+> +This is the reference platform driver to be used in the Synopsys PCI Root
+> +Complex IP Prototyping Kit.
+> +
+> +Required properties:
+> +- compatible: set to "snps,pcie-synopsys";
+
+Please also include the exact version of the designware PCIe part that
+is used in here, such as "snps,dw-pcie-1.234". I'm sure you can find
+out the version.
+
+"snps,pcie-synopsys" by itself is about the worst possible compatible
+string because it says nothing about the specific hardware. Half the
+machines we support all have a designware PCIe host that was made
+by synopsys. Please use the name of the SoC for the most specific
+string.
+
+> +- reg: base address and length of the pcie controller registers.
+> +- #address-cells: set to <3>
+> +- #size-cells: set to <2>
+> +- device_type: set to "pci"
+> +- ranges: ranges for the PCI memory and I/O regions.
+> +- interrupts: one interrupt source for MSI interrupts, followed by interrupt
+> +	source for hardware related interrupts.
+> +- #interrupt-cells: set to <1>
+> +- num-lanes: set to <1>;
+> +
+> +Example configuration:
+> +
+> +	pcie: pcie@0xdffff000 {
+> +		compatible = "snps,pcie-synopsys";
+> +		reg = <0xdffff000 0x1000>;
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		device_type = "pci";
+> +		ranges = <0x00000800 0 0xd0000000 0xd0000000 0 0x00002000>,
+
+This line looks misplaced here and does not match the documentation. It's
+probably a leftover from an earlier version that had the config space
+in the ranges, so you need to remove that.
+
+> +/* This handler was created for future work */
+> +static irqreturn_t synopsys_pcie_irq_handler(int irq, void *arg)
+> +{
+> +	return IRQ_NONE;
+> +}
+
+It's not harmful, but we generally don't add code "for future work",
+better remove it for now.
+
+> +static void synopsys_pcie_establish_link(struct pcie_port *pp)
+> +{
+> +	int retries = 0;
+> +
+> +	/* check if the link is up or not */
+> +	for (retries = 0; retries < 10; retries++) {
+> +		if (dw_pcie_link_up(pp)) {
+> +			dev_info(pp->dev, "Link up\n");
+> +			return;
+> +		}
+> +		mdelay(100);
+> +	}
+> +}
+
+That mdelay() needs to be an msleep(). You should never waste
+a whole second worth of CPU time in a driver.
+
+	Arnd
