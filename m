@@ -1,157 +1,54 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36148 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965203AbcBCSis (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 3 Feb 2016 13:38:48 -0500
-Date: Wed, 3 Feb 2016 12:38:44 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Vineet.Gupta1@synopsys.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
-	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
-Subject: Re: [PATCH v7 2/2] add new platform driver for PCI RC
-Message-ID: <20160203183844.GC10879@localhost>
-References: <cover.1454349430.git.jpinto@synopsys.com>
- <10b29adcdb0a31eb8f8071b271da267e44ad8a04.1454349430.git.jpinto@synopsys.com>
- <8223655.W63T0XOVm1@wuerfel>
- <20160203180514.GA10879@localhost>
- <56B242F0.6040704@synopsys.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56B242F0.6040704@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: jakeo@microsoft.com
+To: gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	haiyangz@microsoft.com, marc.zyngier@arm.com, bhelgaas@google.com,
+	linux-pci@vger.kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH RESEND 2/3] PCI: irqdomain: Look up IRQ domain by fwnode_handle
+Date: Tue,  2 Feb 2016 17:41:42 +0000
+Message-Id: <1454434903-1680-3-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1454434903-1680-1-git-send-email-jakeo@microsoft.com>
+References: <1454434903-1680-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 03, 2016 at 06:12:00PM +0000, Joao Pinto wrote:
-> Hi Bjorn,
-> 
-> Are these tasks enough?
-> 
-> - replace mdelay() for msleep()
-> - remove synopsys_pcie_irq_handler()
+From: Jake Oshins <jakeo@microsoft.com>
 
-Above are fine with me.
+This patch adds a second way of finding an IRQ domain associated with
+a root PCI bus.  After looking to see if one can be found through
+the OF tree, it attempts to look up the IRQ domain through an
+fwnode_handle stored in the pci_sysdata struct.
 
-> - replace "snps,pcie-synopsys" for "snps,pcie-synopsys-ipk"?
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/pci/probe.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-This is a question for Arnd.
-
-> - rename the driver to pcie-synopsys-ipk?
-
-It doesn't seem necessary to me to include both "synopsys" and "ipk" in the
-filename and the driver name.  Take a look at what the existing drivers do,
-and do something similar.
-
-> - update the devicetree documentation referring that the ranges also include the
-> config space
-
-Another one for Arnd.
-
-
-> On 2/3/2016 6:05 PM, Bjorn Helgaas wrote:
-> > Hi Joao & Arnd,
-> > 
-> > On Tue, Feb 02, 2016 at 09:25:25PM +0100, Arnd Bergmann wrote:
-> >> On Monday 01 February 2016 18:07:45 Joao Pinto wrote:
-> >>> This patch adds a new driver that will be the reference platform driver
-> >>> for all PCI RC IP Protoyping Kits based on ARC SDP.
-> >>> This patch is composed by:
-> >>>
-> >>> -MAINTAINERS file was updated to include the new driver
-> >>> -Documentation/devicetree/bindings/pci was updated to include the new
-> >>> driver documentation
-> >>> -New driver called pcie-synopsys
-> >>>
-> >>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> >>
-> >> I must have completely missed all the earlier submissions and just happened
-> >> to see this one now that it was merged.
-> >>
-> >> I have a couple of comments, maybe you can send a follow up patch to address
-> >> them:
-> > 
-> > These seem pretty easy to address, so I pulled these patches out of
-> > for-linus temporarily while we fix them.
-> > 
-> > Joao, you can just fix the mdelay() in your driver; don't worry about 
-> > fixing other drivers with the same problem or consolidating them.
-> > 
-> > Bjorn
-> > 
-> >>> +----------------------------------
-> >>> +
-> >>> +This is the reference platform driver to be used in the Synopsys PCI Root
-> >>> +Complex IP Prototyping Kit.
-> >>> +
-> >>> +Required properties:
-> >>> +- compatible: set to "snps,pcie-synopsys";
-> >>
-> >> Please also include the exact version of the designware PCIe part that
-> >> is used in here, such as "snps,dw-pcie-1.234". I'm sure you can find
-> >> out the version.
-> >>
-> >> "snps,pcie-synopsys" by itself is about the worst possible compatible
-> >> string because it says nothing about the specific hardware. Half the
-> >> machines we support all have a designware PCIe host that was made
-> >> by synopsys. Please use the name of the SoC for the most specific
-> >> string.
-> >>
-> >>> +- reg: base address and length of the pcie controller registers.
-> >>> +- #address-cells: set to <3>
-> >>> +- #size-cells: set to <2>
-> >>> +- device_type: set to "pci"
-> >>> +- ranges: ranges for the PCI memory and I/O regions.
-> >>> +- interrupts: one interrupt source for MSI interrupts, followed by interrupt
-> >>> +	source for hardware related interrupts.
-> >>> +- #interrupt-cells: set to <1>
-> >>> +- num-lanes: set to <1>;
-> >>> +
-> >>> +Example configuration:
-> >>> +
-> >>> +	pcie: pcie@0xdffff000 {
-> >>> +		compatible = "snps,pcie-synopsys";
-> >>> +		reg = <0xdffff000 0x1000>;
-> >>> +		#address-cells = <3>;
-> >>> +		#size-cells = <2>;
-> >>> +		device_type = "pci";
-> >>> +		ranges = <0x00000800 0 0xd0000000 0xd0000000 0 0x00002000>,
-> >>
-> >> This line looks misplaced here and does not match the documentation. It's
-> >> probably a leftover from an earlier version that had the config space
-> >> in the ranges, so you need to remove that.
-> >>
-> >>> +/* This handler was created for future work */
-> >>> +static irqreturn_t synopsys_pcie_irq_handler(int irq, void *arg)
-> >>> +{
-> >>> +	return IRQ_NONE;
-> >>> +}
-> >>
-> >> It's not harmful, but we generally don't add code "for future work",
-> >> better remove it for now.
-> >>
-> >>> +static void synopsys_pcie_establish_link(struct pcie_port *pp)
-> >>> +{
-> >>> +	int retries = 0;
-> >>> +
-> >>> +	/* check if the link is up or not */
-> >>> +	for (retries = 0; retries < 10; retries++) {
-> >>> +		if (dw_pcie_link_up(pp)) {
-> >>> +			dev_info(pp->dev, "Link up\n");
-> >>> +			return;
-> >>> +		}
-> >>> +		mdelay(100);
-> >>> +	}
-> >>> +}
-> >>
-> >> That mdelay() needs to be an msleep(). You should never waste
-> >> a whole second worth of CPU time in a driver.
-> >>
-> >> 	Arnd
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b207e74..1e34d21 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -676,6 +676,20 @@ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
+ 	if (!d)
+ 		d = pci_host_bridge_acpi_msi_domain(bus);
+ 
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++	/*
++	 * If no IRQ domain was found via the OF tree, try looking it up
++	 * directly through the fwnode_handle.
++	 */
++	if (!d) {
++		struct fwnode_handle *fwnode = pci_root_bus_fwnode(bus);
++
++		if (fwnode)
++			d = irq_find_matching_fwnode(fwnode,
++						     DOMAIN_BUS_PCI_MSI);
++	}
++#endif
++
+ 	return d;
+ }
+ 
+-- 
+1.9.1
