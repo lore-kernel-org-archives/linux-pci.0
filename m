@@ -1,87 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59509 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760202AbcBYPKs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Feb 2016 10:10:48 -0500
-Date: Thu, 25 Feb 2016 09:10:40 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: jakeo@microsoft.com
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	haddenh@microsoft.com
-Subject: Re: [PATCH] PCI: Remove usage of pci_domain_nr when the PCI bus
- doesn't yet exist
-Message-ID: <20160225151040.GB23155@localhost>
-References: <1456340196-13717-1-git-send-email-jakeo@microsoft.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
+To: <linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-ia64@vger.kernel.org>,
+	<linux-metag@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+	<linux-s390@vger.kernel.org>, <linux-sh@vger.kernel.org>,
+	<linux-arch@vger.kernel.org>, <Will.Deacon@arm.com>,
+	<catalin.marinas@arm.com>, <robh+dt@kernel.org>,
+	<mark.rutland@arm.com>, <grant.likely@linaro.org>,
+	<leif.lindholm@linaro.org>, <rfranz@cavium.com>,
+	<ard.biesheuvel@linaro.org>, <msalter@redhat.com>,
+	<steve.capper@linaro.org>, <hanjun.guo@linaro.org>,
+	<al.stone@linaro.org>, <arnd@arndb.de>, <pawel.moll@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<rjw@rjwysocki.net>, <lenb@kernel.org>, <marc.zyngier@arm.com>,
+	<lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
+	<tony.luck@intel.com>, <fenghua.yu@intel.com>,
+	<james.hogan@imgtec.com>, <benh@kernel.crashing.org>,
+	<tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
+	<x86@kernel.org>, <jonathan@jonmasters.org>, <rrichter@cavium.com>,
+	<Prasun.Kapoor@caviumnetworks.com>
+CC: <gpkulkarni@gmail.com>
+Subject: [PATCH v10 6/8] arm64, mm, numa: Adding numa balancing support for arm64.
+Date: Tue, 2 Feb 2016 15:39:21 +0530
+Message-ID: <1454407763-1017-7-git-send-email-gkulkarni@caviumnetworks.com>
+In-Reply-To: <1454407763-1017-1-git-send-email-gkulkarni@caviumnetworks.com>
+References: <1454407763-1017-1-git-send-email-gkulkarni@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1456340196-13717-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 24, 2016 at 06:56:36PM +0000, jakeo@microsoft.com wrote:
-> From: Jake Oshins <jakeo@microsoft.com>
-> 
-> This patch fixes a race condition in this driver.  Using the
-> function pci_domain_nr() only works if the PCI bus has already
-> been fully created.  This patch just deletes one call site,
-> as it was in debug prints which aren't strictly necessary.
-> Another call site is changed to look for the data in the same
-> structure that is passed in when creating the PCI bus in the
-> first place.
-> 
-> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+enabled numa balancing for arm64 platforms.
+added pte, pmd protnone helpers for use by automatic NUMA balancing.
 
-I folded this into the original "Add paravirtual PCI front-end for
-Microsoft Hyper-V VMs" patch and updated the pci/host-hv branch.
+Reviewed-by: Robert Richter <rrichter@cavium.com>
+Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
+---
+ arch/arm64/Kconfig               |  1 +
+ arch/arm64/include/asm/pgtable.h | 18 ++++++++++++++++++
+ 2 files changed, 19 insertions(+)
 
-Thanks, Jake!
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index fcf3950..8a7c02a 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -11,6 +11,7 @@ config ARM64
+ 	select ARCH_HAS_TICK_BROADCAST if GENERIC_CLOCKEVENTS_BROADCAST
+ 	select ARCH_USE_CMPXCHG_LOCKREF
+ 	select ARCH_SUPPORTS_ATOMIC_RMW
++	select ARCH_SUPPORTS_NUMA_BALANCING if NUMA
+ 	select ARCH_WANT_OPTIONAL_GPIOLIB
+ 	select ARCH_WANT_COMPAT_IPC_PARSE_VERSION
+ 	select ARCH_WANT_FRAME_POINTERS
+diff --git a/arch/arm64/include/asm/pgtable.h b/arch/arm64/include/asm/pgtable.h
+index 2d545d7a..24ce546 100644
+--- a/arch/arm64/include/asm/pgtable.h
++++ b/arch/arm64/include/asm/pgtable.h
+@@ -347,6 +347,24 @@ static inline pgprot_t mk_sect_prot(pgprot_t prot)
+ 	return __pgprot(pgprot_val(prot) & ~PTE_TABLE_BIT);
+ }
+ 
++#ifdef CONFIG_NUMA_BALANCING
++
++/*
++ * These work without NUMA balancing but the kernel does not care. See the
++ * comment in include/asm-generic/pgtable.h
++ */
++static inline int pte_protnone(pte_t pte)
++{
++	return ((pte_val(pte) & (PTE_VALID | PTE_PROT_NONE)) == PTE_PROT_NONE);
++}
++
++static inline int pmd_protnone(pmd_t pmd)
++{
++	return pte_protnone(pmd_pte(pmd));
++}
++
++#endif /* CONFIG_NUMA_BALANCING */
++
+ /*
+  * THP definitions.
+  */
+-- 
+1.8.1.4
 
-> ---
->  drivers/pci/host/pci-hyperv.c | 15 ++++++++-------
->  1 file changed, 8 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index 9391dee..ed651ba 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -1265,11 +1265,6 @@ static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
->  	if (!hpdev)
->  		return NULL;
->  
-> -	dev_info(&hbus->hdev->device,
-> -		 "New child device (%p) [%04x:%04x] at %04x:00:00.%02x\n",
-> -		 hpdev, desc->v_id, desc->d_id, pci_domain_nr(hbus->pci_bus),
-> -		 desc->win_slot.bits.func);
-> -
->  	hpdev->hbus = hbus;
->  
->  	memset(&pkt, 0, sizeof(pkt));
-> @@ -1558,9 +1553,15 @@ static void hv_eject_device_work(struct work_struct *work)
->  		return;
->  	}
->  
-> +	/*
-> +	 * Ejection can come before or after the PCI bus has been set up, so
-> +	 * attempt to find it and tear down the bus state, if it exists.  This
-> +	 * must be done without constructs like pci_domain_nr(hbus->pci_bus)
-> +	 * because hbus->pci_bus may not exist yet.
-> +	 */
->  	wslot = wslot_to_devfn(hpdev->desc.win_slot.slot);
-> -	pdev = pci_get_domain_bus_and_slot(pci_domain_nr(hpdev->hbus->pci_bus),
-> -					   0, wslot);
-> +	pdev = pci_get_domain_bus_and_slot(hpdev->hbus->sysdata.domain, 0,
-> +					   wslot);
->  	if (pdev) {
->  		pci_stop_and_remove_bus_device(pdev);
->  		pci_dev_put(pdev);
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
