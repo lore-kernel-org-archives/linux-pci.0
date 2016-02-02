@@ -1,111 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-am1on0054.outbound.protection.outlook.com ([157.56.112.54]:21248
-	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933169AbcBQEuX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 23:50:23 -0500
-From: Mingkai Hu <mingkai.hu@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	"Shi, Yang" <yang.shi@linaro.org>
-CC: "Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	"Pawel Moll" <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: RE: [PATCH] PCI: layerscape: add ls2085a compatible
-Date: Wed, 17 Feb 2016 02:17:47 +0000
-Message-ID: <VI1PR04MB1454676391D9A2D83E7625F48EAE0@VI1PR04MB1454.eurprd04.prod.outlook.com>
-References: <1453915925-19198-1-git-send-email-yang.shi@linaro.org>
- <20160205203858.GA11780@localhost> <56B509E5.2050602@linaro.org>
- <20160205222525.GA16238@localhost>
-In-Reply-To: <20160205222525.GA16238@localhost>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.kernel.org ([198.145.29.136]:56378 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753179AbcBBTia (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Feb 2016 14:38:30 -0500
+Subject: [PATCH 0/5] Clean up warnings (part 2, asm/pci-bridge.h)
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Date: Tue, 02 Feb 2016 13:38:26 -0600
+Message-ID: <20160202193026.9258.7573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+We've had some non-arch-specific stuff (pci_has_flag() and associated
+definitions like PCI_PROBE_ONLY) in asm/pci-bridge.h.  This leads to
+warnings like:
+
+  drivers/pci/host/pcie-designware.c:562:20: error: 'PCI_PROBE_ONLY' undeclared (first use in this function)
+  drivers/pci/host/pcie-designware.c:562:7: error: implicit declaration of function 'pci_has_flag' [-Werror=implicit-function-declaration]
+
+because arches don't consistently supply asm/pci-bridge.h, and several
+drivers include it when they shouldn't.
+
+This series moves the generic stuff to linux/pci.h, so it's the same for
+everybody, and removes the now-empty asm-generic/pci-bridge.h.
+
+There still a few arches that provide asm/pci-bridge.h (microblaze,
+powerpc, and xtensa), but now they contain truly arch-dependent things like
+struct pci_controller definitions, and they're only included by
+arch-specific files.
+
+---
+
+Bjorn Helgaas (5):
+      PCI: Move pci_set_flags() from asm-generic/pci-bridge.h to linux/pci.h
+      PCI: Remove includes of empty asm-generic/pci-bridge.h
+      ARM64: PCI: Remove generated include of asm-generic/pci-bridge.h
+      PCI: Remove empty asm-generic/pci-bridge.h
+      PCI: Remove includes of asm/pci-bridge.h
 
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Saturday, February 06, 2016 6:25 AM
-> To: Shi, Yang
-> Cc: Mingkai.Hu@freescale.com; Minghuan.Lian@freescale.com;
-> bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linaro-
-> kernel@lists.linaro.org; Rob Herring; Pawel Moll; Mark Rutland; Ian
-> Campbell; Kumar Gala; devicetree@vger.kernel.org
-> Subject: Re: [PATCH] PCI: layerscape: add ls2085a compatible
-> 
-> On Fri, Feb 05, 2016 at 12:45:25PM -0800, Shi, Yang wrote:
-> > On 2/5/2016 12:38 PM, Bjorn Helgaas wrote:
-> > >[+cc Rob, et al]
-> > >
-> > >On Wed, Jan 27, 2016 at 09:32:05AM -0800, Yang Shi wrote:
-> > >>The layerscape PCI host driver needs recognize ls2085a compatible
-> > >>when using firmware with ls2085a compatible property, otherwise the
-> > >>PCI bus won't be detected even though ls2085a compatible is included
-> by the dts.
-> > >>
-> > >>Signed-off-by: Yang Shi <yang.shi@linaro.org>
-> > >>---
-> > >>  drivers/pci/host/pci-layerscape.c | 1 +
-> > >>  1 file changed, 1 insertion(+)
-> > >>
-> > >>diff --git a/drivers/pci/host/pci-layerscape.c
-> > >>b/drivers/pci/host/pci-layerscape.c
-> > >>index 3923bed..c40d8b2 100644
-> > >>--- a/drivers/pci/host/pci-layerscape.c
-> > >>+++ b/drivers/pci/host/pci-layerscape.c
-> > >>@@ -203,6 +203,7 @@ static const struct of_device_id
-> ls_pcie_of_match[] = {
-> > >>  	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata },
-> > >>  	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata },
-> > >>  	{ .compatible = "fsl,ls2080a-pcie", .data = &ls2080_drvdata },
-> > >>+	{ .compatible = "fsl,ls2085a-pcie", .data = &ls2080_drvdata },
-> > >
-> > >Hmm, "fsl,ls2085a-pcie" doesn't appear in
-> > >Documentation/devicetree/bindings/pci/.
-> > >
-> > >Aren't we supposed to add these strings to the bindings before or at
-> > >the same time we add them to drivers?
-> >
-> > The below patch will add it into dts and binding doc. I should
-> > mentioned this in the commit log.
-> >
-> > https://patchwork.kernel.org/patch/7767061/
-> 
-> OK.  This is really annoying as a reviewer.  To me, adding "fsl,ls2085a-
-> pcie" to:
-> 
->   - the binding in Documentation/devicetree/bindings/pci/layerscape-
-> pci.txt
->   - the DT in arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi
->   - the driver in drivers/pci/host/pci-layerscape.c
-> 
-> are all logically related, and it would make sense to have them all in a
-> single patch.
-> 
-> But whatever.  I applied this to pci/host-layerscape for v4.6.
-> 
-
-Bojon,
-
-I have sent version3 of the patch to add strings to the bindings and dts file.
-https://patchwork.kernel.org/patch/8333761/
-
-Sorry for the delayed response due to Chinese New Year holiday.
-
-Thanks,
-Mingkai
-
-
+ arch/alpha/include/asm/pci.h               |    1 
+ arch/arm/include/asm/pci.h                 |    3 -
+ arch/arm64/include/asm/Kbuild              |    3 -
+ arch/arm64/include/asm/pci.h               |    1 
+ arch/arm64/kernel/pci.c                    |    2 -
+ arch/mips/include/asm/pci.h                |    1 
+ arch/powerpc/include/asm/pci-bridge.h      |    1 
+ arch/unicore32/include/asm/pci.h           |    2 -
+ arch/x86/pci/common.c                      |    1 
+ drivers/ata/pata_macio.c                   |    2 -
+ drivers/char/agp/uninorth-agp.c            |    1 
+ drivers/gpu/drm/radeon/radeon_combios.c    |    1 
+ drivers/ide/pdc202xx_new.c                 |    1 
+ drivers/ide/pmac.c                         |    1 
+ drivers/macintosh/macio_asic.c             |    1 
+ drivers/misc/cxl/pci.c                     |    1 
+ drivers/net/ethernet/sun/sungem.c          |    1 
+ drivers/net/ethernet/toshiba/spider_net.c  |    1 
+ drivers/of/of_pci.c                        |    1 
+ drivers/pci/pci.c                          |    1 
+ drivers/pci/probe.c                        |    8 +++
+ drivers/pci/setup-bus.c                    |    1 
+ drivers/scsi/mac53c94.c                    |    2 -
+ drivers/scsi/mesh.c                        |    2 -
+ drivers/usb/core/hcd-pci.c                 |    1 
+ drivers/video/fbdev/aty/aty128fb.c         |    1 
+ drivers/video/fbdev/aty/radeon_base.c      |    1 
+ drivers/video/fbdev/imsttfb.c              |    1 
+ drivers/video/fbdev/matrox/matroxfb_base.h |    1 
+ drivers/video/fbdev/offb.c                 |    4 --
+ include/asm-generic/pci-bridge.h           |   74 ----------------------------
+ include/linux/pci.h                        |   22 ++++++++
+ sound/ppc/pmac.c                           |    1 
+ 33 files changed, 32 insertions(+), 114 deletions(-)
+ delete mode 100644 include/asm-generic/pci-bridge.h
