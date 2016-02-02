@@ -1,74 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH] pci: Wait for up to an additional 1000ms after FLR reset
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: allen.m.kay@intel.com, linux-kernel@vger.kernel.org,
-	kvm@vger.kernel.org
-Date: Fri, 12 Feb 2016 16:51:08 -0700
-Message-ID: <20160212235013.16862.53910.stgit@gimli.home>
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db5eur01on0087.outbound.protection.outlook.com ([104.47.2.87]:30840
+	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753861AbcBBJVP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Feb 2016 04:21:15 -0500
+From: Minghuan Lian <minghuan.lian@nxp.com>
+To: Minghuan Lian <minghuan.lian@nxp.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <kernel@pengutronix.de>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Roy Zang <roy.zang@nxp.com>, "Mingkai Hu" <mingkai.hu@nxp.com>,
+	Stuart Yoder <stuart.yoder@nxp.com>,
+	Yang-Leo Li <leoyang.li@nxp.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: RE: [PATCH 1/4] ARM: dts: ls1021a: add PCIe dts node
+Date: Tue, 2 Feb 2016 08:48:36 +0000
+Message-ID: <VI1PR04MB1615DCF54369ED2E01234E64E8DF0@VI1PR04MB1615.eurprd04.prod.outlook.com>
+References: <1454401807-28751-1-git-send-email-Minghuan.Lian@nxp.com>
+In-Reply-To: <1454401807-28751-1-git-send-email-Minghuan.Lian@nxp.com>
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some devices take longer than the spec indicates to return from FLR
-reset, a notable case of this is Intel integrated graphics (IGD),
-which can often take an additional 300ms powering down an attached
-LCD panel as part of the FLR.  Allow devices up to an additional
-1000ms, testing every 100ms whether the first dword of config space
-is read as -1.
-
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
-
-Copying KVM list as this patch is required for IGD assignment.
-
- drivers/pci/pci.c |   21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 602eb42..3b90a42 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3414,6 +3414,25 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
- }
- EXPORT_SYMBOL(pci_wait_for_pending_transaction);
- 
-+static void pci_wait_alive(struct pci_dev *dev)
-+{
-+	int i;
-+	u32 id;
-+
-+	for (i = 0; i < 10; i++) {
-+		pci_read_config_dword(dev, PCI_VENDOR_ID, &id);
-+		if (~id != 0) {
-+			if (i > 0)
-+				dev_info(&dev->dev, "Required additional %d"
-+				         "ms to return from reset\n", i * 100);
-+			return;
-+		}
-+		msleep(100);
-+	}
-+
-+	dev_warn(&dev->dev, "Failed to return from reset\n");
-+}
-+
- static int pcie_flr(struct pci_dev *dev, int probe)
- {
- 	u32 cap;
-@@ -3430,6 +3449,7 @@ static int pcie_flr(struct pci_dev *dev, int probe)
- 
- 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
- 	msleep(100);
-+	pci_wait_alive(dev);
- 	return 0;
- }
- 
-@@ -3460,6 +3480,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
- 
- 	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
- 	msleep(100);
-+	pci_wait_alive(dev);
- 	return 0;
- }
- 
+SGkgU2hhd24sDQoNCkNvdWxkIHlvdSBwbGVhc2UgaGVscCB0byByZXZpZXcgdGhlIHBhdGNoPyAg
+VGhhbmsgeW91IHZlcnkgbXVjaC4NClRoZXJlIGlzIG9ubHkgb25lIHBhdGNoIG5vdCBhIHNldCBv
+ZiBwYXRjaCwgcGxlYXNlIGlnbm9yZSBbMS80XSA6KA0KDQpBcm5kIGhhcyBnaXZlbiBhIGFjay4N
+Cg0KDQpUaGFua3MsDQpNaW5naHVhbg0KIA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
+DQo+IEZyb206IE1pbmdodWFuIExpYW4gW21haWx0bzpNaW5naHVhbi5MaWFuQG54cC5jb21dDQo+
+IFNlbnQ6IFR1ZXNkYXksIEZlYnJ1YXJ5IDAyLCAyMDE2IDQ6MzAgUE0NCj4gVG86IGxpbnV4LXBj
+aUB2Z2VyLmtlcm5lbC5vcmcNCj4gQ2M6IGxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFk
+Lm9yZzsgUm95IFphbmcgPHJveS56YW5nQG54cC5jb20+Ow0KPiBNaW5na2FpIEh1IDxtaW5na2Fp
+Lmh1QG54cC5jb20+OyBTdHVhcnQgWW9kZXIgPHN0dWFydC55b2RlckBueHAuY29tPjsNCj4gWWFu
+Zy1MZW8gTGkgPGxlb3lhbmcubGlAbnhwLmNvbT47IEFybmQgQmVyZ21hbm4gPGFybmRAYXJuZGIu
+ZGU+OyBCam9ybg0KPiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPjsgTWluZ2h1YW4gTGlh
+biA8bWluZ2h1YW4ubGlhbkBueHAuY29tPg0KPiBTdWJqZWN0OiBbUEFUQ0ggMS80XSBBUk06IGR0
+czogbHMxMDIxYTogYWRkIFBDSWUgZHRzIG5vZGUNCj4gDQo+IExTMTAyMWEgY29udGFpbnMgdHdv
+IFBDSWUgY29udHJvbGxlcnMuIFRoZSBwYXRjaCBhZGRzIHRoZWlyIG5vZGUgdG8gZHRzIGZpbGUu
+DQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBNaW5naHVhbiBMaWFuIDxNaW5naHVhbi5MaWFuQG54cC5j
+b20+DQo+IC0tLQ0KPiAgYXJjaC9hcm0vYm9vdC9kdHMvbHMxMDIxYS5kdHNpIHwgNDQNCj4gKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrDQo+ICAxIGZpbGUgY2hhbmdl
+ZCwgNDQgaW5zZXJ0aW9ucygrKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2FyY2gvYXJtL2Jvb3QvZHRz
+L2xzMTAyMWEuZHRzaSBiL2FyY2gvYXJtL2Jvb3QvZHRzL2xzMTAyMWEuZHRzaQ0KPiBpbmRleCAy
+Yzg0Y2EyLi4yNzRkNjQ3IDEwMDY0NA0KPiAtLS0gYS9hcmNoL2FybS9ib290L2R0cy9sczEwMjFh
+LmR0c2kNCj4gKysrIGIvYXJjaC9hcm0vYm9vdC9kdHMvbHMxMDIxYS5kdHNpDQo+IEBAIC01NjAs
+NSArNTYwLDQ5IEBADQo+ICAJCQlkcl9tb2RlID0gImhvc3QiOw0KPiAgCQkJc25wcyxxdWlyay1m
+cmFtZS1sZW5ndGgtYWRqdXN0bWVudCA9IDwweDIwPjsNCj4gIAkJfTsNCj4gKw0KPiArCQlwY2ll
+QDM0MDAwMDAgew0KPiArCQkJY29tcGF0aWJsZSA9ICJmc2wsbHMxMDIxYS1wY2llIiwgInNucHMs
+ZHctcGNpZSI7DQo+ICsJCQlyZWcgPSA8MHgwMCAweDAzNDAwMDAwIDB4MCAweDAwMDEwMDAwICAg
+LyogY29udHJvbGxlcg0KPiByZWdpc3RlcnMgKi8NCj4gKwkJCSAgICAgICAweDQwIDB4MDAwMDAw
+MDAgMHgwIDB4MDAwMDIwMDA+OyAvKiBjb25maWd1cmF0aW9uDQo+IHNwYWNlICovDQo+ICsJCQly
+ZWctbmFtZXMgPSAicmVncyIsICJjb25maWciOw0KPiArCQkJaW50ZXJydXB0cyA9IDxHSUNfU1BJ
+IDE3NyBJUlFfVFlQRV9MRVZFTF9ISUdIPjsgLyoNCj4gY29udHJvbGxlciBpbnRlcnJ1cHQgKi8N
+Cj4gKwkJCWZzbCxwY2llLXNjZmcgPSA8JnNjZmcgMD47DQo+ICsJCQkjYWRkcmVzcy1jZWxscyA9
+IDwzPjsNCj4gKwkJCSNzaXplLWNlbGxzID0gPDI+Ow0KPiArCQkJZGV2aWNlX3R5cGUgPSAicGNp
+IjsNCj4gKwkJCW51bS1sYW5lcyA9IDw0PjsNCj4gKwkJCWJ1cy1yYW5nZSA9IDwweDAgMHhmZj47
+DQo+ICsJCQlyYW5nZXMgPSA8MHg4MTAwMDAwMCAweDAgMHgwMDAwMDAwMCAweDQwIDB4MDAwMTAw
+MDAgMHgwDQo+IDB4MDAwMTAwMDAgICAvKiBkb3duc3RyZWFtIEkvTyAqLw0KPiArCQkJCSAgMHg4
+MjAwMDAwMCAweDAgMHg0MDAwMDAwMCAweDQwIDB4NDAwMDAwMDAgMHgwDQo+IDB4NDAwMDAwMDA+
+OyAvKiBub24tcHJlZmV0Y2hhYmxlIG1lbW9yeSAqLw0KPiArCQkJI2ludGVycnVwdC1jZWxscyA9
+IDwxPjsNCj4gKwkJCWludGVycnVwdC1tYXAtbWFzayA9IDwwIDAgMCA3PjsNCj4gKwkJCWludGVy
+cnVwdC1tYXAgPSA8MDAwMCAwIDAgMSAmZ2ljIEdJQ19TUEkgOTENCj4gSVJRX1RZUEVfTEVWRUxf
+SElHSD4sDQo+ICsJCQkJCTwwMDAwIDAgMCAyICZnaWMgR0lDX1NQSSAxODgNCj4gSVJRX1RZUEVf
+TEVWRUxfSElHSD4sDQo+ICsJCQkJCTwwMDAwIDAgMCAzICZnaWMgR0lDX1NQSSAxOTANCj4gSVJR
+X1RZUEVfTEVWRUxfSElHSD4sDQo+ICsJCQkJCTwwMDAwIDAgMCA0ICZnaWMgR0lDX1NQSSAxOTIN
+Cj4gSVJRX1RZUEVfTEVWRUxfSElHSD47DQo+ICsJCX07DQo+ICsNCj4gKwkJcGNpZUAzNTAwMDAw
+IHsNCj4gKwkJCWNvbXBhdGlibGUgPSAiZnNsLGxzMTAyMWEtcGNpZSIsICJzbnBzLGR3LXBjaWUi
+Ow0KPiArCQkJcmVnID0gPDB4MDAgMHgwMzUwMDAwMCAweDAgMHgwMDAxMDAwMCAgIC8qIGNvbnRy
+b2xsZXINCj4gcmVnaXN0ZXJzICovDQo+ICsJCQkgICAgICAgMHg0OCAweDAwMDAwMDAwIDB4MCAw
+eDAwMDAyMDAwPjsgLyogY29uZmlndXJhdGlvbg0KPiBzcGFjZSAqLw0KPiArCQkJcmVnLW5hbWVz
+ID0gInJlZ3MiLCAiY29uZmlnIjsNCj4gKwkJCWludGVycnVwdHMgPSA8R0lDX1NQSSAxNzggSVJR
+X1RZUEVfTEVWRUxfSElHSD47DQo+ICsJCQlmc2wscGNpZS1zY2ZnID0gPCZzY2ZnIDE+Ow0KPiAr
+CQkJI2FkZHJlc3MtY2VsbHMgPSA8Mz47DQo+ICsJCQkjc2l6ZS1jZWxscyA9IDwyPjsNCj4gKwkJ
+CWRldmljZV90eXBlID0gInBjaSI7DQo+ICsJCQludW0tbGFuZXMgPSA8ND47DQo+ICsJCQlidXMt
+cmFuZ2UgPSA8MHgwIDB4ZmY+Ow0KPiArCQkJcmFuZ2VzID0gPDB4ODEwMDAwMDAgMHgwIDB4MDAw
+MDAwMDAgMHg0OCAweDAwMDEwMDAwIDB4MA0KPiAweDAwMDEwMDAwICAgLyogZG93bnN0cmVhbSBJ
+L08gKi8NCj4gKwkJCQkgIDB4ODIwMDAwMDAgMHgwIDB4NDAwMDAwMDAgMHg0OCAweDQwMDAwMDAw
+IDB4MA0KPiAweDQwMDAwMDAwPjsgLyogbm9uLXByZWZldGNoYWJsZSBtZW1vcnkgKi8NCj4gKwkJ
+CSNpbnRlcnJ1cHQtY2VsbHMgPSA8MT47DQo+ICsJCQlpbnRlcnJ1cHQtbWFwLW1hc2sgPSA8MCAw
+IDAgNz47DQo+ICsJCQlpbnRlcnJ1cHQtbWFwID0gPDAwMDAgMCAwIDEgJmdpYyBHSUNfU1BJIDky
+DQo+IElSUV9UWVBFX0xFVkVMX0hJR0g+LA0KPiArCQkJCQk8MDAwMCAwIDAgMiAmZ2ljIEdJQ19T
+UEkgMTg5DQo+IElSUV9UWVBFX0xFVkVMX0hJR0g+LA0KPiArCQkJCQk8MDAwMCAwIDAgMyAmZ2lj
+IEdJQ19TUEkgMTkxDQo+IElSUV9UWVBFX0xFVkVMX0hJR0g+LA0KPiArCQkJCQk8MDAwMCAwIDAg
+NCAmZ2ljIEdJQ19TUEkgMTkzDQo+IElSUV9UWVBFX0xFVkVMX0hJR0g+Ow0KPiArCQl9Ow0KPiAg
+CX07DQo+ICB9Ow0KPiAtLQ0KPiAxLjkuMQ0KDQo=
