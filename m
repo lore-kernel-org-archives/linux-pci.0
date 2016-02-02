@@ -1,61 +1,36 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 17 Feb 2016 15:37:52 +0000
-From: Luis Henriques <luis.henriques@canonical.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] vfio: fix link failures when CONFIG_PCI_MSI is disabled
-Message-ID: <20160217153752.GB28282@ares>
-References: <20160203205108.GA9181@charon.olymp>
- <20160212111758.4b5cb926@t450s.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.47.9]:57294 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754504AbcBBK5J (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Feb 2016 05:57:09 -0500
+Subject: Re: [PATCH v7 1/2] PCI support added to ARC
+To: Joao Pinto <Joao.Pinto@synopsys.com>, <helgaas@kernel.org>
+References: <cover.1454349430.git.jpinto@synopsys.com>
+ <cd8c068e6a2adca346769f0f9c1e0c291d001048.1454349430.git.jpinto@synopsys.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-snps-arc@lists.infradead.org>,
+	<CARLOS.PALMINHA@synopsys.com>, <Alexey.Brodkin@synopsys.com>,
+	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
+	<arnd@arndb.de>
+From: Vineet Gupta <Vineet.Gupta1@synopsys.com>
+Message-ID: <56B0896C.8000701@synopsys.com>
+Date: Tue, 2 Feb 2016 16:18:12 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20160212111758.4b5cb926@t450s.home>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <cd8c068e6a2adca346769f0f9c1e0c291d001048.1454349430.git.jpinto@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 12, 2016 at 11:17:58AM -0700, Alex Williamson wrote:
-> On Wed, 3 Feb 2016 20:51:08 +0000
-> Luis Henriques <luis.henriques@canonical.com> wrote:
+On Monday 01 February 2016 11:37 PM, Joao Pinto wrote:
+> This patch adds PCI support to ARC and updates drivers/pci Makefile
+> enabling the ARC arch to use the generic PCI setup functions.
 > 
-> > The following link failure occurs when CONFIG_PCI_MSI is not set:
-> > 
-> > drivers/built-in.o: In function `vfio_msi_set_vector_signal':
-> > :(.text+0x626640): undefined reference to `pci_write_msi_msg'
-> > 
-> > Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
-> > ---
-> >  drivers/vfio/pci/Kconfig | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
-> > index 02912f180c6d..b9dbfc9aeee1 100644
-> > --- a/drivers/vfio/pci/Kconfig
-> > +++ b/drivers/vfio/pci/Kconfig
-> > @@ -1,6 +1,6 @@
-> >  config VFIO_PCI
-> >  	tristate "VFIO support for PCI devices"
-> > -	depends on VFIO && PCI && EVENTFD
-> > +	depends on VFIO && PCI_MSI && EVENTFD
-> >  	select VFIO_VIRQFD
-> >  	select IRQ_BYPASS_MANAGER
-> >  	help
-> > 
-> 
-> 
-> It seems like a better solution would be to have pci stub these out
-> with static inlines when !CONFIG_PCI_MSI, we already do that for quite
-> a lot of MSI and MSI-X callbacks.  MSI/X on the device clearly won't
-> work if the host doesn't support MSI, and maybe there are improvements
-> to be made there, but MSI is a subcomponent of vfio-pci, the module
-> itself shouldn't depend on MSI.  Thanks,
-> 
-> Alex
-> 
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 
-Thanks for reviewing.  I'll submit a new patch later today, stubbing
-pci_write_msi_msg() to fix this failure.
+Acked-by: Vineet Gupta <vgupta@synopsys.com>
 
-Cheers,
---
-Luís
+@Bjorn - feel free to pull this patch into your tree !
+
+Thx,
+-Vineet
