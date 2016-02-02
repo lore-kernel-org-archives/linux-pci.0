@@ -1,82 +1,176 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34447 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1425080AbcBRQDW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Feb 2016 11:03:22 -0500
-Date: Thu, 18 Feb 2016 10:03:19 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: =?utf-8?B?0JzQvtGA0L7QtyDQntC70LXQsw==?= <oleg.moroz@mcc.vniiem.ru>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Joerg Roedel <jroedel@suse.de>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
-	linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH v2 0/3] PCI: Revert "Implement pcibios_alloc_irq() and
- pcibios_free_irq()"
-Message-ID: <20160218160319.GC17588@localhost>
-References: <20160217182718.302.10272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <56C55305.2050404@mcc.vniiem.ru>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 1/5] PCI: Move pci_set_flags() from asm-generic/pci-bridge.h
+ to linux/pci.h
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Date: Tue, 02 Feb 2016 13:38:34 -0600
+Message-ID: <20160202193834.9258.64377.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160202193026.9258.7573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160202193026.9258.7573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <56C55305.2050404@mcc.vniiem.ru>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 18, 2016 at 08:13:41AM +0300, Мороз Олег wrote:
-> On 17.02.2016 21:36, Bjorn Helgaas wrote:
-> >These are clean reverts of 991de2e59090 ("PCI, x86: Implement
-> >pcibios_alloc_irq() and pcibios_free_irq()") and related changes.
-> >
-> >We have two reports of drivers broken in v4.3 by Jiang's change,
-> >991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
-> >pcibios_free_irq()").
-> >
-> >It would be best to fix the problem instead of reverting 991de2e59090, but
-> >I don't have time to do that myself, and we haven't heard from Jiang, so
-> >the only choice I have is to revert the commit.
-> >
-> >Note that reverting will likely break IOAPIC hotplug.
-> >
-> >Олег and Sunjin, can you please test this and see whether it fixes your
-> >drivers?  This patch is based on v4.5-rc1.
-> >
-> >I intend to merge these for v4.5 unless I hear objections.
-> >
-> >They're on my for-linus branch, so they should appear in linux-next
-> >tomorrow.
-> >
-> >Changes from the v1 posting:
-> >   - Explicitly revert related patches instead of resolving conflicts
-> >     manually
-> >---
-> >
-> >Bjorn Helgaas (3):
-> >       Revert "x86/PCI: Don't alloc pcibios-irq when MSI is enabled"
-> >       Revert "PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed"
-> >       Revert "PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()"
-> >
-> >
-> >  arch/x86/include/asm/pci_x86.h |    2 ++
-> >  arch/x86/pci/common.c          |   26 ++++++++++----------------
-> >  arch/x86/pci/intel_mid_pci.c   |    9 +++------
-> >  arch/x86/pci/irq.c             |   23 +++++++++++++++++++----
-> >  drivers/acpi/pci_irq.c         |   17 +++++++++++++----
-> >  include/linux/pci.h            |   17 -----------------
-> >  6 files changed, 47 insertions(+), 47 deletions(-)
-> As i undestand this patch will appear in kernel git repo tomorrow? I
-> don't need to apply in manyally to v4.5-rc1?
+The PCI flag management constants and functions were previously declared in
+include/asm-generic/pci-bridge.h.  But they are not specific to bridges,
+and arches did not include pci-bridge.h consistently.
 
-These are included in the next-20160218 tag in the linux-next git repo (not
-Linus' repo) at:
+Move the following interfaces and related constants to include/linux/pci.h
+and remove pci-bridge.h:
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+  pci_set_flags()
+  pci_add_flags()
+  pci_clear_flags()
+  pci_has_flag()
 
-You browse this at:
+This fixes these warnings when building for some arches:
 
-  https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/
+  drivers/pci/host/pcie-designware.c:562:20: error: 'PCI_PROBE_ONLY' undeclared (first use in this function)
+  drivers/pci/host/pcie-designware.c:562:7: error: implicit declaration of function 'pci_has_flag' [-Werror=implicit-function-declaration]
 
-If you'd rather, you can also apply the patches yourself to v4.5-rc1.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c              |    7 ++++
+ include/asm-generic/pci-bridge.h |   65 --------------------------------------
+ include/linux/pci.h              |   22 +++++++++++++
+ 3 files changed, 29 insertions(+), 65 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6d7ab9b..ead1ac1 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1803,6 +1803,13 @@ static int only_one_child(struct pci_bus *bus)
+ 		return 0;
+ 	if (pci_pcie_type(parent) == PCI_EXP_TYPE_ROOT_PORT)
+ 		return 1;
++
++	/*
++	 * PCIe downstream ports are bridges that normally lead to only a
++	 * device 0, but if PCI_SCAN_ALL_PCIE_DEVS is set, scan all
++	 * possible devices, not just device 0.  See PCIe spec r3.0,
++	 * sec 7.3.1.
++	 */
+ 	if (parent->has_secondary_link &&
+ 	    !pci_has_flag(PCI_SCAN_ALL_PCIE_DEVS))
+ 		return 1;
+diff --git a/include/asm-generic/pci-bridge.h b/include/asm-generic/pci-bridge.h
+index 20db2e5..1b1d82f 100644
+--- a/include/asm-generic/pci-bridge.h
++++ b/include/asm-generic/pci-bridge.h
+@@ -6,69 +6,4 @@
+  */
+ #ifndef _ASM_GENERIC_PCI_BRIDGE_H
+ #define _ASM_GENERIC_PCI_BRIDGE_H
+-
+-#ifdef __KERNEL__
+-
+-enum {
+-	/* Force re-assigning all resources (ignore firmware
+-	 * setup completely)
+-	 */
+-	PCI_REASSIGN_ALL_RSRC	= 0x00000001,
+-
+-	/* Re-assign all bus numbers */
+-	PCI_REASSIGN_ALL_BUS	= 0x00000002,
+-
+-	/* Do not try to assign, just use existing setup */
+-	PCI_PROBE_ONLY		= 0x00000004,
+-
+-	/* Don't bother with ISA alignment unless the bridge has
+-	 * ISA forwarding enabled
+-	 */
+-	PCI_CAN_SKIP_ISA_ALIGN	= 0x00000008,
+-
+-	/* Enable domain numbers in /proc */
+-	PCI_ENABLE_PROC_DOMAINS	= 0x00000010,
+-	/* ... except for domain 0 */
+-	PCI_COMPAT_DOMAIN_0	= 0x00000020,
+-
+-	/* PCIe downstream ports are bridges that normally lead to only a
+-	 * device 0, but if this is set, we scan all possible devices, not
+-	 * just device 0.
+-	 */
+-	PCI_SCAN_ALL_PCIE_DEVS	= 0x00000040,
+-};
+-
+-#ifdef CONFIG_PCI
+-extern unsigned int pci_flags;
+-
+-static inline void pci_set_flags(int flags)
+-{
+-	pci_flags = flags;
+-}
+-
+-static inline void pci_add_flags(int flags)
+-{
+-	pci_flags |= flags;
+-}
+-
+-static inline void pci_clear_flags(int flags)
+-{
+-	pci_flags &= ~flags;
+-}
+-
+-static inline int pci_has_flag(int flag)
+-{
+-	return pci_flags & flag;
+-}
+-#else
+-static inline void pci_set_flags(int flags) { }
+-static inline void pci_add_flags(int flags) { }
+-static inline void pci_clear_flags(int flags) { }
+-static inline int pci_has_flag(int flag)
+-{
+-	return 0;
+-}
+-#endif	/* CONFIG_PCI */
+-
+-#endif	/* __KERNEL__ */
+ #endif	/* _ASM_GENERIC_PCI_BRIDGE_H */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 27df4a6..3d371c1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -746,9 +746,26 @@ struct pci_driver {
+ 	.vendor = PCI_VENDOR_ID_##vend, .device = (dev), \
+ 	.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID, 0, 0
+ 
++enum {
++	PCI_REASSIGN_ALL_RSRC	= 0x00000001,	/* ignore firmware setup */
++	PCI_REASSIGN_ALL_BUS	= 0x00000002,	/* reassign all bus numbers */
++	PCI_PROBE_ONLY		= 0x00000004,	/* use existing setup */
++	PCI_CAN_SKIP_ISA_ALIGN	= 0x00000008,	/* don't do ISA alignment */
++	PCI_ENABLE_PROC_DOMAINS	= 0x00000010,	/* enable domains in /proc */
++	PCI_COMPAT_DOMAIN_0	= 0x00000020,	/* ... except domain 0 */
++	PCI_SCAN_ALL_PCIE_DEVS	= 0x00000040,	/* scan all, not just dev 0 */
++};
++
+ /* these external functions are only available when PCI support is enabled */
+ #ifdef CONFIG_PCI
+ 
++extern unsigned int pci_flags;
++
++static inline void pci_set_flags(int flags) { pci_flags = flags; }
++static inline void pci_add_flags(int flags) { pci_flags |= flags; }
++static inline void pci_clear_flags(int flags) { pci_flags &= ~flags; }
++static inline int pci_has_flag(int flag) { return pci_flags & flag; }
++
+ void pcie_bus_configure_settings(struct pci_bus *bus);
+ 
+ enum pcie_bus_config_types {
+@@ -1405,6 +1422,11 @@ void pci_register_set_vga_state(arch_set_vga_state_t func);
+ 
+ #else /* CONFIG_PCI is not enabled */
+ 
++static inline void pci_set_flags(int flags) { }
++static inline void pci_add_flags(int flags) { }
++static inline void pci_clear_flags(int flags) { }
++static inline int pci_has_flag(int flag) { return 0; }
++
+ /*
+  *  If the system does not have PCI, clearly these return errors.  Define
+  *  these as simple inline functions to avoid hair in drivers.
