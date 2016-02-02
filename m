@@ -1,84 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52152 "EHLO mx2.suse.de"
+Received: from mail.kernel.org ([198.145.29.136]:54979 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1425276AbcBRMwt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Feb 2016 07:52:49 -0500
-Date: Thu, 18 Feb 2016 13:52:46 +0100
-From: Jean Delvare <jdelvare@suse.de>
+	id S965557AbcBBTUx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Feb 2016 14:20:53 -0500
+Subject: [PATCH 3/3] PCI/PME: Restructure pcie_pme_suspend() to prevent
+ compiler warning
 To: linux-pci@vger.kernel.org
-Cc: Thomas Renninger <trenn@suse.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Borislav Petkov <bp@suse.de>,
-	Prarit Bhargava <prarit@redhat.com>
-Subject: [PATCH 3/4] PCI: aer_inject: Log actual error causes
-Message-ID: <20160218135246.076beae6@endymion>
-In-Reply-To: <20160218130928.67dbf63b@endymion>
-References: <20160218130928.67dbf63b@endymion>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org
+Date: Tue, 02 Feb 2016 13:20:50 -0600
+Message-ID: <20160202192050.7887.34876.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160202191658.7887.28475.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160202191658.7887.28475.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The aer_inject driver is very quiet. In most cases, it merely returns
-an error code to user-space, leaving the user with little clue about
-the actual reason for the failure.
+Previously we had this:
 
-So, log error messages for 4 of the most frequent causes of failure:
-* Can't find the root port of the specified device.
-* Device doesn't support AER.
-* Root port doesn't support AER.
-* AER device not found.
-This gives the user a chance to understand why aer-inject failed.
+  if (wakeup)
+    ret = enable_irq_wake(...);
+  if (!wakeup || ret)
+    ...
 
-Based on a preliminary patch by Thomas Renninger.
+"ret" is only evaluated when "wakeup" is true, and it is always initialized
+in that case, but gcc isn't smart enough to figure that out and warns:
 
-Signed-off-by: Jean Delvare <jdelvare@suse.de>
-Cc: Borislav Petkov <bp@suse.de>
-Cc: Thomas Renninger <trenn@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
+  drivers/pci/pcie/pme.c:414:14: warning: 'ret' may be used uninitialized in this function [-Wmaybe-uninitialized]
+
+Restructure the code slightly to make it easier for gcc (and maybe for
+humans as well).
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pcie/aer/aer_inject.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/pci/pcie/pme.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
---- linux-4.5-rc4.orig/drivers/pci/pcie/aer/aer_inject.c	2016-02-18 12:50:56.927581343 +0100
-+++ linux-4.5-rc4/drivers/pci/pcie/aer/aer_inject.c	2016-02-18 12:53:18.432587496 +0100
-@@ -335,12 +335,14 @@ static int aer_inject(struct aer_error_i
- 		return -ENODEV;
- 	rpdev = pcie_find_root_port(dev);
- 	if (!rpdev) {
-+		dev_err(&dev->dev, "aer_inject: Root port not found\n");
- 		ret = -ENODEV;
- 		goto out_put;
- 	}
+diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+index 5695861..1ae4c73 100644
+--- a/drivers/pci/pcie/pme.c
++++ b/drivers/pci/pcie/pme.c
+@@ -396,7 +396,7 @@ static int pcie_pme_suspend(struct pcie_device *srv)
+ {
+ 	struct pcie_pme_service_data *data = get_service_data(srv);
+ 	struct pci_dev *port = srv->port;
+-	bool wakeup;
++	bool wakeup, wake_irq_enabled = false;
+ 	int ret;
  
- 	pos_cap_err = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
- 	if (!pos_cap_err) {
-+		dev_err(&dev->dev, "aer_inject: Device doesn't support AER\n");
- 		ret = -EPROTONOSUPPORT;
- 		goto out_put;
+ 	if (device_may_wakeup(&port->dev)) {
+@@ -409,9 +409,12 @@ static int pcie_pme_suspend(struct pcie_device *srv)
+ 	spin_lock_irq(&data->lock);
+ 	if (wakeup) {
+ 		ret = enable_irq_wake(srv->irq);
+-		data->suspend_level = PME_SUSPEND_WAKEUP;
++		if (ret == 0) {
++			data->suspend_level = PME_SUSPEND_WAKEUP;
++			wake_irq_enabled = true;
++		}
  	}
-@@ -351,6 +353,8 @@ static int aer_inject(struct aer_error_i
- 
- 	rp_pos_cap_err = pci_find_ext_capability(rpdev, PCI_EXT_CAP_ID_ERR);
- 	if (!rp_pos_cap_err) {
-+		dev_err(&rpdev->dev,
-+			"aer_inject: Root port doesn't support AER\n");
- 		ret = -EPROTONOSUPPORT;
- 		goto out_put;
- 	}
-@@ -466,8 +470,10 @@ static int aer_inject(struct aer_error_i
- 			goto out_put;
- 		}
- 		aer_irq(-1, edev);
--	} else
-+	} else {
-+		dev_err(&rpdev->dev, "aer_inject: AER device not found\n");
- 		ret = -ENODEV;
-+	}
- out_put:
- 	kfree(err_alloc);
- 	kfree(rperr_alloc);
+-	if (!wakeup || ret) {
++	if (!wake_irq_enabled) {
+ 		pcie_pme_interrupt_enable(port, false);
+ 		pcie_clear_root_pme_status(port);
+ 		data->suspend_level = PME_SUSPEND_NOIRQ;
 
--- 
-Jean Delvare
-SUSE L3 Support
