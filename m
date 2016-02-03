@@ -1,115 +1,216 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 18 Feb 2016 12:32:16 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	okaya@codeaurora.org, jiang.liu@linux.intel.com,
-	jchandra@broadcom.com, Stefano.Stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-Subject: Re: [PATCH V5 04/15] pci, acpi, ecam: Add flag to indicate whether
- ECAM region was hot added or not.
-Message-ID: <20160218123216.GB12626@red-moon>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
- <1455630825-27253-5-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0071.outbound.protection.outlook.com ([104.47.38.71]:55173
+	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753068AbcBCQJI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2016 11:09:08 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	Michal Simek <michals@xilinx.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"paul.burton@imgtec.com" <paul.burton@imgtec.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"wangyijing@huawei.com" <wangyijing@huawei.com>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH V2 5/5] Microblaze: Modifying microblaze PCI subsytem to
+ support  generic Xilinx  AXI PCIe Host Bridge IP driver
+Date: Wed, 3 Feb 2016 16:08:58 +0000
+Message-ID: <8520D5D51A55D047800579B0941471982587F05F@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
+ <1452620173-4905-6-git-send-email-bharatku@xilinx.com>
+ <8520D5D51A55D047800579B0941471982587F02E@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20160203155920.GB32546@localhost>
+In-Reply-To: <20160203155920.GB32546@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1455630825-27253-5-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 16, 2016 at 02:53:34PM +0100, Tomasz Nowicki wrote:
-> There are two ways we can get ECAM (aka MCFG) regions using ACPI,
-> first from MCFG static table and second from _CBA method. We cannot remove
-> static regions, however regions coming from _CBA should be removed while
-> removing bridge device.
+> You said you were going to do another revision, so I'm waiting for r3.
+Hi Bjorn, 
+Do you have any comments on this patch (5/5), I will address other patches comments along with this patch, if any, in v3.
+
+Bharat
 > 
-> In the light of above we need flag to mark hot added ECAM entries
-> and user to call pci_mmconfig_insert while adding regions from _CBA method.
-> Similarly pci_mmconfig_delete while removing hot added regions.
-
-"According to the PCI firmware specification, ACPI provides two standard
-mechanisms to retrieve ECAM memory mapped configuration regions (aka MCFG).
-For non-hot-removable bridges, ECAM bridge configurations are retrieved from
-the static MCFG table and have to be considered non-hot-removable for the
-current boot; hot-removable PCI host bridges configurations are retrieved
-through bridges _CBA methods.
-
-When ECAM regions are added through _CBA methods, they can be marked
-as hot-added so that, upon respective PCI host bridge hot-removal, they can
-be unmapped and deleted in that no longer needed.
-
-This patch adds a flag to MCFG regions allowing to mark them as hot-added,
-so that upon corresponding PCI bridge hot-removal they can be deleted since
-no longer needed."
-
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> Tested-by: Jeremy Linton <jeremy.linton@arm.com>
-> Tested-by: Duc Dang <dhdang@apm.com>
-> Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-> Tested-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/acpi/pci_mcfg.c  | 4 +++-
->  include/linux/pci-acpi.h | 1 +
->  2 files changed, 4 insertions(+), 1 deletion(-)
-
-It would be great if x86 people can have a look, we no longer
-associate a MCFG region to a bridge structure, the end result
-should be equivalent though, so:
-
-Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-
-> 
-> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> index 0467b00..3282f2a 100644
-> --- a/drivers/acpi/pci_mcfg.c
-> +++ b/drivers/acpi/pci_mcfg.c
-> @@ -74,6 +74,7 @@ static struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
->  	new->segment = segment;
->  	new->start_bus = start;
->  	new->end_bus = end;
-> +	new->hot_added = false;
->  
->  	res = &new->res;
->  	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
-> @@ -205,6 +206,7 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
->  	}
->  	rc = pci_mmconfig_map_resource(dev, cfg);
->  	if (!rc) {
-> +		cfg->hot_added = true;
->  		list_add_sorted(cfg);
->  		dev_info(dev, "MMCONFIG at %pR (base %#lx)\n",
->  				 &cfg->res, (unsigned long)addr);
-> @@ -228,7 +230,7 @@ int pci_mmconfig_delete(u16 seg, u8 start, u8 end)
->  	mutex_lock(&pci_mmcfg_lock);
->  	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
->  		if (cfg->segment == seg && cfg->start_bus == start &&
-> -		    cfg->end_bus == end) {
-> +		    cfg->end_bus == end && cfg->hot_added) {
->  			list_del_rcu(&cfg->list);
->  			synchronize_rcu();
->  			pci_mmconfig_unmap_resource(cfg);
-> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> index e9450ef..94d8f38 100644
-> --- a/include/linux/pci-acpi.h
-> +++ b/include/linux/pci-acpi.h
-> @@ -119,6 +119,7 @@ struct pci_mmcfg_region {
->  	u8 start_bus;
->  	u8 end_bus;
->  	char name[PCI_MMCFG_RESOURCE_NAME_LEN];
-> +	bool hot_added;
->  };
->  
->  extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
-> -- 
-> 1.9.1
-> 
+> > > This patch does required modifications to microblaze PCI subsystem,
+> > > to work with generic driver (drivers/pci/host/pcie-xilinx.c) on
+> > > Microblaze and Zynq.
+> > >
+> > > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> > > ---
+> > > Changes:
+> > > Modified pcibios_fixup_bus in pci-common.c, as per generic
+> architecuture.
+> > > Modified pcibios_align_resource in pci-common.c, as per generic
+> > > architecuture.
+> > > Modified pcibios_get_phb_of_node function in pci-common.c, to
+> remove
+> > > dependency on struct pci_controller.
+> > > Removed pci_domain_nr in pci-common.c, instead using generic code.
+> > > Added pcibios_add_device in pci-common.c, as per generic
+> architecuture.
+> > > Adding Kernel configuration in arch/microblaze as required for
+> > > generic PCI domains.
+> > > Added kernel configuration for driver to support Microblaze.
+> > > ---
+> > >  arch/microblaze/Kconfig          |  3 ++
+> > >  arch/microblaze/pci/pci-common.c | 61
+> > > +++++++++++++++--------------------
+> > > -----
+> > >  drivers/pci/host/Kconfig         |  2 +-
+> > >  3 files changed, 27 insertions(+), 39 deletions(-)
+> > >
+> > > diff --git a/arch/microblaze/Kconfig b/arch/microblaze/Kconfig index
+> > > 0bce820..c3702b9 100644
+> > > --- a/arch/microblaze/Kconfig
+> > > +++ b/arch/microblaze/Kconfig
+> > > @@ -271,6 +271,9 @@ config PCI
+> > >  config PCI_DOMAINS
+> > >  	def_bool PCI
+> > >
+> > > +config PCI_DOMAINS_GENERIC
+> > > +	def_bool PCI_DOMAINS
+> > > +
+> > >  config PCI_SYSCALL
+> > >  	def_bool PCI
+> > >
+> > > diff --git a/arch/microblaze/pci/pci-common.c
+> > > b/arch/microblaze/pci/pci- common.c index ae838ed..bc72856 100644
+> > > --- a/arch/microblaze/pci/pci-common.c
+> > > +++ b/arch/microblaze/pci/pci-common.c
+> > > @@ -123,17 +123,6 @@ unsigned long pci_address_to_pio(phys_addr_t
+> > > address)
+> > >  }
+> > >  EXPORT_SYMBOL_GPL(pci_address_to_pio);
+> > >
+> > > -/*
+> > > - * Return the domain number for this bus.
+> > > - */
+> > > -int pci_domain_nr(struct pci_bus *bus) -{
+> > > -	struct pci_controller *hose = pci_bus_to_host(bus);
+> > > -
+> > > -	return hose->global_number;
+> > > -}
+> > > -EXPORT_SYMBOL(pci_domain_nr);
+> > > -
+> > >  /* This routine is meant to be used early during boot, when the
+> > >   * PCI bus numbers have not yet been assigned, and you need to
+> > >   * issue PCI config cycles to an OF device.
+> > > @@ -863,26 +852,10 @@ void pcibios_setup_bus_devices(struct pci_bus
+> > > *bus)
+> > >
+> > >  void pcibios_fixup_bus(struct pci_bus *bus)  {
+> > > -	/* When called from the generic PCI probe, read PCI<->PCI bridge
+> > > -	 * bases. This is -not- called when generating the PCI tree from
+> > > -	 * the OF device-tree.
+> > > -	 */
+> > > -	if (bus->self != NULL)
+> > > -		pci_read_bridge_bases(bus);
+> > > -
+> > > -	/* Now fixup the bus bus */
+> > > -	pcibios_setup_bus_self(bus);
+> > > -
+> > > -	/* Now fixup devices on that bus */
+> > > -	pcibios_setup_bus_devices(bus);
+> > > +	/* nothing to do */
+> > >  }
+> > >  EXPORT_SYMBOL(pcibios_fixup_bus);
+> > >
+> > > -static int skip_isa_ioresource_align(struct pci_dev *dev) -{
+> > > -	return 0;
+> > > -}
+> > > -
+> > >  /*
+> > >   * We need to avoid collisions with `mirrored' VGA ports
+> > >   * and other strange ISA hardware, so we always want the @@ -899,20
+> > > +872,20 @@ static int skip_isa_ioresource_align(struct pci_dev
+> > > *dev)
+> > >  resource_size_t pcibios_align_resource(void *data, const struct
+> > > resource *res,
+> > >  				resource_size_t size, resource_size_t align)  {
+> > > -	struct pci_dev *dev = data;
+> > >  	resource_size_t start = res->start;
+> > >
+> > > -	if (res->flags & IORESOURCE_IO) {
+> > > -		if (skip_isa_ioresource_align(dev))
+> > > -			return start;
+> > > -		if (start & 0x300)
+> > > -			start = (start + 0x3ff) & ~0x3ff;
+> > > -	}
+> > > -
+> > >  	return start;
+> > >  }
+> > >  EXPORT_SYMBOL(pcibios_align_resource);
+> > >
+> > > +int pcibios_add_device(struct pci_dev *dev) {
+> > > +	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> > > +
+> > > +	return 0;
+> > > +}
+> > > +EXPORT_SYMBOL(pcibios_add_device);
+> > > +
+> > >  /*
+> > >   * Reparent resource children of pr that conflict with res
+> > >   * under res, and make res replace those children.
+> > > @@ -1335,9 +1308,21 @@ static void
+> > > pcibios_setup_phb_resources(struct
+> > > pci_controller *hose,
+> > >
+> > >  struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)  {
+> > > -	struct pci_controller *hose = bus->sysdata;
+> > > +	struct device_node *np;
+> > > +
+> > > +	for_each_node_by_type(np, "pci") {
+> > > +		const void *prop;
+> > > +		unsigned int bus_min;
+> > > +
+> > > +		prop = of_get_property(np, "bus-range", NULL);
+> > > +		if (!prop)
+> > > +			continue;
+> > > +		bus_min = be32_to_cpup(prop);
+> > > +		if (bus->number == bus_min)
+> > > +			return np;
+> > > +	}
+> > >
+> > > -	return of_node_get(hose->dn);
+> > > +	return NULL;
+> > >  }
+> > >
+> > >  static void pcibios_scan_phb(struct pci_controller *hose) diff
+> > > --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig index
+> > > d5e58ba..7c56c2e 100644
+> > > --- a/drivers/pci/host/Kconfig
+> > > +++ b/drivers/pci/host/Kconfig
+> > > @@ -79,7 +79,7 @@ config PCI_KEYSTONE
+> > >
+> > >  config PCIE_XILINX
+> > >  	bool "Xilinx AXI PCIe host bridge support"
+> > > -	depends on ARCH_ZYNQ
+> > > +	depends on ARCH_ZYNQ || MICROBLAZE
+> > >  	help
+> > >  	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+> > >  	  Host Bridge driver.
+> > > --
+> > > 2.1.1
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci"
+> > in the body of a message to majordomo@vger.kernel.org More
+> majordomo
+> > info at  http://vger.kernel.org/majordomo-info.html
