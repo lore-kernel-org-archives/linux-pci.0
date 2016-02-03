@@ -1,274 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47798 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:51618 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755859AbcBWAq2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Feb 2016 19:46:28 -0500
-Subject: [PATCH v4 00/11] PCI VPD access fixes
-To: Hannes Reinecke <hare@suse.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Babu Moger <babu.moger@oracle.com>,
-	Alexander Duyck <alexander.duyck@gmail.com>
-Date: Mon, 22 Feb 2016 18:46:23 -0600
-Message-ID: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	id S1755709AbcBCQcN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 3 Feb 2016 11:32:13 -0500
+Date: Wed, 3 Feb 2016 10:32:07 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: bhelgaas@google.com, michals@xilinx.com, lorenzo.pieralisi@arm.com,
+	paul.burton@imgtec.com, yinghai@kernel.org, wangyijing@huawei.com,
+	robh@kernel.org, russell.joyce@york.ac.uk, sorenb@xilinx.com,
+	jiang.liu@linux.intel.com, arnd@arndb.de, pawel.moll@arm.com,
+	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
+	galak@codeaurora.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH V2 5/5] Microblaze: Modifying microblaze PCI subsytem to
+ support  generic Xilinx  AXI PCIe Host Bridge IP driver
+Message-ID: <20160203163207.GC32546@localhost>
+References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
+ <1452620173-4905-6-git-send-email-bharatku@xilinx.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1452620173-4905-6-git-send-email-bharatku@xilinx.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Hannes,
+[+cc Ben, pcibios_get_phb_of_node() question]
 
-This is a revision of your v3 series:
-http://lkml.kernel.org/r/1455525722-122040-1-git-send-email-hare@suse.de
+On Tue, Jan 12, 2016 at 11:06:13PM +0530, Bharat Kumar Gogada wrote:
+> This patch does required modifications to microblaze PCI subsystem, to
+> work with generic driver (drivers/pci/host/pcie-xilinx.c) on Microblaze
+> and Zynq.
+> 
+> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+>...
 
-Here's the description from your v3 posting:
+>  resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>  				resource_size_t size, resource_size_t align)
+>  {
+> -	struct pci_dev *dev = data;
+>  	resource_size_t start = res->start;
+>  
+> -	if (res->flags & IORESOURCE_IO) {
+> -		if (skip_isa_ioresource_align(dev))
+> -			return start;
+> -		if (start & 0x300)
+> -			start = (start + 0x3ff) & ~0x3ff;
+> -	}
+> -
+>  	return start;
 
-  the current PCI VPD page access assumes that the entire possible VPD
-  data is readable. However, the spec only guarantees a VPD data up to
-  the 'end' marker, with everything beyond that being undefined.
-  This causes a system lockup on certain devices.
+"return res->start;" is sufficient; no need for a temporary variable.
 
-  With this patch we always set the VPD sysfs attribute size to '0', and
-  calculate the available VPD size on the first access.
-  If no valid data can be read an I/O error is returned.
+>  }
+>  EXPORT_SYMBOL(pcibios_align_resource);
+>  
+> +int pcibios_add_device(struct pci_dev *dev)
+> +{
+> +	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL(pcibios_add_device);
+> +
+>  /*
+>   * Reparent resource children of pr that conflict with res
+>   * under res, and make res replace those children.
+> @@ -1335,9 +1308,21 @@ static void pcibios_setup_phb_resources(struct pci_controller *hose,
+>  
+>  struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
+>  {
+> -	struct pci_controller *hose = bus->sysdata;
+> +	struct device_node *np;
+> +
+> +	for_each_node_by_type(np, "pci") {
+> +		const void *prop;
+> +		unsigned int bus_min;
+> +
+> +		prop = of_get_property(np, "bus-range", NULL);
+> +		if (!prop)
+> +			continue;
+> +		bus_min = be32_to_cpup(prop);
+> +		if (bus->number == bus_min)
+> +			return np;
+> +	}
+>  
+> -	return of_node_get(hose->dn);
+> +	return NULL;
 
-  I've also included the patch from Babu to blacklists devices which
-  are known to lockup when accessing the VPD data.
+Hmmm.  The old microblaze code ("return of_node_get(hose->dn);") is
+basically the same as the mips and powerpc versions.  The new code is
+basically the same as the x86 version.
 
-I tweaked a few things, mostly whitespace and printk changes.  The
-appended diff shows the changes I made.
+I like the generic weak version in drivers/pci/of.c because it doesn't
+use any arch-specific data, and it looks like if we just set the
+struct device.of_node members correctly, everything should Just Work.
 
-I added some patches on top to clean up and simplify the VPD code.
-These shouldn't make any functional difference unless I've made a
-mistake.  I've built these, but I don't really have a way to test
-them.
+But Ben added both the generic and the x86 versions the same day, so
+there must be some complication:
 
-I am still waiting for bugzilla links from Babu for the blacklist
-patch.
+  98d9f30c820d ("pci/of: Match PCI devices to OF nodes dynamically")
+  3d5fe5a65af9 ("x86/devicetree: Use generic PCI <-> OF matching")
+
+So I guess my question is, why do we need a microblaze-specific
+version at all?
 
 Bjorn
-
----
-
-Babu Moger (1):
-      FIXME need bugzilla link
-
-Bjorn Helgaas (7):
-      PCI: Use bitfield instead of bool for struct pci_vpd_pci22.busy
-      PCI: Move pci_read_vpd() and pci_write_vpd() close to other VPD code
-      PCI: Move pci_vpd_release() from header file to pci/access.c
-      PCI: Remove struct pci_vpd_ops.release function pointer
-      PCI: Rename VPD symbols to remove unnecessary "pci22"
-      PCI: Fold struct pci_vpd_pci22 into struct pci_vpd
-      PCI: Sleep rather than busy-wait for VPD access completion
-
-Hannes Reinecke (3):
-      PCI: Update VPD definitions
-      PCI: Allow access to VPD attributes with size 0
-      PCI: Determine actual VPD size on first access
-
-
- drivers/pci/access.c    |  240 ++++++++++++++++++++++++++++++-----------------
- drivers/pci/pci-sysfs.c |   22 +++-
- drivers/pci/pci.h       |   16 ++-
- drivers/pci/probe.c     |    2 
- drivers/pci/quirks.c    |   29 ++++++
- include/linux/pci.h     |   27 +++++
- 6 files changed, 231 insertions(+), 105 deletions(-)
-
-
-Below are the changes I made to your v3 series:
-
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 8b6f5a2..4850f06 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -283,9 +283,9 @@ struct pci_vpd_pci22 {
- 	struct pci_vpd base;
- 	struct mutex lock;
- 	u16	flag;
-+	u8	cap;
- 	u8	busy:1;
- 	u8	valid:1;
--	u8	cap;
- };
- 
- /**
-@@ -311,9 +311,9 @@ static size_t pci_vpd_pci22_size(struct pci_dev *dev, size_t old_size)
- 			    (tag == PCI_VPD_LTIN_RW_DATA)) {
- 				if (pci_read_vpd(dev, off+1, 2,
- 						 &header[1]) != 2) {
--					dev_dbg(&dev->dev,
--						"invalid large VPD tag %02x size at offset %zu",
--						tag, off + 1);
-+					dev_warn(&dev->dev,
-+						 "invalid large VPD tag %02x size at offset %zu",
-+						 tag, off + 1);
- 					return 0;
- 				}
- 				off += PCI_VPD_LRDT_TAG_SIZE +
-@@ -325,15 +325,17 @@ static size_t pci_vpd_pci22_size(struct pci_dev *dev, size_t old_size)
- 				pci_vpd_srdt_size(header);
- 			tag = pci_vpd_srdt_tag(header);
- 		}
-+
- 		if (tag == PCI_VPD_STIN_END)	/* End tag descriptor */
- 			return off;
-+
- 		if ((tag != PCI_VPD_LTIN_ID_STRING) &&
- 		    (tag != PCI_VPD_LTIN_RO_DATA) &&
- 		    (tag != PCI_VPD_LTIN_RW_DATA)) {
--			dev_dbg(&dev->dev,
--				"invalid %s VPD tag %02x at offset %zu",
--				(header[0] & PCI_VPD_LRDT) ? "large" : "short",
--				tag, off);
-+			dev_warn(&dev->dev,
-+				 "invalid %s VPD tag %02x at offset %zu",
-+				 (header[0] & PCI_VPD_LRDT) ? "large" : "short",
-+				 tag, off);
- 			return 0;
- 		}
- 	}
-@@ -366,7 +368,7 @@ static int pci_vpd_pci22_wait(struct pci_dev *dev)
- 			return ret;
- 
- 		if ((status & PCI_VPD_ADDR_F) == vpd->flag) {
--			vpd->busy = false;
-+			vpd->busy = 0;
- 			return 0;
- 		}
- 
-@@ -393,16 +395,18 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
- 	if (pos < 0)
- 		return -EINVAL;
- 
--	if (!vpd->valid && vpd->base.len > 0) {
--		vpd->valid = true;
-+	if (!vpd->valid) {
-+		vpd->valid = 1;
- 		vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
- 	}
-+
- 	if (vpd->base.len == 0)
- 		return -EIO;
- 
-+	if (pos >= vpd->base.len)
-+		return 0;
-+
- 	if (end > vpd->base.len) {
--		if (pos > vpd->base.len)
--			return 0;
- 		end = vpd->base.len;
- 		count = end - pos;
- 	}
-@@ -422,7 +426,7 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
- 						 pos & ~3);
- 		if (ret < 0)
- 			break;
--		vpd->busy = true;
-+		vpd->busy = 1;
- 		vpd->flag = PCI_VPD_ADDR_F;
- 		ret = pci_vpd_pci22_wait(dev);
- 		if (ret < 0)
-@@ -459,10 +463,11 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
- 	if (pos < 0 || (pos & 3) || (count & 3))
- 		return -EINVAL;
- 
--	if (!vpd->valid && vpd->base.len > 0) {
--		vpd->valid = true;
-+	if (!vpd->valid) {
-+		vpd->valid = 1;
- 		vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
- 	}
-+
- 	if (vpd->base.len == 0)
- 		return -EIO;
- 
-@@ -492,7 +497,7 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
- 		if (ret < 0)
- 			break;
- 
--		vpd->busy = true;
-+		vpd->busy = 1;
- 		vpd->flag = 0;
- 		ret = pci_vpd_pci22_wait(dev);
- 		if (ret < 0)
-@@ -572,8 +577,8 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
- 		vpd->base.ops = &pci_vpd_pci22_ops;
- 	mutex_init(&vpd->lock);
- 	vpd->cap = cap;
--	vpd->busy = false;
--	vpd->valid = false;
-+	vpd->busy = 0;
-+	vpd->valid = 0;
- 	dev->vpd = &vpd->base;
- 	return 0;
- }
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index df1178f..626c3b2 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2135,45 +2135,31 @@ static void quirk_via_cx700_pci_parking_caching(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, 0x324e, quirk_via_cx700_pci_parking_caching);
- 
- /*
-- * A read/write to sysfs entry ('/sys/bus/pci/devices/<id>/vpd')
-- * will dump 32k of data. The default length is set as 32768.
-- * Reading a full 32k will cause an access beyond the VPD end tag.
-- * The system behaviour at that point is mostly unpredictable.
-- * Apparently, some vendors have not implemented this VPD headers properly.
-- * Adding a generic function disable vpd data for these buggy adapters
-- * Add the DECLARE_PCI_FIXUP_FINAL line below with the specific with
-- * vendor and device of interest to use this quirk.
-+ * If a device follows the VPD format spec, the PCI core will not read or
-+ * write past the VPD End Tag.  But some vendors do not follow the VPD
-+ * format spec, so we can't tell how much data is safe to access.  Devices
-+ * may behave unpredictably if we access too much.  Blacklist these devices
-+ * so we don't touch VPD at all.
-  */
- static void quirk_blacklist_vpd(struct pci_dev *dev)
- {
- 	if (dev->vpd) {
- 		dev->vpd->len = 0;
--		dev_warn(&dev->dev, "PCI vpd access has been disabled due to firmware bug\n");
-+		dev_warn(&dev->dev, FW_BUG "VPD access disabled\n");
- 	}
- }
- 
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060,
--		quirk_blacklist_vpd);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c,
--		quirk_blacklist_vpd);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413,
--		quirk_blacklist_vpd);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078,
--		quirk_blacklist_vpd);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079,
--		quirk_blacklist_vpd);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073,
--		quirk_blacklist_vpd);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071,
--		quirk_blacklist_vpd);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b,
--		quirk_blacklist_vpd);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f,
--		quirk_blacklist_vpd);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d,
--		quirk_blacklist_vpd);
--DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f,
--		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060, quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c, quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413, quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078, quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079, quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073, quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071, quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b, quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f, quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d, quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f, quirk_blacklist_vpd);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID,
- 		quirk_blacklist_vpd);
- 
