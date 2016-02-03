@@ -1,84 +1,138 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:46005 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964975AbcBQDp6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:45:58 -0500
-Received: from localhost
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 17 Feb 2016 13:45:56 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v8 18/45] powerpc/powernv: Increase PE# capacity
-Date: Wed, 17 Feb 2016 14:44:01 +1100
-Message-Id: <1455680668-23298-19-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v7 2/2] add new platform driver for PCI RC
+To: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>
+References: <cover.1454349430.git.jpinto@synopsys.com>
+ <10b29adcdb0a31eb8f8071b271da267e44ad8a04.1454349430.git.jpinto@synopsys.com>
+ <8223655.W63T0XOVm1@wuerfel> <20160203180514.GA10879@localhost>
+CC: Joao Pinto <Joao.Pinto@synopsys.com>, <Vineet.Gupta1@synopsys.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-snps-arc@lists.infradead.org>,
+	<CARLOS.PALMINHA@synopsys.com>, <Alexey.Brodkin@synopsys.com>,
+	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <56B242F0.6040704@synopsys.com>
+Date: Wed, 3 Feb 2016 18:12:00 +0000
+MIME-Version: 1.0
+In-Reply-To: <20160203180514.GA10879@localhost>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Each PHB maintains an array helping to translate 2-bytes Request
-ID (RID) to PE# with the assumption that PE# takes one byte, meaning
-that we can't have more than 256 PEs. However, pci_dn->pe_number
-already had 4-bytes for the PE#.
 
-This extends the PE# capacity for every PHB. After that, the PE number
-is represented by 4-bytes value. Then we can reuse IODA_INVALID_PE to
-check the PE# in phb->pe_rmap[] is valid or not.
+Hi Bjorn,
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Reviewed-by: Daniel Axtens <dja@axtens.net>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 6 +++++-
- arch/powerpc/platforms/powernv/pci.h      | 7 ++-----
- 2 files changed, 7 insertions(+), 6 deletions(-)
+Are these tasks enough?
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 59782fba..7800897 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -757,7 +757,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
- 
- 	/* Clear the reverse map */
- 	for (rid = pe->rid; rid < rid_end; rid++)
--		phb->ioda.pe_rmap[rid] = 0;
-+		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
- 
- 	/* Release from all parents PELT-V */
- 	while (parent) {
-@@ -3387,6 +3387,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	if (prop32)
- 		phb->ioda.reserved_pe_idx = be32_to_cpup(prop32);
- 
-+	/* Invalidate RID to PE# mapping */
-+	for (i = 0; i < ARRAY_SIZE(phb->ioda.pe_rmap); ++i)
-+		phb->ioda.pe_rmap[i] = IODA_INVALID_PE;
-+
- 	/* Parse 64-bit MMIO range */
- 	pnv_ioda_parse_m64_window(phb);
- 
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 350e630..928cf81 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -160,11 +160,8 @@ struct pnv_phb {
- 		struct list_head	pe_list;
- 		struct mutex            pe_list_mutex;
- 
--		/* Reverse map of PEs, will have to extend if
--		 * we are to support more than 256 PEs, indexed
--		 * bus { bus, devfn }
--		 */
--		unsigned char		pe_rmap[0x10000];
-+		/* Reverse map of PEs, indexed by {bus, devfn} */
-+		int			pe_rmap[0x10000];
- 
- 		/* TCE cache invalidate registers (physical and
- 		 * remapped)
--- 
-2.1.0
+- replace mdelay() for msleep()
+- remove synopsys_pcie_irq_handler()
+- replace "snps,pcie-synopsys" for "snps,pcie-synopsys-ipk"?
+- rename the driver to pcie-synopsys-ipk?
+- update the devicetree documentation referring that the ranges also include the
+config space
 
+Joao
+
+On 2/3/2016 6:05 PM, Bjorn Helgaas wrote:
+> Hi Joao & Arnd,
+> 
+> On Tue, Feb 02, 2016 at 09:25:25PM +0100, Arnd Bergmann wrote:
+>> On Monday 01 February 2016 18:07:45 Joao Pinto wrote:
+>>> This patch adds a new driver that will be the reference platform driver
+>>> for all PCI RC IP Protoyping Kits based on ARC SDP.
+>>> This patch is composed by:
+>>>
+>>> -MAINTAINERS file was updated to include the new driver
+>>> -Documentation/devicetree/bindings/pci was updated to include the new
+>>> driver documentation
+>>> -New driver called pcie-synopsys
+>>>
+>>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+>>
+>> I must have completely missed all the earlier submissions and just happened
+>> to see this one now that it was merged.
+>>
+>> I have a couple of comments, maybe you can send a follow up patch to address
+>> them:
+> 
+> These seem pretty easy to address, so I pulled these patches out of
+> for-linus temporarily while we fix them.
+> 
+> Joao, you can just fix the mdelay() in your driver; don't worry about 
+> fixing other drivers with the same problem or consolidating them.
+> 
+> Bjorn
+> 
+>>> +----------------------------------
+>>> +
+>>> +This is the reference platform driver to be used in the Synopsys PCI Root
+>>> +Complex IP Prototyping Kit.
+>>> +
+>>> +Required properties:
+>>> +- compatible: set to "snps,pcie-synopsys";
+>>
+>> Please also include the exact version of the designware PCIe part that
+>> is used in here, such as "snps,dw-pcie-1.234". I'm sure you can find
+>> out the version.
+>>
+>> "snps,pcie-synopsys" by itself is about the worst possible compatible
+>> string because it says nothing about the specific hardware. Half the
+>> machines we support all have a designware PCIe host that was made
+>> by synopsys. Please use the name of the SoC for the most specific
+>> string.
+>>
+>>> +- reg: base address and length of the pcie controller registers.
+>>> +- #address-cells: set to <3>
+>>> +- #size-cells: set to <2>
+>>> +- device_type: set to "pci"
+>>> +- ranges: ranges for the PCI memory and I/O regions.
+>>> +- interrupts: one interrupt source for MSI interrupts, followed by interrupt
+>>> +	source for hardware related interrupts.
+>>> +- #interrupt-cells: set to <1>
+>>> +- num-lanes: set to <1>;
+>>> +
+>>> +Example configuration:
+>>> +
+>>> +	pcie: pcie@0xdffff000 {
+>>> +		compatible = "snps,pcie-synopsys";
+>>> +		reg = <0xdffff000 0x1000>;
+>>> +		#address-cells = <3>;
+>>> +		#size-cells = <2>;
+>>> +		device_type = "pci";
+>>> +		ranges = <0x00000800 0 0xd0000000 0xd0000000 0 0x00002000>,
+>>
+>> This line looks misplaced here and does not match the documentation. It's
+>> probably a leftover from an earlier version that had the config space
+>> in the ranges, so you need to remove that.
+>>
+>>> +/* This handler was created for future work */
+>>> +static irqreturn_t synopsys_pcie_irq_handler(int irq, void *arg)
+>>> +{
+>>> +	return IRQ_NONE;
+>>> +}
+>>
+>> It's not harmful, but we generally don't add code "for future work",
+>> better remove it for now.
+>>
+>>> +static void synopsys_pcie_establish_link(struct pcie_port *pp)
+>>> +{
+>>> +	int retries = 0;
+>>> +
+>>> +	/* check if the link is up or not */
+>>> +	for (retries = 0; retries < 10; retries++) {
+>>> +		if (dw_pcie_link_up(pp)) {
+>>> +			dev_info(pp->dev, "Link up\n");
+>>> +			return;
+>>> +		}
+>>> +		mdelay(100);
+>>> +	}
+>>> +}
+>>
+>> That mdelay() needs to be an msleep(). You should never waste
+>> a whole second worth of CPU time in a driver.
+>>
+>> 	Arnd
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
