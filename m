@@ -1,86 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:35771 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934526AbcBDR3A (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 12:29:00 -0500
-Received: by mail-wm0-f53.google.com with SMTP id r129so222642641wmr.0
-        for <linux-pci@vger.kernel.org>; Thu, 04 Feb 2016 09:29:00 -0800 (PST)
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V4 03/23] pci, acpi, mcfg: Provide generic implementation of MCFG code initialization.
-Date: Thu,  4 Feb 2016 18:28:41 +0100
-Message-Id: <1454606941-9523-4-git-send-email-tn@semihalf.com>
-In-Reply-To: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
+Received: from mail-db5eur01on0070.outbound.protection.outlook.com ([104.47.2.70]:1728
+	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932217AbcBCCZc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 2 Feb 2016 21:25:32 -0500
+From: Minghuan Lian <minghuan.lian@nxp.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Roy Zang <roy.zang@nxp.com>,
+	Stuart Yoder <stuart.yoder@nxp.com>,
+	Yang-Leo Li <leoyang.li@nxp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mingkai Hu <mingkai.hu@nxp.com>
+Subject: RE: [PATCH 1/4] ARM: dts: ls1021a: add PCIe dts node
+Date: Wed, 3 Feb 2016 02:11:06 +0000
+Message-ID: <VI1PR04MB16159CDCE9C134363846F4CAE8D00@VI1PR04MB1615.eurprd04.prod.outlook.com>
+References: <1454401807-28751-1-git-send-email-Minghuan.Lian@nxp.com>
+ <VI1PR04MB1615DCF54369ED2E01234E64E8DF0@VI1PR04MB1615.eurprd04.prod.outlook.com>
+ <6117401.iajrHOL4Mn@wuerfel>
+In-Reply-To: <6117401.iajrHOL4Mn@wuerfel>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-First function acpi_mcfg_check_entry() does not apply any quirks by default.
-
-Last two functions are required by ACPI subsystem to make PCI config
-space accessible. Generic code assume to do nothing for early init call but
-late init call does as follow:
-- parse MCFG table and add regions to ECAM resource list
-- map regions
-- add regions to iomem_resource
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Tested-by: Jeremy Linton <jeremy.linton@arm.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/acpi/mcfg.c | 26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
-
-diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
-index 5ecef20..fad9917 100644
---- a/drivers/acpi/mcfg.c
-+++ b/drivers/acpi/mcfg.c
-@@ -57,3 +57,29 @@ int __init acpi_parse_mcfg(struct acpi_table_header *header)
- 
- 	return 0;
- }
-+
-+int __init __weak acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
-+					struct acpi_mcfg_allocation *cfg)
-+{
-+	return 0;
-+}
-+
-+void __init __weak pci_mmcfg_early_init(void)
-+{
-+
-+}
-+
-+void __init __weak pci_mmcfg_late_init(void)
-+{
-+	struct pci_mmcfg_region *cfg;
-+
-+	acpi_table_parse(ACPI_SIG_MCFG, acpi_parse_mcfg);
-+
-+	if (list_empty(&pci_mmcfg_list))
-+		return;
-+	if (!pci_mmcfg_arch_init())
-+		free_all_mmcfg();
-+
-+	list_for_each_entry(cfg, &pci_mmcfg_list, list)
-+		insert_resource(&iomem_resource, &cfg->res);
-+}
--- 
-1.9.1
-
+SGkgQXJuZCwNCg0KSSBhbSBzb3JyeS4NCk90aGVyIHBhdGNoZXMgYXJlIGZvciBNU0kgdGVzdCwg
+YW5kIG5vdCBuZWVkIHRvIGJlIHN1bW1pdGVkLg0KVGhlcmUgaXMgb25seSBvbmUgcGF0Y2gsIHNo
+b3VsZCBiZSBbMS8xXSBub3QgWzEvNF0uICBJIGZvcmdvdCB0byByZW1vdmUgIjEvNCIgOigNClNo
+b3VsZCBJIHJlLXN1bW1pdCB0byBmaXggaXQ/DQoNClRoYW5rcywNCk1pbmdodWFuDQoNCg0KPiAt
+LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBcm5kIEJlcmdtYW5uIFttYWlsdG86
+YXJuZEBhcm5kYi5kZV0NCj4gU2VudDogVHVlc2RheSwgRmVicnVhcnkgMDIsIDIwMTYgNTozMiBQ
+TQ0KPiBUbzogbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnDQo+IENjOiBNaW5n
+aHVhbiBMaWFuIDxtaW5naHVhbi5saWFuQG54cC5jb20+OyBsaW51eC1wY2lAdmdlci5rZXJuZWwu
+b3JnOw0KPiBTaGF3biBHdW8gPHNoYXduZ3VvQGtlcm5lbC5vcmc+OyBTYXNjaGEgSGF1ZXIgPGtl
+cm5lbEBwZW5ndXRyb25peC5kZT47DQo+IFJveSBaYW5nIDxyb3kuemFuZ0BueHAuY29tPjsgU3R1
+YXJ0IFlvZGVyIDxzdHVhcnQueW9kZXJAbnhwLmNvbT47DQo+IFlhbmctTGVvIExpIDxsZW95YW5n
+LmxpQG54cC5jb20+OyBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPjsNCj4gTWlu
+Z2thaSBIdSA8bWluZ2thaS5odUBueHAuY29tPg0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDEvNF0g
+QVJNOiBkdHM6IGxzMTAyMWE6IGFkZCBQQ0llIGR0cyBub2RlDQo+IA0KPiBPbiBUdWVzZGF5IDAy
+IEZlYnJ1YXJ5IDIwMTYgMDg6NDg6MzYgTWluZ2h1YW4gTGlhbiB3cm90ZToNCj4gPiBIaSBTaGF3
+biwNCj4gPg0KPiA+IENvdWxkIHlvdSBwbGVhc2UgaGVscCB0byByZXZpZXcgdGhlIHBhdGNoPyAg
+VGhhbmsgeW91IHZlcnkgbXVjaC4NCj4gPiBUaGVyZSBpcyBvbmx5IG9uZSBwYXRjaCBub3QgYSBz
+ZXQgb2YgcGF0Y2gsIHBsZWFzZSBpZ25vcmUgWzEvNF0NCj4gPg0KPiA+IEFybmQgaGFzIGdpdmVu
+IGEgYWNrLg0KPiANCj4gRm9yIHNvbWUgcmVhc29uLCBJIGRpZCBub3QgZ2V0IHRoZSBvdGhlciB0
+aHJlZSBwYXRjaGVzIHRob3VnaCwgSSB3YXMgZ29pbmcgdG8NCj4gbG9vayBhdCB0aGVtLCBidXQg
+SSBjYW4ndCB0ZWxsIGlmIHRoaXMgd2FzIGEgc2VyaWVzIG9mIHBhdGNoZXMgZG9pbmcgUENJIHN1
+cHBvcnQsIG9yDQo+IHBhdGNoZXMgZG9pbmcgb3RoZXIgZHRzIGNoYW5nZXMuDQo+IA0KPiBJZiB5
+b3UgaGF2ZSBhZGRpdGlvbmFsIHBhdGNoZXMgZm9yIHRoZSBQQ0kgZHJpdmVyLCBsZXQncyByZXZp
+ZXcgaXQgYWxsIHRvZ2V0aGVyIGZpcnN0Lg0KPiANCj4gCUFybmQNCg==
