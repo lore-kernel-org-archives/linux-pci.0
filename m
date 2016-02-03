@@ -1,41 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f175.google.com ([209.85.161.175]:35837 "EHLO
-	mail-yw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423688AbcBQPAw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Feb 2016 10:00:52 -0500
-MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-44-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com> <1455680668-23298-44-git-send-email-gwshan@linux.vnet.ibm.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Wed, 17 Feb 2016 09:00:31 -0600
-Message-ID: <CAL_JsqLLrp+ZxkhEp9Whg=jhm4-Cq4-GpRVerj4h6igzRQXiEQ@mail.gmail.com>
-Subject: Re: [PATCH v8 43/45] drivers/of: Specify parent node in of_fdt_unflatten_tree()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
-	dja@axtens.net, Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Jyri Sarha <jsarha@ti.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:37421 "EHLO
+	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933801AbcBCV3S convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2016 16:29:18 -0500
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
+Subject: Re: [PATCH] drivers:pci Add pcie/Kconfig to pci/Kconfig
+From: sasa bogicevic <brutallesale@gmail.com>
+In-Reply-To: <20160119033153.GE14080@localhost>
+Date: Wed, 3 Feb 2016 22:29:15 +0100
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <41CC00C3-DE29-4D70-A997-C4AEE0154CF7@gmail.com>
+References: <1452608545-32242-1-git-send-email-brutallesale@gmail.com> <20160119033153.GE14080@localhost>
+To: Bjorn Helgaas <helgaas@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 16, 2016 at 9:44 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
-> This adds one more argument to of_fdt_unflatten_tree() to specify
-> the parent node of the FDT blob that is going to be unflattened.
-> In the result, the function can be used to unflatten FDT blob that
-> represents device sub-tree in PowerNV PCI hotplug driver.
->
-> Cc: Jyri Sarha <jsarha@ti.com>
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->  drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c |  2 +-
->  drivers/of/fdt.c                             | 14 ++++++++++----
->  drivers/of/unittest.c                        |  2 +-
->  include/linux/of_fdt.h                       |  1 +
->  4 files changed, 13 insertions(+), 6 deletions(-)
+Hi Bjorn,
+I just sent a patch regarding pcie Kconfig in arch/ . I just wanted to ask how did you get these errors you pasted:
 
-Acked-by: Rob Herring <robh@kernel.org>
+>  drivers/pci/pcie/Kconfig:61:warning: choice value used outside its choice group
+>  drivers/pci/pcie/Kconfig:67:warning: choice value used outside its choice group
+>  drivers/pci/pcie/Kconfig:74:warning: choice value used outside its choice group
+
+
+Is there a tool for this ? I just wanted to be better at debugging kernel compilation process.
+
+Thanks, Sasa
+{
+	name: Bogicevic Sasa
+	phone: +381606006200
+}
+
+
+
+> On Jan 19, 2016, at 04:31, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> 
+> Hi Bogicevic,
+> 
+> On Tue, Jan 12, 2016 at 06:22:25AM -0800, Bogicevic Sasa wrote:
+>> Architectures currently have to include both
+>> drivers/pci/Kconfig and drivers/pci/pcie/Kconfig.
+>> They should include only drivers/pci/Kconfig, and
+>> that should handle PCIe as well.
+>> 
+>> Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
+>> ---
+>> drivers/pci/Kconfig | 2 ++
+>> 1 file changed, 2 insertions(+)
+>> 
+>> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+>> index 73de4ef..005dd7d 100644
+>> --- a/drivers/pci/Kconfig
+>> +++ b/drivers/pci/Kconfig
+>> @@ -119,3 +119,5 @@ config PCI_LABEL
+>> 	select NLS
+>> 
+>> source "drivers/pci/host/Kconfig"
+>> +
+>> +source "drivers/pci/pcie/Kconfig"
+> 
+> This project is something I'd like to get done, but it requires a
+> little more work.  If it were this simple, I would have done it long
+> ago :)
+> 
+> For one thing, we need to update all the Kconfig files that already
+> include drivers/pci/pcie/Kconfig at the same time.  On x86,
+> arch/x86/Kconfig already includes both:
+> 
+>  source "drivers/pci/pcie/Kconfig"
+>  source "drivers/pci/Kconfig"
+> 
+> With your patch applied, I see these new warnings:
+> 
+>  05:42:09 ~/linux (wip/bogicevic-kconfig)$ make menuconfig
+>  ...
+>  scripts/kconfig/mconf  Kconfig
+>  drivers/pci/pcie/Kconfig:61:warning: choice value used outside its choice group
+>  drivers/pci/pcie/Kconfig:67:warning: choice value used outside its choice group
+>  drivers/pci/pcie/Kconfig:74:warning: choice value used outside its choice group
+> 
+> I see that you did verify that removing the source line from
+> arch/x86/Kconfig does the right thing.  We need to put all the related
+> changes in a single patch so it is self-contained.  The tree should be
+> buildable and functional at every stage.
+> 
+> Bjorn
+
