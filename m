@@ -1,49 +1,116 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:40321 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755302AbcBEQBl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Feb 2016 11:01:41 -0500
-Subject: Re: dra7xx driver status
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <20160204204534.GC7031@localhost> <56B421E1.9090005@ti.com>
- <20160205155215.GA29306@localhost>
-CC: Tony Lindgren <tony@atomide.com>, Paul Walmsley <paul@pwsan.com>,
-	<linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <56B4C74D.9010408@ti.com>
-Date: Fri, 5 Feb 2016 21:31:17 +0530
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 3 Feb 2016 10:38:05 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: bhelgaas@google.com, michals@xilinx.com, lorenzo.pieralisi@arm.com,
+	paul.burton@imgtec.com, yinghai@kernel.org, wangyijing@huawei.com,
+	robh@kernel.org, russell.joyce@york.ac.uk, sorenb@xilinx.com,
+	jiang.liu@linux.intel.com, arnd@arndb.de, pawel.moll@arm.com,
+	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
+	galak@codeaurora.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH V2 5/5] Microblaze: Modifying microblaze PCI subsytem to
+ support  generic Xilinx  AXI PCIe Host Bridge IP driver
+Message-ID: <20160203163805.GA6112@localhost>
+References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
+ <1452620173-4905-6-git-send-email-bharatku@xilinx.com>
+ <20160203163207.GC32546@localhost>
 MIME-Version: 1.0
-In-Reply-To: <20160205155215.GA29306@localhost>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160203163207.GC32546@localhost>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+[+cc Ben for real this time]
 
-On Friday 05 February 2016 09:22 PM, Bjorn Helgaas wrote:
-> On Fri, Feb 05, 2016 at 09:45:29AM +0530, Kishon Vijay Abraham I wrote:
->> Hi Bjorn,
->>
->> On Friday 05 February 2016 02:15 AM, Bjorn Helgaas wrote:
->>> Hi Kishon,
->>>
->>> What's the state of dra7xx?  In my tree, it's still marked with
->>> CONFIG_BROKEN.  Last I heard there was a reset issue that needed to
->>> be worked out, but I don't know whether that's been done yet.
->>
->> I've posted pdata-quirks mechanism to do the reset (which will get PCIe
->> working). Tony had some comments and we are expecting feedback from Paul. I'll
->> ping him again in that thread.
+On Wed, Feb 03, 2016 at 10:32:07AM -0600, Bjorn Helgaas wrote:
+> [+cc Ben, pcibios_get_phb_of_node() question]
 > 
-> Great, thanks, can you cc me as well?  I want to make sure we don't
-
-you seem to be already copied in that thread. Check with $subject=[PATCH v3
-3/3] pci: dra7xx: use pdata callbacks to perform reset.
-
-Thanks
-Kishon
-> carry dra7xx around forever marked as broken.  I'd like to either
-> make progress or remove it.
+> On Tue, Jan 12, 2016 at 11:06:13PM +0530, Bharat Kumar Gogada wrote:
+> > This patch does required modifications to microblaze PCI subsystem, to
+> > work with generic driver (drivers/pci/host/pcie-xilinx.c) on Microblaze
+> > and Zynq.
+> > 
+> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> >...
+> 
+> >  resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+> >  				resource_size_t size, resource_size_t align)
+> >  {
+> > -	struct pci_dev *dev = data;
+> >  	resource_size_t start = res->start;
+> >  
+> > -	if (res->flags & IORESOURCE_IO) {
+> > -		if (skip_isa_ioresource_align(dev))
+> > -			return start;
+> > -		if (start & 0x300)
+> > -			start = (start + 0x3ff) & ~0x3ff;
+> > -	}
+> > -
+> >  	return start;
+> 
+> "return res->start;" is sufficient; no need for a temporary variable.
+> 
+> >  }
+> >  EXPORT_SYMBOL(pcibios_align_resource);
+> >  
+> > +int pcibios_add_device(struct pci_dev *dev)
+> > +{
+> > +	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> > +
+> > +	return 0;
+> > +}
+> > +EXPORT_SYMBOL(pcibios_add_device);
+> > +
+> >  /*
+> >   * Reparent resource children of pr that conflict with res
+> >   * under res, and make res replace those children.
+> > @@ -1335,9 +1308,21 @@ static void pcibios_setup_phb_resources(struct pci_controller *hose,
+> >  
+> >  struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
+> >  {
+> > -	struct pci_controller *hose = bus->sysdata;
+> > +	struct device_node *np;
+> > +
+> > +	for_each_node_by_type(np, "pci") {
+> > +		const void *prop;
+> > +		unsigned int bus_min;
+> > +
+> > +		prop = of_get_property(np, "bus-range", NULL);
+> > +		if (!prop)
+> > +			continue;
+> > +		bus_min = be32_to_cpup(prop);
+> > +		if (bus->number == bus_min)
+> > +			return np;
+> > +	}
+> >  
+> > -	return of_node_get(hose->dn);
+> > +	return NULL;
+> 
+> Hmmm.  The old microblaze code ("return of_node_get(hose->dn);") is
+> basically the same as the mips and powerpc versions.  The new code is
+> basically the same as the x86 version.
+> 
+> I like the generic weak version in drivers/pci/of.c because it doesn't
+> use any arch-specific data, and it looks like if we just set the
+> struct device.of_node members correctly, everything should Just Work.
+> 
+> But Ben added both the generic and the x86 versions the same day, so
+> there must be some complication:
+> 
+>   98d9f30c820d ("pci/of: Match PCI devices to OF nodes dynamically")
+>   3d5fe5a65af9 ("x86/devicetree: Use generic PCI <-> OF matching")
+> 
+> So I guess my question is, why do we need a microblaze-specific
+> version at all?
 > 
 > Bjorn
-> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
