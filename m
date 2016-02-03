@@ -1,49 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [165.204.55.251] ([165.204.55.251]:47214 "EHLO
-	KellyTonga.amd.com" rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753084AbcBISJP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2016 13:09:15 -0500
-From: kelly.zytaruk@amd.com
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Kelly Zytaruk <kelly.zytaruk@amd.com>
-Subject: [PATCH] PCI: Support SRIOV on Legacy EndPoint device
-Date: Tue,  9 Feb 2016 13:08:58 -0500
-Message-Id: <1455041338-3644-1-git-send-email-kelly.zytaruk@amd.com>
+Received: from mout.kundenserver.de ([217.72.192.74]:56806 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751436AbcBCJIM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2016 04:08:12 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Minghuan Lian <minghuan.lian@nxp.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Roy Zang <roy.zang@nxp.com>,
+	Stuart Yoder <stuart.yoder@nxp.com>,
+	Yang-Leo Li <leoyang.li@nxp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mingkai Hu <mingkai.hu@nxp.com>
+Subject: Re: [PATCH 1/4] ARM: dts: ls1021a: add PCIe dts node
+Date: Wed, 03 Feb 2016 10:07:33 +0100
+Message-ID: <12992975.EIGaY2MJJY@wuerfel>
+In-Reply-To: <VI1PR04MB16159CDCE9C134363846F4CAE8D00@VI1PR04MB1615.eurprd04.prod.outlook.com>
+References: <1454401807-28751-1-git-send-email-Minghuan.Lian@nxp.com> <6117401.iajrHOL4Mn@wuerfel> <VI1PR04MB16159CDCE9C134363846F4CAE8D00@VI1PR04MB1615.eurprd04.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Kelly Zytaruk <kelly.zytaruk@amd.com>
+On Wednesday 03 February 2016 02:11:06 Minghuan Lian wrote:
+> Hi Arnd,
+> 
+> I am sorry.
+> Other patches are for MSI test, and not need to be summited.
+> There is only one patch, should be [1/1] not [1/4].  I forgot to remove "1/4" 
+> Should I re-summit to fix it?
+> 
 
-It is not neccessary to check for PCI_EXP_TYPE in sriov_init().  There appears to be no reason for the check.
+Ok, I see. It's up to Shawn then, I guess he can pick it up from
+this submission if he's ok with the patch.
 
-Some AMD GPUs have hardware support for grapics SRIOV.
-If the GPU has a display output then the GPU needs to support Legacy VGA operation.
-If CLASS_CODE = VGA then the device should have a Port Type = Legacy EndPoint.
-Therefore in order to enable SRIOV on a GPU with a display output, LEGACY_END_POINT is supported as a valid Port Type by removing the check for Port Type.
-
-Patch is also logged in Bugzilla #112221
-
-Signed-off-by: Kelly Zytaruk <kelly.zytaruk@amd.com>
----
- drivers/pci/iov.c |    4 ----
- 1 file changed, 4 deletions(-)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 31f31d4..fe4bd0a 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -387,10 +387,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
- 	struct resource *res;
- 	struct pci_dev *pdev;
- 
--	if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_END &&
--	    pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
--		return -ENODEV;
--
- 	pci_read_config_word(dev, pos + PCI_SRIOV_CTRL, &ctrl);
- 	if (ctrl & PCI_SRIOV_CTRL_VFE) {
- 		pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, 0);
--- 
-1.7.10.4
-
+	Arnd
