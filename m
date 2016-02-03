@@ -1,55 +1,81 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: "Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-	"tn@semihalf.com" <tn@semihalf.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bn0105.outbound.protection.outlook.com ([157.56.110.105]:48539
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S965675AbcBCWWr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2016 17:22:47 -0500
+From: Jake Oshins <jakeo@microsoft.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	KY Srinivasan <kys@microsoft.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"jcm@redhat.com" <jcm@redhat.com>
-Subject: Re: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host Controllers
-Date: Thu, 04 Feb 2016 18:01:51 +0100
-Message-ID: <1930535.mkCdtpUWq7@wuerfel>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1EC9EF4B@lhreml503-mbs>
-References: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com> <76564455.dlc1WHiVY2@wuerfel> <EE11001F9E5DDD47B7634E2F8A612F2E1EC9EF4B@lhreml503-mbs>
-MIME-Version: 1.0
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH RESEND 3/3] PCI: hv: New paravirtual PCI front-end for
+ Hyper-V VMs
+Date: Wed, 3 Feb 2016 22:22:44 +0000
+Message-ID: <DM2PR0301MB1232CA7B094EC389000BB733ABD00@DM2PR0301MB1232.namprd03.prod.outlook.com>
+References: <1454434903-1680-1-git-send-email-jakeo@microsoft.com>
+ <1454434903-1680-4-git-send-email-jakeo@microsoft.com>
+ <20160203212904.GF10879@localhost>
+In-Reply-To: <20160203212904.GF10879@localhost>
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 04 February 2016 16:44:12 Gabriele Paoloni wrote:
-> Effectively the ACPI version of the HiSilicon driver does not rely on
-> Designware as much as the DT version (that calls dw_pcie_host_init());
-> however in order to do what you suggest I'd need to copy and paste and
-> modify dw_pcie_rd_conf and dw_pcie_wr_conf.
-> Also I'd need to declare duplicate version of the functions in
-> pcie-hisi-common.c (if I do not want to split the object across
-> different paths "drivers/pci/host" and "drivers/acpi/")
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Wednesday, February 3, 2016 1:29 PM
+> To: Jake Oshins <jakeo@microsoft.com>
+> Cc: gregkh@linuxfoundation.org; KY Srinivasan <kys@microsoft.com>; linux-
+> kernel@vger.kernel.org; devel@linuxdriverproject.org; Haiyang Zhang
+> <haiyangz@microsoft.com>; marc.zyngier@arm.com;
+> bhelgaas@google.com; linux-pci@vger.kernel.org
+> Subject: Re: [PATCH RESEND 3/3] PCI: hv: New paravirtual PCI front-end for
+> Hyper-V VMs
 > 
-> Now I can do it but I thought it was more correct to pass &dw_pcie_ops
-> as input pointer in DECLARE_ACPI_MCFG_FIXUP(); this is also because maybe in
-> future other Designware based controllers may need to support ACPI and it
-> would be easier for them to reuse their DT based driver functions
+> Hi Jake,
 > 
-> Honestly I am a bit confused...
+> On Tue, Feb 02, 2016 at 05:41:43PM +0000, jakeo@microsoft.com wrote:
+> > From: Jake Oshins <jakeo@microsoft.com>
+> >
+> > This patch introduces a new driver which exposes a root PCI bus whenever
+> a
+> > PCI Express device is passed through to a guest VM under Hyper-V. The
+> > device can be single- or multi-function. The interrupts for the devices
+> > are managed by an IRQ domain, implemented within the driver.
+
+[lots of stuff snipped out]
+
+> > +/**
+> > + * hv_pci_free_bridge_windows() - Release memory regions for the
+> > + * bus
+> > + * @hbus:	Root PCI bus, as understood by this driver
+> > + */
+> > +static void hv_pci_free_bridge_windows(struct hv_pcibus_device *hbus)
+> > +{
+> > +	if (hbus->low_mmio_space && hbus->low_mmio_res) {
+> > +		hbus->low_mmio_res->flags |= IORESOURCE_BUSY;
+> 
+> Drivers should not normally set or clear IORESOURCE_BUSY themselves.
+> 
+> > +		release_mem_region(hbus->low_mmio_res->start,
+> > +				   resource_size(hbus->low_mmio_res));
+> 
+> Usually there's a request_mem_region() to correspond with a
+> release_mem_region(), and that takes care of IORESOURCE_BUSY.
+> 
+> What's unique about this driver, and can you make it less unique?
 > 
 
-I don't think you can use the dw_pcie_ops as-is anyway, as they in
-turn rely on the device driver structure, and you also don't need
-those as they seem to be written for the generic case of a 32-bit
-architecture that does not have enough space to map the entire
-config space into MMIO. Just set up all those mapping registers from
-the firmware and pass the config space base address as you'd normally
-do on ACPI.
+Thanks for the detailed review.  I'll make all the changes that you're suggesting and resend.
 
-	Arnd
+As for the comment above, and all the others related to IORESOURCE_BUSY, this amounts to making the resource claim look like a bridge window, so that callers of request_mem_region() in the drivers for the child devices actually can succeed.  There's no function in the kernel today that amounts to "request_mem_region_for_bridge_window()" or at least none that I understood.  The current plug and play code in Linux is pretty hard coded for various bus types, i.e. ACPI and PCI.  I took a tack at one point where I tried to offer changes to it, so that it understood the concept of "grandchild of ACPI or PCI" which is what would make this code simpler.  Rafael Wysocki basically told me that the pnp layer is deprecated and that new changes to it wouldn't be entertained, and that I should find some way of using what exists.  This was the result.  If you have another suggestion, I'm happy to try it.  In any case, I'll explain what's happening more thoroughly in comments.
+
+Thanks,
+Jake Oshins
+
