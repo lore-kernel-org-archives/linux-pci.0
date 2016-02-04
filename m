@@ -1,75 +1,170 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:33563 "EHLO
-	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751356AbcBJPwu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 10:52:50 -0500
-Date: Wed, 10 Feb 2016 16:52:47 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: Re: [PATCH] PCI: tegra: Update for new XUSB pad controller bindings
-Message-ID: <20160210155247.GA14584@ulmo>
-References: <1455029465-9211-1-git-send-email-thierry.reding@gmail.com>
- <56BA107A.9050201@wwwdotorg.org>
+Received: from mailapp01.imgtec.com ([195.59.15.196]:16368 "EHLO
+	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933018AbcBDQKy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 11:10:54 -0500
+From: Paul Burton <paul.burton@imgtec.com>
+To: <linux-mips@linux-mips.org>
+CC: Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>,
+	"Paul Burton" <paul.burton@imgtec.com>,
+	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
+	Russell Joyce <russell.joyce@york.ac.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, Rob Herring <robh@kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Jingoo Han" <jingoohan1@gmail.com>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v3 1/6] PCI: xilinx: Keep references to both IRQ domains
+Date: Thu, 4 Feb 2016 16:10:08 +0000
+Message-ID: <1454602213-967-2-git-send-email-paul.burton@imgtec.com>
+In-Reply-To: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
+References: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="d6Gm4EdcadzBjdND"
-In-Reply-To: <56BA107A.9050201@wwwdotorg.org>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+pcie-xilinx creates 2 IRQ domains when built with MSI support: one for
+MSI interrupts & one for legacy INTx interrupts. However, it only kept a
+reference to the MSI IRQ domain. This means that any INTx interrupts
+that may occur would be mapped using the wrong domain, and that only the
+MSI IRQ domain would be removed along with the driver. Track both IRQ
+domains & clean up both as appropriate.
 
---d6Gm4EdcadzBjdND
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Paul Burton <paul.burton@imgtec.com>
+Fixes: 8961def56845 ("PCI: xilinx: Add Xilinx AXI PCIe Host Bridge IP driver")
 
-On Tue, Feb 09, 2016 at 09:14:50AM -0700, Stephen Warren wrote:
-> On 02/09/2016 07:51 AM, Thierry Reding wrote:
-> >From: Thierry Reding <treding@nvidia.com>
-> >
-> >The current XUSB pad controller bindings are insufficient to describe
-> >PHY devices attached to USB controllers. New bindings have been created
-> >to overcome these restrictions.
->=20
-> New bindings have been created? Which ones; there were several attempts to
-> enhance the bindings, but I wasn't aware that any of them had passed thro=
-ugh
-> review and been accepted.
+---
 
-Perhaps are being created would be more accurate. Though technically
-this isn't really about the new binding, or at least not the details.
-The most important part here is that this implements the driver code
-that will control per-lane PHYs. At least that part was what everyone
-had agreed on was the right move forward.
+Changes in v3:
+- Split out from Boston patchset.
 
-Also the goal is to land this change before the switch for the XUSB
-pad controller goes in, because otherwise PCIe will be broken. I can
-reword the commit message to clarify this.
+Changes in v2:
+- Add Fixes tag.
 
-Thierry
+ drivers/pci/host/pcie-xilinx.c | 58 ++++++++++++++++++++----------------------
+ 1 file changed, 28 insertions(+), 30 deletions(-)
 
---d6Gm4EdcadzBjdND
-Content-Type: application/pgp-signature; name="signature.asc"
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 4cfa463..1490bd1 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -105,6 +105,7 @@
+  * @root_busno: Root Bus number
+  * @dev: Device pointer
+  * @irq_domain: IRQ domain pointer
++ * @msi_irq_domain: MSI IRQ domain pointer
+  * @bus_range: Bus range
+  * @resources: Bus Resources
+  */
+@@ -115,6 +116,7 @@ struct xilinx_pcie_port {
+ 	u8 root_busno;
+ 	struct device *dev;
+ 	struct irq_domain *irq_domain;
++	struct irq_domain *msi_irq_domain;
+ 	struct resource bus_range;
+ 	struct list_head resources;
+ };
+@@ -291,7 +293,7 @@ static int xilinx_pcie_msi_setup_irq(struct msi_controller *chip,
+ 	if (hwirq < 0)
+ 		return hwirq;
+ 
+-	irq = irq_create_mapping(port->irq_domain, hwirq);
++	irq = irq_create_mapping(port->msi_irq_domain, hwirq);
+ 	if (!irq)
+ 		return -EINVAL;
+ 
+@@ -517,31 +519,21 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 
+ /**
+  * xilinx_pcie_free_irq_domain - Free IRQ domain
+- * @port: PCIe port information
++ * @domain: the IRQ domain to free
++ * @nr: the number of IRQs in the domain
+  */
+-static void xilinx_pcie_free_irq_domain(struct xilinx_pcie_port *port)
++static void xilinx_pcie_free_irq_domain(struct irq_domain *domain, int nr)
+ {
+ 	int i;
+-	u32 irq, num_irqs;
+-
+-	/* Free IRQ Domain */
+-	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-
+-		free_pages(port->msi_pages, 0);
+-
+-		num_irqs = XILINX_NUM_MSI_IRQS;
+-	} else {
+-		/* INTx */
+-		num_irqs = 4;
+-	}
++	u32 irq;
+ 
+-	for (i = 0; i < num_irqs; i++) {
+-		irq = irq_find_mapping(port->irq_domain, i);
++	for (i = 0; i < nr; i++) {
++		irq = irq_find_mapping(domain, i);
+ 		if (irq > 0)
+ 			irq_dispose_mapping(irq);
+ 	}
+ 
+-	irq_domain_remove(port->irq_domain);
++	irq_domain_remove(domain);
+ }
+ 
+ /**
+@@ -571,20 +563,20 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+ 		return PTR_ERR(port->irq_domain);
+ 	}
+ 
+-	/* Setup MSI */
+-	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		port->irq_domain = irq_domain_add_linear(node,
+-							 XILINX_NUM_MSI_IRQS,
+-							 &msi_domain_ops,
+-							 &xilinx_pcie_msi_chip);
+-		if (!port->irq_domain) {
+-			dev_err(dev, "Failed to get a MSI IRQ domain\n");
+-			return PTR_ERR(port->irq_domain);
+-		}
++	if (!IS_ENABLED(CONFIG_PCI_MSI))
++		return 0;
+ 
+-		xilinx_pcie_enable_msi(port);
++	/* Setup MSI */
++	port->msi_irq_domain = irq_domain_add_linear(node,
++						     XILINX_NUM_MSI_IRQS,
++						     &msi_domain_ops,
++						     &xilinx_pcie_msi_chip);
++	if (!port->msi_irq_domain) {
++		dev_err(dev, "Failed to get a MSI IRQ domain\n");
++		return PTR_ERR(port->msi_irq_domain);
+ 	}
+ 
++	xilinx_pcie_enable_msi(port);
+ 	return 0;
+ }
+ 
+@@ -869,7 +861,13 @@ static int xilinx_pcie_remove(struct platform_device *pdev)
+ {
+ 	struct xilinx_pcie_port *port = platform_get_drvdata(pdev);
+ 
+-	xilinx_pcie_free_irq_domain(port);
++	xilinx_pcie_free_irq_domain(port->irq_domain, 4);
++
++	if (config_enabled(CONFIG_MSI)) {
++		free_pages(port->msi_pages, 0);
++		xilinx_pcie_free_irq_domain(port->msi_irq_domain,
++					    XILINX_NUM_MSI_IRQS);
++	}
+ 
+ 	return 0;
+ }
+-- 
+2.7.0
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCAAGBQJWu1zLAAoJEN0jrNd/PrOh3hQQAKUcpCrGbQubqrbhoafwKiwv
-UEAR4lhyP+PIkgT8fWTwlAqji16CkmuizuytJrm8U/x3t1Jiu18uipvHCUpwwaBK
-rIG9QQnjqpnB5jCNUuy5pFSKR0IWBC8d4Pud3X7tDP1Rg+YPd8PCMoOwqJkjlGAU
-WIpvNHujeEGu/lToPzJmcEDin5sco9EsCshfU7ifCJvpfXyeqs/usbgbpHU5DSzJ
-RsZ5XF3UB5xni9xr4TQwBhBV36mYDZHyu5QUn7RTvBXvo1IJEmUWuUset8ltk+9t
-5TGx0aTBplq36J/x/5/ckdRA69Gekdy85xeFtFW5VKIwv0trWRC6UVRJlci8Vfg4
-Ofn3qKsaX8un6RukmTXbc0YzlfsW32KAlFrxrDPYl9UZJ8TBg6x6GxWGdC5mZDF8
-QO3cTPCYGDKqjbFYl350XcUENVGUrA5FJ2+IWOElZ5NDdIcyGxGt2RaFcewRBmrj
-H1dN7HNx++dXz9ovFSj0wyUsCcM5nZg6KV8ANpkIaVIxkVaLBcxdM5VdNpmS9dL3
-fq7hN64YWJiPzkWcbfZvMAnfrMFPpnGXh/60NABeB17LXk7ofHiI4IbdcAFedwS4
-XtPhy6EkFkXqrzYf1DGluTgqoBvncWWWFaun7kTP+Lz5sTUpk/dJl167C0BmjoZR
-aowXt5YqZuzo8FeqY1Z1
-=3B+n
------END PGP SIGNATURE-----
-
---d6Gm4EdcadzBjdND--
