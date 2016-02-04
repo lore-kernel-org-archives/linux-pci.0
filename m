@@ -1,79 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:44439 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751610AbcBJGEG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 01:04:06 -0500
-Received: from localhost
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 10 Feb 2016 16:04:04 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id B30112CE805B
-	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:03:56 +1100 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u1A63ioA43319520
-	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:03:53 +1100
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u1A63NNZ011814
-	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:03:24 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, mpe@ellerman.id.au,
-	aik@ozlabs.ru, ruscur@russell.cc,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH v14 4/9] powerpc/eeh: Cache normal BARs, not windows or IOV BARs
-Date: Wed, 10 Feb 2016 17:02:52 +1100
-Message-Id: <1455084177-15525-5-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V4 17/23] acpi, mcfg: Add default PCI config accessors implementation and initial support for related quirks.
+Date: Thu,  4 Feb 2016 18:28:55 +0100
+Message-Id: <1454606941-9523-18-git-send-email-tn@semihalf.com>
+In-Reply-To: <1454606941-9523-1-git-send-email-tn@semihalf.com>
+References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
+We use generic accessors from access.c by default. However, we already
+know platforms that need special handling while accessing to PCI config
+space. These platforms will need different accessors set matched against
+platform ID, domain, bus touple. Therefore we are going to add (in future)
+DECLARE_ACPI_MCFG_FIXUP which will register platform specific custom
+accessors. For now, we let pci_mcfg_get_ops to take acpi_pci_root structure
+as an arguments and left some space for quirk matching algorithm.
 
-This restricts the EEH address cache to use only the first 7 BARs. This
-makes __eeh_addr_cache_insert_dev() ignore PCI bridge window and IOV BARs.
-As the result of this change, eeh_addr_cache_get_dev() will return VFs from
-VF's resource addresses instead of parent PFs.
-
-This also removes PCI bridge check as we limit __eeh_addr_cache_insert_dev()
-to 7 BARs and this effectively excludes PCI bridges from being cached.
-
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Duc Dang <dhdang@apm.com>
+Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+Tested-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- arch/powerpc/kernel/eeh_cache.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ drivers/acpi/mcfg.c      | 30 ++++++++++++++++++++++++++++++
+ include/linux/pci-acpi.h |  8 ++++++++
+ 2 files changed, 38 insertions(+)
 
-diff --git a/arch/powerpc/kernel/eeh_cache.c b/arch/powerpc/kernel/eeh_cache.c
-index a1e86e1..ddbcfab 100644
---- a/arch/powerpc/kernel/eeh_cache.c
-+++ b/arch/powerpc/kernel/eeh_cache.c
-@@ -195,8 +195,11 @@ static void __eeh_addr_cache_insert_dev(struct pci_dev *dev)
- 		return;
- 	}
+diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
+index dca4c4e..dfc2d14 100644
+--- a/drivers/acpi/mcfg.c
++++ b/drivers/acpi/mcfg.c
+@@ -34,6 +34,36 @@ int __weak raw_pci_write(unsigned int domain, unsigned int bus,
+ 	return PCIBIOS_DEVICE_NOT_FOUND;
+ }
  
--	/* Walk resources on this device, poke them into the tree */
--	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
++void __iomem *
++pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn, int offset)
++{
++	struct pci_mmcfg_region *cfg;
++
++	cfg = pci_mmconfig_lookup(pci_domain_nr(bus), bus->number);
++	if (cfg && cfg->virt)
++		return cfg->virt +
++			(PCI_MMCFG_BUS_OFFSET(bus->number) | (devfn << 12)) +
++			offset;
++	return NULL;
++}
++
++/* Default generic PCI config accessors */
++static struct pci_ops default_pci_mcfg_ops = {
++	.map_bus = pci_mcfg_dev_base,
++	.read = pci_generic_config_read,
++	.write = pci_generic_config_write,
++};
++
++struct pci_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
++{
 +	/*
-+	 * Walk resources on this device, poke the first 7 (6 normal BAR and 1
-+	 * ROM BAR) into the tree.
++	 * TODO: Match against platform specific quirks and return
++	 * corresponding PCI config space accessor set.
 +	 */
-+	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
- 		resource_size_t start = pci_resource_start(dev,i);
- 		resource_size_t end = pci_resource_end(dev,i);
- 		unsigned long flags = pci_resource_flags(dev,i);
-@@ -222,10 +225,6 @@ void eeh_addr_cache_insert_dev(struct pci_dev *dev)
++
++	return &default_pci_mcfg_ops;
++}
++
+ int __init acpi_parse_mcfg(struct acpi_table_header *header)
  {
- 	unsigned long flags;
+ 	struct acpi_table_mcfg *mcfg;
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 65b91f3..c974586 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -83,10 +83,18 @@ void acpi_pci_remove_bus(struct pci_bus *bus);
+ #ifdef	CONFIG_PCI_MMCONFIG
+ int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci);
+ void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci);
++struct pci_ops *pci_mcfg_get_ops(struct acpi_pci_root *root);
++void __iomem *
++pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn, int offset);
+ #else
+ static inline int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci)
+ { return 0; }
+ static inline void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci) { }
++static inline struct pci_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
++{ return NULL; }
++static inline void __iomem *
++pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn, int offset)
++{ return NULL; }
+ #endif
  
--	/* Ignore PCI bridges */
--	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
--		return;
--
- 	spin_lock_irqsave(&pci_io_addr_cache_root.piar_lock, flags);
- 	__eeh_addr_cache_insert_dev(dev);
- 	spin_unlock_irqrestore(&pci_io_addr_cache_root.piar_lock, flags);
+ #ifdef	CONFIG_ACPI_PCI_SLOT
 -- 
-2.1.0
-
+1.9.1
