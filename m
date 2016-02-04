@@ -1,84 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:33683 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966104AbcBDR3K (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 12:29:10 -0500
-Received: by mail-wm0-f54.google.com with SMTP id g62so15085689wme.0
-        for <linux-pci@vger.kernel.org>; Thu, 04 Feb 2016 09:29:09 -0800 (PST)
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V4 07/23] pci, acpi, mcfg: Provide default RAW ACPI PCI config space accessors.
-Date: Thu,  4 Feb 2016 18:28:45 +0100
-Message-Id: <1454606941-9523-8-git-send-email-tn@semihalf.com>
-In-Reply-To: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
+Received: from mail.kernel.org ([198.145.29.136]:34466 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756916AbcBDXni (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Feb 2016 18:43:38 -0500
+Date: Thu, 4 Feb 2016 17:43:34 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Vineet.Gupta1@synopsys.com, arnd@arndb.de,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
+	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
+	pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
+Subject: Re: [PATCH v8 2/2] add new platform driver for PCI RC
+Message-ID: <20160204234334.GH7031@localhost>
+References: <cover.1454600622.git.jpinto@synopsys.com>
+ <c7af1603d4f18d11cb0ccee1c07708a1455ea4ed.1454600622.git.jpinto@synopsys.com>
+ <20160204181911.GA2143@localhost>
+ <56B398E9.3080902@synopsys.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56B398E9.3080902@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Lets keep RAW ACPI PCI config space accessors empty by default,
-since we are note sure if they are necessary accross all archs.
-Once we sort this out, we can provide generic version or let
-architectures to overwrite, like now x86.
+On Thu, Feb 04, 2016 at 06:31:05PM +0000, Joao Pinto wrote:
+> On 2/4/2016 6:19 PM, Bjorn Helgaas wrote:
+> > On Thu, Feb 04, 2016 at 03:52:10PM +0000, Joao Pinto wrote:
+> >> This patch adds a new driver that will be the reference platform driver
+> >> for all PCI RC IP Protoyping Kits based on ARC SDP.
+> >>
+> >> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> >> ---
+> >> Change v7 -> v8 (Bjorn Helgaas and Arnd Bergmann):
+> >> - driver name was changed from pcie-synopsys to pcie-dw-pltfm
+> > 
+> > "pcie-dw-pltfm" seems worse to me.  We have eight existing drivers
+> > that call dw_pcie_host_init(), and they're all platform_drivers.
+> > "pcie-dw-pltfm" could apply equally well to any of them.
+> > 
+> > I think I see what happened: I wrote "It doesn't seem necessary to me
+> > to include both 'synopsys' and 'ipk' in the filename and the driver
+> > name."  I meant that using one of them should be sufficient, not that
+> > *both* should be removed.
+> > 
+> > I don't know the SoC landscape, but from Arnd's comment, it sounds
+> > like "synopsys" might be too generic because many of the other drivers
+> > are connected with Synopsys.  I don't know what "ipk" means, but maybe
+> > that could work.  It's convenient if the name *means* something, and
+> > if "ipk" stands for "IP Prototyping Kit", that sounds pretty generic.
+> > Is "haps" or "haps_dx" a name people would associate with this
+> > hardware?  I guess it'd be nice if the driver name were related to the
+> > DT compat strings, so "ipk" is better from that perspective.
+> 
+> Synopsys has a product called IP Prototyping Kit which is a bundle of
+> HAPSDX + PCIE RC IP + drivers + Development Board. This driver was
+> implemented originally to serve this IPK but it can be used by SoC that
+> use the Synopsys PCIe RC IP.  "ipk" would say that the driver is usable
+> only in the IP Prototyping Kits which is not 100% true, it is usable in
+> any SoC with Synopsys IP or in limit serve as a base for specific SoC
+> drivers.  Suggestions: "pcie-dw-soc-agnostic", "pcie-dw-ipk",
+> "pcie-dw-haps-prototyping"
+> 
+> What do you think?
 
-Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Tested-by: Jeremy Linton <jeremy.linton@arm.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/acpi/mcfg.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+I don't think the "dw" part is relevant (none of the other
+DesignWare-based drivers includes it in the driver or file name).
 
-diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
-index 745b83e..3e1e7be 100644
---- a/drivers/acpi/mcfg.c
-+++ b/drivers/acpi/mcfg.c
-@@ -9,9 +9,30 @@
- 
- #include <linux/acpi.h>
- #include <linux/ecam.h>
-+#include <linux/pci.h>
- 
- #define	PREFIX	"MCFG: "
- 
-+/*
-+ * raw_pci_read/write - raw ACPI PCI config space accessors.
-+ *
-+ * By defauly (__weak) these accessors are empty and should be overwritten
-+ * by architectures which support operations on ACPI PCI_Config regions,
-+ * see osl.c file.
-+ */
-+
-+int __weak raw_pci_read(unsigned int domain, unsigned int bus,
-+			unsigned int devfn, int reg, int len, u32 *val)
-+{
-+	return PCIBIOS_DEVICE_NOT_FOUND;
-+}
-+
-+int __weak raw_pci_write(unsigned int domain, unsigned int bus,
-+			 unsigned int devfn, int reg, int len, u32 val)
-+{
-+	return PCIBIOS_DEVICE_NOT_FOUND;
-+}
-+
- int __init acpi_parse_mcfg(struct acpi_table_header *header)
- {
- 	struct acpi_table_mcfg *mcfg;
--- 
-1.9.1
+How do people typically refer to this board?
 
+I really like "synopsys" because it fits the pattern of being
+recognizable and pronounceable like "altera", "designware", "qcom",
+"keystone", "layerscape", "tegra", etc.  But I can't tell whether it's
+too generic.
+
+"ipk" or "haps" would be fine with me.  I think it's OK if it doesn't
+cover 100% of the possible systems.
+
+Bjorn
