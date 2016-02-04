@@ -1,182 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48134 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755500AbcBWAri (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Feb 2016 19:47:38 -0500
-Subject: [PATCH v4 10/11] PCI: Fold struct pci_vpd_pci22 into struct pci_vpd
-To: Hannes Reinecke <hare@suse.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Babu Moger <babu.moger@oracle.com>,
-	Alexander Duyck <alexander.duyck@gmail.com>
-Date: Mon, 22 Feb 2016 18:47:35 -0600
-Message-ID: <20160223004735.10635.72128.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-sn1nam02on0086.outbound.protection.outlook.com ([104.47.36.86]:53088
+	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S965231AbcBDO4f convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 09:56:35 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	Michal Simek <michals@xilinx.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"paul.burton@imgtec.com" <paul.burton@imgtec.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"wangyijing@huawei.com" <wangyijing@huawei.com>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: RE: [PATCH V2 5/5] Microblaze: Modifying microblaze PCI subsytem to
+ support  generic Xilinx  AXI PCIe Host Bridge IP driver
+Date: Thu, 4 Feb 2016 14:56:29 +0000
+Message-ID: <8520D5D51A55D047800579B094147198258803F8@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
+ <1452620173-4905-6-git-send-email-bharatku@xilinx.com>
+ <20160203163207.GC32546@localhost> <20160203163805.GA6112@localhost>
+ <8520D5D51A55D047800579B0941471982587F199@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20160204145148.GA26361@localhost>
+In-Reply-To: <20160204145148.GA26361@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We only support one flavor of VPD, so there's no need to complicate things
-by having a "generic" struct pci_vpd and a more specific struct
-pci_vpd_pci22.
+> Subject: Re: [PATCH V2 5/5] Microblaze: Modifying microblaze PCI subsytem
+> to support generic Xilinx AXI PCIe Host Bridge IP driver
+> 
+> On Thu, Feb 04, 2016 at 05:49:20AM +0000, Bharat Kumar Gogada wrote:
+> > > Subject: Re: [PATCH V2 5/5] Microblaze: Modifying microblaze PCI
+> > > subsytem to support generic Xilinx AXI PCIe Host Bridge IP driver
+> > >
+> > > [+cc Ben for real this time]
+> > >
+> > > On Wed, Feb 03, 2016 at 10:32:07AM -0600, Bjorn Helgaas wrote:
+> > > > [+cc Ben, pcibios_get_phb_of_node() question]
+> > > >
+> > > > On Tue, Jan 12, 2016 at 11:06:13PM +0530, Bharat Kumar Gogada wrote:
+> > > > > This patch does required modifications to microblaze PCI
+> > > > > subsystem, to work with generic driver
+> > > > > (drivers/pci/host/pcie-xilinx.c) on Microblaze and Zynq.
+> > > > >
+> > > > > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > > > > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com> ...
+> > > >
+> > > > >  resource_size_t pcibios_align_resource(void *data, const struct
+> > > > > resource
+> > > *res,
+> > > > >  				resource_size_t size, resource_size_t
+> align)  {
+> > > > > -	struct pci_dev *dev = data;
+> > > > >  	resource_size_t start = res->start;
+> > > > >
+> > > > > -	if (res->flags & IORESOURCE_IO) {
+> > > > > -		if (skip_isa_ioresource_align(dev))
+> > > > > -			return start;
+> > > > > -		if (start & 0x300)
+> > > > > -			start = (start + 0x3ff) & ~0x3ff;
+> > > > > -	}
+> > > > > -
+> > > > >  	return start;
+> > > >
+> > > > "return res->start;" is sufficient; no need for a temporary variable.
+> > > >
+> > Agreed will address in next patch.
+> > > > >  }
+> > > > >  EXPORT_SYMBOL(pcibios_align_resource);
+> > > > >
+> > > > > +int pcibios_add_device(struct pci_dev *dev) {
+> > > > > +	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> > > > > +
+> > > > > +	return 0;
+> > > > > +}
+> > > > > +EXPORT_SYMBOL(pcibios_add_device);
+> > > > > +
+> > > > >  /*
+> > > > >   * Reparent resource children of pr that conflict with res
+> > > > >   * under res, and make res replace those children.
+> > > > > @@ -1335,9 +1308,21 @@ static void
+> > > > > pcibios_setup_phb_resources(struct pci_controller *hose,
+> > > > >
+> > > > >  struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
+> {
+> > > > > -	struct pci_controller *hose = bus->sysdata;
+> > > > > +	struct device_node *np;
+> > > > > +
+> > > > > +	for_each_node_by_type(np, "pci") {
+> > > > > +		const void *prop;
+> > > > > +		unsigned int bus_min;
+> > > > > +
+> > > > > +		prop = of_get_property(np, "bus-range", NULL);
+> > > > > +		if (!prop)
+> > > > > +			continue;
+> > > > > +		bus_min = be32_to_cpup(prop);
+> > > > > +		if (bus->number == bus_min)
+> > > > > +			return np;
+> > > > > +	}
+> > > > >
+> > > > > -	return of_node_get(hose->dn);
+> > > > > +	return NULL;
+> > > >
+> > > > Hmmm.  The old microblaze code ("return of_node_get(hose->dn);")
+> > > > is basically the same as the mips and powerpc versions.  The new
+> > > > code is basically the same as the x86 version.
+> > > >
+> > > > I like the generic weak version in drivers/pci/of.c because it
+> > > > doesn't use any arch-specific data, and it looks like if we just
+> > > > set the struct device.of_node members correctly, everything should
+> Just Work.
+> > > >
+> > > > But Ben added both the generic and the x86 versions the same day,
+> > > > so there must be some complication:
+> > > >
+> > > >   98d9f30c820d ("pci/of: Match PCI devices to OF nodes dynamically")
+> > > >   3d5fe5a65af9 ("x86/devicetree: Use generic PCI <-> OF matching")
+> > > >
+> > > > So I guess my question is, why do we need a microblaze-specific
+> > > > version at all?
+> > > >
+> > I did not notice the weak version in /pci/of.c, I have tested with
+> > weak version also and it is working.  We might not need this
+> > microblaze specific version, but will wait for ben's reply.
+> 
+> If the generic version works, and you don't need the microblaze- specific
+> version, just remove it and we'll get this wrapped up.  No need to wait for
+> Ben.
+>
+Ok Bjorn, I will remove it and send next series of patches.
 
-Fold struct pci_vpd_pci22 directly into struct pci_vpd.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/access.c |   46 +++++++++++++++++-----------------------------
- drivers/pci/pci.h    |    7 ++++++-
- 2 files changed, 23 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index ee205de..cae5462 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -277,15 +277,6 @@ EXPORT_SYMBOL(pci_write_vpd);
- 
- #define PCI_VPD_MAX_SIZE (PCI_VPD_ADDR_MASK + 1)
- 
--struct pci_vpd_pci22 {
--	struct pci_vpd base;
--	struct mutex lock;
--	u16	flag;
--	u8	cap;
--	u8	busy:1;
--	u8	valid:1;
--};
--
- /**
-  * pci_vpd_size - determine actual size of Vital Product Data
-  * @dev:	pci device struct
-@@ -350,8 +341,7 @@ static size_t pci_vpd_size(struct pci_dev *dev, size_t old_size)
-  */
- static int pci_vpd_wait(struct pci_dev *dev)
- {
--	struct pci_vpd_pci22 *vpd =
--		container_of(dev->vpd, struct pci_vpd_pci22, base);
-+	struct pci_vpd *vpd = dev->vpd;
- 	unsigned long timeout = jiffies + HZ/20 + 2;
- 	u16 status;
- 	int ret;
-@@ -384,8 +374,7 @@ static int pci_vpd_wait(struct pci_dev *dev)
- static ssize_t pci_vpd_read(struct pci_dev *dev, loff_t pos, size_t count,
- 			    void *arg)
- {
--	struct pci_vpd_pci22 *vpd =
--		container_of(dev->vpd, struct pci_vpd_pci22, base);
-+	struct pci_vpd *vpd = dev->vpd;
- 	int ret;
- 	loff_t end = pos + count;
- 	u8 *buf = arg;
-@@ -395,17 +384,17 @@ static ssize_t pci_vpd_read(struct pci_dev *dev, loff_t pos, size_t count,
- 
- 	if (!vpd->valid) {
- 		vpd->valid = 1;
--		vpd->base.len = pci_vpd_size(dev, vpd->base.len);
-+		vpd->len = pci_vpd_size(dev, vpd->len);
- 	}
- 
--	if (vpd->base.len == 0)
-+	if (vpd->len == 0)
- 		return -EIO;
- 
--	if (pos >= vpd->base.len)
-+	if (pos > vpd->len)
- 		return 0;
- 
--	if (end > vpd->base.len) {
--		end = vpd->base.len;
-+	if (end > vpd->len) {
-+		end = vpd->len;
- 		count = end - pos;
- 	}
- 
-@@ -452,8 +441,7 @@ out:
- static ssize_t pci_vpd_write(struct pci_dev *dev, loff_t pos, size_t count,
- 			     const void *arg)
- {
--	struct pci_vpd_pci22 *vpd =
--		container_of(dev->vpd, struct pci_vpd_pci22, base);
-+	struct pci_vpd *vpd = dev->vpd;
- 	const u8 *buf = arg;
- 	loff_t end = pos + count;
- 	int ret = 0;
-@@ -463,13 +451,13 @@ static ssize_t pci_vpd_write(struct pci_dev *dev, loff_t pos, size_t count,
- 
- 	if (!vpd->valid) {
- 		vpd->valid = 1;
--		vpd->base.len = pci_vpd_size(dev, vpd->base.len);
-+		vpd->len = pci_vpd_size(dev, vpd->len);
- 	}
- 
--	if (vpd->base.len == 0)
-+	if (vpd->len == 0)
- 		return -EIO;
- 
--	if (end > vpd->base.len)
-+	if (end > vpd->len)
- 		return -EINVAL;
- 
- 	if (mutex_lock_killable(&vpd->lock))
-@@ -550,7 +538,7 @@ static const struct pci_vpd_ops pci_vpd_f0_ops = {
- 
- int pci_vpd_init(struct pci_dev *dev)
- {
--	struct pci_vpd_pci22 *vpd;
-+	struct pci_vpd *vpd;
- 	u8 cap;
- 
- 	cap = pci_find_capability(dev, PCI_CAP_ID_VPD);
-@@ -561,23 +549,23 @@ int pci_vpd_init(struct pci_dev *dev)
- 	if (!vpd)
- 		return -ENOMEM;
- 
--	vpd->base.len = PCI_VPD_MAX_SIZE;
-+	vpd->len = PCI_VPD_MAX_SIZE;
- 	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0)
--		vpd->base.ops = &pci_vpd_f0_ops;
-+		vpd->ops = &pci_vpd_f0_ops;
- 	else
--		vpd->base.ops = &pci_vpd_ops;
-+		vpd->ops = &pci_vpd_ops;
- 	mutex_init(&vpd->lock);
- 	vpd->cap = cap;
- 	vpd->busy = 0;
- 	vpd->valid = 0;
--	dev->vpd = &vpd->base;
-+	dev->vpd = vpd;
- 	return 0;
- }
- 
- void pci_vpd_release(struct pci_dev *dev)
- {
- 	if (dev->vpd)
--		kfree(container_of(dev->vpd, struct pci_vpd_pci22, base));
-+		kfree(dev->vpd);
- }
- 
- /**
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 6191703..d0fb934 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -100,9 +100,14 @@ struct pci_vpd_ops {
- };
- 
- struct pci_vpd {
--	unsigned int len;
- 	const struct pci_vpd_ops *ops;
- 	struct bin_attribute *attr; /* descriptor for sysfs VPD entry */
-+	struct mutex	lock;
-+	unsigned int	len;
-+	u16		flag;
-+	u8		cap;
-+	u8		busy:1;
-+	u8		valid:1;
- };
- 
- int pci_vpd_init(struct pci_dev *dev);
+Bharat
 
