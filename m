@@ -1,70 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: jakeo@microsoft.com
-To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH 1/5] hv: Make a function to free mmio regions through vmbus
-Date: Wed, 24 Feb 2016 21:23:58 +0000
-Message-Id: <1456349042-16275-2-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1456349042-16275-1-git-send-email-jakeo@microsoft.com>
-References: <1456349042-16275-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailapp01.imgtec.com ([195.59.15.196]:18669 "EHLO
+	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756070AbcBDQM3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 11:12:29 -0500
+From: Paul Burton <paul.burton@imgtec.com>
+To: <linux-mips@linux-mips.org>
+CC: Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>,
+	"Paul Burton" <paul.burton@imgtec.com>,
+	Ley Foon Tan <lftan@altera.com>,
+	"Arnd Bergmann" <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	"Scott Branden" <sbranden@broadcom.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	<linux-kernel@vger.kernel.org>, Duc Dang <dhdang@apm.com>,
+	<linux-pci@vger.kernel.org>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Ray Jui <rjui@broadcom.com>, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: [PATCH v3 6/6] PCI: xilinx: Allow build on MIPS platforms
+Date: Thu, 4 Feb 2016 16:10:13 +0000
+Message-ID: <1454602213-967-7-git-send-email-paul.burton@imgtec.com>
+In-Reply-To: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
+References: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+Allow the xilinx-pcie driver to be built on MIPS platforms. This will be
+used on the MIPS Boston board.
 
-This patch introduces a function that reverses everything
-done by vmbus_allocate_mmio().  Existing code just called
-release_mem_region().  Future patches in this series
-require a more complex sequence of actions, so this function
-is introduced to wrap those actions.
+Signed-off-by: Paul Burton <paul.burton@imgtec.com>
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- drivers/hv/vmbus_drv.c | 15 +++++++++++++++
- include/linux/hyperv.h |  2 +-
- 2 files changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-index 063e5f5..69393ff 100644
---- a/drivers/hv/vmbus_drv.c
-+++ b/drivers/hv/vmbus_drv.c
-@@ -1221,6 +1221,21 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
+Changes in v3:
+- Split out from Boston patchset.
+
+Changes in v2: None
+
+ drivers/pci/host/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 75a6054..0aee193 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -81,7 +81,7 @@ config PCI_KEYSTONE
  
- /**
-+ * vmbus_free_mmio() - Free a memory-mapped I/O range.
-+ * @start:		Base address of region to release.
-+ * @size:		Size of the range to be allocated
-+ *
-+ * This function releases anything requested by
-+ * vmbus_mmio_allocate().
-+ */
-+void vmbus_free_mmio(resource_size_t start, resource_size_t size)
-+{
-+	release_mem_region(start, size);
-+
-+}
-+EXPORT_SYMBOL_GPL(vmbus_free_mmio);
-+
-+/**
-  * vmbus_cpu_number_to_vp_number() - Map CPU to VP.
-  * @cpu_number: CPU number in Linux terms
-  *
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index a32704d..f3e0c71 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -1091,7 +1091,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 			resource_size_t min, resource_size_t max,
- 			resource_size_t size, resource_size_t align,
- 			bool fb_overlap_ok);
--
-+void vmbus_free_mmio(resource_size_t start, resource_size_t size);
- int vmbus_cpu_number_to_vp_number(int cpu_number);
- u64 hv_do_hypercall(u64 control, void *input, void *output);
- 
+ config PCIE_XILINX
+ 	bool "Xilinx AXI PCIe host bridge support"
+-	depends on ARCH_ZYNQ
++	depends on ARCH_ZYNQ || MIPS
+ 	help
+ 	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+ 	  Host Bridge driver.
 -- 
-1.9.1
+2.7.0
+
