@@ -1,112 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47997 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756522AbcBWArK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Feb 2016 19:47:10 -0500
-Subject: [PATCH v4 06/11] PCI: Move pci_read_vpd() and pci_write_vpd() close
- to other VPD code
-To: Hannes Reinecke <hare@suse.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Babu Moger <babu.moger@oracle.com>,
-	Alexander Duyck <alexander.duyck@gmail.com>
-Date: Mon, 22 Feb 2016 18:47:07 -0600
-Message-ID: <20160223004707.10635.94730.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:33316 "EHLO
+	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966603AbcBDR3r (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 12:29:47 -0500
+Received: by mail-wm0-f50.google.com with SMTP id g62so15110027wme.0
+        for <linux-pci@vger.kernel.org>; Thu, 04 Feb 2016 09:29:46 -0800 (PST)
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V4 22/23] arm64, pci, acpi: Assign legacy IRQs once device is enable.
+Date: Thu,  4 Feb 2016 18:29:00 +0100
+Message-Id: <1454606941-9523-23-git-send-email-tn@semihalf.com>
+In-Reply-To: <1454606941-9523-1-git-send-email-tn@semihalf.com>
+References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_read_vpd() and pci_write_vpd() were stranded in the middle of config
-accessor functions.  Move them close to the other VPD code in the file.
-No functional change.
+This is the last step before enabling generic ACPI PCI host controller
+for ARM64. We need to take care of legacy IRQ mapping for non-MSI(X)
+PCI devices. pcibios_enable_device() boot order is not sensitive to
+ACPI device enumeration, so it is the best place to assign device's IRQs.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+NOTE: *This is going to be temporary solution*. There is ongoing work
+which aims for cleaning legacy IRQ allocation, see [1].
+We can consider this patch as the necessary evil which will be removed
+once [1] series hits mailnline in the near future.
+
+1. http://comments.gmane.org/gmane.linux.kernel.pci/46461
+
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 ---
- drivers/pci/access.c |   62 ++++++++++++++++++++++++--------------------------
- 1 file changed, 30 insertions(+), 32 deletions(-)
+ arch/arm64/kernel/pci.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 4850f06..4c4c734 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -174,38 +174,6 @@ struct pci_ops *pci_bus_set_ops(struct pci_bus *bus, struct pci_ops *ops)
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 023b983..d1a701f 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -39,16 +39,26 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
  }
- EXPORT_SYMBOL(pci_bus_set_ops);
  
--/**
-- * pci_read_vpd - Read one entry from Vital Product Data
-- * @dev:	pci device struct
-- * @pos:	offset in vpd space
-- * @count:	number of bytes to read
-- * @buf:	pointer to where to store result
-- *
-- */
--ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf)
--{
--	if (!dev->vpd || !dev->vpd->ops)
--		return -ENODEV;
--	return dev->vpd->ops->read(dev, pos, count, buf);
--}
--EXPORT_SYMBOL(pci_read_vpd);
--
--/**
-- * pci_write_vpd - Write entry to Vital Product Data
-- * @dev:	pci device struct
-- * @pos:	offset in vpd space
-- * @count:	number of bytes to write
-- * @buf:	buffer containing write data
-- *
-- */
--ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf)
--{
--	if (!dev->vpd || !dev->vpd->ops)
--		return -ENODEV;
--	return dev->vpd->ops->write(dev, pos, count, buf);
--}
--EXPORT_SYMBOL(pci_write_vpd);
--
+ /**
+- * pcibios_enable_device - Enable I/O and memory.
++ * pcibios_enable_device - Enable I/O, memory and legacy IRQs for ACPI.
+  * @dev: PCI device to be enabled
+  * @mask: bitmask of BARs to enable
+  */
+ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ {
++	int ret;
++
+ 	if (pci_has_flag(PCI_PROBE_ONLY))
+ 		return 0;
+ 
+-	return pci_enable_resources(dev, mask);
++	ret = pci_enable_resources(dev, mask);
++	if (ret < 0)
++		return ret;
++
++#ifdef CONFIG_ACPI
++	if (!pci_dev_msi_enabled(dev))
++		return acpi_pci_irq_enable(dev);
++#endif
++	return 0;
+ }
+ 
  /*
-  * The following routines are to prevent the user from accessing PCI config
-  * space when it's unsafe to do so.  Some devices require this during BIST and
-@@ -277,6 +245,36 @@ PCI_USER_WRITE_CONFIG(dword, u32)
- 
- /* VPD access through PCI 2.2+ VPD capability */
- 
-+/**
-+ * pci_read_vpd - Read one entry from Vital Product Data
-+ * @dev:	pci device struct
-+ * @pos:	offset in vpd space
-+ * @count:	number of bytes to read
-+ * @buf:	pointer to where to store result
-+ */
-+ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf)
-+{
-+	if (!dev->vpd || !dev->vpd->ops)
-+		return -ENODEV;
-+	return dev->vpd->ops->read(dev, pos, count, buf);
-+}
-+EXPORT_SYMBOL(pci_read_vpd);
-+
-+/**
-+ * pci_write_vpd - Write entry to Vital Product Data
-+ * @dev:	pci device struct
-+ * @pos:	offset in vpd space
-+ * @count:	number of bytes to write
-+ * @buf:	buffer containing write data
-+ */
-+ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf)
-+{
-+	if (!dev->vpd || !dev->vpd->ops)
-+		return -ENODEV;
-+	return dev->vpd->ops->write(dev, pos, count, buf);
-+}
-+EXPORT_SYMBOL(pci_write_vpd);
-+
- #define PCI_VPD_PCI22_SIZE (PCI_VPD_ADDR_MASK + 1)
- 
- struct pci_vpd_pci22 {
+-- 
+1.9.1
 
