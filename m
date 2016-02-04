@@ -1,28 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:33328 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756261AbcBWAPI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Feb 2016 19:15:08 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glp-linux-pci@m.gmane.org>)
-	id 1aY0d6-0001Oq-E3
-	for linux-pci@vger.kernel.org; Tue, 23 Feb 2016 01:15:04 +0100
-Received: from ARennes-358-1-241-142.w2-13.abo.wanadoo.fr ([2.13.240.142])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Tue, 23 Feb 2016 01:15:04 +0100
-Received: from harveyp by ARennes-358-1-241-142.w2-13.abo.wanadoo.fr with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-pci@vger.kernel.org>; Tue, 23 Feb 2016 01:15:04 +0100
-To: linux-pci@vger.kernel.org
-From: Harvey Partridge <harveyp@hotmail.fr>
-Subject: PCI/USB 2.0 4 port hub fails to install under Ubuntu 12.04
-Date: Tue, 23 Feb 2016 00:06:54 +0000 (UTC)
-Message-ID: <loom.20160223T003705-325@post.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mailapp01.imgtec.com ([195.59.15.196]:18554 "EHLO
+	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965006AbcBDQMC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 11:12:02 -0500
+From: Paul Burton <paul.burton@imgtec.com>
+To: <linux-mips@linux-mips.org>
+CC: Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>,
+	"Paul Burton" <paul.burton@imgtec.com>,
+	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
+	Grygorii Strashko <grygorii.strashko@ti.com>,
+	Russell Joyce <russell.joyce@york.ac.uk>,
+	"Bjorn Helgaas" <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	"Jingoo Han" <jingoohan1@gmail.com>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v3 5/6] PCI: xilinx: Fix INTX irq dispatch
+Date: Thu, 4 Feb 2016 16:10:12 +0000
+Message-ID: <1454602213-967-6-git-send-email-paul.burton@imgtec.com>
+In-Reply-To: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
+References: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Qm9uam91ciwKCkkgaGF2ZSBhIHZlcnkgb2xkIEhld2xldHQtUGFja2FyZCBQQyB3aXRoIFVidW50dSAxMi4wNC4gUmVjZW50bHkgbXkgYnVpbHQtaW4KdXNiIHBvcnRzIGhhdmUgYmVjb21lIHZlcnkgZmxha3kgc28gSSBoYXZlIGJvdWdodCBhIG5ldyBsb3cgcHJvZmlsZSBQQ0kKNC1wb3J0IFVTQiAyLjAgaHViIChWSUEgVGVjaG5vbG9naWVzLCBJbmMuKSB3aGljaCBoYXMgZmFpbGVkIHRvIGluc3RhbGwuCgpJbW1lZGlhdGVseSBhcHBhcmVudCBpcyB0aGUgISEhZXJyb3Igbm90aWNlLiBJIGhhdmUgc3BlbnQgc2V2ZXJhbCBob3VycyBpbgpyZXNlYXJjaCB3aXRoIG5vIHN1Y2Nlc3MgLSBJIGFtIG9idmlvdXNseSBub3QgZG9pbmcgaXQgcmlnaHQhCgpPZGQsIHRvbywgdGhhdCBsc3BjaSBhbmQgbHNodyBvbmx5IGVudW1lcmF0ZSAzIHBvcnRzIG9uIHRoaXMgY2FyZCwgd2hlcmVhcwp0aGVyZSBhcmUgNC4KCkFueSBoZWxwIGdyYXRlZnVsbHkgcmVjZWl2ZWQuIEZhaWxpbmcgZGlyZWN0IGhlbHAsIEkgc2hvdWxkIGFwcHJlY2lhdGUgc29tZQpwb2ludGVycyBvbiBob3cgdG8gc3RhcnQgc2VsZi1oZWxwaW5nIC4uLiBUYSEgRm9yIGV4YW1wbGUsIEkgaW1hZ2luZSBpdAp3b3VsZCBiZSB1c2VmdWwgdG8gdW5kZXJzdGFuZCB0aGUgZXJyb3IgbWVzc2FnZSEKCkkgc2hhbGwgYmUgZ2xhZCB0byBzdXBwbHkgYW55IGZ1cnRoZXIgZGlhZ25vc3RpY3MgLSBqdXN0IHRlbGwgbWUhCkkgYW0gbm90IGEgc3RyYW5nZXIgdG8gcHJvZ3JhbW1pbmcsIGJ1dCBteSBtYWpvciBpbnRlcmVzdHMgaGF2ZSBiZWVuIERCcwpyYXRoZXIgdGhhbiBoYXJkd2FyZS4uLgoKUENJL1ZFTl8xMTA2JkRFVl8zMDNBJlJFVl82MQoKbHN1c2IgZG9lcyBub3QgZmluZCB0aGVzZSBwb3J0cwpkbWVzZyBoYXMgbm8gcmVmZXJlbmNlcyB0byB0aGlzIGNhcmQsIHRoYXQgSSBjYW4gZGlzY292ZXIvcmVjb2duaXNlLgoKbHNwY2kgLXZ2diAtcyAwMTowMQoKMDE6MDEuMCBOb24tVkdBIHVuY2xhc3NpZmllZCBkZXZpY2U6IFZJQSBUZWNobm9sb2dpZXMsIEluYy4gRGV2aWNlIDMwM2EgKHJldiA2MSkKU3Vic3lzdGVtOiBBY2NlbGdyYXBoaWNzIEluYy4gRGV2aWNlIDAwMDMKISEhIEludmFsaWQgY2xhc3MgMDAwMCBmb3IgaGVhZGVyIHR5cGUgMDIKQ29udHJvbDogSS9PLSBNZW0tIEJ1c01hc3RlcisgU3BlY0N5Y2xlLSBNZW1XSU5WLSBWR0FTbm9vcC0gUGFyRXJyLQpTdGVwcGluZy0gU0VSUi0gRmFzdEIyQi0gRGlzSU5UeC0gU3RhdHVzOiBDYXArIDY2TUh6LSBVREYtIEZhc3RCMkItIFBhckVyci0KREVWU0VMPW1lZGl1bSA+VEFib3J0LSBTRVJSLSBMYXRlbmN5OiAyMgpJbnRlcnJ1cHQ6IHBpbiBBIHJvdXRlZCB0byBJUlEgMApSZWdpb24gMDogTWVtb3J5IGF0ICgzMi1iaXQsIG5vbi1wcmVmZXRjaGFibGUpIFtkaXNhYmxlZF0KQnVzOiBwcmltYXJ5PTAwLCBzZWNvbmRhcnk9MDAsIHN1Ym9yZGluYXRlPTAyLCBzZWMtbGF0ZW5jeT0wCk1lbW9yeSB3aW5kb3cgMDogMDAwMjAwMDAtMDAwMmZjZTEgW2Rpc2FibGVkXQpNZW1vcnkgd2luZG93IDE6IDAwMDIwMDAwLTAwMDIwMDAwIFtkaXNhYmxlZF0KSS9PIHdpbmRvdyAwOiAwMDAwMTEwNC0wMDAwMDAwMyBbZGlzYWJsZWRdCkkvTyB3aW5kb3cgMTogMDAwMDAwODAtMDAwMDAwMDMgW2Rpc2FibGVkXQpCcmlkZ2VDdGw6IFBhcml0eS0gU0VSUisgSVNBLSBWR0EtIE1BYm9ydC0gPlJlc2V0LSAxNmJJbnQtIFBvc3RXcml0ZS0gCgpldGMuCgpmcm9tICdsc2h3JwouLi4KCiAgICAgICAqLXBjaQogICAgICAgICAgICAgZGVzY3JpcHRpb246IFBDSSBicmlkZ2UKICAgICAgICAgICAgIHByb2R1aXQ6IDgyODAxIFBDSSBCcmlkZ2UKICAgICAgICAgICAgIGZhYnJpcXVhbnQ6IEludGVsIENvcnBvcmF0aW9uCiAgICAgICAgICAgICBpZGVudGlmaWFudCBtYXTDqXJpZWw6IDFlCiAgICAgICAgICAgICBpbmZvcm1hdGlvbiBidXM6IHBjaUAwMDAwOjAwOjFlLjAKICAgICAgICAgICAgIHZlcnNpb246IDgxCiAgICAgICAgICAgICBiaXRzOiAzMiBiaXRzCiAgICAgICAgICAgICBob3Jsb2dlOiAzM01IegogICAgICAgICAgICAgZm9uY3Rpb25uYWxpdMOpczogcGNpIG5vcm1hbF9kZWNvZGUgYnVzX21hc3RlcgogICAgICAgICAgICAgcmVzc291cmNlczogcG9ydEUvUzpkMDAwKHRhaWxsZT00MDk2KSBtw6ltb2lyZTpmZjgwMDAwMC1mZjhmZmZmZgptw6ltb2lyZTplNmEwMDAwMC1lNmFmZmZmZgogICAgICAgICAgICotdXNiOjAgTk9OLVLDiUNMQU3DiQogICAgICAgICAgICAgICAgZGVzY3JpcHRpb246IFVTQiBjb250cm9sbGVyCiAgICAgICAgICAgICAgICBwcm9kdWl0OiBWSUEgVGVjaG5vbG9naWVzLCBJbmMuCiAgICAgICAgICAgICAgICBmYWJyaXF1YW50OiBWSUEgVGVjaG5vbG9naWVzLCBJbmMuCiAgICAgICAgICAgICAgICBpZGVudGlmaWFudCBtYXTDqXJpZWw6IDEKICAgICAgICAgICAgICAgIGluZm9ybWF0aW9uIGJ1czogcGNpQDAwMDA6MDE6MDEuMAogICAgICAgICAgICAgICAgdmVyc2lvbjogNjEKICAgICAgICAgICAgICAgIGJpdHM6IDMyIGJpdHMKICAgICAgICAgICAgICAgIGhvcmxvZ2U6IDMzTUh6CiAgICAgICAgICAgICAgICBmb25jdGlvbm5hbGl0w6lzOiBwbSB1aGNpIGJ1c19tYXN0ZXIgY2FwX2xpc3QKICAgICAgICAgICAgICAgIGNvbmZpZ3VyYXRpb246IGxhdGVuY3k9MCBtaW5nbnQ9MgogICAgICAgICAgICotdXNiOjEgTk9OLVLDiUNMQU3DiQogICAgICAgICAgICAgICAgZGVzY3JpcHRpb246IFVTQiBjb250cm9sbGVyCiAgICAgICAgICAgICAgICBwcm9kdWl0OiBWSUEgVGVjaG5vbG9naWVzLCBJbmMuCiAgICAgICAgICAgICAgICBmYWJyaXF1YW50OiBWSUEgVGVjaG5vbG9naWVzLCBJbmMuCiAgICAgICAgICAgICAgICBpZGVudGlmaWFudCBtYXTDqXJpZWw6IDEuMQogICAgICAgICAgICAgICAgaW5mb3JtYXRpb24gYnVzOiBwY2lAMDAwMDowMTowMS4xCiAgICAgICAgICAgICAgICB2ZXJzaW9uOiA2MQogICAgICAgICAgICAgICAgYml0czogMzIgYml0cwogICAgICAgICAgICAgICAgaG9ybG9nZTogMzNNSHoKICAgICAgICAgICAgICAgIGZvbmN0aW9ubmFsaXTDqXM6IHBtIHVoY2kgYnVzX21hc3RlciBjYXBfbGlzdAogICAgICAgICAgICAgICAgY29uZmlndXJhdGlvbjogbGF0ZW5jeT0wIG1pbmdudD0yCiAgICAgICAgICAgKi11c2I6MiBOT04tUsOJQ0xBTcOJCiAgICAgICAgICAgICAgICBkZXNjcmlwdGlvbjogVVNCIGNvbnRyb2xsZXIKICAgICAgICAgICAgICAgIHByb2R1aXQ6IFZUNjEwNS9WVDYxMDZTIFtSaGluZS1JSUldCiAgICAgICAgICAgICAgICBmYWJyaXF1YW50OiBWSUEgVGVjaG5vbG9naWVzLCBJbmMuCiAgICAgICAgICAgICAgICBpZGVudGlmaWFudCBtYXTDqXJpZWw6IDEuMgogICAgICAgICAgICAgICAgaW5mb3JtYXRpb24gYnVzOiBwY2lAMDAwMDowMTowMS4yCiAgICAgICAgICAgICAgICB2ZXJzaW9uOiA2MwogICAgICAgICAgICAgICAgYml0czogMzIgYml0cwogICAgICAgICAgICAgICAgaG9ybG9nZTogMzNNSHoKICAgICAgICAgICAgICAgIGZvbmN0aW9ubmFsaXTDqXM6IHBtIGVoY2kgYnVzX21hc3RlciBjYXBfbGlzdAogICAgICAgICAgICAgICAgY29uZmlndXJhdGlvbjogbGF0ZW5jeT0wIG1pbmdudD0yCi4uLg==
+The IRQ domain for INTX interrupts has 4 entries, numbered 0 to 3. This
+matches what the hardware reports from the interrupt FIFO exactly, but
+xilinx_pcie_intr_handler was adding 1 to that value to convert to the
+range 1 to 4. Stop adding 1, such that all of INTA through to INTD fall
+within the range of the IRQ domain.
+
+Signed-off-by: Paul Burton <paul.burton@imgtec.com>
+Fixes: 8961def56845 ("PCI: xilinx: Add Xilinx AXI PCIe Host Bridge IP driver")
+
+---
+
+Changes in v3:
+- Split out from Boston patchset.
+
+Changes in v2:
+- Add Fixes tag.
+
+ drivers/pci/host/pcie-xilinx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 6c5a503..8013e83 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -451,8 +451,8 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 			irq = pcie_read(port, XILINX_PCIE_REG_RPIFR2) &
+ 				XILINX_PCIE_RPIFR2_MSG_DATA;
+ 		} else {
+-			val = ((val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
+-				XILINX_PCIE_RPIFR1_INTR_SHIFT) + 1;
++			val = (val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
++				XILINX_PCIE_RPIFR1_INTR_SHIFT;
+ 			irq = irq_find_mapping(port->irq_domain, val);
+ 		}
+ 
+-- 
+2.7.0
 
