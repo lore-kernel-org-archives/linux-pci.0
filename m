@@ -1,178 +1,416 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH v2 3/3] Revert "PCI,
- x86: Implement pcibios_alloc_irq() and pcibios_free_irq()"
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: =?utf-8?b?0J7Qu9C10LM=?= =?utf-8?b?0JzQvtGA0L7Qtw==?=
-	<oleg.moroz@mcc.vniiem.ru>, Joerg Roedel <jroedel@suse.de>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
-	linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Date: Wed, 17 Feb 2016 12:37:21 -0600
-Message-ID: <20160217183721.302.89369.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160217182718.302.10272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160217182718.302.10272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.47.9]:40931 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933368AbcBDPw0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 10:52:26 -0500
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: Vineet.Gupta1@synopsys.com, helgaas@kernel.org, arnd@arndb.de
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
+	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
+	pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v8 2/2] add new platform driver for PCI RC
+Date: Thu,  4 Feb 2016 15:52:10 +0000
+Message-Id: <c7af1603d4f18d11cb0ccee1c07708a1455ea4ed.1454600622.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1454600622.git.jpinto@synopsys.com>
+References: <cover.1454600622.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1454600622.git.jpinto@synopsys.com>
+References: <cover.1454600622.git.jpinto@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
-pcibios_free_irq()") appeared in v4.3 and helps support IOAPIC hotplug.
+This patch adds a new driver that will be the reference platform driver
+for all PCI RC IP Protoyping Kits based on ARC SDP.
 
-Олег reported that the Elcus-1553 TA1-PCI driver worked in v4.2 but not
-v4.3 and bisected it to 991de2e59090.  Sunjin reported that the RocketRAID
-272x driver worked in v4.2 but not v4.3.  In both cases booting with
-"pci=routirq" is a workaround.
-
-I think the problem is that after 991de2e59090, we no longer call
-pcibios_enable_irq() for upstream bridges.  Prior to 991de2e59090, when a
-driver called pci_enable_device(), we recursively called
-pcibios_enable_irq() for upstream bridges via pci_enable_bridge().
-
-After 991de2e59090, we call pcibios_enable_irq() from pci_device_probe()
-instead of the pci_enable_device() path, which does *not* call
-pcibios_enable_irq() for upstream bridges.
-
-Revert 991de2e59090 to fix these driver regressions.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=111211
-Fixes: 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
-Reported-by: Олег Мороз <oleg.moroz@mcc.vniiem.ru>
-Reported-by: Sunjin Yang <fan4326@gmail.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 ---
- arch/x86/include/asm/pci_x86.h |    2 ++
- arch/x86/pci/common.c          |   20 +++++++++++---------
- arch/x86/pci/intel_mid_pci.c   |    7 ++-----
- arch/x86/pci/irq.c             |   15 ++++++++++++++-
- drivers/acpi/pci_irq.c         |    9 ++++++++-
- 5 files changed, 37 insertions(+), 16 deletions(-)
+Change v7 -> v8 (Bjorn Helgaas and Arnd Bergmann):
+- driver name was changed from pcie-synopsys to pcie-dw-pltfm
+- mdelay() replaced for msleep() in the new driver
+- Devicetree bindings for the new driver was updated (config space removed
+from ranges)
+- Unnecessary synopsys_pcie_irq_handler() was removed
+- Driver compatibility strings updated
+Change v6 -> v7 (Bjorn Helgaas):
+- driver name was changed from pcie-snpsdev to pcie-synopsys
+- driver internals (functions and certain variables) also changed name
+accordingly
+- devicetree bindings documentation also changed accordingly
+- quirk function dw_pcie_link_retrain() was removed (tests were made
+successfully without it)
+- driver was changed to meet pci standards (link up confirmation routine,
+init rc functions, etc.)
+- EPROBE_DEFER were removed
+Change v5 -> v6:
+- Nothing changed (just to keep up with patch set version).
+Change v4 -> v5:
+- Nothing changed (just to keep up with patch set version).
+Changes v3 -> v4 (Bjorn Helgaas):
+- ARCH dependencies were added to the drivers/pci/host/kconfig for the
+PCIE_SNPSDEV.
+Changes v2 -> v3 (Bjorn Helgaas):
+- link init stuff was moved to a snpsdev_pcie_establish_link() function in
+pcie-snpsdev
+- pcie-snpsdev driver declaration was changed to be more 
+standard (Bjorn Helgaas)
+- pcie-designware' dw_pcie_link_retrain() now use standard registers from
+pci-regs.h (Bjorn Helgaas)
+- pcie-snpsdev.txt was complemented with more info (Mark Rutland)
+Changes v1 -> v2 (Bjorn Helgaas):
+- Fixups snpsdev_pcie_fixup_bridge() and snpsdev_pcie_fixup_res() were removed
+from the driver (these functions were for specific tests only and not usefull
+in mainline)
+- Driver' comments were reviewed (fix Typos and excessive comments removal)
+- Removed unnecessary definitions in the driver source (PCIE_PHY_CTRL and
+PCIE_PHY_STAT)
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index 46873fb..d08eacd2 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -93,6 +93,8 @@ extern raw_spinlock_t pci_config_lock;
- extern int (*pcibios_enable_irq)(struct pci_dev *dev);
- extern void (*pcibios_disable_irq)(struct pci_dev *dev);
- 
-+extern bool mp_should_keep_irq(struct device *dev);
+ .../devicetree/bindings/pci/pcie-dw-pltfm.txt      |  36 +++
+ MAINTAINERS                                        |   7 +
+ drivers/pci/host/Kconfig                           |   8 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pcie-dw-pltfm.c                   | 244 +++++++++++++++++++++
+ 5 files changed, 296 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/pcie-dw-pltfm.txt
+ create mode 100644 drivers/pci/host/pcie-dw-pltfm.c
+
+diff --git a/Documentation/devicetree/bindings/pci/pcie-dw-pltfm.txt b/Documentation/devicetree/bindings/pci/pcie-dw-pltfm.txt
+new file mode 100644
+index 0000000..ee2a877
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/pcie-dw-pltfm.txt
+@@ -0,0 +1,36 @@
++Synopsys PCI RC IP Prototyping Kit
++----------------------------------
 +
- struct pci_raw_ops {
- 	int (*read)(unsigned int domain, unsigned int bus, unsigned int devfn,
- 						int reg, int len, u32 *val);
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index cb499c5..d34b511 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -711,20 +711,22 @@ int pcibios_add_device(struct pci_dev *dev)
- 	return 0;
- }
- 
--int pcibios_alloc_irq(struct pci_dev *dev)
-+int pcibios_enable_device(struct pci_dev *dev, int mask)
- {
--	return pcibios_enable_irq(dev);
--}
-+	int err;
- 
--void pcibios_free_irq(struct pci_dev *dev)
--{
--	if (pcibios_disable_irq)
--		pcibios_disable_irq(dev);
-+	if ((err = pci_enable_resources(dev, mask)) < 0)
-+		return err;
++This is the reference platform driver to be used in the Synopsys PCI Root
++Complex IP Prototyping Kit.
 +
-+	if (!pci_dev_msi_enabled(dev))
-+		return pcibios_enable_irq(dev);
-+	return 0;
- }
++Required properties:
++- compatible: set to "snps,dw-pcie" or "snps,ipk-pcie";
++- reg: base address and length of the pcie controller registers and
++configuration address space
++- reg-names: Must be "config" for the PCIe configuration space.
++- #address-cells: set to <3>
++- #size-cells: set to <2>
++- device_type: set to "pci"
++- ranges: ranges for the PCI memory and I/O regions.
++- interrupts: one interrupt source for MSI interrupts, followed by interrupt
++	source for hardware related interrupts.
++- #interrupt-cells: set to <1>
++- num-lanes: set to <1>;
++
++Example configuration:
++
++	pcie: pcie@0xdffff000 {
++		compatible = "snps,dw-pcie";
++		reg = <0xdffff000 0x1000
++		       0xd0000000 0x2000>;
++		reg-names = "csr", "config";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x81000000 0 0x00000000 0xde000000 0 0x00010000
++			  0x82000000 0 0xd0400000 0xd0400000 0 0x0d000000>;
++		interrupts = <25>, <24>;
++		#interrupt-cells = <1>;
++		num-lanes = <1>;
++	};
+diff --git a/MAINTAINERS b/MAINTAINERS
+index e9caa4b..8362189 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8230,6 +8230,13 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+ F:	drivers/pci/host/pcie-hisi.c
  
--int pcibios_enable_device(struct pci_dev *dev, int mask)
-+void pcibios_disable_device (struct pci_dev *dev)
- {
--	return pci_enable_resources(dev, mask);
-+	if (!pci_dev_msi_enabled(dev) && pcibios_disable_irq)
-+		pcibios_disable_irq(dev);
- }
++PCI DRIVER FOR SYNOPSYS PROTOTYPING DEVICE
++M:	Joao Pinto <jpinto@synopsys.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/pcie-dw-pltfm.txt
++F:	drivers/pci/host/pcie-dw-pltfm.c
++
+ PCMCIA SUBSYSTEM
+ P:	Linux PCMCIA Team
+ L:	linux-pcmcia@lists.infradead.org
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index f131ba9..61cdc72 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -172,4 +172,12 @@ config PCI_HISI
+ 	help
+ 	  Say Y here if you want PCIe controller support on HiSilicon HIP05 SoC
  
- int pci_ext_cfg_avail(void)
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 8826ff5..8b93e63 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -256,13 +256,10 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 
- static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- {
--	if (dev->irq_managed && dev->irq > 0) {
-+	if (!mp_should_keep_irq(&dev->dev) && dev->irq_managed &&
-+	    dev->irq > 0) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq_managed = 0;
--		/*
--		 * Don't reset dev->irq here, otherwise
--		 * intel_mid_pci_irq_enable() will fail on next call.
--		 */
- 	}
- }
- 
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 72108f0..9bd1154 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1257,9 +1257,22 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 	return 0;
- }
- 
-+bool mp_should_keep_irq(struct device *dev)
++config PCIE_DW_PLAT
++	bool "Platform Driver for Synopsys PCIe controller"
++	depends on ARC && OF
++	select PCIEPORTBUS
++	select PCIE_DW
++	help
++	  Say Y here if you want to enable Synopsys PCIe controller platform
++	  driver.
+ endmenu
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 9d4d3c6..8c84ba4 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -20,3 +20,4 @@ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
+ obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
+ obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
+ obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
++obj-$(CONFIG_PCIE_DW_PLAT) += pcie-dw-pltfm.o
+diff --git a/drivers/pci/host/pcie-dw-pltfm.c b/drivers/pci/host/pcie-dw-pltfm.c
+new file mode 100644
+index 0000000..0924ec4
+--- /dev/null
++++ b/drivers/pci/host/pcie-dw-pltfm.c
+@@ -0,0 +1,244 @@
++/*
++ * PCIe RC driver for Synopsys Designware Core
++ *
++ * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
++ *
++ * Authors: Manjunath Bettegowda <manjumb@synopsys.com>,
++ *	    Jie Deng <jiedeng@synopsys.com>
++ *	    Joao Pinto <jpinto@synopsys.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/gpio.h>
++#include <linux/interrupt.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_gpio.h>
++#include <linux/pci.h>
++#include <linux/platform_device.h>
++#include <linux/resource.h>
++#include <linux/signal.h>
++#include <linux/types.h>
++
++#include "pcie-designware.h"
++
++#define to_dw_pltfm_pcie(x)	container_of(x, struct dw_pltfm_pcie, pp)
++
++struct dw_pltfm_pcie {
++	void __iomem		*mem_base; /* Memory Base to access Core's [RC]
++					    * Config Space Layout
++					    */
++	struct pcie_port	pp;        /* RC Root Port specific structure -
++					    * DWC_PCIE_RC stuff
++					    */
++};
++
++#define PCI_EQUAL_CONTROL_PHY 0x00000707
++#define PCIE_PHY_DEBUG_R1_LINK_UP 0x00000010
++
++/* PCIe Port Logic registers (memory-mapped) */
++#define PLR_OFFSET 0x700
++#define PCIE_PHY_DEBUG_R0 (PLR_OFFSET + 0x28) /* 0x728 */
++#define PCIE_PHY_DEBUG_R1 (PLR_OFFSET + 0x2c) /* 0x72c */
++
++static irqreturn_t dw_pltfm_pcie_msi_irq_handler(int irq, void *arg)
 +{
-+	if (dev->power.is_prepared)
-+		return true;
-+#ifdef CONFIG_PM
-+	if (dev->power.runtime_status == RPM_SUSPENDING)
-+		return true;
-+#endif
++	struct pcie_port *pp = arg;
 +
-+	return false;
++	dw_handle_msi_irq(pp);
++
++	return dw_handle_msi_irq(pp);
 +}
 +
- static void pirq_disable_irq(struct pci_dev *dev)
- {
--	if (io_apic_assign_pci_irqs && dev->irq_managed && dev->irq) {
-+	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
-+	    dev->irq_managed && dev->irq) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq = 0;
- 		dev->irq_managed = 0;
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index 9032db7..c8e169e 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -478,6 +478,14 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	if (!pin || !dev->irq_managed || dev->irq <= 0)
- 		return;
- 
-+	/* Keep IOAPIC pin configuration when suspending */
-+	if (dev->dev.power.is_prepared)
-+		return;
-+#ifdef	CONFIG_PM
-+	if (dev->dev.power.runtime_status == RPM_SUSPENDING)
-+		return;
-+#endif
++static void dw_pltfm_pcie_init_phy(struct pcie_port *pp)
++{
++	/* write Lane 0 Equalization Control fields register */
++	writel(PCI_EQUAL_CONTROL_PHY, pp->dbi_base + 0x154);
++}
 +
- 	entry = acpi_pci_irq_lookup(dev, pin);
- 	if (!entry)
- 		return;
-@@ -498,6 +506,5 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	if (gsi >= 0) {
- 		acpi_unregister_gsi(gsi);
- 		dev->irq_managed = 0;
--		dev->irq = 0;
- 	}
- }
++static int dw_pltfm_pcie_deassert_core_reset(struct pcie_port *pp)
++{
++	return 0;
++}
++
++static void dw_pltfm_pcie_establish_link(struct pcie_port *pp)
++{
++	int retries = 0;
++
++	/* check if the link is up or not */
++	for (retries = 0; retries < 10; retries++) {
++		if (dw_pcie_link_up(pp)) {
++			dev_info(pp->dev, "Link up\n");
++			return;
++		}
++		msleep(100);
++	}
++}
++
++/*
++ * dw_pltfm_pcie_host_init()
++ * Platform specific host/RC initialization
++ *	a. Assert the core reset
++ *	b. Assert and deassert phy reset and initialize the phy
++ *	c. De-Assert the core reset
++ *	d. Initializet the Root Port (BARs/Memory Or IO/ Interrupt/ Commnad Reg)
++ *	e. Initiate Link startup procedure
++ *
++ */
++static void dw_pltfm_pcie_host_init(struct pcie_port *pp)
++{
++	/* Initialize Phy (Reset/poweron/control-inputs ) */
++	dw_pltfm_pcie_init_phy(pp);
++
++	dw_pltfm_pcie_deassert_core_reset(pp);
++
++	dw_pcie_setup_rc(pp);
++
++	dw_pltfm_pcie_establish_link(pp);
++
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		dw_pcie_msi_init(pp);
++}
++
++static int dw_pltfm_pcie_link_up(struct pcie_port *pp)
++{
++	u32 val;
++
++	val = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
++	return val & PCIE_PHY_DEBUG_R1_LINK_UP;
++}
++
++/**
++ * This is RC operation structure
++ * dw_pltfm_pcie_link_up: the function which initiates the phy link up procedure
++ * dw_pltfm_pcie_host_init: the function which does the host/RC Root port
++ * initialization.
++ */
++static struct pcie_host_ops dw_pltfm_pcie_host_ops = {
++	.link_up = dw_pltfm_pcie_link_up,
++	.host_init = dw_pltfm_pcie_host_init,
++};
++
++/**
++ * dw_pltfm_add_pcie_port
++ * This function
++ * a. installs the interrupt handler
++ * b. registers host operations in the pcie_port structure
++ */
++static int dw_pltfm_add_pcie_port(struct pcie_port *pp,
++				 struct platform_device *pdev)
++{
++	int ret;
++
++	pp->irq = platform_get_irq(pdev, 1);
++
++	if (pp->irq < 0)
++		return pp->irq;
++
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		pp->msi_irq = platform_get_irq(pdev, 0);
++
++		if (pp->msi_irq < 0)
++			return pp->msi_irq;
++
++		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
++					dw_pltfm_pcie_msi_irq_handler,
++					IRQF_SHARED, "dw-pltfm-pcie-msi", pp);
++		if (ret) {
++			dev_err(&pdev->dev, "failed to request msi irq\n");
++			return ret;
++		}
++	}
++
++	pp->root_bus_nr = -1;
++	pp->ops = &dw_pltfm_pcie_host_ops;
++
++	/* Below function:
++	 * Checks for range property from DT
++	 * Gets the IO and MEMORY and CONFIG-Space ranges from DT
++	 * Does IOREMAPS on the physical addresses
++	 * Gets the num-lanes from DT
++	 * Gets MSI capability from DT
++	 * Calls the platform specific host initialization
++	 * Program the correct class, BAR0, Link width, in Config space
++	 * Then it calls pci common init routine
++	 * Then it calls function to assign "unassigned resources"
++	 */
++	ret = dw_pcie_host_init(pp);
++	if (ret) {
++		dev_err(&pdev->dev, "failed to initialize host\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++/**
++ * dw_pltfm_pcie_probe()
++ * This function gets called as part of pcie registration. if the id matches
++ * the platform driver framework will call this function.
++ *
++ * @pdev: Pointer to the platform_device structure
++ *
++ * Returns zero on success; Negative errorno on failure
++ */
++static int dw_pltfm_pcie_probe(struct platform_device *pdev)
++{
++	struct dw_pltfm_pcie *dw_pltfm_pcie;
++	struct pcie_port *pp;
++	struct resource *res;  /* Resource from DT */
++	int ret;
++
++	dw_pltfm_pcie = devm_kzalloc(&pdev->dev, sizeof(*dw_pltfm_pcie),
++					GFP_KERNEL);
++	if (!dw_pltfm_pcie)
++		return -ENOMEM;
++
++	pp = &dw_pltfm_pcie->pp;
++	pp->dev = &pdev->dev;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++
++	if (!res)
++		return -ENODEV;
++
++	dw_pltfm_pcie->mem_base = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(dw_pltfm_pcie->mem_base))
++		return PTR_ERR(dw_pltfm_pcie->mem_base);
++
++	pp->dbi_base = dw_pltfm_pcie->mem_base;
++
++	ret = dw_pltfm_add_pcie_port(pp, pdev);
++	if (ret < 0)
++		return ret;
++
++	platform_set_drvdata(pdev, dw_pltfm_pcie);
++
++	return 0;
++}
++
++static const struct of_device_id dw_pltfm_pcie_of_match[] = {
++	{ .compatible = "snps,dw-pcie", },
++	{ .compatible = "snps,ipk-pcie", },
++	{},
++};
++MODULE_DEVICE_TABLE(of, dw_pltfm_pcie_of_match);
++
++static struct platform_driver dw_pltfm_pcie_driver = {
++	.driver = {
++		.name	= "dw-pcie",
++		.of_match_table = dw_pltfm_pcie_of_match,
++	},
++	.probe = dw_pltfm_pcie_probe,
++};
++
++module_platform_driver(dw_pltfm_pcie_driver);
++
++MODULE_AUTHOR("Manjunath Bettegowda <manjumb@synopsys.com>");
++MODULE_DESCRIPTION("Synopsys PCIe host controller driver");
++MODULE_LICENSE("GPL v2");
+-- 
+1.8.1.5
 
