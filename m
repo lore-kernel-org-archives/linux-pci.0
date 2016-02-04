@@ -1,351 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:46512 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965106AbcBQDp6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:45:58 -0500
-Received: from localhost
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 17 Feb 2016 13:45:56 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v8 19/45] powerpc/powernv: Use PE instead of number during setup and release
-Date: Wed, 17 Feb 2016 14:44:02 +1100
-Message-Id: <1455680668-23298-20-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:57690 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755811AbcBDWo7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Feb 2016 17:44:59 -0500
+Date: Thu, 4 Feb 2016 16:44:56 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Manish Jaggi <mjaggi@caviumnetworks.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Tirumalesh Chalamarla <tchalamarla@cavium.com>,
+	"Richter, Robert" <Robert.Richter@caviumnetworks.com>
+Subject: Re: [PATCH] PCI: Add cavium acs pci quirk
+Message-ID: <20160204224456.GF7031@localhost>
+References: <56ABC5AE.1050209@caviumnetworks.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56ABC5AE.1050209@caviumnetworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In current implementation, the PEs that are allocated or picked
-from the reserved list are identified by PE number. The PE instance
-has to be picked according to the PE number eventually. We have
-same issue when PE is released.
+On Sat, Jan 30, 2016 at 01:33:58AM +0530, Manish Jaggi wrote:
+> 
+> Cavium devices matching this quirk do not perform
+> peer-to-peer with other functions, allowing masking out
+> these bits as if they were unimplemented in the ACS capability.
+> 
+> Acked-by: Tirumalesh Chalamarla <tchalamarla@cavium.com>
+> Signed-off-by: Manish Jaggi <mjaggi@caviumnetworks.com>
 
-For pnv_ioda_pick_m64_pe() and pnv_ioda_alloc_pe(), this returns
-PE instance so that pnv_ioda_setup_bus_PE() can use the allocated
-or reserved PE instance directly. Also, pnv_ioda_setup_bus_PE()
-returns the reserved/allocated PE instance to be used in subsequent
-patches. On the other hand, pnv_ioda_free_pe() uses PE instance
-(not number) as its argument. No logical changes introduced.
+Applied as follows to pci/virtualization for v4.6, thanks, Manish!
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 104 +++++++++++++++++-------------
- arch/powerpc/platforms/powernv/pci.h      |   2 +-
- 2 files changed, 59 insertions(+), 47 deletions(-)
+Note that this quirk applies to *all* Cavium devices.  I assume that's
+what you want; I only mention it because your comment says "Cavium
+devices matching this quirk ...", which is all of them because the
+code says PCI_ANY_ID.
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 7800897..f182ca7 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -119,6 +119,14 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
- 		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
+Bjorn
+
+
+commit b404bcfbf035413dcce539c8ba2c9986d220d8ed
+Author: Manish Jaggi <mjaggi@caviumnetworks.com>
+Date:   Sat Jan 30 01:33:58 2016 +0530
+
+    PCI: Add ACS quirk for all Cavium devices
+    
+    Cavium devices matching this quirk do not perform peer-to-peer with other
+    functions, allowing masking out these bits as if they were unimplemented in
+    the ACS capability.
+    
+    Signed-off-by: Manish Jaggi <mjaggi@caviumnetworks.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Tirumalesh Chalamarla <tchalamarla@cavium.com>
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 0575a1e..85fa6a2a 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3832,6 +3832,19 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+ #endif
  }
  
-+static struct pnv_ioda_pe *pnv_ioda_init_pe(struct pnv_phb *phb, int pe_no)
++static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
 +{
-+	phb->ioda.pe_array[pe_no].phb = phb;
-+	phb->ioda.pe_array[pe_no].pe_number = pe_no;
++	/*
++	 * Cavium devices matching this quirk do not perform peer-to-peer
++	 * with other functions, allowing masking out these bits as if they
++	 * were unimplemented in the ACS capability.
++	 */
++	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
++		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
 +
-+	return &phb->ioda.pe_array[pe_no];
++	return acs_flags ? 0 : 1;
 +}
 +
- static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
- {
- 	if (!(pe_no >= 0 && pe_no < phb->ioda.total_pe_num)) {
-@@ -131,11 +139,10 @@ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
- 		pr_debug("%s: PE %d was reserved on PHB#%x\n",
- 			 __func__, pe_no, phb->hose->global_number);
+ /*
+  * Many Intel PCH root ports do provide ACS-like features to disable peer
+  * transactions and validate bus numbers in requests, but do not provide an
+@@ -3984,6 +3997,8 @@ static const struct pci_dev_acs_enabled {
+ 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
+ 	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
+ 	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
++	/* Cavium ThunderX */
++	{ PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
+ 	{ 0 }
+ };
  
--	phb->ioda.pe_array[pe_no].phb = phb;
--	phb->ioda.pe_array[pe_no].pe_number = pe_no;
-+	pnv_ioda_init_pe(phb, pe_no);
- }
- 
--static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
-+static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
- {
- 	unsigned long pe;
- 
-@@ -143,20 +150,20 @@ static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
- 		pe = find_next_zero_bit(phb->ioda.pe_alloc,
- 					phb->ioda.total_pe_num, 0);
- 		if (pe >= phb->ioda.total_pe_num)
--			return IODA_INVALID_PE;
-+			return NULL;
- 	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
- 
--	phb->ioda.pe_array[pe].phb = phb;
--	phb->ioda.pe_array[pe].pe_number = pe;
--	return pe;
-+	return pnv_ioda_init_pe(phb, pe);
- }
- 
--static void pnv_ioda_free_pe(struct pnv_phb *phb, int pe)
-+static void pnv_ioda_free_pe(struct pnv_ioda_pe *pe)
- {
--	WARN_ON(phb->ioda.pe_array[pe].pdev);
-+	struct pnv_phb *phb = pe->phb;
- 
--	memset(&phb->ioda.pe_array[pe], 0, sizeof(struct pnv_ioda_pe));
--	clear_bit(pe, phb->ioda.pe_alloc);
-+	WARN_ON(pe->pdev);
-+
-+	memset(pe, 0, sizeof(struct pnv_ioda_pe));
-+	clear_bit(pe->pe_number, phb->ioda.pe_alloc);
- }
- 
- /* The default M64 BAR is shared by all PEs */
-@@ -316,7 +323,7 @@ static void pnv_ioda_reserve_m64_pe(struct pci_bus *bus,
- 	}
- }
- 
--static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
-+static struct pnv_ioda_pe *pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
- {
- 	struct pci_controller *hose = pci_bus_to_host(bus);
- 	struct pnv_phb *phb = hose->private_data;
-@@ -326,7 +333,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
- 
- 	/* Root bus shouldn't use M64 */
- 	if (pci_is_root_bus(bus))
--		return IODA_INVALID_PE;
-+		return NULL;
- 
- 	/* Allocate bitmap */
- 	size = _ALIGN_UP(phb->ioda.total_pe_num / 8, sizeof(unsigned long));
-@@ -334,7 +341,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
- 	if (!pe_alloc) {
- 		pr_warn("%s: Out of memory !\n",
- 			__func__);
--		return IODA_INVALID_PE;
-+		return NULL;
- 	}
- 
- 	/* Figure out reserved PE numbers by the PE */
-@@ -347,7 +354,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
- 	 */
- 	if (bitmap_empty(pe_alloc, phb->ioda.total_pe_num)) {
- 		kfree(pe_alloc);
--		return IODA_INVALID_PE;
-+		return NULL;
- 	}
- 
- 	/*
-@@ -393,7 +400,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
- 	}
- 
- 	kfree(pe_alloc);
--	return master_pe->pe_number;
-+	return master_pe;
- }
- 
- static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
-@@ -959,7 +966,6 @@ static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
- 	struct pnv_phb *phb = hose->private_data;
- 	struct pci_dn *pdn = pci_get_pdn(dev);
- 	struct pnv_ioda_pe *pe;
--	int pe_num;
- 
- 	if (!pdn) {
- 		pr_err("%s: Device tree node not associated properly\n",
-@@ -969,8 +975,8 @@ static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
- 	if (pdn->pe_number != IODA_INVALID_PE)
- 		return NULL;
- 
--	pe_num = pnv_ioda_alloc_pe(phb);
--	if (pe_num == IODA_INVALID_PE) {
-+	pe = pnv_ioda_alloc_pe(phb);
-+	if (!pe) {
- 		pr_warning("%s: Not enough PE# available, disabling device\n",
- 			   pci_name(dev));
- 		return NULL;
-@@ -983,10 +989,9 @@ static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
- 	 *
- 	 * At some point we want to remove the PDN completely anyways
- 	 */
--	pe = &phb->ioda.pe_array[pe_num];
- 	pci_dev_get(dev);
- 	pdn->pcidev = dev;
--	pdn->pe_number = pe_num;
-+	pdn->pe_number = pe->pe_number;
- 	pe->flags = PNV_IODA_PE_DEV;
- 	pe->pdev = dev;
- 	pe->pbus = NULL;
-@@ -997,8 +1002,7 @@ static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
- 
- 	if (pnv_ioda_configure_pe(phb, pe)) {
- 		/* XXX What do we do here ? */
--		if (pe_num)
--			pnv_ioda_free_pe(phb, pe_num);
-+		pnv_ioda_free_pe(pe);
- 		pdn->pe_number = IODA_INVALID_PE;
- 		pe->pdev = NULL;
- 		pci_dev_put(dev);
-@@ -1033,28 +1037,26 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
-  * subordinate PCI devices and buses. The second type of PE is normally
-  * orgiriated by PCIe-to-PCI bridge or PLX switch downstream ports.
-  */
--static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
-+static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
- {
- 	struct pci_controller *hose = pci_bus_to_host(bus);
- 	struct pnv_phb *phb = hose->private_data;
--	struct pnv_ioda_pe *pe;
--	int pe_num = IODA_INVALID_PE;
-+	struct pnv_ioda_pe *pe = NULL;
- 
- 	/* Check if PE is determined by M64 */
- 	if (phb->pick_m64_pe)
--		pe_num = phb->pick_m64_pe(bus, all);
-+		pe = phb->pick_m64_pe(bus, all);
- 
- 	/* The PE number isn't pinned by M64 */
--	if (pe_num == IODA_INVALID_PE)
--		pe_num = pnv_ioda_alloc_pe(phb);
-+	if (!pe)
-+		pe = pnv_ioda_alloc_pe(phb);
- 
--	if (pe_num == IODA_INVALID_PE) {
-+	if (!pe) {
- 		pr_warning("%s: Not enough PE# available for PCI bus %04x:%02x\n",
- 			__func__, pci_domain_nr(bus), bus->number);
--		return;
-+		return NULL;
- 	}
- 
--	pe = &phb->ioda.pe_array[pe_num];
- 	pe->flags |= (all ? PNV_IODA_PE_BUS_ALL : PNV_IODA_PE_BUS);
- 	pe->pbus = bus;
- 	pe->pdev = NULL;
-@@ -1063,17 +1065,16 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
- 
- 	if (all)
- 		pe_info(pe, "Secondary bus %d..%d associated with PE#%d\n",
--			bus->busn_res.start, bus->busn_res.end, pe_num);
-+			bus->busn_res.start, bus->busn_res.end, pe->pe_number);
- 	else
- 		pe_info(pe, "Secondary bus %d associated with PE#%d\n",
--			bus->busn_res.start, pe_num);
-+			bus->busn_res.start, pe->pe_number);
- 
- 	if (pnv_ioda_configure_pe(phb, pe)) {
- 		/* XXX What do we do here ? */
--		if (pe_num)
--			pnv_ioda_free_pe(phb, pe_num);
-+		pnv_ioda_free_pe(pe);
- 		pe->pbus = NULL;
--		return;
-+		return NULL;
- 	}
- 
- 	/* Associate it with all child devices */
-@@ -1081,6 +1082,8 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
- 
- 	/* Put PE to the list */
- 	list_add_tail(&pe->list, &phb->ioda.pe_list);
-+
-+	return pe;
- }
- 
- static struct pnv_ioda_pe *pnv_ioda_setup_npu_PE(struct pci_dev *npu_pdev)
-@@ -1392,7 +1395,7 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
- 
- 		pnv_ioda_deconfigure_pe(phb, pe);
- 
--		pnv_ioda_free_pe(phb, pe->pe_number);
-+		pnv_ioda_free_pe(pe);
- 	}
- }
- 
-@@ -1401,6 +1404,7 @@ void pnv_pci_sriov_disable(struct pci_dev *pdev)
- 	struct pci_bus        *bus;
- 	struct pci_controller *hose;
- 	struct pnv_phb        *phb;
-+	struct pnv_ioda_pe    *pe;
- 	struct pci_dn         *pdn;
- 	struct pci_sriov      *iov;
- 	u16                    num_vfs, i;
-@@ -1425,8 +1429,11 @@ void pnv_pci_sriov_disable(struct pci_dev *pdev)
- 		/* Release PE numbers */
- 		if (pdn->m64_single_mode) {
- 			for (i = 0; i < num_vfs; i++) {
--				if (pdn->pe_num_map[i] != IODA_INVALID_PE)
--					pnv_ioda_free_pe(phb, pdn->pe_num_map[i]);
-+				if (pdn->pe_num_map[i] == IODA_INVALID_PE)
-+					continue;
-+
-+				pe = &phb->ioda.pe_array[pdn->pe_num_map[i]];
-+				pnv_ioda_free_pe(pe);
- 			}
- 		} else
- 			bitmap_clear(phb->ioda.pe_alloc, *pdn->pe_num_map, num_vfs);
-@@ -1479,8 +1486,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
- 
- 		if (pnv_ioda_configure_pe(phb, pe)) {
- 			/* XXX What do we do here ? */
--			if (pe_num)
--				pnv_ioda_free_pe(phb, pe_num);
-+			pnv_ioda_free_pe(pe);
- 			pe->pdev = NULL;
- 			continue;
- 		}
-@@ -1499,6 +1505,7 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
- 	struct pci_bus        *bus;
- 	struct pci_controller *hose;
- 	struct pnv_phb        *phb;
-+	struct pnv_ioda_pe    *pe;
- 	struct pci_dn         *pdn;
- 	int                    ret;
- 	u16                    i;
-@@ -1541,11 +1548,13 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
- 		/* Calculate available PE for required VFs */
- 		if (pdn->m64_single_mode) {
- 			for (i = 0; i < num_vfs; i++) {
--				pdn->pe_num_map[i] = pnv_ioda_alloc_pe(phb);
--				if (pdn->pe_num_map[i] == IODA_INVALID_PE) {
-+				pe = pnv_ioda_alloc_pe(phb);
-+				if (!pe) {
- 					ret = -EBUSY;
- 					goto m64_failed;
- 				}
-+
-+				pdn->pe_num_map[i] = pe->pe_number;
- 			}
- 		} else {
- 			mutex_lock(&phb->ioda.pe_alloc_mutex);
-@@ -1590,8 +1599,11 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
- m64_failed:
- 	if (pdn->m64_single_mode) {
- 		for (i = 0; i < num_vfs; i++) {
--			if (pdn->pe_num_map[i] != IODA_INVALID_PE)
--				pnv_ioda_free_pe(phb, pdn->pe_num_map[i]);
-+			if (pdn->pe_num_map[i] == IODA_INVALID_PE)
-+				continue;
-+
-+			pe = &phb->ioda.pe_array[pdn->pe_num_map[i]];
-+			pnv_ioda_free_pe(pe);
- 		}
- 	} else
- 		bitmap_clear(phb->ioda.pe_alloc, *pdn->pe_num_map, num_vfs);
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 928cf81..ef9924a 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -109,7 +109,7 @@ struct pnv_phb {
- 	int (*init_m64)(struct pnv_phb *phb);
- 	void (*reserve_m64_pe)(struct pci_bus *bus,
- 			       unsigned long *pe_bitmap, bool all);
--	int (*pick_m64_pe)(struct pci_bus *bus, bool all);
-+	struct pnv_ioda_pe *(*pick_m64_pe)(struct pci_bus *bus, bool all);
- 	int (*get_pe_state)(struct pnv_phb *phb, int pe_no);
- 	void (*freeze_pe)(struct pnv_phb *phb, int pe_no);
- 	int (*unfreeze_pe)(struct pnv_phb *phb, int pe_no, int opt);
--- 
-2.1.0
-
