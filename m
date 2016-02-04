@@ -1,140 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48399 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756115AbcBPWZb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 16 Feb 2016 17:25:31 -0500
-Date: Tue, 16 Feb 2016 15:25:29 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Jayachandran Chandrashekaran Nair
-	<jayachandran.chandrashekaran@broadcom.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: Re: [RFC PATCH 1/2] PCI: Add PCI device flag
- PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS
-Message-ID: <20160216152529.33855bc1@t450s.home>
-In-Reply-To: <CAKc_7PUtm7443qv40DNWKqJneWnVT6Do7s7vr_hOerkGLOgkJg@mail.gmail.com>
-References: <1455487501-28630-1-git-send-email-jchandra@broadcom.com>
-	<20160215182023.GB12641@localhost>
-	<20160215123901.1600f86f@t450s.home>
-	<CAKc_7PUtm7443qv40DNWKqJneWnVT6Do7s7vr_hOerkGLOgkJg@mail.gmail.com>
+Received: from mout.kundenserver.de ([212.227.126.134]:63250 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752570AbcBDNN3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 08:13:29 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Vineet.Gupta1@synopsys.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
+	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
+	pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
+Subject: Re: [PATCH v7 2/2] add new platform driver for PCI RC
+Date: Thu, 04 Feb 2016 14:12:40 +0100
+Message-ID: <5558330.K4tT8JUImA@wuerfel>
+In-Reply-To: <56B331BF.2000406@synopsys.com>
+References: <cover.1454349430.git.jpinto@synopsys.com> <2915520.tvWP9ESSNu@wuerfel> <56B331BF.2000406@synopsys.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 17 Feb 2016 02:38:24 +0530
-Jayachandran Chandrashekaran Nair
-<jayachandran.chandrashekaran@broadcom.com> wrote:
-
-> On Tue, Feb 16, 2016 at 1:09 AM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > On Mon, 15 Feb 2016 12:20:23 -0600
-> > Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >  
-> >> [+cc Alex, iommu list]
-> >>
-> >> On Mon, Feb 15, 2016 at 03:35:00AM +0530, Jayachandran C wrote:  
-> >> > Add a new flag PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS to indicate bridges
-> >> > that should not be considered during DMA alias search. This is
-> >> > to support hardware (in this case Broadcom Vulcan PCIe subsystem)
-> >> > that has internal bridges which have either missing or wrong PCIe
-> >> > capabilities.  
-> >
-> > I figured this would come at some point, the right answer is of course
-> > to follow the PCIe spec and implement the required PCIe capability in
-> > the hardware.  
+On Thursday 04 February 2016 11:10:55 Joao Pinto wrote:
+> > The "synopsys" can go away, it's already in the vendor field of the
+> > string. "ipk" is still a bit unspecific, I was hoping to see a specific
+> > chip and/or version of the PCIe part. Something like
+> > 
+> >       compatible = "snps,ipk2040-pcie", "snps,ipk-pcie", "snps,dw-pcie-1.23", "snps,dw-pcie";
+> > 
+> > which would indicate that there is a chip called "ipk2040" in a family called "ipk",
+> > and this includes the designware pcie implementation in version 1.23.
+> > 
 > 
-> There are  PCIe controllers on the chip that follows the spec, the issue is
-> how it is integrated to the northbridge (equivalent) on the chip, I have
-> tried to explain it below.
+> "snps,dw-pcie" seems a good idea!
 > 
-> >> This needs more explanation, like what exactly is wrong with this
-> >> device?  A missing PCIe capability might cause other problems.
-> >>
-> >> What problem does this fix?  Without these patches, do we merely add
-> >> aliases that are unnecessary?  Do we crash because something goes
-> >> wrong in the pci_pcie_type() switch because of the incorrect
-> >> capability?  
-> 
-> Here's how (for example) how the PCI enumeration of a 2 node Vulcan
-> processor will look like:
-> 
-> 
-> [0] +-0.0.0--[1]---+--1.a.0----[2]-----2.0.0---[3]----3.0.0
->     |              +--1.a.1----[4]-----4.0.0---[5]----5.0.0
->     |              .
->     |              ... etc...
->     |
->     +-0.0.1--[10]--+-10.a.0----[11]---11.0.0---[12]---12.0.0
->                    +-10.a.1----[13]---13.0.0---[14]---14.0.0
->                    .
->                    ... etc...
 
-So we have:
+Just to clarify: I really meant you should put all four of the strings
+into the compatible property.
 
-    "Glue Bridge"---"Glue Bridges"---Root Ports---Endpoints
-      (no pcie)      (pci/x-pcie)
-
-> 
-> The devices 0.0.x and x.a.x are glue bridges that are there to
-> bring the real PCIe controllers (pcie cap type 4) 2.0.0, 4.0.0,
-> 11.0.0, 13.0.0 under a single PCI hierarchy. The x.a.x bridges
-> have a PCIe capability (type 8) and 0.0.x does not have any pcie
-> capability.
-> 
-> In case of Vulcan, both the GICv3 ITS driver code and the SMMUv3
-> driver code does dma alias walk to find the device id to use
-> in ITS and SMMU. In both cases it will ignore the x.0.0 bridges
-> since they are type root port, but will continue on up and end
-> up with incorrect device id.
-> 
-> The flag I have added is to make the pci_for_each_dma_alias()
-> ignore the last 2 levels of glue/internal bridges.
-
-Per the PCIe spec, I'm not even sure what you have is a valid
-hierarchy, root ports sit on root complexes, not behind a PCI-to-PCIe
-bridge.  So really you're pretending that the downstream "glue bridge"
-is your host bridge and therefore root complex, but the PCI topology
-would clearly dictate that the top-most bus is conventional PCI and
-therefore everything is an alias of everything else and the DMA alias
-code is doing exactly what it should.
-
-Also note that the caller of pci_for_each_dma_alias() owns the callback
-function triggered for each alias, that function could choose to prune
-out these "glue bridges" itself if that's the appropriate thing to do.
-Where do the SMMU and ITS actually reside in the above diagram?  You
-can use the callout function to stop the traversal anywhere you wish,
-it's free to return a -errno to stop or positive number, which the
-caller can interpret as error or non-failure stop condition.
-
-You could even think about changing what Linux considers to be the host
-bridge.  Maybe these glue bridges shouldn't even be visible to Linux,
-would that also solve the issue with the broken BAR?
-
-> > The change takes the same code path as it would for a real PCIe bridge
-> > port (downstream/upstream/root), which means they want to skip adding
-> > this bridge as an alias of the device.  So we're adding in aliases that
-> > don't exist, the bridge itself.
-> >
-> > If anything I'd suggest a flag that actually tries to address the
-> > problem rather than a symptom of the problem.  For example, maybe the
-> > flag should be PCI_DEV_FLAGS_IS_PCIE.  Maybe pci_is_pcie() should even
-> > take that into account.  That has some trickle through for
-> > pci_pcie_type() and all the accessor functions, but maybe it's a
-> > cleaner solution overall (or maybe it explodes further).  Thanks,  
-> 
-> I didn't really want to mark the glue bridges as PCIe or have fake
-> PCIe capability there, the obvious simple solution was to add
-> the flag PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS
-> 
-> Any suggestions/comments on how to do this better would be welcome.
-
-I definitely don't think either flag idea is the right solution, I
-think you've actually already got the tools you need to solve it by
-putting the intelligence in the callback function or by going further
-down the path of pretending the glue bridge is really a host bridge.
-Thanks,
-
-Alex
+	Arnd
