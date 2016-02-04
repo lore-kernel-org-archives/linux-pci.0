@@ -1,63 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:34985 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751926AbcBEKsz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2016 05:48:55 -0500
-Received: by mail-ig0-f176.google.com with SMTP id hb3so11062791igb.0
-        for <linux-pci@vger.kernel.org>; Fri, 05 Feb 2016 02:48:55 -0800 (PST)
+Received: from mail.kernel.org ([198.145.29.136]:33229 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757537AbcBDXOB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Feb 2016 18:14:01 -0500
+Date: Thu, 4 Feb 2016 17:13:58 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Sean O. Stalley" <sean.stalley@intel.com>
+Cc: linux-pci@vger.kernel.org, mj@ucw.cz, bhelgaas@google.com,
+	alex.williamson@redhat.com, david.daney@cavium.com
+Subject: Re: [PATCH 1/2] pci: Identify Enhanced Allocation (EA) BAR
+ Equivalent resources
+Message-ID: <20160204231358.GG7031@localhost>
+References: <1453500294-3140-1-git-send-email-sean.stalley@intel.com>
+ <1453500294-3140-2-git-send-email-sean.stalley@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <4090946.AhejVJy7MO@wuerfel>
-References: <1454077035-23872-1-git-send-email-ard.biesheuvel@linaro.org>
-	<20160129142831.GF4541@arm.com>
-	<CAKv+Gu_V83bUktPX0EiHd6qCDT2y0NEx=4n-uVv=P2MF9AZbMQ@mail.gmail.com>
-	<4090946.AhejVJy7MO@wuerfel>
-Date: Fri, 5 Feb 2016 11:48:54 +0100
-Message-ID: <CAKv+Gu8oZADs_FRN=p7_Nz0wXJVWVmzVNsxtzscyp7_cFAreAQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI: generic: map config window in one go
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Mark Brown <mark.brown@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1453500294-3140-2-git-send-email-sean.stalley@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 29 January 2016 at 15:52, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Friday 29 January 2016 15:32:01 Ard Biesheuvel wrote:
->> On 29 January 2016 at 15:28, Will Deacon <will.deacon@arm.com> wrote:
->> > Hi Ard,
->> >
->> > On Fri, Jan 29, 2016 at 03:17:15PM +0100, Ard Biesheuvel wrote:
->> >> Instead of iterating over the PCI config window and performing individual
->> >> ioremap() calls on all the adjacent slices, perform a single ioremap() to
->> >> map the entire region, and divvy it up later. This not only prevents
->> >> leaving some of it mapped if we fail half way through, it also ensures that
->> >> archs that support huge-vmap can use section mappings to perform the
->> >> mapping.
->> >>
->> >> On my Seattle A0 box, this transforms 128 separate 1 MB mappings that are
->> >> mapped down to 4 KB pages into a single 128 MB mapping using 2 MB sections,
->> >> saving 512 KB worth of page tables.
->> >>
->> >> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
->> >> ---
->> >
->> > The code was written this way in response to feedback during driver review
->> > that we couldn't necessarily grab that much contiguous vmalloc space on
->> > 32-bit ARM. Unless that's changed, we probably want to to predicate this
->> > change on having a 64-bit arch.
->> >
->>
->> Ah right. How about testing for the ARCH_HAVE_HUGE_VMAP Kconfig symbol
->> explicitly?
->>
->
-> Testing for 64BIT should be sufficient.
->
+On Fri, Jan 22, 2016 at 02:04:53PM -0800, Sean O. Stalley wrote:
+> From: Alex Williamson <alex.williamson@redhat.com>
+> 
+> We've done a pretty good job of abstracting EA from drivers,
+> but there are some cases where flaging resources as EA would be
+> useful. Specifically, EA is flexabable when it comes to resource
 
-Does it make sense to spin a v2 for this patch? Given the discussion
-we had regarding allocating only the config regions for busses that
-are populated, perhaps there is a better approach here?
+Heh, "flexabable" :)
+
+> alignment & sizing. This can create issues when existing software
+> makes assumptions about the PCI resources.
+> 
+> For example, lspci assumes any PCI resource exposed by the kernel
+> that isn't visible in standard configspace comes from a VF BAR.
+> vfio makes assumptions about alignment and sizing, and runs into
+> problems when attempting to emulate a BAR Equivalent EA resource.
+> 
+> To facilitate that, a flag indicating whether a PCI resource is a
+> traditional BAR or BAR equivalent seems much nicer than attempting
+> to deduce where the resource came from from the size & address fields
+> (which is impossible if a EA resource happens naturally aligned).
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+> ---
+>  drivers/pci/pci.c      | 2 +-
+>  include/linux/ioport.h | 2 ++
+>  2 files changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index d1a7105..8ff678c 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2229,7 +2229,7 @@ void pci_pm_init(struct pci_dev *dev)
+>  
+>  static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
+>  {
+> -	unsigned long flags = IORESOURCE_PCI_FIXED;
+> +	unsigned long flags = IORESOURCE_PCI_FIXED | IORESOURCE_PCI_EA_BEI;
+>  
+>  	switch (prop) {
+>  	case PCI_EA_P_MEM:
+> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+> index 24bea08..5acc194 100644
+> --- a/include/linux/ioport.h
+> +++ b/include/linux/ioport.h
+> @@ -105,6 +105,8 @@ struct resource {
+>  /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
+>  #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move resource */
+>  
+> +/* PCI Enhanced Allocation defined BAR equivalent resource */
+> +#define IORESOURCE_PCI_EA_BEI		(1<<5)
+
+Hmmm, I didn't realize until I read the lspci patch that the resource
+flags are exposed via sysfs (I think in resource_show()) and are thus
+part of the sysfs ABI.  It would be nice to have a comment to that
+effect here in ioport.h so we don't move bits and inadvertently break
+something.
+
+The changelog should also connect the dots a little bit more, e.g.,
+mention the sysfs file affected by this patch, and that this currently
+only makes lspci print slightly more correct output.
+
+>  /* helpers to define resources */
+>  #define DEFINE_RES_NAMED(_start, _size, _name, _flags)			\
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
