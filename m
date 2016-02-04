@@ -1,75 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52092 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1425604AbcBRMwE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Feb 2016 07:52:04 -0500
-Date: Thu, 18 Feb 2016 13:52:01 +0100
-From: Jean Delvare <jdelvare@suse.de>
-To: linux-pci@vger.kernel.org
-Cc: Thomas Renninger <trenn@suse.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Borislav Petkov <bp@suse.de>,
-	Prarit Bhargava <prarit@redhat.com>
-Subject: [PATCH 2/4] PCI: aer_inject: Use dev_warn()
-Message-ID: <20160218135201.1a97a532@endymion>
-In-Reply-To: <20160218130928.67dbf63b@endymion>
-References: <20160218130928.67dbf63b@endymion>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V4 11/23] pci, acpi: Move ACPI host bridge device companion assignment to core code.
+Date: Thu,  4 Feb 2016 18:28:49 +0100
+Message-Id: <1454606941-9523-12-git-send-email-tn@semihalf.com>
+In-Reply-To: <1454606941-9523-1-git-send-email-tn@semihalf.com>
+References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-dev_warn() is better than printk(LOG_WARNING...) as it records which
-device the message relates to. Also add a prefix "aer_inject:" to
-help differentiate real errors from injected errors.
+Currently we have two platforms (x86 & ia64) capable of PCI ACPI host
+bridge initialization. They both use sysdata to pass down parent
+device reference and both rely on NULL parent in pci_create_root_bus()
+to validate sysdata content.
 
-Signed-off-by: Jean Delvare <jdelvare@suse.de>
-Cc: Borislav Petkov <bp@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
+It looks hacky and prevents us from getting some firmware specific
+info for PCI host controller e.g. PCI bus domain number.
+However, we overcome that blocker by passing down parent
+device via pci_create_root_bus parameter (as the ACPI device type)
+and using ACPI_COMPANION_SET in core code for ACPI boot method.
+ACPI_COMPANION_SET is safe to run for all cases DT, ACPI and DT&ACPI.
+
+Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Duc Dang <dhdang@apm.com>
+Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+Tested-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/pci/pcie/aer/aer_inject.c |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/acpi/pci_root.c | 5 ++++-
+ drivers/pci/probe.c     | 2 ++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
---- linux-4.5-rc4.orig/drivers/pci/pcie/aer/aer_inject.c	2016-02-18 11:41:48.738010173 +0100
-+++ linux-4.5-rc4/drivers/pci/pcie/aer/aer_inject.c	2016-02-18 12:50:56.927581343 +0100
-@@ -25,6 +25,7 @@
- #include <linux/fs.h>
- #include <linux/uaccess.h>
- #include <linux/stddef.h>
-+#include <linux/device.h>
- #include "aerdrv.h"
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index ae3fe4e..a65c8c2 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -846,7 +846,10 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
  
- /* Override the existing corrected and uncorrected error masks */
-@@ -397,14 +398,16 @@ static int aer_inject(struct aer_error_i
- 	if (!aer_mask_override && einj->cor_status &&
- 	    !(einj->cor_status & ~cor_mask)) {
- 		ret = -EINVAL;
--		printk(KERN_WARNING "The correctable error(s) is masked by device\n");
-+		dev_warn(&dev->dev,
-+			 "aer_inject: The correctable error(s) is masked by device\n");
- 		spin_unlock_irqrestore(&inject_lock, flags);
- 		goto out_put;
- 	}
- 	if (!aer_mask_override && einj->uncor_status &&
- 	    !(einj->uncor_status & ~uncor_mask)) {
- 		ret = -EINVAL;
--		printk(KERN_WARNING "The uncorrectable error(s) is masked by device\n");
-+		dev_warn(&dev->dev,
-+			 "aer_inject: The uncorrectable error(s) is masked by device\n");
- 		spin_unlock_irqrestore(&inject_lock, flags);
- 		goto out_put;
- 	}
-@@ -457,7 +460,8 @@ static int aer_inject(struct aer_error_i
- 
- 	if (find_aer_device(rpdev, &edev)) {
- 		if (!get_service_data(edev)) {
--			printk(KERN_WARNING "AER service is not initialized\n");
-+			dev_warn(&edev->device,
-+				 "aer_inject: AER service is not initialized\n");
- 			ret = -EPROTONOSUPPORT;
- 			goto out_put;
- 		}
-
+ 	pci_acpi_root_add_resources(info);
+ 	pci_add_resource(&info->resources, &root->secondary);
+-	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
++
++	/* Root bridge device needs to be sure of parent ACPI type */
++	ACPI_COMPANION_SET(&device->dev, device);
++	bus = pci_create_root_bus(&device->dev, busnum, ops->pci_ops,
+ 				  sysdata, &info->resources);
+ 	if (!bus)
+ 		goto out_release_info;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6d7ab9b..81dd3a2 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2100,6 +2100,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	bridge->dev.parent = parent;
+ 	bridge->dev.release = pci_release_host_bridge_dev;
+ 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
++	ACPI_COMPANION_SET(&bridge->dev,
++			   parent ? to_acpi_device_node(parent->fwnode) : NULL);
+ 	error = pcibios_root_bridge_prepare(bridge);
+ 	if (error) {
+ 		kfree(bridge);
 -- 
-Jean Delvare
-SUSE L3 Support
+1.9.1
+
