@@ -1,47 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:53462 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1424150AbcBROb2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Feb 2016 09:31:28 -0500
-Date: Thu, 18 Feb 2016 15:29:03 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-next@vger.kernel.org,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: [PATCH] PCI: mvebu: Restrict build to 32-bit ARM
-Message-ID: <20160218152903.7a659ca8@free-electrons.com>
-In-Reply-To: <1455802330-17565-1-git-send-email-thierry.reding@gmail.com>
-References: <1455802330-17565-1-git-send-email-thierry.reding@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: guohanjun@huawei.com, wangzhou1@hisilicon.com,
+	liudongdong3@huawei.com, linuxarm@huawei.com, qiujiang@huawei.com,
+	bhelgaas@google.com, Lorenzo.Pieralisi@arm.com, tn@semihalf.com,
+	zhangjukuo@huawei.com, xuwei5@hisilicon.com,
+	liguozhu@hisilicon.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jcm@redhat.com
+Subject: Re: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host Controllers
+Date: Thu, 04 Feb 2016 14:11:32 +0100
+Message-ID: <2387127.DMZaDnZvEW@wuerfel>
+In-Reply-To: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
-
-On Thu, 18 Feb 2016 14:32:10 +0100, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
+On Thursday 04 February 2016 19:37:36 Gabriele Paoloni wrote:
+> From: gabriele paoloni <gabriele.paoloni@huawei.com>
 > 
-> This driver uses PCI glue that is only available on 32-bit ARM. This
-> used to work fine as long as ARCH_MVEBU and ARCH_DOVE were exclusively
-> 32-bit, but that's changed now, with ARCH_MVEBU also being available
-> on 64-bit ARM.
+> This patchset adds ACPI support for the HiSilicon Hip05/Hip06 SoC PCIe controllers
+> The four patches respectively:
+>         - rework PCie Designware to be used for ACPI PCI Host controllers
+>         - re-architect the current HiSilicon driver to make it scalable to the
+>           new ACPI quirks
+>         - rework the current HiSilicon driver to make it ECAM compliant
+>         - adds the HiSilicon ACPI specific quirks.
 > 
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
-> ---
->  drivers/pci/host/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
+>    This patchset  is based on 
+>    https://github.com/semihalf-nowicki-tomasz/linux.git
+>    branch pci-acpi-v3 + Hip06 support applied on top:
+>    https://patchwork.ozlabs.org/patch/549198/
+> 
 
-Acked-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+ACPI has its own PCI support, and should not need drivers for host
+bridges. I don't think we can really mix the two things, as ACPI
+needs to have access to things like PCI config space way before
+we are probing normal device drivers.
 
-Best regards,
+Please put this in drivers/acpi/pci*.c.
 
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+	Arnd
