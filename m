@@ -1,82 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:40503 "EHLO theia.8bytes.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754585AbcBZP4C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 26 Feb 2016 10:56:02 -0500
-Date: Fri, 26 Feb 2016 16:55:58 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Marsan, Luugi" <Luugi.Marsan@amd.com>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: BUGZILLA [112941] - Cannot reenable SRIOV after disabling SRIOV
- on AMD GPU
-Message-ID: <20160226155558.GA32730@8bytes.org>
-References: <CY1PR12MB0262D12DAC0897F8DC74541CFEA40@CY1PR12MB0262.namprd12.prod.outlook.com>
- <20160223170215.GA25203@localhost>
- <CY1PR12MB0262E17EF294E8A1F23D8CB2FEA40@CY1PR12MB0262.namprd12.prod.outlook.com>
- <CY1PR12MB02629490AFFE29BACB197EA6FEA50@CY1PR12MB0262.namprd12.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CY1PR12MB02629490AFFE29BACB197EA6FEA50@CY1PR12MB0262.namprd12.prod.outlook.com>
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:36906 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966176AbcBDR33 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 12:29:29 -0500
+Received: by mail-wm0-f53.google.com with SMTP id g62so15064913wme.0
+        for <linux-pci@vger.kernel.org>; Thu, 04 Feb 2016 09:29:28 -0800 (PST)
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V4 15/23] acpi, mcfg: Implement two calls that might be used to inject/remove MCFG region.
+Date: Thu,  4 Feb 2016 18:28:53 +0100
+Message-Id: <1454606941-9523-16-git-send-email-tn@semihalf.com>
+In-Reply-To: <1454606941-9523-1-git-send-email-tn@semihalf.com>
+References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kelly,
+Lets abstract two calls which allow to inject and remove MCFG regions
+which may come from DSDT table. These calls will be used for x86 and ARM64
+PCI host bridge driver in the later patches.
 
-On Wed, Feb 24, 2016 at 06:29:56PM +0000, Zytaruk, Kelly wrote:
-> I don't know if the asynchronous nature of the iommu attach/detach is
-> by design or if it is broken somewhere up the tree and just not
-> working in my case.  Maybe one of the iommu owners could answer this.
-
-Thanks a lot for your bug report and the detailed analysis of the
-issue. I attached a possible fix for you to try out. Can you please test
-it and report whether it changes anything?
-
-
-Thanks,
-
-	Joerg
-
->From 027b6489833aef8ce5ec46cef3e0f9e6a61dbdcd Mon Sep 17 00:00:00 2001
-From: Joerg Roedel <jroedel@suse.de>
-Date: Fri, 26 Feb 2016 16:48:59 +0100
-Subject: [PATCH] iommu/amd: Detach device from domain before removal
-
-Detach the device that is about to be removed from its
-domain (if it has one) to clear any related state like DTE
-entry and device's ATS state.
-
-Signed-off-by: Joerg Roedel <jroedel@suse.de>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Duc Dang <dhdang@apm.com>
+Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+Tested-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/iommu/amd_iommu.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/acpi/mcfg.c      | 38 ++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-acpi.h |  9 +++++++++
+ 2 files changed, 47 insertions(+)
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 539b0de..60cc89f 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -114,6 +114,7 @@ struct kmem_cache *amd_iommu_irq_cache;
+diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
+index 3e1e7be..dca4c4e 100644
+--- a/drivers/acpi/mcfg.c
++++ b/drivers/acpi/mcfg.c
+@@ -10,6 +10,7 @@
+ #include <linux/acpi.h>
+ #include <linux/ecam.h>
+ #include <linux/pci.h>
++#include <linux/pci-acpi.h>
  
- static void update_domain(struct protection_domain *domain);
- static int protection_domain_init(struct protection_domain *domain);
-+static void detach_device(struct device *dev);
+ #define	PREFIX	"MCFG: "
  
- /*
-  * For dynamic growth the aperture size is split into ranges of 128MB of
-@@ -384,6 +385,9 @@ static void iommu_uninit_device(struct device *dev)
- 	if (!dev_data)
- 		return;
+@@ -77,6 +78,43 @@ int __init acpi_parse_mcfg(struct acpi_table_header *header)
+ 	return 0;
+ }
  
-+	if (dev_data->domain)
-+		detach_device(dev);
++int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci)
++{
++	struct pci_mmcfg_region *cfg;
++	struct acpi_pci_root *root;
++	int seg, start, end, err;
 +
- 	iommu_device_unlink(amd_iommu_rlookup_table[dev_data->devid]->iommu_dev,
- 			    dev);
++	root = ci->root;
++	seg = root->segment;
++	start = root->secondary.start;
++	end = root->secondary.end;
++
++	cfg = pci_mmconfig_lookup(seg, start);
++	if (cfg)
++		return 0;
++
++	cfg = pci_mmconfig_alloc(seg, start, end, root->mcfg_addr);
++	if (!cfg)
++		return -ENOMEM;
++
++	err = pci_mmconfig_inject(cfg);
++	return err;
++}
++
++void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci)
++{
++	struct acpi_pci_root *root = ci->root;
++	struct pci_mmcfg_region *cfg;
++
++	cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
++	if (!cfg)
++		return;
++
++	if (cfg->hot_added)
++		pci_mmconfig_delete(root->segment, root->secondary.start,
++				    root->secondary.end);
++}
++
+ int __init __weak acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
+ 					struct acpi_mcfg_allocation *cfg)
+ {
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index a72e22d..65b91f3 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -80,6 +80,15 @@ extern struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+ void acpi_pci_add_bus(struct pci_bus *bus);
+ void acpi_pci_remove_bus(struct pci_bus *bus);
  
++#ifdef	CONFIG_PCI_MMCONFIG
++int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci);
++void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci);
++#else
++static inline int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci)
++{ return 0; }
++static inline void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci) { }
++#endif
++
+ #ifdef	CONFIG_ACPI_PCI_SLOT
+ void acpi_pci_slot_init(void);
+ void acpi_pci_slot_enumerate(struct pci_bus *bus);
 -- 
-1.8.4.5
+1.9.1
 
