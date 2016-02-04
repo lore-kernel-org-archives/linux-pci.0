@@ -1,153 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:36199 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751836AbcBCVYe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2016 16:24:34 -0500
-From: Bogicevic Sasa <brutallesale@gmail.com>
-To: bhelgaas@google.com
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bogicevic Sasa <brutallesale@gmail.com>
-Subject: [PATCH] drivers:pci Remove pcie folder from Kconfig
-Date: Wed,  3 Feb 2016 13:24:22 -0800
-Message-Id: <1454534662-33889-1-git-send-email-brutallesale@gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:54240 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965345AbcBDOvx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Feb 2016 09:51:53 -0500
+Date: Thu, 4 Feb 2016 08:51:48 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+	Michal Simek <michals@xilinx.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"paul.burton@imgtec.com" <paul.burton@imgtec.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"wangyijing@huawei.com" <wangyijing@huawei.com>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH V2 5/5] Microblaze: Modifying microblaze PCI subsytem to
+ support  generic Xilinx  AXI PCIe Host Bridge IP driver
+Message-ID: <20160204145148.GA26361@localhost>
+References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
+ <1452620173-4905-6-git-send-email-bharatku@xilinx.com>
+ <20160203163207.GC32546@localhost>
+ <20160203163805.GA6112@localhost>
+ <8520D5D51A55D047800579B0941471982587F199@XAP-PVEXMBX01.xlnx.xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8520D5D51A55D047800579B0941471982587F199@XAP-PVEXMBX01.xlnx.xilinx.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This removes drivers/pci/pcie folder from Kconfig
-files in arch/ and sources pcie in pci Kconfig directly
+On Thu, Feb 04, 2016 at 05:49:20AM +0000, Bharat Kumar Gogada wrote:
+> > Subject: Re: [PATCH V2 5/5] Microblaze: Modifying microblaze PCI subsytem
+> > to support generic Xilinx AXI PCIe Host Bridge IP driver
+> > 
+> > [+cc Ben for real this time]
+> > 
+> > On Wed, Feb 03, 2016 at 10:32:07AM -0600, Bjorn Helgaas wrote:
+> > > [+cc Ben, pcibios_get_phb_of_node() question]
+> > >
+> > > On Tue, Jan 12, 2016 at 11:06:13PM +0530, Bharat Kumar Gogada wrote:
+> > > > This patch does required modifications to microblaze PCI subsystem,
+> > > > to work with generic driver (drivers/pci/host/pcie-xilinx.c) on
+> > > > Microblaze and Zynq.
+> > > >
+> > > > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > > > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com> ...
+> > >
+> > > >  resource_size_t pcibios_align_resource(void *data, const struct resource
+> > *res,
+> > > >  				resource_size_t size, resource_size_t align)  {
+> > > > -	struct pci_dev *dev = data;
+> > > >  	resource_size_t start = res->start;
+> > > >
+> > > > -	if (res->flags & IORESOURCE_IO) {
+> > > > -		if (skip_isa_ioresource_align(dev))
+> > > > -			return start;
+> > > > -		if (start & 0x300)
+> > > > -			start = (start + 0x3ff) & ~0x3ff;
+> > > > -	}
+> > > > -
+> > > >  	return start;
+> > >
+> > > "return res->start;" is sufficient; no need for a temporary variable.
+> > >
+> Agreed will address in next patch.
+> > > >  }
+> > > >  EXPORT_SYMBOL(pcibios_align_resource);
+> > > >
+> > > > +int pcibios_add_device(struct pci_dev *dev) {
+> > > > +	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> > > > +
+> > > > +	return 0;
+> > > > +}
+> > > > +EXPORT_SYMBOL(pcibios_add_device);
+> > > > +
+> > > >  /*
+> > > >   * Reparent resource children of pr that conflict with res
+> > > >   * under res, and make res replace those children.
+> > > > @@ -1335,9 +1308,21 @@ static void
+> > > > pcibios_setup_phb_resources(struct pci_controller *hose,
+> > > >
+> > > >  struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)  {
+> > > > -	struct pci_controller *hose = bus->sysdata;
+> > > > +	struct device_node *np;
+> > > > +
+> > > > +	for_each_node_by_type(np, "pci") {
+> > > > +		const void *prop;
+> > > > +		unsigned int bus_min;
+> > > > +
+> > > > +		prop = of_get_property(np, "bus-range", NULL);
+> > > > +		if (!prop)
+> > > > +			continue;
+> > > > +		bus_min = be32_to_cpup(prop);
+> > > > +		if (bus->number == bus_min)
+> > > > +			return np;
+> > > > +	}
+> > > >
+> > > > -	return of_node_get(hose->dn);
+> > > > +	return NULL;
+> > >
+> > > Hmmm.  The old microblaze code ("return of_node_get(hose->dn);") is
+> > > basically the same as the mips and powerpc versions.  The new code is
+> > > basically the same as the x86 version.
+> > >
+> > > I like the generic weak version in drivers/pci/of.c because it doesn't
+> > > use any arch-specific data, and it looks like if we just set the
+> > > struct device.of_node members correctly, everything should Just Work.
+> > >
+> > > But Ben added both the generic and the x86 versions the same day, so
+> > > there must be some complication:
+> > >
+> > >   98d9f30c820d ("pci/of: Match PCI devices to OF nodes dynamically")
+> > >   3d5fe5a65af9 ("x86/devicetree: Use generic PCI <-> OF matching")
+> > >
+> > > So I guess my question is, why do we need a microblaze-specific
+> > > version at all?
+> > >
+> I did not notice the weak version in /pci/of.c, I have tested with
+> weak version also and it is working.  We might not need this
+> microblaze specific version, but will wait for ben's reply.  
 
-Signed-off-by: Sasa Bogicevic <brutallesale@gmail.com>
----
- arch/arm/Kconfig     | 1 -
- arch/arm64/Kconfig   | 1 -
- arch/ia64/Kconfig    | 1 -
- arch/mips/Kconfig    | 2 --
- arch/powerpc/Kconfig | 1 -
- arch/s390/Kconfig    | 1 -
- arch/sh/Kconfig      | 1 -
- arch/tile/Kconfig    | 1 -
- arch/x86/Kconfig     | 1 -
- drivers/pci/Kconfig  | 1 +
- 10 files changed, 1 insertion(+), 10 deletions(-)
+If the generic version works, and you don't need the microblaze-
+specific version, just remove it and we'll get this wrapped up.  No
+need to wait for Ben.
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index 4f799e5..1d00da1 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -1212,7 +1212,6 @@ config PCI_HOST_ITE8152
- 	select DMABOUNCE
- 
- source "drivers/pci/Kconfig"
--source "drivers/pci/pcie/Kconfig"
- 
- source "drivers/pcmcia/Kconfig"
- 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 8cc6228..128ec3c 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -235,7 +235,6 @@ config PCI_SYSCALL
- 	def_bool PCI
- 
- source "drivers/pci/Kconfig"
--source "drivers/pci/pcie/Kconfig"
- source "drivers/pci/hotplug/Kconfig"
- 
- endmenu
-diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-index fb0515e..6245501 100644
---- a/arch/ia64/Kconfig
-+++ b/arch/ia64/Kconfig
-@@ -574,7 +574,6 @@ config PCI_DOMAINS
- config PCI_SYSCALL
- 	def_bool PCI
- 
--source "drivers/pci/pcie/Kconfig"
- 
- source "drivers/pci/Kconfig"
- 
-diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-index 57a945e..d21eec7 100644
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -2876,8 +2876,6 @@ config PCI_DOMAINS
- 
- source "drivers/pci/Kconfig"
- 
--source "drivers/pci/pcie/Kconfig"
--
- #
- # ISA support is now enabled via select.  Too many systems still have the one
- # or other ISA chip on the board that users don't know about so don't expect
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index e4824fd..d4ec17c 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -828,7 +828,6 @@ config PCI_8260
- 	select PPC_INDIRECT_PCI
- 	default y
- 
--source "drivers/pci/pcie/Kconfig"
- 
- source "drivers/pci/Kconfig"
- 
-diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
-index 3be9c83..9918433 100644
---- a/arch/s390/Kconfig
-+++ b/arch/s390/Kconfig
-@@ -605,7 +605,6 @@ config PCI_NR_MSI
- 	  PCI devices.
- 
- source "drivers/pci/Kconfig"
--source "drivers/pci/pcie/Kconfig"
- source "drivers/pci/hotplug/Kconfig"
- 
- endif	# PCI
-diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
-index e13da05..88a334c 100644
---- a/arch/sh/Kconfig
-+++ b/arch/sh/Kconfig
-@@ -847,7 +847,6 @@ config PCI
- config PCI_DOMAINS
- 	bool
- 
--source "drivers/pci/pcie/Kconfig"
- 
- source "drivers/pci/Kconfig"
- 
-diff --git a/arch/tile/Kconfig b/arch/tile/Kconfig
-index de4a4ff..0c95266 100644
---- a/arch/tile/Kconfig
-+++ b/arch/tile/Kconfig
-@@ -455,7 +455,6 @@ config TILE_PCI_IO
- 
- source "drivers/pci/Kconfig"
- 
--source "drivers/pci/pcie/Kconfig"
- 
- config TILE_USB
- 	tristate "Tilera USB host adapter support"
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 9af2e63..688b222 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -2430,7 +2430,6 @@ config PCI_CNB20LE_QUIRK
- 
- 	  You should say N unless you know you need this.
- 
--source "drivers/pci/pcie/Kconfig"
- 
- source "drivers/pci/Kconfig"
- 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 73de4ef..aae605a 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -119,3 +119,4 @@ config PCI_LABEL
- 	select NLS
- 
- source "drivers/pci/host/Kconfig"
-+source "drivers/pci/pcie/Kconfig"
--- 
-2.5.0
-
+Bjorn
