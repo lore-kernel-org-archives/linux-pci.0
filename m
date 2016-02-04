@@ -1,35 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:64852 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965589AbcBDPXP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 10:23:15 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Vineet.Gupta1@synopsys.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: Vineet.Gupta1@synopsys.com, helgaas@kernel.org, arnd@arndb.de
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
 	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
 	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
-Subject: Re: [PATCH v7 2/2] add new platform driver for PCI RC
-Date: Thu, 04 Feb 2016 16:22:19 +0100
-Message-ID: <3373582.ygj8SQ4T4P@wuerfel>
-In-Reply-To: <56B35B96.3090005@synopsys.com>
-References: <cover.1454349430.git.jpinto@synopsys.com> <56B33278.3000408@synopsys.com> <56B35B96.3090005@synopsys.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v8 0/2] adding PCI support to AXS10x
+Date: Thu,  4 Feb 2016 15:52:08 +0000
+Message-Id: <cover.1454600622.git.jpinto@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 04 February 2016 14:09:26 Joao Pinto wrote:
-> Hi Bjorn and Arnd,
-> 
-> Removing the irq_handler causes the irq request to fail because in
-> request_threaded_irq() both handler and thread_fn are NULL.
-> 
-> What's the typical procedure for this?
-> 
+This patch set has the goal to add suppport for DesignWare PCIe RC in ARC
+AXS10x. It includes the necessary tweaks to the ARC architecture, 
+necessary tweaks to the PCI subsystem and a new driver (pcie-synopsys).
+This new driver will be used extensively in the PCIe RC Prototyping Kit.
 
-Don't call request_irq? ;-)
+The patches were produced against Bjorn Helgaas' repository. It was properly
+tested in an IP Prototyping Kit.
 
-	Arnd
+Joao Pinto (2):
+  PCI support added to ARC
+  add new platform driver for PCI RC
+
+ .../devicetree/bindings/pci/pcie-dw-pltfm.txt      |  36 +++
+ MAINTAINERS                                        |   7 +
+ arch/arc/Kconfig                                   |  23 ++
+ arch/arc/include/asm/dma.h                         |   5 +
+ arch/arc/include/asm/io.h                          |   9 +
+ arch/arc/include/asm/pci.h                         |  31 +++
+ arch/arc/kernel/Makefile                           |   1 +
+ arch/arc/kernel/pcibios.c                          |  23 ++
+ arch/arc/plat-axs10x/Kconfig                       |   1 +
+ drivers/pci/Makefile                               |   1 +
+ drivers/pci/host/Kconfig                           |   8 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pcie-dw-pltfm.c                   | 244 +++++++++++++++++++++
+ 13 files changed, 390 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/pcie-dw-pltfm.txt
+ create mode 100644 arch/arc/include/asm/pci.h
+ create mode 100644 arch/arc/kernel/pcibios.c
+ create mode 100644 drivers/pci/host/pcie-dw-pltfm.c
+
+-- 
+1.8.1.5
