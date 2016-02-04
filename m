@@ -1,111 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51618 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755709AbcBCQcN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 3 Feb 2016 11:32:13 -0500
-Date: Wed, 3 Feb 2016 10:32:07 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: bhelgaas@google.com, michals@xilinx.com, lorenzo.pieralisi@arm.com,
-	paul.burton@imgtec.com, yinghai@kernel.org, wangyijing@huawei.com,
-	robh@kernel.org, russell.joyce@york.ac.uk, sorenb@xilinx.com,
-	jiang.liu@linux.intel.com, arnd@arndb.de, pawel.moll@arm.com,
-	mark.rutland@arm.com, ijc+devicetree@hellion.org.uk,
-	galak@codeaurora.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH V2 5/5] Microblaze: Modifying microblaze PCI subsytem to
- support  generic Xilinx  AXI PCIe Host Bridge IP driver
-Message-ID: <20160203163207.GC32546@localhost>
-References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
- <1452620173-4905-6-git-send-email-bharatku@xilinx.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+	"tn@semihalf.com" <tn@semihalf.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"jcm@redhat.com" <jcm@redhat.com>
+Subject: RE: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host
+ Controllers
+Date: Thu, 4 Feb 2016 15:11:18 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1EC9EC12@lhreml503-mbs>
+References: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
+ <2387127.DMZaDnZvEW@wuerfel>
+In-Reply-To: <2387127.DMZaDnZvEW@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1452620173-4905-6-git-send-email-bharatku@xilinx.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Ben, pcibios_get_phb_of_node() question]
+Hi Arnd
 
-On Tue, Jan 12, 2016 at 11:06:13PM +0530, Bharat Kumar Gogada wrote:
-> This patch does required modifications to microblaze PCI subsystem, to
-> work with generic driver (drivers/pci/host/pcie-xilinx.c) on Microblaze
-> and Zynq.
+Thanks for looking at this
+
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: 04 February 2016 13:12
+> To: Gabriele Paoloni
+> Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C); Linuxarm;
+> qiujiang; bhelgaas@google.com; Lorenzo.Pieralisi@arm.com;
+> tn@semihalf.com; zhangjukuo; xuwei (O); Liguozhu (Kenneth); linux-
+> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
+> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; jcm@redhat.com
+> Subject: Re: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host
+> Controllers
 > 
-> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
->...
+> On Thursday 04 February 2016 19:37:36 Gabriele Paoloni wrote:
+> > From: gabriele paoloni <gabriele.paoloni@huawei.com>
+> >
+> > This patchset adds ACPI support for the HiSilicon Hip05/Hip06 SoC
+> PCIe controllers
+> > The four patches respectively:
+> >         - rework PCie Designware to be used for ACPI PCI Host
+> controllers
+> >         - re-architect the current HiSilicon driver to make it
+> scalable to the
+> >           new ACPI quirks
+> >         - rework the current HiSilicon driver to make it ECAM
+> compliant
+> >         - adds the HiSilicon ACPI specific quirks.
+> >
+> >    This patchset  is based on
+> >    https://github.com/semihalf-nowicki-tomasz/linux.git
+> >    branch pci-acpi-v3 + Hip06 support applied on top:
+> >    https://patchwork.ozlabs.org/patch/549198/
+> >
+> 
+> ACPI has its own PCI support, and should not need drivers for host
+> bridges. I don't think we can really mix the two things, as ACPI
+> needs to have access to things like PCI config space way before
+> we are probing normal device drivers.
+> 
+> Please put this in drivers/acpi/pci*.c.
 
->  resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->  				resource_size_t size, resource_size_t align)
->  {
-> -	struct pci_dev *dev = data;
->  	resource_size_t start = res->start;
->  
-> -	if (res->flags & IORESOURCE_IO) {
-> -		if (skip_isa_ioresource_align(dev))
-> -			return start;
-> -		if (start & 0x300)
-> -			start = (start + 0x3ff) & ~0x3ff;
-> -	}
-> -
->  	return start;
+I can put pcie-hisi-acpi.c under drivers/acpi/
 
-"return res->start;" is sufficient; no need for a temporary variable.
+However if you look at the driver it is made up of three parts:
+pcie-hisi.c --> the DT based driver
+pcie-hisi-acpi.c --> the ACPI based hook and ACPI specific init callback
+pcie-hisi-common.c --> common functions shared between DT and ACPI versions 
+                       of the driver
 
->  }
->  EXPORT_SYMBOL(pcibios_align_resource);
->  
-> +int pcibios_add_device(struct pci_dev *dev)
-> +{
-> +	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> +
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL(pcibios_add_device);
-> +
->  /*
->   * Reparent resource children of pr that conflict with res
->   * under res, and make res replace those children.
-> @@ -1335,9 +1308,21 @@ static void pcibios_setup_phb_resources(struct pci_controller *hose,
->  
->  struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
->  {
-> -	struct pci_controller *hose = bus->sysdata;
-> +	struct device_node *np;
-> +
-> +	for_each_node_by_type(np, "pci") {
-> +		const void *prop;
-> +		unsigned int bus_min;
-> +
-> +		prop = of_get_property(np, "bus-range", NULL);
-> +		if (!prop)
-> +			continue;
-> +		bus_min = be32_to_cpup(prop);
-> +		if (bus->number == bus_min)
-> +			return np;
-> +	}
->  
-> -	return of_node_get(hose->dn);
-> +	return NULL;
+Now I think that moving pcie-hisi-acpi.c under drivers/acpi/
+would make it hard to read as you need to jump across directories
+and it seems a bit unnatural...
 
-Hmmm.  The old microblaze code ("return of_node_get(hose->dn);") is
-basically the same as the mips and powerpc versions.  The new code is
-basically the same as the x86 version.
+However it is not a big issue to me...
 
-I like the generic weak version in drivers/pci/of.c because it doesn't
-use any arch-specific data, and it looks like if we just set the
-struct device.of_node members correctly, everything should Just Work.
+Cheers
 
-But Ben added both the generic and the x86 versions the same day, so
-there must be some complication:
+Gab
 
-  98d9f30c820d ("pci/of: Match PCI devices to OF nodes dynamically")
-  3d5fe5a65af9 ("x86/devicetree: Use generic PCI <-> OF matching")
-
-So I guess my question is, why do we need a microblaze-specific
-version at all?
-
-Bjorn
+> 
+> 	Arnd
