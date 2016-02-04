@@ -1,222 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:59681 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965103AbcBQDp6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:45:58 -0500
-Received: from localhost
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 17 Feb 2016 13:45:56 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v8 41/45] drivers/of: Avoid recursively calling unflatten_dt_node()
-Date: Wed, 17 Feb 2016 14:44:24 +1100
-Message-Id: <1455680668-23298-42-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+	"tn@semihalf.com" <tn@semihalf.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"jcm@redhat.com" <jcm@redhat.com>
+Subject: RE: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host
+ Controllers
+Date: Thu, 4 Feb 2016 17:06:40 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1EC9F055@lhreml503-mbs>
+References: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
+ <76564455.dlc1WHiVY2@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1EC9EF4B@lhreml503-mbs>
+ <1930535.mkCdtpUWq7@wuerfel>
+In-Reply-To: <1930535.mkCdtpUWq7@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In current implementation, unflatten_dt_node() is called recursively
-to unflatten device nodes in FDT blob. It's stress to limited stack
-capacity, especially to adopt the function to unflatten device sub-tree
-that possibly has multiple root nodes. In that case, we runs out of
-stack and the system can't boot up successfully.
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: 04 February 2016 17:02
+> To: Gabriele Paoloni
+> Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C); Linuxarm;
+> qiujiang; bhelgaas@google.com; Lorenzo.Pieralisi@arm.com;
+> tn@semihalf.com; zhangjukuo; xuwei (O); Liguozhu (Kenneth); linux-
+> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
+> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; jcm@redhat.com
+> Subject: Re: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host
+> Controllers
+> 
+> On Thursday 04 February 2016 16:44:12 Gabriele Paoloni wrote:
+> > Effectively the ACPI version of the HiSilicon driver does not rely on
+> > Designware as much as the DT version (that calls
+> dw_pcie_host_init());
+> > however in order to do what you suggest I'd need to copy and paste
+> and
+> > modify dw_pcie_rd_conf and dw_pcie_wr_conf.
+> > Also I'd need to declare duplicate version of the functions in
+> > pcie-hisi-common.c (if I do not want to split the object across
+> > different paths "drivers/pci/host" and "drivers/acpi/")
+> >
+> > Now I can do it but I thought it was more correct to pass
+> &dw_pcie_ops
+> > as input pointer in DECLARE_ACPI_MCFG_FIXUP(); this is also because
+> maybe in
+> > future other Designware based controllers may need to support ACPI
+> and it
+> > would be easier for them to reuse their DT based driver functions
+> >
+> > Honestly I am a bit confused...
+> >
+> 
+> I don't think you can use the dw_pcie_ops as-is anyway, as they in
+> turn rely on the device driver structure, and you also don't need
+> those as they seem to be written for the generic case of a 32-bit
+> architecture that does not have enough space to map the entire
+> config space into MMIO. Just set up all those mapping registers from
+> the firmware and pass the config space base address as you'd normally
+> do on ACPI.
 
-In order to reuse the function to unflatten device sub-tree, this avoids
-calling the function recursively, meaning the device nodes are unflattened
-in one call on unflatten_dt_node(): two arrays are introduced to track the
-parent path size and the device node of current level of depth, which will
-be used by the device node on next level of depth to be unflattened. All
-device nodes in more than 64 level of depth are dropped and hopefully,
-the system can boot up successfully with the partial device-tree.
+Ok thanks, I'll wait a bit to see if there is any comment on this
+from other people, if not I'll rework the ACPI driver as you suggest
+and remove any dependency on Designware.
 
-Also, the parameter "poffset" and "fpsize" are unused and dropped and the
-parameter "dryrun" is figured out from "mem == NULL". Besides, the return
-value of the function is changed to indicate the size of memory consumed by
-the unflatten device tree or error code.
+Cheers
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- drivers/of/fdt.c | 122 +++++++++++++++++++++++++++++++++----------------------
- 1 file changed, 74 insertions(+), 48 deletions(-)
+Gab
 
-diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
-index 3c69002..667a5b2 100644
---- a/drivers/of/fdt.c
-+++ b/drivers/of/fdt.c
-@@ -356,63 +356,90 @@ static unsigned long populate_node(const void *blob,
- 	return fpsize;
- }
- 
-+static void reverse_nodes(struct device_node *parent)
-+{
-+	struct device_node *child, *next;
-+
-+	/* In-depth first */
-+	child = parent->child;
-+	while (child) {
-+		reverse_nodes(child);
-+
-+		child = child->sibling;
-+	}
-+
-+	/* Reverse the nodes in the child list */
-+	child = parent->child;
-+	parent->child = NULL;
-+	while (child) {
-+		next = child->sibling;
-+
-+		child->sibling = parent->child;
-+		parent->child = child;
-+		child = next;
-+	}
-+}
-+
- /**
-  * unflatten_dt_node - Alloc and populate a device_node from the flat tree
-  * @blob: The parent device tree blob
-  * @mem: Memory chunk to use for allocating device nodes and properties
-- * @poffset: pointer to node in flat tree
-  * @dad: Parent struct device_node
-  * @nodepp: The device_node tree created by the call
-- * @fpsize: Size of the node path up at the current depth.
-- * @dryrun: If true, do not allocate device nodes but still calculate needed
-- * memory size
-+ *
-+ * It returns the size of unflattened device tree or error code
-  */
--static void *unflatten_dt_node(const void *blob,
--			       void *mem,
--			       int *poffset,
--			       struct device_node *dad,
--			       struct device_node **nodepp,
--			       unsigned long fpsize,
--			       bool dryrun)
-+static int unflatten_dt_node(const void *blob,
-+			     void *mem,
-+			     struct device_node *dad,
-+			     struct device_node **nodepp)
- {
--	struct device_node *np;
--	static int depth;
--	int old_depth;
-+	struct device_node *root;
-+	int offset = 0, depth = 0;
-+#define FDT_MAX_DEPTH	64
-+	unsigned long fpsizes[FDT_MAX_DEPTH];
-+	struct device_node *nps[FDT_MAX_DEPTH];
-+	void *base = mem;
-+	bool dryrun = !base;
- 
--	fpsize = populate_node(blob, *poffset, &mem, dad, fpsize, &np, dryrun);
--	if (!fpsize)
--		return mem;
-+	if (nodepp)
-+		*nodepp = NULL;
-+
-+	root = dad;
-+	fpsizes[depth] = dad ? strlen(of_node_full_name(dad)) : 0;
-+	nps[depth++] = dad;
-+	for (offset = 0;
-+	     offset >= 0;
-+	     offset = fdt_next_node(blob, offset, &depth)) {
-+		if (WARN_ON_ONCE(depth >= FDT_MAX_DEPTH))
-+			continue;
- 
--	old_depth = depth;
--	*poffset = fdt_next_node(blob, *poffset, &depth);
--	if (depth < 0)
--		depth = 0;
--	while (*poffset > 0 && depth > old_depth)
--		mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
--					fpsize, dryrun);
-+		fpsizes[depth] = populate_node(blob, offset, &mem,
-+					       nps[depth - 1],
-+					       fpsizes[depth - 1],
-+					       &nps[depth], dryrun);
-+		if (!fpsizes[depth])
-+			return mem - base;
-+
-+		if (!dryrun && nodepp && !*nodepp)
-+			*nodepp = nps[depth];
-+		if (!dryrun && !root)
-+			root = nps[depth];
-+	}
- 
--	if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
--		pr_err("unflatten: error %d processing FDT\n", *poffset);
-+	if (offset < 0 && offset != -FDT_ERR_NOTFOUND) {
-+		pr_err("%s: Error %d processing FDT\n", __func__, offset);
-+		return -EINVAL;
-+	}
- 
- 	/*
- 	 * Reverse the child list. Some drivers assumes node order matches .dts
- 	 * node order
- 	 */
--	if (!dryrun && np->child) {
--		struct device_node *child = np->child;
--		np->child = NULL;
--		while (child) {
--			struct device_node *next = child->sibling;
--			child->sibling = np->child;
--			np->child = child;
--			child = next;
--		}
--	}
--
--	if (nodepp)
--		*nodepp = np;
-+	if (!dryrun)
-+		reverse_nodes(root);
- 
--	return mem;
-+	return mem - base;
- }
- 
- /**
-@@ -431,8 +458,7 @@ static void __unflatten_device_tree(const void *blob,
- 			     struct device_node **mynodes,
- 			     void * (*dt_alloc)(u64 size, u64 align))
- {
--	unsigned long size;
--	int start;
-+	int size;
- 	void *mem;
- 
- 	pr_debug(" -> unflatten_device_tree()\n");
-@@ -453,11 +479,12 @@ static void __unflatten_device_tree(const void *blob,
- 	}
- 
- 	/* First pass, scan for size */
--	start = 0;
--	size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
--	size = ALIGN(size, 4);
-+	size = unflatten_dt_node(blob, NULL, NULL, NULL);
-+	if (size < 0)
-+		return;
- 
--	pr_debug("  size is %lx, allocating...\n", size);
-+	size = ALIGN(size, 4);
-+	pr_debug("  size is %d, allocating...\n", size);
- 
- 	/* Allocate memory for the expanded device tree */
- 	mem = dt_alloc(size + 4, __alignof__(struct device_node));
-@@ -468,8 +495,7 @@ static void __unflatten_device_tree(const void *blob,
- 	pr_debug("  unflattening %p...\n", mem);
- 
- 	/* Second pass, do actual unflattening */
--	start = 0;
--	unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
-+	unflatten_dt_node(blob, mem, NULL, mynodes);
- 	if (be32_to_cpup(mem + size) != 0xdeadbeef)
- 		pr_warning("End of tree marker overwritten: %08x\n",
- 			   be32_to_cpup(mem + size));
--- 
-2.1.0
-
+> 
+> 	Arnd
