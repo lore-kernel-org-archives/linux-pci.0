@@ -1,230 +1,85 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 28 Jan 2016 14:57:36 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:50385 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750976AbcBDUh6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Feb 2016 15:37:58 -0500
+Date: Thu, 4 Feb 2016 14:37:55 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
-Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	rjw@rjwysocki.net, lenb@kernel.org, izumi.taku@jp.fujitsu.com,
-	wency@cn.fujitsu.com, caoj.fnst@cn.fujitsu.com,
-	ddaney.cavm@gmail.com, okaya@codeaurora.org, bhelgaas@google.com,
-	jiang.liu@linux.intel.com, linux-pci@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>
-Subject: Re: [PATCH v4 1/1] pci: fix unavailable irq number 255 reported by
- BIOS
-Message-ID: <20160128205736.GA12965@localhost>
-References: <1453944946-18852-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>
+To: Jisheng Zhang <jszhang@marvell.com>
+Cc: jingoohan1@gmail.com, pratyush.anand@gmail.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] PCI: designware: comment the condition of programming
+ ATU in host init
+Message-ID: <20160204203755.GB7031@localhost>
+References: <1452147158-2526-1-git-send-email-jszhang@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1453944946-18852-1-git-send-email-chen.fan.fnst@cn.fujitsu.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1452147158-2526-1-git-send-email-jszhang@marvell.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Chen,
-
-Thanks a lot for persevering and working this all out!
-
-On Thu, Jan 28, 2016 at 09:35:46AM +0800, Chen Fan wrote:
-> In our X86 environment, when enable Secure boot, we found an abnormal
-> phenomenon as following call trace shows. after investigation, we
-> found the firmware assigned an irq number 255 which means unknown
-> or no connection in PCI local spec for i801_smbus, meanwhile the
-> ACPI didn't configure the pci irq routing. and the 255 irq number
-> was assigned for megasa msix without IRQF_SHARED. then in this case
-> during i801_smbus probe, the i801_smbus driver would request irq with
-> bad irq number 255. but the 255 irq number was assigned for memgasa
-> with MSIX enable. which will cause request_irq fails and result in
-> the call trace below, here we introduce an IRQ_NOTCONNECTED to identify
-> the device interrupt is not connected.
+On Thu, Jan 07, 2016 at 02:12:38PM +0800, Jisheng Zhang wrote:
+> Some platforms don't support ATU, e.g pci-keystone.c, these platforms
+> use their own address translation component rather than ATU, and they
+> provide the rd_other_conf and wr_other_conf to programming the
+> translation component then do the required access, so we ignore the ATU
+> programming for these platforms. Add the comment to explain the reason.
 > 
-> i801_smbus 0000:00:1f.3: enabling device (0140 -> 0143)
-> i801_smbus 0000:00:1f.3: can't derive routing for PCI INT C
-> i801_smbus 0000:00:1f.3: PCI INT C: no GSI
-> genirq: Flags mismatch irq 255. 00000080 (i801_smbus) vs. 00000000 (megasa)
-> CPU: 0 PID: 2487 Comm: kworker/0:1 Not tainted 3.10.0-229.el7.x86_64 #1
-> Hardware name: FUJITSU PRIMEQUEST 2800E2/D3736, BIOS PRIMEQUEST 2000 Serie5
+> As Bjorn pointed out,
 > 
-> Call Trace:
->   dump_stack+0x19/0x1b
->   __setup_irq+0x54a/0x570
->   request_threaded_irq+0xcc/0x170
->   i801_probe+0x32f/0x508 [i2c_i801]
->   local_pci_probe+0x45/0xa0
-> i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
-> i801_smbus: probe of 0000:00:1f.3 failed with error -16
+>   "these definitions:
 > 
-> Signed-off-by: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Bjorn Helgaas <helgaas@kernel.org>
+>   #define PCIE_ATU_TYPE_MEM
+>   #define PCIE_ATU_TYPE_IO
+>   #define PCIE_ATU_TYPE_CFG0
+>   #define PCIE_ATU_TYPE_CFG1
+> 
+>   and these uses:
+> 
+>   - In dw_pcie_host_init(), set PCIE_ATU_TYPE_MEM for unit 1
+>     (but only if rd_other_conf is not overridden)
+> 
+>   - In dw_pcie_rd_other_conf() and dw_pcie_wr_other_conf(),
+>     set PCIE_ATU_TYPE_CFG0 before config access to own bus;
+>     set PCIE_ATU_TYPE_CFG1 before config access to other bus;
+>     set PCIE_ATU_TYPE_IO after completion
+> 
+>    Why is that initialization related to rd_other_conf?  Shouldn't that
+>    be set up always?  A comment here would be nice..."
+> 
+> To be honest, I can't answer this question immediately until I read the
+> code carefully again. So indeed, the comment is really necessary.
+> 
+> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Rafael, I assume you'll take this if you think it's ready.
-
-This is a subtle problem and, if I understand correctly, can manifest
-intermittently depending on the machine configuration.  For example,
-if you got rid of the "megasa" driver, I suspect i801_smbus would not
-complain, but it wouldn't work.
-
-I think we might want to consider doing something for non-x86 arches
-as well, but we can do that later.  I propose a changelog like the
-following.  Please correct anything I got wrong.  I suspect we will be
-revisiting this issue eventually, so I'd like to have a good
-description.
-
-
-x86/PCI: Recognize that Interrupt Line 255 means "not connected"
-
-Per the x86-specific footnote to PCI spec r3.0, sec 6.2.4, the value 255 in
-the Interrupt Line register means "unknown" or "no connection."
-Previously, when we couldn't derive an IRQ from the _PRT, we fell back to
-using the value from Interrupt Line as an IRQ.  It's questionable whether
-we should do that at all, but the spec clearly suggests we shouldn't do it
-for the value 255 on x86.
-
-Calling request_irq() with IRQ 255 may succeed, but the driver won't
-receive any interrupts.  Or, if IRQ 255 is shared with another device, it
-may succeed, and the driver's ISR will be called at random times when the
-*other* device interrupts.  Or it may fail if another device is using IRQ
-255 with incompatible flags.  What we *want* is for request_irq() to fail
-predictably so the driver can fall back to polling.
-
-On x86, assume 255 in the Interrupt Line means the INTx line is not
-connected.  In that case, set dev->irq to IRQ_NOTCONNECTED so request_irq()
-will fail gracefully with -ENOTCONN.
-
-We found this problem on a system where Secure Boot firmware assigned
-Interrupt Line 255 to an i801_smbus device and another device was already
-using MSI-X IRQ 255.  This was in v3.10, where i801_probe() fails if
-request_irq() fails:
-
-  i801_smbus 0000:00:1f.3: enabling device (0140 -> 0143)
-  i801_smbus 0000:00:1f.3: can't derive routing for PCI INT C
-  i801_smbus 0000:00:1f.3: PCI INT C: no GSI
-  genirq: Flags mismatch irq 255. 00000080 (i801_smbus) vs. 00000000 (megasa)
-  CPU: 0 PID: 2487 Comm: kworker/0:1 Not tainted 3.10.0-229.el7.x86_64 #1
-  Hardware name: FUJITSU PRIMEQUEST 2800E2/D3736, BIOS PRIMEQUEST 2000 Serie5
-  Call Trace:
-    dump_stack+0x19/0x1b
-    __setup_irq+0x54a/0x570
-    request_threaded_irq+0xcc/0x170
-    i801_probe+0x32f/0x508 [i2c_i801]
-    local_pci_probe+0x45/0xa0
-  i801_smbus 0000:00:1f.3: Failed to allocate irq 255: -16
-  i801_smbus: probe of 0000:00:1f.3 failed with error -16
-
-After aeb8a3d16ae0 ("i2c: i801: Check if interrupts are disabled"),
-i801_probe() will fall back to polling if request_irq() fails.  But we
-still need this patch because request_irq() may succeed or fail depending
-on other devices in the system.  If request_irq() fails, i801_smbus will
-work by falling back to polling, but if it succeeds, i801_smbus won't work
-because it expects interrupts that it may not receive.
+Applied to pci/host-designware for v4.6, thanks, Jisheng!
 
 > ---
->  drivers/acpi/pci_irq.c    | 20 ++++++++++++++++++++
->  include/linux/interrupt.h | 10 ++++++++++
->  kernel/irq/manage.c       |  9 ++++++++-
->  3 files changed, 38 insertions(+), 1 deletion(-)
+>  drivers/pci/host/pcie-designware.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
 > 
-> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-> index d30184c..dda6d25 100644
-> --- a/drivers/acpi/pci_irq.c
-> +++ b/drivers/acpi/pci_irq.c
-> @@ -33,6 +33,7 @@
->  #include <linux/pci.h>
->  #include <linux/acpi.h>
->  #include <linux/slab.h>
-> +#include <linux/interrupt.h>
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 02a7452..b795b20 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -517,6 +517,12 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  	if (pp->ops->host_init)
+>  		pp->ops->host_init(pp);
 >  
->  #define PREFIX "ACPI: "
->  
-> @@ -387,6 +388,22 @@ static inline int acpi_isa_register_gsi(struct pci_dev *dev)
->  }
->  #endif
->  
-> +static inline bool acpi_pci_irq_valid(struct pci_dev *dev)
-> +{
-> +#ifdef CONFIG_X86
 > +	/*
-> +	 * On x86 irq line 0xff means "unknown" or "no connection" (PCI 3.0,
-> +	 * Section 6.2.4, footnote on page 223).
+> +	 * If the platform provides ->rd_other_conf, it means the platform
+> +	 * doesn't support ATU, it uses its own address translation component
+> +	 * rather than ATU, so we should ignore ATU programming for this
+> +	 * kind of platform.
 > +	 */
-> +	if (dev->irq == 0xff) {
-> +		dev->irq = IRQ_NOTCONNECTED;
-> +		dev_warn(&dev->dev, "PCI INT not connected\n");
-> +		return false;
-> +	}
-> +#endif
-> +	return true;
-> +}
-> +
->  int acpi_pci_irq_enable(struct pci_dev *dev)
->  {
->  	struct acpi_prt_entry *entry;
-> @@ -409,6 +426,9 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
->  	if (pci_has_managed_irq(dev))
->  		return 0;
->  
-> +	if (!acpi_pci_irq_valid(dev))
-> +		return 0;
-> +
->  	entry = acpi_pci_irq_lookup(dev, pin);
->  	if (!entry) {
->  		/*
-> diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-> index cb30edb..12f7da4 100644
-> --- a/include/linux/interrupt.h
-> +++ b/include/linux/interrupt.h
-> @@ -125,6 +125,16 @@ struct irqaction {
->  
->  extern irqreturn_t no_action(int cpl, void *dev_id);
->  
-> +/*
-> + * If a (PCI) device interrupt is not connected we set dev->irq to
-> + * IRQ_NOTCONNECTED. This causes request_irq() to fail with -ENOTCONN, so we
-> + * can distingiush that case from other error returns.
-> + *
-> + * 0x80000000 is guaranteed to be outside the available range of interrupts
-> + * and easy to distinguish from other possible incorrect values.
-> + */
-> +#define IRQ_NOTCONNECTED	(1U << 31)
-> +
->  extern int __must_check
->  request_threaded_irq(unsigned int irq, irq_handler_t handler,
->  		     irq_handler_t thread_fn,
-> diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-> index 8411872..e79e60f 100644
-> --- a/kernel/irq/manage.c
-> +++ b/kernel/irq/manage.c
-> @@ -1609,6 +1609,9 @@ int request_threaded_irq(unsigned int irq, irq_handler_t handler,
->  	struct irq_desc *desc;
->  	int retval;
->  
-> +	if (irq == IRQ_NOTCONNECTED)
-> +		return -ENOTCONN;
-> +
->  	/*
->  	 * Sanity-check: shared interrupts must pass in a real dev-ID,
->  	 * otherwise we'll have trouble later trying to figure out
-> @@ -1699,9 +1702,13 @@ EXPORT_SYMBOL(request_threaded_irq);
->  int request_any_context_irq(unsigned int irq, irq_handler_t handler,
->  			    unsigned long flags, const char *name, void *dev_id)
->  {
-> -	struct irq_desc *desc = irq_to_desc(irq);
-> +	struct irq_desc *desc;
->  	int ret;
->  
-> +	if (irq == IRQ_NOTCONNECTED)
-> +		return -ENOTCONN;
-> +
-> +	desc = irq_to_desc(irq);
->  	if (!desc)
->  		return -EINVAL;
->  
+>  	if (!pp->ops->rd_other_conf)
+>  		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+>  					  PCIE_ATU_TYPE_MEM, pp->mem_base,
 > -- 
-> 1.9.3
-> 
-> 
+> 2.7.0.rc3
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
