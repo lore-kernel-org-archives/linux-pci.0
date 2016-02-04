@@ -1,142 +1,174 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V5 00/15] MMCONFIG refactoring and support for ARM64 PCI hostbridge init based on ACPI
-Date: Tue, 16 Feb 2016 14:53:30 +0100
-Message-Id: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yu Zhao <yuzhao@google.com>
+Subject: RE: [PATCH] PCI: Support SRIOV on Legacy EndPoint device
+Date: Thu, 4 Feb 2016 16:21:08 +0000
+Message-ID: <CY1PR12MB02628AFFB28DCA6AF01167D0FED10@CY1PR12MB0262.namprd12.prod.outlook.com>
+References: <1454597306-26189-1-git-send-email-kelly.zytaruk@amd.com>
+ <20160204151425.GA27474@localhost>
+In-Reply-To: <20160204151425.GA27474@localhost>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From the functionality point of view this series might be split into the
-following logic parts:
-1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
-   PCI config regions and used when necessary.
-2. Move non-arch specific bits to the core code.
-3. Use MMCONFIG code and implement generic ACPI based PCI host controller driver.
-4. Enable above driver on ARM64
+Hi Bjorn, It been a long time.
 
-Patches has been built on top of 4.5-rc3 and can be found here:
-git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v5)
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Thursday, February 04, 2016 10:14 AM
+> To: Zytaruk, Kelly
+> Cc: bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org; Alex Williamson; Yu Zhao
+> Subject: Re: [PATCH] PCI: Support SRIOV on Legacy EndPoint device
+> 
+> [+cc Alex, Yu (participants in previous discussion)]
+> 
+> Hi Kelly,
+> 
+> On Thu, Feb 04, 2016 at 09:48:26AM -0500, Kelly Zytaruk wrote:
+> > Some AMD GPUs have hardware support for grapics SRIOV.
+> > If the GPU has a display output then the GPU needs to support Legacy VGA
+> operation.
+> > If CLASS_CODE = VGA then the device should have a Port Type = Legacy
+> EndPoint.
+> > Therefore in order to enable SRIOV on a GPU with a display output
+> LEGACY_END_POINT is supported as a valid Port Type.
+> >
+> > Signed-off-by: Kelly Zytaruk <kelly.zytaruk@amd.com>
+> 
+> We had an interesting discussion about this two years ago:
+> http://lkml.kernel.org/r/B756807489D6244883AC0B799A6EEC15EAB2E8@store
+> xdag02.amd.com
 
-NOTE, this patch set depends on Lorenzo's fixes:
-https://patchwork.ozlabs.org/patch/576450/
-which can be found in pci-acpi-v5 branch.
+Unfortunately 2 years ago I couldn't complete your request as it would have disclosed Information about an unannounced technology that we were working on.  We have recently made that technology public and I can now send you the requested information.
 
-This has been tested on Cavium ThunderX server, JunoR2, HP RX2660 IA64, x86,
-Hip05, X-Gene and QEMU-aarch64. Any help in reviewing and testing is very appreciated.
+> 
+> Please include a reference to that discussion in your changelog.  In that
+> discussion, I also asked for some details (dmesg and lspci info) that motivate the
+> change, so please collect and add a reference to them as well.
 
-v4 -> v5
-- dropped MCFG refactoring group patches 1-6 from series v4 and integrated Jayachandran's patch
-  https://patchwork.ozlabs.org/patch/575525/
-- rewrite PCI legacy IRQs allocation
-- squashed two patches 11 and 12 from series v4, fixed bisection issue
-- changelog improvements
-- rebased to 4.5-rc3
+The information that you ask for is included below.  I have abbreviated it so that this does not become a huge email.  I can send full logs if you want them.
 
-v3 -> v4
-- dropped Jiang's fix http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04318.html
-- added Lorenzo's fix patch 19/24
-- ACPI PCI bus domain number assigning cleanup
-- changed resource management, we now claim and reassign resources
-- improvements for applying quirks
-- dropped Matthew's http://www.spinics.net/lists/linux-pci/msg45950.html dependency
-- rebased to 4.5-rc1
+'lspci' before enabling sriov
 
-v2 -> v3
-- fix legacy IRQ assigning and IO ports registration
-- remove reference to arch specific companion device for ia64
-- move ACPI PCI host controller driver to pci_root.c
-- drop generic domain assignment for x86 and ia64 as I am not
-  able to run all necessary test variants
-- drop patch which cleaned legacy IRQ assignment since it belongs to
-  Mathew's series:
-  https://patchwork.ozlabs.org/patch/557504/
-- extend MCFG quirk code
-- rebased to 4.4
+00:14.7 SD Host controller: Advanced Micro Devices [AMD] FCH SD Flash Controller
+00:15.0 PCI bridge: Advanced Micro Devices [AMD] Hudson PCI to PCI bridge (PCIE port 0)
+00:15.2 PCI bridge: Advanced Micro Devices [AMD] Hudson PCI to PCI bridge (PCIE port 2)
+00:18.0 Host bridge: Advanced Micro Devices [AMD] Device 141a
+00:18.1 Host bridge: Advanced Micro Devices [AMD] Device 141b
+00:18.2 Host bridge: Advanced Micro Devices [AMD] Device 141c
+00:18.3 Host bridge: Advanced Micro Devices [AMD] Device 141d
+00:18.4 Host bridge: Advanced Micro Devices [AMD] Device 141e
+00:18.5 Host bridge: Advanced Micro Devices [AMD] Device 141f
+01:00.0 VGA compatible controller: Advanced Micro Devices [AMD] nee ATI Device 6929
+05:00.0 FireWire (IEEE 1394): VIA Technologies, Inc. VT6315 Series Firewire Controller (rev 01)
+06:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5761 Gigabit Ethernet PCIe (rev 10)
 
-v1 -> v2
-- moved non-arch specific piece of code to dirver/acpi/ directory
-- fixed IO resource handling
-- introduced PCI config accessors quirks matching
-- moved ACPI_COMPANION_SET to generic code
+'lspci -vvv' showing the sriov config space after sriov is enbled.  Note that I have enabled 4 VFs.
 
-v1 - https://lkml.org/lkml/2015/10/27/504
-v2 - https://lkml.org/lkml/2015/12/16/246
-v3 - http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04308.html
-v4 - https://lkml.org/lkml/2016/2/4/646
+        Capabilities: [328 v1] Alternative Routing-ID Interpretation (ARI)
+                ARICap: MFVC- ACS-, Next Function: 0
+                ARICtl: MFVC- ACS-, Function Group: 0
+        Capabilities: [330 v1] Single Root I/O Virtualization (SR-IOV)
+                IOVCap: Migration-, Interrupt Message Number: 000
+                IOVCtl: Enable+ Migration- Interrupt- MSE+ ARIHierarchy+
+                IOVSta: Migration-
+                Initial VFs: 16, Total VFs: 16, Number of VFs: 4, Function Dependency Link: 00
+                VF offset: 256, stride: 1, Device ID: 692f
+                Supported Page Size: 00000553, System Page Size: 00000001
+                Region 0: Memory at 0000000050000000 (64-bit, prefetchable)
+                Region 2: Memory at 00000000d0000000 (64-bit, prefetchable)
+                Region 5: Memory at d5000000 (32-bit, non-prefetchable)
+                VF Migration: offset: 00000000, BIR: 0
+        Capabilities: [400 v1] Vendor Specific Information: ID=0002 Rev=1 Len=070 <?>
 
-Jayachandran C (1):
-  ACPI: MCFG: Move mmcfg_list management to drivers/acpi
+'lspci' after enabling sriov on the device.  Four VFs are created on Bus 2. The PF is indicated as device ID 6929 and the VFs are device ID 692f.
 
-Lorenzo Pieralisi (1):
-  drivers: pci: add generic code to claim bus resources
+00:14.7 SD Host controller: Advanced Micro Devices [AMD] FCH SD Flash Controller
+00:15.0 PCI bridge: Advanced Micro Devices [AMD] Hudson PCI to PCI bridge (PCIE port 0)
+00:15.2 PCI bridge: Advanced Micro Devices [AMD] Hudson PCI to PCI bridge (PCIE port 2)
+00:18.0 Host bridge: Advanced Micro Devices [AMD] Device 141a
+00:18.1 Host bridge: Advanced Micro Devices [AMD] Device 141b
+00:18.2 Host bridge: Advanced Micro Devices [AMD] Device 141c
+00:18.3 Host bridge: Advanced Micro Devices [AMD] Device 141d
+00:18.4 Host bridge: Advanced Micro Devices [AMD] Device 141e
+00:18.5 Host bridge: Advanced Micro Devices [AMD] Device 141f
+01:00.0 VGA compatible controller: Advanced Micro Devices [AMD] nee ATI Device 6929
+02:00.0 VGA compatible controller: Advanced Micro Devices [AMD] nee ATI Device 692f
+02:00.1 VGA compatible controller: Advanced Micro Devices [AMD] nee ATI Device 692f
+02:00.2 VGA compatible controller: Advanced Micro Devices [AMD] nee ATI Device 692f
+02:00.3 VGA compatible controller: Advanced Micro Devices [AMD] nee ATI Device 692f
+05:00.0 FireWire (IEEE 1394): VIA Technologies, Inc. VT6315 Series Firewire Controller (rev 01)
+06:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5761 Gigabit Ethernet PCIe (rev 10)
 
-Tomasz Nowicki (13):
-  acpi, pci, mcfg: Provide default RAW ACPI PCI config space accessors.
-  arm64, acpi: Use MCFG library and empty PCI config space accessors
-    from pci_mcfg.c file.
-  pci, acpi, ecam: Add flag to indicate whether ECAM region was hot
-    added or not.
-  x86, pci: Cleanup platform specific MCFG data by using ECAM hot_added
-    flag.
-  pci, acpi, x86, ia64: Move ACPI host bridge device companion
-    assignment to core code.
-  pci, acpi: Provide generic way to assign bus domain number.
-  x86, ia64: Include acpi_pci_{add|remove}_bus to the default
-    pcibios_{add|remove}_bus implementation.
-  acpi, mcfg: Add default PCI config accessors implementation and
-    initial support for related quirks.
-  pci, of: Move the PCI I/O space management to PCI core code.
-  pci, acpi: Support for ACPI based generic PCI host controller
-    initialization
-  pci, acpi: Match PCI config space accessors against platfrom specific
-    quirks.
-  arm64, pci, acpi: Assign legacy IRQs once device is enable.
-  arm64, pci, acpi: Start using ACPI based PCI host bridge driver for
-    ARM64.
+Below is a snippet from the dmesg log when sriov is enabled on the device. This represents the delta from dmesg before the enabling sriov and dmesg after enabling sriov. Num_vfs is set to 4.  The last 2 lines of the dmesg are generated from my test module that I used to enable/disable sriov, they can be ignored.
 
- arch/arm64/Kconfig                 |   5 +
- arch/arm64/kernel/pci.c            |  35 +---
- arch/ia64/hp/common/sba_iommu.c    |   2 +-
- arch/ia64/include/asm/pci.h        |   1 -
- arch/ia64/pci/pci.c                |  26 ---
- arch/ia64/sn/kernel/io_acpi_init.c |   4 +-
- arch/x86/include/asm/pci.h         |   3 -
- arch/x86/include/asm/pci_x86.h     |  24 +--
- arch/x86/pci/acpi.c                |  47 +----
- arch/x86/pci/common.c              |  10 -
- arch/x86/pci/mmconfig-shared.c     | 269 ++++---------------------
- arch/x86/pci/mmconfig_32.c         |   1 +
- arch/x86/pci/mmconfig_64.c         |   1 +
- arch/x86/pci/numachip.c            |   1 +
- drivers/acpi/Kconfig               |   7 +
- drivers/acpi/Makefile              |   1 +
- drivers/acpi/pci_mcfg.c            | 392 +++++++++++++++++++++++++++++++++++++
- drivers/acpi/pci_root.c            | 154 ++++++++++++++-
- drivers/of/address.c               | 116 +----------
- drivers/pci/pci.c                  | 126 +++++++++++-
- drivers/pci/probe.c                |   5 +
- drivers/pci/setup-bus.c            |  63 ++++++
- drivers/xen/pci.c                  |   5 +-
- include/acpi/acpi_bus.h            |   1 +
- include/asm-generic/vmlinux.lds.h  |   7 +
- include/linux/of_address.h         |   9 -
- include/linux/pci-acpi.h           |  68 +++++++
- include/linux/pci.h                |   6 +
- 28 files changed, 892 insertions(+), 497 deletions(-)
- create mode 100644 drivers/acpi/pci_mcfg.c
+[  157.336265] pci 0000:02:00.0: [1002:692f] type 00 class 0x030000
+[  157.336321] pci 0000:02:00.0: Max Payload Size set to 256 (was 128, max 256)
+[  157.336355] pci 0000:02:00.0: calling quirk_no_pm_reset+0x0/0x1a
+[  157.336541] vgaarb: device added: PCI:0000:02:00.0,decodes=io+mem,owns=none,locks=none
+[  157.336585] iommu: Adding device 0000:02:00.0 to group 2
+[  157.336644] pci 0000:02:00.0: calling pci_fixup_video+0x0/0xb1
+[  157.336874] pci 0000:02:00.1: [1002:692f] type 00 class 0x030000
+[  157.336927] pci 0000:02:00.1: Max Payload Size set to 256 (was 128, max 256)
+[  157.336948] pci 0000:02:00.1: calling quirk_no_pm_reset+0x0/0x1a
+[  157.337265] vgaarb: device added: PCI:0000:02:00.1,decodes=io+mem,owns=none,locks=none
+[  157.337368] iommu: Adding device 0000:02:00.1 to group 2
+[  157.337414] pci 0000:02:00.1: calling pci_fixup_video+0x0/0xb1
+[  157.337556] pci 0000:02:00.2: [1002:692f] type 00 class 0x030000
+[  157.337609] pci 0000:02:00.2: Max Payload Size set to 256 (was 128, max 256)
+[  157.337631] pci 0000:02:00.2: calling quirk_no_pm_reset+0x0/0x1a
+[  157.337826] vgaarb: device added: PCI:0000:02:00.2,decodes=io+mem,owns=none,locks=none
+[  157.337875] iommu: Adding device 0000:02:00.2 to group 2
+[  157.337920] pci 0000:02:00.2: calling pci_fixup_video+0x0/0xb1
+[  157.338016] pci 0000:02:00.3: [1002:692f] type 00 class 0x030000
+[  157.338065] pci 0000:02:00.3: Max Payload Size set to 256 (was 128, max 256)
+[  157.338084] pci 0000:02:00.3: calling quirk_no_pm_reset+0x0/0x1a
+[  157.338221] vgaarb: device added: PCI:0000:02:00.3,decodes=io+mem,owns=none,locks=none
+[  157.338255] iommu: Adding device 0000:02:00.3 to group 2
+[  157.338287] pci 0000:02:00.3: calling pci_fixup_video+0x0/0xb1
+[  157.338360] pci_enable_sriov() returns 0
+[  157.338363] BDF = 0x0100, numVF = 4
 
--- 
-1.9.1
+> 
+> It's not clear to me why we check the device type at all.  If there's no spec
+> restriction on the types of devices that can have an SR-IOV capability, we should
+> consider removing the test altogether (Alex mentioned this possiblity in the
+> earlier discussion).
 
+I am as well not clear why the check is in there.  I would be just as happy either adding TYPE_LEG_END or removing the check all together.  I don't know what the side effects of removing the check would be. I don't have any sriov devices other than a graphics card to test with so I wouldn't be able to test other scenarios.
+
+> 
+> Bjorn
+> 
+> > ---
+> >  drivers/pci/iov.c |    3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c index
+> > 31f31d4..da4fbac 100644
+> > --- a/drivers/pci/iov.c
+> > +++ b/drivers/pci/iov.c
+> > @@ -388,7 +388,8 @@ static int sriov_init(struct pci_dev *dev, int pos)
+> >  	struct pci_dev *pdev;
+> >
+> >  	if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_END &&
+> > -	    pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
+> > +	    pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT &&
+> > +	    pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END)
+> >  		return -ENODEV;
+> >
+> >  	pci_read_config_word(dev, pos + PCI_SRIOV_CTRL, &ctrl);
+> > --
+> > 1.7.10.4
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci"
+> > in the body of a message to majordomo@vger.kernel.org More majordomo
+> > info at  http://vger.kernel.org/majordomo-info.html
