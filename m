@@ -1,89 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0087.outbound.protection.outlook.com ([104.47.2.87]:30840
-	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753861AbcBBJVP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Feb 2016 04:21:15 -0500
-From: Minghuan Lian <minghuan.lian@nxp.com>
-To: Minghuan Lian <minghuan.lian@nxp.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Sascha Hauer <kernel@pengutronix.de>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Roy Zang <roy.zang@nxp.com>, "Mingkai Hu" <mingkai.hu@nxp.com>,
-	Stuart Yoder <stuart.yoder@nxp.com>,
-	Yang-Leo Li <leoyang.li@nxp.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: RE: [PATCH 1/4] ARM: dts: ls1021a: add PCIe dts node
-Date: Tue, 2 Feb 2016 08:48:36 +0000
-Message-ID: <VI1PR04MB1615DCF54369ED2E01234E64E8DF0@VI1PR04MB1615.eurprd04.prod.outlook.com>
-References: <1454401807-28751-1-git-send-email-Minghuan.Lian@nxp.com>
-In-Reply-To: <1454401807-28751-1-git-send-email-Minghuan.Lian@nxp.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mout1.freenet.de ([195.4.92.91]:56902 "EHLO mout1.freenet.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756129AbcBDSGC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Feb 2016 13:06:02 -0500
+Subject: Re: AMD-Vi: Unable to write to IOMMU perf counter.
+To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>,
+	linux-pci@vger.kernel.org
+References: <56B365E0.4020100@01019freenet.de> <56B37292.1000201@amd.com>
+Cc: Joerg Roedel <joro@8bytes.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	iommu <iommu@lists.linux-foundation.org>
+From: Andreas Hartmann <andihartmann@freenet.de>
+Message-ID: <56B39009.90401@maya.org>
+Date: Thu, 4 Feb 2016 18:53:13 +0100
 MIME-Version: 1.0
+In-Reply-To: <56B37292.1000201@amd.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgU2hhd24sDQoNCkNvdWxkIHlvdSBwbGVhc2UgaGVscCB0byByZXZpZXcgdGhlIHBhdGNoPyAg
-VGhhbmsgeW91IHZlcnkgbXVjaC4NClRoZXJlIGlzIG9ubHkgb25lIHBhdGNoIG5vdCBhIHNldCBv
-ZiBwYXRjaCwgcGxlYXNlIGlnbm9yZSBbMS80XSA6KA0KDQpBcm5kIGhhcyBnaXZlbiBhIGFjay4N
-Cg0KDQpUaGFua3MsDQpNaW5naHVhbg0KIA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
-DQo+IEZyb206IE1pbmdodWFuIExpYW4gW21haWx0bzpNaW5naHVhbi5MaWFuQG54cC5jb21dDQo+
-IFNlbnQ6IFR1ZXNkYXksIEZlYnJ1YXJ5IDAyLCAyMDE2IDQ6MzAgUE0NCj4gVG86IGxpbnV4LXBj
-aUB2Z2VyLmtlcm5lbC5vcmcNCj4gQ2M6IGxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFk
-Lm9yZzsgUm95IFphbmcgPHJveS56YW5nQG54cC5jb20+Ow0KPiBNaW5na2FpIEh1IDxtaW5na2Fp
-Lmh1QG54cC5jb20+OyBTdHVhcnQgWW9kZXIgPHN0dWFydC55b2RlckBueHAuY29tPjsNCj4gWWFu
-Zy1MZW8gTGkgPGxlb3lhbmcubGlAbnhwLmNvbT47IEFybmQgQmVyZ21hbm4gPGFybmRAYXJuZGIu
-ZGU+OyBCam9ybg0KPiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPjsgTWluZ2h1YW4gTGlh
-biA8bWluZ2h1YW4ubGlhbkBueHAuY29tPg0KPiBTdWJqZWN0OiBbUEFUQ0ggMS80XSBBUk06IGR0
-czogbHMxMDIxYTogYWRkIFBDSWUgZHRzIG5vZGUNCj4gDQo+IExTMTAyMWEgY29udGFpbnMgdHdv
-IFBDSWUgY29udHJvbGxlcnMuIFRoZSBwYXRjaCBhZGRzIHRoZWlyIG5vZGUgdG8gZHRzIGZpbGUu
-DQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBNaW5naHVhbiBMaWFuIDxNaW5naHVhbi5MaWFuQG54cC5j
-b20+DQo+IC0tLQ0KPiAgYXJjaC9hcm0vYm9vdC9kdHMvbHMxMDIxYS5kdHNpIHwgNDQNCj4gKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrDQo+ICAxIGZpbGUgY2hhbmdl
-ZCwgNDQgaW5zZXJ0aW9ucygrKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2FyY2gvYXJtL2Jvb3QvZHRz
-L2xzMTAyMWEuZHRzaSBiL2FyY2gvYXJtL2Jvb3QvZHRzL2xzMTAyMWEuZHRzaQ0KPiBpbmRleCAy
-Yzg0Y2EyLi4yNzRkNjQ3IDEwMDY0NA0KPiAtLS0gYS9hcmNoL2FybS9ib290L2R0cy9sczEwMjFh
-LmR0c2kNCj4gKysrIGIvYXJjaC9hcm0vYm9vdC9kdHMvbHMxMDIxYS5kdHNpDQo+IEBAIC01NjAs
-NSArNTYwLDQ5IEBADQo+ICAJCQlkcl9tb2RlID0gImhvc3QiOw0KPiAgCQkJc25wcyxxdWlyay1m
-cmFtZS1sZW5ndGgtYWRqdXN0bWVudCA9IDwweDIwPjsNCj4gIAkJfTsNCj4gKw0KPiArCQlwY2ll
-QDM0MDAwMDAgew0KPiArCQkJY29tcGF0aWJsZSA9ICJmc2wsbHMxMDIxYS1wY2llIiwgInNucHMs
-ZHctcGNpZSI7DQo+ICsJCQlyZWcgPSA8MHgwMCAweDAzNDAwMDAwIDB4MCAweDAwMDEwMDAwICAg
-LyogY29udHJvbGxlcg0KPiByZWdpc3RlcnMgKi8NCj4gKwkJCSAgICAgICAweDQwIDB4MDAwMDAw
-MDAgMHgwIDB4MDAwMDIwMDA+OyAvKiBjb25maWd1cmF0aW9uDQo+IHNwYWNlICovDQo+ICsJCQly
-ZWctbmFtZXMgPSAicmVncyIsICJjb25maWciOw0KPiArCQkJaW50ZXJydXB0cyA9IDxHSUNfU1BJ
-IDE3NyBJUlFfVFlQRV9MRVZFTF9ISUdIPjsgLyoNCj4gY29udHJvbGxlciBpbnRlcnJ1cHQgKi8N
-Cj4gKwkJCWZzbCxwY2llLXNjZmcgPSA8JnNjZmcgMD47DQo+ICsJCQkjYWRkcmVzcy1jZWxscyA9
-IDwzPjsNCj4gKwkJCSNzaXplLWNlbGxzID0gPDI+Ow0KPiArCQkJZGV2aWNlX3R5cGUgPSAicGNp
-IjsNCj4gKwkJCW51bS1sYW5lcyA9IDw0PjsNCj4gKwkJCWJ1cy1yYW5nZSA9IDwweDAgMHhmZj47
-DQo+ICsJCQlyYW5nZXMgPSA8MHg4MTAwMDAwMCAweDAgMHgwMDAwMDAwMCAweDQwIDB4MDAwMTAw
-MDAgMHgwDQo+IDB4MDAwMTAwMDAgICAvKiBkb3duc3RyZWFtIEkvTyAqLw0KPiArCQkJCSAgMHg4
-MjAwMDAwMCAweDAgMHg0MDAwMDAwMCAweDQwIDB4NDAwMDAwMDAgMHgwDQo+IDB4NDAwMDAwMDA+
-OyAvKiBub24tcHJlZmV0Y2hhYmxlIG1lbW9yeSAqLw0KPiArCQkJI2ludGVycnVwdC1jZWxscyA9
-IDwxPjsNCj4gKwkJCWludGVycnVwdC1tYXAtbWFzayA9IDwwIDAgMCA3PjsNCj4gKwkJCWludGVy
-cnVwdC1tYXAgPSA8MDAwMCAwIDAgMSAmZ2ljIEdJQ19TUEkgOTENCj4gSVJRX1RZUEVfTEVWRUxf
-SElHSD4sDQo+ICsJCQkJCTwwMDAwIDAgMCAyICZnaWMgR0lDX1NQSSAxODgNCj4gSVJRX1RZUEVf
-TEVWRUxfSElHSD4sDQo+ICsJCQkJCTwwMDAwIDAgMCAzICZnaWMgR0lDX1NQSSAxOTANCj4gSVJR
-X1RZUEVfTEVWRUxfSElHSD4sDQo+ICsJCQkJCTwwMDAwIDAgMCA0ICZnaWMgR0lDX1NQSSAxOTIN
-Cj4gSVJRX1RZUEVfTEVWRUxfSElHSD47DQo+ICsJCX07DQo+ICsNCj4gKwkJcGNpZUAzNTAwMDAw
-IHsNCj4gKwkJCWNvbXBhdGlibGUgPSAiZnNsLGxzMTAyMWEtcGNpZSIsICJzbnBzLGR3LXBjaWUi
-Ow0KPiArCQkJcmVnID0gPDB4MDAgMHgwMzUwMDAwMCAweDAgMHgwMDAxMDAwMCAgIC8qIGNvbnRy
-b2xsZXINCj4gcmVnaXN0ZXJzICovDQo+ICsJCQkgICAgICAgMHg0OCAweDAwMDAwMDAwIDB4MCAw
-eDAwMDAyMDAwPjsgLyogY29uZmlndXJhdGlvbg0KPiBzcGFjZSAqLw0KPiArCQkJcmVnLW5hbWVz
-ID0gInJlZ3MiLCAiY29uZmlnIjsNCj4gKwkJCWludGVycnVwdHMgPSA8R0lDX1NQSSAxNzggSVJR
-X1RZUEVfTEVWRUxfSElHSD47DQo+ICsJCQlmc2wscGNpZS1zY2ZnID0gPCZzY2ZnIDE+Ow0KPiAr
-CQkJI2FkZHJlc3MtY2VsbHMgPSA8Mz47DQo+ICsJCQkjc2l6ZS1jZWxscyA9IDwyPjsNCj4gKwkJ
-CWRldmljZV90eXBlID0gInBjaSI7DQo+ICsJCQludW0tbGFuZXMgPSA8ND47DQo+ICsJCQlidXMt
-cmFuZ2UgPSA8MHgwIDB4ZmY+Ow0KPiArCQkJcmFuZ2VzID0gPDB4ODEwMDAwMDAgMHgwIDB4MDAw
-MDAwMDAgMHg0OCAweDAwMDEwMDAwIDB4MA0KPiAweDAwMDEwMDAwICAgLyogZG93bnN0cmVhbSBJ
-L08gKi8NCj4gKwkJCQkgIDB4ODIwMDAwMDAgMHgwIDB4NDAwMDAwMDAgMHg0OCAweDQwMDAwMDAw
-IDB4MA0KPiAweDQwMDAwMDAwPjsgLyogbm9uLXByZWZldGNoYWJsZSBtZW1vcnkgKi8NCj4gKwkJ
-CSNpbnRlcnJ1cHQtY2VsbHMgPSA8MT47DQo+ICsJCQlpbnRlcnJ1cHQtbWFwLW1hc2sgPSA8MCAw
-IDAgNz47DQo+ICsJCQlpbnRlcnJ1cHQtbWFwID0gPDAwMDAgMCAwIDEgJmdpYyBHSUNfU1BJIDky
-DQo+IElSUV9UWVBFX0xFVkVMX0hJR0g+LA0KPiArCQkJCQk8MDAwMCAwIDAgMiAmZ2ljIEdJQ19T
-UEkgMTg5DQo+IElSUV9UWVBFX0xFVkVMX0hJR0g+LA0KPiArCQkJCQk8MDAwMCAwIDAgMyAmZ2lj
-IEdJQ19TUEkgMTkxDQo+IElSUV9UWVBFX0xFVkVMX0hJR0g+LA0KPiArCQkJCQk8MDAwMCAwIDAg
-NCAmZ2ljIEdJQ19TUEkgMTkzDQo+IElSUV9UWVBFX0xFVkVMX0hJR0g+Ow0KPiArCQl9Ow0KPiAg
-CX07DQo+ICB9Ow0KPiAtLQ0KPiAxLjkuMQ0KDQo=
+On 02/04/2016 at 04:47 PM, Suravee Suthikulanit wrote:
+> Hi Andreas,
+> 
+> On 2/4/2016 8:53 AM, Andreas Hartmann wrote:
+>> Hello!
+>>
+>> The following happens with Linux 4.4.1 during boot on an MSI A78M-E35
+>> board. Additionally, I attached the complete dmesg.
+> 
+> I was working on upstreaming changes to the AMD IOMMU Perf to fix some
+> of the similar issue I saw on a different platform.  Would you please
+> check to see if this patch series would fix this?
+> 
+> https://lkml.org/lkml/2016/1/1/141
+
+
+This patchset seems to fix the problem.
+
+[    1.264639] AMD-Vi: IOMMU performance counters supported
+
+But there seems to be a problem with the location of
+perf_event_amd_iommu.h in the patch - I had to fix the complete
+perf_event_amd_iommu.h related patches to get them applied to 4.4. and
+finally compiled.
+
+
+Thanks,
+Andreas
