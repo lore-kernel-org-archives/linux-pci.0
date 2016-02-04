@@ -1,99 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43245 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751447AbcBNCKT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 13 Feb 2016 21:10:19 -0500
-Date: Sun, 14 Feb 2016 10:10:02 +0800
-From: Shawn Guo <shawnguo@kernel.org>
-To: Bhupesh Sharma <bhupesh.sharma@nxp.com>
-Cc: "Shi, Yang" <yang.shi@linaro.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Yang-Leo Li <leoyang.li@nxp.com>,
-	"shawn.guo@linaro.org" <shawn.guo@linaro.org>,
-	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Minghuan Lian <minghuan.lian@nxp.com>,
-	Mingkai Hu <mingkai.hu@nxp.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] PCI: layerscape: add ls2085a compatible
-Message-ID: <20160214021002.GB6756@tiger>
-References: <1453915925-19198-1-git-send-email-yang.shi@linaro.org>
- <56A906F4.3050809@linaro.org>
- <20160204223711.GE7031@localhost>
- <56B3E386.8010002@linaro.org>
- <VI1PR04MB1230AA5CAEEEE0D4AD8E3DF288D20@VI1PR04MB1230.eurprd04.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <VI1PR04MB1230AA5CAEEEE0D4AD8E3DF288D20@VI1PR04MB1230.eurprd04.prod.outlook.com>
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:33683 "EHLO
+	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966104AbcBDR3K (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 12:29:10 -0500
+Received: by mail-wm0-f54.google.com with SMTP id g62so15085689wme.0
+        for <linux-pci@vger.kernel.org>; Thu, 04 Feb 2016 09:29:09 -0800 (PST)
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V4 07/23] pci, acpi, mcfg: Provide default RAW ACPI PCI config space accessors.
+Date: Thu,  4 Feb 2016 18:28:45 +0100
+Message-Id: <1454606941-9523-8-git-send-email-tn@semihalf.com>
+In-Reply-To: <1454606941-9523-1-git-send-email-tn@semihalf.com>
+References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 05, 2016 at 05:36:28AM +0000, Bhupesh Sharma wrote:
-> > From: Shi, Yang
-> > Sent: Friday, February 05, 2016 5:19 AM
-> > 
-> > On 2/4/2016 2:37 PM, Bjorn Helgaas wrote:
-> > > On Wed, Jan 27, 2016 at 10:05:40AM -0800, Shi, Yang wrote:
-> > >> Correct FSL folks email address to nxp.com, sorry for the
-> > inconvenience.
-> > >
-> > > Do we need some MAINTAINERS updates in addition to the ack for this
-> > patch?
-> > > I see a bunch of @freescale.com addresses in MAINTAINERS.
-> > 
-> > I guess so if the @freescale.com address is not valid anymore.
-> 
-> All @freescale.com address have shifted to @nxp.com.
-> 
-> Leo, Minghuan - can you kindly review this patch.
-> 
-> Shawn - can you take this through your tree, once Leo and Minghuan have reviewed the code.
+Lets keep RAW ACPI PCI config space accessors empty by default,
+since we are note sure if they are necessary accross all archs.
+Once we sort this out, we can provide generic version or let
+architectures to overwrite, like now x86.
 
-This is a patch that should go through PCI subsystem tree.
+Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+Tested-by: Duc Dang <dhdang@apm.com>
+Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+Tested-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/acpi/mcfg.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-Shawn
+diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
+index 745b83e..3e1e7be 100644
+--- a/drivers/acpi/mcfg.c
++++ b/drivers/acpi/mcfg.c
+@@ -9,9 +9,30 @@
+ 
+ #include <linux/acpi.h>
+ #include <linux/ecam.h>
++#include <linux/pci.h>
+ 
+ #define	PREFIX	"MCFG: "
+ 
++/*
++ * raw_pci_read/write - raw ACPI PCI config space accessors.
++ *
++ * By defauly (__weak) these accessors are empty and should be overwritten
++ * by architectures which support operations on ACPI PCI_Config regions,
++ * see osl.c file.
++ */
++
++int __weak raw_pci_read(unsigned int domain, unsigned int bus,
++			unsigned int devfn, int reg, int len, u32 *val)
++{
++	return PCIBIOS_DEVICE_NOT_FOUND;
++}
++
++int __weak raw_pci_write(unsigned int domain, unsigned int bus,
++			 unsigned int devfn, int reg, int len, u32 val)
++{
++	return PCIBIOS_DEVICE_NOT_FOUND;
++}
++
+ int __init acpi_parse_mcfg(struct acpi_table_header *header)
+ {
+ 	struct acpi_table_mcfg *mcfg;
+-- 
+1.9.1
 
-> > >> On 1/27/2016 9:32 AM, Yang Shi wrote:
-> > >>> The layerscape PCI host driver needs recognize ls2085a compatible
-> > >>> when using firmware with ls2085a compatible property, otherwise the
-> > >>> PCI bus won't be detected even though ls2085a compatible is included
-> > by the dts.
-> > >>>
-> > >>> Signed-off-by: Yang Shi <yang.shi@linaro.org>
-> > >>> ---
-> > >>>   drivers/pci/host/pci-layerscape.c | 1 +
-> > >>>   1 file changed, 1 insertion(+)
-> > >>>
-> > >>> diff --git a/drivers/pci/host/pci-layerscape.c
-> > >>> b/drivers/pci/host/pci-layerscape.c
-> > >>> index 3923bed..c40d8b2 100644
-> > >>> --- a/drivers/pci/host/pci-layerscape.c
-> > >>> +++ b/drivers/pci/host/pci-layerscape.c
-> > >>> @@ -203,6 +203,7 @@ static const struct of_device_id
-> > ls_pcie_of_match[] = {
-> > >>>   	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata
-> > },
-> > >>>   	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata
-> > },
-> > >>>   	{ .compatible = "fsl,ls2080a-pcie", .data = &ls2080_drvdata
-> > },
-> > >>> +	{ .compatible = "fsl,ls2085a-pcie", .data = &ls2080_drvdata },
-> > >>>   	{ },
-> > >>>   };
-> > >>>   MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
-> > >>>
-> > >>
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org More majordomo info at
-> > http://vger.kernel.org/majordomo-info.html
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> 
