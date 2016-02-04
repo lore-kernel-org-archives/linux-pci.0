@@ -1,104 +1,353 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:39002 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751894AbcBYWXY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Feb 2016 17:23:24 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <stable@vger.kernel.org>, <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: [PATCH] PCI: keystone: fix msi code that retrieves the pp struct ptr
-Date: Thu, 25 Feb 2016 17:23:04 -0500
-Message-ID: <1456438984-22111-1-git-send-email-m-karicheri2@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V4 18/23] pci, of: Move the PCI I/O space management to PCI core code.
+Date: Thu,  4 Feb 2016 18:28:56 +0100
+Message-Id: <1454606941-9523-19-git-send-email-tn@semihalf.com>
+In-Reply-To: <1454606941-9523-1-git-send-email-tn@semihalf.com>
+References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Recent update to pcie-designware core driver,
-commit "cbce79005 PCI: designware: Make driver arch-agnostic" broke the
-keystone PCI driver. This is because, the way pp struct ptr is retrieved
-from  msi desc has changed and require similar update in pci-keystone-dw.c
-as well. This patch fix this issue. Here is the early boot crash log seen
-on K2E EVM.
+No functional changes in this patch.
 
-[    1.012999] pci 0000:00:00.0: PCI bridge to [bus 01]
-[    1.018073] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
-[    1.024308] pci 0000:00:00.0:   bridge window [mem 0x60000000-0x600fffff]
-[    1.031216] pci 0000:00:00.0:   bridge window [mem 0x60100000-0x601fffff
-pref]
-[    1.038736] Unable to handle kernel NULL pointer dereference at virtual
-address 00000030
-[    1.046950] pgd = c0003000
-[    1.049750] [00000030] *pgd=80000800004003, *pmd=00000000
-[    1.055265] Internal error: Oops: 206 [#1] PREEMPT SMP ARM
-[    1.060860] Modules linked in:
-[    1.064013] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.4.2-00139-gb74f926 #2
-[    1.071266] Hardware name: Keystone
-[    1.074853] task: eb888000 ti: eb890000 task.ti: eb890000
-[    1.080364] PC is at ks_dw_pcie_msi_irq_unmask+0x24/0x58
-[    1.085785] LR is at ks_dw_pcie_msi_irq_unmask+0x18/0x58
-[    1.091206] pc : [<c02f65c8>]    lr : [<c02f65bc>]    psr: 60000093
-[    1.091206] sp : eb891bc8  ip : 00000000  fp : ebb15010
-[    1.102915] r10: 00000051  r9 : 60000013  r8 : ebafaa20
-[    1.108247] r7 : ebaa9f80  r6 : eb9fd0c0  r5 : ebafa9d0  r4 : ebafa9c0
-[    1.114889] r3 : 00000051  r2 : 00000000  r1 : 00000001  r0 : ebb14c18
-[    1.121533] Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment
-kernel
-[    1.129049] Control: 30c5387d  Table: 00003000  DAC: fffffffd
-[    1.134905] Process swapper/0 (pid: 1, stack limit = 0xeb890210)
-[    1.141023] Stack: (0xeb891bc8 to 0xeb892000)
+PCI I/O space mapping code does not depend on OF, therefore it can be
+moved to PCI core code. This way we will be able to use it
+e.g. in ACPI PCI code.
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Liviu Dudau <Liviu.Dudau@arm.com>
+CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
 ---
- - Need this fix in 4.4.4 as well
- drivers/pci/host/pci-keystone-dw.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+ drivers/of/address.c       | 116 +--------------------------------------------
+ drivers/pci/pci.c          | 115 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/of_address.h |   9 ----
+ include/linux/pci.h        |   5 ++
+ 4 files changed, 121 insertions(+), 124 deletions(-)
 
-diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-index ed34c95..6153853 100644
---- a/drivers/pci/host/pci-keystone-dw.c
-+++ b/drivers/pci/host/pci-keystone-dw.c
-@@ -58,11 +58,6 @@
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 91a469d..0a553c0 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -4,6 +4,7 @@
+ #include <linux/ioport.h>
+ #include <linux/module.h>
+ #include <linux/of_address.h>
++#include <linux/pci.h>
+ #include <linux/pci_regs.h>
+ #include <linux/sizes.h>
+ #include <linux/slab.h>
+@@ -673,121 +674,6 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+ }
+ EXPORT_SYMBOL(of_get_address);
  
- #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
- 
--static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+-#ifdef PCI_IOBASE
+-struct io_range {
+-	struct list_head list;
+-	phys_addr_t start;
+-	resource_size_t size;
+-};
+-
+-static LIST_HEAD(io_range_list);
+-static DEFINE_SPINLOCK(io_range_lock);
+-#endif
+-
+-/*
+- * Record the PCI IO range (expressed as CPU physical address + size).
+- * Return a negative value if an error has occured, zero otherwise
+- */
+-int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
 -{
--	return sys->private_data;
+-	int err = 0;
+-
+-#ifdef PCI_IOBASE
+-	struct io_range *range;
+-	resource_size_t allocated_size = 0;
+-
+-	/* check if the range hasn't been previously recorded */
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(range, &io_range_list, list) {
+-		if (addr >= range->start && addr + size <= range->start + size) {
+-			/* range already registered, bail out */
+-			goto end_register;
+-		}
+-		allocated_size += range->size;
+-	}
+-
+-	/* range not registed yet, check for available space */
+-	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
+-		/* if it's too big check if 64K space can be reserved */
+-		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
+-			err = -E2BIG;
+-			goto end_register;
+-		}
+-
+-		size = SZ_64K;
+-		pr_warn("Requested IO range too big, new size set to 64K\n");
+-	}
+-
+-	/* add the range to the list */
+-	range = kzalloc(sizeof(*range), GFP_ATOMIC);
+-	if (!range) {
+-		err = -ENOMEM;
+-		goto end_register;
+-	}
+-
+-	range->start = addr;
+-	range->size = size;
+-
+-	list_add_tail(&range->list, &io_range_list);
+-
+-end_register:
+-	spin_unlock(&io_range_lock);
+-#endif
+-
+-	return err;
 -}
 -
- static inline void update_reg_offset_bit_pos(u32 offset, u32 *reg_offset,
- 					     u32 *bit_pos)
+-phys_addr_t pci_pio_to_address(unsigned long pio)
+-{
+-	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
+-
+-#ifdef PCI_IOBASE
+-	struct io_range *range;
+-	resource_size_t allocated_size = 0;
+-
+-	if (pio > IO_SPACE_LIMIT)
+-		return address;
+-
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(range, &io_range_list, list) {
+-		if (pio >= allocated_size && pio < allocated_size + range->size) {
+-			address = range->start + pio - allocated_size;
+-			break;
+-		}
+-		allocated_size += range->size;
+-	}
+-	spin_unlock(&io_range_lock);
+-#endif
+-
+-	return address;
+-}
+-
+-unsigned long __weak pci_address_to_pio(phys_addr_t address)
+-{
+-#ifdef PCI_IOBASE
+-	struct io_range *res;
+-	resource_size_t offset = 0;
+-	unsigned long addr = -1;
+-
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(res, &io_range_list, list) {
+-		if (address >= res->start && address < res->start + res->size) {
+-			addr = address - res->start + offset;
+-			break;
+-		}
+-		offset += res->size;
+-	}
+-	spin_unlock(&io_range_lock);
+-
+-	return addr;
+-#else
+-	if (address > IO_SPACE_LIMIT)
+-		return (unsigned long)-1;
+-
+-	return (unsigned long) address;
+-#endif
+-}
+-
+ static int __of_address_to_resource(struct device_node *dev,
+ 		const __be32 *addrp, u64 size, unsigned int flags,
+ 		const char *name, struct resource *r)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d6c768e..3a516c0 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3023,6 +3023,121 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
+ }
+ EXPORT_SYMBOL(pci_request_regions_exclusive);
+ 
++#ifdef PCI_IOBASE
++struct io_range {
++	struct list_head list;
++	phys_addr_t start;
++	resource_size_t size;
++};
++
++static LIST_HEAD(io_range_list);
++static DEFINE_SPINLOCK(io_range_lock);
++#endif
++
++/*
++ * Record the PCI IO range (expressed as CPU physical address + size).
++ * Return a negative value if an error has occured, zero otherwise
++ */
++int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
++{
++	int err = 0;
++
++#ifdef PCI_IOBASE
++	struct io_range *range;
++	resource_size_t allocated_size = 0;
++
++	/* check if the range hasn't been previously recorded */
++	spin_lock(&io_range_lock);
++	list_for_each_entry(range, &io_range_list, list) {
++		if (addr >= range->start && addr + size <= range->start + size) {
++			/* range already registered, bail out */
++			goto end_register;
++		}
++		allocated_size += range->size;
++	}
++
++	/* range not registed yet, check for available space */
++	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
++		/* if it's too big check if 64K space can be reserved */
++		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
++			err = -E2BIG;
++			goto end_register;
++		}
++
++		size = SZ_64K;
++		pr_warn("Requested IO range too big, new size set to 64K\n");
++	}
++
++	/* add the range to the list */
++	range = kzalloc(sizeof(*range), GFP_ATOMIC);
++	if (!range) {
++		err = -ENOMEM;
++		goto end_register;
++	}
++
++	range->start = addr;
++	range->size = size;
++
++	list_add_tail(&range->list, &io_range_list);
++
++end_register:
++	spin_unlock(&io_range_lock);
++#endif
++
++	return err;
++}
++
++phys_addr_t pci_pio_to_address(unsigned long pio)
++{
++	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
++
++#ifdef PCI_IOBASE
++	struct io_range *range;
++	resource_size_t allocated_size = 0;
++
++	if (pio > IO_SPACE_LIMIT)
++		return address;
++
++	spin_lock(&io_range_lock);
++	list_for_each_entry(range, &io_range_list, list) {
++		if (pio >= allocated_size && pio < allocated_size + range->size) {
++			address = range->start + pio - allocated_size;
++			break;
++		}
++		allocated_size += range->size;
++	}
++	spin_unlock(&io_range_lock);
++#endif
++
++	return address;
++}
++
++unsigned long __weak pci_address_to_pio(phys_addr_t address)
++{
++#ifdef PCI_IOBASE
++	struct io_range *res;
++	resource_size_t offset = 0;
++	unsigned long addr = -1;
++
++	spin_lock(&io_range_lock);
++	list_for_each_entry(res, &io_range_list, list) {
++		if (address >= res->start && address < res->start + res->size) {
++			addr = address - res->start + offset;
++			break;
++		}
++		offset += res->size;
++	}
++	spin_unlock(&io_range_lock);
++
++	return addr;
++#else
++	if (address > IO_SPACE_LIMIT)
++		return (unsigned long)-1;
++
++	return (unsigned long) address;
++#endif
++}
++
+ /**
+  *	pci_remap_iospace - Remap the memory mapped I/O space
+  *	@res: Resource describing the I/O space
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index 01c0a55..3786473 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -47,10 +47,6 @@ void __iomem *of_io_request_and_map(struct device_node *device,
+ extern const __be32 *of_get_address(struct device_node *dev, int index,
+ 			   u64 *size, unsigned int *flags);
+ 
+-extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+-extern unsigned long pci_address_to_pio(phys_addr_t addr);
+-extern phys_addr_t pci_pio_to_address(unsigned long pio);
+-
+ extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+ 			struct device_node *node);
+ extern struct of_pci_range *of_pci_range_parser_one(
+@@ -86,11 +82,6 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
+ 	return NULL;
+ }
+ 
+-static inline phys_addr_t pci_pio_to_address(unsigned long pio)
+-{
+-	return 0;
+-}
+-
+ static inline int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+ 			struct device_node *node)
  {
-@@ -108,7 +103,7 @@ static void ks_dw_pcie_msi_irq_ack(struct irq_data *d)
- 	struct pcie_port *pp;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 27df4a6..dac677c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1168,6 +1168,9 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
+ 			void *alignf_data);
  
- 	msi = irq_data_get_msi_desc(d);
--	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
-+	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
- 	ks_pcie = to_keystone_pcie(pp);
- 	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
- 	update_reg_offset_bit_pos(offset, &reg_offset, &bit_pos);
-@@ -146,7 +141,7 @@ static void ks_dw_pcie_msi_irq_mask(struct irq_data *d)
- 	u32 offset;
  
- 	msi = irq_data_get_msi_desc(d);
--	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
-+	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
- 	ks_pcie = to_keystone_pcie(pp);
- 	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
++int pci_register_io_range(phys_addr_t addr, resource_size_t size);
++unsigned long pci_address_to_pio(phys_addr_t addr);
++phys_addr_t pci_pio_to_address(unsigned long pio);
+ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
  
-@@ -167,7 +162,7 @@ static void ks_dw_pcie_msi_irq_unmask(struct irq_data *d)
- 	u32 offset;
+ static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
+@@ -1488,6 +1491,8 @@ static inline int pci_request_regions(struct pci_dev *dev, const char *res_name)
+ { return -EIO; }
+ static inline void pci_release_regions(struct pci_dev *dev) { }
  
- 	msi = irq_data_get_msi_desc(d);
--	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
-+	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
- 	ks_pcie = to_keystone_pcie(pp);
- 	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
- 
++static inline unsigned long pci_address_to_pio(phys_addr_t addr) { return -1; }
++
+ static inline void pci_block_cfg_access(struct pci_dev *dev) { }
+ static inline int pci_block_cfg_access_in_atomic(struct pci_dev *dev)
+ { return 0; }
 -- 
 1.9.1
 
