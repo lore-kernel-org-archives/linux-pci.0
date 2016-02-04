@@ -1,75 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 23 Feb 2016 11:02:15 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Marsan, Luugi" <Luugi.Marsan@amd.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: BUGZILLA [112941] - Cannot reenable SRIOV after disabling SRIOV
- on AMD GPU
-Message-ID: <20160223170215.GA25203@localhost>
-References: <CY1PR12MB0262D12DAC0897F8DC74541CFEA40@CY1PR12MB0262.namprd12.prod.outlook.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <guohanjun@huawei.com>, <wangzhou1@hisilicon.com>,
+	<liudongdong3@huawei.com>, <linuxarm@huawei.com>,
+	<qiujiang@huawei.com>, <bhelgaas@google.com>, <arnd@arndb.de>,
+	<Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>
+CC: <gabriele.paoloni@huawei.com>, <zhangjukuo@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<jcm@redhat.com>
+Subject: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host Controllers
+Date: Thu, 4 Feb 2016 19:37:36 +0800
+Message-ID: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CY1PR12MB0262D12DAC0897F8DC74541CFEA40@CY1PR12MB0262.namprd12.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Joerg, Alex]
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-Hi Kelly,
+This patchset adds ACPI support for the HiSilicon Hip05/Hip06 SoC PCIe controllers
+The four patches respectively:
+        - rework PCie Designware to be used for ACPI PCI Host controllers
+        - re-architect the current HiSilicon driver to make it scalable to the
+          new ACPI quirks
+	- rework the current HiSilicon driver to make it ECAM compliant
+        - adds the HiSilicon ACPI specific quirks.
 
-On Tue, Feb 23, 2016 at 03:52:13PM +0000, Zytaruk, Kelly wrote:
-> As per our offline discussions I have created Bugzilla #112941 for
-> the SRIOV issue.
+   This patchset  is based on 
+   https://github.com/semihalf-nowicki-tomasz/linux.git
+   branch pci-acpi-v3 + Hip06 support applied on top:
+   https://patchwork.ozlabs.org/patch/549198/
 
-https://bugzilla.kernel.org/show_bug.cgi?id=112941
+gabriele paoloni (4):
+  PCI: Designware: Add support for ACPI based controllers
+  PCI: hisi: re-architect Hip05/Hip06 controllers driver to preapare for
+    ACPI
+  PCI: hisi: Make the HiSilicon PCIe host controller ECAM compliant
+  PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
 
-> When trying to enable SRIOV on AMD GPU after doing a previous enable
-> / disable sequence the following warning is shown in dmesg.  I
-> suspect that there might be something missing from the cleanup on
-> the disable.  
-> 
-> I had a quick look at the code and it is checking for something in
-> the iommu, something to do with being attached to a domain.  I am
-> not familiar with this code yet (what does it mean to be attached to
-> a domain?) so it might take a little while before I can get the time
-> to check it out and understand it.
-> 
-> From a quick glance I notice that during SRIOV enable the function
-> do_attach()  in amd_iommu.c is called but during disable I don't see
-> a corresponding call to do_detach (...).  do_detach(...) is called
-> in the second enable SRIOV  sequence as a cleanup because it thinks
-> that the iommu is still attached which it shouldn't be (as far as I
-> understand).
-> 
-> If the iommu reports that the device is being removed why isn't it
-> also detached??? Is this by design or an omission?
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     |   4 +-
+ MAINTAINERS                                        |   3 +
+ drivers/pci/host/Kconfig                           |   9 ++
+ drivers/pci/host/Makefile                          |   3 +-
+ drivers/pci/host/pcie-designware.c                 |  39 +++++-
+ drivers/pci/host/pcie-designware.h                 |   1 +
+ drivers/pci/host/pcie-hisi-acpi.c                  | 147 ++++++++++++++++++++
+ drivers/pci/host/pcie-hisi-common.c                | 103 ++++++++++++++
+ drivers/pci/host/pcie-hisi.c                       | 149 ++++++---------------
+ drivers/pci/host/pcie-hisi.h                       |  50 +++++++
+ 10 files changed, 390 insertions(+), 118 deletions(-)
+ create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
+ create mode 100644 drivers/pci/host/pcie-hisi-common.c
+ create mode 100644 drivers/pci/host/pcie-hisi.h
 
-I don't know enough about the IOMMU code to understand this, but maybe
-the IOMMU experts I copied do.
+-- 
+1.9.1
 
-> I see the following in dmesg when I do a disable, note the device is removed.
-> 
-> [  131.674066] pci 0000:02:00.0: PME# disabled
-> [  131.682191] iommu: Removing device 0000:02:00.0 from group 2
-> 
-> Stack trace of warn is shown below.
-> 
-> [  368.510742] pci 0000:02:00.2: calling pci_fixup_video+0x0/0xb1
-> [  368.510847] pci 0000:02:00.3: [1002:692f] type 00 class 0x030000
-> [  368.510888] pci 0000:02:00.3: Max Payload Size set to 256 (was 128, max 256)
-> [  368.510907] pci 0000:02:00.3: calling quirk_no_pm_reset+0x0/0x1a
-> [  368.511005] vgaarb: device added: PCI:0000:02:00.3,decodes=io+mem,owns=none,locks=none
-> [  368.511421] ------------[ cut here ]------------
-> [  368.511426] WARNING: CPU: 1 PID: 3390 at drivers/pci/ats.c:85 pci_disable_ats+0x26/0xa4()
-
-This warning is because dev->ats_enabled doesn't have the value we
-expect.  I think we only modify ats_enabled in two places.  Can you
-stick a dump_stack() at those two places?  Maybe a little more context
-will make this obvious.
-
-Bjorn
