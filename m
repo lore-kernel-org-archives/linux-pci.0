@@ -1,60 +1,78 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <guohanjun@huawei.com>, <wangzhou1@hisilicon.com>,
-	<liudongdong3@huawei.com>, <linuxarm@huawei.com>,
-	<qiujiang@huawei.com>, <bhelgaas@google.com>, <arnd@arndb.de>,
-	<Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>
-CC: <gabriele.paoloni@huawei.com>, <zhangjukuo@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailapp01.imgtec.com ([195.59.15.196]:59036 "EHLO
+	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965006AbcBDQL3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 11:11:29 -0500
+From: Paul Burton <paul.burton@imgtec.com>
+To: <linux-mips@linux-mips.org>
+CC: Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>,
+	"Paul Burton" <paul.burton@imgtec.com>,
+	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
+	Grygorii Strashko <grygorii.strashko@ti.com>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<jcm@redhat.com>
-Subject: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host Controllers
-Date: Thu, 4 Feb 2016 19:37:36 +0800
-Message-ID: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
+	Russell Joyce <russell.joyce@york.ac.uk>,
+	<linux-kernel@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v3 3/6] PCI: xilinx: Always clear interrupt decode register
+Date: Thu, 4 Feb 2016 16:10:10 +0000
+Message-ID: <1454602213-967-4-git-send-email-paul.burton@imgtec.com>
+In-Reply-To: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
+References: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+If an MSI or INTx interrupt is incorrectly triggered with an empty FIFO
+then xilinx_pcie_intr_handler will print a warning & skip further
+processing. However it did not clear the interrupt in the decode
+register, so the same INTX or MSI interrupt would trigger again
+immediately even though the FIFO is still empty. Clear the interrupt in
+the decode register to avoid that situation.
 
-This patchset adds ACPI support for the HiSilicon Hip05/Hip06 SoC PCIe controllers
-The four patches respectively:
-        - rework PCie Designware to be used for ACPI PCI Host controllers
-        - re-architect the current HiSilicon driver to make it scalable to the
-          new ACPI quirks
-	- rework the current HiSilicon driver to make it ECAM compliant
-        - adds the HiSilicon ACPI specific quirks.
+Signed-off-by: Paul Burton <paul.burton@imgtec.com>
+Fixes: 8961def56845 ("PCI: xilinx: Add Xilinx AXI PCIe Host Bridge IP driver")
 
-   This patchset  is based on 
-   https://github.com/semihalf-nowicki-tomasz/linux.git
-   branch pci-acpi-v3 + Hip06 support applied on top:
-   https://patchwork.ozlabs.org/patch/549198/
+---
 
-gabriele paoloni (4):
-  PCI: Designware: Add support for ACPI based controllers
-  PCI: hisi: re-architect Hip05/Hip06 controllers driver to preapare for
-    ACPI
-  PCI: hisi: Make the HiSilicon PCIe host controller ECAM compliant
-  PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
+Changes in v3:
+- Split out from Boston patchset.
 
- .../devicetree/bindings/pci/hisilicon-pcie.txt     |   4 +-
- MAINTAINERS                                        |   3 +
- drivers/pci/host/Kconfig                           |   9 ++
- drivers/pci/host/Makefile                          |   3 +-
- drivers/pci/host/pcie-designware.c                 |  39 +++++-
- drivers/pci/host/pcie-designware.h                 |   1 +
- drivers/pci/host/pcie-hisi-acpi.c                  | 147 ++++++++++++++++++++
- drivers/pci/host/pcie-hisi-common.c                | 103 ++++++++++++++
- drivers/pci/host/pcie-hisi.c                       | 149 ++++++---------------
- drivers/pci/host/pcie-hisi.h                       |  50 +++++++
- 10 files changed, 390 insertions(+), 118 deletions(-)
- create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
- create mode 100644 drivers/pci/host/pcie-hisi-common.c
- create mode 100644 drivers/pci/host/pcie-hisi.h
+Changes in v2:
+- Add Fixes tag.
 
+ drivers/pci/host/pcie-xilinx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index afdfb09..1eb74a2 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -444,7 +444,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 		/* Check whether interrupt valid */
+ 		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
+ 			dev_warn(port->dev, "RP Intr FIFO1 read error\n");
+-			return IRQ_HANDLED;
++			goto out;
+ 		}
+ 
+ 		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
+@@ -492,6 +492,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 	if (status & XILINX_PCIE_INTR_MST_ERRP)
+ 		dev_warn(port->dev, "Master error poison\n");
+ 
++out:
+ 	/* Clear the Interrupt Decode register */
+ 	pcie_write(port, status, XILINX_PCIE_REG_IDR);
+ 
 -- 
-1.9.1
+2.7.0
 
