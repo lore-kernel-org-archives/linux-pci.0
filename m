@@ -1,38 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49610 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751141AbcBWMTS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Feb 2016 07:19:18 -0500
-Subject: Re: [PATCH v4 03/11] PCI: Use bitfield instead of bool for struct
- pci_vpd_pci22.busy
-To: Bjorn Helgaas <bhelgaas@google.com>
-References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160223004645.10635.98577.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Cc: linux-pci@vger.kernel.org,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Babu Moger <babu.moger@oracle.com>,
-	Alexander Duyck <alexander.duyck@gmail.com>
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <56CC4E3C.8000907@suse.de>
-Date: Tue, 23 Feb 2016 20:19:08 +0800
-MIME-Version: 1.0
-In-Reply-To: <20160223004645.10635.98577.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Received: from [193.47.165.129] ([193.47.165.129]:33956 "EHLO mellanox.co.il"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755241AbcBDI3j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Feb 2016 03:29:39 -0500
+From: Ilya Lesokhin <ilyal@mellanox.com>
+To: kvm@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, alex.williamson@redhat.com,
+	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
+	liranl@mellanox.com, ilyal@mellanox.com
+Subject: [RFC V2 1/4] VFIO: Probe new devices in a live VFIO group with the VFIO driver
+Date: Thu,  4 Feb 2016 10:28:54 +0200
+Message-Id: <1454574537-123466-2-git-send-email-ilyal@mellanox.com>
+In-Reply-To: <1454574537-123466-1-git-send-email-ilyal@mellanox.com>
+References: <1454574537-123466-1-git-send-email-ilyal@mellanox.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/23/2016 08:46 AM, Bjorn Helgaas wrote:
-> Make struct pci_vpd_pci22.busy a 1-bit field instead of a bool.  We intend
-> to add another flag, and two bitfields are cheaper than two bools.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+When a new device is added to a live VFIO group,
+use driver_override to force the device to be probed by
+the VFIO driver.
 
-Cheers,
+Signed-off-by: Ilya Lesokhin <ilyal@mellanox.com>
+---
+ drivers/vfio/vfio.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
-Hannes
+diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
+index 563c510..176647e 100644
+--- a/drivers/vfio/vfio.c
++++ b/drivers/vfio/vfio.c
+@@ -504,6 +504,7 @@ static int vfio_dev_viable(struct device *dev, void *data)
+ static int vfio_group_nb_add_dev(struct vfio_group *group, struct device *dev)
+ {
+ 	struct vfio_device *device;
++	struct pci_dev *pdev;
+ 
+ 	/* Do we already know about it?  We shouldn't */
+ 	device = vfio_group_get_device(group, dev);
+@@ -516,9 +517,20 @@ static int vfio_group_nb_add_dev(struct vfio_group *group, struct device *dev)
+ 	if (!atomic_read(&group->container_users))
+ 		return 0;
+ 
+-	/* TODO Prevent device auto probing */
+-	WARN("Device %s added to live group %d!\n", dev_name(dev),
+-	     iommu_group_id(group->iommu_group));
++	if (dev_is_pci(dev)) {
++		/* a device that shares a group with another VFIO
++		 * device should also be probed by VFIO
++		 */
++		pdev = to_pci_dev(dev);
++		if (pdev->driver_override)
++			kfree(pdev->driver_override);
++
++		pdev->driver_override = kstrdup("vfio-pci", GFP_KERNEL);
++	} else {
++		/* TODO Prevent device auto probing */
++		WARN("Device %s added to live group %d!\n", dev_name(dev),
++		     iommu_group_id(group->iommu_group));
++	}
+ 
+ 	return 0;
+ }
 -- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+1.8.3.1
+
