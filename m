@@ -1,37 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:36204 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424770AbcBRL7w (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Feb 2016 06:59:52 -0500
-Received: by mail-wm0-f66.google.com with SMTP id a4so2499034wme.3
-        for <linux-pci@vger.kernel.org>; Thu, 18 Feb 2016 03:59:51 -0800 (PST)
-From: Christoph Fritz <chf.fritz@googlemail.com>
-To: Richard Zhu <hongxing.zhu@nxp.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lee Jones <lee.jones@linaro.org>
-Cc: linux-pci@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>
-Subject: [PATCH v2 0/2] Add PCIe driver support for imx6sx.
-Date: Thu, 18 Feb 2016 12:59:01 +0100
-Message-Id: <1455796743-5987-1-git-send-email-chf.fritz@googlemail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v7 2/2] add new platform driver for PCI RC
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+References: <cover.1454349430.git.jpinto@synopsys.com>
+ <10b29adcdb0a31eb8f8071b271da267e44ad8a04.1454349430.git.jpinto@synopsys.com>
+ <8223655.W63T0XOVm1@wuerfel> <20160203180514.GA10879@localhost>
+ <56B242F0.6040704@synopsys.com> <20160203183844.GC10879@localhost>
+ <56B33278.3000408@synopsys.com>
+CC: Arnd Bergmann <arnd@arndb.de>, <Vineet.Gupta1@synopsys.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-snps-arc@lists.infradead.org>,
+	<CARLOS.PALMINHA@synopsys.com>, <Alexey.Brodkin@synopsys.com>,
+	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <56B35B96.3090005@synopsys.com>
+Date: Thu, 4 Feb 2016 14:09:26 +0000
+MIME-Version: 1.0
+In-Reply-To: <56B33278.3000408@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add PCIe driver support for imx6sx.
+Hi Bjorn and Arnd,
 
-v2:
- * leave out regulator handling from driver, will be done later
-   in PM subsystem 
- * use BIT() macro for MFD
+Removing the irq_handler causes the irq request to fail because in
+request_threaded_irq() both handler and thread_fn are NULL.
 
-Christoph Fritz (2):
-  MFD: imx6sx: Add PCIe register definitions for iomuxc gpr
-  PCI: imx6: add initial imx6sx support
+What's the typical procedure for this?
 
- drivers/pci/host/pci-imx6.c                 | 130 +++++++++++++++++++---------
- include/linux/mfd/syscon/imx6q-iomuxc-gpr.h |   5 ++
- 2 files changed, 96 insertions(+), 39 deletions(-)
+Joao
 
--- 
-2.1.4
-
+On 2/4/2016 11:14 AM, Joao Pinto wrote:
+> Hi Bjorn,
+> 
+> On 2/3/2016 6:38 PM, Bjorn Helgaas wrote:
+>> On Wed, Feb 03, 2016 at 06:12:00PM +0000, Joao Pinto wrote:
+>>> Hi Bjorn,
+>>>
+>>> Are these tasks enough?
+>>>
+>>> - replace mdelay() for msleep()
+>>> - remove synopsys_pcie_irq_handler()
+>>
+>> Above are fine with me.
+> 
+> Ok, I'll to that.
+> 
+> Thanks.
+> 
