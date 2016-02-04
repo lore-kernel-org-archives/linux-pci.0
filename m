@@ -1,178 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:46040 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965167AbcBQDqB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:46:01 -0500
-Received: from localhost
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 17 Feb 2016 13:45:59 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v8 13/45] powerpc/powernv/ioda1: M64 support on P7IOC
-Date: Wed, 17 Feb 2016 14:43:56 +1100
-Message-Id: <1455680668-23298-14-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V4 09/23] pci, acpi, ecam: Add flag to indicate whether ECAM region was hot added or not.
+Date: Thu,  4 Feb 2016 18:28:47 +0100
+Message-Id: <1454606941-9523-10-git-send-email-tn@semihalf.com>
+In-Reply-To: <1454606941-9523-1-git-send-email-tn@semihalf.com>
+References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This enables M64 window on P7IOC, which has been enabled on PHB3.
-Different from PHB3 where 16 M64 BARs are supported and each of
-them can be owned by one particular PE# exclusively or divided
-evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
-of them are divided to 8 segments. So every P7IOC PHB supports
-128 M64 segments in total. P7IOC has M64DT, which helps mapping
-one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
-M64DT, indicating that one M64 segment can only be pinned to the
-fixed PE#. In order to have same code to support M64 on P7IOC and
-PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
-of them is pinned to the fixed PE# by bypassing the function of
-M64DT. In turn, we just need different phb->init_m64() for P7IOC
-and PHB3 to support M64.
+There are two ways we can get ECAM (aka MCFG) regions using ACPI,
+from MCFG static table and from _CBA method. We cannot remove static
+regions, however regions coming from _CBA should be removed while removing
+bridge device.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+In the light of above we need flag to mark hot added ECAM entries
+so that user should use pci_mmconfig_inject while adding regions from
+_CBA method.
+
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+Tested-by: Duc Dang <dhdang@apm.com>
+Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+Tested-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 86 +++++++++++++++++++++++++++++--
- arch/powerpc/platforms/powernv/pci.h      |  3 ++
- 2 files changed, 86 insertions(+), 3 deletions(-)
+ drivers/pci/ecam.c   | 2 ++
+ include/linux/ecam.h | 1 +
+ 2 files changed, 3 insertions(+)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 1dc663a..8488238 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -246,6 +246,64 @@ static void pnv_ioda_reserve_dev_m64_pe(struct pci_dev *pdev,
- 	}
- }
+diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
+index 7bc75af..fea5700 100644
+--- a/drivers/pci/ecam.c
++++ b/drivers/pci/ecam.c
+@@ -131,6 +131,7 @@ struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
+ 	new->segment = segment;
+ 	new->start_bus = start;
+ 	new->end_bus = end;
++	new->hot_added = false;
  
-+static int pnv_ioda1_init_m64(struct pnv_phb *phb)
-+{
-+	struct resource *r;
-+	int index;
-+
-+	/*
-+	 * There are 16 M64 BARs, each of which has 8 segments. So
-+	 * there are as many M64 segments as the maximum number of
-+	 * PEs, which is 128.
-+	 */
-+	for (index = 0; index < PNV_IODA1_M64_NUM; index++) {
-+		unsigned long base, segsz = phb->ioda.m64_segsize;
-+		int64_t rc;
-+
-+		base = phb->ioda.m64_base +
-+		       index * PNV_IODA1_M64_SEGS * segsz;
-+		rc = opal_pci_set_phb_mem_window(phb->opal_id,
-+				OPAL_M64_WINDOW_TYPE, index, base, 0,
-+				PNV_IODA1_M64_SEGS * segsz);
-+		if (rc != OPAL_SUCCESS) {
-+			pr_warn("  Error %lld setting M64 PHB#%d-BAR#%d\n",
-+				rc, phb->hose->global_number, index);
-+			goto fail;
-+		}
-+
-+		rc = opal_pci_phb_mmio_enable(phb->opal_id,
-+				OPAL_M64_WINDOW_TYPE, index,
-+				OPAL_ENABLE_M64_SPLIT);
-+		if (rc != OPAL_SUCCESS) {
-+			pr_warn("  Error %lld enabling M64 PHB#%d-BAR#%d\n",
-+				rc, phb->hose->global_number, index);
-+			goto fail;
-+		}
-+	}
-+
-+	/*
-+	 * Exclude the segment used by the reserved PE, which
-+	 * is expected to be 0 or last supported PE#.
-+	 */
-+	r = &phb->hose->mem_resources[1];
-+	if (phb->ioda.reserved_pe_idx == 0)
-+		r->start += phb->ioda.m64_segsize;
-+	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
-+		r->end -= phb->ioda.m64_segsize;
-+	else
-+		pr_warn("  Cannot cut M64 segment for reserved PE#%d\n",
-+			phb->ioda.reserved_pe_idx);
-+
-+	return 0;
-+
-+fail:
-+	for ( ; index >= 0; index--)
-+		opal_pci_phb_mmio_enable(phb->opal_id,
-+			OPAL_M64_WINDOW_TYPE, index, OPAL_DISABLE_M64);
-+
-+	return -EIO;
-+}
-+
- static void pnv_ioda_reserve_m64_pe(struct pci_bus *bus,
- 				    unsigned long *pe_bitmap,
- 				    bool all)
-@@ -315,6 +373,26 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
- 			pe->master = master_pe;
- 			list_add_tail(&pe->list, &master_pe->slaves);
- 		}
-+
-+		/*
-+		 * P7IOC supports M64DT, which helps mapping M64 segment
-+		 * to one particular PE#. However, PHB3 has fixed mapping
-+		 * between M64 segment and PE#. In order to have same logic
-+		 * for P7IOC and PHB3, we enforce fixed mapping between M64
-+		 * segment and PE# on P7IOC.
-+		 */
-+		if (phb->type == PNV_PHB_IODA1) {
-+			int64_t rc;
-+
-+			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-+					pe->pe_number, OPAL_M64_WINDOW_TYPE,
-+					pe->pe_number / PNV_IODA1_M64_SEGS,
-+					pe->pe_number % PNV_IODA1_M64_SEGS);
-+			if (rc != OPAL_SUCCESS)
-+				pr_warn("%s: Error %lld mapping M64 for PHB#%d-PE#%d\n",
-+					__func__, rc, phb->hose->global_number,
-+					pe->pe_number);
-+		}
- 	}
- 
- 	kfree(pe_alloc);
-@@ -329,8 +407,7 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
- 	const u32 *r;
- 	u64 pci_addr;
- 
--	/* FIXME: Support M64 for P7IOC */
--	if (phb->type != PNV_PHB_IODA2) {
-+	if (phb->type != PNV_PHB_IODA1 && phb->type != PNV_PHB_IODA2) {
- 		pr_info("  Not support M64 window\n");
- 		return;
- 	}
-@@ -364,7 +441,10 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
- 
- 	/* Use last M64 BAR to cover M64 window */
- 	phb->ioda.m64_bar_idx = 15;
--	phb->init_m64 = pnv_ioda2_init_m64;
-+	if (phb->type == PNV_PHB_IODA1)
-+		phb->init_m64 = pnv_ioda1_init_m64;
-+	else
-+		phb->init_m64 = pnv_ioda2_init_m64;
- 	phb->reserve_m64_pe = pnv_ioda_reserve_m64_pe;
- 	phb->pick_m64_pe = pnv_ioda_pick_m64_pe;
- }
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 866a5ea..00539ff 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -82,6 +82,9 @@ struct pnv_ioda_pe {
- 	struct list_head	list;
+ 	res = &new->res;
+ 	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
+@@ -221,6 +222,7 @@ int pci_mmconfig_inject(struct pci_mmcfg_region *cfg)
+ 		err = -ENOMEM;
+ 		goto out;
+ 	} else {
++		cfg->hot_added = true;
+ 		list_add_sorted(cfg);
+ 		pr_info("MMCONFIG at %pR (base %#lx)\n",
+ 			&cfg->res, (unsigned long)cfg->address);
+diff --git a/include/linux/ecam.h b/include/linux/ecam.h
+index 813acd1..e0f322e 100644
+--- a/include/linux/ecam.h
++++ b/include/linux/ecam.h
+@@ -17,6 +17,7 @@ struct pci_mmcfg_region {
+ 	u8 start_bus;
+ 	u8 end_bus;
+ 	char name[PCI_MMCFG_RESOURCE_NAME_LEN];
++	bool hot_added;
  };
  
-+#define PNV_IODA1_M64_NUM	16	/* Number of M64 BARs   */
-+#define PNV_IODA1_M64_SEGS	8	/* Segments per M64 BAR */
-+
- #define PNV_PHB_FLAG_EEH	(1 << 0)
- 
- struct pnv_phb {
+ struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
 -- 
-2.1.0
+1.9.1
 
