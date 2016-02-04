@@ -1,51 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v7 2/2] add new platform driver for PCI RC
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-References: <cover.1454349430.git.jpinto@synopsys.com>
- <10b29adcdb0a31eb8f8071b271da267e44ad8a04.1454349430.git.jpinto@synopsys.com>
- <8223655.W63T0XOVm1@wuerfel> <20160203180514.GA10879@localhost>
- <56B242F0.6040704@synopsys.com> <20160203183844.GC10879@localhost>
- <56B33278.3000408@synopsys.com>
-CC: Arnd Bergmann <arnd@arndb.de>, <Vineet.Gupta1@synopsys.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-snps-arc@lists.infradead.org>,
-	<CARLOS.PALMINHA@synopsys.com>, <Alexey.Brodkin@synopsys.com>,
-	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <56B35B96.3090005@synopsys.com>
-Date: Thu, 4 Feb 2016 14:09:26 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:39246 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933796AbcBDSyn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Feb 2016 13:54:43 -0500
+Date: Thu, 4 Feb 2016 10:54:42 -0800
+From: Andi Kleen <ak@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Andi Kleen <andi@firstfloor.org>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [PATCH] x86, pci: Add quirk for unsizeable Broadwell EP bar
+Message-ID: <20160204185442.GA4875@tassilo.jf.intel.com>
+References: <1452896279-22034-1-git-send-email-andi@firstfloor.org>
+ <20160204174155.GB19957@localhost>
 MIME-Version: 1.0
-In-Reply-To: <56B33278.3000408@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160204174155.GB19957@localhost>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn and Arnd,
+> It sounds like these devices have some device-specific register where
+> BAR 0 is supposed to be?  Setting IORESOURCE_PCI_FIXED doesn't seem
+> like the right solution to me.  Even if we set that, the core still
 
-Removing the irq_handler causes the irq request to fail because in
-request_threaded_irq() both handler and thread_fn are NULL.
+There is no actually functional register on these locations that has any side
+effects.
 
-What's the typical procedure for this?
+> believes this resource corresponds to some address space consumed by
+> the device.  I think we will still try to size the BAR and decode its
+> type.  I think it will still show up via lspci.  That's all
+> meaningless.
 
-Joao
+But would actually anything use it?
 
-On 2/4/2016 11:14 AM, Joao Pinto wrote:
-> Hi Bjorn,
+> How do you deal with this on Windows?
 > 
-> On 2/3/2016 6:38 PM, Bjorn Helgaas wrote:
->> On Wed, Feb 03, 2016 at 06:12:00PM +0000, Joao Pinto wrote:
->>> Hi Bjorn,
->>>
->>> Are these tasks enough?
->>>
->>> - replace mdelay() for msleep()
->>> - remove synopsys_pcie_irq_handler()
->>
->> Above are fine with me.
-> 
-> Ok, I'll to that.
-> 
-> Thanks.
-> 
+> I think you need to replace the config accessor with a special one
+> that knows that this register is not a BAR, and they can return zero.
+> Or maybe the accessor should hide these devices completely, i.e.,
+> return 0xffffffff for the vendor/device ID.  Or maybe you even have a
+> switch the BIOS can use to hide them from the OS.
+
+In some cases we need the devices.
+
+-Andi
