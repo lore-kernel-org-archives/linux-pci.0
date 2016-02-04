@@ -1,53 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:57636 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751142AbcBASH5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2016 13:07:57 -0500
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: Vineet.Gupta1@synopsys.com, helgaas@kernel.org
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
-	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v7 0/2] adding PCI support to AXS10x
-Date: Mon,  1 Feb 2016 18:07:43 +0000
-Message-Id: <cover.1454349430.git.jpinto@synopsys.com>
+Received: from mail-bl2on0069.outbound.protection.outlook.com ([65.55.169.69]:28071
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750748AbcBDSL7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Feb 2016 13:11:59 -0500
+Subject: Re: AMD-Vi: Unable to write to IOMMU perf counter.
+To: Andreas Hartmann <andihartmann@freenet.de>,
+	<linux-pci@vger.kernel.org>
+References: <56B365E0.4020100@01019freenet.de> <56B37292.1000201@amd.com>
+ <56B39009.90401@maya.org>
+CC: Joerg Roedel <joro@8bytes.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	iommu <iommu@lists.linux-foundation.org>
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Message-ID: <56B39468.7080902@amd.com>
+Date: Thu, 4 Feb 2016 12:11:52 -0600
+MIME-Version: 1.0
+In-Reply-To: <56B39009.90401@maya.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set has the goal to add suppport for DesignWare PCIe RC in ARC
-AXS10x. It includes the necessary tweaks to the ARC architecture, 
-necessary tweaks to the PCI subsystem and a new driver (pcie-synopsys).
-This new driver will be used extensively in the PCIe RC Prototyping Kit.
+On 2/4/2016 11:53 AM, Andreas Hartmann wrote:
+> On 02/04/2016 at 04:47 PM, Suravee Suthikulanit wrote:
+>> Hi Andreas,
+>>
+>> On 2/4/2016 8:53 AM, Andreas Hartmann wrote:
+>>> Hello!
+>>>
+>>> The following happens with Linux 4.4.1 during boot on an MSI A78M-E35
+>>> board. Additionally, I attached the complete dmesg.
+>>
+>> I was working on upstreaming changes to the AMD IOMMU Perf to fix some
+>> of the similar issue I saw on a different platform.  Would you please
+>> check to see if this patch series would fix this?
+>>
+>> https://lkml.org/lkml/2016/1/1/141
+>
+>
+> This patchset seems to fix the problem.
+>
+> [    1.264639] AMD-Vi: IOMMU performance counters supported
+>
+> But there seems to be a problem with the location of
+> perf_event_amd_iommu.h in the patch - I had to fix the complete
+> perf_event_amd_iommu.h related patches to get them applied to 4.4. and
+> finally compiled.
+>
+>
+> Thanks,
+> Andreas
+>
 
-The patches were produced against Bjorn Helgaas' repository. It was properly
-tested in an IP Prototyping Kit.
+Ok, I'll clean up and resend this patch series. Thanks for testing.
 
-Joao Pinto (2):
-  PCI support added to ARC
-  add new platform driver for PCI RC
-
- .../devicetree/bindings/pci/pcie-synopsys.txt      |  33 +++
- MAINTAINERS                                        |   7 +
- arch/arc/Kconfig                                   |  23 ++
- arch/arc/include/asm/dma.h                         |   5 +
- arch/arc/include/asm/io.h                          |   9 +
- arch/arc/include/asm/pci.h                         |  31 +++
- arch/arc/kernel/Makefile                           |   1 +
- arch/arc/kernel/pcibios.c                          |  23 ++
- arch/arc/plat-axs10x/Kconfig                       |   1 +
- drivers/pci/Makefile                               |   1 +
- drivers/pci/host/Kconfig                           |   8 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pcie-synopsys.c                   | 257 +++++++++++++++++++++
- 13 files changed, 400 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/pcie-synopsys.txt
- create mode 100644 arch/arc/include/asm/pci.h
- create mode 100644 arch/arc/kernel/pcibios.c
- create mode 100644 drivers/pci/host/pcie-synopsys.c
-
--- 
-1.8.1.5
-
+Thanks,
+Suravee
