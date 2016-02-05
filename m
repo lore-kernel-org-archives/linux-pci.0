@@ -1,131 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 2/2] PCI: generic: add description of property
- "interrupt-skip-mask"
-To: Mark Rutland <mark.rutland@arm.com>
-References: <1456401208-10136-1-git-send-email-thunder.leizhen@huawei.com>
- <1456401208-10136-2-git-send-email-thunder.leizhen@huawei.com>
- <20160225122035.GB10593@leverpostej>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Zefan Li <lizefan@huawei.com>, Xinwei Hu <huxinwei@huawei.com>,
-	Tianhong Ding <dingtianhong@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	Yijing Wang <wangyijing@huawei.com>
-From: "Leizhen (ThunderTown)" <thunder.leizhen@huawei.com>
-Message-ID: <56CFFC9B.20703@huawei.com>
-Date: Fri, 26 Feb 2016 15:19:55 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:52041 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752851AbcBEOvq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2016 09:51:46 -0500
+Subject: Re: [PATCH v8 2/2] add new platform driver for PCI RC
+To: Arnd Bergmann <arnd@arndb.de>, Joao Pinto <Joao.Pinto@synopsys.com>
+References: <cover.1454600622.git.jpinto@synopsys.com>
+ <20160204234334.GH7031@localhost> <56B47D0D.5030204@synopsys.com>
+ <4427983.0G6mVNKP5W@wuerfel>
+CC: Bjorn Helgaas <helgaas@kernel.org>, <Vineet.Gupta1@synopsys.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-snps-arc@lists.infradead.org>,
+	<CARLOS.PALMINHA@synopsys.com>, <Alexey.Brodkin@synopsys.com>,
+	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <56B4B6FB.1040500@synopsys.com>
+Date: Fri, 5 Feb 2016 14:51:39 +0000
 MIME-Version: 1.0
-In-Reply-To: <20160225122035.GB10593@leverpostej>
+In-Reply-To: <4427983.0G6mVNKP5W@wuerfel>
 Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 2016/2/25 20:20, Mark Rutland wrote:
-> Hi,
-> 
-> In future, please send the binding document first in a series, per point
-> 3 of Documentation/devicetree/bindings/submitting-patches.txt. It makes
-> review easier/faster.
-Thank you for your reminding.
-
-> 
-> On Thu, Feb 25, 2016 at 07:53:28PM +0800, Zhen Lei wrote:
->> Interrupt Pin register is read-only and optional. Some pci devices may use
->> msi/msix but leave the value of Interrupt Pin non-zero.
-> 
-> Is that permitted by the spec? Surely 'optional' means it must be zero
-> if not implemented?
-
-In <PCI Local Bus Specification Revision 3.0>:
-Devices (or device functions) that do not use an interrupt pin must put a 0 in this register. This register is read-only.
-
-So, do you think this is a hardware bug? But these pci-devices are not produced by our company.
-
-In function init_service_irqs, it try msix first, then msi, Interrupt PIN is the last attemption. But of_irq_parse_pci() happened before this.
-
-
-In fact, there also a familiar problem exist. As below:
-pci 0000:42:00.0: BAR 7: no space for [io  size 0x1000]
-pci 0000:42:00.0: BAR 7: failed to assign [io  size 0x1000]
-
-There no "io space" on arm64, maybe only exist on X86. And the Memory Space Indicator also read-only in BAR register.
-
-> 
->> In this case, the driver will print information as below: pci
->> 0000:40:00.0: of_irq_parse_pci() failed with rc=-22
+On 2/5/2016 2:39 PM, Arnd Bergmann wrote:
+> On Friday 05 February 2016 10:44:29 Joao Pinto wrote:
+>> Hi,
 >>
->> It's easily lead to misinterpret.
+>> On 2/4/2016 11:43 PM, Bjorn Helgaas wrote:
+>>>> What do you think?
+>>>
+>>> I don't think the "dw" part is relevant (none of the other
+>>> DesignWare-based drivers includes it in the driver or file name).
+>>>
+>>> How do people typically refer to this board?
+>>>
+>>> I really like "synopsys" because it fits the pattern of being
+>>> recognizable and pronounceable like "altera", "designware", "qcom",
+>>> "keystone", "layerscape", "tegra", etc.  But I can't tell whether it's
+>>> too generic.
+>>>
+>>> "ipk" or "haps" would be fine with me.  I think it's OK if it doesn't
+>>> cover 100% of the possible systems.
+>>
+>> I think we should follow the iproc example: pcie-iproc-platform.c
+>> In this case we would have pcie-designware-platform.c
+>> I think this would be the best name because the driver is a non soc specific
+>> designware platform driver.
+>>
+>> Arnd and Bjorn agree on this name?
 > 
-> If this is limited to a subset of devices which we know are broken in
-> this regard, can we not handle these cases explicitly?
-Actually, we have another way to block this warning. Use "interrupt-map" to map it to a pesudo IRQ. But I think it will also be misunderstanded.
+> Sorry, I did not realize that your submission was for the generic dw-pcie
+> implementation rather than a particular product integrating it.
+> 
 
-> 
->> Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
->> ---
->>  Documentation/devicetree/bindings/pci/host-generic-pci.txt | 2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
->> index 3f1d3fc..0f10978 100644
->> --- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
->> +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
->> @@ -70,6 +70,8 @@ Practice: Interrupt Mapping' and requires the following properties:
->>
->>  - interrupt-map-mask : <see aforementioned specification>
->>
->> +- interrupt-skip-mask: Explicitly declare which pci devices only use msi/msix
->> +but leave the value of Interrupt Pin non-zero.
-> 
-> Unlike the rest of the interrupt mapping properties, this is not
-> described in  `Open Firmware Recommended Practice: Interrupt Mapping'.
-> 
-> This needs a far more complete description.
-> 
-> This also doesn't strike me as th right approach. The interrupt-map-mask
-> property describe as relationship between the host-controller-provided
-> interrupt lines and endpoints, while this seems to be a bug completely
-> contained within an endpoint.
+It is a driver that is useful for PCIe RC prototyping and to be a reference
+platform driver for DesignWare PCIe RC, I don't know if merging some of the
+driver's code into pcie-designware is really necessary depends on the usefulness
+of it. I would suggest that bigger step to be done in a 2nd stage since I will
+be around to maintain what's necessary. Agree?
 
-In <host-generic-pci.txt>:
-// PCI_DEVICE(3)  INT#(1)  CONTROLLER(PHANDLE)  CONTROLLER_DATA(3)
-    interrupt-map = <  0x0 0x0 0x0  0x1  &gic  0x0 0x4 0x1
+I made a patch that is applicable to Bjorn's host/pcie-synopsys that tries to
+match your suggestions and Bjorn's. Could you please comment check it?
 
-PCI_DEVICE contain 3 cells. But only the first one be used in function of_irq_parse_pci.
-laddr[0] = cpu_to_be32((pdev->bus->number << 16) | (pdev->devfn << 8));
-laddr[1] = laddr[2] = cpu_to_be32(0);
+> I think in this case, we should do this completely differently:
+> 
+> How about putting all the new code into drivers/pci/host/pcie-designware.c
+> as functions that can be used by the other drivers in absence of a chip
+> specific handler?
+> 
+> Instead of providing a new instance of struct pcie_host_ops, maybe add
+> it as a default implementation in dw_pcie_link_up() and dw_pcie_host_init()
+> for drivers that don't provide their own. "hisi_pcie_host_ops" currently
+> provides no host_init() callback function, so you will have to change
+> the hisi frontend to a provide nop-function.
+> 
+> For all other drivers, check if they can be changed to use your generic
+> implementation and remove their private callbacks if possible.
+> 
+> I think the MSI implementation should be split out into a separate file
+> though, as not everyone uses this.
+> 
+> 	Arnd
+> 
 
-And for INT#, I don't think there will some Pins used but others unused on a pci-device. So I can ommit it.
+Joao
 
-So, only laddr[0] mask need to be described.
-> 
-> Thanks,
-> Mark.
-> 
->>
->>  Example:
->>
->> --
->> 2.5.0
->>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe devicetree" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-> 
-> .
-> 
+
