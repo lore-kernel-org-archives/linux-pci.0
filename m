@@ -1,86 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48051 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756522AbcBWArY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Feb 2016 19:47:24 -0500
-Subject: [PATCH v4 08/11] PCI: Remove struct pci_vpd_ops.release function
- pointer
-To: Hannes Reinecke <hare@suse.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Babu Moger <babu.moger@oracle.com>,
-	Alexander Duyck <alexander.duyck@gmail.com>
-Date: Mon, 22 Feb 2016 18:47:21 -0600
-Message-ID: <20160223004721.10635.89434.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:34985 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751926AbcBEKsz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2016 05:48:55 -0500
+Received: by mail-ig0-f176.google.com with SMTP id hb3so11062791igb.0
+        for <linux-pci@vger.kernel.org>; Fri, 05 Feb 2016 02:48:55 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <4090946.AhejVJy7MO@wuerfel>
+References: <1454077035-23872-1-git-send-email-ard.biesheuvel@linaro.org>
+	<20160129142831.GF4541@arm.com>
+	<CAKv+Gu_V83bUktPX0EiHd6qCDT2y0NEx=4n-uVv=P2MF9AZbMQ@mail.gmail.com>
+	<4090946.AhejVJy7MO@wuerfel>
+Date: Fri, 5 Feb 2016 11:48:54 +0100
+Message-ID: <CAKv+Gu8oZADs_FRN=p7_Nz0wXJVWVmzVNsxtzscyp7_cFAreAQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: generic: map config window in one go
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Mark Brown <mark.brown@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The struct pci_vpd_ops.release function pointer is always
-pci_vpd_pci22_release(), so there's no need for the flexibility of a
-function pointer.
+On 29 January 2016 at 15:52, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Friday 29 January 2016 15:32:01 Ard Biesheuvel wrote:
+>> On 29 January 2016 at 15:28, Will Deacon <will.deacon@arm.com> wrote:
+>> > Hi Ard,
+>> >
+>> > On Fri, Jan 29, 2016 at 03:17:15PM +0100, Ard Biesheuvel wrote:
+>> >> Instead of iterating over the PCI config window and performing individual
+>> >> ioremap() calls on all the adjacent slices, perform a single ioremap() to
+>> >> map the entire region, and divvy it up later. This not only prevents
+>> >> leaving some of it mapped if we fail half way through, it also ensures that
+>> >> archs that support huge-vmap can use section mappings to perform the
+>> >> mapping.
+>> >>
+>> >> On my Seattle A0 box, this transforms 128 separate 1 MB mappings that are
+>> >> mapped down to 4 KB pages into a single 128 MB mapping using 2 MB sections,
+>> >> saving 512 KB worth of page tables.
+>> >>
+>> >> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+>> >> ---
+>> >
+>> > The code was written this way in response to feedback during driver review
+>> > that we couldn't necessarily grab that much contiguous vmalloc space on
+>> > 32-bit ARM. Unless that's changed, we probably want to to predicate this
+>> > change on having a 64-bit arch.
+>> >
+>>
+>> Ah right. How about testing for the ARCH_HAVE_HUGE_VMAP Kconfig symbol
+>> explicitly?
+>>
+>
+> Testing for 64BIT should be sufficient.
+>
 
-Inline the pci_vpd_pci22_release() body into pci_vpd_release() and remove
-pci_vpd_pci22_release() and the struct pci_vpd_ops.release function
-pointer.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/access.c |    9 +--------
- drivers/pci/pci.h    |    1 -
- 2 files changed, 1 insertion(+), 9 deletions(-)
-
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index ca42a33..68ed22a 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -508,15 +508,9 @@ out:
- 	return ret ? ret : count;
- }
- 
--static void pci_vpd_pci22_release(struct pci_dev *dev)
--{
--	kfree(container_of(dev->vpd, struct pci_vpd_pci22, base));
--}
--
- static const struct pci_vpd_ops pci_vpd_pci22_ops = {
- 	.read = pci_vpd_pci22_read,
- 	.write = pci_vpd_pci22_write,
--	.release = pci_vpd_pci22_release,
- };
- 
- static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
-@@ -552,7 +546,6 @@ static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
- static const struct pci_vpd_ops pci_vpd_f0_ops = {
- 	.read = pci_vpd_f0_read,
- 	.write = pci_vpd_f0_write,
--	.release = pci_vpd_pci22_release,
- };
- 
- int pci_vpd_pci22_init(struct pci_dev *dev)
-@@ -584,7 +577,7 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
- void pci_vpd_release(struct pci_dev *dev)
- {
- 	if (dev->vpd)
--		dev->vpd->ops->release(dev);
-+		kfree(container_of(dev->vpd, struct pci_vpd_pci22, base));
- }
- 
- /**
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 52e86b0..b3e9daa 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -97,7 +97,6 @@ static inline bool pci_has_subordinate(struct pci_dev *pci_dev)
- struct pci_vpd_ops {
- 	ssize_t (*read)(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
- 	ssize_t (*write)(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
--	void (*release)(struct pci_dev *dev);
- };
- 
- struct pci_vpd {
-
+Does it make sense to spin a v2 for this patch? Given the discussion
+we had regarding allocating only the config regions for busses that
+are populated, perhaps there is a better approach here?
