@@ -1,150 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:56566 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933709AbcBQP6c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Feb 2016 10:58:32 -0500
-Subject: Re: [PATCH v8 43/45] drivers/of: Specify parent node in
- of_fdt_unflatten_tree()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	<linuxppc-dev@lists.ozlabs.org>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-44-git-send-email-gwshan@linux.vnet.ibm.com>
-CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<benh@kernel.crashing.org>, <mpe@ellerman.id.au>, <aik@ozlabs.ru>,
-	<dja@axtens.net>, <bhelgaas@google.com>, <robherring2@gmail.com>,
-	<grant.likely@linaro.org>
-From: Jyri Sarha <jsarha@ti.com>
-Message-ID: <56C49896.3090109@ti.com>
-Date: Wed, 17 Feb 2016 17:58:14 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 5 Feb 2016 10:59:55 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yu Zhao <yuzhao@google.com>
+Subject: Re: [PATCH] PCI: Support SRIOV on Legacy EndPoint device
+Message-ID: <20160205165955.GA31904@localhost>
+References: <1454597306-26189-1-git-send-email-kelly.zytaruk@amd.com>
+ <20160204151425.GA27474@localhost>
+ <CY1PR12MB02628AFFB28DCA6AF01167D0FED10@CY1PR12MB0262.namprd12.prod.outlook.com>
+ <20160205164631.GE29306@localhost>
+ <CY1PR12MB026259439AA9689B7326F4B5FED20@CY1PR12MB0262.namprd12.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-44-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CY1PR12MB026259439AA9689B7326F4B5FED20@CY1PR12MB0262.namprd12.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/17/16 05:44, Gavin Shan wrote:
-> This adds one more argument to of_fdt_unflatten_tree() to specify
-> the parent node of the FDT blob that is going to be unflattened.
-> In the result, the function can be used to unflatten FDT blob that
-> represents device sub-tree in PowerNV PCI hotplug driver.
->
-> Cc: Jyri Sarha <jsarha@ti.com>
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c |  2 +-
+On Fri, Feb 05, 2016 at 04:50:11PM +0000, Zytaruk, Kelly wrote:
+> 
+> 
+> > -----Original Message-----
+> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > Sent: Friday, February 05, 2016 11:47 AM
+> > To: Zytaruk, Kelly
+> > Cc: bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
+> > kernel@vger.kernel.org; Alex Williamson; Yu Zhao
+> > Subject: Re: [PATCH] PCI: Support SRIOV on Legacy EndPoint device
+> > 
+> > On Thu, Feb 04, 2016 at 04:21:08PM +0000, Zytaruk, Kelly wrote:
+> > > > -----Original Message-----
+> > > > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > > > Sent: Thursday, February 04, 2016 10:14 AM
+> > > > To: Zytaruk, Kelly
+> > > > Cc: bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
+> > > > kernel@vger.kernel.org; Alex Williamson; Yu Zhao
+> > > > Subject: Re: [PATCH] PCI: Support SRIOV on Legacy EndPoint device
+> > > >
+> > > > [+cc Alex, Yu (participants in previous discussion)]
+> > > >
+> > > > Hi Kelly,
+> > > >
+> > > > On Thu, Feb 04, 2016 at 09:48:26AM -0500, Kelly Zytaruk wrote:
+> > > > > Some AMD GPUs have hardware support for grapics SRIOV.
+> > > > > If the GPU has a display output then the GPU needs to support
+> > > > > Legacy VGA
+> > > > operation.
+> > > > > If CLASS_CODE = VGA then the device should have a Port Type =
+> > > > > Legacy
+> > > > EndPoint.
+> > > > > Therefore in order to enable SRIOV on a GPU with a display output
+> > > > LEGACY_END_POINT is supported as a valid Port Type.
+> > > > >
+> > > > > Signed-off-by: Kelly Zytaruk <kelly.zytaruk@amd.com>
+> > > >
+> > > > We had an interesting discussion about this two years ago:
+> > > >
+> > http://lkml.kernel.org/r/B756807489D6244883AC0B799A6EEC15EAB2E8@stor
+> > > > e
+> > > > xdag02.amd.com
+> > >
+> > > Unfortunately 2 years ago I couldn't complete your request as it would
+> > > have disclosed Information about an unannounced technology that we
+> > > were working on.  We have recently made that technology public and I
+> > > can now send you the requested information.
+> > 
+> > > > Please include a reference to that discussion in your changelog.  In
+> > > > that discussion, I also asked for some details (dmesg and lspci
+> > > > info) that motivate the change, so please collect and add a reference to
+> > them as well.
+> > >
+> > > The information that you ask for is included below.  I have
+> > > abbreviated it so that this does not become a huge email.  I can send
+> > > full logs if you want them.
+> > 
+> > Can you open a bugzilla at http://bugzilla.kernel.org and attach the full logs
+> > there?  Then we can include the URL in your patch changelog.
+> 
+> I have never worked with bugzilla before but I will check it out.  So you
+> want me to take the bugzilla URL and paste it into the comments of my
+> patch? Or is this something that you will do?
 
-Acked-by: Jyri Sarha <jsarha@ti.com>
+Put it in the bugzilla drivers/PCI category.  Let me know if you have
+any bugzilla troubles.  It should be pretty self-explanatory.  Please
+attach the files rather than pasting them in the text box.
 
->   drivers/of/fdt.c                             | 14 ++++++++++----
->   drivers/of/unittest.c                        |  2 +-
->   include/linux/of_fdt.h                       |  1 +
->   4 files changed, 13 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c b/drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c
-> index 106679b..f9c79da 100644
-> --- a/drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c
-> +++ b/drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c
-> @@ -157,7 +157,7 @@ struct device_node * __init tilcdc_get_overlay(struct kfree_table *kft)
->   	if (!overlay_data || kfree_table_add(kft, overlay_data))
->   		return NULL;
->
-> -	of_fdt_unflatten_tree(overlay_data, &overlay);
-> +	of_fdt_unflatten_tree(overlay_data, NULL, &overlay);
->   	if (!overlay) {
->   		pr_warn("%s: Unfattening overlay tree failed\n", __func__);
->   		return NULL;
-> diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
-> index 3fc9a30..16a1ba5 100644
-> --- a/drivers/of/fdt.c
-> +++ b/drivers/of/fdt.c
-> @@ -450,11 +450,13 @@ static int unflatten_dt_nodes(const void *blob,
->    * pointers of the nodes so the normal device-tree walking functions
->    * can be used.
->    * @blob: The blob to expand
-> + * @dad: Parent device node
->    * @mynodes: The device_node tree created by the call
->    * @dt_alloc: An allocator that provides a virtual address to memory
->    * for the resulting tree
->    */
->   static void __unflatten_device_tree(const void *blob,
-> +			     struct device_node *dad,
->   			     struct device_node **mynodes,
->   			     void * (*dt_alloc)(u64 size, u64 align))
->   {
-> @@ -479,7 +481,7 @@ static void __unflatten_device_tree(const void *blob,
->   	}
->
->   	/* First pass, scan for size */
-> -	size = unflatten_dt_nodes(blob, NULL, NULL, NULL);
-> +	size = unflatten_dt_nodes(blob, NULL, dad, NULL);
->   	if (size < 0)
->   		return;
->
-> @@ -495,7 +497,7 @@ static void __unflatten_device_tree(const void *blob,
->   	pr_debug("  unflattening %p...\n", mem);
->
->   	/* Second pass, do actual unflattening */
-> -	unflatten_dt_nodes(blob, mem, NULL, mynodes);
-> +	unflatten_dt_nodes(blob, mem, dad, mynodes);
->   	if (be32_to_cpup(mem + size) != 0xdeadbeef)
->   		pr_warning("End of tree marker overwritten: %08x\n",
->   			   be32_to_cpup(mem + size));
-> @@ -512,6 +514,9 @@ static DEFINE_MUTEX(of_fdt_unflatten_mutex);
->
->   /**
->    * of_fdt_unflatten_tree - create tree of device_nodes from flat blob
-> + * @blob: Flat device tree blob
-> + * @dad: Parent device node
-> + * @mynodes: The device tree created by the call
->    *
->    * unflattens the device-tree passed by the firmware, creating the
->    * tree of struct device_node. It also fills the "name" and "type"
-> @@ -519,10 +524,11 @@ static DEFINE_MUTEX(of_fdt_unflatten_mutex);
->    * can be used.
->    */
->   void of_fdt_unflatten_tree(const unsigned long *blob,
-> +			struct device_node *dad,
->   			struct device_node **mynodes)
->   {
->   	mutex_lock(&of_fdt_unflatten_mutex);
-> -	__unflatten_device_tree(blob, mynodes, &kernel_tree_alloc);
-> +	__unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
->   	mutex_unlock(&of_fdt_unflatten_mutex);
->   }
->   EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
-> @@ -1180,7 +1186,7 @@ bool __init early_init_dt_scan(void *params)
->    */
->   void __init unflatten_device_tree(void)
->   {
-> -	__unflatten_device_tree(initial_boot_params, &of_root,
-> +	__unflatten_device_tree(initial_boot_params, NULL, &of_root,
->   				early_init_dt_alloc_memory_arch);
->
->   	/* Get pointer to "/chosen" and "/aliases" nodes for use everywhere */
-> diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
-> index 979b6e4..ec36f93 100644
-> --- a/drivers/of/unittest.c
-> +++ b/drivers/of/unittest.c
-> @@ -921,7 +921,7 @@ static int __init unittest_data_add(void)
->   			"not running tests\n", __func__);
->   		return -ENOMEM;
->   	}
-> -	of_fdt_unflatten_tree(unittest_data, &unittest_data_node);
-> +	of_fdt_unflatten_tree(unittest_data, NULL, &unittest_data_node);
->   	if (!unittest_data_node) {
->   		pr_warn("%s: No tree to attach; not running tests\n", __func__);
->   		return -ENODATA;
-> diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
-> index df9ef38..3644960 100644
-> --- a/include/linux/of_fdt.h
-> +++ b/include/linux/of_fdt.h
-> @@ -38,6 +38,7 @@ extern bool of_fdt_is_big_endian(const void *blob,
->   extern int of_fdt_match(const void *blob, unsigned long node,
->   			const char *const *compat);
->   extern void of_fdt_unflatten_tree(const unsigned long *blob,
-> +			       struct device_node *dad,
->   			       struct device_node **mynodes);
->
->   /* TBD: Temporary export of fdt globals - remove when code fully merged */
->
+If you could include the bugzilla URL in the changelog of a revised
+patch, that would be great.  
 
+> > > > It's not clear to me why we check the device type at all.  If
+> > > > there's no spec restriction on the types of devices that can have an
+> > > > SR-IOV capability, we should consider removing the test altogether
+> > > > (Alex mentioned this possiblity in the earlier discussion).
+> > >
+> > > I am as well not clear why the check is in there.  I would be just as
+> > > happy either adding TYPE_LEG_END or removing the check all together.
+> > > I don't know what the side effects of removing the check would be. I
+> > > don't have any sriov devices other than a graphics card to test with
+> > > so I wouldn't be able to test other scenarios.
+> > 
+> > If we don't have a reason to do the check, I think we should just remove it
+> > altogether.
+> 
+> So instead of my proposed change do you want me to just remove the check
+> completely and submit a patch for that?
+
+Please.
+
+Bjorn
