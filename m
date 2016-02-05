@@ -1,189 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0069.outbound.protection.outlook.com ([104.47.37.69]:37650
-	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751526AbcBVQBW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Feb 2016 11:01:22 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Bharat Kumar Gogada <bharatku@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	Michal Simek <michals@xilinx.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"paul.burton@imgtec.com" <paul.burton@imgtec.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"wangyijing@huawei.com" <wangyijing@huawei.com>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>
-CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: RE: [PATCH V4 5/5] Microblaze: Modifying microblaze PCI subsytem to
- support  generic Xilinx  AXI PCIe Host Bridge IP driver
-Date: Mon, 22 Feb 2016 16:01:15 +0000
-Message-ID: <8520D5D51A55D047800579B09414719825884643@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1455208091-15556-1-git-send-email-bharatku@xilinx.com>
- <1455208091-15556-6-git-send-email-bharatku@xilinx.com>
-In-Reply-To: <1455208091-15556-6-git-send-email-bharatku@xilinx.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.kernel.org ([198.145.29.136]:59532 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756047AbcBERkj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Feb 2016 12:40:39 -0500
+Date: Fri, 5 Feb 2016 11:40:35 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: =?utf-8?B?0J7Qu9C10LMg0JzQvtGA0L7Qtw==?= <oleg.moroz@mcc.vniiem.ru>
+Cc: linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Sunjin Yang <fan4326@gmail.com>, linux-kernel@vger.kernel.org
+Subject: Re: PCI device driver broken between 4.2 and 4.3
+Message-ID: <20160205174035.GB24785@localhost>
+References: <56A32702.7080909@mcc.vniiem.ru>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <56A32702.7080909@mcc.vniiem.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Ping
+[+cc Jiang, Yinghai, Sunjin, linux-kernel]
 
-> Subject: [PATCH V4 5/5] Microblaze: Modifying microblaze PCI subsytem to
-> support generic Xilinx AXI PCIe Host Bridge IP driver
-> 
-> This patch does required modifications to microblaze PCI subsystem, to work
-> with generic driver (drivers/pci/host/pcie-xilinx.c) on Microblaze and Zynq.
-> 
-> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
-> ---
-> Changes:
-> Removed pcibios_get_phb_of_node in pci-common.c, using generic version
-> instead.
-> Modified pcibios_fixup_bus in pci-common.c, as per generic architecuture.
-> Modified pcibios_align_resource in pci-common.c, as per generic
-> architecuture, removed temporary variable.
-> Removed pci_domain_nr in pci-common.c, instead using generic code.
-> Added pcibios_add_device in pci-common.c, as per generic architecuture.
-> Adding Kernel configuration in arch/microblaze as required for generic PCI
-> domains.
-> Added kernel configuration for driver to support Microblaze.
-> ---
->  arch/microblaze/Kconfig          |  3 +++
->  arch/microblaze/pci/pci-common.c | 56 +++++++---------------------------------
->  drivers/pci/host/Kconfig         |  2 +-
->  3 files changed, 14 insertions(+), 47 deletions(-)
-> 
-> diff --git a/arch/microblaze/Kconfig b/arch/microblaze/Kconfig index
-> 0bce820..c3702b9 100644
-> --- a/arch/microblaze/Kconfig
-> +++ b/arch/microblaze/Kconfig
-> @@ -271,6 +271,9 @@ config PCI
->  config PCI_DOMAINS
->  	def_bool PCI
-> 
-> +config PCI_DOMAINS_GENERIC
-> +	def_bool PCI_DOMAINS
-> +
->  config PCI_SYSCALL
->  	def_bool PCI
-> 
-> diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-
-> common.c
-> index ae838ed..35654be 100644
-> --- a/arch/microblaze/pci/pci-common.c
-> +++ b/arch/microblaze/pci/pci-common.c
-> @@ -123,17 +123,6 @@ unsigned long pci_address_to_pio(phys_addr_t
-> address)  }  EXPORT_SYMBOL_GPL(pci_address_to_pio);
-> 
-> -/*
-> - * Return the domain number for this bus.
-> - */
-> -int pci_domain_nr(struct pci_bus *bus)
-> -{
-> -	struct pci_controller *hose = pci_bus_to_host(bus);
-> -
-> -	return hose->global_number;
-> -}
-> -EXPORT_SYMBOL(pci_domain_nr);
-> -
->  /* This routine is meant to be used early during boot, when the
->   * PCI bus numbers have not yet been assigned, and you need to
->   * issue PCI config cycles to an OF device.
-> @@ -863,26 +852,10 @@ void pcibios_setup_bus_devices(struct pci_bus
-> *bus)
-> 
->  void pcibios_fixup_bus(struct pci_bus *bus)  {
-> -	/* When called from the generic PCI probe, read PCI<->PCI bridge
-> -	 * bases. This is -not- called when generating the PCI tree from
-> -	 * the OF device-tree.
-> -	 */
-> -	if (bus->self != NULL)
-> -		pci_read_bridge_bases(bus);
-> -
-> -	/* Now fixup the bus bus */
-> -	pcibios_setup_bus_self(bus);
-> -
-> -	/* Now fixup devices on that bus */
-> -	pcibios_setup_bus_devices(bus);
-> +	/* nothing to do */
->  }
->  EXPORT_SYMBOL(pcibios_fixup_bus);
-> 
-> -static int skip_isa_ioresource_align(struct pci_dev *dev) -{
-> -	return 0;
-> -}
-> -
->  /*
->   * We need to avoid collisions with `mirrored' VGA ports
->   * and other strange ISA hardware, so we always want the @@ -899,20
-> +872,18 @@ static int skip_isa_ioresource_align(struct pci_dev *dev)
-> resource_size_t pcibios_align_resource(void *data, const struct resource
-> *res,
->  				resource_size_t size, resource_size_t align)  {
-> -	struct pci_dev *dev = data;
-> -	resource_size_t start = res->start;
-> -
-> -	if (res->flags & IORESOURCE_IO) {
-> -		if (skip_isa_ioresource_align(dev))
-> -			return start;
-> -		if (start & 0x300)
-> -			start = (start + 0x3ff) & ~0x3ff;
-> -	}
-> -
-> -	return start;
-> +	return res->start;
->  }
->  EXPORT_SYMBOL(pcibios_align_resource);
-> 
-> +int pcibios_add_device(struct pci_dev *dev) {
-> +	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> +
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL(pcibios_add_device);
-> +
->  /*
->   * Reparent resource children of pr that conflict with res
->   * under res, and make res replace those children.
-> @@ -1333,13 +1304,6 @@ static void pcibios_setup_phb_resources(struct
-> pci_controller *hose,
->  		 (unsigned long)hose->io_base_virt - _IO_BASE);  }
-> 
-> -struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus) -{
-> -	struct pci_controller *hose = bus->sysdata;
-> -
-> -	return of_node_get(hose->dn);
-> -}
-> -
->  static void pcibios_scan_phb(struct pci_controller *hose)  {
->  	LIST_HEAD(resources);
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig index
-> d5e58ba..7c56c2e 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -79,7 +79,7 @@ config PCI_KEYSTONE
-> 
->  config PCIE_XILINX
->  	bool "Xilinx AXI PCIe host bridge support"
-> -	depends on ARCH_ZYNQ
-> +	depends on ARCH_ZYNQ || MICROBLAZE
->  	help
->  	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
->  	  Host Bridge driver.
-> --
-> 2.1.1
+On Sat, Jan 23, 2016 at 10:08:50AM +0300, Олег Мороз wrote:
+> Hello. I've got a device driver for MIL-1553b card called TA1-PCI,
+> which could be found at
+> https://github.com/qmor/elcus-1553-driver-linux
+> Card is using PLX_PCI9030 PCI controller.
+> Today i've found that this driver compiles, installes, but is not
+> working as it should.
+> Looks like it not receives any interrupts from PCI. I've test it
+> again with kernel
+> 4.2 and it works okay. What changes was made in PCI subsystem from
+> 4.2 to 4.3
+> which could have impact this driver work.
 
+Sunjin reported another driver, RocketRAID 272x, with the same
+problem.  "pci=routeirq" is a workaround:
+https://bugzilla.kernel.org/show_bug.cgi?id=111211#c7
+
+Олег bisected the problem with his driver to Jiang's patch,
+991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
+pcibios_free_irq()") and found that "pci=routeirq" was a workaround.
+
+I don't think Sunjin has bisected this, but the RocketRAID driver
+stopped working at the same time and the same workaround works, so we
+assume it is the same problem.
+
+Prior to 991de2e59090, we called pcibios_enable_irq() in the
+pci_enable_device() path, which recursively called
+pcibios_enable_irq() for upstream bridges via pci_enable_bridge().
+
+After 991de2e59090, we call pcibios_enable_irq() from the
+pci_device_probe() path instead of the pci_enable_device() path.  This
+does *not* call pcibios_enable_irq() for upstream bridges.
+
+I think this is what Yinghai meant in his response, but I didn't
+understand the connection.
+
+This is a pretty serious problem that should affect many devices
+behind bridges, so I think we need a PCI or ACPI core fix.  Jiang?
+
+Bjorn
