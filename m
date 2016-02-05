@@ -1,49 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:32266 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751943AbcBWXQO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Feb 2016 18:16:14 -0500
-Date: Tue, 23 Feb 2016 23:16:11 +0000
-From: Keith Busch <keith.busch@intel.com>
-To: Jon Derrick <jonathan.derrick@intel.com>
-Cc: helgaas@kernel.org, linux-kernel@vger.kernel.org, x86@kernel.org,
-	bryan.e.veal@intel.com, linux-pci@vger.kernel.org,
-	tglx@linutronix.de, dan.j.williams@intel.com
-Subject: Re: [PATCH] VMD: Attach vmd resources to parent domain's resource
- tree
-Message-ID: <20160223231610.GC20250@localhost.localdomain>
-References: <1456264213-3546-1-git-send-email-jonathan.derrick@intel.com>
+Received: from mail-db5eur01on0043.outbound.protection.outlook.com ([104.47.2.43]:30770
+	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750750AbcBEGHO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Feb 2016 01:07:14 -0500
+From: Minghuan Lian <minghuan.lian@nxp.com>
+To: Bhupesh Sharma <bhupesh.sharma@nxp.com>,
+	"Shi, Yang" <yang.shi@linaro.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Yang-Leo Li <leoyang.li@nxp.com>,
+	"shawn.guo@linaro.org" <shawn.guo@linaro.org>
+CC: Mingkai Hu <mingkai.hu@nxp.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>
+Subject: RE: [PATCH] PCI: layerscape: add ls2085a compatible
+Date: Fri, 5 Feb 2016 06:07:10 +0000
+Message-ID: <VI1PR04MB16155E4265922D6659B439C1E8D20@VI1PR04MB1615.eurprd04.prod.outlook.com>
+References: <1453915925-19198-1-git-send-email-yang.shi@linaro.org>
+ <56A906F4.3050809@linaro.org> <20160204223711.GE7031@localhost>
+ <56B3E386.8010002@linaro.org>
+ <VI1PR04MB1230AA5CAEEEE0D4AD8E3DF288D20@VI1PR04MB1230.eurprd04.prod.outlook.com>
+In-Reply-To: <VI1PR04MB1230AA5CAEEEE0D4AD8E3DF288D20@VI1PR04MB1230.eurprd04.prod.outlook.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1456264213-3546-1-git-send-email-jonathan.derrick@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 23, 2016 at 02:50:13PM -0700, Jon Derrick wrote:
-> This patch attaches the new VMD domain's resources to the VMD device's
-> resources. This allows /proc/iomem to display a more complete picture.
-> 
-> Before:
->   c0000000-c1ffffff : 0000:5d:05.5
->   c2000000-c3ffffff : 0000:5d:05.5
->     c2010000-c2013fff : nvme
->   c4000000-c40fffff : 0000:5d:05.5
-> 
-> After:
->   c0000000-c1ffffff : 0000:5d:05.5
->     c0000000-0000001f : VMD CFGBAR
->   c2000000-c3ffffff : 0000:5d:05.5
->     c2000000-c3ffffff : VMD MEMBAR1
->       c2000000-c22fffff : PCI Bus 10000:01
->         c2000000-c200ffff : 10000:01:00.0
->         c2010000-c2013fff : 10000:01:00.0
->           c2010000-c2013fff : nvme
->       c2300000-c24fffff : PCI Bus 10000:01
->   c4000000-c40fffff : 0000:5d:05.5
->     c4002000-c40fffff : VMD MEMBAR2
-
-I think we should drop the CFGBAR from here since that's a bus resource
-rather than IO memory. Otherwise, this looks good and useful.
-
-I think in the near future we should come up with a better name than
-"VMD MEMBAR" to help distinguish multiple VMD's in a system.
+VGhlIHBhdGNoIGlzIG9rIHRvIG1lLg0KDQpUaGFua3MsDQpNaW5naHVhbg0KDQo+IC0tLS0tT3Jp
+Z2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEJodXBlc2ggU2hhcm1hDQo+IFNlbnQ6IEZyaWRh
+eSwgRmVicnVhcnkgMDUsIDIwMTYgMTozNiBQTQ0KPiBUbzogU2hpLCBZYW5nIDx5YW5nLnNoaUBs
+aW5hcm8ub3JnPjsgQmpvcm4gSGVsZ2FhcyA8aGVsZ2Fhc0BrZXJuZWwub3JnPjsNCj4gWWFuZy1M
+ZW8gTGkgPGxlb3lhbmcubGlAbnhwLmNvbT47IHNoYXduLmd1b0BsaW5hcm8ub3JnDQo+IENjOiBN
+aW5na2FpIEh1IDxtaW5na2FpLmh1QG54cC5jb20+OyBNaW5naHVhbiBMaWFuDQo+IDxtaW5naHVh
+bi5saWFuQG54cC5jb20+OyBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBsaW51eC1wY2lAdmdlci5rZXJu
+ZWwub3JnOw0KPiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVs
+QGxpc3RzLmluZnJhZGVhZC5vcmc7DQo+IGxpbmFyby1rZXJuZWxAbGlzdHMubGluYXJvLm9yZw0K
+PiBTdWJqZWN0OiBSRTogW1BBVENIXSBQQ0k6IGxheWVyc2NhcGU6IGFkZCBsczIwODVhIGNvbXBh
+dGlibGUNCj4gDQo+ID4gRnJvbTogU2hpLCBZYW5nDQo+ID4gU2VudDogRnJpZGF5LCBGZWJydWFy
+eSAwNSwgMjAxNiA1OjE5IEFNDQo+ID4NCj4gPiBPbiAyLzQvMjAxNiAyOjM3IFBNLCBCam9ybiBI
+ZWxnYWFzIHdyb3RlOg0KPiA+ID4gT24gV2VkLCBKYW4gMjcsIDIwMTYgYXQgMTA6MDU6NDBBTSAt
+MDgwMCwgU2hpLCBZYW5nIHdyb3RlOg0KPiA+ID4+IENvcnJlY3QgRlNMIGZvbGtzIGVtYWlsIGFk
+ZHJlc3MgdG8gbnhwLmNvbSwgc29ycnkgZm9yIHRoZQ0KPiA+IGluY29udmVuaWVuY2UuDQo+ID4g
+Pg0KPiA+ID4gRG8gd2UgbmVlZCBzb21lIE1BSU5UQUlORVJTIHVwZGF0ZXMgaW4gYWRkaXRpb24g
+dG8gdGhlIGFjayBmb3IgdGhpcw0KPiA+IHBhdGNoPw0KPiA+ID4gSSBzZWUgYSBidW5jaCBvZiBA
+ZnJlZXNjYWxlLmNvbSBhZGRyZXNzZXMgaW4gTUFJTlRBSU5FUlMuDQo+ID4NCj4gPiBJIGd1ZXNz
+IHNvIGlmIHRoZSBAZnJlZXNjYWxlLmNvbSBhZGRyZXNzIGlzIG5vdCB2YWxpZCBhbnltb3JlLg0K
+PiANCj4gQWxsIEBmcmVlc2NhbGUuY29tIGFkZHJlc3MgaGF2ZSBzaGlmdGVkIHRvIEBueHAuY29t
+Lg0KPiANCj4gTGVvLCBNaW5naHVhbiAtIGNhbiB5b3Uga2luZGx5IHJldmlldyB0aGlzIHBhdGNo
+Lg0KPiANCj4gU2hhd24gLSBjYW4geW91IHRha2UgdGhpcyB0aHJvdWdoIHlvdXIgdHJlZSwgb25j
+ZSBMZW8gYW5kIE1pbmdodWFuIGhhdmUNCj4gcmV2aWV3ZWQgdGhlIGNvZGUuDQo+IA0KPiBSZWdh
+cmRzLA0KPiBCaHVwZXNoDQo+IA0KPiA+DQo+ID4gPg0KPiA+ID4+IE9uIDEvMjcvMjAxNiA5OjMy
+IEFNLCBZYW5nIFNoaSB3cm90ZToNCj4gPiA+Pj4gVGhlIGxheWVyc2NhcGUgUENJIGhvc3QgZHJp
+dmVyIG5lZWRzIHJlY29nbml6ZSBsczIwODVhIGNvbXBhdGlibGUNCj4gPiA+Pj4gd2hlbiB1c2lu
+ZyBmaXJtd2FyZSB3aXRoIGxzMjA4NWEgY29tcGF0aWJsZSBwcm9wZXJ0eSwgb3RoZXJ3aXNlDQo+
+ID4gPj4+IHRoZSBQQ0kgYnVzIHdvbid0IGJlIGRldGVjdGVkIGV2ZW4gdGhvdWdoIGxzMjA4NWEg
+Y29tcGF0aWJsZSBpcw0KPiA+ID4+PiBpbmNsdWRlZA0KPiA+IGJ5IHRoZSBkdHMuDQo+ID4gPj4+
+DQo+ID4gPj4+IFNpZ25lZC1vZmYtYnk6IFlhbmcgU2hpIDx5YW5nLnNoaUBsaW5hcm8ub3JnPg0K
+PiA+ID4+PiAtLS0NCj4gPiA+Pj4gICBkcml2ZXJzL3BjaS9ob3N0L3BjaS1sYXllcnNjYXBlLmMg
+fCAxICsNCj4gPiA+Pj4gICAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKykNCj4gPiA+Pj4N
+Cj4gPiA+Pj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWxheWVyc2NhcGUuYw0K
+PiA+ID4+PiBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWxheWVyc2NhcGUuYw0KPiA+ID4+PiBpbmRl
+eCAzOTIzYmVkLi5jNDBkOGIyIDEwMDY0NA0KPiA+ID4+PiAtLS0gYS9kcml2ZXJzL3BjaS9ob3N0
+L3BjaS1sYXllcnNjYXBlLmMNCj4gPiA+Pj4gKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktbGF5
+ZXJzY2FwZS5jDQo+ID4gPj4+IEBAIC0yMDMsNiArMjAzLDcgQEAgc3RhdGljIGNvbnN0IHN0cnVj
+dCBvZl9kZXZpY2VfaWQNCj4gPiBsc19wY2llX29mX21hdGNoW10gPSB7DQo+ID4gPj4+ICAgCXsg
+LmNvbXBhdGlibGUgPSAiZnNsLGxzMTAyMWEtcGNpZSIsIC5kYXRhID0gJmxzMTAyMV9kcnZkYXRh
+DQo+ID4gfSwNCj4gPiA+Pj4gICAJeyAuY29tcGF0aWJsZSA9ICJmc2wsbHMxMDQzYS1wY2llIiwg
+LmRhdGEgPSAmbHMxMDQzX2RydmRhdGENCj4gPiB9LA0KPiA+ID4+PiAgIAl7IC5jb21wYXRpYmxl
+ID0gImZzbCxsczIwODBhLXBjaWUiLCAuZGF0YSA9ICZsczIwODBfZHJ2ZGF0YQ0KPiA+IH0sDQo+
+ID4gPj4+ICsJeyAuY29tcGF0aWJsZSA9ICJmc2wsbHMyMDg1YS1wY2llIiwgLmRhdGEgPSAmbHMy
+MDgwX2RydmRhdGEgfSwNCj4gPiA+Pj4gICAJeyB9LA0KPiA+ID4+PiAgIH07DQo+ID4gPj4+ICAg
+TU9EVUxFX0RFVklDRV9UQUJMRShvZiwgbHNfcGNpZV9vZl9tYXRjaCk7DQo+ID4gPj4+DQo+ID4g
+Pj4NCj4gPg0KPiA+IC0tDQo+ID4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQg
+dGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXBjaSINCj4gPiBpbiB0aGUgYm9keSBvZiBhIG1l
+c3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZyBNb3JlIG1ham9yZG9tbw0KPiA+IGlu
+Zm8gYXQgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo=
