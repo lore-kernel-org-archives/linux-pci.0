@@ -1,49 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33582 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753977AbcBVJTy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Feb 2016 04:19:54 -0500
-Received: by mail-wm0-f68.google.com with SMTP id c200so17020558wme.0
-        for <linux-pci@vger.kernel.org>; Mon, 22 Feb 2016 01:19:53 -0800 (PST)
-Message-ID: <1456132791.1860.3.camel@googlemail.com>
-Subject: Re: [PATCH v2 2/2] PCI: imx6: add initial imx6sx support
-From: Christoph Fritz <chf.fritz@googlemail.com>
-Reply-To: chf.fritz@googlemail.com
-To: Richard Zhu <hongxing.zhu@nxp.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Cc: Fabio Estevam <festevam@gmail.com>,
+Received: from mail.kernel.org ([198.145.29.136]:36162 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750717AbcBEA1H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 4 Feb 2016 19:27:07 -0500
+Date: Thu, 4 Feb 2016 18:27:03 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Lee Jones <lee.jones@linaro.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@nxp.com>
-Date: Mon, 22 Feb 2016 10:19:51 +0100
-In-Reply-To: <1456101636.2176.4.camel@googlemail.com>
-References: <1455796743-5987-1-git-send-email-chf.fritz@googlemail.com>
-	 <1455796743-5987-3-git-send-email-chf.fritz@googlemail.com>
-	 <CAOMZO5CfO5ZiMj-QEgEJn4zRkw=vg6zChrLKa0i=H+mnqLKRkg@mail.gmail.com>
-	 <1456101636.2176.4.camel@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Simon Horman <horms@verge.net.au>,
+	linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH 1/2] drivers: pci: host: rcar: remove PCI_PROBE_ONLY
+ handling
+Message-ID: <20160205002703.GK7031@localhost>
+References: <1454066972-3609-1-git-send-email-lorenzo.pieralisi@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1454066972-3609-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2016-02-22 at 01:40 +0100, Christoph Fritz wrote:
-> On Sat, 2016-02-20 at 17:37 -0200, Fabio Estevam wrote:
-> > On Thu, Feb 18, 2016 at 9:59 AM, Christoph Fritz
-> > <chf.fritz@googlemail.com> wrote:
-> > 
-> > >  static const struct of_device_id imx6_pcie_of_match[] = {
-> > >         { .compatible = "fsl,imx6q-pcie", },
-> > > +       { .compatible = "fsl,imx6sx-pcie", },
-> > 
-> > Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt needs to be
-> > updated to include this new compatible string.
+[+cc Simon, R-car maintainer, linux-renesas-soc]
+
+I badly want to merge this, so speak up now if you object :)
+
+On Fri, Jan 29, 2016 at 11:29:31AM +0000, Lorenzo Pieralisi wrote:
+> The PCIe rcar host driver is not used in system configurations
+> requiring the PCI_PROBE_ONLY flag to be set to prevent resources
+> assignment, therefore the driver code handling the flag can be
+> removed from the kernel.
 > 
-> Thanks, I'll wait a bit for other possible comments and will then send a
-> v3 patchset which updates the documentation too.
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/host/pcie-rcar.c | 14 +++++---------
+>  1 file changed, 5 insertions(+), 9 deletions(-)
 > 
-
-@MAINTAINERS (Lucas or Richard):
-
- Do you want the documentation changes as a separate patch?
-
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index 4edb518..3509218 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -390,9 +390,7 @@ static int rcar_pcie_enable(struct rcar_pcie *pcie)
+>  
+>  	rcar_pcie_setup(&res, pcie);
+>  
+> -	/* Do not reassign resources if probe only */
+> -	if (!pci_has_flag(PCI_PROBE_ONLY))
+> -		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
+> +	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
+>  
+>  	if (IS_ENABLED(CONFIG_PCI_MSI))
+>  		bus = pci_scan_root_bus_msi(pcie->dev, pcie->root_bus_nr,
+> @@ -408,13 +406,11 @@ static int rcar_pcie_enable(struct rcar_pcie *pcie)
+>  
+>  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+>  
+> -	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+> -		pci_bus_size_bridges(bus);
+> -		pci_bus_assign_resources(bus);
+> +	pci_bus_size_bridges(bus);
+> +	pci_bus_assign_resources(bus);
+>  
+> -		list_for_each_entry(child, &bus->children, node)
+> -			pcie_bus_configure_settings(child);
+> -	}
+> +	list_for_each_entry(child, &bus->children, node)
+> +		pcie_bus_configure_settings(child);
+>  
+>  	pci_bus_add_devices(bus);
+>  
+> -- 
+> 2.5.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
