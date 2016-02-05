@@ -1,69 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:54989 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932649AbcBBRSI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Feb 2016 12:18:08 -0500
-Subject: Re: [PATCH v7 0/2] adding PCI support to AXS10x
+Received: from mail-db3on0099.outbound.protection.outlook.com ([157.55.234.99]:52800
+	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753709AbcBEVMc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2016 16:12:32 -0500
+From: Yang-Leo Li <leoyang.li@nxp.com>
 To: Bjorn Helgaas <helgaas@kernel.org>,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-References: <cover.1454349430.git.jpinto@synopsys.com>
- <20160202171437.GD11085@localhost>
-CC: <Vineet.Gupta1@synopsys.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	<linux-snps-arc@lists.infradead.org>,
-	<CARLOS.PALMINHA@synopsys.com>, <Alexey.Brodkin@synopsys.com>,
-	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<arnd@arndb.de>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <56B0E4C6.6040200@synopsys.com>
-Date: Tue, 2 Feb 2016 17:17:58 +0000
+	Minghuan Lian <minghuan.lian@nxp.com>
+CC: Bhupesh Sharma <bhupesh.sharma@nxp.com>,
+	"Shi, Yang" <yang.shi@linaro.org>,
+	"shawn.guo@linaro.org" <shawn.guo@linaro.org>,
+	Mingkai Hu <mingkai.hu@nxp.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>
+Subject: RE: [PATCH] PCI: layerscape: add ls2085a compatible
+Date: Fri, 5 Feb 2016 19:36:50 +0000
+Message-ID: <AM2PR04MB0770FD6ED4FD45AFE600C6DB8FD20@AM2PR04MB0770.eurprd04.prod.outlook.com>
+References: <1453915925-19198-1-git-send-email-yang.shi@linaro.org>
+ <56A906F4.3050809@linaro.org> <20160204223711.GE7031@localhost>
+ <56B3E386.8010002@linaro.org>
+ <VI1PR04MB1230AA5CAEEEE0D4AD8E3DF288D20@VI1PR04MB1230.eurprd04.prod.outlook.com>
+ <VI1PR04MB16155E4265922D6659B439C1E8D20@VI1PR04MB1615.eurprd04.prod.outlook.com>
+ <20160205155412.GB29306@localhost>
+In-Reply-To: <20160205155412.GB29306@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20160202171437.GD11085@localhost>
-Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-Thanks. Could you please send me the git URL for me to give it a try?
-
-Joao
-
-On 2/2/2016 5:14 PM, Bjorn Helgaas wrote:
-> On Mon, Feb 01, 2016 at 06:07:43PM +0000, Joao Pinto wrote:
->> This patch set has the goal to add suppport for DesignWare PCIe RC in ARC
->> AXS10x. It includes the necessary tweaks to the ARC architecture, 
->> necessary tweaks to the PCI subsystem and a new driver (pcie-synopsys).
->> This new driver will be used extensively in the PCIe RC Prototyping Kit.
->>
->> The patches were produced against Bjorn Helgaas' repository. It was properly
->> tested in an IP Prototyping Kit.
->>
->> Joao Pinto (2):
->>   PCI support added to ARC
->>   add new platform driver for PCI RC
->>
->>  .../devicetree/bindings/pci/pcie-synopsys.txt      |  33 +++
->>  MAINTAINERS                                        |   7 +
->>  arch/arc/Kconfig                                   |  23 ++
->>  arch/arc/include/asm/dma.h                         |   5 +
->>  arch/arc/include/asm/io.h                          |   9 +
->>  arch/arc/include/asm/pci.h                         |  31 +++
->>  arch/arc/kernel/Makefile                           |   1 +
->>  arch/arc/kernel/pcibios.c                          |  23 ++
->>  arch/arc/plat-axs10x/Kconfig                       |   1 +
->>  drivers/pci/Makefile                               |   1 +
->>  drivers/pci/host/Kconfig                           |   8 +
->>  drivers/pci/host/Makefile                          |   1 +
->>  drivers/pci/host/pcie-synopsys.c                   | 257 +++++++++++++++++++++
->>  13 files changed, 400 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/pci/pcie-synopsys.txt
->>  create mode 100644 arch/arc/include/asm/pci.h
->>  create mode 100644 arch/arc/kernel/pcibios.c
->>  create mode 100644 drivers/pci/host/pcie-synopsys.c
+> On Fri, Feb 05, 2016 at 06:07:10AM +0000, Minghuan Lian wrote:
+> > The patch is ok to me.
 > 
-> I applied these to pci/host-synopsys, and I plan to merge them for v4.5.
-> 
-> Bjorn
-> 
+> Thanks, I'll transform that into an ack.
 
+Also
+Acked-by: Li Yang <leoyang.li@nxp.com>
+
+> 
+> Who's going to post a patch to update MAINTAINERS to fix the @freescale.com
+> addresses?  If we can get that in for v4.5, it will save some hassle.
+
+The @freescale.com address can still reach us for some time(not sure how long though).  I don't know if all the people want to change to an NXP company email address in MAINTAINERS or just update to a personal email address as some already did.
+
+Regards,
+Leo
+
+> 
+> > > -----Original Message-----
+> > > From: Bhupesh Sharma
+> > > Sent: Friday, February 05, 2016 1:36 PM
+> > > To: Shi, Yang <yang.shi@linaro.org>; Bjorn Helgaas
+> > > <helgaas@kernel.org>; Yang-Leo Li <leoyang.li@nxp.com>;
+> > > shawn.guo@linaro.org
+> > > Cc: Mingkai Hu <mingkai.hu@nxp.com>; Minghuan Lian
+> > > <minghuan.lian@nxp.com>; bhelgaas@google.com;
+> > > linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
+> > > linux-arm-kernel@lists.infradead.org;
+> > > linaro-kernel@lists.linaro.org
+> > > Subject: RE: [PATCH] PCI: layerscape: add ls2085a compatible
+> > >
+> > > > From: Shi, Yang
+> > > > Sent: Friday, February 05, 2016 5:19 AM
+> > > >
+> > > > On 2/4/2016 2:37 PM, Bjorn Helgaas wrote:
+> > > > > On Wed, Jan 27, 2016 at 10:05:40AM -0800, Shi, Yang wrote:
+> > > > >> Correct FSL folks email address to nxp.com, sorry for the
+> > > > inconvenience.
+> > > > >
+> > > > > Do we need some MAINTAINERS updates in addition to the ack for
+> > > > > this
+> > > > patch?
+> > > > > I see a bunch of @freescale.com addresses in MAINTAINERS.
+> > > >
+> > > > I guess so if the @freescale.com address is not valid anymore.
+> > >
+> > > All @freescale.com address have shifted to @nxp.com.
+> > >
+> > > Leo, Minghuan - can you kindly review this patch.
+> > >
+> > > Shawn - can you take this through your tree, once Leo and Minghuan
+> > > have reviewed the code.
+> > >
+> > > Regards,
+> > > Bhupesh
+> > >
+> > > >
+> > > > >
+> > > > >> On 1/27/2016 9:32 AM, Yang Shi wrote:
+> > > > >>> The layerscape PCI host driver needs recognize ls2085a
+> > > > >>> compatible when using firmware with ls2085a compatible
+> > > > >>> property, otherwise the PCI bus won't be detected even though
+> > > > >>> ls2085a compatible is included
+> > > > by the dts.
+> > > > >>>
+> > > > >>> Signed-off-by: Yang Shi <yang.shi@linaro.org>
+> > > > >>> ---
+> > > > >>>   drivers/pci/host/pci-layerscape.c | 1 +
+> > > > >>>   1 file changed, 1 insertion(+)
+> > > > >>>
+> > > > >>> diff --git a/drivers/pci/host/pci-layerscape.c
+> > > > >>> b/drivers/pci/host/pci-layerscape.c
+> > > > >>> index 3923bed..c40d8b2 100644
+> > > > >>> --- a/drivers/pci/host/pci-layerscape.c
+> > > > >>> +++ b/drivers/pci/host/pci-layerscape.c
+> > > > >>> @@ -203,6 +203,7 @@ static const struct of_device_id
+> > > > ls_pcie_of_match[] = {
+> > > > >>>   	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata
+> > > > },
+> > > > >>>   	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata
+> > > > },
+> > > > >>>   	{ .compatible = "fsl,ls2080a-pcie", .data = &ls2080_drvdata
+> > > > },
+> > > > >>> +	{ .compatible = "fsl,ls2085a-pcie", .data = &ls2080_drvdata
+> > > > >>> +},
+> > > > >>>   	{ },
+> > > > >>>   };
+> > > > >>>   MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
+> > > > >>>
+> > > > >>
+> > > >
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe linux-pci"
+> > > > in the body of a message to majordomo@vger.kernel.org More
+> > > > majordomo info at http://vger.kernel.org/majordomo-info.html
