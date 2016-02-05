@@ -1,113 +1,87 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 5 Feb 2016 10:59:55 -0600
+Date: Fri, 5 Feb 2016 16:36:58 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Yu Zhao <yuzhao@google.com>
-Subject: Re: [PATCH] PCI: Support SRIOV on Legacy EndPoint device
-Message-ID: <20160205165955.GA31904@localhost>
-References: <1454597306-26189-1-git-send-email-kelly.zytaruk@amd.com>
- <20160204151425.GA27474@localhost>
- <CY1PR12MB02628AFFB28DCA6AF01167D0FED10@CY1PR12MB0262.namprd12.prod.outlook.com>
- <20160205164631.GE29306@localhost>
- <CY1PR12MB026259439AA9689B7326F4B5FED20@CY1PR12MB0262.namprd12.prod.outlook.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 0/5] Clean up warnings (part 2, asm/pci-bridge.h)
+Message-ID: <20160205223658.GC16238@localhost>
+References: <20160202193026.9258.7573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CY1PR12MB026259439AA9689B7326F4B5FED20@CY1PR12MB0262.namprd12.prod.outlook.com>
+In-Reply-To: <20160202193026.9258.7573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 05, 2016 at 04:50:11PM +0000, Zytaruk, Kelly wrote:
+On Tue, Feb 02, 2016 at 01:38:26PM -0600, Bjorn Helgaas wrote:
+> We've had some non-arch-specific stuff (pci_has_flag() and associated
+> definitions like PCI_PROBE_ONLY) in asm/pci-bridge.h.  This leads to
+> warnings like:
 > 
+>   drivers/pci/host/pcie-designware.c:562:20: error: 'PCI_PROBE_ONLY' undeclared (first use in this function)
+>   drivers/pci/host/pcie-designware.c:562:7: error: implicit declaration of function 'pci_has_flag' [-Werror=implicit-function-declaration]
 > 
-> > -----Original Message-----
-> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> > Sent: Friday, February 05, 2016 11:47 AM
-> > To: Zytaruk, Kelly
-> > Cc: bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
-> > kernel@vger.kernel.org; Alex Williamson; Yu Zhao
-> > Subject: Re: [PATCH] PCI: Support SRIOV on Legacy EndPoint device
-> > 
-> > On Thu, Feb 04, 2016 at 04:21:08PM +0000, Zytaruk, Kelly wrote:
-> > > > -----Original Message-----
-> > > > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> > > > Sent: Thursday, February 04, 2016 10:14 AM
-> > > > To: Zytaruk, Kelly
-> > > > Cc: bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
-> > > > kernel@vger.kernel.org; Alex Williamson; Yu Zhao
-> > > > Subject: Re: [PATCH] PCI: Support SRIOV on Legacy EndPoint device
-> > > >
-> > > > [+cc Alex, Yu (participants in previous discussion)]
-> > > >
-> > > > Hi Kelly,
-> > > >
-> > > > On Thu, Feb 04, 2016 at 09:48:26AM -0500, Kelly Zytaruk wrote:
-> > > > > Some AMD GPUs have hardware support for grapics SRIOV.
-> > > > > If the GPU has a display output then the GPU needs to support
-> > > > > Legacy VGA
-> > > > operation.
-> > > > > If CLASS_CODE = VGA then the device should have a Port Type =
-> > > > > Legacy
-> > > > EndPoint.
-> > > > > Therefore in order to enable SRIOV on a GPU with a display output
-> > > > LEGACY_END_POINT is supported as a valid Port Type.
-> > > > >
-> > > > > Signed-off-by: Kelly Zytaruk <kelly.zytaruk@amd.com>
-> > > >
-> > > > We had an interesting discussion about this two years ago:
-> > > >
-> > http://lkml.kernel.org/r/B756807489D6244883AC0B799A6EEC15EAB2E8@stor
-> > > > e
-> > > > xdag02.amd.com
-> > >
-> > > Unfortunately 2 years ago I couldn't complete your request as it would
-> > > have disclosed Information about an unannounced technology that we
-> > > were working on.  We have recently made that technology public and I
-> > > can now send you the requested information.
-> > 
-> > > > Please include a reference to that discussion in your changelog.  In
-> > > > that discussion, I also asked for some details (dmesg and lspci
-> > > > info) that motivate the change, so please collect and add a reference to
-> > them as well.
-> > >
-> > > The information that you ask for is included below.  I have
-> > > abbreviated it so that this does not become a huge email.  I can send
-> > > full logs if you want them.
-> > 
-> > Can you open a bugzilla at http://bugzilla.kernel.org and attach the full logs
-> > there?  Then we can include the URL in your patch changelog.
+> because arches don't consistently supply asm/pci-bridge.h, and several
+> drivers include it when they shouldn't.
 > 
-> I have never worked with bugzilla before but I will check it out.  So you
-> want me to take the bugzilla URL and paste it into the comments of my
-> patch? Or is this something that you will do?
-
-Put it in the bugzilla drivers/PCI category.  Let me know if you have
-any bugzilla troubles.  It should be pretty self-explanatory.  Please
-attach the files rather than pasting them in the text box.
-
-If you could include the bugzilla URL in the changelog of a revised
-patch, that would be great.  
-
-> > > > It's not clear to me why we check the device type at all.  If
-> > > > there's no spec restriction on the types of devices that can have an
-> > > > SR-IOV capability, we should consider removing the test altogether
-> > > > (Alex mentioned this possiblity in the earlier discussion).
-> > >
-> > > I am as well not clear why the check is in there.  I would be just as
-> > > happy either adding TYPE_LEG_END or removing the check all together.
-> > > I don't know what the side effects of removing the check would be. I
-> > > don't have any sriov devices other than a graphics card to test with
-> > > so I wouldn't be able to test other scenarios.
-> > 
-> > If we don't have a reason to do the check, I think we should just remove it
-> > altogether.
+> This series moves the generic stuff to linux/pci.h, so it's the same for
+> everybody, and removes the now-empty asm-generic/pci-bridge.h.
 > 
-> So instead of my proposed change do you want me to just remove the check
-> completely and submit a patch for that?
+> There still a few arches that provide asm/pci-bridge.h (microblaze,
+> powerpc, and xtensa), but now they contain truly arch-dependent things like
+> struct pci_controller definitions, and they're only included by
+> arch-specific files.
+> 
+> ---
+> 
+> Bjorn Helgaas (5):
+>       PCI: Move pci_set_flags() from asm-generic/pci-bridge.h to linux/pci.h
+>       PCI: Remove includes of empty asm-generic/pci-bridge.h
+>       ARM64: PCI: Remove generated include of asm-generic/pci-bridge.h
+>       PCI: Remove empty asm-generic/pci-bridge.h
+>       PCI: Remove includes of asm/pci-bridge.h
 
-Please.
+I applied these, with Will's ack on the arm64 parts, to pci/misc
+for v4.6.
 
-Bjorn
+>  arch/alpha/include/asm/pci.h               |    1 
+>  arch/arm/include/asm/pci.h                 |    3 -
+>  arch/arm64/include/asm/Kbuild              |    3 -
+>  arch/arm64/include/asm/pci.h               |    1 
+>  arch/arm64/kernel/pci.c                    |    2 -
+>  arch/mips/include/asm/pci.h                |    1 
+>  arch/powerpc/include/asm/pci-bridge.h      |    1 
+>  arch/unicore32/include/asm/pci.h           |    2 -
+>  arch/x86/pci/common.c                      |    1 
+>  drivers/ata/pata_macio.c                   |    2 -
+>  drivers/char/agp/uninorth-agp.c            |    1 
+>  drivers/gpu/drm/radeon/radeon_combios.c    |    1 
+>  drivers/ide/pdc202xx_new.c                 |    1 
+>  drivers/ide/pmac.c                         |    1 
+>  drivers/macintosh/macio_asic.c             |    1 
+>  drivers/misc/cxl/pci.c                     |    1 
+>  drivers/net/ethernet/sun/sungem.c          |    1 
+>  drivers/net/ethernet/toshiba/spider_net.c  |    1 
+>  drivers/of/of_pci.c                        |    1 
+>  drivers/pci/pci.c                          |    1 
+>  drivers/pci/probe.c                        |    8 +++
+>  drivers/pci/setup-bus.c                    |    1 
+>  drivers/scsi/mac53c94.c                    |    2 -
+>  drivers/scsi/mesh.c                        |    2 -
+>  drivers/usb/core/hcd-pci.c                 |    1 
+>  drivers/video/fbdev/aty/aty128fb.c         |    1 
+>  drivers/video/fbdev/aty/radeon_base.c      |    1 
+>  drivers/video/fbdev/imsttfb.c              |    1 
+>  drivers/video/fbdev/matrox/matroxfb_base.h |    1 
+>  drivers/video/fbdev/offb.c                 |    4 --
+>  include/asm-generic/pci-bridge.h           |   74 ----------------------------
+>  include/linux/pci.h                        |   22 ++++++++
+>  sound/ppc/pmac.c                           |    1 
+>  33 files changed, 32 insertions(+), 114 deletions(-)
+>  delete mode 100644 include/asm-generic/pci-bridge.h
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
