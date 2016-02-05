@@ -1,44 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34187 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752383AbcBVAkj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 21 Feb 2016 19:40:39 -0500
-Received: by mail-wm0-f66.google.com with SMTP id b205so15956109wmb.1
-        for <linux-pci@vger.kernel.org>; Sun, 21 Feb 2016 16:40:38 -0800 (PST)
-Message-ID: <1456101636.2176.4.camel@googlemail.com>
-Subject: Re: [PATCH v2 2/2] PCI: imx6: add initial imx6sx support
-From: Christoph Fritz <chf.fritz@googlemail.com>
-Reply-To: chf.fritz@googlemail.com
-To: Fabio Estevam <festevam@gmail.com>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lee Jones <lee.jones@linaro.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@nxp.com>
-Date: Mon, 22 Feb 2016 01:40:36 +0100
-In-Reply-To: <CAOMZO5CfO5ZiMj-QEgEJn4zRkw=vg6zChrLKa0i=H+mnqLKRkg@mail.gmail.com>
-References: <1455796743-5987-1-git-send-email-chf.fritz@googlemail.com>
-	 <1455796743-5987-3-git-send-email-chf.fritz@googlemail.com>
-	 <CAOMZO5CfO5ZiMj-QEgEJn4zRkw=vg6zChrLKa0i=H+mnqLKRkg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from v094114.home.net.pl ([79.96.170.134]:64030 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750699AbcBEXZb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2016 18:25:31 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Jayachandran Chandrashekaran Nair
+	<jayachandran.chandrashekaran@broadcom.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Jayachandran C <jchandra@broadcom.com>,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-acpi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Tomasz Nowicki <tn@semihalf.com>,
+	xen-devel@lists.xenproject.org
+Subject: Re: [PATCH v7 5/5] PCI: ACPI: Add a generic ACPI based host controller
+Date: Sat, 06 Feb 2016 00:26:37 +0100
+Message-ID: <3576289.1ltj0IceQ5@vostro.rjw.lan>
+In-Reply-To: <20160205094740.GA31547@red-moon>
+References: <1454058340-7904-1-git-send-email-jchandra@broadcom.com> <CAKc_7PXYtFt1MQE-UGO0O5vvQ+xFKa2b5=F8wXB=EN-JUJVzZw@mail.gmail.com> <20160205094740.GA31547@red-moon>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Fabio
-
-On Sat, 2016-02-20 at 17:37 -0200, Fabio Estevam wrote:
-> On Thu, Feb 18, 2016 at 9:59 AM, Christoph Fritz
-> <chf.fritz@googlemail.com> wrote:
+On Friday, February 05, 2016 09:47:40 AM Lorenzo Pieralisi wrote:
+> On Fri, Feb 05, 2016 at 02:05:37PM +0530, Jayachandran Chandrashekaran Nair wrote:
 > 
-> >  static const struct of_device_id imx6_pcie_of_match[] = {
-> >         { .compatible = "fsl,imx6q-pcie", },
-> > +       { .compatible = "fsl,imx6sx-pcie", },
+> [...]
 > 
-> Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt needs to be
-> updated to include this new compatible string.
+> > pci_host_acpi.c is a generic implementation of these using a sysdata
+> > pointing to acpi_pci_root_info, and using a pointer to the pci_mmcfg_region
+> > to access ECAM area, Maybe I can rename this file to
+> > pci_acpi_host_generic.c to reflect this better.
+> 
+> Maybe you should stop sending this series and work with Tomasz to
+> get this done, you are confusing everyone and I am really really
+> annoyed about this.
+> 
+> Do you realize there is no point in having two patch series doing
+> the same thing and wasting everyone's review time ?
+> 
+> Do you realize he started this work long before you and went through
+> several rounds of review already (I told you before but in case you
+> forgot) ?
+> 
+> Tomasz posted a version yesterday, integrating comments following months
+> of review and testing and I think it is ready to get upstream:
+> 
+> https://lkml.org/lkml/2016/2/4/646
+> 
+> Did you even consider reviewing his code or helping him instead of
+> churning out more patches doing the *SAME* thing ?
+> 
+> Do you want all of us to go through your code and re-fix what has
+> already been fixed in Tomasz's series with the end result of missing
+> yet another merge window ?
+> 
+> This is really annoying, stop it please, really.
 
-Thanks, I'll wait a bit for other possible comments and will then send a
-v3 patchset which updates the documentation too.
+OK, so to be crystal clear here.
+
+I'm going to ignore the series the $subject patch belongs to going forward.
+
+Thanks,
+Rafael
 
