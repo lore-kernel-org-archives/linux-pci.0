@@ -1,47 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:51294 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754472AbcBWSRy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Feb 2016 13:17:54 -0500
-Subject: Re: [PATCH v2] PCI: tegra: Support per-lane PHYs
-To: Thierry Reding <thierry.reding@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <1455029465-9211-1-git-send-email-thierry.reding@gmail.com>
- <1455904860-29090-1-git-send-email-thierry.reding@gmail.com>
-Cc: Alexandre Courbot <gnurou@gmail.com>, linux-pci@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-From: Stephen Warren <swarren@wwwdotorg.org>
-Message-ID: <56CCA250.2010403@wwwdotorg.org>
-Date: Tue, 23 Feb 2016 11:17:52 -0700
-MIME-Version: 1.0
-In-Reply-To: <1455904860-29090-1-git-send-email-thierry.reding@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Daney <ddaney.cavm@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Will Deacon <will.deacon@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
+Subject: [PATCH v5 0/3] Add host controller drivers for Cavium ThunderX PCI
+Date: Fri,  5 Feb 2016 15:41:12 -0800
+Message-Id: <1454715675-17512-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/19/2016 11:01 AM, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
->
-> The current XUSB pad controller bindings are insufficient to describe
-> PHY devices attached to USB controllers. New bindings have been created
-> to overcome these restrictions. As a side-effect each root port now is
-> assigned a set of PHY devices, one for each lane associated with the
-> root port. This has the benefit of allowing fine-grained control of the
-> power management for each lane.
+From: David Daney <david.daney@cavium.com>
 
-Overall this change looks OK. However, since it encodes aspects of the 
-DT binding (i.e. that the per-port nodes have a phys property in the new 
-scheme), I think it can't be applied until the related DT binding change 
-is accepted.
+Some Cavium ThunderX processors require quirky access methods for the
+config space of the PCIe bridge.
 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+There are now three patches:
 
-> @@ -883,14 +904,24 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+1) Refactor code in pci-host-generic so that it can more easily be
+   used by other drivers.  This splits the driver for CAM and ECAM
+   access methods to a separate file from the common host driver code.
 
-> +	if (of_get_property(pcie->dev->of_node, "phys", NULL) == NULL) {
+2) Add the ThunderX PCIe driver to external PCIe buses, which
+   leverages the code in pci-host-generic
 
-Rather than re-parsing DT to determine this, thus duplicating the logic, 
-can't the code store some flag in tegra_pcie_phys_get() indicating which 
-path was taken, and that flag used here? Perhaps that flag could be 
-based on whether pcie->phy is set, although the else block here implies 
-that particular solution won't work.
+3) Add ThunderX PCI driver for internel SoC buses used on early
+   ThunderX chip revisions.
+
+Changes from v4: Added patch 3/3.  Stylistic changes to 2/3 suggested
+by Bjorn Helgaas.  When expanding config write width to 32-bits, mask
+out unintened writes to W1C bits, also suggested by Bjorn Helgaas.
+
+Changes from v3: Add some Acked-by, rebased to v4.5.0-rc1
+
+Changes from v2: Improve device tree binding example as noted by Rob
+Herring.  Rename pcie-thunder-pem.* to pci-thunder-pem.* for better
+consistency.  Update MAINTAINERS to reflect the changes.
+
+Changes from v1: Split CAM and ECAM code from common driver code as
+suggested by Arnd Bergmann.  Fix spelling errors in
+pcie-thunder-pem.txt
+
+David Daney (3):
+  PCI: generic: Refactor code to enable reuse by other drivers.
+  pci, pci-thunder-pem: Add PCIe host driver for ThunderX processors.
+  pci, pci-thunder-ecam: Add driver for ThunderX-pass1 on-chip devices
+
+ .../devicetree/bindings/pci/pci-thunder-ecam.txt   |  30 ++
+ .../devicetree/bindings/pci/pci-thunder-pem.txt    |  43 +++
+ MAINTAINERS                                        |   9 +
+ drivers/pci/host/Kconfig                           |  18 ++
+ drivers/pci/host/Makefile                          |   3 +
+ drivers/pci/host/pci-host-common.c                 | 194 +++++++++++
+ drivers/pci/host/pci-host-common.h                 |  47 +++
+ drivers/pci/host/pci-host-generic.c                | 181 +----------
+ drivers/pci/host/pci-thunder-ecam.c                | 358 +++++++++++++++++++++
+ drivers/pci/host/pci-thunder-pem.c                 | 332 +++++++++++++++++++
+ 10 files changed, 1038 insertions(+), 177 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-pem.txt
+ create mode 100644 drivers/pci/host/pci-host-common.c
+ create mode 100644 drivers/pci/host/pci-host-common.h
+ create mode 100644 drivers/pci/host/pci-thunder-ecam.c
+ create mode 100644 drivers/pci/host/pci-thunder-pem.c
+
+-- 
+1.8.3.1
