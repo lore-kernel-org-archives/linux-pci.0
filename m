@@ -1,110 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:24969 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760032AbcBYDNs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 22:13:48 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: [PATCH v10 19/59] PCI: Separate realloc list checking after allocation
-Date: Wed, 24 Feb 2016 18:12:10 -0800
-Message-Id: <1456366370-28995-20-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:44073 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754331AbcBEUC5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Feb 2016 15:02:57 -0500
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: linux-pci@vger.kernel.org, mj@ucw.cz, bhelgaas@google.com,
+	alex.williamson@redhat.com
+Cc: sean.stalley@intel.com, david.daney@cavium.com
+Subject: [PATCH v3 1/2] pci: Identify Enhanced Allocation (EA) BAR Equivalent resources
+Date: Fri,  5 Feb 2016 11:59:04 -0800
+Message-Id: <1454702345-4014-2-git-send-email-sean.stalley@intel.com>
+In-Reply-To: <1454702345-4014-1-git-send-email-sean.stalley@intel.com>
+References: <1454702345-4014-1-git-send-email-sean.stalley@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We check the realloc list, as list must be empty after allocation.
+From: Alex Williamson <alex.williamson@redhat.com>
 
-Separate the realloc list checking to another function.
+Resource flags are exposed to userspace via the sysfs "resource" file.
+lspci reads the sysfs file to determine resource properties.
+Adding this flag allows lspci to distinguish between [virtual]
+and [enhanced] resources.
 
-Add checking that is missed in acpiphp driver.
+If the resource is not aligned, userspace could deduce where
+the resource is EA based on the size & address fields.
+However, a flag indicating whether a PCI resource is a traditional BAR
+or BAR equivalent seems like a much simpler solution and works if the
+EA resource is aligned.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
+Although this patchset only improves lspci, other uses for this
+flag have been identified. For example, vfio makes assumptions
+about alignment and sizing, and runs into problems when attempting
+to emulate a BAR Equivalent EA resource.
+
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
 ---
- drivers/pci/hotplug/acpiphp_glue.c |  1 +
- drivers/pci/pci.h                  |  1 +
- drivers/pci/setup-bus.c            | 12 +++++++++---
- 3 files changed, 11 insertions(+), 3 deletions(-)
+ drivers/pci/pci.c      | 2 +-
+ include/linux/ioport.h | 7 +++++++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index fa49f91..c35983a 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
- 		}
- 	}
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
-+	pci_bus_check_realloc(&add_list);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d1a7105..8ff678c 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2229,7 +2229,7 @@ void pci_pm_init(struct pci_dev *dev)
  
- 	acpiphp_sanitize_bus(bus);
- 	pcie_bus_configure_settings(bus);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 60d1c87..510378d 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -238,6 +238,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus,
- void __pci_bus_assign_resources(const struct pci_bus *bus,
- 				struct list_head *realloc_head,
- 				struct list_head *fail_head);
-+void pci_bus_check_realloc(struct list_head *realloc_head);
- bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
+ static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
+ {
+-	unsigned long flags = IORESOURCE_PCI_FIXED;
++	unsigned long flags = IORESOURCE_PCI_FIXED | IORESOURCE_PCI_EA_BEI;
  
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f9cd04a..4741cc9 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -280,6 +280,12 @@ out:
- 	}
- }
+ 	switch (prop) {
+ 	case PCI_EA_P_MEM:
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 24bea08..88816f9 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -25,7 +25,11 @@ struct resource {
  
-+void pci_bus_check_realloc(struct list_head *realloc_head)
-+{
-+	if (WARN_ON(!list_empty(realloc_head)))
-+		free_list(realloc_head);
-+}
+ /*
+  * IO resources have these defined flags.
++ *
++ * PCI devices expose these flags to userspace in the "resource" sysfs file,
++ * Moving them around could break stuff, so don't do it.
+  */
 +
- /**
-  * assign_requested_resources_sorted() - satisfy resource requests
-  *
-@@ -1777,7 +1783,7 @@ again:
- 	/* Depth last, allocate resources and update the hardware. */
- 	__pci_bus_assign_resources(bus, add_list, &fail_head);
- 	if (add_list)
--		BUG_ON(!list_empty(add_list));
-+		pci_bus_check_realloc(add_list);
- 	tried_times++;
+ #define IORESOURCE_BITS		0x000000ff	/* Bus-specific bits */
  
- 	/* any device complain? */
-@@ -1852,7 +1858,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- again:
- 	__pci_bus_size_bridges(parent, &add_list);
- 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
--	BUG_ON(!list_empty(&add_list));
-+	pci_bus_check_realloc(&add_list);
- 	tried_times++;
+ #define IORESOURCE_TYPE_BITS	0x00001f00	/* Resource type */
+@@ -97,6 +101,7 @@ struct resource {
+ #define IORESOURCE_IO_SPARSE		(1<<2)
  
- 	if (list_empty(&fail_head))
-@@ -1911,6 +1917,6 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
- 							 &add_list);
- 	up_read(&pci_bus_sem);
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
--	BUG_ON(!list_empty(&add_list));
-+	pci_bus_check_realloc(&add_list);
- }
- EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
+ /* PCI ROM control bits (IORESOURCE_BITS) */
++
+ #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled, same as PCI_ROM_ADDRESS_ENABLE */
+ #define IORESOURCE_ROM_SHADOW		(1<<1)	/* ROM is copy at C000:0 */
+ #define IORESOURCE_ROM_COPY		(1<<2)	/* ROM is alloc'd copy, resource field overlaid */
+@@ -105,6 +110,8 @@ struct resource {
+ /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
+ #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move resource */
+ 
++/* PCI Enhanced Allocation defined BAR equivalent resource */
++#define IORESOURCE_PCI_EA_BEI		(1<<5)
+ 
+ /* helpers to define resources */
+ #define DEFINE_RES_NAMED(_start, _size, _name, _flags)			\
 -- 
-1.8.4.5
+1.9.1
 
