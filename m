@@ -1,478 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:33511 "EHLO
-	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750817AbcBEXlZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2016 18:41:25 -0500
-From: David Daney <ddaney.cavm@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
-Subject: [PATCH v5 2/3] pci, pci-thunder-pem: Add PCIe host driver for ThunderX processors.
-Date: Fri,  5 Feb 2016 15:41:14 -0800
-Message-Id: <1454715675-17512-3-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1454715675-17512-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1454715675-17512-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:51701 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753420AbcBEPyS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Feb 2016 10:54:18 -0500
+Date: Fri, 5 Feb 2016 09:54:12 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Minghuan Lian <minghuan.lian@nxp.com>
+Cc: Bhupesh Sharma <bhupesh.sharma@nxp.com>,
+	"Shi, Yang" <yang.shi@linaro.org>,
+	Yang-Leo Li <leoyang.li@nxp.com>,
+	"shawn.guo@linaro.org" <shawn.guo@linaro.org>,
+	Mingkai Hu <mingkai.hu@nxp.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>
+Subject: Re: [PATCH] PCI: layerscape: add ls2085a compatible
+Message-ID: <20160205155412.GB29306@localhost>
+References: <1453915925-19198-1-git-send-email-yang.shi@linaro.org>
+ <56A906F4.3050809@linaro.org>
+ <20160204223711.GE7031@localhost>
+ <56B3E386.8010002@linaro.org>
+ <VI1PR04MB1230AA5CAEEEE0D4AD8E3DF288D20@VI1PR04MB1230.eurprd04.prod.outlook.com>
+ <VI1PR04MB16155E4265922D6659B439C1E8D20@VI1PR04MB1615.eurprd04.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <VI1PR04MB16155E4265922D6659B439C1E8D20@VI1PR04MB1615.eurprd04.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+On Fri, Feb 05, 2016 at 06:07:10AM +0000, Minghuan Lian wrote:
+> The patch is ok to me.
 
-The root complexes used to access off-chip PCIe devices (called PEM
-units in the hardware manuals) on some Cavium ThunderX processors
-require quirky access methods for the config space of the PCIe bridge.
-Add a driver to provide these config space accessor functions.  The
-pci-host-common code is used to configure the PCI machinery.
+Thanks, I'll transform that into an ack.
 
-Signed-off-by: David Daney <david.daney@cavium.com>
-Acked-by: Rob Herring <robh@kernel.org>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
----
- .../devicetree/bindings/pci/pci-thunder-pem.txt    |  43 +++
- MAINTAINERS                                        |   8 +
- drivers/pci/host/Kconfig                           |   7 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-thunder-pem.c                 | 332 +++++++++++++++++++++
- 5 files changed, 391 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-pem.txt
- create mode 100644 drivers/pci/host/pci-thunder-pem.c
+Who's going to post a patch to update MAINTAINERS to fix the
+@freescale.com addresses?  If we can get that in for v4.5, it will
+save some hassle.
 
-diff --git a/Documentation/devicetree/bindings/pci/pci-thunder-pem.txt b/Documentation/devicetree/bindings/pci/pci-thunder-pem.txt
-new file mode 100644
-index 0000000..f131fae
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/pci-thunder-pem.txt
-@@ -0,0 +1,43 @@
-+* ThunderX PEM PCIe host controller
-+
-+Firmware-initialized PCI host controller found on some Cavium
-+ThunderX processors.
-+
-+The properties and their meanings are identical to those described in
-+host-generic-pci.txt except as listed below.
-+
-+Properties of the host controller node that differ from
-+host-generic-pci.txt:
-+
-+- compatible     : Must be "cavium,pci-host-thunder-pem"
-+
-+- reg            : Two entries: First the configuration space for down
-+                   stream devices base address and size, as accessed
-+                   from the parent bus. Second, the register bank of
-+                   the PEM device PCIe bridge.
-+
-+Example:
-+
-+    pci@87e0,c2000000 {
-+	compatible = "cavium,pci-host-thunder-pem";
-+	device_type = "pci";
-+	msi-parent = <&its>;
-+	msi-map = <0 &its 0x10000 0x10000>;
-+	bus-range = <0x8f 0xc7>;
-+	#size-cells = <2>;
-+	#address-cells = <3>;
-+
-+	reg = <0x8880 0x8f000000 0x0 0x39000000>,  /* Configuration space */
-+	      <0x87e0 0xc2000000 0x0 0x00010000>; /* PEM space */
-+	ranges = <0x01000000 0x00 0x00020000 0x88b0 0x00020000 0x00 0x00010000>, /* I/O */
-+		 <0x03000000 0x00 0x10000000 0x8890 0x10000000 0x0f 0xf0000000>, /* mem64 */
-+		 <0x43000000 0x10 0x00000000 0x88a0 0x00000000 0x10 0x00000000>, /* mem64-pref */
-+		 <0x03000000 0x87e0 0xc2f00000 0x87e0 0xc2000000 0x00 0x00100000>; /* mem64 PEM BAR4 */
-+
-+	#interrupt-cells = <1>;
-+	interrupt-map-mask = <0 0 0 7>;
-+	interrupt-map = <0 0 0 1 &gic0 0 0 0 24 4>, /* INTA */
-+			<0 0 0 2 &gic0 0 0 0 25 4>, /* INTB */
-+			<0 0 0 3 &gic0 0 0 0 26 4>, /* INTC */
-+			<0 0 0 4 &gic0 0 0 0 27 4>; /* INTD */
-+    };
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 9287929..ff5c367 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8413,6 +8413,14 @@ L:     linux-arm-msm@vger.kernel.org
- S:     Maintained
- F:     drivers/pci/host/*qcom*
- 
-+PCIE DRIVER FOR CAVIUM THUNDERX
-+M:	David Daney <david.daney@cavium.com>
-+L:	linux-pci@vger.kernel.org
-+L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/pci-thunder-*
-+F:	drivers/pci/host/pci-thunder-*
-+
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
- L:	linux-pcmcia@lists.infradead.org
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 65709b4..184df22 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -195,4 +195,11 @@ config PCIE_QCOM
- 	  PCIe controller uses the Designware core plus Qualcomm-specific
- 	  hardware wrappers.
- 
-+config PCI_HOST_THUNDER_PEM
-+	bool "Cavium Thunder PCIe controller to off-chip devices"
-+	depends on OF && ARM64
-+	select PCI_HOST_COMMON
-+	help
-+	  Say Y here if you want PCIe support for CN88XX Cavium Thunder SoCs.
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 3b24af8..8903172 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -23,3 +23,4 @@ obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
- obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
- obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
- obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
-+obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
-diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-new file mode 100644
-index 0000000..e3a6554
---- /dev/null
-+++ b/drivers/pci/host/pci-thunder-pem.c
-@@ -0,0 +1,332 @@
-+/*
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ *
-+ * Copyright (C) 2015 - 2016 Cavium, Inc.
-+ *
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of_address.h>
-+#include <linux/of_pci.h>
-+#include <linux/platform_device.h>
-+
-+#include "pci-host-common.h"
-+
-+#define PEM_CFG_WR 0x28
-+#define PEM_CFG_RD 0x30
-+
-+struct thunder_pem_pci {
-+	struct gen_pci	gen_pci;
-+	u32		ea_entry[3];
-+	void __iomem	*pem_reg_base;
-+};
-+
-+static void __iomem *thunder_pem_map_bus(struct pci_bus *bus,
-+					 unsigned int devfn, int where)
-+{
-+	struct gen_pci *pci = bus->sysdata;
-+	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
-+
-+	return pci->cfg.win[idx] + ((devfn << 16) | where);
-+}
-+
-+static int thunder_pem_config_read(struct pci_bus *bus, unsigned int devfn,
-+				   int where, int size, u32 *val)
-+{
-+	int r;
-+	struct thunder_pem_pci *pem_pci;
-+	struct gen_pci *pci = bus->sysdata;
-+
-+	pem_pci = container_of(pci, struct thunder_pem_pci, gen_pci);
-+
-+	/*
-+	 * The first device on the bus in the PEM PCIe bridge.
-+	 * Special case its config access.
-+	 */
-+	if (bus->number == pci->cfg.bus_range->start) {
-+		u64 read_val;
-+
-+		if (devfn != 0 || where >= 2048) {
-+			*val = ~0;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+
-+		/*
-+		 * 32-bit accesses only.  Write the address to the low
-+		 * order bits of PEM_CFG_RD, then trigger the read by
-+		 * reading back.  The config data lands in the upper
-+		 * 32-bits of PEM_CFG_RD.
-+		 */
-+		read_val = where & ~3ull;
-+		writeq(read_val, pem_pci->pem_reg_base + PEM_CFG_RD);
-+		read_val = readq(pem_pci->pem_reg_base + PEM_CFG_RD);
-+		read_val >>= 32;
-+
-+		/*
-+		 * The config space contains some garbage, fix it up.
-+		 * Also synthesize an EA capability for the BAR used
-+		 * by MSI-X.
-+		 */
-+		switch (where & ~3u) {
-+		case 0x40:
-+			read_val &= 0xffff00ff;
-+			read_val |= 0x00007000; /* Skip MSI CAP */
-+			break;
-+		case 0x70: /* Express Cap */
-+			/* PME interrupt on vector 2*/
-+			read_val |= (2u << 25);
-+			break;
-+		case 0xb0: /* MSI-X Cap */
-+			/* TableSize=4, Next Cap is EA */
-+			read_val &= 0xc00000ff;
-+			read_val |= 0x0003bc00;
-+			break;
-+		case 0xb4:
-+			/* Table offset=0, BIR=0 */
-+			read_val = 0x00000000;
-+			break;
-+		case 0xb8:
-+			/* BPA offset=0xf0000, BIR=0 */
-+			read_val = 0x000f0000;
-+			break;
-+		case 0xbc:
-+			/* EA, 1 entry, no next Cap */
-+			read_val = 0x00010014;
-+			break;
-+		case 0xc0:
-+			/* DW2 for type-1 */
-+			read_val = 0x00000000;
-+			break;
-+		case 0xc4:
-+			/* Entry BEI=0, PP=0x00, SP=0xff, ES=3 */
-+			read_val = 0x80ff0003;
-+			break;
-+		case 0xc8:
-+			read_val = pem_pci->ea_entry[0];
-+			break;
-+		case 0xcc:
-+			read_val = pem_pci->ea_entry[1];
-+			break;
-+		case 0xd0:
-+			read_val = pem_pci->ea_entry[2];
-+			break;
-+		default:
-+			break;
-+		}
-+		read_val >>= (8 * (where & 3));
-+		switch (size) {
-+		case 1:
-+			read_val &= 0xff;
-+			break;
-+		case 2:
-+			read_val &= 0xffff;
-+			break;
-+		default:
-+			break;
-+		}
-+		*val = read_val;
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	if (bus->number < pci->cfg.bus_range->start ||
-+	    bus->number > pci->cfg.bus_range->end)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	r = pci_generic_config_read(bus, devfn, where, size, val);
-+	return r;
-+}
-+
-+static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
-+				    int where, int size, u32 val)
-+{
-+	struct gen_pci *pci = bus->sysdata;
-+	struct thunder_pem_pci *pem_pci;
-+
-+	pem_pci = container_of(pci, struct thunder_pem_pci, gen_pci);
-+
-+	/*
-+	 * The first device on the bus in the PEM PCIe bridge.
-+	 * Special case its config access.
-+	 */
-+	if (bus->number == pci->cfg.bus_range->start) {
-+		u64 write_val, read_val;
-+		u32 mask = 0;
-+
-+		if (devfn != 0 || where >= 2048)
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+		/*
-+		 * 32-bit accesses only.  If the write is for a size
-+		 * smaller than 32-bits, we must first read the 32-bit
-+		 * value and merge in the desired bits and then write
-+		 * the whole 32-bits back out.
-+		 */
-+		switch (size) {
-+		case 1:
-+			read_val = where & ~3ull;
-+			writeq(read_val, pem_pci->pem_reg_base + PEM_CFG_RD);
-+			read_val = readq(pem_pci->pem_reg_base + PEM_CFG_RD);
-+			read_val >>= 32;
-+			mask = ~(0xff << (8 * (where & 3)));
-+			read_val &= mask;
-+			val = (val & 0xff) << (8 * (where & 3));
-+			val |= (u32)read_val;
-+			break;
-+		case 2:
-+			read_val = where & ~3ull;
-+			writeq(read_val, pem_pci->pem_reg_base + PEM_CFG_RD);
-+			read_val = readq(pem_pci->pem_reg_base + PEM_CFG_RD);
-+			read_val >>= 32;
-+			mask = ~(0xffff << (8 * (where & 3)));
-+			read_val &= mask;
-+			val = (val & 0xffff) << (8 * (where & 3));
-+			val |= (u32)read_val;
-+			break;
-+		default:
-+			break;
-+
-+		}
-+
-+		if (mask) {
-+			/*
-+			 * By expanding the write width to 32 bits, we
-+			 * may inadvertently hit some W1C bits that
-+			 * were not intended to be written.  Mask
-+			 * these out.
-+			 *
-+			 * Some of the w1c_bits below also include
-+			 * read-only or non-writable reserved bits,
-+			 * this makes the code simpler and is OK as
-+			 * the bits are not affected by writing zeros
-+			 * to them.
-+			 */
-+			u32 w1c_bits = 0;
-+
-+			switch (where & 3) {
-+			case 0x04: /* Command/Status */
-+			case 0x1c: /* Base and I/O Limit/Secondary Status */
-+				w1c_bits = 0xff000000;
-+				break;
-+			case 0x44: /* Power Management Control and Status */
-+				w1c_bits = 0xfffffe00;
-+				break;
-+			case 0x78: /* Device Control/Device Status */
-+			case 0x80: /* Link Control/Link Status */
-+			case 0x88: /* Slot Control/Slot Status */
-+			case 0x90: /* Root Status */
-+			case 0xa0: /* Link Control 2 Registers/Link Status 2 */
-+				w1c_bits = 0xffff0000;
-+				break;
-+			case 0x104: /* Uncorrectable Error Status */
-+			case 0x110: /* Correctable Error Status */
-+			case 0x130: /* Error Status */
-+			case 0x160: /* Link Control 4 */
-+				w1c_bits = 0xffffffff;
-+				break;
-+			default:
-+				break;
-+
-+			}
-+			if (w1c_bits) {
-+				mask &= w1c_bits;
-+				val &= ~mask;
-+			}
-+		}
-+
-+		/*
-+		 * Low order bits are the config address, the high
-+		 * order 32 bits are the data to be written.
-+		 */
-+		write_val = where & ~3ull;
-+		write_val |= (((u64)val) << 32);
-+		writeq(write_val, pem_pci->pem_reg_base + PEM_CFG_WR);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	if (bus->number < pci->cfg.bus_range->start ||
-+	    bus->number > pci->cfg.bus_range->end)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	return pci_generic_config_write(bus, devfn, where, size, val);
-+}
-+
-+static struct gen_pci_cfg_bus_ops thunder_pem_bus_ops = {
-+	.bus_shift	= 24,
-+	.ops		= {
-+		.map_bus	= thunder_pem_map_bus,
-+		.read		= thunder_pem_config_read,
-+		.write		= thunder_pem_config_write,
-+	}
-+};
-+
-+static const struct of_device_id thunder_pem_of_match[] = {
-+	{ .compatible = "cavium,pci-host-thunder-pem",
-+	  .data = &thunder_pem_bus_ops },
-+
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(of, thunder_pem_of_match);
-+
-+static int thunder_pem_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	const struct of_device_id *of_id;
-+	resource_size_t bar4_start;
-+	struct resource *res_pem;
-+	struct thunder_pem_pci *pem_pci;
-+
-+	pem_pci = devm_kzalloc(dev, sizeof(*pem_pci), GFP_KERNEL);
-+	if (!pem_pci)
-+		return -ENOMEM;
-+
-+	of_id = of_match_node(thunder_pem_of_match, dev->of_node);
-+	pem_pci->gen_pci.cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
-+
-+	/*
-+	 * The second register range is the PEM bridge to the PCIe
-+	 * bus.  It has a different config access method than those
-+	 * devices behind the bridge.
-+	 */
-+	res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+	if (!res_pem) {
-+		dev_err(dev, "missing \"reg[1]\"property\n");
-+		return -EINVAL;
-+	}
-+
-+	pem_pci->pem_reg_base = devm_ioremap(dev, res_pem->start, 0x10000);
-+	if (!pem_pci->pem_reg_base)
-+		return -ENOMEM;
-+
-+	/*
-+	 * The MSI-X BAR for the PEM and AER interrupts is located at
-+	 * a fixed offset from the PEM register base.  Generate a
-+	 * fragment of the synthesized Enhanced Allocation capability
-+	 * structure here for the BAR.
-+	 */
-+	bar4_start = res_pem->start + 0xf00000;
-+	pem_pci->ea_entry[0] = (u32)bar4_start | 2;
-+	pem_pci->ea_entry[1] = (u32)(res_pem->end - bar4_start) & ~3u;
-+	pem_pci->ea_entry[2] = (u32)(bar4_start >> 32);
-+
-+	return pci_host_common_probe(pdev, &pem_pci->gen_pci);
-+}
-+
-+static struct platform_driver thunder_pem_driver = {
-+	.driver = {
-+		.name = KBUILD_MODNAME,
-+		.of_match_table = thunder_pem_of_match,
-+	},
-+	.probe = thunder_pem_probe,
-+};
-+module_platform_driver(thunder_pem_driver);
-+
-+MODULE_DESCRIPTION("Thunder PEM PCIe host driver");
-+MODULE_LICENSE("GPL v2");
--- 
-1.8.3.1
-
+> > -----Original Message-----
+> > From: Bhupesh Sharma
+> > Sent: Friday, February 05, 2016 1:36 PM
+> > To: Shi, Yang <yang.shi@linaro.org>; Bjorn Helgaas <helgaas@kernel.org>;
+> > Yang-Leo Li <leoyang.li@nxp.com>; shawn.guo@linaro.org
+> > Cc: Mingkai Hu <mingkai.hu@nxp.com>; Minghuan Lian
+> > <minghuan.lian@nxp.com>; bhelgaas@google.com; linux-pci@vger.kernel.org;
+> > linux-kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+> > linaro-kernel@lists.linaro.org
+> > Subject: RE: [PATCH] PCI: layerscape: add ls2085a compatible
+> > 
+> > > From: Shi, Yang
+> > > Sent: Friday, February 05, 2016 5:19 AM
+> > >
+> > > On 2/4/2016 2:37 PM, Bjorn Helgaas wrote:
+> > > > On Wed, Jan 27, 2016 at 10:05:40AM -0800, Shi, Yang wrote:
+> > > >> Correct FSL folks email address to nxp.com, sorry for the
+> > > inconvenience.
+> > > >
+> > > > Do we need some MAINTAINERS updates in addition to the ack for this
+> > > patch?
+> > > > I see a bunch of @freescale.com addresses in MAINTAINERS.
+> > >
+> > > I guess so if the @freescale.com address is not valid anymore.
+> > 
+> > All @freescale.com address have shifted to @nxp.com.
+> > 
+> > Leo, Minghuan - can you kindly review this patch.
+> > 
+> > Shawn - can you take this through your tree, once Leo and Minghuan have
+> > reviewed the code.
+> > 
+> > Regards,
+> > Bhupesh
+> > 
+> > >
+> > > >
+> > > >> On 1/27/2016 9:32 AM, Yang Shi wrote:
+> > > >>> The layerscape PCI host driver needs recognize ls2085a compatible
+> > > >>> when using firmware with ls2085a compatible property, otherwise
+> > > >>> the PCI bus won't be detected even though ls2085a compatible is
+> > > >>> included
+> > > by the dts.
+> > > >>>
+> > > >>> Signed-off-by: Yang Shi <yang.shi@linaro.org>
+> > > >>> ---
+> > > >>>   drivers/pci/host/pci-layerscape.c | 1 +
+> > > >>>   1 file changed, 1 insertion(+)
+> > > >>>
+> > > >>> diff --git a/drivers/pci/host/pci-layerscape.c
+> > > >>> b/drivers/pci/host/pci-layerscape.c
+> > > >>> index 3923bed..c40d8b2 100644
+> > > >>> --- a/drivers/pci/host/pci-layerscape.c
+> > > >>> +++ b/drivers/pci/host/pci-layerscape.c
+> > > >>> @@ -203,6 +203,7 @@ static const struct of_device_id
+> > > ls_pcie_of_match[] = {
+> > > >>>   	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata
+> > > },
+> > > >>>   	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata
+> > > },
+> > > >>>   	{ .compatible = "fsl,ls2080a-pcie", .data = &ls2080_drvdata
+> > > },
+> > > >>> +	{ .compatible = "fsl,ls2085a-pcie", .data = &ls2080_drvdata },
+> > > >>>   	{ },
+> > > >>>   };
+> > > >>>   MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
+> > > >>>
+> > > >>
+> > >
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-pci"
+> > > in the body of a message to majordomo@vger.kernel.org More majordomo
+> > > info at http://vger.kernel.org/majordomo-info.html
