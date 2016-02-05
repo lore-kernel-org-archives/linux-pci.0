@@ -1,67 +1,50 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-	"tn@semihalf.com" <tn@semihalf.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"jcm@redhat.com" <jcm@redhat.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: Re: [RFC PATCH v2 2/3] PCI: hisi: Make the HiSilicon PCIe host controller ECAM compliant
-Date: Mon, 08 Feb 2016 17:29:40 +0100
-Message-ID: <2599997.xBRrI3qHak@wuerfel>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ECACF44@lhreml503-mbs>
-References: <1454935264-6076-1-git-send-email-gabriele.paoloni@huawei.com> <3532826.pJr5R5Xa4c@wuerfel> <EE11001F9E5DDD47B7634E2F8A612F2E1ECACF44@lhreml503-mbs>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:47644 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755538AbcBEWwH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Feb 2016 17:52:07 -0500
+Date: Fri, 5 Feb 2016 16:52:04 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: arnd@arndb.de, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Vineet.Gupta1@synopsys.com,
+	CARLOS.PALMINHA@synopsys.com
+Subject: Re: [PATCH v3] synopsys pcie rc generic platform driver update
+Message-ID: <20160205225204.GB11780@localhost>
+References: <28b04a32cc7caf6db542d4b5aa1feddacd02b2c9.1454701564.git.jpinto@synopsys.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <28b04a32cc7caf6db542d4b5aa1feddacd02b2c9.1454701564.git.jpinto@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 08 February 2016 15:55:35 Gabriele Paoloni wrote:
-> > Doesn't this break backwards compatibility?
-> 
-> Well Hip05/Hip06 SoCs are used into evaluation boards
-> For the Estuary project.
-> 
-> https://github.com/hisilicon/estuary
-> 
-> As this new driver gets upstream we'll merge this new driver into estuary
-> and release a new version of the firmware to support it.
+Hi Joao,
 
-So what happens to folks running the old firmware then?
+On Fri, Feb 05, 2016 at 07:55:43PM +0000, Joao Pinto wrote:
+> This patch tries to improve the host/pcie-synopsys branch including a new
+> driver name, more accurate documentation and centralized link up validation.
+> Other platform drivers were also updated to include the new centralized link
+> up validation function.
 
-> > I think you need to use a new compatible string in the firmware
-> > if you change the register layout, and then change the driver
-> > to support both the old and the new layout.
-> 
-> You are right, for some reason in this patchset I missed the Documentation
-> update that I posted in the previous one, i.e.:
-> 
-> --- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-> @@ -23,8 +23,8 @@ Optional properties:
->  Hip05 Example (note that Hip06 is the same except compatible):
->         pcie@0xb0080000 {
->                 compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
-> -               reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
-> -               reg-names = "rc_dbi", "config";
-> +               reg = <0 0xb0080000 0 0x10000>, <0x220 0x00100000 0 0x0f00000>;
-> +               reg-names = "rc_dbi", "ecam-cfg";
-> 
+It's true that I wanted you to incorporate a few tweaks I had made in
+my pci/host-synopsys branch, but generating incremental patches on top
+of that branch makes this too confusing to follow.
 
-That is not the compatible string, it's an undocumented register set.
-You can either define the a new compatible string that gives the "config"
-registers a new meaning, or you change the binding to allow two either
-a "config" or an "ecam-cfg" register set, and let the driver handle both.
+My pci/host-synopsys contains two patches on top of v4.5-rc1.  I would
+prefer that you
 
-	Arnd
+  - fetch that branch,
+  - make whatever edits you need, and
+  - generate fresh patches based on v4.5-rc1
+  
+Then everybody can see the whole series at once without trying to
+integrate these changes with the ones you've previously posted, and I
+can start from scratch and apply those fresh patches on top of
+v4.5-rc1.
+
+It's good that you include summaries of what's changed between
+versions, but if people want to see *exactly* what's changed between
+your v3 and v4 postings, it's easy for them to download those series,
+apply them on different branches, and git diff the branches.
+
+Bjorn
