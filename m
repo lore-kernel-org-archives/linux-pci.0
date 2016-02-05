@@ -1,99 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: KY Srinivasan <kys@microsoft.com>
-To: Jake Oshins <jakeo@microsoft.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2on0082.outbound.protection.outlook.com ([207.46.100.82]:64128
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754840AbcBEQuO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2016 11:50:14 -0500
+From: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"olaf@aepfle.de" <olaf@aepfle.de>,
-	"apw@canonical.com" <apw@canonical.com>,
-	"vkuznets@redhat.com" <vkuznets@redhat.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Hadden Hoppert <haddenh@microsoft.com>
-CC: Jake Oshins <jakeo@microsoft.com>
-Subject: RE: [PATCH 5/5] hv: Track allocations of children of hv_vmbus in
- private resource tree
-Date: Sat, 27 Feb 2016 01:09:11 +0000
-Message-ID: <BY2PR0301MB16542F997FB348465274DC4BA0B80@BY2PR0301MB1654.namprd03.prod.outlook.com>
-References: <1456349042-16275-1-git-send-email-jakeo@microsoft.com>
- <1456349042-16275-6-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1456349042-16275-6-git-send-email-jakeo@microsoft.com>
+	Alex Williamson <alex.williamson@redhat.com>,
+	Yu Zhao <yuzhao@google.com>
+Subject: RE: [PATCH] PCI: Support SRIOV on Legacy EndPoint device
+Date: Fri, 5 Feb 2016 16:50:11 +0000
+Message-ID: <CY1PR12MB026259439AA9689B7326F4B5FED20@CY1PR12MB0262.namprd12.prod.outlook.com>
+References: <1454597306-26189-1-git-send-email-kelly.zytaruk@amd.com>
+ <20160204151425.GA27474@localhost>
+ <CY1PR12MB02628AFFB28DCA6AF01167D0FED10@CY1PR12MB0262.namprd12.prod.outlook.com>
+ <20160205164631.GE29306@localhost>
+In-Reply-To: <20160205164631.GE29306@localhost>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
 
 > -----Original Message-----
-> From: jakeo@microsoft.com [mailto:jakeo@microsoft.com]
-> Sent: Wednesday, February 24, 2016 1:24 PM
-> To: linux-pci@vger.kernel.org; gregkh@linuxfoundation.org; KY Srinivasan
-> <kys@microsoft.com>; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; olaf@aepfle.de; apw@canonical.com;
-> vkuznets@redhat.com; Haiyang Zhang <haiyangz@microsoft.com>; Hadden
-> Hoppert <haddenh@microsoft.com>
-> Cc: Jake Oshins <jakeo@microsoft.com>
-> Subject: [PATCH 5/5] hv: Track allocations of children of hv_vmbus in private
-> resource tree
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Friday, February 05, 2016 11:47 AM
+> To: Zytaruk, Kelly
+> Cc: bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org; Alex Williamson; Yu Zhao
+> Subject: Re: [PATCH] PCI: Support SRIOV on Legacy EndPoint device
 > 
-> From: Jake Oshins <jakeo@microsoft.com>
+> On Thu, Feb 04, 2016 at 04:21:08PM +0000, Zytaruk, Kelly wrote:
+> > > -----Original Message-----
+> > > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > > Sent: Thursday, February 04, 2016 10:14 AM
+> > > To: Zytaruk, Kelly
+> > > Cc: bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
+> > > kernel@vger.kernel.org; Alex Williamson; Yu Zhao
+> > > Subject: Re: [PATCH] PCI: Support SRIOV on Legacy EndPoint device
+> > >
+> > > [+cc Alex, Yu (participants in previous discussion)]
+> > >
+> > > Hi Kelly,
+> > >
+> > > On Thu, Feb 04, 2016 at 09:48:26AM -0500, Kelly Zytaruk wrote:
+> > > > Some AMD GPUs have hardware support for grapics SRIOV.
+> > > > If the GPU has a display output then the GPU needs to support
+> > > > Legacy VGA
+> > > operation.
+> > > > If CLASS_CODE = VGA then the device should have a Port Type =
+> > > > Legacy
+> > > EndPoint.
+> > > > Therefore in order to enable SRIOV on a GPU with a display output
+> > > LEGACY_END_POINT is supported as a valid Port Type.
+> > > >
+> > > > Signed-off-by: Kelly Zytaruk <kelly.zytaruk@amd.com>
+> > >
+> > > We had an interesting discussion about this two years ago:
+> > >
+> http://lkml.kernel.org/r/B756807489D6244883AC0B799A6EEC15EAB2E8@stor
+> > > e
+> > > xdag02.amd.com
+> >
+> > Unfortunately 2 years ago I couldn't complete your request as it would
+> > have disclosed Information about an unannounced technology that we
+> > were working on.  We have recently made that technology public and I
+> > can now send you the requested information.
 > 
-> This patch changes vmbus_allocate_mmio() and vmbus_free_mmio() so
-> that when child paravirtual devices allocate memory-mapped I/O
-> space, they allocate it privately from a resource tree pointed
-> at by hyperv_mmio and also by the public resource tree
-> iomem_resource.  This allows the region to be marked as "busy"
-> in the private tree, but a "bridge window" in the public tree,
-> guaranteeing that no two bridge windows will overlap each other
-> but while also allowing the PCI device children of the bridge
-> windows to overlap that window.
+> > > Please include a reference to that discussion in your changelog.  In
+> > > that discussion, I also asked for some details (dmesg and lspci
+> > > info) that motivate the change, so please collect and add a reference to
+> them as well.
+> >
+> > The information that you ask for is included below.  I have
+> > abbreviated it so that this does not become a huge email.  I can send
+> > full logs if you want them.
 > 
-> One might conclude that this belongs in the pnp layer, rather
-> than in this driver.  Rafael Wysocki, the maintainter of the
-> pnp layer, has previously asked that we not modify the pnp layer
-> as it is considered deprecated.  This patch is thus essentially
-> a workaround.
-> 
-> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
-> ---
->  drivers/hv/vmbus_drv.c | 22 +++++++++++++++++++++-
->  1 file changed, 21 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-> index b090548..2a7eb3f 100644
-> --- a/drivers/hv/vmbus_drv.c
-> +++ b/drivers/hv/vmbus_drv.c
-> @@ -1169,7 +1169,7 @@ int vmbus_allocate_mmio(struct resource **new,
-> struct hv_device *device_obj,
->  			resource_size_t size, resource_size_t align,
->  			bool fb_overlap_ok)
->  {
-> -	struct resource *iter;
-> +	struct resource *iter, *shadow;
->  	resource_size_t range_min, range_max, start, local_min, local_max;
->  	const char *dev_n = dev_name(&device_obj->device);
->  	u32 fb_end = screen_info.lfb_base + (screen_info.lfb_size << 1);
-> @@ -1211,12 +1211,22 @@ int vmbus_allocate_mmio(struct resource
-> **new, struct hv_device *device_obj,
-> 
->  			start = (local_min + align - 1) & ~(align - 1);
->  			for (; start + size - 1 <= local_max; start += align) {
-> +				shadow = __request_region(iter, start,
-> +							  size,
-> +							  NULL,
-> +							  IORESOURCE_BUSY);
-> +				if (!shadow)
-> +					continue;
-> +
->  				*new =
-> request_mem_region_exclusive(start, size,
->  								    dev_n);
->  				if (*new) {
-> +					shadow->name = (char*)*new;
+> Can you open a bugzilla at http://bugzilla.kernel.org and attach the full logs
+> there?  Then we can include the URL in your patch changelog.
 
-Why are you not correctly setting the name field in the shadow structure?
+I have never worked with bugzilla before but I will check it out.  So you want me to take the bugzilla URL and paste it into the comments of my patch? Or is this something that you will do?
 
-Regards,
+> 
+> > > It's not clear to me why we check the device type at all.  If
+> > > there's no spec restriction on the types of devices that can have an
+> > > SR-IOV capability, we should consider removing the test altogether
+> > > (Alex mentioned this possiblity in the earlier discussion).
+> >
+> > I am as well not clear why the check is in there.  I would be just as
+> > happy either adding TYPE_LEG_END or removing the check all together.
+> > I don't know what the side effects of removing the check would be. I
+> > don't have any sriov devices other than a graphics card to test with
+> > so I wouldn't be able to test other scenarios.
+> 
+> If we don't have a reason to do the check, I think we should just remove it
+> altogether.
 
-K. Y
+So instead of my proposed change do you want me to just remove the check completely and submit a patch for that?
+
+> 
+> Bjorn
