@@ -1,87 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39713 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759484AbcBYCSo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:18:44 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v10 31/59] PCI: Rename pdev_sort_resources() to pdev_assign_resources_prepare()
-Date: Wed, 24 Feb 2016 18:12:22 -0800
-Message-Id: <1456366370-28995-32-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Vineet.Gupta1@synopsys.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
+	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
+	pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
+Subject: Re: [PATCH v8 2/2] add new platform driver for PCI RC
+Date: Fri, 05 Feb 2016 15:39:05 +0100
+Message-ID: <4427983.0G6mVNKP5W@wuerfel>
+In-Reply-To: <56B47D0D.5030204@synopsys.com>
+References: <cover.1454600622.git.jpinto@synopsys.com> <20160204234334.GH7031@localhost> <56B47D0D.5030204@synopsys.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pdev_sort_resources() etc was checking devices resources and putting
-resources that need to assign to one list in sorted order.
+On Friday 05 February 2016 10:44:29 Joao Pinto wrote:
+> Hi,
+> 
+> On 2/4/2016 11:43 PM, Bjorn Helgaas wrote:
+> >> What do you think?
+> > 
+> > I don't think the "dw" part is relevant (none of the other
+> > DesignWare-based drivers includes it in the driver or file name).
+> > 
+> > How do people typically refer to this board?
+> > 
+> > I really like "synopsys" because it fits the pattern of being
+> > recognizable and pronounceable like "altera", "designware", "qcom",
+> > "keystone", "layerscape", "tegra", etc.  But I can't tell whether it's
+> > too generic.
+> > 
+> > "ipk" or "haps" would be fine with me.  I think it's OK if it doesn't
+> > cover 100% of the possible systems.
+> 
+> I think we should follow the iproc example: pcie-iproc-platform.c
+> In this case we would have pcie-designware-platform.c
+> I think this would be the best name because the driver is a non soc specific
+> designware platform driver.
+> 
+> Arnd and Bjorn agree on this name?
 
-Now we don't do sorting in those functions anymore, so change to
-pdev_assign_resources_prepare() instead.
+Sorry, I did not realize that your submission was for the generic dw-pcie
+implementation rather than a particular product integrating it.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+I think in this case, we should do this completely differently:
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a93a15b..dc09418 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -205,8 +205,8 @@ static resource_size_t __pci_resource_alignment(
- 	return r_align;
- }
- 
--/* Sort resources by alignment */
--static void pdev_sort_resources(struct pci_dev *dev,
-+/* check resources and save to the list */
-+static void pdev_assign_resources_prepare(struct pci_dev *dev,
- 				 struct list_head *realloc_head,
- 				 struct list_head *head)
- {
-@@ -242,7 +242,7 @@ static void pdev_sort_resources(struct pci_dev *dev,
- 	}
- }
- 
--static void __dev_sort_resources(struct pci_dev *dev,
-+static void __dev_assign_resources_prepare(struct pci_dev *dev,
- 				 struct list_head *realloc_head,
- 				 struct list_head *head)
- {
-@@ -260,7 +260,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
- 			return;
- 	}
- 
--	pdev_sort_resources(dev, realloc_head, head);
-+	pdev_assign_resources_prepare(dev, realloc_head, head);
- }
- 
- static inline void reset_resource(struct resource *res)
-@@ -566,7 +566,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
- {
- 	LIST_HEAD(head);
- 
--	__dev_sort_resources(dev, add_head, &head);
-+	__dev_assign_resources_prepare(dev, add_head, &head);
- 	__assign_resources_sorted(&head, add_head, fail_head);
- 
- }
-@@ -579,7 +579,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
- 	LIST_HEAD(head);
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list)
--		__dev_sort_resources(dev, realloc_head, &head);
-+		__dev_assign_resources_prepare(dev, realloc_head, &head);
- 
- 	__assign_resources_sorted(&head, realloc_head, fail_head);
- }
--- 
-1.8.4.5
+How about putting all the new code into drivers/pci/host/pcie-designware.c
+as functions that can be used by the other drivers in absence of a chip
+specific handler?
 
+Instead of providing a new instance of struct pcie_host_ops, maybe add
+it as a default implementation in dw_pcie_link_up() and dw_pcie_host_init()
+for drivers that don't provide their own. "hisi_pcie_host_ops" currently
+provides no host_init() callback function, so you will have to change
+the hisi frontend to a provide nop-function.
+
+For all other drivers, check if they can be changed to use your generic
+implementation and remove their private callbacks if possible.
+
+I think the MSI implementation should be split out into a separate file
+though, as not everyone uses this.
+
+	Arnd
