@@ -1,140 +1,168 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54240 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965345AbcBDOvx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Feb 2016 09:51:53 -0500
-Date: Thu, 4 Feb 2016 08:51:48 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	Michal Simek <michals@xilinx.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"paul.burton@imgtec.com" <paul.burton@imgtec.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"wangyijing@huawei.com" <wangyijing@huawei.com>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH V2 5/5] Microblaze: Modifying microblaze PCI subsytem to
- support  generic Xilinx  AXI PCIe Host Bridge IP driver
-Message-ID: <20160204145148.GA26361@localhost>
-References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
- <1452620173-4905-6-git-send-email-bharatku@xilinx.com>
- <20160203163207.GC32546@localhost>
- <20160203163805.GA6112@localhost>
- <8520D5D51A55D047800579B0941471982587F199@XAP-PVEXMBX01.xlnx.xilinx.com>
+Received: from mail-ig0-f193.google.com ([209.85.213.193]:33991 "EHLO
+	mail-ig0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750729AbcBEQ0o (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2016 11:26:44 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8520D5D51A55D047800579B0941471982587F199@XAP-PVEXMBX01.xlnx.xilinx.com>
+In-Reply-To: <20160205161028.GC29306@localhost>
+References: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
+	<20151209183743.GH31930@localhost>
+	<20151211021434.GH9927@verge.net.au>
+	<20151211145916.GA21907@localhost>
+	<CAMuHMdVN5VtZHcC9T4dzpsW-f8FpcjmJeTX_HHqRs0X5HdJCOw@mail.gmail.com>
+	<20160204220146.GA17060@localhost>
+	<CAMuHMdXJqSpgaundL4-hMpD4jvYn5ZWyZP8ofr-4uqqZjcJ9kQ@mail.gmail.com>
+	<20160205161028.GC29306@localhost>
+Date: Fri, 5 Feb 2016 17:26:43 +0100
+Message-ID: <CAMuHMdVmY-3ALs4+r0Zhz7yE5Dneb_p=KqTamNLD0JJiZ5bF_g@mail.gmail.com>
+Subject: Re: [PATCH v2 0/4] PCI: rcar, rcar-gen2: More Gen2 compatibility strings
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Simon Horman <horms@verge.net.au>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linux-sh list <linux-sh@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 04, 2016 at 05:49:20AM +0000, Bharat Kumar Gogada wrote:
-> > Subject: Re: [PATCH V2 5/5] Microblaze: Modifying microblaze PCI subsytem
-> > to support generic Xilinx AXI PCIe Host Bridge IP driver
-> > 
-> > [+cc Ben for real this time]
-> > 
-> > On Wed, Feb 03, 2016 at 10:32:07AM -0600, Bjorn Helgaas wrote:
-> > > [+cc Ben, pcibios_get_phb_of_node() question]
-> > >
-> > > On Tue, Jan 12, 2016 at 11:06:13PM +0530, Bharat Kumar Gogada wrote:
-> > > > This patch does required modifications to microblaze PCI subsystem,
-> > > > to work with generic driver (drivers/pci/host/pcie-xilinx.c) on
-> > > > Microblaze and Zynq.
-> > > >
-> > > > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> > > > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com> ...
-> > >
-> > > >  resource_size_t pcibios_align_resource(void *data, const struct resource
-> > *res,
-> > > >  				resource_size_t size, resource_size_t align)  {
-> > > > -	struct pci_dev *dev = data;
-> > > >  	resource_size_t start = res->start;
-> > > >
-> > > > -	if (res->flags & IORESOURCE_IO) {
-> > > > -		if (skip_isa_ioresource_align(dev))
-> > > > -			return start;
-> > > > -		if (start & 0x300)
-> > > > -			start = (start + 0x3ff) & ~0x3ff;
-> > > > -	}
-> > > > -
-> > > >  	return start;
-> > >
-> > > "return res->start;" is sufficient; no need for a temporary variable.
-> > >
-> Agreed will address in next patch.
-> > > >  }
-> > > >  EXPORT_SYMBOL(pcibios_align_resource);
-> > > >
-> > > > +int pcibios_add_device(struct pci_dev *dev) {
-> > > > +	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> > > > +
-> > > > +	return 0;
-> > > > +}
-> > > > +EXPORT_SYMBOL(pcibios_add_device);
-> > > > +
-> > > >  /*
-> > > >   * Reparent resource children of pr that conflict with res
-> > > >   * under res, and make res replace those children.
-> > > > @@ -1335,9 +1308,21 @@ static void
-> > > > pcibios_setup_phb_resources(struct pci_controller *hose,
-> > > >
-> > > >  struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)  {
-> > > > -	struct pci_controller *hose = bus->sysdata;
-> > > > +	struct device_node *np;
-> > > > +
-> > > > +	for_each_node_by_type(np, "pci") {
-> > > > +		const void *prop;
-> > > > +		unsigned int bus_min;
-> > > > +
-> > > > +		prop = of_get_property(np, "bus-range", NULL);
-> > > > +		if (!prop)
-> > > > +			continue;
-> > > > +		bus_min = be32_to_cpup(prop);
-> > > > +		if (bus->number == bus_min)
-> > > > +			return np;
-> > > > +	}
-> > > >
-> > > > -	return of_node_get(hose->dn);
-> > > > +	return NULL;
-> > >
-> > > Hmmm.  The old microblaze code ("return of_node_get(hose->dn);") is
-> > > basically the same as the mips and powerpc versions.  The new code is
-> > > basically the same as the x86 version.
-> > >
-> > > I like the generic weak version in drivers/pci/of.c because it doesn't
-> > > use any arch-specific data, and it looks like if we just set the
-> > > struct device.of_node members correctly, everything should Just Work.
-> > >
-> > > But Ben added both the generic and the x86 versions the same day, so
-> > > there must be some complication:
-> > >
-> > >   98d9f30c820d ("pci/of: Match PCI devices to OF nodes dynamically")
-> > >   3d5fe5a65af9 ("x86/devicetree: Use generic PCI <-> OF matching")
-> > >
-> > > So I guess my question is, why do we need a microblaze-specific
-> > > version at all?
-> > >
-> I did not notice the weak version in /pci/of.c, I have tested with
-> weak version also and it is working.  We might not need this
-> microblaze specific version, but will wait for ben's reply.  
+Hi Bjorn,
 
-If the generic version works, and you don't need the microblaze-
-specific version, just remove it and we'll get this wrapped up.  No
-need to wait for Ben.
+On Fri, Feb 5, 2016 at 5:10 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, Feb 05, 2016 at 08:43:55AM +0100, Geert Uytterhoeven wrote:
+>> On Thu, Feb 4, 2016 at 11:01 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> > On Fri, Dec 11, 2015 at 04:58:06PM +0100, Geert Uytterhoeven wrote:
+>> >> On Fri, Dec 11, 2015 at 3:59 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> >> > On Fri, Dec 11, 2015 at 11:14:34AM +0900, Simon Horman wrote:
+>> >> >> On Wed, Dec 09, 2015 at 12:37:43PM -0600, Bjorn Helgaas wrote:
+>> >> >> > On Thu, Dec 03, 2015 at 07:51:36AM +0900, Simon Horman wrote:
+>> >> >> > > this short series adds generic gen2 and SoC-specific r8a7793 compatibility
+>> >> >> > > strings to the rcar PCI and rcar-gen2 PCIE drivers. The intention is to
+>> >> >> > > provide a complete set of compatibility strings for known Gen2 SoCs.
+>> >> >> > >
+>> >> >> > > Key Changes in v2:
+>> >> >> > > * Include "rcar-" in generic bindings
+>> >> >> > >
+>> >> >> > > Simon Horman (4):
+>> >> >> > >   PCI: rcar-gen2: add gen2 fallback compatibility string
+>> >> >> > >   PCI: rcar-gen2: add device tree support for r8a7793
+>> >> >> > >   PCI: rcar: add gen2 fallback compatibility string
+>> >> >> > >   PCI: rcar: add device tree support for r8a7793
+>> >> >> > >
+>> >> >> > >  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 12 ++++++++++--
+>> >> >> > >  Documentation/devicetree/bindings/pci/rcar-pci.txt      | 14 +++++++++++---
+>> >> >> > >  drivers/pci/host/pci-rcar-gen2.c                        |  1 +
+>> >> >> > >  drivers/pci/host/pcie-rcar.c                            |  1 +
+>> >> >> > >  4 files changed, 23 insertions(+), 5 deletions(-)
+>> >> >> >
+>> >> >> > I applied these:
+>> >> >> >
+>> >> >> > >   PCI: rcar-gen2: add gen2 fallback compatibility string
+>> >> >> > >   PCI: rcar: add gen2 fallback compatibility string
+>> >> >> >
+>> >> >> > to pci/host-rcar for v4.5, thanks!
+>> >> >> >
+>> >> >> > I haven't applied the R8A7793 binding documentation updates yet, but
+>> >> >> > I'll be happy to do so given a short description of why they're
+>> >> >> > useful (since they don't update a DT or the driver).  Or they could be
+>> >> >> > merged via a DT tree.
+>> >> >>
+>> >> >> To clarify: you would like a description in the changelog?
+>> >> >
+>> >> > Yes, please.  The email discussion so far hasn't contained what I'm
+>> >> > looking for (if it had, I would have just inserted it and been done
+>> >> > with it).
+>> >> >
+>> >> > Apparently it has to do with the stable DT rules, which I don't know.
+>> >> > A concrete example would probably help clear it up.
+>> >>
+>> >> The stable DT rules mean that an old DTS should keep on working with
+>> >> newer kernels.
+>> >>
+>> >> Suppose we have two SoCs, that both contain "foo" modules, which look
+>> >> identical. Hence the DTS for both declares the devices to be compatible
+>> >> with "vendor,foo".
+>> >>
+>> >> Later, we discover a difference between the two "foo" modules in the two
+>> >> SoCs (e.g. a feature present in one of them, or worse, a bug), which we
+>> >> need to handle in the driver. But how can we distinguish between them?
+>> >> We can change the compatible value in the DTS, but that means the user
+>> >> has to update the DTS when updating the kernel. For a new feature that
+>> >> may be deemed acceptable, for a bug fix that's not acceptable.
+>> >>
+>> >> Hence we always use an SoC-specific compatible value, which may or may
+>> >> not be accompanied by a family-specific and/or generic compatible value.
+>> >> As long as everything can be handled the same, the driver will just match
+>> >> against the most generic compatible value used. But if needed later, the
+>> >> driver can be updated to match against a more specific compatible value,
+>> >> and can have special handling for  a module in a specific SoC.
+>> >>
+>> >> So that's why we want to have compatible value in the DT bindings that
+>> >> are not necessarily used by the driver.
+>> >>
+>> >> In a perfect world, where all hardware is properly documented, or even
+>> >> Open Source, we wouldn't need this. There we could just declare a device
+>> >> compatible with what it really is, based on the module's internal version ID
+>> >> (ideally a git commit ID of its HDL source ;-).
+>> >>
+>> >> I hope the above explains it. If you have more questions, feel free to ask!
+>> >
+>> > The above is all pretty standard device identification technique.
+>> > That's not what I've been missing.
+>> >
+>> > But I just had an epiphany.  Tell me if I'm talking sense or
+>> > gibberish:
+>> >
+>> >   If a patch adds a use of "renesas,pcie-r8a7793" in a .dts, .c, or .h
+>> >   file, e.g., in arch/arm/boot/dts/ or in the driver, and somebody
+>> >   runs checkpatch on that patch, checkpatch will complain unless
+>> >   "renesas,pcie-r8a7793" appears somewhere in
+>> >   devicetree/bindings/pci/.
+>> >
+>> > So if I understand correctly, the only point of this patch is to shut
+>> > up checkpatch in that situation.  It doesn't seem terribly useful to
+>> > me because checkpatch is only relevant to Linux kernel patches, and
+>> > even there it's optional and advisory.
+>> >
+>> > The latest changelog says "By documenting this compat string it may be
+>> > used in DTSs shipped, for example as part of ROMs", which seems to be
+>> > saying a DTS may not be shipped unless checkpatch approves of it.
+>> > That's a social and procedural question, not a coding question.
+>> >
+>> > It's fine with me if you want to try to enforce that via checkpatch,
+>> > but I'd just like to be clear on the mechanism.
+>>
+>> A DT binding (e.g. a compatible value) may only be used in a DTS after it's
+>> been documented and approved in a DT binding document.
+>>
+>> Checkpath is just a tool. AFAIK there's no other tool enforcing the above.
+>>
+>> As both DTSes and DT binding documents are (still) in the kernel, and changes
+>> to them go in the kernel through patches, and most people run checkpatch
+>> on patches, I think having the check in checkpatch makes perfect sense.
+>> Adding and using yet another tool would complicate matters.
+>
+> Like I said, it's fine with me if your DTS process relies on
+> checkpatch, and I'm not suggesting any other tool.
+>
+> I'm just trying to get clarity on the nitty-gritty technical benefits
+> of this patch, and I think it is "this patch enables people to add a
+> DTS containing 'renesas,pcie-r8a7793' to the kernel source without
+> having checkpatch complain."
 
-Bjorn
+Indeed. And once ''renesas,pcie-r8a7793' is in the DTS, we can handle quirks of
+the PCIe implementation in r8a7793, if ever needed in the future, without
+requiring a DTS update.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
