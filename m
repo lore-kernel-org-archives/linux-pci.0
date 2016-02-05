@@ -1,70 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:59430 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757194AbcBXVZg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 16:25:36 -0500
-From: jakeo@microsoft.com
-To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH 0/5] hv: drivers: Ensure that bridge windows don't overlap
-Date: Wed, 24 Feb 2016 21:23:57 +0000
-Message-Id: <1456349042-16275-1-git-send-email-jakeo@microsoft.com>
+Received: from mail.kernel.org ([198.145.29.136]:40474 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754899AbcBEU1P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Feb 2016 15:27:15 -0500
+Date: Fri, 5 Feb 2016 14:27:10 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Simon Horman <horms@verge.net.au>,
+	linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH 1/2] drivers: pci: host: rcar: remove PCI_PROBE_ONLY
+ handling
+Message-ID: <20160205202710.GB9594@localhost>
+References: <1454066972-3609-1-git-send-email-lorenzo.pieralisi@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1454066972-3609-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+[+cc Simon, linux-renesas-soc]
 
-Hyper-V VMs expose paravirtual drivers through a mechanism called
-VMBus, which is managed by hv_vmbus.ko.  For each paravirtual service
-instance, this driver exposes a new child device.  Some of these child
-devices need memory address space, into which Hyper-V will map things
-like the virtual video framebuffer.  This memory-mapped address space
-is chosen by the guest OS, not the hypervisor.
+On Fri, Jan 29, 2016 at 11:29:31AM +0000, Lorenzo Pieralisi wrote:
+> The PCIe rcar host driver is not used in system configurations
+> requiring the PCI_PROBE_ONLY flag to be set to prevent resources
+> assignment, therefore the driver code handling the flag can be
+> removed from the kernel.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Phil Edworthy <phil.edworthy@renesas.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
 
-This is difficult to map onto the Linux pnp layer, as the code in the
-pnp layer to choose MMIO space keys off of bus type and it doesn't know
-anything about VMBus.  The maintainers of the pnp layer have asked that
-we not offer patches to it that make it understand VMBus, but that we
-rather find ways of using the code in its current state.  So hv_vmbus.ko
-exports a function, vmbus_allocate_mmio() for choosing the address space
-for any child driver that needs this facility.
+Applied with Simon's ack to pci/host-rcar for v4.6, thanks, Lorenzo!
 
-The recently introduced PCI front-end driver for Hyper-V VMs
-(pci-hyperv.ko) uses vmbus_allocate_mmio() for choosing both the region
-of memory into which PCI configuration space can be mapped and the
-region of memory into which real PCI Express devices which are passed
-through to the VM should occupy.  The regions allocated are made to look
-like root PCI bus bridge windows to the PCI driver, reusing all the code
-in the PCI driver for the rest of the PCI device management.
-
-The problem is that these bridge windows are marked in such a way that
-devices can still allocate from the memory space spanned by them, and
-this means that if two different PCI buses are created in the VM, each
-with devices under them, they may allocate the same memory space, leading
-to PCI Base Address Registers which overlap.
-
-This patch series fixes the problem by tracking allocations to child
-devices in a separate resource tree, marking them such that the bridge
-windows can't overlap.  The main memory resource tree, iomem_resource,
-contains resources properly marked as bridge windows, allowing their
-children to overlap with them.
-
-Jake Oshins (5):
-  hv: Make a function to free mmio regions through vmbus
-  hv: Lock access to hyperv_mmio resource tree
-  hv: Use new vmbus_mmio_free() from client drivers.
-  hv: Reverse order of resources in hyperv_mmio
-  hv: Track allocations of children of hv_vmbus in private resource tree
-
- drivers/hv/vmbus_drv.c          | 56 +++++++++++++++++++++++++++++++++++------
- drivers/pci/host/pci-hyperv.c   | 14 +++++------
- drivers/video/fbdev/hyperv_fb.c |  4 +--
- include/linux/hyperv.h          |  2 +-
- 4 files changed, 59 insertions(+), 17 deletions(-)
-
---
-1.9.1
-
+> ---
+>  drivers/pci/host/pcie-rcar.c | 14 +++++---------
+>  1 file changed, 5 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index 4edb518..3509218 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -390,9 +390,7 @@ static int rcar_pcie_enable(struct rcar_pcie *pcie)
+>  
+>  	rcar_pcie_setup(&res, pcie);
+>  
+> -	/* Do not reassign resources if probe only */
+> -	if (!pci_has_flag(PCI_PROBE_ONLY))
+> -		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
+> +	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
+>  
+>  	if (IS_ENABLED(CONFIG_PCI_MSI))
+>  		bus = pci_scan_root_bus_msi(pcie->dev, pcie->root_bus_nr,
+> @@ -408,13 +406,11 @@ static int rcar_pcie_enable(struct rcar_pcie *pcie)
+>  
+>  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+>  
+> -	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+> -		pci_bus_size_bridges(bus);
+> -		pci_bus_assign_resources(bus);
+> +	pci_bus_size_bridges(bus);
+> +	pci_bus_assign_resources(bus);
+>  
+> -		list_for_each_entry(child, &bus->children, node)
+> -			pcie_bus_configure_settings(child);
+> -	}
+> +	list_for_each_entry(child, &bus->children, node)
+> +		pcie_bus_configure_settings(child);
+>  
+>  	pci_bus_add_devices(bus);
+>  
+> -- 
+> 2.5.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
