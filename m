@@ -1,109 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v10 46/59] PCI: Don't add too much optional size for hotplug bridge io
-Date: Wed, 24 Feb 2016 18:12:37 -0800
-Message-Id: <1456366370-28995-47-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:40530 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753559AbcBEU2N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Feb 2016 15:28:13 -0500
+Date: Fri, 5 Feb 2016 14:28:08 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: Re: [PATCH 2/2] drivers: pci: host: designware: remove
+ PCI_PROBE_ONLY handling
+Message-ID: <20160205202808.GC9594@localhost>
+References: <1454066972-3609-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1454066972-3609-2-git-send-email-lorenzo.pieralisi@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1454066972-3609-2-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Same as patch for MMIO (PCI: Don't add too much optional size for hotplug
-bridge MMIO), and this one is for io port.
+On Fri, Jan 29, 2016 at 11:29:32AM +0000, Lorenzo Pieralisi wrote:
+> The PCIe designware host driver is not used in system configurations
+> requiring the PCI_PROBE_ONLY flag to be set to prevent resources
+> assignment, therefore the driver code handling the flag can be
+> removed from the kernel.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Pratyush Anand <pratyush.anand@gmail.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Jingoo Han <jingoohan1@gmail.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> Cc: Zhou Wang <wangzhou1@hisilicon.com>
 
-It will compare required+optional with min_sum_size to get smaller
-optional size.
+Applied to pci/host-designware for v4.6 with acks from Pratyush and
+Jingoo, thanks everybody!
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 26 ++++++++++++++++----------
- 1 file changed, 16 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 5eee16b..15a52f3 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1177,7 +1177,6 @@ static resource_size_t window_alignment(struct pci_bus *bus,
-  *
-  * @bus : the bus
-  * @min_size : the minimum io window that must to be allocated
-- * @add_size : additional optional io window
-  * @realloc_head : track the additional io window on this list
-  *
-  * Sizing the IO windows of the PCI-PCI bridge is trivial,
-@@ -1186,9 +1185,11 @@ static resource_size_t window_alignment(struct pci_bus *bus,
-  * We must be careful with the ISA aliasing though.
-  */
- static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
--		resource_size_t add_size, struct list_head *realloc_head)
-+			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
-+	resource_size_t min_sum_size = 0;
-+	resource_size_t sum_add_size;
- 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
- 							IORESOURCE_IO);
- 	resource_size_t size = 0, size0 = 0, size1 = 0;
-@@ -1198,6 +1199,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	if (!b_res)
- 		return;
- 
-+	if (realloc_head) {
-+		min_sum_size = min_size;
-+		min_size = 0;
-+	}
-+
- 	min_align = window_alignment(bus, IORESOURCE_IO);
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
-@@ -1227,10 +1233,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 	size0 = calculate_iosize(size, min_size, size1,
- 			resource_size(b_res), min_align);
--	if (children_add_size > add_size)
--		add_size = children_add_size;
--	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
--		calculate_iosize(size, min_size, add_size + size1,
-+	sum_add_size = children_add_size + size + size1;
-+	if (sum_add_size < min_sum_size)
-+		sum_add_size = min_sum_size;
-+	size1 = !realloc_head ? size0 :
-+		calculate_iosize(size, min_size, sum_add_size - size,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
-@@ -1758,7 +1765,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
--	resource_size_t min_mem_size = 0, additional_io_size = 0;
-+	resource_size_t min_mem_size = 0, min_io_size = 0;
- 	struct resource *b_res;
- 	int ret;
- 
-@@ -1794,13 +1801,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 
- 	case PCI_CLASS_BRIDGE_PCI:
- 		if (bus->self->is_hotplug_bridge) {
--			additional_io_size  = pci_hotplug_io_size;
-+			min_io_size  = pci_hotplug_io_size;
- 			min_mem_size = pci_hotplug_mem_size;
- 		}
- 		/* Fall through */
- 	default:
--		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
--			     additional_io_size, realloc_head);
-+		pbus_size_io(bus, min_io_size, realloc_head);
- 
- 		/*
- 		 * If there's a 64-bit prefetchable MMIO window, compute
--- 
-1.8.4.5
+> ---
+>  drivers/pci/host/pcie-designware.c | 10 ++++------
+>  1 file changed, 4 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 2171682..a445083 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -551,13 +551,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+>  #endif
+>  
+> -	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+> -		pci_bus_size_bridges(bus);
+> -		pci_bus_assign_resources(bus);
+> +	pci_bus_size_bridges(bus);
+> +	pci_bus_assign_resources(bus);
+>  
+> -		list_for_each_entry(child, &bus->children, node)
+> -			pcie_bus_configure_settings(child);
+> -	}
+> +	list_for_each_entry(child, &bus->children, node)
+> +		pcie_bus_configure_settings(child);
+>  
+>  	pci_bus_add_devices(bus);
+>  	return 0;
+> -- 
+> 2.5.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
