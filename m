@@ -1,98 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:16255 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758618AbcBXVZ6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 16:25:58 -0500
-From: jakeo@microsoft.com
-To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH 3/5] hv: Use new vmbus_mmio_free() from client drivers.
-Date: Wed, 24 Feb 2016 21:24:00 +0000
-Message-Id: <1456349042-16275-4-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1456349042-16275-1-git-send-email-jakeo@microsoft.com>
-References: <1456349042-16275-1-git-send-email-jakeo@microsoft.com>
+Received: from mail-io0-f176.google.com ([209.85.223.176]:36788 "EHLO
+	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754327AbcBEOJu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2016 09:09:50 -0500
+Received: by mail-io0-f176.google.com with SMTP id g73so129546449ioe.3
+        for <linux-pci@vger.kernel.org>; Fri, 05 Feb 2016 06:09:50 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1507671.sEYIrU8dv6@wuerfel>
+References: <1454077035-23872-1-git-send-email-ard.biesheuvel@linaro.org>
+	<4090946.AhejVJy7MO@wuerfel>
+	<CAKv+Gu8oZADs_FRN=p7_Nz0wXJVWVmzVNsxtzscyp7_cFAreAQ@mail.gmail.com>
+	<1507671.sEYIrU8dv6@wuerfel>
+Date: Fri, 5 Feb 2016 15:09:49 +0100
+Message-ID: <CAKv+Gu8aw0NepDSp_mQAuGK+2u5q40K2XGJBWhGyr4nA2E5uxw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: generic: map config window in one go
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Will Deacon <will.deacon@arm.com>,
+	Mark Brown <mark.brown@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+On 5 February 2016 at 14:37, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Friday 05 February 2016 11:48:54 Ard Biesheuvel wrote:
+>> On 29 January 2016 at 15:52, Arnd Bergmann <arnd@arndb.de> wrote:
+>> > On Friday 29 January 2016 15:32:01 Ard Biesheuvel wrote:
+>> >> On 29 January 2016 at 15:28, Will Deacon <will.deacon@arm.com> wrote:
+>> >> > Hi Ard,
+>> >> >
+>> >> > On Fri, Jan 29, 2016 at 03:17:15PM +0100, Ard Biesheuvel wrote:
+>> >> >> Instead of iterating over the PCI config window and performing individual
+>> >> >> ioremap() calls on all the adjacent slices, perform a single ioremap() to
+>> >> >> map the entire region, and divvy it up later. This not only prevents
+>> >> >> leaving some of it mapped if we fail half way through, it also ensures that
+>> >> >> archs that support huge-vmap can use section mappings to perform the
+>> >> >> mapping.
+>> >> >>
+>> >> >> On my Seattle A0 box, this transforms 128 separate 1 MB mappings that are
+>> >> >> mapped down to 4 KB pages into a single 128 MB mapping using 2 MB sections,
+>> >> >> saving 512 KB worth of page tables.
+>> >> >>
+>> >> >> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+>> >> >> ---
+>> >> >
+>> >> > The code was written this way in response to feedback during driver review
+>> >> > that we couldn't necessarily grab that much contiguous vmalloc space on
+>> >> > 32-bit ARM. Unless that's changed, we probably want to to predicate this
+>> >> > change on having a 64-bit arch.
+>> >> >
+>> >>
+>> >> Ah right. How about testing for the ARCH_HAVE_HUGE_VMAP Kconfig symbol
+>> >> explicitly?
+>> >>
+>> >
+>> > Testing for 64BIT should be sufficient.
+>> >
+>>
+>> Does it make sense to spin a v2 for this patch? Given the discussion
+>> we had regarding allocating only the config regions for busses that
+>> are populated, perhaps there is a better approach here?
+>
+> Allocating only the config regions that are actually used would
+> be ideal, the problem is that you need to access the config space
+> in order to know which ones are, so this is certainly a bit tricky.
+>
+> Are there any downsides to the x86 approach of using fixmap to
+> map each patch separately during the access? It's probably a bit
+> slower per access, but we don't do a lot of those accesses after
+> the system is booted.
+>
 
-This patch modifies all the callers of vmbus_mmio_allocate()
-to call vmbus_mmio_free() instead of release_mem_region().
-
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- drivers/pci/host/pci-hyperv.c   | 14 +++++++-------
- drivers/video/fbdev/hyperv_fb.c |  4 ++--
- 2 files changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 6f77d52..177bbec 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -2034,14 +2034,14 @@ static void hv_pci_free_bridge_windows(struct hv_pcibus_device *hbus)
- 
- 	if (hbus->low_mmio_space && hbus->low_mmio_res) {
- 		hbus->low_mmio_res->flags |= IORESOURCE_BUSY;
--		release_mem_region(hbus->low_mmio_res->start,
--				   resource_size(hbus->low_mmio_res));
-+		vmbus_free_mmio(hbus->low_mmio_res->start,
-+				resource_size(hbus->low_mmio_res));
- 	}
- 
- 	if (hbus->high_mmio_space && hbus->high_mmio_res) {
- 		hbus->high_mmio_res->flags |= IORESOURCE_BUSY;
--		release_mem_region(hbus->high_mmio_res->start,
--				   resource_size(hbus->high_mmio_res));
-+		vmbus_free_mmio(hbus->high_mmio_res->start,
-+				resource_size(hbus->high_mmio_res));
- 	}
- }
- 
-@@ -2119,8 +2119,8 @@ static int hv_pci_allocate_bridge_windows(struct hv_pcibus_device *hbus)
- 
- release_low_mmio:
- 	if (hbus->low_mmio_res) {
--		release_mem_region(hbus->low_mmio_res->start,
--				   resource_size(hbus->low_mmio_res));
-+		vmbus_free_mmio(hbus->low_mmio_res->start,
-+				resource_size(hbus->low_mmio_res));
- 	}
- 
- 	return ret;
-@@ -2163,7 +2163,7 @@ static int hv_allocate_config_window(struct hv_pcibus_device *hbus)
- 
- static void hv_free_config_window(struct hv_pcibus_device *hbus)
- {
--	release_mem_region(hbus->mem_config->start, PCI_CONFIG_MMIO_LENGTH);
-+	vmbus_free_mmio(hbus->mem_config->start, PCI_CONFIG_MMIO_LENGTH);
- }
- 
- /**
-diff --git a/drivers/video/fbdev/hyperv_fb.c b/drivers/video/fbdev/hyperv_fb.c
-index e2451bd..2fd49b2 100644
---- a/drivers/video/fbdev/hyperv_fb.c
-+++ b/drivers/video/fbdev/hyperv_fb.c
-@@ -743,7 +743,7 @@ static int hvfb_getmem(struct hv_device *hdev, struct fb_info *info)
- err3:
- 	iounmap(fb_virt);
- err2:
--	release_mem_region(par->mem->start, screen_fb_size);
-+	vmbus_free_mmio(par->mem->start, screen_fb_size);
- 	par->mem = NULL;
- err1:
- 	if (!gen2vm)
-@@ -758,7 +758,7 @@ static void hvfb_putmem(struct fb_info *info)
- 	struct hvfb_par *par = info->par;
- 
- 	iounmap(info->screen_base);
--	release_mem_region(par->mem->start, screen_fb_size);
-+	vmbus_free_mmio(par->mem->start, screen_fb_size);
- 	par->mem = NULL;
- }
- 
--- 
-1.9.1
-
+Yes, I guess that makes a lot more sense than ioremapping 10s to 100s
+of MBs and hardly ever using them.
