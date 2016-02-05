@@ -1,92 +1,253 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48187 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:45316 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755500AbcBWArp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Feb 2016 19:47:45 -0500
-Subject: [PATCH v4 11/11] PCI: Sleep rather than busy-wait for VPD access
- completion
-To: Hannes Reinecke <hare@suse.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Babu Moger <babu.moger@oracle.com>,
-	Alexander Duyck <alexander.duyck@gmail.com>
-Date: Mon, 22 Feb 2016 18:47:42 -0600
-Message-ID: <20160223004742.10635.55287.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	id S1751222AbcBEO3x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 5 Feb 2016 09:29:53 -0500
+Date: Fri, 5 Feb 2016 08:29:48 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: =?utf-8?B?0J7Qu9C10LMg0JzQvtGA0L7Qtw==?= <oleg.moroz@mcc.vniiem.ru>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: PCI device driver broken between 4.2 and 4.3
+Message-ID: <20160205142948.GA24785@localhost>
+References: <20160128192951.CC6AF820DC@mx.svc.vniiem.ru>
+ <2025502.hfirZrb1Qq@debian802>
+ <20160201210823.GC4861@localhost>
+ <2117097.QTAl1GFxjP@debian802>
+ <20160202161304.GA25649@localhost>
+ <56B0D67E.6050606@mcc.vniiem.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <56B0D67E.6050606@mcc.vniiem.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use usleep_range() instead of udelay() while waiting for a VPD access to
-complete.  This is not a performance path, so no need to hog the CPU.
+On Tue, Feb 02, 2016 at 07:17:02PM +0300, Олег Мороз wrote:
+> Ohhh. It's not my driver from scratch. I'm just trying to maintain
+> it in working state.
+> Could you please advice me some correct and small and simple (I know
+> I ask a lot) PCI driver as example. Maybe it will be not so hard to
+> fix this 1553b driver.
 
-Rationale for usleep_range() parameters:
+The best thing is to get that driver included in the Linux kernel
+source.  Then we can avoid a lot of problems because we will update it
+to match kernel updates, and when problems do occur, they're a lot
+easier to debug and fix.
 
-  We clear PCI_VPD_ADDR_F for a read (or set it for a write), then wait for
-  the device to change it.  For a device that updates PCI_VPD_ADDR between
-  our config write and subsequent config read, we won't sleep at all and
-  can get the device's maximum rate.
+This book: https://lwn.net/Kernel/LDD3/ contains examples.
 
-  Sleeping a minimum of 10 usec per 4-byte access limits throughput to
-  about 400Kbytes/second.  VPD is small (32K bytes at most), and most
-  devices use only a fraction of that.
+drivers/nvme/host/pci.c is a relatively new, clean driver, but
+probably not very simple.
 
-  We back off exponentially up to 1024 usec per iteration.  If we reach
-  1024, we've already waited up to 1008 usec (16 + 32 + ...  + 512), so if
-  we miss an update and wait an extra 1024 usec, we can still get about 1/2
-  of the device's maximum rate.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/access.c |   18 ++++++++++--------
- 1 file changed, 10 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index cae5462..68cad94 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -342,14 +342,15 @@ static size_t pci_vpd_size(struct pci_dev *dev, size_t old_size)
- static int pci_vpd_wait(struct pci_dev *dev)
- {
- 	struct pci_vpd *vpd = dev->vpd;
--	unsigned long timeout = jiffies + HZ/20 + 2;
-+	unsigned long timeout = jiffies + msecs_to_jiffies(50);
-+	unsigned long max_sleep = 16;
- 	u16 status;
- 	int ret;
- 
- 	if (!vpd->busy)
- 		return 0;
- 
--	for (;;) {
-+	while (time_before(jiffies, timeout)) {
- 		ret = pci_user_read_config_word(dev, vpd->cap + PCI_VPD_ADDR,
- 						&status);
- 		if (ret < 0)
-@@ -360,15 +361,16 @@ static int pci_vpd_wait(struct pci_dev *dev)
- 			return 0;
- 		}
- 
--		if (time_after(jiffies, timeout)) {
--			dev_printk(KERN_DEBUG, &dev->dev, "vpd r/w failed.  This is likely a firmware bug on this device.  Contact the card vendor for a firmware update\n");
--			return -ETIMEDOUT;
--		}
- 		if (fatal_signal_pending(current))
- 			return -EINTR;
--		if (!cond_resched())
--			udelay(10);
-+
-+		usleep_range(10, max_sleep);
-+		if (max_sleep < 1024)
-+			max_sleep *= 2;
- 	}
-+
-+	dev_warn(&dev->dev, "VPD access failed.  This is likely a firmware bug on this device.  Contact the card vendor for a firmware update\n");
-+	return -ETIMEDOUT;
- }
- 
- static ssize_t pci_vpd_read(struct pci_dev *dev, loff_t pos, size_t count,
-
+> 02.02.2016 19:13, Bjorn Helgaas пишет:
+> >On Tue, Feb 02, 2016 at 08:04:39AM +0300, Олег Мороз wrote:
+> >>it looks much better with pci=routeirq
+> >>
+> >>[  100.896723] *Before pci_enable_device IRQ 20*
+> >>[  100.896735] *After pci_enable_device IRQ 20*
+> >>[  100.896745] *Before pci_enable_device IRQ 21*
+> >>[  100.896752] *After pci_enable_device IRQ 21*
+> >If pci=routeirq makes a difference, it usually means your driver is
+> >looking at dev->irq before it calls pci_enable_device().  I looked at
+> >what I think is your driver
+> >(https://github.com/qmor/elcus-1553-driver-linux/blob/master/driver/tmk1553.c),
+> >but I didn't *see* that problem.  It does use a highly unconventional
+> >strategy of calling pci_get_device() to locate devices, instead of
+> >using pci_register_driver() like normal drivers do.
+> >
+> >You should not have to use pci=routeirq, and I've even considered
+> >removing the option.
+> >
+> >>On Monday 01 of February 2016 15:08:23 Bjorn Helgaas wrote:
+> >>>[+cc Yinghai]
+> >>>
+> >>>On Mon, Feb 01, 2016 at 08:18:35AM +0300, Олег Мороз wrote:
+> >>>>Okay. I've started from driver level printk
+> >>>>results are:
+> >>>>
+> >>>>On 4.2
+> >>>>
+> >>>>[414006.575989] Before pci_enable_device IRQ 20
+> >>>>
+> >>>>[414006.575991] After pci_enable_device IRQ 20
+> >>>>
+> >>>>[414006.575997] Before pci_enable_device IRQ 21
+> >>>>
+> >>>>[414006.575999] After pci_enable_device IRQ 21
+> >>>>
+> >>>>on 4.3
+> >>>>
+> >>>>[  114.862289] Before pci_enable_device IRQ 5
+> >>>>
+> >>>>[  114.862303] After pci_enable_device IRQ 5
+> >>>>
+> >>>>[  114.862316] Before pci_enable_device IRQ 5
+> >>>>
+> >>>>[  114.862326] After pci_enable_device IRQ 5
+> >>>>
+> >>>>I've got two cards, because of that pci_enable_device() calls twice.
+> >>>Did you try booting with pci=routeirq as Yinghai suggested?  That's
+> >>>not a fix, but if it does make things work, it may give us an idea for
+> >>>how to fix it correctly.
+> >>>
+> >>>>On Friday 29 of January 2016 10:31:59 Bjorn Helgaas wrote:
+> >>>>>On Thu, Jan 28, 2016 at 10:28:14PM +0300, Мороз Олег wrote:
+> >>>>>>What i need to print out at first order?
+> >>>>>Jiang, can you chime in here?
+> >>>>>
+> >>>>>991de2e59090 is related to IRQs, so I'd start by printing dev->irq in
+> >>>>>your
+> >>>>>driver before and after you call pci_enable_device().  Add some printks
+> >>>>>in
+> >>>>>pcibios_alloc_irq() and pcibios_enable_device() just to confirm that we
+> >>>>>got
+> >>>>>
+> >>>>>there and when, e.g., add lines like this:
+> >>>>>   dev_info(&dev->dev, "%s\n", __func__);
+> >>>>>
+> >>>>>Bjorn
+> >>>>>
+> >>>>>>27 янв. 2016 г. 16:22 пользователь Bjorn Helgaas <helgaas@kernel.org>
+> >>>>написал:
+> >>>>>>>On Wed, Jan 27, 2016 at 12:38:06PM +0300, Мороз Олег wrote:
+> >>>>>>>>Also, my drive has no
+> >>>>>>>>
+> >>>>>>>>pcibios_enable_device()
+> >>>>>>>>pcibios_alloc_irq()
+> >>>>>>>>
+> >>>>>>>>calls.
+> >>>>>>>Those are internal interfaces used by the PCI core.  Drivers
+> >>>>>>>shouldn't
+> >>>>>>>call them directly.  Drivers normally call pci_enable_device(), and
+> >>>>>>>those internal interfaces are used in that path.
+> >>>>>>>
+> >>>>>>>>26.01.2016 22:05, Олег Мороз пишет:
+> >>>>>>>>>I confirmed it works in
+> >>>>>>>>>
+> >>>>>>>>>890e4847587f
+> >>>>>>>>>
+> >>>>>>>>>and do not works in
+> >>>>>>>>>
+> >>>>>>>>>991de2e59090
+> >>>>>>>>>
+> >>>>>>>>>26.01.2016 18:32, Bjorn Helgaas пишет:
+> >>>>>>>>>>[+cc Jiang]
+> >>>>>>>>>>
+> >>>>>>>>>>On Mon, Jan 25, 2016 at 03:52:51PM -0600, Bjorn Helgaas wrote:
+> >>>>>>>>>>>Hi Олег,
+> >>>>>>>>>>>
+> >>>>>>>>>>>On Sun, Jan 24, 2016 at 04:50:08PM +0300, Олег Мороз wrote:
+> >>>>>>>>>>>>Okay. I've sent logs (dmesg and lspci) from both 4.2 and 4.3
+> >>>>>>>>>>>>to bugzilla
+> >>>>>>>>>>>I don't see anything wrong in either log.  Both v4.2 and v4.3
+> >>>>>>>>>>>enumerate the device the same way, and the driver seems to
+> >>>>>>>>>>>claim it
+> >>>>>>>>>>>
+> >>>>>>>>>>>the same way:
+> >>>>>>>>>>>   pci 0000:0d:00.0: [10b5:9030] type 00 class 0x078000
+> >>>>>>>>>>>   pci 0000:0d:00.0: reg 0x14: [io  0x2100-0x217f]
+> >>>>>>>>>>>   pci 0000:0d:00.0: reg 0x18: [io  0x2380-0x239f]
+> >>>>>>>>>>>   pci 0000:0d:00.0: PME# supported from D0 D3hot
+> >>>>>>>>>>>   pci 0000:0d:01.0: [10b5:9030] type 00 class 0x078000
+> >>>>>>>>>>>   pci 0000:0d:01.0: reg 0x14: [io  0x2180-0x21ff]
+> >>>>>>>>>>>   pci 0000:0d:01.0: reg 0x18: [io  0x23a0-0x23bf]
+> >>>>>>>>>>>   pci 0000:0d:01.0: PME# supported from D0 D3hot
+> >>>>>>>>>>>   pci 0000:0d:02.0: [10b5:9030] type 00 class 0x078000
+> >>>>>>>>>>>   pci 0000:0d:02.0: reg 0x14: [io  0x2200-0x227f]
+> >>>>>>>>>>>   pci 0000:0d:02.0: reg 0x18: [io  0x2280-0x22ff]
+> >>>>>>>>>>>   pci 0000:0d:02.0: reg 0x1c: [io  0x2300-0x237f]
+> >>>>>>>>>>>   pci 0000:0d:02.0: PME# supported from D0 D3hot
+> >>>>>>>>>>>   sja1000_plx_pci 0000:0d:02.0: Detected "Eclus CAN-200-PCI"
+> >>>>>>>>>>>
+> >>>>>>>>>>>card at slot #2
+> >>>>>>>>>>>
+> >>>>>>>>>>>   sja1000_plx_pci 0000:0d:02.0: Channel #1 at
+> >>>>>>>>>>>
+> >>>>>>>>>>>0x0000000000012280, irq 22 registered as can0
+> >>>>>>>>>>>
+> >>>>>>>>>>>   sja1000_plx_pci 0000:0d:02.0: Channel #2 at
+> >>>>>>>>>>>
+> >>>>>>>>>>>0x0000000000012300, irq 22 registered as can1
+> >>>>>>>>>>>
+> >>>>>>>>>>>   sja1000_plx_pci 0000:0d:02.0 can0: setting BTR0=0x03
+> >>>>>>>>>>>   BTR1=0x37
+> >>>>>>>>>>>
+> >>>>>>>>>>>One option is always to bisect between v4.2 and v4.3 to see
+> >>>>>>>>>>>which
+> >>>>>>>>>>>commit made it stop working.  See
+> >>>>>>>>>>>https://git-scm.com/docs/git-bisect
+> >>>>>>>>>>Jiang, Олег bisected this to 991de2e59090 ("PCI, x86: Implement
+> >>>>>>>>>>pcibios_alloc_irq() and pcibios_free_irq()").
+> >>>>>>>>>>
+> >>>>>>>>>>Олег, please double-check and confirm that 890e4847587f works
+> >>>>>>>>>>and
+> >>>>>>>>>>991de2e59090 fails.
+> >>>>>>>>>>
+> >>>>>>>>>>Then please add some printks in the pcibios_enable_device() and
+> >>>>>>>>>>pcibios_alloc_irq() paths and in your driver to see exactly what
+> >>>>>>>>>>changed
+> >>>>>>>>>>between 890e4847587f and 991de2e59090
+> >>>>>>>>>>
+> >>>>>>>>>>Bjorn
+> >>>>>>>>>>
+> >>>>>>>>>>>>23.01.2016 17:54, Bjorn Helgaas пишет:
+> >>>>>>>>>>>>>[+cc linux-kernel]
+> >>>>>>>>>>>>>
+> >>>>>>>>>>>>>Hi Олег,
+> >>>>>>>>>>>>>
+> >>>>>>>>>>>>>On Sat, Jan 23, 2016 at 1:08 AM, Олег Мороз
+> >>>>>>>>>>>>>
+> >>>>>>>>>>>>><oleg.moroz@mcc.vniiem.ru> wrote:
+> >>>>>>>>>>>>>>Hello. I've got a device driver for MIL-1553b card
+> >>>>>>>>>>>>>>called TA1-PCI, which
+> >>>>>>>>>>>>>>could be found at
+> >>>>>>>>>>>>>>https://github.com/qmor/elcus-1553-driver-linux
+> >>>>>>>>>>>>>>Card is using PLX_PCI9030 PCI controller.
+> >>>>>>>>>>>>>>Today i've found that this driver compiles, installes,
+> >>>>>>>>>>>>>>but is not working as
+> >>>>>>>>>>>>>>it should.
+> >>>>>>>>>>>>>>Looks like it not receives any interrupts from PCI. I've
+> >>>>>>>>>>>>>>test it again with
+> >>>>>>>>>>>>>>kernel
+> >>>>>>>>>>>>>>4.2 and it works okay. What changes was made in PCI
+> >>>>>>>>>>>>>>subsystem from 4.2 to
+> >>>>>>>>>>>>>>4.3
+> >>>>>>>>>>>>>>which could have impact this driver work.
+> >>>>>>>>>>>>>Thank you very much for this problem report.  There were many
+> >>>>>>>>>>>>>PCI
+> >>>>>>>>>>>>>changes between v4.2 and v4.3, and without more information,
+> >>>>>>>>>>>>>I
+> >>>>>>>>>>>>>can't
+> >>>>>>>>>>>>>guess what might be causing this problem.
+> >>>>>>>>>>>>>
+> >>>>>>>>>>>>>I opened a bug report at
+> >>>>>>>>>>>>>https://bugzilla.kernel.org/show_bug.cgi?id=111211
+> >>>>>>>>>>>>>
+> >>>>>>>>>>>>>Please attach complete dmesg logs for both v4.2 and v4.3 to
+> >>>>>>>>>>>>>that
+> >>>>>>>>>>>>>bug
+> >>>>>>>>>>>>>report.  Also, please attach the complete "lspci -vv" output
+> >>>>>>>>>>>>>(as
+> >>>>>>>>>>>>>root).
+> >>>>>>>>>>>>>
+> >>>>>>>>>>>>>Thanks!
+> >>>>>>>>>>>>>
+> >>>>>>>>>>>>>Bjorn
+> >>>>--
+> >>>>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> >>>>the body of a message to majordomo@vger.kernel.org
+> >>>>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >>-- 
+> >>С уважением,
+> >>Олег Мороз
+> >>Заместитель начальника отдела разработки ПО БВС КА
+> >>--
+> >>To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> >>the body of a message to majordomo@vger.kernel.org
+> >>More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
