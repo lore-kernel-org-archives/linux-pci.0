@@ -1,141 +1,76 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <guohanjun@huawei.com>, <wangzhou1@hisilicon.com>,
-	<liudongdong3@huawei.com>, <linuxarm@huawei.com>,
-	<qiujiang@huawei.com>, <bhelgaas@google.com>, <arnd@arndb.de>,
-	<Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>
-CC: <gabriele.paoloni@huawei.com>, <zhangjukuo@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<jcm@redhat.com>
-Subject: [RFC PATCH 1/4] PCI: Designware: Add support for ACPI based controllers
-Date: Thu, 4 Feb 2016 19:37:37 +0800
-Message-ID: <1454585860-60709-2-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <3576289.1ltj0IceQ5@vostro.rjw.lan>
+References: <1454058340-7904-1-git-send-email-jchandra@broadcom.com>
+ <CAKc_7PXYtFt1MQE-UGO0O5vvQ+xFKa2b5=F8wXB=EN-JUJVzZw@mail.gmail.com>
+ <20160205094740.GA31547@red-moon> <3576289.1ltj0IceQ5@vostro.rjw.lan>
+From: Jayachandran Chandrashekaran Nair
+	<jayachandran.chandrashekaran@broadcom.com>
+Date: Sat, 6 Feb 2016 15:28:26 +0530
+Message-ID: <CAKc_7PV69xZ-+yeq+fVAMykuQ53HsjpACz9yH9LpJE-=X5xggA@mail.gmail.com>
+Subject: Re: [PATCH v7 5/5] PCI: ACPI: Add a generic ACPI based host controller
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Jayachandran C <jchandra@broadcom.com>,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-acpi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org,
+	Tomasz Nowicki <tn@semihalf.com>,
+	xen-devel@lists.xenproject.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+Hi Rafael,
 
-This patch reworks the current Designware framework to
-enable ACPI based controllers.
+On Sat, Feb 6, 2016 at 4:56 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> On Friday, February 05, 2016 09:47:40 AM Lorenzo Pieralisi wrote:
+>> On Fri, Feb 05, 2016 at 02:05:37PM +0530, Jayachandran Chandrashekaran Nair wrote:
+>>
+>> [...]
+>>
+>> > pci_host_acpi.c is a generic implementation of these using a sysdata
+>> > pointing to acpi_pci_root_info, and using a pointer to the pci_mmcfg_region
+>> > to access ECAM area, Maybe I can rename this file to
+>> > pci_acpi_host_generic.c to reflect this better.
+>>
+>> Maybe you should stop sending this series and work with Tomasz to
+>> get this done, you are confusing everyone and I am really really
+>> annoyed about this.
+>>
+>> Do you realize there is no point in having two patch series doing
+>> the same thing and wasting everyone's review time ?
+>>
+>> Do you realize he started this work long before you and went through
+>> several rounds of review already (I told you before but in case you
+>> forgot) ?
+>>
+>> Tomasz posted a version yesterday, integrating comments following months
+>> of review and testing and I think it is ready to get upstream:
+>>
+>> https://lkml.org/lkml/2016/2/4/646
+>>
+>> Did you even consider reviewing his code or helping him instead of
+>> churning out more patches doing the *SAME* thing ?
+>>
+>> Do you want all of us to go through your code and re-fix what has
+>> already been fixed in Tomasz's series with the end result of missing
+>> yet another merge window ?
+>>
+>> This is really annoying, stop it please, really.
+>
+> OK, so to be crystal clear here.
+>
+> I'm going to ignore the series the $subject patch belongs to going forward.
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
----
- drivers/pci/host/pcie-designware.c | 39 +++++++++++++++++++++++++++++++++-----
- drivers/pci/host/pcie-designware.h |  1 +
- 2 files changed, 35 insertions(+), 5 deletions(-)
+It looks like you can already reviewed Tomasz's patchset and as Lorenzo
+says thinks that it can be merged.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 02a7452..4ced20d 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -11,6 +11,7 @@
-  * published by the Free Software Foundation.
-  */
- 
-+#include <linux/acpi.h>
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
-@@ -19,6 +20,7 @@
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
- #include <linux/pci.h>
-+#include <linux/pci-acpi.h>
- #include <linux/pci_regs.h>
- #include <linux/platform_device.h>
- #include <linux/types.h>
-@@ -46,7 +48,6 @@
- #define PCIE_MSI_INTR0_ENABLE		0x828
- #define PCIE_MSI_INTR0_MASK		0x82C
- #define PCIE_MSI_INTR0_STATUS		0x830
--
- #define PCIE_ATU_VIEWPORT		0x900
- #define PCIE_ATU_REGION_INBOUND		(0x1 << 31)
- #define PCIE_ATU_REGION_OUTBOUND	(0x0 << 31)
-@@ -69,7 +70,7 @@
- #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
- #define PCIE_ATU_UPPER_TARGET		0x91C
- 
--static struct pci_ops dw_pcie_ops;
-+struct pci_ops dw_pcie_ops;
- 
- int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
- {
-@@ -657,8 +658,22 @@ static int dw_pcie_valid_config(struct pcie_port *pp,
- static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- 			int size, u32 *val)
- {
--	struct pcie_port *pp = bus->sysdata;
- 	int ret;
-+	struct pcie_port *pp;
-+	struct pci_bus *bridge_bus;
-+
-+	for (bridge_bus = bus; bridge_bus->parent;
-+			bridge_bus = bridge_bus->parent)
-+		;
-+
-+	if (has_acpi_companion(bridge_bus->bridge)) {
-+#ifdef CONFIG_ACPI_PCI_HOST_GENERIC
-+		struct acpi_pci_root *root = bus->sysdata;
-+
-+		pp = root->sysdata;
-+#endif /* CONFIG_ACPI_PCI_HOST_GENERIC */
-+	} else
-+		pp = bus->sysdata;
- 
- 	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0) {
- 		*val = 0xffffffff;
-@@ -681,8 +696,22 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
- static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 			int where, int size, u32 val)
- {
--	struct pcie_port *pp = bus->sysdata;
- 	int ret;
-+	struct pcie_port *pp;
-+	struct pci_bus *bridge_bus;
-+
-+	for (bridge_bus = bus; bridge_bus->parent;
-+			bridge_bus = bridge_bus->parent)
-+		;
-+
-+	if (has_acpi_companion(bridge_bus->bridge)) {
-+#ifdef CONFIG_ACPI_PCI_HOST_GENERIC
-+		struct acpi_pci_root *root = bus->sysdata;
-+
-+		pp = root->sysdata;
-+#endif /* CONFIG_ACPI_PCI_HOST_GENERIC */
-+	} else
-+		pp = bus->sysdata;
- 
- 	if (dw_pcie_valid_config(pp, bus, PCI_SLOT(devfn)) == 0)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
-@@ -700,7 +729,7 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 	return ret;
- }
- 
--static struct pci_ops dw_pcie_ops = {
-+struct pci_ops dw_pcie_ops = {
- 	.read = dw_pcie_rd_conf,
- 	.write = dw_pcie_wr_conf,
- };
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 2356d29..fd27fa4 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -80,4 +80,5 @@ int dw_pcie_link_up(struct pcie_port *pp);
- void dw_pcie_setup_rc(struct pcie_port *pp);
- int dw_pcie_host_init(struct pcie_port *pp);
- 
-+extern struct pci_ops dw_pcie_ops;
- #endif /* _PCIE_DESIGNWARE_H */
--- 
-1.9.1
+When I first posted the patchset the state of arm64 ACPI/PCI was not that
+clear - and I thought an alternative will help. Ideally I would expect
+maintainers to look at technical merit, but in this case any working solution
+merged will be great news.
 
+Thanks,
+JC.
