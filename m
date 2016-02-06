@@ -1,82 +1,217 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46737 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:42098 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932078AbcBHX2N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Feb 2016 18:28:13 -0500
-Date: Mon, 8 Feb 2016 17:28:08 -0600
+	id S1751790AbcBFQBe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 6 Feb 2016 11:01:34 -0500
+Date: Sat, 6 Feb 2016 10:01:30 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: kbuild test robot <lkp@intel.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, kbuild-all@01.org,
-	Vineet.Gupta1@synopsys.com, arnd@arndb.de,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
-	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
-Subject: Re: [PATCH v9 2/2] pcie-designware platform driver
-Message-ID: <20160208232808.GB1353@localhost>
-References: <9069117816a5cd9cc3314b6d584c26d457807b8e.1454952698.git.jpinto@synopsys.com>
- <201602090552.plkRtxUR%fengguang.wu@intel.com>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Will Deacon <will.deacon@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v5 2/3] pci, pci-thunder-pem: Add PCIe host driver for
+ ThunderX processors.
+Message-ID: <20160206160130.GC22119@localhost>
+References: <1454715675-17512-1-git-send-email-ddaney.cavm@gmail.com>
+ <1454715675-17512-3-git-send-email-ddaney.cavm@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201602090552.plkRtxUR%fengguang.wu@intel.com>
+In-Reply-To: <1454715675-17512-3-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 09, 2016 at 05:29:15AM +0800, kbuild test robot wrote:
-> Hi Joao,
-> 
-> [auto build test ERROR on arc/for-next]
-> [cannot apply to pci/next v4.5-rc3 next-20160208]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
-> 
-> url:    https://github.com/0day-ci/linux/commits/Joao-Pinto/PCI-support-added-to-ARC/20160209-014808
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/vgupta/arc for-next
-> config: x86_64-allmodconfig (attached as .config)
-> reproduce:
->         # save the attached .config to linux build tree
->         make ARCH=x86_64 
-> 
-> All errors (new ones prefixed by >>):
-> 
->    include/linux/compiler.h:228:8: sparse: attribute 'no_sanitize_address': unknown attribute
->    drivers/pci/host/pcie-designware.c:581:14: sparse: undefined identifier 'pci_has_flag'
->    drivers/pci/host/pcie-designware.c: In function 'dw_pcie_host_init':
-> >> drivers/pci/host/pcie-designware.c:581:7: error: implicit declaration of function 'pci_has_flag' [-Werror=implicit-function-declaration]
->      if (!pci_has_flag(PCI_PROBE_ONLY)) {
->           ^
-> >> drivers/pci/host/pcie-designware.c:581:20: error: 'PCI_PROBE_ONLY' undeclared (first use in this function)
->      if (!pci_has_flag(PCI_PROBE_ONLY)) {
->                        ^
->    drivers/pci/host/pcie-designware.c:581:20: note: each undeclared identifier is reported only once for each function it appears in
->    cc1: some warnings being treated as errors
+Hi David,
 
-I have fixes for this on my pci/misc branch, so you don't need to
-worry about these errors.  Basically I'm moving the PCI_PROBE_ONLY and
-pci_has_flag() declarations from the arch-specific asm/pci-bridge.h
-files to the generic linux/pci.h file.
+I don't have time today to look at this thoroughly, but I think I did
+see one actual bug and a possible way to make this more readable.  I
+think reading difficulty increases as at least the square of the
+maximum indent level :)
 
-> vim +/pci_has_flag +581 drivers/pci/host/pcie-designware.c
-> 
-> cbce7900 Zhou Wang   2015-10-29  575  
-> cbce7900 Zhou Wang   2015-10-29  576  #ifdef CONFIG_ARM
-> cbce7900 Zhou Wang   2015-10-29  577  	/* support old dtbs that incorrectly describe IRQs */
-> cbce7900 Zhou Wang   2015-10-29  578  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-> 0815f957 Yijing Wang 2014-11-11  579  #endif
-> 0815f957 Yijing Wang 2014-11-11  580  
-> cbce7900 Zhou Wang   2015-10-29 @581  	if (!pci_has_flag(PCI_PROBE_ONLY)) {
-> cbce7900 Zhou Wang   2015-10-29  582  		pci_bus_size_bridges(bus);
-> cbce7900 Zhou Wang   2015-10-29  583  		pci_bus_assign_resources(bus);
-> 4b1ced84 Jingoo Han  2013-07-31  584  
-> 
-> :::::: The code at line 581 was first introduced by commit
-> :::::: cbce7900598c26a12652f8ca9c41c5b29034c38d PCI: designware: Make driver arch-agnostic
-> 
-> :::::: TO: Zhou Wang <wangzhou1@hisilicon.com>
-> :::::: CC: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+Bjorn
 
+On Fri, Feb 05, 2016 at 03:41:14PM -0800, David Daney wrote:
+> ...
+> +static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
+> +				    int where, int size, u32 val)
+> +{
+> +	struct gen_pci *pci = bus->sysdata;
+> +	struct thunder_pem_pci *pem_pci;
+> +
+> +	pem_pci = container_of(pci, struct thunder_pem_pci, gen_pci);
+> +
+> +	/*
+> +	 * The first device on the bus in the PEM PCIe bridge.
+> +	 * Special case its config access.
+> +	 */
+> +	if (bus->number == pci->cfg.bus_range->start) {
+> +		u64 write_val, read_val;
+> +		u32 mask = 0;
+> +
+> +		if (devfn != 0 || where >= 2048)
+> +			return PCIBIOS_DEVICE_NOT_FOUND;
+> +
+> +		/*
+> +		 * 32-bit accesses only.  If the write is for a size
+> +		 * smaller than 32-bits, we must first read the 32-bit
+> +		 * value and merge in the desired bits and then write
+> +		 * the whole 32-bits back out.
+> +		 */
+> +		switch (size) {
+> +		case 1:
+> +			read_val = where & ~3ull;
+> +			writeq(read_val, pem_pci->pem_reg_base + PEM_CFG_RD);
+> +			read_val = readq(pem_pci->pem_reg_base + PEM_CFG_RD);
+> +			read_val >>= 32;
+> +			mask = ~(0xff << (8 * (where & 3)));
+> +			read_val &= mask;
+> +			val = (val & 0xff) << (8 * (where & 3));
+> +			val |= (u32)read_val;
+> +			break;
+> +		case 2:
+> +			read_val = where & ~3ull;
+> +			writeq(read_val, pem_pci->pem_reg_base + PEM_CFG_RD);
+> +			read_val = readq(pem_pci->pem_reg_base + PEM_CFG_RD);
+> +			read_val >>= 32;
+> +			mask = ~(0xffff << (8 * (where & 3)));
+> +			read_val &= mask;
+> +			val = (val & 0xffff) << (8 * (where & 3));
+> +			val |= (u32)read_val;
+> +			break;
+> +		default:
+> +			break;
+> +
+> +		}
 
+I think it would make this easier to read if the root bus case were
+split to a different function, e.g.,
+
+  static u32 thunder_pem_root_w1c_bits(...)
+  {
+    ...
+  }
+
+  static int thunder_pem_root_config_write(...)
+  {
+    u32 mask[2] = {0xff, 0xffff};
+
+    if (devfn != 0 || where >= 2048)
+      return PCIBIOS_DEVICE_NOT_FOUND;
+
+    if (size != 1 && size != 2 && size != 4)
+      return PCIBIOS_BAD_REGISTER_NUMBER;
+
+    /* 32-bit accesses supported natively */
+    if (size == 4) {
+      write_val = where & ~3ull;
+      write_val |= (((u64)val) << 32);
+      writeq(write_val, pem_pci->pem_reg_base + PEM_CFG_WR);
+      return PCIBIOS_SUCCESSFUL;
+    }
+
+    /* smaller accesses require read/modify/write */
+    read_val = where & ~3ull;
+    writeq(read_val, pem_pci->pem_reg_base + PEM_CFG_RD);
+    read_val = readq(pem_pci->pem_reg_base + PEM_CFG_RD);
+    read_val >>= 32;
+
+    /* mask W1C bits so we don't clear them inadvertently */
+    write_val = read_val & ~thunder_pem_root_w1c_bits(...);
+
+    /* deposit new write data (which may intentionally write W1C bits) */
+    val &= mask[size];
+    shift = 8 * (where & 3);
+
+    write_val &= ~(mask[size] << shift);
+    write_val |= val << shift;
+
+    write_val = where & ~3ull;
+    write_val |= (((u64)val) << 32);
+    writeq(write_val, pem_pci->pem_reg_base + PEM_CFG_WR);
+    return PCIBIOS_SUCCESSFUL;
+  }
+
+  static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
+				    int where, int size, u32 val)
+  {
+    ...
+    if (bus->number < pci->cfg.bus_range->start ||
+        bus->number > pci->cfg.bus_range->end)
+      return PCIBIOS_DEVICE_NOT_FOUND;
+
+    if (bus->number == pci->cfg.bus_range->start)
+      return thunder_pem_root_config_write(...);
+
+    return pci_generic_config_write(bus, devfn, where, size, val);
+  }
+
+> +
+> +		if (mask) {
+> +			/*
+> +			 * By expanding the write width to 32 bits, we
+> +			 * may inadvertently hit some W1C bits that
+> +			 * were not intended to be written.  Mask
+> +			 * these out.
+> +			 *
+> +			 * Some of the w1c_bits below also include
+> +			 * read-only or non-writable reserved bits,
+> +			 * this makes the code simpler and is OK as
+> +			 * the bits are not affected by writing zeros
+> +			 * to them.
+> +			 */
+> +			u32 w1c_bits = 0;
+> +
+> +			switch (where & 3) {
+> +			case 0x04: /* Command/Status */
+> +			case 0x1c: /* Base and I/O Limit/Secondary Status */
+> +				w1c_bits = 0xff000000;
+> +				break;
+> +			case 0x44: /* Power Management Control and Status */
+> +				w1c_bits = 0xfffffe00;
+> +				break;
+> +			case 0x78: /* Device Control/Device Status */
+> +			case 0x80: /* Link Control/Link Status */
+> +			case 0x88: /* Slot Control/Slot Status */
+> +			case 0x90: /* Root Status */
+> +			case 0xa0: /* Link Control 2 Registers/Link Status 2 */
+> +				w1c_bits = 0xffff0000;
+> +				break;
+> +			case 0x104: /* Uncorrectable Error Status */
+> +			case 0x110: /* Correctable Error Status */
+> +			case 0x130: /* Error Status */
+> +			case 0x160: /* Link Control 4 */
+
+"where & 3" can never match any of these cases.  I suppose you meant
+"where & ~3"?
+
+> +				w1c_bits = 0xffffffff;
+> +				break;
+> +			default:
+> +				break;
+> +
+> +			}
+> +			if (w1c_bits) {
+> +				mask &= w1c_bits;
+> +				val &= ~mask;
+> +			}
+> +		}
+> +
+> +		/*
+> +		 * Low order bits are the config address, the high
+> +		 * order 32 bits are the data to be written.
+> +		 */
+> +		write_val = where & ~3ull;
+> +		write_val |= (((u64)val) << 32);
+> +		writeq(write_val, pem_pci->pem_reg_base + PEM_CFG_WR);
+> +		return PCIBIOS_SUCCESSFUL;
+> +	}
+> +	if (bus->number < pci->cfg.bus_range->start ||
+> +	    bus->number > pci->cfg.bus_range->end)
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+> +	return pci_generic_config_write(bus, devfn, where, size, val);
+> +}
