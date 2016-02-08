@@ -1,69 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:45595 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965181AbcBQDqB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:46:01 -0500
-Received: from localhost
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 17 Feb 2016 13:46:00 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v8 35/45] powerpc/powernv: Fundamental reset in pnv_pci_reset_secondary_bus()
-Date: Wed, 17 Feb 2016 14:44:18 +1100
-Message-Id: <1455680668-23298-36-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mout.kundenserver.de ([212.227.126.135]:51153 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751552AbcBHMcT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Feb 2016 07:32:19 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Vineet.Gupta1@synopsys.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
+	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
+	pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
+Subject: Re: [PATCH v8 2/2] add new platform driver for PCI RC
+Date: Mon, 08 Feb 2016 13:31:38 +0100
+Message-ID: <2803103.hQZUPM7HZf@wuerfel>
+In-Reply-To: <20160205233248.GC11780@localhost>
+References: <cover.1454600622.git.jpinto@synopsys.com> <4427983.0G6mVNKP5W@wuerfel> <20160205233248.GC11780@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In pnv_pci_reset_secondary_bus(), we should issue fundamental reset
-if any one subordinate device of the specified bus is requesting that.
-Otherwise, the device might not come up after the reset.
+On Friday 05 February 2016 17:32:48 Bjorn Helgaas wrote:
+> On Fri, Feb 05, 2016 at 03:39:05PM +0100, Arnd Bergmann wrote:
+> > On Friday 05 February 2016 10:44:29 Joao Pinto wrote:
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/eeh-powernv.c | 21 ++++++++++++++++++++-
- 1 file changed, 20 insertions(+), 1 deletion(-)
+> > I think in this case, we should do this completely differently:
+> > 
+> > How about putting all the new code into drivers/pci/host/pcie-designware.c
+> > as functions that can be used by the other drivers in absence of a chip
+> > specific handler?
+> > 
+> > Instead of providing a new instance of struct pcie_host_ops, maybe add
+> > it as a default implementation in dw_pcie_link_up() and dw_pcie_host_init()
+> > for drivers that don't provide their own. "hisi_pcie_host_ops" currently
+> > provides no host_init() callback function, so you will have to change
+> > the hisi frontend to a provide nop-function.
+> > 
+> > For all other drivers, check if they can be changed to use your generic
+> > implementation and remove their private callbacks if possible.
+> > 
+> > I think the MSI implementation should be split out into a separate file
+> > though, as not everyone uses this.
+> 
+> I'm not sure I understand what you're proposing, Arnd, so let me
+> ramble and you can direct me back on course.
+> 
+> Currently drivers/pci/host/pcie-designware.c is not usable by itself;
+> it doesn't register a platform_driver.
+> 
+> There's hardly any code in Joao's patches; it looks like they add a
+> minimal wrapper around the functionality in pcie-designware.c and
+> register it as a platform_driver.
+> 
+> Are you suggesting that we should just add that functionality directly
+> in pcie-designware.c so that file could both be a minimal driver with
+> the functionality of Joao's patches, *and* continue to provide the
+> shared code used by all the existing DesignWare-based drivers?  Maybe
+> the platform_driver registration part could be controlled by its own
+> separate Kconfig option.
 
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 593b8dc..c7454ba 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -866,9 +866,28 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
- 	return 0;
- }
- 
-+static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
-+{
-+	int *freset = data;
-+
-+	/*
-+	 * Stop the iteration immediately if there has any one
-+	 * PCI device requesting fundamental reset.
-+	 */
-+	*freset |= pdev->needs_freset;
-+	return *freset;
-+}
-+
- void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
- {
--	pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
-+	int option, freset = 0;
-+
-+	if (dev->subordinate)
-+		pci_walk_bus(dev->subordinate,
-+			     pnv_pci_dev_reset_type, &freset);
-+
-+	option = freset ? EEH_RESET_FUNDAMENTAL : EEH_RESET_HOT;
-+	pnv_eeh_bridge_reset(dev, option);
- 	pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
- }
- 
--- 
-2.1.0
+Either way is fine, we just have to be a little careful about the
+initialization ordering.
 
+> For example, he could make dw_pcie_link_up() look like:
+> 
+>   int dw_pcie_link_up(struct pcie_port *pp)
+>   {
+>     u32 val;
+> 
+>     if (pp->ops->link_up)
+>       return pp->ops->link_up(pp);
+> 
+>     val = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
+>     return val & PCIE_PHY_DEBUG_R1_LINK_UP;
+>   }
+
+This is definitely good (after checking that all existing drivers
+either work with the generic version, or provide their own callbacks
+already).
+
+> That seems like it would make sense to me.  It would resolve the
+> filename question, since there wouldn't be a new file.  And if this is
+> merely a driver for the generic DesignWare core without any
+> extensions, I'm happy with some sort of "dw"-based driver name and
+> compatibility string.
+
+The important part I think is that the new driver should not require
+and code that is seen as soc-specific: If it works with any implementation
+of pci-dw rather than a specific system, the driver should know how
+to do the right thing.
+
+It may be helpful to move the actual matching on the compatible string
+and calling of the generic probe function into another module, if we
+are going forward with loadable PCI host drivers as posted by 
+Paul Gortmaker today. Otherwise we end up with a device being bound
+to the generic driver when a more specific one exists and both
+are loadable modules, because the generic driver is always loaded
+first.  As long as both drivers are built-in, it works fine because
+we first look for a driver matching the most specific compatible string.
+
+	Arnd
