@@ -1,213 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:60689 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965168AbcBQDqB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:46:01 -0500
-Received: from localhost
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 17 Feb 2016 13:45:59 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v8 38/45] powerpc/powernv: Functions to get/set PCI slot status
-Date: Wed, 17 Feb 2016 14:44:21 +1100
-Message-Id: <1455680668-23298-39-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-by2on0087.outbound.protection.outlook.com ([207.46.100.87]:16477
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755971AbcBHUr0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Feb 2016 15:47:26 -0500
+Message-ID: <56B8FED6.1050804@caviumnetworks.com>
+Date: Mon, 8 Feb 2016 12:47:18 -0800
+From: David Daney <ddaney@caviumnetworks.com>
+MIME-Version: 1.0
+To: Rob Herring <robh@kernel.org>
+CC: David Daney <ddaney.cavm@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v5 3/3] pci, pci-thunder-ecam: Add driver for ThunderX-pass1
+ on-chip devices
+References: <1454715675-17512-1-git-send-email-ddaney.cavm@gmail.com> <1454715675-17512-4-git-send-email-ddaney.cavm@gmail.com> <20160208195642.GA15103@rob-hp-laptop>
+In-Reply-To: <20160208195642.GA15103@rob-hp-laptop>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This exports 4 functins, which base on the corresponding OPAL
-APIs to get/set PCI slot status. Those functions are going to
-be used by PowerNV PCI hotplug driver:
+On 02/08/2016 11:56 AM, Rob Herring wrote:
+> On Fri, Feb 05, 2016 at 03:41:15PM -0800, David Daney wrote:
+>> From: David Daney <david.daney@cavium.com>
+>>
+>> The cavium,pci-thunder-ecam devices are exactly ECAM based PCI root
+>> complexes.  These root complexes (loosely referred to as ECAM units in
+>> the hardware manuals) are used to access the Thunder on-chips devices.
+>> They are special in that all the BARs on devices behind these root
+>> complexes are at fixed addresses.  To handle this in a manner
+>> compatible with the core PCI code, we have the config access functions
+>> synthesize Enhanced Allocation (EA) capability entries for each BAR.
+>>
+>> Since this EA synthesis is needed for exactly one chip model, we can
+>> hard code some assumptions about the device topology and the
+>> properties of specific DEVFNs in the driver.
+>>
+>> Signed-off-by: David Daney <david.daney@cavium.com>
+>> ---
+>>   .../devicetree/bindings/pci/pci-thunder-ecam.txt   |  30 ++
+>>   drivers/pci/host/Kconfig                           |   7 +
+>>   drivers/pci/host/Makefile                          |   1 +
+>>   drivers/pci/host/pci-thunder-ecam.c                | 358 +++++++++++++++++++++
+>>   4 files changed, 396 insertions(+)
+>>   create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
+>>   create mode 100644 drivers/pci/host/pci-thunder-ecam.c
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt b/Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
+>> new file mode 100644
+>> index 0000000..34658f2
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
+>> @@ -0,0 +1,30 @@
+>> +* ThunderX PCI host controller for pass-1.x silicon
+>> +
+>> +Firmware-initialized PCI host controller to on-chip devices found on
+>> +some Cavium ThunderX processors.  These devices have ECAM based config
+>> +access, but the BARs are all at fixed addresses.  We handle the fixed
+>> +addresses by synthesizing Enhanced Allocation (EA) capabilities for
+>> +these devices.
+>> +
+>> +The properties and their meanings are identical to those described in
+>> +host-generic-pci.txt except as listed below.
+>> +
+>> +Properties of the host controller node that differ from
+>> +host-generic-pci.txt:
+>> +
+>> +- compatible     : Must be "cavium,pci-host-thunder-ecam"
+>> +
+>> +Example:
+>> +
+>> +	pci@84b0,00000000 {
+>
+> Drop the comma,
 
-   pnv_pci_get_device_tree()    opal_get_device_tree()
-   pnv_pci_get_presence_state() opal_pci_get_presence_state()
-   pnv_pci_get_power_state()    opal_pci_get_power_state()
-   pnv_pci_set_power_state()    opal_pci_set_power_state()
+OK...
 
-Besides, the patch also exports pnv_pci_hotplug_notifier_{register,
-unregister}() to allow registration and unregistration of PCI hotplug
-notifier, which will be used to receive PCI hotplug message from
-skiboot firmware in PowerNV PCI hotplug driver.
+> and the node name should be "pcie".
+>
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/opal-api.h            | 17 ++++++-
- arch/powerpc/include/asm/opal.h                |  4 ++
- arch/powerpc/include/asm/pnv-pci.h             |  7 +++
- arch/powerpc/platforms/powernv/opal-wrappers.S |  4 ++
- arch/powerpc/platforms/powernv/pci.c           | 66 ++++++++++++++++++++++++++
- 5 files changed, 97 insertions(+), 1 deletion(-)
+Why pcie?
 
-diff --git a/arch/powerpc/include/asm/opal-api.h b/arch/powerpc/include/asm/opal-api.h
-index f8faaae..a6af338 100644
---- a/arch/powerpc/include/asm/opal-api.h
-+++ b/arch/powerpc/include/asm/opal-api.h
-@@ -158,7 +158,11 @@
- #define OPAL_LEDS_SET_INDICATOR			115
- #define OPAL_CEC_REBOOT2			116
- #define OPAL_CONSOLE_FLUSH			117
--#define OPAL_LAST				117
-+#define OPAL_GET_DEVICE_TREE			118
-+#define OPAL_PCI_GET_PRESENCE_STATE		119
-+#define OPAL_PCI_GET_POWER_STATE		120
-+#define OPAL_PCI_SET_POWER_STATE		121
-+#define OPAL_LAST				121
- 
- /* Device tree flags */
- 
-@@ -344,6 +348,16 @@ enum OpalPciResetState {
- 	OPAL_ASSERT_RESET   = 1
- };
- 
-+enum OpalPciSlotPresentenceState {
-+	OPAL_PCI_SLOT_EMPTY	= 0,
-+	OPAL_PCI_SLOT_PRESENT	= 1
-+};
-+
-+enum OpalPciSlotPowerState {
-+	OPAL_PCI_SLOT_POWER_OFF	= 0,
-+	OPAL_PCI_SLOT_POWER_ON	= 1
-+};
-+
- enum OpalSlotLedType {
- 	OPAL_SLOT_LED_TYPE_ID = 0,	/* IDENTIFY LED */
- 	OPAL_SLOT_LED_TYPE_FAULT = 1,	/* FAULT LED */
-@@ -378,6 +392,7 @@ enum opal_msg_type {
- 	OPAL_MSG_DPO,
- 	OPAL_MSG_PRD,
- 	OPAL_MSG_OCC,
-+	OPAL_MSG_PCI_HOTPLUG,
- 	OPAL_MSG_TYPE_MAX,
- };
- 
-diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
-index 9e0039f..899bcb941 100644
---- a/arch/powerpc/include/asm/opal.h
-+++ b/arch/powerpc/include/asm/opal.h
-@@ -209,6 +209,10 @@ int64_t opal_flash_write(uint64_t id, uint64_t offset, uint64_t buf,
- 		uint64_t size, uint64_t token);
- int64_t opal_flash_erase(uint64_t id, uint64_t offset, uint64_t size,
- 		uint64_t token);
-+int64_t opal_get_device_tree(uint32_t phandle, uint64_t buf, uint64_t len);
-+int64_t opal_pci_get_presence_state(uint64_t id, uint8_t *state);
-+int64_t opal_pci_get_power_state(uint64_t id, uint8_t *state);
-+int64_t opal_pci_set_power_state(uint64_t id, uint8_t state);
- 
- /* Internal functions */
- extern int early_init_dt_scan_opal(unsigned long node, const char *uname,
-diff --git a/arch/powerpc/include/asm/pnv-pci.h b/arch/powerpc/include/asm/pnv-pci.h
-index 6f77f71..d9d095b 100644
---- a/arch/powerpc/include/asm/pnv-pci.h
-+++ b/arch/powerpc/include/asm/pnv-pci.h
-@@ -13,6 +13,13 @@
- #include <linux/pci.h>
- #include <misc/cxl-base.h>
- 
-+extern int pnv_pci_get_device_tree(uint32_t phandle, void *buf, uint64_t len);
-+extern int pnv_pci_get_presence_state(uint64_t id, uint8_t *state);
-+extern int pnv_pci_get_power_state(uint64_t id, uint8_t *state);
-+extern int pnv_pci_set_power_state(uint64_t id, uint8_t state);
-+extern int pnv_pci_hotplug_notifier_register(struct notifier_block *nb);
-+extern int pnv_pci_hotplug_notifier_unregister(struct notifier_block *nb);
-+
- int pnv_phb_to_cxl_mode(struct pci_dev *dev, uint64_t mode);
- int pnv_cxl_ioda_msi_setup(struct pci_dev *dev, unsigned int hwirq,
- 			   unsigned int virq);
-diff --git a/arch/powerpc/platforms/powernv/opal-wrappers.S b/arch/powerpc/platforms/powernv/opal-wrappers.S
-index e45b88a..3ea1a855 100644
---- a/arch/powerpc/platforms/powernv/opal-wrappers.S
-+++ b/arch/powerpc/platforms/powernv/opal-wrappers.S
-@@ -302,3 +302,7 @@ OPAL_CALL(opal_prd_msg,				OPAL_PRD_MSG);
- OPAL_CALL(opal_leds_get_ind,			OPAL_LEDS_GET_INDICATOR);
- OPAL_CALL(opal_leds_set_ind,			OPAL_LEDS_SET_INDICATOR);
- OPAL_CALL(opal_console_flush,			OPAL_CONSOLE_FLUSH);
-+OPAL_CALL(opal_get_device_tree,			OPAL_GET_DEVICE_TREE);
-+OPAL_CALL(opal_pci_get_presence_state,		OPAL_PCI_GET_PRESENCE_STATE);
-+OPAL_CALL(opal_pci_get_power_state,		OPAL_PCI_GET_POWER_STATE);
-+OPAL_CALL(opal_pci_set_power_state,		OPAL_PCI_SET_POWER_STATE);
-diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
-index a458703..206385f 100644
---- a/arch/powerpc/platforms/powernv/pci.c
-+++ b/arch/powerpc/platforms/powernv/pci.c
-@@ -63,6 +63,72 @@ int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *state)
- 	return (rval == OPAL_SUCCESS) ? 0 : -EIO;
- }
- 
-+int pnv_pci_get_device_tree(uint32_t phandle, void *buf, uint64_t len)
-+{
-+	int64_t rc;
-+
-+	if (!opal_check_token(OPAL_GET_DEVICE_TREE))
-+		return -ENXIO;
-+
-+	rc = opal_get_device_tree(phandle, (uint64_t)buf, len);
-+	if (rc != OPAL_SUCCESS)
-+		return -EIO;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_get_device_tree);
-+
-+int pnv_pci_get_presence_state(uint64_t id, uint8_t *state)
-+{
-+	int64_t rc;
-+
-+	if (!opal_check_token(OPAL_PCI_GET_PRESENCE_STATE))
-+		return -ENXIO;
-+
-+	rc = opal_pci_get_presence_state(id, state);
-+	if (rc != OPAL_SUCCESS)
-+		return -EIO;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_get_presence_state);
-+
-+int pnv_pci_get_power_state(uint64_t id, uint8_t *state)
-+{
-+	int64_t rc;
-+
-+	if (!opal_check_token(OPAL_PCI_GET_POWER_STATE))
-+		return -ENXIO;
-+
-+	rc = opal_pci_get_power_state(id, state);
-+	return pnv_pci_poll(id, rc, state);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_get_power_state);
-+
-+int pnv_pci_set_power_state(uint64_t id, uint8_t state)
-+{
-+	int64_t rc;
-+
-+	if (!opal_check_token(OPAL_PCI_SET_POWER_STATE))
-+		return -ENXIO;
-+
-+	rc = opal_pci_set_power_state(id, state);
-+	return pnv_pci_poll(id, rc, NULL);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_set_power_state);
-+
-+int pnv_pci_hotplug_notifier_register(struct notifier_block *nb)
-+{
-+	return opal_message_notifier_register(OPAL_MSG_PCI_HOTPLUG, nb);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_hotplug_notifier_register);
-+
-+int pnv_pci_hotplug_notifier_unregister(struct notifier_block *nb)
-+{
-+	return opal_message_notifier_unregister(OPAL_MSG_PCI_HOTPLUG, nb);
-+}
-+EXPORT_SYMBOL_GPL(pnv_pci_hotplug_notifier_unregister);
-+
- #ifdef CONFIG_PCI_MSI
- int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
- {
--- 
-2.1.0
+There are no PCIe devices or buses reachable from this type of root 
+complex.  There are however many PCI devices.
+
+> Otherwise,
+>
+> Acked-by: Rob Herring <robh@kernel.org>
+>
+>> +		compatible = "cavium,pci-host-thunder-ecam";
+>> +		device_type = "pci";
+>> +		msi-parent = <&its>;
+>> +		msi-map = <0 &its 0x30000 0x10000>;
+>> +		bus-range = <0 31>;
+>> +		#size-cells = <2>;
+>> +		#address-cells = <3>;
+>> +		#stream-id-cells = <1>;
+>> +		reg = <0x84b0 0x00000000 0 0x02000000>;  /* Configuration space */
+>> +		ranges = <0x03000000 0x8180 0x00000000 0x8180 0x00000000 0x80 0x00000000>; /* mem ranges */
+>> +	};
 
