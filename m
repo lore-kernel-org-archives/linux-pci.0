@@ -1,44 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:53473 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755923AbcBIP2z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2016 10:28:55 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, CARLOS.PALMINHA@synopsys.com
-Subject: Re: [PATCH] link up validation moved to pcie-designware
-Date: Tue, 09 Feb 2016 16:28:38 +0100
-Message-ID: <3127323.7iUuBrk8dh@wuerfel>
-In-Reply-To: <56B8C6C7.9060105@synopsys.com>
-References: <b00bf38b4351831b97892b747d48c9206fbab9c7.1454935205.git.jpinto@synopsys.com> <2817924.61jZWIvqjt@wuerfel> <56B8C6C7.9060105@synopsys.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 8 Feb 2016 10:53:56 -0500
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-kernel@vger.kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 3/5] drivers/pci: export dw syms enabling board specific
+ PCI code to be tristate
+Message-ID: <20160208155356.GV23093@windriver.com>
+References: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com>
+ <1454889644-27830-4-git-send-email-paul.gortmaker@windriver.com>
+ <4185524.RaOx11t2l7@wuerfel>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <4185524.RaOx11t2l7@wuerfel>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 08 February 2016 16:48:07 Joao Pinto wrote:
-> On 2/8/2016 4:46 PM, Arnd Bergmann wrote:
-> > On Monday 08 February 2016 16:43:33 Joao Pinto wrote:
-> >> Hi,
-> >> Ok, so what should be the retries and waiting time in your opinion?
-> >> The most typical is:
-> >>
-> >> retries: 10
-> >> delay: 100ms (usleep_range (90000, 100000))
-> >>
-> >> These values should be ok?
-> >>
-> >> I am already testing a full pcie-designware platform driver.
-> >>
-> >>
-> > You are the one with the datasheet, not me. 
-> 
-> Our reference driver follows the 10x with 100ms delay between retries, so lets
-> follow that value. Agree?
-> 
+[Re: [PATCH 3/5] drivers/pci: export dw syms enabling board specific PCI code to be tristate] On 08/02/2016 (Mon 10:57) Arnd Bergmann wrote:
 
-I wouldn't trust the reference driver too much, better follow whatever
-the hardware specifications says.
+> On Sunday 07 February 2016 19:00:42 Paul Gortmaker wrote:
+> > After converting the drivers who select PCI_DW from bool to tristate,
+> > the following symbols need to be exported, simply based on the output
+> > from modpost failures.
+> > 
+> > Cc: Jingoo Han <jingoohan1@gmail.com>
+> > Cc: Pratyush Anand <pratyush.anand@gmail.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> > Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
+> > Cc: Thierry Reding <thierry.reding@gmail.com>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: linux-pci@vger.kernel.org
+> > Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+> > 
+> 
+> Looks good in principle, but maybe use EXPORT_SYMBOL_GPL? These
+> are just meant to be used internally by the drivers after all.
 
-	Arnd
+Sure, I can make that restriction.
+
+P.
+--
+
+> 
+> 	Arnd
