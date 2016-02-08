@@ -1,63 +1,90 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 18 Feb 2016 13:20:38 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: "liudongdong (C)" <liudongdong3@huawei.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rafael@kernel.org, hanjun.guo@linaro.org, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	Stefano.Stabellini@eu.citrix.com, jcm@redhat.com,
-	linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	robert.richter@caviumnetworks.com, wangyijing@huawei.com,
-	mw@semihalf.com, linux-arm-kernel@lists.infradead.org
-Subject: Re: [Linaro-acpi] [PATCH V5 01/15] ACPI: MCFG: Move mmcfg_list
- management to drivers/acpi
-Message-ID: <20160218132038.GA13229@red-moon>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
- <1455630825-27253-2-git-send-email-tn@semihalf.com>
- <56C5B83F.4010602@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:52380 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753540AbcBHTDt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Feb 2016 14:03:49 -0500
+Subject: Re: [PATCH 4/5] drivers/pci: make host/pci-keystone-dw.c modular
+To: Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Arnd Bergmann <arnd@arndb.de>
+References: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com>
+ <1454889644-27830-5-git-send-email-paul.gortmaker@windriver.com>
+ <91848876.ZYig6qgHLq@wuerfel> <20160208155324.GU23093@windriver.com>
+CC: <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+From: Murali Karicheri <m-karicheri2@ti.com>
+Message-ID: <56B8E66B.3060309@ti.com>
+Date: Mon, 8 Feb 2016 14:03:07 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56C5B83F.4010602@huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20160208155324.GU23093@windriver.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 18, 2016 at 08:25:35PM +0800, liudongdong (C) wrote:
-
-[...]
-
-> >+/*
-> >+ * Map a pci_mmcfg_region, can be overrriden by arch
-> >+ */
-> >+int __weak pci_mmconfig_map_resource(struct device *dev,
-> >+	struct pci_mmcfg_region *mcfg)
-> >+{
-> >+	struct resource *tmp;
-> >+	void __iomem *vaddr;
-> >+
-> >+	tmp = insert_resource_conflict(&iomem_resource, &mcfg->res);
-> >+	if (tmp) {
-> >+		dev_warn(dev, "MMCONFIG %pR conflicts with %s %pR\n",
-> >+			&mcfg->res, tmp->name, tmp);
-> >+		return -EBUSY;
-> >+	}
-> >+
-> >+	vaddr =  ioremap(mcfg->res.start, resource_size(&mcfg->res));
-               ^^
-	       while at it, stray white space
-
-> >+	if (!vaddr) {
-> >+		release_resource(&mcfg->res);
-> >+		return -ENOMEM;
-> >+	}
-> >+
-> >+	mcfg->virt = vaddr;
-> Here should be changed to
-> 	mcfg->virt = vaddr - PCI_MMCFG_BUS_OFFSET(mcfg->start_bus);
+On 02/08/2016 10:53 AM, Paul Gortmaker wrote:
+> [Re: [PATCH 4/5] drivers/pci: make host/pci-keystone-dw.c modular] On 08/02/2016 (Mon 10:59) Arnd Bergmann wrote:
 > 
-> or when pcie host "start_bus" is not 0, the configuraion access will be wrong.
-Well spotted, thanks.
+>> On Sunday 07 February 2016 19:00:43 Paul Gortmaker wrote:
+>>> Export the symbols that this driver requires in order for it to
+>>> be modular.  In addition to the one use case of a dw_pci sym, it
+>>> has many instances of its own ks_dw_pci syms that need exporting
+>>> in order to modpost w/o error.
+>>>
+>>> Cc: Murali Karicheri <m-karicheri2@ti.com>
+>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>>> Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
+>>> Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+>>> Cc: Thierry Reding <thierry.reding@gmail.com>
+>>> Cc: Arnd Bergmann <arnd@arndb.de>
+>>> Cc: linux-pci@vger.kernel.org
+>>> Cc: linux-arm-kernel@lists.infradead.org
+>>> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+>>> ---
+>>
+>>
+>> Could we just have one module for the driver  instead of two?
 
-Lorenzo
+I agree. Please note that Keystone PCI is tested only as static. 
+I can help test the module if this series get to the next revision,
+but it might be a while before I can do the test.
+
+Murali
+
+> 
+> That thought crossed my mind, but I was considering merging the C files
+> and figured it might be more churn than the maintainer wanted.  If
+> maintainers are good with the below (assuming it works) then yes that
+> also seems reasonable.
+> 
+> P.
+> --
+> 
+>>
+>> Something like below (untested)
+>>
+>> 	Arnd
+>>
+>> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+>> index 7b2f20c6ccc6..0b472c680348 100644
+>> --- a/drivers/pci/host/Makefile
+>> +++ b/drivers/pci/host/Makefile
+>> @@ -8,7 +8,8 @@ obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+>>  obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
+>>  obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
+>>  obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+>> -obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
+>> +obj-$(CONFIG_PCI_KEYSTONE) pci-keystone-mod.o
+>> +pci-keystone-mod-objs := pci-keystone-dw.o pci-keystone.o
+>>  obj-$(CONFIG_PCIE_XILINX) += pcie-xilinx.o
+>>  obj-$(CONFIG_PCI_XGENE) += pci-xgene.o
+>>  obj-$(CONFIG_PCI_XGENE_MSI) += pci-xgene-msi.o
+>>
+> 
+
+
+-- 
+Murali Karicheri
+Linux Kernel, Keystone
