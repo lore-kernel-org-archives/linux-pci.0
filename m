@@ -1,81 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42785 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750843AbcB2SAW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Feb 2016 13:00:22 -0500
-Date: Mon, 29 Feb 2016 12:00:18 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: kelly.zytaruk@amd.com
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Support SRIOV on Legacy EndPoint device
-Message-ID: <20160229180018.GA3653@localhost>
-References: <1455041338-3644-1-git-send-email-kelly.zytaruk@amd.com>
+Received: from mout.kundenserver.de ([212.227.126.130]:64114 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750972AbcBHQkk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Feb 2016 11:40:40 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: helgaas@kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, CARLOS.PALMINHA@synopsys.com
+Subject: Re: [PATCH] link up validation moved to pcie-designware
+Date: Mon, 08 Feb 2016 17:40:30 +0100
+Message-ID: <13142496.gh5Gdib4M6@wuerfel>
+In-Reply-To: <b00bf38b4351831b97892b747d48c9206fbab9c7.1454935205.git.jpinto@synopsys.com>
+References: <b00bf38b4351831b97892b747d48c9206fbab9c7.1454935205.git.jpinto@synopsys.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1455041338-3644-1-git-send-email-kelly.zytaruk@amd.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 09, 2016 at 01:08:58PM -0500, kelly.zytaruk@amd.com wrote:
-> From: Kelly Zytaruk <kelly.zytaruk@amd.com>
+On Monday 08 February 2016 12:43:58 Joao Pinto wrote:
+> This patch goal is to centralize in pcie-designware the link up
+> validation. A new function was added to pci-designware that is
+> responsible for doing such a task. This was implemented in a form that
+> permits flexibility for all SoCs.
 > 
-> It is not neccessary to check for PCI_EXP_TYPE in sriov_init().  There appears to be no reason for the check.
-> 
-> Some AMD GPUs have hardware support for grapics SRIOV.
-> If the GPU has a display output then the GPU needs to support Legacy VGA operation.
-> If CLASS_CODE = VGA then the device should have a Port Type = Legacy EndPoint.
-> Therefore in order to enable SRIOV on a GPU with a display output, LEGACY_END_POINT is supported as a valid Port Type by removing the check for Port Type.
-> 
-> Patch is also logged in Bugzilla #112221
-> 
-> Signed-off-by: Kelly Zytaruk <kelly.zytaruk@amd.com>
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 
-Applied to pci/virtualization for v4.6, with changelog as follows:
+I believe the different timeouts in each driver are just coincidence
+and partly based on who reviewed which driver.
 
-    PCI: Support SR-IOV on any function type
-    
-    Previously, we only supported SR-IOV on PCI Express Endpoints and Root
-    Complex Integrated Endpoints.  This restriction has been present since
-    d1b054da8f59 ("PCI: initialize and release SR-IOV capability") added SR-IOV
-    support, but the spec does not require it.  In fact, the SR-IOV spec r1.1,
-    sec 3.3, says the SR-IOV extended capability may be present for any Type 0
-    function.
-    
-    Remove the function type test, so we can support SR-IOV on any function.
-    
-    Some AMD GPUs have display outputs, use the VGA class code, are Legacy
-    Endpoints, and support SR-IOV.  This change allows Linux to enable SR-IOV
-    on these devices.
-    
-    [bhelgaas: changelog]
-    Link: https://bugzilla.kernel.org/show_bug.cgi?id=112221
-    Signed-off-by: Kelly Zytaruk <kelly.zytaruk@amd.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+I'm pretty sure it doesn't really matter at all, and we can just use
+the same loop for every one.
 
-> ---
->  drivers/pci/iov.c |    4 ----
->  1 file changed, 4 deletions(-)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 31f31d4..fe4bd0a 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -387,10 +387,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
->  	struct resource *res;
->  	struct pci_dev *pdev;
->  
-> -	if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_END &&
-> -	    pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
-> -		return -ENODEV;
-> -
->  	pci_read_config_word(dev, pos + PCI_SRIOV_CTRL, &ctrl);
->  	if (ctrl & PCI_SRIOV_CTRL_VFE) {
->  		pci_write_config_word(dev, pos + PCI_SRIOV_CTRL, 0);
-> -- 
-> 1.7.10.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I was also hoping that a little more than just the loop could be
+unified between the various establish_link() functions. I have a
+feeling that each one just implements a subset of what is actually
+required, so they are buggy in different ways because nobody
+has the datasheet.
+
+	Arnd
