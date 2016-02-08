@@ -1,48 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+	"tn@semihalf.com" <tn@semihalf.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"jcm@redhat.com" <jcm@redhat.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: Re: [RFC PATCH v2 2/3] PCI: hisi: Make the HiSilicon PCIe host controller ECAM compliant
+Date: Mon, 08 Feb 2016 17:29:40 +0100
+Message-ID: <2599997.xBRrI3qHak@wuerfel>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ECACF44@lhreml503-mbs>
+References: <1454935264-6076-1-git-send-email-gabriele.paoloni@huawei.com> <3532826.pJr5R5Xa4c@wuerfel> <EE11001F9E5DDD47B7634E2F8A612F2E1ECACF44@lhreml503-mbs>
 MIME-Version: 1.0
-In-Reply-To: <1455630825-27253-8-git-send-email-tn@semihalf.com>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com> <1455630825-27253-8-git-send-email-tn@semihalf.com>
-From: Jayachandran Chandrashekaran Nair
-	<jayachandran.chandrashekaran@broadcom.com>
-Date: Wed, 17 Feb 2016 19:14:13 +0530
-Message-ID: <CAKc_7PU+i2AwOVCyW2VNt4BZCWw=KBMAbV8v9DVQ2Ess3WE=kw@mail.gmail.com>
-Subject: Re: [PATCH V5 07/15] pci, acpi: Provide generic way to assign bus
- domain number.
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
-	hanjun.guo@linaro.org,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	okaya@codeaurora.org, jiang.liu@linux.intel.com,
-	Jayachandran Chandrashekaran Nair <jchandra@broadcom.com>,
-	Stefano.Stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tomasz, Lorenzo,
+On Monday 08 February 2016 15:55:35 Gabriele Paoloni wrote:
+> > Doesn't this break backwards compatibility?
+> 
+> Well Hip05/Hip06 SoCs are used into evaluation boards
+> For the Estuary project.
+> 
+> https://github.com/hisilicon/estuary
+> 
+> As this new driver gets upstream we'll merge this new driver into estuary
+> and release a new version of the firmware to support it.
 
-On Tue, Feb 16, 2016 at 7:23 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
-> As we now have valid PCI host bridge device reference we can
-> introduce code that is going to find its bus domain number using
-> ACPI _SEG method.
->
-> Note that _SEG method is optional, therefore _SEG absence means
-> that all PCI buses belong to domain 0.
->
-> While at it, for the sake of code clarity we put ACPI and DT domain
-> assign methods into the corresponding helpers.
+So what happens to folks running the old firmware then?
 
-In my patchset, I had a slightly different and I think better approach for
-this without calling the _SEG method again. Please see
-http://www.spinics.net/lists/arm-kernel/msg478167.html
-at the last part of http://www.spinics.net/lists/arm-kernel/msg478169.html
+> > I think you need to use a new compatible string in the firmware
+> > if you change the register layout, and then change the driver
+> > to support both the old and the new layout.
+> 
+> You are right, for some reason in this patchset I missed the Documentation
+> update that I posted in the previous one, i.e.:
+> 
+> --- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> @@ -23,8 +23,8 @@ Optional properties:
+>  Hip05 Example (note that Hip06 is the same except compatible):
+>         pcie@0xb0080000 {
+>                 compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
+> -               reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
+> -               reg-names = "rc_dbi", "config";
+> +               reg = <0 0xb0080000 0 0x10000>, <0x220 0x00100000 0 0x0f00000>;
+> +               reg-names = "rc_dbi", "ecam-cfg";
+> 
 
-JC.
+That is not the compatible string, it's an undocumented register set.
+You can either define the a new compatible string that gives the "config"
+registers a new meaning, or you change the binding to allow two either
+a "config" or an "ecam-cfg" register set, and let the driver handle both.
+
+	Arnd
