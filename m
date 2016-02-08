@@ -1,57 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 3/3] PCI: Mark Broadcom Vulcan bridges as having
- non-compliant BARs
-To: Andi Kleen <ak@linux.intel.com>,
-	Jayachandran Chandrashekaran Nair
-	<jayachandran.chandrashekaran@broadcom.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh@kernel.org>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	linux-pci@vger.kernel.org
-Date: Fri, 26 Feb 2016 09:59:04 -0600
-Message-ID: <20160226155904.9113.63245.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160226155334.9113.77645.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160226155334.9113.77645.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail5.windriver.com ([192.103.53.11]:59587 "EHLO mail5.wrs.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754814AbcBHPwA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 8 Feb 2016 10:52:00 -0500
+Date: Mon, 8 Feb 2016 10:51:41 -0500
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ley Foon Tan <lftan@altera.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	<linux-pci@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>
+Subject: Re: [PATCH 5/5] drivers/pci: make most of the PCI_DW drivers modular
+Message-ID: <20160208155141.GT23093@windriver.com>
+References: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com>
+ <1454889644-27830-6-git-send-email-paul.gortmaker@windriver.com>
+ <2730150.DUniNa63fK@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <2730150.DUniNa63fK@wuerfel>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Broadcom Vulcan bridges have a BAR 0 for internal debug registers.  But
-writing certain addresses to the BAR can trigger a hardware problem in the
-device.  Linux doesn't need any BARs on these devices, so we can ignore
-them.
+[Re: [PATCH 5/5] drivers/pci: make most of the PCI_DW drivers modular] On 08/02/2016 (Mon 11:00) Arnd Bergmann wrote:
 
-Mark these bridges as having non-compliant BARs so the PCI core doesn't
-touch them.
+> On Sunday 07 February 2016 19:00:44 Paul Gortmaker wrote:
+> > We've exported the symbols that we know these specific drivers
+> > will need as tristate, so now we can make the conversion from
+> > bool to tristate w/o concern for build regressions.
+> > 
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Ley Foon Tan <lftan@altera.com>
+> > Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+> > Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
+> > Cc: Thierry Reding <thierry.reding@gmail.com>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: linux-pci@vger.kernel.org
+> > Cc: linux-arm-msm@vger.kernel.org
+> > Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+> 
+> Looks good, but I'm not sure what happens on unload. Did you check?
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/quirks.c |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+Per the 0/N I've not got the capability to do run time testing for any
+of this stuff.  And from previous discussions, ISTR that people didn't
+want to see a blanket block-unload policy implemented.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 0575a1e..978c00c 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3705,6 +3705,20 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
- DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
- 
- /*
-+ * Writing to BAR 0 on Broadcom Vulcan bridges can trigger a hardware
-+ * problem in the device.  Linux doesn't need any BARs on these devices, so
-+ * mark the device as having non-compliant BARs so we will ignore them.
-+ */
-+static void quirk_bridge_brcm_vulcan_internal(struct pci_dev *pdev)
-+{
-+	pdev->non_compliant_bars = 1;
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x9000,
-+			quirk_bridge_brcm_vulcan_internal);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_BROADCOM, 0x9039,
-+			quirk_bridge_brcm_vulcan_internal);
-+
-+/*
-  * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
-  * class code.  Fix it.
-  */
+> Until this is tested, maybe it's best to prevent module unloading?
+
+If that is what people want, I can add that.
+
+P.
+-- 
+
+> 
+> 	Arnd
