@@ -1,67 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48024 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756522AbcBWArR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Feb 2016 19:47:17 -0500
-Subject: [PATCH v4 07/11] PCI: Move pci_vpd_release() from header file to
- pci/access.c
-To: Hannes Reinecke <hare@suse.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Babu Moger <babu.moger@oracle.com>,
-	Alexander Duyck <alexander.duyck@gmail.com>
-Date: Mon, 22 Feb 2016 18:47:14 -0600
-Message-ID: <20160223004714.10635.28635.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+	"tn@semihalf.com" <tn@semihalf.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"jcm@redhat.com" <jcm@redhat.com>
+Subject: RE: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host
+ Controllers
+Date: Mon, 8 Feb 2016 13:17:58 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ECAC944@lhreml503-mbs>
+References: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
+ <76564455.dlc1WHiVY2@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1EC9EF4B@lhreml503-mbs>
+ <1930535.mkCdtpUWq7@wuerfel>
+In-Reply-To: <1930535.mkCdtpUWq7@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Move pci_vpd_release() so it's next to the other VPD functions.  This puts
-it next to pci_vpd_pci22_init(), which allocates the space freed by
-pci_vpd_release().
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: 04 February 2016 17:02
+> To: Gabriele Paoloni
+> Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C); Linuxarm;
+> qiujiang; bhelgaas@google.com; Lorenzo.Pieralisi@arm.com;
+> tn@semihalf.com; zhangjukuo; xuwei (O); Liguozhu (Kenneth); linux-
+> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
+> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; jcm@redhat.com
+> Subject: Re: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host
+> Controllers
+> 
+> On Thursday 04 February 2016 16:44:12 Gabriele Paoloni wrote:
+> > Effectively the ACPI version of the HiSilicon driver does not rely on
+> > Designware as much as the DT version (that calls
+> dw_pcie_host_init());
+> > however in order to do what you suggest I'd need to copy and paste
+> and
+> > modify dw_pcie_rd_conf and dw_pcie_wr_conf.
+> > Also I'd need to declare duplicate version of the functions in
+> > pcie-hisi-common.c (if I do not want to split the object across
+> > different paths "drivers/pci/host" and "drivers/acpi/")
+> >
+> > Now I can do it but I thought it was more correct to pass
+> &dw_pcie_ops
+> > as input pointer in DECLARE_ACPI_MCFG_FIXUP(); this is also because
+> maybe in
+> > future other Designware based controllers may need to support ACPI
+> and it
+> > would be easier for them to reuse their DT based driver functions
+> >
+> > Honestly I am a bit confused...
+> >
+> 
+> I don't think you can use the dw_pcie_ops as-is anyway, as they in
+> turn rely on the device driver structure, and you also don't need
+> those as they seem to be written for the generic case of a 32-bit
+> architecture that does not have enough space to map the entire
+> config space into MMIO. Just set up all those mapping registers from
+> the firmware and pass the config space base address as you'd normally
+> do on ACPI.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/access.c |    6 ++++++
- drivers/pci/pci.h    |    6 +-----
- 2 files changed, 7 insertions(+), 5 deletions(-)
+Hi Arnd
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 4c4c734..ca42a33 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -581,6 +581,12 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
- 	return 0;
- }
- 
-+void pci_vpd_release(struct pci_dev *dev)
-+{
-+	if (dev->vpd)
-+		dev->vpd->ops->release(dev);
-+}
-+
- /**
-  * pci_cfg_access_lock - Lock PCI config reads/writes
-  * @dev:	pci device struct
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 9a1660f..52e86b0 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -107,11 +107,7 @@ struct pci_vpd {
- };
- 
- int pci_vpd_pci22_init(struct pci_dev *dev);
--static inline void pci_vpd_release(struct pci_dev *dev)
--{
--	if (dev->vpd)
--		dev->vpd->ops->release(dev);
--}
-+void pci_vpd_release(struct pci_dev *dev);
- 
- /* PCI /proc functions */
- #ifdef CONFIG_PROC_FS
+I have now sent out patchset v2.
 
+Now I have removed the dependency from designware but I still think
+the best location for the code is in "drivers/pci/host/":
+the ACPI quirks share the config read/write functions with the DT
+driver, moreover for other hosts in future I think it makes sense
+to stay in "drivers/pci/host/" as they could even share more init
+code with their respective DT versions...
+
+Cheers
+
+Gab
+
+> 
+> 	Arnd
