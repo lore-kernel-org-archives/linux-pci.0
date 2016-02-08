@@ -1,95 +1,219 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57491 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030385AbcBSV5e (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 19 Feb 2016 16:57:34 -0500
-Date: Fri, 19 Feb 2016 14:57:33 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: allen.m.kay@intel.com, linux-kernel@vger.kernel.org,
-	kvm@vger.kernel.org
-Subject: Re: [PATCH v2] pci: Wait for up to 1000ms after FLR reset
-Message-ID: <20160219145733.7f3a2f55@t450s.home>
-In-Reply-To: <20160216205031.11990.51880.stgit@gimli.home>
-References: <20160216205031.11990.51880.stgit@gimli.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:52398 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751776AbcBHMoE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Feb 2016 07:44:04 -0500
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: helgaas@kernel.org
+Cc: arnd@arndb.de, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, CARLOS.PALMINHA@synopsys.com,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH] link up validation moved to pcie-designware
+Date: Mon,  8 Feb 2016 12:43:58 +0000
+Message-Id: <b00bf38b4351831b97892b747d48c9206fbab9c7.1454935205.git.jpinto@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 16 Feb 2016 13:53:19 -0700
-Alex Williamson <alex.williamson@redhat.com> wrote:
+This patch goal is to centralize in pcie-designware the link up
+validation. A new function was added to pci-designware that is
+responsible for doing such a task. This was implemented in a form that
+permits flexibility for all SoCs.
 
-> Some devices take longer than the spec indicates to return from FLR
-> reset, a notable case of this is Intel integrated graphics (IGD),
-> which can often take an additional 300ms powering down an attached
-> LCD panel as part of the FLR.  Allow devices up to 1000ms, testing
-> every 100ms whether the first dword of config space is read as -1.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> ---
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+ drivers/pci/host/pci-dra7xx.c      | 11 +++--------
+ drivers/pci/host/pci-exynos.c      | 11 ++---------
+ drivers/pci/host/pci-imx6.c        | 11 +++--------
+ drivers/pci/host/pcie-designware.c | 20 ++++++++++++++++++++
+ drivers/pci/host/pcie-designware.h |  2 ++
+ drivers/pci/host/pcie-spear13xx.c  | 12 ++----------
+ 6 files changed, 32 insertions(+), 35 deletions(-)
 
-Self nak on this one, didn't account for VFs not implementing the first
-dword.  Thanks,
-
-Alex
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 8c36880..e425944 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -10,7 +10,6 @@
+  * published by the Free Software Foundation.
+  */
  
-> v2: Change loop to incorporate initial 100ms delay, replace delay in
->     callee functions, add comment.
-> 
->  drivers/pci/pci.c |   26 ++++++++++++++++++++++++--
->  1 file changed, 24 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 602eb42..0ce153c 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3414,6 +3414,28 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL(pci_wait_for_pending_transaction);
->  
-> +/*
-> + * We should only need to wait 100ms after FLR, but some devices take longer.
-> + * Wait for up to 1000ms for config space to return something other than -1.
-> + * Intel IGD requires this when an LCD panel is attached.
-> + */
-> +static void pci_flr_wait(struct pci_dev *dev)
-> +{
-> +	int i = 0;
-> +	u32 id;
-> +
-> +	do {
-> +		msleep(100);
-> +		pci_read_config_dword(dev, PCI_VENDOR_ID, &id);
-> +	} while (i++ < 10 && id == ~0);
-> +
-> +	if (id == ~0)
-> +		dev_warn(&dev->dev, "Failed to return from FLR\n");
-> +	else if (i > 1)
-> +		dev_info(&dev->dev, "Required additional "
-> +			 "%dms to return from FLR\n", (i - 1) * 100);
-> +}
-> +
->  static int pcie_flr(struct pci_dev *dev, int probe)
->  {
->  	u32 cap;
-> @@ -3429,7 +3451,7 @@ static int pcie_flr(struct pci_dev *dev, int probe)
->  		dev_err(&dev->dev, "timed out waiting for pending transaction; performing function level reset anyway\n");
->  
->  	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
-> -	msleep(100);
-> +	pci_flr_wait(dev);
->  	return 0;
->  }
->  
-> @@ -3459,7 +3481,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
->  		dev_err(&dev->dev, "timed out waiting for pending transaction; performing AF function level reset anyway\n");
->  
->  	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
-> -	msleep(100);
-> +	pci_flr_wait(dev);
->  	return 0;
->  }
->  
-> 
+-#include <linux/delay.h>
+ #include <linux/err.h>
+ #include <linux/interrupt.h>
+ #include <linux/irq.h>
+@@ -108,7 +107,6 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
+ {
+ 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+ 	u32 reg;
+-	unsigned int retries;
+ 
+ 	if (dw_pcie_link_up(pp)) {
+ 		dev_err(pp->dev, "link is already up\n");
+@@ -119,13 +117,10 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
+ 	reg |= LTSSM_EN;
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+ 
+-	for (retries = 0; retries < 1000; retries++) {
+-		if (dw_pcie_link_up(pp))
+-			return 0;
+-		usleep_range(10, 20);
+-	}
++	/* check if the link is up or not */
++	if (!dw_pcie_check_link_is_up(pp, 1000, 10, 20))
++		return 0;
+ 
+-	dev_err(pp->dev, "link is not up\n");
+ 	return -EINVAL;
+ }
+ 
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index 01095e1..770c45a 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -318,7 +318,6 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
+ {
+ 	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+ 	u32 val;
+-	unsigned int retries;
+ 
+ 	if (dw_pcie_link_up(pp)) {
+ 		dev_err(pp->dev, "Link already up\n");
+@@ -357,13 +356,8 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
+ 			  PCIE_APP_LTSSM_ENABLE);
+ 
+ 	/* check if the link is up or not */
+-	for (retries = 0; retries < 10; retries++) {
+-		if (dw_pcie_link_up(pp)) {
+-			dev_info(pp->dev, "Link up\n");
+-			return 0;
+-		}
+-		mdelay(100);
+-	}
++	if (!dw_pcie_check_link_is_up(pp, 10, 100000, 110000))
++		return 0;
+ 
+ 	while (exynos_phy_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED) == 0) {
+ 		val = exynos_blk_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED);
+@@ -372,7 +366,6 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
+ 	/* power off phy */
+ 	exynos_pcie_power_off_phy(pp);
+ 
+-	dev_err(pp->dev, "PCIe Link Fail\n");
+ 	return -EINVAL;
+ }
+ 
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 22e8224..9e323be 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -330,15 +330,10 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ 
+ static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+ {
+-	unsigned int retries;
+-
+-	for (retries = 0; retries < 200; retries++) {
+-		if (dw_pcie_link_up(pp))
+-			return 0;
+-		usleep_range(100, 1000);
+-	}
++	/* check if the link is up or not */
++	if (!dw_pcie_check_link_is_up(pp, 200, 100, 1000))
++		return 0;
+ 
+-	dev_err(pp->dev, "phy link never came up\n");
+ 	dev_dbg(pp->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+ 		readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
+ 		readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 540f077..6725231 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -22,6 +22,7 @@
+ #include <linux/pci_regs.h>
+ #include <linux/platform_device.h>
+ #include <linux/types.h>
++#include <linux/delay.h>
+ 
+ #include "pcie-designware.h"
+ 
+@@ -380,6 +381,25 @@ static struct msi_controller dw_pcie_msi_chip = {
+ 	.teardown_irq = dw_msi_teardown_irq,
+ };
+ 
++int dw_pcie_check_link_is_up(struct pcie_port *pp, int max_ret, int sleep_min,
++								int sleep_max)
++{
++	int retries;
++
++	/* check if the link is up or not */
++	for (retries = 0; retries < max_ret; retries++) {
++		if (dw_pcie_link_up(pp)) {
++			dev_info(pp->dev, "link up\n");
++			return 0;
++		}
++		usleep_range(sleep_min, sleep_max);
++	}
++
++	dev_err(pp->dev, "phy link never came up\n");
++
++	return 1;
++}
++
+ int dw_pcie_link_up(struct pcie_port *pp)
+ {
+ 	if (pp->ops->link_up)
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 2356d29..b077fe0 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -76,6 +76,8 @@ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val);
+ int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val);
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+ void dw_pcie_msi_init(struct pcie_port *pp);
++int dw_pcie_check_link_is_up(struct pcie_port *pp, int max_ret, int sleep_min,
++								int sleep_max);
+ int dw_pcie_link_up(struct pcie_port *pp);
+ void dw_pcie_setup_rc(struct pcie_port *pp);
+ int dw_pcie_host_init(struct pcie_port *pp);
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index b95b756..5c24595 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -13,7 +13,6 @@
+  */
+ 
+ #include <linux/clk.h>
+-#include <linux/delay.h>
+ #include <linux/interrupt.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+@@ -149,7 +148,6 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+ 	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
+ 	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
+ 	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
+-	unsigned int retries;
+ 
+ 	if (dw_pcie_link_up(pp)) {
+ 		dev_err(pp->dev, "link already up\n");
+@@ -201,15 +199,9 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+ 			&app_reg->app_ctrl_0);
+ 
+ 	/* check if the link is up or not */
+-	for (retries = 0; retries < 10; retries++) {
+-		if (dw_pcie_link_up(pp)) {
+-			dev_info(pp->dev, "link up\n");
+-			return 0;
+-		}
+-		mdelay(100);
+-	}
++	if (!dw_pcie_check_link_is_up(pp, 10, 100000, 110000))
++		return 0;
+ 
+-	dev_err(pp->dev, "link Fail\n");
+ 	return -EINVAL;
+ }
+ 
+-- 
+1.8.1.5
 
