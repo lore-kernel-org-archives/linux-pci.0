@@ -1,67 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34961 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932407AbcBYP7O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Feb 2016 10:59:14 -0500
-Date: Thu, 25 Feb 2016 09:59:11 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Paul Burton <paul.burton@imgtec.com>
-Cc: linux-mips@linux-mips.org,
-	Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>,
-	Ley Foon Tan <lftan@altera.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Russell Joyce <russell.joyce@york.ac.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Ray Jui <rjui@broadcom.com>,
-	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Rob Herring <robh@kernel.org>, Duc Dang <dhdang@apm.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	linux-kernel@vger.kernel.org,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Subject: Re: [PATCH v3 0/6] Xilinx AXI PCIe Host Bridge driver fixes
-Message-ID: <20160225155911.GF8120@localhost>
-References: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+	"tn@semihalf.com" <tn@semihalf.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"jcm@redhat.com" <jcm@redhat.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [RFC PATCH v2 1/3] PCI: hisi: re-architect Hip05/Hip06
+ controllers driver to preapare for ACPI
+Date: Mon, 8 Feb 2016 16:51:19 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ECAD249@lhreml503-mbs>
+References: <1454935264-6076-1-git-send-email-gabriele.paoloni@huawei.com>
+ <2409806.1aGBrN4l0X@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ECACFDD@lhreml503-mbs>
+ <3113837.YSNyDAf4HQ@wuerfel>
+In-Reply-To: <3113837.YSNyDAf4HQ@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Paul,
-
-On Thu, Feb 04, 2016 at 04:10:07PM +0000, Paul Burton wrote:
-> This series fixes a number of issues found using the Xilinx AXI PCIe
-> Host Bridge IP on the Imagination Technologies MIPS Boston development
-> board. It has been split out of the larger Boston board support series
-> at Michal's request.
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: 08 February 2016 16:33
+> To: Gabriele Paoloni
+> Cc: linux-arm-kernel@lists.infradead.org; Guohanjun (Hanjun Guo);
+> Wangzhou (B); liudongdong (C); Linuxarm; qiujiang; bhelgaas@google.com;
+> Lorenzo.Pieralisi@arm.com; tn@semihalf.com; linux-pci@vger.kernel.org;
+> linux-kernel@vger.kernel.org; xuwei (O); linux-acpi@vger.kernel.org;
+> jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth)
+> Subject: Re: [RFC PATCH v2 1/3] PCI: hisi: re-architect Hip05/Hip06
+> controllers driver to preapare for ACPI
 > 
-> Applies atop v4.5-rc2.
+> On Monday 08 February 2016 16:06:54 Gabriele Paoloni wrote:
+> > >
+> > > On Monday 08 February 2016 12:41:02 Gabriele Paoloni wrote:
+> > > > +
+> > > > +/* HipXX PCIe host only supports 32-bit config access */
+> > > > +int hisi_pcie_common_cfg_read(void __iomem *reg_base, int where,
+> int
+> > > size,
+> > > > +                         u32 *val)
+> > > > +{
+> > > > +   u32 reg;
+> > > > +   u32 reg_val;
+> > > > +   void *walker = &reg_val;
+> > > > +
+> > > > +   walker += (where & 0x3);
+> > > > +   reg = where & ~0x3;
+> > > > +   reg_val = readl(reg_base + reg);
+> > > > +
+> > > > +   if (size == 1)
+> > > > +           *val = *(u8 __force *) walker;
+> > > > +   else if (size == 2)
+> > > > +           *val = *(u16 __force *) walker;
+> > > > +   else if (size == 4)
+> > > > +           *val = reg_val;
+> > > > +   else
+> > > > +           return PCIBIOS_BAD_REGISTER_NUMBER;
+> > > > +
+> > > > +   return PCIBIOS_SUCCESSFUL;
+> > > > +}
+> > >
+> > > Isn't this the same hack that Qualcomm are using?
+> >
+> > As far as I can see Qualcomm defines its own config access
+> > mechanism only for RC config read and also it seems they're
+> > having problems with reporting the device class...
+> >
+> > https://github.com/torvalds/linux/blob/master/drivers/pci/host/pcie-
+> qcom.c#L474
+> >
+> > Our problem is that our HW can only perform 32b rd/wr accesses
+> > So we can't use readw/readb/writew/writeb...
+> >
+> >
 > 
-> Paul Burton (6):
->   PCI: xilinx: Keep references to both IRQ domains
->   PCI: xilinx: Unify INTx & MSI interrupt FIFO decode
->   PCI: xilinx: Always clear interrupt decode register
->   PCI: xilinx: Clear interrupt FIFO during probe
->   PCI: xilinx: Fix INTX irq dispatch
->   PCI: xilinx: Allow build on MIPS platforms
+> Sorry, my mistake, I meant Cavium not Qualcomm.
+> See https://lkml.org/lkml/2016/2/5/689 for the patches.
+
+Well, looking at it Cavium seems quite different, 
+
+On read they need to trigger the retrieval of the
+config space info writing to the lower 32b of a 64b register,
+then they need to read data back on the upper 64b of the
+same register and adjust the content to remove the garbage...
+
+We just use 32b accesses and adjust grab the appropriate
+bytes depending on the read/write sizes...
+
+Thanks 
+
+Gab
+
 > 
->  drivers/pci/host/Kconfig       |   2 +-
->  drivers/pci/host/pcie-xilinx.c | 125 +++++++++++++++++++----------------------
-
-Looks like Bharat has some IRQ concerns, so I'm guessing you'll be
-posting a v4?
-
-Bjorn
+> 	Arnd
