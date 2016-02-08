@@ -1,151 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0086.outbound.protection.outlook.com ([104.47.36.86]:53088
-	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965231AbcBDO4f convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 09:56:35 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	Michal Simek <michals@xilinx.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"paul.burton@imgtec.com" <paul.burton@imgtec.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"wangyijing@huawei.com" <wangyijing@huawei.com>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: RE: [PATCH V2 5/5] Microblaze: Modifying microblaze PCI subsytem to
- support  generic Xilinx  AXI PCIe Host Bridge IP driver
-Date: Thu, 4 Feb 2016 14:56:29 +0000
-Message-ID: <8520D5D51A55D047800579B094147198258803F8@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1452620173-4905-1-git-send-email-bharatku@xilinx.com>
- <1452620173-4905-6-git-send-email-bharatku@xilinx.com>
- <20160203163207.GC32546@localhost> <20160203163805.GA6112@localhost>
- <8520D5D51A55D047800579B0941471982587F199@XAP-PVEXMBX01.xlnx.xilinx.com>
- <20160204145148.GA26361@localhost>
-In-Reply-To: <20160204145148.GA26361@localhost>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160205094740.GA31547@red-moon>
+References: <1454058340-7904-1-git-send-email-jchandra@broadcom.com>
+ <1454058340-7904-6-git-send-email-jchandra@broadcom.com> <20160205001907.GJ7031@localhost>
+ <CAKc_7PXYtFt1MQE-UGO0O5vvQ+xFKa2b5=F8wXB=EN-JUJVzZw@mail.gmail.com> <20160205094740.GA31547@red-moon>
+From: Jayachandran Chandrashekaran Nair
+	<jayachandran.chandrashekaran@broadcom.com>
+Date: Mon, 8 Feb 2016 16:57:46 +0530
+Message-ID: <CAKc_7PVNm7z8nv_+Tr9FYhrVAA+-vh4CDMB83WAyT8tdi+CHzA@mail.gmail.com>
+Subject: Re: [PATCH v7 5/5] PCI: ACPI: Add a generic ACPI based host controller
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Jayachandran C <jchandra@broadcom.com>,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-acpi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	linux-arm-kernel@lists.infradead.org,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	xen-devel@lists.xenproject.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Subject: Re: [PATCH V2 5/5] Microblaze: Modifying microblaze PCI subsytem
-> to support generic Xilinx AXI PCIe Host Bridge IP driver
-> 
-> On Thu, Feb 04, 2016 at 05:49:20AM +0000, Bharat Kumar Gogada wrote:
-> > > Subject: Re: [PATCH V2 5/5] Microblaze: Modifying microblaze PCI
-> > > subsytem to support generic Xilinx AXI PCIe Host Bridge IP driver
-> > >
-> > > [+cc Ben for real this time]
-> > >
-> > > On Wed, Feb 03, 2016 at 10:32:07AM -0600, Bjorn Helgaas wrote:
-> > > > [+cc Ben, pcibios_get_phb_of_node() question]
-> > > >
-> > > > On Tue, Jan 12, 2016 at 11:06:13PM +0530, Bharat Kumar Gogada wrote:
-> > > > > This patch does required modifications to microblaze PCI
-> > > > > subsystem, to work with generic driver
-> > > > > (drivers/pci/host/pcie-xilinx.c) on Microblaze and Zynq.
-> > > > >
-> > > > > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> > > > > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com> ...
-> > > >
-> > > > >  resource_size_t pcibios_align_resource(void *data, const struct
-> > > > > resource
-> > > *res,
-> > > > >  				resource_size_t size, resource_size_t
-> align)  {
-> > > > > -	struct pci_dev *dev = data;
-> > > > >  	resource_size_t start = res->start;
-> > > > >
-> > > > > -	if (res->flags & IORESOURCE_IO) {
-> > > > > -		if (skip_isa_ioresource_align(dev))
-> > > > > -			return start;
-> > > > > -		if (start & 0x300)
-> > > > > -			start = (start + 0x3ff) & ~0x3ff;
-> > > > > -	}
-> > > > > -
-> > > > >  	return start;
-> > > >
-> > > > "return res->start;" is sufficient; no need for a temporary variable.
-> > > >
-> > Agreed will address in next patch.
-> > > > >  }
-> > > > >  EXPORT_SYMBOL(pcibios_align_resource);
-> > > > >
-> > > > > +int pcibios_add_device(struct pci_dev *dev) {
-> > > > > +	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> > > > > +
-> > > > > +	return 0;
-> > > > > +}
-> > > > > +EXPORT_SYMBOL(pcibios_add_device);
-> > > > > +
-> > > > >  /*
-> > > > >   * Reparent resource children of pr that conflict with res
-> > > > >   * under res, and make res replace those children.
-> > > > > @@ -1335,9 +1308,21 @@ static void
-> > > > > pcibios_setup_phb_resources(struct pci_controller *hose,
-> > > > >
-> > > > >  struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
-> {
-> > > > > -	struct pci_controller *hose = bus->sysdata;
-> > > > > +	struct device_node *np;
-> > > > > +
-> > > > > +	for_each_node_by_type(np, "pci") {
-> > > > > +		const void *prop;
-> > > > > +		unsigned int bus_min;
-> > > > > +
-> > > > > +		prop = of_get_property(np, "bus-range", NULL);
-> > > > > +		if (!prop)
-> > > > > +			continue;
-> > > > > +		bus_min = be32_to_cpup(prop);
-> > > > > +		if (bus->number == bus_min)
-> > > > > +			return np;
-> > > > > +	}
-> > > > >
-> > > > > -	return of_node_get(hose->dn);
-> > > > > +	return NULL;
-> > > >
-> > > > Hmmm.  The old microblaze code ("return of_node_get(hose->dn);")
-> > > > is basically the same as the mips and powerpc versions.  The new
-> > > > code is basically the same as the x86 version.
-> > > >
-> > > > I like the generic weak version in drivers/pci/of.c because it
-> > > > doesn't use any arch-specific data, and it looks like if we just
-> > > > set the struct device.of_node members correctly, everything should
-> Just Work.
-> > > >
-> > > > But Ben added both the generic and the x86 versions the same day,
-> > > > so there must be some complication:
-> > > >
-> > > >   98d9f30c820d ("pci/of: Match PCI devices to OF nodes dynamically")
-> > > >   3d5fe5a65af9 ("x86/devicetree: Use generic PCI <-> OF matching")
-> > > >
-> > > > So I guess my question is, why do we need a microblaze-specific
-> > > > version at all?
-> > > >
-> > I did not notice the weak version in /pci/of.c, I have tested with
-> > weak version also and it is working.  We might not need this
-> > microblaze specific version, but will wait for ben's reply.
-> 
-> If the generic version works, and you don't need the microblaze- specific
-> version, just remove it and we'll get this wrapped up.  No need to wait for
-> Ben.
+Lorenzo,
+
+On Fri, Feb 5, 2016 at 3:17 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Fri, Feb 05, 2016 at 02:05:37PM +0530, Jayachandran Chandrashekaran Nair wrote:
 >
-Ok Bjorn, I will remove it and send next series of patches.
+> [...]
+>
+>> pci_host_acpi.c is a generic implementation of these using a sysdata
+>> pointing to acpi_pci_root_info, and using a pointer to the pci_mmcfg_region
+>> to access ECAM area, Maybe I can rename this file to
+>> pci_acpi_host_generic.c to reflect this better.
+>
+> Maybe you should stop sending this series and work with Tomasz to
+> get this done, you are confusing everyone and I am really really
+> annoyed about this.
+>
+> Do you realize there is no point in having two patch series doing
+> the same thing and wasting everyone's review time ?
+>
+> Do you realize he started this work long before you and went through
+> several rounds of review already (I told you before but in case you
+> forgot) ?
+>
+> Tomasz posted a version yesterday, integrating comments following months
+> of review and testing and I think it is ready to get upstream:
+>
+> https://lkml.org/lkml/2016/2/4/646
+>
+> Did you even consider reviewing his code or helping him instead of
+> churning out more patches doing the *SAME* thing ?
 
-Bharat
+This is getting ridiculous, I had replied to your earlier mails on why
+my patchset is NOT doing the exact same thing. I had also explained
+why helping was not feasible.
 
+The basic point again: I am trying to give a much simpler patchset
+to solve the same problem, I take it that you haven't reviewed my
+patchset before writing this mail. I would have appreciated
+a technical discussion rather than this pointless flamefest.
+
+If you have reviewed it, you can see that there are just 5 patches
+instead of 23, and that overall it is a much simpler approach.
+
+> Do you want all of us to go through your code and re-fix what has
+> already been fixed in Tomasz's series with the end result of missing
+> yet another merge window ?
+
+Again, as I said, the whole point of my patchset is that is much  easier
+to go thru and validate and merge or drop as needed.
+
+Anyway, if you are on target to hit this merge window, I really hope
+that happens and there will no need for me to spend further time on
+this.
+
+Regards,
+JC.
