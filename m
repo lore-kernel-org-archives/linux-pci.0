@@ -1,78 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:34934 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933685AbcBQDph (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:45:37 -0500
-Received: from localhost
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 17 Feb 2016 13:45:35 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v8 03/45] powerpc/pci: Cleanup on struct pci_controller_ops
-Date: Wed, 17 Feb 2016 14:43:46 +1100
-Message-Id: <1455680668-23298-4-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail.windriver.com ([147.11.1.11]:53152 "EHLO
+	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752807AbcBHADr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 7 Feb 2016 19:03:47 -0500
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <linux-pci@vger.kernel.org>
+Subject: [PATCH 3/5] drivers/pci: export dw syms enabling board specific PCI code to be tristate
+Date: Sun, 7 Feb 2016 19:00:42 -0500
+Message-ID: <1454889644-27830-4-git-send-email-paul.gortmaker@windriver.com>
+In-Reply-To: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com>
+References: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Each PHB has one instance of "struct pci_controller_ops", which
-includes various callbacks called by PCI subsystem. In the definition
-of this struct, some callbacks have explicit names for its arguments,
-but the left don't have.
+After converting the drivers who select PCI_DW from bool to tristate,
+the following symbols need to be exported, simply based on the output
+from modpost failures.
 
-This adds all explicit names of the arguments to the callbacks in
-"struct pci_controller_ops" so that the code looks consistent.
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Reviewed-by: Daniel Axtens <dja@axtens.net>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
 ---
- arch/powerpc/include/asm/pci-bridge.h | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/pci/host/pcie-designware.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-index b688d04..4dd6ef4 100644
---- a/arch/powerpc/include/asm/pci-bridge.h
-+++ b/arch/powerpc/include/asm/pci-bridge.h
-@@ -21,18 +21,19 @@ struct pci_controller_ops {
- 	void		(*dma_dev_setup)(struct pci_dev *dev);
- 	void		(*dma_bus_setup)(struct pci_bus *bus);
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 21716827847a..65c0c81b8852 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -91,6 +91,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
  
--	int		(*probe_mode)(struct pci_bus *);
-+	int		(*probe_mode)(struct pci_bus *bus);
+ 	return PCIBIOS_SUCCESSFUL;
+ }
++EXPORT_SYMBOL(dw_pcie_cfg_read);
  
- 	/* Called when pci_enable_device() is called. Returns true to
- 	 * allow assignment/enabling of the device. */
--	bool		(*enable_device_hook)(struct pci_dev *);
-+	bool		(*enable_device_hook)(struct pci_dev *dev);
+ int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
+ {
+@@ -108,6 +109,7 @@ int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
  
--	void		(*disable_device)(struct pci_dev *);
-+	void		(*disable_device)(struct pci_dev *dev);
+ 	return PCIBIOS_SUCCESSFUL;
+ }
++EXPORT_SYMBOL(dw_pcie_cfg_write);
  
--	void		(*release_device)(struct pci_dev *);
-+	void		(*release_device)(struct pci_dev *dev);
+ static inline void dw_pcie_readl_rc(struct pcie_port *pp, u32 reg, u32 *val)
+ {
+@@ -201,6 +203,7 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
  
- 	/* Called during PCI resource reassignment */
--	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long type);
-+	resource_size_t (*window_alignment)(struct pci_bus *bus,
-+					    unsigned long type);
- 	void		(*setup_bridge)(struct pci_bus *bus,
- 					unsigned long type);
- 	void		(*reset_secondary_bus)(struct pci_dev *dev);
-@@ -46,7 +47,7 @@ struct pci_controller_ops {
- 	int             (*dma_set_mask)(struct pci_dev *dev, u64 dma_mask);
- 	u64		(*dma_get_required_mask)(struct pci_dev *dev);
+ 	return ret;
+ }
++EXPORT_SYMBOL(dw_handle_msi_irq);
  
--	void		(*shutdown)(struct pci_controller *);
-+	void		(*shutdown)(struct pci_controller *hose);
- };
+ void dw_pcie_msi_init(struct pcie_port *pp)
+ {
+@@ -215,6 +218,7 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+ 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
+ 			    (u32)(msi_target >> 32 & 0xffffffff));
+ }
++EXPORT_SYMBOL(dw_pcie_msi_init);
  
- /*
+ static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+ {
+@@ -387,6 +391,7 @@ int dw_pcie_link_up(struct pcie_port *pp)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL(dw_pcie_link_up);
+ 
+ static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+ 			irq_hw_number_t hwirq)
+@@ -562,6 +567,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	pci_bus_add_devices(bus);
+ 	return 0;
+ }
++EXPORT_SYMBOL(dw_pcie_host_init);
+ 
+ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 		u32 devfn, int where, int size, u32 *val)
+@@ -771,6 +777,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
+ 	dw_pcie_writel_rc(pp, val, PCI_COMMAND);
+ }
++EXPORT_SYMBOL(dw_pcie_setup_rc);
+ 
+ MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
+ MODULE_DESCRIPTION("Designware PCIe host controller driver");
 -- 
-2.1.0
+2.6.1
 
