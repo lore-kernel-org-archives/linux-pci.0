@@ -1,120 +1,288 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0057.outbound.protection.outlook.com ([157.56.111.57]:31070
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752830AbcBIQ67 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Feb 2016 11:58:59 -0500
-Message-ID: <56BA1ACA.3090106@caviumnetworks.com>
-Date: Tue, 9 Feb 2016 08:58:50 -0800
-From: David Daney <ddaney@caviumnetworks.com>
-MIME-Version: 1.0
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Bjorn Helgaas <helgaas@kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH] link up validation moved to pcie-designware
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>,
+	"helgaas@kernel.org" <helgaas@kernel.org>
+References: <b00bf38b4351831b97892b747d48c9206fbab9c7.1454935205.git.jpinto@synopsys.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ECAC8D0@lhreml503-mbs>
+CC: "arnd@arndb.de" <arnd@arndb.de>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	David Daney <david.daney@cavium.com>,
-	Will Deacon <will.deacon@arm.com>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	David Daney <ddaney.cavm@gmail.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v5 3/3] pci, pci-thunder-ecam: Add driver for ThunderX-pass1
- on-chip devices
-References: <1454715675-17512-1-git-send-email-ddaney.cavm@gmail.com> <12842339.z2KnaZPlyO@wuerfel> <20160209162628.GA20171@localhost> <4260938.2z2RNjENMM@wuerfel>
-In-Reply-To: <4260938.2z2RNjENMM@wuerfel>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+	"CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <56B8B04B.9060909@synopsys.com>
+Date: Mon, 8 Feb 2016 15:12:11 +0000
+MIME-Version: 1.0
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ECAC8D0@lhreml503-mbs>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/09/2016 08:31 AM, Arnd Bergmann wrote:
-> On Tuesday 09 February 2016 10:26:28 Bjorn Helgaas wrote:
->> On Tue, Feb 09, 2016 at 10:25:33AM +0100, Arnd Bergmann wrote:
->>> On Monday 08 February 2016 17:24:30 Bjorn Helgaas wrote:
->>>>>>
->>>>>> I assume your system conforms to expectations like these; I'm just
->>>>>> pointing them out because you mentioned buses with multiple devices on
->>>>>> them, which is definitely something one doesn't expect in PCIe.
->>>>>
->>>>> The topology we have is currently working with the kernel's core PCI
->>>>> code.  I don't really want to get into discussing what the
->>>>> definition of PCIe is.  We have multiple devices (more than 32) on a
->>>>> single bus, and they have PCI Express and ARI Capabilities.  Is that
->>>>> PCIe?  I don't know.
->>>>
->>>> I don't need to know the details of your topology.  As long as it
->>>> conforms to the PCIe spec, it should be fine.  If it *doesn't* conform
->>>> to the spec, but things currently seem to work, that's less fine,
->>>> because a future Linux change is liable to break something for you.
->>>>
->>>> I was a little concerned about your statement that "there are multiple
->>>> devices residing on each bus, so from that point of view it cannot be
->>>> PCIe."  That made it sound like you're doing something outside the
->>>> spec.  If you're just using regular multi-function devices or ARI,
->>>> then I don't see any issue (or any reason to say it can't be PCIe).
->>>
->>> It doesn't conform to the PCIe port spec, because there are no external
->>> ports but just integrated devices in the host bridge.
+
+Hi Gab,
+This patch is part of the on going work of integrating a designware platform
+driver that is SoC agnostic. This code replication issue was raised during
+discussions.
+
+Thanks
+Joao
+
+On 2/8/2016 1:03 PM, Gabriele Paoloni wrote:
+> Hi Joao
+> 
+>> -----Original Message-----
+>> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+>> owner@vger.kernel.org] On Behalf Of Joao Pinto
+>> Sent: 08 February 2016 12:44
+>> To: helgaas@kernel.org
+>> Cc: arnd@arndb.de; linux-pci@vger.kernel.org; linux-
+>> kernel@vger.kernel.org; CARLOS.PALMINHA@synopsys.com; Joao Pinto
+>> Subject: [PATCH] link up validation moved to pcie-designware
 >>
->> Is there a spec section you have in mind?  Based on sec 1.3.1, I don't
->> think there's a requirement to have PCI Express Ports (is that what
->> you mean by "external ports"?)
->
-> No, I was just assuming that ports are specified in their own document,
-> which would not be followed here if there are none. There is nothing in
-> here that leads me to believe that the hardware is actually noncompliant
-> with any relevant standard.
->
->> Root Complex Integrated Endpoints (sec 1.3.2.3) are clearly supported
->> and they would not be behind a Root Port.  If you're using those, I
->> hope they're correctly identified via the PCIe capability Device/Port
->> Type (sec 7.8.2) because we rely on that type to figure out whether
->> the link-related registers are implemented.
+>> This patch goal is to centralize in pcie-designware the link up
+>> validation. A new function was added to pci-designware that is
+>> responsible for doing such a task. This was implemented in a form that
+>> permits flexibility for all SoCs.
+> 
+> Looking at the patch I don't think this is really needed,
+> it seems to me like it makes more confusion in reading the
+> drivers code.
+> 
+> It is clear that each HW IP has got his own transient time
+> in setting the link up, this is clear looking at the code
+> of the single drivers now.
+> 
+> With the modification you are proposing we are seeing
+> drivers calls with magic numbers and the need for the
+> reader to go and look into the designware framework to
+> understand a function that is not even designware
+> specific (in fact all these drivers need to wait different
+> times according to their HW IP and some other drivers do
+> not need to wait at all...)
+> 
+> BTW I am quite new to PCIe so let's see what the other guys
+> think...
+> 
+> Cheers
+> 
+> Gab
+> 
 >>
->> The spec does include rules related to peer-to-peer transactions, MPS,
->> ASPM, error reporting, etc., and Linux relies on those, so I think it
->> would be important to get those right.
->
-> David can probably explain more if the registers are compliant with
-> those parts of the spec.
-
-It is somewhat moot, but in the interest of keeping this thread alive:
-
-None of the "on-chip" devices behind these root complexes implements 
-ASPM, AER, etc.  The capability structures for all the features you 
-mention are not present.
-
-All that is there beyond standard PCI capabilities are:
-
-   - PCI Express capability, to indicate presence of PCI Express 
-Extended Capabilities.
-
-   - ARI capability so we can fit more than 16 devices on a bus.
-
-   - SRIOV capability on devices that are virtualizable.
-
-   - That's it!
-
-The reality is that they are not really PCI/PCIe devices at all.  All 
-the device registers are at fixed addresses and are connected to 
-proprietary internal buses with various weird properties.  Witness the 
-need for Enhanced Allocation capabilities to describe the fixed addressing.
-
-The PCI config space is a veneer laid on top of it all to aid in device 
-discovery and interrupt routing.
-
-So is it PCI or PCIe?  It is not really important to say.  All we want, 
-is to be able to get the pci-host-generic root complex driver to bind to 
-our ECAM/ECAM-like configuration space accessors.
-
-David Daney
-
-
-
->
-> 	Arnd
->
-
+>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+>> ---
+>>  drivers/pci/host/pci-dra7xx.c      | 11 +++--------
+>>  drivers/pci/host/pci-exynos.c      | 11 ++---------
+>>  drivers/pci/host/pci-imx6.c        | 11 +++--------
+>>  drivers/pci/host/pcie-designware.c | 20 ++++++++++++++++++++
+>>  drivers/pci/host/pcie-designware.h |  2 ++
+>>  drivers/pci/host/pcie-spear13xx.c  | 12 ++----------
+>>  6 files changed, 32 insertions(+), 35 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-
+>> dra7xx.c
+>> index 8c36880..e425944 100644
+>> --- a/drivers/pci/host/pci-dra7xx.c
+>> +++ b/drivers/pci/host/pci-dra7xx.c
+>> @@ -10,7 +10,6 @@
+>>   * published by the Free Software Foundation.
+>>   */
+>>
+>> -#include <linux/delay.h>
+>>  #include <linux/err.h>
+>>  #include <linux/interrupt.h>
+>>  #include <linux/irq.h>
+>> @@ -108,7 +107,6 @@ static int dra7xx_pcie_establish_link(struct
+>> pcie_port *pp)
+>>  {
+>>  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+>>  	u32 reg;
+>> -	unsigned int retries;
+>>
+>>  	if (dw_pcie_link_up(pp)) {
+>>  		dev_err(pp->dev, "link is already up\n");
+>> @@ -119,13 +117,10 @@ static int dra7xx_pcie_establish_link(struct
+>> pcie_port *pp)
+>>  	reg |= LTSSM_EN;
+>>  	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+>>
+>> -	for (retries = 0; retries < 1000; retries++) {
+>> -		if (dw_pcie_link_up(pp))
+>> -			return 0;
+>> -		usleep_range(10, 20);
+>> -	}
+>> +	/* check if the link is up or not */
+>> +	if (!dw_pcie_check_link_is_up(pp, 1000, 10, 20))
+>> +		return 0;
+>>
+>> -	dev_err(pp->dev, "link is not up\n");
+>>  	return -EINVAL;
+>>  }
+>>
+>> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-
+>> exynos.c
+>> index 01095e1..770c45a 100644
+>> --- a/drivers/pci/host/pci-exynos.c
+>> +++ b/drivers/pci/host/pci-exynos.c
+>> @@ -318,7 +318,6 @@ static int exynos_pcie_establish_link(struct
+>> pcie_port *pp)
+>>  {
+>>  	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+>>  	u32 val;
+>> -	unsigned int retries;
+>>
+>>  	if (dw_pcie_link_up(pp)) {
+>>  		dev_err(pp->dev, "Link already up\n");
+>> @@ -357,13 +356,8 @@ static int exynos_pcie_establish_link(struct
+>> pcie_port *pp)
+>>  			  PCIE_APP_LTSSM_ENABLE);
+>>
+>>  	/* check if the link is up or not */
+>> -	for (retries = 0; retries < 10; retries++) {
+>> -		if (dw_pcie_link_up(pp)) {
+>> -			dev_info(pp->dev, "Link up\n");
+>> -			return 0;
+>> -		}
+>> -		mdelay(100);
+>> -	}
+>> +	if (!dw_pcie_check_link_is_up(pp, 10, 100000, 110000))
+>> +		return 0;
+>>
+>>  	while (exynos_phy_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED) == 0) {
+>>  		val = exynos_blk_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED);
+>> @@ -372,7 +366,6 @@ static int exynos_pcie_establish_link(struct
+>> pcie_port *pp)
+>>  	/* power off phy */
+>>  	exynos_pcie_power_off_phy(pp);
+>>
+>> -	dev_err(pp->dev, "PCIe Link Fail\n");
+>>  	return -EINVAL;
+>>  }
+>>
+>> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+>> index 22e8224..9e323be 100644
+>> --- a/drivers/pci/host/pci-imx6.c
+>> +++ b/drivers/pci/host/pci-imx6.c
+>> @@ -330,15 +330,10 @@ static void imx6_pcie_init_phy(struct pcie_port
+>> *pp)
+>>
+>>  static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+>>  {
+>> -	unsigned int retries;
+>> -
+>> -	for (retries = 0; retries < 200; retries++) {
+>> -		if (dw_pcie_link_up(pp))
+>> -			return 0;
+>> -		usleep_range(100, 1000);
+>> -	}
+>> +	/* check if the link is up or not */
+>> +	if (!dw_pcie_check_link_is_up(pp, 200, 100, 1000))
+>> +		return 0;
+>>
+>> -	dev_err(pp->dev, "phy link never came up\n");
+>>  	dev_dbg(pp->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+>>  		readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
+>>  		readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
+>> diff --git a/drivers/pci/host/pcie-designware.c
+>> b/drivers/pci/host/pcie-designware.c
+>> index 540f077..6725231 100644
+>> --- a/drivers/pci/host/pcie-designware.c
+>> +++ b/drivers/pci/host/pcie-designware.c
+>> @@ -22,6 +22,7 @@
+>>  #include <linux/pci_regs.h>
+>>  #include <linux/platform_device.h>
+>>  #include <linux/types.h>
+>> +#include <linux/delay.h>
+>>
+>>  #include "pcie-designware.h"
+>>
+>> @@ -380,6 +381,25 @@ static struct msi_controller dw_pcie_msi_chip = {
+>>  	.teardown_irq = dw_msi_teardown_irq,
+>>  };
+>>
+>> +int dw_pcie_check_link_is_up(struct pcie_port *pp, int max_ret, int
+>> sleep_min,
+>> +								int sleep_max)
+>> +{
+>> +	int retries;
+>> +
+>> +	/* check if the link is up or not */
+>> +	for (retries = 0; retries < max_ret; retries++) {
+>> +		if (dw_pcie_link_up(pp)) {
+>> +			dev_info(pp->dev, "link up\n");
+>> +			return 0;
+>> +		}
+>> +		usleep_range(sleep_min, sleep_max);
+>> +	}
+>> +
+>> +	dev_err(pp->dev, "phy link never came up\n");
+>> +
+>> +	return 1;
+>> +}
+>> +
+>>  int dw_pcie_link_up(struct pcie_port *pp)
+>>  {
+>>  	if (pp->ops->link_up)
+>> diff --git a/drivers/pci/host/pcie-designware.h
+>> b/drivers/pci/host/pcie-designware.h
+>> index 2356d29..b077fe0 100644
+>> --- a/drivers/pci/host/pcie-designware.h
+>> +++ b/drivers/pci/host/pcie-designware.h
+>> @@ -76,6 +76,8 @@ int dw_pcie_cfg_read(void __iomem *addr, int size,
+>> u32 *val);
+>>  int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val);
+>>  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+>>  void dw_pcie_msi_init(struct pcie_port *pp);
+>> +int dw_pcie_check_link_is_up(struct pcie_port *pp, int max_ret, int
+>> sleep_min,
+>> +								int sleep_max);
+>>  int dw_pcie_link_up(struct pcie_port *pp);
+>>  void dw_pcie_setup_rc(struct pcie_port *pp);
+>>  int dw_pcie_host_init(struct pcie_port *pp);
+>> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-
+>> spear13xx.c
+>> index b95b756..5c24595 100644
+>> --- a/drivers/pci/host/pcie-spear13xx.c
+>> +++ b/drivers/pci/host/pcie-spear13xx.c
+>> @@ -13,7 +13,6 @@
+>>   */
+>>
+>>  #include <linux/clk.h>
+>> -#include <linux/delay.h>
+>>  #include <linux/interrupt.h>
+>>  #include <linux/kernel.h>
+>>  #include <linux/module.h>
+>> @@ -149,7 +148,6 @@ static int spear13xx_pcie_establish_link(struct
+>> pcie_port *pp)
+>>  	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
+>>  	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
+>>  	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
+>> -	unsigned int retries;
+>>
+>>  	if (dw_pcie_link_up(pp)) {
+>>  		dev_err(pp->dev, "link already up\n");
+>> @@ -201,15 +199,9 @@ static int spear13xx_pcie_establish_link(struct
+>> pcie_port *pp)
+>>  			&app_reg->app_ctrl_0);
+>>
+>>  	/* check if the link is up or not */
+>> -	for (retries = 0; retries < 10; retries++) {
+>> -		if (dw_pcie_link_up(pp)) {
+>> -			dev_info(pp->dev, "link up\n");
+>> -			return 0;
+>> -		}
+>> -		mdelay(100);
+>> -	}
+>> +	if (!dw_pcie_check_link_is_up(pp, 10, 100000, 110000))
+>> +		return 0;
+>>
+>> -	dev_err(pp->dev, "link Fail\n");
+>>  	return -EINVAL;
+>>  }
+>>
+>> --
+>> 1.8.1.5
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
