@@ -1,178 +1,557 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47447 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752365AbcBOImZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 15 Feb 2016 03:42:25 -0500
-From: Hannes Reinecke <hare@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
-	linux-pci@vger.kernel.org, Babu Moger <babu.moger@oracle.com>,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Subject: [PATCHv3 3/4] pci: Determine actual VPD size on first access
-Date: Mon, 15 Feb 2016 09:42:01 +0100
-Message-Id: <1455525722-122040-4-git-send-email-hare@suse.de>
-In-Reply-To: <1455525722-122040-1-git-send-email-hare@suse.de>
-References: <1455525722-122040-1-git-send-email-hare@suse.de>
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:34685 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756249AbcBHXzj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Feb 2016 18:55:39 -0500
+From: David Daney <ddaney.cavm@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Will Deacon <will.deacon@arm.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
+Subject: [PATCH v6 1/3] PCI: generic: Refactor code to enable reuse by other drivers.
+Date: Mon,  8 Feb 2016 15:55:29 -0800
+Message-Id: <1454975731-13618-2-git-send-email-ddaney.cavm@gmail.com>
+In-Reply-To: <1454975731-13618-1-git-send-email-ddaney.cavm@gmail.com>
+References: <1454975731-13618-1-git-send-email-ddaney.cavm@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI-2.2 VPD entries have a maximum size of 32k, but might actually
-be smaller than that. To figure out the actual size one has to read
-the VPD area until the 'end marker' is reached.
-Trying to read VPD data beyond that marker results in 'interesting'
-effects, from simple read errors to crashing the card. And to make
-matters worse not every PCI card implements this properly, leaving
-us with no 'end' marker or even completely invalid data.
-This patch tries to determine the size of the VPD data when it's
-first accessed.  If no valid data can be read an I/O error will
-be returned when reading or writing the sysfs attribute.
-As the amount of VPD data is unknown initially the size of the sysfs
-attribute will always be set to '0'.
+From: David Daney <david.daney@cavium.com>
 
-Cc: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+No change in functionality.
+
+Move structure definitions into a separate header file.  Move common
+code to new file with Kconfig machinery to build it.  Split probe
+function in to two parts:
+
+   - a small driver specific probe function (gen_pci_probe)
+
+   - a common probe that can be used by other drivers
+     (pci_host_common_probe)
+
+Signed-off-by: David Daney <david.daney@cavium.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+Acked-by: Will Deacon <will.deacon@arm.com>
 ---
- drivers/pci/access.c    | 84 +++++++++++++++++++++++++++++++++++++++++++++++--
- drivers/pci/pci-sysfs.c |  2 +-
- 2 files changed, 82 insertions(+), 4 deletions(-)
+ MAINTAINERS                         |   1 +
+ drivers/pci/host/Kconfig            |   4 +
+ drivers/pci/host/Makefile           |   1 +
+ drivers/pci/host/pci-host-common.c  | 194 ++++++++++++++++++++++++++++++++++++
+ drivers/pci/host/pci-host-common.h  |  47 +++++++++
+ drivers/pci/host/pci-host-generic.c | 181 +--------------------------------
+ 6 files changed, 251 insertions(+), 177 deletions(-)
+ create mode 100644 drivers/pci/host/pci-host-common.c
+ create mode 100644 drivers/pci/host/pci-host-common.h
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 8c05b5c..253e0c8 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -283,10 +283,63 @@ struct pci_vpd_pci22 {
- 	struct pci_vpd base;
- 	struct mutex lock;
- 	u16	flag;
--	bool	busy;
-+	u8	busy:1;
-+	u8	valid:1;
- 	u8	cap;
- };
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 7f1fa4f..f95ac7f 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8365,6 +8365,7 @@ L:	linux-pci@vger.kernel.org
+ L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/host-generic-pci.txt
++F:	drivers/pci/host/pci-host-common.c
+ F:	drivers/pci/host/pci-host-generic.c
  
-+/**
-+ * pci_vpd_size - determine actual size of Vital Product Data
-+ * @dev:	pci device struct
-+ * @old_size:	current assumed size, also maximum allowed size
+ PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (VMD)
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 75a6054..65709b4 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -53,9 +53,13 @@ config PCI_RCAR_GEN2_PCIE
+ 	help
+ 	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
+ 
++config PCI_HOST_COMMON
++	bool
++
+ config PCI_HOST_GENERIC
+ 	bool "Generic PCI host controller"
+ 	depends on (ARM || ARM64) && OF
++	select PCI_HOST_COMMON
+ 	help
+ 	  Say Y here if you want to support a simple generic PCI host
+ 	  controller, such as the one emulated by kvmtool.
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 7b2f20c..3b24af8 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -6,6 +6,7 @@ obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+ obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+ obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+ obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
++obj-$(CONFIG_PCI_HOST_COMMON) += pci-host-common.o
+ obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
+ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+ obj-$(CONFIG_PCI_KEYSTONE) += pci-keystone-dw.o pci-keystone.o
+diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+new file mode 100644
+index 0000000..e9f850f
+--- /dev/null
++++ b/drivers/pci/host/pci-host-common.c
+@@ -0,0 +1,194 @@
++/*
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ *
++ * Copyright (C) 2014 ARM Limited
++ *
++ * Author: Will Deacon <will.deacon@arm.com>
 + */
-+static size_t pci_vpd_pci22_size(struct pci_dev *dev, size_t old_size)
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_pci.h>
++#include <linux/platform_device.h>
++
++#include "pci-host-common.h"
++
++static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
 +{
-+	size_t off = 0;
-+	unsigned char header[1+2];	/* 1 byte tag, 2 bytes length */
++	pci_free_resource_list(&pci->resources);
++}
 +
-+	while (off < old_size &&
-+	       pci_read_vpd(dev, off, 1, header) == 1) {
-+		unsigned char tag;
++static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
++{
++	int err, res_valid = 0;
++	struct device *dev = pci->host.dev.parent;
++	struct device_node *np = dev->of_node;
++	resource_size_t iobase;
++	struct resource_entry *win;
 +
-+		if (header[0] & PCI_VPD_LRDT) {
-+			/* Large Resource Data Type Tag */
-+			tag = pci_vpd_lrdt_tag(header);
-+			/* Only read length from known tag items */
-+			if ((tag == PCI_VPD_LTIN_ID_STRING) ||
-+			    (tag == PCI_VPD_LTIN_RO_DATA) ||
-+			    (tag == PCI_VPD_LTIN_RW_DATA)) {
-+				if (pci_read_vpd(dev, off+1, 2,
-+						 &header[1]) != 2) {
-+					dev_dbg(&dev->dev,
-+						"invalid large VPD tag %02x size at offset %zu",
-+						tag, off + 1);
-+					return 0;
-+				}
-+				off += PCI_VPD_LRDT_TAG_SIZE +
-+					pci_vpd_lrdt_size(header);
++	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
++					       &iobase);
++	if (err)
++		return err;
++
++	resource_list_for_each_entry(win, &pci->resources) {
++		struct resource *parent, *res = win->res;
++
++		switch (resource_type(res)) {
++		case IORESOURCE_IO:
++			parent = &ioport_resource;
++			err = pci_remap_iospace(res, iobase);
++			if (err) {
++				dev_warn(dev, "error %d: failed to map resource %pR\n",
++					 err, res);
++				continue;
 +			}
-+		} else {
-+			/* Short Resource Data Type Tag */
-+			off += PCI_VPD_SRDT_TAG_SIZE +
-+				pci_vpd_srdt_size(header);
-+			tag = pci_vpd_srdt_tag(header);
++			break;
++		case IORESOURCE_MEM:
++			parent = &iomem_resource;
++			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
++			break;
++		case IORESOURCE_BUS:
++			pci->cfg.bus_range = res;
++		default:
++			continue;
 +		}
-+		if (tag == PCI_VPD_STIN_END)	/* End tag descriptor */
-+			return off;
-+		if ((tag != PCI_VPD_LTIN_ID_STRING) &&
-+		    (tag != PCI_VPD_LTIN_RO_DATA) &&
-+		    (tag != PCI_VPD_LTIN_RW_DATA)) {
-+			dev_dbg(&dev->dev,
-+				"invalid %s VPD tag %02x at offset %zu",
-+				(header[0] & PCI_VPD_LRDT) ? "large" : "short",
-+				tag, off);
-+			return 0;
-+		}
++
++		err = devm_request_resource(dev, parent, res);
++		if (err)
++			goto out_release_res;
 +	}
++
++	if (!res_valid) {
++		dev_err(dev, "non-prefetchable memory resource required\n");
++		err = -EINVAL;
++		goto out_release_res;
++	}
++
++	return 0;
++
++out_release_res:
++	gen_pci_release_of_pci_ranges(pci);
++	return err;
++}
++
++static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
++{
++	int err;
++	u8 bus_max;
++	resource_size_t busn;
++	struct resource *bus_range;
++	struct device *dev = pci->host.dev.parent;
++	struct device_node *np = dev->of_node;
++	u32 sz = 1 << pci->cfg.ops->bus_shift;
++
++	err = of_address_to_resource(np, 0, &pci->cfg.res);
++	if (err) {
++		dev_err(dev, "missing \"reg\" property\n");
++		return err;
++	}
++
++	/* Limit the bus-range to fit within reg */
++	bus_max = pci->cfg.bus_range->start +
++		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
++	pci->cfg.bus_range->end = min_t(resource_size_t,
++					pci->cfg.bus_range->end, bus_max);
++
++	pci->cfg.win = devm_kcalloc(dev, resource_size(pci->cfg.bus_range),
++				    sizeof(*pci->cfg.win), GFP_KERNEL);
++	if (!pci->cfg.win)
++		return -ENOMEM;
++
++	/* Map our Configuration Space windows */
++	if (!devm_request_mem_region(dev, pci->cfg.res.start,
++				     resource_size(&pci->cfg.res),
++				     "Configuration Space"))
++		return -ENOMEM;
++
++	bus_range = pci->cfg.bus_range;
++	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
++		u32 idx = busn - bus_range->start;
++
++		pci->cfg.win[idx] = devm_ioremap(dev,
++						 pci->cfg.res.start + idx * sz,
++						 sz);
++		if (!pci->cfg.win[idx])
++			return -ENOMEM;
++	}
++
 +	return 0;
 +}
 +
- /*
-  * Wait for last operation to complete.
-  * This code has to spin since there is no other notification from the PCI
-@@ -337,9 +390,23 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
- 	loff_t end = pos + count;
- 	u8 *buf = arg;
- 
--	if (pos < 0 || pos > vpd->base.len || end > vpd->base.len)
-+	if (pos < 0)
- 		return -EINVAL;
- 
-+	if (!vpd->valid) {
-+		vpd->valid = true;
-+		vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
-+	}
-+	if (vpd->base.len == 0)
-+		return -EIO;
++int pci_host_common_probe(struct platform_device *pdev,
++			  struct gen_pci *pci)
++{
++	int err;
++	const char *type;
++	struct device *dev = &pdev->dev;
++	struct device_node *np = dev->of_node;
++	struct pci_bus *bus, *child;
 +
-+	if (end > vpd->base.len) {
-+		if (pos > vpd->base.len)
-+			return 0;
-+		end = vpd->base.len;
-+		count = end - pos;
-+	}
-+
- 	if (mutex_lock_killable(&vpd->lock))
- 		return -EINTR;
- 
-@@ -389,7 +456,17 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
- 	loff_t end = pos + count;
- 	int ret = 0;
- 
--	if (pos < 0 || (pos & 3) || (count & 3) || end > vpd->base.len)
-+	if (pos < 0 || (pos & 3) || (count & 3))
++	type = of_get_property(np, "device_type", NULL);
++	if (!type || strcmp(type, "pci")) {
++		dev_err(dev, "invalid \"device_type\" %s\n", type);
 +		return -EINVAL;
-+
-+	if (!vpd->valid) {
-+		vpd->valid = true;
-+		vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
 +	}
-+	if (vpd->base.len == 0)
-+		return -EIO;
 +
-+	if (end > vpd->base.len)
- 		return -EINVAL;
++	of_pci_check_probe_only();
++
++	pci->host.dev.parent = dev;
++	INIT_LIST_HEAD(&pci->host.windows);
++	INIT_LIST_HEAD(&pci->resources);
++
++	/* Parse our PCI ranges and request their resources */
++	err = gen_pci_parse_request_of_pci_ranges(pci);
++	if (err)
++		return err;
++
++	/* Parse and map our Configuration Space windows */
++	err = gen_pci_parse_map_cfg_windows(pci);
++	if (err) {
++		gen_pci_release_of_pci_ranges(pci);
++		return err;
++	}
++
++	/* Do not reassign resources if probe only */
++	if (!pci_has_flag(PCI_PROBE_ONLY))
++		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
++
++
++	bus = pci_scan_root_bus(dev, pci->cfg.bus_range->start,
++				&pci->cfg.ops->ops, pci, &pci->resources);
++	if (!bus) {
++		dev_err(dev, "Scanning rootbus failed");
++		return -ENODEV;
++	}
++
++	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++
++	if (!pci_has_flag(PCI_PROBE_ONLY)) {
++		pci_bus_size_bridges(bus);
++		pci_bus_assign_resources(bus);
++
++		list_for_each_entry(child, &bus->children, node)
++			pcie_bus_configure_settings(child);
++	}
++
++	pci_bus_add_devices(bus);
++	return 0;
++}
++
++MODULE_DESCRIPTION("Generic PCI host driver common code");
++MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
++MODULE_LICENSE("GPL v2");
+diff --git a/drivers/pci/host/pci-host-common.h b/drivers/pci/host/pci-host-common.h
+new file mode 100644
+index 0000000..09f3fa0
+--- /dev/null
++++ b/drivers/pci/host/pci-host-common.h
+@@ -0,0 +1,47 @@
++/*
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ *
++ * Copyright (C) 2014 ARM Limited
++ *
++ * Author: Will Deacon <will.deacon@arm.com>
++ */
++
++#ifndef _PCI_HOST_COMMON_H
++#define _PCI_HOST_COMMON_H
++
++#include <linux/kernel.h>
++#include <linux/platform_device.h>
++
++struct gen_pci_cfg_bus_ops {
++	u32 bus_shift;
++	struct pci_ops ops;
++};
++
++struct gen_pci_cfg_windows {
++	struct resource				res;
++	struct resource				*bus_range;
++	void __iomem				**win;
++
++	struct gen_pci_cfg_bus_ops		*ops;
++};
++
++struct gen_pci {
++	struct pci_host_bridge			host;
++	struct gen_pci_cfg_windows		cfg;
++	struct list_head			resources;
++};
++
++int pci_host_common_probe(struct platform_device *pdev,
++			  struct gen_pci *pci);
++
++#endif /* _PCI_HOST_COMMON_H */
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 1652bc7..e8aa78f 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -25,24 +25,7 @@
+ #include <linux/of_pci.h>
+ #include <linux/platform_device.h>
  
- 	if (mutex_lock_killable(&vpd->lock))
-@@ -496,6 +573,7 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
- 	mutex_init(&vpd->lock);
- 	vpd->cap = cap;
- 	vpd->busy = false;
-+	vpd->valid = false;
- 	dev->vpd = &vpd->base;
- 	return 0;
+-struct gen_pci_cfg_bus_ops {
+-	u32 bus_shift;
+-	struct pci_ops ops;
+-};
+-
+-struct gen_pci_cfg_windows {
+-	struct resource				res;
+-	struct resource				*bus_range;
+-	void __iomem				**win;
+-
+-	struct gen_pci_cfg_bus_ops		*ops;
+-};
+-
+-struct gen_pci {
+-	struct pci_host_bridge			host;
+-	struct gen_pci_cfg_windows		cfg;
+-	struct list_head			resources;
+-};
++#include "pci-host-common.h"
+ 
+ static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
+ 					     unsigned int devfn,
+@@ -93,175 +76,19 @@ static const struct of_device_id gen_pci_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, gen_pci_of_match);
+ 
+-static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
+-{
+-	pci_free_resource_list(&pci->resources);
+-}
+-
+-static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
+-{
+-	int err, res_valid = 0;
+-	struct device *dev = pci->host.dev.parent;
+-	struct device_node *np = dev->of_node;
+-	resource_size_t iobase;
+-	struct resource_entry *win;
+-
+-	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
+-					       &iobase);
+-	if (err)
+-		return err;
+-
+-	resource_list_for_each_entry(win, &pci->resources) {
+-		struct resource *parent, *res = win->res;
+-
+-		switch (resource_type(res)) {
+-		case IORESOURCE_IO:
+-			parent = &ioport_resource;
+-			err = pci_remap_iospace(res, iobase);
+-			if (err) {
+-				dev_warn(dev, "error %d: failed to map resource %pR\n",
+-					 err, res);
+-				continue;
+-			}
+-			break;
+-		case IORESOURCE_MEM:
+-			parent = &iomem_resource;
+-			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
+-			break;
+-		case IORESOURCE_BUS:
+-			pci->cfg.bus_range = res;
+-		default:
+-			continue;
+-		}
+-
+-		err = devm_request_resource(dev, parent, res);
+-		if (err)
+-			goto out_release_res;
+-	}
+-
+-	if (!res_valid) {
+-		dev_err(dev, "non-prefetchable memory resource required\n");
+-		err = -EINVAL;
+-		goto out_release_res;
+-	}
+-
+-	return 0;
+-
+-out_release_res:
+-	gen_pci_release_of_pci_ranges(pci);
+-	return err;
+-}
+-
+-static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+-{
+-	int err;
+-	u8 bus_max;
+-	resource_size_t busn;
+-	struct resource *bus_range;
+-	struct device *dev = pci->host.dev.parent;
+-	struct device_node *np = dev->of_node;
+-	u32 sz = 1 << pci->cfg.ops->bus_shift;
+-
+-	err = of_address_to_resource(np, 0, &pci->cfg.res);
+-	if (err) {
+-		dev_err(dev, "missing \"reg\" property\n");
+-		return err;
+-	}
+-
+-	/* Limit the bus-range to fit within reg */
+-	bus_max = pci->cfg.bus_range->start +
+-		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
+-	pci->cfg.bus_range->end = min_t(resource_size_t,
+-					pci->cfg.bus_range->end, bus_max);
+-
+-	pci->cfg.win = devm_kcalloc(dev, resource_size(pci->cfg.bus_range),
+-				    sizeof(*pci->cfg.win), GFP_KERNEL);
+-	if (!pci->cfg.win)
+-		return -ENOMEM;
+-
+-	/* Map our Configuration Space windows */
+-	if (!devm_request_mem_region(dev, pci->cfg.res.start,
+-				     resource_size(&pci->cfg.res),
+-				     "Configuration Space"))
+-		return -ENOMEM;
+-
+-	bus_range = pci->cfg.bus_range;
+-	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
+-		u32 idx = busn - bus_range->start;
+-
+-		pci->cfg.win[idx] = devm_ioremap(dev,
+-						 pci->cfg.res.start + idx * sz,
+-						 sz);
+-		if (!pci->cfg.win[idx])
+-			return -ENOMEM;
+-	}
+-
+-	return 0;
+-}
+-
+ static int gen_pci_probe(struct platform_device *pdev)
+ {
+-	int err;
+-	const char *type;
+-	const struct of_device_id *of_id;
+ 	struct device *dev = &pdev->dev;
+-	struct device_node *np = dev->of_node;
++	const struct of_device_id *of_id;
+ 	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+-	struct pci_bus *bus, *child;
+ 
+ 	if (!pci)
+ 		return -ENOMEM;
+ 
+-	type = of_get_property(np, "device_type", NULL);
+-	if (!type || strcmp(type, "pci")) {
+-		dev_err(dev, "invalid \"device_type\" %s\n", type);
+-		return -EINVAL;
+-	}
+-
+-	of_pci_check_probe_only();
+-
+-	of_id = of_match_node(gen_pci_of_match, np);
++	of_id = of_match_node(gen_pci_of_match, dev->of_node);
+ 	pci->cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
+-	pci->host.dev.parent = dev;
+-	INIT_LIST_HEAD(&pci->host.windows);
+-	INIT_LIST_HEAD(&pci->resources);
+-
+-	/* Parse our PCI ranges and request their resources */
+-	err = gen_pci_parse_request_of_pci_ranges(pci);
+-	if (err)
+-		return err;
+-
+-	/* Parse and map our Configuration Space windows */
+-	err = gen_pci_parse_map_cfg_windows(pci);
+-	if (err) {
+-		gen_pci_release_of_pci_ranges(pci);
+-		return err;
+-	}
+-
+-	/* Do not reassign resources if probe only */
+-	if (!pci_has_flag(PCI_PROBE_ONLY))
+-		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
+-
+-
+-	bus = pci_scan_root_bus(dev, pci->cfg.bus_range->start,
+-				&pci->cfg.ops->ops, pci, &pci->resources);
+-	if (!bus) {
+-		dev_err(dev, "Scanning rootbus failed");
+-		return -ENODEV;
+-	}
+-
+-	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+-
+-	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+-		pci_bus_size_bridges(bus);
+-		pci_bus_assign_resources(bus);
+-
+-		list_for_each_entry(child, &bus->children, node)
+-			pcie_bus_configure_settings(child);
+-	}
+ 
+-	pci_bus_add_devices(bus);
+-	return 0;
++	return pci_host_common_probe(pdev, pci);
  }
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index a730f54..ed39c09 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1323,7 +1323,7 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
- 			return -ENOMEM;
  
- 		sysfs_bin_attr_init(attr);
--		attr->size = dev->vpd->len;
-+		attr->size = 0;
- 		attr->attr.name = "vpd";
- 		attr->attr.mode = S_IRUSR | S_IWUSR;
- 		attr->read = read_vpd_attr;
+ static struct platform_driver gen_pci_driver = {
 -- 
-1.8.5.6
+1.8.3.1
 
