@@ -1,232 +1,317 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f182.google.com ([209.85.160.182]:35196 "EHLO
-	mail-yk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759244AbcBTSQ1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 20 Feb 2016 13:16:27 -0500
-Received: by mail-yk0-f182.google.com with SMTP id r207so47568303ykd.2
-        for <linux-pci@vger.kernel.org>; Sat, 20 Feb 2016 10:16:27 -0800 (PST)
+Received: from lhrrgout.huawei.com ([194.213.3.17]:53129 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754439AbcBHP3T convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Feb 2016 10:29:19 -0500
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Joao Pinto <Joao.Pinto@synopsys.com>,
+	"helgaas@kernel.org" <helgaas@kernel.org>
+CC: "arnd@arndb.de" <arnd@arndb.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>
+Subject: RE: [PATCH] link up validation moved to pcie-designware
+Date: Mon, 8 Feb 2016 15:29:02 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ECACDF1@lhreml503-mbs>
+References: <b00bf38b4351831b97892b747d48c9206fbab9c7.1454935205.git.jpinto@synopsys.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ECAC8D0@lhreml503-mbs>
+ <56B8B04B.9060909@synopsys.com>
+In-Reply-To: <56B8B04B.9060909@synopsys.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20160218071450.6b65676e@t450s.home>
-References: <1455487501-28630-1-git-send-email-jchandra@broadcom.com>
- <20160215182023.GB12641@localhost> <20160215123901.1600f86f@t450s.home>
- <CAKc_7PUtm7443qv40DNWKqJneWnVT6Do7s7vr_hOerkGLOgkJg@mail.gmail.com>
- <20160216152529.33855bc1@t450s.home> <CAKc_7PVExWkm0NqoGcf4d5bSPEcbhzn45oBgYRc7xZ8CJg+WEw@mail.gmail.com>
- <20160217082828.3d164080@t450s.home> <CAKc_7PXwAUVc1=Sh2B9+BFts2bDGObtQCMCBg-bYrKfjE9iwVw@mail.gmail.com>
- <20160218071450.6b65676e@t450s.home>
-From: Jayachandran Chandrashekaran Nair
-	<jayachandran.chandrashekaran@broadcom.com>
-Date: Sat, 20 Feb 2016 23:45:47 +0530
-Message-ID: <CAKc_7PVHjAe8ZhfLJXdQTRkh21WDmn2S_T9knNON9Uv=L4ecVw@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/2] PCI: Add PCI device flag PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex,
+> -----Original Message-----
+> From: Joao Pinto [mailto:Joao.Pinto@synopsys.com]
+> Sent: 08 February 2016 15:12
+> To: Gabriele Paoloni; Joao Pinto; helgaas@kernel.org
+> Cc: arnd@arndb.de; linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org; CARLOS.PALMINHA@synopsys.com
+> Subject: Re: [PATCH] link up validation moved to pcie-designware
+> 
+> 
+> Hi Gab,
+> This patch is part of the on going work of integrating a designware
+> platform
+> driver that is SoC agnostic. This code replication issue was raised
+> during
+> discussions.
 
-On Thu, Feb 18, 2016 at 7:44 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Thu, 18 Feb 2016 18:57:12 +0530
-> Jayachandran Chandrashekaran Nair
-> <jayachandran.chandrashekaran@broadcom.com> wrote:
->
->> On Wed, Feb 17, 2016 at 8:58 PM, Alex Williamson
->> <alex.williamson@redhat.com> wrote:
->> > On Wed, 17 Feb 2016 17:15:09 +0530
->> > Jayachandran Chandrashekaran Nair
->> > <jayachandran.chandrashekaran@broadcom.com> wrote:
->> >
->> >> On Wed, Feb 17, 2016 at 3:55 AM, Alex Williamson
->> >> <alex.williamson@redhat.com> wrote:
->> >> > On Wed, 17 Feb 2016 02:38:24 +0530
->> >> > Jayachandran Chandrashekaran Nair
->> >> > <jayachandran.chandrashekaran@broadcom.com> wrote:
->> >> >
->> >> >> On Tue, Feb 16, 2016 at 1:09 AM, Alex Williamson
->> >> >> <alex.williamson@redhat.com> wrote:
->> >> >> > On Mon, 15 Feb 2016 12:20:23 -0600
->> >> >> > Bjorn Helgaas <helgaas@kernel.org> wrote:
->> >> >> >
->> >> >> >> [+cc Alex, iommu list]
->> >> >> >>
->> >> >> >> On Mon, Feb 15, 2016 at 03:35:00AM +0530, Jayachandran C wrote:
->> >> >> >> > Add a new flag PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS to indicate bridges
->> >> >> >> > that should not be considered during DMA alias search. This is
->> >> >> >> > to support hardware (in this case Broadcom Vulcan PCIe subsystem)
->> >> >> >> > that has internal bridges which have either missing or wrong PCIe
->> >> >> >> > capabilities.
->> >> >> >
->> >> >> > I figured this would come at some point, the right answer is of course
->> >> >> > to follow the PCIe spec and implement the required PCIe capability in
->> >> >> > the hardware.
->> >> >>
->> >> >> There are  PCIe controllers on the chip that follows the spec, the issue is
->> >> >> how it is integrated to the northbridge (equivalent) on the chip, I have
->> >> >> tried to explain it below.
->> >> >>
->> >> >> >> This needs more explanation, like what exactly is wrong with this
->> >> >> >> device?  A missing PCIe capability might cause other problems.
->> >> >> >>
->> >> >> >> What problem does this fix?  Without these patches, do we merely add
->> >> >> >> aliases that are unnecessary?  Do we crash because something goes
->> >> >> >> wrong in the pci_pcie_type() switch because of the incorrect
->> >> >> >> capability?
->> >> >>
->> >> >> Here's how (for example) how the PCI enumeration of a 2 node Vulcan
->> >> >> processor will look like:
->> >> >>
->> >> >>
->> >> >> [0] +-0.0.0--[1]---+--1.a.0----[2]-----2.0.0---[3]----3.0.0
->> >> >>     |              +--1.a.1----[4]-----4.0.0---[5]----5.0.0
->> >> >>     |              .
->> >> >>     |              ... etc...
->> >> >>     |
->> >> >>     +-0.0.1--[10]--+-10.a.0----[11]---11.0.0---[12]---12.0.0
->> >> >>                    +-10.a.1----[13]---13.0.0---[14]---14.0.0
->> >> >>                    .
->> >> >>                    ... etc...
->> >> >
->> >> > So we have:
->> >> >
->> >> >     "Glue Bridge"---"Glue Bridges"---Root Ports---Endpoints
->> >> >       (no pcie)      (pci/x-pcie)
->> >>
->> >> The top level is one glue bridge per chip in a multi-chip board,
->> >> but otherwise this is accurate.
->> >>
->> >> >>
->> >> >> The devices 0.0.x and x.a.x are glue bridges that are there to
->> >> >> bring the real PCIe controllers (pcie cap type 4) 2.0.0, 4.0.0,
->> >> >> 11.0.0, 13.0.0 under a single PCI hierarchy. The x.a.x bridges
->> >> >> have a PCIe capability (type 8) and 0.0.x does not have any pcie
->> >> >> capability.
->> >> >>
->> >> >> In case of Vulcan, both the GICv3 ITS driver code and the SMMUv3
->> >> >> driver code does dma alias walk to find the device id to use
->> >> >> in ITS and SMMU. In both cases it will ignore the x.0.0 bridges
->> >> >> since they are type root port, but will continue on up and end
->> >> >> up with incorrect device id.
->> >> >>
->> >> >> The flag I have added is to make the pci_for_each_dma_alias()
->> >> >> ignore the last 2 levels of glue/internal bridges.
->> >> >
->> >> > Per the PCIe spec, I'm not even sure what you have is a valid
->> >> > hierarchy, root ports sit on root complexes, not behind a PCI-to-PCIe
->> >> > bridge.  So really you're pretending that the downstream "glue bridge"
->> >> > is your host bridge and therefore root complex, but the PCI topology
->> >> > would clearly dictate that the top-most bus is conventional PCI and
->> >> > therefore everything is an alias of everything else and the DMA alias
->> >> > code is doing exactly what it should.
->> >>
->> >> Yes, I am not arguing that there is any issue in the current code. I
->> >> am trying to figure out the correct way to implement the quirk. We
->> >> have to support the hardware we have, not the hardware we want to
->> >> have :)
->> >>
->> >> > Also note that the caller of pci_for_each_dma_alias() owns the callback
->> >> > function triggered for each alias, that function could choose to prune
->> >> > out these "glue bridges" itself if that's the appropriate thing to do.
->> >>
->> >> I had implemented this first, but moved to the current approach because
->> >> it is needed in multiple places. The problem is: "On vulcan, while
->> >> going up the pcie bus heirarchy for finding aliases, skip the glue bridges",
->> >> So the logical place to put the fix is in pci_for_each_dma_alias()
->> >>
->> >> > Where do the SMMU and ITS actually reside in the above diagram?  You
->> >> > can use the callout function to stop the traversal anywhere you wish,
->> >> > it's free to return a -errno to stop or positive number, which the
->> >> > caller can interpret as error or non-failure stop condition.
->> >>
->> >> The SMMU (for translation requests) and ITS (for MSI writes for
->> >> interrupts) are connected directly to the proper PCIe controller
->> >> (2/4/11/13.0.0 above)
->> >
->> >
->> > If the translation unit is on the root port then DMA aliases upstream of
->> > the translation unit are irrelevant and the callback function should
->> > stop the traversal at that point.
->> >
->> >> > You could even think about changing what Linux considers to be the host
->> >> > bridge.  Maybe these glue bridges shouldn't even be visible to Linux,
->> >> > would that also solve the issue with the broken BAR?
->> >>
->> >> The glue bridges have to seen by Linux for assigning resources like
->> >> bus ranges and memory windows. So these are required bridges in
->> >> the topology and will work with the standard linux code
->> >> (provided we skip them for aliases, and and ignore the BAR).
->> >>
->> >> >> > The change takes the same code path as it would for a real PCIe bridge
->> >> >> > port (downstream/upstream/root), which means they want to skip adding
->> >> >> > this bridge as an alias of the device.  So we're adding in aliases that
->> >> >> > don't exist, the bridge itself.
->> >> >> >
->> >> >> > If anything I'd suggest a flag that actually tries to address the
->> >> >> > problem rather than a symptom of the problem.  For example, maybe the
->> >> >> > flag should be PCI_DEV_FLAGS_IS_PCIE.  Maybe pci_is_pcie() should even
->> >> >> > take that into account.  That has some trickle through for
->> >> >> > pci_pcie_type() and all the accessor functions, but maybe it's a
->> >> >> > cleaner solution overall (or maybe it explodes further).  Thanks,
->> >> >>
->> >> >> I didn't really want to mark the glue bridges as PCIe or have fake
->> >> >> PCIe capability there, the obvious simple solution was to add
->> >> >> the flag PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS
->> >> >>
->> >> >> Any suggestions/comments on how to do this better would be welcome.
->> >> >
->> >> > I definitely don't think either flag idea is the right solution, I
->> >> > think you've actually already got the tools you need to solve it by
->> >> > putting the intelligence in the callback function or by going further
->> >> > down the path of pretending the glue bridge is really a host bridge.
->> >>
->> >> If I understand your suggestion, I need to fake the PCIe capability
->> >> for the glue bridges, which may be reasonable for the second level.
->> >> But for the first level, there is no pcie capability and faking that
->> >> becomes more difficult.
->> >
->> > That's not what I'm suggesting.
->> >
->> >> If the concern is adding a flag for just one platform, I can check
->> >> for the vendor ID/device ID in the pci_for_each_dma_alias()
->> >> function, which would be slightly uglier, but still a simple and
->> >> maintainable solution.
->> >>
->> >> Another option is to break the pci_for_each_dma_alias when it
->> >> reaches to root port (for vulcan), this too can be done without
->> >> a flag.
->> >
->> > Exactly, this can be done by the callback function provided on vulcan
->> > systems and requires no core changes.  The IOMMU needs to provide a
->> > callback function that makes sense for collecting aliases on the
->> > specific platform.  If the translation unit is not on the root bus, the
->> > callback function should stop the topology walk earlier.  Thanks,
->>
->> Fixing every callback function is going to be painful and ugly.
->> I will have to change drivers/irqchip/irq-gic-v3-its-pci-msi.c,
->> drivers/pci/msi.c, and drivers/iommu/arm-smmu-v3.c with the
->> same check for vendor/device ids and return early.
->>
->> I can update the patch to check the vendor/device id in the
->> case of ROOT_PORT in pci_for_each_dma_alias(). If you
->> think that will not be acceptable, I don't have any reasonable
->> options left.
->
-> I've never known there to necessarily be a correlation between the
-> easiest solution and the correct one, but I think there's probably
-> still an easy and clean solution not far from your original approach.
-> pci_for_each_dma_alias() is meant to collect all the aliases for a
-> given device.  It stops at the root bus both because it can't go
-> further and because on many platforms, that's where the translation
-> unit lives.  If we want to have a common and easy way to stop it above
-> the root bus then we could flag a device as being the DMA alias root
-> and exit at that point.  I think that makes more sense architecturally
-> than some mystery devices flagged to skip reporting an alias.  Thanks,
+Ok sorry, I missed it then
 
-Thanks for the suggestion, I will try to implement this approach and
-submit a newer patchset.
+Cheers
 
-JC.
+Gab
+
+
+> 
+> Thanks
+> Joao
+> 
+> On 2/8/2016 1:03 PM, Gabriele Paoloni wrote:
+> > Hi Joao
+> >
+> >> -----Original Message-----
+> >> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> >> owner@vger.kernel.org] On Behalf Of Joao Pinto
+> >> Sent: 08 February 2016 12:44
+> >> To: helgaas@kernel.org
+> >> Cc: arnd@arndb.de; linux-pci@vger.kernel.org; linux-
+> >> kernel@vger.kernel.org; CARLOS.PALMINHA@synopsys.com; Joao Pinto
+> >> Subject: [PATCH] link up validation moved to pcie-designware
+> >>
+> >> This patch goal is to centralize in pcie-designware the link up
+> >> validation. A new function was added to pci-designware that is
+> >> responsible for doing such a task. This was implemented in a form
+> that
+> >> permits flexibility for all SoCs.
+> >
+> > Looking at the patch I don't think this is really needed,
+> > it seems to me like it makes more confusion in reading the
+> > drivers code.
+> >
+> > It is clear that each HW IP has got his own transient time
+> > in setting the link up, this is clear looking at the code
+> > of the single drivers now.
+> >
+> > With the modification you are proposing we are seeing
+> > drivers calls with magic numbers and the need for the
+> > reader to go and look into the designware framework to
+> > understand a function that is not even designware
+> > specific (in fact all these drivers need to wait different
+> > times according to their HW IP and some other drivers do
+> > not need to wait at all...)
+> >
+> > BTW I am quite new to PCIe so let's see what the other guys
+> > think...
+> >
+> > Cheers
+> >
+> > Gab
+> >
+> >>
+> >> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> >> ---
+> >>  drivers/pci/host/pci-dra7xx.c      | 11 +++--------
+> >>  drivers/pci/host/pci-exynos.c      | 11 ++---------
+> >>  drivers/pci/host/pci-imx6.c        | 11 +++--------
+> >>  drivers/pci/host/pcie-designware.c | 20 ++++++++++++++++++++
+> >>  drivers/pci/host/pcie-designware.h |  2 ++
+> >>  drivers/pci/host/pcie-spear13xx.c  | 12 ++----------
+> >>  6 files changed, 32 insertions(+), 35 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-
+> >> dra7xx.c
+> >> index 8c36880..e425944 100644
+> >> --- a/drivers/pci/host/pci-dra7xx.c
+> >> +++ b/drivers/pci/host/pci-dra7xx.c
+> >> @@ -10,7 +10,6 @@
+> >>   * published by the Free Software Foundation.
+> >>   */
+> >>
+> >> -#include <linux/delay.h>
+> >>  #include <linux/err.h>
+> >>  #include <linux/interrupt.h>
+> >>  #include <linux/irq.h>
+> >> @@ -108,7 +107,6 @@ static int dra7xx_pcie_establish_link(struct
+> >> pcie_port *pp)
+> >>  {
+> >>  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+> >>  	u32 reg;
+> >> -	unsigned int retries;
+> >>
+> >>  	if (dw_pcie_link_up(pp)) {
+> >>  		dev_err(pp->dev, "link is already up\n");
+> >> @@ -119,13 +117,10 @@ static int dra7xx_pcie_establish_link(struct
+> >> pcie_port *pp)
+> >>  	reg |= LTSSM_EN;
+> >>  	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+> >>
+> >> -	for (retries = 0; retries < 1000; retries++) {
+> >> -		if (dw_pcie_link_up(pp))
+> >> -			return 0;
+> >> -		usleep_range(10, 20);
+> >> -	}
+> >> +	/* check if the link is up or not */
+> >> +	if (!dw_pcie_check_link_is_up(pp, 1000, 10, 20))
+> >> +		return 0;
+> >>
+> >> -	dev_err(pp->dev, "link is not up\n");
+> >>  	return -EINVAL;
+> >>  }
+> >>
+> >> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-
+> >> exynos.c
+> >> index 01095e1..770c45a 100644
+> >> --- a/drivers/pci/host/pci-exynos.c
+> >> +++ b/drivers/pci/host/pci-exynos.c
+> >> @@ -318,7 +318,6 @@ static int exynos_pcie_establish_link(struct
+> >> pcie_port *pp)
+> >>  {
+> >>  	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+> >>  	u32 val;
+> >> -	unsigned int retries;
+> >>
+> >>  	if (dw_pcie_link_up(pp)) {
+> >>  		dev_err(pp->dev, "Link already up\n");
+> >> @@ -357,13 +356,8 @@ static int exynos_pcie_establish_link(struct
+> >> pcie_port *pp)
+> >>  			  PCIE_APP_LTSSM_ENABLE);
+> >>
+> >>  	/* check if the link is up or not */
+> >> -	for (retries = 0; retries < 10; retries++) {
+> >> -		if (dw_pcie_link_up(pp)) {
+> >> -			dev_info(pp->dev, "Link up\n");
+> >> -			return 0;
+> >> -		}
+> >> -		mdelay(100);
+> >> -	}
+> >> +	if (!dw_pcie_check_link_is_up(pp, 10, 100000, 110000))
+> >> +		return 0;
+> >>
+> >>  	while (exynos_phy_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED) == 0) {
+> >>  		val = exynos_blk_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED);
+> >> @@ -372,7 +366,6 @@ static int exynos_pcie_establish_link(struct
+> >> pcie_port *pp)
+> >>  	/* power off phy */
+> >>  	exynos_pcie_power_off_phy(pp);
+> >>
+> >> -	dev_err(pp->dev, "PCIe Link Fail\n");
+> >>  	return -EINVAL;
+> >>  }
+> >>
+> >> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-
+> imx6.c
+> >> index 22e8224..9e323be 100644
+> >> --- a/drivers/pci/host/pci-imx6.c
+> >> +++ b/drivers/pci/host/pci-imx6.c
+> >> @@ -330,15 +330,10 @@ static void imx6_pcie_init_phy(struct
+> pcie_port
+> >> *pp)
+> >>
+> >>  static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+> >>  {
+> >> -	unsigned int retries;
+> >> -
+> >> -	for (retries = 0; retries < 200; retries++) {
+> >> -		if (dw_pcie_link_up(pp))
+> >> -			return 0;
+> >> -		usleep_range(100, 1000);
+> >> -	}
+> >> +	/* check if the link is up or not */
+> >> +	if (!dw_pcie_check_link_is_up(pp, 200, 100, 1000))
+> >> +		return 0;
+> >>
+> >> -	dev_err(pp->dev, "phy link never came up\n");
+> >>  	dev_dbg(pp->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+> >>  		readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
+> >>  		readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
+> >> diff --git a/drivers/pci/host/pcie-designware.c
+> >> b/drivers/pci/host/pcie-designware.c
+> >> index 540f077..6725231 100644
+> >> --- a/drivers/pci/host/pcie-designware.c
+> >> +++ b/drivers/pci/host/pcie-designware.c
+> >> @@ -22,6 +22,7 @@
+> >>  #include <linux/pci_regs.h>
+> >>  #include <linux/platform_device.h>
+> >>  #include <linux/types.h>
+> >> +#include <linux/delay.h>
+> >>
+> >>  #include "pcie-designware.h"
+> >>
+> >> @@ -380,6 +381,25 @@ static struct msi_controller dw_pcie_msi_chip =
+> {
+> >>  	.teardown_irq = dw_msi_teardown_irq,
+> >>  };
+> >>
+> >> +int dw_pcie_check_link_is_up(struct pcie_port *pp, int max_ret, int
+> >> sleep_min,
+> >> +								int sleep_max)
+> >> +{
+> >> +	int retries;
+> >> +
+> >> +	/* check if the link is up or not */
+> >> +	for (retries = 0; retries < max_ret; retries++) {
+> >> +		if (dw_pcie_link_up(pp)) {
+> >> +			dev_info(pp->dev, "link up\n");
+> >> +			return 0;
+> >> +		}
+> >> +		usleep_range(sleep_min, sleep_max);
+> >> +	}
+> >> +
+> >> +	dev_err(pp->dev, "phy link never came up\n");
+> >> +
+> >> +	return 1;
+> >> +}
+> >> +
+> >>  int dw_pcie_link_up(struct pcie_port *pp)
+> >>  {
+> >>  	if (pp->ops->link_up)
+> >> diff --git a/drivers/pci/host/pcie-designware.h
+> >> b/drivers/pci/host/pcie-designware.h
+> >> index 2356d29..b077fe0 100644
+> >> --- a/drivers/pci/host/pcie-designware.h
+> >> +++ b/drivers/pci/host/pcie-designware.h
+> >> @@ -76,6 +76,8 @@ int dw_pcie_cfg_read(void __iomem *addr, int size,
+> >> u32 *val);
+> >>  int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val);
+> >>  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+> >>  void dw_pcie_msi_init(struct pcie_port *pp);
+> >> +int dw_pcie_check_link_is_up(struct pcie_port *pp, int max_ret, int
+> >> sleep_min,
+> >> +								int sleep_max);
+> >>  int dw_pcie_link_up(struct pcie_port *pp);
+> >>  void dw_pcie_setup_rc(struct pcie_port *pp);
+> >>  int dw_pcie_host_init(struct pcie_port *pp);
+> >> diff --git a/drivers/pci/host/pcie-spear13xx.c
+> b/drivers/pci/host/pcie-
+> >> spear13xx.c
+> >> index b95b756..5c24595 100644
+> >> --- a/drivers/pci/host/pcie-spear13xx.c
+> >> +++ b/drivers/pci/host/pcie-spear13xx.c
+> >> @@ -13,7 +13,6 @@
+> >>   */
+> >>
+> >>  #include <linux/clk.h>
+> >> -#include <linux/delay.h>
+> >>  #include <linux/interrupt.h>
+> >>  #include <linux/kernel.h>
+> >>  #include <linux/module.h>
+> >> @@ -149,7 +148,6 @@ static int spear13xx_pcie_establish_link(struct
+> >> pcie_port *pp)
+> >>  	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
+> >>  	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
+> >>  	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
+> >> -	unsigned int retries;
+> >>
+> >>  	if (dw_pcie_link_up(pp)) {
+> >>  		dev_err(pp->dev, "link already up\n");
+> >> @@ -201,15 +199,9 @@ static int spear13xx_pcie_establish_link(struct
+> >> pcie_port *pp)
+> >>  			&app_reg->app_ctrl_0);
+> >>
+> >>  	/* check if the link is up or not */
+> >> -	for (retries = 0; retries < 10; retries++) {
+> >> -		if (dw_pcie_link_up(pp)) {
+> >> -			dev_info(pp->dev, "link up\n");
+> >> -			return 0;
+> >> -		}
+> >> -		mdelay(100);
+> >> -	}
+> >> +	if (!dw_pcie_check_link_is_up(pp, 10, 100000, 110000))
+> >> +		return 0;
+> >>
+> >> -	dev_err(pp->dev, "link Fail\n");
+> >>  	return -EINVAL;
+> >>  }
+> >>
+> >> --
+> >> 1.8.1.5
+> >>
+> >> --
+> >> To unsubscribe from this list: send the line "unsubscribe linux-pci"
+> in
+> >> the body of a message to majordomo@vger.kernel.org
+> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
