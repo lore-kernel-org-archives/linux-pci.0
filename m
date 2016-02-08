@@ -1,58 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44276 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752247AbcBXTof (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Feb 2016 14:44:35 -0500
-Subject: [PATCH v4 6/6] PCI: Squash pci_dev_flags to remove holes
-To: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <jroedel@suse.de>,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org
-Date: Wed, 24 Feb 2016 13:44:31 -0600
-Message-ID: <20160224194431.7585.78791.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-yw0-f173.google.com ([209.85.161.173]:34421 "EHLO
+	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750935AbcBHN60 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Feb 2016 08:58:26 -0500
+Received: by mail-yw0-f173.google.com with SMTP id h129so102173326ywb.1
+        for <linux-pci@vger.kernel.org>; Mon, 08 Feb 2016 05:58:26 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <bug-112121-41252@https.bugzilla.kernel.org/>
+References: <bug-112121-41252@https.bugzilla.kernel.org/>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 8 Feb 2016 07:51:13 -0600
+Message-ID: <CAErSpo4beDk_ajsgqMUNJ3TGxDv=ysyPzhXHcx2AhUEUE9ROKA@mail.gmail.com>
+Subject: Re: [Bug 112121] New: Some PCIe options cause devices to be removed
+ after syspend
+To: mike@fireburn.co.uk
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
+	linux-nvme <linux-nvme@lists.infradead.org>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+[+cc linux-pci, NVMe folks,  power management folks]
 
-After removing PCI_DEV_FLAGS_DMA_ALIAS_DEVFN, the (1 << 4) value was
-unused.  Squash the other values so all the bits are adjacent.  No
-functional change intended.
+On Sun, Feb 7, 2016 at 11:04 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=112121
+>
+>             Bug ID: 112121
+>            Summary: Some PCIe options cause devices to be removed after
+>                     syspend
+>            Product: Drivers
+>            Version: 2.5
+>     Kernel Version: 4.5-rc2
+>           Hardware: All
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: PCI
+>           Assignee: drivers_pci@kernel-bugs.osdl.org
+>           Reporter: mike@fireburn.co.uk
+>         Regression: No
+>
+> Created attachment 203091
+>   --> https://bugzilla.kernel.org/attachment.cgi?id=203091&action=edit
+> Dmesg showing PCIe device removals
+>
+> I was having issues with suspend, when the machine was being resumed iommu
+> started removing devices - including my PCIe NVMe drive which contained my root
+> partition
+>
+> The problem showed up with:
+>
+> [*] PCI support
+> [*]   Support mmconfig PCI config space access
+> [*]   PCI Express Port Bus support
+> [*]     PCI Express Hotplug driver
+> [*]     Root Port Advanced Error Reporting support
+> [*]       PCI Express ECRC settings control
+> < >       PCIe AER error injector support
+> -*-     PCI Express ASPM control
+> [ ]       Debug PCI Express ASPM
+>           Default ASPM policy (BIOS default)  --->
+> [*]   Message Signaled Interrupts (MSI and MSI-X)
+> [ ]   PCI Debugging
+> [*]   Enable PCI resource re-allocation detection
+> < >   PCI Stub driver
+> [*]   Interrupts on hypertransport devices
+> [ ] PCI IOV support
+> [*] PCI PRI support
+> -*- PCI PASID support
+>     PCI host controller drivers  ----
+> < > PCCard (PCMCIA/CardBus) support  ----
+> [*] Support for PCI Hotplug  --->
+> < > RapidIO support
+>
+>
+> This is what I have now:
+>
+> [*] PCI support
+> [*]   Support mmconfig PCI config space access
+> [*]   PCI Express Port Bus support
+> [ ]     Root Port Advanced Error Reporting support
+> -*-     PCI Express ASPM control
+> [ ]       Debug PCI Express ASPM
+>           Default ASPM policy (BIOS default)  --->
+> [*]   Message Signaled Interrupts (MSI and MSI-X)
+> [*]   PCI Debugging
+> [ ]   Enable PCI resource re-allocation detection
+> < >   PCI Stub driver
+> [*]   Interrupts on hypertransport devices
+> [ ] PCI IOV support
+> [ ] PCI PRI support
+> [ ] PCI PASID support
+>     PCI host controller drivers  ----
+> < > PCCard (PCMCIA/CardBus) support  ----
+> [ ] Support for PCI Hotplug  ----
+> < > RapidIO support
+>
+> I tried disabling the iommu driver first but it had no effect
+>
+> If people are interested I could play with the above options to see which one
+> causes the issue
 
-(I'm not sure this is worth doing.  We have 16 flag bits and we're not
-even close to exhausting them.  But if we do squash them, it should be
-in a separate patch so we don't clutter up the main patches.)
----
- include/linux/pci.h |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+My guess is that PCI hotplug is the important one.  It would be nice
+if dmesg contained enough information to connect nvme0n1 to a PCI
+device.  It'd be even nicer if the PCI core noted device removals or
+whatever happened here.
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index d9e0c84..4e36024 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -173,13 +173,13 @@ enum pci_dev_flags {
- 	/* Flag for quirk use to store if quirk-specific ACS is enabled */
- 	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) (1 << 3),
- 	/* Use a PCIe-to-PCI bridge alias even if !pci_is_pcie */
--	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 5),
-+	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 4),
- 	/* Do not use bus resets for device */
--	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 6),
-+	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 5),
- 	/* Do not use PM reset even if device advertises NoSoftRst- */
--	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
-+	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 6),
- 	/* Get VPD from function 0 VPD */
--	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
-+	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 7),
- };
- 
- enum pci_irq_reroute_variant {
+You don't get any more details if you boot with "ignore_loglevel", do you?
 
+Mike, you didn't mark this as a regression, so I assume it's always
+been this way, and we just haven't noticed it because most people
+enable PCI hotplug (or whatever the relevant config option is).
+
+Bjorn
