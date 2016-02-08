@@ -1,55 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44044 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751845AbcBXTnl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Feb 2016 14:43:41 -0500
-Subject: [PATCH v4 0/6] PCI: Support multiple DMA aliases
-To: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <jroedel@suse.de>,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org
-Date: Wed, 24 Feb 2016 13:43:32 -0600
-Message-ID: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host
+ Controllers
+To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
+References: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1930535.mkCdtpUWq7@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ECAC944@lhreml503-mbs>
+ <7297343.ktGck3KQJN@wuerfel>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+	"jcm@redhat.com" <jcm@redhat.com>,
+	"tn@semihalf.com" <tn@semihalf.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linuxarm <linuxarm@huawei.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	"Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	qiujiang <qiujiang@huawei.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <56B8A214.8040203@codeaurora.org>
+Date: Mon, 8 Feb 2016 09:11:32 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <7297343.ktGck3KQJN@wuerfel>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a revision of Jacek's v3 posting:
-http://lkml.kernel.org/r/1454152012-46337-1-git-send-email-jacek.lawrynowicz@intel.com
+On 2/8/2016 8:55 AM, Arnd Bergmann wrote:
+> I haven't really followed what is going on with ACPI. Do you expect
+> to see future machines come out that are not just implementing SBSA
+> but that still need to run ACPI? I thought this was just a hack
+> for some early machines that only run with ACPI but are not actually
+> compliant.
+> 
+> 	Arnd
 
-The changes from v3 are:
+I agree. We shouldn't be playing with half-baked ACPI solutions. We have seen
+two variants already that claim to be ACPI compliant yet they do not tie into
+anything inside ACPICA. 
 
-  - Split into smaller patches for reviewability
-  - Move printk when adding DMA alias
-  - Change dma_alias_is_enabled() interface to take two pci_devs
-  - Rename dma_alias_is_enabled() to indicate PCI context
+The correct route is to use Tomasz's ACPI PCI root bridge driver and use the ACPI
+framework.
 
-The only remaining thing I want to sort out is the dma_alias_is_enabled()
-vs pci_for_each_dma_alias() question Alex raised.  I'll respond to the
-relevant part of the patch in this series with my specific questions.
+If a platform has quirks, Tomasz's patches allow vendors add quirks too.
 
----
+The combination of PCI host bridge driver + ACPI hack is not right.
 
-Bjorn Helgaas (1):
-      PCI: Rename dma_alias_is_enabled() to pci_devs_are_dma_aliases()
-
-Jacek Lawrynowicz (5):
-      PCI: Add pci_add_dma_alias() to abstract implementation
-      PCI: Move informational printk to pci_add_dma_alias()
-      PCI: Add support for multiple DMA aliases
-      pci: Add DMA alias quirk for mic_x200_dma
-      PCI: Squash pci_dev_flags to remove holes
-
-
- drivers/iommu/iommu.c |   18 +++++++++++-------
- drivers/pci/pci.c     |   23 +++++++++++++++++++++++
- drivers/pci/pci.h     |    2 ++
- drivers/pci/probe.c   |    1 +
- drivers/pci/quirks.c  |   34 +++++++++++++++++++---------------
- drivers/pci/search.c  |   14 +++++++++-----
- include/linux/pci.h   |   12 +++++-------
- 7 files changed, 70 insertions(+), 34 deletions(-)
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
