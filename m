@@ -1,85 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-	"tn@semihalf.com" <tn@semihalf.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"jcm@redhat.com" <jcm@redhat.com>
-Subject: RE: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host
- Controllers
-Date: Thu, 4 Feb 2016 17:06:40 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1EC9F055@lhreml503-mbs>
-References: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
- <76564455.dlc1WHiVY2@wuerfel>
- <EE11001F9E5DDD47B7634E2F8A612F2E1EC9EF4B@lhreml503-mbs>
- <1930535.mkCdtpUWq7@wuerfel>
-In-Reply-To: <1930535.mkCdtpUWq7@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:51480 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751102AbcBHLeo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Feb 2016 06:34:44 -0500
+Subject: Re: [PATCH v3] synopsys pcie rc generic platform driver update
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+References: <28b04a32cc7caf6db542d4b5aa1feddacd02b2c9.1454701564.git.jpinto@synopsys.com>
+ <20160205225204.GB11780@localhost>
+CC: <arnd@arndb.de>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <Vineet.Gupta1@synopsys.com>,
+	<CARLOS.PALMINHA@synopsys.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <56B87D4F.2080009@synopsys.com>
+Date: Mon, 8 Feb 2016 11:34:39 +0000
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20160205225204.GB11780@localhost>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: 04 February 2016 17:02
-> To: Gabriele Paoloni
-> Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C); Linuxarm;
-> qiujiang; bhelgaas@google.com; Lorenzo.Pieralisi@arm.com;
-> tn@semihalf.com; zhangjukuo; xuwei (O); Liguozhu (Kenneth); linux-
-> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
-> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; jcm@redhat.com
-> Subject: Re: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host
-> Controllers
+Hi Bjorn,
+
+I am going to produce a patch just for the centralization of driver common code
+first. Then we need to discuss a bit what to do in order to transform
+pcie-designware into an hybrid driver (function lib and platform driver).
+
+BR
+Joao
+
+
+On 2/5/2016 10:52 PM, Bjorn Helgaas wrote:
+> Hi Joao,
 > 
-> On Thursday 04 February 2016 16:44:12 Gabriele Paoloni wrote:
-> > Effectively the ACPI version of the HiSilicon driver does not rely on
-> > Designware as much as the DT version (that calls
-> dw_pcie_host_init());
-> > however in order to do what you suggest I'd need to copy and paste
-> and
-> > modify dw_pcie_rd_conf and dw_pcie_wr_conf.
-> > Also I'd need to declare duplicate version of the functions in
-> > pcie-hisi-common.c (if I do not want to split the object across
-> > different paths "drivers/pci/host" and "drivers/acpi/")
-> >
-> > Now I can do it but I thought it was more correct to pass
-> &dw_pcie_ops
-> > as input pointer in DECLARE_ACPI_MCFG_FIXUP(); this is also because
-> maybe in
-> > future other Designware based controllers may need to support ACPI
-> and it
-> > would be easier for them to reuse their DT based driver functions
-> >
-> > Honestly I am a bit confused...
-> >
+> On Fri, Feb 05, 2016 at 07:55:43PM +0000, Joao Pinto wrote:
+>> This patch tries to improve the host/pcie-synopsys branch including a new
+>> driver name, more accurate documentation and centralized link up validation.
+>> Other platform drivers were also updated to include the new centralized link
+>> up validation function.
 > 
-> I don't think you can use the dw_pcie_ops as-is anyway, as they in
-> turn rely on the device driver structure, and you also don't need
-> those as they seem to be written for the generic case of a 32-bit
-> architecture that does not have enough space to map the entire
-> config space into MMIO. Just set up all those mapping registers from
-> the firmware and pass the config space base address as you'd normally
-> do on ACPI.
-
-Ok thanks, I'll wait a bit to see if there is any comment on this
-from other people, if not I'll rework the ACPI driver as you suggest
-and remove any dependency on Designware.
-
-Cheers
-
-Gab
-
+> It's true that I wanted you to incorporate a few tweaks I had made in
+> my pci/host-synopsys branch, but generating incremental patches on top
+> of that branch makes this too confusing to follow.
 > 
-> 	Arnd
+> My pci/host-synopsys contains two patches on top of v4.5-rc1.  I would
+> prefer that you
+> 
+>   - fetch that branch,
+>   - make whatever edits you need, and
+>   - generate fresh patches based on v4.5-rc1
+>   
+> Then everybody can see the whole series at once without trying to
+> integrate these changes with the ones you've previously posted, and I
+> can start from scratch and apply those fresh patches on top of
+> v4.5-rc1.
+> 
+> It's good that you include summaries of what's changed between
+> versions, but if people want to see *exactly* what's changed between
+> your v3 and v4 postings, it's easy for them to download those series,
+> apply them on different branches, and git diff the branches.
+> 
+> Bjorn
+> 
+
