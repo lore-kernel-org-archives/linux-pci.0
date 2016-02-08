@@ -1,78 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:49765 "EHLO
-	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484AbcBJR1M (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 12:27:12 -0500
-Date: Wed, 10 Feb 2016 09:27:07 -0800
-From: Paul Burton <paul.burton@imgtec.com>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	Michal Simek <michals@xilinx.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"wangyijing@huawei.com" <wangyijing@huawei.com>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH V3 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge
- driver to work on both  Zynq and Microblaze
-Message-ID: <20160210172707.GA29590@NP-P-BURTON>
-References: <1455014518-8708-1-git-send-email-bharatku@xilinx.com>
- <1455014518-8708-4-git-send-email-bharatku@xilinx.com>
- <20160209161134.GA24244@NP-P-BURTON>
- <8520D5D51A55D047800579B09414719825881780@XAP-PVEXMBX01.xlnx.xilinx.com>
+Received: from smtprelay.synopsys.com ([198.182.47.9]:52642 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750961AbcBHM6d (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Feb 2016 07:58:33 -0500
+Subject: Re: [PATCH v8 2/2] add new platform driver for PCI RC
+To: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <helgaas@kernel.org>
+References: <cover.1454600622.git.jpinto@synopsys.com>
+ <4427983.0G6mVNKP5W@wuerfel> <20160205233248.GC11780@localhost>
+ <2803103.hQZUPM7HZf@wuerfel>
+CC: Joao Pinto <Joao.Pinto@synopsys.com>, <Vineet.Gupta1@synopsys.com>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-snps-arc@lists.infradead.org>,
+	<CARLOS.PALMINHA@synopsys.com>, <Alexey.Brodkin@synopsys.com>,
+	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <56B88F9F.7020907@synopsys.com>
+Date: Mon, 8 Feb 2016 12:52:47 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <8520D5D51A55D047800579B09414719825881780@XAP-PVEXMBX01.xlnx.xilinx.com>
+In-Reply-To: <2803103.hQZUPM7HZf@wuerfel>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 10, 2016 at 05:55:51AM +0000, Bharat Kumar Gogada wrote:
-> > On Tue, Feb 09, 2016 at 04:11:56PM +0530, Bharat Kumar Gogada wrote:
-> > > Modifying Xilinx AXI PCIe Host Bridge Soft IP driver to work on both
-> > > Zynq and Microblaze Architectures.
-> > > With these modifications drivers/pci/host/pcie-xilinx.c, will work on
-> > > both Zynq and Microblaze Architectures.
-> > >
-> > > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> > > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
-> > > ---
-> > > Changes:
-> > > Removed unneccessary architecture dependent number of MSI's.
-> > > Added #ifdef to pci_fixup_irqs which is ARM specific API.
-> > 
-> > Hi Bharat,
-> > 
-> > Why do you say pci_fixup_irqs is ARM-specific? It's declared in
-> > include/linux/pci.h, defined in drivers/pci/setup-irq.c & used by multiple
-> > architectures (alpha, arm, m68k, mips, sh, sparc, tile,
-> > unicore32 from a quick grep).
-> > 
-> > Will you not break INTX-style interrupts by removing this?
-> > 
-> I meant to say ARM specific w.r.t Microblaze architecture, which is
-> what this patch series are for. This has been already discussed in my
-> previous patch by  Arnd Bergmann and Lorenzo Pieralisi .
-> (https://lkml.org/lkml/2016/1/12/707)
+Hi Bjorn and Arnd,
 
-Hi Bharat,
+I agree with you in adding the platform register mechanism to the
+pcie-designware core driver. This feature is excellent for who wants to quickly
+have a taste of a pcie-designware platform drive for their Synopsys PCIe RC
+controller.
 
-Ok, so you don't need it for microblaze but do need it for zynq/ARM. We
-also need it for MIPS, where my recent patches enable this driver. So if
-#ifdef'ing this is the current way forwards could you please invert the
-condition to #ifndef CONFIG_MICROBLAZE?
+Do you have some example for me to check in order to follow the same logic.
+Adding something like this in pcie-designware:
+
+#ifdef CONFIG_PCIE_DW_PLAT
+<add compatibility and platform register code>
+#endif
+
+would be acceptable? maybe the platform tweeks should be external makeing it
+cleaner like Arnd suggested. An example to follow would be nice.
 
 Thanks,
-    Paul
+Joao
+
+On 2/8/2016 12:31 PM, Arnd Bergmann wrote:
+> On Friday 05 February 2016 17:32:48 Bjorn Helgaas wrote:
+>> On Fri, Feb 05, 2016 at 03:39:05PM +0100, Arnd Bergmann wrote:
+>>> On Friday 05 February 2016 10:44:29 Joao Pinto wrote:
+> 
+>>> I think in this case, we should do this completely differently:
+>>>
+>>> How about putting all the new code into drivers/pci/host/pcie-designware.c
+>>> as functions that can be used by the other drivers in absence of a chip
+>>> specific handler?
+>>>
+>>> Instead of providing a new instance of struct pcie_host_ops, maybe add
+>>> it as a default implementation in dw_pcie_link_up() and dw_pcie_host_init()
+>>> for drivers that don't provide their own. "hisi_pcie_host_ops" currently
+>>> provides no host_init() callback function, so you will have to change
+>>> the hisi frontend to a provide nop-function.
+>>>
+>>> For all other drivers, check if they can be changed to use your generic
+>>> implementation and remove their private callbacks if possible.
+>>>
+>>> I think the MSI implementation should be split out into a separate file
+>>> though, as not everyone uses this.
+>>
+>> I'm not sure I understand what you're proposing, Arnd, so let me
+>> ramble and you can direct me back on course.
+>>
+>> Currently drivers/pci/host/pcie-designware.c is not usable by itself;
+>> it doesn't register a platform_driver.
+>>
+>> There's hardly any code in Joao's patches; it looks like they add a
+>> minimal wrapper around the functionality in pcie-designware.c and
+>> register it as a platform_driver.
+>>
+>> Are you suggesting that we should just add that functionality directly
+>> in pcie-designware.c so that file could both be a minimal driver with
+>> the functionality of Joao's patches, *and* continue to provide the
+>> shared code used by all the existing DesignWare-based drivers?  Maybe
+>> the platform_driver registration part could be controlled by its own
+>> separate Kconfig option.
+> 
+> Either way is fine, we just have to be a little careful about the
+> initialization ordering.
+> 
+>> For example, he could make dw_pcie_link_up() look like:
+>>
+>>   int dw_pcie_link_up(struct pcie_port *pp)
+>>   {
+>>     u32 val;
+>>
+>>     if (pp->ops->link_up)
+>>       return pp->ops->link_up(pp);
+>>
+>>     val = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
+>>     return val & PCIE_PHY_DEBUG_R1_LINK_UP;
+>>   }
+> 
+> This is definitely good (after checking that all existing drivers
+> either work with the generic version, or provide their own callbacks
+> already).
+> 
+>> That seems like it would make sense to me.  It would resolve the
+>> filename question, since there wouldn't be a new file.  And if this is
+>> merely a driver for the generic DesignWare core without any
+>> extensions, I'm happy with some sort of "dw"-based driver name and
+>> compatibility string.
+> 
+> The important part I think is that the new driver should not require
+> and code that is seen as soc-specific: If it works with any implementation
+> of pci-dw rather than a specific system, the driver should know how
+> to do the right thing.
+> 
+> It may be helpful to move the actual matching on the compatible string
+> and calling of the generic probe function into another module, if we
+> are going forward with loadable PCI host drivers as posted by 
+> Paul Gortmaker today. Otherwise we end up with a device being bound
+> to the generic driver when a more specific one exists and both
+> are loadable modules, because the generic driver is always loaded
+> first.  As long as both drivers are built-in, it works fine because
+> we first look for a driver matching the most specific compatible string.
+> 
+> 	Arnd
+> 
+
