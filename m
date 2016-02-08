@@ -1,49 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from relmlor3.renesas.com ([210.160.252.173]:6651 "EHLO
-	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750850AbcBZJWJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Feb 2016 04:22:09 -0500
-From: Phil Edworthy <phil.edworthy@renesas.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Simon Horman <horms+renesas@verge.net.au>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	"linux-renesas-soc@vger.kernel.org"
-	<linux-renesas-soc@vger.kernel.org>
-Subject: RE: [PATCH] PCI: rcar, rcar-gen2: Use ARCH_RENESAS
-Date: Fri, 26 Feb 2016 09:22:04 +0000
-Message-ID: <HK2PR0601MB1393372115B466FBB5F2D4EEF5A70@HK2PR0601MB1393.apcprd06.prod.outlook.com>
-References: <1456361156-16798-1-git-send-email-horms+renesas@verge.net.au>
- <CAMuHMdUW=3Vx7M2tTHguF2Gs8BAWWcPOVNDPizdPTWyawy8vHg@mail.gmail.com>
-In-Reply-To: <CAMuHMdUW=3Vx7M2tTHguF2Gs8BAWWcPOVNDPizdPTWyawy8vHg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail5.windriver.com ([192.103.53.11]:51098 "EHLO mail5.wrs.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754041AbcBHABc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 7 Feb 2016 19:01:32 -0500
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ley Foon Tan <lftan@altera.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>, <linux-pci@vger.kernel.org>,
+	<linux-arm-msm@vger.kernel.org>
+Subject: [PATCH 5/5] drivers/pci: make most of the PCI_DW drivers modular
+Date: Sun, 7 Feb 2016 19:00:44 -0500
+Message-ID: <1454889644-27830-6-git-send-email-paul.gortmaker@windriver.com>
+In-Reply-To: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com>
+References: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgR2VlcnQsDQoNCk9uIDI1IEZlYnJ1YXJ5IDIwMTYgMDg6MDUsIEdlZXJ0IFV5dHRlcmhvZXZl
-biB3cm90ZToNCj4gT24gVGh1LCBGZWIgMjUsIDIwMTYgYXQgMTo0NSBBTSwgU2ltb24gSG9ybWFu
-DQo+IDxob3JtcytyZW5lc2FzQHZlcmdlLm5ldC5hdT4gd3JvdGU6DQo+ID4gTWFrZSB1c2Ugb2Yg
-QVJDSF9SRU5FU0FTIGluIHBsYWNlIG9mIEFSQ0hfU0hNT0JJTEUuDQo+ID4NCj4gPiBUaGlzIGlz
-IHBhcnQgb2YgYW4gb25nb2luZyBwcm9jZXNzIHRvIG1pZ3JhdGUgZnJvbSBBUkNIX1NITU9CSUxF
-IHRvDQo+ID4gQVJDSF9SRU5FU0FTIHRoZSBtb3RpdmF0aW9uIGZvciB3aGljaCBiZWluZyB0aGF0
-IFJFTkVTQVMgc2VlbXMgdG8gYmUgYQ0KPiBtb3JlDQo+ID4gYXBwcm9wcmlhdGUgbmFtZSB0aGFu
-IFNITU9CSUxFIGZvciB0aGUgbWFqb3JpdHkgb2YgUmVuZXNhcyBBUk0gYmFzZWQNCj4gU29Dcy4N
-Cj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IFNpbW9uIEhvcm1hbiA8aG9ybXMrcmVuZXNhc0B2ZXJn
-ZS5uZXQuYXU+DQo+IA0KPiBBY2tlZC1ieTogR2VlcnQgVXl0dGVyaG9ldmVuIDxnZWVydCtyZW5l
-c2FzQGdsaWRlci5iZT4NCj4gDQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvaG9zdC9LY29uZmlnDQo+
-ID4gKysrIGIvZHJpdmVycy9wY2kvaG9zdC9LY29uZmlnDQo+IA0KPiA+IEBAIC00OSw3ICs0OSw3
-IEBAIGNvbmZpZyBQQ0lfUkNBUl9HRU4yDQo+ID4NCj4gPiAgY29uZmlnIFBDSV9SQ0FSX0dFTjJf
-UENJRQ0KPiA+ICAgICAgICAgYm9vbCAiUmVuZXNhcyBSLUNhciBQQ0llIGNvbnRyb2xsZXIiDQo+
-ID4gLSAgICAgICBkZXBlbmRzIG9uIEFSQ0hfU0hNT0JJTEUgfHwgKEFSTSAmJiBDT01QSUxFX1RF
-U1QpDQo+ID4gKyAgICAgICBkZXBlbmRzIG9uIEFSQ0hfUkVORVNBUyB8fCAoQVJNICYmIENPTVBJ
-TEVfVEVTVCkNCj4gPiAgICAgICAgIGhlbHANCj4gPiAgICAgICAgICAgU2F5IFkgaGVyZSBpZiB5
-b3Ugd2FudCBQQ0llIGNvbnRyb2xsZXIgc3VwcG9ydCBvbiBSLUNhciBHZW4yIFNvQ3MuDQo+IA0K
-PiBCVFcsIHRoaXMgbG9va3MgbGlrZSBhIG1pc25vbWVyOiB0aGUgZHJpdmVyIHN1cHBvcnRzIGEg
-Y29tcGF0aWJsZSB2YWx1ZSBmb3INCj4gUi1DYXIgSDEsIHRvbyAoInJlbmVzYXMscGNpZS1yOGE3
-Nzc5IiksIGJ1dCBpdCdzIG5vdCB1c2VkIGluIHI4YTc3NzkuZHRzaS4NCklJUkMsIEgxIFBDSWUg
-c3VwcG9ydCB3YXMgbm9iYmxlZCBpbiBzb21lIHdheSB0aGF0IG1lYW50IHlvdSBjb3VsZCBub3QN
-CnVzZSBpdCB3aXRoIGFueSBub3JtYWwgUENJZSBjYXJkLiBZb3UgY291bGQgY29ubmVjdCB0byBh
-bm90aGVyIFItQ2FyIHRoYXQNCndhcyBhY3RpbmcgYXMgYW4gZW5kcG9pbnQgdGhvdWdoLg0KDQpQ
-aGlsDQo=
+We've exported the symbols that we know these specific drivers
+will need as tristate, so now we can make the conversion from
+bool to tristate w/o concern for build regressions.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ley Foon Tan <lftan@altera.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-arm-msm@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+---
+ drivers/pci/host/Kconfig | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index b040ad7ba44d..f3020389ddaa 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -2,7 +2,7 @@ menu "PCI host controller drivers"
+ 	depends on PCI
+ 
+ config PCI_DRA7XX
+-	bool "TI DRA7xx PCIe controller"
++	tristate "TI DRA7xx PCIe controller"
+ 	select PCIE_DW
+ 	depends on OF && HAS_IOMEM && TI_PIPE3
+ 	depends on BROKEN
+@@ -20,13 +20,13 @@ config PCIE_DW
+ 	bool
+ 
+ config PCI_EXYNOS
+-	bool "Samsung Exynos PCIe controller"
++	tristate "Samsung Exynos PCIe controller"
+ 	depends on SOC_EXYNOS5440
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+ 
+ config PCI_IMX6
+-	bool "Freescale i.MX6 PCIe controller"
++	tristate "Freescale i.MX6 PCIe controller"
+ 	depends on SOC_IMX6Q
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+@@ -61,7 +61,7 @@ config PCI_HOST_GENERIC
+ 	  controller, such as the one emulated by kvmtool.
+ 
+ config PCIE_SPEAR13XX
+-	bool "STMicroelectronics SPEAr PCIe controller"
++	tristate "STMicroelectronics SPEAr PCIe controller"
+ 	depends on ARCH_SPEAR13XX
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+@@ -106,7 +106,7 @@ config PCI_XGENE_MSI
+ 	  This MSI driver supports 5 PCIe ports on the APM X-Gene v1 SoC.
+ 
+ config PCI_LAYERSCAPE
+-	bool "Freescale Layerscape PCIe controller"
++	tristate "Freescale Layerscape PCIe controller"
+ 	depends on OF && (ARM || ARCH_LAYERSCAPE)
+ 	select PCIE_DW
+ 	select MFD_SYSCON
+@@ -174,7 +174,7 @@ config PCIE_ALTERA_MSI
+ 
+ config PCI_HISI
+ 	depends on OF && ARM64
+-	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
++	tristate "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
+ 	help
+@@ -182,7 +182,7 @@ config PCI_HISI
+ 	  Hip05 and Hip06 SoCs
+ 
+ config PCIE_QCOM
+-	bool "Qualcomm PCIe controller"
++	tristate "Qualcomm PCIe controller"
+ 	depends on ARCH_QCOM && OF
+ 	select PCIE_DW
+ 	select PCIEPORTBUS
+-- 
+2.6.1
+
