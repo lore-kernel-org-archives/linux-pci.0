@@ -1,53 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:36969 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751660AbcBASl3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 1 Feb 2016 13:41:29 -0500
-Received: by mail-ig0-f181.google.com with SMTP id 5so18354568igt.0
-        for <linux-pci@vger.kernel.org>; Mon, 01 Feb 2016 10:41:29 -0800 (PST)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 9 Feb 2016 10:26:28 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	David Daney <ddaney@caviumnetworks.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	David Daney <david.daney@cavium.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	David Daney <ddaney.cavm@gmail.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v5 3/3] pci, pci-thunder-ecam: Add driver for
+ ThunderX-pass1 on-chip devices
+Message-ID: <20160209162628.GA20171@localhost>
+References: <1454715675-17512-1-git-send-email-ddaney.cavm@gmail.com>
+ <56B919A5.5090000@caviumnetworks.com>
+ <20160208232430.GA1353@localhost>
+ <12842339.z2KnaZPlyO@wuerfel>
 MIME-Version: 1.0
-In-Reply-To: <1454300093.10542.3.camel@redhat.com>
-References: <CAJ2oMhL-oL68ZOLsFEn3uGE=O9sMjcwPDH6oznLhG15xnzSQtQ@mail.gmail.com>
-	<1454300093.10542.3.camel@redhat.com>
-Date: Mon, 1 Feb 2016 20:41:28 +0200
-Message-ID: <CAJ2oMh+MjG8frrE3DjHBtwrsG1vGwMcDzQQ8f-n0q-YBS04DZg@mail.gmail.com>
-Subject: Re: Q: Relation between lanes to devices and to BARs
-From: Ran Shalit <ranshalit@gmail.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <12842339.z2KnaZPlyO@wuerfel>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 1, 2016 at 6:14 AM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Sun, 2016-01-31 at 02:15 -0500, Ran Shalit wrote:
->> Hello,
->>
->> I am new to pci express drivers, and would please like to ask a question.
->> We develop a linux driver for a PCIe device board with 4 lanes.
->> 1. Is it expected that this will be recognized as a single device or
->> multiple device ?
->
-> It depends whether your device is multifunction.
->
+On Tue, Feb 09, 2016 at 10:25:33AM +0100, Arnd Bergmann wrote:
+> On Monday 08 February 2016 17:24:30 Bjorn Helgaas wrote:
+> > > >
+> > > >I assume your system conforms to expectations like these; I'm just
+> > > >pointing them out because you mentioned buses with multiple devices on
+> > > >them, which is definitely something one doesn't expect in PCIe.
+> > > 
+> > > The topology we have is currently working with the kernel's core PCI
+> > > code.  I don't really want to get into discussing what the
+> > > definition of PCIe is.  We have multiple devices (more than 32) on a
+> > > single bus, and they have PCI Express and ARI Capabilities.  Is that
+> > > PCIe?  I don't know.
+> > 
+> > I don't need to know the details of your topology.  As long as it
+> > conforms to the PCIe spec, it should be fine.  If it *doesn't* conform
+> > to the spec, but things currently seem to work, that's less fine,
+> > because a future Linux change is liable to break something for you.
+> > 
+> > I was a little concerned about your statement that "there are multiple
+> > devices residing on each bus, so from that point of view it cannot be
+> > PCIe."  That made it sound like you're doing something outside the
+> > spec.  If you're just using regular multi-function devices or ARI,
+> > then I don't see any issue (or any reason to say it can't be PCIe).
+> 
+> It doesn't conform to the PCIe port spec, because there are no external
+> ports but just integrated devices in the host bridge. 
 
-It is a video capture & output deivce, (video4linux), so I guess it
-means it has single functionality (video).' and therefore will aprear
-as a single device.
+Is there a spec section you have in mind?  Based on sec 1.3.1, I don't
+think there's a requirement to have PCI Express Ports (is that what
+you mean by "external ports"?)
 
+Root Complex Integrated Endpoints (sec 1.3.2.3) are clearly supported
+and they would not be behind a Root Port.  If you're using those, I
+hope they're correctly identified via the PCIe capability Device/Port
+Type (sec 7.8.2) because we rely on that type to figure out whether
+the link-related registers are implemented.
 
->> 2. Is it that each lane rales to a different BAR or there is no
->> connection between these two ?
->
-> No relation, all PCI/e devices have the same set of standard BARs
-> available to them.
->
+The spec does include rules related to peer-to-peer transactions, MPS,
+ASPM, error reporting, etc., and Linux relies on those, so I think it
+would be important to get those right.
 
-Thanks,
-So it probably means that there is no added complexity in terms of
-device driver with multi lanes PCIe (compared to single lane).
+> For this special
+> case, I don't think it matters at all from the point of view of the DT
+> binding whether we call the node name "pci" or "pcie".
 
+And the PCI core doesn't even know the node name, it doesn't matter
+there either.
 
-Thank you,
-Ran
+Bjorn
