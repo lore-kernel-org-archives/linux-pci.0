@@ -1,87 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:21584 "EHLO mga02.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:35649 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423083AbcBQXpl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Feb 2016 18:45:41 -0500
-From: Andi Kleen <andi@firstfloor.org>
-To: bhelgaas@google.com
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org,
-	linux-pci@vger.kernel.org, Andi Kleen <ak@linux.intel.com>
-Subject: [PATCH] x86, pci: Add quirk for unsizeable Broadwell EP bar
-Date: Wed, 17 Feb 2016 15:45:28 -0800
-Message-Id: <1455752728-29958-1-git-send-email-andi@firstfloor.org>
+	id S1755142AbcBIVID (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Feb 2016 16:08:03 -0500
+Date: Tue, 9 Feb 2016 15:07:59 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Babu Moger <babu.moger@oracle.com>
+Subject: Re: [PATCHv2 4/4] pci: Blacklist vpd access for buggy devices
+Message-ID: <20160209210759.GC32530@localhost>
+References: <1452684335-46107-1-git-send-email-hare@suse.de>
+ <1452684335-46107-5-git-send-email-hare@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1452684335-46107-5-git-send-email-hare@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Andi Kleen <ak@linux.intel.com>
+There seem to be several revs of this patch, and it's hard for me to
+keep track of what's current.  If you want to update any patch in the
+series, please repost the entire series with a new version number.
 
-The Home Agent and PCU PCI devices in Broadwell-EP have a BAR that returns a
-non zero value when read, but is still not sizeable (because it doesn't
-exist).  This causes several [Firmware error] messages at boot. It does
-not cause any functional problems, as the devices really have no BARs.
+On Wed, Jan 13, 2016 at 12:25:35PM +0100, Hannes Reinecke wrote:
+> From: Babu Moger <babu.moger@oracle.com>
+> 
+> Reading or Writing of PCI VPD data causes system panic.
+> We saw this problem by running "lspci -vvv" in the beginning.
+> However this can be easily reproduced by running
+>  cat /sys/bus/devices/XX../vpd
+> 
+> As even a simple read on any VPD data triggers a system
+> lockup on certain cards this patch implements a PCI quirk
+> to disabling VPD acces altogether by setting the vpd length
 
-Add a PCI quirk to shut off the messages.
+s/acces/access/
+s/vpd/VPD/
 
-v2: Handle all BARs, not just BAR0 (Chaohong Guo)
-v3: Switch to patching bus ops
-Signed-off-by: Andi Kleen <ak@linux.intel.com>
----
- arch/x86/pci/fixup.c | 45 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 45 insertions(+)
+> to '0'.
+> 
+> Signed-off-by: Babu Moger <babu.moger@oracle.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/pci/access.c |  5 ++++-
+>  drivers/pci/quirks.c | 41 +++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 45 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index 914e023..82f41a8 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -396,7 +396,7 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
+>  	if (pos < 0)
+>  		return -EINVAL;
+>  
+> -	if (!vpd->valid) {
+> +	if (!vpd->valid && vpd->base.len > 0) {
+>  		vpd->valid = true;
+>  		vpd->base.len = pci_vpd_pci22_size(dev);
+>  	}
+> @@ -459,6 +459,9 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
+>  	loff_t end = pos + count;
+>  	int ret = 0;
+>  
+> +	if (vpd->base.len == 0)
+> +		return -EIO;
+> +
+>  	if (!vpd->valid)
+>  		return -EAGAIN;
+>  
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 7e32730..af0f8a1 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2123,6 +2123,47 @@ static void quirk_via_cx700_pci_parking_caching(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, 0x324e, quirk_via_cx700_pci_parking_caching);
+>  
+>  /*
+> + * A read/write to sysfs entry ('/sys/bus/pci/devices/<id>/vpd')
+> + * will dump 32k of data. The default length is set as 32768.
+> + * Reading a full 32k will cause an access beyond the VPD end tag.
+> + * The system behaviour at that point is mostly unpredictable.
+> + * Apparently, some vendors have not implemented this VPD headers properly.
+> + * Adding a generic function disable vpd data for these buggy adapters
+> + * Add the DECLARE_PCI_FIXUP_FINAL line below with the specific with
+> + * vendor and device of interest to use this quirk.
+> + */
+> +static void quirk_blacklist_vpd(struct pci_dev *dev)
+> +{
+> +	if (dev->vpd) {
+> +		dev->vpd->len = 0;
+> +		dev_warn(&dev->dev, "PCI vpd access has been disabled due to firmware bug\n");
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index e585655..4fcb5d5 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -540,3 +540,48 @@ static void twinhead_reserve_killing_zone(struct pci_dev *dev)
-         }
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x27B9, twinhead_reserve_killing_zone);
-+
-+/*
-+ * Intel Broadwell EP. Prevent reading/updating BARs on Home Agent and PCU devices
-+ * which are not real BARs, but still return non-null.
-+ * This prevents a harmless warning message at boot.
-+ */
-+
-+static inline bool bdwep_bad_bars(unsigned devfn, int where)
-+{
-+	return ((PCI_SLOT(devfn) == 0x12 && PCI_FUNC(devfn) == 0) ||
-+		(PCI_SLOT(devfn) == 0x1e && PCI_FUNC(devfn) == 3)) &&
-+		where >= 0x10 && where <= 0x24;
-+}
-+
-+static int quirk_bdwep_bar_read(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *value)
-+{
-+	if (bdwep_bad_bars(devfn, where)) {
-+		*value = 0;
-+		return 0;
-+	}
-+
-+	return raw_pci_read(pci_domain_nr(bus), bus->number,
-+			    devfn, where, size, value);
-+}
-+
-+static int quirk_bdwep_bar_write(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 value)
-+{
-+	if (bdwep_bad_bars(devfn, where))
-+		return 0;
-+
-+	return raw_pci_write(pci_domain_nr(bus), bus->number,
-+			     devfn, where, size, value);
-+}
-+
-+static struct pci_ops quirk_bdwep_bar_ops = {
-+	.read = quirk_bdwep_bar_read,
-+	.write = quirk_bdwep_bar_write,
-+};
-+
-+static void pci_bdwep_bar(struct pci_dev *dev)
-+{
-+	pci_bus_set_ops(dev->bus, &quirk_bdwep_bar_ops);
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_bdwep_bar);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_bdwep_bar);
--- 
-2.5.0
+"PCI" is superfluous and "VPD" should be capitalized.
 
+> +	}
+> +}
+> +
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060,
+> +		quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c,
+> +		quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413,
+> +		quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078,
+> +		quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079,
+> +		quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073,
+> +		quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071,
+> +		quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b,
+> +		quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f,
+> +		quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d,
+> +		quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f,
+> +		quirk_blacklist_vpd);
+> +
+> +/*
+>   * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
+>   * VPD end tag will hang the device.  This problem was initially
+>   * observed when a vpd entry was created in sysfs
+> -- 
+> 1.8.5.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
