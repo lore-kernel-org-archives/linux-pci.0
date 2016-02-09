@@ -1,65 +1,198 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:32849 "EHLO
-	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402AbcBNUxe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Feb 2016 15:53:34 -0500
-Received: by mail-wm0-f65.google.com with SMTP id c200so12572595wme.0
-        for <linux-pci@vger.kernel.org>; Sun, 14 Feb 2016 12:53:33 -0800 (PST)
-From: Christoph Fritz <chf.fritz@googlemail.com>
-To: Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lee Jones <lee.jones@linaro.org>
-Cc: Fabio Estevam <fabio.estevam@nxp.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 1/2] ARM: imx6sx: Add PCIe register definitions for iomuxc gpr
-Date: Sun, 14 Feb 2016 21:52:43 +0100
-Message-Id: <1455483164-13755-2-git-send-email-chf.fritz@googlemail.com>
-In-Reply-To: <1455483164-13755-1-git-send-email-chf.fritz@googlemail.com>
-References: <1455483164-13755-1-git-send-email-chf.fritz@googlemail.com>
+Received: from mail-sn1nam02on0076.outbound.protection.outlook.com ([104.47.36.76]:37202
+	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932725AbcBIKmO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Feb 2016 05:42:14 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <bhelgaas@google.com>, <michals@xilinx.com>,
+	<lorenzo.pieralisi@arm.com>, <paul.burton@imgtec.com>,
+	<yinghai@kernel.org>, <wangyijing@huawei.com>, <robh@kernel.org>,
+	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
+	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
+	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
+	<galak@codeaurora.org>
+CC: <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: [PATCH V3 2/5] PCI: xilinx: Removing struct hw_pci structure.
+Date: Tue, 9 Feb 2016 16:11:55 +0530
+Message-ID: <1455014518-8708-3-git-send-email-bharatku@xilinx.com>
+In-Reply-To: <1455014518-8708-1-git-send-email-bharatku@xilinx.com>
+References: <1455014518-8708-1-git-send-email-bharatku@xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds macros to define masks and bits for imx6sx
-PCIe registers. This is based on a patch by Richard Zhu.
+Removing struct hw_pci and adding generic PCI core API's.
 
-Signed-off-by: Christoph Fritz <chf.fritz@googlemail.com>
+Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
 ---
- include/linux/mfd/syscon/imx6q-iomuxc-gpr.h | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+Changes:
+Removing architecure dependecy structure struct hw_pci which is ARM 32-bit
+specific structure, and adding generic PCI core API's to register to
+PCI subsytem.
+Removing funtions which are not being used with generic API's.
+---
+ drivers/pci/host/pcie-xilinx.c | 82 +++++++++---------------------------------
+ 1 file changed, 16 insertions(+), 66 deletions(-)
 
-diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-index 558a485..93d859b 100644
---- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-+++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-@@ -422,6 +422,12 @@
- #define IMX6SX_GPR5_VADC_TO_CSI_CAPTURE_EN_MASK		(0x1 << 26)
- #define IMX6SX_GPR5_VADC_TO_CSI_CAPTURE_EN_ENABLE	(0x1 << 26)
- #define IMX6SX_GPR5_VADC_TO_CSI_CAPTURE_EN_DISABLE	(0x0 << 26)
-+#define IMX6SX_GPR5_PCIE_BTNRST_MASK			(0x1 << 19)
-+#define IMX6SX_GPR5_PCIE_BTNRST_RESET			(0x1 << 19)
-+#define IMX6SX_GPR5_PCIE_BTNRST_RELEASE		(0x0 << 19)
-+#define IMX6SX_GPR5_PCIE_PERST_MASK			(0x1 << 18)
-+#define IMX6SX_GPR5_PCIE_PERST_RESET			(0x1 << 18)
-+#define IMX6SX_GPR5_PCIE_PERST_RELEASE			(0x0 << 18)
- #define IMX6SX_GPR5_CSI1_MUX_CTRL_MASK			(0x3 << 4)
- #define IMX6SX_GPR5_CSI1_MUX_CTRL_EXT_PIN		(0x0 << 4)
- #define IMX6SX_GPR5_CSI1_MUX_CTRL_CVD			(0x1 << 4)
-@@ -435,6 +441,15 @@
- #define IMX6SX_GPR5_DISP_MUX_DCIC1_LVDS			(0x1 << 1)
- #define IMX6SX_GPR5_DISP_MUX_DCIC1_MASK			(0x1 << 1)
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 627878d..13fec35 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -111,17 +111,11 @@ struct xilinx_pcie_port {
+ 	u8 root_busno;
+ 	struct device *dev;
+ 	struct irq_domain *irq_domain;
+-	struct resource bus_range;
+ 	struct list_head resources;
+ };
  
-+#define IMX6SX_GPR12_PCIE_TEST_POWERDOWN_MASK		(0x1 << 30)
-+#define IMX6SX_GPR12_PCIE_TEST_POWERDOWN_ENABLE	(0x1 << 30)
-+#define IMX6SX_GPR12_PCIE_TEST_POWERDOWN_DISABLE	(0x0 << 30)
-+#define IMX6SX_GPR12_PCIE_PM_TURNOFF_MASK		(0x1 << 16)
-+#define IMX6SX_GPR12_PCIE_PM_TURNOFF_OFF		(0x1 << 16)
-+#define IMX6SX_GPR12_PCIE_PM_TURNOFF_RELEASE		(0x0 << 16)
-+#define IMX6SX_GPR12_PCIE_RX_EQ_MASK			(0x7 << 0)
-+#define IMX6SX_GPR12_PCIE_RX_EQ_2			(0x2 << 0)
+ static DECLARE_BITMAP(msi_irq_in_use, XILINX_NUM_MSI_IRQS);
+ 
+-static inline struct xilinx_pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+-{
+-	return sys->private_data;
+-}
+-
+ static inline u32 pcie_read(struct xilinx_pcie_port *port, u32 reg)
+ {
+ 	return readl(port->reg_base + reg);
+@@ -163,7 +157,7 @@ static void xilinx_pcie_clear_err_interrupts(struct xilinx_pcie_port *port)
+  */
+ static bool xilinx_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
+ {
+-	struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
++	struct xilinx_pcie_port *port = bus->sysdata;
+ 
+ 	/* Check if link is up when trying to access downstream ports */
+ 	if (bus->number != port->root_busno)
+@@ -196,7 +190,7 @@ static bool xilinx_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
+ static void __iomem *xilinx_pcie_map_bus(struct pci_bus *bus,
+ 					 unsigned int devfn, int where)
+ {
+-	struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
++	struct xilinx_pcie_port *port = bus->sysdata;
+ 	int relbus;
+ 
+ 	if (!xilinx_pcie_valid_device(bus, devfn))
+@@ -228,7 +222,7 @@ static void xilinx_pcie_destroy_msi(unsigned int irq)
+ 
+ 	if (!test_bit(irq, msi_irq_in_use)) {
+ 		msi = irq_get_msi_desc(irq);
+-		port = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
++		port = msi_desc_to_pci_sysdata(msi);
+ 		dev_err(port->dev, "Trying to free unused MSI#%d\n", irq);
+ 	} else {
+ 		clear_bit(irq, msi_irq_in_use);
+@@ -277,7 +271,7 @@ static int xilinx_pcie_msi_setup_irq(struct msi_controller *chip,
+ 				     struct pci_dev *pdev,
+ 				     struct msi_desc *desc)
+ {
+-	struct xilinx_pcie_port *port = sys_to_pcie(pdev->bus->sysdata);
++	struct xilinx_pcie_port *port = pdev->bus->sysdata;
+ 	unsigned int irq;
+ 	int hwirq;
+ 	struct msi_msg msg;
+@@ -614,47 +608,6 @@ static void xilinx_pcie_init_port(struct xilinx_pcie_port *port)
+ }
+ 
+ /**
+- * xilinx_pcie_setup - Setup memory resources
+- * @nr: Bus number
+- * @sys: Per controller structure
+- *
+- * Return: '1' on success and error value on failure
+- */
+-static int xilinx_pcie_setup(int nr, struct pci_sys_data *sys)
+-{
+-	struct xilinx_pcie_port *port = sys_to_pcie(sys);
+-
+-	list_splice_init(&port->resources, &sys->resources);
+-
+-	return 1;
+-}
+-
+-/**
+- * xilinx_pcie_scan_bus - Scan PCIe bus for devices
+- * @nr: Bus number
+- * @sys: Per controller structure
+- *
+- * Return: Valid Bus pointer on success and NULL on failure
+- */
+-static struct pci_bus *xilinx_pcie_scan_bus(int nr, struct pci_sys_data *sys)
+-{
+-	struct xilinx_pcie_port *port = sys_to_pcie(sys);
+-	struct pci_bus *bus;
+-
+-	port->root_busno = sys->busnr;
+-
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		bus = pci_scan_root_bus_msi(port->dev, sys->busnr,
+-					    &xilinx_pcie_ops, sys,
+-					    &sys->resources,
+-					    &xilinx_pcie_msi_chip);
+-	else
+-		bus = pci_scan_root_bus(port->dev, sys->busnr,
+-					&xilinx_pcie_ops, sys, &sys->resources);
+-	return bus;
+-}
+-
+-/**
+  * xilinx_pcie_parse_dt - Parse Device tree
+  * @port: PCIe port information
+  *
+@@ -704,8 +657,9 @@ static int xilinx_pcie_parse_dt(struct xilinx_pcie_port *port)
+ static int xilinx_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct xilinx_pcie_port *port;
+-	struct hw_pci hw;
+ 	struct device *dev = &pdev->dev;
++	struct pci_bus *bus;
 +
- /* For imx6ul iomux gpr register field define */
- #define IMX6UL_GPR1_ENET1_CLK_DIR		(0x1 << 17)
- #define IMX6UL_GPR1_ENET2_CLK_DIR		(0x1 << 18)
+ 	int err;
+ 	resource_size_t iobase = 0;
+ 	LIST_HEAD(res);
+@@ -739,24 +693,20 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+ 		dev_err(dev, "Getting bridge resources failed\n");
+ 		return err;
+ 	}
+-
+-	platform_set_drvdata(pdev, port);
+-
+-	/* Register the device */
+-	memset(&hw, 0, sizeof(hw));
+-	hw = (struct hw_pci) {
+-		.nr_controllers	= 1,
+-		.private_data	= (void **)&port,
+-		.setup		= xilinx_pcie_setup,
+-		.map_irq	= of_irq_parse_and_map_pci,
+-		.scan		= xilinx_pcie_scan_bus,
+-		.ops		= &xilinx_pcie_ops,
+-	};
++	bus = pci_create_root_bus(&pdev->dev, 0,
++				  &xilinx_pcie_ops, port, &res);
++	if (!bus)
++		return -ENOMEM;
+ 
+ #ifdef CONFIG_PCI_MSI
+ 	xilinx_pcie_msi_chip.dev = port->dev;
++	bus->msi = &xilinx_pcie_msi_chip;
+ #endif
+-	pci_common_init_dev(dev, &hw);
++	pci_scan_child_bus(bus);
++	pci_assign_unassigned_bus_resources(bus);
++	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++	pci_bus_add_devices(bus);
++	platform_set_drvdata(pdev, port);
+ 
+ 	return 0;
+ }
 -- 
-2.1.4
+2.1.1
 
