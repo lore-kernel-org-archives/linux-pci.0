@@ -1,83 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [193.47.165.129] ([193.47.165.129]:33954 "EHLO mellanox.co.il"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755217AbcBDI3j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Feb 2016 03:29:39 -0500
-From: Ilya Lesokhin <ilyal@mellanox.com>
-To: kvm@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com,
-	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
-	liranl@mellanox.com, ilyal@mellanox.com
-Subject: [RFC V2 0/4] VFIO SRIOV support
-Date: Thu,  4 Feb 2016 10:28:53 +0200
-Message-Id: <1454574537-123466-1-git-send-email-ilyal@mellanox.com>
+Received: from mout.kundenserver.de ([212.227.17.13]:61856 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932685AbcBIQcT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2016 11:32:19 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org,
+	David Daney <ddaney@caviumnetworks.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	David Daney <david.daney@cavium.com>,
+	Will Deacon <will.deacon@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	David Daney <ddaney.cavm@gmail.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v5 3/3] pci, pci-thunder-ecam: Add driver for ThunderX-pass1 on-chip devices
+Date: Tue, 09 Feb 2016 17:31:26 +0100
+Message-ID: <4260938.2z2RNjENMM@wuerfel>
+In-Reply-To: <20160209162628.GA20171@localhost>
+References: <1454715675-17512-1-git-send-email-ddaney.cavm@gmail.com> <12842339.z2KnaZPlyO@wuerfel> <20160209162628.GA20171@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes from v1:
-	Due to the security concern raised in v1, we add two patches
-	to make sure the VFs belong to the same IOMMU group as
-	the PF and are probed by VFIO.
+On Tuesday 09 February 2016 10:26:28 Bjorn Helgaas wrote:
+> On Tue, Feb 09, 2016 at 10:25:33AM +0100, Arnd Bergmann wrote:
+> > On Monday 08 February 2016 17:24:30 Bjorn Helgaas wrote:
+> > > > >
+> > > > >I assume your system conforms to expectations like these; I'm just
+> > > > >pointing them out because you mentioned buses with multiple devices on
+> > > > >them, which is definitely something one doesn't expect in PCIe.
+> > > > 
+> > > > The topology we have is currently working with the kernel's core PCI
+> > > > code.  I don't really want to get into discussing what the
+> > > > definition of PCIe is.  We have multiple devices (more than 32) on a
+> > > > single bus, and they have PCI Express and ARI Capabilities.  Is that
+> > > > PCIe?  I don't know.
+> > > 
+> > > I don't need to know the details of your topology.  As long as it
+> > > conforms to the PCIe spec, it should be fine.  If it *doesn't* conform
+> > > to the spec, but things currently seem to work, that's less fine,
+> > > because a future Linux change is liable to break something for you.
+> > > 
+> > > I was a little concerned about your statement that "there are multiple
+> > > devices residing on each bus, so from that point of view it cannot be
+> > > PCIe."  That made it sound like you're doing something outside the
+> > > spec.  If you're just using regular multi-function devices or ARI,
+> > > then I don't see any issue (or any reason to say it can't be PCIe).
+> > 
+> > It doesn't conform to the PCIe port spec, because there are no external
+> > ports but just integrated devices in the host bridge. 
+> 
+> Is there a spec section you have in mind?  Based on sec 1.3.1, I don't
+> think there's a requirement to have PCI Express Ports (is that what
+> you mean by "external ports"?)
 
-Today the QEMU hypervisor allows assigning a physical device to a VM,
-facilitating driver development. However, it does not support enabling
-SR-IOV by the VM kernel driver. Our goal is to implement such support,
-allowing developers working on SR-IOV physical function drivers to work
-inside VMs as well.
+No, I was just assuming that ports are specified in their own document,
+which would not be followed here if there are none. There is nothing in
+here that leads me to believe that the hardware is actually noncompliant
+with any relevant standard.
 
-This patch series implements the kernel side of our solution.  It extends
-the VFIO driver to support the PCIE SRIOV extended capability with
-following features:
-1. The ability to probe SRIOV BAR sizes.
-2. The ability to enable and disable sriov.
+> Root Complex Integrated Endpoints (sec 1.3.2.3) are clearly supported
+> and they would not be behind a Root Port.  If you're using those, I
+> hope they're correctly identified via the PCIe capability Device/Port
+> Type (sec 7.8.2) because we rely on that type to figure out whether
+> the link-related registers are implemented.
+> 
+> The spec does include rules related to peer-to-peer transactions, MPS,
+> ASPM, error reporting, etc., and Linux relies on those, so I think it
+> would be important to get those right.
 
-This patch series is going to be used by QEMU to expose sriov capabilities
-to VM. We already have an early prototype based on Knut Omang's patches for
-SRIOV[1]. 
+David can probably explain more if the registers are compliant with
+those parts of the spec.
 
-Open issues:
-1. How to tell if it is safe to disable SRIOV?
-In the current implementation, a userspace can enable sriov, grab one of
-the VFs and then call disable sriov without releasing the device.  This
-will result in a deadlock where the user process is stuck inside disable
-sriov waiting for itself to release the device. Killing the process leaves
-it in a zombie state.
-We also get a strange warning saying:
-[  181.668492] WARNING: CPU: 22 PID: 3684 at kernel/sched/core.c:7497 __might_sleep+0x77/0x80() 
-[  181.668502] do not call blocking ops when !TASK_RUNNING; state=1 set at [<ffffffff810aa193>] prepare_to_wait_event+0x63/0xf0
-
-2. How to expose the Supported Page Sizes and System Page Size registers in
-the SRIOV capability? 
-Presently the hypervisor initializes Supported Page Sizes once and assumes
-it doesn't change therefore we cannot allow user space to change this
-register at will. The first solution that comes to mind is to expose a
-device that only supports the page size selected by the hypervisor.
-Unfourtently, Per SR-IOV spec section 3.3.12, PFs are required to support
-4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB page sizes. We currently map both
-registers as virtualized and read only and leave user space to worry about
-this problem.
-
-3. Other SRIOV capabilities.
-Do we want to hide capabilities we do not support in the SR-IOV
-Capabilities register? or leave it to the userspace application?
-
-[1] https://github.com/knuto/qemu/tree/sriov_patches_v6
-
-Ilya Lesokhin (4):
-  VFIO: Probe new devices in a live VFIO group with the VFIO driver
-  IOMMU: Force the VFs of an untrusted PF device to be in the PFs IOMMU
-    group
-  PCI: Expose iov_set_numvfs and iov_resource_size for modules.
-  VFIO: Add support for SRIOV extended capablity
-
- drivers/iommu/iommu.c              |   4 +
- drivers/pci/iov.c                  |   4 +-
- drivers/vfio/pci/vfio_pci.c        |   3 +
- drivers/vfio/pci/vfio_pci_config.c | 169 +++++++++++++++++++++++++++++++++----
- drivers/vfio/vfio.c                |  18 +++-
- include/linux/pci.h                |   5 ++
- 6 files changed, 182 insertions(+), 21 deletions(-)
-
--- 
-1.8.3.1
-
+	Arnd
