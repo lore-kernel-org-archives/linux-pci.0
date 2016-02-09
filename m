@@ -1,59 +1,41 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20160217182718.302.10272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160217182718.302.10272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Date: Wed, 17 Feb 2016 20:47:16 +0100
-Message-ID: <CAJZ5v0g1TBiRhALk5Q8PbC2FOXvOCJJsfNBcTVBLFpjDFvp0ag@mail.gmail.com>
-Subject: Re: [PATCH v2 0/3] PCI: Revert "Implement pcibios_alloc_irq() and pcibios_free_irq()"
-From: "Rafael J. Wysocki" <rafael@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:35645 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750781AbcBIOwf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2016 09:52:35 -0500
+From: Thierry Reding <thierry.reding@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	=?UTF-8?B?0J7Qu9C10LPQnNC+0YDQvtC3?= <oleg.moroz@mcc.vniiem.ru>,
-	Joerg Roedel <jroedel@suse.de>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Sunjin Yang <fan4326@gmail.com>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH 1/3] PCI: tegra: Remove unused field
+Date: Tue,  9 Feb 2016 15:52:31 +0100
+Message-Id: <1455029553-9460-1-git-send-email-thierry.reding@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 17, 2016 at 7:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> These are clean reverts of 991de2e59090 ("PCI, x86: Implement
-> pcibios_alloc_irq() and pcibios_free_irq()") and related changes.
->
-> We have two reports of drivers broken in v4.3 by Jiang's change,
-> 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
-> pcibios_free_irq()").
->
-> It would be best to fix the problem instead of reverting 991de2e59090, but
-> I don't have time to do that myself, and we haven't heard from Jiang, so
-> the only choice I have is to revert the commit.
->
-> Note that reverting will likely break IOAPIC hotplug.
->
-> Олег and Sunjin, can you please test this and see whether it fixes your
-> drivers?  This patch is based on v4.5-rc1.
->
-> I intend to merge these for v4.5 unless I hear objections.
->
-> They're on my for-linus branch, so they should appear in linux-next
-> tomorrow.
->
-> Changes from the v1 posting:
->   - Explicitly revert related patches instead of resolving conflicts
->     manually
-> ---
->
-> Bjorn Helgaas (3):
->       Revert "x86/PCI: Don't alloc pcibios-irq when MSI is enabled"
->       Revert "PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed"
->       Revert "PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()"
+From: Thierry Reding <treding@nvidia.com>
 
-ACK for all three FWIW.
+The num_ports field of the tegra_pcie structure is never used so it can
+be safely removed.
 
-Thanks,
-Rafael
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ drivers/pci/host/pci-tegra.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 4cb8157a4678..82d7ad3a1c3a 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -295,7 +295,6 @@ struct tegra_pcie {
+ 	struct tegra_msi msi;
+ 
+ 	struct list_head ports;
+-	unsigned int num_ports;
+ 	u32 xbar_config;
+ 
+ 	struct regulator_bulk_data *supplies;
+-- 
+2.7.1
+
