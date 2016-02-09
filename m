@@ -1,113 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40576 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758966AbcBYCNb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:13:31 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v10 01/59] PCI: Add pci_find_root_bus_resource()
-Date: Wed, 24 Feb 2016 18:11:52 -0800
-Message-Id: <1456366370-28995-2-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:37551 "EHLO
+	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754143AbcBIOwi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2016 09:52:38 -0500
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH 3/3] PCI: tegra: Remove misleading PHYS_OFFSET
+Date: Tue,  9 Feb 2016 15:52:33 +0100
+Message-Id: <1455029553-9460-3-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <1455029553-9460-1-git-send-email-thierry.reding@gmail.com>
+References: <1455029553-9460-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pci_find_root_bus_resource() to return root bus resource
-for input resource.
+From: Thierry Reding <treding@nvidia.com>
 
-For sparc mem64 support, We need that host bridge window res:
-  1. we need direct parent for request_resource_conflict() calling in
-      pci_register_legacy_regions().
-  2. check if return is NULL to decide if region is valid or not.
+BARs are disabled when the size register is 0, so it's misleading to
+write a base address into the start register.
 
-Convert old pci_find_parent_resource() to pci_find_bus_resource(),
-and use it in pci_find_root_bus_resource() and new
-pci_find_parent_resource().
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- drivers/pci/pci.c   | 36 +++++++++++++++++++++++++-----------
- include/linux/pci.h |  2 ++
- 2 files changed, 27 insertions(+), 11 deletions(-)
+ drivers/pci/host/pci-tegra.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 602eb42..db4025f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -415,18 +415,9 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap)
- }
- EXPORT_SYMBOL_GPL(pci_find_ht_capability);
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index f6fc54b48606..9d5817546425 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -774,7 +774,7 @@ static void tegra_pcie_setup_translations(struct tegra_pcie *pcie)
+ 	afi_writel(pcie, 0, AFI_FPCI_BAR5);
  
--/**
-- * pci_find_parent_resource - return resource region of parent bus of given region
-- * @dev: PCI device structure contains resources to be searched
-- * @res: child resource record for which parent is sought
-- *
-- *  For given resource region of given device, return the resource
-- *  region of parent bus the given region is contained in.
-- */
--struct resource *pci_find_parent_resource(const struct pci_dev *dev,
--					  struct resource *res)
-+static struct resource *pci_find_bus_resource(const struct pci_bus *bus,
-+					      struct resource *res)
- {
--	const struct pci_bus *bus = dev->bus;
- 	struct resource *r;
- 	int i;
- 
-@@ -456,8 +447,31 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- 	}
- 	return NULL;
- }
-+
-+/**
-+ * pci_find_parent_resource - return resource region of parent bus of given region
-+ * @dev: PCI device structure contains resources to be searched
-+ * @res: child resource record for which parent is sought
-+ *
-+ *  For given resource region of given device, return the resource
-+ *  region of parent bus the given region is contained in.
-+ */
-+struct resource *pci_find_parent_resource(const struct pci_dev *dev,
-+					  struct resource *res)
-+{
-+	return pci_find_bus_resource(dev->bus, res);
-+}
- EXPORT_SYMBOL(pci_find_parent_resource);
- 
-+struct resource *pci_find_root_bus_resource(struct pci_bus *bus,
-+					    struct resource *res)
-+{
-+	while (bus->parent)
-+		bus = bus->parent;
-+
-+	return pci_find_bus_resource(bus, res);
-+}
-+
- /**
-  * pci_find_pcie_root_port - return PCIe Root Port
-  * @dev: PCI device to query
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 27df4a6..dd603a668 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -792,6 +792,8 @@ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
- 			     struct resource *res);
- void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- 			     struct pci_bus_region *region);
-+struct resource *pci_find_root_bus_resource(struct pci_bus *bus,
-+					    struct resource *res);
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
+ 	/* map all upstream transactions as uncached */
+-	afi_writel(pcie, PHYS_OFFSET, AFI_CACHE_BAR0_ST);
++	afi_writel(pcie, 0, AFI_CACHE_BAR0_ST);
+ 	afi_writel(pcie, 0, AFI_CACHE_BAR0_SZ);
+ 	afi_writel(pcie, 0, AFI_CACHE_BAR1_ST);
+ 	afi_writel(pcie, 0, AFI_CACHE_BAR1_SZ);
 -- 
-1.8.4.5
+2.7.1
 
