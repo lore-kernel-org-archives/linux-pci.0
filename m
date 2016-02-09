@@ -1,83 +1,177 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:56189 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750788AbcBHQoP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Feb 2016 11:44:15 -0500
-Subject: Re: [PATCH] link up validation moved to pcie-designware
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-References: <b00bf38b4351831b97892b747d48c9206fbab9c7.1454935205.git.jpinto@synopsys.com>
- <20160208164104.GA17268@localhost>
-CC: <arnd@arndb.de>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <CARLOS.PALMINHA@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <56B8C5B5.5050400@synopsys.com>
-Date: Mon, 8 Feb 2016 16:43:33 +0000
+Received: from mail-sn1nam02on0060.outbound.protection.outlook.com ([104.47.36.60]:18573
+	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932724AbcBIKmO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Feb 2016 05:42:14 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <bhelgaas@google.com>, <michals@xilinx.com>,
+	<lorenzo.pieralisi@arm.com>, <paul.burton@imgtec.com>,
+	<yinghai@kernel.org>, <wangyijing@huawei.com>, <robh@kernel.org>,
+	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
+	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
+	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
+	<galak@codeaurora.org>
+CC: <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: [PATCH V3 5/5] Microblaze: Modifying microblaze PCI subsytem to support  generic Xilinx  AXI PCIe Host Bridge IP driver
+Date: Tue, 9 Feb 2016 16:11:58 +0530
+Message-ID: <1455014518-8708-6-git-send-email-bharatku@xilinx.com>
+In-Reply-To: <1455014518-8708-1-git-send-email-bharatku@xilinx.com>
+References: <1455014518-8708-1-git-send-email-bharatku@xilinx.com>
 MIME-Version: 1.0
-In-Reply-To: <20160208164104.GA17268@localhost>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-Ok, so what should be the retries and waiting time in your opinion?
-The most typical is:
+This patch does required modifications to microblaze PCI subsystem, to
+work with generic driver (drivers/pci/host/pcie-xilinx.c) on Microblaze
+and Zynq.
 
-retries: 10
-delay: 100ms (usleep_range (90000, 100000))
+Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+---
+Changes:
+Removed pcibios_get_phb_of_node in pci-common.c, using generic version
+instead.
+Modified pcibios_fixup_bus in pci-common.c, as per generic architecuture.
+Modified pcibios_align_resource in pci-common.c, as per generic
+architecuture, removed temporary variable.
+Removed pci_domain_nr in pci-common.c, instead using generic code.
+Added pcibios_add_device in pci-common.c, as per generic architecuture.
+Adding Kernel configuration in arch/microblaze as required for generic PCI
+domains.
+Added kernel configuration for driver to support Microblaze.
+---
+ arch/microblaze/Kconfig          |  3 +++
+ arch/microblaze/pci/pci-common.c | 56 +++++++---------------------------------
+ drivers/pci/host/Kconfig         |  2 +-
+ 3 files changed, 14 insertions(+), 47 deletions(-)
 
-These values should be ok?
-
-I am already testing a full pcie-designware platform driver.
-
-Joao
-
-On 2/8/2016 4:41 PM, Bjorn Helgaas wrote:
-> On Mon, Feb 08, 2016 at 12:43:58PM +0000, Joao Pinto wrote:
->> This patch goal is to centralize in pcie-designware the link up
->> validation. A new function was added to pci-designware that is
->> responsible for doing such a task. This was implemented in a form that
->> permits flexibility for all SoCs.
->>
->> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
->> ---
->>  drivers/pci/host/pci-dra7xx.c      | 11 +++--------
->>  drivers/pci/host/pci-exynos.c      | 11 ++---------
->>  drivers/pci/host/pci-imx6.c        | 11 +++--------
->>  drivers/pci/host/pcie-designware.c | 20 ++++++++++++++++++++
->>  drivers/pci/host/pcie-designware.h |  2 ++
->>  drivers/pci/host/pcie-spear13xx.c  | 12 ++----------
->>  6 files changed, 32 insertions(+), 35 deletions(-)
-> 
->> +int dw_pcie_check_link_is_up(struct pcie_port *pp, int max_ret, int sleep_min,
->> +								int sleep_max)
-> 
-> I think "dw_pcie_wait_for_link()" would be a more descriptive name.
-> 
-> I doubt that the variations between drivers in number of retries and
-> amount of time to wait are meaningful.  I suspect most of those
-> numbers are made up or copied from other drivers.  So we might not
-> need the max_ret, sleep_min, and sleep_max parameters at all.
-> 
-> Even if there really are important differences, I suspect the only
-> important thing is the total time we're prepared to wait, and we can
-> leave it up to dw_pcie_wait_for_link() to decide how to split that up
-> into sleep ranges and retries.
-> 
->> +{
->> +	int retries;
->> +
->> +	/* check if the link is up or not */
->> +	for (retries = 0; retries < max_ret; retries++) {
->> +		if (dw_pcie_link_up(pp)) {
->> +			dev_info(pp->dev, "link up\n");
->> +			return 0;
->> +		}
->> +		usleep_range(sleep_min, sleep_max);
->> +	}
->> +
->> +	dev_err(pp->dev, "phy link never came up\n");
->> +
->> +	return 1;
->> +}
+diff --git a/arch/microblaze/Kconfig b/arch/microblaze/Kconfig
+index 0bce820..c3702b9 100644
+--- a/arch/microblaze/Kconfig
++++ b/arch/microblaze/Kconfig
+@@ -271,6 +271,9 @@ config PCI
+ config PCI_DOMAINS
+ 	def_bool PCI
+ 
++config PCI_DOMAINS_GENERIC
++	def_bool PCI_DOMAINS
++
+ config PCI_SYSCALL
+ 	def_bool PCI
+ 
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index ae838ed..35654be 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -123,17 +123,6 @@ unsigned long pci_address_to_pio(phys_addr_t address)
+ }
+ EXPORT_SYMBOL_GPL(pci_address_to_pio);
+ 
+-/*
+- * Return the domain number for this bus.
+- */
+-int pci_domain_nr(struct pci_bus *bus)
+-{
+-	struct pci_controller *hose = pci_bus_to_host(bus);
+-
+-	return hose->global_number;
+-}
+-EXPORT_SYMBOL(pci_domain_nr);
+-
+ /* This routine is meant to be used early during boot, when the
+  * PCI bus numbers have not yet been assigned, and you need to
+  * issue PCI config cycles to an OF device.
+@@ -863,26 +852,10 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
+ 
+ void pcibios_fixup_bus(struct pci_bus *bus)
+ {
+-	/* When called from the generic PCI probe, read PCI<->PCI bridge
+-	 * bases. This is -not- called when generating the PCI tree from
+-	 * the OF device-tree.
+-	 */
+-	if (bus->self != NULL)
+-		pci_read_bridge_bases(bus);
+-
+-	/* Now fixup the bus bus */
+-	pcibios_setup_bus_self(bus);
+-
+-	/* Now fixup devices on that bus */
+-	pcibios_setup_bus_devices(bus);
++	/* nothing to do */
+ }
+ EXPORT_SYMBOL(pcibios_fixup_bus);
+ 
+-static int skip_isa_ioresource_align(struct pci_dev *dev)
+-{
+-	return 0;
+-}
+-
+ /*
+  * We need to avoid collisions with `mirrored' VGA ports
+  * and other strange ISA hardware, so we always want the
+@@ -899,20 +872,18 @@ static int skip_isa_ioresource_align(struct pci_dev *dev)
+ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 				resource_size_t size, resource_size_t align)
+ {
+-	struct pci_dev *dev = data;
+-	resource_size_t start = res->start;
+-
+-	if (res->flags & IORESOURCE_IO) {
+-		if (skip_isa_ioresource_align(dev))
+-			return start;
+-		if (start & 0x300)
+-			start = (start + 0x3ff) & ~0x3ff;
+-	}
+-
+-	return start;
++	return res->start;
+ }
+ EXPORT_SYMBOL(pcibios_align_resource);
+ 
++int pcibios_add_device(struct pci_dev *dev)
++{
++	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
++
++	return 0;
++}
++EXPORT_SYMBOL(pcibios_add_device);
++
+ /*
+  * Reparent resource children of pr that conflict with res
+  * under res, and make res replace those children.
+@@ -1333,13 +1304,6 @@ static void pcibios_setup_phb_resources(struct pci_controller *hose,
+ 		 (unsigned long)hose->io_base_virt - _IO_BASE);
+ }
+ 
+-struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
+-{
+-	struct pci_controller *hose = bus->sysdata;
+-
+-	return of_node_get(hose->dn);
+-}
+-
+ static void pcibios_scan_phb(struct pci_controller *hose)
+ {
+ 	LIST_HEAD(resources);
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index d5e58ba..7c56c2e 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -79,7 +79,7 @@ config PCI_KEYSTONE
+ 
+ config PCIE_XILINX
+ 	bool "Xilinx AXI PCIe host bridge support"
+-	depends on ARCH_ZYNQ
++	depends on ARCH_ZYNQ || MICROBLAZE
+ 	help
+ 	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+ 	  Host Bridge driver.
+-- 
+2.1.1
 
