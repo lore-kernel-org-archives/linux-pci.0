@@ -1,76 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:14670 "EHLO
-	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757740AbcBIQLj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2016 11:11:39 -0500
-Date: Tue, 9 Feb 2016 08:11:34 -0800
-From: Paul Burton <paul.burton@imgtec.com>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-CC: <bhelgaas@google.com>, <michals@xilinx.com>,
-	<lorenzo.pieralisi@arm.com>, <yinghai@kernel.org>,
-	<wangyijing@huawei.com>, <robh@kernel.org>,
-	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
-	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
-	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
-	<galak@codeaurora.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH V3 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge
- driver to work on both  Zynq and Microblaze
-Message-ID: <20160209161134.GA24244@NP-P-BURTON>
-References: <1455014518-8708-1-git-send-email-bharatku@xilinx.com>
- <1455014518-8708-4-git-send-email-bharatku@xilinx.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-In-Reply-To: <1455014518-8708-4-git-send-email-bharatku@xilinx.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160209164435.GB20171@localhost>
+References: <56B52990.3030103@gmail.com>
+	<1676062.Zh6hUgWIix@vostro.rjw.lan>
+	<56B5AA4B.5040705@gmail.com>
+	<20160206151922.GB22119@localhost>
+	<56B61492.40507@gmail.com>
+	<20160209164435.GB20171@localhost>
+Date: Tue, 9 Feb 2016 20:24:25 +0100
+Message-ID: <CAJZ5v0huANzD29-oB9tpQXodx936MtRf+316PYPAuYh1h_Pa+w@mail.gmail.com>
+Subject: Re: Problems since commit Recognize that Interrupt Line 255 means
+ "not connected"
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Heiner Kallweit <hkallweit1@gmail.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Chen Fan <chen.fan.fnst@cn.fujitsu.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 09, 2016 at 04:11:56PM +0530, Bharat Kumar Gogada wrote:
-> Modifying Xilinx AXI PCIe Host Bridge Soft IP driver to work on both
-> Zynq and Microblaze Architectures.
-> With these modifications drivers/pci/host/pcie-xilinx.c, will
-> work on both Zynq and Microblaze Architectures.
-> 
-> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
-> ---
-> Changes:
-> Removed unneccessary architecture dependent number of MSI's.
-> Added #ifdef to pci_fixup_irqs which is ARM specific API.
+On Tue, Feb 9, 2016 at 5:44 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Sat, Feb 06, 2016 at 04:43:14PM +0100, Heiner Kallweit wrote:
+>> Am 06.02.2016 um 16:19 schrieb Bjorn Helgaas:
+>> > On Sat, Feb 06, 2016 at 09:09:47AM +0100, Heiner Kallweit wrote:
+>> >> Am 06.02.2016 um 00:37 schrieb Rafael J. Wysocki:
+>> >>> On Saturday, February 06, 2016 12:00:32 AM Heiner Kallweit wrote:
+>> >>>> Since commit a44c386a361e "x86/PCI/ACPI: Recognize that Interrupt Line 255
+>> >>>> means "not connected"" I get several "PCI INT not connected" warnings on
+>> >>>> a Zotac CI321 and EHCI failes to load:
+>> >>>
+>> >>> That doesn't follow clearly from your report, but I'm assuming that it works
+>> >>> correctly without that commit, right?
+>> >>>
+>> >> Right, w/o this commit it looks like this:
+>> >>
+>> >> dmesg
+>> >> ehci-pci 0000:00:1d.0: irq 23, io mem 0xf7d1b000
+>> >>
+>> >> /proc/interrupts
+>> >> IO-APIC  23-fasteoi   ehci_hcd:usb3
+>> >
+>> > Thanks a lot for your report!  This is a bit of a minefield, and I was
+>> > worried that we'd trip over something with a44c386a361e.
+>> >
+>> > Oops, I think I see a problem with a44c386a361e.  We're checking for
+>> > Interrupt Line == 255 even before we try to look it up in the _PRT.  I
+>> > think we should only check Interrupt Line *after* everything else has
+>> > failed.  Can you try the patch below instead of a44c386a361e?
+>> >
+>> With the attached patch everything is fine. No warnings and EHCI loads properly.
+>
+> Great, thanks a lot for testing this!
+>
+> Chen, will you update and repost your patch?  I know Rafael already
+> had it on a branch, but I think he dropped it, so we need to get the
+> update merged somehow.
 
-Hi Bharat,
-
-Why do you say pci_fixup_irqs is ARM-specific? It's declared in
-include/linux/pci.h, defined in drivers/pci/setup-irq.c & used by
-multiple architectures (alpha, arm, m68k, mips, sh, sparc, tile,
-unicore32 from a quick grep).
-
-Will you not break INTX-style interrupts by removing this?
+I'd prefer a new updated patch if that's possible.
 
 Thanks,
-    Paul
-
-> ---
->  drivers/pci/host/pcie-xilinx.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-> index 13fec35..6cbce34 100644
-> --- a/drivers/pci/host/pcie-xilinx.c
-> +++ b/drivers/pci/host/pcie-xilinx.c
-> @@ -704,7 +704,9 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
->  #endif
->  	pci_scan_child_bus(bus);
->  	pci_assign_unassigned_bus_resources(bus);
-> +#ifdef CONFIG_ARM
->  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-> +#endif
->  	pci_bus_add_devices(bus);
->  	platform_set_drvdata(pdev, port);
->  
-> -- 
-> 2.1.1
-> 
+Rafael
