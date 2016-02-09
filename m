@@ -1,170 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:16368 "EHLO
-	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933018AbcBDQKy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 11:10:54 -0500
-From: Paul Burton <paul.burton@imgtec.com>
-To: <linux-mips@linux-mips.org>
-CC: Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>,
-	"Paul Burton" <paul.burton@imgtec.com>,
-	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
-	Russell Joyce <russell.joyce@york.ac.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, Rob Herring <robh@kernel.org>,
-	<linux-kernel@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Jingoo Han" <jingoohan1@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v3 1/6] PCI: xilinx: Keep references to both IRQ domains
-Date: Thu, 4 Feb 2016 16:10:08 +0000
-Message-ID: <1454602213-967-2-git-send-email-paul.burton@imgtec.com>
-In-Reply-To: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
-References: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+	"jcm@redhat.com" <jcm@redhat.com>,
+	"tn@semihalf.com" <tn@semihalf.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linuxarm <linuxarm@huawei.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	"Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	qiujiang <qiujiang@huawei.com>
+Subject: Re: [RFC PATCH v2 2/3] PCI: hisi: Make the HiSilicon PCIe host controller ECAM compliant
+Date: Tue, 09 Feb 2016 16:32:14 +0100
+Message-ID: <3763449.y3Mfs92xrA@wuerfel>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ECAD436@lhreml503-mbs>
+References: <1454935264-6076-1-git-send-email-gabriele.paoloni@huawei.com> <2599997.xBRrI3qHak@wuerfel> <EE11001F9E5DDD47B7634E2F8A612F2E1ECAD436@lhreml503-mbs>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pcie-xilinx creates 2 IRQ domains when built with MSI support: one for
-MSI interrupts & one for legacy INTx interrupts. However, it only kept a
-reference to the MSI IRQ domain. This means that any INTx interrupts
-that may occur would be mapped using the wrong domain, and that only the
-MSI IRQ domain would be removed along with the driver. Track both IRQ
-domains & clean up both as appropriate.
+On Monday 08 February 2016 17:21:27 Gabriele Paoloni wrote:
+> Hi Arnd
+> 
+> > -----Original Message-----
+> > From: Arnd Bergmann [mailto:arnd@arndb.de]
+> > Sent: 08 February 2016 16:30
+> > To: Gabriele Paoloni
+> > Cc: linux-arm-kernel@lists.infradead.org; Guohanjun (Hanjun Guo);
+> > Wangzhou (B); liudongdong (C); Linuxarm; qiujiang; bhelgaas@google.com;
+> > Lorenzo.Pieralisi@arm.com; tn@semihalf.com; linux-pci@vger.kernel.org;
+> > linux-kernel@vger.kernel.org; xuwei (O); linux-acpi@vger.kernel.org;
+> > jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth)
+> > Subject: Re: [RFC PATCH v2 2/3] PCI: hisi: Make the HiSilicon PCIe host
+> > controller ECAM compliant
+> > 
+> > On Monday 08 February 2016 15:55:35 Gabriele Paoloni wrote:
+> > > > Doesn't this break backwards compatibility?
+> > >
+> > > Well Hip05/Hip06 SoCs are used into evaluation boards
+> > > For the Estuary project.
+> > >
+> > > https://github.com/hisilicon/estuary
+> > >
+> > > As this new driver gets upstream we'll merge this new driver into
+> > estuary
+> > > and release a new version of the firmware to support it.
+> > 
+> > So what happens to folks running the old firmware then?
+> 
+> So far we haven't released the PCIe nodes dtsi upstream and we think
+> we can handle the firmware upgrade for our current users either
+> by pointing them to the updated Estuary branch or by internal 
+> channels  
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-Fixes: 8961def56845 ("PCI: xilinx: Add Xilinx AXI PCIe Host Bridge IP driver")
+The dts files in the kernel tree are not really that important,
+the question is whether you are breaking things for real users.
 
----
+If the upstream drivers work on some released firmware version,
+they should keep working.
 
-Changes in v3:
-- Split out from Boston patchset.
+> > 
+> > > > I think you need to use a new compatible string in the firmware
+> > > > if you change the register layout, and then change the driver
+> > > > to support both the old and the new layout.
+> > >
+> > > You are right, for some reason in this patchset I missed the
+> > Documentation
+> > > update that I posted in the previous one, i.e.:
+> > >
+> > > --- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> > > +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> > > @@ -23,8 +23,8 @@ Optional properties:
+> > >  Hip05 Example (note that Hip06 is the same except compatible):
+> > >         pcie@0xb0080000 {
+> > >                 compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
+> > > -               reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0
+> > 0x2000>;
+> > > -               reg-names = "rc_dbi", "config";
+> > > +               reg = <0 0xb0080000 0 0x10000>, <0x220 0x00100000 0
+> > 0x0f00000>;
+> > > +               reg-names = "rc_dbi", "ecam-cfg";
+> > >
+> > 
+> > That is not the compatible string, it's an undocumented register set.
+> 
+> Sorry, I misunderstood here, got it now :)
+> 
+> > You can either define the a new compatible string that gives the
+> > "config"
+> > registers a new meaning, or you change the binding to allow two either
+> > a "config" or an "ecam-cfg" register set, and let the driver handle
+> > both.
+> 
+> As per reply above I think that it would be quite easy for us to
+> let out current users update the BIOS so I don't think there is any
+> value in maintaining two version of the drivers one of which will
+> not be used.
+> 
+> What do you think?
 
-Changes in v2:
-- Add Fixes tag.
+Requiring a BIOS update for a kernel update is really bad, even more
+so when the same BIOS update breaks older kernels.
 
- drivers/pci/host/pcie-xilinx.c | 58 ++++++++++++++++++++----------------------
- 1 file changed, 28 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 4cfa463..1490bd1 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -105,6 +105,7 @@
-  * @root_busno: Root Bus number
-  * @dev: Device pointer
-  * @irq_domain: IRQ domain pointer
-+ * @msi_irq_domain: MSI IRQ domain pointer
-  * @bus_range: Bus range
-  * @resources: Bus Resources
-  */
-@@ -115,6 +116,7 @@ struct xilinx_pcie_port {
- 	u8 root_busno;
- 	struct device *dev;
- 	struct irq_domain *irq_domain;
-+	struct irq_domain *msi_irq_domain;
- 	struct resource bus_range;
- 	struct list_head resources;
- };
-@@ -291,7 +293,7 @@ static int xilinx_pcie_msi_setup_irq(struct msi_controller *chip,
- 	if (hwirq < 0)
- 		return hwirq;
- 
--	irq = irq_create_mapping(port->irq_domain, hwirq);
-+	irq = irq_create_mapping(port->msi_irq_domain, hwirq);
- 	if (!irq)
- 		return -EINVAL;
- 
-@@ -517,31 +519,21 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 
- /**
-  * xilinx_pcie_free_irq_domain - Free IRQ domain
-- * @port: PCIe port information
-+ * @domain: the IRQ domain to free
-+ * @nr: the number of IRQs in the domain
-  */
--static void xilinx_pcie_free_irq_domain(struct xilinx_pcie_port *port)
-+static void xilinx_pcie_free_irq_domain(struct irq_domain *domain, int nr)
- {
- 	int i;
--	u32 irq, num_irqs;
--
--	/* Free IRQ Domain */
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--
--		free_pages(port->msi_pages, 0);
--
--		num_irqs = XILINX_NUM_MSI_IRQS;
--	} else {
--		/* INTx */
--		num_irqs = 4;
--	}
-+	u32 irq;
- 
--	for (i = 0; i < num_irqs; i++) {
--		irq = irq_find_mapping(port->irq_domain, i);
-+	for (i = 0; i < nr; i++) {
-+		irq = irq_find_mapping(domain, i);
- 		if (irq > 0)
- 			irq_dispose_mapping(irq);
- 	}
- 
--	irq_domain_remove(port->irq_domain);
-+	irq_domain_remove(domain);
- }
- 
- /**
-@@ -571,20 +563,20 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
- 		return PTR_ERR(port->irq_domain);
- 	}
- 
--	/* Setup MSI */
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		port->irq_domain = irq_domain_add_linear(node,
--							 XILINX_NUM_MSI_IRQS,
--							 &msi_domain_ops,
--							 &xilinx_pcie_msi_chip);
--		if (!port->irq_domain) {
--			dev_err(dev, "Failed to get a MSI IRQ domain\n");
--			return PTR_ERR(port->irq_domain);
--		}
-+	if (!IS_ENABLED(CONFIG_PCI_MSI))
-+		return 0;
- 
--		xilinx_pcie_enable_msi(port);
-+	/* Setup MSI */
-+	port->msi_irq_domain = irq_domain_add_linear(node,
-+						     XILINX_NUM_MSI_IRQS,
-+						     &msi_domain_ops,
-+						     &xilinx_pcie_msi_chip);
-+	if (!port->msi_irq_domain) {
-+		dev_err(dev, "Failed to get a MSI IRQ domain\n");
-+		return PTR_ERR(port->msi_irq_domain);
- 	}
- 
-+	xilinx_pcie_enable_msi(port);
- 	return 0;
- }
- 
-@@ -869,7 +861,13 @@ static int xilinx_pcie_remove(struct platform_device *pdev)
- {
- 	struct xilinx_pcie_port *port = platform_get_drvdata(pdev);
- 
--	xilinx_pcie_free_irq_domain(port);
-+	xilinx_pcie_free_irq_domain(port->irq_domain, 4);
-+
-+	if (config_enabled(CONFIG_MSI)) {
-+		free_pages(port->msi_pages, 0);
-+		xilinx_pcie_free_irq_domain(port->msi_irq_domain,
-+					    XILINX_NUM_MSI_IRQS);
-+	}
- 
- 	return 0;
- }
--- 
-2.7.0
-
+	Arnd
