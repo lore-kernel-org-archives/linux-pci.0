@@ -1,168 +1,214 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 9 Feb 2016 18:11:39 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Mark Salter <msalter@redhat.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH] PCI: ACPI: IA64: fix IO port generic range check
-Message-ID: <20160209181139.GD22868@red-moon>
-References: <1454322357-10912-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20160209170006.GA21247@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:35526 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932209AbcBIVFD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Feb 2016 16:05:03 -0500
+Date: Tue, 9 Feb 2016 15:04:58 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Babu Moger <babu.moger@oracle.com>
+Subject: Re: [PATCHv2 3/4] pci: Determine actual VPD size on first access
+Message-ID: <20160209210458.GB32530@localhost>
+References: <1452684335-46107-1-git-send-email-hare@suse.de>
+ <1452684335-46107-4-git-send-email-hare@suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160209170006.GA21247@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1452684335-46107-4-git-send-email-hare@suse.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On Tue, Feb 09, 2016 at 11:00:06AM -0600, Bjorn Helgaas wrote:
-> Hi Lorenzo,
+On Wed, Jan 13, 2016 at 12:25:34PM +0100, Hannes Reinecke wrote:
+> PCI-2.2 VPD entries have a maximum size of 32k, but might actually
+> be smaller than that. To figure out the actual size one has to read
+> the VPD area until the 'end marker' is reached.
+> Trying to read VPD data beyond that marker results in 'interesting'
+> effects, from simple read errors to crashing the card. And to make
+> matters worse not every PCI card implements this properly, leaving
+> us with no 'end' marker or even completely invalid data.
+> This path tries to determine the size of the VPD data.
+> If no valid data can be read an I/O error will be returned when
+> reading the sysfs attribute.
 > 
-> On Mon, Feb 01, 2016 at 10:25:57AM +0000, Lorenzo Pieralisi wrote:
-> > The [0 - 64k] ACPI PCI IO port resource boundary check in:
-> > 
-> > acpi_dev_ioresource_flags()
-> > 
-> > is currently applied blindly in the ACPI resource parsing to all
-> > architectures, but only x86 suffers from that IO space limitation.
-> > The check in generic ACPI code leaves other arches (ie IA64) IO space
-> > broken (ie kernel can't claim IO resources since the host bridge
-> > IO resource is disabled and discarded by ACPI core code, eg log on
-> > IA64):
-> > 
-> > pci 0000:00:03.0: [1002:515e] type 00 class 0x030000
-> > 
-> > pci 0000:00:03.0: reg 0x10: [mem 0x80000000-0x87ffffff pref]
-> > 
-> > pci 0000:00:03.0: reg 0x14: [io  0x1000-0x10ff]
-> > 
-> > pci 0000:00:03.0: reg 0x18: [mem 0x88020000-0x8802ffff]
-> > 
-> > pci 0000:00:03.0: reg 0x30: [mem 0x88000000-0x8801ffff pref]
-> > 
-> > pci 0000:00:03.0: supports D1 D2
-> > 
-> > pci 0000:00:03.0: can't claim BAR 1 [io  0x1000-0x10ff]: no compatible
-> > bridge window
+> Cc: Alexander Duyck <alexander.duyck@gmail.com>
+> Cc: Bjorn Helgaas <helgaas@kernel.org>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/pci/access.c    | 76 ++++++++++++++++++++++++++++++++++++++++++++++++-
+>  drivers/pci/pci-sysfs.c |  2 +-
+>  2 files changed, 76 insertions(+), 2 deletions(-)
 > 
-> I think your text and code changes make sense, but I don't understand
-> this example.  I guess there must have been a host bridge window from
-> _CRS that got discarded, which would lead to this error for any I/O
-> resources in the tree below that bridge.
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index 59ac36f..914e023 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -284,9 +284,65 @@ struct pci_vpd_pci22 {
+>  	struct mutex lock;
+>  	u16	flag;
+>  	bool	busy;
+> +	bool	valid;
 
-Exactly, claiming IO space fails since the root bridge aperture from
-_CRS was discarded by core ACPI code.
+You're just following the precedent here, but I think using "bool" in
+structures like this is pointless: it takes more space than a :1 field
+and doesn't really add any safety.
 
-> I guess that probably doesn't show up in the dmesg log, except that
-> the root bus doesn't have any I/O resources, because we only show the
-> root bus resources, not the original _CRS resources.
+>  	u8	cap;
+>  };
+>  
+> +/**
+> + * pci_vpd_size - determine actual size of Vital Product Data
+> + * @dev:	pci device struct
+> + * @old_size:	current assumed size, also maximum allowed size
+> + *
 
-Yep.
+Superfluous empty line.
 
-> This seems like something we might explicitly note in dmesg, i.e.,
-> maybe we should log a warning when we discard an invalid resource.
+> + */
+> +static size_t
+> +pci_vpd_pci22_size(struct pci_dev *dev)
 
-Yes, I can do that, with a separate patch (unless you want it to go
-in via this fix). I will send a v2 with a rephrased commit log to show
-how the root bus resources have to look like and how they look currently,
-reporting the regression.
+Please follow indentation style of the file (all on one line).
 
-Thanks,
-Lorenzo
+> +{
+> +	size_t off = 0;
+> +	unsigned char header[1+2];	/* 1 byte tag, 2 bytes length */
+> +
+> +	while (off < PCI_VPD_PCI22_SIZE &&
+> +	       pci_read_vpd(dev, off, 1, header) == 1) {
+> +		unsigned char tag;
+> +
+> +		if (header[0] & PCI_VPD_LRDT) {
+> +			/* Large Resource Data Type Tag */
+> +			tag = pci_vpd_lrdt_tag(header);
+> +			/* Only read length from known tag items */
+> +			if ((tag == PCI_VPD_LTIN_ID_STRING) ||
+> +			    (tag == PCI_VPD_LTIN_RO_DATA) ||
+> +			    (tag == PCI_VPD_LTIN_RW_DATA)) {
+> +				if (pci_read_vpd(dev, off+1, 2,
+> +						 &header[1]) != 2) {
+> +					dev_dbg(&dev->dev,
+> +						"invalid large vpd tag %02x "
+> +						"size at offset %zu",
+> +						tag, off + 1);
 
-> > For this reason, the IO port resources boundaries check in generic ACPI
-> > parsing code should be moved to x86 arch code so that more arches (ie
-> > ARM64) can benefit from the generic ACPI resources parsing interface
-> > without incurring in unexpected resource filtering, fixing at the same
-> > time current breakage on IA64.
-> > 
-> > This patch moves the IO ports boundary [0 - 64k] check to x86 arch code
-> > code that validates the PCI host bridge resources.
-> > 
-> > Fixes: 3772aea7d6f3 ("ia64/PCI/ACPI: Use common ACPI resource parsing
-> > interface for host bridge")
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> > Cc: Jiang Liu <jiang.liu@linux.intel.com>
-> > Cc: Tony Luck <tony.luck@intel.com>
-> > Cc: Tomasz Nowicki <tn@semihalf.com>
-> > Cc: Mark Salter <msalter@redhat.com>
-> > Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> > ---
-> >  arch/x86/pci/acpi.c     | 18 +++++++++++++-----
-> >  drivers/acpi/resource.c |  3 ---
-> >  2 files changed, 13 insertions(+), 8 deletions(-)
-> > 
-> > diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> > index 3cd6983..e20dbe5 100644
-> > --- a/arch/x86/pci/acpi.c
-> > +++ b/arch/x86/pci/acpi.c
-> > @@ -275,11 +275,14 @@ static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
-> >   *     to access PCI configuration space.
-> >   *
-> >   * So explicitly filter out PCI CFG IO ports[0xCF8-0xCFF].
-> > + *
-> > + * Furthermore, IO ports address space is limited to 16k on x86,
-> > + * any IO resource exceeding the boundary must therefore be discarded.
-> >   */
-> > -static bool resource_is_pcicfg_ioport(struct resource *res)
-> > +static bool ioport_valid(struct resource *res)
-> >  {
-> > -	return (res->flags & IORESOURCE_IO) &&
-> > -		res->start == 0xCF8 && res->end == 0xCFF;
-> > +	return !(res->start == 0xCF8 && res->end == 0xCFF) &&
-> > +	       !(res->end >= 0x10003);
-> >  }
-> >  
-> >  static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
-> > @@ -287,13 +290,18 @@ static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
-> >  	struct acpi_device *device = ci->bridge;
-> >  	int busnum = ci->root->secondary.start;
-> >  	struct resource_entry *entry, *tmp;
-> > +	struct resource *res;
-> >  	int status;
-> >  
-> >  	status = acpi_pci_probe_root_resources(ci);
-> >  	if (pci_use_crs) {
-> > -		resource_list_for_each_entry_safe(entry, tmp, &ci->resources)
-> > -			if (resource_is_pcicfg_ioport(entry->res))
-> > +		resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
-> > +			res = entry->res;
-> > +
-> > +			if (res->flags & IORESOURCE_IO && !ioport_valid(res))
-> >  				resource_list_destroy_entry(entry);
-> > +		}
-> > +
-> >  		return status;
-> >  	}
-> >  
-> > diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-> > index d02fd53..c112e1d 100644
-> > --- a/drivers/acpi/resource.c
-> > +++ b/drivers/acpi/resource.c
-> > @@ -127,9 +127,6 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
-> >  	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
-> >  		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
-> >  
-> > -	if (res->end >= 0x10003)
-> > -		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
-> > -
-> >  	if (io_decode == ACPI_DECODE_16)
-> >  		res->flags |= IORESOURCE_IO_16BIT_ADDR;
-> >  	if (translation_type == ACPI_SPARSE_TRANSLATION)
-> > -- 
-> > 2.5.1
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The effect of this is that we set vpd->base.len to 0, which will cause
+all VPD accesses to fail, right?  If so, I'd make this at least a
+dev_info(), maybe even a dev_warn().  The dev_dbg() may not appear in
+dmesg at all, depending on config options.
+
+Capitalize "VPD" and concatenate all the strings, even if it exceeds
+80 columns.
+
+> +					break;
+
+I think this leads to "return 0" below; I'd just return directly here
+so the reader doesn't have to figure out what we're breaking from.
+
+> +				}
+> +				off += PCI_VPD_LRDT_TAG_SIZE +
+> +					pci_vpd_lrdt_size(header);
+> +			}
+> +		} else {
+> +			/* Short Resource Data Type Tag */
+> +			off += PCI_VPD_SRDT_TAG_SIZE +
+> +				pci_vpd_srdt_size(header);
+> +			tag = pci_vpd_srdt_tag(header);
+> +		}
+> +		if (tag == PCI_VPD_STIN_END)	/* End tag descriptor */
+> +			return off;
+> +		if ((tag != PCI_VPD_LTIN_ID_STRING) &&
+> +		    (tag != PCI_VPD_LTIN_RO_DATA) &&
+> +		    (tag != PCI_VPD_LTIN_RW_DATA)) {
+> +			dev_dbg(&dev->dev,
+> +				"invalid %s vpd tag %02x at offset %zu",
+> +				(header[0] & PCI_VPD_LRDT) ? "large" : "short",
+> +				tag, off);
+> +			break;
+
+Same dev_dbg() and break comment here.
+
+> +		}
+> +	}
+> +	return 0;
+> +}
+> +
+>  /*
+>   * Wait for last operation to complete.
+>   * This code has to spin since there is no other notification from the PCI
+> @@ -337,9 +393,23 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
+>  	loff_t end = pos + count;
+>  	u8 *buf = arg;
+>  
+> -	if (pos < 0 || pos > vpd->base.len || end > vpd->base.len)
+> +	if (pos < 0)
+>  		return -EINVAL;
+>  
+> +	if (!vpd->valid) {
+> +		vpd->valid = true;
+> +		vpd->base.len = pci_vpd_pci22_size(dev);
+> +	}
+> +	if (vpd->base.len == 0)
+> +		return -EIO;
+> +
+> +	if (end > vpd->base.len) {
+> +		if (pos > vpd->base.len)
+> +			return 0;
+> +		end = vpd->base.len;
+> +		count = end - pos;
+> +	}
+> +
+>  	if (mutex_lock_killable(&vpd->lock))
+>  		return -EINTR;
+>  
+> @@ -389,6 +459,9 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
+>  	loff_t end = pos + count;
+>  	int ret = 0;
+>  
+> +	if (!vpd->valid)
+> +		return -EAGAIN;
+
+Does this mean we now have to do a VPD read before a VPD write?  That
+sounds like a new requirement that is non-obvious.
+
+> +
+>  	if (pos < 0 || (pos & 3) || (count & 3) || end > vpd->base.len)
+>  		return -EINVAL;
+>  
+> @@ -496,6 +569,7 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
+>  	mutex_init(&vpd->lock);
+>  	vpd->cap = cap;
+>  	vpd->busy = false;
+> +	vpd->valid = false;
+>  	dev->vpd = &vpd->base;
+>  	return 0;
+>  }
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index de327c3..31a1f35 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -1333,7 +1333,7 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
+>  			return -ENOMEM;
+>  
+>  		sysfs_bin_attr_init(attr);
+> -		attr->size = dev->vpd->len;
+> +		attr->size = 0;
+
+I'm still puzzled about how we're using attr->size.  I don't really
+want that size to change at run-time, i.e., I don't want it to be zero
+immediately after boot, then change to something else after the first
+VPD read.  I don't think it's important that this reflect the size
+computed based on the VPD contents.  I think it would be fine if it
+were set to 32K all the time and possibly set to zero by quirks on
+devices where VPD is completely broken.
+
+>  		attr->attr.name = "vpd";
+>  		attr->attr.mode = S_IRUSR | S_IWUSR;
+>  		attr->read = read_vpd_attr;
+> -- 
+> 1.8.5.6
 > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
