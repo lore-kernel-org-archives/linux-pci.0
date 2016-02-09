@@ -1,477 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:33507 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756256AbcBHXzk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Feb 2016 18:55:40 -0500
-From: David Daney <ddaney.cavm@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
-Subject: [PATCH v6 3/3] pci, pci-thunder-ecam: Add driver for ThunderX-pass1 on-chip devices
-Date: Mon,  8 Feb 2016 15:55:31 -0800
-Message-Id: <1454975731-13618-4-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1454975731-13618-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1454975731-13618-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:49392 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752997AbcBIVYa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2016 16:24:30 -0500
+Subject: Re: [PATCHv2 4/4] pci: Blacklist vpd access for buggy devices
+To: Bjorn Helgaas <helgaas@kernel.org>, Hannes Reinecke <hare@suse.de>
+References: <1452684335-46107-1-git-send-email-hare@suse.de>
+ <1452684335-46107-5-git-send-email-hare@suse.de>
+ <20160209210759.GC32530@localhost>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Babu Moger <babu.moger@oracle.com>
+Message-ID: <56BA58FA.40600@oracle.com>
+Date: Tue, 9 Feb 2016 15:24:10 -0600
+MIME-Version: 1.0
+In-Reply-To: <20160209210759.GC32530@localhost>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+On 2/9/2016 3:07 PM, Bjorn Helgaas wrote:
+> There seem to be several revs of this patch, and it's hard for me to
+> keep track of what's current.  If you want to update any patch in the
+> series, please repost the entire series with a new version number.
 
-The cavium,pci-thunder-ecam devices are exactly ECAM based PCI root
-complexes.  These root complexes (loosely referred to as ECAM units in
-the hardware manuals) are used to access the Thunder on-chips devices.
-They are special in that all the BARs on devices behind these root
-complexes are at fixed addresses.  To handle this in a manner
-compatible with the core PCI code, we have the config access functions
-synthesize Enhanced Allocation (EA) capability entries for each BAR.
+ Here is the latest of patch 4/4.
+ https://patchwork.kernel.org/patch/8084221/
 
-Since this EA synthesis is needed for exactly one chip model, we can
-hard code some assumptions about the device topology and the
-properties of specific DEVFNs in the driver.
-
-Signed-off-by: David Daney <david.daney@cavium.com>
-Acked-by: Rob Herring <robh@kernel.org>
----
- .../devicetree/bindings/pci/pci-thunder-ecam.txt   |  30 ++
- drivers/pci/host/Kconfig                           |   7 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-thunder-ecam.c                | 358 +++++++++++++++++++++
- 4 files changed, 396 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
- create mode 100644 drivers/pci/host/pci-thunder-ecam.c
-
-diff --git a/Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt b/Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
-new file mode 100644
-index 0000000..0202dd1
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
-@@ -0,0 +1,30 @@
-+* ThunderX PCI host controller for pass-1.x silicon
-+
-+Firmware-initialized PCI host controller to on-chip devices found on
-+some Cavium ThunderX processors.  These devices have ECAM based config
-+access, but the BARs are all at fixed addresses.  We handle the fixed
-+addresses by synthesizing Enhanced Allocation (EA) capabilities for
-+these devices.
-+
-+The properties and their meanings are identical to those described in
-+host-generic-pci.txt except as listed below.
-+
-+Properties of the host controller node that differ from
-+host-generic-pci.txt:
-+
-+- compatible     : Must be "cavium,pci-host-thunder-ecam"
-+
-+Example:
-+
-+	pcie@84b000000000 {
-+		compatible = "cavium,pci-host-thunder-ecam";
-+		device_type = "pci";
-+		msi-parent = <&its>;
-+		msi-map = <0 &its 0x30000 0x10000>;
-+		bus-range = <0 31>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		#stream-id-cells = <1>;
-+		reg = <0x84b0 0x00000000 0 0x02000000>;  /* Configuration space */
-+		ranges = <0x03000000 0x8180 0x00000000 0x8180 0x00000000 0x80 0x00000000>; /* mem ranges */
-+	};
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 184df22..f8912c6 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -202,4 +202,11 @@ config PCI_HOST_THUNDER_PEM
- 	help
- 	  Say Y here if you want PCIe support for CN88XX Cavium Thunder SoCs.
+ I will wait for Hannes's response before re-posting it.
+ Hannes, If you want me to re-post all the series let me know.
  
-+config PCI_HOST_THUNDER_ECAM
-+	bool "Cavium Thunder ECAMe controller to on-chip devices on pass-1.x silicon"
-+	depends on OF && ARM64
-+	select PCI_HOST_COMMON
-+	help
-+	  Say Y here if you want ECAM support for CN88XX-Pass-1.x Cavium Thunder SoCs.
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 8903172..d6af3ba 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -23,4 +23,5 @@ obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
- obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
- obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
- obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
-+obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
- obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
-diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/host/pci-thunder-ecam.c
-new file mode 100644
-index 0000000..83ee590
---- /dev/null
-+++ b/drivers/pci/host/pci-thunder-ecam.c
-@@ -0,0 +1,358 @@
-+/*
-+ *
-+ * This file is subject to the terms and conditions of the GNU General Public
-+ * License.  See the file "COPYING" in the main directory of this archive
-+ * for more details.
-+ *
-+ * Copyright (C) 2015 Cavium, Inc.
-+ *
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/ioport.h>
-+#include <linux/of_pci.h>
-+#include <linux/of.h>
-+#include <linux/platform_device.h>
-+
-+#include "pci-host-common.h"
-+
-+/* Mapping is standard ECAM */
-+static void __iomem *thunder_ecam_map_bus(struct pci_bus *bus,
-+					  unsigned int devfn,
-+					  int where)
-+{
-+	struct gen_pci *pci = bus->sysdata;
-+	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
-+
-+	return pci->cfg.win[idx] + ((devfn << 12) | where);
-+}
-+
-+static void set_val(u32 v, int where, int size, u32 *val)
-+{
-+	int shift = (where & 3) * 8;
-+
-+	pr_debug("set_val %04x: %08x\n", (unsigned)(where & ~3), v);
-+	v >>= shift;
-+	if (size == 1)
-+		v &= 0xff;
-+	else if (size == 2)
-+		v &= 0xffff;
-+	*val = v;
-+}
-+
-+static int handle_ea_bar(u32 e0, int bar, struct pci_bus *bus,
-+			 unsigned int devfn, int where, int size, u32 *val)
-+{
-+	void __iomem *addr;
-+	u32 v;
-+	/*
-+	 * Each entry is 16-byte aligned bits[2,3] select which word
-+	 * in the entry
-+	 */
-+	int where_a = where & 0xc;
-+
-+	if (where_a == 0) {
-+		set_val(e0, where, size, val);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	if (where_a == 0x4) {
-+		addr = bus->ops->map_bus(bus, devfn, bar); /* BAR 0 */
-+		if (!addr) {
-+			*val = ~0;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+		v = readl(addr);
-+		v &= ~0xf;
-+		v |= 2; /* EA entry-1. Base-L */
-+		set_val(v, where, size, val);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	if (where_a == 0x8) {
-+		u32 barl_orig;
-+		u32 barl_rb;
-+
-+		addr = bus->ops->map_bus(bus, devfn, bar); /* BAR 0 */
-+		if (!addr) {
-+			*val = ~0;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+		barl_orig = readl(addr + 0);
-+		writel(0xffffffff, addr + 0);
-+		barl_rb = readl(addr + 0);
-+		writel(barl_orig, addr + 0);
-+		/* zeros in unsettable bits. */
-+		v = ~barl_rb & ~3;
-+		v |= 0xc; /* EA entry-2. Offset-L */
-+		set_val(v, where, size, val);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	if (where_a == 0xc) {
-+		addr = bus->ops->map_bus(bus, devfn, bar + 4); /* BAR 1 */
-+		if (!addr) {
-+			*val = ~0;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+		v = readl(addr); /* EA entry-3. Base-H */
-+		set_val(v, where, size, val);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	return PCIBIOS_DEVICE_NOT_FOUND;
-+}
-+
-+static int thunder_ecam_config_read(struct pci_bus *bus, unsigned int devfn,
-+				    int where, int size, u32 *val)
-+{
-+	u32 v;
-+	u32 vendor_device;
-+	void __iomem *addr;
-+	int cfg_type;
-+	int where_a = where & ~3;
-+
-+
-+	addr = bus->ops->map_bus(bus, devfn, 0xc);
-+	if (!addr) {
-+		*val = ~0;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	v = readl(addr);
-+
-+	/* Check for non type-00 header. */
-+	cfg_type = (v >> 16) & 0x7f;
-+
-+	/*
-+	 * All BARs have fixed addresses specified by the EA
-+	 * capability, they must return zero on read.
-+	 */
-+	if (cfg_type == 0 &&
-+	    ((where >= 0x10 && where < 0x2c) ||
-+	     (where >= 0x1a4 && where < 0x1bc))) {
-+		/* BAR or SRIOV BAR */
-+		*val = 0;
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+
-+	addr = bus->ops->map_bus(bus, devfn, 0);
-+	if (!addr) {
-+		*val = ~0;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	vendor_device = readl(addr);
-+	if (vendor_device == 0xffffffff)
-+		goto no_emulation;
-+
-+	addr = bus->ops->map_bus(bus, devfn, 8);
-+	if (!addr) {
-+		*val = ~0;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	v = readl(addr);
-+	if (v == 0xffffffff)
-+		goto no_emulation;
-+
-+	pr_debug("%04x:%04x - Fix pass#: %08x, where: %03x, devfn: %03x\n",
-+		 vendor_device & 0xffff, vendor_device >> 16, v,
-+		 (unsigned) where, devfn);
-+
-+	/* Check for non type-00 header. */
-+	if (cfg_type == 0) {
-+		bool has_msix;
-+		bool is_nic = (vendor_device == 0xa01e177d);
-+		bool is_tns = (vendor_device == 0xa01f177d);
-+
-+		addr = bus->ops->map_bus(bus, devfn, 0x70);
-+		if (!addr) {
-+			*val = ~0;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+		/* E_CAP */
-+		v = readl(addr);
-+		has_msix = (v & 0xff00) != 0;
-+
-+		if (!has_msix && where_a == 0x70) {
-+			v |= 0xbc00; /* next capability is EA at 0xbc */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xb0) {
-+			addr = bus->ops->map_bus(bus, devfn, where_a);
-+			if (!addr) {
-+				*val = ~0;
-+				return PCIBIOS_DEVICE_NOT_FOUND;
-+			}
-+			v = readl(addr);
-+			if (v & 0xff00)
-+				pr_err("Bad MSIX cap header: %08x\n", v);
-+			v |= 0xbc00; /* next capability is EA at 0xbc */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xbc) {
-+			if (is_nic)
-+				v = 0x40014; /* EA last in chain, 4 entries. */
-+			else if (is_tns)
-+				v = 0x30014; /* EA last in chain, 3 entries. */
-+			else if (has_msix)
-+				v = 0x20014; /* EA last in chain, 2 entries. */
-+			else
-+				v = 0x10014; /* EA last in chain, 1 entry. */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a >= 0xc0 && where_a < 0xd0)
-+			/* EA entry-0. PP=0, BAR0 Size:3 */
-+			return handle_ea_bar(0x80ff0003,
-+					     0x10, bus, devfn, where,
-+					     size, val);
-+		if (where_a >= 0xd0 && where_a < 0xe0 && has_msix)
-+			 /* EA entry-1. PP=0, BAR4 Size:3 */
-+			return handle_ea_bar(0x80ff0043,
-+					     0x20, bus, devfn, where,
-+					     size, val);
-+		if (where_a >= 0xe0 && where_a < 0xf0 && is_tns)
-+			/* EA entry-2. PP=0, BAR2, Size:3 */
-+			return handle_ea_bar(0x80ff0023,
-+					     0x18, bus, devfn, where,
-+					     size, val);
-+		if (where_a >= 0xe0 && where_a < 0xf0 && is_nic)
-+			/* EA entry-2. PP=4, VF_BAR0 (9), Size:3 */
-+			return handle_ea_bar(0x80ff0493,
-+					     0x1a4, bus, devfn, where,
-+					     size, val);
-+		if (where_a >= 0xf0 && where_a < 0x100 && is_nic)
-+			/* EA entry-3. PP=4, VF_BAR4 (d), Size:3 */
-+			return handle_ea_bar(0x80ff04d3,
-+					     0x1b4, bus, devfn, where,
-+					     size, val);
-+	} else if (cfg_type == 1) {
-+		bool is_rsl_bridge = devfn == 0x08;
-+		bool is_rad_bridge = devfn == 0xa0;
-+		bool is_zip_bridge = devfn == 0xa8;
-+		bool is_dfa_bridge = devfn == 0xb0;
-+		bool is_nic_bridge = devfn == 0x10;
-+
-+		if (where_a == 0x70) {
-+			addr = bus->ops->map_bus(bus, devfn, where_a);
-+			if (!addr) {
-+				*val = ~0;
-+				return PCIBIOS_DEVICE_NOT_FOUND;
-+			}
-+			v = readl(addr);
-+			if (v & 0xff00)
-+				pr_err("Bad PCIe cap header: %08x\n", v);
-+			v |= 0xbc00; /* next capability is EA at 0xbc */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xbc) {
-+			if (is_nic_bridge)
-+				v = 0x10014; /* EA last in chain, 1 entry */
-+			else
-+				v = 0x00014; /* EA last in chain, no entries */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xc0) {
-+			if (is_rsl_bridge || is_nic_bridge)
-+				v = 0x0101; /* subordinate:secondary = 1:1 */
-+			else if (is_rad_bridge)
-+				v = 0x0202; /* subordinate:secondary = 2:2 */
-+			else if (is_zip_bridge)
-+				v = 0x0303; /* subordinate:secondary = 3:3 */
-+			else if (is_dfa_bridge)
-+				v = 0x0404; /* subordinate:secondary = 4:4 */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xc4 && is_nic_bridge) {
-+			/* Enabled, not-Write, SP=ff, PP=05, BEI=6, ES=4 */
-+			v = 0x80ff0564;
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xc8 && is_nic_bridge) {
-+			v = 0x00000002; /* Base-L 64-bit */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xcc && is_nic_bridge) {
-+			v = 0xfffffffe; /* MaxOffset-L 64-bit */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xd0 && is_nic_bridge) {
-+			v = 0x00008430; /* NIC Base-H */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xd4 && is_nic_bridge) {
-+			v = 0x0000000f; /* MaxOffset-H */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+	}
-+no_emulation:
-+	return pci_generic_config_read(bus, devfn, where, size, val);
-+}
-+
-+static int thunder_ecam_config_write(struct pci_bus *bus, unsigned int devfn,
-+				     int where, int size, u32 val)
-+{
-+	/*
-+	 * All BARs have fixed addresses, ignore BAR writes so they
-+	 * don't get corrupted.
-+	 */
-+	if ((where >= 0x10 && where < 0x2c) ||
-+	    (where >= 0x1a4 && where < 0x1bc))
-+		/* BAR or SRIOV BAR */
-+		return PCIBIOS_SUCCESSFUL;
-+
-+	return pci_generic_config_write(bus, devfn, where, size, val);
-+}
-+
-+static struct gen_pci_cfg_bus_ops thunder_ecam_bus_ops = {
-+	.bus_shift	= 20,
-+	.ops		= {
-+		.map_bus        = thunder_ecam_map_bus,
-+		.read           = thunder_ecam_config_read,
-+		.write          = thunder_ecam_config_write,
-+	}
-+};
-+
-+static const struct of_device_id thunder_ecam_of_match[] = {
-+	{ .compatible = "cavium,pci-host-thunder-ecam",
-+	  .data = &thunder_ecam_bus_ops },
-+
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(of, thunder_ecam_of_match);
-+
-+static int thunder_ecam_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	const struct of_device_id *of_id;
-+	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-+
-+	if (!pci)
-+		return -ENOMEM;
-+
-+	of_id = of_match_node(thunder_ecam_of_match, dev->of_node);
-+	pci->cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
-+
-+	return pci_host_common_probe(pdev, pci);
-+}
-+
-+static struct platform_driver thunder_ecam_driver = {
-+	.driver = {
-+		.name = KBUILD_MODNAME,
-+		.of_match_table = thunder_ecam_of_match,
-+	},
-+	.probe = thunder_ecam_probe,
-+};
-+module_platform_driver(thunder_ecam_driver);
-+
-+MODULE_DESCRIPTION("Thunder ECAM PCI host driver");
-+MODULE_LICENSE("GPL v2");
--- 
-1.8.3.1
-
+> 
+> On Wed, Jan 13, 2016 at 12:25:35PM +0100, Hannes Reinecke wrote:
+>> From: Babu Moger <babu.moger@oracle.com>
+>>
+>> Reading or Writing of PCI VPD data causes system panic.
+>> We saw this problem by running "lspci -vvv" in the beginning.
+>> However this can be easily reproduced by running
+>>  cat /sys/bus/devices/XX../vpd
+>>
+>> As even a simple read on any VPD data triggers a system
+>> lockup on certain cards this patch implements a PCI quirk
+>> to disabling VPD acces altogether by setting the vpd length
+> 
+> s/acces/access/
+> s/vpd/VPD/
+> 
+>> to '0'.
+>>
+>> Signed-off-by: Babu Moger <babu.moger@oracle.com>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> ---
+>>  drivers/pci/access.c |  5 ++++-
+>>  drivers/pci/quirks.c | 41 +++++++++++++++++++++++++++++++++++++++++
+>>  2 files changed, 45 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+>> index 914e023..82f41a8 100644
+>> --- a/drivers/pci/access.c
+>> +++ b/drivers/pci/access.c
+>> @@ -396,7 +396,7 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
+>>  	if (pos < 0)
+>>  		return -EINVAL;
+>>  
+>> -	if (!vpd->valid) {
+>> +	if (!vpd->valid && vpd->base.len > 0) {
+>>  		vpd->valid = true;
+>>  		vpd->base.len = pci_vpd_pci22_size(dev);
+>>  	}
+>> @@ -459,6 +459,9 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
+>>  	loff_t end = pos + count;
+>>  	int ret = 0;
+>>  
+>> +	if (vpd->base.len == 0)
+>> +		return -EIO;
+>> +
+>>  	if (!vpd->valid)
+>>  		return -EAGAIN;
+>>  
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index 7e32730..af0f8a1 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -2123,6 +2123,47 @@ static void quirk_via_cx700_pci_parking_caching(struct pci_dev *dev)
+>>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, 0x324e, quirk_via_cx700_pci_parking_caching);
+>>  
+>>  /*
+>> + * A read/write to sysfs entry ('/sys/bus/pci/devices/<id>/vpd')
+>> + * will dump 32k of data. The default length is set as 32768.
+>> + * Reading a full 32k will cause an access beyond the VPD end tag.
+>> + * The system behaviour at that point is mostly unpredictable.
+>> + * Apparently, some vendors have not implemented this VPD headers properly.
+>> + * Adding a generic function disable vpd data for these buggy adapters
+>> + * Add the DECLARE_PCI_FIXUP_FINAL line below with the specific with
+>> + * vendor and device of interest to use this quirk.
+>> + */
+>> +static void quirk_blacklist_vpd(struct pci_dev *dev)
+>> +{
+>> +	if (dev->vpd) {
+>> +		dev->vpd->len = 0;
+>> +		dev_warn(&dev->dev, "PCI vpd access has been disabled due to firmware bug\n");
+> 
+> "PCI" is superfluous and "VPD" should be capitalized.
+> 
+>> +	}
+>> +}
+>> +
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060,
+>> +		quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c,
+>> +		quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413,
+>> +		quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078,
+>> +		quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079,
+>> +		quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073,
+>> +		quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071,
+>> +		quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b,
+>> +		quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f,
+>> +		quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d,
+>> +		quirk_blacklist_vpd);
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f,
+>> +		quirk_blacklist_vpd);
+>> +
+>> +/*
+>>   * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
+>>   * VPD end tag will hang the device.  This problem was initially
+>>   * observed when a vpd entry was created in sysfs
+>> -- 
+>> 1.8.5.6
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
