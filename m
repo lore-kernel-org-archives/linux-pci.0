@@ -1,72 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:39602 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752252AbcBJJsu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 04:48:50 -0500
-Subject: Re: [PATCH v9 2/2] pcie-designware platform driver
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <9069117816a5cd9cc3314b6d584c26d457807b8e.1454952698.git.jpinto@synopsys.com>
- <201602090552.plkRtxUR%fengguang.wu@intel.com>
- <20160208232808.GB1353@localhost>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>, <kbuild-all@01.org>,
-	<Vineet.Gupta1@synopsys.com>, <arnd@arndb.de>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-snps-arc@lists.infradead.org>,
-	<CARLOS.PALMINHA@synopsys.com>, <Alexey.Brodkin@synopsys.com>,
-	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <56BB0777.6080208@synopsys.com>
-Date: Wed, 10 Feb 2016 09:48:39 +0000
+Received: from mailapp01.imgtec.com ([195.59.15.196]:14670 "EHLO
+	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757740AbcBIQLj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2016 11:11:39 -0500
+Date: Tue, 9 Feb 2016 08:11:34 -0800
+From: Paul Burton <paul.burton@imgtec.com>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+CC: <bhelgaas@google.com>, <michals@xilinx.com>,
+	<lorenzo.pieralisi@arm.com>, <yinghai@kernel.org>,
+	<wangyijing@huawei.com>, <robh@kernel.org>,
+	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
+	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
+	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
+	<galak@codeaurora.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH V3 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge
+ driver to work on both  Zynq and Microblaze
+Message-ID: <20160209161134.GA24244@NP-P-BURTON>
+References: <1455014518-8708-1-git-send-email-bharatku@xilinx.com>
+ <1455014518-8708-4-git-send-email-bharatku@xilinx.com>
 MIME-Version: 1.0
-In-Reply-To: <20160208232808.GB1353@localhost>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1455014518-8708-4-git-send-email-bharatku@xilinx.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On 2/8/2016 11:28 PM, Bjorn Helgaas wrote:
->>      if (!pci_has_flag(PCI_PROBE_ONLY)) {
->>                        ^
->>    drivers/pci/host/pcie-designware.c:581:20: note: each undeclared identifier is reported only once for each function it appears in
->>    cc1: some warnings being treated as errors
+On Tue, Feb 09, 2016 at 04:11:56PM +0530, Bharat Kumar Gogada wrote:
+> Modifying Xilinx AXI PCIe Host Bridge Soft IP driver to work on both
+> Zynq and Microblaze Architectures.
+> With these modifications drivers/pci/host/pcie-xilinx.c, will
+> work on both Zynq and Microblaze Architectures.
 > 
-> I have fixes for this on my pci/misc branch, so you don't need to
-> worry about these errors.  Basically I'm moving the PCI_PROBE_ONLY and
-> pci_has_flag() declarations from the arch-specific asm/pci-bridge.h
-> files to the generic linux/pci.h file.
+> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> ---
+> Changes:
+> Removed unneccessary architecture dependent number of MSI's.
+> Added #ifdef to pci_fixup_irqs which is ARM specific API.
 
-Ok, thanks.
+Hi Bharat,
 
-> 
->> vim +/pci_has_flag +581 drivers/pci/host/pcie-designware.c
->>
->> cbce7900 Zhou Wang   2015-10-29  575  
->> cbce7900 Zhou Wang   2015-10-29  576  #ifdef CONFIG_ARM
->> cbce7900 Zhou Wang   2015-10-29  577  	/* support old dtbs that incorrectly describe IRQs */
->> cbce7900 Zhou Wang   2015-10-29  578  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
->> 0815f957 Yijing Wang 2014-11-11  579  #endif
->> 0815f957 Yijing Wang 2014-11-11  580  
->> cbce7900 Zhou Wang   2015-10-29 @581  	if (!pci_has_flag(PCI_PROBE_ONLY)) {
->> cbce7900 Zhou Wang   2015-10-29  582  		pci_bus_size_bridges(bus);
->> cbce7900 Zhou Wang   2015-10-29  583  		pci_bus_assign_resources(bus);
->> 4b1ced84 Jingoo Han  2013-07-31  584  
->>
->> :::::: The code at line 581 was first introduced by commit
->> :::::: cbce7900598c26a12652f8ca9c41c5b29034c38d PCI: designware: Make driver arch-agnostic
->>
->> :::::: TO: Zhou Wang <wangzhou1@hisilicon.com>
->> :::::: CC: Bjorn Helgaas <bhelgaas@google.com>
->>
->> ---
->> 0-DAY kernel test infrastructure                Open Source Technology Center
->> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
-> 
-> 
+Why do you say pci_fixup_irqs is ARM-specific? It's declared in
+include/linux/pci.h, defined in drivers/pci/setup-irq.c & used by
+multiple architectures (alpha, arm, m68k, mips, sh, sparc, tile,
+unicore32 from a quick grep).
 
-If there's anything else that is needed for the pcie-designware platform driver,
-please let me know.
+Will you not break INTX-style interrupts by removing this?
 
 Thanks,
-Joao
+    Paul
+
+> ---
+>  drivers/pci/host/pcie-xilinx.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+> index 13fec35..6cbce34 100644
+> --- a/drivers/pci/host/pcie-xilinx.c
+> +++ b/drivers/pci/host/pcie-xilinx.c
+> @@ -704,7 +704,9 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+>  #endif
+>  	pci_scan_child_bus(bus);
+>  	pci_assign_unassigned_bus_resources(bus);
+> +#ifdef CONFIG_ARM
+>  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+> +#endif
+>  	pci_bus_add_devices(bus);
+>  	platform_set_drvdata(pdev, port);
+>  
+> -- 
+> 2.1.1
+> 
