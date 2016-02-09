@@ -1,179 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f174.google.com ([209.85.160.174]:33679 "EHLO
-	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161362AbcBQLpt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Feb 2016 06:45:49 -0500
-Received: by mail-yk0-f174.google.com with SMTP id z13so5432270ykd.0
-        for <linux-pci@vger.kernel.org>; Wed, 17 Feb 2016 03:45:49 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20160216152529.33855bc1@t450s.home>
-References: <1455487501-28630-1-git-send-email-jchandra@broadcom.com>
- <20160215182023.GB12641@localhost> <20160215123901.1600f86f@t450s.home>
- <CAKc_7PUtm7443qv40DNWKqJneWnVT6Do7s7vr_hOerkGLOgkJg@mail.gmail.com> <20160216152529.33855bc1@t450s.home>
-From: Jayachandran Chandrashekaran Nair
-	<jayachandran.chandrashekaran@broadcom.com>
-Date: Wed, 17 Feb 2016 17:15:09 +0530
-Message-ID: <CAKc_7PVExWkm0NqoGcf4d5bSPEcbhzn45oBgYRc7xZ8CJg+WEw@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/2] PCI: Add PCI device flag PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: jakeo@microsoft.com
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	haddenh@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH RESEND v2 1/3] PCI: Add fwnode_handle to pci_sysdata
+Date: Tue,  9 Feb 2016 19:24:26 +0000
+Message-Id: <1455045869-38341-2-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1455045869-38341-1-git-send-email-jakeo@microsoft.com>
+References: <1455045869-38341-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 17, 2016 at 3:55 AM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Wed, 17 Feb 2016 02:38:24 +0530
-> Jayachandran Chandrashekaran Nair
-> <jayachandran.chandrashekaran@broadcom.com> wrote:
->
->> On Tue, Feb 16, 2016 at 1:09 AM, Alex Williamson
->> <alex.williamson@redhat.com> wrote:
->> > On Mon, 15 Feb 2016 12:20:23 -0600
->> > Bjorn Helgaas <helgaas@kernel.org> wrote:
->> >
->> >> [+cc Alex, iommu list]
->> >>
->> >> On Mon, Feb 15, 2016 at 03:35:00AM +0530, Jayachandran C wrote:
->> >> > Add a new flag PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS to indicate bridges
->> >> > that should not be considered during DMA alias search. This is
->> >> > to support hardware (in this case Broadcom Vulcan PCIe subsystem)
->> >> > that has internal bridges which have either missing or wrong PCIe
->> >> > capabilities.
->> >
->> > I figured this would come at some point, the right answer is of course
->> > to follow the PCIe spec and implement the required PCIe capability in
->> > the hardware.
->>
->> There are  PCIe controllers on the chip that follows the spec, the issue is
->> how it is integrated to the northbridge (equivalent) on the chip, I have
->> tried to explain it below.
->>
->> >> This needs more explanation, like what exactly is wrong with this
->> >> device?  A missing PCIe capability might cause other problems.
->> >>
->> >> What problem does this fix?  Without these patches, do we merely add
->> >> aliases that are unnecessary?  Do we crash because something goes
->> >> wrong in the pci_pcie_type() switch because of the incorrect
->> >> capability?
->>
->> Here's how (for example) how the PCI enumeration of a 2 node Vulcan
->> processor will look like:
->>
->>
->> [0] +-0.0.0--[1]---+--1.a.0----[2]-----2.0.0---[3]----3.0.0
->>     |              +--1.a.1----[4]-----4.0.0---[5]----5.0.0
->>     |              .
->>     |              ... etc...
->>     |
->>     +-0.0.1--[10]--+-10.a.0----[11]---11.0.0---[12]---12.0.0
->>                    +-10.a.1----[13]---13.0.0---[14]---14.0.0
->>                    .
->>                    ... etc...
->
-> So we have:
->
->     "Glue Bridge"---"Glue Bridges"---Root Ports---Endpoints
->       (no pcie)      (pci/x-pcie)
+From: Jake Oshins <jakeo@microsoft.com>
 
-The top level is one glue bridge per chip in a multi-chip board,
-but otherwise this is accurate.
+This patch adds an fwnode_handle to struct pci_sysdata, which is
+used by the next patch in the series when trying to locate an
+IRQ domain associated with a root PCI bus.
 
->>
->> The devices 0.0.x and x.a.x are glue bridges that are there to
->> bring the real PCIe controllers (pcie cap type 4) 2.0.0, 4.0.0,
->> 11.0.0, 13.0.0 under a single PCI hierarchy. The x.a.x bridges
->> have a PCIe capability (type 8) and 0.0.x does not have any pcie
->> capability.
->>
->> In case of Vulcan, both the GICv3 ITS driver code and the SMMUv3
->> driver code does dma alias walk to find the device id to use
->> in ITS and SMMU. In both cases it will ignore the x.0.0 bridges
->> since they are type root port, but will continue on up and end
->> up with incorrect device id.
->>
->> The flag I have added is to make the pci_for_each_dma_alias()
->> ignore the last 2 levels of glue/internal bridges.
->
-> Per the PCIe spec, I'm not even sure what you have is a valid
-> hierarchy, root ports sit on root complexes, not behind a PCI-to-PCIe
-> bridge.  So really you're pretending that the downstream "glue bridge"
-> is your host bridge and therefore root complex, but the PCI topology
-> would clearly dictate that the top-most bus is conventional PCI and
-> therefore everything is an alias of everything else and the DMA alias
-> code is doing exactly what it should.
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ arch/x86/include/asm/pci.h | 15 +++++++++++++++
+ include/linux/pci.h        |  4 ++++
+ 2 files changed, 19 insertions(+)
 
-Yes, I am not arguing that there is any issue in the current code. I
-am trying to figure out the correct way to implement the quirk. We
-have to support the hardware we have, not the hardware we want to
-have :)
-
-> Also note that the caller of pci_for_each_dma_alias() owns the callback
-> function triggered for each alias, that function could choose to prune
-> out these "glue bridges" itself if that's the appropriate thing to do.
-
-I had implemented this first, but moved to the current approach because
-it is needed in multiple places. The problem is: "On vulcan, while
-going up the pcie bus heirarchy for finding aliases, skip the glue bridges",
-So the logical place to put the fix is in pci_for_each_dma_alias()
-
-> Where do the SMMU and ITS actually reside in the above diagram?  You
-> can use the callout function to stop the traversal anywhere you wish,
-> it's free to return a -errno to stop or positive number, which the
-> caller can interpret as error or non-failure stop condition.
-
-The SMMU (for translation requests) and ITS (for MSI writes for
-interrupts) are connected directly to the proper PCIe controller
-(2/4/11/13.0.0 above)
-
-> You could even think about changing what Linux considers to be the host
-> bridge.  Maybe these glue bridges shouldn't even be visible to Linux,
-> would that also solve the issue with the broken BAR?
-
-The glue bridges have to seen by Linux for assigning resources like
-bus ranges and memory windows. So these are required bridges in
-the topology and will work with the standard linux code
-(provided we skip them for aliases, and and ignore the BAR).
-
->> > The change takes the same code path as it would for a real PCIe bridge
->> > port (downstream/upstream/root), which means they want to skip adding
->> > this bridge as an alias of the device.  So we're adding in aliases that
->> > don't exist, the bridge itself.
->> >
->> > If anything I'd suggest a flag that actually tries to address the
->> > problem rather than a symptom of the problem.  For example, maybe the
->> > flag should be PCI_DEV_FLAGS_IS_PCIE.  Maybe pci_is_pcie() should even
->> > take that into account.  That has some trickle through for
->> > pci_pcie_type() and all the accessor functions, but maybe it's a
->> > cleaner solution overall (or maybe it explodes further).  Thanks,
->>
->> I didn't really want to mark the glue bridges as PCIe or have fake
->> PCIe capability there, the obvious simple solution was to add
->> the flag PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS
->>
->> Any suggestions/comments on how to do this better would be welcome.
->
-> I definitely don't think either flag idea is the right solution, I
-> think you've actually already got the tools you need to solve it by
-> putting the intelligence in the callback function or by going further
-> down the path of pretending the glue bridge is really a host bridge.
-
-If I understand your suggestion, I need to fake the PCIe capability
-for the glue bridges, which may be reasonable for the second level.
-But for the first level, there is no pcie capability and faking that
-becomes more difficult.
-
-If the concern is adding a flag for just one platform, I can check
-for the vendor ID/device ID in the pci_for_each_dma_alias()
-function, which would be slightly uglier, but still a simple and
-maintainable solution.
-
-Another option is to break the pci_for_each_dma_alias when it
-reaches to root port (for vulcan), this too can be done without
-a flag.
-
-Thanks,
-JC.
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 4625943..6fc3c7c 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -20,6 +20,9 @@ struct pci_sysdata {
+ #ifdef CONFIG_X86_64
+ 	void		*iommu;		/* IOMMU private data */
+ #endif
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++	void		*fwnode;	/* IRQ domain for MSI assignment */
++#endif
+ };
+ 
+ extern int pci_routeirq;
+@@ -32,6 +35,7 @@ extern int noioapicreroute;
+ static inline int pci_domain_nr(struct pci_bus *bus)
+ {
+ 	struct pci_sysdata *sd = bus->sysdata;
++
+ 	return sd->domain;
+ }
+ 
+@@ -41,6 +45,17 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ }
+ #endif
+ 
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
++{
++	struct pci_sysdata *sd = bus->sysdata;
++
++	return sd->fwnode;
++}
++
++#define pci_root_bus_fwnode	_pci_root_bus_fwnode
++#endif
++
+ /* Can be used to override the logic in pci_scan_bus for skipping
+    already-configured bus numbers - to be used for buggy BIOSes
+    or architectures with incomplete PCI setup by the loader */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 27df4a6..1bb44af 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1515,6 +1515,10 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ 
+ #include <asm/pci.h>
+ 
++#ifndef pci_root_bus_fwnode
++#define pci_root_bus_fwnode(bus)	NULL
++#endif
++
+ /* these helpers provide future and backwards compatibility
+  * for accessing popular PCI BAR info */
+ #define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
+-- 
+1.9.1
