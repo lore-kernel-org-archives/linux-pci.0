@@ -1,58 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail5.windriver.com ([192.103.53.11]:59587 "EHLO mail5.wrs.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754814AbcBHPwA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Feb 2016 10:52:00 -0500
-Date: Mon, 8 Feb 2016 10:51:41 -0500
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ley Foon Tan <lftan@altera.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	<linux-pci@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>
-Subject: Re: [PATCH 5/5] drivers/pci: make most of the PCI_DW drivers modular
-Message-ID: <20160208155141.GT23093@windriver.com>
-References: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com>
- <1454889644-27830-6-git-send-email-paul.gortmaker@windriver.com>
- <2730150.DUniNa63fK@wuerfel>
+Received: from mail-cys01nam02on0078.outbound.protection.outlook.com ([104.47.37.78]:63026
+	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932703AbcBIKmO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 9 Feb 2016 05:42:14 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <bhelgaas@google.com>, <michals@xilinx.com>,
+	<lorenzo.pieralisi@arm.com>, <paul.burton@imgtec.com>,
+	<yinghai@kernel.org>, <wangyijing@huawei.com>, <robh@kernel.org>,
+	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
+	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
+	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
+	<galak@codeaurora.org>
+CC: <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: [PATCH V3 4/5] PCI: xilinx: Updating Zynq PCI binding documentation with  Microblaze node.
+Date: Tue, 9 Feb 2016 16:11:57 +0530
+Message-ID: <1455014518-8708-5-git-send-email-bharatku@xilinx.com>
+In-Reply-To: <1455014518-8708-1-git-send-email-bharatku@xilinx.com>
+References: <1455014518-8708-1-git-send-email-bharatku@xilinx.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <2730150.DUniNa63fK@wuerfel>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Re: [PATCH 5/5] drivers/pci: make most of the PCI_DW drivers modular] On 08/02/2016 (Mon 11:00) Arnd Bergmann wrote:
+Updated Zynq PCI binding documentation with Microblaze node.
 
-> On Sunday 07 February 2016 19:00:44 Paul Gortmaker wrote:
-> > We've exported the symbols that we know these specific drivers
-> > will need as tristate, so now we can make the conversion from
-> > bool to tristate w/o concern for build regressions.
-> > 
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Ley Foon Tan <lftan@altera.com>
-> > Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-> > Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
-> > Cc: Thierry Reding <thierry.reding@gmail.com>
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: linux-pci@vger.kernel.org
-> > Cc: linux-arm-msm@vger.kernel.org
-> > Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
-> 
-> Looks good, but I'm not sure what happens on unload. Did you check?
+Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
 
-Per the 0/N I've not got the capability to do run time testing for any
-of this stuff.  And from previous discussions, ISTR that people didn't
-want to see a blanket block-unload policy implemented.
+Acked-by: Rob Herring <robh@kernel.org>
+---
+Changes:
+Adding Microblaze device tree node Documnetation.
+Made bus-range property optional for Microblaze.
+---
+ .../devicetree/bindings/pci/xilinx-pcie.txt        | 32 ++++++++++++++++++++--
+ 1 file changed, 29 insertions(+), 3 deletions(-)
 
-> Until this is tested, maybe it's best to prevent module unloading?
-
-If that is what people want, I can add that.
-
-P.
+diff --git a/Documentation/devicetree/bindings/pci/xilinx-pcie.txt b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
+index 02f979a..ad7c7bf 100644
+--- a/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
+@@ -17,7 +17,7 @@ Required properties:
+ 	Please refer to the standard PCI bus binding document for a more
+ 	detailed explanation
+ 
+-Optional properties:
++Optional properties for Zynq/Microblaze:
+ - bus-range: PCI bus numbers covered
+ 
+ Interrupt controller child node
+@@ -38,13 +38,13 @@ the four INTx interrupts in ISR and route them to this domain.
+ 
+ Example:
+ ++++++++
+-
++Zynq:
+ 	pci_express: axi-pcie@50000000 {
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+ 		#interrupt-cells = <1>;
+ 		compatible = "xlnx,axi-pcie-host-1.00.a";
+-		reg = < 0x50000000 0x10000000 >;
++		reg = < 0x50000000 0x1000000 >;
+ 		device_type = "pci";
+ 		interrupts = < 0 52 4 >;
+ 		interrupt-map-mask = <0 0 0 7>;
+@@ -60,3 +60,29 @@ Example:
+ 			#interrupt-cells = <1>;
+ 		};
+ 	};
++
++
++Microblaze:
++	pci_express: axi-pcie@10000000 {
++		#address-cells = <3>;
++		#size-cells = <2>;
++		#interrupt-cells = <1>;
++		compatible = "xlnx,axi-pcie-host-1.00.a";
++		reg = <0x10000000 0x4000000>;
++		device_type = "pci";
++		interrupt-parent = <&microbalze_0_intc>;
++		interrupts = <1 2>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie_intc 1>,
++				<0 0 0 2 &pcie_intc 2>,
++				<0 0 0 3 &pcie_intc 3>,
++				<0 0 0 4 &pcie_intc 4>;
++		ranges = <0x02000000 0x00000000 0x80000000 0x80000000 0x00000000 0x10000000>;
++
++		pcie_intc: interrupt-controller {
++			interrupt-controller;
++			#address-cells = <0>;
++			#interrupt-cells = <1>;
++		};
++
++	};
 -- 
+2.1.1
 
-> 
-> 	Arnd
