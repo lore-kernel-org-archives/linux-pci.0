@@ -1,88 +1,233 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0089.outbound.protection.outlook.com ([207.46.100.89]:12455
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753962AbcBBJBx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Feb 2016 04:01:53 -0500
-From: Minghuan Lian <Minghuan.Lian@nxp.com>
-To: <linux-pci@vger.kernel.org>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	Roy Zang <roy.zang@nxp.com>, Mingkai Hu <mingkai.hu@nxp.com>,
-	Stuart Yoder <stuart.yoder@nxp.com>,
-	Yang-Leo Li <leoyang.li@nxp.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"Bjorn Helgaas" <bhelgaas@google.com>,
-	Minghuan Lian <Minghuan.Lian@nxp.com>
-Subject: [PATCH 1/4] ARM: dts: ls1021a: add PCIe dts node
-Date: Tue, 2 Feb 2016 16:30:07 +0800
-Message-ID: <1454401807-28751-1-git-send-email-Minghuan.Lian@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:36779 "EHLO
+	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754170AbcBIOvI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2016 09:51:08 -0500
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH] PCI: tegra: Update for new XUSB pad controller bindings
+Date: Tue,  9 Feb 2016 15:51:05 +0100
+Message-Id: <1455029465-9211-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-LS1021a contains two PCIe controllers. The patch adds their node to
-dts file.
+From: Thierry Reding <treding@nvidia.com>
 
-Signed-off-by: Minghuan Lian <Minghuan.Lian@nxp.com>
+The current XUSB pad controller bindings are insufficient to describe
+PHY devices attached to USB controllers. New bindings have been created
+to overcome these restrictions. As a side-effect each root port now is
+assigned a set of PHY devices, one for each lane associated with the
+root port.
+
+Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- arch/arm/boot/dts/ls1021a.dtsi | 44 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
+ drivers/pci/host/pci-tegra.c | 148 ++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 132 insertions(+), 16 deletions(-)
 
-diff --git a/arch/arm/boot/dts/ls1021a.dtsi b/arch/arm/boot/dts/ls1021a.dtsi
-index 2c84ca2..274d647 100644
---- a/arch/arm/boot/dts/ls1021a.dtsi
-+++ b/arch/arm/boot/dts/ls1021a.dtsi
-@@ -560,5 +560,49 @@
- 			dr_mode = "host";
- 			snps,quirk-frame-length-adjustment = <0x20>;
- 		};
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 75c55265ca73..4cb8157a4678 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -307,11 +307,14 @@ struct tegra_pcie {
+ 
+ struct tegra_pcie_port {
+ 	struct tegra_pcie *pcie;
++	struct device_node *np;
+ 	struct list_head list;
+ 	struct resource regs;
+ 	void __iomem *base;
+ 	unsigned int index;
+ 	unsigned int lanes;
 +
-+		pcie@3400000 {
-+			compatible = "fsl,ls1021a-pcie", "snps,dw-pcie";
-+			reg = <0x00 0x03400000 0x0 0x00010000   /* controller registers */
-+			       0x40 0x00000000 0x0 0x00002000>; /* configuration space */
-+			reg-names = "regs", "config";
-+			interrupts = <GIC_SPI 177 IRQ_TYPE_LEVEL_HIGH>; /* controller interrupt */
-+			fsl,pcie-scfg = <&scfg 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			num-lanes = <4>;
-+			bus-range = <0x0 0xff>;
-+			ranges = <0x81000000 0x0 0x00000000 0x40 0x00010000 0x0 0x00010000   /* downstream I/O */
-+				  0x82000000 0x0 0x40000000 0x40 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0000 0 0 1 &gic GIC_SPI 91  IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 2 &gic GIC_SPI 188 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 3 &gic GIC_SPI 190 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 4 &gic GIC_SPI 192 IRQ_TYPE_LEVEL_HIGH>;
-+		};
-+
-+		pcie@3500000 {
-+			compatible = "fsl,ls1021a-pcie", "snps,dw-pcie";
-+			reg = <0x00 0x03500000 0x0 0x00010000   /* controller registers */
-+			       0x48 0x00000000 0x0 0x00002000>; /* configuration space */
-+			reg-names = "regs", "config";
-+			interrupts = <GIC_SPI 178 IRQ_TYPE_LEVEL_HIGH>;
-+			fsl,pcie-scfg = <&scfg 1>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			num-lanes = <4>;
-+			bus-range = <0x0 0xff>;
-+			ranges = <0x81000000 0x0 0x00000000 0x48 0x00010000 0x0 0x00010000   /* downstream I/O */
-+				  0x82000000 0x0 0x40000000 0x48 0x40000000 0x0 0x40000000>; /* non-prefetchable memory */
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0000 0 0 1 &gic GIC_SPI 92  IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 2 &gic GIC_SPI 189 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 3 &gic GIC_SPI 191 IRQ_TYPE_LEVEL_HIGH>,
-+					<0000 0 0 4 &gic GIC_SPI 193 IRQ_TYPE_LEVEL_HIGH>;
-+		};
- 	};
++	struct phy **phys;
  };
+ 
+ struct tegra_pcie_bus {
+@@ -844,6 +847,24 @@ static int tegra_pcie_phy_enable(struct tegra_pcie *pcie)
+ 	return 0;
+ }
+ 
++static int tegra_pcie_port_phy_power_on(struct tegra_pcie_port *port)
++{
++	struct device *dev = port->pcie->dev;
++	unsigned int i;
++	int err;
++
++	for (i = 0; i < port->lanes; i++) {
++		err = phy_power_on(port->phys[i]);
++		if (err < 0) {
++			dev_err(dev, "failed to power on PHY#%u: %d\n", i,
++				err);
++			return err;
++		}
++	}
++
++	return 0;
++}
++
+ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+ {
+ 	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
+@@ -883,14 +904,24 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+ 		afi_writel(pcie, value, AFI_FUSE);
+ 	}
+ 
+-	if (!pcie->phy)
+-		err = tegra_pcie_phy_enable(pcie);
+-	else
+-		err = phy_power_on(pcie->phy);
++	if (of_get_property(pcie->dev->of_node, "phys", NULL) == NULL) {
++		list_for_each_entry(port, &pcie->ports, list) {
++			err = tegra_pcie_port_phy_power_on(port);
++			if (err < 0) {
++				dev_err(pcie->dev,
++					"failed to power on PCIe port: %d\n",
++					err);
++				return err;
++			}
++		}
++	} else {
++		if (!pcie->phy)
++			err = tegra_pcie_phy_enable(pcie);
++		else
++			err = phy_power_on(pcie->phy);
+ 
+-	if (err < 0) {
+-		dev_err(pcie->dev, "failed to power on PHY: %d\n", err);
+-		return err;
++		if (err < 0)
++			dev_err(pcie->dev, "failed to power on PHY: %d\n", err);
+ 	}
+ 
+ 	/* take the PCIe interface module out of reset */
+@@ -1033,6 +1064,97 @@ static int tegra_pcie_resets_get(struct tegra_pcie *pcie)
+ 	return 0;
+ }
+ 
++static int tegra_pcie_phys_get_legacy(struct tegra_pcie *pcie)
++{
++	int err;
++
++	pcie->phy = devm_phy_optional_get(pcie->dev, "pcie");
++	if (IS_ERR(pcie->phy)) {
++		err = PTR_ERR(pcie->phy);
++		dev_err(pcie->dev, "failed to get PHY: %d\n", err);
++		return err;
++	}
++
++	err = phy_init(pcie->phy);
++	if (err < 0) {
++		dev_err(pcie->dev, "failed to initialize PHY: %d\n", err);
++		return err;
++	}
++
++	return 0;
++}
++
++static struct phy *devm_of_phy_optional_get_index(struct device *dev,
++						  struct device_node *np,
++						  const char *consumer,
++						  unsigned int index)
++{
++	struct phy *phy;
++	char *name;
++
++	name = kasprintf(GFP_KERNEL, "%s-%u", consumer, index);
++	if (!name)
++		return ERR_PTR(-ENOMEM);
++
++	phy = devm_of_phy_get(dev, np, name);
++	kfree(name);
++
++	if (IS_ERR(phy) && PTR_ERR(phy) == -ENODEV)
++		phy = NULL;
++
++	return phy;
++}
++
++static int tegra_pcie_port_get_phys(struct tegra_pcie_port *port)
++{
++	struct device *dev = port->pcie->dev;
++	struct phy *phy;
++	unsigned int i;
++	int err;
++
++	port->phys = devm_kcalloc(dev, sizeof(phy), port->lanes, GFP_KERNEL);
++	if (!port->phys)
++		return -ENOMEM;
++
++	for (i = 0; i < port->lanes; i++) {
++		phy = devm_of_phy_optional_get_index(dev, port->np, "pcie", i);
++		if (IS_ERR(phy)) {
++			dev_err(dev, "failed to get PHY#%u: %ld\n", i,
++				PTR_ERR(phy));
++			return PTR_ERR(phy);
++		}
++
++		err = phy_init(phy);
++		if (err < 0) {
++			dev_err(dev, "failed to initialize PHY#%u: %d\n", i,
++				err);
++			return err;
++		}
++
++		port->phys[i] = phy;
++	}
++
++	return 0;
++}
++
++static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
++{
++	struct tegra_pcie_port *port;
++	int err;
++
++	if (of_get_property(pcie->dev->of_node, "phys", NULL) != NULL)
++		return tegra_pcie_phys_get_legacy(pcie);
++
++	list_for_each_entry(port, &pcie->ports, list) {
++		err = tegra_pcie_port_get_phys(port);
++		if (err < 0) {
++			return err;
++		}
++	}
++
++	return 0;
++}
++
+ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ {
+ 	struct platform_device *pdev = to_platform_device(pcie->dev);
+@@ -1051,16 +1173,9 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+ 		return err;
+ 	}
+ 
+-	pcie->phy = devm_phy_optional_get(pcie->dev, "pcie");
+-	if (IS_ERR(pcie->phy)) {
+-		err = PTR_ERR(pcie->phy);
+-		dev_err(&pdev->dev, "failed to get PHY: %d\n", err);
+-		return err;
+-	}
+-
+-	err = phy_init(pcie->phy);
++	err = tegra_pcie_phys_get(pcie);
+ 	if (err < 0) {
+-		dev_err(&pdev->dev, "failed to initialize PHY: %d\n", err);
++		dev_err(&pdev->dev, "failed to get PHYs: %d\n", err);
+ 		return err;
+ 	}
+ 
+@@ -1725,6 +1840,7 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
+ 		rp->index = index;
+ 		rp->lanes = value;
+ 		rp->pcie = pcie;
++		rp->np = port;
+ 
+ 		rp->base = devm_ioremap_resource(pcie->dev, &rp->regs);
+ 		if (IS_ERR(rp->base))
 -- 
-1.9.1
+2.7.1
 
