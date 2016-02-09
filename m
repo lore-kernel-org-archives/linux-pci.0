@@ -1,45 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout2.freenet.de ([195.4.92.92]:34561 "EHLO mout2.freenet.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751035AbcBEGkn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Feb 2016 01:40:43 -0500
-Subject: Re: AMD-Vi: Unable to write to IOMMU perf counter.
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <56B365E0.4020100@01019freenet.de>
- <20160204152309.GA27351@localhost>
-Cc: linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
-	iommu@lists.linux-foundation.org
-From: Andreas Hartmann <andihartmann@freenet.de>
-Message-ID: <56B44330.4020507@maya.org>
-Date: Fri, 5 Feb 2016 07:37:36 +0100
+Received: from szxga03-in.huawei.com ([119.145.14.66]:53835 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756661AbcBIRip (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2016 12:38:45 -0500
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <guohanjun@huawei.com>, <wangzhou1@hisilicon.com>,
+	<liudongdong3@huawei.com>, <linuxarm@huawei.com>,
+	<qiujiang@huawei.com>, <bhelgaas@google.com>, <arnd@arndb.de>,
+	<Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>
+CC: <gabriele.paoloni@huawei.com>, <zhangjukuo@huawei.com>,
+	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<jcm@redhat.com>
+Subject: [RFC PATCH v3 0/3] Add ACPI support for HiSilicon PCIe Host Controllers
+Date: Tue, 9 Feb 2016 17:34:17 +0000
+Message-ID: <1455039260-6040-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20160204152309.GA27351@localhost>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-On 02/04/2016 at 04:23 PM Bjorn Helgaas wrote:
-> [+cc Joerg, iommu list]
-> 
-> Hi Andreas,
-> 
-> On Thu, Feb 04, 2016 at 03:53:20PM +0100, Andreas Hartmann wrote:
->> Hello!
->>
->> The following happens with Linux 4.4.1 during boot on an MSI A78M-E35
->> board. Additionally, I attached the complete dmesg.
-> 
-> Thanks a lot for the report!  I cc'd some folks who know more about
-> this than I do.  Is this a regression?
+This patchset adds ACPI support for the HiSilicon Hip05/Hip06 SoC PCIe controllers
+The four patches respectively:
+        - re-architect the current HiSilicon driver to make it scalable to the
+          new ACPI quirks
+        - rework the current HiSilicon driver to add support for ECAM platforms
+        - adds the HiSilicon ACPI specific quirks.
 
-Problem doesn't happen in 4.2 - I didn't test 4.3 because I actually
-don't have a 4.3 kernel and Suravee Suthikulanit patchset fixes the
-problem as I already wrote.
+   This patchset  is based on
+   https://github.com/semihalf-nowicki-tomasz/linux.git
+   branch pci-acpi-v4
 
-Therefore the problem could be there since 4.3 or maybe firstly at 4.4.
+Changes v1 -> v2: removed the ACPI quirks dependency on Designware framework
+
+Changes v2 -> v3: kept backward compatibility for non-ECAM platforms
+
+gabriele paoloni (3):
+  PCI: hisi: re-architect Hip05/Hip06 controllers driver to preapare for
+    ACPI
+  PCI: hisi: Add ECAM support to HiSilicon PCIe host controller
+  PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
+
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     |  15 +-
+ MAINTAINERS                                        |   3 +
+ drivers/pci/host/Kconfig                           |   8 +
+ drivers/pci/host/Makefile                          |   3 +-
+ drivers/pci/host/pcie-designware.c                 |   4 +-
+ drivers/pci/host/pcie-designware.h                 |   2 +
+ drivers/pci/host/pcie-hisi-acpi.c                  | 188 +++++++++++++++++++++
+ drivers/pci/host/pcie-hisi-common.c                |  73 ++++++++
+ drivers/pci/host/pcie-hisi.c                       | 149 ++++++++--------
+ drivers/pci/host/pcie-hisi.h                       |  25 +++
+ 10 files changed, 382 insertions(+), 88 deletions(-)
+ create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
+ create mode 100644 drivers/pci/host/pcie-hisi-common.c
+ create mode 100644 drivers/pci/host/pcie-hisi.h
+
+-- 
+1.9.1
 
 
-Regards,
-Andreas
