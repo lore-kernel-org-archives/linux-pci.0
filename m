@@ -1,52 +1,179 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47446 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752305AbcBOImZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 15 Feb 2016 03:42:25 -0500
-From: Hannes Reinecke <hare@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
-	linux-pci@vger.kernel.org, Babu Moger <babu.moger@oracle.com>,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv3 0/4] PCI VPD access fixes
-Date: Mon, 15 Feb 2016 09:41:58 +0100
-Message-Id: <1455525722-122040-1-git-send-email-hare@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: [PATCH] Revert 991de2e59090 ("PCI,
+ x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: =?utf-8?b?0J7Qu9C10LM=?= =?utf-8?b?0JzQvtGA0L7Qtw==?=
+	<oleg.moroz@mcc.vniiem.ru>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
+	linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Date: Tue, 09 Feb 2016 11:58:09 -0600
+Message-ID: <20160209175809.23549.41255.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160209175155.23549.35323.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160209175155.23549.35323.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-the current PCI VPD page access assumes that the entire possible VPD
-data is readable. However, the spec only guarantees a VPD data up to
-the 'end' marker, with everything beyond that being undefined.
-This causes a system lockup on certain devices.
+991de2e59090 appeared in v4.3.  Олег reported that the Elcus-1553 TA1-PCI
+driver worked in v4.2 but not v4.3 and bisected it to 991de2e59090.  Sunjin
+reported that the RocketRAID 272x driver worked in v4.2 but not v4.3.  In
+both cases, booting with "pci=routirq" is a workaround.
 
-With this patch we always set the VPD sysfs attribute size to '0', and
-calculate the available VPD size on the first access.
-If no valid data can be read an I/O error is returned.
+I think the problem is that after 991de2e59090, we no longer call
+pcibios_enable_irq() for upstream bridges.  Prior to 991de2e59090, when a
+driver called pci_enable_device(), we recursively called
+pcibios_enable_irq() for upstream bridges via pci_enable_bridge().
 
-I've also included the patch from Babu to blacklists devices which
-are known to lockup when accessing the VPD data.
+After 991de2e59090, we call pcibios_enable_irq() from pci_device_probe()
+instead of the pci_enable_device() path, which does *not* call
+pcibios_enable_irq() for upstream bridges.
 
-Changes to v2:
-- Spelling fixes as suggested by Bjorn Helgaas
-- Update to correct vpd size in pci_vpc_pci22_write
-- Pass in modified VPD size to pci_vpd_pci22_size() to make
-  quirk_brcm_570x_limit_vpd work
+The purpose of 991de2e59090 was to help support IOAPIC hotplug, so
+reverting it likely breaks that.
 
-Babu Moger (1):
-  pci: Blacklist vpd access for buggy devices
+Note: this also reverts 8affb487d4a4 ("x86/PCI: Don't alloc pcibios-irq
+when MSI is enabled").
 
-Hannes Reinecke (3):
-  pci: Update VPD definitions
-  pci: allow access to VPD attributes with size '0'
-  pci: Determine actual VPD size on first access
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=111211
+Fixes: 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
+Reported-by: Олег Мороз <oleg.moroz@mcc.vniiem.ru>
+Reported-by: Sunjin Yang <fan4326@gmail.com>
+Not-yet-signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/include/asm/pci_x86.h |    2 ++
+ arch/x86/pci/common.c          |   27 +++++++++++----------------
+ arch/x86/pci/intel_mid_pci.c   |    7 ++-----
+ arch/x86/pci/irq.c             |   15 ++++++++++++++-
+ drivers/acpi/pci_irq.c         |    8 ++++++++
+ 5 files changed, 37 insertions(+), 22 deletions(-)
 
- drivers/pci/access.c    | 84 +++++++++++++++++++++++++++++++++++++++++++++++--
- drivers/pci/pci-sysfs.c | 22 +++++++------
- drivers/pci/quirks.c    | 43 +++++++++++++++++++++++++
- include/linux/pci.h     | 27 ++++++++++++++--
- 4 files changed, 162 insertions(+), 14 deletions(-)
-
--- 
-1.8.5.6
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index 46873fb..d08eacd2 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -93,6 +93,8 @@ extern raw_spinlock_t pci_config_lock;
+ extern int (*pcibios_enable_irq)(struct pci_dev *dev);
+ extern void (*pcibios_disable_irq)(struct pci_dev *dev);
+ 
++extern bool mp_should_keep_irq(struct device *dev);
++
+ struct pci_raw_ops {
+ 	int (*read)(unsigned int domain, unsigned int bus, unsigned int devfn,
+ 						int reg, int len, u32 *val);
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 2879efc..9df5ab9 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -711,28 +711,23 @@ int pcibios_add_device(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
+-int pcibios_alloc_irq(struct pci_dev *dev)
++int pcibios_enable_device(struct pci_dev *dev, int mask)
+ {
+-	/*
+-	 * If the PCI device was already claimed by core code and has
+-	 * MSI enabled, probing of the pcibios IRQ will overwrite
+-	 * dev->irq.  So bail out if MSI is already enabled.
+-	 */
+-	if (pci_dev_msi_enabled(dev))
+-		return -EBUSY;
++	int err;
+ 
+-	return pcibios_enable_irq(dev);
+-}
++	if ((err = pci_enable_resources(dev, mask)) < 0)
++		return err;
+ 
+-void pcibios_free_irq(struct pci_dev *dev)
+-{
+-	if (pcibios_disable_irq)
+-		pcibios_disable_irq(dev);
++	if (!pci_dev_msi_enabled(dev))
++		return pcibios_enable_irq(dev);
++
++	return 0;
+ }
+ 
+-int pcibios_enable_device(struct pci_dev *dev, int mask)
++void pcibios_disable_device (struct pci_dev *dev)
+ {
+-	return pci_enable_resources(dev, mask);
++	if (!pci_dev_msi_enabled(dev) && pcibios_disable_irq)
++		pcibios_disable_irq(dev);
+ }
+ 
+ int pci_ext_cfg_avail(void)
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index 0d24e7c..354180e 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -256,13 +256,10 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 
+ static void intel_mid_pci_irq_disable(struct pci_dev *dev)
+ {
+-	if (pci_has_managed_irq(dev)) {
++	if (!mp_should_keep_irq(&dev->dev) && dev->irq_managed &&
++	    dev->irq > 0) {
+ 		mp_unmap_irq(dev->irq);
+ 		dev->irq_managed = 0;
+-		/*
+-		 * Don't reset dev->irq here, otherwise
+-		 * intel_mid_pci_irq_enable() will fail on next call.
+-		 */
+ 	}
+ }
+ 
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index 32e7034..6c96cd3 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1256,9 +1256,22 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
++bool mp_should_keep_irq(struct device *dev)
++{
++	if (dev->power.is_prepared)
++		return true;
++#ifdef CONFIG_PM
++	if (dev->power.runtime_status == RPM_SUSPENDING)
++		return true;
++#endif
++
++	return false;
++}
++
+ static void pirq_disable_irq(struct pci_dev *dev)
+ {
+-	if (io_apic_assign_pci_irqs && pci_has_managed_irq(dev)) {
++	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
++	    dev->irq_managed && dev->irq) {
+ 		mp_unmap_irq(dev->irq);
+ 		pci_reset_managed_irq(dev);
+ 	}
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index d30184c..20bce3a 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -477,6 +477,14 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	if (!pin || !pci_has_managed_irq(dev))
+ 		return;
+ 
++	/* Keep IOAPIC pin configuration when suspending */
++	if (dev->dev.power.is_prepared)
++		return;
++#ifdef CONFIG_PM
++	if (dev->dev.power.runtime_status == RPM_SUSPENDING)
++		return;
++#endif
++
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+ 	if (!entry)
+ 		return;
 
