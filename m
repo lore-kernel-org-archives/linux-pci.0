@@ -1,119 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Duc Dang <dhdang@apm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
-	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>, patches@apm.com,
-	Duc Dang <dhdang@apm.com>
-Subject: [PATCH] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI boot for X-Gene v1
-Date: Tue,  9 Feb 2016 17:56:24 -0800
-Message-Id: <1455069384-22323-1-git-send-email-dhdang@apm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:37946 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932162AbcBIOav (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2016 09:30:51 -0500
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH v2 1/2] PCI: Add pci_ops.{add,remove}_bus() callbacks
+Date: Tue,  9 Feb 2016 15:30:47 +0100
+Message-Id: <1455028248-1950-1-git-send-email-thierry.reding@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch makes pci-xgene-msi driver ACPI-aware and provides
-MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
+From: Thierry Reding <treding@nvidia.com>
 
-Signed-off-by: Duc Dang <dhdang@apm.com>
+These callbacks will be called on every newly created bus and when a bus
+is being removed, respectively. This can be used by drivers to implement
+driver-specific initialization and teardown of the bus, in addition to
+the architecture-specifics implemented by the pcibios_add_bus() and the
+pcibios_remove_bus() functions.
+
+Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- drivers/pci/host/pci-xgene-msi.c | 35 ++++++++++++++++++++++++++++++++---
- 1 file changed, 32 insertions(+), 3 deletions(-)
+Changes in v2:
+- add pci_ops.remove_bus() callback
+- always call pcibios_add_bus()
 
-diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
-index a6456b5..466aa93 100644
---- a/drivers/pci/host/pci-xgene-msi.c
-+++ b/drivers/pci/host/pci-xgene-msi.c
-@@ -24,6 +24,7 @@
- #include <linux/pci.h>
- #include <linux/platform_device.h>
- #include <linux/of_pci.h>
-+#include <linux/acpi.h>
+ drivers/pci/probe.c  | 6 ++++++
+ drivers/pci/remove.c | 4 ++++
+ include/linux/pci.h  | 2 ++
+ 3 files changed, 12 insertions(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6d7ab9bb0d5a..3ea4de1c6926 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -758,6 +758,12 @@ add_dev:
  
- #define MSI_IR0			0x000000
- #define MSI_INT0		0x800000
-@@ -39,7 +40,7 @@ struct xgene_msi_group {
- };
+ 	pcibios_add_bus(child);
  
- struct xgene_msi {
--	struct device_node	*node;
-+	struct fwnode_handle	*fwnode;
- 	struct irq_domain	*inner_domain;
- 	struct irq_domain	*msi_domain;
- 	u64			msi_addr;
-@@ -249,6 +250,13 @@ static const struct irq_domain_ops msi_domain_ops = {
- 	.free   = xgene_irq_domain_free,
- };
- 
-+#ifdef CONFIG_ACPI
-+static struct fwnode_handle *xgene_msi_get_fwnode(struct device *dev)
-+{
-+	return xgene_msi_ctrl.fwnode;
-+}
-+#endif
-+
- static int xgene_allocate_domains(struct xgene_msi *msi)
- {
- 	msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
-@@ -256,7 +264,7 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
- 	if (!msi->inner_domain)
- 		return -ENOMEM;
- 
--	msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
-+	msi->msi_domain = pci_msi_create_irq_domain(msi->fwnode,
- 						    &xgene_msi_domain_info,
- 						    msi->inner_domain);
- 
-@@ -265,6 +273,9 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
- 		return -ENOMEM;
- 	}
- 
-+#ifdef CONFIG_ACPI
-+	pci_msi_register_fwnode_provider(&xgene_msi_get_fwnode);
-+#endif
- 	return 0;
- }
- 
-@@ -473,6 +484,13 @@ static const struct of_device_id xgene_msi_match_table[] = {
- 	{},
- };
- 
-+#ifdef CONFIG_ACPI
-+static const struct acpi_device_id xgene_msi_acpi_ids[] = {
-+	{"APMC0D0E", 0},
-+	{ },
-+};
-+#endif
-+
- static int xgene_msi_probe(struct platform_device *pdev)
- {
- 	struct resource *res;
-@@ -494,7 +512,17 @@ static int xgene_msi_probe(struct platform_device *pdev)
- 		goto error;
- 	}
- 	xgene_msi->msi_addr = res->start;
--	xgene_msi->node = pdev->dev.of_node;
-+
-+	xgene_msi->fwnode = of_node_to_fwnode(pdev->dev.of_node);
-+	if (!xgene_msi->fwnode) {
-+		xgene_msi->fwnode = irq_domain_alloc_fwnode(NULL);
-+		if (!xgene_msi->fwnode) {
-+			dev_err(&pdev->dev, "Failed to create fwnode\n");
-+			rc = ENOMEM;
-+			goto error;
-+		}
++	if (child->ops->add_bus) {
++		ret = child->ops->add_bus(child);
++		if (WARN_ON(ret < 0))
++			dev_err(&child->dev, "failed to add bus: %d\n", ret);
 +	}
 +
- 	xgene_msi->num_cpus = num_possible_cpus();
+ 	/* Create legacy_io and legacy_mem files for this bus */
+ 	pci_create_legacy_files(child);
  
- 	rc = xgene_msi_init_allocator(xgene_msi);
-@@ -571,6 +599,7 @@ static struct platform_driver xgene_msi_driver = {
- 	.driver = {
- 		.name = "xgene-msi",
- 		.of_match_table = xgene_msi_match_table,
-+		.acpi_match_table = ACPI_PTR(xgene_msi_acpi_ids),
- 	},
- 	.probe = xgene_msi_probe,
- 	.remove = xgene_msi_remove,
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 8a280e9c2ad1..d35c7fcde3af 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -54,6 +54,10 @@ void pci_remove_bus(struct pci_bus *bus)
+ 	pci_bus_release_busn_res(bus);
+ 	up_write(&pci_bus_sem);
+ 	pci_remove_legacy_files(bus);
++
++	if (bus->ops->remove_bus)
++		bus->ops->remove_bus(bus);
++
+ 	pcibios_remove_bus(bus);
+ 	device_unregister(&bus->dev);
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 27df4a6585da..0f7ef14c4d10 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -578,6 +578,8 @@ static inline int pcibios_err_to_errno(int err)
+ /* Low-level architecture-dependent routines */
+ 
+ struct pci_ops {
++	int (*add_bus)(struct pci_bus *bus);
++	void (*remove_bus)(struct pci_bus *bus);
+ 	void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
+ 	int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
+ 	int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
 -- 
-1.9.1
+2.7.1
+
