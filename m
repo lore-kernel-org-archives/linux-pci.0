@@ -1,85 +1,129 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	devicetree@vger.kernel.org, Frank Rowand <frowand.list@gmail.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ley Foon Tan <lftan@altera.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	linux-arm-kernel@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/5] Modularize PCI_DW related drivers.
-Date: Wed, 24 Feb 2016 10:04:57 +0100
-Message-ID: <6350001.oOdGGcH81x@wuerfel>
-In-Reply-To: <56CD4916.3050904@ti.com>
-References: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com> <56CD4916.3050904@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:47376 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757028AbcBIQxT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2016 11:53:19 -0500
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+	"tn@semihalf.com" <tn@semihalf.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"jcm@redhat.com" <jcm@redhat.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
+Subject: RE: [RFC PATCH v2 1/3] PCI: hisi: re-architect Hip05/Hip06
+ controllers driver to preapare for ACPI
+Date: Tue, 9 Feb 2016 16:52:38 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ECAF48D@lhreml503-mbs>
+References: <1454935264-6076-1-git-send-email-gabriele.paoloni@huawei.com>
+ <3113837.YSNyDAf4HQ@wuerfel>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ECAD249@lhreml503-mbs>
+ <5968234.D2a3VCM72k@wuerfel>
+In-Reply-To: <5968234.D2a3VCM72k@wuerfel>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 24 February 2016 11:39:26 Kishon Vijay Abraham I wrote:
-> Hi,
+> -----Original Message-----
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: 09 February 2016 16:27
+> To: Gabriele Paoloni
+> Cc: linux-arm-kernel@lists.infradead.org; Guohanjun (Hanjun Guo);
+> Wangzhou (B); liudongdong (C); Linuxarm; qiujiang; bhelgaas@google.com;
+> Lorenzo.Pieralisi@arm.com; tn@semihalf.com; linux-pci@vger.kernel.org;
+> linux-kernel@vger.kernel.org; xuwei (O); linux-acpi@vger.kernel.org;
+> jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth)
+> Subject: Re: [RFC PATCH v2 1/3] PCI: hisi: re-architect Hip05/Hip06
+> controllers driver to preapare for ACPI
 > 
-> On Monday 08 February 2016 05:30 AM, Paul Gortmaker wrote:
-> > In a recent patch series that aimed to remove code related to module
-> > unload for PCI support that was simply non modular, the discussion
-> > led to people wanting to keep the code and push towards taking the
-> > steps needed to support moving it towards tristate instead[1].
-> > 
-> > Here, we take step one, which is simply making the Kconfig change
-> > and then dealing with any build fallout or modpost fallout.  What
-> > amounts to essentially a sanity build test.  To be clear, these
-> > have not been runtime validated; that will need to be done by those
-> > with access to real hardware.  However, the changes are not anything
-> > that should disrupt any existing built-in validation, so real world
-> > users should not be impacted by this change.
-> > 
-> > We start with a smaller family of drivers; those that actively select
-> > PCI_DW, as a nice self contained group to test the waters and see if
-> > everyone is still good with this approach before investing more time
-> > on a wider scale to other pci/host/ code blocks.
-> > 
-> > As such the drivers here share a dependency on having the same group
-> > of functions exported in order to successfully complete modpost.
-> > 
-> > In addition, we have to stray outside drivers/pci to add exports
-> > in two places; once for an ARM fault handler, and once for an OF
-> > variable.
-> > 
-> > The pci-keystone-dw.c instance was handled separately because it
-> > consists of two source files that need their own group of driver
-> > specific exports above and beyond the "shared" ones.
-> > 
-> > Then we convert the Kconfig for all remaining at once; we could have
-> > done it on a per driver basis for ease of revert if anyone really
-> > objects, but since it would be a one line change, that seemed like
-> > not a real concern.
-> > 
-> > Build testing was done on the linux-next tree for arm allmodconfig.
+> On Monday 08 February 2016 16:51:19 Gabriele Paoloni wrote:
+> > > From: Arnd Bergmann [mailto:arnd@arndb.de]
+> > > On Monday 08 February 2016 16:06:54 Gabriele Paoloni wrote:
+> > > > > On Monday 08 February 2016 12:41:02 Gabriele Paoloni wrote:
+> > > int
+> > > > > size,
+> > > > > > +                         u32 *val)
+> > > > > > +{
+> > > > > > +   u32 reg;
+> > > > > > +   u32 reg_val;
+> > > > > > +   void *walker = &reg_val;
+> > > > > > +
+> > > > > > +   walker += (where & 0x3);
+> > > > > > +   reg = where & ~0x3;
+> > > > > > +   reg_val = readl(reg_base + reg);
+> > > > > > +
+> > > > > > +   if (size == 1)
+> > > > > > +           *val = *(u8 __force *) walker;
+> > > > > > +   else if (size == 2)
+> > > > > > +           *val = *(u16 __force *) walker;
+> > > > > > +   else if (size == 4)
+> > > > > > +           *val = reg_val;
+> > > > > > +   else
+> > > > > > +           return PCIBIOS_BAD_REGISTER_NUMBER;
+> > > > > > +
+> > > > > > +   return PCIBIOS_SUCCESSFUL;
+> > > > > > +}
+> > > > >
+> > > > > Isn't this the same hack that Qualcomm are using?
+> > > >
+> > > > As far as I can see Qualcomm defines its own config access
+> > > > mechanism only for RC config read and also it seems they're
+> > > > having problems with reporting the device class...
+> > > >
+> > > >
+> https://github.com/torvalds/linux/blob/master/drivers/pci/host/pcie-
+> > > qcom.c#L474
+> > > >
+> > > > Our problem is that our HW can only perform 32b rd/wr accesses
+> > > > So we can't use readw/readb/writew/writeb...
+> > > >
+> > > >
+> > >
+> > > Sorry, my mistake, I meant Cavium not Qualcomm.
+> > > See https://lkml.org/lkml/2016/2/5/689 for the patches.
+> >
+> > Well, looking at it Cavium seems quite different,
+> >
+> > On read they need to trigger the retrieval of the
+> > config space info writing to the lower 32b of a 64b register,
+> > then they need to read data back on the upper 64b of the
+> > same register and adjust the content to remove the garbage...
+> >
+> > We just use 32b accesses and adjust grab the appropriate
+> > bytes depending on the read/write sizes...
 > 
-> I took these patches and gave a test with DRA7xx board. As expected there was
-> no issues when the driver was built-in. However when I tried to rmmod/modprobe
-> I got this error [2].
+> Hmm, I must have misremembered that too then, let me try once more ;-)
+> 
+> The above appears to reimplement pci_generic_config_read32(). Can you
+> just use that instead?
 
-Thanks for testing this!
+Nope I don't think so,
 
-> [2] -> http://pastebin.ubuntu.com/15185894/
+When we read the root complex config space we need to use a configuration
+address space that is different from the one used to map the rest of the
+hierarchy; I think this is something to do with Designware itself. It
+is clear if you look at
 
-It looks like you are hitting the BUG_ON() in ioremap_pte_range()
-that checks if a virtual address already has a page table entry,
-which in turn is probably a result of dw_pcie_host_init()
-calling pci_remap_iospace() again for the same memory area
-it has called the last time, and no cleanup done inbetween.
+http://lxr.free-electrons.com/source/drivers/pci/host/pcie-designware.c#L657
 
-Could you try adding a pci_unmap_iospace() and calling that
-in the device remove function? Let me know if you need help
-implementing it.
+Here you can see that in calling "dw_pcie_wr_own_conf" Designware does not
+pass "bus" and "devfn" that are actually required by pci_generic_config_read32()
+to map the addr...
 
-	Arnd
+Many Thanks
+
+Gab
+
+> 
+> 	Arnd
