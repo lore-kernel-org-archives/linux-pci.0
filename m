@@ -1,56 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:57746 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760249AbcBYOuV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Feb 2016 09:50:21 -0500
-Date: Thu, 25 Feb 2016 14:50:15 +0000
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Veal, Bryan E." <bryan.e.veal@intel.com>,
-	LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCHv8 0/5] Driver for new "VMD" device
-Message-ID: <20160225145014.GA2265@localhost.localdomain>
-References: <1452629890-17542-1-git-send-email-keith.busch@intel.com>
- <20160115181938.GA5296@localhost>
- <20160115193103.GA2249@intel.com>
- <20160115214902.GA10272@localhost>
- <20160116221937.GA31482@intel.com>
- <20160120220111.GE7973@localhost>
- <20160222221024.GA20879@localhost>
- <20160223182359.GA20250@localhost.localdomain>
- <20160225144219.GB8726@localhost>
+Received: from mailapp01.imgtec.com ([195.59.15.196]:49765 "EHLO
+	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751484AbcBJR1M (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 12:27:12 -0500
+Date: Wed, 10 Feb 2016 09:27:07 -0800
+From: Paul Burton <paul.burton@imgtec.com>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	Michal Simek <michals@xilinx.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"wangyijing@huawei.com" <wangyijing@huawei.com>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH V3 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge
+ driver to work on both  Zynq and Microblaze
+Message-ID: <20160210172707.GA29590@NP-P-BURTON>
+References: <1455014518-8708-1-git-send-email-bharatku@xilinx.com>
+ <1455014518-8708-4-git-send-email-bharatku@xilinx.com>
+ <20160209161134.GA24244@NP-P-BURTON>
+ <8520D5D51A55D047800579B09414719825881780@XAP-PVEXMBX01.xlnx.xilinx.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160225144219.GB8726@localhost>
+Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <8520D5D51A55D047800579B09414719825881780@XAP-PVEXMBX01.xlnx.xilinx.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 25, 2016 at 08:42:19AM -0600, Bjorn Helgaas wrote:
-> On Tue, Feb 23, 2016 at 06:24:00PM +0000, Keith Busch wrote:
-> > On Mon, Feb 22, 2016 at 04:10:24PM -0600, Bjorn Helgaas wrote:
-> > > +	/*
-> > > +	 * If the window is below 4GB, clear IORESOURCE_MEM_64 so we can
-> > > +	 * put 32-bit resources in the window.
-> > > +	 *
-> > > +	 * There's no hardware reason why a 64-bit window *couldn't*
-> > > +	 * contain a 32-bit resource, but pbus_size_mem() computes the
-> > > +	 * bridge window size assuming a 64-bit window will contain no
-> > > +	 * 32-bit resources.  __pci_assign_resource() enforces that
-> > > +	 * artificial restriction to make sure everything will fit.
-> > > +	 */
+On Wed, Feb 10, 2016 at 05:55:51AM +0000, Bharat Kumar Gogada wrote:
+> > On Tue, Feb 09, 2016 at 04:11:56PM +0530, Bharat Kumar Gogada wrote:
+> > > Modifying Xilinx AXI PCIe Host Bridge Soft IP driver to work on both
+> > > Zynq and Microblaze Architectures.
+> > > With these modifications drivers/pci/host/pcie-xilinx.c, will work on
+> > > both Zynq and Microblaze Architectures.
+> > >
+> > > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> > > ---
+> > > Changes:
+> > > Removed unneccessary architecture dependent number of MSI's.
+> > > Added #ifdef to pci_fixup_irqs which is ARM specific API.
 > > 
-> > This sounds good to me. Thanks!
+> > Hi Bharat,
 > > 
-> > >  	res = &vmd->dev->resource[VMD_MEMBAR1];
-> > >  	upper_bits = upper_32_bits(res->end);
-> > >  	flags = res->flags & ~IORESOURCE_SIZEALIGN;
-> 
-> Can you prepare a patch, that adds both comments, please?  (The one
-> about how we assume BIOS assigns the BAR below 4GB, and the one I
-> drafted above.)
+> > Why do you say pci_fixup_irqs is ARM-specific? It's declared in
+> > include/linux/pci.h, defined in drivers/pci/setup-irq.c & used by multiple
+> > architectures (alpha, arm, m68k, mips, sh, sparc, tile,
+> > unicore32 from a quick grep).
+> > 
+> > Will you not break INTX-style interrupts by removing this?
+> > 
+> I meant to say ARM specific w.r.t Microblaze architecture, which is
+> what this patch series are for. This has been already discussed in my
+> previous patch by  Arnd Bergmann and Lorenzo Pieralisi .
+> (https://lkml.org/lkml/2016/1/12/707)
 
-Yep, will send it out be end of today.
+Hi Bharat,
+
+Ok, so you don't need it for microblaze but do need it for zynq/ARM. We
+also need it for MIPS, where my recent patches enable this driver. So if
+#ifdef'ing this is the current way forwards could you please invert the
+condition to #ifndef CONFIG_MICROBLAZE?
+
+Thanks,
+    Paul
