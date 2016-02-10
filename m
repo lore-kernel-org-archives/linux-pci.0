@@ -1,59 +1,57 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <guohanjun@huawei.com>, <wangzhou1@hisilicon.com>,
-	<liudongdong3@huawei.com>, <linuxarm@huawei.com>,
-	<qiujiang@huawei.com>, <bhelgaas@google.com>, <arnd@arndb.de>,
-	<Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>
-CC: <gabriele.paoloni@huawei.com>, <zhangjukuo@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<jcm@redhat.com>
-Subject: [RFC PATCH v2 0/3] Add ACPI support for HiSilicon PCIe Host Controllers
-Date: Mon, 8 Feb 2016 12:41:01 +0000
-Message-ID: <1454935264-6076-1-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ausc60pc101.us.dell.com ([143.166.85.206]:16032 "EHLO
+	ausc60pc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751310AbcBJPAP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 10:00:15 -0500
+From: <Jordan_Hargrave@Dell.com>
+To: <jharg93@gmail.com>
+CC: <linux-pci@vger.kernel.org>
+Subject: [PATCH] Create pci slot files for SMBIOS Type 9 entries
+Date: Wed, 10 Feb 2016 14:50:34 +0000
+Message-ID: <1455115834664.14871@Dell.com>
+References: <1448678755-14779-1-git-send-email-jordan_hargrave@dell.com>,<1455058433803.44638@Dell.com>
+In-Reply-To: <1455058433803.44638@Dell.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+The following diff builds on the "[PATCHv3] Save SMBIOS Type 9 System Slots"
 
-This patchset adds ACPI support for the HiSilicon Hip05/Hip06 SoC PCIe controllers
-The four patches respectively:
-        - re-architect the current HiSilicon driver to make it scalable to the
-          new ACPI quirks
-        - rework the current HiSilicon driver to make it ECAM compliant
-        - adds the HiSilicon ACPI specific quirks.
+This will create a /sys/bus/pci/slots/XXX file for each Type 9 entry.  This will be used for systemd enumeration of NICs.
 
-   This patchset  is based on
-   https://github.com/semihalf-nowicki-tomasz/linux.git
-   branch pci-acpi-v4
+Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
+---
+ arch/x86/pci/common.c |   17 +++++++++++++++++
+ 1 files changed, 17 insertions(+), 0 deletions(-)
 
-Changes v1 -> v2: removed the ACPI quirks dependency on Designware framework
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index eccd4d9..fc5bc49 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -173,6 +173,23 @@ void pcibios_fixup_bus(struct pci_bus *b)
 
-gabriele paoloni (3):
-  PCI: hisi: re-architect Hip05/Hip06 controllers driver to preapare for
-    ACPI
-  PCI: hisi: Make the HiSilicon PCIe host controller ECAM compliant
-  PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
+ void pcibios_add_bus(struct pci_bus *bus)
+ {
++       const struct dmi_device *dmi;
++       struct dmi_dev_onboard *dslot;
++
++       dmi = NULL;
++       while ((dmi = dmi_find_device(DMI_DEV_TYPE_DEV_SLOT,
++                                     NULL, dmi)) != NULL) {
++               dslot = dmi->device_data;
++               if (dslot->segment == pci_domain_nr(bus) &&
++                   dslot->bus == bus->number) {
++                       dev_info(&bus->dev, "Found SMBIOS Slot %s\n",
++                                dslot->dev.name);
++                       pci_create_slot(bus, dslot->devfn,
++                                       dslot->dev.name,
++                                       NULL);
++               }
++       }
++
+        acpi_pci_add_bus(bus);
+ }
 
- MAINTAINERS                         |   3 +
- drivers/pci/host/Kconfig            |   8 ++
- drivers/pci/host/Makefile           |   3 +-
- drivers/pci/host/pcie-designware.c  |   4 +-
- drivers/pci/host/pcie-designware.h  |   2 +
- drivers/pci/host/pcie-hisi-acpi.c   | 188 ++++++++++++++++++++++++++++++++++++
- drivers/pci/host/pcie-hisi-common.c |  73 ++++++++++++++
- drivers/pci/host/pcie-hisi.c        | 144 +++++++++++++--------------
- drivers/pci/host/pcie-hisi.h        |  25 +++++
- 9 files changed, 367 insertions(+), 83 deletions(-)
- create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
- create mode 100644 drivers/pci/host/pcie-hisi-common.c
- create mode 100644 drivers/pci/host/pcie-hisi.h
-
--- 
-1.9.1
-
-
+--
+1.7.1
