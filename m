@@ -1,129 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:47376 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757028AbcBIQxT convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2016 11:53:19 -0500
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Paul Burton <paul.burton@imgtec.com>
+Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
 	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-	"tn@semihalf.com" <tn@semihalf.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Michal Simek <michals@xilinx.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"wangyijing@huawei.com" <wangyijing@huawei.com>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"jcm@redhat.com" <jcm@redhat.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [RFC PATCH v2 1/3] PCI: hisi: re-architect Hip05/Hip06
- controllers driver to preapare for ACPI
-Date: Tue, 9 Feb 2016 16:52:38 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ECAF48D@lhreml503-mbs>
-References: <1454935264-6076-1-git-send-email-gabriele.paoloni@huawei.com>
- <3113837.YSNyDAf4HQ@wuerfel>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ECAD249@lhreml503-mbs>
- <5968234.D2a3VCM72k@wuerfel>
-In-Reply-To: <5968234.D2a3VCM72k@wuerfel>
-Content-Type: text/plain; charset="Windows-1252"
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH V3 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge driver to work on both  Zynq and Microblaze
+Date: Wed, 10 Feb 2016 21:40:11 +0100
+Message-ID: <2818168.2fmZIs86hN@wuerfel>
+In-Reply-To: <20160210172707.GA29590@NP-P-BURTON>
+References: <1455014518-8708-1-git-send-email-bharatku@xilinx.com> <8520D5D51A55D047800579B09414719825881780@XAP-PVEXMBX01.xlnx.xilinx.com> <20160210172707.GA29590@NP-P-BURTON>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: 09 February 2016 16:27
-> To: Gabriele Paoloni
-> Cc: linux-arm-kernel@lists.infradead.org; Guohanjun (Hanjun Guo);
-> Wangzhou (B); liudongdong (C); Linuxarm; qiujiang; bhelgaas@google.com;
-> Lorenzo.Pieralisi@arm.com; tn@semihalf.com; linux-pci@vger.kernel.org;
-> linux-kernel@vger.kernel.org; xuwei (O); linux-acpi@vger.kernel.org;
-> jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth)
-> Subject: Re: [RFC PATCH v2 1/3] PCI: hisi: re-architect Hip05/Hip06
-> controllers driver to preapare for ACPI
+On Wednesday 10 February 2016 09:27:07 Paul Burton wrote:
+> On Wed, Feb 10, 2016 at 05:55:51AM +0000, Bharat Kumar Gogada wrote:
+> > > On Tue, Feb 09, 2016 at 04:11:56PM +0530, Bharat Kumar Gogada wrote:
+> > > > Modifying Xilinx AXI PCIe Host Bridge Soft IP driver to work on both
+> > > > Zynq and Microblaze Architectures.
+> > > > With these modifications drivers/pci/host/pcie-xilinx.c, will work on
+> > > > both Zynq and Microblaze Architectures.
+> > > >
+> > > > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > > > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> > > > ---
+> > > > Changes:
+> > > > Removed unneccessary architecture dependent number of MSI's.
+> > > > Added #ifdef to pci_fixup_irqs which is ARM specific API.
+> > > 
+> > > Hi Bharat,
+> > > 
+> > > Why do you say pci_fixup_irqs is ARM-specific? It's declared in
+> > > include/linux/pci.h, defined in drivers/pci/setup-irq.c & used by multiple
+> > > architectures (alpha, arm, m68k, mips, sh, sparc, tile,
+> > > unicore32 from a quick grep).
+> > > 
+> > > Will you not break INTX-style interrupts by removing this?
+> > > 
+> > I meant to say ARM specific w.r.t Microblaze architecture, which is
+> > what this patch series are for. This has been already discussed in my
+> > previous patch by  Arnd Bergmann and Lorenzo Pieralisi .
+> > (https://lkml.org/lkml/2016/1/12/707)
 > 
-> On Monday 08 February 2016 16:51:19 Gabriele Paoloni wrote:
-> > > From: Arnd Bergmann [mailto:arnd@arndb.de]
-> > > On Monday 08 February 2016 16:06:54 Gabriele Paoloni wrote:
-> > > > > On Monday 08 February 2016 12:41:02 Gabriele Paoloni wrote:
-> > > int
-> > > > > size,
-> > > > > > +                         u32 *val)
-> > > > > > +{
-> > > > > > +   u32 reg;
-> > > > > > +   u32 reg_val;
-> > > > > > +   void *walker = &reg_val;
-> > > > > > +
-> > > > > > +   walker += (where & 0x3);
-> > > > > > +   reg = where & ~0x3;
-> > > > > > +   reg_val = readl(reg_base + reg);
-> > > > > > +
-> > > > > > +   if (size == 1)
-> > > > > > +           *val = *(u8 __force *) walker;
-> > > > > > +   else if (size == 2)
-> > > > > > +           *val = *(u16 __force *) walker;
-> > > > > > +   else if (size == 4)
-> > > > > > +           *val = reg_val;
-> > > > > > +   else
-> > > > > > +           return PCIBIOS_BAD_REGISTER_NUMBER;
-> > > > > > +
-> > > > > > +   return PCIBIOS_SUCCESSFUL;
-> > > > > > +}
-> > > > >
-> > > > > Isn't this the same hack that Qualcomm are using?
-> > > >
-> > > > As far as I can see Qualcomm defines its own config access
-> > > > mechanism only for RC config read and also it seems they're
-> > > > having problems with reporting the device class...
-> > > >
-> > > >
-> https://github.com/torvalds/linux/blob/master/drivers/pci/host/pcie-
-> > > qcom.c#L474
-> > > >
-> > > > Our problem is that our HW can only perform 32b rd/wr accesses
-> > > > So we can't use readw/readb/writew/writeb...
-> > > >
-> > > >
-> > >
-> > > Sorry, my mistake, I meant Cavium not Qualcomm.
-> > > See https://lkml.org/lkml/2016/2/5/689 for the patches.
-> >
-> > Well, looking at it Cavium seems quite different,
-> >
-> > On read they need to trigger the retrieval of the
-> > config space info writing to the lower 32b of a 64b register,
-> > then they need to read data back on the upper 64b of the
-> > same register and adjust the content to remove the garbage...
-> >
-> > We just use 32b accesses and adjust grab the appropriate
-> > bytes depending on the read/write sizes...
+> Hi Bharat,
 > 
-> Hmm, I must have misremembered that too then, let me try once more ;-)
-> 
-> The above appears to reimplement pci_generic_config_read32(). Can you
-> just use that instead?
+> Ok, so you don't need it for microblaze but do need it for zynq/ARM. We
+> also need it for MIPS, where my recent patches enable this driver. So if
+> #ifdef'ing this is the current way forwards could you please invert the
+> condition to #ifndef CONFIG_MICROBLAZE?
 
-Nope I don't think so,
+I think we are getting to the point where we should try much harder
+to make sure nobody needs that hack and it all works out of the box.
 
-When we read the root complex config space we need to use a configuration
-address space that is different from the one used to map the rest of the
-hierarchy; I think this is something to do with Designware itself. It
-is clear if you look at
-
-http://lxr.free-electrons.com/source/drivers/pci/host/pcie-designware.c#L657
-
-Here you can see that in calling "dw_pcie_wr_own_conf" Designware does not
-pass "bus" and "devfn" that are actually required by pci_generic_config_read32()
-to map the addr...
-
-Many Thanks
-
-Gab
-
-> 
-> 	Arnd
+	Arnd
