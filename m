@@ -1,121 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47445 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752239AbcBOImZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 15 Feb 2016 03:42:25 -0500
-From: Hannes Reinecke <hare@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
-	linux-pci@vger.kernel.org, Babu Moger <babu.moger@oracle.com>,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv3 4/4] pci: Blacklist vpd access for buggy devices
-Date: Mon, 15 Feb 2016 09:42:02 +0100
-Message-Id: <1455525722-122040-5-git-send-email-hare@suse.de>
-In-Reply-To: <1455525722-122040-1-git-send-email-hare@suse.de>
-References: <1455525722-122040-1-git-send-email-hare@suse.de>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:52972 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751639AbcBJGEa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 01:04:30 -0500
+Received: from localhost
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 10 Feb 2016 16:04:28 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id D11E82CE8057
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:04:26 +1100 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u1A64IJ644695652
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:04:26 +1100
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u1A63r6g012928
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:03:54 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru, ruscur@russell.cc,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH v14 3/9] powerpc/pci: Remove VFs prior to PF
+Date: Wed, 10 Feb 2016 17:02:51 +1100
+Message-Id: <1455084177-15525-4-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Babu Moger <babu.moger@oracle.com>
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-Reading or Writing of PCI VPD data causes system panic.
-We saw this problem by running "lspci -vvv" in the beginning.
-However this can be easily reproduced by running
- cat /sys/bus/devices/XX../vpd
+As commit ac205b7bb72f ("PCI: make sriov work with hotplug remove")
+indicates, VFs which is on the same PCI bus as their PF, should be
+removed before the PF. Otherwise, we might run into kernel crash
+at PCI unplugging time.
 
-As even a simple read on any VPD data triggers a system
-lockup on certain cards this patch implements a PCI quirk
-to disabling VPD acces altogether.
-This is done by setting the by setting the vpd length
-to '0' initially for those devices, which will then inhibit
-access completely..
+This applies the above pattern to powerpc PCI hotplug path.
 
-Cc: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Babu Moger <babu.moger@oracle.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/pci/access.c |  4 ++--
- drivers/pci/quirks.c | 43 +++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 45 insertions(+), 2 deletions(-)
+ arch/powerpc/kernel/pci-hotplug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 253e0c8..8b6f5a2 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -393,7 +393,7 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
- 	if (pos < 0)
- 		return -EINVAL;
+diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+index 7f9ed0c..59c4361 100644
+--- a/arch/powerpc/kernel/pci-hotplug.c
++++ b/arch/powerpc/kernel/pci-hotplug.c
+@@ -55,7 +55,7 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
  
--	if (!vpd->valid) {
-+	if (!vpd->valid && vpd->base.len > 0) {
- 		vpd->valid = true;
- 		vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
+ 	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
+ 		 pci_domain_nr(bus),  bus->number);
+-	list_for_each_entry_safe(dev, tmp, &bus->devices, bus_list) {
++	list_for_each_entry_safe_reverse(dev, tmp, &bus->devices, bus_list) {
+ 		pr_debug("   Removing %s...\n", pci_name(dev));
+ 		pci_stop_and_remove_bus_device(dev);
  	}
-@@ -459,7 +459,7 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
- 	if (pos < 0 || (pos & 3) || (count & 3))
- 		return -EINVAL;
- 
--	if (!vpd->valid) {
-+	if (!vpd->valid && vpd->base.len > 0) {
- 		vpd->valid = true;
- 		vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
- 	}
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 0575a1e..df1178f 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2135,6 +2135,49 @@ static void quirk_via_cx700_pci_parking_caching(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, 0x324e, quirk_via_cx700_pci_parking_caching);
- 
- /*
-+ * A read/write to sysfs entry ('/sys/bus/pci/devices/<id>/vpd')
-+ * will dump 32k of data. The default length is set as 32768.
-+ * Reading a full 32k will cause an access beyond the VPD end tag.
-+ * The system behaviour at that point is mostly unpredictable.
-+ * Apparently, some vendors have not implemented this VPD headers properly.
-+ * Adding a generic function disable vpd data for these buggy adapters
-+ * Add the DECLARE_PCI_FIXUP_FINAL line below with the specific with
-+ * vendor and device of interest to use this quirk.
-+ */
-+static void quirk_blacklist_vpd(struct pci_dev *dev)
-+{
-+	if (dev->vpd) {
-+		dev->vpd->len = 0;
-+		dev_warn(&dev->dev, "PCI vpd access has been disabled due to firmware bug\n");
-+	}
-+}
-+
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f,
-+		quirk_blacklist_vpd);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID,
-+		quirk_blacklist_vpd);
-+
-+/*
-  * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
-  * VPD end tag will hang the device.  This problem was initially
-  * observed when a vpd entry was created in sysfs
 -- 
-1.8.5.6
+2.1.0
 
