@@ -1,92 +1,64 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-	"tn@semihalf.com" <tn@semihalf.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"jcm@redhat.com" <jcm@redhat.com>
-Subject: RE: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host
- Controllers
-Date: Mon, 8 Feb 2016 13:17:58 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ECAC944@lhreml503-mbs>
-References: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
- <76564455.dlc1WHiVY2@wuerfel>
- <EE11001F9E5DDD47B7634E2F8A612F2E1EC9EF4B@lhreml503-mbs>
- <1930535.mkCdtpUWq7@wuerfel>
-In-Reply-To: <1930535.mkCdtpUWq7@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:37603 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752174AbcBJRWg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 12:22:36 -0500
+Date: Wed, 10 Feb 2016 18:22:29 +0100
+From: Simon Horman <horms@verge.net.au>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 0/4] PCI: rcar, rcar-gen2: More Gen2 compatibility
+ strings
+Message-ID: <20160210172229.GC17671@verge.net.au>
+References: <1453093785-21067-1-git-send-email-horms+renesas@verge.net.au>
+ <20160205202135.GA9594@localhost>
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160205202135.GA9594@localhost>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: 04 February 2016 17:02
-> To: Gabriele Paoloni
-> Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C); Linuxarm;
-> qiujiang; bhelgaas@google.com; Lorenzo.Pieralisi@arm.com;
-> tn@semihalf.com; zhangjukuo; xuwei (O); Liguozhu (Kenneth); linux-
-> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
-> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; jcm@redhat.com
-> Subject: Re: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host
-> Controllers
+On Fri, Feb 05, 2016 at 02:21:35PM -0600, Bjorn Helgaas wrote:
+> Hi Simon,
 > 
-> On Thursday 04 February 2016 16:44:12 Gabriele Paoloni wrote:
-> > Effectively the ACPI version of the HiSilicon driver does not rely on
-> > Designware as much as the DT version (that calls
-> dw_pcie_host_init());
-> > however in order to do what you suggest I'd need to copy and paste
-> and
-> > modify dw_pcie_rd_conf and dw_pcie_wr_conf.
-> > Also I'd need to declare duplicate version of the functions in
-> > pcie-hisi-common.c (if I do not want to split the object across
-> > different paths "drivers/pci/host" and "drivers/acpi/")
-> >
-> > Now I can do it but I thought it was more correct to pass
-> &dw_pcie_ops
-> > as input pointer in DECLARE_ACPI_MCFG_FIXUP(); this is also because
-> maybe in
-> > future other Designware based controllers may need to support ACPI
-> and it
-> > would be easier for them to reuse their DT based driver functions
-> >
-> > Honestly I am a bit confused...
-> >
+> On Mon, Jan 18, 2016 at 02:09:41PM +0900, Simon Horman wrote:
+> > this short series adds fallback gen2 and SoC-specific r8a7793 compatibility
+> > strings to the rcar PCI and rcar-gen2 PCIE drivers. The intention is to
+> > provide a complete set of compatibility strings for known Gen2 SoCs.
+> > 
+> > Bjorn, the intention of the revised changelogs for the r8a7793 is to
+> > address your concerns regarding providing an explanation of why there are
+> > no driver changes. Please consider taking this series through your tree.
+> > 
+> > Key Changes between v2 and v3:
+> > * Enhance changelog to describe why documenting the r8a7793 is necessary
+> >   and sufficient
+> > * Added acks.
+> > 
+> > Key Changes between v1 and v2:
+> > * Include "rcar-" in generic bindings
+> > 
+> > Simon Horman (4):
+> >   PCI: rcar-gen2: add gen2 fallback compatibility string
+> >   PCI: rcar-gen2: add device tree support for r8a7793
+> >   PCI: rcar: add gen2 fallback compatibility string
+> >   PCI: rcar: add device tree support for r8a7793
+> > 
+> >  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 12 ++++++++++--
+> >  Documentation/devicetree/bindings/pci/rcar-pci.txt      | 14 +++++++++++---
+> >  drivers/pci/host/pci-rcar-gen2.c                        |  1 +
+> >  drivers/pci/host/pcie-rcar.c                            |  1 +
+> >  4 files changed, 23 insertions(+), 5 deletions(-)
 > 
-> I don't think you can use the dw_pcie_ops as-is anyway, as they in
-> turn rely on the device driver structure, and you also don't need
-> those as they seem to be written for the generic case of a 32-bit
-> architecture that does not have enough space to map the entire
-> config space into MMIO. Just set up all those mapping registers from
-> the firmware and pass the config space base address as you'd normally
-> do on ACPI.
-
-Hi Arnd
-
-I have now sent out patchset v2.
-
-Now I have removed the dependency from designware but I still think
-the best location for the code is in "drivers/pci/host/":
-the ACPI quirks share the config read/write functions with the DT
-driver, moreover for other hosts in future I think it makes sense
-to stay in "drivers/pci/host/" as they could even share more init
-code with their respective DT versions...
-
-Cheers
-
-Gab
-
+> Whew, it took a long time to pound that through my thick skull :)
 > 
-> 	Arnd
+> I think patches 1 and 3 are already in v4.5-rc1, and I applied patches 2
+> and 4 to my for-linus branch as below.  Please double-check and make sure
+> for-linus has everything you want.  I'll ask Linus to pull that before
+> v4.5.
+
+Thanks,
+
+I checked your for-linus branch and everything seems to be in order.
