@@ -1,67 +1,127 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V5 14/15] arm64, pci, acpi: Assign legacy IRQs once device is enable.
-Date: Tue, 16 Feb 2016 14:53:44 +0100
-Message-Id: <1455630825-27253-15-git-send-email-tn@semihalf.com>
-In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:33465 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751639AbcBJGEI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 01:04:08 -0500
+Received: from localhost
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 10 Feb 2016 16:04:06 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 12B932CE8058
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:03:56 +1100 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u1A63iXT36176058
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:03:52 +1100
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u1A63MOC010691
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:03:23 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru, ruscur@russell.cc,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH v14 1/9] PCI/IOV: Rename and export virtfn_{add, remove}
+Date: Wed, 10 Feb 2016 17:02:49 +1100
+Message-Id: <1455084177-15525-2-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is the last step before enabling generic ACPI PCI host controller
-for ARM64. We need to take care of legacy IRQ mapping for non-MSI(X)
-PCI devices. pcibios_alloc_irq() evaluation is not sensitive to
-ACPI device enumeration order, so it is the best place to assign
-device's IRQs for ACPI boot method. Also, it does not hurt DT to be
-initialized form the same place.
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-NOTE: *This is going to be temporary solution*. There is ongoing work
-which aims for cleaning legacy IRQ allocation from arch specific code.
-We can consider this patch as the necessary evil which will be removed
-once cleanup series lands in mailnline in the near future.
+During EEH recovery, hotplug is applied to the devices which don't
+have drivers or their drivers don't support EEH. However, the hotplug,
+which was implemented based on PCI bus, can't be applied to VF directly.
+Instead, we unplug and plug individual PCI devices (VFs).
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+This renames virtn_{add,remove}() and exports them so they can be used
+in PCI hotplug during EEH recovery.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/arm64/kernel/pci.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ drivers/pci/iov.c   | 10 +++++-----
+ include/linux/pci.h |  8 ++++++++
+ 2 files changed, 13 insertions(+), 5 deletions(-)
 
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index 023b983..6e77e1b 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -52,11 +52,16 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 31f31d4..fa4f138 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -113,7 +113,7 @@ resource_size_t pci_iov_resource_size(struct pci_dev *dev, int resno)
+ 	return dev->sriov->barsz[resno - PCI_IOV_RESOURCES];
  }
  
- /*
-- * Try to assign the IRQ number from DT when adding a new device
-+ * Try to assign the IRQ number when probing a new device
-  */
--int pcibios_add_device(struct pci_dev *dev)
-+int pcibios_alloc_irq(struct pci_dev *dev)
+-static int virtfn_add(struct pci_dev *dev, int id, int reset)
++int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
  {
--	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-+	if (acpi_disabled)
-+		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-+#ifdef CONFIG_ACPI
-+	else
-+		return acpi_pci_irq_enable(dev);
-+#endif
- 
- 	return 0;
+ 	int i;
+ 	int rc = -ENOMEM;
+@@ -188,7 +188,7 @@ failed:
+ 	return rc;
  }
+ 
+-static void virtfn_remove(struct pci_dev *dev, int id, int reset)
++void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset)
+ {
+ 	char buf[VIRTFN_ID_LEN];
+ 	struct pci_dev *virtfn;
+@@ -321,7 +321,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	}
+ 
+ 	for (i = 0; i < initial; i++) {
+-		rc = virtfn_add(dev, i, 0);
++		rc = pci_iov_add_virtfn(dev, i, 0);
+ 		if (rc)
+ 			goto failed;
+ 	}
+@@ -333,7 +333,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 
+ failed:
+ 	while (i--)
+-		virtfn_remove(dev, i, 0);
++		pci_iov_remove_virtfn(dev, i, 0);
+ 
+ 	pcibios_sriov_disable(dev);
+ err_pcibios:
+@@ -359,7 +359,7 @@ static void sriov_disable(struct pci_dev *dev)
+ 		return;
+ 
+ 	for (i = 0; i < iov->num_VFs; i++)
+-		virtfn_remove(dev, i, 0);
++		pci_iov_remove_virtfn(dev, i, 0);
+ 
+ 	pcibios_sriov_disable(dev);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 27df4a6..3db5e30 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1738,6 +1738,8 @@ int pci_iov_virtfn_devfn(struct pci_dev *dev, int id);
+ 
+ int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn);
+ void pci_disable_sriov(struct pci_dev *dev);
++int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset);
++void pci_iov_remove_virtfn(struct pci_dev *dev, int id, int reset);
+ int pci_num_vf(struct pci_dev *dev);
+ int pci_vfs_assigned(struct pci_dev *dev);
+ int pci_sriov_set_totalvfs(struct pci_dev *dev, u16 numvfs);
+@@ -1754,6 +1756,12 @@ static inline int pci_iov_virtfn_devfn(struct pci_dev *dev, int id)
+ }
+ static inline int pci_enable_sriov(struct pci_dev *dev, int nr_virtfn)
+ { return -ENODEV; }
++static inline int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
++{
++	return -ENOSYS;
++}
++static inline void pci_iov_remove_virtfn(struct pci_dev *dev,
++					 int id, int reset) { }
+ static inline void pci_disable_sriov(struct pci_dev *dev) { }
+ static inline int pci_num_vf(struct pci_dev *dev) { return 0; }
+ static inline int pci_vfs_assigned(struct pci_dev *dev)
 -- 
-1.9.1
+2.1.0
 
