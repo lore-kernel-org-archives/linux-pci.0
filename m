@@ -1,119 +1,30 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 0/5] Modularize PCI_DW related drivers.
-To: Arnd Bergmann <arnd@arndb.de>
-References: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com>
- <6350001.oOdGGcH81x@wuerfel> <56CEB7BC.7010803@ti.com>
- <2837386.VTD89bjPJz@wuerfel>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	<linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<devicetree@vger.kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ley Foon Tan <lftan@altera.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-arm-msm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <56D40F7F.5060204@ti.com>
-Date: Mon, 29 Feb 2016 14:59:35 +0530
+Subject: Re: [PATCH] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI boot
+ for X-Gene v1
+To: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <bhelgaas@google.com>
+References: <1455069384-22323-1-git-send-email-dhdang@apm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Tanmay Inamdar <tinamdar@apm.com>,
+	Loc Ho <lho@apm.com>, Feng Kan <fkan@apm.com>, patches@apm.com
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <56BB6EA0.7060706@arm.com>
+Date: Wed, 10 Feb 2016 17:08:48 +0000
 MIME-Version: 1.0
-In-Reply-To: <2837386.VTD89bjPJz@wuerfel>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <1455069384-22323-1-git-send-email-dhdang@apm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
-
-On Thursday 25 February 2016 02:05 PM, Arnd Bergmann wrote:
-> On Thursday 25 February 2016 13:43:48 Kishon Vijay Abraham I wrote:
->> Hi Arnd,
->>
->> On Wednesday 24 February 2016 02:34 PM, Arnd Bergmann wrote:
->>> On Wednesday 24 February 2016 11:39:26 Kishon Vijay Abraham I wrote:
->>>> Hi,
->>>>
->>>> On Monday 08 February 2016 05:30 AM, Paul Gortmaker wrote:
->>>>> In a recent patch series that aimed to remove code related to module
->>>>> unload for PCI support that was simply non modular, the discussion
->>>>> led to people wanting to keep the code and push towards taking the
->>>>> steps needed to support moving it towards tristate instead[1].
->>>>>
->>>>> Here, we take step one, which is simply making the Kconfig change
->>>>> and then dealing with any build fallout or modpost fallout.  What
->>>>> amounts to essentially a sanity build test.  To be clear, these
->>>>> have not been runtime validated; that will need to be done by those
->>>>> with access to real hardware.  However, the changes are not anything
->>>>> that should disrupt any existing built-in validation, so real world
->>>>> users should not be impacted by this change.
->>>>>
->>>>> We start with a smaller family of drivers; those that actively select
->>>>> PCI_DW, as a nice self contained group to test the waters and see if
->>>>> everyone is still good with this approach before investing more time
->>>>> on a wider scale to other pci/host/ code blocks.
->>>>>
->>>>> As such the drivers here share a dependency on having the same group
->>>>> of functions exported in order to successfully complete modpost.
->>>>>
->>>>> In addition, we have to stray outside drivers/pci to add exports
->>>>> in two places; once for an ARM fault handler, and once for an OF
->>>>> variable.
->>>>>
->>>>> The pci-keystone-dw.c instance was handled separately because it
->>>>> consists of two source files that need their own group of driver
->>>>> specific exports above and beyond the "shared" ones.
->>>>>
->>>>> Then we convert the Kconfig for all remaining at once; we could have
->>>>> done it on a per driver basis for ease of revert if anyone really
->>>>> objects, but since it would be a one line change, that seemed like
->>>>> not a real concern.
->>>>>
->>>>> Build testing was done on the linux-next tree for arm allmodconfig.
->>>>
->>>> I took these patches and gave a test with DRA7xx board. As expected there was
->>>> no issues when the driver was built-in. However when I tried to rmmod/modprobe
->>>> I got this error [2].
->>>
->>> Thanks for testing this!
->>>
->>>> [2] -> http://pastebin.ubuntu.com/15185894/
->>>
->>> It looks like you are hitting the BUG_ON() in ioremap_pte_range()
->>> that checks if a virtual address already has a page table entry,
->>> which in turn is probably a result of dw_pcie_host_init()
->>> calling pci_remap_iospace() again for the same memory area
->>> it has called the last time, and no cleanup done inbetween.
->>>
->>> Could you try adding a pci_unmap_iospace() and calling that
->>> in the device remove function? Let me know if you need help
->>> implementing it.
->>
->> That didn't look straight forward to me :-( I'll try to see this next week. Any
->> help from you will make it simpler for me.
+On 10/02/16 01:56, Duc Dang wrote:
+> This patch makes pci-xgene-msi driver ACPI-aware and provides
+> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
 > 
-> I tried writing the function now, and I think it's actually quite easy:
-> 
-> void pci_unmap_iospace(const struct resource *res)
-> {
-> #if defined(PCI_IOBASE) && defined(CONFIG_MMU)
->         return iounmap(PCI_IOBASE + res->start);
-> #endif
-> }
-> 
-> You just need to pass the same resource in here htat you pass into
-> pci_remap_iospace().
+> Signed-off-by: Duc Dang <dhdang@apm.com>
 
-I still seem to get the abort in ioremap_page_range().
+Another nail on the ACPI "standardization" coffin, I suppose... Oh well.
 
-Here's the patch I used [3] and here's the kernel log [4].
+Acked-by: Marc Zyngier <marc.zyngier@arm.com>
 
-[3] -> http://pastebin.ubuntu.com/15241614/
-[4] -> http://pastebin.ubuntu.com/15241637/
-
-Thanks
-Kishon
+	M.
+-- 
+Jazz is not dead. It just smells funny...
