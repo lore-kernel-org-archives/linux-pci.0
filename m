@@ -1,72 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 11 Feb 2016 16:32:55 +0100
-From: Robert Richter <robert.richter@caviumnetworks.com>
-To: Rob Herring <robh+dt@kernel.org>
-CC: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	<linux-ia64@vger.kernel.org>,
-	linux-metag <linux-metag@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	<linux-s390@vger.kernel.org>, SH-Linux <linux-sh@vger.kernel.org>,
-	"linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-	Will Deacon <Will.Deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	"Mark Rutland" <mark.rutland@arm.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	"Leif Lindholm" <leif.lindholm@linaro.org>, <rfranz@cavium.com>,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	Mark Salter <msalter@redhat.com>,
-	Steve Capper <steve.capper@linaro.org>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Al Stone <al.stone@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	Rafael Wysocki <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Tony Luck <tony.luck@intel.com>, <fenghua.yu@intel.com>,
-	James Hogan <james.hogan@imgtec.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	Jon Masters <jonathan@jonmasters.org>,
-	<Prasun.Kapoor@caviumnetworks.com>,
-	"Ganapatrao Kulkarni" <gpkulkarni@gmail.com>
-Subject: Re: [PATCH v10 3/8] dt, numa: adding numa dt binding implementation.
-Message-ID: <20160211153255.GR24726@rric.localdomain>
-References: <1454407763-1017-1-git-send-email-gkulkarni@caviumnetworks.com>
- <1454407763-1017-4-git-send-email-gkulkarni@caviumnetworks.com>
- <CAL_JsqK5HV9yzBE+ANnTw26eVR7Dy+B8OkwQ-7WF8KDa86Fd9g@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:33563 "EHLO
+	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751356AbcBJPwu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 10:52:50 -0500
+Date: Wed, 10 Feb 2016 16:52:47 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: Re: [PATCH] PCI: tegra: Update for new XUSB pad controller bindings
+Message-ID: <20160210155247.GA14584@ulmo>
+References: <1455029465-9211-1-git-send-email-thierry.reding@gmail.com>
+ <56BA107A.9050201@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <CAL_JsqK5HV9yzBE+ANnTw26eVR7Dy+B8OkwQ-7WF8KDa86Fd9g@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="d6Gm4EdcadzBjdND"
+In-Reply-To: <56BA107A.9050201@wwwdotorg.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11.02.16 08:50:41, Rob Herring wrote:
-> On Tue, Feb 2, 2016 at 4:09 AM, Ganapatrao Kulkarni
-> <gkulkarni@caviumnetworks.com> wrote:
-> > dt node parsing for numa topology is done using device property
-> > numa-node-id and device node distance-map.
-> 
-> How is it that powerpc doesn't need flat DT parsing for NUMA? Both
-> arches are memblock based and the binding is similar IIRC, so you
-> should be able to find a way to do this with the unflattened tree.
-> Ideally, there should be some common code shared as well.
-> 
-> Do you have a git tree with this series?
 
-I have pushed it here for you:
+--d6Gm4EdcadzBjdND
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
- https://git.kernel.org/cgit/linux/kernel/git/rric/linux.git/log/?h=thunder/numa-v10
+On Tue, Feb 09, 2016 at 09:14:50AM -0700, Stephen Warren wrote:
+> On 02/09/2016 07:51 AM, Thierry Reding wrote:
+> >From: Thierry Reding <treding@nvidia.com>
+> >
+> >The current XUSB pad controller bindings are insufficient to describe
+> >PHY devices attached to USB controllers. New bindings have been created
+> >to overcome these restrictions.
+>=20
+> New bindings have been created? Which ones; there were several attempts to
+> enhance the bindings, but I wasn't aware that any of them had passed thro=
+ugh
+> review and been accepted.
 
--Robert
+Perhaps are being created would be more accurate. Though technically
+this isn't really about the new binding, or at least not the details.
+The most important part here is that this implements the driver code
+that will control per-lane PHYs. At least that part was what everyone
+had agreed on was the right move forward.
+
+Also the goal is to land this change before the switch for the XUSB
+pad controller goes in, because otherwise PCIe will be broken. I can
+reword the commit message to clarify this.
+
+Thierry
+
+--d6Gm4EdcadzBjdND
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCAAGBQJWu1zLAAoJEN0jrNd/PrOh3hQQAKUcpCrGbQubqrbhoafwKiwv
+UEAR4lhyP+PIkgT8fWTwlAqji16CkmuizuytJrm8U/x3t1Jiu18uipvHCUpwwaBK
+rIG9QQnjqpnB5jCNUuy5pFSKR0IWBC8d4Pud3X7tDP1Rg+YPd8PCMoOwqJkjlGAU
+WIpvNHujeEGu/lToPzJmcEDin5sco9EsCshfU7ifCJvpfXyeqs/usbgbpHU5DSzJ
+RsZ5XF3UB5xni9xr4TQwBhBV36mYDZHyu5QUn7RTvBXvo1IJEmUWuUset8ltk+9t
+5TGx0aTBplq36J/x/5/ckdRA69Gekdy85xeFtFW5VKIwv0trWRC6UVRJlci8Vfg4
+Ofn3qKsaX8un6RukmTXbc0YzlfsW32KAlFrxrDPYl9UZJ8TBg6x6GxWGdC5mZDF8
+QO3cTPCYGDKqjbFYl350XcUENVGUrA5FJ2+IWOElZ5NDdIcyGxGt2RaFcewRBmrj
+H1dN7HNx++dXz9ovFSj0wyUsCcM5nZg6KV8ANpkIaVIxkVaLBcxdM5VdNpmS9dL3
+fq7hN64YWJiPzkWcbfZvMAnfrMFPpnGXh/60NABeB17LXk7ofHiI4IbdcAFedwS4
+XtPhy6EkFkXqrzYf1DGluTgqoBvncWWWFaun7kTP+Lz5sTUpk/dJl167C0BmjoZR
+aowXt5YqZuzo8FeqY1Z1
+=3B+n
+-----END PGP SIGNATURE-----
+
+--d6Gm4EdcadzBjdND--
