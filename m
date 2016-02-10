@@ -1,110 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Zhen Lei <thunder.leizhen@huawei.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Grant Likely <grant.likely@linaro.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"Kumar Gala" <galak@codeaurora.org>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-CC: Zefan Li <lizefan@huawei.com>, Xinwei Hu <huxinwei@huawei.com>,
-	"Tianhong Ding" <dingtianhong@huawei.com>,
-	Hanjun Guo <guohanjun@huawei.com>,
-	"Yijing Wang" <wangyijing@huawei.com>,
-	Zhen Lei <thunder.leizhen@huawei.com>
-Subject: [PATCH 1/2] pci/of: to support explicitly declare interrupt pins unused
-Date: Thu, 25 Feb 2016 19:53:27 +0800
-Message-ID: <1456401208-10136-1-git-send-email-thunder.leizhen@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:44439 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751610AbcBJGEG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 01:04:06 -0500
+Received: from localhost
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 10 Feb 2016 16:04:04 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id B30112CE805B
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:03:56 +1100 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u1A63ioA43319520
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:03:53 +1100
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u1A63NNZ011814
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:03:24 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru, ruscur@russell.cc,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH v14 4/9] powerpc/eeh: Cache normal BARs, not windows or IOV BARs
+Date: Wed, 10 Feb 2016 17:02:52 +1100
+Message-Id: <1455084177-15525-5-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Interrupt Pin register is read-only and optional. Some pci devices may use
-msi/msix but leave the value of Interrupt Pin non-zero. In this case, the
-driver will print information as below:
-pci 0000:40:00.0: of_irq_parse_pci() failed with rc=-22
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-It's easily lead to misinterpret.
+This restricts the EEH address cache to use only the first 7 BARs. This
+makes __eeh_addr_cache_insert_dev() ignore PCI bridge window and IOV BARs.
+As the result of this change, eeh_addr_cache_get_dev() will return VFs from
+VF's resource addresses instead of parent PFs.
 
-Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
+This also removes PCI bridge check as we limit __eeh_addr_cache_insert_dev()
+to 7 BARs and this effectively excludes PCI bridges from being cached.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- drivers/of/of_pci_irq.c | 43 ++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 40 insertions(+), 3 deletions(-)
+ arch/powerpc/kernel/eeh_cache.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
-index 2306313..a6d51e0 100644
---- a/drivers/of/of_pci_irq.c
-+++ b/drivers/of/of_pci_irq.c
-@@ -4,6 +4,38 @@
- #include <linux/export.h>
-
- /**
-+ * of_irq_skip_pci - Skip the interrupt pins for a PCI device
-+ * @pdev: the device whose interrupt pins may be skipped
-+ * @dn: device node of pdev or pdev's ancestral bus
-+ *
-+ * Interrupt Pin register is read-only and optional. Some pci devices may use
-+ * msi/msix but leave the value of Interrupt Pin non-zero. This function give
-+ * an opportunity to suppress the warning about of_irq_parse_pci() failed.
-+ */
-+static int of_irq_skip_pci(const struct pci_dev *pdev,
-+			   const struct device_node *dn)
-+{
-+	const __be32 *skip_mask, *end;
-+	u32 addr, mask;
-+	int len;
-+
-+	skip_mask = of_get_property(dn, "interrupt-skip-mask", &len);
-+	if (!skip_mask)
-+		return 0;
-+
-+	end = skip_mask + (len / sizeof(__be32));
-+	addr = (pdev->bus->number << 16) | (pdev->devfn << 8);
-+
-+	while (skip_mask < end) {
-+		mask = be32_to_cpu(*(skip_mask++));
-+		if ((addr & ~mask) == 0)
-+			return 1;
-+	}
-+
-+	return 0;
-+}
-+
-+/**
-  * of_irq_parse_pci - Resolve the interrupt for a PCI device
-  * @pdev:       the device whose interrupt is to be resolved
-  * @out_irq:    structure of_irq filled by this function
-@@ -30,6 +62,9 @@ int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq
- 		rc = of_irq_parse_one(dn, 0, out_irq);
- 		if (!rc)
- 			return rc;
-+
-+		if (of_irq_skip_pci(pdev, dn))
-+			return -ENODEV;
+diff --git a/arch/powerpc/kernel/eeh_cache.c b/arch/powerpc/kernel/eeh_cache.c
+index a1e86e1..ddbcfab 100644
+--- a/arch/powerpc/kernel/eeh_cache.c
++++ b/arch/powerpc/kernel/eeh_cache.c
+@@ -195,8 +195,11 @@ static void __eeh_addr_cache_insert_dev(struct pci_dev *dev)
+ 		return;
  	}
+ 
+-	/* Walk resources on this device, poke them into the tree */
+-	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
++	/*
++	 * Walk resources on this device, poke the first 7 (6 normal BAR and 1
++	 * ROM BAR) into the tree.
++	 */
++	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+ 		resource_size_t start = pci_resource_start(dev,i);
+ 		resource_size_t end = pci_resource_end(dev,i);
+ 		unsigned long flags = pci_resource_flags(dev,i);
+@@ -222,10 +225,6 @@ void eeh_addr_cache_insert_dev(struct pci_dev *dev)
+ {
+ 	unsigned long flags;
+ 
+-	/* Ignore PCI bridges */
+-	if ((dev->class >> 16) == PCI_BASE_CLASS_BRIDGE)
+-		return;
+-
+ 	spin_lock_irqsave(&pci_io_addr_cache_root.piar_lock, flags);
+ 	__eeh_addr_cache_insert_dev(dev);
+ 	spin_unlock_irqrestore(&pci_io_addr_cache_root.piar_lock, flags);
+-- 
+2.1.0
 
- 	/* Ok, we don't, time to have fun. Let's start by building up an
-@@ -89,9 +124,11 @@ int of_irq_parse_pci(const struct pci_dev *pdev, struct of_phandle_args *out_irq
- 	laddr[0] = cpu_to_be32((pdev->bus->number << 16) | (pdev->devfn << 8));
- 	laddr[1] = laddr[2] = cpu_to_be32(0);
- 	rc = of_irq_parse_raw(laddr, out_irq);
--	if (rc)
--		goto err;
--	return 0;
-+	if (!rc)
-+		return 0;
-+
-+	if (of_irq_skip_pci(pdev, ppnode))
-+		return -ENODEV;
- err:
- 	dev_err(&pdev->dev, "of_irq_parse_pci() failed with rc=%d\n", rc);
- 	return rc;
---
-2.5.0
