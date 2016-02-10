@@ -1,249 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Mark Rutland <mark.rutland@arm.com>
-CC: "Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0065.outbound.protection.outlook.com ([104.47.37.65]:64934
+	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752126AbcBJFz5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 10 Feb 2016 00:55:57 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Paul Burton <paul.burton@imgtec.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	Michal Simek <michals@xilinx.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"wangyijing@huawei.com" <wangyijing@huawei.com>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
 	"arnd@arndb.de" <arnd@arndb.de>,
-	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-	"tn@semihalf.com" <tn@semihalf.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"jcm@redhat.com" <jcm@redhat.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
 	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Subject: RE: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
- HiSilicon SoCs Host Controllers
-Date: Wed, 10 Feb 2016 09:52:36 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1591@lhreml503-mbs>
-References: <1455039260-6040-1-git-send-email-gabriele.paoloni@huawei.com>
- <1455039260-6040-4-git-send-email-gabriele.paoloni@huawei.com>
- <20160209182429.GD4348@leverpostej>
-In-Reply-To: <20160209182429.GD4348@leverpostej>
-Content-Type: text/plain; charset="us-ascii"
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH V3 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge
+ driver to work on both  Zynq and Microblaze
+Date: Wed, 10 Feb 2016 05:55:51 +0000
+Message-ID: <8520D5D51A55D047800579B09414719825881780@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1455014518-8708-1-git-send-email-bharatku@xilinx.com>
+ <1455014518-8708-4-git-send-email-bharatku@xilinx.com>
+ <20160209161134.GA24244@NP-P-BURTON>
+In-Reply-To: <20160209161134.GA24244@NP-P-BURTON>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mark
-
-> -----Original Message-----
-> From: Mark Rutland [mailto:mark.rutland@arm.com]
-> Sent: 09 February 2016 18:24
-> To: Gabriele Paoloni
-> Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C); Linuxarm;
-> qiujiang; bhelgaas@google.com; arnd@arndb.de;
-> Lorenzo.Pieralisi@arm.com; tn@semihalf.com; linux-pci@vger.kernel.org;
-> linux-kernel@vger.kernel.org; xuwei (O); linux-acpi@vger.kernel.org;
-> jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth); linux-arm-
-> kernel@lists.infradead.org
-> Subject: Re: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
-> HiSilicon SoCs Host Controllers
-> 
-> On Tue, Feb 09, 2016 at 05:34:20PM +0000, Gabriele Paoloni wrote:
-> > From: gabriele paoloni <gabriele.paoloni@huawei.com>
-> >
-> > This patch adds specific quirks for PCI config space accessors,
-> > it uses _HID to decide whether to hook pci_ops or not.
-> 
-> If I understand correctly, this would mean that it's not actually ECAM
-> compliant, then?
-
-Correct we need out own methods to read/write the RC config space...see
-for example:
-
-+	if (bus->number == root->secondary.start)
-+		return hisi_pcie_common_cfg_read(reg_base, where, size, val);
-+
-+	return pci_generic_config_read(bus, devfn, where, size, val);
-
-> 
-> > Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-> > Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> > ---
-> >  MAINTAINERS                       |   1 +
-> >  drivers/pci/host/Kconfig          |   8 ++
-> >  drivers/pci/host/Makefile         |   1 +
-> >  drivers/pci/host/pcie-hisi-acpi.c | 188
-> ++++++++++++++++++++++++++++++++++++++
-> >  drivers/pci/host/pcie-hisi.c      |   2 -
-> >  drivers/pci/host/pcie-hisi.h      |   2 +
-> >  6 files changed, 200 insertions(+), 2 deletions(-)
-> >  create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
-> >
-> > diff --git a/MAINTAINERS b/MAINTAINERS
-> > index d69f436..f184c3e 100644
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -8412,6 +8412,7 @@ F:
-> 	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-> >  F:	drivers/pci/host/pcie-hisi.h
-> >  F:	drivers/pci/host/pcie-hisi.c
-> >  F:	drivers/pci/host/pcie-hisi-common.c
-> > +F:	drivers/pci/host/pcie-hisi-acpi.c
-> >
-> >  PCIE DRIVER FOR QUALCOMM MSM
-> >  M:     Stanimir Varbanov <svarbanov@mm-sol.com>
-> > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> > index 75a6054..65b1add 100644
-> > --- a/drivers/pci/host/Kconfig
-> > +++ b/drivers/pci/host/Kconfig
-> > @@ -181,6 +181,14 @@ config PCI_HISI
-> >  	  Say Y here if you want PCIe controller support on HiSilicon
-> >  	  Hip05 and Hip06 SoCs
-> >
-> > +config PCI_HISI_ACPI
-> > +	depends on ACPI
-> > +	bool "HiSilicon Hip05 and Hip06 SoCs ACPI PCIe controllers"
-> > +	select ACPI_PCI_HOST_GENERIC
-> > +	help
-> > +	  Say Y here if you want ACPI PCIe controller support on
-> HiSilicon
-> > +	  Hip05 and Hip06 SoCs
-> > +
-> >  config PCIE_QCOM
-> >  	bool "Qualcomm PCIe controller"
-> >  	depends on ARCH_QCOM && OF
-> > diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> > index 8c93c0f..57e4379 100644
-> > --- a/drivers/pci/host/Makefile
-> > +++ b/drivers/pci/host/Makefile
-> > @@ -21,4 +21,5 @@ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
-> >  obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
-> >  obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
-> >  obj-$(CONFIG_PCI_HISI) += pcie-hisi.o pcie-hisi-common.o
-> > +obj-$(CONFIG_PCI_HISI_ACPI) += pcie-hisi-acpi.o pcie-hisi-common.o
-> >  obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
-> > diff --git a/drivers/pci/host/pcie-hisi-acpi.c
-> b/drivers/pci/host/pcie-hisi-acpi.c
-> > new file mode 100644
-> > index 0000000..3605260
-> > --- /dev/null
-> > +++ b/drivers/pci/host/pcie-hisi-acpi.c
-> > @@ -0,0 +1,188 @@
-> > +/*
-> > + * PCIe host controller driver for HiSilicon HipXX SoCs
-> > + *
-> > + * Copyright (C) 2016 HiSilicon Co., Ltd. http://www.hisilicon.com
-> > + *
-> > + * Author: Dongdong Liu <liudongdong3@huawei.com>
-> > + *         Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> > + *
-> > + * This program is free software; you can redistribute it and/or
-> modify
-> > + * it under the terms of the GNU General Public License version 2 as
-> > + * published by the Free Software Foundation.
-> > + */
-> > +#include <linux/interrupt.h>
-> > +#include <linux/acpi.h>
-> > +#include <linux/ecam.h>
-> > +#include <linux/pci.h>
-> > +#include <linux/pci-acpi.h>
-> > +#include "pcie-hisi.h"
-> > +
-> > +#define GET_PCIE_LINK_STATUS  0x0
-> > +
-> > +/* uuid 6d30f553-836c-408e-b6ad-45bccc957949 */
-> > +const u8 hisi_pcie_acpi_dsm_uuid[] = {
-> > +	0x53, 0xf5, 0x30, 0x6d, 0x6c, 0x83, 0x8e, 0x40,
-> > +	0xb6, 0xad, 0x45, 0xbc, 0xcc, 0x95, 0x79, 0x49
-> > +};
-> > +
-> > +static const struct acpi_device_id hisi_pcie_ids[] = {
-> > +	{"HISI0080", 0},
-> > +	{"", 0},
-> > +};
-> > +
-> > +static int hisi_pcie_get_addr(struct acpi_pci_root *root, const char
-> *name,
-> > +				void __iomem **addr)
-> > +{
-> > +	struct acpi_device *device;
-> > +	u64 base;
-> > +	u64 size;
-> > +	u32 buf[4];
-> > +	int ret;
-> > +
-> > +	device =  root->device;
-> > +	ret = fwnode_property_read_u32_array(&device->fwnode, name,
-> > +					buf, ARRAY_SIZE(buf));
-> > +	if (ret) {
-> > +		dev_err(&device->dev, "can't get %s\n", name);
-> > +		return ret;
-> > +	}
-> > +
-> > +	base = ((u64)buf[0] << 32) | buf[1];
-> > +	size =  ((u64)buf[2] << 32) | buf[3];
-> > +	*addr = devm_ioremap(&device->dev, base, size);
-> > +	if (!(*addr)) {
-> > +		dev_err(&device->dev, "error with ioremap\n");
-> > +		return -ENOMEM;
-> > +	}
-> 
-> This does not seem like the correct way of describing an addres in
-> ACPI.
-
-Ok I guess this is related to the comment below...
-
-> 
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +
-> > +static int hisi_pcie_link_up_acpi(struct acpi_pci_root *root)
-> > +{
-> > +	u32 val;
-> > +	struct acpi_device *device;
-> > +	union acpi_object *obj;
-> > +
-> > +	device = root->device;
-> > +	obj = acpi_evaluate_dsm(device->handle,
-> > +		hisi_pcie_acpi_dsm_uuid, 0,
-> > +		GET_PCIE_LINK_STATUS, NULL);
-> > +
-> > +	if (!obj  ||  obj->type != ACPI_TYPE_INTEGER)  {
-> > +		dev_err(&device->dev, "can't get link status from _DSM\n");
-> > +		return 0;
-> > +	}
-> > +	val = obj->integer.value;
-> > +
-> > +	return ((val & PCIE_LTSSM_STATE_MASK) ==
-> PCIE_LTSSM_LINKUP_STATE);
-> > +
-> > +}
-> > +
-> > +/*
-> > + * Retrieve rc_dbi base and size from _DSD
-> > + * Name (_DSD, Package () {
-> > + *	ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
-> > + *	Package () {
-> > + *	Package () {"rc-dbi", Package () { 0x0, 0xb0080000, 0x0, 0x10000
-> }},
-> > + *	}
-> > + *	})
-> > + */
-> 
-> As above, this does not look right. ACPI has standard mechanisms for
-> describing addresses. Making something up like this is not a good idea.
- 
-I am quite new to ACPI, may I ask you to explain a bit? 
-In our case we need to put somewhere in the ACPI table the value of 
-the base register address used to read/write the RC config space... 
-
-Do you have any suggestion about the correct place to put it?
-
-Many Thanks
-
-Gab
-
-> 
-> Mark.
-
+PiBPbiBUdWUsIEZlYiAwOSwgMjAxNiBhdCAwNDoxMTo1NlBNICswNTMwLCBCaGFyYXQgS3VtYXIg
+R29nYWRhIHdyb3RlOg0KPiA+IE1vZGlmeWluZyBYaWxpbnggQVhJIFBDSWUgSG9zdCBCcmlkZ2Ug
+U29mdCBJUCBkcml2ZXIgdG8gd29yayBvbiBib3RoDQo+ID4gWnlucSBhbmQgTWljcm9ibGF6ZSBB
+cmNoaXRlY3R1cmVzLg0KPiA+IFdpdGggdGhlc2UgbW9kaWZpY2F0aW9ucyBkcml2ZXJzL3BjaS9o
+b3N0L3BjaWUteGlsaW54LmMsIHdpbGwgd29yayBvbg0KPiA+IGJvdGggWnlucSBhbmQgTWljcm9i
+bGF6ZSBBcmNoaXRlY3R1cmVzLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogQmhhcmF0IEt1bWFy
+IEdvZ2FkYSA8YmhhcmF0a3VAeGlsaW54LmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBSYXZpIEtp
+cmFuIEd1bW1hbHVyaSA8cmd1bW1hbEB4aWxpbnguY29tPg0KPiA+IC0tLQ0KPiA+IENoYW5nZXM6
+DQo+ID4gUmVtb3ZlZCB1bm5lY2Nlc3NhcnkgYXJjaGl0ZWN0dXJlIGRlcGVuZGVudCBudW1iZXIg
+b2YgTVNJJ3MuDQo+ID4gQWRkZWQgI2lmZGVmIHRvIHBjaV9maXh1cF9pcnFzIHdoaWNoIGlzIEFS
+TSBzcGVjaWZpYyBBUEkuDQo+IA0KPiBIaSBCaGFyYXQsDQo+IA0KPiBXaHkgZG8geW91IHNheSBw
+Y2lfZml4dXBfaXJxcyBpcyBBUk0tc3BlY2lmaWM/IEl0J3MgZGVjbGFyZWQgaW4NCj4gaW5jbHVk
+ZS9saW51eC9wY2kuaCwgZGVmaW5lZCBpbiBkcml2ZXJzL3BjaS9zZXR1cC1pcnEuYyAmIHVzZWQg
+YnkgbXVsdGlwbGUNCj4gYXJjaGl0ZWN0dXJlcyAoYWxwaGEsIGFybSwgbTY4aywgbWlwcywgc2gs
+IHNwYXJjLCB0aWxlLA0KPiB1bmljb3JlMzIgZnJvbSBhIHF1aWNrIGdyZXApLg0KPiANCj4gV2ls
+bCB5b3Ugbm90IGJyZWFrIElOVFgtc3R5bGUgaW50ZXJydXB0cyBieSByZW1vdmluZyB0aGlzPw0K
+PiANCkkgbWVhbnQgdG8gc2F5IEFSTSBzcGVjaWZpYyB3LnIudCBNaWNyb2JsYXplIGFyY2hpdGVj
+dHVyZSwgd2hpY2ggaXMgd2hhdCB0aGlzIHBhdGNoIHNlcmllcyBhcmUgZm9yLiBUaGlzIGhhcyBi
+ZWVuIGFscmVhZHkgZGlzY3Vzc2VkIGluIG15IHByZXZpb3VzIHBhdGNoIGJ5ICBBcm5kIEJlcmdt
+YW5uIGFuZCBMb3JlbnpvIFBpZXJhbGlzaSAuIChodHRwczovL2xrbWwub3JnL2xrbWwvMjAxNi8x
+LzEyLzcwNykNCg0KQmhhcmF0DQo=
