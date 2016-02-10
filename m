@@ -1,76 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40530 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753559AbcBEU2N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Feb 2016 15:28:13 -0500
-Date: Fri, 5 Feb 2016 14:28:08 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>
-Subject: Re: [PATCH 2/2] drivers: pci: host: designware: remove
- PCI_PROBE_ONLY handling
-Message-ID: <20160205202808.GC9594@localhost>
-References: <1454066972-3609-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1454066972-3609-2-git-send-email-lorenzo.pieralisi@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1454066972-3609-2-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:42502 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751639AbcBJGEg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 01:04:36 -0500
+Received: from localhost
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 10 Feb 2016 16:04:34 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id BF8A02CE8054
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:04:31 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u1A64KW138994090
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:04:28 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u1A63l5j004655
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:03:58 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru, ruscur@russell.cc,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH v14 6/9] powerpc/eeh: Create PE for VFs
+Date: Wed, 10 Feb 2016 17:02:54 +1100
+Message-Id: <1455084177-15525-7-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 29, 2016 at 11:29:32AM +0000, Lorenzo Pieralisi wrote:
-> The PCIe designware host driver is not used in system configurations
-> requiring the PCI_PROBE_ONLY flag to be set to prevent resources
-> assignment, therefore the driver code handling the flag can be
-> removed from the kernel.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Pratyush Anand <pratyush.anand@gmail.com>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Jingoo Han <jingoohan1@gmail.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> Cc: Zhou Wang <wangzhou1@hisilicon.com>
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-Applied to pci/host-designware for v4.6 with acks from Pratyush and
-Jingoo, thanks everybody!
+This creates PEs for VFs in the weak function pcibios_bus_add_device().
+Those PEs for VFs are identified with newly introduced flag EEH_PE_VF
+so that we treat them differently during EEH recovery.
 
-> ---
->  drivers/pci/host/pcie-designware.c | 10 ++++------
->  1 file changed, 4 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index 2171682..a445083 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -551,13 +551,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
->  #endif
->  
-> -	if (!pci_has_flag(PCI_PROBE_ONLY)) {
-> -		pci_bus_size_bridges(bus);
-> -		pci_bus_assign_resources(bus);
-> +	pci_bus_size_bridges(bus);
-> +	pci_bus_assign_resources(bus);
->  
-> -		list_for_each_entry(child, &bus->children, node)
-> -			pcie_bus_configure_settings(child);
-> -	}
-> +	list_for_each_entry(child, &bus->children, node)
-> +		pcie_bus_configure_settings(child);
->  
->  	pci_bus_add_devices(bus);
->  	return 0;
-> -- 
-> 2.5.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/eeh.h               |  1 +
+ arch/powerpc/kernel/eeh_pe.c                 | 10 ++++++++--
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 16 ++++++++++++++++
+ 3 files changed, 25 insertions(+), 2 deletions(-)
+
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index 574ed49a..0c551a2 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -72,6 +72,7 @@ struct pci_dn;
+ #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
+ #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
+ #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
++#define EEH_PE_VF	(1 << 4)	/* VF PE     */
+ 
+ #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
+ #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
+diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
+index faaf19e..e441d7b 100644
+--- a/arch/powerpc/kernel/eeh_pe.c
++++ b/arch/powerpc/kernel/eeh_pe.c
+@@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
+ 	 * EEH device already having associated PE, but
+ 	 * the direct parent EEH device doesn't have yet.
+ 	 */
+-	pdn = pdn ? pdn->parent : NULL;
++	if (edev->physfn)
++		pdn = pci_get_pdn(edev->physfn);
++	else
++		pdn = pdn ? pdn->parent : NULL;
+ 	while (pdn) {
+ 		/* We're poking out of PCI territory */
+ 		parent = pdn_to_eeh_dev(pdn);
+@@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
+ 	}
+ 
+ 	/* Create a new EEH PE */
+-	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
++	if (edev->physfn)
++		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
++	else
++		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
+ 	if (!pe) {
+ 		pr_err("%s: out of memory!\n", __func__);
+ 		return -ENOMEM;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 8119172..830526e 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1503,6 +1503,22 @@ static struct eeh_ops pnv_eeh_ops = {
+ 	.restore_config		= pnv_eeh_restore_config
+ };
+ 
++void pcibios_bus_add_device(struct pci_dev *pdev)
++{
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++
++	if (!pdev->is_virtfn)
++		return;
++
++	/*
++	 * The following operations will fail if VF's sysfs files
++	 * aren't created or its resources aren't finalized.
++	 */
++	eeh_add_device_early(pdn);
++	eeh_add_device_late(pdev);
++	eeh_sysfs_add_device(pdev);
++}
++
+ /**
+  * eeh_powernv_init - Register platform dependent EEH operations
+  *
+-- 
+2.1.0
+
