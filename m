@@ -1,349 +1,201 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:9044 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750781AbcBHMmX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Feb 2016 07:42:23 -0500
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <guohanjun@huawei.com>, <wangzhou1@hisilicon.com>,
-	<liudongdong3@huawei.com>, <linuxarm@huawei.com>,
-	<qiujiang@huawei.com>, <bhelgaas@google.com>, <arnd@arndb.de>,
-	<Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>
-CC: <gabriele.paoloni@huawei.com>, <zhangjukuo@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<jcm@redhat.com>
-Subject: [RFC PATCH v2 1/3] PCI: hisi: re-architect Hip05/Hip06 controllers driver to preapare for ACPI
-Date: Mon, 8 Feb 2016 12:41:02 +0000
-Message-ID: <1454935264-6076-2-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1454935264-6076-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1454935264-6076-1-git-send-email-gabriele.paoloni@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:33603 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751659AbcBJGEn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 01:04:43 -0500
+Received: from localhost
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 10 Feb 2016 16:04:41 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 9F81F357805C
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:04:20 +1100 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u1A6488g52101338
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:04:16 +1100
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u1A63ltO012682
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:03:48 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru, ruscur@russell.cc,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH v14 8/9] powerpc/powernv: Support PCI config restore for VFs
+Date: Wed, 10 Feb 2016 17:02:56 +1100
+Message-Id: <1455084177-15525-9-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-re-architect the Hip05/Hip06 host controllers driver to prepare
-for the ACPI based driver.
-The common functions used also by the ACPI driver have been grouped
-into a new "common" file
+After PE reset, OPAL API opal_pci_reinit() is called on all devices
+contained in the PE to reinitialize them. While skiboot is not aware of
+VFs, we have to implement the function in kernel to reinitialize VFs after
+reset on PE for VFs.
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+In this patch, two functions pnv_pci_fixup_vf_mps() and
+pnv_eeh_restore_vf_config() both manipulate the MPS of the VF, since for a
+VF it has three cases.
+
+1. Normal creation for a VF
+   In this case, pnv_pci_fixup_vf_mps() is called to make the MPS a proper
+   value compared with its parent.
+2. EEH recovery without VF removed
+   In this case, MPS is stored in pci_dn and pnv_eeh_restore_vf_config() is
+   called to restore it and reinitialize other part.
+3. EEH recovery with VF removed
+   In this case, VF will be removed then re-created. Both functions are
+   called. First pnv_pci_fixup_vf_mps() is called to store the proper MPS
+   to pci_dn and then pnv_eeh_restore_vf_config() is called to do proper
+   thing.
+
+This introduces two functions: pnv_pci_fixup_vf_mps() to fixup the VF's
+MPS to make sure it is equal to parent's and store this value in pci_dn
+for future use. pnv_eeh_restore_vf_config() to re-initialize on VF by
+restoring MPS, disabling completion timeout, enabling SERR, etc.
+
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- MAINTAINERS                         |   2 +
- drivers/pci/host/Makefile           |   2 +-
- drivers/pci/host/pcie-hisi-common.c |  73 ++++++++++++++++++++++
- drivers/pci/host/pcie-hisi.c        | 119 +++++++++++-------------------------
- drivers/pci/host/pcie-hisi.h        |  23 +++++++
- 5 files changed, 135 insertions(+), 84 deletions(-)
- create mode 100644 drivers/pci/host/pcie-hisi-common.c
- create mode 100644 drivers/pci/host/pcie-hisi.h
+ arch/powerpc/include/asm/pci-bridge.h        |  1 +
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 95 +++++++++++++++++++++++++++-
+ 2 files changed, 93 insertions(+), 3 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 30aca4a..d69f436 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8409,7 +8409,9 @@ M:	Gabriele Paoloni <gabriele.paoloni@huawei.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-+F:	drivers/pci/host/pcie-hisi.h
- F:	drivers/pci/host/pcie-hisi.c
-+F:	drivers/pci/host/pcie-hisi-common.c
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index b0b43f5..f4d1758 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -220,6 +220,7 @@ struct pci_dn {
+ #define IODA_INVALID_M64        (-1)
+ 	int     (*m64_map)[PCI_SRIOV_NUM_BARS];
+ #endif /* CONFIG_PCI_IOV */
++	int	mps;			/* Maximum Payload Size */
+ #endif
+ 	struct list_head child_list;
+ 	struct list_head list;
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index e26256b..950b3e5 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -1588,6 +1588,65 @@ static int pnv_eeh_next_error(struct eeh_pe **pe)
+ 	return ret;
+ }
  
- PCIE DRIVER FOR QUALCOMM MSM
- M:     Stanimir Varbanov <svarbanov@mm-sol.com>
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 7b2f20c..8c93c0f 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -20,5 +20,5 @@ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
- obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
- obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
- obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
--obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
-+obj-$(CONFIG_PCI_HISI) += pcie-hisi.o pcie-hisi-common.o
- obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
-diff --git a/drivers/pci/host/pcie-hisi-common.c b/drivers/pci/host/pcie-hisi-common.c
-new file mode 100644
-index 0000000..6dfb4c3
---- /dev/null
-+++ b/drivers/pci/host/pcie-hisi-common.c
-@@ -0,0 +1,73 @@
-+/*
-+ * PCIe host controller common functions for HiSilicon SoCs
-+ *
-+ * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
-+ *
-+ * Author: Zhou Wang <wangzhou1@hisilicon.com>
-+ *         Dacai Zhu <zhudacai@hisilicon.com>
-+ *         Gabriele Paoloni <gabriele.paoloni@huawei.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/acpi.h>
-+#include <linux/interrupt.h>
-+#include <linux/module.h>
-+#include <linux/mfd/syscon.h>
-+#include <linux/of_pci.h>
-+#include <linux/regmap.h>
-+
-+#include "pcie-designware.h"
-+#include "pcie-hisi.h"
-+
-+/* HipXX PCIe host only supports 32-bit config access */
-+int hisi_pcie_common_cfg_read(void __iomem *reg_base, int where, int size,
-+			      u32 *val)
++static int pnv_eeh_restore_vf_config(struct pci_dn *pdn)
 +{
-+	u32 reg;
-+	u32 reg_val;
-+	void *walker = &reg_val;
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++	u32 devctl, cmd, cap2, aer_capctl;
++	int old_mps;
 +
-+	walker += (where & 0x3);
-+	reg = where & ~0x3;
-+	reg_val = readl(reg_base + reg);
++	if (edev->pcie_cap) {
++		/* Restore MPS */
++		old_mps = (ffs(pdn->mps) - 8) << 5;
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				     2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_PAYLOAD;
++		devctl |= old_mps;
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				      2, devctl);
 +
-+	if (size == 1)
-+		*val = *(u8 __force *) walker;
-+	else if (size == 2)
-+		*val = *(u16 __force *) walker;
-+	else if (size == 4)
-+		*val = reg_val;
-+	else
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
++		/* Disable Completion Timeout */
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP2,
++				     4, &cap2);
++		if (cap2 & 0x10) {
++			eeh_ops->read_config(pdn,
++					     edev->pcie_cap + PCI_EXP_DEVCTL2,
++					     4, &cap2);
++			cap2 |= 0x10;
++			eeh_ops->write_config(pdn,
++					      edev->pcie_cap + PCI_EXP_DEVCTL2,
++					      4, cap2);
++		}
++	}
 +
-+	return PCIBIOS_SUCCESSFUL;
++	/* Enable SERR and parity checking */
++	eeh_ops->read_config(pdn, PCI_COMMAND, 2, &cmd);
++	cmd |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
++	eeh_ops->write_config(pdn, PCI_COMMAND, 2, cmd);
++
++	/* Enable report various errors */
++	if (edev->pcie_cap) {
++		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				     2, &devctl);
++		devctl &= ~PCI_EXP_DEVCTL_CERE;
++		devctl |= (PCI_EXP_DEVCTL_NFERE |
++			   PCI_EXP_DEVCTL_FERE |
++			   PCI_EXP_DEVCTL_URRE);
++		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
++				      2, devctl);
++	}
++
++	/* Enable ECRC generation and check */
++	if (edev->pcie_cap && edev->aer_cap) {
++		eeh_ops->read_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				     4, &aer_capctl);
++		aer_capctl |= (PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
++		eeh_ops->write_config(pdn, edev->aer_cap + PCI_ERR_CAP,
++				      4, aer_capctl);
++	}
++
++	return 0;
 +}
 +
-+/* HipXX PCIe host only supports 32-bit config access */
-+int hisi_pcie_common_cfg_write(void __iomem *reg_base, int where, int  size,
-+				u32 val)
-+{
-+	u32 reg_val;
-+	u32 reg;
-+	void *walker = &reg_val;
-+
-+	walker += (where & 0x3);
-+	reg = where & ~0x3;
-+	if (size == 4)
-+		writel(val, reg_base + reg);
-+	else if (size == 2) {
-+		reg_val = readl(reg_base + reg);
-+		*(u16 __force *) walker = val;
-+		writel(val, reg_base + reg);
-+	} else if (size == 1) {
-+		reg_val = readl(reg_base + reg);
-+		*(u8 __force *) walker = val;
-+		writel(val, reg_base + reg);
-+	} else
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-index 3e98d4e..458d0f8 100644
---- a/drivers/pci/host/pcie-hisi.c
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -21,6 +21,7 @@
- #include <linux/regmap.h>
- 
- #include "pcie-designware.h"
-+#include "pcie-hisi.h"
- 
- #define PCIE_LTSSM_LINKUP_STATE				0x11
- #define PCIE_LTSSM_STATE_MASK				0x3F
-@@ -30,12 +31,6 @@
- 
- #define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
- 
--struct hisi_pcie;
--
--struct pcie_soc_ops {
--	int (*hisi_pcie_link_up)(struct hisi_pcie *pcie);
--};
--
- struct hisi_pcie {
- 	struct regmap *subctrl;
- 	void __iomem *reg_base;
-@@ -44,87 +39,24 @@ struct hisi_pcie {
- 	struct pcie_soc_ops *soc_ops;
- };
- 
--static inline void hisi_pcie_apb_writel(struct hisi_pcie *pcie,
--					u32 val, u32 reg)
--{
--	writel(val, pcie->reg_base + reg);
--}
--
--static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *pcie, u32 reg)
--{
--	return readl(pcie->reg_base + reg);
--}
--
--/* HipXX PCIe host only supports 32-bit config access */
--static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
--			      u32 *val)
--{
--	u32 reg;
--	u32 reg_val;
--	struct hisi_pcie *pcie = to_hisi_pcie(pp);
--	void *walker = &reg_val;
--
--	walker += (where & 0x3);
--	reg = where & ~0x3;
--	reg_val = hisi_pcie_apb_readl(pcie, reg);
--
--	if (size == 1)
--		*val = *(u8 __force *) walker;
--	else if (size == 2)
--		*val = *(u16 __force *) walker;
--	else if (size == 4)
--		*val = reg_val;
--	else
--		return PCIBIOS_BAD_REGISTER_NUMBER;
--
--	return PCIBIOS_SUCCESSFUL;
--}
-+struct pcie_soc_ops {
-+	int (*hisi_pcie_link_up)(struct hisi_pcie *pcie);
-+};
- 
--/* HipXX PCIe host only supports 32-bit config access */
--static int hisi_pcie_cfg_write(struct pcie_port *pp, int where, int  size,
--				u32 val)
-+static inline int hisi_pcie_cfg_read(struct pcie_port *pp, int where,
-+		int size, u32 *val)
+ static int pnv_eeh_restore_config(struct pci_dn *pdn)
  {
--	u32 reg_val;
--	u32 reg;
- 	struct hisi_pcie *pcie = to_hisi_pcie(pp);
--	void *walker = &reg_val;
--
--	walker += (where & 0x3);
--	reg = where & ~0x3;
--	if (size == 4)
--		hisi_pcie_apb_writel(pcie, val, reg);
--	else if (size == 2) {
--		reg_val = hisi_pcie_apb_readl(pcie, reg);
--		*(u16 __force *) walker = val;
--		hisi_pcie_apb_writel(pcie, reg_val, reg);
--	} else if (size == 1) {
--		reg_val = hisi_pcie_apb_readl(pcie, reg);
--		*(u8 __force *) walker = val;
--		hisi_pcie_apb_writel(pcie, reg_val, reg);
--	} else
--		return PCIBIOS_BAD_REGISTER_NUMBER;
--
--	return PCIBIOS_SUCCESSFUL;
--}
+ 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+@@ -1597,9 +1656,21 @@ static int pnv_eeh_restore_config(struct pci_dn *pdn)
+ 	if (!edev)
+ 		return -EEXIST;
  
--static int hisi_pcie_link_up_hip05(struct hisi_pcie *hisi_pcie)
--{
--	u32 val;
--
--	regmap_read(hisi_pcie->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
--		    0x100 * hisi_pcie->port_id, &val);
--
--	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
-+	return hisi_pcie_common_cfg_read(pcie->reg_base, where, size, val);
- }
- 
--static int hisi_pcie_link_up_hip06(struct hisi_pcie *hisi_pcie)
-+static inline int hisi_pcie_cfg_write(struct pcie_port *pp, int where,
-+		int size, u32 val)
- {
--	u32 val;
--
--	val = hisi_pcie_apb_readl(hisi_pcie, PCIE_HIP06_CTRL_OFF +
--			PCIE_SYS_STATE4);
-+	struct hisi_pcie *pcie = to_hisi_pcie(pp);
- 
--	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
-+	return hisi_pcie_common_cfg_write(pcie->reg_base, where, size, val);
- }
- 
- static int hisi_pcie_link_up(struct pcie_port *pp)
-@@ -134,12 +66,13 @@ static int hisi_pcie_link_up(struct pcie_port *pp)
- 	return hisi_pcie->soc_ops->hisi_pcie_link_up(hisi_pcie);
- }
- 
--static struct pcie_host_ops hisi_pcie_host_ops = {
--	.rd_own_conf = hisi_pcie_cfg_read,
--	.wr_own_conf = hisi_pcie_cfg_write,
--	.link_up = hisi_pcie_link_up,
-+struct pcie_host_ops hisi_pcie_host_ops = {
-+		.rd_own_conf = hisi_pcie_cfg_read,
-+		.wr_own_conf = hisi_pcie_cfg_write,
-+		.link_up = hisi_pcie_link_up,
- };
- 
+-	phb = edev->phb->private_data;
+-	ret = opal_pci_reinit(phb->opal_id,
+-			      OPAL_REINIT_PCI_DEV, edev->config_addr);
++	/*
++	 * We have to restore the PCI config space after reset since the
++	 * firmware can't see SRIOV VFs.
++	 *
++	 * FIXME: The MPS, error routing rules, timeout setting are worthy
++	 * to be exported by firmware in extendible way.
++	 */
++	if (edev->physfn) {
++		ret = pnv_eeh_restore_vf_config(pdn);
++	} else {
++		phb = edev->phb->private_data;
++		ret = opal_pci_reinit(phb->opal_id,
++				      OPAL_REINIT_PCI_DEV, edev->config_addr);
++	}
 +
- static int hisi_add_pcie_port(struct pcie_port *pp,
- 				     struct platform_device *pdev)
- {
-@@ -215,6 +148,26 @@ static int hisi_pcie_probe(struct platform_device *pdev)
- 	return 0;
+ 	if (ret) {
+ 		pr_warn("%s: Can't reinit PCI dev 0x%x (%lld)\n",
+ 			__func__, edev->config_addr, ret);
+@@ -1644,6 +1715,24 @@ void pcibios_bus_add_device(struct pci_dev *pdev)
+ 	eeh_sysfs_add_device(pdev);
  }
  
-+static int hisi_pcie_link_up_hip05(struct hisi_pcie *hisi_pcie)
++#ifdef CONFIG_PCI_IOV
++static void pnv_pci_fixup_vf_mps(struct pci_dev *pdev)
 +{
-+	u32 val;
++	struct pci_dn *pdn = pci_get_pdn(pdev);
++	int parent_mps;
 +
-+	regmap_read(hisi_pcie->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
-+		    0x100 * hisi_pcie->port_id, &val);
++	if (!pdev->is_virtfn)
++		return;
 +
-+	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
++	/* Synchronize MPS for VF and PF */
++	parent_mps = pcie_get_mps(pdev->physfn);
++	if ((128 << pdev->pcie_mpss) >= parent_mps)
++		pcie_set_mps(pdev, parent_mps);
++	pdn->mps = pcie_get_mps(pdev);
 +}
++DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pnv_pci_fixup_vf_mps);
++#endif /* CONFIG_PCI_IOV */
 +
-+static int hisi_pcie_link_up_hip06(struct hisi_pcie *hisi_pcie)
-+{
-+	u32 val;
-+
-+	val = readl(hisi_pcie->reg_base + PCIE_HIP06_CTRL_OFF +
-+			PCIE_SYS_STATE4);
-+
-+	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
-+}
-+
- static struct pcie_soc_ops hip05_ops = {
- 		&hisi_pcie_link_up_hip05
- };
-diff --git a/drivers/pci/host/pcie-hisi.h b/drivers/pci/host/pcie-hisi.h
-new file mode 100644
-index 0000000..29e0790
---- /dev/null
-+++ b/drivers/pci/host/pcie-hisi.h
-@@ -0,0 +1,23 @@
-+/*
-+ * PCIe host controller driver for HiSilicon SoCs
-+ *
-+ * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
-+ *
-+ * Author: Zhou Wang <wangzhou1@hisilicon.com>
-+ *         Dacai Zhu <zhudacai@hisilicon.com>
-+ *         Gabriele Paoloni <gabriele.paoloni@huawei.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+#ifndef PCIE_HISI_H_
-+#define PCIE_HISI_H_
-+
-+
-+int hisi_pcie_common_cfg_read(void __iomem *reg_base, int where, int size,
-+			      u32 *val);
-+int hisi_pcie_common_cfg_write(void __iomem *reg_base, int where, int  size,
-+				u32 val);
-+
-+#endif /* PCIE_HISI_H_ */
+ /**
+  * eeh_powernv_init - Register platform dependent EEH operations
+  *
 -- 
-1.9.1
-
+2.1.0
 
