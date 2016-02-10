@@ -1,132 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54793 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756957AbcBDWBu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Feb 2016 17:01:50 -0500
-Date: Thu, 4 Feb 2016 16:01:46 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Simon Horman <horms@verge.net.au>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux-sh list <linux-sh@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH v2 0/4] PCI: rcar, rcar-gen2: More Gen2 compatibility
- strings
-Message-ID: <20160204220146.GA17060@localhost>
-References: <1449096700-23304-1-git-send-email-horms+renesas@verge.net.au>
- <20151209183743.GH31930@localhost>
- <20151211021434.GH9927@verge.net.au>
- <20151211145916.GA21907@localhost>
- <CAMuHMdVN5VtZHcC9T4dzpsW-f8FpcjmJeTX_HHqRs0X5HdJCOw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMuHMdVN5VtZHcC9T4dzpsW-f8FpcjmJeTX_HHqRs0X5HdJCOw@mail.gmail.com>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:59325 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751186AbcBJGEG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 01:04:06 -0500
+Received: from localhost
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 10 Feb 2016 16:04:04 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 697BD2CE8054
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:03:56 +1100 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u1A63iUr43581482
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:03:52 +1100
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u1A63N6n011789
+	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:03:24 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, mpe@ellerman.id.au,
+	aik@ozlabs.ru, ruscur@russell.cc,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Subject: [PATCH v14 2/9] PCI: Add pcibios_bus_add_device() weak function
+Date: Wed, 10 Feb 2016 17:02:50 +1100
+Message-Id: <1455084177-15525-3-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Geert,
+From: Wei Yang <weiyang@linux.vnet.ibm.com>
 
-On Fri, Dec 11, 2015 at 04:58:06PM +0100, Geert Uytterhoeven wrote:
-> On Fri, Dec 11, 2015 at 3:59 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Fri, Dec 11, 2015 at 11:14:34AM +0900, Simon Horman wrote:
-> >> On Wed, Dec 09, 2015 at 12:37:43PM -0600, Bjorn Helgaas wrote:
-> >> > On Thu, Dec 03, 2015 at 07:51:36AM +0900, Simon Horman wrote:
-> >> > > this short series adds generic gen2 and SoC-specific r8a7793 compatibility
-> >> > > strings to the rcar PCI and rcar-gen2 PCIE drivers. The intention is to
-> >> > > provide a complete set of compatibility strings for known Gen2 SoCs.
-> >> > >
-> >> > > Key Changes in v2:
-> >> > > * Include "rcar-" in generic bindings
-> >> > >
-> >> > > Simon Horman (4):
-> >> > >   PCI: rcar-gen2: add gen2 fallback compatibility string
-> >> > >   PCI: rcar-gen2: add device tree support for r8a7793
-> >> > >   PCI: rcar: add gen2 fallback compatibility string
-> >> > >   PCI: rcar: add device tree support for r8a7793
-> >> > >
-> >> > >  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 12 ++++++++++--
-> >> > >  Documentation/devicetree/bindings/pci/rcar-pci.txt      | 14 +++++++++++---
-> >> > >  drivers/pci/host/pci-rcar-gen2.c                        |  1 +
-> >> > >  drivers/pci/host/pcie-rcar.c                            |  1 +
-> >> > >  4 files changed, 23 insertions(+), 5 deletions(-)
-> >> >
-> >> > I applied these:
-> >> >
-> >> > >   PCI: rcar-gen2: add gen2 fallback compatibility string
-> >> > >   PCI: rcar: add gen2 fallback compatibility string
-> >> >
-> >> > to pci/host-rcar for v4.5, thanks!
-> >> >
-> >> > I haven't applied the R8A7793 binding documentation updates yet, but
-> >> > I'll be happy to do so given a short description of why they're
-> >> > useful (since they don't update a DT or the driver).  Or they could be
-> >> > merged via a DT tree.
-> >>
-> >> To clarify: you would like a description in the changelog?
-> >
-> > Yes, please.  The email discussion so far hasn't contained what I'm
-> > looking for (if it had, I would have just inserted it and been done
-> > with it).
-> >
-> > Apparently it has to do with the stable DT rules, which I don't know.
-> > A concrete example would probably help clear it up.
-> 
-> The stable DT rules mean that an old DTS should keep on working with
-> newer kernels.
-> 
-> Suppose we have two SoCs, that both contain "foo" modules, which look
-> identical. Hence the DTS for both declares the devices to be compatible
-> with "vendor,foo".
-> 
-> Later, we discover a difference between the two "foo" modules in the two
-> SoCs (e.g. a feature present in one of them, or worse, a bug), which we
-> need to handle in the driver. But how can we distinguish between them?
-> We can change the compatible value in the DTS, but that means the user
-> has to update the DTS when updating the kernel. For a new feature that
-> may be deemed acceptable, for a bug fix that's not acceptable.
-> 
-> Hence we always use an SoC-specific compatible value, which may or may
-> not be accompanied by a family-specific and/or generic compatible value.
-> As long as everything can be handled the same, the driver will just match
-> against the most generic compatible value used. But if needed later, the
-> driver can be updated to match against a more specific compatible value,
-> and can have special handling for  a module in a specific SoC.
-> 
-> So that's why we want to have compatible value in the DT bindings that
-> are not necessarily used by the driver.
-> 
-> In a perfect world, where all hardware is properly documented, or even
-> Open Source, we wouldn't need this. There we could just declare a device
-> compatible with what it really is, based on the module's internal version ID
-> (ideally a git commit ID of its HDL source ;-).
-> 
-> I hope the above explains it. If you have more questions, feel free to ask!
+This adds weak function pcibios_bus_add_device() for arch dependent
+code could do proper setup. For example, powerpc could setup EEH
+related resources for SRIOV VFs.
 
-The above is all pretty standard device identification technique.
-That's not what I've been missing.
+Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
+Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/bus.c   | 3 +++
+ include/linux/pci.h | 1 +
+ 2 files changed, 4 insertions(+)
 
-But I just had an epiphany.  Tell me if I'm talking sense or
-gibberish:
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 89b3bef..6469ff6 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -271,6 +271,8 @@ bool pci_bus_clip_resource(struct pci_dev *dev, int idx)
+ 
+ void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
+ 
++void __weak pcibios_bus_add_device(struct pci_dev *pdev) { }
++
+ /**
+  * pci_bus_add_device - start driver for a single device
+  * @dev: device to add
+@@ -285,6 +287,7 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 	 * Can not put in pci_device_add yet because resources
+ 	 * are not assigned yet for some devices.
+ 	 */
++	pcibios_bus_add_device(dev);
+ 	pci_fixup_device(pci_fixup_final, dev);
+ 	pci_create_sysfs_dev_files(dev);
+ 	pci_proc_attach_device(dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 3db5e30..bc435d62 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -770,6 +770,7 @@ extern struct list_head pci_root_buses;	/* list of all known PCI buses */
+ int no_pci_devices(void);
+ 
+ void pcibios_resource_survey_bus(struct pci_bus *bus);
++void pcibios_bus_add_device(struct pci_dev *pdev);
+ void pcibios_add_bus(struct pci_bus *bus);
+ void pcibios_remove_bus(struct pci_bus *bus);
+ void pcibios_fixup_bus(struct pci_bus *);
+-- 
+2.1.0
 
-  If a patch adds a use of "renesas,pcie-r8a7793" in a .dts, .c, or .h
-  file, e.g., in arch/arm/boot/dts/ or in the driver, and somebody
-  runs checkpatch on that patch, checkpatch will complain unless
-  "renesas,pcie-r8a7793" appears somewhere in
-  devicetree/bindings/pci/.
-
-So if I understand correctly, the only point of this patch is to shut
-up checkpatch in that situation.  It doesn't seem terribly useful to
-me because checkpatch is only relevant to Linux kernel patches, and
-even there it's optional and advisory.
-
-The latest changelog says "By documenting this compat string it may be
-used in DTSs shipped, for example as part of ROMs", which seems to be
-saying a DTS may not be shipped unless checkpatch approves of it.
-That's a social and procedural question, not a coding question.
-
-It's fine with me if you want to try to enforce that via checkpatch,
-but I'd just like to be clear on the mechanism.
-
-Bjorn
