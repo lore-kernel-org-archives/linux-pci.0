@@ -1,83 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V5 03/15] arm64, acpi: Use MCFG library and empty PCI config space accessors from pci_mcfg.c file.
-Date: Tue, 16 Feb 2016 14:53:33 +0100
-Message-Id: <1455630825-27253-4-git-send-email-tn@semihalf.com>
-In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0076.outbound.protection.outlook.com ([104.47.37.76]:13584
+	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751314AbcBKFhL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Feb 2016 00:37:11 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Arnd Bergmann <arnd@arndb.de>, Paul Burton <paul.burton@imgtec.com>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	Michal Simek <michals@xilinx.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"wangyijing@huawei.com" <wangyijing@huawei.com>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH V3 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge
+ driver to work on both  Zynq and Microblaze
+Date: Thu, 11 Feb 2016 05:37:04 +0000
+Message-ID: <8520D5D51A55D047800579B09414719825881ACE@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1455014518-8708-1-git-send-email-bharatku@xilinx.com>
+ <8520D5D51A55D047800579B09414719825881780@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <20160210172707.GA29590@NP-P-BURTON> <2818168.2fmZIs86hN@wuerfel>
+In-Reply-To: <2818168.2fmZIs86hN@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We can now enable MCFG library. Currently, there is no ARM64 use case for
-RAW pci config accessors, so lets use empty ones for now.
-At the same time, we can cleanup the old implementation of RAW accessors
-from arch/arm64/kernel/pci.c
+> Subject: Re: [PATCH V3 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge driver
+> to work on both Zynq and Microblaze
+> 
+> On Wednesday 10 February 2016 09:27:07 Paul Burton wrote:
+> > On Wed, Feb 10, 2016 at 05:55:51AM +0000, Bharat Kumar Gogada wrote:
+> > > > On Tue, Feb 09, 2016 at 04:11:56PM +0530, Bharat Kumar Gogada
+> wrote:
+> > > > > Modifying Xilinx AXI PCIe Host Bridge Soft IP driver to work on
+> > > > > both Zynq and Microblaze Architectures.
+> > > > > With these modifications drivers/pci/host/pcie-xilinx.c, will
+> > > > > work on both Zynq and Microblaze Architectures.
+> > > > >
+> > > > > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > > > > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> > > > > ---
+> > > > > Changes:
+> > > > > Removed unneccessary architecture dependent number of MSI's.
+> > > > > Added #ifdef to pci_fixup_irqs which is ARM specific API.
+> > > >
+> > > > Hi Bharat,
+> > > >
+> > > > Why do you say pci_fixup_irqs is ARM-specific? It's declared in
+> > > > include/linux/pci.h, defined in drivers/pci/setup-irq.c & used by
+> > > > multiple architectures (alpha, arm, m68k, mips, sh, sparc, tile,
+> > > > unicore32 from a quick grep).
+> > > >
+> > > > Will you not break INTX-style interrupts by removing this?
+> > > >
+> > > I meant to say ARM specific w.r.t Microblaze architecture, which is
+> > > what this patch series are for. This has been already discussed in
+> > > my previous patch by  Arnd Bergmann and Lorenzo Pieralisi .
+> > > (https://lkml.org/lkml/2016/1/12/707)
+> >
+> > Hi Bharat,
+> >
+> > Ok, so you don't need it for microblaze but do need it for zynq/ARM.
+> > We also need it for MIPS, where my recent patches enable this driver.
+> > So if #ifdef'ing this is the current way forwards could you please
+> > invert the condition to #ifndef CONFIG_MICROBLAZE?
+> 
+> I think we are getting to the point where we should try much harder to make
+> sure nobody needs that hack and it all works out of the box.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Tested-by: Jeremy Linton <jeremy.linton@arm.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
----
- arch/arm64/Kconfig      |  4 ++++
- arch/arm64/kernel/pci.c | 15 ---------------
- 2 files changed, 4 insertions(+), 15 deletions(-)
+Ok I will invert to this condition and resend the patches.
 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 8cc6228..552e996 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -238,6 +238,10 @@ source "drivers/pci/Kconfig"
- source "drivers/pci/pcie/Kconfig"
- source "drivers/pci/hotplug/Kconfig"
- 
-+config PCI_MMCONFIG
-+	def_bool y
-+	depends on ACPI
-+
- endmenu
- 
- menu "Kernel Features"
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index b3d098b..023b983 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -61,21 +61,6 @@ int pcibios_add_device(struct pci_dev *dev)
- 	return 0;
- }
- 
--/*
-- * raw_pci_read/write - Platform-specific PCI config space access.
-- */
--int raw_pci_read(unsigned int domain, unsigned int bus,
--		  unsigned int devfn, int reg, int len, u32 *val)
--{
--	return -ENXIO;
--}
--
--int raw_pci_write(unsigned int domain, unsigned int bus,
--		unsigned int devfn, int reg, int len, u32 val)
--{
--	return -ENXIO;
--}
--
- #ifdef CONFIG_ACPI
- /* Root bridge scanning */
- struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
--- 
-1.9.1
+Bharat
