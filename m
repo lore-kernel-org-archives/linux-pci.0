@@ -1,81 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:58705 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750883AbcBXGKR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Feb 2016 01:10:17 -0500
-Subject: Re: [PATCH 0/5] Modularize PCI_DW related drivers.
-To: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	<linux-kernel@vger.kernel.org>
-References: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com>
-CC: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	<devicetree@vger.kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ley Foon Tan <lftan@altera.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 11 Feb 2016 16:32:55 +0100
+From: Robert Richter <robert.richter@caviumnetworks.com>
+To: Rob Herring <robh+dt@kernel.org>
+CC: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>,
+	"linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
-	<linux-arm-msm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <56CD4916.3050904@ti.com>
-Date: Wed, 24 Feb 2016 11:39:26 +0530
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	<linux-ia64@vger.kernel.org>,
+	linux-metag <linux-metag@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	<linux-s390@vger.kernel.org>, SH-Linux <linux-sh@vger.kernel.org>,
+	"linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	"Mark Rutland" <mark.rutland@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	"Leif Lindholm" <leif.lindholm@linaro.org>, <rfranz@cavium.com>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	Mark Salter <msalter@redhat.com>,
+	Steve Capper <steve.capper@linaro.org>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Al Stone <al.stone@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	"Kumar Gala" <galak@codeaurora.org>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Tony Luck <tony.luck@intel.com>, <fenghua.yu@intel.com>,
+	James Hogan <james.hogan@imgtec.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Jon Masters <jonathan@jonmasters.org>,
+	<Prasun.Kapoor@caviumnetworks.com>,
+	"Ganapatrao Kulkarni" <gpkulkarni@gmail.com>
+Subject: Re: [PATCH v10 3/8] dt, numa: adding numa dt binding implementation.
+Message-ID: <20160211153255.GR24726@rric.localdomain>
+References: <1454407763-1017-1-git-send-email-gkulkarni@caviumnetworks.com>
+ <1454407763-1017-4-git-send-email-gkulkarni@caviumnetworks.com>
+ <CAL_JsqK5HV9yzBE+ANnTw26eVR7Dy+B8OkwQ-7WF8KDa86Fd9g@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAL_JsqK5HV9yzBE+ANnTw26eVR7Dy+B8OkwQ-7WF8KDa86Fd9g@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On 11.02.16 08:50:41, Rob Herring wrote:
+> On Tue, Feb 2, 2016 at 4:09 AM, Ganapatrao Kulkarni
+> <gkulkarni@caviumnetworks.com> wrote:
+> > dt node parsing for numa topology is done using device property
+> > numa-node-id and device node distance-map.
+> 
+> How is it that powerpc doesn't need flat DT parsing for NUMA? Both
+> arches are memblock based and the binding is similar IIRC, so you
+> should be able to find a way to do this with the unflattened tree.
+> Ideally, there should be some common code shared as well.
+> 
+> Do you have a git tree with this series?
 
-On Monday 08 February 2016 05:30 AM, Paul Gortmaker wrote:
-> In a recent patch series that aimed to remove code related to module
-> unload for PCI support that was simply non modular, the discussion
-> led to people wanting to keep the code and push towards taking the
-> steps needed to support moving it towards tristate instead[1].
-> 
-> Here, we take step one, which is simply making the Kconfig change
-> and then dealing with any build fallout or modpost fallout.  What
-> amounts to essentially a sanity build test.  To be clear, these
-> have not been runtime validated; that will need to be done by those
-> with access to real hardware.  However, the changes are not anything
-> that should disrupt any existing built-in validation, so real world
-> users should not be impacted by this change.
-> 
-> We start with a smaller family of drivers; those that actively select
-> PCI_DW, as a nice self contained group to test the waters and see if
-> everyone is still good with this approach before investing more time
-> on a wider scale to other pci/host/ code blocks.
-> 
-> As such the drivers here share a dependency on having the same group
-> of functions exported in order to successfully complete modpost.
-> 
-> In addition, we have to stray outside drivers/pci to add exports
-> in two places; once for an ARM fault handler, and once for an OF
-> variable.
-> 
-> The pci-keystone-dw.c instance was handled separately because it
-> consists of two source files that need their own group of driver
-> specific exports above and beyond the "shared" ones.
-> 
-> Then we convert the Kconfig for all remaining at once; we could have
-> done it on a per driver basis for ease of revert if anyone really
-> objects, but since it would be a one line change, that seemed like
-> not a real concern.
-> 
-> Build testing was done on the linux-next tree for arm allmodconfig.
+I have pushed it here for you:
 
-I took these patches and gave a test with DRA7xx board. As expected there was
-no issues when the driver was built-in. However when I tried to rmmod/modprobe
-I got this error [2].
+ https://git.kernel.org/cgit/linux/kernel/git/rric/linux.git/log/?h=thunder/numa-v10
 
-Thanks
-Kishon
-
-[2] -> http://pastebin.ubuntu.com/15185894/
-> 
-> [1] https://lkml.kernel.org/r/20160108203102.GH5354@localhost
-> 
+-Robert
