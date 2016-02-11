@@ -1,194 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0075.outbound.protection.outlook.com ([104.47.36.75]:12252
-	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751082AbcBKQ21 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Feb 2016 11:28:27 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <bhelgaas@google.com>, <michals@xilinx.com>,
-	<lorenzo.pieralisi@arm.com>, <paul.burton@imgtec.com>,
-	<yinghai@kernel.org>, <wangyijing@huawei.com>, <robh@kernel.org>,
-	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
-	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
-	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
-	<galak@codeaurora.org>
-CC: <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: [PATCH V4 1/5] PCI: xilinx: Removing xilinx_pcie_parse_and_add_res function
-Date: Thu, 11 Feb 2016 21:58:07 +0530
-Message-ID: <1455208091-15556-2-git-send-email-bharatku@xilinx.com>
-In-Reply-To: <1455208091-15556-1-git-send-email-bharatku@xilinx.com>
-References: <1455208091-15556-1-git-send-email-bharatku@xilinx.com>
+Received: from mail.kernel.org ([198.145.29.136]:55830 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750761AbcBKOvH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Feb 2016 09:51:07 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1454407763-1017-4-git-send-email-gkulkarni@caviumnetworks.com>
+References: <1454407763-1017-1-git-send-email-gkulkarni@caviumnetworks.com> <1454407763-1017-4-git-send-email-gkulkarni@caviumnetworks.com>
+From: Rob Herring <robh+dt@kernel.org>
+Date: Thu, 11 Feb 2016 08:50:41 -0600
+Message-ID: <CAL_JsqK5HV9yzBE+ANnTw26eVR7Dy+B8OkwQ-7WF8KDa86Fd9g@mail.gmail.com>
+Subject: Re: [PATCH v10 3/8] dt, numa: adding numa dt binding implementation.
+To: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
+Cc: "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-ia64@vger.kernel.org,
+	linux-metag <linux-metag@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	linux-s390@vger.kernel.org, SH-Linux <linux-sh@vger.kernel.org>,
+	"linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+	Will Deacon <Will.Deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Leif Lindholm <leif.lindholm@linaro.org>, rfranz@cavium.com,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	Mark Salter <msalter@redhat.com>,
+	Steve Capper <steve.capper@linaro.org>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Al Stone <al.stone@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Tony Luck <tony.luck@intel.com>, fenghua.yu@intel.com,
+	James Hogan <james.hogan@imgtec.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	Jon Masters <jonathan@jonmasters.org>,
+	Robert Richter <rrichter@cavium.com>,
+	Prasun.Kapoor@caviumnetworks.com,
+	Ganapatrao Kulkarni <gpkulkarni@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Removing xilinx_pcie_parse_and_add_res function replacing with
-of_pci_get_host_bridge_resources API.
+On Tue, Feb 2, 2016 at 4:09 AM, Ganapatrao Kulkarni
+<gkulkarni@caviumnetworks.com> wrote:
+> dt node parsing for numa topology is done using device property
+> numa-node-id and device node distance-map.
 
-Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+How is it that powerpc doesn't need flat DT parsing for NUMA? Both
+arches are memblock based and the binding is similar IIRC, so you
+should be able to find a way to do this with the unflattened tree.
+Ideally, there should be some common code shared as well.
 
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
----
-Changes:
-Removing xilinx_pcie_parse_and_add_res function and replacing it
-with of_pci_get_host_bridge_resources kernel API which does the same.
----
- drivers/pci/host/pcie-xilinx.c | 107 ++---------------------------------------
- 1 file changed, 5 insertions(+), 102 deletions(-)
+Do you have a git tree with this series?
 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 3c7a0d5..627878d 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -94,9 +94,6 @@
- /* Number of MSI IRQs */
- #define XILINX_NUM_MSI_IRQS		128
- 
--/* Number of Memory Resources */
--#define XILINX_MAX_NUM_RESOURCES	3
--
- /**
-  * struct xilinx_pcie_port - PCIe port information
-  * @reg_base: IO Mapped Register Base
-@@ -105,7 +102,6 @@
-  * @root_busno: Root Bus number
-  * @dev: Device pointer
-  * @irq_domain: IRQ domain pointer
-- * @bus_range: Bus range
-  * @resources: Bus Resources
-  */
- struct xilinx_pcie_port {
-@@ -659,97 +655,6 @@ static struct pci_bus *xilinx_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- }
- 
- /**
-- * xilinx_pcie_parse_and_add_res - Add resources by parsing ranges
-- * @port: PCIe port information
-- *
-- * Return: '0' on success and error value on failure
-- */
--static int xilinx_pcie_parse_and_add_res(struct xilinx_pcie_port *port)
--{
--	struct device *dev = port->dev;
--	struct device_node *node = dev->of_node;
--	struct resource *mem;
--	resource_size_t offset;
--	struct of_pci_range_parser parser;
--	struct of_pci_range range;
--	struct resource_entry *win;
--	int err = 0, mem_resno = 0;
--
--	/* Get the ranges */
--	if (of_pci_range_parser_init(&parser, node)) {
--		dev_err(dev, "missing \"ranges\" property\n");
--		return -EINVAL;
--	}
--
--	/* Parse the ranges and add the resources found to the list */
--	for_each_of_pci_range(&parser, &range) {
--
--		if (mem_resno >= XILINX_MAX_NUM_RESOURCES) {
--			dev_err(dev, "Maximum memory resources exceeded\n");
--			return -EINVAL;
--		}
--
--		mem = devm_kmalloc(dev, sizeof(*mem), GFP_KERNEL);
--		if (!mem) {
--			err = -ENOMEM;
--			goto free_resources;
--		}
--
--		of_pci_range_to_resource(&range, node, mem);
--
--		switch (mem->flags & IORESOURCE_TYPE_BITS) {
--		case IORESOURCE_MEM:
--			offset = range.cpu_addr - range.pci_addr;
--			mem_resno++;
--			break;
--		default:
--			err = -EINVAL;
--			break;
--		}
--
--		if (err < 0) {
--			dev_warn(dev, "Invalid resource found %pR\n", mem);
--			continue;
--		}
--
--		err = request_resource(&iomem_resource, mem);
--		if (err)
--			goto free_resources;
--
--		pci_add_resource_offset(&port->resources, mem, offset);
--	}
--
--	/* Get the bus range */
--	if (of_pci_parse_bus_range(node, &port->bus_range)) {
--		u32 val = pcie_read(port, XILINX_PCIE_REG_BIR);
--		u8 last;
--
--		last = (val & XILINX_PCIE_BIR_ECAM_SZ_MASK) >>
--			XILINX_PCIE_BIR_ECAM_SZ_SHIFT;
--
--		port->bus_range = (struct resource) {
--			.name	= node->name,
--			.start	= 0,
--			.end	= last,
--			.flags	= IORESOURCE_BUS,
--		};
--	}
--
--	/* Register bus resource */
--	pci_add_resource(&port->resources, &port->bus_range);
--
--	return 0;
--
--free_resources:
--	release_child_resources(&iomem_resource);
--	resource_list_for_each_entry(win, &port->resources)
--		devm_kfree(dev, win->res);
--	pci_free_resource_list(&port->resources);
--
--	return err;
--}
--
--/**
-  * xilinx_pcie_parse_dt - Parse Device tree
-  * @port: PCIe port information
-  *
-@@ -802,6 +707,8 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
- 	struct hw_pci hw;
- 	struct device *dev = &pdev->dev;
- 	int err;
-+	resource_size_t iobase = 0;
-+	LIST_HEAD(res);
- 
- 	if (!dev->of_node)
- 		return -ENODEV;
-@@ -826,14 +733,10 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
- 		return err;
- 	}
- 
--	/*
--	 * Parse PCI ranges, configuration bus range and
--	 * request their resources
--	 */
--	INIT_LIST_HEAD(&port->resources);
--	err = xilinx_pcie_parse_and_add_res(port);
-+	err = of_pci_get_host_bridge_resources(dev->of_node, 0, 0xff, &res,
-+					       &iobase);
- 	if (err) {
--		dev_err(dev, "Failed adding resources\n");
-+		dev_err(dev, "Getting bridge resources failed\n");
- 		return err;
- 	}
- 
--- 
-2.1.1
-
+Rob
