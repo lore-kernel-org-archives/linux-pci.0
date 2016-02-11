@@ -1,476 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:32997 "EHLO
-	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750699AbcBEXl0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2016 18:41:26 -0500
-From: David Daney <ddaney.cavm@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
-Subject: [PATCH v5 3/3] pci, pci-thunder-ecam: Add driver for ThunderX-pass1 on-chip devices
-Date: Fri,  5 Feb 2016 15:41:15 -0800
-Message-Id: <1454715675-17512-4-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1454715675-17512-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1454715675-17512-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:51595 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750782AbcBKOUe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Feb 2016 09:20:34 -0500
+Date: Thu, 11 Feb 2016 08:20:30 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: Andi Kleen <ak@linux.intel.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [PATCH] x86, pci: Add quirk for unsizeable Broadwell EP bar
+Message-ID: <20160211142030.GA4507@localhost>
+References: <1452896279-22034-1-git-send-email-andi@firstfloor.org>
+ <20160204174155.GB19957@localhost>
+ <20160204185442.GA4875@tassilo.jf.intel.com>
+ <20160205015734.GA29929@localhost>
+ <20160205033616.GF3696@two.firstfloor.org>
+ <20160205163427.GD29306@localhost>
+ <20160210222333.GK3696@two.firstfloor.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160210222333.GK3696@two.firstfloor.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+On Wed, Feb 10, 2016 at 11:23:33PM +0100, Andi Kleen wrote:
+> On Fri, Feb 05, 2016 at 10:34:27AM -0600, Bjorn Helgaas wrote:
+> > On Fri, Feb 05, 2016 at 04:36:17AM +0100, Andi Kleen wrote:
+> > > > > But would actually anything use it?
+> > > > 
+> > > > You mean, would anything actually use the lspci output?  I don't know,
+> > > > but why would we want it to print garbage?
+> > > 
+> > > In he kernel. I don't think lspci is that interesting.
+> > > > 
+> > > > And the kernel certainly uses the struct resource.  Setting
+> > > > IORESOURCE_PCI_FIXED is not a way of saying "please ignore this
+> > > > resource."
+> > > 
+> > > There is already another quirk that uses the same technique to handle
+> > > a bad bar. I also didn't notice any bad side effects. Again what would it be
+> > > used for?
+> > 
+> > I suppose you mean pci_siemens_interrupt_controller(), added by
+> > 73a74ed3a6f8 ("PCI: i386: fixup for Siemens Nixdorf AG FSC
+> > Multiprocessor Interrupt Controllers")?
+> > 
+> > Here are the problems I see:
+> 
+> All good points. I changed the patch to use a new flag
+> IORESOURCE_PCI_IGNORE that skips the whole bar process
+> (except for the BAR size, which are ok in my case at least).
+> 
+> Also fixed to handle all BARs.
+> 
+> Does that look better?
+> 
+> ------
+> x86, pci: Add quirk for unsizeable Broadwell EP bar
+>     
+> The Home Agent and PCU PCI devices in Broadwell-EP have a BAR that returns a
+> non zero value when read, but is still not sizeable (because it doesn't
+> exist).  This causes several [Firmware error] messages at boot. It does
+> not cause any functional problems, as the devices really have no BARs.
+> 
+> Add a PCI quirk to shut off the messages.
+> 
+> Since the message is printed before the normal header fixup add EARLY
+> fixups. This requires changing the PCI probe code to not override
+> the resource flags unconditionally, so that the quirk can set flags.
+> 
+> (I believe that's ok, they should be always zero before, but please double
+> check)
+> 
+> I used a new resource flag that causes the BAR to be ignored
+> 
+> v2: Handle all BARs, not just BAR0 (Chaohong Guo)
+> Switch over to using IORESOURCE_PCI_IGNORE over FIXED
+> Signed-off-by: Andi Kleen <ak@linux.intel.com>
+> 
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index e585655..837acb7 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -540,3 +540,18 @@ static void twinhead_reserve_killing_zone(struct pci_dev *dev)
+>          }
+>  }
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x27B9, twinhead_reserve_killing_zone);
+> +
+> +/*
+> + * Intel Broadwell EP. Prevent reading/updating BARs on Home Agent and PCU devices
+> + * which are not real BARs, but still return non-null.
+> + * This prevents a harmless warning message at boot.
+> + */
+> +static void pci_bdwep_ha_bar(struct pci_dev *dev)
+> +{
+> +	int i;
+> +
+> +	for (i = 0; i < 5; i++)
+> +		dev->resource[i].flags |= IORESOURCE_PCI_IGNORE;
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_bdwep_ha_bar);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_bdwep_ha_bar);
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 6d7ab9b..7c12e6d 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -214,7 +214,9 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+>  		l = 0;
+>  
+>  	if (type == pci_bar_unknown) {
+> -		res->flags = decode_bar(dev, l);
+> +		res->flags |= decode_bar(dev, l);
+> +		if (res->flags & IORESOURCE_PCI_IGNORE)
+> +			goto out;
 
-The cavium,pci-thunder-ecam devices are exactly ECAM based PCI root
-complexes.  These root complexes (loosely referred to as ECAM units in
-the hardware manuals) are used to access the Thunder on-chips devices.
-They are special in that all the BARs on devices behind these root
-complexes are at fixed addresses.  To handle this in a manner
-compatible with the core PCI code, we have the config access functions
-synthesize Enhanced Allocation (EA) capability entries for each BAR.
+Sorry, I really don't like this either.  For one thing, if these
+registers are not BARs, I don't want to even read them.  I don't want
+the possible side-effects from reading the register, and I don't want
+to worry about what happens when we feed garbage to decode_bar().
 
-Since this EA synthesis is needed for exactly one chip model, we can
-hard code some assumptions about the device topology and the
-properties of specific DEVFNs in the driver.
+But more importantly, I don't want to define a whole new IORESOURCE_*
+flag just for this, and I don't want places that use resources to have
+to check for the new flag.
 
-Signed-off-by: David Daney <david.daney@cavium.com>
----
- .../devicetree/bindings/pci/pci-thunder-ecam.txt   |  30 ++
- drivers/pci/host/Kconfig                           |   7 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-thunder-ecam.c                | 358 +++++++++++++++++++++
- 4 files changed, 396 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
- create mode 100644 drivers/pci/host/pci-thunder-ecam.c
+There's lots of code that assumes "res->flags == 0" means "this
+resource does not correspond to a BAR".  For examples, look at the
+output of this:
 
-diff --git a/Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt b/Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
-new file mode 100644
-index 0000000..34658f2
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
-@@ -0,0 +1,30 @@
-+* ThunderX PCI host controller for pass-1.x silicon
-+
-+Firmware-initialized PCI host controller to on-chip devices found on
-+some Cavium ThunderX processors.  These devices have ECAM based config
-+access, but the BARs are all at fixed addresses.  We handle the fixed
-+addresses by synthesizing Enhanced Allocation (EA) capabilities for
-+these devices.
-+
-+The properties and their meanings are identical to those described in
-+host-generic-pci.txt except as listed below.
-+
-+Properties of the host controller node that differ from
-+host-generic-pci.txt:
-+
-+- compatible     : Must be "cavium,pci-host-thunder-ecam"
-+
-+Example:
-+
-+	pci@84b0,00000000 {
-+		compatible = "cavium,pci-host-thunder-ecam";
-+		device_type = "pci";
-+		msi-parent = <&its>;
-+		msi-map = <0 &its 0x30000 0x10000>;
-+		bus-range = <0 31>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		#stream-id-cells = <1>;
-+		reg = <0x84b0 0x00000000 0 0x02000000>;  /* Configuration space */
-+		ranges = <0x03000000 0x8180 0x00000000 0x8180 0x00000000 0x80 0x00000000>; /* mem ranges */
-+	};
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 184df22..f8912c6 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -202,4 +202,11 @@ config PCI_HOST_THUNDER_PEM
- 	help
- 	  Say Y here if you want PCIe support for CN88XX Cavium Thunder SoCs.
- 
-+config PCI_HOST_THUNDER_ECAM
-+	bool "Cavium Thunder ECAMe controller to on-chip devices on pass-1.x silicon"
-+	depends on OF && ARM64
-+	select PCI_HOST_COMMON
-+	help
-+	  Say Y here if you want ECAM support for CN88XX-Pass-1.x Cavium Thunder SoCs.
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 8903172..d6af3ba 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -23,4 +23,5 @@ obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
- obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
- obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
- obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
-+obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
- obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
-diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/host/pci-thunder-ecam.c
-new file mode 100644
-index 0000000..83ee590
---- /dev/null
-+++ b/drivers/pci/host/pci-thunder-ecam.c
-@@ -0,0 +1,358 @@
-+/*
-+ *
-+ * This file is subject to the terms and conditions of the GNU General Public
-+ * License.  See the file "COPYING" in the main directory of this archive
-+ * for more details.
-+ *
-+ * Copyright (C) 2015 Cavium, Inc.
-+ *
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/ioport.h>
-+#include <linux/of_pci.h>
-+#include <linux/of.h>
-+#include <linux/platform_device.h>
-+
-+#include "pci-host-common.h"
-+
-+/* Mapping is standard ECAM */
-+static void __iomem *thunder_ecam_map_bus(struct pci_bus *bus,
-+					  unsigned int devfn,
-+					  int where)
-+{
-+	struct gen_pci *pci = bus->sysdata;
-+	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
-+
-+	return pci->cfg.win[idx] + ((devfn << 12) | where);
-+}
-+
-+static void set_val(u32 v, int where, int size, u32 *val)
-+{
-+	int shift = (where & 3) * 8;
-+
-+	pr_debug("set_val %04x: %08x\n", (unsigned)(where & ~3), v);
-+	v >>= shift;
-+	if (size == 1)
-+		v &= 0xff;
-+	else if (size == 2)
-+		v &= 0xffff;
-+	*val = v;
-+}
-+
-+static int handle_ea_bar(u32 e0, int bar, struct pci_bus *bus,
-+			 unsigned int devfn, int where, int size, u32 *val)
-+{
-+	void __iomem *addr;
-+	u32 v;
-+	/*
-+	 * Each entry is 16-byte aligned bits[2,3] select which word
-+	 * in the entry
-+	 */
-+	int where_a = where & 0xc;
-+
-+	if (where_a == 0) {
-+		set_val(e0, where, size, val);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	if (where_a == 0x4) {
-+		addr = bus->ops->map_bus(bus, devfn, bar); /* BAR 0 */
-+		if (!addr) {
-+			*val = ~0;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+		v = readl(addr);
-+		v &= ~0xf;
-+		v |= 2; /* EA entry-1. Base-L */
-+		set_val(v, where, size, val);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	if (where_a == 0x8) {
-+		u32 barl_orig;
-+		u32 barl_rb;
-+
-+		addr = bus->ops->map_bus(bus, devfn, bar); /* BAR 0 */
-+		if (!addr) {
-+			*val = ~0;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+		barl_orig = readl(addr + 0);
-+		writel(0xffffffff, addr + 0);
-+		barl_rb = readl(addr + 0);
-+		writel(barl_orig, addr + 0);
-+		/* zeros in unsettable bits. */
-+		v = ~barl_rb & ~3;
-+		v |= 0xc; /* EA entry-2. Offset-L */
-+		set_val(v, where, size, val);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	if (where_a == 0xc) {
-+		addr = bus->ops->map_bus(bus, devfn, bar + 4); /* BAR 1 */
-+		if (!addr) {
-+			*val = ~0;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+		v = readl(addr); /* EA entry-3. Base-H */
-+		set_val(v, where, size, val);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+	return PCIBIOS_DEVICE_NOT_FOUND;
-+}
-+
-+static int thunder_ecam_config_read(struct pci_bus *bus, unsigned int devfn,
-+				    int where, int size, u32 *val)
-+{
-+	u32 v;
-+	u32 vendor_device;
-+	void __iomem *addr;
-+	int cfg_type;
-+	int where_a = where & ~3;
-+
-+
-+	addr = bus->ops->map_bus(bus, devfn, 0xc);
-+	if (!addr) {
-+		*val = ~0;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	v = readl(addr);
-+
-+	/* Check for non type-00 header. */
-+	cfg_type = (v >> 16) & 0x7f;
-+
-+	/*
-+	 * All BARs have fixed addresses specified by the EA
-+	 * capability, they must return zero on read.
-+	 */
-+	if (cfg_type == 0 &&
-+	    ((where >= 0x10 && where < 0x2c) ||
-+	     (where >= 0x1a4 && where < 0x1bc))) {
-+		/* BAR or SRIOV BAR */
-+		*val = 0;
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+
-+	addr = bus->ops->map_bus(bus, devfn, 0);
-+	if (!addr) {
-+		*val = ~0;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	vendor_device = readl(addr);
-+	if (vendor_device == 0xffffffff)
-+		goto no_emulation;
-+
-+	addr = bus->ops->map_bus(bus, devfn, 8);
-+	if (!addr) {
-+		*val = ~0;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	v = readl(addr);
-+	if (v == 0xffffffff)
-+		goto no_emulation;
-+
-+	pr_debug("%04x:%04x - Fix pass#: %08x, where: %03x, devfn: %03x\n",
-+		 vendor_device & 0xffff, vendor_device >> 16, v,
-+		 (unsigned) where, devfn);
-+
-+	/* Check for non type-00 header. */
-+	if (cfg_type == 0) {
-+		bool has_msix;
-+		bool is_nic = (vendor_device == 0xa01e177d);
-+		bool is_tns = (vendor_device == 0xa01f177d);
-+
-+		addr = bus->ops->map_bus(bus, devfn, 0x70);
-+		if (!addr) {
-+			*val = ~0;
-+			return PCIBIOS_DEVICE_NOT_FOUND;
-+		}
-+		/* E_CAP */
-+		v = readl(addr);
-+		has_msix = (v & 0xff00) != 0;
-+
-+		if (!has_msix && where_a == 0x70) {
-+			v |= 0xbc00; /* next capability is EA at 0xbc */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xb0) {
-+			addr = bus->ops->map_bus(bus, devfn, where_a);
-+			if (!addr) {
-+				*val = ~0;
-+				return PCIBIOS_DEVICE_NOT_FOUND;
-+			}
-+			v = readl(addr);
-+			if (v & 0xff00)
-+				pr_err("Bad MSIX cap header: %08x\n", v);
-+			v |= 0xbc00; /* next capability is EA at 0xbc */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xbc) {
-+			if (is_nic)
-+				v = 0x40014; /* EA last in chain, 4 entries. */
-+			else if (is_tns)
-+				v = 0x30014; /* EA last in chain, 3 entries. */
-+			else if (has_msix)
-+				v = 0x20014; /* EA last in chain, 2 entries. */
-+			else
-+				v = 0x10014; /* EA last in chain, 1 entry. */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a >= 0xc0 && where_a < 0xd0)
-+			/* EA entry-0. PP=0, BAR0 Size:3 */
-+			return handle_ea_bar(0x80ff0003,
-+					     0x10, bus, devfn, where,
-+					     size, val);
-+		if (where_a >= 0xd0 && where_a < 0xe0 && has_msix)
-+			 /* EA entry-1. PP=0, BAR4 Size:3 */
-+			return handle_ea_bar(0x80ff0043,
-+					     0x20, bus, devfn, where,
-+					     size, val);
-+		if (where_a >= 0xe0 && where_a < 0xf0 && is_tns)
-+			/* EA entry-2. PP=0, BAR2, Size:3 */
-+			return handle_ea_bar(0x80ff0023,
-+					     0x18, bus, devfn, where,
-+					     size, val);
-+		if (where_a >= 0xe0 && where_a < 0xf0 && is_nic)
-+			/* EA entry-2. PP=4, VF_BAR0 (9), Size:3 */
-+			return handle_ea_bar(0x80ff0493,
-+					     0x1a4, bus, devfn, where,
-+					     size, val);
-+		if (where_a >= 0xf0 && where_a < 0x100 && is_nic)
-+			/* EA entry-3. PP=4, VF_BAR4 (d), Size:3 */
-+			return handle_ea_bar(0x80ff04d3,
-+					     0x1b4, bus, devfn, where,
-+					     size, val);
-+	} else if (cfg_type == 1) {
-+		bool is_rsl_bridge = devfn == 0x08;
-+		bool is_rad_bridge = devfn == 0xa0;
-+		bool is_zip_bridge = devfn == 0xa8;
-+		bool is_dfa_bridge = devfn == 0xb0;
-+		bool is_nic_bridge = devfn == 0x10;
-+
-+		if (where_a == 0x70) {
-+			addr = bus->ops->map_bus(bus, devfn, where_a);
-+			if (!addr) {
-+				*val = ~0;
-+				return PCIBIOS_DEVICE_NOT_FOUND;
-+			}
-+			v = readl(addr);
-+			if (v & 0xff00)
-+				pr_err("Bad PCIe cap header: %08x\n", v);
-+			v |= 0xbc00; /* next capability is EA at 0xbc */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xbc) {
-+			if (is_nic_bridge)
-+				v = 0x10014; /* EA last in chain, 1 entry */
-+			else
-+				v = 0x00014; /* EA last in chain, no entries */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xc0) {
-+			if (is_rsl_bridge || is_nic_bridge)
-+				v = 0x0101; /* subordinate:secondary = 1:1 */
-+			else if (is_rad_bridge)
-+				v = 0x0202; /* subordinate:secondary = 2:2 */
-+			else if (is_zip_bridge)
-+				v = 0x0303; /* subordinate:secondary = 3:3 */
-+			else if (is_dfa_bridge)
-+				v = 0x0404; /* subordinate:secondary = 4:4 */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xc4 && is_nic_bridge) {
-+			/* Enabled, not-Write, SP=ff, PP=05, BEI=6, ES=4 */
-+			v = 0x80ff0564;
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xc8 && is_nic_bridge) {
-+			v = 0x00000002; /* Base-L 64-bit */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xcc && is_nic_bridge) {
-+			v = 0xfffffffe; /* MaxOffset-L 64-bit */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xd0 && is_nic_bridge) {
-+			v = 0x00008430; /* NIC Base-H */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+		if (where_a == 0xd4 && is_nic_bridge) {
-+			v = 0x0000000f; /* MaxOffset-H */
-+			set_val(v, where, size, val);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+	}
-+no_emulation:
-+	return pci_generic_config_read(bus, devfn, where, size, val);
-+}
-+
-+static int thunder_ecam_config_write(struct pci_bus *bus, unsigned int devfn,
-+				     int where, int size, u32 val)
-+{
-+	/*
-+	 * All BARs have fixed addresses, ignore BAR writes so they
-+	 * don't get corrupted.
-+	 */
-+	if ((where >= 0x10 && where < 0x2c) ||
-+	    (where >= 0x1a4 && where < 0x1bc))
-+		/* BAR or SRIOV BAR */
-+		return PCIBIOS_SUCCESSFUL;
-+
-+	return pci_generic_config_write(bus, devfn, where, size, val);
-+}
-+
-+static struct gen_pci_cfg_bus_ops thunder_ecam_bus_ops = {
-+	.bus_shift	= 20,
-+	.ops		= {
-+		.map_bus        = thunder_ecam_map_bus,
-+		.read           = thunder_ecam_config_read,
-+		.write          = thunder_ecam_config_write,
-+	}
-+};
-+
-+static const struct of_device_id thunder_ecam_of_match[] = {
-+	{ .compatible = "cavium,pci-host-thunder-ecam",
-+	  .data = &thunder_ecam_bus_ops },
-+
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(of, thunder_ecam_of_match);
-+
-+static int thunder_ecam_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	const struct of_device_id *of_id;
-+	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-+
-+	if (!pci)
-+		return -ENOMEM;
-+
-+	of_id = of_match_node(thunder_ecam_of_match, dev->of_node);
-+	pci->cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
-+
-+	return pci_host_common_probe(pdev, pci);
-+}
-+
-+static struct platform_driver thunder_ecam_driver = {
-+	.driver = {
-+		.name = KBUILD_MODNAME,
-+		.of_match_table = thunder_ecam_of_match,
-+	},
-+	.probe = thunder_ecam_probe,
-+};
-+module_platform_driver(thunder_ecam_driver);
-+
-+MODULE_DESCRIPTION("Thunder ECAM PCI host driver");
-+MODULE_LICENSE("GPL v2");
--- 
-1.8.3.1
+  git grep -e 'if (!r.*->flags'
 
+These Broadwell-EP resources don't correspond to valid BARs, so they
+should look just like the resources we have for unimplemented BARs.  I
+think the cleanest way to accomplish this is to make the registers
+look like unimplemented BARs, i.e., by making pci_read_config_dword()
+read zero.
+
+I think it should be pretty easy to define your own pci_ops that
+special-cases these registers on these devices and falls back to the
+existing raw_pci_read() for everything else, and you could probably
+install those ops with an early quirk.
+
+We already do something very similar for quirk_pcie_aspm_ops.
+
+>  		res->flags |= IORESOURCE_SIZEALIGN;
+>  		if (res->flags & IORESOURCE_IO) {
+>  			l64 = l & PCI_BASE_ADDRESS_IO_MASK;
+> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+> index 24bea08..5262102 100644
+> --- a/include/linux/ioport.h
+> +++ b/include/linux/ioport.h
+> @@ -104,7 +104,7 @@ struct resource {
+>  
+>  /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
+>  #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move resource */
+> -
+> +#define IORESOURCE_PCI_IGNORE		(1<<5)	/* Ignore resource */
+>  
+>  /* helpers to define resources */
+>  #define DEFINE_RES_NAMED(_start, _size, _name, _flags)			\
