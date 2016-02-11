@@ -1,86 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from g9t5008.houston.hp.com ([15.240.92.66]:34078 "EHLO
-	g9t5008.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933325AbcBPXu0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 18:50:26 -0500
-From: "Seymour, Shane M" <shane.seymour@hpe.com>
-To: Hannes Reinecke <hare@suse.de>, Bjorn Helgaas <bhelgaas@google.com>
-CC: Alexander Duyck <alexander.duyck@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Babu Moger <babu.moger@oracle.com>,
-	"Jordan Hargrave" <Jordan_Hargrave@dell.com>
-Subject: RE: [PATCHv3 0/4] PCI VPD access fixes
-Date: Tue, 16 Feb 2016 23:50:24 +0000
-Message-ID: <DDB9C85B850785449757F9914A034FCB44531CFE@G4W3219.americas.hpqcorp.net>
-References: <1455525722-122040-1-git-send-email-hare@suse.de>
-In-Reply-To: <1455525722-122040-1-git-send-email-hare@suse.de>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH V4 22/23] arm64, pci, acpi: Assign legacy IRQs once device
+ is enable.
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
+ <1454606941-9523-23-git-send-email-tn@semihalf.com>
+ <20160211115843.GA24136@red-moon> <20160211171700.GB25235@red-moon>
+Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <56BCD550.2050601@semihalf.com>
+Date: Thu, 11 Feb 2016 19:39:12 +0100
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160211171700.GB25235@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 11.02.2016 18:17, Lorenzo Pieralisi wrote:
+> Here (on top of your series), ready for flak.
+>
+> Lorenzo
+>
+> -- >8 --
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index 0b53262..26ee291 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -45,28 +45,23 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+>    */
+>   int pcibios_enable_device(struct pci_dev *dev, int mask)
+>   {
+> -	int ret;
+> -
+>   	if (pci_has_flag(PCI_PROBE_ONLY))
+>   		return 0;
+>
+> -	ret = pci_enable_resources(dev, mask);
+> -	if (ret < 0)
+> -		return ret;
+> -
+> -#ifdef CONFIG_ACPI
+> -	if (!pci_dev_msi_enabled(dev))
+> -		return acpi_pci_irq_enable(dev);
+> -#endif
+> -	return 0;
+> +	return pci_enable_resources(dev, mask);
+>   }
+>
+>   /*
+> - * Try to assign the IRQ number from DT when adding a new device
+> + * Try to assign the IRQ number when probing a new device
+>    */
+> -int pcibios_add_device(struct pci_dev *dev)
+> +int pcibios_alloc_irq(struct pci_dev *dev)
+>   {
+> -	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> +	if (acpi_disabled)
+> +		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> +#ifdef CONFIG_ACPI
+> +	else
+> +		return acpi_pci_irq_enable(dev);
+> +#endif
+>
+>   	return 0;
+>   }
 
-For the series tested two PCIe cards that support VPD:
+I miss that way of solving the problem. OK lets try this way. I will 
+integrate it.
 
-0d:00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic SAS2308 PCI-Express Fusion-MPT SAS-2 (rev 05)
-1e:00.0 Fibre Channel: QLogic Corp. ISP2432-based 4Gb Fibre Channel to PCI Express HBA (rev 03)
-
-The first card exposes 32KiB of NUL bytes as VPD and the second 154 bytes of non-NUL data repeating every 4KiB for 32KiB before the change. After the change the first  card returns no data for VPD (since it contains only NUL bytes) and the second the expected 154 bytes of data.
-
-Using dyn debug also tested that this message comes out as expected for the LSI card (and it did):
-
-[  289.539523] mpt3sas 0000:0d:00.0: invalid short VPD tag 00 at offset 1
-
-lspci works correctly with the patch in the kernel. The only change on the system was that with the LSI card lspci with -vvvv as root it now says "Not readable"  instead of "Unknown small resource type 00, will not decode more." in the VPD section.
----
-Tested-by: Shane Seymour <shane.seymour@hpe.com>
-
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> owner@vger.kernel.org] On Behalf Of Hannes Reinecke
-> Sent: Monday, February 15, 2016 7:42 PM
-> To: Bjorn Helgaas
-> Cc: Alexander Duyck; linux-pci@vger.kernel.org; Babu Moger; Jordan
-> Hargrave; Hannes Reinecke
-> Subject: [PATCHv3 0/4] PCI VPD access fixes
-> 
-> the current PCI VPD page access assumes that the entire possible VPD data is
-> readable. However, the spec only guarantees a VPD data up to the 'end'
-> marker, with everything beyond that being undefined.
-> This causes a system lockup on certain devices.
-> 
-> With this patch we always set the VPD sysfs attribute size to '0', and calculate
-> the available VPD size on the first access.
-> If no valid data can be read an I/O error is returned.
-> 
-> I've also included the patch from Babu to blacklists devices which are known
-> to lockup when accessing the VPD data.
-> 
-> Changes to v2:
-> - Spelling fixes as suggested by Bjorn Helgaas
-> - Update to correct vpd size in pci_vpc_pci22_write
-> - Pass in modified VPD size to pci_vpd_pci22_size() to make
->   quirk_brcm_570x_limit_vpd work
-> 
-> Babu Moger (1):
->   pci: Blacklist vpd access for buggy devices
-> 
-> Hannes Reinecke (3):
->   pci: Update VPD definitions
->   pci: allow access to VPD attributes with size '0'
->   pci: Determine actual VPD size on first access
-> 
->  drivers/pci/access.c    | 84
-> +++++++++++++++++++++++++++++++++++++++++++++++--
->  drivers/pci/pci-sysfs.c | 22 +++++++------
->  drivers/pci/quirks.c    | 43 +++++++++++++++++++++++++
->  include/linux/pci.h     | 27 ++++++++++++++--
->  4 files changed, 162 insertions(+), 14 deletions(-)
-> 
-> --
-> 1.8.5.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
-> body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+Tomasz
