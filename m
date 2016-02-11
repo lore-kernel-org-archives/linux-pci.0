@@ -1,46 +1,163 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:35042 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965121AbcBQDp7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:45:59 -0500
-Received: from localhost
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 17 Feb 2016 13:45:56 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v8 39/45] powerpc/powernv: Select OF_DYNAMIC
-Date: Wed, 17 Feb 2016 14:44:22 +1100
-Message-Id: <1455680668-23298-40-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-acpi@vger.kernel.org, linux-ia64@vger.kernel.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Mark Salter <msalter@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: [PATCH v2] PCI: ACPI: IA64: fix IO port generic range check
+Date: Thu, 11 Feb 2016 17:47:07 +0000
+Message-Id: <1455212827-9382-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The device tree will change dynamically in PowerNV PCI hotplug
-driver. This enables CONFIG_OF_DYNAMIC to support that.
+The [0 - 64k] ACPI PCI IO port resource boundary check in:
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+acpi_dev_ioresource_flags()
+
+is currently applied blindly in the ACPI resource parsing to all
+architectures, but only x86 suffers from that IO space limitation.
+
+On arches (ie IA64 and ARM64) where IO space is memory mapped,
+the PCI root bridges IO resource windows are firstly initialized from
+the _CRS (in acpi_decode_space()) and contain the CPU physical address
+at which a root bridge decodes IO space in the CPU physical address
+space with the offset value representing the offset required to translate
+the PCI bus address into the CPU physical address.
+
+The IO resource windows are then parsed and updated in arch code
+before creating and enumerating PCI buses (eg IA64 add_io_space())
+to map in an arch specific way the obtained CPU physical address range
+to a slice of virtual address space reserved to map PCI IO space,
+ending up with PCI bridges resource windows containing IO
+resources like the following on a working IA64 configuration:
+
+PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [io  0x1000000-0x100ffff window] (bus
+address [0x0000-0xffff])
+pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000fffff window]
+pci_bus 0000:00: root bus resource [mem 0x80000000-0x8fffffff window]
+pci_bus 0000:00: root bus resource [mem 0x80004000000-0x800ffffffff window]
+pci_bus 0000:00: root bus resource [bus 00]
+
+This implies that the [0 - 64K] check in acpi_dev_ioresource_flags()
+leaves platforms with memory mapped IO space (ie IA64) broken (ie kernel
+can't claim IO resources since the host bridge IO resource is disabled
+and discarded by ACPI core code, see log on IA64 with missing root bridge
+IO resource, silently filtered by current [0 - 64k] check in
+acpi_dev_ioresource_flags()):
+
+PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000fffff window]
+pci_bus 0000:00: root bus resource [mem 0x80000000-0x8fffffff window]
+pci_bus 0000:00: root bus resource [mem 0x80004000000-0x800ffffffff window]
+pci_bus 0000:00: root bus resource [bus 00]
+
+[...]
+
+pci 0000:00:03.0: [1002:515e] type 00 class 0x030000
+pci 0000:00:03.0: reg 0x10: [mem 0x80000000-0x87ffffff pref]
+pci 0000:00:03.0: reg 0x14: [io  0x1000-0x10ff]
+pci 0000:00:03.0: reg 0x18: [mem 0x88020000-0x8802ffff]
+pci 0000:00:03.0: reg 0x30: [mem 0x88000000-0x8801ffff pref]
+pci 0000:00:03.0: supports D1 D2
+pci 0000:00:03.0: can't claim BAR 1 [io  0x1000-0x10ff]: no compatible
+bridge window
+
+For this reason, the IO port resources boundaries check in generic ACPI
+parsing code should be moved to x86 arch code so that more arches (ie
+ARM64) can benefit from the generic ACPI resources parsing interface
+without incurring in unexpected resource filtering, fixing at the same
+time current breakage on IA64.
+
+This patch moves the IO ports boundary [0 - 64k] check to x86 arch code
+code that validates the PCI host bridge resources.
+
+Fixes: 3772aea7d6f3 ("ia64/PCI/ACPI: Use common ACPI resource parsing
+interface for host bridge")
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: Mark Salter <msalter@redhat.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 ---
- arch/powerpc/platforms/powernv/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+v1 -> v2
 
-diff --git a/arch/powerpc/platforms/powernv/Kconfig b/arch/powerpc/platforms/powernv/Kconfig
-index 604190c..e7b1ad7 100644
---- a/arch/powerpc/platforms/powernv/Kconfig
-+++ b/arch/powerpc/platforms/powernv/Kconfig
-@@ -18,6 +18,7 @@ config PPC_POWERNV
- 	select CPU_FREQ_GOV_ONDEMAND
- 	select CPU_FREQ_GOV_CONSERVATIVE
- 	select PPC_DOORBELL
-+	select OF_DYNAMIC
- 	default y
+- Updated commit log to report missing IO resources
+- Fixed function ioport_valid() comment 16k/64k typo
+
+v1: https://lkml.org/lkml/2016/2/1/157
+
+ arch/x86/pci/acpi.c     | 18 +++++++++++++-----
+ drivers/acpi/resource.c |  3 ---
+ 2 files changed, 13 insertions(+), 8 deletions(-)
+
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 3cd6983..cec68e7 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -275,11 +275,14 @@ static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
+  *     to access PCI configuration space.
+  *
+  * So explicitly filter out PCI CFG IO ports[0xCF8-0xCFF].
++ *
++ * Furthermore, IO ports address space is limited to 64k on x86,
++ * any IO resource exceeding the boundary must therefore be discarded.
+  */
+-static bool resource_is_pcicfg_ioport(struct resource *res)
++static bool ioport_valid(struct resource *res)
+ {
+-	return (res->flags & IORESOURCE_IO) &&
+-		res->start == 0xCF8 && res->end == 0xCFF;
++	return !(res->start == 0xCF8 && res->end == 0xCFF) &&
++	       !(res->end >= 0x10003);
+ }
  
- config OPAL_PRD
+ static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
+@@ -287,13 +290,18 @@ static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
+ 	struct acpi_device *device = ci->bridge;
+ 	int busnum = ci->root->secondary.start;
+ 	struct resource_entry *entry, *tmp;
++	struct resource *res;
+ 	int status;
+ 
+ 	status = acpi_pci_probe_root_resources(ci);
+ 	if (pci_use_crs) {
+-		resource_list_for_each_entry_safe(entry, tmp, &ci->resources)
+-			if (resource_is_pcicfg_ioport(entry->res))
++		resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
++			res = entry->res;
++
++			if (res->flags & IORESOURCE_IO && !ioport_valid(res))
+ 				resource_list_destroy_entry(entry);
++		}
++
+ 		return status;
+ 	}
+ 
+diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+index d02fd53..c112e1d 100644
+--- a/drivers/acpi/resource.c
++++ b/drivers/acpi/resource.c
+@@ -127,9 +127,6 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+ 	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
+ 		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+ 
+-	if (res->end >= 0x10003)
+-		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+-
+ 	if (io_decode == ACPI_DECODE_16)
+ 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
+ 	if (translation_type == ACPI_SPARSE_TRANSLATION)
 -- 
-2.1.0
+2.5.1
 
