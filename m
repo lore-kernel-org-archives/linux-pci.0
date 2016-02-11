@@ -1,38 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:48013 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750723AbcBEEPi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Feb 2016 23:15:38 -0500
-Subject: Re: dra7xx driver status
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Tony Lindgren <tony@atomide.com>,
-	Paul Walmsley <paul@pwsan.com>
-References: <20160204204534.GC7031@localhost>
-CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <56B421E1.9090005@ti.com>
-Date: Fri, 5 Feb 2016 09:45:29 +0530
+Received: from mail-sn1nam02on0058.outbound.protection.outlook.com ([104.47.36.58]:55760
+	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751389AbcBKQ23 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Feb 2016 11:28:29 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <bhelgaas@google.com>, <michals@xilinx.com>,
+	<lorenzo.pieralisi@arm.com>, <paul.burton@imgtec.com>,
+	<yinghai@kernel.org>, <wangyijing@huawei.com>, <robh@kernel.org>,
+	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
+	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
+	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
+	<galak@codeaurora.org>
+CC: <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: [PATCH V4 3/5] PCI: xilinx: Modifying AXI PCIe Host Bridge driver to work on both  Zynq and Microblaze
+Date: Thu, 11 Feb 2016 21:58:09 +0530
+Message-ID: <1455208091-15556-4-git-send-email-bharatku@xilinx.com>
+In-Reply-To: <1455208091-15556-1-git-send-email-bharatku@xilinx.com>
+References: <1455208091-15556-1-git-send-email-bharatku@xilinx.com>
 MIME-Version: 1.0
-In-Reply-To: <20160204204534.GC7031@localhost>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Modifying Xilinx AXI PCIe Host Bridge Soft IP driver to work on both
+Zynq and Microblaze Architectures.
+With these modifications drivers/pci/host/pcie-xilinx.c, will
+work on both Zynq and Microblaze Architectures.
 
-On Friday 05 February 2016 02:15 AM, Bjorn Helgaas wrote:
-> Hi Kishon,
-> 
-> What's the state of dra7xx?  In my tree, it's still marked with
-> CONFIG_BROKEN.  Last I heard there was a reset issue that needed to
-> be worked out, but I don't know whether that's been done yet.
+Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
 
-I've posted pdata-quirks mechanism to do the reset (which will get PCIe
-working). Tony had some comments and we are expecting feedback from Paul. I'll
-ping him again in that thread.
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+---
+Changes:
+Added #ifdef to pci_fixup_irqs which is ARM specific API.
+---
+ drivers/pci/host/pcie-xilinx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Thanks
-Kishon
-> 
-> Bjorn
-> 
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 13fec35..8ad50fe 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -704,7 +704,9 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+ #endif
+ 	pci_scan_child_bus(bus);
+ 	pci_assign_unassigned_bus_resources(bus);
++#ifndef CONFIG_MICROBLAZE
+ 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++#endif
+ 	pci_bus_add_devices(bus);
+ 	platform_set_drvdata(pdev, port);
+ 
+-- 
+2.1.1
+
