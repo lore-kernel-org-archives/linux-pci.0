@@ -1,72 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47886 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756379AbcBWAql (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Feb 2016 19:46:41 -0500
-Subject: [PATCH v4 02/11] PCI: Allow access to VPD attributes with size 0
-To: Hannes Reinecke <hare@suse.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Babu Moger <babu.moger@oracle.com>,
-	Alexander Duyck <alexander.duyck@gmail.com>
-Date: Mon, 22 Feb 2016 18:46:38 -0600
-Message-ID: <20160223004638.10635.92076.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V4 22/23] arm64, pci, acpi: Assign legacy IRQs once device
+ is enable.
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
+ <1454606941-9523-23-git-send-email-tn@semihalf.com>
+ <20160211115843.GA24136@red-moon>
+Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jchandra@broadcom.com, jcm@redhat.com
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <56BCD6FE.4030107@semihalf.com>
+Date: Thu, 11 Feb 2016 19:46:22 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160211115843.GA24136@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hannes Reinecke <hare@suse.de>
+On 11.02.2016 12:58, Lorenzo Pieralisi wrote:
+> As for the MSI check, by reading commit history its need I think
+> it harks back to bba6f6fc, which was supposed to be a quick hack and it
+> has been in the kernel for 9 years:), is it really needed ?
 
-It is not always possible to determine the actual size of the VPD
-data, so allow access to them if the size is set to '0'.
+IMO, yes it is needed. We need to chose MSI vs IRQ, and MSI is 
+preferable option.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>
----
- drivers/pci/pci-sysfs.c |   20 ++++++++++++--------
- 1 file changed, 12 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 95d9e7b..a730f54 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -769,10 +769,12 @@ static ssize_t read_vpd_attr(struct file *filp, struct kobject *kobj,
- {
- 	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
- 
--	if (off > bin_attr->size)
--		count = 0;
--	else if (count > bin_attr->size - off)
--		count = bin_attr->size - off;
-+	if (bin_attr->size > 0) {
-+		if (off > bin_attr->size)
-+			count = 0;
-+		else if (count > bin_attr->size - off)
-+			count = bin_attr->size - off;
-+	}
- 
- 	return pci_read_vpd(dev, off, count, buf);
- }
-@@ -783,10 +785,12 @@ static ssize_t write_vpd_attr(struct file *filp, struct kobject *kobj,
- {
- 	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
- 
--	if (off > bin_attr->size)
--		count = 0;
--	else if (count > bin_attr->size - off)
--		count = bin_attr->size - off;
-+	if (bin_attr->size > 0) {
-+		if (off > bin_attr->size)
-+			count = 0;
-+		else if (count > bin_attr->size - off)
-+			count = bin_attr->size - off;
-+	}
- 
- 	return pci_write_vpd(dev, off, count, buf);
- }
-
+Tomasz
