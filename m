@@ -1,129 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db3on0099.outbound.protection.outlook.com ([157.55.234.99]:52800
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0055.outbound.protection.outlook.com ([104.47.38.55]:51712
+	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753709AbcBEVMc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2016 16:12:32 -0500
-From: Yang-Leo Li <leoyang.li@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Minghuan Lian <minghuan.lian@nxp.com>
-CC: Bhupesh Sharma <bhupesh.sharma@nxp.com>,
-	"Shi, Yang" <yang.shi@linaro.org>,
-	"shawn.guo@linaro.org" <shawn.guo@linaro.org>,
-	Mingkai Hu <mingkai.hu@nxp.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
+	id S1751334AbcBKQ22 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Feb 2016 11:28:28 -0500
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <bhelgaas@google.com>, <michals@xilinx.com>,
+	<lorenzo.pieralisi@arm.com>, <paul.burton@imgtec.com>,
+	<yinghai@kernel.org>, <wangyijing@huawei.com>, <robh@kernel.org>,
+	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
+	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
+	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
+	<galak@codeaurora.org>
+CC: <devicetree@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>
-Subject: RE: [PATCH] PCI: layerscape: add ls2085a compatible
-Date: Fri, 5 Feb 2016 19:36:50 +0000
-Message-ID: <AM2PR04MB0770FD6ED4FD45AFE600C6DB8FD20@AM2PR04MB0770.eurprd04.prod.outlook.com>
-References: <1453915925-19198-1-git-send-email-yang.shi@linaro.org>
- <56A906F4.3050809@linaro.org> <20160204223711.GE7031@localhost>
- <56B3E386.8010002@linaro.org>
- <VI1PR04MB1230AA5CAEEEE0D4AD8E3DF288D20@VI1PR04MB1230.eurprd04.prod.outlook.com>
- <VI1PR04MB16155E4265922D6659B439C1E8D20@VI1PR04MB1615.eurprd04.prod.outlook.com>
- <20160205155412.GB29306@localhost>
-In-Reply-To: <20160205155412.GB29306@localhost>
-Content-Type: text/plain; charset="us-ascii"
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: [PATCH V4 4/5] PCI: xilinx: Updating Zynq PCI binding documentation  with  Microblaze node.
+Date: Thu, 11 Feb 2016 21:58:10 +0530
+Message-ID: <1455208091-15556-5-git-send-email-bharatku@xilinx.com>
+In-Reply-To: <1455208091-15556-1-git-send-email-bharatku@xilinx.com>
+References: <1455208091-15556-1-git-send-email-bharatku@xilinx.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Fri, Feb 05, 2016 at 06:07:10AM +0000, Minghuan Lian wrote:
-> > The patch is ok to me.
-> 
-> Thanks, I'll transform that into an ack.
+Updated Zynq PCI binding documentation with Microblaze node.
 
-Also
-Acked-by: Li Yang <leoyang.li@nxp.com>
+Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
 
-> 
-> Who's going to post a patch to update MAINTAINERS to fix the @freescale.com
-> addresses?  If we can get that in for v4.5, it will save some hassle.
+Acked-by: Rob Herring <robh@kernel.org>
+---
+Changes:
+Adding Microblaze device tree node Documnetation.
+---
+ .../devicetree/bindings/pci/xilinx-pcie.txt        | 32 ++++++++++++++++++++--
+ 1 file changed, 29 insertions(+), 3 deletions(-)
 
-The @freescale.com address can still reach us for some time(not sure how long though).  I don't know if all the people want to change to an NXP company email address in MAINTAINERS or just update to a personal email address as some already did.
+diff --git a/Documentation/devicetree/bindings/pci/xilinx-pcie.txt b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
+index 02f979a..ad7c7bf 100644
+--- a/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
+@@ -17,7 +17,7 @@ Required properties:
+ 	Please refer to the standard PCI bus binding document for a more
+ 	detailed explanation
+ 
+-Optional properties:
++Optional properties for Zynq/Microblaze:
+ - bus-range: PCI bus numbers covered
+ 
+ Interrupt controller child node
+@@ -38,13 +38,13 @@ the four INTx interrupts in ISR and route them to this domain.
+ 
+ Example:
+ ++++++++
+-
++Zynq:
+ 	pci_express: axi-pcie@50000000 {
+ 		#address-cells = <3>;
+ 		#size-cells = <2>;
+ 		#interrupt-cells = <1>;
+ 		compatible = "xlnx,axi-pcie-host-1.00.a";
+-		reg = < 0x50000000 0x10000000 >;
++		reg = < 0x50000000 0x1000000 >;
+ 		device_type = "pci";
+ 		interrupts = < 0 52 4 >;
+ 		interrupt-map-mask = <0 0 0 7>;
+@@ -60,3 +60,29 @@ Example:
+ 			#interrupt-cells = <1>;
+ 		};
+ 	};
++
++
++Microblaze:
++	pci_express: axi-pcie@10000000 {
++		#address-cells = <3>;
++		#size-cells = <2>;
++		#interrupt-cells = <1>;
++		compatible = "xlnx,axi-pcie-host-1.00.a";
++		reg = <0x10000000 0x4000000>;
++		device_type = "pci";
++		interrupt-parent = <&microbalze_0_intc>;
++		interrupts = <1 2>;
++		interrupt-map-mask = <0 0 0 7>;
++		interrupt-map = <0 0 0 1 &pcie_intc 1>,
++				<0 0 0 2 &pcie_intc 2>,
++				<0 0 0 3 &pcie_intc 3>,
++				<0 0 0 4 &pcie_intc 4>;
++		ranges = <0x02000000 0x00000000 0x80000000 0x80000000 0x00000000 0x10000000>;
++
++		pcie_intc: interrupt-controller {
++			interrupt-controller;
++			#address-cells = <0>;
++			#interrupt-cells = <1>;
++		};
++
++	};
+-- 
+2.1.1
 
-Regards,
-Leo
-
-> 
-> > > -----Original Message-----
-> > > From: Bhupesh Sharma
-> > > Sent: Friday, February 05, 2016 1:36 PM
-> > > To: Shi, Yang <yang.shi@linaro.org>; Bjorn Helgaas
-> > > <helgaas@kernel.org>; Yang-Leo Li <leoyang.li@nxp.com>;
-> > > shawn.guo@linaro.org
-> > > Cc: Mingkai Hu <mingkai.hu@nxp.com>; Minghuan Lian
-> > > <minghuan.lian@nxp.com>; bhelgaas@google.com;
-> > > linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
-> > > linux-arm-kernel@lists.infradead.org;
-> > > linaro-kernel@lists.linaro.org
-> > > Subject: RE: [PATCH] PCI: layerscape: add ls2085a compatible
-> > >
-> > > > From: Shi, Yang
-> > > > Sent: Friday, February 05, 2016 5:19 AM
-> > > >
-> > > > On 2/4/2016 2:37 PM, Bjorn Helgaas wrote:
-> > > > > On Wed, Jan 27, 2016 at 10:05:40AM -0800, Shi, Yang wrote:
-> > > > >> Correct FSL folks email address to nxp.com, sorry for the
-> > > > inconvenience.
-> > > > >
-> > > > > Do we need some MAINTAINERS updates in addition to the ack for
-> > > > > this
-> > > > patch?
-> > > > > I see a bunch of @freescale.com addresses in MAINTAINERS.
-> > > >
-> > > > I guess so if the @freescale.com address is not valid anymore.
-> > >
-> > > All @freescale.com address have shifted to @nxp.com.
-> > >
-> > > Leo, Minghuan - can you kindly review this patch.
-> > >
-> > > Shawn - can you take this through your tree, once Leo and Minghuan
-> > > have reviewed the code.
-> > >
-> > > Regards,
-> > > Bhupesh
-> > >
-> > > >
-> > > > >
-> > > > >> On 1/27/2016 9:32 AM, Yang Shi wrote:
-> > > > >>> The layerscape PCI host driver needs recognize ls2085a
-> > > > >>> compatible when using firmware with ls2085a compatible
-> > > > >>> property, otherwise the PCI bus won't be detected even though
-> > > > >>> ls2085a compatible is included
-> > > > by the dts.
-> > > > >>>
-> > > > >>> Signed-off-by: Yang Shi <yang.shi@linaro.org>
-> > > > >>> ---
-> > > > >>>   drivers/pci/host/pci-layerscape.c | 1 +
-> > > > >>>   1 file changed, 1 insertion(+)
-> > > > >>>
-> > > > >>> diff --git a/drivers/pci/host/pci-layerscape.c
-> > > > >>> b/drivers/pci/host/pci-layerscape.c
-> > > > >>> index 3923bed..c40d8b2 100644
-> > > > >>> --- a/drivers/pci/host/pci-layerscape.c
-> > > > >>> +++ b/drivers/pci/host/pci-layerscape.c
-> > > > >>> @@ -203,6 +203,7 @@ static const struct of_device_id
-> > > > ls_pcie_of_match[] = {
-> > > > >>>   	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata
-> > > > },
-> > > > >>>   	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata
-> > > > },
-> > > > >>>   	{ .compatible = "fsl,ls2080a-pcie", .data = &ls2080_drvdata
-> > > > },
-> > > > >>> +	{ .compatible = "fsl,ls2085a-pcie", .data = &ls2080_drvdata
-> > > > >>> +},
-> > > > >>>   	{ },
-> > > > >>>   };
-> > > > >>>   MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
-> > > > >>>
-> > > > >>
-> > > >
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux-pci"
-> > > > in the body of a message to majordomo@vger.kernel.org More
-> > > > majordomo info at http://vger.kernel.org/majordomo-info.html
