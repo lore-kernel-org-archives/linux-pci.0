@@ -1,115 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:42502 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751639AbcBJGEg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 01:04:36 -0500
-Received: from localhost
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 10 Feb 2016 16:04:34 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id BF8A02CE8054
-	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:04:31 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u1A64KW138994090
-	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:04:28 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u1A63l5j004655
-	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:03:58 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, mpe@ellerman.id.au,
-	aik@ozlabs.ru, ruscur@russell.cc,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH v14 6/9] powerpc/eeh: Create PE for VFs
-Date: Wed, 10 Feb 2016 17:02:54 +1100
-Message-Id: <1455084177-15525-7-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:38393 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750987AbcBLWlo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 12 Feb 2016 17:41:44 -0500
+Date: Fri, 12 Feb 2016 16:41:40 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Simon Horman <horms+renesas@verge.net.au>,
+	Ray Jui <rjui@broadcom.com>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: [GIT PULL] PCI fixes for v4.5
+Message-ID: <20160212224140.GA8096@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
+Hi Linus,
 
-This creates PEs for VFs in the weak function pcibios_bus_add_device().
-Those PEs for VFs are identified with newly introduced flag EEH_PE_VF
-so that we treat them differently during EEH recovery.
+These are some Renesas binding updates for PCI host controllers, a
+Broadcom fix for a regression we added in v4.5-rc1, and a fix for
+an AER use-after-free problem that can cause memory corruption.
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h               |  1 +
- arch/powerpc/kernel/eeh_pe.c                 | 10 ++++++++--
- arch/powerpc/platforms/powernv/eeh-powernv.c | 16 ++++++++++++++++
- 3 files changed, 25 insertions(+), 2 deletions(-)
+Bjorn
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 574ed49a..0c551a2 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -72,6 +72,7 @@ struct pci_dn;
- #define EEH_PE_PHB	(1 << 1)	/* PHB PE    */
- #define EEH_PE_DEVICE 	(1 << 2)	/* Device PE */
- #define EEH_PE_BUS	(1 << 3)	/* Bus PE    */
-+#define EEH_PE_VF	(1 << 4)	/* VF PE     */
- 
- #define EEH_PE_ISOLATED		(1 << 0)	/* Isolated PE		*/
- #define EEH_PE_RECOVERING	(1 << 1)	/* Recovering PE	*/
-diff --git a/arch/powerpc/kernel/eeh_pe.c b/arch/powerpc/kernel/eeh_pe.c
-index faaf19e..e441d7b 100644
---- a/arch/powerpc/kernel/eeh_pe.c
-+++ b/arch/powerpc/kernel/eeh_pe.c
-@@ -299,7 +299,10 @@ static struct eeh_pe *eeh_pe_get_parent(struct eeh_dev *edev)
- 	 * EEH device already having associated PE, but
- 	 * the direct parent EEH device doesn't have yet.
- 	 */
--	pdn = pdn ? pdn->parent : NULL;
-+	if (edev->physfn)
-+		pdn = pci_get_pdn(edev->physfn);
-+	else
-+		pdn = pdn ? pdn->parent : NULL;
- 	while (pdn) {
- 		/* We're poking out of PCI territory */
- 		parent = pdn_to_eeh_dev(pdn);
-@@ -382,7 +385,10 @@ int eeh_add_to_parent_pe(struct eeh_dev *edev)
- 	}
- 
- 	/* Create a new EEH PE */
--	pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
-+	if (edev->physfn)
-+		pe = eeh_pe_alloc(edev->phb, EEH_PE_VF);
-+	else
-+		pe = eeh_pe_alloc(edev->phb, EEH_PE_DEVICE);
- 	if (!pe) {
- 		pr_err("%s: out of memory!\n", __func__);
- 		return -ENOMEM;
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 8119172..830526e 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -1503,6 +1503,22 @@ static struct eeh_ops pnv_eeh_ops = {
- 	.restore_config		= pnv_eeh_restore_config
- };
- 
-+void pcibios_bus_add_device(struct pci_dev *pdev)
-+{
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+
-+	if (!pdev->is_virtfn)
-+		return;
-+
-+	/*
-+	 * The following operations will fail if VF's sysfs files
-+	 * aren't created or its resources aren't finalized.
-+	 */
-+	eeh_add_device_early(pdn);
-+	eeh_add_device_late(pdev);
-+	eeh_sysfs_add_device(pdev);
-+}
-+
- /**
-  * eeh_powernv_init - Register platform dependent EEH operations
-  *
--- 
-2.1.0
 
+The following changes since commit 92e963f50fc74041b5e9e744c330dca48e04f08d:
+
+  Linux 4.5-rc1 (2016-01-24 13:06:47 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.5-fixes-1
+
+for you to fetch changes up to 0cf1337e0b83c16de4e7e98dad3a6afce6043fea:
+
+  PCI: rcar: Add device tree support for r8a7793 (2016-02-05 14:13:53 -0600)
+
+----------------------------------------------------------------
+PCI updates for v4.5:
+
+  AER
+    Flush workqueue on device remove to avoid use-after-free (Sebastian Andrzej Siewior)
+
+  Broadcom iProc host bridge driver
+    Allow multiple devices except on PAXC (Ray Jui)
+
+  Renesas R-Car host bridge driver
+    Add gen2 device tree support for r8a7793 (Simon Horman)
+    Add device tree support for r8a7793 (Simon Horman)
+
+----------------------------------------------------------------
+Ray Jui (1):
+      PCI: iproc: Allow multiple devices except on PAXC
+
+Sebastian Andrzej Siewior (1):
+      PCI/AER: Flush workqueue on device remove to avoid use-after-free
+
+Simon Horman (2):
+      PCI: rcar: Add gen2 device tree support for r8a7793
+      PCI: rcar: Add device tree support for r8a7793
+
+ .../devicetree/bindings/pci/pci-rcar-gen2.txt      |  1 +
+ Documentation/devicetree/bindings/pci/rcar-pci.txt |  1 +
+ drivers/pci/host/pcie-iproc.c                      | 29 ++++++++--------------
+ drivers/pci/pcie/aer/aerdrv.c                      |  4 +--
+ drivers/pci/pcie/aer/aerdrv.h                      |  1 -
+ drivers/pci/pcie/aer/aerdrv_core.c                 |  2 --
+ 6 files changed, 14 insertions(+), 24 deletions(-)
