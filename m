@@ -1,105 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:53152 "EHLO
-	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752807AbcBHADr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 7 Feb 2016 19:03:47 -0500
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>, <linux-pci@vger.kernel.org>
-Subject: [PATCH 3/5] drivers/pci: export dw syms enabling board specific PCI code to be tristate
-Date: Sun, 7 Feb 2016 19:00:42 -0500
-Message-ID: <1454889644-27830-4-git-send-email-paul.gortmaker@windriver.com>
-In-Reply-To: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com>
-References: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com>
+Received: from mail.kernel.org ([198.145.29.136]:38325 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750820AbcBLDUf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Feb 2016 22:20:35 -0500
+Date: Thu, 11 Feb 2016 21:20:26 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ran Shalit <ranshalit@gmail.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: Q: Relation between lanes to devices and to BARs
+Message-ID: <20160212032026.GA28057@localhost>
+References: <CAJ2oMhL-oL68ZOLsFEn3uGE=O9sMjcwPDH6oznLhG15xnzSQtQ@mail.gmail.com>
+ <1454300093.10542.3.camel@redhat.com>
+ <CAJ2oMh+MjG8frrE3DjHBtwrsG1vGwMcDzQQ8f-n0q-YBS04DZg@mail.gmail.com>
+ <20160201205400.GB4861@localhost>
+ <CAJ2oMh+8pAP3AwF+jBt4rMJ2VhuehSCGHNw7-2VwSeRyV759BA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJ2oMh+8pAP3AwF+jBt4rMJ2VhuehSCGHNw7-2VwSeRyV759BA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After converting the drivers who select PCI_DW from bool to tristate,
-the following symbols need to be exported, simply based on the output
-from modpost failures.
+On Thu, Feb 11, 2016 at 05:22:15PM +0200, Ran Shalit wrote:
+> If I may please ask one more on this issue.
+> You have made it clear the terms lanes & device in relation to
+> PCI/PCI-e device driver.
+> What about port ? Is there any relation between port to lane/device or
+> is there no relation between these terms.
 
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
----
- drivers/pci/host/pcie-designware.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+In Linux, PCIe Ports (Root Ports, Switch Upstream Ports, or Switch
+Downstream Ports) are treated as devices.  There is a struct pci_dev
+for each Port.  A Switch contains at least two Ports (an Upstream Port
+and one or more Downstream Ports), and there is a pci_dev for each of
+them.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 21716827847a..65c0c81b8852 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -91,6 +91,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
- 
- 	return PCIBIOS_SUCCESSFUL;
- }
-+EXPORT_SYMBOL(dw_pcie_cfg_read);
- 
- int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
- {
-@@ -108,6 +109,7 @@ int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
- 
- 	return PCIBIOS_SUCCESSFUL;
- }
-+EXPORT_SYMBOL(dw_pcie_cfg_write);
- 
- static inline void dw_pcie_readl_rc(struct pcie_port *pp, u32 reg, u32 *val)
- {
-@@ -201,6 +203,7 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL(dw_handle_msi_irq);
- 
- void dw_pcie_msi_init(struct pcie_port *pp)
- {
-@@ -215,6 +218,7 @@ void dw_pcie_msi_init(struct pcie_port *pp)
- 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
- 			    (u32)(msi_target >> 32 & 0xffffffff));
- }
-+EXPORT_SYMBOL(dw_pcie_msi_init);
- 
- static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
- {
-@@ -387,6 +391,7 @@ int dw_pcie_link_up(struct pcie_port *pp)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL(dw_pcie_link_up);
- 
- static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
- 			irq_hw_number_t hwirq)
-@@ -562,6 +567,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	pci_bus_add_devices(bus);
- 	return 0;
- }
-+EXPORT_SYMBOL(dw_pcie_host_init);
- 
- static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		u32 devfn, int where, int size, u32 *val)
-@@ -771,6 +777,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
- 	dw_pcie_writel_rc(pp, val, PCI_COMMAND);
- }
-+EXPORT_SYMBOL(dw_pcie_setup_rc);
- 
- MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
- MODULE_DESCRIPTION("Designware PCIe host controller driver");
--- 
-2.6.1
+There is no connection between the number of lanes and the number of
+pci_dev structs.  The Linux PCI core doesn't do anything with the
+number of lanes.  My understanding is that the devices on either end
+of a Link normally negotiate the link width (number of lanes) between
+themselves automatically, without software intervention.
 
+> For example, can it be 1 device with 2 lanes and 8 ports for example ?
+
+"1 device with 8 ports" is a phrase that would make sense in the PCIe
+spec, where you could be talking about a Switch with one Upstream Port
+and seven Downstream Ports.
+
+But in the Linux kernel, since we treat each PCI/PCIe *function* as an
+independent device, this looks like 8 devices.  There will be 8
+pci_dev structs, one for each port.
+
+The "2 lanes" part is irrelevant.  The number of lanes makes no
+difference as far as how many pci_dev structs we have.
+
+Bjorn
