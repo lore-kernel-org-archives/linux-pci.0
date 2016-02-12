@@ -1,519 +1,234 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:42937 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965409AbcBQRqk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Feb 2016 12:46:40 -0500
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: Vineet.Gupta1@synopsys.com, helgaas@kernel.org
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
-	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH RESEND v9 2/2] pcie-designware platform driver
-Date: Wed, 17 Feb 2016 17:46:19 +0000
-Message-Id: <9069117816a5cd9cc3314b6d584c26d457807b8e.1454952698.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1454952698.git.jpinto@synopsys.com>
-References: <cover.1454952698.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1454952698.git.jpinto@synopsys.com>
-References: <cover.1454952698.git.jpinto@synopsys.com>
+Received: from mga04.intel.com ([192.55.52.120]:44845 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750957AbcBLA4S (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 11 Feb 2016 19:56:18 -0500
+From: "Sean O. Stalley" <sean.stalley@intel.com>
+To: linux-pci@vger.kernel.org, mj@ucw.cz, bhelgaas@google.com,
+	alex.williamson@redhat.com
+Cc: sean.stalley@intel.com, david.daney@cavium.com
+Subject: [PATCH v4 2/2] Add support for enhanced allocation regions
+Date: Thu, 11 Feb 2016 16:52:25 -0800
+Message-Id: <1455238345-5602-3-git-send-email-sean.stalley@intel.com>
+In-Reply-To: <1455238345-5602-1-git-send-email-sean.stalley@intel.com>
+References: <1455238345-5602-1-git-send-email-sean.stalley@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The "wait for link" routine was centralised and so all drivers using it
-(dra7xx, exynos, imx6 and spear13xx) were updated to include the new
-function. The keystone driver was not updated because it had some custom
-opreations in the link waiting loop. 
+Append [enhanced] to Regions that contain the BEI flag in sysfs.
+To do this, we need to add the resource flags to the pci_dev struct.
+This struct is passed through the libpci API, so we increment the API version number.
 
-A simple module (pcie-designware-plat) was created to contain the 
-specific platform init code for pcie-designware.
+Don't tuncate least significant bits of the region size.
+ex: a 2000 byte region should display [size=2000] instead of [size=1K]
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
 ---
-Change v8 -> v9 (Bjorn Helgaas and Arnd Bergmann):
-- wait for link routine was moved to pcie-designware, this implicated
-  an update in ra7xx, exynos, imx6 and spear13xx pcie drivers
-- the proposed synopsys pcie rc platform driver is now a simple module
-  that uses pcie-designware functions only and has no custom features
-- the designware-pcie.txt was updated with a DT example
-Change v7 -> v8 (Bjorn Helgaas and Arnd Bergmann):
-- driver name was changed from pcie-synopsys to pcie-dw-pltfm
-- mdelay() replaced for msleep() in the new driver
-- Devicetree bindings for the new driver was updated (config space removed
-from ranges)
-- Unnecessary synopsys_pcie_irq_handler() was removed
-- Driver compatibility strings updated
-Change v6 -> v7 (Bjorn Helgaas):
-- driver name was changed from pcie-snpsdev to pcie-synopsys
-- driver internals (functions and certain variables) also changed name
-accordingly
-- devicetree bindings documentation also changed accordingly
-- quirk function dw_pcie_link_retrain() was removed (tests were made
-successfully without it)
-- driver was changed to meet pci standards (link up confirmation routine,
-init rc functions, etc.)
-- EPROBE_DEFER were removed
-Change v5 -> v6:
-- Nothing changed (just to keep up with patch set version).
-Change v4 -> v5:
-- Nothing changed (just to keep up with patch set version).
-Changes v3 -> v4 (Bjorn Helgaas):
-- ARCH dependencies were added to the drivers/pci/host/kconfig for the
-PCIE_SNPSDEV.
-Changes v2 -> v3 (Bjorn Helgaas):
-- link init stuff was moved to a snpsdev_pcie_establish_link() function in
-pcie-snpsdev
-- pcie-snpsdev driver declaration was changed to be more 
-standard (Bjorn Helgaas)
-- pcie-designware' dw_pcie_link_retrain() now use standard registers from
-pci-regs.h (Bjorn Helgaas)
-- pcie-snpsdev.txt was complemented with more info (Mark Rutland)
-Changes v1 -> v2 (Bjorn Helgaas):
-- Fixups snpsdev_pcie_fixup_bridge() and snpsdev_pcie_fixup_res() were removed
-from the driver (these functions were for specific tests only and not usefull
-in mainline)
-- Driver' comments were reviewed (fix Typos and excessive comments removal)
-- Removed unnecessary definitions in the driver source (PCIE_PHY_CTRL and
-PCIE_PHY_STAT)
+ lib/access.c   | 18 ++++++++++--------
+ lib/caps.c     |  2 +-
+ lib/filter.c   |  2 +-
+ lib/header.h   |  4 ++++
+ lib/libpci.ver |  5 +++++
+ lib/pci.h      |  3 +++
+ lib/sysfs.c    |  7 +++++--
+ lspci.c        | 12 +++++++++---
+ 8 files changed, 38 insertions(+), 15 deletions(-)
 
- .../devicetree/bindings/pci/designware-pcie.txt    |  17 +++
- drivers/pci/host/Kconfig                           |  11 ++
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-dra7xx.c                      |  11 +-
- drivers/pci/host/pci-exynos.c                      |  11 +-
- drivers/pci/host/pci-imx6.c                        |  11 +-
- drivers/pci/host/pcie-designware-plat.c            | 143 +++++++++++++++++++++
- drivers/pci/host/pcie-designware.c                 |  31 ++++-
- drivers/pci/host/pcie-designware.h                 |   6 +
- drivers/pci/host/pcie-spear13xx.c                  |  12 +-
- 10 files changed, 217 insertions(+), 37 deletions(-)
- create mode 100644 drivers/pci/host/pcie-designware-plat.c
-
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-index 5b0853d..64f2fff 100644
---- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-@@ -28,3 +28,20 @@ Optional properties:
- - clock-names: Must include the following entries:
- 	- "pcie"
- 	- "pcie_bus"
-+
-+Example configuration:
-+
-+	pcie: pcie@0xdffff000 {
-+		compatible = "snps,dw-pcie";
-+		reg = <0xdffff000 0x1000>, /* Controller registers */
-+		      <0xd0000000 0x2000>; /* PCI config space */
-+		reg-names = "ctrlreg", "config";
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x81000000 0 0x00000000 0xde000000 0 0x00010000
-+			  0x82000000 0 0xd0400000 0xd0400000 0 0x0d000000>;
-+		interrupts = <25>, <24>;
-+		#interrupt-cells = <1>;
-+		num-lanes = <1>;
-+	};
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index f131ba9..b564f8a 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -15,6 +15,17 @@ config PCI_MVEBU
- 	depends on ARCH_MVEBU || ARCH_DOVE
- 	depends on OF
- 
-+config PCIE_DW_PLAT
-+	bool "Platform bus based DesignWare PCIe Controller"
-+	select PCIE_DW
-+	---help---
-+	 This selects the DesignWare PCIe controller support. Select this if
-+	 you have an PCIe controller on Platform bus.
-+
-+	 If you have a controller with this interface, say Y or M here.
-+
-+	 If unsure, say N.
-+
- config PCIE_DW
- 	bool
- 
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 9d4d3c6..d979121 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -1,4 +1,5 @@
- obj-$(CONFIG_PCIE_DW) += pcie-designware.o
-+obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
- obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
- obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
- obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 8c36880..9b394bb 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -10,7 +10,6 @@
-  * published by the Free Software Foundation.
-  */
- 
--#include <linux/delay.h>
- #include <linux/err.h>
- #include <linux/interrupt.h>
- #include <linux/irq.h>
-@@ -108,7 +107,6 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
- {
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
- 	u32 reg;
--	unsigned int retries;
- 
- 	if (dw_pcie_link_up(pp)) {
- 		dev_err(pp->dev, "link is already up\n");
-@@ -119,13 +117,10 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
- 	reg |= LTSSM_EN;
- 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
- 
--	for (retries = 0; retries < 1000; retries++) {
--		if (dw_pcie_link_up(pp))
--			return 0;
--		usleep_range(10, 20);
--	}
-+	/* check if the link is up or not */
-+	if (!dw_pcie_wait_for_link(pp))
-+		return 0;
- 
--	dev_err(pp->dev, "link is not up\n");
- 	return -EINVAL;
+diff --git a/lib/access.c b/lib/access.c
+index 5994008..17b8bed 100644
+--- a/lib/access.c
++++ b/lib/access.c
+@@ -155,7 +155,7 @@ pci_write_block(struct pci_dev *d, int pos, byte *buf, int len)
  }
  
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index 01095e1..bd26e15 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -318,7 +318,6 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
+ int
+-pci_fill_info_v34(struct pci_dev *d, int flags)
++pci_fill_info_v35(struct pci_dev *d, int flags)
  {
- 	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
- 	u32 val;
--	unsigned int retries;
- 
- 	if (dw_pcie_link_up(pp)) {
- 		dev_err(pp->dev, "Link already up\n");
-@@ -357,13 +356,8 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
- 			  PCIE_APP_LTSSM_ENABLE);
- 
- 	/* check if the link is up or not */
--	for (retries = 0; retries < 10; retries++) {
--		if (dw_pcie_link_up(pp)) {
--			dev_info(pp->dev, "Link up\n");
--			return 0;
--		}
--		mdelay(100);
--	}
-+	if (!dw_pcie_wait_for_link(pp))
-+		return 0;
- 
- 	while (exynos_phy_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED) == 0) {
- 		val = exynos_blk_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED);
-@@ -372,7 +366,6 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
- 	/* power off phy */
- 	exynos_pcie_power_off_phy(pp);
- 
--	dev_err(pp->dev, "PCIe Link Fail\n");
- 	return -EINVAL;
+   if (flags & PCI_FILL_RESCAN)
+     {
+@@ -169,17 +169,19 @@ pci_fill_info_v34(struct pci_dev *d, int flags)
  }
  
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 22e8224..42c6930 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -330,15 +330,10 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ /* In version 3.1, pci_fill_info got new flags => versioned alias */
+-/* In versions 3.2, 3.3 and 3.4, the same has happened */
+-STATIC_ALIAS(int pci_fill_info(struct pci_dev *d, int flags), pci_fill_info_v34(d, flags));
+-DEFINE_ALIAS(int pci_fill_info_v30(struct pci_dev *d, int flags), pci_fill_info_v34);
+-DEFINE_ALIAS(int pci_fill_info_v31(struct pci_dev *d, int flags), pci_fill_info_v34);
+-DEFINE_ALIAS(int pci_fill_info_v32(struct pci_dev *d, int flags), pci_fill_info_v34);
+-DEFINE_ALIAS(int pci_fill_info_v33(struct pci_dev *d, int flags), pci_fill_info_v34);
++/* In versions 3.2, 3.3, 3.4 and 3.5, the same has happened */
++STATIC_ALIAS(int pci_fill_info(struct pci_dev *d, int flags), pci_fill_info_v35(d, flags));
++DEFINE_ALIAS(int pci_fill_info_v30(struct pci_dev *d, int flags), pci_fill_info_v35);
++DEFINE_ALIAS(int pci_fill_info_v31(struct pci_dev *d, int flags), pci_fill_info_v35);
++DEFINE_ALIAS(int pci_fill_info_v32(struct pci_dev *d, int flags), pci_fill_info_v35);
++DEFINE_ALIAS(int pci_fill_info_v33(struct pci_dev *d, int flags), pci_fill_info_v35);
++DEFINE_ALIAS(int pci_fill_info_v34(struct pci_dev *d, int flags), pci_fill_info_v35);
+ SYMBOL_VERSION(pci_fill_info_v30, pci_fill_info@LIBPCI_3.0);
+ SYMBOL_VERSION(pci_fill_info_v31, pci_fill_info@LIBPCI_3.1);
+ SYMBOL_VERSION(pci_fill_info_v32, pci_fill_info@LIBPCI_3.2);
+ SYMBOL_VERSION(pci_fill_info_v33, pci_fill_info@LIBPCI_3.3);
+-SYMBOL_VERSION(pci_fill_info_v34, pci_fill_info@@LIBPCI_3.4);
++SYMBOL_VERSION(pci_fill_info_v34, pci_fill_info@LIBPCI_3.4);
++SYMBOL_VERSION(pci_fill_info_v35, pci_fill_info@@LIBPCI_3.5);
  
- static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+ void
+ pci_setup_cache(struct pci_dev *d, byte *cache, int len)
+diff --git a/lib/caps.c b/lib/caps.c
+index a812fb9..9a2e0a5 100644
+--- a/lib/caps.c
++++ b/lib/caps.c
+@@ -106,7 +106,7 @@ pci_find_cap(struct pci_dev *d, unsigned int id, unsigned int type)
  {
--	unsigned int retries;
--
--	for (retries = 0; retries < 200; retries++) {
--		if (dw_pcie_link_up(pp))
--			return 0;
--		usleep_range(100, 1000);
--	}
-+	/* check if the link is up or not */
-+	if (!dw_pcie_wait_for_link(pp))
-+		return 0;
+   struct pci_cap *c;
  
--	dev_err(pp->dev, "phy link never came up\n");
- 	dev_dbg(pp->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
- 		readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
- 		readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
-diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
-new file mode 100644
-index 0000000..5f75aba
---- /dev/null
-+++ b/drivers/pci/host/pcie-designware-plat.c
-@@ -0,0 +1,143 @@
-+/*
-+ * PCIe RC driver for Synopsys Designware Core
-+ *
-+ * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
-+ *
-+ * Authors: Joao Pinto <jpinto@synopsys.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+#include <linux/clk.h>
-+#include <linux/delay.h>
-+#include <linux/gpio.h>
-+#include <linux/interrupt.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of_gpio.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/resource.h>
-+#include <linux/signal.h>
-+#include <linux/types.h>
-+
-+#include "pcie-designware.h"
-+
-+struct dw_plat_pcie {
-+	void __iomem		*mem_base;
-+	struct pcie_port	pp;
-+};
-+
-+static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
-+{
-+	struct pcie_port *pp = arg;
-+
-+	return dw_handle_msi_irq(pp);
-+}
-+
-+static void dw_plat_pcie_host_init(struct pcie_port *pp)
-+{
-+	dw_pcie_setup_rc(pp);
-+
-+	dw_pcie_wait_for_link(pp);
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI))
-+		dw_pcie_msi_init(pp);
-+}
-+
-+static struct pcie_host_ops dw_plat_pcie_host_ops = {
-+	.host_init = dw_plat_pcie_host_init,
-+};
-+
-+static int dw_plat_add_pcie_port(struct pcie_port *pp,
-+				 struct platform_device *pdev)
-+{
-+	int ret;
-+
-+	pp->irq = platform_get_irq(pdev, 1);
-+
-+	if (pp->irq < 0)
-+		return pp->irq;
-+
-+	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+		pp->msi_irq = platform_get_irq(pdev, 0);
-+
-+		if (pp->msi_irq < 0)
-+			return pp->msi_irq;
-+
-+		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
-+					dw_plat_pcie_msi_irq_handler,
-+					IRQF_SHARED, "dw-plat-pcie-msi", pp);
-+		if (ret) {
-+			dev_err(&pdev->dev, "failed to request msi irq\n");
-+			return ret;
-+		}
-+	}
-+
-+	pp->root_bus_nr = -1;
-+	pp->ops = &dw_plat_pcie_host_ops;
-+
-+	ret = dw_pcie_host_init(pp);
-+	if (ret) {
-+		dev_err(&pdev->dev, "failed to initialize host\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int dw_plat_pcie_probe(struct platform_device *pdev)
-+{
-+	struct dw_plat_pcie *dw_plat_pcie;
-+	struct pcie_port *pp;
-+	struct resource *res;  /* Resource from DT */
-+	int ret;
-+
-+	dw_plat_pcie = devm_kzalloc(&pdev->dev, sizeof(*dw_plat_pcie),
-+					GFP_KERNEL);
-+	if (!dw_plat_pcie)
-+		return -ENOMEM;
-+
-+	pp = &dw_plat_pcie->pp;
-+	pp->dev = &pdev->dev;
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+
-+	if (!res)
-+		return -ENODEV;
-+
-+	dw_plat_pcie->mem_base = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(dw_plat_pcie->mem_base))
-+		return PTR_ERR(dw_plat_pcie->mem_base);
-+
-+	pp->dbi_base = dw_plat_pcie->mem_base;
-+
-+	ret = dw_plat_add_pcie_port(pp, pdev);
-+	if (ret < 0)
-+		return ret;
-+
-+	platform_set_drvdata(pdev, dw_plat_pcie);
-+
-+	return 0;
-+}
-+
-+static const struct of_device_id dw_plat_pcie_of_match[] = {
-+	{ .compatible = "snps,dw-pcie", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, dw_plat_pcie_of_match);
-+
-+static struct platform_driver dw_plat_pcie_driver = {
-+	.driver = {
-+		.name	= "dw-pcie",
-+		.of_match_table = dw_plat_pcie_of_match,
-+	},
-+	.probe = dw_plat_pcie_probe,
-+};
-+
-+module_platform_driver(dw_plat_pcie_driver);
-+
-+MODULE_AUTHOR("Joao Pinto <Joao.Pinto@synopsys.com>");
-+MODULE_DESCRIPTION("Synopsys PCIe host controller glue platform driver");
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 540f077..68ca614 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -22,6 +22,7 @@
- #include <linux/pci_regs.h>
- #include <linux/platform_device.h>
- #include <linux/types.h>
-+#include <linux/delay.h>
+-  pci_fill_info_v34(d, ((type == PCI_CAP_NORMAL) ? PCI_FILL_CAPS : PCI_FILL_EXT_CAPS));
++  pci_fill_info_v35(d, ((type == PCI_CAP_NORMAL) ? PCI_FILL_CAPS : PCI_FILL_EXT_CAPS));
+   for (c=d->first_cap; c; c=c->next)
+     if (c->type == type && c->id == id)
+       return c;
+diff --git a/lib/filter.c b/lib/filter.c
+index d4254a0..ab1476f 100644
+--- a/lib/filter.c
++++ b/lib/filter.c
+@@ -129,7 +129,7 @@ pci_filter_match_v33(struct pci_filter *f, struct pci_dev *d)
+     return 0;
+   if (f->device >= 0 || f->vendor >= 0)
+     {
+-      pci_fill_info_v34(d, PCI_FILL_IDENT);
++      pci_fill_info_v35(d, PCI_FILL_IDENT);
+       if ((f->device >= 0 && f->device != d->device_id) ||
+ 	  (f->vendor >= 0 && f->vendor != d->vendor_id))
+ 	return 0;
+diff --git a/lib/header.h b/lib/header.h
+index b8f7dc1..7b9a803 100644
+--- a/lib/header.h
++++ b/lib/header.h
+@@ -1235,3 +1235,7 @@
  
- #include "pcie-designware.h"
- 
-@@ -69,6 +70,11 @@
- #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
- #define PCIE_ATU_UPPER_TARGET		0x91C
- 
-+/* PCIe Port Logic registers */
-+#define PCIE_PHY_DEBUG_R1_LINK_UP 0x00000010
-+#define PLR_OFFSET 0x700
-+#define PCIE_PHY_DEBUG_R1 (PLR_OFFSET + 0x2c)
+ #define PCI_VENDOR_ID_INTEL		0x8086
+ #define PCI_VENDOR_ID_COMPAQ		0x0e11
 +
- static struct pci_ops dw_pcie_ops;
- 
- int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
-@@ -380,12 +386,33 @@ static struct msi_controller dw_pcie_msi_chip = {
- 	.teardown_irq = dw_msi_teardown_irq,
++/* taken from <include/linux/ioport.h> */
++
++#define IORESOURCE_PCI_EA_BEI          (1<<5)
+diff --git a/lib/libpci.ver b/lib/libpci.ver
+index 7ac8d34..83f3c50 100644
+--- a/lib/libpci.ver
++++ b/lib/libpci.ver
+@@ -66,3 +66,8 @@ LIBPCI_3.4 {
+ 	global:
+ 		pci_fill_info;
  };
- 
-+int dw_pcie_wait_for_link(struct pcie_port *pp)
-+{
-+	int retries;
 +
-+	/* check if the link is up or not */
-+	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
-+		if (dw_pcie_link_up(pp)) {
-+			dev_info(pp->dev, "link up\n");
-+			return 0;
-+		}
-+		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
-+	}
-+
-+	dev_err(pp->dev, "phy link never came up\n");
-+
-+	return 1;
-+}
-+
- int dw_pcie_link_up(struct pcie_port *pp)
- {
-+	u32 val;
-+
- 	if (pp->ops->link_up)
- 		return pp->ops->link_up(pp);
--	else
--		return 0;
-+
-+	val = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
-+	return val & PCIE_PHY_DEBUG_R1_LINK_UP;
- }
++LIBPCI_3.5 {
++	global:
++		pci_fill_info;
++};
+diff --git a/lib/pci.h b/lib/pci.h
+index 9c1e281..a86bfd7 100644
+--- a/lib/pci.h
++++ b/lib/pci.h
+@@ -136,6 +136,8 @@ struct pci_dev {
+   char *module_alias;			/* Linux kernel module alias */
+   char *label;				/* Device name as exported by BIOS */
+   int numa_node;			/* NUMA node */
++  pciaddr_t flags[6];			/* Region IORESOURCE flags */
++  pciaddr_t rom_flags;			/* Expansion ROM IORESOURCE flags */
  
- static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 2356d29..8e42624 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -22,6 +22,11 @@
- #define MAX_MSI_IRQS			32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+   /* Fields used internally: */
+   struct pci_access *access;
+@@ -174,6 +176,7 @@ int pci_fill_info(struct pci_dev *, int flags) PCI_ABI; /* Fill in device inform
+ #define PCI_FILL_MODULE_ALIAS	0x0200
+ #define PCI_FILL_LABEL		0x0400
+ #define PCI_FILL_NUMA_NODE	0x0800
++#define PCI_FILL_IO_FLAGS	0x1000
+ #define PCI_FILL_RESCAN		0x00010000
  
-+/* Parameters for the Waiting for link up routine */
-+#define LINK_WAIT_MAX_RETRIES		10
-+#define LINK_WAIT_USLEEP_MIN		90000
-+#define LINK_WAIT_USLEEP_MAX		100000
-+
- struct pcie_port {
- 	struct device		*dev;
- 	u8			root_bus_nr;
-@@ -76,6 +81,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val);
- int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val);
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
- void dw_pcie_msi_init(struct pcie_port *pp);
-+int dw_pcie_wait_for_link(struct pcie_port *pp);
- int dw_pcie_link_up(struct pcie_port *pp);
- void dw_pcie_setup_rc(struct pcie_port *pp);
- int dw_pcie_host_init(struct pcie_port *pp);
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index b95b756..ffdff1d 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -13,7 +13,6 @@
-  */
- 
- #include <linux/clk.h>
--#include <linux/delay.h>
- #include <linux/interrupt.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
-@@ -149,7 +148,6 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- 	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
- 	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
- 	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
--	unsigned int retries;
- 
- 	if (dw_pcie_link_up(pp)) {
- 		dev_err(pp->dev, "link already up\n");
-@@ -201,15 +199,9 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- 			&app_reg->app_ctrl_0);
- 
- 	/* check if the link is up or not */
--	for (retries = 0; retries < 10; retries++) {
--		if (dw_pcie_link_up(pp)) {
--			dev_info(pp->dev, "link up\n");
--			return 0;
--		}
--		mdelay(100);
--	}
-+	if (!dw_pcie_wait_for_link(pp))
-+		return 0;
- 
--	dev_err(pp->dev, "link Fail\n");
- 	return -EINVAL;
- }
- 
+ void pci_setup_cache(struct pci_dev *, u8 *cache, int len) PCI_ABI;
+diff --git a/lib/sysfs.c b/lib/sysfs.c
+index 986ecc9..65f58bf 100644
+--- a/lib/sysfs.c
++++ b/lib/sysfs.c
+@@ -153,14 +153,17 @@ sysfs_get_resources(struct pci_dev *d)
+ 	size = end - start + 1;
+       else
+ 	size = 0;
+-      flags &= PCI_ADDR_FLAG_MASK;
+       if (i < 6)
+ 	{
++	  d->flags[i] = flags;
++	  flags &= PCI_ADDR_FLAG_MASK;
+ 	  d->base_addr[i] = start | flags;
+ 	  d->size[i] = size;
+ 	}
+       else
+ 	{
++	  d->rom_flags = flags;
++	  flags &= PCI_ADDR_FLAG_MASK;
+ 	  d->rom_base_addr = start | flags;
+ 	  d->rom_size = size;
+ 	}
+@@ -208,7 +211,7 @@ static void sysfs_scan(struct pci_access *a)
+ 	  d->vendor_id = sysfs_get_value(d, "vendor", 1);
+ 	  d->device_id = sysfs_get_value(d, "device", 1);
+ 	  d->device_class = sysfs_get_value(d, "class", 1) >> 8;
+-	  d->known_fields = PCI_FILL_IDENT | PCI_FILL_CLASS | PCI_FILL_IRQ | PCI_FILL_BASES | PCI_FILL_ROM_BASE | PCI_FILL_SIZES;
++	  d->known_fields = PCI_FILL_IDENT | PCI_FILL_CLASS | PCI_FILL_IRQ | PCI_FILL_BASES | PCI_FILL_ROM_BASE | PCI_FILL_SIZES | PCI_FILL_IO_FLAGS;
+ 	}
+       pci_link_dev(a, d);
+     }
+diff --git a/lspci.c b/lspci.c
+index fe7b7fe..52d14f3 100644
+--- a/lspci.c
++++ b/lspci.c
+@@ -336,7 +336,7 @@ show_size(pciaddr_t x)
+   if (!x)
+     return;
+   for (i = 0; i < (sizeof(suffix) / sizeof(*suffix) - 1); i++) {
+-    if (x < 1024)
++    if (x % 1024)
+       break;
+     x /= 1024;
+   }
+@@ -355,6 +355,7 @@ show_bases(struct device *d, int cnt)
+     {
+       pciaddr_t pos = p->base_addr[i];
+       pciaddr_t len = (p->known_fields & PCI_FILL_SIZES) ? p->size[i] : 0;
++      pciaddr_t ioflg = (p->known_fields & PCI_FILL_IO_FLAGS) ? p->flags[i] : 0;
+       u32 flg = get_conf_long(d, PCI_BASE_ADDRESS_0 + 4*i);
+       if (flg == 0xffffffff)
+ 	flg = 0;
+@@ -364,7 +365,9 @@ show_bases(struct device *d, int cnt)
+ 	printf("\tRegion %d: ", i);
+       else
+ 	putchar('\t');
+-      if (pos && !flg)			/* Reported by the OS, but not by the device */
++      if (ioflg & IORESOURCE_PCI_EA_BEI)
++	  printf("[enhanced] ");
++      else if (pos && !flg)	/* Reported by the OS, but not by the device */
+ 	{
+ 	  printf("[virtual] ");
+ 	  flg = pos;
+@@ -430,6 +433,7 @@ show_rom(struct device *d, int reg)
+   struct pci_dev *p = d->dev;
+   pciaddr_t rom = p->rom_base_addr;
+   pciaddr_t len = (p->known_fields & PCI_FILL_SIZES) ? p->rom_size : 0;
++  pciaddr_t ioflg = (p->known_fields & PCI_FILL_IO_FLAGS) ? p->rom_flags : 0;
+   u32 flg = get_conf_long(d, reg);
+   word cmd = get_conf_word(d, PCI_COMMAND);
+   int virtual = 0;
+@@ -437,7 +441,9 @@ show_rom(struct device *d, int reg)
+   if (!rom && !flg && !len)
+     return;
+   putchar('\t');
+-  if ((rom & PCI_ROM_ADDRESS_MASK) && !(flg & PCI_ROM_ADDRESS_MASK))
++  if (ioflg & IORESOURCE_PCI_EA_BEI)
++      printf("[enhanced] ");
++  else if ((rom & PCI_ROM_ADDRESS_MASK) && !(flg & PCI_ROM_ADDRESS_MASK))
+     {
+       printf("[virtual] ");
+       flg = rom;
 -- 
-1.8.1.5
+1.9.1
 
