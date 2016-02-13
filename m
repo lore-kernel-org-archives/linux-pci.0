@@ -1,87 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:52344 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751474AbcBYVXB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Feb 2016 16:23:01 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	'Mark Rutland' <mark.rutland@arm.com>,
-	"Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
-	"'bhelgaas@google.com'" <bhelgaas@google.com>,
-	"'arnd@arndb.de'" <arnd@arndb.de>,
-	"'tn@semihalf.com'" <tn@semihalf.com>,
-	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"'linux-acpi@vger.kernel.org'" <linux-acpi@vger.kernel.org>,
-	"'jcm@redhat.com'" <jcm@redhat.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	"'linux-arm-kernel@lists.infradead.org'"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
-Date: Thu, 25 Feb 2016 22:24:34 +0100
-Message-ID: <8105311.kD8XXIcipM@vostro.rjw.lan>
-In-Reply-To: <20160225195912.GA4818@localhost>
-References: <20160209182429.GD4348@leverpostej> <20160225120750.GA32016@red-moon> <20160225195912.GA4818@localhost>
+Received: from mail-lf0-f49.google.com ([209.85.215.49]:33517 "EHLO
+	mail-lf0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751060AbcBMXkN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 13 Feb 2016 18:40:13 -0500
+Received: by mail-lf0-f49.google.com with SMTP id m1so71016732lfg.0
+        for <linux-pci@vger.kernel.org>; Sat, 13 Feb 2016 15:40:12 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAErSpo4beDk_ajsgqMUNJ3TGxDv=ysyPzhXHcx2AhUEUE9ROKA@mail.gmail.com>
+References: <bug-112121-41252@https.bugzilla.kernel.org/> <CAErSpo4beDk_ajsgqMUNJ3TGxDv=ysyPzhXHcx2AhUEUE9ROKA@mail.gmail.com>
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Sat, 13 Feb 2016 23:39:52 +0000
+Message-ID: <CAHbf0-GBiMVr4=n3ZT1NSH8Xgdh3TcdDd=Di+pok6Ep6h42ZOQ@mail.gmail.com>
+Subject: Re: [Bug 112121] New: Some PCIe options cause devices to be removed
+ after syspend
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
+	linux-nvme <linux-nvme@lists.infradead.org>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, February 25, 2016 01:59:12 PM Bjorn Helgaas wrote:
-> On Thu, Feb 25, 2016 at 12:07:50PM +0000, Lorenzo Pieralisi wrote:
-> > On Thu, Feb 25, 2016 at 03:01:19AM +0000, Gabriele Paoloni wrote:
-> > 
-> > [...]
-> > 
-> > > > I think the relevant spec is the PCI Firmware Spec, r3.0, sec 4.1.2.
-> > > > Note 2 in that section says the address range of an MMCFG region
-> > > > must be reserved by declaring a motherboard resource, i.e., included
-> > > > in the _CRS of a PNP0C02 or similar device.
-> > > 
-> > > I had a look a this. So yes the specs says that we should use the 
-> > > PNP0C02 device if MCFG is not supported. 
-> > 
-> > AFAIK, PNP0C02 is a resource reservation mechanism, the spec says that
-> > MCFG regions must be reserved using PNP0C02, even though its
-> > current usage on x86 is a bit unfathomable to me, in particular
-> > in relation to MCFG resources retrieved for hotpluggable bridges (ie
-> > through _CBA, which I think consider the MCFG region as reserved
-> > by default, regardless of PNP0c02):
-> > 
-> > see pci_mmcfg_check_reserved() arch/x86/pci/mmconfig-shared.c
-> 
-> I don't know how _CBA-related resources would be reserved.  I haven't
-> personally worked with any host bridges that supply _CBA, so I don't
-> know whether or how they handled it.
-> 
-> I think the spec intent was that the Consumer/Producer bit (Extended
-> Address Space Descriptor, General Flags Bit[0], see ACPI spec sec
-> 6.4.3.5.4) would be used.  Resources such as ECAM areas would be
-> marked "Consumer", meaning the bridge consumed that space itself, and
-> windows passed down to the PCI bus would be marked "Producer".
-> 
-> But BIOSes didn't use that bit consistently, so we couldn't rely on
-> it.  I verified experimentally that Windows didn't pay attention to
-> that bit either, at least for DWord descriptors:
-> https://bugzilla.kernel.org/show_bug.cgi?id=15701
-> 
-> It's conceivable that we could still use that bit in Extended Address
-> Space descriptors, or maybe some hack like pay attention if the bridge
-> has _CBA, or some such.
+Hi
 
-Last time I asked the firmware vendor people in the ASWG about that,
-the answer was that the Consumer/Producer bit was useless as they had
-never paid any attention to it in general.
+I've just tested this again, I enabled PCI Hotplug & PCIe Hotplug and
+nothing - then I noticed I hadn't enabled the ACPI Hotplug driver -
+once I did the issue re-appeared
 
-It may be good to update the spec to say something along these lines, actually.
+I then had to use testdisk to restore my partition table :'(
 
-Thanks,
-Rafael
+I've attached the updated dmesg & my .config
 
+Cheers
+
+Mike
+
+On 8 February 2016 at 13:51, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> [+cc linux-pci, NVMe folks,  power management folks]
+>
+> On Sun, Feb 7, 2016 at 11:04 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=112121
+>>
+>>             Bug ID: 112121
+>>            Summary: Some PCIe options cause devices to be removed after
+>>                     syspend
+>>            Product: Drivers
+>>            Version: 2.5
+>>     Kernel Version: 4.5-rc2
+>>           Hardware: All
+>>                 OS: Linux
+>>               Tree: Mainline
+>>             Status: NEW
+>>           Severity: normal
+>>           Priority: P1
+>>          Component: PCI
+>>           Assignee: drivers_pci@kernel-bugs.osdl.org
+>>           Reporter: mike@fireburn.co.uk
+>>         Regression: No
+>>
+>> Created attachment 203091
+>>   --> https://bugzilla.kernel.org/attachment.cgi?id=203091&action=edit
+>> Dmesg showing PCIe device removals
+>>
+>> I was having issues with suspend, when the machine was being resumed iommu
+>> started removing devices - including my PCIe NVMe drive which contained my root
+>> partition
+>>
+>> The problem showed up with:
+>>
+>> [*] PCI support
+>> [*]   Support mmconfig PCI config space access
+>> [*]   PCI Express Port Bus support
+>> [*]     PCI Express Hotplug driver
+>> [*]     Root Port Advanced Error Reporting support
+>> [*]       PCI Express ECRC settings control
+>> < >       PCIe AER error injector support
+>> -*-     PCI Express ASPM control
+>> [ ]       Debug PCI Express ASPM
+>>           Default ASPM policy (BIOS default)  --->
+>> [*]   Message Signaled Interrupts (MSI and MSI-X)
+>> [ ]   PCI Debugging
+>> [*]   Enable PCI resource re-allocation detection
+>> < >   PCI Stub driver
+>> [*]   Interrupts on hypertransport devices
+>> [ ] PCI IOV support
+>> [*] PCI PRI support
+>> -*- PCI PASID support
+>>     PCI host controller drivers  ----
+>> < > PCCard (PCMCIA/CardBus) support  ----
+>> [*] Support for PCI Hotplug  --->
+>> < > RapidIO support
+>>
+>>
+>> This is what I have now:
+>>
+>> [*] PCI support
+>> [*]   Support mmconfig PCI config space access
+>> [*]   PCI Express Port Bus support
+>> [ ]     Root Port Advanced Error Reporting support
+>> -*-     PCI Express ASPM control
+>> [ ]       Debug PCI Express ASPM
+>>           Default ASPM policy (BIOS default)  --->
+>> [*]   Message Signaled Interrupts (MSI and MSI-X)
+>> [*]   PCI Debugging
+>> [ ]   Enable PCI resource re-allocation detection
+>> < >   PCI Stub driver
+>> [*]   Interrupts on hypertransport devices
+>> [ ] PCI IOV support
+>> [ ] PCI PRI support
+>> [ ] PCI PASID support
+>>     PCI host controller drivers  ----
+>> < > PCCard (PCMCIA/CardBus) support  ----
+>> [ ] Support for PCI Hotplug  ----
+>> < > RapidIO support
+>>
+>> I tried disabling the iommu driver first but it had no effect
+>>
+>> If people are interested I could play with the above options to see which one
+>> causes the issue
+>
+> My guess is that PCI hotplug is the important one.  It would be nice
+> if dmesg contained enough information to connect nvme0n1 to a PCI
+> device.  It'd be even nicer if the PCI core noted device removals or
+> whatever happened here.
+>
+> You don't get any more details if you boot with "ignore_loglevel", do you?
+>
+> Mike, you didn't mark this as a regression, so I assume it's always
+> been this way, and we just haven't noticed it because most people
+> enable PCI hotplug (or whatever the relevant config option is).
+>
+> Bjorn
