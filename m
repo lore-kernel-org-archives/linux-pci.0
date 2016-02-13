@@ -1,162 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Paul Burton <paul.burton@imgtec.com>
-To: <linux-mips@linux-mips.org>, Ralf Baechle <ralf@linux-mips.org>
-CC: Paul Burton <paul.burton@imgtec.com>,
-	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	"Jiang Liu" <jiang.liu@linux.intel.com>,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	Russell Joyce <russell.joyce@york.ac.uk>,
-	<linux-kernel@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"Jingoo Han" <jingoohan1@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v2 04/15] PCI: xilinx: Keep references to both IRQ domains
-Date: Wed, 3 Feb 2016 11:30:34 +0000
-Message-ID: <1454499045-5020-5-git-send-email-paul.burton@imgtec.com>
-In-Reply-To: <1454499045-5020-1-git-send-email-paul.burton@imgtec.com>
-References: <1454499045-5020-1-git-send-email-paul.burton@imgtec.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from magic.merlins.org ([209.81.13.136]:59662 "EHLO
+	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750961AbcBMWZm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 13 Feb 2016 17:25:42 -0500
+Date: Sat, 13 Feb 2016 13:57:36 -0800
+From: Marc MERLIN <marc@merlins.org>
+To: linux-pci@vger.kernel.org
+Message-ID: <20160213215736.GA1002@merlins.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Subject: 4.4.x kernel (only) gives pcieport 0000:00:1c.4: AER: Corrected
+ error received: id=00e4
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pcie-xilinx creates 2 IRQ domains when built with MSI support: one for
-MSI interrupts & one for legacy INTx interrupts. However, it only kept a
-reference to the MSI IRQ domain. This means that any INTx interrupts
-that may occur would be mapped using the wrong domain, and that only the
-MSI IRQ domain would be removed along with the driver. Track both IRQ
-domains & clean up both as appropriate.
+Howdy,
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-Fixes: 8961def56845 ("PCI: xilinx: Add Xilinx AXI PCIe Host Bridge IP driver")
+I just upgraded my laptop to a Lenovo thinkpad P70 (skylake), moved my linux
+image (4.4.1 kernel), and I'm pseudo-randomly getting these:
 
----
+pcieport 0000:00:1c.4: AER: Corrected error received: id=00e4
+pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Data Link Layer, id=00e4(Transmitter ID)
+pcieport 0000:00:1c.4:   device [8086:a114] error status/mask=00001000/00002000
+pcieport 0000:00:1c.4:    [12] Replay Timer Timeout
+pcieport 0000:00:1c.4: AER: Corrected error received: id=00e4
+pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Data Link Layer, id=00e4(Transmitter ID)
+pcieport 0000:00:1c.4:   device [8086:a114] error status/mask=00001000/00002000
+pcieport 0000:00:1c.4:    [12] Replay Timer Timeout
 
-Changes in v2:
-- Add Fixes tag.
+pcieport 0000:00:1c.4: AER: Multiple Corrected error received: id=00e4
+pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Data Link Layer, id=00e4(Transmitter ID)
+pcieport 0000:00:1c.4:   device [8086:a114] error status/mask=00001000/00002000
+pcieport 0000:00:1c.4:    [12] Replay Timer Timeout
+pcieport 0000:00:1c.4: AER: Multiple Corrected error received: id=00e4
+pcieport 0000:00:1c.4: can't find device of ID00e4
+pcieport 0000:00:1c.4: AER: Multiple Corrected error received: id=00e4
+pcieport 0000:00:1c.4: PCIe Bus Error: severity=Corrected, type=Data Link Layer, id=00e4(Transmitter ID)
 
- drivers/pci/host/pcie-xilinx.c | 58 ++++++++++++++++++++----------------------
- 1 file changed, 28 insertions(+), 30 deletions(-)
+They did not seem to be happening with 4.3.3 kernel.
+With 4.4.1, I've had a boot where I got so many of those that the machine was unusable.
+Other times, it happens a bit, and stops.
+My last boot, it didn't happen at all.
 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 4cfa463..1490bd1 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -105,6 +105,7 @@
-  * @root_busno: Root Bus number
-  * @dev: Device pointer
-  * @irq_domain: IRQ domain pointer
-+ * @msi_irq_domain: MSI IRQ domain pointer
-  * @bus_range: Bus range
-  * @resources: Bus Resources
-  */
-@@ -115,6 +116,7 @@ struct xilinx_pcie_port {
- 	u8 root_busno;
- 	struct device *dev;
- 	struct irq_domain *irq_domain;
-+	struct irq_domain *msi_irq_domain;
- 	struct resource bus_range;
- 	struct list_head resources;
- };
-@@ -291,7 +293,7 @@ static int xilinx_pcie_msi_setup_irq(struct msi_controller *chip,
- 	if (hwirq < 0)
- 		return hwirq;
- 
--	irq = irq_create_mapping(port->irq_domain, hwirq);
-+	irq = irq_create_mapping(port->msi_irq_domain, hwirq);
- 	if (!irq)
- 		return -EINVAL;
- 
-@@ -517,31 +519,21 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 
- /**
-  * xilinx_pcie_free_irq_domain - Free IRQ domain
-- * @port: PCIe port information
-+ * @domain: the IRQ domain to free
-+ * @nr: the number of IRQs in the domain
-  */
--static void xilinx_pcie_free_irq_domain(struct xilinx_pcie_port *port)
-+static void xilinx_pcie_free_irq_domain(struct irq_domain *domain, int nr)
- {
- 	int i;
--	u32 irq, num_irqs;
--
--	/* Free IRQ Domain */
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--
--		free_pages(port->msi_pages, 0);
--
--		num_irqs = XILINX_NUM_MSI_IRQS;
--	} else {
--		/* INTx */
--		num_irqs = 4;
--	}
-+	u32 irq;
- 
--	for (i = 0; i < num_irqs; i++) {
--		irq = irq_find_mapping(port->irq_domain, i);
-+	for (i = 0; i < nr; i++) {
-+		irq = irq_find_mapping(domain, i);
- 		if (irq > 0)
- 			irq_dispose_mapping(irq);
- 	}
- 
--	irq_domain_remove(port->irq_domain);
-+	irq_domain_remove(domain);
- }
- 
- /**
-@@ -571,20 +563,20 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
- 		return PTR_ERR(port->irq_domain);
- 	}
- 
--	/* Setup MSI */
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		port->irq_domain = irq_domain_add_linear(node,
--							 XILINX_NUM_MSI_IRQS,
--							 &msi_domain_ops,
--							 &xilinx_pcie_msi_chip);
--		if (!port->irq_domain) {
--			dev_err(dev, "Failed to get a MSI IRQ domain\n");
--			return PTR_ERR(port->irq_domain);
--		}
-+	if (!IS_ENABLED(CONFIG_PCI_MSI))
-+		return 0;
- 
--		xilinx_pcie_enable_msi(port);
-+	/* Setup MSI */
-+	port->msi_irq_domain = irq_domain_add_linear(node,
-+						     XILINX_NUM_MSI_IRQS,
-+						     &msi_domain_ops,
-+						     &xilinx_pcie_msi_chip);
-+	if (!port->msi_irq_domain) {
-+		dev_err(dev, "Failed to get a MSI IRQ domain\n");
-+		return PTR_ERR(port->msi_irq_domain);
- 	}
- 
-+	xilinx_pcie_enable_msi(port);
- 	return 0;
- }
- 
-@@ -869,7 +861,13 @@ static int xilinx_pcie_remove(struct platform_device *pdev)
- {
- 	struct xilinx_pcie_port *port = platform_get_drvdata(pdev);
- 
--	xilinx_pcie_free_irq_domain(port);
-+	xilinx_pcie_free_irq_domain(port->irq_domain, 4);
-+
-+	if (config_enabled(CONFIG_MSI)) {
-+		free_pages(port->msi_pages, 0);
-+		xilinx_pcie_free_irq_domain(port->msi_irq_domain,
-+					    XILINX_NUM_MSI_IRQS);
-+	}
- 
- 	return 0;
- }
+Sadly, I have no idea what they mean, what I should do about them, and
+why they only seem to be happening with 4.4.1 and not older kernels.
+
+Boot log: http://marc.merlins.org/tmp/4.1.4.boot.txt
+config.gz: http://marc.merlins.org/tmp/4.1.4.config.gz
+
+8086:a114 is this:
+PCI bridge: Intel Corporation Sunrise Point-H PCI Express Root Port #5 (rev f1)
+00:1c.4 0604: 8086:a114 (rev f1) (prog-if 00 [Normal decode])
+        Flags: bus master, fast devsel, latency 0, IRQ 123
+        Bus: primary=00, secondary=05, subordinate=6f, sec-latency=0
+        I/O behind bridge: 00002000-00002fff
+        Memory behind bridge: a4000000-ba0fffff
+        Prefetchable memory behind bridge: 0000000080000000-00000000a1ffffff
+        Capabilities: [40] Express Root Port (Slot+), MSI 00
+        Capabilities: [80] MSI: Enable+ Count=1/1 Maskable- 64bit-
+        Capabilities: [90] Subsystem: 17aa:222d
+        Capabilities: [a0] Power Management version 3
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [140] Access Control Services
+        Capabilities: [220] #19
+        Kernel driver in use: pcieport
+
+Can someone offer some suggestions?
+
+Thanks,
+Marc
 -- 
-2.7.0
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/                         | PGP 1024R/763BE901
