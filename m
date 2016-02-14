@@ -1,159 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42283 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759421AbcBYCSi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:18:38 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v10 29/59] PCI: Reorder resources list for required/optional resources
-Date: Wed, 24 Feb 2016 18:12:20 -0800
-Message-Id: <1456366370-28995-30-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:36841
+	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751476AbcBNWIp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Feb 2016 17:08:45 -0500
+From: Jayachandran C <jchandra@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Jayachandran C <jchandra@broadcom.com>
+Subject: [RFC PATCH 2/2] PCI: Quirks for Broadcom Vulcan
+Date: Mon, 15 Feb 2016 03:35:01 +0530
+Message-Id: <1455487501-28630-2-git-send-email-jchandra@broadcom.com>
+In-Reply-To: <1455487501-28630-1-git-send-email-jchandra@broadcom.com>
+References: <1455487501-28630-1-git-send-email-jchandra@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We try to allocate required+optional before allocate required only and
-expand with optional.
-
-At first we update size and alignment for required+optional resource.
-And after that we reorder them with new alignment, but current we only
-do that STARTALIGN ones.
-
-For SIZEALIGN type resource, after add back add_size, the alignment
-get changed, so need to do sorting like STARTALIGN type resources.
-
-Also we need to reorder the sorting back after we restore
-resource to required only when required+optional fail to allocate for all.
-
-So move out the reordering code from the loop to separated function,
-and call it two times accordingly.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Handle 2 quirks of the Broadcom Vulcan PCI controller:
+ - Make internal bridges to be skipped during DMA alias search
+ - Skip BAR0 resource assignment internal bridges. The BARs of
+   bridges cannot be assigned from the mem resource range.
 ---
- drivers/pci/setup-bus.c | 62 +++++++++++++++++++++++++++++--------------------
- 1 file changed, 37 insertions(+), 25 deletions(-)
+ drivers/pci/quirks.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 9fdbd98..34e61ff 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -286,6 +286,31 @@ static inline void reset_resource(struct resource *res)
- 	res->flags = 0;
- }
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 0575a1e..afc186a 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3705,6 +3705,27 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
+ DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
  
-+static void sort_resources(struct list_head *head)
+ /*
++ * Two levels of bridges in Broadcom Vulcan are not real PCI or PCIe bridges.
++ * These are internal bridges and should not be used for dma alias
++ * calculations. Additionally, the BAR0 of thes bridges should not be
++ * assigned with a mem resource from linux
++ */
++static void quirk_bridge_brcm_vulcan_internal(struct pci_dev *pdev)
 +{
-+	struct pci_dev_resource *res1, *tmp_res, *res2;
++	struct resource *r = &pdev->resource[0];
 +
-+	list_for_each_entry_safe(res1, tmp_res, head, list) {
-+		resource_size_t align1, size1, align2, size2;
++	/* skip from alias search */
++	pdev->dev_flags |= PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS;
 +
-+		align1 = pci_resource_alignment(res1->dev, res1->res);
-+		size1 = resource_size(res1->res);
-+
-+		/* reorder it */
-+		list_for_each_entry(res2, head, list) {
-+			if (res2 == res1)
-+				break;
-+
-+			align2 = pci_resource_alignment(res2->dev, res2->res);
-+			size2 = resource_size(res2->res);
-+			if (is_before(align1, size1, align2, size2)) {
-+				list_move_tail(&res1->list, &res2->list);
-+				break;
-+			}
-+		}
-+	}
++	/* clear BAR0, should not be used from Linux */
++	memset(r, 0, sizeof(*r));
 +}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9000,
++				quirk_bridge_brcm_vulcan_internal);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9039,
++				quirk_bridge_brcm_vulcan_internal);
 +
- /**
-  * reassign_resources_sorted() - satisfy any additional resource requests
-  *
-@@ -454,9 +479,9 @@ static void __assign_resources_sorted(struct list_head *head,
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
--	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
-+	struct pci_dev_resource *dev_res, *tmp_res;
- 	unsigned long fail_type;
--	resource_size_t add_align, align;
-+	resource_size_t add_align;
- 
- 	/* Check if optional add_size is there */
- 	if (!realloc_head || list_empty(realloc_head))
-@@ -471,47 +496,32 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 
- 	/* Update res in head list with add_size in realloc_head list */
--	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
-+	list_for_each_entry(dev_res, head, list) {
- 		dev_res->res->end += get_res_add_size(realloc_head,
- 							dev_res->res);
- 
- 		/*
- 		 * There are two kinds of additional resources in the list:
--		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
--		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
--		 * Here just fix the additional alignment for bridge
-+		 * 1. bridge resource with IORESOURCE_STARTALIGN
-+		 *    need to update start to change alignment
-+		 * 2. resource with IORESOURCE_SIZEALIGN
-+		 *    update size above already change alignment.
- 		 */
- 		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
- 			continue;
- 
- 		add_align = get_res_add_align(realloc_head, dev_res->res);
- 
--		/*
--		 * The "head" list is sorted by the alignment to make sure
--		 * resources with bigger alignment will be assigned first.
--		 * After we change the alignment of a dev_res in "head" list,
--		 * we need to reorder the list by alignment to make it
--		 * consistent.
--		 */
--		if (add_align > dev_res->res->start) {
-+		if (add_align) {
- 			resource_size_t r_size = resource_size(dev_res->res);
- 
- 			dev_res->res->start = add_align;
- 			dev_res->res->end = add_align + r_size - 1;
--
--			list_for_each_entry(dev_res2, head, list) {
--				align = pci_resource_alignment(dev_res2->dev,
--							       dev_res2->res);
--				if (add_align > align) {
--					list_move_tail(&dev_res->list,
--						       &dev_res2->list);
--					break;
--				}
--			}
- 		}
--
- 	}
- 
-+	sort_resources(head);
-+
- 	/* Try updated head list with add_size added */
- 	assign_requested_resources_sorted(head, &local_fail_head);
- 
-@@ -553,6 +563,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	}
- 	free_list(&save_head);
- 
-+	sort_resources(head);
-+
- requested_and_reassign:
- 	/* Satisfy the must-have resource requests */
- 	assign_requested_resources_sorted(head, fail_head);
++/*
+  * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
+  * class code.  Fix it.
+  */
 -- 
-1.8.4.5
+1.9.1
 
