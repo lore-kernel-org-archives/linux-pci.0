@@ -1,209 +1,175 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V4 21/23] pci, acpi: Match PCI config space accessors against platfrom specific quirks.
-Date: Thu,  4 Feb 2016 18:28:59 +0100
-Message-Id: <1454606941-9523-22-git-send-email-tn@semihalf.com>
-In-Reply-To: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:36467 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751467AbcBNIeD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Feb 2016 03:34:03 -0500
+Received: by mail-pa0-f45.google.com with SMTP id yy13so69294996pab.3
+        for <linux-pci@vger.kernel.org>; Sun, 14 Feb 2016 00:34:02 -0800 (PST)
+Subject: Re: [PATCH v2] PCI: ACPI: IA64: fix IO port generic range check
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	linux-pci@vger.kernel.org
+References: <1455212827-9382-1-git-send-email-lorenzo.pieralisi@arm.com>
+Cc: linux-acpi@vger.kernel.org, linux-ia64@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Mark Salter <msalter@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <56C03BF0.6020505@linaro.org>
+Date: Sun, 14 Feb 2016 16:33:52 +0800
+MIME-Version: 1.0
+In-Reply-To: <1455212827-9382-1-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some platforms may not be fully compliant with generic set of PCI config
-accessors. For these cases we implement the way to overwrite accessors
-set prior to PCI buses enumeration. Algorithm traverses available quirk
-list, matches against <platform ID (DMI), domain, bus number> tuple and
-returns corresponding accessors. All quirks can be defined using:
-DECLARE_ACPI_MCFG_FIXUP() and kept self contained. Example,
+On 2016/2/12 1:47, Lorenzo Pieralisi wrote:
+> The [0 - 64k] ACPI PCI IO port resource boundary check in:
+>
+> acpi_dev_ioresource_flags()
+>
+> is currently applied blindly in the ACPI resource parsing to all
+> architectures, but only x86 suffers from that IO space limitation.
+>
+> On arches (ie IA64 and ARM64) where IO space is memory mapped,
+> the PCI root bridges IO resource windows are firstly initialized from
+> the _CRS (in acpi_decode_space()) and contain the CPU physical address
+> at which a root bridge decodes IO space in the CPU physical address
+> space with the offset value representing the offset required to translate
+> the PCI bus address into the CPU physical address.
+>
+> The IO resource windows are then parsed and updated in arch code
+> before creating and enumerating PCI buses (eg IA64 add_io_space())
+> to map in an arch specific way the obtained CPU physical address range
+> to a slice of virtual address space reserved to map PCI IO space,
+> ending up with PCI bridges resource windows containing IO
+> resources like the following on a working IA64 configuration:
+>
+> PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [io  0x1000000-0x100ffff window] (bus
+> address [0x0000-0xffff])
+> pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000fffff window]
+> pci_bus 0000:00: root bus resource [mem 0x80000000-0x8fffffff window]
+> pci_bus 0000:00: root bus resource [mem 0x80004000000-0x800ffffffff window]
+> pci_bus 0000:00: root bus resource [bus 00]
+>
+> This implies that the [0 - 64K] check in acpi_dev_ioresource_flags()
+> leaves platforms with memory mapped IO space (ie IA64) broken (ie kernel
+> can't claim IO resources since the host bridge IO resource is disabled
+> and discarded by ACPI core code, see log on IA64 with missing root bridge
+> IO resource, silently filtered by current [0 - 64k] check in
+> acpi_dev_ioresource_flags()):
+>
+> PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000fffff window]
+> pci_bus 0000:00: root bus resource [mem 0x80000000-0x8fffffff window]
+> pci_bus 0000:00: root bus resource [mem 0x80004000000-0x800ffffffff window]
+> pci_bus 0000:00: root bus resource [bus 00]
+>
+> [...]
+>
+> pci 0000:00:03.0: [1002:515e] type 00 class 0x030000
+> pci 0000:00:03.0: reg 0x10: [mem 0x80000000-0x87ffffff pref]
+> pci 0000:00:03.0: reg 0x14: [io  0x1000-0x10ff]
+> pci 0000:00:03.0: reg 0x18: [mem 0x88020000-0x8802ffff]
+> pci 0000:00:03.0: reg 0x30: [mem 0x88000000-0x8801ffff pref]
+> pci 0000:00:03.0: supports D1 D2
+> pci 0000:00:03.0: can't claim BAR 1 [io  0x1000-0x10ff]: no compatible
+> bridge window
+>
+> For this reason, the IO port resources boundaries check in generic ACPI
+> parsing code should be moved to x86 arch code so that more arches (ie
+> ARM64) can benefit from the generic ACPI resources parsing interface
+> without incurring in unexpected resource filtering, fixing at the same
+> time current breakage on IA64.
+>
+> This patch moves the IO ports boundary [0 - 64k] check to x86 arch code
+> code that validates the PCI host bridge resources.
+>
+> Fixes: 3772aea7d6f3 ("ia64/PCI/ACPI: Use common ACPI resource parsing
+> interface for host bridge")
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> Cc: Jiang Liu <jiang.liu@linux.intel.com>
+> Cc: Tony Luck <tony.luck@intel.com>
+> Cc: Tomasz Nowicki <tn@semihalf.com>
+> Cc: Mark Salter <msalter@redhat.com>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> ---
+> v1 -> v2
+>
+> - Updated commit log to report missing IO resources
+> - Fixed function ioport_valid() comment 16k/64k typo
+>
+> v1: https://lkml.org/lkml/2016/2/1/157
+>
+>   arch/x86/pci/acpi.c     | 18 +++++++++++++-----
+>   drivers/acpi/resource.c |  3 ---
+>   2 files changed, 13 insertions(+), 8 deletions(-)
+>
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index 3cd6983..cec68e7 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -275,11 +275,14 @@ static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
+>    *     to access PCI configuration space.
+>    *
+>    * So explicitly filter out PCI CFG IO ports[0xCF8-0xCFF].
+> + *
+> + * Furthermore, IO ports address space is limited to 64k on x86,
+> + * any IO resource exceeding the boundary must therefore be discarded.
+>    */
+> -static bool resource_is_pcicfg_ioport(struct resource *res)
+> +static bool ioport_valid(struct resource *res)
+>   {
+> -	return (res->flags & IORESOURCE_IO) &&
+> -		res->start == 0xCF8 && res->end == 0xCFF;
+> +	return !(res->start == 0xCF8 && res->end == 0xCFF) &&
+> +	       !(res->end >= 0x10003);
+>   }
+>
+>   static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
+> @@ -287,13 +290,18 @@ static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
+>   	struct acpi_device *device = ci->bridge;
+>   	int busnum = ci->root->secondary.start;
+>   	struct resource_entry *entry, *tmp;
+> +	struct resource *res;
+>   	int status;
+>
+>   	status = acpi_pci_probe_root_resources(ci);
+>   	if (pci_use_crs) {
+> -		resource_list_for_each_entry_safe(entry, tmp, &ci->resources)
+> -			if (resource_is_pcicfg_ioport(entry->res))
+> +		resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
+> +			res = entry->res;
+> +
+> +			if (res->flags & IORESOURCE_IO && !ioport_valid(res))
+>   				resource_list_destroy_entry(entry);
+> +		}
+> +
+>   		return status;
+>   	}
+>
+> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> index d02fd53..c112e1d 100644
+> --- a/drivers/acpi/resource.c
+> +++ b/drivers/acpi/resource.c
+> @@ -127,9 +127,6 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+>   	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
+>   		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+>
+> -	if (res->end >= 0x10003)
+> -		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+> -
+>   	if (io_decode == ACPI_DECODE_16)
+>   		res->flags |= IORESOURCE_IO_16BIT_ADDR;
+>   	if (translation_type == ACPI_SPARSE_TRANSLATION)
 
-static const struct dmi_system_id foo_dmi[] = {
-        {
-                .ident = "<Platform ident string>",
-                .callback = <handler>,
-                .matches = {
-                        DMI_MATCH(DMI_SYS_VENDOR, "<system vendor>"),
-                        DMI_MATCH(DMI_PRODUCT_NAME, "<product name>"),
-                        DMI_MATCH(DMI_PRODUCT_VERSION, "product version"),
-                },
-        },
-        { }
-};
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 
-static struct pci_ops foo_ecam_pci_ops = {
-        .map_bus = pci_mcfg_dev_base,
-        .read = foo_ecam_config_read,
-        .write = foo_ecam_config_write,
-};
-DECLARE_ACPI_MCFG_FIXUP(foo_dmi, NULL, &foo_ecam_pci_ops, <domain_nr>, <bus_nr>);
-
-More custom (non-DMI) matching can be done via an extra call.
-Note that there is possibility to assign quirk related private data to
-root->sysdata which will be available along read/wriate accessor, example:
-
-static int boo_match(struct pci_mcfg_fixup *fixup, struct acpi_pci_root *root)
-{
-        return [condition] ? 1 : 0;
-}
-
-int boo_ecam_config_read(struct pci_bus *bus, unsigned int devfn,
-                          int where, int size, u32 *val)
-{
-        struct acpi_pci_root *root = bus->sysdata;
-        struct boo_priv_data *boo_data = root->sysdata;
-
-        [..]
-}
-
-static struct pci_ops boo_ecam_pci_ops = {
-	.map_bus = pci_mcfg_dev_base,
-	.read = boo_ecam_config_read,
-	.write = boo_ecam_config_write,
-};
-DECLARE_ACPI_MCFG_FIXUP(NULL, boo_match, &boo_ecam_pci_ops, <domain_nr>, <bus_nr>);
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/acpi/mcfg.c               | 33 +++++++++++++++++++++++++++++++--
- include/acpi/acpi_bus.h           |  1 +
- include/asm-generic/vmlinux.lds.h |  7 +++++++
- include/linux/ecam.h              | 18 ++++++++++++++++++
- 4 files changed, 57 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
-index dfc2d14..4663f70 100644
---- a/drivers/acpi/mcfg.c
-+++ b/drivers/acpi/mcfg.c
-@@ -8,6 +8,7 @@
-  */
- 
- #include <linux/acpi.h>
-+#include <linux/dmi.h>
- #include <linux/ecam.h>
- #include <linux/pci.h>
- #include <linux/pci-acpi.h>
-@@ -34,6 +35,29 @@ int __weak raw_pci_write(unsigned int domain, unsigned int bus,
- 	return PCIBIOS_DEVICE_NOT_FOUND;
- }
- 
-+extern struct pci_mcfg_fixup __start_acpi_mcfg_fixups[];
-+extern struct pci_mcfg_fixup __end_acpi_mcfg_fixups[];
-+
-+static struct pci_ops *pci_mcfg_check_quirks(struct acpi_pci_root *root)
-+{
-+	struct pci_mcfg_fixup *f;
-+	int bus_num = root->secondary.start;
-+	int domain = root->segment;
-+
-+	/*
-+	 * First match against PCI topology <domain:bus> then use DMI or
-+	 * custom match handler.
-+	 */
-+	for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups; f++) {
-+		if ((f->domain == domain || f->domain == PCI_MCFG_DOMAIN_ANY) &&
-+		    (f->bus_num == bus_num || f->bus_num == PCI_MCFG_BUS_ANY) &&
-+		    (f->system ? dmi_check_system(f->system) : 1 &&
-+		     f->match ? f->match(f, root) : 1))
-+			return f->ops;
-+	}
-+	return NULL;
-+}
-+
- void __iomem *
- pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn, int offset)
- {
-@@ -56,10 +80,15 @@ static struct pci_ops default_pci_mcfg_ops = {
- 
- struct pci_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
- {
-+	struct pci_ops *pci_mcfg_ops_quirk;
-+
- 	/*
--	 * TODO: Match against platform specific quirks and return
--	 * corresponding PCI config space accessor set.
-+	 * Match against platform specific quirks and return corresponding
-+	 * PCI config space accessor set.
- 	 */
-+	pci_mcfg_ops_quirk = pci_mcfg_check_quirks(root);
-+	if (pci_mcfg_ops_quirk)
-+		return pci_mcfg_ops_quirk;
- 
- 	return &default_pci_mcfg_ops;
- }
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index 14362a8..0fc6f13 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -556,6 +556,7 @@ struct acpi_pci_root {
- 	struct pci_bus *bus;
- 	u16 segment;
- 	struct resource secondary;	/* downstream bus range */
-+	void *sysdata;
- 
- 	u32 osc_support_set;	/* _OSC state of support bits */
- 	u32 osc_control_set;	/* _OSC state of control bits */
-diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-index c4bd0e2..c93fc97 100644
---- a/include/asm-generic/vmlinux.lds.h
-+++ b/include/asm-generic/vmlinux.lds.h
-@@ -298,6 +298,13 @@
- 		VMLINUX_SYMBOL(__end_pci_fixups_suspend_late) = .;	\
- 	}								\
- 									\
-+	/* ACPI MCFG quirks */						\
-+	.acpi_fixup        : AT(ADDR(.acpi_fixup) - LOAD_OFFSET) {	\
-+		VMLINUX_SYMBOL(__start_acpi_mcfg_fixups) = .;		\
-+		*(.acpi_fixup_mcfg)					\
-+		VMLINUX_SYMBOL(__end_acpi_mcfg_fixups) = .;		\
-+	}								\
-+									\
- 	/* Built-in firmware blobs */					\
- 	.builtin_fw        : AT(ADDR(.builtin_fw) - LOAD_OFFSET) {	\
- 		VMLINUX_SYMBOL(__start_builtin_fw) = .;			\
-diff --git a/include/linux/ecam.h b/include/linux/ecam.h
-index e0f322e..21215be 100644
---- a/include/linux/ecam.h
-+++ b/include/linux/ecam.h
-@@ -20,6 +20,24 @@ struct pci_mmcfg_region {
- 	bool hot_added;
- };
- 
-+struct pci_mcfg_fixup {
-+	const struct dmi_system_id *system;
-+	int (*match)(struct pci_mcfg_fixup *, struct acpi_pci_root *);
-+	struct pci_ops *ops;
-+	int domain;
-+	int bus_num;
-+};
-+
-+#define PCI_MCFG_DOMAIN_ANY	-1
-+#define PCI_MCFG_BUS_ANY	-1
-+
-+/* Designate a routine to fix up buggy MCFG */
-+#define DECLARE_ACPI_MCFG_FIXUP(system, match, ops, dom, bus)		\
-+	static const struct pci_mcfg_fixup __mcfg_fixup_##system##dom##bus\
-+	 __used	__attribute__((__section__(".acpi_fixup_mcfg"),		\
-+				aligned((sizeof(void *))))) =		\
-+	{ system, match, ops, dom, bus };
-+
- struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
- struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
- 						   int end, u64 addr);
--- 
-1.9.1
-
+Thanks
+Hanjun
