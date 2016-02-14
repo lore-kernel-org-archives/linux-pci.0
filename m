@@ -1,297 +1,296 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v11 2/4] PCI: designware: Add generic dw_pcie_wait_for_link()
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: mark.rutland@arm.com, Alexey.Brodkin@synopsys.com, arnd@arndb.de,
-	pawel.moll@arm.com, ijc+devicetree@hellion.org.uk,
-	linux-pci@vger.kernel.org, Vineet.Gupta1@synopsys.com,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	linux-kernel@vger.kernel.org, CARLOS.PALMINHA@synopsys.com,
-	robh+dt@kernel.org, Murali Karicheri <m-karicheri2@ti.com>,
-	galak@codeaurora.org, Jingoo Han <jingoohan1@gmail.com>,
-	linux-snps-arc@lists.infradead.org
-Date: Fri, 26 Feb 2016 10:30:04 -0600
-Message-ID: <20160226163004.11964.55387.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160226162554.11964.96983.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160226162554.11964.96983.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:35413 "EHLO
+	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751402AbcBNUxk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Feb 2016 15:53:40 -0500
+Received: by mail-wm0-f65.google.com with SMTP id g62so12567361wme.2
+        for <linux-pci@vger.kernel.org>; Sun, 14 Feb 2016 12:53:39 -0800 (PST)
+From: Christoph Fritz <chf.fritz@googlemail.com>
+To: Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lee Jones <lee.jones@linaro.org>
+Cc: Fabio Estevam <fabio.estevam@nxp.com>, linux-pci@vger.kernel.org
+Subject: [PATCH 2/2] PCI: imx6: add initial imx6sx support
+Date: Sun, 14 Feb 2016 21:52:44 +0100
+Message-Id: <1455483164-13755-3-git-send-email-chf.fritz@googlemail.com>
+In-Reply-To: <1455483164-13755-1-git-send-email-chf.fritz@googlemail.com>
+References: <1455483164-13755-1-git-send-email-chf.fritz@googlemail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Joao Pinto <Joao.Pinto@synopsys.com>
+This patch adds initial PCIe support for the imx6 SoC derivate imx6sx.
+PCI_MSI support is untested as its necessary suspend/resume quirk is left
+out of this patch.
+This patch is heavily based on patches by Richard Zhu.
 
-Several DesignWare-based drivers (dra7xx, exynos, imx6, keystone, qcom, and
-spear13xx) had similar loops waiting for the link to come up.
-
-Add a generic dw_pcie_wait_for_link() for use by all these drivers so the
-waiting is done consistently, e.g., always using usleep_range() rather than
-mdelay() and using similar timeouts and retry counts.
-
-Note that this changes the Keystone link training/wait for link strategy,
-so we initiate link training, then wait longer for the link to come up
-before re-initiating link training.
-
-[bhelgaas: changelog, split into its own patch, update pci-keystone.c, pcie-qcom.c]
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Christoph Fritz <chf.fritz@googlemail.com>
 ---
- drivers/pci/host/pci-dra7xx.c      |   11 +----------
- drivers/pci/host/pci-exynos.c      |   13 +++----------
- drivers/pci/host/pci-imx6.c        |   13 ++++---------
- drivers/pci/host/pci-keystone.c    |   10 ++++------
- drivers/pci/host/pcie-designware.c |   19 +++++++++++++++++++
- drivers/pci/host/pcie-designware.h |    6 ++++++
- drivers/pci/host/pcie-qcom.c       |   10 +---------
- drivers/pci/host/pcie-spear13xx.c  |   14 +-------------
- 8 files changed, 39 insertions(+), 57 deletions(-)
+ drivers/pci/host/pci-imx6.c | 172 +++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 129 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-index 923607b..2ca3a1f 100644
---- a/drivers/pci/host/pci-dra7xx.c
-+++ b/drivers/pci/host/pci-dra7xx.c
-@@ -10,7 +10,6 @@
-  * published by the Free Software Foundation.
-  */
- 
--#include <linux/delay.h>
- #include <linux/err.h>
- #include <linux/interrupt.h>
- #include <linux/irq.h>
-@@ -108,7 +107,6 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
- {
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
- 	u32 reg;
--	unsigned int retries;
- 
- 	if (dw_pcie_link_up(pp)) {
- 		dev_err(pp->dev, "link is already up\n");
-@@ -119,14 +117,7 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
- 	reg |= LTSSM_EN;
- 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
- 
--	for (retries = 0; retries < 1000; retries++) {
--		if (dw_pcie_link_up(pp))
--			return 0;
--		usleep_range(10, 20);
--	}
--
--	dev_err(pp->dev, "link is not up\n");
--	return -EINVAL;
-+	return dw_pcie_wait_for_link(pp);
- }
- 
- static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index d997d22..2199761 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -318,7 +318,6 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
- {
- 	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
- 	u32 val;
--	unsigned int retries;
- 
- 	if (dw_pcie_link_up(pp)) {
- 		dev_err(pp->dev, "Link already up\n");
-@@ -357,13 +356,8 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
- 			  PCIE_APP_LTSSM_ENABLE);
- 
- 	/* check if the link is up or not */
--	for (retries = 0; retries < 10; retries++) {
--		if (dw_pcie_link_up(pp)) {
--			dev_info(pp->dev, "Link up\n");
--			return 0;
--		}
--		mdelay(100);
--	}
-+	if (!dw_pcie_wait_for_link(pp))
-+		return 0;
- 
- 	while (exynos_phy_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED) == 0) {
- 		val = exynos_blk_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED);
-@@ -372,8 +366,7 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
- 	/* power off phy */
- 	exynos_pcie_power_off_phy(pp);
- 
--	dev_err(pp->dev, "PCIe Link Fail\n");
--	return -EINVAL;
-+	return -ETIMEDOUT;
- }
- 
- static void exynos_pcie_clear_irq_pulse(struct pcie_port *pp)
 diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index fe60096..6c35d86 100644
+index fe60096..73abc3e 100644
 --- a/drivers/pci/host/pci-imx6.c
 +++ b/drivers/pci/host/pci-imx6.c
-@@ -330,19 +330,14 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
- 
- static int imx6_pcie_wait_for_link(struct pcie_port *pp)
- {
--	unsigned int retries;
--
--	for (retries = 0; retries < 200; retries++) {
--		if (dw_pcie_link_up(pp))
--			return 0;
--		usleep_range(100, 1000);
--	}
-+	/* check if the link is up or not */
-+	if (!dw_pcie_wait_for_link(pp))
-+		return 0;
- 
--	dev_err(pp->dev, "phy link never came up\n");
- 	dev_dbg(pp->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
- 		readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
- 		readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
--	return -EINVAL;
-+	return -ETIMEDOUT;
- }
- 
- static int imx6_pcie_wait_for_speed_change(struct pcie_port *pp)
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index 0aa81bd..9a91487 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -97,17 +97,15 @@ static int ks_pcie_establish_link(struct keystone_pcie *ks_pcie)
- 		return 0;
- 	}
- 
--	ks_dw_pcie_initiate_link_train(ks_pcie);
- 	/* check if the link is up or not */
--	for (retries = 0; retries < 200; retries++) {
--		if (dw_pcie_link_up(pp))
--			return 0;
--		usleep_range(100, 1000);
-+	for (retries = 0; retries < 5; retries++) {
- 		ks_dw_pcie_initiate_link_train(ks_pcie);
-+		if (!dw_pcie_wait_for_link(pp))
-+			return 0;
- 	}
- 
- 	dev_err(pp->dev, "phy link never came up\n");
--	return -EINVAL;
-+	return -ETIMEDOUT;
- }
- 
- static void ks_pcie_msi_irq_handler(struct irq_desc *desc)
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 2171682..1fd3ad3 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
 @@ -22,6 +22,7 @@
- #include <linux/pci_regs.h>
+ #include <linux/pci.h>
  #include <linux/platform_device.h>
+ #include <linux/regmap.h>
++#include <linux/regulator/consumer.h>
+ #include <linux/resource.h>
+ #include <linux/signal.h>
  #include <linux/types.h>
-+#include <linux/delay.h>
- 
- #include "pcie-designware.h"
- 
-@@ -380,6 +381,24 @@ static struct msi_controller dw_pcie_msi_chip = {
- 	.teardown_irq = dw_msi_teardown_irq,
+@@ -35,9 +36,13 @@ struct imx6_pcie {
+ 	struct gpio_desc	*reset_gpio;
+ 	struct clk		*pcie_bus;
+ 	struct clk		*pcie_phy;
++	struct clk		*pcie_inbound_axi;
+ 	struct clk		*pcie;
+ 	struct pcie_port	pp;
+ 	struct regmap		*iomuxc_gpr;
++	struct regmap		*gpc_ips_reg;
++	struct regulator	*pcie_phy_regulator;
++	bool			is_imx6sx;
+ 	void __iomem		*mem_base;
  };
  
-+int dw_pcie_wait_for_link(struct pcie_port *pp)
-+{
-+	int retries;
+@@ -80,6 +85,9 @@ struct imx6_pcie {
+ #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
+ #define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1 << 3)
+ 
++#define PCIE_PHY_IMX6SX_GPC_CNTR		0x0
++#define PCIE_PHY_IMX6SX_GPC_CNTR_PUP_REQ	BIT(7)
 +
-+	/* check if the link is up or not */
-+	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
-+		if (dw_pcie_link_up(pp)) {
-+			dev_info(pp->dev, "link up\n");
-+			return 0;
-+		}
-+		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
-+	}
-+
-+	dev_err(pp->dev, "phy link never came up\n");
-+
-+	return -ETIMEDOUT;
-+}
-+
- int dw_pcie_link_up(struct pcie_port *pp)
+ static int pcie_phy_poll_ack(void __iomem *dbi_base, int exp_val)
  {
- 	if (pp->ops->link_up)
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 2356d29..f437f9b 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -22,6 +22,11 @@
- #define MAX_MSI_IRQS			32
- #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+ 	u32 val;
+@@ -214,35 +222,46 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 	u32 val, gpr1, gpr12;
  
-+/* Parameters for the waiting for link up routine */
-+#define LINK_WAIT_MAX_RETRIES		10
-+#define LINK_WAIT_USLEEP_MIN		90000
-+#define LINK_WAIT_USLEEP_MAX		100000
-+
- struct pcie_port {
- 	struct device		*dev;
- 	u8			root_bus_nr;
-@@ -76,6 +81,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val);
- int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val);
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
- void dw_pcie_msi_init(struct pcie_port *pp);
-+int dw_pcie_wait_for_link(struct pcie_port *pp);
- int dw_pcie_link_up(struct pcie_port *pp);
- void dw_pcie_setup_rc(struct pcie_port *pp);
- int dw_pcie_host_init(struct pcie_port *pp);
-diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
-index e845fba..ec4ef54 100644
---- a/drivers/pci/host/pcie-qcom.c
-+++ b/drivers/pci/host/pcie-qcom.c
-@@ -128,15 +128,7 @@ static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
- 	val |= PCIE20_ELBI_SYS_CTRL_LT_ENABLE;
- 	writel(val, pcie->elbi + PCIE20_ELBI_SYS_CTRL);
- 
--	do {
--		if (dw_pcie_link_up(&pcie->pp))
--			return 0;
--		usleep_range(250, 1000);
--	} while (retries < 200);
+-	/*
+-	 * If the bootloader already enabled the link we need some special
+-	 * handling to get the core back into a state where it is safe to
+-	 * touch it for configuration.  As there is no dedicated reset signal
+-	 * wired up for MX6QDL, we need to manually force LTSSM into "detect"
+-	 * state before completely disabling LTSSM, which is a prerequisite
+-	 * for core configuration.
+-	 *
+-	 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
+-	 * indication that the bootloader activated the link.
+-	 */
+-	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
+-	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
 -
--	dev_warn(dev, "phy link never came up\n");
+-	if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
+-	    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
+-		val = readl(pp->dbi_base + PCIE_PL_PFLR);
+-		val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
+-		val |= PCIE_PL_PFLR_FORCE_LINK;
+-		writel(val, pp->dbi_base + PCIE_PL_PFLR);
 -
--	return -ETIMEDOUT;
-+	return dw_pcie_wait_for_link(pp);
- }
- 
- static int qcom_pcie_get_resources_v0(struct qcom_pcie *pcie)
-diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-index a6cd823..a4060b8 100644
---- a/drivers/pci/host/pcie-spear13xx.c
-+++ b/drivers/pci/host/pcie-spear13xx.c
-@@ -13,7 +13,6 @@
-  */
- 
- #include <linux/clk.h>
--#include <linux/delay.h>
- #include <linux/interrupt.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
-@@ -149,7 +148,6 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- 	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
- 	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
- 	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
--	unsigned int retries;
- 
- 	if (dw_pcie_link_up(pp)) {
- 		dev_err(pp->dev, "link already up\n");
-@@ -200,17 +198,7 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
- 			| ((u32)1 << REG_TRANSLATION_ENABLE),
- 			&app_reg->app_ctrl_0);
- 
--	/* check if the link is up or not */
--	for (retries = 0; retries < 10; retries++) {
--		if (dw_pcie_link_up(pp)) {
--			dev_info(pp->dev, "link up\n");
--			return 0;
--		}
--		mdelay(100);
++	if (imx6_pcie->is_imx6sx) {
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-				IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
 -	}
--
--	dev_err(pp->dev, "link Fail\n");
--	return -EINVAL;
-+	return dw_pcie_wait_for_link(pp);
++				IMX6SX_GPR12_PCIE_TEST_POWERDOWN_MASK,
++				IMX6SX_GPR12_PCIE_TEST_POWERDOWN_ENABLE);
++		/* Force PCIe PHY reset */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++					IMX6SX_GPR5_PCIE_BTNRST_MASK,
++					IMX6SX_GPR5_PCIE_BTNRST_RESET);
++	} else {
++		/*
++		 * If the bootloader already enabled the link we need some
++		 * special handling to get the core back into a state where
++		 * it is safe to touch it for configuration.  As there is no
++		 * dedicated reset signal to manually force LTSSM into "detect"
++		 * state before completely disabling LTSSM, which is a
++		 * prerequisite for core configuration.
++		 *
++		 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have
++		 * a strong indication that the bootloader activated the link.
++		 */
++		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
++		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
++
++		if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
++				(gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
++			val = readl(pp->dbi_base + PCIE_PL_PFLR);
++			val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
++			val |= PCIE_PL_PFLR_FORCE_LINK;
++			writel(val, pp->dbi_base + PCIE_PL_PFLR);
++
++			regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				IMX6Q_GPR12_PCIE_CTL_2, 0);
++		}
+ 
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++			IMX6Q_GPR1_PCIE_TEST_PD,
++			IMX6Q_GPR1_PCIE_TEST_PD);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0);
++	}
+ 
+ 	return 0;
+ }
+@@ -270,18 +289,31 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		goto err_pcie;
+ 	}
+ 
+-	/* power up core phy and enable ref clock */
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+-	/*
+-	 * the async reset input need ref clock to sync internally,
+-	 * when the ref clock comes after reset, internal synced
+-	 * reset time is too short, cannot meet the requirement.
+-	 * add one ~10us delay here.
+-	 */
+-	udelay(10);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
++	if (imx6_pcie->is_imx6sx) {
++		ret = clk_prepare_enable(imx6_pcie->pcie_inbound_axi);
++		if (ret) {
++			dev_err(pp->dev, "unable to enable pcie_axi clock\n");
++			goto err_inbound_axi;
++		}
++
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++			IMX6SX_GPR12_PCIE_TEST_POWERDOWN_MASK,
++			IMX6SX_GPR12_PCIE_TEST_POWERDOWN_DISABLE);
++	} else {
++		/* power up core phy and enable ref clock */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				IMX6Q_GPR1_PCIE_TEST_PD, 0);
++		/*
++		 * the async reset input need ref clock to sync internally,
++		 * when the ref clock comes after reset, internal synced
++		 * reset time is too short , cannot meet the requirement.
++		 * add one ~10us delay here.
++		 */
++		udelay(10);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++			IMX6Q_GPR1_PCIE_REF_CLK_EN,
++			IMX6Q_GPR1_PCIE_REF_CLK_EN);
++	}
+ 
+ 	/* allow the clocks to stabilize */
+ 	usleep_range(200, 500);
+@@ -292,8 +324,16 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		msleep(100);
+ 		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+ 	}
++
++	if (imx6_pcie->is_imx6sx)
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++			IMX6SX_GPR5_PCIE_BTNRST_MASK,
++			IMX6SX_GPR5_PCIE_BTNRST_RELEASE);
++
+ 	return 0;
+ 
++err_inbound_axi:
++	clk_disable_unprepare(imx6_pcie->pcie);
+ err_pcie:
+ 	clk_disable_unprepare(imx6_pcie->pcie_bus);
+ err_pcie_bus:
+@@ -303,9 +343,28 @@ err_pcie_phy:
+ 
  }
  
- static irqreturn_t spear13xx_pcie_irq_handler(int irq, void *arg)
+-static void imx6_pcie_init_phy(struct pcie_port *pp)
++static int imx6_pcie_init_phy(struct pcie_port *pp)
+ {
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
++	int ret = 0;
++
++	if (imx6_pcie->is_imx6sx) {
++		/* power up separate domain available on i.mx6sx */
++		regmap_update_bits(imx6_pcie->gpc_ips_reg,
++			PCIE_PHY_IMX6SX_GPC_CNTR,
++			PCIE_PHY_IMX6SX_GPC_CNTR_PUP_REQ,
++			PCIE_PHY_IMX6SX_GPC_CNTR_PUP_REQ);
++		regulator_set_voltage(imx6_pcie->pcie_phy_regulator,
++			1100000, 1100000);
++		ret = regulator_enable(imx6_pcie->pcie_phy_regulator);
++		if (ret) {
++			dev_err(pp->dev, "cannot enable pcie_phy regulator\n");
++			return ret;
++		}
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++			IMX6SX_GPR12_PCIE_RX_EQ_MASK,
++			IMX6SX_GPR12_PCIE_RX_EQ_2);
++	}
+ 
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+@@ -326,6 +385,8 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ 			IMX6Q_GPR8_TX_SWING_FULL, 127 << 18);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+ 			IMX6Q_GPR8_TX_SWING_LOW, 127 << 25);
++
++	return ret;
+ }
+ 
+ static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+@@ -571,6 +632,9 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 	pp = &imx6_pcie->pp;
+ 	pp->dev = &pdev->dev;
+ 
++	imx6_pcie->is_imx6sx = of_device_is_compatible(pp->dev->of_node,
++					"fsl,imx6sx-pcie");
++
+ 	/* Added for PCI abort handling */
+ 	hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
+ 		"imprecise external abort");
+@@ -606,9 +670,30 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(imx6_pcie->pcie);
+ 	}
+ 
+-	/* Grab GPR config register range */
+-	imx6_pcie->iomuxc_gpr =
+-		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
++	if (imx6_pcie->is_imx6sx) {
++		imx6_pcie->pcie_inbound_axi = devm_clk_get(&pdev->dev,
++			"pcie_inbound_axi");
++
++		if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
++			dev_err(&pdev->dev,
++				"pcie_incbound_axi clock missing or invalid\n");
++			return PTR_ERR(imx6_pcie->pcie_inbound_axi);
++		}
++
++		imx6_pcie->pcie_phy_regulator = devm_regulator_get(pp->dev,
++			"pcie-phy");
++
++		imx6_pcie->iomuxc_gpr =
++			syscon_regmap_lookup_by_compatible
++			("fsl,imx6sx-iomuxc-gpr");
++
++		imx6_pcie->gpc_ips_reg =
++			syscon_regmap_lookup_by_compatible("fsl,imx6sx-gpc");
++	} else {
++		imx6_pcie->iomuxc_gpr =
++			syscon_regmap_lookup_by_compatible
++			("fsl,imx6q-iomuxc-gpr");
++	}
+ 	if (IS_ERR(imx6_pcie->iomuxc_gpr)) {
+ 		dev_err(&pdev->dev, "unable to find iomuxc registers\n");
+ 		return PTR_ERR(imx6_pcie->iomuxc_gpr);
+@@ -632,6 +717,7 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
+ 
+ static const struct of_device_id imx6_pcie_of_match[] = {
+ 	{ .compatible = "fsl,imx6q-pcie", },
++	{ .compatible = "fsl,imx6sx-pcie", },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
+-- 
+2.1.4
+
