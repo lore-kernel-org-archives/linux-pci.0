@@ -1,109 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Qipeng Zha <qipeng.zha@intel.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
-	mika.westerberg@intel.com, Qi Zheng <qi.zheng@intel.com>
-Subject: [PATCH 1/2] PCI/PM: Revert "PCI/PM: Drop unused runtime PM support code for PCIe ports"
-Date: Thu, 18 Feb 2016 17:43:30 +0800
-Message-Id: <1455788611-59790-1-git-send-email-qipeng.zha@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:44178
+	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751476AbcBNWIo (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 14 Feb 2016 17:08:44 -0500
+From: Jayachandran C <jchandra@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Jayachandran C <jchandra@broadcom.com>
+Subject: [RFC PATCH 1/2] PCI: Add PCI device flag PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS
+Date: Mon, 15 Feb 2016 03:35:00 +0530
+Message-Id: <1455487501-28630-1-git-send-email-jchandra@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This reverts commit fe9a743a2601 ("PCI/PM: Drop unused runtime
-PM support code for PCIe ports"). To support PCIe ports
-runtime PM for Intel Broxton platform.
+Add a new flag PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS to indicate bridges
+that should not be considered during DMA alias search. This is
+to support hardware (in this case Broadcom Vulcan PCIe subsystem)
+that has internal bridges which have either missing or wrong PCIe
+capabilities.
 
-Signed-off-by: Qi Zheng <qi.zheng@intel.com>
-Signed-off-by: Qipeng Zha <qipeng.zha@intel.com>
+Update the function pci_for_each_dma_alias() to skip bridges with
+this flag set.
+
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
 ---
- drivers/pci/pcie/portdrv_pci.c | 68 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 68 insertions(+)
 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index be35da2..1e4a562 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -93,6 +93,71 @@ static int pcie_port_resume_noirq(struct device *dev)
- 	return 0;
- }
+This patch is an RFC, if there is a better way to do this, please
+let me know.
+
+Thanks,
+JC.
+
+ drivers/pci/search.c | 2 ++
+ include/linux/pci.h  | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index a20ce7d..e5296aa 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -55,6 +55,8 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+ 			continue;
  
-+struct d3cold_info {
-+	bool no_d3cold;
-+	unsigned int d3cold_delay;
-+};
-+
-+static int pci_dev_d3cold_info(struct pci_dev *pdev, void *data)
-+{
-+	struct d3cold_info *info = data;
-+
-+	info->d3cold_delay = max_t(unsigned int, pdev->d3cold_delay,
-+				   info->d3cold_delay);
-+	if (pdev->no_d3cold)
-+		info->no_d3cold = true;
-+	return 0;
-+}
-+
-+static int pcie_port_runtime_suspend(struct device *dev)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct d3cold_info d3cold_info = {
-+		.no_d3cold	= false,
-+		.d3cold_delay	= PCI_PM_D3_WAIT,
-+	};
-+
-+	/*
-+	 * If any subordinate device disable D3cold, we should not put
-+	 * the port into D3cold.  The D3cold delay of port should be
-+	 * the max of that of all subordinate devices.
-+	 */
-+	pci_walk_bus(pdev->subordinate, pci_dev_d3cold_info, &d3cold_info);
-+	pdev->no_d3cold = d3cold_info.no_d3cold;
-+	pdev->d3cold_delay = d3cold_info.d3cold_delay;
-+	return 0;
-+}
-+
-+static int pcie_port_runtime_resume(struct device *dev)
-+{
-+	return 0;
-+}
-+
-+static int pci_dev_pme_poll(struct pci_dev *pdev, void *data)
-+{
-+	bool *pme_poll = data;
-+
-+	if (pdev->pme_poll)
-+		*pme_poll = true;
-+	return 0;
-+}
-+
-+static int pcie_port_runtime_idle(struct device *dev)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	bool pme_poll = false;
-+
-+	/*
-+	 * If any subordinate device needs pme poll, we should keep
-+	 * the port in D0, because we need port in D0 to poll it.
-+	 */
-+	pci_walk_bus(pdev->subordinate, pci_dev_pme_poll, &pme_poll);
-+	/* Delay for a short while to prevent too frequent suspend/resume */
-+	if (!pme_poll)
-+		pm_schedule_suspend(dev, 10);
-+	return -EBUSY;
-+}
-+
- static const struct dev_pm_ops pcie_portdrv_pm_ops = {
- 	.suspend	= pcie_port_device_suspend,
- 	.resume		= pcie_port_device_resume,
-@@ -101,6 +166,9 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
- 	.poweroff	= pcie_port_device_suspend,
- 	.restore	= pcie_port_device_resume,
- 	.resume_noirq	= pcie_port_resume_noirq,
-+	.runtime_suspend = pcie_port_runtime_suspend,
-+	.runtime_resume = pcie_port_runtime_resume,
-+	.runtime_idle	= pcie_port_runtime_idle,
+ 		tmp = bus->self;
++		if (tmp->dev_flags & PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS)
++			continue;
+ 
+ 		/*
+ 		 * PCIe-to-PCI/X bridges alias transactions from downstream
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 27df4a6..b4d8215 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -182,6 +182,8 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
+ 	/* Get VPD from function 0 VPD */
+ 	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
++	/* Bridge should be ignored for alias search  */
++	PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS = (__force pci_dev_flags_t) (1 << 9),
  };
  
- #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+ enum pci_irq_reroute_variant {
 -- 
-1.8.3.2
+1.9.1
+
