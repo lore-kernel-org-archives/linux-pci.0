@@ -1,94 +1,121 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-CC: "Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-	"tn@semihalf.com" <tn@semihalf.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"jcm@redhat.com" <jcm@redhat.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [RFC PATCH v2 2/3] PCI: hisi: Make the HiSilicon PCIe host
- controller ECAM compliant
-Date: Mon, 8 Feb 2016 15:55:35 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ECACF44@lhreml503-mbs>
-References: <1454935264-6076-1-git-send-email-gabriele.paoloni@huawei.com>
- <1454935264-6076-3-git-send-email-gabriele.paoloni@huawei.com>
- <3532826.pJr5R5Xa4c@wuerfel>
-In-Reply-To: <3532826.pJr5R5Xa4c@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:47445 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752239AbcBOImZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 15 Feb 2016 03:42:25 -0500
+From: Hannes Reinecke <hare@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+	linux-pci@vger.kernel.org, Babu Moger <babu.moger@oracle.com>,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv3 4/4] pci: Blacklist vpd access for buggy devices
+Date: Mon, 15 Feb 2016 09:42:02 +0100
+Message-Id: <1455525722-122040-5-git-send-email-hare@suse.de>
+In-Reply-To: <1455525722-122040-1-git-send-email-hare@suse.de>
+References: <1455525722-122040-1-git-send-email-hare@suse.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: 08 February 2016 13:48
-> To: linux-arm-kernel@lists.infradead.org
-> Cc: Gabriele Paoloni; Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong
-> (C); Linuxarm; qiujiang; bhelgaas@google.com;
-> Lorenzo.Pieralisi@arm.com; tn@semihalf.com; linux-pci@vger.kernel.org;
-> linux-kernel@vger.kernel.org; xuwei (O); linux-acpi@vger.kernel.org;
-> jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth)
-> Subject: Re: [RFC PATCH v2 2/3] PCI: hisi: Make the HiSilicon PCIe host
-> controller ECAM compliant
-> 
-> On Monday 08 February 2016 12:41:03 Gabriele Paoloni wrote:
-> > From: gabriele paoloni <gabriele.paoloni@huawei.com>
-> >
-> > This patch modifies the current Hip05/Hip06 PCIe host controller
-> > driver to make it ECAM compliant. This is needed in preparation
-> > for the ACPI based driver to allow both DT and ACPI drivers to
-> > use the same BIOS (that configure the Designware iATUs).
-> >
-> > Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> > Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-> >
-> 
-> Doesn't this break backwards compatibility?
+From: Babu Moger <babu.moger@oracle.com>
 
-Well Hip05/Hip06 SoCs are used into evaluation boards
-For the Estuary project.
+Reading or Writing of PCI VPD data causes system panic.
+We saw this problem by running "lspci -vvv" in the beginning.
+However this can be easily reproduced by running
+ cat /sys/bus/devices/XX../vpd
 
-https://github.com/hisilicon/estuary
+As even a simple read on any VPD data triggers a system
+lockup on certain cards this patch implements a PCI quirk
+to disabling VPD acces altogether.
+This is done by setting the by setting the vpd length
+to '0' initially for those devices, which will then inhibit
+access completely..
 
-As this new driver gets upstream we'll merge this new driver into estuary
-and release a new version of the firmware to support it.
+Cc: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Babu Moger <babu.moger@oracle.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/pci/access.c |  4 ++--
+ drivers/pci/quirks.c | 43 +++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 45 insertions(+), 2 deletions(-)
 
-> 
-> I think you need to use a new compatible string in the firmware
-> if you change the register layout, and then change the driver
-> to support both the old and the new layout.
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 253e0c8..8b6f5a2 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -393,7 +393,7 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
+ 	if (pos < 0)
+ 		return -EINVAL;
+ 
+-	if (!vpd->valid) {
++	if (!vpd->valid && vpd->base.len > 0) {
+ 		vpd->valid = true;
+ 		vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
+ 	}
+@@ -459,7 +459,7 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
+ 	if (pos < 0 || (pos & 3) || (count & 3))
+ 		return -EINVAL;
+ 
+-	if (!vpd->valid) {
++	if (!vpd->valid && vpd->base.len > 0) {
+ 		vpd->valid = true;
+ 		vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
+ 	}
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 0575a1e..df1178f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2135,6 +2135,49 @@ static void quirk_via_cx700_pci_parking_caching(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, 0x324e, quirk_via_cx700_pci_parking_caching);
+ 
+ /*
++ * A read/write to sysfs entry ('/sys/bus/pci/devices/<id>/vpd')
++ * will dump 32k of data. The default length is set as 32768.
++ * Reading a full 32k will cause an access beyond the VPD end tag.
++ * The system behaviour at that point is mostly unpredictable.
++ * Apparently, some vendors have not implemented this VPD headers properly.
++ * Adding a generic function disable vpd data for these buggy adapters
++ * Add the DECLARE_PCI_FIXUP_FINAL line below with the specific with
++ * vendor and device of interest to use this quirk.
++ */
++static void quirk_blacklist_vpd(struct pci_dev *dev)
++{
++	if (dev->vpd) {
++		dev->vpd->len = 0;
++		dev_warn(&dev->dev, "PCI vpd access has been disabled due to firmware bug\n");
++	}
++}
++
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f,
++		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID,
++		quirk_blacklist_vpd);
++
++/*
+  * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
+  * VPD end tag will hang the device.  This problem was initially
+  * observed when a vpd entry was created in sysfs
+-- 
+1.8.5.6
 
-You are right, for some reason in this patchset I missed the Documentation
-update that I posted in the previous one, i.e.:
-
---- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-@@ -23,8 +23,8 @@ Optional properties:
- Hip05 Example (note that Hip06 is the same except compatible):
- 	pcie@0xb0080000 {
- 		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
--		reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
--		reg-names = "rc_dbi", "config";
-+		reg = <0 0xb0080000 0 0x10000>, <0x220 0x00100000 0 0x0f00000>;
-+		reg-names = "rc_dbi", "ecam-cfg";
-
-I will fix this in v3
-
-Thanks
-
-Gab 
-
-
-> 
-> 	Arnd
