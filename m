@@ -1,200 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V5 13/15] pci, acpi: Match PCI config space accessors against platfrom specific quirks.
-Date: Tue, 16 Feb 2016 14:53:43 +0100
-Message-Id: <1455630825-27253-14-git-send-email-tn@semihalf.com>
-In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:43374 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752546AbcBOSU3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 15 Feb 2016 13:20:29 -0500
+Date: Mon, 15 Feb 2016 12:20:23 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jayachandran C <jchandra@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Alex Williamson <alex.williamson@redhat.com>,
+	iommu@lists.linux-foundation.org
+Subject: Re: [RFC PATCH 1/2] PCI: Add PCI device flag
+ PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS
+Message-ID: <20160215182023.GB12641@localhost>
+References: <1455487501-28630-1-git-send-email-jchandra@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1455487501-28630-1-git-send-email-jchandra@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some platforms may not be fully compliant with generic set of PCI config
-accessors. For these cases we implement the way to overwrite accessors
-set prior to PCI buses enumeration. Algorithm traverses available quirk
-list, matches against <platform ID (DMI), domain, bus number> tuple and
-returns corresponding accessors. All quirks can be defined using:
-DECLARE_ACPI_MCFG_FIXUP() and kept self contained. Example,
+[+cc Alex, iommu list]
 
-static const struct dmi_system_id foo_dmi[] = {
-        {
-                .ident = "<Platform ident string>",
-                .callback = <handler>,
-                .matches = {
-                        DMI_MATCH(DMI_SYS_VENDOR, "<system vendor>"),
-                        DMI_MATCH(DMI_PRODUCT_NAME, "<product name>"),
-                        DMI_MATCH(DMI_PRODUCT_VERSION, "product version"),
-                },
-        },
-        { }
-};
+On Mon, Feb 15, 2016 at 03:35:00AM +0530, Jayachandran C wrote:
+> Add a new flag PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS to indicate bridges
+> that should not be considered during DMA alias search. This is
+> to support hardware (in this case Broadcom Vulcan PCIe subsystem)
+> that has internal bridges which have either missing or wrong PCIe
+> capabilities.
 
-static struct pci_ops foo_ecam_pci_ops = {
-        .map_bus = pci_mcfg_dev_base,
-        .read = foo_ecam_config_read,
-        .write = foo_ecam_config_write,
-};
-DECLARE_ACPI_MCFG_FIXUP(foo_dmi, NULL, &foo_ecam_pci_ops, <domain_nr>, <bus_nr>);
+This needs more explanation, like what exactly is wrong with this
+device?  A missing PCIe capability might cause other problems.
 
-More custom (non-DMI) matching can be done via an extra call.
-Note that there is possibility to assign quirk related private data to
-root->sysdata which will be available along read/wriate accessor, example:
+What problem does this fix?  Without these patches, do we merely add
+aliases that are unnecessary?  Do we crash because something goes
+wrong in the pci_pcie_type() switch because of the incorrect
+capability?
 
-static int boo_match(struct pci_mcfg_fixup *fixup, struct acpi_pci_root *root)
-{
-        return [condition] ? 1 : 0;
-}
-
-int boo_ecam_config_read(struct pci_bus *bus, unsigned int devfn,
-                          int where, int size, u32 *val)
-{
-        struct acpi_pci_root *root = bus->sysdata;
-        struct boo_priv_data *boo_data = root->sysdata;
-
-        [..]
-}
-
-static struct pci_ops boo_ecam_pci_ops = {
-	.map_bus = pci_mcfg_dev_base,
-	.read = boo_ecam_config_read,
-	.write = boo_ecam_config_write,
-};
-DECLARE_ACPI_MCFG_FIXUP(NULL, boo_match, &boo_ecam_pci_ops, <domain_nr>, <bus_nr>);
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/acpi/pci_mcfg.c           | 32 ++++++++++++++++++++++++++++++--
- include/acpi/acpi_bus.h           |  1 +
- include/asm-generic/vmlinux.lds.h |  7 +++++++
- include/linux/pci-acpi.h          | 18 ++++++++++++++++++
- 4 files changed, 56 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index 0062257..b343547 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -41,6 +41,29 @@ int __weak raw_pci_write(unsigned int domain, unsigned int bus,
- 	return PCIBIOS_DEVICE_NOT_FOUND;
- }
- 
-+extern struct pci_mcfg_fixup __start_acpi_mcfg_fixups[];
-+extern struct pci_mcfg_fixup __end_acpi_mcfg_fixups[];
-+
-+static struct pci_ops *pci_mcfg_check_quirks(struct acpi_pci_root *root)
-+{
-+	struct pci_mcfg_fixup *f;
-+	int bus_num = root->secondary.start;
-+	int domain = root->segment;
-+
-+	/*
-+	 * First match against PCI topology <domain:bus> then use DMI or
-+	 * custom match handler.
-+	 */
-+	for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups; f++) {
-+		if ((f->domain == domain || f->domain == PCI_MCFG_DOMAIN_ANY) &&
-+		    (f->bus_num == bus_num || f->bus_num == PCI_MCFG_BUS_ANY) &&
-+		    (f->system ? dmi_check_system(f->system) : 1 &&
-+		     f->match ? f->match(f, root) : 1))
-+			return f->ops;
-+	}
-+	return NULL;
-+}
-+
- void __iomem *
- pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn, int offset)
- {
-@@ -63,10 +86,15 @@ static struct pci_ops default_pci_mcfg_ops = {
- 
- struct pci_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
- {
-+	struct pci_ops *pci_mcfg_ops_quirk;
-+
- 	/*
--	 * TODO: Match against platform specific quirks and return
--	 * corresponding PCI config space accessor set.
-+	 * Match against platform specific quirks and return corresponding
-+	 * PCI config space accessor set.
- 	 */
-+	pci_mcfg_ops_quirk = pci_mcfg_check_quirks(root);
-+	if (pci_mcfg_ops_quirk)
-+		return pci_mcfg_ops_quirk;
- 
- 	return &default_pci_mcfg_ops;
- }
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index 14362a8..0fc6f13 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -556,6 +556,7 @@ struct acpi_pci_root {
- 	struct pci_bus *bus;
- 	u16 segment;
- 	struct resource secondary;	/* downstream bus range */
-+	void *sysdata;
- 
- 	u32 osc_support_set;	/* _OSC state of support bits */
- 	u32 osc_control_set;	/* _OSC state of control bits */
-diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-index c4bd0e2..c93fc97 100644
---- a/include/asm-generic/vmlinux.lds.h
-+++ b/include/asm-generic/vmlinux.lds.h
-@@ -298,6 +298,13 @@
- 		VMLINUX_SYMBOL(__end_pci_fixups_suspend_late) = .;	\
- 	}								\
- 									\
-+	/* ACPI MCFG quirks */						\
-+	.acpi_fixup        : AT(ADDR(.acpi_fixup) - LOAD_OFFSET) {	\
-+		VMLINUX_SYMBOL(__start_acpi_mcfg_fixups) = .;		\
-+		*(.acpi_fixup_mcfg)					\
-+		VMLINUX_SYMBOL(__end_acpi_mcfg_fixups) = .;		\
-+	}								\
-+									\
- 	/* Built-in firmware blobs */					\
- 	.builtin_fw        : AT(ADDR(.builtin_fw) - LOAD_OFFSET) {	\
- 		VMLINUX_SYMBOL(__start_builtin_fw) = .;			\
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index 93feb04..9e1bedd 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -123,6 +123,24 @@ struct pci_mmcfg_region {
- 	bool hot_added;
- };
- 
-+struct pci_mcfg_fixup {
-+	const struct dmi_system_id *system;
-+	int (*match)(struct pci_mcfg_fixup *, struct acpi_pci_root *);
-+	struct pci_ops *ops;
-+	int domain;
-+	int bus_num;
-+};
-+
-+#define PCI_MCFG_DOMAIN_ANY	-1
-+#define PCI_MCFG_BUS_ANY	-1
-+
-+/* Designate a routine to fix up buggy MCFG */
-+#define DECLARE_ACPI_MCFG_FIXUP(system, match, ops, dom, bus)		\
-+	static const struct pci_mcfg_fixup __mcfg_fixup_##system##dom##bus\
-+	 __used	__attribute__((__section__(".acpi_fixup_mcfg"),		\
-+				aligned((sizeof(void *))))) =		\
-+	{ system, match, ops, dom, bus };
-+
- extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
- extern struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
- 							int end, u64 addr);
--- 
-1.9.1
+> Update the function pci_for_each_dma_alias() to skip bridges with
+> this flag set.
+> 
+> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> ---
+> 
+> This patch is an RFC, if there is a better way to do this, please
+> let me know.
+> 
+> Thanks,
+> JC.
+> 
+>  drivers/pci/search.c | 2 ++
+>  include/linux/pci.h  | 2 ++
+>  2 files changed, 4 insertions(+)
+> 
+> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+> index a20ce7d..e5296aa 100644
+> --- a/drivers/pci/search.c
+> +++ b/drivers/pci/search.c
+> @@ -55,6 +55,8 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+>  			continue;
+>  
+>  		tmp = bus->self;
+> +		if (tmp->dev_flags & PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS)
+> +			continue;
+>  
+>  		/*
+>  		 * PCIe-to-PCI/X bridges alias transactions from downstream
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 27df4a6..b4d8215 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -182,6 +182,8 @@ enum pci_dev_flags {
+>  	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
+>  	/* Get VPD from function 0 VPD */
+>  	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
+> +	/* Bridge should be ignored for alias search  */
+> +	PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS = (__force pci_dev_flags_t) (1 << 9),
+>  };
+>  
+>  enum pci_irq_reroute_variant {
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
