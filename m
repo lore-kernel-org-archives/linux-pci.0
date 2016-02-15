@@ -1,45 +1,132 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-	"jcm@redhat.com" <jcm@redhat.com>,
-	"tn@semihalf.com" <tn@semihalf.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linuxarm <linuxarm@huawei.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	"Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	qiujiang <qiujiang@huawei.com>
-Subject: Re: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host Controllers
-Date: Mon, 08 Feb 2016 14:55:11 +0100
-Message-ID: <7297343.ktGck3KQJN@wuerfel>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ECAC944@lhreml503-mbs>
-References: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com> <1930535.mkCdtpUWq7@wuerfel> <EE11001F9E5DDD47B7634E2F8A612F2E1ECAC944@lhreml503-mbs>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:40784 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751706AbcBOQl7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Feb 2016 11:41:59 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org
+Cc: linux-pci@vger.kernel.org, ravikanth.nalla@hpe.com,
+	lenb@kernel.org, harish.k@hpe.com, ashwin.reghunandanan@hpe.com,
+	bhelgaas@google.com, rjw@rjwysocki.net,
+	Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org
+Subject: [PATCH] acpi, pci, irq: account for early penalty assignment
+Date: Mon, 15 Feb 2016 11:41:47 -0500
+Message-Id: <1455554508-18174-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 08 February 2016 13:17:58 Gabriele Paoloni wrote:
-> 
-> Now I have removed the dependency from designware but I still think
-> the best location for the code is in "drivers/pci/host/":
-> the ACPI quirks share the config read/write functions with the DT
-> driver, moreover for other hosts in future I think it makes sense
-> to stay in "drivers/pci/host/" as they could even share more init
-> code with their respective DT versions...
+A crash has been observed when assigning penalty on x86 systems.
 
-I haven't really followed what is going on with ACPI. Do you expect
-to see future machines come out that are not just implementing SBSA
-but that still need to run ACPI? I thought this was just a hack
-for some early machines that only run with ACPI but are not actually
-compliant.
+It looks like this problem happens on x86 platforms with IOAPIC and an SCI
+interrupt override in the ACPI table with interrupt number greater than
+16. (22 in this example)
 
-	Arnd
+The bug has been introduced by "ACPI, PCI, irq: remove interrupt count
+restriction" commit. The code was using kmalloc to resize the interrupt
+list. In this use case, the set penalty call is coming from early phase
+and the heap is not initialized yet.
+
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000018
+IP: [<ffffffff811e8b9d>] kmem_cache_alloc_trace+0xad/0x1c0
+PGD 0
+Oops: 0000 [#1] SMP
+Modules linked in:
+CPU: 0 PID: 0 Comm: swapper Not tainted 4.5.0-rc2Feb-3_RK #1
+Hardware name: HP Superdome2 16s, BIOS Bundle: 007.006.000 SFW: 033.162.000
+10/30/2015
+[<ffffffff813bc190>] acpi_irq_set_penalty+0x60/0x8e
+[<ffffffff813bc1df>] acpi_irq_add_penalty+0x21/0x26
+[<ffffffff813bc76d>] acpi_penalize_sci_irq+0x25/0x28
+[<ffffffff81b8260d>] acpi_sci_ioapic_setup+0x68/0x78
+[<ffffffff81b830fc>] acpi_boot_init+0x2cc/0x533
+[<ffffffff810677c8>] ? set_pte_vaddr_pud+0x48/0x50
+[<ffffffff81b828cf>] ? acpi_parse_x2apic+0x77/0x77
+[<ffffffff81b82858>] ? dmi_ignore_irq0_timer_override+0x30/0x30
+[<ffffffff81b77c1e>] setup_arch+0xc24/0xce9
+[<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
+[<ffffffff81b6ed94>] start_kernel+0xfc/0x506
+[<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
+[<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
+[<ffffffff81b6e5ee>] x86_64_start_reservations+0x2a/0x2c
+[<ffffffff81b6e73c>] x86_64_start_kernel+0x14c/0x16f
+
+Besides from the use case above, there is one more situation where
+set_penalty is being called from the init context like. There is support
+for setting the penalty through kernel command line.
+
+Adding support to be called from early context for limited number of
+interrupts.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/acpi/pci_link.c | 32 ++++++++++++++++++++++++++++----
+ 1 file changed, 28 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index fa28635..24b69e1 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -47,6 +47,7 @@ ACPI_MODULE_NAME("pci_link");
+ #define ACPI_PCI_LINK_FILE_INFO		"info"
+ #define ACPI_PCI_LINK_FILE_STATUS	"state"
+ #define ACPI_PCI_LINK_MAX_POSSIBLE	16
++#define ACPI_PCI_LINK_MAX_EARLY_IRQINFO 1024
+ 
+ static int acpi_pci_link_add(struct acpi_device *device,
+ 			     const struct acpi_device_id *not_used);
+@@ -470,9 +471,13 @@ struct irq_penalty_info {
+ 	int irq;
+ 	int penalty;
+ 	struct list_head node;
++	bool early;
+ };
+ 
+ static LIST_HEAD(acpi_irq_penalty_list);
++static int early_init_done;
++static struct irq_penalty_info early_irq_infos[ACPI_PCI_LINK_MAX_EARLY_IRQINFO];
++static int early_irq_info_counter;
+ 
+ static int acpi_irq_get_penalty(int irq)
+ {
+@@ -507,10 +512,20 @@ static int acpi_irq_set_penalty(int irq, int new_penalty)
+ 		}
+ 	}
+ 
+-	/* nope, let's allocate a slot for this IRQ */
+-	irq_info = kzalloc(sizeof(*irq_info), GFP_KERNEL);
+-	if (!irq_info)
+-		return -ENOMEM;
++	if (!early_init_done) {
++		if (early_irq_info_counter < ARRAY_SIZE(early_irq_infos)) {
++			irq_info = &early_irq_infos[early_irq_info_counter];
++			irq_info->early = true;
++			early_irq_info_counter++;
++		} else {
++			return -ENOMEM;
++		}
++	} else {
++		/* nope, let's allocate a slot for this IRQ */
++		irq_info = kzalloc(sizeof(*irq_info), GFP_KERNEL);
++		if (!irq_info)
++			return -ENOMEM;
++	}
+ 
+ 	irq_info->irq = irq;
+ 	irq_info->penalty = new_penalty;
+@@ -968,3 +983,12 @@ void __init acpi_pci_link_init(void)
+ 	register_syscore_ops(&irqrouter_syscore_ops);
+ 	acpi_scan_add_handler(&pci_link_handler);
+ }
++
++
++static int acpi_pci_link_subsys_init(void)
++{
++	early_init_done = true;
++	return 0;
++}
++
++subsys_initcall(acpi_pci_link_subsys_init)
+-- 
+1.8.2.1
+
