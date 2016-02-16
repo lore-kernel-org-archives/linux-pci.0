@@ -1,84 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53649 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753895AbcBZQ3x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 26 Feb 2016 11:29:53 -0500
-Subject: [PATCH v11 0/4] ARC: Add PCI support
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: mark.rutland@arm.com, Alexey.Brodkin@synopsys.com, arnd@arndb.de,
-	pawel.moll@arm.com, ijc+devicetree@hellion.org.uk,
-	linux-pci@vger.kernel.org, Vineet.Gupta1@synopsys.com,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	linux-kernel@vger.kernel.org, CARLOS.PALMINHA@synopsys.com,
-	robh+dt@kernel.org, Murali Karicheri <m-karicheri2@ti.com>,
-	galak@codeaurora.org, Jingoo Han <jingoohan1@gmail.com>,
-	linux-snps-arc@lists.infradead.org
-Date: Fri, 26 Feb 2016 10:29:49 -0600
-Message-ID: <20160226162554.11964.96983.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 16 Feb 2016 16:44:15 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jake Oshins <jakeo@microsoft.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	KY Srinivasan <kys@microsoft.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>,
+	"apw@canonical.com" <apw@canonical.com>,
+	"vkuznets@redhat.com" <vkuznets@redhat.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+	Hadden Hoppert <haddenh@microsoft.com>
+Subject: Re: [PATCH RESEND v2 3/3] PCI: hv: New paravirtual PCI front-end for
+ Hyper-V VMs
+Message-ID: <20160216224415.GA11805@localhost>
+References: <1455045869-38341-1-git-send-email-jakeo@microsoft.com>
+ <1455045869-38341-4-git-send-email-jakeo@microsoft.com>
+ <20160216164544.GA18685@localhost>
+ <DM2PR0301MB1232A3F01DC9DB4F3BF97C18ABAD0@DM2PR0301MB1232.namprd03.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <DM2PR0301MB1232A3F01DC9DB4F3BF97C18ABAD0@DM2PR0301MB1232.namprd03.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From Joao's v9 posting
-(http://lkml.kernel.org/r/cover.1454952698.git.jpinto@synopsys.com):
+On Tue, Feb 16, 2016 at 09:46:55PM +0000, Jake Oshins wrote:
+> > -----Original Message-----
+> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > Sent: Tuesday, February 16, 2016 8:46 AM
+> > To: Jake Oshins <jakeo@microsoft.com>
+> > Cc: bhelgaas@google.com; linux-pci@vger.kernel.org;
+> > gregkh@linuxfoundation.org; KY Srinivasan <kys@microsoft.com>; linux-
+> > kernel@vger.kernel.org; devel@linuxdriverproject.org; olaf@aepfle.de;
+> > apw@canonical.com; vkuznets@redhat.com; tglx@linutronix.de; Haiyang
+> > Zhang <haiyangz@microsoft.com>; marc.zyngier@arm.com; Hadden
+> > Hoppert <haddenh@microsoft.com>
+> > Subject: Re: [PATCH RESEND v2 3/3] PCI: hv: New paravirtual PCI front-end
+> > for Hyper-V VMs
+> > 
+> > Hi Jake,
+> > 
+> > Looks good to me overall; I marked a few nits below.
+> > 
+> > The only real question I have is about domain number allocation.  See
+> > the note below.
+> > 
+> [snip]
+> > > +
+> > > +	/*
+> > > +	 * The PCI bus "domain" is what is called "segment" in
+> > > +	 * ACPI and other specs.  Pull it from the instance ID,
+> > > +	 * to get something unique.  Bytes 8 and 9 are what is used
+> > > +	 * in Windows guests, so do the same thing for consistency.
+> > > +	 */
+> > > +
+> > > +	hbus->sysdata.domain = hdev->dev_instance.b[9] |
+> > > +			       hdev->dev_instance.b[8] << 8;
+> > 
+> > How do we know this is unique?  We don't have any idea what the
+> > platform will put in _SEG, so I think there's a potential conflict
+> > here.  The Intel VMD driver (arch/x86/pci/vmd.c) has a similar
+> > problem, and it looks for unused domain numbers starting at 0x10000
+> > (see vmd_find_free_domain()).
+> > 
+> 
+> Bjorn, thank you for your very thorough reviews.  I deeply appreciate it.  I checked the Hyper-V code and it currently does guarantee that these values are unique.  When I resend the series, I'll add a comment to that effect.  I'll also add a comment to Hyper-V that says that it has to stay that way.
 
-  "This patch set has the goal to add suppport for DesignWare PCIe RC in ARC
-  AXS10x. It includes the necessary tweaks to:
+I'm not familiar with how Hyper-V works, but I guess you're saying
+that Hyper-V controls what the guest sees via _SEG as well as what it
+sees via the instance ID.
 
-   - the ARC architecture (PCI support)
-   - the PCI subsystem (ARC CPU support)
-   - to pcie-designware (Centralisation of wait for link routine)
-   - to dra7xx, exynos, imx6 and spear13xx drivers to use the centralised
-     code for link wait
-
-  A simple module was (pcie-designware-plat) was created to contain the
-  specific platform init code."
-
-Changes from v10:
-  - Update keystone link establishment to wait longer for link to come up
-    before re-initiating link training
-  - Also use generic dw_pcie_wait_for_link() in keystone and qcom drivers
-
-I would still like acks from DesignWare maintainers (Jingoo or
-Pratyush), from Murali for the Keystone changes, and from Arnd for the
-DT updates.
-
-This series is in my pci/host-synopsys branch here:
-https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-syn
-opsys
----
-
-Joao Pinto (4):
-      ARC: Add PCI support
-      PCI: designware: Add generic dw_pcie_wait_for_link()
-      PCI: designware: Add default link up check if sub-driver doesn't override
-      PCI: designware: Add driver for prototyping kits based on ARC SDP
-
-
- .../devicetree/bindings/pci/designware-pcie.txt    |   17 ++
- MAINTAINERS                                        |    7 +
- arch/arc/Kconfig                                   |   26 ++++
- arch/arc/include/asm/dma.h                         |    5 +
- arch/arc/include/asm/io.h                          |    9 +
- arch/arc/include/asm/pci.h                         |   31 ++++
- arch/arc/kernel/Makefile                           |    1 
- arch/arc/kernel/pcibios.c                          |   22 +++
- arch/arc/plat-axs10x/Kconfig                       |    1 
- drivers/pci/Makefile                               |    1 
- drivers/pci/host/Kconfig                           |   11 ++
- drivers/pci/host/Makefile                          |    1 
- drivers/pci/host/pci-dra7xx.c                      |   11 --
- drivers/pci/host/pci-exynos.c                      |   13 --
- drivers/pci/host/pci-imx6.c                        |   13 +-
- drivers/pci/host/pci-keystone.c                    |   10 +
- drivers/pci/host/pcie-designware-plat.c            |  138 ++++++++++++++++++++
- drivers/pci/host/pcie-designware.c                 |   29 ++++
- drivers/pci/host/pcie-designware.h                 |    6 +
- drivers/pci/host/pcie-qcom.c                       |   10 -
- drivers/pci/host/pcie-spear13xx.c                  |   14 --
- 21 files changed, 318 insertions(+), 58 deletions(-)
- create mode 100644 arch/arc/include/asm/pci.h
- create mode 100644 arch/arc/kernel/pcibios.c
- create mode 100644 drivers/pci/host/pcie-designware-plat.c
+Bjorn
