@@ -1,119 +1,69 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-ia64@vger.kernel.org>,
-	<linux-metag@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-s390@vger.kernel.org>, <linux-sh@vger.kernel.org>,
-	<linux-arch@vger.kernel.org>, <Will.Deacon@arm.com>,
-	<catalin.marinas@arm.com>, <robh+dt@kernel.org>,
-	<mark.rutland@arm.com>, <grant.likely@linaro.org>,
-	<leif.lindholm@linaro.org>, <rfranz@cavium.com>,
-	<ard.biesheuvel@linaro.org>, <msalter@redhat.com>,
-	<steve.capper@linaro.org>, <hanjun.guo@linaro.org>,
-	<al.stone@linaro.org>, <arnd@arndb.de>, <pawel.moll@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<rjw@rjwysocki.net>, <lenb@kernel.org>, <marc.zyngier@arm.com>,
-	<lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-	<tony.luck@intel.com>, <fenghua.yu@intel.com>,
-	<james.hogan@imgtec.com>, <benh@kernel.crashing.org>,
-	<tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
-	<x86@kernel.org>, <jonathan@jonmasters.org>, <rrichter@cavium.com>,
-	<Prasun.Kapoor@caviumnetworks.com>
-CC: <gpkulkarni@gmail.com>
-Subject: [PATCH v10 4/8] arm64, numa : Enable numa dt for arm64 platforms.
-Date: Tue, 2 Feb 2016 15:39:19 +0530
-Message-ID: <1454407763-1017-5-git-send-email-gkulkarni@caviumnetworks.com>
-In-Reply-To: <1454407763-1017-1-git-send-email-gkulkarni@caviumnetworks.com>
-References: <1454407763-1017-1-git-send-email-gkulkarni@caviumnetworks.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:47540 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756022AbcBPV5G (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 16:57:06 -0500
+From: jakeo@microsoft.com
+To: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	haddenh@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH RESEND v3 2/3] PCI: irqdomain: Look up IRQ domain by fwnode_handle
+Date: Tue, 16 Feb 2016 21:56:22 +0000
+Message-Id: <1455659783-20036-3-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1455659783-20036-1-git-send-email-jakeo@microsoft.com>
+References: <1455659783-20036-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adding numa dt binding support for arm64 based platforms.
+From: Jake Oshins <jakeo@microsoft.com>
 
-Reviewed-by: Robert Richter <rrichter@cavium.com>
-Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
+This patch adds a second way of finding an IRQ domain associated with
+a root PCI bus.  After looking to see if one can be found through
+the OF tree, it attempts to look up the IRQ domain through an
+fwnode_handle stored in the pci_sysdata struct.
+
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- arch/arm64/include/asm/numa.h |  2 ++
- arch/arm64/kernel/smp.c       |  2 ++
- arch/arm64/mm/numa.c          | 17 +++++++++++++++++
- 3 files changed, 21 insertions(+)
+ drivers/pci/probe.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/arch/arm64/include/asm/numa.h b/arch/arm64/include/asm/numa.h
-index 574267f..e9b4f29 100644
---- a/arch/arm64/include/asm/numa.h
-+++ b/arch/arm64/include/asm/numa.h
-@@ -31,12 +31,14 @@ void __init arm64_numa_init(void);
- int __init numa_add_memblk(int nodeid, u64 start, u64 end);
- void __init numa_set_distance(int from, int to, int distance);
- void __init numa_free_distance(void);
-+void __init early_map_cpu_to_node(unsigned int cpu, int nid);
- void numa_store_cpu_info(unsigned int cpu);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6d7ab9b..1e34d21 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -15,6 +15,7 @@
+ #include <linux/pci-aspm.h>
+ #include <linux/aer.h>
+ #include <linux/acpi.h>
++#include <linux/irqdomain.h>
+ #include <asm-generic/pci-bridge.h>
+ #include "pci.h"
  
- #else	/* CONFIG_NUMA */
+@@ -675,6 +676,20 @@ static struct irq_domain *pci_host_bridge_msi_domain(struct pci_bus *bus)
+ 	if (!d)
+ 		d = pci_host_bridge_acpi_msi_domain(bus);
  
- static inline void numa_store_cpu_info(unsigned int cpu) { }
- static inline void arm64_numa_init(void) { }
-+static inline void early_map_cpu_to_node(unsigned int cpu, int nid) { }
- 
- #endif	/* CONFIG_NUMA */
- 
-diff --git a/arch/arm64/kernel/smp.c b/arch/arm64/kernel/smp.c
-index d6e7d6a..46c45c8 100644
---- a/arch/arm64/kernel/smp.c
-+++ b/arch/arm64/kernel/smp.c
-@@ -520,6 +520,8 @@ static void __init of_parse_and_init_cpus(void)
- 
- 		pr_debug("cpu logical map 0x%llx\n", hwid);
- 		cpu_logical_map(cpu_count) = hwid;
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++	/*
++	 * If no IRQ domain was found via the OF tree, try looking it up
++	 * directly through the fwnode_handle.
++	 */
++	if (!d) {
++		struct fwnode_handle *fwnode = pci_root_bus_fwnode(bus);
 +
-+		early_map_cpu_to_node(cpu_count, of_node_to_nid(dn));
- next:
- 		cpu_count++;
- 	}
-diff --git a/arch/arm64/mm/numa.c b/arch/arm64/mm/numa.c
-index 60f19a2..7aad5d4 100644
---- a/arch/arm64/mm/numa.c
-+++ b/arch/arm64/mm/numa.c
-@@ -20,6 +20,7 @@
- #include <linux/bootmem.h>
- #include <linux/memblock.h>
- #include <linux/module.h>
-+#include <linux/of.h>
- 
- struct pglist_data *node_data[MAX_NUMNODES] __read_mostly;
- EXPORT_SYMBOL(node_data);
-@@ -122,6 +123,15 @@ void numa_store_cpu_info(unsigned int cpu)
- 	map_cpu_to_node(cpu, numa_off ? 0 : cpu_to_node_map[cpu]);
- }
- 
-+void __init early_map_cpu_to_node(unsigned int cpu, int nid)
-+{
-+	/* fallback to node 0 */
-+	if (nid < 0 || nid >= MAX_NUMNODES)
-+		nid = 0;
-+
-+	cpu_to_node_map[cpu] = nid;
-+}
-+
- /**
-  * numa_add_memblk - Set node id to memblk
-  * @nid: NUMA node ID of the new memblk
-@@ -383,5 +393,12 @@ static int __init dummy_numa_init(void)
-  */
- void __init arm64_numa_init(void)
- {
-+	if (!numa_off) {
-+#ifdef CONFIG_OF_NUMA
-+		if (!numa_init(of_numa_init))
-+			return;
-+#endif
++		if (fwnode)
++			d = irq_find_matching_fwnode(fwnode,
++						     DOMAIN_BUS_PCI_MSI);
 +	}
++#endif
 +
- 	numa_init(dummy_numa_init);
+ 	return d;
  }
+ 
 -- 
-1.8.1.4
+1.9.1
 
