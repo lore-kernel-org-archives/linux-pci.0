@@ -1,104 +1,153 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0055.outbound.protection.outlook.com ([104.47.38.55]:51712
-	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751334AbcBKQ22 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Feb 2016 11:28:28 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <bhelgaas@google.com>, <michals@xilinx.com>,
-	<lorenzo.pieralisi@arm.com>, <paul.burton@imgtec.com>,
-	<yinghai@kernel.org>, <wangyijing@huawei.com>, <robh@kernel.org>,
-	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
-	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
-	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
-	<galak@codeaurora.org>
-CC: <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: [PATCH V4 4/5] PCI: xilinx: Updating Zynq PCI binding documentation  with  Microblaze node.
-Date: Thu, 11 Feb 2016 21:58:10 +0530
-Message-ID: <1455208091-15556-5-git-send-email-bharatku@xilinx.com>
-In-Reply-To: <1455208091-15556-1-git-send-email-bharatku@xilinx.com>
-References: <1455208091-15556-1-git-send-email-bharatku@xilinx.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1455554508-18174-1-git-send-email-okaya@codeaurora.org>
+References: <1455554508-18174-1-git-send-email-okaya@codeaurora.org>
+Date: Tue, 16 Feb 2016 01:26:45 +0100
+Message-ID: <CAJZ5v0iszEN+ep8yGNX35RP04_ZwnF1K_w+VW5tFR9Jz2_ZJqw@mail.gmail.com>
+Subject: Re: [PATCH] acpi, pci, irq: account for early penalty assignment
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Timur Tabi <timur@codeaurora.org>,
+	Christopher Covington <cov@codeaurora.org>,
+	Linux PCI <linux-pci@vger.kernel.org>, ravikanth.nalla@hpe.com,
+	Len Brown <lenb@kernel.org>, harish.k@hpe.com,
+	ashwin.reghunandanan@hpe.com, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Updated Zynq PCI binding documentation with Microblaze node.
+On Mon, Feb 15, 2016 at 5:41 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+> A crash has been observed when assigning penalty on x86 systems.
+>
+> It looks like this problem happens on x86 platforms with IOAPIC and an SCI
+> interrupt override in the ACPI table with interrupt number greater than
+> 16. (22 in this example)
+>
+> The bug has been introduced by "ACPI, PCI, irq: remove interrupt count
+> restriction" commit. The code was using kmalloc to resize the interrupt
+> list. In this use case, the set penalty call is coming from early phase
+> and the heap is not initialized yet.
+>
+> BUG: unable to handle kernel NULL pointer dereference at 0000000000000018
+> IP: [<ffffffff811e8b9d>] kmem_cache_alloc_trace+0xad/0x1c0
+> PGD 0
+> Oops: 0000 [#1] SMP
+> Modules linked in:
+> CPU: 0 PID: 0 Comm: swapper Not tainted 4.5.0-rc2Feb-3_RK #1
+> Hardware name: HP Superdome2 16s, BIOS Bundle: 007.006.000 SFW: 033.162.000
+> 10/30/2015
+> [<ffffffff813bc190>] acpi_irq_set_penalty+0x60/0x8e
+> [<ffffffff813bc1df>] acpi_irq_add_penalty+0x21/0x26
+> [<ffffffff813bc76d>] acpi_penalize_sci_irq+0x25/0x28
+> [<ffffffff81b8260d>] acpi_sci_ioapic_setup+0x68/0x78
+> [<ffffffff81b830fc>] acpi_boot_init+0x2cc/0x533
+> [<ffffffff810677c8>] ? set_pte_vaddr_pud+0x48/0x50
+> [<ffffffff81b828cf>] ? acpi_parse_x2apic+0x77/0x77
+> [<ffffffff81b82858>] ? dmi_ignore_irq0_timer_override+0x30/0x30
+> [<ffffffff81b77c1e>] setup_arch+0xc24/0xce9
+> [<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
+> [<ffffffff81b6ed94>] start_kernel+0xfc/0x506
+> [<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
+> [<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
+> [<ffffffff81b6e5ee>] x86_64_start_reservations+0x2a/0x2c
+> [<ffffffff81b6e73c>] x86_64_start_kernel+0x14c/0x16f
+>
+> Besides from the use case above, there is one more situation where
+> set_penalty is being called from the init context like. There is support
+> for setting the penalty through kernel command line.
+>
+> Adding support to be called from early context for limited number of
+> interrupts.
+>
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 
-Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+This looks somewhat hackish to me to be honest.
 
-Acked-by: Rob Herring <robh@kernel.org>
----
-Changes:
-Adding Microblaze device tree node Documnetation.
----
- .../devicetree/bindings/pci/xilinx-pcie.txt        | 32 ++++++++++++++++++++--
- 1 file changed, 29 insertions(+), 3 deletions(-)
+> ---
+>  drivers/acpi/pci_link.c | 32 ++++++++++++++++++++++++++++----
+>  1 file changed, 28 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+> index fa28635..24b69e1 100644
+> --- a/drivers/acpi/pci_link.c
+> +++ b/drivers/acpi/pci_link.c
+> @@ -47,6 +47,7 @@ ACPI_MODULE_NAME("pci_link");
+>  #define ACPI_PCI_LINK_FILE_INFO                "info"
+>  #define ACPI_PCI_LINK_FILE_STATUS      "state"
+>  #define ACPI_PCI_LINK_MAX_POSSIBLE     16
+> +#define ACPI_PCI_LINK_MAX_EARLY_IRQINFO 1024
+>
+>  static int acpi_pci_link_add(struct acpi_device *device,
+>                              const struct acpi_device_id *not_used);
+> @@ -470,9 +471,13 @@ struct irq_penalty_info {
+>         int irq;
+>         int penalty;
+>         struct list_head node;
+> +       bool early;
 
-diff --git a/Documentation/devicetree/bindings/pci/xilinx-pcie.txt b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
-index 02f979a..ad7c7bf 100644
---- a/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/xilinx-pcie.txt
-@@ -17,7 +17,7 @@ Required properties:
- 	Please refer to the standard PCI bus binding document for a more
- 	detailed explanation
- 
--Optional properties:
-+Optional properties for Zynq/Microblaze:
- - bus-range: PCI bus numbers covered
- 
- Interrupt controller child node
-@@ -38,13 +38,13 @@ the four INTx interrupts in ISR and route them to this domain.
- 
- Example:
- ++++++++
--
-+Zynq:
- 	pci_express: axi-pcie@50000000 {
- 		#address-cells = <3>;
- 		#size-cells = <2>;
- 		#interrupt-cells = <1>;
- 		compatible = "xlnx,axi-pcie-host-1.00.a";
--		reg = < 0x50000000 0x10000000 >;
-+		reg = < 0x50000000 0x1000000 >;
- 		device_type = "pci";
- 		interrupts = < 0 52 4 >;
- 		interrupt-map-mask = <0 0 0 7>;
-@@ -60,3 +60,29 @@ Example:
- 			#interrupt-cells = <1>;
- 		};
- 	};
-+
-+
-+Microblaze:
-+	pci_express: axi-pcie@10000000 {
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		#interrupt-cells = <1>;
-+		compatible = "xlnx,axi-pcie-host-1.00.a";
-+		reg = <0x10000000 0x4000000>;
-+		device_type = "pci";
-+		interrupt-parent = <&microbalze_0_intc>;
-+		interrupts = <1 2>;
-+		interrupt-map-mask = <0 0 0 7>;
-+		interrupt-map = <0 0 0 1 &pcie_intc 1>,
-+				<0 0 0 2 &pcie_intc 2>,
-+				<0 0 0 3 &pcie_intc 3>,
-+				<0 0 0 4 &pcie_intc 4>;
-+		ranges = <0x02000000 0x00000000 0x80000000 0x80000000 0x00000000 0x10000000>;
-+
-+		pcie_intc: interrupt-controller {
-+			interrupt-controller;
-+			#address-cells = <0>;
-+			#interrupt-cells = <1>;
-+		};
-+
-+	};
--- 
-2.1.1
+Where is this field used ->
 
+>  };
+>
+>  static LIST_HEAD(acpi_irq_penalty_list);
+> +static int early_init_done;
+> +static struct irq_penalty_info early_irq_infos[ACPI_PCI_LINK_MAX_EARLY_IRQINFO];
+> +static int early_irq_info_counter;
+>
+>  static int acpi_irq_get_penalty(int irq)
+>  {
+> @@ -507,10 +512,20 @@ static int acpi_irq_set_penalty(int irq, int new_penalty)
+>                 }
+>         }
+>
+> -       /* nope, let's allocate a slot for this IRQ */
+> -       irq_info = kzalloc(sizeof(*irq_info), GFP_KERNEL);
+> -       if (!irq_info)
+> -               return -ENOMEM;
+> +       if (!early_init_done) {
+> +               if (early_irq_info_counter < ARRAY_SIZE(early_irq_infos)) {
+> +                       irq_info = &early_irq_infos[early_irq_info_counter];
+> +                       irq_info->early = true;
+
+-> except for being set here?
+
+> +                       early_irq_info_counter++;
+> +               } else {
+> +                       return -ENOMEM;
+> +               }
+> +       } else {
+> +               /* nope, let's allocate a slot for this IRQ */
+> +               irq_info = kzalloc(sizeof(*irq_info), GFP_KERNEL);
+> +               if (!irq_info)
+> +                       return -ENOMEM;
+> +       }
+>
+>         irq_info->irq = irq;
+>         irq_info->penalty = new_penalty;
+> @@ -968,3 +983,12 @@ void __init acpi_pci_link_init(void)
+>         register_syscore_ops(&irqrouter_syscore_ops);
+>         acpi_scan_add_handler(&pci_link_handler);
+>  }
+> +
+> +
+> +static int acpi_pci_link_subsys_init(void)
+> +{
+> +       early_init_done = true;
+
+Why do you need yet another subsys_initcall do set this?  Can't it be
+set in, say, acpi_init()?
+
+And isn't there any existing way to check that?  Like checking
+acpi_gbl_permanent_mmap or something?
+
+> +       return 0;
+> +}
+> +
+> +subsys_initcall(acpi_pci_link_subsys_init)
+> --
+
+Thanks,
+Rafael
