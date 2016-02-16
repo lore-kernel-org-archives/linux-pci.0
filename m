@@ -1,339 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:39173 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965133AbcBQDqA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:46:00 -0500
-Received: from localhost
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 17 Feb 2016 13:45:58 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v8 40/45] drivers/of: Split unflatten_dt_node()
-Date: Wed, 17 Feb 2016 14:44:23 +1100
-Message-Id: <1455680668-23298-41-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:47497 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754641AbcBPQxg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 16 Feb 2016 11:53:36 -0500
+Date: Tue, 16 Feb 2016 10:53:33 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, allen.m.kay@intel.com,
+	linux-kernel@vger.kernel.org, kvm@vger.kernel.org
+Subject: Re: [PATCH] pci: Wait for up to an additional 1000ms after FLR reset
+Message-ID: <20160216165333.GB18685@localhost>
+References: <20160212235013.16862.53910.stgit@gimli.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160212235013.16862.53910.stgit@gimli.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The function unflatten_dt_node() is called recursively to unflatten
-device nodes and properties in the FDT blob. It looks complicated
-and hard to be understood.
+Hi Alex,
 
-This splits the function into 3 functions: populate_properties(),
-populate_node() and unflatten_dt_node(). populate_properties(),
-which is called by populate_node(), creates properties for the
-indicated device node. The later one creates the device nodes
-from FDT blob. populate_node() gets the offset in FDT blob for
-next device nodes and then calls populate_node(). No logical
-changes introduced.
+On Fri, Feb 12, 2016 at 04:51:08PM -0700, Alex Williamson wrote:
+> Some devices take longer than the spec indicates to return from FLR
+> reset, a notable case of this is Intel integrated graphics (IGD),
+> which can often take an additional 300ms powering down an attached
+> LCD panel as part of the FLR.  Allow devices up to an additional
+> 1000ms, testing every 100ms whether the first dword of config space
+> is read as -1.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- drivers/of/fdt.c | 249 ++++++++++++++++++++++++++++++++-----------------------
- 1 file changed, 147 insertions(+), 102 deletions(-)
+This gives me a little more heartburn about ignoring presence detect
+during reset and pretending that the post-reset device is the same as
+the pre-reset device.  I suspect this problem wouldn't occur if we
+just watched for a new device to show up after the FLR, because we
+wouldn't have a timeout at all.
 
-diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
-index 655f79d..3c69002 100644
---- a/drivers/of/fdt.c
-+++ b/drivers/of/fdt.c
-@@ -161,39 +161,127 @@ static void *unflatten_dt_alloc(void **mem, unsigned long size,
- 	return res;
- }
- 
--/**
-- * unflatten_dt_node - Alloc and populate a device_node from the flat tree
-- * @blob: The parent device tree blob
-- * @mem: Memory chunk to use for allocating device nodes and properties
-- * @poffset: pointer to node in flat tree
-- * @dad: Parent struct device_node
-- * @nodepp: The device_node tree created by the call
-- * @fpsize: Size of the node path up at the current depth.
-- * @dryrun: If true, do not allocate device nodes but still calculate needed
-- * memory size
-- */
--static void * unflatten_dt_node(const void *blob,
--				void *mem,
--				int *poffset,
--				struct device_node *dad,
--				struct device_node **nodepp,
--				unsigned long fpsize,
-+static void populate_properties(const void *blob,
-+				int offset,
-+				void **mem,
-+				struct device_node *np,
-+				const char *nodename,
- 				bool dryrun)
- {
--	const __be32 *p;
-+	struct property *pp, **pprev = NULL;
-+	int cur;
-+	bool has_name = false;
-+
-+	pprev = &np->properties;
-+	for (cur = fdt_first_property_offset(blob, offset);
-+	     cur >= 0;
-+	     cur = fdt_next_property_offset(blob, cur)) {
-+		const __be32 *val;
-+		const char *pname;
-+		u32 sz;
-+
-+		val = fdt_getprop_by_offset(blob, cur, &pname, &sz);
-+		if (!val) {
-+			pr_warn("%s: Cannot locate property at 0x%x\n",
-+				__func__, cur);
-+			continue;
-+		}
-+
-+		if (!pname) {
-+			pr_warn("%s: Cannot find property name at 0x%x\n",
-+				__func__, cur);
-+			continue;
-+		}
-+
-+		if (!strcmp(pname, "name"))
-+			has_name = true;
-+
-+		pp = unflatten_dt_alloc(mem, sizeof(struct property),
-+					__alignof__(struct property));
-+		if (dryrun)
-+			continue;
-+
-+		/* We accept flattened tree phandles either in
-+		 * ePAPR-style "phandle" properties, or the
-+		 * legacy "linux,phandle" properties.  If both
-+		 * appear and have different values, things
-+		 * will get weird. Don't do that.
-+		 */
-+		if (!strcmp(pname, "phandle") ||
-+		    !strcmp(pname, "linux,phandle")) {
-+			if (!np->phandle)
-+				np->phandle = be32_to_cpup(val);
-+		}
-+
-+		/* And we process the "ibm,phandle" property
-+		 * used in pSeries dynamic device tree
-+		 * stuff
-+		 */
-+		if (!strcmp(pname, "ibm,phandle"))
-+			np->phandle = be32_to_cpup(val);
-+
-+		pp->name   = (char *)pname;
-+		pp->length = sz;
-+		pp->value  = (__be32 *)val;
-+		*pprev     = pp;
-+		pprev      = &pp->next;
-+	}
-+
-+	/* With version 0x10 we may not have the name property,
-+	 * recreate it here from the unit name if absent
-+	 */
-+	if (!has_name) {
-+		const char *p = nodename, *ps = p, *pa = NULL;
-+		int len;
-+
-+		while (*p) {
-+			if ((*p) == '@')
-+				pa = p;
-+			else if ((*p) == '/')
-+				ps = p + 1;
-+			p++;
-+		}
-+
-+		if (pa < ps)
-+			pa = p;
-+		len = (pa - ps) + 1;
-+		pp = unflatten_dt_alloc(mem, sizeof(struct property) + len,
-+					__alignof__(struct property));
-+		if (!dryrun) {
-+			pp->name   = "name";
-+			pp->length = len;
-+			pp->value  = pp + 1;
-+			*pprev     = pp;
-+			pprev      = &pp->next;
-+			memcpy(pp->value, ps, len - 1);
-+			((char *)pp->value)[len - 1] = 0;
-+			pr_debug("fixed up name for %s -> %s\n",
-+				 nodename, (char *)pp->value);
-+		}
-+	}
-+
-+	if (!dryrun)
-+		*pprev = NULL;
-+}
-+
-+static unsigned long populate_node(const void *blob,
-+				   int offset,
-+				   void **mem,
-+				   struct device_node *dad,
-+				   unsigned long fpsize,
-+				   struct device_node **pnp,
-+				   bool dryrun)
-+{
- 	struct device_node *np;
--	struct property *pp, **prev_pp = NULL;
- 	const char *pathp;
- 	unsigned int l, allocl;
--	static int depth;
--	int old_depth;
--	int offset;
--	int has_name = 0;
- 	int new_format = 0;
- 
--	pathp = fdt_get_name(blob, *poffset, &l);
--	if (!pathp)
--		return mem;
-+	pathp = fdt_get_name(blob, offset, &l);
-+	if (!pathp) {
-+		*pnp = NULL;
-+		return 0;
-+	}
- 
- 	allocl = ++l;
- 
-@@ -223,7 +311,7 @@ static void * unflatten_dt_node(const void *blob,
- 		}
- 	}
- 
--	np = unflatten_dt_alloc(&mem, sizeof(struct device_node) + allocl,
-+	np = unflatten_dt_alloc(mem, sizeof(struct device_node) + allocl,
- 				__alignof__(struct device_node));
- 	if (!dryrun) {
- 		char *fn;
-@@ -246,89 +334,15 @@ static void * unflatten_dt_node(const void *blob,
- 		}
- 		memcpy(fn, pathp, l);
- 
--		prev_pp = &np->properties;
- 		if (dad != NULL) {
- 			np->parent = dad;
- 			np->sibling = dad->child;
- 			dad->child = np;
- 		}
- 	}
--	/* process properties */
--	for (offset = fdt_first_property_offset(blob, *poffset);
--	     (offset >= 0);
--	     (offset = fdt_next_property_offset(blob, offset))) {
--		const char *pname;
--		u32 sz;
- 
--		if (!(p = fdt_getprop_by_offset(blob, offset, &pname, &sz))) {
--			offset = -FDT_ERR_INTERNAL;
--			break;
--		}
--
--		if (pname == NULL) {
--			pr_info("Can't find property name in list !\n");
--			break;
--		}
--		if (strcmp(pname, "name") == 0)
--			has_name = 1;
--		pp = unflatten_dt_alloc(&mem, sizeof(struct property),
--					__alignof__(struct property));
--		if (!dryrun) {
--			/* We accept flattened tree phandles either in
--			 * ePAPR-style "phandle" properties, or the
--			 * legacy "linux,phandle" properties.  If both
--			 * appear and have different values, things
--			 * will get weird.  Don't do that. */
--			if ((strcmp(pname, "phandle") == 0) ||
--			    (strcmp(pname, "linux,phandle") == 0)) {
--				if (np->phandle == 0)
--					np->phandle = be32_to_cpup(p);
--			}
--			/* And we process the "ibm,phandle" property
--			 * used in pSeries dynamic device tree
--			 * stuff */
--			if (strcmp(pname, "ibm,phandle") == 0)
--				np->phandle = be32_to_cpup(p);
--			pp->name = (char *)pname;
--			pp->length = sz;
--			pp->value = (__be32 *)p;
--			*prev_pp = pp;
--			prev_pp = &pp->next;
--		}
--	}
--	/* with version 0x10 we may not have the name property, recreate
--	 * it here from the unit name if absent
--	 */
--	if (!has_name) {
--		const char *p1 = pathp, *ps = pathp, *pa = NULL;
--		int sz;
--
--		while (*p1) {
--			if ((*p1) == '@')
--				pa = p1;
--			if ((*p1) == '/')
--				ps = p1 + 1;
--			p1++;
--		}
--		if (pa < ps)
--			pa = p1;
--		sz = (pa - ps) + 1;
--		pp = unflatten_dt_alloc(&mem, sizeof(struct property) + sz,
--					__alignof__(struct property));
--		if (!dryrun) {
--			pp->name = "name";
--			pp->length = sz;
--			pp->value = pp + 1;
--			*prev_pp = pp;
--			prev_pp = &pp->next;
--			memcpy(pp->value, ps, sz - 1);
--			((char *)pp->value)[sz - 1] = 0;
--			pr_debug("fixed up name for %s -> %s\n", pathp,
--				(char *)pp->value);
--		}
--	}
-+	populate_properties(blob, offset, mem, np, pathp, dryrun);
- 	if (!dryrun) {
--		*prev_pp = NULL;
- 		np->name = of_get_property(np, "name", NULL);
- 		np->type = of_get_property(np, "device_type", NULL);
- 
-@@ -338,6 +352,37 @@ static void * unflatten_dt_node(const void *blob,
- 			np->type = "<NULL>";
- 	}
- 
-+	*pnp = np;
-+	return fpsize;
-+}
-+
-+/**
-+ * unflatten_dt_node - Alloc and populate a device_node from the flat tree
-+ * @blob: The parent device tree blob
-+ * @mem: Memory chunk to use for allocating device nodes and properties
-+ * @poffset: pointer to node in flat tree
-+ * @dad: Parent struct device_node
-+ * @nodepp: The device_node tree created by the call
-+ * @fpsize: Size of the node path up at the current depth.
-+ * @dryrun: If true, do not allocate device nodes but still calculate needed
-+ * memory size
-+ */
-+static void *unflatten_dt_node(const void *blob,
-+			       void *mem,
-+			       int *poffset,
-+			       struct device_node *dad,
-+			       struct device_node **nodepp,
-+			       unsigned long fpsize,
-+			       bool dryrun)
-+{
-+	struct device_node *np;
-+	static int depth;
-+	int old_depth;
-+
-+	fpsize = populate_node(blob, *poffset, &mem, dad, fpsize, &np, dryrun);
-+	if (!fpsize)
-+		return mem;
-+
- 	old_depth = depth;
- 	*poffset = fdt_next_node(blob, *poffset, &depth);
- 	if (depth < 0)
--- 
-2.1.0
+But given that this *is* the way we do it, ...
 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+> 
+> Copying KVM list as this patch is required for IGD assignment.
+> 
+>  drivers/pci/pci.c |   21 +++++++++++++++++++++
+>  1 file changed, 21 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 602eb42..3b90a42 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3414,6 +3414,25 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+>  }
+>  EXPORT_SYMBOL(pci_wait_for_pending_transaction);
+>  
+> +static void pci_wait_alive(struct pci_dev *dev)
+> +{
+> +	int i;
+> +	u32 id;
+> +
+> +	for (i = 0; i < 10; i++) {
+> +		pci_read_config_dword(dev, PCI_VENDOR_ID, &id);
+> +		if (~id != 0) {
+> +			if (i > 0)
+> +				dev_info(&dev->dev, "Required additional %d"
+> +				         "ms to return from reset\n", i * 100);
+> +			return;
+> +		}
+> +		msleep(100);
+> +	}
+> +
+> +	dev_warn(&dev->dev, "Failed to return from reset\n");
+> +}
+> +
+>  static int pcie_flr(struct pci_dev *dev, int probe)
+>  {
+>  	u32 cap;
+> @@ -3430,6 +3449,7 @@ static int pcie_flr(struct pci_dev *dev, int probe)
+>  
+>  	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+>  	msleep(100);
+> +	pci_wait_alive(dev);
+
+Can we fold the msleep() into pci_wait_alive(), so all the delay
+happens in one place?  Maybe you can add a comment to the effect that
+the spec says devices should be ready 100ms after FLR, but some
+devices take longer.
+
+>  	return 0;
+>  }
+>  
+> @@ -3460,6 +3480,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+>  
+>  	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
+>  	msleep(100);
+> +	pci_wait_alive(dev);
+>  	return 0;
+>  }
+>  
+> 
