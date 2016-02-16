@@ -1,58 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.73]:49648 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751745AbcBCVCd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2016 16:02:33 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Vineet.Gupta1@synopsys.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
-	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
-Subject: Re: [PATCH v7 2/2] add new platform driver for PCI RC
-Date: Wed, 03 Feb 2016 22:01:54 +0100
-Message-ID: <2915520.tvWP9ESSNu@wuerfel>
-In-Reply-To: <20160203183844.GC10879@localhost>
-References: <cover.1454349430.git.jpinto@synopsys.com> <56B242F0.6040704@synopsys.com> <20160203183844.GC10879@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V5 15/15] arm64, pci, acpi: Start using ACPI based PCI host bridge driver for ARM64.
+Date: Tue, 16 Feb 2016 14:53:45 +0100
+Message-Id: <1455630825-27253-16-git-send-email-tn@semihalf.com>
+In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday 03 February 2016 12:38:44 Bjorn Helgaas wrote:
-> On Wed, Feb 03, 2016 at 06:12:00PM +0000, Joao Pinto wrote:
-> 
-> > - replace "snps,pcie-synopsys" for "snps,pcie-synopsys-ipk"?
-> 
-> This is a question for Arnd.
-> 
-> > - rename the driver to pcie-synopsys-ipk?
-> 
-> It doesn't seem necessary to me to include both "synopsys" and "ipk" in the
-> filename and the driver name.  Take a look at what the existing drivers do,
-> and do something similar.
+It is perfectly fine to use ACPI_PCI_HOST_GENERIC for ARM64,
+so lets get rid of PCI init empty stub, related ACPI header and
+go with full-blown PCI host controller driver.
 
-The "synopsys" can go away, it's already in the vendor field of the
-string. "ipk" is still a bit unspecific, I was hoping to see a specific
-chip and/or version of the PCIe part. Something like
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+TO: Catalin Marinas <catalin.marinas@arm.com>
+TO: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+TO: Will Deacon <will.deacon@arm.com>
+TO: Arnd Bergmann <arnd@arndb.de>
+CC: Liviu Dudau <Liviu.Dudau@arm.com>
+Tested-by: Duc Dang <dhdang@apm.com>
+Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+Tested-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ arch/arm64/Kconfig      | 1 +
+ arch/arm64/kernel/pci.c | 9 ---------
+ 2 files changed, 1 insertion(+), 9 deletions(-)
 
-	compatible = "snps,ipk2040-pcie", "snps,ipk-pcie", "snps,dw-pcie-1.23", "snps,dw-pcie";
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 552e996..09c49ea 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -2,6 +2,7 @@ config ARM64
+ 	def_bool y
+ 	select ACPI_CCA_REQUIRED if ACPI
+ 	select ACPI_GENERIC_GSI if ACPI
++	select ACPI_PCI_HOST_GENERIC if ACPI
+ 	select ACPI_REDUCED_HARDWARE_ONLY if ACPI
+ 	select ARCH_HAS_DEVMEM_IS_ALLOWED
+ 	select ARCH_HAS_ATOMIC64_DEC_IF_POSITIVE
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 6e77e1b..1de0168 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -65,12 +65,3 @@ int pcibios_alloc_irq(struct pci_dev *dev)
+ 
+ 	return 0;
+ }
+-
+-#ifdef CONFIG_ACPI
+-/* Root bridge scanning */
+-struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+-{
+-	/* TODO: Should be revisited when implementing PCI on ACPI */
+-	return NULL;
+-}
+-#endif
+-- 
+1.9.1
 
-which would indicate that there is a chip called "ipk2040" in a family called "ipk",
-and this includes the designware pcie implementation in version 1.23.
-
-> > - update the devicetree documentation referring that the ranges also include the
-> > config space
-> 
-> Another one for Arnd.
-
-This one is wrong, the ranges should *not* include the config space, and if they
-currently do, you must change the driver. The generic dw-pcie driver still
-accepts the config space in the ranges for backwards compatibility with some
-of the earlier front-ends that mistakenly did this, but new driver should not
-do the same, and we should probably add some code in the common driver to
-prevent it for front-ends other than the ones we have to keep compatibility with.
-
-	Arnd
