@@ -1,95 +1,115 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-	"tn@semihalf.com" <tn@semihalf.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"jcm@redhat.com" <jcm@redhat.com>
-Subject: RE: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host
- Controllers
-Date: Thu, 4 Feb 2016 15:11:18 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1EC9EC12@lhreml503-mbs>
-References: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
- <2387127.DMZaDnZvEW@wuerfel>
-In-Reply-To: <2387127.DMZaDnZvEW@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V5 08/15] x86, ia64: Include acpi_pci_{add|remove}_bus to the default pcibios_{add|remove}_bus implementation.
+Date: Tue, 16 Feb 2016 14:53:38 +0100
+Message-Id: <1455630825-27253-9-git-send-email-tn@semihalf.com>
+In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd
+x86 and ia64 are the only arches that implement pcibios_{add|remove}_bus hooks
+and implement them in the same way. Moreover ARM64 is going to do the same.
+So it seems that acpi_pci_{add|remove}_bus is generic enough to be default
+option for pcibios_{add|remove}_bus hooks. Also, it is always safe to run
+acpi_pci_{add|remove}_bus as they have empty stubs for !ACPI case and
+return if ACPI has been switched off in run time.
 
-Thanks for looking at this
+After all we can remove x86 and ia64 pcibios_{add|remove}_bus
+implementation.
 
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: 04 February 2016 13:12
-> To: Gabriele Paoloni
-> Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C); Linuxarm;
-> qiujiang; bhelgaas@google.com; Lorenzo.Pieralisi@arm.com;
-> tn@semihalf.com; zhangjukuo; xuwei (O); Liguozhu (Kenneth); linux-
-> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
-> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; jcm@redhat.com
-> Subject: Re: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host
-> Controllers
-> 
-> On Thursday 04 February 2016 19:37:36 Gabriele Paoloni wrote:
-> > From: gabriele paoloni <gabriele.paoloni@huawei.com>
-> >
-> > This patchset adds ACPI support for the HiSilicon Hip05/Hip06 SoC
-> PCIe controllers
-> > The four patches respectively:
-> >         - rework PCie Designware to be used for ACPI PCI Host
-> controllers
-> >         - re-architect the current HiSilicon driver to make it
-> scalable to the
-> >           new ACPI quirks
-> >         - rework the current HiSilicon driver to make it ECAM
-> compliant
-> >         - adds the HiSilicon ACPI specific quirks.
-> >
-> >    This patchset  is based on
-> >    https://github.com/semihalf-nowicki-tomasz/linux.git
-> >    branch pci-acpi-v3 + Hip06 support applied on top:
-> >    https://patchwork.ozlabs.org/patch/549198/
-> >
-> 
-> ACPI has its own PCI support, and should not need drivers for host
-> bridges. I don't think we can really mix the two things, as ACPI
-> needs to have access to things like PCI config space way before
-> we are probing normal device drivers.
-> 
-> Please put this in drivers/acpi/pci*.c.
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Tested-by: Duc Dang <dhdang@apm.com>
+Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+Tested-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ arch/ia64/pci/pci.c   | 10 ----------
+ arch/x86/pci/common.c | 10 ----------
+ drivers/pci/probe.c   |  3 +++
+ 3 files changed, 3 insertions(+), 20 deletions(-)
 
-I can put pcie-hisi-acpi.c under drivers/acpi/
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 978d6af..be4c9ef 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -358,16 +358,6 @@ void pcibios_fixup_bus(struct pci_bus *b)
+ 	platform_pci_fixup_bus(b);
+ }
+ 
+-void pcibios_add_bus(struct pci_bus *bus)
+-{
+-	acpi_pci_add_bus(bus);
+-}
+-
+-void pcibios_remove_bus(struct pci_bus *bus)
+-{
+-	acpi_pci_remove_bus(bus);
+-}
+-
+ void pcibios_set_master (struct pci_dev *dev)
+ {
+ 	/* No special bus mastering setup handling */
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 2879efc..5aa25f1 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -171,16 +171,6 @@ void pcibios_fixup_bus(struct pci_bus *b)
+ 		pcibios_fixup_device_resources(dev);
+ }
+ 
+-void pcibios_add_bus(struct pci_bus *bus)
+-{
+-	acpi_pci_add_bus(bus);
+-}
+-
+-void pcibios_remove_bus(struct pci_bus *bus)
+-{
+-	acpi_pci_remove_bus(bus);
+-}
+-
+ /*
+  * Only use DMI information to set this if nothing was passed
+  * on the kernel command line (which was parsed earlier).
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 88a4734..9859b12 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -12,6 +12,7 @@
+ #include <linux/slab.h>
+ #include <linux/module.h>
+ #include <linux/cpumask.h>
++#include <linux/pci-acpi.h>
+ #include <linux/pci-aspm.h>
+ #include <linux/aer.h>
+ #include <linux/acpi.h>
+@@ -2060,10 +2061,12 @@ int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ 
+ void __weak pcibios_add_bus(struct pci_bus *bus)
+ {
++	acpi_pci_add_bus(bus);
+ }
+ 
+ void __weak pcibios_remove_bus(struct pci_bus *bus)
+ {
++	acpi_pci_remove_bus(bus);
+ }
+ 
+ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+-- 
+1.9.1
 
-However if you look at the driver it is made up of three parts:
-pcie-hisi.c --> the DT based driver
-pcie-hisi-acpi.c --> the ACPI based hook and ACPI specific init callback
-pcie-hisi-common.c --> common functions shared between DT and ACPI versions 
-                       of the driver
-
-Now I think that moving pcie-hisi-acpi.c under drivers/acpi/
-would make it hard to read as you need to jump across directories
-and it seems a bit unnatural...
-
-However it is not a big issue to me...
-
-Cheers
-
-Gab
-
-> 
-> 	Arnd
