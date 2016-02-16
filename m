@@ -1,60 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33641 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1425619AbcBRL7U (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Feb 2016 06:59:20 -0500
-Received: by mail-wm0-f68.google.com with SMTP id c200so2506244wme.0
-        for <linux-pci@vger.kernel.org>; Thu, 18 Feb 2016 03:59:20 -0800 (PST)
-Message-ID: <1455796757.23688.27.camel@googlemail.com>
-Subject: Re: [PATCH 2/2] PCI: imx6: add initial imx6sx support
-From: Christoph Fritz <chf.fritz@googlemail.com>
-Reply-To: chf.fritz@googlemail.com
-To: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lee Jones <lee.jones@linaro.org>,
-	Fabio Estevam <fabio.estevam@nxp.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Date: Thu, 18 Feb 2016 12:59:17 +0100
-In-Reply-To: <DBXPR04MB270F3A785BAF6E21BFD03108CAC0@DBXPR04MB270.eurprd04.prod.outlook.com>
-References: <1455483164-13755-1-git-send-email-chf.fritz@googlemail.com>
-	 <1455483164-13755-3-git-send-email-chf.fritz@googlemail.com>
-	 <DBXPR04MB270F3A785BAF6E21BFD03108CAC0@DBXPR04MB270.eurprd04.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:48399 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756115AbcBPWZb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 16 Feb 2016 17:25:31 -0500
+Date: Tue, 16 Feb 2016 15:25:29 -0700
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Jayachandran Chandrashekaran Nair
+	<jayachandran.chandrashekaran@broadcom.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	iommu@lists.linux-foundation.org
+Subject: Re: [RFC PATCH 1/2] PCI: Add PCI device flag
+ PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS
+Message-ID: <20160216152529.33855bc1@t450s.home>
+In-Reply-To: <CAKc_7PUtm7443qv40DNWKqJneWnVT6Do7s7vr_hOerkGLOgkJg@mail.gmail.com>
+References: <1455487501-28630-1-git-send-email-jchandra@broadcom.com>
+	<20160215182023.GB12641@localhost>
+	<20160215123901.1600f86f@t450s.home>
+	<CAKc_7PUtm7443qv40DNWKqJneWnVT6Do7s7vr_hOerkGLOgkJg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Richard
+On Wed, 17 Feb 2016 02:38:24 +0530
+Jayachandran Chandrashekaran Nair
+<jayachandran.chandrashekaran@broadcom.com> wrote:
 
-On Mon, 2016-02-15 at 07:24 +0000, Richard Zhu wrote:
-> > -----Original Message-----
-> > From: Christoph Fritz [mailto:chf.fritz@googlemail.com]
-> > -static void imx6_pcie_init_phy(struct pcie_port *pp)
-> > +static int imx6_pcie_init_phy(struct pcie_port *pp)
-> >  {
-> >  	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
-> > +	int ret = 0;
-> > +
-> > +	if (imx6_pcie->is_imx6sx) {
-> > +		/* power up separate domain available on i.mx6sx */
-> > +		regmap_update_bits(imx6_pcie->gpc_ips_reg,
-> > +			PCIE_PHY_IMX6SX_GPC_CNTR,
-> > +			PCIE_PHY_IMX6SX_GPC_CNTR_PUP_REQ,
-> > +			PCIE_PHY_IMX6SX_GPC_CNTR_PUP_REQ);
+> On Tue, Feb 16, 2016 at 1:09 AM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> > On Mon, 15 Feb 2016 12:20:23 -0600
+> > Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >  
+> >> [+cc Alex, iommu list]
+> >>
+> >> On Mon, Feb 15, 2016 at 03:35:00AM +0530, Jayachandran C wrote:  
+> >> > Add a new flag PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS to indicate bridges
+> >> > that should not be considered during DMA alias search. This is
+> >> > to support hardware (in this case Broadcom Vulcan PCIe subsystem)
+> >> > that has internal bridges which have either missing or wrong PCIe
+> >> > capabilities.  
+> >
+> > I figured this would come at some point, the right answer is of course
+> > to follow the PCIe spec and implement the required PCIe capability in
+> > the hardware.  
 > 
->  [Zhu hongxing]  First of all, thanks for trying to upstream imx6sx pcie driver.
-> As Lucas discussed with me before,  the GPC regulator operations should be touched in
-> Imx pcie driver at all.  These bits operations should be encapsulate into the PM system,
->  for example, the regulator driver.
+> There are  PCIe controllers on the chip that follows the spec, the issue is
+> how it is integrated to the northbridge (equivalent) on the chip, I have
+> tried to explain it below.
+> 
+> >> This needs more explanation, like what exactly is wrong with this
+> >> device?  A missing PCIe capability might cause other problems.
+> >>
+> >> What problem does this fix?  Without these patches, do we merely add
+> >> aliases that are unnecessary?  Do we crash because something goes
+> >> wrong in the pci_pcie_type() switch because of the incorrect
+> >> capability?  
+> 
+> Here's how (for example) how the PCI enumeration of a 2 node Vulcan
+> processor will look like:
+> 
+> 
+> [0] +-0.0.0--[1]---+--1.a.0----[2]-----2.0.0---[3]----3.0.0
+>     |              +--1.a.1----[4]-----4.0.0---[5]----5.0.0
+>     |              .
+>     |              ... etc...
+>     |
+>     +-0.0.1--[10]--+-10.a.0----[11]---11.0.0---[12]---12.0.0
+>                    +-10.a.1----[13]---13.0.0---[14]---14.0.0
+>                    .
+>                    ... etc...
 
-Ok, for an initial version, I'll just leave the regulator in my
-devicetree enabled. For further enhancements I suppose
-arch/arm/mach-imx/gpc.c needs to get touched?
+So we have:
 
-Let me reroll this patchset.
+    "Glue Bridge"---"Glue Bridges"---Root Ports---Endpoints
+      (no pcie)      (pci/x-pcie)
 
-Thanks
- -- Christoph
+> 
+> The devices 0.0.x and x.a.x are glue bridges that are there to
+> bring the real PCIe controllers (pcie cap type 4) 2.0.0, 4.0.0,
+> 11.0.0, 13.0.0 under a single PCI hierarchy. The x.a.x bridges
+> have a PCIe capability (type 8) and 0.0.x does not have any pcie
+> capability.
+> 
+> In case of Vulcan, both the GICv3 ITS driver code and the SMMUv3
+> driver code does dma alias walk to find the device id to use
+> in ITS and SMMU. In both cases it will ignore the x.0.0 bridges
+> since they are type root port, but will continue on up and end
+> up with incorrect device id.
+> 
+> The flag I have added is to make the pci_for_each_dma_alias()
+> ignore the last 2 levels of glue/internal bridges.
 
+Per the PCIe spec, I'm not even sure what you have is a valid
+hierarchy, root ports sit on root complexes, not behind a PCI-to-PCIe
+bridge.  So really you're pretending that the downstream "glue bridge"
+is your host bridge and therefore root complex, but the PCI topology
+would clearly dictate that the top-most bus is conventional PCI and
+therefore everything is an alias of everything else and the DMA alias
+code is doing exactly what it should.
 
+Also note that the caller of pci_for_each_dma_alias() owns the callback
+function triggered for each alias, that function could choose to prune
+out these "glue bridges" itself if that's the appropriate thing to do.
+Where do the SMMU and ITS actually reside in the above diagram?  You
+can use the callout function to stop the traversal anywhere you wish,
+it's free to return a -errno to stop or positive number, which the
+caller can interpret as error or non-failure stop condition.
+
+You could even think about changing what Linux considers to be the host
+bridge.  Maybe these glue bridges shouldn't even be visible to Linux,
+would that also solve the issue with the broken BAR?
+
+> > The change takes the same code path as it would for a real PCIe bridge
+> > port (downstream/upstream/root), which means they want to skip adding
+> > this bridge as an alias of the device.  So we're adding in aliases that
+> > don't exist, the bridge itself.
+> >
+> > If anything I'd suggest a flag that actually tries to address the
+> > problem rather than a symptom of the problem.  For example, maybe the
+> > flag should be PCI_DEV_FLAGS_IS_PCIE.  Maybe pci_is_pcie() should even
+> > take that into account.  That has some trickle through for
+> > pci_pcie_type() and all the accessor functions, but maybe it's a
+> > cleaner solution overall (or maybe it explodes further).  Thanks,  
+> 
+> I didn't really want to mark the glue bridges as PCIe or have fake
+> PCIe capability there, the obvious simple solution was to add
+> the flag PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS
+> 
+> Any suggestions/comments on how to do this better would be welcome.
+
+I definitely don't think either flag idea is the right solution, I
+think you've actually already got the tools you need to solve it by
+putting the intelligence in the callback function or by going further
+down the path of pretending the glue bridge is really a host bridge.
+Thanks,
+
+Alex
