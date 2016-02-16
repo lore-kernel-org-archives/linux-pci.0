@@ -1,97 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39790 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759600AbcBYCSx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:18:53 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v10 49/59] PCI: Unify calculate_size() for io port and MMIO
-Date: Wed, 24 Feb 2016 18:12:40 -0800
-Message-Id: <1456366370-28995-50-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH V5 11/15] drivers: pci: add generic code to claim bus resources
+Date: Tue, 16 Feb 2016 14:53:41 +0100
+Message-Id: <1455630825-27253-12-git-send-email-tn@semihalf.com>
+In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now calculate_memsize() and calculate_iosize() is the same.
+From: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
 
-Change them to calculate_size().
+PCI core code contains a set of functions, eg:
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+pci_assign_unassigned_bus_resources()
+
+that allow to assign the PCI resources for a given bus after
+enumeration.
+
+On systems where the PCI BARs are immutable (ie they must not and can
+not be assigned), PCI resources must be claimed in order to be
+validated and inserted in the PCI resources tree, but there is no generic
+PCI kernel function for that purpose and the resource claiming is
+implemented in an arch specific fashion which resulted in arches
+implementations that contain duplicated code.
+
+This patch, based on the ia64 resource claiming arch implementation,
+implements a set of functions in core PCI code that provides a PCI core
+interface for resources claiming for a given PCI bus hierarchy, paving
+the way for further resource claiming consolidation across architectures.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c | 25 +++++--------------------
- 1 file changed, 5 insertions(+), 20 deletions(-)
+ drivers/pci/setup-bus.c | 63 +++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h     |  1 +
+ 2 files changed, 64 insertions(+)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 0af433b..c13ec01 100644
+index 7796d0a..c959398 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -1104,22 +1104,7 @@ static struct resource *find_free_bus_resource(struct pci_bus *bus,
- 	return NULL;
+@@ -1424,6 +1424,69 @@ void pci_bus_assign_resources(const struct pci_bus *bus)
  }
+ EXPORT_SYMBOL(pci_bus_assign_resources);
  
--static resource_size_t calculate_iosize(resource_size_t size,
--		resource_size_t min_size,
--		resource_size_t old_size,
--		resource_size_t align)
--{
--	if (size < min_size)
--		size = min_size;
--	if (old_size == 1)
--		old_size = 0;
--	size = ALIGN(size, align);
--	if (size < old_size)
--		size = old_size;
--	return size;
--}
--
--static resource_size_t calculate_memsize(resource_size_t size,
-+static resource_size_t calculate_size(resource_size_t size,
- 		resource_size_t min_size,
- 		resource_size_t old_size,
- 		resource_size_t align)
-@@ -1245,14 +1230,14 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 	size = size_aligned_for_isa(size);
- 	size += size1;
--	size0 = calculate_iosize(size, min_size,
-+	size0 = calculate_size(size, min_size,
- 			resource_size(b_res), min_align);
- 	sum_add_size = size_aligned_for_isa(sum_add_size);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
- 	size1 = !realloc_head ? size0 :
--		calculate_iosize(sum_add_size, min_size,
-+		calculate_size(sum_add_size, min_size,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
-@@ -1581,7 +1566,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (size || min_size) {
- 		min_align = calculate_mem_align(&align_test_list, max_align,
- 						size, window_align);
--		size0 = calculate_memsize(size, min_size,
-+		size0 = calculate_size(size, min_size,
- 				  resource_size(b_res), min_align);
- 	}
- 	free_align_test_list(&align_test_list);
-@@ -1606,7 +1591,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
- 					window_align);
--		size1 = calculate_memsize(sum_add_size, min_size,
-+		size1 = calculate_size(sum_add_size, min_size,
- 				 resource_size(b_res), min_add_align);
- 	}
- 	free_align_test_list(&align_test_add_list);
++static void pci_claim_device_resources(struct pci_dev *dev)
++{
++	int i;
++
++	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
++		struct resource *r = &dev->resource[i];
++
++		if (!r->flags || r->parent)
++			continue;
++
++		pci_claim_resource(dev, i);
++	}
++}
++
++static void pci_claim_bridge_resources(struct pci_dev *dev)
++{
++	int i;
++
++	for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
++		struct resource *r = &dev->resource[i];
++
++		if (!r->flags || r->parent)
++			continue;
++
++		pci_claim_bridge_resource(dev, i);
++	}
++}
++
++static void pci_bus_allocate_dev_resources(struct pci_bus *b)
++{
++	struct pci_dev *dev;
++	struct pci_bus *child;
++
++	list_for_each_entry(dev, &b->devices, bus_list) {
++		pci_claim_device_resources(dev);
++
++		child = dev->subordinate;
++		if (child)
++			pci_bus_allocate_dev_resources(child);
++	}
++}
++
++static void pci_bus_allocate_resources(struct pci_bus *b)
++{
++	struct pci_bus *child;
++
++	/* Depth-First Search on bus tree */
++	if (b->self) {
++		pci_read_bridge_bases(b);
++		pci_claim_bridge_resources(b->self);
++	}
++
++	list_for_each_entry(child, &b->children, node)
++		pci_bus_allocate_resources(child);
++}
++
++void pci_bus_claim_resources(struct pci_bus *b)
++{
++	pci_bus_allocate_resources(b);
++	pci_bus_allocate_dev_resources(b);
++}
++EXPORT_SYMBOL(pci_bus_claim_resources);
++
+ static void __pci_bridge_assign_resources(const struct pci_dev *bridge,
+ 					  struct list_head *add_head,
+ 					  struct list_head *fail_head)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index dac677c..6faf994 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1119,6 +1119,7 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
+ /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
+ resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
+ void pci_bus_assign_resources(const struct pci_bus *bus);
++void pci_bus_claim_resources(struct pci_bus *bus);
+ void pci_bus_size_bridges(struct pci_bus *bus);
+ int pci_claim_resource(struct pci_dev *, int);
+ int pci_claim_bridge_resource(struct pci_dev *bridge, int i);
 -- 
-1.8.4.5
-
+1.9.1
