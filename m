@@ -1,76 +1,135 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <3576289.1ltj0IceQ5@vostro.rjw.lan>
-References: <1454058340-7904-1-git-send-email-jchandra@broadcom.com>
- <CAKc_7PXYtFt1MQE-UGO0O5vvQ+xFKa2b5=F8wXB=EN-JUJVzZw@mail.gmail.com>
- <20160205094740.GA31547@red-moon> <3576289.1ltj0IceQ5@vostro.rjw.lan>
-From: Jayachandran Chandrashekaran Nair
-	<jayachandran.chandrashekaran@broadcom.com>
-Date: Sat, 6 Feb 2016 15:28:26 +0530
-Message-ID: <CAKc_7PV69xZ-+yeq+fVAMykuQ53HsjpACz9yH9LpJE-=X5xggA@mail.gmail.com>
-Subject: Re: [PATCH v7 5/5] PCI: ACPI: Add a generic ACPI based host controller
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Jayachandran C <jchandra@broadcom.com>,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-acpi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org,
-	Tomasz Nowicki <tn@semihalf.com>,
-	xen-devel@lists.xenproject.org
-Content-Type: text/plain; charset=UTF-8
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V5 07/15] pci, acpi: Provide generic way to assign bus domain number.
+Date: Tue, 16 Feb 2016 14:53:37 +0100
+Message-Id: <1455630825-27253-8-git-send-email-tn@semihalf.com>
+In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
+As we now have valid PCI host bridge device reference we can
+introduce code that is going to find its bus domain number using
+ACPI _SEG method.
 
-On Sat, Feb 6, 2016 at 4:56 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Friday, February 05, 2016 09:47:40 AM Lorenzo Pieralisi wrote:
->> On Fri, Feb 05, 2016 at 02:05:37PM +0530, Jayachandran Chandrashekaran Nair wrote:
->>
->> [...]
->>
->> > pci_host_acpi.c is a generic implementation of these using a sysdata
->> > pointing to acpi_pci_root_info, and using a pointer to the pci_mmcfg_region
->> > to access ECAM area, Maybe I can rename this file to
->> > pci_acpi_host_generic.c to reflect this better.
->>
->> Maybe you should stop sending this series and work with Tomasz to
->> get this done, you are confusing everyone and I am really really
->> annoyed about this.
->>
->> Do you realize there is no point in having two patch series doing
->> the same thing and wasting everyone's review time ?
->>
->> Do you realize he started this work long before you and went through
->> several rounds of review already (I told you before but in case you
->> forgot) ?
->>
->> Tomasz posted a version yesterday, integrating comments following months
->> of review and testing and I think it is ready to get upstream:
->>
->> https://lkml.org/lkml/2016/2/4/646
->>
->> Did you even consider reviewing his code or helping him instead of
->> churning out more patches doing the *SAME* thing ?
->>
->> Do you want all of us to go through your code and re-fix what has
->> already been fixed in Tomasz's series with the end result of missing
->> yet another merge window ?
->>
->> This is really annoying, stop it please, really.
->
-> OK, so to be crystal clear here.
->
-> I'm going to ignore the series the $subject patch belongs to going forward.
+Note that _SEG method is optional, therefore _SEG absence means
+that all PCI buses belong to domain 0.
 
-It looks like you can already reviewed Tomasz's patchset and as Lorenzo
-says thinks that it can be merged.
+While at it, for the sake of code clarity we put ACPI and DT domain
+assign methods into the corresponding helpers.
 
-When I first posted the patchset the state of arm64 ACPI/PCI was not that
-clear - and I thought an alternative will help. Ideally I would expect
-maintainers to look at technical merit, but in this case any working solution
-merged will be great news.
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+Tested-by: Duc Dang <dhdang@apm.com>
+Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+Tested-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/acpi/pci_root.c  | 18 ++++++++++++++++++
+ drivers/pci/pci.c        | 11 +++++++++--
+ include/linux/pci-acpi.h |  2 ++
+ 3 files changed, 29 insertions(+), 2 deletions(-)
 
-Thanks,
-JC.
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index c2bd6dd..3b284dc 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -419,6 +419,24 @@ out:
+ }
+ EXPORT_SYMBOL(acpi_pci_osc_control_set);
+ 
++int acpi_pci_bus_domain_nr(struct device *parent)
++{
++	struct acpi_device *acpi_dev = to_acpi_device(parent);
++	unsigned long long segment = 0;
++	acpi_status status;
++
++	/*
++	 * If _SEG method does not exist, following ACPI spec (6.5.6)
++	 * all PCI buses belong to domain 0.
++	 */
++	status = acpi_evaluate_integer(acpi_dev->handle, METHOD_NAME__SEG, NULL,
++				       &segment);
++	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
++		dev_err(&acpi_dev->dev, "can't evaluate _SEG\n");
++
++	return segment;
++}
++
+ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
+ {
+ 	u32 support, control, requested;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 602eb42..d6c768e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -19,6 +19,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/string.h>
+ #include <linux/log2.h>
++#include <linux/pci-acpi.h>
+ #include <linux/pci-aspm.h>
+ #include <linux/pm_wakeup.h>
+ #include <linux/interrupt.h>
+@@ -4769,7 +4770,7 @@ int pci_get_new_domain_nr(void)
+ }
+ 
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++static int of_pci_bus_domain_nr(struct device *parent)
+ {
+ 	static int use_dt_domains = -1;
+ 	int domain = of_get_pci_domain_nr(parent->of_node);
+@@ -4811,7 +4812,13 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ 		domain = -1;
+ 	}
+ 
+-	bus->domain_nr = domain;
++	return domain;
++}
++
++void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++{
++	bus->domain_nr = acpi_disabled ? of_pci_bus_domain_nr(parent) :
++					 acpi_pci_bus_domain_nr(parent);
+ }
+ #endif
+ #endif
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 94d8f38..b4f87ba9 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -22,6 +22,7 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
+ {
+ 	return acpi_remove_pm_notifier(dev);
+ }
++extern int acpi_pci_bus_domain_nr(struct device *parent);
+ extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
+ 
+ static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
+@@ -143,6 +144,7 @@ extern struct list_head pci_mmcfg_list;
+ #else	/* CONFIG_ACPI */
+ static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
+ static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
++static inline int acpi_pci_bus_domain_nr(struct device *parent) { return -1; }
+ #endif	/* CONFIG_ACPI */
+ 
+ #ifdef CONFIG_ACPI_APEI
+-- 
+1.9.1
+
