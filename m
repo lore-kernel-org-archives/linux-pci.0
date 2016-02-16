@@ -1,64 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yk0-f181.google.com ([209.85.160.181]:33667 "EHLO
-	mail-yk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423215AbcBQObD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Feb 2016 09:31:03 -0500
-MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-41-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com> <1455680668-23298-41-git-send-email-gwshan@linux.vnet.ibm.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Wed, 17 Feb 2016 08:30:42 -0600
-Message-ID: <CAL_Jsq++L-D=RD6ZYK=CPnhqcZbhEbxsKk3xT-vK2R=Qe9Z_pg@mail.gmail.com>
-Subject: Re: [PATCH v8 40/45] drivers/of: Split unflatten_dt_node()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+Received: from g9t5008.houston.hp.com ([15.240.92.66]:34078 "EHLO
+	g9t5008.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933325AbcBPXu0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 18:50:26 -0500
+From: "Seymour, Shane M" <shane.seymour@hpe.com>
+To: Hannes Reinecke <hare@suse.de>, Bjorn Helgaas <bhelgaas@google.com>
+CC: Alexander Duyck <alexander.duyck@gmail.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
-	dja@axtens.net, Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+	Babu Moger <babu.moger@oracle.com>,
+	"Jordan Hargrave" <Jordan_Hargrave@dell.com>
+Subject: RE: [PATCHv3 0/4] PCI VPD access fixes
+Date: Tue, 16 Feb 2016 23:50:24 +0000
+Message-ID: <DDB9C85B850785449757F9914A034FCB44531CFE@G4W3219.americas.hpqcorp.net>
+References: <1455525722-122040-1-git-send-email-hare@suse.de>
+In-Reply-To: <1455525722-122040-1-git-send-email-hare@suse.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 16, 2016 at 9:44 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
-> The function unflatten_dt_node() is called recursively to unflatten
-> device nodes and properties in the FDT blob. It looks complicated
-> and hard to be understood.
->
-> This splits the function into 3 functions: populate_properties(),
-> populate_node() and unflatten_dt_node(). populate_properties(),
-> which is called by populate_node(), creates properties for the
-> indicated device node. The later one creates the device nodes
-> from FDT blob. populate_node() gets the offset in FDT blob for
-> next device nodes and then calls populate_node(). No logical
-> changes introduced.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->  drivers/of/fdt.c | 249 ++++++++++++++++++++++++++++++++-----------------------
->  1 file changed, 147 insertions(+), 102 deletions(-)
 
-One nit, otherwise:
+For the series tested two PCIe cards that support VPD:
 
-Acked-by: Rob Herring <robh@kernel.org>
+0d:00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic SAS2308 PCI-Express Fusion-MPT SAS-2 (rev 05)
+1e:00.0 Fibre Channel: QLogic Corp. ISP2432-based 4Gb Fibre Channel to PCI Express HBA (rev 03)
 
-[...]
+The first card exposes 32KiB of NUL bytes as VPD and the second 154 bytes of non-NUL data repeating every 4KiB for 32KiB before the change. After the change the first  card returns no data for VPD (since it contains only NUL bytes) and the second the expected 154 bytes of data.
 
-> +               /* And we process the "ibm,phandle" property
-> +                * used in pSeries dynamic device tree
-> +                * stuff
-> +                */
-> +               if (!strcmp(pname, "ibm,phandle"))
-> +                       np->phandle = be32_to_cpup(val);
-> +
-> +               pp->name   = (char *)pname;
-> +               pp->length = sz;
-> +               pp->value  = (__be32 *)val;
+Using dyn debug also tested that this message comes out as expected for the LSI card (and it did):
 
-This cast should not be needed.
+[  289.539523] mpt3sas 0000:0d:00.0: invalid short VPD tag 00 at offset 1
 
-> +               *pprev     = pp;
-> +               pprev      = &pp->next;
-> +       }
+lspci works correctly with the patch in the kernel. The only change on the system was that with the LSI card lspci with -vvvv as root it now says "Not readable"  instead of "Unknown small resource type 00, will not decode more." in the VPD section.
+---
+Tested-by: Shane Seymour <shane.seymour@hpe.com>
+
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> owner@vger.kernel.org] On Behalf Of Hannes Reinecke
+> Sent: Monday, February 15, 2016 7:42 PM
+> To: Bjorn Helgaas
+> Cc: Alexander Duyck; linux-pci@vger.kernel.org; Babu Moger; Jordan
+> Hargrave; Hannes Reinecke
+> Subject: [PATCHv3 0/4] PCI VPD access fixes
+> 
+> the current PCI VPD page access assumes that the entire possible VPD data is
+> readable. However, the spec only guarantees a VPD data up to the 'end'
+> marker, with everything beyond that being undefined.
+> This causes a system lockup on certain devices.
+> 
+> With this patch we always set the VPD sysfs attribute size to '0', and calculate
+> the available VPD size on the first access.
+> If no valid data can be read an I/O error is returned.
+> 
+> I've also included the patch from Babu to blacklists devices which are known
+> to lockup when accessing the VPD data.
+> 
+> Changes to v2:
+> - Spelling fixes as suggested by Bjorn Helgaas
+> - Update to correct vpd size in pci_vpc_pci22_write
+> - Pass in modified VPD size to pci_vpd_pci22_size() to make
+>   quirk_brcm_570x_limit_vpd work
+> 
+> Babu Moger (1):
+>   pci: Blacklist vpd access for buggy devices
+> 
+> Hannes Reinecke (3):
+>   pci: Update VPD definitions
+>   pci: allow access to VPD attributes with size '0'
+>   pci: Determine actual VPD size on first access
+> 
+>  drivers/pci/access.c    | 84
+> +++++++++++++++++++++++++++++++++++++++++++++++--
+>  drivers/pci/pci-sysfs.c | 22 +++++++------
+>  drivers/pci/quirks.c    | 43 +++++++++++++++++++++++++
+>  include/linux/pci.h     | 27 ++++++++++++++--
+>  4 files changed, 162 insertions(+), 14 deletions(-)
+> 
+> --
+> 1.8.5.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in the
+> body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
