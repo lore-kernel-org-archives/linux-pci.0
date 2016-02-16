@@ -1,51 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 12 Feb 2016 11:17:58 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Luis Henriques <luis.henriques@canonical.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] vfio: fix link failures when CONFIG_PCI_MSI is disabled
-Message-ID: <20160212111758.4b5cb926@t450s.home>
-In-Reply-To: <20160203205108.GA9181@charon.olymp>
-References: <20160203205108.GA9181@charon.olymp>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V5 02/15] acpi, pci, mcfg: Provide default RAW ACPI PCI config space accessors.
+Date: Tue, 16 Feb 2016 14:53:32 +0100
+Message-Id: <1455630825-27253-3-git-send-email-tn@semihalf.com>
+In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 3 Feb 2016 20:51:08 +0000
-Luis Henriques <luis.henriques@canonical.com> wrote:
+Lets keep RAW ACPI PCI config space accessors empty by default,
+since we are note sure if they are necessary accross all archs.
+Once we sort this out, we can provide generic version or let
+architectures to overwrite, like now x86.
 
-> The following link failure occurs when CONFIG_PCI_MSI is not set:
-> 
-> drivers/built-in.o: In function `vfio_msi_set_vector_signal':
-> :(.text+0x626640): undefined reference to `pci_write_msi_msg'
-> 
-> Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
-> ---
->  drivers/vfio/pci/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
-> index 02912f180c6d..b9dbfc9aeee1 100644
-> --- a/drivers/vfio/pci/Kconfig
-> +++ b/drivers/vfio/pci/Kconfig
-> @@ -1,6 +1,6 @@
->  config VFIO_PCI
->  	tristate "VFIO support for PCI devices"
-> -	depends on VFIO && PCI && EVENTFD
-> +	depends on VFIO && PCI_MSI && EVENTFD
->  	select VFIO_VIRQFD
->  	select IRQ_BYPASS_MANAGER
->  	help
-> 
+Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+Tested-by: Duc Dang <dhdang@apm.com>
+Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+Tested-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/acpi/pci_mcfg.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index ea84365..0467b00 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -21,6 +21,26 @@
+ static DEFINE_MUTEX(pci_mmcfg_lock);
+ LIST_HEAD(pci_mmcfg_list);
+ 
++/*
++ * raw_pci_read/write - raw ACPI PCI config space accessors.
++ *
++ * By defauly (__weak) these accessors are empty and should be overwritten
++ * by architectures which support operations on ACPI PCI_Config regions,
++ * see osl.c file.
++ */
++
++int __weak raw_pci_read(unsigned int domain, unsigned int bus,
++			unsigned int devfn, int reg, int len, u32 *val)
++{
++	return PCIBIOS_DEVICE_NOT_FOUND;
++}
++
++int __weak raw_pci_write(unsigned int domain, unsigned int bus,
++			 unsigned int devfn, int reg, int len, u32 val)
++{
++	return PCIBIOS_DEVICE_NOT_FOUND;
++}
++
+ static void list_add_sorted(struct pci_mmcfg_region *new)
+ {
+ 	struct pci_mmcfg_region *cfg;
+-- 
+1.9.1
 
-It seems like a better solution would be to have pci stub these out
-with static inlines when !CONFIG_PCI_MSI, we already do that for quite
-a lot of MSI and MSI-X callbacks.  MSI/X on the device clearly won't
-work if the host doesn't support MSI, and maybe there are improvements
-to be made there, but MSI is a subcomponent of vfio-pci, the module
-itself shouldn't depend on MSI.  Thanks,
-
-Alex
