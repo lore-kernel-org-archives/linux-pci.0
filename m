@@ -1,68 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail12.wdc04.mandrillapp.com ([205.201.139.12]:57395 "EHLO
-	mail12.wdc04.mandrillapp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752119AbcBZALR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Feb 2016 19:11:17 -0500
-Received: from pmta05.wdc01.mailchimp.com (127.0.0.1) by mail12.wdc04.mandrillapp.com id hpuc2a1jvjgs for <linux-pci@vger.kernel.org>; Fri, 26 Feb 2016 00:11:15 +0000 (envelope-from <bounce-md_30481620.56cf9823.v1-dea01e0ee526471d9f576446609046db@mandrillapp.com>)
-From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] PCI: keystone: fix msi code that retrieves the pp struct ptr
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: <stable@vger.kernel.org>, <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>
-Message-Id: <20160226001114.GA10923@kroah.com>
-References: <1456438984-22111-1-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1456438984-22111-1-git-send-email-m-karicheri2@ti.com>
-Date: Fri, 26 Feb 2016 00:11:15 +0000
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V5 04/15] pci, acpi, ecam: Add flag to indicate whether ECAM region was hot added or not.
+Date: Tue, 16 Feb 2016 14:53:34 +0100
+Message-Id: <1455630825-27253-5-git-send-email-tn@semihalf.com>
+In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 25, 2016 at 05:23:04PM -0500, Murali Karicheri wrote:
-> Recent update to pcie-designware core driver,
-> commit "cbce79005 PCI: designware: Make driver arch-agnostic" broke the
-> keystone PCI driver. This is because, the way pp struct ptr is retrieved
-> from  msi desc has changed and require similar update in pci-keystone-dw.c
-> as well. This patch fix this issue. Here is the early boot crash log seen
-> on K2E EVM.
-> 
-> [    1.012999] pci 0000:00:00.0: PCI bridge to [bus 01]
-> [    1.018073] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
-> [    1.024308] pci 0000:00:00.0:   bridge window [mem 0x60000000-0x600fffff]
-> [    1.031216] pci 0000:00:00.0:   bridge window [mem 0x60100000-0x601fffff
-> pref]
-> [    1.038736] Unable to handle kernel NULL pointer dereference at virtual
-> address 00000030
-> [    1.046950] pgd = c0003000
-> [    1.049750] [00000030] *pgd=80000800004003, *pmd=00000000
-> [    1.055265] Internal error: Oops: 206 [#1] PREEMPT SMP ARM
-> [    1.060860] Modules linked in:
-> [    1.064013] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.4.2-00139-gb74f926 #2
-> [    1.071266] Hardware name: Keystone
-> [    1.074853] task: eb888000 ti: eb890000 task.ti: eb890000
-> [    1.080364] PC is at ks_dw_pcie_msi_irq_unmask+0x24/0x58
-> [    1.085785] LR is at ks_dw_pcie_msi_irq_unmask+0x18/0x58
-> [    1.091206] pc : [<c02f65c8>]    lr : [<c02f65bc>]    psr: 60000093
-> [    1.091206] sp : eb891bc8  ip : 00000000  fp : ebb15010
-> [    1.102915] r10: 00000051  r9 : 60000013  r8 : ebafaa20
-> [    1.108247] r7 : ebaa9f80  r6 : eb9fd0c0  r5 : ebafa9d0  r4 : ebafa9c0
-> [    1.114889] r3 : 00000051  r2 : 00000000  r1 : 00000001  r0 : ebb14c18
-> [    1.121533] Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment
-> kernel
-> [    1.129049] Control: 30c5387d  Table: 00003000  DAC: fffffffd
-> [    1.134905] Process swapper/0 (pid: 1, stack limit = 0xeb890210)
-> [    1.141023] Stack: (0xeb891bc8 to 0xeb892000)
-> 
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> ---
->  - Need this fix in 4.4.4 as well
+There are two ways we can get ECAM (aka MCFG) regions using ACPI,
+first from MCFG static table and second from _CBA method. We cannot remove
+static regions, however regions coming from _CBA should be removed while
+removing bridge device.
 
-<formletter>
+In the light of above we need flag to mark hot added ECAM entries
+and user to call pci_mmconfig_insert while adding regions from _CBA method.
+Similarly pci_mmconfig_delete while removing hot added regions.
 
-This is not the correct way to submit patches for inclusion in the
-stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
-for how to do this properly.
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+Tested-by: Duc Dang <dhdang@apm.com>
+Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+Tested-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/acpi/pci_mcfg.c  | 4 +++-
+ include/linux/pci-acpi.h | 1 +
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-</formletter>
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index 0467b00..3282f2a 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -74,6 +74,7 @@ static struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
+ 	new->segment = segment;
+ 	new->start_bus = start;
+ 	new->end_bus = end;
++	new->hot_added = false;
+ 
+ 	res = &new->res;
+ 	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
+@@ -205,6 +206,7 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+ 	}
+ 	rc = pci_mmconfig_map_resource(dev, cfg);
+ 	if (!rc) {
++		cfg->hot_added = true;
+ 		list_add_sorted(cfg);
+ 		dev_info(dev, "MMCONFIG at %pR (base %#lx)\n",
+ 				 &cfg->res, (unsigned long)addr);
+@@ -228,7 +230,7 @@ int pci_mmconfig_delete(u16 seg, u8 start, u8 end)
+ 	mutex_lock(&pci_mmcfg_lock);
+ 	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
+ 		if (cfg->segment == seg && cfg->start_bus == start &&
+-		    cfg->end_bus == end) {
++		    cfg->end_bus == end && cfg->hot_added) {
+ 			list_del_rcu(&cfg->list);
+ 			synchronize_rcu();
+ 			pci_mmconfig_unmap_resource(cfg);
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index e9450ef..94d8f38 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -119,6 +119,7 @@ struct pci_mmcfg_region {
+ 	u8 start_bus;
+ 	u8 end_bus;
+ 	char name[PCI_MMCFG_RESOURCE_NAME_LEN];
++	bool hot_added;
+ };
+ 
+ extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+-- 
+1.9.1
