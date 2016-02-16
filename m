@@ -1,285 +1,232 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "'Mark Rutland'" <mark.rutland@arm.com>,
-	"Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
-	"'bhelgaas@google.com'" <bhelgaas@google.com>,
-	"'arnd@arndb.de'" <arnd@arndb.de>,
-	"'Lorenzo.Pieralisi@arm.com'" <Lorenzo.Pieralisi@arm.com>,
-	"'tn@semihalf.com'" <tn@semihalf.com>,
-	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"'linux-acpi@vger.kernel.org'" <linux-acpi@vger.kernel.org>,
-	"'jcm@redhat.com'" <jcm@redhat.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	"'linux-arm-kernel@lists.infradead.org'"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
- HiSilicon SoCs Host Controllers
-Date: Thu, 25 Feb 2016 03:01:19 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ECCD209@lhreml503-mbs>
-References: <1455039260-6040-1-git-send-email-gabriele.paoloni@huawei.com>
- <1455039260-6040-4-git-send-email-gabriele.paoloni@huawei.com>
- <20160209182429.GD4348@leverpostej>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1591@lhreml503-mbs>
- <20160210111234.GC2632@leverpostej>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1D30@lhreml503-mbs>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ECC5F00@lhreml503-mbs>
- <20160224011418.GB13026@localhost>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ECCAD6A@lhreml503-mbs>
- <20160224152538.GA19700@localhost>
-In-Reply-To: <20160224152538.GA19700@localhost>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V5 06/15] pci, acpi, x86, ia64: Move ACPI host bridge device companion assignment to core code.
+Date: Tue, 16 Feb 2016 14:53:36 +0100
+Message-Id: <1455630825-27253-7-git-send-email-tn@semihalf.com>
+In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
+Currently we have two platforms (x86 & ia64) capable of PCI ACPI host
+bridge initialization. They both use arch-specific sysdata to pass down
+parent device reference and both rely on NULL parent in pci_create_root_bus()
+to validate sysdata content.
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: 24 February 2016 23:26
-> To: Gabriele Paoloni
-> Cc: 'Mark Rutland'; Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong
-> (C); Linuxarm; qiujiang; 'bhelgaas@google.com'; 'arnd@arndb.de';
-> 'Lorenzo.Pieralisi@arm.com'; 'tn@semihalf.com'; 'linux-
-> pci@vger.kernel.org'; 'linux-kernel@vger.kernel.org'; xuwei (O);
-> 'linux-acpi@vger.kernel.org'; 'jcm@redhat.com'; zhangjukuo; Liguozhu
-> (Kenneth); 'linux-arm-kernel@lists.infradead.org'
-> Subject: Re: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
-> HiSilicon SoCs Host Controllers
-> 
-> On Wed, Feb 24, 2016 at 06:46:09AM +0000, Gabriele Paoloni wrote:
-> >
-> > Hi Bjorn, many thanks for replying
-> >
-> > > -----Original Message-----
-> > > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> > > Sent: 24 February 2016 09:14
-> > > To: Gabriele Paoloni
-> > > Cc: 'Mark Rutland'; Guohanjun (Hanjun Guo); Wangzhou (B);
-> liudongdong
-> > > (C); Linuxarm; qiujiang; 'bhelgaas@google.com'; 'arnd@arndb.de';
-> > > 'Lorenzo.Pieralisi@arm.com'; 'tn@semihalf.com'; 'linux-
-> > > pci@vger.kernel.org'; 'linux-kernel@vger.kernel.org'; xuwei (O);
-> > > 'linux-acpi@vger.kernel.org'; 'jcm@redhat.com'; zhangjukuo;
-> Liguozhu
-> > > (Kenneth); 'linux-arm-kernel@lists.infradead.org'
-> > > Subject: Re: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support
-> for
-> > > HiSilicon SoCs Host Controllers
-> > >
-> > > On Tue, Feb 23, 2016 at 02:47:22AM +0000, Gabriele Paoloni wrote:
-> > > > > -----Original Message-----
-> > > > > From: Gabriele Paoloni
-> > > > > Sent: 10 February 2016 22:45
-> > > > > To: Mark Rutland
-> > > > > Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C);
-> Linuxarm;
-> > > > > qiujiang; bhelgaas@google.com; arnd@arndb.de;
-> > > Lorenzo.Pieralisi@arm.com;
-> > > > > tn@semihalf.com; linux-pci@vger.kernel.org; linux-
-> > > > > kernel@vger.kernel.org; xuwei (O); linux-acpi@vger.kernel.org;
-> > > > > jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth); linux-arm-
-> > > > > kernel@lists.infradead.org
-> > > > > Subject: RE: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI
-> support
-> > > for
-> > > > > HiSilicon SoCs Host Controllers
-> > > > >
-> > > > > > -----Original Message-----
-> > > > > > From: linux-kernel-owner@vger.kernel.org [mailto:linux-
-> kernel-
-> > > > > > owner@vger.kernel.org] On Behalf Of Mark Rutland
-> > > > > > Sent: 10 February 2016 11:13
-> > > > > > To: Gabriele Paoloni
-> > > > > > Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C);
-> > > Linuxarm;
-> > > > > > qiujiang; bhelgaas@google.com; arnd@arndb.de;
-> > > > > > Lorenzo.Pieralisi@arm.com; tn@semihalf.com; linux-
-> > > pci@vger.kernel.org;
-> > > > > > linux-kernel@vger.kernel.org; xuwei (O); linux-
-> > > acpi@vger.kernel.org;
-> > > > > > jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth); linux-arm-
-> > > > > > kernel@lists.infradead.org
-> > > > > > Subject: Re: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI
-> support
-> > > for
-> > > > > > HiSilicon SoCs Host Controllers
-> > > > > >
-> > > > > > On Wed, Feb 10, 2016 at 09:52:36AM +0000, Gabriele Paoloni
-> wrote:
-> > > > > > > Hi Mark
-> > > > > > >
-> > > > > > > > On Tue, Feb 09, 2016 at 05:34:20PM +0000, Gabriele
-> Paoloni
-> > > wrote:
-> > > > > > > > > From: gabriele paoloni <gabriele.paoloni@huawei.com>
-> > > > > > > > > +/*
-> > > > > > > > > + * Retrieve rc_dbi base and size from _DSD
-> > > > > > > > > + * Name (_DSD, Package () {
-> > > > > > > > > + *	ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
-> > > > > > > > > + *	Package () {
-> > > > > > > > > + *	Package () {"rc-dbi", Package () { 0x0,
-> 0xb0080000,
-> > > 0x0,
-> > > > > > 0x10000
-> > > > > > > > }},
-> > > > > > > > > + *	}
-> > > > > > > > > + *	})
-> > > > > > > > > + */
-> > > > > > > >
-> > > > > > > > As above, this does not look right. ACPI has standard
-> > > mechanisms
-> > > > > > for
-> > > > > > > > describing addresses. Making something up like this is
-> not a
-> > > good
-> > > > > > idea.
-> > > > > > >
-> > > > > > > I am quite new to ACPI, may I ask you to explain a bit?
-> > > > > >
-> > > > > > ACPI has standard mechanisms for describing certain resources,
-> > > and
-> > > > > > these
-> > > > > > should not be described in _DSD. Memory or IO address regions
-> are
-> > > > > such
-> > > > > > resources (in _CRS, IIRC), and should not be described in
-> _DSD.
-> > > > >
-> > > > > Hi Mark,
-> > > > >
-> > > > > In my case I think in need to look into the MCFG object as the
-> > > problem
-> > > > > I have is RC using a different range than the rest of the
-> hierarchy.
-> > > > >
-> > > > > I'll investigate this and try to come with a solution in v4
-> > > >
-> > > > I have looked into this and in our case we cannot use the
-> > > > standard MCFG object to pass the RC config space addresses.
-> > > >
-> > > > The reason is that in our HW we have the config base addresses of
-> the
-> > > > root complex ports that are less than 0x100000 byte distant one
-> from
-> > > > the other as we only map the first 0x10000 bytes.
-> > >
-> > > The ECAM spec requires 4096 bytes per function, 8 functions per
-> > > device, 32 devices per bus, which means you need 0x100000 bytes of
-> > > address space per bus.  If your device doesn't supply that, it
-> doesn't
-> > > really implement ECAM, and you probably can't use the standard ways
-> of
-> > > describing ECAM (MCFG, _CBA).
-> >
-> > Correct, our host bridge is non ECAM only for the RC bus config space;
-> > for any other bus underneath the root bus we support ECAM access, so
-> > we need a quirk for the RC config rd/wr
-> 
-> MCFG can specify a bus number range, so you might be able to use it
-> to describe the ECAM space for buses below the root bus, e.g.,
-> [bus 01-ff].
+It looks hacky and prevents us from getting some firmware specific
+info for PCI host controller based on its acpi_device structure
+in generic pci_create_root_bus() function. However, we overcome that
+blocker by passing down parent device via pci_create_root_bus parameter
+(as the ACPI device type). Then we use ACPI_COMPANION_SET in core code
+for ACPI boot method only. ACPI_COMPANION_SET is safe to run for all
+cases DT, ACPI and DT&ACPI.
 
-Yes, for this patchset we use MCFG for buses [01-ff] and _DSD for bus 0
+Since now PCI core code is setting ACPI companion device for us,
+x86 & ia64 specific ACPI companion device setting turns out to be dead now.
+We can get rid of it, including related companion reference from
+PCI sysdata structure. Aslo, PCI_CONTROLLER macro cannot return valid
+companion device anymore. Therefore we need to convert its usage to
+ACPI_COMPANION.
 
-> 
-> > > > Now the MCFG acpi framework always fix the MCFG resource size to
-> > > 0x100000
-> > > > for each bus; therefore if we pass our RC addresses through MCFG
-> we
-> > > end
-> > > > up with a resource conflict.
-> > > >
-> > > > To give you a practical example we are in a situation where we
-> have:
-> > > >
-> > > > port0: [0x00000000b0080000 - 0x00000000b0080000 + 0x10000]
-> > > > port1: [0x00000000b0090000 - 0x00000000b0090000 + 0x10000]
-> > > > port2: [0x00000000b00A0000 - 0x00000000b00A0000 + 0x10000]
-> > > > port3: [0x00000000b00B0000 - 0x00000000b00B0000 + 0x10000]
-> > > >
-> > > > So if we pass the base addresses through MCFG the resources
-> > > > will overlap as MCFG will consider 0x100000 size for each base
-> > > > address of the root complex (only the RC bus uses that address)
-> > > >
-> > > > So far I do not see many option other than using _DSD to pass
-> > > > these RC config base addresses.
-> > >
-> > > I don't want to take over Mark's discussion, but I really do not
-> think
-> > > _DSD is the correct way to fix this.  _CRS is like a generalized
-> PCI
-> > > BAR.  A PCI device is only allowed to respond to address space
-> > > reported via a BAR.  An ACPI device is only allowed to respond to
-> > > address space reported via _CRS.  Those are important rules because
-> > > they mean we can manage address space with generic code instead of
-> > > device-specific code.
-> >
-> > From what I see in
-> > http://lxr.free-electrons.com/source/drivers/acpi/pci_root.c#L723
-> > acpi_pci_probe_root_resources() parses the _CRS method and
-> > it only works for MEM and IO resources, so I don't think it is
-> > right to pass a config space address by _CRS or to modify the
-> > current ACPI framework to support this.
-> 
-> Config space addresses are made up of [bus, device, function, register
-> offset], and you're right that _CRS doesn't contain those addresses
-> directly; _CRS only describes memory, I/O, and bus number ranges.
-> 
-> But part of the function of a host bridge is to convert memory or I/O
-> accesses on the primary (CPU) side to PCI config accesses on the
-> secondary (PCI) side, and this CPU-side memory or I/O region should be
-> reported via _CRS.
+Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Tested-by: Duc Dang <dhdang@apm.com>
+Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+Tested-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ arch/ia64/hp/common/sba_iommu.c    |  2 +-
+ arch/ia64/include/asm/pci.h        |  1 -
+ arch/ia64/pci/pci.c                | 16 ----------------
+ arch/ia64/sn/kernel/io_acpi_init.c |  4 ++--
+ arch/x86/include/asm/pci.h         |  3 ---
+ arch/x86/pci/acpi.c                | 17 -----------------
+ drivers/acpi/pci_root.c            |  8 +++++++-
+ drivers/pci/probe.c                |  2 ++
+ 8 files changed, 12 insertions(+), 41 deletions(-)
 
-Yes the memory and I/O ranges are specified in the _CRS method of the
-root complex PCI device
+diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
+index a6d6190..78e4444 100644
+--- a/arch/ia64/hp/common/sba_iommu.c
++++ b/arch/ia64/hp/common/sba_iommu.c
+@@ -1981,7 +1981,7 @@ sba_connect_bus(struct pci_bus *bus)
+ 	if (PCI_CONTROLLER(bus)->iommu)
+ 		return;
+ 
+-	handle = acpi_device_handle(PCI_CONTROLLER(bus)->companion);
++	handle = acpi_device_handle(ACPI_COMPANION(bus->bridge));
+ 	if (!handle)
+ 		return;
+ 
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 07039d1..5050748 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -65,7 +65,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+ #define pci_legacy_write platform_pci_legacy_write
+ 
+ struct pci_controller {
+-	struct acpi_device *companion;
+ 	void *iommu;
+ 	int segment;
+ 	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 8f6ac2f..978d6af 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -301,28 +301,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	}
+ 
+ 	info->controller.segment = root->segment;
+-	info->controller.companion = device;
+ 	info->controller.node = acpi_get_node(device->handle);
+ 	INIT_LIST_HEAD(&info->io_resources);
+ 	return acpi_pci_root_create(root, &pci_acpi_root_ops,
+ 				    &info->common, &info->controller);
+ }
+ 
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	/*
+-	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
+-	 * here, pci_create_root_bus() has been called by someone else and
+-	 * sysdata is likely to be different from what we expect.  Let it go in
+-	 * that case.
+-	 */
+-	if (!bridge->dev.parent) {
+-		struct pci_controller *controller = bridge->bus->sysdata;
+-		ACPI_COMPANION_SET(&bridge->dev, controller->companion);
+-	}
+-	return 0;
+-}
+-
+ void pcibios_fixup_device_resources(struct pci_dev *dev)
+ {
+ 	int idx;
+diff --git a/arch/ia64/sn/kernel/io_acpi_init.c b/arch/ia64/sn/kernel/io_acpi_init.c
+index 0640739..bcfddc2 100644
+--- a/arch/ia64/sn/kernel/io_acpi_init.c
++++ b/arch/ia64/sn/kernel/io_acpi_init.c
+@@ -132,7 +132,7 @@ sn_get_bussoft_ptr(struct pci_bus *bus)
+ 	struct acpi_resource_vendor_typed *vendor;
+ 
+ 
+-	handle = acpi_device_handle(PCI_CONTROLLER(bus)->companion);
++	handle = acpi_device_handle(ACPI_COMPANION(bus->bridge));
+ 	status = acpi_get_vendor_resource(handle, METHOD_NAME__CRS,
+ 					  &sn_uuid, &buffer);
+ 	if (ACPI_FAILURE(status)) {
+@@ -360,7 +360,7 @@ sn_acpi_get_pcidev_info(struct pci_dev *dev, struct pcidev_info **pcidev_info,
+ 	acpi_status status;
+ 	struct acpi_buffer name_buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+ 
+-	rootbus_handle = acpi_device_handle(PCI_CONTROLLER(dev)->companion);
++	rootbus_handle = acpi_device_handle(ACPI_COMPANION(dev->bus->bridge));
+         status = acpi_evaluate_integer(rootbus_handle, METHOD_NAME__SEG, NULL,
+                                        &segment);
+         if (ACPI_SUCCESS(status)) {
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 4625943..a98c022 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -14,9 +14,6 @@
+ struct pci_sysdata {
+ 	int		domain;		/* PCI domain */
+ 	int		node;		/* NUMA node */
+-#ifdef CONFIG_ACPI
+-	struct acpi_device *companion;	/* ACPI companion device */
+-#endif
+ #ifdef CONFIG_X86_64
+ 	void		*iommu;		/* IOMMU private data */
+ #endif
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 081dc70..c67932e 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -334,7 +334,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		struct pci_sysdata sd = {
+ 			.domain = domain,
+ 			.node = node,
+-			.companion = root->device
+ 		};
+ 
+ 		memcpy(bus->sysdata, &sd, sizeof(sd));
+@@ -349,7 +348,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 		else {
+ 			info->sd.domain = domain;
+ 			info->sd.node = node;
+-			info->sd.companion = root->device;
+ 			bus = acpi_pci_root_create(root, &acpi_pci_root_ops,
+ 						   &info->common, &info->sd);
+ 		}
+@@ -367,21 +365,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	return bus;
+ }
+ 
+-int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+-{
+-	/*
+-	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
+-	 * here, pci_create_root_bus() has been called by someone else and
+-	 * sysdata is likely to be different from what we expect.  Let it go in
+-	 * that case.
+-	 */
+-	if (!bridge->dev.parent) {
+-		struct pci_sysdata *sd = bridge->bus->sysdata;
+-		ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+-	}
+-	return 0;
+-}
+-
+ int __init pci_acpi_init(void)
+ {
+ 	struct pci_dev *dev = NULL;
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index ae3fe4e..c2bd6dd 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -846,7 +846,13 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+ 
+ 	pci_acpi_root_add_resources(info);
+ 	pci_add_resource(&info->resources, &root->secondary);
+-	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
++
++	/*
++	 * pci_create_root_bus() needs to detect the parent device type,
++	 * so initialize its companion data accordingly.
++	 */
++	ACPI_COMPANION_SET(&device->dev, device);
++	bus = pci_create_root_bus(&device->dev, busnum, ops->pci_ops,
+ 				  sysdata, &info->resources);
+ 	if (!bus)
+ 		goto out_release_info;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6d7ab9b..88a4734 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2100,6 +2100,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 	bridge->dev.parent = parent;
+ 	bridge->dev.release = pci_release_host_bridge_dev;
+ 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
++	if (parent)
++		ACPI_COMPANION_SET(&bridge->dev, ACPI_COMPANION(parent));
+ 	error = pcibios_root_bridge_prepare(bridge);
+ 	if (error) {
+ 		kfree(bridge);
+-- 
+1.9.1
 
-> 
-> I think the relevant spec is the PCI Firmware Spec, r3.0, sec 4.1.2.
-> Note 2 in that section says the address range of an MMCFG region
-> must be reserved by declaring a motherboard resource, i.e., included
-> in the _CRS of a PNP0C02 or similar device.
-
-I had a look a this. So yes the specs says that we should use the 
-PNP0C02 device if MCFG is not supported. 
-So probably I can use acpi_get_devices("PNP0C02",...) to retrieve it
-from the quirk match function, I will look into this... 
-
-> 
-> > On the other side, since this is an exception only for the config
-> > space address of our host controller (as said before all the buses
-> > below the root one support ECAM), I think that it is right to put
-> > this address as a device specific data (in fact the rest of the
-> > config space addresses will be parsed from MCFG).
-> 
-> A kernel with no support for your host controller (and thus no
-> knowledge of its _DSD) should still be able to operate the rest of the
-> system correctly.  That means we must have a generic way to learn what
-> address space is consumed by the host controller so we don't try to
-> assign it to other devices.
-
-This is something I don't understand much...
-Are you talking about a scenario where we have a Kernel image compiled
-without our host controller support and running on our platform?
-
-In this case the quirk is not called and the standard acpi pci root
-driver will run and probably the config rd/wr for bus 0 will fail...
-
-I don't see in this case how the physical address that we specify in the
-_DSD can be assigned to other devices...
-
-maybe I misunderstood something here...
-
-Many Thanks
-
-Gab 
-
-> 
-> Bjorn
