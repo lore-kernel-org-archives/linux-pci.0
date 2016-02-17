@@ -1,90 +1,61 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-CC: "Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-	"tn@semihalf.com" <tn@semihalf.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"jcm@redhat.com" <jcm@redhat.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>
-Subject: RE: [RFC PATCH v2 1/3] PCI: hisi: re-architect Hip05/Hip06
- controllers driver to preapare for ACPI
-Date: Mon, 8 Feb 2016 16:06:54 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ECACFDD@lhreml503-mbs>
-References: <1454935264-6076-1-git-send-email-gabriele.paoloni@huawei.com>
- <1454935264-6076-2-git-send-email-gabriele.paoloni@huawei.com>
- <2409806.1aGBrN4l0X@wuerfel>
-In-Reply-To: <2409806.1aGBrN4l0X@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
+Date: Wed, 17 Feb 2016 15:37:52 +0000
+From: Luis Henriques <luis.henriques@canonical.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] vfio: fix link failures when CONFIG_PCI_MSI is disabled
+Message-ID: <20160217153752.GB28282@ares>
+References: <20160203205108.GA9181@charon.olymp>
+ <20160212111758.4b5cb926@t450s.home>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20160212111758.4b5cb926@t450s.home>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd
-
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: 08 February 2016 13:50
-> To: linux-arm-kernel@lists.infradead.org
-> Cc: Gabriele Paoloni; Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong
-> (C); Linuxarm; qiujiang; bhelgaas@google.com;
-> Lorenzo.Pieralisi@arm.com; tn@semihalf.com; linux-pci@vger.kernel.org;
-> linux-kernel@vger.kernel.org; xuwei (O); linux-acpi@vger.kernel.org;
-> jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth)
-> Subject: Re: [RFC PATCH v2 1/3] PCI: hisi: re-architect Hip05/Hip06
-> controllers driver to preapare for ACPI
+On Fri, Feb 12, 2016 at 11:17:58AM -0700, Alex Williamson wrote:
+> On Wed, 3 Feb 2016 20:51:08 +0000
+> Luis Henriques <luis.henriques@canonical.com> wrote:
 > 
-> On Monday 08 February 2016 12:41:02 Gabriele Paoloni wrote:
-> > +
-> > +/* HipXX PCIe host only supports 32-bit config access */
-> > +int hisi_pcie_common_cfg_read(void __iomem *reg_base, int where, int
-> size,
-> > +			      u32 *val)
-> > +{
-> > +	u32 reg;
-> > +	u32 reg_val;
-> > +	void *walker = &reg_val;
-> > +
-> > +	walker += (where & 0x3);
-> > +	reg = where & ~0x3;
-> > +	reg_val = readl(reg_base + reg);
-> > +
-> > +	if (size == 1)
-> > +		*val = *(u8 __force *) walker;
-> > +	else if (size == 2)
-> > +		*val = *(u16 __force *) walker;
-> > +	else if (size == 4)
-> > +		*val = reg_val;
-> > +	else
-> > +		return PCIBIOS_BAD_REGISTER_NUMBER;
-> > +
-> > +	return PCIBIOS_SUCCESSFUL;
-> > +}
+> > The following link failure occurs when CONFIG_PCI_MSI is not set:
+> > 
+> > drivers/built-in.o: In function `vfio_msi_set_vector_signal':
+> > :(.text+0x626640): undefined reference to `pci_write_msi_msg'
+> > 
+> > Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
+> > ---
+> >  drivers/vfio/pci/Kconfig | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/vfio/pci/Kconfig b/drivers/vfio/pci/Kconfig
+> > index 02912f180c6d..b9dbfc9aeee1 100644
+> > --- a/drivers/vfio/pci/Kconfig
+> > +++ b/drivers/vfio/pci/Kconfig
+> > @@ -1,6 +1,6 @@
+> >  config VFIO_PCI
+> >  	tristate "VFIO support for PCI devices"
+> > -	depends on VFIO && PCI && EVENTFD
+> > +	depends on VFIO && PCI_MSI && EVENTFD
+> >  	select VFIO_VIRQFD
+> >  	select IRQ_BYPASS_MANAGER
+> >  	help
+> > 
 > 
-> Isn't this the same hack that Qualcomm are using?
-
-As far as I can see Qualcomm defines its own config access
-mechanism only for RC config read and also it seems they're
-having problems with reporting the device class...
-
-https://github.com/torvalds/linux/blob/master/drivers/pci/host/pcie-qcom.c#L474
-
-Our problem is that our HW can only perform 32b rd/wr accesses
-So we can't use readw/readb/writew/writeb...
-
-Thanks
-
-Gab
-
 > 
-> 	Arnd
+> It seems like a better solution would be to have pci stub these out
+> with static inlines when !CONFIG_PCI_MSI, we already do that for quite
+> a lot of MSI and MSI-X callbacks.  MSI/X on the device clearly won't
+> work if the host doesn't support MSI, and maybe there are improvements
+> to be made there, but MSI is a subcomponent of vfio-pci, the module
+> itself shouldn't depend on MSI.  Thanks,
+> 
+> Alex
+> 
+
+Thanks for reviewing.  I'll submit a new patch later today, stubbing
+pci_write_msi_msg() to fix this failure.
+
+Cheers,
+--
+Luís
