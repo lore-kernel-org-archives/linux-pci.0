@@ -1,54 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:58860 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754186AbcBBX2Z (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Feb 2016 18:28:25 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Vineet.Gupta1@synopsys.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
-	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
-Subject: Re: [PATCH v7 2/2] add new platform driver for PCI RC
-Date: Wed, 03 Feb 2016 00:27:46 +0100
-Message-ID: <727234287.1RWoeYxhOH@wuerfel>
-In-Reply-To: <20160202231449.GA18009@localhost>
-References: <cover.1454349430.git.jpinto@synopsys.com> <8223655.W63T0XOVm1@wuerfel> <20160202231449.GA18009@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:59569 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933709AbcBQDpj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:45:39 -0500
+Received: from localhost
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 17 Feb 2016 13:45:36 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v8 02/45] powerpc/pci: Override pcibios_setup_bridge()
+Date: Wed, 17 Feb 2016 14:43:45 +1100
+Message-Id: <1455680668-23298-3-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 02 February 2016 17:14:49 Bjorn Helgaas wrote:
-> On Tue, Feb 02, 2016 at 09:25:25PM +0100, Arnd Bergmann wrote:
-> > On Monday 01 February 2016 18:07:45 Joao Pinto wrote:
-> > > +static void synopsys_pcie_establish_link(struct pcie_port *pp)
-> > > +{
-> > > +   int retries = 0;
-> > > +
-> > > +   /* check if the link is up or not */
-> > > +   for (retries = 0; retries < 10; retries++) {
-> > > +           if (dw_pcie_link_up(pp)) {
-> > > +                   dev_info(pp->dev, "Link up\n");
-> > > +                   return;
-> > > +           }
-> > > +           mdelay(100);
-> > > +   }
-> > > +}
-> > 
-> > That mdelay() needs to be an msleep(). You should never waste
-> > a whole second worth of CPU time in a driver.
-> 
-> There are six other copies of this code, and two of them (exynos and
-> spear) have the same problem.
+This overrides pcibios_setup_bridge() that is called to update PCI
+bridge windows when PCI resource assignment is completed, to assign
+PE and setup various (resource) mapping for the PE in subsequent
+patches.
 
-Good point. Maybe move one (correct) copy into the main driver file and
-have it called by the other drivers?
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h | 2 ++
+ arch/powerpc/kernel/pci-common.c      | 8 ++++++++
+ 2 files changed, 10 insertions(+)
 
-IIRC there were some problems in drivers that did a similar
-function from the config space accessors where you cannot call
-msleep(), but this driver is not one of them.
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 9f165e8..b688d04 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -33,6 +33,8 @@ struct pci_controller_ops {
+ 
+ 	/* Called during PCI resource reassignment */
+ 	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long type);
++	void		(*setup_bridge)(struct pci_bus *bus,
++					unsigned long type);
+ 	void		(*reset_secondary_bus)(struct pci_dev *dev);
+ 
+ #ifdef CONFIG_PCI_MSI
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 0f7a60f..40df3a5 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -124,6 +124,14 @@ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+ 	return 1;
+ }
+ 
++void pcibios_setup_bridge(struct pci_bus *bus, unsigned long type)
++{
++	struct pci_controller *hose = pci_bus_to_host(bus);
++
++	if (hose->controller_ops.setup_bridge)
++		hose->controller_ops.setup_bridge(bus, type);
++}
++
+ void pcibios_reset_secondary_bus(struct pci_dev *dev)
+ {
+ 	struct pci_controller *phb = pci_bus_to_host(dev->bus);
+-- 
+2.1.0
 
-	Arnd
