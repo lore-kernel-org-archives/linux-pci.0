@@ -1,230 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f180.google.com ([209.85.161.180]:34275 "EHLO
-	mail-yw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751426AbcB0IP3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Feb 2016 03:15:29 -0500
-Received: by mail-yw0-f180.google.com with SMTP id h129so86648724ywb.1
-        for <linux-pci@vger.kernel.org>; Sat, 27 Feb 2016 00:15:29 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20160223151211.GB14394@localhost>
-References: <1455487501-28630-2-git-send-email-jchandra@broadcom.com>
- <1455528398-29311-1-git-send-email-jchandra@broadcom.com> <20160215183015.GC12641@localhost>
- <CAKc_7PVVn2ookpbOUuT-jyUq6e6hJYKLpM+d9=6CqYtLO45tWw@mail.gmail.com>
- <20160216171418.GA702@localhost> <CAKc_7PVBH8h9aPK7j74yCjTOnJ22FzNd2O8nDUJn7n0iKUD_FQ@mail.gmail.com>
- <20160216210337.GA8244@localhost> <CAKc_7PW3OBZcAW-rVEdWa2i94acgT9EhjS2Kbnb-ot36ZXPMUw@mail.gmail.com>
- <20160218154957.GB17588@localhost> <CAKc_7PVhmE9SYCWD+DuzFWqzjpVFg4vO70TsAwyq8_8XYPJdBA@mail.gmail.com>
- <20160223151211.GB14394@localhost>
-From: Jayachandran Chandrashekaran Nair
-	<jayachandran.chandrashekaran@broadcom.com>
-Date: Sat, 27 Feb 2016 13:44:49 +0530
-Message-ID: <CAKc_7PVKtVoiz0vU8OzJauSf=yDjrgH81zfqxUEyTOenVv51Sw@mail.gmail.com>
-Subject: Re: [RFC PATCH 2/2] PCI: Handle Broadcom Vulcan quirks
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Jayachandran C <jchandra@broadcom.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
-	Andi Kleen <ak@linux.intel.com>, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:59716 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965161AbcBQDqA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:46:00 -0500
+Received: from localhost
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 17 Feb 2016 13:45:58 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v8 37/45] powerpc/powernv: Use firmware PCI slot reset infrastructure
+Date: Wed, 17 Feb 2016 14:44:20 +1100
+Message-Id: <1455680668-23298-38-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+The skiboot firmware might provide the PCI slot reset capability
+which is identified by property "ibm,reset-by-firmware" on the
+PCI slot associated device node.
 
-On Tue, Feb 23, 2016 at 8:42 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> [+cc Andi, linux-kernel, x86 for Intel Broadwell-EP non-BAR issue]
->
-> On Tue, Feb 23, 2016 at 08:10:03PM +0530, Jayachandran Chandrashekaran Nair wrote:
-> > On Thu, Feb 18, 2016 at 9:19 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > On Wed, Feb 17, 2016 at 10:36:55PM +0530, Jayachandran Chandrashekaran Nair wrote:
-> > >> On Wed, Feb 17, 2016 at 2:33 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > >> > [+cc Arnd, Rob, DT host bridge description questions]
-> > >> >
-> > >> > On Tue, Feb 16, 2016 at 11:39:41PM +0530, Jayachandran Chandrashekaran Nair wrote:
-> > >> >> On Tue, Feb 16, 2016 at 10:44 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > >> >> > On Tue, Feb 16, 2016 at 09:47:34PM +0530, Jayachandran Chandrashekaran Nair wrote:
-> > >> >> >> On Tue, Feb 16, 2016 at 12:00 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > >> >> >> > On Mon, Feb 15, 2016 at 02:56:38PM +0530, Jayachandran C wrote:
-> > >> >> >> >> Handle two quirks of the PCI controller on Broadcom's Vulcan processor.
-> > >> >> >> >>  - Mark internal bridges so that they are skipped during DMA alias
-> > >> >> >> >>    search.
-> > >> >> >> >>  - Skip BAR0 resource assignment for internal bridges. The BARs
-> > >> >> >> >>    of internal bridges should not be assigned from the mem resource
-> > >> >> >> >>    range.
-> > >> >> >> >> ...
-> > >> >> >> >>  drivers/pci/quirks.c | 21 +++++++++++++++++++++
-> > >> >> >> >>  1 file changed, 21 insertions(+)
-> > >> >> >> >>
-> > >> >> >> >> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > >> >> >> >> index 0575a1e..afc186a 100644
-> > >> >> >> >> --- a/drivers/pci/quirks.c
-> > >> >> >> >> +++ b/drivers/pci/quirks.c
-> > >> >> >> >> @@ -3705,6 +3705,27 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
-> > >> >> >> >>  DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
-> > >> >> >> >>
-> > >> >> >> >>  /*
-> > >> >> >> >> + * Two levels of bridges in Broadcom Vulcan are not real PCI or PCIe bridges.
-> > >> >> >> >> + * These are internal bridges and should not be used for dma alias
-> > >> >> >> >> + * calculations. Additionally, the BAR0 of thes bridges should not be
-> > >> >> >> >> + * assigned with a mem resource from linux
-> > >> >> >> >> + */
-> > >> >> >> >> +static void quirk_bridge_brcm_vulcan_internal(struct pci_dev *pdev)
-> > >> >> >> >> +{
-> > >> >> >> >> +     struct resource *r = &pdev->resource[0];
-> > >> >> >> >> +
-> > >> >> >> >> +     /* skip from alias search */
-> > >> >> >> >> +     pdev->dev_flags |= PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS;
-> > >> >> >> >> +
-> > >> >> >> >> +     /* clear BAR0, should not be used from Linux */
-> > >> >> >> >> +     memset(r, 0, sizeof(*r));
-> > >> >> >> >
-> > >> >> >> > This definitely needs some explanation.  The whole point of the
-> > >> >> >> > architected PCI config space header is so that generic OS code can
-> > >> >> >> > manage the device without having to add device-specific code.
-> > >> >> >> >
-> > >> >> >> > Are you saying the register at 0x10 in config space is not actually a
-> > >> >> >> > BAR at all?  Or it is a BAR, but you don't think anybody should need
-> > >> >> >> > to use it?
-> > >> >> >>
-> > >> >> >> These is a proper BAR (64 bit pref) in the bridge's Type 1 header, but:
-> > >> >> >> 1. Assigning a memory resource from the pci memory window to this
-> > >> >> >>    BAR causes the PCIe system to fail (this is a bug). So we cannot
-> > >> >> >>    expose this BAR to standard Linux code without even more quirks
-> > >> >> >>    and hacks.
-> > >> >> >
-> > >> >> > Are you saying assigning space for this BAR exposes a Linux PCI bug?
-> > >> >> > If so, I'd like to know more about that because we should fix it.
-> > >> >> >
-> > >> >> > Or does it expose a hardware bug in the Broadcom device?
-> > >> >>
-> > >> >> This is a hardware bug (or non-compliance). The BAR cannot be
-> > >> >> assigned from the PCI MEM range. To use it we need to program
-> > >> >> an address outside the areas assigned to PCI to the BAR. But like
-> > >> >> I said it is better for us to ignore the BAR in linux and then the
-> > >> >> device acts as a normal bridge.
-> > >> >
-> > >> > Your PCI host bridge has a window of address space that it forwards
-> > >> > from the primary (CPU) side to the secondary (PCI) side.  I assume
-> > >> > that's what you mean by the "PCI MEM range."  Apparently if the BAR is
-> > >> > programmed inside that window, it causes some hardware error.  That
-> > >> > still seems strange; there's no driver for the device, and we know the
-> > >> > range is in use so it won't be assigned to any other device, so Linux
-> > >> > should never *access* the range.
-> > >>
-> > >> This is correct. The write to this bridge BAR with a address from
-> > >> the host bridge window will cause a hardware issue.
-> > >>
-> > >> > Apparently if you program the BAR *outside* the window, the hardware
-> > >> > error does not happen, and the private registers are accessible.  But
-> > >> > Linux currently doesn't know where this space is.
-> > >> >
-> > >> > If we ignore the BAR in Linux, apparently the hardware error does not
-> > >> > happen.  But the BAR still contains some value, so this is really the
-> > >> > same as having the BAR outside the window, presumably because it came
-> > >> > out of reset that way, or maybe firmware programmed it.
-> > >>
-> > >> Yes.
-> > >>
-> > >> > It sounds to me like you should do the following:
-> > >> >
-> > >> > a) Have firmware program this BAR where you want it,
-> > >> >
-> > >> > b) Describe these private registers as internal PCI bridge registers,
-> > >> >    using a DT "reg" property,
-> > >>
-> > >> Two ponts here:
-> > >> - We have to support ACPI as well
-> > >
-> > > ACPI can do something similar.  This register space would be described
-> > > in a _CRS method.  IIRC there is actually a bit in the _CRS descriptor
-> > > that was intended to tell you whether the resource is (a) consumed
-> > > directly by the device or (b) forwarded to downstream devices.  But I
-> > > think BIOSes didn't use that bit correctly, so it's useless, so the
-> > > _CRS method might have to be on a different device.
-> > >
-> > >> - There is no need to use the private registers in linux, so the
-> > >>    whole thing will be pointless.
-> > >>
-> > >> > c) Describe the host bridge window (which doesn't include the above
-> > >> >    registers) using the normal "ranges" property, and
-> > >>
-> > >> This is standard code (and ACPI works as well)..
-> > >>
-> > >> > d) Arrange for config writes to BAR 0 to be dropped and for reads to
-> > >> >    return 0, maybe by checks in your config accessors.
-> > >>
-> > >> Here we are hiding the BAR from linux using checks in config read
-> > >> write (if i understand correctly). This will need custom config accessors
-> > >> for Vulcan both on device tree as well as in ACPI.
-> > >
-> > > Config accessors are usually not specific to DT or ACPI.
-> > >
-> > >> The patch (above) is trying to do it in a much much simpler way by
-> > >> clearing the bar0 resource in DECLARE_PCI_FIXUP_HEADER quirk.
-> > >> I am not able to see why this is not valid.
-> > >
-> > > I think there are two problems:
-> > >
-> > > 1) If the device responds to any address space, Linux needs to know
-> > > about it.  If we don't know about it, we might assign that space to
-> > > something else.
-> >
-> > If it is really needed I can mark the address space as reserved. And
-> > Linux generally should not use physical address space outside the
-> > areas specified by firmware of device tree.
->
-> That's true, at least in theory.  Historically on x86, we only avoided
-> areas marked as reserved.  We *should* have only used areas marked as
-> available for MMIO, but Linux didn't pay much attention to the _CRS
-> methods that tell us that.  We just assumed anything that wasn't RAM
-> and wasn't marked as reserved in E820 was fair game for use by PCI.
->
-> > > 2) The PCI core still reads and writes the BAR to size it, and we
-> > > don't know whether this will trigger the hardware issue.
-> >
-> > The sizing read/write is done after disabling the BAR by writing
-> > to CMD register - I don't see why you think this will be a problem.
->
-> You're right; I forgot about that CMD enable bit.  There are a few
-> cases where we don't disable decoding (see mmio_always_on), the most
-> important being for PCI_CLASS_BRIDGE_HOST devices.  But I think your
-> device is a PCI_CLASS_BRIDGE_PCI device, not a BRIDGE_HOST device, so
-> we should disable decoding on your device.
->
-> > > *You* might know that neither of these is an issue today, but special
-> > > incidental knowledge like that is a maintenance problem because I
-> > > can't tell what PCI core changes might make them an issue in the
-> > > future.
-> >
-> > The worst case maintenance problem is that a future PCI change
-> > might break our chip. This is not unexpected in Linux, and such
-> > breakages can be easily fixed.
->
-> It's certainly unexpected by *me* :)  And the burden of fixing such
-> breakages doesn't scale well -- it usually involves triage by somebody
-> other than the chip folks, e.g., me.
->
-> Andi is doing something similar for some Broadwell-EP devices that
-> have BARs that aren't really BARs.  I suggested custom config
-> accessors, which is fairly clean from the core point of view, but it's
-> definitely clunky on the device side.
->
-> Andi's first proposals were to use a quirk to set a flag bit that told
-> us not to touch the BAR.  I'm starting to think that's a cleaner
-> approach.  I think it would be better to put the bit(s) in the
-> pci_dev, so generic struct resource users wouldn't see them, set them
-> via early quirks, then have __pci_read_base() check them and just
-> leave the struct resource zeroed out.
+This checks the property. If it exists, the reset request is routed
+to firmware. Otherwise, the reset is done by kernel as before.
 
-I spent some more time working with our hardware team on the nature
-of this issue. It looks like this is not a problem if we setup the PCI
-configuration in firmware better (this has to do with the sequence for
-configuring the PCI controller in firmware).
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 41 +++++++++++++++++++++++++++-
+ 1 file changed, 40 insertions(+), 1 deletion(-)
 
-So I will drop the part in my patch that hides the BARs from linux, since
-the standard Linux resource allocation code will work Sorry for taking up
-your time on this.
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index e23b063..c8a5217 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -789,7 +789,7 @@ static int pnv_eeh_root_reset(struct pci_controller *hose, int option)
+ 	return ret;
+ }
+ 
+-static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
++static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+ {
+ 	struct pci_dn *pdn = pci_get_pdn_by_devfn(dev->bus, dev->devfn);
+ 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+@@ -840,6 +840,45 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+ 	return 0;
+ }
+ 
++static int pnv_eeh_bridge_reset(struct pci_dev *pdev, int option)
++{
++	struct pci_controller *hose;
++	struct pnv_phb *phb;
++	struct device_node *dn = pdev ? pci_device_to_OF_node(pdev) : NULL;
++	uint64_t id = (0x1ul << 60);
++	uint8_t scope;
++	int64_t rc;
++
++	/*
++	 * If the firmware can't handle it, we will issue hot reset
++	 * on the secondary bus despite the requested reset type.
++	 */
++	if (!dn || !of_get_property(dn, "ibm,reset-by-firmware", NULL))
++		return __pnv_eeh_bridge_reset(pdev, option);
++
++	/* The firmware can handle the request */
++	switch (option) {
++	case EEH_RESET_HOT:
++		scope = OPAL_RESET_PCI_HOT;
++		break;
++	case EEH_RESET_FUNDAMENTAL:
++		scope = OPAL_RESET_PCI_FUNDAMENTAL;
++		break;
++	case EEH_RESET_DEACTIVATE:
++		return 0;
++	default:
++		dev_warn(&pdev->dev, "%s: Unsupported reset %d\n",
++			 __func__, option);
++		return -EINVAL;
++	}
++
++	hose = pci_bus_to_host(pdev->bus);
++	phb = hose->private_data;
++	id |= (pdev->bus->number << 24) | (pdev->devfn << 16) | phb->opal_id;
++	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
++	return pnv_pci_poll(id, rc, NULL);
++}
++
+ static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
+ {
+ 	int *freset = data;
+-- 
+2.1.0
 
-Thanks,
-JC.
