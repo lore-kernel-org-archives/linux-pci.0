@@ -1,117 +1,92 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+MIME-Version: 1.0
+In-Reply-To: <56C48C45.7050203@semihalf.com>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+ <1455630825-27253-8-git-send-email-tn@semihalf.com> <CAKc_7PU+i2AwOVCyW2VNt4BZCWw=KBMAbV8v9DVQ2Ess3WE=kw@mail.gmail.com>
+ <56C47E9A.5010901@semihalf.com> <CAKc_7PUiLQhUuJjR8wcuRm7KJdxBYjb+ZBd_cLTtjNPbEro6wA@mail.gmail.com>
+ <56C48C45.7050203@semihalf.com>
+From: Jayachandran Chandrashekaran Nair
+	<jayachandran.chandrashekaran@broadcom.com>
+Date: Wed, 17 Feb 2016 20:51:37 +0530
+Message-ID: <CAKc_7PV=p7kHt73c673L+v=KCaFV8RzoaSHwcH2gd1g-fWGq5w@mail.gmail.com>
+Subject: Re: [PATCH V5 07/15] pci, acpi: Provide generic way to assign bus
+ domain number.
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	Jayachandran Chandrashekaran Nair <jchandra@broadcom.com>,
+	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>,
+	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
+	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
 	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
 	msalter@redhat.com, linux-pci@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
 	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V4 10/23] x86, pci: Cleanup platform specific MCFG data by using ECAM hot_added flag.
-Date: Thu,  4 Feb 2016 18:28:48 +0100
-Message-Id: <1454606941-9523-11-git-send-email-tn@semihalf.com>
-In-Reply-To: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
+	jcm@redhat.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Because of two facts:
-1. MCFG region has hot_added flag
-2. struct acpi_pci_root has topology info (domain, bus number)
-we can get rid of arch specific mcfg data from x86 struct pci_root_info.
+On Wed, Feb 17, 2016 at 8:35 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
+> On 17.02.2016 15:21, Jayachandran Chandrashekaran Nair wrote:
+>>
+>> On Wed, Feb 17, 2016 at 7:37 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
+>>>
+>>> On 17.02.2016 14:44, Jayachandran Chandrashekaran Nair wrote:
+>>>>
+>>>>
+>>>> Tomasz, Lorenzo,
+>>>>
+>>>> On Tue, Feb 16, 2016 at 7:23 PM, Tomasz Nowicki<tn@semihalf.com>  wrote:
+>>>>>
+>>>>>
+>>>>>> As we now have valid PCI host bridge device reference we can
+>>>>>> introduce code that is going to find its bus domain number using
+>>>>>> ACPI _SEG method.
+>>>>>>
+>>>>>> Note that _SEG method is optional, therefore _SEG absence means
+>>>>>> that all PCI buses belong to domain 0.
+>>>>>>
+>>>>>> While at it, for the sake of code clarity we put ACPI and DT domain
+>>>>>> assign methods into the corresponding helpers.
+>>>>
+>>>>
+>>>> In my patchset, I had a slightly different and I think better approach
+>>>> for
+>>>> this without calling the _SEG method again. Please see
+>>>> http://www.spinics.net/lists/arm-kernel/msg478167.html
+>>>> at the last part
+>>>> ofhttp://www.spinics.net/lists/arm-kernel/msg478169.html
+>>>
+>>>
+>>> Relying on NULL parent device to make decision on boot method is really
+>>> ugly
+>>> way. This may hit us again once we want to obtain another firmware
+>>> specific
+>>> info e.g. numa node. IMO we need to fix it this way.
+>>
+>>
+>> I am not relying on NULL there, in the current code parent is NULL
+>> in case of ACPI, and the check is needed not to crash (unless that
+>> has changed).
+>
+>
+> This series passes down valid parent, see [PATCH V5 06/15].
+>
+>>
+>> The main part was the macro acpi_pci_get_segment() and the use
+>> of acpi_pci_root_info from sysdata to do this.
+>
+>
+> Since we can obtain related firmware specific data from valid parent device
+> (without defining another accessors), I do not see the point to use sysdata.
+> Let me know your opinion.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
----
- arch/x86/pci/acpi.c | 36 ++++++++++++++----------------------
- 1 file changed, 14 insertions(+), 22 deletions(-)
+In the patch, you use the parent info and call _SEG method again.
+The segment information is available in the ->root->segment of
+acpi_pci_root_info if you setup the sysdata like in my patch
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index a997d7c..8e89921 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -12,11 +12,6 @@
- struct pci_root_info {
- 	struct acpi_pci_root_info common;
- 	struct pci_sysdata sd;
--#ifdef	CONFIG_PCI_MMCONFIG
--	bool mcfg_added;
--	u8 start_bus;
--	u8 end_bus;
--#endif
- };
- 
- static bool pci_use_crs = true;
-@@ -180,16 +175,13 @@ static int check_segment(u16 seg, struct device *dev, char *estr)
- 
- static int setup_mcfg_map(struct acpi_pci_root_info *ci)
- {
--	int result, seg;
--	struct pci_root_info *info;
-+	int result, seg, start, end;
- 	struct acpi_pci_root *root = ci->root;
- 	struct device *dev = &ci->bridge->dev;
- 
--	info = container_of(ci, struct pci_root_info, common);
--	info->start_bus = (u8)root->secondary.start;
--	info->end_bus = (u8)root->secondary.end;
--	info->mcfg_added = false;
--	seg = info->sd.domain;
-+	seg = root->segment;
-+	start = root->secondary.start;
-+	end = root->secondary.end;
- 
- 	/* return success if MMCFG is not in use */
- 	if (raw_pci_ext_ops && raw_pci_ext_ops != &pci_mmcfg)
-@@ -198,13 +190,11 @@ static int setup_mcfg_map(struct acpi_pci_root_info *ci)
- 	if (!(pci_probe & PCI_PROBE_MMCONF))
- 		return check_segment(seg, dev, "MMCONFIG is disabled,");
- 
--	result = pci_mmconfig_insert(dev, seg, info->start_bus, info->end_bus,
--				     root->mcfg_addr);
-+	result = pci_mmconfig_insert(dev, seg, start, end, root->mcfg_addr);
- 	if (result == 0) {
- 		/* enable MMCFG if it hasn't been enabled yet */
- 		if (raw_pci_ext_ops == NULL)
- 			raw_pci_ext_ops = &pci_mmcfg;
--		info->mcfg_added = true;
- 	} else if (result != -EEXIST)
- 		return check_segment(seg, dev,
- 			 "fail to add MMCONFIG information,");
-@@ -214,14 +204,16 @@ static int setup_mcfg_map(struct acpi_pci_root_info *ci)
- 
- static void teardown_mcfg_map(struct acpi_pci_root_info *ci)
- {
--	struct pci_root_info *info;
-+	struct acpi_pci_root *root = ci->root;
-+	struct pci_mmcfg_region *cfg;
- 
--	info = container_of(ci, struct pci_root_info, common);
--	if (info->mcfg_added) {
--		pci_mmconfig_delete(info->sd.domain,
--				    info->start_bus, info->end_bus);
--		info->mcfg_added = false;
--	}
-+	cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
-+	if (!cfg)
-+		return;
-+
-+	if (cfg->hot_added)
-+		pci_mmconfig_delete(root->segment, root->secondary.start,
-+				    root->secondary.end);
- }
- #else
- static int setup_mcfg_map(struct acpi_pci_root_info *ci)
--- 
-1.9.1
-
+JC.
