@@ -1,81 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bn0105.outbound.protection.outlook.com ([157.56.110.105]:48539
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965675AbcBCWWr convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2016 17:22:47 -0500
-From: Jake Oshins <jakeo@microsoft.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	KY Srinivasan <kys@microsoft.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH RESEND 3/3] PCI: hv: New paravirtual PCI front-end for
- Hyper-V VMs
-Date: Wed, 3 Feb 2016 22:22:44 +0000
-Message-ID: <DM2PR0301MB1232CA7B094EC389000BB733ABD00@DM2PR0301MB1232.namprd03.prod.outlook.com>
-References: <1454434903-1680-1-git-send-email-jakeo@microsoft.com>
- <1454434903-1680-4-git-send-email-jakeo@microsoft.com>
- <20160203212904.GF10879@localhost>
-In-Reply-To: <20160203212904.GF10879@localhost>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from russell.cc ([43.229.61.17]:59278 "EHLO russell.cc"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754244AbcBQGMx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Feb 2016 01:12:53 -0500
+From: Russell Currey <ruscur@russell.cc>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
+	benh@kernel.crashing.org, Russell Currey <ruscur@russell.cc>
+Subject: [PATCH] MAINTAINERS: Update EEH details and maintainership
+Date: Wed, 17 Feb 2016 17:06:04 +1100
+Message-Id: <1455689164-12128-1-git-send-email-ruscur@russell.cc>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Wednesday, February 3, 2016 1:29 PM
-> To: Jake Oshins <jakeo@microsoft.com>
-> Cc: gregkh@linuxfoundation.org; KY Srinivasan <kys@microsoft.com>; linux-
-> kernel@vger.kernel.org; devel@linuxdriverproject.org; Haiyang Zhang
-> <haiyangz@microsoft.com>; marc.zyngier@arm.com;
-> bhelgaas@google.com; linux-pci@vger.kernel.org
-> Subject: Re: [PATCH RESEND 3/3] PCI: hv: New paravirtual PCI front-end for
-> Hyper-V VMs
-> 
-> Hi Jake,
-> 
-> On Tue, Feb 02, 2016 at 05:41:43PM +0000, jakeo@microsoft.com wrote:
-> > From: Jake Oshins <jakeo@microsoft.com>
-> >
-> > This patch introduces a new driver which exposes a root PCI bus whenever
-> a
-> > PCI Express device is passed through to a guest VM under Hyper-V. The
-> > device can be single- or multi-function. The interrupts for the devices
-> > are managed by an IRQ domain, implemented within the driver.
+Enhanced Error Handling could mean anything in the context of the entire
+kernel, so change the name to reference that it is both for PCI and
+powerpc.
 
-[lots of stuff snipped out]
+EEH covers a bit more than the previously listed files, so add the headers
+and platform-specific code to the EEH maintained section.
 
-> > +/**
-> > + * hv_pci_free_bridge_windows() - Release memory regions for the
-> > + * bus
-> > + * @hbus:	Root PCI bus, as understood by this driver
-> > + */
-> > +static void hv_pci_free_bridge_windows(struct hv_pcibus_device *hbus)
-> > +{
-> > +	if (hbus->low_mmio_space && hbus->low_mmio_res) {
-> > +		hbus->low_mmio_res->flags |= IORESOURCE_BUSY;
-> 
-> Drivers should not normally set or clear IORESOURCE_BUSY themselves.
-> 
-> > +		release_mem_region(hbus->low_mmio_res->start,
-> > +				   resource_size(hbus->low_mmio_res));
-> 
-> Usually there's a request_mem_region() to correspond with a
-> release_mem_region(), and that takes care of IORESOURCE_BUSY.
-> 
-> What's unique about this driver, and can you make it less unique?
-> 
+In addition, I am taking over the maintainership.
 
-Thanks for the detailed review.  I'll make all the changes that you're suggesting and resend.
+Signed-off-by: Russell Currey <ruscur@russell.cc>
+---
+ MAINTAINERS | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
-As for the comment above, and all the others related to IORESOURCE_BUSY, this amounts to making the resource claim look like a bridge window, so that callers of request_mem_region() in the drivers for the child devices actually can succeed.  There's no function in the kernel today that amounts to "request_mem_region_for_bridge_window()" or at least none that I understood.  The current plug and play code in Linux is pretty hard coded for various bus types, i.e. ACPI and PCI.  I took a tack at one point where I tried to offer changes to it, so that it understood the concept of "grandchild of ACPI or PCI" which is what would make this code simpler.  Rafael Wysocki basically told me that the pnp layer is deprecated and that new changes to it wouldn't be entertained, and that I should find some way of using what exists.  This was the result.  If you have another suggestion, I'm happy to try it.  In any case, I'll explain what's happening more thoroughly in comments.
-
-Thanks,
-Jake Oshins
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 28eb61b..95d999e 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -4222,13 +4222,6 @@ M:	Maxim Levitsky <maximlevitsky@gmail.com>
+ S:	Maintained
+ F:	drivers/media/rc/ene_ir.*
+ 
+-ENHANCED ERROR HANDLING (EEH)
+-M:	Gavin Shan <shangw@linux.vnet.ibm.com>
+-L:	linuxppc-dev@lists.ozlabs.org
+-S:	Supported
+-F:	Documentation/powerpc/eeh-pci-error-recovery.txt
+-F:	arch/powerpc/kernel/eeh*.c
+-
+ EPSON S1D13XXX FRAMEBUFFER DRIVER
+ M:	Kristoffer Ericson <kristoffer.ericson@gmail.com>
+ S:	Maintained
+@@ -8244,6 +8237,15 @@ L:	linux-pci@vger.kernel.org
+ S:	Supported
+ F:	Documentation/PCI/pci-error-recovery.txt
+ 
++PCI ENHANCED ERROR HANDLING (EEH) FOR POWERPC
++M:	Russell Currey <ruscur@russell.cc>
++L:	linuxppc-dev@lists.ozlabs.org
++S:	Supported
++F:	Documentation/powerpc/eeh-pci-error-recovery.txt
++F:	arch/powerpc/kernel/eeh*.c
++F:	arch/powerpc/platforms/*/eeh*.c
++F:	arch/powerpc/include/*/eeh*.h
++
+ PCI SUBSYSTEM
+ M:	Bjorn Helgaas <bhelgaas@google.com>
+ L:	linux-pci@vger.kernel.org
+-- 
+2.7.1
 
