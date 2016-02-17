@@ -1,103 +1,222 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.135]:51153 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751552AbcBHMcT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Feb 2016 07:32:19 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Vineet.Gupta1@synopsys.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
-	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
-Subject: Re: [PATCH v8 2/2] add new platform driver for PCI RC
-Date: Mon, 08 Feb 2016 13:31:38 +0100
-Message-ID: <2803103.hQZUPM7HZf@wuerfel>
-In-Reply-To: <20160205233248.GC11780@localhost>
-References: <cover.1454600622.git.jpinto@synopsys.com> <4427983.0G6mVNKP5W@wuerfel> <20160205233248.GC11780@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:59681 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965103AbcBQDp6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:45:58 -0500
+Received: from localhost
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 17 Feb 2016 13:45:56 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v8 41/45] drivers/of: Avoid recursively calling unflatten_dt_node()
+Date: Wed, 17 Feb 2016 14:44:24 +1100
+Message-Id: <1455680668-23298-42-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday 05 February 2016 17:32:48 Bjorn Helgaas wrote:
-> On Fri, Feb 05, 2016 at 03:39:05PM +0100, Arnd Bergmann wrote:
-> > On Friday 05 February 2016 10:44:29 Joao Pinto wrote:
+In current implementation, unflatten_dt_node() is called recursively
+to unflatten device nodes in FDT blob. It's stress to limited stack
+capacity, especially to adopt the function to unflatten device sub-tree
+that possibly has multiple root nodes. In that case, we runs out of
+stack and the system can't boot up successfully.
 
-> > I think in this case, we should do this completely differently:
-> > 
-> > How about putting all the new code into drivers/pci/host/pcie-designware.c
-> > as functions that can be used by the other drivers in absence of a chip
-> > specific handler?
-> > 
-> > Instead of providing a new instance of struct pcie_host_ops, maybe add
-> > it as a default implementation in dw_pcie_link_up() and dw_pcie_host_init()
-> > for drivers that don't provide their own. "hisi_pcie_host_ops" currently
-> > provides no host_init() callback function, so you will have to change
-> > the hisi frontend to a provide nop-function.
-> > 
-> > For all other drivers, check if they can be changed to use your generic
-> > implementation and remove their private callbacks if possible.
-> > 
-> > I think the MSI implementation should be split out into a separate file
-> > though, as not everyone uses this.
-> 
-> I'm not sure I understand what you're proposing, Arnd, so let me
-> ramble and you can direct me back on course.
-> 
-> Currently drivers/pci/host/pcie-designware.c is not usable by itself;
-> it doesn't register a platform_driver.
-> 
-> There's hardly any code in Joao's patches; it looks like they add a
-> minimal wrapper around the functionality in pcie-designware.c and
-> register it as a platform_driver.
-> 
-> Are you suggesting that we should just add that functionality directly
-> in pcie-designware.c so that file could both be a minimal driver with
-> the functionality of Joao's patches, *and* continue to provide the
-> shared code used by all the existing DesignWare-based drivers?  Maybe
-> the platform_driver registration part could be controlled by its own
-> separate Kconfig option.
+In order to reuse the function to unflatten device sub-tree, this avoids
+calling the function recursively, meaning the device nodes are unflattened
+in one call on unflatten_dt_node(): two arrays are introduced to track the
+parent path size and the device node of current level of depth, which will
+be used by the device node on next level of depth to be unflattened. All
+device nodes in more than 64 level of depth are dropped and hopefully,
+the system can boot up successfully with the partial device-tree.
 
-Either way is fine, we just have to be a little careful about the
-initialization ordering.
+Also, the parameter "poffset" and "fpsize" are unused and dropped and the
+parameter "dryrun" is figured out from "mem == NULL". Besides, the return
+value of the function is changed to indicate the size of memory consumed by
+the unflatten device tree or error code.
 
-> For example, he could make dw_pcie_link_up() look like:
-> 
->   int dw_pcie_link_up(struct pcie_port *pp)
->   {
->     u32 val;
-> 
->     if (pp->ops->link_up)
->       return pp->ops->link_up(pp);
-> 
->     val = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
->     return val & PCIE_PHY_DEBUG_R1_LINK_UP;
->   }
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ drivers/of/fdt.c | 122 +++++++++++++++++++++++++++++++++----------------------
+ 1 file changed, 74 insertions(+), 48 deletions(-)
 
-This is definitely good (after checking that all existing drivers
-either work with the generic version, or provide their own callbacks
-already).
+diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+index 3c69002..667a5b2 100644
+--- a/drivers/of/fdt.c
++++ b/drivers/of/fdt.c
+@@ -356,63 +356,90 @@ static unsigned long populate_node(const void *blob,
+ 	return fpsize;
+ }
+ 
++static void reverse_nodes(struct device_node *parent)
++{
++	struct device_node *child, *next;
++
++	/* In-depth first */
++	child = parent->child;
++	while (child) {
++		reverse_nodes(child);
++
++		child = child->sibling;
++	}
++
++	/* Reverse the nodes in the child list */
++	child = parent->child;
++	parent->child = NULL;
++	while (child) {
++		next = child->sibling;
++
++		child->sibling = parent->child;
++		parent->child = child;
++		child = next;
++	}
++}
++
+ /**
+  * unflatten_dt_node - Alloc and populate a device_node from the flat tree
+  * @blob: The parent device tree blob
+  * @mem: Memory chunk to use for allocating device nodes and properties
+- * @poffset: pointer to node in flat tree
+  * @dad: Parent struct device_node
+  * @nodepp: The device_node tree created by the call
+- * @fpsize: Size of the node path up at the current depth.
+- * @dryrun: If true, do not allocate device nodes but still calculate needed
+- * memory size
++ *
++ * It returns the size of unflattened device tree or error code
+  */
+-static void *unflatten_dt_node(const void *blob,
+-			       void *mem,
+-			       int *poffset,
+-			       struct device_node *dad,
+-			       struct device_node **nodepp,
+-			       unsigned long fpsize,
+-			       bool dryrun)
++static int unflatten_dt_node(const void *blob,
++			     void *mem,
++			     struct device_node *dad,
++			     struct device_node **nodepp)
+ {
+-	struct device_node *np;
+-	static int depth;
+-	int old_depth;
++	struct device_node *root;
++	int offset = 0, depth = 0;
++#define FDT_MAX_DEPTH	64
++	unsigned long fpsizes[FDT_MAX_DEPTH];
++	struct device_node *nps[FDT_MAX_DEPTH];
++	void *base = mem;
++	bool dryrun = !base;
+ 
+-	fpsize = populate_node(blob, *poffset, &mem, dad, fpsize, &np, dryrun);
+-	if (!fpsize)
+-		return mem;
++	if (nodepp)
++		*nodepp = NULL;
++
++	root = dad;
++	fpsizes[depth] = dad ? strlen(of_node_full_name(dad)) : 0;
++	nps[depth++] = dad;
++	for (offset = 0;
++	     offset >= 0;
++	     offset = fdt_next_node(blob, offset, &depth)) {
++		if (WARN_ON_ONCE(depth >= FDT_MAX_DEPTH))
++			continue;
+ 
+-	old_depth = depth;
+-	*poffset = fdt_next_node(blob, *poffset, &depth);
+-	if (depth < 0)
+-		depth = 0;
+-	while (*poffset > 0 && depth > old_depth)
+-		mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
+-					fpsize, dryrun);
++		fpsizes[depth] = populate_node(blob, offset, &mem,
++					       nps[depth - 1],
++					       fpsizes[depth - 1],
++					       &nps[depth], dryrun);
++		if (!fpsizes[depth])
++			return mem - base;
++
++		if (!dryrun && nodepp && !*nodepp)
++			*nodepp = nps[depth];
++		if (!dryrun && !root)
++			root = nps[depth];
++	}
+ 
+-	if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
+-		pr_err("unflatten: error %d processing FDT\n", *poffset);
++	if (offset < 0 && offset != -FDT_ERR_NOTFOUND) {
++		pr_err("%s: Error %d processing FDT\n", __func__, offset);
++		return -EINVAL;
++	}
+ 
+ 	/*
+ 	 * Reverse the child list. Some drivers assumes node order matches .dts
+ 	 * node order
+ 	 */
+-	if (!dryrun && np->child) {
+-		struct device_node *child = np->child;
+-		np->child = NULL;
+-		while (child) {
+-			struct device_node *next = child->sibling;
+-			child->sibling = np->child;
+-			np->child = child;
+-			child = next;
+-		}
+-	}
+-
+-	if (nodepp)
+-		*nodepp = np;
++	if (!dryrun)
++		reverse_nodes(root);
+ 
+-	return mem;
++	return mem - base;
+ }
+ 
+ /**
+@@ -431,8 +458,7 @@ static void __unflatten_device_tree(const void *blob,
+ 			     struct device_node **mynodes,
+ 			     void * (*dt_alloc)(u64 size, u64 align))
+ {
+-	unsigned long size;
+-	int start;
++	int size;
+ 	void *mem;
+ 
+ 	pr_debug(" -> unflatten_device_tree()\n");
+@@ -453,11 +479,12 @@ static void __unflatten_device_tree(const void *blob,
+ 	}
+ 
+ 	/* First pass, scan for size */
+-	start = 0;
+-	size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
+-	size = ALIGN(size, 4);
++	size = unflatten_dt_node(blob, NULL, NULL, NULL);
++	if (size < 0)
++		return;
+ 
+-	pr_debug("  size is %lx, allocating...\n", size);
++	size = ALIGN(size, 4);
++	pr_debug("  size is %d, allocating...\n", size);
+ 
+ 	/* Allocate memory for the expanded device tree */
+ 	mem = dt_alloc(size + 4, __alignof__(struct device_node));
+@@ -468,8 +495,7 @@ static void __unflatten_device_tree(const void *blob,
+ 	pr_debug("  unflattening %p...\n", mem);
+ 
+ 	/* Second pass, do actual unflattening */
+-	start = 0;
+-	unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
++	unflatten_dt_node(blob, mem, NULL, mynodes);
+ 	if (be32_to_cpup(mem + size) != 0xdeadbeef)
+ 		pr_warning("End of tree marker overwritten: %08x\n",
+ 			   be32_to_cpup(mem + size));
+-- 
+2.1.0
 
-> That seems like it would make sense to me.  It would resolve the
-> filename question, since there wouldn't be a new file.  And if this is
-> merely a driver for the generic DesignWare core without any
-> extensions, I'm happy with some sort of "dw"-based driver name and
-> compatibility string.
-
-The important part I think is that the new driver should not require
-and code that is seen as soc-specific: If it works with any implementation
-of pci-dw rather than a specific system, the driver should know how
-to do the right thing.
-
-It may be helpful to move the actual matching on the compatible string
-and calling of the generic probe function into another module, if we
-are going forward with loadable PCI host drivers as posted by 
-Paul Gortmaker today. Otherwise we end up with a device being bound
-to the generic driver when a more specific one exists and both
-are loadable modules, because the generic driver is always loaded
-first.  As long as both drivers are built-in, it works fine because
-we first look for a driver matching the most specific compatible string.
-
-	Arnd
