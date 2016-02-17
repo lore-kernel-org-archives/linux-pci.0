@@ -1,92 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f178.google.com ([209.85.161.178]:36496 "EHLO
-	mail-yw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865AbcBEIno (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2016 03:43:44 -0500
-Received: by mail-yw0-f178.google.com with SMTP id q190so45836440ywd.3
-        for <linux-pci@vger.kernel.org>; Fri, 05 Feb 2016 00:43:43 -0800 (PST)
+Received: from bear.ext.ti.com ([192.94.94.41]:56566 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933709AbcBQP6c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Feb 2016 10:58:32 -0500
+Subject: Re: [PATCH v8 43/45] drivers/of: Specify parent node in
+ of_fdt_unflatten_tree()
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	<linuxppc-dev@lists.ozlabs.org>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-44-git-send-email-gwshan@linux.vnet.ibm.com>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<benh@kernel.crashing.org>, <mpe@ellerman.id.au>, <aik@ozlabs.ru>,
+	<dja@axtens.net>, <bhelgaas@google.com>, <robherring2@gmail.com>,
+	<grant.likely@linaro.org>
+From: Jyri Sarha <jsarha@ti.com>
+Message-ID: <56C49896.3090109@ti.com>
+Date: Wed, 17 Feb 2016 17:58:14 +0200
 MIME-Version: 1.0
-In-Reply-To: <20160205001907.GJ7031@localhost>
-References: <1454058340-7904-1-git-send-email-jchandra@broadcom.com>
- <1454058340-7904-6-git-send-email-jchandra@broadcom.com> <20160205001907.GJ7031@localhost>
-From: Jayachandran Chandrashekaran Nair
-	<jayachandran.chandrashekaran@broadcom.com>
-Date: Fri, 5 Feb 2016 14:05:37 +0530
-Message-ID: <CAKc_7PXYtFt1MQE-UGO0O5vvQ+xFKa2b5=F8wXB=EN-JUJVzZw@mail.gmail.com>
-Subject: Re: [PATCH v7 5/5] PCI: ACPI: Add a generic ACPI based host controller
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Jayachandran C <jchandra@broadcom.com>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-acpi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	xen-devel@lists.xenproject.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1455680668-23298-44-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On Fri, Feb 5, 2016 at 5:49 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> Hi Jayachandran,
+On 02/17/16 05:44, Gavin Shan wrote:
+> This adds one more argument to of_fdt_unflatten_tree() to specify
+> the parent node of the FDT blob that is going to be unflattened.
+> In the result, the function can be used to unflatten FDT blob that
+> represents device sub-tree in PowerNV PCI hotplug driver.
 >
-> On Fri, Jan 29, 2016 at 02:35:40PM +0530, Jayachandran C wrote:
->> Add a simple ACPI based PCI host controller under config option
->> ACPI_PCI_HOST_GENERIC. This is done by providing an implementation
->> of pci_acpi_scan_root().
->>
->> The pci_mmcfg_list handling is done by the ACPI code, so we keep a
->> reference to the pci_mmcfg_region in sysdata. The ECAM region will
->> be already mapped, so map_bus can be implemented by using the
->> virt pointer for the pci_mmcfg_region. pci_generic_config_read
->> and pci_generic_config_write are used for config space read/write.
->>
->> Also, we provide implementations of raw_pci_read and raw_pci_write
->> hat are needed by ACPI based on the pci_mmcfg_list.
->>
->> pci_acpi_set_companion() and acpi_pci_get_segment() are defined
->> using sysdata of generic ACPI host controller so that PCI domain
->> and ACPI companion are set in PCI code rather than platform code.
->>
->> This code is currently enabled only for ARM64.
->>
->> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
->> ---
->>  drivers/acpi/Kconfig         |   8 ++
->>  drivers/acpi/Makefile        |   1 +
->>  drivers/acpi/pci_host_acpi.c | 186 +++++++++++++++++++++++++++++++++++++++++++
->>  include/linux/pci-acpi.h     |  17 ++++
->>  4 files changed, 212 insertions(+)
->>  create mode 100644 drivers/acpi/pci_host_acpi.c
+> Cc: Jyri Sarha <jsarha@ti.com>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>   drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c |  2 +-
+
+Acked-by: Jyri Sarha <jsarha@ti.com>
+
+>   drivers/of/fdt.c                             | 14 ++++++++++----
+>   drivers/of/unittest.c                        |  2 +-
+>   include/linux/of_fdt.h                       |  1 +
+>   4 files changed, 13 insertions(+), 6 deletions(-)
 >
-> I'm speaking a little bit out of turn here, because this is ACPI code,
-> but I'm confused about pci_host_acpi.c.  We already have pci_root.c,
-> which is *supposed* to be arch-independent.  I know pci_root.c is
-> crufty and could be improved, but it does work today on x86 and ia64,
-> and it handles some generic things that pci_host_acpi.c does not,
-> e.g., _OSC, NUMA, host bridge hotplug, etc.
+> diff --git a/drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c b/drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c
+> index 106679b..f9c79da 100644
+> --- a/drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c
+> +++ b/drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c
+> @@ -157,7 +157,7 @@ struct device_node * __init tilcdc_get_overlay(struct kfree_table *kft)
+>   	if (!overlay_data || kfree_table_add(kft, overlay_data))
+>   		return NULL;
 >
-> I'd really like to see pci_root.c improved so it could work on x86,
-> ia64, and arm64.  I'm sure that was probably the first thing you
-> tried, so likely there are issues there.  Are they insurmountable?
+> -	of_fdt_unflatten_tree(overlay_data, &overlay);
+> +	of_fdt_unflatten_tree(overlay_data, NULL, &overlay);
+>   	if (!overlay) {
+>   		pr_warn("%s: Unfattening overlay tree failed\n", __func__);
+>   		return NULL;
+> diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+> index 3fc9a30..16a1ba5 100644
+> --- a/drivers/of/fdt.c
+> +++ b/drivers/of/fdt.c
+> @@ -450,11 +450,13 @@ static int unflatten_dt_nodes(const void *blob,
+>    * pointers of the nodes so the normal device-tree walking functions
+>    * can be used.
+>    * @blob: The blob to expand
+> + * @dad: Parent device node
+>    * @mynodes: The device_node tree created by the call
+>    * @dt_alloc: An allocator that provides a virtual address to memory
+>    * for the resulting tree
+>    */
+>   static void __unflatten_device_tree(const void *blob,
+> +			     struct device_node *dad,
+>   			     struct device_node **mynodes,
+>   			     void * (*dt_alloc)(u64 size, u64 align))
+>   {
+> @@ -479,7 +481,7 @@ static void __unflatten_device_tree(const void *blob,
+>   	}
+>
+>   	/* First pass, scan for size */
+> -	size = unflatten_dt_nodes(blob, NULL, NULL, NULL);
+> +	size = unflatten_dt_nodes(blob, NULL, dad, NULL);
+>   	if (size < 0)
+>   		return;
+>
+> @@ -495,7 +497,7 @@ static void __unflatten_device_tree(const void *blob,
+>   	pr_debug("  unflattening %p...\n", mem);
+>
+>   	/* Second pass, do actual unflattening */
+> -	unflatten_dt_nodes(blob, mem, NULL, mynodes);
+> +	unflatten_dt_nodes(blob, mem, dad, mynodes);
+>   	if (be32_to_cpup(mem + size) != 0xdeadbeef)
+>   		pr_warning("End of tree marker overwritten: %08x\n",
+>   			   be32_to_cpup(mem + size));
+> @@ -512,6 +514,9 @@ static DEFINE_MUTEX(of_fdt_unflatten_mutex);
+>
+>   /**
+>    * of_fdt_unflatten_tree - create tree of device_nodes from flat blob
+> + * @blob: Flat device tree blob
+> + * @dad: Parent device node
+> + * @mynodes: The device tree created by the call
+>    *
+>    * unflattens the device-tree passed by the firmware, creating the
+>    * tree of struct device_node. It also fills the "name" and "type"
+> @@ -519,10 +524,11 @@ static DEFINE_MUTEX(of_fdt_unflatten_mutex);
+>    * can be used.
+>    */
+>   void of_fdt_unflatten_tree(const unsigned long *blob,
+> +			struct device_node *dad,
+>   			struct device_node **mynodes)
+>   {
+>   	mutex_lock(&of_fdt_unflatten_mutex);
+> -	__unflatten_device_tree(blob, mynodes, &kernel_tree_alloc);
+> +	__unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
+>   	mutex_unlock(&of_fdt_unflatten_mutex);
+>   }
+>   EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
+> @@ -1180,7 +1186,7 @@ bool __init early_init_dt_scan(void *params)
+>    */
+>   void __init unflatten_device_tree(void)
+>   {
+> -	__unflatten_device_tree(initial_boot_params, &of_root,
+> +	__unflatten_device_tree(initial_boot_params, NULL, &of_root,
+>   				early_init_dt_alloc_memory_arch);
+>
+>   	/* Get pointer to "/chosen" and "/aliases" nodes for use everywhere */
+> diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
+> index 979b6e4..ec36f93 100644
+> --- a/drivers/of/unittest.c
+> +++ b/drivers/of/unittest.c
+> @@ -921,7 +921,7 @@ static int __init unittest_data_add(void)
+>   			"not running tests\n", __func__);
+>   		return -ENOMEM;
+>   	}
+> -	of_fdt_unflatten_tree(unittest_data, &unittest_data_node);
+> +	of_fdt_unflatten_tree(unittest_data, NULL, &unittest_data_node);
+>   	if (!unittest_data_node) {
+>   		pr_warn("%s: No tree to attach; not running tests\n", __func__);
+>   		return -ENODATA;
+> diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
+> index df9ef38..3644960 100644
+> --- a/include/linux/of_fdt.h
+> +++ b/include/linux/of_fdt.h
+> @@ -38,6 +38,7 @@ extern bool of_fdt_is_big_endian(const void *blob,
+>   extern int of_fdt_match(const void *blob, unsigned long node,
+>   			const char *const *compat);
+>   extern void of_fdt_unflatten_tree(const unsigned long *blob,
+> +			       struct device_node *dad,
+>   			       struct device_node **mynodes);
+>
+>   /* TBD: Temporary export of fdt globals - remove when code fully merged */
+>
 
-pci_root.c leaves the implementation of pci_acpi_scan_root() to the
-architecture. Implementing pci_acpi_scan_root needs a
-pci_acpi_root_ops instance and a pci_ops instance and related functions.
-The architecture is also expected to implement raw_pci_read and
-raw_pci_write.
-
-pci_host_acpi.c is a generic implementation of these using a sysdata
-pointing to acpi_pci_root_info, and using a pointer to the pci_mmcfg_region
-to access ECAM area, Maybe I can rename this file to
-pci_acpi_host_generic.c to reflect this better.
-
-arm64 is the only user of this generic implementation now. The config
-option CONFIG_ACPI_PCI_HOST_GENERIC has to be set on the
-architecture that chooses to use this generic code instead of its own
-implementation.
-
-JC.
-{Sorry if the formatting is wrong, using webmail due to internal IT changes]
