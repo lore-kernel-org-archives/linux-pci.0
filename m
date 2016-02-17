@@ -1,100 +1,50 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
-	"tn@semihalf.com" <tn@semihalf.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"jcm@redhat.com" <jcm@redhat.com>
-Subject: RE: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host
- Controllers
-Date: Thu, 4 Feb 2016 16:44:12 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1EC9EF4B@lhreml503-mbs>
-References: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
- <2387127.DMZaDnZvEW@wuerfel>
- <EE11001F9E5DDD47B7634E2F8A612F2E1EC9EC12@lhreml503-mbs>
- <76564455.dlc1WHiVY2@wuerfel>
-In-Reply-To: <76564455.dlc1WHiVY2@wuerfel>
-Content-Type: text/plain; charset="Windows-1252"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yw0-f176.google.com ([209.85.161.176]:33466 "EHLO
+	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933985AbcBQO7i (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Feb 2016 09:59:38 -0500
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1455680668-23298-42-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com> <1455680668-23298-42-git-send-email-gwshan@linux.vnet.ibm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Wed, 17 Feb 2016 08:53:51 -0600
+Message-ID: <CAL_JsqKWokaUSgf8dfi7Ao_hrKCMf1LYS_ubd=Z=_+d6ehD9Jw@mail.gmail.com>
+Subject: Re: [PATCH v8 41/45] drivers/of: Avoid recursively calling unflatten_dt_node()
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
+	dja@axtens.net, Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: 04 February 2016 16:07
-> To: Gabriele Paoloni
-> Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C); Linuxarm;
-> qiujiang; bhelgaas@google.com; Lorenzo.Pieralisi@arm.com;
-> tn@semihalf.com; zhangjukuo; xuwei (O); Liguozhu (Kenneth); linux-
-> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
-> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; jcm@redhat.com
-> Subject: Re: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host
-> Controllers
-> 
-> On Thursday 04 February 2016 15:11:18 Gabriele Paoloni wrote:
-> > >
-> > > ACPI has its own PCI support, and should not need drivers for host
-> > > bridges. I don't think we can really mix the two things, as ACPI
-> > > needs to have access to things like PCI config space way before
-> > > we are probing normal device drivers.
-> > >
-> > > Please put this in drivers/acpi/pci*.c.
-> >
-> > I can put pcie-hisi-acpi.c under drivers/acpi/
-> >
-> > However if you look at the driver it is made up of three parts:
-> > pcie-hisi.c --> the DT based driver
-> > pcie-hisi-acpi.c --> the ACPI based hook and ACPI specific init
-> callback
-> > pcie-hisi-common.c --> common functions shared between DT and ACPI
-> versions
-> >                        of the driver
-> >
-> > Now I think that moving pcie-hisi-acpi.c under drivers/acpi/
-> > would make it hard to read as you need to jump across directories
-> > and it seems a bit unnatural...
-> >
-> > However it is not a big issue to me...
-> 
-> That's not really what I meant though: the pcie-hisi driver uses the
-> pcie-designware.c library, most of which makes no sense in an
-> environment
-> where you have ACPI, e.g. link training, custom MSI support, initial
-> register setup, platform driver hooks, etc.
-> 
-> You should add a very minimal set of hacks for the parts in this driver
-> that diverge from a standard SBSA compliant PCIe host that ACPI expects.
+On Tue, Feb 16, 2016 at 9:44 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+> In current implementation, unflatten_dt_node() is called recursively
+> to unflatten device nodes in FDT blob. It's stress to limited stack
+> capacity, especially to adopt the function to unflatten device sub-tree
+> that possibly has multiple root nodes. In that case, we runs out of
+> stack and the system can't boot up successfully.
+>
+> In order to reuse the function to unflatten device sub-tree, this avoids
+> calling the function recursively, meaning the device nodes are unflattened
+> in one call on unflatten_dt_node(): two arrays are introduced to track the
+> parent path size and the device node of current level of depth, which will
+> be used by the device node on next level of depth to be unflattened. All
+> device nodes in more than 64 level of depth are dropped and hopefully,
+> the system can boot up successfully with the partial device-tree.
+>
+> Also, the parameter "poffset" and "fpsize" are unused and dropped and the
+> parameter "dryrun" is figured out from "mem == NULL". Besides, the return
+> value of the function is changed to indicate the size of memory consumed by
+> the unflatten device tree or error code.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>  drivers/of/fdt.c | 122 +++++++++++++++++++++++++++++++++----------------------
+>  1 file changed, 74 insertions(+), 48 deletions(-)
 
-Effectively the ACPI version of the HiSilicon driver does not rely on
-Designware as much as the DT version (that calls dw_pcie_host_init());
-however in order to do what you suggest I'd need to copy and paste and
-modify dw_pcie_rd_conf and dw_pcie_wr_conf.
-Also I'd need to declare duplicate version of the functions in
-pcie-hisi-common.c (if I do not want to split the object across
-different paths "drivers/pci/host" and "drivers/acpi/")
-
-Now I can do it but I thought it was more correct to pass &dw_pcie_ops
-as input pointer in DECLARE_ACPI_MCFG_FIXUP(); this is also because maybe in
-future other Designware based controllers may need to support ACPI and it
-would be easier for them to reuse their DT based driver functions
-
-Honestly I am a bit confused...
-
-Thanks
-
-Gab
-
-> 
-> 	Arnd
+Acked-by: Rob Herring <robh@kernel.org>
