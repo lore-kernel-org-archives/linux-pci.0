@@ -1,115 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44086 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753101AbcBXTnu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Feb 2016 14:43:50 -0500
-Subject: [PATCH v4 1/6] PCI: Add pci_add_dma_alias() to abstract
- implementation
-To: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <jroedel@suse.de>,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org
-Date: Wed, 24 Feb 2016 13:43:45 -0600
-Message-ID: <20160224194345.7585.20639.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160217182718.302.10272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160217182718.302.10272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Date: Wed, 17 Feb 2016 20:47:16 +0100
+Message-ID: <CAJZ5v0g1TBiRhALk5Q8PbC2FOXvOCJJsfNBcTVBLFpjDFvp0ag@mail.gmail.com>
+Subject: Re: [PATCH v2 0/3] PCI: Revert "Implement pcibios_alloc_irq() and pcibios_free_irq()"
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	=?UTF-8?B?0J7Qu9C10LPQnNC+0YDQvtC3?= <oleg.moroz@mcc.vniiem.ru>,
+	Joerg Roedel <jroedel@suse.de>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Sunjin Yang <fan4326@gmail.com>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+On Wed, Feb 17, 2016 at 7:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> These are clean reverts of 991de2e59090 ("PCI, x86: Implement
+> pcibios_alloc_irq() and pcibios_free_irq()") and related changes.
+>
+> We have two reports of drivers broken in v4.3 by Jiang's change,
+> 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
+> pcibios_free_irq()").
+>
+> It would be best to fix the problem instead of reverting 991de2e59090, but
+> I don't have time to do that myself, and we haven't heard from Jiang, so
+> the only choice I have is to revert the commit.
+>
+> Note that reverting will likely break IOAPIC hotplug.
+>
+> Олег and Sunjin, can you please test this and see whether it fixes your
+> drivers?  This patch is based on v4.5-rc1.
+>
+> I intend to merge these for v4.5 unless I hear objections.
+>
+> They're on my for-linus branch, so they should appear in linux-next
+> tomorrow.
+>
+> Changes from the v1 posting:
+>   - Explicitly revert related patches instead of resolving conflicts
+>     manually
+> ---
+>
+> Bjorn Helgaas (3):
+>       Revert "x86/PCI: Don't alloc pcibios-irq when MSI is enabled"
+>       Revert "PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed"
+>       Revert "PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()"
 
-Add a pci_add_dma_alias() interface to encapsulate the details of adding an
-alias.  No functional change intended.
----
- drivers/pci/pci.c    |   14 ++++++++++++++
- drivers/pci/pci.h    |    2 ++
- drivers/pci/quirks.c |   19 +++++++------------
- 3 files changed, 23 insertions(+), 12 deletions(-)
+ACK for all three FWIW.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 602eb42..7fccc8a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4568,6 +4568,20 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
- 	return 0;
- }
- 
-+/**
-+ * pci_add_dma_alias - Add a DMA devfn alias for a device
-+ * @dev: the PCI device for which alias is added
-+ * @devfn: alias slot and function
-+ *
-+ * This helper encodes 8-bit devfn as bit number in dma_alias_mask.
-+ * It should be called early, preferably as PCI fixup header quirk.
-+ */
-+void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
-+{
-+	dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 0);
-+	dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-+}
-+
- bool pci_device_is_present(struct pci_dev *pdev)
- {
- 	u32 v;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 9a1660f..c5dc8dc 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -335,4 +335,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- }
- #endif
- 
-+void pci_add_dma_alias(struct pci_dev *dev, u8 devfn);
-+
- #endif /* DRIVERS_PCI_H */
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 0575a1e..df28dce 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3581,10 +3581,8 @@ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- 
- static void quirk_dma_func0_alias(struct pci_dev *dev)
- {
--	if (PCI_FUNC(dev->devfn) != 0) {
--		dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 0);
--		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
--	}
-+	if (PCI_FUNC(dev->devfn) != 0)
-+		pci_add_dma_alias(dev, PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
- }
- 
- /*
-@@ -3597,10 +3595,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe476, quirk_dma_func0_alias);
- 
- static void quirk_dma_func1_alias(struct pci_dev *dev)
- {
--	if (PCI_FUNC(dev->devfn) != 1) {
--		dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 1);
--		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
--	}
-+	if (PCI_FUNC(dev->devfn) != 1)
-+		pci_add_dma_alias(dev, PCI_DEVFN(PCI_SLOT(dev->devfn), 1));
- }
- 
- /*
-@@ -3667,11 +3663,10 @@ static void quirk_fixed_dma_alias(struct pci_dev *dev)
- 
- 	id = pci_match_id(fixed_dma_alias_tbl, dev);
- 	if (id) {
--		dev->dma_alias_devfn = id->driver_data;
--		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-+		pci_add_dma_alias(dev, id->driver_data);
- 		dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
--			 PCI_SLOT(dev->dma_alias_devfn),
--			 PCI_FUNC(dev->dma_alias_devfn));
-+			 PCI_SLOT(id->driver_data),
-+			 PCI_FUNC(id->driver_data));
- 	}
- }
- 
-
+Thanks,
+Rafael
