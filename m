@@ -1,86 +1,339 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57690 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755811AbcBDWo7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Feb 2016 17:44:59 -0500
-Date: Thu, 4 Feb 2016 16:44:56 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Manish Jaggi <mjaggi@caviumnetworks.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Tirumalesh Chalamarla <tchalamarla@cavium.com>,
-	"Richter, Robert" <Robert.Richter@caviumnetworks.com>
-Subject: Re: [PATCH] PCI: Add cavium acs pci quirk
-Message-ID: <20160204224456.GF7031@localhost>
-References: <56ABC5AE.1050209@caviumnetworks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56ABC5AE.1050209@caviumnetworks.com>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:39173 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965133AbcBQDqA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:46:00 -0500
+Received: from localhost
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 17 Feb 2016 13:45:58 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v8 40/45] drivers/of: Split unflatten_dt_node()
+Date: Wed, 17 Feb 2016 14:44:23 +1100
+Message-Id: <1455680668-23298-41-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 30, 2016 at 01:33:58AM +0530, Manish Jaggi wrote:
-> 
-> Cavium devices matching this quirk do not perform
-> peer-to-peer with other functions, allowing masking out
-> these bits as if they were unimplemented in the ACS capability.
-> 
-> Acked-by: Tirumalesh Chalamarla <tchalamarla@cavium.com>
-> Signed-off-by: Manish Jaggi <mjaggi@caviumnetworks.com>
+The function unflatten_dt_node() is called recursively to unflatten
+device nodes and properties in the FDT blob. It looks complicated
+and hard to be understood.
 
-Applied as follows to pci/virtualization for v4.6, thanks, Manish!
+This splits the function into 3 functions: populate_properties(),
+populate_node() and unflatten_dt_node(). populate_properties(),
+which is called by populate_node(), creates properties for the
+indicated device node. The later one creates the device nodes
+from FDT blob. populate_node() gets the offset in FDT blob for
+next device nodes and then calls populate_node(). No logical
+changes introduced.
 
-Note that this quirk applies to *all* Cavium devices.  I assume that's
-what you want; I only mention it because your comment says "Cavium
-devices matching this quirk ...", which is all of them because the
-code says PCI_ANY_ID.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ drivers/of/fdt.c | 249 ++++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 147 insertions(+), 102 deletions(-)
 
-Bjorn
-
-
-commit b404bcfbf035413dcce539c8ba2c9986d220d8ed
-Author: Manish Jaggi <mjaggi@caviumnetworks.com>
-Date:   Sat Jan 30 01:33:58 2016 +0530
-
-    PCI: Add ACS quirk for all Cavium devices
-    
-    Cavium devices matching this quirk do not perform peer-to-peer with other
-    functions, allowing masking out these bits as if they were unimplemented in
-    the ACS capability.
-    
-    Signed-off-by: Manish Jaggi <mjaggi@caviumnetworks.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Acked-by: Tirumalesh Chalamarla <tchalamarla@cavium.com>
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 0575a1e..85fa6a2a 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3832,6 +3832,19 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
- #endif
+diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+index 655f79d..3c69002 100644
+--- a/drivers/of/fdt.c
++++ b/drivers/of/fdt.c
+@@ -161,39 +161,127 @@ static void *unflatten_dt_alloc(void **mem, unsigned long size,
+ 	return res;
  }
  
-+static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
-+{
-+	/*
-+	 * Cavium devices matching this quirk do not perform peer-to-peer
-+	 * with other functions, allowing masking out these bits as if they
-+	 * were unimplemented in the ACS capability.
-+	 */
-+	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
-+		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+-/**
+- * unflatten_dt_node - Alloc and populate a device_node from the flat tree
+- * @blob: The parent device tree blob
+- * @mem: Memory chunk to use for allocating device nodes and properties
+- * @poffset: pointer to node in flat tree
+- * @dad: Parent struct device_node
+- * @nodepp: The device_node tree created by the call
+- * @fpsize: Size of the node path up at the current depth.
+- * @dryrun: If true, do not allocate device nodes but still calculate needed
+- * memory size
+- */
+-static void * unflatten_dt_node(const void *blob,
+-				void *mem,
+-				int *poffset,
+-				struct device_node *dad,
+-				struct device_node **nodepp,
+-				unsigned long fpsize,
++static void populate_properties(const void *blob,
++				int offset,
++				void **mem,
++				struct device_node *np,
++				const char *nodename,
+ 				bool dryrun)
+ {
+-	const __be32 *p;
++	struct property *pp, **pprev = NULL;
++	int cur;
++	bool has_name = false;
 +
-+	return acs_flags ? 0 : 1;
++	pprev = &np->properties;
++	for (cur = fdt_first_property_offset(blob, offset);
++	     cur >= 0;
++	     cur = fdt_next_property_offset(blob, cur)) {
++		const __be32 *val;
++		const char *pname;
++		u32 sz;
++
++		val = fdt_getprop_by_offset(blob, cur, &pname, &sz);
++		if (!val) {
++			pr_warn("%s: Cannot locate property at 0x%x\n",
++				__func__, cur);
++			continue;
++		}
++
++		if (!pname) {
++			pr_warn("%s: Cannot find property name at 0x%x\n",
++				__func__, cur);
++			continue;
++		}
++
++		if (!strcmp(pname, "name"))
++			has_name = true;
++
++		pp = unflatten_dt_alloc(mem, sizeof(struct property),
++					__alignof__(struct property));
++		if (dryrun)
++			continue;
++
++		/* We accept flattened tree phandles either in
++		 * ePAPR-style "phandle" properties, or the
++		 * legacy "linux,phandle" properties.  If both
++		 * appear and have different values, things
++		 * will get weird. Don't do that.
++		 */
++		if (!strcmp(pname, "phandle") ||
++		    !strcmp(pname, "linux,phandle")) {
++			if (!np->phandle)
++				np->phandle = be32_to_cpup(val);
++		}
++
++		/* And we process the "ibm,phandle" property
++		 * used in pSeries dynamic device tree
++		 * stuff
++		 */
++		if (!strcmp(pname, "ibm,phandle"))
++			np->phandle = be32_to_cpup(val);
++
++		pp->name   = (char *)pname;
++		pp->length = sz;
++		pp->value  = (__be32 *)val;
++		*pprev     = pp;
++		pprev      = &pp->next;
++	}
++
++	/* With version 0x10 we may not have the name property,
++	 * recreate it here from the unit name if absent
++	 */
++	if (!has_name) {
++		const char *p = nodename, *ps = p, *pa = NULL;
++		int len;
++
++		while (*p) {
++			if ((*p) == '@')
++				pa = p;
++			else if ((*p) == '/')
++				ps = p + 1;
++			p++;
++		}
++
++		if (pa < ps)
++			pa = p;
++		len = (pa - ps) + 1;
++		pp = unflatten_dt_alloc(mem, sizeof(struct property) + len,
++					__alignof__(struct property));
++		if (!dryrun) {
++			pp->name   = "name";
++			pp->length = len;
++			pp->value  = pp + 1;
++			*pprev     = pp;
++			pprev      = &pp->next;
++			memcpy(pp->value, ps, len - 1);
++			((char *)pp->value)[len - 1] = 0;
++			pr_debug("fixed up name for %s -> %s\n",
++				 nodename, (char *)pp->value);
++		}
++	}
++
++	if (!dryrun)
++		*pprev = NULL;
 +}
 +
- /*
-  * Many Intel PCH root ports do provide ACS-like features to disable peer
-  * transactions and validate bus numbers in requests, but do not provide an
-@@ -3984,6 +3997,8 @@ static const struct pci_dev_acs_enabled {
- 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
- 	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
- 	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
-+	/* Cavium ThunderX */
-+	{ PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
- 	{ 0 }
- };
++static unsigned long populate_node(const void *blob,
++				   int offset,
++				   void **mem,
++				   struct device_node *dad,
++				   unsigned long fpsize,
++				   struct device_node **pnp,
++				   bool dryrun)
++{
+ 	struct device_node *np;
+-	struct property *pp, **prev_pp = NULL;
+ 	const char *pathp;
+ 	unsigned int l, allocl;
+-	static int depth;
+-	int old_depth;
+-	int offset;
+-	int has_name = 0;
+ 	int new_format = 0;
  
+-	pathp = fdt_get_name(blob, *poffset, &l);
+-	if (!pathp)
+-		return mem;
++	pathp = fdt_get_name(blob, offset, &l);
++	if (!pathp) {
++		*pnp = NULL;
++		return 0;
++	}
+ 
+ 	allocl = ++l;
+ 
+@@ -223,7 +311,7 @@ static void * unflatten_dt_node(const void *blob,
+ 		}
+ 	}
+ 
+-	np = unflatten_dt_alloc(&mem, sizeof(struct device_node) + allocl,
++	np = unflatten_dt_alloc(mem, sizeof(struct device_node) + allocl,
+ 				__alignof__(struct device_node));
+ 	if (!dryrun) {
+ 		char *fn;
+@@ -246,89 +334,15 @@ static void * unflatten_dt_node(const void *blob,
+ 		}
+ 		memcpy(fn, pathp, l);
+ 
+-		prev_pp = &np->properties;
+ 		if (dad != NULL) {
+ 			np->parent = dad;
+ 			np->sibling = dad->child;
+ 			dad->child = np;
+ 		}
+ 	}
+-	/* process properties */
+-	for (offset = fdt_first_property_offset(blob, *poffset);
+-	     (offset >= 0);
+-	     (offset = fdt_next_property_offset(blob, offset))) {
+-		const char *pname;
+-		u32 sz;
+ 
+-		if (!(p = fdt_getprop_by_offset(blob, offset, &pname, &sz))) {
+-			offset = -FDT_ERR_INTERNAL;
+-			break;
+-		}
+-
+-		if (pname == NULL) {
+-			pr_info("Can't find property name in list !\n");
+-			break;
+-		}
+-		if (strcmp(pname, "name") == 0)
+-			has_name = 1;
+-		pp = unflatten_dt_alloc(&mem, sizeof(struct property),
+-					__alignof__(struct property));
+-		if (!dryrun) {
+-			/* We accept flattened tree phandles either in
+-			 * ePAPR-style "phandle" properties, or the
+-			 * legacy "linux,phandle" properties.  If both
+-			 * appear and have different values, things
+-			 * will get weird.  Don't do that. */
+-			if ((strcmp(pname, "phandle") == 0) ||
+-			    (strcmp(pname, "linux,phandle") == 0)) {
+-				if (np->phandle == 0)
+-					np->phandle = be32_to_cpup(p);
+-			}
+-			/* And we process the "ibm,phandle" property
+-			 * used in pSeries dynamic device tree
+-			 * stuff */
+-			if (strcmp(pname, "ibm,phandle") == 0)
+-				np->phandle = be32_to_cpup(p);
+-			pp->name = (char *)pname;
+-			pp->length = sz;
+-			pp->value = (__be32 *)p;
+-			*prev_pp = pp;
+-			prev_pp = &pp->next;
+-		}
+-	}
+-	/* with version 0x10 we may not have the name property, recreate
+-	 * it here from the unit name if absent
+-	 */
+-	if (!has_name) {
+-		const char *p1 = pathp, *ps = pathp, *pa = NULL;
+-		int sz;
+-
+-		while (*p1) {
+-			if ((*p1) == '@')
+-				pa = p1;
+-			if ((*p1) == '/')
+-				ps = p1 + 1;
+-			p1++;
+-		}
+-		if (pa < ps)
+-			pa = p1;
+-		sz = (pa - ps) + 1;
+-		pp = unflatten_dt_alloc(&mem, sizeof(struct property) + sz,
+-					__alignof__(struct property));
+-		if (!dryrun) {
+-			pp->name = "name";
+-			pp->length = sz;
+-			pp->value = pp + 1;
+-			*prev_pp = pp;
+-			prev_pp = &pp->next;
+-			memcpy(pp->value, ps, sz - 1);
+-			((char *)pp->value)[sz - 1] = 0;
+-			pr_debug("fixed up name for %s -> %s\n", pathp,
+-				(char *)pp->value);
+-		}
+-	}
++	populate_properties(blob, offset, mem, np, pathp, dryrun);
+ 	if (!dryrun) {
+-		*prev_pp = NULL;
+ 		np->name = of_get_property(np, "name", NULL);
+ 		np->type = of_get_property(np, "device_type", NULL);
+ 
+@@ -338,6 +352,37 @@ static void * unflatten_dt_node(const void *blob,
+ 			np->type = "<NULL>";
+ 	}
+ 
++	*pnp = np;
++	return fpsize;
++}
++
++/**
++ * unflatten_dt_node - Alloc and populate a device_node from the flat tree
++ * @blob: The parent device tree blob
++ * @mem: Memory chunk to use for allocating device nodes and properties
++ * @poffset: pointer to node in flat tree
++ * @dad: Parent struct device_node
++ * @nodepp: The device_node tree created by the call
++ * @fpsize: Size of the node path up at the current depth.
++ * @dryrun: If true, do not allocate device nodes but still calculate needed
++ * memory size
++ */
++static void *unflatten_dt_node(const void *blob,
++			       void *mem,
++			       int *poffset,
++			       struct device_node *dad,
++			       struct device_node **nodepp,
++			       unsigned long fpsize,
++			       bool dryrun)
++{
++	struct device_node *np;
++	static int depth;
++	int old_depth;
++
++	fpsize = populate_node(blob, *poffset, &mem, dad, fpsize, &np, dryrun);
++	if (!fpsize)
++		return mem;
++
+ 	old_depth = depth;
+ 	*poffset = fdt_next_node(blob, *poffset, &depth);
+ 	if (depth < 0)
+-- 
+2.1.0
+
