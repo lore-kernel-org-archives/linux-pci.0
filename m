@@ -1,56 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:2164 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755882AbcBPV44 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 16:56:56 -0500
-From: jakeo@microsoft.com
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	haddenh@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH RESEND v3 0/3] PCI: hv: New paravirtual PCI front-end driver
-Date: Tue, 16 Feb 2016 21:56:20 +0000
-Message-Id: <1455659783-20036-1-git-send-email-jakeo@microsoft.com>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:33136 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755832AbcBQEgr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 23:36:47 -0500
+Received: from localhost
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <andrew.donnellan@au1.ibm.com>;
+	Wed, 17 Feb 2016 14:36:44 +1000
+Subject: Re: [PATCH v8 33/45] powerpc/powernv: Simplify pnv_eeh_reset()
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-34-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: devicetree@vger.kernel.org, aik@ozlabs.ru,
+	linux-pci@vger.kernel.org, grant.likely@linaro.org,
+	robherring2@gmail.com, bhelgaas@google.com, dja@axtens.net
+From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Message-ID: <56C3F89F.4070505@au1.ibm.com>
+Date: Wed, 17 Feb 2016 15:35:43 +1100
+MIME-Version: 1.0
+In-Reply-To: <1455680668-23298-34-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+On 17/02/16 14:44, Gavin Shan wrote:
+> This drops unnecessary nested if statements in pnv_eeh_reset() to
+> improve the code readability. After the changes, the unused local
+> variable "ret" is dropped as well. No logical changes introduced.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-This version incorporates more feedback from Bjorn Helgaas.  Most notably,
-I removed some debugging code and I consistently used architectural
-means for getting the PCI domain instead of just reaching into the sysdata.
+This looks good to me.
 
-This is a resend of patches that enable PCI pass-through within Hyper-V
-VMs.  This patch series only includes those which were deemed appropriate
-for being incorportated via the PCI tree.  All other patches in previous
-patch series have gone through other trees and are now in mainline.
+Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 
-The first two patches modify PCI so that new root PCI buses can be marked with
-an associated fwnode_handle, and so that root PCI buses can look up their
-associated IRQ domain by that handle.
-
-The last patch, introduces a new driver, hv_pcifront, which exposes root PCI
-buses in a Hyper-V VM.  These root PCI buses expose real PCIe devices, or PCI
-Virtual Functions.
-
-Jake Oshins (3):
-  PCI: Add fwnode_handle to pci_sysdata
-  PCI: irqdomain: Look up IRQ domain by fwnode_handle
-  PCI: hv: New paravirtual PCI front-end for Hyper-V VMs
-
- MAINTAINERS                   |    1 +
- arch/x86/include/asm/pci.h    |   15 +
- drivers/pci/Kconfig           |    7 +
- drivers/pci/host/Makefile     |    1 +
- drivers/pci/host/pci-hyperv.c | 2359 +++++++++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c           |   15 +
- include/linux/pci.h           |    4 +
- 7 files changed, 2402 insertions(+)
- create mode 100644 drivers/pci/host/pci-hyperv.c
-
---
-1.9.1
+-- 
+Andrew Donnellan              Software Engineer, OzLabs
+andrew.donnellan@au1.ibm.com  Australia Development Lab, Canberra
++61 2 6201 8874 (work)        IBM Australia Limited
 
