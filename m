@@ -1,62 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59532 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756047AbcBERkj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Feb 2016 12:40:39 -0500
-Date: Fri, 5 Feb 2016 11:40:35 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: =?utf-8?B?0J7Qu9C10LMg0JzQvtGA0L7Qtw==?= <oleg.moroz@mcc.vniiem.ru>
-Cc: linux-pci@vger.kernel.org, Jiang Liu <jiang.liu@linux.intel.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Sunjin Yang <fan4326@gmail.com>, linux-kernel@vger.kernel.org
-Subject: Re: PCI device driver broken between 4.2 and 4.3
-Message-ID: <20160205174035.GB24785@localhost>
-References: <56A32702.7080909@mcc.vniiem.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <56A32702.7080909@mcc.vniiem.ru>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:46003 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965114AbcBQDp6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:45:58 -0500
+Received: from localhost
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 17 Feb 2016 13:45:56 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v8 32/45] powerpc/pci: Update bridge windows on PCI plug
+Date: Wed, 17 Feb 2016 14:44:15 +1100
+Message-Id: <1455680668-23298-33-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jiang, Yinghai, Sunjin, linux-kernel]
+On the PCI plugging event, PCI slot's subordinate devices are
+scanned and their (IO and MMIO) resources are assigned. Platform
+dependent resources (PE#, IO/MMIO/DMA windows) are allocated or
+created on updating windows of the slot's upstream bridge.
 
-On Sat, Jan 23, 2016 at 10:08:50AM +0300, Олег Мороз wrote:
-> Hello. I've got a device driver for MIL-1553b card called TA1-PCI,
-> which could be found at
-> https://github.com/qmor/elcus-1553-driver-linux
-> Card is using PLX_PCI9030 PCI controller.
-> Today i've found that this driver compiles, installes, but is not
-> working as it should.
-> Looks like it not receives any interrupts from PCI. I've test it
-> again with kernel
-> 4.2 and it works okay. What changes was made in PCI subsystem from
-> 4.2 to 4.3
-> which could have impact this driver work.
+This updates the windows of the hot plugged slot's upstream bridge
+in pcibios_finish_adding_to_bus() so that the platform resources
+(PE#, IO/MMIO/DMA segments) are allocated or created accordingly.
 
-Sunjin reported another driver, RocketRAID 272x, with the same
-problem.  "pci=routeirq" is a workaround:
-https://bugzilla.kernel.org/show_bug.cgi?id=111211#c7
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/pci-common.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-Олег bisected the problem with his driver to Jiang's patch,
-991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
-pcibios_free_irq()") and found that "pci=routeirq" was a workaround.
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 40df3a5..be9e515 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1444,8 +1444,12 @@ void pcibios_finish_adding_to_bus(struct pci_bus *bus)
+ 	/* Allocate bus and devices resources */
+ 	pcibios_allocate_bus_resources(bus);
+ 	pcibios_claim_one_bus(bus);
+-	if (!pci_has_flag(PCI_PROBE_ONLY))
+-		pci_assign_unassigned_bus_resources(bus);
++	if (!pci_has_flag(PCI_PROBE_ONLY)) {
++		if (bus->self)
++			pci_assign_unassigned_bridge_resources(bus->self);
++		else
++			pci_assign_unassigned_bus_resources(bus);
++	}
+ 
+ 	/* Fixup EEH */
+ 	eeh_add_device_tree_late(bus);
+-- 
+2.1.0
 
-I don't think Sunjin has bisected this, but the RocketRAID driver
-stopped working at the same time and the same workaround works, so we
-assume it is the same problem.
-
-Prior to 991de2e59090, we called pcibios_enable_irq() in the
-pci_enable_device() path, which recursively called
-pcibios_enable_irq() for upstream bridges via pci_enable_bridge().
-
-After 991de2e59090, we call pcibios_enable_irq() from the
-pci_device_probe() path instead of the pci_enable_device() path.  This
-does *not* call pcibios_enable_irq() for upstream bridges.
-
-I think this is what Yinghai meant in his response, but I didn't
-understand the connection.
-
-This is a pretty serious problem that should affect many devices
-behind bridges, so I think we need a PCI or ACPI core fix.  Jiang?
-
-Bjorn
