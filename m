@@ -1,66 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:53835 "EHLO
-	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756661AbcBIRip (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2016 12:38:45 -0500
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <guohanjun@huawei.com>, <wangzhou1@hisilicon.com>,
-	<liudongdong3@huawei.com>, <linuxarm@huawei.com>,
-	<qiujiang@huawei.com>, <bhelgaas@google.com>, <arnd@arndb.de>,
-	<Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>
-CC: <gabriele.paoloni@huawei.com>, <zhangjukuo@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<jcm@redhat.com>
-Subject: [RFC PATCH v3 0/3] Add ACPI support for HiSilicon PCIe Host Controllers
-Date: Tue, 9 Feb 2016 17:34:17 +0000
-Message-ID: <1455039260-6040-1-git-send-email-gabriele.paoloni@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:59690 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965147AbcBQDqA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:46:00 -0500
+Received: from localhost
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 17 Feb 2016 13:45:58 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v8 28/45] powerpc/pci: Introduce pci_remove_device_node_info()
+Date: Wed, 17 Feb 2016 14:44:11 +1100
+Message-Id: <1455680668-23298-29-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+This implements and exports pci_remove_device_node_info(). It's
+used to remove the pdn (struct pci_dn) for the indicated device
+node. The function is going to be used by PowerNV PCI hotplug
+driver.
 
-This patchset adds ACPI support for the HiSilicon Hip05/Hip06 SoC PCIe controllers
-The four patches respectively:
-        - re-architect the current HiSilicon driver to make it scalable to the
-          new ACPI quirks
-        - rework the current HiSilicon driver to add support for ECAM platforms
-        - adds the HiSilicon ACPI specific quirks.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h |  1 +
+ arch/powerpc/kernel/pci_dn.c          | 23 +++++++++++++++++++++++
+ 2 files changed, 24 insertions(+)
 
-   This patchset  is based on
-   https://github.com/semihalf-nowicki-tomasz/linux.git
-   branch pci-acpi-v4
-
-Changes v1 -> v2: removed the ACPI quirks dependency on Designware framework
-
-Changes v2 -> v3: kept backward compatibility for non-ECAM platforms
-
-gabriele paoloni (3):
-  PCI: hisi: re-architect Hip05/Hip06 controllers driver to preapare for
-    ACPI
-  PCI: hisi: Add ECAM support to HiSilicon PCIe host controller
-  PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
-
- .../devicetree/bindings/pci/hisilicon-pcie.txt     |  15 +-
- MAINTAINERS                                        |   3 +
- drivers/pci/host/Kconfig                           |   8 +
- drivers/pci/host/Makefile                          |   3 +-
- drivers/pci/host/pcie-designware.c                 |   4 +-
- drivers/pci/host/pcie-designware.h                 |   2 +
- drivers/pci/host/pcie-hisi-acpi.c                  | 188 +++++++++++++++++++++
- drivers/pci/host/pcie-hisi-common.c                |  73 ++++++++
- drivers/pci/host/pcie-hisi.c                       | 149 ++++++++--------
- drivers/pci/host/pcie-hisi.h                       |  25 +++
- 10 files changed, 382 insertions(+), 88 deletions(-)
- create mode 100644 drivers/pci/host/pcie-hisi-acpi.c
- create mode 100644 drivers/pci/host/pcie-hisi-common.c
- create mode 100644 drivers/pci/host/pcie-hisi.h
-
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 72a9d4e..c6310e2 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -240,6 +240,7 @@ extern struct pci_dn *add_dev_pci_data(struct pci_dev *pdev);
+ extern void remove_dev_pci_data(struct pci_dev *pdev);
+ extern struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
+ 					       struct device_node *dn);
++extern void pci_remove_device_node_info(struct device_node *dn);
+ 
+ static inline int pci_device_from_OF_node(struct device_node *np,
+ 					  u8 *bus, u8 *devfn)
+diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+index 0a249ff..ce10281 100644
+--- a/arch/powerpc/kernel/pci_dn.c
++++ b/arch/powerpc/kernel/pci_dn.c
+@@ -331,6 +331,29 @@ struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
+ }
+ EXPORT_SYMBOL_GPL(pci_add_device_node_info);
+ 
++void pci_remove_device_node_info(struct device_node *dn)
++{
++	struct pci_dn *pdn = dn ? PCI_DN(dn) : NULL;
++#ifdef CONFIG_EEH
++	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
++
++	if (edev)
++		edev->pdn = NULL;
++#endif
++
++	if (!pdn)
++		return;
++
++	WARN_ON(!list_empty(&pdn->child_list));
++	list_del(&pdn->list);
++	if (pdn->parent)
++		of_node_put(pdn->parent->node);
++
++	dn->data = NULL;
++	kfree(pdn);
++}
++EXPORT_SYMBOL_GPL(pci_remove_device_node_info);
++
+ /*
+  * Traverse a device tree stopping each PCI device in the tree.
+  * This is done depth first.  As each node is processed, a "pre"
 -- 
-1.9.1
-
+2.1.0
 
