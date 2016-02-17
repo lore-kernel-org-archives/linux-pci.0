@@ -1,127 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Paul Burton <paul.burton@imgtec.com>
-To: <linux-mips@linux-mips.org>
-CC: Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>,
-	"Paul Burton" <paul.burton@imgtec.com>,
-	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Russell Joyce <russell.joyce@york.ac.uk>,
-	"Bjorn Helgaas" <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	Rob Herring <robh@kernel.org>, <linux-kernel@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v3 2/6] PCI: xilinx: Unify INTx & MSI interrupt FIFO decode
-Date: Thu, 4 Feb 2016 16:10:09 +0000
-Message-ID: <1454602213-967-3-git-send-email-paul.burton@imgtec.com>
-In-Reply-To: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
-References: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:46535 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965175AbcBQDqB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:46:01 -0500
+Received: from localhost
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 17 Feb 2016 13:45:59 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v8 31/45] powerpc/pci: Don't scan empty slot
+Date: Wed, 17 Feb 2016 14:44:14 +1100
+Message-Id: <1455680668-23298-32-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When decoding either an INTx or MSI interrupt, the driver has no way to
-know which it will pull out of the interrupt FIFO. If both were pending
-then this would lead to either the interrupt being handled incorrectly
-(MSI interrupt treated as INTx) or not at all (INTx interrupt dropped by
-MSI path). Unify the reading of the interrupt FIFO & act according to
-the type of interrupt actually read.
+In hotplug case, function pci_add_pci_devices() is called to rescan
+the specified PCI bus, which might not have any child devices. Access
+to the PCI bus's child device node will cause kernel crash without
+exception.
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-Fixes: 8961def56845 ("PCI: xilinx: Add Xilinx AXI PCIe Host Bridge IP driver")
+This adds one more check to skip scanning PCI bus that doesn't have
+any subordinate devices from device-tree, in order to avoid kernel
+crash.
 
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
+ arch/powerpc/kernel/pci-hotplug.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Changes in v3:
-- Split out from Boston patchset.
-
-Changes in v2:
-- Add Fixes tag.
-
- drivers/pci/host/pcie-xilinx.c | 47 +++++++++++++-----------------------------
- 1 file changed, 14 insertions(+), 33 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 1490bd1..afdfb09 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -397,7 +397,7 @@ static const struct irq_domain_ops intx_domain_ops = {
- static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- {
- 	struct xilinx_pcie_port *port = (struct xilinx_pcie_port *)data;
--	u32 val, mask, status, msi_data;
-+	u32 val, mask, status;
- 
- 	/* Read interrupt decode and mask registers */
- 	val = pcie_read(port, XILINX_PCIE_REG_IDR);
-@@ -437,8 +437,8 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 		xilinx_pcie_clear_err_interrupts(port);
- 	}
- 
--	if (status & XILINX_PCIE_INTR_INTX) {
--		/* INTx interrupt received */
-+	if (status & (XILINX_PCIE_INTR_INTX | XILINX_PCIE_INTR_MSI)) {
-+		/* Interrupt received */
- 		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
- 
- 		/* Check whether interrupt valid */
-@@ -447,41 +447,22 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 			return IRQ_HANDLED;
- 		}
- 
--		if (!(val & XILINX_PCIE_RPIFR1_MSI_INTR)) {
--			/* Clear interrupt FIFO register 1 */
--			pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
--				   XILINX_PCIE_REG_RPIFR1);
--
--			/* Handle INTx Interrupt */
-+		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
-+			irq = pcie_read(port, XILINX_PCIE_REG_RPIFR2) &
-+				XILINX_PCIE_RPIFR2_MSG_DATA;
-+		} else {
- 			val = ((val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
- 				XILINX_PCIE_RPIFR1_INTR_SHIFT) + 1;
--			generic_handle_irq(irq_find_mapping(port->irq_domain,
--							    val));
-+			irq = irq_find_mapping(port->irq_domain, val);
- 		}
--	}
- 
--	if (status & XILINX_PCIE_INTR_MSI) {
--		/* MSI Interrupt */
--		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
-+		/* Clear interrupt FIFO register 1 */
-+		pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
-+			   XILINX_PCIE_REG_RPIFR1);
- 
--		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
--			dev_warn(port->dev, "RP Intr FIFO1 read error\n");
--			return IRQ_HANDLED;
--		}
--
--		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
--			msi_data = pcie_read(port, XILINX_PCIE_REG_RPIFR2) &
--				   XILINX_PCIE_RPIFR2_MSG_DATA;
--
--			/* Clear interrupt FIFO register 1 */
--			pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
--				   XILINX_PCIE_REG_RPIFR1);
--
--			if (IS_ENABLED(CONFIG_PCI_MSI)) {
--				/* Handle MSI Interrupt */
--				generic_handle_irq(msi_data);
--			}
--		}
-+		if (IS_ENABLED(CONFIG_PCI_MSI) ||
-+			!(val & XILINX_PCIE_RPIFR1_MSI_INTR))
-+			generic_handle_irq(irq);
- 	}
- 
- 	if (status & XILINX_PCIE_INTR_SLV_UNSUPP)
+diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+index 7929a1c..3628c38 100644
+--- a/arch/powerpc/kernel/pci-hotplug.c
++++ b/arch/powerpc/kernel/pci-hotplug.c
+@@ -120,7 +120,8 @@ void pci_add_pci_devices(struct pci_bus *bus)
+ 	if (mode == PCI_PROBE_DEVTREE) {
+ 		/* use ofdt-based probe */
+ 		of_rescan_bus(dn, bus);
+-	} else if (mode == PCI_PROBE_NORMAL) {
++	} else if (mode == PCI_PROBE_NORMAL &&
++		   dn->child && PCI_DN(dn->child)) {
+ 		/*
+ 		 * Use legacy probe. In the partial hotplug case, we
+ 		 * probably have grandchildren devices unplugged. So
 -- 
-2.7.0
+2.1.0
+
