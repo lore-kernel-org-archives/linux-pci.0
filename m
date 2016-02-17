@@ -1,39 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from magic.merlins.org ([209.81.13.136]:50283 "EHLO
-	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751571AbcBORSR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Feb 2016 12:18:17 -0500
-Date: Mon, 15 Feb 2016 09:17:57 -0800
-From: Marc MERLIN <marc@merlins.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: 4.4.x kernel (only) gives pcieport 0000:00:1c.4: AER: Corrected error received: id=00e4
-Message-ID: <20160215171757.GL4115@merlins.org>
-References: <20160213215736.GA1002@merlins.org> <20160215171423.GA12641@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160215171423.GA12641@localhost>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:46959 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965188AbcBQDq0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:46:26 -0500
+Received: from localhost
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 17 Feb 2016 13:46:24 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v8 09/45] powerpc/powernv: Simplify pnv_ioda_setup_pe_seg()
+Date: Wed, 17 Feb 2016 14:43:52 +1100
+Message-Id: <1455680668-23298-10-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 15, 2016 at 11:14:23AM -0600, Bjorn Helgaas wrote:
-> 
-> Short story: the AER driver receives the corrected error notification
-> but fails to clear it.  Nobody has stepped up to fix the bug yet.  You
-> can probably work around it by disabling AER completely by booting
-> with "pci=noaer".
+The original implementation of pnv_ioda_setup_pe_seg() configures
+IO and M32 segments by separate logics, which can be merged by
+by caching @segmap, @seg_size, @win in advance. This shouldn't
+cause any behavioural changes.
+
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 62 ++++++++++++++-----------------
+ 1 file changed, 28 insertions(+), 34 deletions(-)
+
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 44cc5f3..fd7d382 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -2940,8 +2940,10 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+ 	struct pnv_phb *phb = hose->private_data;
+ 	struct pci_bus_region region;
+ 	struct resource *res;
+-	int i, index;
+-	int rc;
++	unsigned int segsize;
++	int *segmap, index, i;
++	uint16_t win;
++	int64_t rc;
  
-Thanks, that's good to know. I wanted to make sure I had some idea why
-before turning it off :)
-
-> I attached your dmesg log to
-> https://bugzilla.kernel.org/show_bug.cgi?id=111601
-
-I appreciate it, thanks.
-
-Marc
+ 	/*
+ 	 * NOTE: We only care PCI bus based PE for now. For PCI
+@@ -2958,23 +2960,9 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+ 		if (res->flags & IORESOURCE_IO) {
+ 			region.start = res->start - phb->ioda.io_pci_base;
+ 			region.end   = res->end - phb->ioda.io_pci_base;
+-			index = region.start / phb->ioda.io_segsize;
+-
+-			while (index < phb->ioda.total_pe_num &&
+-			       region.start <= region.end) {
+-				phb->ioda.io_segmap[index] = pe->pe_number;
+-				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+-					pe->pe_number, OPAL_IO_WINDOW_TYPE, 0, index);
+-				if (rc != OPAL_SUCCESS) {
+-					pr_err("%s: OPAL error %d when mapping IO "
+-					       "segment #%d to PE#%d\n",
+-					       __func__, rc, index, pe->pe_number);
+-					break;
+-				}
+-
+-				region.start += phb->ioda.io_segsize;
+-				index++;
+-			}
++			segsize      = phb->ioda.io_segsize;
++			segmap       = phb->ioda.io_segmap;
++			win          = OPAL_IO_WINDOW_TYPE;
+ 		} else if ((res->flags & IORESOURCE_MEM) &&
+ 			   !pnv_pci_is_mem_pref_64(res->flags)) {
+ 			region.start = res->start -
+@@ -2983,23 +2971,29 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+ 			region.end   = res->end -
+ 				       hose->mem_offset[0] -
+ 				       phb->ioda.m32_pci_base;
+-			index = region.start / phb->ioda.m32_segsize;
+-
+-			while (index < phb->ioda.total_pe_num &&
+-			       region.start <= region.end) {
+-				phb->ioda.m32_segmap[index] = pe->pe_number;
+-				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+-					pe->pe_number, OPAL_M32_WINDOW_TYPE, 0, index);
+-				if (rc != OPAL_SUCCESS) {
+-					pr_err("%s: OPAL error %d when mapping M32 "
+-					       "segment#%d to PE#%d",
+-					       __func__, rc, index, pe->pe_number);
+-					break;
+-				}
++			segsize      = phb->ioda.m32_segsize;
++			segmap       = phb->ioda.m32_segmap;
++			win          = OPAL_M32_WINDOW_TYPE;
++		} else {
++			continue;
++		}
+ 
+-				region.start += phb->ioda.m32_segsize;
+-				index++;
++		index = region.start / segsize;
++		while (index < phb->ioda.total_pe_num &&
++		       region.start <= region.end) {
++			segmap[index] = pe->pe_number;
++			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
++					pe->pe_number, win, 0, index);
++			if (rc != OPAL_SUCCESS) {
++				pr_warn("%s: Error %lld mapping (%d) seg#%d to PHB#%d-PE#%d\n",
++					__func__, rc, win, index,
++					pe->phb->hose->global_number,
++					pe->pe_number);
++				break;
+ 			}
++
++			region.start += segsize;
++			index++;
+ 		}
+ 	}
+ }
 -- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/  
+2.1.0
+
