@@ -1,219 +1,178 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from AUSXIPPC110.us.dell.com ([143.166.85.200]:9857 "EHLO
-	ausxippc110.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992508AbcBSToc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Feb 2016 14:44:32 -0500
-From: <Jordan_Hargrave@Dell.com>
-To: <hare@suse.de>, <jharg93@gmail.com>
-CC: <bhelgaas@google.com>, <alexander.duyck@gmail.com>,
-	<linux-pci@vger.kernel.org>, <babu.moger@oracle.com>,
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] Create sysfs entries for PCI VPDI and VPDR tags
-Date: Fri, 19 Feb 2016 19:44:21 +0000
-Message-ID: <1455910852096.10012@Dell.com>
-References: <1455825895-10951-1-git-send-email-Jordan_Hargrave@dell.com>
- <56C6E7D1.4@suse.de>
- <CAC1AzddUqEScGgUqPxa8CgLSH3gynVcj71vMNn6b-Roi2YTRUQ@mail.gmail.com>,<56C72420.4070601@suse.de>
-In-Reply-To: <56C72420.4070601@suse.de>
-Content-Type: text/plain; charset="iso-8859-1"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: [PATCH v2 3/3] Revert "PCI,
+ x86: Implement pcibios_alloc_irq() and pcibios_free_irq()"
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: =?utf-8?b?0J7Qu9C10LM=?= =?utf-8?b?0JzQvtGA0L7Qtw==?=
+	<oleg.moroz@mcc.vniiem.ru>, Joerg Roedel <jroedel@suse.de>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
+	linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Date: Wed, 17 Feb 2016 12:37:21 -0600
+Message-ID: <20160217183721.302.89369.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160217182718.302.10272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160217182718.302.10272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->On 02/19/2016 03:07 PM, Jordan Hargrave wrote:
->> On Fri, Feb 19, 2016 at 4:00 AM, Hannes Reinecke <hare@suse.de> wrote:
->>>
->>> On 02/18/2016 09:04 PM, Jordan Hargrave wrote:
->>>> The VPD-R is a readonly area of the PCI Vital Product Data region.
->>>> There are some standard keywords for serial number, manufacturer,
->>>> and vendor-specific values.  Dell Servers use a vendor-specific
->>>> tag to store number of ports and port mapping of partitioned NICs.
->>>>
->>>> info = VPD-Info string
->>>> PN = Part Number
->>>> SN = Serial Number
->>>> MN = Manufacturer ID
->>>> Vx = Vendor-specific (x=0..9 A..Z)
->>>>
->>>> This creates a sysfs subdirectory in the pci device: vpdattr with
->>>> 'info', 'EC', 'SN', 'V0', etc. files containing the tag values.
->>>>
->>>> Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
->>> Hmm. Can we first get an agreement on the PCI VPD parsing patches
->>> I've posted earlier?
->>> VPD parsing is really tricky, and we should aim on making the
->>> read_vpd function robust enough before we begin putting things into
->>> sysfs.
->>>
->>> Also, I'm not utterly keen on this patchset.
->>> The sysfs space is blown up with tiny pieces of information, which
->>> can easily gotten via lspci, too.
->>>
->>> Also, to my knowledge it's perfectly valid to _write_ to the VPD, in
->>> which case the entire sysfs attribute setup would be invalided.
->>> How do you propose to handle that?
->>>
->>
->> This patch only reads the attributes from VPD-I and VPD-R areas, not
->> the VPD-W (read write) area.
->> The VPD-W data is located after the VPD-I and VPD-R area  So nothing
->> in these attributes should change.
->>
->Ah. Ok.
->
->> The main reason I want this is for replacing biosdevname (ethernet
->> naming) functionality and getting the same functionality into the
->> kernel and systemd.  Systemd doesn't want to do vpd parsing, and
->> reading the vpd can take a very long time on some devices, causing
->> systemd to timeout.  Another disadvantage of it being in userspace
->> is for devices using SR-IOV.  In those devices the vpd only
->> exists for the physfn devices but not the virtual devices.  A
->> userspace program device will have to read the entire VPD for
->> each physical and virtual PCI device.
->>
->> Logic is something like this:
->> if (open("/sys/bus/pci/devices/X/physfn/vpd", O_RDONLY) < 0)
->>    if (open("/sys/bus/pci/devices/X/vpd", O_RDONLY) < 0)
->>      return;
->> }
->> parsevpd(fd);
->>
->> Specifically it is parsing one of the Vx attributes for a 'DCM' or
->> 'DC2' string that contain a mapping from
->> NIC ports and partitions to PCI device
->>
->Well, unfortunately you just gave a very good reason to _not_
->include this into the kernel:
+991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
+pcibios_free_irq()") appeared in v4.3 and helps support IOAPIC hotplug.
 
-The delay isn't a huge amount on any of the devices I've seen. The
-Mellanox cards I have are the slowest.  Here's some timing tests I've done,
-using this patch vs a readvpd utility.  I also compared it with lspci.
+Олег reported that the Elcus-1553 TA1-PCI driver worked in v4.2 but not
+v4.3 and bisected it to 991de2e59090.  Sunjin reported that the RocketRAID
+272x driver worked in v4.2 but not v4.3.  In both cases booting with
+"pci=routirq" is a workaround.
 
-@@@ Read individual Broadcom
-(time ./readvpd 0000:01:00.0 > /dev/null) &>>log
-real	0m0.003s
-user	0m0.002s
-sys	0m0.002s
+I think the problem is that after 991de2e59090, we no longer call
+pcibios_enable_irq() for upstream bridges.  Prior to 991de2e59090, when a
+driver called pci_enable_device(), we recursively called
+pcibios_enable_irq() for upstream bridges via pci_enable_bridge().
 
-@@@ Read individual Mellanox
-(time ./readvpd 0000:04:00.0 > /dev/null) &>>log
-real	0m0.071s
-user	0m0.001s
-sys	0m0.070s
+After 991de2e59090, we call pcibios_enable_irq() from pci_device_probe()
+instead of the pci_enable_device() path, which does *not* call
+pcibios_enable_irq() for upstream bridges.
 
-@@@ Read individual Broadcom using lspci
-(time lspci -vvv -s 0000:01:00.0 > /dev/null) &>>log
-real	0m0.036s
-user	0m0.017s
-sys	0m0.019s
+Revert 991de2e59090 to fix these driver regressions.
 
-@@@ Read individual Mellanox using lspci
-(time lspci -vvv -s 0000:04:00.0 > /dev/null) &>>log
-real	0m1.213s  <--- SLOW!!!!
-user	0m0.012s
-sys	0m1.201s
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=111211
+Fixes: 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
+Reported-by: Олег Мороз <oleg.moroz@mcc.vniiem.ru>
+Reported-by: Sunjin Yang <fan4326@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/include/asm/pci_x86.h |    2 ++
+ arch/x86/pci/common.c          |   20 +++++++++++---------
+ arch/x86/pci/intel_mid_pci.c   |    7 ++-----
+ arch/x86/pci/irq.c             |   15 ++++++++++++++-
+ drivers/acpi/pci_irq.c         |    9 ++++++++-
+ 5 files changed, 37 insertions(+), 16 deletions(-)
 
-@@@ Read each network device with 'real' VPD.  This should be equivalent to the boot time delay, at least for network devices with VPD
-(time for X in /sys/class/net/*/device ; do PF=$(readlink -f $X); SBDF=$(basename $PF) ; if [ -e $PF/vpdattr ] ; then echo ==== $X ; ./readvpd $SBDF > /dev/null; fi ; done) &>> log
-==== /sys/class/net/eno1/device
-==== /sys/class/net/eno2/device
-==== /sys/class/net/eno3/device
-==== /sys/class/net/eno4/device
-==== /sys/class/net/eno5/device
-==== /sys/class/net/eno6/device
-==== /sys/class/net/enp4s0d1/device
-==== /sys/class/net/enp4s0/device
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index 46873fb..d08eacd2 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -93,6 +93,8 @@ extern raw_spinlock_t pci_config_lock;
+ extern int (*pcibios_enable_irq)(struct pci_dev *dev);
+ extern void (*pcibios_disable_irq)(struct pci_dev *dev);
+ 
++extern bool mp_should_keep_irq(struct device *dev);
++
+ struct pci_raw_ops {
+ 	int (*read)(unsigned int domain, unsigned int bus, unsigned int devfn,
+ 						int reg, int len, u32 *val);
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index cb499c5..d34b511 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -711,20 +711,22 @@ int pcibios_add_device(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
+-int pcibios_alloc_irq(struct pci_dev *dev)
++int pcibios_enable_device(struct pci_dev *dev, int mask)
+ {
+-	return pcibios_enable_irq(dev);
+-}
++	int err;
+ 
+-void pcibios_free_irq(struct pci_dev *dev)
+-{
+-	if (pcibios_disable_irq)
+-		pcibios_disable_irq(dev);
++	if ((err = pci_enable_resources(dev, mask)) < 0)
++		return err;
++
++	if (!pci_dev_msi_enabled(dev))
++		return pcibios_enable_irq(dev);
++	return 0;
+ }
+ 
+-int pcibios_enable_device(struct pci_dev *dev, int mask)
++void pcibios_disable_device (struct pci_dev *dev)
+ {
+-	return pci_enable_resources(dev, mask);
++	if (!pci_dev_msi_enabled(dev) && pcibios_disable_irq)
++		pcibios_disable_irq(dev);
+ }
+ 
+ int pci_ext_cfg_avail(void)
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index 8826ff5..8b93e63 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -256,13 +256,10 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 
+ static void intel_mid_pci_irq_disable(struct pci_dev *dev)
+ {
+-	if (dev->irq_managed && dev->irq > 0) {
++	if (!mp_should_keep_irq(&dev->dev) && dev->irq_managed &&
++	    dev->irq > 0) {
+ 		mp_unmap_irq(dev->irq);
+ 		dev->irq_managed = 0;
+-		/*
+-		 * Don't reset dev->irq here, otherwise
+-		 * intel_mid_pci_irq_enable() will fail on next call.
+-		 */
+ 	}
+ }
+ 
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index 72108f0..9bd1154 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1257,9 +1257,22 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
++bool mp_should_keep_irq(struct device *dev)
++{
++	if (dev->power.is_prepared)
++		return true;
++#ifdef CONFIG_PM
++	if (dev->power.runtime_status == RPM_SUSPENDING)
++		return true;
++#endif
++
++	return false;
++}
++
+ static void pirq_disable_irq(struct pci_dev *dev)
+ {
+-	if (io_apic_assign_pci_irqs && dev->irq_managed && dev->irq) {
++	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
++	    dev->irq_managed && dev->irq) {
+ 		mp_unmap_irq(dev->irq);
+ 		dev->irq = 0;
+ 		dev->irq_managed = 0;
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index 9032db7..c8e169e 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -478,6 +478,14 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	if (!pin || !dev->irq_managed || dev->irq <= 0)
+ 		return;
+ 
++	/* Keep IOAPIC pin configuration when suspending */
++	if (dev->dev.power.is_prepared)
++		return;
++#ifdef	CONFIG_PM
++	if (dev->dev.power.runtime_status == RPM_SUSPENDING)
++		return;
++#endif
++
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+ 	if (!entry)
+ 		return;
+@@ -498,6 +506,5 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	if (gsi >= 0) {
+ 		acpi_unregister_gsi(gsi);
+ 		dev->irq_managed = 0;
+-		dev->irq = 0;
+ 	}
+ }
 
-real	0m0.319s
-user	0m0.033s
-sys	0m0.295s
-
-@@@ Read each network device, including SR-IOV
-(time for X in /sys/class/net/*/device ; do PF=$(readlink -f $X); if [ -e $PF/physfn ] ; then PF=$(readlink -f $PF/physfn) ; fi ; SBDF=$(basename $PF) ; if [ -e $PF/vpdattr ] ; then echo ==== $X ; ./readvpd $SBDF > /dev/null; fi ; done) &>> log
-==== /sys/class/net/eno1/device
-==== /sys/class/net/eno2/device
-==== /sys/class/net/eno3/device
-==== /sys/class/net/eno4/device
-==== /sys/class/net/eno5/device
-==== /sys/class/net/eno6/device
-==== /sys/class/net/enp4s0d1/device
-==== /sys/class/net/enp4s0/device
-==== /sys/class/net/enp4s0f1d1/device (SR-IOV)
-==== /sys/class/net/enp4s0f1/device (SR-IOV)
-==== /sys/class/net/enp4s0f2d1/device (SR-IOV)
-==== /sys/class/net/enp4s0f2/device (SR-IOV)
-==== /sys/class/net/enp4s0f3d1/device (SR-IOV)
-==== /sys/class/net/enp4s0f3/device (SR-IOV)
-==== /sys/class/net/enp4s0f4d1/device (SR-IOV)
-==== /sys/class/net/enp4s0f4/device (SR-IOV)
-==== /sys/class/net/enp4s0f5d1/device (SR-IOV)
-==== /sys/class/net/enp4s0f5/device (SR-IOV)
-==== /sys/class/net/enp4s0f6d1/device (SR-IOV)
-==== /sys/class/net/enp4s0f6/device (SR-IOV)
-==== /sys/class/net/enp4s0f7d1/device (SR-IOV)
-==== /sys/class/net/enp4s0f7/device (SR-IOV)
-==== /sys/class/net/enp4s1d1/device (SR-IOV)
-==== /sys/class/net/enp4s1/device (SR-IOV)
-
-real	0m1.449s
-user	0m0.047s
-sys	0m1.412s
-
-This is much slower as it has to re-read/parse the VPD data for each SR-IOV device
-
-By contrast, here is using cached kernel entries (including virtual devices)
-(time for X in /sys/class/net/*/device ; do PF=$(readlink -f $X); if [ -e $PF/physfn ] ; then PF=$(readlink -f $PF/physfn) ; fi ; if [ -e $PF/vpdattr ] ; then echo ==== $X ; cat $PF/vpdattr/* > /dev/null; fi ; done) &> log
-==== /sys/class/net/eno1/device
-==== /sys/class/net/eno2/device
-==== /sys/class/net/eno3/device
-==== /sys/class/net/eno4/device
-==== /sys/class/net/eno5/device
-==== /sys/class/net/eno6/device
-==== /sys/class/net/enp4s0d1/device
-==== /sys/class/net/enp4s0/device
-==== /sys/class/net/enp4s0f1d1/device
-==== /sys/class/net/enp4s0f1/device
-==== /sys/class/net/enp4s0f2d1/device
-==== /sys/class/net/enp4s0f2/device
-==== /sys/class/net/enp4s0f3d1/device
-==== /sys/class/net/enp4s0f3/device
-==== /sys/class/net/enp4s0f4d1/device
-==== /sys/class/net/enp4s0f4/device
-==== /sys/class/net/enp4s0f5d1/device
-==== /sys/class/net/enp4s0f5/device
-==== /sys/class/net/enp4s0f6d1/device
-==== /sys/class/net/enp4s0f6/device
-==== /sys/class/net/enp4s0f7d1/device
-==== /sys/class/net/enp4s0f7/device
-==== /sys/class/net/enp4s1d1/device
-==== /sys/class/net/enp4s1/device
-
-real	0m0.212s
-user	0m0.050s
-sys	0m0.175s
-
->> reading the vpd can take a very long time on some devices, causing
->
->If we were to put your patch in, we would need to read the VPD
->_during each boot_, thereby slowing down the booting process noticeably.
->Plus the additional risk of locking up during boot for misbehaving
->PCI devices. Probably not something we should be doing.
->
->I would rather have it delegated to some helper function/program
->invoked from udev; with my latest patchset we always will have
->well-behaved VPD information so it's easy to just read the vpd
->attribute from sysfs.
->There still might be a lag, but surely not so long as if to timeout
->udev. And if we still encounter these devices I would mark them as
->broken via the blacklist and skip VPD reading for those.
->
->Cheers,
->
->Hannes
->--
->Dr. Hannes Reinecke                Teamlead Storage & Networking
->hare@suse.de                                   +49 911 74053 688
->SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N�rnberg
->GF: F. Imend�rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
->HRB 21284 (AG N�rnberg)
->
