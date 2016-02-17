@@ -1,53 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:57842 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424150AbcBROm2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Feb 2016 09:42:28 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Gregory CLEMENT <gregory.clement@free-electrons.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-next@vger.kernel.org,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH] PCI: mvebu: Restrict build to 32-bit ARM
-Date: Thu, 18 Feb 2016 15:41:45 +0100
-Message-ID: <2551766.4Kx1a2F3t1@wuerfel>
-In-Reply-To: <87egcaqe89.fsf@free-electrons.com>
-References: <1455802330-17565-1-git-send-email-thierry.reding@gmail.com> <5051836.EUN3ennYNm@wuerfel> <87egcaqe89.fsf@free-electrons.com>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:57238 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965104AbcBQETp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 23:19:45 -0500
+Received: from localhost
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <andrew.donnellan@au1.ibm.com>;
+	Wed, 17 Feb 2016 14:19:43 +1000
+Subject: Re: [PATCH v8 03/45] powerpc/pci: Cleanup on struct
+ pci_controller_ops
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-4-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: devicetree@vger.kernel.org, aik@ozlabs.ru,
+	linux-pci@vger.kernel.org, grant.likely@linaro.org,
+	robherring2@gmail.com, bhelgaas@google.com, dja@axtens.net
+From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Message-ID: <56C3F4A2.1010909@au1.ibm.com>
+Date: Wed, 17 Feb 2016 15:18:42 +1100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+In-Reply-To: <1455680668-23298-4-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 18 February 2016 15:34:30 Gregory CLEMENT wrote:
->  On jeu., févr. 18 2016, Arnd Bergmann <arnd@arndb.de> wrote:
-> 
-> > On Thursday 18 February 2016 14:32:10 Thierry Reding wrote:
-> >> From: Thierry Reding <treding@nvidia.com>
-> >> 
-> >> This driver uses PCI glue that is only available on 32-bit ARM. This
-> >> used to work fine as long as ARCH_MVEBU and ARCH_DOVE were exclusively
-> >> 32-bit, but that's changed now, with ARCH_MVEBU also being available
-> >> on 64-bit ARM.
-> >> 
-> >> Signed-off-by: Thierry Reding <treding@nvidia.com>
-> >
-> > Looks fine as a temporary workaround, but I think what we really want to
-> > do here is to remove the dependency, as the new ARM64 platforms are going
-> > to need this driver anyway.
-> 
-> Actually the mvebu ARM64 platform we know about (Armada 3700, 7K and
-> 8K), won't use the same controller. A7K/A8K will use a synopsis IP and
-> Armada 3700 a new Marvell IP.
-> 
-> So for me depending on ARM32 is enough.
+On 17/02/16 14:43, Gavin Shan wrote:
+> Each PHB has one instance of "struct pci_controller_ops", which
+> includes various callbacks called by PCI subsystem. In the definition
+> of this struct, some callbacks have explicit names for its arguments,
+> but the left don't have.
+>
+> This adds all explicit names of the arguments to the callbacks in
+> "struct pci_controller_ops" so that the code looks consistent.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Reviewed-by: Daniel Axtens <dja@axtens.net>
 
-Ah, that makes things much easier indeed.
+Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 
-Does this mean no more MBUS on the 64-bit platforms too?
+-- 
+Andrew Donnellan              Software Engineer, OzLabs
+andrew.donnellan@au1.ibm.com  Australia Development Lab, Canberra
++61 2 6201 8874 (work)        IBM Australia Limited
 
-	Arnd
