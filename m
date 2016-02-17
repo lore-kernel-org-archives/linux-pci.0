@@ -1,132 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40784 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706AbcBOQl7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Feb 2016 11:41:59 -0500
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org
-Cc: linux-pci@vger.kernel.org, ravikanth.nalla@hpe.com,
-	lenb@kernel.org, harish.k@hpe.com, ashwin.reghunandanan@hpe.com,
-	bhelgaas@google.com, rjw@rjwysocki.net,
-	Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org
-Subject: [PATCH] acpi, pci, irq: account for early penalty assignment
-Date: Mon, 15 Feb 2016 11:41:47 -0500
-Message-Id: <1455554508-18174-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V5 07/15] pci, acpi: Provide generic way to assign bus
+ domain number.
+To: Jayachandran Chandrashekaran Nair
+	<jayachandran.chandrashekaran@broadcom.com>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+ <1455630825-27253-8-git-send-email-tn@semihalf.com>
+ <CAKc_7PU+i2AwOVCyW2VNt4BZCWw=KBMAbV8v9DVQ2Ess3WE=kw@mail.gmail.com>
+ <56C47E9A.5010901@semihalf.com>
+ <CAKc_7PUiLQhUuJjR8wcuRm7KJdxBYjb+ZBd_cLTtjNPbEro6wA@mail.gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	Jayachandran Chandrashekaran Nair <jchandra@broadcom.com>,
+	Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <56C48C45.7050203@semihalf.com>
+Date: Wed, 17 Feb 2016 16:05:41 +0100
+MIME-Version: 1.0
+In-Reply-To: <CAKc_7PUiLQhUuJjR8wcuRm7KJdxBYjb+ZBd_cLTtjNPbEro6wA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A crash has been observed when assigning penalty on x86 systems.
+On 17.02.2016 15:21, Jayachandran Chandrashekaran Nair wrote:
+> On Wed, Feb 17, 2016 at 7:37 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
+>> On 17.02.2016 14:44, Jayachandran Chandrashekaran Nair wrote:
+>>>
+>>> Tomasz, Lorenzo,
+>>>
+>>> On Tue, Feb 16, 2016 at 7:23 PM, Tomasz Nowicki<tn@semihalf.com>  wrote:
+>>>>
+>>>>> As we now have valid PCI host bridge device reference we can
+>>>>> introduce code that is going to find its bus domain number using
+>>>>> ACPI _SEG method.
+>>>>>
+>>>>> Note that _SEG method is optional, therefore _SEG absence means
+>>>>> that all PCI buses belong to domain 0.
+>>>>>
+>>>>> While at it, for the sake of code clarity we put ACPI and DT domain
+>>>>> assign methods into the corresponding helpers.
+>>>
+>>> In my patchset, I had a slightly different and I think better approach for
+>>> this without calling the _SEG method again. Please see
+>>> http://www.spinics.net/lists/arm-kernel/msg478167.html
+>>> at the last part ofhttp://www.spinics.net/lists/arm-kernel/msg478169.html
+>>
+>> Relying on NULL parent device to make decision on boot method is really ugly
+>> way. This may hit us again once we want to obtain another firmware specific
+>> info e.g. numa node. IMO we need to fix it this way.
+>
+> I am not relying on NULL there, in the current code parent is NULL
+> in case of ACPI, and the check is needed not to crash (unless that
+> has changed).
 
-It looks like this problem happens on x86 platforms with IOAPIC and an SCI
-interrupt override in the ACPI table with interrupt number greater than
-16. (22 in this example)
+This series passes down valid parent, see [PATCH V5 06/15].
 
-The bug has been introduced by "ACPI, PCI, irq: remove interrupt count
-restriction" commit. The code was using kmalloc to resize the interrupt
-list. In this use case, the set penalty call is coming from early phase
-and the heap is not initialized yet.
+>
+> The main part was the macro acpi_pci_get_segment() and the use
+> of acpi_pci_root_info from sysdata to do this.
 
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000018
-IP: [<ffffffff811e8b9d>] kmem_cache_alloc_trace+0xad/0x1c0
-PGD 0
-Oops: 0000 [#1] SMP
-Modules linked in:
-CPU: 0 PID: 0 Comm: swapper Not tainted 4.5.0-rc2Feb-3_RK #1
-Hardware name: HP Superdome2 16s, BIOS Bundle: 007.006.000 SFW: 033.162.000
-10/30/2015
-[<ffffffff813bc190>] acpi_irq_set_penalty+0x60/0x8e
-[<ffffffff813bc1df>] acpi_irq_add_penalty+0x21/0x26
-[<ffffffff813bc76d>] acpi_penalize_sci_irq+0x25/0x28
-[<ffffffff81b8260d>] acpi_sci_ioapic_setup+0x68/0x78
-[<ffffffff81b830fc>] acpi_boot_init+0x2cc/0x533
-[<ffffffff810677c8>] ? set_pte_vaddr_pud+0x48/0x50
-[<ffffffff81b828cf>] ? acpi_parse_x2apic+0x77/0x77
-[<ffffffff81b82858>] ? dmi_ignore_irq0_timer_override+0x30/0x30
-[<ffffffff81b77c1e>] setup_arch+0xc24/0xce9
-[<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
-[<ffffffff81b6ed94>] start_kernel+0xfc/0x506
-[<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
-[<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
-[<ffffffff81b6e5ee>] x86_64_start_reservations+0x2a/0x2c
-[<ffffffff81b6e73c>] x86_64_start_kernel+0x14c/0x16f
+Since we can obtain related firmware specific data from valid parent 
+device (without defining another accessors), I do not see the point to 
+use sysdata. Let me know your opinion.
 
-Besides from the use case above, there is one more situation where
-set_penalty is being called from the init context like. There is support
-for setting the penalty through kernel command line.
-
-Adding support to be called from early context for limited number of
-interrupts.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/acpi/pci_link.c | 32 ++++++++++++++++++++++++++++----
- 1 file changed, 28 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index fa28635..24b69e1 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -47,6 +47,7 @@ ACPI_MODULE_NAME("pci_link");
- #define ACPI_PCI_LINK_FILE_INFO		"info"
- #define ACPI_PCI_LINK_FILE_STATUS	"state"
- #define ACPI_PCI_LINK_MAX_POSSIBLE	16
-+#define ACPI_PCI_LINK_MAX_EARLY_IRQINFO 1024
- 
- static int acpi_pci_link_add(struct acpi_device *device,
- 			     const struct acpi_device_id *not_used);
-@@ -470,9 +471,13 @@ struct irq_penalty_info {
- 	int irq;
- 	int penalty;
- 	struct list_head node;
-+	bool early;
- };
- 
- static LIST_HEAD(acpi_irq_penalty_list);
-+static int early_init_done;
-+static struct irq_penalty_info early_irq_infos[ACPI_PCI_LINK_MAX_EARLY_IRQINFO];
-+static int early_irq_info_counter;
- 
- static int acpi_irq_get_penalty(int irq)
- {
-@@ -507,10 +512,20 @@ static int acpi_irq_set_penalty(int irq, int new_penalty)
- 		}
- 	}
- 
--	/* nope, let's allocate a slot for this IRQ */
--	irq_info = kzalloc(sizeof(*irq_info), GFP_KERNEL);
--	if (!irq_info)
--		return -ENOMEM;
-+	if (!early_init_done) {
-+		if (early_irq_info_counter < ARRAY_SIZE(early_irq_infos)) {
-+			irq_info = &early_irq_infos[early_irq_info_counter];
-+			irq_info->early = true;
-+			early_irq_info_counter++;
-+		} else {
-+			return -ENOMEM;
-+		}
-+	} else {
-+		/* nope, let's allocate a slot for this IRQ */
-+		irq_info = kzalloc(sizeof(*irq_info), GFP_KERNEL);
-+		if (!irq_info)
-+			return -ENOMEM;
-+	}
- 
- 	irq_info->irq = irq;
- 	irq_info->penalty = new_penalty;
-@@ -968,3 +983,12 @@ void __init acpi_pci_link_init(void)
- 	register_syscore_ops(&irqrouter_syscore_ops);
- 	acpi_scan_add_handler(&pci_link_handler);
- }
-+
-+
-+static int acpi_pci_link_subsys_init(void)
-+{
-+	early_init_done = true;
-+	return 0;
-+}
-+
-+subsys_initcall(acpi_pci_link_subsys_init)
--- 
-1.8.2.1
-
+Tomasz
