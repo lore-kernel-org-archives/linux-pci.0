@@ -1,67 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60442 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932212AbcBAVNB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 1 Feb 2016 16:13:01 -0500
-Date: Mon, 1 Feb 2016 15:12:58 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFC] ARM/ARM64 PCI_PROBE_ONLY platforms
-Message-ID: <20160201211258.GD4861@localhost>
-References: <20160120160427.GD13437@red-moon>
- <569FB210.9090605@codeaurora.org>
- <20160129230645.GG12965@localhost>
- <56AC0065.5030909@codeaurora.org>
- <20160130133027.GA16394@localhost>
- <20160201152507.GA30869@red-moon>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160201152507.GA30869@red-moon>
+Received: from e23smtp05.au.ibm.com ([202.81.31.147]:59800 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965226AbcBQDqV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:46:21 -0500
+Received: from localhost
+	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 17 Feb 2016 13:46:19 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v8 27/45] powerpc/pci: Export pci_add_device_node_info()
+Date: Wed, 17 Feb 2016 14:44:10 +1100
+Message-Id: <1455680668-23298-28-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 01, 2016 at 03:25:07PM +0000, Lorenzo Pieralisi wrote:
-> On Sat, Jan 30, 2016 at 07:30:27AM -0600, Bjorn Helgaas wrote:
-> 
-> [...]
-> 
-> > > Most non-UEFI firmwares I have seen on ARM rely on device specific
-> > > driver like synopsys etc. to do the device initialization and ask
-> > > kernel to do the enumeration.
-> > > 
-> > > ACPI systems on the other hand handle the resource assignment before
-> > > the OS starts.
-> > 
-> > My guess is that this is more of a tradition than anything actually
-> > required by the spec.
-> 
-> I share your opinion, and that tradition on ARM64 should be built
-> on top of existing DT based systems where the bootloader assigns
-> *NOTHING* in 90% of designs.
-> 
-> That's why I want to see resource claiming carried out by default
-> on ACPI on ARM64, this would foster the tradition :), hopefully.
-> 
-> > The bottom line is that Linux can't rely on much consistency across
-> > the universe of architectures and firmwares.  I think the only thing
-> > that really makes sense for us to do is:
-> > 
-> >   - Read whatever assignments the firmware may have made
-> >   - Keep them unchanged if they seem sensible
-> 
-> Here I take "sensible" as "it can be successfully claimed" - ie the resource
-> is allocated in a valid way, though it may not be optimal (eg bridge window
-> apertures).
+This renames update_dn_pci_info() to pci_add_device_node_info()
+with corresponding adjustment on the parameter type and exports it.
+The function is used to create pdn (struct pci_dn) for the indicated
+device node. Another function add_pdn(), almost wrapper of
+pci_add_device_node_info(), to be used in traverse_pci_devices(). No
+logical changes introduced.
 
-Yes.  But even if platforms assign resources in a way they can be
-successfully claimed, I don't think platforms should rely on that
-assignment being unchanged.  For example, even if the boot-time
-configuration is valid, the kernel may need to move things around to
-deal with hotplug.  I know we don't really do that today, but I think
-we should be able to do it in principle.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci-bridge.h  |  3 ++-
+ arch/powerpc/kernel/pci_dn.c           | 30 +++++++++++++++++++-----------
+ arch/powerpc/platforms/pseries/setup.c |  2 +-
+ 3 files changed, 22 insertions(+), 13 deletions(-)
 
-Bjorn
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index 03f4ee7..72a9d4e 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -238,7 +238,8 @@ extern struct pci_dn *pci_get_pdn_by_devfn(struct pci_bus *bus,
+ extern struct pci_dn *pci_get_pdn(struct pci_dev *pdev);
+ extern struct pci_dn *add_dev_pci_data(struct pci_dev *pdev);
+ extern void remove_dev_pci_data(struct pci_dev *pdev);
+-extern void *update_dn_pci_info(struct device_node *dn, void *data);
++extern struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
++					       struct device_node *dn);
+ 
+ static inline int pci_device_from_OF_node(struct device_node *np,
+ 					  u8 *bus, u8 *devfn)
+diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+index 38102cb..0a249ff 100644
+--- a/arch/powerpc/kernel/pci_dn.c
++++ b/arch/powerpc/kernel/pci_dn.c
+@@ -282,13 +282,9 @@ void remove_dev_pci_data(struct pci_dev *pdev)
+ #endif /* CONFIG_PCI_IOV */
+ }
+ 
+-/*
+- * Traverse_func that inits the PCI fields of the device node.
+- * NOTE: this *must* be done before read/write config to the device.
+- */
+-void *update_dn_pci_info(struct device_node *dn, void *data)
++struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
++					struct device_node *dn)
+ {
+-	struct pci_controller *phb = data;
+ 	const __be32 *type = of_get_property(dn, "ibm,pci-config-space-type", NULL);
+ 	const __be32 *regs;
+ 	struct device_node *parent;
+@@ -299,7 +295,7 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
+ 		return NULL;
+ 	dn->data = pdn;
+ 	pdn->node = dn;
+-	pdn->phb = phb;
++	pdn->phb = hose;
+ #ifdef CONFIG_PPC_POWERNV
+ 	pdn->pe_number = IODA_INVALID_PE;
+ #endif
+@@ -331,8 +327,9 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
+ 	if (pdn->parent)
+ 		list_add_tail(&pdn->list, &pdn->parent->child_list);
+ 
+-	return NULL;
++	return pdn;
+ }
++EXPORT_SYMBOL_GPL(pci_add_device_node_info);
+ 
+ /*
+  * Traverse a device tree stopping each PCI device in the tree.
+@@ -432,6 +429,18 @@ void *traverse_pci_dn(struct pci_dn *root,
+ 	return NULL;
+ }
+ 
++static void *add_pdn(struct device_node *dn, void *data)
++{
++	struct pci_controller *hose = data;
++	struct pci_dn *pdn;
++
++	pdn = pci_add_device_node_info(hose, dn);
++	if (!pdn)
++		return ERR_PTR(-ENOMEM);
++
++	return NULL;
++}
++
+ /** 
+  * pci_devs_phb_init_dynamic - setup pci devices under this PHB
+  * phb: pci-to-host bridge (top-level bridge connecting to cpu)
+@@ -446,8 +455,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
+ 	struct pci_dn *pdn;
+ 
+ 	/* PHB nodes themselves must not match */
+-	update_dn_pci_info(dn, phb);
+-	pdn = dn->data;
++	pdn = pci_add_device_node_info(phb, dn);
+ 	if (pdn) {
+ 		pdn->devfn = pdn->busno = -1;
+ 		pdn->vendor_id = pdn->device_id = pdn->class_code = 0;
+@@ -456,7 +464,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
+ 	}
+ 
+ 	/* Update dn->phb ptrs for new phb and children devices */
+-	traverse_pci_devices(dn, update_dn_pci_info, phb);
++	traverse_pci_devices(dn, add_pdn, phb);
+ }
+ 
+ /** 
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index 36df46e..6f8d020 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -265,7 +265,7 @@ static int pci_dn_reconfig_notifier(struct notifier_block *nb, unsigned long act
+ 		pdn = parent ? PCI_DN(parent) : NULL;
+ 		if (pdn) {
+ 			/* Create pdn and EEH device */
+-			update_dn_pci_info(np, pdn->phb);
++			pci_add_device_node_info(pdn->phb, np);
+ 			eeh_dev_init(PCI_DN(np), pdn->phb);
+ 		}
+ 
+-- 
+2.1.0
+
