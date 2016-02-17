@@ -1,85 +1,147 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0049.outbound.protection.outlook.com ([104.47.38.49]:37996
-	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932190AbcBZHtv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 26 Feb 2016 02:49:51 -0500
-Subject: Re: [PATCH v3 6/6] PCI: xilinx: Allow build on MIPS platforms
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Paul Burton <paul.burton@imgtec.com>
-References: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
- <1454602213-967-7-git-send-email-paul.burton@imgtec.com>
- <CAL_JsqLRMiJ-0j_PrXSKqf6MrRfyqbDGaiaiEn4rAoFaCNgtKQ@mail.gmail.com>
- <20160204175325.GB31145@NP-P-BURTON> <20160225154326.GE8120@localhost>
-CC: Rob Herring <robh@kernel.org>,
-	Linux-MIPS <linux-mips@linux-mips.org>,
-	Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>,
-	"Ley Foon Tan" <lftan@altera.com>, Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	"Scott Branden" <sbranden@broadcom.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Duc Dang <dhdang@apm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Ray Jui <rjui@broadcom.com>, Hauke Mehrtens <hauke@hauke-m.de>
-From: Michal Simek <michal.simek@xilinx.com>
-Message-ID: <56D00390.7030600@xilinx.com>
-Date: Fri, 26 Feb 2016 08:49:36 +0100
-MIME-Version: 1.0
-In-Reply-To: <20160225154326.GE8120@localhost>
-Content-Type: text/plain; charset="windows-1252"
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:60691 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965176AbcBQDqB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:46:01 -0500
+Received: from localhost
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 17 Feb 2016 13:45:59 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Jyri Sarha <jsarha@ti.com>
+Subject: [PATCH v8 43/45] drivers/of: Specify parent node in of_fdt_unflatten_tree()
+Date: Wed, 17 Feb 2016 14:44:26 +1100
+Message-Id: <1455680668-23298-44-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 25.2.2016 16:43, Bjorn Helgaas wrote:
-> On Thu, Feb 04, 2016 at 05:53:25PM +0000, Paul Burton wrote:
->> On Thu, Feb 04, 2016 at 11:46:28AM -0600, Rob Herring wrote:
->>> On Thu, Feb 4, 2016 at 10:10 AM, Paul Burton <paul.burton@imgtec.com> wrote:
->>>> Allow the xilinx-pcie driver to be built on MIPS platforms. This will be
->>>> used on the MIPS Boston board.
->>>>
->>>> Signed-off-by: Paul Burton <paul.burton@imgtec.com>
->>>>
->>>> ---
->>>>
->>>> Changes in v3:
->>>> - Split out from Boston patchset.
->>>>
->>>> Changes in v2: None
->>>>
->>>>  drivers/pci/host/Kconfig | 2 +-
->>>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
->>>> index 75a6054..0aee193 100644
->>>> --- a/drivers/pci/host/Kconfig
->>>> +++ b/drivers/pci/host/Kconfig
->>>> @@ -81,7 +81,7 @@ config PCI_KEYSTONE
->>>>
->>>>  config PCIE_XILINX
->>>>         bool "Xilinx AXI PCIe host bridge support"
->>>> -       depends on ARCH_ZYNQ
->>>> +       depends on ARCH_ZYNQ || MIPS
->>>
->>> Why don't you just remove the dependency? Then it gets better build coverage.
->>>
->>> Rob
->>
->> That seems like a call best made by whomever has to maintain this - if
->> that's the preferred way to go I'm fine with it.
-> 
-> I'm in favor of removing the dependency if possible.  I guess Michal
-> would be the person to ack that.
+This adds one more argument to of_fdt_unflatten_tree() to specify
+the parent node of the FDT blob that is going to be unflattened.
+In the result, the function can be used to unflatten FDT blob that
+represents device sub-tree in PowerNV PCI hotplug driver.
 
-Not a problem to remove dependency on archs. There is pending support
-for Microblaze anyway.
+Cc: Jyri Sarha <jsarha@ti.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c |  2 +-
+ drivers/of/fdt.c                             | 14 ++++++++++----
+ drivers/of/unittest.c                        |  2 +-
+ include/linux/of_fdt.h                       |  1 +
+ 4 files changed, 13 insertions(+), 6 deletions(-)
 
-Thanks,
-Michal
+diff --git a/drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c b/drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c
+index 106679b..f9c79da 100644
+--- a/drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c
++++ b/drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c
+@@ -157,7 +157,7 @@ struct device_node * __init tilcdc_get_overlay(struct kfree_table *kft)
+ 	if (!overlay_data || kfree_table_add(kft, overlay_data))
+ 		return NULL;
+ 
+-	of_fdt_unflatten_tree(overlay_data, &overlay);
++	of_fdt_unflatten_tree(overlay_data, NULL, &overlay);
+ 	if (!overlay) {
+ 		pr_warn("%s: Unfattening overlay tree failed\n", __func__);
+ 		return NULL;
+diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+index 3fc9a30..16a1ba5 100644
+--- a/drivers/of/fdt.c
++++ b/drivers/of/fdt.c
+@@ -450,11 +450,13 @@ static int unflatten_dt_nodes(const void *blob,
+  * pointers of the nodes so the normal device-tree walking functions
+  * can be used.
+  * @blob: The blob to expand
++ * @dad: Parent device node
+  * @mynodes: The device_node tree created by the call
+  * @dt_alloc: An allocator that provides a virtual address to memory
+  * for the resulting tree
+  */
+ static void __unflatten_device_tree(const void *blob,
++			     struct device_node *dad,
+ 			     struct device_node **mynodes,
+ 			     void * (*dt_alloc)(u64 size, u64 align))
+ {
+@@ -479,7 +481,7 @@ static void __unflatten_device_tree(const void *blob,
+ 	}
+ 
+ 	/* First pass, scan for size */
+-	size = unflatten_dt_nodes(blob, NULL, NULL, NULL);
++	size = unflatten_dt_nodes(blob, NULL, dad, NULL);
+ 	if (size < 0)
+ 		return;
+ 
+@@ -495,7 +497,7 @@ static void __unflatten_device_tree(const void *blob,
+ 	pr_debug("  unflattening %p...\n", mem);
+ 
+ 	/* Second pass, do actual unflattening */
+-	unflatten_dt_nodes(blob, mem, NULL, mynodes);
++	unflatten_dt_nodes(blob, mem, dad, mynodes);
+ 	if (be32_to_cpup(mem + size) != 0xdeadbeef)
+ 		pr_warning("End of tree marker overwritten: %08x\n",
+ 			   be32_to_cpup(mem + size));
+@@ -512,6 +514,9 @@ static DEFINE_MUTEX(of_fdt_unflatten_mutex);
+ 
+ /**
+  * of_fdt_unflatten_tree - create tree of device_nodes from flat blob
++ * @blob: Flat device tree blob
++ * @dad: Parent device node
++ * @mynodes: The device tree created by the call
+  *
+  * unflattens the device-tree passed by the firmware, creating the
+  * tree of struct device_node. It also fills the "name" and "type"
+@@ -519,10 +524,11 @@ static DEFINE_MUTEX(of_fdt_unflatten_mutex);
+  * can be used.
+  */
+ void of_fdt_unflatten_tree(const unsigned long *blob,
++			struct device_node *dad,
+ 			struct device_node **mynodes)
+ {
+ 	mutex_lock(&of_fdt_unflatten_mutex);
+-	__unflatten_device_tree(blob, mynodes, &kernel_tree_alloc);
++	__unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
+ 	mutex_unlock(&of_fdt_unflatten_mutex);
+ }
+ EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
+@@ -1180,7 +1186,7 @@ bool __init early_init_dt_scan(void *params)
+  */
+ void __init unflatten_device_tree(void)
+ {
+-	__unflatten_device_tree(initial_boot_params, &of_root,
++	__unflatten_device_tree(initial_boot_params, NULL, &of_root,
+ 				early_init_dt_alloc_memory_arch);
+ 
+ 	/* Get pointer to "/chosen" and "/aliases" nodes for use everywhere */
+diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
+index 979b6e4..ec36f93 100644
+--- a/drivers/of/unittest.c
++++ b/drivers/of/unittest.c
+@@ -921,7 +921,7 @@ static int __init unittest_data_add(void)
+ 			"not running tests\n", __func__);
+ 		return -ENOMEM;
+ 	}
+-	of_fdt_unflatten_tree(unittest_data, &unittest_data_node);
++	of_fdt_unflatten_tree(unittest_data, NULL, &unittest_data_node);
+ 	if (!unittest_data_node) {
+ 		pr_warn("%s: No tree to attach; not running tests\n", __func__);
+ 		return -ENODATA;
+diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
+index df9ef38..3644960 100644
+--- a/include/linux/of_fdt.h
++++ b/include/linux/of_fdt.h
+@@ -38,6 +38,7 @@ extern bool of_fdt_is_big_endian(const void *blob,
+ extern int of_fdt_match(const void *blob, unsigned long node,
+ 			const char *const *compat);
+ extern void of_fdt_unflatten_tree(const unsigned long *blob,
++			       struct device_node *dad,
+ 			       struct device_node **mynodes);
+ 
+ /* TBD: Temporary export of fdt globals - remove when code fully merged */
+-- 
+2.1.0
 
