@@ -1,77 +1,130 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
-Subject: [PATCH v6 0/3] Add host controller drivers for Cavium ThunderX PCI
-Date: Mon,  8 Feb 2016 15:55:28 -0800
-Message-Id: <1454975731-13618-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 17 Feb 2016 18:39:30 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	jchandra@broadcom.com, Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+Subject: Re: [PATCH V5 09/15] acpi, mcfg: Add default PCI config accessors
+ implementation and initial support for related quirks.
+Message-ID: <20160217183930.GC11132@red-moon>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+ <1455630825-27253-10-git-send-email-tn@semihalf.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1455630825-27253-10-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+On Tue, Feb 16, 2016 at 02:53:39PM +0100, Tomasz Nowicki wrote:
+> We use generic accessors from access.c by default. However, we already
+> know platforms that need special handling while accessing to PCI config
+> space. These platforms will need different accessors set matched against
+> platform ID, domain, bus touple. Therefore we are going to add (in future)
+> DECLARE_ACPI_MCFG_FIXUP which will register platform specific custom
+> accessors. For now, we let pci_mcfg_get_ops to take acpi_pci_root structure
+> as an arguments and left some space for quirk matching algorithm.
 
-Some Cavium ThunderX processors require quirky access methods for the
-config space of the PCIe bridge.
+You should not describe the future (because you do not know if/when
+that will be implemented), you should describe what the patch does
+in its current form.
 
-There are now three patches:
+"This patch implements MCFG based PCI bus operations through MCFG
+map function and generic PCI accessors".
 
-1) Refactor code in pci-host-generic so that it can more easily be
-   used by other drivers.  This splits the driver for CAM and ECAM
-   access methods to a separate file from the common host driver code.
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Tested-by: Duc Dang <dhdang@apm.com>
+> Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+> Tested-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/acpi/pci_mcfg.c  | 30 ++++++++++++++++++++++++++++++
+>  include/linux/pci-acpi.h | 12 ++++++++++++
+>  2 files changed, 42 insertions(+)
+> 
+> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> index 3282f2a..0062257 100644
+> --- a/drivers/acpi/pci_mcfg.c
+> +++ b/drivers/acpi/pci_mcfg.c
+> @@ -41,6 +41,36 @@ int __weak raw_pci_write(unsigned int domain, unsigned int bus,
+>  	return PCIBIOS_DEVICE_NOT_FOUND;
+>  }
+>  
+> +void __iomem *
+> +pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn, int offset)
+> +{
+> +	struct pci_mmcfg_region *cfg;
+> +
+> +	cfg = pci_mmconfig_lookup(pci_domain_nr(bus), bus->number);
+> +	if (cfg && cfg->virt)
+> +		return cfg->virt +
+> +			(PCI_MMCFG_BUS_OFFSET(bus->number) | (devfn << 12)) +
+> +			offset;
+> +	return NULL;
+> +}
+> +
+> +/* Default generic PCI config accessors */
+> +static struct pci_ops default_pci_mcfg_ops = {
+> +	.map_bus = pci_mcfg_dev_base,
+> +	.read = pci_generic_config_read,
+> +	.write = pci_generic_config_write,
+> +};
 
-2) Add the ThunderX PCIe driver to external PCIe buses, which
-   leverages the code in pci-host-generic
+Nit: s/default_pci_mcfg_ops/pci_mcfg_ops
 
-3) Add ThunderX PCI driver for internel SoC buses used on early
-   ThunderX chip revisions.
+> +
+> +struct pci_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
+> +{
+> +	/*
+> +	 * TODO: Match against platform specific quirks and return
+> +	 * corresponding PCI config space accessor set.
+> +	 */
 
-Changes from v5: Added Acked-by Rob Herring for the device tree
-binding in 3/3.  Fixed typo and split large functions as suggested by
-Bjorn Helgaas.
+Remove this comment, see above.
 
-Changes from v4: Added patch 3/3.  Stylistic changes to 2/3 suggested
-by Bjorn Helgaas.  When expanding config write width to 32-bits, mask
-out unintened writes to W1C bits, also suggested by Bjorn Helgaas.
+> +
+> +	return &default_pci_mcfg_ops;
 
-Changes from v3: Add some Acked-by, rebased to v4.5.0-rc1
+See above.
 
-Changes from v2: Improve device tree binding example as noted by Rob
-Herring.  Rename pcie-thunder-pem.* to pci-thunder-pem.* for better
-consistency.  Update MAINTAINERS to reflect the changes.
+> +}
+> +
+>  static void list_add_sorted(struct pci_mmcfg_region *new)
+>  {
+>  	struct pci_mmcfg_region *cfg;
+> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+> index b4f87ba9..3dc6a8c 100644
+> --- a/include/linux/pci-acpi.h
+> +++ b/include/linux/pci-acpi.h
+> @@ -141,6 +141,18 @@ extern struct list_head pci_mmcfg_list;
+>  #define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
+>  #define PCI_MMCFG_OFFSET(bus, devfn)   ((bus) << 20 | (devfn) << 12)
+>  
+> +#ifdef	CONFIG_PCI_MMCONFIG
+> +extern struct pci_ops *pci_mcfg_get_ops(struct acpi_pci_root *root);
+> +extern void __iomem *pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn,
+> +				       int offset);
+> +#else
+> +static inline struct pci_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
+> +{ return NULL; }
+> +static inline void __iomem *pci_mcfg_dev_base(struct pci_bus *bus,
+> +					      unsigned int devfn, int offset)
+> +{ return NULL; }
+> +#endif
+> +
+>  #else	/* CONFIG_ACPI */
+>  static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
+>  static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
 
-Changes from v1: Split CAM and ECAM code from common driver code as
-suggested by Arnd Bergmann.  Fix spelling errors in
-pcie-thunder-pem.txt
+I think it can even be squashed, anyway:
 
-David Daney (3):
-  PCI: generic: Refactor code to enable reuse by other drivers.
-  pci, pci-thunder-pem: Add PCIe host driver for ThunderX processors.
-  pci, pci-thunder-ecam: Add driver for ThunderX-pass1 on-chip devices
-
- .../devicetree/bindings/pci/pci-thunder-ecam.txt   |  30 ++
- .../devicetree/bindings/pci/pci-thunder-pem.txt    |  43 +++
- MAINTAINERS                                        |   9 +
- drivers/pci/host/Kconfig                           |  18 ++
- drivers/pci/host/Makefile                          |   3 +
- drivers/pci/host/pci-host-common.c                 | 194 +++++++++++
- drivers/pci/host/pci-host-common.h                 |  47 +++
- drivers/pci/host/pci-host-generic.c                | 181 +----------
- drivers/pci/host/pci-thunder-ecam.c                | 358 +++++++++++++++++++++
- drivers/pci/host/pci-thunder-pem.c                 | 347 ++++++++++++++++++++
- 10 files changed, 1053 insertions(+), 177 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
- create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-pem.txt
- create mode 100644 drivers/pci/host/pci-host-common.c
- create mode 100644 drivers/pci/host/pci-host-common.h
- create mode 100644 drivers/pci/host/pci-thunder-ecam.c
- create mode 100644 drivers/pci/host/pci-thunder-pem.c
-
--- 
-1.8.3.1
+Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
