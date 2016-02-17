@@ -1,80 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v3] pci: Wait for up to 1000ms after FLR reset
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: allen.m.kay@intel.com, linux-kernel@vger.kernel.org,
-	kvm@vger.kernel.org
-Date: Mon, 22 Feb 2016 13:05:48 -0700
-Message-ID: <20160222200351.4709.85363.stgit@gimli.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:34934 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933685AbcBQDph (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:45:37 -0500
+Received: from localhost
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 17 Feb 2016 13:45:35 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v8 03/45] powerpc/pci: Cleanup on struct pci_controller_ops
+Date: Wed, 17 Feb 2016 14:43:46 +1100
+Message-Id: <1455680668-23298-4-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some devices take longer than the spec indicates to return from FLR
-reset, a notable case of this is Intel integrated graphics (IGD),
-which can often take an additional 300ms powering down an attached
-LCD panel as part of the FLR.  Allow devices up to 1000ms, testing
-every 100ms whether the second dword of config space is read as -1.
+Each PHB has one instance of "struct pci_controller_ops", which
+includes various callbacks called by PCI subsystem. In the definition
+of this struct, some callbacks have explicit names for its arguments,
+but the left don't have.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+This adds all explicit names of the arguments to the callbacks in
+"struct pci_controller_ops" so that the code looks consistent.
+
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Reviewed-by: Daniel Axtens <dja@axtens.net>
 ---
-v3: Read 2nd dword since SR-IOV VFs don't implement the 1st dword
-v2: Change loop to incorporate initial 100ms delay, replace delay in
-    callee functions, add comment.
+ arch/powerpc/include/asm/pci-bridge.h | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
- drivers/pci/pci.c |   27 +++++++++++++++++++++++++--
- 1 file changed, 25 insertions(+), 2 deletions(-)
+diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+index b688d04..4dd6ef4 100644
+--- a/arch/powerpc/include/asm/pci-bridge.h
++++ b/arch/powerpc/include/asm/pci-bridge.h
+@@ -21,18 +21,19 @@ struct pci_controller_ops {
+ 	void		(*dma_dev_setup)(struct pci_dev *dev);
+ 	void		(*dma_bus_setup)(struct pci_bus *bus);
+ 
+-	int		(*probe_mode)(struct pci_bus *);
++	int		(*probe_mode)(struct pci_bus *bus);
+ 
+ 	/* Called when pci_enable_device() is called. Returns true to
+ 	 * allow assignment/enabling of the device. */
+-	bool		(*enable_device_hook)(struct pci_dev *);
++	bool		(*enable_device_hook)(struct pci_dev *dev);
+ 
+-	void		(*disable_device)(struct pci_dev *);
++	void		(*disable_device)(struct pci_dev *dev);
+ 
+-	void		(*release_device)(struct pci_dev *);
++	void		(*release_device)(struct pci_dev *dev);
+ 
+ 	/* Called during PCI resource reassignment */
+-	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long type);
++	resource_size_t (*window_alignment)(struct pci_bus *bus,
++					    unsigned long type);
+ 	void		(*setup_bridge)(struct pci_bus *bus,
+ 					unsigned long type);
+ 	void		(*reset_secondary_bus)(struct pci_dev *dev);
+@@ -46,7 +47,7 @@ struct pci_controller_ops {
+ 	int             (*dma_set_mask)(struct pci_dev *dev, u64 dma_mask);
+ 	u64		(*dma_get_required_mask)(struct pci_dev *dev);
+ 
+-	void		(*shutdown)(struct pci_controller *);
++	void		(*shutdown)(struct pci_controller *hose);
+ };
+ 
+ /*
+-- 
+2.1.0
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 602eb42..365ac76 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3414,6 +3414,29 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
- }
- EXPORT_SYMBOL(pci_wait_for_pending_transaction);
- 
-+/*
-+ * We should only need to wait 100ms after FLR, but some devices take longer.
-+ * Wait for up to 1000ms for config space to return something other than -1.
-+ * Intel IGD requires this when an LCD panel is attached.  We read the 2nd
-+ * dword because VFs don't implement the 1st dword.
-+ */
-+static void pci_flr_wait(struct pci_dev *dev)
-+{
-+	int i = 0;
-+	u32 id;
-+
-+	do {
-+		msleep(100);
-+		pci_read_config_dword(dev, PCI_COMMAND, &id);
-+	} while (i++ < 10 && id == ~0);
-+
-+	if (id == ~0)
-+		dev_warn(&dev->dev, "Failed to return from FLR\n");
-+	else if (i > 1)
-+		dev_info(&dev->dev, "Required additional "
-+			 "%dms to return from FLR\n", (i - 1) * 100);
-+}
-+
- static int pcie_flr(struct pci_dev *dev, int probe)
- {
- 	u32 cap;
-@@ -3429,7 +3452,7 @@ static int pcie_flr(struct pci_dev *dev, int probe)
- 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing function level reset anyway\n");
- 
- 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
--	msleep(100);
-+	pci_flr_wait(dev);
- 	return 0;
- }
- 
-@@ -3459,7 +3482,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
- 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing AF function level reset anyway\n");
- 
- 	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
--	msleep(100);
-+	pci_flr_wait(dev);
- 	return 0;
- }
- 
