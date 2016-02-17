@@ -1,89 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:52041 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752851AbcBEOvq (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2016 09:51:46 -0500
-Subject: Re: [PATCH v8 2/2] add new platform driver for PCI RC
-To: Arnd Bergmann <arnd@arndb.de>, Joao Pinto <Joao.Pinto@synopsys.com>
-References: <cover.1454600622.git.jpinto@synopsys.com>
- <20160204234334.GH7031@localhost> <56B47D0D.5030204@synopsys.com>
- <4427983.0G6mVNKP5W@wuerfel>
-CC: Bjorn Helgaas <helgaas@kernel.org>, <Vineet.Gupta1@synopsys.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-snps-arc@lists.infradead.org>,
-	<CARLOS.PALMINHA@synopsys.com>, <Alexey.Brodkin@synopsys.com>,
-	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <56B4B6FB.1040500@synopsys.com>
-Date: Fri, 5 Feb 2016 14:51:39 +0000
-MIME-Version: 1.0
-In-Reply-To: <4427983.0G6mVNKP5W@wuerfel>
-Content-Type: text/plain; charset="windows-1252"
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:45595 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965181AbcBQDqB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:46:01 -0500
+Received: from localhost
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 17 Feb 2016 13:46:00 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v8 35/45] powerpc/powernv: Fundamental reset in pnv_pci_reset_secondary_bus()
+Date: Wed, 17 Feb 2016 14:44:18 +1100
+Message-Id: <1455680668-23298-36-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2/5/2016 2:39 PM, Arnd Bergmann wrote:
-> On Friday 05 February 2016 10:44:29 Joao Pinto wrote:
->> Hi,
->>
->> On 2/4/2016 11:43 PM, Bjorn Helgaas wrote:
->>>> What do you think?
->>>
->>> I don't think the "dw" part is relevant (none of the other
->>> DesignWare-based drivers includes it in the driver or file name).
->>>
->>> How do people typically refer to this board?
->>>
->>> I really like "synopsys" because it fits the pattern of being
->>> recognizable and pronounceable like "altera", "designware", "qcom",
->>> "keystone", "layerscape", "tegra", etc.  But I can't tell whether it's
->>> too generic.
->>>
->>> "ipk" or "haps" would be fine with me.  I think it's OK if it doesn't
->>> cover 100% of the possible systems.
->>
->> I think we should follow the iproc example: pcie-iproc-platform.c
->> In this case we would have pcie-designware-platform.c
->> I think this would be the best name because the driver is a non soc specific
->> designware platform driver.
->>
->> Arnd and Bjorn agree on this name?
-> 
-> Sorry, I did not realize that your submission was for the generic dw-pcie
-> implementation rather than a particular product integrating it.
-> 
+In pnv_pci_reset_secondary_bus(), we should issue fundamental reset
+if any one subordinate device of the specified bus is requesting that.
+Otherwise, the device might not come up after the reset.
 
-It is a driver that is useful for PCIe RC prototyping and to be a reference
-platform driver for DesignWare PCIe RC, I don't know if merging some of the
-driver's code into pcie-designware is really necessary depends on the usefulness
-of it. I would suggest that bigger step to be done in a 2nd stage since I will
-be around to maintain what's necessary. Agree?
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
 
-I made a patch that is applicable to Bjorn's host/pcie-synopsys that tries to
-match your suggestions and Bjorn's. Could you please comment check it?
-
-> I think in this case, we should do this completely differently:
-> 
-> How about putting all the new code into drivers/pci/host/pcie-designware.c
-> as functions that can be used by the other drivers in absence of a chip
-> specific handler?
-> 
-> Instead of providing a new instance of struct pcie_host_ops, maybe add
-> it as a default implementation in dw_pcie_link_up() and dw_pcie_host_init()
-> for drivers that don't provide their own. "hisi_pcie_host_ops" currently
-> provides no host_init() callback function, so you will have to change
-> the hisi frontend to a provide nop-function.
-> 
-> For all other drivers, check if they can be changed to use your generic
-> implementation and remove their private callbacks if possible.
-> 
-> I think the MSI implementation should be split out into a separate file
-> though, as not everyone uses this.
-> 
-> 	Arnd
-> 
-
-Joao
-
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 593b8dc..c7454ba 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -866,9 +866,28 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+ 	return 0;
+ }
+ 
++static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
++{
++	int *freset = data;
++
++	/*
++	 * Stop the iteration immediately if there has any one
++	 * PCI device requesting fundamental reset.
++	 */
++	*freset |= pdev->needs_freset;
++	return *freset;
++}
++
+ void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
+ {
+-	pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
++	int option, freset = 0;
++
++	if (dev->subordinate)
++		pci_walk_bus(dev->subordinate,
++			     pnv_pci_dev_reset_type, &freset);
++
++	option = freset ? EEH_RESET_FUNDAMENTAL : EEH_RESET_HOT;
++	pnv_eeh_bridge_reset(dev, option);
+ 	pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
+ }
+ 
+-- 
+2.1.0
 
