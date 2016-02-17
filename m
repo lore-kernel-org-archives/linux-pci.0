@@ -1,271 +1,351 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51998 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422674AbcBZQGY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 26 Feb 2016 11:06:24 -0500
-Date: Fri, 26 Feb 2016 10:06:19 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, mark.rutland@arm.com,
-	Alexey.Brodkin@synopsys.com, arnd@arndb.de, pawel.moll@arm.com,
-	ijc+devicetree@hellion.org.uk, linux-pci@vger.kernel.org,
-	Vineet.Gupta1@synopsys.com,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	linux-kernel@vger.kernel.org, CARLOS.PALMINHA@synopsys.com,
-	robh+dt@kernel.org, Murali Karicheri <m-karicheri2@ti.com>,
-	galak@codeaurora.org, Jingoo Han <jingoohan1@gmail.com>,
-	linux-snps-arc@lists.infradead.org
-Subject: Re: [PATCH v10 2/4] PCI: designware: Add generic
- dw_pcie_wait_for_link()
-Message-ID: <20160226160619.GA9512@localhost>
-References: <20160225172957.2103.8326.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160225173736.2103.59017.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <56CFBBAF.4060203@synopsys.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56CFBBAF.4060203@synopsys.com>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:46512 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965106AbcBQDp6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:45:58 -0500
+Received: from localhost
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 17 Feb 2016 13:45:56 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v8 19/45] powerpc/powernv: Use PE instead of number during setup and release
+Date: Wed, 17 Feb 2016 14:44:02 +1100
+Message-Id: <1455680668-23298-20-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 26, 2016 at 10:42:55AM +0800, Joao Pinto wrote:
-> Hi! This patch seems OK also.
-> I did not received the 3/4 and 4/4 patches.
+In current implementation, the PEs that are allocated or picked
+from the reserved list are identified by PE number. The PE instance
+has to be picked according to the PE number eventually. We have
+same issue when PE is released.
 
-Huh.  I do see them in the list archives:
+For pnv_ioda_pick_m64_pe() and pnv_ioda_alloc_pe(), this returns
+PE instance so that pnv_ioda_setup_bus_PE() can use the allocated
+or reserved PE instance directly. Also, pnv_ioda_setup_bus_PE()
+returns the reserved/allocated PE instance to be used in subsequent
+patches. On the other hand, pnv_ioda_free_pe() uses PE instance
+(not number) as its argument. No logical changes introduced.
 
-  http://marc.info/?l=linux-pci&m=145642190422528&w=2
-  http://marc.info/?l=linux-pci&m=145642190522529&w=2
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 104 +++++++++++++++++-------------
+ arch/powerpc/platforms/powernv/pci.h      |   2 +-
+ 2 files changed, 59 insertions(+), 47 deletions(-)
 
-> On 2/26/2016 1:37 AM, Bjorn Helgaas wrote:
-> > From: Joao Pinto <Joao.Pinto@synopsys.com>
-> > 
-> > Several DesignWare-based drivers (dra7xx, exynos, imx6 and spear13xx) had
-> > similar loops waiting for the link to come up.
-> > 
-> > FIXME Doesn't update keystone
-> > FIXME Doesn't update qcom
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 7800897..f182ca7 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -119,6 +119,14 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
+ 		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
+ }
+ 
++static struct pnv_ioda_pe *pnv_ioda_init_pe(struct pnv_phb *phb, int pe_no)
++{
++	phb->ioda.pe_array[pe_no].phb = phb;
++	phb->ioda.pe_array[pe_no].pe_number = pe_no;
++
++	return &phb->ioda.pe_array[pe_no];
++}
++
+ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+ {
+ 	if (!(pe_no >= 0 && pe_no < phb->ioda.total_pe_num)) {
+@@ -131,11 +139,10 @@ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+ 		pr_debug("%s: PE %d was reserved on PHB#%x\n",
+ 			 __func__, pe_no, phb->hose->global_number);
+ 
+-	phb->ioda.pe_array[pe_no].phb = phb;
+-	phb->ioda.pe_array[pe_no].pe_number = pe_no;
++	pnv_ioda_init_pe(phb, pe_no);
+ }
+ 
+-static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
++static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
+ {
+ 	unsigned long pe;
+ 
+@@ -143,20 +150,20 @@ static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
+ 		pe = find_next_zero_bit(phb->ioda.pe_alloc,
+ 					phb->ioda.total_pe_num, 0);
+ 		if (pe >= phb->ioda.total_pe_num)
+-			return IODA_INVALID_PE;
++			return NULL;
+ 	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
+ 
+-	phb->ioda.pe_array[pe].phb = phb;
+-	phb->ioda.pe_array[pe].pe_number = pe;
+-	return pe;
++	return pnv_ioda_init_pe(phb, pe);
+ }
+ 
+-static void pnv_ioda_free_pe(struct pnv_phb *phb, int pe)
++static void pnv_ioda_free_pe(struct pnv_ioda_pe *pe)
+ {
+-	WARN_ON(phb->ioda.pe_array[pe].pdev);
++	struct pnv_phb *phb = pe->phb;
+ 
+-	memset(&phb->ioda.pe_array[pe], 0, sizeof(struct pnv_ioda_pe));
+-	clear_bit(pe, phb->ioda.pe_alloc);
++	WARN_ON(pe->pdev);
++
++	memset(pe, 0, sizeof(struct pnv_ioda_pe));
++	clear_bit(pe->pe_number, phb->ioda.pe_alloc);
+ }
+ 
+ /* The default M64 BAR is shared by all PEs */
+@@ -316,7 +323,7 @@ static void pnv_ioda_reserve_m64_pe(struct pci_bus *bus,
+ 	}
+ }
+ 
+-static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
++static struct pnv_ioda_pe *pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+ {
+ 	struct pci_controller *hose = pci_bus_to_host(bus);
+ 	struct pnv_phb *phb = hose->private_data;
+@@ -326,7 +333,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+ 
+ 	/* Root bus shouldn't use M64 */
+ 	if (pci_is_root_bus(bus))
+-		return IODA_INVALID_PE;
++		return NULL;
+ 
+ 	/* Allocate bitmap */
+ 	size = _ALIGN_UP(phb->ioda.total_pe_num / 8, sizeof(unsigned long));
+@@ -334,7 +341,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+ 	if (!pe_alloc) {
+ 		pr_warn("%s: Out of memory !\n",
+ 			__func__);
+-		return IODA_INVALID_PE;
++		return NULL;
+ 	}
+ 
+ 	/* Figure out reserved PE numbers by the PE */
+@@ -347,7 +354,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+ 	 */
+ 	if (bitmap_empty(pe_alloc, phb->ioda.total_pe_num)) {
+ 		kfree(pe_alloc);
+-		return IODA_INVALID_PE;
++		return NULL;
+ 	}
+ 
+ 	/*
+@@ -393,7 +400,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+ 	}
+ 
+ 	kfree(pe_alloc);
+-	return master_pe->pe_number;
++	return master_pe;
+ }
+ 
+ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+@@ -959,7 +966,6 @@ static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
+ 	struct pnv_phb *phb = hose->private_data;
+ 	struct pci_dn *pdn = pci_get_pdn(dev);
+ 	struct pnv_ioda_pe *pe;
+-	int pe_num;
+ 
+ 	if (!pdn) {
+ 		pr_err("%s: Device tree node not associated properly\n",
+@@ -969,8 +975,8 @@ static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
+ 	if (pdn->pe_number != IODA_INVALID_PE)
+ 		return NULL;
+ 
+-	pe_num = pnv_ioda_alloc_pe(phb);
+-	if (pe_num == IODA_INVALID_PE) {
++	pe = pnv_ioda_alloc_pe(phb);
++	if (!pe) {
+ 		pr_warning("%s: Not enough PE# available, disabling device\n",
+ 			   pci_name(dev));
+ 		return NULL;
+@@ -983,10 +989,9 @@ static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
+ 	 *
+ 	 * At some point we want to remove the PDN completely anyways
+ 	 */
+-	pe = &phb->ioda.pe_array[pe_num];
+ 	pci_dev_get(dev);
+ 	pdn->pcidev = dev;
+-	pdn->pe_number = pe_num;
++	pdn->pe_number = pe->pe_number;
+ 	pe->flags = PNV_IODA_PE_DEV;
+ 	pe->pdev = dev;
+ 	pe->pbus = NULL;
+@@ -997,8 +1002,7 @@ static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
+ 
+ 	if (pnv_ioda_configure_pe(phb, pe)) {
+ 		/* XXX What do we do here ? */
+-		if (pe_num)
+-			pnv_ioda_free_pe(phb, pe_num);
++		pnv_ioda_free_pe(pe);
+ 		pdn->pe_number = IODA_INVALID_PE;
+ 		pe->pdev = NULL;
+ 		pci_dev_put(dev);
+@@ -1033,28 +1037,26 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+  * subordinate PCI devices and buses. The second type of PE is normally
+  * orgiriated by PCIe-to-PCI bridge or PLX switch downstream ports.
+  */
+-static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
++static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+ {
+ 	struct pci_controller *hose = pci_bus_to_host(bus);
+ 	struct pnv_phb *phb = hose->private_data;
+-	struct pnv_ioda_pe *pe;
+-	int pe_num = IODA_INVALID_PE;
++	struct pnv_ioda_pe *pe = NULL;
+ 
+ 	/* Check if PE is determined by M64 */
+ 	if (phb->pick_m64_pe)
+-		pe_num = phb->pick_m64_pe(bus, all);
++		pe = phb->pick_m64_pe(bus, all);
+ 
+ 	/* The PE number isn't pinned by M64 */
+-	if (pe_num == IODA_INVALID_PE)
+-		pe_num = pnv_ioda_alloc_pe(phb);
++	if (!pe)
++		pe = pnv_ioda_alloc_pe(phb);
+ 
+-	if (pe_num == IODA_INVALID_PE) {
++	if (!pe) {
+ 		pr_warning("%s: Not enough PE# available for PCI bus %04x:%02x\n",
+ 			__func__, pci_domain_nr(bus), bus->number);
+-		return;
++		return NULL;
+ 	}
+ 
+-	pe = &phb->ioda.pe_array[pe_num];
+ 	pe->flags |= (all ? PNV_IODA_PE_BUS_ALL : PNV_IODA_PE_BUS);
+ 	pe->pbus = bus;
+ 	pe->pdev = NULL;
+@@ -1063,17 +1065,16 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+ 
+ 	if (all)
+ 		pe_info(pe, "Secondary bus %d..%d associated with PE#%d\n",
+-			bus->busn_res.start, bus->busn_res.end, pe_num);
++			bus->busn_res.start, bus->busn_res.end, pe->pe_number);
+ 	else
+ 		pe_info(pe, "Secondary bus %d associated with PE#%d\n",
+-			bus->busn_res.start, pe_num);
++			bus->busn_res.start, pe->pe_number);
+ 
+ 	if (pnv_ioda_configure_pe(phb, pe)) {
+ 		/* XXX What do we do here ? */
+-		if (pe_num)
+-			pnv_ioda_free_pe(phb, pe_num);
++		pnv_ioda_free_pe(pe);
+ 		pe->pbus = NULL;
+-		return;
++		return NULL;
+ 	}
+ 
+ 	/* Associate it with all child devices */
+@@ -1081,6 +1082,8 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+ 
+ 	/* Put PE to the list */
+ 	list_add_tail(&pe->list, &phb->ioda.pe_list);
++
++	return pe;
+ }
+ 
+ static struct pnv_ioda_pe *pnv_ioda_setup_npu_PE(struct pci_dev *npu_pdev)
+@@ -1392,7 +1395,7 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
+ 
+ 		pnv_ioda_deconfigure_pe(phb, pe);
+ 
+-		pnv_ioda_free_pe(phb, pe->pe_number);
++		pnv_ioda_free_pe(pe);
+ 	}
+ }
+ 
+@@ -1401,6 +1404,7 @@ void pnv_pci_sriov_disable(struct pci_dev *pdev)
+ 	struct pci_bus        *bus;
+ 	struct pci_controller *hose;
+ 	struct pnv_phb        *phb;
++	struct pnv_ioda_pe    *pe;
+ 	struct pci_dn         *pdn;
+ 	struct pci_sriov      *iov;
+ 	u16                    num_vfs, i;
+@@ -1425,8 +1429,11 @@ void pnv_pci_sriov_disable(struct pci_dev *pdev)
+ 		/* Release PE numbers */
+ 		if (pdn->m64_single_mode) {
+ 			for (i = 0; i < num_vfs; i++) {
+-				if (pdn->pe_num_map[i] != IODA_INVALID_PE)
+-					pnv_ioda_free_pe(phb, pdn->pe_num_map[i]);
++				if (pdn->pe_num_map[i] == IODA_INVALID_PE)
++					continue;
++
++				pe = &phb->ioda.pe_array[pdn->pe_num_map[i]];
++				pnv_ioda_free_pe(pe);
+ 			}
+ 		} else
+ 			bitmap_clear(phb->ioda.pe_alloc, *pdn->pe_num_map, num_vfs);
+@@ -1479,8 +1486,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+ 
+ 		if (pnv_ioda_configure_pe(phb, pe)) {
+ 			/* XXX What do we do here ? */
+-			if (pe_num)
+-				pnv_ioda_free_pe(phb, pe_num);
++			pnv_ioda_free_pe(pe);
+ 			pe->pdev = NULL;
+ 			continue;
+ 		}
+@@ -1499,6 +1505,7 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+ 	struct pci_bus        *bus;
+ 	struct pci_controller *hose;
+ 	struct pnv_phb        *phb;
++	struct pnv_ioda_pe    *pe;
+ 	struct pci_dn         *pdn;
+ 	int                    ret;
+ 	u16                    i;
+@@ -1541,11 +1548,13 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+ 		/* Calculate available PE for required VFs */
+ 		if (pdn->m64_single_mode) {
+ 			for (i = 0; i < num_vfs; i++) {
+-				pdn->pe_num_map[i] = pnv_ioda_alloc_pe(phb);
+-				if (pdn->pe_num_map[i] == IODA_INVALID_PE) {
++				pe = pnv_ioda_alloc_pe(phb);
++				if (!pe) {
+ 					ret = -EBUSY;
+ 					goto m64_failed;
+ 				}
++
++				pdn->pe_num_map[i] = pe->pe_number;
+ 			}
+ 		} else {
+ 			mutex_lock(&phb->ioda.pe_alloc_mutex);
+@@ -1590,8 +1599,11 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+ m64_failed:
+ 	if (pdn->m64_single_mode) {
+ 		for (i = 0; i < num_vfs; i++) {
+-			if (pdn->pe_num_map[i] != IODA_INVALID_PE)
+-				pnv_ioda_free_pe(phb, pdn->pe_num_map[i]);
++			if (pdn->pe_num_map[i] == IODA_INVALID_PE)
++				continue;
++
++			pe = &phb->ioda.pe_array[pdn->pe_num_map[i]];
++			pnv_ioda_free_pe(pe);
+ 		}
+ 	} else
+ 		bitmap_clear(phb->ioda.pe_alloc, *pdn->pe_num_map, num_vfs);
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 928cf81..ef9924a 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -109,7 +109,7 @@ struct pnv_phb {
+ 	int (*init_m64)(struct pnv_phb *phb);
+ 	void (*reserve_m64_pe)(struct pci_bus *bus,
+ 			       unsigned long *pe_bitmap, bool all);
+-	int (*pick_m64_pe)(struct pci_bus *bus, bool all);
++	struct pnv_ioda_pe *(*pick_m64_pe)(struct pci_bus *bus, bool all);
+ 	int (*get_pe_state)(struct pnv_phb *phb, int pe_no);
+ 	void (*freeze_pe)(struct pnv_phb *phb, int pe_no);
+ 	int (*unfreeze_pe)(struct pnv_phb *phb, int pe_no, int opt);
+-- 
+2.1.0
 
-I do want to resolve these keystone and qcom questions, though.
-
-If I don't hear any responses, I'm going to go ahead and change them
-myself and ask forgiveness later.  I should have just done that to
-begin with :)
-
-> > Add a generic dw_pcie_wait_for_link() for use by all these drivers so the
-> > waiting is done consistently, e.g., always using usleep_range() rather than
-> > mdelay() and using similar timeouts and retry counts.
-> > 
-> > [bhelgaas: changelog, split into its own patch]
-> > Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > ---
-> >  drivers/pci/host/pci-dra7xx.c      |   11 +++--------
-> >  drivers/pci/host/pci-exynos.c      |   11 ++---------
-> >  drivers/pci/host/pci-imx6.c        |   11 +++--------
-> >  drivers/pci/host/pcie-designware.c |   19 +++++++++++++++++++
-> >  drivers/pci/host/pcie-designware.h |    6 ++++++
-> >  drivers/pci/host/pcie-spear13xx.c  |   12 ++----------
-> >  6 files changed, 35 insertions(+), 35 deletions(-)
-> > 
-> > diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-> > index 923607b..8d3d350 100644
-> > --- a/drivers/pci/host/pci-dra7xx.c
-> > +++ b/drivers/pci/host/pci-dra7xx.c
-> > @@ -10,7 +10,6 @@
-> >   * published by the Free Software Foundation.
-> >   */
-> >  
-> > -#include <linux/delay.h>
-> >  #include <linux/err.h>
-> >  #include <linux/interrupt.h>
-> >  #include <linux/irq.h>
-> > @@ -108,7 +107,6 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
-> >  {
-> >  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
-> >  	u32 reg;
-> > -	unsigned int retries;
-> >  
-> >  	if (dw_pcie_link_up(pp)) {
-> >  		dev_err(pp->dev, "link is already up\n");
-> > @@ -119,13 +117,10 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
-> >  	reg |= LTSSM_EN;
-> >  	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
-> >  
-> > -	for (retries = 0; retries < 1000; retries++) {
-> > -		if (dw_pcie_link_up(pp))
-> > -			return 0;
-> > -		usleep_range(10, 20);
-> > -	}
-> > +	/* check if the link is up or not */
-> > +	if (!dw_pcie_wait_for_link(pp))
-> > +		return 0;
-> >  
-> > -	dev_err(pp->dev, "link is not up\n");
-> >  	return -EINVAL;
-> >  }
-> >  
-> > diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-> > index d997d22..41f3248 100644
-> > --- a/drivers/pci/host/pci-exynos.c
-> > +++ b/drivers/pci/host/pci-exynos.c
-> > @@ -318,7 +318,6 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
-> >  {
-> >  	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
-> >  	u32 val;
-> > -	unsigned int retries;
-> >  
-> >  	if (dw_pcie_link_up(pp)) {
-> >  		dev_err(pp->dev, "Link already up\n");
-> > @@ -357,13 +356,8 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
-> >  			  PCIE_APP_LTSSM_ENABLE);
-> >  
-> >  	/* check if the link is up or not */
-> > -	for (retries = 0; retries < 10; retries++) {
-> > -		if (dw_pcie_link_up(pp)) {
-> > -			dev_info(pp->dev, "Link up\n");
-> > -			return 0;
-> > -		}
-> > -		mdelay(100);
-> > -	}
-> > +	if (!dw_pcie_wait_for_link(pp))
-> > +		return 0;
-> >  
-> >  	while (exynos_phy_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED) == 0) {
-> >  		val = exynos_blk_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED);
-> > @@ -372,7 +366,6 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
-> >  	/* power off phy */
-> >  	exynos_pcie_power_off_phy(pp);
-> >  
-> > -	dev_err(pp->dev, "PCIe Link Fail\n");
-> >  	return -EINVAL;
-> >  }
-> >  
-> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> > index fe60096..c53da17 100644
-> > --- a/drivers/pci/host/pci-imx6.c
-> > +++ b/drivers/pci/host/pci-imx6.c
-> > @@ -330,15 +330,10 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
-> >  
-> >  static int imx6_pcie_wait_for_link(struct pcie_port *pp)
-> >  {
-> > -	unsigned int retries;
-> > -
-> > -	for (retries = 0; retries < 200; retries++) {
-> > -		if (dw_pcie_link_up(pp))
-> > -			return 0;
-> > -		usleep_range(100, 1000);
-> > -	}
-> > +	/* check if the link is up or not */
-> > +	if (!dw_pcie_wait_for_link(pp))
-> > +		return 0;
-> >  
-> > -	dev_err(pp->dev, "phy link never came up\n");
-> >  	dev_dbg(pp->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
-> >  		readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
-> >  		readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
-> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> > index 2171682..4fff2d2 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -22,6 +22,7 @@
-> >  #include <linux/pci_regs.h>
-> >  #include <linux/platform_device.h>
-> >  #include <linux/types.h>
-> > +#include <linux/delay.h>
-> >  
-> >  #include "pcie-designware.h"
-> >  
-> > @@ -380,6 +381,24 @@ static struct msi_controller dw_pcie_msi_chip = {
-> >  	.teardown_irq = dw_msi_teardown_irq,
-> >  };
-> >  
-> > +int dw_pcie_wait_for_link(struct pcie_port *pp)
-> > +{
-> > +	int retries;
-> > +
-> > +	/* check if the link is up or not */
-> > +	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
-> > +		if (dw_pcie_link_up(pp)) {
-> > +			dev_info(pp->dev, "link up\n");
-> > +			return 0;
-> > +		}
-> > +		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
-> > +	}
-> > +
-> > +	dev_err(pp->dev, "phy link never came up\n");
-> > +
-> > +	return -EINVAL;
-> > +}
-> > +
-> >  int dw_pcie_link_up(struct pcie_port *pp)
-> >  {
-> >  	if (pp->ops->link_up)
-> > diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> > index 2356d29..f437f9b 100644
-> > --- a/drivers/pci/host/pcie-designware.h
-> > +++ b/drivers/pci/host/pcie-designware.h
-> > @@ -22,6 +22,11 @@
-> >  #define MAX_MSI_IRQS			32
-> >  #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
-> >  
-> > +/* Parameters for the waiting for link up routine */
-> > +#define LINK_WAIT_MAX_RETRIES		10
-> > +#define LINK_WAIT_USLEEP_MIN		90000
-> > +#define LINK_WAIT_USLEEP_MAX		100000
-> > +
-> >  struct pcie_port {
-> >  	struct device		*dev;
-> >  	u8			root_bus_nr;
-> > @@ -76,6 +81,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val);
-> >  int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val);
-> >  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
-> >  void dw_pcie_msi_init(struct pcie_port *pp);
-> > +int dw_pcie_wait_for_link(struct pcie_port *pp);
-> >  int dw_pcie_link_up(struct pcie_port *pp);
-> >  void dw_pcie_setup_rc(struct pcie_port *pp);
-> >  int dw_pcie_host_init(struct pcie_port *pp);
-> > diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
-> > index a6cd823..0e5a2f1 100644
-> > --- a/drivers/pci/host/pcie-spear13xx.c
-> > +++ b/drivers/pci/host/pcie-spear13xx.c
-> > @@ -13,7 +13,6 @@
-> >   */
-> >  
-> >  #include <linux/clk.h>
-> > -#include <linux/delay.h>
-> >  #include <linux/interrupt.h>
-> >  #include <linux/kernel.h>
-> >  #include <linux/module.h>
-> > @@ -149,7 +148,6 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
-> >  	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
-> >  	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
-> >  	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
-> > -	unsigned int retries;
-> >  
-> >  	if (dw_pcie_link_up(pp)) {
-> >  		dev_err(pp->dev, "link already up\n");
-> > @@ -201,15 +199,9 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
-> >  			&app_reg->app_ctrl_0);
-> >  
-> >  	/* check if the link is up or not */
-> > -	for (retries = 0; retries < 10; retries++) {
-> > -		if (dw_pcie_link_up(pp)) {
-> > -			dev_info(pp->dev, "link up\n");
-> > -			return 0;
-> > -		}
-> > -		mdelay(100);
-> > -	}
-> > +	if (!dw_pcie_wait_for_link(pp))
-> > +		return 0;
-> >  
-> > -	dev_err(pp->dev, "link Fail\n");
-> >  	return -EINVAL;
-> >  }
-> >  
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
