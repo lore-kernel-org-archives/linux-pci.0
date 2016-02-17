@@ -1,40 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:34482 "EHLO
-	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933034AbcBYOsM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Feb 2016 09:48:12 -0500
-Received: by mail-wm0-f67.google.com with SMTP id b205so3898522wmb.1
-        for <linux-pci@vger.kernel.org>; Thu, 25 Feb 2016 06:48:12 -0800 (PST)
-From: Christoph Fritz <chf.fritz@googlemail.com>
-To: Richard Zhu <hongxing.zhu@nxp.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Fabio Estevam <fabio.estevam@nxp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lee Jones <lee.jones@linaro.org>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v3 0/2] Add PCIe driver support for imx6sx
-Date: Thu, 25 Feb 2016 15:47:47 +0100
-Message-Id: <1456411669-4699-1-git-send-email-chf.fritz@googlemail.com>
+Received: from mail-yw0-f181.google.com ([209.85.161.181]:32941 "EHLO
+	mail-yw0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423688AbcBQPAO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Feb 2016 10:00:14 -0500
+MIME-Version: 1.0
+In-Reply-To: <1455680668-23298-43-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com> <1455680668-23298-43-git-send-email-gwshan@linux.vnet.ibm.com>
+From: Rob Herring <robherring2@gmail.com>
+Date: Wed, 17 Feb 2016 08:59:53 -0600
+Message-ID: <CAL_JsqJydgmkU=SGcr-0JHsYG8wXk5GEQCQXY7y+FHH2A0LZkw@mail.gmail.com>
+Subject: Re: [PATCH v8 42/45] drivers/of: Rename unflatten_dt_node()
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
+	dja@axtens.net, Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v3:
- * adapt devicetree bindings documentation fsl,imx6q-pcie.txt
-v2:
- * leave out regulator handling from driver, will be done later
-   in PM subsystem 
- * use BIT() macro for MFD
+On Tue, Feb 16, 2016 at 9:44 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+> This renames unflatten_dt_node() to unflatten_dt_nodes() as it
+> populates multiple device nodes from FDT blob. No logical changes
+> introduced.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>  drivers/of/fdt.c | 14 +++++++-------
+>  1 file changed, 7 insertions(+), 7 deletions(-)
 
-Christoph Fritz (2):
-  MFD: imx6sx: Add PCIe register definitions for iomuxc gpr
-  PCI: imx6: add initial imx6sx support
+Acked-by: Rob Herring <robh@kernel.org>
 
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |   6 +-
- drivers/pci/host/pci-imx6.c                        | 130 ++++++++++++++-------
- include/linux/mfd/syscon/imx6q-iomuxc-gpr.h        |   5 +
- 3 files changed, 101 insertions(+), 40 deletions(-)
+I'm happy to take patches 40-42 for 4.6 if the rest of the series
+doesn't go in given they fix a separate problem. I just need to know
+soon (or at least they need to go into -next soon).
 
--- 
-2.1.4
-
+Rob
