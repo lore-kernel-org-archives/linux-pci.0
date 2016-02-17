@@ -1,123 +1,124 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 3 Feb 2016 12:05:14 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Vineet.Gupta1@synopsys.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
-	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
-Subject: Re: [PATCH v7 2/2] add new platform driver for PCI RC
-Message-ID: <20160203180514.GA10879@localhost>
-References: <cover.1454349430.git.jpinto@synopsys.com>
- <10b29adcdb0a31eb8f8071b271da267e44ad8a04.1454349430.git.jpinto@synopsys.com>
- <8223655.W63T0XOVm1@wuerfel>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8223655.W63T0XOVm1@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:35193 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965225AbcBQDqV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:46:21 -0500
+Received: from localhost
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 17 Feb 2016 13:46:18 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v8 22/45] powerpc/powernv/ioda1: Support releasing IODA1 TCE table
+Date: Wed, 17 Feb 2016 14:44:05 +1100
+Message-Id: <1455680668-23298-23-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joao & Arnd,
+pnv_pci_ioda_table_free_pages() can be reused to release the IODA1
+TCE table when releasing IODA1 PE in subsequent patches.
 
-On Tue, Feb 02, 2016 at 09:25:25PM +0100, Arnd Bergmann wrote:
-> On Monday 01 February 2016 18:07:45 Joao Pinto wrote:
-> > This patch adds a new driver that will be the reference platform driver
-> > for all PCI RC IP Protoyping Kits based on ARC SDP.
-> > This patch is composed by:
-> > 
-> > -MAINTAINERS file was updated to include the new driver
-> > -Documentation/devicetree/bindings/pci was updated to include the new
-> > driver documentation
-> > -New driver called pcie-synopsys
-> > 
-> > Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> 
-> I must have completely missed all the earlier submissions and just happened
-> to see this one now that it was merged.
-> 
-> I have a couple of comments, maybe you can send a follow up patch to address
-> them:
+This renames the following functions to support releasing IODA1 TCE
+table: pnv_pci_ioda2_table_free_pages() to pnv_pci_ioda_table_free_pages(),
+pnv_pci_ioda2_table_do_free_pages() to pnv_pci_ioda_table_do_free_pages().
+No logical changes introduced.
 
-These seem pretty easy to address, so I pulled these patches out of
-for-linus temporarily while we fix them.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-Joao, you can just fix the mdelay() in your driver; don't worry about 
-fixing other drivers with the same problem or consolidating them.
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index d360607..077f9db 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -51,7 +51,7 @@
+ #define POWERNV_IOMMU_DEFAULT_LEVELS	1
+ #define POWERNV_IOMMU_MAX_LEVELS	5
+ 
+-static void pnv_pci_ioda2_table_free_pages(struct iommu_table *tbl);
++static void pnv_pci_ioda_table_free_pages(struct iommu_table *tbl);
+ 
+ static void pe_level_printk(const struct pnv_ioda_pe *pe, const char *level,
+ 			    const char *fmt, ...)
+@@ -1352,7 +1352,7 @@ static void pnv_pci_ioda2_release_dma_pe(struct pci_dev *dev, struct pnv_ioda_pe
+ 		iommu_group_put(pe->table_group.group);
+ 		BUG_ON(pe->table_group.group);
+ 	}
+-	pnv_pci_ioda2_table_free_pages(tbl);
++	pnv_pci_ioda_table_free_pages(tbl);
+ 	iommu_free_table(tbl, of_node_full_name(dev->dev.of_node));
+ }
+ 
+@@ -1946,7 +1946,7 @@ static void pnv_ioda2_tce_free(struct iommu_table *tbl, long index,
+ 
+ static void pnv_ioda2_table_free(struct iommu_table *tbl)
+ {
+-	pnv_pci_ioda2_table_free_pages(tbl);
++	pnv_pci_ioda_table_free_pages(tbl);
+ 	iommu_free_table(tbl, "pnv");
+ }
+ 
+@@ -2448,7 +2448,7 @@ static __be64 *pnv_pci_ioda2_table_do_alloc_pages(int nid, unsigned shift,
+ 	return addr;
+ }
+ 
+-static void pnv_pci_ioda2_table_do_free_pages(__be64 *addr,
++static void pnv_pci_ioda_table_do_free_pages(__be64 *addr,
+ 		unsigned long size, unsigned level);
+ 
+ static long pnv_pci_ioda2_table_alloc_pages(int nid, __u64 bus_offset,
+@@ -2487,7 +2487,7 @@ static long pnv_pci_ioda2_table_alloc_pages(int nid, __u64 bus_offset,
+ 	 * release partially allocated table.
+ 	 */
+ 	if (offset < tce_table_size) {
+-		pnv_pci_ioda2_table_do_free_pages(addr,
++		pnv_pci_ioda_table_do_free_pages(addr,
+ 				1ULL << (level_shift - 3), levels - 1);
+ 		return -ENOMEM;
+ 	}
+@@ -2505,7 +2505,7 @@ static long pnv_pci_ioda2_table_alloc_pages(int nid, __u64 bus_offset,
+ 	return 0;
+ }
+ 
+-static void pnv_pci_ioda2_table_do_free_pages(__be64 *addr,
++static void pnv_pci_ioda_table_do_free_pages(__be64 *addr,
+ 		unsigned long size, unsigned level)
+ {
+ 	const unsigned long addr_ul = (unsigned long) addr &
+@@ -2521,7 +2521,7 @@ static void pnv_pci_ioda2_table_do_free_pages(__be64 *addr,
+ 			if (!(hpa & (TCE_PCI_READ | TCE_PCI_WRITE)))
+ 				continue;
+ 
+-			pnv_pci_ioda2_table_do_free_pages(__va(hpa), size,
++			pnv_pci_ioda_table_do_free_pages(__va(hpa), size,
+ 					level - 1);
+ 		}
+ 	}
+@@ -2529,7 +2529,7 @@ static void pnv_pci_ioda2_table_do_free_pages(__be64 *addr,
+ 	free_pages(addr_ul, get_order(size << 3));
+ }
+ 
+-static void pnv_pci_ioda2_table_free_pages(struct iommu_table *tbl)
++static void pnv_pci_ioda_table_free_pages(struct iommu_table *tbl)
+ {
+ 	const unsigned long size = tbl->it_indirect_levels ?
+ 			tbl->it_level_size : tbl->it_size;
+@@ -2537,7 +2537,7 @@ static void pnv_pci_ioda2_table_free_pages(struct iommu_table *tbl)
+ 	if (!tbl->it_size)
+ 		return;
+ 
+-	pnv_pci_ioda2_table_do_free_pages((__be64 *)tbl->it_base, size,
++	pnv_pci_ioda_table_do_free_pages((__be64 *)tbl->it_base, size,
+ 			tbl->it_indirect_levels);
+ }
+ 
+-- 
+2.1.0
 
-Bjorn
-
-> > +----------------------------------
-> > +
-> > +This is the reference platform driver to be used in the Synopsys PCI Root
-> > +Complex IP Prototyping Kit.
-> > +
-> > +Required properties:
-> > +- compatible: set to "snps,pcie-synopsys";
-> 
-> Please also include the exact version of the designware PCIe part that
-> is used in here, such as "snps,dw-pcie-1.234". I'm sure you can find
-> out the version.
-> 
-> "snps,pcie-synopsys" by itself is about the worst possible compatible
-> string because it says nothing about the specific hardware. Half the
-> machines we support all have a designware PCIe host that was made
-> by synopsys. Please use the name of the SoC for the most specific
-> string.
-> 
-> > +- reg: base address and length of the pcie controller registers.
-> > +- #address-cells: set to <3>
-> > +- #size-cells: set to <2>
-> > +- device_type: set to "pci"
-> > +- ranges: ranges for the PCI memory and I/O regions.
-> > +- interrupts: one interrupt source for MSI interrupts, followed by interrupt
-> > +	source for hardware related interrupts.
-> > +- #interrupt-cells: set to <1>
-> > +- num-lanes: set to <1>;
-> > +
-> > +Example configuration:
-> > +
-> > +	pcie: pcie@0xdffff000 {
-> > +		compatible = "snps,pcie-synopsys";
-> > +		reg = <0xdffff000 0x1000>;
-> > +		#address-cells = <3>;
-> > +		#size-cells = <2>;
-> > +		device_type = "pci";
-> > +		ranges = <0x00000800 0 0xd0000000 0xd0000000 0 0x00002000>,
-> 
-> This line looks misplaced here and does not match the documentation. It's
-> probably a leftover from an earlier version that had the config space
-> in the ranges, so you need to remove that.
-> 
-> > +/* This handler was created for future work */
-> > +static irqreturn_t synopsys_pcie_irq_handler(int irq, void *arg)
-> > +{
-> > +	return IRQ_NONE;
-> > +}
-> 
-> It's not harmful, but we generally don't add code "for future work",
-> better remove it for now.
-> 
-> > +static void synopsys_pcie_establish_link(struct pcie_port *pp)
-> > +{
-> > +	int retries = 0;
-> > +
-> > +	/* check if the link is up or not */
-> > +	for (retries = 0; retries < 10; retries++) {
-> > +		if (dw_pcie_link_up(pp)) {
-> > +			dev_info(pp->dev, "Link up\n");
-> > +			return;
-> > +		}
-> > +		mdelay(100);
-> > +	}
-> > +}
-> 
-> That mdelay() needs to be an msleep(). You should never waste
-> a whole second worth of CPU time in a driver.
-> 
-> 	Arnd
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
