@@ -1,151 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44163 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752247AbcBXToM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Feb 2016 14:44:12 -0500
-Subject: [PATCH v4 3/6] PCI: Add support for multiple DMA aliases
-To: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <jroedel@suse.de>,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org
-Date: Wed, 24 Feb 2016 13:44:06 -0600
-Message-ID: <20160224194406.7585.17447.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 17 Feb 2016 17:45:16 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: Jayachandran Chandrashekaran Nair
+	<jayachandran.chandrashekaran@broadcom.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org,
+	Hanjun Guo <hanjun.guo@linaro.org>, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com,
+	Jayachandran Chandrashekaran Nair <jchandra@broadcom.com>,
+	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>,
+	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
+	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+Subject: Re: [PATCH V5 07/15] pci, acpi: Provide generic way to assign bus
+ domain number.
+Message-ID: <20160217174516.GA11132@red-moon>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+ <1455630825-27253-8-git-send-email-tn@semihalf.com>
+ <CAKc_7PU+i2AwOVCyW2VNt4BZCWw=KBMAbV8v9DVQ2Ess3WE=kw@mail.gmail.com>
+ <56C47E9A.5010901@semihalf.com>
+ <CAKc_7PUiLQhUuJjR8wcuRm7KJdxBYjb+ZBd_cLTtjNPbEro6wA@mail.gmail.com>
+ <56C48C45.7050203@semihalf.com>
+ <CAKc_7PV=p7kHt73c673L+v=KCaFV8RzoaSHwcH2gd1g-fWGq5w@mail.gmail.com>
+ <56C49342.1070308@semihalf.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56C49342.1070308@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+Guys,
 
-<Insert changelog here>
----
- drivers/iommu/iommu.c |   17 ++++++++++-------
- drivers/pci/pci.c     |   11 +++++++++--
- drivers/pci/probe.c   |    1 +
- drivers/pci/search.c  |   14 +++++++++-----
- include/linux/pci.h   |    4 +---
- 5 files changed, 30 insertions(+), 17 deletions(-)
+On Wed, Feb 17, 2016 at 04:35:30PM +0100, Tomasz Nowicki wrote:
 
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index 0e3b009..a214e19 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -659,9 +659,15 @@ static struct iommu_group *get_pci_function_alias_group(struct pci_dev *pdev,
- 	return NULL;
- }
- 
-+static bool dma_alias_is_enabled(struct pci_dev *dev, u8 devfn)
-+{
-+	return dev->dma_alias_mask &&
-+	       test_bit(devfn, dev->dma_alias_mask);
-+}
-+
- /*
-- * Look for aliases to or from the given device for exisiting groups.  The
-- * dma_alias_devfn only supports aliases on the same bus, therefore the search
-+ * Look for aliases to or from the given device for existing groups. DMA
-+ * aliases are only supported on the same bus, therefore the search
-  * space is quite small (especially since we're really only looking at pcie
-  * device, and therefore only expect multiple slots on the root complex or
-  * downstream switch ports).  It's conceivable though that a pair of
-@@ -686,11 +692,8 @@ static struct iommu_group *get_pci_alias_group(struct pci_dev *pdev,
- 			continue;
- 
- 		/* We alias them or they alias us */
--		if (((pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
--		     pdev->dma_alias_devfn == tmp->devfn) ||
--		    ((tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
--		     tmp->dma_alias_devfn == pdev->devfn)) {
--
-+		if (dma_alias_is_enabled(pdev, tmp->devfn) ||
-+		    dma_alias_is_enabled(tmp, pdev->devfn)) {
- 			group = get_pci_alias_group(tmp, devfns);
- 			if (group) {
- 				pci_dev_put(tmp);
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 8b0a637..eb4dd49 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4578,8 +4578,15 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
-  */
- void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
- {
--	dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 0);
--	dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-+	if (!dev->dma_alias_mask)
-+		dev->dma_alias_mask = kcalloc(BITS_TO_LONGS(U8_MAX),
-+					      sizeof(long), GFP_KERNEL);
-+	if (!dev->dma_alias_mask) {
-+		dev_warn(&dev->dev, "Unable to allocate DMA alias mask\n");
-+		return;
-+	}
-+
-+	set_bit(devfn, dev->dma_alias_mask);
- 	dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
- 		 PCI_SLOT(devfn), PCI_FUNC(devfn));
- }
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6d7ab9b..23fc397 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1503,6 +1503,7 @@ static void pci_release_dev(struct device *dev)
- 	pcibios_release_device(pci_dev);
- 	pci_bus_put(pci_dev->bus);
- 	kfree(pci_dev->driver_override);
-+	kfree(pci_dev->dma_alias_mask);
- 	kfree(pci_dev);
- }
- 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index a20ce7d..33e0f03 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -40,11 +40,15 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- 	 * If the device is broken and uses an alias requester ID for
- 	 * DMA, iterate over that too.
- 	 */
--	if (unlikely(pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN)) {
--		ret = fn(pdev, PCI_DEVID(pdev->bus->number,
--					 pdev->dma_alias_devfn), data);
--		if (ret)
--			return ret;
-+	if (unlikely(pdev->dma_alias_mask)) {
-+		u8 devfn;
-+
-+		for_each_set_bit(devfn, pdev->dma_alias_mask, U8_MAX) {
-+			ret = fn(pdev, PCI_DEVID(pdev->bus->number, devfn),
-+				 data);
-+			if (ret)
-+				return ret;
-+		}
- 	}
- 
- 	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 27df4a6..d9e0c84 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -172,8 +172,6 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) (1 << 2),
- 	/* Flag for quirk use to store if quirk-specific ACS is enabled */
- 	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) (1 << 3),
--	/* Flag to indicate the device uses dma_alias_devfn */
--	PCI_DEV_FLAGS_DMA_ALIAS_DEVFN = (__force pci_dev_flags_t) (1 << 4),
- 	/* Use a PCIe-to-PCI bridge alias even if !pci_is_pcie */
- 	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 5),
- 	/* Do not use bus resets for device */
-@@ -279,7 +277,7 @@ struct pci_dev {
- 	u8		rom_base_reg;	/* which config register controls the ROM */
- 	u8		pin;		/* which interrupt pin this device uses */
- 	u16		pcie_flags_reg;	/* cached PCIe Capabilities Register */
--	u8		dma_alias_devfn;/* devfn of DMA alias, if any */
-+	unsigned long	*dma_alias_mask;/* mask of enabled devfn aliases */
- 
- 	struct pci_driver *driver;	/* which driver has allocated this device */
- 	u64		dma_mask;	/* Mask of the bits of bus address this
+[...]
 
+> >>>>>In my patchset, I had a slightly different and I think better approach
+> >>>>>for
+> >>>>>this without calling the _SEG method again. Please see
+> >>>>>http://www.spinics.net/lists/arm-kernel/msg478167.html
+> >>>>>at the last part
+> >>>>>ofhttp://www.spinics.net/lists/arm-kernel/msg478169.html
+> >>>>
+> >>>>
+> >>>>Relying on NULL parent device to make decision on boot method is really
+> >>>>ugly
+> >>>>way. This may hit us again once we want to obtain another firmware
+> >>>>specific
+> >>>>info e.g. numa node. IMO we need to fix it this way.
+> >>>
+> >>>
+> >>>I am not relying on NULL there, in the current code parent is NULL
+> >>>in case of ACPI, and the check is needed not to crash (unless that
+> >>>has changed).
+> >>
+> >>
+> >>This series passes down valid parent, see [PATCH V5 06/15].
+> >>
+> >>>
+> >>>The main part was the macro acpi_pci_get_segment() and the use
+> >>>of acpi_pci_root_info from sysdata to do this.
+> >>
+> >>
+> >>Since we can obtain related firmware specific data from valid parent device
+> >>(without defining another accessors), I do not see the point to use sysdata.
+> >>Let me know your opinion.
+> >
+> >In the patch, you use the parent info and call _SEG method again.
+> >The segment information is available in the ->root->segment of
+> >acpi_pci_root_info if you setup the sysdata like in my patch
+> 
+> I know it is in sysdata->root->segment, but the way it is passed
+> down is wrong. sysdata is the pointer to unknown content (void *) so
+> we need to validate it before we can use it. If we merge this patch
+> we can remove first _SEG call.
+
+I personally do not think there is such a significant difference, both
+solutions have pros and cons, it is worth keeping in mind though
+that reading _SEG again to set the bus domain number works only if
+the value we stash in acpi_pci_root.segment is not overridden, if it
+is (ie see x86 - agreed that's to fix a FW bug) we have a disconnect.
+
+On the other hand Tomasz's code allows removing some IA64 code in the
+process (code that sets the bridge companion, so part of the patch
+should be kept regardless).
+
+So, there are two things to do:
+
+- Assign the bridge companion in PCI core code
+- Decide where to get the domain number from (acpi_pci_root.segment vs
+  calling _SEG again). At present they are equivalent so I do not see
+  any compelling reason to change this patch.
+
+Side note: there is already a function (pci_domain_nr()) that you
+can implement in ACPI PCI host generic (by deselecting
+PCI_DOMAINS_GENERIC if ACPI) so there is no need for acpi_pci_get_segment()
+in case we have to override _SEG value in the future, at present
+there is no need, comments appreciated.
+
+Lorenzo
