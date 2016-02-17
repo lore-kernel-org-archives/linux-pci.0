@@ -1,57 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0069.outbound.protection.outlook.com ([65.55.169.69]:28071
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750748AbcBDSL7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Feb 2016 13:11:59 -0500
-Subject: Re: AMD-Vi: Unable to write to IOMMU perf counter.
-To: Andreas Hartmann <andihartmann@freenet.de>,
-	<linux-pci@vger.kernel.org>
-References: <56B365E0.4020100@01019freenet.de> <56B37292.1000201@amd.com>
- <56B39009.90401@maya.org>
-CC: Joerg Roedel <joro@8bytes.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	iommu <iommu@lists.linux-foundation.org>
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Message-ID: <56B39468.7080902@amd.com>
-Date: Thu, 4 Feb 2016 12:11:52 -0600
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <56B39009.90401@maya.org>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1455630825-27253-8-git-send-email-tn@semihalf.com>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com> <1455630825-27253-8-git-send-email-tn@semihalf.com>
+From: Jayachandran Chandrashekaran Nair
+	<jayachandran.chandrashekaran@broadcom.com>
+Date: Wed, 17 Feb 2016 19:14:13 +0530
+Message-ID: <CAKc_7PU+i2AwOVCyW2VNt4BZCWw=KBMAbV8v9DVQ2Ess3WE=kw@mail.gmail.com>
+Subject: Re: [PATCH V5 07/15] pci, acpi: Provide generic way to assign bus
+ domain number.
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	Jayachandran Chandrashekaran Nair <jchandra@broadcom.com>,
+	Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2/4/2016 11:53 AM, Andreas Hartmann wrote:
-> On 02/04/2016 at 04:47 PM, Suravee Suthikulanit wrote:
->> Hi Andreas,
->>
->> On 2/4/2016 8:53 AM, Andreas Hartmann wrote:
->>> Hello!
->>>
->>> The following happens with Linux 4.4.1 during boot on an MSI A78M-E35
->>> board. Additionally, I attached the complete dmesg.
->>
->> I was working on upstreaming changes to the AMD IOMMU Perf to fix some
->> of the similar issue I saw on a different platform.  Would you please
->> check to see if this patch series would fix this?
->>
->> https://lkml.org/lkml/2016/1/1/141
->
->
-> This patchset seems to fix the problem.
->
-> [    1.264639] AMD-Vi: IOMMU performance counters supported
->
-> But there seems to be a problem with the location of
-> perf_event_amd_iommu.h in the patch - I had to fix the complete
-> perf_event_amd_iommu.h related patches to get them applied to 4.4. and
-> finally compiled.
->
->
-> Thanks,
-> Andreas
->
+Tomasz, Lorenzo,
 
-Ok, I'll clean up and resend this patch series. Thanks for testing.
+On Tue, Feb 16, 2016 at 7:23 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
+> As we now have valid PCI host bridge device reference we can
+> introduce code that is going to find its bus domain number using
+> ACPI _SEG method.
+>
+> Note that _SEG method is optional, therefore _SEG absence means
+> that all PCI buses belong to domain 0.
+>
+> While at it, for the sake of code clarity we put ACPI and DT domain
+> assign methods into the corresponding helpers.
 
-Thanks,
-Suravee
+In my patchset, I had a slightly different and I think better approach for
+this without calling the _SEG method again. Please see
+http://www.spinics.net/lists/arm-kernel/msg478167.html
+at the last part of http://www.spinics.net/lists/arm-kernel/msg478169.html
+
+JC.
