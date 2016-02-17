@@ -1,102 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40580 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758983AbcBYCNb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:13:31 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v10 12/59] PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
-Date: Wed, 24 Feb 2016 18:12:03 -0800
-Message-Id: <1456366370-28995-13-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+Received: from mail-am1on0054.outbound.protection.outlook.com ([157.56.112.54]:21248
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933169AbcBQEuX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 23:50:23 -0500
+From: Mingkai Hu <mingkai.hu@nxp.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	"Shi, Yang" <yang.shi@linaro.org>
+CC: "Mingkai.Hu@freescale.com" <Mingkai.Hu@freescale.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	"Pawel Moll" <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: RE: [PATCH] PCI: layerscape: add ls2085a compatible
+Date: Wed, 17 Feb 2016 02:17:47 +0000
+Message-ID: <VI1PR04MB1454676391D9A2D83E7625F48EAE0@VI1PR04MB1454.eurprd04.prod.outlook.com>
+References: <1453915925-19198-1-git-send-email-yang.shi@linaro.org>
+ <20160205203858.GA11780@localhost> <56B509E5.2050602@linaro.org>
+ <20160205222525.GA16238@localhost>
+In-Reply-To: <20160205222525.GA16238@localhost>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If any bridge up to root only have 32bit pref mmio, We don't need to
-treat device non-pref mmio64 as as pref mmio64.
 
-We need to move pci_bridge_check_ranges calling early.
-for parent bridges pref mmio BAR may not allocated by BIOS, res flags
-is still 0, we need to have it correct set before we check them for
-child device resources.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
----
- drivers/pci/setup-bus.c | 31 +++++++++++++++++++++++++++++--
- 1 file changed, 29 insertions(+), 2 deletions(-)
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Saturday, February 06, 2016 6:25 AM
+> To: Shi, Yang
+> Cc: Mingkai.Hu@freescale.com; Minghuan.Lian@freescale.com;
+> bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linaro-
+> kernel@lists.linaro.org; Rob Herring; Pawel Moll; Mark Rutland; Ian
+> Campbell; Kumar Gala; devicetree@vger.kernel.org
+> Subject: Re: [PATCH] PCI: layerscape: add ls2085a compatible
+> 
+> On Fri, Feb 05, 2016 at 12:45:25PM -0800, Shi, Yang wrote:
+> > On 2/5/2016 12:38 PM, Bjorn Helgaas wrote:
+> > >[+cc Rob, et al]
+> > >
+> > >On Wed, Jan 27, 2016 at 09:32:05AM -0800, Yang Shi wrote:
+> > >>The layerscape PCI host driver needs recognize ls2085a compatible
+> > >>when using firmware with ls2085a compatible property, otherwise the
+> > >>PCI bus won't be detected even though ls2085a compatible is included
+> by the dts.
+> > >>
+> > >>Signed-off-by: Yang Shi <yang.shi@linaro.org>
+> > >>---
+> > >>  drivers/pci/host/pci-layerscape.c | 1 +
+> > >>  1 file changed, 1 insertion(+)
+> > >>
+> > >>diff --git a/drivers/pci/host/pci-layerscape.c
+> > >>b/drivers/pci/host/pci-layerscape.c
+> > >>index 3923bed..c40d8b2 100644
+> > >>--- a/drivers/pci/host/pci-layerscape.c
+> > >>+++ b/drivers/pci/host/pci-layerscape.c
+> > >>@@ -203,6 +203,7 @@ static const struct of_device_id
+> ls_pcie_of_match[] = {
+> > >>  	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata },
+> > >>  	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata },
+> > >>  	{ .compatible = "fsl,ls2080a-pcie", .data = &ls2080_drvdata },
+> > >>+	{ .compatible = "fsl,ls2085a-pcie", .data = &ls2080_drvdata },
+> > >
+> > >Hmm, "fsl,ls2085a-pcie" doesn't appear in
+> > >Documentation/devicetree/bindings/pci/.
+> > >
+> > >Aren't we supposed to add these strings to the bindings before or at
+> > >the same time we add them to drivers?
+> >
+> > The below patch will add it into dts and binding doc. I should
+> > mentioned this in the commit log.
+> >
+> > https://patchwork.kernel.org/patch/7767061/
+> 
+> OK.  This is really annoying as a reviewer.  To me, adding "fsl,ls2085a-
+> pcie" to:
+> 
+>   - the binding in Documentation/devicetree/bindings/pci/layerscape-
+> pci.txt
+>   - the DT in arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi
+>   - the driver in drivers/pci/host/pci-layerscape.c
+> 
+> are all logically related, and it would make sense to have them all in a
+> single patch.
+> 
+> But whatever.  I applied this to pci/host-layerscape for v4.6.
+> 
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 17f10b3..b7b64d2 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -739,6 +739,29 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 	return -EINVAL;
- }
- 
-+static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
-+{
-+	if (pci_is_root_bus(bus))
-+		return true;
-+
-+	if (bus->self) {
-+		int i;
-+		bool found = false;
-+		struct resource *res;
-+
-+		pci_bus_for_each_resource(bus, res, i)
-+			if (res->flags & IORESOURCE_MEM_64) {
-+				found = true;
-+				break;
-+			}
-+
-+		if (!found)
-+			return false;
-+	}
-+
-+	return pci_up_path_over_pref_mem64(bus->parent);
-+}
-+
- int pci_resource_pref_compatible(const struct pci_dev *dev,
- 				 struct resource *res)
- {
-@@ -747,7 +770,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
- 
- 	if ((res->flags & IORESOURCE_MEM) &&
- 	    (res->flags & IORESOURCE_MEM_64) &&
--	    dev->on_all_pcie_path)
-+	    dev->on_all_pcie_path &&
-+	    pci_up_path_over_pref_mem64(dev->bus))
- 		return res->flags | IORESOURCE_PREFETCH;
- 
- 	return res->flags;
-@@ -1240,6 +1264,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	struct resource *b_res;
- 	int ret;
- 
-+	if (!pci_is_root_bus(bus) &&
-+	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
-+		pci_bridge_check_ranges(bus);
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		struct pci_bus *b = dev->subordinate;
- 		if (!b)
-@@ -1267,7 +1295,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		break;
- 
- 	case PCI_CLASS_BRIDGE_PCI:
--		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
- 			additional_io_size  = pci_hotplug_io_size;
- 			additional_mem_size = pci_hotplug_mem_size;
--- 
-1.8.4.5
+Bojon,
+
+I have sent version3 of the patch to add strings to the bindings and dts file.
+https://patchwork.kernel.org/patch/8333761/
+
+Sorry for the delayed response due to Chinese New Year holiday.
+
+Thanks,
+Mingkai
+
 
