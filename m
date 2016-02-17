@@ -1,100 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "Richard.Zhu@freescale.com" <Richard.Zhu@freescale.com>,
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Mueller <dave.mueller@gmx.ch>
-Subject: RE: [PATCH] PCI: imx6:don't sleep in atomic context
-Date: Fri, 19 Feb 2016 09:18:29 +0000
-Message-ID: <FDC088D3B5555644AE135ED28A7ABDE986505224@EU-MBX-04.mgc.mentorg.com>
-References: <1447066080-5859-1-git-send-email-sanjeev_sharma@mentor.com>
- <20160106220430.GC16231@localhost>
- <FDC088D3B5555644AE135ED28A7ABDE986504C90@EU-MBX-04.mgc.mentorg.com>
- <20160218150852.GA17588@localhost>
-In-Reply-To: <20160218150852.GA17588@localhost>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:45577 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965011AbcBQDqA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:46:00 -0500
+Received: from localhost
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 17 Feb 2016 13:45:59 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v8 11/45] powerpc/powernv: Track M64 segment consumption
+Date: Wed, 17 Feb 2016 14:43:54 +1100
+Message-Id: <1455680668-23298-12-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
------Original Message-----
-From: Bjorn Helgaas [mailto:helgaas@kernel.org] 
-Sent: Thursday, February 18, 2016 8:39 PM
-To: Sharma, Sanjeev
-Cc: Richard.Zhu@freescale.com; l.stach@pengutronix.de; bhelgaas@google.com; linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-kernel@vger.kernel.org; David Mueller
-Subject: Re: [PATCH] PCI: imx6:don't sleep in atomic context
+When unplugging PCI devices, their parent PEs might be offline.
+The consumed M64 resource by the PEs should be released at that
+time. As we track M32 segment consumption, this introduces an
+array to the PHB to track the mapping between M64 segment and
+PE number.
 
-On Thu, Feb 18, 2016 at 07:17:41AM +0000, Sharma, Sanjeev wrote:
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Thursday, January 07, 2016 3:35 AM
-> To: Sharma, Sanjeev
-> Cc: Richard.Zhu@freescale.com; l.stach@pengutronix.de; 
-> bhelgaas@google.com; linux-pci@vger.kernel.org; 
-> linux-arm-kernel@lists.infradead.org; linux-kernel@vger.kernel.org; 
-> David Mueller
-> Subject: Re: [PATCH] PCI: imx6:don't sleep in atomic context
-> 
-> Hi Sanjeev,
-> 
-> On Mon, Nov 09, 2015 at 04:18:00PM +0530, Sanjeev Sharma wrote:
-> > If additional PCIe switch get connected between the host and the 
-> > NIC,the kernel crashes with "BUG:
-> > scheduling while atomic". To handle this we need to call mdelay() 
-> > instead of usleep_range().
-> > 
-> > For more detail please refer bugzilla.kernel.org, Bug
-> > 100031
-> > 
-> > Signed-off-by: Sanjeev Sharma <sanjeev_sharma@mentor.com>
-> > Signed-off-by: David Mueller <dave.mueller@gmx.ch>
-> 
-> I'm dropping this for now because we've been kicking around the same solution (with tweaks to the mdelay amount) since June, but no progress on the *real* issue, which is that imx6_pcie_link_up() should never wait; it should simply return the link status.
-> 
-> I'm pretty sure the amount of time I've spent looking into this would have been enough to make some progress on that underlying issue.
-> 
-> Bjorn
-> 
-> Ok ! please share the change you are planning to implement. 
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 10 ++++++++--
+ arch/powerpc/platforms/powernv/pci.h      |  1 +
+ 2 files changed, 9 insertions(+), 2 deletions(-)
 
-I didn't mean I personally was going to do this.  But I think Lucas stepped up and did it:
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 7330a73..fc0374a 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -305,6 +305,7 @@ static int pnv_ioda2_pick_m64_pe(struct pci_bus *bus, bool all)
+ 		phb->ioda.total_pe_num) {
+ 		pe = &phb->ioda.pe_array[i];
+ 
++		phb->ioda.m64_segmap[pe->pe_number] = pe->pe_number;
+ 		if (!master_pe) {
+ 			pe->flags |= PNV_IODA_PE_MASTER;
+ 			INIT_LIST_HEAD(&pe->slaves);
+@@ -3245,7 +3246,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ {
+ 	struct pci_controller *hose;
+ 	struct pnv_phb *phb;
+-	unsigned long size, m32map_off, pemap_off, iomap_off = 0;
++	unsigned long size, m64map_off, m32map_off, pemap_off, iomap_off = 0;
+ 	const __be64 *prop64;
+ 	const __be32 *prop32;
+ 	int i, len;
+@@ -3332,6 +3333,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 
+ 	/* Allocate aux data & arrays. We don't have IO ports on PHB3 */
+ 	size = _ALIGN_UP(phb->ioda.total_pe_num / 8, sizeof(unsigned long));
++	m64map_off = size;
++	size += phb->ioda.total_pe_num * sizeof(phb->ioda.m64_segmap[0]);
+ 	m32map_off = size;
+ 	size += phb->ioda.total_pe_num * sizeof(phb->ioda.m32_segmap[0]);
+ 	if (phb->type == PNV_PHB_IODA1) {
+@@ -3342,9 +3345,12 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	size += phb->ioda.total_pe_num * sizeof(struct pnv_ioda_pe);
+ 	aux = memblock_virt_alloc(size, 0);
+ 	phb->ioda.pe_alloc = aux;
++	phb->ioda.m64_segmap = aux + m64map_off;
+ 	phb->ioda.m32_segmap = aux + m32map_off;
+-	for (i = 0; i < phb->ioda.total_pe_num; i++)
++	for (i = 0; i < phb->ioda.total_pe_num; i++) {
++		phb->ioda.m64_segmap[i] = IODA_INVALID_PE;
+ 		phb->ioda.m32_segmap[i] = IODA_INVALID_PE;
++	}
+ 	if (phb->type == PNV_PHB_IODA1) {
+ 		phb->ioda.io_segmap = aux + iomap_off;
+ 		for (i = 0; i < phb->ioda.total_pe_num; i++)
+diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+index 36c4965..866a5ea 100644
+--- a/arch/powerpc/platforms/powernv/pci.h
++++ b/arch/powerpc/platforms/powernv/pci.h
+@@ -146,6 +146,7 @@ struct pnv_phb {
+ 		struct pnv_ioda_pe	*pe_array;
+ 
+ 		/* M32 & IO segment maps */
++		int			*m64_segmap;
+ 		int			*m32_segmap;
+ 		int			*io_segmap;
+ 
+-- 
+2.1.0
 
-https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-imx6&id=4d107d3b5a686b5834e533a00b73bf7b1cf59df7
-
-Thanks Bjorn 
-
-code look ok !
-
-> > ---
-> >  drivers/pci/host/pci-imx6.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/host/pci-imx6.c 
-> > b/drivers/pci/host/pci-imx6.c index 233a196..9769b13 100644
-> > --- a/drivers/pci/host/pci-imx6.c
-> > +++ b/drivers/pci/host/pci-imx6.c
-> > @@ -499,7 +499,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
-> >  		 * Wait a little bit, then re-check if the link finished
-> >  		 * the training.
-> >  		 */
-> > -		usleep_range(1000, 2000);
-> > +		mdelay(1000);
-> >  	}
-> >  	/*
-> >  	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
-> > --
-> > 1.7.11.7
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" 
-> > in the body of a message to majordomo@vger.kernel.org More majordomo 
-> > info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" 
-> in the body of a message to majordomo@vger.kernel.org More majordomo 
-> info at  http://vger.kernel.org/majordomo-info.html
