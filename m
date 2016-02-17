@@ -1,143 +1,54 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 23 Feb 2016 19:14:18 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: 'Mark Rutland' <mark.rutland@arm.com>,
-	"Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
-	"'bhelgaas@google.com'" <bhelgaas@google.com>,
-	"'arnd@arndb.de'" <arnd@arndb.de>,
-	"'Lorenzo.Pieralisi@arm.com'" <Lorenzo.Pieralisi@arm.com>,
-	"'tn@semihalf.com'" <tn@semihalf.com>,
-	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"'linux-acpi@vger.kernel.org'" <linux-acpi@vger.kernel.org>,
-	"'jcm@redhat.com'" <jcm@redhat.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	"'linux-arm-kernel@lists.infradead.org'"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
- HiSilicon SoCs Host Controllers
-Message-ID: <20160224011418.GB13026@localhost>
-References: <1455039260-6040-1-git-send-email-gabriele.paoloni@huawei.com>
- <1455039260-6040-4-git-send-email-gabriele.paoloni@huawei.com>
- <20160209182429.GD4348@leverpostej>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1591@lhreml503-mbs>
- <20160210111234.GC2632@leverpostej>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1D30@lhreml503-mbs>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ECC5F00@lhreml503-mbs>
+Subject: Re: [PATCH V5 07/15] pci, acpi: Provide generic way to assign bus
+ domain number.
+To: Jayachandran Chandrashekaran Nair
+	<jayachandran.chandrashekaran@broadcom.com>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+ <1455630825-27253-8-git-send-email-tn@semihalf.com>
+ <CAKc_7PU+i2AwOVCyW2VNt4BZCWw=KBMAbV8v9DVQ2Ess3WE=kw@mail.gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	Jayachandran Chandrashekaran Nair <jchandra@broadcom.com>,
+	Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <56C47E9A.5010901@semihalf.com>
+Date: Wed, 17 Feb 2016 15:07:22 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ECC5F00@lhreml503-mbs>
+In-Reply-To: <CAKc_7PU+i2AwOVCyW2VNt4BZCWw=KBMAbV8v9DVQ2Ess3WE=kw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 23, 2016 at 02:47:22AM +0000, Gabriele Paoloni wrote:
-> > -----Original Message-----
-> > From: Gabriele Paoloni
-> > Sent: 10 February 2016 22:45
-> > To: Mark Rutland
-> > Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C); Linuxarm;
-> > qiujiang; bhelgaas@google.com; arnd@arndb.de; Lorenzo.Pieralisi@arm.com;
-> > tn@semihalf.com; linux-pci@vger.kernel.org; linux-
-> > kernel@vger.kernel.org; xuwei (O); linux-acpi@vger.kernel.org;
-> > jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth); linux-arm-
-> > kernel@lists.infradead.org
-> > Subject: RE: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
-> > HiSilicon SoCs Host Controllers
-> > 
-> > > -----Original Message-----
-> > > From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
-> > > owner@vger.kernel.org] On Behalf Of Mark Rutland
-> > > Sent: 10 February 2016 11:13
-> > > To: Gabriele Paoloni
-> > > Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C); Linuxarm;
-> > > qiujiang; bhelgaas@google.com; arnd@arndb.de;
-> > > Lorenzo.Pieralisi@arm.com; tn@semihalf.com; linux-pci@vger.kernel.org;
-> > > linux-kernel@vger.kernel.org; xuwei (O); linux-acpi@vger.kernel.org;
-> > > jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth); linux-arm-
-> > > kernel@lists.infradead.org
-> > > Subject: Re: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
-> > > HiSilicon SoCs Host Controllers
-> > >
-> > > On Wed, Feb 10, 2016 at 09:52:36AM +0000, Gabriele Paoloni wrote:
-> > > > Hi Mark
-> > > >
-> > > > > On Tue, Feb 09, 2016 at 05:34:20PM +0000, Gabriele Paoloni wrote:
-> > > > > > From: gabriele paoloni <gabriele.paoloni@huawei.com>
-> > > > > > +/*
-> > > > > > + * Retrieve rc_dbi base and size from _DSD
-> > > > > > + * Name (_DSD, Package () {
-> > > > > > + *	ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
-> > > > > > + *	Package () {
-> > > > > > + *	Package () {"rc-dbi", Package () { 0x0, 0xb0080000, 0x0,
-> > > 0x10000
-> > > > > }},
-> > > > > > + *	}
-> > > > > > + *	})
-> > > > > > + */
-> > > > >
-> > > > > As above, this does not look right. ACPI has standard mechanisms
-> > > for
-> > > > > describing addresses. Making something up like this is not a good
-> > > idea.
-> > > >
-> > > > I am quite new to ACPI, may I ask you to explain a bit?
-> > >
-> > > ACPI has standard mechanisms for describing certain resources, and
-> > > these
-> > > should not be described in _DSD. Memory or IO address regions are
-> > such
-> > > resources (in _CRS, IIRC), and should not be described in _DSD.
-> > 
-> > Hi Mark,
-> > 
-> > In my case I think in need to look into the MCFG object as the problem
-> > I have is RC using a different range than the rest of the hierarchy.
-> > 
-> > I'll investigate this and try to come with a solution in v4
-> 
-> I have looked into this and in our case we cannot use the
-> standard MCFG object to pass the RC config space addresses.
-> 
-> The reason is that in our HW we have the config base addresses of the 
-> root complex ports that are less than 0x100000 byte distant one from
-> the other as we only map the first 0x10000 bytes.
+On 17.02.2016 14:44, Jayachandran Chandrashekaran Nair wrote:
+> Tomasz, Lorenzo,
+>
+> On Tue, Feb 16, 2016 at 7:23 PM, Tomasz Nowicki<tn@semihalf.com>  wrote:
+>> >As we now have valid PCI host bridge device reference we can
+>> >introduce code that is going to find its bus domain number using
+>> >ACPI _SEG method.
+>> >
+>> >Note that _SEG method is optional, therefore _SEG absence means
+>> >that all PCI buses belong to domain 0.
+>> >
+>> >While at it, for the sake of code clarity we put ACPI and DT domain
+>> >assign methods into the corresponding helpers.
+> In my patchset, I had a slightly different and I think better approach for
+> this without calling the _SEG method again. Please see
+> http://www.spinics.net/lists/arm-kernel/msg478167.html
+> at the last part ofhttp://www.spinics.net/lists/arm-kernel/msg478169.html
 
-The ECAM spec requires 4096 bytes per function, 8 functions per
-device, 32 devices per bus, which means you need 0x100000 bytes of
-address space per bus.  If your device doesn't supply that, it doesn't
-really implement ECAM, and you probably can't use the standard ways of
-describing ECAM (MCFG, _CBA).
+Relying on NULL parent device to make decision on boot method is really 
+ugly way. This may hit us again once we want to obtain another firmware 
+specific info e.g. numa node. IMO we need to fix it this way.
 
-> Now the MCFG acpi framework always fix the MCFG resource size to 0x100000
-> for each bus; therefore if we pass our RC addresses through MCFG we end
-> up with a resource conflict.
-> 
-> To give you a practical example we are in a situation where we have:
-> 
-> port0: [0x00000000b0080000 - 0x00000000b0080000 + 0x10000]
-> port1: [0x00000000b0090000 - 0x00000000b0090000 + 0x10000]
-> port2: [0x00000000b00A0000 - 0x00000000b00A0000 + 0x10000]
-> port3: [0x00000000b00B0000 - 0x00000000b00B0000 + 0x10000]
->   
-> So if we pass the base addresses through MCFG the resources
-> will overlap as MCFG will consider 0x100000 size for each base
-> address of the root complex (only the RC bus uses that address)
-> 
-> So far I do not see many option other than using _DSD to pass
-> these RC config base addresses.
-
-I don't want to take over Mark's discussion, but I really do not think
-_DSD is the correct way to fix this.  _CRS is like a generalized PCI
-BAR.  A PCI device is only allowed to respond to address space
-reported via a BAR.  An ACPI device is only allowed to respond to
-address space reported via _CRS.  Those are important rules because
-they mean we can manage address space with generic code instead of
-device-specific code.
-
-Bjorn
+Tomasz
