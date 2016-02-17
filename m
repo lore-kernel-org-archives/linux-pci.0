@@ -1,166 +1,334 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39698 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750857AbcBAXfS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 1 Feb 2016 18:35:18 -0500
-Date: Mon, 1 Feb 2016 17:35:12 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Richard F <lists@keynet-technology.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: Hint HB6 - kernel doesn't see chips behind it.
-Message-ID: <20160201233512.GA19585@localhost>
-References: <20160115172640.GC28453@localhost>
- <569CFB5B.7050903@keynet-technology.com>
- <20160119033839.GA3339@localhost>
- <56A8DA21.7060607@keynet-technology.com>
- <20160127215522.GA4875@localhost>
- <56A9EC07.8080509@keynet-technology.com>
- <20160129162400.GB12965@localhost>
- <56ACF8D4.8010607@keynet-technology.com>
- <20160201190611.GA4861@localhost>
- <56AFBADB.3060108@keynet-technology.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56AFBADB.3060108@keynet-technology.com>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:60548 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933619AbcBQDph (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:45:37 -0500
+Received: from localhost
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 17 Feb 2016 13:45:35 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
+	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v8 00/45] powerpc/powernv: PCI hotplug support
+Date: Wed, 17 Feb 2016 14:43:43 +1100
+Message-Id: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 01, 2016 at 08:06:51PM +0000, Richard F wrote:
-> Bjorn,
-> 
-> Thanks so much for your investigation.
-> 
-> Yes, MOBO has 2 PCI slots fed off the IT8893E.
-> This guy -
-> http://linux.derkeiler.com/Mailing-Lists/Debian/2005-08/3243.html  had a
-> similar problem 10yrs ago(!), fixed by disabling ACPI, I tried that
-> without any success.   
+This series of patches rebases on powerpc/next branch, plus below additional
+patches:
 
-Interesting.  That makes you think there's some bridge init
-difference.
+   <This series of patches>
+   <Followup 3 patches from Gavin on SRIOV EEH, which aren't posted>
+   https://patchwork.ozlabs.org/patch/581315/	(PATCH[1/9] Richard's SRIOV EEH)
+   https://patchwork.ozlabs.org/patch/582639/	(PATCH[1/1] Gavin's EEH fix)
+   https://patchwork.ozlabs.org/patch/582093/	(PATCH[1/1] Gavin's EEH fix)
+   https://patchwork.ozlabs.org/patch/580626/	(PATCH[1/4] Gavin's PCI fix)
+   https://patchwork.ozlabs.org/patch/580153/	(PATCH[1/1] Andrew's EEH minor fix)
+   https://patchwork.ozlabs.org/patch/566827/	(PATCH[1/1] Russell's P5IOC2 removal)
+   https://patchwork.ozlabs.org/patch/534154/	(PATCH[1/7] Richard's SRIOV rework)
+   commit 388f7b1 ("Linux 4.5-rc3")
+   
+The series of patches intend to support PCI slot for PowerPC PowerNV platform,
+which is running on top of skiboot firmware. The patchset requires corresponding
+changes from skiboot firmware, which is sent to skiboot@lists.ozlabs.org
+for review. The PCI slots are exposed by skiboot with device node properties,
+and kernel utilizes those properties to populated PCI slots accordingly.
 
-> I did extract the BIOS tables and
-> disassemble/reassemble them to see if there was anything obvious broken
-> there, and not much shows, a few warnings, AML is pretty indecipherable
-> stuff... I also tried fooling it with some Windows acpi_os_name's
-> matching those in the AML, without luck.
-> 
-> For kicks I spun up an old Win XP image today, and it recognised the PCI
-> bridge but may not have been able to see the BT878's behind, but then I
-> didn't have a reliable source for drivers for it.
+The original PCI infrastructure on PowerNV platform can't support hotplug
+because the PE is assigned during PHB fixup time, which is called for once
+during system boot time. For this, the PCI infrastructure on PowerNV platform
+has been reworked for a lot. After that, the PE and its corresponding resources
+(IODT, M32DT, M64 segments, DMA32 and bypass window) are assigned upon updating
+PCI bridge's resources, which might decide PE# assigned to the PE (e.g. M64
+resources, on P8 strictly speaking). Each PE will maintain a reference count,
+which is (number of child PCI devices + 1). That indicates when last child PCI
+device leaves the PE, the PE and its included resources will be relased and put
+back into free pool again. With this design, the PE will be released when EEH PE
+is released. PATCH[1 - 23] are related to this part.
 
-You should be able to tell whether Windows sees the BT878 even without
-drivers.  I think there might be something in Device Manager, or you
-can use a tool like AIDA64 (there was a free trial version last I
-checked).
+>From skiboot perspective, PCI slot is providing (hot/fundamental/complete)
+resets to EEH. The kernel gets to know if skiboot supports various reset on one
+particular PCI slot through device-tree node. If it does, EEH will utilize the
+functionality provided by skiboot. Besides, the device-tree nodes have to change
+in order to support PCI hotplug. For example, when one PCI adapter inserted to
+one slot, its device-tree node should be added to the system dynamically. Conversely,
+the device-tree node should be removed from the system when the PCI adapter is going
+to be offline. Since pci_dn and eeh_dev have same life cyle as PCI device nodes,
+they should be added/removed accordingly during PCI hotplug. PATCH[24 - 39] are
+doing the related work.
 
-> Is there's something needing configuring in that Hint HB6/PCI6140
-> bridge?
+The OF driver is changed to support unflattening FDT blob for sub-stree, which
+is covered by PATCH[40 - 44].
 
-I can't think of anything, but that does seem like the most likely
-explanation.
+The last one, PATCH[45], is the standalone PCI hotplug driver for PowerPC PowerNV
+platform.
 
-> When working, it loads the shpchp module, and it does advertise
-> itself as "non transparent" mode. 
+=======
+Testing
+=======
+1. Unplug adapters behind non-empty slot, then plug them.
 
-I see "Hint Corp HB6 Universal PCI-PCI bridge (non-transparent mode)"
-in both lspci outputs.  Is that what you mean, or do you see a
-difference somewhere else?  It looks like that string is just looked
-up from the device ID; it's not influenced by anything the kernel
-does.
+   1.1 Check status
+   # cat /sys/bus/pci/slots/C10/address 
+   0003:09:00
+   # cat /sys/bus/pci/slots/C10/adapter 
+   1
+   # cat /sys/bus/pci/slots/C10/power 
+   1
+   # lspci
+   0003:09:00.0 Ethernet controller: \
+   Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+   0003:09:00.1 Ethernet controller: \
+   Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+   0003:09:00.2 Ethernet controller: \
+   Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+   0003:09:00.3 Ethernet controller: \
+   Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+   # lspci -t
+   # lspci -t
+   -+-[0003:00]---00.0-[01-13]----00.0-[02-13]--+-01.0-[03]----00.0
+    |                                           +-08.0-[04-08]--
+    |                                           +-09.0-[09]--+-00.0
+    |                                           |            +-00.1
+    |                                           |            +-00.2
+    |                                           |            \-00.3
+    |                                           +-10.0-[0a-0e]--
+    |                                           \-11.0-[0f-13]--
 
-> The other difference is a latency of
-> 64 in the working scenario, 32 when not. Not configurable on the AMI
-> BIOS unfortunately.
+   1.2 Unplug adapter 0003:09.00.x
+   # echo 0 > /sys/bus/pci/slots/C10/power 
+   # lspci -t
+   -+-[0003:00]---00.0-[01-13]----00.0-[02-13]--+-01.0-[03]----00.0
+    |                                           +-08.0-[04-08]--
+    |                                           +-09.0-[09]--
+    |                                           +-10.0-[0a-0e]--
+    |                                           \-11.0-[0f-13]--
 
-I did notice the shpchp and latency timer differences, but I couldn't
-figure out how they could possibly be related.  But it certainly
-wouldn't hurt to enable shpchp in your kernel and see if it makes a
-difference.
+   1.3 Plug adapter 0003:09.00.x
+   # echo 1 > /sys/bus/pci/slots/C10/power 
+   # lspci -t
+   -+-[0003:00]---00.0-[01-13]----00.0-[02-13]--+-01.0-[03]----00.0
+    |                                           +-08.0-[04-08]--
+    |                                           +-09.0-[09]--+-00.0
+    |                                           |            +-00.1
+    |                                           |            +-00.2
+    |                                           |            \-00.3
+    |                                           +-10.0-[0a-0e]--
+    |                                           \-11.0-[0f-13]--
+ 
 
-I can't figure out how the latency timer could be involved either, but
-you can try fiddling with it, e.g., set it to 64:
+   1.4 Inject EEH error to adapter 0003:09:00.x, which is recovered.
+   # cat /sys/bus/pci/devices/0003:09:00.0/eeh_pe_config_addr 
+   0x1
+   # echo 1:0:4:0:0 > /sys/kernel/debug/powerpc/PCI0003/err_injct
+   # lspci -ns 0003:09:00.0
+   # dmesg | grep EEH
+   EEH: Frozen PHB#3-PE#1 detected
+   EEH: PE location: U78C9.001.WZS00CF-P1-C10, PHB location: N/A
+   EEH: Detected PCI bus error on PHB#3-PE#1
+   EEH: This PCI device has failed 1 times in the last hour
+   EEH: Notify device drivers to shutdown
+   EEH: Collect temporary log
+   EEH: Reset without hotplug activity
+   EEH: Notify device drivers the completion of reset
+   EEH: Notify device driver to resume
 
-  # setpci -s04:01.0 0x0d.b=0x40
-  # echo 1 > /sys/bus/pci/rescan
+2. Plug adapter and then unplug it. This requires hack in skiboot
+   to skip probing the adapters behind the target (C12 in the
+   testing) for once.
 
-You can also use "lspci -vvv -s04:01.0" and compare with the working
-system and see if there are other differences.  I think AIDA64 will
-also dump that config space, so you might be able to compare with
-with what Windows XP does, too.
+   2.1 Check status
+   # cat /sys/bus/pci/slots/C12/address 
+   0001:06
+   # cat /sys/bus/pci/slots/C12/power 
+   0
+   # cat /sys/bus/pci/slots/C12/adapter 
+   1
+   # lspci -t
+   +-[0001:00]---00.0-[01-0a]----00.0-[02-0a]--+-01.0-[03-04]----00.0-[04]----00.0
+                                               +-08.0-[05]----00.0
+                                               \-09.0-[06-0a]--
 
-> On 1/02/2016 19:06, Bjorn Helgaas wrote:
-> > On Sat, Jan 30, 2016 at 05:54:28PM +0000, Richard F wrote:
-> >> On 29/01/2016 16:24, Bjorn Helgaas wrote:
-> >>> On Thu, Jan 28, 2016 at 10:23:03AM +0000, Richard F wrote:
-> >>> Your topology looks a little strange:
-> >>>
-> >>>   00:1c.0 PCIe root port to [bus 01]    slot 0
-> >>>   00:1c.1 PCIe root port to [bus 02]    slot 1
-> >>>   00:1c.2 PCIe root port to [bus 03-05] slot 2
-> >>>   03:00.0 PCI bridge to [bus 04-05] (Integrated Technology Express)
-> >>>   04:01.0 PCI bridge to [bus 05] (Hint Corp)
-> >>>
-> >>> 00:1c.2 is a normal PCIe Root Port, so the device it's connected to
-> >>> *should* be a PCIe device, but 03:00.0 doesn't have a PCIe capability.
-> >>> Is this an adapter card of some kind?
-> >>
-> >> It's a motherboard bridge to get from PCIe to legacy PCI slots, quite a
-> >> few motherboards use it I think. It's not an adapter I plugged in.
-> > 
-> > That makes sense.  It sounds like there are two conventional PCI
-> > slots?  I think it's also a minor platform bug that the 00:1c.2 root
-> > port advertises a slot.  1c.2 is connected to a system-integrated
-> > device, i.e., 03:00.0, not a slot.  This might cause pciehp to claim
-> > 1c.2 when it shouldn't.  But that's unrelated to the current issue, of
-> > course.
-> > 
-> >> I posted the output of DMESG with your patch (in 4.4.0) to the bugzilla
-> >> https://bugzilla.kernel.org/show_bug.cgi?id=110851
-> >>
-> >> It produced a fair bit of output but doesn't look like the card was
-> >> recognised. At least modprobe'ing bttv with the right parameters didn't
-> >> yield the right response.
-> > 
-> > I only added printks, so I didn't expect it to change the behavior.  I
-> > just wanted to confirm that we are scanning the bus and device numbers
-> > where we expect the bttv devices to be, and we are.  I think your bttv
-> > card includes these devices:
-> > 
-> >   04:01.0 PCI-PCI bridge (Hint Corp)
-> >   05:0c.0 bt878
-> >   05:0c.1 bt878
-> >   05:0d.0 bt878
-> >   ...
-> >   05:0f.1 bt878
-> > 
-> > For conventional PCI, I think the device number is determined by the
-> > slot wiring.  That affects the device number of the Hint Corp bridge,
-> > so if you move it between slots, it should change from device 01 to
-> > something else.
-> > 
-> > The device and function numbers of the bt878 devices are determined by
-> > wiring on the card, so those should be the same between machine A and
-> > B.  These are 5- and 3-bit fields, respectively, so 0c.0 means we have
-> > 01100 000 encoded into an 8-bit devfn as 0110 0000 or 0x60.  When we
-> > tried to read the vendor & device ID from 0c.0, we got no response
-> > from the device:
-> > 
-> >   pci_bus 0000:05: pci_scan_slot 60
-> >   pci_bus 0000:05: pci_scan_single_device 60
-> >   pci_bus 0000:05: pci_scan_device 60
-> >   pci_bus 0000:05: pci_bus_read_dev_vendor_id 60 0xffffffff
-> > 
-> > I'm out of ideas.  Other cards work in this slot; it's only the bttv
-> > card that doesn't work.  So it seems like it must be something about
-> > that card that's different.
-> > 
-> > Maybe somebody on the list will have more ideas?
-> > 
-> > Bjorn
-> > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+   2.2 Plug adapter 0001:06:00.x
+   # echo 1 > /sys/bus/pci/slots/C12/power
+   # lspci -t
+   +-[0001:00]---00.0-[01-0a]----00.0-[02-0a]--+-01.0-[03-04]----00.0-[04]----00.0
+                                               +-08.0-[05]----00.0
+                                               \-09.0-[06-0a]--+-00.0
+                                                               \-00.1
+   # lspci
+   0001:06:00.0 Ethernet controller: \
+   Broadcom Corporation NetXtreme II BCM57810 10 Gigabit Ethernet (rev 10)
+   0001:06:00.1 Ethernet controller: \
+   Broadcom Corporation NetXtreme II BCM57810 10 Gigabit Ethernet (rev 10)
+
+   2.3 Inject EEH error to adapter 0001:06:00.x, which is recovered
+   # cat /sys/bus/pci/devices/0001:06:00.0/eeh_pe_config_addr 
+   0x2
+   # echo 2:0:4:0:0 > /sys/kernel/debug/powerpc/PCI0001/err_injct
+   # dmesg | grep EEH
+   EEH: Frozen PHB#1-PE#2 detected
+   EEH: PE location: U78C9.001.WZS00CF-P1-C12, PHB location: N/A
+   EEH: Detected PCI bus error on PHB#1-PE#2
+   EEH: This PCI device has failed 1 times in the last hour
+   EEH: Notify device drivers to shutdown
+   EEH: Collect temporary log
+   EEH: Reset without hotplug activity
+   EEH: Notify device drivers the completion of reset
+   EEH: Notify device driver to resume
+
+   2.4 Unplug adapter 0001:06:00.x
+   # echo 0 > /sys/bus/pci/slots/C12/power
+   # lspci -t
+   +-[0001:00]---00.0-[01-0a]----00.0-[02-0a]--+-01.0-[03-04]----00.0-[04]----00.0
+                                               +-08.0-[05]----00.0
+                                               \-09.0-[06-0a]--
+
+=========
+Changelog
+=========
+v8:
+   * Rebased to linux-powerpc next branch.
+   * Resolve comments from Alexey and Daniel on PCI part
+   * Resolve comments from Rob on fdt.c
+   * Retested (refer to the "Testing section")
+v7:
+   * Reworked revision to some extent.
+   * Rebased to powerpc/next repository.
+   * Reorder/split/merge/drop according - Alexey.
+   * Defined macros and use array to track IO/M32/M64/DMA32 segments - Alexey.
+   * Merged 3 files to one for the hotplug driver - Alexey.
+   * As part of OPAL API, defined macros for PCI slot power state, hotplug
+     message type. Defined macros for PCI slot power confirmed state in
+     hotplug driver.
+   * Misc comments from Alexey.
+   * Reworked unflatten_dt_node() to avoid recursive function calls.
+   * Use EXPORT_SYMBOL_GPL() and document function's input/output - Rob/Frank.
+v6:
+   * Patch reorder, split, squash - Alexey.
+   * Minor coding style - Alexey.
+   * Better function names for pcibios_{add,remove}_pci_devices - Bjorn
+   * Replace pr_warn() with dev_warn() in PowerNV hotplug driver - Bjorn
+   * Concurrent depth as parameter passed to __unflatten_dt_node() - Grant / Alexey
+   * Replace overlay with of_changeset - Grant
+v5:
+   * Rebased to 4.1.rc6 and some unmerged patches as below:
+     Alexey's DDW patchset (v11);
+     Gavin's EEH error injection support (in mpe's next branch);
+     Richard's EEH cleanup patches (in mpe's next branch);
+     Richard's EEH support for VF (v7);
+     Gavin's misc EEH fixes for 4.2;
+   * The revision bases on skiboot corresponding patches (v7):
+     https://patchwork.ozlabs.org/patch/480437/
+   * Utilize OF overlay to update device-tree with help of newly introduced
+     OPAL API opal_get_overlay_dt().
+   * Split patches for easy review according to aik's comments.
+   * Fix coding style from checkpatchc.pl as pointed by aik.
+   * Code cleanup and misc fixup according to aik's input.
+v4:
+   * Rebased to 4.1.RC1
+   * Added API to unflatten FDT blob to device node sub-tree, which is attached
+     the indicated parent device node. The original mechanism based on formatted
+     string stream has been dropped.
+   * The PATCH[v3 09/21] ("powerpc/eeh: Delay probing EEH device during hotplug")
+     was picked up sent to linux-ppc@ separately for review as Richard's "VF EEH
+     Support" depends on that.
+v3:
+   * Rebased to 4.1.RC0
+   * PowerNV PCI infrasturcture is total refactored in order to support PCI
+     hotplug. The PowerNV hotplug driver is also reworked a lot because of
+     the changes in skiboot in order to support PCI hotplug.
+
+Gavin Shan (45):
+  PCI: Add pcibios_setup_bridge()
+  powerpc/pci: Override pcibios_setup_bridge()
+  powerpc/pci: Cleanup on struct pci_controller_ops
+  powerpc/powernv: Cleanup on pci_controller_ops instances
+  powerpc/powernv: Drop phb->bdfn_to_pe()
+  powerpc/powernv: Reorder fields in struct pnv_phb
+  powerpc/powernv: Rename PE# fields in struct pnv_phb
+  powerpc/powernv: Fix initial IO and M32 segmap
+  powerpc/powernv: Simplify pnv_ioda_setup_pe_seg()
+  powerpc/powernv: IO and M32 mapping based on PCI device resources
+  powerpc/powernv: Track M64 segment consumption
+  powerpc/powernv: Rename M64 related functions
+  powerpc/powernv/ioda1: M64 support on P7IOC
+  powerpc/powernv/ioda1: Rename pnv_pci_ioda_setup_dma_pe()
+  powerpc/powernv/ioda1: Introduce PNV_IODA1_DMA32_SEGSIZE
+  powerpc/powernv: Remove DMA32 PE list
+  powerpc/powernv/ioda1: Improve DMA32 segment track
+  powerpc/powernv: Increase PE# capacity
+  powerpc/powernv: Use PE instead of number during setup and release
+  powerpc/powernv: Allocate PE# in reverse order
+  powerpc/powernv: Create PEs at PCI hot plugging time
+  powerpc/powernv/ioda1: Support releasing IODA1 TCE table
+  powerpc/powernv: Dynamically release PEs
+  powerpc/pci: Rename pcibios_{add,remove}_pci_devices()
+  powerpc/pci: Rename pcibios_find_pci_bus()
+  powerpc/pci: Move pci_find_bus_by_node() around
+  powerpc/pci: Export pci_add_device_node_info()
+  powerpc/pci: Introduce pci_remove_device_node_info()
+  powerpc/pci: Export pci_traverse_device_nodes()
+  powerpc/pci: Delay populating pdn
+  powerpc/pci: Don't scan empty slot
+  powerpc/pci: Update bridge windows on PCI plug
+  powerpc/powernv: Simplify pnv_eeh_reset()
+  powerpc/powernv: Exclude root bus in pnv_pci_reset_secondary_bus()
+  powerpc/powernv: Fundamental reset in pnv_pci_reset_secondary_bus()
+  powerpc/powernv: Support PCI slot ID
+  powerpc/powernv: Use firmware PCI slot reset infrastructure
+  powerpc/powernv: Functions to get/set PCI slot status
+  powerpc/powernv: Select OF_DYNAMIC
+  drivers/of: Split unflatten_dt_node()
+  drivers/of: Avoid recursively calling unflatten_dt_node()
+  drivers/of: Rename unflatten_dt_node()
+  drivers/of: Specify parent node in of_fdt_unflatten_tree()
+  drivers/of: Return allocated memory from of_fdt_unflatten_tree()
+  PCI/hotplug: PowerPC PowerNV PCI hotplug driver
+
+ arch/powerpc/include/asm/eeh.h                 |    2 +-
+ arch/powerpc/include/asm/opal-api.h            |   17 +-
+ arch/powerpc/include/asm/opal.h                |    8 +-
+ arch/powerpc/include/asm/pci-bridge.h          |   25 +-
+ arch/powerpc/include/asm/pnv-pci.h             |    7 +
+ arch/powerpc/include/asm/ppc-pci.h             |    8 +-
+ arch/powerpc/kernel/eeh_dev.c                  |   17 +-
+ arch/powerpc/kernel/eeh_driver.c               |   12 +-
+ arch/powerpc/kernel/pci-common.c               |   16 +-
+ arch/powerpc/kernel/pci-hotplug.c              |   47 +-
+ arch/powerpc/kernel/pci_dn.c                   |   89 +-
+ arch/powerpc/platforms/maple/pci.c             |   34 +-
+ arch/powerpc/platforms/pasemi/pci.c            |    3 -
+ arch/powerpc/platforms/powermac/pci.c          |   38 +-
+ arch/powerpc/platforms/powernv/Kconfig         |    1 +
+ arch/powerpc/platforms/powernv/eeh-powernv.c   |  179 ++--
+ arch/powerpc/platforms/powernv/opal-wrappers.S |    4 +
+ arch/powerpc/platforms/powernv/pci-ioda.c      | 1243 +++++++++++++++---------
+ arch/powerpc/platforms/powernv/pci.c           |   92 +-
+ arch/powerpc/platforms/powernv/pci.h           |   60 +-
+ arch/powerpc/platforms/pseries/msi.c           |    4 +-
+ arch/powerpc/platforms/pseries/pci_dlpar.c     |   32 -
+ arch/powerpc/platforms/pseries/setup.c         |    8 +-
+ drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c   |    2 +-
+ drivers/of/fdt.c                               |  372 ++++---
+ drivers/of/unittest.c                          |    2 +-
+ drivers/pci/hotplug/Kconfig                    |   12 +
+ drivers/pci/hotplug/Makefile                   |    3 +
+ drivers/pci/hotplug/pnv_php.c                  |  870 +++++++++++++++++
+ drivers/pci/hotplug/rpadlpar_core.c            |    8 +-
+ drivers/pci/hotplug/rpaphp_core.c              |    4 +-
+ drivers/pci/hotplug/rpaphp_pci.c               |    4 +-
+ drivers/pci/setup-bus.c                        |    5 +
+ include/linux/of_fdt.h                         |    5 +-
+ include/linux/pci.h                            |    1 +
+ 35 files changed, 2360 insertions(+), 874 deletions(-)
+ create mode 100644 drivers/pci/hotplug/pnv_php.c
+
+-- 
+2.1.0
+
