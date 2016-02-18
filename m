@@ -1,62 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:9762 "EHLO
-	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752803AbcBDQKe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 11:10:34 -0500
-From: Paul Burton <paul.burton@imgtec.com>
-To: <linux-mips@linux-mips.org>
-CC: Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>,
-	"Paul Burton" <paul.burton@imgtec.com>,
-	Ley Foon Tan <lftan@altera.com>,
-	"Arnd Bergmann" <arnd@arndb.de>,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Russell Joyce <russell.joyce@york.ac.uk>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Ray Jui <rjui@broadcom.com>,
-	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	"Thomas Gleixner" <tglx@linutronix.de>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"Rob Herring" <robh@kernel.org>, Duc Dang <dhdang@apm.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	<linux-kernel@vger.kernel.org>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Subject: [PATCH v3 0/6] Xilinx AXI PCIe Host Bridge driver fixes
-Date: Thu, 4 Feb 2016 16:10:07 +0000
-Message-ID: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:30110 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1424347AbcBRBiv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 17 Feb 2016 20:38:51 -0500
+From: Qipeng Zha <qipeng.zha@intel.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	mika.westerberg@intel.com, Qi Zheng <qi.zheng@intel.com>
+Subject: [PATCH 2/2] PCI/PM: enable runtime PM support for Intel Broxton platform.
+Date: Thu, 18 Feb 2016 17:43:31 +0800
+Message-Id: <1455788611-59790-2-git-send-email-qipeng.zha@intel.com>
+In-Reply-To: <1455788611-59790-1-git-send-email-qipeng.zha@intel.com>
+References: <1455788611-59790-1-git-send-email-qipeng.zha@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series fixes a number of issues found using the Xilinx AXI PCIe
-Host Bridge IP on the Imagination Technologies MIPS Boston development
-board. It has been split out of the larger Boston board support series
-at Michal's request.
+The PCIe runtime PM is disabled by default, add special treatment
+to allow runtime PM for Intel Broxton platform.
 
-Applies atop v4.5-rc2.
+Signed-off-by: Qi Zheng <qi.zheng@intel.com>
+Signed-off-by: Qipeng Zha <qipeng.zha@intel.com>
+---
+ drivers/pci/quirks.c    | 13 +++++++++++++
+ include/linux/pci_ids.h |  2 ++
+ 2 files changed, 15 insertions(+)
 
-Paul Burton (6):
-  PCI: xilinx: Keep references to both IRQ domains
-  PCI: xilinx: Unify INTx & MSI interrupt FIFO decode
-  PCI: xilinx: Always clear interrupt decode register
-  PCI: xilinx: Clear interrupt FIFO during probe
-  PCI: xilinx: Fix INTX irq dispatch
-  PCI: xilinx: Allow build on MIPS platforms
-
- drivers/pci/host/Kconfig       |   2 +-
- drivers/pci/host/pcie-xilinx.c | 125 +++++++++++++++++++----------------------
- 2 files changed, 60 insertions(+), 67 deletions(-)
-
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 7e32730..a745d06 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -25,6 +25,7 @@
+ #include <linux/sched.h>
+ #include <linux/ktime.h>
+ #include <linux/mm.h>
++#include <linux/pm_runtime.h>
+ #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+ #include "pci.h"
+ 
+@@ -2989,6 +2990,18 @@ static void quirk_intel_ntb(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e08, quirk_intel_ntb);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x0e0d, quirk_intel_ntb);
+ 
++
++/*PCIe ports on Intel Broxton should support runtime PM*/
++static void quirk_pcie_enable_rtpm(struct pci_dev *dev)
++{
++	pm_runtime_put_noidle(&dev->dev);
++	pm_runtime_allow(&dev->dev);
++}
++DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_INTEL,
++	PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_0, quirk_pcie_enable_rtpm);
++DECLARE_PCI_FIXUP_ENABLE(PCI_VENDOR_ID_INTEL,
++	PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_1, quirk_pcie_enable_rtpm);
++
+ static ktime_t fixup_debug_start(struct pci_dev *dev,
+ 				 void (*fn)(struct pci_dev *dev))
+ {
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index d9ba49c..731f05f 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2596,6 +2596,8 @@
+ #define PCI_DEVICE_ID_INTEL_82840_HB	0x1a21
+ #define PCI_DEVICE_ID_INTEL_82845_HB	0x1a30
+ #define PCI_DEVICE_ID_INTEL_IOAT	0x1a38
++#define PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_0		0x1ad6
++#define PCI_DEVICE_ID_INTEL_BXT_B0_PCIe_1		0x1ad7
+ #define PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MIN	0x1c41
+ #define PCI_DEVICE_ID_INTEL_COUGARPOINT_LPC_MAX	0x1c5f
+ #define PCI_DEVICE_ID_INTEL_PATSBURG_LPC_0	0x1d40
 -- 
-2.7.0
+1.8.3.2
 
