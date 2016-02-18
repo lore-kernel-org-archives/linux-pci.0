@@ -1,49 +1,78 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	guohanjun@huawei.com, wangzhou1@hisilicon.com,
-	liudongdong3@huawei.com, linuxarm@huawei.com, qiujiang@huawei.com,
-	bhelgaas@google.com, Lorenzo.Pieralisi@arm.com, tn@semihalf.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	xuwei5@hisilicon.com, linux-acpi@vger.kernel.org, jcm@redhat.com,
-	zhangjukuo@huawei.com, liguozhu@hisilicon.com
-Subject: Re: [RFC PATCH v2 1/3] PCI: hisi: re-architect Hip05/Hip06 controllers driver to preapare for ACPI
-Date: Mon, 08 Feb 2016 14:50:15 +0100
-Message-ID: <2409806.1aGBrN4l0X@wuerfel>
-In-Reply-To: <1454935264-6076-2-git-send-email-gabriele.paoloni@huawei.com>
-References: <1454935264-6076-1-git-send-email-gabriele.paoloni@huawei.com> <1454935264-6076-2-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:51929 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1425604AbcBRMus (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Feb 2016 07:50:48 -0500
+Date: Thu, 18 Feb 2016 13:50:45 +0100
+From: Jean Delvare <jdelvare@suse.de>
+To: linux-pci@vger.kernel.org
+Cc: Thomas Renninger <trenn@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Borislav Petkov <bp@suse.de>,
+	Prarit Bhargava <prarit@redhat.com>
+Subject: [PATCH 1/4] PCI: aer_inject: Fix error codes
+Message-ID: <20160218135045.0991a270@endymion>
+In-Reply-To: <20160218130928.67dbf63b@endymion>
+References: <20160218130928.67dbf63b@endymion>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 08 February 2016 12:41:02 Gabriele Paoloni wrote:
-> +
-> +/* HipXX PCIe host only supports 32-bit config access */
-> +int hisi_pcie_common_cfg_read(void __iomem *reg_base, int where, int size,
-> +			      u32 *val)
-> +{
-> +	u32 reg;
-> +	u32 reg_val;
-> +	void *walker = &reg_val;
-> +
-> +	walker += (where & 0x3);
-> +	reg = where & ~0x3;
-> +	reg_val = readl(reg_base + reg);
-> +
-> +	if (size == 1)
-> +		*val = *(u8 __force *) walker;
-> +	else if (size == 2)
-> +		*val = *(u16 __force *) walker;
-> +	else if (size == 4)
-> +		*val = reg_val;
-> +	else
-> +		return PCIBIOS_BAD_REGISTER_NUMBER;
-> +
-> +	return PCIBIOS_SUCCESSFUL;
-> +}
+EPERM means "Operation not permitted", which doesn't reflect the lack
+of support for AER. EPROTONOSUPPORT (Protocol not supported) is a
+better choice or error code if the device or its root port lack
+support for AER.
 
-Isn't this the same hack that Qualcomm are using?
+Likewise, EINVAL means "Invalid argument", which is not suitable for
+cases where the AER error device is missing or unusable. ENODEV and
+EPROTONOSUPPORT, respectively, fit better.
 
-	Arnd
+Suggested-by: Borislav Petkov <bp@suse.de>
+Signed-off-by: Jean Delvare <jdelvare@suse.de>
+Cc: Borislav Petkov <bp@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Prarit Bhargava <prarit@redhat.com>
+---
+ drivers/pci/pcie/aer/aer_inject.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+--- linux-4.5-rc4.orig/drivers/pci/pcie/aer/aer_inject.c	2016-02-18 11:23:03.741503472 +0100
++++ linux-4.5-rc4/drivers/pci/pcie/aer/aer_inject.c	2016-02-18 13:18:18.999397788 +0100
+@@ -340,7 +340,7 @@ static int aer_inject(struct aer_error_i
+ 
+ 	pos_cap_err = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+ 	if (!pos_cap_err) {
+-		ret = -EPERM;
++		ret = -EPROTONOSUPPORT;
+ 		goto out_put;
+ 	}
+ 	pci_read_config_dword(dev, pos_cap_err + PCI_ERR_UNCOR_SEVER, &sever);
+@@ -350,7 +350,7 @@ static int aer_inject(struct aer_error_i
+ 
+ 	rp_pos_cap_err = pci_find_ext_capability(rpdev, PCI_EXT_CAP_ID_ERR);
+ 	if (!rp_pos_cap_err) {
+-		ret = -EPERM;
++		ret = -EPROTONOSUPPORT;
+ 		goto out_put;
+ 	}
+ 
+@@ -458,12 +458,12 @@ static int aer_inject(struct aer_error_i
+ 	if (find_aer_device(rpdev, &edev)) {
+ 		if (!get_service_data(edev)) {
+ 			printk(KERN_WARNING "AER service is not initialized\n");
+-			ret = -EINVAL;
++			ret = -EPROTONOSUPPORT;
+ 			goto out_put;
+ 		}
+ 		aer_irq(-1, edev);
+ 	} else
+-		ret = -EINVAL;
++		ret = -ENODEV;
+ out_put:
+ 	kfree(err_alloc);
+ 	kfree(rperr_alloc);
+
+-- 
+Jean Delvare
+SUSE L3 Support
