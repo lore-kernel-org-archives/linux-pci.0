@@ -1,128 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:52642 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750961AbcBHM6d (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Feb 2016 07:58:33 -0500
-Subject: Re: [PATCH v8 2/2] add new platform driver for PCI RC
-To: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <helgaas@kernel.org>
-References: <cover.1454600622.git.jpinto@synopsys.com>
- <4427983.0G6mVNKP5W@wuerfel> <20160205233248.GC11780@localhost>
- <2803103.hQZUPM7HZf@wuerfel>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>, <Vineet.Gupta1@synopsys.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-snps-arc@lists.infradead.org>,
-	<CARLOS.PALMINHA@synopsys.com>, <Alexey.Brodkin@synopsys.com>,
-	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <56B88F9F.7020907@synopsys.com>
-Date: Mon, 8 Feb 2016 12:52:47 +0000
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <2803103.hQZUPM7HZf@wuerfel>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1455801582-21595-1-git-send-email-okaya@codeaurora.org>
+References: <1455801582-21595-1-git-send-email-okaya@codeaurora.org>
+Date: Thu, 18 Feb 2016 17:39:03 +0100
+Message-ID: <CAJZ5v0hOrY3iP8QQMQxkNtY7vQcrShQuPBxyNBqY6DYaxhf1bA@mail.gmail.com>
+Subject: Re: [PATCH V2] acpi, pci, irq: account for early penalty assignment
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Timur Tabi <timur@codeaurora.org>,
+	Christopher Covington <cov@codeaurora.org>,
+	Linux PCI <linux-pci@vger.kernel.org>, ravikanth.nalla@hpe.com,
+	Len Brown <lenb@kernel.org>, harish.k@hpe.com,
+	ashwin.reghunandanan@hpe.com,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn and Arnd,
+On Thu, Feb 18, 2016 at 2:19 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+> A crash has been observed when assigning penalty on x86 systems.
+>
+> It looks like this problem happens on x86 platforms with IOAPIC and an SCI
+> interrupt override in the ACPI table with interrupt number greater than
+> 16. (22 in this example)
+>
+> The bug has been introduced by "ACPI, PCI, irq: remove interrupt count
+> restriction" commit. The code was using kmalloc to resize the interrupt
+> list. In this use case, the set penalty call is coming from early phase
+> and the heap is not initialized yet.
+>
+> BUG: unable to handle kernel NULL pointer dereference at 0000000000000018
+> IP: [<ffffffff811e8b9d>] kmem_cache_alloc_trace+0xad/0x1c0
+> PGD 0
+> Oops: 0000 [#1] SMP
+> Modules linked in:
+> CPU: 0 PID: 0 Comm: swapper Not tainted 4.5.0-rc2Feb-3_RK #1
+> Hardware name: HP Superdome2 16s, BIOS Bundle: 007.006.000 SFW: 033.162.000
+> 10/30/2015
+> [<ffffffff813bc190>] acpi_irq_set_penalty+0x60/0x8e
+> [<ffffffff813bc1df>] acpi_irq_add_penalty+0x21/0x26
+> [<ffffffff813bc76d>] acpi_penalize_sci_irq+0x25/0x28
+> [<ffffffff81b8260d>] acpi_sci_ioapic_setup+0x68/0x78
+> [<ffffffff81b830fc>] acpi_boot_init+0x2cc/0x533
+> [<ffffffff810677c8>] ? set_pte_vaddr_pud+0x48/0x50
+> [<ffffffff81b828cf>] ? acpi_parse_x2apic+0x77/0x77
+> [<ffffffff81b82858>] ? dmi_ignore_irq0_timer_override+0x30/0x30
+> [<ffffffff81b77c1e>] setup_arch+0xc24/0xce9
+> [<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
+> [<ffffffff81b6ed94>] start_kernel+0xfc/0x506
+> [<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
+> [<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
+> [<ffffffff81b6e5ee>] x86_64_start_reservations+0x2a/0x2c
+> [<ffffffff81b6e73c>] x86_64_start_kernel+0x14c/0x16f
+>
+> Besides from the use case above, there is one more situation where
+> set_penalty is being called from the init context like. There is support
+> for setting the penalty through kernel command line.
+>
+> Adding support to be called from early context for limited number of
+> interrupts.
+>
+> Reported-by: Nalla, Ravikanth <ravikanth.nalla@hpe.com>
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/acpi/pci_link.c | 19 +++++++++++++++----
+>  1 file changed, 15 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+> index fa28635..14fe3ca 100644
+> --- a/drivers/acpi/pci_link.c
+> +++ b/drivers/acpi/pci_link.c
+> @@ -47,6 +47,7 @@ ACPI_MODULE_NAME("pci_link");
+>  #define ACPI_PCI_LINK_FILE_INFO                "info"
+>  #define ACPI_PCI_LINK_FILE_STATUS      "state"
+>  #define ACPI_PCI_LINK_MAX_POSSIBLE     16
+> +#define ACPI_PCI_LINK_MAX_EARLY_IRQINFO 1024
 
-I agree with you in adding the platform register mechanism to the
-pcie-designware core driver. This feature is excellent for who wants to quickly
-have a taste of a pcie-designware platform drive for their Synopsys PCIe RC
-controller.
+Why do we need so many of them?
 
-Do you have some example for me to check in order to follow the same logic.
-Adding something like this in pcie-designware:
+>
+>  static int acpi_pci_link_add(struct acpi_device *device,
+>                              const struct acpi_device_id *not_used);
+> @@ -473,6 +474,8 @@ struct irq_penalty_info {
+>  };
+>
+>  static LIST_HEAD(acpi_irq_penalty_list);
+> +static struct irq_penalty_info early_irq_infos[ACPI_PCI_LINK_MAX_EARLY_IRQINFO];
+> +static int early_irq_info_counter;
+>
+>  static int acpi_irq_get_penalty(int irq)
+>  {
+> @@ -507,10 +510,17 @@ static int acpi_irq_set_penalty(int irq, int new_penalty)
+>                 }
+>         }
+>
+> -       /* nope, let's allocate a slot for this IRQ */
+> -       irq_info = kzalloc(sizeof(*irq_info), GFP_KERNEL);
+> -       if (!irq_info)
+> -               return -ENOMEM;
+> +       if (!acpi_gbl_permanent_mmap) {
+> +               if (early_irq_info_counter < ARRAY_SIZE(early_irq_infos))
+> +                       irq_info = &early_irq_infos[early_irq_info_counter++];
+> +               else
+> +                       return -ENOMEM;
+> +       } else {
+> +               /* nope, let's allocate a slot for this IRQ */
+> +               irq_info = kzalloc(sizeof(*irq_info), GFP_KERNEL);
+> +               if (!irq_info)
+> +                       return -ENOMEM;
+> +       }
+>
+>         irq_info->irq = irq;
+>         irq_info->penalty = new_penalty;
+> @@ -968,3 +978,4 @@ void __init acpi_pci_link_init(void)
+>         register_syscore_ops(&irqrouter_syscore_ops);
+>         acpi_scan_add_handler(&pci_link_handler);
+>  }
+> +
+> --
 
-#ifdef CONFIG_PCIE_DW_PLAT
-<add compatibility and platform register code>
-#endif
-
-would be acceptable? maybe the platform tweeks should be external makeing it
-cleaner like Arnd suggested. An example to follow would be nice.
+Bjorn, what do you think about this one?
 
 Thanks,
-Joao
-
-On 2/8/2016 12:31 PM, Arnd Bergmann wrote:
-> On Friday 05 February 2016 17:32:48 Bjorn Helgaas wrote:
->> On Fri, Feb 05, 2016 at 03:39:05PM +0100, Arnd Bergmann wrote:
->>> On Friday 05 February 2016 10:44:29 Joao Pinto wrote:
-> 
->>> I think in this case, we should do this completely differently:
->>>
->>> How about putting all the new code into drivers/pci/host/pcie-designware.c
->>> as functions that can be used by the other drivers in absence of a chip
->>> specific handler?
->>>
->>> Instead of providing a new instance of struct pcie_host_ops, maybe add
->>> it as a default implementation in dw_pcie_link_up() and dw_pcie_host_init()
->>> for drivers that don't provide their own. "hisi_pcie_host_ops" currently
->>> provides no host_init() callback function, so you will have to change
->>> the hisi frontend to a provide nop-function.
->>>
->>> For all other drivers, check if they can be changed to use your generic
->>> implementation and remove their private callbacks if possible.
->>>
->>> I think the MSI implementation should be split out into a separate file
->>> though, as not everyone uses this.
->>
->> I'm not sure I understand what you're proposing, Arnd, so let me
->> ramble and you can direct me back on course.
->>
->> Currently drivers/pci/host/pcie-designware.c is not usable by itself;
->> it doesn't register a platform_driver.
->>
->> There's hardly any code in Joao's patches; it looks like they add a
->> minimal wrapper around the functionality in pcie-designware.c and
->> register it as a platform_driver.
->>
->> Are you suggesting that we should just add that functionality directly
->> in pcie-designware.c so that file could both be a minimal driver with
->> the functionality of Joao's patches, *and* continue to provide the
->> shared code used by all the existing DesignWare-based drivers?  Maybe
->> the platform_driver registration part could be controlled by its own
->> separate Kconfig option.
-> 
-> Either way is fine, we just have to be a little careful about the
-> initialization ordering.
-> 
->> For example, he could make dw_pcie_link_up() look like:
->>
->>   int dw_pcie_link_up(struct pcie_port *pp)
->>   {
->>     u32 val;
->>
->>     if (pp->ops->link_up)
->>       return pp->ops->link_up(pp);
->>
->>     val = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
->>     return val & PCIE_PHY_DEBUG_R1_LINK_UP;
->>   }
-> 
-> This is definitely good (after checking that all existing drivers
-> either work with the generic version, or provide their own callbacks
-> already).
-> 
->> That seems like it would make sense to me.  It would resolve the
->> filename question, since there wouldn't be a new file.  And if this is
->> merely a driver for the generic DesignWare core without any
->> extensions, I'm happy with some sort of "dw"-based driver name and
->> compatibility string.
-> 
-> The important part I think is that the new driver should not require
-> and code that is seen as soc-specific: If it works with any implementation
-> of pci-dw rather than a specific system, the driver should know how
-> to do the right thing.
-> 
-> It may be helpful to move the actual matching on the compatible string
-> and calling of the generic probe function into another module, if we
-> are going forward with loadable PCI host drivers as posted by 
-> Paul Gortmaker today. Otherwise we end up with a device being bound
-> to the generic driver when a more specific one exists and both
-> are loadable modules, because the generic driver is always loaded
-> first.  As long as both drivers are built-in, it works fine because
-> we first look for a driver matching the most specific compatible string.
-> 
-> 	Arnd
-> 
-
+Rafael
