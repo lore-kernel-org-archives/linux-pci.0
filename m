@@ -1,79 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0114.outbound.protection.outlook.com ([207.46.100.114]:47008
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756010AbcBPWBM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 17:01:12 -0500
-From: Jake Oshins <jakeo@microsoft.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	KY Srinivasan <kys@microsoft.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"olaf@aepfle.de" <olaf@aepfle.de>,
-	"apw@canonical.com" <apw@canonical.com>,
-	"vkuznets@redhat.com" <vkuznets@redhat.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-	Hadden Hoppert <haddenh@microsoft.com>
-Subject: RE: [PATCH RESEND v2 3/3] PCI: hv: New paravirtual PCI front-end for
- Hyper-V VMs
-Date: Tue, 16 Feb 2016 21:46:55 +0000
-Message-ID: <DM2PR0301MB1232A3F01DC9DB4F3BF97C18ABAD0@DM2PR0301MB1232.namprd03.prod.outlook.com>
-References: <1455045869-38341-1-git-send-email-jakeo@microsoft.com>
- <1455045869-38341-4-git-send-email-jakeo@microsoft.com>
- <20160216164544.GA18685@localhost>
-In-Reply-To: <20160216164544.GA18685@localhost>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx2.suse.de ([195.135.220.15]:52152 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1425276AbcBRMwt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Feb 2016 07:52:49 -0500
+Date: Thu, 18 Feb 2016 13:52:46 +0100
+From: Jean Delvare <jdelvare@suse.de>
+To: linux-pci@vger.kernel.org
+Cc: Thomas Renninger <trenn@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Borislav Petkov <bp@suse.de>,
+	Prarit Bhargava <prarit@redhat.com>
+Subject: [PATCH 3/4] PCI: aer_inject: Log actual error causes
+Message-ID: <20160218135246.076beae6@endymion>
+In-Reply-To: <20160218130928.67dbf63b@endymion>
+References: <20160218130928.67dbf63b@endymion>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Tuesday, February 16, 2016 8:46 AM
-> To: Jake Oshins <jakeo@microsoft.com>
-> Cc: bhelgaas@google.com; linux-pci@vger.kernel.org;
-> gregkh@linuxfoundation.org; KY Srinivasan <kys@microsoft.com>; linux-
-> kernel@vger.kernel.org; devel@linuxdriverproject.org; olaf@aepfle.de;
-> apw@canonical.com; vkuznets@redhat.com; tglx@linutronix.de; Haiyang
-> Zhang <haiyangz@microsoft.com>; marc.zyngier@arm.com; Hadden
-> Hoppert <haddenh@microsoft.com>
-> Subject: Re: [PATCH RESEND v2 3/3] PCI: hv: New paravirtual PCI front-end
-> for Hyper-V VMs
-> 
-> Hi Jake,
-> 
-> Looks good to me overall; I marked a few nits below.
-> 
-> The only real question I have is about domain number allocation.  See
-> the note below.
-> 
-[snip]
-> > +
-> > +	/*
-> > +	 * The PCI bus "domain" is what is called "segment" in
-> > +	 * ACPI and other specs.  Pull it from the instance ID,
-> > +	 * to get something unique.  Bytes 8 and 9 are what is used
-> > +	 * in Windows guests, so do the same thing for consistency.
-> > +	 */
-> > +
-> > +	hbus->sysdata.domain = hdev->dev_instance.b[9] |
-> > +			       hdev->dev_instance.b[8] << 8;
-> 
-> How do we know this is unique?  We don't have any idea what the
-> platform will put in _SEG, so I think there's a potential conflict
-> here.  The Intel VMD driver (arch/x86/pci/vmd.c) has a similar
-> problem, and it looks for unused domain numbers starting at 0x10000
-> (see vmd_find_free_domain()).
-> 
+The aer_inject driver is very quiet. In most cases, it merely returns
+an error code to user-space, leaving the user with little clue about
+the actual reason for the failure.
 
-Bjorn, thank you for your very thorough reviews.  I deeply appreciate it.  I checked the Hyper-V code and it currently does guarantee that these values are unique.  When I resend the series, I'll add a comment to that effect.  I'll also add a comment to Hyper-V that says that it has to stay that way.
+So, log error messages for 4 of the most frequent causes of failure:
+* Can't find the root port of the specified device.
+* Device doesn't support AER.
+* Root port doesn't support AER.
+* AER device not found.
+This gives the user a chance to understand why aer-inject failed.
 
-I'll resend shortly.
+Based on a preliminary patch by Thomas Renninger.
 
-Thanks again,
-Jake
+Signed-off-by: Jean Delvare <jdelvare@suse.de>
+Cc: Borislav Petkov <bp@suse.de>
+Cc: Thomas Renninger <trenn@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/aer/aer_inject.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+--- linux-4.5-rc4.orig/drivers/pci/pcie/aer/aer_inject.c	2016-02-18 12:50:56.927581343 +0100
++++ linux-4.5-rc4/drivers/pci/pcie/aer/aer_inject.c	2016-02-18 12:53:18.432587496 +0100
+@@ -335,12 +335,14 @@ static int aer_inject(struct aer_error_i
+ 		return -ENODEV;
+ 	rpdev = pcie_find_root_port(dev);
+ 	if (!rpdev) {
++		dev_err(&dev->dev, "aer_inject: Root port not found\n");
+ 		ret = -ENODEV;
+ 		goto out_put;
+ 	}
+ 
+ 	pos_cap_err = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+ 	if (!pos_cap_err) {
++		dev_err(&dev->dev, "aer_inject: Device doesn't support AER\n");
+ 		ret = -EPROTONOSUPPORT;
+ 		goto out_put;
+ 	}
+@@ -351,6 +353,8 @@ static int aer_inject(struct aer_error_i
+ 
+ 	rp_pos_cap_err = pci_find_ext_capability(rpdev, PCI_EXT_CAP_ID_ERR);
+ 	if (!rp_pos_cap_err) {
++		dev_err(&rpdev->dev,
++			"aer_inject: Root port doesn't support AER\n");
+ 		ret = -EPROTONOSUPPORT;
+ 		goto out_put;
+ 	}
+@@ -466,8 +470,10 @@ static int aer_inject(struct aer_error_i
+ 			goto out_put;
+ 		}
+ 		aer_irq(-1, edev);
+-	} else
++	} else {
++		dev_err(&rpdev->dev, "aer_inject: AER device not found\n");
+ 		ret = -ENODEV;
++	}
+ out_put:
+ 	kfree(err_alloc);
+ 	kfree(rperr_alloc);
+
+-- 
+Jean Delvare
+SUSE L3 Support
