@@ -1,201 +1,311 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:42018 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755512AbcBIR0F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Feb 2016 12:26:05 -0500
-Date: Tue, 9 Feb 2016 17:28:00 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	okaya@codeaurora.org, jiang.liu@linux.intel.com,
-	Stefano.Stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com
-Subject: Re: [PATCH V4 12/23] x86, ia64, pci: Remove ACPI companion device
- from platform specific data.
-Message-ID: <20160209172800.GB22868@red-moon>
-References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
- <1454606941-9523-13-git-send-email-tn@semihalf.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1454606941-9523-13-git-send-email-tn@semihalf.com>
+Received: from AUSXIPPS310.us.dell.com ([143.166.148.211]:6545 "EHLO
+	ausxipps310.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1947689AbcBRUI0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Feb 2016 15:08:26 -0500
+From: Jordan Hargrave <Jordan_Hargrave@dell.com>
+To: jordan_hargrave@dell.com, bhelgaas@google.com
+Cc: alexander.duyck@gmail.com, linux-pci@vger.kernel.org,
+	babu.moger@oracle.com, hare@suse.de, linux-kernel@vger.kernel.org,
+	jharg93@gmail.com, Jordan Hargrave <Jordan_Hargrave@dell.com>
+Subject: [PATCH] Create sysfs entries for PCI VPDI and VPDR tags
+Date: Thu, 18 Feb 2016 14:04:55 -0600
+Message-Id: <1455825895-10951-1-git-send-email-Jordan_Hargrave@dell.com>
+To: Jordan_Hargrave@dell.com
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tomasz,
+The VPD-R is a readonly area of the PCI Vital Product Data region.
+There are some standard keywords for serial number, manufacturer,
+and vendor-specific values.  Dell Servers use a vendor-specific
+tag to store number of ports and port mapping of partitioned NICs.
 
-On Thu, Feb 04, 2016 at 06:28:50PM +0100, Tomasz Nowicki wrote:
-> Since PCI core code is setting ACPI companion device for us now,
-> platform specific ACPI companion device setting turns out to be dead now.
-> Therefore we can get rid of it, including related companion reference
-> from PCI sysdata structure.
-> 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Tested-by: Duc Dang <dhdang@apm.com>
-> Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-> Tested-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  arch/ia64/hp/common/sba_iommu.c    |  2 +-
->  arch/ia64/include/asm/pci.h        |  1 -
->  arch/ia64/pci/pci.c                | 16 ----------------
->  arch/ia64/sn/kernel/io_acpi_init.c |  4 ++--
->  arch/x86/include/asm/pci.h         |  3 ---
->  arch/x86/pci/acpi.c                | 17 -----------------
->  6 files changed, 3 insertions(+), 40 deletions(-)
+info = VPD-Info string
+PN = Part Number
+SN = Serial Number
+MN = Manufacturer ID
+Vx = Vendor-specific (x=0..9 A..Z)
 
-This patch has to be squashed with the previous one otherwise it
-has bisectability issues (ie the previous patch passes the parent
-to the pci_create_root_bus() call so, without this patch applied,
-the companion initialization would fail).
+This creates a sysfs subdirectory in the pci device: vpdattr with
+'info', 'EC', 'SN', 'V0', etc. files containing the tag values.
 
-Other than that:
+Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
+---
+ drivers/pci/pci-sysfs.c | 240 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 240 insertions(+)
 
-Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index d750870..e5f3779 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1295,6 +1295,230 @@ static struct bin_attribute pcie_config_attr = {
+ 	.write = pci_write_config,
+ };
+ 
++static umode_t vpd_attr_exist(struct kobject *kobj,
++			      struct attribute *attr, int n)
++{
++	struct device *dev;
++	struct pci_dev *pdev;
++	int i;
++
++	dev = container_of(kobj, struct device, kobj);
++	pdev = to_pci_dev(dev);
++
++	if (!strcmp(attr->name, "info"))
++		return pdev->vpdi_data ? S_IRUGO : 0;
++	if (pdev->vpdr_data == NULL)
++		return 0;
++	i = pci_vpd_find_info_keyword(pdev->vpdr_data, 0,
++				      pdev->vpdr_len,
++				      attr->name);
++	return i >= 0 ? S_IRUGO : 0;
++}
++
++static ssize_t vpd_attr_show(struct device *dev,
++			     struct device_attribute *attr, char *buf)
++{
++	struct pci_dev *pdev;
++	int i, len;
++
++	pdev = to_pci_dev(dev);
++	if (!strcmp(attr->attr.name, "info")) {
++		if (pdev->vpdi_data == NULL)
++			return 0;
++		return scnprintf(buf, PAGE_SIZE, "%s\n",
++				 pdev->vpdi_data);
++	}
++	if (pdev->vpdr_data == NULL)
++		return 0;
++	i = pci_vpd_find_info_keyword(pdev->vpdr_data, 0,
++				      pdev->vpdr_len,
++				      attr->attr.name);
++	if (i >= 0) {
++		len = pci_vpd_info_field_size(&pdev->vpdr_data[i]);
++		return scnprintf(buf, PAGE_SIZE, "%.*s\n", len,
++				 pdev->vpdr_data + i +
++				 PCI_VPD_INFO_FLD_HDR_SIZE);
++	}
++	return 0;
++}
++
++#define VPD_ATTR_RO(x) \
++static struct device_attribute vpd ## x = { \
++	.attr = { .name = #x, .mode = S_IRUGO | S_IWUSR }, \
++	.show = vpd_attr_show \
++}
++VPD_ATTR_RO(info);
++VPD_ATTR_RO(PN);
++VPD_ATTR_RO(EC);
++VPD_ATTR_RO(MN);
++VPD_ATTR_RO(SN);
++VPD_ATTR_RO(V0);
++VPD_ATTR_RO(V1);
++VPD_ATTR_RO(V2);
++VPD_ATTR_RO(V3);
++VPD_ATTR_RO(V4);
++VPD_ATTR_RO(V5);
++VPD_ATTR_RO(V6);
++VPD_ATTR_RO(V7);
++VPD_ATTR_RO(V8);
++VPD_ATTR_RO(V9);
++VPD_ATTR_RO(VA);
++VPD_ATTR_RO(VB);
++VPD_ATTR_RO(VC);
++VPD_ATTR_RO(VD);
++VPD_ATTR_RO(VE);
++VPD_ATTR_RO(VF);
++VPD_ATTR_RO(VG);
++VPD_ATTR_RO(VH);
++VPD_ATTR_RO(VI);
++VPD_ATTR_RO(VJ);
++VPD_ATTR_RO(VK);
++VPD_ATTR_RO(VL);
++VPD_ATTR_RO(VM);
++VPD_ATTR_RO(VN);
++VPD_ATTR_RO(VO);
++VPD_ATTR_RO(VP);
++VPD_ATTR_RO(VQ);
++VPD_ATTR_RO(VR);
++VPD_ATTR_RO(VS);
++VPD_ATTR_RO(VT);
++VPD_ATTR_RO(VU);
++VPD_ATTR_RO(VV);
++VPD_ATTR_RO(VW);
++VPD_ATTR_RO(VX);
++VPD_ATTR_RO(VY);
++VPD_ATTR_RO(VZ);
++
++static struct attribute *vpd_attributes[] = {
++	&vpdinfo.attr,
++	&vpdPN.attr,
++	&vpdEC.attr,
++	&vpdMN.attr,
++	&vpdSN.attr,
++	&vpdV0.attr,
++	&vpdV1.attr,
++	&vpdV2.attr,
++	&vpdV3.attr,
++	&vpdV4.attr,
++	&vpdV5.attr,
++	&vpdV6.attr,
++	&vpdV7.attr,
++	&vpdV8.attr,
++	&vpdV9.attr,
++	&vpdVA.attr,
++	&vpdVB.attr,
++	&vpdVC.attr,
++	&vpdVD.attr,
++	&vpdVE.attr,
++	&vpdVF.attr,
++	&vpdVG.attr,
++	&vpdVH.attr,
++	&vpdVI.attr,
++	&vpdVJ.attr,
++	&vpdVK.attr,
++	&vpdVL.attr,
++	&vpdVM.attr,
++	&vpdVN.attr,
++	&vpdVO.attr,
++	&vpdVP.attr,
++	&vpdVQ.attr,
++	&vpdVR.attr,
++	&vpdVS.attr,
++	&vpdVT.attr,
++	&vpdVU.attr,
++	&vpdVV.attr,
++	&vpdVW.attr,
++	&vpdVX.attr,
++	&vpdVY.attr,
++	&vpdVZ.attr,
++	NULL,
++};
++
++static struct attribute_group vpd_attr_group = {
++	.name = "vpdattr",
++	.attrs = vpd_attributes,
++	.is_visible = vpd_attr_exist,
++};
++
++
++static int pci_get_vpd_tag(struct pci_dev *dev, int off, int *len)
++{
++	u8  tag[3];
++	int rc, tlen;
++
++	*len = 0;
++	rc = pci_read_vpd(dev, off, 1, tag);
++	if (rc != 1)
++		return -ENOENT;
++	/* Ignore invalid/end tags */
++	if (tag[0] == 0x00 || tag[0] == 0xFF || tag[0] == 0x7F)
++		return -ENOENT;
++	if (tag[0] & PCI_VPD_LRDT) {
++		/* Large tag */
++		rc = pci_read_vpd(dev, off+1, 2, tag+1);
++		if (rc != 2)
++			return -ENOENT;
++		tlen = pci_vpd_lrdt_size(tag) +
++			PCI_VPD_LRDT_TAG_SIZE;
++	} else {
++		/* Small tag (shouldn't happen in VPD...) */
++		tlen = pci_vpd_srdt_size(tag) +
++			PCI_VPD_SRDT_TAG_SIZE;
++		tag[0] &= ~PCI_VPD_SRDT_LEN_MASK;
++	}
++	/* Verify VPD tag fits in area */
++	if (tlen + off > dev->vpd->len)
++		return -ENOENT;
++	*len = tlen;
++	return tag[0];
++}
++
++static int pci_load_vpdr(struct pci_dev *dev)
++{
++	int rlen, ilen, tag, rc;
++
++	/* Check for VPD-I tag */
++	tag = pci_get_vpd_tag(dev, 0, &ilen);
++	if (tag != PCI_VPD_LRDT_ID_STRING)
++		return -ENOENT;
++
++	/* Read VPDI string */
++	ilen -= PCI_VPD_LRDT_TAG_SIZE;
++	dev->vpdi_data = kzalloc(ilen + 1, GFP_ATOMIC);
++	if (dev->vpdi_data == NULL)
++		return  -ENOMEM;
++	rc = pci_read_vpd(dev, PCI_VPD_LRDT_TAG_SIZE,
++			  ilen, dev->vpdi_data);
++	if (rc != ilen)
++		goto error;
++	ilen += PCI_VPD_LRDT_TAG_SIZE;
++
++	/* Check for VPD-R tag */
++	tag = pci_get_vpd_tag(dev, ilen, &rlen);
++	if (tag != PCI_VPD_LRDT_RO_DATA)
++		return -ENOENT;
++
++	/* Read VPDR area */
++	rlen -= PCI_VPD_LRDT_TAG_SIZE;
++	dev->vpdr_len = rlen;
++	dev->vpdr_data = kzalloc(rlen, GFP_ATOMIC);
++	if (dev->vpdr_data == NULL)
++		return -ENOMEM;
++
++	rc = pci_read_vpd(dev, ilen + PCI_VPD_LRDT_TAG_SIZE,
++			  rlen, dev->vpdr_data);
++	if (rc != rlen)
++		goto error;
++	if (sysfs_create_group(&dev->dev.kobj, &vpd_attr_group))
++		goto error;
++	return 0;
++ error:
++	kfree(dev->vpdi_data);
++	kfree(dev->vpdr_data);
++	dev->vpdr_data = NULL;
++	return -ENOENT;
++}
++
+ static ssize_t reset_store(struct device *dev, struct device_attribute *attr,
+ 			   const char *buf, size_t count)
+ {
+@@ -1340,6 +1564,8 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
+ 			return retval;
+ 		}
+ 		dev->vpd->attr = attr;
++
++		pci_load_vpdr(dev);
+ 	}
+ 
+ 	/* Active State Power Management */
+@@ -1356,6 +1582,13 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
+ error:
+ 	pcie_aspm_remove_sysfs_dev_files(dev);
+ 	if (dev->vpd && dev->vpd->attr) {
++		if (dev->vpdr_data) {
++			sysfs_remove_group(&dev->dev.kobj, &vpd_attr_group);
++			kfree(dev->vpdr_data);
++			dev->vpdr_data = NULL;
++		}
++		kfree(dev->vpdi_data);
++		dev->vpdi_data = NULL;
+ 		sysfs_remove_bin_file(&dev->dev.kobj, dev->vpd->attr);
+ 		kfree(dev->vpd->attr);
+ 	}
+@@ -1438,6 +1671,13 @@ err:
+ static void pci_remove_capabilities_sysfs(struct pci_dev *dev)
+ {
+ 	if (dev->vpd && dev->vpd->attr) {
++		if (dev->vpdr_data) {
++			sysfs_remove_group(&dev->dev.kobj, &vpd_attr_group);
++			kfree(dev->vpdr_data);
++			dev->vpdr_data = NULL;
++		}
++		kfree(dev->vpdi_data);
++		dev->vpdi_data = NULL;
+ 		sysfs_remove_bin_file(&dev->dev.kobj, dev->vpd->attr);
+ 		kfree(dev->vpd->attr);
+ 	}
+-- 
+2.5.0
 
-> diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
-> index a6d6190..78e4444 100644
-> --- a/arch/ia64/hp/common/sba_iommu.c
-> +++ b/arch/ia64/hp/common/sba_iommu.c
-> @@ -1981,7 +1981,7 @@ sba_connect_bus(struct pci_bus *bus)
->  	if (PCI_CONTROLLER(bus)->iommu)
->  		return;
->  
-> -	handle = acpi_device_handle(PCI_CONTROLLER(bus)->companion);
-> +	handle = acpi_device_handle(ACPI_COMPANION(bus->bridge));
->  	if (!handle)
->  		return;
->  
-> diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-> index 07039d1..5050748 100644
-> --- a/arch/ia64/include/asm/pci.h
-> +++ b/arch/ia64/include/asm/pci.h
-> @@ -65,7 +65,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
->  #define pci_legacy_write platform_pci_legacy_write
->  
->  struct pci_controller {
-> -	struct acpi_device *companion;
->  	void *iommu;
->  	int segment;
->  	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
-> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-> index 8f6ac2f..978d6af 100644
-> --- a/arch/ia64/pci/pci.c
-> +++ b/arch/ia64/pci/pci.c
-> @@ -301,28 +301,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  	}
->  
->  	info->controller.segment = root->segment;
-> -	info->controller.companion = device;
->  	info->controller.node = acpi_get_node(device->handle);
->  	INIT_LIST_HEAD(&info->io_resources);
->  	return acpi_pci_root_create(root, &pci_acpi_root_ops,
->  				    &info->common, &info->controller);
->  }
->  
-> -int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-> -{
-> -	/*
-> -	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
-> -	 * here, pci_create_root_bus() has been called by someone else and
-> -	 * sysdata is likely to be different from what we expect.  Let it go in
-> -	 * that case.
-> -	 */
-> -	if (!bridge->dev.parent) {
-> -		struct pci_controller *controller = bridge->bus->sysdata;
-> -		ACPI_COMPANION_SET(&bridge->dev, controller->companion);
-> -	}
-> -	return 0;
-> -}
-> -
->  void pcibios_fixup_device_resources(struct pci_dev *dev)
->  {
->  	int idx;
-> diff --git a/arch/ia64/sn/kernel/io_acpi_init.c b/arch/ia64/sn/kernel/io_acpi_init.c
-> index 0640739..bcfddc2 100644
-> --- a/arch/ia64/sn/kernel/io_acpi_init.c
-> +++ b/arch/ia64/sn/kernel/io_acpi_init.c
-> @@ -132,7 +132,7 @@ sn_get_bussoft_ptr(struct pci_bus *bus)
->  	struct acpi_resource_vendor_typed *vendor;
->  
->  
-> -	handle = acpi_device_handle(PCI_CONTROLLER(bus)->companion);
-> +	handle = acpi_device_handle(ACPI_COMPANION(bus->bridge));
->  	status = acpi_get_vendor_resource(handle, METHOD_NAME__CRS,
->  					  &sn_uuid, &buffer);
->  	if (ACPI_FAILURE(status)) {
-> @@ -360,7 +360,7 @@ sn_acpi_get_pcidev_info(struct pci_dev *dev, struct pcidev_info **pcidev_info,
->  	acpi_status status;
->  	struct acpi_buffer name_buffer = { ACPI_ALLOCATE_BUFFER, NULL };
->  
-> -	rootbus_handle = acpi_device_handle(PCI_CONTROLLER(dev)->companion);
-> +	rootbus_handle = acpi_device_handle(ACPI_COMPANION(dev->bus->bridge));
->          status = acpi_evaluate_integer(rootbus_handle, METHOD_NAME__SEG, NULL,
->                                         &segment);
->          if (ACPI_SUCCESS(status)) {
-> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-> index 4625943..a98c022 100644
-> --- a/arch/x86/include/asm/pci.h
-> +++ b/arch/x86/include/asm/pci.h
-> @@ -14,9 +14,6 @@
->  struct pci_sysdata {
->  	int		domain;		/* PCI domain */
->  	int		node;		/* NUMA node */
-> -#ifdef CONFIG_ACPI
-> -	struct acpi_device *companion;	/* ACPI companion device */
-> -#endif
->  #ifdef CONFIG_X86_64
->  	void		*iommu;		/* IOMMU private data */
->  #endif
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index 8e89921..d5086d1 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -341,7 +341,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  		struct pci_sysdata sd = {
->  			.domain = domain,
->  			.node = node,
-> -			.companion = root->device
->  		};
->  
->  		memcpy(bus->sysdata, &sd, sizeof(sd));
-> @@ -356,7 +355,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  		else {
->  			info->sd.domain = domain;
->  			info->sd.node = node;
-> -			info->sd.companion = root->device;
->  			bus = acpi_pci_root_create(root, &acpi_pci_root_ops,
->  						   &info->common, &info->sd);
->  		}
-> @@ -374,21 +372,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  	return bus;
->  }
->  
-> -int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-> -{
-> -	/*
-> -	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
-> -	 * here, pci_create_root_bus() has been called by someone else and
-> -	 * sysdata is likely to be different from what we expect.  Let it go in
-> -	 * that case.
-> -	 */
-> -	if (!bridge->dev.parent) {
-> -		struct pci_sysdata *sd = bridge->bus->sysdata;
-> -		ACPI_COMPANION_SET(&bridge->dev, sd->companion);
-> -	}
-> -	return 0;
-> -}
-> -
->  int __init pci_acpi_init(void)
->  {
->  	struct pci_dev *dev = NULL;
-> -- 
-> 1.9.1
-> 
