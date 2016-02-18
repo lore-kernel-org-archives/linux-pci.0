@@ -1,79 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1bon0131.outbound.protection.outlook.com ([157.56.111.131]:35054
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751600AbcBCXPL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2016 18:15:11 -0500
-From: Jake Oshins <jakeo@microsoft.com>
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	KY Srinivasan <kys@microsoft.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH RESEND 1/3] PCI: Add fwnode_handle to pci_sysdata
-Date: Wed, 3 Feb 2016 22:42:00 +0000
-Message-ID: <DM2PR0301MB123298B3233B172BA2C92EF4ABD00@DM2PR0301MB1232.namprd03.prod.outlook.com>
-References: <1454434903-1680-1-git-send-email-jakeo@microsoft.com>
- <1454434903-1680-2-git-send-email-jakeo@microsoft.com>
- <20160203182528.GB10879@localhost>
- <DM2PR0301MB12328FC565D58EB8F995DECFABD00@DM2PR0301MB1232.namprd03.prod.outlook.com>
- <20160203185127.GE10879@localhost> <56B24D93.4040202@arm.com>
-In-Reply-To: <56B24D93.4040202@arm.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 18 Feb 2016 15:24:09 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-next@vger.kernel.org,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [PATCH] PCI: mvebu: Restrict build to 32-bit ARM
+Message-ID: <20160218142409.GA4678@ulmo.nvidia.com>
+References: <1455802330-17565-1-git-send-email-thierry.reding@gmail.com>
+ <5051836.EUN3ennYNm@wuerfel>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="OgqxwSJOaUobr8KG"
+In-Reply-To: <5051836.EUN3ennYNm@wuerfel>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Marc Zyngier [mailto:marc.zyngier@arm.com]
-> Sent: Wednesday, February 3, 2016 10:57 AM
-> To: Bjorn Helgaas <helgaas@kernel.org>; Jake Oshins
-> <jakeo@microsoft.com>
-> Cc: gregkh@linuxfoundation.org; KY Srinivasan <kys@microsoft.com>; linux-
-> kernel@vger.kernel.org; devel@linuxdriverproject.org; Haiyang Zhang
-> <haiyangz@microsoft.com>; bhelgaas@google.com; linux-
-> pci@vger.kernel.org
-> Subject: Re: [PATCH RESEND 1/3] PCI: Add fwnode_handle to pci_sysdata
-> 
-> On 03/02/16 18:51, Bjorn Helgaas wrote:
-> > On Wed, Feb 03, 2016 at 06:32:20PM +0000, Jake Oshins wrote:
-> >>> -----Original Message-----
-> >>> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> >>> Sent: Wednesday, February 3, 2016 10:25 AM
-> >>> To: Jake Oshins <jakeo@microsoft.com>
-[snip]
-> >>>>
-> >>>> +#ifndef pci_root_bus_fwnode
-> >>>> +#define pci_root_bus_fwnode(bus)	((void)(bus), NULL)
-> >>>
-> >>> Huh, interesting.  This is new for me; I guess the idea is that we at least
-> >>> evaluate "bus" even when pci_root_bus_fwnode isn't defined, so the
-> >>> compiler can catch egregious errors?
-> >>>
-> >>
-> >> This was a suggestion by Mark Zyngier.  It made the non-x86 architectures
-> build benignly.  If you'd like it done differently, I'm open to suggestion.
-> 
-> I don't remember suggesting the use of the comma operator, but just to
-> check that pci_root_bus_fwnode wasn't previously defined.
-> 
-> > Something like "#define pci_root_bus_fwnode(bus) NULL" would be
-> > typical.  What I'm curious about is the use of the comma operator.
-> > I'm not opposed to it; I'm just trying to understand why it makes a
-> > difference.
-> 
-> I guess it flags the variable as used, and prevents an overly sensitive
-> compiler from being loud and obnoxious... Just a guess though.
-> 
-> 	M.
-> --
 
-I was just copying the form that was in the code that Marc pointed out, somewhere else.  I have no particular attachment to this construct.  Honestly, since I'm still relatively new to the Linux codebase, I just assumed that was a common form that I should follow suit on.  If you tell me that the simpler NULL is more typical, I prefer that.  I'll simplify this when I resend the patch series.
+--OgqxwSJOaUobr8KG
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
-Jake
+On Thu, Feb 18, 2016 at 03:06:23PM +0100, Arnd Bergmann wrote:
+> On Thursday 18 February 2016 14:32:10 Thierry Reding wrote:
+> > From: Thierry Reding <treding@nvidia.com>
+> >=20
+> > This driver uses PCI glue that is only available on 32-bit ARM. This
+> > used to work fine as long as ARCH_MVEBU and ARCH_DOVE were exclusively
+> > 32-bit, but that's changed now, with ARCH_MVEBU also being available
+> > on 64-bit ARM.
+> >=20
+> > Signed-off-by: Thierry Reding <treding@nvidia.com>
+>=20
+> Looks fine as a temporary workaround, but I think what we really want to
+> do here is to remove the dependency, as the new ARM64 platforms are going
+> to need this driver anyway.
 
+Agreed. I've been meaning to do just that for Tegra as well, but the
+conversion is somewhat more involved and this is currently breaking the
+linux-next builds, so a quick fix, even if temporary, is warranted in my
+opinion.
+
+Thierry
+
+--OgqxwSJOaUobr8KG
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCAAGBQJWxdQGAAoJEN0jrNd/PrOhtKkQAJ/LdHf+YABXdStz47pw/yU4
+SFl8zD0hcnJS2asG/8JN9QVBNo0hOji9rW5OcraGbt5WboctYy0SM/H8qNzik+Qb
+M2Sxms7SnpBSPsn7HUJioSOwpCArOr/2KFEwt3+zqaiSzvzir3K8Qwi70LorpXPB
+RO2XJUYPB+Lj6zx33BrqzuEuuBuGUALjCGHiu+32dIKzbhl8RhBDvYszEbmfurW9
+KCrDsmvFmKyJ31/MS24C3m7LM28S3lgFF6Aq1xDRCExCUMt4LTZB3TCFwu6o9bnM
+SzmVj6rJp9qDzG4F4S4wv5HbgfQbXPqpVu6cmEhvP3EwLX4Kr6wQgFIUCiF8PCBd
+oUE51F0Ht2E5EAv7BFq8azQ6ezbGd8mrQJMBrNgbhE2SG/WMevTi91c+aA1feeeu
+dcAPqybwR23cXnL9vocjn/CmwI6GEJnksk5ANocOzdqvptiWvB2y1Cse5Gr6doq4
+j057HsvcuKpjW/uzq1qYbXgyEr4AKawOifyzt3XinXAktPPJWwvh2iXLOLZ1IE7y
+1hwk4auh7qIh76znlvfp/WNTA0G0P3jQ21KvM3WvvjEc63TS0FvaJDMa4V3nee6x
+PshjYROaNF+aUqgtTy+jaWpChywjPH0Pnx75NkxrZDoL9HZBZyxkfmbIEyOm9w/Y
+d8TlfGaqvhAwGYJ+9yYX
+=zLj5
+-----END PGP SIGNATURE-----
+
+--OgqxwSJOaUobr8KG--
