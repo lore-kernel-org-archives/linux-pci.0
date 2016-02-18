@@ -1,369 +1,231 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <guohanjun@huawei.com>, <wangzhou1@hisilicon.com>,
-	<liudongdong3@huawei.com>, <linuxarm@huawei.com>,
-	<qiujiang@huawei.com>, <bhelgaas@google.com>, <arnd@arndb.de>,
-	<Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>
-CC: <gabriele.paoloni@huawei.com>, <zhangjukuo@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<jcm@redhat.com>
-Subject: [RFC PATCH 2/4] PCI: hisi: re-architect Hip05/Hip06 controllers driver to preapare for ACPI
-Date: Thu, 4 Feb 2016 19:37:38 +0800
-Message-ID: <1454585860-60709-3-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35375 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1424770AbcBRMAI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Feb 2016 07:00:08 -0500
+Received: by mail-wm0-f68.google.com with SMTP id g62so2495970wme.2
+        for <linux-pci@vger.kernel.org>; Thu, 18 Feb 2016 04:00:08 -0800 (PST)
+From: Christoph Fritz <chf.fritz@googlemail.com>
+To: Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lee Jones <lee.jones@linaro.org>
+Cc: linux-pci@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>
+Subject: [PATCH v2 2/2] PCI: imx6: add initial imx6sx support
+Date: Thu, 18 Feb 2016 12:59:03 +0100
+Message-Id: <1455796743-5987-3-git-send-email-chf.fritz@googlemail.com>
+In-Reply-To: <1455796743-5987-1-git-send-email-chf.fritz@googlemail.com>
+References: <1455796743-5987-1-git-send-email-chf.fritz@googlemail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+This patch adds initial PCIe support for the imx6 SoC derivate imx6sx.
+PCI_MSI support is untested as its necessary suspend/resume quirk is
+left out of this patch.
+This patch is heavily based on patches by Richard Zhu.
 
-re-architect the Hip05/Hip06 host controllers driver to prepare
-for the ACPI based driver.
-The common functions used also by the ACPI driver have been grouped
-into a new "common" file
-
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Christoph Fritz <chf.fritz@googlemail.com>
 ---
- MAINTAINERS                         |   2 +
- drivers/pci/host/Makefile           |   2 +-
- drivers/pci/host/pcie-hisi-common.c |  88 +++++++++++++++++++++++
- drivers/pci/host/pcie-hisi.c        | 135 ++++++------------------------------
- drivers/pci/host/pcie-hisi.h        |  44 ++++++++++++
- 5 files changed, 157 insertions(+), 114 deletions(-)
- create mode 100644 drivers/pci/host/pcie-hisi-common.c
- create mode 100644 drivers/pci/host/pcie-hisi.h
+ drivers/pci/host/pci-imx6.c | 130 +++++++++++++++++++++++++++++++-------------
+ 1 file changed, 91 insertions(+), 39 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index c80d9ff..8d6ec25 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8247,7 +8247,9 @@ M:	Gabriele Paoloni <gabriele.paoloni@huawei.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-+F:	drivers/pci/host/pcie-hisi.h
- F:	drivers/pci/host/pcie-hisi.c
-+F:	drivers/pci/host/pcie-hisi-common.c
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index fe60096..7e634a6 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -35,9 +35,11 @@ struct imx6_pcie {
+ 	struct gpio_desc	*reset_gpio;
+ 	struct clk		*pcie_bus;
+ 	struct clk		*pcie_phy;
++	struct clk		*pcie_inbound_axi;
+ 	struct clk		*pcie;
+ 	struct pcie_port	pp;
+ 	struct regmap		*iomuxc_gpr;
++	bool			is_imx6sx;
+ 	void __iomem		*mem_base;
+ };
  
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 9d4d3c6..6248320 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -19,4 +19,4 @@ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
- obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
- obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
- obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
--obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
-+obj-$(CONFIG_PCI_HISI) += pcie-hisi.o pcie-hisi-common.o
-diff --git a/drivers/pci/host/pcie-hisi-common.c b/drivers/pci/host/pcie-hisi-common.c
-new file mode 100644
-index 0000000..ff93293
---- /dev/null
-+++ b/drivers/pci/host/pcie-hisi-common.c
-@@ -0,0 +1,88 @@
-+/*
-+ * PCIe host controller common functions for HiSilicon SoCs
-+ *
-+ * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
-+ *
-+ * Author: Zhou Wang <wangzhou1@hisilicon.com>
-+ *         Dacai Zhu <zhudacai@hisilicon.com>
-+ *         Gabriele Paoloni <gabriele.paoloni@huawei.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/acpi.h>
-+#include <linux/interrupt.h>
-+#include <linux/module.h>
-+#include <linux/mfd/syscon.h>
-+#include <linux/of_pci.h>
-+#include <linux/regmap.h>
-+
-+#include "pcie-designware.h"
-+#include "pcie-hisi.h"
-+
-+/* HipXX PCIe host only supports 32-bit config access */
-+static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
-+			      u32 *val)
-+{
-+	u32 reg;
-+	u32 reg_val;
-+	struct hisi_pcie *pcie = to_hisi_pcie(pp);
-+	void *walker = &reg_val;
-+
-+	walker += (where & 0x3);
-+	reg = where & ~0x3;
-+	reg_val = hisi_pcie_apb_readl(pcie, reg);
-+
-+	if (size == 1)
-+		*val = *(u8 __force *) walker;
-+	else if (size == 2)
-+		*val = *(u16 __force *) walker;
-+	else if (size == 4)
-+		*val = reg_val;
-+	else
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+/* HipXX PCIe host only supports 32-bit config access */
-+static int hisi_pcie_cfg_write(struct pcie_port *pp, int where, int  size,
-+				u32 val)
-+{
-+	u32 reg_val;
-+	u32 reg;
-+	struct hisi_pcie *pcie = to_hisi_pcie(pp);
-+	void *walker = &reg_val;
-+
-+	walker += (where & 0x3);
-+	reg = where & ~0x3;
-+	if (size == 4)
-+		hisi_pcie_apb_writel(pcie, val, reg);
-+	else if (size == 2) {
-+		reg_val = hisi_pcie_apb_readl(pcie, reg);
-+		*(u16 __force *) walker = val;
-+		hisi_pcie_apb_writel(pcie, reg_val, reg);
-+	} else if (size == 1) {
-+		reg_val = hisi_pcie_apb_readl(pcie, reg);
-+		*(u8 __force *) walker = val;
-+		hisi_pcie_apb_writel(pcie, reg_val, reg);
-+	} else
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int hisi_pcie_link_up(struct pcie_port *pp)
-+{
-+	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
-+
-+	return hisi_pcie->soc_ops->hisi_pcie_link_up(hisi_pcie);
-+}
-+
-+struct pcie_host_ops hisi_pcie_host_ops = {
-+	.rd_own_conf = hisi_pcie_cfg_read,
-+	.wr_own_conf = hisi_pcie_cfg_write,
-+	.link_up = hisi_pcie_link_up,
-+};
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-index 3e98d4e..552ebfc 100644
---- a/drivers/pci/host/pcie-hisi.c
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -21,124 +21,13 @@
- #include <linux/regmap.h>
+@@ -214,35 +216,46 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 	u32 val, gpr1, gpr12;
  
- #include "pcie-designware.h"
-+#include "pcie-hisi.h"
+-	/*
+-	 * If the bootloader already enabled the link we need some special
+-	 * handling to get the core back into a state where it is safe to
+-	 * touch it for configuration.  As there is no dedicated reset signal
+-	 * wired up for MX6QDL, we need to manually force LTSSM into "detect"
+-	 * state before completely disabling LTSSM, which is a prerequisite
+-	 * for core configuration.
+-	 *
+-	 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
+-	 * indication that the bootloader activated the link.
+-	 */
+-	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
+-	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
+-
+-	if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
+-	    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
+-		val = readl(pp->dbi_base + PCIE_PL_PFLR);
+-		val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
+-		val |= PCIE_PL_PFLR_FORCE_LINK;
+-		writel(val, pp->dbi_base + PCIE_PL_PFLR);
+-
++	if (imx6_pcie->is_imx6sx) {
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-				IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+-	}
++				IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
++				IMX6SX_GPR12_PCIE_TEST_POWERDOWN);
++		/* Force PCIe PHY reset */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++					IMX6SX_GPR5_PCIE_BTNRST_RESET,
++					IMX6SX_GPR5_PCIE_BTNRST_RESET);
++	} else {
++		/*
++		 * If the bootloader already enabled the link we need some
++		 * special handling to get the core back into a state where
++		 * it is safe to touch it for configuration.  As there is no
++		 * dedicated reset signal to manually force LTSSM into "detect"
++		 * state before completely disabling LTSSM, which is a
++		 * prerequisite for core configuration.
++		 *
++		 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have
++		 * a strong indication that the bootloader activated the link.
++		 */
++		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
++		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
++
++		if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
++				(gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
++			val = readl(pp->dbi_base + PCIE_PL_PFLR);
++			val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
++			val |= PCIE_PL_PFLR_FORCE_LINK;
++			writel(val, pp->dbi_base + PCIE_PL_PFLR);
++
++			regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				IMX6Q_GPR12_PCIE_CTL_2, 0);
++		}
  
- #define PCIE_LTSSM_LINKUP_STATE				0x11
- #define PCIE_LTSSM_STATE_MASK				0x3F
- #define PCIE_SUBCTRL_SYS_STATE4_REG			0x6818
--#define PCIE_SYS_STATE4						0x31c
- #define PCIE_HIP06_CTRL_OFF					0x1000
--
--#define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
--
--struct hisi_pcie;
--
--struct pcie_soc_ops {
--	int (*hisi_pcie_link_up)(struct hisi_pcie *pcie);
--};
--
--struct hisi_pcie {
--	struct regmap *subctrl;
--	void __iomem *reg_base;
--	u32 port_id;
--	struct pcie_port pp;
--	struct pcie_soc_ops *soc_ops;
--};
--
--static inline void hisi_pcie_apb_writel(struct hisi_pcie *pcie,
--					u32 val, u32 reg)
--{
--	writel(val, pcie->reg_base + reg);
--}
--
--static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *pcie, u32 reg)
--{
--	return readl(pcie->reg_base + reg);
--}
--
--/* HipXX PCIe host only supports 32-bit config access */
--static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
--			      u32 *val)
--{
--	u32 reg;
--	u32 reg_val;
--	struct hisi_pcie *pcie = to_hisi_pcie(pp);
--	void *walker = &reg_val;
--
--	walker += (where & 0x3);
--	reg = where & ~0x3;
--	reg_val = hisi_pcie_apb_readl(pcie, reg);
--
--	if (size == 1)
--		*val = *(u8 __force *) walker;
--	else if (size == 2)
--		*val = *(u16 __force *) walker;
--	else if (size == 4)
--		*val = reg_val;
--	else
--		return PCIBIOS_BAD_REGISTER_NUMBER;
--
--	return PCIBIOS_SUCCESSFUL;
--}
--
--/* HipXX PCIe host only supports 32-bit config access */
--static int hisi_pcie_cfg_write(struct pcie_port *pp, int where, int  size,
--				u32 val)
--{
--	u32 reg_val;
--	u32 reg;
--	struct hisi_pcie *pcie = to_hisi_pcie(pp);
--	void *walker = &reg_val;
--
--	walker += (where & 0x3);
--	reg = where & ~0x3;
--	if (size == 4)
--		hisi_pcie_apb_writel(pcie, val, reg);
--	else if (size == 2) {
--		reg_val = hisi_pcie_apb_readl(pcie, reg);
--		*(u16 __force *) walker = val;
--		hisi_pcie_apb_writel(pcie, reg_val, reg);
--	} else if (size == 1) {
--		reg_val = hisi_pcie_apb_readl(pcie, reg);
--		*(u8 __force *) walker = val;
--		hisi_pcie_apb_writel(pcie, reg_val, reg);
--	} else
--		return PCIBIOS_BAD_REGISTER_NUMBER;
--
--	return PCIBIOS_SUCCESSFUL;
--}
--
--static int hisi_pcie_link_up_hip05(struct hisi_pcie *hisi_pcie)
--{
--	u32 val;
--
--	regmap_read(hisi_pcie->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
--		    0x100 * hisi_pcie->port_id, &val);
--
--	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
--}
--
--static int hisi_pcie_link_up_hip06(struct hisi_pcie *hisi_pcie)
--{
--	u32 val;
--
--	val = hisi_pcie_apb_readl(hisi_pcie, PCIE_HIP06_CTRL_OFF +
--			PCIE_SYS_STATE4);
--
--	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
--}
--
--static int hisi_pcie_link_up(struct pcie_port *pp)
--{
--	struct hisi_pcie *hisi_pcie = to_hisi_pcie(pp);
--
--	return hisi_pcie->soc_ops->hisi_pcie_link_up(hisi_pcie);
--}
--
--static struct pcie_host_ops hisi_pcie_host_ops = {
--	.rd_own_conf = hisi_pcie_cfg_read,
--	.wr_own_conf = hisi_pcie_cfg_write,
--	.link_up = hisi_pcie_link_up,
--};
-+#define PCIE_SYS_STATE4						0x31c
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++			IMX6Q_GPR1_PCIE_TEST_PD,
++			IMX6Q_GPR1_PCIE_TEST_PD);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0);
++	}
  
- static int hisi_add_pcie_port(struct pcie_port *pp,
- 				     struct platform_device *pdev)
-@@ -215,6 +104,26 @@ static int hisi_pcie_probe(struct platform_device *pdev)
  	return 0;
  }
+@@ -270,18 +283,30 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		goto err_pcie;
+ 	}
  
-+static int hisi_pcie_link_up_hip05(struct hisi_pcie *hisi_pcie)
-+{
-+	u32 val;
+-	/* power up core phy and enable ref clock */
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+-	/*
+-	 * the async reset input need ref clock to sync internally,
+-	 * when the ref clock comes after reset, internal synced
+-	 * reset time is too short, cannot meet the requirement.
+-	 * add one ~10us delay here.
+-	 */
+-	udelay(10);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
++	if (imx6_pcie->is_imx6sx) {
++		ret = clk_prepare_enable(imx6_pcie->pcie_inbound_axi);
++		if (ret) {
++			dev_err(pp->dev, "unable to enable pcie_axi clock\n");
++			goto err_inbound_axi;
++		}
 +
-+	regmap_read(hisi_pcie->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
-+		    0x100 * hisi_pcie->port_id, &val);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++			IMX6SX_GPR12_PCIE_TEST_POWERDOWN, 0);
++	} else {
++		/* power up core phy and enable ref clock */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				IMX6Q_GPR1_PCIE_TEST_PD, 0);
++		/*
++		 * the async reset input need ref clock to sync internally,
++		 * when the ref clock comes after reset, internal synced
++		 * reset time is too short , cannot meet the requirement.
++		 * add one ~10us delay here.
++		 */
++		udelay(10);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++			IMX6Q_GPR1_PCIE_REF_CLK_EN,
++			IMX6Q_GPR1_PCIE_REF_CLK_EN);
++	}
+ 
+ 	/* allow the clocks to stabilize */
+ 	usleep_range(200, 500);
+@@ -292,8 +317,15 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		msleep(100);
+ 		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+ 	}
 +
-+	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
-+}
++	if (imx6_pcie->is_imx6sx)
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++			IMX6SX_GPR5_PCIE_BTNRST_RESET, 0);
 +
-+static int hisi_pcie_link_up_hip06(struct hisi_pcie *hisi_pcie)
-+{
-+	u32 val;
+ 	return 0;
+ 
++err_inbound_axi:
++	clk_disable_unprepare(imx6_pcie->pcie);
+ err_pcie:
+ 	clk_disable_unprepare(imx6_pcie->pcie_bus);
+ err_pcie_bus:
+@@ -307,6 +339,12 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ {
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 
++	if (imx6_pcie->is_imx6sx) {
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++			IMX6SX_GPR12_PCIE_RX_EQ_MASK,
++			IMX6SX_GPR12_PCIE_RX_EQ_2);
++	}
 +
-+	val = hisi_pcie_apb_readl(hisi_pcie, PCIE_HIP06_CTRL_OFF +
-+			PCIE_SYS_STATE4);
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+ 
+@@ -571,6 +609,9 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 	pp = &imx6_pcie->pp;
+ 	pp->dev = &pdev->dev;
+ 
++	imx6_pcie->is_imx6sx = of_device_is_compatible(pp->dev->of_node,
++					"fsl,imx6sx-pcie");
 +
-+	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
-+}
+ 	/* Added for PCI abort handling */
+ 	hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
+ 		"imprecise external abort");
+@@ -606,6 +647,16 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(imx6_pcie->pcie);
+ 	}
+ 
++	if (imx6_pcie->is_imx6sx) {
++		imx6_pcie->pcie_inbound_axi = devm_clk_get(&pdev->dev,
++			"pcie_inbound_axi");
++		if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
++			dev_err(&pdev->dev,
++				"pcie_incbound_axi clock missing or invalid\n");
++			return PTR_ERR(imx6_pcie->pcie_inbound_axi);
++		}
++	}
 +
- static struct pcie_soc_ops hip05_ops = {
- 		&hisi_pcie_link_up_hip05
+ 	/* Grab GPR config register range */
+ 	imx6_pcie->iomuxc_gpr =
+ 		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
+@@ -632,6 +683,7 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
+ 
+ static const struct of_device_id imx6_pcie_of_match[] = {
+ 	{ .compatible = "fsl,imx6q-pcie", },
++	{ .compatible = "fsl,imx6sx-pcie", },
+ 	{},
  };
-diff --git a/drivers/pci/host/pcie-hisi.h b/drivers/pci/host/pcie-hisi.h
-new file mode 100644
-index 0000000..f64249d
---- /dev/null
-+++ b/drivers/pci/host/pcie-hisi.h
-@@ -0,0 +1,44 @@
-+/*
-+ * PCIe host controller driver for HiSilicon SoCs
-+ *
-+ * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
-+ *
-+ * Author: Zhou Wang <wangzhou1@hisilicon.com>
-+ *         Dacai Zhu <zhudacai@hisilicon.com>
-+ *         Gabriele Paoloni <gabriele.paoloni@huawei.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+#ifndef PCIE_HISI_H_
-+#define PCIE_HISI_H_
-+
-+struct hisi_pcie {
-+	struct regmap *subctrl;
-+	void __iomem *reg_base;
-+	u32 port_id;
-+	struct pcie_port pp;
-+	struct pcie_soc_ops *soc_ops;
-+};
-+
-+struct pcie_soc_ops {
-+	int (*hisi_pcie_link_up)(struct hisi_pcie *pcie);
-+};
-+
-+static inline void hisi_pcie_apb_writel(struct hisi_pcie *pcie,
-+					u32 val, u32 reg)
-+{
-+	writel(val, pcie->reg_base + reg);
-+}
-+
-+static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *pcie, u32 reg)
-+{
-+	return readl(pcie->reg_base + reg);
-+}
-+
-+#define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
-+
-+extern struct pcie_host_ops hisi_pcie_host_ops;
-+
-+#endif /* PCIE_HISI_H_ */
+ MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
 -- 
-1.9.1
+2.1.4
 
