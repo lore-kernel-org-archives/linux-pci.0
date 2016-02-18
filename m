@@ -1,198 +1,168 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0076.outbound.protection.outlook.com ([104.47.36.76]:37202
-	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932725AbcBIKmO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 9 Feb 2016 05:42:14 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <bhelgaas@google.com>, <michals@xilinx.com>,
-	<lorenzo.pieralisi@arm.com>, <paul.burton@imgtec.com>,
-	<yinghai@kernel.org>, <wangyijing@huawei.com>, <robh@kernel.org>,
-	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
-	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
-	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
-	<galak@codeaurora.org>
-CC: <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: [PATCH V3 2/5] PCI: xilinx: Removing struct hw_pci structure.
-Date: Tue, 9 Feb 2016 16:11:55 +0530
-Message-ID: <1455014518-8708-3-git-send-email-bharatku@xilinx.com>
-In-Reply-To: <1455014518-8708-1-git-send-email-bharatku@xilinx.com>
-References: <1455014518-8708-1-git-send-email-bharatku@xilinx.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 18 Feb 2016 12:59:28 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tn@semihalf.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	jchandra@broadcom.com, Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+Subject: Re: [PATCH V5 00/15] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+Message-ID: <20160218125928.GA13045@red-moon>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Removing struct hw_pci and adding generic PCI core API's.
+Hi Bjorn, Rafael,
 
-Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
----
-Changes:
-Removing architecure dependecy structure struct hw_pci which is ARM 32-bit
-specific structure, and adding generic PCI core API's to register to
-PCI subsytem.
-Removing funtions which are not being used with generic API's.
----
- drivers/pci/host/pcie-xilinx.c | 82 +++++++++---------------------------------
- 1 file changed, 16 insertions(+), 66 deletions(-)
+On Tue, Feb 16, 2016 at 02:53:30PM +0100, Tomasz Nowicki wrote:
+> From the functionality point of view this series might be split into the
+> following logic parts:
+> 1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
+>    PCI config regions and used when necessary.
+> 2. Move non-arch specific bits to the core code.
+> 3. Use MMCONFIG code and implement generic ACPI based PCI host controller driver.
+> 4. Enable above driver on ARM64
 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 627878d..13fec35 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -111,17 +111,11 @@ struct xilinx_pcie_port {
- 	u8 root_busno;
- 	struct device *dev;
- 	struct irq_domain *irq_domain;
--	struct resource bus_range;
- 	struct list_head resources;
- };
- 
- static DECLARE_BITMAP(msi_irq_in_use, XILINX_NUM_MSI_IRQS);
- 
--static inline struct xilinx_pcie_port *sys_to_pcie(struct pci_sys_data *sys)
--{
--	return sys->private_data;
--}
--
- static inline u32 pcie_read(struct xilinx_pcie_port *port, u32 reg)
- {
- 	return readl(port->reg_base + reg);
-@@ -163,7 +157,7 @@ static void xilinx_pcie_clear_err_interrupts(struct xilinx_pcie_port *port)
-  */
- static bool xilinx_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
- {
--	struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
-+	struct xilinx_pcie_port *port = bus->sysdata;
- 
- 	/* Check if link is up when trying to access downstream ports */
- 	if (bus->number != port->root_busno)
-@@ -196,7 +190,7 @@ static bool xilinx_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
- static void __iomem *xilinx_pcie_map_bus(struct pci_bus *bus,
- 					 unsigned int devfn, int where)
- {
--	struct xilinx_pcie_port *port = sys_to_pcie(bus->sysdata);
-+	struct xilinx_pcie_port *port = bus->sysdata;
- 	int relbus;
- 
- 	if (!xilinx_pcie_valid_device(bus, devfn))
-@@ -228,7 +222,7 @@ static void xilinx_pcie_destroy_msi(unsigned int irq)
- 
- 	if (!test_bit(irq, msi_irq_in_use)) {
- 		msi = irq_get_msi_desc(irq);
--		port = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
-+		port = msi_desc_to_pci_sysdata(msi);
- 		dev_err(port->dev, "Trying to free unused MSI#%d\n", irq);
- 	} else {
- 		clear_bit(irq, msi_irq_in_use);
-@@ -277,7 +271,7 @@ static int xilinx_pcie_msi_setup_irq(struct msi_controller *chip,
- 				     struct pci_dev *pdev,
- 				     struct msi_desc *desc)
- {
--	struct xilinx_pcie_port *port = sys_to_pcie(pdev->bus->sysdata);
-+	struct xilinx_pcie_port *port = pdev->bus->sysdata;
- 	unsigned int irq;
- 	int hwirq;
- 	struct msi_msg msg;
-@@ -614,47 +608,6 @@ static void xilinx_pcie_init_port(struct xilinx_pcie_port *port)
- }
- 
- /**
-- * xilinx_pcie_setup - Setup memory resources
-- * @nr: Bus number
-- * @sys: Per controller structure
-- *
-- * Return: '1' on success and error value on failure
-- */
--static int xilinx_pcie_setup(int nr, struct pci_sys_data *sys)
--{
--	struct xilinx_pcie_port *port = sys_to_pcie(sys);
--
--	list_splice_init(&port->resources, &sys->resources);
--
--	return 1;
--}
--
--/**
-- * xilinx_pcie_scan_bus - Scan PCIe bus for devices
-- * @nr: Bus number
-- * @sys: Per controller structure
-- *
-- * Return: Valid Bus pointer on success and NULL on failure
-- */
--static struct pci_bus *xilinx_pcie_scan_bus(int nr, struct pci_sys_data *sys)
--{
--	struct xilinx_pcie_port *port = sys_to_pcie(sys);
--	struct pci_bus *bus;
--
--	port->root_busno = sys->busnr;
--
--	if (IS_ENABLED(CONFIG_PCI_MSI))
--		bus = pci_scan_root_bus_msi(port->dev, sys->busnr,
--					    &xilinx_pcie_ops, sys,
--					    &sys->resources,
--					    &xilinx_pcie_msi_chip);
--	else
--		bus = pci_scan_root_bus(port->dev, sys->busnr,
--					&xilinx_pcie_ops, sys, &sys->resources);
--	return bus;
--}
--
--/**
-  * xilinx_pcie_parse_dt - Parse Device tree
-  * @port: PCIe port information
-  *
-@@ -704,8 +657,9 @@ static int xilinx_pcie_parse_dt(struct xilinx_pcie_port *port)
- static int xilinx_pcie_probe(struct platform_device *pdev)
- {
- 	struct xilinx_pcie_port *port;
--	struct hw_pci hw;
- 	struct device *dev = &pdev->dev;
-+	struct pci_bus *bus;
-+
- 	int err;
- 	resource_size_t iobase = 0;
- 	LIST_HEAD(res);
-@@ -739,24 +693,20 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
- 		dev_err(dev, "Getting bridge resources failed\n");
- 		return err;
- 	}
--
--	platform_set_drvdata(pdev, port);
--
--	/* Register the device */
--	memset(&hw, 0, sizeof(hw));
--	hw = (struct hw_pci) {
--		.nr_controllers	= 1,
--		.private_data	= (void **)&port,
--		.setup		= xilinx_pcie_setup,
--		.map_irq	= of_irq_parse_and_map_pci,
--		.scan		= xilinx_pcie_scan_bus,
--		.ops		= &xilinx_pcie_ops,
--	};
-+	bus = pci_create_root_bus(&pdev->dev, 0,
-+				  &xilinx_pcie_ops, port, &res);
-+	if (!bus)
-+		return -ENOMEM;
- 
- #ifdef CONFIG_PCI_MSI
- 	xilinx_pcie_msi_chip.dev = port->dev;
-+	bus->msi = &xilinx_pcie_msi_chip;
- #endif
--	pci_common_init_dev(dev, &hw);
-+	pci_scan_child_bus(bus);
-+	pci_assign_unassigned_bus_resources(bus);
-+	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-+	pci_bus_add_devices(bus);
-+	platform_set_drvdata(pdev, port);
- 
- 	return 0;
- }
--- 
-2.1.1
+I think that apart from some pending review comments that will force
+some minor patches update, the overall structure of this patchset is in
+a reasonable shape, I would be grateful if you could have a look
+from PCI and ACPI perspectives to see if there is some serious
+rework needed and/or you want us to do things differently.
 
+In particular, the MCFG rework (along with some PCI core changes
+ie PCI ACPI bridge companion) affects x86 so we definitely need
+some feedback on that code, otherwise we are stuck and can't
+enable ACPI PCI support for ARM64.
+
+Thank you very much.
+
+Cheers,
+Lorenzo
+
+> Patches has been built on top of 4.5-rc3 and can be found here:
+> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v5)
+> 
+> NOTE, this patch set depends on Lorenzo's fixes:
+> https://patchwork.ozlabs.org/patch/576450/
+> which can be found in pci-acpi-v5 branch.
+> 
+> This has been tested on Cavium ThunderX server, JunoR2, HP RX2660 IA64, x86,
+> Hip05, X-Gene and QEMU-aarch64. Any help in reviewing and testing is very appreciated.
+> 
+> v4 -> v5
+> - dropped MCFG refactoring group patches 1-6 from series v4 and integrated Jayachandran's patch
+>   https://patchwork.ozlabs.org/patch/575525/
+> - rewrite PCI legacy IRQs allocation
+> - squashed two patches 11 and 12 from series v4, fixed bisection issue
+> - changelog improvements
+> - rebased to 4.5-rc3
+> 
+> v3 -> v4
+> - dropped Jiang's fix http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04318.html
+> - added Lorenzo's fix patch 19/24
+> - ACPI PCI bus domain number assigning cleanup
+> - changed resource management, we now claim and reassign resources
+> - improvements for applying quirks
+> - dropped Matthew's http://www.spinics.net/lists/linux-pci/msg45950.html dependency
+> - rebased to 4.5-rc1
+> 
+> v2 -> v3
+> - fix legacy IRQ assigning and IO ports registration
+> - remove reference to arch specific companion device for ia64
+> - move ACPI PCI host controller driver to pci_root.c
+> - drop generic domain assignment for x86 and ia64 as I am not
+>   able to run all necessary test variants
+> - drop patch which cleaned legacy IRQ assignment since it belongs to
+>   Mathew's series:
+>   https://patchwork.ozlabs.org/patch/557504/
+> - extend MCFG quirk code
+> - rebased to 4.4
+> 
+> v1 -> v2
+> - moved non-arch specific piece of code to dirver/acpi/ directory
+> - fixed IO resource handling
+> - introduced PCI config accessors quirks matching
+> - moved ACPI_COMPANION_SET to generic code
+> 
+> v1 - https://lkml.org/lkml/2015/10/27/504
+> v2 - https://lkml.org/lkml/2015/12/16/246
+> v3 - http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04308.html
+> v4 - https://lkml.org/lkml/2016/2/4/646
+> 
+> Jayachandran C (1):
+>   ACPI: MCFG: Move mmcfg_list management to drivers/acpi
+> 
+> Lorenzo Pieralisi (1):
+>   drivers: pci: add generic code to claim bus resources
+> 
+> Tomasz Nowicki (13):
+>   acpi, pci, mcfg: Provide default RAW ACPI PCI config space accessors.
+>   arm64, acpi: Use MCFG library and empty PCI config space accessors
+>     from pci_mcfg.c file.
+>   pci, acpi, ecam: Add flag to indicate whether ECAM region was hot
+>     added or not.
+>   x86, pci: Cleanup platform specific MCFG data by using ECAM hot_added
+>     flag.
+>   pci, acpi, x86, ia64: Move ACPI host bridge device companion
+>     assignment to core code.
+>   pci, acpi: Provide generic way to assign bus domain number.
+>   x86, ia64: Include acpi_pci_{add|remove}_bus to the default
+>     pcibios_{add|remove}_bus implementation.
+>   acpi, mcfg: Add default PCI config accessors implementation and
+>     initial support for related quirks.
+>   pci, of: Move the PCI I/O space management to PCI core code.
+>   pci, acpi: Support for ACPI based generic PCI host controller
+>     initialization
+>   pci, acpi: Match PCI config space accessors against platfrom specific
+>     quirks.
+>   arm64, pci, acpi: Assign legacy IRQs once device is enable.
+>   arm64, pci, acpi: Start using ACPI based PCI host bridge driver for
+>     ARM64.
+> 
+>  arch/arm64/Kconfig                 |   5 +
+>  arch/arm64/kernel/pci.c            |  35 +---
+>  arch/ia64/hp/common/sba_iommu.c    |   2 +-
+>  arch/ia64/include/asm/pci.h        |   1 -
+>  arch/ia64/pci/pci.c                |  26 ---
+>  arch/ia64/sn/kernel/io_acpi_init.c |   4 +-
+>  arch/x86/include/asm/pci.h         |   3 -
+>  arch/x86/include/asm/pci_x86.h     |  24 +--
+>  arch/x86/pci/acpi.c                |  47 +----
+>  arch/x86/pci/common.c              |  10 -
+>  arch/x86/pci/mmconfig-shared.c     | 269 ++++---------------------
+>  arch/x86/pci/mmconfig_32.c         |   1 +
+>  arch/x86/pci/mmconfig_64.c         |   1 +
+>  arch/x86/pci/numachip.c            |   1 +
+>  drivers/acpi/Kconfig               |   7 +
+>  drivers/acpi/Makefile              |   1 +
+>  drivers/acpi/pci_mcfg.c            | 392 +++++++++++++++++++++++++++++++++++++
+>  drivers/acpi/pci_root.c            | 154 ++++++++++++++-
+>  drivers/of/address.c               | 116 +----------
+>  drivers/pci/pci.c                  | 126 +++++++++++-
+>  drivers/pci/probe.c                |   5 +
+>  drivers/pci/setup-bus.c            |  63 ++++++
+>  drivers/xen/pci.c                  |   5 +-
+>  include/acpi/acpi_bus.h            |   1 +
+>  include/asm-generic/vmlinux.lds.h  |   7 +
+>  include/linux/of_address.h         |   9 -
+>  include/linux/pci-acpi.h           |  68 +++++++
+>  include/linux/pci.h                |   6 +
+>  28 files changed, 892 insertions(+), 497 deletions(-)
+>  create mode 100644 drivers/acpi/pci_mcfg.c
+> 
+> -- 
+> 1.9.1
+> 
