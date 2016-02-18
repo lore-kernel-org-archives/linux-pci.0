@@ -1,40 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:60788 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751597AbcBJO3b (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 09:29:31 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Tomasz Nowicki <tn@semihalf.com>, Feng Kan <fkan@apm.com>,
-	linux-pci@vger.kernel.org, patches@apm.com,
-	linux-kernel@vger.kernel.org, Loc Ho <lho@apm.com>,
-	Mark Salter <msalter@redhat.com>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [PATCH] pci: xgene: Add ECAM fixups
-Date: Wed, 10 Feb 2016 15:28:56 +0100
-Message-ID: <2994764.UGKJE3zfLx@wuerfel>
-In-Reply-To: <1455068984-22210-1-git-send-email-dhdang@apm.com>
-References: <1455068984-22210-1-git-send-email-dhdang@apm.com>
+Received: from AUSXIPPS310.us.dell.com ([143.166.148.211]:45708 "EHLO
+	ausxipps310.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1948070AbcBRUke convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Feb 2016 15:40:34 -0500
+From: <Jordan_Hargrave@Dell.com>
+To: <bhelgaas@google.com>, <helgaas@kernel.org>, <tglx@linutronix.de>,
+	<mingo@redhat.com>, <hpa@zytor.com>
+CC: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<x86@kernel.org>, <jharg93@gmail.com>
+Subject: [PATCH v3] Create pci slot files for SMBIOS Type 9 entries
+Date: Thu, 18 Feb 2016 20:40:32 +0000
+Message-ID: <1455827823254.98505@Dell.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 09 February 2016 17:49:44 Duc Dang wrote:
-> X-Gene PCIe controller does not fully support ECAM.
-> This patch adds required ECAM fixup to allow X-Gene
-> PCIe controller to be functional in ACPI boot mode.
-> 
-> This patch is based on the original work of
-> Mark Salter <msalter@redhat.com> and depends on
-> Tomasz's PCIe ACPI series:
-> https://lkml.org/lkml/2016/2/4/646
-> 
-> Signed-off-by: Duc Dang <dhdang@apm.com>
-> ---
+The following diff builds on the "[PATCHv3] Save SMBIOS Type 9 System Slots"
 
-This really has nothing to do with the PCI host device driver, please
-keep it in a separate file in drivers/acpi/.
+This will create a /sys/bus/pci/slots/XXX file for each Type 9 entry.  This will be \
+used for systemd enumeration of NICs.
 
-	Arnd
+Only build if CONFIG_DMI is set
+
+Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
+---
+ arch/x86/pci/common.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index eccd4d9..bfa3c85 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -173,6 +173,27 @@ void pcibios_fixup_bus(struct pci_bus *b)
+ 
+ void pcibios_add_bus(struct pci_bus *bus)
+ {
++#ifdef CONFIG_DMI
++	const struct dmi_device *dmi;
++	struct dmi_dev_onboard *dslot;
++	char sname[128];
++
++	dmi = NULL;
++	while ((dmi = dmi_find_device(DMI_DEV_TYPE_DEV_SLOT,
++				      NULL, dmi)) != NULL) {
++		dslot = dmi->device_data;
++		if (dslot->segment == pci_domain_nr(bus) &&
++		    dslot->bus == bus->number) {
++			dev_info(&bus->dev, "Found SMBIOS Slot %s\n",
++				 dslot->dev.name);
++			snprintf(sname, sizeof(sname), "%s-%d",
++				 dslot->dev.name,
++				 dslot->instance);
++			pci_create_slot(bus, dslot->devfn,
++					sname, NULL);
++		}
++	}
++#endif
+ 	acpi_pci_add_bus(bus);
+ }
+ 
+-- 
+2.5.0
+
+
+
+
+
+
+ 
+--jordan hargrave
+ Dell Enterprise Linux Engineering  
