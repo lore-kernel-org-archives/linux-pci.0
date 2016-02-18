@@ -1,54 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:7248 "EHLO mga11.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:52092 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751584AbcBWXrW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Feb 2016 18:47:22 -0500
-Date: Tue, 23 Feb 2016 16:47:10 -0700
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: Keith Busch <keith.busch@intel.com>
-Cc: helgaas@kernel.org, linux-kernel@vger.kernel.org, x86@kernel.org,
-	bryan.e.veal@intel.com, linux-pci@vger.kernel.org,
-	tglx@linutronix.de, dan.j.williams@intel.com
-Subject: Re: [PATCH] VMD: Attach vmd resources to parent domain's resource
- tree
-Message-ID: <20160223234710.GA8670@localhost.localdomain>
-References: <1456264213-3546-1-git-send-email-jonathan.derrick@intel.com>
- <20160223231610.GC20250@localhost.localdomain>
+	id S1425604AbcBRMwE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Feb 2016 07:52:04 -0500
+Date: Thu, 18 Feb 2016 13:52:01 +0100
+From: Jean Delvare <jdelvare@suse.de>
+To: linux-pci@vger.kernel.org
+Cc: Thomas Renninger <trenn@suse.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Borislav Petkov <bp@suse.de>,
+	Prarit Bhargava <prarit@redhat.com>
+Subject: [PATCH 2/4] PCI: aer_inject: Use dev_warn()
+Message-ID: <20160218135201.1a97a532@endymion>
+In-Reply-To: <20160218130928.67dbf63b@endymion>
+References: <20160218130928.67dbf63b@endymion>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160223231610.GC20250@localhost.localdomain>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 23, 2016 at 11:16:11PM +0000, Keith Busch wrote:
-> On Tue, Feb 23, 2016 at 02:50:13PM -0700, Jon Derrick wrote:
-> > This patch attaches the new VMD domain's resources to the VMD device's
-> > resources. This allows /proc/iomem to display a more complete picture.
-> > 
-> > Before:
-> >   c0000000-c1ffffff : 0000:5d:05.5
-> >   c2000000-c3ffffff : 0000:5d:05.5
-> >     c2010000-c2013fff : nvme
-> >   c4000000-c40fffff : 0000:5d:05.5
-> > 
-> > After:
-> >   c0000000-c1ffffff : 0000:5d:05.5
-> >     c0000000-0000001f : VMD CFGBAR
-> >   c2000000-c3ffffff : 0000:5d:05.5
-> >     c2000000-c3ffffff : VMD MEMBAR1
-> >       c2000000-c22fffff : PCI Bus 10000:01
-> >         c2000000-c200ffff : 10000:01:00.0
-> >         c2010000-c2013fff : 10000:01:00.0
-> >           c2010000-c2013fff : nvme
-> >       c2300000-c24fffff : PCI Bus 10000:01
-> >   c4000000-c40fffff : 0000:5d:05.5
-> >     c4002000-c40fffff : VMD MEMBAR2
-> 
-> I think we should drop the CFGBAR from here since that's a bus resource
-> rather than IO memory. Otherwise, this looks good and useful.
-Yes that entry doesn't make much sense for iomem does it. I'll drop that part.
+dev_warn() is better than printk(LOG_WARNING...) as it records which
+device the message relates to. Also add a prefix "aer_inject:" to
+help differentiate real errors from injected errors.
 
-> 
-> I think in the near future we should come up with a better name than
-> "VMD MEMBAR" to help distinguish multiple VMD's in a system.
-Seconded. I'm fine with naming it by its PCI designator, eg 10000:01:00.0, and maybe a bar designator after that (or not).
+Signed-off-by: Jean Delvare <jdelvare@suse.de>
+Cc: Borislav Petkov <bp@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pcie/aer/aer_inject.c |   10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+--- linux-4.5-rc4.orig/drivers/pci/pcie/aer/aer_inject.c	2016-02-18 11:41:48.738010173 +0100
++++ linux-4.5-rc4/drivers/pci/pcie/aer/aer_inject.c	2016-02-18 12:50:56.927581343 +0100
+@@ -25,6 +25,7 @@
+ #include <linux/fs.h>
+ #include <linux/uaccess.h>
+ #include <linux/stddef.h>
++#include <linux/device.h>
+ #include "aerdrv.h"
+ 
+ /* Override the existing corrected and uncorrected error masks */
+@@ -397,14 +398,16 @@ static int aer_inject(struct aer_error_i
+ 	if (!aer_mask_override && einj->cor_status &&
+ 	    !(einj->cor_status & ~cor_mask)) {
+ 		ret = -EINVAL;
+-		printk(KERN_WARNING "The correctable error(s) is masked by device\n");
++		dev_warn(&dev->dev,
++			 "aer_inject: The correctable error(s) is masked by device\n");
+ 		spin_unlock_irqrestore(&inject_lock, flags);
+ 		goto out_put;
+ 	}
+ 	if (!aer_mask_override && einj->uncor_status &&
+ 	    !(einj->uncor_status & ~uncor_mask)) {
+ 		ret = -EINVAL;
+-		printk(KERN_WARNING "The uncorrectable error(s) is masked by device\n");
++		dev_warn(&dev->dev,
++			 "aer_inject: The uncorrectable error(s) is masked by device\n");
+ 		spin_unlock_irqrestore(&inject_lock, flags);
+ 		goto out_put;
+ 	}
+@@ -457,7 +460,8 @@ static int aer_inject(struct aer_error_i
+ 
+ 	if (find_aer_device(rpdev, &edev)) {
+ 		if (!get_service_data(edev)) {
+-			printk(KERN_WARNING "AER service is not initialized\n");
++			dev_warn(&edev->device,
++				 "aer_inject: AER service is not initialized\n");
+ 			ret = -EPROTONOSUPPORT;
+ 			goto out_put;
+ 		}
+
+-- 
+Jean Delvare
+SUSE L3 Support
