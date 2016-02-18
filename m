@@ -1,74 +1,50 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V5 15/15] arm64, pci, acpi: Start using ACPI based PCI host bridge driver for ARM64.
-Date: Tue, 16 Feb 2016 14:53:45 +0100
-Message-Id: <1455630825-27253-16-git-send-email-tn@semihalf.com>
-In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jordan Hargrave <Jordan_Hargrave@dell.com>
+To: jordan_hargrave@dell.com, bhelgaas@google.com
+Cc: alexander.duyck@gmail.com, linux-pci@vger.kernel.org,
+	babu.moger@oracle.com, hare@suse.de, linux-kernel@vger.kernel.org,
+	jharg93@gmail.com, Jordan Hargrave <Jordan_Hargrave@dell.com>
+Subject: [PATCH 2/2] Create sysfs entries for PCI VPDI and VPDR tags
+Date: Thu, 18 Feb 2016 14:31:04 -0600
+Message-Id: <1455827464-11398-1-git-send-email-Jordan_Hargrave@dell.com>
+To: Jordan_Hargrave@dell.com
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is perfectly fine to use ACPI_PCI_HOST_GENERIC for ARM64,
-so lets get rid of PCI init empty stub, related ACPI header and
-go with full-blown PCI host controller driver.
+The VPD-R is a readonly area of the PCI Vital Product Data region.
+There are some standard keywords for serial number, manufacturer,
+and vendor-specific values.  Dell Servers use a vendor-specific
+tag to store number of ports and port mapping of partitioned NICs.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-TO: Catalin Marinas <catalin.marinas@arm.com>
-TO: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-TO: Will Deacon <will.deacon@arm.com>
-TO: Arnd Bergmann <arnd@arndb.de>
-CC: Liviu Dudau <Liviu.Dudau@arm.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
+info = VPD-Info string
+PN = Part Number
+SN = Serial Number
+MN = Manufacturer ID
+Vx = Vendor-specific (x=0..9 A..Z)
+
+This creates a sysfs subdirectory in the pci device: vpdattr with
+'info', 'EC', 'SN', 'V0', etc. files containing the tag values.
+
+Added pci.h patch
+
+Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
 ---
- arch/arm64/Kconfig      | 1 +
- arch/arm64/kernel/pci.c | 9 ---------
- 2 files changed, 1 insertion(+), 9 deletions(-)
+ include/linux/pci.h     |   3 +
+ 1 files changed, 3 insertions(+)
 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 552e996..09c49ea 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -2,6 +2,7 @@ config ARM64
- 	def_bool y
- 	select ACPI_CCA_REQUIRED if ACPI
- 	select ACPI_GENERIC_GSI if ACPI
-+	select ACPI_PCI_HOST_GENERIC if ACPI
- 	select ACPI_REDUCED_HARDWARE_ONLY if ACPI
- 	select ARCH_HAS_DEVMEM_IS_ALLOWED
- 	select ARCH_HAS_ATOMIC64_DEC_IF_POSITIVE
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index 6e77e1b..1de0168 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -65,12 +65,3 @@ int pcibios_alloc_irq(struct pci_dev *dev)
- 
- 	return 0;
- }
--
--#ifdef CONFIG_ACPI
--/* Root bridge scanning */
--struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
--{
--	/* TODO: Should be revisited when implementing PCI on ACPI */
--	return NULL;
--}
--#endif
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8135a2f..c1313b1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -372,6 +372,9 @@ struct pci_dev {
+ 	const struct attribute_group **msi_irq_groups;
+ #endif
+ 	struct pci_vpd *vpd;
++	int vpdr_len;
++	u8 *vpdr_data;
++	char *vpdi_data;
+ #ifdef CONFIG_PCI_ATS
+ 	union {
+ 		struct pci_sriov *sriov;	/* SR-IOV capability related */
 -- 
-1.9.1
-
+2.5.0
