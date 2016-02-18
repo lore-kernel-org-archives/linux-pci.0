@@ -1,62 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 0/3] PCI: Revert "Implement pcibios_alloc_irq() and
- pcibios_free_irq()"
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-References: <20160217182718.302.10272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Cc: Joerg Roedel <jroedel@suse.de>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
-	linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-From: =?UTF-8?B?0JzQvtGA0L7QtyDQntC70LXQsw==?= <oleg.moroz@mcc.vniiem.ru>
-Message-ID: <56C55305.2050404@mcc.vniiem.ru>
-Date: Thu, 18 Feb 2016 08:13:41 +0300
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 18 Feb 2016 13:20:38 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: "liudongdong (C)" <liudongdong3@huawei.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rafael@kernel.org, hanjun.guo@linaro.org, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	Stefano.Stabellini@eu.citrix.com, jcm@redhat.com,
+	linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	robert.richter@caviumnetworks.com, wangyijing@huawei.com,
+	mw@semihalf.com, linux-arm-kernel@lists.infradead.org
+Subject: Re: [Linaro-acpi] [PATCH V5 01/15] ACPI: MCFG: Move mmcfg_list
+ management to drivers/acpi
+Message-ID: <20160218132038.GA13229@red-moon>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+ <1455630825-27253-2-git-send-email-tn@semihalf.com>
+ <56C5B83F.4010602@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20160217182718.302.10272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56C5B83F.4010602@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17.02.2016 21:36, Bjorn Helgaas wrote:
-> These are clean reverts of 991de2e59090 ("PCI, x86: Implement
-> pcibios_alloc_irq() and pcibios_free_irq()") and related changes.
->
-> We have two reports of drivers broken in v4.3 by Jiang's change,
-> 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
-> pcibios_free_irq()").
->
-> It would be best to fix the problem instead of reverting 991de2e59090, but
-> I don't have time to do that myself, and we haven't heard from Jiang, so
-> the only choice I have is to revert the commit.
->
-> Note that reverting will likely break IOAPIC hotplug.
->
-> Олег and Sunjin, can you please test this and see whether it fixes your
-> drivers?  This patch is based on v4.5-rc1.
->
-> I intend to merge these for v4.5 unless I hear objections.
->
-> They're on my for-linus branch, so they should appear in linux-next
-> tomorrow.
->
-> Changes from the v1 posting:
->    - Explicitly revert related patches instead of resolving conflicts
->      manually
-> ---
->
-> Bjorn Helgaas (3):
->        Revert "x86/PCI: Don't alloc pcibios-irq when MSI is enabled"
->        Revert "PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed"
->        Revert "PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()"
->
->
->   arch/x86/include/asm/pci_x86.h |    2 ++
->   arch/x86/pci/common.c          |   26 ++++++++++----------------
->   arch/x86/pci/intel_mid_pci.c   |    9 +++------
->   arch/x86/pci/irq.c             |   23 +++++++++++++++++++----
->   drivers/acpi/pci_irq.c         |   17 +++++++++++++----
->   include/linux/pci.h            |   17 -----------------
->   6 files changed, 47 insertions(+), 47 deletions(-)
-As i undestand this patch will appear in kernel git repo tomorrow? I 
-don't need to apply in manyally to v4.5-rc1?
+On Thu, Feb 18, 2016 at 08:25:35PM +0800, liudongdong (C) wrote:
+
+[...]
+
+> >+/*
+> >+ * Map a pci_mmcfg_region, can be overrriden by arch
+> >+ */
+> >+int __weak pci_mmconfig_map_resource(struct device *dev,
+> >+	struct pci_mmcfg_region *mcfg)
+> >+{
+> >+	struct resource *tmp;
+> >+	void __iomem *vaddr;
+> >+
+> >+	tmp = insert_resource_conflict(&iomem_resource, &mcfg->res);
+> >+	if (tmp) {
+> >+		dev_warn(dev, "MMCONFIG %pR conflicts with %s %pR\n",
+> >+			&mcfg->res, tmp->name, tmp);
+> >+		return -EBUSY;
+> >+	}
+> >+
+> >+	vaddr =  ioremap(mcfg->res.start, resource_size(&mcfg->res));
+               ^^
+	       while at it, stray white space
+
+> >+	if (!vaddr) {
+> >+		release_resource(&mcfg->res);
+> >+		return -ENOMEM;
+> >+	}
+> >+
+> >+	mcfg->virt = vaddr;
+> Here should be changed to
+> 	mcfg->virt = vaddr - PCI_MMCFG_BUS_OFFSET(mcfg->start_bus);
+> 
+> or when pcie host "start_bus" is not 0, the configuraion access will be wrong.
+Well spotted, thanks.
+
+Lorenzo
