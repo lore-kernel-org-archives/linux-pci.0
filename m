@@ -1,70 +1,170 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22442 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758399AbcBYDNg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 22:13:36 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v10 13/59] PCI: Add has_mem64 for struct host_bridge
-Date: Wed, 24 Feb 2016 18:12:04 -0800
-Message-Id: <1456366370-28995-14-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:33027 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1425202AbcBRPuB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 18 Feb 2016 10:50:01 -0500
+Date: Thu, 18 Feb 2016 09:49:57 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jayachandran Chandrashekaran Nair
+	<jayachandran.chandrashekaran@broadcom.com>
+Cc: Jayachandran C <jchandra@broadcom.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>
+Subject: Re: [RFC PATCH 2/2] PCI: Handle Broadcom Vulcan quirks
+Message-ID: <20160218154957.GB17588@localhost>
+References: <1455487501-28630-2-git-send-email-jchandra@broadcom.com>
+ <1455528398-29311-1-git-send-email-jchandra@broadcom.com>
+ <20160215183015.GC12641@localhost>
+ <CAKc_7PVVn2ookpbOUuT-jyUq6e6hJYKLpM+d9=6CqYtLO45tWw@mail.gmail.com>
+ <20160216171418.GA702@localhost>
+ <CAKc_7PVBH8h9aPK7j74yCjTOnJ22FzNd2O8nDUJn7n0iKUD_FQ@mail.gmail.com>
+ <20160216210337.GA8244@localhost>
+ <CAKc_7PW3OBZcAW-rVEdWa2i94acgT9EhjS2Kbnb-ot36ZXPMUw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKc_7PW3OBZcAW-rVEdWa2i94acgT9EhjS2Kbnb-ot36ZXPMUw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add has_mem64 for struct host_bridge, on root bus that does not support
-mmio64 above 4g, will not set that.
+On Wed, Feb 17, 2016 at 10:36:55PM +0530, Jayachandran Chandrashekaran Nair wrote:
+> On Wed, Feb 17, 2016 at 2:33 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > [+cc Arnd, Rob, DT host bridge description questions]
+> >
+> > On Tue, Feb 16, 2016 at 11:39:41PM +0530, Jayachandran Chandrashekaran Nair wrote:
+> >> On Tue, Feb 16, 2016 at 10:44 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >> > On Tue, Feb 16, 2016 at 09:47:34PM +0530, Jayachandran Chandrashekaran Nair wrote:
+> >> >> On Tue, Feb 16, 2016 at 12:00 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >> >> > On Mon, Feb 15, 2016 at 02:56:38PM +0530, Jayachandran C wrote:
+> >> >> >> Handle two quirks of the PCI controller on Broadcom's Vulcan processor.
+> >> >> >>  - Mark internal bridges so that they are skipped during DMA alias
+> >> >> >>    search.
+> >> >> >>  - Skip BAR0 resource assignment for internal bridges. The BARs
+> >> >> >>    of internal bridges should not be assigned from the mem resource
+> >> >> >>    range.
+> >> >> >> ...
+> >> >> >>  drivers/pci/quirks.c | 21 +++++++++++++++++++++
+> >> >> >>  1 file changed, 21 insertions(+)
+> >> >> >>
+> >> >> >> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> >> >> >> index 0575a1e..afc186a 100644
+> >> >> >> --- a/drivers/pci/quirks.c
+> >> >> >> +++ b/drivers/pci/quirks.c
+> >> >> >> @@ -3705,6 +3705,27 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
+> >> >> >>  DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
+> >> >> >>
+> >> >> >>  /*
+> >> >> >> + * Two levels of bridges in Broadcom Vulcan are not real PCI or PCIe bridges.
+> >> >> >> + * These are internal bridges and should not be used for dma alias
+> >> >> >> + * calculations. Additionally, the BAR0 of thes bridges should not be
+> >> >> >> + * assigned with a mem resource from linux
+> >> >> >> + */
+> >> >> >> +static void quirk_bridge_brcm_vulcan_internal(struct pci_dev *pdev)
+> >> >> >> +{
+> >> >> >> +     struct resource *r = &pdev->resource[0];
+> >> >> >> +
+> >> >> >> +     /* skip from alias search */
+> >> >> >> +     pdev->dev_flags |= PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS;
+> >> >> >> +
+> >> >> >> +     /* clear BAR0, should not be used from Linux */
+> >> >> >> +     memset(r, 0, sizeof(*r));
+> >> >> >
+> >> >> > This definitely needs some explanation.  The whole point of the
+> >> >> > architected PCI config space header is so that generic OS code can
+> >> >> > manage the device without having to add device-specific code.
+> >> >> >
+> >> >> > Are you saying the register at 0x10 in config space is not actually a
+> >> >> > BAR at all?  Or it is a BAR, but you don't think anybody should need
+> >> >> > to use it?
+> >> >>
+> >> >> These is a proper BAR (64 bit pref) in the bridge's Type 1 header, but:
+> >> >> 1. Assigning a memory resource from the pci memory window to this
+> >> >>    BAR causes the PCIe system to fail (this is a bug). So we cannot
+> >> >>    expose this BAR to standard Linux code without even more quirks
+> >> >>    and hacks.
+> >> >
+> >> > Are you saying assigning space for this BAR exposes a Linux PCI bug?
+> >> > If so, I'd like to know more about that because we should fix it.
+> >> >
+> >> > Or does it expose a hardware bug in the Broadcom device?
+> >>
+> >> This is a hardware bug (or non-compliance). The BAR cannot be
+> >> assigned from the PCI MEM range. To use it we need to program
+> >> an address outside the areas assigned to PCI to the BAR. But like
+> >> I said it is better for us to ignore the BAR in linux and then the
+> >> device acts as a normal bridge.
+> >
+> > Your PCI host bridge has a window of address space that it forwards
+> > from the primary (CPU) side to the secondary (PCI) side.  I assume
+> > that's what you mean by the "PCI MEM range."  Apparently if the BAR is
+> > programmed inside that window, it causes some hardware error.  That
+> > still seems strange; there's no driver for the device, and we know the
+> > range is in use so it won't be assigned to any other device, so Linux
+> > should never *access* the range.
+> 
+> This is correct. The write to this bridge BAR with a address from
+> the host bridge window will cause a hardware issue.
+> 
+> > Apparently if you program the BAR *outside* the window, the hardware
+> > error does not happen, and the private registers are accessible.  But
+> > Linux currently doesn't know where this space is.
+> >
+> > If we ignore the BAR in Linux, apparently the hardware error does not
+> > happen.  But the BAR still contains some value, so this is really the
+> > same as having the BAR outside the window, presumably because it came
+> > out of reset that way, or maybe firmware programmed it.
+> 
+> Yes.
+> 
+> > It sounds to me like you should do the following:
+> >
+> > a) Have firmware program this BAR where you want it,
+> >
+> > b) Describe these private registers as internal PCI bridge registers,
+> >    using a DT "reg" property,
+> 
+> Two ponts here:
+> - We have to support ACPI as well
 
-We will use that info next two following patches:
-1. Don't treat non-pref mmio64 as pref mmio, so will not put
-   it under bridge's pref range when rescan the devices
-2. will keep pref mmio64 and pref mmio32 under bridge pref bar.
+ACPI can do something similar.  This register space would be described
+in a _CRS method.  IIRC there is actually a bit in the _CRS descriptor
+that was intended to tell you whether the resource is (a) consumed
+directly by the device or (b) forwarded to downstream devices.  But I
+think BIOSes didn't use that bit correctly, so it's useless, so the
+_CRS method might have to be on a different device.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
----
- drivers/pci/probe.c | 7 +++++++
- include/linux/pci.h | 1 +
- 2 files changed, 8 insertions(+)
+> - There is no need to use the private registers in linux, so the
+>    whole thing will be pointless.
+> 
+> > c) Describe the host bridge window (which doesn't include the above
+> >    registers) using the normal "ranges" property, and
+> 
+> This is standard code (and ACPI works as well)..
+> 
+> > d) Arrange for config writes to BAR 0 to be dropped and for reads to
+> >    return 0, maybe by checks in your config accessors.
+> 
+> Here we are hiding the BAR from linux using checks in config read
+> write (if i understand correctly). This will need custom config accessors
+> for Vulcan both on device tree as well as in ACPI.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 2c3e264..bcda915 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2189,6 +2189,13 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		} else
- 			bus_addr[0] = '\0';
- 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
-+
-+		if (resource_type(res) == IORESOURCE_MEM) {
-+			if ((res->end - offset) > 0xffffffff)
-+				bridge->has_mem64 = 1;
-+			if ((res->start - offset) > 0xffffffff)
-+				res->flags |= IORESOURCE_MEM_64;
-+		}
- 	}
- 
- 	down_write(&pci_bus_sem);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index ca8d70a..d4592e3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -413,6 +413,7 @@ struct pci_host_bridge {
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
-+	unsigned int has_mem64:1;
- 	/* Resource alignment requirements */
- 	resource_size_t (*align_resource)(struct pci_dev *dev,
- 			const struct resource *res,
--- 
-1.8.4.5
+Config accessors are usually not specific to DT or ACPI.
 
+> The patch (above) is trying to do it in a much much simpler way by
+> clearing the bar0 resource in DECLARE_PCI_FIXUP_HEADER quirk.
+> I am not able to see why this is not valid.
+
+I think there are two problems:
+
+1) If the device responds to any address space, Linux needs to know
+about it.  If we don't know about it, we might assign that space to
+something else.
+
+2) The PCI core still reads and writes the BAR to size it, and we
+don't know whether this will trigger the hardware issue.
+
+*You* might know that neither of these is an issue today, but special
+incidental knowledge like that is a maintenance problem because I
+can't tell what PCI core changes might make them an issue in the
+future.
+
+Bjorn
