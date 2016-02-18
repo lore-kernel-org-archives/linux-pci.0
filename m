@@ -1,103 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0088.outbound.protection.outlook.com ([207.46.100.88]:57888
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752692AbcBWRrN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Feb 2016 12:47:13 -0500
-From: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Marsan, Luugi" <Luugi.Marsan@amd.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Alex Williamson <alex.williamson@redhat.com>
-Subject: RE: BUGZILLA [112941] - Cannot reenable SRIOV after disabling SRIOV
- on AMD GPU
-Date: Tue, 23 Feb 2016 17:47:11 +0000
-Message-ID: <CY1PR12MB0262E17EF294E8A1F23D8CB2FEA40@CY1PR12MB0262.namprd12.prod.outlook.com>
-References: <CY1PR12MB0262D12DAC0897F8DC74541CFEA40@CY1PR12MB0262.namprd12.prod.outlook.com>
- <20160223170215.GA25203@localhost>
-In-Reply-To: <20160223170215.GA25203@localhost>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 0/3] PCI: Revert "Implement pcibios_alloc_irq() and
+ pcibios_free_irq()"
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+References: <20160217182718.302.10272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: Joerg Roedel <jroedel@suse.de>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
+	linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+From: =?UTF-8?B?0JzQvtGA0L7QtyDQntC70LXQsw==?= <oleg.moroz@mcc.vniiem.ru>
+Message-ID: <56C55305.2050404@mcc.vniiem.ru>
+Date: Thu, 18 Feb 2016 08:13:41 +0300
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160217182718.302.10272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Tuesday, February 23, 2016 12:02 PM
-> To: Zytaruk, Kelly
-> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
-> bhelgaas@google.com; Marsan, Luugi; Joerg Roedel; Alex Williamson
-> Subject: Re: BUGZILLA [112941] - Cannot reenable SRIOV after disabling SRIOV
-> on AMD GPU
-> 
-> [+cc Joerg, Alex]
-> 
-> Hi Kelly,
-> 
-> On Tue, Feb 23, 2016 at 03:52:13PM +0000, Zytaruk, Kelly wrote:
-> > As per our offline discussions I have created Bugzilla #112941 for the
-> > SRIOV issue.
-> 
-> https://bugzilla.kernel.org/show_bug.cgi?id=112941
-> 
-> > When trying to enable SRIOV on AMD GPU after doing a previous enable /
-> > disable sequence the following warning is shown in dmesg.  I suspect
-> > that there might be something missing from the cleanup on the disable.
-> >
-> > I had a quick look at the code and it is checking for something in the
-> > iommu, something to do with being attached to a domain.  I am not
-> > familiar with this code yet (what does it mean to be attached to a
-> > domain?) so it might take a little while before I can get the time to
-> > check it out and understand it.
-> >
-> > From a quick glance I notice that during SRIOV enable the function
-> > do_attach()  in amd_iommu.c is called but during disable I don't see a
-> > corresponding call to do_detach (...).  do_detach(...) is called in
-> > the second enable SRIOV  sequence as a cleanup because it thinks that
-> > the iommu is still attached which it shouldn't be (as far as I
-> > understand).
-> >
-> > If the iommu reports that the device is being removed why isn't it
-> > also detached??? Is this by design or an omission?
-> 
-> I don't know enough about the IOMMU code to understand this, but maybe the
-> IOMMU experts I copied do.
-> 
-> > I see the following in dmesg when I do a disable, note the device is removed.
-> >
-> > [  131.674066] pci 0000:02:00.0: PME# disabled [  131.682191] iommu:
-> > Removing device 0000:02:00.0 from group 2
-> >
-> > Stack trace of warn is shown below.
-> >
-> > [  368.510742] pci 0000:02:00.2: calling pci_fixup_video+0x0/0xb1 [
-> > 368.510847] pci 0000:02:00.3: [1002:692f] type 00 class 0x030000 [
-> > 368.510888] pci 0000:02:00.3: Max Payload Size set to 256 (was 128,
-> > max 256) [  368.510907] pci 0000:02:00.3: calling
-> > quirk_no_pm_reset+0x0/0x1a [  368.511005] vgaarb: device added:
-> > PCI:0000:02:00.3,decodes=io+mem,owns=none,locks=none
-> > [  368.511421] ------------[ cut here ]------------ [  368.511426]
-> > WARNING: CPU: 1 PID: 3390 at drivers/pci/ats.c:85
-> > pci_disable_ats+0x26/0xa4()
-> 
-> This warning is because dev->ats_enabled doesn't have the value we expect.  I
-> think we only modify ats_enabled in two places.  Can you stick a dump_stack() at
-> those two places?  Maybe a little more context will make this obvious.
-> 
-
-Yes, I only see the two places.
-The dump_stack() doesn't help much other than tell me that dev->ats_enabled is never set to 0.  The code path never gets hit.
-
-dev->ats_enabled is set to 1 when the VF is created but it is not set to 0 when the VF is destroyed.
-
-The code path looks like detach_device (from amd_iommu.c) calls pci_disable_ats() which sets ats_enabled = 0.
->From the log trace detach_device() is not called when SRIOV is disabled, so when SRIOV is enabled again ats_enabled is still == 1. 
-
-I am not sure where detach_device() should be called but my guess is that detach_device() should be somewhere in the disable SRIOV path.  I don't yet know enough about the iommu code.
-
-> Bjorn
+On 17.02.2016 21:36, Bjorn Helgaas wrote:
+> These are clean reverts of 991de2e59090 ("PCI, x86: Implement
+> pcibios_alloc_irq() and pcibios_free_irq()") and related changes.
+>
+> We have two reports of drivers broken in v4.3 by Jiang's change,
+> 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
+> pcibios_free_irq()").
+>
+> It would be best to fix the problem instead of reverting 991de2e59090, but
+> I don't have time to do that myself, and we haven't heard from Jiang, so
+> the only choice I have is to revert the commit.
+>
+> Note that reverting will likely break IOAPIC hotplug.
+>
+> Олег and Sunjin, can you please test this and see whether it fixes your
+> drivers?  This patch is based on v4.5-rc1.
+>
+> I intend to merge these for v4.5 unless I hear objections.
+>
+> They're on my for-linus branch, so they should appear in linux-next
+> tomorrow.
+>
+> Changes from the v1 posting:
+>    - Explicitly revert related patches instead of resolving conflicts
+>      manually
+> ---
+>
+> Bjorn Helgaas (3):
+>        Revert "x86/PCI: Don't alloc pcibios-irq when MSI is enabled"
+>        Revert "PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed"
+>        Revert "PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()"
+>
+>
+>   arch/x86/include/asm/pci_x86.h |    2 ++
+>   arch/x86/pci/common.c          |   26 ++++++++++----------------
+>   arch/x86/pci/intel_mid_pci.c   |    9 +++------
+>   arch/x86/pci/irq.c             |   23 +++++++++++++++++++----
+>   drivers/acpi/pci_irq.c         |   17 +++++++++++++----
+>   include/linux/pci.h            |   17 -----------------
+>   6 files changed, 47 insertions(+), 47 deletions(-)
+As i undestand this patch will appear in kernel git repo tomorrow? I 
+don't need to apply in manyally to v4.5-rc1?
