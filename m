@@ -1,134 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52124 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751764AbcBXQJN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Feb 2016 11:09:13 -0500
-Message-ID: <1456330151.5681.46.camel@redhat.com>
-Subject: Re: [PATCH] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI boot
- for X-Gene v1
-From: Mark Salter <msalter@redhat.com>
-To: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Marc Zyngier <marc.zyngier@arm.com>
-Cc: Feng Kan <fkan@apm.com>, linux-pci@vger.kernel.org,
-	patches@apm.com, linux-kernel@vger.kernel.org,
-	Loc Ho <lho@apm.com>, linux-arm-kernel@lists.infradead.org,
-	Tanmay Inamdar <tinamdar@apm.com>
-Date: Wed, 24 Feb 2016 11:09:11 -0500
-In-Reply-To: <1455069384-22323-1-git-send-email-dhdang@apm.com>
-References: <1455069384-22323-1-git-send-email-dhdang@apm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 18 Feb 2016 12:32:16 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	jchandra@broadcom.com, Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+Subject: Re: [PATCH V5 04/15] pci, acpi, ecam: Add flag to indicate whether
+ ECAM region was hot added or not.
+Message-ID: <20160218123216.GB12626@red-moon>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+ <1455630825-27253-5-git-send-email-tn@semihalf.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1455630825-27253-5-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2016-02-09 at 17:56 -0800, Duc Dang wrote:
-> This patch makes pci-xgene-msi driver ACPI-aware and provides
-> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
+On Tue, Feb 16, 2016 at 02:53:34PM +0100, Tomasz Nowicki wrote:
+> There are two ways we can get ECAM (aka MCFG) regions using ACPI,
+> first from MCFG static table and second from _CBA method. We cannot remove
+> static regions, however regions coming from _CBA should be removed while
+> removing bridge device.
 > 
-> Signed-off-by: Duc Dang <dhdang@apm.com>
+> In the light of above we need flag to mark hot added ECAM entries
+> and user to call pci_mmconfig_insert while adding regions from _CBA method.
+> Similarly pci_mmconfig_delete while removing hot added regions.
+
+"According to the PCI firmware specification, ACPI provides two standard
+mechanisms to retrieve ECAM memory mapped configuration regions (aka MCFG).
+For non-hot-removable bridges, ECAM bridge configurations are retrieved from
+the static MCFG table and have to be considered non-hot-removable for the
+current boot; hot-removable PCI host bridges configurations are retrieved
+through bridges _CBA methods.
+
+When ECAM regions are added through _CBA methods, they can be marked
+as hot-added so that, upon respective PCI host bridge hot-removal, they can
+be unmapped and deleted in that no longer needed.
+
+This patch adds a flag to MCFG regions allowing to mark them as hot-added,
+so that upon corresponding PCI bridge hot-removal they can be deleted since
+no longer needed."
+
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+> Tested-by: Duc Dang <dhdang@apm.com>
+> Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+> Tested-by: Sinan Kaya <okaya@codeaurora.org>
 > ---
->  drivers/pci/host/pci-xgene-msi.c | 35 ++++++++++++++++++++++++++++++++---
->  1 file changed, 32 insertions(+), 3 deletions(-)
+>  drivers/acpi/pci_mcfg.c  | 4 +++-
+>  include/linux/pci-acpi.h | 1 +
+>  2 files changed, 4 insertions(+), 1 deletion(-)
+
+It would be great if x86 people can have a look, we no longer
+associate a MCFG region to a bridge structure, the end result
+should be equivalent though, so:
+
+Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+
 > 
-> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
-> index a6456b5..466aa93 100644
-> --- a/drivers/pci/host/pci-xgene-msi.c
-> +++ b/drivers/pci/host/pci-xgene-msi.c
-> @@ -24,6 +24,7 @@
->  #include <linux/pci.h>
->  #include <linux/platform_device.h>
->  #include <linux/of_pci.h>
-> +#include <linux/acpi.h>
->  
->  #define MSI_IR0			0x000000
->  #define MSI_INT0		0x800000
-> @@ -39,7 +40,7 @@ struct xgene_msi_group {
->  };
->  
->  struct xgene_msi {
-> -	struct device_node	*node;
-> +	struct fwnode_handle	*fwnode;
->  	struct irq_domain	*inner_domain;
->  	struct irq_domain	*msi_domain;
->  	u64			msi_addr;
-> @@ -249,6 +250,13 @@ static const struct irq_domain_ops msi_domain_ops = {
->  	.free   = xgene_irq_domain_free,
->  };
->  
-> +#ifdef CONFIG_ACPI
-> +static struct fwnode_handle *xgene_msi_get_fwnode(struct device *dev)
-> +{
-> +	return xgene_msi_ctrl.fwnode;
-> +}
-> +#endif
-> +
->  static int xgene_allocate_domains(struct xgene_msi *msi)
->  {
->  	msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
-> @@ -256,7 +264,7 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
->  	if (!msi->inner_domain)
->  		return -ENOMEM;
->  
-> -	msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
-> +	msi->msi_domain = pci_msi_create_irq_domain(msi->fwnode,
->  						    &xgene_msi_domain_info,
->  						    msi->inner_domain);
-
-This doesn't work for me (ACPI probing on Mustang) unless I change this
-to be pci_msi_create_default_irq_domain(). The problem seems to be that
-the MSI probe happens after the PCIe RC is probed so there is no MSI domain
-at the time the PCIe root is initialized by ACPI.
-
->  
-> @@ -265,6 +273,9 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
->  		return -ENOMEM;
->  	}
->  
-> +#ifdef CONFIG_ACPI
-> +	pci_msi_register_fwnode_provider(&xgene_msi_get_fwnode);
-> +#endif
->  	return 0;
->  }
->  
-> @@ -473,6 +484,13 @@ static const struct of_device_id xgene_msi_match_table[] = {
->  	{},
->  };
->  
-> +#ifdef CONFIG_ACPI
-> +static const struct acpi_device_id xgene_msi_acpi_ids[] = {
-> +	{"APMC0D0E", 0},
-> +	{ },
-> +};
-> +#endif
-> +
->  static int xgene_msi_probe(struct platform_device *pdev)
->  {
->  	struct resource *res;
-> @@ -494,7 +512,17 @@ static int xgene_msi_probe(struct platform_device *pdev)
->  		goto error;
->  	}
->  	xgene_msi->msi_addr = res->start;
-> -	xgene_msi->node = pdev->dev.of_node;
-> +
-> +	xgene_msi->fwnode = of_node_to_fwnode(pdev->dev.of_node);
-> +	if (!xgene_msi->fwnode) {
-> +		xgene_msi->fwnode = irq_domain_alloc_fwnode(NULL);
-> +		if (!xgene_msi->fwnode) {
-> +			dev_err(&pdev->dev, "Failed to create fwnode\n");
-> +			rc = ENOMEM;
-> +			goto error;
-> +		}
-> +	}
-> +
->  	xgene_msi->num_cpus = num_possible_cpus();
->  
->  	rc = xgene_msi_init_allocator(xgene_msi);
-> @@ -571,6 +599,7 @@ static struct platform_driver xgene_msi_driver = {
->  	.driver = {
->  		.name = "xgene-msi",
->  		.of_match_table = xgene_msi_match_table,
-> +		.acpi_match_table = ACPI_PTR(xgene_msi_acpi_ids),
->  	},
->  	.probe = xgene_msi_probe,
->  	.remove = xgene_msi_remove,
-
+> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> index 0467b00..3282f2a 100644
+> --- a/drivers/acpi/pci_mcfg.c
+> +++ b/drivers/acpi/pci_mcfg.c
+> @@ -74,6 +74,7 @@ static struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
+>  	new->segment = segment;
+>  	new->start_bus = start;
+>  	new->end_bus = end;
+> +	new->hot_added = false;
+>  
+>  	res = &new->res;
+>  	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
+> @@ -205,6 +206,7 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+>  	}
+>  	rc = pci_mmconfig_map_resource(dev, cfg);
+>  	if (!rc) {
+> +		cfg->hot_added = true;
+>  		list_add_sorted(cfg);
+>  		dev_info(dev, "MMCONFIG at %pR (base %#lx)\n",
+>  				 &cfg->res, (unsigned long)addr);
+> @@ -228,7 +230,7 @@ int pci_mmconfig_delete(u16 seg, u8 start, u8 end)
+>  	mutex_lock(&pci_mmcfg_lock);
+>  	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
+>  		if (cfg->segment == seg && cfg->start_bus == start &&
+> -		    cfg->end_bus == end) {
+> +		    cfg->end_bus == end && cfg->hot_added) {
+>  			list_del_rcu(&cfg->list);
+>  			synchronize_rcu();
+>  			pci_mmconfig_unmap_resource(cfg);
+> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+> index e9450ef..94d8f38 100644
+> --- a/include/linux/pci-acpi.h
+> +++ b/include/linux/pci-acpi.h
+> @@ -119,6 +119,7 @@ struct pci_mmcfg_region {
+>  	u8 start_bus;
+>  	u8 end_bus;
+>  	char name[PCI_MMCFG_RESOURCE_NAME_LEN];
+> +	bool hot_added;
+>  };
+>  
+>  extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+> -- 
+> 1.9.1
+> 
