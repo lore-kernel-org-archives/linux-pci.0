@@ -1,126 +1,153 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 25 Feb 2016 12:07:50 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	'Mark Rutland' <mark.rutland@arm.com>,
-	"Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
-	"'bhelgaas@google.com'" <bhelgaas@google.com>,
-	"'arnd@arndb.de'" <arnd@arndb.de>,
-	"'tn@semihalf.com'" <tn@semihalf.com>,
-	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"'linux-acpi@vger.kernel.org'" <linux-acpi@vger.kernel.org>,
-	"'jcm@redhat.com'" <jcm@redhat.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	"'linux-arm-kernel@lists.infradead.org'"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
- HiSilicon SoCs Host Controllers
-Message-ID: <20160225120750.GA32016@red-moon>
-References: <1455039260-6040-4-git-send-email-gabriele.paoloni@huawei.com>
- <20160209182429.GD4348@leverpostej>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1591@lhreml503-mbs>
- <20160210111234.GC2632@leverpostej>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1D30@lhreml503-mbs>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ECC5F00@lhreml503-mbs>
- <20160224011418.GB13026@localhost>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ECCAD6A@lhreml503-mbs>
- <20160224152538.GA19700@localhost>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ECCD209@lhreml503-mbs>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f53.google.com ([209.85.213.53]:36767 "EHLO
+	mail-vk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422953AbcBSUZq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 19 Feb 2016 15:25:46 -0500
+Received: by mail-vk0-f53.google.com with SMTP id c3so84754753vkb.3
+        for <linux-pci@vger.kernel.org>; Fri, 19 Feb 2016 12:25:46 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ECCD209@lhreml503-mbs>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20160204172544.GA19957@localhost>
+References: <1452871476-11752-1-git-send-email-justin.waters@timesys.com> <20160204172544.GA19957@localhost>
+From: Justin Waters <justin.waters@timesys.com>
+Date: Fri, 19 Feb 2016 15:25:26 -0500
+Message-ID: <CAENNV6+gn1hpz2PFp05F2Mf8zUcc8kN7MZEijDrY6JPMUcueAg@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: imx6: Add DT bindings to configure Tx Driver settings
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Fabio Estevam <festevam@gmail.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <Richard.Zhu@freescale.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 25, 2016 at 03:01:19AM +0000, Gabriele Paoloni wrote:
+On Thu, Feb 4, 2016 at 12:25 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> [+cc Richard]
+>
+> On Fri, Jan 15, 2016 at 10:24:35AM -0500, Justin Waters wrote:
+>> The settings in GPR8 are dependent upon the particular layout of the
+>> hardware platform. As such, they should be configurable via the device
+>> tree.
+>>
+>> As many boards have been using the default values, this implementation
+>> uses the old values if they are not specified in the device tree.
+>>
+>> Signed-off-by: Justin Waters <justin.waters@timesys.com>
+>
+> Waiting for an ack from Lucas, since he had comments on the last version.
+>
 
-[...]
+Lucas, I just wanted to check in and see if you had any additional
+feedback for me. Did v2 address your concerns?
 
-> > I think the relevant spec is the PCI Firmware Spec, r3.0, sec 4.1.2.
-> > Note 2 in that section says the address range of an MMCFG region
-> > must be reserved by declaring a motherboard resource, i.e., included
-> > in the _CRS of a PNP0C02 or similar device.
-> 
-> I had a look a this. So yes the specs says that we should use the 
-> PNP0C02 device if MCFG is not supported. 
+Thank you,
 
-AFAIK, PNP0C02 is a resource reservation mechanism, the spec says that
-MCFG regions must be reserved using PNP0C02, even though its
-current usage on x86 is a bit unfathomable to me, in particular
-in relation to MCFG resources retrieved for hotpluggable bridges (ie
-through _CBA, which I think consider the MCFG region as reserved
-by default, regardless of PNP0c02):
+-Justin
 
-see pci_mmcfg_check_reserved() arch/x86/pci/mmconfig-shared.c
-
-Have a look at drivers/pnp/system.c for PNP0c02
-
-> So probably I can use acpi_get_devices("PNP0C02",...) to retrieve it
-> from the quirk match function, I will look into this... 
-> 
-> > 
-> > > On the other side, since this is an exception only for the config
-> > > space address of our host controller (as said before all the buses
-> > > below the root one support ECAM), I think that it is right to put
-> > > this address as a device specific data (in fact the rest of the
-> > > config space addresses will be parsed from MCFG).
-> > 
-> > A kernel with no support for your host controller (and thus no
-> > knowledge of its _DSD) should still be able to operate the rest of the
-> > system correctly.  That means we must have a generic way to learn what
-> > address space is consumed by the host controller so we don't try to
-> > assign it to other devices.
-> 
-> This is something I don't understand much...
-> Are you talking about a scenario where we have a Kernel image compiled
-> without our host controller support and running on our platform?
-
-I *think* the point here is that your host controller config space should be
-reserved through PNP0c02 so that the kernel will reserve it through the
-generic PNP0c02 driver even if your host controller driver (and related
-_DSD) is not supported in the kernel.
-
-I do not understand how PNP0c02 works, currently, by the way.
-
-If I read x86 code correctly, the unassigned PCI bus resources are
-assigned in arch/x86/pci/i386.c (?) fs_initcall(pcibios_assign_resources),
-with a comment:
-
-/**
- * called in fs_initcall (one below subsys_initcall),
- * give a chance for motherboard reserve resources
- */
-
-Problem is, motherboard resources are requested through (?):
-
-drivers/pnp/system.c
-
-which is also initialized at fs_initcall, so it might be called after
-core x86 code reassign resources, defeating the purpose PNP0c02 was
-designed for, namely, request motherboard regions before resources
-are assigned, am I wrong ?
-
-As per last Tomasz's patchset, we claim and assign unassigned PCI
-resources upon ACPI PCI host bridge probing (which happens at
-subsys_initcall time, courtesy of ACPI current code); at that time the
-kernel did not even register the PNP0c02 driver (drivers/pnp/system.c)
-(it does that at fs_initcall). On the other hand, we insert MCFG
-regions into the resource tree upon MCFG parsing, so I do not
-see why we need to rely on PNP0c02 to do that for us (granted, the
-mechanism is part of the PCI fw specs, which are x86 centric anyway
-ie we can't certainly rely on Int15 e820 to detect reserved memory
-on ARM :D)
-
-There is lots of legacy x86 here and Bjorn definitely has more
-visibility into that than I have, the ARM world must understand
-how this works to make sure we have an agreement.
-
-Thanks,
-Lorenzo
+>> ---
+>>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  7 ++++
+>>  drivers/pci/host/pci-imx6.c                        | 42 +++++++++++++++++++---
+>>  2 files changed, 44 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+>> index 6fbba53..3be80c6 100644
+>> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+>> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+>> @@ -13,6 +13,13 @@ Required properties:
+>>  - clock-names: Must include the following additional entries:
+>>       - "pcie_phy"
+>>
+>> +Optional properties:
+>> +- fsl,tx-deemph-gen1: Gen1 De-emphasis value. Default: 0
+>> +- fsl,tx-deemph-gen2-3p5db: Gen2 (3.5db) De-emphasis value. Default: 0
+>> +- fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
+>> +- fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
+>> +- fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
+>> +
+>>  Example:
+>>
+>>       pcie@0x01000000 {
+>> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+>> index 230ebf9..cc04497 100644
+>> --- a/drivers/pci/host/pci-imx6.c
+>> +++ b/drivers/pci/host/pci-imx6.c
+>> @@ -39,6 +39,11 @@ struct imx6_pcie {
+>>       struct pcie_port        pp;
+>>       struct regmap           *iomuxc_gpr;
+>>       void __iomem            *mem_base;
+>> +     u32                     tx_deemph_gen1;
+>> +     u32                     tx_deemph_gen2_3p5db;
+>> +     u32                     tx_deemph_gen2_6db;
+>> +     u32                     tx_swing_full;
+>> +     u32                     tx_swing_low;
+>>  };
+>>
+>>  /* PCIe Root Complex registers (memory-mapped) */
+>> @@ -317,15 +322,20 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+>>                       IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
+>>
+>>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+>> -                     IMX6Q_GPR8_TX_DEEMPH_GEN1, 0 << 0);
+>> +                        IMX6Q_GPR8_TX_DEEMPH_GEN1,
+>> +                        imx6_pcie->tx_deemph_gen1 << 0);
+>>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+>> -                     IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB, 0 << 6);
+>> +                        IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB,
+>> +                        imx6_pcie->tx_deemph_gen2_3p5db << 6);
+>>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+>> -                     IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB, 20 << 12);
+>> +                        IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB,
+>> +                        imx6_pcie->tx_deemph_gen2_6db << 12);
+>>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+>> -                     IMX6Q_GPR8_TX_SWING_FULL, 127 << 18);
+>> +                        IMX6Q_GPR8_TX_SWING_FULL,
+>> +                        imx6_pcie->tx_swing_full << 18);
+>>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+>> -                     IMX6Q_GPR8_TX_SWING_LOW, 127 << 25);
+>> +                        IMX6Q_GPR8_TX_SWING_LOW,
+>> +                        imx6_pcie->tx_swing_low << 25);
+>>  }
+>>
+>>  static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+>> @@ -565,6 +575,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>>       struct imx6_pcie *imx6_pcie;
+>>       struct pcie_port *pp;
+>>       struct resource *dbi_base;
+>> +     struct device_node *node = pdev->dev.of_node;
+>>       int ret;
+>>
+>>       imx6_pcie = devm_kzalloc(&pdev->dev, sizeof(*imx6_pcie), GFP_KERNEL);
+>> @@ -617,6 +628,27 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>>               return PTR_ERR(imx6_pcie->iomuxc_gpr);
+>>       }
+>>
+>> +     /* Grab PCIe PHY Tx Settings */
+>> +     if (of_property_read_u32
+>> +         (node, "fsl,tx-deemph-gen1", &imx6_pcie->tx_deemph_gen1))
+>> +             imx6_pcie->tx_deemph_gen1 = 0;
+>> +
+>> +     if (of_property_read_u32
+>> +         (node, "fsl,tx-deemph-gen2-3p5db", &imx6_pcie->tx_deemph_gen2_3p5db))
+>> +             imx6_pcie->tx_deemph_gen2_3p5db = 0;
+>> +
+>> +     if (of_property_read_u32
+>> +         (node, "fsl,tx-deemph-gen2-6db", &imx6_pcie->tx_deemph_gen2_6db))
+>> +             imx6_pcie->tx_deemph_gen2_6db = 20;
+>> +
+>> +     if (of_property_read_u32
+>> +         (node, "fsl,tx-swing-full", &imx6_pcie->tx_swing_full))
+>> +             imx6_pcie->tx_swing_full = 127;
+>> +
+>> +     if (of_property_read_u32
+>> +         (node, "fsl,tx-swing-low", &imx6_pcie->tx_swing_low))
+>> +             imx6_pcie->tx_swing_low = 127;
+>> +
+>>       ret = imx6_add_pcie_port(pp, pdev);
+>>       if (ret < 0)
+>>               return ret;
+>> --
+>> 2.5.0
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
