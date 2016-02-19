@@ -1,107 +1,100 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 5 Feb 2016 17:32:48 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Vineet.Gupta1@synopsys.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
-	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
-Subject: Re: [PATCH v8 2/2] add new platform driver for PCI RC
-Message-ID: <20160205233248.GC11780@localhost>
-References: <cover.1454600622.git.jpinto@synopsys.com>
- <20160204234334.GH7031@localhost>
- <56B47D0D.5030204@synopsys.com>
- <4427983.0G6mVNKP5W@wuerfel>
+From: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "Richard.Zhu@freescale.com" <Richard.Zhu@freescale.com>,
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	David Mueller <dave.mueller@gmx.ch>
+Subject: RE: [PATCH] PCI: imx6:don't sleep in atomic context
+Date: Fri, 19 Feb 2016 09:18:29 +0000
+Message-ID: <FDC088D3B5555644AE135ED28A7ABDE986505224@EU-MBX-04.mgc.mentorg.com>
+References: <1447066080-5859-1-git-send-email-sanjeev_sharma@mentor.com>
+ <20160106220430.GC16231@localhost>
+ <FDC088D3B5555644AE135ED28A7ABDE986504C90@EU-MBX-04.mgc.mentorg.com>
+ <20160218150852.GA17588@localhost>
+In-Reply-To: <20160218150852.GA17588@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4427983.0G6mVNKP5W@wuerfel>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 05, 2016 at 03:39:05PM +0100, Arnd Bergmann wrote:
-> On Friday 05 February 2016 10:44:29 Joao Pinto wrote:
-> > Hi,
+-----Original Message-----
+From: Bjorn Helgaas [mailto:helgaas@kernel.org] 
+Sent: Thursday, February 18, 2016 8:39 PM
+To: Sharma, Sanjeev
+Cc: Richard.Zhu@freescale.com; l.stach@pengutronix.de; bhelgaas@google.com; linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-kernel@vger.kernel.org; David Mueller
+Subject: Re: [PATCH] PCI: imx6:don't sleep in atomic context
+
+On Thu, Feb 18, 2016 at 07:17:41AM +0000, Sharma, Sanjeev wrote:
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Thursday, January 07, 2016 3:35 AM
+> To: Sharma, Sanjeev
+> Cc: Richard.Zhu@freescale.com; l.stach@pengutronix.de; 
+> bhelgaas@google.com; linux-pci@vger.kernel.org; 
+> linux-arm-kernel@lists.infradead.org; linux-kernel@vger.kernel.org; 
+> David Mueller
+> Subject: Re: [PATCH] PCI: imx6:don't sleep in atomic context
+> 
+> Hi Sanjeev,
+> 
+> On Mon, Nov 09, 2015 at 04:18:00PM +0530, Sanjeev Sharma wrote:
+> > If additional PCIe switch get connected between the host and the 
+> > NIC,the kernel crashes with "BUG:
+> > scheduling while atomic". To handle this we need to call mdelay() 
+> > instead of usleep_range().
 > > 
-> > On 2/4/2016 11:43 PM, Bjorn Helgaas wrote:
-> > >> What do you think?
-> > > 
-> > > I don't think the "dw" part is relevant (none of the other
-> > > DesignWare-based drivers includes it in the driver or file name).
-> > > 
-> > > How do people typically refer to this board?
-> > > 
-> > > I really like "synopsys" because it fits the pattern of being
-> > > recognizable and pronounceable like "altera", "designware", "qcom",
-> > > "keystone", "layerscape", "tegra", etc.  But I can't tell whether it's
-> > > too generic.
-> > > 
-> > > "ipk" or "haps" would be fine with me.  I think it's OK if it doesn't
-> > > cover 100% of the possible systems.
+> > For more detail please refer bugzilla.kernel.org, Bug
+> > 100031
 > > 
-> > I think we should follow the iproc example: pcie-iproc-platform.c
-> > In this case we would have pcie-designware-platform.c
-> > I think this would be the best name because the driver is a non soc specific
-> > designware platform driver.
+> > Signed-off-by: Sanjeev Sharma <sanjeev_sharma@mentor.com>
+> > Signed-off-by: David Mueller <dave.mueller@gmx.ch>
+> 
+> I'm dropping this for now because we've been kicking around the same solution (with tweaks to the mdelay amount) since June, but no progress on the *real* issue, which is that imx6_pcie_link_up() should never wait; it should simply return the link status.
+> 
+> I'm pretty sure the amount of time I've spent looking into this would have been enough to make some progress on that underlying issue.
+> 
+> Bjorn
+> 
+> Ok ! please share the change you are planning to implement. 
+
+I didn't mean I personally was going to do this.  But I think Lucas stepped up and did it:
+
+https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-imx6&id=4d107d3b5a686b5834e533a00b73bf7b1cf59df7
+
+Thanks Bjorn 
+
+code look ok !
+
+> > ---
+> >  drivers/pci/host/pci-imx6.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
 > > 
-> > Arnd and Bjorn agree on this name?
-> 
-> Sorry, I did not realize that your submission was for the generic dw-pcie
-> implementation rather than a particular product integrating it.
-> 
-> I think in this case, we should do this completely differently:
-> 
-> How about putting all the new code into drivers/pci/host/pcie-designware.c
-> as functions that can be used by the other drivers in absence of a chip
-> specific handler?
-> 
-> Instead of providing a new instance of struct pcie_host_ops, maybe add
-> it as a default implementation in dw_pcie_link_up() and dw_pcie_host_init()
-> for drivers that don't provide their own. "hisi_pcie_host_ops" currently
-> provides no host_init() callback function, so you will have to change
-> the hisi frontend to a provide nop-function.
-> 
-> For all other drivers, check if they can be changed to use your generic
-> implementation and remove their private callbacks if possible.
-> 
-> I think the MSI implementation should be split out into a separate file
-> though, as not everyone uses this.
-
-I'm not sure I understand what you're proposing, Arnd, so let me
-ramble and you can direct me back on course.
-
-Currently drivers/pci/host/pcie-designware.c is not usable by itself;
-it doesn't register a platform_driver.
-
-There's hardly any code in Joao's patches; it looks like they add a
-minimal wrapper around the functionality in pcie-designware.c and
-register it as a platform_driver.
-
-Are you suggesting that we should just add that functionality directly
-in pcie-designware.c so that file could both be a minimal driver with
-the functionality of Joao's patches, *and* continue to provide the
-shared code used by all the existing DesignWare-based drivers?  Maybe
-the platform_driver registration part could be controlled by its own
-separate Kconfig option.
-
-For example, he could make dw_pcie_link_up() look like:
-
-  int dw_pcie_link_up(struct pcie_port *pp)
-  {
-    u32 val;
-
-    if (pp->ops->link_up)
-      return pp->ops->link_up(pp);
-
-    val = readl(pp->dbi_base + PCIE_PHY_DEBUG_R1);
-    return val & PCIE_PHY_DEBUG_R1_LINK_UP;
-  }
-
-That seems like it would make sense to me.  It would resolve the
-filename question, since there wouldn't be a new file.  And if this is
-merely a driver for the generic DesignWare core without any
-extensions, I'm happy with some sort of "dw"-based driver name and
-compatibility string.
-
-Bjorn
+> > diff --git a/drivers/pci/host/pci-imx6.c 
+> > b/drivers/pci/host/pci-imx6.c index 233a196..9769b13 100644
+> > --- a/drivers/pci/host/pci-imx6.c
+> > +++ b/drivers/pci/host/pci-imx6.c
+> > @@ -499,7 +499,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
+> >  		 * Wait a little bit, then re-check if the link finished
+> >  		 * the training.
+> >  		 */
+> > -		usleep_range(1000, 2000);
+> > +		mdelay(1000);
+> >  	}
+> >  	/*
+> >  	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
+> > --
+> > 1.7.11.7
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" 
+> > in the body of a message to majordomo@vger.kernel.org More majordomo 
+> > info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" 
+> in the body of a message to majordomo@vger.kernel.org More majordomo 
+> info at  http://vger.kernel.org/majordomo-info.html
