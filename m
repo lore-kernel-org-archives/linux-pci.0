@@ -1,75 +1,90 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V5 07/15] pci, acpi: Provide generic way to assign bus
- domain number.
-To: Jayachandran Chandrashekaran Nair
-	<jayachandran.chandrashekaran@broadcom.com>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
- <1455630825-27253-8-git-send-email-tn@semihalf.com>
- <CAKc_7PU+i2AwOVCyW2VNt4BZCWw=KBMAbV8v9DVQ2Ess3WE=kw@mail.gmail.com>
- <56C47E9A.5010901@semihalf.com>
- <CAKc_7PUiLQhUuJjR8wcuRm7KJdxBYjb+ZBd_cLTtjNPbEro6wA@mail.gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
-	hanjun.guo@linaro.org,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	okaya@codeaurora.org, jiang.liu@linux.intel.com,
-	Jayachandran Chandrashekaran Nair <jchandra@broadcom.com>,
-	Stefano.Stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <56C48C45.7050203@semihalf.com>
-Date: Wed, 17 Feb 2016 16:05:41 +0100
 MIME-Version: 1.0
-In-Reply-To: <CAKc_7PUiLQhUuJjR8wcuRm7KJdxBYjb+ZBd_cLTtjNPbEro6wA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20160219110950.606d48ec@endymion>
+References: <20160217143306.6340c6cf@endymion> <CAErSpo5s9JnjaPfsQreWeXTeu7_j-hY0+jVJvyzFYhVeJyazsw@mail.gmail.com>
+ <20160219110950.606d48ec@endymion>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 19 Feb 2016 09:08:24 -0600
+Message-ID: <CAErSpo7a8KnZA3fAmRzUAQRjdaZxdSw8o7CH=TusqpykZiXZ0Q@mail.gmail.com>
+Subject: Re: aer_inject vs. apei/einj
+To: Jean Delvare <jdelvare@suse.de>
+Cc: Huang Ying <ying.huang@intel.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17.02.2016 15:21, Jayachandran Chandrashekaran Nair wrote:
-> On Wed, Feb 17, 2016 at 7:37 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
->> On 17.02.2016 14:44, Jayachandran Chandrashekaran Nair wrote:
->>>
->>> Tomasz, Lorenzo,
->>>
->>> On Tue, Feb 16, 2016 at 7:23 PM, Tomasz Nowicki<tn@semihalf.com>  wrote:
->>>>
->>>>> As we now have valid PCI host bridge device reference we can
->>>>> introduce code that is going to find its bus domain number using
->>>>> ACPI _SEG method.
->>>>>
->>>>> Note that _SEG method is optional, therefore _SEG absence means
->>>>> that all PCI buses belong to domain 0.
->>>>>
->>>>> While at it, for the sake of code clarity we put ACPI and DT domain
->>>>> assign methods into the corresponding helpers.
->>>
->>> In my patchset, I had a slightly different and I think better approach for
->>> this without calling the _SEG method again. Please see
->>> http://www.spinics.net/lists/arm-kernel/msg478167.html
->>> at the last part ofhttp://www.spinics.net/lists/arm-kernel/msg478169.html
+[+cc linux-pci]
+
+On Fri, Feb 19, 2016 at 4:09 AM, Jean Delvare <jdelvare@suse.de> wrote:
+> On Wed, 17 Feb 2016 11:03:31 -0600, Bjorn Helgaas wrote:
+>> [+cc Huang, author of both aer_inject and apei/einj]
 >>
->> Relying on NULL parent device to make decision on boot method is really ugly
->> way. This may hit us again once we want to obtain another firmware specific
->> info e.g. numa node. IMO we need to fix it this way.
+>> On Wed, Feb 17, 2016 at 7:33 AM, Jean Delvare <jdelvare@suse.de> wrote:
+>> > Hi all,
+>> >
+>> > I am looking for some guidance regarding AER testing. I see that we
+>> > have two different drivers for error injection in the kernel:
+>> > aer_inject and apei/einj. The user-space aer-inject tool seems to only
+>> > care about the former.
+>> >
+>> > How does one know which driver should be used on a given system? I
+>> > suppose that only one of them will work on a given system?
+>> >
+>> > My impression is that aer_inject is for "native" AER handling while
+>> > apei/einj is for ACPI-driven AER. Is it correct? If not I would
+>> > appreciate some pointers explaining when aer_inject should be used and
+>> > when apei/einj should be used.
+>>
+>> My understanding is that:
+>>
+>>   - aer_inject does not actually write to any hardware registers
+>> itself (though I do see it writes to some masks).  It works by
+>> replacing the PCI config accessors with new ones that make it look
+>> like the AER registers have errors logged.
+>>
+>>   - apei/einj runs ACPI methods that apparently seed errors.  These
+>> might use hardware support for seeding errors, which would of course
+>> be platform-dependent.
+>>
+>> So aer_inject should work on any system at all.  I think apei/einj
 >
-> I am not relying on NULL there, in the current code parent is NULL
-> in case of ACPI, and the check is needed not to crash (unless that
-> has changed).
+> My problem is precisely that aer_inject doesn't work on any system I
+> tested. Either the device doesn't support AER, or its root port doesn't
+> support AER, or (further I've been) the "error device" of the root port
+> doesn't exist.
 
-This series passes down valid parent, see [PATCH V5 06/15].
+OK, I should have said "aer_inject" should work on any system with
+devices that support AER :)  And there are also some conditions
+related to _OSC and "firmware-first" error handling, based on the HEST
+table.  I expect that dmesg would show whether we can use AER and why
+it might be disabled (and if dmesg doesn't show that, it *should*).
 
+> I am not too familiar with PCIe but apparently PCIe
+> devices can have "sub-devices" which do not show in "lspci" but show up
+> in /sys/bus/pci_express/devices. I have yet to see an aer sub-device
+> there on any of my systems.
+
+Yes, the different PCIe services (AER, native hotplug, VC, etc.) are
+handled sort of like subdevices.  This seems a bit hacky to me but
+it's what we have.
+
+Anyway, if you have a system where the root port and a device below it
+support AER, but there's no subdevice for it, we must have disabled it
+somehow.  Can you collect a dmesg and "lspci -vv" for it?  We should
+be logging a clue there.
+
+>> will only work if the platform supplies an EINJ table, and even when
+>> it does, I suspect different platforms probably have different
+>> injection capabilities.
+>>
+>> Huang probably can give a much better response.
 >
-> The main part was the macro acpi_pci_get_segment() and the use
-> of acpi_pci_root_info from sysdata to do this.
-
-Since we can obtain related firmware specific data from valid parent 
-device (without defining another accessors), I do not see the point to 
-use sysdata. Let me know your opinion.
-
-Tomasz
+> Huang, pleeeease? :)
+>
+> --
+> Jean Delvare
+> SUSE L3 Support
