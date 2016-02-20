@@ -1,82 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33937 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760783AbcBYPnb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Feb 2016 10:43:31 -0500
-Date: Thu, 25 Feb 2016 09:43:26 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Paul Burton <paul.burton@imgtec.com>
-Cc: Rob Herring <robh@kernel.org>,
-	Linux-MIPS <linux-mips@linux-mips.org>,
-	Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>,
-	Ley Foon Tan <lftan@altera.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Duc Dang <dhdang@apm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Ray Jui <rjui@broadcom.com>, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: Re: [PATCH v3 6/6] PCI: xilinx: Allow build on MIPS platforms
-Message-ID: <20160225154326.GE8120@localhost>
-References: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
- <1454602213-967-7-git-send-email-paul.burton@imgtec.com>
- <CAL_JsqLRMiJ-0j_PrXSKqf6MrRfyqbDGaiaiEn4rAoFaCNgtKQ@mail.gmail.com>
- <20160204175325.GB31145@NP-P-BURTON>
+Received: from mail-io0-f176.google.com ([209.85.223.176]:33289 "EHLO
+	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750880AbcBTThI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 20 Feb 2016 14:37:08 -0500
+Received: by mail-io0-f176.google.com with SMTP id z135so142094155iof.0
+        for <linux-pci@vger.kernel.org>; Sat, 20 Feb 2016 11:37:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160204175325.GB31145@NP-P-BURTON>
+In-Reply-To: <1455796743-5987-3-git-send-email-chf.fritz@googlemail.com>
+References: <1455796743-5987-1-git-send-email-chf.fritz@googlemail.com>
+	<1455796743-5987-3-git-send-email-chf.fritz@googlemail.com>
+Date: Sat, 20 Feb 2016 17:37:07 -0200
+Message-ID: <CAOMZO5CfO5ZiMj-QEgEJn4zRkw=vg6zChrLKa0i=H+mnqLKRkg@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] PCI: imx6: add initial imx6sx support
+From: Fabio Estevam <festevam@gmail.com>
+To: Christoph Fritz <chf.fritz@googlemail.com>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lee Jones <lee.jones@linaro.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fabio Estevam <fabio.estevam@nxp.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 04, 2016 at 05:53:25PM +0000, Paul Burton wrote:
-> On Thu, Feb 04, 2016 at 11:46:28AM -0600, Rob Herring wrote:
-> > On Thu, Feb 4, 2016 at 10:10 AM, Paul Burton <paul.burton@imgtec.com> wrote:
-> > > Allow the xilinx-pcie driver to be built on MIPS platforms. This will be
-> > > used on the MIPS Boston board.
-> > >
-> > > Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-> > >
-> > > ---
-> > >
-> > > Changes in v3:
-> > > - Split out from Boston patchset.
-> > >
-> > > Changes in v2: None
-> > >
-> > >  drivers/pci/host/Kconfig | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > >
-> > > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> > > index 75a6054..0aee193 100644
-> > > --- a/drivers/pci/host/Kconfig
-> > > +++ b/drivers/pci/host/Kconfig
-> > > @@ -81,7 +81,7 @@ config PCI_KEYSTONE
-> > >
-> > >  config PCIE_XILINX
-> > >         bool "Xilinx AXI PCIe host bridge support"
-> > > -       depends on ARCH_ZYNQ
-> > > +       depends on ARCH_ZYNQ || MIPS
-> > 
-> > Why don't you just remove the dependency? Then it gets better build coverage.
-> > 
-> > Rob
-> 
-> That seems like a call best made by whomever has to maintain this - if
-> that's the preferred way to go I'm fine with it.
+Hi Christoph,
 
-I'm in favor of removing the dependency if possible.  I guess Michal
-would be the person to ack that.
+On Thu, Feb 18, 2016 at 9:59 AM, Christoph Fritz
+<chf.fritz@googlemail.com> wrote:
 
-Right now (in my current "next" branch),
-drivers/pci/host/pcie-xilinx.c uses struct hw_pci, which is only
-defined by arm.
+>  static const struct of_device_id imx6_pcie_of_match[] = {
+>         { .compatible = "fsl,imx6q-pcie", },
+> +       { .compatible = "fsl,imx6sx-pcie", },
 
-Bjorn
+Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt needs to be
+updated to include this new compatible string.
+
+Thanks
