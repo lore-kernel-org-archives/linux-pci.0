@@ -1,112 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38429 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946757AbcBSOSM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 19 Feb 2016 09:18:12 -0500
-Subject: Re: [PATCH] Create sysfs entries for PCI VPDI and VPDR tags
-To: Jordan Hargrave <jharg93@gmail.com>
-References: <1455825895-10951-1-git-send-email-Jordan_Hargrave@dell.com>
- <56C6E7D1.4@suse.de>
- <CAC1AzddUqEScGgUqPxa8CgLSH3gynVcj71vMNn6b-Roi2YTRUQ@mail.gmail.com>
-Cc: Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, alexander.duyck@gmail.com,
-	linux-pci@vger.kernel.org, babu.moger@oracle.com,
-	LKML <linux-kernel@vger.kernel.org>
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <56C72420.4070601@suse.de>
-Date: Fri, 19 Feb 2016 15:18:08 +0100
+Received: from mail-yw0-f176.google.com ([209.85.161.176]:35049 "EHLO
+	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750746AbcBVQDx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 22 Feb 2016 11:03:53 -0500
+Received: by mail-yw0-f176.google.com with SMTP id g127so122451845ywf.2
+        for <linux-pci@vger.kernel.org>; Mon, 22 Feb 2016 08:03:53 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAC1AzddUqEScGgUqPxa8CgLSH3gynVcj71vMNn6b-Roi2YTRUQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CADaLNDmsW+5-EEvTMGOyCGmKWYS-trx74pQ87czkrSWqNgrHWw@mail.gmail.com>
+References: <1455069384-22323-1-git-send-email-dhdang@apm.com> <CADaLNDmsW+5-EEvTMGOyCGmKWYS-trx74pQ87czkrSWqNgrHWw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 22 Feb 2016 10:03:33 -0600
+Message-ID: <CAErSpo6nNKeg+v7SGLieBOi0f+5U_G03T6F7VtSw1N_VbjA2rg@mail.gmail.com>
+Subject: Re: [PATCH] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI boot
+ for X-Gene v1
+To: Duc Dang <dhdang@apm.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Tanmay Inamdar <tinamdar@apm.com>, Loc Ho <lho@apm.com>,
+	Feng Kan <fkan@apm.com>, patches <patches@apm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/19/2016 03:07 PM, Jordan Hargrave wrote:
-> On Fri, Feb 19, 2016 at 4:00 AM, Hannes Reinecke <hare@suse.de> wrote:
+On Sat, Feb 20, 2016 at 1:47 PM, Duc Dang <dhdang@apm.com> wrote:
+> On Tue, Feb 9, 2016 at 5:56 PM, Duc Dang <dhdang@apm.com> wrote:
+>> This patch makes pci-xgene-msi driver ACPI-aware and provides
+>> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
+>
+> Hi Bjorn,
+>
+> Are you planning to take this patch into your tree?
+
+Sorry, I haven't had a chance to look at this yet.  I had a sick
+daughter last week, so I'm even farther behind than usual.
+
+When I get to it, I'll be asking questions like:
+
+  - Does this correspond to some analogous x86 code?
+  - Is there something unique about arm64 or X-Gene that means it
+needs special code?
+
+I don't really understand the arm64/ACPI strategy yet, so I'll be
+looking first for generic solutions that work across x86/ia64/arm64,
+and justifications for the inevitable exceptions.
+
+>> Signed-off-by: Duc Dang <dhdang@apm.com>
+>> ---
+>>  drivers/pci/host/pci-xgene-msi.c | 35 ++++++++++++++++++++++++++++++++---
+>>  1 file changed, 32 insertions(+), 3 deletions(-)
 >>
->> On 02/18/2016 09:04 PM, Jordan Hargrave wrote:
->>> The VPD-R is a readonly area of the PCI Vital Product Data region.
->>> There are some standard keywords for serial number, manufacturer,
->>> and vendor-specific values.  Dell Servers use a vendor-specific
->>> tag to store number of ports and port mapping of partitioned NICs.
->>>
->>> info = VPD-Info string
->>> PN = Part Number
->>> SN = Serial Number
->>> MN = Manufacturer ID
->>> Vx = Vendor-specific (x=0..9 A..Z)
->>>
->>> This creates a sysfs subdirectory in the pci device: vpdattr with
->>> 'info', 'EC', 'SN', 'V0', etc. files containing the tag values.
->>>
->>> Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
->> Hmm. Can we first get an agreement on the PCI VPD parsing patches
->> I've posted earlier?
->> VPD parsing is really tricky, and we should aim on making the
->> read_vpd function robust enough before we begin putting things into
->> sysfs.
+>> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+>> index a6456b5..466aa93 100644
+>> --- a/drivers/pci/host/pci-xgene-msi.c
+>> +++ b/drivers/pci/host/pci-xgene-msi.c
+>> @@ -24,6 +24,7 @@
+>>  #include <linux/pci.h>
+>>  #include <linux/platform_device.h>
+>>  #include <linux/of_pci.h>
+>> +#include <linux/acpi.h>
 >>
->> Also, I'm not utterly keen on this patchset.
->> The sysfs space is blown up with tiny pieces of information, which
->> can easily gotten via lspci, too.
+>>  #define MSI_IR0                        0x000000
+>>  #define MSI_INT0               0x800000
+>> @@ -39,7 +40,7 @@ struct xgene_msi_group {
+>>  };
 >>
->> Also, to my knowledge it's perfectly valid to _write_ to the VPD, in
->> which case the entire sysfs attribute setup would be invalided.
->> How do you propose to handle that?
+>>  struct xgene_msi {
+>> -       struct device_node      *node;
+>> +       struct fwnode_handle    *fwnode;
+>>         struct irq_domain       *inner_domain;
+>>         struct irq_domain       *msi_domain;
+>>         u64                     msi_addr;
+>> @@ -249,6 +250,13 @@ static const struct irq_domain_ops msi_domain_ops = {
+>>         .free   = xgene_irq_domain_free,
+>>  };
 >>
-> 
-> This patch only reads the attributes from VPD-I and VPD-R areas, not
-> the VPD-W (read write) area.
-> The VPD-W data is located after the VPD-I and VPD-R area  So nothing
-> in these attributes should change.
-> 
-Ah. Ok.
-
-> The main reason I want this is for replacing biosdevname (ethernet
-> naming) functionality and getting the same functionality into the
-> kernel and systemd.  Systemd doesn't want to do vpd parsing, and
-> reading the vpd can take a very long time on some devices, causing
-> systemd to timeout.  Another disadvantage of it being in userspace
-> is for devices using SR-IOV.  In those devices the vpd only
-> exists for the physfn devices but not the virtual devices.  A
-> userspace program device will have to read the entire VPD for
-> each physical and virtual PCI device.
-> 
-> Logic is something like this:
-> if (open("/sys/bus/pci/devices/X/physfn/vpd", O_RDONLY) < 0)
->    if (open("/sys/bus/pci/devices/X/vpd", O_RDONLY) < 0)
->      return;
-> }
-> parsevpd(fd);
-> 
-> Specifically it is parsing one of the Vx attributes for a 'DCM' or
-> 'DC2' string that contain a mapping from
-> NIC ports and partitions to PCI device
-> 
-Well, unfortunately you just gave a very good reason to _not_
-include this into the kernel:
-
-> reading the vpd can take a very long time on some devices, causing
-
-If we were to put your patch in, we would need to read the VPD
-_during each boot_, thereby slowing down the booting process noticeably.
-Plus the additional risk of locking up during boot for misbehaving
-PCI devices. Probably not something we should be doing.
-
-I would rather have it delegated to some helper function/program
-invoked from udev; with my latest patchset we always will have
-well-behaved VPD information so it's easy to just read the vpd
-attribute from sysfs.
-There still might be a lag, but surely not so long as if to timeout
-udev. And if we still encounter these devices I would mark them as
-broken via the blacklist and skip VPD reading for those.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+>> +#ifdef CONFIG_ACPI
+>> +static struct fwnode_handle *xgene_msi_get_fwnode(struct device *dev)
+>> +{
+>> +       return xgene_msi_ctrl.fwnode;
+>> +}
+>> +#endif
+>> +
+>>  static int xgene_allocate_domains(struct xgene_msi *msi)
+>>  {
+>>         msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
+>> @@ -256,7 +264,7 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+>>         if (!msi->inner_domain)
+>>                 return -ENOMEM;
+>>
+>> -       msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
+>> +       msi->msi_domain = pci_msi_create_irq_domain(msi->fwnode,
+>>                                                     &xgene_msi_domain_info,
+>>                                                     msi->inner_domain);
+>>
+>> @@ -265,6 +273,9 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+>>                 return -ENOMEM;
+>>         }
+>>
+>> +#ifdef CONFIG_ACPI
+>> +       pci_msi_register_fwnode_provider(&xgene_msi_get_fwnode);
+>> +#endif
+>>         return 0;
+>>  }
+>>
+>> @@ -473,6 +484,13 @@ static const struct of_device_id xgene_msi_match_table[] = {
+>>         {},
+>>  };
+>>
+>> +#ifdef CONFIG_ACPI
+>> +static const struct acpi_device_id xgene_msi_acpi_ids[] = {
+>> +       {"APMC0D0E", 0},
+>> +       { },
+>> +};
+>> +#endif
+>> +
+>>  static int xgene_msi_probe(struct platform_device *pdev)
+>>  {
+>>         struct resource *res;
+>> @@ -494,7 +512,17 @@ static int xgene_msi_probe(struct platform_device *pdev)
+>>                 goto error;
+>>         }
+>>         xgene_msi->msi_addr = res->start;
+>> -       xgene_msi->node = pdev->dev.of_node;
+>> +
+>> +       xgene_msi->fwnode = of_node_to_fwnode(pdev->dev.of_node);
+>> +       if (!xgene_msi->fwnode) {
+>> +               xgene_msi->fwnode = irq_domain_alloc_fwnode(NULL);
+>> +               if (!xgene_msi->fwnode) {
+>> +                       dev_err(&pdev->dev, "Failed to create fwnode\n");
+>> +                       rc = ENOMEM;
+>> +                       goto error;
+>> +               }
+>> +       }
+>> +
+>>         xgene_msi->num_cpus = num_possible_cpus();
+>>
+>>         rc = xgene_msi_init_allocator(xgene_msi);
+>> @@ -571,6 +599,7 @@ static struct platform_driver xgene_msi_driver = {
+>>         .driver = {
+>>                 .name = "xgene-msi",
+>>                 .of_match_table = xgene_msi_match_table,
+>> +               .acpi_match_table = ACPI_PTR(xgene_msi_acpi_ids),
+>>         },
+>>         .probe = xgene_msi_probe,
+>>         .remove = xgene_msi_remove,
+>> --
+>> 1.9.1
+>>
