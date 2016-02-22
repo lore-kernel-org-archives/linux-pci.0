@@ -1,345 +1,80 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <guohanjun@huawei.com>, <wangzhou1@hisilicon.com>,
-	<liudongdong3@huawei.com>, <linuxarm@huawei.com>,
-	<qiujiang@huawei.com>, <bhelgaas@google.com>, <arnd@arndb.de>,
-	<Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>
-CC: <gabriele.paoloni@huawei.com>, <zhangjukuo@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<jcm@redhat.com>
-Subject: [RFC PATCH v3 1/3] PCI: hisi: re-architect Hip05/Hip06 controllers driver to preapare for ACPI
-Date: Tue, 9 Feb 2016 17:34:18 +0000
-Message-ID: <1455039260-6040-2-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1455039260-6040-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1455039260-6040-1-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v3] pci: Wait for up to 1000ms after FLR reset
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: allen.m.kay@intel.com, linux-kernel@vger.kernel.org,
+	kvm@vger.kernel.org
+Date: Mon, 22 Feb 2016 13:05:48 -0700
+Message-ID: <20160222200351.4709.85363.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+Some devices take longer than the spec indicates to return from FLR
+reset, a notable case of this is Intel integrated graphics (IGD),
+which can often take an additional 300ms powering down an attached
+LCD panel as part of the FLR.  Allow devices up to 1000ms, testing
+every 100ms whether the second dword of config space is read as -1.
 
-re-architect the Hip05/Hip06 host controllers driver to prepare
-for the ACPI based driver.
-The common functions used also by the ACPI driver have been grouped
-into a new "common" file
-
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 ---
- MAINTAINERS                         |   2 +
- drivers/pci/host/Makefile           |   2 +-
- drivers/pci/host/pcie-hisi-common.c |  73 ++++++++++++++++++++++
- drivers/pci/host/pcie-hisi.c        | 119 +++++++++++-------------------------
- drivers/pci/host/pcie-hisi.h        |  23 +++++++
- 5 files changed, 135 insertions(+), 84 deletions(-)
- create mode 100644 drivers/pci/host/pcie-hisi-common.c
- create mode 100644 drivers/pci/host/pcie-hisi.h
+v3: Read 2nd dword since SR-IOV VFs don't implement the 1st dword
+v2: Change loop to incorporate initial 100ms delay, replace delay in
+    callee functions, add comment.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 30aca4a..d69f436 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8409,7 +8409,9 @@ M:	Gabriele Paoloni <gabriele.paoloni@huawei.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-+F:	drivers/pci/host/pcie-hisi.h
- F:	drivers/pci/host/pcie-hisi.c
-+F:	drivers/pci/host/pcie-hisi-common.c
+ drivers/pci/pci.c |   27 +++++++++++++++++++++++++--
+ 1 file changed, 25 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 602eb42..365ac76 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3414,6 +3414,29 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL(pci_wait_for_pending_transaction);
  
- PCIE DRIVER FOR QUALCOMM MSM
- M:     Stanimir Varbanov <svarbanov@mm-sol.com>
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 7b2f20c..8c93c0f 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -20,5 +20,5 @@ obj-$(CONFIG_PCIE_IPROC_PLATFORM) += pcie-iproc-platform.o
- obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
- obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
- obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
--obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
-+obj-$(CONFIG_PCI_HISI) += pcie-hisi.o pcie-hisi-common.o
- obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
-diff --git a/drivers/pci/host/pcie-hisi-common.c b/drivers/pci/host/pcie-hisi-common.c
-new file mode 100644
-index 0000000..6dfb4c3
---- /dev/null
-+++ b/drivers/pci/host/pcie-hisi-common.c
-@@ -0,0 +1,73 @@
 +/*
-+ * PCIe host controller common functions for HiSilicon SoCs
-+ *
-+ * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
-+ *
-+ * Author: Zhou Wang <wangzhou1@hisilicon.com>
-+ *         Dacai Zhu <zhudacai@hisilicon.com>
-+ *         Gabriele Paoloni <gabriele.paoloni@huawei.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
++ * We should only need to wait 100ms after FLR, but some devices take longer.
++ * Wait for up to 1000ms for config space to return something other than -1.
++ * Intel IGD requires this when an LCD panel is attached.  We read the 2nd
++ * dword because VFs don't implement the 1st dword.
 + */
-+
-+#include <linux/acpi.h>
-+#include <linux/interrupt.h>
-+#include <linux/module.h>
-+#include <linux/mfd/syscon.h>
-+#include <linux/of_pci.h>
-+#include <linux/regmap.h>
-+
-+#include "pcie-designware.h"
-+#include "pcie-hisi.h"
-+
-+/* HipXX PCIe host only supports 32-bit config access */
-+int hisi_pcie_common_cfg_read(void __iomem *reg_base, int where, int size,
-+			      u32 *val)
++static void pci_flr_wait(struct pci_dev *dev)
 +{
-+	u32 reg;
-+	u32 reg_val;
-+	void *walker = &reg_val;
++	int i = 0;
++	u32 id;
 +
-+	walker += (where & 0x3);
-+	reg = where & ~0x3;
-+	reg_val = readl(reg_base + reg);
++	do {
++		msleep(100);
++		pci_read_config_dword(dev, PCI_COMMAND, &id);
++	} while (i++ < 10 && id == ~0);
 +
-+	if (size == 1)
-+		*val = *(u8 __force *) walker;
-+	else if (size == 2)
-+		*val = *(u16 __force *) walker;
-+	else if (size == 4)
-+		*val = reg_val;
-+	else
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+
-+	return PCIBIOS_SUCCESSFUL;
++	if (id == ~0)
++		dev_warn(&dev->dev, "Failed to return from FLR\n");
++	else if (i > 1)
++		dev_info(&dev->dev, "Required additional "
++			 "%dms to return from FLR\n", (i - 1) * 100);
 +}
 +
-+/* HipXX PCIe host only supports 32-bit config access */
-+int hisi_pcie_common_cfg_write(void __iomem *reg_base, int where, int  size,
-+				u32 val)
-+{
-+	u32 reg_val;
-+	u32 reg;
-+	void *walker = &reg_val;
-+
-+	walker += (where & 0x3);
-+	reg = where & ~0x3;
-+	if (size == 4)
-+		writel(val, reg_base + reg);
-+	else if (size == 2) {
-+		reg_val = readl(reg_base + reg);
-+		*(u16 __force *) walker = val;
-+		writel(val, reg_base + reg);
-+	} else if (size == 1) {
-+		reg_val = readl(reg_base + reg);
-+		*(u8 __force *) walker = val;
-+		writel(val, reg_base + reg);
-+	} else
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-index 3e98d4e..458d0f8 100644
---- a/drivers/pci/host/pcie-hisi.c
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -21,6 +21,7 @@
- #include <linux/regmap.h>
- 
- #include "pcie-designware.h"
-+#include "pcie-hisi.h"
- 
- #define PCIE_LTSSM_LINKUP_STATE				0x11
- #define PCIE_LTSSM_STATE_MASK				0x3F
-@@ -30,12 +31,6 @@
- 
- #define to_hisi_pcie(x)	container_of(x, struct hisi_pcie, pp)
- 
--struct hisi_pcie;
--
--struct pcie_soc_ops {
--	int (*hisi_pcie_link_up)(struct hisi_pcie *pcie);
--};
--
- struct hisi_pcie {
- 	struct regmap *subctrl;
- 	void __iomem *reg_base;
-@@ -44,87 +39,24 @@ struct hisi_pcie {
- 	struct pcie_soc_ops *soc_ops;
- };
- 
--static inline void hisi_pcie_apb_writel(struct hisi_pcie *pcie,
--					u32 val, u32 reg)
--{
--	writel(val, pcie->reg_base + reg);
--}
--
--static inline u32 hisi_pcie_apb_readl(struct hisi_pcie *pcie, u32 reg)
--{
--	return readl(pcie->reg_base + reg);
--}
--
--/* HipXX PCIe host only supports 32-bit config access */
--static int hisi_pcie_cfg_read(struct pcie_port *pp, int where, int size,
--			      u32 *val)
--{
--	u32 reg;
--	u32 reg_val;
--	struct hisi_pcie *pcie = to_hisi_pcie(pp);
--	void *walker = &reg_val;
--
--	walker += (where & 0x3);
--	reg = where & ~0x3;
--	reg_val = hisi_pcie_apb_readl(pcie, reg);
--
--	if (size == 1)
--		*val = *(u8 __force *) walker;
--	else if (size == 2)
--		*val = *(u16 __force *) walker;
--	else if (size == 4)
--		*val = reg_val;
--	else
--		return PCIBIOS_BAD_REGISTER_NUMBER;
--
--	return PCIBIOS_SUCCESSFUL;
--}
-+struct pcie_soc_ops {
-+	int (*hisi_pcie_link_up)(struct hisi_pcie *pcie);
-+};
- 
--/* HipXX PCIe host only supports 32-bit config access */
--static int hisi_pcie_cfg_write(struct pcie_port *pp, int where, int  size,
--				u32 val)
-+static inline int hisi_pcie_cfg_read(struct pcie_port *pp, int where,
-+		int size, u32 *val)
+ static int pcie_flr(struct pci_dev *dev, int probe)
  {
--	u32 reg_val;
--	u32 reg;
- 	struct hisi_pcie *pcie = to_hisi_pcie(pp);
--	void *walker = &reg_val;
--
--	walker += (where & 0x3);
--	reg = where & ~0x3;
--	if (size == 4)
--		hisi_pcie_apb_writel(pcie, val, reg);
--	else if (size == 2) {
--		reg_val = hisi_pcie_apb_readl(pcie, reg);
--		*(u16 __force *) walker = val;
--		hisi_pcie_apb_writel(pcie, reg_val, reg);
--	} else if (size == 1) {
--		reg_val = hisi_pcie_apb_readl(pcie, reg);
--		*(u8 __force *) walker = val;
--		hisi_pcie_apb_writel(pcie, reg_val, reg);
--	} else
--		return PCIBIOS_BAD_REGISTER_NUMBER;
--
--	return PCIBIOS_SUCCESSFUL;
--}
+ 	u32 cap;
+@@ -3429,7 +3452,7 @@ static int pcie_flr(struct pci_dev *dev, int probe)
+ 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing function level reset anyway\n");
  
--static int hisi_pcie_link_up_hip05(struct hisi_pcie *hisi_pcie)
--{
--	u32 val;
--
--	regmap_read(hisi_pcie->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
--		    0x100 * hisi_pcie->port_id, &val);
--
--	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
-+	return hisi_pcie_common_cfg_read(pcie->reg_base, where, size, val);
- }
- 
--static int hisi_pcie_link_up_hip06(struct hisi_pcie *hisi_pcie)
-+static inline int hisi_pcie_cfg_write(struct pcie_port *pp, int where,
-+		int size, u32 val)
- {
--	u32 val;
--
--	val = hisi_pcie_apb_readl(hisi_pcie, PCIE_HIP06_CTRL_OFF +
--			PCIE_SYS_STATE4);
-+	struct hisi_pcie *pcie = to_hisi_pcie(pp);
- 
--	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
-+	return hisi_pcie_common_cfg_write(pcie->reg_base, where, size, val);
- }
- 
- static int hisi_pcie_link_up(struct pcie_port *pp)
-@@ -134,12 +66,13 @@ static int hisi_pcie_link_up(struct pcie_port *pp)
- 	return hisi_pcie->soc_ops->hisi_pcie_link_up(hisi_pcie);
- }
- 
--static struct pcie_host_ops hisi_pcie_host_ops = {
--	.rd_own_conf = hisi_pcie_cfg_read,
--	.wr_own_conf = hisi_pcie_cfg_write,
--	.link_up = hisi_pcie_link_up,
-+struct pcie_host_ops hisi_pcie_host_ops = {
-+		.rd_own_conf = hisi_pcie_cfg_read,
-+		.wr_own_conf = hisi_pcie_cfg_write,
-+		.link_up = hisi_pcie_link_up,
- };
- 
-+
- static int hisi_add_pcie_port(struct pcie_port *pp,
- 				     struct platform_device *pdev)
- {
-@@ -215,6 +148,26 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+ 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+-	msleep(100);
++	pci_flr_wait(dev);
  	return 0;
  }
  
-+static int hisi_pcie_link_up_hip05(struct hisi_pcie *hisi_pcie)
-+{
-+	u32 val;
-+
-+	regmap_read(hisi_pcie->subctrl, PCIE_SUBCTRL_SYS_STATE4_REG +
-+		    0x100 * hisi_pcie->port_id, &val);
-+
-+	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
-+}
-+
-+static int hisi_pcie_link_up_hip06(struct hisi_pcie *hisi_pcie)
-+{
-+	u32 val;
-+
-+	val = readl(hisi_pcie->reg_base + PCIE_HIP06_CTRL_OFF +
-+			PCIE_SYS_STATE4);
-+
-+	return ((val & PCIE_LTSSM_STATE_MASK) == PCIE_LTSSM_LINKUP_STATE);
-+}
-+
- static struct pcie_soc_ops hip05_ops = {
- 		&hisi_pcie_link_up_hip05
- };
-diff --git a/drivers/pci/host/pcie-hisi.h b/drivers/pci/host/pcie-hisi.h
-new file mode 100644
-index 0000000..29e0790
---- /dev/null
-+++ b/drivers/pci/host/pcie-hisi.h
-@@ -0,0 +1,23 @@
-+/*
-+ * PCIe host controller driver for HiSilicon SoCs
-+ *
-+ * Copyright (C) 2015 HiSilicon Co., Ltd. http://www.hisilicon.com
-+ *
-+ * Author: Zhou Wang <wangzhou1@hisilicon.com>
-+ *         Dacai Zhu <zhudacai@hisilicon.com>
-+ *         Gabriele Paoloni <gabriele.paoloni@huawei.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+#ifndef PCIE_HISI_H_
-+#define PCIE_HISI_H_
-+
-+
-+int hisi_pcie_common_cfg_read(void __iomem *reg_base, int where, int size,
-+			      u32 *val);
-+int hisi_pcie_common_cfg_write(void __iomem *reg_base, int where, int  size,
-+				u32 val);
-+
-+#endif /* PCIE_HISI_H_ */
--- 
-1.9.1
-
-
+@@ -3459,7 +3482,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+ 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing AF function level reset anyway\n");
+ 
+ 	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
+-	msleep(100);
++	pci_flr_wait(dev);
+ 	return 0;
+ }
+ 
