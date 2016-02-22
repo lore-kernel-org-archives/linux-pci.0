@@ -1,152 +1,205 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V4 00/23] MMCONFIG refactoring and support for ARM64 PCI hostbridge init based on ACPI
-Date: Thu,  4 Feb 2016 18:28:38 +0100
-Message-Id: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:58549 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750832AbcBVQRw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Feb 2016 11:17:52 -0500
+Date: Mon, 22 Feb 2016 16:17:45 +0000
+From: Mark Rutland <mark.rutland@arm.com>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: Bharat Kumar Gogada <bharatku@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	Michal Simek <michals@xilinx.com>,
+	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+	"paul.burton@imgtec.com" <paul.burton@imgtec.com>,
+	"yinghai@kernel.org" <yinghai@kernel.org>,
+	"wangyijing@huawei.com" <wangyijing@huawei.com>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH V4 5/5] Microblaze: Modifying microblaze PCI subsytem to
+ support  generic Xilinx  AXI PCIe Host Bridge IP driver
+Message-ID: <20160222161745.GL3435@leverpostej>
+References: <1455208091-15556-1-git-send-email-bharatku@xilinx.com>
+ <1455208091-15556-6-git-send-email-bharatku@xilinx.com>
+ <8520D5D51A55D047800579B09414719825884643@XAP-PVEXMBX01.xlnx.xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8520D5D51A55D047800579B09414719825884643@XAP-PVEXMBX01.xlnx.xilinx.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From the functionality point of view this series might be split into the
-following logic parts:
-1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
-   PCI config regions and used when necessary.
-2. Move non-arch specific bits to the core code.
-3. Use MMCONFIG code and implement generic ACPI based PCI host controller driver.
-4. Enable above driver on ARM64
+On Mon, Feb 22, 2016 at 04:01:15PM +0000, Bharat Kumar Gogada wrote:
+> Ping
 
-Patches has been built on top of 4.5-rc1 and can be found here:
-git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v4)
+Please trim your To line, and state who you're pinging, and specifically
+what you are pinging for. You'll have much better luck with targetted
+replies.
 
-NOTE, this patch set depends on Lorenzo's fixes:
-https://patchwork.ozlabs.org/patch/576450/
-which can be found in pci-acpi-v4 branch.
+Given the number of people in the To line, no-one knows if they're being
+poked, or if someone else is. Given the lack of any question/statement
+with your ping, it's not clear what you're asking for.
 
-This has been tested on Cavium ThunderX server, JunoR2, HP RX2660 IA64, x86,
-Hip05, X-Gene and QEMU-aarch64. Any help in reviewing and testing is very appreciated.
+The DT parts of this series already appear to have been reviewed, so
+there's no reason to keep myself and other DT maintainers on the To
+line for this patch.
 
-v3 -> v4
-- dropped Jiang's fix http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04318.html
-- added Lorenzo's fix patch 19/24
-- ACPI PCI bus domain number assigning cleanup
-- changed resource management, we now claim and reassign resources
-- improvements for applying quirks
-- dropped Matthew's http://www.spinics.net/lists/linux-pci/msg45950.html dependency
-- rebased to 4.5-rc1
+Mark.
 
-v2 -> v3
-- fix legacy IRQ assigning and IO ports registration
-- remove reference to arch specific companion device for ia64
-- move ACPI PCI host controller driver to pci_root.c
-- drop generic domain assignment for x86 and ia64 as I am not
-  able to run all necessary test variants
-- drop patch which cleaned legacy IRQ assignment since it belongs to
-  Mathew's series:
-  https://patchwork.ozlabs.org/patch/557504/
-- extend MCFG quirk code
-- rebased to 4.4
-
-v1 -> v2
-- moved non-arch specific piece of code to dirver/acpi/ directory
-- fixed IO resource handling
-- introduced PCI config accessors quirks matching
-- moved ACPI_COMPANION_SET to generic code
-
-v1 - https://lkml.org/lkml/2015/10/27/504
-v2 - https://lkml.org/lkml/2015/12/16/246
-v3 - http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04308.html
-
-Lorenzo Pieralisi (1):
-  drivers: pci: add generic code to claim bus resources
-
-Tomasz Nowicki (22):
-  x86, pci: Reorder logic of pci_mmconfig_insert() function
-  x86, pci, acpi: Move arch-agnostic MMCONFIG (aka ECAM) and ACPI code
-    out of arch/x86/ directory
-  pci, acpi, mcfg: Provide generic implementation of MCFG code
-    initialization.
-  x86, pci: mmconfig_{32,64}.c code refactoring - remove code
-    duplication.
-  x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM
-    driver.
-  XEN / PCI: Remove the dependence on arch x86 when PCI_MMCONFIG=y
-  pci, acpi, mcfg: Provide default RAW ACPI PCI config space accessors.
-  arm64, acpi: Use MCFG and empty PCI config space accessors from mcfg.c
-    file.
-  pci, acpi, ecam: Add flag to indicate whether ECAM region was hot
-    added or not.
-  x86, pci: Cleanup platform specific MCFG data by using ECAM hot_added
-    flag.
-  pci, acpi: Move ACPI host bridge device companion assignment to core
-    code.
-  x86, ia64, pci: Remove ACPI companion device from platform specific
-    data.
-  pci, acpi: Provide generic way to assign bus domain number.
-  x86, ia64: Include acpi_pci_{add|remove}_bus to the default
-    pcibios_{add|remove}_bus implementation.
-  acpi, mcfg: Implement two calls that might be used to inject/remove
-    MCFG region.
-  x86, acpi, pci: Use equivalent function from mcfg.c driver.
-  acpi, mcfg: Add default PCI config accessors implementation and
-    initial support for related quirks.
-  pci, of: Move the PCI I/O space management to PCI core code.
-  pci, acpi: Support for ACPI based generic PCI host controller init
-  pci, acpi: Match PCI config space accessors against platfrom specific
-    quirks.
-  arm64, pci, acpi: Assign legacy IRQs once device is enable.
-  arm64, pci, acpi: Start using ACPI based PCI host bridge driver for
-    ARM64.
-
- arch/arm64/Kconfig                 |   8 ++
- arch/arm64/kernel/pci.c            |  37 ++----
- arch/ia64/hp/common/sba_iommu.c    |   2 +-
- arch/ia64/include/asm/pci.h        |   1 -
- arch/ia64/pci/pci.c                |  26 ----
- arch/ia64/sn/kernel/io_acpi_init.c |   4 +-
- arch/x86/Kconfig                   |   4 +
- arch/x86/include/asm/pci.h         |   3 -
- arch/x86/include/asm/pci_x86.h     |  28 +----
- arch/x86/pci/acpi.c                |  56 ++-------
- arch/x86/pci/common.c              |  10 --
- arch/x86/pci/mmconfig-shared.c     | 250 ++++++-------------------------------
- arch/x86/pci/mmconfig_32.c         |  11 +-
- arch/x86/pci/mmconfig_64.c         |  67 +---------
- arch/x86/pci/numachip.c            |   1 +
- drivers/acpi/Kconfig               |   7 ++
- drivers/acpi/Makefile              |   1 +
- drivers/acpi/mcfg.c                | 201 +++++++++++++++++++++++++++++
- drivers/acpi/pci_root.c            | 134 +++++++++++++++++++-
- drivers/of/address.c               | 116 +----------------
- drivers/pci/Kconfig                |  10 ++
- drivers/pci/Makefile               |   5 +
- drivers/pci/ecam.c                 | 234 ++++++++++++++++++++++++++++++++++
- drivers/pci/pci.c                  | 126 ++++++++++++++++++-
- drivers/pci/probe.c                |   5 +
- drivers/pci/setup-bus.c            |  63 ++++++++++
- drivers/xen/pci.c                  |   7 +-
- include/acpi/acpi_bus.h            |   1 +
- include/asm-generic/vmlinux.lds.h  |   7 ++
- include/linux/acpi.h               |   2 +
- include/linux/ecam.h               |  62 +++++++++
- include/linux/of_address.h         |   9 --
- include/linux/pci-acpi.h           |  19 +++
- include/linux/pci.h                |   6 +
- 34 files changed, 962 insertions(+), 561 deletions(-)
- create mode 100644 drivers/acpi/mcfg.c
- create mode 100644 drivers/pci/ecam.c
- create mode 100644 include/linux/ecam.h
-
--- 
-1.9.1
-
+> 
+> > Subject: [PATCH V4 5/5] Microblaze: Modifying microblaze PCI subsytem to
+> > support generic Xilinx AXI PCIe Host Bridge IP driver
+> > 
+> > This patch does required modifications to microblaze PCI subsystem, to work
+> > with generic driver (drivers/pci/host/pcie-xilinx.c) on Microblaze and Zynq.
+> > 
+> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> > ---
+> > Changes:
+> > Removed pcibios_get_phb_of_node in pci-common.c, using generic version
+> > instead.
+> > Modified pcibios_fixup_bus in pci-common.c, as per generic architecuture.
+> > Modified pcibios_align_resource in pci-common.c, as per generic
+> > architecuture, removed temporary variable.
+> > Removed pci_domain_nr in pci-common.c, instead using generic code.
+> > Added pcibios_add_device in pci-common.c, as per generic architecuture.
+> > Adding Kernel configuration in arch/microblaze as required for generic PCI
+> > domains.
+> > Added kernel configuration for driver to support Microblaze.
+> > ---
+> >  arch/microblaze/Kconfig          |  3 +++
+> >  arch/microblaze/pci/pci-common.c | 56 +++++++---------------------------------
+> >  drivers/pci/host/Kconfig         |  2 +-
+> >  3 files changed, 14 insertions(+), 47 deletions(-)
+> > 
+> > diff --git a/arch/microblaze/Kconfig b/arch/microblaze/Kconfig index
+> > 0bce820..c3702b9 100644
+> > --- a/arch/microblaze/Kconfig
+> > +++ b/arch/microblaze/Kconfig
+> > @@ -271,6 +271,9 @@ config PCI
+> >  config PCI_DOMAINS
+> >  	def_bool PCI
+> > 
+> > +config PCI_DOMAINS_GENERIC
+> > +	def_bool PCI_DOMAINS
+> > +
+> >  config PCI_SYSCALL
+> >  	def_bool PCI
+> > 
+> > diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-
+> > common.c
+> > index ae838ed..35654be 100644
+> > --- a/arch/microblaze/pci/pci-common.c
+> > +++ b/arch/microblaze/pci/pci-common.c
+> > @@ -123,17 +123,6 @@ unsigned long pci_address_to_pio(phys_addr_t
+> > address)  }  EXPORT_SYMBOL_GPL(pci_address_to_pio);
+> > 
+> > -/*
+> > - * Return the domain number for this bus.
+> > - */
+> > -int pci_domain_nr(struct pci_bus *bus)
+> > -{
+> > -	struct pci_controller *hose = pci_bus_to_host(bus);
+> > -
+> > -	return hose->global_number;
+> > -}
+> > -EXPORT_SYMBOL(pci_domain_nr);
+> > -
+> >  /* This routine is meant to be used early during boot, when the
+> >   * PCI bus numbers have not yet been assigned, and you need to
+> >   * issue PCI config cycles to an OF device.
+> > @@ -863,26 +852,10 @@ void pcibios_setup_bus_devices(struct pci_bus
+> > *bus)
+> > 
+> >  void pcibios_fixup_bus(struct pci_bus *bus)  {
+> > -	/* When called from the generic PCI probe, read PCI<->PCI bridge
+> > -	 * bases. This is -not- called when generating the PCI tree from
+> > -	 * the OF device-tree.
+> > -	 */
+> > -	if (bus->self != NULL)
+> > -		pci_read_bridge_bases(bus);
+> > -
+> > -	/* Now fixup the bus bus */
+> > -	pcibios_setup_bus_self(bus);
+> > -
+> > -	/* Now fixup devices on that bus */
+> > -	pcibios_setup_bus_devices(bus);
+> > +	/* nothing to do */
+> >  }
+> >  EXPORT_SYMBOL(pcibios_fixup_bus);
+> > 
+> > -static int skip_isa_ioresource_align(struct pci_dev *dev) -{
+> > -	return 0;
+> > -}
+> > -
+> >  /*
+> >   * We need to avoid collisions with `mirrored' VGA ports
+> >   * and other strange ISA hardware, so we always want the @@ -899,20
+> > +872,18 @@ static int skip_isa_ioresource_align(struct pci_dev *dev)
+> > resource_size_t pcibios_align_resource(void *data, const struct resource
+> > *res,
+> >  				resource_size_t size, resource_size_t align)  {
+> > -	struct pci_dev *dev = data;
+> > -	resource_size_t start = res->start;
+> > -
+> > -	if (res->flags & IORESOURCE_IO) {
+> > -		if (skip_isa_ioresource_align(dev))
+> > -			return start;
+> > -		if (start & 0x300)
+> > -			start = (start + 0x3ff) & ~0x3ff;
+> > -	}
+> > -
+> > -	return start;
+> > +	return res->start;
+> >  }
+> >  EXPORT_SYMBOL(pcibios_align_resource);
+> > 
+> > +int pcibios_add_device(struct pci_dev *dev) {
+> > +	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> > +
+> > +	return 0;
+> > +}
+> > +EXPORT_SYMBOL(pcibios_add_device);
+> > +
+> >  /*
+> >   * Reparent resource children of pr that conflict with res
+> >   * under res, and make res replace those children.
+> > @@ -1333,13 +1304,6 @@ static void pcibios_setup_phb_resources(struct
+> > pci_controller *hose,
+> >  		 (unsigned long)hose->io_base_virt - _IO_BASE);  }
+> > 
+> > -struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus) -{
+> > -	struct pci_controller *hose = bus->sysdata;
+> > -
+> > -	return of_node_get(hose->dn);
+> > -}
+> > -
+> >  static void pcibios_scan_phb(struct pci_controller *hose)  {
+> >  	LIST_HEAD(resources);
+> > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig index
+> > d5e58ba..7c56c2e 100644
+> > --- a/drivers/pci/host/Kconfig
+> > +++ b/drivers/pci/host/Kconfig
+> > @@ -79,7 +79,7 @@ config PCI_KEYSTONE
+> > 
+> >  config PCIE_XILINX
+> >  	bool "Xilinx AXI PCIe host bridge support"
+> > -	depends on ARCH_ZYNQ
+> > +	depends on ARCH_ZYNQ || MICROBLAZE
+> >  	help
+> >  	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+> >  	  Host Bridge driver.
+> > --
+> > 2.1.1
+> 
