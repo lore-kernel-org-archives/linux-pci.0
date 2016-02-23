@@ -1,65 +1,274 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:51480 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751102AbcBHLeo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Feb 2016 06:34:44 -0500
-Subject: Re: [PATCH v3] synopsys pcie rc generic platform driver update
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-References: <28b04a32cc7caf6db542d4b5aa1feddacd02b2c9.1454701564.git.jpinto@synopsys.com>
- <20160205225204.GB11780@localhost>
-CC: <arnd@arndb.de>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <Vineet.Gupta1@synopsys.com>,
-	<CARLOS.PALMINHA@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <56B87D4F.2080009@synopsys.com>
-Date: Mon, 8 Feb 2016 11:34:39 +0000
+Received: from mail.kernel.org ([198.145.29.136]:47798 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755859AbcBWAq2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Feb 2016 19:46:28 -0500
+Subject: [PATCH v4 00/11] PCI VPD access fixes
+To: Hannes Reinecke <hare@suse.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	Babu Moger <babu.moger@oracle.com>,
+	Alexander Duyck <alexander.duyck@gmail.com>
+Date: Mon, 22 Feb 2016 18:46:23 -0600
+Message-ID: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20160205225204.GB11780@localhost>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Hi Hannes,
 
-I am going to produce a patch just for the centralization of driver common code
-first. Then we need to discuss a bit what to do in order to transform
-pcie-designware into an hybrid driver (function lib and platform driver).
+This is a revision of your v3 series:
+http://lkml.kernel.org/r/1455525722-122040-1-git-send-email-hare@suse.de
 
-BR
-Joao
+Here's the description from your v3 posting:
+
+  the current PCI VPD page access assumes that the entire possible VPD
+  data is readable. However, the spec only guarantees a VPD data up to
+  the 'end' marker, with everything beyond that being undefined.
+  This causes a system lockup on certain devices.
+
+  With this patch we always set the VPD sysfs attribute size to '0', and
+  calculate the available VPD size on the first access.
+  If no valid data can be read an I/O error is returned.
+
+  I've also included the patch from Babu to blacklists devices which
+  are known to lockup when accessing the VPD data.
+
+I tweaked a few things, mostly whitespace and printk changes.  The
+appended diff shows the changes I made.
+
+I added some patches on top to clean up and simplify the VPD code.
+These shouldn't make any functional difference unless I've made a
+mistake.  I've built these, but I don't really have a way to test
+them.
+
+I am still waiting for bugzilla links from Babu for the blacklist
+patch.
+
+Bjorn
+
+---
+
+Babu Moger (1):
+      FIXME need bugzilla link
+
+Bjorn Helgaas (7):
+      PCI: Use bitfield instead of bool for struct pci_vpd_pci22.busy
+      PCI: Move pci_read_vpd() and pci_write_vpd() close to other VPD code
+      PCI: Move pci_vpd_release() from header file to pci/access.c
+      PCI: Remove struct pci_vpd_ops.release function pointer
+      PCI: Rename VPD symbols to remove unnecessary "pci22"
+      PCI: Fold struct pci_vpd_pci22 into struct pci_vpd
+      PCI: Sleep rather than busy-wait for VPD access completion
+
+Hannes Reinecke (3):
+      PCI: Update VPD definitions
+      PCI: Allow access to VPD attributes with size 0
+      PCI: Determine actual VPD size on first access
 
 
-On 2/5/2016 10:52 PM, Bjorn Helgaas wrote:
-> Hi Joao,
-> 
-> On Fri, Feb 05, 2016 at 07:55:43PM +0000, Joao Pinto wrote:
->> This patch tries to improve the host/pcie-synopsys branch including a new
->> driver name, more accurate documentation and centralized link up validation.
->> Other platform drivers were also updated to include the new centralized link
->> up validation function.
-> 
-> It's true that I wanted you to incorporate a few tweaks I had made in
-> my pci/host-synopsys branch, but generating incremental patches on top
-> of that branch makes this too confusing to follow.
-> 
-> My pci/host-synopsys contains two patches on top of v4.5-rc1.  I would
-> prefer that you
-> 
->   - fetch that branch,
->   - make whatever edits you need, and
->   - generate fresh patches based on v4.5-rc1
->   
-> Then everybody can see the whole series at once without trying to
-> integrate these changes with the ones you've previously posted, and I
-> can start from scratch and apply those fresh patches on top of
-> v4.5-rc1.
-> 
-> It's good that you include summaries of what's changed between
-> versions, but if people want to see *exactly* what's changed between
-> your v3 and v4 postings, it's easy for them to download those series,
-> apply them on different branches, and git diff the branches.
-> 
-> Bjorn
-> 
+ drivers/pci/access.c    |  240 ++++++++++++++++++++++++++++++-----------------
+ drivers/pci/pci-sysfs.c |   22 +++-
+ drivers/pci/pci.h       |   16 ++-
+ drivers/pci/probe.c     |    2 
+ drivers/pci/quirks.c    |   29 ++++++
+ include/linux/pci.h     |   27 +++++
+ 6 files changed, 231 insertions(+), 105 deletions(-)
 
+
+Below are the changes I made to your v3 series:
+
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 8b6f5a2..4850f06 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -283,9 +283,9 @@ struct pci_vpd_pci22 {
+ 	struct pci_vpd base;
+ 	struct mutex lock;
+ 	u16	flag;
++	u8	cap;
+ 	u8	busy:1;
+ 	u8	valid:1;
+-	u8	cap;
+ };
+ 
+ /**
+@@ -311,9 +311,9 @@ static size_t pci_vpd_pci22_size(struct pci_dev *dev, size_t old_size)
+ 			    (tag == PCI_VPD_LTIN_RW_DATA)) {
+ 				if (pci_read_vpd(dev, off+1, 2,
+ 						 &header[1]) != 2) {
+-					dev_dbg(&dev->dev,
+-						"invalid large VPD tag %02x size at offset %zu",
+-						tag, off + 1);
++					dev_warn(&dev->dev,
++						 "invalid large VPD tag %02x size at offset %zu",
++						 tag, off + 1);
+ 					return 0;
+ 				}
+ 				off += PCI_VPD_LRDT_TAG_SIZE +
+@@ -325,15 +325,17 @@ static size_t pci_vpd_pci22_size(struct pci_dev *dev, size_t old_size)
+ 				pci_vpd_srdt_size(header);
+ 			tag = pci_vpd_srdt_tag(header);
+ 		}
++
+ 		if (tag == PCI_VPD_STIN_END)	/* End tag descriptor */
+ 			return off;
++
+ 		if ((tag != PCI_VPD_LTIN_ID_STRING) &&
+ 		    (tag != PCI_VPD_LTIN_RO_DATA) &&
+ 		    (tag != PCI_VPD_LTIN_RW_DATA)) {
+-			dev_dbg(&dev->dev,
+-				"invalid %s VPD tag %02x at offset %zu",
+-				(header[0] & PCI_VPD_LRDT) ? "large" : "short",
+-				tag, off);
++			dev_warn(&dev->dev,
++				 "invalid %s VPD tag %02x at offset %zu",
++				 (header[0] & PCI_VPD_LRDT) ? "large" : "short",
++				 tag, off);
+ 			return 0;
+ 		}
+ 	}
+@@ -366,7 +368,7 @@ static int pci_vpd_pci22_wait(struct pci_dev *dev)
+ 			return ret;
+ 
+ 		if ((status & PCI_VPD_ADDR_F) == vpd->flag) {
+-			vpd->busy = false;
++			vpd->busy = 0;
+ 			return 0;
+ 		}
+ 
+@@ -393,16 +395,18 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
+ 	if (pos < 0)
+ 		return -EINVAL;
+ 
+-	if (!vpd->valid && vpd->base.len > 0) {
+-		vpd->valid = true;
++	if (!vpd->valid) {
++		vpd->valid = 1;
+ 		vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
+ 	}
++
+ 	if (vpd->base.len == 0)
+ 		return -EIO;
+ 
++	if (pos >= vpd->base.len)
++		return 0;
++
+ 	if (end > vpd->base.len) {
+-		if (pos > vpd->base.len)
+-			return 0;
+ 		end = vpd->base.len;
+ 		count = end - pos;
+ 	}
+@@ -422,7 +426,7 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
+ 						 pos & ~3);
+ 		if (ret < 0)
+ 			break;
+-		vpd->busy = true;
++		vpd->busy = 1;
+ 		vpd->flag = PCI_VPD_ADDR_F;
+ 		ret = pci_vpd_pci22_wait(dev);
+ 		if (ret < 0)
+@@ -459,10 +463,11 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
+ 	if (pos < 0 || (pos & 3) || (count & 3))
+ 		return -EINVAL;
+ 
+-	if (!vpd->valid && vpd->base.len > 0) {
+-		vpd->valid = true;
++	if (!vpd->valid) {
++		vpd->valid = 1;
+ 		vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
+ 	}
++
+ 	if (vpd->base.len == 0)
+ 		return -EIO;
+ 
+@@ -492,7 +497,7 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
+ 		if (ret < 0)
+ 			break;
+ 
+-		vpd->busy = true;
++		vpd->busy = 1;
+ 		vpd->flag = 0;
+ 		ret = pci_vpd_pci22_wait(dev);
+ 		if (ret < 0)
+@@ -572,8 +577,8 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
+ 		vpd->base.ops = &pci_vpd_pci22_ops;
+ 	mutex_init(&vpd->lock);
+ 	vpd->cap = cap;
+-	vpd->busy = false;
+-	vpd->valid = false;
++	vpd->busy = 0;
++	vpd->valid = 0;
+ 	dev->vpd = &vpd->base;
+ 	return 0;
+ }
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index df1178f..626c3b2 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -2135,45 +2135,31 @@ static void quirk_via_cx700_pci_parking_caching(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_VIA, 0x324e, quirk_via_cx700_pci_parking_caching);
+ 
+ /*
+- * A read/write to sysfs entry ('/sys/bus/pci/devices/<id>/vpd')
+- * will dump 32k of data. The default length is set as 32768.
+- * Reading a full 32k will cause an access beyond the VPD end tag.
+- * The system behaviour at that point is mostly unpredictable.
+- * Apparently, some vendors have not implemented this VPD headers properly.
+- * Adding a generic function disable vpd data for these buggy adapters
+- * Add the DECLARE_PCI_FIXUP_FINAL line below with the specific with
+- * vendor and device of interest to use this quirk.
++ * If a device follows the VPD format spec, the PCI core will not read or
++ * write past the VPD End Tag.  But some vendors do not follow the VPD
++ * format spec, so we can't tell how much data is safe to access.  Devices
++ * may behave unpredictably if we access too much.  Blacklist these devices
++ * so we don't touch VPD at all.
+  */
+ static void quirk_blacklist_vpd(struct pci_dev *dev)
+ {
+ 	if (dev->vpd) {
+ 		dev->vpd->len = 0;
+-		dev_warn(&dev->dev, "PCI vpd access has been disabled due to firmware bug\n");
++		dev_warn(&dev->dev, FW_BUG "VPD access disabled\n");
+ 	}
+ }
+ 
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060,
+-		quirk_blacklist_vpd);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c,
+-		quirk_blacklist_vpd);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413,
+-		quirk_blacklist_vpd);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078,
+-		quirk_blacklist_vpd);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079,
+-		quirk_blacklist_vpd);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073,
+-		quirk_blacklist_vpd);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071,
+-		quirk_blacklist_vpd);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b,
+-		quirk_blacklist_vpd);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f,
+-		quirk_blacklist_vpd);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d,
+-		quirk_blacklist_vpd);
+-DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f,
+-		quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0060, quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x007c, quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0413, quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0078, quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0079, quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0073, quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x0071, quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005b, quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x002f, quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005d, quirk_blacklist_vpd);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f, quirk_blacklist_vpd);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID,
+ 		quirk_blacklist_vpd);
+ 
