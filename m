@@ -1,70 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47448 "EHLO mx2.suse.de"
+Received: from mail.kernel.org ([198.145.29.136]:48051 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752431AbcBOImZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 15 Feb 2016 03:42:25 -0500
-From: Hannes Reinecke <hare@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
-	linux-pci@vger.kernel.org, Babu Moger <babu.moger@oracle.com>,
+	id S1756522AbcBWArY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Feb 2016 19:47:24 -0500
+Subject: [PATCH v4 08/11] PCI: Remove struct pci_vpd_ops.release function
+ pointer
+To: Hannes Reinecke <hare@suse.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
 	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv3 2/4] pci: allow access to VPD attributes with size '0'
-Date: Mon, 15 Feb 2016 09:42:00 +0100
-Message-Id: <1455525722-122040-3-git-send-email-hare@suse.de>
-In-Reply-To: <1455525722-122040-1-git-send-email-hare@suse.de>
-References: <1455525722-122040-1-git-send-email-hare@suse.de>
+	Babu Moger <babu.moger@oracle.com>,
+	Alexander Duyck <alexander.duyck@gmail.com>
+Date: Mon, 22 Feb 2016 18:47:21 -0600
+Message-ID: <20160223004721.10635.89434.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is not always possible to determine the actual size of the VPD
-data, so allow access to them if the size is set to '0'.
+The struct pci_vpd_ops.release function pointer is always
+pci_vpd_pci22_release(), so there's no need for the flexibility of a
+function pointer.
 
-Cc: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Inline the pci_vpd_pci22_release() body into pci_vpd_release() and remove
+pci_vpd_pci22_release() and the struct pci_vpd_ops.release function
+pointer.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pci-sysfs.c | 20 ++++++++++++--------
- 1 file changed, 12 insertions(+), 8 deletions(-)
+ drivers/pci/access.c |    9 +--------
+ drivers/pci/pci.h    |    1 -
+ 2 files changed, 1 insertion(+), 9 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 95d9e7b..a730f54 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -769,10 +769,12 @@ static ssize_t read_vpd_attr(struct file *filp, struct kobject *kobj,
- {
- 	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
- 
--	if (off > bin_attr->size)
--		count = 0;
--	else if (count > bin_attr->size - off)
--		count = bin_attr->size - off;
-+	if (bin_attr->size > 0) {
-+		if (off > bin_attr->size)
-+			count = 0;
-+		else if (count > bin_attr->size - off)
-+			count = bin_attr->size - off;
-+	}
- 
- 	return pci_read_vpd(dev, off, count, buf);
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index ca42a33..68ed22a 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -508,15 +508,9 @@ out:
+ 	return ret ? ret : count;
  }
-@@ -783,10 +785,12 @@ static ssize_t write_vpd_attr(struct file *filp, struct kobject *kobj,
+ 
+-static void pci_vpd_pci22_release(struct pci_dev *dev)
+-{
+-	kfree(container_of(dev->vpd, struct pci_vpd_pci22, base));
+-}
+-
+ static const struct pci_vpd_ops pci_vpd_pci22_ops = {
+ 	.read = pci_vpd_pci22_read,
+ 	.write = pci_vpd_pci22_write,
+-	.release = pci_vpd_pci22_release,
+ };
+ 
+ static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
+@@ -552,7 +546,6 @@ static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
+ static const struct pci_vpd_ops pci_vpd_f0_ops = {
+ 	.read = pci_vpd_f0_read,
+ 	.write = pci_vpd_f0_write,
+-	.release = pci_vpd_pci22_release,
+ };
+ 
+ int pci_vpd_pci22_init(struct pci_dev *dev)
+@@ -584,7 +577,7 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
+ void pci_vpd_release(struct pci_dev *dev)
  {
- 	struct pci_dev *dev = to_pci_dev(kobj_to_dev(kobj));
- 
--	if (off > bin_attr->size)
--		count = 0;
--	else if (count > bin_attr->size - off)
--		count = bin_attr->size - off;
-+	if (bin_attr->size > 0) {
-+		if (off > bin_attr->size)
-+			count = 0;
-+		else if (count > bin_attr->size - off)
-+			count = bin_attr->size - off;
-+	}
- 
- 	return pci_write_vpd(dev, off, count, buf);
+ 	if (dev->vpd)
+-		dev->vpd->ops->release(dev);
++		kfree(container_of(dev->vpd, struct pci_vpd_pci22, base));
  }
--- 
-1.8.5.6
+ 
+ /**
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 52e86b0..b3e9daa 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -97,7 +97,6 @@ static inline bool pci_has_subordinate(struct pci_dev *pci_dev)
+ struct pci_vpd_ops {
+ 	ssize_t (*read)(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+ 	ssize_t (*write)(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+-	void (*release)(struct pci_dev *dev);
+ };
+ 
+ struct pci_vpd {
 
