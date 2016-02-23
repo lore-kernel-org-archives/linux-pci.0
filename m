@@ -1,81 +1,103 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2on0088.outbound.protection.outlook.com ([207.46.100.88]:57888
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752692AbcBWRrN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Feb 2016 12:47:13 -0500
+From: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"Marsan, Luugi" <Luugi.Marsan@amd.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Alex Williamson <alex.williamson@redhat.com>
+Subject: RE: BUGZILLA [112941] - Cannot reenable SRIOV after disabling SRIOV
+ on AMD GPU
+Date: Tue, 23 Feb 2016 17:47:11 +0000
+Message-ID: <CY1PR12MB0262E17EF294E8A1F23D8CB2FEA40@CY1PR12MB0262.namprd12.prod.outlook.com>
+References: <CY1PR12MB0262D12DAC0897F8DC74541CFEA40@CY1PR12MB0262.namprd12.prod.outlook.com>
+ <20160223170215.GA25203@localhost>
+In-Reply-To: <20160223170215.GA25203@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20160205094740.GA31547@red-moon>
-References: <1454058340-7904-1-git-send-email-jchandra@broadcom.com>
- <1454058340-7904-6-git-send-email-jchandra@broadcom.com> <20160205001907.GJ7031@localhost>
- <CAKc_7PXYtFt1MQE-UGO0O5vvQ+xFKa2b5=F8wXB=EN-JUJVzZw@mail.gmail.com> <20160205094740.GA31547@red-moon>
-From: Jayachandran Chandrashekaran Nair
-	<jayachandran.chandrashekaran@broadcom.com>
-Date: Mon, 8 Feb 2016 16:57:46 +0530
-Message-ID: <CAKc_7PVNm7z8nv_+Tr9FYhrVAA+-vh4CDMB83WAyT8tdi+CHzA@mail.gmail.com>
-Subject: Re: [PATCH v7 5/5] PCI: ACPI: Add a generic ACPI based host controller
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Jayachandran C <jchandra@broadcom.com>,
-	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-acpi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	xen-devel@lists.xenproject.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Lorenzo,
 
-On Fri, Feb 5, 2016 at 3:17 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Fri, Feb 05, 2016 at 02:05:37PM +0530, Jayachandran Chandrashekaran Nair wrote:
->
-> [...]
->
->> pci_host_acpi.c is a generic implementation of these using a sysdata
->> pointing to acpi_pci_root_info, and using a pointer to the pci_mmcfg_region
->> to access ECAM area, Maybe I can rename this file to
->> pci_acpi_host_generic.c to reflect this better.
->
-> Maybe you should stop sending this series and work with Tomasz to
-> get this done, you are confusing everyone and I am really really
-> annoyed about this.
->
-> Do you realize there is no point in having two patch series doing
-> the same thing and wasting everyone's review time ?
->
-> Do you realize he started this work long before you and went through
-> several rounds of review already (I told you before but in case you
-> forgot) ?
->
-> Tomasz posted a version yesterday, integrating comments following months
-> of review and testing and I think it is ready to get upstream:
->
-> https://lkml.org/lkml/2016/2/4/646
->
-> Did you even consider reviewing his code or helping him instead of
-> churning out more patches doing the *SAME* thing ?
 
-This is getting ridiculous, I had replied to your earlier mails on why
-my patchset is NOT doing the exact same thing. I had also explained
-why helping was not feasible.
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Tuesday, February 23, 2016 12:02 PM
+> To: Zytaruk, Kelly
+> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
+> bhelgaas@google.com; Marsan, Luugi; Joerg Roedel; Alex Williamson
+> Subject: Re: BUGZILLA [112941] - Cannot reenable SRIOV after disabling SRIOV
+> on AMD GPU
+> 
+> [+cc Joerg, Alex]
+> 
+> Hi Kelly,
+> 
+> On Tue, Feb 23, 2016 at 03:52:13PM +0000, Zytaruk, Kelly wrote:
+> > As per our offline discussions I have created Bugzilla #112941 for the
+> > SRIOV issue.
+> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=112941
+> 
+> > When trying to enable SRIOV on AMD GPU after doing a previous enable /
+> > disable sequence the following warning is shown in dmesg.  I suspect
+> > that there might be something missing from the cleanup on the disable.
+> >
+> > I had a quick look at the code and it is checking for something in the
+> > iommu, something to do with being attached to a domain.  I am not
+> > familiar with this code yet (what does it mean to be attached to a
+> > domain?) so it might take a little while before I can get the time to
+> > check it out and understand it.
+> >
+> > From a quick glance I notice that during SRIOV enable the function
+> > do_attach()  in amd_iommu.c is called but during disable I don't see a
+> > corresponding call to do_detach (...).  do_detach(...) is called in
+> > the second enable SRIOV  sequence as a cleanup because it thinks that
+> > the iommu is still attached which it shouldn't be (as far as I
+> > understand).
+> >
+> > If the iommu reports that the device is being removed why isn't it
+> > also detached??? Is this by design or an omission?
+> 
+> I don't know enough about the IOMMU code to understand this, but maybe the
+> IOMMU experts I copied do.
+> 
+> > I see the following in dmesg when I do a disable, note the device is removed.
+> >
+> > [  131.674066] pci 0000:02:00.0: PME# disabled [  131.682191] iommu:
+> > Removing device 0000:02:00.0 from group 2
+> >
+> > Stack trace of warn is shown below.
+> >
+> > [  368.510742] pci 0000:02:00.2: calling pci_fixup_video+0x0/0xb1 [
+> > 368.510847] pci 0000:02:00.3: [1002:692f] type 00 class 0x030000 [
+> > 368.510888] pci 0000:02:00.3: Max Payload Size set to 256 (was 128,
+> > max 256) [  368.510907] pci 0000:02:00.3: calling
+> > quirk_no_pm_reset+0x0/0x1a [  368.511005] vgaarb: device added:
+> > PCI:0000:02:00.3,decodes=io+mem,owns=none,locks=none
+> > [  368.511421] ------------[ cut here ]------------ [  368.511426]
+> > WARNING: CPU: 1 PID: 3390 at drivers/pci/ats.c:85
+> > pci_disable_ats+0x26/0xa4()
+> 
+> This warning is because dev->ats_enabled doesn't have the value we expect.  I
+> think we only modify ats_enabled in two places.  Can you stick a dump_stack() at
+> those two places?  Maybe a little more context will make this obvious.
+> 
 
-The basic point again: I am trying to give a much simpler patchset
-to solve the same problem, I take it that you haven't reviewed my
-patchset before writing this mail. I would have appreciated
-a technical discussion rather than this pointless flamefest.
+Yes, I only see the two places.
+The dump_stack() doesn't help much other than tell me that dev->ats_enabled is never set to 0.  The code path never gets hit.
 
-If you have reviewed it, you can see that there are just 5 patches
-instead of 23, and that overall it is a much simpler approach.
+dev->ats_enabled is set to 1 when the VF is created but it is not set to 0 when the VF is destroyed.
 
-> Do you want all of us to go through your code and re-fix what has
-> already been fixed in Tomasz's series with the end result of missing
-> yet another merge window ?
+The code path looks like detach_device (from amd_iommu.c) calls pci_disable_ats() which sets ats_enabled = 0.
+>From the log trace detach_device() is not called when SRIOV is disabled, so when SRIOV is enabled again ats_enabled is still == 1. 
 
-Again, as I said, the whole point of my patchset is that is much  easier
-to go thru and validate and merge or drop as needed.
+I am not sure where detach_device() should be called but my guess is that detach_device() should be somewhere in the disable SRIOV path.  I don't yet know enough about the iommu code.
 
-Anyway, if you are on target to hit this merge window, I really hope
-that happens and there will no need for me to spend further time on
-this.
-
-Regards,
-JC.
+> Bjorn
