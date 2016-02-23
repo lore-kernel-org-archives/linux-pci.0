@@ -1,155 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39708 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759554AbcBYCSn (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:18:43 -0500
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v10 28/59] PCI: Don't add too much optional size for hotplug bridge MMIO
-Date: Wed, 24 Feb 2016 18:12:19 -0800
-Message-Id: <1456366370-28995-29-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:50161 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750746AbcBWMZf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Feb 2016 07:25:35 -0500
+Subject: Re: [PATCH v4 11/11] PCI: Sleep rather than busy-wait for VPD access
+ completion
+To: Bjorn Helgaas <bhelgaas@google.com>
+References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160223004742.10635.55287.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	Babu Moger <babu.moger@oracle.com>,
+	Alexander Duyck <alexander.duyck@gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <56CC4FB6.5020709@suse.de>
+Date: Tue, 23 Feb 2016 20:25:26 +0800
+MIME-Version: 1.0
+In-Reply-To: <20160223004742.10635.55287.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code will always add 2M for hotplug bridge MMIO even
-there is child device under it already.
+On 02/23/2016 08:47 AM, Bjorn Helgaas wrote:
+> Use usleep_range() instead of udelay() while waiting for a VPD access to
+> complete.  This is not a performance path, so no need to hog the CPU.
+> 
+> Rationale for usleep_range() parameters:
+> 
+>   We clear PCI_VPD_ADDR_F for a read (or set it for a write), then wait for
+>   the device to change it.  For a device that updates PCI_VPD_ADDR between
+>   our config write and subsequent config read, we won't sleep at all and
+>   can get the device's maximum rate.
+> 
+>   Sleeping a minimum of 10 usec per 4-byte access limits throughput to
+>   about 400Kbytes/second.  VPD is small (32K bytes at most), and most
+>   devices use only a fraction of that.
+> 
+>   We back off exponentially up to 1024 usec per iteration.  If we reach
+>   1024, we've already waited up to 1008 usec (16 + 32 + ...  + 512), so if
+>   we miss an update and wait an extra 1024 usec, we can still get about 1/2
+>   of the device's maximum rate.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-For example:
-	40:03.0 --- 43:00.0 --- 44:02.0 -+- 45:00.0
-					 \- 45:00.1
+Cheers,
 
-44:02.0 will need 1M as must for 45:00.0 and 45:00.1
-When we calculate add_size for 44:02.0, we pass 2M as additional
-size for hotplug bridge, total will be 3M.
-
-That is different from code before changes for optional support,
-or even current code that treat optional as required directly by
-not passing realloc list. We only need 2M as total.
-
-The optional size should be 1M, and total size should be 2M.
-
-This patch change to comparing required+optional with min_sum_size to
-get smaller optional size.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 28 +++++++++++++++-------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 6265f4d..9fdbd98 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1199,7 +1199,6 @@ out:
-  * @type2: second match type
-  * @type3: third match type
-  * @min_size : the minimum memory window that must to be allocated
-- * @add_size : additional optional memory window
-  * @realloc_head : track the additional memory window on this list
-  *
-  * Calculate the size of the bus and minimal alignment which
-@@ -1212,10 +1211,11 @@ out:
- static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			 unsigned long type, unsigned long type2,
- 			 unsigned long type3,
--			 resource_size_t min_size, resource_size_t add_size,
-+			 resource_size_t min_size,
- 			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
-+	resource_size_t min_sum_size = 0;
- 	resource_size_t min_align = 0, min_add_align = 0;
- 	resource_size_t max_align = 0, max_add_align = 0;
- 	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
-@@ -1227,6 +1227,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (!b_res)
- 		return -ENOSPC;
- 
-+	if (realloc_head) {
-+		min_sum_size = min_size;
-+		min_size = 0;
-+	}
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
-@@ -1299,8 +1304,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	}
- 	free_align_test_list(&align_test_list);
- 
--	if ((sum_add_size - size) < add_size)
--		sum_add_size = size + add_size;
-+	if (sum_add_size < min_sum_size)
-+		sum_add_size = min_sum_size;
- 	if (sum_add_size > size && realloc_head) {
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
-@@ -1437,7 +1442,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
--	resource_size_t additional_mem_size = 0, additional_io_size = 0;
-+	resource_size_t min_mem_size = 0, additional_io_size = 0;
- 	struct resource *b_res;
- 	int ret;
- 
-@@ -1474,7 +1479,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	case PCI_CLASS_BRIDGE_PCI:
- 		if (bus->self->is_hotplug_bridge) {
- 			additional_io_size  = pci_hotplug_io_size;
--			additional_mem_size = pci_hotplug_mem_size;
-+			min_mem_size = pci_hotplug_mem_size;
- 		}
- 		/* Fall through */
- 	default:
-@@ -1494,8 +1499,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask |= IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 				  prefmask, prefmask,
--				  realloc_head ? 0 : additional_mem_size,
--				  additional_mem_size, realloc_head);
-+				  min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, all non-prefetchable resources
-@@ -1518,8 +1522,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask &= ~IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 					 prefmask, prefmask,
--					 realloc_head ? 0 : additional_mem_size,
--					 additional_mem_size, realloc_head);
-+					 min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, only non-prefetchable resources
-@@ -1528,7 +1531,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			if (ret == 0)
- 				mask = prefmask;
- 			else
--				additional_mem_size += additional_mem_size;
-+				min_mem_size += min_mem_size;
- 
- 			type2 = type3 = IORESOURCE_MEM;
- 		}
-@@ -1549,8 +1552,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		 * window.
- 		 */
- 		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
--				realloc_head ? 0 : additional_mem_size,
--				additional_mem_size, realloc_head);
-+				min_mem_size, realloc_head);
- 		break;
- 	}
- }
+Hannes
 -- 
-1.8.4.5
-
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
