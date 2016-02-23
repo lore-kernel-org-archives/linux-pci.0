@@ -1,81 +1,186 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56378 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:47940 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753179AbcBBTia (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 2 Feb 2016 14:38:30 -0500
-Subject: [PATCH 0/5] Clean up warnings (part 2, asm/pci-bridge.h)
-To: linux-pci@vger.kernel.org
+	id S1756509AbcBWAq4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Feb 2016 19:46:56 -0500
+Subject: [PATCH v4 04/11] PCI: Determine actual VPD size on first access
+To: Hannes Reinecke <hare@suse.de>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Date: Tue, 02 Feb 2016 13:38:26 -0600
-Message-ID: <20160202193026.9258.7573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	Babu Moger <babu.moger@oracle.com>,
+	Alexander Duyck <alexander.duyck@gmail.com>
+Date: Mon, 22 Feb 2016 18:46:52 -0600
+Message-ID: <20160223004652.10635.13976.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We've had some non-arch-specific stuff (pci_has_flag() and associated
-definitions like PCI_PROBE_ONLY) in asm/pci-bridge.h.  This leads to
-warnings like:
+From: Hannes Reinecke <hare@suse.de>
 
-  drivers/pci/host/pcie-designware.c:562:20: error: 'PCI_PROBE_ONLY' undeclared (first use in this function)
-  drivers/pci/host/pcie-designware.c:562:7: error: implicit declaration of function 'pci_has_flag' [-Werror=implicit-function-declaration]
+PCI-2.2 VPD entries have a maximum size of 32k, but might actually be
+smaller than that.  To figure out the actual size one has to read the VPD
+area until the 'end marker' is reached.
 
-because arches don't consistently supply asm/pci-bridge.h, and several
-drivers include it when they shouldn't.
+Per spec, reading outside of the VPD space is "not allowed."  In practice,
+it may cause simple read errors or even crash the card.  To make matters
+worse not every PCI card implements this properly, leaving us with no 'end'
+marker or even completely invalid data.
 
-This series moves the generic stuff to linux/pci.h, so it's the same for
-everybody, and removes the now-empty asm-generic/pci-bridge.h.
+Try to determine the size of the VPD data when it's first accessed.  If no
+valid data can be read an I/O error will be returned when reading or
+writing the sysfs attribute.
 
-There still a few arches that provide asm/pci-bridge.h (microblaze,
-powerpc, and xtensa), but now they contain truly arch-dependent things like
-struct pci_controller definitions, and they're only included by
-arch-specific files.
+As the amount of VPD data is unknown initially the size of the sysfs
+attribute will always be set to '0'.
 
+[bhelgaas: changelog, use 0/1 (not false/true) for bitfield, tweak
+pci_vpd_pci22_read() error checking]
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>
 ---
+ drivers/pci/access.c    |   87 ++++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/pci/pci-sysfs.c |    2 +
+ 2 files changed, 86 insertions(+), 3 deletions(-)
 
-Bjorn Helgaas (5):
-      PCI: Move pci_set_flags() from asm-generic/pci-bridge.h to linux/pci.h
-      PCI: Remove includes of empty asm-generic/pci-bridge.h
-      ARM64: PCI: Remove generated include of asm-generic/pci-bridge.h
-      PCI: Remove empty asm-generic/pci-bridge.h
-      PCI: Remove includes of asm/pci-bridge.h
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index a7f0069..4850f06 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -285,8 +285,63 @@ struct pci_vpd_pci22 {
+ 	u16	flag;
+ 	u8	cap;
+ 	u8	busy:1;
++	u8	valid:1;
+ };
+ 
++/**
++ * pci_vpd_size - determine actual size of Vital Product Data
++ * @dev:	pci device struct
++ * @old_size:	current assumed size, also maximum allowed size
++ */
++static size_t pci_vpd_pci22_size(struct pci_dev *dev, size_t old_size)
++{
++	size_t off = 0;
++	unsigned char header[1+2];	/* 1 byte tag, 2 bytes length */
++
++	while (off < old_size &&
++	       pci_read_vpd(dev, off, 1, header) == 1) {
++		unsigned char tag;
++
++		if (header[0] & PCI_VPD_LRDT) {
++			/* Large Resource Data Type Tag */
++			tag = pci_vpd_lrdt_tag(header);
++			/* Only read length from known tag items */
++			if ((tag == PCI_VPD_LTIN_ID_STRING) ||
++			    (tag == PCI_VPD_LTIN_RO_DATA) ||
++			    (tag == PCI_VPD_LTIN_RW_DATA)) {
++				if (pci_read_vpd(dev, off+1, 2,
++						 &header[1]) != 2) {
++					dev_warn(&dev->dev,
++						 "invalid large VPD tag %02x size at offset %zu",
++						 tag, off + 1);
++					return 0;
++				}
++				off += PCI_VPD_LRDT_TAG_SIZE +
++					pci_vpd_lrdt_size(header);
++			}
++		} else {
++			/* Short Resource Data Type Tag */
++			off += PCI_VPD_SRDT_TAG_SIZE +
++				pci_vpd_srdt_size(header);
++			tag = pci_vpd_srdt_tag(header);
++		}
++
++		if (tag == PCI_VPD_STIN_END)	/* End tag descriptor */
++			return off;
++
++		if ((tag != PCI_VPD_LTIN_ID_STRING) &&
++		    (tag != PCI_VPD_LTIN_RO_DATA) &&
++		    (tag != PCI_VPD_LTIN_RW_DATA)) {
++			dev_warn(&dev->dev,
++				 "invalid %s VPD tag %02x at offset %zu",
++				 (header[0] & PCI_VPD_LRDT) ? "large" : "short",
++				 tag, off);
++			return 0;
++		}
++	}
++	return 0;
++}
++
+ /*
+  * Wait for last operation to complete.
+  * This code has to spin since there is no other notification from the PCI
+@@ -337,9 +392,25 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
+ 	loff_t end = pos + count;
+ 	u8 *buf = arg;
+ 
+-	if (pos < 0 || pos > vpd->base.len || end > vpd->base.len)
++	if (pos < 0)
+ 		return -EINVAL;
+ 
++	if (!vpd->valid) {
++		vpd->valid = 1;
++		vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
++	}
++
++	if (vpd->base.len == 0)
++		return -EIO;
++
++	if (pos >= vpd->base.len)
++		return 0;
++
++	if (end > vpd->base.len) {
++		end = vpd->base.len;
++		count = end - pos;
++	}
++
+ 	if (mutex_lock_killable(&vpd->lock))
+ 		return -EINTR;
+ 
+@@ -389,7 +460,18 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
+ 	loff_t end = pos + count;
+ 	int ret = 0;
+ 
+-	if (pos < 0 || (pos & 3) || (count & 3) || end > vpd->base.len)
++	if (pos < 0 || (pos & 3) || (count & 3))
++		return -EINVAL;
++
++	if (!vpd->valid) {
++		vpd->valid = 1;
++		vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
++	}
++
++	if (vpd->base.len == 0)
++		return -EIO;
++
++	if (end > vpd->base.len)
+ 		return -EINVAL;
+ 
+ 	if (mutex_lock_killable(&vpd->lock))
+@@ -496,6 +578,7 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
+ 	mutex_init(&vpd->lock);
+ 	vpd->cap = cap;
+ 	vpd->busy = 0;
++	vpd->valid = 0;
+ 	dev->vpd = &vpd->base;
+ 	return 0;
+ }
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index a730f54..ed39c09 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1323,7 +1323,7 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
+ 			return -ENOMEM;
+ 
+ 		sysfs_bin_attr_init(attr);
+-		attr->size = dev->vpd->len;
++		attr->size = 0;
+ 		attr->attr.name = "vpd";
+ 		attr->attr.mode = S_IRUSR | S_IWUSR;
+ 		attr->read = read_vpd_attr;
 
-
- arch/alpha/include/asm/pci.h               |    1 
- arch/arm/include/asm/pci.h                 |    3 -
- arch/arm64/include/asm/Kbuild              |    3 -
- arch/arm64/include/asm/pci.h               |    1 
- arch/arm64/kernel/pci.c                    |    2 -
- arch/mips/include/asm/pci.h                |    1 
- arch/powerpc/include/asm/pci-bridge.h      |    1 
- arch/unicore32/include/asm/pci.h           |    2 -
- arch/x86/pci/common.c                      |    1 
- drivers/ata/pata_macio.c                   |    2 -
- drivers/char/agp/uninorth-agp.c            |    1 
- drivers/gpu/drm/radeon/radeon_combios.c    |    1 
- drivers/ide/pdc202xx_new.c                 |    1 
- drivers/ide/pmac.c                         |    1 
- drivers/macintosh/macio_asic.c             |    1 
- drivers/misc/cxl/pci.c                     |    1 
- drivers/net/ethernet/sun/sungem.c          |    1 
- drivers/net/ethernet/toshiba/spider_net.c  |    1 
- drivers/of/of_pci.c                        |    1 
- drivers/pci/pci.c                          |    1 
- drivers/pci/probe.c                        |    8 +++
- drivers/pci/setup-bus.c                    |    1 
- drivers/scsi/mac53c94.c                    |    2 -
- drivers/scsi/mesh.c                        |    2 -
- drivers/usb/core/hcd-pci.c                 |    1 
- drivers/video/fbdev/aty/aty128fb.c         |    1 
- drivers/video/fbdev/aty/radeon_base.c      |    1 
- drivers/video/fbdev/imsttfb.c              |    1 
- drivers/video/fbdev/matrox/matroxfb_base.h |    1 
- drivers/video/fbdev/offb.c                 |    4 --
- include/asm-generic/pci-bridge.h           |   74 ----------------------------
- include/linux/pci.h                        |   22 ++++++++
- sound/ppc/pmac.c                           |    1 
- 33 files changed, 32 insertions(+), 114 deletions(-)
- delete mode 100644 include/asm-generic/pci-bridge.h
