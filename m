@@ -1,80 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH V4 22/23] arm64, pci, acpi: Assign legacy IRQs once device
- is enable.
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
- <1454606941-9523-23-git-send-email-tn@semihalf.com>
- <20160211115843.GA24136@red-moon> <20160211171700.GB25235@red-moon>
-Cc: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	okaya@codeaurora.org, jiang.liu@linux.intel.com,
-	Stefano.Stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <56BCD550.2050601@semihalf.com>
-Date: Thu, 11 Feb 2016 19:39:12 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:50130 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750740AbcBWMY4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Feb 2016 07:24:56 -0500
+Subject: Re: [PATCH v4 10/11] PCI: Fold struct pci_vpd_pci22 into struct
+ pci_vpd
+To: Bjorn Helgaas <bhelgaas@google.com>
+References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160223004735.10635.72128.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	Babu Moger <babu.moger@oracle.com>,
+	Alexander Duyck <alexander.duyck@gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <56CC4F8F.3090302@suse.de>
+Date: Tue, 23 Feb 2016 20:24:47 +0800
 MIME-Version: 1.0
-In-Reply-To: <20160211171700.GB25235@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160223004735.10635.72128.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11.02.2016 18:17, Lorenzo Pieralisi wrote:
-> Here (on top of your series), ready for flak.
->
-> Lorenzo
->
-> -- >8 --
-> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> index 0b53262..26ee291 100644
-> --- a/arch/arm64/kernel/pci.c
-> +++ b/arch/arm64/kernel/pci.c
-> @@ -45,28 +45,23 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
->    */
->   int pcibios_enable_device(struct pci_dev *dev, int mask)
->   {
-> -	int ret;
-> -
->   	if (pci_has_flag(PCI_PROBE_ONLY))
->   		return 0;
->
-> -	ret = pci_enable_resources(dev, mask);
-> -	if (ret < 0)
-> -		return ret;
-> -
-> -#ifdef CONFIG_ACPI
-> -	if (!pci_dev_msi_enabled(dev))
-> -		return acpi_pci_irq_enable(dev);
-> -#endif
-> -	return 0;
-> +	return pci_enable_resources(dev, mask);
->   }
->
->   /*
-> - * Try to assign the IRQ number from DT when adding a new device
-> + * Try to assign the IRQ number when probing a new device
->    */
-> -int pcibios_add_device(struct pci_dev *dev)
-> +int pcibios_alloc_irq(struct pci_dev *dev)
->   {
-> -	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> +	if (acpi_disabled)
-> +		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> +#ifdef CONFIG_ACPI
-> +	else
-> +		return acpi_pci_irq_enable(dev);
-> +#endif
->
->   	return 0;
->   }
+On 02/23/2016 08:47 AM, Bjorn Helgaas wrote:
+> We only support one flavor of VPD, so there's no need to complicate things
+> by having a "generic" struct pci_vpd and a more specific struct
+> pci_vpd_pci22.
+> 
+> Fold struct pci_vpd_pci22 directly into struct pci_vpd.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-I miss that way of solving the problem. OK lets try this way. I will 
-integrate it.
+Cheers,
 
-Tomasz
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
