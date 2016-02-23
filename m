@@ -1,80 +1,140 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34466 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756916AbcBDXni (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Feb 2016 18:43:38 -0500
-Date: Thu, 4 Feb 2016 17:43:34 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Vineet.Gupta1@synopsys.com, arnd@arndb.de,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
-	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
-Subject: Re: [PATCH v8 2/2] add new platform driver for PCI RC
-Message-ID: <20160204234334.GH7031@localhost>
-References: <cover.1454600622.git.jpinto@synopsys.com>
- <c7af1603d4f18d11cb0ccee1c07708a1455ea4ed.1454600622.git.jpinto@synopsys.com>
- <20160204181911.GA2143@localhost>
- <56B398E9.3080902@synopsys.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: "'Mark Rutland'" <mark.rutland@arm.com>
+CC: "Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
+	"'bhelgaas@google.com'" <bhelgaas@google.com>,
+	"'arnd@arndb.de'" <arnd@arndb.de>,
+	"'Lorenzo.Pieralisi@arm.com'" <Lorenzo.Pieralisi@arm.com>,
+	"'tn@semihalf.com'" <tn@semihalf.com>,
+	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"'linux-acpi@vger.kernel.org'" <linux-acpi@vger.kernel.org>,
+	"'jcm@redhat.com'" <jcm@redhat.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	"'linux-arm-kernel@lists.infradead.org'"
+	<linux-arm-kernel@lists.infradead.org>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Subject: RE: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
+ HiSilicon SoCs Host Controllers
+Date: Tue, 23 Feb 2016 02:47:22 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ECC5F00@lhreml503-mbs>
+References: <1455039260-6040-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1455039260-6040-4-git-send-email-gabriele.paoloni@huawei.com>
+ <20160209182429.GD4348@leverpostej>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1591@lhreml503-mbs>
+ <20160210111234.GC2632@leverpostej>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1D30@lhreml503-mbs>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1D30@lhreml503-mbs>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56B398E9.3080902@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 04, 2016 at 06:31:05PM +0000, Joao Pinto wrote:
-> On 2/4/2016 6:19 PM, Bjorn Helgaas wrote:
-> > On Thu, Feb 04, 2016 at 03:52:10PM +0000, Joao Pinto wrote:
-> >> This patch adds a new driver that will be the reference platform driver
-> >> for all PCI RC IP Protoyping Kits based on ARC SDP.
-> >>
-> >> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> >> ---
-> >> Change v7 -> v8 (Bjorn Helgaas and Arnd Bergmann):
-> >> - driver name was changed from pcie-synopsys to pcie-dw-pltfm
-> > 
-> > "pcie-dw-pltfm" seems worse to me.  We have eight existing drivers
-> > that call dw_pcie_host_init(), and they're all platform_drivers.
-> > "pcie-dw-pltfm" could apply equally well to any of them.
-> > 
-> > I think I see what happened: I wrote "It doesn't seem necessary to me
-> > to include both 'synopsys' and 'ipk' in the filename and the driver
-> > name."  I meant that using one of them should be sufficient, not that
-> > *both* should be removed.
-> > 
-> > I don't know the SoC landscape, but from Arnd's comment, it sounds
-> > like "synopsys" might be too generic because many of the other drivers
-> > are connected with Synopsys.  I don't know what "ipk" means, but maybe
-> > that could work.  It's convenient if the name *means* something, and
-> > if "ipk" stands for "IP Prototyping Kit", that sounds pretty generic.
-> > Is "haps" or "haps_dx" a name people would associate with this
-> > hardware?  I guess it'd be nice if the driver name were related to the
-> > DT compat strings, so "ipk" is better from that perspective.
+Hi Mark
+
+> -----Original Message-----
+> From: Gabriele Paoloni
+> Sent: 10 February 2016 22:45
+> To: Mark Rutland
+> Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C); Linuxarm;
+> qiujiang; bhelgaas@google.com; arnd@arndb.de; Lorenzo.Pieralisi@arm.com;
+> tn@semihalf.com; linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org; xuwei (O); linux-acpi@vger.kernel.org;
+> jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth); linux-arm-
+> kernel@lists.infradead.org
+> Subject: RE: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
+> HiSilicon SoCs Host Controllers
 > 
-> Synopsys has a product called IP Prototyping Kit which is a bundle of
-> HAPSDX + PCIE RC IP + drivers + Development Board. This driver was
-> implemented originally to serve this IPK but it can be used by SoC that
-> use the Synopsys PCIe RC IP.  "ipk" would say that the driver is usable
-> only in the IP Prototyping Kits which is not 100% true, it is usable in
-> any SoC with Synopsys IP or in limit serve as a base for specific SoC
-> drivers.  Suggestions: "pcie-dw-soc-agnostic", "pcie-dw-ipk",
-> "pcie-dw-haps-prototyping"
+> > -----Original Message-----
+> > From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
+> > owner@vger.kernel.org] On Behalf Of Mark Rutland
+> > Sent: 10 February 2016 11:13
+> > To: Gabriele Paoloni
+> > Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C); Linuxarm;
+> > qiujiang; bhelgaas@google.com; arnd@arndb.de;
+> > Lorenzo.Pieralisi@arm.com; tn@semihalf.com; linux-pci@vger.kernel.org;
+> > linux-kernel@vger.kernel.org; xuwei (O); linux-acpi@vger.kernel.org;
+> > jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth); linux-arm-
+> > kernel@lists.infradead.org
+> > Subject: Re: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
+> > HiSilicon SoCs Host Controllers
+> >
+> > On Wed, Feb 10, 2016 at 09:52:36AM +0000, Gabriele Paoloni wrote:
+> > > Hi Mark
+> > >
+> > > > On Tue, Feb 09, 2016 at 05:34:20PM +0000, Gabriele Paoloni wrote:
+> > > > > From: gabriele paoloni <gabriele.paoloni@huawei.com>
+> > > > > +/*
+> > > > > + * Retrieve rc_dbi base and size from _DSD
+> > > > > + * Name (_DSD, Package () {
+> > > > > + *	ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+> > > > > + *	Package () {
+> > > > > + *	Package () {"rc-dbi", Package () { 0x0, 0xb0080000, 0x0,
+> > 0x10000
+> > > > }},
+> > > > > + *	}
+> > > > > + *	})
+> > > > > + */
+> > > >
+> > > > As above, this does not look right. ACPI has standard mechanisms
+> > for
+> > > > describing addresses. Making something up like this is not a good
+> > idea.
+> > >
+> > > I am quite new to ACPI, may I ask you to explain a bit?
+> >
+> > ACPI has standard mechanisms for describing certain resources, and
+> > these
+> > should not be described in _DSD. Memory or IO address regions are
+> such
+> > resources (in _CRS, IIRC), and should not be described in _DSD.
 > 
-> What do you think?
+> Hi Mark,
+> 
+> In my case I think in need to look into the MCFG object as the problem
+> I have is RC using a different range than the rest of the hierarchy.
+> 
+> I'll investigate this and try to come with a solution in v4
 
-I don't think the "dw" part is relevant (none of the other
-DesignWare-based drivers includes it in the driver or file name).
+I have looked into this and in our case we cannot use the
+standard MCFG object to pass the RC config space addresses.
 
-How do people typically refer to this board?
+The reason is that in our HW we have the config base addresses of the 
+root complex ports that are less than 0x100000 byte distant one from
+the other as we only map the first 0x10000 bytes.
 
-I really like "synopsys" because it fits the pattern of being
-recognizable and pronounceable like "altera", "designware", "qcom",
-"keystone", "layerscape", "tegra", etc.  But I can't tell whether it's
-too generic.
+Now the MCFG acpi framework always fix the MCFG resource size to 0x100000
+for each bus; therefore if we pass our RC addresses through MCFG we end
+up with a resource conflict.
 
-"ipk" or "haps" would be fine with me.  I think it's OK if it doesn't
-cover 100% of the possible systems.
+To give you a practical example we are in a situation where we have:
 
-Bjorn
+port0: [0x00000000b0080000 - 0x00000000b0080000 + 0x10000]
+port1: [0x00000000b0090000 - 0x00000000b0090000 + 0x10000]
+port2: [0x00000000b00A0000 - 0x00000000b00A0000 + 0x10000]
+port3: [0x00000000b00B0000 - 0x00000000b00B0000 + 0x10000]
+  
+So if we pass the base addresses through MCFG the resources
+will overlap as MCFG will consider 0x100000 size for each base
+address of the root complex (only the RC bus uses that address)
+
+So far I do not see many option other than using _DSD to pass
+these RC config base addresses.
+
+Thanks and Regards
+
+Gab 
+
+> 
+> Many Thanks
+> 
+> Gab
+> 
+> >
+> > Thanks,
+> > Mark.
