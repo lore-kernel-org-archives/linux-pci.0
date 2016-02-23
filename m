@@ -1,106 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:46784 "EHLO comal.ext.ti.com"
+Received: from mail.kernel.org ([198.145.29.136]:48187 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750796AbcB2PP2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Feb 2016 10:15:28 -0500
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: [PATCH v1] PCI: keystone: fix msi code that retrieves the pp struct ptr
-Date: Mon, 29 Feb 2016 10:15:11 -0500
-Message-ID: <1456758911-8190-1-git-send-email-m-karicheri2@ti.com>
+	id S1755500AbcBWArp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Feb 2016 19:47:45 -0500
+Subject: [PATCH v4 11/11] PCI: Sleep rather than busy-wait for VPD access
+ completion
+To: Hannes Reinecke <hare@suse.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	Babu Moger <babu.moger@oracle.com>,
+	Alexander Duyck <alexander.duyck@gmail.com>
+Date: Mon, 22 Feb 2016 18:47:42 -0600
+Message-ID: <20160223004742.10635.55287.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Recent update to pcie-designware core driver, 
-'commit cbce7900598c ("PCI: designware: Make driver arch-agnostic")'
-broke the keystone PCI driver. After this commit, we see a kernel crash on
-Keystone SoC as shown below in the boot log. This is because, the way pp
-struct ptr is retrieved from  msi desc has changed and require similar
-update in pci-keystone-dw.c as well. This patch fixes this issue. 
+Use usleep_range() instead of udelay() while waiting for a VPD access to
+complete.  This is not a performance path, so no need to hog the CPU.
 
-[    1.012999] pci 0000:00:00.0: PCI bridge to [bus 01]
-[    1.018073] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
-[    1.024308] pci 0000:00:00.0:   bridge window [mem 0x60000000-0x600fffff]
-[    1.031216] pci 0000:00:00.0:   bridge window [mem 0x60100000-0x601fffff
-pref]
-[    1.038736] Unable to handle kernel NULL pointer dereference at virtual
-address 00000030
-[    1.046950] pgd = c0003000
-[    1.049750] [00000030] *pgd=80000800004003, *pmd=00000000
-[    1.055265] Internal error: Oops: 206 [#1] PREEMPT SMP ARM
-[    1.060860] Modules linked in:
-[    1.064013] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.4.2-00139-gb74f926 #2
-[    1.071266] Hardware name: Keystone
-[    1.074853] task: eb888000 ti: eb890000 task.ti: eb890000
-[    1.080364] PC is at ks_dw_pcie_msi_irq_unmask+0x24/0x58
-[    1.085785] LR is at ks_dw_pcie_msi_irq_unmask+0x18/0x58
-[    1.091206] pc : [<c02f65c8>]    lr : [<c02f65bc>]    psr: 60000093
-[    1.091206] sp : eb891bc8  ip : 00000000  fp : ebb15010
-[    1.102915] r10: 00000051  r9 : 60000013  r8 : ebafaa20
-[    1.108247] r7 : ebaa9f80  r6 : eb9fd0c0  r5 : ebafa9d0  r4 : ebafa9c0
-[    1.114889] r3 : 00000051  r2 : 00000000  r1 : 00000001  r0 : ebb14c18
-[    1.121533] Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment
-kernel
-[    1.129049] Control: 30c5387d  Table: 00003000  DAC: fffffffd
-[    1.134905] Process swapper/0 (pid: 1, stack limit = 0xeb890210)
-[    1.141023] Stack: (0xeb891bc8 to 0xeb892000)
+Rationale for usleep_range() parameters:
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+  We clear PCI_VPD_ADDR_F for a read (or set it for a write), then wait for
+  the device to change it.  For a device that updates PCI_VPD_ADDR between
+  our config write and subsequent config read, we won't sleep at all and
+  can get the device's maximum rate.
+
+  Sleeping a minimum of 10 usec per 4-byte access limits throughput to
+  about 400Kbytes/second.  VPD is small (32K bytes at most), and most
+  devices use only a fraction of that.
+
+  We back off exponentially up to 1024 usec per iteration.  If we reach
+  1024, we've already waited up to 1008 usec (16 + 32 + ...  + 512), so if
+  we miss an update and wait an extra 1024 usec, we can still get about 1/2
+  of the device's maximum rate.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- - Resending as per stable submission procedure
- - Need this fix in 4.4.4 as well
- drivers/pci/host/pci-keystone-dw.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+ drivers/pci/access.c |   18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-index ed34c95..6153853 100644
---- a/drivers/pci/host/pci-keystone-dw.c
-+++ b/drivers/pci/host/pci-keystone-dw.c
-@@ -58,11 +58,6 @@
- 
- #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
- 
--static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
--{
--	return sys->private_data;
--}
--
- static inline void update_reg_offset_bit_pos(u32 offset, u32 *reg_offset,
- 					     u32 *bit_pos)
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index cae5462..68cad94 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -342,14 +342,15 @@ static size_t pci_vpd_size(struct pci_dev *dev, size_t old_size)
+ static int pci_vpd_wait(struct pci_dev *dev)
  {
-@@ -108,7 +103,7 @@ static void ks_dw_pcie_msi_irq_ack(struct irq_data *d)
- 	struct pcie_port *pp;
+ 	struct pci_vpd *vpd = dev->vpd;
+-	unsigned long timeout = jiffies + HZ/20 + 2;
++	unsigned long timeout = jiffies + msecs_to_jiffies(50);
++	unsigned long max_sleep = 16;
+ 	u16 status;
+ 	int ret;
  
- 	msi = irq_data_get_msi_desc(d);
--	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
-+	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
- 	ks_pcie = to_keystone_pcie(pp);
- 	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
- 	update_reg_offset_bit_pos(offset, &reg_offset, &bit_pos);
-@@ -146,7 +141,7 @@ static void ks_dw_pcie_msi_irq_mask(struct irq_data *d)
- 	u32 offset;
+ 	if (!vpd->busy)
+ 		return 0;
  
- 	msi = irq_data_get_msi_desc(d);
--	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
-+	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
- 	ks_pcie = to_keystone_pcie(pp);
- 	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+-	for (;;) {
++	while (time_before(jiffies, timeout)) {
+ 		ret = pci_user_read_config_word(dev, vpd->cap + PCI_VPD_ADDR,
+ 						&status);
+ 		if (ret < 0)
+@@ -360,15 +361,16 @@ static int pci_vpd_wait(struct pci_dev *dev)
+ 			return 0;
+ 		}
  
-@@ -167,7 +162,7 @@ static void ks_dw_pcie_msi_irq_unmask(struct irq_data *d)
- 	u32 offset;
+-		if (time_after(jiffies, timeout)) {
+-			dev_printk(KERN_DEBUG, &dev->dev, "vpd r/w failed.  This is likely a firmware bug on this device.  Contact the card vendor for a firmware update\n");
+-			return -ETIMEDOUT;
+-		}
+ 		if (fatal_signal_pending(current))
+ 			return -EINTR;
+-		if (!cond_resched())
+-			udelay(10);
++
++		usleep_range(10, max_sleep);
++		if (max_sleep < 1024)
++			max_sleep *= 2;
+ 	}
++
++	dev_warn(&dev->dev, "VPD access failed.  This is likely a firmware bug on this device.  Contact the card vendor for a firmware update\n");
++	return -ETIMEDOUT;
+ }
  
- 	msi = irq_data_get_msi_desc(d);
--	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
-+	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
- 	ks_pcie = to_keystone_pcie(pp);
- 	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
- 
--- 
-1.9.1
+ static ssize_t pci_vpd_read(struct pci_dev *dev, loff_t pos, size_t count,
 
