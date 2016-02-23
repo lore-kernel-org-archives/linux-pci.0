@@ -1,88 +1,28 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 5 Feb 2016 10:34:27 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Andi Kleen <ak@linux.intel.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	x86@kernel.org
-Subject: Re: [PATCH] x86, pci: Add quirk for unsizeable Broadwell EP bar
-Message-ID: <20160205163427.GD29306@localhost>
-References: <1452896279-22034-1-git-send-email-andi@firstfloor.org>
- <20160204174155.GB19957@localhost>
- <20160204185442.GA4875@tassilo.jf.intel.com>
- <20160205015734.GA29929@localhost>
- <20160205033616.GF3696@two.firstfloor.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160205033616.GF3696@two.firstfloor.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from plane.gmane.org ([80.91.229.3]:33328 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756261AbcBWAPI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Feb 2016 19:15:08 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glp-linux-pci@m.gmane.org>)
+	id 1aY0d6-0001Oq-E3
+	for linux-pci@vger.kernel.org; Tue, 23 Feb 2016 01:15:04 +0100
+Received: from ARennes-358-1-241-142.w2-13.abo.wanadoo.fr ([2.13.240.142])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Tue, 23 Feb 2016 01:15:04 +0100
+Received: from harveyp by ARennes-358-1-241-142.w2-13.abo.wanadoo.fr with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-pci@vger.kernel.org>; Tue, 23 Feb 2016 01:15:04 +0100
+To: linux-pci@vger.kernel.org
+From: Harvey Partridge <harveyp@hotmail.fr>
+Subject: PCI/USB 2.0 4 port hub fails to install under Ubuntu 12.04
+Date: Tue, 23 Feb 2016 00:06:54 +0000 (UTC)
+Message-ID: <loom.20160223T003705-325@post.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 05, 2016 at 04:36:17AM +0100, Andi Kleen wrote:
-> > > But would actually anything use it?
-> > 
-> > You mean, would anything actually use the lspci output?  I don't know,
-> > but why would we want it to print garbage?
-> 
-> In he kernel. I don't think lspci is that interesting.
-> > 
-> > And the kernel certainly uses the struct resource.  Setting
-> > IORESOURCE_PCI_FIXED is not a way of saying "please ignore this
-> > resource."
-> 
-> There is already another quirk that uses the same technique to handle
-> a bad bar. I also didn't notice any bad side effects. Again what would it be
-> used for?
+Qm9uam91ciwKCkkgaGF2ZSBhIHZlcnkgb2xkIEhld2xldHQtUGFja2FyZCBQQyB3aXRoIFVidW50dSAxMi4wNC4gUmVjZW50bHkgbXkgYnVpbHQtaW4KdXNiIHBvcnRzIGhhdmUgYmVjb21lIHZlcnkgZmxha3kgc28gSSBoYXZlIGJvdWdodCBhIG5ldyBsb3cgcHJvZmlsZSBQQ0kKNC1wb3J0IFVTQiAyLjAgaHViIChWSUEgVGVjaG5vbG9naWVzLCBJbmMuKSB3aGljaCBoYXMgZmFpbGVkIHRvIGluc3RhbGwuCgpJbW1lZGlhdGVseSBhcHBhcmVudCBpcyB0aGUgISEhZXJyb3Igbm90aWNlLiBJIGhhdmUgc3BlbnQgc2V2ZXJhbCBob3VycyBpbgpyZXNlYXJjaCB3aXRoIG5vIHN1Y2Nlc3MgLSBJIGFtIG9idmlvdXNseSBub3QgZG9pbmcgaXQgcmlnaHQhCgpPZGQsIHRvbywgdGhhdCBsc3BjaSBhbmQgbHNodyBvbmx5IGVudW1lcmF0ZSAzIHBvcnRzIG9uIHRoaXMgY2FyZCwgd2hlcmVhcwp0aGVyZSBhcmUgNC4KCkFueSBoZWxwIGdyYXRlZnVsbHkgcmVjZWl2ZWQuIEZhaWxpbmcgZGlyZWN0IGhlbHAsIEkgc2hvdWxkIGFwcHJlY2lhdGUgc29tZQpwb2ludGVycyBvbiBob3cgdG8gc3RhcnQgc2VsZi1oZWxwaW5nIC4uLiBUYSEgRm9yIGV4YW1wbGUsIEkgaW1hZ2luZSBpdAp3b3VsZCBiZSB1c2VmdWwgdG8gdW5kZXJzdGFuZCB0aGUgZXJyb3IgbWVzc2FnZSEKCkkgc2hhbGwgYmUgZ2xhZCB0byBzdXBwbHkgYW55IGZ1cnRoZXIgZGlhZ25vc3RpY3MgLSBqdXN0IHRlbGwgbWUhCkkgYW0gbm90IGEgc3RyYW5nZXIgdG8gcHJvZ3JhbW1pbmcsIGJ1dCBteSBtYWpvciBpbnRlcmVzdHMgaGF2ZSBiZWVuIERCcwpyYXRoZXIgdGhhbiBoYXJkd2FyZS4uLgoKUENJL1ZFTl8xMTA2JkRFVl8zMDNBJlJFVl82MQoKbHN1c2IgZG9lcyBub3QgZmluZCB0aGVzZSBwb3J0cwpkbWVzZyBoYXMgbm8gcmVmZXJlbmNlcyB0byB0aGlzIGNhcmQsIHRoYXQgSSBjYW4gZGlzY292ZXIvcmVjb2duaXNlLgoKbHNwY2kgLXZ2diAtcyAwMTowMQoKMDE6MDEuMCBOb24tVkdBIHVuY2xhc3NpZmllZCBkZXZpY2U6IFZJQSBUZWNobm9sb2dpZXMsIEluYy4gRGV2aWNlIDMwM2EgKHJldiA2MSkKU3Vic3lzdGVtOiBBY2NlbGdyYXBoaWNzIEluYy4gRGV2aWNlIDAwMDMKISEhIEludmFsaWQgY2xhc3MgMDAwMCBmb3IgaGVhZGVyIHR5cGUgMDIKQ29udHJvbDogSS9PLSBNZW0tIEJ1c01hc3RlcisgU3BlY0N5Y2xlLSBNZW1XSU5WLSBWR0FTbm9vcC0gUGFyRXJyLQpTdGVwcGluZy0gU0VSUi0gRmFzdEIyQi0gRGlzSU5UeC0gU3RhdHVzOiBDYXArIDY2TUh6LSBVREYtIEZhc3RCMkItIFBhckVyci0KREVWU0VMPW1lZGl1bSA+VEFib3J0LSBTRVJSLSBMYXRlbmN5OiAyMgpJbnRlcnJ1cHQ6IHBpbiBBIHJvdXRlZCB0byBJUlEgMApSZWdpb24gMDogTWVtb3J5IGF0ICgzMi1iaXQsIG5vbi1wcmVmZXRjaGFibGUpIFtkaXNhYmxlZF0KQnVzOiBwcmltYXJ5PTAwLCBzZWNvbmRhcnk9MDAsIHN1Ym9yZGluYXRlPTAyLCBzZWMtbGF0ZW5jeT0wCk1lbW9yeSB3aW5kb3cgMDogMDAwMjAwMDAtMDAwMmZjZTEgW2Rpc2FibGVkXQpNZW1vcnkgd2luZG93IDE6IDAwMDIwMDAwLTAwMDIwMDAwIFtkaXNhYmxlZF0KSS9PIHdpbmRvdyAwOiAwMDAwMTEwNC0wMDAwMDAwMyBbZGlzYWJsZWRdCkkvTyB3aW5kb3cgMTogMDAwMDAwODAtMDAwMDAwMDMgW2Rpc2FibGVkXQpCcmlkZ2VDdGw6IFBhcml0eS0gU0VSUisgSVNBLSBWR0EtIE1BYm9ydC0gPlJlc2V0LSAxNmJJbnQtIFBvc3RXcml0ZS0gCgpldGMuCgpmcm9tICdsc2h3JwouLi4KCiAgICAgICAqLXBjaQogICAgICAgICAgICAgZGVzY3JpcHRpb246IFBDSSBicmlkZ2UKICAgICAgICAgICAgIHByb2R1aXQ6IDgyODAxIFBDSSBCcmlkZ2UKICAgICAgICAgICAgIGZhYnJpcXVhbnQ6IEludGVsIENvcnBvcmF0aW9uCiAgICAgICAgICAgICBpZGVudGlmaWFudCBtYXTDqXJpZWw6IDFlCiAgICAgICAgICAgICBpbmZvcm1hdGlvbiBidXM6IHBjaUAwMDAwOjAwOjFlLjAKICAgICAgICAgICAgIHZlcnNpb246IDgxCiAgICAgICAgICAgICBiaXRzOiAzMiBiaXRzCiAgICAgICAgICAgICBob3Jsb2dlOiAzM01IegogICAgICAgICAgICAgZm9uY3Rpb25uYWxpdMOpczogcGNpIG5vcm1hbF9kZWNvZGUgYnVzX21hc3RlcgogICAgICAgICAgICAgcmVzc291cmNlczogcG9ydEUvUzpkMDAwKHRhaWxsZT00MDk2KSBtw6ltb2lyZTpmZjgwMDAwMC1mZjhmZmZmZgptw6ltb2lyZTplNmEwMDAwMC1lNmFmZmZmZgogICAgICAgICAgICotdXNiOjAgTk9OLVLDiUNMQU3DiQogICAgICAgICAgICAgICAgZGVzY3JpcHRpb246IFVTQiBjb250cm9sbGVyCiAgICAgICAgICAgICAgICBwcm9kdWl0OiBWSUEgVGVjaG5vbG9naWVzLCBJbmMuCiAgICAgICAgICAgICAgICBmYWJyaXF1YW50OiBWSUEgVGVjaG5vbG9naWVzLCBJbmMuCiAgICAgICAgICAgICAgICBpZGVudGlmaWFudCBtYXTDqXJpZWw6IDEKICAgICAgICAgICAgICAgIGluZm9ybWF0aW9uIGJ1czogcGNpQDAwMDA6MDE6MDEuMAogICAgICAgICAgICAgICAgdmVyc2lvbjogNjEKICAgICAgICAgICAgICAgIGJpdHM6IDMyIGJpdHMKICAgICAgICAgICAgICAgIGhvcmxvZ2U6IDMzTUh6CiAgICAgICAgICAgICAgICBmb25jdGlvbm5hbGl0w6lzOiBwbSB1aGNpIGJ1c19tYXN0ZXIgY2FwX2xpc3QKICAgICAgICAgICAgICAgIGNvbmZpZ3VyYXRpb246IGxhdGVuY3k9MCBtaW5nbnQ9MgogICAgICAgICAgICotdXNiOjEgTk9OLVLDiUNMQU3DiQogICAgICAgICAgICAgICAgZGVzY3JpcHRpb246IFVTQiBjb250cm9sbGVyCiAgICAgICAgICAgICAgICBwcm9kdWl0OiBWSUEgVGVjaG5vbG9naWVzLCBJbmMuCiAgICAgICAgICAgICAgICBmYWJyaXF1YW50OiBWSUEgVGVjaG5vbG9naWVzLCBJbmMuCiAgICAgICAgICAgICAgICBpZGVudGlmaWFudCBtYXTDqXJpZWw6IDEuMQogICAgICAgICAgICAgICAgaW5mb3JtYXRpb24gYnVzOiBwY2lAMDAwMDowMTowMS4xCiAgICAgICAgICAgICAgICB2ZXJzaW9uOiA2MQogICAgICAgICAgICAgICAgYml0czogMzIgYml0cwogICAgICAgICAgICAgICAgaG9ybG9nZTogMzNNSHoKICAgICAgICAgICAgICAgIGZvbmN0aW9ubmFsaXTDqXM6IHBtIHVoY2kgYnVzX21hc3RlciBjYXBfbGlzdAogICAgICAgICAgICAgICAgY29uZmlndXJhdGlvbjogbGF0ZW5jeT0wIG1pbmdudD0yCiAgICAgICAgICAgKi11c2I6MiBOT04tUsOJQ0xBTcOJCiAgICAgICAgICAgICAgICBkZXNjcmlwdGlvbjogVVNCIGNvbnRyb2xsZXIKICAgICAgICAgICAgICAgIHByb2R1aXQ6IFZUNjEwNS9WVDYxMDZTIFtSaGluZS1JSUldCiAgICAgICAgICAgICAgICBmYWJyaXF1YW50OiBWSUEgVGVjaG5vbG9naWVzLCBJbmMuCiAgICAgICAgICAgICAgICBpZGVudGlmaWFudCBtYXTDqXJpZWw6IDEuMgogICAgICAgICAgICAgICAgaW5mb3JtYXRpb24gYnVzOiBwY2lAMDAwMDowMTowMS4yCiAgICAgICAgICAgICAgICB2ZXJzaW9uOiA2MwogICAgICAgICAgICAgICAgYml0czogMzIgYml0cwogICAgICAgICAgICAgICAgaG9ybG9nZTogMzNNSHoKICAgICAgICAgICAgICAgIGZvbmN0aW9ubmFsaXTDqXM6IHBtIGVoY2kgYnVzX21hc3RlciBjYXBfbGlzdAogICAgICAgICAgICAgICAgY29uZmlndXJhdGlvbjogbGF0ZW5jeT0wIG1pbmdudD0yCi4uLg==
 
-I suppose you mean pci_siemens_interrupt_controller(), added by
-73a74ed3a6f8 ("PCI: i386: fixup for Siemens Nixdorf AG FSC
-Multiprocessor Interrupt Controllers")?
-
-Here are the problems I see:
-
-  - We still try to size the register as though it were a real BAR,
-    which means we write 0xffffffff to it.  This register isn't a BAR,
-    so we have no idea what effect this will have on the device.  In
-    your case, you might know it's safe, but it's not safe in general
-
-  - We read from the register and interpret the low bits as a BAR
-    type.  We have no idea what data we'll get from a non-BAR
-    register, so we're essentially putting junk in the struct resource
-    flags.
-
-  - We try to figure out the size of the BAR.  Depending on what data
-    we get, we may compute some arbitrary size.  You might know that
-    we happen to compute a zero size or something else safe, but that
-    depends on your device and is not safe in general.  I don't want
-    to have to worry about your device settings in that register being
-    magically compatible with the pci_size() computation.
-
-  - I think it's possible that the data we read from this register
-    would lead us to conclude this is a BAR that consumes memory space
-    at some adddress.  Or I/O space at some address.  We rely on this
-    information to perform PCI address space allocation.
-
-> I looked into the new device ops you asked for, but it is fairly
-> complicated as the ops are not per device but per bus, and there
-> can be many copies of this device, and the pci_dev is not passed,
-> so it needs complicated pattern matching on the devfn.
-> 
-> Doing it like the existing quirk is much simpler, and seems to work
-> just fine.
-
-It's simple and seems to work in this case, but it doesn't lead to a
-consistent model of the system.
-
-It may be a hassle to work around this via pci_ops, but, well, if you
-[Intel] want to take advantage of all the generic PCI code, you sort
-of have to play within the constraints of the generic PCI model.
-
-Maybe there's some other way to do a quirk that doesn't involve using
-IORESOURCE_PCI_FIXED.  I just object to the fact that we run so much
-code that thinks this is a real BAR, and we have no idea what data
-we're getting back, so we don't know what that struct resource will
-end up looking like.  What I *want* is for that resource to remain
-zeroed out, just like any other resource corresponding to an
-unimplemented BAR.
-
-Bjorn
