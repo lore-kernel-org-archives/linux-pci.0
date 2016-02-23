@@ -1,186 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47940 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756509AbcBWAq4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Feb 2016 19:46:56 -0500
-Subject: [PATCH v4 04/11] PCI: Determine actual VPD size on first access
-To: Hannes Reinecke <hare@suse.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Babu Moger <babu.moger@oracle.com>,
-	Alexander Duyck <alexander.duyck@gmail.com>
-Date: Mon, 22 Feb 2016 18:46:52 -0600
-Message-ID: <20160223004652.10635.13976.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:51294 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754472AbcBWSRy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 23 Feb 2016 13:17:54 -0500
+Subject: Re: [PATCH v2] PCI: tegra: Support per-lane PHYs
+To: Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+References: <1455029465-9211-1-git-send-email-thierry.reding@gmail.com>
+ <1455904860-29090-1-git-send-email-thierry.reding@gmail.com>
+Cc: Alexandre Courbot <gnurou@gmail.com>, linux-pci@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+From: Stephen Warren <swarren@wwwdotorg.org>
+Message-ID: <56CCA250.2010403@wwwdotorg.org>
+Date: Tue, 23 Feb 2016 11:17:52 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <1455904860-29090-1-git-send-email-thierry.reding@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hannes Reinecke <hare@suse.de>
+On 02/19/2016 11:01 AM, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
+>
+> The current XUSB pad controller bindings are insufficient to describe
+> PHY devices attached to USB controllers. New bindings have been created
+> to overcome these restrictions. As a side-effect each root port now is
+> assigned a set of PHY devices, one for each lane associated with the
+> root port. This has the benefit of allowing fine-grained control of the
+> power management for each lane.
 
-PCI-2.2 VPD entries have a maximum size of 32k, but might actually be
-smaller than that.  To figure out the actual size one has to read the VPD
-area until the 'end marker' is reached.
+Overall this change looks OK. However, since it encodes aspects of the 
+DT binding (i.e. that the per-port nodes have a phys property in the new 
+scheme), I think it can't be applied until the related DT binding change 
+is accepted.
 
-Per spec, reading outside of the VPD space is "not allowed."  In practice,
-it may cause simple read errors or even crash the card.  To make matters
-worse not every PCI card implements this properly, leaving us with no 'end'
-marker or even completely invalid data.
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
 
-Try to determine the size of the VPD data when it's first accessed.  If no
-valid data can be read an I/O error will be returned when reading or
-writing the sysfs attribute.
+> @@ -883,14 +904,24 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
 
-As the amount of VPD data is unknown initially the size of the sysfs
-attribute will always be set to '0'.
+> +	if (of_get_property(pcie->dev->of_node, "phys", NULL) == NULL) {
 
-[bhelgaas: changelog, use 0/1 (not false/true) for bitfield, tweak
-pci_vpd_pci22_read() error checking]
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>
----
- drivers/pci/access.c    |   87 ++++++++++++++++++++++++++++++++++++++++++++++-
- drivers/pci/pci-sysfs.c |    2 +
- 2 files changed, 86 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index a7f0069..4850f06 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -285,8 +285,63 @@ struct pci_vpd_pci22 {
- 	u16	flag;
- 	u8	cap;
- 	u8	busy:1;
-+	u8	valid:1;
- };
- 
-+/**
-+ * pci_vpd_size - determine actual size of Vital Product Data
-+ * @dev:	pci device struct
-+ * @old_size:	current assumed size, also maximum allowed size
-+ */
-+static size_t pci_vpd_pci22_size(struct pci_dev *dev, size_t old_size)
-+{
-+	size_t off = 0;
-+	unsigned char header[1+2];	/* 1 byte tag, 2 bytes length */
-+
-+	while (off < old_size &&
-+	       pci_read_vpd(dev, off, 1, header) == 1) {
-+		unsigned char tag;
-+
-+		if (header[0] & PCI_VPD_LRDT) {
-+			/* Large Resource Data Type Tag */
-+			tag = pci_vpd_lrdt_tag(header);
-+			/* Only read length from known tag items */
-+			if ((tag == PCI_VPD_LTIN_ID_STRING) ||
-+			    (tag == PCI_VPD_LTIN_RO_DATA) ||
-+			    (tag == PCI_VPD_LTIN_RW_DATA)) {
-+				if (pci_read_vpd(dev, off+1, 2,
-+						 &header[1]) != 2) {
-+					dev_warn(&dev->dev,
-+						 "invalid large VPD tag %02x size at offset %zu",
-+						 tag, off + 1);
-+					return 0;
-+				}
-+				off += PCI_VPD_LRDT_TAG_SIZE +
-+					pci_vpd_lrdt_size(header);
-+			}
-+		} else {
-+			/* Short Resource Data Type Tag */
-+			off += PCI_VPD_SRDT_TAG_SIZE +
-+				pci_vpd_srdt_size(header);
-+			tag = pci_vpd_srdt_tag(header);
-+		}
-+
-+		if (tag == PCI_VPD_STIN_END)	/* End tag descriptor */
-+			return off;
-+
-+		if ((tag != PCI_VPD_LTIN_ID_STRING) &&
-+		    (tag != PCI_VPD_LTIN_RO_DATA) &&
-+		    (tag != PCI_VPD_LTIN_RW_DATA)) {
-+			dev_warn(&dev->dev,
-+				 "invalid %s VPD tag %02x at offset %zu",
-+				 (header[0] & PCI_VPD_LRDT) ? "large" : "short",
-+				 tag, off);
-+			return 0;
-+		}
-+	}
-+	return 0;
-+}
-+
- /*
-  * Wait for last operation to complete.
-  * This code has to spin since there is no other notification from the PCI
-@@ -337,9 +392,25 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
- 	loff_t end = pos + count;
- 	u8 *buf = arg;
- 
--	if (pos < 0 || pos > vpd->base.len || end > vpd->base.len)
-+	if (pos < 0)
- 		return -EINVAL;
- 
-+	if (!vpd->valid) {
-+		vpd->valid = 1;
-+		vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
-+	}
-+
-+	if (vpd->base.len == 0)
-+		return -EIO;
-+
-+	if (pos >= vpd->base.len)
-+		return 0;
-+
-+	if (end > vpd->base.len) {
-+		end = vpd->base.len;
-+		count = end - pos;
-+	}
-+
- 	if (mutex_lock_killable(&vpd->lock))
- 		return -EINTR;
- 
-@@ -389,7 +460,18 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
- 	loff_t end = pos + count;
- 	int ret = 0;
- 
--	if (pos < 0 || (pos & 3) || (count & 3) || end > vpd->base.len)
-+	if (pos < 0 || (pos & 3) || (count & 3))
-+		return -EINVAL;
-+
-+	if (!vpd->valid) {
-+		vpd->valid = 1;
-+		vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
-+	}
-+
-+	if (vpd->base.len == 0)
-+		return -EIO;
-+
-+	if (end > vpd->base.len)
- 		return -EINVAL;
- 
- 	if (mutex_lock_killable(&vpd->lock))
-@@ -496,6 +578,7 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
- 	mutex_init(&vpd->lock);
- 	vpd->cap = cap;
- 	vpd->busy = 0;
-+	vpd->valid = 0;
- 	dev->vpd = &vpd->base;
- 	return 0;
- }
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index a730f54..ed39c09 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1323,7 +1323,7 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
- 			return -ENOMEM;
- 
- 		sysfs_bin_attr_init(attr);
--		attr->size = dev->vpd->len;
-+		attr->size = 0;
- 		attr->attr.name = "vpd";
- 		attr->attr.mode = S_IRUSR | S_IWUSR;
- 		attr->read = read_vpd_attr;
-
+Rather than re-parsing DT to determine this, thus duplicating the logic, 
+can't the code store some flag in tegra_pcie_phys_get() indicating which 
+path was taken, and that flag used here? Perhaps that flag could be 
+based on whether pcie->phy is set, although the else block here implies 
+that particular solution won't work.
