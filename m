@@ -1,34 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from static-181-143-229-122.une.net.co ([181.143.229.122]:34116 "EHLO
-	ServProxy.localdomain" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932273AbcBPOxt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 09:53:49 -0500
-Received: from 181.143.229.122 (localhost.localdomain [127.0.0.1])
-	by ServProxy.localdomain (Postfix) with SMTP id 57F3BBD782
-	for <linux-pci@vger.kernel.org>; Tue, 16 Feb 2016 15:23:01 -0500 (COT)
-Message-ID: <E01BAF779E4A65A67A7F36897DFE5DB8@vger.kernel.org>
-Reply-To: "linux-pci@vger.kernel.org" <mnoskova760@gmail.com>
-From: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-To: <linux-pci@vger.kernel.org>
-Subject: =?utf-8?Q?=D0=9A=D0=9B=D0=98=D0=95=D0=9D=D0=A2=D0=A1=D0?=
-	=?utf-8?Q?=9A=D0=98=D0=95_=D0=91=D0=90=D0=97=D0=AB!_=D0?=
-	=?utf-8?Q?=A2=D0=B5=D0=BB=5CViber=5CWhatsapp=3A_+79139393?=
-	=?utf-8?Q?506_Email=3A_mnoskova760=40gmail=2Ecom_Skype=3A?=
-	=?utf-8?Q?_prodawez389?=
-Date: Tue, 16 Feb 2016 18:24:45 +0600
+Received: from mail.kernel.org ([198.145.29.136]:47997 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756522AbcBWArK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 22 Feb 2016 19:47:10 -0500
+Subject: [PATCH v4 06/11] PCI: Move pci_read_vpd() and pci_write_vpd() close
+ to other VPD code
+To: Hannes Reinecke <hare@suse.de>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	Babu Moger <babu.moger@oracle.com>,
+	Alexander Duyck <alexander.duyck@gmail.com>
+Date: Mon, 22 Feb 2016 18:47:07 -0600
+Message-ID: <20160223004707.10635.94730.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8";
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-КЛИЕНТСКИЕ БАЗЫ!
+pci_read_vpd() and pci_write_vpd() were stranded in the middle of config
+accessor functions.  Move them close to the other VPD code in the file.
+No functional change.
 
-Соберем для Вас по интернет базу данных потенциальных клиентов 
-для Вашего Бизнеса!
-Много! Быстро! Недорого! 
-Узнайте об этом подробнее по 
-Тел: +79139393506
-Viber: +79139393506
-Whatsapp: +79139393506
-Skype: prodawez389
-Email: mnoskova760@gmail.com
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/access.c |   62 ++++++++++++++++++++++++--------------------------
+ 1 file changed, 30 insertions(+), 32 deletions(-)
+
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 4850f06..4c4c734 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -174,38 +174,6 @@ struct pci_ops *pci_bus_set_ops(struct pci_bus *bus, struct pci_ops *ops)
+ }
+ EXPORT_SYMBOL(pci_bus_set_ops);
+ 
+-/**
+- * pci_read_vpd - Read one entry from Vital Product Data
+- * @dev:	pci device struct
+- * @pos:	offset in vpd space
+- * @count:	number of bytes to read
+- * @buf:	pointer to where to store result
+- *
+- */
+-ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf)
+-{
+-	if (!dev->vpd || !dev->vpd->ops)
+-		return -ENODEV;
+-	return dev->vpd->ops->read(dev, pos, count, buf);
+-}
+-EXPORT_SYMBOL(pci_read_vpd);
+-
+-/**
+- * pci_write_vpd - Write entry to Vital Product Data
+- * @dev:	pci device struct
+- * @pos:	offset in vpd space
+- * @count:	number of bytes to write
+- * @buf:	buffer containing write data
+- *
+- */
+-ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf)
+-{
+-	if (!dev->vpd || !dev->vpd->ops)
+-		return -ENODEV;
+-	return dev->vpd->ops->write(dev, pos, count, buf);
+-}
+-EXPORT_SYMBOL(pci_write_vpd);
+-
+ /*
+  * The following routines are to prevent the user from accessing PCI config
+  * space when it's unsafe to do so.  Some devices require this during BIST and
+@@ -277,6 +245,36 @@ PCI_USER_WRITE_CONFIG(dword, u32)
+ 
+ /* VPD access through PCI 2.2+ VPD capability */
+ 
++/**
++ * pci_read_vpd - Read one entry from Vital Product Data
++ * @dev:	pci device struct
++ * @pos:	offset in vpd space
++ * @count:	number of bytes to read
++ * @buf:	pointer to where to store result
++ */
++ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf)
++{
++	if (!dev->vpd || !dev->vpd->ops)
++		return -ENODEV;
++	return dev->vpd->ops->read(dev, pos, count, buf);
++}
++EXPORT_SYMBOL(pci_read_vpd);
++
++/**
++ * pci_write_vpd - Write entry to Vital Product Data
++ * @dev:	pci device struct
++ * @pos:	offset in vpd space
++ * @count:	number of bytes to write
++ * @buf:	buffer containing write data
++ */
++ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf)
++{
++	if (!dev->vpd || !dev->vpd->ops)
++		return -ENODEV;
++	return dev->vpd->ops->write(dev, pos, count, buf);
++}
++EXPORT_SYMBOL(pci_write_vpd);
++
+ #define PCI_VPD_PCI22_SIZE (PCI_VPD_ADDR_MASK + 1)
+ 
+ struct pci_vpd_pci22 {
+
