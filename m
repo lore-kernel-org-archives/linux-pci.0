@@ -1,124 +1,143 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:46017 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965126AbcBQDp7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:45:59 -0500
-Received: from localhost
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 17 Feb 2016 13:45:57 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v8 26/45] powerpc/pci: Move pci_find_bus_by_node() around
-Date: Wed, 17 Feb 2016 14:44:09 +1100
-Message-Id: <1455680668-23298-27-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 23 Feb 2016 19:14:18 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: 'Mark Rutland' <mark.rutland@arm.com>,
+	"Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
+	"'bhelgaas@google.com'" <bhelgaas@google.com>,
+	"'arnd@arndb.de'" <arnd@arndb.de>,
+	"'Lorenzo.Pieralisi@arm.com'" <Lorenzo.Pieralisi@arm.com>,
+	"'tn@semihalf.com'" <tn@semihalf.com>,
+	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"'linux-acpi@vger.kernel.org'" <linux-acpi@vger.kernel.org>,
+	"'jcm@redhat.com'" <jcm@redhat.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	"'linux-arm-kernel@lists.infradead.org'"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
+ HiSilicon SoCs Host Controllers
+Message-ID: <20160224011418.GB13026@localhost>
+References: <1455039260-6040-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1455039260-6040-4-git-send-email-gabriele.paoloni@huawei.com>
+ <20160209182429.GD4348@leverpostej>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1591@lhreml503-mbs>
+ <20160210111234.GC2632@leverpostej>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1D30@lhreml503-mbs>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ECC5F00@lhreml503-mbs>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ECC5F00@lhreml503-mbs>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This moves pci_find_bus_by_node() from arch/powerpc/platforms/
-pseries/pci_dlpar.c to arch/powerpc/kernel/pci-hotplug.c so that
-the function can be used by pSeries and PowerNV platform at the
-same time. Also, below cleanup applied. No functional changes
-introduced.
+On Tue, Feb 23, 2016 at 02:47:22AM +0000, Gabriele Paoloni wrote:
+> > -----Original Message-----
+> > From: Gabriele Paoloni
+> > Sent: 10 February 2016 22:45
+> > To: Mark Rutland
+> > Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C); Linuxarm;
+> > qiujiang; bhelgaas@google.com; arnd@arndb.de; Lorenzo.Pieralisi@arm.com;
+> > tn@semihalf.com; linux-pci@vger.kernel.org; linux-
+> > kernel@vger.kernel.org; xuwei (O); linux-acpi@vger.kernel.org;
+> > jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth); linux-arm-
+> > kernel@lists.infradead.org
+> > Subject: RE: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
+> > HiSilicon SoCs Host Controllers
+> > 
+> > > -----Original Message-----
+> > > From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
+> > > owner@vger.kernel.org] On Behalf Of Mark Rutland
+> > > Sent: 10 February 2016 11:13
+> > > To: Gabriele Paoloni
+> > > Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C); Linuxarm;
+> > > qiujiang; bhelgaas@google.com; arnd@arndb.de;
+> > > Lorenzo.Pieralisi@arm.com; tn@semihalf.com; linux-pci@vger.kernel.org;
+> > > linux-kernel@vger.kernel.org; xuwei (O); linux-acpi@vger.kernel.org;
+> > > jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth); linux-arm-
+> > > kernel@lists.infradead.org
+> > > Subject: Re: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
+> > > HiSilicon SoCs Host Controllers
+> > >
+> > > On Wed, Feb 10, 2016 at 09:52:36AM +0000, Gabriele Paoloni wrote:
+> > > > Hi Mark
+> > > >
+> > > > > On Tue, Feb 09, 2016 at 05:34:20PM +0000, Gabriele Paoloni wrote:
+> > > > > > From: gabriele paoloni <gabriele.paoloni@huawei.com>
+> > > > > > +/*
+> > > > > > + * Retrieve rc_dbi base and size from _DSD
+> > > > > > + * Name (_DSD, Package () {
+> > > > > > + *	ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+> > > > > > + *	Package () {
+> > > > > > + *	Package () {"rc-dbi", Package () { 0x0, 0xb0080000, 0x0,
+> > > 0x10000
+> > > > > }},
+> > > > > > + *	}
+> > > > > > + *	})
+> > > > > > + */
+> > > > >
+> > > > > As above, this does not look right. ACPI has standard mechanisms
+> > > for
+> > > > > describing addresses. Making something up like this is not a good
+> > > idea.
+> > > >
+> > > > I am quite new to ACPI, may I ask you to explain a bit?
+> > >
+> > > ACPI has standard mechanisms for describing certain resources, and
+> > > these
+> > > should not be described in _DSD. Memory or IO address regions are
+> > such
+> > > resources (in _CRS, IIRC), and should not be described in _DSD.
+> > 
+> > Hi Mark,
+> > 
+> > In my case I think in need to look into the MCFG object as the problem
+> > I have is RC using a different range than the rest of the hierarchy.
+> > 
+> > I'll investigate this and try to come with a solution in v4
+> 
+> I have looked into this and in our case we cannot use the
+> standard MCFG object to pass the RC config space addresses.
+> 
+> The reason is that in our HW we have the config base addresses of the 
+> root complex ports that are less than 0x100000 byte distant one from
+> the other as we only map the first 0x10000 bytes.
 
-   * Remove variable "busdn" in find_bus_among_children()
-   * Use PCI_DN() to convert device node to pci_dn
+The ECAM spec requires 4096 bytes per function, 8 functions per
+device, 32 devices per bus, which means you need 0x100000 bytes of
+address space per bus.  If your device doesn't supply that, it doesn't
+really implement ECAM, and you probably can't use the standard ways of
+describing ECAM (MCFG, _CBA).
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
----
- arch/powerpc/kernel/pci-hotplug.c          | 29 ++++++++++++++++++++++++++++
- arch/powerpc/platforms/pseries/pci_dlpar.c | 31 ------------------------------
- 2 files changed, 29 insertions(+), 31 deletions(-)
+> Now the MCFG acpi framework always fix the MCFG resource size to 0x100000
+> for each bus; therefore if we pass our RC addresses through MCFG we end
+> up with a resource conflict.
+> 
+> To give you a practical example we are in a situation where we have:
+> 
+> port0: [0x00000000b0080000 - 0x00000000b0080000 + 0x10000]
+> port1: [0x00000000b0090000 - 0x00000000b0090000 + 0x10000]
+> port2: [0x00000000b00A0000 - 0x00000000b00A0000 + 0x10000]
+> port3: [0x00000000b00B0000 - 0x00000000b00B0000 + 0x10000]
+>   
+> So if we pass the base addresses through MCFG the resources
+> will overlap as MCFG will consider 0x100000 size for each base
+> address of the root complex (only the RC bus uses that address)
+> 
+> So far I do not see many option other than using _DSD to pass
+> these RC config base addresses.
 
-diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-index 78bf2a1..7929a1c 100644
---- a/arch/powerpc/kernel/pci-hotplug.c
-+++ b/arch/powerpc/kernel/pci-hotplug.c
-@@ -21,6 +21,35 @@
- #include <asm/firmware.h>
- #include <asm/eeh.h>
- 
-+static struct pci_bus *find_bus_among_children(struct pci_bus *bus,
-+					       struct device_node *dn)
-+{
-+	struct pci_bus *child = NULL;
-+	struct pci_bus *tmp;
-+
-+	if (pci_bus_to_OF_node(bus) == dn)
-+		return bus;
-+
-+	list_for_each_entry(tmp, &bus->children, node) {
-+		child = find_bus_among_children(tmp, dn);
-+		if (child)
-+			break;
-+	}
-+
-+	return child;
-+}
-+
-+struct pci_bus *pci_find_bus_by_node(struct device_node *dn)
-+{
-+	struct pci_dn *pdn = PCI_DN(dn);
-+
-+	if (!pdn  || !pdn->phb || !pdn->phb->bus)
-+		return NULL;
-+
-+	return find_bus_among_children(pdn->phb->bus, dn);
-+}
-+EXPORT_SYMBOL_GPL(pci_find_bus_by_node);
-+
- /**
-  * pcibios_release_device - release PCI device
-  * @dev: PCI device
-diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
-index aee22b4..906dbaa 100644
---- a/arch/powerpc/platforms/pseries/pci_dlpar.c
-+++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
-@@ -34,37 +34,6 @@
- 
- #include "pseries.h"
- 
--static struct pci_bus *
--find_bus_among_children(struct pci_bus *bus,
--                        struct device_node *dn)
--{
--	struct pci_bus *child = NULL;
--	struct pci_bus *tmp;
--	struct device_node *busdn;
--
--	busdn = pci_bus_to_OF_node(bus);
--	if (busdn == dn)
--		return bus;
--
--	list_for_each_entry(tmp, &bus->children, node) {
--		child = find_bus_among_children(tmp, dn);
--		if (child)
--			break;
--	};
--	return child;
--}
--
--struct pci_bus *pci_find_bus_by_node(struct device_node *dn)
--{
--	struct pci_dn *pdn = dn->data;
--
--	if (!pdn  || !pdn->phb || !pdn->phb->bus)
--		return NULL;
--
--	return find_bus_among_children(pdn->phb->bus, dn);
--}
--EXPORT_SYMBOL_GPL(pci_find_bus_by_node);
--
- struct pci_controller *init_phb_dynamic(struct device_node *dn)
- {
- 	struct pci_controller *phb;
--- 
-2.1.0
+I don't want to take over Mark's discussion, but I really do not think
+_DSD is the correct way to fix this.  _CRS is like a generalized PCI
+BAR.  A PCI device is only allowed to respond to address space
+reported via a BAR.  An ACPI device is only allowed to respond to
+address space reported via _CRS.  Those are important rules because
+they mean we can manage address space with generic code instead of
+device-specific code.
 
+Bjorn
