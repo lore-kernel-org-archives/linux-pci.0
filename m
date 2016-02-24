@@ -1,179 +1,80 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: [PATCH] Revert 991de2e59090 ("PCI,
- x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: =?utf-8?b?0J7Qu9C10LM=?= =?utf-8?b?0JzQvtGA0L7Qtw==?=
-	<oleg.moroz@mcc.vniiem.ru>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 0/3] PCI: Revert "Implement pcibios_alloc_irq() and
+ pcibios_free_irq()"
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20160217182718.302.10272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <56C55305.2050404@mcc.vniiem.ru> <20160218160319.GC17588@localhost>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Joerg Roedel <jroedel@suse.de>,
 	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
 	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
 	linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
 	Yinghai Lu <yinghai@kernel.org>,
 	Jiang Liu <jiang.liu@linux.intel.com>
-Date: Tue, 09 Feb 2016 11:58:09 -0600
-Message-ID: <20160209175809.23549.41255.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160209175155.23549.35323.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160209175155.23549.35323.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+From: =?UTF-8?B?0J7Qu9C10LMg0JzQvtGA0L7Qtw==?= <oleg.moroz@mcc.vniiem.ru>
+Message-ID: <56CDF6E0.2060005@mcc.vniiem.ru>
+Date: Wed, 24 Feb 2016 21:30:56 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20160218160319.GC17588@localhost>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-991de2e59090 appeared in v4.3.  Олег reported that the Elcus-1553 TA1-PCI
-driver worked in v4.2 but not v4.3 and bisected it to 991de2e59090.  Sunjin
-reported that the RocketRAID 272x driver worked in v4.2 but not v4.3.  In
-both cases, booting with "pci=routirq" is a workaround.
+I've checked next next-20160218 tag and confirm that it works.
 
-I think the problem is that after 991de2e59090, we no longer call
-pcibios_enable_irq() for upstream bridges.  Prior to 991de2e59090, when a
-driver called pci_enable_device(), we recursively called
-pcibios_enable_irq() for upstream bridges via pci_enable_bridge().
-
-After 991de2e59090, we call pcibios_enable_irq() from pci_device_probe()
-instead of the pci_enable_device() path, which does *not* call
-pcibios_enable_irq() for upstream bridges.
-
-The purpose of 991de2e59090 was to help support IOAPIC hotplug, so
-reverting it likely breaks that.
-
-Note: this also reverts 8affb487d4a4 ("x86/PCI: Don't alloc pcibios-irq
-when MSI is enabled").
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=111211
-Fixes: 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
-Reported-by: Олег Мороз <oleg.moroz@mcc.vniiem.ru>
-Reported-by: Sunjin Yang <fan4326@gmail.com>
-Not-yet-signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/x86/include/asm/pci_x86.h |    2 ++
- arch/x86/pci/common.c          |   27 +++++++++++----------------
- arch/x86/pci/intel_mid_pci.c   |    7 ++-----
- arch/x86/pci/irq.c             |   15 ++++++++++++++-
- drivers/acpi/pci_irq.c         |    8 ++++++++
- 5 files changed, 37 insertions(+), 22 deletions(-)
-
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index 46873fb..d08eacd2 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -93,6 +93,8 @@ extern raw_spinlock_t pci_config_lock;
- extern int (*pcibios_enable_irq)(struct pci_dev *dev);
- extern void (*pcibios_disable_irq)(struct pci_dev *dev);
- 
-+extern bool mp_should_keep_irq(struct device *dev);
-+
- struct pci_raw_ops {
- 	int (*read)(unsigned int domain, unsigned int bus, unsigned int devfn,
- 						int reg, int len, u32 *val);
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 2879efc..9df5ab9 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -711,28 +711,23 @@ int pcibios_add_device(struct pci_dev *dev)
- 	return 0;
- }
- 
--int pcibios_alloc_irq(struct pci_dev *dev)
-+int pcibios_enable_device(struct pci_dev *dev, int mask)
- {
--	/*
--	 * If the PCI device was already claimed by core code and has
--	 * MSI enabled, probing of the pcibios IRQ will overwrite
--	 * dev->irq.  So bail out if MSI is already enabled.
--	 */
--	if (pci_dev_msi_enabled(dev))
--		return -EBUSY;
-+	int err;
- 
--	return pcibios_enable_irq(dev);
--}
-+	if ((err = pci_enable_resources(dev, mask)) < 0)
-+		return err;
- 
--void pcibios_free_irq(struct pci_dev *dev)
--{
--	if (pcibios_disable_irq)
--		pcibios_disable_irq(dev);
-+	if (!pci_dev_msi_enabled(dev))
-+		return pcibios_enable_irq(dev);
-+
-+	return 0;
- }
- 
--int pcibios_enable_device(struct pci_dev *dev, int mask)
-+void pcibios_disable_device (struct pci_dev *dev)
- {
--	return pci_enable_resources(dev, mask);
-+	if (!pci_dev_msi_enabled(dev) && pcibios_disable_irq)
-+		pcibios_disable_irq(dev);
- }
- 
- int pci_ext_cfg_avail(void)
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 0d24e7c..354180e 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -256,13 +256,10 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 
- static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- {
--	if (pci_has_managed_irq(dev)) {
-+	if (!mp_should_keep_irq(&dev->dev) && dev->irq_managed &&
-+	    dev->irq > 0) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq_managed = 0;
--		/*
--		 * Don't reset dev->irq here, otherwise
--		 * intel_mid_pci_irq_enable() will fail on next call.
--		 */
- 	}
- }
- 
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 32e7034..6c96cd3 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1256,9 +1256,22 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 	return 0;
- }
- 
-+bool mp_should_keep_irq(struct device *dev)
-+{
-+	if (dev->power.is_prepared)
-+		return true;
-+#ifdef CONFIG_PM
-+	if (dev->power.runtime_status == RPM_SUSPENDING)
-+		return true;
-+#endif
-+
-+	return false;
-+}
-+
- static void pirq_disable_irq(struct pci_dev *dev)
- {
--	if (io_apic_assign_pci_irqs && pci_has_managed_irq(dev)) {
-+	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
-+	    dev->irq_managed && dev->irq) {
- 		mp_unmap_irq(dev->irq);
- 		pci_reset_managed_irq(dev);
- 	}
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index d30184c..20bce3a 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -477,6 +477,14 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	if (!pin || !pci_has_managed_irq(dev))
- 		return;
- 
-+	/* Keep IOAPIC pin configuration when suspending */
-+	if (dev->dev.power.is_prepared)
-+		return;
-+#ifdef CONFIG_PM
-+	if (dev->dev.power.runtime_status == RPM_SUSPENDING)
-+		return;
-+#endif
-+
- 	entry = acpi_pci_irq_lookup(dev, pin);
- 	if (!entry)
- 		return;
-
+18.02.2016 19:03, Bjorn Helgaas пишет:
+> On Thu, Feb 18, 2016 at 08:13:41AM +0300, Мороз Олег wrote:
+>> On 17.02.2016 21:36, Bjorn Helgaas wrote:
+>>> These are clean reverts of 991de2e59090 ("PCI, x86: Implement
+>>> pcibios_alloc_irq() and pcibios_free_irq()") and related changes.
+>>>
+>>> We have two reports of drivers broken in v4.3 by Jiang's change,
+>>> 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
+>>> pcibios_free_irq()").
+>>>
+>>> It would be best to fix the problem instead of reverting 991de2e59090, but
+>>> I don't have time to do that myself, and we haven't heard from Jiang, so
+>>> the only choice I have is to revert the commit.
+>>>
+>>> Note that reverting will likely break IOAPIC hotplug.
+>>>
+>>> Олег and Sunjin, can you please test this and see whether it fixes your
+>>> drivers?  This patch is based on v4.5-rc1.
+>>>
+>>> I intend to merge these for v4.5 unless I hear objections.
+>>>
+>>> They're on my for-linus branch, so they should appear in linux-next
+>>> tomorrow.
+>>>
+>>> Changes from the v1 posting:
+>>>    - Explicitly revert related patches instead of resolving conflicts
+>>>      manually
+>>> ---
+>>>
+>>> Bjorn Helgaas (3):
+>>>        Revert "x86/PCI: Don't alloc pcibios-irq when MSI is enabled"
+>>>        Revert "PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed"
+>>>        Revert "PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()"
+>>>
+>>>
+>>>   arch/x86/include/asm/pci_x86.h |    2 ++
+>>>   arch/x86/pci/common.c          |   26 ++++++++++----------------
+>>>   arch/x86/pci/intel_mid_pci.c   |    9 +++------
+>>>   arch/x86/pci/irq.c             |   23 +++++++++++++++++++----
+>>>   drivers/acpi/pci_irq.c         |   17 +++++++++++++----
+>>>   include/linux/pci.h            |   17 -----------------
+>>>   6 files changed, 47 insertions(+), 47 deletions(-)
+>> As i undestand this patch will appear in kernel git repo tomorrow? I
+>> don't need to apply in manyally to v4.5-rc1?
+> These are included in the next-20160218 tag in the linux-next git repo (not
+> Linus' repo) at:
+>
+>    git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+>
+> You browse this at:
+>
+>    https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/
+>
+> If you'd rather, you can also apply the patches yourself to v4.5-rc1.
+>
+> Bjorn
