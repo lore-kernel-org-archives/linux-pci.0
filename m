@@ -1,87 +1,98 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
-To: <linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-ia64@vger.kernel.org>,
-	<linux-metag@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-s390@vger.kernel.org>, <linux-sh@vger.kernel.org>,
-	<linux-arch@vger.kernel.org>, <Will.Deacon@arm.com>,
-	<catalin.marinas@arm.com>, <robh+dt@kernel.org>,
-	<mark.rutland@arm.com>, <grant.likely@linaro.org>,
-	<leif.lindholm@linaro.org>, <rfranz@cavium.com>,
-	<ard.biesheuvel@linaro.org>, <msalter@redhat.com>,
-	<steve.capper@linaro.org>, <hanjun.guo@linaro.org>,
-	<al.stone@linaro.org>, <arnd@arndb.de>, <pawel.moll@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<rjw@rjwysocki.net>, <lenb@kernel.org>, <marc.zyngier@arm.com>,
-	<lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-	<tony.luck@intel.com>, <fenghua.yu@intel.com>,
-	<james.hogan@imgtec.com>, <benh@kernel.crashing.org>,
-	<tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
-	<x86@kernel.org>, <jonathan@jonmasters.org>, <rrichter@cavium.com>,
-	<Prasun.Kapoor@caviumnetworks.com>
-CC: <gpkulkarni@gmail.com>
-Subject: [PATCH v10 6/8] arm64, mm, numa: Adding numa balancing support for arm64.
-Date: Tue, 2 Feb 2016 15:39:21 +0530
-Message-ID: <1454407763-1017-7-git-send-email-gkulkarni@caviumnetworks.com>
-In-Reply-To: <1454407763-1017-1-git-send-email-gkulkarni@caviumnetworks.com>
-References: <1454407763-1017-1-git-send-email-gkulkarni@caviumnetworks.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH] acpi, pci, irq: account for early penalty assignment
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+References: <1455554508-18174-1-git-send-email-okaya@codeaurora.org>
+ <CAJZ5v0iszEN+ep8yGNX35RP04_ZwnF1K_w+VW5tFR9Jz2_ZJqw@mail.gmail.com>
+ <56C28633.60003@codeaurora.org>
+ <CAJZ5v0j7CwbBw+i1Fc6OCkHO5AZvdLo8yeDhk4asyCFB68ghKg@mail.gmail.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Timur Tabi <timur@codeaurora.org>,
+	Christopher Covington <cov@codeaurora.org>,
+	Linux PCI <linux-pci@vger.kernel.org>, ravikanth.nalla@hpe.com,
+	Len Brown <lenb@kernel.org>, harish.k@hpe.com,
+	ashwin.reghunandanan@hpe.com, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <56CDC10D.9050206@codeaurora.org>
+Date: Wed, 24 Feb 2016 09:41:17 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <CAJZ5v0j7CwbBw+i1Fc6OCkHO5AZvdLo8yeDhk4asyCFB68ghKg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-enabled numa balancing for arm64 platforms.
-added pte, pmd protnone helpers for use by automatic NUMA balancing.
+On 2/24/2016 8:04 AM, Rafael J. Wysocki wrote:
+> Hi,
+> 
+> On Tue, Feb 16, 2016 at 3:15 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>> On 2/15/2016 7:26 PM, Rafael J. Wysocki wrote:
+>>> On Mon, Feb 15, 2016 at 5:41 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>>>> A crash has been observed when assigning penalty on x86 systems.
+>>>>
+>>>> It looks like this problem happens on x86 platforms with IOAPIC and an SCI
+>>>> interrupt override in the ACPI table with interrupt number greater than
+>>>> 16. (22 in this example)
+>>>>
+>>>> The bug has been introduced by "ACPI, PCI, irq: remove interrupt count
+>>>> restriction" commit. The code was using kmalloc to resize the interrupt
+>>>> list. In this use case, the set penalty call is coming from early phase
+>>>> and the heap is not initialized yet.
+>>>>
+>>>> BUG: unable to handle kernel NULL pointer dereference at 0000000000000018
+>>>> IP: [<ffffffff811e8b9d>] kmem_cache_alloc_trace+0xad/0x1c0
+>>>> PGD 0
+>>>> Oops: 0000 [#1] SMP
+>>>> Modules linked in:
+>>>> CPU: 0 PID: 0 Comm: swapper Not tainted 4.5.0-rc2Feb-3_RK #1
+>>>> Hardware name: HP Superdome2 16s, BIOS Bundle: 007.006.000 SFW: 033.162.000
+>>>> 10/30/2015
+>>>> [<ffffffff813bc190>] acpi_irq_set_penalty+0x60/0x8e
+>>>> [<ffffffff813bc1df>] acpi_irq_add_penalty+0x21/0x26
+>>>> [<ffffffff813bc76d>] acpi_penalize_sci_irq+0x25/0x28
+>>>> [<ffffffff81b8260d>] acpi_sci_ioapic_setup+0x68/0x78
+>>>> [<ffffffff81b830fc>] acpi_boot_init+0x2cc/0x533
+>>>> [<ffffffff810677c8>] ? set_pte_vaddr_pud+0x48/0x50
+>>>> [<ffffffff81b828cf>] ? acpi_parse_x2apic+0x77/0x77
+>>>> [<ffffffff81b82858>] ? dmi_ignore_irq0_timer_override+0x30/0x30
+>>>> [<ffffffff81b77c1e>] setup_arch+0xc24/0xce9
+>>>> [<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
+>>>> [<ffffffff81b6ed94>] start_kernel+0xfc/0x506
+>>>> [<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
+>>>> [<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
+>>>> [<ffffffff81b6e5ee>] x86_64_start_reservations+0x2a/0x2c
+>>>> [<ffffffff81b6e73c>] x86_64_start_kernel+0x14c/0x16f
+>>>>
+>>>> Besides from the use case above, there is one more situation where
+>>>> set_penalty is being called from the init context like. There is support
+>>>> for setting the penalty through kernel command line.
+>>>>
+>>>> Adding support to be called from early context for limited number of
+>>>> interrupts.
+>>>>
+>>>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>>>
+>>> This looks somewhat hackish to me to be honest.
+>> I know.
+> 
+> So after an e-mail exchange with Bjorn I've decided to revert the
+> problematic commit for 4.5, so please submit it again with the fix
+> folded in (or a better way to address the issue if you have one).
+> 
 
-Reviewed-by: Robert Richter <rrichter@cavium.com>
-Signed-off-by: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
----
- arch/arm64/Kconfig               |  1 +
- arch/arm64/include/asm/pgtable.h | 18 ++++++++++++++++++
- 2 files changed, 19 insertions(+)
+OK, I'll post a new version of the removed patch with this included. We can 
+discuss on the list if there is a better way of doing things.
 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index fcf3950..8a7c02a 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -11,6 +11,7 @@ config ARM64
- 	select ARCH_HAS_TICK_BROADCAST if GENERIC_CLOCKEVENTS_BROADCAST
- 	select ARCH_USE_CMPXCHG_LOCKREF
- 	select ARCH_SUPPORTS_ATOMIC_RMW
-+	select ARCH_SUPPORTS_NUMA_BALANCING if NUMA
- 	select ARCH_WANT_OPTIONAL_GPIOLIB
- 	select ARCH_WANT_COMPAT_IPC_PARSE_VERSION
- 	select ARCH_WANT_FRAME_POINTERS
-diff --git a/arch/arm64/include/asm/pgtable.h b/arch/arm64/include/asm/pgtable.h
-index 2d545d7a..24ce546 100644
---- a/arch/arm64/include/asm/pgtable.h
-+++ b/arch/arm64/include/asm/pgtable.h
-@@ -347,6 +347,24 @@ static inline pgprot_t mk_sect_prot(pgprot_t prot)
- 	return __pgprot(pgprot_val(prot) & ~PTE_TABLE_BIT);
- }
- 
-+#ifdef CONFIG_NUMA_BALANCING
-+
-+/*
-+ * These work without NUMA balancing but the kernel does not care. See the
-+ * comment in include/asm-generic/pgtable.h
-+ */
-+static inline int pte_protnone(pte_t pte)
-+{
-+	return ((pte_val(pte) & (PTE_VALID | PTE_PROT_NONE)) == PTE_PROT_NONE);
-+}
-+
-+static inline int pmd_protnone(pmd_t pmd)
-+{
-+	return pte_protnone(pmd_pte(pmd));
-+}
-+
-+#endif /* CONFIG_NUMA_BALANCING */
-+
- /*
-  * THP definitions.
-  */
+> Thanks,
+> Rafael
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
 -- 
-1.8.1.4
-
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
