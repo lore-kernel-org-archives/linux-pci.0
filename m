@@ -1,58 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:48677 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751203AbcBEKoi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2016 05:44:38 -0500
-Subject: Re: [PATCH v8 2/2] add new platform driver for PCI RC
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-References: <cover.1454600622.git.jpinto@synopsys.com>
- <c7af1603d4f18d11cb0ccee1c07708a1455ea4ed.1454600622.git.jpinto@synopsys.com>
- <20160204181911.GA2143@localhost> <56B398E9.3080902@synopsys.com>
- <20160204234334.GH7031@localhost>
-CC: <Vineet.Gupta1@synopsys.com>, <arnd@arndb.de>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-snps-arc@lists.infradead.org>,
-	<CARLOS.PALMINHA@synopsys.com>, <Alexey.Brodkin@synopsys.com>,
-	<robh+dt@kernel.org>, <pawel.moll@arm.com>, <mark.rutland@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <56B47D0D.5030204@synopsys.com>
-Date: Fri, 5 Feb 2016 10:44:29 +0000
+Received: from mail.kernel.org ([198.145.29.136]:59609 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753369AbcBXApp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Feb 2016 19:45:45 -0500
+Date: Tue, 23 Feb 2016 18:45:42 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	Babu Moger <babu.moger@oracle.com>,
+	Alexander Duyck <alexander.duyck@gmail.com>
+Subject: Re: [PATCH v4 00/11] PCI VPD access fixes
+Message-ID: <20160224004542.GA13026@localhost>
+References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160223140750.GA12885@localhost>
+ <56CCD3B1.3060702@suse.de>
+ <20160223223611.GA6495@localhost>
+ <56CCF9AE.9080601@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <20160204234334.GH7031@localhost>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56CCF9AE.9080601@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On 2/4/2016 11:43 PM, Bjorn Helgaas wrote:
->> What do you think?
+On Wed, Feb 24, 2016 at 08:30:38AM +0800, Hannes Reinecke wrote:
+> On 02/24/2016 06:36 AM, Bjorn Helgaas wrote:
+> > On Wed, Feb 24, 2016 at 05:48:33AM +0800, Hannes Reinecke wrote:
+> >> On 02/23/2016 10:07 PM, Bjorn Helgaas wrote:
+> >>> Hi Hannes,
+> >>>
+> >>> Thanks for taking a look at the rest of these.
+> >>>
+> >>> On Mon, Feb 22, 2016 at 06:46:23PM -0600, Bjorn Helgaas wrote:
+> >>>> Hi Hannes,
+> >>>>
+> >>>> This is a revision of your v3 series:
+> >>>> http://lkml.kernel.org/r/1455525722-122040-1-git-send-email-hare@suse.de
+> >>>>
+> >>>> Here's the description from your v3 posting:
+> >>>>
+> >>>>   the current PCI VPD page access assumes that the entire possible VPD
+> >>>>   data is readable. However, the spec only guarantees a VPD data up to
+> >>>>   the 'end' marker, with everything beyond that being undefined.
+> >>>>   This causes a system lockup on certain devices.
+> >>>>
+> >>>>   With this patch we always set the VPD sysfs attribute size to '0', and
+> >>>>   calculate the available VPD size on the first access.
+> >>>>   If no valid data can be read an I/O error is returned.
+> >>>
+> >>> Just to see if I have this right: the VPD file size in sysfs will
+> >>> always appear as zero, regardless of whether it has been read or
+> >>> written, right?  I don't think the user-visible size should change.
+> >>>
+> >> That is correct.
+> >> As the actual size is evaluated on the first access, we don't have it
+> >> available when creating the sysfs attribute itself.
+> >> And when using the nominal size of 32k some bright program might try to
+> >> jump to somewhere in the middle of the data, which will make calculating
+> >> the validity of this horribly complex.
+> >> Setting it to '0' is an easy way of avoiding this kinda games.
+> >>
+> >> So yes, there will be a user-visible change, but it shouldn't affect the
+> >> programs accessing this attribute.
+> >> lspci works happily with these changes
+> > 
+> > What is the user-visible change?  Here's what I'm thinking.  If we do
+> > this:
+> > 
+> >   ls -l /sys/.../vpd
+> >   dd if=/sys/.../vpd bs=1 count=1
+> >   ls -l /sys/.../vpd
+> > 
+> > Do we see different sizes from the two "ls" invocations?  My thought
+> > is that we should see '0' both times, because I don't really think
+> > that output should change depending on previous actions of this user
+> > or other users.
+> > 
+> Originally we have:
 > 
-> I don't think the "dw" part is relevant (none of the other
-> DesignWare-based drivers includes it in the driver or file name).
+> # ls -l 0000:07:00.0/vpd
+> -rw------- 1 root root 32768 Feb 24 01:29 0000:07:00.0/vpd
 > 
-> How do people typically refer to this board?
+> and with this patchset we have:
 > 
-> I really like "synopsys" because it fits the pattern of being
-> recognizable and pronounceable like "altera", "designware", "qcom",
-> "keystone", "layerscape", "tegra", etc.  But I can't tell whether it's
-> too generic.
+> # ls -l 0000:07:00.0/vpd
+> -rw------- 1 root root 0 Feb 24 01:29 0000:07:00.0/vpd
 > 
-> "ipk" or "haps" would be fine with me.  I think it's OK if it doesn't
-> cover 100% of the possible systems.
+> So only programs doing a 'stat' on the device node will see a difference.
 
-I think we should follow the iproc example: pcie-iproc-platform.c
-In this case we would have pcie-designware-platform.c
-I think this would be the best name because the driver is a non soc specific
-designware platform driver.
+Oh, I think I see: you mean there's a user-visible difference between
+the current tree and the tree with your patches applied.
 
-Arnd and Bjorn agree on this name?
+I was hoping that on a single kernel, the "vpd" attribute size was
+always the same, regardless of whether anybody had read or written it.
 
-> 
-> Bjorn
-> 
+If we always report zero size for all "vpd" files, I think that's OK.
 
-Joao
-
+Bjorn
