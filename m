@@ -1,78 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43767 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:47481 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752527AbcBWO3t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Feb 2016 09:29:49 -0500
-Date: Tue, 23 Feb 2016 08:29:42 -0600
+	id S932671AbcBXUEF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Feb 2016 15:04:05 -0500
+Date: Wed, 24 Feb 2016 14:03:57 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Harvey Partridge <harveyp@hotmail.fr>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: PCI/USB 2.0 4 port hub fails to install under Ubuntu 12.04
-Message-ID: <20160223142942.GA14394@localhost>
-References: <loom.20160223T003705-325@post.gmane.org>
+To: Tim Harvey <tharvey@gateworks.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fabio Estevam <fabio.estevam@freescale.com>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: imx6: add dt prop for link gen, default to gen1
+Message-ID: <20160224200357.GB31108@localhost>
+References: <1446735481-27326-1-git-send-email-tharvey@gateworks.com>
+ <1447942365-11662-1-git-send-email-tharvey@gateworks.com>
+ <20151125231435.GI8869@localhost>
+ <CAJ+vNU0ar_d=2n4Yz3QX4qidSkH6PBLyfB8-w-ErLOYzwqj7rw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <loom.20160223T003705-325@post.gmane.org>
+In-Reply-To: <CAJ+vNU0ar_d=2n4Yz3QX4qidSkH6PBLyfB8-w-ErLOYzwqj7rw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Harvey,
+[+cc Rob, devicetree list]
 
-Thanks a lot for your report, and sorry you're having problems.
+On Wed, Dec 02, 2015 at 08:35:06AM -0800, Tim Harvey wrote:
+> On Wed, Nov 25, 2015 at 3:14 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Thu, Nov 19, 2015 at 06:12:45AM -0800, Tim Harvey wrote:
+> >> Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
+> >> the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
+> >> external clock source is present and supplied back to the IMX6 PCIe core
+> >> via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
+> >>
+> >> Add a dt property to specify gen1 vs gen2 and check this before allowing
+> >> a Gen2 link.
+> >>
+> >> We default to Gen1 if the property is not present because at this time there
+> >> are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
+> >>
+> >> In order to be Gen2 compliant on IMX6 you need to:
+> >>  - have a Gen2 compliant external clock generator and route that clock back
+> >>    to either LVDS CLK1 or LVDS CLK2 as an input.
+> >>    (see IMX6SX-SabreSD reference design)
+> >>  - specify this clock in the pcie node in the dt
+> >>    (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
+> >>     IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
+> >>
+> >> [1] https://community.freescale.com/message/453209
+> >>
+> >> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+> >> ---
+> >> v2:
+> >>  - moved dt property to designware core
+> >>
+> >>  .../devicetree/bindings/pci/designware-pcie.txt          |  1 +
+> >>  drivers/pci/host/pci-imx6.c                              | 16 ++++++++++------
+> >>  drivers/pci/host/pcie-designware.c                       |  4 ++++
+> >>  drivers/pci/host/pcie-designware.h                       |  1 +
+> >>  4 files changed, 16 insertions(+), 6 deletions(-)
+> >>
+> >> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> >> index 9f4faa8..a9a94b9 100644
+> >> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> >> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> >> @@ -26,3 +26,4 @@ Optional properties:
+> >>  - bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
+> >>    specify this property, to keep backwards compatibility a range of 0x00-0xff
+> >>    is assumed if not present)
+> >> +- max-link-speed: Specify PCI gen for link capability (ie 2 for gen2)
+> >
+> > Is there some sort of DT or OF spec that lists "max-link-speed" as a
+> > generic property?  I see Lucas' desire to have this be common across
+> > DesignWare PCIe cores.  Should it be moved up a level even from there,
+> > i.e., to bindings/pci/pci.txt?
+> 
+> I don't know what the general consensus is here. As your the PCI
+> maintainer I would leave that up to you. Are there other platforms
+> that need to link at a lesser capability than the host controller is
+> capable of? I am only aware of the IMX6 and SPEAr13XX [1]
 
-On Tue, Feb 23, 2016 at 12:06:54AM +0000, Harvey Partridge wrote:
-> Bonjour,
-> 
-> I have a very old Hewlett-Packard PC with Ubuntu 12.04. Recently my built-in
-> usb ports have become very flaky so I have bought a new low profile PCI
-> 4-port USB 2.0 hub (VIA Technologies, Inc.) which has failed to install.
+This is really a devicetree question, not a PCI one, so I added Rob
+and the devicetree list in case they have any comments on this.
 
-This is a plug-in PCI card, right?
+> > It might be worth mentioning in pci/fsl,imx6q-pcie.txt that we limit
+> > the link to gen1 unless max-link-speed is present and has the value
+> > "2".
 
-> Immediately apparent is the !!!error notice. I have spent several hours in
-> research with no success - I am obviously not doing it right!
-> 
-> Odd, too, that lspci and lshw only enumerate 3 ports on this card, whereas
-> there are 4.
-> 
-> Any help gratefully received. Failing direct help, I should appreciate some
-> pointers on how to start self-helping ... Ta! For example, I imagine it
-> would be useful to understand the error message!
-> 
-> I shall be glad to supply any further diagnostics - just tell me!
-> I am not a stranger to programming, but my major interests have been DBs
-> rather than hardware...
-> 
-> PCI/VEN_1106&DEV_303A&REV_61
-> 
-> lsusb does not find these ports
-> dmesg has no references to this card, that I can discover/recognise.
-> 
-> lspci -vvv -s 01:01
-> 
-> 01:01.0 Non-VGA unclassified device: VIA Technologies, Inc. Device 303a (rev 61)
-> Subsystem: Accelgraphics Inc. Device 0003
-> !!! Invalid class 0000 for header type 02
-> Control: I/O- Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr-
-> Stepping- SERR- FastB2B- DisINTx- Status: Cap+ 66MHz- UDF- FastB2B- ParErr-
-> DEVSEL=medium >TAbort- SERR- Latency: 22
-> Interrupt: pin A routed to IRQ 0
-> Region 0: Memory at (32-bit, non-prefetchable) [disabled]
-> Bus: primary=00, secondary=00, subordinate=02, sec-latency=0
-> Memory window 0: 00020000-0002fce1 [disabled]
-> Memory window 1: 00020000-00020000 [disabled]
-> I/O window 0: 00001104-00000003 [disabled]
-> I/O window 1: 00000080-00000003 [disabled]
-> BridgeCtl: Parity- SERR+ ISA- VGA- MAbort- >Reset- 16bInt- PostWrite- 
+This default seems backwards.  It seems like we'd want to configure
+the link to go as fast as possible unless we have a quirk, e.g.,
+"max-link-speed", that imposes a device-specific link.  In other
+words, why don't we penalize the broken board instead of penalizing
+all the working ones?
 
-This particular device looks like a bridge, not a USB controller.  Can
-you collect the complete "lspci -vvvxxx" output (as root) and the
-complete dmesg log?
-
-The first step is to figure out whether the PCI core is enumerating
-the device.  If nothing else works, you could collect the dmesg log
-with the card removed, then again with the card installed, and diff
-the two.  The PCI core prints at least one line for each PCI device it
-finds.
-
-Bjorn
+> [1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/pci/spear13xx-pcie.txt#n14
