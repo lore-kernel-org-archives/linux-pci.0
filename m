@@ -1,68 +1,58 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <56C13FD8.9080409@cn.fujitsu.com>
-Date: Mon, 15 Feb 2016 11:02:48 +0800
-From: Chen Fan <chen.fan.fnst@cn.fujitsu.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:44276 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752247AbcBXTof (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Feb 2016 14:44:35 -0500
+Subject: [PATCH v4 6/6] PCI: Squash pci_dev_flags to remove holes
+To: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <jroedel@suse.de>,
+	David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org
+Date: Wed, 24 Feb 2016 13:44:31 -0600
+Message-ID: <20160224194431.7585.78791.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-To: "Rafael J. Wysocki" <rafael@kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>
-CC: Heiner Kallweit <hkallweit1@gmail.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: Problems since commit Recognize that Interrupt Line 255 means
- "not connected"
-References: <56B52990.3030103@gmail.com>	<1676062.Zh6hUgWIix@vostro.rjw.lan>	<56B5AA4B.5040705@gmail.com>	<20160206151922.GB22119@localhost>	<56B61492.40507@gmail.com>	<20160209164435.GB20171@localhost> <CAJZ5v0huANzD29-oB9tpQXodx936MtRf+316PYPAuYh1h_Pa+w@mail.gmail.com>
-In-Reply-To: <CAJZ5v0huANzD29-oB9tpQXodx936MtRf+316PYPAuYh1h_Pa+w@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
 
-On 02/10/2016 03:24 AM, Rafael J. Wysocki wrote:
-> On Tue, Feb 9, 2016 at 5:44 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> On Sat, Feb 06, 2016 at 04:43:14PM +0100, Heiner Kallweit wrote:
->>> Am 06.02.2016 um 16:19 schrieb Bjorn Helgaas:
->>>> On Sat, Feb 06, 2016 at 09:09:47AM +0100, Heiner Kallweit wrote:
->>>>> Am 06.02.2016 um 00:37 schrieb Rafael J. Wysocki:
->>>>>> On Saturday, February 06, 2016 12:00:32 AM Heiner Kallweit wrote:
->>>>>>> Since commit a44c386a361e "x86/PCI/ACPI: Recognize that Interrupt Line 255
->>>>>>> means "not connected"" I get several "PCI INT not connected" warnings on
->>>>>>> a Zotac CI321 and EHCI failes to load:
->>>>>> That doesn't follow clearly from your report, but I'm assuming that it works
->>>>>> correctly without that commit, right?
->>>>>>
->>>>> Right, w/o this commit it looks like this:
->>>>>
->>>>> dmesg
->>>>> ehci-pci 0000:00:1d.0: irq 23, io mem 0xf7d1b000
->>>>>
->>>>> /proc/interrupts
->>>>> IO-APIC  23-fasteoi   ehci_hcd:usb3
->>>> Thanks a lot for your report!  This is a bit of a minefield, and I was
->>>> worried that we'd trip over something with a44c386a361e.
->>>>
->>>> Oops, I think I see a problem with a44c386a361e.  We're checking for
->>>> Interrupt Line == 255 even before we try to look it up in the _PRT.  I
->>>> think we should only check Interrupt Line *after* everything else has
->>>> failed.  Can you try the patch below instead of a44c386a361e?
->>>>
->>> With the attached patch everything is fine. No warnings and EHCI loads properly.
->> Great, thanks a lot for testing this!
->>
->> Chen, will you update and repost your patch?  I know Rafael already
->> had it on a branch, but I think he dropped it, so we need to get the
->> update merged somehow.
-> I'd prefer a new updated patch if that's possible.
-patch is coming soon, thank all of your help.
+After removing PCI_DEV_FLAGS_DMA_ALIAS_DEVFN, the (1 << 4) value was
+unused.  Squash the other values so all the bits are adjacent.  No
+functional change intended.
 
-Chen
->
-> Thanks,
-> Rafael
->
->
->
+(I'm not sure this is worth doing.  We have 16 flag bits and we're not
+even close to exhausting them.  But if we do squash them, it should be
+in a separate patch so we don't clutter up the main patches.)
+---
+ include/linux/pci.h |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d9e0c84..4e36024 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -173,13 +173,13 @@ enum pci_dev_flags {
+ 	/* Flag for quirk use to store if quirk-specific ACS is enabled */
+ 	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) (1 << 3),
+ 	/* Use a PCIe-to-PCI bridge alias even if !pci_is_pcie */
+-	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 5),
++	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 4),
+ 	/* Do not use bus resets for device */
+-	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 6),
++	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 5),
+ 	/* Do not use PM reset even if device advertises NoSoftRst- */
+-	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
++	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 6),
+ 	/* Get VPD from function 0 VPD */
+-	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
++	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 7),
+ };
+ 
+ enum pci_irq_reroute_variant {
 
