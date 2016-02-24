@@ -1,45 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17481 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753504AbcB2Wg7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Feb 2016 17:36:59 -0500
+Received: from mx2.suse.de ([195.135.220.15]:44969 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753131AbcBXAat (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 23 Feb 2016 19:30:49 -0500
 Subject: Re: [PATCH v4 00/11] PCI VPD access fixes
-To: "Seymour, Shane M" <shane.seymour@hpe.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hannes Reinecke <hare@suse.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
 References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <DDB9C85B850785449757F9914A034FCB445368F5@G4W3219.americas.hpqcorp.net>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ <20160223140750.GA12885@localhost> <56CCD3B1.3060702@suse.de>
+ <20160223223611.GA6495@localhost>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
 	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	Babu Moger <babu.moger@oracle.com>,
 	Alexander Duyck <alexander.duyck@gmail.com>
-From: Babu Moger <babu.moger@oracle.com>
-Message-ID: <56D4C7F9.1060609@oracle.com>
-Date: Mon, 29 Feb 2016 16:36:41 -0600
+From: Hannes Reinecke <hare@suse.de>
+Message-ID: <56CCF9AE.9080601@suse.de>
+Date: Wed, 24 Feb 2016 08:30:38 +0800
 MIME-Version: 1.0
-In-Reply-To: <DDB9C85B850785449757F9914A034FCB445368F5@G4W3219.americas.hpqcorp.net>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160223223611.GA6495@localhost>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2/23/2016 10:52 PM, Seymour, Shane M wrote:
-> Retested v4. For the series tested two PCIe cards that support VPD:
+On 02/24/2016 06:36 AM, Bjorn Helgaas wrote:
+> On Wed, Feb 24, 2016 at 05:48:33AM +0800, Hannes Reinecke wrote:
+>> On 02/23/2016 10:07 PM, Bjorn Helgaas wrote:
+>>> Hi Hannes,
+>>>
+>>> Thanks for taking a look at the rest of these.
+>>>
+>>> On Mon, Feb 22, 2016 at 06:46:23PM -0600, Bjorn Helgaas wrote:
+>>>> Hi Hannes,
+>>>>
+>>>> This is a revision of your v3 series:
+>>>> http://lkml.kernel.org/r/1455525722-122040-1-git-send-email-hare@suse.de
+>>>>
+>>>> Here's the description from your v3 posting:
+>>>>
+>>>>   the current PCI VPD page access assumes that the entire possible VPD
+>>>>   data is readable. However, the spec only guarantees a VPD data up to
+>>>>   the 'end' marker, with everything beyond that being undefined.
+>>>>   This causes a system lockup on certain devices.
+>>>>
+>>>>   With this patch we always set the VPD sysfs attribute size to '0', and
+>>>>   calculate the available VPD size on the first access.
+>>>>   If no valid data can be read an I/O error is returned.
+>>>
+>>> Just to see if I have this right: the VPD file size in sysfs will
+>>> always appear as zero, regardless of whether it has been read or
+>>> written, right?  I don't think the user-visible size should change.
+>>>
+>> That is correct.
+>> As the actual size is evaluated on the first access, we don't have it
+>> available when creating the sysfs attribute itself.
+>> And when using the nominal size of 32k some bright program might try to
+>> jump to somewhere in the middle of the data, which will make calculating
+>> the validity of this horribly complex.
+>> Setting it to '0' is an easy way of avoiding this kinda games.
+>>
+>> So yes, there will be a user-visible change, but it shouldn't affect the
+>> programs accessing this attribute.
+>> lspci works happily with these changes
 > 
-> 0d:00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic SAS2308 PCI-Express Fusion-MPT SAS-2 (rev 05)
-> 1e:00.0 Fibre Channel: QLogic Corp. ISP2432-based 4Gb Fibre Channel to PCI Express HBA (rev 03)
+> What is the user-visible change?  Here's what I'm thinking.  If we do
+> this:
 > 
-> The first card exposes 32KiB of NUL bytes as VPD and the second 154 bytes of non-NUL data repeating every 4KiB for 32KiB before the change. After the change the first  card returns no data for VPD (since it contains only NUL bytes) and the second the expected 154 bytes of data.
+>   ls -l /sys/.../vpd
+>   dd if=/sys/.../vpd bs=1 count=1
+>   ls -l /sys/.../vpd
 > 
-> The following warning message comes out as expected for the LSI card (changed from dyn debug controlled message):
+> Do we see different sizes from the two "ls" invocations?  My thought
+> is that we should see '0' both times, because I don't really think
+> that output should change depending on previous actions of this user
+> or other users.
 > 
-> [  614.475984] mpt3sas 0000:0d:00.0: invalid short VPD tag 00 at offset 1
-> 
-> lspci works correctly with the patch in the kernel. The only change on the system (apart from the size of the vpd file) was that with the LSI card lspci with -vvvv as root it now says "Not readable"  instead of "Unknown small resource type 00, will not decode more." in the VPD section.
-> ---
-> Tested-by: Shane Seymour <shane.seymour@hpe.com>
-> 
+Originally we have:
 
-I have also retested the V4 series. Did not see any side effects.
-Once again here is the bug I opened for this issue.
-https://bugzilla.kernel.org/show_bug.cgi?id=110681
----
-Tested-by: Babu Moger <babu.moger@oracle.com>
+# ls -l 0000:07:00.0/vpd
+-rw------- 1 root root 32768 Feb 24 01:29 0000:07:00.0/vpd
+
+and with this patchset we have:
+
+# ls -l 0000:07:00.0/vpd
+-rw------- 1 root root 0 Feb 24 01:29 0000:07:00.0/vpd
+
+So only programs doing a 'stat' on the device node will see a difference.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
