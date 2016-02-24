@@ -1,54 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f44.google.com ([209.85.213.44]:36181 "EHLO
-	mail-vk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753981AbcBZRYy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Feb 2016 12:24:54 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20160226163004.11964.55387.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160226162554.11964.96983.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<20160226163004.11964.55387.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Date: Fri, 26 Feb 2016 22:54:52 +0530
-Message-ID: <CAHM4w1kR+ug2aD_AZ_zMMwPODm07yMwahbBT3QKzFeN1WP6j_Q@mail.gmail.com>
-Subject: Re: [PATCH v11 2/4] PCI: designware: Add generic dw_pcie_wait_for_link()
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Alexey.Brodkin@synopsys.com, Arnd Bergmann <arnd@arndb.de>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Vineet.Gupta1@synopsys.com, linux-kernel@vger.kernel.org,
-	Carlos Palminha <CARLOS.PALMINHA@synopsys.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	linux-snps-arc@lists.infradead.org
+In-Reply-To: <56CDD767.6020103@arm.com>
+References: <1455069384-22323-1-git-send-email-dhdang@apm.com>
+ <1456330151.5681.46.camel@redhat.com> <56CDD767.6020103@arm.com>
+From: Duc Dang <dhdang@apm.com>
+Date: Wed, 24 Feb 2016 14:28:10 -0800
+Message-ID: <CADaLND=mrkxOWOzcEb8os16Rb=SDHfnn_8eSgB4bQYH3UguS3w@mail.gmail.com>
+Subject: Re: [PATCH] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI boot
+ for X-Gene v1
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Mark Salter <msalter@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Feng Kan <fkan@apm.com>,
+	linux-pci@vger.kernel.org, patches <patches@apm.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Loc Ho <lho@apm.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Tanmay Inamdar <tinamdar@apm.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 26, 2016 at 10:00 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> From: Joao Pinto <Joao.Pinto@synopsys.com>
+On Wed, Feb 24, 2016 at 8:16 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+> On 24/02/16 16:09, Mark Salter wrote:
+>> On Tue, 2016-02-09 at 17:56 -0800, Duc Dang wrote:
+>>> This patch makes pci-xgene-msi driver ACPI-aware and provides
+>>> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
+>>>
+>>> Signed-off-by: Duc Dang <dhdang@apm.com>
+>>> ---
+>>>  drivers/pci/host/pci-xgene-msi.c | 35 ++++++++++++++++++++++++++++++++---
+>>>  1 file changed, 32 insertions(+), 3 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+>>> index a6456b5..466aa93 100644
+>>> --- a/drivers/pci/host/pci-xgene-msi.c
+>>> +++ b/drivers/pci/host/pci-xgene-msi.c
+>>> @@ -24,6 +24,7 @@
+>>>  #include <linux/pci.h>
+>>>  #include <linux/platform_device.h>
+>>>  #include <linux/of_pci.h>
+>>> +#include <linux/acpi.h>
+>>>
+>>>  #define MSI_IR0                     0x000000
+>>>  #define MSI_INT0            0x800000
+>>> @@ -39,7 +40,7 @@ struct xgene_msi_group {
+>>>  };
+>>>
+>>>  struct xgene_msi {
+>>> -    struct device_node      *node;
+>>> +    struct fwnode_handle    *fwnode;
+>>>      struct irq_domain       *inner_domain;
+>>>      struct irq_domain       *msi_domain;
+>>>      u64                     msi_addr;
+>>> @@ -249,6 +250,13 @@ static const struct irq_domain_ops msi_domain_ops = {
+>>>      .free   = xgene_irq_domain_free,
+>>>  };
+>>>
+>>> +#ifdef CONFIG_ACPI
+>>> +static struct fwnode_handle *xgene_msi_get_fwnode(struct device *dev)
+>>> +{
+>>> +    return xgene_msi_ctrl.fwnode;
+>>> +}
+>>> +#endif
+>>> +
+>>>  static int xgene_allocate_domains(struct xgene_msi *msi)
+>>>  {
+>>>      msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
+>>> @@ -256,7 +264,7 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+>>>      if (!msi->inner_domain)
+>>>              return -ENOMEM;
+>>>
+>>> -    msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
+>>> +    msi->msi_domain = pci_msi_create_irq_domain(msi->fwnode,
+>>>                                                  &xgene_msi_domain_info,
+>>>                                                  msi->inner_domain);
+>>
+>> This doesn't work for me (ACPI probing on Mustang) unless I change this
+>> to be pci_msi_create_default_irq_domain(). The problem seems to be that
+>> the MSI probe happens after the PCIe RC is probed so there is no MSI domain
+>> at the time the PCIe root is initialized by ACPI.
 >
-> Several DesignWare-based drivers (dra7xx, exynos, imx6, keystone, qcom, and
-> spear13xx) had similar loops waiting for the link to come up.
+> pci_msi_create_default_irq_domain is the wrong thing do use, specially
+> if you have multiple MSI controllers in the system. I certainly wouldn't
+> want to see it being used on arm64.
 >
-> Add a generic dw_pcie_wait_for_link() for use by all these drivers so the
-> waiting is done consistently, e.g., always using usleep_range() rather than
-> mdelay() and using similar timeouts and retry counts.
->
-> Note that this changes the Keystone link training/wait for link strategy,
-> so we initiate link training, then wait longer for the link to come up
-> before re-initiating link training.
->
-> [bhelgaas: changelog, split into its own patch, update pci-keystone.c, pcie-qcom.c]
-> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> This is the usual dependency hell. You try moving the probing earlier,
+> but that may break something else in the process.
 
-5 retries should be sufficient for keystone, still it would be good to
-have a tested-by for it.
-Other than that code seems fine to me.
+Hi Mark and Marc,
 
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+I have modified Tianocore firmware to have MSI node declared before
+PCIe node in Dsdt table. With this modification, the MSI driver will
+be loaded before PCIe driver and MSI domain is available at the time
+PCIe root is initialized.
+
+So we will need a UEFI firmware update to work with this patch.
+
+Regards,
+Duc Dang.
+
+>
+>         M.
+> --
+> Jazz is not dead. It just smells funny...
