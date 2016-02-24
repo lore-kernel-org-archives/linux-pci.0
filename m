@@ -1,94 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:34873 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751789AbcBKPWP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 11 Feb 2016 10:22:15 -0500
-Received: by mail-ig0-f176.google.com with SMTP id hb3so37136234igb.0
-        for <linux-pci@vger.kernel.org>; Thu, 11 Feb 2016 07:22:15 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20160201205400.GB4861@localhost>
-References: <CAJ2oMhL-oL68ZOLsFEn3uGE=O9sMjcwPDH6oznLhG15xnzSQtQ@mail.gmail.com>
-	<1454300093.10542.3.camel@redhat.com>
-	<CAJ2oMh+MjG8frrE3DjHBtwrsG1vGwMcDzQQ8f-n0q-YBS04DZg@mail.gmail.com>
-	<20160201205400.GB4861@localhost>
-Date: Thu, 11 Feb 2016 17:22:15 +0200
-Message-ID: <CAJ2oMh+8pAP3AwF+jBt4rMJ2VhuehSCGHNw7-2VwSeRyV759BA@mail.gmail.com>
-Subject: Re: Q: Relation between lanes to devices and to BARs
-From: Ran Shalit <ranshalit@gmail.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:52124 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751764AbcBXQJN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Feb 2016 11:09:13 -0500
+Message-ID: <1456330151.5681.46.camel@redhat.com>
+Subject: Re: [PATCH] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI boot
+ for X-Gene v1
+From: Mark Salter <msalter@redhat.com>
+To: Duc Dang <dhdang@apm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Cc: Feng Kan <fkan@apm.com>, linux-pci@vger.kernel.org,
+	patches@apm.com, linux-kernel@vger.kernel.org,
+	Loc Ho <lho@apm.com>, linux-arm-kernel@lists.infradead.org,
+	Tanmay Inamdar <tinamdar@apm.com>
+Date: Wed, 24 Feb 2016 11:09:11 -0500
+In-Reply-To: <1455069384-22323-1-git-send-email-dhdang@apm.com>
+References: <1455069384-22323-1-git-send-email-dhdang@apm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 1, 2016 at 10:54 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Mon, Feb 01, 2016 at 08:41:28PM +0200, Ran Shalit wrote:
->> On Mon, Feb 1, 2016 at 6:14 AM, Alex Williamson
->> <alex.williamson@redhat.com> wrote:
->> > On Sun, 2016-01-31 at 02:15 -0500, Ran Shalit wrote:
->> >> Hello,
->> >>
->> >> I am new to pci express drivers, and would please like to ask a question.
->> >> We develop a linux driver for a PCIe device board with 4 lanes.
->> >> 1. Is it expected that this will be recognized as a single device or
->> >> multiple device ?
->> >
->> > It depends whether your device is multifunction.
->>
->> It is a video capture & output deivce, (video4linux), so I guess it
->> means it has single functionality (video).' and therefore will aprear
->> as a single device.
->
-> I'm not familiar with video devices, but it sounds likely that there
-> would be at least two functions (one for input, another for output).
->
-> It's a little confusing because the PCI/PCIe specs use "bus",
-> "device", and "function" to describe device addressing, but in the
-> Linux kernel, when we talk about a PCI device, we mean an individual
-> *function*.  We maintain a struct pci_dev for each function, and a
-> driver binds to the pci_dev for a single function.
->
-> If you run "lspci", it shows a line for each function.  Here are a few
-> from my system:
->
->   00:1b.0 Audio device: Intel Corporation Lynx Point-LP HD Audio Controller
->   00:1c.0 PCI bridge: Intel Corporation Lynx Point-LP PCI Express Root Port 1
->   00:1c.3 PCI bridge: Intel Corporation Lynx Point-LP PCI Express Root Port 4
->   00:1c.5 PCI bridge: Intel Corporation Lynx Point-LP PCI Express Root Port 6
->
-> The 00 is the PCI bus number; 1b and 1c are PCI device numbers; the
-> .0, .3, and .5 are PCI function numbers.  In PCI spec terms, this is
-> one single-function device (the audio controller at 00:1b.0) and one
-> multi-function device with three functions (the root ports at 00:1c).
->
-> In the kernel, we manage each function individually, so there are four
-> pci_dev structs for the above list, and there could be four separate
-> drivers bound to them.
->
->> >> 2. Is it that each lane rales to a different BAR or there is no
->> >> connection between these two ?
->> >
->> > No relation, all PCI/e devices have the same set of standard BARs
->> > available to them.
->>
->> So it probably means that there is no added complexity in terms of
->> device driver with multi lanes PCIe (compared to single lane).
->
-> Right.  The number of PCIe lanes is invisible to the driver.  There
-> are ways to find out and influence how many lanes a device uses, but
-> in general, there's no need to do that.
->
-> Bjorn
+On Tue, 2016-02-09 at 17:56 -0800, Duc Dang wrote:
+> This patch makes pci-xgene-msi driver ACPI-aware and provides
+> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
+> 
+> Signed-off-by: Duc Dang <dhdang@apm.com>
+> ---
+>  drivers/pci/host/pci-xgene-msi.c | 35 ++++++++++++++++++++++++++++++++---
+>  1 file changed, 32 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+> index a6456b5..466aa93 100644
+> --- a/drivers/pci/host/pci-xgene-msi.c
+> +++ b/drivers/pci/host/pci-xgene-msi.c
+> @@ -24,6 +24,7 @@
+>  #include <linux/pci.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/of_pci.h>
+> +#include <linux/acpi.h>
+>  
+>  #define MSI_IR0			0x000000
+>  #define MSI_INT0		0x800000
+> @@ -39,7 +40,7 @@ struct xgene_msi_group {
+>  };
+>  
+>  struct xgene_msi {
+> -	struct device_node	*node;
+> +	struct fwnode_handle	*fwnode;
+>  	struct irq_domain	*inner_domain;
+>  	struct irq_domain	*msi_domain;
+>  	u64			msi_addr;
+> @@ -249,6 +250,13 @@ static const struct irq_domain_ops msi_domain_ops = {
+>  	.free   = xgene_irq_domain_free,
+>  };
+>  
+> +#ifdef CONFIG_ACPI
+> +static struct fwnode_handle *xgene_msi_get_fwnode(struct device *dev)
+> +{
+> +	return xgene_msi_ctrl.fwnode;
+> +}
+> +#endif
+> +
+>  static int xgene_allocate_domains(struct xgene_msi *msi)
+>  {
+>  	msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
+> @@ -256,7 +264,7 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+>  	if (!msi->inner_domain)
+>  		return -ENOMEM;
+>  
+> -	msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
+> +	msi->msi_domain = pci_msi_create_irq_domain(msi->fwnode,
+>  						    &xgene_msi_domain_info,
+>  						    msi->inner_domain);
 
-Hello,
+This doesn't work for me (ACPI probing on Mustang) unless I change this
+to be pci_msi_create_default_irq_domain(). The problem seems to be that
+the MSI probe happens after the PCIe RC is probed so there is no MSI domain
+at the time the PCIe root is initialized by ACPI.
 
-If I may please ask one more on this issue.
-You have made it clear the terms lanes & device in relation to
-PCI/PCI-e device driver.
-What about port ? Is there any relation between port to lane/device or
-is there no relation between these terms.
-For example, can it be 1 device with 2 lanes and 8 ports for example ?
+>  
+> @@ -265,6 +273,9 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+>  		return -ENOMEM;
+>  	}
+>  
+> +#ifdef CONFIG_ACPI
+> +	pci_msi_register_fwnode_provider(&xgene_msi_get_fwnode);
+> +#endif
+>  	return 0;
+>  }
+>  
+> @@ -473,6 +484,13 @@ static const struct of_device_id xgene_msi_match_table[] = {
+>  	{},
+>  };
+>  
+> +#ifdef CONFIG_ACPI
+> +static const struct acpi_device_id xgene_msi_acpi_ids[] = {
+> +	{"APMC0D0E", 0},
+> +	{ },
+> +};
+> +#endif
+> +
+>  static int xgene_msi_probe(struct platform_device *pdev)
+>  {
+>  	struct resource *res;
+> @@ -494,7 +512,17 @@ static int xgene_msi_probe(struct platform_device *pdev)
+>  		goto error;
+>  	}
+>  	xgene_msi->msi_addr = res->start;
+> -	xgene_msi->node = pdev->dev.of_node;
+> +
+> +	xgene_msi->fwnode = of_node_to_fwnode(pdev->dev.of_node);
+> +	if (!xgene_msi->fwnode) {
+> +		xgene_msi->fwnode = irq_domain_alloc_fwnode(NULL);
+> +		if (!xgene_msi->fwnode) {
+> +			dev_err(&pdev->dev, "Failed to create fwnode\n");
+> +			rc = ENOMEM;
+> +			goto error;
+> +		}
+> +	}
+> +
+>  	xgene_msi->num_cpus = num_possible_cpus();
+>  
+>  	rc = xgene_msi_init_allocator(xgene_msi);
+> @@ -571,6 +599,7 @@ static struct platform_driver xgene_msi_driver = {
+>  	.driver = {
+>  		.name = "xgene-msi",
+>  		.of_match_table = xgene_msi_match_table,
+> +		.acpi_match_table = ACPI_PTR(xgene_msi_acpi_ids),
+>  	},
+>  	.probe = xgene_msi_probe,
+>  	.remove = xgene_msi_remove,
 
-Thank you very much,
-Ran
