@@ -1,78 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:59036 "EHLO
-	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965006AbcBDQL3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 11:11:29 -0500
-From: Paul Burton <paul.burton@imgtec.com>
-To: <linux-mips@linux-mips.org>
-CC: Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>,
-	"Paul Burton" <paul.burton@imgtec.com>,
-	=?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	"Lorenzo Pieralisi" <lorenzo.pieralisi@arm.com>,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	Russell Joyce <russell.joyce@york.ac.uk>,
-	<linux-kernel@vger.kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v3 3/6] PCI: xilinx: Always clear interrupt decode register
-Date: Thu, 4 Feb 2016 16:10:10 +0000
-Message-ID: <1454602213-967-4-git-send-email-paul.burton@imgtec.com>
-In-Reply-To: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
-References: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
+Received: from mail.kernel.org ([198.145.29.136]:45887 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759212AbcBXTxA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Feb 2016 14:53:00 -0500
+Date: Wed, 24 Feb 2016 13:52:57 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Akshay Bhat <akshay.bhat@timesys.com>
+Cc: linux-pci@vger.kernel.org, Tim Harvey <tharvey@gateworks.com>
+Subject: Re: [PATCH v2] PCI: imx6: add dt prop for link gen, default to gen1
+Message-ID: <20160224195257.GA31108@localhost>
+References: <1446735481-27326-1-git-send-email-tharvey@gateworks.com>
+ <1447942365-11662-1-git-send-email-tharvey@gateworks.com>
+ <20151125231435.GI8869@localhost>
+ <CAJ+vNU0ar_d=2n4Yz3QX4qidSkH6PBLyfB8-w-ErLOYzwqj7rw@mail.gmail.com>
+ <CAJ+vNU399O0uskuAQGaqPQUhFdNYktZY4bm-=JCmdEgQF-HgYg@mail.gmail.com>
+ <loom.20160224T202751-432@post.gmane.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <loom.20160224T202751-432@post.gmane.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If an MSI or INTx interrupt is incorrectly triggered with an empty FIFO
-then xilinx_pcie_intr_handler will print a warning & skip further
-processing. However it did not clear the interrupt in the decode
-register, so the same INTX or MSI interrupt would trigger again
-immediately even though the FIFO is still empty. Clear the interrupt in
-the decode register to avoid that situation.
+[+cc Tim]
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-Fixes: 8961def56845 ("PCI: xilinx: Add Xilinx AXI PCIe Host Bridge IP driver")
+On Wed, Feb 24, 2016 at 07:35:55PM +0000, Akshay Bhat wrote:
+> Tim Harvey <tharvey <at> gateworks.com> writes:
+> 
+> > >>
+> > >> Is there some sort of DT or OF spec that lists "max-link-speed" as a
+> > >> generic property?  I see Lucas' desire to have this be common across
+> > >> DesignWare PCIe cores.  Should it be moved up a level even from there,
+> > >> i.e., to bindings/pci/pci.txt?
+> > >
+> > > Bjorn,
+> > >
+> > > I don't know what the general consensus is here. As your the PCI
+> > > maintainer I would leave that up to you. Are there other platforms
+> > > that need to link at a lesser capability than the host controller is
+> > > capable of? I am only aware of the IMX6 and SPEAr13XX [1]
+> > >
+> > > I can make that change and re-submit if you feel that is necessary.
+> > >
+> > 
+> > Bjorn,
+> > 
+> > Any thoughts here? I would really like to see this get picked up
+> > sooner rather than later.
+> > 
+> > Regards,
+> > 
+> > Tim
+> > 
+> 
+> Bjorn,
+> 
+> It looks like there was no further follow-up on this patch. Could you 
+> kindly provide feedback to Tim's question? We have multiple i.MX boards 
+> that could use this patch to resolve PCIe issues.
 
----
+Tim had mentioned doing a v3 with a documentation update, so I
+dropped the v2 patch in anticipation of v3, which never appeared.
 
-Changes in v3:
-- Split out from Boston patchset.
+Looking at it again, I have another question, so I'll respond to that
+thread again.
 
-Changes in v2:
-- Add Fixes tag.
-
- drivers/pci/host/pcie-xilinx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index afdfb09..1eb74a2 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -444,7 +444,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 		/* Check whether interrupt valid */
- 		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
- 			dev_warn(port->dev, "RP Intr FIFO1 read error\n");
--			return IRQ_HANDLED;
-+			goto out;
- 		}
- 
- 		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
-@@ -492,6 +492,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 	if (status & XILINX_PCIE_INTR_MST_ERRP)
- 		dev_warn(port->dev, "Master error poison\n");
- 
-+out:
- 	/* Clear the Interrupt Decode register */
- 	pcie_write(port, status, XILINX_PCIE_REG_IDR);
- 
--- 
-2.7.0
-
+Bjorn
