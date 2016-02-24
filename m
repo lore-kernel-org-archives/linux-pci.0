@@ -1,91 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0097.outbound.protection.outlook.com ([65.55.169.97]:11269
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756276AbcBHVj3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 8 Feb 2016 16:39:29 -0500
-Message-ID: <56B90B09.7090500@caviumnetworks.com>
-Date: Mon, 8 Feb 2016 13:39:21 -0800
-From: David Daney <ddaney@caviumnetworks.com>
-MIME-Version: 1.0
-To: Rob Herring <robh@kernel.org>
-CC: David Daney <ddaney.cavm@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v5 3/3] pci, pci-thunder-ecam: Add driver for ThunderX-pass1
- on-chip devices
-References: <1454715675-17512-1-git-send-email-ddaney.cavm@gmail.com> <1454715675-17512-4-git-send-email-ddaney.cavm@gmail.com> <20160208195642.GA15103@rob-hp-laptop> <56B8FED6.1050804@caviumnetworks.com> <CAL_JsqJNndZ59465YhpkP=dQYaijaar+LcQG4KQEJwF5e1ryLQ@mail.gmail.com>
-In-Reply-To: <CAL_JsqJNndZ59465YhpkP=dQYaijaar+LcQG4KQEJwF5e1ryLQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from o1.f.az.sendgrid.net ([208.117.55.132]:16255 "EHLO
+	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758618AbcBXVZ6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 16:25:58 -0500
+From: jakeo@microsoft.com
+To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH 3/5] hv: Use new vmbus_mmio_free() from client drivers.
+Date: Wed, 24 Feb 2016 21:24:00 +0000
+Message-Id: <1456349042-16275-4-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1456349042-16275-1-git-send-email-jakeo@microsoft.com>
+References: <1456349042-16275-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/08/2016 01:12 PM, Rob Herring wrote:
-> On Mon, Feb 8, 2016 at 2:47 PM, David Daney <ddaney@caviumnetworks.com> wrote:
->> On 02/08/2016 11:56 AM, Rob Herring wrote:
->>>
->>> On Fri, Feb 05, 2016 at 03:41:15PM -0800, David Daney wrote:
->>>>
->>>> From: David Daney <david.daney@cavium.com>
->
-> [...]
->
->>>> +Properties of the host controller node that differ from
->>>> +host-generic-pci.txt:
->>>> +
->>>> +- compatible     : Must be "cavium,pci-host-thunder-ecam"
->>>> +
->>>> +Example:
->>>> +
->>>> +       pci@84b0,00000000 {
->>>
->>>
->>> Drop the comma,
->>
->>
->> OK...
->>
->>> and the node name should be "pcie".
->>>
->>
->> Why pcie?
->>
->> There are no PCIe devices or buses reachable from this type of root complex.
->> There are however many PCI devices.
->
-> I thought ECAM is a PCIe thing. If not, then nevermind.
+From: Jake Oshins <jakeo@microsoft.com>
 
+This patch modifies all the callers of vmbus_mmio_allocate()
+to call vmbus_mmio_free() instead of release_mem_region().
 
-Well, Enhanced Configuration Access Mechanism (ECAM) is defined  the the 
-PCI Express(R) base Specification, but it just defines a standard layout 
-of address bits to memory map config space operations.  Since the PCI 
-config space is a sub set of the PCIe config space, ECAM can also be 
-used in PCI systems.
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c   | 14 +++++++-------
+ drivers/video/fbdev/hyperv_fb.c |  4 ++--
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-Really, it is a bit of a gray area here as we don't have any bridges to 
-PCIe buses and there are multiple devices residing on each bus, so from 
-that point of view it cannot be PCIe.  There are, however, devices that 
-implement the PCI Express Capability structure, so does that make it 
-PCIe?  It is not clear what the specifications demand here.
-
-I choose to call it "pci" as it lacks much of what it means to be PCIe, 
-and also you cannot plug things into it.
-
-David Daney
-
-
-
->
-> Rob
->
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index 6f77d52..177bbec 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -2034,14 +2034,14 @@ static void hv_pci_free_bridge_windows(struct hv_pcibus_device *hbus)
+ 
+ 	if (hbus->low_mmio_space && hbus->low_mmio_res) {
+ 		hbus->low_mmio_res->flags |= IORESOURCE_BUSY;
+-		release_mem_region(hbus->low_mmio_res->start,
+-				   resource_size(hbus->low_mmio_res));
++		vmbus_free_mmio(hbus->low_mmio_res->start,
++				resource_size(hbus->low_mmio_res));
+ 	}
+ 
+ 	if (hbus->high_mmio_space && hbus->high_mmio_res) {
+ 		hbus->high_mmio_res->flags |= IORESOURCE_BUSY;
+-		release_mem_region(hbus->high_mmio_res->start,
+-				   resource_size(hbus->high_mmio_res));
++		vmbus_free_mmio(hbus->high_mmio_res->start,
++				resource_size(hbus->high_mmio_res));
+ 	}
+ }
+ 
+@@ -2119,8 +2119,8 @@ static int hv_pci_allocate_bridge_windows(struct hv_pcibus_device *hbus)
+ 
+ release_low_mmio:
+ 	if (hbus->low_mmio_res) {
+-		release_mem_region(hbus->low_mmio_res->start,
+-				   resource_size(hbus->low_mmio_res));
++		vmbus_free_mmio(hbus->low_mmio_res->start,
++				resource_size(hbus->low_mmio_res));
+ 	}
+ 
+ 	return ret;
+@@ -2163,7 +2163,7 @@ static int hv_allocate_config_window(struct hv_pcibus_device *hbus)
+ 
+ static void hv_free_config_window(struct hv_pcibus_device *hbus)
+ {
+-	release_mem_region(hbus->mem_config->start, PCI_CONFIG_MMIO_LENGTH);
++	vmbus_free_mmio(hbus->mem_config->start, PCI_CONFIG_MMIO_LENGTH);
+ }
+ 
+ /**
+diff --git a/drivers/video/fbdev/hyperv_fb.c b/drivers/video/fbdev/hyperv_fb.c
+index e2451bd..2fd49b2 100644
+--- a/drivers/video/fbdev/hyperv_fb.c
++++ b/drivers/video/fbdev/hyperv_fb.c
+@@ -743,7 +743,7 @@ static int hvfb_getmem(struct hv_device *hdev, struct fb_info *info)
+ err3:
+ 	iounmap(fb_virt);
+ err2:
+-	release_mem_region(par->mem->start, screen_fb_size);
++	vmbus_free_mmio(par->mem->start, screen_fb_size);
+ 	par->mem = NULL;
+ err1:
+ 	if (!gen2vm)
+@@ -758,7 +758,7 @@ static void hvfb_putmem(struct fb_info *info)
+ 	struct hvfb_par *par = info->par;
+ 
+ 	iounmap(info->screen_base);
+-	release_mem_region(par->mem->start, screen_fb_size);
++	vmbus_free_mmio(par->mem->start, screen_fb_size);
+ 	par->mem = NULL;
+ }
+ 
+-- 
+1.9.1
 
