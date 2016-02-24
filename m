@@ -1,105 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.windriver.com ([147.11.1.11]:53201 "EHLO
-	mail.windriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755184AbcBHACT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 7 Feb 2016 19:02:19 -0500
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<devicetree@vger.kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ley Foon Tan <lftan@altera.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-arm-msm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH 0/5] Modularize PCI_DW related drivers.
-Date: Sun, 7 Feb 2016 19:00:39 -0500
-Message-ID: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:6213 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753809AbcBXRHA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 24 Feb 2016 12:07:00 -0500
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: helgaas@kernel.org
+Cc: Jon Derrick <jonathan.derrick@intel.com>, keith.busch@intel.com,
+	linux-pci@vger.kernel.org
+Subject: [PATCHv2] VMD: Attach vmd resources to parent domain's resource tree
+Date: Wed, 24 Feb 2016 10:06:37 -0700
+Message-Id: <1456333597-10469-1-git-send-email-jonathan.derrick@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In a recent patch series that aimed to remove code related to module
-unload for PCI support that was simply non modular, the discussion
-led to people wanting to keep the code and push towards taking the
-steps needed to support moving it towards tristate instead[1].
+This patch attaches the new VMD domain's resources to the VMD device's
+resources. This allows /proc/iomem to display a more complete picture.
 
-Here, we take step one, which is simply making the Kconfig change
-and then dealing with any build fallout or modpost fallout.  What
-amounts to essentially a sanity build test.  To be clear, these
-have not been runtime validated; that will need to be done by those
-with access to real hardware.  However, the changes are not anything
-that should disrupt any existing built-in validation, so real world
-users should not be impacted by this change.
+Before:
+  c0000000-c1ffffff : 0000:5d:05.5
+  c2000000-c3ffffff : 0000:5d:05.5
+    c2010000-c2013fff : nvme
+  c4000000-c40fffff : 0000:5d:05.5
 
-We start with a smaller family of drivers; those that actively select
-PCI_DW, as a nice self contained group to test the waters and see if
-everyone is still good with this approach before investing more time
-on a wider scale to other pci/host/ code blocks.
+After:
+  c0000000-c1ffffff : 0000:5d:05.5
+  c2000000-c3ffffff : 0000:5d:05.5
+    c2000000-c3ffffff : VMD MEMBAR1
+      c2000000-c22fffff : PCI Bus 10000:01
+        c2000000-c200ffff : 10000:01:00.0
+        c2010000-c2013fff : 10000:01:00.0
+          c2010000-c2013fff : nvme
+      c2300000-c24fffff : PCI Bus 10000:01
+  c4000000-c40fffff : 0000:5d:05.5
+    c4002000-c40fffff : VMD MEMBAR2
 
-As such the drivers here share a dependency on having the same group
-of functions exported in order to successfully complete modpost.
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+v1->v2: Dropped the CFGBAR resource from the tree
+ arch/x86/pci/vmd.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-In addition, we have to stray outside drivers/pci to add exports
-in two places; once for an ARM fault handler, and once for an OF
-variable.
-
-The pci-keystone-dw.c instance was handled separately because it
-consists of two source files that need their own group of driver
-specific exports above and beyond the "shared" ones.
-
-Then we convert the Kconfig for all remaining at once; we could have
-done it on a per driver basis for ease of revert if anyone really
-objects, but since it would be a one line change, that seemed like
-not a real concern.
-
-Build testing was done on the linux-next tree for arm allmodconfig.
-
-[1] https://lkml.kernel.org/r/20160108203102.GH5354@localhost
-
+diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+index d57e480..d0c4542 100644
+--- a/arch/x86/pci/vmd.c
++++ b/arch/x86/pci/vmd.c
+@@ -503,6 +503,18 @@ static struct pci_ops vmd_ops = {
+ 	.write		= vmd_pci_write,
+ };
+ 
++static void vmd_attach_resources(struct vmd_dev *vmd)
++{
++	vmd->dev->resource[VMD_MEMBAR1].child = &vmd->resources[1];
++	vmd->dev->resource[VMD_MEMBAR2].child = &vmd->resources[2];
++}
++
++static void vmd_detach_resources(struct vmd_dev *vmd)
++{
++	vmd->dev->resource[VMD_MEMBAR1].child = NULL;
++	vmd->dev->resource[VMD_MEMBAR2].child = NULL;
++}
++
+ /*
+  * VMD domains start at 0x1000 to not clash with ACPI _SEG domains.
+  */
+@@ -542,6 +554,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
+ 		.start = res->start,
+ 		.end   = res->end,
+ 		.flags = flags,
++		.parent = res,
+ 	};
+ 
+ 	res = &vmd->dev->resource[VMD_MEMBAR2];
+@@ -554,6 +567,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
+ 		.start = res->start + 0x2000,
+ 		.end   = res->end,
+ 		.flags = flags,
++		.parent = res,
+ 	};
+ 
+ 	sd->domain = vmd_find_free_domain();
+@@ -578,6 +592,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
+ 		return -ENODEV;
+ 	}
+ 
++	vmd_attach_resources(vmd);
+ 	vmd_setup_dma_ops(vmd);
+ 	dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
+ 	pci_rescan_bus(vmd->bus);
+@@ -674,6 +689,7 @@ static void vmd_remove(struct pci_dev *dev)
+ {
+ 	struct vmd_dev *vmd = pci_get_drvdata(dev);
+ 
++	vmd_detach_resources(vmd);
+ 	pci_set_drvdata(dev, NULL);
+ 	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
+ 	pci_stop_root_bus(vmd->bus);
 -- 
-
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: devicetree@vger.kernel.org
-Cc: Frank Rowand <frowand.list@gmail.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Grant Likely <grant.likely@linaro.org>
-Cc: Ley Foon Tan <lftan@altera.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Russell King <linux@arm.linux.org.uk>
-Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-arm-msm@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-
-
-Paul Gortmaker (5):
-  ARM: add EXPORT_SYMBOL of hook_fault_code for PCI host modularization
-  drivers/of: add EXPORT_SYMBOL to of_irq_count
-  drivers/pci: export dw syms enabling board specific PCI code to be
-    tristate
-  drivers/pci: make host/pci-keystone-dw.c modular
-  drivers/pci: make most of the PCI_DW drivers modular
-
- arch/arm/mm/fault.c                |  3 ++-
- drivers/of/irq.c                   |  1 +
- drivers/pci/host/Kconfig           | 16 ++++++++--------
- drivers/pci/host/pci-keystone-dw.c | 16 +++++++++++++++-
- drivers/pci/host/pcie-designware.c |  7 +++++++
- 5 files changed, 33 insertions(+), 10 deletions(-)
-
--- 
-2.6.1
+1.8.3.1
 
