@@ -1,79 +1,200 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52722 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751110AbcBWWga (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 23 Feb 2016 17:36:30 -0500
-Date: Tue, 23 Feb 2016 16:36:11 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Babu Moger <babu.moger@oracle.com>,
-	Alexander Duyck <alexander.duyck@gmail.com>
-Subject: Re: [PATCH v4 00/11] PCI VPD access fixes
-Message-ID: <20160223223611.GA6495@localhost>
-References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160223140750.GA12885@localhost>
- <56CCD3B1.3060702@suse.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "'Mark Rutland'" <mark.rutland@arm.com>,
+	"Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
+	"'bhelgaas@google.com'" <bhelgaas@google.com>,
+	"'arnd@arndb.de'" <arnd@arndb.de>,
+	"'Lorenzo.Pieralisi@arm.com'" <Lorenzo.Pieralisi@arm.com>,
+	"'tn@semihalf.com'" <tn@semihalf.com>,
+	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"'linux-acpi@vger.kernel.org'" <linux-acpi@vger.kernel.org>,
+	"'jcm@redhat.com'" <jcm@redhat.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	"'linux-arm-kernel@lists.infradead.org'"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
+ HiSilicon SoCs Host Controllers
+Date: Wed, 24 Feb 2016 06:46:09 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ECCAD6A@lhreml503-mbs>
+References: <1455039260-6040-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1455039260-6040-4-git-send-email-gabriele.paoloni@huawei.com>
+ <20160209182429.GD4348@leverpostej>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1591@lhreml503-mbs>
+ <20160210111234.GC2632@leverpostej>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1D30@lhreml503-mbs>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ECC5F00@lhreml503-mbs>
+ <20160224011418.GB13026@localhost>
+In-Reply-To: <20160224011418.GB13026@localhost>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56CCD3B1.3060702@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 24, 2016 at 05:48:33AM +0800, Hannes Reinecke wrote:
-> On 02/23/2016 10:07 PM, Bjorn Helgaas wrote:
-> > Hi Hannes,
-> > 
-> > Thanks for taking a look at the rest of these.
-> > 
-> > On Mon, Feb 22, 2016 at 06:46:23PM -0600, Bjorn Helgaas wrote:
-> >> Hi Hannes,
-> >>
-> >> This is a revision of your v3 series:
-> >> http://lkml.kernel.org/r/1455525722-122040-1-git-send-email-hare@suse.de
-> >>
-> >> Here's the description from your v3 posting:
-> >>
-> >>   the current PCI VPD page access assumes that the entire possible VPD
-> >>   data is readable. However, the spec only guarantees a VPD data up to
-> >>   the 'end' marker, with everything beyond that being undefined.
-> >>   This causes a system lockup on certain devices.
-> >>
-> >>   With this patch we always set the VPD sysfs attribute size to '0', and
-> >>   calculate the available VPD size on the first access.
-> >>   If no valid data can be read an I/O error is returned.
-> > 
-> > Just to see if I have this right: the VPD file size in sysfs will
-> > always appear as zero, regardless of whether it has been read or
-> > written, right?  I don't think the user-visible size should change.
-> > 
-> That is correct.
-> As the actual size is evaluated on the first access, we don't have it
-> available when creating the sysfs attribute itself.
-> And when using the nominal size of 32k some bright program might try to
-> jump to somewhere in the middle of the data, which will make calculating
-> the validity of this horribly complex.
-> Setting it to '0' is an easy way of avoiding this kinda games.
+
+Hi Bjorn, many thanks for replying
+
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: 24 February 2016 09:14
+> To: Gabriele Paoloni
+> Cc: 'Mark Rutland'; Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong
+> (C); Linuxarm; qiujiang; 'bhelgaas@google.com'; 'arnd@arndb.de';
+> 'Lorenzo.Pieralisi@arm.com'; 'tn@semihalf.com'; 'linux-
+> pci@vger.kernel.org'; 'linux-kernel@vger.kernel.org'; xuwei (O);
+> 'linux-acpi@vger.kernel.org'; 'jcm@redhat.com'; zhangjukuo; Liguozhu
+> (Kenneth); 'linux-arm-kernel@lists.infradead.org'
+> Subject: Re: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
+> HiSilicon SoCs Host Controllers
 > 
-> So yes, there will be a user-visible change, but it shouldn't affect the
-> programs accessing this attribute.
-> lspci works happily with these changes
+> On Tue, Feb 23, 2016 at 02:47:22AM +0000, Gabriele Paoloni wrote:
+> > > -----Original Message-----
+> > > From: Gabriele Paoloni
+> > > Sent: 10 February 2016 22:45
+> > > To: Mark Rutland
+> > > Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C); Linuxarm;
+> > > qiujiang; bhelgaas@google.com; arnd@arndb.de;
+> Lorenzo.Pieralisi@arm.com;
+> > > tn@semihalf.com; linux-pci@vger.kernel.org; linux-
+> > > kernel@vger.kernel.org; xuwei (O); linux-acpi@vger.kernel.org;
+> > > jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth); linux-arm-
+> > > kernel@lists.infradead.org
+> > > Subject: RE: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support
+> for
+> > > HiSilicon SoCs Host Controllers
+> > >
+> > > > -----Original Message-----
+> > > > From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
+> > > > owner@vger.kernel.org] On Behalf Of Mark Rutland
+> > > > Sent: 10 February 2016 11:13
+> > > > To: Gabriele Paoloni
+> > > > Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C);
+> Linuxarm;
+> > > > qiujiang; bhelgaas@google.com; arnd@arndb.de;
+> > > > Lorenzo.Pieralisi@arm.com; tn@semihalf.com; linux-
+> pci@vger.kernel.org;
+> > > > linux-kernel@vger.kernel.org; xuwei (O); linux-
+> acpi@vger.kernel.org;
+> > > > jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth); linux-arm-
+> > > > kernel@lists.infradead.org
+> > > > Subject: Re: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support
+> for
+> > > > HiSilicon SoCs Host Controllers
+> > > >
+> > > > On Wed, Feb 10, 2016 at 09:52:36AM +0000, Gabriele Paoloni wrote:
+> > > > > Hi Mark
+> > > > >
+> > > > > > On Tue, Feb 09, 2016 at 05:34:20PM +0000, Gabriele Paoloni
+> wrote:
+> > > > > > > From: gabriele paoloni <gabriele.paoloni@huawei.com>
+> > > > > > > +/*
+> > > > > > > + * Retrieve rc_dbi base and size from _DSD
+> > > > > > > + * Name (_DSD, Package () {
+> > > > > > > + *	ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+> > > > > > > + *	Package () {
+> > > > > > > + *	Package () {"rc-dbi", Package () { 0x0, 0xb0080000,
+> 0x0,
+> > > > 0x10000
+> > > > > > }},
+> > > > > > > + *	}
+> > > > > > > + *	})
+> > > > > > > + */
+> > > > > >
+> > > > > > As above, this does not look right. ACPI has standard
+> mechanisms
+> > > > for
+> > > > > > describing addresses. Making something up like this is not a
+> good
+> > > > idea.
+> > > > >
+> > > > > I am quite new to ACPI, may I ask you to explain a bit?
+> > > >
+> > > > ACPI has standard mechanisms for describing certain resources,
+> and
+> > > > these
+> > > > should not be described in _DSD. Memory or IO address regions are
+> > > such
+> > > > resources (in _CRS, IIRC), and should not be described in _DSD.
+> > >
+> > > Hi Mark,
+> > >
+> > > In my case I think in need to look into the MCFG object as the
+> problem
+> > > I have is RC using a different range than the rest of the hierarchy.
+> > >
+> > > I'll investigate this and try to come with a solution in v4
+> >
+> > I have looked into this and in our case we cannot use the
+> > standard MCFG object to pass the RC config space addresses.
+> >
+> > The reason is that in our HW we have the config base addresses of the
+> > root complex ports that are less than 0x100000 byte distant one from
+> > the other as we only map the first 0x10000 bytes.
+> 
+> The ECAM spec requires 4096 bytes per function, 8 functions per
+> device, 32 devices per bus, which means you need 0x100000 bytes of
+> address space per bus.  If your device doesn't supply that, it doesn't
+> really implement ECAM, and you probably can't use the standard ways of
+> describing ECAM (MCFG, _CBA).
 
-What is the user-visible change?  Here's what I'm thinking.  If we do
-this:
+Correct, our host bridge is non ECAM only for the RC bus config space;
+for any other bus underneath the root bus we support ECAM access, so
+we need a quirk for the RC config rd/wr  
 
-  ls -l /sys/.../vpd
-  dd if=/sys/.../vpd bs=1 count=1
-  ls -l /sys/.../vpd
+> 
+> > Now the MCFG acpi framework always fix the MCFG resource size to
+> 0x100000
+> > for each bus; therefore if we pass our RC addresses through MCFG we
+> end
+> > up with a resource conflict.
+> >
+> > To give you a practical example we are in a situation where we have:
+> >
+> > port0: [0x00000000b0080000 - 0x00000000b0080000 + 0x10000]
+> > port1: [0x00000000b0090000 - 0x00000000b0090000 + 0x10000]
+> > port2: [0x00000000b00A0000 - 0x00000000b00A0000 + 0x10000]
+> > port3: [0x00000000b00B0000 - 0x00000000b00B0000 + 0x10000]
+> >
+> > So if we pass the base addresses through MCFG the resources
+> > will overlap as MCFG will consider 0x100000 size for each base
+> > address of the root complex (only the RC bus uses that address)
+> >
+> > So far I do not see many option other than using _DSD to pass
+> > these RC config base addresses.
+> 
+> I don't want to take over Mark's discussion, but I really do not think
+> _DSD is the correct way to fix this.  _CRS is like a generalized PCI
+> BAR.  A PCI device is only allowed to respond to address space
+> reported via a BAR.  An ACPI device is only allowed to respond to
+> address space reported via _CRS.  Those are important rules because
+> they mean we can manage address space with generic code instead of
+> device-specific code.
 
-Do we see different sizes from the two "ls" invocations?  My thought
-is that we should see '0' both times, because I don't really think
-that output should change depending on previous actions of this user
-or other users.
+>From what I see in 
+http://lxr.free-electrons.com/source/drivers/acpi/pci_root.c#L723
+acpi_pci_probe_root_resources() parses the _CRS method and
+it only works for MEM and IO resources, so I don't think it is 
+right to pass a config space address by _CRS or to modify the 
+current ACPI framework to support this.
 
-I though you were confirming that we do always see '0', but then you
-mentioned a user-visible change; is there a different change you're
-thinking of?
+On the other side, since this is an exception only for the config
+space address of our host controller (as said before all the buses
+below the root one support ECAM), I think that it is right to put
+this address as a device specific data (in fact the rest of the
+config space addresses will be parsed from MCFG).
+I thought the purpose of the quirks from Nowicki patchset were meant
+to handle this sort of special cases...
 
-Bjorn
+
+Thanks and Regards
+
+Gab
+
+> 
+> Bjorn
