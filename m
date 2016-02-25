@@ -1,168 +1,234 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 18 Feb 2016 12:59:28 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Tomasz Nowicki <tn@semihalf.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	okaya@codeaurora.org, jiang.liu@linux.intel.com,
-	jchandra@broadcom.com, Stefano.Stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-Subject: Re: [PATCH V5 00/15] MMCONFIG refactoring and support for ARM64 PCI
- hostbridge init based on ACPI
-Message-ID: <20160218125928.GA13045@red-moon>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:42285 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932381AbcBYRhc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Feb 2016 12:37:32 -0500
+Subject: [PATCH v10 1/4] ARC: Add PCI support
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: mark.rutland@arm.com, Alexey.Brodkin@synopsys.com, arnd@arndb.de,
+	pawel.moll@arm.com, ijc+devicetree@hellion.org.uk,
+	linux-pci@vger.kernel.org, Vineet.Gupta1@synopsys.com,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	linux-kernel@vger.kernel.org, CARLOS.PALMINHA@synopsys.com,
+	robh+dt@kernel.org, Murali Karicheri <m-karicheri2@ti.com>,
+	galak@codeaurora.org, Jingoo Han <jingoohan1@gmail.com>,
+	linux-snps-arc@lists.infradead.org
+Date: Thu, 25 Feb 2016 11:37:28 -0600
+Message-ID: <20160225173728.2103.69952.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160225172957.2103.8326.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160225172957.2103.8326.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn, Rafael,
+From: Joao Pinto <Joao.Pinto@synopsys.com>
 
-On Tue, Feb 16, 2016 at 02:53:30PM +0100, Tomasz Nowicki wrote:
-> From the functionality point of view this series might be split into the
-> following logic parts:
-> 1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
->    PCI config regions and used when necessary.
-> 2. Move non-arch specific bits to the core code.
-> 3. Use MMCONFIG code and implement generic ACPI based PCI host controller driver.
-> 4. Enable above driver on ARM64
+Add PCI support to ARC and update drivers/pci Makefile enabling the ARC
+arch to use the generic PCI setup functions.
 
-I think that apart from some pending review comments that will force
-some minor patches update, the overall structure of this patchset is in
-a reasonable shape, I would be grateful if you could have a look
-from PCI and ACPI perspectives to see if there is some serious
-rework needed and/or you want us to do things differently.
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Vineet Gupta <vgupta@synopsys.com>
+---
+ arch/arc/Kconfig             |   26 ++++++++++++++++++++++++++
+ arch/arc/include/asm/dma.h   |    5 +++++
+ arch/arc/include/asm/io.h    |    9 +++++++++
+ arch/arc/include/asm/pci.h   |   31 +++++++++++++++++++++++++++++++
+ arch/arc/kernel/Makefile     |    1 +
+ arch/arc/kernel/pcibios.c    |   22 ++++++++++++++++++++++
+ arch/arc/plat-axs10x/Kconfig |    1 +
+ drivers/pci/Makefile         |    1 +
+ 8 files changed, 96 insertions(+)
+ create mode 100644 arch/arc/include/asm/pci.h
+ create mode 100644 arch/arc/kernel/pcibios.c
 
-In particular, the MCFG rework (along with some PCI core changes
-ie PCI ACPI bridge companion) affects x86 so we definitely need
-some feedback on that code, otherwise we are stuck and can't
-enable ACPI PCI support for ARM64.
+diff --git a/arch/arc/Kconfig b/arch/arc/Kconfig
+index 76dde9d..f9e3b357 100644
+--- a/arch/arc/Kconfig
++++ b/arch/arc/Kconfig
+@@ -19,6 +19,7 @@ config ARC
+ 	select GENERIC_FIND_FIRST_BIT
+ 	# for now, we don't need GENERIC_IRQ_PROBE, CONFIG_GENERIC_IRQ_CHIP
+ 	select GENERIC_IRQ_SHOW
++	select GENERIC_PCI_IOMAP
+ 	select GENERIC_PENDING_IRQ if SMP
+ 	select GENERIC_SMP_IDLE_THREAD
+ 	select HAVE_ARCH_KGDB
+@@ -39,6 +40,9 @@ config ARC
+ 	select PERF_USE_VMALLOC
+ 	select HAVE_DEBUG_STACKOVERFLOW
+ 
++config MIGHT_HAVE_PCI
++	bool
++
+ config TRACE_IRQFLAGS_SUPPORT
+ 	def_bool y
+ 
+@@ -568,6 +572,28 @@ endmenu	 # "ARC Architecture Configuration"
+ source "mm/Kconfig"
+ source "net/Kconfig"
+ source "drivers/Kconfig"
++
++menu "Bus Support"
++
++config PCI
++	bool "PCI support" if MIGHT_HAVE_PCI
++	help
++	  PCI is the name of a bus system, i.e., the way the CPU talks to
++	  the other stuff inside your box.  Find out if your board/platform
++	  has PCI.
++
++	  Note: PCIe support for Synopsys Device will be available only
++	  when HAPS DX is configured with PCIe RC bitmap. If you have PCI,
++	  say Y, otherwise N.
++
++config PCI_SYSCALL
++	def_bool PCI
++
++source "drivers/pci/Kconfig"
++source "drivers/pci/pcie/Kconfig"
++
++endmenu
++
+ source "fs/Kconfig"
+ source "arch/arc/Kconfig.debug"
+ source "security/Kconfig"
+diff --git a/arch/arc/include/asm/dma.h b/arch/arc/include/asm/dma.h
+index ca7c451..01e47a6 100644
+--- a/arch/arc/include/asm/dma.h
++++ b/arch/arc/include/asm/dma.h
+@@ -10,5 +10,10 @@
+ #define ASM_ARC_DMA_H
+ 
+ #define MAX_DMA_ADDRESS 0xC0000000
++#ifdef CONFIG_PCI
++extern int isa_dma_bridge_buggy;
++#else
++#define isa_dma_bridge_buggy	0
++#endif
+ 
+ #endif
+diff --git a/arch/arc/include/asm/io.h b/arch/arc/include/asm/io.h
+index 694ece8..947bf0c 100644
+--- a/arch/arc/include/asm/io.h
++++ b/arch/arc/include/asm/io.h
+@@ -16,6 +16,15 @@
+ extern void __iomem *ioremap(unsigned long physaddr, unsigned long size);
+ extern void __iomem *ioremap_prot(phys_addr_t offset, unsigned long size,
+ 				  unsigned long flags);
++static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
++{
++	return (void __iomem *)port;
++}
++
++static inline void ioport_unmap(void __iomem *addr)
++{
++}
++
+ extern void iounmap(const void __iomem *addr);
+ 
+ #define ioremap_nocache(phy, sz)	ioremap(phy, sz)
+diff --git a/arch/arc/include/asm/pci.h b/arch/arc/include/asm/pci.h
+new file mode 100644
+index 0000000..2f2011c
+--- /dev/null
++++ b/arch/arc/include/asm/pci.h
+@@ -0,0 +1,31 @@
++/*
++ * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#ifndef _ASM_ARC_PCI_H
++#define _ASM_ARC_PCI_H
++
++#ifdef __KERNEL__
++#include <asm-generic/pci-dma-compat.h>
++#include <asm-generic/pci-bridge.h>
++
++#include <linux/ioport.h>
++
++#define PCIBIOS_MIN_IO 0x100
++#define PCIBIOS_MIN_MEM 0x100000
++
++#define pcibios_assign_all_busses()	1
++/*
++ * The PCI address space does equal the physical memory address space.
++ * The networking and block device layers use this boolean for bounce
++ * buffer decisions.
++ */
++#define PCI_DMA_BUS_IS_PHYS	1
++
++#endif /* __KERNEL__ */
++
++#endif /* _ASM_ARC_PCI_H */
+diff --git a/arch/arc/kernel/Makefile b/arch/arc/kernel/Makefile
+index e7f3625..1bc2036 100644
+--- a/arch/arc/kernel/Makefile
++++ b/arch/arc/kernel/Makefile
+@@ -12,6 +12,7 @@ obj-y	:= arcksyms.o setup.o irq.o time.o reset.o ptrace.o process.o devtree.o
+ obj-y	+= signal.o traps.o sys.o troubleshoot.o stacktrace.o disasm.o clk.o
+ obj-$(CONFIG_ISA_ARCOMPACT)		+= entry-compact.o intc-compact.o
+ obj-$(CONFIG_ISA_ARCV2)			+= entry-arcv2.o intc-arcv2.o
++obj-$(CONFIG_PCI)  			+= pcibios.o
+ 
+ obj-$(CONFIG_MODULES)			+= arcksyms.o module.o
+ obj-$(CONFIG_SMP) 			+= smp.o
+diff --git a/arch/arc/kernel/pcibios.c b/arch/arc/kernel/pcibios.c
+new file mode 100644
+index 0000000..72e1d73
+--- /dev/null
++++ b/arch/arc/kernel/pcibios.c
+@@ -0,0 +1,22 @@
++/*
++ * Copyright (C) 2014-2015 Synopsys, Inc. (www.synopsys.com)
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/pci.h>
++
++/*
++ * We don't have to worry about legacy ISA devices, so nothing to do here
++ */
++resource_size_t pcibios_align_resource(void *data, const struct resource *res,
++				resource_size_t size, resource_size_t align)
++{
++	return res->start;
++}
++
++void pcibios_fixup_bus(struct pci_bus *bus)
++{
++}
+diff --git a/arch/arc/plat-axs10x/Kconfig b/arch/arc/plat-axs10x/Kconfig
+index d475f9d..426ac4b 100644
+--- a/arch/arc/plat-axs10x/Kconfig
++++ b/arch/arc/plat-axs10x/Kconfig
+@@ -11,6 +11,7 @@ menuconfig ARC_PLAT_AXS10X
+ 	select DW_APB_ICTL
+ 	select GPIO_DWAPB
+ 	select OF_GPIO
++	select MIGHT_HAVE_PCI
+ 	select GENERIC_IRQ_CHIP
+ 	select ARCH_REQUIRE_GPIOLIB
+ 	help
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index be3f631..2154092 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -32,6 +32,7 @@ obj-$(CONFIG_PCI_IOV) += iov.o
+ # Some architectures use the generic PCI setup functions
+ #
+ obj-$(CONFIG_ALPHA) += setup-irq.o
++obj-$(CONFIG_ARC) += setup-irq.o
+ obj-$(CONFIG_ARM) += setup-irq.o
+ obj-$(CONFIG_ARM64) += setup-irq.o
+ obj-$(CONFIG_UNICORE32) += setup-irq.o
 
-Thank you very much.
-
-Cheers,
-Lorenzo
-
-> Patches has been built on top of 4.5-rc3 and can be found here:
-> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v5)
-> 
-> NOTE, this patch set depends on Lorenzo's fixes:
-> https://patchwork.ozlabs.org/patch/576450/
-> which can be found in pci-acpi-v5 branch.
-> 
-> This has been tested on Cavium ThunderX server, JunoR2, HP RX2660 IA64, x86,
-> Hip05, X-Gene and QEMU-aarch64. Any help in reviewing and testing is very appreciated.
-> 
-> v4 -> v5
-> - dropped MCFG refactoring group patches 1-6 from series v4 and integrated Jayachandran's patch
->   https://patchwork.ozlabs.org/patch/575525/
-> - rewrite PCI legacy IRQs allocation
-> - squashed two patches 11 and 12 from series v4, fixed bisection issue
-> - changelog improvements
-> - rebased to 4.5-rc3
-> 
-> v3 -> v4
-> - dropped Jiang's fix http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04318.html
-> - added Lorenzo's fix patch 19/24
-> - ACPI PCI bus domain number assigning cleanup
-> - changed resource management, we now claim and reassign resources
-> - improvements for applying quirks
-> - dropped Matthew's http://www.spinics.net/lists/linux-pci/msg45950.html dependency
-> - rebased to 4.5-rc1
-> 
-> v2 -> v3
-> - fix legacy IRQ assigning and IO ports registration
-> - remove reference to arch specific companion device for ia64
-> - move ACPI PCI host controller driver to pci_root.c
-> - drop generic domain assignment for x86 and ia64 as I am not
->   able to run all necessary test variants
-> - drop patch which cleaned legacy IRQ assignment since it belongs to
->   Mathew's series:
->   https://patchwork.ozlabs.org/patch/557504/
-> - extend MCFG quirk code
-> - rebased to 4.4
-> 
-> v1 -> v2
-> - moved non-arch specific piece of code to dirver/acpi/ directory
-> - fixed IO resource handling
-> - introduced PCI config accessors quirks matching
-> - moved ACPI_COMPANION_SET to generic code
-> 
-> v1 - https://lkml.org/lkml/2015/10/27/504
-> v2 - https://lkml.org/lkml/2015/12/16/246
-> v3 - http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04308.html
-> v4 - https://lkml.org/lkml/2016/2/4/646
-> 
-> Jayachandran C (1):
->   ACPI: MCFG: Move mmcfg_list management to drivers/acpi
-> 
-> Lorenzo Pieralisi (1):
->   drivers: pci: add generic code to claim bus resources
-> 
-> Tomasz Nowicki (13):
->   acpi, pci, mcfg: Provide default RAW ACPI PCI config space accessors.
->   arm64, acpi: Use MCFG library and empty PCI config space accessors
->     from pci_mcfg.c file.
->   pci, acpi, ecam: Add flag to indicate whether ECAM region was hot
->     added or not.
->   x86, pci: Cleanup platform specific MCFG data by using ECAM hot_added
->     flag.
->   pci, acpi, x86, ia64: Move ACPI host bridge device companion
->     assignment to core code.
->   pci, acpi: Provide generic way to assign bus domain number.
->   x86, ia64: Include acpi_pci_{add|remove}_bus to the default
->     pcibios_{add|remove}_bus implementation.
->   acpi, mcfg: Add default PCI config accessors implementation and
->     initial support for related quirks.
->   pci, of: Move the PCI I/O space management to PCI core code.
->   pci, acpi: Support for ACPI based generic PCI host controller
->     initialization
->   pci, acpi: Match PCI config space accessors against platfrom specific
->     quirks.
->   arm64, pci, acpi: Assign legacy IRQs once device is enable.
->   arm64, pci, acpi: Start using ACPI based PCI host bridge driver for
->     ARM64.
-> 
->  arch/arm64/Kconfig                 |   5 +
->  arch/arm64/kernel/pci.c            |  35 +---
->  arch/ia64/hp/common/sba_iommu.c    |   2 +-
->  arch/ia64/include/asm/pci.h        |   1 -
->  arch/ia64/pci/pci.c                |  26 ---
->  arch/ia64/sn/kernel/io_acpi_init.c |   4 +-
->  arch/x86/include/asm/pci.h         |   3 -
->  arch/x86/include/asm/pci_x86.h     |  24 +--
->  arch/x86/pci/acpi.c                |  47 +----
->  arch/x86/pci/common.c              |  10 -
->  arch/x86/pci/mmconfig-shared.c     | 269 ++++---------------------
->  arch/x86/pci/mmconfig_32.c         |   1 +
->  arch/x86/pci/mmconfig_64.c         |   1 +
->  arch/x86/pci/numachip.c            |   1 +
->  drivers/acpi/Kconfig               |   7 +
->  drivers/acpi/Makefile              |   1 +
->  drivers/acpi/pci_mcfg.c            | 392 +++++++++++++++++++++++++++++++++++++
->  drivers/acpi/pci_root.c            | 154 ++++++++++++++-
->  drivers/of/address.c               | 116 +----------
->  drivers/pci/pci.c                  | 126 +++++++++++-
->  drivers/pci/probe.c                |   5 +
->  drivers/pci/setup-bus.c            |  63 ++++++
->  drivers/xen/pci.c                  |   5 +-
->  include/acpi/acpi_bus.h            |   1 +
->  include/asm-generic/vmlinux.lds.h  |   7 +
->  include/linux/of_address.h         |   9 -
->  include/linux/pci-acpi.h           |  68 +++++++
->  include/linux/pci.h                |   6 +
->  28 files changed, 892 insertions(+), 497 deletions(-)
->  create mode 100644 drivers/acpi/pci_mcfg.c
-> 
-> -- 
-> 1.9.1
-> 
