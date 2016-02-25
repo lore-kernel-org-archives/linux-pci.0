@@ -1,205 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:58549 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.136]:43511 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750832AbcBVQRw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Feb 2016 11:17:52 -0500
-Date: Mon, 22 Feb 2016 16:17:45 +0000
-From: Mark Rutland <mark.rutland@arm.com>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: Bharat Kumar Gogada <bharatku@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	Michal Simek <michals@xilinx.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"paul.burton@imgtec.com" <paul.burton@imgtec.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"wangyijing@huawei.com" <wangyijing@huawei.com>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH V4 5/5] Microblaze: Modifying microblaze PCI subsytem to
- support  generic Xilinx  AXI PCIe Host Bridge IP driver
-Message-ID: <20160222161745.GL3435@leverpostej>
-References: <1455208091-15556-1-git-send-email-bharatku@xilinx.com>
- <1455208091-15556-6-git-send-email-bharatku@xilinx.com>
- <8520D5D51A55D047800579B09414719825884643@XAP-PVEXMBX01.xlnx.xilinx.com>
+	id S932381AbcBYRyH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Feb 2016 12:54:07 -0500
+Date: Thu, 25 Feb 2016 11:54:00 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ilya Lesokhin <ilyal@mellanox.com>
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, alex.williamson@redhat.com,
+	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
+	liranl@mellanox.com
+Subject: Re: [RFC V2 2/4] IOMMU: Force the VFs of an untrusted PF device to
+ be in the PFs IOMMU group
+Message-ID: <20160225175400.GA2940@localhost>
+References: <1454574537-123466-1-git-send-email-ilyal@mellanox.com>
+ <1454574537-123466-3-git-send-email-ilyal@mellanox.com>
+ <20160225153726.GD8120@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8520D5D51A55D047800579B09414719825884643@XAP-PVEXMBX01.xlnx.xilinx.com>
+In-Reply-To: <20160225153726.GD8120@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 22, 2016 at 04:01:15PM +0000, Bharat Kumar Gogada wrote:
-> Ping
+[Hi Ilya, I think your response didn't go to the list because it was
+not plain text only (please fix your email client).  I'm inserting
+your response manually below.]
 
-Please trim your To line, and state who you're pinging, and specifically
-what you are pinging for. You'll have much better luck with targetted
-replies.
-
-Given the number of people in the To line, no-one knows if they're being
-poked, or if someone else is. Given the lack of any question/statement
-with your ping, it's not clear what you're asking for.
-
-The DT parts of this series already appear to have been reviewed, so
-there's no reason to keep myself and other DT maintainers on the To
-line for this patch.
-
-Mark.
-
+Ilya wrote:
+> On Thu, Feb 25, 2016 at 09:37:26AM -0600, Bjorn Helgaas wrote:
+> > On Thu, Feb 04, 2016 at 10:28:55AM +0200, Ilya Lesokhin wrote:
+> > > Add a new PCI_DEV_FLAGS_UNTRUSTED to indicate that a PCI device
+> > > is probed by a driver that gives untrusted entities access to that device.
+> > > Make iommu_group_get_for_pci_dev check the new flag when an IOMMU
+> > > group is selected for a virtual function.
+> > > Mark VFIO devices with the new flag.
+> > > 
+> > > Signed-off-by: Ilya Lesokhin <ilyal@mellanox.com>
+> > > ---
+> > >  drivers/iommu/iommu.c       | 4 ++++
+> > >  drivers/vfio/pci/vfio_pci.c | 3 +++
+> > >  include/linux/pci.h         | 1 +
+> > >  3 files changed, 8 insertions(+)
+> > > 
+> > > diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+> > > index 049df49..864b459 100644
+> > > --- a/drivers/iommu/iommu.c
+> > > +++ b/drivers/iommu/iommu.c
+> > > @@ -738,6 +738,10 @@ static struct iommu_group *iommu_group_get_for_pci_dev(struct pci_dev *pdev)
+> > >  	struct iommu_group *group = NULL;
+> > >  	u64 devfns[4] = { 0 };
+> > >  
+> > > +	if (pdev->is_virtfn && 
+> > > +	   (pdev->physfn->dev_flags & PCI_DEV_FLAGS_UNTRUSTED))
+> > > +		return iommu_group_get(&pdev->physfn->dev);
+> > > +	
+> > >  	/*
+> > >  	 * Find the upstream DMA alias for the device.  A device must not
+> > >  	 * be aliased due to topology in order to have its own IOMMU group.
+> > > diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> > > index 964ad57..ddcfd2c 100644
+> > > --- a/drivers/vfio/pci/vfio_pci.c
+> > > +++ b/drivers/vfio/pci/vfio_pci.c
+> > > @@ -982,6 +982,8 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+> > >  		pci_set_power_state(pdev, PCI_D3hot);
+> > >  	}
+> > >  
+> > > +	pdev->dev_flags |= PCI_DEV_FLAGS_UNTRUSTED;
+> > > +
+> > >  	return ret;
+> > >  }
+> > >  
+> > > @@ -989,6 +991,7 @@ static void vfio_pci_remove(struct pci_dev *pdev)
+> > >  {
+> > >  	struct vfio_pci_device *vdev;
+> > >  
+> > > +	pdev->dev_flags &= ~PCI_DEV_FLAGS_UNTRUSTED;
+> > >  	vdev = vfio_del_group_dev(&pdev->dev);
+> > >  	if (!vdev)
+> > >  		return;
+> > > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > > index e90eb22..6330327 100644
+> > > --- a/include/linux/pci.h
+> > > +++ b/include/linux/pci.h
+> > > @@ -182,6 +182,7 @@ enum pci_dev_flags {
+> > >  	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
+> > >  	/* Get VPD from function 0 VPD */
+> > >  	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
+> > > +	PCI_DEV_FLAGS_UNTRUSTED = (__force pci_dev_flags_t) (1 << 9),
+> > 
+> > I'm raising my eyebrows a bit at this.  PCI_DEV_FLAGS_UNTRUSTED
+> > doesn't seem like a PCI core property, so it seems like the PCI core
+> > is an innocent bystander here (it neither sets nor checks the flag),
+> > and you're asking it to keep track of bookkeeping details for other
+> > unrelated entities.
 > 
-> > Subject: [PATCH V4 5/5] Microblaze: Modifying microblaze PCI subsytem to
-> > support generic Xilinx AXI PCIe Host Bridge IP driver
-> > 
-> > This patch does required modifications to microblaze PCI subsystem, to work
-> > with generic driver (drivers/pci/host/pcie-xilinx.c) on Microblaze and Zynq.
-> > 
-> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
-> > ---
-> > Changes:
-> > Removed pcibios_get_phb_of_node in pci-common.c, using generic version
-> > instead.
-> > Modified pcibios_fixup_bus in pci-common.c, as per generic architecuture.
-> > Modified pcibios_align_resource in pci-common.c, as per generic
-> > architecuture, removed temporary variable.
-> > Removed pci_domain_nr in pci-common.c, instead using generic code.
-> > Added pcibios_add_device in pci-common.c, as per generic architecuture.
-> > Adding Kernel configuration in arch/microblaze as required for generic PCI
-> > domains.
-> > Added kernel configuration for driver to support Microblaze.
-> > ---
-> >  arch/microblaze/Kconfig          |  3 +++
-> >  arch/microblaze/pci/pci-common.c | 56 +++++++---------------------------------
-> >  drivers/pci/host/Kconfig         |  2 +-
-> >  3 files changed, 14 insertions(+), 47 deletions(-)
-> > 
-> > diff --git a/arch/microblaze/Kconfig b/arch/microblaze/Kconfig index
-> > 0bce820..c3702b9 100644
-> > --- a/arch/microblaze/Kconfig
-> > +++ b/arch/microblaze/Kconfig
-> > @@ -271,6 +271,9 @@ config PCI
-> >  config PCI_DOMAINS
-> >  	def_bool PCI
-> > 
-> > +config PCI_DOMAINS_GENERIC
-> > +	def_bool PCI_DOMAINS
-> > +
-> >  config PCI_SYSCALL
-> >  	def_bool PCI
-> > 
-> > diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-
-> > common.c
-> > index ae838ed..35654be 100644
-> > --- a/arch/microblaze/pci/pci-common.c
-> > +++ b/arch/microblaze/pci/pci-common.c
-> > @@ -123,17 +123,6 @@ unsigned long pci_address_to_pio(phys_addr_t
-> > address)  }  EXPORT_SYMBOL_GPL(pci_address_to_pio);
-> > 
-> > -/*
-> > - * Return the domain number for this bus.
-> > - */
-> > -int pci_domain_nr(struct pci_bus *bus)
-> > -{
-> > -	struct pci_controller *hose = pci_bus_to_host(bus);
-> > -
-> > -	return hose->global_number;
-> > -}
-> > -EXPORT_SYMBOL(pci_domain_nr);
-> > -
-> >  /* This routine is meant to be used early during boot, when the
-> >   * PCI bus numbers have not yet been assigned, and you need to
-> >   * issue PCI config cycles to an OF device.
-> > @@ -863,26 +852,10 @@ void pcibios_setup_bus_devices(struct pci_bus
-> > *bus)
-> > 
-> >  void pcibios_fixup_bus(struct pci_bus *bus)  {
-> > -	/* When called from the generic PCI probe, read PCI<->PCI bridge
-> > -	 * bases. This is -not- called when generating the PCI tree from
-> > -	 * the OF device-tree.
-> > -	 */
-> > -	if (bus->self != NULL)
-> > -		pci_read_bridge_bases(bus);
-> > -
-> > -	/* Now fixup the bus bus */
-> > -	pcibios_setup_bus_self(bus);
-> > -
-> > -	/* Now fixup devices on that bus */
-> > -	pcibios_setup_bus_devices(bus);
-> > +	/* nothing to do */
-> >  }
-> >  EXPORT_SYMBOL(pcibios_fixup_bus);
-> > 
-> > -static int skip_isa_ioresource_align(struct pci_dev *dev) -{
-> > -	return 0;
-> > -}
-> > -
-> >  /*
-> >   * We need to avoid collisions with `mirrored' VGA ports
-> >   * and other strange ISA hardware, so we always want the @@ -899,20
-> > +872,18 @@ static int skip_isa_ioresource_align(struct pci_dev *dev)
-> > resource_size_t pcibios_align_resource(void *data, const struct resource
-> > *res,
-> >  				resource_size_t size, resource_size_t align)  {
-> > -	struct pci_dev *dev = data;
-> > -	resource_size_t start = res->start;
-> > -
-> > -	if (res->flags & IORESOURCE_IO) {
-> > -		if (skip_isa_ioresource_align(dev))
-> > -			return start;
-> > -		if (start & 0x300)
-> > -			start = (start + 0x3ff) & ~0x3ff;
-> > -	}
-> > -
-> > -	return start;
-> > +	return res->start;
-> >  }
-> >  EXPORT_SYMBOL(pcibios_align_resource);
-> > 
-> > +int pcibios_add_device(struct pci_dev *dev) {
-> > +	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> > +
-> > +	return 0;
-> > +}
-> > +EXPORT_SYMBOL(pcibios_add_device);
-> > +
-> >  /*
-> >   * Reparent resource children of pr that conflict with res
-> >   * under res, and make res replace those children.
-> > @@ -1333,13 +1304,6 @@ static void pcibios_setup_phb_resources(struct
-> > pci_controller *hose,
-> >  		 (unsigned long)hose->io_base_virt - _IO_BASE);  }
-> > 
-> > -struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus) -{
-> > -	struct pci_controller *hose = bus->sysdata;
-> > -
-> > -	return of_node_get(hose->dn);
-> > -}
-> > -
-> >  static void pcibios_scan_phb(struct pci_controller *hose)  {
-> >  	LIST_HEAD(resources);
-> > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig index
-> > d5e58ba..7c56c2e 100644
-> > --- a/drivers/pci/host/Kconfig
-> > +++ b/drivers/pci/host/Kconfig
-> > @@ -79,7 +79,7 @@ config PCI_KEYSTONE
-> > 
-> >  config PCIE_XILINX
-> >  	bool "Xilinx AXI PCIe host bridge support"
-> > -	depends on ARCH_ZYNQ
-> > +	depends on ARCH_ZYNQ || MICROBLAZE
-> >  	help
-> >  	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
-> >  	  Host Bridge driver.
-> > --
-> > 2.1.1
+> PCI_DEV_FLAGS_UNTRUSTED is quite similar to
+> PCI_DEV_FLAGS_DMA_ALIAS_DEVFN,
 > 
+> they both indicate that a device needs to be put in the same IOMMU
+> group as another device.
+> 
+> In fact, we initially though about overloading the meaning of
+> PCI_DEV_FLAGS_DMA_ALIAS_DEVFN
+> 
+> To force the VFs in the same group as the PF (if its probed by VFIO).
+
+It's true that it's similar to PCI_DEV_FLAGS_DMA_ALIAS_DEVFN.  I don't
+really like that either :)
+
+There's a little bit of current discussion about that here: 
+http://lkml.kernel.org/r/20160224194406.7585.17447.stgit@bhelgaas-glaptop2.roam.corp.google.com
+
+I don't know if I have a better suggestion yet.  Having a real PCI
+interface, even if just simple wrappers that set/test the bit, at
+least provides a place for an explanatory comment, so that would be a
+little better in my mind.
+
+Bjorn
