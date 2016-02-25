@@ -1,215 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60711 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750712AbcB2Woh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:44:37 -0500
-Date: Mon, 29 Feb 2016 16:44:17 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Lawrynowicz, Jacek" <jacek.lawrynowicz@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Joerg Roedel <jroedel@suse.de>,
-	David Woodhouse <dwmw2@infradead.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Subject: Re: [PATCH v4 3/6] PCI: Add support for multiple DMA aliases
-Message-ID: <20160229224417.GD3653@localhost>
-References: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160224194406.7585.17447.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160225143841.GA8726@localhost>
- <36D38C1F74839847A52A484C31F3E51A62180790@irsmsx105.ger.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <36D38C1F74839847A52A484C31F3E51A62180790@irsmsx105.ger.corp.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v10 20/59] PCI: Treat optional as required in first try for bridge rescan
+Date: Wed, 24 Feb 2016 18:12:11 -0800
+Message-Id: <1456366370-28995-21-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 25, 2016 at 03:41:51PM +0000, Lawrynowicz, Jacek wrote:
-> > -----Original Message-----
-> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> > Sent: Thursday, February 25, 2016 3:39 PM
-> > To: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Lawrynowicz, Jacek <jacek.lawrynowicz@intel.com>; linux-
-> > pci@vger.kernel.org; Alex Williamson <alex.williamson@redhat.com>; Joerg
-> > Roedel <jroedel@suse.de>; David Woodhouse <dwmw2@infradead.org>;
-> > iommu@lists.linux-foundation.org
-> > Subject: Re: [PATCH v4 3/6] PCI: Add support for multiple DMA aliases
-> > 
-> > On Wed, Feb 24, 2016 at 01:44:06PM -0600, Bjorn Helgaas wrote:
-> > > From: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-> > >
-> > > <Insert changelog here>
-> > 
-> > (Sorry, I should have copied this changelog in the patch; I copied
-> > this manually from your v3 posting):
-> > 
-> > > This patch solves IOMMU support issues with PCIe non-transparent bridges
-> > > that use Requester ID look-up tables (LUT), e.g. PEX8733. Before exiting
-> > > the bridge, packet's RID is rewritten according to LUT programmed by
-> > > a driver. Modified packets are then passed to a destination bus and
-> > > processed upstream. The problem is that such packets seem to come from
-> > > non-existent nodes that are hidden behind NTB and are not discoverable
-> > > by a destination node, so IOMMU discards them. Adding DMA alias for a
-> > > given LUT entry allows IOMMU to create a proper mapping that enables
-> > > inter-node communication.
-> > 
-> > A specific example here would help me understand.  Here's how I
-> > understand this (correct me if I'm wrong): We're talking about a DMA
-> > packet being forwarded upstream from an NTB.  The NTB uses the LUT to
-> > rewrite the RID in the DMA packet.  The new RID from the LUT is
-> > unknown to the IOMMU, so it discards the DMA packet.
-> 
-> Yes, this is exactly the problem.
-> 
-> > > The current DMA alias implementation supports only single alias, so it's
-> > > not possible to connect more than two nodes when IOMMU is enabled. This
-> > > implementation enables all possible aliases on a given bus (256) that
-> > > are stored in a bitset. Alias devfn is directly translated to a bit
-> > > number. The bitset is not allocated for devices that have no need for
-> > > DMA aliases.
-> > 
-> > I think "two nodes" is referring to two PCIe devices on the other side
-> > of the NTB.  You want DMA packets from those devices to have different
-> > RIDs so the IOMMU can distinguish them.
-> 
-> Right.
-> 
-> > The LUT entries basically create aliases of the NTB (one alias for
-> > each device beyond the NTB).  Your quirk uses pci_add_dma_alias(), and
-> > the aliases are all on the same bus as the NTB itself.
-> > 
-> > The quirk adds PCI_DEVFN(0x10, 0x0), PCI_DEVFN(0x11, 0x0), and
-> > PCI_DEVFN(0x12, 0x0).  Shouldn't there be some connection between this
-> > and the LUT programming?  I assume the LUT is programmed to correspond
-> > to those aliases.  Does this mean you're limited to three devices
-> > beyond the NTB?
-> 
-> Yes, there is an indirect connection between LUT table and devfns used in the
-> quirk.
-> Dev part is an offset in the LUT table and function is taken from the device
-> behind the NTB.
-> So the driver can only change the dev part by using different LUT offsets.
-> We don't plan to modify this quirk. The number of PCIe devices beyond single
-> x200 card NTB will not change.
-> Two are used by x200 CPU (host bridge & root port) and one is used by x200 DMA
-> engine.
-> I'm not sure introducing some dependencies to make sure the offsets are set
-> correctly is really worth it.
+For rescan bridge/bus that children are removed before, we should treat
+optional as required just like root bus the boot time in 19aa7ee432ce
+(PCI: make re-allocation try harder by reassigning ranges higher in
+the heirarchy).
 
-I'd like at least a comment that points to the specific x200 code that
-must coordinate with this.
+The reason: allocate required and expand to optional path do not
+put failed resource to fail list, so will lose required info before
+next try.
 
-> So regarding the improvements in the patch description, you want me to update
-> and repost it?
+So we are using following way:
+1. First and following try before last try:
+   We don't keep realloc list so treat every optional as required.
+   allocate for required+optional and put failed in the fail list.
+   then size info (include must and optonal separatedly) will be kept
+   for next try.
+2. last try:
+   a: try to allocate required+optional to see if all get allocated.
+   b: try to allocate required then expand to optional.
 
-Yes, please.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
 
-> BTW I posted x200 DMA driver (the client for this change) on DMA list:
-> https://lkml.org/lkml/2016/2/9/287
-> I'm working on integrating review comments and hope to get it included in 4.6.
-
-What about my questions on the code itself, below?
-
-> > > ---
-> > >  drivers/iommu/iommu.c |   17 ++++++++++-------
-> > >  drivers/pci/pci.c     |   11 +++++++++--
-> > >  drivers/pci/probe.c   |    1 +
-> > >  drivers/pci/search.c  |   14 +++++++++-----
-> > >  include/linux/pci.h   |    4 +---
-> > >  5 files changed, 30 insertions(+), 17 deletions(-)
-> > >
-> > > diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> > > index 0e3b009..a214e19 100644
-> > > --- a/drivers/iommu/iommu.c
-> > > +++ b/drivers/iommu/iommu.c
-> > > @@ -659,9 +659,15 @@ static struct iommu_group
-> > *get_pci_function_alias_group(struct pci_dev *pdev,
-> > >  	return NULL;
-> > >  }
-> > >
-> > > +static bool dma_alias_is_enabled(struct pci_dev *dev, u8 devfn)
-> > > +{
-> > > +	return dev->dma_alias_mask &&
-> > > +	       test_bit(devfn, dev->dma_alias_mask);
-> > > +}
-> > > +
-> > >  /*
-> > > - * Look for aliases to or from the given device for exisiting groups.  The
-> > > - * dma_alias_devfn only supports aliases on the same bus, therefore the
-> > search
-> > > + * Look for aliases to or from the given device for existing groups. DMA
-> > > + * aliases are only supported on the same bus, therefore the search
-> > 
-> > I'm trying to reconcile this statement that "DMA aliases are only
-> > supported on the same bus" (which was there even before this patch)
-> > with the fact that pci_for_each_dma_alias() does not have that
-> > limitation.
-> > 
-> > >   * space is quite small (especially since we're really only looking at pcie
-> > >   * device, and therefore only expect multiple slots on the root complex or
-> > >   * downstream switch ports).  It's conceivable though that a pair of
-> > > @@ -686,11 +692,8 @@ static struct iommu_group *get_pci_alias_group(struct
-> > pci_dev *pdev,
-> > >  			continue;
-> > >
-> > >  		/* We alias them or they alias us */
-> > > -		if (((pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN)
-> > &&
-> > > -		     pdev->dma_alias_devfn == tmp->devfn) ||
-> > > -		    ((tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
-> > > -		     tmp->dma_alias_devfn == pdev->devfn)) {
-> > > -
-> > > +		if (dma_alias_is_enabled(pdev, tmp->devfn) ||
-> > > +		    dma_alias_is_enabled(tmp, pdev->devfn)) {
-> > >  			group = get_pci_alias_group(tmp, devfns);
-> > 
-> > We basically have this:
-> > 
-> >   for_each_pci_dev(tmp) {
-> >     if (<pdev and tmp are DMA aliases>)
-> >       group = get_pci_alias_group();
-> >       ...
-> >   }
-> > 
-> > The DMA alias stuff relies on PCI internals, so it doesn't doesn't
-> > seem quite right to use things like PCI_DEV_FLAGS_DMA_ALIAS_DEVFN and
-> > dma_alias_devfn here in the IOMMU code.
-> > 
-> > I'm trying to figure out why we don't do something like the following
-> > instead:
-> > 
-> >   callback(struct pci_dev *pdev, u16 alias, void *opaque)
-> >   {
-> >     struct iommu_group *group;
-> > 
-> >     group = get_pci_alias_group();
-> >     if (group)
-> >       return group;
-> > 
-> >     return 0;
-> >   }
-> > 
-> >   pci_for_each_dma_alias(pdev, callback, ...);
-> > 
-> > Is the existing code some sort of optimization, e.g., checking
-> > PCI_DEV_FLAGS_DMA_ALIAS_DEVFN is cheaper than using
-> > pci_for_each_dma_alias()?
-> > 
-> > It seems like this won't work for some very unlikely but theoretically
-> > possible topologies, e.g.,
-> > 
-> >   PCIe Root Complex/IOMMU
-> >     PCIe switch A
-> >       PCIe to conventional PCI bridge
-> >         PCI to PCIe Root Complex
-> > 	  PCIe NTB
-> > 
-> > Here, I think the IOMMU will only see RIDs from PCIe switch A, but the
-> > current code only looks at DMA aliases that are on the same bus as the
-> > PCIe NTB.  Wouldn't using pci_for_each_dma_alias() handle this
-> > correctly?
-> > 
-> > >  			if (group) {
-> > >  				pci_dev_put(tmp);
-
-
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 4741cc9..10f1146 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1846,25 +1846,34 @@ void __init pci_assign_unassigned_resources(void)
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ {
+ 	struct pci_bus *parent = bridge->subordinate;
+-	LIST_HEAD(add_list); /* list of resources that
++	LIST_HEAD(realloc_head); /* list of resources that
+ 					want additional resources */
++	struct list_head *add_list = NULL;
+ 	int tried_times = 0;
+ 	LIST_HEAD(fail_head);
+ 	struct pci_dev_resource *fail_res;
+ 	int retval;
+ 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+ 				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
++	int pci_try_num = 2;
+ 
+ again:
+-	__pci_bus_size_bridges(parent, &add_list);
+-	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+-	pci_bus_check_realloc(&add_list);
++	/*
++	 * last try will use add_list, otherwise will try good to have as
++	 * must have, so can realloc parent bridge resource
++	 */
++	if (tried_times + 1 == pci_try_num)
++		add_list = &realloc_head;
++	__pci_bus_size_bridges(parent, add_list);
++	__pci_bridge_assign_resources(bridge, add_list, &fail_head);
++	if (add_list)
++		pci_bus_check_realloc(add_list);
+ 	tried_times++;
+ 
+ 	if (list_empty(&fail_head))
+ 		goto enable_all;
+ 
+-	if (tried_times >= 2) {
++	if (tried_times >= pci_try_num) {
+ 		/* still fail, don't need to try more */
+ 		free_list(&fail_head);
+ 		goto enable_all;
+-- 
+1.8.4.5
