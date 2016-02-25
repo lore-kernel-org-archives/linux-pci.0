@@ -1,197 +1,251 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60441 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423823AbcBQP23 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Feb 2016 10:28:29 -0500
-Date: Wed, 17 Feb 2016 08:28:28 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Jayachandran Chandrashekaran Nair
-	<jayachandran.chandrashekaran@broadcom.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: Re: [RFC PATCH 1/2] PCI: Add PCI device flag
- PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS
-Message-ID: <20160217082828.3d164080@t450s.home>
-In-Reply-To: <CAKc_7PVExWkm0NqoGcf4d5bSPEcbhzn45oBgYRc7xZ8CJg+WEw@mail.gmail.com>
-References: <1455487501-28630-1-git-send-email-jchandra@broadcom.com>
-	<20160215182023.GB12641@localhost>
-	<20160215123901.1600f86f@t450s.home>
-	<CAKc_7PUtm7443qv40DNWKqJneWnVT6Do7s7vr_hOerkGLOgkJg@mail.gmail.com>
-	<20160216152529.33855bc1@t450s.home>
-	<CAKc_7PVExWkm0NqoGcf4d5bSPEcbhzn45oBgYRc7xZ8CJg+WEw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from userp1040.oracle.com ([156.151.31.81]:40785 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932680AbcBYCNx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:13:53 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v10 55/59] PCI: Add debug print out for min_align and alt_size
+Date: Wed, 24 Feb 2016 18:12:46 -0800
+Message-Id: <1456366370-28995-56-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 17 Feb 2016 17:15:09 +0530
-Jayachandran Chandrashekaran Nair
-<jayachandran.chandrashekaran@broadcom.com> wrote:
+Put all print out for all children align/size and result align/size
+together.
 
-> On Wed, Feb 17, 2016 at 3:55 AM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > On Wed, 17 Feb 2016 02:38:24 +0530
-> > Jayachandran Chandrashekaran Nair
-> > <jayachandran.chandrashekaran@broadcom.com> wrote:
-> >  
-> >> On Tue, Feb 16, 2016 at 1:09 AM, Alex Williamson
-> >> <alex.williamson@redhat.com> wrote:  
-> >> > On Mon, 15 Feb 2016 12:20:23 -0600
-> >> > Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >> >  
-> >> >> [+cc Alex, iommu list]
-> >> >>
-> >> >> On Mon, Feb 15, 2016 at 03:35:00AM +0530, Jayachandran C wrote:  
-> >> >> > Add a new flag PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS to indicate bridges
-> >> >> > that should not be considered during DMA alias search. This is
-> >> >> > to support hardware (in this case Broadcom Vulcan PCIe subsystem)
-> >> >> > that has internal bridges which have either missing or wrong PCIe
-> >> >> > capabilities.  
-> >> >
-> >> > I figured this would come at some point, the right answer is of course
-> >> > to follow the PCIe spec and implement the required PCIe capability in
-> >> > the hardware.  
-> >>
-> >> There are  PCIe controllers on the chip that follows the spec, the issue is
-> >> how it is integrated to the northbridge (equivalent) on the chip, I have
-> >> tried to explain it below.
-> >>  
-> >> >> This needs more explanation, like what exactly is wrong with this
-> >> >> device?  A missing PCIe capability might cause other problems.
-> >> >>
-> >> >> What problem does this fix?  Without these patches, do we merely add
-> >> >> aliases that are unnecessary?  Do we crash because something goes
-> >> >> wrong in the pci_pcie_type() switch because of the incorrect
-> >> >> capability?  
-> >>
-> >> Here's how (for example) how the PCI enumeration of a 2 node Vulcan
-> >> processor will look like:
-> >>
-> >>
-> >> [0] +-0.0.0--[1]---+--1.a.0----[2]-----2.0.0---[3]----3.0.0
-> >>     |              +--1.a.1----[4]-----4.0.0---[5]----5.0.0
-> >>     |              .
-> >>     |              ... etc...
-> >>     |
-> >>     +-0.0.1--[10]--+-10.a.0----[11]---11.0.0---[12]---12.0.0
-> >>                    +-10.a.1----[13]---13.0.0---[14]---14.0.0
-> >>                    .
-> >>                    ... etc...  
-> >
-> > So we have:
-> >
-> >     "Glue Bridge"---"Glue Bridges"---Root Ports---Endpoints
-> >       (no pcie)      (pci/x-pcie)  
-> 
-> The top level is one glue bridge per chip in a multi-chip board,
-> but otherwise this is accurate.
-> 
-> >>
-> >> The devices 0.0.x and x.a.x are glue bridges that are there to
-> >> bring the real PCIe controllers (pcie cap type 4) 2.0.0, 4.0.0,
-> >> 11.0.0, 13.0.0 under a single PCI hierarchy. The x.a.x bridges
-> >> have a PCIe capability (type 8) and 0.0.x does not have any pcie
-> >> capability.
-> >>
-> >> In case of Vulcan, both the GICv3 ITS driver code and the SMMUv3
-> >> driver code does dma alias walk to find the device id to use
-> >> in ITS and SMMU. In both cases it will ignore the x.0.0 bridges
-> >> since they are type root port, but will continue on up and end
-> >> up with incorrect device id.
-> >>
-> >> The flag I have added is to make the pci_for_each_dma_alias()
-> >> ignore the last 2 levels of glue/internal bridges.  
-> >
-> > Per the PCIe spec, I'm not even sure what you have is a valid
-> > hierarchy, root ports sit on root complexes, not behind a PCI-to-PCIe
-> > bridge.  So really you're pretending that the downstream "glue bridge"
-> > is your host bridge and therefore root complex, but the PCI topology
-> > would clearly dictate that the top-most bus is conventional PCI and
-> > therefore everything is an alias of everything else and the DMA alias
-> > code is doing exactly what it should.  
-> 
-> Yes, I am not arguing that there is any issue in the current code. I
-> am trying to figure out the correct way to implement the quirk. We
-> have to support the hardware we have, not the hardware we want to
-> have :)
-> 
-> > Also note that the caller of pci_for_each_dma_alias() owns the callback
-> > function triggered for each alias, that function could choose to prune
-> > out these "glue bridges" itself if that's the appropriate thing to do.  
-> 
-> I had implemented this first, but moved to the current approach because
-> it is needed in multiple places. The problem is: "On vulcan, while
-> going up the pcie bus heirarchy for finding aliases, skip the glue bridges",
-> So the logical place to put the fix is in pci_for_each_dma_alias()
-> 
-> > Where do the SMMU and ITS actually reside in the above diagram?  You
-> > can use the callout function to stop the traversal anywhere you wish,
-> > it's free to return a -errno to stop or positive number, which the
-> > caller can interpret as error or non-failure stop condition.  
-> 
-> The SMMU (for translation requests) and ITS (for MSI writes for
-> interrupts) are connected directly to the proper PCIe controller
-> (2/4/11/13.0.0 above)
+We can print out device name at same time with min_align/alt_size
+calculation.
 
+So we can shut off debug print out from get_res_add_size() and
+get_res_add_align().
 
-If the translation unit is on the root port then DMA aliases upstream of
-the translation unit are irrelevant and the callback function should
-stop the traversal at that point.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 76 ++++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 56 insertions(+), 20 deletions(-)
 
-> > You could even think about changing what Linux considers to be the host
-> > bridge.  Maybe these glue bridges shouldn't even be visible to Linux,
-> > would that also solve the issue with the broken BAR?  
-> 
-> The glue bridges have to seen by Linux for assigning resources like
-> bus ranges and memory windows. So these are required bridges in
-> the topology and will work with the standard linux code
-> (provided we skip them for aliases, and and ignore the BAR).
-> 
-> >> > The change takes the same code path as it would for a real PCIe bridge
-> >> > port (downstream/upstream/root), which means they want to skip adding
-> >> > this bridge as an alias of the device.  So we're adding in aliases that
-> >> > don't exist, the bridge itself.
-> >> >
-> >> > If anything I'd suggest a flag that actually tries to address the
-> >> > problem rather than a symptom of the problem.  For example, maybe the
-> >> > flag should be PCI_DEV_FLAGS_IS_PCIE.  Maybe pci_is_pcie() should even
-> >> > take that into account.  That has some trickle through for
-> >> > pci_pcie_type() and all the accessor functions, but maybe it's a
-> >> > cleaner solution overall (or maybe it explodes further).  Thanks,  
-> >>
-> >> I didn't really want to mark the glue bridges as PCIe or have fake
-> >> PCIe capability there, the obvious simple solution was to add
-> >> the flag PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS
-> >>
-> >> Any suggestions/comments on how to do this better would be welcome.  
-> >
-> > I definitely don't think either flag idea is the right solution, I
-> > think you've actually already got the tools you need to solve it by
-> > putting the intelligence in the callback function or by going further
-> > down the path of pretending the glue bridge is really a host bridge.  
-> 
-> If I understand your suggestion, I need to fake the PCIe capability
-> for the glue bridges, which may be reasonable for the second level.
-> But for the first level, there is no pcie capability and faking that
-> becomes more difficult.
-
-That's not what I'm suggesting.
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 7b89bf5..ff4c5c4 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -159,11 +159,6 @@ static resource_size_t get_res_add_size(struct list_head *head,
+ 	if (!dev_res || !dev_res->add_size)
+ 		return 0;
  
-> If the concern is adding a flag for just one platform, I can check
-> for the vendor ID/device ID in the pci_for_each_dma_alias()
-> function, which would be slightly uglier, but still a simple and
-> maintainable solution.
-> 
-> Another option is to break the pci_for_each_dma_alias when it
-> reaches to root port (for vulcan), this too can be done without
-> a flag.
+-	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+-		   "BAR %d: %pR get_res_add_size add_size   %#llx\n",
+-		   (int)(res - &dev_res->dev->resource[0]),
+-		   res, (unsigned long long)dev_res->add_size);
+-
+ 	return dev_res->add_size;
+ }
+ 
+@@ -176,11 +171,6 @@ static resource_size_t get_res_add_align(struct list_head *head,
+ 	if (!dev_res || !dev_res->min_align)
+ 		return 0;
+ 
+-	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+-		   "BAR %d: %pR get_res_add_align min_align %#llx\n",
+-		   (int)(res - &dev_res->dev->resource[0]),
+-		   res, (unsigned long long)dev_res->min_align);
+-
+ 	return dev_res->min_align;
+ }
+ 
+@@ -1271,6 +1261,8 @@ struct align_test_res {
+ 	struct resource res;
+ 	resource_size_t size;
+ 	resource_size_t align;
++	struct device *dev;
++	int idx;
+ };
+ 
+ static void free_align_test_list(struct list_head *head)
+@@ -1284,7 +1276,8 @@ static void free_align_test_list(struct list_head *head)
+ }
+ 
+ static int add_to_align_test_list(struct list_head *head,
+-				  resource_size_t align, resource_size_t size)
++				  resource_size_t align, resource_size_t size,
++				  struct device *dev, int idx)
+ {
+ 	struct align_test_res *tmp;
+ 
+@@ -1294,6 +1287,8 @@ static int add_to_align_test_list(struct list_head *head,
+ 
+ 	tmp->align = align;
+ 	tmp->size = size;
++	tmp->dev = dev;
++	tmp->idx = idx;
+ 
+ 	list_add_tail(&tmp->list, head);
+ 
+@@ -1359,6 +1354,19 @@ static resource_size_t calculate_mem_align(struct list_head *head,
+ 	resource_size_t min_align, good_align, aligned_size, start;
+ 	int count = 0;
+ 
++	list_for_each_entry(p, head, list)
++		count++;
++
++	printk(KERN_DEBUG "  ===========BEGIN===calculate_mem_align========\n");
++	if (count) {
++		printk(KERN_DEBUG "  align/size:\n");
++		list_for_each_entry(p, head, list)
++			dev_printk(KERN_DEBUG, p->dev,
++				   "BAR %d:     %08llx/%08llx\n", p->idx,
++				   (unsigned long long)p->align,
++				   (unsigned long long)p->size);
++	}
++
+ 	if (max_align <= align_low) {
+ 		good_align = align_low;
+ 		goto out;
+@@ -1366,9 +1374,6 @@ static resource_size_t calculate_mem_align(struct list_head *head,
+ 
+ 	good_align = max_align;
+ 
+-	list_for_each_entry(p, head, list)
+-		count++;
+-
+ 	if (count <= 1)
+ 		goto out;
+ 
+@@ -1393,6 +1398,11 @@ static resource_size_t calculate_mem_align(struct list_head *head,
+ 	} while (min_align > align_low);
+ 
+ out:
++	printk(KERN_DEBUG "      min_align/aligned_size: %08llx/%08llx\n",
++			(unsigned long long)good_align,
++			(unsigned long long)ALIGN(size, good_align));
++	printk(KERN_DEBUG "  ===========END===calculate_mem_align==========\n");
++
+ 	return good_align;
+ }
+ 
+@@ -1410,6 +1420,16 @@ static resource_size_t calculate_mem_alt_size(struct list_head *head,
+ 	list_for_each_entry(p, head, list)
+ 		count++;
+ 
++	printk(KERN_DEBUG "  ===========BEGIN===calculate_mem_alt_size=====\n");
++	if (count) {
++		printk(KERN_DEBUG "  align/size:\n");
++		list_for_each_entry(p, head, list)
++			dev_printk(KERN_DEBUG, p->dev,
++				   "BAR %d:     %08llx/%08llx\n", p->idx,
++				   (unsigned long long)p->align,
++				   (unsigned long long)p->size);
++	}
++
+ 	if (count <= 1)
+ 		goto out;
+ 
+@@ -1434,6 +1454,11 @@ static resource_size_t calculate_mem_alt_size(struct list_head *head,
+ 	}
+ 
+ out:
++	printk(KERN_DEBUG "   alt_align/alt_size: %08llx/%08llx\n",
++			(unsigned long long)max_align,
++			(unsigned long long)good_size);
++	printk(KERN_DEBUG "  ===========END===calculate_mem_alt_size=======\n");
++
+ 	return good_size;
+ }
+ 
+@@ -1516,7 +1541,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			/* put SRIOV/ROM res to realloc list */
+ 			if (realloc_head && is_optional(i)) {
+ 				add_to_align_test_list(&align_test_add_list,
+-							align, r_size);
++						align, r_size, &dev->dev, i);
+ 				r->end = r->start - 1;
+ 				__add_to_list(realloc_head, dev, r,
+ 					      r_size, align, 0, 0);
+@@ -1535,7 +1560,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 			if (r_size > 1) {
+ 				add_to_align_test_list(&align_test_list,
+-							align, r_size);
++						align, r_size, &dev->dev, i);
+ 				size += r_size;
+ 				if (align > max_align)
+ 					max_align = align;
+@@ -1552,7 +1577,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					add_align = align;
+ 				add_to_align_test_list(&align_test_add_list,
+ 							add_align,
+-							r_size + add_r_size);
++							r_size + add_r_size,
++							&dev->dev, i);
+ 				sum_add_size += r_size + add_r_size;
+ 				if (add_align > max_add_align)
+ 					max_add_align = add_align;
+@@ -1562,14 +1588,14 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					add_to_align_test_list(
+ 						&align_test_alt_list,
+ 						dev_res->alt_align,
+-						dev_res->alt_size);
++						dev_res->alt_size, &dev->dev, i);
+ 					alt_size += dev_res->alt_size;
+ 					if (alt_align < dev_res->alt_align)
+ 						alt_align = dev_res->alt_align;
+ 				} else if (r_size > 1) {
+ 					add_to_align_test_list(
+ 						&align_test_alt_list,
+-						align, r_size);
++						align, r_size, &dev->dev, i);
+ 					alt_size += r_size;
+ 					if (alt_align < align)
+ 						alt_align = align;
+@@ -1580,6 +1606,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 	max_align = max(max_align, window_align);
+ 	if (size || min_size) {
++		dev_printk(KERN_DEBUG, &bus->self->dev,
++			   "BAR %d: bridge window %pR to %pR calculate_mem for MUST\n",
++			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
+ 		min_align = calculate_mem_align(&align_test_list, max_align,
+ 						size, window_align);
+ 		size0 = calculate_size(size, min_size,
+@@ -1589,6 +1618,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 	if (size0 && realloc_head) {
+ 		alt_align = max(alt_align, window_align);
++		dev_printk(KERN_DEBUG, &bus->self->dev,
++			   "BAR %d: bridge window %pR to %pR calculate_mem for ALT\n",
++			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
+ 		/* need to increase size to fit more alt */
+ 		alt_size = calculate_mem_alt_size(&align_test_alt_list,
+ 						  alt_align, alt_size,
+@@ -1604,6 +1636,9 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	if (sum_add_size > size && realloc_head) {
++		dev_printk(KERN_DEBUG, &bus->self->dev,
++			   "BAR %d: bridge window %pR to %pR calculate_mem for ADD\n",
++			   (int)(b_res - &bus->self->resource[0]), b_res, &bus->busn_res);
+ 		min_add_align = calculate_mem_align(&align_test_add_list,
+ 					max_add_align, sum_add_size,
+ 					window_align);
+@@ -1661,7 +1696,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				      final_add_size, min_add_align,
+ 				      alt_size, alt_align);
+ 			dev_printk(KERN_DEBUG, &bus->self->dev,
+-				   "bridge window %pR to %pR add_size %llx add_align %llx alt_size %llx alt_align %llx req_size %llx req_align %llx\n",
++				   "BAR %d: bridge window %pR to %pR add_size %llx add_align %llx alt_size %llx alt_align %llx req_size %llx req_align %llx\n",
++				   (int)(b_res - &bus->self->resource[0]),
+ 				   b_res, &bus->busn_res,
+ 				   (unsigned long long)final_add_size,
+ 				   (unsigned long long)min_add_align,
+-- 
+1.8.4.5
 
-Exactly, this can be done by the callback function provided on vulcan
-systems and requires no core changes.  The IOMMU needs to provide a
-callback function that makes sense for collecting aliases on the
-specific platform.  If the translation unit is not on the root bus, the
-callback function should stop the topology walk earlier.  Thanks,
-
-Alex
