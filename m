@@ -1,89 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33271 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:42247 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760625AbcBYPfF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Feb 2016 10:35:05 -0500
-Date: Thu, 25 Feb 2016 09:35:00 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ilya Lesokhin <ilyal@mellanox.com>
-Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, alex.williamson@redhat.com,
-	noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
-	liranl@mellanox.com
-Subject: Re: [RFC V2 0/4] VFIO SRIOV support
-Message-ID: <20160225153500.GC8120@localhost>
-References: <1454574537-123466-1-git-send-email-ilyal@mellanox.com>
+	id S932381AbcBYRhY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Feb 2016 12:37:24 -0500
+Subject: [PATCH v10 0/4] Add PCI support to AXS10x
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: mark.rutland@arm.com, Alexey.Brodkin@synopsys.com, arnd@arndb.de,
+	pawel.moll@arm.com, ijc+devicetree@hellion.org.uk,
+	linux-pci@vger.kernel.org, Vineet.Gupta1@synopsys.com,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	linux-kernel@vger.kernel.org, CARLOS.PALMINHA@synopsys.com,
+	robh+dt@kernel.org, Murali Karicheri <m-karicheri2@ti.com>,
+	galak@codeaurora.org, Jingoo Han <jingoohan1@gmail.com>,
+	linux-snps-arc@lists.infradead.org
+Date: Thu, 25 Feb 2016 11:37:21 -0600
+Message-ID: <20160225172957.2103.8326.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1454574537-123466-1-git-send-email-ilyal@mellanox.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ilya,
+>From Joao's v9 posting
+(http://lkml.kernel.org/r/cover.1454952698.git.jpinto@synopsys.com):
 
-On Thu, Feb 04, 2016 at 10:28:53AM +0200, Ilya Lesokhin wrote:
-> Changes from v1:
-> 	Due to the security concern raised in v1, we add two patches
-> 	to make sure the VFs belong to the same IOMMU group as
-> 	the PF and are probed by VFIO.
-> 
-> Today the QEMU hypervisor allows assigning a physical device to a VM,
-> facilitating driver development. However, it does not support enabling
-> SR-IOV by the VM kernel driver. Our goal is to implement such support,
-> allowing developers working on SR-IOV physical function drivers to work
-> inside VMs as well.
-> 
-> This patch series implements the kernel side of our solution.  It extends
-> the VFIO driver to support the PCIE SRIOV extended capability with
-> following features:
-> 1. The ability to probe SRIOV BAR sizes.
-> 2. The ability to enable and disable sriov.
-> 
-> This patch series is going to be used by QEMU to expose sriov capabilities
-> to VM. We already have an early prototype based on Knut Omang's patches for
-> SRIOV[1]. 
-> 
-> Open issues:
-> 1. How to tell if it is safe to disable SRIOV?
-> In the current implementation, a userspace can enable sriov, grab one of
-> the VFs and then call disable sriov without releasing the device.  This
-> will result in a deadlock where the user process is stuck inside disable
-> sriov waiting for itself to release the device. Killing the process leaves
-> it in a zombie state.
-> We also get a strange warning saying:
-> [  181.668492] WARNING: CPU: 22 PID: 3684 at kernel/sched/core.c:7497 __might_sleep+0x77/0x80() 
-> [  181.668502] do not call blocking ops when !TASK_RUNNING; state=1 set at [<ffffffff810aa193>] prepare_to_wait_event+0x63/0xf0
-> 
-> 2. How to expose the Supported Page Sizes and System Page Size registers in
-> the SRIOV capability? 
-> Presently the hypervisor initializes Supported Page Sizes once and assumes
-> it doesn't change therefore we cannot allow user space to change this
-> register at will. The first solution that comes to mind is to expose a
-> device that only supports the page size selected by the hypervisor.
-> Unfourtently, Per SR-IOV spec section 3.3.12, PFs are required to support
-> 4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB page sizes. We currently map both
-> registers as virtualized and read only and leave user space to worry about
-> this problem.
-> 
-> 3. Other SRIOV capabilities.
-> Do we want to hide capabilities we do not support in the SR-IOV
-> Capabilities register? or leave it to the userspace application?
-> 
-> [1] https://github.com/knuto/qemu/tree/sriov_patches_v6
-> 
-> Ilya Lesokhin (4):
->   VFIO: Probe new devices in a live VFIO group with the VFIO driver
->   IOMMU: Force the VFs of an untrusted PF device to be in the PFs IOMMU
->     group
->   PCI: Expose iov_set_numvfs and iov_resource_size for modules.
->   VFIO: Add support for SRIOV extended capablity
-> 
->  drivers/iommu/iommu.c              |   4 +
->  drivers/pci/iov.c                  |   4 +-
->  drivers/vfio/pci/vfio_pci.c        |   3 +
->  drivers/vfio/pci/vfio_pci_config.c | 169 +++++++++++++++++++++++++++++++++----
->  drivers/vfio/vfio.c                |  18 +++-
->  include/linux/pci.h                |   5 ++
->  6 files changed, 182 insertions(+), 21 deletions(-)
+  "This patch set has the goal to add suppport for DesignWare PCIe RC in ARC
+  AXS10x. It includes the necessary tweaks to:
 
-This is mostly a VFIO series, so I'm going to defer to Alex.
+   - the ARC architecture (PCI support)
+   - the PCI subsystem (ARC CPU support)
+   - to pcie-designware (Centralisation of wait for link routine)
+   - to dra7xx, exynos, imx6 and spear13xx drivers to use the centralised
+     code for link wait
+
+  A simple module was (pcie-designware-plat) was created to contain the
+  specific platform init code."
+
+Here's what I'm looking for before putting this in "next":
+
+  - An ack from the DesignWare maintainers (Jingoo or Pratyush)
+  - An ack from Arnd for the DT updates/driver name/etc
+  - A response from Murali about the Keystone establish_link strategy
+    (I posted this question to Joao's v9 posting)
+  - An update for pcie-qcom.d to use dw_pcie_wait_for_link() or a reason
+    why it can't use it
+
+This series is in my pci/host-synopsys branch here:
+https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-synopsys
+
+Joao, if you post a v11, please grab my pci/host-synopsys, make your edits,
+then post the entire new v11 series as complete patches based on v4.5-rc1.
+
+---
+
+Joao Pinto (4):
+      ARC: Add PCI support
+      PCI: designware: Add generic dw_pcie_wait_for_link()
+      PCI: designware: Add default link up check if sub-driver doesn't override
+      PCI: designware: Add driver for prototyping kits based on ARC SDP
+
+
+ .../devicetree/bindings/pci/designware-pcie.txt    |   17 ++
+ MAINTAINERS                                        |    7 +
+ arch/arc/Kconfig                                   |   26 ++++
+ arch/arc/include/asm/dma.h                         |    5 +
+ arch/arc/include/asm/io.h                          |    9 +
+ arch/arc/include/asm/pci.h                         |   31 ++++
+ arch/arc/kernel/Makefile                           |    1 
+ arch/arc/kernel/pcibios.c                          |   22 +++
+ arch/arc/plat-axs10x/Kconfig                       |    1 
+ drivers/pci/Makefile                               |    1 
+ drivers/pci/host/Kconfig                           |   11 ++
+ drivers/pci/host/Makefile                          |    1 
+ drivers/pci/host/pci-dra7xx.c                      |   11 --
+ drivers/pci/host/pci-exynos.c                      |   11 --
+ drivers/pci/host/pci-imx6.c                        |   11 --
+ drivers/pci/host/pcie-designware-plat.c            |  138 ++++++++++++++++++++
+ drivers/pci/host/pcie-designware.c                 |   29 ++++
+ drivers/pci/host/pcie-designware.h                 |    6 +
+ drivers/pci/host/pcie-spear13xx.c                  |   12 --
+ 19 files changed, 314 insertions(+), 36 deletions(-)
+ create mode 100644 arch/arc/include/asm/pci.h
+ create mode 100644 arch/arc/kernel/pcibios.c
+ create mode 100644 drivers/pci/host/pcie-designware-plat.c
