@@ -1,134 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:37165 "EHLO
-	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932328AbcBIOax (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2016 09:30:53 -0500
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: [PATCH v2 2/2] PCI: tegra: Implement ->{add,remove}_bus() callbacks
-Date: Tue,  9 Feb 2016 15:30:48 +0100
-Message-Id: <1455028248-1950-2-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1455028248-1950-1-git-send-email-thierry.reding@gmail.com>
-References: <1455028248-1950-1-git-send-email-thierry.reding@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Paul Gortmaker <paul.gortmaker@windriver.com>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	devicetree@vger.kernel.org, Frank Rowand <frowand.list@gmail.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ley Foon Tan <lftan@altera.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	linux-arm-kernel@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/5] Modularize PCI_DW related drivers.
+Date: Thu, 25 Feb 2016 09:35:43 +0100
+Message-ID: <2837386.VTD89bjPJz@wuerfel>
+In-Reply-To: <56CEB7BC.7010803@ti.com>
+References: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com> <6350001.oOdGGcH81x@wuerfel> <56CEB7BC.7010803@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+On Thursday 25 February 2016 13:43:48 Kishon Vijay Abraham I wrote:
+> Hi Arnd,
+> 
+> On Wednesday 24 February 2016 02:34 PM, Arnd Bergmann wrote:
+> > On Wednesday 24 February 2016 11:39:26 Kishon Vijay Abraham I wrote:
+> >> Hi,
+> >>
+> >> On Monday 08 February 2016 05:30 AM, Paul Gortmaker wrote:
+> >>> In a recent patch series that aimed to remove code related to module
+> >>> unload for PCI support that was simply non modular, the discussion
+> >>> led to people wanting to keep the code and push towards taking the
+> >>> steps needed to support moving it towards tristate instead[1].
+> >>>
+> >>> Here, we take step one, which is simply making the Kconfig change
+> >>> and then dealing with any build fallout or modpost fallout.  What
+> >>> amounts to essentially a sanity build test.  To be clear, these
+> >>> have not been runtime validated; that will need to be done by those
+> >>> with access to real hardware.  However, the changes are not anything
+> >>> that should disrupt any existing built-in validation, so real world
+> >>> users should not be impacted by this change.
+> >>>
+> >>> We start with a smaller family of drivers; those that actively select
+> >>> PCI_DW, as a nice self contained group to test the waters and see if
+> >>> everyone is still good with this approach before investing more time
+> >>> on a wider scale to other pci/host/ code blocks.
+> >>>
+> >>> As such the drivers here share a dependency on having the same group
+> >>> of functions exported in order to successfully complete modpost.
+> >>>
+> >>> In addition, we have to stray outside drivers/pci to add exports
+> >>> in two places; once for an ARM fault handler, and once for an OF
+> >>> variable.
+> >>>
+> >>> The pci-keystone-dw.c instance was handled separately because it
+> >>> consists of two source files that need their own group of driver
+> >>> specific exports above and beyond the "shared" ones.
+> >>>
+> >>> Then we convert the Kconfig for all remaining at once; we could have
+> >>> done it on a per driver basis for ease of revert if anyone really
+> >>> objects, but since it would be a one line change, that seemed like
+> >>> not a real concern.
+> >>>
+> >>> Build testing was done on the linux-next tree for arm allmodconfig.
+> >>
+> >> I took these patches and gave a test with DRA7xx board. As expected there was
+> >> no issues when the driver was built-in. However when I tried to rmmod/modprobe
+> >> I got this error [2].
+> > 
+> > Thanks for testing this!
+> > 
+> >> [2] -> http://pastebin.ubuntu.com/15185894/
+> > 
+> > It looks like you are hitting the BUG_ON() in ioremap_pte_range()
+> > that checks if a virtual address already has a page table entry,
+> > which in turn is probably a result of dw_pcie_host_init()
+> > calling pci_remap_iospace() again for the same memory area
+> > it has called the last time, and no cleanup done inbetween.
+> > 
+> > Could you try adding a pci_unmap_iospace() and calling that
+> > in the device remove function? Let me know if you need help
+> > implementing it.
+> 
+> That didn't look straight forward to me :-( I'll try to see this next week. Any
+> help from you will make it simpler for me.
 
-The configuration space mapping on Tegra is somewhat special, and in
-order to avoid wasting virtual address space the configuration space
-for each bus needs to be stitched together from several blocks which
-form a single continuous virtual address range for accessors.
+I tried writing the function now, and I think it's actually quite easy:
 
-Currently the configuration space is mapped upon the first access to
-one of its registers. However, the mapping operation may sleep under
-certain circumstances, so doing it from the configuration space
-accessors (they are protected by a spin lock) will trigger a warning.
+void pci_unmap_iospace(const struct resource *res)
+{
+#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
+        return iounmap(PCI_IOBASE + res->start);
+#endif
+}
 
-To avoid the warning, use the ->add_bus() callback to perform the
-mapping at enumeration time when the operation is allowed to sleep.
-Also add an implementation of ->remove_bus() that undoes the mapping
-established by the ->add_bus() callback. While it isn't currently
-possible to unload the module, there is work underway to remedy this,
-and this code will come in handy when that happens.
+You just need to pass the same resource in here htat you pass into
+pci_remap_iospace().
 
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
-Changes in v2:
-- add ->remove_bus() callback implementation
-
- drivers/pci/host/pci-tegra.c | 54 ++++++++++++++++++++++++++++----------------
- 1 file changed, 34 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 30323114c53c..75c55265ca73 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -426,31 +426,38 @@ free:
- 	return ERR_PTR(err);
- }
- 
--/*
-- * Look up a virtual address mapping for the specified bus number. If no such
-- * mapping exists, try to create one.
-- */
--static void __iomem *tegra_pcie_bus_map(struct tegra_pcie *pcie,
--					unsigned int busnr)
-+static int tegra_pcie_add_bus(struct pci_bus *bus)
- {
--	struct tegra_pcie_bus *bus;
-+	struct tegra_pcie *pcie = sys_to_pcie(bus->sysdata);
-+	struct tegra_pcie_bus *b;
- 
--	list_for_each_entry(bus, &pcie->buses, list)
--		if (bus->nr == busnr)
--			return (void __iomem *)bus->area->addr;
-+	b = tegra_pcie_bus_alloc(pcie, bus->number);
-+	if (IS_ERR(b))
-+		return PTR_ERR(b);
- 
--	bus = tegra_pcie_bus_alloc(pcie, busnr);
--	if (IS_ERR(bus))
--		return NULL;
-+	list_add_tail(&b->list, &pcie->buses);
- 
--	list_add_tail(&bus->list, &pcie->buses);
-+	return 0;
-+}
- 
--	return (void __iomem *)bus->area->addr;
-+static void tegra_pcie_remove_bus(struct pci_bus *child)
-+{
-+	struct tegra_pcie *pcie = sys_to_pcie(child->sysdata);
-+	struct tegra_pcie_bus *bus, *tmp;
-+
-+	list_for_each_entry_safe(bus, tmp, &pcie->buses, list) {
-+		if (bus->nr == child->number) {
-+			vunmap(bus->area->addr);
-+			list_del(&bus->list);
-+			kfree(bus);
-+			break;
-+		}
-+	}
- }
- 
--static void __iomem *tegra_pcie_conf_address(struct pci_bus *bus,
--					     unsigned int devfn,
--					     int where)
-+static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
-+					unsigned int devfn,
-+					int where)
- {
- 	struct tegra_pcie *pcie = sys_to_pcie(bus->sysdata);
- 	void __iomem *addr = NULL;
-@@ -466,7 +473,12 @@ static void __iomem *tegra_pcie_conf_address(struct pci_bus *bus,
- 			}
- 		}
- 	} else {
--		addr = tegra_pcie_bus_map(pcie, bus->number);
-+		struct tegra_pcie_bus *b;
-+
-+		list_for_each_entry(b, &pcie->buses, list)
-+			if (b->nr == bus->number)
-+				addr = (void __iomem *)b->area->addr;
-+
- 		if (!addr) {
- 			dev_err(pcie->dev,
- 				"failed to map cfg. space for bus %u\n",
-@@ -481,7 +493,9 @@ static void __iomem *tegra_pcie_conf_address(struct pci_bus *bus,
- }
- 
- static struct pci_ops tegra_pcie_ops = {
--	.map_bus = tegra_pcie_conf_address,
-+	.add_bus = tegra_pcie_add_bus,
-+	.remove_bus = tegra_pcie_remove_bus,
-+	.map_bus = tegra_pcie_map_bus,
- 	.read = pci_generic_config_read32,
- 	.write = pci_generic_config_write32,
- };
--- 
-2.7.1
-
+	Arnd
