@@ -1,4 +1,8 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:40904 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932929AbcBYCOJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:14:09 -0500
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -8,102 +12,119 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Khalid Aziz <khalid.aziz@oracle.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v10 40/59] PCI: Separate required+optional assigning to another function
-Date: Wed, 24 Feb 2016 18:12:31 -0800
-Message-Id: <1456366370-28995-41-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v10 47/59] PCI: Move ISA io port align out of calculate_iosize()
+Date: Wed, 24 Feb 2016 18:12:38 -0800
+Message-Id: <1456366370-28995-48-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
 References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-__assign_resources_sorted() is getting too big if we put alt_size support
-into it.  Split out required+optional assigning code to another function.
+We need to move ISA io port align out of calculate_iosize(),
+so we could unify calculate_iosize and calculate_memsize later.
+
+That extra aligning or offset is to work around ISA devices:
+When one bridge have several children devices, and every device
+has several io port resources and resource size < 0x400.
+We need to check size, and add extra size to make sure bit8/9
+to be zero.
+
+Also need to apply same checking for optional size path.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c | 47 +++++++++++++++++++++++++++--------------------
- 1 file changed, 27 insertions(+), 20 deletions(-)
+ drivers/pci/setup-bus.c | 39 +++++++++++++++++++++++++++------------
+ 1 file changed, 27 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index dc66653..6ed7c85 100644
+index 15a52f3..691d41e 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -473,20 +473,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
- 	res->flags = save_res->flags;
+@@ -1114,11 +1114,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
+ 		size = min_size;
+ 	if (old_size == 1)
+ 		old_size = 0;
+-	/* To be fixed in 2.5: we should have sort of HAVE_ISA
+-	   flag in the struct pci_bus. */
+-#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
+-	size = (size & 0xff) + ((size & ~0xffUL) << 2);
+-#endif
+ 	size = ALIGN(size + size1, align);
+ 	if (size < old_size)
+ 		size = old_size;
+@@ -1172,6 +1167,18 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+ 	return max(align, arch_align);
  }
  
--static void __assign_resources_sorted(struct list_head *head,
--				 struct list_head *realloc_head,
--				 struct list_head *fail_head)
-+static bool __assign_resources_required_optional_sorted(struct list_head *head,
-+				 struct list_head *realloc_head)
- {
--	/*
--	 * Should not assign requested resources at first.
--	 *   they could be adjacent, so later reassign can not reallocate
--	 *   them one by one in parent resource window.
--	 * Try to assign requested + add_size at beginning
--	 *  if could do that, could get out early.
--	 *  if could not do that, we still try to assign requested at first,
--	 *    then try to reassign add_size for some resources.
--	 */
--
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
-@@ -495,12 +484,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	resource_size_t add_align;
- 	struct resource *res;
- 
--	/* Check if optional add_size is there */
--	if (!realloc_head || list_empty(realloc_head))
--		goto requested_and_reassign;
--
- 	if (!save_resources(head, &save_head))
--		goto requested_and_reassign;
-+		return false;
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
-@@ -539,7 +524,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 			remove_from_list(realloc_head, dev_res->res);
- 		free_list(&save_head);
- 		free_list(head);
--		return;
-+
-+		return true;
- 	}
- 
- 	/* check failed type */
-@@ -574,7 +560,28 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 	free_list(&save_head);
- 
--requested_and_reassign:
-+	return false;
-+}
-+
-+static void __assign_resources_sorted(struct list_head *head,
-+				 struct list_head *realloc_head,
-+				 struct list_head *fail_head)
++static resource_size_t size_aligned_for_isa(resource_size_t size)
 +{
 +	/*
-+	 * Should not assign required resources at first.
-+	 *   they could be adjacent, so later reassign can not reallocate
-+	 *   them one by one in parent resource window.
-+	 * Try to assign required + optional at beginning
-+	 *  if could do that, could get out early.
-+	 *  if could not do that, we still try to assign required at first,
-+	 *    then try to reassign add_size for some resources.
++	 * To be fixed in 2.5: we should have sort of HAVE_ISA
++	 *  flag in the struct pci_bus.
 +	 */
++#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
++	size = (size & 0xff) + ((size & ~0xffUL) << 2);
++#endif
++	return size;
++}
 +
-+	/* Check required+optional add */
-+	if (realloc_head && !list_empty(realloc_head) &&
-+	    __assign_resources_required_optional_sorted(head, realloc_head))
-+		return;
-+
- 	sort_resources(head);
+ /**
+  * pbus_size_io() - size the io window of a given bus
+  *
+@@ -1189,11 +1196,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ {
+ 	struct pci_dev *dev;
+ 	resource_size_t min_sum_size = 0;
+-	resource_size_t sum_add_size;
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+ 							IORESOURCE_IO);
+ 	resource_size_t size = 0, size0 = 0, size1 = 0;
+-	resource_size_t children_add_size = 0;
++	resource_size_t sum_add_size = 0, sum_add_size1 = 0;
+ 	resource_size_t min_align, align;
  
- 	/* Satisfy the must-have resource requests */
+ 	if (!b_res)
+@@ -1210,7 +1216,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 			struct resource *r = &dev->resource[i];
+-			unsigned long r_size;
++			unsigned long r_size, r_add_size;
+ 
+ 			if (r->parent || !(r->flags & IORESOURCE_IO))
+ 				continue;
+@@ -1226,18 +1232,27 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 			if (align > min_align)
+ 				min_align = align;
+ 
+-			if (realloc_head)
+-				children_add_size += get_res_add_size(realloc_head, r);
++			if (realloc_head) {
++				r_add_size = get_res_add_size(realloc_head, r);
++				r_add_size += r_size;
++				if (r_add_size < 0x400)
++					/* Might be re-aligned for ISA */
++					sum_add_size += r_add_size;
++				else
++					sum_add_size1 += r_add_size;
++			}
+ 		}
+ 	}
+ 
++	size = size_aligned_for_isa(size);
+ 	size0 = calculate_iosize(size, min_size, size1,
+ 			resource_size(b_res), min_align);
+-	sum_add_size = children_add_size + size + size1;
++	sum_add_size = size_aligned_for_isa(sum_add_size);
++	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	size1 = !realloc_head ? size0 :
+-		calculate_iosize(size, min_size, sum_add_size - size,
++		calculate_iosize(sum_add_size, min_size, 0,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
 -- 
 1.8.4.5
+
