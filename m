@@ -1,116 +1,82 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V5 05/15] x86, pci: Cleanup platform specific MCFG data by using ECAM hot_added flag.
-Date: Tue, 16 Feb 2016 14:53:35 +0100
-Message-Id: <1455630825-27253-6-git-send-email-tn@semihalf.com>
-In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:33937 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760783AbcBYPnb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Feb 2016 10:43:31 -0500
+Date: Thu, 25 Feb 2016 09:43:26 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Paul Burton <paul.burton@imgtec.com>
+Cc: Rob Herring <robh@kernel.org>,
+	Linux-MIPS <linux-mips@linux-mips.org>,
+	Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>,
+	Ley Foon Tan <lftan@altera.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Duc Dang <dhdang@apm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Ray Jui <rjui@broadcom.com>, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: [PATCH v3 6/6] PCI: xilinx: Allow build on MIPS platforms
+Message-ID: <20160225154326.GE8120@localhost>
+References: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
+ <1454602213-967-7-git-send-email-paul.burton@imgtec.com>
+ <CAL_JsqLRMiJ-0j_PrXSKqf6MrRfyqbDGaiaiEn4rAoFaCNgtKQ@mail.gmail.com>
+ <20160204175325.GB31145@NP-P-BURTON>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160204175325.GB31145@NP-P-BURTON>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-x86 uses lots of arch-specific data to maintain MCFG regions.
-However, there is no need to. Firstly, information like start_bus, end_bus
-can be obtained from acpi_pci_root structure. Secondly, mcfg_added flag
-is already integrated to MCFG library, so it is enough to call functions
-pci_mmconfig_insert and pci_mmconfig_delete which are handling
-hot-plugged MCFG regions internally.
+On Thu, Feb 04, 2016 at 05:53:25PM +0000, Paul Burton wrote:
+> On Thu, Feb 04, 2016 at 11:46:28AM -0600, Rob Herring wrote:
+> > On Thu, Feb 4, 2016 at 10:10 AM, Paul Burton <paul.burton@imgtec.com> wrote:
+> > > Allow the xilinx-pcie driver to be built on MIPS platforms. This will be
+> > > used on the MIPS Boston board.
+> > >
+> > > Signed-off-by: Paul Burton <paul.burton@imgtec.com>
+> > >
+> > > ---
+> > >
+> > > Changes in v3:
+> > > - Split out from Boston patchset.
+> > >
+> > > Changes in v2: None
+> > >
+> > >  drivers/pci/host/Kconfig | 2 +-
+> > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > >
+> > > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> > > index 75a6054..0aee193 100644
+> > > --- a/drivers/pci/host/Kconfig
+> > > +++ b/drivers/pci/host/Kconfig
+> > > @@ -81,7 +81,7 @@ config PCI_KEYSTONE
+> > >
+> > >  config PCIE_XILINX
+> > >         bool "Xilinx AXI PCIe host bridge support"
+> > > -       depends on ARCH_ZYNQ
+> > > +       depends on ARCH_ZYNQ || MIPS
+> > 
+> > Why don't you just remove the dependency? Then it gets better build coverage.
+> > 
+> > Rob
+> 
+> That seems like a call best made by whomever has to maintain this - if
+> that's the preferred way to go I'm fine with it.
 
-This patch implements above improvements, as a results we get
-much smaller pci_root_info structure.
+I'm in favor of removing the dependency if possible.  I guess Michal
+would be the person to ack that.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
----
- arch/x86/pci/acpi.c | 30 ++++++++----------------------
- 1 file changed, 8 insertions(+), 22 deletions(-)
+Right now (in my current "next" branch),
+drivers/pci/host/pcie-xilinx.c uses struct hw_pci, which is only
+defined by arm.
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index cec68e7..081dc70 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -11,11 +11,6 @@
- struct pci_root_info {
- 	struct acpi_pci_root_info common;
- 	struct pci_sysdata sd;
--#ifdef	CONFIG_PCI_MMCONFIG
--	bool mcfg_added;
--	u8 start_bus;
--	u8 end_bus;
--#endif
- };
- 
- static bool pci_use_crs = true;
-@@ -179,16 +174,13 @@ static int check_segment(u16 seg, struct device *dev, char *estr)
- 
- static int setup_mcfg_map(struct acpi_pci_root_info *ci)
- {
--	int result, seg;
--	struct pci_root_info *info;
-+	int result, seg, start, end;
- 	struct acpi_pci_root *root = ci->root;
- 	struct device *dev = &ci->bridge->dev;
- 
--	info = container_of(ci, struct pci_root_info, common);
--	info->start_bus = (u8)root->secondary.start;
--	info->end_bus = (u8)root->secondary.end;
--	info->mcfg_added = false;
--	seg = info->sd.domain;
-+	seg = root->segment;
-+	start = root->secondary.start;
-+	end = root->secondary.end;
- 
- 	/* return success if MMCFG is not in use */
- 	if (raw_pci_ext_ops && raw_pci_ext_ops != &pci_mmcfg)
-@@ -197,13 +189,11 @@ static int setup_mcfg_map(struct acpi_pci_root_info *ci)
- 	if (!(pci_probe & PCI_PROBE_MMCONF))
- 		return check_segment(seg, dev, "MMCONFIG is disabled,");
- 
--	result = pci_mmconfig_insert(dev, seg, info->start_bus, info->end_bus,
--				     root->mcfg_addr);
-+	result = pci_mmconfig_insert(dev, seg, start, end, root->mcfg_addr);
- 	if (result == 0) {
- 		/* enable MMCFG if it hasn't been enabled yet */
- 		if (raw_pci_ext_ops == NULL)
- 			raw_pci_ext_ops = &pci_mmcfg;
--		info->mcfg_added = true;
- 	} else if (result != -EEXIST)
- 		return check_segment(seg, dev,
- 			 "fail to add MMCONFIG information,");
-@@ -213,14 +203,10 @@ static int setup_mcfg_map(struct acpi_pci_root_info *ci)
- 
- static void teardown_mcfg_map(struct acpi_pci_root_info *ci)
- {
--	struct pci_root_info *info;
-+	struct acpi_pci_root *root = ci->root;
- 
--	info = container_of(ci, struct pci_root_info, common);
--	if (info->mcfg_added) {
--		pci_mmconfig_delete(info->sd.domain,
--				    info->start_bus, info->end_bus);
--		info->mcfg_added = false;
--	}
-+	pci_mmconfig_delete(root->segment, root->secondary.start,
-+			    root->secondary.end);
- }
- #else
- static int setup_mcfg_map(struct acpi_pci_root_info *ci)
--- 
-1.9.1
-
+Bjorn
