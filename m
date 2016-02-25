@@ -1,140 +1,64 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: "'Mark Rutland'" <mark.rutland@arm.com>
-CC: "Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
-	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
-	"liudongdong (C)" <liudongdong3@huawei.com>,
-	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
-	"'bhelgaas@google.com'" <bhelgaas@google.com>,
-	"'arnd@arndb.de'" <arnd@arndb.de>,
-	"'Lorenzo.Pieralisi@arm.com'" <Lorenzo.Pieralisi@arm.com>,
-	"'tn@semihalf.com'" <tn@semihalf.com>,
-	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
-	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
-	"xuwei (O)" <xuwei5@hisilicon.com>,
-	"'linux-acpi@vger.kernel.org'" <linux-acpi@vger.kernel.org>,
-	"'jcm@redhat.com'" <jcm@redhat.com>,
-	zhangjukuo <zhangjukuo@huawei.com>,
-	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
-	"'linux-arm-kernel@lists.infradead.org'"
-	<linux-arm-kernel@lists.infradead.org>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Subject: RE: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
- HiSilicon SoCs Host Controllers
-Date: Tue, 23 Feb 2016 02:47:22 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ECC5F00@lhreml503-mbs>
-References: <1455039260-6040-1-git-send-email-gabriele.paoloni@huawei.com>
- <1455039260-6040-4-git-send-email-gabriele.paoloni@huawei.com>
- <20160209182429.GD4348@leverpostej>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1591@lhreml503-mbs>
- <20160210111234.GC2632@leverpostej>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1D30@lhreml503-mbs>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1D30@lhreml503-mbs>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:40585 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758997AbcBYCNb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:13:31 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v10 08/59] powerpc/PCI: Keep resource idx order with bridge register number
+Date: Wed, 24 Feb 2016 18:11:59 -0800
+Message-Id: <1456366370-28995-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mark
+Same as sparc version.
 
-> -----Original Message-----
-> From: Gabriele Paoloni
-> Sent: 10 February 2016 22:45
-> To: Mark Rutland
-> Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C); Linuxarm;
-> qiujiang; bhelgaas@google.com; arnd@arndb.de; Lorenzo.Pieralisi@arm.com;
-> tn@semihalf.com; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org; xuwei (O); linux-acpi@vger.kernel.org;
-> jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth); linux-arm-
-> kernel@lists.infradead.org
-> Subject: RE: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
-> HiSilicon SoCs Host Controllers
-> 
-> > -----Original Message-----
-> > From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
-> > owner@vger.kernel.org] On Behalf Of Mark Rutland
-> > Sent: 10 February 2016 11:13
-> > To: Gabriele Paoloni
-> > Cc: Guohanjun (Hanjun Guo); Wangzhou (B); liudongdong (C); Linuxarm;
-> > qiujiang; bhelgaas@google.com; arnd@arndb.de;
-> > Lorenzo.Pieralisi@arm.com; tn@semihalf.com; linux-pci@vger.kernel.org;
-> > linux-kernel@vger.kernel.org; xuwei (O); linux-acpi@vger.kernel.org;
-> > jcm@redhat.com; zhangjukuo; Liguozhu (Kenneth); linux-arm-
-> > kernel@lists.infradead.org
-> > Subject: Re: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
-> > HiSilicon SoCs Host Controllers
-> >
-> > On Wed, Feb 10, 2016 at 09:52:36AM +0000, Gabriele Paoloni wrote:
-> > > Hi Mark
-> > >
-> > > > On Tue, Feb 09, 2016 at 05:34:20PM +0000, Gabriele Paoloni wrote:
-> > > > > From: gabriele paoloni <gabriele.paoloni@huawei.com>
-> > > > > +/*
-> > > > > + * Retrieve rc_dbi base and size from _DSD
-> > > > > + * Name (_DSD, Package () {
-> > > > > + *	ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
-> > > > > + *	Package () {
-> > > > > + *	Package () {"rc-dbi", Package () { 0x0, 0xb0080000, 0x0,
-> > 0x10000
-> > > > }},
-> > > > > + *	}
-> > > > > + *	})
-> > > > > + */
-> > > >
-> > > > As above, this does not look right. ACPI has standard mechanisms
-> > for
-> > > > describing addresses. Making something up like this is not a good
-> > idea.
-> > >
-> > > I am quite new to ACPI, may I ask you to explain a bit?
-> >
-> > ACPI has standard mechanisms for describing certain resources, and
-> > these
-> > should not be described in _DSD. Memory or IO address regions are
-> such
-> > resources (in _CRS, IIRC), and should not be described in _DSD.
-> 
-> Hi Mark,
-> 
-> In my case I think in need to look into the MCFG object as the problem
-> I have is RC using a different range than the rest of the hierarchy.
-> 
-> I'll investigate this and try to come with a solution in v4
+Make resource with consistent sequence
+like other arch or directly from pci_read_bridge_bases(),
+even when non-pref mmio is missing, or out of ordering in firmware reporting.
 
-I have looked into this and in our case we cannot use the
-standard MCFG object to pass the RC config space addresses.
+Just hold i = 1 for non pref mmio, and i = 2 for pref mmio.
 
-The reason is that in our HW we have the config base addresses of the 
-root complex ports that are less than 0x100000 byte distant one from
-the other as we only map the first 0x10000 bytes.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/powerpc/kernel/pci_of_scan.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-Now the MCFG acpi framework always fix the MCFG resource size to 0x100000
-for each bus; therefore if we pass our RC addresses through MCFG we end
-up with a resource conflict.
+diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
+index 526ac67..719f225 100644
+--- a/arch/powerpc/kernel/pci_of_scan.c
++++ b/arch/powerpc/kernel/pci_of_scan.c
+@@ -252,7 +252,7 @@ void of_scan_pci_bridge(struct pci_dev *dev)
+ 		bus->resource[i] = res;
+ 		++res;
+ 	}
+-	i = 1;
++	i = 3;
+ 	for (; len >= 32; len -= 32, ranges += 8) {
+ 		flags = pci_parse_of_flags(of_read_number(ranges, 1), 1);
+ 		size = of_read_number(&ranges[6], 2);
+@@ -265,6 +265,12 @@ void of_scan_pci_bridge(struct pci_dev *dev)
+ 				       " for bridge %s\n", node->full_name);
+ 				continue;
+ 			}
++		} else if ((flags & IORESOURCE_PREFETCH) &&
++			   !bus->resource[2]->flags) {
++			res = bus->resource[2];
++		} else if (((flags & (IORESOURCE_MEM | IORESOURCE_PREFETCH)) ==
++			    IORESOURCE_MEM) && !bus->resource[1]->flags) {
++			res = bus->resource[1];
+ 		} else {
+ 			if (i >= PCI_NUM_RESOURCES - PCI_BRIDGE_RESOURCES) {
+ 				printk(KERN_ERR "PCI: too many memory ranges"
+-- 
+1.8.4.5
 
-To give you a practical example we are in a situation where we have:
-
-port0: [0x00000000b0080000 - 0x00000000b0080000 + 0x10000]
-port1: [0x00000000b0090000 - 0x00000000b0090000 + 0x10000]
-port2: [0x00000000b00A0000 - 0x00000000b00A0000 + 0x10000]
-port3: [0x00000000b00B0000 - 0x00000000b00B0000 + 0x10000]
-  
-So if we pass the base addresses through MCFG the resources
-will overlap as MCFG will consider 0x100000 size for each base
-address of the root complex (only the RC bus uses that address)
-
-So far I do not see many option other than using _DSD to pass
-these RC config base addresses.
-
-Thanks and Regards
-
-Gab 
-
-> 
-> Many Thanks
-> 
-> Gab
-> 
-> >
-> > Thanks,
-> > Mark.
