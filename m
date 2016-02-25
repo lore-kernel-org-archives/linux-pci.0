@@ -1,112 +1,109 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 2 Feb 2016 12:26:42 +0100
-From: Robert Richter <robert.richter@caviumnetworks.com>
-To: Ganapatrao Kulkarni <gkulkarni@caviumnetworks.com>
-CC: <linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <linux-ia64@vger.kernel.org>,
-	<linux-metag@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
-	<linux-s390@vger.kernel.org>, <linux-sh@vger.kernel.org>,
-	<linux-arch@vger.kernel.org>, <Will.Deacon@arm.com>,
-	<catalin.marinas@arm.com>, <robh+dt@kernel.org>,
-	<mark.rutland@arm.com>, <grant.likely@linaro.org>,
-	<leif.lindholm@linaro.org>, <rfranz@cavium.com>,
-	<ard.biesheuvel@linaro.org>, <msalter@redhat.com>,
-	<steve.capper@linaro.org>, <hanjun.guo@linaro.org>,
-	<al.stone@linaro.org>, <arnd@arndb.de>, <pawel.moll@arm.com>,
-	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>,
-	<rjw@rjwysocki.net>, <lenb@kernel.org>, <marc.zyngier@arm.com>,
-	<lorenzo.pieralisi@arm.com>, <bhelgaas@google.com>,
-	<tony.luck@intel.com>, <fenghua.yu@intel.com>,
-	<james.hogan@imgtec.com>, <benh@kernel.crashing.org>,
-	<tglx@linutronix.de>, <mingo@redhat.com>, <hpa@zytor.com>,
-	<x86@kernel.org>, <jonathan@jonmasters.org>,
-	<Prasun.Kapoor@caviumnetworks.com>, <gpkulkarni@gmail.com>
-Subject: Re: [PATCH v10 0/8] arm64, numa: Add numa support for arm64 platforms
-Message-ID: <20160202112642.GE24726@rric.localdomain>
-References: <1454407763-1017-1-git-send-email-gkulkarni@caviumnetworks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <1454407763-1017-1-git-send-email-gkulkarni@caviumnetworks.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v10 46/59] PCI: Don't add too much optional size for hotplug bridge io
+Date: Wed, 24 Feb 2016 18:12:37 -0800
+Message-Id: <1456366370-28995-47-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02.02.16 15:39:15, Ganapatrao Kulkarni wrote:
+Same as patch for MMIO (PCI: Don't add too much optional size for hotplug
+bridge MMIO), and this one is for io port.
 
-> Ganapatrao Kulkarni (8):
->   arm64, numa: adding numa support for arm64 platforms.
->   Documentation, dt, numa: dt bindings for numa.
->   dt, numa: adding numa dt binding implementation.
->   arm64, numa : Enable numa dt for arm64 platforms.
->   arm64, dt, thunderx: Add initial dts for Cavium Thunderx in 2 node
->     topology.
->   arm64, mm, numa: Adding numa balancing support for arm64.
->   topology, cleanup: Avoid redefinition of cpumask_of_pcibus in asm
->     header files.
->   numa, mm, cleanup: remove redundant NODE_DATA macro from asm header
->     files.
+It will compare required+optional with min_sum_size to get smaller
+optional size.
 
-I have tested the whole series on single and dual node systems for
-devicetree and acpi (with Hanjun's acpi numa v3 patches ported on
-top).
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 26 ++++++++++++++++----------
+ 1 file changed, 16 insertions(+), 10 deletions(-)
 
-Tested-by: Robert Richter <rrichter@cavium.com>
-
--Robert
-
-> 
->  Documentation/devicetree/bindings/numa.txt      | 272 ++++++++
->  arch/arm64/Kconfig                              |  26 +
->  arch/arm64/boot/dts/cavium/Makefile             |   2 +-
->  arch/arm64/boot/dts/cavium/thunder-88xx-2n.dts  |  83 +++
->  arch/arm64/boot/dts/cavium/thunder-88xx-2n.dtsi | 806 ++++++++++++++++++++++++
->  arch/arm64/include/asm/mmzone.h                 |  10 +
->  arch/arm64/include/asm/numa.h                   |  45 ++
->  arch/arm64/include/asm/pgtable.h                |  18 +
->  arch/arm64/include/asm/topology.h               |   7 +
->  arch/arm64/kernel/pci.c                         |  10 +
->  arch/arm64/kernel/setup.c                       |   4 +
->  arch/arm64/kernel/smp.c                         |   4 +
->  arch/arm64/mm/Makefile                          |   1 +
->  arch/arm64/mm/init.c                            |  34 +-
->  arch/arm64/mm/mmu.c                             |   1 +
->  arch/arm64/mm/numa.c                            | 404 ++++++++++++
->  arch/ia64/include/asm/topology.h                |   4 -
->  arch/m32r/include/asm/mmzone.h                  |   4 +-
->  arch/metag/include/asm/mmzone.h                 |   4 +-
->  arch/metag/include/asm/topology.h               |   3 -
->  arch/powerpc/include/asm/mmzone.h               |   8 +-
->  arch/powerpc/include/asm/topology.h             |   4 -
->  arch/s390/include/asm/mmzone.h                  |   6 +-
->  arch/s390/include/asm/pci.h                     |   2 +-
->  arch/s390/include/asm/topology.h                |   1 +
->  arch/sh/include/asm/mmzone.h                    |   4 +-
->  arch/sh/include/asm/topology.h                  |   3 -
->  arch/sparc/include/asm/mmzone.h                 |   6 +-
->  arch/tile/include/asm/pci.h                     |   2 -
->  arch/tile/include/asm/topology.h                |   3 +
->  arch/x86/include/asm/mmzone.h                   |   3 +-
->  arch/x86/include/asm/mmzone_32.h                |   5 -
->  arch/x86/include/asm/mmzone_64.h                |  17 -
->  arch/x86/include/asm/pci.h                      |   2 +-
->  arch/x86/include/asm/topology.h                 |   1 +
->  drivers/of/Kconfig                              |  11 +
->  drivers/of/Makefile                             |   1 +
->  drivers/of/of_numa.c                            | 207 ++++++
->  include/asm-generic/mmzone.h                    |  24 +
->  include/asm-generic/topology.h                  |   4 +-
->  include/linux/of.h                              |   4 +
->  41 files changed, 1986 insertions(+), 74 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/numa.txt
->  create mode 100644 arch/arm64/boot/dts/cavium/thunder-88xx-2n.dts
->  create mode 100644 arch/arm64/boot/dts/cavium/thunder-88xx-2n.dtsi
->  create mode 100644 arch/arm64/include/asm/mmzone.h
->  create mode 100644 arch/arm64/include/asm/numa.h
->  create mode 100644 arch/arm64/mm/numa.c
->  delete mode 100644 arch/x86/include/asm/mmzone_64.h
->  create mode 100644 drivers/of/of_numa.c
->  create mode 100644 include/asm-generic/mmzone.h
-> 
-> -- 
-> 1.8.1.4
-> 
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 5eee16b..15a52f3 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1177,7 +1177,6 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+  *
+  * @bus : the bus
+  * @min_size : the minimum io window that must to be allocated
+- * @add_size : additional optional io window
+  * @realloc_head : track the additional io window on this list
+  *
+  * Sizing the IO windows of the PCI-PCI bridge is trivial,
+@@ -1186,9 +1185,11 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+  * We must be careful with the ISA aliasing though.
+  */
+ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+-		resource_size_t add_size, struct list_head *realloc_head)
++			 struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
++	resource_size_t min_sum_size = 0;
++	resource_size_t sum_add_size;
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+ 							IORESOURCE_IO);
+ 	resource_size_t size = 0, size0 = 0, size1 = 0;
+@@ -1198,6 +1199,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	if (!b_res)
+ 		return;
+ 
++	if (realloc_head) {
++		min_sum_size = min_size;
++		min_size = 0;
++	}
++
+ 	min_align = window_alignment(bus, IORESOURCE_IO);
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+@@ -1227,10 +1233,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 	size0 = calculate_iosize(size, min_size, size1,
+ 			resource_size(b_res), min_align);
+-	if (children_add_size > add_size)
+-		add_size = children_add_size;
+-	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+-		calculate_iosize(size, min_size, add_size + size1,
++	sum_add_size = children_add_size + size + size1;
++	if (sum_add_size < min_sum_size)
++		sum_add_size = min_sum_size;
++	size1 = !realloc_head ? size0 :
++		calculate_iosize(size, min_size, sum_add_size - size,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+@@ -1758,7 +1765,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+ 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
+-	resource_size_t min_mem_size = 0, additional_io_size = 0;
++	resource_size_t min_mem_size = 0, min_io_size = 0;
+ 	struct resource *b_res;
+ 	int ret;
+ 
+@@ -1794,13 +1801,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 
+ 	case PCI_CLASS_BRIDGE_PCI:
+ 		if (bus->self->is_hotplug_bridge) {
+-			additional_io_size  = pci_hotplug_io_size;
++			min_io_size  = pci_hotplug_io_size;
+ 			min_mem_size = pci_hotplug_mem_size;
+ 		}
+ 		/* Fall through */
+ 	default:
+-		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
+-			     additional_io_size, realloc_head);
++		pbus_size_io(bus, min_io_size, realloc_head);
+ 
+ 		/*
+ 		 * If there's a 64-bit prefetchable MMIO window, compute
+-- 
+1.8.4.5
