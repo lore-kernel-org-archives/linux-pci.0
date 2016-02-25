@@ -1,140 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36925 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751106AbcB2Xhp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Feb 2016 18:37:45 -0500
-Date: Mon, 29 Feb 2016 17:37:41 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Justin Waters <justin.waters@timesys.com>
-Cc: linux-pci@vger.kernel.org, festevam@gmail.com,
-	l.stach@pengutronix.de
-Subject: Re: [PATCH v2] PCI: imx6: Add DT bindings to configure Tx Driver
- settings
-Message-ID: <20160229233741.GH3653@localhost>
-References: <1452871476-11752-1-git-send-email-justin.waters@timesys.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:52344 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751474AbcBYVXB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Feb 2016 16:23:01 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	'Mark Rutland' <mark.rutland@arm.com>,
+	"Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
+	"'bhelgaas@google.com'" <bhelgaas@google.com>,
+	"'arnd@arndb.de'" <arnd@arndb.de>,
+	"'tn@semihalf.com'" <tn@semihalf.com>,
+	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"'linux-acpi@vger.kernel.org'" <linux-acpi@vger.kernel.org>,
+	"'jcm@redhat.com'" <jcm@redhat.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	"'linux-arm-kernel@lists.infradead.org'"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for HiSilicon SoCs Host Controllers
+Date: Thu, 25 Feb 2016 22:24:34 +0100
+Message-ID: <8105311.kD8XXIcipM@vostro.rjw.lan>
+In-Reply-To: <20160225195912.GA4818@localhost>
+References: <20160209182429.GD4348@leverpostej> <20160225120750.GA32016@red-moon> <20160225195912.GA4818@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1452871476-11752-1-git-send-email-justin.waters@timesys.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 15, 2016 at 10:24:35AM -0500, Justin Waters wrote:
-> The settings in GPR8 are dependent upon the particular layout of the
-> hardware platform. As such, they should be configurable via the device
-> tree.
+On Thursday, February 25, 2016 01:59:12 PM Bjorn Helgaas wrote:
+> On Thu, Feb 25, 2016 at 12:07:50PM +0000, Lorenzo Pieralisi wrote:
+> > On Thu, Feb 25, 2016 at 03:01:19AM +0000, Gabriele Paoloni wrote:
+> > 
+> > [...]
+> > 
+> > > > I think the relevant spec is the PCI Firmware Spec, r3.0, sec 4.1.2.
+> > > > Note 2 in that section says the address range of an MMCFG region
+> > > > must be reserved by declaring a motherboard resource, i.e., included
+> > > > in the _CRS of a PNP0C02 or similar device.
+> > > 
+> > > I had a look a this. So yes the specs says that we should use the 
+> > > PNP0C02 device if MCFG is not supported. 
+> > 
+> > AFAIK, PNP0C02 is a resource reservation mechanism, the spec says that
+> > MCFG regions must be reserved using PNP0C02, even though its
+> > current usage on x86 is a bit unfathomable to me, in particular
+> > in relation to MCFG resources retrieved for hotpluggable bridges (ie
+> > through _CBA, which I think consider the MCFG region as reserved
+> > by default, regardless of PNP0c02):
+> > 
+> > see pci_mmcfg_check_reserved() arch/x86/pci/mmconfig-shared.c
 > 
-> As many boards have been using the default values, this implementation
-> uses the old values if they are not specified in the device tree.
+> I don't know how _CBA-related resources would be reserved.  I haven't
+> personally worked with any host bridges that supply _CBA, so I don't
+> know whether or how they handled it.
 > 
-> Signed-off-by: Justin Waters <justin.waters@timesys.com>
+> I think the spec intent was that the Consumer/Producer bit (Extended
+> Address Space Descriptor, General Flags Bit[0], see ACPI spec sec
+> 6.4.3.5.4) would be used.  Resources such as ECAM areas would be
+> marked "Consumer", meaning the bridge consumed that space itself, and
+> windows passed down to the PCI bus would be marked "Producer".
+> 
+> But BIOSes didn't use that bit consistently, so we couldn't rely on
+> it.  I verified experimentally that Windows didn't pay attention to
+> that bit either, at least for DWord descriptors:
+> https://bugzilla.kernel.org/show_bug.cgi?id=15701
+> 
+> It's conceivable that we could still use that bit in Extended Address
+> Space descriptors, or maybe some hack like pay attention if the bridge
+> has _CBA, or some such.
 
-Applied with Lucas' ack to pci/host-imx6 for v4.6, thanks, Justin!
+Last time I asked the firmware vendor people in the ASWG about that,
+the answer was that the Consumer/Producer bit was useless as they had
+never paid any attention to it in general.
 
-> ---
->  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  7 ++++
->  drivers/pci/host/pci-imx6.c                        | 42 +++++++++++++++++++---
->  2 files changed, 44 insertions(+), 5 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> index 6fbba53..3be80c6 100644
-> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> @@ -13,6 +13,13 @@ Required properties:
->  - clock-names: Must include the following additional entries:
->  	- "pcie_phy"
->  
-> +Optional properties:
-> +- fsl,tx-deemph-gen1: Gen1 De-emphasis value. Default: 0
-> +- fsl,tx-deemph-gen2-3p5db: Gen2 (3.5db) De-emphasis value. Default: 0
-> +- fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
-> +- fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
-> +- fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
-> +
->  Example:
->  
->  	pcie@0x01000000 {
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 230ebf9..cc04497 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -39,6 +39,11 @@ struct imx6_pcie {
->  	struct pcie_port	pp;
->  	struct regmap		*iomuxc_gpr;
->  	void __iomem		*mem_base;
-> +	u32			tx_deemph_gen1;
-> +	u32			tx_deemph_gen2_3p5db;
-> +	u32			tx_deemph_gen2_6db;
-> +	u32			tx_swing_full;
-> +	u32			tx_swing_low;
->  };
->  
->  /* PCIe Root Complex registers (memory-mapped) */
-> @@ -317,15 +322,20 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
->  			IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
->  
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-> -			IMX6Q_GPR8_TX_DEEMPH_GEN1, 0 << 0);
-> +			   IMX6Q_GPR8_TX_DEEMPH_GEN1,
-> +			   imx6_pcie->tx_deemph_gen1 << 0);
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-> -			IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB, 0 << 6);
-> +			   IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB,
-> +			   imx6_pcie->tx_deemph_gen2_3p5db << 6);
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-> -			IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB, 20 << 12);
-> +			   IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB,
-> +			   imx6_pcie->tx_deemph_gen2_6db << 12);
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-> -			IMX6Q_GPR8_TX_SWING_FULL, 127 << 18);
-> +			   IMX6Q_GPR8_TX_SWING_FULL,
-> +			   imx6_pcie->tx_swing_full << 18);
->  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-> -			IMX6Q_GPR8_TX_SWING_LOW, 127 << 25);
-> +			   IMX6Q_GPR8_TX_SWING_LOW,
-> +			   imx6_pcie->tx_swing_low << 25);
->  }
->  
->  static int imx6_pcie_wait_for_link(struct pcie_port *pp)
-> @@ -565,6 +575,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
->  	struct imx6_pcie *imx6_pcie;
->  	struct pcie_port *pp;
->  	struct resource *dbi_base;
-> +	struct device_node *node = pdev->dev.of_node;
->  	int ret;
->  
->  	imx6_pcie = devm_kzalloc(&pdev->dev, sizeof(*imx6_pcie), GFP_KERNEL);
-> @@ -617,6 +628,27 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
->  		return PTR_ERR(imx6_pcie->iomuxc_gpr);
->  	}
->  
-> +	/* Grab PCIe PHY Tx Settings */
-> +	if (of_property_read_u32
-> +	    (node, "fsl,tx-deemph-gen1", &imx6_pcie->tx_deemph_gen1))
-> +		imx6_pcie->tx_deemph_gen1 = 0;
-> +
-> +	if (of_property_read_u32
-> +	    (node, "fsl,tx-deemph-gen2-3p5db", &imx6_pcie->tx_deemph_gen2_3p5db))
-> +		imx6_pcie->tx_deemph_gen2_3p5db = 0;
-> +
-> +	if (of_property_read_u32
-> +	    (node, "fsl,tx-deemph-gen2-6db", &imx6_pcie->tx_deemph_gen2_6db))
-> +		imx6_pcie->tx_deemph_gen2_6db = 20;
-> +
-> +	if (of_property_read_u32
-> +	    (node, "fsl,tx-swing-full", &imx6_pcie->tx_swing_full))
-> +		imx6_pcie->tx_swing_full = 127;
-> +
-> +	if (of_property_read_u32
-> +	    (node, "fsl,tx-swing-low", &imx6_pcie->tx_swing_low))
-> +		imx6_pcie->tx_swing_low = 127;
-> +
->  	ret = imx6_add_pcie_port(pp, pdev);
->  	if (ret < 0)
->  		return ret;
-> -- 
-> 2.5.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It may be good to update the spec to say something along these lines, actually.
+
+Thanks,
+Rafael
+
