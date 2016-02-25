@@ -1,89 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:37421 "EHLO
-	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933801AbcBCV3S convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 3 Feb 2016 16:29:18 -0500
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
-Subject: Re: [PATCH] drivers:pci Add pcie/Kconfig to pci/Kconfig
-From: sasa bogicevic <brutallesale@gmail.com>
-In-Reply-To: <20160119033153.GE14080@localhost>
-Date: Wed, 3 Feb 2016 22:29:15 +0100
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <41CC00C3-DE29-4D70-A997-C4AEE0154CF7@gmail.com>
-References: <1452608545-32242-1-git-send-email-brutallesale@gmail.com> <20160119033153.GE14080@localhost>
-To: Bjorn Helgaas <helgaas@kernel.org>
+Received: from devils.ext.ti.com ([198.47.26.153]:39002 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751894AbcBYWXY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Feb 2016 17:23:24 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <stable@vger.kernel.org>, <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: [PATCH] PCI: keystone: fix msi code that retrieves the pp struct ptr
+Date: Thu, 25 Feb 2016 17:23:04 -0500
+Message-ID: <1456438984-22111-1-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-I just sent a patch regarding pcie Kconfig in arch/ . I just wanted to ask how did you get these errors you pasted:
+Recent update to pcie-designware core driver,
+commit "cbce79005 PCI: designware: Make driver arch-agnostic" broke the
+keystone PCI driver. This is because, the way pp struct ptr is retrieved
+from  msi desc has changed and require similar update in pci-keystone-dw.c
+as well. This patch fix this issue. Here is the early boot crash log seen
+on K2E EVM.
 
->  drivers/pci/pcie/Kconfig:61:warning: choice value used outside its choice group
->  drivers/pci/pcie/Kconfig:67:warning: choice value used outside its choice group
->  drivers/pci/pcie/Kconfig:74:warning: choice value used outside its choice group
+[    1.012999] pci 0000:00:00.0: PCI bridge to [bus 01]
+[    1.018073] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
+[    1.024308] pci 0000:00:00.0:   bridge window [mem 0x60000000-0x600fffff]
+[    1.031216] pci 0000:00:00.0:   bridge window [mem 0x60100000-0x601fffff
+pref]
+[    1.038736] Unable to handle kernel NULL pointer dereference at virtual
+address 00000030
+[    1.046950] pgd = c0003000
+[    1.049750] [00000030] *pgd=80000800004003, *pmd=00000000
+[    1.055265] Internal error: Oops: 206 [#1] PREEMPT SMP ARM
+[    1.060860] Modules linked in:
+[    1.064013] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.4.2-00139-gb74f926 #2
+[    1.071266] Hardware name: Keystone
+[    1.074853] task: eb888000 ti: eb890000 task.ti: eb890000
+[    1.080364] PC is at ks_dw_pcie_msi_irq_unmask+0x24/0x58
+[    1.085785] LR is at ks_dw_pcie_msi_irq_unmask+0x18/0x58
+[    1.091206] pc : [<c02f65c8>]    lr : [<c02f65bc>]    psr: 60000093
+[    1.091206] sp : eb891bc8  ip : 00000000  fp : ebb15010
+[    1.102915] r10: 00000051  r9 : 60000013  r8 : ebafaa20
+[    1.108247] r7 : ebaa9f80  r6 : eb9fd0c0  r5 : ebafa9d0  r4 : ebafa9c0
+[    1.114889] r3 : 00000051  r2 : 00000000  r1 : 00000001  r0 : ebb14c18
+[    1.121533] Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment
+kernel
+[    1.129049] Control: 30c5387d  Table: 00003000  DAC: fffffffd
+[    1.134905] Process swapper/0 (pid: 1, stack limit = 0xeb890210)
+[    1.141023] Stack: (0xeb891bc8 to 0xeb892000)
 
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+---
+ - Need this fix in 4.4.4 as well
+ drivers/pci/host/pci-keystone-dw.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-Is there a tool for this ? I just wanted to be better at debugging kernel compilation process.
-
-Thanks, Sasa
-{
-	name: Bogicevic Sasa
-	phone: +381606006200
-}
-
-
-
-> On Jan 19, 2016, at 04:31, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> 
-> Hi Bogicevic,
-> 
-> On Tue, Jan 12, 2016 at 06:22:25AM -0800, Bogicevic Sasa wrote:
->> Architectures currently have to include both
->> drivers/pci/Kconfig and drivers/pci/pcie/Kconfig.
->> They should include only drivers/pci/Kconfig, and
->> that should handle PCIe as well.
->> 
->> Signed-off-by: Bogicevic Sasa <brutallesale@gmail.com>
->> ---
->> drivers/pci/Kconfig | 2 ++
->> 1 file changed, 2 insertions(+)
->> 
->> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
->> index 73de4ef..005dd7d 100644
->> --- a/drivers/pci/Kconfig
->> +++ b/drivers/pci/Kconfig
->> @@ -119,3 +119,5 @@ config PCI_LABEL
->> 	select NLS
->> 
->> source "drivers/pci/host/Kconfig"
->> +
->> +source "drivers/pci/pcie/Kconfig"
-> 
-> This project is something I'd like to get done, but it requires a
-> little more work.  If it were this simple, I would have done it long
-> ago :)
-> 
-> For one thing, we need to update all the Kconfig files that already
-> include drivers/pci/pcie/Kconfig at the same time.  On x86,
-> arch/x86/Kconfig already includes both:
-> 
->  source "drivers/pci/pcie/Kconfig"
->  source "drivers/pci/Kconfig"
-> 
-> With your patch applied, I see these new warnings:
-> 
->  05:42:09 ~/linux (wip/bogicevic-kconfig)$ make menuconfig
->  ...
->  scripts/kconfig/mconf  Kconfig
->  drivers/pci/pcie/Kconfig:61:warning: choice value used outside its choice group
->  drivers/pci/pcie/Kconfig:67:warning: choice value used outside its choice group
->  drivers/pci/pcie/Kconfig:74:warning: choice value used outside its choice group
-> 
-> I see that you did verify that removing the source line from
-> arch/x86/Kconfig does the right thing.  We need to put all the related
-> changes in a single patch so it is self-contained.  The tree should be
-> buildable and functional at every stage.
-> 
-> Bjorn
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index ed34c95..6153853 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -58,11 +58,6 @@
+ 
+ #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
+ 
+-static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+-{
+-	return sys->private_data;
+-}
+-
+ static inline void update_reg_offset_bit_pos(u32 offset, u32 *reg_offset,
+ 					     u32 *bit_pos)
+ {
+@@ -108,7 +103,7 @@ static void ks_dw_pcie_msi_irq_ack(struct irq_data *d)
+ 	struct pcie_port *pp;
+ 
+ 	msi = irq_data_get_msi_desc(d);
+-	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
++	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
+ 	ks_pcie = to_keystone_pcie(pp);
+ 	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+ 	update_reg_offset_bit_pos(offset, &reg_offset, &bit_pos);
+@@ -146,7 +141,7 @@ static void ks_dw_pcie_msi_irq_mask(struct irq_data *d)
+ 	u32 offset;
+ 
+ 	msi = irq_data_get_msi_desc(d);
+-	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
++	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
+ 	ks_pcie = to_keystone_pcie(pp);
+ 	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+ 
+@@ -167,7 +162,7 @@ static void ks_dw_pcie_msi_irq_unmask(struct irq_data *d)
+ 	u32 offset;
+ 
+ 	msi = irq_data_get_msi_desc(d);
+-	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
++	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
+ 	ks_pcie = to_keystone_pcie(pp);
+ 	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+ 
+-- 
+1.9.1
 
