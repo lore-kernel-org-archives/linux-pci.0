@@ -1,107 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: helgaas@kernel.org
-Cc: Jon Derrick <jonathan.derrick@intel.com>, keith.busch@intel.com,
-	linux-kernel@vger.kernel.org, x86@kernel.org,
-	bryan.e.veal@intel.com, linux-pci@vger.kernel.org,
-	tglx@linutronix.de, dan.j.williams@intel.com
-Subject: [PATCH] VMD: Attach vmd resources to parent domain's resource tree
-Date: Tue, 23 Feb 2016 14:50:13 -0700
-Message-Id: <1456264213-3546-1-git-send-email-jonathan.derrick@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:34961 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932407AbcBYP7O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Feb 2016 10:59:14 -0500
+Date: Thu, 25 Feb 2016 09:59:11 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Paul Burton <paul.burton@imgtec.com>
+Cc: linux-mips@linux-mips.org,
+	Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>,
+	Ley Foon Tan <lftan@altera.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Grygorii Strashko <grygorii.strashko@ti.com>,
+	Russell Joyce <russell.joyce@york.ac.uk>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Ray Jui <rjui@broadcom.com>,
+	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Rob Herring <robh@kernel.org>, Duc Dang <dhdang@apm.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	linux-kernel@vger.kernel.org,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Subject: Re: [PATCH v3 0/6] Xilinx AXI PCIe Host Bridge driver fixes
+Message-ID: <20160225155911.GF8120@localhost>
+References: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch attaches the new VMD domain's resources to the VMD device's
-resources. This allows /proc/iomem to display a more complete picture.
+Hi Paul,
 
-Before:
-  c0000000-c1ffffff : 0000:5d:05.5
-  c2000000-c3ffffff : 0000:5d:05.5
-    c2010000-c2013fff : nvme
-  c4000000-c40fffff : 0000:5d:05.5
+On Thu, Feb 04, 2016 at 04:10:07PM +0000, Paul Burton wrote:
+> This series fixes a number of issues found using the Xilinx AXI PCIe
+> Host Bridge IP on the Imagination Technologies MIPS Boston development
+> board. It has been split out of the larger Boston board support series
+> at Michal's request.
+> 
+> Applies atop v4.5-rc2.
+> 
+> Paul Burton (6):
+>   PCI: xilinx: Keep references to both IRQ domains
+>   PCI: xilinx: Unify INTx & MSI interrupt FIFO decode
+>   PCI: xilinx: Always clear interrupt decode register
+>   PCI: xilinx: Clear interrupt FIFO during probe
+>   PCI: xilinx: Fix INTX irq dispatch
+>   PCI: xilinx: Allow build on MIPS platforms
+> 
+>  drivers/pci/host/Kconfig       |   2 +-
+>  drivers/pci/host/pcie-xilinx.c | 125 +++++++++++++++++++----------------------
 
-After:
-  c0000000-c1ffffff : 0000:5d:05.5
-    c0000000-0000001f : VMD CFGBAR
-  c2000000-c3ffffff : 0000:5d:05.5
-    c2000000-c3ffffff : VMD MEMBAR1
-      c2000000-c22fffff : PCI Bus 10000:01
-        c2000000-c200ffff : 10000:01:00.0
-        c2010000-c2013fff : 10000:01:00.0
-          c2010000-c2013fff : nvme
-      c2300000-c24fffff : PCI Bus 10000:01
-  c4000000-c40fffff : 0000:5d:05.5
-    c4002000-c40fffff : VMD MEMBAR2
+Looks like Bharat has some IRQ concerns, so I'm guessing you'll be
+posting a v4?
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- arch/x86/pci/vmd.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
-
-diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-index d57e480..06490da 100644
---- a/arch/x86/pci/vmd.c
-+++ b/arch/x86/pci/vmd.c
-@@ -503,6 +503,20 @@ static struct pci_ops vmd_ops = {
- 	.write		= vmd_pci_write,
- };
- 
-+static void vmd_attach_resources(struct vmd_dev *vmd)
-+{
-+	vmd->dev->resource[VMD_CFGBAR].child = &vmd->resources[0];
-+	vmd->dev->resource[VMD_MEMBAR1].child = &vmd->resources[1];
-+	vmd->dev->resource[VMD_MEMBAR2].child = &vmd->resources[2];
-+}
-+
-+static void vmd_detach_resources(struct vmd_dev *vmd)
-+{
-+	vmd->dev->resource[VMD_CFGBAR].child = NULL;
-+	vmd->dev->resource[VMD_MEMBAR1].child = NULL;
-+	vmd->dev->resource[VMD_MEMBAR2].child = NULL;
-+}
-+
- /*
-  * VMD domains start at 0x1000 to not clash with ACPI _SEG domains.
-  */
-@@ -530,6 +544,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
- 		.start = res->start,
- 		.end   = (resource_size(res) >> 20) - 1,
- 		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
-+		.parent = res,
- 	};
- 
- 	res = &vmd->dev->resource[VMD_MEMBAR1];
-@@ -542,6 +557,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
- 		.start = res->start,
- 		.end   = res->end,
- 		.flags = flags,
-+		.parent = res,
- 	};
- 
- 	res = &vmd->dev->resource[VMD_MEMBAR2];
-@@ -554,6 +570,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
- 		.start = res->start + 0x2000,
- 		.end   = res->end,
- 		.flags = flags,
-+		.parent = res,
- 	};
- 
- 	sd->domain = vmd_find_free_domain();
-@@ -578,6 +595,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
- 		return -ENODEV;
- 	}
- 
-+	vmd_attach_resources(vmd);
- 	vmd_setup_dma_ops(vmd);
- 	dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
- 	pci_rescan_bus(vmd->bus);
-@@ -674,6 +692,7 @@ static void vmd_remove(struct pci_dev *dev)
- {
- 	struct vmd_dev *vmd = pci_get_drvdata(dev);
- 
-+	vmd_detach_resources(vmd);
- 	pci_set_drvdata(dev, NULL);
- 	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
- 	pci_stop_root_bus(vmd->bus);
--- 
-1.8.3.1
+Bjorn
