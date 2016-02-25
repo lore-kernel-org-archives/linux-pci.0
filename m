@@ -1,253 +1,170 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:43369 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751659AbcBJGEZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 01:04:25 -0500
-Received: from localhost
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 10 Feb 2016 16:04:23 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id F236D357805E
-	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:04:20 +1100 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u1A64Cud64880878
-	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:04:20 +1100
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-	by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u1A63llQ025720
-	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:03:48 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, mpe@ellerman.id.au,
-	aik@ozlabs.ru, ruscur@russell.cc,
-	Wei Yang <weiyang@linux.vnet.ibm.com>
-Subject: [PATCH v14 7/9] powerpc/powernv: Support EEH reset for VF PE
-Date: Wed, 10 Feb 2016 17:02:55 +1100
-Message-Id: <1455084177-15525-8-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Message-ID: <1456413584.3747.56.camel@pengutronix.de>
+Subject: Re: [PATCH v2] PCI: imx6: Add DT bindings to configure Tx Driver
+ settings
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Justin Waters <justin.waters@timesys.com>,
+	linux-pci@vger.kernel.org, Fabio Estevam <festevam@gmail.com>,
+	Richard Zhu <Richard.Zhu@freescale.com>
+Date: Thu, 25 Feb 2016 16:19:44 +0100
+In-Reply-To: <20160225151654.GA8120@localhost>
+References: <1452871476-11752-1-git-send-email-justin.waters@timesys.com>
+	 <20160204172544.GA19957@localhost>
+	 <CAENNV6+gn1hpz2PFp05F2Mf8zUcc8kN7MZEijDrY6JPMUcueAg@mail.gmail.com>
+	 <20160225151654.GA8120@localhost>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Wei Yang <weiyang@linux.vnet.ibm.com>
+Am Donnerstag, den 25.02.2016, 09:16 -0600 schrieb Bjorn Helgaas:
+> On Fri, Feb 19, 2016 at 03:25:26PM -0500, Justin Waters wrote:
+> > On Thu, Feb 4, 2016 at 12:25 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > [+cc Richard]
+> > >
+> > > On Fri, Jan 15, 2016 at 10:24:35AM -0500, Justin Waters wrote:
+> > >> The settings in GPR8 are dependent upon the particular layout of the
+> > >> hardware platform. As such, they should be configurable via the device
+> > >> tree.
+> > >>
+> > >> As many boards have been using the default values, this implementation
+> > >> uses the old values if they are not specified in the device tree.
+> > >>
+> > >> Signed-off-by: Justin Waters <justin.waters@timesys.com>
+> > >
+> > > Waiting for an ack from Lucas, since he had comments on the last version.
+> > >
+> > 
+> > Lucas, I just wanted to check in and see if you had any additional
+> > feedback for me. Did v2 address your concerns?
+> 
+> Just to be clear, I'm waiting for an ack from the IMX6 maintainers
+> (Richard or Lucas) before applying this.
+> 
+Sorry, for the delay on my side.
 
-PEs for VFs don't have primary bus. So they have to have their own reset
-backend, which is used during EEH recovery. The patch implements the reset
-backend for VF's PE by issuing FLR or AF FLR to the VFs, which are contained
-in the PE.
+Patch looks good to me now,
+Acked-by: Lucas Stach <l.stach@pengutronix.de>
 
-Signed-off-by: Wei Yang <weiyang@linux.vnet.ibm.com>
-Acked-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/include/asm/eeh.h               |   1 +
- arch/powerpc/kernel/eeh.c                    |   9 +-
- arch/powerpc/platforms/powernv/eeh-powernv.c | 127 ++++++++++++++++++++++++++-
- 3 files changed, 133 insertions(+), 4 deletions(-)
+> > >> ---
+> > >>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  7 ++++
+> > >>  drivers/pci/host/pci-imx6.c                        | 42 +++++++++++++++++++---
+> > >>  2 files changed, 44 insertions(+), 5 deletions(-)
+> > >>
+> > >> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> > >> index 6fbba53..3be80c6 100644
+> > >> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> > >> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> > >> @@ -13,6 +13,13 @@ Required properties:
+> > >>  - clock-names: Must include the following additional entries:
+> > >>       - "pcie_phy"
+> > >>
+> > >> +Optional properties:
+> > >> +- fsl,tx-deemph-gen1: Gen1 De-emphasis value. Default: 0
+> > >> +- fsl,tx-deemph-gen2-3p5db: Gen2 (3.5db) De-emphasis value. Default: 0
+> > >> +- fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
+> > >> +- fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
+> > >> +- fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
+> > >> +
+> > >>  Example:
+> > >>
+> > >>       pcie@0x01000000 {
+> > >> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> > >> index 230ebf9..cc04497 100644
+> > >> --- a/drivers/pci/host/pci-imx6.c
+> > >> +++ b/drivers/pci/host/pci-imx6.c
+> > >> @@ -39,6 +39,11 @@ struct imx6_pcie {
+> > >>       struct pcie_port        pp;
+> > >>       struct regmap           *iomuxc_gpr;
+> > >>       void __iomem            *mem_base;
+> > >> +     u32                     tx_deemph_gen1;
+> > >> +     u32                     tx_deemph_gen2_3p5db;
+> > >> +     u32                     tx_deemph_gen2_6db;
+> > >> +     u32                     tx_swing_full;
+> > >> +     u32                     tx_swing_low;
+> > >>  };
+> > >>
+> > >>  /* PCIe Root Complex registers (memory-mapped) */
+> > >> @@ -317,15 +322,20 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+> > >>                       IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
+> > >>
+> > >>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+> > >> -                     IMX6Q_GPR8_TX_DEEMPH_GEN1, 0 << 0);
+> > >> +                        IMX6Q_GPR8_TX_DEEMPH_GEN1,
+> > >> +                        imx6_pcie->tx_deemph_gen1 << 0);
+> > >>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+> > >> -                     IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB, 0 << 6);
+> > >> +                        IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB,
+> > >> +                        imx6_pcie->tx_deemph_gen2_3p5db << 6);
+> > >>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+> > >> -                     IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB, 20 << 12);
+> > >> +                        IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB,
+> > >> +                        imx6_pcie->tx_deemph_gen2_6db << 12);
+> > >>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+> > >> -                     IMX6Q_GPR8_TX_SWING_FULL, 127 << 18);
+> > >> +                        IMX6Q_GPR8_TX_SWING_FULL,
+> > >> +                        imx6_pcie->tx_swing_full << 18);
+> > >>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+> > >> -                     IMX6Q_GPR8_TX_SWING_LOW, 127 << 25);
+> > >> +                        IMX6Q_GPR8_TX_SWING_LOW,
+> > >> +                        imx6_pcie->tx_swing_low << 25);
+> > >>  }
+> > >>
+> > >>  static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+> > >> @@ -565,6 +575,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+> > >>       struct imx6_pcie *imx6_pcie;
+> > >>       struct pcie_port *pp;
+> > >>       struct resource *dbi_base;
+> > >> +     struct device_node *node = pdev->dev.of_node;
+> > >>       int ret;
+> > >>
+> > >>       imx6_pcie = devm_kzalloc(&pdev->dev, sizeof(*imx6_pcie), GFP_KERNEL);
+> > >> @@ -617,6 +628,27 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+> > >>               return PTR_ERR(imx6_pcie->iomuxc_gpr);
+> > >>       }
+> > >>
+> > >> +     /* Grab PCIe PHY Tx Settings */
+> > >> +     if (of_property_read_u32
+> > >> +         (node, "fsl,tx-deemph-gen1", &imx6_pcie->tx_deemph_gen1))
+> > >> +             imx6_pcie->tx_deemph_gen1 = 0;
+> > >> +
+> > >> +     if (of_property_read_u32
+> > >> +         (node, "fsl,tx-deemph-gen2-3p5db", &imx6_pcie->tx_deemph_gen2_3p5db))
+> > >> +             imx6_pcie->tx_deemph_gen2_3p5db = 0;
+> > >> +
+> > >> +     if (of_property_read_u32
+> > >> +         (node, "fsl,tx-deemph-gen2-6db", &imx6_pcie->tx_deemph_gen2_6db))
+> > >> +             imx6_pcie->tx_deemph_gen2_6db = 20;
+> > >> +
+> > >> +     if (of_property_read_u32
+> > >> +         (node, "fsl,tx-swing-full", &imx6_pcie->tx_swing_full))
+> > >> +             imx6_pcie->tx_swing_full = 127;
+> > >> +
+> > >> +     if (of_property_read_u32
+> > >> +         (node, "fsl,tx-swing-low", &imx6_pcie->tx_swing_low))
+> > >> +             imx6_pcie->tx_swing_low = 127;
+> > >> +
+> > >>       ret = imx6_add_pcie_port(pp, pdev);
+> > >>       if (ret < 0)
+> > >>               return ret;
+> > >> --
+> > >> 2.5.0
+> > >>
+> > >> --
+> > >> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > >> the body of a message to majordomo@vger.kernel.org
+> > >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
-index 0c551a2..b5b5f45 100644
---- a/arch/powerpc/include/asm/eeh.h
-+++ b/arch/powerpc/include/asm/eeh.h
-@@ -137,6 +137,7 @@ struct eeh_dev {
- 	int pcix_cap;			/* Saved PCIx capability	*/
- 	int pcie_cap;			/* Saved PCIe capability	*/
- 	int aer_cap;			/* Saved AER capability		*/
-+	int af_cap;			/* Saved AF capability		*/
- 	struct eeh_pe *pe;		/* Associated PE		*/
- 	struct list_head list;		/* Form link list in the PE	*/
- 	struct pci_controller *phb;	/* Associated PHB		*/
-diff --git a/arch/powerpc/kernel/eeh.c b/arch/powerpc/kernel/eeh.c
-index 8c6005c..0d72462 100644
---- a/arch/powerpc/kernel/eeh.c
-+++ b/arch/powerpc/kernel/eeh.c
-@@ -761,7 +761,8 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state stat
- 	case pcie_deassert_reset:
- 		eeh_ops->reset(pe, EEH_RESET_DEACTIVATE);
- 		eeh_unfreeze_pe(pe, false);
--		eeh_pe_state_clear(pe, EEH_PE_CFG_BLOCKED);
-+		if (!(pe->type & EEH_PE_VF))
-+			eeh_pe_state_clear(pe, EEH_PE_CFG_BLOCKED);
- 		eeh_pe_dev_traverse(pe, eeh_restore_dev_state, dev);
- 		eeh_pe_state_clear(pe, EEH_PE_ISOLATED);
- 		break;
-@@ -769,14 +770,16 @@ int pcibios_set_pcie_reset_state(struct pci_dev *dev, enum pcie_reset_state stat
- 		eeh_pe_state_mark_with_cfg(pe, EEH_PE_ISOLATED);
- 		eeh_ops->set_option(pe, EEH_OPT_FREEZE_PE);
- 		eeh_pe_dev_traverse(pe, eeh_disable_and_save_dev_state, dev);
--		eeh_pe_state_mark(pe, EEH_PE_CFG_BLOCKED);
-+		if (!(pe->type & EEH_PE_VF))
-+			eeh_pe_state_mark(pe, EEH_PE_CFG_BLOCKED);
- 		eeh_ops->reset(pe, EEH_RESET_HOT);
- 		break;
- 	case pcie_warm_reset:
- 		eeh_pe_state_mark_with_cfg(pe, EEH_PE_ISOLATED);
- 		eeh_ops->set_option(pe, EEH_OPT_FREEZE_PE);
- 		eeh_pe_dev_traverse(pe, eeh_disable_and_save_dev_state, dev);
--		eeh_pe_state_mark(pe, EEH_PE_CFG_BLOCKED);
-+		if (!(pe->type & EEH_PE_VF))
-+			eeh_pe_state_mark(pe, EEH_PE_CFG_BLOCKED);
- 		eeh_ops->reset(pe, EEH_RESET_FUNDAMENTAL);
- 		break;
- 	default:
-diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 830526e..e26256b 100644
---- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -371,6 +371,7 @@ static void *pnv_eeh_probe(struct pci_dn *pdn, void *data)
- 	edev->mode	&= 0xFFFFFF00;
- 	edev->pcix_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_PCIX);
- 	edev->pcie_cap = pnv_eeh_find_cap(pdn, PCI_CAP_ID_EXP);
-+	edev->af_cap   = pnv_eeh_find_cap(pdn, PCI_CAP_ID_AF);
- 	edev->aer_cap  = pnv_eeh_find_ecap(pdn, PCI_EXT_CAP_ID_ERR);
- 	if ((edev->class_code >> 8) == PCI_CLASS_BRIDGE_PCI) {
- 		edev->mode |= EEH_DEV_BRIDGE;
-@@ -879,6 +880,120 @@ void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
- 	}
- }
- 
-+static void pnv_eeh_wait_for_pending(struct pci_dn *pdn, const char *type,
-+				     int pos, u16 mask)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	int i, status = 0;
-+
-+	/* Wait for Transaction Pending bit to be cleared */
-+	for (i = 0; i < 4; i++) {
-+		eeh_ops->read_config(pdn, pos, 2, &status);
-+		if (!(status & mask))
-+			return;
-+
-+		msleep((1 << i) * 100);
-+	}
-+
-+	pr_warn("%s: Pending transaction while issuing %sFLR to %04x:%02x:%02x.%01x\n",
-+		__func__, type,
-+		edev->phb->global_number, pdn->busno,
-+		PCI_SLOT(pdn->devfn), PCI_FUNC(pdn->devfn));
-+}
-+
-+static int pnv_eeh_do_flr(struct pci_dn *pdn, int option)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	u32 reg = 0;
-+
-+	if (WARN_ON(!edev->pcie_cap))
-+		return -ENOTTY;
-+
-+	eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCAP, 4, &reg);
-+	if (!(reg & PCI_EXP_DEVCAP_FLR))
-+		return -ENOTTY;
-+
-+	switch (option) {
-+	case EEH_RESET_HOT:
-+	case EEH_RESET_FUNDAMENTAL:
-+		pnv_eeh_wait_for_pending(pdn, "",
-+					 edev->pcie_cap + PCI_EXP_DEVSTA,
-+					 PCI_EXP_DEVSTA_TRPND);
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				     4, &reg);
-+		reg |= PCI_EXP_DEVCTL_BCR_FLR;
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				      4, reg);
-+		msleep(EEH_PE_RST_HOLD_TIME);
-+		break;
-+	case EEH_RESET_DEACTIVATE:
-+		eeh_ops->read_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				     4, &reg);
-+		reg &= ~PCI_EXP_DEVCTL_BCR_FLR;
-+		eeh_ops->write_config(pdn, edev->pcie_cap + PCI_EXP_DEVCTL,
-+				      4, reg);
-+		msleep(EEH_PE_RST_SETTLE_TIME);
-+		break;
-+	}
-+
-+	return 0;
-+}
-+
-+static int pnv_eeh_do_af_flr(struct pci_dn *pdn, int option)
-+{
-+	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-+	u32 cap = 0;
-+
-+	if (WARN_ON(!edev->af_cap))
-+		return -ENOTTY;
-+
-+	eeh_ops->read_config(pdn, edev->af_cap + PCI_AF_CAP, 1, &cap);
-+	if (!(cap & PCI_AF_CAP_TP) || !(cap & PCI_AF_CAP_FLR))
-+		return -ENOTTY;
-+
-+	switch (option) {
-+	case EEH_RESET_HOT:
-+	case EEH_RESET_FUNDAMENTAL:
-+		/*
-+		 * Wait for Transaction Pending bit to clear. A word-aligned
-+		 * test is used, so we use the conrol offset rather than status
-+		 * and shift the test bit to match.
-+		 */
-+		pnv_eeh_wait_for_pending(pdn, "AF",
-+					 edev->af_cap + PCI_AF_CTRL,
-+					 PCI_AF_STATUS_TP << 8);
-+		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL,
-+				      1, PCI_AF_CTRL_FLR);
-+		msleep(EEH_PE_RST_HOLD_TIME);
-+		break;
-+	case EEH_RESET_DEACTIVATE:
-+		eeh_ops->write_config(pdn, edev->af_cap + PCI_AF_CTRL, 1, 0);
-+		msleep(EEH_PE_RST_SETTLE_TIME);
-+		break;
-+	}
-+
-+	return 0;
-+}
-+
-+static int pnv_eeh_reset_vf_pe(struct eeh_pe *pe, int option)
-+{
-+	struct eeh_dev *edev;
-+	struct pci_dn *pdn;
-+	int ret;
-+
-+	/* The VF PE should have only one child device */
-+	edev = list_first_entry_or_null(&pe->edevs, struct eeh_dev, list);
-+	pdn = eeh_dev_to_pdn(edev);
-+	if (!pdn)
-+		return -ENXIO;
-+
-+	ret = pnv_eeh_do_flr(pdn, option);
-+	if (!ret)
-+		return ret;
-+
-+	return pnv_eeh_do_af_flr(pdn, option);
-+}
-+
- /**
-  * pnv_eeh_reset - Reset the specified PE
-  * @pe: EEH PE
-@@ -940,7 +1055,9 @@ static int pnv_eeh_reset(struct eeh_pe *pe, int option)
- 		}
- 
- 		bus = eeh_pe_bus_get(pe);
--		if (pci_is_root_bus(bus) ||
-+		if (pe->type & EEH_PE_VF)
-+			ret = pnv_eeh_reset_vf_pe(pe, option);
-+		else if (pci_is_root_bus(bus) ||
- 			pci_is_root_bus(bus->parent))
- 			ret = pnv_eeh_root_reset(hose, option);
- 		else
-@@ -1079,6 +1196,14 @@ static inline bool pnv_eeh_cfg_blocked(struct pci_dn *pdn)
- 	if (!edev || !edev->pe)
- 		return false;
- 
-+	/*
-+	 * We will issue FLR or AF FLR to all VFs, which are contained
-+	 * in VF PE. It relies on the EEH PCI config accessors. So we
-+	 * can't block them during the window.
-+	 */
-+	if (edev->physfn && (edev->pe->state & EEH_PE_RESET))
-+		return false;
-+
- 	if (edev->pe->state & EEH_PE_CFG_BLOCKED)
- 		return true;
- 
 -- 
-2.1.0
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
 
