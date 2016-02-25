@@ -1,8 +1,8 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39749 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759363AbcBYCSo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:18:44 -0500
+Received: from userp1040.oracle.com ([156.151.31.81]:42283 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759421AbcBYCSi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:18:38 -0500
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -12,110 +12,148 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 	Khalid Aziz <khalid.aziz@oracle.com>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v10 38/59] PCI: Separate out save_resources()/restore_resources()
-Date: Wed, 24 Feb 2016 18:12:29 -0800
-Message-Id: <1456366370-28995-39-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v10 29/59] PCI: Reorder resources list for required/optional resources
+Date: Wed, 24 Feb 2016 18:12:20 -0800
+Message-Id: <1456366370-28995-30-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
 References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to save/restore resources several times for alt_size support,
-separate the save_resources()/resources() to save some lines later.
+We try to allocate required+optional before allocate required only and
+expand with optional.
+
+At first we update size and alignment for required+optional resource.
+And after that we reorder them with new alignment, but current we only
+do that STARTALIGN ones.
+
+For SIZEALIGN type resource, after add back add_size, the alignment
+get changed, so need to do sorting like STARTALIGN type resources.
+
+Also we need to reorder the sorting back after we restore
+resource to required only when required+optional fail to allocate for all.
+
+So move out the reordering code from the loop to separated function,
+and call it two times accordingly.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/setup-bus.c | 49 ++++++++++++++++++++++++++++++-------------------
- 1 file changed, 30 insertions(+), 19 deletions(-)
+ drivers/pci/setup-bus.c | 62 +++++++++++++++++++++++++++++--------------------
+ 1 file changed, 37 insertions(+), 25 deletions(-)
 
 diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 4d9cf1b..a84e0c3 100644
+index 9fdbd98..34e61ff 100644
 --- a/drivers/pci/setup-bus.c
 +++ b/drivers/pci/setup-bus.c
-@@ -436,6 +436,29 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
- 	return false;	/* should not get here */
+@@ -286,6 +286,31 @@ static inline void reset_resource(struct resource *res)
+ 	res->flags = 0;
  }
  
-+static bool save_resources(struct list_head *head,
-+			   struct list_head *save_head)
++static void sort_resources(struct list_head *head)
 +{
-+	struct pci_dev_resource *dev_res;
++	struct pci_dev_resource *res1, *tmp_res, *res2;
 +
-+	/* Save original start, end, flags etc at first */
-+	list_for_each_entry(dev_res, head, list)
-+		if (add_to_list(save_head, dev_res->dev, dev_res->res)) {
-+			free_list(save_head);
-+			return false;
++	list_for_each_entry_safe(res1, tmp_res, head, list) {
++		resource_size_t align1, size1, align2, size2;
++
++		align1 = pci_resource_alignment(res1->dev, res1->res);
++		size1 = resource_size(res1->res);
++
++		/* reorder it */
++		list_for_each_entry(res2, head, list) {
++			if (res2 == res1)
++				break;
++
++			align2 = pci_resource_alignment(res2->dev, res2->res);
++			size2 = resource_size(res2->res);
++			if (is_before(align1, size1, align2, size2)) {
++				list_move_tail(&res1->list, &res2->list);
++				break;
++			}
 +		}
-+
-+	return true;
++	}
 +}
 +
-+static void restore_resource(struct pci_dev_resource *save_res,
-+			     struct resource *res)
-+{
-+	res->start = save_res->start;
-+	res->end = save_res->end;
-+	res->flags = save_res->flags;
-+}
-+
- static void __assign_resources_sorted(struct list_head *head,
- 				 struct list_head *realloc_head,
- 				 struct list_head *fail_head)
-@@ -473,13 +496,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	if (!realloc_head || list_empty(realloc_head))
- 		goto requested_and_reassign;
+ /**
+  * reassign_resources_sorted() - satisfy any additional resource requests
+  *
+@@ -454,9 +479,9 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+-	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
++	struct pci_dev_resource *dev_res, *tmp_res;
+ 	unsigned long fail_type;
+-	resource_size_t add_align, align;
++	resource_size_t add_align;
  
--	/* Save original start, end, flags etc at first */
--	list_for_each_entry(dev_res, head, list) {
--		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
--			free_list(&save_head);
--			goto requested_and_reassign;
--		}
--	}
-+	if (!save_resources(head, &save_head))
-+		goto requested_and_reassign;
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -471,47 +496,32 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
  
  	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
-@@ -548,12 +566,9 @@ static void __assign_resources_sorted(struct list_head *head,
+-	list_for_each_entry_safe(dev_res, tmp_res, head, list) {
++	list_for_each_entry(dev_res, head, list) {
+ 		dev_res->res->end += get_res_add_size(realloc_head,
+ 							dev_res->res);
+ 
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+-		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
+-		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
+-		 * Here just fix the additional alignment for bridge
++		 * 1. bridge resource with IORESOURCE_STARTALIGN
++		 *    need to update start to change alignment
++		 * 2. resource with IORESOURCE_SIZEALIGN
++		 *    update size above already change alignment.
+ 		 */
+ 		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
+ 			continue;
+ 
+ 		add_align = get_res_add_align(realloc_head, dev_res->res);
+ 
+-		/*
+-		 * The "head" list is sorted by the alignment to make sure
+-		 * resources with bigger alignment will be assigned first.
+-		 * After we change the alignment of a dev_res in "head" list,
+-		 * we need to reorder the list by alignment to make it
+-		 * consistent.
+-		 */
+-		if (add_align > dev_res->res->start) {
++		if (add_align) {
+ 			resource_size_t r_size = resource_size(dev_res->res);
+ 
+ 			dev_res->res->start = add_align;
+ 			dev_res->res->end = add_align + r_size - 1;
+-
+-			list_for_each_entry(dev_res2, head, list) {
+-				align = pci_resource_alignment(dev_res2->dev,
+-							       dev_res2->res);
+-				if (add_align > align) {
+-					list_move_tail(&dev_res->list,
+-						       &dev_res2->list);
+-					break;
+-				}
+-			}
  		}
+-
  	}
- 	/* Restore start/end/flags from saved list */
--	list_for_each_entry(save_res, &save_head, list) {
--		res = save_res->res;
--		res->start = save_res->start;
--		res->end = save_res->end;
--		res->flags = save_res->flags;
--	}
-+	list_for_each_entry(save_res, &save_head, list)
-+		restore_resource(save_res, save_res->res);
+ 
++	sort_resources(head);
 +
+ 	/* Try updated head list with add_size added */
+ 	assign_requested_resources_sorted(head, &local_fail_head);
+ 
+@@ -553,6 +563,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	}
  	free_list(&save_head);
  
++	sort_resources(head);
++
  requested_and_reassign:
-@@ -2025,9 +2040,7 @@ again:
- 	list_for_each_entry(fail_res, &fail_head, list) {
- 		struct resource *res = fail_res->res;
- 
--		res->start = fail_res->start;
--		res->end = fail_res->end;
--		res->flags = fail_res->flags;
-+		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
- 			/* last or third times and later */
-@@ -2111,9 +2124,7 @@ again:
- 	list_for_each_entry(fail_res, &fail_head, list) {
- 		struct resource *res = fail_res->res;
- 
--		res->start = fail_res->start;
--		res->end = fail_res->end;
--		res->flags = fail_res->flags;
-+		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
- 			/* last time */
+ 	/* Satisfy the must-have resource requests */
+ 	assign_requested_resources_sorted(head, fail_head);
 -- 
 1.8.4.5
 
