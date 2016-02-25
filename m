@@ -1,32 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:59442 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751910AbcBEJgD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 5 Feb 2016 04:36:03 -0500
-Date: Fri, 5 Feb 2016 10:35:56 +0100
-From: Simon Horman <horms@verge.net.au>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH 1/2] drivers: pci: host: rcar: remove PCI_PROBE_ONLY
- handling
-Message-ID: <20160205093556.GC16556@verge.net.au>
-References: <1454066972-3609-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20160205002703.GK7031@localhost>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 25 Feb 2016 12:20:35 +0000
+From: Mark Rutland <mark.rutland@arm.com>
+To: Zhen Lei <thunder.leizhen@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Zefan Li <lizefan@huawei.com>, Xinwei Hu <huxinwei@huawei.com>,
+	Tianhong Ding <dingtianhong@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+Subject: Re: [PATCH 2/2] PCI: generic: add description of property
+ "interrupt-skip-mask"
+Message-ID: <20160225122035.GB10593@leverpostej>
+References: <1456401208-10136-1-git-send-email-thunder.leizhen@huawei.com>
+ <1456401208-10136-2-git-send-email-thunder.leizhen@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160205002703.GK7031@localhost>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1456401208-10136-2-git-send-email-thunder.leizhen@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 04, 2016 at 06:27:03PM -0600, Bjorn Helgaas wrote:
-> [+cc Simon, R-car maintainer, linux-renesas-soc]
+Hi,
+
+In future, please send the binding document first in a series, per point
+3 of Documentation/devicetree/bindings/submitting-patches.txt. It makes
+review easier/faster.
+
+On Thu, Feb 25, 2016 at 07:53:28PM +0800, Zhen Lei wrote:
+> Interrupt Pin register is read-only and optional. Some pci devices may use
+> msi/msix but leave the value of Interrupt Pin non-zero.
+
+Is that permitted by the spec? Surely 'optional' means it must be zero
+if not implemented?
+
+> In this case, the driver will print information as below: pci
+> 0000:40:00.0: of_irq_parse_pci() failed with rc=-22
 > 
-> I badly want to merge this, so speak up now if you object :)
+> It's easily lead to misinterpret.
 
-I have no objections.
+If this is limited to a subset of devices which we know are broken in
+this regard, can we not handle these cases explicitly?
 
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
+> Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
+> ---
+>  Documentation/devicetree/bindings/pci/host-generic-pci.txt | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> index 3f1d3fc..0f10978 100644
+> --- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> @@ -70,6 +70,8 @@ Practice: Interrupt Mapping' and requires the following properties:
+> 
+>  - interrupt-map-mask : <see aforementioned specification>
+> 
+> +- interrupt-skip-mask: Explicitly declare which pci devices only use msi/msix
+> +but leave the value of Interrupt Pin non-zero.
+
+Unlike the rest of the interrupt mapping properties, this is not
+described in  `Open Firmware Recommended Practice: Interrupt Mapping'.
+
+This needs a far more complete description.
+
+This also doesn't strike me as th right approach. The interrupt-map-mask
+property describe as relationship between the host-controller-provided
+interrupt lines and endpoints, while this seems to be a bug completely
+contained within an endpoint.
+
+Thanks,
+Mark.
+
+> 
+>  Example:
+> 
+> --
+> 2.5.0
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
