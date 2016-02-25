@@ -1,60 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:36722 "EHLO
-	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932948AbcBIWKb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 9 Feb 2016 17:10:31 -0500
-Received: by mail-pf0-f174.google.com with SMTP id e127so588068pfe.3
-        for <linux-pci@vger.kernel.org>; Tue, 09 Feb 2016 14:10:30 -0800 (PST)
-From: Bhaskar Jupudi <njupudi@ucsc.edu>
-To: linux-kernel@vger.kernel.org
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	cmps107-njupudi <njupudi@ucsc.edu>
-Subject: [PATCH] drivers/pci:Broken link fixed
-Date: Tue,  9 Feb 2016 14:10:16 -0800
-Message-Id: <1455055816-3768-1-git-send-email-njupudi@ucsc.edu>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 25 Feb 2016 08:53:10 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: =?utf-8?B?0J7Qu9C10LMg0JzQvtGA0L7Qtw==?= <oleg.moroz@mcc.vniiem.ru>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Joerg Roedel <jroedel@suse.de>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
+	linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH v2 0/3] PCI: Revert "Implement pcibios_alloc_irq() and
+ pcibios_free_irq()"
+Message-ID: <20160225145310.GA23155@localhost>
+References: <20160217182718.302.10272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <56C55305.2050404@mcc.vniiem.ru>
+ <20160218160319.GC17588@localhost>
+ <56CDF6E0.2060005@mcc.vniiem.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <56CDF6E0.2060005@mcc.vniiem.ru>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: cmps107-njupudi <njupudi@ucsc.edu>
+On Wed, Feb 24, 2016 at 09:30:56PM +0300, Олег Мороз wrote:
+> I've checked next next-20160218 tag and confirm that it works.
 
-Dell developed a way to consistently name devices, 
-and their last proposal was accepted under the name biosdevname.
+Thanks a lot for testing this!  I added your tested-by to the commit.
 
-Signed-off-by: Naga Venkata Sai Indubhaskar Jupudi <njupudi@ucsc.edu>
----
-Proposal 1 provides a character device interface to ethernet devices.
+I apologize again for the inconvenience of this.  Thank you very much
+for your effort in reporting it and helping track it down.
 
-Proposal 2 is implemented in the same way as proposal 1 except that
-device nodes are created without any changes in the kernel.
+Bjorn
 
-Proposal 3 is an installer based proposal where it provides the user 
-with options to rename network interfaces.
-
-Proposal 4 exports system firmware provided SMBIOS strings on
-onboard devices to sysfs.
-
-Proposal 5 uses the firmware provided index to derive ethN names
-
-Proposal 6 is named as biosdevname and renames network interfaces 
-to a different names space and accepted upstream.
-
- drivers/pci/pci-label.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-index 024b5c1..27143a0 100644
---- a/drivers/pci/pci-label.c
-+++ b/drivers/pci/pci-label.c
-@@ -16,7 +16,7 @@
-  * the instance number and string from the type 41 record and exports
-  * it to sysfs.
-  *
-- * Please see http://linux.dell.com/wiki/index.php/Oss/libnetdevname for more
-+ * Please see http://linux.dell.com/files/biosdevname/ for more
-  * information.
-  */
- 
--- 
-2.5.0
-
-
+> 18.02.2016 19:03, Bjorn Helgaas пишет:
+> >On Thu, Feb 18, 2016 at 08:13:41AM +0300, Мороз Олег wrote:
+> >>On 17.02.2016 21:36, Bjorn Helgaas wrote:
+> >>>These are clean reverts of 991de2e59090 ("PCI, x86: Implement
+> >>>pcibios_alloc_irq() and pcibios_free_irq()") and related changes.
+> >>>
+> >>>We have two reports of drivers broken in v4.3 by Jiang's change,
+> >>>991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
+> >>>pcibios_free_irq()").
+> >>>
+> >>>It would be best to fix the problem instead of reverting 991de2e59090, but
+> >>>I don't have time to do that myself, and we haven't heard from Jiang, so
+> >>>the only choice I have is to revert the commit.
+> >>>
+> >>>Note that reverting will likely break IOAPIC hotplug.
+> >>>
+> >>>Олег and Sunjin, can you please test this and see whether it fixes your
+> >>>drivers?  This patch is based on v4.5-rc1.
+> >>>
+> >>>I intend to merge these for v4.5 unless I hear objections.
+> >>>
+> >>>They're on my for-linus branch, so they should appear in linux-next
+> >>>tomorrow.
+> >>>
+> >>>Changes from the v1 posting:
+> >>>   - Explicitly revert related patches instead of resolving conflicts
+> >>>     manually
+> >>>---
+> >>>
+> >>>Bjorn Helgaas (3):
+> >>>       Revert "x86/PCI: Don't alloc pcibios-irq when MSI is enabled"
+> >>>       Revert "PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed"
+> >>>       Revert "PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()"
+> >>>
+> >>>
+> >>>  arch/x86/include/asm/pci_x86.h |    2 ++
+> >>>  arch/x86/pci/common.c          |   26 ++++++++++----------------
+> >>>  arch/x86/pci/intel_mid_pci.c   |    9 +++------
+> >>>  arch/x86/pci/irq.c             |   23 +++++++++++++++++++----
+> >>>  drivers/acpi/pci_irq.c         |   17 +++++++++++++----
+> >>>  include/linux/pci.h            |   17 -----------------
+> >>>  6 files changed, 47 insertions(+), 47 deletions(-)
+> >>As i undestand this patch will appear in kernel git repo tomorrow? I
+> >>don't need to apply in manyally to v4.5-rc1?
+> >These are included in the next-20160218 tag in the linux-next git repo (not
+> >Linus' repo) at:
+> >
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
+> >
+> >You browse this at:
+> >
+> >   https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/
+> >
+> >If you'd rather, you can also apply the patches yourself to v4.5-rc1.
+> >
+> >Bjorn
+> 
