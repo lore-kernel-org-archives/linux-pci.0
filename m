@@ -1,64 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:37603 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752174AbcBJRWg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 12:22:36 -0500
-Date: Wed, 10 Feb 2016 18:22:29 +0100
-From: Simon Horman <horms@verge.net.au>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 0/4] PCI: rcar, rcar-gen2: More Gen2 compatibility
- strings
-Message-ID: <20160210172229.GC17671@verge.net.au>
-References: <1453093785-21067-1-git-send-email-horms+renesas@verge.net.au>
- <20160205202135.GA9594@localhost>
+Received: from mail.kernel.org ([198.145.29.136]:59509 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760202AbcBYPKs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Feb 2016 10:10:48 -0500
+Date: Thu, 25 Feb 2016 09:10:40 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: jakeo@microsoft.com
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
+	haddenh@microsoft.com
+Subject: Re: [PATCH] PCI: Remove usage of pci_domain_nr when the PCI bus
+ doesn't yet exist
+Message-ID: <20160225151040.GB23155@localhost>
+References: <1456340196-13717-1-git-send-email-jakeo@microsoft.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160205202135.GA9594@localhost>
+In-Reply-To: <1456340196-13717-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 05, 2016 at 02:21:35PM -0600, Bjorn Helgaas wrote:
-> Hi Simon,
+On Wed, Feb 24, 2016 at 06:56:36PM +0000, jakeo@microsoft.com wrote:
+> From: Jake Oshins <jakeo@microsoft.com>
 > 
-> On Mon, Jan 18, 2016 at 02:09:41PM +0900, Simon Horman wrote:
-> > this short series adds fallback gen2 and SoC-specific r8a7793 compatibility
-> > strings to the rcar PCI and rcar-gen2 PCIE drivers. The intention is to
-> > provide a complete set of compatibility strings for known Gen2 SoCs.
-> > 
-> > Bjorn, the intention of the revised changelogs for the r8a7793 is to
-> > address your concerns regarding providing an explanation of why there are
-> > no driver changes. Please consider taking this series through your tree.
-> > 
-> > Key Changes between v2 and v3:
-> > * Enhance changelog to describe why documenting the r8a7793 is necessary
-> >   and sufficient
-> > * Added acks.
-> > 
-> > Key Changes between v1 and v2:
-> > * Include "rcar-" in generic bindings
-> > 
-> > Simon Horman (4):
-> >   PCI: rcar-gen2: add gen2 fallback compatibility string
-> >   PCI: rcar-gen2: add device tree support for r8a7793
-> >   PCI: rcar: add gen2 fallback compatibility string
-> >   PCI: rcar: add device tree support for r8a7793
-> > 
-> >  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 12 ++++++++++--
-> >  Documentation/devicetree/bindings/pci/rcar-pci.txt      | 14 +++++++++++---
-> >  drivers/pci/host/pci-rcar-gen2.c                        |  1 +
-> >  drivers/pci/host/pcie-rcar.c                            |  1 +
-> >  4 files changed, 23 insertions(+), 5 deletions(-)
+> This patch fixes a race condition in this driver.  Using the
+> function pci_domain_nr() only works if the PCI bus has already
+> been fully created.  This patch just deletes one call site,
+> as it was in debug prints which aren't strictly necessary.
+> Another call site is changed to look for the data in the same
+> structure that is passed in when creating the PCI bus in the
+> first place.
 > 
-> Whew, it took a long time to pound that through my thick skull :)
-> 
-> I think patches 1 and 3 are already in v4.5-rc1, and I applied patches 2
-> and 4 to my for-linus branch as below.  Please double-check and make sure
-> for-linus has everything you want.  I'll ask Linus to pull that before
-> v4.5.
+> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 
-Thanks,
+I folded this into the original "Add paravirtual PCI front-end for
+Microsoft Hyper-V VMs" patch and updated the pci/host-hv branch.
 
-I checked your for-linus branch and everything seems to be in order.
+Thanks, Jake!
+
+> ---
+>  drivers/pci/host/pci-hyperv.c | 15 ++++++++-------
+>  1 file changed, 8 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index 9391dee..ed651ba 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -1265,11 +1265,6 @@ static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
+>  	if (!hpdev)
+>  		return NULL;
+>  
+> -	dev_info(&hbus->hdev->device,
+> -		 "New child device (%p) [%04x:%04x] at %04x:00:00.%02x\n",
+> -		 hpdev, desc->v_id, desc->d_id, pci_domain_nr(hbus->pci_bus),
+> -		 desc->win_slot.bits.func);
+> -
+>  	hpdev->hbus = hbus;
+>  
+>  	memset(&pkt, 0, sizeof(pkt));
+> @@ -1558,9 +1553,15 @@ static void hv_eject_device_work(struct work_struct *work)
+>  		return;
+>  	}
+>  
+> +	/*
+> +	 * Ejection can come before or after the PCI bus has been set up, so
+> +	 * attempt to find it and tear down the bus state, if it exists.  This
+> +	 * must be done without constructs like pci_domain_nr(hbus->pci_bus)
+> +	 * because hbus->pci_bus may not exist yet.
+> +	 */
+>  	wslot = wslot_to_devfn(hpdev->desc.win_slot.slot);
+> -	pdev = pci_get_domain_bus_and_slot(pci_domain_nr(hpdev->hbus->pci_bus),
+> -					   0, wslot);
+> +	pdev = pci_get_domain_bus_and_slot(hpdev->hbus->sysdata.domain, 0,
+> +					   wslot);
+>  	if (pdev) {
+>  		pci_stop_and_remove_bus_device(pdev);
+>  		pci_dev_put(pdev);
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
