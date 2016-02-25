@@ -1,212 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48116 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756522AbcBWArb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Feb 2016 19:47:31 -0500
-Subject: [PATCH v4 09/11] PCI: Rename VPD symbols to remove unnecessary
- "pci22"
-To: Hannes Reinecke <hare@suse.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Babu Moger <babu.moger@oracle.com>,
-	Alexander Duyck <alexander.duyck@gmail.com>
-Date: Mon, 22 Feb 2016 18:47:28 -0600
-Message-ID: <20160223004728.10635.43331.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from userp1040.oracle.com ([156.151.31.81]:40725 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932571AbcBYCNr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:13:47 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v10 44/59] PCI: Add support for more than two alt_size entries under same bridge
+Date: Wed, 24 Feb 2016 18:12:35 -0800
+Message-Id: <1456366370-28995-45-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There's only one kind of VPD, so we don't need to qualify it as "the
-version described by PCI spec rev 2.2."
+When we have two bridges under parent bridge, and each child
+bridge has alt_size, we need to increase parent alt_size to make
+sure it could fit all alt entries.
 
-Rename the following symbols to remove unnecessary "pci22":
+In the patch, we first select one big size, and then keep reducing
+the size and retrying to get the minimum value for alt_size.
 
-  PCI_VPD_PCI22_SIZE	-> PCI_VPD_MAX_SIZE
-  pci_vpd_pci22_size()	-> pci_vpd_size()
-  pci_vpd_pci22_wait()	-> pci_vpd_wait()
-  pci_vpd_pci22_read()	-> pci_vpd_read()
-  pci_vpd_pci22_write()	-> pci_vpd_write()
-  pci_vpd_pci22_ops	-> pci_vpd_ops
-  pci_vpd_pci22_init()	-> pci_vpd_init()
+For example, two bridges:
+  one have 8M/8M, and 1M/1M children res.
+  one have 4M/4M, and 1M/1M children res.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Then we have child pridges alt_align/alt_size: 8M/9M, 4M/5M.
+Before this patch, parent bridge alt_align/alt_size is 8M/14M
+that is wrong, as it can not fit two alt entries at all.
+With this patch	parent bridge alt_align/alt_size: 8M/17M.
+               8M            16M   20M   24M
+  |------------|-------------|-----|-----|
+	       8M			   25M
+	       |---------------------------|
+			       17M
+               |---9M----------|   |-5M----|
+
+
+At same time, child bridges required align/size: 4M/12M, 2M/6M.
+and prarent bridge required align/size: 4M/20M.
+
+So at last, we use 8M/17M as parent bridge alt_align/alt_size.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=100451
+Reported-by: Yijing Wang <wangyijing@huawei.com>
+Tested-by: Yijing Wang <wangyijing@huawei.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/access.c |   38 +++++++++++++++++++-------------------
- drivers/pci/pci.h    |    2 +-
- drivers/pci/probe.c  |    2 +-
- 3 files changed, 21 insertions(+), 21 deletions(-)
+ drivers/pci/setup-bus.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 54 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 68ed22a..ee205de 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -275,7 +275,7 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 55366f4..1fcb9b2 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1373,6 +1373,47 @@ out:
+ 	return good_align;
  }
- EXPORT_SYMBOL(pci_write_vpd);
  
--#define PCI_VPD_PCI22_SIZE (PCI_VPD_ADDR_MASK + 1)
-+#define PCI_VPD_MAX_SIZE (PCI_VPD_ADDR_MASK + 1)
++static resource_size_t calculate_mem_alt_size(struct list_head *head,
++				resource_size_t max_align, resource_size_t size,
++				resource_size_t align_low)
++{
++	struct align_test_res *p;
++	resource_size_t tmp;
++	resource_size_t good_size, bad_size;
++	int count = 0, order;
++
++	good_size = ALIGN(size, align_low);
++
++	list_for_each_entry(p, head, list)
++		count++;
++
++	if (count <= 1)
++		goto out;
++
++	sort_align_test(head);
++
++	tmp = max(size, max_align);
++	order = __fls(count);
++	if ((1ULL << order) < count)
++		order++;
++	good_size = ALIGN((tmp << order), align_low);
++	bad_size = ALIGN(size, align_low) - align_low;
++	size = good_size;
++	while (size > bad_size) {
++		/* check if align/size fit all entries */
++		if (is_align_size_good(head, max_align, size, 0))
++			good_size = size;
++		else
++			bad_size = size;
++
++		size = bad_size + ((good_size - bad_size) >> 1);
++		size = round_down(size, align_low);
++	}
++
++out:
++	return good_size;
++}
++
+ static inline bool is_optional(int i)
+ {
  
- struct pci_vpd_pci22 {
- 	struct pci_vpd base;
-@@ -291,7 +291,7 @@ struct pci_vpd_pci22 {
-  * @dev:	pci device struct
-  * @old_size:	current assumed size, also maximum allowed size
-  */
--static size_t pci_vpd_pci22_size(struct pci_dev *dev, size_t old_size)
-+static size_t pci_vpd_size(struct pci_dev *dev, size_t old_size)
- {
- 	size_t off = 0;
- 	unsigned char header[1+2];	/* 1 byte tag, 2 bytes length */
-@@ -348,7 +348,7 @@ static size_t pci_vpd_pci22_size(struct pci_dev *dev, size_t old_size)
-  *
-  * Returns 0 on success, negative values indicate error.
-  */
--static int pci_vpd_pci22_wait(struct pci_dev *dev)
-+static int pci_vpd_wait(struct pci_dev *dev)
- {
- 	struct pci_vpd_pci22 *vpd =
- 		container_of(dev->vpd, struct pci_vpd_pci22, base);
-@@ -381,8 +381,8 @@ static int pci_vpd_pci22_wait(struct pci_dev *dev)
+@@ -1419,6 +1460,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	LIST_HEAD(align_test_list);
+ 	LIST_HEAD(align_test_add_list);
++	LIST_HEAD(align_test_alt_list);
+ 	resource_size_t alt_size = 0, alt_align = 0;
+ 	resource_size_t window_align;
+ 
+@@ -1494,10 +1536,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 				dev_res = res_to_dev_res(realloc_head, r);
+ 				if (dev_res && dev_res->alt_size) {
++					add_to_align_test_list(
++						&align_test_alt_list,
++						dev_res->alt_align,
++						dev_res->alt_size);
+ 					alt_size += dev_res->alt_size;
+ 					if (alt_align < dev_res->alt_align)
+ 						alt_align = dev_res->alt_align;
+ 				} else if (r_size > 1) {
++					add_to_align_test_list(
++						&align_test_alt_list,
++						align, r_size);
+ 					alt_size += r_size;
+ 					if (alt_align < align)
+ 						alt_align = align;
+@@ -1517,14 +1566,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 	if (size0 && realloc_head) {
+ 		alt_align = max(alt_align, window_align);
+-		alt_size = calculate_memsize(alt_size, min_size,
+-					     0, window_align);
++		/* need to increase size to fit more alt */
++		alt_size = calculate_mem_alt_size(&align_test_alt_list,
++						  alt_align, alt_size,
++						  window_align);
+ 		/* required is better ? */
+ 		if (alt_size >= size0) {
+ 			alt_align = 0;
+ 			alt_size = 0;
+ 		}
  	}
- }
++	free_align_test_list(&align_test_alt_list);
  
--static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
--				  void *arg)
-+static ssize_t pci_vpd_read(struct pci_dev *dev, loff_t pos, size_t count,
-+			    void *arg)
- {
- 	struct pci_vpd_pci22 *vpd =
- 		container_of(dev->vpd, struct pci_vpd_pci22, base);
-@@ -395,7 +395,7 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
- 
- 	if (!vpd->valid) {
- 		vpd->valid = 1;
--		vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
-+		vpd->base.len = pci_vpd_size(dev, vpd->base.len);
- 	}
- 
- 	if (vpd->base.len == 0)
-@@ -412,7 +412,7 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
- 	if (mutex_lock_killable(&vpd->lock))
- 		return -EINTR;
- 
--	ret = pci_vpd_pci22_wait(dev);
-+	ret = pci_vpd_wait(dev);
- 	if (ret < 0)
- 		goto out;
- 
-@@ -426,7 +426,7 @@ static ssize_t pci_vpd_pci22_read(struct pci_dev *dev, loff_t pos, size_t count,
- 			break;
- 		vpd->busy = 1;
- 		vpd->flag = PCI_VPD_ADDR_F;
--		ret = pci_vpd_pci22_wait(dev);
-+		ret = pci_vpd_wait(dev);
- 		if (ret < 0)
- 			break;
- 
-@@ -449,8 +449,8 @@ out:
- 	return ret ? ret : count;
- }
- 
--static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count,
--				   const void *arg)
-+static ssize_t pci_vpd_write(struct pci_dev *dev, loff_t pos, size_t count,
-+			     const void *arg)
- {
- 	struct pci_vpd_pci22 *vpd =
- 		container_of(dev->vpd, struct pci_vpd_pci22, base);
-@@ -463,7 +463,7 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
- 
- 	if (!vpd->valid) {
- 		vpd->valid = 1;
--		vpd->base.len = pci_vpd_pci22_size(dev, vpd->base.len);
-+		vpd->base.len = pci_vpd_size(dev, vpd->base.len);
- 	}
- 
- 	if (vpd->base.len == 0)
-@@ -475,7 +475,7 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
- 	if (mutex_lock_killable(&vpd->lock))
- 		return -EINTR;
- 
--	ret = pci_vpd_pci22_wait(dev);
-+	ret = pci_vpd_wait(dev);
- 	if (ret < 0)
- 		goto out;
- 
-@@ -497,7 +497,7 @@ static ssize_t pci_vpd_pci22_write(struct pci_dev *dev, loff_t pos, size_t count
- 
- 		vpd->busy = 1;
- 		vpd->flag = 0;
--		ret = pci_vpd_pci22_wait(dev);
-+		ret = pci_vpd_wait(dev);
- 		if (ret < 0)
- 			break;
- 
-@@ -508,9 +508,9 @@ out:
- 	return ret ? ret : count;
- }
- 
--static const struct pci_vpd_ops pci_vpd_pci22_ops = {
--	.read = pci_vpd_pci22_read,
--	.write = pci_vpd_pci22_write,
-+static const struct pci_vpd_ops pci_vpd_ops = {
-+	.read = pci_vpd_read,
-+	.write = pci_vpd_write,
- };
- 
- static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
-@@ -548,7 +548,7 @@ static const struct pci_vpd_ops pci_vpd_f0_ops = {
- 	.write = pci_vpd_f0_write,
- };
- 
--int pci_vpd_pci22_init(struct pci_dev *dev)
-+int pci_vpd_init(struct pci_dev *dev)
- {
- 	struct pci_vpd_pci22 *vpd;
- 	u8 cap;
-@@ -561,11 +561,11 @@ int pci_vpd_pci22_init(struct pci_dev *dev)
- 	if (!vpd)
- 		return -ENOMEM;
- 
--	vpd->base.len = PCI_VPD_PCI22_SIZE;
-+	vpd->base.len = PCI_VPD_MAX_SIZE;
- 	if (dev->dev_flags & PCI_DEV_FLAGS_VPD_REF_F0)
- 		vpd->base.ops = &pci_vpd_f0_ops;
- 	else
--		vpd->base.ops = &pci_vpd_pci22_ops;
-+		vpd->base.ops = &pci_vpd_ops;
- 	mutex_init(&vpd->lock);
- 	vpd->cap = cap;
- 	vpd->busy = 0;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index b3e9daa..6191703 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -105,7 +105,7 @@ struct pci_vpd {
- 	struct bin_attribute *attr; /* descriptor for sysfs VPD entry */
- };
- 
--int pci_vpd_pci22_init(struct pci_dev *dev);
-+int pci_vpd_init(struct pci_dev *dev);
- void pci_vpd_release(struct pci_dev *dev);
- 
- /* PCI /proc functions */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6d7ab9b..39b0174 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1608,7 +1608,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 	pci_pm_init(dev);
- 
- 	/* Vital Product Data */
--	pci_vpd_pci22_init(dev);
-+	pci_vpd_init(dev);
- 
- 	/* Alternative Routing-ID Forwarding */
- 	pci_configure_ari(dev);
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+-- 
+1.8.4.5
 
