@@ -1,84 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:46404 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755376AbcB2PGw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 29 Feb 2016 10:06:52 -0500
-Subject: Re: [PATCH] PCI: keystone: fix msi code that retrieves the pp struct
- ptr
-To: Greg KH <gregkh@linuxfoundation.org>
-References: <1456438984-22111-1-git-send-email-m-karicheri2@ti.com>
- <20160226001114.GA10923@kroah.com>
-CC: <stable@vger.kernel.org>, <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Message-ID: <56D45E72.1040501@ti.com>
-Date: Mon, 29 Feb 2016 10:06:26 -0500
-MIME-Version: 1.0
-In-Reply-To: <20160226001114.GA10923@kroah.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from userp1040.oracle.com ([156.151.31.81]:42438 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932853AbcBYCTF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:19:05 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v10 59/59] PCI: Only try to assign io port only for root bus that support it
+Date: Wed, 24 Feb 2016 18:12:50 -0800
+Message-Id: <1456366370-28995-60-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/25/2016 07:11 PM, Greg KH wrote:
-> On Thu, Feb 25, 2016 at 05:23:04PM -0500, Murali Karicheri wrote:
->> Recent update to pcie-designware core driver,
->> commit "cbce79005 PCI: designware: Make driver arch-agnostic" broke the
->> keystone PCI driver. This is because, the way pp struct ptr is retrieved
->> from  msi desc has changed and require similar update in pci-keystone-dw.c
->> as well. This patch fix this issue. Here is the early boot crash log seen
->> on K2E EVM.
->>
->> [    1.012999] pci 0000:00:00.0: PCI bridge to [bus 01]
->> [    1.018073] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
->> [    1.024308] pci 0000:00:00.0:   bridge window [mem 0x60000000-0x600fffff]
->> [    1.031216] pci 0000:00:00.0:   bridge window [mem 0x60100000-0x601fffff
->> pref]
->> [    1.038736] Unable to handle kernel NULL pointer dereference at virtual
->> address 00000030
->> [    1.046950] pgd = c0003000
->> [    1.049750] [00000030] *pgd=80000800004003, *pmd=00000000
->> [    1.055265] Internal error: Oops: 206 [#1] PREEMPT SMP ARM
->> [    1.060860] Modules linked in:
->> [    1.064013] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.4.2-00139-gb74f926 #2
->> [    1.071266] Hardware name: Keystone
->> [    1.074853] task: eb888000 ti: eb890000 task.ti: eb890000
->> [    1.080364] PC is at ks_dw_pcie_msi_irq_unmask+0x24/0x58
->> [    1.085785] LR is at ks_dw_pcie_msi_irq_unmask+0x18/0x58
->> [    1.091206] pc : [<c02f65c8>]    lr : [<c02f65bc>]    psr: 60000093
->> [    1.091206] sp : eb891bc8  ip : 00000000  fp : ebb15010
->> [    1.102915] r10: 00000051  r9 : 60000013  r8 : ebafaa20
->> [    1.108247] r7 : ebaa9f80  r6 : eb9fd0c0  r5 : ebafa9d0  r4 : ebafa9c0
->> [    1.114889] r3 : 00000051  r2 : 00000000  r1 : 00000001  r0 : ebb14c18
->> [    1.121533] Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment
->> kernel
->> [    1.129049] Control: 30c5387d  Table: 00003000  DAC: fffffffd
->> [    1.134905] Process swapper/0 (pid: 1, stack limit = 0xeb890210)
->> [    1.141023] Stack: (0xeb891bc8 to 0xeb892000)
->>
->> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
->> ---
->>  - Need this fix in 4.4.4 as well
-> 
-> <formletter>
-> 
-> This is not the correct way to submit patches for inclusion in the
-> stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
-> for how to do this properly.
-> 
-> </formletter>
-> 
-I misremembered it. I am following option 1) and only thing missing is
-========================================================================
-To have the patch automatically included in the stable tree, add the tag
-     Cc: stable@vger.kernel.org
-   in the sign-off area.
-=========================================================================
+The PCI subsystem always assumes that I/O is supported on root bus and
+tries to assign an I/O window to each child bus even if that is not the
+case.
 
-I will add Cc in the sign-off area and send v1.
+The use cases is on Intel 8 socket system that have 8 root buses,
+last two root buses would not have io port resources from _CRS.
 
+Check if root bus supports I/O, and later during sizing and
+assigning, check that flags and skip those resources.
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/probe.c     | 6 ++++++
+ drivers/pci/setup-bus.c | 9 +++++++++
+ include/linux/pci.h     | 1 +
+ 3 files changed, 16 insertions(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 563b784..96fda92 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -342,6 +342,9 @@ static void pci_read_bridge_io(struct pci_bus *child)
+ 	struct pci_bus_region region;
+ 	struct resource *res;
+ 
++	if (!pci_find_host_bridge(child)->has_ioport)
++		return;
++
+ 	io_mask = PCI_IO_RANGE_MASK;
+ 	io_granularity = 0x1000;
+ 	if (dev->io_window_1k) {
+@@ -2190,6 +2193,9 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 			bus_addr[0] = '\0';
+ 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
+ 
++		if (resource_type(res) == IORESOURCE_IO)
++			bridge->has_ioport = 1;
++
+ 		if (resource_type(res) == IORESOURCE_MEM) {
+ 			if ((res->end - offset) > 0xffffffff)
+ 				bridge->has_mem64 = 1;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index e1d7b79..8682522 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -226,6 +226,10 @@ static void pdev_assign_resources_prepare(struct pci_dev *dev,
+ 		if (resource_disabled(r) || r->parent)
+ 			continue;
+ 
++		if ((r->flags & IORESOURCE_IO) &&
++		    !pci_find_host_bridge(dev->bus)->has_ioport)
++			continue;
++
+ 		r_align = __pci_resource_alignment(dev, r, realloc_head);
+ 		if (!r_align) {
+ 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
+@@ -1189,6 +1193,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		min_size = 0;
+ 	}
+ 
++	if (!pci_find_host_bridge(bus)->has_ioport) {
++		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
++		return;
++	}
++
+ 	min_align = window_alignment(bus, IORESOURCE_IO);
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 30a4879..5dc748f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -414,6 +414,7 @@ struct pci_host_bridge {
+ 	void *release_data;
+ 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
+ 	unsigned int has_mem64:1;
++	unsigned int has_ioport:1;
+ 	/* Resource alignment requirements */
+ 	resource_size_t (*align_resource)(struct pci_dev *dev,
+ 			const struct resource *res,
 -- 
-Murali Karicheri
-Linux Kernel, Keystone
+1.8.4.5
+
