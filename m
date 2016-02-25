@@ -1,127 +1,150 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:45994 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965105AbcBQDp6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:45:58 -0500
-Received: from localhost
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 17 Feb 2016 13:45:56 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v8 29/45] powerpc/pci: Export pci_traverse_device_nodes()
-Date: Wed, 17 Feb 2016 14:44:12 +1100
-Message-Id: <1455680668-23298-30-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v10 25/59] PCI: Use correct align for optional only resources during sorting
+Date: Wed, 24 Feb 2016 18:12:16 -0800
+Message-Id: <1456366370-28995-26-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This renames traverse_pci_devices() to pci_traverse_device_nodes().
-The function traverses all subordinate device nodes of the specified
-one. Also, below cleanup applied to the function. No logical changes
-introduced.
+During sorting before assign, we only put resource with non-zero align
+in the sorted list, so for optional resources that required size is 0 and
+only have optional parts, we need to have correct align.
 
-   * Rename "pre" to "fn".
-   * Avoid assignment in if condition reported from checkpatch.pl.
+While treating SRIOV as optional resources, we always read alignment for
+SRIOV bars every time, so they are ok.
+Hotplug bridge resources are using STARTALIGN so it is ok when size is 0
+if we have correct start for them.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Later we want to treat the ROM BAR as optional resource, and it has
+SIZEALIGN, so align=size will be 0. We need to find a way to get align
+for them.
+
+We can use optional resource align instead in that case, and it
+is ok for SRIOV path and hotplug bridge resource path.
+
+We need to pass realloc list from sizing stage to sorting stage, and
+get entry from realloc list and calculate align from the entry.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
+Reported-by: TJ <linux@iam.tj>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/powerpc/include/asm/ppc-pci.h   |  6 +++---
- arch/powerpc/kernel/pci_dn.c         | 15 ++++++++++-----
- arch/powerpc/platforms/pseries/msi.c |  4 ++--
- 3 files changed, 15 insertions(+), 10 deletions(-)
+ drivers/pci/setup-bus.c | 49 ++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 42 insertions(+), 7 deletions(-)
 
-diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
-index ca0c5bf..8753e4e 100644
---- a/arch/powerpc/include/asm/ppc-pci.h
-+++ b/arch/powerpc/include/asm/ppc-pci.h
-@@ -33,9 +33,9 @@ extern struct pci_dev *isa_bridge_pcidev;	/* may be NULL if no ISA bus */
- struct device_node;
- struct pci_dn;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index aae1de0..a0905e9 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -145,9 +145,42 @@ static resource_size_t get_res_add_align(struct list_head *head,
+ 	return dev_res->min_align;
+ }
  
--typedef void *(*traverse_func)(struct device_node *me, void *data);
--void *traverse_pci_devices(struct device_node *start, traverse_func pre,
--		void *data);
-+void *pci_traverse_device_nodes(struct device_node *start,
-+				void *(*fn)(struct device_node *, void *),
-+				void *data);
- void *traverse_pci_dn(struct pci_dn *root,
- 		      void *(*fn)(struct pci_dn *, void *),
- 		      void *data);
-diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-index ce10281..ecdccce 100644
---- a/arch/powerpc/kernel/pci_dn.c
-+++ b/arch/powerpc/kernel/pci_dn.c
-@@ -372,8 +372,9 @@ EXPORT_SYMBOL_GPL(pci_remove_device_node_info);
-  * one of these nodes we also assume its siblings are non-pci for
-  * performance.
-  */
--void *traverse_pci_devices(struct device_node *start, traverse_func pre,
--		void *data)
-+void *pci_traverse_device_nodes(struct device_node *start,
-+				void *(*fn)(struct device_node *, void *),
-+				void *data)
++static resource_size_t __pci_resource_alignment(
++				struct pci_dev *dev,
++				struct resource *r,
++				struct list_head *realloc_head)
++{
++	resource_size_t r_align = pci_resource_alignment(dev, r);
++	resource_size_t orig_start, orig_end;
++	struct pci_dev_resource *dev_res;
++
++	if (r_align || !realloc_head)
++		return r_align;
++
++	dev_res = res_to_dev_res(realloc_head, r);
++	if (!dev_res || !dev_res->add_size)
++		return r_align;
++
++	orig_start = r->start;
++	orig_end = r->end;
++	r->end += dev_res->add_size;
++	if ((r->flags & IORESOURCE_STARTALIGN)) {
++		resource_size_t r_size = resource_size(r);
++
++		r->start = dev_res->min_align;
++		r->end = r->start + r_size - 1;
++	}
++	r_align = pci_resource_alignment(dev, r);
++	r->start = orig_start;
++	r->end = orig_end;
++
++	return r_align;
++}
+ 
+ /* Sort resources by alignment */
+-static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
++static void pdev_sort_resources(struct pci_dev *dev,
++				 struct list_head *realloc_head,
++				 struct list_head *head)
  {
- 	struct device_node *dn, *nextdn;
- 	void *ret;
-@@ -388,8 +389,11 @@ void *traverse_pci_devices(struct device_node *start, traverse_func pre,
- 		if (classp)
- 			class = of_read_number(classp, 1);
+ 	int i;
  
--		if (pre && ((ret = pre(dn, data)) != NULL))
--			return ret;
-+		if (fn) {
-+			ret = fn(dn, data);
-+			if (ret)
-+				return ret;
-+		}
+@@ -165,7 +198,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ 		if (!(r->flags) || r->parent)
+ 			continue;
  
- 		/* If we are a PCI bridge, go down */
- 		if (dn->child && ((class >> 8) == PCI_CLASS_BRIDGE_PCI ||
-@@ -411,6 +415,7 @@ void *traverse_pci_devices(struct device_node *start, traverse_func pre,
- 	}
- 	return NULL;
- }
-+EXPORT_SYMBOL_GPL(pci_traverse_device_nodes);
+-		r_align = pci_resource_alignment(dev, r);
++		r_align = __pci_resource_alignment(dev, r, realloc_head);
+ 		if (!r_align) {
+ 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
+ 				 i, r);
+@@ -183,8 +216,9 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+ 		list_for_each_entry(dev_res, head, list) {
+ 			resource_size_t align;
  
- static struct pci_dn *pci_dn_next_one(struct pci_dn *root,
- 				      struct pci_dn *pdn)
-@@ -487,7 +492,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
- 	}
+-			align = pci_resource_alignment(dev_res->dev,
+-							 dev_res->res);
++			align = __pci_resource_alignment(dev_res->dev,
++							 dev_res->res,
++							 realloc_head);
  
- 	/* Update dn->phb ptrs for new phb and children devices */
--	traverse_pci_devices(dn, add_pdn, phb);
-+	pci_traverse_device_nodes(dn, add_pdn, phb);
+ 			if (r_align > align) {
+ 				n = &dev_res->list;
+@@ -197,6 +231,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
  }
  
- /** 
-diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-index 272e9ec..543a638 100644
---- a/arch/powerpc/platforms/pseries/msi.c
-+++ b/arch/powerpc/platforms/pseries/msi.c
-@@ -305,7 +305,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
- 	memset(&counts, 0, sizeof(struct msi_counts));
+ static void __dev_sort_resources(struct pci_dev *dev,
++				 struct list_head *realloc_head,
+ 				 struct list_head *head)
+ {
+ 	u16 class = dev->class >> 8;
+@@ -213,7 +248,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
+ 			return;
+ 	}
  
- 	/* Work out how many devices we have below this PE */
--	traverse_pci_devices(pe_dn, count_non_bridge_devices, &counts);
-+	pci_traverse_device_nodes(pe_dn, count_non_bridge_devices, &counts);
+-	pdev_sort_resources(dev, head);
++	pdev_sort_resources(dev, realloc_head, head);
+ }
  
- 	if (counts.num_devices == 0) {
- 		pr_err("rtas_msi: found 0 devices under PE for %s\n",
-@@ -320,7 +320,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
- 	/* else, we have some more calculating to do */
- 	counts.requestor = pci_device_to_OF_node(dev);
- 	counts.request = request;
--	traverse_pci_devices(pe_dn, count_spare_msis, &counts);
-+	pci_traverse_device_nodes(pe_dn, count_spare_msis, &counts);
+ static inline void reset_resource(struct resource *res)
+@@ -507,7 +542,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
+ {
+ 	LIST_HEAD(head);
  
- 	/* If the quota isn't an integer multiple of the total, we can
- 	 * use the remainder as spare MSIs for anyone that wants them. */
+-	__dev_sort_resources(dev, &head);
++	__dev_sort_resources(dev, add_head, &head);
+ 	__assign_resources_sorted(&head, add_head, fail_head);
+ 
+ }
+@@ -520,7 +555,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
+ 	LIST_HEAD(head);
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list)
+-		__dev_sort_resources(dev, &head);
++		__dev_sort_resources(dev, realloc_head, &head);
+ 
+ 	__assign_resources_sorted(&head, realloc_head, fail_head);
+ }
 -- 
-2.1.0
-
+1.8.4.5
