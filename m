@@ -1,232 +1,343 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V5 06/15] pci, acpi, x86, ia64: Move ACPI host bridge device companion assignment to core code.
-Date: Tue, 16 Feb 2016 14:53:36 +0100
-Message-Id: <1455630825-27253-7-git-send-email-tn@semihalf.com>
-In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:42295 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759564AbcBYCSp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:18:45 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v10 26/59] PCI: Optimize bus min_align/size calculation during sizing
+Date: Wed, 24 Feb 2016 18:12:17 -0800
+Message-Id: <1456366370-28995-27-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently we have two platforms (x86 & ia64) capable of PCI ACPI host
-bridge initialization. They both use arch-specific sysdata to pass down
-parent device reference and both rely on NULL parent in pci_create_root_bus()
-to validate sysdata content.
+During bus mmio resource sizing stage, current code try to get alignment as
+small as possible and use that to align size to get final size. But it does
+not handle resource that size is bigger than alignment in optimal way, kernel
+only use max alignment for them.
 
-It looks hacky and prevents us from getting some firmware specific
-info for PCI host controller based on its acpi_device structure
-in generic pci_create_root_bus() function. However, we overcome that
-blocker by passing down parent device via pci_create_root_bus parameter
-(as the ACPI device type). Then we use ACPI_COMPANION_SET in core code
-for ACPI boot method only. ACPI_COMPANION_SET is safe to run for all
-cases DT, ACPI and DT&ACPI.
+For example:
+ When we have resources with align/size: 1M/2M, 512M/512M,
+ current code will have bus resource min_align/size: 512M/1024M,
+ but optimal value should be 256M/768M, as we can fit them into
+ [256M,768M) or [512M,1280M) instead of [512M,1536M).
 
-Since now PCI core code is setting ACPI companion device for us,
-x86 & ia64 specific ACPI companion device setting turns out to be dead now.
-We can get rid of it, including related companion reference from
-PCI sysdata structure. Aslo, PCI_CONTROLLER macro cannot return valid
-companion device anymore. Therefore we need to convert its usage to
-ACPI_COMPANION.
+ 0M        256M        512M       768M       1024M      1280M
+ |----------|-----------|----------|----------|----------|----------|
+when we have [256M,1024M)
+            |---------------------------------|
+            |-2M-|      |---512M--------------|
+when we have [512M,1280M)
+                        |--------------------------------|
+                        |---512M--------------|-2M-|
 
-Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
+For following cases that we have resource size that is bigger
+than resource alignment:
+1. SRIOV bar.
+2. PCI bridges with children that need several MMIOs that are more than 1M.
+
+We can keep on trying to allocate children devices resources from range
+[offset, offset + aligned_size) and offset is aligned with half min_align.
+If it sucesses, we can use that half min_align as new min_align.
+
+After this patch, we get:
+ align/size: 1M/2M, 2M/4M, 4M/8M, 8M/16M
+ new min_align/min_size: 4M/32M, and original is 8M/32M
+
+ align/size: 1M/2M, 2M/4M, 4M/8M
+ new min_align/min_size: 2M/14M, and original is 4M/16M
+
+ align/size: 1M/2M, 512M/512M
+ new min_align/min_size: 256M/768M, and original is 512M/1024M
+
+The real result from one system with one pcie card that has
+four functions that support sriov:
+ children resources with align/size:
+   00800000/00800000, 00800000/00800000, 00800000/00800000,
+   00800000/00800000, 00010000/00200000, 00010000/00200000,
+   00010000/00200000, 00010000/00200000, 00008000/00008000,
+   00008000/00008000, 00008000/00008000, 00008000/00008000,
+   00004000/00080000, 00004000/00080000, 00004000/00080000,
+   00004000/00080000
+for the bridge:
+With original code we have min_align/min_size: 00400000/02c00000,
+and with this patch we have min_align/min_size: 00100000/02b00000
+So min_align will be 1M instead of 4M and we even have smaller size.
+
+-v2: Need to check more offset with every min_alignment.
+-v3: skip r_size <= 1 for optional only bridge resources.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
+Reported-by: TJ <linux@iam.tj>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/ia64/hp/common/sba_iommu.c    |  2 +-
- arch/ia64/include/asm/pci.h        |  1 -
- arch/ia64/pci/pci.c                | 16 ----------------
- arch/ia64/sn/kernel/io_acpi_init.c |  4 ++--
- arch/x86/include/asm/pci.h         |  3 ---
- arch/x86/pci/acpi.c                | 17 -----------------
- drivers/acpi/pci_root.c            |  8 +++++++-
- drivers/pci/probe.c                |  2 ++
- 8 files changed, 12 insertions(+), 41 deletions(-)
+ drivers/pci/setup-bus.c | 195 ++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 157 insertions(+), 38 deletions(-)
 
-diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
-index a6d6190..78e4444 100644
---- a/arch/ia64/hp/common/sba_iommu.c
-+++ b/arch/ia64/hp/common/sba_iommu.c
-@@ -1981,7 +1981,7 @@ sba_connect_bus(struct pci_bus *bus)
- 	if (PCI_CONTROLLER(bus)->iommu)
- 		return;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index a0905e9..4e07a01 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -30,6 +30,34 @@
  
--	handle = acpi_device_handle(PCI_CONTROLLER(bus)->companion);
-+	handle = acpi_device_handle(ACPI_COMPANION(bus->bridge));
- 	if (!handle)
- 		return;
+ unsigned int pci_flags;
  
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index 07039d1..5050748 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -65,7 +65,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
- #define pci_legacy_write platform_pci_legacy_write
- 
- struct pci_controller {
--	struct acpi_device *companion;
- 	void *iommu;
- 	int segment;
- 	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 8f6ac2f..978d6af 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -301,28 +301,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	}
- 
- 	info->controller.segment = root->segment;
--	info->controller.companion = device;
- 	info->controller.node = acpi_get_node(device->handle);
- 	INIT_LIST_HEAD(&info->io_resources);
- 	return acpi_pci_root_create(root, &pci_acpi_root_ops,
- 				    &info->common, &info->controller);
- }
- 
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
--{
--	/*
--	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
--	 * here, pci_create_root_bus() has been called by someone else and
--	 * sysdata is likely to be different from what we expect.  Let it go in
--	 * that case.
--	 */
--	if (!bridge->dev.parent) {
--		struct pci_controller *controller = bridge->bus->sysdata;
--		ACPI_COMPANION_SET(&bridge->dev, controller->companion);
--	}
--	return 0;
--}
--
- void pcibios_fixup_device_resources(struct pci_dev *dev)
- {
- 	int idx;
-diff --git a/arch/ia64/sn/kernel/io_acpi_init.c b/arch/ia64/sn/kernel/io_acpi_init.c
-index 0640739..bcfddc2 100644
---- a/arch/ia64/sn/kernel/io_acpi_init.c
-+++ b/arch/ia64/sn/kernel/io_acpi_init.c
-@@ -132,7 +132,7 @@ sn_get_bussoft_ptr(struct pci_bus *bus)
- 	struct acpi_resource_vendor_typed *vendor;
- 
- 
--	handle = acpi_device_handle(PCI_CONTROLLER(bus)->companion);
-+	handle = acpi_device_handle(ACPI_COMPANION(bus->bridge));
- 	status = acpi_get_vendor_resource(handle, METHOD_NAME__CRS,
- 					  &sn_uuid, &buffer);
- 	if (ACPI_FAILURE(status)) {
-@@ -360,7 +360,7 @@ sn_acpi_get_pcidev_info(struct pci_dev *dev, struct pcidev_info **pcidev_info,
- 	acpi_status status;
- 	struct acpi_buffer name_buffer = { ACPI_ALLOCATE_BUFFER, NULL };
- 
--	rootbus_handle = acpi_device_handle(PCI_CONTROLLER(dev)->companion);
-+	rootbus_handle = acpi_device_handle(ACPI_COMPANION(dev->bus->bridge));
-         status = acpi_evaluate_integer(rootbus_handle, METHOD_NAME__SEG, NULL,
-                                        &segment);
-         if (ACPI_SUCCESS(status)) {
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 4625943..a98c022 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -14,9 +14,6 @@
- struct pci_sysdata {
- 	int		domain;		/* PCI domain */
- 	int		node;		/* NUMA node */
--#ifdef CONFIG_ACPI
--	struct acpi_device *companion;	/* ACPI companion device */
--#endif
- #ifdef CONFIG_X86_64
- 	void		*iommu;		/* IOMMU private data */
- #endif
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 081dc70..c67932e 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -334,7 +334,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		struct pci_sysdata sd = {
- 			.domain = domain,
- 			.node = node,
--			.companion = root->device
- 		};
- 
- 		memcpy(bus->sysdata, &sd, sizeof(sd));
-@@ -349,7 +348,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		else {
- 			info->sd.domain = domain;
- 			info->sd.node = node;
--			info->sd.companion = root->device;
- 			bus = acpi_pci_root_create(root, &acpi_pci_root_ops,
- 						   &info->common, &info->sd);
- 		}
-@@ -367,21 +365,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	return bus;
- }
- 
--int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
--{
--	/*
--	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
--	 * here, pci_create_root_bus() has been called by someone else and
--	 * sysdata is likely to be different from what we expect.  Let it go in
--	 * that case.
--	 */
--	if (!bridge->dev.parent) {
--		struct pci_sysdata *sd = bridge->bus->sysdata;
--		ACPI_COMPANION_SET(&bridge->dev, sd->companion);
--	}
--	return 0;
--}
--
- int __init pci_acpi_init(void)
- {
- 	struct pci_dev *dev = NULL;
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index ae3fe4e..c2bd6dd 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -846,7 +846,13 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- 
- 	pci_acpi_root_add_resources(info);
- 	pci_add_resource(&info->resources, &root->secondary);
--	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
++static inline bool is_before(resource_size_t align1, resource_size_t size1,
++			     resource_size_t align2, resource_size_t size2)
++{
++	resource_size_t size1_left, size2_left;
++
++	/* big align is before small align */
++	if (align1 > align2)
++		return true;
 +
 +	/*
-+	 * pci_create_root_bus() needs to detect the parent device type,
-+	 * so initialize its companion data accordingly.
++	 * for same align:
++	 *   aligned is before not aligned
++	 *   for not aligned, big remainder is before small remainder
 +	 */
-+	ACPI_COMPANION_SET(&device->dev, device);
-+	bus = pci_create_root_bus(&device->dev, busnum, ops->pci_ops,
- 				  sysdata, &info->resources);
- 	if (!bus)
- 		goto out_release_info;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6d7ab9b..88a4734 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2100,6 +2100,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	bridge->dev.parent = parent;
- 	bridge->dev.release = pci_release_host_bridge_dev;
- 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-+	if (parent)
-+		ACPI_COMPANION_SET(&bridge->dev, ACPI_COMPANION(parent));
- 	error = pcibios_root_bridge_prepare(bridge);
- 	if (error) {
- 		kfree(bridge);
++	if (align1 == align2) {
++		size1_left = size1 & (align1 - 1);
++		if (!size1_left)
++			size1_left = align1;
++		size2_left = size2 & (align2 - 1);
++		if (!size2_left)
++			size2_left = align2;
++		if (size1_left > size2_left)
++			return true;
++	}
++
++	return false;
++}
++
+ struct pci_dev_resource {
+ 	struct list_head list;
+ 	struct resource *res;
+@@ -1042,26 +1070,125 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 	}
+ }
+ 
+-static inline resource_size_t calculate_mem_align(resource_size_t *aligns,
+-						  int max_order)
++struct align_test_res {
++	struct list_head list;
++	struct resource res;
++	resource_size_t size;
++	resource_size_t align;
++};
++
++static void free_align_test_list(struct list_head *head)
+ {
+-	resource_size_t align = 0;
+-	resource_size_t min_align = 0;
+-	int order;
++	struct align_test_res *p, *tmp;
+ 
+-	for (order = 0; order <= max_order; order++) {
+-		resource_size_t align1 = 1;
++	list_for_each_entry_safe(p, tmp, head, list) {
++		list_del(&p->list);
++		kfree(p);
++	}
++}
+ 
+-		align1 <<= (order + 20);
++static int add_to_align_test_list(struct list_head *head,
++				  resource_size_t align, resource_size_t size)
++{
++	struct align_test_res *tmp;
++
++	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
++	if (!tmp)
++		return -ENOMEM;
++
++	tmp->align = align;
++	tmp->size = size;
++
++	list_add_tail(&tmp->list, head);
++
++	return 0;
++}
++
++static void sort_align_test(struct list_head *head)
++{
++	struct align_test_res *res1, *tmp_res, *res2;
+ 
+-		if (!align)
+-			min_align = align1;
+-		else if (ALIGN(align + min_align, min_align) < align1)
+-			min_align = align1 >> 1;
+-		align += aligns[order];
++	list_for_each_entry_safe(res1, tmp_res, head, list) {
++		/* reorder it */
++		list_for_each_entry(res2, head, list) {
++			if (res2 == res1)
++				break;
++
++			if (is_before(res1->align, res1->size,
++				      res2->align, res2->size)) {
++				list_move_tail(&res1->list, &res2->list);
++				break;
++			}
++		}
++	}
++}
++
++static bool is_align_size_good(struct list_head *head,
++			resource_size_t min_align, resource_size_t size,
++			resource_size_t start)
++{
++	struct align_test_res *p;
++	struct resource root;
++
++	memset(&root, 0, sizeof(root));
++	root.start = start;
++	root.end = start + size - 1;
++
++	list_for_each_entry(p, head, list)
++		memset(&p->res, 0, sizeof(p->res));
++
++	list_for_each_entry(p, head, list)
++		if (allocate_resource(&root, &p->res, p->size,
++				0, (resource_size_t)-1ULL,
++				p->align, NULL, NULL))
++			return false;
++
++	return true;
++}
++
++static resource_size_t calculate_mem_align(struct list_head *head,
++				resource_size_t max_align, resource_size_t size,
++				resource_size_t align_low)
++{
++	struct align_test_res *p;
++	resource_size_t min_align, good_align, aligned_size, start;
++	int count = 0;
++
++	if (max_align <= align_low) {
++		good_align = align_low;
++		goto out;
+ 	}
+ 
+-	return min_align;
++	good_align = max_align;
++
++	list_for_each_entry(p, head, list)
++		count++;
++
++	if (count <= 1)
++		goto out;
++
++	sort_align_test(head);
++
++	do {
++		/* check if we can use smaller align */
++		min_align = good_align >> 1;
++		aligned_size = ALIGN(size, min_align);
++
++		/* need to make sure every offset work */
++		for (start = min_align; start < max_align; start += min_align) {
++			/* checked already with last align ? */
++			if (!(start & (good_align - 1)))
++				continue;
++
++			if (!is_align_size_good(head, min_align, aligned_size,
++					       start))
++				goto out;
++		}
++		good_align = min_align;
++	} while (min_align > align_low);
++
++out:
++	return good_align;
+ }
+ 
+ /**
+@@ -1091,19 +1218,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ {
+ 	struct pci_dev *dev;
+ 	resource_size_t min_align, align, size, size0, size1;
+-	resource_size_t aligns[18];	/* Alignments from 1Mb to 128Gb */
+-	int order, max_order;
++	resource_size_t max_align = 0;
+ 	struct resource *b_res = find_free_bus_resource(bus,
+ 					mask | IORESOURCE_PREFETCH, type);
+ 	resource_size_t children_add_size = 0;
+ 	resource_size_t children_add_align = 0;
+ 	resource_size_t add_align = 0;
++	LIST_HEAD(align_test_list);
+ 
+ 	if (!b_res)
+ 		return -ENOSPC;
+ 
+-	memset(aligns, 0, sizeof(aligns));
+-	max_order = 0;
+ 	size = 0;
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+@@ -1131,29 +1256,20 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				continue;
+ 			}
+ #endif
+-			/*
+-			 * aligns[0] is for 1MB (since bridge memory
+-			 * windows are always at least 1MB aligned), so
+-			 * keep "order" from being negative for smaller
+-			 * resources.
+-			 */
+ 			align = pci_resource_alignment(dev, r);
+-			order = __ffs(align) - 20;
+-			if (order < 0)
+-				order = 0;
+-			if (order >= ARRAY_SIZE(aligns)) {
++			if (align > (1ULL<<37)) { /*128 Gb*/
+ 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
+-					 i, r, (unsigned long long) align);
++					i, r, (unsigned long long) align);
+ 				r->flags = 0;
+ 				continue;
+ 			}
++
++			if (r_size > 1)
++				add_to_align_test_list(&align_test_list,
++							align, r_size);
+ 			size += r_size;
+-			/* Exclude ranges with size > align from
+-			   calculation of the alignment. */
+-			if (r_size == align)
+-				aligns[order] += align;
+-			if (order > max_order)
+-				max_order = order;
++			if (align > max_align)
++				max_align = align;
+ 
+ 			if (realloc_head) {
+ 				children_add_size += get_res_add_size(realloc_head, r);
+@@ -1163,9 +1279,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		}
+ 	}
+ 
+-	min_align = calculate_mem_align(aligns, max_order);
+-	min_align = max(min_align, window_alignment(bus, b_res->flags));
+-	size0 = calculate_memsize(size, min_size, 0, resource_size(b_res), min_align);
++	max_align = max(max_align, window_alignment(bus, b_res->flags));
++	min_align = calculate_mem_align(&align_test_list, max_align, size,
++					window_alignment(bus, b_res->flags));
++	size0 = calculate_memsize(size, min_size, 0,
++				  resource_size(b_res), min_align);
++	free_align_test_list(&align_test_list);
+ 	add_align = max(min_align, add_align);
+ 	if (children_add_size > add_size)
+ 		add_size = children_add_size;
 -- 
-1.9.1
+1.8.4.5
 
