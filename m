@@ -1,91 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:44073 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754331AbcBEUC5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 5 Feb 2016 15:02:57 -0500
-From: "Sean O. Stalley" <sean.stalley@intel.com>
-To: linux-pci@vger.kernel.org, mj@ucw.cz, bhelgaas@google.com,
-	alex.williamson@redhat.com
-Cc: sean.stalley@intel.com, david.daney@cavium.com
-Subject: [PATCH v3 1/2] pci: Identify Enhanced Allocation (EA) BAR Equivalent resources
-Date: Fri,  5 Feb 2016 11:59:04 -0800
-Message-Id: <1454702345-4014-2-git-send-email-sean.stalley@intel.com>
-In-Reply-To: <1454702345-4014-1-git-send-email-sean.stalley@intel.com>
-References: <1454702345-4014-1-git-send-email-sean.stalley@intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:40564 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758217AbcBYCNa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:13:30 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
+Subject: [PATCH v10 04/59] sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+Date: Wed, 24 Feb 2016 18:11:55 -0800
+Message-Id: <1456366370-28995-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Alex Williamson <alex.williamson@redhat.com>
+For device resource with PREF bit setting under bridge 64-bit pref resource,
+we need to make sure only set PREF for 64bit resource.
 
-Resource flags are exposed to userspace via the sysfs "resource" file.
-lspci reads the sysfs file to determine resource properties.
-Adding this flag allows lspci to distinguish between [virtual]
-and [enhanced] resources.
+so this patch set IORESOUCE_MEM_64 for 64bit resource during OF device resource
+flags parsing.
 
-If the resource is not aligned, userspace could deduce where
-the resource is EA based on the size & address fields.
-However, a flag indicating whether a PCI resource is a traditional BAR
-or BAR equivalent seems like a much simpler solution and works if the
-EA resource is aligned.
-
-Although this patchset only improves lspci, other uses for this
-flag have been identified. For example, vfio makes assumptions
-about alignment and sizing, and runs into problems when attempting
-to emulate a BAR Equivalent EA resource.
-
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
 ---
- drivers/pci/pci.c      | 2 +-
- include/linux/ioport.h | 7 +++++++
- 2 files changed, 8 insertions(+), 1 deletion(-)
+ arch/sparc/kernel/of_device_32.c | 5 +++--
+ arch/sparc/kernel/of_device_64.c | 5 +++--
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index d1a7105..8ff678c 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2229,7 +2229,7 @@ void pci_pm_init(struct pci_dev *dev)
- 
- static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
- {
--	unsigned long flags = IORESOURCE_PCI_FIXED;
-+	unsigned long flags = IORESOURCE_PCI_FIXED | IORESOURCE_PCI_EA_BEI;
- 
- 	switch (prop) {
- 	case PCI_EA_P_MEM:
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 24bea08..88816f9 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -25,7 +25,11 @@ struct resource {
- 
- /*
-  * IO resources have these defined flags.
-+ *
-+ * PCI devices expose these flags to userspace in the "resource" sysfs file,
-+ * Moving them around could break stuff, so don't do it.
-  */
-+
- #define IORESOURCE_BITS		0x000000ff	/* Bus-specific bits */
- 
- #define IORESOURCE_TYPE_BITS	0x00001f00	/* Resource type */
-@@ -97,6 +101,7 @@ struct resource {
- #define IORESOURCE_IO_SPARSE		(1<<2)
- 
- /* PCI ROM control bits (IORESOURCE_BITS) */
-+
- #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled, same as PCI_ROM_ADDRESS_ENABLE */
- #define IORESOURCE_ROM_SHADOW		(1<<1)	/* ROM is copy at C000:0 */
- #define IORESOURCE_ROM_COPY		(1<<2)	/* ROM is alloc'd copy, resource field overlaid */
-@@ -105,6 +110,8 @@ struct resource {
- /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
- #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move resource */
- 
-+/* PCI Enhanced Allocation defined BAR equivalent resource */
-+#define IORESOURCE_PCI_EA_BEI		(1<<5)
- 
- /* helpers to define resources */
- #define DEFINE_RES_NAMED(_start, _size, _name, _flags)			\
+diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
+index 185aa96..3e9f273 100644
+--- a/arch/sparc/kernel/of_device_32.c
++++ b/arch/sparc/kernel/of_device_32.c
+@@ -83,11 +83,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
+ 	}
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
+diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
+index 7bbdc26..defee61 100644
+--- a/arch/sparc/kernel/of_device_64.c
++++ b/arch/sparc/kernel/of_device_64.c
+@@ -146,11 +146,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
+ 	}
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
 -- 
-1.9.1
+1.8.4.5
 
