@@ -1,178 +1,263 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <guohanjun@huawei.com>, <wangzhou1@hisilicon.com>,
-	<liudongdong3@huawei.com>, <linuxarm@huawei.com>,
-	<qiujiang@huawei.com>, <bhelgaas@google.com>, <arnd@arndb.de>,
-	<Lorenzo.Pieralisi@arm.com>, <tn@semihalf.com>
-CC: <gabriele.paoloni@huawei.com>, <zhangjukuo@huawei.com>,
-	<xuwei5@hisilicon.com>, <liguozhu@hisilicon.com>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<jcm@redhat.com>
-Subject: [RFC PATCH v3 2/3] PCI: hisi: Add ECAM support to HiSilicon PCIe host controller
-Date: Tue, 9 Feb 2016 17:34:19 +0000
-Message-ID: <1455039260-6040-3-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1455039260-6040-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1455039260-6040-1-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:42433 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933332AbcBYRhx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Feb 2016 12:37:53 -0500
+Subject: [PATCH v10 4/4] PCI: designware: Add driver for prototyping kits
+ based on ARC SDP
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: mark.rutland@arm.com, Alexey.Brodkin@synopsys.com, arnd@arndb.de,
+	pawel.moll@arm.com, ijc+devicetree@hellion.org.uk,
+	linux-pci@vger.kernel.org, Vineet.Gupta1@synopsys.com,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	linux-kernel@vger.kernel.org, CARLOS.PALMINHA@synopsys.com,
+	robh+dt@kernel.org, Murali Karicheri <m-karicheri2@ti.com>,
+	galak@codeaurora.org, Jingoo Han <jingoohan1@gmail.com>,
+	linux-snps-arc@lists.infradead.org
+Date: Thu, 25 Feb 2016 11:37:50 -0600
+Message-ID: <20160225173749.2103.9893.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160225172957.2103.8326.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160225172957.2103.8326.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
 
-This patch modifies the current Hip05/Hip06 PCIe host
-controller driver to add support for ECAM compliant
-platforms.
-This is needed in preparation for the ACPI based driver
-to allow both DT and ACPI drivers to use the same BIOS
-(that configure the Designware iATUs).
-This commit doesn't break backward compatibility with
-previous non-ECAM platforms.
+Add a reference platform driver for PCI RC IP Protoyping Kits based on the
+ARC SDP.
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+[bhelgaas: changelog, split patch up, MAINTAINERS update]
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- .../devicetree/bindings/pci/hisilicon-pcie.txt     | 15 +++++---
- drivers/pci/host/pcie-designware.c                 |  4 +--
- drivers/pci/host/pcie-designware.h                 |  2 ++
- drivers/pci/host/pcie-hisi.c                       | 40 ++++++++++++++++++++++
- 4 files changed, 53 insertions(+), 8 deletions(-)
+ .../devicetree/bindings/pci/designware-pcie.txt    |   17 ++
+ MAINTAINERS                                        |    7 +
+ drivers/pci/host/Kconfig                           |   11 ++
+ drivers/pci/host/Makefile                          |    1 
+ drivers/pci/host/pcie-designware-plat.c            |  138 ++++++++++++++++++++
+ 5 files changed, 174 insertions(+)
+ create mode 100644 drivers/pci/host/pcie-designware-plat.c
 
-diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-index b721bea..5a4c1e7 100644
---- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-@@ -9,10 +9,13 @@ Additional properties are described here:
- 
- Required properties
- - compatible: Should contain "hisilicon,hip05-pcie" or "hisilicon,hip06-pcie".
--- reg: Should contain rc_dbi, config registers location and length.
--- reg-names: Must include the following entries:
-+- reg: Should contain rc_dbi and  either config or ecam-cfg registers
-+       location and length (it depends on the platform BIOS).
-+- reg-names: Must include
-   "rc_dbi": controller configuration registers;
--  "config": PCIe configuration space registers.
-+  and one of the following entries:
-+    "config": PCIe configuration space registers for non-ECAM platforms.
-+    "ecam-cfg": PCIe configuration space registers for ECAM platforms
- - msi-parent: Should be its_pcie which is an ITS receiving MSI interrupts.
- - port-id: Should be 0, 1, 2 or 3.
- 
-@@ -23,8 +26,10 @@ Optional properties:
- Hip05 Example (note that Hip06 is the same except compatible):
- 	pcie@0xb0080000 {
- 		compatible = "hisilicon,hip05-pcie", "snps,dw-pcie";
--		reg = <0 0xb0080000 0 0x10000>, <0x220 0x00000000 0 0x2000>;
--		reg-names = "rc_dbi", "config";
-+		reg = <0 0xb0080000 0 0x10000>,
-+			  <0x220 0x00000000 0 0x2000>
-+			/* or <0x220 0x00100000 0 0x0f00000> for ecam-cfg*/;
-+		reg-names = "rc_dbi", "config" /* or "ecam-cfg" */;
- 		bus-range = <0  15>;
- 		msi-parent = <&its_pcie>;
- 		#address-cells = <3>;
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index 2171682..5f19ea4 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -69,8 +69,6 @@
- #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
- #define PCIE_ATU_UPPER_TARGET		0x91C
- 
--static struct pci_ops dw_pcie_ops;
--
- int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
- {
- 	if ((uintptr_t)addr & (size - 1)) {
-@@ -690,7 +688,7 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 	return dw_pcie_wr_other_conf(pp, bus, devfn, where, size, val);
- }
- 
--static struct pci_ops dw_pcie_ops = {
-+struct pci_ops dw_pcie_ops = {
- 	.read = dw_pcie_rd_conf,
- 	.write = dw_pcie_wr_conf,
- };
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index 2356d29..3f42655 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -80,4 +80,6 @@ int dw_pcie_link_up(struct pcie_port *pp);
- void dw_pcie_setup_rc(struct pcie_port *pp);
- int dw_pcie_host_init(struct pcie_port *pp);
- 
-+extern struct pci_ops dw_pcie_ops;
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index 5b0853d..64f2fff 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -28,3 +28,20 @@ Optional properties:
+ - clock-names: Must include the following entries:
+ 	- "pcie"
+ 	- "pcie_bus"
 +
- #endif /* _PCIE_DESIGNWARE_H */
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-index 458d0f8..d3e2047 100644
---- a/drivers/pci/host/pcie-hisi.c
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -43,6 +43,18 @@ struct pcie_soc_ops {
- 	int (*hisi_pcie_link_up)(struct hisi_pcie *pcie);
- };
++Example configuration:
++
++	pcie: pcie@0xdffff000 {
++		compatible = "snps,dw-pcie";
++		reg = <0xdffff000 0x1000>, /* Controller registers */
++		      <0xd0000000 0x2000>; /* PCI config space */
++		reg-names = "ctrlreg", "config";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		ranges = <0x81000000 0 0x00000000 0xde000000 0 0x00010000
++			  0x82000000 0 0xd0400000 0xd0400000 0 0x0d000000>;
++		interrupts = <25>, <24>;
++		#interrupt-cells = <1>;
++		num-lanes = <1>;
++	};
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 30aca4a..e6c327b 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8367,6 +8367,13 @@ L:	linux-pci@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/host/*designware*
  
-+static inline int hisi_rd_ecam_conf(struct pcie_port *pp, struct pci_bus *bus,
-+		unsigned int devfn, int where, int size, u32 *value)
++PCI DRIVER FOR SYNOPSYS PROTOTYPING DEVICE
++M:	Joao Pinto <jpinto@synopsys.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/designware-pcie.txt
++F:	drivers/pci/host/pcie-designware-plat.c
++
+ PCI DRIVER FOR GENERIC OF HOSTS
+ M:	Will Deacon <will.deacon@arm.com>
+ L:	linux-pci@vger.kernel.org
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 75a6054..7c47d69 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -16,6 +16,17 @@ config PCI_MVEBU
+ 	depends on ARCH_MVEBU || ARCH_DOVE
+ 	depends on OF
+ 
++config PCIE_DW_PLAT
++	bool "Platform bus based DesignWare PCIe Controller"
++	select PCIE_DW
++	---help---
++	 This selects the DesignWare PCIe controller support. Select this if
++	 you have a PCIe controller on Platform bus.
++
++	 If you have a controller with this interface, say Y or M here.
++
++	 If unsure, say N.
++
+ config PCIE_DW
+ 	bool
+ 
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index 7b2f20c..7136a1e 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -1,4 +1,5 @@
+ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
++obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
+ obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
+ obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
+ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
+diff --git a/drivers/pci/host/pcie-designware-plat.c b/drivers/pci/host/pcie-designware-plat.c
+new file mode 100644
+index 0000000..b350099
+--- /dev/null
++++ b/drivers/pci/host/pcie-designware-plat.c
+@@ -0,0 +1,138 @@
++/*
++ * PCIe RC driver for Synopsys DesignWare Core
++ *
++ * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
++ *
++ * Authors: Joao Pinto <jpinto@synopsys.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/gpio.h>
++#include <linux/interrupt.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_gpio.h>
++#include <linux/pci.h>
++#include <linux/platform_device.h>
++#include <linux/resource.h>
++#include <linux/signal.h>
++#include <linux/types.h>
++
++#include "pcie-designware.h"
++
++struct dw_plat_pcie {
++	void __iomem		*mem_base;
++	struct pcie_port	pp;
++};
++
++static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
 +{
-+	return pci_generic_config_read(bus, devfn, where, size, value);
++	struct pcie_port *pp = arg;
++
++	return dw_handle_msi_irq(pp);
 +}
 +
-+static inline int hisi_wr_ecam_conf(struct pcie_port *pp, struct pci_bus *bus,
-+		unsigned int devfn, int where, int size, u32 value)
++static void dw_plat_pcie_host_init(struct pcie_port *pp)
 +{
-+	return pci_generic_config_write(bus, devfn, where, size, value);
++	dw_pcie_setup_rc(pp);
++	dw_pcie_wait_for_link(pp);
++
++	if (IS_ENABLED(CONFIG_PCI_MSI))
++		dw_pcie_msi_init(pp);
 +}
 +
- static inline int hisi_pcie_cfg_read(struct pcie_port *pp, int where,
- 		int size, u32 *val)
- {
-@@ -72,6 +84,17 @@ struct pcie_host_ops hisi_pcie_host_ops = {
- 		.link_up = hisi_pcie_link_up,
- };
- 
-+static void __iomem *hisi_pci_map_cfg_bus_cam(struct pci_bus *bus,
-+					     unsigned int devfn,
-+					     int where)
++static struct pcie_host_ops dw_plat_pcie_host_ops = {
++	.host_init = dw_plat_pcie_host_init,
++};
++
++static int dw_plat_add_pcie_port(struct pcie_port *pp,
++				 struct platform_device *pdev)
 +{
-+	void __iomem *addr;
-+	struct pcie_port *pp = bus->sysdata;
++	int ret;
 +
-+	addr = pp->va_cfg1_base + where;
++	pp->irq = platform_get_irq(pdev, 1);
++	if (pp->irq < 0)
++		return pp->irq;
 +
-+	return addr;
-+}
- 
- static int hisi_add_pcie_port(struct pcie_port *pp,
- 				     struct platform_device *pdev)
-@@ -137,6 +160,23 @@ static int hisi_pcie_probe(struct platform_device *pdev)
- 
- 	hisi_pcie->pp.dbi_base = hisi_pcie->reg_base;
- 
-+	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ecam-cfg");
-+	if (reg) {
-+		/* ECAM driver version */
-+		hisi_pcie->pp.va_cfg0_base =
-+				devm_ioremap_resource(&pdev->dev, reg);
-+		if (IS_ERR(hisi_pcie->pp.va_cfg0_base)) {
-+			dev_err(pp->dev, "cannot get ecam-cfg\n");
-+			return PTR_ERR(hisi_pcie->pp.va_cfg0_base);
++	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++		pp->msi_irq = platform_get_irq(pdev, 0);
++		if (pp->msi_irq < 0)
++			return pp->msi_irq;
++
++		ret = devm_request_irq(&pdev->dev, pp->msi_irq,
++					dw_plat_pcie_msi_irq_handler,
++					IRQF_SHARED, "dw-plat-pcie-msi", pp);
++		if (ret) {
++			dev_err(&pdev->dev, "failed to request MSI IRQ\n");
++			return ret;
 +		}
-+		hisi_pcie->pp.va_cfg1_base = hisi_pcie->pp.va_cfg0_base;
-+
-+		dw_pcie_ops.map_bus = hisi_pci_map_cfg_bus_cam;
-+
-+		hisi_pcie_host_ops.rd_other_conf = hisi_rd_ecam_conf;
-+		hisi_pcie_host_ops.wr_other_conf = hisi_wr_ecam_conf;
 +	}
 +
- 	ret = hisi_add_pcie_port(pp, pdev);
- 	if (ret)
- 		return ret;
--- 
-1.9.1
-
++	pp->root_bus_nr = -1;
++	pp->ops = &dw_plat_pcie_host_ops;
++
++	ret = dw_pcie_host_init(pp);
++	if (ret) {
++		dev_err(&pdev->dev, "failed to initialize host\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static int dw_plat_pcie_probe(struct platform_device *pdev)
++{
++	struct dw_plat_pcie *dw_plat_pcie;
++	struct pcie_port *pp;
++	struct resource *res;  /* Resource from DT */
++	int ret;
++
++	dw_plat_pcie = devm_kzalloc(&pdev->dev, sizeof(*dw_plat_pcie),
++					GFP_KERNEL);
++	if (!dw_plat_pcie)
++		return -ENOMEM;
++
++	pp = &dw_plat_pcie->pp;
++	pp->dev = &pdev->dev;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!res)
++		return -ENODEV;
++
++	dw_plat_pcie->mem_base = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(dw_plat_pcie->mem_base))
++		return PTR_ERR(dw_plat_pcie->mem_base);
++
++	pp->dbi_base = dw_plat_pcie->mem_base;
++
++	ret = dw_plat_add_pcie_port(pp, pdev);
++	if (ret < 0)
++		return ret;
++
++	platform_set_drvdata(pdev, dw_plat_pcie);
++	return 0;
++}
++
++static const struct of_device_id dw_plat_pcie_of_match[] = {
++	{ .compatible = "snps,dw-pcie", },
++	{},
++};
++MODULE_DEVICE_TABLE(of, dw_plat_pcie_of_match);
++
++static struct platform_driver dw_plat_pcie_driver = {
++	.driver = {
++		.name	= "dw-pcie",
++		.of_match_table = dw_plat_pcie_of_match,
++	},
++	.probe = dw_plat_pcie_probe,
++};
++
++module_platform_driver(dw_plat_pcie_driver);
++
++MODULE_AUTHOR("Joao Pinto <Joao.Pinto@synopsys.com>");
++MODULE_DESCRIPTION("Synopsys PCIe host controller glue platform driver");
++MODULE_LICENSE("GPL v2");
 
