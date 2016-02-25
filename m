@@ -1,90 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58196 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946097AbcBRPI5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 18 Feb 2016 10:08:57 -0500
-Date: Thu, 18 Feb 2016 09:08:52 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Sharma, Sanjeev" <Sanjeev_Sharma@mentor.com>
-Cc: "Richard.Zhu@freescale.com" <Richard.Zhu@freescale.com>,
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	David Mueller <dave.mueller@gmx.ch>
-Subject: Re: [PATCH] PCI: imx6:don't sleep in atomic context
-Message-ID: <20160218150852.GA17588@localhost>
-References: <1447066080-5859-1-git-send-email-sanjeev_sharma@mentor.com>
- <20160106220430.GC16231@localhost>
- <FDC088D3B5555644AE135ED28A7ABDE986504C90@EU-MBX-04.mgc.mentorg.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <FDC088D3B5555644AE135ED28A7ABDE986504C90@EU-MBX-04.mgc.mentorg.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:39708 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759554AbcBYCSn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:18:43 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v10 28/59] PCI: Don't add too much optional size for hotplug bridge MMIO
+Date: Wed, 24 Feb 2016 18:12:19 -0800
+Message-Id: <1456366370-28995-29-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 18, 2016 at 07:17:41AM +0000, Sharma, Sanjeev wrote:
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org] 
-> Sent: Thursday, January 07, 2016 3:35 AM
-> To: Sharma, Sanjeev
-> Cc: Richard.Zhu@freescale.com; l.stach@pengutronix.de; bhelgaas@google.com; linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-kernel@vger.kernel.org; David Mueller
-> Subject: Re: [PATCH] PCI: imx6:don't sleep in atomic context
-> 
-> Hi Sanjeev,
-> 
-> On Mon, Nov 09, 2015 at 04:18:00PM +0530, Sanjeev Sharma wrote:
-> > If additional PCIe switch get connected between the host and the 
-> > NIC,the kernel crashes with "BUG:
-> > scheduling while atomic". To handle this we need to call mdelay() 
-> > instead of usleep_range().
-> > 
-> > For more detail please refer bugzilla.kernel.org, Bug
-> > 100031
-> > 
-> > Signed-off-by: Sanjeev Sharma <sanjeev_sharma@mentor.com>
-> > Signed-off-by: David Mueller <dave.mueller@gmx.ch>
-> 
-> I'm dropping this for now because we've been kicking around the same solution (with tweaks to the mdelay amount) since June, but no progress on the *real* issue, which is that imx6_pcie_link_up() should never wait; it should simply return the link status.
-> 
-> I'm pretty sure the amount of time I've spent looking into this would have been enough to make some progress on that underlying issue.
-> 
-> Bjorn
-> 
-> Ok ! please share the change you are planning to implement. 
+Current code will always add 2M for hotplug bridge MMIO even
+there is child device under it already.
 
-I didn't mean I personally was going to do this.  But I think Lucas
-stepped up and did it:
+For example:
+	40:03.0 --- 43:00.0 --- 44:02.0 -+- 45:00.0
+					 \- 45:00.1
 
-https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-imx6&id=4d107d3b5a686b5834e533a00b73bf7b1cf59df7
+44:02.0 will need 1M as must for 45:00.0 and 45:00.1
+When we calculate add_size for 44:02.0, we pass 2M as additional
+size for hotplug bridge, total will be 3M.
 
-> > ---
-> >  drivers/pci/host/pci-imx6.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c 
-> > index 233a196..9769b13 100644
-> > --- a/drivers/pci/host/pci-imx6.c
-> > +++ b/drivers/pci/host/pci-imx6.c
-> > @@ -499,7 +499,7 @@ static int imx6_pcie_link_up(struct pcie_port *pp)
-> >  		 * Wait a little bit, then re-check if the link finished
-> >  		 * the training.
-> >  		 */
-> > -		usleep_range(1000, 2000);
-> > +		mdelay(1000);
-> >  	}
-> >  	/*
-> >  	 * From L0, initiate MAC entry to gen2 if EP/RC supports gen2.
-> > --
-> > 1.7.11.7
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" 
-> > in the body of a message to majordomo@vger.kernel.org More majordomo 
-> > info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+That is different from code before changes for optional support,
+or even current code that treat optional as required directly by
+not passing realloc list. We only need 2M as total.
+
+The optional size should be 1M, and total size should be 2M.
+
+This patch change to comparing required+optional with min_sum_size to
+get smaller optional size.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 6265f4d..9fdbd98 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1199,7 +1199,6 @@ out:
+  * @type2: second match type
+  * @type3: third match type
+  * @min_size : the minimum memory window that must to be allocated
+- * @add_size : additional optional memory window
+  * @realloc_head : track the additional memory window on this list
+  *
+  * Calculate the size of the bus and minimal alignment which
+@@ -1212,10 +1211,11 @@ out:
+ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			 unsigned long type, unsigned long type2,
+ 			 unsigned long type3,
+-			 resource_size_t min_size, resource_size_t add_size,
++			 resource_size_t min_size,
+ 			 struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
++	resource_size_t min_sum_size = 0;
+ 	resource_size_t min_align = 0, min_add_align = 0;
+ 	resource_size_t max_align = 0, max_add_align = 0;
+ 	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
+@@ -1227,6 +1227,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	if (!b_res)
+ 		return -ENOSPC;
+ 
++	if (realloc_head) {
++		min_sum_size = min_size;
++		min_size = 0;
++	}
++
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+ 
+@@ -1299,8 +1304,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	}
+ 	free_align_test_list(&align_test_list);
+ 
+-	if ((sum_add_size - size) < add_size)
+-		sum_add_size = size + add_size;
++	if (sum_add_size < min_sum_size)
++		sum_add_size = min_sum_size;
+ 	if (sum_add_size > size && realloc_head) {
+ 		min_add_align = calculate_mem_align(&align_test_add_list,
+ 					max_add_align, sum_add_size,
+@@ -1437,7 +1442,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+ 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
+-	resource_size_t additional_mem_size = 0, additional_io_size = 0;
++	resource_size_t min_mem_size = 0, additional_io_size = 0;
+ 	struct resource *b_res;
+ 	int ret;
+ 
+@@ -1474,7 +1479,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	case PCI_CLASS_BRIDGE_PCI:
+ 		if (bus->self->is_hotplug_bridge) {
+ 			additional_io_size  = pci_hotplug_io_size;
+-			additional_mem_size = pci_hotplug_mem_size;
++			min_mem_size = pci_hotplug_mem_size;
+ 		}
+ 		/* Fall through */
+ 	default:
+@@ -1494,8 +1499,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			prefmask |= IORESOURCE_MEM_64;
+ 			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 				  prefmask, prefmask,
+-				  realloc_head ? 0 : additional_mem_size,
+-				  additional_mem_size, realloc_head);
++				  min_mem_size, realloc_head);
+ 
+ 			/*
+ 			 * If successful, all non-prefetchable resources
+@@ -1518,8 +1522,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			prefmask &= ~IORESOURCE_MEM_64;
+ 			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 					 prefmask, prefmask,
+-					 realloc_head ? 0 : additional_mem_size,
+-					 additional_mem_size, realloc_head);
++					 min_mem_size, realloc_head);
+ 
+ 			/*
+ 			 * If successful, only non-prefetchable resources
+@@ -1528,7 +1531,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 			if (ret == 0)
+ 				mask = prefmask;
+ 			else
+-				additional_mem_size += additional_mem_size;
++				min_mem_size += min_mem_size;
+ 
+ 			type2 = type3 = IORESOURCE_MEM;
+ 		}
+@@ -1549,8 +1552,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		 * window.
+ 		 */
+ 		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
+-				realloc_head ? 0 : additional_mem_size,
+-				additional_mem_size, realloc_head);
++				min_mem_size, realloc_head);
+ 		break;
+ 	}
+ }
+-- 
+1.8.4.5
+
