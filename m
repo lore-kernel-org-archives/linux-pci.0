@@ -1,86 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bhupesh Sharma <bhupesh.sharma@nxp.com>
-To: "Shi, Yang" <yang.shi@linaro.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Yang-Leo Li <leoyang.li@nxp.com>,
-	"shawn.guo@linaro.org" <shawn.guo@linaro.org>
-CC: Mingkai Hu <mingkai.hu@nxp.com>,
-	Minghuan Lian <minghuan.lian@nxp.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>
-Subject: RE: [PATCH] PCI: layerscape: add ls2085a compatible
-Date: Fri, 5 Feb 2016 05:36:28 +0000
-Message-ID: <VI1PR04MB1230AA5CAEEEE0D4AD8E3DF288D20@VI1PR04MB1230.eurprd04.prod.outlook.com>
-References: <1453915925-19198-1-git-send-email-yang.shi@linaro.org>
- <56A906F4.3050809@linaro.org> <20160204223711.GE7031@localhost>
- <56B3E386.8010002@linaro.org>
-In-Reply-To: <56B3E386.8010002@linaro.org>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:41181 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932515AbcBYCXp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:23:45 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v10 39/59] PCI: Move comment to pci_need_to_release()
+Date: Wed, 24 Feb 2016 18:12:30 -0800
+Message-Id: <1456366370-28995-40-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Shi, Yang
-> Sent: Friday, February 05, 2016 5:19 AM
-> 
-> On 2/4/2016 2:37 PM, Bjorn Helgaas wrote:
-> > On Wed, Jan 27, 2016 at 10:05:40AM -0800, Shi, Yang wrote:
-> >> Correct FSL folks email address to nxp.com, sorry for the
-> inconvenience.
-> >
-> > Do we need some MAINTAINERS updates in addition to the ack for this
-> patch?
-> > I see a bunch of @freescale.com addresses in MAINTAINERS.
-> 
-> I guess so if the @freescale.com address is not valid anymore.
+Move comment from caller to pci_need_to_release(), as we will have one new
+caller for alt_size support.
 
-All @freescale.com address have shifted to @nxp.com.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 27 +++++++++++++++------------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
 
-Leo, Minghuan - can you kindly review this patch.
-
-Shawn - can you take this through your tree, once Leo and Minghuan have reviewed the code.
-
-Regards,
-Bhupesh
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index a84e0c3..dc66653 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -415,6 +415,20 @@ static unsigned long pci_fail_res_type_mask(struct list_head *fail_head)
  
-> 
-> >
-> >> On 1/27/2016 9:32 AM, Yang Shi wrote:
-> >>> The layerscape PCI host driver needs recognize ls2085a compatible
-> >>> when using firmware with ls2085a compatible property, otherwise the
-> >>> PCI bus won't be detected even though ls2085a compatible is included
-> by the dts.
-> >>>
-> >>> Signed-off-by: Yang Shi <yang.shi@linaro.org>
-> >>> ---
-> >>>   drivers/pci/host/pci-layerscape.c | 1 +
-> >>>   1 file changed, 1 insertion(+)
-> >>>
-> >>> diff --git a/drivers/pci/host/pci-layerscape.c
-> >>> b/drivers/pci/host/pci-layerscape.c
-> >>> index 3923bed..c40d8b2 100644
-> >>> --- a/drivers/pci/host/pci-layerscape.c
-> >>> +++ b/drivers/pci/host/pci-layerscape.c
-> >>> @@ -203,6 +203,7 @@ static const struct of_device_id
-> ls_pcie_of_match[] = {
-> >>>   	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata
-> },
-> >>>   	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata
-> },
-> >>>   	{ .compatible = "fsl,ls2080a-pcie", .data = &ls2080_drvdata
-> },
-> >>> +	{ .compatible = "fsl,ls2085a-pcie", .data = &ls2080_drvdata },
-> >>>   	{ },
-> >>>   };
-> >>>   MODULE_DEVICE_TABLE(of, ls_pcie_of_match);
-> >>>
-> >>
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+ static bool pci_need_to_release(unsigned long mask, struct resource *res)
+ {
++	/*
++	 * Separate three resource type checking if we need to release
++	 * assigned resource.
++	 *	1. if there is io port assign fail, will release assigned
++	 *	   io port.
++	 *	2. if there is pref mmio assign fail, release assigned
++	 *	   pref mmio.
++	 *	   if assigned pref mmio's parent is non-pref mmio and there
++	 *	   is non-pref mmio assign fail, will release that assigned
++	 *	   pref mmio.
++	 *	3. if there is non-pref mmio assign fail or pref mmio
++	 *	   assigned fail, will release assigned non-pref mmio.
++	 */
++
+ 	if (res->flags & IORESOURCE_IO)
+ 		return !!(mask & IORESOURCE_IO);
+ 
+@@ -471,19 +485,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	 *  if could do that, could get out early.
+ 	 *  if could not do that, we still try to assign requested at first,
+ 	 *    then try to reassign add_size for some resources.
+-	 *
+-	 * Separate three resource type checking if we need to release
+-	 * assigned resource after requested + add_size try.
+-	 *	1. if there is io port assign fail, will release assigned
+-	 *	   io port.
+-	 *	2. if there is pref mmio assign fail, release assigned
+-	 *	   pref mmio.
+-	 *	   if assigned pref mmio's parent is non-pref mmio and there
+-	 *	   is non-pref mmio assign fail, will release that assigned
+-	 *	   pref mmio.
+-	 *	3. if there is non-pref mmio assign fail or pref mmio
+-	 *	   assigned fail, will release assigned non-pref mmio.
+ 	 */
++
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
+-- 
+1.8.4.5
+
