@@ -1,177 +1,173 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0074.outbound.protection.outlook.com ([104.47.38.74]:19980
-	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751334AbcBKQ2j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 11 Feb 2016 11:28:39 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <bhelgaas@google.com>, <michals@xilinx.com>,
-	<lorenzo.pieralisi@arm.com>, <paul.burton@imgtec.com>,
-	<yinghai@kernel.org>, <wangyijing@huawei.com>, <robh@kernel.org>,
-	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
-	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
-	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
-	<galak@codeaurora.org>
-CC: <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	"Bharat Kumar Gogada" <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: [PATCH V4 5/5] Microblaze: Modifying microblaze PCI subsytem to support  generic Xilinx  AXI PCIe Host Bridge IP driver
-Date: Thu, 11 Feb 2016 21:58:11 +0530
-Message-ID: <1455208091-15556-6-git-send-email-bharatku@xilinx.com>
-In-Reply-To: <1455208091-15556-1-git-send-email-bharatku@xilinx.com>
-References: <1455208091-15556-1-git-send-email-bharatku@xilinx.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from aserp1040.oracle.com ([141.146.126.69]:38827 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759303AbcBYCPa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:15:30 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v10 03/59] sparc/PCI: Reserve legacy mmio after PCI mmio
+Date: Wed, 24 Feb 2016 18:11:54 -0800
+Message-Id: <1456366370-28995-4-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch does required modifications to microblaze PCI subsystem, to
-work with generic driver (drivers/pci/host/pcie-xilinx.c) on Microblaze
-and Zynq.
+On one system found bunch of claim resource fail from pci device.
+pci_sun4v f02b894c: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
+pci_bus 0000:00: root bus resource [mem 0x2000000000000-0x200007effffff] (bus address [0x00000000-0x7effffff])
+pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x20007ffffffff] (bus address [0x100000000-0x7ffffffff])
+...
+PCI: Claiming 0000:00:02.0: Resource 14: 0002000000000000..00020000004fffff [200]
+pci 0000:00:02.0: can't claim BAR 14 [mem 0x2000000000000-0x20000004fffff]: address conflict with Video RAM area [??? 0x20000000a0000-0x20000000bffff flags 0x80000000]
+pci 0000:02:00.0: can't claim BAR 0 [mem 0x2000000000000-0x20000000fffff]: no compatible bridge window
+PCI: Claiming 0000:02:00.0: Resource 3: 0002000000100000..0002000000103fff [200]
+pci 0000:02:00.0: can't claim BAR 3 [mem 0x2000000100000-0x2000000103fff]: no compatible bridge window
+PCI: Claiming 0000:02:00.1: Resource 0: 0002000000200000..00020000002fffff [200]
+pci 0000:02:00.1: can't claim BAR 0 [mem 0x2000000200000-0x20000002fffff]: no compatible bridge window
+PCI: Claiming 0000:02:00.1: Resource 3: 0002000000104000..0002000000107fff [200]
+pci 0000:02:00.1: can't claim BAR 3 [mem 0x2000000104000-0x2000000107fff]: no compatible bridge window
+PCI: Claiming 0000:02:00.2: Resource 0: 0002000000300000..00020000003fffff [200]
+pci 0000:02:00.2: can't claim BAR 0 [mem 0x2000000300000-0x20000003fffff]: no compatible bridge window
+PCI: Claiming 0000:02:00.2: Resource 3: 0002000000108000..000200000010bfff [200]
+pci 0000:02:00.2: can't claim BAR 3 [mem 0x2000000108000-0x200000010bfff]: no compatible bridge window
+PCI: Claiming 0000:02:00.3: Resource 0: 0002000000400000..00020000004fffff [200]
+pci 0000:02:00.3: can't claim BAR 0 [mem 0x2000000400000-0x20000004fffff]: no compatible bridge window
+PCI: Claiming 0000:02:00.3: Resource 3: 000200000010c000..000200000010ffff [200]
+pci 0000:02:00.3: can't claim BAR 3 [mem 0x200000010c000-0x200000010ffff]: no compatible bridge window
 
-Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
----
-Changes:
-Removed pcibios_get_phb_of_node in pci-common.c, using generic version
-instead.
-Modified pcibios_fixup_bus in pci-common.c, as per generic architecuture.
-Modified pcibios_align_resource in pci-common.c, as per generic
-architecuture, removed temporary variable.
-Removed pci_domain_nr in pci-common.c, instead using generic code.
-Added pcibios_add_device in pci-common.c, as per generic architecuture.
-Adding Kernel configuration in arch/microblaze as required for generic PCI
-domains.
-Added kernel configuration for driver to support Microblaze.
----
- arch/microblaze/Kconfig          |  3 +++
- arch/microblaze/pci/pci-common.c | 56 +++++++---------------------------------
- drivers/pci/host/Kconfig         |  2 +-
- 3 files changed, 14 insertions(+), 47 deletions(-)
+The bridge 00:02.0 resource does not get reserved as Video RAM take the position early,
+and following children resources reservation all fail.
 
-diff --git a/arch/microblaze/Kconfig b/arch/microblaze/Kconfig
-index 0bce820..c3702b9 100644
---- a/arch/microblaze/Kconfig
-+++ b/arch/microblaze/Kconfig
-@@ -271,6 +271,9 @@ config PCI
- config PCI_DOMAINS
- 	def_bool PCI
+Move down Video RAM area reservation after pci mmio get reserved,
+so we leave pci driver to use those regions.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+---
+ arch/sparc/kernel/pci.c        |  1 +
+ arch/sparc/kernel/pci_common.c | 59 ++++++++++++++++++++++--------------------
+ arch/sparc/kernel/pci_impl.h   |  1 +
+ 3 files changed, 33 insertions(+), 28 deletions(-)
+
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 269630a..0e82584 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -677,6 +677,7 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 	pci_bus_register_of_sysfs(bus);
  
-+config PCI_DOMAINS_GENERIC
-+	def_bool PCI_DOMAINS
-+
- config PCI_SYSCALL
- 	def_bool PCI
- 
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index ae838ed..35654be 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -123,17 +123,6 @@ unsigned long pci_address_to_pio(phys_addr_t address)
+ 	pci_claim_bus_resources(bus);
++	pci_register_legacy_regions(bus);
+ 	pci_bus_add_devices(bus);
+ 	return bus;
  }
- EXPORT_SYMBOL_GPL(pci_address_to_pio);
+diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
+index 76998f8..09380a5 100644
+--- a/arch/sparc/kernel/pci_common.c
++++ b/arch/sparc/kernel/pci_common.c
+@@ -328,41 +328,46 @@ void pci_get_pbm_props(struct pci_pbm_info *pbm)
+ 	}
+ }
  
--/*
-- * Return the domain number for this bus.
-- */
--int pci_domain_nr(struct pci_bus *bus)
--{
--	struct pci_controller *hose = pci_bus_to_host(bus);
--
--	return hose->global_number;
--}
--EXPORT_SYMBOL(pci_domain_nr);
--
- /* This routine is meant to be used early during boot, when the
-  * PCI bus numbers have not yet been assigned, and you need to
-  * issue PCI config cycles to an OF device.
-@@ -863,26 +852,10 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
- 
- void pcibios_fixup_bus(struct pci_bus *bus)
+-static void pci_register_legacy_regions(struct resource *io_res,
+-					struct resource *mem_res)
++static void pci_register_region(struct pci_bus *bus, const char *name,
++				resource_size_t rstart, resource_size_t size)
  {
--	/* When called from the generic PCI probe, read PCI<->PCI bridge
--	 * bases. This is -not- called when generating the PCI tree from
--	 * the OF device-tree.
--	 */
--	if (bus->self != NULL)
--		pci_read_bridge_bases(bus);
--
--	/* Now fixup the bus bus */
--	pcibios_setup_bus_self(bus);
--
--	/* Now fixup devices on that bus */
--	pcibios_setup_bus_devices(bus);
-+	/* nothing to do */
- }
- EXPORT_SYMBOL(pcibios_fixup_bus);
+-	struct resource *p;
++	struct resource *res, *conflict, *root_bus_res;
++	struct pci_bus_region region;
  
--static int skip_isa_ioresource_align(struct pci_dev *dev)
--{
--	return 0;
--}
--
- /*
-  * We need to avoid collisions with `mirrored' VGA ports
-  * and other strange ISA hardware, so we always want the
-@@ -899,20 +872,18 @@ static int skip_isa_ioresource_align(struct pci_dev *dev)
- resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				resource_size_t size, resource_size_t align)
- {
--	struct pci_dev *dev = data;
--	resource_size_t start = res->start;
--
--	if (res->flags & IORESOURCE_IO) {
--		if (skip_isa_ioresource_align(dev))
--			return start;
--		if (start & 0x300)
--			start = (start + 0x3ff) & ~0x3ff;
--	}
--
--	return start;
-+	return res->start;
- }
- EXPORT_SYMBOL(pcibios_align_resource);
+-	/* VGA Video RAM. */
+-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
++	res = kzalloc(sizeof(*res), GFP_KERNEL);
++	if (!res)
+ 		return;
  
-+int pcibios_add_device(struct pci_dev *dev)
-+{
-+	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+-	p->name = "Video RAM area";
+-	p->start = mem_res->start + 0xa0000UL;
+-	p->end = p->start + 0x1ffffUL;
+-	p->flags = IORESOURCE_BUSY;
+-	request_resource(mem_res, p);
++	res->flags = IORESOURCE_MEM;
+ 
+-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
++	region.start = rstart;
++	region.end = rstart + size - 1UL;
++	pcibios_bus_to_resource(bus, res, &region);
++	root_bus_res = pci_find_root_bus_resource(bus, res);
++	if (!root_bus_res) {
++		kfree(res);
+ 		return;
++	}
 +
-+	return 0;
++	res->name = name;
++	res->flags |= IORESOURCE_BUSY;
++	conflict = request_resource_conflict(root_bus_res, res);
++	if (conflict) {
++		dev_printk(KERN_DEBUG, &bus->dev,
++			" can't claim %s %pR: address conflict with %s %pR\n",
++			res->name, res, conflict->name, conflict);
++		kfree(res);
++	}
 +}
-+EXPORT_SYMBOL(pcibios_add_device);
-+
- /*
-  * Reparent resource children of pr that conflict with res
-  * under res, and make res replace those children.
-@@ -1333,13 +1304,6 @@ static void pcibios_setup_phb_resources(struct pci_controller *hose,
- 		 (unsigned long)hose->io_base_virt - _IO_BASE);
+ 
+-	p->name = "System ROM";
+-	p->start = mem_res->start + 0xf0000UL;
+-	p->end = p->start + 0xffffUL;
+-	p->flags = IORESOURCE_BUSY;
+-	request_resource(mem_res, p);
++void pci_register_legacy_regions(struct pci_bus *bus)
++{
++	/* VGA Video RAM. */
++	pci_register_region(bus, "Video RAM area", 0xa0000UL, 0x20000UL);
+ 
+-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+-	if (!p)
+-		return;
++	pci_register_region(bus, "System ROM",     0xf0000UL, 0x10000UL);
+ 
+-	p->name = "Video ROM";
+-	p->start = mem_res->start + 0xc0000UL;
+-	p->end = p->start + 0x7fffUL;
+-	p->flags = IORESOURCE_BUSY;
+-	request_resource(mem_res, p);
++	pci_register_region(bus, "Video ROM",      0xc0000UL,  0x8000UL);
  }
  
--struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus)
--{
--	struct pci_controller *hose = bus->sysdata;
--
--	return of_node_get(hose->dn);
--}
--
- static void pcibios_scan_phb(struct pci_controller *hose)
- {
- 	LIST_HEAD(resources);
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index d5e58ba..7c56c2e 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -79,7 +79,7 @@ config PCI_KEYSTONE
+ static void pci_register_iommu_region(struct pci_pbm_info *pbm)
+@@ -504,8 +509,6 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 	if (pbm->mem64_space.flags)
+ 		request_resource(&iomem_resource, &pbm->mem64_space);
  
- config PCIE_XILINX
- 	bool "Xilinx AXI PCIe host bridge support"
--	depends on ARCH_ZYNQ
-+	depends on ARCH_ZYNQ || MICROBLAZE
- 	help
- 	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
- 	  Host Bridge driver.
+-	pci_register_legacy_regions(&pbm->io_space,
+-				    &pbm->mem_space);
+ 	pci_register_iommu_region(pbm);
+ }
+ 
+diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
+index 2853af7..ff8f5e1 100644
+--- a/arch/sparc/kernel/pci_impl.h
++++ b/arch/sparc/kernel/pci_impl.h
+@@ -167,6 +167,7 @@ void pci_get_pbm_props(struct pci_pbm_info *pbm);
+ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 				 struct device *parent);
+ void pci_determine_mem_io_space(struct pci_pbm_info *pbm);
++void pci_register_legacy_regions(struct pci_bus *bus);
+ 
+ /* Error reporting support. */
+ void pci_scan_for_target_abort(struct pci_pbm_info *, struct pci_bus *);
 -- 
-2.1.1
+1.8.4.5
 
