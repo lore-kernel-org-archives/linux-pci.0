@@ -1,100 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:6213 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753809AbcBXRHA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 24 Feb 2016 12:07:00 -0500
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: helgaas@kernel.org
-Cc: Jon Derrick <jonathan.derrick@intel.com>, keith.busch@intel.com,
-	linux-pci@vger.kernel.org
-Subject: [PATCHv2] VMD: Attach vmd resources to parent domain's resource tree
-Date: Wed, 24 Feb 2016 10:06:37 -0700
-Message-Id: <1456333597-10469-1-git-send-email-jonathan.derrick@intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:24969 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760032AbcBYDNs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 22:13:48 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
+Subject: [PATCH v10 19/59] PCI: Separate realloc list checking after allocation
+Date: Wed, 24 Feb 2016 18:12:10 -0800
+Message-Id: <1456366370-28995-20-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch attaches the new VMD domain's resources to the VMD device's
-resources. This allows /proc/iomem to display a more complete picture.
+We check the realloc list, as list must be empty after allocation.
 
-Before:
-  c0000000-c1ffffff : 0000:5d:05.5
-  c2000000-c3ffffff : 0000:5d:05.5
-    c2010000-c2013fff : nvme
-  c4000000-c40fffff : 0000:5d:05.5
+Separate the realloc list checking to another function.
 
-After:
-  c0000000-c1ffffff : 0000:5d:05.5
-  c2000000-c3ffffff : 0000:5d:05.5
-    c2000000-c3ffffff : VMD MEMBAR1
-      c2000000-c22fffff : PCI Bus 10000:01
-        c2000000-c200ffff : 10000:01:00.0
-        c2010000-c2013fff : 10000:01:00.0
-          c2010000-c2013fff : nvme
-      c2300000-c24fffff : PCI Bus 10000:01
-  c4000000-c40fffff : 0000:5d:05.5
-    c4002000-c40fffff : VMD MEMBAR2
+Add checking that is missed in acpiphp driver.
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org
 ---
-v1->v2: Dropped the CFGBAR resource from the tree
- arch/x86/pci/vmd.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/pci/hotplug/acpiphp_glue.c |  1 +
+ drivers/pci/pci.h                  |  1 +
+ drivers/pci/setup-bus.c            | 12 +++++++++---
+ 3 files changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-index d57e480..d0c4542 100644
---- a/arch/x86/pci/vmd.c
-+++ b/arch/x86/pci/vmd.c
-@@ -503,6 +503,18 @@ static struct pci_ops vmd_ops = {
- 	.write		= vmd_pci_write,
- };
- 
-+static void vmd_attach_resources(struct vmd_dev *vmd)
-+{
-+	vmd->dev->resource[VMD_MEMBAR1].child = &vmd->resources[1];
-+	vmd->dev->resource[VMD_MEMBAR2].child = &vmd->resources[2];
-+}
-+
-+static void vmd_detach_resources(struct vmd_dev *vmd)
-+{
-+	vmd->dev->resource[VMD_MEMBAR1].child = NULL;
-+	vmd->dev->resource[VMD_MEMBAR2].child = NULL;
-+}
-+
- /*
-  * VMD domains start at 0x1000 to not clash with ACPI _SEG domains.
-  */
-@@ -542,6 +554,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
- 		.start = res->start,
- 		.end   = res->end,
- 		.flags = flags,
-+		.parent = res,
- 	};
- 
- 	res = &vmd->dev->resource[VMD_MEMBAR2];
-@@ -554,6 +567,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
- 		.start = res->start + 0x2000,
- 		.end   = res->end,
- 		.flags = flags,
-+		.parent = res,
- 	};
- 
- 	sd->domain = vmd_find_free_domain();
-@@ -578,6 +592,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
- 		return -ENODEV;
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index fa49f91..c35983a 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
+ 		}
  	}
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
++	pci_bus_check_realloc(&add_list);
  
-+	vmd_attach_resources(vmd);
- 	vmd_setup_dma_ops(vmd);
- 	dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
- 	pci_rescan_bus(vmd->bus);
-@@ -674,6 +689,7 @@ static void vmd_remove(struct pci_dev *dev)
- {
- 	struct vmd_dev *vmd = pci_get_drvdata(dev);
+ 	acpiphp_sanitize_bus(bus);
+ 	pcie_bus_configure_settings(bus);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 60d1c87..510378d 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -238,6 +238,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus,
+ void __pci_bus_assign_resources(const struct pci_bus *bus,
+ 				struct list_head *realloc_head,
+ 				struct list_head *fail_head);
++void pci_bus_check_realloc(struct list_head *realloc_head);
+ bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
  
-+	vmd_detach_resources(vmd);
- 	pci_set_drvdata(dev, NULL);
- 	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
- 	pci_stop_root_bus(vmd->bus);
+ void pci_reassigndev_resource_alignment(struct pci_dev *dev);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index f9cd04a..4741cc9 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -280,6 +280,12 @@ out:
+ 	}
+ }
+ 
++void pci_bus_check_realloc(struct list_head *realloc_head)
++{
++	if (WARN_ON(!list_empty(realloc_head)))
++		free_list(realloc_head);
++}
++
+ /**
+  * assign_requested_resources_sorted() - satisfy resource requests
+  *
+@@ -1777,7 +1783,7 @@ again:
+ 	/* Depth last, allocate resources and update the hardware. */
+ 	__pci_bus_assign_resources(bus, add_list, &fail_head);
+ 	if (add_list)
+-		BUG_ON(!list_empty(add_list));
++		pci_bus_check_realloc(add_list);
+ 	tried_times++;
+ 
+ 	/* any device complain? */
+@@ -1852,7 +1858,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ again:
+ 	__pci_bus_size_bridges(parent, &add_list);
+ 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
+-	BUG_ON(!list_empty(&add_list));
++	pci_bus_check_realloc(&add_list);
+ 	tried_times++;
+ 
+ 	if (list_empty(&fail_head))
+@@ -1911,6 +1917,6 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ 							 &add_list);
+ 	up_read(&pci_bus_sem);
+ 	__pci_bus_assign_resources(bus, &add_list, NULL);
+-	BUG_ON(!list_empty(&add_list));
++	pci_bus_check_realloc(&add_list);
+ }
+ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
 -- 
-1.8.3.1
+1.8.4.5
 
