@@ -1,128 +1,142 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Mark Salter <msalter@redhat.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: [PATCH] PCI: ACPI: IA64: fix IO port generic range check
-Date: Mon,  1 Feb 2016 10:25:57 +0000
-Message-Id: <1454322357-10912-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:38381 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932721AbcBYCNy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 21:13:54 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v10 56/59] PCI, x86: Add pci=assign_pref_bars to reallocate pref BARs
+Date: Wed, 24 Feb 2016 18:12:47 -0800
+Message-Id: <1456366370-28995-57-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The [0 - 64k] ACPI PCI IO port resource boundary check in:
+Now some BIOS tend to allocate pref MMIO under non-pref MMIO, or allocate
+64bit pref MMIO under 4G.
 
-acpi_dev_ioresource_flags()
+Add pci=assign_pref_bars to clear and allocate resource to pref BARS.
+So could reallocate pref mmio64 above 4G and pref under bridges pref BARs.
 
-is currently applied blindly in the ACPI resource parsing to all
-architectures, but only x86 suffers from that IO space limitation.
-The check in generic ACPI code leaves other arches (ie IA64) IO space
-broken (ie kernel can't claim IO resources since the host bridge
-IO resource is disabled and discarded by ACPI core code, eg log on
-IA64):
-
-pci 0000:00:03.0: [1002:515e] type 00 class 0x030000
-
-pci 0000:00:03.0: reg 0x10: [mem 0x80000000-0x87ffffff pref]
-
-pci 0000:00:03.0: reg 0x14: [io  0x1000-0x10ff]
-
-pci 0000:00:03.0: reg 0x18: [mem 0x88020000-0x8802ffff]
-
-pci 0000:00:03.0: reg 0x30: [mem 0x88000000-0x8801ffff pref]
-
-pci 0000:00:03.0: supports D1 D2
-
-pci 0000:00:03.0: can't claim BAR 1 [io  0x1000-0x10ff]: no compatible
-bridge window
-
-For this reason, the IO port resources boundaries check in generic ACPI
-parsing code should be moved to x86 arch code so that more arches (ie
-ARM64) can benefit from the generic ACPI resources parsing interface
-without incurring in unexpected resource filtering, fixing at the same
-time current breakage on IA64.
-
-This patch moves the IO ports boundary [0 - 64k] check to x86 arch code
-code that validates the PCI host bridge resources.
-
-Fixes: 3772aea7d6f3 ("ia64/PCI/ACPI: Use common ACPI resource parsing
-interface for host bridge")
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: Mark Salter <msalter@redhat.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/pci/acpi.c     | 18 +++++++++++++-----
- drivers/acpi/resource.c |  3 ---
- 2 files changed, 13 insertions(+), 8 deletions(-)
+ arch/x86/include/asm/pci_x86.h |  1 +
+ arch/x86/pci/common.c          |  3 +++
+ arch/x86/pci/i386.c            | 56 ++++++++++++++++++++++++++----------------
+ 3 files changed, 39 insertions(+), 21 deletions(-)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 3cd6983..e20dbe5 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -275,11 +275,14 @@ static void pci_acpi_root_release_info(struct acpi_pci_root_info *ci)
-  *     to access PCI configuration space.
-  *
-  * So explicitly filter out PCI CFG IO ports[0xCF8-0xCFF].
-+ *
-+ * Furthermore, IO ports address space is limited to 16k on x86,
-+ * any IO resource exceeding the boundary must therefore be discarded.
-  */
--static bool resource_is_pcicfg_ioport(struct resource *res)
-+static bool ioport_valid(struct resource *res)
- {
--	return (res->flags & IORESOURCE_IO) &&
--		res->start == 0xCF8 && res->end == 0xCFF;
-+	return !(res->start == 0xCF8 && res->end == 0xCFF) &&
-+	       !(res->end >= 0x10003);
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index 3f9ba17..717e1be 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -34,6 +34,7 @@ do {						\
+ #define PCI_NOASSIGN_ROMS	0x80000
+ #define PCI_ROOT_NO_CRS		0x100000
+ #define PCI_NOASSIGN_BARS	0x200000
++#define PCI_ASSIGN_PREF_BARS	0x400000
+ 
+ extern unsigned int pci_probe;
+ extern unsigned long pirq_table_addr;
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 77a450e..478db0b 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -606,6 +606,9 @@ char *__init pcibios_setup(char *str)
+ 	} else if (!strcmp(str, "assign-busses")) {
+ 		pci_probe |= PCI_ASSIGN_ALL_BUSSES;
+ 		return NULL;
++	} else if (!strcmp(str, "assign_pref_bars")) {
++		pci_probe |= PCI_ASSIGN_PREF_BARS;
++		return NULL;
+ 	} else if (!strcmp(str, "use_crs")) {
+ 		pci_probe |= PCI_USE__CRS;
+ 		return NULL;
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 6121ef3..2df7723 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -227,16 +227,25 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
+ 			continue;
+ 		if (r->parent)	/* Already allocated */
+ 			continue;
+-		if (!r->start || pci_claim_bridge_resource(dev, idx) < 0) {
+-			/*
+-			 * Something is wrong with the region.
+-			 * Invalidate the resource to prevent
+-			 * child resource allocations in this
+-			 * range.
+-			 */
+-			r->start = r->end = 0;
+-			r->flags = 0;
+-		}
++
++		if ((r->flags & IORESOURCE_PREFETCH) &&
++		    (pci_probe & PCI_ASSIGN_PREF_BARS))
++			goto clear;
++
++		if (!r->start)
++			goto clear;
++
++		if (pci_claim_bridge_resource(dev, idx) == 0)
++			continue;
++
++clear:
++		/*
++		 * Something is wrong with the region.
++		 * Invalidate the resource to prevent
++		 * child resource allocations in this range.
++		 */
++		r->start = r->end = 0;
++		r->flags = 0;
+ 	}
  }
  
- static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
-@@ -287,13 +290,18 @@ static int pci_acpi_root_prepare_resources(struct acpi_pci_root_info *ci)
- 	struct acpi_device *device = ci->bridge;
- 	int busnum = ci->root->secondary.start;
- 	struct resource_entry *entry, *tmp;
-+	struct resource *res;
- 	int status;
- 
- 	status = acpi_pci_probe_root_resources(ci);
- 	if (pci_use_crs) {
--		resource_list_for_each_entry_safe(entry, tmp, &ci->resources)
--			if (resource_is_pcicfg_ioport(entry->res))
-+		resource_list_for_each_entry_safe(entry, tmp, &ci->resources) {
-+			res = entry->res;
+@@ -282,21 +291,26 @@ static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
+ 			else
+ 				disabled = !(command & PCI_COMMAND_MEMORY);
+ 			if (pass == disabled) {
++				if ((r->flags & IORESOURCE_PREFETCH) &&
++				    (pci_probe & PCI_ASSIGN_PREF_BARS))
++					goto clear;
 +
-+			if (res->flags & IORESOURCE_IO && !ioport_valid(res))
- 				resource_list_destroy_entry(entry);
-+		}
+ 				dev_dbg(&dev->dev,
+ 					"BAR %d: reserving %pr (d=%d, p=%d)\n",
+ 					idx, r, disabled, pass);
+-				if (pci_claim_resource(dev, idx) < 0) {
+-					if (r->flags & IORESOURCE_PCI_FIXED) {
+-						dev_info(&dev->dev, "BAR %d %pR is immovable\n",
+-							 idx, r);
+-					} else {
+-						/* We'll assign a new address later */
+-						pcibios_save_fw_addr(dev,
+-								idx, r->start);
+-						r->end -= r->start;
+-						r->start = 0;
+-					}
++				if (pci_claim_resource(dev, idx) == 0)
++					continue;
++				if (r->flags & IORESOURCE_PCI_FIXED) {
++					dev_info(&dev->dev, "BAR %d %pR is immovable\n",
++						 idx, r);
++					continue;
+ 				}
 +
- 		return status;
- 	}
- 
-diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-index d02fd53..c112e1d 100644
---- a/drivers/acpi/resource.c
-+++ b/drivers/acpi/resource.c
-@@ -127,9 +127,6 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
- 	if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
- 		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
- 
--	if (res->end >= 0x10003)
--		res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
--
- 	if (io_decode == ACPI_DECODE_16)
- 		res->flags |= IORESOURCE_IO_16BIT_ADDR;
- 	if (translation_type == ACPI_SPARSE_TRANSLATION)
++clear:
++				/* We'll assign a new address later */
++				pcibios_save_fw_addr(dev, idx, r->start);
++				r->end -= r->start;
++				r->start = 0;
+ 			}
+ 		}
+ 	if (!pass) {
 -- 
-2.5.1
+1.8.4.5
 
