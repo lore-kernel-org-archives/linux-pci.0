@@ -1,60 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48535 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757179AbcBSKAv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 19 Feb 2016 05:00:51 -0500
-Subject: Re: [PATCH] Create sysfs entries for PCI VPDI and VPDR tags
-To: Jordan Hargrave <Jordan_Hargrave@dell.com>, bhelgaas@google.com
-References: <1455825895-10951-1-git-send-email-Jordan_Hargrave@dell.com>
-Cc: alexander.duyck@gmail.com, linux-pci@vger.kernel.org,
-	babu.moger@oracle.com, linux-kernel@vger.kernel.org,
-	jharg93@gmail.com
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <56C6E7D1.4@suse.de>
-Date: Fri, 19 Feb 2016 11:00:49 +0100
-MIME-Version: 1.0
-In-Reply-To: <1455825895-10951-1-git-send-email-Jordan_Hargrave@dell.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v10 33/59] PCI: Add debug printout during releasing partial assigned resources
+Date: Wed, 24 Feb 2016 18:12:24 -0800
+Message-Id: <1456366370-28995-34-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/18/2016 09:04 PM, Jordan Hargrave wrote:
-> The VPD-R is a readonly area of the PCI Vital Product Data region.
-> There are some standard keywords for serial number, manufacturer,
-> and vendor-specific values.  Dell Servers use a vendor-specific
-> tag to store number of ports and port mapping of partitioned NICs.
-> 
-> info = VPD-Info string
-> PN = Part Number
-> SN = Serial Number
-> MN = Manufacturer ID
-> Vx = Vendor-specific (x=0..9 A..Z)
-> 
-> This creates a sysfs subdirectory in the pci device: vpdattr with
-> 'info', 'EC', 'SN', 'V0', etc. files containing the tag values.
-> 
-> Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
-Hmm. Can we first get an agreement on the PCI VPD parsing patches
-I've posted earlier?
-VPD parsing is really tricky, and we should aim on making the
-read_vpd function robust enough before we begin putting things into
-sysfs.
+We try to assign required+optional at first, and we only accept the result
+if all resources get allocated. Otherwise will release assigned in the
+list, and try to assign required and expand to optional.
 
-Also, I'm not utterly keen on this patchset.
-The sysfs space is blown up with tiny pieces of information, which
-can easily gotten via lspci, too.
+We have to do that to make sure any required has priority over any optional.
 
-Also, to my knowledge it's perfectly valid to _write_ to the VPD, in
-which case the entire sysfs attribute setup would be invalided.
-How do you propose to handle that?
+When that happens, we only print out "assigned" info, that is confusing
+as it looks like same range is assigned to two peer resources at the same
+time.
 
-Cheers,
+Add printout for releasing so we have whole picture in debug messages.
 
-Hannes
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index cf6f9f9..9d6a846 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -526,9 +526,17 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 	free_list(&local_fail_head);
+ 	/* Release assigned resource */
+-	list_for_each_entry(dev_res, head, list)
+-		if (dev_res->res->parent)
+-			release_resource(dev_res->res);
++	list_for_each_entry(dev_res, head, list) {
++		struct resource *res = dev_res->res;
++
++		if (res->parent) {
++			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
++				   "BAR %d: released %pR\n",
++				   (int)(res - &dev_res->dev->resource[0]),
++				   res);
++			release_resource(res);
++		}
++	}
+ 	/* Restore start/end/flags from saved list */
+ 	list_for_each_entry(save_res, &save_head, list) {
+ 		struct resource *res = save_res->res;
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+1.8.4.5
