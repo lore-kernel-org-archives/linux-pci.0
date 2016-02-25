@@ -1,179 +1,245 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:59278 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751659AbcBJGEj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 10 Feb 2016 01:04:39 -0500
-Received: from localhost
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 10 Feb 2016 16:04:36 +1000
-Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id B652B2BB0052
-	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:04:35 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u1A64Oph46923834
-	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:04:32 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u1A63qcj005000
-	for <linux-pci@vger.kernel.org>; Wed, 10 Feb 2016 17:04:01 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, mpe@ellerman.id.au,
-	aik@ozlabs.ru, ruscur@russell.cc,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v14 0/9] EEH Support for SRIOV VFs
-Date: Wed, 10 Feb 2016 17:02:48 +1100
-Message-Id: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:42315 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933450AbcBYRhj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 25 Feb 2016 12:37:39 -0500
+Subject: [PATCH v10 2/4] PCI: designware: Add generic dw_pcie_wait_for_link()
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: mark.rutland@arm.com, Alexey.Brodkin@synopsys.com, arnd@arndb.de,
+	pawel.moll@arm.com, ijc+devicetree@hellion.org.uk,
+	linux-pci@vger.kernel.org, Vineet.Gupta1@synopsys.com,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	linux-kernel@vger.kernel.org, CARLOS.PALMINHA@synopsys.com,
+	robh+dt@kernel.org, Murali Karicheri <m-karicheri2@ti.com>,
+	galak@codeaurora.org, Jingoo Han <jingoohan1@gmail.com>,
+	linux-snps-arc@lists.infradead.org
+Date: Thu, 25 Feb 2016 11:37:36 -0600
+Message-ID: <20160225173736.2103.59017.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160225172957.2103.8326.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160225172957.2103.8326.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This applies to linux-powerpc-next and additional unmerged patches:
+From: Joao Pinto <Joao.Pinto@synopsys.com>
 
-[v2,1/4] powerpc/eeh: Fix stale cached primary bus
-powerpc/eeh: fix incorrect function name in comment
-[V2] powerpc/powernv: Remove support for p5ioc2
-[V7,1/6] powerpc/powernv: don't enable SRIOV when VF BAR has non 64bit-prefetchable BAR
-92e963f Linux 4.5-rc1 - Linux powerpc next branch
+Several DesignWare-based drivers (dra7xx, exynos, imx6 and spear13xx) had
+similar loops waiting for the link to come up.
 
-This patchset enables EEH on SRIOV VFs. The general idea is to create proper
-VF edev and VF PE and handle them properly.
+FIXME Doesn't update keystone
+FIXME Doesn't update qcom
 
-Different from the Bus PE, VF PE just contain one VF. This introduces the
-difference of EEH error handling on a VF PE. Generally, it has several
-differences.
+Add a generic dw_pcie_wait_for_link() for use by all these drivers so the
+waiting is done consistently, e.g., always using usleep_range() rather than
+mdelay() and using similar timeouts and retry counts.
 
-First, the VF's removal and re-enumerate rely on its PF. VF has a tight
-relationship between its PF. This is not proper to enumerate a VF by usual
-scan procedure. That's why virtfn_add/virtfn_remove are exported in this patch
-set.
+[bhelgaas: changelog, split into its own patch]
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-dra7xx.c      |   11 +++--------
+ drivers/pci/host/pci-exynos.c      |   11 ++---------
+ drivers/pci/host/pci-imx6.c        |   11 +++--------
+ drivers/pci/host/pcie-designware.c |   19 +++++++++++++++++++
+ drivers/pci/host/pcie-designware.h |    6 ++++++
+ drivers/pci/host/pcie-spear13xx.c  |   12 ++----------
+ 6 files changed, 35 insertions(+), 35 deletions(-)
 
-Second, the reset/restore of a VF is done in kernel space. FW is not aware of
-the VF, this means the usual reset function done in FW will not work. One of
-the patch will imitate the reset/restore function in kernel space.
-
-Third, the VF may be removed during the PF's error_detected function. In this
-case, the original error_detected->slot_reset->resume sequence is not proper
-to those removed VFs, since they are re-created by PF in a fresh state. A flag
-in eeh_dev is introduce to mark the eeh_dev is in error state. By doing so, we
-track whether this device needs to be reset or not.
-
-This has been tested both on host and in guest on Power8 with latest kernel
-version.
-
-Changelog
-=========
-v14:
-   * Rebased to linux-powerpc-next branch, plus additional patches related to
-     powerpc/pci and powerpc/eeh subsystems.
-   * Minor code changes
-   * Fix build error on pSeries reported by mpe
-v13:
-   * move eeh_rmv_data{} to eeh_driver.c
-v12:
-   * Rephrase some commit log to make it more clear and specific
-   * move vf_index assignment in CONFIG_PPC_POWERNV
-   * merge "Cache VF index in pci_dn" with "Support error recovery for VF PE"
-   * check the return value after eeh_dev_init() for VF
-   * initialize the parameter before pass to read_config()
-   * make pnv_pci_fixup_vf_mps() a dedicated patch, which fixup and store mps
-     value in pci_dn
-v11:
-   * move vf_index assignment in marco CONFIG_PPC_POWERNV
-   * merge Patch "Cache VF index in pci_dn" into Patch "Support error recovery
-     for VF PE"
-v10:
-   * rebased on v4.2
-   * delete the last patch "powerpc/powernv: compound PE for VFs" since after
-     redesign of SRIOV, there is no compound PE for VFs now.
-   * add two patches which fix problems found during tests
-     powerpc/eeh: Support error recovery for VF PE
-     powerpc/eeh: Handle hot removed VF when PF is EEH aware
-v9:
-   * split pcibios_bus_add_device() into a separate patch
-   * Bjorn acked the PCI part and agreed this patch set to be merged from ppc
-     tree
-   * rebased on mpe/linux.git next branch
-v8:
-   * fix on checking the return value of pnv_eeh_do_flr()
-   * introduced a weak function pcibios_bus_add_device() to create PE for VFs
-v7:
-   * fix compile error when PCI_IOV is not set
-v6:
-   * code / commit log refactor by Gavin
-v5:
-   * remove the compound field, iterate on Master VF PE instead
-   * some code refine on PCI config restore and reset on VF
-     the wait time for assert and deassert
-     PCI device address format
-     check on edev->pcie_cap and edev->aer_cap before access them
-v4:
-   * refine the change logs, comment and code style
-   * change pnv_pci_fixup_vf_eeh() to pnv_eeh_vf_final_fixup() and remove the
-     CONFIG_PCI_IOV macro
-   * reorder patch 5/6 to make the logic more reasonable
-   * remove remove_dev_pci_data()
-   * remove the EEH_DEV_VF flag, use edev->physfn to identify a VF EEH DEV and
-     remove related CONFIG_PCI_IOV macro
-   * add the option for VF reset
-   * fix the pnv_eeh_cfg_blocked() logic
-   * replace pnv_pci_cfg_{read,write} with eeh_ops->{read,write}_config in
-     pnv_eeh_vf_restore_config()
-   * rename pnv_eeh_vf_restore_config() to pnv_eeh_restore_vf_config()
-   * rename pnv_pci_fixup_vf_caps() to pnv_pci_vf_header_fixup() and move it
-     to arch/powerpc/platforms/powernv/pci.c
-   * add a field compound in pnv_ioda_pe to link compound PEs
-   * handle compound PE for VF PEs
-v3:
-   * add back vf_index in pci_dn to track the VF's index
-   * rename ppdev in eeh_dev to physfn for consistency
-   * move edev->physfn assignment before dev->dev.archdata.edev is set
-   * move pnv_pci_fixup_vf_eeh() and pnv_pci_fixup_vf_caps() to eeh-powernv.c
-   * more clear and detail in commit log and comment in code
-   * merge eeh_rmv_virt_device() with eeh_rmv_device()
-   * move the cfg_blocked check logic from pnv_eeh_read/write_config() to
-     pnv_eeh_cfg_blocked()
-   * move the vf reset/restore logic into its own patch, two patches are
-     created.
-     powerpc/powernv: Support PCI config restore for VFs
-     powerpc/powernv: Support EEH reset for VFs
-   * simplify the vf reset logic
-v2:
-   * add prefix pci_iov_ to virtfn_add/virtfn_remove
-   * use EEH_DEV_VF as a flag for a VF's eeh_dev
-   * use eeh_dev instead of edev in change log
-   * remove vf_index in eeh_dev, calculate it from pdn->busno and devfn
-   * do eeh_add_device_late() and eeh_sysfs_add_device() both after pci_dev is
-     well initialized
-   * do FLR to reset a VF PE
-   * imitate the restore function in FW for VF
-   * remove the reverse order patch, since it is still under discussion
-
-Wei Yang (9):
-  PCI/IOV: Rename and export virtfn_{add, remove}
-  PCI: Add pcibios_bus_add_device() weak function
-  powerpc/pci: Remove VFs prior to PF
-  powerpc/eeh: Cache normal BARs, not windows or IOV BARs
-  powerpc/eeh: EEH device for VF
-  powerpc/eeh: Create PE for VFs
-  powerpc/powernv: Support EEH reset for VF PE
-  powerpc/powernv: Support PCI config restore for VFs
-  powerpc/eeh: powerpc/eeh: Support error recovery for VF PE
-
- arch/powerpc/include/asm/eeh.h               |   5 +
- arch/powerpc/include/asm/pci-bridge.h        |   2 +
- arch/powerpc/kernel/eeh.c                    |  17 +-
- arch/powerpc/kernel/eeh_cache.c              |  11 +-
- arch/powerpc/kernel/eeh_dev.c                |   1 +
- arch/powerpc/kernel/eeh_driver.c             | 137 ++++++++++++---
- arch/powerpc/kernel/eeh_pe.c                 |  10 +-
- arch/powerpc/kernel/pci-hotplug.c            |   2 +-
- arch/powerpc/kernel/pci_dn.c                 |  19 ++-
- arch/powerpc/platforms/powernv/eeh-powernv.c | 238 ++++++++++++++++++++++++++-
- drivers/pci/bus.c                            |   3 +
- drivers/pci/iov.c                            |  10 +-
- include/linux/pci.h                          |   9 +
- 13 files changed, 417 insertions(+), 47 deletions(-)
-
--- 
-2.1.0
+diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+index 923607b..8d3d350 100644
+--- a/drivers/pci/host/pci-dra7xx.c
++++ b/drivers/pci/host/pci-dra7xx.c
+@@ -10,7 +10,6 @@
+  * published by the Free Software Foundation.
+  */
+ 
+-#include <linux/delay.h>
+ #include <linux/err.h>
+ #include <linux/interrupt.h>
+ #include <linux/irq.h>
+@@ -108,7 +107,6 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
+ {
+ 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+ 	u32 reg;
+-	unsigned int retries;
+ 
+ 	if (dw_pcie_link_up(pp)) {
+ 		dev_err(pp->dev, "link is already up\n");
+@@ -119,13 +117,10 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
+ 	reg |= LTSSM_EN;
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+ 
+-	for (retries = 0; retries < 1000; retries++) {
+-		if (dw_pcie_link_up(pp))
+-			return 0;
+-		usleep_range(10, 20);
+-	}
++	/* check if the link is up or not */
++	if (!dw_pcie_wait_for_link(pp))
++		return 0;
+ 
+-	dev_err(pp->dev, "link is not up\n");
+ 	return -EINVAL;
+ }
+ 
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index d997d22..41f3248 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -318,7 +318,6 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
+ {
+ 	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+ 	u32 val;
+-	unsigned int retries;
+ 
+ 	if (dw_pcie_link_up(pp)) {
+ 		dev_err(pp->dev, "Link already up\n");
+@@ -357,13 +356,8 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
+ 			  PCIE_APP_LTSSM_ENABLE);
+ 
+ 	/* check if the link is up or not */
+-	for (retries = 0; retries < 10; retries++) {
+-		if (dw_pcie_link_up(pp)) {
+-			dev_info(pp->dev, "Link up\n");
+-			return 0;
+-		}
+-		mdelay(100);
+-	}
++	if (!dw_pcie_wait_for_link(pp))
++		return 0;
+ 
+ 	while (exynos_phy_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED) == 0) {
+ 		val = exynos_blk_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED);
+@@ -372,7 +366,6 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
+ 	/* power off phy */
+ 	exynos_pcie_power_off_phy(pp);
+ 
+-	dev_err(pp->dev, "PCIe Link Fail\n");
+ 	return -EINVAL;
+ }
+ 
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index fe60096..c53da17 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -330,15 +330,10 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ 
+ static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+ {
+-	unsigned int retries;
+-
+-	for (retries = 0; retries < 200; retries++) {
+-		if (dw_pcie_link_up(pp))
+-			return 0;
+-		usleep_range(100, 1000);
+-	}
++	/* check if the link is up or not */
++	if (!dw_pcie_wait_for_link(pp))
++		return 0;
+ 
+-	dev_err(pp->dev, "phy link never came up\n");
+ 	dev_dbg(pp->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+ 		readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
+ 		readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index 2171682..4fff2d2 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -22,6 +22,7 @@
+ #include <linux/pci_regs.h>
+ #include <linux/platform_device.h>
+ #include <linux/types.h>
++#include <linux/delay.h>
+ 
+ #include "pcie-designware.h"
+ 
+@@ -380,6 +381,24 @@ static struct msi_controller dw_pcie_msi_chip = {
+ 	.teardown_irq = dw_msi_teardown_irq,
+ };
+ 
++int dw_pcie_wait_for_link(struct pcie_port *pp)
++{
++	int retries;
++
++	/* check if the link is up or not */
++	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
++		if (dw_pcie_link_up(pp)) {
++			dev_info(pp->dev, "link up\n");
++			return 0;
++		}
++		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
++	}
++
++	dev_err(pp->dev, "phy link never came up\n");
++
++	return -EINVAL;
++}
++
+ int dw_pcie_link_up(struct pcie_port *pp)
+ {
+ 	if (pp->ops->link_up)
+diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+index 2356d29..f437f9b 100644
+--- a/drivers/pci/host/pcie-designware.h
++++ b/drivers/pci/host/pcie-designware.h
+@@ -22,6 +22,11 @@
+ #define MAX_MSI_IRQS			32
+ #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+ 
++/* Parameters for the waiting for link up routine */
++#define LINK_WAIT_MAX_RETRIES		10
++#define LINK_WAIT_USLEEP_MIN		90000
++#define LINK_WAIT_USLEEP_MAX		100000
++
+ struct pcie_port {
+ 	struct device		*dev;
+ 	u8			root_bus_nr;
+@@ -76,6 +81,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val);
+ int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val);
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+ void dw_pcie_msi_init(struct pcie_port *pp);
++int dw_pcie_wait_for_link(struct pcie_port *pp);
+ int dw_pcie_link_up(struct pcie_port *pp);
+ void dw_pcie_setup_rc(struct pcie_port *pp);
+ int dw_pcie_host_init(struct pcie_port *pp);
+diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+index a6cd823..0e5a2f1 100644
+--- a/drivers/pci/host/pcie-spear13xx.c
++++ b/drivers/pci/host/pcie-spear13xx.c
+@@ -13,7 +13,6 @@
+  */
+ 
+ #include <linux/clk.h>
+-#include <linux/delay.h>
+ #include <linux/interrupt.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+@@ -149,7 +148,6 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+ 	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
+ 	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
+ 	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
+-	unsigned int retries;
+ 
+ 	if (dw_pcie_link_up(pp)) {
+ 		dev_err(pp->dev, "link already up\n");
+@@ -201,15 +199,9 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+ 			&app_reg->app_ctrl_0);
+ 
+ 	/* check if the link is up or not */
+-	for (retries = 0; retries < 10; retries++) {
+-		if (dw_pcie_link_up(pp)) {
+-			dev_info(pp->dev, "link up\n");
+-			return 0;
+-		}
+-		mdelay(100);
+-	}
++	if (!dw_pcie_wait_for_link(pp))
++		return 0;
+ 
+-	dev_err(pp->dev, "link Fail\n");
+ 	return -EINVAL;
+ }
+ 
 
