@@ -1,99 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:60507 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758167AbcBYIOw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Feb 2016 03:14:52 -0500
-Subject: Re: [PATCH 0/5] Modularize PCI_DW related drivers.
-To: Arnd Bergmann <arnd@arndb.de>
-References: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com>
- <56CD4916.3050904@ti.com> <6350001.oOdGGcH81x@wuerfel>
-CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
-	<linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	<devicetree@vger.kernel.org>,
-	Frank Rowand <frowand.list@gmail.com>,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	Grant Likely <grant.likely@linaro.org>,
-	Ley Foon Tan <lftan@altera.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Russell King <linux@arm.linux.org.uk>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-arm-msm@vger.kernel.org>, <linux-pci@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <56CEB7BC.7010803@ti.com>
-Date: Thu, 25 Feb 2016 13:43:48 +0530
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:36282 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752104AbcBYQwW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Feb 2016 11:52:22 -0500
+Subject: Re: [PATCH RESEND v9 1/2] PCI support added to ARC
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+References: <cover.1454952698.git.jpinto@synopsys.com>
+ <8294ff8ecdae71799292c0d8b0bfc2f99967c26d.1454952698.git.jpinto@synopsys.com>
+ <20160225163024.GH8120@localhost>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
+	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
+	pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org, arnd@arndb.de
+From: Vineet Gupta <vgupta@synopsys.com>
+Message-ID: <56CF3139.4000008@synopsys.com>
+Date: Thu, 25 Feb 2016 22:22:09 +0530
 MIME-Version: 1.0
-In-Reply-To: <6350001.oOdGGcH81x@wuerfel>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <20160225163024.GH8120@localhost>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+On Thursday 25 February 2016 10:00 PM, Bjorn Helgaas wrote:
+> On Wed, Feb 17, 2016 at 05:46:18PM +0000, Joao Pinto wrote:
+>> > This patch adds PCI support to ARC and updates drivers/pci Makefile
+>> > enabling the ARC arch to use the generic PCI setup functions.
+>> > 
+>> > Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> Did we have an ack from the ARC arch maintainer for this?  I seem to
+> remember one, but it would help me out if you included it here so I
+> didn't have to track it down.
+> 
 
-On Wednesday 24 February 2016 02:34 PM, Arnd Bergmann wrote:
-> On Wednesday 24 February 2016 11:39:26 Kishon Vijay Abraham I wrote:
->> Hi,
->>
->> On Monday 08 February 2016 05:30 AM, Paul Gortmaker wrote:
->>> In a recent patch series that aimed to remove code related to module
->>> unload for PCI support that was simply non modular, the discussion
->>> led to people wanting to keep the code and push towards taking the
->>> steps needed to support moving it towards tristate instead[1].
->>>
->>> Here, we take step one, which is simply making the Kconfig change
->>> and then dealing with any build fallout or modpost fallout.  What
->>> amounts to essentially a sanity build test.  To be clear, these
->>> have not been runtime validated; that will need to be done by those
->>> with access to real hardware.  However, the changes are not anything
->>> that should disrupt any existing built-in validation, so real world
->>> users should not be impacted by this change.
->>>
->>> We start with a smaller family of drivers; those that actively select
->>> PCI_DW, as a nice self contained group to test the waters and see if
->>> everyone is still good with this approach before investing more time
->>> on a wider scale to other pci/host/ code blocks.
->>>
->>> As such the drivers here share a dependency on having the same group
->>> of functions exported in order to successfully complete modpost.
->>>
->>> In addition, we have to stray outside drivers/pci to add exports
->>> in two places; once for an ARM fault handler, and once for an OF
->>> variable.
->>>
->>> The pci-keystone-dw.c instance was handled separately because it
->>> consists of two source files that need their own group of driver
->>> specific exports above and beyond the "shared" ones.
->>>
->>> Then we convert the Kconfig for all remaining at once; we could have
->>> done it on a per driver basis for ease of revert if anyone really
->>> objects, but since it would be a one line change, that seemed like
->>> not a real concern.
->>>
->>> Build testing was done on the linux-next tree for arm allmodconfig.
->>
->> I took these patches and gave a test with DRA7xx board. As expected there was
->> no issues when the driver was built-in. However when I tried to rmmod/modprobe
->> I got this error [2].
-> 
-> Thanks for testing this!
-> 
->> [2] -> http://pastebin.ubuntu.com/15185894/
-> 
-> It looks like you are hitting the BUG_ON() in ioremap_pte_range()
-> that checks if a virtual address already has a page table entry,
-> which in turn is probably a result of dw_pcie_host_init()
-> calling pci_remap_iospace() again for the same memory area
-> it has called the last time, and no cleanup done inbetween.
-> 
-> Could you try adding a pci_unmap_iospace() and calling that
-> in the device remove function? Let me know if you need help
-> implementing it.
+Indeed I'd acked it before. Still if it helps avoid a respin !
 
-That didn't look straight forward to me :-( I'll try to see this next week. Any
-help from you will make it simpler for me.
+Acked-by: Vineet Gupta <vgupta@synopsys.com>
 
-Thanks
-Kishon
