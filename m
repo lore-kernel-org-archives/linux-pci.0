@@ -1,46 +1,52 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Heiner Kallweit <hkallweit1@gmail.com>
-Cc: Chen Fan <chen.fan.fnst@cn.fujitsu.com>,
-	linux-acpi@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: Problems since commit Recognize that Interrupt Line 255 means "not connected"
-Date: Sat, 06 Feb 2016 00:37:45 +0100
-Message-ID: <1676062.Zh6hUgWIix@vostro.rjw.lan>
-In-Reply-To: <56B52990.3030103@gmail.com>
-References: <56B52990.3030103@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:50822 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933535AbcBZP7A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Feb 2016 10:59:00 -0500
+Subject: [PATCH v1 2/3] x86/PCI: Mark Broadwell-EP Home Agent & PCU as
+ having non-compliant BARs
+To: Andi Kleen <ak@linux.intel.com>,
+	Jayachandran Chandrashekaran Nair
+	<jayachandran.chandrashekaran@broadcom.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh@kernel.org>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	linux-pci@vger.kernel.org
+Date: Fri, 26 Feb 2016 09:58:57 -0600
+Message-ID: <20160226155857.9113.98179.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160226155334.9113.77645.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160226155334.9113.77645.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, February 06, 2016 12:00:32 AM Heiner Kallweit wrote:
-> Since commit a44c386a361e "x86/PCI/ACPI: Recognize that Interrupt Line 255
-> means "not connected"" I get several "PCI INT not connected" warnings on
-> a Zotac CI321 and EHCI failes to load:
+The Home Agent and PCU PCI devices in Broadwell-EP have a non-BAR register
+where a BAR should be.  We don't know what the side effects of sizing the
+"BAR" would be, and we don't know what address space the "BAR" might appear
+to describe.
 
-That doesn't follow clearly from your report, but I'm assuming that it works
-correctly without that commit, right?
+Mark these devices as having non-compliant BARs so the PCI core doesn't
+touch them.
 
-> ehci-pci 0000:00:1d.0: PCI INT not connected
-> ehci-pci 0000:00:1d.0: EHCI Host Controller
-> ehci-pci 0000:00:1d.0: new USB bus registered, assigned bus number 3
-> ehci-pci 0000:00:1d.0: debug port 2
-> ehci-pci 0000:00:1d.0: cache line size of 64 is not supported
-> ehci-pci 0000:00:1d.0: request interrupt -2147483648 failed
-> ehci-pci 0000:00:1d.0: USB bus 3 deregistered
-> ehci-pci 0000:00:1d.0: init 0000:00:1d.0 fail, -107
-> ehci-pci: probe of 0000:00:1d.0 failed with error -107
-> 
-> XHCI brings the "PCI INT not connected" warning too but loads properly
-> (most likely because it uses a MSI interrupt).
-> 
-> Not sure whether this commit is to blame or a broken BIOS.
-> Just let me know in case you need additional information.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/x86/pci/fixup.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Well, even if the BIOS is "broken" and the kernel without the above commit
-is able to work with it, we cannot break that.
-
-Thanks,
-Rafael
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index e585655..0ae7e9f 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -540,3 +540,10 @@ static void twinhead_reserve_killing_zone(struct pci_dev *dev)
+         }
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x27B9, twinhead_reserve_killing_zone);
++
++static void pci_bdwep_bar(struct pci_dev *dev)
++{
++	dev->non_compliant_bars = 1;
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_bdwep_bar);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_bdwep_bar);
 
