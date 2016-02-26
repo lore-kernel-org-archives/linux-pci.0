@@ -1,62 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37233 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:53649 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964911AbcBQShD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 17 Feb 2016 13:37:03 -0500
-Subject: [PATCH v2 0/3] PCI: Revert "Implement pcibios_alloc_irq() and
- pcibios_free_irq()"
-To: linux-pci@vger.kernel.org
+	id S1753895AbcBZQ3x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Feb 2016 11:29:53 -0500
+Subject: [PATCH v11 0/4] ARC: Add PCI support
+To: Joao Pinto <Joao.Pinto@synopsys.com>
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: =?utf-8?b?0J7Qu9C10LM=?= =?utf-8?b?0JzQvtGA0L7Qtw==?=
-	<oleg.moroz@mcc.vniiem.ru>, Joerg Roedel <jroedel@suse.de>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
-	linux-acpi@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Date: Wed, 17 Feb 2016 12:36:57 -0600
-Message-ID: <20160217182718.302.10272.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: mark.rutland@arm.com, Alexey.Brodkin@synopsys.com, arnd@arndb.de,
+	pawel.moll@arm.com, ijc+devicetree@hellion.org.uk,
+	linux-pci@vger.kernel.org, Vineet.Gupta1@synopsys.com,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	linux-kernel@vger.kernel.org, CARLOS.PALMINHA@synopsys.com,
+	robh+dt@kernel.org, Murali Karicheri <m-karicheri2@ti.com>,
+	galak@codeaurora.org, Jingoo Han <jingoohan1@gmail.com>,
+	linux-snps-arc@lists.infradead.org
+Date: Fri, 26 Feb 2016 10:29:49 -0600
+Message-ID: <20160226162554.11964.96983.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These are clean reverts of 991de2e59090 ("PCI, x86: Implement
-pcibios_alloc_irq() and pcibios_free_irq()") and related changes.
+>From Joao's v9 posting
+(http://lkml.kernel.org/r/cover.1454952698.git.jpinto@synopsys.com):
 
-We have two reports of drivers broken in v4.3 by Jiang's change,
-991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
-pcibios_free_irq()").
+  "This patch set has the goal to add suppport for DesignWare PCIe RC in ARC
+  AXS10x. It includes the necessary tweaks to:
 
-It would be best to fix the problem instead of reverting 991de2e59090, but
-I don't have time to do that myself, and we haven't heard from Jiang, so
-the only choice I have is to revert the commit.
+   - the ARC architecture (PCI support)
+   - the PCI subsystem (ARC CPU support)
+   - to pcie-designware (Centralisation of wait for link routine)
+   - to dra7xx, exynos, imx6 and spear13xx drivers to use the centralised
+     code for link wait
 
-Note that reverting will likely break IOAPIC hotplug.
+  A simple module was (pcie-designware-plat) was created to contain the
+  specific platform init code."
 
-Олег and Sunjin, can you please test this and see whether it fixes your
-drivers?  This patch is based on v4.5-rc1.
+Changes from v10:
+  - Update keystone link establishment to wait longer for link to come up
+    before re-initiating link training
+  - Also use generic dw_pcie_wait_for_link() in keystone and qcom drivers
 
-I intend to merge these for v4.5 unless I hear objections.
+I would still like acks from DesignWare maintainers (Jingoo or
+Pratyush), from Murali for the Keystone changes, and from Arnd for the
+DT updates.
 
-They're on my for-linus branch, so they should appear in linux-next
-tomorrow.
-
-Changes from the v1 posting:
-  - Explicitly revert related patches instead of resolving conflicts
-    manually
+This series is in my pci/host-synopsys branch here:
+https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-syn
+opsys
 ---
 
-Bjorn Helgaas (3):
-      Revert "x86/PCI: Don't alloc pcibios-irq when MSI is enabled"
-      Revert "PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed"
-      Revert "PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()"
+Joao Pinto (4):
+      ARC: Add PCI support
+      PCI: designware: Add generic dw_pcie_wait_for_link()
+      PCI: designware: Add default link up check if sub-driver doesn't override
+      PCI: designware: Add driver for prototyping kits based on ARC SDP
 
 
- arch/x86/include/asm/pci_x86.h |    2 ++
- arch/x86/pci/common.c          |   26 ++++++++++----------------
- arch/x86/pci/intel_mid_pci.c   |    9 +++------
- arch/x86/pci/irq.c             |   23 +++++++++++++++++++----
- drivers/acpi/pci_irq.c         |   17 +++++++++++++----
- include/linux/pci.h            |   17 -----------------
- 6 files changed, 47 insertions(+), 47 deletions(-)
+ .../devicetree/bindings/pci/designware-pcie.txt    |   17 ++
+ MAINTAINERS                                        |    7 +
+ arch/arc/Kconfig                                   |   26 ++++
+ arch/arc/include/asm/dma.h                         |    5 +
+ arch/arc/include/asm/io.h                          |    9 +
+ arch/arc/include/asm/pci.h                         |   31 ++++
+ arch/arc/kernel/Makefile                           |    1 
+ arch/arc/kernel/pcibios.c                          |   22 +++
+ arch/arc/plat-axs10x/Kconfig                       |    1 
+ drivers/pci/Makefile                               |    1 
+ drivers/pci/host/Kconfig                           |   11 ++
+ drivers/pci/host/Makefile                          |    1 
+ drivers/pci/host/pci-dra7xx.c                      |   11 --
+ drivers/pci/host/pci-exynos.c                      |   13 --
+ drivers/pci/host/pci-imx6.c                        |   13 +-
+ drivers/pci/host/pci-keystone.c                    |   10 +
+ drivers/pci/host/pcie-designware-plat.c            |  138 ++++++++++++++++++++
+ drivers/pci/host/pcie-designware.c                 |   29 ++++
+ drivers/pci/host/pcie-designware.h                 |    6 +
+ drivers/pci/host/pcie-qcom.c                       |   10 -
+ drivers/pci/host/pcie-spear13xx.c                  |   14 --
+ 21 files changed, 318 insertions(+), 58 deletions(-)
+ create mode 100644 arch/arc/include/asm/pci.h
+ create mode 100644 arch/arc/kernel/pcibios.c
+ create mode 100644 drivers/pci/host/pcie-designware-plat.c
