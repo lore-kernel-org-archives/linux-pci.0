@@ -1,90 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:52770 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932407AbcBYQDZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 25 Feb 2016 11:03:25 -0500
-Date: Thu, 25 Feb 2016 16:05:33 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Will Deacon <will.deacon@arm.com>,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
+Received: from mail-bl2nam02on0049.outbound.protection.outlook.com ([104.47.38.49]:37996
+	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932190AbcBZHtv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Feb 2016 02:49:51 -0500
+Subject: Re: [PATCH v3 6/6] PCI: xilinx: Allow build on MIPS platforms
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Paul Burton <paul.burton@imgtec.com>
+References: <1454602213-967-1-git-send-email-paul.burton@imgtec.com>
+ <1454602213-967-7-git-send-email-paul.burton@imgtec.com>
+ <CAL_JsqLRMiJ-0j_PrXSKqf6MrRfyqbDGaiaiEn4rAoFaCNgtKQ@mail.gmail.com>
+ <20160204175325.GB31145@NP-P-BURTON> <20160225154326.GE8120@localhost>
+CC: Rob Herring <robh@kernel.org>,
+	Linux-MIPS <linux-mips@linux-mips.org>,
+	Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>,
+	"Ley Foon Tan" <lftan@altera.com>, Arnd Bergmann <arnd@arndb.de>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Catalin Marinas <catalin.marinas@arm.com>
-Subject: Re: [PATCH 3/3] arm/arm64: pci: remove arch specific
- pcibios_enable_device()
-Message-ID: <20160225160533.GA3596@red-moon>
-References: <1447779838-15585-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1447779838-15585-3-git-send-email-lorenzo.pieralisi@arm.com>
- <20151123134921.GB4236@arm.com>
- <20160120162215.GE13437@red-moon>
- <20160225152417.GB8120@localhost>
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	"Scott Branden" <sbranden@broadcom.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Duc Dang <dhdang@apm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Ray Jui <rjui@broadcom.com>, Hauke Mehrtens <hauke@hauke-m.de>
+From: Michal Simek <michal.simek@xilinx.com>
+Message-ID: <56D00390.7030600@xilinx.com>
+Date: Fri, 26 Feb 2016 08:49:36 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160225152417.GB8120@localhost>
+In-Reply-To: <20160225154326.GE8120@localhost>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On Thu, Feb 25, 2016 at 09:24:17AM -0600, Bjorn Helgaas wrote:
-> Hi Lorenzo,
+On 25.2.2016 16:43, Bjorn Helgaas wrote:
+> On Thu, Feb 04, 2016 at 05:53:25PM +0000, Paul Burton wrote:
+>> On Thu, Feb 04, 2016 at 11:46:28AM -0600, Rob Herring wrote:
+>>> On Thu, Feb 4, 2016 at 10:10 AM, Paul Burton <paul.burton@imgtec.com> wrote:
+>>>> Allow the xilinx-pcie driver to be built on MIPS platforms. This will be
+>>>> used on the MIPS Boston board.
+>>>>
+>>>> Signed-off-by: Paul Burton <paul.burton@imgtec.com>
+>>>>
+>>>> ---
+>>>>
+>>>> Changes in v3:
+>>>> - Split out from Boston patchset.
+>>>>
+>>>> Changes in v2: None
+>>>>
+>>>>  drivers/pci/host/Kconfig | 2 +-
+>>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+>>>> index 75a6054..0aee193 100644
+>>>> --- a/drivers/pci/host/Kconfig
+>>>> +++ b/drivers/pci/host/Kconfig
+>>>> @@ -81,7 +81,7 @@ config PCI_KEYSTONE
+>>>>
+>>>>  config PCIE_XILINX
+>>>>         bool "Xilinx AXI PCIe host bridge support"
+>>>> -       depends on ARCH_ZYNQ
+>>>> +       depends on ARCH_ZYNQ || MIPS
+>>>
+>>> Why don't you just remove the dependency? Then it gets better build coverage.
+>>>
+>>> Rob
+>>
+>> That seems like a call best made by whomever has to maintain this - if
+>> that's the preferred way to go I'm fine with it.
 > 
-> On Wed, Jan 20, 2016 at 04:22:15PM +0000, Lorenzo Pieralisi wrote:
-> > On Mon, Nov 23, 2015 at 01:49:21PM +0000, Will Deacon wrote:
-> > > On Tue, Nov 17, 2015 at 05:03:58PM +0000, Lorenzo Pieralisi wrote:
-> > > > The arm/arm64 pcibios_enable_device() implementations exist solely
-> > > > to prevent enabling PCI resources on PROBE_ONLY systems, since
-> > > > on those systems the PCI resources are currently not claimed (ie
-> > > > validated and inserted in the PCI resource tree) therefore they can
-> > > > not be enabled since this would trigger PCI set-ups failures.
-> > > > 
-> > > > By introducing resources claiming in the PCI host controllers set-ups
-> > > > that have PROBE_ONLY as a probe option, there is no need for arch specific
-> > > > pcibios_enable_device() implementations anymore in that the kernel can
-> > > > rely on the generic pcibios_enable_device() implementation without
-> > > > resorting to arch specific code to work around the missing resources
-> > > > claiming enumeration step.
-> > > > 
-> > > > This patch removes the pcibios_enable_device() implementations from
-> > > > the arm/arm64 arch back-ends.
-> > > > 
-> > > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > > > Cc: Arnd Bergmann <arnd@arndb.de>
-> > > > Cc: Will Deacon <will.deacon@arm.com>
-> > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > > Cc: Russell King <linux@arm.linux.org.uk>
-> > > > Cc: Catalin Marinas <catalin.marinas@arm.com>
-> > > > ---
-> > > >  arch/arm/kernel/bios32.c | 12 ------------
-> > > >  arch/arm64/kernel/pci.c  | 13 -------------
-> > > >  2 files changed, 25 deletions(-)
-> > > 
-> > > Acked-by: Will Deacon <will.deacon@arm.com>
-> > 
-> > Thanks, unfortunately I spotted that ARM platforms can set
-> > PCI_PROBE_ONLY also via command line (pcibios_setup()), which means
-> > that I have to add resource claiming to all ARM PCI controllers that
-> > check PCI_PROBE_ONLY (inclusive of ARM bios32) to really make sure we
-> > can apply this patch or alternatevely we add the resource claiming
-> > to the pcibios_fixup_bus() callback (but we can claim resources only if
-> > PCI_PROBE_ONLY is set lest we trigger regressions) which would be the
-> > simpler solution.
-> 
-> So where are we?  The above response sounds like this series still
-> needs a little tweaking?
+> I'm in favor of removing the dependency if possible.  I guess Michal
+> would be the person to ack that.
 
-Yes, I rewrote the generic PCI layer for claiming resources (Tomasz's
-posted it in its ACPI PCI ARM64 series):
-
-https://lkml.org/lkml/2016/2/16/412
-
-My only concern is removing PCI_PROBE_ONLY handling from arm 32 bit code,
-since I noticed it can be set on the command line there, claiming
-resources in pcibios arm 32 should do the trick, I will move the ARM
-32-bit handling in a separate patch (hopefully someone can help me test
-it on affected platforms (?), I will ask Russell the best way to do it).
+Not a problem to remove dependency on archs. There is pending support
+for Microblaze anyway.
 
 Thanks,
-Lorenzo
+Michal
+
