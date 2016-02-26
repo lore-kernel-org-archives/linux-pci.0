@@ -1,271 +1,271 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v10 54/59] PCI, x86: Allocate from high in available window for MMIO
-Date: Wed, 24 Feb 2016 18:12:45 -0800
-Message-Id: <1456366370-28995-55-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:51998 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1422674AbcBZQGY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Feb 2016 11:06:24 -0500
+Date: Fri, 26 Feb 2016 10:06:19 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, mark.rutland@arm.com,
+	Alexey.Brodkin@synopsys.com, arnd@arndb.de, pawel.moll@arm.com,
+	ijc+devicetree@hellion.org.uk, linux-pci@vger.kernel.org,
+	Vineet.Gupta1@synopsys.com,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	linux-kernel@vger.kernel.org, CARLOS.PALMINHA@synopsys.com,
+	robh+dt@kernel.org, Murali Karicheri <m-karicheri2@ti.com>,
+	galak@codeaurora.org, Jingoo Han <jingoohan1@gmail.com>,
+	linux-snps-arc@lists.infradead.org
+Subject: Re: [PATCH v10 2/4] PCI: designware: Add generic
+ dw_pcie_wait_for_link()
+Message-ID: <20160226160619.GA9512@localhost>
+References: <20160225172957.2103.8326.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160225173736.2103.59017.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <56CFBBAF.4060203@synopsys.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56CFBBAF.4060203@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code just use aligned start from avialable window, that could waste
-big alignment from start.
+On Fri, Feb 26, 2016 at 10:42:55AM +0800, Joao Pinto wrote:
+> Hi! This patch seems OK also.
+> I did not received the 3/4 and 4/4 patches.
 
-We can align to the end from avialable window, so will save
-start with big align to others: like second try for pref mmio
-after first try already have non-pref assigned.
+Huh.  I do see them in the list archives:
 
-pci tree:
--[0000:00]-+-00.0
-           +-1c.0-[01-10]--+-00.0-[02-10]--+-01.0-[03]----00.0  PLX Technology, Inc. Device 87b1
-           |               |               +-02.0-[04-09]--+-00.0-[05-09]--+-01.0-[06]----00.0  PLX Technology, Inc. Device 87b1
-           |               |               |               |               +-02.0-[07]----00.0  Broadcom Corporation Device 8650
-           |               |               |               |               +-03.0-[08]--
-           |               |               |               |               \-04.0-[09]----00.0  Altera Corporation Device 0201
-           |               |               |               +-00.1  PLX Technology, Inc. Device 87d0
-           |               |               |               +-00.2  PLX Technology, Inc. Device 87d0
-           |               |               |               +-00.3  PLX Technology, Inc. Device 87d0
-           |               |               |               \-00.4  PLX Technology, Inc. Device 87d0
-           |               |               +-03.0-[0a-0f]--+-00.0-[0b-0f]--+-01.0-[0c]----00.0  PLX Technology, Inc. Device 87b1
-           |               |               |               |               +-02.0-[0d]----00.0  Broadcom Corporation Device 8650
-           |               |               |               |               +-03.0-[0e]--
-           |               |               |               |               \-04.0-[0f]----00.0  Altera Corporation Device 0201
-           |               |               |               +-00.1  PLX Technology, Inc. Device 87d0
-           |               |               |               +-00.2  PLX Technology, Inc. Device 87d0
-           |               |               |               +-00.3  PLX Technology, Inc. Device 87d0
-           |               |               |               \-00.4  PLX Technology, Inc. Device 87d0
-           |               |               \-04.0-[10]--
-           |               +-00.1  PLX Technology, Inc. Device 87d0
-           |               +-00.2  PLX Technology, Inc. Device 87d0
-           |               +-00.3  PLX Technology, Inc. Device 87d0
-           |               \-00.4  PLX Technology, Inc. Device 87d0
-           +-1c.3-[11]----00.0
+  http://marc.info/?l=linux-pci&m=145642190422528&w=2
+  http://marc.info/?l=linux-pci&m=145642190522529&w=2
 
-hotplug device under 0000:02:03.0
+> On 2/26/2016 1:37 AM, Bjorn Helgaas wrote:
+> > From: Joao Pinto <Joao.Pinto@synopsys.com>
+> > 
+> > Several DesignWare-based drivers (dra7xx, exynos, imx6 and spear13xx) had
+> > similar loops waiting for the link to come up.
+> > 
+> > FIXME Doesn't update keystone
+> > FIXME Doesn't update qcom
 
-before the patch:
+I do want to resolve these keystone and qcom questions, though.
 
-pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 8: assigned [mem 0xb0000000-0xb01fffff]  **************
-pci 0000:0a:00.0: BAR 0: assigned [mem 0xb0200000-0xb023ffff]
-pci 0000:0a:00.1: BAR 0: assigned [mem 0xb0240000-0xb0241fff]
-pci 0000:0a:00.2: BAR 0: assigned [mem 0xb0242000-0xb0243fff]
-pci 0000:0a:00.3: BAR 0: assigned [mem 0xb0244000-0xb0245fff]
-pci 0000:0a:00.4: BAR 0: assigned [mem 0xb0246000-0xb0247fff]
-pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0b:01.0: BAR 8: assigned [mem 0xb0000000-0xb00fffff]
-pci 0000:0b:02.0: BAR 8: assigned [mem 0xb0100000-0xb01fffff]
-pci 0000:0c:00.0: BAR 0: assigned [mem 0xb0000000-0xb003ffff]
-pci 0000:0b:01.0: PCI bridge to [bus 0c]
-pci 0000:0b:01.0:   bridge window [mem 0xb0000000-0xb00fffff]
-pci 0000:0d:00.0: BAR 0: assigned [mem 0xb0100000-0xb013ffff 64bit]
-pci 0000:0b:02.0: PCI bridge to [bus 0d]
-pci 0000:0b:02.0:   bridge window [mem 0xb0100000-0xb01fffff]
-pci 0000:0b:03.0: PCI bridge to [bus 0e]
-pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
-pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
-pci 0000:0b:04.0: PCI bridge to [bus 0f]
-pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
-pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb01fffff]
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
-pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
-pcieport 0000:02:03.0:   bridge window [mem 0x80200000-0x803fffff 64bit pref]
-PCI: No. 2 try to assign unassigned res
-pcieport 0000:02:03.0: resource 9 [mem 0x80200000-0x803fffff 64bit pref] released
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x02100000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
-pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: no space for [mem size 0x02100000 64bit pref]   **************
-pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
-pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: no space for [mem size 0x02100000 64bit pref]   **************
-pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
-pci 0000:0b:01.0: PCI bridge to [bus 0c]
-pci 0000:0b:01.0:   bridge window [mem 0xb0000000-0xb00fffff]
-pci 0000:0b:02.0: PCI bridge to [bus 0d]
-pci 0000:0b:02.0:   bridge window [mem 0xb0100000-0xb01fffff]
-pci 0000:0b:03.0: PCI bridge to [bus 0e]
-pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
-pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
-pci 0000:0b:04.0: PCI bridge to [bus 0f]
-pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
-pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb01fffff]
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
-pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
+If I don't hear any responses, I'm going to go ahead and change them
+myself and ask forgiveness later.  I should have just done that to
+begin with :)
 
-
-after the patch:
-
-pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 8: assigned [mem 0xb2300000-0xb24fffff]   *************
-pci 0000:0a:00.0: BAR 0: assigned [mem 0xb22c0000-0xb22fffff]
-pci 0000:0a:00.1: BAR 0: assigned [mem 0xb22be000-0xb22bffff]
-pci 0000:0a:00.2: BAR 0: assigned [mem 0xb22bc000-0xb22bdfff]
-pci 0000:0a:00.3: BAR 0: assigned [mem 0xb22ba000-0xb22bbfff]
-pci 0000:0a:00.4: BAR 0: assigned [mem 0xb22b8000-0xb22b9fff]
-pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0b:01.0: BAR 8: assigned [mem 0xb2400000-0xb24fffff]
-pci 0000:0b:02.0: BAR 8: assigned [mem 0xb2300000-0xb23fffff]
-pci 0000:0c:00.0: BAR 0: assigned [mem 0xb24c0000-0xb24fffff]
-pci 0000:0b:01.0: PCI bridge to [bus 0c]
-pci 0000:0b:01.0:   bridge window [mem 0xb2400000-0xb24fffff]
-pci 0000:0d:00.0: BAR 0: assigned [mem 0xb23c0000-0xb23fffff 64bit]
-pci 0000:0b:02.0: PCI bridge to [bus 0d]
-pci 0000:0b:02.0:   bridge window [mem 0xb2300000-0xb23fffff]
-pci 0000:0b:03.0: PCI bridge to [bus 0e]
-pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
-pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
-pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
-pci 0000:0b:04.0: PCI bridge to [bus 0f]
-pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
-pci 0000:0a:00.0:   bridge window [mem 0xb2300000-0xb24fffff]
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
-pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
-pcieport 0000:02:03.0:   bridge window [mem 0x9fc00000-0x9fdfffff 64bit pref]
-PCI: No. 2 try to assign unassigned res
-pcieport 0000:02:03.0: resource 9 [mem 0x9fc00000-0x9fdfffff 64bit pref] released
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x02100000 64bit pref]
-pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
-pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0a:00.0: BAR 9: assigned [mem 0xb0000000-0xb20fffff 64bit pref]  *********
-pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
-pci 0000:0b:04.0: BAR 9: assigned [mem 0xb0000000-0xb20fffff 64bit pref]  *********
-pci 0000:0b:01.0: PCI bridge to [bus 0c]
-pci 0000:0b:01.0:   bridge window [mem 0xb2400000-0xb24fffff]
-pci 0000:0b:02.0: PCI bridge to [bus 0d]
-pci 0000:0b:02.0:   bridge window [mem 0xb2300000-0xb23fffff]
-pci 0000:0b:03.0: PCI bridge to [bus 0e]
-pci 0000:0f:00.0: BAR 0: assigned [mem 0xb0000000-0xb1ffffff 64bit pref]   ********
-pci 0000:0f:00.0: BAR 2: assigned [mem 0xb20f0000-0xb20fffff 64bit pref]   ********
-pci 0000:0b:04.0: PCI bridge to [bus 0f]
-pci 0000:0b:04.0:   bridge window [mem 0xb0000000-0xb20fffff 64bit pref]
-pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
-pci 0000:0a:00.0:   bridge window [mem 0xb2300000-0xb24fffff]
-pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb20fffff 64bit pref]
-pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
-pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
-pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
-
-So we allocate high for 0a:00.0 and etc, and leave low range like 0xb0000000 to
-0b:04.0 and 0f:00.0
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/pci/i386.c     | 20 ++++++++++++++++++++
- drivers/pci/setup-bus.c | 11 ++++++++++-
- include/linux/pci.h     |  3 +++
- 3 files changed, 33 insertions(+), 1 deletion(-)
-
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index cf296f5..6121ef3 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -128,6 +128,24 @@ static void __init pcibios_fw_addr_list_del(void)
- 	pcibios_fw_addr_done = true;
- }
- 
-+resource_size_t
-+pcibios_align_end_resource(void *data, const struct resource *res,
-+			resource_size_t size, resource_size_t align)
-+{
-+	resource_size_t start = res->start;
-+
-+	/* Take near end */
-+	if (res->end + 1 > size) {
-+		resource_size_t new_start;
-+
-+		new_start = round_down(res->end + 1 - size, align);
-+		if (new_start > start)
-+			start = new_start;
-+	}
-+
-+	return start;
-+}
-+
- /*
-  * We need to avoid collisions with `mirrored' VGA ports
-  * and other strange ISA hardware, so we always want the
-@@ -154,6 +172,8 @@ pcibios_align_resource(void *data, const struct resource *res,
- 		if (start & 0x300)
- 			start = (start + 0x3ff) & ~0x3ff;
- 	} else if (res->flags & IORESOURCE_MEM) {
-+		start = pcibios_align_end_resource(data, res, size, align);
-+
- 		/* The low 1MB range is reserved for ISA cards */
- 		if (start < BIOS_END)
- 			start = BIOS_END;
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 1de017b..7b89bf5 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1319,6 +1319,15 @@ static void sort_align_test(struct list_head *head)
- 	}
- }
- 
-+resource_size_t __weak pcibios_align_end_resource(void *data,
-+					  const struct resource *res,
-+					  resource_size_t size,
-+					  resource_size_t align)
-+{
-+	/* default is not aligned to end */
-+	return res->start;
-+}
-+
- static bool is_align_size_good(struct list_head *head,
- 			resource_size_t min_align, resource_size_t size,
- 			resource_size_t start)
-@@ -1336,7 +1345,7 @@ static bool is_align_size_good(struct list_head *head,
- 	list_for_each_entry(p, head, list)
- 		if (allocate_resource(&root, &p->res, p->size,
- 				0, (resource_size_t)-1ULL,
--				p->align, NULL, NULL))
-+				p->align, pcibios_align_end_resource, NULL))
- 			return false;
- 
- 	return true;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 6687346..30a4879 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -785,6 +785,9 @@ char *pcibios_setup(char *str);
- resource_size_t pcibios_align_resource(void *, const struct resource *,
- 				resource_size_t,
- 				resource_size_t);
-+resource_size_t pcibios_align_end_resource(void *, const struct resource *,
-+				resource_size_t,
-+				resource_size_t);
- void pcibios_update_irq(struct pci_dev *, int irq);
- 
- /* Weak but can be overriden by arch */
--- 
-1.8.4.5
+> > Add a generic dw_pcie_wait_for_link() for use by all these drivers so the
+> > waiting is done consistently, e.g., always using usleep_range() rather than
+> > mdelay() and using similar timeouts and retry counts.
+> > 
+> > [bhelgaas: changelog, split into its own patch]
+> > Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > ---
+> >  drivers/pci/host/pci-dra7xx.c      |   11 +++--------
+> >  drivers/pci/host/pci-exynos.c      |   11 ++---------
+> >  drivers/pci/host/pci-imx6.c        |   11 +++--------
+> >  drivers/pci/host/pcie-designware.c |   19 +++++++++++++++++++
+> >  drivers/pci/host/pcie-designware.h |    6 ++++++
+> >  drivers/pci/host/pcie-spear13xx.c  |   12 ++----------
+> >  6 files changed, 35 insertions(+), 35 deletions(-)
+> > 
+> > diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+> > index 923607b..8d3d350 100644
+> > --- a/drivers/pci/host/pci-dra7xx.c
+> > +++ b/drivers/pci/host/pci-dra7xx.c
+> > @@ -10,7 +10,6 @@
+> >   * published by the Free Software Foundation.
+> >   */
+> >  
+> > -#include <linux/delay.h>
+> >  #include <linux/err.h>
+> >  #include <linux/interrupt.h>
+> >  #include <linux/irq.h>
+> > @@ -108,7 +107,6 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
+> >  {
+> >  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+> >  	u32 reg;
+> > -	unsigned int retries;
+> >  
+> >  	if (dw_pcie_link_up(pp)) {
+> >  		dev_err(pp->dev, "link is already up\n");
+> > @@ -119,13 +117,10 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
+> >  	reg |= LTSSM_EN;
+> >  	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+> >  
+> > -	for (retries = 0; retries < 1000; retries++) {
+> > -		if (dw_pcie_link_up(pp))
+> > -			return 0;
+> > -		usleep_range(10, 20);
+> > -	}
+> > +	/* check if the link is up or not */
+> > +	if (!dw_pcie_wait_for_link(pp))
+> > +		return 0;
+> >  
+> > -	dev_err(pp->dev, "link is not up\n");
+> >  	return -EINVAL;
+> >  }
+> >  
+> > diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> > index d997d22..41f3248 100644
+> > --- a/drivers/pci/host/pci-exynos.c
+> > +++ b/drivers/pci/host/pci-exynos.c
+> > @@ -318,7 +318,6 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
+> >  {
+> >  	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+> >  	u32 val;
+> > -	unsigned int retries;
+> >  
+> >  	if (dw_pcie_link_up(pp)) {
+> >  		dev_err(pp->dev, "Link already up\n");
+> > @@ -357,13 +356,8 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
+> >  			  PCIE_APP_LTSSM_ENABLE);
+> >  
+> >  	/* check if the link is up or not */
+> > -	for (retries = 0; retries < 10; retries++) {
+> > -		if (dw_pcie_link_up(pp)) {
+> > -			dev_info(pp->dev, "Link up\n");
+> > -			return 0;
+> > -		}
+> > -		mdelay(100);
+> > -	}
+> > +	if (!dw_pcie_wait_for_link(pp))
+> > +		return 0;
+> >  
+> >  	while (exynos_phy_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED) == 0) {
+> >  		val = exynos_blk_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED);
+> > @@ -372,7 +366,6 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
+> >  	/* power off phy */
+> >  	exynos_pcie_power_off_phy(pp);
+> >  
+> > -	dev_err(pp->dev, "PCIe Link Fail\n");
+> >  	return -EINVAL;
+> >  }
+> >  
+> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> > index fe60096..c53da17 100644
+> > --- a/drivers/pci/host/pci-imx6.c
+> > +++ b/drivers/pci/host/pci-imx6.c
+> > @@ -330,15 +330,10 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+> >  
+> >  static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+> >  {
+> > -	unsigned int retries;
+> > -
+> > -	for (retries = 0; retries < 200; retries++) {
+> > -		if (dw_pcie_link_up(pp))
+> > -			return 0;
+> > -		usleep_range(100, 1000);
+> > -	}
+> > +	/* check if the link is up or not */
+> > +	if (!dw_pcie_wait_for_link(pp))
+> > +		return 0;
+> >  
+> > -	dev_err(pp->dev, "phy link never came up\n");
+> >  	dev_dbg(pp->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+> >  		readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
+> >  		readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
+> > diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> > index 2171682..4fff2d2 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -22,6 +22,7 @@
+> >  #include <linux/pci_regs.h>
+> >  #include <linux/platform_device.h>
+> >  #include <linux/types.h>
+> > +#include <linux/delay.h>
+> >  
+> >  #include "pcie-designware.h"
+> >  
+> > @@ -380,6 +381,24 @@ static struct msi_controller dw_pcie_msi_chip = {
+> >  	.teardown_irq = dw_msi_teardown_irq,
+> >  };
+> >  
+> > +int dw_pcie_wait_for_link(struct pcie_port *pp)
+> > +{
+> > +	int retries;
+> > +
+> > +	/* check if the link is up or not */
+> > +	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
+> > +		if (dw_pcie_link_up(pp)) {
+> > +			dev_info(pp->dev, "link up\n");
+> > +			return 0;
+> > +		}
+> > +		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
+> > +	}
+> > +
+> > +	dev_err(pp->dev, "phy link never came up\n");
+> > +
+> > +	return -EINVAL;
+> > +}
+> > +
+> >  int dw_pcie_link_up(struct pcie_port *pp)
+> >  {
+> >  	if (pp->ops->link_up)
+> > diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> > index 2356d29..f437f9b 100644
+> > --- a/drivers/pci/host/pcie-designware.h
+> > +++ b/drivers/pci/host/pcie-designware.h
+> > @@ -22,6 +22,11 @@
+> >  #define MAX_MSI_IRQS			32
+> >  #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+> >  
+> > +/* Parameters for the waiting for link up routine */
+> > +#define LINK_WAIT_MAX_RETRIES		10
+> > +#define LINK_WAIT_USLEEP_MIN		90000
+> > +#define LINK_WAIT_USLEEP_MAX		100000
+> > +
+> >  struct pcie_port {
+> >  	struct device		*dev;
+> >  	u8			root_bus_nr;
+> > @@ -76,6 +81,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val);
+> >  int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val);
+> >  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+> >  void dw_pcie_msi_init(struct pcie_port *pp);
+> > +int dw_pcie_wait_for_link(struct pcie_port *pp);
+> >  int dw_pcie_link_up(struct pcie_port *pp);
+> >  void dw_pcie_setup_rc(struct pcie_port *pp);
+> >  int dw_pcie_host_init(struct pcie_port *pp);
+> > diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+> > index a6cd823..0e5a2f1 100644
+> > --- a/drivers/pci/host/pcie-spear13xx.c
+> > +++ b/drivers/pci/host/pcie-spear13xx.c
+> > @@ -13,7 +13,6 @@
+> >   */
+> >  
+> >  #include <linux/clk.h>
+> > -#include <linux/delay.h>
+> >  #include <linux/interrupt.h>
+> >  #include <linux/kernel.h>
+> >  #include <linux/module.h>
+> > @@ -149,7 +148,6 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+> >  	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
+> >  	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
+> >  	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
+> > -	unsigned int retries;
+> >  
+> >  	if (dw_pcie_link_up(pp)) {
+> >  		dev_err(pp->dev, "link already up\n");
+> > @@ -201,15 +199,9 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+> >  			&app_reg->app_ctrl_0);
+> >  
+> >  	/* check if the link is up or not */
+> > -	for (retries = 0; retries < 10; retries++) {
+> > -		if (dw_pcie_link_up(pp)) {
+> > -			dev_info(pp->dev, "link up\n");
+> > -			return 0;
+> > -		}
+> > -		mdelay(100);
+> > -	}
+> > +	if (!dw_pcie_wait_for_link(pp))
+> > +		return 0;
+> >  
+> > -	dev_err(pp->dev, "link Fail\n");
+> >  	return -EINVAL;
+> >  }
+> >  
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> 
