@@ -1,38 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:47736 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755808AbcBVVWv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 22 Feb 2016 16:22:51 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Keith Busch <keith.busch@intel.com>
-Subject: [PATCH] VMD: Set bus resource start to 0
-Date: Mon, 22 Feb 2016 14:22:40 -0700
-Message-Id: <1456176160-9086-1-git-send-email-keith.busch@intel.com>
+Received: from relmlor3.renesas.com ([210.160.252.173]:6651 "EHLO
+	relmlie2.idc.renesas.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750850AbcBZJWJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Feb 2016 04:22:09 -0500
+From: Phil Edworthy <phil.edworthy@renesas.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>,
+	Simon Horman <horms+renesas@verge.net.au>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	"linux-renesas-soc@vger.kernel.org"
+	<linux-renesas-soc@vger.kernel.org>
+Subject: RE: [PATCH] PCI: rcar, rcar-gen2: Use ARCH_RENESAS
+Date: Fri, 26 Feb 2016 09:22:04 +0000
+Message-ID: <HK2PR0601MB1393372115B466FBB5F2D4EEF5A70@HK2PR0601MB1393.apcprd06.prod.outlook.com>
+References: <1456361156-16798-1-git-send-email-horms+renesas@verge.net.au>
+ <CAMuHMdUW=3Vx7M2tTHguF2Gs8BAWWcPOVNDPizdPTWyawy8vHg@mail.gmail.com>
+In-Reply-To: <CAMuHMdUW=3Vx7M2tTHguF2Gs8BAWWcPOVNDPizdPTWyawy8vHg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The bus always starts at 0. Due to alignment and down-casting, this
-happened to work before, but looked alarmingly incorrect in kernel logs.
-
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- arch/x86/pci/vmd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-index d57e480..ba07687 100644
---- a/arch/x86/pci/vmd.c
-+++ b/arch/x86/pci/vmd.c
-@@ -527,7 +527,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
- 	res = &vmd->dev->resource[VMD_CFGBAR];
- 	vmd->resources[0] = (struct resource) {
- 		.name  = "VMD CFGBAR",
--		.start = res->start,
-+		.start = 0,
- 		.end   = (resource_size(res) >> 20) - 1,
- 		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
- 	};
--- 
-2.6.2.307.g37023ba
-
+SGkgR2VlcnQsDQoNCk9uIDI1IEZlYnJ1YXJ5IDIwMTYgMDg6MDUsIEdlZXJ0IFV5dHRlcmhvZXZl
+biB3cm90ZToNCj4gT24gVGh1LCBGZWIgMjUsIDIwMTYgYXQgMTo0NSBBTSwgU2ltb24gSG9ybWFu
+DQo+IDxob3JtcytyZW5lc2FzQHZlcmdlLm5ldC5hdT4gd3JvdGU6DQo+ID4gTWFrZSB1c2Ugb2Yg
+QVJDSF9SRU5FU0FTIGluIHBsYWNlIG9mIEFSQ0hfU0hNT0JJTEUuDQo+ID4NCj4gPiBUaGlzIGlz
+IHBhcnQgb2YgYW4gb25nb2luZyBwcm9jZXNzIHRvIG1pZ3JhdGUgZnJvbSBBUkNIX1NITU9CSUxF
+IHRvDQo+ID4gQVJDSF9SRU5FU0FTIHRoZSBtb3RpdmF0aW9uIGZvciB3aGljaCBiZWluZyB0aGF0
+IFJFTkVTQVMgc2VlbXMgdG8gYmUgYQ0KPiBtb3JlDQo+ID4gYXBwcm9wcmlhdGUgbmFtZSB0aGFu
+IFNITU9CSUxFIGZvciB0aGUgbWFqb3JpdHkgb2YgUmVuZXNhcyBBUk0gYmFzZWQNCj4gU29Dcy4N
+Cj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IFNpbW9uIEhvcm1hbiA8aG9ybXMrcmVuZXNhc0B2ZXJn
+ZS5uZXQuYXU+DQo+IA0KPiBBY2tlZC1ieTogR2VlcnQgVXl0dGVyaG9ldmVuIDxnZWVydCtyZW5l
+c2FzQGdsaWRlci5iZT4NCj4gDQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvaG9zdC9LY29uZmlnDQo+
+ID4gKysrIGIvZHJpdmVycy9wY2kvaG9zdC9LY29uZmlnDQo+IA0KPiA+IEBAIC00OSw3ICs0OSw3
+IEBAIGNvbmZpZyBQQ0lfUkNBUl9HRU4yDQo+ID4NCj4gPiAgY29uZmlnIFBDSV9SQ0FSX0dFTjJf
+UENJRQ0KPiA+ICAgICAgICAgYm9vbCAiUmVuZXNhcyBSLUNhciBQQ0llIGNvbnRyb2xsZXIiDQo+
+ID4gLSAgICAgICBkZXBlbmRzIG9uIEFSQ0hfU0hNT0JJTEUgfHwgKEFSTSAmJiBDT01QSUxFX1RF
+U1QpDQo+ID4gKyAgICAgICBkZXBlbmRzIG9uIEFSQ0hfUkVORVNBUyB8fCAoQVJNICYmIENPTVBJ
+TEVfVEVTVCkNCj4gPiAgICAgICAgIGhlbHANCj4gPiAgICAgICAgICAgU2F5IFkgaGVyZSBpZiB5
+b3Ugd2FudCBQQ0llIGNvbnRyb2xsZXIgc3VwcG9ydCBvbiBSLUNhciBHZW4yIFNvQ3MuDQo+IA0K
+PiBCVFcsIHRoaXMgbG9va3MgbGlrZSBhIG1pc25vbWVyOiB0aGUgZHJpdmVyIHN1cHBvcnRzIGEg
+Y29tcGF0aWJsZSB2YWx1ZSBmb3INCj4gUi1DYXIgSDEsIHRvbyAoInJlbmVzYXMscGNpZS1yOGE3
+Nzc5IiksIGJ1dCBpdCdzIG5vdCB1c2VkIGluIHI4YTc3NzkuZHRzaS4NCklJUkMsIEgxIFBDSWUg
+c3VwcG9ydCB3YXMgbm9iYmxlZCBpbiBzb21lIHdheSB0aGF0IG1lYW50IHlvdSBjb3VsZCBub3QN
+CnVzZSBpdCB3aXRoIGFueSBub3JtYWwgUENJZSBjYXJkLiBZb3UgY291bGQgY29ubmVjdCB0byBh
+bm90aGVyIFItQ2FyIHRoYXQNCndhcyBhY3RpbmcgYXMgYW4gZW5kcG9pbnQgdGhvdWdoLg0KDQpQ
+aGlsDQo=
