@@ -1,228 +1,256 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mcc.vniiem.ru ([78.107.120.166]:57204 "EHLO mx.svc.vniiem.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750723AbcBBFEx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Feb 2016 00:04:53 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by mx.svc.vniiem.ru (Postfix) with ESMTP id 96DFC820AA
-	for <linux-pci@vger.kernel.org>; Tue,  2 Feb 2016 08:04:51 +0300 (MSK)
-Received: from mx.svc.vniiem.ru ([127.0.0.1])
-	by localhost (mx.svc.vniiem.ru [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id LYQ1k4XdK6JH for <linux-pci@vger.kernel.org>;
-	Tue,  2 Feb 2016 08:04:51 +0300 (MSK)
-From: =?utf-8?B?0J7Qu9C10LMg0JzQvtGA0L7Qtw==?= <oleg.moroz@mcc.vniiem.ru>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: PCI device driver broken between 4.2 and 4.3
-Date: Tue, 02 Feb 2016 08:04:39 +0300
-Message-ID: <2117097.QTAl1GFxjP@debian802>
-In-Reply-To: <20160201210823.GC4861@localhost>
-References: <20160128192951.CC6AF820DC@mx.svc.vniiem.ru> <2025502.hfirZrb1Qq@debian802> <20160201210823.GC4861@localhost>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v10 2/4] PCI: designware: Add generic
+ dw_pcie_wait_for_link()
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+References: <20160225172957.2103.8326.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160225173736.2103.59017.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+CC: <mark.rutland@arm.com>, <Alexey.Brodkin@synopsys.com>,
+	<arnd@arndb.de>, <pawel.moll@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <linux-pci@vger.kernel.org>,
+	<Vineet.Gupta1@synopsys.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	<linux-kernel@vger.kernel.org>, <CARLOS.PALMINHA@synopsys.com>,
+	<robh+dt@kernel.org>, Murali Karicheri <m-karicheri2@ti.com>,
+	<galak@codeaurora.org>, Jingoo Han <jingoohan1@gmail.com>,
+	<linux-snps-arc@lists.infradead.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <56CFBBAF.4060203@synopsys.com>
+Date: Fri, 26 Feb 2016 10:42:55 +0800
 MIME-Version: 1.0
+In-Reply-To: <20160225173736.2103.59017.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-it looks much better with pci=routeirq
+Hi! This patch seems OK also.
+I did not received the 3/4 and 4/4 patches.
 
-[  100.896723] *Before pci_enable_device IRQ 20* 
-[  100.896735] *After pci_enable_device IRQ 20* 
-[  100.896745] *Before pci_enable_device IRQ 21* 
-[  100.896752] *After pci_enable_device IRQ 21*
+Thanks.
 
-
-On Monday 01 of February 2016 15:08:23 Bjorn Helgaas wrote:
-> [+cc Yinghai]
+On 2/26/2016 1:37 AM, Bjorn Helgaas wrote:
+> From: Joao Pinto <Joao.Pinto@synopsys.com>
 > 
-> On Mon, Feb 01, 2016 at 08:18:35AM +0300, Олег Мороз wrote:
-> > Okay. I've started from driver level printk
-> > results are:
-> > 
-> > On 4.2
-> > 
-> > [414006.575989] Before pci_enable_device IRQ 20
-> > 
-> > [414006.575991] After pci_enable_device IRQ 20
-> > 
-> > [414006.575997] Before pci_enable_device IRQ 21
-> > 
-> > [414006.575999] After pci_enable_device IRQ 21
-> > 
-> > on 4.3
-> > 
-> > [  114.862289] Before pci_enable_device IRQ 5
-> > 
-> > [  114.862303] After pci_enable_device IRQ 5
-> > 
-> > [  114.862316] Before pci_enable_device IRQ 5
-> > 
-> > [  114.862326] After pci_enable_device IRQ 5
-> > 
-> > I've got two cards, because of that pci_enable_device() calls twice.
+> Several DesignWare-based drivers (dra7xx, exynos, imx6 and spear13xx) had
+> similar loops waiting for the link to come up.
 > 
-> Did you try booting with pci=routeirq as Yinghai suggested?  That's
-> not a fix, but if it does make things work, it may give us an idea for
-> how to fix it correctly.
+> FIXME Doesn't update keystone
+> FIXME Doesn't update qcom
 > 
-> > On Friday 29 of January 2016 10:31:59 Bjorn Helgaas wrote:
-> > > On Thu, Jan 28, 2016 at 10:28:14PM +0300, Мороз Олег wrote:
-> > > > What i need to print out at first order?
-> > > 
-> > > Jiang, can you chime in here?
-> > > 
-> > > 991de2e59090 is related to IRQs, so I'd start by printing dev->irq in
-> > > your
-> > > driver before and after you call pci_enable_device().  Add some printks
-> > > in
-> > > pcibios_alloc_irq() and pcibios_enable_device() just to confirm that we
-> > > got
-> > > 
-> > > there and when, e.g., add lines like this:
-> > >   dev_info(&dev->dev, "%s\n", __func__);
-> > > 
-> > > Bjorn
-> > > 
-> > > > 27 янв. 2016 г. 16:22 пользователь Bjorn Helgaas <helgaas@kernel.org>
-> > 
-> > написал:
-> > > > > On Wed, Jan 27, 2016 at 12:38:06PM +0300, Мороз Олег wrote:
-> > > > > > Also, my drive has no
-> > > > > > 
-> > > > > > pcibios_enable_device()
-> > > > > > pcibios_alloc_irq()
-> > > > > > 
-> > > > > > calls.
-> > > > > 
-> > > > > Those are internal interfaces used by the PCI core.  Drivers
-> > > > > shouldn't
-> > > > > call them directly.  Drivers normally call pci_enable_device(), and
-> > > > > those internal interfaces are used in that path.
-> > > > > 
-> > > > > > 26.01.2016 22:05, Олег Мороз пишет:
-> > > > > > >I confirmed it works in
-> > > > > > >
-> > > > > > >890e4847587f
-> > > > > > >
-> > > > > > >and do not works in
-> > > > > > >
-> > > > > > >991de2e59090
-> > > > > > >
-> > > > > > >26.01.2016 18:32, Bjorn Helgaas пишет:
-> > > > > > >>[+cc Jiang]
-> > > > > > >>
-> > > > > > >>On Mon, Jan 25, 2016 at 03:52:51PM -0600, Bjorn Helgaas wrote:
-> > > > > > >>>Hi Олег,
-> > > > > > >>>
-> > > > > > >>>On Sun, Jan 24, 2016 at 04:50:08PM +0300, Олег Мороз wrote:
-> > > > > > >>>>Okay. I've sent logs (dmesg and lspci) from both 4.2 and 4.3
-> > > > > > >>>>to bugzilla
-> > > > > > >>>
-> > > > > > >>>I don't see anything wrong in either log.  Both v4.2 and v4.3
-> > > > > > >>>enumerate the device the same way, and the driver seems to
-> > > > > > >>>claim it
-> > > > > > >>>
-> > > > > > >>>the same way:
-> > > > > > >>>   pci 0000:0d:00.0: [10b5:9030] type 00 class 0x078000
-> > > > > > >>>   pci 0000:0d:00.0: reg 0x14: [io  0x2100-0x217f]
-> > > > > > >>>   pci 0000:0d:00.0: reg 0x18: [io  0x2380-0x239f]
-> > > > > > >>>   pci 0000:0d:00.0: PME# supported from D0 D3hot
-> > > > > > >>>   pci 0000:0d:01.0: [10b5:9030] type 00 class 0x078000
-> > > > > > >>>   pci 0000:0d:01.0: reg 0x14: [io  0x2180-0x21ff]
-> > > > > > >>>   pci 0000:0d:01.0: reg 0x18: [io  0x23a0-0x23bf]
-> > > > > > >>>   pci 0000:0d:01.0: PME# supported from D0 D3hot
-> > > > > > >>>   pci 0000:0d:02.0: [10b5:9030] type 00 class 0x078000
-> > > > > > >>>   pci 0000:0d:02.0: reg 0x14: [io  0x2200-0x227f]
-> > > > > > >>>   pci 0000:0d:02.0: reg 0x18: [io  0x2280-0x22ff]
-> > > > > > >>>   pci 0000:0d:02.0: reg 0x1c: [io  0x2300-0x237f]
-> > > > > > >>>   pci 0000:0d:02.0: PME# supported from D0 D3hot
-> > > > > > >>>   
-> > > > > > >>>   sja1000_plx_pci 0000:0d:02.0: Detected "Eclus CAN-200-PCI"
-> > > > > > >>>
-> > > > > > >>>card at slot #2
-> > > > > > >>>
-> > > > > > >>>   sja1000_plx_pci 0000:0d:02.0: Channel #1 at
-> > > > > > >>>
-> > > > > > >>>0x0000000000012280, irq 22 registered as can0
-> > > > > > >>>
-> > > > > > >>>   sja1000_plx_pci 0000:0d:02.0: Channel #2 at
-> > > > > > >>>
-> > > > > > >>>0x0000000000012300, irq 22 registered as can1
-> > > > > > >>>
-> > > > > > >>>   sja1000_plx_pci 0000:0d:02.0 can0: setting BTR0=0x03
-> > > > > > >>>   BTR1=0x37
-> > > > > > >>>
-> > > > > > >>>One option is always to bisect between v4.2 and v4.3 to see
-> > > > > > >>>which
-> > > > > > >>>commit made it stop working.  See
-> > > > > > >>>https://git-scm.com/docs/git-bisect
-> > > > > > >>
-> > > > > > >>Jiang, Олег bisected this to 991de2e59090 ("PCI, x86: Implement
-> > > > > > >>pcibios_alloc_irq() and pcibios_free_irq()").
-> > > > > > >>
-> > > > > > >>Олег, please double-check and confirm that 890e4847587f works
-> > > > > > >>and
-> > > > > > >>991de2e59090 fails.
-> > > > > > >>
-> > > > > > >>Then please add some printks in the pcibios_enable_device() and
-> > > > > > >>pcibios_alloc_irq() paths and in your driver to see exactly what
-> > > > > > >>changed
-> > > > > > >>between 890e4847587f and 991de2e59090
-> > > > > > >>
-> > > > > > >>Bjorn
-> > > > > > >>
-> > > > > > >>>>23.01.2016 17:54, Bjorn Helgaas пишет:
-> > > > > > >>>>>[+cc linux-kernel]
-> > > > > > >>>>>
-> > > > > > >>>>>Hi Олег,
-> > > > > > >>>>>
-> > > > > > >>>>>On Sat, Jan 23, 2016 at 1:08 AM, Олег Мороз
-> > > > > > >>>>>
-> > > > > > >>>>><oleg.moroz@mcc.vniiem.ru> wrote:
-> > > > > > >>>>>>Hello. I've got a device driver for MIL-1553b card
-> > > > > > >>>>>>called TA1-PCI, which
-> > > > > > >>>>>>could be found at
-> > > > > > >>>>>>https://github.com/qmor/elcus-1553-driver-linux
-> > > > > > >>>>>>Card is using PLX_PCI9030 PCI controller.
-> > > > > > >>>>>>Today i've found that this driver compiles, installes,
-> > > > > > >>>>>>but is not working as
-> > > > > > >>>>>>it should.
-> > > > > > >>>>>>Looks like it not receives any interrupts from PCI. I've
-> > > > > > >>>>>>test it again with
-> > > > > > >>>>>>kernel
-> > > > > > >>>>>>4.2 and it works okay. What changes was made in PCI
-> > > > > > >>>>>>subsystem from 4.2 to
-> > > > > > >>>>>>4.3
-> > > > > > >>>>>>which could have impact this driver work.
-> > > > > > >>>>>
-> > > > > > >>>>>Thank you very much for this problem report.  There were many
-> > > > > > >>>>>PCI
-> > > > > > >>>>>changes between v4.2 and v4.3, and without more information,
-> > > > > > >>>>>I
-> > > > > > >>>>>can't
-> > > > > > >>>>>guess what might be causing this problem.
-> > > > > > >>>>>
-> > > > > > >>>>>I opened a bug report at
-> > > > > > >>>>>https://bugzilla.kernel.org/show_bug.cgi?id=111211
-> > > > > > >>>>>
-> > > > > > >>>>>Please attach complete dmesg logs for both v4.2 and v4.3 to
-> > > > > > >>>>>that
-> > > > > > >>>>>bug
-> > > > > > >>>>>report.  Also, please attach the complete "lspci -vv" output
-> > > > > > >>>>>(as
-> > > > > > >>>>>root).
-> > > > > > >>>>>
-> > > > > > >>>>>Thanks!
-> > > > > > >>>>>
-> > > > > > >>>>>Bjorn
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-С уважением,
-Олег Мороз
-Заместитель начальника отдела разработки ПО БВС КА
+> Add a generic dw_pcie_wait_for_link() for use by all these drivers so the
+> waiting is done consistently, e.g., always using usleep_range() rather than
+> mdelay() and using similar timeouts and retry counts.
+> 
+> [bhelgaas: changelog, split into its own patch]
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/host/pci-dra7xx.c      |   11 +++--------
+>  drivers/pci/host/pci-exynos.c      |   11 ++---------
+>  drivers/pci/host/pci-imx6.c        |   11 +++--------
+>  drivers/pci/host/pcie-designware.c |   19 +++++++++++++++++++
+>  drivers/pci/host/pcie-designware.h |    6 ++++++
+>  drivers/pci/host/pcie-spear13xx.c  |   12 ++----------
+>  6 files changed, 35 insertions(+), 35 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+> index 923607b..8d3d350 100644
+> --- a/drivers/pci/host/pci-dra7xx.c
+> +++ b/drivers/pci/host/pci-dra7xx.c
+> @@ -10,7 +10,6 @@
+>   * published by the Free Software Foundation.
+>   */
+>  
+> -#include <linux/delay.h>
+>  #include <linux/err.h>
+>  #include <linux/interrupt.h>
+>  #include <linux/irq.h>
+> @@ -108,7 +107,6 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
+>  {
+>  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
+>  	u32 reg;
+> -	unsigned int retries;
+>  
+>  	if (dw_pcie_link_up(pp)) {
+>  		dev_err(pp->dev, "link is already up\n");
+> @@ -119,13 +117,10 @@ static int dra7xx_pcie_establish_link(struct pcie_port *pp)
+>  	reg |= LTSSM_EN;
+>  	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+>  
+> -	for (retries = 0; retries < 1000; retries++) {
+> -		if (dw_pcie_link_up(pp))
+> -			return 0;
+> -		usleep_range(10, 20);
+> -	}
+> +	/* check if the link is up or not */
+> +	if (!dw_pcie_wait_for_link(pp))
+> +		return 0;
+>  
+> -	dev_err(pp->dev, "link is not up\n");
+>  	return -EINVAL;
+>  }
+>  
+> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+> index d997d22..41f3248 100644
+> --- a/drivers/pci/host/pci-exynos.c
+> +++ b/drivers/pci/host/pci-exynos.c
+> @@ -318,7 +318,6 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
+>  {
+>  	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
+>  	u32 val;
+> -	unsigned int retries;
+>  
+>  	if (dw_pcie_link_up(pp)) {
+>  		dev_err(pp->dev, "Link already up\n");
+> @@ -357,13 +356,8 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
+>  			  PCIE_APP_LTSSM_ENABLE);
+>  
+>  	/* check if the link is up or not */
+> -	for (retries = 0; retries < 10; retries++) {
+> -		if (dw_pcie_link_up(pp)) {
+> -			dev_info(pp->dev, "Link up\n");
+> -			return 0;
+> -		}
+> -		mdelay(100);
+> -	}
+> +	if (!dw_pcie_wait_for_link(pp))
+> +		return 0;
+>  
+>  	while (exynos_phy_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED) == 0) {
+>  		val = exynos_blk_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED);
+> @@ -372,7 +366,6 @@ static int exynos_pcie_establish_link(struct pcie_port *pp)
+>  	/* power off phy */
+>  	exynos_pcie_power_off_phy(pp);
+>  
+> -	dev_err(pp->dev, "PCIe Link Fail\n");
+>  	return -EINVAL;
+>  }
+>  
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index fe60096..c53da17 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -330,15 +330,10 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+>  
+>  static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+>  {
+> -	unsigned int retries;
+> -
+> -	for (retries = 0; retries < 200; retries++) {
+> -		if (dw_pcie_link_up(pp))
+> -			return 0;
+> -		usleep_range(100, 1000);
+> -	}
+> +	/* check if the link is up or not */
+> +	if (!dw_pcie_wait_for_link(pp))
+> +		return 0;
+>  
+> -	dev_err(pp->dev, "phy link never came up\n");
+>  	dev_dbg(pp->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
+>  		readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
+>  		readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index 2171682..4fff2d2 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -22,6 +22,7 @@
+>  #include <linux/pci_regs.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/types.h>
+> +#include <linux/delay.h>
+>  
+>  #include "pcie-designware.h"
+>  
+> @@ -380,6 +381,24 @@ static struct msi_controller dw_pcie_msi_chip = {
+>  	.teardown_irq = dw_msi_teardown_irq,
+>  };
+>  
+> +int dw_pcie_wait_for_link(struct pcie_port *pp)
+> +{
+> +	int retries;
+> +
+> +	/* check if the link is up or not */
+> +	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
+> +		if (dw_pcie_link_up(pp)) {
+> +			dev_info(pp->dev, "link up\n");
+> +			return 0;
+> +		}
+> +		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
+> +	}
+> +
+> +	dev_err(pp->dev, "phy link never came up\n");
+> +
+> +	return -EINVAL;
+> +}
+> +
+>  int dw_pcie_link_up(struct pcie_port *pp)
+>  {
+>  	if (pp->ops->link_up)
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index 2356d29..f437f9b 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -22,6 +22,11 @@
+>  #define MAX_MSI_IRQS			32
+>  #define MAX_MSI_CTRLS			(MAX_MSI_IRQS / 32)
+>  
+> +/* Parameters for the waiting for link up routine */
+> +#define LINK_WAIT_MAX_RETRIES		10
+> +#define LINK_WAIT_USLEEP_MIN		90000
+> +#define LINK_WAIT_USLEEP_MAX		100000
+> +
+>  struct pcie_port {
+>  	struct device		*dev;
+>  	u8			root_bus_nr;
+> @@ -76,6 +81,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val);
+>  int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val);
+>  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+>  void dw_pcie_msi_init(struct pcie_port *pp);
+> +int dw_pcie_wait_for_link(struct pcie_port *pp);
+>  int dw_pcie_link_up(struct pcie_port *pp);
+>  void dw_pcie_setup_rc(struct pcie_port *pp);
+>  int dw_pcie_host_init(struct pcie_port *pp);
+> diff --git a/drivers/pci/host/pcie-spear13xx.c b/drivers/pci/host/pcie-spear13xx.c
+> index a6cd823..0e5a2f1 100644
+> --- a/drivers/pci/host/pcie-spear13xx.c
+> +++ b/drivers/pci/host/pcie-spear13xx.c
+> @@ -13,7 +13,6 @@
+>   */
+>  
+>  #include <linux/clk.h>
+> -#include <linux/delay.h>
+>  #include <linux/interrupt.h>
+>  #include <linux/kernel.h>
+>  #include <linux/module.h>
+> @@ -149,7 +148,6 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+>  	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
+>  	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
+>  	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
+> -	unsigned int retries;
+>  
+>  	if (dw_pcie_link_up(pp)) {
+>  		dev_err(pp->dev, "link already up\n");
+> @@ -201,15 +199,9 @@ static int spear13xx_pcie_establish_link(struct pcie_port *pp)
+>  			&app_reg->app_ctrl_0);
+>  
+>  	/* check if the link is up or not */
+> -	for (retries = 0; retries < 10; retries++) {
+> -		if (dw_pcie_link_up(pp)) {
+> -			dev_info(pp->dev, "link up\n");
+> -			return 0;
+> -		}
+> -		mdelay(100);
+> -	}
+> +	if (!dw_pcie_wait_for_link(pp))
+> +		return 0;
+>  
+> -	dev_err(pp->dev, "link Fail\n");
+>  	return -EINVAL;
+>  }
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
