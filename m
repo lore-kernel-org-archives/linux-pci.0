@@ -1,44 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0084.outbound.protection.outlook.com ([207.46.100.84]:19632
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965589AbcBDPX5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 10:23:57 -0500
-From: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
-Subject: [PATCH] PCI: Support SRIOV on Legacy EndPoint device
-Date: Thu, 4 Feb 2016 15:08:50 +0000
-Message-ID: <CY1PR12MB02624BD9D5A28EDAF4B3E61FFED10@CY1PR12MB0262.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v1 1/3] PCI: Disable IO/MEM decoding for devices with
+ non-compliant BARs
+To: Andi Kleen <ak@linux.intel.com>,
+	Jayachandran Chandrashekaran Nair
+	<jayachandran.chandrashekaran@broadcom.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh@kernel.org>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	linux-pci@vger.kernel.org
+Date: Fri, 26 Feb 2016 09:58:50 -0600
+Message-ID: <20160226155850.9113.90817.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160226155334.9113.77645.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160226155334.9113.77645.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some AMD GPUs have hardware support for grapics SRIOV.
-If the GPU has a display output then the GPU needs to support Legacy VGA operation.
-If CLASS_CODE = VGA then the device should have a Port Type = Legacy EndPoint.
-Therefore in order to enable SRIOV on a GPU with a display output LEGACY_END_POINT is supported as a valid Port Type.
+The PCI config header (first 64 bytes of each device's config space) is
+defined by the PCI spec so generic software can identify the device and
+manage its usage of I/O, memory, and IRQ resources.
 
-Signed-off-by: Kelly Zytaruk <kelly.zytaruk@amd.com>
+Some non-spec-compliant devices put registers other than BARs where the
+BARs should be.  When the PCI core sizes these "BARs", the reads and writes
+it does may have unwanted side effects, and the "BAR" may appear to
+describe non-sensical address space.
+
+Add a flag bit to mark non-compliant devices so we don't touch their BARs.
+Turn off IO/MEM decoding to prevent the devices from consuming address
+space, since we can't read the BARs to find out what that address space
+would be.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/iov.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/pci/probe.c |   14 ++++++++++++++
+ include/linux/pci.h |    1 +
+ 2 files changed, 15 insertions(+)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c index 31f31d4..da4fbac 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -388,7 +388,8 @@ static int sriov_init(struct pci_dev *dev, int pos)
- 	struct pci_dev *pdev;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6d7ab9b..6b0056e 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -179,6 +179,9 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 	u16 orig_cmd;
+ 	struct pci_bus_region region, inverted_region;
  
- 	if (pci_pcie_type(dev) != PCI_EXP_TYPE_RC_END &&
--	    pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT)
-+	    pci_pcie_type(dev) != PCI_EXP_TYPE_ENDPOINT &&
-+	    pci_pcie_type(dev) != PCI_EXP_TYPE_LEG_END)
- 		return -ENODEV;
++	if (dev->non_compliant_bars)
++		return 0;
++
+ 	mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
  
- 	pci_read_config_word(dev, pos + PCI_SRIOV_CTRL, &ctrl);
---
-1.7.10.4
+ 	/* No printks while decoding is disabled! */
+@@ -1171,6 +1174,7 @@ static void pci_msi_setup_pci_dev(struct pci_dev *dev)
+ int pci_setup_device(struct pci_dev *dev)
+ {
+ 	u32 class;
++	u16 cmd;
+ 	u8 hdr_type;
+ 	int pos = 0;
+ 	struct pci_bus_region region;
+@@ -1214,6 +1218,16 @@ int pci_setup_device(struct pci_dev *dev)
+ 	/* device class may be changed after fixup */
+ 	class = dev->class >> 8;
+ 
++	if (dev->non_compliant_bars) {
++		pci_read_config_word(dev, PCI_COMMAND, &cmd);
++		if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
++			dev_info(&dev->dev, "device has non-compliant BARs; disabling IO/MEM decoding\n");
++			cmd &= ~PCI_COMMAND_IO;
++			cmd &= ~PCI_COMMAND_MEMORY;
++			pci_write_config_word(dev, PCI_COMMAND, cmd);
++		}
++	}
++
+ 	switch (dev->hdr_type) {		    /* header type */
+ 	case PCI_HEADER_TYPE_NORMAL:		    /* standard header */
+ 		if (class == PCI_CLASS_BRIDGE_PCI)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 27df4a6..5f80661 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -359,6 +359,7 @@ struct pci_dev {
+ 	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
+ 	unsigned int	irq_managed:1;
+ 	unsigned int	has_secondary_link:1;
++	unsigned int	non_compliant_bars:1;	/* broken BARs; ignore them */
+ 	pci_dev_flags_t dev_flags;
+ 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+ 
