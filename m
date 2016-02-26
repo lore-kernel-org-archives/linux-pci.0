@@ -1,45 +1,87 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: guohanjun@huawei.com, wangzhou1@hisilicon.com,
-	liudongdong3@huawei.com, linuxarm@huawei.com, qiujiang@huawei.com,
-	bhelgaas@google.com, Lorenzo.Pieralisi@arm.com, tn@semihalf.com,
-	zhangjukuo@huawei.com, xuwei5@hisilicon.com,
-	liguozhu@hisilicon.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jcm@redhat.com
-Subject: Re: [RFC PATCH 0/4] Add ACPI support for HiSilicon PCIe Host Controllers
-Date: Thu, 04 Feb 2016 14:11:32 +0100
-Message-ID: <2387127.DMZaDnZvEW@wuerfel>
-In-Reply-To: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1454585860-60709-1-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:3275 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752174AbcBZP3c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 26 Feb 2016 10:29:32 -0500
+Date: Fri, 26 Feb 2016 15:29:30 +0000
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "Veal, Bryan E." <bryan.e.veal@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+	linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: Re: [PATCHv8 0/5] Driver for new "VMD" device
+Message-ID: <20160226152929.GA29903@localhost.localdomain>
+References: <1452629890-17542-1-git-send-email-keith.busch@intel.com>
+ <20160115181938.GA5296@localhost>
+ <20160115193103.GA2249@intel.com>
+ <20160115214902.GA10272@localhost>
+ <20160116221937.GA31482@intel.com>
+ <20160120220111.GE7973@localhost>
+ <20160222221024.GA20879@localhost>
+ <20160223182359.GA20250@localhost.localdomain>
+ <20160225144219.GB8726@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160225144219.GB8726@localhost>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday 04 February 2016 19:37:36 Gabriele Paoloni wrote:
-> From: gabriele paoloni <gabriele.paoloni@huawei.com>
-> 
-> This patchset adds ACPI support for the HiSilicon Hip05/Hip06 SoC PCIe controllers
-> The four patches respectively:
->         - rework PCie Designware to be used for ACPI PCI Host controllers
->         - re-architect the current HiSilicon driver to make it scalable to the
->           new ACPI quirks
->         - rework the current HiSilicon driver to make it ECAM compliant
->         - adds the HiSilicon ACPI specific quirks.
-> 
->    This patchset  is based on 
->    https://github.com/semihalf-nowicki-tomasz/linux.git
->    branch pci-acpi-v3 + Hip06 support applied on top:
->    https://patchwork.ozlabs.org/patch/549198/
-> 
+Hi Bryan
 
-ACPI has its own PCI support, and should not need drivers for host
-bridges. I don't think we can really mix the two things, as ACPI
-needs to have access to things like PCI config space way before
-we are probing normal device drivers.
+I want to make sure I get the right message for Bjorn, so held off on
+sending anything before confirming.
 
-Please put this in drivers/acpi/pci*.c.
+As far as clearing the 64-bit resource flag when it's a 32-bit address,
+that seems pretty straight forward as captured in the comment.
 
-	Arnd
+But do we actually rely on a memory window below 4GB? If the memory
+window is above 4GB, we just won't be able to support devices with 32-bit
+BARs there, but is that a concern? Should the comment just say that if
+the window is assigned >4GB, we simply won't be able to support 32-bit
+BAR devices on that domain, and that's 'ok'?
+
+Thanks,
+Keith
+
+On Thu, Feb 25, 2016 at 08:42:19AM -0600, Bjorn Helgaas wrote:
+> On Tue, Feb 23, 2016 at 06:24:00PM +0000, Keith Busch wrote:
+> > On Mon, Feb 22, 2016 at 04:10:24PM -0600, Bjorn Helgaas wrote:
+> > > I'm not sure how to deal with the question of a hot-added VMD.  Maybe
+> > > all we can do now is add a comment to the effect that we assume BIOS
+> > > has assigned the non-prefetchable BAR below 4GB, and if Linux assigns
+> > > that BAR for hot-added VMDs, that assumption will likely break.
+> > 
+> > Yes, we can assume BIOS always assigns. There are other BIOS dependencies
+> > in order for the host to see the h/w as a VMD endpoint.
+> > 
+> > > diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+> > > index d57e480..7554722 100644
+> > > --- a/arch/x86/pci/vmd.c
+> > > +++ b/arch/x86/pci/vmd.c
+> > > @@ -532,6 +532,16 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
+> > >  		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
+> > >  	};
+> > >  
+> > > +	/*
+> > > +	 * If the window is below 4GB, clear IORESOURCE_MEM_64 so we can
+> > > +	 * put 32-bit resources in the window.
+> > > +	 *
+> > > +	 * There's no hardware reason why a 64-bit window *couldn't*
+> > > +	 * contain a 32-bit resource, but pbus_size_mem() computes the
+> > > +	 * bridge window size assuming a 64-bit window will contain no
+> > > +	 * 32-bit resources.  __pci_assign_resource() enforces that
+> > > +	 * artificial restriction to make sure everything will fit.
+> > > +	 */
+> > 
+> > This sounds good to me. Thanks!
+> > 
+> > >  	res = &vmd->dev->resource[VMD_MEMBAR1];
+> > >  	upper_bits = upper_32_bits(res->end);
+> > >  	flags = res->flags & ~IORESOURCE_SIZEALIGN;
+> 
+> Can you prepare a patch, that adds both comments, please?  (The one
+> about how we assume BIOS assigns the BAR below 4GB, and the one I
+> drafted above.)
