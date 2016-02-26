@@ -1,286 +1,131 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 5/5] PCI: Remove includes of asm/pci-bridge.h
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
+Subject: Re: [PATCH 2/2] PCI: generic: add description of property
+ "interrupt-skip-mask"
+To: Mark Rutland <mark.rutland@arm.com>
+References: <1456401208-10136-1-git-send-email-thunder.leizhen@huawei.com>
+ <1456401208-10136-2-git-send-email-thunder.leizhen@huawei.com>
+ <20160225122035.GB10593@leverpostej>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Grant Likely <grant.likely@linaro.org>,
 	Will Deacon <will.deacon@arm.com>,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Date: Tue, 02 Feb 2016 13:39:02 -0600
-Message-ID: <20160202193902.9258.7816.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160202193026.9258.7573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160202193026.9258.7573.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	Pawel Moll <pawel.moll@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Zefan Li <lizefan@huawei.com>, Xinwei Hu <huxinwei@huawei.com>,
+	Tianhong Ding <dingtianhong@huawei.com>,
+	Hanjun Guo <guohanjun@huawei.com>,
+	Yijing Wang <wangyijing@huawei.com>
+From: "Leizhen (ThunderTown)" <thunder.leizhen@huawei.com>
+Message-ID: <56CFFC9B.20703@huawei.com>
+Date: Fri, 26 Feb 2016 15:19:55 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20160225122035.GB10593@leverpostej>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Drivers should include asm/pci-bridge.h only when they need the arch-
-specific things provided there.  Outside of the arch/ directories, the only
-drivers that actually need things provided by asm/pci-bridge.h are the
-powerpc RPA hotplug drivers in drivers/pci/hotplug/rpa*.
 
-Remove the includes of asm/pci-bridge.h from the other drivers, adding an
-include of linux/pci.h if necessary.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/ata/pata_macio.c                   |    2 +-
- drivers/char/agp/uninorth-agp.c            |    1 -
- drivers/gpu/drm/radeon/radeon_combios.c    |    1 -
- drivers/ide/pdc202xx_new.c                 |    1 -
- drivers/ide/pmac.c                         |    1 -
- drivers/macintosh/macio_asic.c             |    1 -
- drivers/misc/cxl/pci.c                     |    1 -
- drivers/net/ethernet/sun/sungem.c          |    1 -
- drivers/net/ethernet/toshiba/spider_net.c  |    1 -
- drivers/scsi/mac53c94.c                    |    2 +-
- drivers/scsi/mesh.c                        |    2 +-
- drivers/usb/core/hcd-pci.c                 |    1 -
- drivers/video/fbdev/aty/aty128fb.c         |    1 -
- drivers/video/fbdev/aty/radeon_base.c      |    1 -
- drivers/video/fbdev/imsttfb.c              |    1 -
- drivers/video/fbdev/matrox/matroxfb_base.h |    1 -
- drivers/video/fbdev/offb.c                 |    4 ----
- sound/ppc/pmac.c                           |    1 -
- 18 files changed, 3 insertions(+), 21 deletions(-)
+On 2016/2/25 20:20, Mark Rutland wrote:
+> Hi,
+> 
+> In future, please send the binding document first in a series, per point
+> 3 of Documentation/devicetree/bindings/submitting-patches.txt. It makes
+> review easier/faster.
+Thank you for your reminding.
 
-diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
-index e3d4b05..e347e7a 100644
---- a/drivers/ata/pata_macio.c
-+++ b/drivers/ata/pata_macio.c
-@@ -22,6 +22,7 @@
- #include <linux/scatterlist.h>
- #include <linux/of.h>
- #include <linux/gfp.h>
-+#include <linux/pci.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
-@@ -30,7 +31,6 @@
- #include <asm/macio.h>
- #include <asm/io.h>
- #include <asm/dbdma.h>
--#include <asm/pci-bridge.h>
- #include <asm/machdep.h>
- #include <asm/pmac_feature.h>
- #include <asm/mediabay.h>
-diff --git a/drivers/char/agp/uninorth-agp.c b/drivers/char/agp/uninorth-agp.c
-index 0575544..fdced54 100644
---- a/drivers/char/agp/uninorth-agp.c
-+++ b/drivers/char/agp/uninorth-agp.c
-@@ -10,7 +10,6 @@
- #include <linux/delay.h>
- #include <linux/vmalloc.h>
- #include <asm/uninorth.h>
--#include <asm/pci-bridge.h>
- #include <asm/prom.h>
- #include <asm/pmac_feature.h>
- #include "agp.h"
-diff --git a/drivers/gpu/drm/radeon/radeon_combios.c b/drivers/gpu/drm/radeon/radeon_combios.c
-index a9b01bc..432480f 100644
---- a/drivers/gpu/drm/radeon/radeon_combios.c
-+++ b/drivers/gpu/drm/radeon/radeon_combios.c
-@@ -34,7 +34,6 @@
- #include <asm/machdep.h>
- #include <asm/pmac_feature.h>
- #include <asm/prom.h>
--#include <asm/pci-bridge.h>
- #endif /* CONFIG_PPC_PMAC */
- 
- /* from radeon_legacy_encoder.c */
-diff --git a/drivers/ide/pdc202xx_new.c b/drivers/ide/pdc202xx_new.c
-index 9ad014a..b33646b 100644
---- a/drivers/ide/pdc202xx_new.c
-+++ b/drivers/ide/pdc202xx_new.c
-@@ -28,7 +28,6 @@
- 
- #ifdef CONFIG_PPC_PMAC
- #include <asm/prom.h>
--#include <asm/pci-bridge.h>
- #endif
- 
- #define DRV_NAME "pdc202xx_new"
-diff --git a/drivers/ide/pmac.c b/drivers/ide/pmac.c
-index 96a3452..7f0434f 100644
---- a/drivers/ide/pmac.c
-+++ b/drivers/ide/pmac.c
-@@ -40,7 +40,6 @@
- #include <asm/io.h>
- #include <asm/dbdma.h>
- #include <asm/ide.h>
--#include <asm/pci-bridge.h>
- #include <asm/machdep.h>
- #include <asm/pmac_feature.h>
- #include <asm/sections.h>
-diff --git a/drivers/macintosh/macio_asic.c b/drivers/macintosh/macio_asic.c
-index 4f12c6f..b6819f0 100644
---- a/drivers/macintosh/macio_asic.c
-+++ b/drivers/macintosh/macio_asic.c
-@@ -31,7 +31,6 @@
- #include <asm/macio.h>
- #include <asm/pmac_feature.h>
- #include <asm/prom.h>
--#include <asm/pci-bridge.h>
- 
- #undef DEBUG
- 
-diff --git a/drivers/misc/cxl/pci.c b/drivers/misc/cxl/pci.c
-index 4c1903f..a214032 100644
---- a/drivers/misc/cxl/pci.c
-+++ b/drivers/misc/cxl/pci.c
-@@ -19,7 +19,6 @@
- #include <linux/delay.h>
- #include <asm/opal.h>
- #include <asm/msi_bitmap.h>
--#include <asm/pci-bridge.h> /* for struct pci_controller */
- #include <asm/pnv-pci.h>
- #include <asm/io.h>
- 
-diff --git a/drivers/net/ethernet/sun/sungem.c b/drivers/net/ethernet/sun/sungem.c
-index e23a642..2437227 100644
---- a/drivers/net/ethernet/sun/sungem.c
-+++ b/drivers/net/ethernet/sun/sungem.c
-@@ -51,7 +51,6 @@
- #endif
- 
- #ifdef CONFIG_PPC_PMAC
--#include <asm/pci-bridge.h>
- #include <asm/prom.h>
- #include <asm/machdep.h>
- #include <asm/pmac_feature.h>
-diff --git a/drivers/net/ethernet/toshiba/spider_net.c b/drivers/net/ethernet/toshiba/spider_net.c
-index 3c54a2c..6761027 100644
---- a/drivers/net/ethernet/toshiba/spider_net.c
-+++ b/drivers/net/ethernet/toshiba/spider_net.c
-@@ -48,7 +48,6 @@
- #include <linux/wait.h>
- #include <linux/workqueue.h>
- #include <linux/bitops.h>
--#include <asm/pci-bridge.h>
- #include <net/checksum.h>
- 
- #include "spider_net.h"
-diff --git a/drivers/scsi/mac53c94.c b/drivers/scsi/mac53c94.c
-index 1412266..a6682c5 100644
---- a/drivers/scsi/mac53c94.c
-+++ b/drivers/scsi/mac53c94.c
-@@ -18,11 +18,11 @@
- #include <linux/spinlock.h>
- #include <linux/interrupt.h>
- #include <linux/module.h>
-+#include <linux/pci.h>
- #include <asm/dbdma.h>
- #include <asm/io.h>
- #include <asm/pgtable.h>
- #include <asm/prom.h>
--#include <asm/pci-bridge.h>
- #include <asm/macio.h>
- 
- #include <scsi/scsi.h>
-diff --git a/drivers/scsi/mesh.c b/drivers/scsi/mesh.c
-index 555367f..1753e42 100644
---- a/drivers/scsi/mesh.c
-+++ b/drivers/scsi/mesh.c
-@@ -29,6 +29,7 @@
- #include <linux/interrupt.h>
- #include <linux/reboot.h>
- #include <linux/spinlock.h>
-+#include <linux/pci.h>
- #include <asm/dbdma.h>
- #include <asm/io.h>
- #include <asm/pgtable.h>
-@@ -38,7 +39,6 @@
- #include <asm/processor.h>
- #include <asm/machdep.h>
- #include <asm/pmac_feature.h>
--#include <asm/pci-bridge.h>
- #include <asm/macio.h>
- 
- #include <scsi/scsi.h>
-diff --git a/drivers/usb/core/hcd-pci.c b/drivers/usb/core/hcd-pci.c
-index 9eb1cff..c3640f8 100644
---- a/drivers/usb/core/hcd-pci.c
-+++ b/drivers/usb/core/hcd-pci.c
-@@ -28,7 +28,6 @@
- #ifdef CONFIG_PPC_PMAC
- #include <asm/machdep.h>
- #include <asm/pmac_feature.h>
--#include <asm/pci-bridge.h>
- #include <asm/prom.h>
- #endif
- 
-diff --git a/drivers/video/fbdev/aty/aty128fb.c b/drivers/video/fbdev/aty/aty128fb.c
-index c42ce2f..0a46268 100644
---- a/drivers/video/fbdev/aty/aty128fb.c
-+++ b/drivers/video/fbdev/aty/aty128fb.c
-@@ -68,7 +68,6 @@
- #include <asm/machdep.h>
- #include <asm/pmac_feature.h>
- #include <asm/prom.h>
--#include <asm/pci-bridge.h>
- #include "../macmodes.h"
- #endif
- 
-diff --git a/drivers/video/fbdev/aty/radeon_base.c b/drivers/video/fbdev/aty/radeon_base.c
-index ce0b1d0..218339a 100644
---- a/drivers/video/fbdev/aty/radeon_base.c
-+++ b/drivers/video/fbdev/aty/radeon_base.c
-@@ -76,7 +76,6 @@
- 
- #ifdef CONFIG_PPC
- 
--#include <asm/pci-bridge.h>
- #include "../macmodes.h"
- 
- #ifdef CONFIG_BOOTX_TEXT
-diff --git a/drivers/video/fbdev/imsttfb.c b/drivers/video/fbdev/imsttfb.c
-index 9b167f7..4363c64 100644
---- a/drivers/video/fbdev/imsttfb.c
-+++ b/drivers/video/fbdev/imsttfb.c
-@@ -33,7 +33,6 @@
- #if defined(CONFIG_PPC)
- #include <linux/nvram.h>
- #include <asm/prom.h>
--#include <asm/pci-bridge.h>
- #include "macmodes.h"
- #endif
- 
-diff --git a/drivers/video/fbdev/matrox/matroxfb_base.h b/drivers/video/fbdev/matrox/matroxfb_base.h
-index 09b02cd..7a90ea2 100644
---- a/drivers/video/fbdev/matrox/matroxfb_base.h
-+++ b/drivers/video/fbdev/matrox/matroxfb_base.h
-@@ -47,7 +47,6 @@
- 
- #if defined(CONFIG_PPC_PMAC)
- #include <asm/prom.h>
--#include <asm/pci-bridge.h>
- #include "../macmodes.h"
- #endif
- 
-diff --git a/drivers/video/fbdev/offb.c b/drivers/video/fbdev/offb.c
-index 43a0a52..fb60a8f 100644
---- a/drivers/video/fbdev/offb.c
-+++ b/drivers/video/fbdev/offb.c
-@@ -28,10 +28,6 @@
- #include <linux/pci.h>
- #include <asm/io.h>
- 
--#ifdef CONFIG_PPC64
--#include <asm/pci-bridge.h>
--#endif
--
- #ifdef CONFIG_PPC32
- #include <asm/bootx.h>
- #endif
-diff --git a/sound/ppc/pmac.c b/sound/ppc/pmac.c
-index 0095a80..a5843fc 100644
---- a/sound/ppc/pmac.c
-+++ b/sound/ppc/pmac.c
-@@ -34,7 +34,6 @@
- #include "pmac.h"
- #include <sound/pcm_params.h>
- #include <asm/pmac_feature.h>
--#include <asm/pci-bridge.h>
- 
- 
- /* fixed frequency table for awacs, screamer, burgundy, DACA (44100 max) */
+> 
+> On Thu, Feb 25, 2016 at 07:53:28PM +0800, Zhen Lei wrote:
+>> Interrupt Pin register is read-only and optional. Some pci devices may use
+>> msi/msix but leave the value of Interrupt Pin non-zero.
+> 
+> Is that permitted by the spec? Surely 'optional' means it must be zero
+> if not implemented?
+
+In <PCI Local Bus Specification Revision 3.0>:
+Devices (or device functions) that do not use an interrupt pin must put a 0 in this register. This register is read-only.
+
+So, do you think this is a hardware bug? But these pci-devices are not produced by our company.
+
+In function init_service_irqs, it try msix first, then msi, Interrupt PIN is the last attemption. But of_irq_parse_pci() happened before this.
+
+
+In fact, there also a familiar problem exist. As below:
+pci 0000:42:00.0: BAR 7: no space for [io  size 0x1000]
+pci 0000:42:00.0: BAR 7: failed to assign [io  size 0x1000]
+
+There no "io space" on arm64, maybe only exist on X86. And the Memory Space Indicator also read-only in BAR register.
+
+> 
+>> In this case, the driver will print information as below: pci
+>> 0000:40:00.0: of_irq_parse_pci() failed with rc=-22
+>>
+>> It's easily lead to misinterpret.
+> 
+> If this is limited to a subset of devices which we know are broken in
+> this regard, can we not handle these cases explicitly?
+Actually, we have another way to block this warning. Use "interrupt-map" to map it to a pesudo IRQ. But I think it will also be misunderstanded.
+
+> 
+>> Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
+>> ---
+>>  Documentation/devicetree/bindings/pci/host-generic-pci.txt | 2 ++
+>>  1 file changed, 2 insertions(+)
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.txt b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+>> index 3f1d3fc..0f10978 100644
+>> --- a/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+>> +++ b/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+>> @@ -70,6 +70,8 @@ Practice: Interrupt Mapping' and requires the following properties:
+>>
+>>  - interrupt-map-mask : <see aforementioned specification>
+>>
+>> +- interrupt-skip-mask: Explicitly declare which pci devices only use msi/msix
+>> +but leave the value of Interrupt Pin non-zero.
+> 
+> Unlike the rest of the interrupt mapping properties, this is not
+> described in  `Open Firmware Recommended Practice: Interrupt Mapping'.
+> 
+> This needs a far more complete description.
+> 
+> This also doesn't strike me as th right approach. The interrupt-map-mask
+> property describe as relationship between the host-controller-provided
+> interrupt lines and endpoints, while this seems to be a bug completely
+> contained within an endpoint.
+
+In <host-generic-pci.txt>:
+// PCI_DEVICE(3)  INT#(1)  CONTROLLER(PHANDLE)  CONTROLLER_DATA(3)
+    interrupt-map = <  0x0 0x0 0x0  0x1  &gic  0x0 0x4 0x1
+
+PCI_DEVICE contain 3 cells. But only the first one be used in function of_irq_parse_pci.
+laddr[0] = cpu_to_be32((pdev->bus->number << 16) | (pdev->devfn << 8));
+laddr[1] = laddr[2] = cpu_to_be32(0);
+
+And for INT#, I don't think there will some Pins used but others unused on a pci-device. So I can ommit it.
+
+So, only laddr[0] mask need to be described.
+> 
+> Thanks,
+> Mark.
+> 
+>>
+>>  Example:
+>>
+>> --
+>> 2.5.0
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+> 
+> .
+> 
