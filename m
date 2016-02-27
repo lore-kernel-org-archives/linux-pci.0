@@ -1,94 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:45577 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965011AbcBQDqA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:46:00 -0500
-Received: from localhost
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 17 Feb 2016 13:45:59 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v8 11/45] powerpc/powernv: Track M64 segment consumption
-Date: Wed, 17 Feb 2016 14:43:54 +1100
-Message-Id: <1455680668-23298-12-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:55141 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756711AbcB0UT3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 27 Feb 2016 15:19:29 -0500
+Date: Sat, 27 Feb 2016 14:19:21 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Thierry Reding <treding@nvidia.com>,
+	Jake Oshins <jakeo@microsoft.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	=?utf-8?B?0J7Qu9C10LMg0JzQvtGA0L7Qtw==?= <oleg.moroz@mcc.vniiem.ru>,
+	Sunjin Yang <fan4326@gmail.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>
+Subject: Re: [GIT PULL] PCI fixes for v4.5
+Message-ID: <20160227201921.GB30280@localhost>
+References: <20160227151457.GA30280@localhost>
+ <CA+55aFwd3zJNyy=7n945GfKYv0RhMuX6HUfDAqvZWrQyL=4GUA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+55aFwd3zJNyy=7n945GfKYv0RhMuX6HUfDAqvZWrQyL=4GUA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When unplugging PCI devices, their parent PEs might be offline.
-The consumed M64 resource by the PEs should be released at that
-time. As we track M32 segment consumption, this introduces an
-array to the PHB to track the mapping between M64 segment and
-PE number.
+On Sat, Feb 27, 2016 at 10:22:04AM -0800, Linus Torvalds wrote:
+> On Sat, Feb 27, 2016 at 7:14 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >
+> > The big chunk here is the paravirtual front-end for Linux guests of a
+> > Microsoft Hyper-V VM.  It's new, so no risk of regressions to pci-hyperv
+> > itself.  It does include minor changes to common code, but they are
+> > low-risk.
+> 
+> I really don't want to take new features like this that change
+> existing code when I'm about to do a rc6.
+> 
+> I've done late hardware-enabling pulls before with new drivers etc,
+> but then they are meant to enable consumer hardware that people would
+> have trouble getting Linux installed on etc. A paravirt Hyper-V VM
+> install doesn't really count as that kind of "we need to get this in
+> quickly out of the normal development model".
+> 
+> I didn't check, but can you peel off that part if it's at the top and
+> just send me the actual bugfixes?
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 10 ++++++++--
- arch/powerpc/platforms/powernv/pci.h      |  1 +
- 2 files changed, 9 insertions(+), 2 deletions(-)
+Of course!  The Hyper-V stuff was the top-most merge, so I dropped
+that and added a new tag, pci-v4.5-fixes-3, with just the fixes.  Here
+it is:
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index 7330a73..fc0374a 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -305,6 +305,7 @@ static int pnv_ioda2_pick_m64_pe(struct pci_bus *bus, bool all)
- 		phb->ioda.total_pe_num) {
- 		pe = &phb->ioda.pe_array[i];
- 
-+		phb->ioda.m64_segmap[pe->pe_number] = pe->pe_number;
- 		if (!master_pe) {
- 			pe->flags |= PNV_IODA_PE_MASTER;
- 			INIT_LIST_HEAD(&pe->slaves);
-@@ -3245,7 +3246,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- {
- 	struct pci_controller *hose;
- 	struct pnv_phb *phb;
--	unsigned long size, m32map_off, pemap_off, iomap_off = 0;
-+	unsigned long size, m64map_off, m32map_off, pemap_off, iomap_off = 0;
- 	const __be64 *prop64;
- 	const __be32 *prop32;
- 	int i, len;
-@@ -3332,6 +3333,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 
- 	/* Allocate aux data & arrays. We don't have IO ports on PHB3 */
- 	size = _ALIGN_UP(phb->ioda.total_pe_num / 8, sizeof(unsigned long));
-+	m64map_off = size;
-+	size += phb->ioda.total_pe_num * sizeof(phb->ioda.m64_segmap[0]);
- 	m32map_off = size;
- 	size += phb->ioda.total_pe_num * sizeof(phb->ioda.m32_segmap[0]);
- 	if (phb->type == PNV_PHB_IODA1) {
-@@ -3342,9 +3345,12 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	size += phb->ioda.total_pe_num * sizeof(struct pnv_ioda_pe);
- 	aux = memblock_virt_alloc(size, 0);
- 	phb->ioda.pe_alloc = aux;
-+	phb->ioda.m64_segmap = aux + m64map_off;
- 	phb->ioda.m32_segmap = aux + m32map_off;
--	for (i = 0; i < phb->ioda.total_pe_num; i++)
-+	for (i = 0; i < phb->ioda.total_pe_num; i++) {
-+		phb->ioda.m64_segmap[i] = IODA_INVALID_PE;
- 		phb->ioda.m32_segmap[i] = IODA_INVALID_PE;
-+	}
- 	if (phb->type == PNV_PHB_IODA1) {
- 		phb->ioda.io_segmap = aux + iomap_off;
- 		for (i = 0; i < phb->ioda.total_pe_num; i++)
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 36c4965..866a5ea 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -146,6 +146,7 @@ struct pnv_phb {
- 		struct pnv_ioda_pe	*pe_array;
- 
- 		/* M32 & IO segment maps */
-+		int			*m64_segmap;
- 		int			*m32_segmap;
- 		int			*io_segmap;
- 
--- 
-2.1.0
 
+The following changes since commit 0cf1337e0b83c16de4e7e98dad3a6afce6043fea:
+
+  PCI: rcar: Add device tree support for r8a7793 (2016-02-05 14:13:53 -0600)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.5-fixes-3
+
+for you to fetch changes up to 61d9e854dfb91b46b99ffd3d31fc7d45d2b95f31:
+
+  PCI: mvebu: Restrict build to 32-bit ARM (2016-02-27 08:52:20 -0600)
+
+----------------------------------------------------------------
+PCI updates for v4.5:
+
+  Enumeration
+    Revert x86 pcibios_alloc_irq() to fix regression (Bjorn Helgaas)
+
+  Marvell MVEBU host bridge driver
+    Restrict build to 32-bit ARM (Thierry Reding)
+
+----------------------------------------------------------------
+Bjorn Helgaas (3):
+      Revert "x86/PCI: Don't alloc pcibios-irq when MSI is enabled"
+      Revert "PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed"
+      Revert "PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()"
+
+Thierry Reding (1):
+      PCI: mvebu: Restrict build to 32-bit ARM
+
+ arch/x86/include/asm/pci_x86.h |  2 ++
+ arch/x86/pci/common.c          | 26 ++++++++++----------------
+ arch/x86/pci/intel_mid_pci.c   |  9 +++------
+ arch/x86/pci/irq.c             | 23 +++++++++++++++++++----
+ drivers/acpi/pci_irq.c         | 17 +++++++++++++----
+ drivers/pci/host/Kconfig       |  1 +
+ include/linux/pci.h            | 17 -----------------
+ 7 files changed, 48 insertions(+), 47 deletions(-)
