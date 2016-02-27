@@ -1,122 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:36906 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966176AbcBDR33 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 4 Feb 2016 12:29:29 -0500
-Received: by mail-wm0-f53.google.com with SMTP id g62so15064913wme.0
-        for <linux-pci@vger.kernel.org>; Thu, 04 Feb 2016 09:29:28 -0800 (PST)
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V4 15/23] acpi, mcfg: Implement two calls that might be used to inject/remove MCFG region.
-Date: Thu,  4 Feb 2016 18:28:53 +0100
-Message-Id: <1454606941-9523-16-git-send-email-tn@semihalf.com>
-In-Reply-To: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: KY Srinivasan <kys@microsoft.com>
+To: Jake Oshins <jakeo@microsoft.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>,
+	"apw@canonical.com" <apw@canonical.com>,
+	"vkuznets@redhat.com" <vkuznets@redhat.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Hadden Hoppert <haddenh@microsoft.com>
+CC: Jake Oshins <jakeo@microsoft.com>
+Subject: RE: [PATCH 5/5] hv: Track allocations of children of hv_vmbus in
+ private resource tree
+Date: Sat, 27 Feb 2016 01:09:11 +0000
+Message-ID: <BY2PR0301MB16542F997FB348465274DC4BA0B80@BY2PR0301MB1654.namprd03.prod.outlook.com>
+References: <1456349042-16275-1-git-send-email-jakeo@microsoft.com>
+ <1456349042-16275-6-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1456349042-16275-6-git-send-email-jakeo@microsoft.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Lets abstract two calls which allow to inject and remove MCFG regions
-which may come from DSDT table. These calls will be used for x86 and ARM64
-PCI host bridge driver in the later patches.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/acpi/mcfg.c      | 38 ++++++++++++++++++++++++++++++++++++++
- include/linux/pci-acpi.h |  9 +++++++++
- 2 files changed, 47 insertions(+)
 
-diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
-index 3e1e7be..dca4c4e 100644
---- a/drivers/acpi/mcfg.c
-+++ b/drivers/acpi/mcfg.c
-@@ -10,6 +10,7 @@
- #include <linux/acpi.h>
- #include <linux/ecam.h>
- #include <linux/pci.h>
-+#include <linux/pci-acpi.h>
- 
- #define	PREFIX	"MCFG: "
- 
-@@ -77,6 +78,43 @@ int __init acpi_parse_mcfg(struct acpi_table_header *header)
- 	return 0;
- }
- 
-+int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci)
-+{
-+	struct pci_mmcfg_region *cfg;
-+	struct acpi_pci_root *root;
-+	int seg, start, end, err;
-+
-+	root = ci->root;
-+	seg = root->segment;
-+	start = root->secondary.start;
-+	end = root->secondary.end;
-+
-+	cfg = pci_mmconfig_lookup(seg, start);
-+	if (cfg)
-+		return 0;
-+
-+	cfg = pci_mmconfig_alloc(seg, start, end, root->mcfg_addr);
-+	if (!cfg)
-+		return -ENOMEM;
-+
-+	err = pci_mmconfig_inject(cfg);
-+	return err;
-+}
-+
-+void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci)
-+{
-+	struct acpi_pci_root *root = ci->root;
-+	struct pci_mmcfg_region *cfg;
-+
-+	cfg = pci_mmconfig_lookup(root->segment, root->secondary.start);
-+	if (!cfg)
-+		return;
-+
-+	if (cfg->hot_added)
-+		pci_mmconfig_delete(root->segment, root->secondary.start,
-+				    root->secondary.end);
-+}
-+
- int __init __weak acpi_mcfg_check_entry(struct acpi_table_mcfg *mcfg,
- 					struct acpi_mcfg_allocation *cfg)
- {
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index a72e22d..65b91f3 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -80,6 +80,15 @@ extern struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
- void acpi_pci_add_bus(struct pci_bus *bus);
- void acpi_pci_remove_bus(struct pci_bus *bus);
- 
-+#ifdef	CONFIG_PCI_MMCONFIG
-+int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci);
-+void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci);
-+#else
-+static inline int pci_mmcfg_setup_map(struct acpi_pci_root_info *ci)
-+{ return 0; }
-+static inline void pci_mmcfg_teardown_map(struct acpi_pci_root_info *ci) { }
-+#endif
-+
- #ifdef	CONFIG_ACPI_PCI_SLOT
- void acpi_pci_slot_init(void);
- void acpi_pci_slot_enumerate(struct pci_bus *bus);
--- 
-1.9.1
+> -----Original Message-----
+> From: jakeo@microsoft.com [mailto:jakeo@microsoft.com]
+> Sent: Wednesday, February 24, 2016 1:24 PM
+> To: linux-pci@vger.kernel.org; gregkh@linuxfoundation.org; KY Srinivasan
+> <kys@microsoft.com>; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; olaf@aepfle.de; apw@canonical.com;
+> vkuznets@redhat.com; Haiyang Zhang <haiyangz@microsoft.com>; Hadden
+> Hoppert <haddenh@microsoft.com>
+> Cc: Jake Oshins <jakeo@microsoft.com>
+> Subject: [PATCH 5/5] hv: Track allocations of children of hv_vmbus in private
+> resource tree
+> 
+> From: Jake Oshins <jakeo@microsoft.com>
+> 
+> This patch changes vmbus_allocate_mmio() and vmbus_free_mmio() so
+> that when child paravirtual devices allocate memory-mapped I/O
+> space, they allocate it privately from a resource tree pointed
+> at by hyperv_mmio and also by the public resource tree
+> iomem_resource.  This allows the region to be marked as "busy"
+> in the private tree, but a "bridge window" in the public tree,
+> guaranteeing that no two bridge windows will overlap each other
+> but while also allowing the PCI device children of the bridge
+> windows to overlap that window.
+> 
+> One might conclude that this belongs in the pnp layer, rather
+> than in this driver.  Rafael Wysocki, the maintainter of the
+> pnp layer, has previously asked that we not modify the pnp layer
+> as it is considered deprecated.  This patch is thus essentially
+> a workaround.
+> 
+> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+> ---
+>  drivers/hv/vmbus_drv.c | 22 +++++++++++++++++++++-
+>  1 file changed, 21 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+> index b090548..2a7eb3f 100644
+> --- a/drivers/hv/vmbus_drv.c
+> +++ b/drivers/hv/vmbus_drv.c
+> @@ -1169,7 +1169,7 @@ int vmbus_allocate_mmio(struct resource **new,
+> struct hv_device *device_obj,
+>  			resource_size_t size, resource_size_t align,
+>  			bool fb_overlap_ok)
+>  {
+> -	struct resource *iter;
+> +	struct resource *iter, *shadow;
+>  	resource_size_t range_min, range_max, start, local_min, local_max;
+>  	const char *dev_n = dev_name(&device_obj->device);
+>  	u32 fb_end = screen_info.lfb_base + (screen_info.lfb_size << 1);
+> @@ -1211,12 +1211,22 @@ int vmbus_allocate_mmio(struct resource
+> **new, struct hv_device *device_obj,
+> 
+>  			start = (local_min + align - 1) & ~(align - 1);
+>  			for (; start + size - 1 <= local_max; start += align) {
+> +				shadow = __request_region(iter, start,
+> +							  size,
+> +							  NULL,
+> +							  IORESOURCE_BUSY);
+> +				if (!shadow)
+> +					continue;
+> +
+>  				*new =
+> request_mem_region_exclusive(start, size,
+>  								    dev_n);
+>  				if (*new) {
+> +					shadow->name = (char*)*new;
 
+Why are you not correctly setting the name field in the shadow structure?
+
+Regards,
+
+K. Y
