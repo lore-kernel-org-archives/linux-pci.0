@@ -1,493 +1,230 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:35104 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756262AbcBHXzl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Feb 2016 18:55:41 -0500
-From: David Daney <ddaney.cavm@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Will Deacon <will.deacon@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>
-Subject: [PATCH v6 2/3] pci, pci-thunder-pem: Add PCIe host driver for ThunderX processors.
-Date: Mon,  8 Feb 2016 15:55:30 -0800
-Message-Id: <1454975731-13618-3-git-send-email-ddaney.cavm@gmail.com>
-In-Reply-To: <1454975731-13618-1-git-send-email-ddaney.cavm@gmail.com>
-References: <1454975731-13618-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from mail-yw0-f180.google.com ([209.85.161.180]:34275 "EHLO
+	mail-yw0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751426AbcB0IP3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 27 Feb 2016 03:15:29 -0500
+Received: by mail-yw0-f180.google.com with SMTP id h129so86648724ywb.1
+        for <linux-pci@vger.kernel.org>; Sat, 27 Feb 2016 00:15:29 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20160223151211.GB14394@localhost>
+References: <1455487501-28630-2-git-send-email-jchandra@broadcom.com>
+ <1455528398-29311-1-git-send-email-jchandra@broadcom.com> <20160215183015.GC12641@localhost>
+ <CAKc_7PVVn2ookpbOUuT-jyUq6e6hJYKLpM+d9=6CqYtLO45tWw@mail.gmail.com>
+ <20160216171418.GA702@localhost> <CAKc_7PVBH8h9aPK7j74yCjTOnJ22FzNd2O8nDUJn7n0iKUD_FQ@mail.gmail.com>
+ <20160216210337.GA8244@localhost> <CAKc_7PW3OBZcAW-rVEdWa2i94acgT9EhjS2Kbnb-ot36ZXPMUw@mail.gmail.com>
+ <20160218154957.GB17588@localhost> <CAKc_7PVhmE9SYCWD+DuzFWqzjpVFg4vO70TsAwyq8_8XYPJdBA@mail.gmail.com>
+ <20160223151211.GB14394@localhost>
+From: Jayachandran Chandrashekaran Nair
+	<jayachandran.chandrashekaran@broadcom.com>
+Date: Sat, 27 Feb 2016 13:44:49 +0530
+Message-ID: <CAKc_7PVKtVoiz0vU8OzJauSf=yDjrgH81zfqxUEyTOenVv51Sw@mail.gmail.com>
+Subject: Re: [RFC PATCH 2/2] PCI: Handle Broadcom Vulcan quirks
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Jayachandran C <jchandra@broadcom.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
+	Andi Kleen <ak@linux.intel.com>, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+Hi Bjorn,
 
-The root complexes used to access off-chip PCIe devices (called PEM
-units in the hardware manuals) on some Cavium ThunderX processors
-require quirky access methods for the config space of the PCIe bridge.
-Add a driver to provide these config space accessor functions.  The
-pci-host-common code is used to configure the PCI machinery.
+On Tue, Feb 23, 2016 at 8:42 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> [+cc Andi, linux-kernel, x86 for Intel Broadwell-EP non-BAR issue]
+>
+> On Tue, Feb 23, 2016 at 08:10:03PM +0530, Jayachandran Chandrashekaran Nair wrote:
+> > On Thu, Feb 18, 2016 at 9:19 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > On Wed, Feb 17, 2016 at 10:36:55PM +0530, Jayachandran Chandrashekaran Nair wrote:
+> > >> On Wed, Feb 17, 2016 at 2:33 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > >> > [+cc Arnd, Rob, DT host bridge description questions]
+> > >> >
+> > >> > On Tue, Feb 16, 2016 at 11:39:41PM +0530, Jayachandran Chandrashekaran Nair wrote:
+> > >> >> On Tue, Feb 16, 2016 at 10:44 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > >> >> > On Tue, Feb 16, 2016 at 09:47:34PM +0530, Jayachandran Chandrashekaran Nair wrote:
+> > >> >> >> On Tue, Feb 16, 2016 at 12:00 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > >> >> >> > On Mon, Feb 15, 2016 at 02:56:38PM +0530, Jayachandran C wrote:
+> > >> >> >> >> Handle two quirks of the PCI controller on Broadcom's Vulcan processor.
+> > >> >> >> >>  - Mark internal bridges so that they are skipped during DMA alias
+> > >> >> >> >>    search.
+> > >> >> >> >>  - Skip BAR0 resource assignment for internal bridges. The BARs
+> > >> >> >> >>    of internal bridges should not be assigned from the mem resource
+> > >> >> >> >>    range.
+> > >> >> >> >> ...
+> > >> >> >> >>  drivers/pci/quirks.c | 21 +++++++++++++++++++++
+> > >> >> >> >>  1 file changed, 21 insertions(+)
+> > >> >> >> >>
+> > >> >> >> >> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > >> >> >> >> index 0575a1e..afc186a 100644
+> > >> >> >> >> --- a/drivers/pci/quirks.c
+> > >> >> >> >> +++ b/drivers/pci/quirks.c
+> > >> >> >> >> @@ -3705,6 +3705,27 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
+> > >> >> >> >>  DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
+> > >> >> >> >>
+> > >> >> >> >>  /*
+> > >> >> >> >> + * Two levels of bridges in Broadcom Vulcan are not real PCI or PCIe bridges.
+> > >> >> >> >> + * These are internal bridges and should not be used for dma alias
+> > >> >> >> >> + * calculations. Additionally, the BAR0 of thes bridges should not be
+> > >> >> >> >> + * assigned with a mem resource from linux
+> > >> >> >> >> + */
+> > >> >> >> >> +static void quirk_bridge_brcm_vulcan_internal(struct pci_dev *pdev)
+> > >> >> >> >> +{
+> > >> >> >> >> +     struct resource *r = &pdev->resource[0];
+> > >> >> >> >> +
+> > >> >> >> >> +     /* skip from alias search */
+> > >> >> >> >> +     pdev->dev_flags |= PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS;
+> > >> >> >> >> +
+> > >> >> >> >> +     /* clear BAR0, should not be used from Linux */
+> > >> >> >> >> +     memset(r, 0, sizeof(*r));
+> > >> >> >> >
+> > >> >> >> > This definitely needs some explanation.  The whole point of the
+> > >> >> >> > architected PCI config space header is so that generic OS code can
+> > >> >> >> > manage the device without having to add device-specific code.
+> > >> >> >> >
+> > >> >> >> > Are you saying the register at 0x10 in config space is not actually a
+> > >> >> >> > BAR at all?  Or it is a BAR, but you don't think anybody should need
+> > >> >> >> > to use it?
+> > >> >> >>
+> > >> >> >> These is a proper BAR (64 bit pref) in the bridge's Type 1 header, but:
+> > >> >> >> 1. Assigning a memory resource from the pci memory window to this
+> > >> >> >>    BAR causes the PCIe system to fail (this is a bug). So we cannot
+> > >> >> >>    expose this BAR to standard Linux code without even more quirks
+> > >> >> >>    and hacks.
+> > >> >> >
+> > >> >> > Are you saying assigning space for this BAR exposes a Linux PCI bug?
+> > >> >> > If so, I'd like to know more about that because we should fix it.
+> > >> >> >
+> > >> >> > Or does it expose a hardware bug in the Broadcom device?
+> > >> >>
+> > >> >> This is a hardware bug (or non-compliance). The BAR cannot be
+> > >> >> assigned from the PCI MEM range. To use it we need to program
+> > >> >> an address outside the areas assigned to PCI to the BAR. But like
+> > >> >> I said it is better for us to ignore the BAR in linux and then the
+> > >> >> device acts as a normal bridge.
+> > >> >
+> > >> > Your PCI host bridge has a window of address space that it forwards
+> > >> > from the primary (CPU) side to the secondary (PCI) side.  I assume
+> > >> > that's what you mean by the "PCI MEM range."  Apparently if the BAR is
+> > >> > programmed inside that window, it causes some hardware error.  That
+> > >> > still seems strange; there's no driver for the device, and we know the
+> > >> > range is in use so it won't be assigned to any other device, so Linux
+> > >> > should never *access* the range.
+> > >>
+> > >> This is correct. The write to this bridge BAR with a address from
+> > >> the host bridge window will cause a hardware issue.
+> > >>
+> > >> > Apparently if you program the BAR *outside* the window, the hardware
+> > >> > error does not happen, and the private registers are accessible.  But
+> > >> > Linux currently doesn't know where this space is.
+> > >> >
+> > >> > If we ignore the BAR in Linux, apparently the hardware error does not
+> > >> > happen.  But the BAR still contains some value, so this is really the
+> > >> > same as having the BAR outside the window, presumably because it came
+> > >> > out of reset that way, or maybe firmware programmed it.
+> > >>
+> > >> Yes.
+> > >>
+> > >> > It sounds to me like you should do the following:
+> > >> >
+> > >> > a) Have firmware program this BAR where you want it,
+> > >> >
+> > >> > b) Describe these private registers as internal PCI bridge registers,
+> > >> >    using a DT "reg" property,
+> > >>
+> > >> Two ponts here:
+> > >> - We have to support ACPI as well
+> > >
+> > > ACPI can do something similar.  This register space would be described
+> > > in a _CRS method.  IIRC there is actually a bit in the _CRS descriptor
+> > > that was intended to tell you whether the resource is (a) consumed
+> > > directly by the device or (b) forwarded to downstream devices.  But I
+> > > think BIOSes didn't use that bit correctly, so it's useless, so the
+> > > _CRS method might have to be on a different device.
+> > >
+> > >> - There is no need to use the private registers in linux, so the
+> > >>    whole thing will be pointless.
+> > >>
+> > >> > c) Describe the host bridge window (which doesn't include the above
+> > >> >    registers) using the normal "ranges" property, and
+> > >>
+> > >> This is standard code (and ACPI works as well)..
+> > >>
+> > >> > d) Arrange for config writes to BAR 0 to be dropped and for reads to
+> > >> >    return 0, maybe by checks in your config accessors.
+> > >>
+> > >> Here we are hiding the BAR from linux using checks in config read
+> > >> write (if i understand correctly). This will need custom config accessors
+> > >> for Vulcan both on device tree as well as in ACPI.
+> > >
+> > > Config accessors are usually not specific to DT or ACPI.
+> > >
+> > >> The patch (above) is trying to do it in a much much simpler way by
+> > >> clearing the bar0 resource in DECLARE_PCI_FIXUP_HEADER quirk.
+> > >> I am not able to see why this is not valid.
+> > >
+> > > I think there are two problems:
+> > >
+> > > 1) If the device responds to any address space, Linux needs to know
+> > > about it.  If we don't know about it, we might assign that space to
+> > > something else.
+> >
+> > If it is really needed I can mark the address space as reserved. And
+> > Linux generally should not use physical address space outside the
+> > areas specified by firmware of device tree.
+>
+> That's true, at least in theory.  Historically on x86, we only avoided
+> areas marked as reserved.  We *should* have only used areas marked as
+> available for MMIO, but Linux didn't pay much attention to the _CRS
+> methods that tell us that.  We just assumed anything that wasn't RAM
+> and wasn't marked as reserved in E820 was fair game for use by PCI.
+>
+> > > 2) The PCI core still reads and writes the BAR to size it, and we
+> > > don't know whether this will trigger the hardware issue.
+> >
+> > The sizing read/write is done after disabling the BAR by writing
+> > to CMD register - I don't see why you think this will be a problem.
+>
+> You're right; I forgot about that CMD enable bit.  There are a few
+> cases where we don't disable decoding (see mmio_always_on), the most
+> important being for PCI_CLASS_BRIDGE_HOST devices.  But I think your
+> device is a PCI_CLASS_BRIDGE_PCI device, not a BRIDGE_HOST device, so
+> we should disable decoding on your device.
+>
+> > > *You* might know that neither of these is an issue today, but special
+> > > incidental knowledge like that is a maintenance problem because I
+> > > can't tell what PCI core changes might make them an issue in the
+> > > future.
+> >
+> > The worst case maintenance problem is that a future PCI change
+> > might break our chip. This is not unexpected in Linux, and such
+> > breakages can be easily fixed.
+>
+> It's certainly unexpected by *me* :)  And the burden of fixing such
+> breakages doesn't scale well -- it usually involves triage by somebody
+> other than the chip folks, e.g., me.
+>
+> Andi is doing something similar for some Broadwell-EP devices that
+> have BARs that aren't really BARs.  I suggested custom config
+> accessors, which is fairly clean from the core point of view, but it's
+> definitely clunky on the device side.
+>
+> Andi's first proposals were to use a quirk to set a flag bit that told
+> us not to touch the BAR.  I'm starting to think that's a cleaner
+> approach.  I think it would be better to put the bit(s) in the
+> pci_dev, so generic struct resource users wouldn't see them, set them
+> via early quirks, then have __pci_read_base() check them and just
+> leave the struct resource zeroed out.
 
-Signed-off-by: David Daney <david.daney@cavium.com>
-Acked-by: Rob Herring <robh@kernel.org>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
----
- .../devicetree/bindings/pci/pci-thunder-pem.txt    |  43 +++
- MAINTAINERS                                        |   8 +
- drivers/pci/host/Kconfig                           |   7 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pci-thunder-pem.c                 | 347 +++++++++++++++++++++
- 5 files changed, 406 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-pem.txt
- create mode 100644 drivers/pci/host/pci-thunder-pem.c
+I spent some more time working with our hardware team on the nature
+of this issue. It looks like this is not a problem if we setup the PCI
+configuration in firmware better (this has to do with the sequence for
+configuring the PCI controller in firmware).
 
-diff --git a/Documentation/devicetree/bindings/pci/pci-thunder-pem.txt b/Documentation/devicetree/bindings/pci/pci-thunder-pem.txt
-new file mode 100644
-index 0000000..f131fae
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/pci-thunder-pem.txt
-@@ -0,0 +1,43 @@
-+* ThunderX PEM PCIe host controller
-+
-+Firmware-initialized PCI host controller found on some Cavium
-+ThunderX processors.
-+
-+The properties and their meanings are identical to those described in
-+host-generic-pci.txt except as listed below.
-+
-+Properties of the host controller node that differ from
-+host-generic-pci.txt:
-+
-+- compatible     : Must be "cavium,pci-host-thunder-pem"
-+
-+- reg            : Two entries: First the configuration space for down
-+                   stream devices base address and size, as accessed
-+                   from the parent bus. Second, the register bank of
-+                   the PEM device PCIe bridge.
-+
-+Example:
-+
-+    pci@87e0,c2000000 {
-+	compatible = "cavium,pci-host-thunder-pem";
-+	device_type = "pci";
-+	msi-parent = <&its>;
-+	msi-map = <0 &its 0x10000 0x10000>;
-+	bus-range = <0x8f 0xc7>;
-+	#size-cells = <2>;
-+	#address-cells = <3>;
-+
-+	reg = <0x8880 0x8f000000 0x0 0x39000000>,  /* Configuration space */
-+	      <0x87e0 0xc2000000 0x0 0x00010000>; /* PEM space */
-+	ranges = <0x01000000 0x00 0x00020000 0x88b0 0x00020000 0x00 0x00010000>, /* I/O */
-+		 <0x03000000 0x00 0x10000000 0x8890 0x10000000 0x0f 0xf0000000>, /* mem64 */
-+		 <0x43000000 0x10 0x00000000 0x88a0 0x00000000 0x10 0x00000000>, /* mem64-pref */
-+		 <0x03000000 0x87e0 0xc2f00000 0x87e0 0xc2000000 0x00 0x00100000>; /* mem64 PEM BAR4 */
-+
-+	#interrupt-cells = <1>;
-+	interrupt-map-mask = <0 0 0 7>;
-+	interrupt-map = <0 0 0 1 &gic0 0 0 0 24 4>, /* INTA */
-+			<0 0 0 2 &gic0 0 0 0 25 4>, /* INTB */
-+			<0 0 0 3 &gic0 0 0 0 26 4>, /* INTC */
-+			<0 0 0 4 &gic0 0 0 0 27 4>; /* INTD */
-+    };
-diff --git a/MAINTAINERS b/MAINTAINERS
-index f95ac7f..650e8f3 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8411,6 +8411,14 @@ L:     linux-arm-msm@vger.kernel.org
- S:     Maintained
- F:     drivers/pci/host/*qcom*
- 
-+PCIE DRIVER FOR CAVIUM THUNDERX
-+M:	David Daney <david.daney@cavium.com>
-+L:	linux-pci@vger.kernel.org
-+L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
-+S:	Supported
-+F:	Documentation/devicetree/bindings/pci/pci-thunder-*
-+F:	drivers/pci/host/pci-thunder-*
-+
- PCMCIA SUBSYSTEM
- P:	Linux PCMCIA Team
- L:	linux-pcmcia@lists.infradead.org
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 65709b4..184df22 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -195,4 +195,11 @@ config PCIE_QCOM
- 	  PCIe controller uses the Designware core plus Qualcomm-specific
- 	  hardware wrappers.
- 
-+config PCI_HOST_THUNDER_PEM
-+	bool "Cavium Thunder PCIe controller to off-chip devices"
-+	depends on OF && ARM64
-+	select PCI_HOST_COMMON
-+	help
-+	  Say Y here if you want PCIe support for CN88XX Cavium Thunder SoCs.
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 3b24af8..8903172 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -23,3 +23,4 @@ obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
- obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
- obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
- obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
-+obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
-diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-new file mode 100644
-index 0000000..4b939c7
---- /dev/null
-+++ b/drivers/pci/host/pci-thunder-pem.c
-@@ -0,0 +1,347 @@
-+/*
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ *
-+ * Copyright (C) 2015 - 2016 Cavium, Inc.
-+ *
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of_address.h>
-+#include <linux/of_pci.h>
-+#include <linux/platform_device.h>
-+
-+#include "pci-host-common.h"
-+
-+#define PEM_CFG_WR 0x28
-+#define PEM_CFG_RD 0x30
-+
-+struct thunder_pem_pci {
-+	struct gen_pci	gen_pci;
-+	u32		ea_entry[3];
-+	void __iomem	*pem_reg_base;
-+};
-+
-+static void __iomem *thunder_pem_map_bus(struct pci_bus *bus,
-+					 unsigned int devfn, int where)
-+{
-+	struct gen_pci *pci = bus->sysdata;
-+	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
-+
-+	return pci->cfg.win[idx] + ((devfn << 16) | where);
-+}
-+
-+static int thunder_pem_bridge_read(struct pci_bus *bus, unsigned int devfn,
-+				   int where, int size, u32 *val)
-+{
-+	u64 read_val;
-+	struct thunder_pem_pci *pem_pci;
-+	struct gen_pci *pci = bus->sysdata;
-+
-+	pem_pci = container_of(pci, struct thunder_pem_pci, gen_pci);
-+
-+	if (devfn != 0 || where >= 2048) {
-+		*val = ~0;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	/*
-+	 * 32-bit accesses only.  Write the address to the low order
-+	 * bits of PEM_CFG_RD, then trigger the read by reading back.
-+	 * The config data lands in the upper 32-bits of PEM_CFG_RD.
-+	 */
-+	read_val = where & ~3ull;
-+	writeq(read_val, pem_pci->pem_reg_base + PEM_CFG_RD);
-+	read_val = readq(pem_pci->pem_reg_base + PEM_CFG_RD);
-+	read_val >>= 32;
-+
-+	/*
-+	 * The config space contains some garbage, fix it up.  Also
-+	 * synthesize an EA capability for the BAR used by MSI-X.
-+	 */
-+	switch (where & ~3) {
-+	case 0x40:
-+		read_val &= 0xffff00ff;
-+		read_val |= 0x00007000; /* Skip MSI CAP */
-+		break;
-+	case 0x70: /* Express Cap */
-+		/* PME interrupt on vector 2*/
-+		read_val |= (2u << 25);
-+		break;
-+	case 0xb0: /* MSI-X Cap */
-+		/* TableSize=4, Next Cap is EA */
-+		read_val &= 0xc00000ff;
-+		read_val |= 0x0003bc00;
-+		break;
-+	case 0xb4:
-+		/* Table offset=0, BIR=0 */
-+		read_val = 0x00000000;
-+		break;
-+	case 0xb8:
-+		/* BPA offset=0xf0000, BIR=0 */
-+		read_val = 0x000f0000;
-+		break;
-+	case 0xbc:
-+		/* EA, 1 entry, no next Cap */
-+		read_val = 0x00010014;
-+		break;
-+	case 0xc0:
-+		/* DW2 for type-1 */
-+		read_val = 0x00000000;
-+		break;
-+	case 0xc4:
-+		/* Entry BEI=0, PP=0x00, SP=0xff, ES=3 */
-+		read_val = 0x80ff0003;
-+		break;
-+	case 0xc8:
-+		read_val = pem_pci->ea_entry[0];
-+		break;
-+	case 0xcc:
-+		read_val = pem_pci->ea_entry[1];
-+		break;
-+	case 0xd0:
-+		read_val = pem_pci->ea_entry[2];
-+		break;
-+	default:
-+		break;
-+	}
-+	read_val >>= (8 * (where & 3));
-+	switch (size) {
-+	case 1:
-+		read_val &= 0xff;
-+		break;
-+	case 2:
-+		read_val &= 0xffff;
-+		break;
-+	default:
-+		break;
-+	}
-+	*val = read_val;
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int thunder_pem_config_read(struct pci_bus *bus, unsigned int devfn,
-+				   int where, int size, u32 *val)
-+{
-+	struct gen_pci *pci = bus->sysdata;
-+
-+	if (bus->number < pci->cfg.bus_range->start ||
-+	    bus->number > pci->cfg.bus_range->end)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	/*
-+	 * The first device on the bus is the PEM PCIe bridge.
-+	 * Special case its config access.
-+	 */
-+	if (bus->number == pci->cfg.bus_range->start)
-+		return thunder_pem_bridge_read(bus, devfn, where, size, val);
-+
-+	return pci_generic_config_read(bus, devfn, where, size, val);
-+}
-+
-+/*
-+ * Some of the w1c_bits below also include read-only or non-writable
-+ * reserved bits, this makes the code simpler and is OK as the bits
-+ * are not affected by writing zeros to them.
-+ */
-+static u32 thunder_pem_bridge_w1c_bits(int where)
-+{
-+	u32 w1c_bits = 0;
-+
-+	switch (where & ~3) {
-+	case 0x04: /* Command/Status */
-+	case 0x1c: /* Base and I/O Limit/Secondary Status */
-+		w1c_bits = 0xff000000;
-+		break;
-+	case 0x44: /* Power Management Control and Status */
-+		w1c_bits = 0xfffffe00;
-+		break;
-+	case 0x78: /* Device Control/Device Status */
-+	case 0x80: /* Link Control/Link Status */
-+	case 0x88: /* Slot Control/Slot Status */
-+	case 0x90: /* Root Status */
-+	case 0xa0: /* Link Control 2 Registers/Link Status 2 */
-+		w1c_bits = 0xffff0000;
-+		break;
-+	case 0x104: /* Uncorrectable Error Status */
-+	case 0x110: /* Correctable Error Status */
-+	case 0x130: /* Error Status */
-+	case 0x160: /* Link Control 4 */
-+		w1c_bits = 0xffffffff;
-+		break;
-+	default:
-+		break;
-+	}
-+	return w1c_bits;
-+}
-+
-+static int thunder_pem_bridge_write(struct pci_bus *bus, unsigned int devfn,
-+				    int where, int size, u32 val)
-+{
-+	struct gen_pci *pci = bus->sysdata;
-+	struct thunder_pem_pci *pem_pci;
-+	u64 write_val, read_val;
-+	u32 mask = 0;
-+
-+	pem_pci = container_of(pci, struct thunder_pem_pci, gen_pci);
-+
-+	if (devfn != 0 || where >= 2048)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	/*
-+	 * 32-bit accesses only.  If the write is for a size smaller
-+	 * than 32-bits, we must first read the 32-bit value and merge
-+	 * in the desired bits and then write the whole 32-bits back
-+	 * out.
-+	 */
-+	switch (size) {
-+	case 1:
-+		read_val = where & ~3ull;
-+		writeq(read_val, pem_pci->pem_reg_base + PEM_CFG_RD);
-+		read_val = readq(pem_pci->pem_reg_base + PEM_CFG_RD);
-+		read_val >>= 32;
-+		mask = ~(0xff << (8 * (where & 3)));
-+		read_val &= mask;
-+		val = (val & 0xff) << (8 * (where & 3));
-+		val |= (u32)read_val;
-+		break;
-+	case 2:
-+		read_val = where & ~3ull;
-+		writeq(read_val, pem_pci->pem_reg_base + PEM_CFG_RD);
-+		read_val = readq(pem_pci->pem_reg_base + PEM_CFG_RD);
-+		read_val >>= 32;
-+		mask = ~(0xffff << (8 * (where & 3)));
-+		read_val &= mask;
-+		val = (val & 0xffff) << (8 * (where & 3));
-+		val |= (u32)read_val;
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	/*
-+	 * By expanding the write width to 32 bits, we may
-+	 * inadvertently hit some W1C bits that were not intended to
-+	 * be written.  Calculate the mask that must be applied to the
-+	 * data to be written to avoid these cases.
-+	 */
-+	if (mask) {
-+		u32 w1c_bits = thunder_pem_bridge_w1c_bits(where);
-+
-+		if (w1c_bits) {
-+			mask &= w1c_bits;
-+			val &= ~mask;
-+		}
-+	}
-+
-+	/*
-+	 * Low order bits are the config address, the high order 32
-+	 * bits are the data to be written.
-+	 */
-+	write_val = where & ~3ull;
-+	write_val |= (((u64)val) << 32);
-+	writeq(write_val, pem_pci->pem_reg_base + PEM_CFG_WR);
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
-+				    int where, int size, u32 val)
-+{
-+	struct gen_pci *pci = bus->sysdata;
-+
-+	if (bus->number < pci->cfg.bus_range->start ||
-+	    bus->number > pci->cfg.bus_range->end)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	/*
-+	 * The first device on the bus is the PEM PCIe bridge.
-+	 * Special case its config access.
-+	 */
-+	if (bus->number == pci->cfg.bus_range->start)
-+		return thunder_pem_bridge_write(bus, devfn, where, size, val);
-+
-+
-+	return pci_generic_config_write(bus, devfn, where, size, val);
-+}
-+
-+static struct gen_pci_cfg_bus_ops thunder_pem_bus_ops = {
-+	.bus_shift	= 24,
-+	.ops		= {
-+		.map_bus	= thunder_pem_map_bus,
-+		.read		= thunder_pem_config_read,
-+		.write		= thunder_pem_config_write,
-+	}
-+};
-+
-+static const struct of_device_id thunder_pem_of_match[] = {
-+	{ .compatible = "cavium,pci-host-thunder-pem",
-+	  .data = &thunder_pem_bus_ops },
-+
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(of, thunder_pem_of_match);
-+
-+static int thunder_pem_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	const struct of_device_id *of_id;
-+	resource_size_t bar4_start;
-+	struct resource *res_pem;
-+	struct thunder_pem_pci *pem_pci;
-+
-+	pem_pci = devm_kzalloc(dev, sizeof(*pem_pci), GFP_KERNEL);
-+	if (!pem_pci)
-+		return -ENOMEM;
-+
-+	of_id = of_match_node(thunder_pem_of_match, dev->of_node);
-+	pem_pci->gen_pci.cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
-+
-+	/*
-+	 * The second register range is the PEM bridge to the PCIe
-+	 * bus.  It has a different config access method than those
-+	 * devices behind the bridge.
-+	 */
-+	res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+	if (!res_pem) {
-+		dev_err(dev, "missing \"reg[1]\"property\n");
-+		return -EINVAL;
-+	}
-+
-+	pem_pci->pem_reg_base = devm_ioremap(dev, res_pem->start, 0x10000);
-+	if (!pem_pci->pem_reg_base)
-+		return -ENOMEM;
-+
-+	/*
-+	 * The MSI-X BAR for the PEM and AER interrupts is located at
-+	 * a fixed offset from the PEM register base.  Generate a
-+	 * fragment of the synthesized Enhanced Allocation capability
-+	 * structure here for the BAR.
-+	 */
-+	bar4_start = res_pem->start + 0xf00000;
-+	pem_pci->ea_entry[0] = (u32)bar4_start | 2;
-+	pem_pci->ea_entry[1] = (u32)(res_pem->end - bar4_start) & ~3u;
-+	pem_pci->ea_entry[2] = (u32)(bar4_start >> 32);
-+
-+	return pci_host_common_probe(pdev, &pem_pci->gen_pci);
-+}
-+
-+static struct platform_driver thunder_pem_driver = {
-+	.driver = {
-+		.name = KBUILD_MODNAME,
-+		.of_match_table = thunder_pem_of_match,
-+	},
-+	.probe = thunder_pem_probe,
-+};
-+module_platform_driver(thunder_pem_driver);
-+
-+MODULE_DESCRIPTION("Thunder PEM PCIe host driver");
-+MODULE_LICENSE("GPL v2");
--- 
-1.8.3.1
+So I will drop the part in my patch that hides the BARs from linux, since
+the standard Linux resource allocation code will work Sorry for taking up
+your time on this.
 
+Thanks,
+JC.
