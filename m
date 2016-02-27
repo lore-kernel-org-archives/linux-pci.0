@@ -1,161 +1,231 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jscinoz.so ([43.229.62.214]:35428 "EHLO mail.jscinoz.so"
+Received: from mail.kernel.org ([198.145.29.136]:47610 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752160AbcBZIQ5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 26 Feb 2016 03:16:57 -0500
-From: Jack Coulter <jscinoz@jscinoz.so>
-Subject: Thunderbolt 3 (Skylake / Alpine Ridge) hotplug
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-ID: <56D0085B.60402@jscinoz.so>
-Date: Fri, 26 Feb 2016 19:10:03 +1100
+	id S1756340AbcB0Ogo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 27 Feb 2016 09:36:44 -0500
+Date: Sat, 27 Feb 2016 08:36:37 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jayachandran Chandrashekaran Nair
+	<jayachandran.chandrashekaran@broadcom.com>
+Cc: Jayachandran C <jchandra@broadcom.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
+	Andi Kleen <ak@linux.intel.com>, linux-kernel@vger.kernel.org,
+	x86@kernel.org
+Subject: Re: [RFC PATCH 2/2] PCI: Handle Broadcom Vulcan quirks
+Message-ID: <20160227143637.GA21037@localhost>
+References: <20160215183015.GC12641@localhost>
+ <CAKc_7PVVn2ookpbOUuT-jyUq6e6hJYKLpM+d9=6CqYtLO45tWw@mail.gmail.com>
+ <20160216171418.GA702@localhost>
+ <CAKc_7PVBH8h9aPK7j74yCjTOnJ22FzNd2O8nDUJn7n0iKUD_FQ@mail.gmail.com>
+ <20160216210337.GA8244@localhost>
+ <CAKc_7PW3OBZcAW-rVEdWa2i94acgT9EhjS2Kbnb-ot36ZXPMUw@mail.gmail.com>
+ <20160218154957.GB17588@localhost>
+ <CAKc_7PVhmE9SYCWD+DuzFWqzjpVFg4vO70TsAwyq8_8XYPJdBA@mail.gmail.com>
+ <20160223151211.GB14394@localhost>
+ <CAKc_7PVKtVoiz0vU8OzJauSf=yDjrgH81zfqxUEyTOenVv51Sw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKc_7PVKtVoiz0vU8OzJauSf=yDjrgH81zfqxUEyTOenVv51Sw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sat, Feb 27, 2016 at 01:44:49PM +0530, Jayachandran Chandrashekaran Nair wrote:
+> On Tue, Feb 23, 2016 at 8:42 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Tue, Feb 23, 2016 at 08:10:03PM +0530, Jayachandran Chandrashekaran Nair wrote:
+> > > On Thu, Feb 18, 2016 at 9:19 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > > On Wed, Feb 17, 2016 at 10:36:55PM +0530, Jayachandran Chandrashekaran Nair wrote:
+> > > >> On Wed, Feb 17, 2016 at 2:33 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > >> > On Tue, Feb 16, 2016 at 11:39:41PM +0530, Jayachandran Chandrashekaran Nair wrote:
+> > > >> >> On Tue, Feb 16, 2016 at 10:44 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > >> >> > On Tue, Feb 16, 2016 at 09:47:34PM +0530, Jayachandran Chandrashekaran Nair wrote:
+> > > >> >> >> On Tue, Feb 16, 2016 at 12:00 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > > >> >> >> > On Mon, Feb 15, 2016 at 02:56:38PM +0530, Jayachandran C wrote:
+> > > >> >> >> >> Handle two quirks of the PCI controller on Broadcom's Vulcan processor.
+> > > >> >> >> >>  - Mark internal bridges so that they are skipped during DMA alias
+> > > >> >> >> >>    search.
+> > > >> >> >> >>  - Skip BAR0 resource assignment for internal bridges. The BARs
+> > > >> >> >> >>    of internal bridges should not be assigned from the mem resource
+> > > >> >> >> >>    range.
+> > > >> >> >> >> ...
+> > > >> >> >> >>  drivers/pci/quirks.c | 21 +++++++++++++++++++++
+> > > >> >> >> >>  1 file changed, 21 insertions(+)
+> > > >> >> >> >>
+> > > >> >> >> >> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > > >> >> >> >> index 0575a1e..afc186a 100644
+> > > >> >> >> >> --- a/drivers/pci/quirks.c
+> > > >> >> >> >> +++ b/drivers/pci/quirks.c
+> > > >> >> >> >> @@ -3705,6 +3705,27 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
+> > > >> >> >> >>  DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
+> > > >> >> >> >>
+> > > >> >> >> >>  /*
+> > > >> >> >> >> + * Two levels of bridges in Broadcom Vulcan are not real PCI or PCIe bridges.
+> > > >> >> >> >> + * These are internal bridges and should not be used for dma alias
+> > > >> >> >> >> + * calculations. Additionally, the BAR0 of thes bridges should not be
+> > > >> >> >> >> + * assigned with a mem resource from linux
+> > > >> >> >> >> + */
+> > > >> >> >> >> +static void quirk_bridge_brcm_vulcan_internal(struct pci_dev *pdev)
+> > > >> >> >> >> +{
+> > > >> >> >> >> +     struct resource *r = &pdev->resource[0];
+> > > >> >> >> >> +
+> > > >> >> >> >> +     /* skip from alias search */
+> > > >> >> >> >> +     pdev->dev_flags |= PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS;
+> > > >> >> >> >> +
+> > > >> >> >> >> +     /* clear BAR0, should not be used from Linux */
+> > > >> >> >> >> +     memset(r, 0, sizeof(*r));
+> > > >> >> >> >
+> > > >> >> >> > This definitely needs some explanation.  The whole point of the
+> > > >> >> >> > architected PCI config space header is so that generic OS code can
+> > > >> >> >> > manage the device without having to add device-specific code.
+> > > >> >> >> >
+> > > >> >> >> > Are you saying the register at 0x10 in config space is not actually a
+> > > >> >> >> > BAR at all?  Or it is a BAR, but you don't think anybody should need
+> > > >> >> >> > to use it?
+> > > >> >> >>
+> > > >> >> >> These is a proper BAR (64 bit pref) in the bridge's Type 1 header, but:
+> > > >> >> >> 1. Assigning a memory resource from the pci memory window to this
+> > > >> >> >>    BAR causes the PCIe system to fail (this is a bug). So we cannot
+> > > >> >> >>    expose this BAR to standard Linux code without even more quirks
+> > > >> >> >>    and hacks.
+> > > >> >> >
+> > > >> >> > Are you saying assigning space for this BAR exposes a Linux PCI bug?
+> > > >> >> > If so, I'd like to know more about that because we should fix it.
+> > > >> >> >
+> > > >> >> > Or does it expose a hardware bug in the Broadcom device?
+> > > >> >>
+> > > >> >> This is a hardware bug (or non-compliance). The BAR cannot be
+> > > >> >> assigned from the PCI MEM range. To use it we need to program
+> > > >> >> an address outside the areas assigned to PCI to the BAR. But like
+> > > >> >> I said it is better for us to ignore the BAR in linux and then the
+> > > >> >> device acts as a normal bridge.
+> > > >> >
+> > > >> > Your PCI host bridge has a window of address space that it forwards
+> > > >> > from the primary (CPU) side to the secondary (PCI) side.  I assume
+> > > >> > that's what you mean by the "PCI MEM range."  Apparently if the BAR is
+> > > >> > programmed inside that window, it causes some hardware error.  That
+> > > >> > still seems strange; there's no driver for the device, and we know the
+> > > >> > range is in use so it won't be assigned to any other device, so Linux
+> > > >> > should never *access* the range.
+> > > >>
+> > > >> This is correct. The write to this bridge BAR with a address from
+> > > >> the host bridge window will cause a hardware issue.
+> > > >>
+> > > >> > Apparently if you program the BAR *outside* the window, the hardware
+> > > >> > error does not happen, and the private registers are accessible.  But
+> > > >> > Linux currently doesn't know where this space is.
+> > > >> >
+> > > >> > If we ignore the BAR in Linux, apparently the hardware error does not
+> > > >> > happen.  But the BAR still contains some value, so this is really the
+> > > >> > same as having the BAR outside the window, presumably because it came
+> > > >> > out of reset that way, or maybe firmware programmed it.
+> > > >>
+> > > >> Yes.
+> > > >>
+> > > >> > It sounds to me like you should do the following:
+> > > >> >
+> > > >> > a) Have firmware program this BAR where you want it,
+> > > >> >
+> > > >> > b) Describe these private registers as internal PCI bridge registers,
+> > > >> >    using a DT "reg" property,
+> > > >>
+> > > >> Two ponts here:
+> > > >> - We have to support ACPI as well
+> > > >
+> > > > ACPI can do something similar.  This register space would be described
+> > > > in a _CRS method.  IIRC there is actually a bit in the _CRS descriptor
+> > > > that was intended to tell you whether the resource is (a) consumed
+> > > > directly by the device or (b) forwarded to downstream devices.  But I
+> > > > think BIOSes didn't use that bit correctly, so it's useless, so the
+> > > > _CRS method might have to be on a different device.
+> > > >
+> > > >> - There is no need to use the private registers in linux, so the
+> > > >>    whole thing will be pointless.
+> > > >>
+> > > >> > c) Describe the host bridge window (which doesn't include the above
+> > > >> >    registers) using the normal "ranges" property, and
+> > > >>
+> > > >> This is standard code (and ACPI works as well)..
+> > > >>
+> > > >> > d) Arrange for config writes to BAR 0 to be dropped and for reads to
+> > > >> >    return 0, maybe by checks in your config accessors.
+> > > >>
+> > > >> Here we are hiding the BAR from linux using checks in config read
+> > > >> write (if i understand correctly). This will need custom config accessors
+> > > >> for Vulcan both on device tree as well as in ACPI.
+> > > >
+> > > > Config accessors are usually not specific to DT or ACPI.
+> > > >
+> > > >> The patch (above) is trying to do it in a much much simpler way by
+> > > >> clearing the bar0 resource in DECLARE_PCI_FIXUP_HEADER quirk.
+> > > >> I am not able to see why this is not valid.
+> > > >
+> > > > I think there are two problems:
+> > > >
+> > > > 1) If the device responds to any address space, Linux needs to know
+> > > > about it.  If we don't know about it, we might assign that space to
+> > > > something else.
+> > >
+> > > If it is really needed I can mark the address space as reserved. And
+> > > Linux generally should not use physical address space outside the
+> > > areas specified by firmware of device tree.
+> >
+> > That's true, at least in theory.  Historically on x86, we only avoided
+> > areas marked as reserved.  We *should* have only used areas marked as
+> > available for MMIO, but Linux didn't pay much attention to the _CRS
+> > methods that tell us that.  We just assumed anything that wasn't RAM
+> > and wasn't marked as reserved in E820 was fair game for use by PCI.
+> >
+> > > > 2) The PCI core still reads and writes the BAR to size it, and we
+> > > > don't know whether this will trigger the hardware issue.
+> > >
+> > > The sizing read/write is done after disabling the BAR by writing
+> > > to CMD register - I don't see why you think this will be a problem.
+> >
+> > You're right; I forgot about that CMD enable bit.  There are a few
+> > cases where we don't disable decoding (see mmio_always_on), the most
+> > important being for PCI_CLASS_BRIDGE_HOST devices.  But I think your
+> > device is a PCI_CLASS_BRIDGE_PCI device, not a BRIDGE_HOST device, so
+> > we should disable decoding on your device.
+> >
+> > > > *You* might know that neither of these is an issue today, but special
+> > > > incidental knowledge like that is a maintenance problem because I
+> > > > can't tell what PCI core changes might make them an issue in the
+> > > > future.
+> > >
+> > > The worst case maintenance problem is that a future PCI change
+> > > might break our chip. This is not unexpected in Linux, and such
+> > > breakages can be easily fixed.
+> >
+> > It's certainly unexpected by *me* :)  And the burden of fixing such
+> > breakages doesn't scale well -- it usually involves triage by somebody
+> > other than the chip folks, e.g., me.
+> >
+> > Andi is doing something similar for some Broadwell-EP devices that
+> > have BARs that aren't really BARs.  I suggested custom config
+> > accessors, which is fairly clean from the core point of view, but it's
+> > definitely clunky on the device side.
+> >
+> > Andi's first proposals were to use a quirk to set a flag bit that told
+> > us not to touch the BAR.  I'm starting to think that's a cleaner
+> > approach.  I think it would be better to put the bit(s) in the
+> > pci_dev, so generic struct resource users wouldn't see them, set them
+> > via early quirks, then have __pci_read_base() check them and just
+> > leave the struct resource zeroed out.
+> 
+> I spent some more time working with our hardware team on the nature
+> of this issue. It looks like this is not a problem if we setup the PCI
+> configuration in firmware better (this has to do with the sequence for
+> configuring the PCI controller in firmware).
+> 
+> So I will drop the part in my patch that hides the BARs from linux, since
+> the standard Linux resource allocation code will work Sorry for taking up
+> your time on this.
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
+No problem, this is the best possible outcome: the hardware isn't
+broken, Linux isn't broken (at least in this tiny regard), we avoided
+putting an unnecessary workaround into Linux, and we retained the
+ability to use those debug registers if that's ever necessary.
 
-Hi Andreas,
+Thanks a lot for chasing this down!
 
-I was asking around on #linux-pci on OFTC and it was mentioned that you
-were the maintainer for Linux Thunderbolt support, and that I should
-direct my query to you and the linux-pci & linux-kernel lists.
-
-I'm attempting to use the Thunderbolt 3 (which has a USB Type-C
-connector) port on my laptop, a Dell XPS 15 (9550). The external device
-I'm attempting to use is a gigabit ethernet + USB 3.0 hub, of an unknown
-/ generic brand, but bears model number KY-688 if that's of any use.
-
-When the device is present at system startup, everything works
-correctly, and shows up in lspci as a USB controller, which lsusb shows
-having a hub and ethernet NIC attached, which the r8152 driver binds and
-uses without issue:
-
-lspci -v:
-> 0a:00.0 USB controller: Intel Corporation Device 15b5 (prog-if 30 [XHCI])
->     Subsystem: Device 2222:1111
->     Flags: bus master, fast devsel, latency 0, IRQ 131
->     Memory at c4200000 (32-bit, non-prefetchable) [size=64K]
->     Capabilities: [80] Power Management version 3
->     Capabilities: [88] MSI: Enable+ Count=1/8 Maskable- 64bit+
->     Capabilities: [c0] Express Endpoint, MSI 00
->     Capabilities: [100] Device Serial Number a3-21-b5-60-a7-23-04-00
->     Capabilities: [200] Advanced Error Reporting
->     Capabilities: [300] Virtual Channel
->     Capabilities: [400] Power Budgeting <?>
->     Capabilities: [500] Vendor Specific Information: ID=1234 Rev=1
-Len=0d8 <?>
->     Capabilities: [600] Latency Tolerance Reporting
->     Capabilities: [700] #19
->     Kernel driver in use: xhci_hcd
-
-
-lspci -tv (Thunderbolt device is 15b5)
-> -[0000:00]-+-00.0  Intel Corporation Sky Lake Host Bridge/DRAM Registers
->            +-01.0-[01]----00.0  NVIDIA Corporation GM107M [GeForce GTX
-960M]
->            +-02.0  Intel Corporation Device 191b
->            +-04.0  Intel Corporation Device 1903
->            +-14.0  Intel Corporation Sunrise Point-H USB 3.0 xHCI
-Controller
->            +-14.2  Intel Corporation Sunrise Point-H Thermal subsystem
->            +-15.0  Intel Corporation Sunrise Point-H LPSS I2C
-Controller #0
->            +-15.1  Intel Corporation Sunrise Point-H LPSS I2C
-Controller #1
->            +-16.0  Intel Corporation Sunrise Point-H CSME HECI #1
->            +-1c.0-[02]----00.0  Broadcom Corporation BCM43602 802.11ac
-Wireless LAN SoC
->            +-1c.1-[03]----00.0  Realtek Semiconductor Co., Ltd. Device
-525a
->            +-1d.0-[04]----00.0  Samsung Electronics Co Ltd Device a802
->            +-1d.4-[05]--
->            +-1d.6-[06-3e]----00.0-[07-0a]--+-00.0-[08]--
->            |                               +-01.0-[09]--
->            |                               \-02.0-[0a]----00.0  Intel
-Corporation Device 15b5
->            +-1f.0  Intel Corporation Sunrise Point-H LPC Controller
->            +-1f.2  Intel Corporation Sunrise Point-H PMC
->            +-1f.3  Intel Corporation Sunrise Point-H HD Audio
->            \-1f.4  Intel Corporation Sunrise Point-H SMBus
-
-lsusb -tv:
-> /:  Bus 04.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/2p, 5000M
->     |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/4p, 5000M
->         |__ Port 1: Dev 3, If 0, Class=Vendor Specific Class,
-Driver=r8152, 5000M
-> /:  Bus 03.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/2p, 480M
->     |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/4p, 480M
->         |__ Port 3: Dev 3, If 0, Class=Human Interface Device,
-Driver=usbhid, 12M
->         |__ Port 3: Dev 3, If 1, Class=Human Interface Device,
-Driver=usbhid, 12M
->         |__ Port 3: Dev 3, If 2, Class=Human Interface Device,
-Driver=usbhid, 12M
->         |__ Port 3: Dev 3, If 3, Class=Human Interface Device,
-Driver=usbhid, 12M
-> /:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/8p, 5000M
-> /:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/16p, 480M
->     |__ Port 4: Dev 2, If 0, Class=Vendor Specific Class,
-Driver=btusb, 12M
->     |__ Port 4: Dev 2, If 1, Class=Vendor Specific Class,
-Driver=btusb, 12M
->     |__ Port 4: Dev 2, If 2, Class=Vendor Specific Class,
-Driver=btusb, 12M
->     |__ Port 4: Dev 2, If 3, Class=Application Specific Interface,
-Driver=, 12M
->     |__ Port 12: Dev 3, If 0, Class=Video, Driver=uvcvideo, 480M
->     |__ Port 12: Dev 3, If 1, Class=Video, Driver=uvcvideo, 480M
-
-
-However, if the device is connected after the system boots (or
-disconnected and reconnected), it is not detected at all. No messages
-show up in dmesg upon connection and no additional devices show up in
-the output of lspci & lsusb. Strangely enough, USB devices connected to
-the external hub do still receive power.
-
-I also have the following options relating to PCI hotplug set in my
-kernel config:
-
-> CONFIG_HOTPLUG_PCI_PCIE=y
-> CONFIG_HOTPLUG_PCI=y
-> CONFIG_HOTPLUG_PCI_ACPI=y
-> CONFIG_HOTPLUG_PCI_ACPI_IBM=y
-
-I'm running the 4.4.2 kernel, booted via EFI. From what I've read,
-Thunderbolt hotplug has been working since 3.17, controlled by the
-CONFIG_THUNDERBOLT option. However regardless of whether this option is
-enabled or disabled, hotplug does not appeare to work on my hardware.
->From reading the in-kernel help text for this option, I suspect that
-it's only relevant for the older Cactus Ridge Thunderbolt controller
-present in 2012-era MacBooks.
-
-How can I go about finding additional information about just what's
-going on, hopefully to assist with improving support for this newer
-hardware?
-
-
-Kind regards,
-Jack
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJW0AhWAAoJEP0XuxcIDSnP9lwP/i/wNuNTQOKM40FZdcslJ4u1
-uztebCxlMTt9MIQteZDSK5Srfof/EN9sT9TKQB8eBa7szzBC6ve37W+n5sKh189+
-fMMOHBxVg10okCZk6WhyIrY1Q0kdIsOqCY80SoVRHZ0/1anP0+wBr1GAELhYVkrz
-ZoFTjvVG/fvuqXxs4es0S9wD7q9xgnMpSEHWjsc2h+XR1JvRyaifh6YrYQ0Y/sb7
-XJ5TuaNb+LKT5RACuMLSPb+LeYoRd+KOD9O/5hZOunJdglFjr1SsPTMLE7OgSPgC
-JhQGc6jaRbI9xYfe95V+YiVG/R1rVmWyPO5K22XWvB96F2ecS+L9lTtSdvEMG3z8
-AxxBoG+nu5b396Fk6+7Mt5tqyI6/pqxHf+sr2+znK7tzBxugz89IaGjN7AzQFFqc
-Y0529G+YcBegXhYkUJ4KWvjAnmXK0ovhMZg4+SMAxPK9KHlHfJtpHWdteyQwGYmJ
-LiwvbxskDXESUs+5W2CMPaJymcxp4MiRCrZvTKGojtCQh8TgPBYmFMwocDQ14kgI
-s8fW0GLchh9pcCpPZDifpnHOZUAS2V7ebP3eJnmC7N6XpCpvqOmR1+BXr9KMK4fb
-D2sQW1H2s5biBnsWZKsKj0ZIn5vMojMH1zbrUG7lqtdO4xNt6AN1H/Wp1Rqsgu5u
-D0x1areDAEKuToqgb0wJ
-=AU/v
------END PGP SIGNATURE-----
-
-
+Bjorn
