@@ -1,110 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.75]:49785 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757484AbcBBU0D (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 2 Feb 2016 15:26:03 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Vineet.Gupta1@synopsys.com, helgaas@kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-snps-arc@lists.infradead.org, CARLOS.PALMINHA@synopsys.com,
-	Alexey.Brodkin@synopsys.com, robh+dt@kernel.org,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org
-Subject: Re: [PATCH v7 2/2] add new platform driver for PCI RC
-Date: Tue, 02 Feb 2016 21:25:25 +0100
-Message-ID: <8223655.W63T0XOVm1@wuerfel>
-In-Reply-To: <10b29adcdb0a31eb8f8071b271da267e44ad8a04.1454349430.git.jpinto@synopsys.com>
-References: <cover.1454349430.git.jpinto@synopsys.com> <10b29adcdb0a31eb8f8071b271da267e44ad8a04.1454349430.git.jpinto@synopsys.com>
-MIME-Version: 1.0
+Received: from mail-by2on0136.outbound.protection.outlook.com ([207.46.100.136]:12905
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752095AbcB2RVX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Feb 2016 12:21:23 -0500
+From: Jake Oshins <jakeo@microsoft.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+	KY Srinivasan <kys@microsoft.com>
+CC: Haiyang Zhang <haiyangz@microsoft.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Subject: RE: [patch] PCI: hv: potential use after free
+Date: Mon, 29 Feb 2016 17:21:18 +0000
+Message-ID: <DM2PR0301MB1232C919B7845FAEC0B36BF3ABBA0@DM2PR0301MB1232.namprd03.prod.outlook.com>
+References: <20160227104357.GA14086@mwanda>
+In-Reply-To: <20160227104357.GA14086@mwanda>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 01 February 2016 18:07:45 Joao Pinto wrote:
-> This patch adds a new driver that will be the reference platform driver
-> for all PCI RC IP Protoyping Kits based on ARC SDP.
-> This patch is composed by:
+> -----Original Message-----
+> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
+> Sent: Saturday, February 27, 2016 2:44 AM
+> To: KY Srinivasan <kys@microsoft.com>; Jake Oshins
+> <jakeo@microsoft.com>
+> Cc: Haiyang Zhang <haiyangz@microsoft.com>; Bjorn Helgaas
+> <bhelgaas@google.com>; devel@linuxdriverproject.org; linux-
+> pci@vger.kernel.org; linux-kernel@vger.kernel.org; kernel-
+> janitors@vger.kernel.org
+> Subject: [patch] PCI: hv: potential use after free
 > 
-> -MAINTAINERS file was updated to include the new driver
-> -Documentation/devicetree/bindings/pci was updated to include the new
-> driver documentation
-> -New driver called pcie-synopsys
+> If we throw away the very last item on the list, then we could end up
+> with a use after free of "dr".
 > 
-> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> Fixes: 15ca17645f19 ('PCI: hv: Add paravirtual PCI front-end for Microsoft
+> Hyper-V VMs')
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index 9391dee..9b66ffe 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -1397,6 +1397,7 @@ static void pci_devices_present_work(struct
+> work_struct *work)
+>  		/* Throw this away if the list still has stuff in it. */
+>  		if (!list_empty(&hbus->dr_list)) {
+>  			kfree(dr);
+> +			dr = NULL;
+>  			continue;
+>  		}
+>  	}
 
-I must have completely missed all the earlier submissions and just happened
-to see this one now that it was merged.
+Thanks for looking at this.  I do truly appreciate it.  But the code here removes dr from the list and then, before freeing it, checks to see that it was not the last entry in the list.   The list lock is still held and the list is not empty even after removing dr from it.
 
-I have a couple of comments, maybe you can send a follow up patch to address
-them:
+(I suspect that you're going to tell me that I'm missing something here.  Please do.  I'll appreciate it even more.)
 
-> +----------------------------------
-> +
-> +This is the reference platform driver to be used in the Synopsys PCI Root
-> +Complex IP Prototyping Kit.
-> +
-> +Required properties:
-> +- compatible: set to "snps,pcie-synopsys";
-
-Please also include the exact version of the designware PCIe part that
-is used in here, such as "snps,dw-pcie-1.234". I'm sure you can find
-out the version.
-
-"snps,pcie-synopsys" by itself is about the worst possible compatible
-string because it says nothing about the specific hardware. Half the
-machines we support all have a designware PCIe host that was made
-by synopsys. Please use the name of the SoC for the most specific
-string.
-
-> +- reg: base address and length of the pcie controller registers.
-> +- #address-cells: set to <3>
-> +- #size-cells: set to <2>
-> +- device_type: set to "pci"
-> +- ranges: ranges for the PCI memory and I/O regions.
-> +- interrupts: one interrupt source for MSI interrupts, followed by interrupt
-> +	source for hardware related interrupts.
-> +- #interrupt-cells: set to <1>
-> +- num-lanes: set to <1>;
-> +
-> +Example configuration:
-> +
-> +	pcie: pcie@0xdffff000 {
-> +		compatible = "snps,pcie-synopsys";
-> +		reg = <0xdffff000 0x1000>;
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		device_type = "pci";
-> +		ranges = <0x00000800 0 0xd0000000 0xd0000000 0 0x00002000>,
-
-This line looks misplaced here and does not match the documentation. It's
-probably a leftover from an earlier version that had the config space
-in the ranges, so you need to remove that.
-
-> +/* This handler was created for future work */
-> +static irqreturn_t synopsys_pcie_irq_handler(int irq, void *arg)
-> +{
-> +	return IRQ_NONE;
-> +}
-
-It's not harmful, but we generally don't add code "for future work",
-better remove it for now.
-
-> +static void synopsys_pcie_establish_link(struct pcie_port *pp)
-> +{
-> +	int retries = 0;
-> +
-> +	/* check if the link is up or not */
-> +	for (retries = 0; retries < 10; retries++) {
-> +		if (dw_pcie_link_up(pp)) {
-> +			dev_info(pp->dev, "Link up\n");
-> +			return;
-> +		}
-> +		mdelay(100);
-> +	}
-> +}
-
-That mdelay() needs to be an msleep(). You should never waste
-a whole second worth of CPU time in a driver.
-
-	Arnd
+Thanks,
+Jake
