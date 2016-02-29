@@ -1,135 +1,101 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V4 13/23] pci, acpi: Provide generic way to assign bus domain number.
-Date: Thu,  4 Feb 2016 18:28:51 +0100
-Message-Id: <1454606941-9523-14-git-send-email-tn@semihalf.com>
-In-Reply-To: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:46764 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750860AbcB2Sa5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Feb 2016 13:30:57 -0500
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+CC: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"Alexey.Brodkin@synopsys.com" <Alexey.Brodkin@synopsys.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"Vineet.Gupta1@synopsys.com" <Vineet.Gupta1@synopsys.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>,
+	"robh+dt@kernel.org" <robh+dt@kernel.org>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	"linux-snps-arc@lists.infradead.org"
+	<linux-snps-arc@lists.infradead.org>
+Subject: RE: [PATCH v11 0/4] ARC: Add PCI support
+Date: Mon, 29 Feb 2016 18:30:52 +0000
+Message-ID: <6C7E76B729B341419CE4B84926C1D2CD010BCE1D@DE02WEMBXB.internal.synopsys.com>
+References: <20160226162554.11964.96983.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160226162554.11964.96983.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As we now have valid PCI host bridge device reference we can
-introduce code that is going to find its bus domain number using
-ACPI _SEG method.
-
-Note that _SEG method is optional, therefore _SEG absence means
-that all PCI buses belong to domain 0.
-
-While at it, for the sake of code clarity we put ACPI and DT domain
-assign methods into the corresponding helpers.
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Tested-by: Jeremy Linton <jeremy.linton@arm.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/acpi/pci_root.c  | 18 ++++++++++++++++++
- drivers/pci/pci.c        | 11 +++++++++--
- include/linux/pci-acpi.h |  2 ++
- 3 files changed, 29 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index a65c8c2..cc2c73a 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -419,6 +419,24 @@ out:
- }
- EXPORT_SYMBOL(acpi_pci_osc_control_set);
- 
-+int acpi_pci_bus_domain_nr(struct device *parent)
-+{
-+	struct acpi_device *acpi_dev = to_acpi_device(parent);
-+	unsigned long long segment = 0;
-+	acpi_status status;
-+
-+	/*
-+	 * If _SEG method does not exist, following ACPI spec (6.5.6)
-+	 * all PCI buses belong to domain 0.
-+	 */
-+	status = acpi_evaluate_integer(acpi_dev->handle, METHOD_NAME__SEG, NULL,
-+				       &segment);
-+	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
-+		dev_err(&acpi_dev->dev, "can't evaluate _SEG\n");
-+
-+	return segment;
-+}
-+
- static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
- {
- 	u32 support, control, requested;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 602eb42..d6c768e 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -19,6 +19,7 @@
- #include <linux/spinlock.h>
- #include <linux/string.h>
- #include <linux/log2.h>
-+#include <linux/pci-acpi.h>
- #include <linux/pci-aspm.h>
- #include <linux/pm_wakeup.h>
- #include <linux/interrupt.h>
-@@ -4769,7 +4770,7 @@ int pci_get_new_domain_nr(void)
- }
- 
- #ifdef CONFIG_PCI_DOMAINS_GENERIC
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-+static int of_pci_bus_domain_nr(struct device *parent)
- {
- 	static int use_dt_domains = -1;
- 	int domain = of_get_pci_domain_nr(parent->of_node);
-@@ -4811,7 +4812,13 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
- 		domain = -1;
- 	}
- 
--	bus->domain_nr = domain;
-+	return domain;
-+}
-+
-+void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-+{
-+	bus->domain_nr = acpi_disabled ? of_pci_bus_domain_nr(parent) :
-+					 acpi_pci_bus_domain_nr(parent);
- }
- #endif
- #endif
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index 89ab057..a72e22d 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -22,6 +22,7 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
- {
- 	return acpi_remove_pm_notifier(dev);
- }
-+extern int acpi_pci_bus_domain_nr(struct device *parent);
- extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
- 
- static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
-@@ -109,6 +110,7 @@ extern const u8 pci_acpi_dsm_uuid[];
- #else	/* CONFIG_ACPI */
- static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
- static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
-+static inline int acpi_pci_bus_domain_nr(struct device *parent) { return -1; }
- #endif	/* CONFIG_ACPI */
- 
- #ifdef CONFIG_ACPI_APEI
--- 
-1.9.1
-
+SGkgQmpvcm4hDQoNCklzIGl0IHBvc3NpYmxlIHRvIHB1bGwgdGhpcyBwYXRjaCBzZXQgaW50byA0
+LjU/DQoNClRoYW5rcw0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogbGludXgt
+cGNpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXBjaS1vd25lckB2Z2VyLmtl
+cm5lbC5vcmddIE9uIEJlaGFsZiBPZiBCam9ybiBIZWxnYWFzDQpTZW50OiBGcmlkYXksIEZlYnJ1
+YXJ5IDI2LCAyMDE2IDQ6MzAgUE0NClRvOiBKb2FvIFBpbnRvDQpDYzogbWFyay5ydXRsYW5kQGFy
+bS5jb207IEFsZXhleS5Ccm9ka2luQHN5bm9wc3lzLmNvbTsgYXJuZEBhcm5kYi5kZTsgcGF3ZWwu
+bW9sbEBhcm0uY29tOyBpamMrZGV2aWNldHJlZUBoZWxsaW9uLm9yZy51azsgbGludXgtcGNpQHZn
+ZXIua2VybmVsLm9yZzsgVmluZWV0Lkd1cHRhMUBzeW5vcHN5cy5jb207IFByYXR5dXNoIEFuYW5k
+OyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBDQVJMT1MuUEFMTUlOSEFAc3lub3BzeXMu
+Y29tOyByb2JoK2R0QGtlcm5lbC5vcmc7IE11cmFsaSBLYXJpY2hlcmk7IGdhbGFrQGNvZGVhdXJv
+cmEub3JnOyBKaW5nb28gSGFuOyBsaW51eC1zbnBzLWFyY0BsaXN0cy5pbmZyYWRlYWQub3JnDQpT
+dWJqZWN0OiBbUEFUQ0ggdjExIDAvNF0gQVJDOiBBZGQgUENJIHN1cHBvcnQNCg0KPkZyb20gSm9h
+bydzIHY5IHBvc3RpbmcNCihodHRwOi8vbGttbC5rZXJuZWwub3JnL3IvY292ZXIuMTQ1NDk1MjY5
+OC5naXQuanBpbnRvQHN5bm9wc3lzLmNvbSk6DQoNCiAgIlRoaXMgcGF0Y2ggc2V0IGhhcyB0aGUg
+Z29hbCB0byBhZGQgc3VwcHBvcnQgZm9yIERlc2lnbldhcmUgUENJZSBSQyBpbiBBUkMNCiAgQVhT
+MTB4LiBJdCBpbmNsdWRlcyB0aGUgbmVjZXNzYXJ5IHR3ZWFrcyB0bzoNCg0KICAgLSB0aGUgQVJD
+IGFyY2hpdGVjdHVyZSAoUENJIHN1cHBvcnQpDQogICAtIHRoZSBQQ0kgc3Vic3lzdGVtIChBUkMg
+Q1BVIHN1cHBvcnQpDQogICAtIHRvIHBjaWUtZGVzaWdud2FyZSAoQ2VudHJhbGlzYXRpb24gb2Yg
+d2FpdCBmb3IgbGluayByb3V0aW5lKQ0KICAgLSB0byBkcmE3eHgsIGV4eW5vcywgaW14NiBhbmQg
+c3BlYXIxM3h4IGRyaXZlcnMgdG8gdXNlIHRoZSBjZW50cmFsaXNlZA0KICAgICBjb2RlIGZvciBs
+aW5rIHdhaXQNCg0KICBBIHNpbXBsZSBtb2R1bGUgd2FzIChwY2llLWRlc2lnbndhcmUtcGxhdCkg
+d2FzIGNyZWF0ZWQgdG8gY29udGFpbiB0aGUNCiAgc3BlY2lmaWMgcGxhdGZvcm0gaW5pdCBjb2Rl
+LiINCg0KQ2hhbmdlcyBmcm9tIHYxMDoNCiAgLSBVcGRhdGUga2V5c3RvbmUgbGluayBlc3RhYmxp
+c2htZW50IHRvIHdhaXQgbG9uZ2VyIGZvciBsaW5rIHRvIGNvbWUgdXANCiAgICBiZWZvcmUgcmUt
+aW5pdGlhdGluZyBsaW5rIHRyYWluaW5nDQogIC0gQWxzbyB1c2UgZ2VuZXJpYyBkd19wY2llX3dh
+aXRfZm9yX2xpbmsoKSBpbiBrZXlzdG9uZSBhbmQgcWNvbSBkcml2ZXJzDQoNCkkgd291bGQgc3Rp
+bGwgbGlrZSBhY2tzIGZyb20gRGVzaWduV2FyZSBtYWludGFpbmVycyAoSmluZ29vIG9yIFByYXR5
+dXNoKSwgZnJvbSBNdXJhbGkgZm9yIHRoZSBLZXlzdG9uZSBjaGFuZ2VzLCBhbmQgZnJvbSBBcm5k
+IGZvciB0aGUgRFQgdXBkYXRlcy4NCg0KVGhpcyBzZXJpZXMgaXMgaW4gbXkgcGNpL2hvc3Qtc3lu
+b3BzeXMgYnJhbmNoIGhlcmU6DQpodHRwczovL2dpdC5rZXJuZWwub3JnL2NnaXQvbGludXgva2Vy
+bmVsL2dpdC9oZWxnYWFzL3BjaS5naXQvbG9nLz9oPXBjaS9ob3N0LXN5bg0Kb3BzeXMNCi0tLQ0K
+DQpKb2FvIFBpbnRvICg0KToNCiAgICAgIEFSQzogQWRkIFBDSSBzdXBwb3J0DQogICAgICBQQ0k6
+IGRlc2lnbndhcmU6IEFkZCBnZW5lcmljIGR3X3BjaWVfd2FpdF9mb3JfbGluaygpDQogICAgICBQ
+Q0k6IGRlc2lnbndhcmU6IEFkZCBkZWZhdWx0IGxpbmsgdXAgY2hlY2sgaWYgc3ViLWRyaXZlciBk
+b2Vzbid0IG92ZXJyaWRlDQogICAgICBQQ0k6IGRlc2lnbndhcmU6IEFkZCBkcml2ZXIgZm9yIHBy
+b3RvdHlwaW5nIGtpdHMgYmFzZWQgb24gQVJDIFNEUA0KDQoNCiAuLi4vZGV2aWNldHJlZS9iaW5k
+aW5ncy9wY2kvZGVzaWdud2FyZS1wY2llLnR4dCAgICB8ICAgMTcgKysNCiBNQUlOVEFJTkVSUyAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgIDcgKw0KIGFyY2gvYXJj
+L0tjb25maWcgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAyNiArKysrDQog
+YXJjaC9hcmMvaW5jbHVkZS9hc20vZG1hLmggICAgICAgICAgICAgICAgICAgICAgICAgfCAgICA1
+ICsNCiBhcmNoL2FyYy9pbmNsdWRlL2FzbS9pby5oICAgICAgICAgICAgICAgICAgICAgICAgICB8
+ICAgIDkgKw0KIGFyY2gvYXJjL2luY2x1ZGUvYXNtL3BjaS5oICAgICAgICAgICAgICAgICAgICAg
+ICAgIHwgICAzMSArKysrDQogYXJjaC9hcmMva2VybmVsL01ha2VmaWxlICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgfCAgICAxIA0KIGFyY2gvYXJjL2tlcm5lbC9wY2liaW9zLmMgICAgICAgICAg
+ICAgICAgICAgICAgICAgIHwgICAyMiArKysNCiBhcmNoL2FyYy9wbGF0LWF4czEweC9LY29uZmln
+ICAgICAgICAgICAgICAgICAgICAgICB8ICAgIDEgDQogZHJpdmVycy9wY2kvTWFrZWZpbGUgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgICAxIA0KIGRyaXZlcnMvcGNpL2hvc3QvS2Nv
+bmZpZyAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAxMSArKw0KIGRyaXZlcnMvcGNpL2hv
+c3QvTWFrZWZpbGUgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAgMSANCiBkcml2ZXJzL3Bj
+aS9ob3N0L3BjaS1kcmE3eHguYyAgICAgICAgICAgICAgICAgICAgICB8ICAgMTEgLS0NCiBkcml2
+ZXJzL3BjaS9ob3N0L3BjaS1leHlub3MuYyAgICAgICAgICAgICAgICAgICAgICB8ICAgMTMgLS0N
+CiBkcml2ZXJzL3BjaS9ob3N0L3BjaS1pbXg2LmMgICAgICAgICAgICAgICAgICAgICAgICB8ICAg
+MTMgKy0NCiBkcml2ZXJzL3BjaS9ob3N0L3BjaS1rZXlzdG9uZS5jICAgICAgICAgICAgICAgICAg
+ICB8ICAgMTAgKw0KIGRyaXZlcnMvcGNpL2hvc3QvcGNpZS1kZXNpZ253YXJlLXBsYXQuYyAgICAg
+ICAgICAgIHwgIDEzOCArKysrKysrKysrKysrKysrKysrKw0KIGRyaXZlcnMvcGNpL2hvc3QvcGNp
+ZS1kZXNpZ253YXJlLmMgICAgICAgICAgICAgICAgIHwgICAyOSArKysrDQogZHJpdmVycy9wY2kv
+aG9zdC9wY2llLWRlc2lnbndhcmUuaCAgICAgICAgICAgICAgICAgfCAgICA2ICsNCiBkcml2ZXJz
+L3BjaS9ob3N0L3BjaWUtcWNvbS5jICAgICAgICAgICAgICAgICAgICAgICB8ICAgMTAgLQ0KIGRy
+aXZlcnMvcGNpL2hvc3QvcGNpZS1zcGVhcjEzeHguYyAgICAgICAgICAgICAgICAgIHwgICAxNCAt
+LQ0KIDIxIGZpbGVzIGNoYW5nZWQsIDMxOCBpbnNlcnRpb25zKCspLCA1OCBkZWxldGlvbnMoLSkg
+IGNyZWF0ZSBtb2RlIDEwMDY0NCBhcmNoL2FyYy9pbmNsdWRlL2FzbS9wY2kuaCAgY3JlYXRlIG1v
+ZGUgMTAwNjQ0IGFyY2gvYXJjL2tlcm5lbC9wY2liaW9zLmMgIGNyZWF0ZSBtb2RlIDEwMDY0NCBk
+cml2ZXJzL3BjaS9ob3N0L3BjaWUtZGVzaWdud2FyZS1wbGF0LmMNCi0tDQpUbyB1bnN1YnNjcmli
+ZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtcGNpIiBp
+biB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZyBNb3Jl
+IG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZv
+Lmh0bWwNCg==
