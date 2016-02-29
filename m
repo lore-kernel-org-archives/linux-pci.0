@@ -1,231 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35375 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424770AbcBRMAI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Feb 2016 07:00:08 -0500
-Received: by mail-wm0-f68.google.com with SMTP id g62so2495970wme.2
-        for <linux-pci@vger.kernel.org>; Thu, 18 Feb 2016 04:00:08 -0800 (PST)
-From: Christoph Fritz <chf.fritz@googlemail.com>
-To: Richard Zhu <hongxing.zhu@nxp.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lee Jones <lee.jones@linaro.org>
-Cc: linux-pci@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>
-Subject: [PATCH v2 2/2] PCI: imx6: add initial imx6sx support
-Date: Thu, 18 Feb 2016 12:59:03 +0100
-Message-Id: <1455796743-5987-3-git-send-email-chf.fritz@googlemail.com>
-In-Reply-To: <1455796743-5987-1-git-send-email-chf.fritz@googlemail.com>
-References: <1455796743-5987-1-git-send-email-chf.fritz@googlemail.com>
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:32996 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752070AbcB2QcF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Feb 2016 11:32:05 -0500
+Received: by mail-oi0-f52.google.com with SMTP id d205so25897984oia.0
+        for <linux-pci@vger.kernel.org>; Mon, 29 Feb 2016 08:32:05 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CALCETrXD6WUPJ-d8vUD0UnjGDDK6MnQfNtd7tyZNbNZkFBxYNw@mail.gmail.com>
+References: <CALCETrXM5w0iCKDNBZYEpk17ViCMdP_B-cO4X01EQR9H8hesTw@mail.gmail.com>
+ <20151118105907.GC4437@intel.com> <CALCETrUPfgPrKY4ZQcvLr8=i_dYb=FTndfVXzbCjxEMfbi0YiQ@mail.gmail.com>
+ <CAPj87rNj4mGtRe33k64zYMAdSKc=OwrseY0oxMGtPtzn=XGnXA@mail.gmail.com>
+ <CALCETrV+RwNPzxyL8UVNsrAGu-6cCzD_Cc9PFJT2NCTJPLZZiw@mail.gmail.com> <CALCETrXD6WUPJ-d8vUD0UnjGDDK6MnQfNtd7tyZNbNZkFBxYNw@mail.gmail.com>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Mon, 29 Feb 2016 08:31:35 -0800
+Message-ID: <CALCETrUx33NNp+2Zj=ww1OCuE-qb=-u1R56Akvqeym7mhj19rg@mail.gmail.com>
+Subject: Re: [Intel-gfx] i915 Skylake: "Invalid ROM contents"
+To: Daniel Stone <daniel@fooishbar.org>
+Cc: =?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	=?UTF-8?Q?Bruno_Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds initial PCIe support for the imx6 SoC derivate imx6sx.
-PCI_MSI support is untested as its necessary suspend/resume quirk is
-left out of this patch.
-This patch is heavily based on patches by Richard Zhu.
+On Sun, Jan 10, 2016 at 11:12 AM, Andy Lutomirski <luto@amacapital.net> wrote:
+> On Sun, Jan 10, 2016 at 10:41 AM, Andy Lutomirski <luto@amacapital.net> wrote:
+>> On Wed, Nov 18, 2015 at 8:12 AM, Daniel Stone <daniel@fooishbar.org> wrote:
+>>> Hi,
+>>>
+>>> On 18 November 2015 at 15:59, Andy Lutomirski <luto@amacapital.net> wrote:
+>>>> On Wed, Nov 18, 2015 at 2:59 AM, Ville Syrjälä
+>>>> <ville.syrjala@linux.intel.com> wrote:
+>>>>> On Tue, Nov 17, 2015 at 11:43:25AM -0800, Andy Lutomirski wrote:
+>>>>>> Typing:
+>>>>>>
+>>>>>> # cat /sys/devices/pci0000:00/0000:00:02.0/rom
+>>>>>>
+>>>>>> Provokes:
+>>>>>>
+>>>>>> i915 0000:00:02.0: Invalid ROM contents
+>>>>>
+>>>>> Hmm. So there's no PCI option ROM there. I wonder what is there. I
+>>>>> get the same on my Braswell BTW. I tried to look through the UEFI
+>>>>> spec a bit, and it seems to say that even for non-legacy option ROMs
+>>>>> the 0x55aa signature should be there.
+>>>>>
+>>>>> But this being the GPU means we may be using the shadow ROM stuff,
+>>>>> which IIRC assumes that the shadow is at 0xc000. I'm not sure that
+>>>>> holds anymore with UEFI, and maybe we should be using some UEFI
+>>>>> trick instead to find out where it actually lives?
+>>>>>
+>>>>> BTW what does 'lspci -vv -s 00:02.0' say on your machine?
+>>>>>
+>>>>
+>>>> 00:02.0 VGA compatible controller: Intel Corporation Sky Lake
+>>>> Integrated Graphics (rev 07) (prog-if 00 [VGA controller])
+>>>>     DeviceName:  Onboard IGD
+>>>>     Subsystem: Dell Device 0704
+>>>>     Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+>>>> ParErr- Stepping- SERR- FastB2B- DisINTx+
+>>>>     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+>>>> <TAbort- <MAbort- >SERR- <PERR- INTx-
+>>>>     Latency: 0
+>>>>     Interrupt: pin A routed to IRQ 128
+>>>>     Region 0: Memory at db000000 (64-bit, non-prefetchable) [size=16M]
+>>>>     Region 2: Memory at 90000000 (64-bit, prefetchable) [size=256M]
+>>>>     Region 4: I/O ports at f000 [size=64]
+>>>>     Expansion ROM at <unassigned> [disabled]
+>>>
+>>> UEFI has an option to enable option ROMs, which is disabled by
+>>> default; I wonder if having it disabled prevents all access to the
+>>> ROM.
+>>>
+>>> Mind you, it doesn't seem to be fatal; I've not had any issues with
+>>> the same machine that I can pin down to lack of ROM.
+>>>
+>>
+>> FWIW, my logs also get spammed with:
+>>
+>> [  127.101881] i915 0000:00:02.0: BAR 6: [??? 0x00000000 flags 0x2]
+>> has bogus alignment
+>>
+>> I suspect that the PCI core is just failing to recognize that the ROM
+>> is disabled.
+>>
+>
+> A bit more info:
+>
+> I think I only get this error when suspending for the second time
+> after boot.  No clue why.
+>
+> I instrumented the code a bit.  At the time of that error, res->flags
+> == 0x2.  It's probably not a coincidence that:
+>
+> #define IORESOURCE_ROM_SHADOW        (1<<1)    /* ROM is copy at C000:0 */
+>
+> Should pci_fixup_video check that the resource exists in the first
+> place before setting flags on it?
 
-Signed-off-by: Christoph Fritz <chf.fritz@googlemail.com>
----
- drivers/pci/host/pci-imx6.c | 130 +++++++++++++++++++++++++++++++-------------
- 1 file changed, 91 insertions(+), 39 deletions(-)
+*ping*
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index fe60096..7e634a6 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -35,9 +35,11 @@ struct imx6_pcie {
- 	struct gpio_desc	*reset_gpio;
- 	struct clk		*pcie_bus;
- 	struct clk		*pcie_phy;
-+	struct clk		*pcie_inbound_axi;
- 	struct clk		*pcie;
- 	struct pcie_port	pp;
- 	struct regmap		*iomuxc_gpr;
-+	bool			is_imx6sx;
- 	void __iomem		*mem_base;
- };
- 
-@@ -214,35 +216,46 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
- 	u32 val, gpr1, gpr12;
- 
--	/*
--	 * If the bootloader already enabled the link we need some special
--	 * handling to get the core back into a state where it is safe to
--	 * touch it for configuration.  As there is no dedicated reset signal
--	 * wired up for MX6QDL, we need to manually force LTSSM into "detect"
--	 * state before completely disabling LTSSM, which is a prerequisite
--	 * for core configuration.
--	 *
--	 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
--	 * indication that the bootloader activated the link.
--	 */
--	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
--	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
--
--	if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
--	    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
--		val = readl(pp->dbi_base + PCIE_PL_PFLR);
--		val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
--		val |= PCIE_PL_PFLR_FORCE_LINK;
--		writel(val, pp->dbi_base + PCIE_PL_PFLR);
--
-+	if (imx6_pcie->is_imx6sx) {
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
--				IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
--	}
-+				IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
-+				IMX6SX_GPR12_PCIE_TEST_POWERDOWN);
-+		/* Force PCIe PHY reset */
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
-+					IMX6SX_GPR5_PCIE_BTNRST_RESET,
-+					IMX6SX_GPR5_PCIE_BTNRST_RESET);
-+	} else {
-+		/*
-+		 * If the bootloader already enabled the link we need some
-+		 * special handling to get the core back into a state where
-+		 * it is safe to touch it for configuration.  As there is no
-+		 * dedicated reset signal to manually force LTSSM into "detect"
-+		 * state before completely disabling LTSSM, which is a
-+		 * prerequisite for core configuration.
-+		 *
-+		 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have
-+		 * a strong indication that the bootloader activated the link.
-+		 */
-+		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
-+		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
-+
-+		if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
-+				(gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
-+			val = readl(pp->dbi_base + PCIE_PL_PFLR);
-+			val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
-+			val |= PCIE_PL_PFLR_FORCE_LINK;
-+			writel(val, pp->dbi_base + PCIE_PL_PFLR);
-+
-+			regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+				IMX6Q_GPR12_PCIE_CTL_2, 0);
-+		}
- 
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+			IMX6Q_GPR1_PCIE_TEST_PD,
-+			IMX6Q_GPR1_PCIE_TEST_PD);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0);
-+	}
- 
- 	return 0;
- }
-@@ -270,18 +283,30 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 		goto err_pcie;
- 	}
- 
--	/* power up core phy and enable ref clock */
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
--	/*
--	 * the async reset input need ref clock to sync internally,
--	 * when the ref clock comes after reset, internal synced
--	 * reset time is too short, cannot meet the requirement.
--	 * add one ~10us delay here.
--	 */
--	udelay(10);
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
-+	if (imx6_pcie->is_imx6sx) {
-+		ret = clk_prepare_enable(imx6_pcie->pcie_inbound_axi);
-+		if (ret) {
-+			dev_err(pp->dev, "unable to enable pcie_axi clock\n");
-+			goto err_inbound_axi;
-+		}
-+
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+			IMX6SX_GPR12_PCIE_TEST_POWERDOWN, 0);
-+	} else {
-+		/* power up core phy and enable ref clock */
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+				IMX6Q_GPR1_PCIE_TEST_PD, 0);
-+		/*
-+		 * the async reset input need ref clock to sync internally,
-+		 * when the ref clock comes after reset, internal synced
-+		 * reset time is too short , cannot meet the requirement.
-+		 * add one ~10us delay here.
-+		 */
-+		udelay(10);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+			IMX6Q_GPR1_PCIE_REF_CLK_EN,
-+			IMX6Q_GPR1_PCIE_REF_CLK_EN);
-+	}
- 
- 	/* allow the clocks to stabilize */
- 	usleep_range(200, 500);
-@@ -292,8 +317,15 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 		msleep(100);
- 		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
- 	}
-+
-+	if (imx6_pcie->is_imx6sx)
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
-+			IMX6SX_GPR5_PCIE_BTNRST_RESET, 0);
-+
- 	return 0;
- 
-+err_inbound_axi:
-+	clk_disable_unprepare(imx6_pcie->pcie);
- err_pcie:
- 	clk_disable_unprepare(imx6_pcie->pcie_bus);
- err_pcie_bus:
-@@ -307,6 +339,12 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
- {
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
- 
-+	if (imx6_pcie->is_imx6sx) {
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+			IMX6SX_GPR12_PCIE_RX_EQ_MASK,
-+			IMX6SX_GPR12_PCIE_RX_EQ_2);
-+	}
-+
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
- 
-@@ -571,6 +609,9 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 	pp = &imx6_pcie->pp;
- 	pp->dev = &pdev->dev;
- 
-+	imx6_pcie->is_imx6sx = of_device_is_compatible(pp->dev->of_node,
-+					"fsl,imx6sx-pcie");
-+
- 	/* Added for PCI abort handling */
- 	hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
- 		"imprecise external abort");
-@@ -606,6 +647,16 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(imx6_pcie->pcie);
- 	}
- 
-+	if (imx6_pcie->is_imx6sx) {
-+		imx6_pcie->pcie_inbound_axi = devm_clk_get(&pdev->dev,
-+			"pcie_inbound_axi");
-+		if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
-+			dev_err(&pdev->dev,
-+				"pcie_incbound_axi clock missing or invalid\n");
-+			return PTR_ERR(imx6_pcie->pcie_inbound_axi);
-+		}
-+	}
-+
- 	/* Grab GPR config register range */
- 	imx6_pcie->iomuxc_gpr =
- 		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
-@@ -632,6 +683,7 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
- 
- static const struct of_device_id imx6_pcie_of_match[] = {
- 	{ .compatible = "fsl,imx6q-pcie", },
-+	{ .compatible = "fsl,imx6sx-pcie", },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
--- 
-2.1.4
+Hi, PCI people.
 
+--Andy
