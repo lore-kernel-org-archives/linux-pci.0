@@ -1,68 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp06.au.ibm.com ([202.81.31.148]:52389 "EHLO
-	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753790AbcBSDSI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 18 Feb 2016 22:18:08 -0500
-Received: from localhost
-	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 19 Feb 2016 13:18:04 +1000
-Date: Fri, 19 Feb 2016 14:16:55 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
-	dja@axtens.net, Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: Re: [PATCH v8 42/45] drivers/of: Rename unflatten_dt_node()
-Message-ID: <20160219031655.GA10818@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-43-git-send-email-gwshan@linux.vnet.ibm.com>
- <CAL_JsqJydgmkU=SGcr-0JHsYG8wXk5GEQCQXY7y+FHH2A0LZkw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL_JsqJydgmkU=SGcr-0JHsYG8wXk5GEQCQXY7y+FHH2A0LZkw@mail.gmail.com>
+Received: from mga04.intel.com ([192.55.52.120]:60693 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750828AbcB2M4M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Feb 2016 07:56:12 -0500
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [PATCH 4/6] PCI: Add runtime PM support for PCIe ports
+Date: Mon, 29 Feb 2016 14:56:04 +0200
+Message-Id: <1456750566-116248-5-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 17, 2016 at 08:59:53AM -0600, Rob Herring wrote:
->On Tue, Feb 16, 2016 at 9:44 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->> This renames unflatten_dt_node() to unflatten_dt_nodes() as it
->> populates multiple device nodes from FDT blob. No logical changes
->> introduced.
->>
->> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> ---
->>  drivers/of/fdt.c | 14 +++++++-------
->>  1 file changed, 7 insertions(+), 7 deletions(-)
->
->Acked-by: Rob Herring <robh@kernel.org>
->
->I'm happy to take patches 40-42 for 4.6 if the rest of the series
->doesn't go in given they fix a separate problem. I just need to know
->soon (or at least they need to go into -next soon).
->
+Add back runtime PM support for PCIe ports that was removed in
+commit fe9a743a2601 ("PCI/PM: Drop unused runtime PM support code for PCIe
+ports").
 
-Thanks for quick response, Rob. It depends how much comments I will
-receive for the powerpc/powernv part. Except that, all parts including
-this one have been ack'ed. I can discuss it with Michael Ellerman.
-By the way, how soon you need the decision to merge 40-42? If that's
-one or two weeks later, I don't think the reivew on the whole series
-can be done.
+First of all we cannot enable it automatically for all root ports since
+there have been problems previously, so we enable it only based on per port
+configuration (runtime_suspend_allowed). Furthermore we need to check that
+the device, if wake capable, can do so from D3cold (which is the state it
+goes after the root port is powered down). This follows what we did for
+PCIe port system suspend already.
 
-Also, I think you probably can merge 40-44 as they're all about
-fdt.c. If they can be merged at one time, I needn't bother (cc)
-you again if I need send a updated revision. Thanks for your
-review.
+Runtime PM is still blocked and needs to be unblocked from userspace like
+with other PCI devices.
 
-Thanks,
-Gavin
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/pcie/portdrv_pci.c | 49 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
 
->Rob
->
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index fe3349685141..eb0f425f51cc 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -85,6 +85,7 @@ enum pcie_port_type {
+ 
+ struct pcie_port_config {
+ 	bool suspend_allowed;
++	bool runtime_suspend_allowed;
+ };
+ 
+ static const struct pcie_port_config pcie_port_configs[] = {
+@@ -154,6 +155,11 @@ static bool pcie_port_suspend_allowed(struct pci_dev *pdev)
+ 	return pcie_port_can_suspend(pdev);
+ }
+ 
++static bool pcie_port_runtime_suspend_allowed(struct pci_dev *pdev)
++{
++	return pcie_port_get_config(pdev)->runtime_suspend_allowed;
++}
++
+ static int pcie_port_suspend_noirq(struct device *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+@@ -188,6 +194,34 @@ static int pcie_port_resume_noirq(struct device *dev)
+ 	return 0;
+ }
+ 
++static int pcie_port_runtime_suspend(struct device *dev)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	/*
++	 * All devices behind the port are assumed to be in D3cold so
++	 * update their state now.
++	 */
++	__pci_bus_set_current_state(pdev->subordinate, PCI_D3cold);
++	return 0;
++}
++
++static int pcie_port_runtime_resume(struct device *dev)
++{
++	return 0;
++}
++
++static int pcie_port_runtime_idle(struct device *dev)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	if (pcie_port_can_suspend(pdev)) {
++		pm_schedule_suspend(dev, 10);
++		return 0;
++	}
++	return -EBUSY;
++}
++
+ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ 	.suspend	= pcie_port_device_suspend,
+ 	.resume		= pcie_port_device_resume,
+@@ -197,12 +231,20 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ 	.restore	= pcie_port_device_resume,
+ 	.suspend_noirq	= pcie_port_suspend_noirq,
+ 	.resume_noirq	= pcie_port_resume_noirq,
++	.runtime_suspend = pcie_port_runtime_suspend,
++	.runtime_resume	= pcie_port_runtime_resume,
++	.runtime_idle	= pcie_port_runtime_idle,
+ };
+ 
+ #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+ 
+ #else /* !PM */
+ 
++static inline bool pcie_port_runtime_suspend_allowed(struct pci_dev *pdev)
++{
++	return false;
++}
++
+ #define PCIE_PORTDRV_PM_OPS	NULL
+ #endif /* !PM */
+ 
+@@ -230,11 +272,18 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 		return status;
+ 
+ 	pci_save_state(dev);
++
++	if (pcie_port_runtime_suspend_allowed(dev))
++		pm_runtime_put_noidle(&dev->dev);
++
+ 	return 0;
+ }
+ 
+ static void pcie_portdrv_remove(struct pci_dev *dev)
+ {
++	if (pcie_port_runtime_suspend_allowed(dev))
++		pm_runtime_get_noresume(&dev->dev);
++
+ 	pcie_port_device_remove(dev);
+ }
+ 
+-- 
+2.7.0
 
