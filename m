@@ -1,87 +1,45 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V5 04/15] pci, acpi, ecam: Add flag to indicate whether ECAM region was hot added or not.
-Date: Tue, 16 Feb 2016 14:53:34 +0100
-Message-Id: <1455630825-27253-5-git-send-email-tn@semihalf.com>
-In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:17481 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753504AbcB2Wg7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Feb 2016 17:36:59 -0500
+Subject: Re: [PATCH v4 00/11] PCI VPD access fixes
+To: "Seymour, Shane M" <shane.seymour@hpe.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hannes Reinecke <hare@suse.de>
+References: <20160223003444.10635.20204.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <DDB9C85B850785449757F9914A034FCB445368F5@G4W3219.americas.hpqcorp.net>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	Alexander Duyck <alexander.duyck@gmail.com>
+From: Babu Moger <babu.moger@oracle.com>
+Message-ID: <56D4C7F9.1060609@oracle.com>
+Date: Mon, 29 Feb 2016 16:36:41 -0600
+MIME-Version: 1.0
+In-Reply-To: <DDB9C85B850785449757F9914A034FCB445368F5@G4W3219.americas.hpqcorp.net>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are two ways we can get ECAM (aka MCFG) regions using ACPI,
-first from MCFG static table and second from _CBA method. We cannot remove
-static regions, however regions coming from _CBA should be removed while
-removing bridge device.
+On 2/23/2016 10:52 PM, Seymour, Shane M wrote:
+> Retested v4. For the series tested two PCIe cards that support VPD:
+> 
+> 0d:00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic SAS2308 PCI-Express Fusion-MPT SAS-2 (rev 05)
+> 1e:00.0 Fibre Channel: QLogic Corp. ISP2432-based 4Gb Fibre Channel to PCI Express HBA (rev 03)
+> 
+> The first card exposes 32KiB of NUL bytes as VPD and the second 154 bytes of non-NUL data repeating every 4KiB for 32KiB before the change. After the change the first  card returns no data for VPD (since it contains only NUL bytes) and the second the expected 154 bytes of data.
+> 
+> The following warning message comes out as expected for the LSI card (changed from dyn debug controlled message):
+> 
+> [  614.475984] mpt3sas 0000:0d:00.0: invalid short VPD tag 00 at offset 1
+> 
+> lspci works correctly with the patch in the kernel. The only change on the system (apart from the size of the vpd file) was that with the LSI card lspci with -vvvv as root it now says "Not readable"  instead of "Unknown small resource type 00, will not decode more." in the VPD section.
+> ---
+> Tested-by: Shane Seymour <shane.seymour@hpe.com>
+> 
 
-In the light of above we need flag to mark hot added ECAM entries
-and user to call pci_mmconfig_insert while adding regions from _CBA method.
-Similarly pci_mmconfig_delete while removing hot added regions.
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Tested-by: Jeremy Linton <jeremy.linton@arm.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
+I have also retested the V4 series. Did not see any side effects.
+Once again here is the bug I opened for this issue.
+https://bugzilla.kernel.org/show_bug.cgi?id=110681
 ---
- drivers/acpi/pci_mcfg.c  | 4 +++-
- include/linux/pci-acpi.h | 1 +
- 2 files changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index 0467b00..3282f2a 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -74,6 +74,7 @@ static struct pci_mmcfg_region *pci_mmconfig_alloc(int segment, int start,
- 	new->segment = segment;
- 	new->start_bus = start;
- 	new->end_bus = end;
-+	new->hot_added = false;
- 
- 	res = &new->res;
- 	res->start = addr + PCI_MMCFG_BUS_OFFSET(start);
-@@ -205,6 +206,7 @@ int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
- 	}
- 	rc = pci_mmconfig_map_resource(dev, cfg);
- 	if (!rc) {
-+		cfg->hot_added = true;
- 		list_add_sorted(cfg);
- 		dev_info(dev, "MMCONFIG at %pR (base %#lx)\n",
- 				 &cfg->res, (unsigned long)addr);
-@@ -228,7 +230,7 @@ int pci_mmconfig_delete(u16 seg, u8 start, u8 end)
- 	mutex_lock(&pci_mmcfg_lock);
- 	list_for_each_entry_rcu(cfg, &pci_mmcfg_list, list)
- 		if (cfg->segment == seg && cfg->start_bus == start &&
--		    cfg->end_bus == end) {
-+		    cfg->end_bus == end && cfg->hot_added) {
- 			list_del_rcu(&cfg->list);
- 			synchronize_rcu();
- 			pci_mmconfig_unmap_resource(cfg);
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index e9450ef..94d8f38 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -119,6 +119,7 @@ struct pci_mmcfg_region {
- 	u8 start_bus;
- 	u8 end_bus;
- 	char name[PCI_MMCFG_RESOURCE_NAME_LEN];
-+	bool hot_added;
- };
- 
- extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
--- 
-1.9.1
+Tested-by: Babu Moger <babu.moger@oracle.com>
