@@ -1,50 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.161.176]:33466 "EHLO
-	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933985AbcBQO7i (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 17 Feb 2016 09:59:38 -0500
-MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-42-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com> <1455680668-23298-42-git-send-email-gwshan@linux.vnet.ibm.com>
-From: Rob Herring <robherring2@gmail.com>
-Date: Wed, 17 Feb 2016 08:53:51 -0600
-Message-ID: <CAL_JsqKWokaUSgf8dfi7Ao_hrKCMf1LYS_ubd=Z=_+d6ehD9Jw@mail.gmail.com>
-Subject: Re: [PATCH v8 41/45] drivers/of: Avoid recursively calling unflatten_dt_node()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
-	dja@axtens.net, Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from foss.arm.com ([217.140.101.70]:46406 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750718AbcB2RlJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Feb 2016 12:41:09 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Cc: linux-doc@vger.kernel.org,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Lennert Buytenhek <kernel@wantstofly.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>,
+	Russell King <linux@arm.linux.org.uk>
+Subject: [RFC PATCH] arm: kernel: pci: remove pci=firmware command line parameter handling
+Date: Mon, 29 Feb 2016 17:43:20 +0000
+Message-Id: <1456767800-6609-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 16, 2016 at 9:44 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
-> In current implementation, unflatten_dt_node() is called recursively
-> to unflatten device nodes in FDT blob. It's stress to limited stack
-> capacity, especially to adopt the function to unflatten device sub-tree
-> that possibly has multiple root nodes. In that case, we runs out of
-> stack and the system can't boot up successfully.
->
-> In order to reuse the function to unflatten device sub-tree, this avoids
-> calling the function recursively, meaning the device nodes are unflattened
-> in one call on unflatten_dt_node(): two arrays are introduced to track the
-> parent path size and the device node of current level of depth, which will
-> be used by the device node on next level of depth to be unflattened. All
-> device nodes in more than 64 level of depth are dropped and hopefully,
-> the system can boot up successfully with the partial device-tree.
->
-> Also, the parameter "poffset" and "fpsize" are unused and dropped and the
-> parameter "dryrun" is figured out from "mem == NULL". Besides, the return
-> value of the function is changed to indicate the size of memory consumed by
-> the unflatten device tree or error code.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->  drivers/of/fdt.c | 122 +++++++++++++++++++++++++++++++++----------------------
->  1 file changed, 74 insertions(+), 48 deletions(-)
+According to kernel documentation, the pci=firmware command line
+parameter is only meant to be used on IXP2000 ARM platforms to prevent
+the kernel from assigning PCI resources configured by the bootloader.
 
-Acked-by: Rob Herring <robh@kernel.org>
+Since the IXP2000 ARM platforms support has been removed from the
+kernel in commit:
+
+commit c65f2abf54a6 ("ARM: remove ixp23xx and ixp2000 platforms")
+
+its platforms specific kernel parameters should be removed
+too from the kernel documentation along with the kernel code
+currently handling them in that they have just become obsolete.
+
+This patch removes the pci=firmware command line parameter handling
+from ARM code and the related kernel parameters documentation
+section.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Lennert Buytenhek <kernel@wantstofly.org>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh@kernel.org>
+Cc: Russell King <linux@arm.linux.org.uk>
+---
+ Documentation/kernel-parameters.txt | 5 -----
+ arch/arm/kernel/bios32.c            | 3 ---
+ 2 files changed, 8 deletions(-)
+
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 9a53c92..e213acc 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2875,11 +2875,6 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				for broken drivers that don't call it.
+ 		skip_isa_align	[X86] do not align io start addr, so can
+ 				handle more pci cards
+-		firmware	[ARM] Do not re-enumerate the bus but instead
+-				just use the configuration from the
+-				bootloader. This is currently used on
+-				IXP2000 systems where the bus has to be
+-				configured a certain way for adjunct CPUs.
+ 		noearly		[X86] Don't do any early type 1 scanning.
+ 				This might help on some broken boards which
+ 				machine check when some devices' config space
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 066f7f9..05e61a2 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -550,9 +550,6 @@ char * __init pcibios_setup(char *str)
+ 	if (!strcmp(str, "debug")) {
+ 		debug_pci = 1;
+ 		return NULL;
+-	} else if (!strcmp(str, "firmware")) {
+-		pci_add_flags(PCI_PROBE_ONLY);
+-		return NULL;
+ 	}
+ 	return str;
+ }
+-- 
+2.5.1
+
