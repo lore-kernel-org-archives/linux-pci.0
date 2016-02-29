@@ -1,69 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:39976
-	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752678AbcBOJah (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 15 Feb 2016 04:30:37 -0500
-From: Jayachandran C <jchandra@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Jayachandran C <jchandra@broadcom.com>
-Subject: [RFC PATCH 2/2] PCI: Handle Broadcom Vulcan quirks
-Date: Mon, 15 Feb 2016 14:56:38 +0530
-Message-Id: <1455528398-29311-1-git-send-email-jchandra@broadcom.com>
-In-Reply-To: <1455487501-28630-2-git-send-email-jchandra@broadcom.com>
-References: <1455487501-28630-2-git-send-email-jchandra@broadcom.com>
+Received: from mga14.intel.com ([192.55.52.115]:63660 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750828AbcB2M4K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Feb 2016 07:56:10 -0500
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [PATCH 0/6] PCI: Add support for suspending (including runtime) of PCIe ports
+Date: Mon, 29 Feb 2016 14:56:00 +0200
+Message-Id: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Handle two quirks of the PCI controller on Broadcom's Vulcan processor.
- - Mark internal bridges so that they are skipped during DMA alias
-   search.
- - Skip BAR0 resource assignment for internal bridges. The BARs
-   of internal bridges should not be assigned from the mem resource
-   range.
+Hi,
 
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
----
+This series add support for moving PCIe ports to D3hot both runtime and
+during system suspend.
 
-Resending, last patch was missing the Signed-off-by, also fixed the
-comment a bit.
+When PCIe port is suspended connected devices are effectively moved to
+D3cold because their config space is not accessible anymore (and the link
+may be powered down as well). So we need to make sure the devices are
+allowed to go to D3cold and, if they are wake capable, can do so from
+D3cold. Only then we can suspend the port.
 
-JC.
+Patch [3/6] adds support for system suspend of PCIe ports. Since we do not
+know how well this has been supported in older hardware, enable this only
+for quite recent hardware (starting from 2015). This can still be
+disallowed per port as needed by adding entries to pcie_port_configs[].
 
- drivers/pci/quirks.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+Patch [4/6] then extends this to allow runtime PM of PCIe ports whenever
+all connected devices are runtime suspended. Patches [5,6/6] enable runtime
+PM for recent Intel hardware including Sunrisepoint (Skylake) and Broxton.
+These are meant to be alternative for patches by Qipeng Zha here:
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 0575a1e..afc186a 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3705,6 +3705,27 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
- DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
- 
- /*
-+ * Two levels of bridges in Broadcom Vulcan are not real PCI or PCIe bridges.
-+ * These are internal bridges and should not be used for dma alias
-+ * calculations. Additionally, the BAR0 of thes bridges should not be
-+ * assigned with a mem resource from linux
-+ */
-+static void quirk_bridge_brcm_vulcan_internal(struct pci_dev *pdev)
-+{
-+	struct resource *r = &pdev->resource[0];
-+
-+	/* skip from alias search */
-+	pdev->dev_flags |= PCI_DEV_FLAGS_BRIDGE_SKIP_ALIAS;
-+
-+	/* clear BAR0, should not be used from Linux */
-+	memset(r, 0, sizeof(*r));
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9000,
-+				quirk_bridge_brcm_vulcan_internal);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9039,
-+				quirk_bridge_brcm_vulcan_internal);
-+
-+/*
-  * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
-  * class code.  Fix it.
-  */
+  http://www.spinics.net/lists/linux-pci/msg48103.html
+  http://www.spinics.net/lists/linux-pci/msg48104.html
+
+The idea how this is supposed to be implemented came from Rafael Wysocki.
+
+Mika Westerberg (6):
+  PCI: No need to set d3cold_allowed to PCIe ports
+  PCI: Make __pci_bus_set_current_state() available to other files
+  PCI: Move PCIe ports to D3hot during suspend
+  PCI: Add runtime PM support for PCIe ports
+  PCI: Enable runtime PM for Intel Sunrisepoint PCIe root ports
+  PCI: Enable runtime PM for Intel Broxton PCIe root ports
+
+ drivers/pci/pci.c              |   2 +-
+ drivers/pci/pci.h              |   1 +
+ drivers/pci/pcie/portdrv_pci.c | 170 +++++++++++++++++++++++++++++++++++++++--
+ 3 files changed, 164 insertions(+), 9 deletions(-)
+
 -- 
-1.9.1
+2.7.0
 
