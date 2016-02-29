@@ -1,60 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.75]:52872 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751375AbcBPVqu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 16:46:50 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Jayachandran Chandrashekaran Nair
-	<jayachandran.chandrashekaran@broadcom.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Rob Herring <robh@kernel.org>
-Subject: Re: [RFC PATCH 2/2] PCI: Handle Broadcom Vulcan quirks
-Date: Tue, 16 Feb 2016 22:46:41 +0100
-Message-ID: <3683441.Vpq7tGkM4s@wuerfel>
-In-Reply-To: <20160216210337.GA8244@localhost>
-References: <1455487501-28630-2-git-send-email-jchandra@broadcom.com> <CAKc_7PVBH8h9aPK7j74yCjTOnJ22FzNd2O8nDUJn7n0iKUD_FQ@mail.gmail.com> <20160216210337.GA8244@localhost>
+Received: from smtp.codeaurora.org ([198.145.29.96]:50126 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752862AbcB2TDy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 29 Feb 2016 14:03:54 -0500
+Subject: Re: [PATCH V5 00/15] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+To: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, jiang.liu@linux.intel.com,
+	jchandra@broadcom.com, Stefano.Stabellini@eu.citrix.com
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <56D49611.2050202@codeaurora.org>
+Date: Mon, 29 Feb 2016 14:03:45 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 16 February 2016 15:03:37 Bjorn Helgaas wrote:
+On 2/16/2016 8:53 AM, Tomasz Nowicki wrote:
+> From the functionality point of view this series might be split into the
+> following logic parts:
+> 1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
+>    PCI config regions and used when necessary.
+> 2. Move non-arch specific bits to the core code.
+> 3. Use MMCONFIG code and implement generic ACPI based PCI host controller driver.
+> 4. Enable above driver on ARM64
 > 
-> Your PCI host bridge has a window of address space that it forwards
-> from the primary (CPU) side to the secondary (PCI) side.  I assume
-> that's what you mean by the "PCI MEM range."  Apparently if the BAR is
-> programmed inside that window, it causes some hardware error.  That
-> still seems strange; there's no driver for the device, and we know the
-> range is in use so it won't be assigned to any other device, so Linux
-> should never *access* the range.
+> Patches has been built on top of 4.5-rc3 and can be found here:
+> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v5)
 > 
-> Apparently if you program the BAR *outside* the window, the hardware
-> error does not happen, and the private registers are accessible.  But
-> Linux currently doesn't know where this space is.
+> NOTE, this patch set depends on Lorenzo's fixes:
+> https://patchwork.ozlabs.org/patch/576450/
+> which can be found in pci-acpi-v5 branch.
 > 
-> If we ignore the BAR in Linux, apparently the hardware error does not
-> happen.  But the BAR still contains some value, so this is really the
-> same as having the BAR outside the window, presumably because it came
-> out of reset that way, or maybe firmware programmed it.
+> This has been tested on Cavium ThunderX server, JunoR2, HP RX2660 IA64, x86,
+> Hip05, X-Gene and QEMU-aarch64. Any help in reviewing and testing is very appreciated.
 > 
-> It sounds to me like you should do the following:
+> v4 -> v5
+> - dropped MCFG refactoring group patches 1-6 from series v4 and integrated Jayachandran's patch
+>   https://patchwork.ozlabs.org/patch/575525/
+> - rewrite PCI legacy IRQs allocation
+> - squashed two patches 11 and 12 from series v4, fixed bisection issue
+> - changelog improvements
+> - rebased to 4.5-rc3
 > 
-> a) Have firmware program this BAR where you want it,
+> v3 -> v4
+> - dropped Jiang's fix http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04318.html
+> - added Lorenzo's fix patch 19/24
+> - ACPI PCI bus domain number assigning cleanup
+> - changed resource management, we now claim and reassign resources
+> - improvements for applying quirks
+> - dropped Matthew's http://www.spinics.net/lists/linux-pci/msg45950.html dependency
+> - rebased to 4.5-rc1
 > 
-> b) Describe these private registers as internal PCI bridge registers,
->    using a DT "reg" property,
-> 
-> c) Describe the host bridge window (which doesn't include the above
->    registers) using the normal "ranges" property, and
-> 
-> d) Arrange for config writes to BAR 0 to be dropped and for reads to
->    return 0, maybe by checks in your config accessors.
 
-We should be able to express this in the ranges property as
-a non-relocatable range, I'm pretty sure the PCI binding allows
-this, but the Linux PCI code might not honor the flag at the
-moment, which can be fixed.
+Having tested v4 and v5, I'm seeing some resource assignment problems and address conflicts. 
+And problems booting QEMU.
 
-	Arnd
+Anybody else seeing the same?
+
+
+
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
