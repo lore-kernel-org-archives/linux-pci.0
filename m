@@ -1,135 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f49.google.com ([209.85.215.49]:33517 "EHLO
-	mail-lf0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751060AbcBMXkN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 13 Feb 2016 18:40:13 -0500
-Received: by mail-lf0-f49.google.com with SMTP id m1so71016732lfg.0
-        for <linux-pci@vger.kernel.org>; Sat, 13 Feb 2016 15:40:12 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo4beDk_ajsgqMUNJ3TGxDv=ysyPzhXHcx2AhUEUE9ROKA@mail.gmail.com>
-References: <bug-112121-41252@https.bugzilla.kernel.org/> <CAErSpo4beDk_ajsgqMUNJ3TGxDv=ysyPzhXHcx2AhUEUE9ROKA@mail.gmail.com>
-From: Mike Lothian <mike@fireburn.co.uk>
-Date: Sat, 13 Feb 2016 23:39:52 +0000
-Message-ID: <CAHbf0-GBiMVr4=n3ZT1NSH8Xgdh3TcdDd=Di+pok6Ep6h42ZOQ@mail.gmail.com>
-Subject: Re: [Bug 112121] New: Some PCIe options cause devices to be removed
- after syspend
+Received: from mga04.intel.com ([192.55.52.120]:60693 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750752AbcB2M4N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Feb 2016 07:56:13 -0500
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
-	linux-nvme <linux-nvme@lists.infradead.org>,
-	Rafael Wysocki <rjw@rjwysocki.net>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [PATCH 5/6] PCI: Enable runtime PM for Intel Sunrisepoint PCIe root ports
+Date: Mon, 29 Feb 2016 14:56:05 +0200
+Message-Id: <1456750566-116248-6-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi
+Intel Sunrisepoint (Skylake PCH) PCIe root ports are capable of being
+suspended runtime so allow runtime PM for these ports.
 
-I've just tested this again, I enabled PCI Hotplug & PCIe Hotplug and
-nothing - then I noticed I hadn't enabled the ACPI Hotplug driver -
-once I did the issue re-appeared
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/pcie/portdrv_pci.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-I then had to use testdisk to restore my partition table :'(
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index eb0f425f51cc..864c1bdd0e91 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -81,6 +81,7 @@ static int pcie_portdrv_restore_config(struct pci_dev *dev)
+ 
+ enum pcie_port_type {
+ 	PCIE_PORT_DEFAULT,
++	PCIE_PORT_SPT,
+ };
+ 
+ struct pcie_port_config {
+@@ -92,6 +93,10 @@ static const struct pcie_port_config pcie_port_configs[] = {
+ 	[PCIE_PORT_DEFAULT] = {
+ 		.suspend_allowed = true,
+ 	},
++	[PCIE_PORT_SPT] = {
++		.suspend_allowed = true,
++		.runtime_suspend_allowed = true,
++	},
+ };
+ 
+ #ifdef CONFIG_PM
+@@ -431,6 +436,9 @@ static void pcie_portdrv_err_resume(struct pci_dev *dev)
+  * LINUX Device Driver Model
+  */
+ static const struct pci_device_id port_pci_ids[] = {
++	/* Intel Sunrisepoint */
++	{ PCI_VDEVICE(INTEL, 0x9d14), .driver_data = PCIE_PORT_SPT },
++	{ PCI_VDEVICE(INTEL, 0x9d15), .driver_data = PCIE_PORT_SPT },
+ 	/* handle any PCI-Express port */
+ 	{ PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x00), ~0),
+ 	  .driver_data = PCIE_PORT_DEFAULT },
+-- 
+2.7.0
 
-I've attached the updated dmesg & my .config
-
-Cheers
-
-Mike
-
-On 8 February 2016 at 13:51, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> [+cc linux-pci, NVMe folks,  power management folks]
->
-> On Sun, Feb 7, 2016 at 11:04 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
->> https://bugzilla.kernel.org/show_bug.cgi?id=112121
->>
->>             Bug ID: 112121
->>            Summary: Some PCIe options cause devices to be removed after
->>                     syspend
->>            Product: Drivers
->>            Version: 2.5
->>     Kernel Version: 4.5-rc2
->>           Hardware: All
->>                 OS: Linux
->>               Tree: Mainline
->>             Status: NEW
->>           Severity: normal
->>           Priority: P1
->>          Component: PCI
->>           Assignee: drivers_pci@kernel-bugs.osdl.org
->>           Reporter: mike@fireburn.co.uk
->>         Regression: No
->>
->> Created attachment 203091
->>   --> https://bugzilla.kernel.org/attachment.cgi?id=203091&action=edit
->> Dmesg showing PCIe device removals
->>
->> I was having issues with suspend, when the machine was being resumed iommu
->> started removing devices - including my PCIe NVMe drive which contained my root
->> partition
->>
->> The problem showed up with:
->>
->> [*] PCI support
->> [*]   Support mmconfig PCI config space access
->> [*]   PCI Express Port Bus support
->> [*]     PCI Express Hotplug driver
->> [*]     Root Port Advanced Error Reporting support
->> [*]       PCI Express ECRC settings control
->> < >       PCIe AER error injector support
->> -*-     PCI Express ASPM control
->> [ ]       Debug PCI Express ASPM
->>           Default ASPM policy (BIOS default)  --->
->> [*]   Message Signaled Interrupts (MSI and MSI-X)
->> [ ]   PCI Debugging
->> [*]   Enable PCI resource re-allocation detection
->> < >   PCI Stub driver
->> [*]   Interrupts on hypertransport devices
->> [ ] PCI IOV support
->> [*] PCI PRI support
->> -*- PCI PASID support
->>     PCI host controller drivers  ----
->> < > PCCard (PCMCIA/CardBus) support  ----
->> [*] Support for PCI Hotplug  --->
->> < > RapidIO support
->>
->>
->> This is what I have now:
->>
->> [*] PCI support
->> [*]   Support mmconfig PCI config space access
->> [*]   PCI Express Port Bus support
->> [ ]     Root Port Advanced Error Reporting support
->> -*-     PCI Express ASPM control
->> [ ]       Debug PCI Express ASPM
->>           Default ASPM policy (BIOS default)  --->
->> [*]   Message Signaled Interrupts (MSI and MSI-X)
->> [*]   PCI Debugging
->> [ ]   Enable PCI resource re-allocation detection
->> < >   PCI Stub driver
->> [*]   Interrupts on hypertransport devices
->> [ ] PCI IOV support
->> [ ] PCI PRI support
->> [ ] PCI PASID support
->>     PCI host controller drivers  ----
->> < > PCCard (PCMCIA/CardBus) support  ----
->> [ ] Support for PCI Hotplug  ----
->> < > RapidIO support
->>
->> I tried disabling the iommu driver first but it had no effect
->>
->> If people are interested I could play with the above options to see which one
->> causes the issue
->
-> My guess is that PCI hotplug is the important one.  It would be nice
-> if dmesg contained enough information to connect nvme0n1 to a PCI
-> device.  It'd be even nicer if the PCI core noted device removals or
-> whatever happened here.
->
-> You don't get any more details if you boot with "ignore_loglevel", do you?
->
-> Mike, you didn't mark this as a regression, so I assume it's always
-> been this way, and we just haven't noticed it because most people
-> enable PCI hotplug (or whatever the relevant config option is).
->
-> Bjorn
