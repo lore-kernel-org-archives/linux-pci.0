@@ -1,73 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:45591 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965172AbcBQDqB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:46:01 -0500
-Received: from localhost
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 17 Feb 2016 13:45:59 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v8 20/45] powerpc/powernv: Allocate PE# in reverse order
-Date: Wed, 17 Feb 2016 14:44:03 +1100
-Message-Id: <1455680668-23298-21-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 0/5] Modularize PCI_DW related drivers.
+To: Arnd Bergmann <arnd@arndb.de>
+References: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com>
+ <6350001.oOdGGcH81x@wuerfel> <56CEB7BC.7010803@ti.com>
+ <2837386.VTD89bjPJz@wuerfel>
+CC: Paul Gortmaker <paul.gortmaker@windriver.com>,
+	<linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	<devicetree@vger.kernel.org>,
+	Frank Rowand <frowand.list@gmail.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ley Foon Tan <lftan@altera.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-arm-msm@vger.kernel.org>, <linux-pci@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <56D40F7F.5060204@ti.com>
+Date: Mon, 29 Feb 2016 14:59:35 +0530
+MIME-Version: 1.0
+In-Reply-To: <2837386.VTD89bjPJz@wuerfel>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PE number for one particular PE can be allocated dynamically or
-reserved according to the consumed M64 (64-bits prefetchable)
-segments of the PE. The M64 resources, and hence their segments
-and PE number are assigned/reserved in ascending order. The PE
-numbers are allocated dynamically in ascending order as well.
-It's not a problem as the PE numbers are reserved and then
-allocated all at once in fine order. However, it will introduce
-conflicts when PCI hotplug is supported: the PE number to be
-reserved for newly added PE might have been assigned.
+Hi Arnd,
 
-To resolve above conflicts, this forces the PE number to be
-allocated dynamically in reverse order. With this patch applied,
-the PE numbers are reserved in ascending order, but allocated
-dynamically in reverse order.
+On Thursday 25 February 2016 02:05 PM, Arnd Bergmann wrote:
+> On Thursday 25 February 2016 13:43:48 Kishon Vijay Abraham I wrote:
+>> Hi Arnd,
+>>
+>> On Wednesday 24 February 2016 02:34 PM, Arnd Bergmann wrote:
+>>> On Wednesday 24 February 2016 11:39:26 Kishon Vijay Abraham I wrote:
+>>>> Hi,
+>>>>
+>>>> On Monday 08 February 2016 05:30 AM, Paul Gortmaker wrote:
+>>>>> In a recent patch series that aimed to remove code related to module
+>>>>> unload for PCI support that was simply non modular, the discussion
+>>>>> led to people wanting to keep the code and push towards taking the
+>>>>> steps needed to support moving it towards tristate instead[1].
+>>>>>
+>>>>> Here, we take step one, which is simply making the Kconfig change
+>>>>> and then dealing with any build fallout or modpost fallout.  What
+>>>>> amounts to essentially a sanity build test.  To be clear, these
+>>>>> have not been runtime validated; that will need to be done by those
+>>>>> with access to real hardware.  However, the changes are not anything
+>>>>> that should disrupt any existing built-in validation, so real world
+>>>>> users should not be impacted by this change.
+>>>>>
+>>>>> We start with a smaller family of drivers; those that actively select
+>>>>> PCI_DW, as a nice self contained group to test the waters and see if
+>>>>> everyone is still good with this approach before investing more time
+>>>>> on a wider scale to other pci/host/ code blocks.
+>>>>>
+>>>>> As such the drivers here share a dependency on having the same group
+>>>>> of functions exported in order to successfully complete modpost.
+>>>>>
+>>>>> In addition, we have to stray outside drivers/pci to add exports
+>>>>> in two places; once for an ARM fault handler, and once for an OF
+>>>>> variable.
+>>>>>
+>>>>> The pci-keystone-dw.c instance was handled separately because it
+>>>>> consists of two source files that need their own group of driver
+>>>>> specific exports above and beyond the "shared" ones.
+>>>>>
+>>>>> Then we convert the Kconfig for all remaining at once; we could have
+>>>>> done it on a per driver basis for ease of revert if anyone really
+>>>>> objects, but since it would be a one line change, that seemed like
+>>>>> not a real concern.
+>>>>>
+>>>>> Build testing was done on the linux-next tree for arm allmodconfig.
+>>>>
+>>>> I took these patches and gave a test with DRA7xx board. As expected there was
+>>>> no issues when the driver was built-in. However when I tried to rmmod/modprobe
+>>>> I got this error [2].
+>>>
+>>> Thanks for testing this!
+>>>
+>>>> [2] -> http://pastebin.ubuntu.com/15185894/
+>>>
+>>> It looks like you are hitting the BUG_ON() in ioremap_pte_range()
+>>> that checks if a virtual address already has a page table entry,
+>>> which in turn is probably a result of dw_pcie_host_init()
+>>> calling pci_remap_iospace() again for the same memory area
+>>> it has called the last time, and no cleanup done inbetween.
+>>>
+>>> Could you try adding a pci_unmap_iospace() and calling that
+>>> in the device remove function? Let me know if you need help
+>>> implementing it.
+>>
+>> That didn't look straight forward to me :-( I'll try to see this next week. Any
+>> help from you will make it simpler for me.
+> 
+> I tried writing the function now, and I think it's actually quite easy:
+> 
+> void pci_unmap_iospace(const struct resource *res)
+> {
+> #if defined(PCI_IOBASE) && defined(CONFIG_MMU)
+>         return iounmap(PCI_IOBASE + res->start);
+> #endif
+> }
+> 
+> You just need to pass the same resource in here htat you pass into
+> pci_remap_iospace().
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+I still seem to get the abort in ioremap_page_range().
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index f182ca7..565725b 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -144,16 +144,14 @@ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
- 
- static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
- {
--	unsigned long pe;
-+	unsigned long pe = phb->ioda.total_pe_num - 1;
- 
--	do {
--		pe = find_next_zero_bit(phb->ioda.pe_alloc,
--					phb->ioda.total_pe_num, 0);
--		if (pe >= phb->ioda.total_pe_num)
--			return NULL;
--	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
-+	for (pe = phb->ioda.total_pe_num - 1; pe >= 0; pe--) {
-+		if (!test_and_set_bit(pe, phb->ioda.pe_alloc))
-+			return pnv_ioda_init_pe(phb, pe);
-+	}
- 
--	return pnv_ioda_init_pe(phb, pe);
-+	return NULL;
- }
- 
- static void pnv_ioda_free_pe(struct pnv_ioda_pe *pe)
--- 
-2.1.0
+Here's the patch I used [3] and here's the kernel log [4].
 
+[3] -> http://pastebin.ubuntu.com/15241614/
+[4] -> http://pastebin.ubuntu.com/15241637/
+
+Thanks
+Kishon
