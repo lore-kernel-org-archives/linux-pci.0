@@ -1,261 +1,185 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V4 05/23] x86, pci, ecam: mmconfig_64.c becomes default implementation for ECAM driver.
-Date: Thu,  4 Feb 2016 18:28:43 +0100
-Message-Id: <1454606941-9523-6-git-send-email-tn@semihalf.com>
-In-Reply-To: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga04.intel.com ([192.55.52.120]:60693 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750861AbcB2M4L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Feb 2016 07:56:11 -0500
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [PATCH 3/6] PCI: Move PCIe ports to D3hot during suspend
+Date: Mon, 29 Feb 2016 14:56:03 +0200
+Message-Id: <1456750566-116248-4-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-mmconfig_64.c functions responsible for ECAM regions mapping
-are generic enough to use them for other architectures, GENERIC_ECAM_MAP
-should be selected in that case (like 64bit x86). Some hosts may need
-arch-specific mapping logic, thus they are obligated to provide own
-implementation and resign GENERIC_ECAM_MAP feature (like 32bit x86 does).
+Currently the PCI core does not do this automatically as it avoids changing
+power state for bridges and PCIe ports. With recent hardware PCIe ports can
+be moved to D3hot given that we take into account few restrictions:
 
-Note, we leaved x86-specific PCI config accessors in the corresponding files.
+  - Devices connected to the ports are effectively in D3cold once the root
+    port is moved to D3hot (the config space is not accessible anymore and
+    the link may be powered down).
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Tested-by: Jeremy Linton <jeremy.linton@arm.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
+  - The device needs to be able to transition to D3cold.
+
+  - If the device is capable of waking the system it needs to be able to
+    do so from D3cold (PME from D3cold).
+
+We assume all recent hardware (starting from 2015) is capable of doing this
+but make it possible to add exceptions via entries in pcie_port_configs[].
+
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- arch/x86/Kconfig               |  1 +
- arch/x86/include/asm/pci_x86.h |  4 ---
- arch/x86/pci/mmconfig_64.c     | 55 ---------------------------------------
- drivers/acpi/mcfg.c            |  2 --
- drivers/pci/Kconfig            |  3 +++
- drivers/pci/ecam.c             | 59 +++++++++++++++++++++++++++++++++++++++++-
- include/linux/ecam.h           |  6 +++++
- 7 files changed, 68 insertions(+), 62 deletions(-)
+ drivers/pci/pcie/portdrv_pci.c | 103 +++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 100 insertions(+), 3 deletions(-)
 
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index a74acce..15674b9 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -65,6 +65,7 @@ config X86
- 	select GENERIC_CMOS_UPDATE
- 	select GENERIC_CPU_AUTOPROBE
- 	select GENERIC_EARLY_IOREMAP
-+	select GENERIC_ECAM_MAP			if X86_64
- 	select GENERIC_FIND_FIRST_BIT
- 	select GENERIC_IOMAP
- 	select GENERIC_IRQ_PROBE
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index 26e7dd4..6e14518 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -122,10 +122,6 @@ extern int pci_legacy_init(void);
- extern void pcibios_fixup_irqs(void);
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 6c6bb03392ea..fe3349685141 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -20,6 +20,7 @@
  
- /* pci-mmconfig.c */
--extern int __init pci_mmcfg_arch_init(void);
--extern void __init pci_mmcfg_arch_free(void);
--extern int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
--extern void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
- extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
- 			       phys_addr_t addr);
+ #include "portdrv.h"
+ #include "aer/aerdrv.h"
++#include "../pci.h"
  
-diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
-index d0c48eb..fd356cc 100644
---- a/arch/x86/pci/mmconfig_64.c
-+++ b/arch/x86/pci/mmconfig_64.c
-@@ -90,58 +90,3 @@ int pci_mmcfg_write(unsigned int seg, unsigned int bus,
- 
+ /*
+  * Version Information
+@@ -78,11 +79,105 @@ static int pcie_portdrv_restore_config(struct pci_dev *dev)
  	return 0;
  }
--
--static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
--{
--	void __iomem *addr;
--	u64 start, size;
--	int num_buses;
--
--	start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
--	num_buses = cfg->end_bus - cfg->start_bus + 1;
--	size = PCI_MMCFG_BUS_OFFSET(num_buses);
--	addr = ioremap_nocache(start, size);
--	if (addr)
--		addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
--	return addr;
--}
--
--int __init pci_mmcfg_arch_init(void)
--{
--	struct pci_mmcfg_region *cfg;
--
--	list_for_each_entry(cfg, &pci_mmcfg_list, list)
--		if (pci_mmcfg_arch_map(cfg)) {
--			pci_mmcfg_arch_free();
--			return 0;
--		}
--
--	return 1;
--}
--
--void __init pci_mmcfg_arch_free(void)
--{
--	struct pci_mmcfg_region *cfg;
--
--	list_for_each_entry(cfg, &pci_mmcfg_list, list)
--		pci_mmcfg_arch_unmap(cfg);
--}
--
--int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
--{
--	cfg->virt = mcfg_ioremap(cfg);
--	if (!cfg->virt) {
--		pr_err(PREFIX "can't map MMCONFIG at %pR\n", &cfg->res);
--		return -ENOMEM;
--	}
--
--	return 0;
--}
--
--void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
--{
--	if (cfg && cfg->virt) {
--		iounmap(cfg->virt + PCI_MMCFG_BUS_OFFSET(cfg->start_bus));
--		cfg->virt = NULL;
--	}
--}
-diff --git a/drivers/acpi/mcfg.c b/drivers/acpi/mcfg.c
-index fad9917..745b83e 100644
---- a/drivers/acpi/mcfg.c
-+++ b/drivers/acpi/mcfg.c
-@@ -10,8 +10,6 @@
- #include <linux/acpi.h>
- #include <linux/ecam.h>
  
--#include <asm/pci_x86.h> /* Temp hack before refactoring arch-specific calls */
--
- #define	PREFIX	"MCFG: "
- 
- int __init acpi_parse_mcfg(struct acpi_table_header *header)
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 9950248..dd26f39 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -33,6 +33,9 @@ config PCI_ECAM
- config HAVE_PCI_ECAM
- 	bool
- 
-+config GENERIC_ECAM_MAP
-+	bool
++enum pcie_port_type {
++	PCIE_PORT_DEFAULT,
++};
 +
- config PCI_DEBUG
- 	bool "PCI Debugging"
- 	depends on PCI && DEBUG_KERNEL
-diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-index d221dba..7bc75af 100644
---- a/drivers/pci/ecam.c
-+++ b/drivers/pci/ecam.c
-@@ -16,7 +16,6 @@
- #include <linux/ecam.h>
- 
- #include <asm/io.h>
--#include <asm/pci_x86.h> /* Temp hack before refactoring arch-specific calls */
- 
- #define PREFIX "PCI: "
- 
-@@ -24,6 +23,64 @@ static DEFINE_MUTEX(pci_mmcfg_lock);
- 
- LIST_HEAD(pci_mmcfg_list);
- 
-+#ifdef CONFIG_GENERIC_ECAM_MAP
++struct pcie_port_config {
++	bool suspend_allowed;
++};
 +
-+static void __iomem *mcfg_ioremap(struct pci_mmcfg_region *cfg)
++static const struct pcie_port_config pcie_port_configs[] = {
++	[PCIE_PORT_DEFAULT] = {
++		.suspend_allowed = true,
++	},
++};
++
+ #ifdef CONFIG_PM
++static const struct pcie_port_config *pcie_port_get_config(struct pci_dev *pdev)
 +{
-+	void __iomem *addr;
-+	u64 start, size;
-+	int num_buses;
-+
-+	start = cfg->address + PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
-+	num_buses = cfg->end_bus - cfg->start_bus + 1;
-+	size = PCI_MMCFG_BUS_OFFSET(num_buses);
-+	addr = ioremap_nocache(start, size);
-+	if (addr)
-+		addr -= PCI_MMCFG_BUS_OFFSET(cfg->start_bus);
-+	return addr;
++	const struct pci_device_id *id = pci_match_id(pdev->driver->id_table,
++						      pdev);
++	return &pcie_port_configs[id->driver_data];
 +}
 +
-+int __init pci_mmcfg_arch_init(void)
++static int pcie_port_check_d3cold(struct pci_dev *pdev, void *data)
 +{
-+	struct pci_mmcfg_region *cfg;
++	bool *d3cold_ok = data;
 +
-+	list_for_each_entry(cfg, &pci_mmcfg_list, list)
-+		if (pci_mmcfg_arch_map(cfg)) {
-+			pci_mmcfg_arch_free();
-+			return 0;
++	if (pdev->no_d3cold || !pdev->d3cold_allowed)
++		*d3cold_ok = false;
++	if (device_may_wakeup(&pdev->dev) && !pci_pme_capable(pdev, PCI_D3cold))
++		*d3cold_ok = false;
++
++	return !*d3cold_ok;
++}
++
++static bool pcie_port_can_suspend(struct pci_dev *pdev)
++{
++	bool d3cold_ok = true;
++
++	/*
++	 * When the port is put to D3hot the devices behind the port are
++	 * effectively in D3cold as their config space cannot be accessed
++	 * anymore and the link may be powered down.
++	 *
++	 * We only allow the port to go to D3hot the devices:
++	 *  - Are allowed to go to D3cold
++	 *  - Can wake up from D3cold if they are wake capable
++	 */
++	pci_walk_bus(pdev->subordinate, pcie_port_check_d3cold, &d3cold_ok);
++	return d3cold_ok;
++}
++
++static bool pcie_port_suspend_allowed(struct pci_dev *pdev)
++{
++	const struct pcie_port_config *config = pcie_port_get_config(pdev);
++
++	/*
++	 * Older hardware is not capable of moving PCIe ports to D3 so
++	 * anything earlier than 2015 is assumed not to support this.
++	 */
++	if (dmi_available) {
++		unsigned year;
++
++		if (!dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) ||
++		    year < 2015) {
++			return false;
 +		}
++	}
 +
-+	return 1;
++	/* Per port configuration can forbid it as well */
++	if (!config->suspend_allowed)
++		return false;
++
++	return pcie_port_can_suspend(pdev);
 +}
 +
-+void __init pci_mmcfg_arch_free(void)
++static int pcie_port_suspend_noirq(struct device *dev)
 +{
-+	struct pci_mmcfg_region *cfg;
++	struct pci_dev *pdev = to_pci_dev(dev);
 +
-+	list_for_each_entry(cfg, &pci_mmcfg_list, list)
-+		pci_mmcfg_arch_unmap(cfg);
-+}
-+
-+int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg)
-+{
-+	cfg->virt = mcfg_ioremap(cfg);
-+	if (!cfg->virt) {
-+		pr_err(PREFIX "can't map MMCONFIG at %pR\n", &cfg->res);
-+		return -ENOMEM;
++	if (pcie_port_suspend_allowed(pdev)) {
++		pci_save_state(pdev);
++		pci_set_power_state(pdev, PCI_D3hot);
++		/*
++		 * All devices behind the port are assumed to be in D3cold
++		 * so update their state now.
++		 */
++		__pci_bus_set_current_state(pdev->subordinate, PCI_D3cold);
 +	}
 +
 +	return 0;
 +}
 +
-+void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg)
-+{
-+	if (cfg && cfg->virt) {
-+		iounmap(cfg->virt + PCI_MMCFG_BUS_OFFSET(cfg->start_bus));
-+		cfg->virt = NULL;
-+	}
-+}
-+#endif /* CONFIG_GENERIC_ECAM_MAP */
-+
- static void __init pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
+ static int pcie_port_resume_noirq(struct device *dev)
  {
- 	if (cfg->res.parent)
-diff --git a/include/linux/ecam.h b/include/linux/ecam.h
-index dec3b52..813acd1 100644
---- a/include/linux/ecam.h
-+++ b/include/linux/ecam.h
-@@ -29,6 +29,12 @@ void list_add_sorted(struct pci_mmcfg_region *new);
- void free_all_mmcfg(void);
- int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
+ 	struct pci_dev *pdev = to_pci_dev(dev);
  
-+/* Arch specific calls */
-+int pci_mmcfg_arch_init(void);
-+void pci_mmcfg_arch_free(void);
-+int pci_mmcfg_arch_map(struct pci_mmcfg_region *cfg);
-+void pci_mmcfg_arch_unmap(struct pci_mmcfg_region *cfg);
++	pci_set_power_state(pdev, PCI_D0);
++	pci_restore_state(pdev);
 +
- extern struct list_head pci_mmcfg_list;
+ 	/*
+ 	 * Some BIOSes forget to clear Root PME Status bits after system wakeup
+ 	 * which breaks ACPI-based runtime wakeup on PCI Express, so clear those
+@@ -100,6 +195,7 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ 	.thaw		= pcie_port_device_resume,
+ 	.poweroff	= pcie_port_device_suspend,
+ 	.restore	= pcie_port_device_resume,
++	.suspend_noirq	= pcie_port_suspend_noirq,
+ 	.resume_noirq	= pcie_port_resume_noirq,
+ };
  
- #define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
+@@ -285,10 +381,11 @@ static void pcie_portdrv_err_resume(struct pci_dev *dev)
+ /*
+  * LINUX Device Driver Model
+  */
+-static const struct pci_device_id port_pci_ids[] = { {
++static const struct pci_device_id port_pci_ids[] = {
+ 	/* handle any PCI-Express port */
+-	PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x00), ~0),
+-	}, { /* end: all zeroes */ }
++	{ PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x00), ~0),
++	  .driver_data = PCIE_PORT_DEFAULT },
++	{ /* end: all zeroes */ }
+ };
+ MODULE_DEVICE_TABLE(pci, port_pci_ids);
+ 
 -- 
-1.9.1
+2.7.0
+
