@@ -1,317 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:53129 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754439AbcBHP3T convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 8 Feb 2016 10:29:19 -0500
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Joao Pinto <Joao.Pinto@synopsys.com>,
-	"helgaas@kernel.org" <helgaas@kernel.org>
-CC: "arnd@arndb.de" <arnd@arndb.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>
-Subject: RE: [PATCH] link up validation moved to pcie-designware
-Date: Mon, 8 Feb 2016 15:29:02 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ECACDF1@lhreml503-mbs>
-References: <b00bf38b4351831b97892b747d48c9206fbab9c7.1454935205.git.jpinto@synopsys.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ECAC8D0@lhreml503-mbs>
- <56B8B04B.9060909@synopsys.com>
-In-Reply-To: <56B8B04B.9060909@synopsys.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.kernel.org ([198.145.29.136]:33618 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751281AbcB2W5A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:57:00 -0500
+Date: Mon, 29 Feb 2016 16:56:53 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Lennert Buytenhek <kernel@wantstofly.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>,
+	Russell King <linux@arm.linux.org.uk>
+Subject: Re: [RFC PATCH] arm: kernel: pci: remove pci=firmware command line
+ parameter handling
+Message-ID: <20160229225653.GE3653@localhost>
+References: <1456767800-6609-1-git-send-email-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1456767800-6609-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Joao Pinto [mailto:Joao.Pinto@synopsys.com]
-> Sent: 08 February 2016 15:12
-> To: Gabriele Paoloni; Joao Pinto; helgaas@kernel.org
-> Cc: arnd@arndb.de; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org; CARLOS.PALMINHA@synopsys.com
-> Subject: Re: [PATCH] link up validation moved to pcie-designware
+On Mon, Feb 29, 2016 at 05:43:20PM +0000, Lorenzo Pieralisi wrote:
+> According to kernel documentation, the pci=firmware command line
+> parameter is only meant to be used on IXP2000 ARM platforms to prevent
+> the kernel from assigning PCI resources configured by the bootloader.
 > 
+> Since the IXP2000 ARM platforms support has been removed from the
+> kernel in commit:
 > 
-> Hi Gab,
-> This patch is part of the on going work of integrating a designware
-> platform
-> driver that is SoC agnostic. This code replication issue was raised
-> during
-> discussions.
-
-Ok sorry, I missed it then
-
-Cheers
-
-Gab
-
-
+> commit c65f2abf54a6 ("ARM: remove ixp23xx and ixp2000 platforms")
 > 
-> Thanks
-> Joao
+> its platforms specific kernel parameters should be removed
+> too from the kernel documentation along with the kernel code
+> currently handling them in that they have just become obsolete.
 > 
-> On 2/8/2016 1:03 PM, Gabriele Paoloni wrote:
-> > Hi Joao
-> >
-> >> -----Original Message-----
-> >> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> >> owner@vger.kernel.org] On Behalf Of Joao Pinto
-> >> Sent: 08 February 2016 12:44
-> >> To: helgaas@kernel.org
-> >> Cc: arnd@arndb.de; linux-pci@vger.kernel.org; linux-
-> >> kernel@vger.kernel.org; CARLOS.PALMINHA@synopsys.com; Joao Pinto
-> >> Subject: [PATCH] link up validation moved to pcie-designware
-> >>
-> >> This patch goal is to centralize in pcie-designware the link up
-> >> validation. A new function was added to pci-designware that is
-> >> responsible for doing such a task. This was implemented in a form
-> that
-> >> permits flexibility for all SoCs.
-> >
-> > Looking at the patch I don't think this is really needed,
-> > it seems to me like it makes more confusion in reading the
-> > drivers code.
-> >
-> > It is clear that each HW IP has got his own transient time
-> > in setting the link up, this is clear looking at the code
-> > of the single drivers now.
-> >
-> > With the modification you are proposing we are seeing
-> > drivers calls with magic numbers and the need for the
-> > reader to go and look into the designware framework to
-> > understand a function that is not even designware
-> > specific (in fact all these drivers need to wait different
-> > times according to their HW IP and some other drivers do
-> > not need to wait at all...)
-> >
-> > BTW I am quite new to PCIe so let's see what the other guys
-> > think...
-> >
-> > Cheers
-> >
-> > Gab
-> >
-> >>
-> >> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> >> ---
-> >>  drivers/pci/host/pci-dra7xx.c      | 11 +++--------
-> >>  drivers/pci/host/pci-exynos.c      | 11 ++---------
-> >>  drivers/pci/host/pci-imx6.c        | 11 +++--------
-> >>  drivers/pci/host/pcie-designware.c | 20 ++++++++++++++++++++
-> >>  drivers/pci/host/pcie-designware.h |  2 ++
-> >>  drivers/pci/host/pcie-spear13xx.c  | 12 ++----------
-> >>  6 files changed, 32 insertions(+), 35 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-
-> >> dra7xx.c
-> >> index 8c36880..e425944 100644
-> >> --- a/drivers/pci/host/pci-dra7xx.c
-> >> +++ b/drivers/pci/host/pci-dra7xx.c
-> >> @@ -10,7 +10,6 @@
-> >>   * published by the Free Software Foundation.
-> >>   */
-> >>
-> >> -#include <linux/delay.h>
-> >>  #include <linux/err.h>
-> >>  #include <linux/interrupt.h>
-> >>  #include <linux/irq.h>
-> >> @@ -108,7 +107,6 @@ static int dra7xx_pcie_establish_link(struct
-> >> pcie_port *pp)
-> >>  {
-> >>  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pp);
-> >>  	u32 reg;
-> >> -	unsigned int retries;
-> >>
-> >>  	if (dw_pcie_link_up(pp)) {
-> >>  		dev_err(pp->dev, "link is already up\n");
-> >> @@ -119,13 +117,10 @@ static int dra7xx_pcie_establish_link(struct
-> >> pcie_port *pp)
-> >>  	reg |= LTSSM_EN;
-> >>  	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
-> >>
-> >> -	for (retries = 0; retries < 1000; retries++) {
-> >> -		if (dw_pcie_link_up(pp))
-> >> -			return 0;
-> >> -		usleep_range(10, 20);
-> >> -	}
-> >> +	/* check if the link is up or not */
-> >> +	if (!dw_pcie_check_link_is_up(pp, 1000, 10, 20))
-> >> +		return 0;
-> >>
-> >> -	dev_err(pp->dev, "link is not up\n");
-> >>  	return -EINVAL;
-> >>  }
-> >>
-> >> diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-
-> >> exynos.c
-> >> index 01095e1..770c45a 100644
-> >> --- a/drivers/pci/host/pci-exynos.c
-> >> +++ b/drivers/pci/host/pci-exynos.c
-> >> @@ -318,7 +318,6 @@ static int exynos_pcie_establish_link(struct
-> >> pcie_port *pp)
-> >>  {
-> >>  	struct exynos_pcie *exynos_pcie = to_exynos_pcie(pp);
-> >>  	u32 val;
-> >> -	unsigned int retries;
-> >>
-> >>  	if (dw_pcie_link_up(pp)) {
-> >>  		dev_err(pp->dev, "Link already up\n");
-> >> @@ -357,13 +356,8 @@ static int exynos_pcie_establish_link(struct
-> >> pcie_port *pp)
-> >>  			  PCIE_APP_LTSSM_ENABLE);
-> >>
-> >>  	/* check if the link is up or not */
-> >> -	for (retries = 0; retries < 10; retries++) {
-> >> -		if (dw_pcie_link_up(pp)) {
-> >> -			dev_info(pp->dev, "Link up\n");
-> >> -			return 0;
-> >> -		}
-> >> -		mdelay(100);
-> >> -	}
-> >> +	if (!dw_pcie_check_link_is_up(pp, 10, 100000, 110000))
-> >> +		return 0;
-> >>
-> >>  	while (exynos_phy_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED) == 0) {
-> >>  		val = exynos_blk_readl(exynos_pcie, PCIE_PHY_PLL_LOCKED);
-> >> @@ -372,7 +366,6 @@ static int exynos_pcie_establish_link(struct
-> >> pcie_port *pp)
-> >>  	/* power off phy */
-> >>  	exynos_pcie_power_off_phy(pp);
-> >>
-> >> -	dev_err(pp->dev, "PCIe Link Fail\n");
-> >>  	return -EINVAL;
-> >>  }
-> >>
-> >> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-
-> imx6.c
-> >> index 22e8224..9e323be 100644
-> >> --- a/drivers/pci/host/pci-imx6.c
-> >> +++ b/drivers/pci/host/pci-imx6.c
-> >> @@ -330,15 +330,10 @@ static void imx6_pcie_init_phy(struct
-> pcie_port
-> >> *pp)
-> >>
-> >>  static int imx6_pcie_wait_for_link(struct pcie_port *pp)
-> >>  {
-> >> -	unsigned int retries;
-> >> -
-> >> -	for (retries = 0; retries < 200; retries++) {
-> >> -		if (dw_pcie_link_up(pp))
-> >> -			return 0;
-> >> -		usleep_range(100, 1000);
-> >> -	}
-> >> +	/* check if the link is up or not */
-> >> +	if (!dw_pcie_check_link_is_up(pp, 200, 100, 1000))
-> >> +		return 0;
-> >>
-> >> -	dev_err(pp->dev, "phy link never came up\n");
-> >>  	dev_dbg(pp->dev, "DEBUG_R0: 0x%08x, DEBUG_R1: 0x%08x\n",
-> >>  		readl(pp->dbi_base + PCIE_PHY_DEBUG_R0),
-> >>  		readl(pp->dbi_base + PCIE_PHY_DEBUG_R1));
-> >> diff --git a/drivers/pci/host/pcie-designware.c
-> >> b/drivers/pci/host/pcie-designware.c
-> >> index 540f077..6725231 100644
-> >> --- a/drivers/pci/host/pcie-designware.c
-> >> +++ b/drivers/pci/host/pcie-designware.c
-> >> @@ -22,6 +22,7 @@
-> >>  #include <linux/pci_regs.h>
-> >>  #include <linux/platform_device.h>
-> >>  #include <linux/types.h>
-> >> +#include <linux/delay.h>
-> >>
-> >>  #include "pcie-designware.h"
-> >>
-> >> @@ -380,6 +381,25 @@ static struct msi_controller dw_pcie_msi_chip =
-> {
-> >>  	.teardown_irq = dw_msi_teardown_irq,
-> >>  };
-> >>
-> >> +int dw_pcie_check_link_is_up(struct pcie_port *pp, int max_ret, int
-> >> sleep_min,
-> >> +								int sleep_max)
-> >> +{
-> >> +	int retries;
-> >> +
-> >> +	/* check if the link is up or not */
-> >> +	for (retries = 0; retries < max_ret; retries++) {
-> >> +		if (dw_pcie_link_up(pp)) {
-> >> +			dev_info(pp->dev, "link up\n");
-> >> +			return 0;
-> >> +		}
-> >> +		usleep_range(sleep_min, sleep_max);
-> >> +	}
-> >> +
-> >> +	dev_err(pp->dev, "phy link never came up\n");
-> >> +
-> >> +	return 1;
-> >> +}
-> >> +
-> >>  int dw_pcie_link_up(struct pcie_port *pp)
-> >>  {
-> >>  	if (pp->ops->link_up)
-> >> diff --git a/drivers/pci/host/pcie-designware.h
-> >> b/drivers/pci/host/pcie-designware.h
-> >> index 2356d29..b077fe0 100644
-> >> --- a/drivers/pci/host/pcie-designware.h
-> >> +++ b/drivers/pci/host/pcie-designware.h
-> >> @@ -76,6 +76,8 @@ int dw_pcie_cfg_read(void __iomem *addr, int size,
-> >> u32 *val);
-> >>  int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val);
-> >>  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
-> >>  void dw_pcie_msi_init(struct pcie_port *pp);
-> >> +int dw_pcie_check_link_is_up(struct pcie_port *pp, int max_ret, int
-> >> sleep_min,
-> >> +								int sleep_max);
-> >>  int dw_pcie_link_up(struct pcie_port *pp);
-> >>  void dw_pcie_setup_rc(struct pcie_port *pp);
-> >>  int dw_pcie_host_init(struct pcie_port *pp);
-> >> diff --git a/drivers/pci/host/pcie-spear13xx.c
-> b/drivers/pci/host/pcie-
-> >> spear13xx.c
-> >> index b95b756..5c24595 100644
-> >> --- a/drivers/pci/host/pcie-spear13xx.c
-> >> +++ b/drivers/pci/host/pcie-spear13xx.c
-> >> @@ -13,7 +13,6 @@
-> >>   */
-> >>
-> >>  #include <linux/clk.h>
-> >> -#include <linux/delay.h>
-> >>  #include <linux/interrupt.h>
-> >>  #include <linux/kernel.h>
-> >>  #include <linux/module.h>
-> >> @@ -149,7 +148,6 @@ static int spear13xx_pcie_establish_link(struct
-> >> pcie_port *pp)
-> >>  	struct spear13xx_pcie *spear13xx_pcie = to_spear13xx_pcie(pp);
-> >>  	struct pcie_app_reg *app_reg = spear13xx_pcie->app_base;
-> >>  	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
-> >> -	unsigned int retries;
-> >>
-> >>  	if (dw_pcie_link_up(pp)) {
-> >>  		dev_err(pp->dev, "link already up\n");
-> >> @@ -201,15 +199,9 @@ static int spear13xx_pcie_establish_link(struct
-> >> pcie_port *pp)
-> >>  			&app_reg->app_ctrl_0);
-> >>
-> >>  	/* check if the link is up or not */
-> >> -	for (retries = 0; retries < 10; retries++) {
-> >> -		if (dw_pcie_link_up(pp)) {
-> >> -			dev_info(pp->dev, "link up\n");
-> >> -			return 0;
-> >> -		}
-> >> -		mdelay(100);
-> >> -	}
-> >> +	if (!dw_pcie_check_link_is_up(pp, 10, 100000, 110000))
-> >> +		return 0;
-> >>
-> >> -	dev_err(pp->dev, "link Fail\n");
-> >>  	return -EINVAL;
-> >>  }
-> >>
-> >> --
-> >> 1.8.1.5
-> >>
-> >> --
-> >> To unsubscribe from this list: send the line "unsubscribe linux-pci"
-> in
-> >> the body of a message to majordomo@vger.kernel.org
-> >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> This patch removes the pci=firmware command line parameter handling
+> from ARM code and the related kernel parameters documentation
+> section.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+It looks like Rob merged c65f2abf54a6, so maybe he will merge this as
+well?  Otherwise I'd be happy to merge it; just let me know if you
+want me to.
+
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Lennert Buytenhek <kernel@wantstofly.org>
+> Cc: Jonathan Corbet <corbet@lwn.net>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Rob Herring <robh@kernel.org>
+> Cc: Russell King <linux@arm.linux.org.uk>
+> ---
+>  Documentation/kernel-parameters.txt | 5 -----
+>  arch/arm/kernel/bios32.c            | 3 ---
+>  2 files changed, 8 deletions(-)
+> 
+> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> index 9a53c92..e213acc 100644
+> --- a/Documentation/kernel-parameters.txt
+> +++ b/Documentation/kernel-parameters.txt
+> @@ -2875,11 +2875,6 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>  				for broken drivers that don't call it.
+>  		skip_isa_align	[X86] do not align io start addr, so can
+>  				handle more pci cards
+> -		firmware	[ARM] Do not re-enumerate the bus but instead
+> -				just use the configuration from the
+> -				bootloader. This is currently used on
+> -				IXP2000 systems where the bus has to be
+> -				configured a certain way for adjunct CPUs.
+>  		noearly		[X86] Don't do any early type 1 scanning.
+>  				This might help on some broken boards which
+>  				machine check when some devices' config space
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index 066f7f9..05e61a2 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -550,9 +550,6 @@ char * __init pcibios_setup(char *str)
+>  	if (!strcmp(str, "debug")) {
+>  		debug_pci = 1;
+>  		return NULL;
+> -	} else if (!strcmp(str, "firmware")) {
+> -		pci_add_flags(PCI_PROBE_ONLY);
+> -		return NULL;
+>  	}
+>  	return str;
+>  }
+> -- 
+> 2.5.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
