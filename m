@@ -1,258 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:36593 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933034AbcBYOsZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 25 Feb 2016 09:48:25 -0500
-Received: by mail-wm0-f66.google.com with SMTP id a4so3885832wme.3
-        for <linux-pci@vger.kernel.org>; Thu, 25 Feb 2016 06:48:24 -0800 (PST)
-From: Christoph Fritz <chf.fritz@googlemail.com>
-To: Richard Zhu <hongxing.zhu@nxp.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Fabio Estevam <fabio.estevam@nxp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lee Jones <lee.jones@linaro.org>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v3 2/2] PCI: imx6: add initial imx6sx support
-Date: Thu, 25 Feb 2016 15:47:49 +0100
-Message-Id: <1456411669-4699-3-git-send-email-chf.fritz@googlemail.com>
-In-Reply-To: <1456411669-4699-1-git-send-email-chf.fritz@googlemail.com>
-References: <1456411669-4699-1-git-send-email-chf.fritz@googlemail.com>
+Received: from mail.kernel.org ([198.145.29.136]:36925 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751106AbcB2Xhp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Feb 2016 18:37:45 -0500
+Date: Mon, 29 Feb 2016 17:37:41 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Justin Waters <justin.waters@timesys.com>
+Cc: linux-pci@vger.kernel.org, festevam@gmail.com,
+	l.stach@pengutronix.de
+Subject: Re: [PATCH v2] PCI: imx6: Add DT bindings to configure Tx Driver
+ settings
+Message-ID: <20160229233741.GH3653@localhost>
+References: <1452871476-11752-1-git-send-email-justin.waters@timesys.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1452871476-11752-1-git-send-email-justin.waters@timesys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds initial PCIe support for the imx6 SoC derivate imx6sx.
-PCI_MSI support is untested as its necessary suspend/resume quirk is
-left out of this patch.
-This patch is heavily based on patches by Richard Zhu.
+On Fri, Jan 15, 2016 at 10:24:35AM -0500, Justin Waters wrote:
+> The settings in GPR8 are dependent upon the particular layout of the
+> hardware platform. As such, they should be configurable via the device
+> tree.
+> 
+> As many boards have been using the default values, this implementation
+> uses the old values if they are not specified in the device tree.
+> 
+> Signed-off-by: Justin Waters <justin.waters@timesys.com>
 
-Signed-off-by: Christoph Fritz <chf.fritz@googlemail.com>
----
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |   6 +-
- drivers/pci/host/pci-imx6.c                        | 130 ++++++++++++++-------
- 2 files changed, 96 insertions(+), 40 deletions(-)
+Applied with Lucas' ack to pci/host-imx6 for v4.6, thanks, Justin!
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 6fbba53..c4323be 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -4,7 +4,7 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
- and thus inherits all the common properties defined in designware-pcie.txt.
- 
- Required properties:
--- compatible: "fsl,imx6q-pcie"
-+- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie"
- - reg: base addresse and length of the pcie controller
- - interrupts: A list of interrupt outputs of the controller. Must contain an
-   entry for each entry in the interrupt-names property.
-@@ -13,6 +13,10 @@ Required properties:
- - clock-names: Must include the following additional entries:
- 	- "pcie_phy"
- 
-+Additional required properties for imx6sx-pcie:
-+- clock names: Must include the following additional entries:
-+	- "pcie_inbound_axi"
-+
- Example:
- 
- 	pcie@0x01000000 {
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index fe60096..7e634a6 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -35,9 +35,11 @@ struct imx6_pcie {
- 	struct gpio_desc	*reset_gpio;
- 	struct clk		*pcie_bus;
- 	struct clk		*pcie_phy;
-+	struct clk		*pcie_inbound_axi;
- 	struct clk		*pcie;
- 	struct pcie_port	pp;
- 	struct regmap		*iomuxc_gpr;
-+	bool			is_imx6sx;
- 	void __iomem		*mem_base;
- };
- 
-@@ -214,35 +216,46 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
- 	u32 val, gpr1, gpr12;
- 
--	/*
--	 * If the bootloader already enabled the link we need some special
--	 * handling to get the core back into a state where it is safe to
--	 * touch it for configuration.  As there is no dedicated reset signal
--	 * wired up for MX6QDL, we need to manually force LTSSM into "detect"
--	 * state before completely disabling LTSSM, which is a prerequisite
--	 * for core configuration.
--	 *
--	 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
--	 * indication that the bootloader activated the link.
--	 */
--	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
--	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
--
--	if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
--	    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
--		val = readl(pp->dbi_base + PCIE_PL_PFLR);
--		val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
--		val |= PCIE_PL_PFLR_FORCE_LINK;
--		writel(val, pp->dbi_base + PCIE_PL_PFLR);
--
-+	if (imx6_pcie->is_imx6sx) {
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
--				IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
--	}
-+				IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
-+				IMX6SX_GPR12_PCIE_TEST_POWERDOWN);
-+		/* Force PCIe PHY reset */
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
-+					IMX6SX_GPR5_PCIE_BTNRST_RESET,
-+					IMX6SX_GPR5_PCIE_BTNRST_RESET);
-+	} else {
-+		/*
-+		 * If the bootloader already enabled the link we need some
-+		 * special handling to get the core back into a state where
-+		 * it is safe to touch it for configuration.  As there is no
-+		 * dedicated reset signal to manually force LTSSM into "detect"
-+		 * state before completely disabling LTSSM, which is a
-+		 * prerequisite for core configuration.
-+		 *
-+		 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have
-+		 * a strong indication that the bootloader activated the link.
-+		 */
-+		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
-+		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
-+
-+		if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
-+				(gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
-+			val = readl(pp->dbi_base + PCIE_PL_PFLR);
-+			val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
-+			val |= PCIE_PL_PFLR_FORCE_LINK;
-+			writel(val, pp->dbi_base + PCIE_PL_PFLR);
-+
-+			regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+				IMX6Q_GPR12_PCIE_CTL_2, 0);
-+		}
- 
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+			IMX6Q_GPR1_PCIE_TEST_PD,
-+			IMX6Q_GPR1_PCIE_TEST_PD);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0);
-+	}
- 
- 	return 0;
- }
-@@ -270,18 +283,30 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 		goto err_pcie;
- 	}
- 
--	/* power up core phy and enable ref clock */
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
--	/*
--	 * the async reset input need ref clock to sync internally,
--	 * when the ref clock comes after reset, internal synced
--	 * reset time is too short, cannot meet the requirement.
--	 * add one ~10us delay here.
--	 */
--	udelay(10);
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
-+	if (imx6_pcie->is_imx6sx) {
-+		ret = clk_prepare_enable(imx6_pcie->pcie_inbound_axi);
-+		if (ret) {
-+			dev_err(pp->dev, "unable to enable pcie_axi clock\n");
-+			goto err_inbound_axi;
-+		}
-+
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+			IMX6SX_GPR12_PCIE_TEST_POWERDOWN, 0);
-+	} else {
-+		/* power up core phy and enable ref clock */
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+				IMX6Q_GPR1_PCIE_TEST_PD, 0);
-+		/*
-+		 * the async reset input need ref clock to sync internally,
-+		 * when the ref clock comes after reset, internal synced
-+		 * reset time is too short , cannot meet the requirement.
-+		 * add one ~10us delay here.
-+		 */
-+		udelay(10);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+			IMX6Q_GPR1_PCIE_REF_CLK_EN,
-+			IMX6Q_GPR1_PCIE_REF_CLK_EN);
-+	}
- 
- 	/* allow the clocks to stabilize */
- 	usleep_range(200, 500);
-@@ -292,8 +317,15 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 		msleep(100);
- 		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
- 	}
-+
-+	if (imx6_pcie->is_imx6sx)
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
-+			IMX6SX_GPR5_PCIE_BTNRST_RESET, 0);
-+
- 	return 0;
- 
-+err_inbound_axi:
-+	clk_disable_unprepare(imx6_pcie->pcie);
- err_pcie:
- 	clk_disable_unprepare(imx6_pcie->pcie_bus);
- err_pcie_bus:
-@@ -307,6 +339,12 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
- {
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
- 
-+	if (imx6_pcie->is_imx6sx) {
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+			IMX6SX_GPR12_PCIE_RX_EQ_MASK,
-+			IMX6SX_GPR12_PCIE_RX_EQ_2);
-+	}
-+
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
- 
-@@ -571,6 +609,9 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 	pp = &imx6_pcie->pp;
- 	pp->dev = &pdev->dev;
- 
-+	imx6_pcie->is_imx6sx = of_device_is_compatible(pp->dev->of_node,
-+					"fsl,imx6sx-pcie");
-+
- 	/* Added for PCI abort handling */
- 	hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
- 		"imprecise external abort");
-@@ -606,6 +647,16 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(imx6_pcie->pcie);
- 	}
- 
-+	if (imx6_pcie->is_imx6sx) {
-+		imx6_pcie->pcie_inbound_axi = devm_clk_get(&pdev->dev,
-+			"pcie_inbound_axi");
-+		if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
-+			dev_err(&pdev->dev,
-+				"pcie_incbound_axi clock missing or invalid\n");
-+			return PTR_ERR(imx6_pcie->pcie_inbound_axi);
-+		}
-+	}
-+
- 	/* Grab GPR config register range */
- 	imx6_pcie->iomuxc_gpr =
- 		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
-@@ -632,6 +683,7 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
- 
- static const struct of_device_id imx6_pcie_of_match[] = {
- 	{ .compatible = "fsl,imx6q-pcie", },
-+	{ .compatible = "fsl,imx6sx-pcie", },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
--- 
-2.1.4
-
+> ---
+>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  7 ++++
+>  drivers/pci/host/pci-imx6.c                        | 42 +++++++++++++++++++---
+>  2 files changed, 44 insertions(+), 5 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> index 6fbba53..3be80c6 100644
+> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> @@ -13,6 +13,13 @@ Required properties:
+>  - clock-names: Must include the following additional entries:
+>  	- "pcie_phy"
+>  
+> +Optional properties:
+> +- fsl,tx-deemph-gen1: Gen1 De-emphasis value. Default: 0
+> +- fsl,tx-deemph-gen2-3p5db: Gen2 (3.5db) De-emphasis value. Default: 0
+> +- fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
+> +- fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
+> +- fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
+> +
+>  Example:
+>  
+>  	pcie@0x01000000 {
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 230ebf9..cc04497 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -39,6 +39,11 @@ struct imx6_pcie {
+>  	struct pcie_port	pp;
+>  	struct regmap		*iomuxc_gpr;
+>  	void __iomem		*mem_base;
+> +	u32			tx_deemph_gen1;
+> +	u32			tx_deemph_gen2_3p5db;
+> +	u32			tx_deemph_gen2_6db;
+> +	u32			tx_swing_full;
+> +	u32			tx_swing_low;
+>  };
+>  
+>  /* PCIe Root Complex registers (memory-mapped) */
+> @@ -317,15 +322,20 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+>  			IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
+>  
+>  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+> -			IMX6Q_GPR8_TX_DEEMPH_GEN1, 0 << 0);
+> +			   IMX6Q_GPR8_TX_DEEMPH_GEN1,
+> +			   imx6_pcie->tx_deemph_gen1 << 0);
+>  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+> -			IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB, 0 << 6);
+> +			   IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB,
+> +			   imx6_pcie->tx_deemph_gen2_3p5db << 6);
+>  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+> -			IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB, 20 << 12);
+> +			   IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB,
+> +			   imx6_pcie->tx_deemph_gen2_6db << 12);
+>  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+> -			IMX6Q_GPR8_TX_SWING_FULL, 127 << 18);
+> +			   IMX6Q_GPR8_TX_SWING_FULL,
+> +			   imx6_pcie->tx_swing_full << 18);
+>  	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+> -			IMX6Q_GPR8_TX_SWING_LOW, 127 << 25);
+> +			   IMX6Q_GPR8_TX_SWING_LOW,
+> +			   imx6_pcie->tx_swing_low << 25);
+>  }
+>  
+>  static int imx6_pcie_wait_for_link(struct pcie_port *pp)
+> @@ -565,6 +575,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>  	struct imx6_pcie *imx6_pcie;
+>  	struct pcie_port *pp;
+>  	struct resource *dbi_base;
+> +	struct device_node *node = pdev->dev.of_node;
+>  	int ret;
+>  
+>  	imx6_pcie = devm_kzalloc(&pdev->dev, sizeof(*imx6_pcie), GFP_KERNEL);
+> @@ -617,6 +628,27 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>  		return PTR_ERR(imx6_pcie->iomuxc_gpr);
+>  	}
+>  
+> +	/* Grab PCIe PHY Tx Settings */
+> +	if (of_property_read_u32
+> +	    (node, "fsl,tx-deemph-gen1", &imx6_pcie->tx_deemph_gen1))
+> +		imx6_pcie->tx_deemph_gen1 = 0;
+> +
+> +	if (of_property_read_u32
+> +	    (node, "fsl,tx-deemph-gen2-3p5db", &imx6_pcie->tx_deemph_gen2_3p5db))
+> +		imx6_pcie->tx_deemph_gen2_3p5db = 0;
+> +
+> +	if (of_property_read_u32
+> +	    (node, "fsl,tx-deemph-gen2-6db", &imx6_pcie->tx_deemph_gen2_6db))
+> +		imx6_pcie->tx_deemph_gen2_6db = 20;
+> +
+> +	if (of_property_read_u32
+> +	    (node, "fsl,tx-swing-full", &imx6_pcie->tx_swing_full))
+> +		imx6_pcie->tx_swing_full = 127;
+> +
+> +	if (of_property_read_u32
+> +	    (node, "fsl,tx-swing-low", &imx6_pcie->tx_swing_low))
+> +		imx6_pcie->tx_swing_low = 127;
+> +
+>  	ret = imx6_add_pcie_port(pp, pdev);
+>  	if (ret < 0)
+>  		return ret;
+> -- 
+> 2.5.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
