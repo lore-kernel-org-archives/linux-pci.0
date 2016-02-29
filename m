@@ -1,108 +1,47 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V5 09/15] acpi, mcfg: Add default PCI config accessors implementation and initial support for related quirks.
-Date: Tue, 16 Feb 2016 14:53:39 +0100
-Message-Id: <1455630825-27253-10-git-send-email-tn@semihalf.com>
-In-Reply-To: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:58348 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750861AbcB2M4N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Feb 2016 07:56:13 -0500
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [PATCH 6/6] PCI: Enable runtime PM for Intel Broxton PCIe root ports
+Date: Mon, 29 Feb 2016 14:56:06 +0200
+Message-Id: <1456750566-116248-7-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We use generic accessors from access.c by default. However, we already
-know platforms that need special handling while accessing to PCI config
-space. These platforms will need different accessors set matched against
-platform ID, domain, bus touple. Therefore we are going to add (in future)
-DECLARE_ACPI_MCFG_FIXUP which will register platform specific custom
-accessors. For now, we let pci_mcfg_get_ops to take acpi_pci_root structure
-as an arguments and left some space for quirk matching algorithm.
+Intel Broxton PCIe root ports are capable of being suspended runtime so
+allow runtime PM for these ports.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/acpi/pci_mcfg.c  | 30 ++++++++++++++++++++++++++++++
- include/linux/pci-acpi.h | 12 ++++++++++++
- 2 files changed, 42 insertions(+)
+ drivers/pci/pcie/portdrv_pci.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index 3282f2a..0062257 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -41,6 +41,36 @@ int __weak raw_pci_write(unsigned int domain, unsigned int bus,
- 	return PCIBIOS_DEVICE_NOT_FOUND;
- }
- 
-+void __iomem *
-+pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn, int offset)
-+{
-+	struct pci_mmcfg_region *cfg;
-+
-+	cfg = pci_mmconfig_lookup(pci_domain_nr(bus), bus->number);
-+	if (cfg && cfg->virt)
-+		return cfg->virt +
-+			(PCI_MMCFG_BUS_OFFSET(bus->number) | (devfn << 12)) +
-+			offset;
-+	return NULL;
-+}
-+
-+/* Default generic PCI config accessors */
-+static struct pci_ops default_pci_mcfg_ops = {
-+	.map_bus = pci_mcfg_dev_base,
-+	.read = pci_generic_config_read,
-+	.write = pci_generic_config_write,
-+};
-+
-+struct pci_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
-+{
-+	/*
-+	 * TODO: Match against platform specific quirks and return
-+	 * corresponding PCI config space accessor set.
-+	 */
-+
-+	return &default_pci_mcfg_ops;
-+}
-+
- static void list_add_sorted(struct pci_mmcfg_region *new)
- {
- 	struct pci_mmcfg_region *cfg;
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index b4f87ba9..3dc6a8c 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -141,6 +141,18 @@ extern struct list_head pci_mmcfg_list;
- #define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
- #define PCI_MMCFG_OFFSET(bus, devfn)   ((bus) << 20 | (devfn) << 12)
- 
-+#ifdef	CONFIG_PCI_MMCONFIG
-+extern struct pci_ops *pci_mcfg_get_ops(struct acpi_pci_root *root);
-+extern void __iomem *pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn,
-+				       int offset);
-+#else
-+static inline struct pci_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
-+{ return NULL; }
-+static inline void __iomem *pci_mcfg_dev_base(struct pci_bus *bus,
-+					      unsigned int devfn, int offset)
-+{ return NULL; }
-+#endif
-+
- #else	/* CONFIG_ACPI */
- static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
- static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 864c1bdd0e91..43dd23e42c1d 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -436,6 +436,11 @@ static void pcie_portdrv_err_resume(struct pci_dev *dev)
+  * LINUX Device Driver Model
+  */
+ static const struct pci_device_id port_pci_ids[] = {
++	/* Intel Broxton */
++	{ PCI_VDEVICE(INTEL, 0x1ad6), .driver_data = PCIE_PORT_SPT },
++	{ PCI_VDEVICE(INTEL, 0x1ad7), .driver_data = PCIE_PORT_SPT },
++	{ PCI_VDEVICE(INTEL, 0x5ad8), .driver_data = PCIE_PORT_SPT },
++	{ PCI_VDEVICE(INTEL, 0x5ada), .driver_data = PCIE_PORT_SPT },
+ 	/* Intel Sunrisepoint */
+ 	{ PCI_VDEVICE(INTEL, 0x9d14), .driver_data = PCIE_PORT_SPT },
+ 	{ PCI_VDEVICE(INTEL, 0x9d15), .driver_data = PCIE_PORT_SPT },
 -- 
-1.9.1
+2.7.0
 
