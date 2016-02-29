@@ -1,54 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:46535 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965175AbcBQDqB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 16 Feb 2016 22:46:01 -0500
-Received: from localhost
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 17 Feb 2016 13:45:59 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	dja@axtens.net, bhelgaas@google.com, robherring2@gmail.com,
-	grant.likely@linaro.org, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v8 31/45] powerpc/pci: Don't scan empty slot
-Date: Wed, 17 Feb 2016 14:44:14 +1100
-Message-Id: <1455680668-23298-32-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 29 Feb 2016 12:05:36 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bhaskar Jupudi <njupudi@ucsc.edu>
+Cc: linux-kernel@vger.kernel.org, bhelgaas@google.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] drivers/pci:Broken link fixed
+Message-ID: <20160229180536.GB3653@localhost>
+References: <1455055816-3768-1-git-send-email-njupudi@ucsc.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1455055816-3768-1-git-send-email-njupudi@ucsc.edu>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In hotplug case, function pci_add_pci_devices() is called to rescan
-the specified PCI bus, which might not have any child devices. Access
-to the PCI bus's child device node will cause kernel crash without
-exception.
+On Tue, Feb 09, 2016 at 02:10:16PM -0800, Bhaskar Jupudi wrote:
+> From: cmps107-njupudi <njupudi@ucsc.edu>
+> 
+> Dell developed a way to consistently name devices, 
+> and their last proposal was accepted under the name biosdevname.
+> 
+> Signed-off-by: Naga Venkata Sai Indubhaskar Jupudi <njupudi@ucsc.edu>
 
-This adds one more check to skip scanning PCI bus that doesn't have
-any subordinate devices from device-tree, in order to avoid kernel
-crash.
+Applied to pci/enumeration for v4.6, thanks!
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/kernel/pci-hotplug.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-index 7929a1c..3628c38 100644
---- a/arch/powerpc/kernel/pci-hotplug.c
-+++ b/arch/powerpc/kernel/pci-hotplug.c
-@@ -120,7 +120,8 @@ void pci_add_pci_devices(struct pci_bus *bus)
- 	if (mode == PCI_PROBE_DEVTREE) {
- 		/* use ofdt-based probe */
- 		of_rescan_bus(dn, bus);
--	} else if (mode == PCI_PROBE_NORMAL) {
-+	} else if (mode == PCI_PROBE_NORMAL &&
-+		   dn->child && PCI_DN(dn->child)) {
- 		/*
- 		 * Use legacy probe. In the partial hotplug case, we
- 		 * probably have grandchildren devices unplugged. So
--- 
-2.1.0
-
+> ---
+> Proposal 1 provides a character device interface to ethernet devices.
+> 
+> Proposal 2 is implemented in the same way as proposal 1 except that
+> device nodes are created without any changes in the kernel.
+> 
+> Proposal 3 is an installer based proposal where it provides the user 
+> with options to rename network interfaces.
+> 
+> Proposal 4 exports system firmware provided SMBIOS strings on
+> onboard devices to sysfs.
+> 
+> Proposal 5 uses the firmware provided index to derive ethN names
+> 
+> Proposal 6 is named as biosdevname and renames network interfaces 
+> to a different names space and accepted upstream.
+> 
+>  drivers/pci/pci-label.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+> index 024b5c1..27143a0 100644
+> --- a/drivers/pci/pci-label.c
+> +++ b/drivers/pci/pci-label.c
+> @@ -16,7 +16,7 @@
+>   * the instance number and string from the type 41 record and exports
+>   * it to sysfs.
+>   *
+> - * Please see http://linux.dell.com/wiki/index.php/Oss/libnetdevname for more
+> + * Please see http://linux.dell.com/files/biosdevname/ for more
+>   * information.
+>   */
+>  
+> -- 
+> 2.5.0
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
