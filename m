@@ -1,170 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Message-ID: <1456413584.3747.56.camel@pengutronix.de>
-Subject: Re: [PATCH v2] PCI: imx6: Add DT bindings to configure Tx Driver
- settings
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Justin Waters <justin.waters@timesys.com>,
-	linux-pci@vger.kernel.org, Fabio Estevam <festevam@gmail.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>
-Date: Thu, 25 Feb 2016 16:19:44 +0100
-In-Reply-To: <20160225151654.GA8120@localhost>
-References: <1452871476-11752-1-git-send-email-justin.waters@timesys.com>
-	 <20160204172544.GA19957@localhost>
-	 <CAENNV6+gn1hpz2PFp05F2Mf8zUcc8kN7MZEijDrY6JPMUcueAg@mail.gmail.com>
-	 <20160225151654.GA8120@localhost>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from comal.ext.ti.com ([198.47.26.152]:46404 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755376AbcB2PGw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Feb 2016 10:06:52 -0500
+Subject: Re: [PATCH] PCI: keystone: fix msi code that retrieves the pp struct
+ ptr
+To: Greg KH <gregkh@linuxfoundation.org>
+References: <1456438984-22111-1-git-send-email-m-karicheri2@ti.com>
+ <20160226001114.GA10923@kroah.com>
+CC: <stable@vger.kernel.org>, <bhelgaas@google.com>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>
+From: Murali Karicheri <m-karicheri2@ti.com>
+Message-ID: <56D45E72.1040501@ti.com>
+Date: Mon, 29 Feb 2016 10:06:26 -0500
+MIME-Version: 1.0
+In-Reply-To: <20160226001114.GA10923@kroah.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Donnerstag, den 25.02.2016, 09:16 -0600 schrieb Bjorn Helgaas:
-> On Fri, Feb 19, 2016 at 03:25:26PM -0500, Justin Waters wrote:
-> > On Thu, Feb 4, 2016 at 12:25 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > > [+cc Richard]
-> > >
-> > > On Fri, Jan 15, 2016 at 10:24:35AM -0500, Justin Waters wrote:
-> > >> The settings in GPR8 are dependent upon the particular layout of the
-> > >> hardware platform. As such, they should be configurable via the device
-> > >> tree.
-> > >>
-> > >> As many boards have been using the default values, this implementation
-> > >> uses the old values if they are not specified in the device tree.
-> > >>
-> > >> Signed-off-by: Justin Waters <justin.waters@timesys.com>
-> > >
-> > > Waiting for an ack from Lucas, since he had comments on the last version.
-> > >
-> > 
-> > Lucas, I just wanted to check in and see if you had any additional
-> > feedback for me. Did v2 address your concerns?
+On 02/25/2016 07:11 PM, Greg KH wrote:
+> On Thu, Feb 25, 2016 at 05:23:04PM -0500, Murali Karicheri wrote:
+>> Recent update to pcie-designware core driver,
+>> commit "cbce79005 PCI: designware: Make driver arch-agnostic" broke the
+>> keystone PCI driver. This is because, the way pp struct ptr is retrieved
+>> from  msi desc has changed and require similar update in pci-keystone-dw.c
+>> as well. This patch fix this issue. Here is the early boot crash log seen
+>> on K2E EVM.
+>>
+>> [    1.012999] pci 0000:00:00.0: PCI bridge to [bus 01]
+>> [    1.018073] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
+>> [    1.024308] pci 0000:00:00.0:   bridge window [mem 0x60000000-0x600fffff]
+>> [    1.031216] pci 0000:00:00.0:   bridge window [mem 0x60100000-0x601fffff
+>> pref]
+>> [    1.038736] Unable to handle kernel NULL pointer dereference at virtual
+>> address 00000030
+>> [    1.046950] pgd = c0003000
+>> [    1.049750] [00000030] *pgd=80000800004003, *pmd=00000000
+>> [    1.055265] Internal error: Oops: 206 [#1] PREEMPT SMP ARM
+>> [    1.060860] Modules linked in:
+>> [    1.064013] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.4.2-00139-gb74f926 #2
+>> [    1.071266] Hardware name: Keystone
+>> [    1.074853] task: eb888000 ti: eb890000 task.ti: eb890000
+>> [    1.080364] PC is at ks_dw_pcie_msi_irq_unmask+0x24/0x58
+>> [    1.085785] LR is at ks_dw_pcie_msi_irq_unmask+0x18/0x58
+>> [    1.091206] pc : [<c02f65c8>]    lr : [<c02f65bc>]    psr: 60000093
+>> [    1.091206] sp : eb891bc8  ip : 00000000  fp : ebb15010
+>> [    1.102915] r10: 00000051  r9 : 60000013  r8 : ebafaa20
+>> [    1.108247] r7 : ebaa9f80  r6 : eb9fd0c0  r5 : ebafa9d0  r4 : ebafa9c0
+>> [    1.114889] r3 : 00000051  r2 : 00000000  r1 : 00000001  r0 : ebb14c18
+>> [    1.121533] Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment
+>> kernel
+>> [    1.129049] Control: 30c5387d  Table: 00003000  DAC: fffffffd
+>> [    1.134905] Process swapper/0 (pid: 1, stack limit = 0xeb890210)
+>> [    1.141023] Stack: (0xeb891bc8 to 0xeb892000)
+>>
+>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>> ---
+>>  - Need this fix in 4.4.4 as well
 > 
-> Just to be clear, I'm waiting for an ack from the IMX6 maintainers
-> (Richard or Lucas) before applying this.
+> <formletter>
 > 
-Sorry, for the delay on my side.
+> This is not the correct way to submit patches for inclusion in the
+> stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
+> for how to do this properly.
+> 
+> </formletter>
+> 
+I misremembered it. I am following option 1) and only thing missing is
+========================================================================
+To have the patch automatically included in the stable tree, add the tag
+     Cc: stable@vger.kernel.org
+   in the sign-off area.
+=========================================================================
 
-Patch looks good to me now,
-Acked-by: Lucas Stach <l.stach@pengutronix.de>
+I will add Cc in the sign-off area and send v1.
 
-> > >> ---
-> > >>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  7 ++++
-> > >>  drivers/pci/host/pci-imx6.c                        | 42 +++++++++++++++++++---
-> > >>  2 files changed, 44 insertions(+), 5 deletions(-)
-> > >>
-> > >> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> > >> index 6fbba53..3be80c6 100644
-> > >> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> > >> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> > >> @@ -13,6 +13,13 @@ Required properties:
-> > >>  - clock-names: Must include the following additional entries:
-> > >>       - "pcie_phy"
-> > >>
-> > >> +Optional properties:
-> > >> +- fsl,tx-deemph-gen1: Gen1 De-emphasis value. Default: 0
-> > >> +- fsl,tx-deemph-gen2-3p5db: Gen2 (3.5db) De-emphasis value. Default: 0
-> > >> +- fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
-> > >> +- fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
-> > >> +- fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
-> > >> +
-> > >>  Example:
-> > >>
-> > >>       pcie@0x01000000 {
-> > >> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> > >> index 230ebf9..cc04497 100644
-> > >> --- a/drivers/pci/host/pci-imx6.c
-> > >> +++ b/drivers/pci/host/pci-imx6.c
-> > >> @@ -39,6 +39,11 @@ struct imx6_pcie {
-> > >>       struct pcie_port        pp;
-> > >>       struct regmap           *iomuxc_gpr;
-> > >>       void __iomem            *mem_base;
-> > >> +     u32                     tx_deemph_gen1;
-> > >> +     u32                     tx_deemph_gen2_3p5db;
-> > >> +     u32                     tx_deemph_gen2_6db;
-> > >> +     u32                     tx_swing_full;
-> > >> +     u32                     tx_swing_low;
-> > >>  };
-> > >>
-> > >>  /* PCIe Root Complex registers (memory-mapped) */
-> > >> @@ -317,15 +322,20 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
-> > >>                       IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
-> > >>
-> > >>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-> > >> -                     IMX6Q_GPR8_TX_DEEMPH_GEN1, 0 << 0);
-> > >> +                        IMX6Q_GPR8_TX_DEEMPH_GEN1,
-> > >> +                        imx6_pcie->tx_deemph_gen1 << 0);
-> > >>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-> > >> -                     IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB, 0 << 6);
-> > >> +                        IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB,
-> > >> +                        imx6_pcie->tx_deemph_gen2_3p5db << 6);
-> > >>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-> > >> -                     IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB, 20 << 12);
-> > >> +                        IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB,
-> > >> +                        imx6_pcie->tx_deemph_gen2_6db << 12);
-> > >>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-> > >> -                     IMX6Q_GPR8_TX_SWING_FULL, 127 << 18);
-> > >> +                        IMX6Q_GPR8_TX_SWING_FULL,
-> > >> +                        imx6_pcie->tx_swing_full << 18);
-> > >>       regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-> > >> -                     IMX6Q_GPR8_TX_SWING_LOW, 127 << 25);
-> > >> +                        IMX6Q_GPR8_TX_SWING_LOW,
-> > >> +                        imx6_pcie->tx_swing_low << 25);
-> > >>  }
-> > >>
-> > >>  static int imx6_pcie_wait_for_link(struct pcie_port *pp)
-> > >> @@ -565,6 +575,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
-> > >>       struct imx6_pcie *imx6_pcie;
-> > >>       struct pcie_port *pp;
-> > >>       struct resource *dbi_base;
-> > >> +     struct device_node *node = pdev->dev.of_node;
-> > >>       int ret;
-> > >>
-> > >>       imx6_pcie = devm_kzalloc(&pdev->dev, sizeof(*imx6_pcie), GFP_KERNEL);
-> > >> @@ -617,6 +628,27 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
-> > >>               return PTR_ERR(imx6_pcie->iomuxc_gpr);
-> > >>       }
-> > >>
-> > >> +     /* Grab PCIe PHY Tx Settings */
-> > >> +     if (of_property_read_u32
-> > >> +         (node, "fsl,tx-deemph-gen1", &imx6_pcie->tx_deemph_gen1))
-> > >> +             imx6_pcie->tx_deemph_gen1 = 0;
-> > >> +
-> > >> +     if (of_property_read_u32
-> > >> +         (node, "fsl,tx-deemph-gen2-3p5db", &imx6_pcie->tx_deemph_gen2_3p5db))
-> > >> +             imx6_pcie->tx_deemph_gen2_3p5db = 0;
-> > >> +
-> > >> +     if (of_property_read_u32
-> > >> +         (node, "fsl,tx-deemph-gen2-6db", &imx6_pcie->tx_deemph_gen2_6db))
-> > >> +             imx6_pcie->tx_deemph_gen2_6db = 20;
-> > >> +
-> > >> +     if (of_property_read_u32
-> > >> +         (node, "fsl,tx-swing-full", &imx6_pcie->tx_swing_full))
-> > >> +             imx6_pcie->tx_swing_full = 127;
-> > >> +
-> > >> +     if (of_property_read_u32
-> > >> +         (node, "fsl,tx-swing-low", &imx6_pcie->tx_swing_low))
-> > >> +             imx6_pcie->tx_swing_low = 127;
-> > >> +
-> > >>       ret = imx6_add_pcie_port(pp, pdev);
-> > >>       if (ret < 0)
-> > >>               return ret;
-> > >> --
-> > >> 2.5.0
-> > >>
-> > >> --
-> > >> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > >> the body of a message to majordomo@vger.kernel.org
-> > >> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -- 
-Pengutronix e.K.             | Lucas Stach                 |
-Industrial Linux Solutions   | http://www.pengutronix.de/  |
-
+Murali Karicheri
+Linux Kernel, Keystone
