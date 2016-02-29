@@ -1,93 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33229 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757537AbcBDXOB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 4 Feb 2016 18:14:01 -0500
-Date: Thu, 4 Feb 2016 17:13:58 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Sean O. Stalley" <sean.stalley@intel.com>
-Cc: linux-pci@vger.kernel.org, mj@ucw.cz, bhelgaas@google.com,
-	alex.williamson@redhat.com, david.daney@cavium.com
-Subject: Re: [PATCH 1/2] pci: Identify Enhanced Allocation (EA) BAR
- Equivalent resources
-Message-ID: <20160204231358.GG7031@localhost>
-References: <1453500294-3140-1-git-send-email-sean.stalley@intel.com>
- <1453500294-3140-2-git-send-email-sean.stalley@intel.com>
+Received: from kirsty.vergenet.net ([202.4.237.240]:38711 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752227AbcB2Ag0 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 28 Feb 2016 19:36:26 -0500
+Date: Mon, 29 Feb 2016 09:36:18 +0900
+From: Simon Horman <horms@verge.net.au>
+To: Phil Edworthy <phil.edworthy@renesas.com>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	"linux-renesas-soc@vger.kernel.org"
+	<linux-renesas-soc@vger.kernel.org>
+Subject: Re: [PATCH] PCI: rcar, rcar-gen2: Use ARCH_RENESAS
+Message-ID: <20160229003618.GA25079@verge.net.au>
+References: <1456361156-16798-1-git-send-email-horms+renesas@verge.net.au>
+ <CAMuHMdUW=3Vx7M2tTHguF2Gs8BAWWcPOVNDPizdPTWyawy8vHg@mail.gmail.com>
+ <HK2PR0601MB1393372115B466FBB5F2D4EEF5A70@HK2PR0601MB1393.apcprd06.prod.outlook.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1453500294-3140-2-git-send-email-sean.stalley@intel.com>
+In-Reply-To: <HK2PR0601MB1393372115B466FBB5F2D4EEF5A70@HK2PR0601MB1393.apcprd06.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jan 22, 2016 at 02:04:53PM -0800, Sean O. Stalley wrote:
-> From: Alex Williamson <alex.williamson@redhat.com>
+On Fri, Feb 26, 2016 at 09:22:04AM +0000, Phil Edworthy wrote:
+> Hi Geert,
 > 
-> We've done a pretty good job of abstracting EA from drivers,
-> but there are some cases where flaging resources as EA would be
-> useful. Specifically, EA is flexabable when it comes to resource
+> On 25 February 2016 08:05, Geert Uytterhoeven wrote:
+> > On Thu, Feb 25, 2016 at 1:45 AM, Simon Horman
+> > <horms+renesas@verge.net.au> wrote:
+> > > Make use of ARCH_RENESAS in place of ARCH_SHMOBILE.
+> > >
+> > > This is part of an ongoing process to migrate from ARCH_SHMOBILE to
+> > > ARCH_RENESAS the motivation for which being that RENESAS seems to be a
+> > more
+> > > appropriate name than SHMOBILE for the majority of Renesas ARM based
+> > SoCs.
+> > >
+> > > Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+> > 
+> > Acked-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> > 
+> > > --- a/drivers/pci/host/Kconfig
+> > > +++ b/drivers/pci/host/Kconfig
+> > 
+> > > @@ -49,7 +49,7 @@ config PCI_RCAR_GEN2
+> > >
+> > >  config PCI_RCAR_GEN2_PCIE
+> > >         bool "Renesas R-Car PCIe controller"
+> > > -       depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
+> > > +       depends on ARCH_RENESAS || (ARM && COMPILE_TEST)
+> > >         help
+> > >           Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
+> > 
+> > BTW, this looks like a misnomer: the driver supports a compatible value for
+> > R-Car H1, too ("renesas,pcie-r8a7779"), but it's not used in r8a7779.dtsi.
+> IIRC, H1 PCIe support was nobbled in some way that meant you could not
+> use it with any normal PCIe card. You could connect to another R-Car that
+> was acting as an endpoint though.
 
-Heh, "flexabable" :)
+It sounds like that might be worth documenting somewhere.
 
-> alignment & sizing. This can create issues when existing software
-> makes assumptions about the PCI resources.
-> 
-> For example, lspci assumes any PCI resource exposed by the kernel
-> that isn't visible in standard configspace comes from a VF BAR.
-> vfio makes assumptions about alignment and sizing, and runs into
-> problems when attempting to emulate a BAR Equivalent EA resource.
-> 
-> To facilitate that, a flag indicating whether a PCI resource is a
-> traditional BAR or BAR equivalent seems much nicer than attempting
-> to deduce where the resource came from from the size & address fields
-> (which is impossible if a EA resource happens naturally aligned).
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
-> ---
->  drivers/pci/pci.c      | 2 +-
->  include/linux/ioport.h | 2 ++
->  2 files changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index d1a7105..8ff678c 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2229,7 +2229,7 @@ void pci_pm_init(struct pci_dev *dev)
->  
->  static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
->  {
-> -	unsigned long flags = IORESOURCE_PCI_FIXED;
-> +	unsigned long flags = IORESOURCE_PCI_FIXED | IORESOURCE_PCI_EA_BEI;
->  
->  	switch (prop) {
->  	case PCI_EA_P_MEM:
-> diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-> index 24bea08..5acc194 100644
-> --- a/include/linux/ioport.h
-> +++ b/include/linux/ioport.h
-> @@ -105,6 +105,8 @@ struct resource {
->  /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
->  #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move resource */
->  
-> +/* PCI Enhanced Allocation defined BAR equivalent resource */
-> +#define IORESOURCE_PCI_EA_BEI		(1<<5)
-
-Hmmm, I didn't realize until I read the lspci patch that the resource
-flags are exposed via sysfs (I think in resource_show()) and are thus
-part of the sysfs ABI.  It would be nice to have a comment to that
-effect here in ioport.h so we don't move bits and inadvertently break
-something.
-
-The changelog should also connect the dots a little bit more, e.g.,
-mention the sysfs file affected by this patch, and that this currently
-only makes lspci print slightly more correct output.
-
->  /* helpers to define resources */
->  #define DEFINE_RES_NAMED(_start, _size, _name, _flags)			\
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In any case, I think we could s/Gen2 // in the text above.
