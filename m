@@ -1,71 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from o1.f.az.sendgrid.net ([208.117.55.132]:37361 "EHLO
-	o1.f.az.sendgrid.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901AbcBXS5I (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 24 Feb 2016 13:57:08 -0500
-From: jakeo@microsoft.com
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org, kys@microsoft.com,
-	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-	tglx@linutronix.de, haiyangz@microsoft.com, marc.zyngier@arm.com,
-	haddenh@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH] PCI: Remove usage of pci_domain_nr when the PCI bus doesn't yet exist
-Date: Wed, 24 Feb 2016 18:56:36 +0000
-Message-Id: <1456340196-13717-1-git-send-email-jakeo@microsoft.com>
+Received: from mail.kernel.org ([198.145.29.136]:35477 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752739AbcB2XUj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Feb 2016 18:20:39 -0500
+Date: Mon, 29 Feb 2016 17:20:34 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, Zhou Wang <wangzhou1@hisilicon.com>
+Subject: Re: [PATCH v2] PCI: keystone: fix msi code that retrieves the pp
+ struct ptr
+Message-ID: <20160229232034.GF3653@localhost>
+References: <1456761113-8416-1-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1456761113-8416-1-git-send-email-m-karicheri2@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jake Oshins <jakeo@microsoft.com>
+[-cc stable, +cc Zhou]
 
-This patch fixes a race condition in this driver.  Using the
-function pci_domain_nr() only works if the PCI bus has already
-been fully created.  This patch just deletes one call site,
-as it was in debug prints which aren't strictly necessary.
-Another call site is changed to look for the data in the same
-structure that is passed in when creating the PCI bus in the
-first place.
+On Mon, Feb 29, 2016 at 10:51:53AM -0500, Murali Karicheri wrote:
+> Recent update to pcie-designware core driver, 
+> 'commit cbce7900598c ("PCI: designware: Make driver arch-agnostic")'
+> broke the keystone PCI driver. After this commit, we see a kernel crash on
+> Keystone SoC as shown below in the boot log. This is because, the way pp
+> struct ptr is retrieved from  msi desc has changed and require similar
+> update in pci-keystone-dw.c as well. This patch fixes this issue. 
+> 
+> [    1.012999] pci 0000:00:00.0: PCI bridge to [bus 01]
+> [    1.018073] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
+> [    1.024308] pci 0000:00:00.0:   bridge window [mem 0x60000000-0x600fffff]
+> [    1.031216] pci 0000:00:00.0:   bridge window [mem 0x60100000-0x601fffff
+> pref]
+> [    1.038736] Unable to handle kernel NULL pointer dereference at virtual
+> address 00000030
+> [    1.046950] pgd = c0003000
+> [    1.049750] [00000030] *pgd=80000800004003, *pmd=00000000
+> [    1.055265] Internal error: Oops: 206 [#1] PREEMPT SMP ARM
+> [    1.060860] Modules linked in:
+> [    1.064013] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.4.2-00139-gb74f926 #2
+> [    1.071266] Hardware name: Keystone
+> [    1.074853] task: eb888000 ti: eb890000 task.ti: eb890000
+> [    1.080364] PC is at ks_dw_pcie_msi_irq_unmask+0x24/0x58
+> [    1.085785] LR is at ks_dw_pcie_msi_irq_unmask+0x18/0x58
+> [    1.091206] pc : [<c02f65c8>]    lr : [<c02f65bc>]    psr: 60000093
+> [    1.091206] sp : eb891bc8  ip : 00000000  fp : ebb15010
+> [    1.102915] r10: 00000051  r9 : 60000013  r8 : ebafaa20
+> [    1.108247] r7 : ebaa9f80  r6 : eb9fd0c0  r5 : ebafa9d0  r4 : ebafa9c0
+> [    1.114889] r3 : 00000051  r2 : 00000000  r1 : 00000001  r0 : ebb14c18
+> [    1.121533] Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment
+> kernel
+> [    1.129049] Control: 30c5387d  Table: 00003000  DAC: fffffffd
+> [    1.134905] Process swapper/0 (pid: 1, stack limit = 0xeb890210)
+> [    1.141023] Stack: (0xeb891bc8 to 0xeb892000)
+> 
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: <stable@vger.kernel.org> # 4.4.x
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- drivers/pci/host/pci-hyperv.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+This fixes a regression, so I applied this to for-linus for v4.5, with
+changelog as follows:
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 9391dee..ed651ba 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -1265,11 +1265,6 @@ static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
- 	if (!hpdev)
- 		return NULL;
- 
--	dev_info(&hbus->hdev->device,
--		 "New child device (%p) [%04x:%04x] at %04x:00:00.%02x\n",
--		 hpdev, desc->v_id, desc->d_id, pci_domain_nr(hbus->pci_bus),
--		 desc->win_slot.bits.func);
--
- 	hpdev->hbus = hbus;
- 
- 	memset(&pkt, 0, sizeof(pkt));
-@@ -1558,9 +1553,15 @@ static void hv_eject_device_work(struct work_struct *work)
- 		return;
- 	}
- 
-+	/*
-+	 * Ejection can come before or after the PCI bus has been set up, so
-+	 * attempt to find it and tear down the bus state, if it exists.  This
-+	 * must be done without constructs like pci_domain_nr(hbus->pci_bus)
-+	 * because hbus->pci_bus may not exist yet.
-+	 */
- 	wslot = wslot_to_devfn(hpdev->desc.win_slot.slot);
--	pdev = pci_get_domain_bus_and_slot(pci_domain_nr(hpdev->hbus->pci_bus),
--					   0, wslot);
-+	pdev = pci_get_domain_bus_and_slot(hpdev->hbus->sysdata.domain, 0,
-+					   wslot);
- 	if (pdev) {
- 		pci_stop_and_remove_bus_device(pdev);
- 		pci_dev_put(pdev);
--- 
-1.9.1
+commit 79e3f4a853ed161cd4c06d84b50beebf961a47c6
+Author: Murali Karicheri <m-karicheri2@ti.com>
+Date:   Mon Feb 29 17:18:22 2016 -0600
 
+    PCI: keystone: Fix MSI code that retrieves struct pcie_port pointer
+    
+    Commit cbce7900598c ("PCI: designware: Make driver arch-agnostic") changed
+    the host bridge sysdata pointer from the ARM pci_sys_data to the DesignWare
+    pcie_port structure, and changed pcie-designware.c to reflect that.  But it
+    did not change the corresponding code in pci-keystone-dw.c, so it caused
+    crashes on Keystone:
+    
+      Unable to handle kernel NULL pointer dereference at virtual address 00000030
+      pgd = c0003000
+      [00000030] *pgd=80000800004003, *pmd=00000000
+      Internal error: Oops: 206 [#1] PREEMPT SMP ARM
+      CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.4.2-00139-gb74f926 #2
+      Hardware name: Keystone
+      PC is at ks_dw_pcie_msi_irq_unmask+0x24/0x58
+    
+    Change pci-keystone-dw.c to expect sysdata to be the struct pcie_port
+    pointer.
+    
+    [bhelgaas: changelog]
+    Fixes: cbce7900598c ("PCI: designware: Make driver arch-agnostic")
+    Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    CC: stable@vger.kernel.org	# v4.4+
+    CC: Zhou Wang <wangzhou1@hisilicon.com>
+
+> ---
+>  v2 - Looks like I missed the fix version format for stable.
+>       Fixed it per best of my knowledge.
+>  v1 - Resending as per stable submission procedure
+>  drivers/pci/host/pci-keystone-dw.c | 11 +++--------
+>  1 file changed, 3 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+> index ed34c95..6153853 100644
+> --- a/drivers/pci/host/pci-keystone-dw.c
+> +++ b/drivers/pci/host/pci-keystone-dw.c
+> @@ -58,11 +58,6 @@
+>  
+>  #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
+>  
+> -static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+> -{
+> -	return sys->private_data;
+> -}
+> -
+>  static inline void update_reg_offset_bit_pos(u32 offset, u32 *reg_offset,
+>  					     u32 *bit_pos)
+>  {
+> @@ -108,7 +103,7 @@ static void ks_dw_pcie_msi_irq_ack(struct irq_data *d)
+>  	struct pcie_port *pp;
+>  
+>  	msi = irq_data_get_msi_desc(d);
+> -	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
+> +	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
+>  	ks_pcie = to_keystone_pcie(pp);
+>  	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+>  	update_reg_offset_bit_pos(offset, &reg_offset, &bit_pos);
+> @@ -146,7 +141,7 @@ static void ks_dw_pcie_msi_irq_mask(struct irq_data *d)
+>  	u32 offset;
+>  
+>  	msi = irq_data_get_msi_desc(d);
+> -	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
+> +	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
+>  	ks_pcie = to_keystone_pcie(pp);
+>  	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+>  
+> @@ -167,7 +162,7 @@ static void ks_dw_pcie_msi_irq_unmask(struct irq_data *d)
+>  	u32 offset;
+>  
+>  	msi = irq_data_get_msi_desc(d);
+> -	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
+> +	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
+>  	ks_pcie = to_keystone_pcie(pp);
+>  	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+>  
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
