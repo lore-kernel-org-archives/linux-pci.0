@@ -1,78 +1,106 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: bhelgaas@google.com, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rjw@rjwysocki.net, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jchandra@broadcom.com, jcm@redhat.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V4 11/23] pci, acpi: Move ACPI host bridge device companion assignment to core code.
-Date: Thu,  4 Feb 2016 18:28:49 +0100
-Message-Id: <1454606941-9523-12-git-send-email-tn@semihalf.com>
-In-Reply-To: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-References: <1454606941-9523-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:46784 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750796AbcB2PP2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Feb 2016 10:15:28 -0500
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: [PATCH v1] PCI: keystone: fix msi code that retrieves the pp struct ptr
+Date: Mon, 29 Feb 2016 10:15:11 -0500
+Message-ID: <1456758911-8190-1-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently we have two platforms (x86 & ia64) capable of PCI ACPI host
-bridge initialization. They both use sysdata to pass down parent
-device reference and both rely on NULL parent in pci_create_root_bus()
-to validate sysdata content.
+Recent update to pcie-designware core driver, 
+'commit cbce7900598c ("PCI: designware: Make driver arch-agnostic")'
+broke the keystone PCI driver. After this commit, we see a kernel crash on
+Keystone SoC as shown below in the boot log. This is because, the way pp
+struct ptr is retrieved from  msi desc has changed and require similar
+update in pci-keystone-dw.c as well. This patch fixes this issue. 
 
-It looks hacky and prevents us from getting some firmware specific
-info for PCI host controller e.g. PCI bus domain number.
-However, we overcome that blocker by passing down parent
-device via pci_create_root_bus parameter (as the ACPI device type)
-and using ACPI_COMPANION_SET in core code for ACPI boot method.
-ACPI_COMPANION_SET is safe to run for all cases DT, ACPI and DT&ACPI.
+[    1.012999] pci 0000:00:00.0: PCI bridge to [bus 01]
+[    1.018073] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
+[    1.024308] pci 0000:00:00.0:   bridge window [mem 0x60000000-0x600fffff]
+[    1.031216] pci 0000:00:00.0:   bridge window [mem 0x60100000-0x601fffff
+pref]
+[    1.038736] Unable to handle kernel NULL pointer dereference at virtual
+address 00000030
+[    1.046950] pgd = c0003000
+[    1.049750] [00000030] *pgd=80000800004003, *pmd=00000000
+[    1.055265] Internal error: Oops: 206 [#1] PREEMPT SMP ARM
+[    1.060860] Modules linked in:
+[    1.064013] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.4.2-00139-gb74f926 #2
+[    1.071266] Hardware name: Keystone
+[    1.074853] task: eb888000 ti: eb890000 task.ti: eb890000
+[    1.080364] PC is at ks_dw_pcie_msi_irq_unmask+0x24/0x58
+[    1.085785] LR is at ks_dw_pcie_msi_irq_unmask+0x18/0x58
+[    1.091206] pc : [<c02f65c8>]    lr : [<c02f65bc>]    psr: 60000093
+[    1.091206] sp : eb891bc8  ip : 00000000  fp : ebb15010
+[    1.102915] r10: 00000051  r9 : 60000013  r8 : ebafaa20
+[    1.108247] r7 : ebaa9f80  r6 : eb9fd0c0  r5 : ebafa9d0  r4 : ebafa9c0
+[    1.114889] r3 : 00000051  r2 : 00000000  r1 : 00000001  r0 : ebb14c18
+[    1.121533] Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment
+kernel
+[    1.129049] Control: 30c5387d  Table: 00003000  DAC: fffffffd
+[    1.134905] Process swapper/0 (pid: 1, stack limit = 0xeb890210)
+[    1.141023] Stack: (0xeb891bc8 to 0xeb892000)
 
-Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
 ---
- drivers/acpi/pci_root.c | 5 ++++-
- drivers/pci/probe.c     | 2 ++
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ - Resending as per stable submission procedure
+ - Need this fix in 4.4.4 as well
+ drivers/pci/host/pci-keystone-dw.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index ae3fe4e..a65c8c2 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -846,7 +846,10 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index ed34c95..6153853 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -58,11 +58,6 @@
  
- 	pci_acpi_root_add_resources(info);
- 	pci_add_resource(&info->resources, &root->secondary);
--	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
-+
-+	/* Root bridge device needs to be sure of parent ACPI type */
-+	ACPI_COMPANION_SET(&device->dev, device);
-+	bus = pci_create_root_bus(&device->dev, busnum, ops->pci_ops,
- 				  sysdata, &info->resources);
- 	if (!bus)
- 		goto out_release_info;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6d7ab9b..81dd3a2 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2100,6 +2100,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 	bridge->dev.parent = parent;
- 	bridge->dev.release = pci_release_host_bridge_dev;
- 	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-+	ACPI_COMPANION_SET(&bridge->dev,
-+			   parent ? to_acpi_device_node(parent->fwnode) : NULL);
- 	error = pcibios_root_bridge_prepare(bridge);
- 	if (error) {
- 		kfree(bridge);
+ #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
+ 
+-static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
+-{
+-	return sys->private_data;
+-}
+-
+ static inline void update_reg_offset_bit_pos(u32 offset, u32 *reg_offset,
+ 					     u32 *bit_pos)
+ {
+@@ -108,7 +103,7 @@ static void ks_dw_pcie_msi_irq_ack(struct irq_data *d)
+ 	struct pcie_port *pp;
+ 
+ 	msi = irq_data_get_msi_desc(d);
+-	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
++	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
+ 	ks_pcie = to_keystone_pcie(pp);
+ 	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+ 	update_reg_offset_bit_pos(offset, &reg_offset, &bit_pos);
+@@ -146,7 +141,7 @@ static void ks_dw_pcie_msi_irq_mask(struct irq_data *d)
+ 	u32 offset;
+ 
+ 	msi = irq_data_get_msi_desc(d);
+-	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
++	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
+ 	ks_pcie = to_keystone_pcie(pp);
+ 	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+ 
+@@ -167,7 +162,7 @@ static void ks_dw_pcie_msi_irq_unmask(struct irq_data *d)
+ 	u32 offset;
+ 
+ 	msi = irq_data_get_msi_desc(d);
+-	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
++	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
+ 	ks_pcie = to_keystone_pcie(pp);
+ 	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+ 
 -- 
 1.9.1
 
