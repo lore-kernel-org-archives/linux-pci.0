@@ -1,243 +1,215 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v10 11/59] PCI: Check pref compatible bit for mem64 resource of PCIe device
-Date: Wed, 24 Feb 2016 18:12:02 -0800
-Message-Id: <1456366370-28995-12-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60711 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750712AbcB2Woh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:44:37 -0500
+Date: Mon, 29 Feb 2016 16:44:17 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Lawrynowicz, Jacek" <jacek.lawrynowicz@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Joerg Roedel <jroedel@suse.de>,
+	David Woodhouse <dwmw2@infradead.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+Subject: Re: [PATCH v4 3/6] PCI: Add support for multiple DMA aliases
+Message-ID: <20160229224417.GD3653@localhost>
+References: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160224194406.7585.17447.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160225143841.GA8726@localhost>
+ <36D38C1F74839847A52A484C31F3E51A62180790@irsmsx105.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <36D38C1F74839847A52A484C31F3E51A62180790@irsmsx105.ger.corp.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We still get "no compatible bridge window" warning on sparc T5-8
-after we add support for 64bit resource parsing for root bus.
+On Thu, Feb 25, 2016 at 03:41:51PM +0000, Lawrynowicz, Jacek wrote:
+> > -----Original Message-----
+> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > Sent: Thursday, February 25, 2016 3:39 PM
+> > To: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Lawrynowicz, Jacek <jacek.lawrynowicz@intel.com>; linux-
+> > pci@vger.kernel.org; Alex Williamson <alex.williamson@redhat.com>; Joerg
+> > Roedel <jroedel@suse.de>; David Woodhouse <dwmw2@infradead.org>;
+> > iommu@lists.linux-foundation.org
+> > Subject: Re: [PATCH v4 3/6] PCI: Add support for multiple DMA aliases
+> > 
+> > On Wed, Feb 24, 2016 at 01:44:06PM -0600, Bjorn Helgaas wrote:
+> > > From: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+> > >
+> > > <Insert changelog here>
+> > 
+> > (Sorry, I should have copied this changelog in the patch; I copied
+> > this manually from your v3 posting):
+> > 
+> > > This patch solves IOMMU support issues with PCIe non-transparent bridges
+> > > that use Requester ID look-up tables (LUT), e.g. PEX8733. Before exiting
+> > > the bridge, packet's RID is rewritten according to LUT programmed by
+> > > a driver. Modified packets are then passed to a destination bus and
+> > > processed upstream. The problem is that such packets seem to come from
+> > > non-existent nodes that are hidden behind NTB and are not discoverable
+> > > by a destination node, so IOMMU discards them. Adding DMA alias for a
+> > > given LUT entry allows IOMMU to create a proper mapping that enables
+> > > inter-node communication.
+> > 
+> > A specific example here would help me understand.  Here's how I
+> > understand this (correct me if I'm wrong): We're talking about a DMA
+> > packet being forwarded upstream from an NTB.  The NTB uses the LUT to
+> > rewrite the RID in the DMA packet.  The new RID from the LUT is
+> > unknown to the IOMMU, so it discards the DMA packet.
+> 
+> Yes, this is exactly the problem.
+> 
+> > > The current DMA alias implementation supports only single alias, so it's
+> > > not possible to connect more than two nodes when IOMMU is enabled. This
+> > > implementation enables all possible aliases on a given bus (256) that
+> > > are stored in a bitset. Alias devfn is directly translated to a bit
+> > > number. The bitset is not allocated for devices that have no need for
+> > > DMA aliases.
+> > 
+> > I think "two nodes" is referring to two PCIe devices on the other side
+> > of the NTB.  You want DMA packets from those devices to have different
+> > RIDs so the IOMMU can distinguish them.
+> 
+> Right.
+> 
+> > The LUT entries basically create aliases of the NTB (one alias for
+> > each device beyond the NTB).  Your quirk uses pci_add_dma_alias(), and
+> > the aliases are all on the same bus as the NTB itself.
+> > 
+> > The quirk adds PCI_DEVFN(0x10, 0x0), PCI_DEVFN(0x11, 0x0), and
+> > PCI_DEVFN(0x12, 0x0).  Shouldn't there be some connection between this
+> > and the LUT programming?  I assume the LUT is programmed to correspond
+> > to those aliases.  Does this mean you're limited to three devices
+> > beyond the NTB?
+> 
+> Yes, there is an indirect connection between LUT table and devfns used in the
+> quirk.
+> Dev part is an offset in the LUT table and function is taken from the device
+> behind the NTB.
+> So the driver can only change the dev part by using different LUT offsets.
+> We don't plan to modify this quirk. The number of PCIe devices beyond single
+> x200 card NTB will not change.
+> Two are used by x200 CPU (host bridge & root port) and one is used by x200 DMA
+> engine.
+> I'm not sure introducing some dependencies to make sure the offsets are set
+> correctly is really worth it.
 
- PCI: scan_bus[/pci@300/pci@1/pci@0/pci@6] bus no 8
- PCI: Claiming 0000:00:01.0: Resource 15: 0000800100000000..00008004afffffff [220c]
- PCI: Claiming 0000:01:00.0: Resource 15: 0000800100000000..00008004afffffff [220c]
- PCI: Claiming 0000:02:04.0: Resource 15: 0000800100000000..000080012fffffff [220c]
- PCI: Claiming 0000:03:00.0: Resource 15: 0000800100000000..000080012fffffff [220c]
- PCI: Claiming 0000:04:06.0: Resource 14: 0000800100000000..000080010fffffff [220c]
- PCI: Claiming 0000:05:00.0: Resource 0: 0000800100000000..0000800100001fff [204]
- pci 0000:05:00.0: can't claim BAR 0 [mem 0x800100000000-0x800100001fff]: no compatible bridge window
+I'd like at least a comment that points to the specific x200 code that
+must coordinate with this.
 
-All the bridges 64-bit resource have pref bit, but the device resource does not
-have pref set, then we can not find parent for the device resource,
-as we can not put non-pref mmio under pref mmio.
+> So regarding the improvements in the patch description, you want me to update
+> and repost it?
 
-According to pcie spec errta
-https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
-page 13, in some case it is ok to mark some as pref.
+Yes, please.
 
-Mark if the entire path from the host to the adapter is over PCI Express.
-Then set pref compatible bit for claim/sizing/assign for 64bit mem resource
-on that pcie device.
+> BTW I posted x200 DMA driver (the client for this change) on DMA list:
+> https://lkml.org/lkml/2016/2/9/287
+> I'm working on integrating review comments and hope to get it included in 4.6.
 
-Fixes: commit d63e2e1f3df9 ("sparc/PCI: Clip bridge windows to fit in upstream windows")
-Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
-Reported-by: David Ahern <david.ahern@oracle.com>
-Tested-by: David Ahern <david.ahern@oracle.com>
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Tested-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
----
- drivers/pci/pci.c       | 10 ++++++----
- drivers/pci/pci.h       |  2 ++
- drivers/pci/probe.c     | 33 +++++++++++++++++++++++++++++++++
- drivers/pci/setup-bus.c | 23 +++++++++++++++++++----
- drivers/pci/setup-res.c |  4 ++++
- include/linux/pci.h     |  1 +
- 6 files changed, 65 insertions(+), 8 deletions(-)
+What about my questions on the code itself, below?
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index db4025f..d1a74e5 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -416,7 +416,7 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap)
- EXPORT_SYMBOL_GPL(pci_find_ht_capability);
- 
- static struct resource *pci_find_bus_resource(const struct pci_bus *bus,
--					      struct resource *res)
-+					      struct resource *res, int flags)
- {
- 	struct resource *r;
- 	int i;
-@@ -431,7 +431,7 @@ static struct resource *pci_find_bus_resource(const struct pci_bus *bus,
- 			 * not, the allocator made a mistake.
- 			 */
- 			if (r->flags & IORESOURCE_PREFETCH &&
--			    !(res->flags & IORESOURCE_PREFETCH))
-+			    !(flags & IORESOURCE_PREFETCH))
- 				return NULL;
- 
- 			/*
-@@ -459,7 +459,9 @@ static struct resource *pci_find_bus_resource(const struct pci_bus *bus,
- struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- 					  struct resource *res)
- {
--	return pci_find_bus_resource(dev->bus, res);
-+	int flags = pci_resource_pref_compatible(dev, res);
-+
-+	return pci_find_bus_resource(dev->bus, res, flags);
- }
- EXPORT_SYMBOL(pci_find_parent_resource);
- 
-@@ -469,7 +471,7 @@ struct resource *pci_find_root_bus_resource(struct pci_bus *bus,
- 	while (bus->parent)
- 		bus = bus->parent;
- 
--	return pci_find_bus_resource(bus, res);
-+	return pci_find_bus_resource(bus, res, res->flags);
- }
- 
- /**
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 9a1660f..220bd0e 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -335,4 +335,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- }
- #endif
- 
-+int pci_resource_pref_compatible(const struct pci_dev *dev,
-+				 struct resource *res);
- #endif /* DRIVERS_PCI_H */
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6d7ab9b..2c3e264 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1697,6 +1697,36 @@ static void pci_dma_configure(struct pci_dev *dev)
- 	pci_put_host_bridge_device(bridge);
- }
- 
-+static bool pci_up_path_over_pcie(struct pci_bus *bus)
-+{
-+	if (pci_is_root_bus(bus))
-+		return true;
-+
-+	if (bus->self && !pci_is_pcie(bus->self))
-+		return false;
-+
-+	return pci_up_path_over_pcie(bus->parent);
-+}
-+
-+/*
-+ * According to
-+ * https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
-+ * page 13, system firmware could put some 64bit non-pref under 64bit pref,
-+ * on some cases.
-+ * Let's mark if entire path from the host to the adapter is over PCI
-+ * Express. later will use that compute pref compaitable bit.
-+ */
-+static void pci_set_on_all_pcie_path(struct pci_dev *dev)
-+{
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	if (!pci_up_path_over_pcie(dev->bus))
-+		return;
-+
-+	dev->on_all_pcie_path = 1;
-+}
-+
- void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- {
- 	int ret;
-@@ -1727,6 +1757,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	/* Initialize various capabilities */
- 	pci_init_capabilities(dev);
- 
-+	/* After pcie_cap is assigned */
-+	pci_set_on_all_pcie_path(dev);
-+
- 	/*
- 	 * Add the device to our list of discovered devices
- 	 * and the bus list for fixup functions, etc.
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7796d0a..17f10b3 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -739,6 +739,20 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 	return -EINVAL;
- }
- 
-+int pci_resource_pref_compatible(const struct pci_dev *dev,
-+				 struct resource *res)
-+{
-+	if (res->flags & IORESOURCE_PREFETCH)
-+		return res->flags;
-+
-+	if ((res->flags & IORESOURCE_MEM) &&
-+	    (res->flags & IORESOURCE_MEM_64) &&
-+	    dev->on_all_pcie_path)
-+		return res->flags | IORESOURCE_PREFETCH;
-+
-+	return res->flags;
-+}
-+
- /* Check whether the bridge supports optional I/O and
-    prefetchable memory ranges. If not, the respective
-    base/limit registers must be read-only and read as 0. */
-@@ -1036,11 +1050,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
- 			resource_size_t r_size;
-+			int flags = pci_resource_pref_compatible(dev, r);
- 
--			if (r->parent || (r->flags & IORESOURCE_PCI_FIXED) ||
--			    ((r->flags & mask) != type &&
--			     (r->flags & mask) != type2 &&
--			     (r->flags & mask) != type3))
-+			if (r->parent || (flags & IORESOURCE_PCI_FIXED) ||
-+			    ((flags & mask) != type &&
-+			     (flags & mask) != type2 &&
-+			     (flags & mask) != type3))
- 				continue;
- 			r_size = resource_size(r);
- #ifdef CONFIG_PCI_IOV
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 604011e..d5b3970 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -257,15 +257,19 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- static int _pci_assign_resource(struct pci_dev *dev, int resno,
- 				resource_size_t size, resource_size_t min_align)
- {
-+	struct resource *res = dev->resource + resno;
-+	int old_flags = res->flags;
- 	struct pci_bus *bus;
- 	int ret;
- 
-+	res->flags = pci_resource_pref_compatible(dev, res);
- 	bus = dev->bus;
- 	while ((ret = __pci_assign_resource(bus, dev, resno, size, min_align))) {
- 		if (!bus->parent || !bus->self->transparent)
- 			break;
- 		bus = bus->parent;
- 	}
-+	res->flags = old_flags;
- 
- 	return ret;
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index dd603a668..ca8d70a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -311,6 +311,7 @@ struct pci_dev {
- 						   powered on/off by the
- 						   corresponding bridge */
- 	unsigned int	ignore_hotplug:1;	/* Ignore hotplug events */
-+	unsigned int	on_all_pcie_path:1;	/* up to host-bridge all pcie */
- 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
- 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
- 
--- 
-1.8.4.5
+> > > ---
+> > >  drivers/iommu/iommu.c |   17 ++++++++++-------
+> > >  drivers/pci/pci.c     |   11 +++++++++--
+> > >  drivers/pci/probe.c   |    1 +
+> > >  drivers/pci/search.c  |   14 +++++++++-----
+> > >  include/linux/pci.h   |    4 +---
+> > >  5 files changed, 30 insertions(+), 17 deletions(-)
+> > >
+> > > diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+> > > index 0e3b009..a214e19 100644
+> > > --- a/drivers/iommu/iommu.c
+> > > +++ b/drivers/iommu/iommu.c
+> > > @@ -659,9 +659,15 @@ static struct iommu_group
+> > *get_pci_function_alias_group(struct pci_dev *pdev,
+> > >  	return NULL;
+> > >  }
+> > >
+> > > +static bool dma_alias_is_enabled(struct pci_dev *dev, u8 devfn)
+> > > +{
+> > > +	return dev->dma_alias_mask &&
+> > > +	       test_bit(devfn, dev->dma_alias_mask);
+> > > +}
+> > > +
+> > >  /*
+> > > - * Look for aliases to or from the given device for exisiting groups.  The
+> > > - * dma_alias_devfn only supports aliases on the same bus, therefore the
+> > search
+> > > + * Look for aliases to or from the given device for existing groups. DMA
+> > > + * aliases are only supported on the same bus, therefore the search
+> > 
+> > I'm trying to reconcile this statement that "DMA aliases are only
+> > supported on the same bus" (which was there even before this patch)
+> > with the fact that pci_for_each_dma_alias() does not have that
+> > limitation.
+> > 
+> > >   * space is quite small (especially since we're really only looking at pcie
+> > >   * device, and therefore only expect multiple slots on the root complex or
+> > >   * downstream switch ports).  It's conceivable though that a pair of
+> > > @@ -686,11 +692,8 @@ static struct iommu_group *get_pci_alias_group(struct
+> > pci_dev *pdev,
+> > >  			continue;
+> > >
+> > >  		/* We alias them or they alias us */
+> > > -		if (((pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN)
+> > &&
+> > > -		     pdev->dma_alias_devfn == tmp->devfn) ||
+> > > -		    ((tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
+> > > -		     tmp->dma_alias_devfn == pdev->devfn)) {
+> > > -
+> > > +		if (dma_alias_is_enabled(pdev, tmp->devfn) ||
+> > > +		    dma_alias_is_enabled(tmp, pdev->devfn)) {
+> > >  			group = get_pci_alias_group(tmp, devfns);
+> > 
+> > We basically have this:
+> > 
+> >   for_each_pci_dev(tmp) {
+> >     if (<pdev and tmp are DMA aliases>)
+> >       group = get_pci_alias_group();
+> >       ...
+> >   }
+> > 
+> > The DMA alias stuff relies on PCI internals, so it doesn't doesn't
+> > seem quite right to use things like PCI_DEV_FLAGS_DMA_ALIAS_DEVFN and
+> > dma_alias_devfn here in the IOMMU code.
+> > 
+> > I'm trying to figure out why we don't do something like the following
+> > instead:
+> > 
+> >   callback(struct pci_dev *pdev, u16 alias, void *opaque)
+> >   {
+> >     struct iommu_group *group;
+> > 
+> >     group = get_pci_alias_group();
+> >     if (group)
+> >       return group;
+> > 
+> >     return 0;
+> >   }
+> > 
+> >   pci_for_each_dma_alias(pdev, callback, ...);
+> > 
+> > Is the existing code some sort of optimization, e.g., checking
+> > PCI_DEV_FLAGS_DMA_ALIAS_DEVFN is cheaper than using
+> > pci_for_each_dma_alias()?
+> > 
+> > It seems like this won't work for some very unlikely but theoretically
+> > possible topologies, e.g.,
+> > 
+> >   PCIe Root Complex/IOMMU
+> >     PCIe switch A
+> >       PCIe to conventional PCI bridge
+> >         PCI to PCIe Root Complex
+> > 	  PCIe NTB
+> > 
+> > Here, I think the IOMMU will only see RIDs from PCIe switch A, but the
+> > current code only looks at DMA aliases that are on the same bus as the
+> > PCIe NTB.  Wouldn't using pci_for_each_dma_alias() handle this
+> > correctly?
+> > 
+> > >  			if (group) {
+> > >  				pci_dev_put(tmp);
+
+
