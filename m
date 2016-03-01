@@ -1,65 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:42606 "EHLO
-	metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753444AbcC3NU5 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2016 09:20:57 -0400
-Message-ID: <1459344050.2565.41.camel@pengutronix.de>
-Subject: Re: [PATCH v2] Revert "PCI: imx6: Add support for active-low reset
- GPIO"
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Petr =?UTF-8?Q?=C5=A0tetiar?= <ynezz@true.cz>
-Cc: Fabio Estevam <festevam@gmail.com>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Krzysztof =?UTF-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@nxp.com>,
-	stable <stable@vger.kernel.org>
-Date: Wed, 30 Mar 2016 15:20:50 +0200
-In-Reply-To: <20160330131639.GO20367@ibawizard.net>
-References: <1459201536-5558-1-git-send-email-festevam@gmail.com>
-	 <CAJ+vNU3kZ2886wRQFUfFTyo2kzYgjGTroKdiuPynZkaNf1BvEw@mail.gmail.com>
-	 <20160330122103.GN20367@ibawizard.net>
-	 <CAOMZO5Bh=JgVEMM-8JBX1cpk5Kgn2O2KBiOGdZT+QQfGUizBUg@mail.gmail.com>
-	 <20160330130002.GA13529@ibawizard.net>
-	 <CAOMZO5BNteOTj+m3h6y83wa25yqz7pb3c1osJbxrea+8B=se3Q@mail.gmail.com>
-	 <20160330131639.GO20367@ibawizard.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Paul Gortmaker <paul.gortmaker@windriver.com>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	devicetree@vger.kernel.org, Frank Rowand <frowand.list@gmail.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	Grant Likely <grant.likely@linaro.org>,
+	Ley Foon Tan <lftan@altera.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	linux-arm-kernel@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/5] Modularize PCI_DW related drivers.
+Date: Tue, 01 Mar 2016 22:35:22 +0100
+Message-ID: <2163039.5ZupTHB3qf@wuerfel>
+In-Reply-To: <56D40F7F.5060204@ti.com>
+References: <1454889644-27830-1-git-send-email-paul.gortmaker@windriver.com> <2837386.VTD89bjPJz@wuerfel> <56D40F7F.5060204@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Mittwoch, den 30.03.2016, 15:16 +0200 schrieb Petr Štetiar:
-> Fabio Estevam <festevam@gmail.com> [2016-03-30 10:07:16]:
-> 
-> > If we apply Krzysztof's patch then we break PCI in imx6qdl-sabresd.
+On Monday 29 February 2016 14:59:35 Kishon Vijay Abraham I wrote:
+> > }
 > > 
-> > In this board we have:
-> > 
-> > reset-gpio = <&gpio7 12 0>;
-> > 
-> > , which is wrong. Of course, we should fix this to be 'reset-gpio =
-> > <&gpio7 12 GPIO_ACTIVE_LOW>;'
-> > 
-> > However we should not break old dtb's. That's why reverting the patch
-> > is the only solution we have so that old dtb's still work.
+> > You just need to pass the same resource in here htat you pass into
+> > pci_remap_iospace().
 > 
-> But this only apply for stable right? I understand this and it's fine with me.
+> I still seem to get the abort in ioremap_page_range().
 > 
-> > We have had this same problem for the FEC PHY reset. The solution
-> > there was to add a new property to treat the active-high case.
+> Here's the patch I used [3] and here's the kernel log [4].
 > 
-> In next we should fix it correctly, apply Krzysztof's patch and fix broken
-> DTBs, right?
+> [3] -> http://pastebin.ubuntu.com/15241614/
+> [4] -> http://pastebin.ubuntu.com/15241637/
 > 
-We can and should fix broken DTs, but keeping DT stability means we need
-to be able to support old (unfixed) DTs with future kernels.
+> 
 
-So we can not just fix the DTs and move on, as kernel and DT are two
-separate entities, even if they are currently distributed through the
-same source tree.
+Sorry, I'm out of ideas here. The patch looks right to me, but the problem
+looks unchanged.
 
-Regards,
-Lucas
-
+	Arnd
