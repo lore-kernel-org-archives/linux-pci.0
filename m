@@ -1,91 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:39094 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751039AbcCWKXr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Mar 2016 06:23:47 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Jayachandran C <jchandra@broadcom.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	"rafael@kernel.org" <rafael@kernel.org>
-CC: Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	"Catalin Marinas" <catalin.marinas@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	"okaya@codeaurora.org" <okaya@codeaurora.org>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>,
-	"robert.richter@caviumnetworks.com"
-	<robert.richter@caviumnetworks.com>,
-	Marcin Wojtas <mw@semihalf.com>,
-	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-	David Daney <ddaney@caviumnetworks.com>,
-	Wangyijing <wangyijing@huawei.com>,
-	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-	"msalter@redhat.com" <msalter@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-	Jon Masters <jcm@redhat.com>
-Subject: RE: [RFC PATCH 0/4] ACPI based PCI host driver with generic ECAM
-Date: Wed, 23 Mar 2016 10:22:45 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED2A787@lhreml503-mbs>
-References: <CAKc_7PVK3VtaR-LDHNXPr5cSjbCcH--hsepFx=jVATNi=+a9Hw@mail.gmail.com>
- <1458245913-17211-1-git-send-email-jchandra@broadcom.com>
- <CAKc_7PWfP0eQJ8dRN=CLu37=GKxin32Uf5rjiZGZgQCbiab2iA@mail.gmail.com>
-In-Reply-To: <CAKc_7PWfP0eQJ8dRN=CLu37=GKxin32Uf5rjiZGZgQCbiab2iA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from foss.arm.com ([217.140.101.70]:51556 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753690AbcCAOl5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Mar 2016 09:41:57 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	David Daney <david.daney@cavium.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Russell King <linux@arm.linux.org.uk>
+Subject: [PATCH v2 0/3] arm/arm64: pci: PCI_PROBE_ONLY clean-up
+Date: Tue,  1 Mar 2016 14:44:06 +0000
+Message-Id: <1456843449-19393-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgSmF5YWNoYW5kcmFuDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTog
-bGludXgta2VybmVsLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LWtlcm5lbC0N
-Cj4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgSmF5YWNoYW5kcmFuIEMNCj4g
-U2VudDogMTggTWFyY2ggMjAxNiAxNzo0OA0KPiBUbzogQmpvcm4gSGVsZ2FhczsgVG9tYXN6IE5v
-d2lja2k7IHJhZmFlbEBrZXJuZWwub3JnDQo+IENjOiBKYXlhY2hhbmRyYW4gQzsgQXJuZCBCZXJn
-bWFubjsgV2lsbCBEZWFjb247IENhdGFsaW4gTWFyaW5hczsgSGFuanVuDQo+IEd1bzsgTG9yZW56
-byBQaWVyYWxpc2k7IG9rYXlhQGNvZGVhdXJvcmEub3JnOw0KPiBqaWFuZy5saXVAbGludXguaW50
-ZWwuY29tOyBTdGVmYW5vIFN0YWJlbGxpbmk7DQo+IHJvYmVydC5yaWNodGVyQGNhdml1bW5ldHdv
-cmtzLmNvbTsgTWFyY2luIFdvanRhczsgTGl2aXUuRHVkYXVAYXJtLmNvbTsNCj4gRGF2aWQgRGFu
-ZXk7IFdhbmd5aWppbmc7IFN1cmF2ZWUuU3V0aGlrdWxwYW5pdEBhbWQuY29tOw0KPiBtc2FsdGVy
-QHJlZGhhdC5jb207IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWFybS0NCj4ga2Vy
-bmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7IGxpbnV4LWFjcGlAdmdlci5rZXJuZWwub3JnOyBsaW51
-eC0NCj4ga2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGluYXJvLWFjcGlAbGlzdHMubGluYXJvLm9y
-ZzsgSm9uIE1hc3RlcnMNCj4gU3ViamVjdDogUmU6IFtSRkMgUEFUQ0ggMC80XSBBQ1BJIGJhc2Vk
-IFBDSSBob3N0IGRyaXZlciB3aXRoIGdlbmVyaWMNCj4gRUNBTQ0KPiANCj4gT24gRnJpLCBNYXIg
-MTgsIDIwMTYgYXQgMTo0OCBBTSwgSmF5YWNoYW5kcmFuIEMgPGpjaGFuZHJhQGJyb2FkY29tLmNv
-bT4NCj4gd3JvdGU6DQo+ID4gSGkgQmpvcm4sDQo+ID4NCj4gPiBIZXJlIGlzIGEgbmV3IHBhdGNo
-c2V0IGZvciB0aGUgQUNQSSBQQ0kgY29udHJvbGxlciBkcml2ZXIgYmFzZWQgb24NCj4gdGhlDQo+
-ID4gZWFybGllciBkaXNjdXNzaW9uWzFdLg0KPiA+DQo+ID4gVGhlIGZpcnN0IHR3byBwYXRjaGVz
-IGluIHRoZSBwYXRjaHNldCBpbXBsZW1lbnRzIHBjaS9lY2FtLmMgZm9yDQo+IGdlbmVyaWMNCj4g
-PiBjb25maWcgc3BhY2UgYWNjZXNzIGFuZCB1c2VzIGl0IGluIHBjaS1ob3N0LWdlbmVyaWMuYyBh
-bmQgcmVsYXRlZA0KPiBmaWxlcy4NCj4gPg0KPiA+IFRoZSB0aGlyZCBwYXRjaCBpbXBsZW1lbnRz
-IHRoZSBBQ1BJIFBDSSBob3N0IGRyaXZlciB1c2luZyB0aGUgc2FtZQ0KPiBlY2FtDQo+ID4gYWNj
-ZXNzIGZ1bmN0aW9ucy4gVGhlIGZvdXJ0aCBwYXRjaCBhZGRzIHRoZSBpbXBsZW1lbnRhdGlvbiBv
-ZiByYXcNCj4gPiBvcGVyYXRpb25zLg0KPiA+DQo+ID4gSSBoYXZlIG5vdCB1c2VkIHRoZSBwY2lf
-bW1jZmdfbGlzdCBvciB0aGUgcmVnaW9uIGRlZmluaXRpb25zIGZyb20NCj4geDg2LA0KPiA+IGJ1
-dCBoYXZlIHVzZWQgYSBtdWNoIHNpbXBsZXIgYXBwcm9hY2ggaGVyZS4NCj4gPg0KPiA+IFRoaXMg
-c2hvdWxkIGFwcGx5IGNsZWFubHkgb24gdG9wIG9mIHRoZSBjdXJyZW50IHBjaSBuZXh0IHRyZWUs
-IGFuZA0KPiA+IGNhbiBiZSByZXZpZXdlZCBhcyBhIHBhdGNoc2V0LiAgVG8gdXNlIGl0IG9uIEFS
-TTY0LCB3ZSBuZWVkIHRvIHB1bGwNCj4gPiBpbiBhYm91dCA3IHBhdGNoZXMgbW9yZSBmcm9tIFRv
-bWFzeiBwYXRjaHNldCB0aGF0IGZpeGVzIHZhcmlvdXMNCj4gPiBpc3N1ZXMgKGxpa2Ugc3R1YiBj
-b2RlIGluIGFybTY0IHBjaS5jLCBBQ1BJIGNvbXBhbmlvbiBzZXR1cCwNCj4gPiBkb21haW4gbnVt
-YmVyIGFzc2lnbm1lbnQsIElPIHJlc291cmNlcyBmaXh1cCBldGMuKS4NCj4gPg0KPiA+IElmIHlv
-dSBhcmUgb2theSB3aXRoIHRoaXMgYXBwcm9hY2gsIEkgd2lsbCB3b3JrIHdpdGggVG9tYXN6IGFu
-ZA0KPiA+IHBvc3QgdGhlIGZ1bGwgcGF0Y2hzZXQuDQo+ID4NCj4gPiBUaGlzIGhhcyBiZWVuIHRl
-c3RlZCBvbiBxZW11IHdpdGggT1ZNRiBmb3IgdGhlIEFDUEkgcGFydCBhbmQgd2l0aA0KPiA+IGRl
-dmljZSB0cmVlIGZvciBwY2ktaG9zdC1nZW5lcmljIGNvZGUuDQo+IA0KPiBUaGUgZnVsbCBwYXRj
-aHNldCBpcyBhdmFpbGFibGUgYXQgaHR0cHM6Ly9naXRodWIuY29tL2pjaGFuZHJhLQ0KPiBicmNt
-L2xpbnV4LmdpdCBvbg0KPiBicmFuY2ggYXJtNjQtYWNwaS1wY2ksIGlmIGFueW9uZSB3YW50cyB0
-byB0cnkgaXQuDQoNCkkgaGFkIGEgbG9vayBhdCB5b3VyIHBhdGNoc2V0IGFuZCBhbHNvIGluIHlv
-dXIgZ2l0IHJlcG8gYXQgdGhlIG90aGVyDQpwYXRjaGVzIHRoYXQgeW91IHBvcnRlZCBvdmVyIGZy
-b20gVG9tYXN6OyBpdCBzZWVtcyB0aGF0IG5vdyB3ZSBtaXNzDQphIHF1aXJrIG1lY2hhbmlzbSB0
-byBlbmFibGUgY29udHJvbGxlciB0aGF0IGFyZSBub3QgZnVsbHkgRUNBTS4NCg0KVGhpcyB3YXMg
-cHJvdmlkZWQgYmVmb3JlIGJ5IFRvbWFzeiBpbjoNCmh0dHBzOi8vbGttbC5vcmcvbGttbC8yMDE2
-LzIvMTYvNDEwDQoNCkkgdGhpbmsgd2Ugc2hvdWxkIHB1dCBzb21ldGhpbmcgbGlrZSB0aGF0IGJh
-Y2sgaW4uLi4NCg0KVGhhbmtzDQoNCkdhYg0KDQo+IA0KPiBDb21tZW50cywgc3VnZ2VzdGlvbnMg
-YW5kIHRlc3Rpbmcgd291bGQgYmUgd2VsY29tZS4NCj4gDQo+IFRoYW5rcywNCj4gSkMuDQo=
+Current arm/arm64 code prevents enabling resources in the respective
+pcibios_enable_device() callbacks if the PCI_PROBE_ONLY flag is set,
+in that on those platforms the resources tree was not validated properly
+since PCI resources are not currently claimed on arm/arm64 PCI_PROBE_ONLY
+systems.
+
+This is a temporary kludge, in that PCI_PROBE_ONLY flag is used to
+describe systems with fixed resources, that can nonetheless be enabled
+through the standard pci_enable_resources() call present in PCI core code,
+(ie via the generic pcibios_enable_device() call).
+
+To remove the PCI_PROBE_ONLY flag in arm/arm64 pcibios_enable_device()
+callbacks, the PCI host controllers that can be used with
+PCI_PROBE_ONLY configurations must make sure that devices resources are
+validated and inserted in the kernel resource tree even on PCI_PROBE_ONLY
+systems so that the generic pcibios_enable_device() generic code, while
+enabling resources (pci_enable_resources()), does not find dangling
+resources pointers (ie missing parent pointers) that are omens of
+an incomplete resource tree, causing failures in resources enablement.
+
+PCI core code provides interfaces to assign/reassign/reallocate PCI
+bus resources but it is currently lacking an interface to claim
+resources for a specific bus. Arches implement resources claiming through
+ad-hoc code built on top of pci_claim_resource() API, but that code
+cannot be leveraged on architectures like arm/arm64 that rely on the
+generic PCI infrastructure to carry out resources claiming/assignment.
+
+Therefore, to clean up the arm/arm64 resources enablement on PCI_PROBE_ONLY
+systems this patchset implements three patches:
+
+PATCH 1: Create PCI core code infrastructure to claim bus resources
+PATCH 2: Leverage the infrastructure in PATCH 1 to claim resources in
+         the PCI generic host controller on PCI_PROBE_ONLY systems
+PATCH 3: Remove PCI_PROBE_ONLY kludges from arm/arm64 PCI back-ends to
+         complete the clean-up and leverage the PCI generic
+         pcibios_enable_device() implementation
+
+Tested on arm/arm64 systems with kvmtool and PCI host generic.
+
+v1 -> v2
+
+- Rewrote patch 1 to recursively claim resources for the whole PCI bus
+  hierarchy
+- Updated commits logs/tags
+- Rebased against v4.5-rc6
+
+v1: https://patchwork.ozlabs.org/patch/545669/
+
+Lorenzo Pieralisi (3):
+  drivers: pci: add generic code to claim bus resources
+  drivers: pci: host-generic: claim bus resources on PCI_PROBE_ONLY
+    set-ups
+  arm/arm64: pci: remove arch specific pcibios_enable_device()
+
+ arch/arm/kernel/bios32.c            | 12 -------
+ arch/arm64/kernel/pci.c             | 13 -------
+ drivers/pci/host/pci-host-generic.c |  5 ++-
+ drivers/pci/setup-bus.c             | 68 +++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h                 |  1 +
+ 5 files changed, 73 insertions(+), 26 deletions(-)
+
+-- 
+2.5.1
+
