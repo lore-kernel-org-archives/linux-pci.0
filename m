@@ -1,84 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from li153-180.members.linode.com ([109.74.206.180]:43215 "EHLO
-	mail.tekno-soft.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932713AbcCQIUa (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Mar 2016 04:20:30 -0400
-Subject: Re: iMX6q PCIe phy link never came up on kernel v4.4.x
-To: Tim Harvey <tharvey@gateworks.com>,
-	Fabio Estevam <festevam@gmail.com>
-References: <56D5E3DF.9030906@tekno-soft.it> <56D71F27.7070708@tekno-soft.it>
- <20160302195634.GA19223@localhost>
- <DBXPR04MB2706C7C2FD2348D205331998CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
- <56D80435.90408@tekno-soft.it>
- <DBXPR04MB2702F4BC78FA28DC82DCA218CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
- <56D8180A.1050708@tekno-soft.it> <56D84B6D.1050800@tekno-soft.it>
- <56D883AD.5060601@tekno-soft.it> <56DEE426.8030902@tekno-soft.it>
- <1457448829.3207.22.camel@pengutronix.de> <56E1B04A.9010206@tekno-soft.it>
- <56E679FE.20409@tekno-soft.it> <56E7ED1E.3070506@tekno-soft.it>
- <CAOMZO5C9H92mMqTPiOwMYhywBCyQuXQen3Vw==ELE-ppTtogqg@mail.gmail.com>
- <56E81C56.8060404@tekno-soft.it>
- <CAOMZO5C0rvszTg0bPoSnT5zzL8EC2Vk1PVDJgB1m1FREy9ncaQ@mail.gmail.com>
- <CAJ+vNU1TxqEfjH6jPLnStDuYTjHvt6TxFbe+QN2O5aVqwr1-Tg@mail.gmail.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <hongxing.zhu@nxp.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>
-From: Roberto Fichera <kernel@tekno-soft.it>
-Message-ID: <56EA68BA.9080909@tekno-soft.it>
-Date: Thu, 17 Mar 2016 09:20:10 +0100
+Received: from foss.arm.com ([217.140.101.70]:49907 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752094AbcCAJsz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Mar 2016 04:48:55 -0500
+Date: Tue, 1 Mar 2016 09:51:08 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-doc@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Lennert Buytenhek <kernel@wantstofly.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh@kernel.org>,
+	Russell King <linux@arm.linux.org.uk>
+Subject: Re: [RFC PATCH] arm: kernel: pci: remove pci=firmware command line
+ parameter handling
+Message-ID: <20160301095108.GB31766@red-moon>
+References: <1456767800-6609-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20160229225653.GE3653@localhost>
 MIME-Version: 1.0
-In-Reply-To: <CAJ+vNU1TxqEfjH6jPLnStDuYTjHvt6TxFbe+QN2O5aVqwr1-Tg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160229225653.GE3653@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/16/2016 10:33 PM, Tim Harvey wrote:
-> On Wed, Mar 16, 2016 at 7:19 AM, Fabio Estevam <festevam@gmail.com> wrote:
->> Tim,
->>
->> On Tue, Mar 15, 2016 at 11:29 AM, Roberto Fichera <kernel@tekno-soft.it> wrote:
->>> On 03/15/2016 03:10 PM, Fabio Estevam wrote:
->>>> On Tue, Mar 15, 2016 at 8:08 AM, Roberto Fichera <kernel@tekno-soft.it> wrote:
->>>>
->>>>> Just to say that I've fixed the problem by asserting PERST before to drop PCIe refclk and enable
->>>>> power down. PERST is finally released at the usual place.
->>>> Excellent! Do you plan to submit a patch to fix this issue?
->>> I don't know, in my case the problem was related to the XIO2001 that require PERST to be
->>> asserted before to drop PCIe refclk as reported by its datasheet:
->> Does your board detect XIO2001 bridge with kernel 4.4.x or do you also
->> need something like Roberto's changes below?
->>
-> Fabio,
->
-> The board combination I have where an XIO2001 is connected directly to
-> an IMX6 is a bit different from Roberto's setup. In our configuration
-> the XIO2001 is on an 'expansion' board that its own local PCI clock
-> generation. So, in my case the XIO2001 always has a valid clock
-> before/during/after its reset. This is different from Roberto's
-> scenario. I do recall running into an issue with the XIO2001 on
-> another product with a different host controller that had to do with
-> noise on the clk prior to its reset being asserted so I am not too
-> surprised at what Roberto has found.
->
-> I don't specifically see an issue with a change that asserts PCI_RST#
-> before the CLK gets enabled then de-asserts it after at least 100ms
-> has expired from clock enable - I think that actually follows the
-> specs wording closer than what we currently do (turning o the clock
-> prior to assert/de-assert reset). However I get very nervous at any
-> change to the IMX6 PCIe init. We have found it to be very finicky
-> because of the lack of a proper reset.
->
-> Roberto,
->
-> Did you require the changes regarding Gen2 negotiation? My
-> IMX6+XIO2001 links reliably at Gen1 which makes sense for that chip.
-You are right, I did all my tests again removing all applied changes related
-to Gen2 negotiation, and indeed the links goes up correctly at Gen1.
+On Mon, Feb 29, 2016 at 04:56:53PM -0600, Bjorn Helgaas wrote:
+> On Mon, Feb 29, 2016 at 05:43:20PM +0000, Lorenzo Pieralisi wrote:
+> > According to kernel documentation, the pci=firmware command line
+> > parameter is only meant to be used on IXP2000 ARM platforms to prevent
+> > the kernel from assigning PCI resources configured by the bootloader.
+> > 
+> > Since the IXP2000 ARM platforms support has been removed from the
+> > kernel in commit:
+> > 
+> > commit c65f2abf54a6 ("ARM: remove ixp23xx and ixp2000 platforms")
+> > 
+> > its platforms specific kernel parameters should be removed
+> > too from the kernel documentation along with the kernel code
+> > currently handling them in that they have just become obsolete.
+> > 
+> > This patch removes the pci=firmware command line parameter handling
+> > from ARM code and the related kernel parameters documentation
+> > section.
+> > 
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
->
-> Regards,
->
-> Tim
->
+Thank you !
 
+> It looks like Rob merged c65f2abf54a6, so maybe he will merge this as
+> well?  Otherwise I'd be happy to merge it; just let me know if you
+> want me to.
+
+Hopefully the kernel parameter description matches current usage
+on ARM systems, it could affect all ARM 32-bit platforms (if any ?) that
+abused the pci=firmware parameter, it is just impossible for me to check
+(that's why I posted it as an RFC. It would be very good to remove that
+kernel parameter though).
+
+Having said that, either way of merging it is fine by me, I can send it
+to Russell's patch system too, given that there are already patches queued
+to remove PCI_PROBE_ONLY from some PCI host controllers I am happy for it
+to go via PCI tree.
+
+Rob, Russell, any preferences ?
+
+Thanks !
+Lorenzo
+
+> 
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Lennert Buytenhek <kernel@wantstofly.org>
+> > Cc: Jonathan Corbet <corbet@lwn.net>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Rob Herring <robh@kernel.org>
+> > Cc: Russell King <linux@arm.linux.org.uk>
+> > ---
+> >  Documentation/kernel-parameters.txt | 5 -----
+> >  arch/arm/kernel/bios32.c            | 3 ---
+> >  2 files changed, 8 deletions(-)
+> > 
+> > diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> > index 9a53c92..e213acc 100644
+> > --- a/Documentation/kernel-parameters.txt
+> > +++ b/Documentation/kernel-parameters.txt
+> > @@ -2875,11 +2875,6 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+> >  				for broken drivers that don't call it.
+> >  		skip_isa_align	[X86] do not align io start addr, so can
+> >  				handle more pci cards
+> > -		firmware	[ARM] Do not re-enumerate the bus but instead
+> > -				just use the configuration from the
+> > -				bootloader. This is currently used on
+> > -				IXP2000 systems where the bus has to be
+> > -				configured a certain way for adjunct CPUs.
+> >  		noearly		[X86] Don't do any early type 1 scanning.
+> >  				This might help on some broken boards which
+> >  				machine check when some devices' config space
+> > diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> > index 066f7f9..05e61a2 100644
+> > --- a/arch/arm/kernel/bios32.c
+> > +++ b/arch/arm/kernel/bios32.c
+> > @@ -550,9 +550,6 @@ char * __init pcibios_setup(char *str)
+> >  	if (!strcmp(str, "debug")) {
+> >  		debug_pci = 1;
+> >  		return NULL;
+> > -	} else if (!strcmp(str, "firmware")) {
+> > -		pci_add_flags(PCI_PROBE_ONLY);
+> > -		return NULL;
+> >  	}
+> >  	return str;
+> >  }
+> > -- 
+> > 2.5.1
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
