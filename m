@@ -1,139 +1,161 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db3on0091.outbound.protection.outlook.com ([157.55.234.91]:13932
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934262AbcCPCH2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Mar 2016 22:07:28 -0400
-From: Richard Zhu <hongxing.zhu@nxp.com>
-To: Roberto Fichera <kernel@tekno-soft.it>,
-	Lucas Stach <l.stach@pengutronix.de>
-CC: Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	"Fabio Estevam" <festevam@gmail.com>
-Subject: RE: iMX6q PCIe phy link never came up on kernel v4.4.x
-Date: Wed, 16 Mar 2016 02:07:24 +0000
-Message-ID: <DBXPR04MB27090AAB00E6D25B9F895178C8A0@DBXPR04MB270.eurprd04.prod.outlook.com>
-References: <56D5E3DF.9030906@tekno-soft.it> <56D71F27.7070708@tekno-soft.it>
- <20160302195634.GA19223@localhost>
- <DBXPR04MB2706C7C2FD2348D205331998CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
- <56D80435.90408@tekno-soft.it>
- <DBXPR04MB2702F4BC78FA28DC82DCA218CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
- <56D8180A.1050708@tekno-soft.it> <56D84B6D.1050800@tekno-soft.it>
- <56D883AD.5060601@tekno-soft.it> <56DEE426.8030902@tekno-soft.it>
- <1457448829.3207.22.camel@pengutronix.de> <56E1B04A.9010206@tekno-soft.it>
- <56E679FE.20409@tekno-soft.it> <56E7ED1E.3070506@tekno-soft.it>
-In-Reply-To: <56E7ED1E.3070506@tekno-soft.it>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V2] acpi, pci, irq: account for early penalty assignment
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1455801582-21595-1-git-send-email-okaya@codeaurora.org>
+ <20160229192420.GC3653@localhost> <56D4A53A.1070708@codeaurora.org>
+ <20160229223453.GA12162@localhost>
+Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org, linux-pci@vger.kernel.org,
+	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
+	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
+	rjw@rjwysocki.net, linux-kernel@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <56D5E43E.7050406@codeaurora.org>
+Date: Tue, 1 Mar 2016 13:49:34 -0500
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160229223453.GA12162@localhost>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBSb2JlcnRvIEZpY2hlcmEgW21h
-aWx0bzprZXJuZWxAdGVrbm8tc29mdC5pdF0NCj4gU2VudDogVHVlc2RheSwgTWFyY2ggMTUsIDIw
-MTYgNzowOCBQTQ0KPiBUbzogTHVjYXMgU3RhY2gNCj4gQ2M6IFJpY2hhcmQgWmh1OyBCam9ybiBI
-ZWxnYWFzOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBSaWNoYXJkIFpodTsgRmFiaW8NCj4g
-RXN0ZXZhbQ0KPiBTdWJqZWN0OiBSZTogaU1YNnEgUENJZSBwaHkgbGluayBuZXZlciBjYW1lIHVw
-IG9uIGtlcm5lbCB2NC40LngNCj4gDQo+IE9uIDAzLzE0LzIwMTYgMDk6NDQgQU0sIFJvYmVydG8g
-RmljaGVyYSB3cm90ZToNCj4gPiBPbiAwMy8xMC8yMDE2IDA2OjM1IFBNLCBSb2JlcnRvIEZpY2hl
-cmEgd3JvdGU6DQo+ID4+ID4gT24gMDMvMDgvMjAxNiAwMzo1MyBQTSwgTHVjYXMgU3RhY2ggd3Jv
-dGU6DQo+ID4+PiA+PiBBbSBEaWVuc3RhZywgZGVuIDA4LjAzLjIwMTYsIDE1OjM5ICswMTAwIHNj
-aHJpZWIgUm9iZXJ0byBGaWNoZXJhOg0KPiA+Pj4+PiA+Pj4+IE9uIDAzLzAzLzIwMTYgMDc6MzQg
-UE0sIFJvYmVydG8gRmljaGVyYSB3cm90ZToNCj4gPj4+Pj4+PiA+Pj4+Pj4gT24gMDMvMDMvMjAx
-NiAwMzozNCBQTSwgUm9iZXJ0byBGaWNoZXJhIHdyb3RlOg0KPiA+Pj4+Pj4+ID4+Pj4+Pg0KPiA+
-Pj4+Pj4+ID4+Pj4+PiBJJ3ZlIGFsc28gY2hlY2tlZCBjbG9jaywgcGxsLCBQTVVfTUlTQzEgYW5k
-IENDR1JbNDVdDQo+ID4+Pj4+Pj4gPj4+Pj4+IHJlZ2lzdGVycywgYWxsIGxvb2tzIGZpbmUgYW5k
-IGV4YWN0bHkgZXF1YWwgdG8gdWJvb3Qgc2V0dGluZ3MuDQo+ID4+Pj4+Pj4gPj4+Pj4+DQo+ID4+
-Pj4+Pj4gPj4+Pj4+IEhvd2V2ZXIgSSdtIGludmVzdGlnYXRpbmcgYSBwb3NzaWJsZSBIVyBpc3N1
-ZSBpbiB0aGUgTERWUw0KPiA+Pj4+Pj4+ID4+Pj4+PiBwYWQgd2lyaW5nIGFnYWluc3QgdGhlIGJy
-aWRnZSBYSU8yMDAxLiBMZXQncyBzZWUgb25jZSB0aGlzIGlzDQo+IGFsc28gY2xhcmlmaWVkLg0K
-PiA+Pj4+PiA+Pj4+IE91ciBIVyBlbmdpbmVlciBoYXMgYXBwbGllZCBhIGZpeCB0byBMVkRTIHZz
-IFhJTzIwMDEgY2xvY2sgd2lyaW5nLg0KPiBIb3dldmVyIEknbSBzdGlsbCBnZXR0aW5nIHRoZSBz
-YW1lIHByb2JsZW0uDQo+ID4+Pj4+ID4+Pj4NCj4gPj4+Pj4gPj4+PiBJJ3ZlIHRyaWVkIHRvIGJv
-b3QgYSBrZXJuZWwgd2l0aCB1Ym9vdCBub3Qgc2V0dGluZyB1cCB0aGUgUENJZSBzdWJzeXMNCj4g
-YW5kIGJlbG93IHRoZXJlIGlzIHRoZSByZXN1bHRpbmcga2VybmVsIGxvZy4NCj4gPj4+Pj4gPj4+
-PiBOb3RlIHRoYXQgdGhlIENDR1I1IGRvZXNuJ3Qgc2V0IHRoZSBDRzIgZmllbGQgYXNzb2NpYXRl
-ZCB0bw0KPiA+Pj4+PiA+Pj4+IHNhdGFfY2xrX2VuYWJsZS4gSSB0aGluayB0aGlzIGZpZWxkIHNo
-b3VsZCBiZSBzZXQgYWxsIDEgdG8gZW5hYmxlIHRoZQ0KPiBTQVRBIHJlZiBhdCAxMDBNSHosIHJp
-Z2h0Pw0KPiA+Pj4+PiA+Pj4+DQo+ID4+PiA+PiBObywgdGhlIHJlZmVyZW5jZSBtYW51YWwgaXMg
-YSBiaXQgY29uZnVzaW5nIGFib3V0IHRoaXMsIGJ1dCB0aGUNCj4gPj4+ID4+IExWRFMxIGNsb2Nr
-IG91dHB1dCBpcyBkcml2ZW4gYnkgc2F0YV9yZWZfMTAwbWh6LCBub3QgdGhlIHNhdGFfY2xrIGdh
-dGUuDQo+ID4+PiA+Pg0KPiA+Pj4gPj4gU28gdGhlIG9ubHkgdGhpbmcgdGhhdCBuZWVkcyB0byBi
-ZSBlbmFibGVkIGZvciBMVkRTIGNsb2NrIG91dHB1dA0KPiA+Pj4gPj4gaXMgdGhlIDEwME1IeiBj
-bG9jayBvdXRwdXQgZnJvbSBQTEwgRU5FVC4gKFJlZ2lzdGVyDQo+ID4+PiA+PiBDQ01fQU5BTE9H
-X1BMTF9FTkVUbiBiaXQgMjApLg0KPiA+PiA+IEd1eXMhIE5vIG1vcmUgaWRlYSB3aGVyZSB0byBs
-b29rIGF0ISBTdGlsbCBnZXR0aW5nIFBDSWUgbGluaw0KPiA+PiA+IHJlYWNoaW5nIEwwIHN0YXRl
-IHVuZGVyIHVib290IGJ1dCBkb2Vzbid0IHByb2dyZXNzIG1vcmUgdGhhbg0KPiA+PiA+IFBPTExf
-QUNUSVZFIG9yIFBPTExfQ09NUExJQU5DRSBzdGF0ZXMgdW5kZXIga2VybmVsLg0KPiA+PiA+DQo+
-ID4+ID4gQW55IGlkZWEgd2hhdCB0byBkbz8NCj4gDQo+IEp1c3QgdG8gc2F5IHRoYXQgSSd2ZSBm
-aXhlZCB0aGUgcHJvYmxlbSBieSBhc3NlcnRpbmcgUEVSU1QgYmVmb3JlIHRvIGRyb3AgUENJZQ0K
-PiByZWZjbGsgYW5kIGVuYWJsZSBwb3dlciBkb3duLiBQRVJTVCBpcyBmaW5hbGx5IHJlbGVhc2Vk
-IGF0IHRoZSB1c3VhbCBwbGFjZS4NCj4gDQpbUmljaGFyZF0gSXQncyBncmVhdCB0byBoZWFyIGl0
-Lg0KDQo+IFsgICAgMC4yMzc0NzNdIFBDSSBob3N0IGJyaWRnZSAvc29jL3BjaWVAMHgwMTAwMDAw
-MCByYW5nZXM6DQo+IFsgICAgMC4yMzc0OTRdICAgTm8gYnVzIHJhbmdlIGZvdW5kIGZvciAvc29j
-L3BjaWVAMHgwMTAwMDAwMCwgdXNpbmcgW2J1cyAwMC1mZl0NCj4gWyAgICAwLjIzNzU0NV0gICBl
-cnIgMHgwMWYwMDAwMC4uMHgwMWY3ZmZmZiAtPiAweDAxZjAwMDAwDQo+IFsgICAgMC4yMzc1ODVd
-ICAgIElPIDB4MDFmODAwMDAuLjB4MDFmOGZmZmYgLT4gMHgwMDAwMDAwMA0KPiBbICAgIDAuMjM3
-NjcxXSAgIE1FTSAweDAxMDAwMDAwLi4weDAxZWZmZmZmIC0+IDB4MDEwMDAwMDANCj4gWyAgICAw
-LjM1Mzg0N10gaW14NnEtcGNpZSAxZmZjMDAwLnBjaWU6IExpbms6IEdlbjIgZGlzYWJsZWQNCj4g
-WyAgICAwLjM1Mzg2Nl0gaW14NnEtcGNpZSAxZmZjMDAwLnBjaWU6IExpbmsgdXAsIEdlbj0xDQo+
-IFsgICAgMC4zNTQ0NDFdIGlteDZxLXBjaWUgMWZmYzAwMC5wY2llOiBQQ0kgaG9zdCBicmlkZ2Ug
-dG8gYnVzIDAwMDA6MDANCj4gWyAgICAwLjM1NDQ2NV0gcGNpX2J1cyAwMDAwOjAwOiByb290IGJ1
-cyByZXNvdXJjZSBbYnVzIDAwLWZmXQ0KPiBbICAgIDAuMzU0NDgzXSBwY2lfYnVzIDAwMDA6MDA6
-IHJvb3QgYnVzIHJlc291cmNlIFs/Pz8gMHgwMWYwMDAwMC0weDAxZjdmZmZmDQo+IGZsYWdzIDB4
-MF0NCj4gWyAgICAwLjM1NDQ5OV0gcGNpX2J1cyAwMDAwOjAwOiByb290IGJ1cyByZXNvdXJjZSBb
-aW8gIDB4MDAwMC0weGZmZmZdDQo+IFsgICAgMC4zNTQ1MTNdIHBjaV9idXMgMDAwMDowMDogcm9v
-dCBidXMgcmVzb3VyY2UgW21lbSAweDAxMDAwMDAwLTB4MDFlZmZmZmZdDQo+IFsgICAgMC4zNTQ2
-NDBdIHBjaSAwMDAwOjAwOjAwLjA6IFsxNmMzOmFiY2RdIHR5cGUgMDEgY2xhc3MgMHgwNjA0MDAN
-Cj4gWyAgICAwLjM1NDcwN10gcGNpIDAwMDA6MDA6MDAuMDogcmVnIDB4MTA6IFttZW0gMHgwMDAw
-MDAwMC0weDAwMGZmZmZmXQ0KPiBbICAgIDAuMzU0NzQ1XSBwY2kgMDAwMDowMDowMC4wOiByZWcg
-MHgzODogW21lbSAweDAwMDAwMDAwLTB4MDAwMGZmZmYgcHJlZl0NCj4gWyAgICAwLjM1NDkzMl0g
-cGNpIDAwMDA6MDA6MDAuMDogc3VwcG9ydHMgRDENCj4gWyAgICAwLjM1NDk1Ml0gcGNpIDAwMDA6
-MDA6MDAuMDogUE1FIyBzdXBwb3J0ZWQgZnJvbSBEMCBEMSBEM2hvdCBEM2NvbGQNCj4gWyAgICAw
-LjM1NTcxM10gUENJOiBidXMwOiBGYXN0IGJhY2sgdG8gYmFjayB0cmFuc2ZlcnMgZGlzYWJsZWQN
-Cj4gWyAgICAwLjM1NjEzOV0gcGNpIDAwMDA6MDE6MDAuMDogWzEwNGM6ODI0MF0gdHlwZSAwMSBj
-bGFzcyAweDA2MDQwMA0KPiBbICAgIDAuMzU2Njg4XSBwY2kgMDAwMDowMTowMC4wOiBzdXBwb3J0
-cyBEMSBEMg0KPiBbICAgIDAuMzY5MzE4XSBQQ0k6IGJ1czE6IEZhc3QgYmFjayB0byBiYWNrIHRy
-YW5zZmVycyBkaXNhYmxlZA0KPiBbICAgIDAuMzY5MzQ3XSBwY2kgMDAwMDowMTowMC4wOiBicmlk
-Z2UgY29uZmlndXJhdGlvbiBpbnZhbGlkIChbYnVzIDAwLTAwXSksDQo+IHJlY29uZmlndXJpbmcN
-Cj4gWyAgICAwLjM2OTg0NF0gcGNpX2J1cyAwMDAwOjAyOiBidXNuX3JlczogY2FuIG5vdCBpbnNl
-cnQgW2J1cyAwMi1mZl0gdW5kZXIgW2J1cw0KPiAwMV0gKGNvbmZsaWN0cyB3aXRoIChudWxsKSBb
-YnVzIDAxXSkNCj4gWyAgICAwLjM3Nzk3NV0gcGNpIDAwMDA6MDI6MDQuMDogWzEzOTc6MDhiNF0g
-dHlwZSAwMCBjbGFzcyAweDAyMDQwMA0KPiBbICAgIDAuMzc4MTIwXSBwY2kgMDAwMDowMjowNC4w
-OiByZWcgMHgxMDogW2lvICAweDAwMDAtMHgwMDA3XQ0KPiBbICAgIDAuMzc4MTc0XSBwY2kgMDAw
-MDowMjowNC4wOiByZWcgMHgxNDogW21lbSAweDAwMDAwMDAwLTB4MDAwMDBmZmZdDQo+IFsgICAg
-MC4zNzg1MzZdIHBjaSAwMDAwOjAyOjA0LjA6IHN1cHBvcnRzIEQxIEQyDQo+IFsgICAgMC4zNzg1
-NTBdIHBjaSAwMDAwOjAyOjA0LjA6IFBNRSMgc3VwcG9ydGVkIGZyb20gRDAgRDEgRDIgRDNob3QN
-Cj4gWyAgICAwLjM3OTQ1M10gUENJOiBidXMyOiBGYXN0IGJhY2sgdG8gYmFjayB0cmFuc2ZlcnMg
-ZGlzYWJsZWQNCj4gWyAgICAwLjM3OTQ3NF0gcGNpX2J1cyAwMDAwOjAyOiBidXNuX3JlczogW2J1
-cyAwMi1mZl0gZW5kIGlzIHVwZGF0ZWQgdG8gMDINCj4gWyAgICAwLjM3OTQ5NF0gcGNpX2J1cyAw
-MDAwOjAyOiBidXNuX3JlczogY2FuIG5vdCBpbnNlcnQgW2J1cyAwMl0gdW5kZXIgW2J1cyAwMV0N
-Cj4gKGNvbmZsaWN0cyB3aXRoIChudWxsKSBbYnVzIDAxXSkNCj4gWyAgICAwLjM3OTUyNF0gcGNp
-X2J1cyAwMDAwOjAyOiBbYnVzIDAyXSBwYXJ0aWFsbHkgaGlkZGVuIGJlaGluZCBicmlkZ2UgMDAw
-MDowMQ0KPiBbYnVzIDAxXQ0KPiBbICAgIDAuMzc5NTQ4XSBwY2kgMDAwMDowMDowMC4wOiBicmlk
-Z2UgaGFzIHN1Ym9yZGluYXRlIDAxIGJ1dCBtYXggYnVzbiAwMg0KPiBbICAgIDAuMzc5ODM3XSBw
-Y2kgMDAwMDowMDowMC4wOiBCQVIgMDogYXNzaWduZWQgW21lbSAweDAxMDAwMDAwLTB4MDEwZmZm
-ZmZdDQo+IFsgICAgMC4zNzk4NjVdIHBjaSAwMDAwOjAwOjAwLjA6IEJBUiA4OiBhc3NpZ25lZCBb
-bWVtIDB4MDExMDAwMDAtMHgwMTFmZmZmZl0NCj4gWyAgICAwLjM3OTg4NF0gcGNpIDAwMDA6MDA6
-MDAuMDogQkFSIDY6IGFzc2lnbmVkIFttZW0gMHgwMTIwMDAwMC0weDAxMjBmZmZmDQo+IHByZWZd
-DQo+IFsgICAgMC4zNzk5MDBdIHBjaSAwMDAwOjAwOjAwLjA6IEJBUiA3OiBhc3NpZ25lZCBbaW8g
-IDB4MTAwMC0weDFmZmZdDQo+IFsgICAgMC4zNzk5MjddIHBjaSAwMDAwOjAxOjAwLjA6IEJBUiA4
-OiBhc3NpZ25lZCBbbWVtIDB4MDExMDAwMDAtMHgwMTFmZmZmZl0NCj4gWyAgICAwLjM3OTk0Ml0g
-cGNpIDAwMDA6MDE6MDAuMDogQkFSIDc6IGFzc2lnbmVkIFtpbyAgMHgxMDAwLTB4MWZmZl0NCj4g
-WyAgICAwLjM3OTk2M10gcGNpIDAwMDA6MDI6MDQuMDogQkFSIDE6IGFzc2lnbmVkIFttZW0gMHgw
-MTEwMDAwMC0weDAxMTAwZmZmXQ0KPiBbICAgIDAuMzc5OTk4XSBwY2kgMDAwMDowMjowNC4wOiBC
-QVIgMDogYXNzaWduZWQgW2lvICAweDEwMDAtMHgxMDA3XQ0KPiBbICAgIDAuMzgwMDMwXSBwY2kg
-MDAwMDowMTowMC4wOiBQQ0kgYnJpZGdlIHRvIFtidXMgMDJdDQo+IFsgICAgMC4zODAwNTRdIHBj
-aSAwMDAwOjAxOjAwLjA6ICAgYnJpZGdlIHdpbmRvdyBbaW8gIDB4MTAwMC0weDFmZmZdDQo+IFsg
-ICAgMC4zODAwOTFdIHBjaSAwMDAwOjAxOjAwLjA6ICAgYnJpZGdlIHdpbmRvdyBbbWVtIDB4MDEx
-MDAwMDAtMHgwMTFmZmZmZl0NCj4gWyAgICAwLjM4MDE0OV0gcGNpIDAwMDA6MDA6MDAuMDogUENJ
-IGJyaWRnZSB0byBbYnVzIDAxXQ0KPiBbICAgIDAuMzgwMTY0XSBwY2kgMDAwMDowMDowMC4wOiAg
-IGJyaWRnZSB3aW5kb3cgW2lvICAweDEwMDAtMHgxZmZmXQ0KPiBbICAgIDAuMzgwMTgzXSBwY2kg
-MDAwMDowMDowMC4wOiAgIGJyaWRnZSB3aW5kb3cgW21lbSAweDAxMTAwMDAwLTB4MDExZmZmZmZd
-DQo+IFsgICAgMC4zODA5NTBdIHBjaWVwb3J0IDAwMDA6MDA6MDAuMDogU2lnbmFsaW5nIFBNRSB0
-aHJvdWdoIFBDSWUgUE1FIGludGVycnVwdA0KPiBbICAgIDAuMzgwOTcwXSBwY2kgMDAwMDowMTow
-MC4wOiBTaWduYWxpbmcgUE1FIHRocm91Z2ggUENJZSBQTUUgaW50ZXJydXB0DQo+IFsgICAgMC4z
-ODA5ODNdIHBjaSAwMDAwOjAyOjA0LjA6IFNpZ25hbGluZyBQTUUgdGhyb3VnaCBQQ0llIFBNRSBp
-bnRlcnJ1cHQNCj4gWyAgICAwLjM4MTAwM10gcGNpZV9wbWUgMDAwMDowMDowMC4wOnBjaWUwMTog
-c2VydmljZSBkcml2ZXIgcGNpZV9wbWUgbG9hZGVkDQo+IFsgICAgMC4zODE0MDddIGFlciAwMDAw
-OjAwOjAwLjA6cGNpZTAyOiBzZXJ2aWNlIGRyaXZlciBhZXIgbG9hZGVkDQoNCg==
+> There's so much code there, that I think all the code obscures the
+> fact that there's almost nothing really happening.  In broad outline,
+> I think we care about:
+> 
+>   - the legacy ISA IRQs, i.e., the contents of acpi_irq_isa_penalty[]
+>   - acpi_irq_isa= from command line
+>   - acpi_irq_pci= from command line
+>   - which IRQ is used for SCI
+>   - number of PCI Interrupt Link devices sharing an IRQ
+> 
+> I doubt we need any dynamic allocation at all to manage this.  We
+> already have the acpi_irq_isa_penalty[] table statically allocated.
+> The SCI IRQ is one word.  
+
+Just to be clear, we have resized acpi_irq_penalty table to 16 and named it
+acpi_irq_isa_penalty. We are dynamically allocating memory for the rest of 
+the interrupts that is bigger than 16. 
+
+The SCI interrupt that caused the failure is interrupt 22 in this case. The code
+was trying to allocate a new entry with kzalloc. 22 won't fit into the 
+acpi_irq_isa_penalty array. How do we handle such case? Is there a cap on the SCI
+interrupt number? 
+
+That's why, I was trying to reallocate some memory in this code.
+
+
+> I bet the command-line stuff is only
+> useful for the 16 ISA IRQs and could be merged into
+> acpi_irq_isa_penalty[].  
+> Same for acpi_penalize_isa_irq() and
+> acpi_isa_irq_available().  
+
+Agreed. No issues with ISA IRQs.
+
+> We could easily compute the
+> number of links sharing an IRQ by traversing acpi_link_list.
+
+Sorry, I couldn't quite get this. Where would you do this?
+
+> 
+> I think only x86 cares about the first three items (legacy ISA IRQs
+> and command-line args).  This should be reflected in the code.  Only
+> x86 calls acpi_irq_penalty_init(), but that's pretty non-obvious.
+
+Very true. It looks like somebody sneaked in some code there.
+
+> 
+> I think it would be better to completely rewrite this penalty stuff
+> than to keep making it more complicated by fixing things in the
+> existing design.
+> 
+OK. Let's find out what it needs to look like. I need guidance on what IRQs on
+Intel systems look like. 
+
+>>>> Reported-by: Nalla, Ravikanth <ravikanth.nalla@hpe.com>
+>>>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>>>> ---
+>>>>  drivers/acpi/pci_link.c | 19 +++++++++++++++----
+>>>>  1 file changed, 15 insertions(+), 4 deletions(-)
+>>>>
+>>>> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+>>>> index fa28635..14fe3ca 100644
+>>>> --- a/drivers/acpi/pci_link.c
+>>>> +++ b/drivers/acpi/pci_link.c
+>>>> @@ -47,6 +47,7 @@ ACPI_MODULE_NAME("pci_link");
+>>>>  #define ACPI_PCI_LINK_FILE_INFO		"info"
+>>>>  #define ACPI_PCI_LINK_FILE_STATUS	"state"
+>>>>  #define ACPI_PCI_LINK_MAX_POSSIBLE	16
+>>>> +#define ACPI_PCI_LINK_MAX_EARLY_IRQINFO 1024
+>>>>  
+>>>>  static int acpi_pci_link_add(struct acpi_device *device,
+>>>>  			     const struct acpi_device_id *not_used);
+>>>> @@ -473,6 +474,8 @@ struct irq_penalty_info {
+>>>>  };
+>>>>  
+>>>>  static LIST_HEAD(acpi_irq_penalty_list);
+>>>> +static struct irq_penalty_info early_irq_infos[ACPI_PCI_LINK_MAX_EARLY_IRQINFO];
+>>>> +static int early_irq_info_counter;
+>>>>  
+>>>>  static int acpi_irq_get_penalty(int irq)
+>>>>  {
+>>>> @@ -507,10 +510,17 @@ static int acpi_irq_set_penalty(int irq, int new_penalty)
+>>>>  		}
+>>>>  	}
+>>>>  
+>>>> -	/* nope, let's allocate a slot for this IRQ */
+>>>> -	irq_info = kzalloc(sizeof(*irq_info), GFP_KERNEL);
+>>>> -	if (!irq_info)
+>>>> -		return -ENOMEM;
+>>>> +	if (!acpi_gbl_permanent_mmap) {
+>>>> +		if (early_irq_info_counter < ARRAY_SIZE(early_irq_infos))
+>>>> +			irq_info = &early_irq_infos[early_irq_info_counter++];
+>>>> +		else
+>>>> +			return -ENOMEM;
+>>>> +	} else {
+>>>> +		/* nope, let's allocate a slot for this IRQ */
+>>>> +		irq_info = kzalloc(sizeof(*irq_info), GFP_KERNEL);
+>>>> +		if (!irq_info)
+>>>> +			return -ENOMEM;
+>>>> +	}
+>>>>  
+>>>>  	irq_info->irq = irq;
+>>>>  	irq_info->penalty = new_penalty;
+>>>> @@ -968,3 +978,4 @@ void __init acpi_pci_link_init(void)
+>>>>  	register_syscore_ops(&irqrouter_syscore_ops);
+>>>>  	acpi_scan_add_handler(&pci_link_handler);
+>>>>  }
+>>>> +
+>>>> -- 
+>>>> 1.8.2.1
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+>>
+>> -- 
+>> Sinan Kaya
+>> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+>> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
