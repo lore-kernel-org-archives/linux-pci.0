@@ -1,59 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44110 "EHLO mail.kernel.org"
+Received: from foss.arm.com ([217.140.101.70]:51576 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751720AbcCLABO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Mar 2016 19:01:14 -0500
-Date: Fri, 11 Mar 2016 18:01:11 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org
-Subject: Re: [PATCH 1/6] PCI: No need to set d3cold_allowed to PCIe ports
-Message-ID: <20160312000111.GJ4725@localhost>
-References: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
- <1456750566-116248-2-git-send-email-mika.westerberg@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1456750566-116248-2-git-send-email-mika.westerberg@linux.intel.com>
+	id S1753739AbcCAOmB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 1 Mar 2016 09:42:01 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	David Daney <david.daney@cavium.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Russell King <linux@arm.linux.org.uk>
+Subject: [PATCH v2 2/3] drivers: pci: host-generic: claim bus resources on PCI_PROBE_ONLY set-ups
+Date: Tue,  1 Mar 2016 14:44:08 +0000
+Message-Id: <1456843449-19393-3-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1456843449-19393-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1456843449-19393-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 29, 2016 at 02:56:01PM +0200, Mika Westerberg wrote:
-> PCIe ports are already skipped by the PCI core so they are never moved to
-> D3 (or D3cold) anyway. No need to set the field.
+The PCI host generic driver does not reassign bus resources on systems
+that require the BARs set-up to be immutable (ie PCI_PROBE_ONLY) since
+that would trigger system failures. Nonetheless, PCI bus resources
+allocated to PCI bridge and devices must be claimed in order to be
+validated and inserted in the kernel resource tree, but the current
+driver omits the resources claiming and relies on arch specific kludges
+to prevent probing failure (ie preventing resources enablement on
+PCI_PROBE_ONLY systems).
 
-A pointer to where the PCI core skips these ports would be helpful.
-pci_pm_runtime_suspend() is the only place I see that tests d3cold_allowed,
-and I don't see that it checks anything about PCIe ports.
+This patch adds code to the PCI host generic driver that correctly
+claims bus resources upon probe on systems that are required to
+prevent reassignment after bus enumeration, so that the allocated
+resources can be enabled successfully upon PCI device drivers probing,
+without resorting to arch back-ends workarounds.
 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/pci/pcie/portdrv_pci.c | 5 -----
->  1 file changed, 5 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index be35da2e105e..6c6bb03392ea 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -134,11 +134,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
->  		return status;
->  
->  	pci_save_state(dev);
-> -	/*
-> -	 * D3cold may not work properly on some PCIe port, so disable
-> -	 * it by default.
-> -	 */
-> -	dev->d3cold_allowed = false;
->  	return 0;
->  }
->  
-> -- 
-> 2.7.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Will Deacon <will.deacon@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: David Daney <david.daney@cavium.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-host-generic.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index 1652bc7..e529825 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -252,7 +252,10 @@ static int gen_pci_probe(struct platform_device *pdev)
+ 
+ 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+ 
+-	if (!pci_has_flag(PCI_PROBE_ONLY)) {
++
++	if (pci_has_flag(PCI_PROBE_ONLY)) {
++		pci_bus_claim_resources(bus);
++	} else {
+ 		pci_bus_size_bridges(bus);
+ 		pci_bus_assign_resources(bus);
+ 
+-- 
+2.5.1
+
