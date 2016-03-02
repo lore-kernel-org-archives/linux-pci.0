@@ -1,158 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45256 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752169AbcCNREq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Mar 2016 13:04:46 -0400
-Date: Mon, 14 Mar 2016 12:04:37 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 2 Mar 2016 08:32:47 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: "robh+dt@kernel.org" <robh+dt@kernel.org>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	Michal Simek <michals@xilinx.com>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"tinamdar@apm.com" <tinamdar@apm.com>,
-	"treding@nvidia.com" <treding@nvidia.com>,
-	"rjui@broadcom.com" <rjui@broadcom.com>,
-	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
-	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
-	"hauke@hauke-m.de" <hauke@hauke-m.de>,
-	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
-	"dhdang@apm.com" <dhdang@apm.com>,
-	"sbranden@broadcom.com" <sbranden@broadcom.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH v12] [PATCH] PCI: Xilinx-NWL-PCIe: Adding support for
- Xilinx NWL PCIe Host Controller
-Message-ID: <20160314170437.GA16729@localhost>
-References: <1457281934-32068-1-git-send-email-bharatku@xilinx.com>
- <20160311215819.GB16257@localhost>
- <8520D5D51A55D047800579B09414719825889095@XAP-PVEXMBX01.xlnx.xilinx.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	'Mark Rutland' <mark.rutland@arm.com>,
+	"Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
+	"'bhelgaas@google.com'" <bhelgaas@google.com>,
+	"'arnd@arndb.de'" <arnd@arndb.de>,
+	"'tn@semihalf.com'" <tn@semihalf.com>,
+	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"'linux-acpi@vger.kernel.org'" <linux-acpi@vger.kernel.org>,
+	"'jcm@redhat.com'" <jcm@redhat.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	"'linux-arm-kernel@lists.infradead.org'"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
+ HiSilicon SoCs Host Controllers
+Message-ID: <20160302143247.GA24024@localhost>
+References: <20160209182429.GD4348@leverpostej>
+ <20160225120750.GA32016@red-moon>
+ <20160225195912.GA4818@localhost>
+ <8105311.kD8XXIcipM@vostro.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <8520D5D51A55D047800579B09414719825889095@XAP-PVEXMBX01.xlnx.xilinx.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8105311.kD8XXIcipM@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 14, 2016 at 03:51:01PM +0000, Bharat Kumar Gogada wrote:
-> > On Sun, Mar 06, 2016 at 10:02:14PM +0530, Bharat Kumar Gogada wrote:
-> > > Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+On Thu, Feb 25, 2016 at 10:24:34PM +0100, Rafael J. Wysocki wrote:
+> On Thursday, February 25, 2016 01:59:12 PM Bjorn Helgaas wrote:
+> > On Thu, Feb 25, 2016 at 12:07:50PM +0000, Lorenzo Pieralisi wrote:
+> > > On Thu, Feb 25, 2016 at 03:01:19AM +0000, Gabriele Paoloni wrote:
+> > > 
+> > > [...]
+> > > 
+> > > > > I think the relevant spec is the PCI Firmware Spec, r3.0, sec 4.1.2.
+> > > > > Note 2 in that section says the address range of an MMCFG region
+> > > > > must be reserved by declaring a motherboard resource, i.e., included
+> > > > > in the _CRS of a PNP0C02 or similar device.
+> > > > 
+> > > > I had a look a this. So yes the specs says that we should use the 
+> > > > PNP0C02 device if MCFG is not supported. 
+> > > 
+> > > AFAIK, PNP0C02 is a resource reservation mechanism, the spec says that
+> > > MCFG regions must be reserved using PNP0C02, even though its
+> > > current usage on x86 is a bit unfathomable to me, in particular
+> > > in relation to MCFG resources retrieved for hotpluggable bridges (ie
+> > > through _CBA, which I think consider the MCFG region as reserved
+> > > by default, regardless of PNP0c02):
+> > > 
+> > > see pci_mmcfg_check_reserved() arch/x86/pci/mmconfig-shared.c
 > > 
-> > > +static bool nwl_pcie_valid_device(struct pci_bus *bus, unsigned int
-> > > +devfn) {
-> > > +	struct nwl_pcie *pcie = bus->sysdata;
-> > > +
-> > > +	/* Check link,before accessing downstream ports */
-> > > +	if (bus->number != pcie->root_busno) {
-> > > +		if (!nwl_pcie_link_up(pcie))
-> > > +			return false;
-> > > +	}
+> > I don't know how _CBA-related resources would be reserved.  I haven't
+> > personally worked with any host bridges that supply _CBA, so I don't
+> > know whether or how they handled it.
 > > 
-> > This seems racy.  What if we check, and the link is up, but the
-> > link goes down before we actually complete the config access?
+> > I think the spec intent was that the Consumer/Producer bit (Extended
+> > Address Space Descriptor, General Flags Bit[0], see ACPI spec sec
+> > 6.4.3.5.4) would be used.  Resources such as ECAM areas would be
+> > marked "Consumer", meaning the bridge consumed that space itself, and
+> > windows passed down to the PCI bus would be marked "Producer".
 > > 
-> > I'm suggesting that this check for the link being up might be
-> > superfluous.
-
-> Without the above check and also if there is no EP then we are getting kernel stack as follows,
-> [    2.654105] PCI host bridge /amba/pcie@fd0e0000 ranges:
-> [    2.659268]   No bus range found for /amba/pcie@fd0e0000, using [bus 00-ff]
-> [    2.666195]   MEM 0xe1000000..0xefffffff -> 0xe1000000
-> [    2.671410] nwl-pcie fd0e0000.pcie: PCI host bridge to bus 0000:00
-> [    2.677436] pci_bus 0000:00: root bus resource [bus 00-ff]
-> [    2.682883] pci_bus 0000:00: root bus resource [mem 0xe1000000-0xefffffff]
-> [    2.690031] Unhandled fault: synchronous external abort (0x96000210) at 0xffffff8000200000
-> [    2.690036] nwl-pcie fd0e0000.pcie: Slave error
-> [    2.702582] Internal error: : 96000210 [#1] SMP
-> [    2.707078] Modules linked in:
-> [    2.710108] CPU: 3 PID: 1 Comm: swapper/0 Not tainted 4.5.0-rc6+ #5
-> [    2.716332] Hardware name: ZynqMP (DT)
-> [    2.720659] task: ffffffc0798bed00 ti: ffffffc0798c0000 task.ti: ffffffc0798c0000
-> [    2.728102] PC is at pci_generic_config_read+0x38/0x9c
-> [    2.733202] LR is at pci_generic_config_read+0x1c/0x9c
-> .......
-> [    3.322701] [<ffffffc000498b1c>] pci_generic_config_read+0x38/0x9c
-> [    3.328842] [<ffffffc000498f54>] pci_bus_read_config_dword+0x80/0xb0
-> [    3.335156] [<ffffffc00049abd4>] pci_bus_read_dev_vendor_id+0x30/0x104
-> [    3.341643] [<ffffffc00049c5b0>] pci_scan_single_device+0x50/0xc4
-> [    3.347698] [<ffffffc00049c674>] pci_scan_slot+0x50/0xe8
-> [    3.352974] [<ffffffc00049d530>] pci_scan_child_bus+0x30/0xd8
-> [    3.358683] [<ffffffc00049d210>] pci_scan_bridge+0x1fc/0x4ec
-> [    3.364306] [<ffffffc00049d58c>] pci_scan_child_bus+0x8c/0xd8
-> [    3.370016] [<ffffffc0004b2d9c>] nwl_pcie_probe+0x6c4/0x8e0
-> .....
+> > But BIOSes didn't use that bit consistently, so we couldn't rely on
+> > it.  I verified experimentally that Windows didn't pay attention to
+> > that bit either, at least for DWord descriptors:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=15701
+> > 
+> > It's conceivable that we could still use that bit in Extended Address
+> > Space descriptors, or maybe some hack like pay attention if the bridge
+> > has _CBA, or some such.
 > 
-> > The hardware should do something reasonable with the config access if it
-> > can't send it down the link.
->
-> When Link is down and H/W gets a ECAM access request for downstream
-> ports, hardware responds by DECERR (decode error) status on AXI
-> Interface.
-
-DECERR isn't a PCIe concept, so I assume it's something specific to
-Xilinx.  In the general case of a PCIe switch, a config access that
-targets a device where the link is down should cause an Unsupported
-Request completion (see PCIe spec r3.0, section 2.9.1, quoted below).
-Possibly your Root Complex turns Unsupported Request completions into
-DECERR.
-
-  2.9 Link Status Dependencies
-  2.9.1 Transaction Layer Behavior in DL_Down Status
-
-  DL_Down status indicates that there is no connection with another
-  component on the Link, or that the connection with the other
-  component has been lost and is not recoverable by the Physical or
-  Data Link Layers.
-
-  For a Downstream Port, DL_Down status is handled by:
-  
-   for Non-Posted Requests, forming completions for any Requests
-   submitted by the device core for Transmission, returning
-   Unsupported Request Completion Status, then discarding the Requests
-
-Linux expects reads with Unsupported Request completion status to
-return all 1's data to the CPU as in section 2.3.2:
-
-  2.3.2 Completion Handling Rules
-
-  Read Data Values with UR Completion Status
-
-  Some system configuration software depends on reading a data value
-  of all 1’s when a Configuration Read Request is terminated as an
-  Unsupported Request, particularly when probing to determine the
-  existence of a device in the system.  A Root Complex intended for
-  use with software that depends on a read-data value of all 1’s must
-  synthesize this value when UR Completion Status is returned for a
-  Configuration Read Request.
-
-> So without any EP and without this condition, Linux kernel cannot
-> determine above response from H/W. So the above condition is useful
-> only when no EP is connected.
+> Last time I asked the firmware vendor people in the ASWG about that,
+> the answer was that the Consumer/Producer bit was useless as they had
+> never paid any attention to it in general.
 > 
-> Now even if the link is up initially, but the link goes down before
-> we actually complete the config access, then H/W responds by DECERR,
-> then Linux kernel might throw similar stack. (We haven't observed
-> this condition yet)
+> It may be good to update the spec to say something along these lines, actually.
 
-It'd be hard to hit this race unless you added delay in
-nwl_pcie_map_bus() after nwl_pcie_valid_device(), then removed the
-device during that delay.
+Yes, we've tried updating the spec, but the update was kind of a
+disaster.
 
-> It looks like we need a different type of hardware response to get
-> rid of this situation, but it's not easy way.  Have you come across
-> this/similar kind of problem anywhere else?  Can you suggest if
-> there is any other way to handle this.
+ACPI 2.0b documented the Consumer/Producer bit in the General Flags
+byte of QWORD, DWORD, and WORD Address Space Descriptors (6.4.3.5).
 
-I'm not a hardware designer, so I don't know what to suggest here.
-The current design does seem like a robustness issue: surprise removal
-of a device may cause this external abort in rare cases.
+ACPI 2.0c removed that General Flags description, but left
+ResourceConsumer in various examples and in the ASL grammar (16.1.3).
+
+ACPI 3.0 added back the Consumer/Producer bit in General Flags (I
+think this was an editing mistake) and added the Extended Address
+Space Descriptor, also with a Consumer/Producer bit.
+
+ACPI 5.0 removed the Consumer/Producer bit from QWORD, DWORD, and WORD
+Address Space Descriptors, but kept it for Extended Address Space
+Descriptors (the revision history says this change actually happened
+in 4.0a, which I don't have a copy of: "4.0a Apr. 2010:
+Consumer/Producer bit is ignored (Restored 2.0C change that had been
+lost)").
+
+ACPI 6.0 contains the following incorrect or misleading things:
+
+  - 6.4.3.5.4 Extended Address Space Descriptor documents the
+    Consumer/Producer bit in General Flags.
+
+  - 19.2.8 ASL Resource Template Terms defines a ResourceUsage term
+    for DWordIO, DWordMemory, DWordSpace, etc., even though I think
+    there's no way to encode in in the AML.
+
+  - 19.6.33 DWordIO and similar sections mention ResourceUsage, even
+    though I think there's no way to encode it in the AML.
+
+  - Various examples (5.2.21.10, 6.2.4, 9.12.4) show QWordMemory
+    using ResourceConsumer.
+
+It's sort of a mess.
 
 Bjorn
