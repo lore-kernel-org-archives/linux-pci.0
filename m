@@ -1,87 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Tim Harvey <tharvey@gateworks.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Krzysztof =?utf-8?B?SGHFgmFzYQ==?= <khalasa@piap.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Petr =?utf-8?B?xaB0ZXRpYXI=?= <ynezz@true.cz>,
-	Fabio Estevam <festevam@gmail.com>
-Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
-Date: Tue, 29 Mar 2016 15:52:11 +0200
-Message-ID: <23031613.R8qN30TbTq@wuerfel>
-In-Reply-To: <CAJ+vNU3o98T2cev1Pj0VJR884kOxVxhrzmowDixGuV2Tb=Sh1Q@mail.gmail.com>
-References: <m3h9fuk7ik.fsf@t19.piap.pl> <1459248921.2565.15.camel@pengutronix.de> <CAJ+vNU3o98T2cev1Pj0VJR884kOxVxhrzmowDixGuV2Tb=Sh1Q@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:48422 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932764AbcCCQyd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Mar 2016 11:54:33 -0500
+Subject: [PATCH v1 05/12] PCI: Clean up pci_map_rom() whitespace
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Tony Luck <tony.luck@intel.com>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+	linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Bruno =?utf-8?q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
+	Daniel Stone <daniel@fooishbar.org>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Ville =?utf-8?b?U3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
+Date: Thu, 03 Mar 2016 10:54:30 -0600
+Message-ID: <20160303165430.3025.45103.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday 29 March 2016 06:32:29 Tim Harvey wrote:
-> >
-> > There is no upstream driver for this chip, so I don't know where to look
-> > to find out if the driver tries to enable MSI.
-> >
-> > Is what you are saying that if you enable MSI support in the kernel, it
-> > breaks legacy IRQs?
-> 
-> Yes - any driver that does not support MSI will use legacy IRQ's and
-> they never fire.
-> 
-> The Ventana GW53xx and GW54xx boards have a Marvell PCIe GigE
-> supported by the sky2 driver as eth1 which does support MSI and I
-> verified it gets an MSI interrupt and does work (along ath9k devices
-> with legacy interrupts that fail to work).
-> 
-> root@ventana:~# cat /proc/interrupts | grep MSI
-> 299:          0          0   PCI-MSI   0 Edge      PCIe PME, aerdrv
-> 308:       8726          0   PCI-MSI   9 Edge      eth1
-> 
-> So it appears that MSI works for those drivers that use it, but does
-> somehow cause legacy IRQ's to break.
-> 
-> I sent you a GW5400 dev kit over a while back to use for through
-> bridge testing on IMX6 that you should be able to repeat this with
-> assuming you have a PCIe card with a driver that doesn't support MSI
-> (or that you can tweak its driver to not support MSI).
-> 
-> I think 31e98e0d24cd2537a63e06e235e050a06b175df7 "ARM:
-> imx_v6_v7_defconfig: enable PCI_MSI" should be reverted as well until
-> we figure this out.
+Remove unnecessary indentation in pci_map_rom().  This is logically part of
+the previous patch; I split it out to make the critical changes in that
+patch more obvious.  No functional change intended.
 
-That doesn't sound like a helpful solution, multi_v7_defconfig for
-instance will still be broken because it enables PCI_MSI, and so
-will be all major distros.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/rom.c |   37 ++++++++++++++++++-------------------
+ 1 file changed, 18 insertions(+), 19 deletions(-)
 
-What happens if we patch the pci-imx6 driver to not make use of
-its MSI support even when that is enabled in the kernel? Does that
-get both devices in your GW5xxx to work with legacy interrupts or
-is one or both of them still broken?
+diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
+index 80e82b1..2a07f34 100644
+--- a/drivers/pci/rom.c
++++ b/drivers/pci/rom.c
+@@ -128,25 +128,24 @@ void __iomem *pci_map_rom(struct pci_dev *pdev, size_t *size)
+ 	loff_t start;
+ 	void __iomem *rom;
+ 
+-		if (res->flags &
+-			(IORESOURCE_ROM_COPY | IORESOURCE_ROM_BIOS_COPY)) {
+-			*size = pci_resource_len(pdev, PCI_ROM_RESOURCE);
+-			return (void __iomem *)(unsigned long)
+-				pci_resource_start(pdev, PCI_ROM_RESOURCE);
+-		} else {
+-			/* assign the ROM an address if it doesn't have one */
+-			if (res->parent == NULL &&
+-			    pci_assign_resource(pdev, PCI_ROM_RESOURCE))
+-				return NULL;
+-			start = pci_resource_start(pdev, PCI_ROM_RESOURCE);
+-			*size = pci_resource_len(pdev, PCI_ROM_RESOURCE);
+-			if (*size == 0)
+-				return NULL;
+-
+-			/* Enable ROM space decodes */
+-			if (pci_enable_rom(pdev))
+-				return NULL;
+-		}
++	if (res->flags & (IORESOURCE_ROM_COPY | IORESOURCE_ROM_BIOS_COPY)) {
++		*size = pci_resource_len(pdev, PCI_ROM_RESOURCE);
++		return (void __iomem *)(unsigned long)
++			pci_resource_start(pdev, PCI_ROM_RESOURCE);
++	}
++
++	/* assign the ROM an address if it doesn't have one */
++	if (res->parent == NULL && pci_assign_resource(pdev, PCI_ROM_RESOURCE))
++		return NULL;
++
++	start = pci_resource_start(pdev, PCI_ROM_RESOURCE);
++	*size = pci_resource_len(pdev, PCI_ROM_RESOURCE);
++	if (*size == 0)
++		return NULL;
++
++	/* Enable ROM space decodes */
++	if (pci_enable_rom(pdev))
++		return NULL;
+ 
+ 	rom = ioremap(start, *size);
+ 	if (!rom) {
 
-	Arnd
-
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index eb5a2755a164..d7607b2695c6 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -470,7 +470,7 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
- 
- 	imx6_pcie_establish_link(pp);
- 
--	if (IS_ENABLED(CONFIG_PCI_MSI))
-+	if (0 && IS_ENABLED(CONFIG_PCI_MSI))
- 		dw_pcie_msi_init(pp);
- }
- 
-@@ -490,7 +490,7 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
- {
- 	int ret;
- 
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-+	if (0 && IS_ENABLED(CONFIG_PCI_MSI)) {
- 		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
- 		if (pp->msi_irq <= 0) {
- 			dev_err(&pdev->dev, "failed to get MSI irq\n");
