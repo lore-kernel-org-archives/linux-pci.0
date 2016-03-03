@@ -1,71 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59656 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756959AbcCVM7w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Mar 2016 08:59:52 -0400
-Date: Tue, 22 Mar 2016 07:59:48 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Cochran <richardcochran@gmail.com>,
-	Paul Walmsley <paul@pwsan.com>, linux-pci@vger.kernel.org,
-	Tony Lindgren <tony@atomide.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, nsekhar@ti.com
-Subject: Re: [PATCH RESEND] Revert "PCI: dra7xx: Mark driver as broken"
-Message-ID: <20160322125948.GA19418@localhost>
-References: <1457087359-16816-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1457087359-16816-1-git-send-email-kishon@ti.com>
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:45107 "EHLO
+	metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754693AbcCCJcJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Mar 2016 04:32:09 -0500
+Message-ID: <1456997527.3772.37.camel@pengutronix.de>
+Subject: Re: iMX6q PCIe phy link never came up on kernel v4.4.x
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Roberto Fichera <kernel@tekno-soft.it>
+Cc: linux-pci@vger.kernel.org
+Date: Thu, 03 Mar 2016 10:32:07 +0100
+In-Reply-To: <56D5E3DF.9030906@tekno-soft.it>
+References: <56D5E3DF.9030906@tekno-soft.it>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 04, 2016 at 03:59:19PM +0530, Kishon Vijay Abraham I wrote:
-> From: Sekhar Nori <nsekhar@ti.com>
-> 
-> This reverts commit <5c3b99d057525fe2befe6a7db9b1309035d93eee>
-> ("PCI: dra7xx: Mark driver as broken").
-> 
-> With support to de-assert PCIe reset present in kernel,
-> DRA7x PCIe is not broken anymore.
-> 
-> Signed-off-by: Sekhar Nori <nsekhar@ti.com>
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Hi Roberto,
 
-Applied to for-linus for v4.6, thanks!
+Am Dienstag, den 01.03.2016, 19:47 +0100 schrieb Roberto Fichera:
+> Hi There,
+> 
+> Working on a custom iMX6q board I'm getting a PCIe phy link never came up, even if uboot seems detecting
+> everything ok. My DTS is enabling PCIe with
+> 
+> &pcie {
+>     pinctrl-names = "default";
+>     pinctrl-0 = <&pinctrl_pcie_reset>;
+>     reset-gpio = <&gpio7 12 0>;
+>     status = "okay";
+> };
+> 
+> The PCIe is connected to a PCIe-to-PCI TI XIO2001. The XIO2001 power is controlled by GPIO_9 and 
+> the corresponding fixed regulator is set as
+> 
+> 		reg_pcie: regulator@4 {
+> 			compatible = "regulator-fixed";
+> 			reg = <4>;
+> 			pinctrl-names = "default";
+> 			pinctrl-0 = <&pinctrl_pcie_reg>;
+> 			regulator-name = "MPCIE_3V3";
+> 			regulator-min-microvolt = <3300000>;
+> 			regulator-max-microvolt = <3300000>;
+> 			gpio = <&gpio1 9 0>;
+> 			regulator-always-on;
+> 			enable-active-high;
+> 		};
+> 
+> so I'd like to know if there is any other special setup to do in order to get it to work on a v4.4.x kernel.
+> Or anyway how to debug it.
+> 
+> Any suggestion?
 
-> ---
-> Bjorn,
-> 
-> This patch should be merged only after [1] hits linus tree.
-> 
-> Thanks
-> Kishon
-> 
-> [1] -> git://git.kernel.org/pub/scm/linux/kernel/git/pjw/omap-pending.git
-> 	for-v4.6/omap-hwmod-b
-> 
->  drivers/pci/host/Kconfig |    1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 75a6054..6d181ba 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -5,7 +5,6 @@ config PCI_DRA7XX
->  	bool "TI DRA7xx PCIe controller"
->  	select PCIE_DW
->  	depends on OF && HAS_IOMEM && TI_PIPE3
-> -	depends on BROKEN
->  	help
->  	 Enables support for the PCIe controller in the DRA7xx SoC.  There
->  	 are two instances of PCIe controller in DRA7xx.  This controller can
-> -- 
-> 1.7.9.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Is this a regression from earlier kernel versions?
+
+If so, can you please revert 5c5fb40de8f14 (PCI: imx6: Add support for
+active-low reset GPIO) and see if this helps?
+
+Regards,
+Lucas
+-- 
+Pengutronix e.K.             | Lucas Stach                 |
+Industrial Linux Solutions   | http://www.pengutronix.de/  |
+
