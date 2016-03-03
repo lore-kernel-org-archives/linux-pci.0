@@ -1,64 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:35574 "EHLO
-	mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751949AbcC2Gu4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Mar 2016 02:50:56 -0400
+Received: from mail.kernel.org ([198.145.29.136]:52944 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756924AbcCCRnR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Mar 2016 12:43:17 -0500
+Date: Thu, 3 Mar 2016 11:43:13 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Minghuan Lian <Minghuan.Lian@nxp.com>,
+	Murali Karicheri <m-karicheri2@ti.com>
+Subject: [GIT PULL] PCI fixes for v4.5
+Message-ID: <20160303174313.GA9613@localhost>
 MIME-Version: 1.0
-In-Reply-To: <1459222998-2855-1-git-send-email-horms+renesas@verge.net.au>
-References: <1459222998-2855-1-git-send-email-horms+renesas@verge.net.au>
-Date: Tue, 29 Mar 2016 08:50:55 +0200
-Message-ID: <CAMuHMdUYUFGho2jN-mxa143MnGLZWtrx+Rg5Ba4W_BG4iJu4zg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: rcar-pcie: Remove Gen2 designation from Kconfig
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Simon Horman <horms+renesas@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-renesas-soc@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 29, 2016 at 5:43 AM, Simon Horman
-<horms+renesas@verge.net.au> wrote:
-> It appears that Gen2 is a misnomer for the R-Car PCIE driver
-> which also supports Gen 1 and Gen 3 SoCs. Accordingly, drop Gen 2
-> from the help text and Kconfig symbol.
->
-> Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-> ---
-> Bjorn, if this patch is acceptable I would like to request that we
-> co-ordinate things so that I can queue-up corresponding updates for
-> arm and arm64 defconfigs in the same release. From my point of view
-> v4.7 would make sense.
-> ---
->  drivers/pci/host/Kconfig  | 4 ++--
->  drivers/pci/host/Makefile | 2 +-
->  2 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 7a0780d56d2d..9109c6c5298c 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -69,11 +69,11 @@ config PCI_RCAR_GEN2
->           There are 3 internal PCI controllers available with a single
->           built-in EHCI/OHCI host controller present on each one.
->
-> -config PCI_RCAR_GEN2_PCIE
-> +config PCI_RCAR_PCIE
+Hi Linus,
 
-Following the pattern in drivers/pci/host/Kconfig, I think this symbol should
-be called PCIE_RCAR.
+Here are a couple more fixes for v4.5.  These only affect the Layerscape
+and Keystone host controllers, and they fix system crashes and hangs.
 
-Gr{oetje,eeting}s,
+Bjorn
 
-                        Geert
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+The following changes since commit 61d9e854dfb91b46b99ffd3d31fc7d45d2b95f31:
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+  PCI: mvebu: Restrict build to 32-bit ARM (2016-02-27 08:52:20 -0600)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.5-fixes-4
+
+for you to fetch changes up to 1195c103f6c98d9ff381cac3a8760d4f8a133627:
+
+  PCI: layerscape: Fix MSG TLP drop setting (2016-02-29 17:24:15 -0600)
+
+----------------------------------------------------------------
+PCI updates for v4.5:
+
+  Freescale Layerscape host bridge driver
+    Fix MSG TLP drop setting (Minghuan Lian)
+
+  TI Keystone host bridge driver
+    Fix MSI code that retrieves struct pcie_port pointer (Murali Karicheri)
+
+----------------------------------------------------------------
+Minghuan Lian (1):
+      PCI: layerscape: Fix MSG TLP drop setting
+
+Murali Karicheri (1):
+      PCI: keystone: Fix MSI code that retrieves struct pcie_port pointer
+
+ drivers/pci/host/pci-keystone-dw.c | 11 +++--------
+ drivers/pci/host/pci-layerscape.c  | 21 +++++++++++++--------
+ 2 files changed, 16 insertions(+), 16 deletions(-)
