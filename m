@@ -1,90 +1,60 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0hurNUOVDXpJJEJ5dCwWO_Fo+EdzBhXJA7QWmPeY653fQ@mail.gmail.com>
-References: <1457504045-12738-1-git-send-email-airlied@gmail.com>
-	<CAJZ5v0hurNUOVDXpJJEJ5dCwWO_Fo+EdzBhXJA7QWmPeY653fQ@mail.gmail.com>
-Date: Thu, 10 Mar 2016 07:56:41 +1000
-Message-ID: <CAPM=9tzAf=464v3uSjert7NVh35EXUG8iy_xEuR36NUMhdJSWw@mail.gmail.com>
-Subject: Re: [PATCH 1/2] vga_switcheroo: add power support for windows 10 machines.
-From: Dave Airlie <airlied@gmail.com>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: dri-devel <dri-devel@lists.freedesktop.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:41637 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932333AbcCCOx0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Mar 2016 09:53:26 -0500
+From: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+To: helgaas@kernel.org
+Cc: jroedel@suse.de, dwmw2@infradead.org, alex.williamson@redhat.com,
+	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+	Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+Subject: [PATCH v5 5/6] PCI: Add DMA alias quirk for mic_x200_dma
+Date: Thu,  3 Mar 2016 15:53:20 +0100
+Message-Id: <1457016800-11903-1-git-send-email-jacek.lawrynowicz@intel.com>
+In-Reply-To: <20160224194423.7585.46582.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160224194423.7585.46582.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 9 March 2016 at 23:19, Rafael J. Wysocki <rafael@kernel.org> wrote:
-> On Wed, Mar 9, 2016 at 7:14 AM, Dave Airlie <airlied@gmail.com> wrote:
->> From: Dave Airlie <airlied@redhat.com>
->>
->> Windows 10 seems to have standardised power control for the
->> optimus/powerxpress laptops using PR3 power resource hooks.
->>
->> I'm not sure this is definitely the correct place to be
->> doing this, but it works for me here.
->>
->> The ACPI device for the GPU I have is \_SB_.PCI0.PEG_.VID_
->> but the power resource hooks are on \_SB_.PCI0.PEG_, so
->> this patch creates a new power domain to turn the GPU
->> device parent off using standard ACPI calls.
->>
->> Signed-off-by: Dave Airlie <airlied@redhat.com>
->> ---
->>  drivers/gpu/vga/vga_switcheroo.c | 54 +++++++++++++++++++++++++++++++++++++++-
->>  include/linux/vga_switcheroo.h   |  3 ++-
->>  2 files changed, 55 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/gpu/vga/vga_switcheroo.c b/drivers/gpu/vga/vga_switcheroo.c
->> index 665ab9f..be32cb2 100644
->> --- a/drivers/gpu/vga/vga_switcheroo.c
->> +++ b/drivers/gpu/vga/vga_switcheroo.c
->> @@ -42,7 +42,7 @@
->>  #include <linux/uaccess.h>
->>  #include <linux/vgaarb.h>
->>  #include <linux/vga_switcheroo.h>
->> -
->> +#include <linux/acpi.h>
->>  /**
->>   * DOC: Overview
->>   *
->> @@ -997,3 +997,55 @@ vga_switcheroo_init_domain_pm_optimus_hdmi_audio(struct device *dev,
->>         return -EINVAL;
->>  }
->>  EXPORT_SYMBOL(vga_switcheroo_init_domain_pm_optimus_hdmi_audio);
->> +
->> +/* With Windows 10 the runtime suspend/resume can use power
->> +   resources on the parent device */
->> +static int vga_acpi_switcheroo_runtime_suspend(struct device *dev)
->> +{
->> +       struct pci_dev *pdev = to_pci_dev(dev);
->> +       int ret;
->> +       struct acpi_device *adev;
->> +
->> +       ret = dev->bus->pm->runtime_suspend(dev);
->> +       if (ret)
->> +               return ret;
->> +
->> +       ret = acpi_bus_get_device(ACPI_HANDLE(&pdev->dev), &adev);
->
-> You can use ACPI_COMPANION(&pdev->dev) for that.
->
->> +       if (!ret)
->> +               acpi_device_set_power(adev->parent, ACPI_STATE_D3_COLD);
->
-> Won't that mess up with the PM of the parent?  Or do we know that the
-> parent won't do its own PM?
+MIC x200 NTB forwards PCIe traffic using multiple alien RID. They have to
+be added as aliases to the DMA device in order to allow buffer access
+when IOMMU is enabled.
 
-The parent is always going to be pcieport. It doesn't seem to do any runtime PM,
-I do wonder if pcieport should be doing it's own runtime PM handling,
-but that is a
-larger task than I'm thinking to tackle here. Maybe I should be doing
+Signed-off-by: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+Acked-by: David Woodhouse <David.Woodhouse@intel.com>
+---
+ Updated quirk comment with requirement that aliases have to be matching
+ values programmed in the EEPROM. The LUT table on x200 is static so there
+ is no need to program it from the driver.
 
-pci_set_power_state(pdev->bus->self, PCI_D3cold) ? I'm not really sure.
+ drivers/pci/quirks.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-I'm guessing on Windows this all happens automatically.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 51927a5..e66f09d 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3696,6 +3696,20 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
+ DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
+ 
+ /*
++ * MIC x200 NTB forwards PCIe traffic using multiple alien RIDs. They have to
++ * be added as aliases to the DMA device in order to allow buffer access
++ * when IOMMU is enabled. Following devfns have to match RIT-LUT table
++ * programmed in the EEPROM.
++ */
++static void quirk_mic_x200_dma_alias(struct pci_dev *pdev)
++{
++	pci_add_dma_alias(pdev, PCI_DEVFN(0x10, 0x0));
++	pci_add_dma_alias(pdev, PCI_DEVFN(0x11, 0x0));
++	pci_add_dma_alias(pdev, PCI_DEVFN(0x12, 0x3));
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2264, quirk_mic_x200_dma_alias);
++
++/*
+  * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
+  * class code.  Fix it.
+  */
+-- 
+1.8.3.1
 
-Dave.
