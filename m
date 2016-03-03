@@ -1,55 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46394 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:48901 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932158AbcCDQ1l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 4 Mar 2016 11:27:41 -0500
-Date: Fri, 4 Mar 2016 10:27:37 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] Fix NULL ptr dereference in pci_bus_assign_domain_nr()
- on ARM
-Message-ID: <20160304162737.GA1296@localhost>
-References: <m337sapw89.fsf@t19.piap.pl>
- <20160303173522.GA9189@localhost>
- <m38u1yojmq.fsf@t19.piap.pl>
+	id S932968AbcCCQz3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Mar 2016 11:55:29 -0500
+Subject: [PATCH v1 12/12] PCI: Simplify sysfs ROM cleanup
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Tony Luck <tony.luck@intel.com>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+	linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Bruno =?utf-8?q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
+	Daniel Stone <daniel@fooishbar.org>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Ville =?utf-8?b?U3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
+Date: Thu, 03 Mar 2016 10:55:25 -0600
+Message-ID: <20160303165525.3025.11790.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <m38u1yojmq.fsf@t19.piap.pl>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 04, 2016 at 07:13:49AM +0100, Krzysztof Hałasa wrote:
-> Hi Bjorn,
-> 
-> Bjorn Helgaas <helgaas@kernel.org> writes:
-> 
-> > On Tue, Mar 01, 2016 at 07:07:18AM +0100, Krzysztof Hałasa wrote:
-> >> Many ARM platforms use a wrapper:
-> >> /*
-> >>  * Compatibility wrapper for older platforms that do not care about
-> >>  * passing the parent device.
-> >>  */
-> >> static inline void pci_common_init(struct hw_pci *hw)
-> >> {
-> >>         pci_common_init_dev(NULL, hw);
-> >> }
-> >> 
-> >> which means that pci_bus_assign_domain_nr() can be called without
-> >> a parent. This patch fixes the NULL pointer dereference.
-> >
-> > What exactly is the impact of this?  Does this fix need to be in v4.5?
-> > It sounds like it should be, but I need a little more detailed
-> > justification, e.g., "platforms X, Y, Z don't boot at all without
-> > this change."
-> 
-> At least CNS3xxx doesn't boot. I haven't verified a couple of others,
-> but they may be broken as well.
+The value of pdev->rom_attr is the definitive indicator of the fact that
+we're created a sysfs attribute.  Check that rather than rom_size, which is
+only used incidentally when deciding whether to create a sysfs attribute.
 
-Good, thanks.  Also (I should have asked this before), please include a
-"Fixes:" line so we know exactly when this broke and what stable kernels
-need the fix.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci-sysfs.c |   13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 95d9e7b..a4cfa52 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1409,7 +1409,7 @@ int __must_check pci_create_sysfs_dev_files(struct pci_dev *pdev)
+ 	return 0;
+ 
+ err_rom_file:
+-	if (rom_size) {
++	if (pdev->rom_attr) {
+ 		sysfs_remove_bin_file(&pdev->dev.kobj, pdev->rom_attr);
+ 		kfree(pdev->rom_attr);
+ 		pdev->rom_attr = NULL;
+@@ -1447,8 +1447,6 @@ static void pci_remove_capabilities_sysfs(struct pci_dev *dev)
+  */
+ void pci_remove_sysfs_dev_files(struct pci_dev *pdev)
+ {
+-	int rom_size = 0;
+-
+ 	if (!sysfs_initialized)
+ 		return;
+ 
+@@ -1461,18 +1459,13 @@ void pci_remove_sysfs_dev_files(struct pci_dev *pdev)
+ 
+ 	pci_remove_resource_files(pdev);
+ 
+-	if (pci_resource_len(pdev, PCI_ROM_RESOURCE))
+-		rom_size = pci_resource_len(pdev, PCI_ROM_RESOURCE);
+-	else if (pdev->resource[PCI_ROM_RESOURCE].flags & IORESOURCE_ROM_SHADOW)
+-		rom_size = 0x20000;
+-
+-	if (rom_size && pdev->rom_attr) {
++	if (pdev->rom_attr) {
+ 		sysfs_remove_bin_file(&pdev->dev.kobj, pdev->rom_attr);
+ 		kfree(pdev->rom_attr);
++		pdev->rom_attr = NULL;
+ 	}
+ 
+ 	pci_remove_firmware_label_files(pdev);
+-
+ }
+ 
+ static int __init pci_sysfs_init(void)
+
