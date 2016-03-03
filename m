@@ -1,73 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0129.outbound.protection.outlook.com ([65.55.169.129]:26281
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750762AbcCaN0o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Mar 2016 09:26:44 -0400
-Message-ID: <1459430795.1998.11.camel@rtd-VirtualBox>
-Subject: PCI IRQ issue since 4.2 kernel
-From: Rob Groner <rgroner@rtd.com>
-To: <linux-pci@vger.kernel.org>
-CC: <jiang.liu@linux.intel.com>, <bhelgaas@google.com>,
-	<tglx@linutronix.de>
-Date: Thu, 31 Mar 2016 09:26:35 -0400
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail.kernel.org ([198.145.29.136]:48318 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932764AbcCCQyS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Mar 2016 11:54:18 -0500
+Subject: [PATCH v1 03/12] PCI: Don't enable/disable ROM BAR if we're using a
+ RAM shadow copy
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Tony Luck <tony.luck@intel.com>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+	linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Bruno =?utf-8?q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
+	Daniel Stone <daniel@fooishbar.org>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Ville =?utf-8?b?U3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
+Date: Thu, 03 Mar 2016 10:54:14 -0600
+Message-ID: <20160303165414.3025.75102.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Greetings,
+If we're using a RAM shadow copy instead of the ROM BAR, we don't need to
+touch the ROM BAR enable bit.
 
-We became aware of an issue with our Linux drivers when used with a 4.4
-kernel.  These drivers had worked previously from 2.6.35 to 4.2 kernels.
-The symptoms were that, even though the request_irq() call was
-successful, we did not receive any IRQs.  IRQs did arrive on a different
-IRQ line, however, and the kernel disabled that line because there was
-no handler.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/rom.c |   16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-I can elaborate on this more if you'd like.
-
-With Greg K-H's help, I found the commit where this issue first appears.
-He told me to email the people listed in the commit and the pci mailing
-list.
-
-Is there something different I need to be doing when I request an IRQ
-for my PCI device driver?  I checked the 4.2, 4.3, and 4.4 kernel change
-logs and did not see anything obvious about the IRQ request process
-changing.
-
-Please let me know how to proceed next.
-
-Thank you,
-
-Rob
-
- -----------------------------------------------------------------------
- rtd@kernel-dev:~/git/kernels/linux$ git bisect good
- 991de2e59090e55c65a7f59a049142e3c480f7bd is the first bad commit
- commit 991de2e59090e55c65a7f59a049142e3c480f7bd
- Author: Jiang Liu <jiang.liu@linux.intel.com>
- Date:   Wed Jun 10 16:54:59 2015 +0800
+diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
+index 9eaca39..5da8d06 100644
+--- a/drivers/pci/rom.c
++++ b/drivers/pci/rom.c
+@@ -24,13 +24,17 @@
+  */
+ int pci_enable_rom(struct pci_dev *pdev)
+ {
+-	struct resource *res = pdev->resource + PCI_ROM_RESOURCE;
++	struct resource *res = &pdev->resource[PCI_ROM_RESOURCE];
+ 	struct pci_bus_region region;
+ 	u32 rom_addr;
  
-     PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()
-     
-     To support IOAPIC hotplug, we need to allocate PCI IRQ resources on
- demand
-     and free them when not used anymore.
-     
-     Implement pcibios_alloc_irq() and pcibios_free_irq() to dynamically
-     allocate and free PCI IRQs.
-     
-     Remove mp_should_keep_irq(), which is no longer used.
-     
-     [bhelgaas: changelog]
-     Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-     Acked-by: Thomas Gleixner <tglx@linutronix.de>
+ 	if (!res->flags)
+ 		return -1;
  
- :040000 040000 765e2d5232d53247ec260b34b51589c3bccb36ae
- f680234a27685e94b1a35ae2a7218f8eafa9071a M    arch
- :040000 040000 d55a682bcde72682e883365e88ad1df6186fd54d
- f82c470a04a6845fcf5e0aa934512c75628f798d M    drivers
- ----------------------------------------------------------------
++	/* Nothing to enable if we're using a shadow copy in RAM */
++	if (res->flags & IORESOURCE_ROM_SHADOW)
++		return 0;
++
+ 	pcibios_resource_to_bus(pdev->bus, &region, res);
+ 	pci_read_config_dword(pdev, pdev->rom_base_reg, &rom_addr);
+ 	rom_addr &= ~PCI_ROM_ADDRESS_MASK;
+@@ -49,7 +53,12 @@ EXPORT_SYMBOL_GPL(pci_enable_rom);
+  */
+ void pci_disable_rom(struct pci_dev *pdev)
+ {
++	struct resource *res = &pdev->resource[PCI_ROM_RESOURCE];
+ 	u32 rom_addr;
++
++	if (res->flags & IORESOURCE_ROM_SHADOW)
++		return;
++
+ 	pci_read_config_dword(pdev, pdev->rom_base_reg, &rom_addr);
+ 	rom_addr &= ~PCI_ROM_ADDRESS_ENABLE;
+ 	pci_write_config_dword(pdev, pdev->rom_base_reg, rom_addr);
+@@ -154,7 +163,6 @@ void __iomem *pci_map_rom(struct pci_dev *pdev, size_t *size)
+ 	if (!rom) {
+ 		/* restore enable if ioremap fails */
+ 		if (!(res->flags & (IORESOURCE_ROM_ENABLE |
+-				    IORESOURCE_ROM_SHADOW |
+ 				    IORESOURCE_ROM_COPY)))
+ 			pci_disable_rom(pdev);
+ 		return NULL;
+@@ -186,8 +194,8 @@ void pci_unmap_rom(struct pci_dev *pdev, void __iomem *rom)
+ 
+ 	iounmap(rom);
+ 
+-	/* Disable again before continuing, leave enabled if pci=rom */
+-	if (!(res->flags & (IORESOURCE_ROM_ENABLE | IORESOURCE_ROM_SHADOW)))
++	/* Disable again before continuing */
++	if (!(res->flags & IORESOURCE_ROM_ENABLE))
+ 		pci_disable_rom(pdev);
+ }
+ EXPORT_SYMBOL(pci_unmap_rom);
 
