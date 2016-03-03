@@ -1,102 +1,102 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 8 Mar 2016 09:22:13 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	timur@codeaurora.org, cov@codeaurora.org,
-	linux-pci@vger.kernel.org, ravikanth.nalla@hpe.com,
-	lenb@kernel.org, harish.k@hpe.com, ashwin.reghunandanan@hpe.com,
-	bhelgaas@google.com, rjw@rjwysocki.net,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V2] acpi, pci, irq: account for early penalty
- assignment
-In-Reply-To: <20160308002558.GC26149@localhost>
-Message-ID: <alpine.DEB.2.11.1603080915240.3859@nanos>
-References: <56D5E43E.7050406@codeaurora.org> <20160301194340.GA19783@localhost> <56D7317F.7090500@codeaurora.org> <56D7ABFB.3070302@codeaurora.org> <56D84EA9.3080900@codeaurora.org> <20160303151048.GA3290@localhost> <56D8546B.5040908@codeaurora.org>
- <56D8745D.70509@codeaurora.org> <20160304180959.GA4794@localhost> <56DDB28F.1040300@codeaurora.org> <20160308002558.GC26149@localhost>
+Date: Thu, 3 Mar 2016 11:23:32 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rafael@kernel.org, hanjun.guo@linaro.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com, yinghai@kernel.org
+Subject: Re: [PATCH V5 00/15] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+Message-ID: <20160303112332.GC28359@red-moon>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+ <56D49611.2050202@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56D49611.2050202@codeaurora.org>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 7 Mar 2016, Bjorn Helgaas wrote:
-> On Mon, Mar 07, 2016 at 11:55:43AM -0500, Sinan Kaya wrote:
-> > It makes sense for SCI as it is Intel specific.
+[+ Yinghai]
+
+On Mon, Feb 29, 2016 at 02:03:45PM -0500, Sinan Kaya wrote:
+> On 2/16/2016 8:53 AM, Tomasz Nowicki wrote:
+> > From the functionality point of view this series might be split into the
+> > following logic parts:
+> > 1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
+> >    PCI config regions and used when necessary.
+> > 2. Move non-arch specific bits to the core code.
+> > 3. Use MMCONFIG code and implement generic ACPI based PCI host controller driver.
+> > 4. Enable above driver on ARM64
 > > 
-> > Unfortunately, this cannot be done in an arch independent way. Of course,
-> > ARM had to implement its own thing. While level-triggered, active-low is
-> > good for intel world, it is not for the ARM world. ARM uses active-high
-> > level triggered.
+> > Patches has been built on top of 4.5-rc3 and can be found here:
+> > git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v5)
+> > 
+> > NOTE, this patch set depends on Lorenzo's fixes:
+> > https://patchwork.ozlabs.org/patch/576450/
+> > which can be found in pci-acpi-v5 branch.
+> > 
+> > This has been tested on Cavium ThunderX server, JunoR2, HP RX2660 IA64, x86,
+> > Hip05, X-Gene and QEMU-aarch64. Any help in reviewing and testing is very appreciated.
+> > 
+> > v4 -> v5
+> > - dropped MCFG refactoring group patches 1-6 from series v4 and integrated Jayachandran's patch
+> >   https://patchwork.ozlabs.org/patch/575525/
+> > - rewrite PCI legacy IRQs allocation
+> > - squashed two patches 11 and 12 from series v4, fixed bisection issue
+> > - changelog improvements
+> > - rebased to 4.5-rc3
+> > 
+> > v3 -> v4
+> > - dropped Jiang's fix http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04318.html
+> > - added Lorenzo's fix patch 19/24
+> > - ACPI PCI bus domain number assigning cleanup
+> > - changed resource management, we now claim and reassign resources
+> > - improvements for applying quirks
+> > - dropped Matthew's http://www.spinics.net/lists/linux-pci/msg45950.html dependency
+> > - rebased to 4.5-rc1
+> > 
 > 
-> I'm confused.  I don't think SCI is Intel-specific.  Per PCI Spec
-> r3.0, sec 2.2.6, PCI interrupts are level-sensitive, asserted low.
-> Per ACPI Spec v3.0, sec 2.1, the SCI is an "active, low, shareable,
-> level interrupt".
-> 
-> Are you saying SCI is active-high on ARM?  If so, I don't think that's
-> necessarily a huge problem, although we'd have to audit the ACPI code
-> to make sure we handle it correctly.
-> 
-> The point here is that a PCI Interrupt Link can only use an IRQ that
-> is level-triggered, active low.  If an IRQ is already set to any other
-> state, whether for an ISA device or for an active-high SCI, we can't
-> use it for a PCI Interrupt Link.
-> 
-> It'd be nice if there were a generic way we could figure out what the
-> trigger mode of an IRQ is.  I was hoping can_request_irq() was that
-> way, but I don't think it is, because it only looks at IRQF_SHARED,
-> not at IRQF_TRIGGER_LOW.
-> 
-> Maybe irq_get_trigger_type() is what we want?
+> Having tested v4 and v5, I'm seeing some resource assignment problems
+> and address conflicts.  And problems booting QEMU.
 
-Yes, that gives you the trigger typ, if the interrupt is already set up.
- 
->   static int pci_compatible_trigger(int irq)
->   {
->     int type = irq_get_trigger_type(irq);
-> 
->     return (type == IRQ_TYPE_LEVEL_LOW || type == IRQ_TYPE_NONE);
->   }
-> 
->   static unsigned int acpi_irq_get_penalty(int irq)
->   {
->     unsigned int penalty = 0;
-> 
->     if (irq == acpi_gbl_FADT.sci_interrupt)
->       penalty += PIRQ_PENALTY_PCI_USING;
-> 
->     penalty += acpi_irq_pci_sharing_penalty(irq);
->     return penalty;
->   }
-> 
->   static int acpi_pci_link_allocate(struct acpi_pci_link *link)
->   {
->     unsigned int best = ~0;
->     ...
-> 
->     for (i = (link->irq.possible_count - 1); i >= 0; i--) {
->       candidate = link->irq.possible[i];
->       if (!pci_compatible_trigger(candidate))
->         continue;
-> 
->       penalty = acpi_irq_get_penalty(candidate);
->       if (penalty < best) {
->         irq = candidate;
->         best = penalty;
->       }
->     }
->     ...
->   }
-> 
-> This looks racy, because we test irq_get_trigger_type() without any
-> kind of locking, and later acpi_register_gsi() calls
-> irq_create_fwspec_mapping(), which looks like it sets the new trigger
-> type.  But I don't know how to fix that.
+I asked Tomasz to add resource claiming code in v4 to make sure that,
+if FW has left resources in a reasonable set-up, we reuse it as-is.
 
-Right, if that pci link allocation code can be executed concurrent, then you
-might end up with problem, but isn't that a problem even without
-irq_get_trigger_type()?
+Now, I was and I am aware this could trigger resource allocation
+issues (in particular in relation to bridges apertures sizing),
+that can be nonetheless solved by forcing the kernel to reallocate
+resources (pci=realloc, that's exactly what's there for, release
+the bridge apertures, resize the busses downstream and reassign
+the respective hierarchy).
 
-Thanks,
+I am not entirely aware of how consistently pci=realloc was used on
+x86, what I am aware of is the panoply of pci=* command line parameters
+defined for x86 and I would certainly avoid that.
 
-	tglx
+The decision on whether we claim resources before reassigning them
+is either dictacted by the boot method (ie ACPI->claim resources by
+default) or we should control it via a FW option or a command
+line option, PCI standard (PCI FW revision 3.1, 3.5 "Device State
+at Firmware/Operating System Handoff) IIUC does not stricly mandate
+FW configuring the whole PCI hierarchy (and to be 100% compliant
+we should check the device IO/MEM enable bits before claiming, as x86 does
+- see pcibios_allocate_dev_resources() in arch/x86/pci/i386.c).
+
+x86 and IA64 claim PCI resources on boot and live with that (well, minus
+the gazillions x86 pci= parameters that change the PCI resources assignment
+one way or another), comments very welcome in particular on the pci=realloc
+option and its usage.
+
+What's certain is, if we do not claim resources by default we will *never*
+be able to do it, it will certainly trigger regressions.
+
+Lorenzo
