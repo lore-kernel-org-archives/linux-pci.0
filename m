@@ -1,70 +1,36 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <bhelgaas@google.com>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH next v1 2/2] PCI: keystone: remove unnecessary goto statement
-Date: Thu, 24 Mar 2016 18:28:18 -0400
-Message-ID: <1458858498-20559-2-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1458858498-20559-1-git-send-email-m-karicheri2@ti.com>
-References: <1458858498-20559-1-git-send-email-m-karicheri2@ti.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V2] acpi, pci, irq: account for early penalty assignment
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1455801582-21595-1-git-send-email-okaya@codeaurora.org>
+ <20160229192420.GC3653@localhost> <56D4A53A.1070708@codeaurora.org>
+ <20160229223453.GA12162@localhost> <56D5E43E.7050406@codeaurora.org>
+ <20160301194340.GA19783@localhost> <56D7317F.7090500@codeaurora.org>
+ <56D7ABFB.3070302@codeaurora.org> <56D84EA9.3080900@codeaurora.org>
+ <20160303151048.GA3290@localhost>
+Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org, linux-pci@vger.kernel.org,
+	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
+	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
+	rjw@rjwysocki.net, linux-kernel@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <56D8546B.5040908@codeaurora.org>
+Date: Thu, 3 Mar 2016 10:12:43 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160303151048.GA3290@localhost>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix the misuse of goto statement in ks_pcie_get_irq_controller_info()
-as simple return is more appropriate for this function. While at
-it add an error log for absence of interrupt controller node.
+On 3/3/2016 10:10 AM, Bjorn Helgaas wrote:
+> That was my idea, but your minimal patch from last night looks awfully
+> attractive, and maybe it's not worth moving it to arch/x86.  I do think we
+> could simplify the code significantly by getting rid of the kzalloc and
+> acpi_irq_penalty_list from acpi_irq_set_penalty().  How about pushing on
+> that a little bit first, and see what it looks like then?
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Pawel Moll <pawel.moll@arm.com>
-Cc: Mark Rutland <mark.rutland@arm.com>
-Cc: Ian Campbell <ijc+devicetree@hellion.org.uk>
-Cc: Kumar Gala <galak@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- v1 - same as before initial version
- drivers/pci/host/pci-keystone.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+OK. Let me go that direction.
 
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index a2b3ff6..fc153a7 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -181,11 +181,13 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
- 	*np_temp = of_find_node_by_name(np_pcie, controller);
- 	if (!(*np_temp)) {
- 		dev_err(dev, "Node for %s is absent\n", controller);
--		goto out;
-+		return ret;
- 	}
- 	temp = of_irq_count(*np_temp);
--	if (!temp)
--		goto out;
-+	if (!temp) {
-+		dev_err(dev, "No entries in %s\n", controller);
-+		return ret;
-+	}
- 	if (temp > max_host_irqs)
- 		dev_warn(dev, "Too many %s interrupts defined %u\n",
- 			(legacy ? "legacy" : "MSI"), temp);
-@@ -203,7 +205,6 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
- 		*num_irqs = temp;
- 		ret = 0;
- 	}
--out:
- 	return ret;
- }
- 
-@@ -231,6 +232,7 @@ static void ks_pcie_setup_interrupts(struct keystone_pcie *ks_pcie)
- 	/* enable error interrupt */
- 	if (ks_pcie->error_irq > 0)
- 		ks_dw_pcie_enable_error_irq(ks_pcie->va_app_base);
-+
- }
- 
- /*
 -- 
-1.9.1
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
