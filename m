@@ -1,343 +1,196 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:39008 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753305AbcC0JbV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Mar 2016 05:31:21 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Hanna Hawa <hannah@marvell.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 2/2] pci: host: new driver for Marvell Armada 7K/8K PCIe controller
-Date: Sun, 27 Mar 2016 11:30:58 +0200
-Message-Id: <1459071058-18328-3-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1459071058-18328-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1459071058-18328-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from e23smtp08.au.ibm.com ([202.81.31.141]:55298 "EHLO
+	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756755AbcCCX7p (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Mar 2016 18:59:45 -0500
+Received: from localhost
+	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 4 Mar 2016 09:59:42 +1000
+Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
+	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 5F90F2BB0055
+	for <linux-pci@vger.kernel.org>; Fri,  4 Mar 2016 10:59:40 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u23NxWdr459112
+	for <linux-pci@vger.kernel.org>; Fri, 4 Mar 2016 10:59:40 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u23Nx7Rd009984
+	for <linux-pci@vger.kernel.org>; Fri, 4 Mar 2016 10:59:07 +1100
+Date: Fri, 4 Mar 2016 10:58:42 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, mpe@ellerman.id.au, aik@ozlabs.ru,
+	ruscur@russell.cc
+Subject: Re: [PATCH v14 0/9] EEH Support for SRIOV VFs
+Message-ID: <20160303235842.GA7162@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Marvell Armada 7K/8K SoCs integrate a PCIe controller from
-Synopsys. This commit adds a new driver that provides the small glue
-needed to use the existing Designware driver to make it work on
-Marvell Armada 7K/8K SoCs.
+On Wed, Feb 10, 2016 at 05:02:48PM +1100, Gavin Shan wrote:
 
-The MSI support will be enabled at a later point.
+In this series, there're some issues on attempt to recover errors on
+pass-throu VFs. Updated series (v15) with more patches sent to address
+the issues:
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/host/Kconfig         |  11 ++
- drivers/pci/host/Makefile        |   1 +
- drivers/pci/host/pcie-armada8k.c | 261 +++++++++++++++++++++++++++++++++++++++
- 3 files changed, 273 insertions(+)
- create mode 100644 drivers/pci/host/pcie-armada8k.c
+So please ignore this series and look at v15.
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 7a0780d..a3b6f24 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -231,4 +231,15 @@ config PCI_HOST_THUNDER_ECAM
- 	help
- 	  Say Y here if you want ECAM support for CN88XX-Pass-1.x Cavium Thunder SoCs.
- 
-+config PCIE_ARMADA_8K
-+	bool "Marvell Armada-8K PCIe controller"
-+	depends on ARCH_MVEBU
-+	select PCIE_DW
-+	select PCIEPORTBUS
-+	help
-+	  Say Y here if you want to enable PCIe controller support on
-+	  Armada-8K SoCs. The PCIe controller on Armada-8K is based on
-+	  Designware hardware and therefore the driver re-uses the
-+	  Designware core functions to implement the driver.
-+
- endmenu
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index d85b5fa..a6f85e3 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -28,3 +28,4 @@ obj-$(CONFIG_PCI_HISI) += pcie-hisi.o
- obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
- obj-$(CONFIG_PCI_HOST_THUNDER_ECAM) += pci-thunder-ecam.o
- obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
-+obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
-diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/host/pcie-armada8k.c
-new file mode 100644
-index 0000000..903ab34
---- /dev/null
-+++ b/drivers/pci/host/pcie-armada8k.c
-@@ -0,0 +1,261 @@
-+/*
-+ * PCIe host controller driver for Marvell Armada-8K SoCs
-+ *
-+ * Armada-8K PCIe Glue Layer Source Code
-+ *
-+ * Copyright (C) 2016 Marvell Technology Group Ltd.
-+ *
-+ * This file is licensed under the terms of the GNU General Public
-+ * License version 2. This program is licensed "as is" without any
-+ * warranty of any kind, whether express or implied.
-+ */
-+
-+#define pr_fmt(fmt) "armada-8k-pcie: " fmt
-+
-+#include <linux/clk.h>
-+#include <linux/delay.h>
-+#include <linux/interrupt.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/pci.h>
-+#include <linux/phy/phy.h>
-+#include <linux/platform_device.h>
-+#include <linux/resource.h>
-+#include <linux/of_pci.h>
-+#include <linux/of_irq.h>
-+
-+#include "pcie-designware.h"
-+
-+struct armada8k_pcie {
-+	void __iomem *base;
-+	struct clk *main_clk;
-+	struct clk *lane_clk;
-+	struct pcie_port pp;
-+};
-+
-+#define PCIE_VENDOR_REGS_OFFSET		0x8000
-+
-+#define PCIE_GLOBAL_CONTROL_REG		0x0
-+#define PCIE_APP_LTSSM_EN		BIT(2)
-+#define PCIE_DEVICE_TYPE_SHIFT		4
-+#define PCIE_DEVICE_TYPE_MASK		0xF
-+#define PCIE_DEVICE_TYPE_EP		0x0 /* Endpoint */
-+#define PCIE_DEVICE_TYPE_LEP		0x1 /* Legacy endpoint */
-+#define PCIE_DEVICE_TYPE_RC		0x4 /* Root complex */
-+
-+#define PCIE_GLOBAL_STATUS_REG		0x8
-+#define PCIE_GLB_STS_RDLH_LINK_UP	BIT(1)
-+#define PCIE_GLB_STS_PHY_LINK_UP	BIT(9)
-+
-+#define PCIE_GLOBAL_INT_CAUSE1_REG	0x1C
-+#define PCIE_GLOBAL_INT_MASK1_REG	0x20
-+#define PCIE_INT_A_ASSERT_MASK		BIT(9)
-+#define PCIE_INT_B_ASSERT_MASK		BIT(10)
-+#define PCIE_INT_C_ASSERT_MASK		BIT(11)
-+#define PCIE_INT_D_ASSERT_MASK		BIT(12)
-+
-+#define PCIE_ARCACHE_TRC_REG		0x50
-+#define PCIE_AWCACHE_TRC_REG		0x54
-+#define PCIE_ARUSER_REG			0x5C
-+#define PCIE_AWUSER_REG			0x60
-+/*
-+ * AR/AW Cache defauls: Normal memory, Write-Back, Read / Write
-+ * allocate
-+ */
-+#define ARCACHE_DEFAULT_VALUE		0x3511
-+#define AWCACHE_DEFAULT_VALUE		0x5311
-+
-+#define DOMAIN_OUTER_SHAREABLE		0x2
-+#define AX_USER_DOMAIN_MASK		0x3
-+#define AX_USER_DOMAIN_SHIFT		4
-+
-+
-+
-+#define to_armada8k_pcie(x)	container_of(x, struct armada8k_pcie, pp)
-+
-+static int armada8k_pcie_link_up(struct pcie_port *pp)
-+{
-+	u32 reg;
-+	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
-+	u32 mask = PCIE_GLB_STS_RDLH_LINK_UP | PCIE_GLB_STS_PHY_LINK_UP;
-+
-+	reg = readl(pcie->base + PCIE_GLOBAL_STATUS_REG);
-+
-+	if ((reg & mask) == mask)
-+		return 1;
-+
-+	pr_debug("No link detected (Global-Status: 0x%08x).\n", reg);
-+	return 0;
-+}
-+
-+static void armada8k_pcie_host_init(struct pcie_port *pp)
-+{
-+	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
-+	void __iomem *base = pcie->base;
-+	int timeout = 1000;
-+	u32 reg;
-+
-+	if (!armada8k_pcie_link_up(pp)) {
-+		/* Disable LTSSM state machine to enable configuration */
-+		reg = readl(base + PCIE_GLOBAL_CONTROL_REG);
-+		reg &= ~(PCIE_APP_LTSSM_EN);
-+		writel(reg, base + PCIE_GLOBAL_CONTROL_REG);
-+	}
-+
-+	/* Set the device to root complex mode */
-+	reg = readl(base + PCIE_GLOBAL_CONTROL_REG);
-+	reg &= ~(PCIE_DEVICE_TYPE_MASK << PCIE_DEVICE_TYPE_SHIFT);
-+	reg |= PCIE_DEVICE_TYPE_RC << PCIE_DEVICE_TYPE_SHIFT;
-+	writel(reg, base + PCIE_GLOBAL_CONTROL_REG);
-+
-+	/* Set the PCIe master AxCache attributes */
-+	writel(ARCACHE_DEFAULT_VALUE, base + PCIE_ARCACHE_TRC_REG);
-+	writel(AWCACHE_DEFAULT_VALUE, base + PCIE_AWCACHE_TRC_REG);
-+
-+	/* Set the PCIe master AxDomain attributes */
-+	reg = readl(base + PCIE_ARUSER_REG);
-+	reg &= ~(AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT);
-+	reg |= DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT;
-+	writel(reg, base + PCIE_ARUSER_REG);
-+
-+	reg = readl(base + PCIE_AWUSER_REG);
-+	reg &= ~(AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT);
-+	reg |= DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT;
-+	writel(reg, base + PCIE_AWUSER_REG);
-+
-+	dw_pcie_setup_rc(pp);
-+
-+	/* Enable INT A-D interrupts */
-+	reg = readl(base + PCIE_GLOBAL_INT_MASK1_REG);
-+	reg |= PCIE_INT_A_ASSERT_MASK | PCIE_INT_B_ASSERT_MASK |
-+	       PCIE_INT_C_ASSERT_MASK | PCIE_INT_D_ASSERT_MASK;
-+	writel(reg, base + PCIE_GLOBAL_INT_MASK1_REG);
-+
-+	if (!armada8k_pcie_link_up(pp)) {
-+		/* Configuration done. Start LTSSM */
-+		reg = readl(base + PCIE_GLOBAL_CONTROL_REG);
-+		reg |= PCIE_APP_LTSSM_EN;
-+		writel(reg, base + PCIE_GLOBAL_CONTROL_REG);
-+	}
-+
-+	/* Wait until the link becomes active again */
-+	while (timeout) {
-+		if (armada8k_pcie_link_up(pp))
-+			break;
-+		udelay(1);
-+		timeout--;
-+	}
-+
-+	if (timeout == 0)
-+		dev_err(pp->dev, "Link not up after reconfiguration\n");
-+}
-+
-+static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
-+{
-+	struct pcie_port *pp = arg;
-+	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
-+	void __iomem *base = pcie->base;
-+	u32 val;
-+
-+	val = readl(base + PCIE_GLOBAL_INT_CAUSE1_REG);
-+	writel(val, base + PCIE_GLOBAL_INT_CAUSE1_REG);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static struct pcie_host_ops armada8k_pcie_host_ops = {
-+	.link_up = armada8k_pcie_link_up,
-+	.host_init = armada8k_pcie_host_init,
-+};
-+
-+static int armada8k_pcie_probe(struct platform_device *pdev)
-+{
-+	struct armada8k_pcie *pcie;
-+	struct pcie_port *pp;
-+	struct device *dev = &pdev->dev;
-+	struct resource *base;
-+	int ret;
-+
-+	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-+	if (!pcie)
-+		return -ENOMEM;
-+
-+	pcie->main_clk = devm_clk_get(dev, "main");
-+	if (!IS_ERR(pcie->main_clk))
-+		clk_prepare_enable(pcie->main_clk);
-+
-+	pcie->lane_clk = devm_clk_get(dev, "port");
-+	if (!IS_ERR(pcie->lane_clk))
-+		clk_prepare_enable(pcie->lane_clk);
-+
-+	pp = &pcie->pp;
-+
-+	platform_set_drvdata(pdev, pcie);
-+
-+	/* Get the dw-pcie unit configuration/control registers base. */
-+	base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ctrl");
-+	pp->dbi_base = devm_ioremap_resource(dev, base);
-+	if (IS_ERR(pp->dbi_base)) {
-+		dev_err(dev, "couldn't remap regs base %p\n", base);
-+		ret = PTR_ERR(pp->dbi_base);
-+		goto fail;
-+	}
-+
-+	pcie->base = pp->dbi_base + PCIE_VENDOR_REGS_OFFSET;
-+
-+	pp->dev = dev;
-+	pp->root_bus_nr = -1;
-+	pp->ops = &armada8k_pcie_host_ops;
-+
-+	pp->irq = platform_get_irq(pdev, 0);
-+	if (!pp->irq) {
-+		dev_err(dev, "failed to get irq for port\n");
-+		ret = -ENODEV;
-+		goto fail;
-+	}
-+
-+	ret = devm_request_irq(dev, pp->irq, armada8k_pcie_irq_handler,
-+				IRQF_SHARED, "armada8k-pcie", pp);
-+	if (ret) {
-+		dev_err(dev, "failed to request irq %d\n", pp->irq);
-+		goto fail;
-+	}
-+
-+	ret = dw_pcie_host_init(pp);
-+	if (ret) {
-+		dev_err(dev, "failed to initialize host: %d\n", ret);
-+		goto fail;
-+	}
-+
-+	return 0;
-+
-+fail:
-+	if (!IS_ERR(pcie->lane_clk))
-+		clk_disable_unprepare(pcie->lane_clk);
-+	if (!IS_ERR(pcie->main_clk))
-+		clk_disable_unprepare(pcie->main_clk);
-+
-+	return ret;
-+}
-+
-+static const struct of_device_id armada8k_pcie_of_match[] = {
-+	{ .compatible = "marvell,armada8k-pcie", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, armada8k_pcie_of_match);
-+
-+static struct platform_driver armada8k_pcie_driver = {
-+	.probe		= armada8k_pcie_probe,
-+	.driver = {
-+		.name	= "armada8k-pcie",
-+		.of_match_table = of_match_ptr(armada8k_pcie_of_match),
-+	},
-+};
-+
-+module_platform_driver(armada8k_pcie_driver);
-+
-+MODULE_DESCRIPTION("Armada 8k PCIe host controller driver");
-+MODULE_AUTHOR("Yehuda Yitshak <yehuday@marvell.com>");
-+MODULE_AUTHOR("Shadi Ammouri <shadi@marvell.com>");
-+MODULE_LICENSE("GPL v2");
--- 
-2.6.4
+Thanks,
+Gavin
+
+>This applies to linux-powerpc-next and additional unmerged patches:
+>
+>[v2,1/4] powerpc/eeh: Fix stale cached primary bus
+>powerpc/eeh: fix incorrect function name in comment
+>[V2] powerpc/powernv: Remove support for p5ioc2
+>[V7,1/6] powerpc/powernv: don't enable SRIOV when VF BAR has non 64bit-prefetchable BAR
+>92e963f Linux 4.5-rc1 - Linux powerpc next branch
+>
+>This patchset enables EEH on SRIOV VFs. The general idea is to create proper
+>VF edev and VF PE and handle them properly.
+>
+>Different from the Bus PE, VF PE just contain one VF. This introduces the
+>difference of EEH error handling on a VF PE. Generally, it has several
+>differences.
+>
+>First, the VF's removal and re-enumerate rely on its PF. VF has a tight
+>relationship between its PF. This is not proper to enumerate a VF by usual
+>scan procedure. That's why virtfn_add/virtfn_remove are exported in this patch
+>set.
+>
+>Second, the reset/restore of a VF is done in kernel space. FW is not aware of
+>the VF, this means the usual reset function done in FW will not work. One of
+>the patch will imitate the reset/restore function in kernel space.
+>
+>Third, the VF may be removed during the PF's error_detected function. In this
+>case, the original error_detected->slot_reset->resume sequence is not proper
+>to those removed VFs, since they are re-created by PF in a fresh state. A flag
+>in eeh_dev is introduce to mark the eeh_dev is in error state. By doing so, we
+>track whether this device needs to be reset or not.
+>
+>This has been tested both on host and in guest on Power8 with latest kernel
+>version.
+>
+>Changelog
+>=========
+>v14:
+>   * Rebased to linux-powerpc-next branch, plus additional patches related to
+>     powerpc/pci and powerpc/eeh subsystems.
+>   * Minor code changes
+>   * Fix build error on pSeries reported by mpe
+>v13:
+>   * move eeh_rmv_data{} to eeh_driver.c
+>v12:
+>   * Rephrase some commit log to make it more clear and specific
+>   * move vf_index assignment in CONFIG_PPC_POWERNV
+>   * merge "Cache VF index in pci_dn" with "Support error recovery for VF PE"
+>   * check the return value after eeh_dev_init() for VF
+>   * initialize the parameter before pass to read_config()
+>   * make pnv_pci_fixup_vf_mps() a dedicated patch, which fixup and store mps
+>     value in pci_dn
+>v11:
+>   * move vf_index assignment in marco CONFIG_PPC_POWERNV
+>   * merge Patch "Cache VF index in pci_dn" into Patch "Support error recovery
+>     for VF PE"
+>v10:
+>   * rebased on v4.2
+>   * delete the last patch "powerpc/powernv: compound PE for VFs" since after
+>     redesign of SRIOV, there is no compound PE for VFs now.
+>   * add two patches which fix problems found during tests
+>     powerpc/eeh: Support error recovery for VF PE
+>     powerpc/eeh: Handle hot removed VF when PF is EEH aware
+>v9:
+>   * split pcibios_bus_add_device() into a separate patch
+>   * Bjorn acked the PCI part and agreed this patch set to be merged from ppc
+>     tree
+>   * rebased on mpe/linux.git next branch
+>v8:
+>   * fix on checking the return value of pnv_eeh_do_flr()
+>   * introduced a weak function pcibios_bus_add_device() to create PE for VFs
+>v7:
+>   * fix compile error when PCI_IOV is not set
+>v6:
+>   * code / commit log refactor by Gavin
+>v5:
+>   * remove the compound field, iterate on Master VF PE instead
+>   * some code refine on PCI config restore and reset on VF
+>     the wait time for assert and deassert
+>     PCI device address format
+>     check on edev->pcie_cap and edev->aer_cap before access them
+>v4:
+>   * refine the change logs, comment and code style
+>   * change pnv_pci_fixup_vf_eeh() to pnv_eeh_vf_final_fixup() and remove the
+>     CONFIG_PCI_IOV macro
+>   * reorder patch 5/6 to make the logic more reasonable
+>   * remove remove_dev_pci_data()
+>   * remove the EEH_DEV_VF flag, use edev->physfn to identify a VF EEH DEV and
+>     remove related CONFIG_PCI_IOV macro
+>   * add the option for VF reset
+>   * fix the pnv_eeh_cfg_blocked() logic
+>   * replace pnv_pci_cfg_{read,write} with eeh_ops->{read,write}_config in
+>     pnv_eeh_vf_restore_config()
+>   * rename pnv_eeh_vf_restore_config() to pnv_eeh_restore_vf_config()
+>   * rename pnv_pci_fixup_vf_caps() to pnv_pci_vf_header_fixup() and move it
+>     to arch/powerpc/platforms/powernv/pci.c
+>   * add a field compound in pnv_ioda_pe to link compound PEs
+>   * handle compound PE for VF PEs
+>v3:
+>   * add back vf_index in pci_dn to track the VF's index
+>   * rename ppdev in eeh_dev to physfn for consistency
+>   * move edev->physfn assignment before dev->dev.archdata.edev is set
+>   * move pnv_pci_fixup_vf_eeh() and pnv_pci_fixup_vf_caps() to eeh-powernv.c
+>   * more clear and detail in commit log and comment in code
+>   * merge eeh_rmv_virt_device() with eeh_rmv_device()
+>   * move the cfg_blocked check logic from pnv_eeh_read/write_config() to
+>     pnv_eeh_cfg_blocked()
+>   * move the vf reset/restore logic into its own patch, two patches are
+>     created.
+>     powerpc/powernv: Support PCI config restore for VFs
+>     powerpc/powernv: Support EEH reset for VFs
+>   * simplify the vf reset logic
+>v2:
+>   * add prefix pci_iov_ to virtfn_add/virtfn_remove
+>   * use EEH_DEV_VF as a flag for a VF's eeh_dev
+>   * use eeh_dev instead of edev in change log
+>   * remove vf_index in eeh_dev, calculate it from pdn->busno and devfn
+>   * do eeh_add_device_late() and eeh_sysfs_add_device() both after pci_dev is
+>     well initialized
+>   * do FLR to reset a VF PE
+>   * imitate the restore function in FW for VF
+>   * remove the reverse order patch, since it is still under discussion
+>
+>Wei Yang (9):
+>  PCI/IOV: Rename and export virtfn_{add, remove}
+>  PCI: Add pcibios_bus_add_device() weak function
+>  powerpc/pci: Remove VFs prior to PF
+>  powerpc/eeh: Cache normal BARs, not windows or IOV BARs
+>  powerpc/eeh: EEH device for VF
+>  powerpc/eeh: Create PE for VFs
+>  powerpc/powernv: Support EEH reset for VF PE
+>  powerpc/powernv: Support PCI config restore for VFs
+>  powerpc/eeh: powerpc/eeh: Support error recovery for VF PE
+>
+> arch/powerpc/include/asm/eeh.h               |   5 +
+> arch/powerpc/include/asm/pci-bridge.h        |   2 +
+> arch/powerpc/kernel/eeh.c                    |  17 +-
+> arch/powerpc/kernel/eeh_cache.c              |  11 +-
+> arch/powerpc/kernel/eeh_dev.c                |   1 +
+> arch/powerpc/kernel/eeh_driver.c             | 137 ++++++++++++---
+> arch/powerpc/kernel/eeh_pe.c                 |  10 +-
+> arch/powerpc/kernel/pci-hotplug.c            |   2 +-
+> arch/powerpc/kernel/pci_dn.c                 |  19 ++-
+> arch/powerpc/platforms/powernv/eeh-powernv.c | 238 ++++++++++++++++++++++++++-
+> drivers/pci/bus.c                            |   3 +
+> drivers/pci/iov.c                            |  10 +-
+> include/linux/pci.h                          |   9 +
+> 13 files changed, 417 insertions(+), 47 deletions(-)
+>
+>-- 
+>2.1.0
+>
 
