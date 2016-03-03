@@ -1,76 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:48174 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932764AbcCCQyH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Mar 2016 11:54:07 -0500
+Subject: [PATCH v1 01/12] PCI: Mark shadow copy of VGA ROM as
+ IORESOURCE_PCI_FIXED
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Tony Luck <tony.luck@intel.com>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+	linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Bruno =?utf-8?q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
+	Daniel Stone <daniel@fooishbar.org>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Ville =?utf-8?b?U3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
+Date: Thu, 03 Mar 2016 10:53:58 -0600
+Message-ID: <20160303165358.3025.23146.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20160309201750.GA26222@wunner.de>
-References: <1457504045-12738-1-git-send-email-airlied@gmail.com>
-	<20160309143336.GA26158@wunner.de>
-	<CADnq5_MUW00AcYcM4WPREOd8ng9AfggZk6U4YU7j50s6BBeMNQ@mail.gmail.com>
-	<20160309201750.GA26222@wunner.de>
-Date: Thu, 10 Mar 2016 08:02:13 +1000
-Message-ID: <CAPM=9txqnnL9UtjYD22BG2QTXdBndJBP_VRmC-=bDkWb7ddRoQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] vga_switcheroo: add power support for windows 10 machines.
-From: Dave Airlie <airlied@gmail.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Alex Deucher <alexdeucher@gmail.com>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Maling list - DRI developers
-	<dri-devel@lists.freedesktop.org>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10 March 2016 at 06:17, Lukas Wunner <lukas@wunner.de> wrote:
-> Hi,
->
-> On Wed, Mar 09, 2016 at 11:52:33AM -0500, Alex Deucher wrote:
->> On Wed, Mar 9, 2016 at 9:33 AM, Lukas Wunner <lukas@wunner.de> wrote:
->> > On Wed, Mar 09, 2016 at 04:14:04PM +1000, Dave Airlie wrote:
->> >> From: Dave Airlie <airlied@redhat.com>
->> >>
->> >> Windows 10 seems to have standardised power control for the
->> >> optimus/powerxpress laptops using PR3 power resource hooks.
->> >
->> > What happened to the Optimus DSM, does this still work? If not,
->> > echoing OFF to the vgaswitcheroo sysfs file won't power down the
->> > GPU now, right? (If runtime pm is disabled in nouveau.)
->> >
->> If the OS identifies itself as windows 10 or newer when initializing
->> ACPI, the standardized interfaces should be used if they exist.  I'm
->> not sure if there is any explicit policy on the vendor specific ones,
->> but I suspect they are probably broken in that case since I doubt the
->> OEM validates them when the standardized interfaces are available.
->
-> The vendor interface (Optimus DSM) must be present, otherwise the call
-> to nouveau_is_optimus() in patch [2/2] would return false.
->
-> But indeed it seems to not be working, otherwise why would the patches
-> be necessary?
->
-> My point is that the chosen approach does not square with vga_switcheroo's
-> architecture: Normally it's the handler's job to power the GPU up/down.
-> If runtime pm is enabled then vga_switcheroo_init_domain_pm_ops()
-> activates runtime_suspend/_resume callbacks which ask the handler to
-> flip the power switch.
->
-> However these two patches add *additional* runtime_suspend/_resume
-> callbacks which do not rely on the handler at all. The handler is thus
-> useless. This becomes apparent when loading the nouveau module with
-> runpm=0: Normally the user is then able to manually power the GPU
-> up/down by echoing ON or OFF to the vgaswitcheroo sysfs file. With the
-> chosen approach this will likely not work because the handler only knows
-> how to invoke the DSM, it doesn't know anything about PR3.
->
-> Hence my suggestion to solve this with an additional handler which
-> gets used in lieu of the nouveau DSM handler.
+A shadow copy of an option ROM is placed by the BIOS as a fixed address.
+Set IORESOURCE_PCI_FIXED to indicate that we can't move the shadow copy.
+This prevents warnings like the following when we assign resources:
 
-I'll think about this a bit more, but really I don't care for vgaswitcheroo
-manual power control anymore. It's in debugfs for a reason, it was a stopgap
-until we got dynamic power control.
+  BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
 
-If dynamic power control isn't working for some people we should fix that,
-but supporting nouveau.runpm=0 and manual power control is so far down
-the list of things I care about.
+This warning is emitted by pdev_sort_resources(), which already ignores
+IORESOURCE_PCI_FIXED resources.
 
-Dave.
+Link: http://lkml.kernel.org/r/CA+55aFyVMfTBB0oz_yx8+eQOEJnzGtCsYSj9QuhEpdZ9BHdq5A@mail.gmail.com
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/ia64/pci/fixup.c |    3 ++-
+ arch/x86/pci/fixup.c  |    3 ++-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
+index fc505d5..fd9ceff 100644
+--- a/arch/ia64/pci/fixup.c
++++ b/arch/ia64/pci/fixup.c
+@@ -61,7 +61,8 @@ static void pci_fixup_video(struct pci_dev *pdev)
+ 	if (!vga_default_device() || pdev == vga_default_device()) {
+ 		pci_read_config_word(pdev, PCI_COMMAND, &config);
+ 		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
+-			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
++			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW |
++				IORESOURCE_PCI_FIXED;
+ 			dev_printk(KERN_DEBUG, &pdev->dev, "Video device with shadowed ROM\n");
+ 		}
+ 	}
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 0ae7e9f..dac027c 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -336,7 +336,8 @@ static void pci_fixup_video(struct pci_dev *pdev)
+ 	if (!vga_default_device() || pdev == vga_default_device()) {
+ 		pci_read_config_word(pdev, PCI_COMMAND, &config);
+ 		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
+-			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
++			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW |
++				IORESOURCE_PCI_FIXED;
+ 			dev_printk(KERN_DEBUG, &pdev->dev, "Video device with shadowed ROM\n");
+ 		}
+ 	}
+
