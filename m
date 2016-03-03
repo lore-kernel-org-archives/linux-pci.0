@@ -1,54 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p3plsmtps2ded02.prod.phx3.secureserver.net ([208.109.80.59]:54989
-	"EHLO p3plsmtps2ded02.prod.phx3.secureserver.net"
+Received: from mail.kernel.org ([198.145.29.136]:48084 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753420AbcC3WLy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 30 Mar 2016 18:11:54 -0400
-From: Jake Oshins <jakeo@microsoft.com>
-To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v2 4/7] drivers:hv: Reverse order of resources in hyperv_mmio
-Date: Wed, 30 Mar 2016 16:48:44 -0700
-Message-Id: <1459381727-25039-5-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1459381727-25039-1-git-send-email-jakeo@microsoft.com>
-References: <y>
- <1459381727-25039-1-git-send-email-jakeo@microsoft.com>
+	id S932703AbcCCQxz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Mar 2016 11:53:55 -0500
+Subject: [PATCH v1 00/12] PCI: Rework shadow ROM handling
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Tony Luck <tony.luck@intel.com>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+	linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Bruno =?utf-8?q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
+	Daniel Stone <daniel@fooishbar.org>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Ville =?utf-8?b?U3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
+Date: Thu, 03 Mar 2016 10:53:50 -0600
+Message-ID: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A patch later in this series allocates child nodes
-in this resource tree.  For that to work, this tree
-needs to be sorted in ascending order.
+The purpose of this series is to:
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+  - Fix the "BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment"
+    messages reported by Linus [1], Andy [2], and others.
+
+  - Move arch-specific shadow ROM location knowledge, e.g.,
+    0xC0000-0xDFFFF, from PCI core to arch code.
+
+  - Fix the ia64 and MIPS Loongson 3 oddity of keeping virtual
+    addresses in shadow ROM struct resource (resources should always
+    contain *physical* addresses).
+
+  - Remove now-unused IORESOURCE_ROM_COPY and IORESOURCE_ROM_BIOS_COPY
+    flags.
+
+This series is based on v4.5-rc1, and it's available on my
+pci/resource git branch (along with a couple tiny unrelated patches)
+at [3].
+
+Bjorn
+
+
+[1] http://lkml.kernel.org/r/CA+55aFyVMfTBB0oz_yx8+eQOEJnzGtCsYSj9QuhEpdZ9BHdq5A@mail.gmail.com
+[2] http://lkml.kernel.org/r/CALCETrV+RwNPzxyL8UVNsrAGu-6cCzD_Cc9PFJT2NCTJPLZZiw@mail.gmail.com
+[3] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/resource
+
+
 ---
- drivers/hv/vmbus_drv.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-index 60553c1..1ce47d0 100644
---- a/drivers/hv/vmbus_drv.c
-+++ b/drivers/hv/vmbus_drv.c
-@@ -1049,7 +1049,6 @@ static acpi_status vmbus_walk_resources(struct acpi_resource *res, void *ctx)
- 	new_res->end = end;
+Bjorn Helgaas (12):
+      PCI: Mark shadow copy of VGA ROM as IORESOURCE_PCI_FIXED
+      PCI: Don't assign or reassign immutable resources
+      PCI: Don't enable/disable ROM BAR if we're using a RAM shadow copy
+      PCI: Set ROM shadow location in arch code, not in PCI core
+      PCI: Clean up pci_map_rom() whitespace
+      ia64/PCI: Use temporary struct resource * to avoid repetition
+      ia64/PCI: Use ioremap() instead of open-coded equivalent
+      ia64/PCI: Keep CPU physical (not virtual) addresses in shadow ROM resource
+      MIPS: Loongson 3: Use temporary struct resource * to avoid repetition
+      MIPS: Loongson 3: Keep CPU physical (not virtual) addresses in shadow ROM resource
+      PCI: Remove unused IORESOURCE_ROM_COPY and IORESOURCE_ROM_BIOS_COPY
+      PCI: Simplify sysfs ROM cleanup
 
- 	/*
--	 * Stick ranges from higher in address space at the front of the list.
- 	 * If two ranges are adjacent, merge them.
- 	 */
- 	do {
-@@ -1070,7 +1069,7 @@ static acpi_status vmbus_walk_resources(struct acpi_resource *res, void *ctx)
- 			break;
- 		}
 
--		if ((*old_res)->end < new_res->start) {
-+		if ((*old_res)->start > new_res->end) {
- 			new_res->sibling = *old_res;
- 			if (prev_res)
- 				(*prev_res)->sibling = new_res;
---
-1.9.1
-
+ arch/ia64/pci/fixup.c              |   21 +++++++--
+ arch/ia64/sn/kernel/io_acpi_init.c |   22 ++++++----
+ arch/ia64/sn/kernel/io_init.c      |   51 ++++++++--------------
+ arch/mips/pci/fixup-loongson3.c    |   19 +++++---
+ arch/x86/pci/fixup.c               |   21 +++++++--
+ drivers/pci/pci-sysfs.c            |   13 +-----
+ drivers/pci/remove.c               |    1 
+ drivers/pci/rom.c                  |   83 +++++++++++-------------------------
+ drivers/pci/setup-res.c            |    6 +++
+ include/linux/ioport.h             |    4 --
+ 10 files changed, 111 insertions(+), 130 deletions(-)
