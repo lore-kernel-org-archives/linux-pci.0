@@ -1,135 +1,214 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f68.google.com ([209.85.213.68]:33722 "EHLO
-	mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932084AbcCKWIM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Mar 2016 17:08:12 -0500
+Received: from li153-180.members.linode.com ([109.74.206.180]:41873 "EHLO
+	mail.tekno-soft.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756689AbcCCJas (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Mar 2016 04:30:48 -0500
+Subject: Re: iMX6q PCIe phy link never came up on kernel v4.4.x
+To: Richard Zhu <hongxing.zhu@nxp.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+References: <56D5E3DF.9030906@tekno-soft.it> <56D71F27.7070708@tekno-soft.it>
+ <20160302195634.GA19223@localhost>
+ <DBXPR04MB2706C7C2FD2348D205331998CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>
+From: Roberto Fichera <kernel@tekno-soft.it>
+Message-ID: <56D80435.90408@tekno-soft.it>
+Date: Thu, 3 Mar 2016 10:30:29 +0100
 MIME-Version: 1.0
-In-Reply-To: <20160310174030.GB17238@localhost>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-	<1456366370-28995-7-git-send-email-yinghai@kernel.org>
-	<20160310174030.GB17238@localhost>
-Date: Fri, 11 Mar 2016 14:08:11 -0800
-Message-ID: <CAE9FiQVAPfb-PYGQoRJzXdn3NAOK-X25M9pWvR2m7_9qT5qQ+w@mail.gmail.com>
-Subject: Re: [PATCH v10 06/59] PCI: Kill wrong quirk about M7101
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Meelis Roos <mroos@linux.ee>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <DBXPR04MB2706C7C2FD2348D205331998CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 10, 2016 at 9:40 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Wed, Feb 24, 2016 at 06:11:57PM -0800, Yinghai Lu wrote:
->> Meelis reported that qla2000 driver does not get loaded on one sparc system.
+On 03/03/2016 10:15 AM, Richard Zhu wrote:
+
+Hi Richard,
+
+>> -----Original Message-----
+>> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+>> Sent: Thursday, March 03, 2016 3:57 AM
+>> To: Roberto Fichera
+>> Cc: linux-pci@vger.kernel.org; Richard Zhu; Lucas Stach
+>> Subject: Re: iMX6q PCIe phy link never came up on kernel v4.4.x
 >>
->> schizo f00732d0: PCI host bridge to bus 0001:00
->> pci_bus 0001:00: root bus resource [io  0x7fe01000000-0x7fe01ffffff] (bus address [0x0000-0xffffff])
->> pci 0001:00:06.0: quirk: [io  0x7fe01000800-0x7fe0100083f] claimed by ali7101 ACPI
->> pci 0001:00:06.0: quirk: [io  0x7fe01000600-0x7fe0100061f] claimed by ali7101 SMB
->> pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
+>> [+cc Richard, Lucas]
 >>
->> So the quirk for M7101 claim the io range early.
->>
->> According to spec with M7101 in M1543 page 103/104,
->>       http://www.versalogic.com/Support/Downloads/pdf/ali1543.pdf
->> 0xe0, and 0xe2 do not include address info for acpi/smb.
->>
->> Kill wrong quirk about them.
+>> On Wed, Mar 02, 2016 at 06:13:11PM +0100, Roberto Fichera wrote:
+>>> On 03/01/2016 07:47 PM, Roberto Fichera wrote:
+>>>
+>>> Sorry guy if I push a little bit about this, I've added some debugging code
+>> regarding my issue:
+>>> [    0.557268] imx6q-pcie 1ffc000.pcie: phy link never came up
+>>> [    0.557290] imx6q-pcie 1ffc000.pcie: LTSSM current state: 0x3
+>> (S_POLL_COMPLIANCE)
+>>> [    0.557304] imx6q-pcie 1ffc000.pcie: PIPE transmit K indication: 1
+>>> [    0.557318] imx6q-pcie 1ffc000.pcie: PIPE Transmit data: 0x4abc
+>>> [    0.557332] imx6q-pcie 1ffc000.pcie: Receiver is receiving logical idle: no
+>>> [    0.557345] imx6q-pcie 1ffc000.pcie: Second symbol is also idle (16-bit PHY
+>> interface only): no
+>>> [    0.557360] imx6q-pcie 1ffc000.pcie: Currently receiving k237 (PAD) in
+>> place of link number: no
+>>> [    0.557372] imx6q-pcie 1ffc000.pcie: Currently receiving k237 (PAD) in
+>> place of lane number: no
+>>> [    0.557385] imx6q-pcie 1ffc000.pcie: Link control bits advertised by link
+>> partner: 0xa
+>>> [    0.557398] imx6q-pcie 1ffc000.pcie: Receiver detected lane reversal: no
+>>> [    0.557410] imx6q-pcie 1ffc000.pcie: TS2 training sequence received: no
+>>> [    0.557422] imx6q-pcie 1ffc000.pcie: TS1 training sequence received: no
+>>> [    0.557434] imx6q-pcie 1ffc000.pcie: Receiver reports skip reception: no
+>>> [    0.557446] imx6q-pcie 1ffc000.pcie: LTSSM reports PHY link up: no
+>>> [    0.557460] imx6q-pcie 1ffc000.pcie: A skip ordered set has been
+>> transmitted: no
+>>> [    0.557474] imx6q-pcie 1ffc000.pcie: Link number advertised/confirmed by
+>> link partner: 68
+>>> [    0.557487] imx6q-pcie 1ffc000.pcie: Application request to initiate training
+>> reset: no
+>>> [    0.557500] imx6q-pcie 1ffc000.pcie: PIPE transmit compliance request: no
+>>> [    0.557512] imx6q-pcie 1ffc000.pcie: PIPE transmit electrical idle request:
+>> no
+>>> [    0.557524] imx6q-pcie 1ffc000.pcie: PIPE receiver detect/loopback request:
+>> no
+>>> [    0.557536] imx6q-pcie 1ffc000.pcie: LTSSM-negotiated link reset: yes
+>>> [    0.557547] imx6q-pcie 1ffc000.pcie: LTSSM testing for polarity reversal: no
+>>> [    0.557559] imx6q-pcie 1ffc000.pcie: LTSSM performing link training: no
+>>> [    0.557572] imx6q-pcie 1ffc000.pcie: LTSSM in DISABLE state; link
+>> inoperable: no
+>>> [    0.557583] imx6q-pcie 1ffc000.pcie: Scrambling disabled for the link: no
+>>> [    0.558156] imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
+>>> [    0.558179] pci_bus 0000:00: root bus resource [bus 00-ff]
+>>> [    0.558197] pci_bus 0000:00: root bus resource [??? 0x01f00000-0x01f7ffff
+>> flags 0x0]
+>>> [    0.558212] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+>>> [    0.558226] pci_bus 0000:00: root bus resource [mem 0x01000000-
+>> 0x01efffff]
+>>> [    0.558346] pci 0000:00:00.0: [16c3:abcd] type 01 class 0x060400
+>>> [    0.558468] pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x000fffff]
+>>> [    0.558510] pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff pref]
+>>> [    0.558708] pci 0000:00:00.0: supports D1
+>>> [    0.558727] pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
+>>> [    0.559495] PCI: bus0: Fast back to back transfers disabled
+>>> [    0.559834] PCI: bus1: Fast back to back transfers enabled
+>>> [    0.559997] pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-0x010fffff]
+>>> [    0.560025] pci 0000:00:00.0: BAR 6: assigned [mem 0x01100000-0x0110ffff
+>> pref]
+>>> [    0.560047] pci 0000:00:00.0: PCI bridge to [bus 01]
+>>> [    0.560812] pcieport 0000:00:00.0: Signaling PME through PCIe PME
+>> interrupt
+>>> [    0.560837] pcie_pme 0000:00:00.0:pcie01: service driver pcie_pme loaded
+>>>
+>>> Any idea what's going on?
+>>>
+>>> Thanks in advance,
+>>> Roberto Fichera.
+>>>
+>>>> Hi There,
+>>>>
+>>>> Working on a custom iMX6q board I'm getting a PCIe phy link never
+>>>> came up, even if uboot seems detecting everything ok. My DTS is
+>>>> enabling PCIe with
+>>>>
+>>>> &pcie {
+>>>>     pinctrl-names = "default";
+>>>>     pinctrl-0 = <&pinctrl_pcie_reset>;
+>>>>     reset-gpio = <&gpio7 12 0>;
+>>>>     status = "okay";
+>>>> };
+>>>>
+>>>> The PCIe is connected to a PCIe-to-PCI TI XIO2001. The XIO2001 power
+>>>> is controlled by GPIO_9 and the corresponding fixed regulator is set
+>>>> as
+>>>>
+>>>> 		reg_pcie: regulator@4 {
+>>>> 			compatible = "regulator-fixed";
+>>>> 			reg = <4>;
+>>>> 			pinctrl-names = "default";
+>>>> 			pinctrl-0 = <&pinctrl_pcie_reg>;
+>>>> 			regulator-name = "MPCIE_3V3";
+>>>> 			regulator-min-microvolt = <3300000>;
+>>>> 			regulator-max-microvolt = <3300000>;
+>>>> 			gpio = <&gpio1 9 0>;
+>>>> 			regulator-always-on;
+>>>> 			enable-active-high;
+>>>> 		};
+>>>>
+>>>> so I'd like to know if there is any other special setup to do in order to get it
+>> to work on a v4.4.x kernel.
+>>>> Or anyway how to debug it.
+>>>>
+>>>> Any suggestion?
+>>>>
+> [Zhu hongxing] It seems that the link down is caused by the different initialization procedure.
+> Can you take a try by the previouse kernel version?
+> Or, you can dump and compare the register values just before the LTSSM_ENABLE is asserted between Linux and uboot.
+
+Which register do you need to dump?
+
+>>>> Thanks in advance,
+>>>> Roberto Fichera.
+>>>>
+>>>> U-Boot 2014.04-imx_v2014.04_3.14.38_6qp_beta+g6e9282c (Feb 15 2016 -
+>>>> 10:02:31)
+>>>>
+>>>> CPU:   Freescale i.MX6Q rev1.5 at 792 MHz
+>>>> CPU:   Temperature 35 C, calibration data: 0x5664d569
+>>>> Reset cause: POR
+>>>> Board: Janas iMX6Q (ID:e315c064140749d4)
+>>>> I2C:   ready
+>>>> DRAM:  2 GiB
+>>>> MMC:   FSL_SDHC: 0, FSL_SDHC: 1
+>>>> *** Warning - bad CRC, using default environment
+>>>>
+>>>>   00:01.0     - 16c3:abcd - Bridge device
+>>>>    01:00.0    - 104c:8240 - Bridge device
+>>>>     02:04.0   - 1397:08b4 - Network controller
+>>>> In:    serial
+>>>> Out:   serial
+>>>> Err:   serial
+>>>> Found PFUZE100! deviceid=10,revid=21 mmc1(part 0) is current device
+>>>> Net:   FEC [PRIME]
+>>>> Warning: failed to set MAC address
+>>>>
+>>>> Normal Boot
+>>>> ....
+>>>> ....
+>>>> [    0.236141] PCI host bridge /soc/pcie@0x01000000 ranges:
+>>>> [    0.236162]   No bus range found for /soc/pcie@0x01000000, using [bus
+>> 00-ff]
+>>>> [    0.236213]   err 0x01f00000..0x01f7ffff -> 0x01f00000
+>>>> [    0.236250]    IO 0x01f80000..0x01f8ffff -> 0x00000000
+>>>> [    0.236330]   MEM 0x01000000..0x01efffff -> 0x01000000
+>>>> -->>> [    0.546690] imx6q-pcie 1ffc000.pcie: phy link never came up
+>>>> [    0.547263] imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
+>>>> [    0.547287] pci_bus 0000:00: root bus resource [bus 00-ff]
+>>>> [    0.547304] pci_bus 0000:00: root bus resource [??? 0x01f00000-
+>> 0x01f7ffff flags 0x0]
+>>>> [    0.547321] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+>>>> [    0.547335] pci_bus 0000:00: root bus resource [mem 0x01000000-
+>> 0x01efffff]
+>>>> [    0.548608] PCI: bus0: Fast back to back transfers disabled
+>>>> [    0.548950] PCI: bus1: Fast back to back transfers enabled
+>>>> [    0.549107] pci 0000:00:00.0: BAR 0: assigned [mem 0x01000000-
+>> 0x010fffff]
+>>>> [    0.549137] pci 0000:00:00.0: BAR 6: assigned [mem 0x01100000-
+>> 0x0110ffff pref]
+>>>> [    0.549159] pci 0000:00:00.0: PCI bridge to [bus 01]
+>>>> [    0.549945] pcieport 0000:00:00.0: Signaling PME through PCIe PME
+>> interrupt
+>>>> ...
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-pci"
+>>>> in the body of a message to majordomo@vger.kernel.org More majordomo
+>>>> info at  http://vger.kernel.org/majordomo-info.html
+>>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-pci"
+>>> in the body of a message to majordomo@vger.kernel.org More majordomo
+>>> info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
-> This needs an explanation for why the quirk was added in the first
-> place, and why it is now safe to remove it.
 
-The related commit does not tell much about why it is there exactly.
-But it is added the same time with intel piix4.
-
-Maybe Linus could have some hint about that quirk?
-
-commit 34f550135e349102bd065488eabbbb217ab27f0d
-Author: Linus Torvalds <torvalds@linuxfoundation.org>
-Date:   Fri Nov 23 15:32:20 2007 -0500
-
-    Import 2.3.49pre2
-
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index cda39a5..8029b19 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -113,6 +113,55 @@ static void __init quirk_s3_64M(struct pci_dev *dev)
-        }
- }
-
-+static void __init quirk_io_region(struct pci_dev *dev, unsigned region, unsign
-ed size, int nr)
-+{
-+       region &= ~(size-1);
-+       if (region) {
-+               struct resource *res = dev->resource + nr;
-+
-+               res->name = dev->name;
-+               res->start = region;
-+               res->end = region + size - 1;
-+               res->flags = IORESOURCE_IO;
-+               pci_claim_resource(dev, nr);
-+       }
-+}
-+
-+/*
-+ * Let's make the southbridge information explicit instead
-+ * of having to worry about people probing the ACPI areas,
-+ * for example.. (Yes, it happens, and if you read the wrong
-+ * ACPI register it will put the machine to sleep with no
-+ * way of waking it up again. Bummer).
-+ *
-+ * ALI M7101: Two IO regions pointed to by words at
-+ *     0xE0 (64 bytes of ACPI registers)
-+ *     0xE2 (32 bytes of SMB registers)
-+ */
-+static void __init quirk_ali7101(struct pci_dev *dev)
-+{
-+       u16 region;
-+
-+       pci_read_config_word(dev, 0xE0, &region);
-+       quirk_io_region(dev, region, 64, PCI_BRIDGE_RESOURCES);
-+       pci_read_config_word(dev, 0xE2, &region);
-+       quirk_io_region(dev, region, 32, PCI_BRIDGE_RESOURCES+1);
-+}
-+
-+/*
-+ * PIIX4 ACPI: Two IO regions pointed to by longwords at
-+ *     0x40 (64 bytes of ACPI registers)
-+ *     0x90 (32 bytes of SMB registers)
-+ */
-+static void __init quirk_piix4acpi(struct pci_dev *dev)
-+{
-+       u32 region;
-+
-+       pci_read_config_dword(dev, 0x40, &region);
-+       quirk_io_region(dev, region, 64, PCI_BRIDGE_RESOURCES);
-+       pci_read_config_dword(dev, 0x90, &region);
-+       quirk_io_region(dev, region, 32, PCI_BRIDGE_RESOURCES+1);
-+}
-
- /*
-  *  The main table of quirks.
-@@ -143,6 +192,8 @@ static struct pci_fixup pci_fixups[] __initdata = {
-        { PCI_FIXUP_FINAL,      PCI_VENDOR_ID_INTEL,
-PCI_DEVICE_ID_INTEL_82443BX_2,  quirk_natoma },
-        { PCI_FIXUP_FINAL,      PCI_VENDOR_ID_SI,
-PCI_DEVICE_ID_SI_5597,          quirk_nopcipci },
-        { PCI_FIXUP_FINAL,      PCI_VENDOR_ID_SI,
-PCI_DEVICE_ID_SI_496,           quirk_nopcipci },
-+       { PCI_FIXUP_FINAL,      PCI_VENDOR_ID_INTEL,
-PCI_DEVICE_ID_INTEL_82371AB_3,  quirk_piix4acpi },
-+       { PCI_FIXUP_FINAL,      PCI_VENDOR_ID_AL,
-PCI_DEVICE_ID_AL_M7101,         quirk_ali7101 },
-        { 0 }
- };
