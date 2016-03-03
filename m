@@ -1,223 +1,71 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH] PCI: Include pci/hotplug Kconfig directly from pci/Kconfig
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:48736 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932935AbcCCQzH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Mar 2016 11:55:07 -0500
+Subject: [PATCH v1 09/12] MIPS: Loongson 3: Use temporary struct resource *
+ to avoid repetition
 To: linux-pci@vger.kernel.org
 From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arch@vger.kernel.org,
-	Bogicevic Sasa <brutallesale@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>
-Date: Tue, 08 Mar 2016 15:27:15 -0600
-Message-ID: <20160308212714.752.96106.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
+	Tony Luck <tony.luck@intel.com>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+	linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Bruno =?utf-8?q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
+	Daniel Stone <daniel@fooishbar.org>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Ville =?utf-8?b?U3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
+Date: Thu, 03 Mar 2016 10:55:00 -0600
+Message-ID: <20160303165500.3025.78202.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Include pci/hotplug/Kconfig directly from pci/Kconfig, so arches don't
-have to source both pci/Kconfig and pci/hotplug/Kconfig.
+Use a temporary struct resource pointer to avoid needless repetition of
+"pdev->resource[PCI_ROM_RESOURCE]".  No functional change intended.
 
-Note that this effectively adds pci/hotplug/Kconfig to the following
-arches, because they already sourced drivers/pci/Kconfig but they
-previously did not source drivers/pci/hotplug/Kconfig:
-
-  alpha
-  arm
-  avr32
-  frv
-  m68k
-  microblaze
-  mn10300
-  sparc
-  unicore32
-
-Inspired-by-patch-from: Bogicevic Sasa <brutallesale@gmail.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/arm64/Kconfig     |    1 -
- arch/blackfin/Kconfig  |    2 --
- arch/ia64/Kconfig      |    2 --
- arch/m32r/Kconfig      |    2 --
- arch/mips/Kconfig      |    2 --
- arch/powerpc/Kconfig   |    2 --
- arch/s390/Kconfig      |    1 -
- arch/sh/Kconfig        |    2 --
- arch/tile/Kconfig      |    3 ---
- arch/x86/Kconfig       |    2 --
- arch/xtensa/Kconfig    |    2 --
- drivers/parisc/Kconfig |    2 --
- drivers/pci/Kconfig    |    1 +
- 13 files changed, 1 insertion(+), 23 deletions(-)
+ arch/mips/pci/fixup-loongson3.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 128ec3c..fc8089d 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -235,7 +235,6 @@ config PCI_SYSCALL
- 	def_bool PCI
+diff --git a/arch/mips/pci/fixup-loongson3.c b/arch/mips/pci/fixup-loongson3.c
+index d708ae4..b66b1eb 100644
+--- a/arch/mips/pci/fixup-loongson3.c
++++ b/arch/mips/pci/fixup-loongson3.c
+@@ -40,20 +40,20 @@ int __init pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
  
- source "drivers/pci/Kconfig"
--source "drivers/pci/hotplug/Kconfig"
+ static void pci_fixup_radeon(struct pci_dev *pdev)
+ {
+-	if (pdev->resource[PCI_ROM_RESOURCE].start)
++	struct resource *res = &pdev->resource[PCI_ROM_RESOURCE];
++
++	if (res->start)
+ 		return;
  
- endmenu
+ 	if (!loongson_sysconf.vgabios_addr)
+ 		return;
  
-diff --git a/arch/blackfin/Kconfig b/arch/blackfin/Kconfig
-index af76634..a63c122 100644
---- a/arch/blackfin/Kconfig
-+++ b/arch/blackfin/Kconfig
-@@ -1233,8 +1233,6 @@ source "drivers/pci/Kconfig"
+-	pdev->resource[PCI_ROM_RESOURCE].start =
+-		loongson_sysconf.vgabios_addr;
+-	pdev->resource[PCI_ROM_RESOURCE].end   =
+-		loongson_sysconf.vgabios_addr + 256*1024 - 1;
+-	pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_COPY;
++	res->start = loongson_sysconf.vgabios_addr;
++	res->end   = res->start + 256*1024 - 1;
++	res->flags |= IORESOURCE_ROM_COPY;
  
- source "drivers/pcmcia/Kconfig"
+ 	dev_info(&pdev->dev, "BAR %d: assigned %pR for Radeon ROM\n",
+-			PCI_ROM_RESOURCE, &pdev->resource[PCI_ROM_RESOURCE]);
++		 PCI_ROM_RESOURCE, res);
+ }
  
--source "drivers/pci/hotplug/Kconfig"
--
- endmenu
- 
- menu "Executable file formats"
-diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-index 1bc4b5a..b534eba 100644
---- a/arch/ia64/Kconfig
-+++ b/arch/ia64/Kconfig
-@@ -576,8 +576,6 @@ config PCI_SYSCALL
- 
- source "drivers/pci/Kconfig"
- 
--source "drivers/pci/hotplug/Kconfig"
--
- source "drivers/pcmcia/Kconfig"
- 
- endmenu
-diff --git a/arch/m32r/Kconfig b/arch/m32r/Kconfig
-index 836ac5a..e1b1236 100644
---- a/arch/m32r/Kconfig
-+++ b/arch/m32r/Kconfig
-@@ -386,8 +386,6 @@ config ISA
- 
- source "drivers/pcmcia/Kconfig"
- 
--source "drivers/pci/hotplug/Kconfig"
--
- endmenu
- 
- 
-diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-index d21eec7..d16204d 100644
---- a/arch/mips/Kconfig
-+++ b/arch/mips/Kconfig
-@@ -2935,8 +2935,6 @@ config ZONE_DMA32
- 
- source "drivers/pcmcia/Kconfig"
- 
--source "drivers/pci/hotplug/Kconfig"
--
- config RAPIDIO
- 	tristate "RapidIO support"
- 	depends on PCI
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index 247a09f..e28f86e 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -832,8 +832,6 @@ source "drivers/pci/Kconfig"
- 
- source "drivers/pcmcia/Kconfig"
- 
--source "drivers/pci/hotplug/Kconfig"
--
- config HAS_RAPIDIO
- 	bool
- 	default n
-diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
-index 9918433..e70d498 100644
---- a/arch/s390/Kconfig
-+++ b/arch/s390/Kconfig
-@@ -605,7 +605,6 @@ config PCI_NR_MSI
- 	  PCI devices.
- 
- source "drivers/pci/Kconfig"
--source "drivers/pci/hotplug/Kconfig"
- 
- endif	# PCI
- 
-diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
-index ce52af9..17a4f15 100644
---- a/arch/sh/Kconfig
-+++ b/arch/sh/Kconfig
-@@ -851,8 +851,6 @@ source "drivers/pci/Kconfig"
- 
- source "drivers/pcmcia/Kconfig"
- 
--source "drivers/pci/hotplug/Kconfig"
--
- endmenu
- 
- menu "Executable file formats"
-diff --git a/arch/tile/Kconfig b/arch/tile/Kconfig
-index 0c95266..8171930 100644
---- a/arch/tile/Kconfig
-+++ b/arch/tile/Kconfig
-@@ -455,7 +455,6 @@ config TILE_PCI_IO
- 
- source "drivers/pci/Kconfig"
- 
--
- config TILE_USB
- 	tristate "Tilera USB host adapter support"
- 	default y
-@@ -466,8 +465,6 @@ config TILE_USB
- 	  Provides USB host adapter support for the built-in EHCI and OHCI
- 	  interfaces on TILE-Gx chips.
- 
--source "drivers/pci/hotplug/Kconfig"
--
- endmenu
- 
- menu "Executable file formats"
-diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index ff7fe2d..1912637 100644
---- a/arch/x86/Kconfig
-+++ b/arch/x86/Kconfig
-@@ -2586,8 +2586,6 @@ config AMD_NB
- 
- source "drivers/pcmcia/Kconfig"
- 
--source "drivers/pci/hotplug/Kconfig"
--
- config RAPIDIO
- 	tristate "RapidIO support"
- 	depends on PCI
-diff --git a/arch/xtensa/Kconfig b/arch/xtensa/Kconfig
-index e9df156..7e9464b 100644
---- a/arch/xtensa/Kconfig
-+++ b/arch/xtensa/Kconfig
-@@ -413,8 +413,6 @@ config FORCE_MAX_ZONEORDER
- 
- source "drivers/pcmcia/Kconfig"
- 
--source "drivers/pci/hotplug/Kconfig"
--
- config PLATFORM_WANT_DEFAULT_MEM
- 	def_bool n
- 
-diff --git a/drivers/parisc/Kconfig b/drivers/parisc/Kconfig
-index 592de56..3a102a8 100644
---- a/drivers/parisc/Kconfig
-+++ b/drivers/parisc/Kconfig
-@@ -110,8 +110,6 @@ config IOMMU_HELPER
- 
- source "drivers/pcmcia/Kconfig"
- 
--source "drivers/pci/hotplug/Kconfig"
--
- endmenu
- 
- menu "PA-RISC specific drivers"
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 04e0092..616165d 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -121,4 +121,5 @@ config PCI_LABEL
- 	def_bool y if (DMI || ACPI)
- 	select NLS
- 
-+source "drivers/pci/hotplug/Kconfig"
- source "drivers/pci/host/Kconfig"
+ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_ATI, PCI_ANY_ID,
 
