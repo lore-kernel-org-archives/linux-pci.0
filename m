@@ -1,246 +1,178 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 16 Mar 2016 10:30:22 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
-	aik@ozlabs.ru, benh@kernel.crashing.org, paulus@samba.org,
-	mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH v4 4/7] PCI: Modify resource_alignment to support
- multiple devices
-Message-ID: <20160316103022.246edf22@t450s.home>
-In-Reply-To: <1457336918-3893-5-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-	<1457336918-3893-5-git-send-email-xyjxie@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:17632 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756738AbcCCOWu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 3 Mar 2016 09:22:50 -0500
+From: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+To: helgaas@kernel.org
+Cc: jroedel@suse.de, dwmw2@infradead.org, alex.williamson@redhat.com,
+	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+	Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+Subject: [PATCH] PCI: Add support for multiple DMA aliases
+Date: Thu,  3 Mar 2016 15:22:36 +0100
+Message-Id: <1457014956-10612-1-git-send-email-jacek.lawrynowicz@intel.com>
+In-Reply-To: <20160229224417.GD3653@localhost>
+References: <20160229224417.GD3653@localhost>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon,  7 Mar 2016 15:48:35 +0800
-Yongji Xie <xyjxie@linux.vnet.ibm.com> wrote:
+This patch solves IOMMU support issues with PCIe non-transparent bridges
+that use Requester ID look-up tables (RID-LUT), e.g. PEX8733.
 
-> When vfio passthrough a PCI device of which MMIO BARs
-> are smaller than PAGE_SIZE, guest will not handle the
-> mmio accesses to the BARs which leads to mmio emulations
-> in host.
-> 
-> This is because vfio will not allow to passthrough one
-> BAR's mmio page which may be shared with other BARs.
-> 
-> To solve this performance issue, this patch modifies
-> resource_alignment to support syntax where multiple
-> devices get the same alignment. So we can use something
-> like "pci=resource_alignment=*:*:*.*:noresize" to
-> enforce the alignment of all MMIO BARs to be at least
-> PAGE_SIZE so that one BAR's mmio page would not be
-> shared with other BARs.
-> 
-> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-> ---
->  Documentation/kernel-parameters.txt |    2 +
->  drivers/pci/pci.c                   |   90 ++++++++++++++++++++++++++++++-----
->  include/linux/pci.h                 |    4 ++
->  3 files changed, 85 insertions(+), 11 deletions(-)
-> 
-> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> index 8028631..74b38ab 100644
-> --- a/Documentation/kernel-parameters.txt
-> +++ b/Documentation/kernel-parameters.txt
-> @@ -2918,6 +2918,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->  				aligned memory resources.
->  				If <order of align> is not specified,
->  				PAGE_SIZE is used as alignment.
-> +				<domain>, <bus>, <slot> and <func> can be set to
-> +				"*" which means match all values.
+The NTB connects devices in two independent PCI domains. Devices
+separated by the NTB are not able to discover each other. A PCI packet
+being forwared from one domain to another has to have its RID modified
+so it appears on correct bus and completions are forwarded back to the
+original domain through the NTB. RID is translated using preprogrammed
+table (LUT) and the PCI packet propagates upstream away from the NTB.
+If the destination system has IOMMU enabled, the packet will be
+discarded because the new RID is unknown to the IOMMU. Adding a DMA
+alias for the new RID allows IOMMU to properly recognize the packet.
 
-I don't see anywhere that you're automatically enabling this for your
-platform, so presumably you're expecting users to determine on their
-own that they have a performance problem and hoping that they'll figure
-out that they need to use this option to resolve it.  The first irate
-question you'll get back is why doesn't this happen automatically?
+Each device behind the NTB has a unique RID assigned in the RID-LUT.
+Current DMA alias implementation supports only single alias, so it's not
+possible to support mutiple devices behind the NTB when IOMMU is enabled.
 
->  				PCI-PCI bridge can be specified, if resource
->  				windows need to be expanded.
->  				noresize: Don't change the resources' sizes when
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 760cce5..44ab59f 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -102,6 +102,8 @@ unsigned int pcibios_max_latency = 255;
->  /* If set, the PCIe ARI capability will not be used. */
->  static bool pcie_ari_disabled;
->  
-> +bool pci_resources_page_aligned;
-> +
->  /**
->   * pci_bus_max_busnr - returns maximum PCI bus number of given bus' children
->   * @bus: pointer to PCI bus structure to search
-> @@ -4604,6 +4606,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
->  	int seg, bus, slot, func, align_order, count;
->  	resource_size_t align = 0;
->  	char *p;
-> +	bool invalid = false;
->  
->  	spin_lock(&resource_alignment_lock);
->  	p = resource_alignment_param;
-> @@ -4615,16 +4618,49 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
->  		} else {
->  			align_order = -1;
->  		}
-> -		if (sscanf(p, "%x:%x:%x.%x%n",
-> -			&seg, &bus, &slot, &func, &count) != 4) {
-> +		if (p[0] == '*' && p[1] == ':') {
-> +			seg = -1;
-> +			count = 1;
-> +		} else if (sscanf(p, "%x%n", &seg, &count) != 1 ||
-> +				p[count] != ':') {
-> +			invalid = true;
-> +			break;
-> +		}
-> +		p += count + 1;
-> +		if (*p == '*') {
-> +			bus = -1;
-> +			count = 1;
-> +		} else if (sscanf(p, "%x%n", &bus, &count) != 1) {
-> +			invalid = true;
-> +			break;
-> +		}
-> +		p += count;
-> +		if (*p == '.') {
-> +			slot = bus;
-> +			bus = seg;
->  			seg = 0;
-> -			if (sscanf(p, "%x:%x.%x%n",
-> -					&bus, &slot, &func, &count) != 3) {
-> -				/* Invalid format */
-> -				printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
-> -					p);
-> +			p++;
-> +		} else if (*p == ':') {
-> +			p++;
-> +			if (p[0] == '*' && p[1] == '.') {
-> +				slot = -1;
-> +				count = 1;
-> +			} else if (sscanf(p, "%x%n", &slot, &count) != 1 ||
-> +					p[count] != '.') {
-> +				invalid = true;
->  				break;
->  			}
-> +			p += count + 1;
-> +		} else {
-> +			invalid = true;
-> +			break;
-> +		}
-> +		if (*p == '*') {
-> +			func = -1;
-> +			count = 1;
-> +		} else if (sscanf(p, "%x%n", &func, &count) != 1) {
-> +			invalid = true;
-> +			break;
->  		}
->  		p += count;
->  		if (!strncmp(p, ":noresize", 9)) {
-> @@ -4632,23 +4668,34 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
->  			p += 9;
->  		} else
->  			*resize = true;
-> -		if (seg == pci_domain_nr(dev->bus) &&
-> -			bus == dev->bus->number &&
-> -			slot == PCI_SLOT(dev->devfn) &&
-> -			func == PCI_FUNC(dev->devfn)) {
-> +		if ((seg == pci_domain_nr(dev->bus) || seg == -1) &&
-> +			(bus == dev->bus->number || bus == -1) &&
-> +			(slot == PCI_SLOT(dev->devfn) || slot == -1) &&
-> +			(func == PCI_FUNC(dev->devfn) || func == -1)) {
->  			if (align_order == -1)
->  				align = PAGE_SIZE;
->  			else
->  				align = 1 << align_order;
-> +			if (!pci_resources_page_aligned &&
-> +				(align >= PAGE_SIZE &&
-> +				seg == -1 && bus == -1 &&
-> +				slot == -1 && func == -1))
-> +				pci_resources_page_aligned = true;
->  			/* Found */
->  			break;
->  		}
->  		if (*p != ';' && *p != ',') {
->  			/* End of param or invalid format */
-> +			invalid = true;
->  			break;
->  		}
->  		p++;
->  	}
-> +	if (invalid == true) {
-> +		/* Invalid format */
-> +		printk(KERN_ERR "PCI: Can't parse resource_alignment parameter:%s\n",
-> +				p);
-> +	}
->  	spin_unlock(&resource_alignment_lock);
->  	return align;
->  }
-> @@ -4769,6 +4816,27 @@ static int __init pci_resource_alignment_sysfs_init(void)
->  }
->  late_initcall(pci_resource_alignment_sysfs_init);
->  
-> +/*
-> + * This function checks whether PCI BARs' mmio page will be shared
-> + * with other BARs.
-> + */
-> +bool pci_resources_share_page(struct pci_dev *dev, int resno)
-> +{
-> +	struct resource *res = dev->resource + resno;
-> +
-> +	if (resource_size(res) >= PAGE_SIZE)
-> +		return false;
-> +	if (pci_resources_page_aligned && !(res->start & ~PAGE_MASK) &&
-> +		res->flags & IORESOURCE_MEM) {
-> +		if (res->sibling)
-> +			return (res->sibling->start & ~PAGE_MASK);
-> +		else
-> +			return false;
-> +	}
-> +	return true;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_resources_share_page);
+This implementation enables all possible aliases on a given bus (256)
+that are stored in a bitset. Alias devfn is directly translated to a bit
+number. The bitset is not allocated for devices that have no need for
+DMA aliases.
 
-This should be a separate patch, there's no mention of this part of the
-change at all in the commitlog.  Also, pci_resource_page_aligned is
-only set if we use the magic wildcards to set alignment for all
-devices, it's not set if we use a specific seg:bus:dev.fn.  That's
-not consistent.  Can't we make use of the STARTALIGN flag for this or
-did that get removed when resources were assigned?
+More details can be found in following article:
+http://www.plxtech.com/files/pdf/technical/expresslane/RTC_Enabling%20MulitHostSystemDesigns.pdf
 
-The test itself is not entirely reassuring, I'd like some positive
-indication that the device has been aligned, not simply that it should
-have been and the start alignment appears that it might have happened.
-Apparently you don't trust pci_resources_page_aligned either since you
-still test the start alignment.
+Signed-off-by: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+Acked-by: David Woodhouse <David.Woodhouse@intel.com>
+Acked-by: Joerg Roedel <jroedel@suse.de>
+---
+ I updated the commit message based on discussion with Bjorn. It should be
+ now a little easier to understand. I'm not resubmitting the whole patch set
+ because it could make the thread harder to follow.
 
-> +
->  static void pci_no_domains(void)
->  {
->  #ifdef CONFIG_PCI_DOMAINS
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 2771625..064a1b6 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1511,6 +1511,10 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
->  	 (pci_resource_end((dev), (bar)) -		\
->  	  pci_resource_start((dev), (bar)) + 1))
->  
-> +extern bool pci_resources_page_aligned;
+ drivers/iommu/iommu.c | 17 ++++++++++-------
+ drivers/pci/pci.c     | 11 +++++++++--
+ drivers/pci/probe.c   |  1 +
+ drivers/pci/search.c  | 14 +++++++++-----
+ include/linux/pci.h   |  4 +---
+ 5 files changed, 30 insertions(+), 17 deletions(-)
 
-I'm not seeing why this shouldn't have been static since you're
-providing a function that tests it, there shouldn't really be any
-external consumers.
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index bfd4f7c..4c10da1 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -659,9 +659,15 @@ static struct iommu_group *get_pci_function_alias_group(struct pci_dev *pdev,
+ 	return NULL;
+ }
+ 
++static bool dma_alias_is_enabled(struct pci_dev *dev, u8 devfn)
++{
++	return dev->dma_alias_mask &&
++	       test_bit(devfn, dev->dma_alias_mask);
++}
++
+ /*
+- * Look for aliases to or from the given device for exisiting groups.  The
+- * dma_alias_devfn only supports aliases on the same bus, therefore the search
++ * Look for aliases to or from the given device for existing groups. DMA
++ * aliases are only supported on the same bus, therefore the search
+  * space is quite small (especially since we're really only looking at pcie
+  * device, and therefore only expect multiple slots on the root complex or
+  * downstream switch ports).  It's conceivable though that a pair of
+@@ -686,11 +692,8 @@ static struct iommu_group *get_pci_alias_group(struct pci_dev *pdev,
+ 			continue;
+ 
+ 		/* We alias them or they alias us */
+-		if (((pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
+-		     pdev->dma_alias_devfn == tmp->devfn) ||
+-		    ((tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
+-		     tmp->dma_alias_devfn == pdev->devfn)) {
+-
++		if (dma_alias_is_enabled(pdev, tmp->devfn) ||
++		    dma_alias_is_enabled(tmp, pdev->devfn)) {
+ 			group = get_pci_alias_group(tmp, devfns);
+ 			if (group) {
+ 				pci_dev_put(tmp);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index e5e2c9d..33f3d24 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4577,8 +4577,15 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
+  */
+ void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
+ {
+-	dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 0);
+-	dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
++	if (!dev->dma_alias_mask)
++		dev->dma_alias_mask = kcalloc(BITS_TO_LONGS(U8_MAX),
++					      sizeof(long), GFP_KERNEL);
++	if (!dev->dma_alias_mask) {
++		dev_warn(&dev->dev, "Unable to allocate DMA alias mask\n");
++		return;
++	}
++
++	set_bit(devfn, dev->dma_alias_mask);
+ 	dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
+ 		 PCI_SLOT(devfn), PCI_FUNC(devfn));
+ }
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 5eb378f..cf09307 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1502,6 +1502,7 @@ static void pci_release_dev(struct device *dev)
+ 	pcibios_release_device(pci_dev);
+ 	pci_bus_put(pci_dev->bus);
+ 	kfree(pci_dev->driver_override);
++	kfree(pci_dev->dma_alias_mask);
+ 	kfree(pci_dev);
+ }
+ 
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index a20ce7d..33e0f03 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -40,11 +40,15 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+ 	 * If the device is broken and uses an alias requester ID for
+ 	 * DMA, iterate over that too.
+ 	 */
+-	if (unlikely(pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN)) {
+-		ret = fn(pdev, PCI_DEVID(pdev->bus->number,
+-					 pdev->dma_alias_devfn), data);
+-		if (ret)
+-			return ret;
++	if (unlikely(pdev->dma_alias_mask)) {
++		u8 devfn;
++
++		for_each_set_bit(devfn, pdev->dma_alias_mask, U8_MAX) {
++			ret = fn(pdev, PCI_DEVID(pdev->bus->number, devfn),
++				 data);
++			if (ret)
++				return ret;
++		}
+ 	}
+ 
+ 	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 614d70d..0c176e5 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -172,8 +172,6 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) (1 << 2),
+ 	/* Flag for quirk use to store if quirk-specific ACS is enabled */
+ 	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) (1 << 3),
+-	/* Flag to indicate the device uses dma_alias_devfn */
+-	PCI_DEV_FLAGS_DMA_ALIAS_DEVFN = (__force pci_dev_flags_t) (1 << 4),
+ 	/* Use a PCIe-to-PCI bridge alias even if !pci_is_pcie */
+ 	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 5),
+ 	/* Do not use bus resets for device */
+@@ -279,7 +277,7 @@ struct pci_dev {
+ 	u8		rom_base_reg;	/* which config register controls the ROM */
+ 	u8		pin;		/* which interrupt pin this device uses */
+ 	u16		pcie_flags_reg;	/* cached PCIe Capabilities Register */
+-	u8		dma_alias_devfn;/* devfn of DMA alias, if any */
++	unsigned long	*dma_alias_mask;/* mask of enabled devfn aliases */
+ 
+ 	struct pci_driver *driver;	/* which driver has allocated this device */
+ 	u64		dma_mask;	/* Mask of the bits of bus address this
+-- 
+1.8.3.1
 
-> +
-> +bool pci_resources_share_page(struct pci_dev *dev, int resno);
-> +
->  /* Similar to the helpers above, these manipulate per-pci_dev
->   * driver-specific data.  They are really just a wrapper around
->   * the generic device structure functions of these calls.
