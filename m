@@ -1,118 +1,166 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:40135 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754231AbcCPQUL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Mar 2016 12:20:11 -0400
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Subject: PCI IO resource question.
-Message-ID: <56E987B8.1090904@ti.com>
-Date: Wed, 16 Mar 2016 12:20:08 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 3 Mar 2016 16:51:52 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+Subject: Re: [PATCH V5 01/15] ACPI: MCFG: Move mmcfg_list management to
+ drivers/acpi
+Message-ID: <20160303225152.GA10472@localhost>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+ <1455630825-27253-2-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1455630825-27253-2-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
+Hi Tomasz, Jayachandran, et al,
 
-Keystone PCI h/w doesn't support IO access in the inbound direction
-as stated in the hardware spec cut-n-pasted below.
+On Tue, Feb 16, 2016 at 02:53:31PM +0100, Tomasz Nowicki wrote:
+> From: Jayachandran C <jchandra@broadcom.com>
+> 
+> Move pci_mmcfg_list handling to a drivers/acpi/pci_mcfg.c. This is
+> to share the API and code with ARM64 later. The corresponding
+> declarations are moved from asm/pci_x86.h to linux/pci-acpi.h
+> 
+> As a part of this we introduce three functions that can be
+> implemented by the arch code: pci_mmconfig_map_resource() to map a
+> mcfg entry, pci_mmconfig_unmap_resource to do the corresponding
+> unmap and pci_mmconfig_enabled to see if the arch setup of
+> mcfg entries was successful. We also provide weak implementations
+> of these, which will be used from ARM64. On x86, we retain the
+> old logic by providing platform specific implementation.
+> 
+> This patch is purely rearranging code, it should not have any
+> impact on the logic of MCFG parsing or list handling.
 
-• No support for IO access in inbound direction in RC or EP mode
+I definitely want to figure out how to make this work well on ARM64.
+I need to ponder this some more, so these are just some initial
+thoughts.
 
-Way back when the driver was ported, I vaguely recollect I had to
-add a dummy IO range to satisfy PCI Driver core. I am assuming the 
-first entry in the DTS is for this IO port access. Is it true?
-  
-arch/arm/boot/dts/k2e.dtsi
+My first impression is that (a) the x86 MCFG code is an unmitigated
+disaster, and (b) we're trying a little too hard to make that mess
+generic.  I think we might be better served if we came up with some
+cleaner, more generic code that we can use for ARM64 today, and
+migrate x86 toward that over time.
 
-                       ranges = <0x81000000 0 0 0x23260000 0x4000 0x4000
-                                 0x82000000 0 0x60000000 0x60000000 0 0x10000000>;
+My concern is that if we elevate the current x86 code to be
+"arch-independent", we will be perpetuating some interfaces and
+designs that shouldn't be allowed to escape arch/x86.
 
-I see following boot log when I boot with 4.4.x kernel
+Some of the code that moved to drivers/acpi/pci_mcfg.c is not really
+ACPI-specific, and could potentially be used for non-ACPI bridges that
+support ECAM.  I'd like to see that sort of code moved to a new file
+like drivers/pci/ecam.c.
 
->> keystone-pcie 21021000.pcie: error -22: failed to map resource [io 0x0000-0x400000003fff]
+There's a little bit of overlap here with the ECAM code in
+pci-host-generic.c.  I'm not sure whether or how to include that, but
+it's a very good example of how simple this *should* be: probe the
+host bridge, discover the ECAM region, request the region, ioremap it,
+done.
 
-I need to fix the above entry to
+> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> new file mode 100644
+> index 0000000..ea84365
+> --- /dev/null
+> +++ b/drivers/acpi/pci_mcfg.c
+> ...
+> +int __weak pci_mmconfig_map_resource(struct device *dev,
+> +	struct pci_mmcfg_region *mcfg)
+> +{
+> +	struct resource *tmp;
+> +	void __iomem *vaddr;
+> +
+> +	tmp = insert_resource_conflict(&iomem_resource, &mcfg->res);
+> +	if (tmp) {
+> +		dev_warn(dev, "MMCONFIG %pR conflicts with %s %pR\n",
+> +			&mcfg->res, tmp->name, tmp);
+> +		return -EBUSY;
+> +	}
 
--                       ranges = <0x81000000 0 0 0x23260000 0x4000 0x4000
-+                       ranges = <0x81000000 0 0 0x23260000 0x0 0x4000
-                                0x82000000 0 0x60000000 0x60000000 0 0x10000000>;
+I think this is a mistake in the x86 MCFG support that we should not
+carry over to a generic implementation.  We should not use the MCFG
+table for resource reservation because MCFG is not defined by the ACPI
+spec and an OS need not include support for it.  The platform must
+indicate in some other, more generic way, that ECAM space is reserved.
+This probably means ECAM space should be declared in a PNP0C02 _CRS
+method (see the PCI Firmware Spec r3.0, sec 4.1.2, note 2).
 
+We might need some kind of x86-specific quirk that does this, or a
+pcibios hook or something here; I just don't think it should be
+generic.
 
-to remove this error message.
+> +int __init pci_mmconfig_parse_table(void)
+> +{
+> +	return acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
+> +}
 
-However I am wondering if it is mandatory to define this range at all. I tried
-to remove the entry and I get following error then
+I don't like the fact that we parse the entire MCFG table at once
+here.  I think we should look for the information we need when we are
+claiming a PCI host bridge, e.g., in acpi_pci_root_add().  This might
+not be a great fit for the way ACPI table management works, but I
+think it's better to do things on-demand rather than just-in-case.
 
-[    0.448772] pci 0000:00:00.0: BAR 8: assigned [mem 0x60000000-0x600fffff]
-[    0.448783] pci 0000:00:00.0: BAR 9: assigned [mem 0x60100000-0x601fffff pref]
-[    0.448792] pci 0000:00:00.0: BAR 7: no space for [io  size 0x1000]
-[    0.448800] pci 0000:00:00.0: BAR 7: failed to assign [io  size 0x1000]
-[    0.448813] pci 0000:01:00.0: BAR 6: assigned [mem 0x60100000-0x6010ffff pref]
-[    0.448822] pci 0000:01:00.0: BAR 5: assigned [mem 0x60000000-0x600001ff]
-[    0.448834] pci 0000:01:00.0: BAR 4: no space for [io  size 0x0010]
-[    0.448841] pci 0000:01:00.0: BAR 4: failed to assign [io  size 0x0010]
-[    0.448848] pci 0000:01:00.0: BAR 0: no space for [io  size 0x0008]
-[    0.448855] pci 0000:01:00.0: BAR 0: failed to assign [io  size 0x0008]
-[    0.448863] pci 0000:01:00.0: BAR 2: no space for [io  size 0x0008]
-[    0.448870] pci 0000:01:00.0: BAR 2: failed to assign [io  size 0x0008]
-[    0.448877] pci 0000:01:00.0: BAR 1: no space for [io  size 0x0004]
-[    0.448884] pci 0000:01:00.0: BAR 1: failed to assign [io  size 0x0004]
-[    0.448891] pci 0000:01:00.0: BAR 3: no space for [io  size 0x0004]
-[    0.448898] pci 0000:01:00.0: BAR 3: failed to assign [io  size 0x0004]
-[    0.448907] pci 0000:00:00.0: PCI bridge to [bus 01]
+> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+> index 89ab057..e9450ef 100644
+> --- a/include/linux/pci-acpi.h
+> +++ b/include/linux/pci-acpi.h
+> @@ -106,6 +106,39 @@ extern const u8 pci_acpi_dsm_uuid[];
+>  #define RESET_DELAY_DSM		0x08
+>  #define FUNCTION_DELAY_DSM	0x09
+>  
+> +/* common API to maintain list of MCFG regions */
+> +/* "PCI MMCONFIG %04x [bus %02x-%02x]" */
+> +#define PCI_MMCFG_RESOURCE_NAME_LEN (22 + 4 + 2 + 2)
+> +
+> +struct pci_mmcfg_region {
+> +	struct list_head list;
+> +	struct resource res;
+> +	u64 address;
+> +	char __iomem *virt;
+> +	u16 segment;
+> +	u8 start_bus;
+> +	u8 end_bus;
+> +	char name[PCI_MMCFG_RESOURCE_NAME_LEN];
+> +};
+> +
+> +extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
+> +			       phys_addr_t addr);
+> +extern int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
+> +
+> +extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
+> +extern struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+> +							int end, u64 addr);
+> +extern int pci_mmconfig_map_resource(struct device *dev,
+> +	struct pci_mmcfg_region *mcfg);
+> +extern void pci_mmconfig_unmap_resource(struct pci_mmcfg_region *mcfg);
+> +extern int pci_mmconfig_enabled(void);
+> +extern int __init pci_mmconfig_parse_table(void);
+> +
+> +extern struct list_head pci_mmcfg_list;
+> +
+> +#define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
+> +#define PCI_MMCFG_OFFSET(bus, devfn)   ((bus) << 20 | (devfn) << 12)
+> +
 
+With the exception of pci_mmconfig_parse_table(), nothing here is
+ACPI-specific.  I'd like to see the PCI ECAM-related interfaces
+(hopefully not these exact ones, but a more rational set) put in
+something like include/linux/pci-ecam.h.
 
-The original log is below and even with the error, I am able to have SATA
-drive function as expected over this PCIe interface.
+>  #else	/* CONFIG_ACPI */
+>  static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
+>  static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
 
-
-[    0.420648] PCI host bridge /soc/pcie@21020000 ranges:
-[    0.420659]   No bus range found for /soc/pcie@21020000, using [bus 00-ff]
-[    0.420679]    IO 0x23260000..0x400023263fff -> 0x00000000
-[    0.420685] Requested IO range too big, new size set to 64K
-[    0.420702]   MEM 0x60000000..0x6fffffff -> 0x60000000
-[    0.420713] keystone-pcie 21021000.pcie: error -22: failed to map resource [io  0x0000-0x400000003fff]
-[    0.431849] keystone-pcie 21021000.pcie: PCI host bridge to bus 0000:00
-[    0.431861] pci_bus 0000:00: root bus resource [bus 00-ff]
-[    0.431870] pci_bus 0000:00: root bus resource [io  0x0000-0x400000003fff]
-[    0.431879] pci_bus 0000:00: root bus resource [mem 0x60000000-0x6fffffff]
-[    0.431906] pci 0000:00:00.0: [104c:b009] type 01 class 0x060400
-[    0.432173] PCI: bus0: Fast back to back transfers disabled
-[    0.432334] pci 0000:01:00.0: [1b4b:9182] type 00 class 0x010601
-[    0.432382] pci 0000:01:00.0: reg 0x10: [io  0x8000-0x8007]
-[    0.432402] pci 0000:01:00.0: reg 0x14: [io  0x8040-0x8043]
-[    0.432420] pci 0000:01:00.0: reg 0x18: [io  0x8100-0x8107]
-[    0.432439] pci 0000:01:00.0: reg 0x1c: [io  0x8140-0x8143]
-[    0.432457] pci 0000:01:00.0: reg 0x20: [io  0x800000-0x80000f]
-[    0.432476] pci 0000:01:00.0: reg 0x24: [mem 0x00900000-0x009001ff]
-[    0.432495] pci 0000:01:00.0: reg 0x30: [mem 0xd0000000-0xd000ffff pref]
-[    0.432561] pci 0000:01:00.0: PME# supported from D3hot
-[    0.448635] PCI: bus1: Fast back to back transfers disabled
-[    0.448717] pci 0000:00:00.0: BAR 8: assigned [mem 0x60000000-0x600fffff]
-[    0.448729] pci 0000:00:00.0: BAR 9: assigned [mem 0x60100000-0x601fffff pref]
-[    0.448738] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
-[    0.448751] pci 0000:01:00.0: BAR 6: assigned [mem 0x60100000-0x6010ffff pref]
-[    0.448760] pci 0000:01:00.0: BAR 5: assigned [mem 0x60000000-0x600001ff]
-[    0.448772] pci 0000:01:00.0: BAR 4: assigned [io  0x1000-0x100f]
-[    0.448784] pci 0000:01:00.0: BAR 0: assigned [io  0x1010-0x1017]
-[    0.448796] pci 0000:01:00.0: BAR 2: assigned [io  0x1018-0x101f]
-[    0.448808] pci 0000:01:00.0: BAR 1: assigned [io  0x1020-0x1023]
-[    0.448820] pci 0000:01:00.0: BAR 3: assigned [io  0x1024-0x1027]
-[    0.448833] pci 0000:00:00.0: PCI bridge to [bus 01]
-[    0.448842] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
-[    0.448851] pci 0000:00:00.0:   bridge window [mem 0x60000000-0x600fffff]
-[    0.448860] pci 0000:00:00.0:   bridge window [mem 0x60100000-0x601fffff pref]
-[    0.449077] pcieport 0000:00:00.0: Signaling PME through PCIe PME interrupt
-[    0.449086] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
-[    0.449095] pcie_pme 0000:00:00.0:pcie01: service driver pcie_pme loaded
-[    0.449240] aer 0000:00:00.0:pcie02: service driver aer loaded
-
-
-Thanks and regards,
-
--- 
-Murali Karicheri
-Linux Kernel, Keystone
+Bjorn
