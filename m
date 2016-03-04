@@ -1,68 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f195.google.com ([209.85.217.195]:34006 "EHLO
-	mail-lb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932547AbcCINUj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Mar 2016 08:20:39 -0500
+Received: from comal.ext.ti.com ([198.47.26.152]:52143 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752793AbcCDKRj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 4 Mar 2016 05:17:39 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Cochran <richardcochran@gmail.com>,
+	Paul Walmsley <paul@pwsan.com>
+CC: <linux-pci@vger.kernel.org>, Tony Lindgren <tony@atomide.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <kishon@ti.com>, <nsekhar@ti.com>
+Subject: [PATCH] Revert "PCI: dra7xx: Mark driver as broken"
+Date: Fri, 4 Mar 2016 15:46:53 +0530
+Message-ID: <1457086613-16443-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1457504045-12738-2-git-send-email-airlied@gmail.com>
-References: <1457504045-12738-1-git-send-email-airlied@gmail.com>
-	<1457504045-12738-2-git-send-email-airlied@gmail.com>
-Date: Wed, 9 Mar 2016 14:20:36 +0100
-Message-ID: <CAJZ5v0g6J0Lew=JxoTA35-JL4-wexWmNh=d_nTg_Ld=iA+RifA@mail.gmail.com>
-Subject: Re: [PATCH 2/2] nouveau: use new vga_switcheroo power domain.
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Dave Airlie <airlied@gmail.com>
-Cc: dri-devel@lists.freedesktop.org,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 9, 2016 at 7:14 AM, Dave Airlie <airlied@gmail.com> wrote:
-> From: Dave Airlie <airlied@redhat.com>
->
-> This fixes GPU auto powerdown on the Lenovo W541,
-> since we advertise Windows 2013 to the ACPI layer.
->
-> Signed-off-by: Dave Airlie <airlied@redhat.com>
-> ---
->  drivers/gpu/drm/nouveau/nouveau_vga.c | 10 +++++++---
->  1 file changed, 7 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/gpu/drm/nouveau/nouveau_vga.c b/drivers/gpu/drm/nouveau/nouveau_vga.c
-> index af89c36..b987427f 100644
-> --- a/drivers/gpu/drm/nouveau/nouveau_vga.c
-> +++ b/drivers/gpu/drm/nouveau/nouveau_vga.c
-> @@ -101,8 +101,12 @@ nouveau_vga_init(struct nouveau_drm *drm)
->                 runtime = true;
->         vga_switcheroo_register_client(dev->pdev, &nouveau_switcheroo_ops, runtime);
->
-> -       if (runtime && nouveau_is_v1_dsm() && !nouveau_is_optimus())
-> -               vga_switcheroo_init_domain_pm_ops(drm->dev->dev, &drm->vga_pm_domain);
-> +       if (runtime) {
-> +               if (nouveau_is_v1_dsm() && !nouveau_is_optimus())
-> +                       vga_switcheroo_init_domain_pm_ops(drm->dev->dev, &drm->vga_pm_domain);
-> +               else if (nouveau_is_optimus())
-> +                       vga_switcheroo_init_parent_pr3_ops(drm->dev->dev, &drm->vga_pm_domain);
-> +       }
->  }
->
->  void
-> @@ -117,7 +121,7 @@ nouveau_vga_fini(struct nouveau_drm *drm)
->                 runtime = true;
->
->         vga_switcheroo_unregister_client(dev->pdev);
-> -       if (runtime && nouveau_is_v1_dsm() && !nouveau_is_optimus())
-> +       if (runtime && (nouveau_is_v1_dsm() || nouveau_is_optimus()))
->                 vga_switcheroo_fini_domain_pm_ops(drm->dev->dev);
->         vga_client_register(dev->pdev, NULL, NULL, NULL);
->  }
-> --
+From: Sekhar Nori <nsekhar@ti.com>
 
-Looks reasonable to me.
+This reverts commit <5c3b99d057525fe2befe6a7db9b1309035d93eee>
+("PCI: dra7xx: Mark driver as broken".
 
-Thanks,
-Rafael
+With support to de-assert PCIe reset present in kernel,
+DRA7x PCIe is not broken anymore.
+
+Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+Bjorn,
+
+This patch should be merged only after [1] hits linus tree.
+
+Thanks
+Kishon
+
+[1] -> git://git.kernel.org/pub/scm/linux/kernel/git/pjw/omap-pending.git
+	for-v4.6/omap-hwmod-b
+
+ drivers/pci/host/Kconfig |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 75a6054..6d181ba 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -5,7 +5,6 @@ config PCI_DRA7XX
+ 	bool "TI DRA7xx PCIe controller"
+ 	select PCIE_DW
+ 	depends on OF && HAS_IOMEM && TI_PIPE3
+-	depends on BROKEN
+ 	help
+ 	 Enables support for the PCIe controller in the DRA7xx SoC.  There
+ 	 are two instances of PCIe controller in DRA7xx.  This controller can
+-- 
+1.7.9.5
+
