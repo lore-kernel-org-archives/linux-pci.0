@@ -1,98 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f170.google.com ([209.85.220.170]:33846 "EHLO
-	mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752252AbcC1VqD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2016 17:46:03 -0400
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: l.stach@pengutronix.de, Richard.Zhu@freescale.com, khalasa@piap.pl,
-	ynezz@true.cz, linux-pci@vger.kernel.org, tharvey@gateworks.com,
-	Fabio Estevam <fabio.estevam@nxp.com>, <stable@vger.kernel.org>
-Subject: [PATCH v2] Revert "PCI: imx6: Add support for active-low reset GPIO"
-Date: Mon, 28 Mar 2016 18:45:36 -0300
-Message-Id: <1459201536-5558-1-git-send-email-festevam@gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V5 00/15] MMCONFIG refactoring and support for ARM64 PCI
+ hostbridge init based on ACPI
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+ <56D49611.2050202@codeaurora.org> <20160303112332.GC28359@red-moon>
+ <56D84938.6020102@codeaurora.org> <20160304105517.GA30693@red-moon>
+Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	Stefano.Stabellini@eu.citrix.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com, yinghai@kernel.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <56D97901.7080001@semihalf.com>
+Date: Fri, 4 Mar 2016 13:01:05 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160304105517.GA30693@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@nxp.com>
+On 04.03.2016 11:55, Lorenzo Pieralisi wrote:
+> On Thu, Mar 03, 2016 at 09:24:56AM -0500, Sinan Kaya wrote:
+>> >On 3/3/2016 6:23 AM, Lorenzo Pieralisi wrote:
+>>> > >x86 and IA64 claim PCI resources on boot and live with that (well, minus
+>>> > >the gazillions x86 pci= parameters that change the PCI resources assignment
+>>> > >one way or another), comments very welcome in particular on the pci=realloc
+>>> > >option and its usage.
+>> >
+>> >I have been working with Linux PCIe over 3 years. I never used
+>> >pci=realloc argument.
+>> >
+>> >The v5 series minus [PATCH V5 11/15] drivers: pci: add generic code to
+>> >claim bus resources is working just fine and is ready to go upstream
+>> >in my opinion. It passed my internal testing with different types of
+>> >endpoints.
+>> >
+>> >The inclusion of this patch is now requiring everybody to add
+>> >pci=realloc argument otherwise the resources assigned by the UEFI BIOS
+>> >are not working.
+>> >
+>> >I think there is still some work to be done in this patch and is too
+>> >early to be included into the series. It is blocking progress of the
+>> >series which is sitting on review over 1 year already.
+> First off, I think that's specious, patch 11 is not blocking anything,
+> if you and Tomasz want to drop it go ahead and take responsibility
+> of the consequences.
+>
+> I am not saying patch 11 is perfect, it is there to review, if you
+> spot bugs point them out.
+>
+> If you are interested and willing to make an effort to understand why I
+> asked Tomasz to integrate it, a bit of background here:
+>
+> http://permalink.gmane.org/gmane.linux.kernel.pci/44830
+>
+> If we want to drop patch 11, we are going to discard whatever FW
+> set-up at FW/OS hand-off and reassign everything. Want to do it ?
+> Go ahead.
+>
+> I wrote it in my previous email, probably it was not clear, so, here we
+> go again.
+>
+> If we want to at least consider the FW PCI configuration at FW/OS
+> handoff, we should read the PCI bridge apertures and claim them, when
+> that fails reassign the corresponding PCI bus hierarchy (which means
+> releasing the bridge resources and downstream devices and reassign
+> them), that's what pci=realloc does.
+>
+> I think that it is a command line option since it has to be a choice,
+> ie overriding FW set-up should be an option, not a default.
+>
+> Patch 11 does what x86 does in arch code arch/x86/pci/i386.c,
+>
+> pcibios_resource_survey()
+>
+> and that works for them (of course, minus quirks that do exist).
+>
+> I could integrate the code implementing pci=realloc in patch 11 so
+> that we realloc by default all resources claimed that failed (which
+> means that bridges are resized accordingly and you won't be forced
+> to use pci=realloc on command line).
+>
 
-Commit 5c5fb40de8f14 ("PCI: imx6: Add support for active-low reset GPIO")
-cause regressions on some boards like MX6 Gateworks Ventana, for example.
+I agree with Lorenzo. Just because v3 works it does not mean we want to 
+go this way. Also, I think we should realloc all resources claimed that 
+failed, w/o need to use pci=realloc on command line.
 
-The reason for the breakage is that this commit sets the gpio polarity
-in the wrong logic level.
-
-Also, the commit log is wrong because active-low reset GPIO is what the
-driver used to support since the beginning.
-
-So keep the old behavior that ignores the gpio polarity specified in
-the device tree and treat the PCI reset GPIO as active-low.
-
-Cc: <stable@vger.kernel.org> # 4.5
-Reported-by: Krzysztof Hałasa <khalasa@piap.pl>
-Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
----
-Changes since v1:
-- Improve wording of commit log (Tim)
-
- drivers/pci/host/pci-imx6.c | 20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index eb5a275..2f817fa 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -32,7 +32,7 @@
- #define to_imx6_pcie(x)	container_of(x, struct imx6_pcie, pp)
- 
- struct imx6_pcie {
--	struct gpio_desc	*reset_gpio;
-+	int			reset_gpio;
- 	struct clk		*pcie_bus;
- 	struct clk		*pcie_phy;
- 	struct clk		*pcie;
-@@ -309,10 +309,10 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 	usleep_range(200, 500);
- 
- 	/* Some boards don't have PCIe reset GPIO. */
--	if (imx6_pcie->reset_gpio) {
--		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 0);
-+	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-+		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
- 		msleep(100);
--		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
-+		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
- 	}
- 	return 0;
- 
-@@ -523,6 +523,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- {
- 	struct imx6_pcie *imx6_pcie;
- 	struct pcie_port *pp;
-+	struct device_node *np = pdev->dev.of_node;
- 	struct resource *dbi_base;
- 	struct device_node *node = pdev->dev.of_node;
- 	int ret;
-@@ -544,8 +545,15 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(pp->dbi_base);
- 
- 	/* Fetch GPIOs */
--	imx6_pcie->reset_gpio = devm_gpiod_get_optional(&pdev->dev, "reset",
--							GPIOD_OUT_LOW);
-+	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
-+	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-+		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
-+					    GPIOF_OUT_INIT_LOW, "PCIe reset");
-+		if (ret) {
-+			dev_err(&pdev->dev, "unable to get reset gpio\n");
-+			return ret;
-+		}
-+	}
- 
- 	/* Fetch clocks */
- 	imx6_pcie->pcie_phy = devm_clk_get(&pdev->dev, "pcie_phy");
--- 
-1.9.1
-
+Tomasz
