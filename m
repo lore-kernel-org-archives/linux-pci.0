@@ -1,46 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:25194 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752138AbcCNI4K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Mar 2016 04:56:10 -0400
-Date: Mon, 14 Mar 2016 10:56:02 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org
-Subject: Re: [PATCH 1/6] PCI: No need to set d3cold_allowed to PCIe ports
-Message-ID: <20160314085602.GZ1796@lahna.fi.intel.com>
-References: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
- <1456750566-116248-2-git-send-email-mika.westerberg@linux.intel.com>
- <20160312000111.GJ4725@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160312000111.GJ4725@localhost>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Daney <ddaney.cavm@gmail.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Will Deacon <will.deacon@arm.com>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
+Cc: Dann Frazier <dann.frazier@canonical.com>,
+	David Daney <david.daney@cavium.com>
+Subject: [PATCH v7 0/3] Add host controller drivers for Cavium ThunderX PCI
+Date: Fri,  4 Mar 2016 14:31:45 -0800
+Message-Id: <1457130708-3231-1-git-send-email-ddaney.cavm@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 11, 2016 at 06:01:11PM -0600, Bjorn Helgaas wrote:
-> On Mon, Feb 29, 2016 at 02:56:01PM +0200, Mika Westerberg wrote:
-> > PCIe ports are already skipped by the PCI core so they are never moved to
-> > D3 (or D3cold) anyway. No need to set the field.
-> 
-> A pointer to where the PCI core skips these ports would be helpful.
-> pci_pm_runtime_suspend() is the only place I see that tests d3cold_allowed,
-> and I don't see that it checks anything about PCIe ports.
+From: David Daney <david.daney@cavium.com>
 
-Right, sorry about that. The changelog should say that the PCI core
-skips PCI bridges and PCIe ports.
+Some Cavium ThunderX processors require quirky access methods for the
+config space of the PCIe bridge.
 
-The relevant code is in drivers/pci/pci-driver.c:pci_pm_suspend_noirq():
+There are now three patches:
 
-        if (!pci_dev->state_saved) {
-                pci_save_state(pci_dev);
-                if (!pci_has_subordinate(pci_dev))
-                        pci_prepare_to_sleep(pci_dev);
-        }
+1) Refactor code in pci-host-generic so that it can more easily be
+   used by other drivers.  This splits the driver for CAM and ECAM
+   access methods to a separate file from the common host driver code.
 
-It checks if the device has subordinate devices if not moves the device
-to low power state.
+2) Add the ThunderX PCIe driver to external PCIe buses, which
+   leverages the code in pci-host-generic
+
+3) Add ThunderX PCI driver for internel SoC buses used on early
+   ThunderX chip revisions.
+
+Changes from v6: Updated 3/3 to support Thunder pass-2.x silicon.
+
+Changes from v5: Added Acked-by Rob Herring for the device tree
+binding in 3/3.  Fixed typo and split large functions as suggested by
+Bjorn Helgaas.
+
+Changes from v4: Added patch 3/3.  Stylistic changes to 2/3 suggested
+by Bjorn Helgaas.  When expanding config write width to 32-bits, mask
+out unintened writes to W1C bits, also suggested by Bjorn Helgaas.
+
+Changes from v3: Add some Acked-by, rebased to v4.5.0-rc1
+
+Changes from v2: Improve device tree binding example as noted by Rob
+Herring.  Rename pcie-thunder-pem.* to pci-thunder-pem.* for better
+consistency.  Update MAINTAINERS to reflect the changes.
+
+Changes from v1: Split CAM and ECAM code from common driver code as
+suggested by Arnd Bergmann.  Fix spelling errors in
+pcie-thunder-pem.txt
+
+
+David Daney (3):
+  PCI: generic: Refactor code to enable reuse by other drivers.
+  pci, pci-thunder-pem: Add PCIe host driver for ThunderX processors.
+  pci, pci-thunder-ecam: Add driver for ThunderX-pass{1,2} on-chip
+    devices
+
+ .../devicetree/bindings/pci/pci-thunder-ecam.txt   |  30 ++
+ .../devicetree/bindings/pci/pci-thunder-pem.txt    |  43 +++
+ MAINTAINERS                                        |   9 +
+ drivers/pci/host/Kconfig                           |  18 +
+ drivers/pci/host/Makefile                          |   3 +
+ drivers/pci/host/pci-host-common.c                 | 194 ++++++++++
+ drivers/pci/host/pci-host-common.h                 |  47 +++
+ drivers/pci/host/pci-host-generic.c                | 181 +--------
+ drivers/pci/host/pci-thunder-ecam.c                | 407 +++++++++++++++++++++
+ drivers/pci/host/pci-thunder-pem.c                 | 347 ++++++++++++++++++
+ 10 files changed, 1102 insertions(+), 177 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-pem.txt
+ create mode 100644 drivers/pci/host/pci-host-common.c
+ create mode 100644 drivers/pci/host/pci-host-common.h
+ create mode 100644 drivers/pci/host/pci-thunder-ecam.c
+ create mode 100644 drivers/pci/host/pci-thunder-pem.c
+
+-- 
+1.8.3.1
