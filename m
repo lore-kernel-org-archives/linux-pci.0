@@ -1,51 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0095.outbound.protection.outlook.com ([104.47.2.95]:42016
-	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752794AbcC3QKZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 30 Mar 2016 12:10:25 -0400
-From: Marcel Ziswiler <marcel.ziswiler@toradex.com>
-To: "ynezz@true.cz" <ynezz@true.cz>,
-	"khalasa@piap.pl" <khalasa@piap.pl>
-CC: "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-	"linux-arm-kernel@lists.infradead.org"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:41647 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756431AbcCDKaA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 4 Mar 2016 05:30:00 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Cochran <richardcochran@gmail.com>,
+	Paul Walmsley <paul@pwsan.com>
+CC: <linux-pci@vger.kernel.org>, Tony Lindgren <tony@atomide.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	<linux-omap@vger.kernel.org>,
 	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"stefan@agner.ch" <stefan@agner.ch>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Richard.Zhu@freescale.com" <Richard.Zhu@freescale.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
-Date: Wed, 30 Mar 2016 14:38:08 +0000
-Message-ID: <1459348687.5073.53.camel@toradex.com>
-References: <m3h9fuk7ik.fsf@t19.piap.pl>
-	 <20160330120644.GM20367@ibawizard.net>
-In-Reply-To: <20160330120644.GM20367@ibawizard.net>
-Content-Type: text/plain; charset="utf-8"
+	<linux-kernel@vger.kernel.org>, <kishon@ti.com>, <nsekhar@ti.com>
+Subject: [PATCH RESEND] Revert "PCI: dra7xx: Mark driver as broken"
+Date: Fri, 4 Mar 2016 15:59:19 +0530
+Message-ID: <1457087359-16816-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgUGV0cg0KDQpPbiBXZWQsIDIwMTYtMDMtMzAgYXQgMTQ6MDYgKzAyMDAsIFBldHIgxaB0ZXRp
-YXIgd3JvdGU6DQo+IEtyenlzenRvZiBIYcWCYXNhIDxraGFsYXNhQHBpYXAucGw+IFsyMDE2LTAz
-LTI1IDE0OjMyOjM1XToNCj4gDQo+IEN6ZcWbxIcsDQo+IA0KPiA+IA0KPiA+IEkgd29uZGVyIGlm
-IGFsbCBib2FyZHMgKGV4Y2VwdCBtYXliZSB0aGF0IFRvcmFkZXggc2V0KSB1c2UgYW4NCj4gPiBh
-Y3RpdmUtbG93DQo+ID4gUENJZSByZXNldCBhbmQgYXJlIG5vdyBicm9rZW4uIFBlcmhhcHMgVG9y
-YWRleCB1c2VzIGFjdGl2ZS1oaWdoIGFuZA0KPiA+IHRodXMNCj4gPiB3b3Jrcy4NCj4gSSdtIHJl
-YWxseSBwdXp6bGVkIGJ5IHRoaXMgOi0pIFdpdGggeW91ciBwYXRjaCBhcHBsaWVkIEkgZ2V0DQo+
-IGZvbGxvd2luZyBvbg0KPiBUb3JhZGV4IEFwYWxpcyBtb2R1bGVzOg0KPiANCj4gwqBEVFM6wqDC
-oMKgwqDCoMKgwqDCoMKgcmVzZXQtZ3BpbyA9IDwmZ3BpbzEgMjggR1BJT19BQ1RJVkVfTE9XPjsN
-Cj4gwqBkbWVzZzrCoMKgwqDCoMKgwqDCoGlteDZxLXBjaWUgMWZmYzAwMC5wY2llOiBwaHkgbGlu
-ayBuZXZlciBjYW1lIHVwDQo+IMKgZ3BpbzrCoMKgwqDCoMKgwqDCoMKgZ3Bpby0yOMKgwqAowqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHxyZXNldMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoCkNCj4gb3V0IGhpDQo+IMKgcGluIHZvbHRhZ2U6IDBWDQo+IA0KPiDC
-oERUUzrCoMKgwqDCoMKgwqDCoMKgwqByZXNldC1ncGlvID0gPCZncGlvMSAyOCBHUElPX0FDVElW
-RV9ISUdIPjsNCj4gwqBkbWVzZzrCoMKgwqDCoMKgwqDCoGF0aDlrIDAwMDA6MDE6MDAuMDogZW5h
-YmxpbmcgZGV2aWNlICgwMTQwIC0+IDAxNDIpDQo+IMKgZ3BpbzrCoMKgwqDCoMKgwqDCoMKgZ3Bp
-by0yOMKgwqAowqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHxyZXNldMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCkNCj4gb3V0IGxvDQo+IMKgcGluIHZvbHRhZ2U6
-IDNWMw0KPiANCj4gU28gVG9yYWRleCBBcGFsaXMgaXMgYWN0dWFsbHkgYWN0aXZlLWhpZ2g/DQoN
-ClllcywgSSBhY3R1YWxseSBleHBsYWluZWQgdGhpcyBpbiBkZXRhaWwgaW4gbXkgY292ZXIgbGV0
-dGVyOg0KDQpodHRwOi8vYXJ0aWNsZS5nbWFuZS5vcmcvZ21hbmUubGludXguZHJpdmVycy5kZXZp
-Y2V0cmVlLzE1NDgyOQ0KDQo+ICBUaGFua3MuDQo+IA0KPiAtLSB5bmV6eg0KDQoNCkNoZWVycw0K
-DQpNYXJjZWwNCg==
+From: Sekhar Nori <nsekhar@ti.com>
+
+This reverts commit <5c3b99d057525fe2befe6a7db9b1309035d93eee>
+("PCI: dra7xx: Mark driver as broken").
+
+With support to de-assert PCIe reset present in kernel,
+DRA7x PCIe is not broken anymore.
+
+Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+Bjorn,
+
+This patch should be merged only after [1] hits linus tree.
+
+Thanks
+Kishon
+
+[1] -> git://git.kernel.org/pub/scm/linux/kernel/git/pjw/omap-pending.git
+	for-v4.6/omap-hwmod-b
+
+ drivers/pci/host/Kconfig |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 75a6054..6d181ba 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -5,7 +5,6 @@ config PCI_DRA7XX
+ 	bool "TI DRA7xx PCIe controller"
+ 	select PCIE_DW
+ 	depends on OF && HAS_IOMEM && TI_PIPE3
+-	depends on BROKEN
+ 	help
+ 	 Enables support for the PCIe controller in the DRA7xx SoC.  There
+ 	 are two instances of PCIe controller in DRA7xx.  This controller can
+-- 
+1.7.9.5
+
