@@ -1,75 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48174 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932764AbcCCQyH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Mar 2016 11:54:07 -0500
-Subject: [PATCH v1 01/12] PCI: Mark shadow copy of VGA ROM as
- IORESOURCE_PCI_FIXED
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Tony Luck <tony.luck@intel.com>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-	linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Bruno =?utf-8?q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
-	Daniel Stone <daniel@fooishbar.org>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Ville =?utf-8?b?U3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
-Date: Thu, 03 Mar 2016 10:53:58 -0600
-Message-ID: <20160303165358.3025.23146.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/3] frv: remove stray pci_{alloc,free}_consistent declaration
+Date: Sun,  6 Mar 2016 16:17:53 +0100
+Message-Id: <1457277475-8913-2-git-send-email-hch@lst.de>
+In-Reply-To: <1457277475-8913-1-git-send-email-hch@lst.de>
+References: <1457277475-8913-1-git-send-email-hch@lst.de>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A shadow copy of an option ROM is placed by the BIOS as a fixed address.
-Set IORESOURCE_PCI_FIXED to indicate that we can't move the shadow copy.
-This prevents warnings like the following when we assign resources:
-
-  BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment
-
-This warning is emitted by pdev_sort_resources(), which already ignores
-IORESOURCE_PCI_FIXED resources.
-
-Link: http://lkml.kernel.org/r/CA+55aFyVMfTBB0oz_yx8+eQOEJnzGtCsYSj9QuhEpdZ9BHdq5A@mail.gmail.com
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- arch/ia64/pci/fixup.c |    3 ++-
- arch/x86/pci/fixup.c  |    3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ arch/frv/include/asm/pci.h | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
-index fc505d5..fd9ceff 100644
---- a/arch/ia64/pci/fixup.c
-+++ b/arch/ia64/pci/fixup.c
-@@ -61,7 +61,8 @@ static void pci_fixup_video(struct pci_dev *pdev)
- 	if (!vga_default_device() || pdev == vga_default_device()) {
- 		pci_read_config_word(pdev, PCI_COMMAND, &config);
- 		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
--			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
-+			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW |
-+				IORESOURCE_PCI_FIXED;
- 			dev_printk(KERN_DEBUG, &pdev->dev, "Video device with shadowed ROM\n");
- 		}
- 	}
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 0ae7e9f..dac027c 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -336,7 +336,8 @@ static void pci_fixup_video(struct pci_dev *pdev)
- 	if (!vga_default_device() || pdev == vga_default_device()) {
- 		pci_read_config_word(pdev, PCI_COMMAND, &config);
- 		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
--			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW;
-+			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW |
-+				IORESOURCE_PCI_FIXED;
- 			dev_printk(KERN_DEBUG, &pdev->dev, "Video device with shadowed ROM\n");
- 		}
- 	}
+diff --git a/arch/frv/include/asm/pci.h b/arch/frv/include/asm/pci.h
+index e43d22c..7e96b57 100644
+--- a/arch/frv/include/asm/pci.h
++++ b/arch/frv/include/asm/pci.h
+@@ -32,12 +32,6 @@ extern void consistent_sync_page(struct page *page, unsigned long offset,
+ 				 size_t size, int direction);
+ #endif
+ 
+-extern void *pci_alloc_consistent(struct pci_dev *hwdev, size_t size,
+-				  dma_addr_t *dma_handle);
+-
+-extern void pci_free_consistent(struct pci_dev *hwdev, size_t size,
+-				void *vaddr, dma_addr_t dma_handle);
+-
+ /* Return the index of the PCI controller for device PDEV. */
+ #define pci_controller_num(PDEV)	(0)
+ 
+-- 
+2.1.4
 
