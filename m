@@ -1,94 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qg0-f53.google.com ([209.85.192.53]:34008 "EHLO
-	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752441AbcC1AuW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Mar 2016 20:50:22 -0400
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: l.stach@pengutronix.de, hongxing.zhu@nxp.com, khalasa@piap.pl,
-	ynezz@true.cz, linux-pci@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@nxp.com>, <stable@vger.kernel.org>
-Subject: [PATCH] Revert "PCI: imx6: Add support for active-low reset GPIO"
-Date: Sun, 27 Mar 2016 21:49:56 -0300
-Message-Id: <1459126196-15063-1-git-send-email-festevam@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:60825 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752524AbcCGHuW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Mar 2016 02:50:22 -0500
+Received: from localhost
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Mon, 7 Mar 2016 17:50:14 +1000
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
+	alex.williamson@redhat.com, benh@kernel.crashing.org,
+	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [RFC PATCH v4 3/7] PCI: Ignore resource_alignment if PCI_PROBE_ONLY was set
+Date: Mon,  7 Mar 2016 15:48:34 +0800
+Message-Id: <1457336918-3893-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@nxp.com>
+The resource_alignment will releases memory resources
+allocated by firmware so that kernel can reassign new
+resources later on. But this will cause the problem
+that no resources can be allocated by kernel if
+PCI_PROBE_ONLY was set, e.g. on pSeries platform
+because PCI_PROBE_ONLY force kernel to use firmware
+setup and not to reassign any resources.
 
-Commit 5c5fb40de8f14 ("PCI: imx6: Add support for active-low reset GPIO")
-has the following issues:
+To solve this problem, this patch ignores
+resource_alignment if PCI_PROBE_ONLY was set.
 
-1. It can break old dtb's that didn't take into account the gpio polarity
-specified in the device tree (For example: Gateworks Laguna
-imx6qdl-gw54xx.dtsi no longer works after this commit)
-
-2. It sets the gpio polarity in the wrong logic level
-
-So revert the commit to avoid such regressions.
-
-Cc: <stable@vger.kernel.org> # 4.5
-Reported-by: Krzysztof Hałasa <khalasa@piap.pl>
-Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
- drivers/pci/host/pci-imx6.c | 20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+ Documentation/kernel-parameters.txt |    2 ++
+ drivers/pci/probe.c                 |    3 ++-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index eb5a275..2f817fa 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -32,7 +32,7 @@
- #define to_imx6_pcie(x)	container_of(x, struct imx6_pcie, pp)
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index d8b29ab..8028631 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2922,6 +2922,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				windows need to be expanded.
+ 				noresize: Don't change the resources' sizes when
+ 				reassigning alignment.
++				Note that this option will not work if
++				PCI_PROBE_ONLY is set.
+ 		ecrc=		Enable/disable PCIe ECRC (transaction layer
+ 				end-to-end CRC checking).
+ 				bios: Use BIOS/firmware settings. This is the
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6d7ab9b..bc31cad 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1719,7 +1719,8 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	pci_fixup_device(pci_fixup_header, dev);
  
- struct imx6_pcie {
--	struct gpio_desc	*reset_gpio;
-+	int			reset_gpio;
- 	struct clk		*pcie_bus;
- 	struct clk		*pcie_phy;
- 	struct clk		*pcie;
-@@ -309,10 +309,10 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 	usleep_range(200, 500);
+ 	/* moved out from quirk header fixup code */
+-	pci_reassigndev_resource_alignment(dev);
++	if (!pci_has_flag(PCI_PROBE_ONLY))
++		pci_reassigndev_resource_alignment(dev);
  
- 	/* Some boards don't have PCIe reset GPIO. */
--	if (imx6_pcie->reset_gpio) {
--		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 0);
-+	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-+		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
- 		msleep(100);
--		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
-+		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
- 	}
- 	return 0;
- 
-@@ -523,6 +523,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- {
- 	struct imx6_pcie *imx6_pcie;
- 	struct pcie_port *pp;
-+	struct device_node *np = pdev->dev.of_node;
- 	struct resource *dbi_base;
- 	struct device_node *node = pdev->dev.of_node;
- 	int ret;
-@@ -544,8 +545,15 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(pp->dbi_base);
- 
- 	/* Fetch GPIOs */
--	imx6_pcie->reset_gpio = devm_gpiod_get_optional(&pdev->dev, "reset",
--							GPIOD_OUT_LOW);
-+	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
-+	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-+		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
-+					    GPIOF_OUT_INIT_LOW, "PCIe reset");
-+		if (ret) {
-+			dev_err(&pdev->dev, "unable to get reset gpio\n");
-+			return ret;
-+		}
-+	}
- 
- 	/* Fetch clocks */
- 	imx6_pcie->pcie_phy = devm_clk_get(&pdev->dev, "pcie_phy");
+ 	/* Clear the state_saved flag. */
+ 	dev->state_saved = false;
 -- 
-1.9.1
+1.7.9.5
 
