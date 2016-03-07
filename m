@@ -1,155 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:37173 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030682AbcCQWjP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Mar 2016 18:39:15 -0400
-Received: from localhost
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 18 Mar 2016 08:39:12 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 80A503578053
-	for <linux-pci@vger.kernel.org>; Fri, 18 Mar 2016 09:38:55 +1100 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u2HMcl0P63766538
-	for <linux-pci@vger.kernel.org>; Fri, 18 Mar 2016 09:38:55 +1100
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u2HMcMbr023311
-	for <linux-pci@vger.kernel.org>; Fri, 18 Mar 2016 09:38:23 +1100
-Date: Fri, 18 Mar 2016 09:37:57 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	mpe@ellerman.id.au, benh@kernel.crashing.org, paulus@samba.org,
-	imunsie@au1.ibm.com, mikey@neuling.org,
-	andrew.donnellan@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	bhelgaas@google.com
-Subject: Re: [PATCH v3] powerpc/pci: Assign fixed PHB number based on
- device-tree properties
-Message-ID: <20160317223757.GA6336@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1458245026-27635-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:59889 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753491AbcCGWdQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 7 Mar 2016 17:33:16 -0500
+Date: Mon, 7 Mar 2016 16:33:11 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH] Fix NULL ptr dereference in pci_bus_assign_domain_nr()
+ on ARM
+Message-ID: <20160307223311.GB26149@localhost>
+References: <m337sapw89.fsf@t19.piap.pl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1458245026-27635-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <m337sapw89.fsf@t19.piap.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 17, 2016 at 05:03:46PM -0300, Guilherme G. Piccoli wrote:
->The domain/PHB field of PCI addresses has its value obtained from a
->global variable, incremented each time a new domain (represented by
->struct pci_controller) is added on the system. The domain addition
->process happens during boot or due to PCI device hotplug.
->
->As recent kernels are using predictable naming for network interfaces,
->the network stack is more tied to PCI naming. This can be a problem in
->hotplug scenarios, because PCI addresses will change if devices are
->removed and then re-added. This situation seems unusual, but it can
->happen if a user wants to replace a NIC without rebooting the machine,
->for example.
->
->This patch changes the way PCI domain values are generated: now, we use
->device-tree properties to assign fixed PHB numbers to PCI addresses
->when available (meaning pSeries and PowerNV cases). We also use a bitmap
->to allow dynamic PHB numbering when device-tree properties are not
->used. This bitmap keeps track of used PHB numbers and if a PHB is
->released (by hotplug operations for example), it allows the reuse of
->this PHB number, avoiding PCI address to change in case of device remove
->and re-add soon after. No functional changes were introduced.
->
->Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+[+cc Lorenzo]
 
-Apart from below minor issues to be fixed, it looks good to me.
-
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-
->---
-> arch/powerpc/kernel/pci-common.c | 41 +++++++++++++++++++++++++++++++++++++---
-> 1 file changed, 38 insertions(+), 3 deletions(-)
->
->diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
->index 0f7a60f..8777614 100644
->--- a/arch/powerpc/kernel/pci-common.c
->+++ b/arch/powerpc/kernel/pci-common.c
->@@ -44,8 +44,11 @@
-> static DEFINE_SPINLOCK(hose_spinlock);
-> LIST_HEAD(hose_list);
->
->-/* XXX kill that some day ... */
->-static int global_phb_number;		/* Global phb counter */
->+/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
->+#define	MAX_PHBS	8192
->+
->+/* For dynamic PHB numbering: used/free PHBs tracking bitmap. */
->+static DECLARE_BITMAP(phb_bitmap, MAX_PHBS);
->
-> /* ISA Memory physical address */
-> resource_size_t isa_mem_base;
->@@ -64,6 +67,33 @@ struct dma_map_ops *get_pci_dma_ops(void)
+On Tue, Mar 01, 2016 at 07:07:18AM +0100, Krzysztof Hałasa wrote:
+> Many ARM platforms use a wrapper:
+> /*
+>  * Compatibility wrapper for older platforms that do not care about
+>  * passing the parent device.
+>  */
+> static inline void pci_common_init(struct hw_pci *hw)
+> {
+>         pci_common_init_dev(NULL, hw);
 > }
-> EXPORT_SYMBOL(get_pci_dma_ops);
->
->+static int get_phb_number(struct device_node *dn)
->+{
->+	const __be64 *prop64;
->+	const __be32 *regs;
->+	int phb_id = 0;
->+
->+	/* try fixed PHB numbering first, by checking archs and reading
->+	 * the respective device-tree property. */
->+	if (machine_is(pseries)) {
->+		regs = of_get_property(dn, "reg", NULL);
->+		if (regs)
->+			return (int)(be32_to_cpu(regs[1]) & 0xFFFF);
->+	} else {
->+		if (machine_is(powernv)) {
->+			prop64 = of_get_property(dn, "ibm,opal-phbid", NULL);
->+			if (prop64)
->+				return (int)(be64_to_cpup(prop64) & 0xFFFF);
->+		}
->+	}
->+
+> 
+> which means that pci_bus_assign_domain_nr() can be called without
+> a parent. This patch fixes the NULL pointer dereference.
+> 
+> Signed-off-by: Krzysztof Hałasa <khalasa@piap.pl>
+> Cc: stable@vger.kernel.org
 
-The nested statements can be merged to one with "else if (machine_is(powernv))".
+I applied this to for-linus with changelog as below for v4.5, thanks!
 
->+	/* if not pSeries nor PowerNV, fallback to dynamic PHB numbering */
->+	phb_id = find_first_zero_bit(phb_bitmap, MAX_PHBS);
->+	BUG_ON(phb_id >= MAX_PHBS); /* reached maximum number of PHBs */
->+	set_bit(phb_id, phb_bitmap);
->+	return phb_id;
+Wow, this is terrible.  All ARM32 systems that use pci_common_init()
+crash at boot.  That includes cns3xxx, dove, footbridge, iopl13xx,
+ip32x, iop33x, ixp4xx, ks8695, mv78xx0, orion5x, pxa, sa1100, etc.
+Apparently they've been crashing since v4.0, when 7c674700098c and
+8c7d14746abc appeared.  I can hardly believe nobody noticed until now.
 
-It's possible another CPU sets this bit before current CPU updates it, which
-will cause same domain number used by two PHBs though it's very rare. I guess
-it might be worthwhile to check if the bit is reserved by somebody else to
-avoid the issue.
+Actually, I did find one problem report:
+http://forum.doozan.com/read.php?2,17868,22070,quote=1 from last May,
+but apparently it got lost in a forum and never found its way
+upstream.
 
->+}
->+
-> struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
-> {
-> 	struct pci_controller *phb;
->@@ -72,7 +102,7 @@ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
-> 	if (phb == NULL)
-> 		return NULL;
-> 	spin_lock(&hose_spinlock);
->-	phb->global_number = global_phb_number++;
->+	phb->global_number = get_phb_number(dev);
-> 	list_add_tail(&phb->list_node, &hose_list);
-> 	spin_unlock(&hose_spinlock);
-> 	phb->dn = dev;
->@@ -94,6 +124,11 @@ EXPORT_SYMBOL_GPL(pcibios_alloc_controller);
-> void pcibios_free_controller(struct pci_controller *phb)
-> {
-> 	spin_lock(&hose_spinlock);
->+
->+	/* clear bit of phb_bitmap to allow reuse of this phb number */
->+	if (phb->global_number < MAX_PHBS)
->+		clear_bit(phb->global_number, phb_bitmap);
->+
-> 	list_del(&phb->list_node);
-> 	spin_unlock(&hose_spinlock);
->
+I reworked the changelog because this problem will affect *any* arch
+that enables CONFIG_PCI_DOMAINS_GENERIC and supplies NULL "parent"
+pointers -- ia64, mips, mn10300, s390, x86, etc., would be affected if
+they enabled CONFIG_PCI_DOMAINS_GENERIC.
 
-Thanks,
-Gavin
+I also added a "Fixes:" tag for 7c674700098c, since that's the commit
+that added the generic code we're fixing.  Backports of 7c674700098c
+should also backport this change.
 
+Bjorn
+
+
+
+commit 71babd2a89fe
+Author: Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>
+Date:   Tue Mar 1 07:07:18 2016 +0100
+
+    PCI: Allow a NULL "parent" pointer in pci_bus_assign_domain_nr()
+    
+    pci_create_root_bus() passes a "parent" pointer to
+    pci_bus_assign_domain_nr().  When CONFIG_PCI_DOMAINS_GENERIC is defined,
+    pci_bus_assign_domain_nr() dereferences that pointer.  Many callers of
+    pci_create_root_bus() supply a NULL "parent" pointer, which leads to a NULL
+    pointer dereference error.
+    
+    7c674700098c ("PCI: Move domain assignment from arm64 to generic code")
+    moved the "parent" dereference from arm64 to generic code.  Only arm64 used
+    that code (because only arm64 defined CONFIG_PCI_DOMAINS_GENERIC), and it
+    always supplied a valid "parent" pointer.  Other arches supplied NULL
+    "parent" pointers but didn't defined CONFIG_PCI_DOMAINS_GENERIC, so they
+    used a no-op version of pci_bus_assign_domain_nr().
+    
+    8c7d14746abc ("ARM/PCI: Move to generic PCI domains") defined
+    CONFIG_PCI_DOMAINS_GENERIC on ARM, and many ARM platforms use
+    pci_common_init(), which supplies a NULL "parent" pointer.
+    These platforms (cns3xxx, dove, footbridge, iop13xx, etc.) crash
+    with a NULL pointer dereference like this while probing PCI:
+    
+      Unable to handle kernel NULL pointer dereference at virtual address 000000a4
+      PC is at pci_bus_assign_domain_nr+0x10/0x84
+      LR is at pci_create_root_bus+0x48/0x2e4
+      Kernel panic - not syncing: Attempted to kill init!
+    
+    [bhelgaas: changelog, add "Reported:" and "Fixes:" tags]
+    Reported: http://forum.doozan.com/read.php?2,17868,22070,quote=1
+    Fixes: 8c7d14746abc ("ARM/PCI: Move to generic PCI domains")
+    Fixes: 7c674700098c ("PCI: Move domain assignment from arm64 to generic code")
+    Signed-off-by: Krzysztof Hałasa <khalasa@piap.pl>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    CC: stable@vger.kernel.org	# v4.0+
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 602eb42..f89db3a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4772,8 +4772,10 @@ int pci_get_new_domain_nr(void)
+ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ {
+ 	static int use_dt_domains = -1;
+-	int domain = of_get_pci_domain_nr(parent->of_node);
++	int domain = -1;
+ 
++	if (parent)
++		domain = of_get_pci_domain_nr(parent->of_node);
+ 	/*
+ 	 * Check DT domain and use_dt_domains values.
+ 	 *
