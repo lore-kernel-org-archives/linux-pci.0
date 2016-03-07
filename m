@@ -1,98 +1,225 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p3plsmtps2ded03.prod.phx3.secureserver.net ([208.109.80.60]:56353
-	"EHLO p3plsmtps2ded03.prod.phx3.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753639AbcC3WLu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 30 Mar 2016 18:11:50 -0400
-From: Jake Oshins <jakeo@microsoft.com>
-To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v2 3/7] drivers:hv: Use new vmbus_mmio_free() from client drivers.
-Date: Wed, 30 Mar 2016 16:48:43 -0700
-Message-Id: <1459381727-25039-4-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1459381727-25039-1-git-send-email-jakeo@microsoft.com>
-References: <y>
- <1459381727-25039-1-git-send-email-jakeo@microsoft.com>
+Received: from e28smtp05.in.ibm.com ([125.16.236.5]:36079 "EHLO
+	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752402AbcCGHtu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Mar 2016 02:49:50 -0500
+Received: from localhost
+	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Mon, 7 Mar 2016 13:19:47 +0530
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
+	alex.williamson@redhat.com, benh@kernel.crashing.org,
+	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [RFC PATCH v4 4/7] PCI: Modify resource_alignment to support multiple devices
+Date: Mon,  7 Mar 2016 15:48:35 +0800
+Message-Id: <1457336918-3893-5-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch modifies all the callers of vmbus_mmio_allocate()
-to call vmbus_mmio_free() instead of release_mem_region().
+When vfio passthrough a PCI device of which MMIO BARs
+are smaller than PAGE_SIZE, guest will not handle the
+mmio accesses to the BARs which leads to mmio emulations
+in host.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+This is because vfio will not allow to passthrough one
+BAR's mmio page which may be shared with other BARs.
+
+To solve this performance issue, this patch modifies
+resource_alignment to support syntax where multiple
+devices get the same alignment. So we can use something
+like "pci=resource_alignment=*:*:*.*:noresize" to
+enforce the alignment of all MMIO BARs to be at least
+PAGE_SIZE so that one BAR's mmio page would not be
+shared with other BARs.
+
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
- drivers/pci/host/pci-hyperv.c   | 14 +++++++-------
- drivers/video/fbdev/hyperv_fb.c |  4 ++--
- 2 files changed, 9 insertions(+), 9 deletions(-)
+ Documentation/kernel-parameters.txt |    2 +
+ drivers/pci/pci.c                   |   90 ++++++++++++++++++++++++++++++-----
+ include/linux/pci.h                 |    4 ++
+ 3 files changed, 85 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index ed651ba..f2559b6 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -1795,14 +1795,14 @@ static void hv_pci_free_bridge_windows(struct hv_pcibus_device *hbus)
-
- 	if (hbus->low_mmio_space && hbus->low_mmio_res) {
- 		hbus->low_mmio_res->flags |= IORESOURCE_BUSY;
--		release_mem_region(hbus->low_mmio_res->start,
--				   resource_size(hbus->low_mmio_res));
-+		vmbus_free_mmio(hbus->low_mmio_res->start,
-+				resource_size(hbus->low_mmio_res));
- 	}
-
- 	if (hbus->high_mmio_space && hbus->high_mmio_res) {
- 		hbus->high_mmio_res->flags |= IORESOURCE_BUSY;
--		release_mem_region(hbus->high_mmio_res->start,
--				   resource_size(hbus->high_mmio_res));
-+		vmbus_free_mmio(hbus->high_mmio_res->start,
-+				resource_size(hbus->high_mmio_res));
- 	}
- }
-
-@@ -1880,8 +1880,8 @@ static int hv_pci_allocate_bridge_windows(struct hv_pcibus_device *hbus)
-
- release_low_mmio:
- 	if (hbus->low_mmio_res) {
--		release_mem_region(hbus->low_mmio_res->start,
--				   resource_size(hbus->low_mmio_res));
-+		vmbus_free_mmio(hbus->low_mmio_res->start,
-+				resource_size(hbus->low_mmio_res));
- 	}
-
- 	return ret;
-@@ -1924,7 +1924,7 @@ static int hv_allocate_config_window(struct hv_pcibus_device *hbus)
-
- static void hv_free_config_window(struct hv_pcibus_device *hbus)
- {
--	release_mem_region(hbus->mem_config->start, PCI_CONFIG_MMIO_LENGTH);
-+	vmbus_free_mmio(hbus->mem_config->start, PCI_CONFIG_MMIO_LENGTH);
- }
-
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 8028631..74b38ab 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2918,6 +2918,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				aligned memory resources.
+ 				If <order of align> is not specified,
+ 				PAGE_SIZE is used as alignment.
++				<domain>, <bus>, <slot> and <func> can be set to
++				"*" which means match all values.
+ 				PCI-PCI bridge can be specified, if resource
+ 				windows need to be expanded.
+ 				noresize: Don't change the resources' sizes when
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 760cce5..44ab59f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -102,6 +102,8 @@ unsigned int pcibios_max_latency = 255;
+ /* If set, the PCIe ARI capability will not be used. */
+ static bool pcie_ari_disabled;
+ 
++bool pci_resources_page_aligned;
++
  /**
-diff --git a/drivers/video/fbdev/hyperv_fb.c b/drivers/video/fbdev/hyperv_fb.c
-index e2451bd..2fd49b2 100644
---- a/drivers/video/fbdev/hyperv_fb.c
-+++ b/drivers/video/fbdev/hyperv_fb.c
-@@ -743,7 +743,7 @@ static int hvfb_getmem(struct hv_device *hdev, struct fb_info *info)
- err3:
- 	iounmap(fb_virt);
- err2:
--	release_mem_region(par->mem->start, screen_fb_size);
-+	vmbus_free_mmio(par->mem->start, screen_fb_size);
- 	par->mem = NULL;
- err1:
- 	if (!gen2vm)
-@@ -758,7 +758,7 @@ static void hvfb_putmem(struct fb_info *info)
- 	struct hvfb_par *par = info->par;
-
- 	iounmap(info->screen_base);
--	release_mem_region(par->mem->start, screen_fb_size);
-+	vmbus_free_mmio(par->mem->start, screen_fb_size);
- 	par->mem = NULL;
+  * pci_bus_max_busnr - returns maximum PCI bus number of given bus' children
+  * @bus: pointer to PCI bus structure to search
+@@ -4604,6 +4606,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 	int seg, bus, slot, func, align_order, count;
+ 	resource_size_t align = 0;
+ 	char *p;
++	bool invalid = false;
+ 
+ 	spin_lock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
+@@ -4615,16 +4618,49 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 		} else {
+ 			align_order = -1;
+ 		}
+-		if (sscanf(p, "%x:%x:%x.%x%n",
+-			&seg, &bus, &slot, &func, &count) != 4) {
++		if (p[0] == '*' && p[1] == ':') {
++			seg = -1;
++			count = 1;
++		} else if (sscanf(p, "%x%n", &seg, &count) != 1 ||
++				p[count] != ':') {
++			invalid = true;
++			break;
++		}
++		p += count + 1;
++		if (*p == '*') {
++			bus = -1;
++			count = 1;
++		} else if (sscanf(p, "%x%n", &bus, &count) != 1) {
++			invalid = true;
++			break;
++		}
++		p += count;
++		if (*p == '.') {
++			slot = bus;
++			bus = seg;
+ 			seg = 0;
+-			if (sscanf(p, "%x:%x.%x%n",
+-					&bus, &slot, &func, &count) != 3) {
+-				/* Invalid format */
+-				printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
+-					p);
++			p++;
++		} else if (*p == ':') {
++			p++;
++			if (p[0] == '*' && p[1] == '.') {
++				slot = -1;
++				count = 1;
++			} else if (sscanf(p, "%x%n", &slot, &count) != 1 ||
++					p[count] != '.') {
++				invalid = true;
+ 				break;
+ 			}
++			p += count + 1;
++		} else {
++			invalid = true;
++			break;
++		}
++		if (*p == '*') {
++			func = -1;
++			count = 1;
++		} else if (sscanf(p, "%x%n", &func, &count) != 1) {
++			invalid = true;
++			break;
+ 		}
+ 		p += count;
+ 		if (!strncmp(p, ":noresize", 9)) {
+@@ -4632,23 +4668,34 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 			p += 9;
+ 		} else
+ 			*resize = true;
+-		if (seg == pci_domain_nr(dev->bus) &&
+-			bus == dev->bus->number &&
+-			slot == PCI_SLOT(dev->devfn) &&
+-			func == PCI_FUNC(dev->devfn)) {
++		if ((seg == pci_domain_nr(dev->bus) || seg == -1) &&
++			(bus == dev->bus->number || bus == -1) &&
++			(slot == PCI_SLOT(dev->devfn) || slot == -1) &&
++			(func == PCI_FUNC(dev->devfn) || func == -1)) {
+ 			if (align_order == -1)
+ 				align = PAGE_SIZE;
+ 			else
+ 				align = 1 << align_order;
++			if (!pci_resources_page_aligned &&
++				(align >= PAGE_SIZE &&
++				seg == -1 && bus == -1 &&
++				slot == -1 && func == -1))
++				pci_resources_page_aligned = true;
+ 			/* Found */
+ 			break;
+ 		}
+ 		if (*p != ';' && *p != ',') {
+ 			/* End of param or invalid format */
++			invalid = true;
+ 			break;
+ 		}
+ 		p++;
+ 	}
++	if (invalid == true) {
++		/* Invalid format */
++		printk(KERN_ERR "PCI: Can't parse resource_alignment parameter:%s\n",
++				p);
++	}
+ 	spin_unlock(&resource_alignment_lock);
+ 	return align;
  }
-
---
-1.9.1
+@@ -4769,6 +4816,27 @@ static int __init pci_resource_alignment_sysfs_init(void)
+ }
+ late_initcall(pci_resource_alignment_sysfs_init);
+ 
++/*
++ * This function checks whether PCI BARs' mmio page will be shared
++ * with other BARs.
++ */
++bool pci_resources_share_page(struct pci_dev *dev, int resno)
++{
++	struct resource *res = dev->resource + resno;
++
++	if (resource_size(res) >= PAGE_SIZE)
++		return false;
++	if (pci_resources_page_aligned && !(res->start & ~PAGE_MASK) &&
++		res->flags & IORESOURCE_MEM) {
++		if (res->sibling)
++			return (res->sibling->start & ~PAGE_MASK);
++		else
++			return false;
++	}
++	return true;
++}
++EXPORT_SYMBOL_GPL(pci_resources_share_page);
++
+ static void pci_no_domains(void)
+ {
+ #ifdef CONFIG_PCI_DOMAINS
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2771625..064a1b6 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1511,6 +1511,10 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ 	 (pci_resource_end((dev), (bar)) -		\
+ 	  pci_resource_start((dev), (bar)) + 1))
+ 
++extern bool pci_resources_page_aligned;
++
++bool pci_resources_share_page(struct pci_dev *dev, int resno);
++
+ /* Similar to the helpers above, these manipulate per-pci_dev
+  * driver-specific data.  They are really just a wrapper around
+  * the generic device structure functions of these calls.
+-- 
+1.7.9.5
 
