@@ -1,76 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56213 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751160AbcCKSNu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Mar 2016 13:13:50 -0500
-Date: Fri, 11 Mar 2016 12:13:46 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Simon Horman <horms@verge.net.au>
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:36214 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205AbcCGI22 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Mar 2016 03:28:28 -0500
+Date: Mon, 7 Mar 2016 09:28:23 +0100
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH] PCI: rcar, rcar-gen2: Use ARCH_RENESAS
-Message-ID: <20160311181346.GC4725@localhost>
-References: <1456361156-16798-1-git-send-email-horms+renesas@verge.net.au>
- <20160308183650.GB23484@localhost>
- <20160311014911.GA26819@verge.net.au>
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: tegra: Support per-lane PHYs
+Message-ID: <20160307082823.GA31189@ulmo.nvidia.com>
+References: <1455029465-9211-1-git-send-email-thierry.reding@gmail.com>
+ <1455904860-29090-1-git-send-email-thierry.reding@gmail.com>
+ <56CCA250.2010403@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160311014911.GA26819@verge.net.au>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="wac7ysb48OaltWcw"
+In-Reply-To: <56CCA250.2010403@wwwdotorg.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 11, 2016 at 10:49:11AM +0900, Simon Horman wrote:
-> On Tue, Mar 08, 2016 at 12:36:50PM -0600, Bjorn Helgaas wrote:
-> > On Thu, Feb 25, 2016 at 09:45:56AM +0900, Simon Horman wrote:
-> > > Make use of ARCH_RENESAS in place of ARCH_SHMOBILE.
-> > > 
-> > > This is part of an ongoing process to migrate from ARCH_SHMOBILE to
-> > > ARCH_RENESAS the motivation for which being that RENESAS seems to be a more
-> > > appropriate name than SHMOBILE for the majority of Renesas ARM based SoCs.
-> > > 
-> > > Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-> > > ---
-> > >  drivers/pci/host/Kconfig | 4 ++--
-> > >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > > 
-> > >  Based on the next branch of the pci tree
-> > > 
-> > > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> > > index 75a605426538..dcf4d5a349ca 100644
-> > > --- a/drivers/pci/host/Kconfig
-> > > +++ b/drivers/pci/host/Kconfig
-> > > @@ -41,7 +41,7 @@ config PCI_TEGRA
-> > >  config PCI_RCAR_GEN2
-> > >  	bool "Renesas R-Car Gen2 Internal PCI controller"
-> > >  	depends on ARM
-> > > -	depends on ARCH_SHMOBILE || COMPILE_TEST
-> > > +	depends on ARCH_RENESAS || COMPILE_TEST
-> > >  	help
-> > >  	  Say Y here if you want internal PCI support on R-Car Gen2 SoC.
-> > >  	  There are 3 internal PCI controllers available with a single
-> > > @@ -49,7 +49,7 @@ config PCI_RCAR_GEN2
-> > >  
-> > >  config PCI_RCAR_GEN2_PCIE
-> > >  	bool "Renesas R-Car PCIe controller"
-> > > -	depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
-> > > +	depends on ARCH_RENESAS || (ARM && COMPILE_TEST)
-> > 
-> > I don't object to this, but I don't know what's happening with Phil's
-> > question.  Is there another revision coming with a doc change and/or the
-> > "s/Gen2//" change?
-> 
-> Sorry for not following up earlier. I have a slight preference to handle
-> the Gen2 issue as a separate change. Could you consider picking up this
-> patch as is?
-> 
-> With regards to the Gen2 change:
-> 
-> * I think its entirely reasonable to s/Gen2// in the help text but;
-> * I think it would also be worth considering, as a follow-up change,
->   s/PCI_RCAR_GEN2/PCI_RCAR/ though I'm wary of breaking existing configs.
 
-The Gen2 and PCI/PCIe text is definitely confusing.  It'd be nice to
-clean it up somehow.
+--wac7ysb48OaltWcw
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Bjorn
+On Tue, Feb 23, 2016 at 11:17:52AM -0700, Stephen Warren wrote:
+> On 02/19/2016 11:01 AM, Thierry Reding wrote:
+[...]
+> >diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+>=20
+> >@@ -883,14 +904,24 @@ static int tegra_pcie_enable_controller(struct teg=
+ra_pcie *pcie)
+>=20
+> >+	if (of_get_property(pcie->dev->of_node, "phys", NULL) =3D=3D NULL) {
+>=20
+> Rather than re-parsing DT to determine this, thus duplicating the logic,
+> can't the code store some flag in tegra_pcie_phys_get() indicating which
+> path was taken, and that flag used here? Perhaps that flag could be based=
+ on
+> whether pcie->phy is set, although the else block here implies that
+> particular solution won't work.
+
+We could derive this by iterating over all ports and check whether each
+of them has its ->phys field set to !NULL. However, keeping track of it
+via a separate boolean seems to me like the less obfuscated version, so
+I've implemented that instead.
+
+Thanks,
+Thierry
+
+--wac7ysb48OaltWcw
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCAAGBQJW3TukAAoJEN0jrNd/PrOhHu4P/Rp1BHDg6EA0ONbXqKxpLuqD
+wLP+wRxMUt/1ts+9x0A1wqHVyE3eYxMJvZXPDahbSMsbJH6klBFJ8QlsLbXKgYMk
+Z5Y6YxJX10E/vhUrx9pUf3KvOJSQlZi9hog1Cn+EPlCzmh7EsDmgi6nJMhiW/9eI
+uSVpvQknv5x05/Z/yXwCvZAM0mtODZ8Hb+2Nx50k0wtNEZHO7zMV/QO76alwPj1o
+TcK+jVvCG7RVrjmV7koM88v7HRhq+cebM3Ak7UUoE3CO3wXeT/PShk+6n2uLW0Fi
+iKhqeKyNu4j1F+yp6x0fNM45bktEgs77ZXK+GuFolP3CkWPrxpqpt+BieA29n+rt
+wvyoTjVhd0ZGyzShyNM+nwgM8AHC+EZLW67HFx1okpW3OZmdj8ZOPXS5y+BYNzY7
+u0C4i6h2Jn/8H1VBv5V3zJ92eIWC6+rhzhAQxF9oJjNBZ6UsUgwl4XzlPz7x1RA4
+fCENTayok902L6N07GN7bjcmf+lgzAKLhxFM8jDjK0pLBeAAQ+gro466sbhVNJdi
++OfsYMMEpkaN/gJDCkLK7+qfsvQGT61WJ96CHWQFjfULiU4I8HJn7UPJ9ZxRMMDZ
+0CZVNDA7x/qrIhw77dxSWpuhI+6EboZf8xpH2TjtZaZYE9S2zY5NS2bxLa8UhbM9
+v4MxBMKaP6ohifOSmEvy
+=2+Pd
+-----END PGP SIGNATURE-----
+
+--wac7ysb48OaltWcw--
