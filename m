@@ -1,107 +1,178 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:42935 "EHLO
-	metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753645AbcC3N3J (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2016 09:29:09 -0400
-Message-ID: <1459344542.2565.44.camel@pengutronix.de>
-Subject: Re: [PATCH v2] Revert "PCI: imx6: Add support for active-low reset
- GPIO"
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: bhelgaas@google.com, Richard.Zhu@freescale.com, khalasa@piap.pl,
-	ynezz@true.cz, linux-pci@vger.kernel.org, tharvey@gateworks.com,
-	Fabio Estevam <fabio.estevam@nxp.com>, stable@vger.kernel.org
-Date: Wed, 30 Mar 2016 15:29:02 +0200
-In-Reply-To: <1459201536-5558-1-git-send-email-festevam@gmail.com>
-References: <1459201536-5558-1-git-send-email-festevam@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Mon, 7 Mar 2016 12:28:48 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 3/3] pci: move pci_dma_* helpers to common code
+Message-ID: <20160307182848.GC13818@localhost>
+References: <1457277475-8913-1-git-send-email-hch@lst.de>
+ <1457277475-8913-4-git-send-email-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1457277475-8913-4-git-send-email-hch@lst.de>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Montag, den 28.03.2016, 18:45 -0300 schrieb Fabio Estevam:
-> From: Fabio Estevam <fabio.estevam@nxp.com>
-> 
-> Commit 5c5fb40de8f14 ("PCI: imx6: Add support for active-low reset GPIO")
-> cause regressions on some boards like MX6 Gateworks Ventana, for example.
-> 
-> The reason for the breakage is that this commit sets the gpio polarity
-> in the wrong logic level.
-> 
-> Also, the commit log is wrong because active-low reset GPIO is what the
-> driver used to support since the beginning.
-> 
-> So keep the old behavior that ignores the gpio polarity specified in
-> the device tree and treat the PCI reset GPIO as active-low.
-> 
-> Cc: <stable@vger.kernel.org> # 4.5
-> Reported-by: Krzysztof Hałasa <khalasa@piap.pl>
-> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+[+cc Arnd]
 
-We need to keep compatibility to existing DTs that are setting the GPIO
-active polarity in the wrong way, so this revert is correct:
-
-Acked-by: Lucas Stach <l.stach@pengutronix.de>
-
-> ---
-> Changes since v1:
-> - Improve wording of commit log (Tim)
+On Sun, Mar 06, 2016 at 04:17:55PM +0100, Christoph Hellwig wrote:
+> For a long time all architectures implement the pci_dma_* functions
+> using the generic DMA API, and they all use the same header to do
+> so.  This patch moves this header, pci-dma-compat.h, to include/linux
+> and includes it from the generic pci.h instead of having each arch
+> duplicate this include.
 > 
->  drivers/pci/host/pci-imx6.c | 20 ++++++++++++++------
->  1 file changed, 14 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index eb5a275..2f817fa 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -32,7 +32,7 @@
->  #define to_imx6_pcie(x)	container_of(x, struct imx6_pcie, pp)
->  
->  struct imx6_pcie {
-> -	struct gpio_desc	*reset_gpio;
-> +	int			reset_gpio;
->  	struct clk		*pcie_bus;
->  	struct clk		*pcie_phy;
->  	struct clk		*pcie;
-> @@ -309,10 +309,10 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
->  	usleep_range(200, 500);
->  
->  	/* Some boards don't have PCIe reset GPIO. */
-> -	if (imx6_pcie->reset_gpio) {
-> -		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 0);
-> +	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-> +		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
->  		msleep(100);
-> -		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
-> +		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
->  	}
->  	return 0;
->  
-> @@ -523,6 +523,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
->  {
->  	struct imx6_pcie *imx6_pcie;
->  	struct pcie_port *pp;
-> +	struct device_node *np = pdev->dev.of_node;
->  	struct resource *dbi_base;
->  	struct device_node *node = pdev->dev.of_node;
->  	int ret;
-> @@ -544,8 +545,15 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
->  		return PTR_ERR(pp->dbi_base);
->  
->  	/* Fetch GPIOs */
-> -	imx6_pcie->reset_gpio = devm_gpiod_get_optional(&pdev->dev, "reset",
-> -							GPIOD_OUT_LOW);
-> +	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
-> +	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-> +		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
-> +					    GPIOF_OUT_INIT_LOW, "PCIe reset");
-> +		if (ret) {
-> +			dev_err(&pdev->dev, "unable to get reset gpio\n");
-> +			return ret;
-> +		}
-> +	}
->  
->  	/* Fetch clocks */
->  	imx6_pcie->pcie_phy = devm_clk_get(&pdev->dev, "pcie_phy");
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+I applied this to pci/misc for v4.6, thanks!  It could go via another
+tree, but it does have minor conflicts with my previous patches that
+removed asm-generic/pci-dma-compat.h, so I think it makes sense for me
+to take it so I can resolve the conflicts.
+
+I wonder if we can consolidate a little more pci_dma_*-related stuff
+in pci-dma-compat.h, e.g.,
 
 
+commit fe537670eab767157eecc50538bd28e8d9b0ce9f
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Mon Mar 7 11:39:16 2016 -0600
+
+    PCI: Consolidate PCI DMA constants and interfaces in linux/pci-dma-compat.h
+    
+    Christoph added a generic include/linux/pci-dma-compat.h, so now there's
+    one place with most of the PCI DMA interfaces.  Move more PCI DMA-related
+    things there:
+    
+      - The PCI_DMA_* direction constants from linux/pci.h
+      - The pci_set_dma_max_seg_size() and pci_set_dma_seg_boundary()
+        CONFIG_PCI implementations from drivers/pci/pci.c
+      - The pci_set_dma_max_seg_size() and pci_set_dma_seg_boundary()
+        !CONFIG_PCI stubs from linux/pci.h
+      - The pci_set_dma_mask() and pci_set_consistent_dma_mask()
+        !CONFIG_PCI stubs from linux/pci.h
+    
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 64c0a12..0a9c8db 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3385,18 +3385,6 @@ bool pci_check_and_unmask_intx(struct pci_dev *dev)
+ }
+ EXPORT_SYMBOL_GPL(pci_check_and_unmask_intx);
+ 
+-int pci_set_dma_max_seg_size(struct pci_dev *dev, unsigned int size)
+-{
+-	return dma_set_max_seg_size(&dev->dev, size);
+-}
+-EXPORT_SYMBOL(pci_set_dma_max_seg_size);
+-
+-int pci_set_dma_seg_boundary(struct pci_dev *dev, unsigned long mask)
+-{
+-	return dma_set_seg_boundary(&dev->dev, mask);
+-}
+-EXPORT_SYMBOL(pci_set_dma_seg_boundary);
+-
+ /**
+  * pci_wait_for_pending_transaction - waits for pending transaction
+  * @dev: the PCI device to operate on
+diff --git a/include/linux/pci-dma-compat.h b/include/linux/pci-dma-compat.h
+index eafce7b..39726ca 100644
+--- a/include/linux/pci-dma-compat.h
++++ b/include/linux/pci-dma-compat.h
+@@ -6,6 +6,12 @@
+ 
+ #include <linux/dma-mapping.h>
+ 
++/* This defines the direction arg to the DMA mapping routines. */
++#define PCI_DMA_BIDIRECTIONAL	0
++#define PCI_DMA_TODEVICE	1
++#define PCI_DMA_FROMDEVICE	2
++#define PCI_DMA_NONE		3
++
+ static inline void *
+ pci_alloc_consistent(struct pci_dev *hwdev, size_t size,
+ 		     dma_addr_t *dma_handle)
+@@ -113,6 +119,29 @@ static inline int pci_set_consistent_dma_mask(struct pci_dev *dev, u64 mask)
+ {
+ 	return dma_set_coherent_mask(&dev->dev, mask);
+ }
++
++static inline int pci_set_dma_max_seg_size(struct pci_dev *dev,
++					   unsigned int size)
++{
++	return dma_set_max_seg_size(&dev->dev, size);
++}
++
++static inline int pci_set_dma_seg_boundary(struct pci_dev *dev,
++					   unsigned long mask)
++{
++	return dma_set_seg_boundary(&dev->dev, mask);
++}
++#else
++static inline int pci_set_dma_mask(struct pci_dev *dev, u64 mask)
++{ return -EIO; }
++static inline int pci_set_consistent_dma_mask(struct pci_dev *dev, u64 mask)
++{ return -EIO; }
++static inline int pci_set_dma_max_seg_size(struct pci_dev *dev,
++					   unsigned int size)
++{ return -EIO; }
++static inline int pci_set_dma_seg_boundary(struct pci_dev *dev,
++					   unsigned long mask)
++{ return -EIO; }
+ #endif
+ 
+ #endif
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5db6e0c..5049bd6 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -70,12 +70,6 @@ enum pci_mmap_state {
+ 	pci_mmap_mem
+ };
+ 
+-/* This defines the direction arg to the DMA mapping routines. */
+-#define PCI_DMA_BIDIRECTIONAL	0
+-#define PCI_DMA_TODEVICE	1
+-#define PCI_DMA_FROMDEVICE	2
+-#define PCI_DMA_NONE		3
+-
+ /*
+  *  For PCI devices, the region numbers are assigned this way:
+  */
+@@ -1038,8 +1032,6 @@ void pci_intx(struct pci_dev *dev, int enable);
+ bool pci_intx_mask_supported(struct pci_dev *dev);
+ bool pci_check_and_mask_intx(struct pci_dev *dev);
+ bool pci_check_and_unmask_intx(struct pci_dev *dev);
+-int pci_set_dma_max_seg_size(struct pci_dev *dev, unsigned int size);
+-int pci_set_dma_seg_boundary(struct pci_dev *dev, unsigned long mask);
+ int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask);
+ int pci_wait_for_pending_transaction(struct pci_dev *dev);
+ int pcix_get_max_mmrbc(struct pci_dev *dev);
+@@ -1255,6 +1247,7 @@ resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
+ 
+ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+ 		      unsigned int command_bits, u32 flags);
++
+ /* kmem_cache style wrapper around pci_alloc_consistent() */
+ 
+ #include <linux/pci-dma.h>
+@@ -1466,16 +1459,6 @@ static inline struct pci_dev *pci_get_class(unsigned int class,
+ static inline void pci_set_master(struct pci_dev *dev) { }
+ static inline int pci_enable_device(struct pci_dev *dev) { return -EIO; }
+ static inline void pci_disable_device(struct pci_dev *dev) { }
+-static inline int pci_set_dma_mask(struct pci_dev *dev, u64 mask)
+-{ return -EIO; }
+-static inline int pci_set_consistent_dma_mask(struct pci_dev *dev, u64 mask)
+-{ return -EIO; }
+-static inline int pci_set_dma_max_seg_size(struct pci_dev *dev,
+-					unsigned int size)
+-{ return -EIO; }
+-static inline int pci_set_dma_seg_boundary(struct pci_dev *dev,
+-					unsigned long mask)
+-{ return -EIO; }
+ static inline int pci_assign_resource(struct pci_dev *dev, int i)
+ { return -EBUSY; }
+ static inline int __pci_register_driver(struct pci_driver *drv,
