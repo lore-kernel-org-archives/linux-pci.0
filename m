@@ -1,50 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V5 01/15] ACPI: MCFG: Move mmcfg_list management to
- drivers/acpi
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
- <1455630825-27253-2-git-send-email-tn@semihalf.com>
- <20160303225152.GA10472@localhost>
- <CAKc_7PUyf8ND8Nd32yDBtBnFbkd1mJ-VsCih6YsEA5ZuBUz5zA@mail.gmail.com>
- <20160305041443.GA15110@localhost> <56DFE91E.10105@semihalf.com>
-Cc: Jayachandran Chandrashekaran Nair
-	<jayachandran.chandrashekaran@broadcom.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	okaya@codeaurora.org, jiang.liu@linux.intel.com,
-	Jayachandran Chandrashekaran Nair <jchandra@broadcom.com>,
-	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>,
-	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
-	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Jon Masters <jcm@redhat.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <56DFE98D.5010906@semihalf.com>
-Date: Wed, 9 Mar 2016 10:14:53 +0100
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Mon, 7 Mar 2016 11:57:53 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	David Howells <dhowells@redhat.com>
+Subject: Re: [PATCH 1/3] frv: remove stray pci_{alloc,free}_consistent
+ declaration
+Message-ID: <20160307175753.GB13818@localhost>
+References: <1457277475-8913-1-git-send-email-hch@lst.de>
+ <1457277475-8913-2-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <56DFE91E.10105@semihalf.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1457277475-8913-2-git-send-email-hch@lst.de>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09.03.2016 10:13, Tomasz Nowicki wrote:
->> So I think we should write generic MCFG and ECAM support from scratch
->> for arm64.  Something like this:
->>
->>    - Add an acpi_mcfg_init(), maybe in drivers/acpi/pci_mcfg.c, to be
->>      called from acpi_init() to copy MCFG info to something we can
->>      access after __init.  This would not reserve resources, but
->>      probably does have to ioremap() the regions to support
->>      raw_pci_read().
->
-> As said, ECAM and ACPI specific code was isolated in previous patch.
+[+cc David M, David H]
 
-I meant to say, in my previous patch set (V4), sorry.
+On Sun, Mar 06, 2016 at 04:17:53PM +0100, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Tomasz
+Applied with acks from David M & David H to pci/misc for v4.6, thanks!
+
+> ---
+>  arch/frv/include/asm/pci.h | 6 ------
+>  1 file changed, 6 deletions(-)
+> 
+> diff --git a/arch/frv/include/asm/pci.h b/arch/frv/include/asm/pci.h
+> index e43d22c..7e96b57 100644
+> --- a/arch/frv/include/asm/pci.h
+> +++ b/arch/frv/include/asm/pci.h
+> @@ -32,12 +32,6 @@ extern void consistent_sync_page(struct page *page, unsigned long offset,
+>  				 size_t size, int direction);
+>  #endif
+>  
+> -extern void *pci_alloc_consistent(struct pci_dev *hwdev, size_t size,
+> -				  dma_addr_t *dma_handle);
+> -
+> -extern void pci_free_consistent(struct pci_dev *hwdev, size_t size,
+> -				void *vaddr, dma_addr_t dma_handle);
+> -
+>  /* Return the index of the PCI controller for device PDEV. */
+>  #define pci_controller_num(PDEV)	(0)
+>  
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-arch" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
