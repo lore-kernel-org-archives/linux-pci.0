@@ -1,72 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:32770 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932216AbcCHKrV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Mar 2016 05:47:21 -0500
-Date: Tue, 8 Mar 2016 10:49:37 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Krzysztof Ha??asa <khalasa@piap.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] Fix NULL ptr dereference in pci_bus_assign_domain_nr()
- on ARM
-Message-ID: <20160308104937.GA18919@red-moon>
-References: <m337sapw89.fsf@t19.piap.pl>
- <20160307223311.GB26149@localhost>
- <20160308030106.GA18190@red-moon>
- <20160308042427.GA20580@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160308042427.GA20580@localhost>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
+	alex.williamson@redhat.com, benh@kernel.crashing.org,
+	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [RFC PATCH v4 2/7] PCI: Use IORESOURCE_WINDOW to identify bridge resources
+Date: Mon,  7 Mar 2016 15:48:33 +0800
+Message-Id: <1457336918-3893-3-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 07, 2016 at 10:24:27PM -0600, Bjorn Helgaas wrote:
+Now we use the IORESOURCE_STARTALIGN to identify bridge
+resources in __assign_resources_sorted(). But there would
+be some problems because some PCI devices' resources may
+also use IORESOURCE_STARTALIGN, e.g. using "noresize"
+option of resource_alignment kernel parameter.
 
-[...]
+So this patch replaces IORESOURCE_STARTALIGN with
+IORESOURCE_WINDOW.
 
-> > > Actually, I did find one problem report:
-> > > http://forum.doozan.com/read.php?2,17868,22070,quote=1 from last May,
-> > > but apparently it got lost in a forum and never found its way
-> > > upstream.
-> > > 
-> > > I reworked the changelog because this problem will affect *any* arch
-> > > that enables CONFIG_PCI_DOMAINS_GENERIC and supplies NULL "parent"
-> > > pointers -- ia64, mips, mn10300, s390, x86, etc., would be affected if
-> > > they enabled CONFIG_PCI_DOMAINS_GENERIC.
-> > > 
-> > > I also added a "Fixes:" tag for 7c674700098c, since that's the commit
-> > > that added the generic code we're fixing.  Backports of 7c674700098c
-> > > should also backport this change.
-> > 
-> > That's really unfortunate, when I moved code from arm64 to generic I
-> > did not spot this issue in the original code and carried it over, you
-> > summarized the reasons in the commit log so without any further ado (and
-> > with my apologies):
-> > 
-> > Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> 
-> No worries, it just goes with the territory.  What surprises me is
-> that it took us so long to notice.  v4.0 was released almost a year
-> ago (April 12, 2015), so I can't figure out how nobody noticed until
-> now.
-> 
-> And I don't know what happened with the problem report in the forum.
-> That's a case where somebody *did* notice, but I guess they just gave
-> up on v4.0 and went back to v3.18.  What a shame :)  I don't know if
-> people just have low expectations of Linux, or they feel like it's too
-> hard to report bugs, or we don't make it easy enough, or we're not
-> approachable enough, or what.  I notice that many times somebody finds
-> a workaround, and people seem satisfied with that, and we don't get a
-> chance to fix the real problem.
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/pci/setup-bus.c |   21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
-I agree it is a pity the problem was not reported upstream which would
-have solved the issue (that I should have spotted anyway while moving
-the code) a long time ago, unfortunately I think it has to do with
-how often developers/distros upgrade their kernels on these boards/socs
-and how they interact with upstream, which is a discussion worth having.
-
-Thank you !
-Lorenzo
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 7796d0a..4ff10ca 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -411,11 +411,11 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+-		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
+-		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
++		 * 1. bridge resource -- IORESOURCE_WINDOW
++		 * 2. SR-IOV resource
+ 		 * Here just fix the additional alignment for bridge
+ 		 */
+-		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
++		if (!(dev_res->res->flags & IORESOURCE_WINDOW))
+ 			continue;
+ 
+ 		add_align = get_res_add_align(realloc_head, dev_res->res);
+@@ -956,7 +956,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 	b_res->start = min_align;
+ 	b_res->end = b_res->start + size0 - 1;
+-	b_res->flags |= IORESOURCE_STARTALIGN;
++	b_res->flags |= IORESOURCE_STARTALIGN | IORESOURCE_WINDOW;
+ 	if (size1 > size0 && realloc_head) {
+ 		add_to_list(realloc_head, bus->self, b_res, size1-size0,
+ 			    min_align);
+@@ -1104,7 +1104,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	}
+ 	b_res->start = min_align;
+ 	b_res->end = size0 + min_align - 1;
+-	b_res->flags |= IORESOURCE_STARTALIGN;
++	b_res->flags |= IORESOURCE_STARTALIGN | IORESOURCE_WINDOW;
+ 	if (size1 > size0 && realloc_head) {
+ 		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
+@@ -1140,7 +1140,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
+ 	 */
+ 	b_res[0].start = pci_cardbus_io_size;
+ 	b_res[0].end = b_res[0].start + pci_cardbus_io_size - 1;
+-	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
++	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN |
++			  IORESOURCE_WINDOW;
+ 	if (realloc_head) {
+ 		b_res[0].end -= pci_cardbus_io_size;
+ 		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
+@@ -1152,7 +1153,8 @@ handle_b_res_1:
+ 		goto handle_b_res_2;
+ 	b_res[1].start = pci_cardbus_io_size;
+ 	b_res[1].end = b_res[1].start + pci_cardbus_io_size - 1;
+-	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
++	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN |
++			  IORESOURCE_WINDOW;
+ 	if (realloc_head) {
+ 		b_res[1].end -= pci_cardbus_io_size;
+ 		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
+@@ -1190,7 +1192,7 @@ handle_b_res_2:
+ 		b_res[2].start = pci_cardbus_mem_size;
+ 		b_res[2].end = b_res[2].start + pci_cardbus_mem_size - 1;
+ 		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH |
+-				  IORESOURCE_STARTALIGN;
++				  IORESOURCE_STARTALIGN | IORESOURCE_WINDOW;
+ 		if (realloc_head) {
+ 			b_res[2].end -= pci_cardbus_mem_size;
+ 			add_to_list(realloc_head, bridge, b_res+2,
+@@ -1206,7 +1208,8 @@ handle_b_res_3:
+ 		goto handle_done;
+ 	b_res[3].start = pci_cardbus_mem_size;
+ 	b_res[3].end = b_res[3].start + b_res_3_size - 1;
+-	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
++	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN |
++			  IORESOURCE_WINDOW;
+ 	if (realloc_head) {
+ 		b_res[3].end -= b_res_3_size;
+ 		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
+-- 
+1.7.9.5
