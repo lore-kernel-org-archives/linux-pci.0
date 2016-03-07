@@ -1,67 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40226 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751407AbcCCPK5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Mar 2016 10:10:57 -0500
-Date: Thu, 3 Mar 2016 09:10:48 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org, linux-pci@vger.kernel.org,
-	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
-	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
-	rjw@rjwysocki.net, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V2] acpi, pci, irq: account for early penalty assignment
-Message-ID: <20160303151048.GA3290@localhost>
-References: <1455801582-21595-1-git-send-email-okaya@codeaurora.org>
- <20160229192420.GC3653@localhost>
- <56D4A53A.1070708@codeaurora.org>
- <20160229223453.GA12162@localhost>
- <56D5E43E.7050406@codeaurora.org>
- <20160301194340.GA19783@localhost>
- <56D7317F.7090500@codeaurora.org>
- <56D7ABFB.3070302@codeaurora.org>
- <56D84EA9.3080900@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56D84EA9.3080900@codeaurora.org>
+Received: from e28smtp08.in.ibm.com ([125.16.236.8]:43425 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752377AbcCGHto (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Mar 2016 02:49:44 -0500
+Received: from localhost
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Mon, 7 Mar 2016 13:19:36 +0530
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
+	alex.williamson@redhat.com, benh@kernel.crashing.org,
+	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [RFC PATCH v4 5/7] vfio-pci: Allow to mmap sub-page MMIO BARs if the mmio page is exclusive
+Date: Mon,  7 Mar 2016 15:48:36 +0800
+Message-Id: <1457336918-3893-6-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 03, 2016 at 09:48:09AM -0500, Sinan Kaya wrote:
-> Taking another stab at it.
-> 
-> On 3/2/2016 10:14 PM, Sinan Kaya wrote:
-> > Taking a step back here and also some inspiration from your code, why don't we
-> > fix the actual problem instead of redesigning the whole thing?
-> 
-> I read your email multiple times. I think you want to move the x86 specific pieces
-> (ISA interrupts and its command line arguments) out of the drivers\acpi\pci_link.c.
-> Is this right?
+Current vfio-pci implementation disallows to mmap
+sub-page(size < PAGE_SIZE) MMIO BARs because these BARs' mmio
+page may be shared with other BARs.
 
-That was my idea, but your minimal patch from last night looks awfully
-attractive, and maybe it's not worth moving it to arch/x86.  I do think we
-could simplify the code significantly by getting rid of the kzalloc and
-acpi_irq_penalty_list from acpi_irq_set_penalty().  How about pushing on
-that a little bit first, and see what it looks like then?
+But we should allow to mmap these sub-page MMIO BARs if PCI
+resource allocator can make sure these BARs' mmio page will
+not be shared with other BARs.
 
-> - the legacy ISA IRQs, i.e., the contents of acpi_irq_isa_penalty[]
-> - acpi_irq_isa= from command line
-> 
->  int pcibios_irq_penalty(int irq)
->   {
->     if (irq >= ACPI_MAX_ISA_IRQ)
->       return 0;
-> 
->     return acpi_irq_isa_penalty[irq] + acpi_irq_cmd_line_penalty[irq];
->   }
-> 
-> 
-> -- 
-> Sinan Kaya
-> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/vfio/pci/vfio_pci.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 1ce1d36..49d7a69 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -589,7 +589,8 @@ static long vfio_pci_ioctl(void *device_data,
+ 				     VFIO_REGION_INFO_FLAG_WRITE;
+ 			if (IS_ENABLED(CONFIG_VFIO_PCI_MMAP) &&
+ 			    pci_resource_flags(pdev, info.index) &
+-			    IORESOURCE_MEM && info.size >= PAGE_SIZE) {
++			    IORESOURCE_MEM && !pci_resources_share_page(pdev,
++			    info.index)) {
+ 				info.flags |= VFIO_REGION_INFO_FLAG_MMAP;
+ 				if (info.index == vdev->msix_bar) {
+ 					ret = msix_sparse_mmap_cap(vdev, &caps);
+@@ -1016,6 +1017,10 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
+ 		return -EINVAL;
+ 
+ 	phys_len = pci_resource_len(pdev, index);
++
++	if (!pci_resources_share_page(pdev, index))
++		phys_len = PAGE_ALIGN(phys_len);
++
+ 	req_len = vma->vm_end - vma->vm_start;
+ 	pgoff = vma->vm_pgoff &
+ 		((1U << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1);
+-- 
+1.7.9.5
+
