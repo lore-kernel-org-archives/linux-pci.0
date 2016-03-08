@@ -1,86 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:44995 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752770AbcC3Pbl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2016 11:31:41 -0400
-Subject: Re: [PATCH v4] sparc/PCI: Fix for panic while enabling SR-IOV
-To: David Miller <davem@davemloft.net>
-References: <1458849742-162399-1-git-send-email-babu.moger@oracle.com>
- <20160329.205717.1170899993877119259.davem@davemloft.net>
-Cc: bhelgaas@google.com, wangyijing@huawei.com,
-	sowmini.varadhan@oracle.com, jiang.liu@linux.intel.com,
-	eric.snowberg@oracle.com, yinghai@kernel.org,
-	dan.j.williams@intel.com, sparclinux@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	ethan.zhao@oracle.com
-From: Babu Moger <babu.moger@oracle.com>
-Message-ID: <56FBF146.3020701@oracle.com>
-Date: Wed, 30 Mar 2016 10:31:18 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 8 Mar 2016 12:08:56 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Robin H. Johnson" <robbat2@gentoo.org>
+Cc: linux-kernel@vger.kernel.org, mst@redhat.com, perex@perex.cz,
+	tiwai@suse.com, bhelgaas@google.com,
+	Dave Airlie <airlied@gmail.com>,
+	dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
+	Gerd Hoffmann <kraxel@redhat.com>
+Subject: Re: [PATCH resend] PCI: QEMU top-level IDs for (sub)vendor & device
+Message-ID: <20160308180856.GD21278@localhost>
+References: <20160306220230.GB3720@orbis-terrarum.net>
 MIME-Version: 1.0
-In-Reply-To: <20160329.205717.1170899993877119259.davem@davemloft.net>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160306220230.GB3720@orbis-terrarum.net>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi David,
+On Sun, Mar 06, 2016 at 10:02:30PM +0000, Robin H. Johnson wrote:
+> Introduce PCI_VENDOR/PCI_SUBVENDOR/PCI_SUBDEVICE defines to replace the
+> constants scattered in the kernel already used to detect QEMU.
+> 
+> They are defined in the QEMU codebase per docs/specs/pci-ids.txt.
+> 
+> Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
+> Reviewed-by: Takashi Iwai <tiwai@suse.de>
+> Reviewed-by: Gerd Hoffmann <kraxel@redhat.com>
+> ---
+> This change prompted by a near-miss in the review of recent change:
+> 'drm/i915: refine qemu south bridge detection'
+> 
+> This patch was previously sent to LKML 25 Jan 2016; and got some
+> reviews, but otherwise slipped through the cracks.
 
-On 3/29/2016 7:57 PM, David Miller wrote:
-> From: Babu Moger <babu.moger@oracle.com>
-> Date: Thu, 24 Mar 2016 13:02:22 -0700
-> 
->> We noticed this panic while enabling SR-IOV in sparc.
->  ...
->> SR-IOV code looks for arch specific data while enabling
->> VFs. When VF device is added, driver probe function makes set
->> of calls to initialize the pci device. Because the VF device is
->> added different way than the normal PF device(which happens via
->> of_create_pci_dev for sparc), some of the arch specific initialization
->> does not happen for VF device.  That causes panic when archdata is
->> accessed.
->>
->> To fix this, I have used already defined weak function
->> pcibios_setup_device to copy archdata from PF to VF.
->> Also verified the fix.
->>
->> Signed-off-by: Babu Moger <babu.moger@oracle.com>
->> Signed-off-by: Sowmini Varadhan <sowmini.varadhan@oracle.com>
->> Reviewed-by: Ethan Zhao <ethan.zhao@oracle.com>
-> 
-> Looks good, applied and queued up for -stable, thanks.
+Applied with acks from Michael and Daniel to pci/misc for v4.6, thanks!
 
-Thanks.
-
+> ---
+>  drivers/gpu/drm/bochs/bochs_drv.c   | 4 ++--
+>  drivers/gpu/drm/cirrus/cirrus_drv.c | 5 +++--
+>  drivers/virtio/virtio_pci_common.c  | 2 +-
+>  include/linux/pci_ids.h             | 4 ++++
+>  sound/pci/intel8x0.c                | 4 ++--
+>  5 files changed, 12 insertions(+), 7 deletions(-)
 > 
-> Just a note, I am assuming that the VFs are not instantiated in the
-> device tree.  Because when you just memcpy the arch data over from the
-> PF, one thing we end up doing is using the device node of the PF.
-
-No. VFs are not instantiated in device tree(/proc/device-tree)
-
+> diff --git a/drivers/gpu/drm/bochs/bochs_drv.c b/drivers/gpu/drm/bochs/bochs_drv.c
+> index 7f1a360..b332b4d3 100644
+> --- a/drivers/gpu/drm/bochs/bochs_drv.c
+> +++ b/drivers/gpu/drm/bochs/bochs_drv.c
+> @@ -182,8 +182,8 @@ static const struct pci_device_id bochs_pci_tbl[] = {
+>  	{
+>  		.vendor      = 0x1234,
+>  		.device      = 0x1111,
+> -		.subvendor   = 0x1af4,
+> -		.subdevice   = 0x1100,
+> +		.subvendor   = PCI_SUBVENDOR_ID_REDHAT_QUMRANET,
+> +		.subdevice   = PCI_SUBDEVICE_ID_QEMU,
+>  		.driver_data = BOCHS_QEMU_STDVGA,
+>  	},
+>  	{
+> diff --git a/drivers/gpu/drm/cirrus/cirrus_drv.c b/drivers/gpu/drm/cirrus/cirrus_drv.c
+> index b1619e2..7bc394e 100644
+> --- a/drivers/gpu/drm/cirrus/cirrus_drv.c
+> +++ b/drivers/gpu/drm/cirrus/cirrus_drv.c
+> @@ -33,8 +33,9 @@ static struct drm_driver driver;
+>  
+>  /* only bind to the cirrus chip in qemu */
+>  static const struct pci_device_id pciidlist[] = {
+> -	{ PCI_VENDOR_ID_CIRRUS, PCI_DEVICE_ID_CIRRUS_5446, 0x1af4, 0x1100, 0,
+> -	  0, 0 },
+> +	{ PCI_VENDOR_ID_CIRRUS, PCI_DEVICE_ID_CIRRUS_5446,
+> +	  PCI_SUBVENDOR_ID_REDHAT_QUMRANET, PCI_SUBDEVICE_ID_QEMU,
+> +	  0, 0, 0 },
+>  	{ PCI_VENDOR_ID_CIRRUS, PCI_DEVICE_ID_CIRRUS_5446, PCI_VENDOR_ID_XEN,
+>  	  0x0001, 0, 0, 0 },
+>  	{0,}
+> diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
+> index 36205c2..127dfe4 100644
+> --- a/drivers/virtio/virtio_pci_common.c
+> +++ b/drivers/virtio/virtio_pci_common.c
+> @@ -467,7 +467,7 @@ static const struct dev_pm_ops virtio_pci_pm_ops = {
+>  
+>  /* Qumranet donated their vendor ID for devices 0x1000 thru 0x10FF. */
+>  static const struct pci_device_id virtio_pci_id_table[] = {
+> -	{ PCI_DEVICE(0x1af4, PCI_ANY_ID) },
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_REDHAT_QUMRANET, PCI_ANY_ID) },
+>  	{ 0 }
+>  };
+>  
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 37f05cb..6d249d3 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2506,6 +2506,10 @@
+>  
+>  #define PCI_VENDOR_ID_AZWAVE		0x1a3b
+>  
+> +#define PCI_VENDOR_ID_REDHAT_QUMRANET    0x1af4
+> +#define PCI_SUBVENDOR_ID_REDHAT_QUMRANET 0x1af4
+> +#define PCI_SUBDEVICE_ID_QEMU            0x1100
+> +
+>  #define PCI_VENDOR_ID_ASMEDIA		0x1b21
+>  
+>  #define PCI_VENDOR_ID_CIRCUITCO		0x1cc8
+> diff --git a/sound/pci/intel8x0.c b/sound/pci/intel8x0.c
+> index 42bcbac..12c2c18 100644
+> --- a/sound/pci/intel8x0.c
+> +++ b/sound/pci/intel8x0.c
+> @@ -2980,8 +2980,8 @@ static int snd_intel8x0_inside_vm(struct pci_dev *pci)
+>  		goto fini;
+>  
+>  	/* check for known (emulated) devices */
+> -	if (pci->subsystem_vendor == 0x1af4 &&
+> -	    pci->subsystem_device == 0x1100) {
+> +	if (pci->subsystem_vendor == PCI_SUBVENDOR_ID_REDHAT_QUMRANET &&
+> +	    pci->subsystem_device == PCI_SUBDEVICE_ID_QEMU) {
+>  		/* KVM emulated sound, PCI SSID: 1af4:1100 */
+>  		msg = "enable KVM";
+>  	} else if (pci->subsystem_vendor == 0x1ab8) {
+> -- 
+> 2.3.0
 > 
-> I slightly cringed at the memcpy, because at least one of these
-> pointers are to objects which are reference counted, the OF device.
-> 
-> Generally speaking we don't really support hot-plug for OF probed
-> devices, but if we did all of the device tree pointers have to be
-> refcounted properly.
-> 
-> So in the long term that whole sequence where we go:
-> 
-> 	struct dev_archdata *sd;
->  ...
-> 	sd = &dev->dev.archdata;
-> 	sd->iommu = pbm->iommu;
-> 	sd->stc = &pbm->stc;
-> 	sd->host_controller = pbm;
-> 	sd->op = op = of_find_device_by_node(node);
-> 	sd->numa_node = pbm->numa_node;
-> 
-> should be encapsulated into a helper function, and both
-> of_create_pci_dev() and this new pcibios_setup_device() can
-> invoke it.
-> 
-
-Yes. Agree. We need to refactor the whole of_create_pci_dev path to support
-hot-plug for the long term. I will start looking at it. For now we should be
-fine with the current patch. thanks
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
