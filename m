@@ -1,110 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
-	alex.williamson@redhat.com, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [RFC PATCH v4 2/7] PCI: Use IORESOURCE_WINDOW to identify bridge resources
-Date: Mon,  7 Mar 2016 15:48:33 +0800
-Message-Id: <1457336918-3893-3-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:48794 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750751AbcCHRqD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Mar 2016 12:46:03 -0500
+Date: Tue, 8 Mar 2016 11:45:58 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Matthew Garrett <mjg59@srcf.ucam.org>,
+	Tony Luck <tony.luck@intel.com>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+	linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>,
+	Daniel Stone <daniel@fooishbar.org>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Ville =?iso-8859-1?Q?Syrj=E4l=E4?=
+	<ville.syrjala@linux.intel.com>
+Subject: Re: [PATCH v1 00/12] PCI: Rework shadow ROM handling
+Message-ID: <20160308174558.GC19869@localhost>
+References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we use the IORESOURCE_STARTALIGN to identify bridge
-resources in __assign_resources_sorted(). But there would
-be some problems because some PCI devices' resources may
-also use IORESOURCE_STARTALIGN, e.g. using "noresize"
-option of resource_alignment kernel parameter.
+On Thu, Mar 03, 2016 at 10:53:50AM -0600, Bjorn Helgaas wrote:
+> The purpose of this series is to:
+> 
+>   - Fix the "BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment"
+>     messages reported by Linus [1], Andy [2], and others.
+> 
+>   - Move arch-specific shadow ROM location knowledge, e.g.,
+>     0xC0000-0xDFFFF, from PCI core to arch code.
+> 
+>   - Fix the ia64 and MIPS Loongson 3 oddity of keeping virtual
+>     addresses in shadow ROM struct resource (resources should always
+>     contain *physical* addresses).
+> 
+>   - Remove now-unused IORESOURCE_ROM_COPY and IORESOURCE_ROM_BIOS_COPY
+>     flags.
+> 
+> This series is based on v4.5-rc1, and it's available on my
+> pci/resource git branch (along with a couple tiny unrelated patches)
+> at [3].
+> 
+> Bjorn
+> 
+> 
+> [1] http://lkml.kernel.org/r/CA+55aFyVMfTBB0oz_yx8+eQOEJnzGtCsYSj9QuhEpdZ9BHdq5A@mail.gmail.com
+> [2] http://lkml.kernel.org/r/CALCETrV+RwNPzxyL8UVNsrAGu-6cCzD_Cc9PFJT2NCTJPLZZiw@mail.gmail.com
+> [3] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/resource
+> 
+> 
+> ---
+> 
+> Bjorn Helgaas (12):
+>       PCI: Mark shadow copy of VGA ROM as IORESOURCE_PCI_FIXED
+>       PCI: Don't assign or reassign immutable resources
+>       PCI: Don't enable/disable ROM BAR if we're using a RAM shadow copy
+>       PCI: Set ROM shadow location in arch code, not in PCI core
+>       PCI: Clean up pci_map_rom() whitespace
+>       ia64/PCI: Use temporary struct resource * to avoid repetition
+>       ia64/PCI: Use ioremap() instead of open-coded equivalent
+>       ia64/PCI: Keep CPU physical (not virtual) addresses in shadow ROM resource
+>       MIPS: Loongson 3: Use temporary struct resource * to avoid repetition
+>       MIPS: Loongson 3: Keep CPU physical (not virtual) addresses in shadow ROM resource
+>       PCI: Remove unused IORESOURCE_ROM_COPY and IORESOURCE_ROM_BIOS_COPY
+>       PCI: Simplify sysfs ROM cleanup
+> 
+> 
+>  arch/ia64/pci/fixup.c              |   21 +++++++--
+>  arch/ia64/sn/kernel/io_acpi_init.c |   22 ++++++----
+>  arch/ia64/sn/kernel/io_init.c      |   51 ++++++++--------------
+>  arch/mips/pci/fixup-loongson3.c    |   19 +++++---
+>  arch/x86/pci/fixup.c               |   21 +++++++--
+>  drivers/pci/pci-sysfs.c            |   13 +-----
+>  drivers/pci/remove.c               |    1 
+>  drivers/pci/rom.c                  |   83 +++++++++++-------------------------
+>  drivers/pci/setup-res.c            |    6 +++
+>  include/linux/ioport.h             |    4 --
+>  10 files changed, 111 insertions(+), 130 deletions(-)
 
-So this patch replaces IORESOURCE_STARTALIGN with
-IORESOURCE_WINDOW.
-
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- drivers/pci/setup-bus.c |   21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7796d0a..4ff10ca 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -411,11 +411,11 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 		/*
- 		 * There are two kinds of additional resources in the list:
--		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
--		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
-+		 * 1. bridge resource -- IORESOURCE_WINDOW
-+		 * 2. SR-IOV resource
- 		 * Here just fix the additional alignment for bridge
- 		 */
--		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
-+		if (!(dev_res->res->flags & IORESOURCE_WINDOW))
- 			continue;
- 
- 		add_align = get_res_add_align(realloc_head, dev_res->res);
-@@ -956,7 +956,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 	b_res->start = min_align;
- 	b_res->end = b_res->start + size0 - 1;
--	b_res->flags |= IORESOURCE_STARTALIGN;
-+	b_res->flags |= IORESOURCE_STARTALIGN | IORESOURCE_WINDOW;
- 	if (size1 > size0 && realloc_head) {
- 		add_to_list(realloc_head, bus->self, b_res, size1-size0,
- 			    min_align);
-@@ -1104,7 +1104,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	}
- 	b_res->start = min_align;
- 	b_res->end = size0 + min_align - 1;
--	b_res->flags |= IORESOURCE_STARTALIGN;
-+	b_res->flags |= IORESOURCE_STARTALIGN | IORESOURCE_WINDOW;
- 	if (size1 > size0 && realloc_head) {
- 		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
-@@ -1140,7 +1140,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 	 */
- 	b_res[0].start = pci_cardbus_io_size;
- 	b_res[0].end = b_res[0].start + pci_cardbus_io_size - 1;
--	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
-+	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN |
-+			  IORESOURCE_WINDOW;
- 	if (realloc_head) {
- 		b_res[0].end -= pci_cardbus_io_size;
- 		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
-@@ -1152,7 +1153,8 @@ handle_b_res_1:
- 		goto handle_b_res_2;
- 	b_res[1].start = pci_cardbus_io_size;
- 	b_res[1].end = b_res[1].start + pci_cardbus_io_size - 1;
--	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
-+	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN |
-+			  IORESOURCE_WINDOW;
- 	if (realloc_head) {
- 		b_res[1].end -= pci_cardbus_io_size;
- 		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
-@@ -1190,7 +1192,7 @@ handle_b_res_2:
- 		b_res[2].start = pci_cardbus_mem_size;
- 		b_res[2].end = b_res[2].start + pci_cardbus_mem_size - 1;
- 		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH |
--				  IORESOURCE_STARTALIGN;
-+				  IORESOURCE_STARTALIGN | IORESOURCE_WINDOW;
- 		if (realloc_head) {
- 			b_res[2].end -= pci_cardbus_mem_size;
- 			add_to_list(realloc_head, bridge, b_res+2,
-@@ -1206,7 +1208,8 @@ handle_b_res_3:
- 		goto handle_done;
- 	b_res[3].start = pci_cardbus_mem_size;
- 	b_res[3].end = b_res[3].start + b_res_3_size - 1;
--	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
-+	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN |
-+			  IORESOURCE_WINDOW;
- 	if (realloc_head) {
- 		b_res[3].end -= b_res_3_size;
- 		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
--- 
-1.7.9.5
+I applied this series to pci/resource for v4.6.
