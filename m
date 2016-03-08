@@ -1,137 +1,218 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 12 Mar 2016 09:52:03 +0200 (EET)
-From: Meelis Roos <mroos@linux.ee>
-To: Yinghai Lu <yinghai@kernel.org>
-cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v10 06/59] PCI: Kill wrong quirk about M7101
-In-Reply-To: <CAE9FiQVAPfb-PYGQoRJzXdn3NAOK-X25M9pWvR2m7_9qT5qQ+w@mail.gmail.com>
-Message-ID: <alpine.LRH.2.20.1603120951320.32556@math.ut.ee>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org> <1456366370-28995-7-git-send-email-yinghai@kernel.org> <20160310174030.GB17238@localhost> <CAE9FiQVAPfb-PYGQoRJzXdn3NAOK-X25M9pWvR2m7_9qT5qQ+w@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:45742 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933522AbcCHA3N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 7 Mar 2016 19:29:13 -0500
+Date: Mon, 7 Mar 2016 18:29:09 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org, linux-pci@vger.kernel.org,
+	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
+	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
+	rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
+	Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH V2] acpi, pci, irq: account for early penalty assignment
+Message-ID: <20160308002909.GA13250@localhost>
+References: <20160301194340.GA19783@localhost>
+ <56D7317F.7090500@codeaurora.org>
+ <56D7ABFB.3070302@codeaurora.org>
+ <56D84EA9.3080900@codeaurora.org>
+ <20160303151048.GA3290@localhost>
+ <56D8546B.5040908@codeaurora.org>
+ <56D8745D.70509@codeaurora.org>
+ <20160304180959.GA4794@localhost>
+ <56DDB28F.1040300@codeaurora.org>
+ <20160308002558.GC26149@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160308002558.GC26149@localhost>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Thu, Mar 10, 2016 at 9:40 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Wed, Feb 24, 2016 at 06:11:57PM -0800, Yinghai Lu wrote:
-> >> Meelis reported that qla2000 driver does not get loaded on one sparc system.
-> >>
-> >> schizo f00732d0: PCI host bridge to bus 0001:00
-> >> pci_bus 0001:00: root bus resource [io  0x7fe01000000-0x7fe01ffffff] (bus address [0x0000-0xffffff])
-> >> pci 0001:00:06.0: quirk: [io  0x7fe01000800-0x7fe0100083f] claimed by ali7101 ACPI
-> >> pci 0001:00:06.0: quirk: [io  0x7fe01000600-0x7fe0100061f] claimed by ali7101 SMB
-> >> pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
-> >>
-> >> So the quirk for M7101 claim the io range early.
+[+cc Thomas for real, sorry]
 
-But why did it work until 4.2 and only with 4.3 the allocations broke?
-
-
-> >>
-> >> According to spec with M7101 in M1543 page 103/104,
-> >>       http://www.versalogic.com/Support/Downloads/pdf/ali1543.pdf
-> >> 0xe0, and 0xe2 do not include address info for acpi/smb.
-> >>
-> >> Kill wrong quirk about them.
-> >
-> > This needs an explanation for why the quirk was added in the first
-> > place, and why it is now safe to remove it.
+On Mon, Mar 07, 2016 at 06:25:58PM -0600, Bjorn Helgaas wrote:
+> [+cc Thomas, irq_get_trigger_type() question below]
 > 
-> The related commit does not tell much about why it is there exactly.
-> But it is added the same time with intel piix4.
+> On Mon, Mar 07, 2016 at 11:55:43AM -0500, Sinan Kaya wrote:
+> > On 3/4/2016 1:09 PM, Bjorn Helgaas wrote:
+> > > On Thu, Mar 03, 2016 at 12:29:01PM -0500, Sinan Kaya wrote:
+> > >> On 3/3/2016 10:12 AM, Sinan Kaya wrote:
+> > >>> On 3/3/2016 10:10 AM, Bjorn Helgaas wrote:
 > 
-> Maybe Linus could have some hint about that quirk?
+> > >> From 6cc33747feb469fe4da2088f34e2c875a36f58f4 Mon Sep 17 00:00:00 2001
+> > >> From: Sinan Kaya <okaya@codeaurora.org>
+> > >> Date: Thu, 3 Mar 2016 10:14:22 -0500
+> > >> Subject: [PATCH] acpi,pci,irq: account for early penalty assignment
+> > >>
+> > >> ---
+> > >>  drivers/acpi/pci_link.c | 77 ++++++++++++++++++++++++++++++-------------------
+> > >>  1 file changed, 47 insertions(+), 30 deletions(-)
+> > >>
+> > >> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+> > >> index fa28635..09eea42 100644
+> > >> --- a/drivers/acpi/pci_link.c
+> > >> +++ b/drivers/acpi/pci_link.c
 > 
-> commit 34f550135e349102bd065488eabbbb217ab27f0d
-> Author: Linus Torvalds <torvalds@linuxfoundation.org>
-> Date:   Fri Nov 23 15:32:20 2007 -0500
+> > >>  static int acpi_irq_get_penalty(int irq)
+> > >>  {
+> > >> -	struct irq_penalty_info *irq_info;
+> > >> -
+> > >>  	if (irq < ACPI_MAX_ISA_IRQ)
+> > >>  		return acpi_irq_isa_penalty[irq];
+> > >>
+> > >> -	list_for_each_entry(irq_info, &acpi_irq_penalty_list, node) {
+> > >> -		if (irq_info->irq == irq)
+> > >> -			return irq_info->penalty;
+> > >> -	}
+> > >> +	if (irq == sci_irq)
+> > >> +		return sci_irq_penalty;
+> > >>
+> > >> -	return 0;
+> > >> +	return acpi_irq_pci_sharing_penalty(irq);
+> > > 
+> > > I think there are two issues here that should be teased apart a bit
+> > > more:
+> > > 
+> > >   1) Trigger settings: If the IRQ is configured as anything other than
+> > >   level-triggered, active-low, we can't use it at all for a PCI
+> > >   interrupt, and we should return an "infinite" penalty.  We currently
+> > >   increase the penalty for the SCI IRQ if it's not level/low, but
+> > >   doesn't it apply to *all* IRQs, not just the SCI IRQ?
+> > 
+> > It makes sense for SCI as it is Intel specific.
+> > 
+> > Unfortunately, this cannot be done in an arch independent way. Of course,
+> > ARM had to implement its own thing. While level-triggered, active-low is
+> > good for intel world, it is not for the ARM world. ARM uses active-high
+> > level triggered.
 > 
->     Import 2.3.49pre2
+> I'm confused.  I don't think SCI is Intel-specific.  Per PCI Spec
+> r3.0, sec 2.2.6, PCI interrupts are level-sensitive, asserted low.
+> Per ACPI Spec v3.0, sec 2.1, the SCI is an "active, low, shareable,
+> level interrupt".
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index cda39a5..8029b19 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -113,6 +113,55 @@ static void __init quirk_s3_64M(struct pci_dev *dev)
->         }
->  }
+> Are you saying SCI is active-high on ARM?  If so, I don't think that's
+> necessarily a huge problem, although we'd have to audit the ACPI code
+> to make sure we handle it correctly.
 > 
-> +static void __init quirk_io_region(struct pci_dev *dev, unsigned region, unsign
-> ed size, int nr)
-> +{
-> +       region &= ~(size-1);
-> +       if (region) {
-> +               struct resource *res = dev->resource + nr;
-> +
-> +               res->name = dev->name;
-> +               res->start = region;
-> +               res->end = region + size - 1;
-> +               res->flags = IORESOURCE_IO;
-> +               pci_claim_resource(dev, nr);
-> +       }
-> +}
-> +
-> +/*
-> + * Let's make the southbridge information explicit instead
-> + * of having to worry about people probing the ACPI areas,
-> + * for example.. (Yes, it happens, and if you read the wrong
-> + * ACPI register it will put the machine to sleep with no
-> + * way of waking it up again. Bummer).
-> + *
-> + * ALI M7101: Two IO regions pointed to by words at
-> + *     0xE0 (64 bytes of ACPI registers)
-> + *     0xE2 (32 bytes of SMB registers)
-> + */
-> +static void __init quirk_ali7101(struct pci_dev *dev)
-> +{
-> +       u16 region;
-> +
-> +       pci_read_config_word(dev, 0xE0, &region);
-> +       quirk_io_region(dev, region, 64, PCI_BRIDGE_RESOURCES);
-> +       pci_read_config_word(dev, 0xE2, &region);
-> +       quirk_io_region(dev, region, 32, PCI_BRIDGE_RESOURCES+1);
-> +}
-> +
-> +/*
-> + * PIIX4 ACPI: Two IO regions pointed to by longwords at
-> + *     0x40 (64 bytes of ACPI registers)
-> + *     0x90 (32 bytes of SMB registers)
-> + */
-> +static void __init quirk_piix4acpi(struct pci_dev *dev)
-> +{
-> +       u32 region;
-> +
-> +       pci_read_config_dword(dev, 0x40, &region);
-> +       quirk_io_region(dev, region, 64, PCI_BRIDGE_RESOURCES);
-> +       pci_read_config_dword(dev, 0x90, &region);
-> +       quirk_io_region(dev, region, 32, PCI_BRIDGE_RESOURCES+1);
-> +}
+> The point here is that a PCI Interrupt Link can only use an IRQ that
+> is level-triggered, active low.  If an IRQ is already set to any other
+> state, whether for an ISA device or for an active-high SCI, we can't
+> use it for a PCI Interrupt Link.
 > 
->  /*
->   *  The main table of quirks.
-> @@ -143,6 +192,8 @@ static struct pci_fixup pci_fixups[] __initdata = {
->         { PCI_FIXUP_FINAL,      PCI_VENDOR_ID_INTEL,
-> PCI_DEVICE_ID_INTEL_82443BX_2,  quirk_natoma },
->         { PCI_FIXUP_FINAL,      PCI_VENDOR_ID_SI,
-> PCI_DEVICE_ID_SI_5597,          quirk_nopcipci },
->         { PCI_FIXUP_FINAL,      PCI_VENDOR_ID_SI,
-> PCI_DEVICE_ID_SI_496,           quirk_nopcipci },
-> +       { PCI_FIXUP_FINAL,      PCI_VENDOR_ID_INTEL,
-> PCI_DEVICE_ID_INTEL_82371AB_3,  quirk_piix4acpi },
-> +       { PCI_FIXUP_FINAL,      PCI_VENDOR_ID_AL,
-> PCI_DEVICE_ID_AL_M7101,         quirk_ali7101 },
->         { 0 }
->  };
+> It'd be nice if there were a generic way we could figure out what the
+> trigger mode of an IRQ is.  I was hoping can_request_irq() was that
+> way, but I don't think it is, because it only looks at IRQF_SHARED,
+> not at IRQF_TRIGGER_LOW.
 > 
-
--- 
-Meelis Roos (mroos@linux.ee)
+> Maybe irq_get_trigger_type() is what we want?
+> 
+> > >   It looks like we do something similar in the pcibios_lookup_irq()
+> > >   loop that uses can_request_irq().  If we used can_request_irq() in
+> > >   pci_link.c, would that mean we could get rid of the SCI
+> > >   trigger/polarity stuff and just keep track of the SCI IRQ?  I don't
+> > >   know whether the SCI IRQ is hooked into whatever can_request_irq()
+> > >   uses, but it seems like it *should* be.
+> > 
+> > Sorry, you lost me here. We are only tracking sci_irq and sci_penalty. 
+> > Do you want to add an additional check here? something like this?
+> > 
+> >         if (trigger != ACPI_MADT_TRIGGER_LEVEL ||
+> > -           polarity != ACPI_MADT_POLARITY_ACTIVE_LOW)
+> > +           polarity != ACPI_MADT_POLARITY_ACTIVE_LOW) &&
+> > +           !can_request_irq(irq, IRQF_SHARED | IRQF_TRIGGER_LOW))
+> 
+> I'm saying:
+> 
+>   - If the IRQ trigger type is anything other than level/low, reject
+>     this IRQ, and
+> 
+>   - If this IRQ is the SCI IRQ, penalize the IRQ as though we have a
+>     PCI device already using it.
+> 
+> > > If we adopt the idea that we compute the penalties on the fly in
+> > > acpi_irq_get_penalty(), I don't think we need acpi_irq_penalty_init()
+> > > any more.  It does basically the same thing acpi_irq_get_penalty()
+> > > would do, and it's confusing to do it twice.
+> > 
+> > Agreed, I was going to take it out. I didn't want to get on it yet. Emptied
+> > the function now.
+> 
+> You might be able to do this incrementally, in several patches, and
+> I'd prefer that if it's possible.  It's much easier to review patches
+> if each one is as small as possible and changes only one thing at a
+> time.
+> 
+> > >> @@ -900,6 +916,7 @@ void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
+> > >>  	if (irq < 0)
+> > >>  		return;
+> > >>
+> > >> +	sci_irq = irq;
+> > > 
+> > > Possibly acpi_penalize_sci_irq() itself could go away, since all we
+> > > really need is the SCI IRQ, and we might be able to just use
+> > > acpi_gbl_FADT.sci_interrupt (I'm not 100% sure sci_interrupt is
+> > > identical to a Linux IRQ number; we'd have to check that).
+> > 
+> > Is SCI IRQ exclusive in general? We are now keeping track of SCI IRQ and 
+> > adding penalty when irq matches sci_irq in get_penalty function. 
+> > 
+> > How do we make sci_irq_penalty and acpi_penalize_sci_irq disappear?
+> 
+> I don't think the SCI IRQ needs to be exclusive.  The ACPI spec says
+> it should be sharable, as long as the other devices use a compatible
+> trigger mode (level/low per spec).
+> 
+> If we know the SCI IRQ, we don't need sci_irq_penalty or
+> acpi_penalize_sci_irq() because we can penalize an IRQ with the
+> PIRQ_PENALTY_PCI_USING, something like this:
+> 
+>   static int pci_compatible_trigger(int irq)
+>   {
+>     int type = irq_get_trigger_type(irq);
+> 
+>     return (type == IRQ_TYPE_LEVEL_LOW || type == IRQ_TYPE_NONE);
+>   }
+> 
+>   static unsigned int acpi_irq_get_penalty(int irq)
+>   {
+>     unsigned int penalty = 0;
+> 
+>     if (irq == acpi_gbl_FADT.sci_interrupt)
+>       penalty += PIRQ_PENALTY_PCI_USING;
+> 
+>     penalty += acpi_irq_pci_sharing_penalty(irq);
+>     return penalty;
+>   }
+> 
+>   static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+>   {
+>     unsigned int best = ~0;
+>     ...
+> 
+>     for (i = (link->irq.possible_count - 1); i >= 0; i--) {
+>       candidate = link->irq.possible[i];
+>       if (!pci_compatible_trigger(candidate))
+>         continue;
+> 
+>       penalty = acpi_irq_get_penalty(candidate);
+>       if (penalty < best) {
+>         irq = candidate;
+>         best = penalty;
+>       }
+>     }
+>     ...
+>   }
+> 
+> This looks racy, because we test irq_get_trigger_type() without any
+> kind of locking, and later acpi_register_gsi() calls
+> irq_create_fwspec_mapping(), which looks like it sets the new trigger
+> type.  But I don't know how to fix that.
+> 
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
