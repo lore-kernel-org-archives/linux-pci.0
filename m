@@ -1,71 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 16 Mar 2016 10:31:51 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
-	aik@ozlabs.ru, benh@kernel.crashing.org, paulus@samba.org,
-	mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH v4 3/7] PCI: Ignore resource_alignment if
- PCI_PROBE_ONLY was set
-Message-ID: <20160316103151.0269f0c5@t450s.home>
-In-Reply-To: <1457336918-3893-4-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-	<1457336918-3893-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:49104 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751099AbcCHRu3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 8 Mar 2016 12:50:29 -0500
+Date: Tue, 8 Mar 2016 11:50:20 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Andi Kleen <ak@linux.intel.com>,
+	Jayachandran Chandrashekaran Nair
+	<jayachandran.chandrashekaran@broadcom.com>,
+	Rob Herring <robh@kernel.org>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v1 0/3] PCI: Avoid touching non-compliant BARs
+Message-ID: <20160308175020.GD19869@localhost>
+References: <20160226155334.9113.77645.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160226155334.9113.77645.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon,  7 Mar 2016 15:48:34 +0800
-Yongji Xie <xyjxie@linux.vnet.ibm.com> wrote:
-
-> The resource_alignment will releases memory resources
-> allocated by firmware so that kernel can reassign new
-> resources later on. But this will cause the problem
-> that no resources can be allocated by kernel if
-> PCI_PROBE_ONLY was set, e.g. on pSeries platform
-> because PCI_PROBE_ONLY force kernel to use firmware
-> setup and not to reassign any resources.
+On Fri, Feb 26, 2016 at 09:58:42AM -0600, Bjorn Helgaas wrote:
+> Hi guys,
 > 
-> To solve this problem, this patch ignores
-> resource_alignment if PCI_PROBE_ONLY was set.
+> Here's a proposal for dealing with these devices that have non-BAR
+> registers where BARs are supposed to be.  The idea is to:
 > 
-> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>   - have an early quirk mark these devices,
+>   - disable IO & MEM decoding so the devices don't consume address space
+>     we don't know about, and
+>   - skip BAR sizing (so the struct resources stay zeroed out)
+> 
+> This is basically a modification of what Andi originally proposed.  The
+> difference here is that we never touch the BAR at all, and we don't have to
+> add any struct resource flags, so we don't have to worry about changing any
+> consumers of the struct resources.
+> 
+> Let me know what you think.
+> 
 > ---
->  Documentation/kernel-parameters.txt |    2 ++
->  drivers/pci/probe.c                 |    3 ++-
->  2 files changed, 4 insertions(+), 1 deletion(-)
 > 
-> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> index d8b29ab..8028631 100644
-> --- a/Documentation/kernel-parameters.txt
-> +++ b/Documentation/kernel-parameters.txt
-> @@ -2922,6 +2922,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
->  				windows need to be expanded.
->  				noresize: Don't change the resources' sizes when
->  				reassigning alignment.
-> +				Note that this option will not work if
-> +				PCI_PROBE_ONLY is set.
+> Bjorn Helgaas (3):
+>       PCI: Disable IO/MEM decoding for devices with non-compliant BARs
+>       x86/PCI: Mark Broadwell-EP Home Agent & PCU as having non-compliant BARs
+>       PCI: Mark Broadcom Vulcan bridges as having non-compliant BARs
+> 
+> 
+>  arch/x86/pci/fixup.c |    7 +++++++
+>  drivers/pci/probe.c  |   14 ++++++++++++++
+>  drivers/pci/quirks.c |   14 ++++++++++++++
+>  include/linux/pci.h  |    1 +
+>  4 files changed, 36 insertions(+)
 
-How would a user have any idea if this is set?
+I applied the first two patches, with Andi's Tested-by, to
+pci/resource for v4.6.
 
->  		ecrc=		Enable/disable PCIe ECRC (transaction layer
->  				end-to-end CRC checking).
->  				bios: Use BIOS/firmware settings. This is the
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 6d7ab9b..bc31cad 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1719,7 +1719,8 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->  	pci_fixup_device(pci_fixup_header, dev);
->  
->  	/* moved out from quirk header fixup code */
-> -	pci_reassigndev_resource_alignment(dev);
-> +	if (!pci_has_flag(PCI_PROBE_ONLY))
-> +		pci_reassigndev_resource_alignment(dev);
->  
->  	/* Clear the state_saved flag. */
->  	dev->state_saved = false;
+Per Jayachandran, the Broadcom patch turned out not to be necessary,
+so I dropped that one.
+
+Bjorn
