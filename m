@@ -1,75 +1,223 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:36040 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755185AbcCPQwA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Mar 2016 12:52:00 -0400
-Subject: Re: [PATCH 1/2] dt-bindings: pci: tegra: Update for per-lane PHYs
-To: Thierry Reding <thierry.reding@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <1457452094-5409-1-git-send-email-thierry.reding@gmail.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-From: Stephen Warren <swarren@wwwdotorg.org>
-Message-ID: <56E98F2E.5010307@wwwdotorg.org>
-Date: Wed, 16 Mar 2016 10:51:58 -0600
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [PATCH] PCI: Include pci/hotplug Kconfig directly from pci/Kconfig
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-arch@vger.kernel.org,
+	Bogicevic Sasa <brutallesale@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>
+Date: Tue, 08 Mar 2016 15:27:15 -0600
+Message-ID: <20160308212714.752.96106.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1457452094-5409-1-git-send-email-thierry.reding@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/08/2016 08:48 AM, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
->
-> Changes to the pad controller device tree binding have required that
-> each lane be associated with a separate PHY.
+Include pci/hotplug/Kconfig directly from pci/Kconfig, so arches don't
+have to source both pci/Kconfig and pci/hotplug/Kconfig.
 
-I still don't think this has anything to do with DT bindings. Rather, 
-the definition of a PHY (in HW and the Linux PHY subsystem) is a single 
-lane. That fact then requires drivers to support a PHY per lane rather 
-than a single multi-lane PHY, and equally means the DT bindings must be 
-written according to the correct definition of a PHY.
+Note that this effectively adds pci/hotplug/Kconfig to the following
+arches, because they already sourced drivers/pci/Kconfig but they
+previously did not source drivers/pci/hotplug/Kconfig:
 
-Still, I suppose the commit description is fine as is.
+  alpha
+  arm
+  avr32
+  frv
+  m68k
+  microblaze
+  mn10300
+  sparc
+  unicore32
 
-> Update the PCI host bridge
-> device tree binding to allow each root port to define the list of PHYs
-> required to drive the lanes associated with it.
+Inspired-by-patch-from: Bogicevic Sasa <brutallesale@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/arm64/Kconfig     |    1 -
+ arch/blackfin/Kconfig  |    2 --
+ arch/ia64/Kconfig      |    2 --
+ arch/m32r/Kconfig      |    2 --
+ arch/mips/Kconfig      |    2 --
+ arch/powerpc/Kconfig   |    2 --
+ arch/s390/Kconfig      |    1 -
+ arch/sh/Kconfig        |    2 --
+ arch/tile/Kconfig      |    3 ---
+ arch/x86/Kconfig       |    2 --
+ arch/xtensa/Kconfig    |    2 --
+ drivers/parisc/Kconfig |    2 --
+ drivers/pci/Kconfig    |    1 +
+ 13 files changed, 1 insertion(+), 23 deletions(-)
 
-> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 128ec3c..fc8089d 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -235,7 +235,6 @@ config PCI_SYSCALL
+ 	def_bool PCI
+ 
+ source "drivers/pci/Kconfig"
+-source "drivers/pci/hotplug/Kconfig"
+ 
+ endmenu
+ 
+diff --git a/arch/blackfin/Kconfig b/arch/blackfin/Kconfig
+index af76634..a63c122 100644
+--- a/arch/blackfin/Kconfig
++++ b/arch/blackfin/Kconfig
+@@ -1233,8 +1233,6 @@ source "drivers/pci/Kconfig"
+ 
+ source "drivers/pcmcia/Kconfig"
+ 
+-source "drivers/pci/hotplug/Kconfig"
+-
+ endmenu
+ 
+ menu "Executable file formats"
+diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
+index 1bc4b5a..b534eba 100644
+--- a/arch/ia64/Kconfig
++++ b/arch/ia64/Kconfig
+@@ -576,8 +576,6 @@ config PCI_SYSCALL
+ 
+ source "drivers/pci/Kconfig"
+ 
+-source "drivers/pci/hotplug/Kconfig"
+-
+ source "drivers/pcmcia/Kconfig"
+ 
+ endmenu
+diff --git a/arch/m32r/Kconfig b/arch/m32r/Kconfig
+index 836ac5a..e1b1236 100644
+--- a/arch/m32r/Kconfig
++++ b/arch/m32r/Kconfig
+@@ -386,8 +386,6 @@ config ISA
+ 
+ source "drivers/pcmcia/Kconfig"
+ 
+-source "drivers/pci/hotplug/Kconfig"
+-
+ endmenu
+ 
+ 
+diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
+index d21eec7..d16204d 100644
+--- a/arch/mips/Kconfig
++++ b/arch/mips/Kconfig
+@@ -2935,8 +2935,6 @@ config ZONE_DMA32
+ 
+ source "drivers/pcmcia/Kconfig"
+ 
+-source "drivers/pci/hotplug/Kconfig"
+-
+ config RAPIDIO
+ 	tristate "RapidIO support"
+ 	depends on PCI
+diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
+index 247a09f..e28f86e 100644
+--- a/arch/powerpc/Kconfig
++++ b/arch/powerpc/Kconfig
+@@ -832,8 +832,6 @@ source "drivers/pci/Kconfig"
+ 
+ source "drivers/pcmcia/Kconfig"
+ 
+-source "drivers/pci/hotplug/Kconfig"
+-
+ config HAS_RAPIDIO
+ 	bool
+ 	default n
+diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
+index 9918433..e70d498 100644
+--- a/arch/s390/Kconfig
++++ b/arch/s390/Kconfig
+@@ -605,7 +605,6 @@ config PCI_NR_MSI
+ 	  PCI devices.
+ 
+ source "drivers/pci/Kconfig"
+-source "drivers/pci/hotplug/Kconfig"
+ 
+ endif	# PCI
+ 
+diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
+index ce52af9..17a4f15 100644
+--- a/arch/sh/Kconfig
++++ b/arch/sh/Kconfig
+@@ -851,8 +851,6 @@ source "drivers/pci/Kconfig"
+ 
+ source "drivers/pcmcia/Kconfig"
+ 
+-source "drivers/pci/hotplug/Kconfig"
+-
+ endmenu
+ 
+ menu "Executable file formats"
+diff --git a/arch/tile/Kconfig b/arch/tile/Kconfig
+index 0c95266..8171930 100644
+--- a/arch/tile/Kconfig
++++ b/arch/tile/Kconfig
+@@ -455,7 +455,6 @@ config TILE_PCI_IO
+ 
+ source "drivers/pci/Kconfig"
+ 
+-
+ config TILE_USB
+ 	tristate "Tilera USB host adapter support"
+ 	default y
+@@ -466,8 +465,6 @@ config TILE_USB
+ 	  Provides USB host adapter support for the built-in EHCI and OHCI
+ 	  interfaces on TILE-Gx chips.
+ 
+-source "drivers/pci/hotplug/Kconfig"
+-
+ endmenu
+ 
+ menu "Executable file formats"
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index ff7fe2d..1912637 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -2586,8 +2586,6 @@ config AMD_NB
+ 
+ source "drivers/pcmcia/Kconfig"
+ 
+-source "drivers/pci/hotplug/Kconfig"
+-
+ config RAPIDIO
+ 	tristate "RapidIO support"
+ 	depends on PCI
+diff --git a/arch/xtensa/Kconfig b/arch/xtensa/Kconfig
+index e9df156..7e9464b 100644
+--- a/arch/xtensa/Kconfig
++++ b/arch/xtensa/Kconfig
+@@ -413,8 +413,6 @@ config FORCE_MAX_ZONEORDER
+ 
+ source "drivers/pcmcia/Kconfig"
+ 
+-source "drivers/pci/hotplug/Kconfig"
+-
+ config PLATFORM_WANT_DEFAULT_MEM
+ 	def_bool n
+ 
+diff --git a/drivers/parisc/Kconfig b/drivers/parisc/Kconfig
+index 592de56..3a102a8 100644
+--- a/drivers/parisc/Kconfig
++++ b/drivers/parisc/Kconfig
+@@ -110,8 +110,6 @@ config IOMMU_HELPER
+ 
+ source "drivers/pcmcia/Kconfig"
+ 
+-source "drivers/pci/hotplug/Kconfig"
+-
+ endmenu
+ 
+ menu "PA-RISC specific drivers"
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 04e0092..616165d 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -121,4 +121,5 @@ config PCI_LABEL
+ 	def_bool y if (DMI || ACPI)
+ 	select NLS
+ 
++source "drivers/pci/hotplug/Kconfig"
+ source "drivers/pci/host/Kconfig"
 
-> +Required properties for Tegra124 and later:
-> +- phys: Must contain an phandle to a PHY for each entry in phy-names.
-> +- phy-names: Must include an entry for each active lane. Note that the number
-> +  of entries does not have to (though usually will) be equal to the specified
-> +  number of lanes in the nvidia,num-lanes property. Entries are of the form
-> +  "pcie-N": where N ranges from 0 to the value specified in nvidia,num-lanes.
-
-When would the number of PHYs not equal the number of lanes? I thought 
-the whole point of this patch was to switch to per-lane PHYs? Perhaps 
-I'm just misremembering some exception, so there may be no need to 
-change this.
-
->   Example:
->
->   SoC DTSI:
-> @@ -169,6 +179,9 @@ SoC DTSI:
->   			ranges;
->
->   			nvidia,num-lanes = <2>;
-> +
-> +			phys = <&{/padctl@0,7009f000/pads/pcie/pcie-4}>;
-> +			phy-names = "pcie-0";
->   		};
-
-The example shows a Tegra20 PCIe controller, yet includes 
-Tegra124-or-greater properties. That seems a bit odd. Should the changes 
-to the example be dropped, or does "Required properties for Tegra124 and 
-later" mean "Required for T124+, optional for earlier chips"?
-
-Conceptually this change is fine by me though.
