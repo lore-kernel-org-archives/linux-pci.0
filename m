@@ -1,234 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 10 Mar 2016 14:56:33 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-	Bogicevic Sasa <brutallesale@gmail.com>,
-	linux-kernel@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH] PCI: Include pci/hotplug Kconfig directly from
- pci/Kconfig
-Message-ID: <20160310205633.GF14873@localhost>
-References: <20160308212714.752.96106.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:49384 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753021AbcCHA5i (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Mar 2016 19:57:38 -0500
+Received: from localhost
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 8 Mar 2016 10:57:35 +1000
+Date: Tue, 8 Mar 2016 11:56:33 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
+	dja@axtens.net, Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>
+Subject: Re: [PATCH v8 42/45] drivers/of: Rename unflatten_dt_node()
+Message-ID: <20160308005633.GA30023@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-43-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAL_JsqJydgmkU=SGcr-0JHsYG8wXk5GEQCQXY7y+FHH2A0LZkw@mail.gmail.com>
+ <20160219031655.GA10818@gwshan>
+ <CAL_JsqJFacEMD6jwi=YsT83BTVp5Asjmw4nYU6Msct-DcR2W9Q@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160308212714.752.96106.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAL_JsqJFacEMD6jwi=YsT83BTVp5Asjmw4nYU6Msct-DcR2W9Q@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 08, 2016 at 03:27:15PM -0600, Bjorn Helgaas wrote:
-> Include pci/hotplug/Kconfig directly from pci/Kconfig, so arches don't
-> have to source both pci/Kconfig and pci/hotplug/Kconfig.
-> 
-> Note that this effectively adds pci/hotplug/Kconfig to the following
-> arches, because they already sourced drivers/pci/Kconfig but they
-> previously did not source drivers/pci/hotplug/Kconfig:
-> 
->   alpha
->   arm
->   avr32
->   frv
->   m68k
->   microblaze
->   mn10300
->   sparc
->   unicore32
-> 
-> Inspired-by-patch-from: Bogicevic Sasa <brutallesale@gmail.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On Tue, Mar 01, 2016 at 08:40:12PM -0600, Rob Herring wrote:
+>On Thu, Feb 18, 2016 at 9:16 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+>> On Wed, Feb 17, 2016 at 08:59:53AM -0600, Rob Herring wrote:
+>>>On Tue, Feb 16, 2016 at 9:44 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+>>>> This renames unflatten_dt_node() to unflatten_dt_nodes() as it
+>>>> populates multiple device nodes from FDT blob. No logical changes
+>>>> introduced.
+>>>>
+>>>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>>> ---
+>>>>  drivers/of/fdt.c | 14 +++++++-------
+>>>>  1 file changed, 7 insertions(+), 7 deletions(-)
+>>>
+>>>Acked-by: Rob Herring <robh@kernel.org>
+>>>
+>>>I'm happy to take patches 40-42 for 4.6 if the rest of the series
+>>>doesn't go in given they fix a separate problem. I just need to know
+>>>soon (or at least they need to go into -next soon).
+>>>
+>>
+>> Thanks for quick response, Rob. It depends how much comments I will
+>> receive for the powerpc/powernv part. Except that, all parts including
+>> this one have been ack'ed. I can discuss it with Michael Ellerman.
+>> By the way, how soon you need the decision to merge 40-42? If that's
+>> one or two weeks later, I don't think the reivew on the whole series
+>> can be done.
+>
+>Well, it's been 2 weeks now. I need to know this week.
+>
+>> Also, I think you probably can merge 40-44 as they're all about
+>> fdt.c. If they can be merged at one time, I needn't bother (cc)
+>> you again if I need send a updated revision. Thanks for your
+>> review.
+>
+>I did not include 43 and 44 as they are only needed for the rest of your series.
+>
 
-I applied this to pci/kconfig for v4.6.
+Rob, sorry for late reponse. I really expect this series to be merged to 4.6 and
+I was checking reviewers' bandwidth to review it. Unfortunately, I didn't receive
+any comments except yours until now. That means this series has to miss 4.6. Please
+pick/merge 41 and 42 if no body has objection. Thanks again for your time on this.
 
-> ---
->  arch/arm64/Kconfig     |    1 -
->  arch/blackfin/Kconfig  |    2 --
->  arch/ia64/Kconfig      |    2 --
->  arch/m32r/Kconfig      |    2 --
->  arch/mips/Kconfig      |    2 --
->  arch/powerpc/Kconfig   |    2 --
->  arch/s390/Kconfig      |    1 -
->  arch/sh/Kconfig        |    2 --
->  arch/tile/Kconfig      |    3 ---
->  arch/x86/Kconfig       |    2 --
->  arch/xtensa/Kconfig    |    2 --
->  drivers/parisc/Kconfig |    2 --
->  drivers/pci/Kconfig    |    1 +
->  13 files changed, 1 insertion(+), 23 deletions(-)
-> 
-> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-> index 128ec3c..fc8089d 100644
-> --- a/arch/arm64/Kconfig
-> +++ b/arch/arm64/Kconfig
-> @@ -235,7 +235,6 @@ config PCI_SYSCALL
->  	def_bool PCI
->  
->  source "drivers/pci/Kconfig"
-> -source "drivers/pci/hotplug/Kconfig"
->  
->  endmenu
->  
-> diff --git a/arch/blackfin/Kconfig b/arch/blackfin/Kconfig
-> index af76634..a63c122 100644
-> --- a/arch/blackfin/Kconfig
-> +++ b/arch/blackfin/Kconfig
-> @@ -1233,8 +1233,6 @@ source "drivers/pci/Kconfig"
->  
->  source "drivers/pcmcia/Kconfig"
->  
-> -source "drivers/pci/hotplug/Kconfig"
-> -
->  endmenu
->  
->  menu "Executable file formats"
-> diff --git a/arch/ia64/Kconfig b/arch/ia64/Kconfig
-> index 1bc4b5a..b534eba 100644
-> --- a/arch/ia64/Kconfig
-> +++ b/arch/ia64/Kconfig
-> @@ -576,8 +576,6 @@ config PCI_SYSCALL
->  
->  source "drivers/pci/Kconfig"
->  
-> -source "drivers/pci/hotplug/Kconfig"
-> -
->  source "drivers/pcmcia/Kconfig"
->  
->  endmenu
-> diff --git a/arch/m32r/Kconfig b/arch/m32r/Kconfig
-> index 836ac5a..e1b1236 100644
-> --- a/arch/m32r/Kconfig
-> +++ b/arch/m32r/Kconfig
-> @@ -386,8 +386,6 @@ config ISA
->  
->  source "drivers/pcmcia/Kconfig"
->  
-> -source "drivers/pci/hotplug/Kconfig"
-> -
->  endmenu
->  
->  
-> diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-> index d21eec7..d16204d 100644
-> --- a/arch/mips/Kconfig
-> +++ b/arch/mips/Kconfig
-> @@ -2935,8 +2935,6 @@ config ZONE_DMA32
->  
->  source "drivers/pcmcia/Kconfig"
->  
-> -source "drivers/pci/hotplug/Kconfig"
-> -
->  config RAPIDIO
->  	tristate "RapidIO support"
->  	depends on PCI
-> diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-> index 247a09f..e28f86e 100644
-> --- a/arch/powerpc/Kconfig
-> +++ b/arch/powerpc/Kconfig
-> @@ -832,8 +832,6 @@ source "drivers/pci/Kconfig"
->  
->  source "drivers/pcmcia/Kconfig"
->  
-> -source "drivers/pci/hotplug/Kconfig"
-> -
->  config HAS_RAPIDIO
->  	bool
->  	default n
-> diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
-> index 9918433..e70d498 100644
-> --- a/arch/s390/Kconfig
-> +++ b/arch/s390/Kconfig
-> @@ -605,7 +605,6 @@ config PCI_NR_MSI
->  	  PCI devices.
->  
->  source "drivers/pci/Kconfig"
-> -source "drivers/pci/hotplug/Kconfig"
->  
->  endif	# PCI
->  
-> diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
-> index ce52af9..17a4f15 100644
-> --- a/arch/sh/Kconfig
-> +++ b/arch/sh/Kconfig
-> @@ -851,8 +851,6 @@ source "drivers/pci/Kconfig"
->  
->  source "drivers/pcmcia/Kconfig"
->  
-> -source "drivers/pci/hotplug/Kconfig"
-> -
->  endmenu
->  
->  menu "Executable file formats"
-> diff --git a/arch/tile/Kconfig b/arch/tile/Kconfig
-> index 0c95266..8171930 100644
-> --- a/arch/tile/Kconfig
-> +++ b/arch/tile/Kconfig
-> @@ -455,7 +455,6 @@ config TILE_PCI_IO
->  
->  source "drivers/pci/Kconfig"
->  
-> -
->  config TILE_USB
->  	tristate "Tilera USB host adapter support"
->  	default y
-> @@ -466,8 +465,6 @@ config TILE_USB
->  	  Provides USB host adapter support for the built-in EHCI and OHCI
->  	  interfaces on TILE-Gx chips.
->  
-> -source "drivers/pci/hotplug/Kconfig"
-> -
->  endmenu
->  
->  menu "Executable file formats"
-> diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-> index ff7fe2d..1912637 100644
-> --- a/arch/x86/Kconfig
-> +++ b/arch/x86/Kconfig
-> @@ -2586,8 +2586,6 @@ config AMD_NB
->  
->  source "drivers/pcmcia/Kconfig"
->  
-> -source "drivers/pci/hotplug/Kconfig"
-> -
->  config RAPIDIO
->  	tristate "RapidIO support"
->  	depends on PCI
-> diff --git a/arch/xtensa/Kconfig b/arch/xtensa/Kconfig
-> index e9df156..7e9464b 100644
-> --- a/arch/xtensa/Kconfig
-> +++ b/arch/xtensa/Kconfig
-> @@ -413,8 +413,6 @@ config FORCE_MAX_ZONEORDER
->  
->  source "drivers/pcmcia/Kconfig"
->  
-> -source "drivers/pci/hotplug/Kconfig"
-> -
->  config PLATFORM_WANT_DEFAULT_MEM
->  	def_bool n
->  
-> diff --git a/drivers/parisc/Kconfig b/drivers/parisc/Kconfig
-> index 592de56..3a102a8 100644
-> --- a/drivers/parisc/Kconfig
-> +++ b/drivers/parisc/Kconfig
-> @@ -110,8 +110,6 @@ config IOMMU_HELPER
->  
->  source "drivers/pcmcia/Kconfig"
->  
-> -source "drivers/pci/hotplug/Kconfig"
-> -
->  endmenu
->  
->  menu "PA-RISC specific drivers"
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index 04e0092..616165d 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -121,4 +121,5 @@ config PCI_LABEL
->  	def_bool y if (DMI || ACPI)
->  	select NLS
->  
-> +source "drivers/pci/hotplug/Kconfig"
->  source "drivers/pci/host/Kconfig"
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-arch" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Gavin
+
