@@ -1,37 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:58125 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932842AbcCOI1c (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Mar 2016 04:27:32 -0400
-Message-ID: <56E7C771.6060700@intel.com>
-Date: Tue, 15 Mar 2016 16:27:29 +0800
-From: "Yong, Jonathan" <jonathan.yong@intel.com>
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:33547 "EHLO
+	mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753231AbcCHEc7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Mar 2016 23:32:59 -0500
+Received: by mail-pf0-f170.google.com with SMTP id 124so3934756pfg.0
+        for <linux-pci@vger.kernel.org>; Mon, 07 Mar 2016 20:32:59 -0800 (PST)
+Date: Tue, 8 Mar 2016 11:32:53 +0700
+From: Lee Jones <lee.jones@linaro.org>
+To: Christoph Fritz <chf.fritz@googlemail.com>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Fabio Estevam <fabio.estevam@nxp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v3 1/2] MFD: imx6sx: Add PCIe register definitions for
+ iomuxc gpr
+Message-ID: <20160308043253.GH13692@x1>
+References: <1456411669-4699-1-git-send-email-chf.fritz@googlemail.com>
+ <1456411669-4699-2-git-send-email-chf.fritz@googlemail.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH] PCI: PTM preliminary implementation
-References: <1457681184-20439-1-git-send-email-jonathan.yong@intel.com> <1457681184-20439-2-git-send-email-jonathan.yong@intel.com> <20160311155332.GA31716@localhost> <56E66BF3.4080500@intel.com> <20160314154215.GB13471@localhost>
-In-Reply-To: <20160314154215.GB13471@localhost>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1456411669-4699-2-git-send-email-chf.fritz@googlemail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/14/2016 23:42, Bjorn Helgaas wrote:
->
-> The nomenclature is confusing, but I think you're reading this
-> backwards.  An Upstream Port is on the downstream end of a Link.  The
-> "Upstream" definition in the PCIe spec "Terms and Acronyms" section
-> says:
->
->    The Port on a Switch that is closest topologically to the Root Complex
->    is the Upstream Port. The Port on a component that contains only
->    Endpoint or Bridge Functions is an Upstream Port.
->
-> I think the spec is saying that PTM must be enabled in a bridge before
-> it is enabled in any device downstream from the bridge.
->
+On Thu, 25 Feb 2016, Christoph Fritz wrote:
 
-Thanks for the explanation, looks like back to the drawing board. Do you 
-recommend using pci_walk_bus on all potential PTM masters?
+> This patch adds macros to define masks and bits for imx6sx
+> PCIe registers. This is based on a patch by Richard Zhu.
+> 
+> Signed-off-by: Christoph Fritz <chf.fritz@googlemail.com>
+> ---
+>  include/linux/mfd/syscon/imx6q-iomuxc-gpr.h | 5 +++++
+>  1 file changed, 5 insertions(+)
 
+I will change the non-conformant $SUBJECT line for you this time, but
+please be more vigilant in the future.
 
+Patch applied.
+
+> diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+> index 558a485..238c8db 100644
+> --- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+> +++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+> @@ -422,6 +422,7 @@
+>  #define IMX6SX_GPR5_VADC_TO_CSI_CAPTURE_EN_MASK		(0x1 << 26)
+>  #define IMX6SX_GPR5_VADC_TO_CSI_CAPTURE_EN_ENABLE	(0x1 << 26)
+>  #define IMX6SX_GPR5_VADC_TO_CSI_CAPTURE_EN_DISABLE	(0x0 << 26)
+> +#define IMX6SX_GPR5_PCIE_BTNRST_RESET			BIT(19)
+>  #define IMX6SX_GPR5_CSI1_MUX_CTRL_MASK			(0x3 << 4)
+>  #define IMX6SX_GPR5_CSI1_MUX_CTRL_EXT_PIN		(0x0 << 4)
+>  #define IMX6SX_GPR5_CSI1_MUX_CTRL_CVD			(0x1 << 4)
+> @@ -435,6 +436,10 @@
+>  #define IMX6SX_GPR5_DISP_MUX_DCIC1_LVDS			(0x1 << 1)
+>  #define IMX6SX_GPR5_DISP_MUX_DCIC1_MASK			(0x1 << 1)
+>  
+> +#define IMX6SX_GPR12_PCIE_TEST_POWERDOWN		BIT(30)
+> +#define IMX6SX_GPR12_PCIE_RX_EQ_MASK			(0x7 << 0)
+> +#define IMX6SX_GPR12_PCIE_RX_EQ_2			(0x2 << 0)
+> +
+>  /* For imx6ul iomux gpr register field define */
+>  #define IMX6UL_GPR1_ENET1_CLK_DIR		(0x1 << 17)
+>  #define IMX6UL_GPR1_ENET2_CLK_DIR		(0x1 << 18)
+
+-- 
+Lee Jones
+Linaro STMicroelectronics Landing Team Lead
+Linaro.org │ Open source software for ARM SoCs
+Follow Linaro: Facebook | Twitter | Blog
