@@ -1,313 +1,200 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41056 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752574AbcCJSYp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Mar 2016 13:24:45 -0500
-Date: Thu, 10 Mar 2016 12:24:40 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v10 02/59] sparc/PCI: Use correct bus address to resource
- offset
-Message-ID: <20160310182440.GC14873@localhost>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
- <1456366370-28995-3-git-send-email-yinghai@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 9 Mar 2016 21:17:50 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Alex Deucher <alexdeucher@gmail.com>
+Cc: Dave Airlie <airlied@gmail.com>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Maling list - DRI developers
+	<dri-devel@lists.freedesktop.org>, linux-pm@vger.kernel.org
+Subject: Re: [PATCH 1/2] vga_switcheroo: add power support for windows 10
+ machines.
+Message-ID: <20160309201750.GA26222@wunner.de>
+References: <1457504045-12738-1-git-send-email-airlied@gmail.com>
+ <20160309143336.GA26158@wunner.de>
+ <CADnq5_MUW00AcYcM4WPREOd8ng9AfggZk6U4YU7j50s6BBeMNQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1456366370-28995-3-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CADnq5_MUW00AcYcM4WPREOd8ng9AfggZk6U4YU7j50s6BBeMNQ@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yinghai,
+Hi,
 
-On Wed, Feb 24, 2016 at 06:11:53PM -0800, Yinghai Lu wrote:
-> After we add 64bit mmio parsing, we got some "no compatible bridge window"
-> warning on anther new model that support 64bit resource.
+On Wed, Mar 09, 2016 at 11:52:33AM -0500, Alex Deucher wrote:
+> On Wed, Mar 9, 2016 at 9:33 AM, Lukas Wunner <lukas@wunner.de> wrote:
+> > On Wed, Mar 09, 2016 at 04:14:04PM +1000, Dave Airlie wrote:
+> >> From: Dave Airlie <airlied@redhat.com>
+> >>
+> >> Windows 10 seems to have standardised power control for the
+> >> optimus/powerxpress laptops using PR3 power resource hooks.
+> >
+> > What happened to the Optimus DSM, does this still work? If not,
+> > echoing OFF to the vgaswitcheroo sysfs file won't power down the
+> > GPU now, right? (If runtime pm is disabled in nouveau.)
+> >
+> If the OS identifies itself as windows 10 or newer when initializing
+> ACPI, the standardized interfaces should be used if they exist.  I'm
+> not sure if there is any explicit policy on the vendor specific ones,
+> but I suspect they are probably broken in that case since I doubt the
+> OEM validates them when the standardized interfaces are available.
+
+The vendor interface (Optimus DSM) must be present, otherwise the call
+to nouveau_is_optimus() in patch [2/2] would return false.
+
+But indeed it seems to not be working, otherwise why would the patches
+be necessary?
+
+My point is that the chosen approach does not square with vga_switcheroo's
+architecture: Normally it's the handler's job to power the GPU up/down.
+If runtime pm is enabled then vga_switcheroo_init_domain_pm_ops()
+activates runtime_suspend/_resume callbacks which ask the handler to
+flip the power switch.
+
+However these two patches add *additional* runtime_suspend/_resume
+callbacks which do not rely on the handler at all. The handler is thus
+useless. This becomes apparent when loading the nouveau module with
+runpm=0: Normally the user is then able to manually power the GPU
+up/down by echoing ON or OFF to the vgaswitcheroo sysfs file. With the
+chosen approach this will likely not work because the handler only knows
+how to invoke the DSM, it doesn't know anything about PR3.
+
+Hence my suggestion to solve this with an additional handler which
+gets used in lieu of the nouveau DSM handler.
+
+Best regards,
+
+Lukas
+
 > 
-> It turns out that we can not use mem_space.start as 64bit mem space
-> offset, aka there is mem_space.start != offset.
+> Alex
 > 
-> Use child_phys_addr to calculate exact offset and record offset in
-> pbm.
-> 
-> After patch we get correct offset.
-> 
-> /pci@305: PCI IO [io  0x2007e00000000-0x2007e0fffffff] offset 2007e00000000
-> /pci@305: PCI MEM [mem 0x2000000100000-0x200007effffff] offset 2000000000000
-> /pci@305: PCI MEM64 [mem 0x2000100000000-0x2000dffffffff] offset 2000000000000
-> ...
-> pci_sun4v f02ae7f8: PCI host bridge to bus 0000:00
-> pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
-
-Just double-checking that your ioport space really contains 256M ports.
-It's fine if it does; it's just a little unusual.
-
-> pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00100000-0x7effffff])
-> pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x2000dffffffff] (bus address [0x100000000-0xdffffffff])
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
-> ---
->  arch/sparc/kernel/pci.c        | 50 +++++++++++++++++++-----------------------
->  arch/sparc/kernel/pci_common.c | 32 ++++++++++++++++++++-------
->  arch/sparc/kernel/pci_impl.h   |  4 ++++
->  3 files changed, 50 insertions(+), 36 deletions(-)
-> 
-> diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-> index badf095..269630a 100644
-> --- a/arch/sparc/kernel/pci.c
-> +++ b/arch/sparc/kernel/pci.c
-> @@ -654,12 +654,12 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
->  	printk("PCI: Scanning PBM %s\n", node->full_name);
->  
->  	pci_add_resource_offset(&resources, &pbm->io_space,
-> -				pbm->io_space.start);
-> +				pbm->io_offset);
->  	pci_add_resource_offset(&resources, &pbm->mem_space,
-> -				pbm->mem_space.start);
-> +				pbm->mem_offset);
->  	if (pbm->mem64_space.flags)
->  		pci_add_resource_offset(&resources, &pbm->mem64_space,
-> -					pbm->mem_space.start);
-> +					pbm->mem64_offset);
->  	pbm->busn.start = pbm->pci_first_busno;
->  	pbm->busn.end	= pbm->pci_last_busno;
->  	pbm->busn.flags	= IORESOURCE_BUS;
-> @@ -733,30 +733,28 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->  static int __pci_mmap_make_offset_bus(struct pci_dev *pdev, struct vm_area_struct *vma,
->  				      enum pci_mmap_state mmap_state)
->  {
-> -	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
-> -	unsigned long space_size, user_offset, user_size;
-> -
-> -	if (mmap_state == pci_mmap_io) {
-> -		space_size = resource_size(&pbm->io_space);
-> -	} else {
-> -		space_size = resource_size(&pbm->mem_space);
-> -	}
-> +	unsigned long user_offset, user_size;
-> +	struct resource res, *root_bus_res;
-> +	struct pci_bus_region region;
->  
->  	/* Make sure the request is in range. */
->  	user_offset = vma->vm_pgoff << PAGE_SHIFT;
->  	user_size = vma->vm_end - vma->vm_start;
->  
-> -	if (user_offset >= space_size ||
-> -	    (user_offset + user_size) > space_size)
-> +	region.start = user_offset;
-> +	region.end = user_offset + user_size - 1;
-> +	memset(&res, 0, sizeof(res));
-> +	if (mmap_state == pci_mmap_io)
-> +		res.flags = IORESOURCE_IO;
-> +	else
-> +		res.flags = IORESOURCE_MEM;
-> +
-> +	pcibios_bus_to_resource(pdev->bus, &res, &region);
-> +	root_bus_res = pci_find_root_bus_resource(pdev->bus, &res);
-> +	if (!root_bus_res)
->  		return -EINVAL;
->  
-> -	if (mmap_state == pci_mmap_io) {
-> -		vma->vm_pgoff = (pbm->io_space.start +
-> -				 user_offset) >> PAGE_SHIFT;
-> -	} else {
-> -		vma->vm_pgoff = (pbm->mem_space.start +
-> -				 user_offset) >> PAGE_SHIFT;
-> -	}
-> +	vma->vm_pgoff = res.start >> PAGE_SHIFT;
->  
->  	return 0;
-
-This needs to explain what's unique about sparc that means it needs
-pci_find_root_bus_resource() when no other arch does.
-
-This is used in the pci_mmap_resource() path.  I don't understand how
-that path works on sparc.  I tried to work through the simple case of
-a user mapping the first 4096 bytes of a BAR.  Assume the BAR is 4096
-bytes in size:
-
-  # User does something like this:
-  #   mmap(NULL, 4096, ..., "/sys/.../resourceN", 0);
-
-  pci_mmap_resource
-
-    # At entry, "vma->vm_pgoff" is the offset into the BAR (in pages).
-    # In this case, the user wants the first page of the BAR, so
-    # vma->vm_pgoff == 0.
-
-    # "res" is the the pdev->resource[n], which contains the CPU
-    # physical address of the BAR.
-
-    pci_mmap_fits(pdev, i, vma, PCI_MMAP_SYSFS)
-      start = vma->vm_pgoff           # == 0
-      size = 4096
-      pci_start = 0                   # offset into BAR (PCI_MMAP_SYSFS case)
-
-      # we return 1 because [0x0000-0x0fff] is a valid area in this
-      # BAR
-
-    pci_resource_to_user(pdev, i, res, &start, &end);
-
-    # On most platforms: pci_resource_to_user() copies res->start to
-    # *start, so "start" is the CPU physical address of the
-    # BAR.
-    
-    # On sparc: pci_resource_to_user() calls pcibios_resource_to_bus()
-    # (see below), so "start" is the PCI bus address of the BAR.
-
-    vma->vm_pgoff += start >> PAGE_SHIFT;
-
-    # On most platforms: "vma->vm_pgoff" is now the CPU physical page
-    # number of the part of the BAR we're mapping.
-
-    # On sparc: "vma->vm_pgoff" is the PCI bus page number of the part
-    # of the BAR we're mapping.  This seems wrong: doesn't the VM
-    # system assume vm_pgoff is a CPU physical page number?
-
-    if (... && iomem_is_exclusive(start))
-
-    # On most platforms, "start" is a CPU physical address, and
-    # iomem_is_exclusive() looks it up in the iomem_resource tree,
-    # which contains resources of CPU physical addresses.
-
-    # On sparc, "start" is a PCI bus address.  How can this work in
-    # iomem_is_exclusive()?  I assume the resources in iomem_resource
-    # still contain CPU physical addresses, not PCI bus addresses,
-    # don't they?
-
->  }
-> @@ -977,16 +975,12 @@ void pci_resource_to_user(const struct pci_dev *pdev, int bar,
->  			  const struct resource *rp, resource_size_t *start,
->  			  resource_size_t *end)
->  {
-> -	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
-> -	unsigned long offset;
-> +	struct pci_bus_region region;
->  
-> -	if (rp->flags & IORESOURCE_IO)
-> -		offset = pbm->io_space.start;
-> -	else
-> -		offset = pbm->mem_space.start;
-> +	pcibios_resource_to_bus(pdev->bus, &region, (struct resource *)rp);
->  
-> -	*start = rp->start - offset;
-> -	*end = rp->end - offset;
-> +	*start = region.start;
-> +	*end = region.end;
->  }
->  
->  void pcibios_set_master(struct pci_dev *dev)
-> diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-> index 33524c1..76998f8 100644
-> --- a/arch/sparc/kernel/pci_common.c
-> +++ b/arch/sparc/kernel/pci_common.c
-> @@ -410,13 +410,16 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->  
->  	for (i = 0; i < num_pbm_ranges; i++) {
->  		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
-> -		unsigned long a, size;
-> +		unsigned long a, size, region_a;
->  		u32 parent_phys_hi, parent_phys_lo;
-> +		u32 child_phys_mid, child_phys_lo;
->  		u32 size_hi, size_lo;
->  		int type;
->  
->  		parent_phys_hi = pr->parent_phys_hi;
->  		parent_phys_lo = pr->parent_phys_lo;
-> +		child_phys_mid = pr->child_phys_mid;
-> +		child_phys_lo = pr->child_phys_lo;
->  		if (tlb_type == hypervisor)
->  			parent_phys_hi &= 0x0fffffff;
->  
-> @@ -426,6 +429,8 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->  		type = (pr->child_phys_hi >> 24) & 0x3;
->  		a = (((unsigned long)parent_phys_hi << 32UL) |
->  		     ((unsigned long)parent_phys_lo  <<  0UL));
-> +		region_a = (((unsigned long)child_phys_mid << 32UL) |
-> +		     ((unsigned long)child_phys_lo  <<  0UL));
->  		size = (((unsigned long)size_hi << 32UL) |
->  			((unsigned long)size_lo  <<  0UL));
->  
-> @@ -440,6 +445,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->  			pbm->io_space.start = a;
->  			pbm->io_space.end = a + size - 1UL;
->  			pbm->io_space.flags = IORESOURCE_IO;
-> +			pbm->io_offset = a - region_a;
->  			saw_io = 1;
->  			break;
->  
-> @@ -448,6 +454,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->  			pbm->mem_space.start = a;
->  			pbm->mem_space.end = a + size - 1UL;
->  			pbm->mem_space.flags = IORESOURCE_MEM;
-> +			pbm->mem_offset = a - region_a;
->  			saw_mem = 1;
->  			break;
->  
-> @@ -456,6 +463,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->  			pbm->mem64_space.start = a;
->  			pbm->mem64_space.end = a + size - 1UL;
->  			pbm->mem64_space.flags = IORESOURCE_MEM;
-> +			pbm->mem64_offset = a - region_a;
->  			saw_mem = 1;
->  			break;
->  
-> @@ -471,14 +479,22 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
->  		prom_halt();
->  	}
->  
-> -	printk("%s: PCI IO[%llx] MEM[%llx]",
-> -	       pbm->name,
-> -	       pbm->io_space.start,
-> -	       pbm->mem_space.start);
-> +	if (pbm->io_space.flags)
-> +		printk("%s: PCI IO %pR offset %llx\n",
-> +		       pbm->name, &pbm->io_space, pbm->io_offset);
-> +	if (pbm->mem_space.flags)
-> +		printk("%s: PCI MEM %pR offset %llx\n",
-> +		       pbm->name, &pbm->mem_space, pbm->mem_offset);
-> +	if (pbm->mem64_space.flags && pbm->mem_space.flags) {
-> +		if (pbm->mem64_space.start <= pbm->mem_space.end)
-> +			pbm->mem64_space.start = pbm->mem_space.end + 1;
-> +		if (pbm->mem64_space.start > pbm->mem64_space.end)
-> +			pbm->mem64_space.flags = 0;
-> +	}
-> +
->  	if (pbm->mem64_space.flags)
-> -		printk(" MEM64[%llx]",
-> -		       pbm->mem64_space.start);
-> -	printk("\n");
-> +		printk("%s: PCI MEM64 %pR offset %llx\n",
-> +		       pbm->name, &pbm->mem64_space, pbm->mem64_offset);
->  
->  	pbm->io_space.name = pbm->mem_space.name = pbm->name;
->  	pbm->mem64_space.name = pbm->name;
-> diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
-> index 37222ca..2853af7 100644
-> --- a/arch/sparc/kernel/pci_impl.h
-> +++ b/arch/sparc/kernel/pci_impl.h
-> @@ -99,6 +99,10 @@ struct pci_pbm_info {
->  	struct resource			mem_space;
->  	struct resource			mem64_space;
->  	struct resource			busn;
-> +	/* offset */
-> +	resource_size_t			io_offset;
-> +	resource_size_t			mem_offset;
-> +	resource_size_t			mem64_offset;
->  
->  	/* Base of PCI Config space, can be per-PBM or shared. */
->  	unsigned long			config_space;
-> -- 
-> 1.8.4.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >> I'm not sure this is definitely the correct place to be
+> >> doing this, but it works for me here.
+> >
+> > How about implementing an additional vga_switcheroo handler somewhere
+> > in drivers/acpi/, which looks for the PR3 hooks and registers with
+> > vga_switcheroo if found. The ->power_state callback of that handler
+> > would then invoke acpi_device_set_power().
+> >
+> > The ACPI bus is scanned in the subsys_initcall section, much earlier
+> > than nouveau is loaded (in the device_initcall section). So the ACPI
+> > vga_switcheroo handler could register before the nouveau DSM handler
+> > and therefore would always have a higher precedence.
+> >
+> > In any case this patch should be amended with kerneldoc for
+> > vga_switcheroo_init_parent_pr3_ops(), I've spent considerable time
+> > last year to document everything and kindly ask that this water not
+> > be muddied again. ;-)
+> >
+> > One small nit, the headers are sorted alphabetically yet acpi.h is
+> > added at the end.
+> >
+> > Thanks,
+> >
+> > Lukas
+> >
+> >>
+> >> The ACPI device for the GPU I have is \_SB_.PCI0.PEG_.VID_
+> >> but the power resource hooks are on \_SB_.PCI0.PEG_, so
+> >> this patch creates a new power domain to turn the GPU
+> >> device parent off using standard ACPI calls.
+> >>
+> >> Signed-off-by: Dave Airlie <airlied@redhat.com>
+> >> ---
+> >>  drivers/gpu/vga/vga_switcheroo.c | 54 +++++++++++++++++++++++++++++++++++++++-
+> >>  include/linux/vga_switcheroo.h   |  3 ++-
+> >>  2 files changed, 55 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/drivers/gpu/vga/vga_switcheroo.c b/drivers/gpu/vga/vga_switcheroo.c
+> >> index 665ab9f..be32cb2 100644
+> >> --- a/drivers/gpu/vga/vga_switcheroo.c
+> >> +++ b/drivers/gpu/vga/vga_switcheroo.c
+> >> @@ -42,7 +42,7 @@
+> >>  #include <linux/uaccess.h>
+> >>  #include <linux/vgaarb.h>
+> >>  #include <linux/vga_switcheroo.h>
+> >> -
+> >> +#include <linux/acpi.h>
+> >>  /**
+> >>   * DOC: Overview
+> >>   *
+> >> @@ -997,3 +997,55 @@ vga_switcheroo_init_domain_pm_optimus_hdmi_audio(struct device *dev,
+> >>       return -EINVAL;
+> >>  }
+> >>  EXPORT_SYMBOL(vga_switcheroo_init_domain_pm_optimus_hdmi_audio);
+> >> +
+> >> +/* With Windows 10 the runtime suspend/resume can use power
+> >> +   resources on the parent device */
+> >> +static int vga_acpi_switcheroo_runtime_suspend(struct device *dev)
+> >> +{
+> >> +     struct pci_dev *pdev = to_pci_dev(dev);
+> >> +     int ret;
+> >> +     struct acpi_device *adev;
+> >> +
+> >> +     ret = dev->bus->pm->runtime_suspend(dev);
+> >> +     if (ret)
+> >> +             return ret;
+> >> +
+> >> +     ret = acpi_bus_get_device(ACPI_HANDLE(&pdev->dev), &adev);
+> >> +     if (!ret)
+> >> +             acpi_device_set_power(adev->parent, ACPI_STATE_D3_COLD);
+> >> +     return 0;
+> >> +}
+> >> +
+> >> +static int vga_acpi_switcheroo_runtime_resume(struct device *dev)
+> >> +{
+> >> +     struct pci_dev *pdev = to_pci_dev(dev);
+> >> +     struct acpi_device *adev;
+> >> +     int ret;
+> >> +
+> >> +     ret = acpi_bus_get_device(ACPI_HANDLE(&pdev->dev), &adev);
+> >> +     if (!ret)
+> >> +             acpi_device_set_power(adev->parent, ACPI_STATE_D0);
+> >> +     ret = dev->bus->pm->runtime_resume(dev);
+> >> +     if (ret)
+> >> +             return ret;
+> >> +
+> >> +     return 0;
+> >> +}
+> >> +
+> >> +int vga_switcheroo_init_parent_pr3_ops(struct device *dev,
+> >> +                                    struct dev_pm_domain *domain)
+> >> +
+> >> +{
+> >> +     /* copy over all the bus versions */
+> >> +     if (dev->bus && dev->bus->pm) {
+> >> +             domain->ops = *dev->bus->pm;
+> >> +             domain->ops.runtime_suspend = vga_acpi_switcheroo_runtime_suspend;
+> >> +             domain->ops.runtime_resume = vga_acpi_switcheroo_runtime_resume;
+> >> +
+> >> +             dev_pm_domain_set(dev, domain);
+> >> +             return 0;
+> >> +     }
+> >> +     dev_pm_domain_set(dev, NULL);
+> >> +     return -EINVAL;
+> >> +}
+> >> +EXPORT_SYMBOL(vga_switcheroo_init_parent_pr3_ops);
+> >> diff --git a/include/linux/vga_switcheroo.h b/include/linux/vga_switcheroo.h
+> >> index 69e1d4a1..5ce0cbe 100644
+> >> --- a/include/linux/vga_switcheroo.h
+> >> +++ b/include/linux/vga_switcheroo.h
+> >> @@ -144,6 +144,7 @@ void vga_switcheroo_set_dynamic_switch(struct pci_dev *pdev, enum vga_switcheroo
+> >>  int vga_switcheroo_init_domain_pm_ops(struct device *dev, struct dev_pm_domain *domain);
+> >>  void vga_switcheroo_fini_domain_pm_ops(struct device *dev);
+> >>  int vga_switcheroo_init_domain_pm_optimus_hdmi_audio(struct device *dev, struct dev_pm_domain *domain);
+> >> +int vga_switcheroo_init_parent_pr3_ops(struct device *dev, struct dev_pm_domain *domain);
+> >>  #else
+> >>
+> >>  static inline void vga_switcheroo_unregister_client(struct pci_dev *dev) {}
+> >> @@ -163,6 +164,6 @@ static inline void vga_switcheroo_set_dynamic_switch(struct pci_dev *pdev, enum
+> >>  static inline int vga_switcheroo_init_domain_pm_ops(struct device *dev, struct dev_pm_domain *domain) { return -EINVAL; }
+> >>  static inline void vga_switcheroo_fini_domain_pm_ops(struct device *dev) {}
+> >>  static inline int vga_switcheroo_init_domain_pm_optimus_hdmi_audio(struct device *dev, struct dev_pm_domain *domain) { return -EINVAL; }
+> >> -
+> >> +static inline int vga_switcheroo_init_parent_pr3_ops(struct device *dev, struct dev_pm_domain *domain) { return -EINVAL; }
+> >>  #endif
+> >>  #endif /* _LINUX_VGA_SWITCHEROO_H_ */
+> >> --
+> >> 2.5.0
