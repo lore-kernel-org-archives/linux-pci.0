@@ -1,119 +1,174 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 08/12] ia64/PCI: Keep CPU physical (not virtual)
- addresses in shadow ROM resource
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Tony Luck <tony.luck@intel.com>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-	linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Bruno =?utf-8?q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
-	Daniel Stone <daniel@fooishbar.org>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Ville =?utf-8?b?U3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
-Date: Thu, 03 Mar 2016 10:54:52 -0600
-Message-ID: <20160303165452.3025.73760.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160309143336.GA26158@wunner.de>
+References: <1457504045-12738-1-git-send-email-airlied@gmail.com>
+	<20160309143336.GA26158@wunner.de>
+Date: Wed, 9 Mar 2016 11:52:33 -0500
+Message-ID: <CADnq5_MUW00AcYcM4WPREOd8ng9AfggZk6U4YU7j50s6BBeMNQ@mail.gmail.com>
+Subject: Re: [PATCH 1/2] vga_switcheroo: add power support for windows 10 machines.
+From: Alex Deucher <alexdeucher@gmail.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Dave Airlie <airlied@gmail.com>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Maling list - DRI developers
+	<dri-devel@lists.freedesktop.org>, linux-pm@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A struct resource contains CPU physical addresses, not virtual addresses.
-But sn_acpi_slot_fixup() and sn_io_slot_fixup() stored the virtual address
-of a shadow ROM copy in the resource.  To compensate, pci_map_rom() had a
-special case that returned the resource address directly rather than
-calling ioremap() on it.
+On Wed, Mar 9, 2016 at 9:33 AM, Lukas Wunner <lukas@wunner.de> wrote:
+> Hi Dave,
+>
+> On Wed, Mar 09, 2016 at 04:14:04PM +1000, Dave Airlie wrote:
+>> From: Dave Airlie <airlied@redhat.com>
+>>
+>> Windows 10 seems to have standardised power control for the
+>> optimus/powerxpress laptops using PR3 power resource hooks.
+>
+> What happened to the Optimus DSM, does this still work? If not,
+> echoing OFF to the vgaswitcheroo sysfs file won't power down the
+> GPU now, right? (If runtime pm is disabled in nouveau.)
+>
 
-When we're using a shadow copy in RAM or PROM, disable the ROM BAR and
-release the address space it was consuming.
+If the OS identifies itself as windows 10 or newer when initializing
+ACPI, the standardized interfaces should be used if they exist.  I'm
+not sure if there is any explicit policy on the vendor specific ones,
+but I suspect they are probably broken in that case since I doubt the
+OEM validates them when the standardized interfaces are available.
 
-Store the CPU physical (not virtual) address in the shadow ROM resource,
-and mark the resource as IORESOURCE_ROM_SHADOW so we use the normal
-pci_map_rom() path that ioremaps the copy.
+Alex
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/ia64/sn/kernel/io_acpi_init.c |   18 +++++++++++-------
- arch/ia64/sn/kernel/io_init.c      |   17 +++++------------
- 2 files changed, 16 insertions(+), 19 deletions(-)
-
-diff --git a/arch/ia64/sn/kernel/io_acpi_init.c b/arch/ia64/sn/kernel/io_acpi_init.c
-index 815c291..231234c 100644
---- a/arch/ia64/sn/kernel/io_acpi_init.c
-+++ b/arch/ia64/sn/kernel/io_acpi_init.c
-@@ -430,7 +430,7 @@ sn_acpi_slot_fixup(struct pci_dev *dev)
- 	struct pcidev_info *pcidev_info = NULL;
- 	struct sn_irq_info *sn_irq_info = NULL;
- 	struct resource *res;
--	size_t image_size, size;
-+	size_t size;
- 
- 	if (sn_acpi_get_pcidev_info(dev, &pcidev_info, &sn_irq_info)) {
- 		panic("%s:  Failure obtaining pcidev_info for %s\n",
-@@ -444,13 +444,17 @@ sn_acpi_slot_fixup(struct pci_dev *dev)
- 		 * of the shadowed copy, and the actual length of the ROM image.
- 		 */
- 		size = pci_resource_len(dev, PCI_ROM_RESOURCE);
--		addr = ioremap(pcidev_info->pdi_pio_mapped_addr[PCI_ROM_RESOURCE],
--			       size);
--		image_size = pci_get_rom_size(dev, addr, size);
-+
- 		res = &dev->resource[PCI_ROM_RESOURCE];
--		res->start = (unsigned long) addr;
--		res->end = (unsigned long) addr + image_size - 1;
--		res->flags |= IORESOURCE_ROM_BIOS_COPY;
-+
-+		pci_disable_rom(dev);
-+		if (res->parent)
-+			release_resource(res);
-+
-+		res->start = pcidev_info->pdi_pio_mapped_addr[PCI_ROM_RESOURCE];
-+		res->end = res->start + size - 1;
-+		res->flags = IORESOURCE_MEM | IORESOURCE_ROM_SHADOW |
-+			     IORESOURCE_PCI_FIXED;
- 	}
- 	sn_pci_fixup_slot(dev, pcidev_info, sn_irq_info);
- }
-diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
-index 0227e20..c15a41e 100644
---- a/arch/ia64/sn/kernel/io_init.c
-+++ b/arch/ia64/sn/kernel/io_init.c
-@@ -185,8 +185,7 @@ sn_io_slot_fixup(struct pci_dev *dev)
- 		if (size == 0)
- 			continue;
- 
--		res->start = ioremap(pcidev_info->pdi_pio_mapped_addr[idx],
--				     size + 1);
-+		res->start = pcidev_info->pdi_pio_mapped_addr[idx];
- 		res->end = addr + size;
- 
- 		/*
-@@ -201,18 +200,12 @@ sn_io_slot_fixup(struct pci_dev *dev)
- 		else
- 			insert_resource(&iomem_resource, res);
- 		/*
--		 * If ROM, set the actual ROM image size, and mark as
--		 * shadowed in PROM.
-+		 * If ROM, mark as shadowed in PROM.
- 		 */
- 		if (idx == PCI_ROM_RESOURCE) {
--			size_t image_size;
--			void __iomem *rom;
--
--			rom = ioremap(pci_resource_start(dev, PCI_ROM_RESOURCE),
--				      size + 1);
--			image_size = pci_get_rom_size(dev, rom, size + 1);
--			res->end = res->start + image_size - 1;
--			res->flags |= IORESOURCE_ROM_BIOS_COPY;
-+			pci_disable_rom(dev);
-+			res->flags = IORESOURCE_MEM | IORESOURCE_ROM_SHADOW |
-+				     IORESOURCE_PCI_FIXED;
- 		}
- 	}
- 
+>> I'm not sure this is definitely the correct place to be
+>> doing this, but it works for me here.
+>
+> How about implementing an additional vga_switcheroo handler somewhere
+> in drivers/acpi/, which looks for the PR3 hooks and registers with
+> vga_switcheroo if found. The ->power_state callback of that handler
+> would then invoke acpi_device_set_power().
+>
+> The ACPI bus is scanned in the subsys_initcall section, much earlier
+> than nouveau is loaded (in the device_initcall section). So the ACPI
+> vga_switcheroo handler could register before the nouveau DSM handler
+> and therefore would always have a higher precedence.
+>
+> In any case this patch should be amended with kerneldoc for
+> vga_switcheroo_init_parent_pr3_ops(), I've spent considerable time
+> last year to document everything and kindly ask that this water not
+> be muddied again. ;-)
+>
+> One small nit, the headers are sorted alphabetically yet acpi.h is
+> added at the end.
+>
+> Thanks,
+>
+> Lukas
+>
+>>
+>> The ACPI device for the GPU I have is \_SB_.PCI0.PEG_.VID_
+>> but the power resource hooks are on \_SB_.PCI0.PEG_, so
+>> this patch creates a new power domain to turn the GPU
+>> device parent off using standard ACPI calls.
+>>
+>> Signed-off-by: Dave Airlie <airlied@redhat.com>
+>> ---
+>>  drivers/gpu/vga/vga_switcheroo.c | 54 +++++++++++++++++++++++++++++++++++++++-
+>>  include/linux/vga_switcheroo.h   |  3 ++-
+>>  2 files changed, 55 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/gpu/vga/vga_switcheroo.c b/drivers/gpu/vga/vga_switcheroo.c
+>> index 665ab9f..be32cb2 100644
+>> --- a/drivers/gpu/vga/vga_switcheroo.c
+>> +++ b/drivers/gpu/vga/vga_switcheroo.c
+>> @@ -42,7 +42,7 @@
+>>  #include <linux/uaccess.h>
+>>  #include <linux/vgaarb.h>
+>>  #include <linux/vga_switcheroo.h>
+>> -
+>> +#include <linux/acpi.h>
+>>  /**
+>>   * DOC: Overview
+>>   *
+>> @@ -997,3 +997,55 @@ vga_switcheroo_init_domain_pm_optimus_hdmi_audio(struct device *dev,
+>>       return -EINVAL;
+>>  }
+>>  EXPORT_SYMBOL(vga_switcheroo_init_domain_pm_optimus_hdmi_audio);
+>> +
+>> +/* With Windows 10 the runtime suspend/resume can use power
+>> +   resources on the parent device */
+>> +static int vga_acpi_switcheroo_runtime_suspend(struct device *dev)
+>> +{
+>> +     struct pci_dev *pdev = to_pci_dev(dev);
+>> +     int ret;
+>> +     struct acpi_device *adev;
+>> +
+>> +     ret = dev->bus->pm->runtime_suspend(dev);
+>> +     if (ret)
+>> +             return ret;
+>> +
+>> +     ret = acpi_bus_get_device(ACPI_HANDLE(&pdev->dev), &adev);
+>> +     if (!ret)
+>> +             acpi_device_set_power(adev->parent, ACPI_STATE_D3_COLD);
+>> +     return 0;
+>> +}
+>> +
+>> +static int vga_acpi_switcheroo_runtime_resume(struct device *dev)
+>> +{
+>> +     struct pci_dev *pdev = to_pci_dev(dev);
+>> +     struct acpi_device *adev;
+>> +     int ret;
+>> +
+>> +     ret = acpi_bus_get_device(ACPI_HANDLE(&pdev->dev), &adev);
+>> +     if (!ret)
+>> +             acpi_device_set_power(adev->parent, ACPI_STATE_D0);
+>> +     ret = dev->bus->pm->runtime_resume(dev);
+>> +     if (ret)
+>> +             return ret;
+>> +
+>> +     return 0;
+>> +}
+>> +
+>> +int vga_switcheroo_init_parent_pr3_ops(struct device *dev,
+>> +                                    struct dev_pm_domain *domain)
+>> +
+>> +{
+>> +     /* copy over all the bus versions */
+>> +     if (dev->bus && dev->bus->pm) {
+>> +             domain->ops = *dev->bus->pm;
+>> +             domain->ops.runtime_suspend = vga_acpi_switcheroo_runtime_suspend;
+>> +             domain->ops.runtime_resume = vga_acpi_switcheroo_runtime_resume;
+>> +
+>> +             dev_pm_domain_set(dev, domain);
+>> +             return 0;
+>> +     }
+>> +     dev_pm_domain_set(dev, NULL);
+>> +     return -EINVAL;
+>> +}
+>> +EXPORT_SYMBOL(vga_switcheroo_init_parent_pr3_ops);
+>> diff --git a/include/linux/vga_switcheroo.h b/include/linux/vga_switcheroo.h
+>> index 69e1d4a1..5ce0cbe 100644
+>> --- a/include/linux/vga_switcheroo.h
+>> +++ b/include/linux/vga_switcheroo.h
+>> @@ -144,6 +144,7 @@ void vga_switcheroo_set_dynamic_switch(struct pci_dev *pdev, enum vga_switcheroo
+>>  int vga_switcheroo_init_domain_pm_ops(struct device *dev, struct dev_pm_domain *domain);
+>>  void vga_switcheroo_fini_domain_pm_ops(struct device *dev);
+>>  int vga_switcheroo_init_domain_pm_optimus_hdmi_audio(struct device *dev, struct dev_pm_domain *domain);
+>> +int vga_switcheroo_init_parent_pr3_ops(struct device *dev, struct dev_pm_domain *domain);
+>>  #else
+>>
+>>  static inline void vga_switcheroo_unregister_client(struct pci_dev *dev) {}
+>> @@ -163,6 +164,6 @@ static inline void vga_switcheroo_set_dynamic_switch(struct pci_dev *pdev, enum
+>>  static inline int vga_switcheroo_init_domain_pm_ops(struct device *dev, struct dev_pm_domain *domain) { return -EINVAL; }
+>>  static inline void vga_switcheroo_fini_domain_pm_ops(struct device *dev) {}
+>>  static inline int vga_switcheroo_init_domain_pm_optimus_hdmi_audio(struct device *dev, struct dev_pm_domain *domain) { return -EINVAL; }
+>> -
+>> +static inline int vga_switcheroo_init_parent_pr3_ops(struct device *dev, struct dev_pm_domain *domain) { return -EINVAL; }
+>>  #endif
+>>  #endif /* _LINUX_VGA_SWITCHEROO_H_ */
+>> --
+>> 2.5.0
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> https://lists.freedesktop.org/mailman/listinfo/dri-devel
