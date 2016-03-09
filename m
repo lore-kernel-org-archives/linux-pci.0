@@ -1,88 +1,179 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:49617 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934678AbcCQWp0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Mar 2016 18:45:26 -0400
-Received: from localhost
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 18 Mar 2016 08:45:24 +1000
-Date: Fri, 18 Mar 2016 09:44:21 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
-	dja@axtens.net, Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: Re: [PATCH v8 42/45] drivers/of: Rename unflatten_dt_node()
-Message-ID: <20160317224421.GA9185@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-43-git-send-email-gwshan@linux.vnet.ibm.com>
- <CAL_JsqJydgmkU=SGcr-0JHsYG8wXk5GEQCQXY7y+FHH2A0LZkw@mail.gmail.com>
- <20160219031655.GA10818@gwshan>
- <CAL_JsqJFacEMD6jwi=YsT83BTVp5Asjmw4nYU6Msct-DcR2W9Q@mail.gmail.com>
- <20160308005633.GA30023@gwshan>
- <CAL_Jsq+2M3iLMCwJhttiL3BTvefUa_5tUiYqvzp3Aix4uK7exw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL_Jsq+2M3iLMCwJhttiL3BTvefUa_5tUiYqvzp3Aix4uK7exw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org
+Cc: linux-pci@vger.kernel.org, ravikanth.nalla@hpe.com,
+	lenb@kernel.org, harish.k@hpe.com, ashwin.reghunandanan@hpe.com,
+	bhelgaas@google.com, rjw@rjwysocki.net,
+	Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/4] acpi,pci,irq: reduce resource requirements
+Date: Tue,  8 Mar 2016 19:41:16 -0500
+Message-Id: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 17, 2016 at 08:31:16AM -0500, Rob Herring wrote:
->On Mon, Mar 7, 2016 at 6:56 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->> On Tue, Mar 01, 2016 at 08:40:12PM -0600, Rob Herring wrote:
->>>On Thu, Feb 18, 2016 at 9:16 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->>>> On Wed, Feb 17, 2016 at 08:59:53AM -0600, Rob Herring wrote:
->>>>>On Tue, Feb 16, 2016 at 9:44 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->>>>>> This renames unflatten_dt_node() to unflatten_dt_nodes() as it
->>>>>> populates multiple device nodes from FDT blob. No logical changes
->>>>>> introduced.
->>>>>>
->>>>>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>>>>> ---
->>>>>>  drivers/of/fdt.c | 14 +++++++-------
->>>>>>  1 file changed, 7 insertions(+), 7 deletions(-)
->>>>>
->>>>>Acked-by: Rob Herring <robh@kernel.org>
->>>>>
->>>>>I'm happy to take patches 40-42 for 4.6 if the rest of the series
->>>>>doesn't go in given they fix a separate problem. I just need to know
->>>>>soon (or at least they need to go into -next soon).
->>>>>
->>>>
->>>> Thanks for quick response, Rob. It depends how much comments I will
->>>> receive for the powerpc/powernv part. Except that, all parts including
->>>> this one have been ack'ed. I can discuss it with Michael Ellerman.
->>>> By the way, how soon you need the decision to merge 40-42? If that's
->>>> one or two weeks later, I don't think the reivew on the whole series
->>>> can be done.
->>>
->>>Well, it's been 2 weeks now. I need to know this week.
->>>
->>>> Also, I think you probably can merge 40-44 as they're all about
->>>> fdt.c. If they can be merged at one time, I needn't bother (cc)
->>>> you again if I need send a updated revision. Thanks for your
->>>> review.
->>>
->>>I did not include 43 and 44 as they are only needed for the rest of your series.
->>>
->>
->> Rob, sorry for late reponse. I really expect this series to be merged to 4.6 and
->> I was checking reviewers' bandwidth to review it. Unfortunately, I didn't receive
->> any comments except yours until now. That means this series has to miss 4.6. Please
->> pick/merge 41 and 42 if no body has objection. Thanks again for your time on this.
->
->Too late for 4.6.
->
+Code has been redesigned to calculate penalty requirements on the fly. This
+significantly simplifies the implementation and removes some of the init
+calls from x86 architecture.
 
-Yeah, Sorry about that, Rob.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/acpi/pci_link.c | 82 ++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 58 insertions(+), 24 deletions(-)
 
-Thanks,
-Gavin
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index ededa90..a5a66ca 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -36,6 +36,8 @@
+ #include <linux/mutex.h>
+ #include <linux/slab.h>
+ #include <linux/acpi.h>
++#include <linux/irq.h>
++#include <linux/interrupt.h>
+ 
+ #include "internal.h"
+ 
+@@ -440,7 +442,6 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
+ #define ACPI_MAX_IRQS		256
+ #define ACPI_MAX_ISA_IRQ	16
+ 
+-#define PIRQ_PENALTY_PCI_AVAILABLE	(0)
+ #define PIRQ_PENALTY_PCI_POSSIBLE	(16*16)
+ #define PIRQ_PENALTY_PCI_USING		(16*16*16)
+ #define PIRQ_PENALTY_ISA_TYPICAL	(16*16*16*16)
+@@ -457,9 +458,9 @@ static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
+ 	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ6 */
+ 	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ7 parallel, spurious */
+ 	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ8 rtc, sometimes */
+-	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ9  PCI, often acpi */
+-	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ10 PCI */
+-	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ11 PCI */
++	0,				/* IRQ9  PCI, often acpi */
++	0,				/* IRQ10 PCI */
++	0,				/* IRQ11 PCI */
+ 	PIRQ_PENALTY_ISA_USED,		/* IRQ12 mouse */
+ 	PIRQ_PENALTY_ISA_USED,		/* IRQ13 fpe, sometimes */
+ 	PIRQ_PENALTY_ISA_USED,		/* IRQ14 ide0 */
+@@ -467,6 +468,49 @@ static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
+ 	/* >IRQ15 */
+ };
+ 
++static int acpi_irq_pci_sharing_penalty(int irq)
++{
++	struct acpi_pci_link *link;
++	int penalty = 0;
++
++	list_for_each_entry(link, &acpi_link_list, list) {
++		/*
++		 * If a link is active, penalize its IRQ heavily
++		 * so we try to choose a different IRQ.
++		 */
++		if (link->irq.active && link->irq.active == irq)
++			penalty += PIRQ_PENALTY_PCI_USING;
++		else {
++			int i;
++
++			/*
++			 * If a link is inactive, penalize the IRQs it
++			 * might use, but not as severely.
++			 */
++			for (i = 0; i < link->irq.possible_count; i++)
++				if (link->irq.possible[i] == irq)
++					penalty += PIRQ_PENALTY_PCI_POSSIBLE /
++						link->irq.possible_count;
++		}
++	}
++
++	return penalty;
++}
++
++static int acpi_irq_get_penalty(int irq)
++{
++	int penalty = 0;
++
++	if (irq < ACPI_MAX_ISA_IRQ)
++		penalty += acpi_irq_penalty[irq];
++
++	if (irq == acpi_gbl_FADT.sci_interrupt)
++		penalty += PIRQ_PENALTY_PCI_USING;
++
++	penalty += acpi_irq_pci_sharing_penalty(irq);
++	return penalty;
++}
++
+ int __init acpi_irq_penalty_init(void)
+ {
+ 	struct acpi_pci_link *link;
+@@ -568,7 +612,6 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+ 			    acpi_device_bid(link->device));
+ 		return -ENODEV;
+ 	} else {
+-		acpi_irq_penalty[link->irq.active] += PIRQ_PENALTY_PCI_USING;
+ 		printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
+ 		       acpi_device_name(link->device),
+ 		       acpi_device_bid(link->device), link->irq.active);
+@@ -787,23 +830,24 @@ static int __init acpi_irq_penalty_update(char *str, int used)
+ 	for (i = 0; i < 16; i++) {
+ 		int retval;
+ 		int irq;
++		int new_penalty;
+ 
+ 		retval = get_option(&str, &irq);
+ 
+ 		if (!retval)
+ 			break;	/* no number found */
+ 
+-		if (irq < 0)
+-			continue;
+-
+-		if (irq >= ARRAY_SIZE(acpi_irq_penalty))
++		/* see if this is a ISA IRQ */
++		if ((irq < 0) || (irq >= ACPI_MAX_ISA_IRQ))
+ 			continue;
+ 
+ 		if (used)
+-			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_USED;
++			new_penalty = acpi_irq_get_penalty(irq) +
++					PIRQ_PENALTY_ISA_USED;
+ 		else
+-			acpi_irq_penalty[irq] = PIRQ_PENALTY_PCI_AVAILABLE;
++			new_penalty = 0;
+ 
++		acpi_irq_penalty[irq] = new_penalty;
+ 		if (retval != 2)	/* no next number */
+ 			break;
+ 	}
+@@ -819,12 +863,9 @@ static int __init acpi_irq_penalty_update(char *str, int used)
+  */
+ void acpi_penalize_isa_irq(int irq, int active)
+ {
+-	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
+-		if (active)
+-			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_USED;
+-		else
+-			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
+-	}
++	if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_irq_penalty)))
++		acpi_irq_penalty[irq] = active ?
++			PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING;
+ }
+ 
+ bool acpi_isa_irq_available(int irq)
+@@ -840,13 +881,6 @@ bool acpi_isa_irq_available(int irq)
+  */
+ void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
+ {
+-	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
+-		if (trigger != ACPI_MADT_TRIGGER_LEVEL ||
+-		    polarity != ACPI_MADT_POLARITY_ACTIVE_LOW)
+-			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_ALWAYS;
+-		else
+-			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
+-	}
+ }
+ 
+ /*
+-- 
+1.8.2.1
 
