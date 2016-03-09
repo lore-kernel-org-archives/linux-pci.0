@@ -1,150 +1,109 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Felipe Balbi <balbi@kernel.org>, linux-pci@vger.kernel.org,
-	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] pci: Add definition for USB Device Controller PCI Class ID
-Date: Tue, 15 Mar 2016 14:06:00 +0200
-Message-Id: <1458043560-133063-1-git-send-email-heikki.krogerus@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20160309071406.GA19555@red-moon>
+References: <1455212827-9382-1-git-send-email-lorenzo.pieralisi@arm.com>
+	<20160308222125.GG27132@localhost>
+	<CAJZ5v0gnDnF_4z_mtZp+Tq8-V3FgG6p7kMykqtVA+s44ukkuaA@mail.gmail.com>
+	<20160309053332.GA22228@localhost>
+	<20160309071406.GA19555@red-moon>
+Date: Wed, 9 Mar 2016 15:20:32 +0100
+Message-ID: <CAJZ5v0gt9uyLWpr0cedKt-dahCfUdN8Ha4mSeL_bNV2YkMWdZg@mail.gmail.com>
+Subject: Re: [PATCH v2] PCI: ACPI: IA64: fix IO port generic range check
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Mark Salter <msalter@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI-SIG has defined Interface FEh for Base Class 0Ch,
-Sub-Class 03h as "USB Device (not host controller)". It is
-already being used in various USB device controller drivers
-for matching, so converting those to use the definition.
+On Wed, Mar 9, 2016 at 8:14 AM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Tue, Mar 08, 2016 at 11:33:32PM -0600, Bjorn Helgaas wrote:
+>> On Tue, Mar 08, 2016 at 11:27:01PM +0100, Rafael J. Wysocki wrote:
+>> > On Tue, Mar 8, 2016 at 11:21 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> > > On Thu, Feb 11, 2016 at 05:47:07PM +0000, Lorenzo Pieralisi wrote:
+>> > >> The [0 - 64k] ACPI PCI IO port resource boundary check in:
+>> > >>
 
-Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
----
- drivers/pci/quirks.c                | 2 +-
- drivers/usb/gadget/udc/amd5536udc.c | 2 +-
- drivers/usb/gadget/udc/goku_udc.c   | 2 +-
- drivers/usb/gadget/udc/net2280.c    | 8 ++++----
- drivers/usb/gadget/udc/pch_udc.c    | 8 ++++----
- include/linux/pci_ids.h             | 1 +
- 6 files changed, 12 insertions(+), 11 deletions(-)
+[cut]
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 4b5fd72..8e67802 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -438,7 +438,7 @@ static void quirk_amd_nl_class(struct pci_dev *pdev)
- 	u32 class = pdev->class;
- 
- 	/* Use "USB Device (not host controller)" class */
--	pdev->class = (PCI_CLASS_SERIAL_USB << 8) | 0xfe;
-+	pdev->class = PCI_CLASS_SERIAL_USB_DEVICE;
- 	dev_info(&pdev->dev, "PCI class overridden (%#08x -> %#08x) so dwc3 driver can claim this instead of xhci\n",
- 		 class, pdev->class);
- }
-diff --git a/drivers/usb/gadget/udc/amd5536udc.c b/drivers/usb/gadget/udc/amd5536udc.c
-index cd87641..39d70b4 100644
---- a/drivers/usb/gadget/udc/amd5536udc.c
-+++ b/drivers/usb/gadget/udc/amd5536udc.c
-@@ -3397,7 +3397,7 @@ err_pcidev:
- static const struct pci_device_id pci_id[] = {
- 	{
- 		PCI_DEVICE(PCI_VENDOR_ID_AMD, 0x2096),
--		.class =	(PCI_CLASS_SERIAL_USB << 8) | 0xfe,
-+		.class =	PCI_CLASS_SERIAL_USB_DEVICE,
- 		.class_mask =	0xffffffff,
- 	},
- 	{},
-diff --git a/drivers/usb/gadget/udc/goku_udc.c b/drivers/usb/gadget/udc/goku_udc.c
-index 1fdfec1..d2205d9 100644
---- a/drivers/usb/gadget/udc/goku_udc.c
-+++ b/drivers/usb/gadget/udc/goku_udc.c
-@@ -1846,7 +1846,7 @@ err:
- /*-------------------------------------------------------------------------*/
- 
- static const struct pci_device_id pci_ids[] = { {
--	.class =	((PCI_CLASS_SERIAL_USB << 8) | 0xfe),
-+	.class =	PCI_CLASS_SERIAL_USB_DEVICE,
- 	.class_mask =	~0,
- 	.vendor =	0x102f,		/* Toshiba */
- 	.device =	0x0107,		/* this UDC */
-diff --git a/drivers/usb/gadget/udc/net2280.c b/drivers/usb/gadget/udc/net2280.c
-index 6706aef..c894b94 100644
---- a/drivers/usb/gadget/udc/net2280.c
-+++ b/drivers/usb/gadget/udc/net2280.c
-@@ -3735,7 +3735,7 @@ static void net2280_shutdown(struct pci_dev *pdev)
- /*-------------------------------------------------------------------------*/
- 
- static const struct pci_device_id pci_ids[] = { {
--	.class =	((PCI_CLASS_SERIAL_USB << 8) | 0xfe),
-+	.class =	PCI_CLASS_SERIAL_USB_DEVICE,
- 	.class_mask =	~0,
- 	.vendor =	PCI_VENDOR_ID_PLX_LEGACY,
- 	.device =	0x2280,
-@@ -3743,7 +3743,7 @@ static const struct pci_device_id pci_ids[] = { {
- 	.subdevice =	PCI_ANY_ID,
- 	.driver_data =	PLX_LEGACY | PLX_2280,
- 	}, {
--	.class =	((PCI_CLASS_SERIAL_USB << 8) | 0xfe),
-+	.class =	PCI_CLASS_SERIAL_USB_DEVICE,
- 	.class_mask =	~0,
- 	.vendor =	PCI_VENDOR_ID_PLX_LEGACY,
- 	.device =	0x2282,
-@@ -3752,7 +3752,7 @@ static const struct pci_device_id pci_ids[] = { {
- 	.driver_data =	PLX_LEGACY,
- 	},
- 	{
--	.class =	((PCI_CLASS_SERIAL_USB << 8) | 0xfe),
-+	.class =	PCI_CLASS_SERIAL_USB_DEVICE,
- 	.class_mask =	~0,
- 	.vendor =	PCI_VENDOR_ID_PLX,
- 	.device =	0x3380,
-@@ -3761,7 +3761,7 @@ static const struct pci_device_id pci_ids[] = { {
- 	.driver_data =	PLX_SUPERSPEED,
- 	 },
- 	{
--	.class =	((PCI_CLASS_SERIAL_USB << 8) | 0xfe),
-+	.class =	PCI_CLASS_SERIAL_USB_DEVICE,
- 	.class_mask =	~0,
- 	.vendor =	PCI_VENDOR_ID_PLX,
- 	.device =	0x3382,
-diff --git a/drivers/usb/gadget/udc/pch_udc.c b/drivers/usb/gadget/udc/pch_udc.c
-index 7a04157..9571ef5 100644
---- a/drivers/usb/gadget/udc/pch_udc.c
-+++ b/drivers/usb/gadget/udc/pch_udc.c
-@@ -3234,22 +3234,22 @@ static const struct pci_device_id pch_udc_pcidev_id[] = {
- 	{
- 		PCI_DEVICE(PCI_VENDOR_ID_INTEL,
- 			   PCI_DEVICE_ID_INTEL_QUARK_X1000_UDC),
--		.class = (PCI_CLASS_SERIAL_USB << 8) | 0xfe,
-+		.class = PCI_CLASS_SERIAL_USB_DEVICE,
- 		.class_mask = 0xffffffff,
- 	},
- 	{
- 		PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_EG20T_UDC),
--		.class = (PCI_CLASS_SERIAL_USB << 8) | 0xfe,
-+		.class = PCI_CLASS_SERIAL_USB_DEVICE,
- 		.class_mask = 0xffffffff,
- 	},
- 	{
- 		PCI_DEVICE(PCI_VENDOR_ID_ROHM, PCI_DEVICE_ID_ML7213_IOH_UDC),
--		.class = (PCI_CLASS_SERIAL_USB << 8) | 0xfe,
-+		.class = PCI_CLASS_SERIAL_USB_DEVICE,
- 		.class_mask = 0xffffffff,
- 	},
- 	{
- 		PCI_DEVICE(PCI_VENDOR_ID_ROHM, PCI_DEVICE_ID_ML7831_IOH_UDC),
--		.class = (PCI_CLASS_SERIAL_USB << 8) | 0xfe,
-+		.class = PCI_CLASS_SERIAL_USB_DEVICE,
- 		.class_mask = 0xffffffff,
- 	},
- 	{ 0 },
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 6d249d3..247da8c 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -110,6 +110,7 @@
- #define PCI_CLASS_SERIAL_USB_OHCI	0x0c0310
- #define PCI_CLASS_SERIAL_USB_EHCI	0x0c0320
- #define PCI_CLASS_SERIAL_USB_XHCI	0x0c0330
-+#define PCI_CLASS_SERIAL_USB_DEVICE	0x0c03fe
- #define PCI_CLASS_SERIAL_FIBER		0x0c04
- #define PCI_CLASS_SERIAL_SMBUS		0x0c05
- 
--- 
-2.7.0
+>> Wait a minute, this doesn't seem right to me.
+>>
+>> The problem we're trying to fix is that on ia64, we incorrectly
+>> discard the PCI host bridge window [io  0x1000000-0x100ffff window].
+>>
+>> That window is currently discarded by the generic
+>> acpi_dev_ioresource_flags() function, where we're removing this code:
+>>
+>> -       if (res->end >= 0x10003)
+>> -               res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+>>
+>> and we're adding the "res->end >= 0x10003" check to
+>> arch/x86/pci/acpi.c.
+>>
+>> But the removal also affects other users of acpi_dev_ioresource_flags(),
+>> and that's broader than the scope of this patch.  We might want to
+>> remove the check, but if we do, it should be in a separate patch by
+>> itself so it isn't a hidden side-effect of fixing this ia64 problem.
+>>
+>> The other users of acpi_dev_ioresource_flags() include:
+>>
+>>     {acpi_lpss_create_device,acpi_create_platform_device,acpi_pci_probe_root_resources,acpi_default_enumeration,bcm_acpi_probe,tpm_tis_acpi_init,acpi_dma_parse_resource_group,acpi_dma_request_slave_chan_by_index,acpi_gpio_resource_lookup,acpi_gpio_count,acpi_i2c_add_device,inv_mpu_process_acpi_config,acpi_spi_add_device}
+>>       acpi_dev_get_resources
+>>         acpi_dev_process_resource
+>>           acpi_dev_resource_io
+>>             acpi_dev_get_ioresource
+>>               acpi_dev_ioresource_flags
+>>
+>>     {pnpacpi_add_device,resources_store}
+>>       pnpacpi_parse_allocated_resource
+>>         pnpacpi_allocated_resource
+>>           acpi_dev_resource_io
+>>             acpi_dev_get_ioresource
+>>               acpi_dev_ioresource_flags
+>>
+>> I think the original test in acpi_dev_ioresource_flags() isn't quite
+>> correct because it's generic code, but it enforces an arch-specific
+>> 64K limit.
+>
+> Yes, I was about to write to you I noticed the same issue.
+>
+> That (>=0x10003) check in generic code is an x86ism, it is wrong but
+> it is there and given that there are other potential
+> users of acpi_dev_ioresource_flags() this patch should
+> be dropped I do not want to trigger x86 regressions because
+> some IO resources are not filtered.
+>
+> I am travelling, so can't have a proper look till next week,
+> Rafael, please drop this patch.
+>
+>> Maybe acpi_dev_ioresource_flags() should instead check res->end
+>> against ioport_resource.end, as we already do in
+>> acpi_pci_root_validate_resources()?  Each arch already sets its own
+>> ioport_resource.end using IO_SPACE_LIMIT:
+>>
+>>   arch/x86/include/asm/io.h   #define IO_SPACE_LIMIT 0xffff
+>>   arch/ia64/include/asm/io.h  #define IO_SPACE_LIMIT 0xffffffffffffffffUL
+>
+> We can't do that, it may work on IA64 but the ioport_resource is a
+> chunk of address space on IA64/ARM64 that has nothing to do with
+> the physical address at which the root bridges decode IO space (which
+> is what's contained in the resource).
+>
+> I will have a look next week, please drop this patch.
+
+OK, dropping.
+
+Thanks,
+Rafael
