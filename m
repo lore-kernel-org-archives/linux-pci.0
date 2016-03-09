@@ -1,160 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:53503 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751758AbcCREMQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Mar 2016 00:12:16 -0400
-Received: from localhost
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 18 Mar 2016 14:12:13 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 1751B357805E
-	for <linux-pci@vger.kernel.org>; Fri, 18 Mar 2016 15:10:56 +1100 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u2I4ASRb54591496
-	for <linux-pci@vger.kernel.org>; Fri, 18 Mar 2016 15:10:50 +1100
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u2I49nEd009302
-	for <linux-pci@vger.kernel.org>; Fri, 18 Mar 2016 15:09:50 +1100
-Date: Fri, 18 Mar 2016 15:00:36 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	mpe@ellerman.id.au, benh@kernel.crashing.org, paulus@samba.org,
-	imunsie@au1.ibm.com, mikey@neuling.org,
-	andrew.donnellan@au1.ibm.com, bhelgaas@google.com
-Subject: Re: [PATCH v3] powerpc/pci: Assign fixed PHB number based on
- device-tree properties
-Message-ID: <20160318040036.GA4078@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1458245026-27635-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
- <20160317223757.GA6336@gwshan>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160317223757.GA6336@gwshan>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160309144047.GB26158@wunner.de>
+References: <1457504045-12738-1-git-send-email-airlied@gmail.com>
+	<1457504045-12738-2-git-send-email-airlied@gmail.com>
+	<20160309144047.GB26158@wunner.de>
+Date: Thu, 10 Mar 2016 08:04:26 +1000
+Message-ID: <CAPM=9txfEOoXLr35qEMQrpfMdDf_rCyUx0pQoC4HbQ=t0HNKdw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] nouveau: use new vga_switcheroo power domain.
+From: Dave Airlie <airlied@gmail.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: dri-devel <dri-devel@lists.freedesktop.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 18, 2016 at 09:37:57AM +1100, Gavin Shan wrote:
->On Thu, Mar 17, 2016 at 05:03:46PM -0300, Guilherme G. Piccoli wrote:
->>The domain/PHB field of PCI addresses has its value obtained from a
->>global variable, incremented each time a new domain (represented by
->>struct pci_controller) is added on the system. The domain addition
->>process happens during boot or due to PCI device hotplug.
->>
->>As recent kernels are using predictable naming for network interfaces,
->>the network stack is more tied to PCI naming. This can be a problem in
->>hotplug scenarios, because PCI addresses will change if devices are
->>removed and then re-added. This situation seems unusual, but it can
->>happen if a user wants to replace a NIC without rebooting the machine,
->>for example.
->>
->>This patch changes the way PCI domain values are generated: now, we use
->>device-tree properties to assign fixed PHB numbers to PCI addresses
->>when available (meaning pSeries and PowerNV cases). We also use a bitmap
->>to allow dynamic PHB numbering when device-tree properties are not
->>used. This bitmap keeps track of used PHB numbers and if a PHB is
->>released (by hotplug operations for example), it allows the reuse of
->>this PHB number, avoiding PCI address to change in case of device remove
->>and re-add soon after. No functional changes were introduced.
->>
->>Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+On 10 March 2016 at 00:40, Lukas Wunner <lukas@wunner.de> wrote:
+> Hi Dave,
 >
->Apart from below minor issues to be fixed, it looks good to me.
->
->Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->
->>---
->> arch/powerpc/kernel/pci-common.c | 41 +++++++++++++++++++++++++++++++++++++---
->> 1 file changed, 38 insertions(+), 3 deletions(-)
+> On Wed, Mar 09, 2016 at 04:14:05PM +1000, Dave Airlie wrote:
+>> From: Dave Airlie <airlied@redhat.com>
 >>
->>diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
->>index 0f7a60f..8777614 100644
->>--- a/arch/powerpc/kernel/pci-common.c
->>+++ b/arch/powerpc/kernel/pci-common.c
->>@@ -44,8 +44,11 @@
->> static DEFINE_SPINLOCK(hose_spinlock);
->> LIST_HEAD(hose_list);
+>> This fixes GPU auto powerdown on the Lenovo W541,
+>> since we advertise Windows 2013 to the ACPI layer.
 >>
->>-/* XXX kill that some day ... */
->>-static int global_phb_number;		/* Global phb counter */
->>+/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
->>+#define	MAX_PHBS	8192
->>+
->>+/* For dynamic PHB numbering: used/free PHBs tracking bitmap. */
->>+static DECLARE_BITMAP(phb_bitmap, MAX_PHBS);
+>> Signed-off-by: Dave Airlie <airlied@redhat.com>
+>> ---
+>>  drivers/gpu/drm/nouveau/nouveau_vga.c | 10 +++++++---
+>>  1 file changed, 7 insertions(+), 3 deletions(-)
 >>
->> /* ISA Memory physical address */
->> resource_size_t isa_mem_base;
->>@@ -64,6 +67,33 @@ struct dma_map_ops *get_pci_dma_ops(void)
->> }
->> EXPORT_SYMBOL(get_pci_dma_ops);
+>> diff --git a/drivers/gpu/drm/nouveau/nouveau_vga.c b/drivers/gpu/drm/nouveau/nouveau_vga.c
+>> index af89c36..b987427f 100644
+>> --- a/drivers/gpu/drm/nouveau/nouveau_vga.c
+>> +++ b/drivers/gpu/drm/nouveau/nouveau_vga.c
+>> @@ -101,8 +101,12 @@ nouveau_vga_init(struct nouveau_drm *drm)
+>>               runtime = true;
+>>       vga_switcheroo_register_client(dev->pdev, &nouveau_switcheroo_ops, runtime);
 >>
->>+static int get_phb_number(struct device_node *dn)
->>+{
->>+	const __be64 *prop64;
->>+	const __be32 *regs;
->>+	int phb_id = 0;
->>+
->>+	/* try fixed PHB numbering first, by checking archs and reading
->>+	 * the respective device-tree property. */
->>+	if (machine_is(pseries)) {
->>+		regs = of_get_property(dn, "reg", NULL);
->>+		if (regs)
->>+			return (int)(be32_to_cpu(regs[1]) & 0xFFFF);
->>+	} else {
->>+		if (machine_is(powernv)) {
->>+			prop64 = of_get_property(dn, "ibm,opal-phbid", NULL);
->>+			if (prop64)
->>+				return (int)(be64_to_cpup(prop64) & 0xFFFF);
->>+		}
->>+	}
->>+
+>> -     if (runtime && nouveau_is_v1_dsm() && !nouveau_is_optimus())
+>> -             vga_switcheroo_init_domain_pm_ops(drm->dev->dev, &drm->vga_pm_domain);
+>> +     if (runtime) {
+>> +             if (nouveau_is_v1_dsm() && !nouveau_is_optimus())
 >
->The nested statements can be merged to one with "else if (machine_is(powernv))".
->
->>+	/* if not pSeries nor PowerNV, fallback to dynamic PHB numbering */
->>+	phb_id = find_first_zero_bit(phb_bitmap, MAX_PHBS);
->>+	BUG_ON(phb_id >= MAX_PHBS); /* reached maximum number of PHBs */
->>+	set_bit(phb_id, phb_bitmap);
->>+	return phb_id;
->
->It's possible another CPU sets this bit before current CPU updates it, which
->will cause same domain number used by two PHBs though it's very rare. I guess
->it might be worthwhile to check if the bit is reserved by somebody else to
->avoid the issue.
+> The " && !nouveau_is_optimus()" can be dropped because a machine cannot
+> have both. Note the "else" in nouveau_dsm_detect():
+
+I'm pretty sure I've seen a machine with both in my past, back in the
+Vista/Win7 crossover days.
+
+> You're calling this unconditionally for all Optimus machines yet
+> I assume pre Windows 10 machines lack the PR3 hooks.
 >
 
-Please ignore this comment: there is a lock (hose_spinlock) avoiding the issue.
+Yes and I've confirmed on my older machine that nothing bad happens
+doing it unconditionally,
+and I couldn't find any bits in the _DSM flags to tell me if I should
+do something different.
 
->>+}
->>+
->> struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
->> {
->> 	struct pci_controller *phb;
->>@@ -72,7 +102,7 @@ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
->> 	if (phb == NULL)
->> 		return NULL;
->> 	spin_lock(&hose_spinlock);
->>-	phb->global_number = global_phb_number++;
->>+	phb->global_number = get_phb_number(dev);
->> 	list_add_tail(&phb->list_node, &hose_list);
->> 	spin_unlock(&hose_spinlock);
->> 	phb->dn = dev;
->>@@ -94,6 +124,11 @@ EXPORT_SYMBOL_GPL(pcibios_alloc_controller);
->> void pcibios_free_controller(struct pci_controller *phb)
->> {
->> 	spin_lock(&hose_spinlock);
->>+
->>+	/* clear bit of phb_bitmap to allow reuse of this phb number */
->>+	if (phb->global_number < MAX_PHBS)
->>+		clear_bit(phb->global_number, phb_bitmap);
->>+
->> 	list_del(&phb->list_node);
->> 	spin_unlock(&hose_spinlock);
->>
->
->Thanks,
->Gavin
-
+Dave.
