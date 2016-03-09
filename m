@@ -1,61 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from li153-180.members.linode.com ([109.74.206.180]:60638 "EHLO
-	mail.tekno-soft.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752618AbcCJRf0 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Mar 2016 12:35:26 -0500
-Subject: Re: iMX6q PCIe phy link never came up on kernel v4.4.x
-To: Lucas Stach <l.stach@pengutronix.de>
-References: <56D5E3DF.9030906@tekno-soft.it> <56D71F27.7070708@tekno-soft.it>
- <20160302195634.GA19223@localhost>
- <DBXPR04MB2706C7C2FD2348D205331998CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
- <56D80435.90408@tekno-soft.it>
- <DBXPR04MB2702F4BC78FA28DC82DCA218CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
- <56D8180A.1050708@tekno-soft.it> <56D84B6D.1050800@tekno-soft.it>
- <56D883AD.5060601@tekno-soft.it> <56DEE426.8030902@tekno-soft.it>
- <1457448829.3207.22.camel@pengutronix.de>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Fabio Estevam <festevam@gmail.com>
-From: Roberto Fichera <kernel@tekno-soft.it>
-Message-ID: <56E1B04A.9010206@tekno-soft.it>
-Date: Thu, 10 Mar 2016 18:35:06 +0100
-MIME-Version: 1.0
-In-Reply-To: <1457448829.3207.22.camel@pengutronix.de>
-Content-Type: text/plain; charset=utf-8
+Received: from smtp.codeaurora.org ([198.145.29.96]:56716 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753369AbcCIAla (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Mar 2016 19:41:30 -0500
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org
+Cc: linux-pci@vger.kernel.org, ravikanth.nalla@hpe.com,
+	lenb@kernel.org, harish.k@hpe.com, ashwin.reghunandanan@hpe.com,
+	bhelgaas@google.com, rjw@rjwysocki.net,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Robert Moore <robert.moore@intel.com>,
+	Lv Zheng <lv.zheng@intel.com>, linux-kernel@vger.kernel.org,
+	devel@acpica.org
+Subject: [PATCH 2/4] acpi,pci,irq: remove redundant code in acpi_irq_penalty_init
+Date: Tue,  8 Mar 2016 19:41:17 -0500
+Message-Id: <1457484079-18202-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
+References: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/08/2016 03:53 PM, Lucas Stach wrote:
-> Am Dienstag, den 08.03.2016, 15:39 +0100 schrieb Roberto Fichera:
->> > On 03/03/2016 07:34 PM, Roberto Fichera wrote:
->>> > > On 03/03/2016 03:34 PM, Roberto Fichera wrote:
->>> > >
->>> > > I've also checked clock, pll, PMU_MISC1 and CCGR[45] registers, all looks fine
->>> > > and exactly equal to uboot settings.
->>> > >
->>> > > However I'm investigating a possible HW issue in the LDVS pad wiring against
->>> > > the bridge XIO2001. Let's see once this is also clarified.
->> > 
->> > Our HW engineer has applied a fix to LVDS vs XIO2001 clock wiring. However I'm still getting the same problem.
->> > 
->> > I've tried to boot a kernel with uboot not setting up the PCIe subsys and below there is the resulting kernel log.
->> > Note that the CCGR5 doesn't set the CG2 field associated to sata_clk_enable. I think this field should be set all 1 to
->> > enable the SATA ref at 100MHz, right?
->> > 
-> No, the reference manual is a bit confusing about this, but the LVDS1
-> clock output is driven by sata_ref_100mhz, not the sata_clk gate.
->
-> So the only thing that needs to be enabled for LVDS clock output is the
-> 100MHz clock output from PLL ENET. (Register CCM_ANALOG_PLL_ENETn bit
-> 20).
+acpi_irq_get_penalty is now calculating the penalty on the fly now.
+No need to maintain global list of penalties or calculate them
+at the init time. Removing duplicate code in acpi_irq_penalty_init.
 
-Guys! No more idea where to look at! Still getting PCIe link reaching L0 state under
-uboot but doesn't progress more than POLL_ACTIVE or POLL_COMPLIANCE states
-under kernel.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ arch/x86/pci/acpi.c         |  1 -
+ drivers/acpi/pci_link.c     | 35 -----------------------------------
+ include/acpi/acpi_drivers.h |  1 -
+ 3 files changed, 37 deletions(-)
 
-Any idea what to do?
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 3cd6983..b2a4e2a 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -396,7 +396,6 @@ int __init pci_acpi_init(void)
+ 		return -ENODEV;
+ 
+ 	printk(KERN_INFO "PCI: Using ACPI for IRQ routing\n");
+-	acpi_irq_penalty_init();
+ 	pcibios_enable_irq = acpi_pci_irq_enable;
+ 	pcibios_disable_irq = acpi_pci_irq_disable;
+ 	x86_init.pci.init_irq = x86_init_noop;
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index a5a66ca..eb8e770 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -511,41 +511,6 @@ static int acpi_irq_get_penalty(int irq)
+ 	return penalty;
+ }
+ 
+-int __init acpi_irq_penalty_init(void)
+-{
+-	struct acpi_pci_link *link;
+-	int i;
+-
+-	/*
+-	 * Update penalties to facilitate IRQ balancing.
+-	 */
+-	list_for_each_entry(link, &acpi_link_list, list) {
+-
+-		/*
+-		 * reflect the possible and active irqs in the penalty table --
+-		 * useful for breaking ties.
+-		 */
+-		if (link->irq.possible_count) {
+-			int penalty =
+-			    PIRQ_PENALTY_PCI_POSSIBLE /
+-			    link->irq.possible_count;
+-
+-			for (i = 0; i < link->irq.possible_count; i++) {
+-				if (link->irq.possible[i] < ACPI_MAX_ISA_IRQ)
+-					acpi_irq_penalty[link->irq.
+-							 possible[i]] +=
+-					    penalty;
+-			}
+-
+-		} else if (link->irq.active) {
+-			acpi_irq_penalty[link->irq.active] +=
+-			    PIRQ_PENALTY_PCI_POSSIBLE;
+-		}
+-	}
+-
+-	return 0;
+-}
+-
+ static int acpi_irq_balance = -1;	/* 0: static, 1: balance */
+ 
+ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+diff --git a/include/acpi/acpi_drivers.h b/include/acpi/acpi_drivers.h
+index 29c6912..797ae2e 100644
+--- a/include/acpi/acpi_drivers.h
++++ b/include/acpi/acpi_drivers.h
+@@ -78,7 +78,6 @@
+ 
+ /* ACPI PCI Interrupt Link (pci_link.c) */
+ 
+-int acpi_irq_penalty_init(void);
+ int acpi_pci_link_allocate_irq(acpi_handle handle, int index, int *triggering,
+ 			       int *polarity, char **name);
+ int acpi_pci_link_free_irq(acpi_handle handle);
+-- 
+1.8.2.1
 
-Cheers,
-Roberto Fichera.
