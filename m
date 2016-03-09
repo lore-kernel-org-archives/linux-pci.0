@@ -1,67 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51576 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753739AbcCAOmB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Mar 2016 09:42:01 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	David Daney <david.daney@cavium.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Russell King <linux@arm.linux.org.uk>
-Subject: [PATCH v2 2/3] drivers: pci: host-generic: claim bus resources on PCI_PROBE_ONLY set-ups
-Date: Tue,  1 Mar 2016 14:44:08 +0000
-Message-Id: <1456843449-19393-3-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1456843449-19393-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1456843449-19393-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <CAJZ5v0hurNUOVDXpJJEJ5dCwWO_Fo+EdzBhXJA7QWmPeY653fQ@mail.gmail.com>
+References: <1457504045-12738-1-git-send-email-airlied@gmail.com>
+	<CAJZ5v0hurNUOVDXpJJEJ5dCwWO_Fo+EdzBhXJA7QWmPeY653fQ@mail.gmail.com>
+Date: Thu, 10 Mar 2016 07:56:41 +1000
+Message-ID: <CAPM=9tzAf=464v3uSjert7NVh35EXUG8iy_xEuR36NUMhdJSWw@mail.gmail.com>
+Subject: Re: [PATCH 1/2] vga_switcheroo: add power support for windows 10 machines.
+From: Dave Airlie <airlied@gmail.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: dri-devel <dri-devel@lists.freedesktop.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI host generic driver does not reassign bus resources on systems
-that require the BARs set-up to be immutable (ie PCI_PROBE_ONLY) since
-that would trigger system failures. Nonetheless, PCI bus resources
-allocated to PCI bridge and devices must be claimed in order to be
-validated and inserted in the kernel resource tree, but the current
-driver omits the resources claiming and relies on arch specific kludges
-to prevent probing failure (ie preventing resources enablement on
-PCI_PROBE_ONLY systems).
+On 9 March 2016 at 23:19, Rafael J. Wysocki <rafael@kernel.org> wrote:
+> On Wed, Mar 9, 2016 at 7:14 AM, Dave Airlie <airlied@gmail.com> wrote:
+>> From: Dave Airlie <airlied@redhat.com>
+>>
+>> Windows 10 seems to have standardised power control for the
+>> optimus/powerxpress laptops using PR3 power resource hooks.
+>>
+>> I'm not sure this is definitely the correct place to be
+>> doing this, but it works for me here.
+>>
+>> The ACPI device for the GPU I have is \_SB_.PCI0.PEG_.VID_
+>> but the power resource hooks are on \_SB_.PCI0.PEG_, so
+>> this patch creates a new power domain to turn the GPU
+>> device parent off using standard ACPI calls.
+>>
+>> Signed-off-by: Dave Airlie <airlied@redhat.com>
+>> ---
+>>  drivers/gpu/vga/vga_switcheroo.c | 54 +++++++++++++++++++++++++++++++++++++++-
+>>  include/linux/vga_switcheroo.h   |  3 ++-
+>>  2 files changed, 55 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/gpu/vga/vga_switcheroo.c b/drivers/gpu/vga/vga_switcheroo.c
+>> index 665ab9f..be32cb2 100644
+>> --- a/drivers/gpu/vga/vga_switcheroo.c
+>> +++ b/drivers/gpu/vga/vga_switcheroo.c
+>> @@ -42,7 +42,7 @@
+>>  #include <linux/uaccess.h>
+>>  #include <linux/vgaarb.h>
+>>  #include <linux/vga_switcheroo.h>
+>> -
+>> +#include <linux/acpi.h>
+>>  /**
+>>   * DOC: Overview
+>>   *
+>> @@ -997,3 +997,55 @@ vga_switcheroo_init_domain_pm_optimus_hdmi_audio(struct device *dev,
+>>         return -EINVAL;
+>>  }
+>>  EXPORT_SYMBOL(vga_switcheroo_init_domain_pm_optimus_hdmi_audio);
+>> +
+>> +/* With Windows 10 the runtime suspend/resume can use power
+>> +   resources on the parent device */
+>> +static int vga_acpi_switcheroo_runtime_suspend(struct device *dev)
+>> +{
+>> +       struct pci_dev *pdev = to_pci_dev(dev);
+>> +       int ret;
+>> +       struct acpi_device *adev;
+>> +
+>> +       ret = dev->bus->pm->runtime_suspend(dev);
+>> +       if (ret)
+>> +               return ret;
+>> +
+>> +       ret = acpi_bus_get_device(ACPI_HANDLE(&pdev->dev), &adev);
+>
+> You can use ACPI_COMPANION(&pdev->dev) for that.
+>
+>> +       if (!ret)
+>> +               acpi_device_set_power(adev->parent, ACPI_STATE_D3_COLD);
+>
+> Won't that mess up with the PM of the parent?  Or do we know that the
+> parent won't do its own PM?
 
-This patch adds code to the PCI host generic driver that correctly
-claims bus resources upon probe on systems that are required to
-prevent reassignment after bus enumeration, so that the allocated
-resources can be enabled successfully upon PCI device drivers probing,
-without resorting to arch back-ends workarounds.
+The parent is always going to be pcieport. It doesn't seem to do any runtime PM,
+I do wonder if pcieport should be doing it's own runtime PM handling,
+but that is a
+larger task than I'm thinking to tackle here. Maybe I should be doing
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Will Deacon <will.deacon@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: David Daney <david.daney@cavium.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-host-generic.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+pci_set_power_state(pdev->bus->self, PCI_D3cold) ? I'm not really sure.
 
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 1652bc7..e529825 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -252,7 +252,10 @@ static int gen_pci_probe(struct platform_device *pdev)
- 
- 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
- 
--	if (!pci_has_flag(PCI_PROBE_ONLY)) {
-+
-+	if (pci_has_flag(PCI_PROBE_ONLY)) {
-+		pci_bus_claim_resources(bus);
-+	} else {
- 		pci_bus_size_bridges(bus);
- 		pci_bus_assign_resources(bus);
- 
--- 
-2.5.1
+I'm guessing on Windows this all happens automatically.
 
+Dave.
