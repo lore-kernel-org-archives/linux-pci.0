@@ -1,42 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.codelabs.ch ([217.150.249.120]:58089 "EHLO
-	fenrir.codelabs.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752037AbcCWKok (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Mar 2016 06:44:40 -0400
-From: Adrian-Ken Rueegsegger <ken@codelabs.ch>
-To: linux-pci@vger.kernel.org
-Cc: ken@codelabs.ch
-Subject: [RFC PATCH] x86/PCI: Refine PCI support check in pcibios_init()
-Date: Wed, 23 Mar 2016 11:34:29 +0100
-Message-Id: <1458729269-9440-2-git-send-email-ken@codelabs.ch>
-In-Reply-To: <1458729269-9440-1-git-send-email-ken@codelabs.ch>
-References: <1458729269-9440-1-git-send-email-ken@codelabs.ch>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH V4 0/5] PCIe Xilinx generic driver for Microblaze and
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+References: <1455208091-15556-1-git-send-email-bharatku@xilinx.com>
+ <20160308203444.GA27132@localhost>
+CC: <bhelgaas@google.com>, <lorenzo.pieralisi@arm.com>,
+	<paul.burton@imgtec.com>, <yinghai@kernel.org>,
+	<wangyijing@huawei.com>, <robh@kernel.org>,
+	<russell.joyce@york.ac.uk>, <sorenb@xilinx.com>,
+	<jiang.liu@linux.intel.com>, <arnd@arndb.de>, <pawel.moll@arm.com>,
+	<mark.rutland@arm.com>, <ijc+devicetree@hellion.org.uk>,
+	<galak@codeaurora.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Bharat Kumar Gogada <bharatku@xilinx.com>
+From: Michal Simek <michal.simek@xilinx.com>
+Message-ID: <56E05A00.9030506@xilinx.com>
+Date: Wed, 9 Mar 2016 18:14:40 +0100
+MIME-Version: 1.0
+In-Reply-To: <20160308203444.GA27132@localhost>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Also consider raw_pci_ext_ops when validating if a system has PCI
-support. This leads to proper resource allocation via
-pcibios_resource_survey() in the case where PCI config space is
-exclusively accessed through MMCONFIG.
+On 8.3.2016 21:34, Bjorn Helgaas wrote:
+> On Thu, Feb 11, 2016 at 09:58:06PM +0530, Bharat Kumar Gogada wrote:
+>> This patch series does modifications to pcie-xilinx.c, to support common
+>> driver on both Zynq and Microblaze architectures.
+>> Microblaze pci-common.c has been modified to support generic driver.
+>>
+>> Bharat Kumar Gogada (5):
+>>   PCI: xilinx: Removing xilinx_pcie_parse_and_add_res function
+>>   PCI: xilinx: Removing struct hw_pci structure.
+>>   PCI: xilinx: Modifying AXI PCIe Host Bridge driver to work on both
+>>      Zynq and Microblaze
+>>   PCI: xilinx: Updating Zynq PCI binding documentation with 
+>>     Microblaze node.
+>>   Microblaze: Modifying microblaze PCI subsytem to support  generic
+>>     Xilinx  AXI PCIe Host Bridge IP driver
+>>
+>>  .../devicetree/bindings/pci/xilinx-pcie.txt        |  32 +++-
+>>  arch/microblaze/Kconfig                            |   3 +
+>>  arch/microblaze/pci/pci-common.c                   |  56 ++----
+>>  drivers/pci/host/Kconfig                           |   2 +-
+>>  drivers/pci/host/pcie-xilinx.c                     | 191 +++------------------
+>>  5 files changed, 66 insertions(+), 218 deletions(-)
+> 
+> I applied this series to my pci/host-xilinx branch for v4.6.
+> 
+> Michal, you only explicitly acked the last patch, but that only makes
+> sense if I apply the whole series, so I applied your ack to all the
+> patches.
 
-Signed-off-by: Adrian-Ken Rueegsegger <ken@codelabs.ch>
----
- arch/x86/pci/common.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+No problem.
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 8fd6f44..50b123d 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -517,7 +517,7 @@ void __init pcibios_set_cache_line_size(void)
- 
- int __init pcibios_init(void)
- {
--	if (!raw_pci_ops) {
-+	if (!raw_pci_ops && !raw_pci_ext_ops) {
- 		printk(KERN_WARNING "PCI: System does not support PCI\n");
- 		return 0;
- 	}
--- 
-2.1.4
-
+Thanks,
+Michal
