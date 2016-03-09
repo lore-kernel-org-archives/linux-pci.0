@@ -1,39 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:37979 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752441AbcC1A0g (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Mar 2016 20:26:36 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAOMZO5DcZCxoLPeGRWSGkstm7F3eN-Q-yJyf6ktMTda2zLviag@mail.gmail.com>
-References: <m3h9fuk7ik.fsf@t19.piap.pl>
-	<CAOMZO5DcZCxoLPeGRWSGkstm7F3eN-Q-yJyf6ktMTda2zLviag@mail.gmail.com>
-Date: Sun, 27 Mar 2016 21:26:35 -0300
-Message-ID: <CAOMZO5B8Lzn-E4YOeYxVtN5PN11aOvZHn4eU0ixkdV8CO8+xYw@mail.gmail.com>
-Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
-From: Fabio Estevam <festevam@gmail.com>
-To: =?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
-	Lucas Stach <l.stach@pengutronix.de>
-Cc: =?UTF-8?Q?Petr_=C5=A0tetiar?= <ynezz@true.cz>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org
+Cc: linux-pci@vger.kernel.org, ravikanth.nalla@hpe.com,
+	lenb@kernel.org, harish.k@hpe.com, ashwin.reghunandanan@hpe.com,
+	bhelgaas@google.com, rjw@rjwysocki.net,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 3/4] acpi,pci,irq: remove SCI penalize function
+Date: Tue,  8 Mar 2016 19:41:18 -0500
+Message-Id: <1457484079-18202-3-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
+References: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Mar 27, 2016 at 11:44 AM, Fabio Estevam <festevam@gmail.com> wrote:
+Removing the SCI penalize function as the penalty is now calculated on the
+fly.
 
-> Good catch!
->
-> Reviewed-by: Fabio Estevam <fabio.estevam@nxp.com>
->
-> I will fix imx6q-sabresd.dtsi when this patch gets applied.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ arch/x86/kernel/acpi/boot.c | 1 -
+ drivers/acpi/pci_link.c     | 9 ---------
+ include/linux/acpi.h        | 1 -
+ 3 files changed, 11 deletions(-)
 
-After thinking more about it, I think the correct fix is to revert
-5c5fb40de8f143 ("PCI: imx6: Add support for active-low reset GPIO") so
-that we do not break old dtb's.
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index e759076..5e99f22 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -445,7 +445,6 @@ static void __init acpi_sci_ioapic_setup(u8 bus_irq, u16 polarity, u16 trigger,
+ 		polarity = acpi_sci_flags & ACPI_MADT_POLARITY_MASK;
+ 
+ 	mp_override_legacy_irq(bus_irq, polarity, trigger, gsi);
+-	acpi_penalize_sci_irq(bus_irq, trigger, polarity);
+ 
+ 	/*
+ 	 * stash over-ride to indicate we've been here
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index eb8e770..6bd77f1 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -840,15 +840,6 @@ bool acpi_isa_irq_available(int irq)
+ }
+ 
+ /*
+- * Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict with
+- * PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be use for
+- * PCI IRQs.
+- */
+-void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
+-{
+-}
+-
+-/*
+  * Over-ride default table to reserve additional IRQs for use by ISA
+  * e.g. acpi_irq_isa=5
+  * Useful for telling ACPI how not to interfere with your ISA sound card.
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 06ed7e5..0f41317 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -311,7 +311,6 @@ struct pci_dev;
+ int acpi_pci_irq_enable (struct pci_dev *dev);
+ void acpi_penalize_isa_irq(int irq, int active);
+ bool acpi_isa_irq_available(int irq);
+-void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
+ void acpi_pci_irq_disable (struct pci_dev *dev);
+ 
+ extern int ec_read(u8 addr, u8 *val);
+-- 
+1.8.2.1
 
-Then a new dt property can be added if someone needs gpio active high PCI reset.
