@@ -1,216 +1,303 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:43283 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757251AbcCaWMC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Mar 2016 18:12:02 -0400
-Subject: Re: [PATCH next 1/2] PCI: keystone: add pci error irq handler
-To: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <bhelgaas@google.com>
-References: <1458676378-24377-1-git-send-email-m-karicheri2@ti.com>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Message-ID: <56FDA0A4.5040207@ti.com>
-Date: Thu, 31 Mar 2016 18:11:48 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: "'Mark Rutland'" <mark.rutland@arm.com>,
+	"Guohanjun (Hanjun Guo)" <guohanjun@huawei.com>,
+	"Wangzhou (B)" <wangzhou1@hisilicon.com>,
+	"liudongdong (C)" <liudongdong3@huawei.com>,
+	Linuxarm <linuxarm@huawei.com>, qiujiang <qiujiang@huawei.com>,
+	"'bhelgaas@google.com'" <bhelgaas@google.com>,
+	"'arnd@arndb.de'" <arnd@arndb.de>,
+	"'tn@semihalf.com'" <tn@semihalf.com>,
+	"'linux-pci@vger.kernel.org'" <linux-pci@vger.kernel.org>,
+	"'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>,
+	"xuwei (O)" <xuwei5@hisilicon.com>,
+	"'linux-acpi@vger.kernel.org'" <linux-acpi@vger.kernel.org>,
+	"'jcm@redhat.com'" <jcm@redhat.com>,
+	zhangjukuo <zhangjukuo@huawei.com>,
+	"Liguozhu (Kenneth)" <liguozhu@hisilicon.com>,
+	"'linux-arm-kernel@lists.infradead.org'"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
+ HiSilicon SoCs Host Controllers
+Date: Wed, 9 Mar 2016 07:41:01 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED09A7B@lhreml503-mbs>
+References: <20160210111234.GC2632@leverpostej>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ECB1D30@lhreml503-mbs>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ECC5F00@lhreml503-mbs>
+ <20160224011418.GB13026@localhost>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ECCAD6A@lhreml503-mbs>
+ <20160224152538.GA19700@localhost>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ECCD209@lhreml503-mbs>
+ <20160225120750.GA32016@red-moon> <20160225195912.GA4818@localhost>
+ <20160301192247.GA21324@red-moon> <20160302155117.GB24024@localhost>
+In-Reply-To: <20160302155117.GB24024@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1458676378-24377-1-git-send-email-m-karicheri2@ti.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/22/2016 03:52 PM, Murali Karicheri wrote:
-> Keystone PCI hardware generates error interrupts at RC using platform
-> irq instead of standard msi/legacy irq. Add a simple error handler that
-> logs the fatal interrupt status to the console.
-> 
-> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Pawel Moll <pawel.moll@arm.com>
-> Cc: Mark Rutland <mark.rutland@arm.com>
-> Cc: Ian Campbell <ijc+devicetree@hellion.org.uk>
-> Cc: Kumar Gala <galak@codeaurora.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  .../devicetree/bindings/pci/pci-keystone.txt       |  1 +
->  drivers/pci/host/pci-keystone-dw.c                 | 46 ++++++++++++++++++++++
->  drivers/pci/host/pci-keystone.c                    | 32 +++++++++++++++
->  drivers/pci/host/pci-keystone.h                    |  6 +++
->  4 files changed, 85 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-> index 54eae29..d08a4d5 100644
-> --- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-> @@ -56,6 +56,7 @@ Optional properties:-
->  	phy-names: name of the Generic Keystine SerDes phy for PCI
->  	  - If boot loader already does PCI link establishment, then phys and
->  	    phy-names shouldn't be present.
-> +	interrupts: platform interrupt for error interrupts.
->  
->  Designware DT Properties not applicable for Keystone PCI
->  
-> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-> index ed34c95..524901d 100644
-> --- a/drivers/pci/host/pci-keystone-dw.c
-> +++ b/drivers/pci/host/pci-keystone-dw.c
-> @@ -53,6 +53,29 @@
->  #define IRQ_STATUS			0x184
->  #define MSI_IRQ_OFFSET			4
->  
-> +/*
-> + * error IRQ bits. Enable following errors
-> + *  - ERR_AER  - ECRC error - BIT(5)
-> + *  - ERR_AXI  - AXI tag lookup fatal error BIT(4)
-> + *  - ERR_CORR - Correctable error BIT(3)
-> + *  - ERR_NONFATAL - Non fatal error BIT(2)
-> + *  - ERR_FATAL - Fatal error BIT(1)
-> + *  - ERR_SYS - System error (fatal, nonfatal or correctable error)
-> + */
-> +#define ERR_AER				BIT(5)
-> +#define ERR_AXI				BIT(4)
-> +#define ERR_CORR			BIT(3)
-> +#define ERR_NONFATAL			BIT(2)
-> +#define ERR_FATAL			BIT(1)
-> +#define ERR_SYS				BIT(0)
-> +#define ERR_IRQ_ALL			(ERR_AER | ERR_AXI | ERR_CORR | \
-> +					ERR_NONFATAL | ERR_FATAL | ERR_SYS)
-> +#define ERR_FATAL_IRQ			(ERR_FATAL | ERR_AXI)
-> +#define ERR_IRQ_STATUS_RAW		0x1c0
-> +#define ERR_IRQ_STATUS			0x1c4
-> +#define ERR_IRQ_ENABLE_SET		0x1c8
-> +#define ERR_IRQ_ENABLE_CLR		0x1cc
-> +
->  /* Config space registers */
->  #define DEBUG0				0x728
->  
-> @@ -248,6 +271,29 @@ void ks_dw_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie, int offset)
->  	writel(offset, ks_pcie->va_app_base + IRQ_EOI);
->  }
->  
-> +void ks_dw_pcie_enable_error_irq(void __iomem *reg_base)
-> +{
-> +	writel(ERR_IRQ_ALL, reg_base + ERR_IRQ_ENABLE_SET);
-> +}
-> +
-> +bool ks_dw_pcie_handle_error_irq(struct device *dev, void __iomem *reg_base)
-> +{
-> +	u32 status;
-> +	bool ret = false;
-> +
-> +	status = readl(reg_base + ERR_IRQ_STATUS_RAW) & ERR_IRQ_ALL;
-> +	if (status) {
-> +		/* The PCIESS interrupt status buts are "write 1 to clear" */
-> +		if (status & ERR_FATAL_IRQ)
-> +			dev_err(dev, "PCIE fatal error detected\n");
-> +
-> +		/* ack the irq event. */
-> +		writel(status, reg_base + ERR_IRQ_STATUS);
-> +		ret = true;
-> +	}
-> +	return ret;
-> +}
-> +
->  static void ks_dw_pcie_ack_legacy_irq(struct irq_data *d)
->  {
->  }
-> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-> index b71f55b..299f2f0 100644
-> --- a/drivers/pci/host/pci-keystone.c
-> +++ b/drivers/pci/host/pci-keystone.c
-> @@ -15,6 +15,7 @@
->  #include <linux/irqchip/chained_irq.h>
->  #include <linux/clk.h>
->  #include <linux/delay.h>
-> +#include <linux/interrupt.h>
->  #include <linux/irqdomain.h>
->  #include <linux/module.h>
->  #include <linux/msi.h>
-> @@ -226,6 +227,10 @@ static void ks_pcie_setup_interrupts(struct keystone_pcie *ks_pcie)
->  							 ks_pcie);
->  		}
->  	}
-> +
-> +	/* enable error interrupt */
-> +	if (ks_pcie->error_irq > 0)
-> +		ks_dw_pcie_enable_error_irq(ks_pcie->va_app_base);
->  }
->  
->  /*
-> @@ -289,6 +294,16 @@ static struct pcie_host_ops keystone_pcie_host_ops = {
->  	.scan_bus = ks_dw_pcie_v3_65_scan_bus,
->  };
->  
-> +static irqreturn_t pcie_err_irq_handler(int irq, void *priv)
-> +{
-> +	struct keystone_pcie *ks_pcie = priv;
-> +
-> +	if (ks_dw_pcie_handle_error_irq(ks_pcie->pp.dev, ks_pcie->va_app_base))
-> +		return IRQ_HANDLED;
-> +
-> +	return IRQ_NONE;
-> +}
-> +
->  static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
->  			 struct platform_device *pdev)
->  {
-> @@ -309,6 +324,22 @@ static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
->  			return ret;
->  	}
->  
-> +	/*
-> +	 * index 0 is the platform interrupt for error interrupt
-> +	 * from RC. As this is optional to define this, we will
-> +	 * just print a warning
-> +	 */
-> +	ks_pcie->error_irq = irq_of_parse_and_map(ks_pcie->np, 0);
-> +	if (ks_pcie->error_irq <= 0)
-> +		dev_warn(&pdev->dev, "No error irq defined\n");
-> +	else {
-> +		if (request_irq(ks_pcie->error_irq, pcie_err_irq_handler,
-> +				IRQF_SHARED, "pcie-error-irq", ks_pcie) < 0) {
-> +			dev_err(&pdev->dev, "failed to request error irq\n");
-> +			return ret;
-> +		}
-> +	}
-> +
->  	pp->root_bus_nr = -1;
->  	pp->ops = &keystone_pcie_host_ops;
->  	ret = ks_dw_pcie_host_init(ks_pcie, ks_pcie->msi_intc_np);
-> @@ -376,6 +407,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
->  	devm_release_mem_region(dev, res->start, resource_size(res));
->  
->  	pp->dev = dev;
-> +	ks_pcie->np = node;
->  	platform_set_drvdata(pdev, ks_pcie);
->  	ks_pcie->clk = devm_clk_get(dev, "pcie");
->  	if (IS_ERR(ks_pcie->clk)) {
-> diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/host/pci-keystone.h
-> index f0944e8..2daa215 100644
-> --- a/drivers/pci/host/pci-keystone.h
-> +++ b/drivers/pci/host/pci-keystone.h
-> @@ -29,6 +29,10 @@ struct keystone_pcie {
->  	int			msi_host_irqs[MAX_MSI_HOST_IRQS];
->  	struct			device_node *msi_intc_np;
->  	struct irq_domain	*legacy_irq_domain;
-> +	struct device_node	*np;
-> +
-> +	/* error interrupt */
-> +	int error_irq;
->  
->  	/* Application register space */
->  	void __iomem		*va_app_base;
-> @@ -42,6 +46,8 @@ phys_addr_t ks_dw_pcie_get_msi_addr(struct pcie_port *pp);
->  /* Keystone specific PCI controller APIs */
->  void ks_dw_pcie_enable_legacy_irqs(struct keystone_pcie *ks_pcie);
->  void ks_dw_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie, int offset);
-> +void ks_dw_pcie_enable_error_irq(void __iomem *reg_base);
-> +bool ks_dw_pcie_handle_error_irq(struct device *dev, void __iomem *reg_base);
->  int  ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
->  			struct device_node *msi_intc_np);
->  int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-> 
-Bjorn,
+Hi Bjorn, Lorenzo
 
-Will you be applying this to your PCI next branch?
--- 
-Murali Karicheri
-Linux Kernel, Keystone
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: 02 March 2016 15:51
+> To: Lorenzo Pieralisi
+> Cc: Gabriele Paoloni; 'Mark Rutland'; Guohanjun (Hanjun Guo); Wangzhou
+> (B); liudongdong (C); Linuxarm; qiujiang; 'bhelgaas@google.com';
+> 'arnd@arndb.de'; 'tn@semihalf.com'; 'linux-pci@vger.kernel.org';
+> 'linux-kernel@vger.kernel.org'; xuwei (O); 'linux-
+> acpi@vger.kernel.org'; 'jcm@redhat.com'; zhangjukuo; Liguozhu
+> (Kenneth); 'linux-arm-kernel@lists.infradead.org'
+> Subject: Re: [RFC PATCH v3 3/3] PCI/ACPI: hisi: Add ACPI support for
+> HiSilicon SoCs Host Controllers
+> 
+> On Tue, Mar 01, 2016 at 07:22:47PM +0000, Lorenzo Pieralisi wrote:
+> > Hi Bjorn,
+> >
+> > On Thu, Feb 25, 2016 at 01:59:12PM -0600, Bjorn Helgaas wrote:
+> > > On Thu, Feb 25, 2016 at 12:07:50PM +0000, Lorenzo Pieralisi wrote:
+> > > > On Thu, Feb 25, 2016 at 03:01:19AM +0000, Gabriele Paoloni wrote:
+> >
+> > [...]
+> >
+> > > > I do not understand how PNP0c02 works, currently, by the way.
+> > > >
+> > > > If I read x86 code correctly, the unassigned PCI bus resources
+> are
+> > > > assigned in arch/x86/pci/i386.c (?)
+> fs_initcall(pcibios_assign_resources),
+> > > > with a comment:
+> > > >
+> > > > /**
+> > > >  * called in fs_initcall (one below subsys_initcall),
+> > > >  * give a chance for motherboard reserve resources
+> > > >  */
+> > > >
+> > > > Problem is, motherboard resources are requested through (?):
+> > > >
+> > > > drivers/pnp/system.c
+> > > >
+> > > > which is also initialized at fs_initcall, so it might be called
+> after
+> > > > core x86 code reassign resources, defeating the purpose PNP0c02
+> was
+> > > > designed for, namely, request motherboard regions before
+> resources
+> > > > are assigned, am I wrong ?
+> > >
+> > > I think you're right.  This is a long-standing screwup in Linux.
+> > > IMHO, ACPI resources should be parsed and reserved by the ACPI
+> core,
+> > > before any PCI resource management (since PCI host bridges are
+> > > represented in ACPI).  But historically PCI devices have enumerated
+> > > before ACPI got involved.  And the ACPI core doesn't really pay
+> > > attention to _CRS for most devices (with the exception of PNP0C02).
+> > >
+> > > IMO the PNP0C02 code in drivers/pnp/system.c should really be done
+> in
+> > > the ACPI core for all ACPI devices, similar to the way the PCI core
+> > > reserves BAR space for all PCI devices, even if we don't have
+> drivers
+> > > for them.  I've tried to fix this in the past, but it is really a
+> > > nightmare to unravel everything.
+> > >
+> > > Because the ACPI core doesn't reserve resources for the _CRS of all
+> > > ACPI devices, we're already vulnerable to the problem of placing a
+> > > device on top of another ACPI device.  We don't see problems
+> because
+> > > on x86, at least, most ACPI devices are already configured by the
+> BIOS
+> > > to be enabled and non-overlapping.  But x86 has the advantage of
+> > > having extensive test coverage courtesy of Windows, and as long as
+> > > _CRS has the right stuff in it, we at least have the potential of
+> > > fixing problems in Linux.
+> >
+> > ...
+> > By "fixing problems in Linux" above, you mean that, given that we
+> > do have a validated _CRS space, we can request/reserve the region the
+> _CRS
+> > reports to prevent assigning those resources to other devices,
+> correct ?
+> 
+> Yes.
+> 
+> I think part of what makes this difficult in Linux is that the
+> resource tree is too strict about overlapping resources.  We get
+> address space information from E820 (on x86), static ACPI tables like
+> MCFG, and dynamic things like ACPI _CRS.  There's no real requirement
+> that the BIOS should make all these consistent, but yet we try to jam
+> it all into the same resource tree.
+> 
+> For example, E820 might tell us that range A is reserved and
+> unavailable to Linux.  We stick it in the resource tree.  Then we
+> might have a _CRS that tells us about range B.  We *want* to put range
+> B in the resource tree, but if B overlaps part of A, the insert will
+> fail.
+> 
+> All we really need from E820 is the information that "you can't put
+> devices in A".  We don't need to enforce any relationship between A
+> and B, but the current resource tree imposes unnecessary hierarchical
+> requirements.
+> 
+> I think issues like this are the biggest reason why the ACPI core
+> doesn't reserve all _CRS space early on (Rafael may correct me here).
+> 
+> > > If the platform doesn't report resource usage correctly on ARM, we
+> may
+> > > not find problems (because we don't have the Windows test suite)
+> and
+> > > if we have resource assignment problems because _CRS is lacking,
+> we'll
+> > > have no way to fix them.
+> >
+> > And I think here you mean we can't prevent assigning resource space
+> to
+> > devices that do not necessarily own it because since some devices
+> _CRS
+> > are borked/missing we have no way to detect the address space
+> allocated
+> > to them and we may end up with resources conflicts.
+> 
+> The ACPI core currently doesn't reserve the space consumed by ACPI
+> devices.  Some drivers, e.g., for PNP0C02 (motherboard) and PNP0A03
+> (PCI host bridge), do reserve their space, but the core itself does
+> not.
+> 
+> If we have drivers for all the ACPI devices, those drivers will
+> probably use _CRS and reserve the space, and we'll probably notice any
+> _CRS errors.  But if we don't have drivers, e.g., for performance
+> monitors or other non-essential things, nothing will use _CRS, and
+> nothing will reserve the space used by the device, and it's hard to
+> find errors.
+> 
+> If we ever assign top-level resources, there's nothing to prevent us
+> from creating a conflict.  The only reason we don't trip over this is
+> that we usually don't assign top-level resources because firmware does
+> it for us.
+
+It seems that in this thread we have touched quite few issues.
+
+First is how to describe a PCI host controller config space resource:
+as you highlighted before mentioning the specs, these resources should
+be marked as "PNP0C02"; therefore I guess the current Nowicki patchset
+must be reworked to check the resources to be motherboard reserved when
+parsing the MCFG table.
+
+Also with respect to the ACPI table for my specific PCIe controller I
+would use the following approach:
+
+	// PCIe Root bus
+	Device (PCI1)
+	{
+		Name (_HID, "HISI0080") // PCI Express Root Bridge
+		Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
+		Name(_SEG, 1) // Segment of this Root complex
+		Name(_BBN, 0) // Base Bus Number
+		Name(_CCA, 1)
+		Method (_CRS, 0, Serialized) { // Root complex resources
+			Name (RBUF, ResourceTemplate () {
+				WordBusNumber ( // Bus numbers assigned to this root
+					ResourceProducer, MinFixed, MaxFixed, PosDecode,
+					0, // AddressGranularity
+					0, // AddressMinimum - Minimum Bus Number
+					63, // AddressMaximum - Maximum Bus Number
+					0, // AddressTranslation - Set to 0
+					64 // RangeLength - Number of Busses
+				)
+				QWordMemory ( // 64-bit BAR Windows
+					ResourceProducer,
+					PosDecode,
+					MinFixed,
+					MaxFixed,
+					Cacheable,
+					ReadWrite,
+					0x0000000000000000, // Granularity
+					0x00000000b0000000, // Min Base Address pci address
+					0x00000000bbfeffff, // Max Base Address
+					0x0000021f54000000, // Translate
+					0x000000000bff0000 // Length
+				)
+				QWordIO (
+					ResourceProducer,
+					MinFixed,
+					MaxFixed,
+					PosDecode,
+					EntireRange,
+					0x0000000000000000, // Granularity
+					0x0000000000000000, // Min Base Address
+					0x000000000000ffff, // Max Base Address
+					0x000002200fff0000, // Translate
+					0x0000000000010000 // Length
+				)
+			}) // Name(RBUF)
+			Return (RBUF)
+		} // Method(_CRS)
+		Device (RES0)
+		{
+			Name (_HID, "HISI0081") // HiSi PCIe RC config base address
+			Name (_CID, "PNP0C02")  // Motherboard reserved resource
+			Name (_CRS, ResourceTemplate (){
+                         Memory32Fixed (ReadWrite, 0xb0080000 , 0x10000)
+			})
+			
+		}
+   
+So in the table above I have a sub-device under the RC to pass the address
+for the RC config space (the rest of the config space addresses for bus 1
+to 63 are passed in the MCFG). As you can see the device _CID is PNP0C02
+As per ACPI specs.
+Do you see anything wrong with this approach?
+ 
+The second issue is when and how to reserve HW resources. As per
+conversation above this seems quite a tricky issue and probably needs to
+consider different aspects...
+
+I was wondering if we can take a gradual approach; maybe for the time being
+we can just rework Nowicki patchset to check the MCFG resources to be
+motherboard reserved and later on we can make an effort to fix the resource
+insertion mechanism making sure that it works right on both x86 and ARM.
+
+What do you think about?
+
+Many Thanks
+
+Gab
+
+> 
+> > > > As per last Tomasz's patchset, we claim and assign unassigned PCI
+> > > > resources upon ACPI PCI host bridge probing (which happens at
+> > > > subsys_initcall time, courtesy of ACPI current code); at that
+> time the
+> > > > kernel did not even register the PNP0c02 driver
+> (drivers/pnp/system.c)
+> > > > (it does that at fs_initcall). On the other hand, we insert MCFG
+> > > > regions into the resource tree upon MCFG parsing, so I do not
+> > > > see why we need to rely on PNP0c02 to do that for us (granted,
+> the
+> > > > mechanism is part of the PCI fw specs, which are x86 centric
+> anyway
+> > > > ie we can't certainly rely on Int15 e820 to detect reserved
+> memory
+> > > > on ARM :D)
+> > > >
+> > > > There is lots of legacy x86 here and Bjorn definitely has more
+> > > > visibility into that than I have, the ARM world must understand
+> > > > how this works to make sure we have an agreement.
+> > >
+> > > As you say, there is lots of unpleasant x86 legacy here.  Possibly
+> ARM
+> > > has a chance to clean this up and do it more sanely; I'm not sure
+> > > whether it's feasible to reverse the ACPI/PCI init order there or
+> not.
+> > >
+> > > Rafael, any thoughts on this whole thing?
+> > >
+> > > Bjorn
+> > >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-acpi"
+> in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
