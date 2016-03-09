@@ -1,50 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:34730 "EHLO
-	mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751287AbcCLBJL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Mar 2016 20:09:11 -0500
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CALCETrV4D2Kzn=6ags5tAP+ortjFpeeNEKW-91UHsF=UA5bN+g@mail.gmail.com>
-References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<20160308174558.GC19869@localhost>
-	<CALCETrUHEmFoO9dYY0xbjLiLfCJQCxG7h60dkOuCMMOKonytpw@mail.gmail.com>
-	<20160311232920.GA27552@localhost>
-	<CALCETrV4D2Kzn=6ags5tAP+ortjFpeeNEKW-91UHsF=UA5bN+g@mail.gmail.com>
-Date: Fri, 11 Mar 2016 17:09:10 -0800
-Message-ID: <CA+55aFwhMWDa4=7x_AgH34Z2US+gyuHT_-=S+vwkZAbkHRm10Q@mail.gmail.com>
-Subject: Re: [PATCH v1 00/12] PCI: Rework shadow ROM handling
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Andy Lutomirski <luto@amacapital.net>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Tony Luck <tony.luck@intel.com>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	=?UTF-8?Q?Bruno_Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
-	Daniel Stone <daniel@fooishbar.org>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
+In-Reply-To: <20160309143336.GA26158@wunner.de>
+References: <1457504045-12738-1-git-send-email-airlied@gmail.com>
+	<20160309143336.GA26158@wunner.de>
+Date: Thu, 10 Mar 2016 08:00:35 +1000
+Message-ID: <CAPM=9twnnxvohz+Ao7rSDC0nm+DLOPrOq+hvoTVyb8+w27BFnA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] vga_switcheroo: add power support for windows 10 machines.
+From: Dave Airlie <airlied@gmail.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: dri-devel <dri-devel@lists.freedesktop.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 11, 2016 at 4:49 PM, Andy Lutomirski <luto@amacapital.net> wrote:
+On 10 March 2016 at 00:33, Lukas Wunner <lukas@wunner.de> wrote:
+> Hi Dave,
 >
-> FWIW, if I disable all the checks in pci_get_rom_size, I learn that my
-> video ROM consists entirely of 0xff bytes.  Maybe there just isn't a
-> ROM shadow on my laptop.
+> On Wed, Mar 09, 2016 at 04:14:04PM +1000, Dave Airlie wrote:
+>> From: Dave Airlie <airlied@redhat.com>
+>>
+>> Windows 10 seems to have standardised power control for the
+>> optimus/powerxpress laptops using PR3 power resource hooks.
+>
+> What happened to the Optimus DSM, does this still work? If not,
+> echoing OFF to the vgaswitcheroo sysfs file won't power down the
+> GPU now, right? (If runtime pm is disabled in nouveau.)
 
-I think most laptops end up having the graphics ROM be part of the
-regular system flash, and there is no actual rom associated with the
-PCI device that is the GPU itself.
+No it doesn't work, hence why I had to go dig through this method. When
+you report Windows 2013 ACPI support to the BIOS it disables the PS3 method,
+and relies on hitting the PR3 method. Unlike ATPX I couldn't find any
+indicator bit
+in the optimus DSM to say which method to use. So we get to try both methods.
 
-The actual GPU ROM tends to be associated with plug-in cards, not
-soldered-down chips in a laptop where they don't want extra flash
-chips.
+I've confirmed on my older machine that if there are no PR3 methods, then it
+has no effect.
 
-               Linus
+> How about implementing an additional vga_switcheroo handler somewhere
+> in drivers/acpi/, which looks for the PR3 hooks and registers with
+> vga_switcheroo if found. The ->power_state callback of that handler
+> would then invoke acpi_device_set_power().
+
+I've nothing to trigger off when to register in that case. I'm not
+sure if the PR3
+hooks alone are enough to tell you whether you should be using this method.
+The ATPX guys have a bit we need to read to know if we should be using this
+method.
+
+>
+> In any case this patch should be amended with kerneldoc for
+> vga_switcheroo_init_parent_pr3_ops(), I've spent considerable time
+> last year to document everything and kindly ask that this water not
+> be muddied again. ;-)
+>
+> One small nit, the headers are sorted alphabetically yet acpi.h is
+> added at the end.
+
+I'll add those in v2.
+
+Dave.
