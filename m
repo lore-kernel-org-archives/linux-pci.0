@@ -1,165 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56178 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:41363 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934804AbcCONyQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Mar 2016 09:54:16 -0400
-Date: Tue, 15 Mar 2016 08:54:12 -0500
+	id S1753749AbcCJSah (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Mar 2016 13:30:37 -0500
+Date: Thu, 10 Mar 2016 12:30:33 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Yinghai Lu <yinghai@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Felipe Balbi <balbi@kernel.org>, linux-pci@vger.kernel.org,
-	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: Add definition for USB Device Controller PCI Class
- ID
-Message-ID: <20160315135412.GD19974@localhost>
-References: <1458043560-133063-1-git-send-email-heikki.krogerus@linux.intel.com>
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v10 00/59] PCI: Resource allocation cleanup for v4.6
+Message-ID: <20160310183033.GA18456@localhost>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1458043560-133063-1-git-send-email-heikki.krogerus@linux.intel.com>
+In-Reply-To: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 15, 2016 at 02:06:00PM +0200, Heikki Krogerus wrote:
-> PCI-SIG has defined Interface FEh for Base Class 0Ch,
-> Sub-Class 03h as "USB Device (not host controller)". It is
-> already being used in various USB device controller drivers
-> for matching, so converting those to use the definition.
+On Wed, Feb 24, 2016 at 06:11:51PM -0800, Yinghai Lu wrote:
+> Hi,
 > 
-> Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+> After 5b28541552ef (PCI: Restrict 64-bit prefetchable bridge windows
+> to 64-bit resources), we have several reports on resource allocation
+> failure, and we try to fix the problem with resource clip, and find
+> more problems.
+> 
+> One is realloc fail with two graphics cards above 4G.
+> One is from sparc that have problem with clip as we don't parse
+> mem64 for it.
+> 
+> Other report is about pci remove/rescan does not work on some setup
+> when BIOS tend to allocate small bus size.
+> 
+> This patchset enhance resource allocation to address those problems.
+> 
+> patch 1-10: parse MEM64 for sparc and other system with OF
+> ...
 
-Applied to pci/misc for v4.6, thanks, Heikki.
+> Yinghai Lu (59):
+>   PCI: Add pci_find_root_bus_resource()
+>   sparc/PCI: Use correct bus address to resource offset
+>   sparc/PCI: Reserve legacy mmio after PCI mmio
+>   sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+>   sparc/PCI: Keep resource idx order with bridge register number
+>   PCI: Kill wrong quirk about M7101
+>   PCI: Ignore BAR for ALi M1533 PCI-ISA bridge
 
-> ---
->  drivers/pci/quirks.c                | 2 +-
->  drivers/usb/gadget/udc/amd5536udc.c | 2 +-
->  drivers/usb/gadget/udc/goku_udc.c   | 2 +-
->  drivers/usb/gadget/udc/net2280.c    | 8 ++++----
->  drivers/usb/gadget/udc/pch_udc.c    | 8 ++++----
->  include/linux/pci_ids.h             | 1 +
->  6 files changed, 12 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 4b5fd72..8e67802 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -438,7 +438,7 @@ static void quirk_amd_nl_class(struct pci_dev *pdev)
->  	u32 class = pdev->class;
->  
->  	/* Use "USB Device (not host controller)" class */
-> -	pdev->class = (PCI_CLASS_SERIAL_USB << 8) | 0xfe;
-> +	pdev->class = PCI_CLASS_SERIAL_USB_DEVICE;
->  	dev_info(&pdev->dev, "PCI class overridden (%#08x -> %#08x) so dwc3 driver can claim this instead of xhci\n",
->  		 class, pdev->class);
->  }
-> diff --git a/drivers/usb/gadget/udc/amd5536udc.c b/drivers/usb/gadget/udc/amd5536udc.c
-> index cd87641..39d70b4 100644
-> --- a/drivers/usb/gadget/udc/amd5536udc.c
-> +++ b/drivers/usb/gadget/udc/amd5536udc.c
-> @@ -3397,7 +3397,7 @@ err_pcidev:
->  static const struct pci_device_id pci_id[] = {
->  	{
->  		PCI_DEVICE(PCI_VENDOR_ID_AMD, 0x2096),
-> -		.class =	(PCI_CLASS_SERIAL_USB << 8) | 0xfe,
-> +		.class =	PCI_CLASS_SERIAL_USB_DEVICE,
->  		.class_mask =	0xffffffff,
->  	},
->  	{},
-> diff --git a/drivers/usb/gadget/udc/goku_udc.c b/drivers/usb/gadget/udc/goku_udc.c
-> index 1fdfec1..d2205d9 100644
-> --- a/drivers/usb/gadget/udc/goku_udc.c
-> +++ b/drivers/usb/gadget/udc/goku_udc.c
-> @@ -1846,7 +1846,7 @@ err:
->  /*-------------------------------------------------------------------------*/
->  
->  static const struct pci_device_id pci_ids[] = { {
-> -	.class =	((PCI_CLASS_SERIAL_USB << 8) | 0xfe),
-> +	.class =	PCI_CLASS_SERIAL_USB_DEVICE,
->  	.class_mask =	~0,
->  	.vendor =	0x102f,		/* Toshiba */
->  	.device =	0x0107,		/* this UDC */
-> diff --git a/drivers/usb/gadget/udc/net2280.c b/drivers/usb/gadget/udc/net2280.c
-> index 6706aef..c894b94 100644
-> --- a/drivers/usb/gadget/udc/net2280.c
-> +++ b/drivers/usb/gadget/udc/net2280.c
-> @@ -3735,7 +3735,7 @@ static void net2280_shutdown(struct pci_dev *pdev)
->  /*-------------------------------------------------------------------------*/
->  
->  static const struct pci_device_id pci_ids[] = { {
-> -	.class =	((PCI_CLASS_SERIAL_USB << 8) | 0xfe),
-> +	.class =	PCI_CLASS_SERIAL_USB_DEVICE,
->  	.class_mask =	~0,
->  	.vendor =	PCI_VENDOR_ID_PLX_LEGACY,
->  	.device =	0x2280,
-> @@ -3743,7 +3743,7 @@ static const struct pci_device_id pci_ids[] = { {
->  	.subdevice =	PCI_ANY_ID,
->  	.driver_data =	PLX_LEGACY | PLX_2280,
->  	}, {
-> -	.class =	((PCI_CLASS_SERIAL_USB << 8) | 0xfe),
-> +	.class =	PCI_CLASS_SERIAL_USB_DEVICE,
->  	.class_mask =	~0,
->  	.vendor =	PCI_VENDOR_ID_PLX_LEGACY,
->  	.device =	0x2282,
-> @@ -3752,7 +3752,7 @@ static const struct pci_device_id pci_ids[] = { {
->  	.driver_data =	PLX_LEGACY,
->  	},
->  	{
-> -	.class =	((PCI_CLASS_SERIAL_USB << 8) | 0xfe),
-> +	.class =	PCI_CLASS_SERIAL_USB_DEVICE,
->  	.class_mask =	~0,
->  	.vendor =	PCI_VENDOR_ID_PLX,
->  	.device =	0x3380,
-> @@ -3761,7 +3761,7 @@ static const struct pci_device_id pci_ids[] = { {
->  	.driver_data =	PLX_SUPERSPEED,
->  	 },
->  	{
-> -	.class =	((PCI_CLASS_SERIAL_USB << 8) | 0xfe),
-> +	.class =	PCI_CLASS_SERIAL_USB_DEVICE,
->  	.class_mask =	~0,
->  	.vendor =	PCI_VENDOR_ID_PLX,
->  	.device =	0x3382,
-> diff --git a/drivers/usb/gadget/udc/pch_udc.c b/drivers/usb/gadget/udc/pch_udc.c
-> index 7a04157..9571ef5 100644
-> --- a/drivers/usb/gadget/udc/pch_udc.c
-> +++ b/drivers/usb/gadget/udc/pch_udc.c
-> @@ -3234,22 +3234,22 @@ static const struct pci_device_id pch_udc_pcidev_id[] = {
->  	{
->  		PCI_DEVICE(PCI_VENDOR_ID_INTEL,
->  			   PCI_DEVICE_ID_INTEL_QUARK_X1000_UDC),
-> -		.class = (PCI_CLASS_SERIAL_USB << 8) | 0xfe,
-> +		.class = PCI_CLASS_SERIAL_USB_DEVICE,
->  		.class_mask = 0xffffffff,
->  	},
->  	{
->  		PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_EG20T_UDC),
-> -		.class = (PCI_CLASS_SERIAL_USB << 8) | 0xfe,
-> +		.class = PCI_CLASS_SERIAL_USB_DEVICE,
->  		.class_mask = 0xffffffff,
->  	},
->  	{
->  		PCI_DEVICE(PCI_VENDOR_ID_ROHM, PCI_DEVICE_ID_ML7213_IOH_UDC),
-> -		.class = (PCI_CLASS_SERIAL_USB << 8) | 0xfe,
-> +		.class = PCI_CLASS_SERIAL_USB_DEVICE,
->  		.class_mask = 0xffffffff,
->  	},
->  	{
->  		PCI_DEVICE(PCI_VENDOR_ID_ROHM, PCI_DEVICE_ID_ML7831_IOH_UDC),
-> -		.class = (PCI_CLASS_SERIAL_USB << 8) | 0xfe,
-> +		.class = PCI_CLASS_SERIAL_USB_DEVICE,
->  		.class_mask = 0xffffffff,
->  	},
->  	{ 0 },
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 6d249d3..247da8c 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -110,6 +110,7 @@
->  #define PCI_CLASS_SERIAL_USB_OHCI	0x0c0310
->  #define PCI_CLASS_SERIAL_USB_EHCI	0x0c0320
->  #define PCI_CLASS_SERIAL_USB_XHCI	0x0c0330
-> +#define PCI_CLASS_SERIAL_USB_DEVICE	0x0c03fe
->  #define PCI_CLASS_SERIAL_FIBER		0x0c04
->  #define PCI_CLASS_SERIAL_SMBUS		0x0c05
->  
-> -- 
-> 2.7.0
-> 
+I took a look at the above and responded on the list with several
+questions.  I have the feeling that some are because I'm missing
+important details about how sparc works.  If it's easier to educate me
+about those via IRC, I'm usually in #linux-pci on OFTC, and I'd be
+happy to chat there.
+
+Bjorn
