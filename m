@@ -1,47 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:37611 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751432AbcC3Mgg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2016 08:36:36 -0400
+Received: from mail.kernel.org ([198.145.29.136]:47162 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932106AbcCJUu4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Mar 2016 15:50:56 -0500
+Date: Thu, 10 Mar 2016 14:50:36 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, allen.m.kay@intel.com,
+	linux-kernel@vger.kernel.org, kvm@vger.kernel.org
+Subject: Re: [PATCH v3] pci: Wait for up to 1000ms after FLR reset
+Message-ID: <20160310205036.GD14873@localhost>
+References: <20160222200351.4709.85363.stgit@gimli.home>
 MIME-Version: 1.0
-In-Reply-To: <20160330122103.GN20367@ibawizard.net>
-References: <1459201536-5558-1-git-send-email-festevam@gmail.com>
-	<CAJ+vNU3kZ2886wRQFUfFTyo2kzYgjGTroKdiuPynZkaNf1BvEw@mail.gmail.com>
-	<20160330122103.GN20367@ibawizard.net>
-Date: Wed, 30 Mar 2016 09:36:35 -0300
-Message-ID: <CAOMZO5Bh=JgVEMM-8JBX1cpk5Kgn2O2KBiOGdZT+QQfGUizBUg@mail.gmail.com>
-Subject: Re: [PATCH v2] Revert "PCI: imx6: Add support for active-low reset GPIO"
-From: Fabio Estevam <festevam@gmail.com>
-To: =?UTF-8?Q?Petr_=C5=A0tetiar?= <ynezz@true.cz>
-Cc: Tim Harvey <tharvey@gateworks.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	=?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@nxp.com>,
-	stable <stable@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160222200351.4709.85363.stgit@gimli.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Petr,
+On Mon, Feb 22, 2016 at 01:05:48PM -0700, Alex Williamson wrote:
+> Some devices take longer than the spec indicates to return from FLR
+> reset, a notable case of this is Intel integrated graphics (IGD),
+> which can often take an additional 300ms powering down an attached
+> LCD panel as part of the FLR.  Allow devices up to 1000ms, testing
+> every 100ms whether the second dword of config space is read as -1.
+> 
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 
-On Wed, Mar 30, 2016 at 9:21 AM, Petr Štetiar <ynezz@true.cz> wrote:
+Applied to pci/virtualization for v4.6, thanks, Alex!
 
-> It's just a nitpick :-) but this commit doesn't set the polarity in the wrong
-> logic level,
-
-Yes, it does. That's why it causes regressions.
-
-> as you can see, the polarity was simply wrong from the beginning[1]. My patch
-> has just probably made the error more exposed.
-
-No, polarity was active low since the beginning.
-
-In order to make the Toradex board to work without breaking old dtb's
-is to introduce a property like 'phy-reset-active-high' and handle it
-in the driver.
-
-Take a look at the FEC driver for a an example:
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/net/ethernet/freescale/fec_main.c?id=962d8cdc3133435aed2928637f73e272128a326c
+> ---
+> v3: Read 2nd dword since SR-IOV VFs don't implement the 1st dword
+> v2: Change loop to incorporate initial 100ms delay, replace delay in
+>     callee functions, add comment.
+> 
+>  drivers/pci/pci.c |   27 +++++++++++++++++++++++++--
+>  1 file changed, 25 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 602eb42..365ac76 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3414,6 +3414,29 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+>  }
+>  EXPORT_SYMBOL(pci_wait_for_pending_transaction);
+>  
+> +/*
+> + * We should only need to wait 100ms after FLR, but some devices take longer.
+> + * Wait for up to 1000ms for config space to return something other than -1.
+> + * Intel IGD requires this when an LCD panel is attached.  We read the 2nd
+> + * dword because VFs don't implement the 1st dword.
+> + */
+> +static void pci_flr_wait(struct pci_dev *dev)
+> +{
+> +	int i = 0;
+> +	u32 id;
+> +
+> +	do {
+> +		msleep(100);
+> +		pci_read_config_dword(dev, PCI_COMMAND, &id);
+> +	} while (i++ < 10 && id == ~0);
+> +
+> +	if (id == ~0)
+> +		dev_warn(&dev->dev, "Failed to return from FLR\n");
+> +	else if (i > 1)
+> +		dev_info(&dev->dev, "Required additional "
+> +			 "%dms to return from FLR\n", (i - 1) * 100);
+> +}
+> +
+>  static int pcie_flr(struct pci_dev *dev, int probe)
+>  {
+>  	u32 cap;
+> @@ -3429,7 +3452,7 @@ static int pcie_flr(struct pci_dev *dev, int probe)
+>  		dev_err(&dev->dev, "timed out waiting for pending transaction; performing function level reset anyway\n");
+>  
+>  	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+> -	msleep(100);
+> +	pci_flr_wait(dev);
+>  	return 0;
+>  }
+>  
+> @@ -3459,7 +3482,7 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+>  		dev_err(&dev->dev, "timed out waiting for pending transaction; performing AF function level reset anyway\n");
+>  
+>  	pci_write_config_byte(dev, pos + PCI_AF_CTRL, PCI_AF_CTRL_FLR);
+> -	msleep(100);
+> +	pci_flr_wait(dev);
+>  	return 0;
+>  }
+>  
+> 
