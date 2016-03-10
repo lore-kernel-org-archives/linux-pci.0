@@ -1,172 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:40138 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752756AbcCPBSU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Mar 2016 21:18:20 -0400
-Received: from localhost
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 16 Mar 2016 11:18:17 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp03.au.ibm.com (Postfix) with ESMTP id 65390357805B
-	for <linux-pci@vger.kernel.org>; Wed, 16 Mar 2016 12:18:15 +1100 (EST)
-Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u2G1I6Qc3932586
-	for <linux-pci@vger.kernel.org>; Wed, 16 Mar 2016 12:18:15 +1100
-Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
-	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u2G1HfuE029674
-	for <linux-pci@vger.kernel.org>; Wed, 16 Mar 2016 12:17:42 +1100
-Date: Wed, 16 Mar 2016 12:17:15 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	mpe@ellerman.id.au, benh@kernel.crashing.org, paulus@samba.org,
-	imunsie@au1.ibm.com, mikey@neuling.org,
-	andrew.donnellan@au1.ibm.com, gwshan@linux.vnet.ibm.com,
-	bhelgaas@google.com
-Subject: Re: [PATCH v2] powerpc/pci: Assign fixed PHB number based on
- device-tree properties
-Message-ID: <20160316011715.GA4071@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1458082481-29916-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Dave Airlie <airlied@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+	dri-devel <dri-devel@lists.freedesktop.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/2] vga_switcheroo: add power support for windows 10 machines.
+Date: Thu, 10 Mar 2016 21:57:09 +0100
+Message-ID: <2736217.utxPzJExd5@vostro.rjw.lan>
+In-Reply-To: <CAPM=9tzAf=464v3uSjert7NVh35EXUG8iy_xEuR36NUMhdJSWw@mail.gmail.com>
+References: <1457504045-12738-1-git-send-email-airlied@gmail.com> <CAJZ5v0hurNUOVDXpJJEJ5dCwWO_Fo+EdzBhXJA7QWmPeY653fQ@mail.gmail.com> <CAPM=9tzAf=464v3uSjert7NVh35EXUG8iy_xEuR36NUMhdJSWw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1458082481-29916-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 15, 2016 at 07:54:41PM -0300, Guilherme G. Piccoli wrote:
->The domain/PHB field of PCI addresses has its value obtained from a
->global variable, incremented each time a new domain (represented by
->struct pci_controller) is added on the system. The domain addition
->process happens during boot or due to PCI device hotplug.
->
->As recent kernels are using predictable naming for network interfaces,
->the network stack is more tied to PCI naming. This can be a problem in
->hotplug scenarios, because PCI addresses will change if devices are
->removed and then re-added. This situation seems unusual, but it can
->happen if a user wants to replace a NIC without rebooting the machine,
->for example.
->
->This patch changes the way PCI domain values are generated: now, we use
->device-tree properties to assign fixed PHB numbers to PCI addresses
->when available (meaning pSeries and PowerNV cases). We also use a bitmap
->to allow dynamic PHB numbering when device-tree properties are not
->used. This bitmap keeps track of used PHB numbers and if a PHB is
->released (by hotplug operations for example), it allows the reuse of
->this PHB number, avoiding PCI address to change in case of device remove
->and re-add soon after. No functional changes were introduced.
->
->Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
->---
-> arch/powerpc/kernel/pci-common.c | 43 +++++++++++++++++++++++++++++++++++++---
-> 1 file changed, 40 insertions(+), 3 deletions(-)
->
->diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
->index 0f7a60f..d4217f9 100644
->--- a/arch/powerpc/kernel/pci-common.c
->+++ b/arch/powerpc/kernel/pci-common.c
->@@ -44,8 +44,11 @@
-> static DEFINE_SPINLOCK(hose_spinlock);
-> LIST_HEAD(hose_list);
->
->-/* XXX kill that some day ... */
->-static int global_phb_number;		/* Global phb counter */
->+/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
->+#define	MAX_PHBS	8192
->+
->+/* For dynamic PHB numbering: used/free PHBs tracking bitmap. */
->+DECLARE_BITMAP(global_phb_bitmap, MAX_PHBS);
->
+On Thursday, March 10, 2016 07:56:41 AM Dave Airlie wrote:
+> On 9 March 2016 at 23:19, Rafael J. Wysocki <rafael@kernel.org> wrote:
+> > On Wed, Mar 9, 2016 at 7:14 AM, Dave Airlie <airlied@gmail.com> wrote:
+> >> From: Dave Airlie <airlied@redhat.com>
+> >>
+> >> Windows 10 seems to have standardised power control for the
+> >> optimus/powerxpress laptops using PR3 power resource hooks.
+> >>
+> >> I'm not sure this is definitely the correct place to be
+> >> doing this, but it works for me here.
+> >>
+> >> The ACPI device for the GPU I have is \_SB_.PCI0.PEG_.VID_
+> >> but the power resource hooks are on \_SB_.PCI0.PEG_, so
+> >> this patch creates a new power domain to turn the GPU
+> >> device parent off using standard ACPI calls.
+> >>
+> >> Signed-off-by: Dave Airlie <airlied@redhat.com>
+> >> ---
+> >>  drivers/gpu/vga/vga_switcheroo.c | 54 +++++++++++++++++++++++++++++++++++++++-
+> >>  include/linux/vga_switcheroo.h   |  3 ++-
+> >>  2 files changed, 55 insertions(+), 2 deletions(-)
+> >>
+> >> diff --git a/drivers/gpu/vga/vga_switcheroo.c b/drivers/gpu/vga/vga_switcheroo.c
+> >> index 665ab9f..be32cb2 100644
+> >> --- a/drivers/gpu/vga/vga_switcheroo.c
+> >> +++ b/drivers/gpu/vga/vga_switcheroo.c
+> >> @@ -42,7 +42,7 @@
+> >>  #include <linux/uaccess.h>
+> >>  #include <linux/vgaarb.h>
+> >>  #include <linux/vga_switcheroo.h>
+> >> -
+> >> +#include <linux/acpi.h>
+> >>  /**
+> >>   * DOC: Overview
+> >>   *
+> >> @@ -997,3 +997,55 @@ vga_switcheroo_init_domain_pm_optimus_hdmi_audio(struct device *dev,
+> >>         return -EINVAL;
+> >>  }
+> >>  EXPORT_SYMBOL(vga_switcheroo_init_domain_pm_optimus_hdmi_audio);
+> >> +
+> >> +/* With Windows 10 the runtime suspend/resume can use power
+> >> +   resources on the parent device */
+> >> +static int vga_acpi_switcheroo_runtime_suspend(struct device *dev)
+> >> +{
+> >> +       struct pci_dev *pdev = to_pci_dev(dev);
+> >> +       int ret;
+> >> +       struct acpi_device *adev;
+> >> +
+> >> +       ret = dev->bus->pm->runtime_suspend(dev);
+> >> +       if (ret)
+> >> +               return ret;
+> >> +
+> >> +       ret = acpi_bus_get_device(ACPI_HANDLE(&pdev->dev), &adev);
+> >
+> > You can use ACPI_COMPANION(&pdev->dev) for that.
+> >
+> >> +       if (!ret)
+> >> +               acpi_device_set_power(adev->parent, ACPI_STATE_D3_COLD);
+> >
+> > Won't that mess up with the PM of the parent?  Or do we know that the
+> > parent won't do its own PM?
+> 
+> The parent is always going to be pcieport.
 
-I guess it can be file-scoped variable.
+I see.
 
-> /* ISA Memory physical address */
-> resource_size_t isa_mem_base;
->@@ -64,6 +67,39 @@ struct dma_map_ops *get_pci_dma_ops(void)
-> }
-> EXPORT_SYMBOL(get_pci_dma_ops);
->
->+static int get_phb_number(struct device_node *dn)
->+{
->+	const __be64 *prop64;
->+	const __be32 *regs;
->+	int phb_id = 0;
->+
->+	/* try fixed PHB numbering first */
->+	if (machine_is(pseries)) {
->+		regs = of_get_property(dn, "reg", NULL);
->+		if (regs)
->+			return (int)(be32_to_cpu(regs[1]) & 0xFFFF);
->+	}
->+
->+	else { /* maybe PowerNV? */
->+		prop64 = of_get_property(dn, "ibm,opal-phbid", NULL);
->+		if (prop64)
->+			return (int)(be64_to_cpup(prop64) & 0xFFFF);
->+	}
->+
+> It doesn't seem to do any runtime PM,
+> I do wonder if pcieport should be doing it's own runtime PM handling,
+> but that is a
+> larger task than I'm thinking to tackle here.
 
-We usually have something like below. Also, why not checking if it's
-PowerNV platform by machine_is(powernv)? Besides, I guess the comments
-here can be more indicative:
+PCIe ports don't do PM - yet.  Mika has posted a series of patches to implement
+that, however, that are waiting for comments now:
 
-	if (...) {
+https://patchwork.kernel.org/patch/8453311/
+https://patchwork.kernel.org/patch/8453381/
+https://patchwork.kernel.org/patch/8453391/
+https://patchwork.kernel.org/patch/8453411/
+https://patchwork.kernel.org/patch/8453371/
+https://patchwork.kernel.org/patch/8453351/
 
-	} else ( ...) {
+> Maybe I should be doing
+> 
+> pci_set_power_state(pdev->bus->self, PCI_D3cold) ? I'm not really sure.
 
-	}
+Using pci_set_power_state() would be more appropriate IMO, but you can get
+to the bridge via dev->parent too, can't you?
 
->+	/* dynamic PHB numbering mechanism */
->+	while ((phb_id < MAX_PHBS) && test_bit(phb_id, global_phb_bitmap))
->+		phb_id++;
->+
->+	BUG_ON(phb_id >= MAX_PHBS); /* reached maximum number of PHBs */
->+	set_bit(phb_id, global_phb_bitmap);
->+	return phb_id;
+In any case, it looks like you and Mika need to talk. :-)
 
-It could be simplified to:
+> I'm guessing on Windows this all happens automatically.
 
-        do {
-		phb_id = find_next_zero_bit(global_phb_bitmap, MAX_PHBS, 0);
-                BUG_ON(phb_id >= MAX_PHBS);
-        } while(test_and_set_bit(phb_id, global_phb_bitmap));
-
-	return phb_id;
->+}
->+
->+static void release_phb_number(int phb_id)
->+{
->+	clear_bit(phb_id, global_phb_bitmap);
->+}
->+
-
-The logic of this function can be merged to pcibos_free_controller() as it's
-just one statement and it's called by pcibios_free_controller() only. Also,
-it will cause memory corruption if (phb_id >= MAX_PHBS) on pSeries/PowerNV
-though it's rare.
-
-> struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
-> {
-> 	struct pci_controller *phb;
->@@ -72,7 +108,7 @@ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
-> 	if (phb == NULL)
-> 		return NULL;
-> 	spin_lock(&hose_spinlock);
->-	phb->global_number = global_phb_number++;
->+	phb->global_number = get_phb_number(dev);
-> 	list_add_tail(&phb->list_node, &hose_list);
-> 	spin_unlock(&hose_spinlock);
-> 	phb->dn = dev;
->@@ -94,6 +130,7 @@ EXPORT_SYMBOL_GPL(pcibios_alloc_controller);
-> void pcibios_free_controller(struct pci_controller *phb)
-> {
-> 	spin_lock(&hose_spinlock);
->+	release_phb_number(phb->global_number);
-> 	list_del(&phb->list_node);
-> 	spin_unlock(&hose_spinlock);
->
+PCIe ports are power-managend by (newer) Windows AFAICS, but we know for a fact
+that this simply doesn't work reliably on some older hardware which is why
+we don't do that.  I suppose that the Windows in question uses a cut-off date
+or similar to decide what do do with PCIe ports PM.
 
 Thanks,
-Gavin
+Rafael
 
