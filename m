@@ -1,211 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:29140 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756335AbcCBUPL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Mar 2016 15:15:11 -0500
-From: Sasha Levin <sasha.levin@oracle.com>
-To: stable@vger.kernel.org, stable-commits@vger.kernel.org
-Cc: Quinn Tran <quinn.tran@qlogic.com>,
-	Alexander Gordeev <agordeev@redhat.com>,
-	qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-	Sasha Levin <sasha.levin@oracle.com>
-Subject: [added to the 4.1 stable tree] qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Wed,  2 Mar 2016 15:13:41 -0500
-Message-Id: <1456949673-25036-34-git-send-email-sasha.levin@oracle.com>
-In-Reply-To: <1456949673-25036-1-git-send-email-sasha.levin@oracle.com>
-References: <1456949673-25036-1-git-send-email-sasha.levin@oracle.com>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:34870 "EHLO
+	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934675AbcCJCUI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Mar 2016 21:20:08 -0500
+Received: by mail-pf0-f196.google.com with SMTP id u190so1563091pfb.2
+        for <linux-pci@vger.kernel.org>; Wed, 09 Mar 2016 18:20:08 -0800 (PST)
+Subject: Re: [RFC PATCH v4 1/7] PCI: Add a new option for resource_alignment
+ to reassign alignment
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>, kvm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
+References: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1457336918-3893-2-git-send-email-xyjxie@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, corbet@lwn.net, alex.williamson@redhat.com,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
+	nikunj@linux.vnet.ibm.com
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <56E0D9BB.5010300@ozlabs.ru>
+Date: Thu, 10 Mar 2016 13:19:39 +1100
+MIME-Version: 1.0
+In-Reply-To: <1457336918-3893-2-git-send-email-xyjxie@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Quinn Tran <quinn.tran@qlogic.com>
+On 03/07/2016 06:48 PM, Yongji Xie wrote:
+> When using resource_alignment kernel parameter, the current
+> implement reassigns the alignment by changing resources' size
+> which can potentially break some drivers.
 
-This patch has been added to the 4.1 stable tree. If you have any
-objections, please let us know.
+How can this possibly break any driver?... It rounds up, not down, what do 
+I miss here?
 
-===============
+>
+> So this patch adds a new option "noresize" for the parameter
+> to solve this problem.
+>
+> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+> ---
+>   Documentation/kernel-parameters.txt |    5 ++++-
+>   drivers/pci/pci.c                   |   36 +++++++++++++++++++++++++----------
+>   2 files changed, 30 insertions(+), 11 deletions(-)
+>
+> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> index 9a53c92..d8b29ab 100644
+> --- a/Documentation/kernel-parameters.txt
+> +++ b/Documentation/kernel-parameters.txt
+> @@ -2912,13 +2912,16 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>   				window. The default value is 64 megabytes.
+>   		resource_alignment=
+>   				Format:
+> -				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
+> +				[<order of align>@][<domain>:]<bus>:<slot>.<func>
+> +				[:noresize][; ...]
+>   				Specifies alignment and device to reassign
+>   				aligned memory resources.
+>   				If <order of align> is not specified,
+>   				PAGE_SIZE is used as alignment.
+>   				PCI-PCI bridge can be specified, if resource
+>   				windows need to be expanded.
+> +				noresize: Don't change the resources' sizes when
+> +				reassigning alignment.
+>   		ecrc=		Enable/disable PCIe ECRC (transaction layer
+>   				end-to-end CRC checking).
+>   				bios: Use BIOS/firmware settings. This is the
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 602eb42..760cce5 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4598,7 +4598,8 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
+>    * RETURNS: Resource alignment if it is specified.
+>    *          Zero if it is not specified.
+>    */
+> -static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+> +static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+> +		bool *resize)
+>   {
+>   	int seg, bus, slot, func, align_order, count;
+>   	resource_size_t align = 0;
+> @@ -4626,6 +4627,11 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+>   			}
+>   		}
+>   		p += count;
+> +		if (!strncmp(p, ":noresize", 9)) {
+> +			*resize = false;
+> +			p += 9;
+> +		} else
+> +			*resize = true;
+>   		if (seg == pci_domain_nr(dev->bus) &&
+>   			bus == dev->bus->number &&
+>   			slot == PCI_SLOT(dev->devfn) &&
+> @@ -4658,11 +4664,12 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>   {
+>   	int i;
+>   	struct resource *r;
+> +	bool resize;
+>   	resource_size_t align, size;
+>   	u16 command;
+>
+>   	/* check if specified PCI is target device to reassign */
+> -	align = pci_specified_resource_alignment(dev);
+> +	align = pci_specified_resource_alignment(dev, &resize);
 
-[ Upstream commit 84e32a06f4f8756ce9ec3c8dc7e97896575f0771 ]
+A compiler should have warned here about passing a pointer to unitialized 
+@resize.
 
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
 
-Log message code 0x00c6 preserved, although it is reported
-after successful call to pci_enable_msix_range(), not before
-possibly unsuccessful call to pci_enable_msix(). Consumers
-of the error code should not notice the difference.
+>   	if (!align)
+>   		return;
+>
+> @@ -4684,15 +4691,24 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>   		if (!(r->flags & IORESOURCE_MEM))
+>   			continue;
+>   		size = resource_size(r);
+> -		if (size < align) {
+> -			size = align;
+> -			dev_info(&dev->dev,
+> -				"Rounding up size of resource #%d to %#llx.\n",
+> -				i, (unsigned long long)size);
+> +		if (resize) {
+> +			if (size < align) {
+> +				size = align;
+> +				dev_info(&dev->dev,
+> +					"Rounding up size of resource #%d to %#llx.\n",
+> +					i, (unsigned long long)size);
+> +			}
+> +			r->flags |= IORESOURCE_UNSET;
+> +			r->end = size - 1;
+> +			r->start = 0;
+> +		} else {
+> +			if (size > align)
+> +				align = size;
+> +			r->flags &= ~IORESOURCE_SIZEALIGN;
+> +			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
+> +			r->start = align;
+> +			r->end = r->start + size - 1;
+>   		}
+> -		r->flags |= IORESOURCE_UNSET;
+> -		r->end = size - 1;
+> -		r->start = 0;
+>   	}
+>   	/* Need to disable bridge's resource window,
+>   	 * to enable the kernel to reassign new resource
+>
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
-Cc: qla2xxx-upstream@qlogic.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
----
- drivers/scsi/qla2xxx/qla_init.c | 10 +++++-----
- drivers/scsi/qla2xxx/qla_isr.c  |  4 ++--
- drivers/scsi/qla2xxx/qla_mid.c  |  4 ++--
- drivers/scsi/qla2xxx/qla_os.c   |  6 ++++++
- drivers/scsi/qla2xxx/qla_tmpl.c | 16 ++++++++++++++++
- 5 files changed, 31 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index b323ad0..60f9651 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2194,7 +2194,7 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
- 	/* Clear outstanding commands array. */
- 	for (que = 0; que < ha->max_req_queues; que++) {
- 		req = ha->req_q_map[que];
--		if (!req)
-+		if (!req || !test_bit(que, ha->req_qid_map))
- 			continue;
- 		req->out_ptr = (void *)(req->ring + req->length);
- 		*req->out_ptr = 0;
-@@ -2211,7 +2211,7 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
- 
- 	for (que = 0; que < ha->max_rsp_queues; que++) {
- 		rsp = ha->rsp_q_map[que];
--		if (!rsp)
-+		if (!rsp || !test_bit(que, ha->rsp_qid_map))
- 			continue;
- 		rsp->in_ptr = (void *)(rsp->ring + rsp->length);
- 		*rsp->in_ptr = 0;
-@@ -4957,7 +4957,7 @@ qla25xx_init_queues(struct qla_hw_data *ha)
- 
- 	for (i = 1; i < ha->max_rsp_queues; i++) {
- 		rsp = ha->rsp_q_map[i];
--		if (rsp) {
-+		if (rsp && test_bit(i, ha->rsp_qid_map)) {
- 			rsp->options &= ~BIT_0;
- 			ret = qla25xx_init_rsp_que(base_vha, rsp);
- 			if (ret != QLA_SUCCESS)
-@@ -4972,8 +4972,8 @@ qla25xx_init_queues(struct qla_hw_data *ha)
- 	}
- 	for (i = 1; i < ha->max_req_queues; i++) {
- 		req = ha->req_q_map[i];
--		if (req) {
--		/* Clear outstanding commands array. */
-+		if (req && test_bit(i, ha->req_qid_map)) {
-+			/* Clear outstanding commands array. */
- 			req->options &= ~BIT_0;
- 			ret = qla25xx_init_req_que(base_vha, req);
- 			if (ret != QLA_SUCCESS)
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 6dc14cd..1f3991b 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2992,9 +2992,9 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 		    "MSI-X: Failed to enable support "
- 		    "-- %d/%d\n Retry with %d vectors.\n",
- 		    ha->msix_count, ret, ret);
-+		ha->msix_count = ret;
-+		ha->max_rsp_queues = ha->msix_count - 1;
- 	}
--	ha->msix_count = ret;
--	ha->max_rsp_queues = ha->msix_count - 1;
- 	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
- 				ha->msix_count, GFP_KERNEL);
- 	if (!ha->msix_entries) {
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index cc94192..63abed1 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -601,7 +601,7 @@ qla25xx_delete_queues(struct scsi_qla_host *vha)
- 	/* Delete request queues */
- 	for (cnt = 1; cnt < ha->max_req_queues; cnt++) {
- 		req = ha->req_q_map[cnt];
--		if (req) {
-+		if (req && test_bit(cnt, ha->req_qid_map)) {
- 			ret = qla25xx_delete_req_que(vha, req);
- 			if (ret != QLA_SUCCESS) {
- 				ql_log(ql_log_warn, vha, 0x00ea,
-@@ -615,7 +615,7 @@ qla25xx_delete_queues(struct scsi_qla_host *vha)
- 	/* Delete response queues */
- 	for (cnt = 1; cnt < ha->max_rsp_queues; cnt++) {
- 		rsp = ha->rsp_q_map[cnt];
--		if (rsp) {
-+		if (rsp && test_bit(cnt, ha->rsp_qid_map)) {
- 			ret = qla25xx_delete_rsp_que(vha, rsp);
- 			if (ret != QLA_SUCCESS) {
- 				ql_log(ql_log_warn, vha, 0x00eb,
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index e7a97a57..d007255 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -398,6 +398,9 @@ static void qla2x00_free_queues(struct qla_hw_data *ha)
- 	int cnt;
- 
- 	for (cnt = 0; cnt < ha->max_req_queues; cnt++) {
-+		if (!test_bit(cnt, ha->req_qid_map))
-+			continue;
-+
- 		req = ha->req_q_map[cnt];
- 		qla2x00_free_req_que(ha, req);
- 	}
-@@ -405,6 +408,9 @@ static void qla2x00_free_queues(struct qla_hw_data *ha)
- 	ha->req_q_map = NULL;
- 
- 	for (cnt = 0; cnt < ha->max_rsp_queues; cnt++) {
-+		if (!test_bit(cnt, ha->rsp_qid_map))
-+			continue;
-+
- 		rsp = ha->rsp_q_map[cnt];
- 		qla2x00_free_rsp_que(ha, rsp);
- 	}
-diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
-index 962cb89..af806fd 100644
---- a/drivers/scsi/qla2xxx/qla_tmpl.c
-+++ b/drivers/scsi/qla2xxx/qla_tmpl.c
-@@ -395,6 +395,10 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
- 	if (ent->t263.queue_type == T263_QUEUE_TYPE_REQ) {
- 		for (i = 0; i < vha->hw->max_req_queues; i++) {
- 			struct req_que *req = vha->hw->req_q_map[i];
-+
-+			if (!test_bit(i, vha->hw->req_qid_map))
-+				continue;
-+
- 			if (req || !buf) {
- 				length = req ?
- 				    req->length : REQUEST_ENTRY_CNT_24XX;
-@@ -408,6 +412,10 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
- 	} else if (ent->t263.queue_type == T263_QUEUE_TYPE_RSP) {
- 		for (i = 0; i < vha->hw->max_rsp_queues; i++) {
- 			struct rsp_que *rsp = vha->hw->rsp_q_map[i];
-+
-+			if (!test_bit(i, vha->hw->rsp_qid_map))
-+				continue;
-+
- 			if (rsp || !buf) {
- 				length = rsp ?
- 				    rsp->length : RESPONSE_ENTRY_CNT_MQ;
-@@ -634,6 +642,10 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
- 	if (ent->t274.queue_type == T274_QUEUE_TYPE_REQ_SHAD) {
- 		for (i = 0; i < vha->hw->max_req_queues; i++) {
- 			struct req_que *req = vha->hw->req_q_map[i];
-+
-+			if (!test_bit(i, vha->hw->req_qid_map))
-+				continue;
-+
- 			if (req || !buf) {
- 				qla27xx_insert16(i, buf, len);
- 				qla27xx_insert16(1, buf, len);
-@@ -645,6 +657,10 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
- 	} else if (ent->t274.queue_type == T274_QUEUE_TYPE_RSP_SHAD) {
- 		for (i = 0; i < vha->hw->max_rsp_queues; i++) {
- 			struct rsp_que *rsp = vha->hw->rsp_q_map[i];
-+
-+			if (!test_bit(i, vha->hw->rsp_qid_map))
-+				continue;
-+
- 			if (rsp || !buf) {
- 				qla27xx_insert16(i, buf, len);
- 				qla27xx_insert16(1, buf, len);
 -- 
-2.5.0
-
+Alexey
