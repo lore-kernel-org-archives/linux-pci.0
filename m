@@ -1,77 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:40399 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751091AbcCYGuB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 25 Mar 2016 02:50:01 -0400
-Subject: Re: Question about PCI I/O space in ARM64
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <56F209A9.4040304@huawei.com>
- <20160323101840.GA21390@e104818-lin.cambridge.arm.com>
- <8793380.nuVa09lFue@wuerfel> <56F35BAA.50800@huawei.com>
- <20160324175728.GC21749@red-moon>
-CC: Arnd Bergmann <arnd@arndb.de>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	<linux-pci@vger.kernel.org>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Linuxarm <linuxarm@huawei.com>, <linux-kernel@vger.kernel.org>,
-	Zhou Wang <wangzhou1@hisilicon.com>, <jdelvare@suse.de>,
-	"xuwei (O)" <xuwei5@hisilicon.com>
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-Message-ID: <56F4DF80.5070707@huawei.com>
-Date: Fri, 25 Mar 2016 14:49:36 +0800
+Received: from mail.kernel.org ([198.145.29.136]:47671 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932088AbcCJU7K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Mar 2016 15:59:10 -0500
+Date: Thu, 10 Mar 2016 14:59:05 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jon Derrick <jonathan.derrick@intel.com>
+Cc: keith.busch@intel.com, linux-pci@vger.kernel.org
+Subject: Re: [PATCHv2] VMD: Attach vmd resources to parent domain's resource
+ tree
+Message-ID: <20160310205905.GG14873@localhost>
+References: <1456333597-10469-1-git-send-email-jonathan.derrick@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160324175728.GC21749@red-moon>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1456333597-10469-1-git-send-email-jonathan.derrick@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Feb 24, 2016 at 10:06:37AM -0700, Jon Derrick wrote:
+> This patch attaches the new VMD domain's resources to the VMD device's
+> resources. This allows /proc/iomem to display a more complete picture.
+> 
+> Before:
+>   c0000000-c1ffffff : 0000:5d:05.5
+>   c2000000-c3ffffff : 0000:5d:05.5
+>     c2010000-c2013fff : nvme
+>   c4000000-c40fffff : 0000:5d:05.5
+> 
+> After:
+>   c0000000-c1ffffff : 0000:5d:05.5
+>   c2000000-c3ffffff : 0000:5d:05.5
+>     c2000000-c3ffffff : VMD MEMBAR1
+>       c2000000-c22fffff : PCI Bus 10000:01
+>         c2000000-c200ffff : 10000:01:00.0
+>         c2010000-c2013fff : 10000:01:00.0
+>           c2010000-c2013fff : nvme
+>       c2300000-c24fffff : PCI Bus 10000:01
+>   c4000000-c40fffff : 0000:5d:05.5
+>     c4002000-c40fffff : VMD MEMBAR2
+> 
+> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 
+Applied with Keith's Reviewed-by to pci/host-vmd for v4.6, thanks, Jon!
 
-On 2016/3/25 1:57, Lorenzo Pieralisi wrote:
-> [+ Jean]
+> ---
+> v1->v2: Dropped the CFGBAR resource from the tree
+>  arch/x86/pci/vmd.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
 > 
-> On Thu, Mar 24, 2016 at 11:14:50AM +0800, Kefeng Wang wrote:
+> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+> index d57e480..d0c4542 100644
+> --- a/arch/x86/pci/vmd.c
+> +++ b/arch/x86/pci/vmd.c
+> @@ -503,6 +503,18 @@ static struct pci_ops vmd_ops = {
+>  	.write		= vmd_pci_write,
+>  };
+>  
+> +static void vmd_attach_resources(struct vmd_dev *vmd)
+> +{
+> +	vmd->dev->resource[VMD_MEMBAR1].child = &vmd->resources[1];
+> +	vmd->dev->resource[VMD_MEMBAR2].child = &vmd->resources[2];
+> +}
+> +
+> +static void vmd_detach_resources(struct vmd_dev *vmd)
+> +{
+> +	vmd->dev->resource[VMD_MEMBAR1].child = NULL;
+> +	vmd->dev->resource[VMD_MEMBAR2].child = NULL;
+> +}
+> +
+>  /*
+>   * VMD domains start at 0x1000 to not clash with ACPI _SEG domains.
+>   */
+> @@ -542,6 +554,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
+>  		.start = res->start,
+>  		.end   = res->end,
+>  		.flags = flags,
+> +		.parent = res,
+>  	};
+>  
+>  	res = &vmd->dev->resource[VMD_MEMBAR2];
+> @@ -554,6 +567,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
+>  		.start = res->start + 0x2000,
+>  		.end   = res->end,
+>  		.flags = flags,
+> +		.parent = res,
+>  	};
+>  
+>  	sd->domain = vmd_find_free_domain();
+> @@ -578,6 +592,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
+>  		return -ENODEV;
+>  	}
+>  
+> +	vmd_attach_resources(vmd);
+>  	vmd_setup_dma_ops(vmd);
+>  	dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
+>  	pci_rescan_bus(vmd->bus);
+> @@ -674,6 +689,7 @@ static void vmd_remove(struct pci_dev *dev)
+>  {
+>  	struct vmd_dev *vmd = pci_get_drvdata(dev);
+>  
+> +	vmd_detach_resources(vmd);
+>  	pci_set_drvdata(dev, NULL);
+>  	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
+>  	pci_stop_root_bus(vmd->bus);
+> -- 
+> 1.8.3.1
 > 
-> [...]
-> 
->>>> You need a PCI host controller driver (e.g.
->>>> drivers/pci/host/pci-host-generic.c) and corresponding bindings in DT or
->>>> ACPI.
->>
->> In our inner test, there are some board without pcie host driver(even
->> without pci host controller).
-> 
-> So I guess those drivers are for devices that are attached to an LPC
-> controller that is not part of a PCI host controller, right ?
-> 
-> BTW, what happened to this (not that I particularly like this patchset) ?
-
-They are working on it, and will upstream again.
-
-> 
-> https://lkml.org/lkml/2015/12/29/154
-> 
-[...]
-> 
-> I agree with Arnd on this and we need to patch the eg f71805f driver too
-> (or we just do not build on ARM) to make it request the IO port region it
-> needs to actually probe the device, it is not correct to assume IO space
-> is available and mapped, I think that's a driver bug rather than anything
-> else, Jean can certainly shed some light here.
-
-Ok, so Jean, would you take a look this? Thanks.
-
-Kefeng
-> 
->> Define some arch in/out func instead of generic ops? when in/out vals, check
->> whether or not the pci_iobase is mapped.
-> 
-> I do not think the problem should be solved in the IO accessors
-> implementation, see above.
-> 
-> Lorenzo
-> 
-> .
-> 
-
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
