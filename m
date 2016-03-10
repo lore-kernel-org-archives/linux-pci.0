@@ -1,209 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48370 "EHLO mail.kernel.org"
+Received: from gate.crashing.org ([63.228.1.57]:46415 "EHLO gate.crashing.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932764AbcCCQy0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Mar 2016 11:54:26 -0500
-Subject: [PATCH v1 04/12] PCI: Set ROM shadow location in arch code,
- not in PCI core
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Tony Luck <tony.luck@intel.com>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-	linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Bruno =?utf-8?q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
-	Daniel Stone <daniel@fooishbar.org>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Ville =?utf-8?b?U3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
-Date: Thu, 03 Mar 2016 10:54:22 -0600
-Message-ID: <20160303165422.3025.63656.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	id S932910AbcCJXcw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 10 Mar 2016 18:32:52 -0500
+Message-ID: <1457645698.24238.76.camel@kernel.crashing.org>
+Subject: Re: [PATCH] powerpc/pci: Reuse PHB number on pci_controller add if
+ available
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, mpe@ellerman.id.au, paulus@samba.org,
+	imunsie@au1.ibm.com, mikey@neuling.org,
+	andrew.donnellan@au1.ibm.com, gwshan@linux.vnet.ibm.com,
+	bhelgaas@google.com
+Date: Fri, 11 Mar 2016 08:34:58 +1100
+In-Reply-To: <1457633505-19857-2-git-send-email-gpiccoli@linux.vnet.ibm.com>
+References: <1457633505-19857-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+	 <1457633505-19857-2-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-IORESOURCE_ROM_SHADOW means there is a copy of a device's option ROM in
-RAM.  The existence of such a copy and its location are arch-specific.
-Previously the IORESOURCE_ROM_SHADOW flag was set in arch code, but the
-0xC0000-0xDFFFF location was hard-coded into the PCI core.
+On Thu, 2016-03-10 at 15:11 -0300, Guilherme G. Piccoli wrote:
+> The domain/PHB field of PCI addresses has its value obtained from a
+> global variable, incremented each time a new domain (represented by
+> struct pci_controller) is added on the system. The domain addition
+> process happens during boot or due to PCI device hotplug.
 
-If we're using a shadow copy in RAM, disable the ROM BAR and release the
-address space it was consuming.  Move the location information from the PCI
-core to the arch code that sets IORESOURCE_ROM_SHADOW.  Save the location
-of the RAM copy in the struct resource for PCI_ROM_RESOURCE.
+I'd rather we use a fixed numbering for domains, for example, under
+OPAL, use the opal-id, under phyp, there is also a number in the DT we
+can use (forgot what it's called) etc...
 
-After this change, pci_map_rom() will call pci_assign_resource() and
-pci_enable_rom() for these IORESOURCE_ROM_SHADOW resources, which we did
-not do before.  This is safe because:
-
-  - pci_assign_resource() will do nothing because the resource is marked
-    IORESOURCE_PCI_FIXED, which means we can't move it, and
-
-  - pci_enable_rom() will not turn on the ROM BAR's enable bit because the
-    resource is marked IORESOURCE_ROM_SHADOW, which means it is in RAM
-    rather than in PCI memory space.
-
-Storing the location in the struct resource means "lspci" will show the
-shadow location, not the value from the ROM BAR.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/ia64/pci/fixup.c  |   22 ++++++++++++++++------
- arch/x86/pci/fixup.c   |   22 ++++++++++++++++------
- drivers/pci/rom.c      |   11 -----------
- include/linux/ioport.h |    2 +-
- 4 files changed, 33 insertions(+), 24 deletions(-)
-
-diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
-index fd9ceff..41caa99 100644
---- a/arch/ia64/pci/fixup.c
-+++ b/arch/ia64/pci/fixup.c
-@@ -17,14 +17,14 @@
-  *
-  * The standard boot ROM sequence for an x86 machine uses the BIOS
-  * to select an initial video card for boot display. This boot video
-- * card will have it's BIOS copied to C0000 in system RAM.
-+ * card will have its BIOS copied to 0xC0000 in system RAM.
-  * IORESOURCE_ROM_SHADOW is used to associate the boot video
-  * card with this copy. On laptops this copy has to be used since
-  * the main ROM may be compressed or combined with another image.
-  * See pci_map_rom() for use of this flag. Before marking the device
-  * with IORESOURCE_ROM_SHADOW check if a vga_default_device is already set
-- * by either arch cde or vga-arbitration, if so only apply the fixup to this
-- * already determined primary video card.
-+ * by either arch code or vga-arbitration; if so only apply the fixup to this
-+ * already-determined primary video card.
-  */
- 
- static void pci_fixup_video(struct pci_dev *pdev)
-@@ -32,6 +32,7 @@ static void pci_fixup_video(struct pci_dev *pdev)
- 	struct pci_dev *bridge;
- 	struct pci_bus *bus;
- 	u16 config;
-+	struct resource *res;
- 
- 	if ((strcmp(ia64_platform_name, "dig") != 0)
- 	    && (strcmp(ia64_platform_name, "hpzx1")  != 0))
-@@ -61,9 +62,18 @@ static void pci_fixup_video(struct pci_dev *pdev)
- 	if (!vga_default_device() || pdev == vga_default_device()) {
- 		pci_read_config_word(pdev, PCI_COMMAND, &config);
- 		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
--			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW |
--				IORESOURCE_PCI_FIXED;
--			dev_printk(KERN_DEBUG, &pdev->dev, "Video device with shadowed ROM\n");
-+			res = &pdev->resource[PCI_ROM_RESOURCE];
-+
-+			pci_disable_rom(pdev);
-+			if (res->parent)
-+				release_resource(res);
-+
-+			res->start = 0xC0000;
-+			res->end = res->start + 0x20000 - 1;
-+			res->flags = IORESOURCE_MEM | IORESOURCE_ROM_SHADOW |
-+				     IORESOURCE_PCI_FIXED;
-+			dev_info(&pdev->dev, "Video device with shadowed ROM at %pR\n",
-+				 res);
- 		}
- 	}
- }
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index dac027c..b7de192 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -297,14 +297,14 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_MCH_PC1,	pcie_r
-  *
-  * The standard boot ROM sequence for an x86 machine uses the BIOS
-  * to select an initial video card for boot display. This boot video
-- * card will have it's BIOS copied to C0000 in system RAM.
-+ * card will have its BIOS copied to 0xC0000 in system RAM.
-  * IORESOURCE_ROM_SHADOW is used to associate the boot video
-  * card with this copy. On laptops this copy has to be used since
-  * the main ROM may be compressed or combined with another image.
-  * See pci_map_rom() for use of this flag. Before marking the device
-  * with IORESOURCE_ROM_SHADOW check if a vga_default_device is already set
-- * by either arch cde or vga-arbitration, if so only apply the fixup to this
-- * already determined primary video card.
-+ * by either arch code or vga-arbitration; if so only apply the fixup to this
-+ * already-determined primary video card.
-  */
- 
- static void pci_fixup_video(struct pci_dev *pdev)
-@@ -312,6 +312,7 @@ static void pci_fixup_video(struct pci_dev *pdev)
- 	struct pci_dev *bridge;
- 	struct pci_bus *bus;
- 	u16 config;
-+	struct resource *res;
- 
- 	/* Is VGA routed to us? */
- 	bus = pdev->bus;
-@@ -336,9 +337,18 @@ static void pci_fixup_video(struct pci_dev *pdev)
- 	if (!vga_default_device() || pdev == vga_default_device()) {
- 		pci_read_config_word(pdev, PCI_COMMAND, &config);
- 		if (config & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
--			pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_SHADOW |
--				IORESOURCE_PCI_FIXED;
--			dev_printk(KERN_DEBUG, &pdev->dev, "Video device with shadowed ROM\n");
-+			res = &pdev->resource[PCI_ROM_RESOURCE];
-+
-+			pci_disable_rom(pdev);
-+			if (res->parent)
-+				release_resource(res);
-+
-+			res->start = 0xC0000;
-+			res->end = res->start + 0x20000 - 1;
-+			res->flags = IORESOURCE_MEM | IORESOURCE_ROM_SHADOW |
-+				     IORESOURCE_PCI_FIXED;
-+			dev_info(&pdev->dev, "Video device with shadowed ROM at %pR\n",
-+				 res);
- 		}
- 	}
- }
-diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
-index 5da8d06..80e82b1 100644
---- a/drivers/pci/rom.c
-+++ b/drivers/pci/rom.c
-@@ -128,16 +128,6 @@ void __iomem *pci_map_rom(struct pci_dev *pdev, size_t *size)
- 	loff_t start;
- 	void __iomem *rom;
- 
--	/*
--	 * IORESOURCE_ROM_SHADOW set on x86, x86_64 and IA64 supports legacy
--	 * memory map if the VGA enable bit of the Bridge Control register is
--	 * set for embedded VGA.
--	 */
--	if (res->flags & IORESOURCE_ROM_SHADOW) {
--		/* primary video rom always starts here */
--		start = (loff_t)0xC0000;
--		*size = 0x20000; /* cover C000:0 through E000:0 */
--	} else {
- 		if (res->flags &
- 			(IORESOURCE_ROM_COPY | IORESOURCE_ROM_BIOS_COPY)) {
- 			*size = pci_resource_len(pdev, PCI_ROM_RESOURCE);
-@@ -157,7 +147,6 @@ void __iomem *pci_map_rom(struct pci_dev *pdev, size_t *size)
- 			if (pci_enable_rom(pdev))
- 				return NULL;
- 		}
--	}
- 
- 	rom = ioremap(start, *size);
- 	if (!rom) {
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 24bea08..2cf1667 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -98,7 +98,7 @@ struct resource {
- 
- /* PCI ROM control bits (IORESOURCE_BITS) */
- #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled, same as PCI_ROM_ADDRESS_ENABLE */
--#define IORESOURCE_ROM_SHADOW		(1<<1)	/* ROM is copy at C000:0 */
-+#define IORESOURCE_ROM_SHADOW		(1<<1)	/* Use RAM image, not ROM BAR */
- #define IORESOURCE_ROM_COPY		(1<<2)	/* ROM is alloc'd copy, resource field overlaid */
- #define IORESOURCE_ROM_BIOS_COPY	(1<<3)	/* ROM is BIOS copy, resource field overlaid */
- 
-
+> As recent kernels are using predictable naming for network
+> interfaces,
+> the network stack is more tied to PCI naming. This can be a problem
+> in
+> hotplug scenarios, because PCI addresses will change if a device is
+> removed and then re-added. This situation seems unusual, but it can
+> happen if a user wants to replace a NIC without rebooting the
+> machine,
+> for example.
+> 
+> This patch changes the way PCI domain values are generated: the
+> global
+> variable is no longer used; instead, a list is introduced, containing
+> a flag that indicates whenever a domain is in use or was released,
+> for
+> example by a PCI hotplug remove. If the new PHB being added finds a
+> free domain, it will use its number; otherwise a new number is
+> generated incrementing the higher domain value present on the system.
+> No functional changes were introduced.
+> 
+> Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/kernel/pci-common.c | 47
+> +++++++++++++++++++++++++++++++++++++---
+>  1 file changed, 44 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/powerpc/kernel/pci-common.c
+> b/arch/powerpc/kernel/pci-common.c
+> index 0f7a60f..6eac0dd 100644
+> --- a/arch/powerpc/kernel/pci-common.c
+> +++ b/arch/powerpc/kernel/pci-common.c
+> @@ -44,8 +44,12 @@
+>  static DEFINE_SPINLOCK(hose_spinlock);
+>  LIST_HEAD(hose_list);
+>  
+> -/* XXX kill that some day ... */
+> -static int global_phb_number;		/* Global phb counter
+> */
+> +/* Global PHB counter list */
+> +struct global_phb_number {
+> +	bool used;
+> +	struct list_head node;
+> +};
+> +LIST_HEAD(global_phb_number_list);
+>  
+>  /* ISA Memory physical address */
+>  resource_size_t isa_mem_base;
+> @@ -64,6 +68,42 @@ struct dma_map_ops *get_pci_dma_ops(void)
+>  }
+>  EXPORT_SYMBOL(get_pci_dma_ops);
+>  
+> +static int get_phb_number(void)
+> +{
+> +	struct global_phb_number *ptr;
+> +	int latest_number = 0;
+> +
+> +	list_for_each_entry(ptr, &global_phb_number_list, node) {
+> +		if (!ptr->used) {
+> +			ptr->used = true;
+> +			return latest_number;
+> +		}
+> +		latest_number++;
+> +	}
+> +
+> +	ptr = zalloc_maybe_bootmem(sizeof(struct global_phb_number),
+> GFP_KERNEL);
+> +	BUG_ON(ptr == NULL);
+> +
+> +	ptr->used = true;
+> +	list_add_tail(&ptr->node, &global_phb_number_list);
+> +
+> +	return latest_number;
+> +}
+> +
+> +static void release_phb_number(int phb_number)
+> +{
+> +	struct global_phb_number *ptr;
+> +	int current_number = 0;
+> +
+> +	list_for_each_entry(ptr, &global_phb_number_list, node) {
+> +		if (current_number == phb_number) {
+> +			ptr->used = false;
+> +			return;
+> +		}
+> +		current_number++;
+> +	}
+> +}
+> +
+>  struct pci_controller *pcibios_alloc_controller(struct device_node
+> *dev)
+>  {
+>  	struct pci_controller *phb;
+> @@ -72,7 +112,7 @@ struct pci_controller
+> *pcibios_alloc_controller(struct device_node *dev)
+>  	if (phb == NULL)
+>  		return NULL;
+>  	spin_lock(&hose_spinlock);
+> -	phb->global_number = global_phb_number++;
+> +	phb->global_number = get_phb_number();
+>  	list_add_tail(&phb->list_node, &hose_list);
+>  	spin_unlock(&hose_spinlock);
+>  	phb->dn = dev;
+> @@ -94,6 +134,7 @@ EXPORT_SYMBOL_GPL(pcibios_alloc_controller);
+>  void pcibios_free_controller(struct pci_controller *phb)
+>  {
+>  	spin_lock(&hose_spinlock);
+> +	release_phb_number(phb->global_number);
+>  	list_del(&phb->list_node);
+>  	spin_unlock(&hose_spinlock);
+>  
