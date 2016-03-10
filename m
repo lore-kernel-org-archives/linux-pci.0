@@ -1,59 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ni.piap.pl ([195.187.100.4]:51954 "EHLO ni.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752247AbcC2F3g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Mar 2016 01:29:36 -0400
-From: khalasa@piap.pl (Krzysztof =?utf-8?Q?Ha=C5=82asa?=)
-To: Tim Harvey <tharvey@gateworks.com>
-Cc: Fabio Estevam <festevam@gmail.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Petr =?utf-8?Q?=C5=A0tetiar?= <ynezz@true.cz>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 10 Mar 2016 07:42:36 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel\@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
-References: <m3h9fuk7ik.fsf@t19.piap.pl>
-	<CAOMZO5DcZCxoLPeGRWSGkstm7F3eN-Q-yJyf6ktMTda2zLviag@mail.gmail.com>
-	<CAOMZO5B8Lzn-E4YOeYxVtN5PN11aOvZHn4eU0ixkdV8CO8+xYw@mail.gmail.com>
-	<CAJ+vNU2Sg1ZKBsGcQswrJZyTJ1WBEZor3ZqpoYUT7i9FKjEAog@mail.gmail.com>
-	<CAOMZO5DO9G18=_YSri3a+UiYbLwN6AMG4asUXbT03mpbU3hHrw@mail.gmail.com>
-	<CAJ+vNU1_YqvWQkmuDB7r8z77iZJS6pP4Mr+j9yW4sFLAeJXQDw@mail.gmail.com>
-	<CAOMZO5A2osG3=mTaCayYfMokUj-vT+Udq9ckq45b1yaUP9Tn3g@mail.gmail.com>
-	<CAJ+vNU2ST=XG5H04-OCwpHgcvkoXOQw8F3MjXhJmWhBUbxWE-g@mail.gmail.com>
-Date: Tue, 29 Mar 2016 07:29:33 +0200
-In-Reply-To: <CAJ+vNU2ST=XG5H04-OCwpHgcvkoXOQw8F3MjXhJmWhBUbxWE-g@mail.gmail.com>
-	(Tim Harvey's message of "Mon, 28 Mar 2016 15:06:53 -0700")
-Message-ID: <m360w5kg1u.fsf@t19.piap.pl>
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Mark Salter <msalter@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH v2] PCI: ACPI: IA64: fix IO port generic range check
+Message-ID: <20160310074236.GA20478@red-moon>
+References: <1455212827-9382-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20160308222125.GG27132@localhost>
+ <CAJZ5v0gnDnF_4z_mtZp+Tq8-V3FgG6p7kMykqtVA+s44ukkuaA@mail.gmail.com>
+ <20160309053332.GA22228@localhost>
+ <20160309071406.GA19555@red-moon>
+ <20160309153556.GA14873@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160309153556.GA14873@localhost>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tim Harvey <tharvey@gateworks.com> writes:
+On Wed, Mar 09, 2016 at 09:35:56AM -0600, Bjorn Helgaas wrote:
+> On Wed, Mar 09, 2016 at 07:14:06AM +0000, Lorenzo Pieralisi wrote:
+> > On Tue, Mar 08, 2016 at 11:33:32PM -0600, Bjorn Helgaas wrote:
+> 
+> > > Maybe acpi_dev_ioresource_flags() should instead check res->end
+> > > against ioport_resource.end, as we already do in
+> > > acpi_pci_root_validate_resources()?  Each arch already sets its own
+> > > ioport_resource.end using IO_SPACE_LIMIT:
+> > > 
+> > >   arch/x86/include/asm/io.h   #define IO_SPACE_LIMIT 0xffff
+> > >   arch/ia64/include/asm/io.h  #define IO_SPACE_LIMIT 0xffffffffffffffffUL
+> 
+> I suspect we're saying the same thing with slightly different words,
+> so I apologize if I'm beating a dead horse.
+> 
+> ioport_resource defines the universe of Linux ioport space.  Every
+> IORESOURCE_IO struct resource must be contained in ioport_resource.
+> Such a resource contains Linux ioport numbers, i.e., things that could
+> appear in /proc/ioports and could be passed as an argument to
+> request_region() and the inb()/outb() functions.
 
-> It's not too easy to tell how many IMX6 boards incorrectly specify
-> their reset-gpio polarity. I don't know what the best way to determine
-> what boards use the IMX6 pcie host controller. Is there a dtc usage
-> that will display the compiled dtb's then we grep out 'compatible =
-> "fsl,imx6q-pcie"' to at least get the list of boards to inspect? I'm
-> curious if its just one or two boards that incorrectly specify the
-> polarity of their PCI reset.
+That's agreed but that's not where the problem is on IA64/ARM64 IO
+ACPI descriptors parsing.
 
-I guess, maybe 8 of them. Not counting those with out-of-tree DTS/DTB
-files.
+> > We can't do that, it may work on IA64 but the ioport_resource is a
+> > chunk of address space on IA64/ARM64 that has nothing to do with
+> > the physical address at which the root bridges decode IO space (which
+> > is what's contained in the resource).
+> 
+> I'm stumbling over "the physical address at which the root bridges
+> decode IO space (which is what's contained in the resource)".
+> 
+> x86 host bridges typically just forward CPU-generated I/O port
+> transactions to PCI with no address translation, so it sounds like
+> you're talking about ia64/ARM64 bridges that decode CPU MMIO space and
+> turn accesses into PCI I/O transactions.  
+> 
+> If we start from a driver calling inb(), the driver supplies a Linux
+> ioport number "X".  On ia64 (and I assume ARM64 as well), inb()
+> performs an MMIO access to memory address "Y".  A host bridge consumes
+> that MMIO access and generates a corresponding PCI I/O transaction to
+> PCI ioport "Z".
+> 
+> It is indeed true that ioport_resource has nothing to do with memory
+> addresses like "Y".  But the driver (and this part of the ACPI
+> infrastructure) are dealing with ioport address "X", and that is
+> definitely in an IORESOURCE_IO struct resource.  The IORESOURCE_MEM_
+> struct resource that contains "Y" is internal to the host bridge
+> driver and invisible to the device driver that's using inb().
 
-Something like:
-$ grep reset-gpio arch/arm/boot/dts/imx6* | grep -v phy-reset
+The problem is, that's the address like "Y" that are checked in
+acpi_dev_ioresource_flags() with current PCI initialization flow.
 
-> I figured out it was the change to enable CONFIG_PCI_MSI in v4.5 that
-> is causing interrupts to fail for me.
+IO ports number "X" are created in (IA64) add_io_space() that is
+executed after acpi_pci_probe_root_resources() is called (see
+arch/ia64/pci/pci.c), that's the code that, IIUC, translates an
+IO resource containing a CPU physical address (which is the address
+that is ioremapped) to an IO resource containing a port number *and*
+a corresponding MEM resource.
 
-Right, a long standing issue. MSI never worked for me on i.MX6.
--- 
-Krzysztof Halasa
+The check that causes failures (>=0x10003) is carried out
+on the "raw" IO resource parsed from ACPI, not the one crafted
+in add_io_space().
 
-Industrial Research Institute for Automation and Measurements PIAP
-Al. Jerozolimskie 202, 02-486 Warsaw, Poland
+The resource checked in acpi_dev_ioresource_flags() is created from
+ACPI IO descriptor and does contain CPU physical MMIO addresses,
+comparing it to a port number is bound to fail, they do NOT represent
+the same thing, happy be corrected.
+
+That's the reason why currently IA64 IO space is not working, and
+this patch fixes it, please correct me if I am wrong.
+
+I will write back next week with the commits sequence and logic that
+led to the current failure, sorry for not being able to respond
+more promptly and in a comprehensive way I need sometime to write up
+my understanding of the problem and commit logs, I will do that
+next week.
+
+Thanks,
+Lorenzo
+
+> 
+> For example, you could have something like this (with made-up
+> addresses):
+> 
+>   [io  0x0000-0xffff]              # Linux ioport space
+>   [mem 0x100000000-0x10000ffff]    # MMIO space consumed by host bridge
+>   [bus 0x0000-0xffff]              # PCI bus I/O transaction space
+> 
+>   [io  0x10000-0x1ffff]            # Linux ioport space ("X")
+>   [mem 0x200000000-0x20000ffff]    # MMIO space consumed by host bridge ("Y")
+>   [bus 0x0000-0xffff]              # PCI bus I/O transaction space ("Z")
+> 
+> Bjorn
+> 
