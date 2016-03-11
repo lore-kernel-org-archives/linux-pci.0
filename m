@@ -1,150 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44663 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:57939 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751915AbcC2Mp5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Mar 2016 08:45:57 -0400
-Date: Tue, 29 Mar 2016 13:44:41 +0100 (BST)
-From: Stefano Stabellini <sstabellini@kernel.org>
-To: Konrad Rzeszutek Wilk <konrad@kernel.org>
-cc: Sinan Kaya <okaya@codeaurora.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	linux-arm-kernel@lists.infradead.org, timur@codeaurora.org,
-	cov@codeaurora.org, nwatters@codeaurora.org,
-	linux-mips@linux-mips.org, linux-ia64@vger.kernel.org,
-	linux-xtensa@linux-xtensa.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Max Filippov <jcmvbkbc@gmail.com>,
-	Chris Metcalf <cmetcalf@ezchip.com>,
-	Paul Mackerras <paulus@samba.org>,
-	"H. Peter Anvin" <hpa@zytor.com>, Huacai Chen <chenhc@lemote.com>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Jisheng Zhang <jszhang@marvell.com>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Michael Ellerman <mpe@ellerman.id.au>, X86 <x86@kernel.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Denys Vlasenko <dvlasenk@redhat.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Akinobu Mita <akinobu.mita@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Valentin Rothberg <valentinrothberg@gmail.com>,
-	Chris Zankel <chris@zankel.net>,
-	Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, Dean Nelson <dnelson@redhat.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-	Joe Perches <joe@perches.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	sstabellini@kernel.org
-Subject: Re: [PATCH 2/3] swiotlb: prefix dma_to_phys and phys_to_dma
- functions
-In-Reply-To: <CACJDEmrzKOExg-Rchjy2hfVzkzbCZ=WNn4Bu3EVgim748VvRig@mail.gmail.com>
-Message-ID: <alpine.DEB.2.02.1603291329460.18380@kaball.uk.xensource.com>
-References: <1458252137-24497-1-git-send-email-okaya@codeaurora.org> <1458252137-24497-2-git-send-email-okaya@codeaurora.org> <56EBF09A.1060503@arm.com> <56EC1805.5060207@codeaurora.org> <CACJDEmrzKOExg-Rchjy2hfVzkzbCZ=WNn4Bu3EVgim748VvRig@mail.gmail.com>
+	id S1750810AbcCKSi1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Mar 2016 13:38:27 -0500
+Date: Fri, 11 Mar 2016 12:38:23 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/keystone: check return value of devm_phy_get with
+ EPROBE_DEFER
+Message-ID: <20160311183823.GE4725@localhost>
+References: <1457325141-1354-1-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1457325141-1354-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 28 Mar 2016, Konrad Rzeszutek Wilk wrote:
-> On Fri, Mar 18, 2016 at 11:00 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> > On 3/18/2016 8:12 AM, Robin Murphy wrote:
-> >> Since we know for sure that swiotlb_to_phys is a no-op on arm64, it might be cleaner to simply not reference it at all. I suppose we could have some private local wrappers, e.g.:
-> >>
-> >> #define swiotlb_to_virt(addr) phys_to_virt((phys_addr_t)(addr))
-> >>
-> >> to keep the intent of the code clear (and just in case anyone ever builds a system mad enough to warrant switching out that definition, but I'd hope that never happens).
-> >>
-> >> Otherwise, looks good - thanks for doing this!
-> >
-> > OK. I added this. Reviewed-by?
-> >
-> > I'm not happy to submit such a big patch for all different ARCHs. I couldn't
-> > find a cleaner solution. I'm willing to split this patch into multiple if there
-> > is a better way.
-> >
-> > diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
-> > index ada00c3..8c0f66b 100644
-> > --- a/arch/arm64/mm/dma-mapping.c
-> > +++ b/arch/arm64/mm/dma-mapping.c
-> > @@ -29,6 +29,14 @@
-> >
-> >  #include <asm/cacheflush.h>
-> >
-> > +/*
-> > + * If you are building a system without IOMMU, then you are using SWIOTLB
-> > + * library. The ARM64 adaptation of this library does not support address
-> > + * translation and it assumes that physical address = dma address for such
-> > + * a use case. Please don't build a platform that violates this.
-> > + */
+On Mon, Mar 07, 2016 at 12:32:21PM +0800, Shawn Lin wrote:
+> If the return value of devm_phy_get is EPROBE_DEFER, we should
+> defer probing the driver.
 > 
-> Why not just expand the ARM64 part to support address translation?
->
-> > +#define swiotlb_to_virt(addr) phys_to_virt((phys_addr_t)(addr))
-> > +
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+
+Applied to pci/host-keystone for v4.6 with the following changelog.
+Thanks, Shawn!
+
+    PCI: keystone: Defer probing if devm_phy_get() returns -EPROBE_DEFER
+    
+    A SerDes PHY is optional, so if devm_phy_get() doesn't find one at all,
+    that's fine.  But if devm_phy_get() finds a PHY that doesn't have a driver
+    yet, it returns -EPROBE_DEFER.  In that case, defer probing the Keystone
+    driver.  We may be able to load it later after a PHY driver is loaded.
+    
+    [bhelgaas: changelog]
+    Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> ---
 > 
-> Adding Stefano here.
-
-Could you please explain what is the problem that you are trying to
-solve? In other words, what is the issue with assuming that physical
-address = dma address (and the current dma_to_phys and phys_to_dma
-static inlines) if no arm64 platforms violate it? That's pretty much
-what is done on x86 too (without X86_DMA_REMAP).
-
-If you want to make sure that the assumption is not violated, you can
-introduce a boot time check or a BUG_ON somewhere.
-
-If there is an arm64 platform with phys_addr != dma_addr, we need proper
-support for it. In fact even if there is an IOMMU on that platform, when
-running Xen on it, the IOMMU would be used by the hypervisor and Linux
-would still end up without it, using the swiotlb.
-
- 
-> >  static pgprot_t __get_dma_pgprot(struct dma_attrs *attrs, pgprot_t prot,
-> >                                  bool coherent)
-> >  {
-> > @@ -188,7 +196,7 @@ static void __dma_free(struct device *dev, size_t size,
-> >                        void *vaddr, dma_addr_t dma_handle,
-> >                        struct dma_attrs *attrs)
-> >  {
-> > -       void *swiotlb_addr = phys_to_virt(swiotlb_dma_to_phys(dev, dma_handle));
-> > +       void *swiotlb_addr = swiotlb_to_virt(dma_handle);
-> >
-> >         size = PAGE_ALIGN(size);
-> >
-> > @@ -209,8 +217,7 @@ static dma_addr_t __swiotlb_map_page(struct device *dev, struct page *page,
-> >
-> >         dev_addr = swiotlb_map_page(dev, page, offset, size, dir, attrs);
-> >         if (!is_device_dma_coherent(dev))
-> > -               __dma_map_area(phys_to_virt(swiotlb_dma_to_phys(dev, dev_addr)),
-> > -                              size, dir);
-> > +               __dma_map_area(swiotlb_to_virt(dev_addr), size, dir);
-> >
-> >         return dev_addr;
-> >  }
-> > @@ -283,8 +290,7 @@ static void __swiotlb_sync_single_for_device(struct device *dev,
-> >  {
-> >         swiotlb_sync_single_for_device(dev, dev_addr, size, dir);
-> >         if (!is_device_dma_coherent(dev))
-> > -               __dma_map_area(phys_to_virt(swiotlb_dma_to_phys(dev, dev_addr)),
-> > -                              size, dir);
-> > +               __dma_map_area(swiotlb_to_virt(dev_addr), size, dir);
-> >  }
-> >
-> >
-> >
-> >
-> > --
-> > Sinan Kaya
-> > Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-> > Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+>  drivers/pci/host/pci-keystone.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
+> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+> index 0aa81bd..42af6ac 100644
+> --- a/drivers/pci/host/pci-keystone.c
+> +++ b/drivers/pci/host/pci-keystone.c
+> @@ -363,6 +363,8 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+>  		ret = phy_init(phy);
+>  		if (ret < 0)
+>  			return ret;
+> +	} else if (PTR_ERR(phy) == -EPROBE_DEFER) {
+> +		return PTR_ERR(phy);
+>  	}
+>  
+>  	/* index 2 is to read PCI DEVICE_ID */
+> -- 
+> 2.3.7
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
