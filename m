@@ -1,58 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f169.google.com ([209.85.161.169]:35446 "EHLO
-	mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751918AbcCLEE6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Mar 2016 23:04:58 -0500
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:51835 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752700AbcCKNPR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Mar 2016 08:15:17 -0500
+Received: from localhost
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 11 Mar 2016 23:15:14 +1000
+Received: from d23relay07.au.ibm.com (d23relay07.au.ibm.com [9.190.26.37])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id A78C52CE8054
+	for <linux-pci@vger.kernel.org>; Sat, 12 Mar 2016 00:15:10 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+	by d23relay07.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u2BDF2Q843909324
+	for <linux-pci@vger.kernel.org>; Sat, 12 Mar 2016 00:15:10 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u2BDEa69032112
+	for <linux-pci@vger.kernel.org>; Sat, 12 Mar 2016 00:14:37 +1100
+Date: Sat, 12 Mar 2016 00:14:19 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	"Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	mpe@ellerman.id.au, paulus@samba.org, imunsie@au1.ibm.com,
+	mikey@neuling.org, andrew.donnellan@au1.ibm.com,
+	bhelgaas@google.com
+Subject: Re: [PATCH] powerpc/pci: Reuse PHB number on pci_controller add if
+ available
+Message-ID: <20160311131419.GA7911@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1457633505-19857-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+ <1457633505-19857-2-git-send-email-gpiccoli@linux.vnet.ibm.com>
+ <1457645698.24238.76.camel@kernel.crashing.org>
+ <20160310231823.GA5270@gwshan>
+ <1457693533.24238.99.camel@kernel.crashing.org>
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFwhMWDa4=7x_AgH34Z2US+gyuHT_-=S+vwkZAbkHRm10Q@mail.gmail.com>
-References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<20160308174558.GC19869@localhost>
-	<CALCETrUHEmFoO9dYY0xbjLiLfCJQCxG7h60dkOuCMMOKonytpw@mail.gmail.com>
-	<20160311232920.GA27552@localhost>
-	<CALCETrV4D2Kzn=6ags5tAP+ortjFpeeNEKW-91UHsF=UA5bN+g@mail.gmail.com>
-	<CA+55aFwhMWDa4=7x_AgH34Z2US+gyuHT_-=S+vwkZAbkHRm10Q@mail.gmail.com>
-Date: Fri, 11 Mar 2016 23:04:57 -0500
-Message-ID: <CADnq5_PvVpQpWRTNo-gUpF=0ExJNczpemG0jnNaNM+mgCDj4_A@mail.gmail.com>
-Subject: Re: [PATCH v1 00/12] PCI: Rework shadow ROM handling
-From: Alex Deucher <alexdeucher@gmail.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andy Lutomirski <luto@amacapital.net>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Tony Luck <tony.luck@intel.com>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	=?UTF-8?Q?Bruno_Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
-	Daniel Stone <daniel@fooishbar.org>,
-	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1457693533.24238.99.camel@kernel.crashing.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 11, 2016 at 8:09 PM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Fri, Mar 11, 2016 at 4:49 PM, Andy Lutomirski <luto@amacapital.net> wrote:
->>
->> FWIW, if I disable all the checks in pci_get_rom_size, I learn that my
->> video ROM consists entirely of 0xff bytes.  Maybe there just isn't a
->> ROM shadow on my laptop.
+On Fri, Mar 11, 2016 at 09:52:13PM +1100, Benjamin Herrenschmidt wrote:
+>On Fri, 2016-03-11 at 10:18 +1100, Gavin Shan wrote:
+>> However, PowerKVM guest doesn't have it. I guess it's a problem,
+>> right?
 >
-> I think most laptops end up having the graphics ROM be part of the
-> regular system flash, and there is no actual rom associated with the
-> PCI device that is the GPU itself.
+>What is the number we use for the TCE h-calls ? I think it's from the
+>first part of the dma window property no ?
 >
-> The actual GPU ROM tends to be associated with plug-in cards, not
-> soldered-down chips in a laptop where they don't want extra flash
-> chips.
 
-Right; on (at least AMD) mobile dGPUs and systems with APUs, the vbios
-"rom" is part of the sbios image and is set up by the sbios when it
-runs.  The driver either gets it from the legacy vga location or some
-platform specific method such as ACPI.
+Yeah, the BUID is PHB's identifier, but we only need the low 16-bits
+as its base is 0x800000020000000ULL in QEMU or pHyp. I think other platforms
+(like freescale's) still need dynamically allocated domain number, which
+could be managed by a bitmap.
 
-Alex
+Thanks,
+Gavin
+
+>Cheers,
+>Ben.
+> 
+
