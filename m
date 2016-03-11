@@ -1,161 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f196.google.com ([209.85.217.196]:35696 "EHLO
-	mail-lb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755484AbcCUMmE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Mar 2016 08:42:04 -0400
-MIME-Version: 1.0
-In-Reply-To: <1458558775-6242-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1458558775-6242-1-git-send-email-lorenzo.pieralisi@arm.com>
-Date: Mon, 21 Mar 2016 13:42:01 +0100
-Message-ID: <CAJZ5v0gvB8fHzmgrnz2wOPdLakJyuRg0eQ65oo13LP0_PHRAbg@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI: ACPI: IA64: fix IO port generic range check
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
+Received: from mail.kernel.org ([198.145.29.136]:43197 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751343AbcCKX3Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Mar 2016 18:29:25 -0500
+Date: Fri, 11 Mar 2016 17:29:20 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andy Lutomirski <luto@amacapital.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
 	Tony Luck <tony.luck@intel.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Mark Salter <msalter@redhat.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Content-Type: text/plain; charset=UTF-8
+	DRI <dri-devel@lists.freedesktop.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	Bruno =?iso-8859-1?Q?Pr=E9mont?= <bonbons@linux-vserver.org>,
+	Daniel Stone <daniel@fooishbar.org>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Ville =?iso-8859-1?Q?Syrj=E4l=E4?=
+	<ville.syrjala@linux.intel.com>
+Subject: Re: [PATCH v1 00/12] PCI: Rework shadow ROM handling
+Message-ID: <20160311232920.GA27552@localhost>
+References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160308174558.GC19869@localhost>
+ <CALCETrUHEmFoO9dYY0xbjLiLfCJQCxG7h60dkOuCMMOKonytpw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CALCETrUHEmFoO9dYY0xbjLiLfCJQCxG7h60dkOuCMMOKonytpw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 21, 2016 at 12:12 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> The [0 - 64k] ACPI PCI IO port resource boundary check in:
->
-> acpi_dev_ioresource_flags()
->
-> is currently applied blindly in the ACPI resource parsing to all
-> architectures, but only x86 suffers from that IO space limitation.
->
-> On arches (ie IA64 and ARM64) where IO space is memory mapped,
-> the PCI root bridges IO resource windows are firstly initialized from
-> the _CRS (in acpi_decode_space()) and contain the CPU physical address
-> at which a root bridge decodes IO space in the CPU physical address
-> space with the offset value representing the offset required to translate
-> the PCI bus address into the CPU physical address.
->
-> The IO resource windows are then parsed and updated in arch code
-> before creating and enumerating PCI buses (eg IA64 add_io_space())
-> to map in an arch specific way the obtained CPU physical address range
-> to a slice of virtual address space reserved to map PCI IO space,
-> ending up with PCI bridges resource windows containing IO
-> resources like the following on a working IA64 configuration:
->
-> PCI host bridge to bus 0000:00
-> pci_bus 0000:00: root bus resource [io  0x1000000-0x100ffff window] (bus
-> address [0x0000-0xffff])
-> pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000fffff window]
-> pci_bus 0000:00: root bus resource [mem 0x80000000-0x8fffffff window]
-> pci_bus 0000:00: root bus resource [mem 0x80004000000-0x800ffffffff window]
-> pci_bus 0000:00: root bus resource [bus 00]
->
-> This implies that the [0 - 64K] check in acpi_dev_ioresource_flags()
-> leaves platforms with memory mapped IO space (ie IA64) broken (ie kernel
-> can't claim IO resources since the host bridge IO resource is disabled
-> and discarded by ACPI core code, see log on IA64 with missing root bridge
-> IO resource, silently filtered by current [0 - 64k] check in
-> acpi_dev_ioresource_flags()):
->
-> PCI host bridge to bus 0000:00
-> pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000fffff window]
-> pci_bus 0000:00: root bus resource [mem 0x80000000-0x8fffffff window]
-> pci_bus 0000:00: root bus resource [mem 0x80004000000-0x800ffffffff window]
-> pci_bus 0000:00: root bus resource [bus 00]
->
-> [...]
->
-> pci 0000:00:03.0: [1002:515e] type 00 class 0x030000
-> pci 0000:00:03.0: reg 0x10: [mem 0x80000000-0x87ffffff pref]
-> pci 0000:00:03.0: reg 0x14: [io  0x1000-0x10ff]
-> pci 0000:00:03.0: reg 0x18: [mem 0x88020000-0x8802ffff]
-> pci 0000:00:03.0: reg 0x30: [mem 0x88000000-0x8801ffff pref]
-> pci 0000:00:03.0: supports D1 D2
-> pci 0000:00:03.0: can't claim BAR 1 [io  0x1000-0x10ff]: no compatible
-> bridge window
->
-> For this reason, the IO port resources boundaries check in generic ACPI
-> parsing code should be guarded with a CONFIG_X86 guard so that more arches
-> (ie ARM64) can benefit from the generic ACPI resources parsing interface
-> without incurring in unexpected resource filtering, fixing at the same
-> time current breakage on IA64.
->
-> This patch factors out IO ports boundary [0 - 64k] check in generic ACPI
-> code and makes the IO space check X86 specific to make sure that IO
-> space resources are usable on other arches too.
->
-> Fixes: 3772aea7d6f3 ("ia64/PCI/ACPI: Use common ACPI resource parsing
-> interface for host bridge")
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> Cc: Jiang Liu <jiang.liu@linux.intel.com>
-> Cc: Tony Luck <tony.luck@intel.com>
-> Cc: Tomasz Nowicki <tn@semihalf.com>
-> Cc: Mark Salter <msalter@redhat.com>
-> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> ---
-> v2 -> v3
->
-> - Moved IO resource check to generic ACPI resource code
-> - Dropped Tested-by tags
-> - Rebased against v4.5
->
-> v2: https://marc.info/?l=linux-acpi&m=145521271330332&w=2
->
-> v1 -> v2
->
-> - Updated commit log to report missing IO resources
-> - Fixed function ioport_valid() comment 16k/64k typo
->
-> v1: https://marc.info/?l=linux-acpi&m=145432228025354&w=2
->
->  drivers/acpi/resource.c | 14 +++++++++++++-
->  1 file changed, 13 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-> index d02fd53..56241eb 100644
-> --- a/drivers/acpi/resource.c
-> +++ b/drivers/acpi/resource.c
-> @@ -27,8 +27,20 @@
->
->  #ifdef CONFIG_X86
->  #define valid_IRQ(i) (((i) != 0) && ((i) != 2))
-> +static inline bool acpi_iospace_resource_valid(struct resource *res)
-> +{
-> +       /* On X86 IO space is limited to the [0 - 64K] IO port range */
-> +       return res->end < 0x10003;
-> +}
->  #else
->  #define valid_IRQ(i) (true)
-> +/*
-> + * ACPI IO descriptors on arches other than X86 contain MMIO CPU physical
-> + * addresses mapping IO space in CPU physical address space, IO space
-> + * resources can be placed anywhere in the 64-bit physical address space.
-> + */
-> +static inline bool
-> +acpi_iospace_resource_valid(struct resource *res) { return true; }
->  #endif
->
->  static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
-> @@ -127,7 +139,7 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
->         if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
->                 res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
->
-> -       if (res->end >= 0x10003)
-> +       if (!acpi_iospace_resource_valid(res))
->                 res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
->
->         if (io_decode == ACPI_DECODE_16)
-> --
+On Fri, Mar 11, 2016 at 01:16:09PM -0800, Andy Lutomirski wrote:
+> On Tue, Mar 8, 2016 at 9:45 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Thu, Mar 03, 2016 at 10:53:50AM -0600, Bjorn Helgaas wrote:
+> >> The purpose of this series is to:
+> >>
+> >>   - Fix the "BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment"
+> >>     messages reported by Linus [1], Andy [2], and others.
+> >>
+> >>   - Move arch-specific shadow ROM location knowledge, e.g.,
+> >>     0xC0000-0xDFFFF, from PCI core to arch code.
+> >>
+> >>   - Fix the ia64 and MIPS Loongson 3 oddity of keeping virtual
+> >>     addresses in shadow ROM struct resource (resources should always
+> >>     contain *physical* addresses).
+> >>
+> >>   - Remove now-unused IORESOURCE_ROM_COPY and IORESOURCE_ROM_BIOS_COPY
+> >>     flags.
+> >>
+> >> This series is based on v4.5-rc1, and it's available on my
+> >> pci/resource git branch (along with a couple tiny unrelated patches)
+> >> at [3].
+> >>
+> >> Bjorn
+> >>
+> >>
+> >> [1] http://lkml.kernel.org/r/CA+55aFyVMfTBB0oz_yx8+eQOEJnzGtCsYSj9QuhEpdZ9BHdq5A@mail.gmail.com
+> >> [2] http://lkml.kernel.org/r/CALCETrV+RwNPzxyL8UVNsrAGu-6cCzD_Cc9PFJT2NCTJPLZZiw@mail.gmail.com
+> >> [3] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/resource
+> >>
+> >>
+> >> ---
+> >>
+> >> Bjorn Helgaas (12):
+> >>       PCI: Mark shadow copy of VGA ROM as IORESOURCE_PCI_FIXED
+> >>       PCI: Don't assign or reassign immutable resources
+> >>       PCI: Don't enable/disable ROM BAR if we're using a RAM shadow copy
+> >>       PCI: Set ROM shadow location in arch code, not in PCI core
+> >>       PCI: Clean up pci_map_rom() whitespace
+> >>       ia64/PCI: Use temporary struct resource * to avoid repetition
+> >>       ia64/PCI: Use ioremap() instead of open-coded equivalent
+> >>       ia64/PCI: Keep CPU physical (not virtual) addresses in shadow ROM resource
+> >>       MIPS: Loongson 3: Use temporary struct resource * to avoid repetition
+> >>       MIPS: Loongson 3: Keep CPU physical (not virtual) addresses in shadow ROM resource
+> >>       PCI: Remove unused IORESOURCE_ROM_COPY and IORESOURCE_ROM_BIOS_COPY
+> >>       PCI: Simplify sysfs ROM cleanup
+> >>
+> >>
+> >>  arch/ia64/pci/fixup.c              |   21 +++++++--
+> >>  arch/ia64/sn/kernel/io_acpi_init.c |   22 ++++++----
+> >>  arch/ia64/sn/kernel/io_init.c      |   51 ++++++++--------------
+> >>  arch/mips/pci/fixup-loongson3.c    |   19 +++++---
+> >>  arch/x86/pci/fixup.c               |   21 +++++++--
+> >>  drivers/pci/pci-sysfs.c            |   13 +-----
+> >>  drivers/pci/remove.c               |    1
+> >>  drivers/pci/rom.c                  |   83 +++++++++++-------------------------
+> >>  drivers/pci/setup-res.c            |    6 +++
+> >>  include/linux/ioport.h             |    4 --
+> >>  10 files changed, 111 insertions(+), 130 deletions(-)
+> >
+> > I applied this series to pci/resource for v4.6.
+> 
+> This gets rid of all the warnings for me until I try to read my i915
+> device's rom using sysfs.  Then I get:
+> 
+> i915 0000:00:02.0: Invalid PCI ROM header signature: expecting 0xaa55,
+> got 0xffff
+> 
+> So I suspect that something is still subtly wrong -- I'd imagine that
+> this should either work or the intialization code should detect that
+> there is no usable ROM and not expose it.
+> 
+> (To be clear, there's no regression here.)
 
-This is fine by me.
+Hmmm.  Thanks for testing this.  As you say, I think this is the way
+it's always been, but it does seem non-intuitive.
 
-Bjorn?
+That "Invalid PCI ROM header signature" warning comes from
+pci_get_rom_size().  We don't call that at enumeration-time; we only
+call it later when somebody tries to read the ROM via sysfs:
+
+  pci_bus_add_device
+    pci_fixup_device(pci_fixup_final)
+      pci_fixup_video                 # final fixup
+	res->flags = MEM | SHADOW | PCI_FIXED
+    pci_create_sysfs_dev_files
+      if (SHADOW)
+	rom_size = 0x20000            # oops, I should have fixed this too
+      if (rom_size)
+	attr->read = pci_read_rom
+	sysfs_create_bin_file         # sysfs "rom" file
+	
+  pci_read_rom                        # sysfs "rom" read function
+    pci_map_rom
+      ioremap
+      pci_get_rom_size
+	dev_err("Invalid PCI ROM header signature")
+    memcpy_fromio
+    pci_unmap_rom
+
+I think this is the same for regular ROMs on the device as it is for
+the magic VGA shadow ROM.  In both cases, we create the sysfs "rom"
+file regardless of what the ROM contains.
+
+I guess we could try to read the ROM at enumeration time and look for
+a valid signature.  I've considered doing that anyway so we could
+cache the ROM contents and avoid permanently allocating MMIO space for
+it, since many BIOSes don't allocate space, and Linux isn't really smart
+enough to do a good job of it itself.
+
+I don't know why the PCI core cares about the ROM signature anyway,
+since it doesn't use the content.  Maybe we should get rid of
+pci_get_rom_size() and allow you to read whatever is there, like
+we do for other BARs.  I suppose there's some history behind limiting
+the size, but I don't know what it is.
+
+Bjorn
