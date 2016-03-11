@@ -1,101 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41362 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932179AbcCKPNd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Mar 2016 10:13:33 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id DDD31201F5
-	for <linux-pci@vger.kernel.org>; Fri, 11 Mar 2016 15:13:31 +0000 (UTC)
-Received: from localhost (unknown [69.71.1.1])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by mail.kernel.org (Postfix) with ESMTPSA id 5F94F201B4
-	for <linux-pci@vger.kernel.org>; Fri, 11 Mar 2016 15:13:30 +0000 (UTC)
-Subject: [PATCH 2/2] PCI: Simplify pci_create_attr() control flow
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 11 Mar 2016 09:13:29 -0600
-Message-ID: <20160311151329.31298.16200.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160311151137.31298.19101.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160311151137.31298.19101.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <56E34518.5020800@caviumnetworks.com>
+Date: Fri, 11 Mar 2016 14:22:16 -0800
+From: David Daney <ddaney@caviumnetworks.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: David Daney <ddaney.cavm@gmail.com>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Will Deacon <will.deacon@arm.com>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<devicetree@vger.kernel.org>,
+	Dann Frazier <dann.frazier@canonical.com>,
+	David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH v7 0/3] Add host controller drivers for Cavium ThunderX
+ PCI
+References: <1457130708-3231-1-git-send-email-ddaney.cavm@gmail.com> <20160311221848.GG4725@localhost>
+In-Reply-To: <20160311221848.GG4725@localhost>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Return error immediately to simplify the control flow in pci_create_attr().
-No functional change intended.
+On 03/11/2016 02:18 PM, Bjorn Helgaas wrote:
+> On Fri, Mar 04, 2016 at 02:31:45PM -0800, David Daney wrote:
+>> From: David Daney <david.daney@cavium.com>
+>>
+>> Some Cavium ThunderX processors require quirky access methods for the
+>> config space of the PCIe bridge.
+>>
+>> There are now three patches:
+>>
+>> 1) Refactor code in pci-host-generic so that it can more easily be
+>>     used by other drivers.  This splits the driver for CAM and ECAM
+>>     access methods to a separate file from the common host driver code.
+>>
+>> 2) Add the ThunderX PCIe driver to external PCIe buses, which
+>>     leverages the code in pci-host-generic
+>>
+>> 3) Add ThunderX PCI driver for internel SoC buses used on early
+>>     ThunderX chip revisions.
+>>
+>> Changes from v6: Updated 3/3 to support Thunder pass-2.x silicon.
+>>
+>> Changes from v5: Added Acked-by Rob Herring for the device tree
+>> binding in 3/3.  Fixed typo and split large functions as suggested by
+>> Bjorn Helgaas.
+>>
+>> Changes from v4: Added patch 3/3.  Stylistic changes to 2/3 suggested
+>> by Bjorn Helgaas.  When expanding config write width to 32-bits, mask
+>> out unintened writes to W1C bits, also suggested by Bjorn Helgaas.
+>>
+>> Changes from v3: Add some Acked-by, rebased to v4.5.0-rc1
+>>
+>> Changes from v2: Improve device tree binding example as noted by Rob
+>> Herring.  Rename pcie-thunder-pem.* to pci-thunder-pem.* for better
+>> consistency.  Update MAINTAINERS to reflect the changes.
+>>
+>> Changes from v1: Split CAM and ECAM code from common driver code as
+>> suggested by Arnd Bergmann.  Fix spelling errors in
+>> pcie-thunder-pem.txt
+>>
+>>
+>> David Daney (3):
+>>    PCI: generic: Refactor code to enable reuse by other drivers.
+>>    pci, pci-thunder-pem: Add PCIe host driver for ThunderX processors.
+>>    pci, pci-thunder-ecam: Add driver for ThunderX-pass{1,2} on-chip
+>>      devices
+>>
+>>   .../devicetree/bindings/pci/pci-thunder-ecam.txt   |  30 ++
+>>   .../devicetree/bindings/pci/pci-thunder-pem.txt    |  43 +++
+>>   MAINTAINERS                                        |   9 +
+>>   drivers/pci/host/Kconfig                           |  18 +
+>>   drivers/pci/host/Makefile                          |   3 +
+>>   drivers/pci/host/pci-host-common.c                 | 194 ++++++++++
+>>   drivers/pci/host/pci-host-common.h                 |  47 +++
+>>   drivers/pci/host/pci-host-generic.c                | 181 +--------
+>>   drivers/pci/host/pci-thunder-ecam.c                | 407 +++++++++++++++++++++
+>>   drivers/pci/host/pci-thunder-pem.c                 | 347 ++++++++++++++++++
+>>   10 files changed, 1102 insertions(+), 177 deletions(-)
+>>   create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
+>>   create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-pem.txt
+>>   create mode 100644 drivers/pci/host/pci-host-common.c
+>>   create mode 100644 drivers/pci/host/pci-host-common.h
+>>   create mode 100644 drivers/pci/host/pci-thunder-ecam.c
+>>   create mode 100644 drivers/pci/host/pci-thunder-pem.c
+>
+> These all look great!
+>
+> I applied them to pci/host-thunder for v4.6.
+>
+> I did split up the first patch into three:
+>
+>    PCI: generic: Move structure definitions to separate header file
+>    PCI: generic: Add pci_host_common_probe(), based on gen_pci_probe()
+>    PCI: generic: Expose pci_host_common_probe() for use by other drivers
+>
+> simply to make them smaller and easier to review, bisect, and revert.  I
+> verified that the result was identical to your original patch, but
+> hopefully I didn't break anything in the intermediate states.  The zero-day
+> build robot should catch obvious goofs.
+>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci-sysfs.c |   53 ++++++++++++++++++++++++-----------------------
- 1 file changed, 27 insertions(+), 26 deletions(-)
+Thank you for having the patience to work through all these patch 
+revisions with me.
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index b0c36f0..cd00aa7 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1134,35 +1134,36 @@ static int pci_create_attr(struct pci_dev *pdev, int num, int write_combine)
- 	/* allocate attribute structure, piggyback attribute name */
- 	int name_len = write_combine ? 13 : 10;
- 	struct bin_attribute *res_attr;
-+	char *res_attr_name;
- 	int retval;
- 
- 	res_attr = kzalloc(sizeof(*res_attr) + name_len, GFP_ATOMIC);
--	if (res_attr) {
--		char *res_attr_name = (char *)(res_attr + 1);
--
--		sysfs_bin_attr_init(res_attr);
--		if (write_combine) {
--			pdev->res_attr_wc[num] = res_attr;
--			sprintf(res_attr_name, "resource%d_wc", num);
--			res_attr->mmap = pci_mmap_resource_wc;
--		} else {
--			pdev->res_attr[num] = res_attr;
--			sprintf(res_attr_name, "resource%d", num);
--			res_attr->mmap = pci_mmap_resource_uc;
--		}
--		if (pci_resource_flags(pdev, num) & IORESOURCE_IO) {
--			res_attr->read = pci_read_resource_io;
--			res_attr->write = pci_write_resource_io;
--		}
--		res_attr->attr.name = res_attr_name;
--		res_attr->attr.mode = S_IRUSR | S_IWUSR;
--		res_attr->size = pci_resource_len(pdev, num);
--		res_attr->private = &pdev->resource[num];
--		retval = sysfs_create_bin_file(&pdev->dev.kobj, res_attr);
--		if (retval)
--			kfree(res_attr);
--	} else
--		retval = -ENOMEM;
-+	if (!res_attr)
-+		return -ENOMEM;
-+
-+	res_attr_name = (char *)(res_attr + 1);
-+
-+	sysfs_bin_attr_init(res_attr);
-+	if (write_combine) {
-+		pdev->res_attr_wc[num] = res_attr;
-+		sprintf(res_attr_name, "resource%d_wc", num);
-+		res_attr->mmap = pci_mmap_resource_wc;
-+	} else {
-+		pdev->res_attr[num] = res_attr;
-+		sprintf(res_attr_name, "resource%d", num);
-+		res_attr->mmap = pci_mmap_resource_uc;
-+	}
-+	if (pci_resource_flags(pdev, num) & IORESOURCE_IO) {
-+		res_attr->read = pci_read_resource_io;
-+		res_attr->write = pci_write_resource_io;
-+	}
-+	res_attr->attr.name = res_attr_name;
-+	res_attr->attr.mode = S_IRUSR | S_IWUSR;
-+	res_attr->size = pci_resource_len(pdev, num);
-+	res_attr->private = &pdev->resource[num];
-+	retval = sysfs_create_bin_file(&pdev->dev.kobj, res_attr);
-+	if (retval)
-+		kfree(res_attr);
- 
- 	return retval;
- }
-
+David Daney
