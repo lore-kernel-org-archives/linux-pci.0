@@ -1,141 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48276 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756270AbcCUQgm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 21 Mar 2016 12:36:42 -0400
-Date: Mon, 21 Mar 2016 11:36:37 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mike Lothian <mike@fireburn.co.uk>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
-	linux-nvme <linux-nvme@lists.infradead.org>,
-	Rafael Wysocki <rjw@rjwysocki.net>,
-	Linux PM list <linux-pm@vger.kernel.org>
-Subject: Re: [Bug 112121] New: Some PCIe options cause devices to be removed
- after suspend
-Message-ID: <20160321163637.GA12288@localhost>
-References: <bug-112121-41252@https.bugzilla.kernel.org/>
- <CAErSpo4beDk_ajsgqMUNJ3TGxDv=ysyPzhXHcx2AhUEUE9ROKA@mail.gmail.com>
- <CAHbf0-GBiMVr4=n3ZT1NSH8Xgdh3TcdDd=Di+pok6Ep6h42ZOQ@mail.gmail.com>
+Received: from mail-vk0-f68.google.com ([209.85.213.68]:33722 "EHLO
+	mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932084AbcCKWIM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Mar 2016 17:08:12 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHbf0-GBiMVr4=n3ZT1NSH8Xgdh3TcdDd=Di+pok6Ep6h42ZOQ@mail.gmail.com>
+In-Reply-To: <20160310174030.GB17238@localhost>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+	<1456366370-28995-7-git-send-email-yinghai@kernel.org>
+	<20160310174030.GB17238@localhost>
+Date: Fri, 11 Mar 2016 14:08:11 -0800
+Message-ID: <CAE9FiQVAPfb-PYGQoRJzXdn3NAOK-X25M9pWvR2m7_9qT5qQ+w@mail.gmail.com>
+Subject: Re: [PATCH v10 06/59] PCI: Kill wrong quirk about M7101
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Meelis Roos <mroos@linux.ee>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mike,
+On Thu, Mar 10, 2016 at 9:40 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Wed, Feb 24, 2016 at 06:11:57PM -0800, Yinghai Lu wrote:
+>> Meelis reported that qla2000 driver does not get loaded on one sparc system.
+>>
+>> schizo f00732d0: PCI host bridge to bus 0001:00
+>> pci_bus 0001:00: root bus resource [io  0x7fe01000000-0x7fe01ffffff] (bus address [0x0000-0xffffff])
+>> pci 0001:00:06.0: quirk: [io  0x7fe01000800-0x7fe0100083f] claimed by ali7101 ACPI
+>> pci 0001:00:06.0: quirk: [io  0x7fe01000600-0x7fe0100061f] claimed by ali7101 SMB
+>> pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
+>>
+>> So the quirk for M7101 claim the io range early.
+>>
+>> According to spec with M7101 in M1543 page 103/104,
+>>       http://www.versalogic.com/Support/Downloads/pdf/ali1543.pdf
+>> 0xe0, and 0xe2 do not include address info for acpi/smb.
+>>
+>> Kill wrong quirk about them.
+>
+> This needs an explanation for why the quirk was added in the first
+> place, and why it is now safe to remove it.
 
-I'm sorry this slipped through the cracks.   I apologize for the
-inability of Google Inbox to send plaintext email; I use mutt
-because that's a hassle for me, too.
+The related commit does not tell much about why it is there exactly.
+But it is added the same time with intel piix4.
 
-On Sat, Feb 13, 2016 at 11:39:52PM +0000, Mike Lothian wrote:
-> On 8 February 2016 at 13:51, Bjorn Helgaas <bhelgaas@google.com> wrote:
-> > [+cc linux-pci, NVMe folks, power management folks]
-> >
-> > On Sun, Feb 7, 2016 at 11:04 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
-> >> https://bugzilla.kernel.org/show_bug.cgi?id=112121
-> >>
-> >>             Bug ID: 112121
-> >>            Summary: Some PCIe options cause devices to be removed after
-> >>                     syspend
-> >>            Product: Drivers
-> >>            Version: 2.5
-> >>     Kernel Version: 4.5-rc2
-> >>           Hardware: All
-> >>                 OS: Linux
-> >>               Tree: Mainline
-> >>             Status: NEW
-> >>           Severity: normal
-> >>           Priority: P1
-> >>          Component: PCI
-> >>           Assignee: drivers_pci@kernel-bugs.osdl.org
-> >>           Reporter: mike@fireburn.co.uk
-> >>         Regression: No
-> >>
-> >> Created attachment 203091
-> >>   --> https://bugzilla.kernel.org/attachment.cgi?id=203091&action=edit
-> >> Dmesg showing PCIe device removals
-> >>
-> >> I was having issues with suspend, when the machine was being resumed iommu
-> >> started removing devices - including my PCIe NVMe drive which contained my root
-> >> partition
-> >>
-> >> The problem showed up with:
-> >>
-> >> [*] PCI support
-> >> [*]   Support mmconfig PCI config space access
-> >> [*]   PCI Express Port Bus support
-> >> [*]     PCI Express Hotplug driver
-> >> [*]     Root Port Advanced Error Reporting support
-> >> [*]       PCI Express ECRC settings control
-> >> < >       PCIe AER error injector support
-> >> -*-     PCI Express ASPM control
-> >> [ ]       Debug PCI Express ASPM
-> >>           Default ASPM policy (BIOS default)  --->
-> >> [*]   Message Signaled Interrupts (MSI and MSI-X)
-> >> [ ]   PCI Debugging
-> >> [*]   Enable PCI resource re-allocation detection
-> >> < >   PCI Stub driver
-> >> [*]   Interrupts on hypertransport devices
-> >> [ ] PCI IOV support
-> >> [*] PCI PRI support
-> >> -*- PCI PASID support
-> >>     PCI host controller drivers  ----
-> >> < > PCCard (PCMCIA/CardBus) support  ----
-> >> [*] Support for PCI Hotplug  --->
-> >> < > RapidIO support
-> >>
-> >>
-> >> This is what I have now:
-> >>
-> >> [*] PCI support
-> >> [*]   Support mmconfig PCI config space access
-> >> [*]   PCI Express Port Bus support
-> >> [ ]     Root Port Advanced Error Reporting support
-> >> -*-     PCI Express ASPM control
-> >> [ ]       Debug PCI Express ASPM
-> >>           Default ASPM policy (BIOS default)  --->
-> >> [*]   Message Signaled Interrupts (MSI and MSI-X)
-> >> [*]   PCI Debugging
-> >> [ ]   Enable PCI resource re-allocation detection
-> >> < >   PCI Stub driver
-> >> [*]   Interrupts on hypertransport devices
-> >> [ ] PCI IOV support
-> >> [ ] PCI PRI support
-> >> [ ] PCI PASID support
-> >>     PCI host controller drivers  ----
-> >> < > PCCard (PCMCIA/CardBus) support  ----
-> >> [ ] Support for PCI Hotplug  ----
-> >> < > RapidIO support
-> >>
-> >> I tried disabling the iommu driver first but it had no effect
-> >>
-> >> If people are interested I could play with the above options to see which one
-> >> causes the issue
-> >
-> > My guess is that PCI hotplug is the important one.  It would be nice
-> > if dmesg contained enough information to connect nvme0n1 to a PCI
-> > device.  It'd be even nicer if the PCI core noted device removals or
-> > whatever happened here.
-> >
-> > You don't get any more details if you boot with "ignore_loglevel", do you?
-> >
-> > Mike, you didn't mark this as a regression, so I assume it's always
-> > been this way, and we just haven't noticed it because most people
-> > enable PCI hotplug (or whatever the relevant config option is).
-> 
-> I've just tested this again, I enabled PCI Hotplug & PCIe Hotplug and
-> nothing - then I noticed I hadn't enabled the ACPI Hotplug driver -
-> once I did the issue re-appeared
-> 
-> I then had to use testdisk to restore my partition table :'(
-> 
-> I've attached the updated dmesg & my .config
+Maybe Linus could have some hint about that quirk?
 
-Correct me if I'm wrong:
+commit 34f550135e349102bd065488eabbbb217ab27f0d
+Author: Linus Torvalds <torvalds@linuxfoundation.org>
+Date:   Fri Nov 23 15:32:20 2007 -0500
 
-  - With CONFIG_HOTPLUG_PCI_ACPI not set, suspend/resume works fine
-  - With CONFIG_HOTPLUG_PCI_ACPI=y, resume fails as shown in your dmesg log
-    (https://bugzilla.kernel.org/attachment.cgi?id=203621)
+    Import 2.3.49pre2
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index cda39a5..8029b19 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -113,6 +113,55 @@ static void __init quirk_s3_64M(struct pci_dev *dev)
+        }
+ }
+
++static void __init quirk_io_region(struct pci_dev *dev, unsigned region, unsign
+ed size, int nr)
++{
++       region &= ~(size-1);
++       if (region) {
++               struct resource *res = dev->resource + nr;
++
++               res->name = dev->name;
++               res->start = region;
++               res->end = region + size - 1;
++               res->flags = IORESOURCE_IO;
++               pci_claim_resource(dev, nr);
++       }
++}
++
++/*
++ * Let's make the southbridge information explicit instead
++ * of having to worry about people probing the ACPI areas,
++ * for example.. (Yes, it happens, and if you read the wrong
++ * ACPI register it will put the machine to sleep with no
++ * way of waking it up again. Bummer).
++ *
++ * ALI M7101: Two IO regions pointed to by words at
++ *     0xE0 (64 bytes of ACPI registers)
++ *     0xE2 (32 bytes of SMB registers)
++ */
++static void __init quirk_ali7101(struct pci_dev *dev)
++{
++       u16 region;
++
++       pci_read_config_word(dev, 0xE0, &region);
++       quirk_io_region(dev, region, 64, PCI_BRIDGE_RESOURCES);
++       pci_read_config_word(dev, 0xE2, &region);
++       quirk_io_region(dev, region, 32, PCI_BRIDGE_RESOURCES+1);
++}
++
++/*
++ * PIIX4 ACPI: Two IO regions pointed to by longwords at
++ *     0x40 (64 bytes of ACPI registers)
++ *     0x90 (32 bytes of SMB registers)
++ */
++static void __init quirk_piix4acpi(struct pci_dev *dev)
++{
++       u32 region;
++
++       pci_read_config_dword(dev, 0x40, &region);
++       quirk_io_region(dev, region, 64, PCI_BRIDGE_RESOURCES);
++       pci_read_config_dword(dev, 0x90, &region);
++       quirk_io_region(dev, region, 32, PCI_BRIDGE_RESOURCES+1);
++}
+
+ /*
+  *  The main table of quirks.
+@@ -143,6 +192,8 @@ static struct pci_fixup pci_fixups[] __initdata = {
+        { PCI_FIXUP_FINAL,      PCI_VENDOR_ID_INTEL,
+PCI_DEVICE_ID_INTEL_82443BX_2,  quirk_natoma },
+        { PCI_FIXUP_FINAL,      PCI_VENDOR_ID_SI,
+PCI_DEVICE_ID_SI_5597,          quirk_nopcipci },
+        { PCI_FIXUP_FINAL,      PCI_VENDOR_ID_SI,
+PCI_DEVICE_ID_SI_496,           quirk_nopcipci },
++       { PCI_FIXUP_FINAL,      PCI_VENDOR_ID_INTEL,
+PCI_DEVICE_ID_INTEL_82371AB_3,  quirk_piix4acpi },
++       { PCI_FIXUP_FINAL,      PCI_VENDOR_ID_AL,
+PCI_DEVICE_ID_AL_M7101,         quirk_ali7101 },
+        { 0 }
+ };
