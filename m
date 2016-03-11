@@ -1,56 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ni.piap.pl ([195.187.100.4]:52149 "EHLO ni.piap.pl"
+Received: from mail.kernel.org ([198.145.29.136]:41325 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751248AbcC2Fn1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 29 Mar 2016 01:43:27 -0400
-From: khalasa@piap.pl (Krzysztof =?utf-8?Q?Ha=C5=82asa?=)
-To: Fabio Estevam <festevam@gmail.com>
-Cc: Tim Harvey <tharvey@gateworks.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Petr =?utf-8?Q?=C5=A0tetiar?= <ynezz@true.cz>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel\@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
-References: <m3h9fuk7ik.fsf@t19.piap.pl>
-	<CAOMZO5DcZCxoLPeGRWSGkstm7F3eN-Q-yJyf6ktMTda2zLviag@mail.gmail.com>
-	<CAOMZO5B8Lzn-E4YOeYxVtN5PN11aOvZHn4eU0ixkdV8CO8+xYw@mail.gmail.com>
-	<CAJ+vNU2Sg1ZKBsGcQswrJZyTJ1WBEZor3ZqpoYUT7i9FKjEAog@mail.gmail.com>
-	<CAOMZO5DO9G18=_YSri3a+UiYbLwN6AMG4asUXbT03mpbU3hHrw@mail.gmail.com>
-	<CAJ+vNU1_YqvWQkmuDB7r8z77iZJS6pP4Mr+j9yW4sFLAeJXQDw@mail.gmail.com>
-	<CAOMZO5A2osG3=mTaCayYfMokUj-vT+Udq9ckq45b1yaUP9Tn3g@mail.gmail.com>
-	<CAJ+vNU2ST=XG5H04-OCwpHgcvkoXOQw8F3MjXhJmWhBUbxWE-g@mail.gmail.com>
-	<CAOMZO5DwuBcpL85GYjTV9yy_ZZB33PDY3TfzwkS1WK03hfkhqg@mail.gmail.com>
-	<m31t6tkfjw.fsf@t19.piap.pl>
-Date: Tue, 29 Mar 2016 07:43:24 +0200
-In-Reply-To: <m31t6tkfjw.fsf@t19.piap.pl> ("Krzysztof \=\?utf-8\?Q\?Ha\=C5\=82as\?\=
- \=\?utf-8\?Q\?a\=22's\?\= message of
-	"Tue, 29 Mar 2016 07:40:19 +0200")
-Message-ID: <m3wpolj0ub.fsf@t19.piap.pl>
+	id S932179AbcCKPNZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Mar 2016 10:13:25 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 449AA201F5
+	for <linux-pci@vger.kernel.org>; Fri, 11 Mar 2016 15:13:24 +0000 (UTC)
+Received: from localhost (unknown [69.71.1.1])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by mail.kernel.org (Postfix) with ESMTPSA id 86978201B4
+	for <linux-pci@vger.kernel.org>; Fri, 11 Mar 2016 15:13:23 +0000 (UTC)
+Subject: [PATCH 1/2] PCI: Don't leak memory if sysfs_create_bin_file() fails
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 11 Mar 2016 09:13:22 -0600
+Message-ID: <20160311151322.31298.25447.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160311151137.31298.19101.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160311151137.31298.19101.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> OTOH, we should fix it some day, making sure the DTS files are fixed
-> first:
->
-> imx6qdl-apf6dev.dtsi:       reset-gpio = <&gpio6 2 GPIO_ACTIVE_HIGH>;
-> imx6qdl-aristainetos2.dtsi: reset-gpio = <&gpio2 16 GPIO_ACTIVE_HIGH>;
-> imx6qdl-hummingboard.dtsi:  reset-gpio = <&gpio3 4 0>; (I think RMK already handles this)
-> imx6qdl-phytec-pfla02.dtsi: reset-gpio = <&gpio4 17 0>;
-> imx6qdl-sabresd.dtsi:       reset-gpio = <&gpio7 12 0>;
-> imx6q-dmo-edmqmx6.dts:      reset-gpio = <&gpio4 8 0>;
-> imx6q-novena.dts:           reset-gpio = <&gpio3 29 GPIO_ACTIVE_HIGH>;
-> imx6q-tbs2910.dts:          reset-gpio = <&gpio7 12 GPIO_ACTIVE_HIGH>;
+If sysfs_create_bin_file() fails, pci_create_attr() leaks the struct
+bin_attribute it allocated previously.
 
-Or maybe we should simply change these to *_LOW, add that short patch
-from me, and forget about it.
--- 
-Krzysztof Halasa
+Free the struct bin_attribute if pci_create_attr() fails.
 
-Industrial Research Institute for Automation and Measurements PIAP
-Al. Jerozolimskie 202, 02-486 Warsaw, Poland
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci-sysfs.c |    2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index a4cfa52..b0c36f0 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1159,6 +1159,8 @@ static int pci_create_attr(struct pci_dev *pdev, int num, int write_combine)
+ 		res_attr->size = pci_resource_len(pdev, num);
+ 		res_attr->private = &pdev->resource[num];
+ 		retval = sysfs_create_bin_file(&pdev->dev.kobj, res_attr);
++		if (retval)
++			kfree(res_attr);
+ 	} else
+ 		retval = -ENOMEM;
+ 
+
