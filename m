@@ -1,54 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:52666 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751035AbcCXTQ4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Mar 2016 15:16:56 -0400
-Date: Thu, 24 Mar 2016 15:16:54 -0400 (EDT)
-Message-Id: <20160324.151654.1707693980081136191.davem@davemloft.net>
-To: babu.moger@oracle.com
-Cc: bhelgaas@google.com, wangyijing@huawei.com,
-	sowmini.varadhan@oracle.com, jiang.liu@linux.intel.com,
-	eric.snowberg@oracle.com, yinghai@kernel.org,
-	dan.j.williams@intel.com, sparclinux@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	ethan.zhao@oracle.com
-Subject: Re: [PATCH v3] sparc/PCI: Fix for panic while enabling SR-IOV
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1458772676-47866-1-git-send-email-babu.moger@oracle.com>
-References: <1458772676-47866-1-git-send-email-babu.moger@oracle.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mail.kernel.org ([198.145.29.136]:43331 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751562AbcCKXdt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Mar 2016 18:33:49 -0500
+Date: Fri, 11 Mar 2016 17:33:45 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/keystone: check return value of devm_phy_get with
+ EPROBE_DEFER
+Message-ID: <20160311233345.GH4725@localhost>
+References: <1457325141-1354-1-git-send-email-shawn.lin@rock-chips.com>
+ <20160311183823.GE4725@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160311183823.GE4725@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Babu Moger <babu.moger@oracle.com>
-Date: Wed, 23 Mar 2016 15:37:56 -0700
+On Fri, Mar 11, 2016 at 12:38:23PM -0600, Bjorn Helgaas wrote:
+> On Mon, Mar 07, 2016 at 12:32:21PM +0800, Shawn Lin wrote:
+> > If the return value of devm_phy_get is EPROBE_DEFER, we should
+> > defer probing the driver.
+> > 
+> > Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> 
+> Applied to pci/host-keystone for v4.6 with the following changelog.
+> Thanks, Shawn!
+> 
+>     PCI: keystone: Defer probing if devm_phy_get() returns -EPROBE_DEFER
+>     
+>     A SerDes PHY is optional, so if devm_phy_get() doesn't find one at all,
+>     that's fine.  But if devm_phy_get() finds a PHY that doesn't have a driver
+>     yet, it returns -EPROBE_DEFER.  In that case, defer probing the Keystone
+>     driver.  We may be able to load it later after a PHY driver is loaded.
+>     
+>     [bhelgaas: changelog]
+>     Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-> +#ifdef CONFIG_PCI_IOV
-> +int pcibios_add_device(struct pci_dev *dev)
-> +{
-> +	struct pci_dev *pdev;
-> +	/*
-> +	 * Add sriov arch specific initialization here.
-> +	 * Copy dev_archdata from PF to VF
-> +	 */
+I meant to include the patch, too, because I tweaked it slightly to
+try to make it easier to read.  Here's what I applied:
 
-Always have an empty line after a set of local variable declarations.
-
-Sparc code is to have comments formatted:
-
-	/* Like
-	 * this.
-	 */
-
-> +		memcpy(&dev->dev.archdata, &pdev->dev.archdata,
-> +				sizeof(struct dev_archdata));
-
-Sparc code should indent multi-line expressions by having the second
-and subsequent line be indented exactly to the column following the
-openning parenthesis on the first line.
-
-You must use the appropriate number of TAB then SPACE characters
-necessary to do so.
-
-Thanks.
+diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+index 0aa81bd..cd70345 100644
+--- a/drivers/pci/host/pci-keystone.c
++++ b/drivers/pci/host/pci-keystone.c
+@@ -359,6 +359,9 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 
+ 	/* initialize SerDes Phy if present */
+ 	phy = devm_phy_get(dev, "pcie-phy");
++	if (PTR_ERR_OR_ZERO(phy) == -EPROBE_DEFER)
++		return PTR_ERR(phy);
++
+ 	if (!IS_ERR_OR_NULL(phy)) {
+ 		ret = phy_init(phy);
+ 		if (ret < 0)
+> 
+> > ---
+> > 
+> >  drivers/pci/host/pci-keystone.c | 2 ++
+> >  1 file changed, 2 insertions(+)
+> > 
+> > diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+> > index 0aa81bd..42af6ac 100644
+> > --- a/drivers/pci/host/pci-keystone.c
+> > +++ b/drivers/pci/host/pci-keystone.c
+> > @@ -363,6 +363,8 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+> >  		ret = phy_init(phy);
+> >  		if (ret < 0)
+> >  			return ret;
+> > +	} else if (PTR_ERR(phy) == -EPROBE_DEFER) {
+> > +		return PTR_ERR(phy);
+> >  	}
+> >  
+> >  	/* index 2 is to read PCI DEVICE_ID */
+> > -- 
+> > 2.3.7
+> > 
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
