@@ -1,121 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59889 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:41362 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753491AbcCGWdQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 7 Mar 2016 17:33:16 -0500
-Date: Mon, 7 Mar 2016 16:33:11 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH] Fix NULL ptr dereference in pci_bus_assign_domain_nr()
- on ARM
-Message-ID: <20160307223311.GB26149@localhost>
-References: <m337sapw89.fsf@t19.piap.pl>
+	id S932179AbcCKPNd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Mar 2016 10:13:33 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id DDD31201F5
+	for <linux-pci@vger.kernel.org>; Fri, 11 Mar 2016 15:13:31 +0000 (UTC)
+Received: from localhost (unknown [69.71.1.1])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	by mail.kernel.org (Postfix) with ESMTPSA id 5F94F201B4
+	for <linux-pci@vger.kernel.org>; Fri, 11 Mar 2016 15:13:30 +0000 (UTC)
+Subject: [PATCH 2/2] PCI: Simplify pci_create_attr() control flow
+To: linux-pci@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 11 Mar 2016 09:13:29 -0600
+Message-ID: <20160311151329.31298.16200.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160311151137.31298.19101.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160311151137.31298.19101.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <m337sapw89.fsf@t19.piap.pl>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Lorenzo]
+Return error immediately to simplify the control flow in pci_create_attr().
+No functional change intended.
 
-On Tue, Mar 01, 2016 at 07:07:18AM +0100, Krzysztof Hałasa wrote:
-> Many ARM platforms use a wrapper:
-> /*
->  * Compatibility wrapper for older platforms that do not care about
->  * passing the parent device.
->  */
-> static inline void pci_common_init(struct hw_pci *hw)
-> {
->         pci_common_init_dev(NULL, hw);
-> }
-> 
-> which means that pci_bus_assign_domain_nr() can be called without
-> a parent. This patch fixes the NULL pointer dereference.
-> 
-> Signed-off-by: Krzysztof Hałasa <khalasa@piap.pl>
-> Cc: stable@vger.kernel.org
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci-sysfs.c |   53 ++++++++++++++++++++++++-----------------------
+ 1 file changed, 27 insertions(+), 26 deletions(-)
 
-I applied this to for-linus with changelog as below for v4.5, thanks!
-
-Wow, this is terrible.  All ARM32 systems that use pci_common_init()
-crash at boot.  That includes cns3xxx, dove, footbridge, iopl13xx,
-ip32x, iop33x, ixp4xx, ks8695, mv78xx0, orion5x, pxa, sa1100, etc.
-Apparently they've been crashing since v4.0, when 7c674700098c and
-8c7d14746abc appeared.  I can hardly believe nobody noticed until now.
-
-Actually, I did find one problem report:
-http://forum.doozan.com/read.php?2,17868,22070,quote=1 from last May,
-but apparently it got lost in a forum and never found its way
-upstream.
-
-I reworked the changelog because this problem will affect *any* arch
-that enables CONFIG_PCI_DOMAINS_GENERIC and supplies NULL "parent"
-pointers -- ia64, mips, mn10300, s390, x86, etc., would be affected if
-they enabled CONFIG_PCI_DOMAINS_GENERIC.
-
-I also added a "Fixes:" tag for 7c674700098c, since that's the commit
-that added the generic code we're fixing.  Backports of 7c674700098c
-should also backport this change.
-
-Bjorn
-
-
-
-commit 71babd2a89fe
-Author: Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>
-Date:   Tue Mar 1 07:07:18 2016 +0100
-
-    PCI: Allow a NULL "parent" pointer in pci_bus_assign_domain_nr()
-    
-    pci_create_root_bus() passes a "parent" pointer to
-    pci_bus_assign_domain_nr().  When CONFIG_PCI_DOMAINS_GENERIC is defined,
-    pci_bus_assign_domain_nr() dereferences that pointer.  Many callers of
-    pci_create_root_bus() supply a NULL "parent" pointer, which leads to a NULL
-    pointer dereference error.
-    
-    7c674700098c ("PCI: Move domain assignment from arm64 to generic code")
-    moved the "parent" dereference from arm64 to generic code.  Only arm64 used
-    that code (because only arm64 defined CONFIG_PCI_DOMAINS_GENERIC), and it
-    always supplied a valid "parent" pointer.  Other arches supplied NULL
-    "parent" pointers but didn't defined CONFIG_PCI_DOMAINS_GENERIC, so they
-    used a no-op version of pci_bus_assign_domain_nr().
-    
-    8c7d14746abc ("ARM/PCI: Move to generic PCI domains") defined
-    CONFIG_PCI_DOMAINS_GENERIC on ARM, and many ARM platforms use
-    pci_common_init(), which supplies a NULL "parent" pointer.
-    These platforms (cns3xxx, dove, footbridge, iop13xx, etc.) crash
-    with a NULL pointer dereference like this while probing PCI:
-    
-      Unable to handle kernel NULL pointer dereference at virtual address 000000a4
-      PC is at pci_bus_assign_domain_nr+0x10/0x84
-      LR is at pci_create_root_bus+0x48/0x2e4
-      Kernel panic - not syncing: Attempted to kill init!
-    
-    [bhelgaas: changelog, add "Reported:" and "Fixes:" tags]
-    Reported: http://forum.doozan.com/read.php?2,17868,22070,quote=1
-    Fixes: 8c7d14746abc ("ARM/PCI: Move to generic PCI domains")
-    Fixes: 7c674700098c ("PCI: Move domain assignment from arm64 to generic code")
-    Signed-off-by: Krzysztof Hałasa <khalasa@piap.pl>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    CC: stable@vger.kernel.org	# v4.0+
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 602eb42..f89db3a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4772,8 +4772,10 @@ int pci_get_new_domain_nr(void)
- void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
- {
- 	static int use_dt_domains = -1;
--	int domain = of_get_pci_domain_nr(parent->of_node);
-+	int domain = -1;
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index b0c36f0..cd00aa7 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1134,35 +1134,36 @@ static int pci_create_attr(struct pci_dev *pdev, int num, int write_combine)
+ 	/* allocate attribute structure, piggyback attribute name */
+ 	int name_len = write_combine ? 13 : 10;
+ 	struct bin_attribute *res_attr;
++	char *res_attr_name;
+ 	int retval;
  
-+	if (parent)
-+		domain = of_get_pci_domain_nr(parent->of_node);
- 	/*
- 	 * Check DT domain and use_dt_domains values.
- 	 *
+ 	res_attr = kzalloc(sizeof(*res_attr) + name_len, GFP_ATOMIC);
+-	if (res_attr) {
+-		char *res_attr_name = (char *)(res_attr + 1);
+-
+-		sysfs_bin_attr_init(res_attr);
+-		if (write_combine) {
+-			pdev->res_attr_wc[num] = res_attr;
+-			sprintf(res_attr_name, "resource%d_wc", num);
+-			res_attr->mmap = pci_mmap_resource_wc;
+-		} else {
+-			pdev->res_attr[num] = res_attr;
+-			sprintf(res_attr_name, "resource%d", num);
+-			res_attr->mmap = pci_mmap_resource_uc;
+-		}
+-		if (pci_resource_flags(pdev, num) & IORESOURCE_IO) {
+-			res_attr->read = pci_read_resource_io;
+-			res_attr->write = pci_write_resource_io;
+-		}
+-		res_attr->attr.name = res_attr_name;
+-		res_attr->attr.mode = S_IRUSR | S_IWUSR;
+-		res_attr->size = pci_resource_len(pdev, num);
+-		res_attr->private = &pdev->resource[num];
+-		retval = sysfs_create_bin_file(&pdev->dev.kobj, res_attr);
+-		if (retval)
+-			kfree(res_attr);
+-	} else
+-		retval = -ENOMEM;
++	if (!res_attr)
++		return -ENOMEM;
++
++	res_attr_name = (char *)(res_attr + 1);
++
++	sysfs_bin_attr_init(res_attr);
++	if (write_combine) {
++		pdev->res_attr_wc[num] = res_attr;
++		sprintf(res_attr_name, "resource%d_wc", num);
++		res_attr->mmap = pci_mmap_resource_wc;
++	} else {
++		pdev->res_attr[num] = res_attr;
++		sprintf(res_attr_name, "resource%d", num);
++		res_attr->mmap = pci_mmap_resource_uc;
++	}
++	if (pci_resource_flags(pdev, num) & IORESOURCE_IO) {
++		res_attr->read = pci_read_resource_io;
++		res_attr->write = pci_write_resource_io;
++	}
++	res_attr->attr.name = res_attr_name;
++	res_attr->attr.mode = S_IRUSR | S_IWUSR;
++	res_attr->size = pci_resource_len(pdev, num);
++	res_attr->private = &pdev->resource[num];
++	retval = sysfs_create_bin_file(&pdev->dev.kobj, res_attr);
++	if (retval)
++		kfree(res_attr);
+ 
+ 	return retval;
+ }
+
