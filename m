@@ -1,83 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Daney <ddaney.cavm@gmail.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Will Deacon <will.deacon@arm.com>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
-Cc: Dann Frazier <dann.frazier@canonical.com>,
-	David Daney <david.daney@cavium.com>
-Subject: [PATCH v7 0/3] Add host controller drivers for Cavium ThunderX PCI
-Date: Fri,  4 Mar 2016 14:31:45 -0800
-Message-Id: <1457130708-3231-1-git-send-email-ddaney.cavm@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:60446 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933153AbcCKBtU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 10 Mar 2016 20:49:20 -0500
+Date: Fri, 11 Mar 2016 10:49:11 +0900
+From: Simon Horman <horms@verge.net.au>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH] PCI: rcar, rcar-gen2: Use ARCH_RENESAS
+Message-ID: <20160311014911.GA26819@verge.net.au>
+References: <1456361156-16798-1-git-send-email-horms+renesas@verge.net.au>
+ <20160308183650.GB23484@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160308183650.GB23484@localhost>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+On Tue, Mar 08, 2016 at 12:36:50PM -0600, Bjorn Helgaas wrote:
+> On Thu, Feb 25, 2016 at 09:45:56AM +0900, Simon Horman wrote:
+> > Make use of ARCH_RENESAS in place of ARCH_SHMOBILE.
+> > 
+> > This is part of an ongoing process to migrate from ARCH_SHMOBILE to
+> > ARCH_RENESAS the motivation for which being that RENESAS seems to be a more
+> > appropriate name than SHMOBILE for the majority of Renesas ARM based SoCs.
+> > 
+> > Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+> > ---
+> >  drivers/pci/host/Kconfig | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > 
+> >  Based on the next branch of the pci tree
+> > 
+> > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> > index 75a605426538..dcf4d5a349ca 100644
+> > --- a/drivers/pci/host/Kconfig
+> > +++ b/drivers/pci/host/Kconfig
+> > @@ -41,7 +41,7 @@ config PCI_TEGRA
+> >  config PCI_RCAR_GEN2
+> >  	bool "Renesas R-Car Gen2 Internal PCI controller"
+> >  	depends on ARM
+> > -	depends on ARCH_SHMOBILE || COMPILE_TEST
+> > +	depends on ARCH_RENESAS || COMPILE_TEST
+> >  	help
+> >  	  Say Y here if you want internal PCI support on R-Car Gen2 SoC.
+> >  	  There are 3 internal PCI controllers available with a single
+> > @@ -49,7 +49,7 @@ config PCI_RCAR_GEN2
+> >  
+> >  config PCI_RCAR_GEN2_PCIE
+> >  	bool "Renesas R-Car PCIe controller"
+> > -	depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
+> > +	depends on ARCH_RENESAS || (ARM && COMPILE_TEST)
+> 
+> I don't object to this, but I don't know what's happening with Phil's
+> question.  Is there another revision coming with a doc change and/or the
+> "s/Gen2//" change?
 
-Some Cavium ThunderX processors require quirky access methods for the
-config space of the PCIe bridge.
+Sorry for not following up earlier. I have a slight preference to handle
+the Gen2 issue as a separate change. Could you consider picking up this
+patch as is?
 
-There are now three patches:
+With regards to the Gen2 change:
 
-1) Refactor code in pci-host-generic so that it can more easily be
-   used by other drivers.  This splits the driver for CAM and ECAM
-   access methods to a separate file from the common host driver code.
+* I think its entirely reasonable to s/Gen2// in the help text but;
+* I think it would also be worth considering, as a follow-up change,
+  s/PCI_RCAR_GEN2/PCI_RCAR/ though I'm wary of breaking existing configs.
 
-2) Add the ThunderX PCIe driver to external PCIe buses, which
-   leverages the code in pci-host-generic
-
-3) Add ThunderX PCI driver for internel SoC buses used on early
-   ThunderX chip revisions.
-
-Changes from v6: Updated 3/3 to support Thunder pass-2.x silicon.
-
-Changes from v5: Added Acked-by Rob Herring for the device tree
-binding in 3/3.  Fixed typo and split large functions as suggested by
-Bjorn Helgaas.
-
-Changes from v4: Added patch 3/3.  Stylistic changes to 2/3 suggested
-by Bjorn Helgaas.  When expanding config write width to 32-bits, mask
-out unintened writes to W1C bits, also suggested by Bjorn Helgaas.
-
-Changes from v3: Add some Acked-by, rebased to v4.5.0-rc1
-
-Changes from v2: Improve device tree binding example as noted by Rob
-Herring.  Rename pcie-thunder-pem.* to pci-thunder-pem.* for better
-consistency.  Update MAINTAINERS to reflect the changes.
-
-Changes from v1: Split CAM and ECAM code from common driver code as
-suggested by Arnd Bergmann.  Fix spelling errors in
-pcie-thunder-pem.txt
-
-
-David Daney (3):
-  PCI: generic: Refactor code to enable reuse by other drivers.
-  pci, pci-thunder-pem: Add PCIe host driver for ThunderX processors.
-  pci, pci-thunder-ecam: Add driver for ThunderX-pass{1,2} on-chip
-    devices
-
- .../devicetree/bindings/pci/pci-thunder-ecam.txt   |  30 ++
- .../devicetree/bindings/pci/pci-thunder-pem.txt    |  43 +++
- MAINTAINERS                                        |   9 +
- drivers/pci/host/Kconfig                           |  18 +
- drivers/pci/host/Makefile                          |   3 +
- drivers/pci/host/pci-host-common.c                 | 194 ++++++++++
- drivers/pci/host/pci-host-common.h                 |  47 +++
- drivers/pci/host/pci-host-generic.c                | 181 +--------
- drivers/pci/host/pci-thunder-ecam.c                | 407 +++++++++++++++++++++
- drivers/pci/host/pci-thunder-pem.c                 | 347 ++++++++++++++++++
- 10 files changed, 1102 insertions(+), 177 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
- create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-pem.txt
- create mode 100644 drivers/pci/host/pci-host-common.c
- create mode 100644 drivers/pci/host/pci-host-common.h
- create mode 100644 drivers/pci/host/pci-thunder-ecam.c
- create mode 100644 drivers/pci/host/pci-thunder-pem.c
-
--- 
-1.8.3.1
+  So I don't have a clear view of how to move forwards at this time.
