@@ -1,82 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48901 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932968AbcCCQz3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Mar 2016 11:55:29 -0500
-Subject: [PATCH v1 12/12] PCI: Simplify sysfs ROM cleanup
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Tony Luck <tony.luck@intel.com>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-	linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Bruno =?utf-8?q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
-	Daniel Stone <daniel@fooishbar.org>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Ville =?utf-8?b?U3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
-Date: Thu, 03 Mar 2016 10:55:25 -0600
-Message-ID: <20160303165525.3025.11790.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160310035415.GA17238@localhost>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+	<1456366370-28995-2-git-send-email-yinghai@kernel.org>
+	<20160310035415.GA17238@localhost>
+Date: Fri, 11 Mar 2016 13:21:46 -0800
+Message-ID: <CAE9FiQUfHCC+3c+hOeOcpRWwedL02KKw0O2qNNLZMymUnwW5-g@mail.gmail.com>
+Subject: Re: [PATCH v10 01/59] PCI: Add pci_find_root_bus_resource()
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The value of pdev->rom_attr is the definitive indicator of the fact that
-we're created a sysfs attribute.  Check that rather than rom_size, which is
-only used incidentally when deciding whether to create a sysfs attribute.
+Hi Bjorn,
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci-sysfs.c |   13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
+Thanks for taking time to look at those patches!
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 95d9e7b..a4cfa52 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1409,7 +1409,7 @@ int __must_check pci_create_sysfs_dev_files(struct pci_dev *pdev)
- 	return 0;
- 
- err_rom_file:
--	if (rom_size) {
-+	if (pdev->rom_attr) {
- 		sysfs_remove_bin_file(&pdev->dev.kobj, pdev->rom_attr);
- 		kfree(pdev->rom_attr);
- 		pdev->rom_attr = NULL;
-@@ -1447,8 +1447,6 @@ static void pci_remove_capabilities_sysfs(struct pci_dev *dev)
-  */
- void pci_remove_sysfs_dev_files(struct pci_dev *pdev)
- {
--	int rom_size = 0;
--
- 	if (!sysfs_initialized)
- 		return;
- 
-@@ -1461,18 +1459,13 @@ void pci_remove_sysfs_dev_files(struct pci_dev *pdev)
- 
- 	pci_remove_resource_files(pdev);
- 
--	if (pci_resource_len(pdev, PCI_ROM_RESOURCE))
--		rom_size = pci_resource_len(pdev, PCI_ROM_RESOURCE);
--	else if (pdev->resource[PCI_ROM_RESOURCE].flags & IORESOURCE_ROM_SHADOW)
--		rom_size = 0x20000;
--
--	if (rom_size && pdev->rom_attr) {
-+	if (pdev->rom_attr) {
- 		sysfs_remove_bin_file(&pdev->dev.kobj, pdev->rom_attr);
- 		kfree(pdev->rom_attr);
-+		pdev->rom_attr = NULL;
- 	}
- 
- 	pci_remove_firmware_label_files(pdev);
--
- }
- 
- static int __init pci_sysfs_init(void)
+On Wed, Mar 9, 2016 at 7:54 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Wed, Feb 24, 2016 at 06:11:52PM -0800, Yinghai Lu wrote:
+>> Add pci_find_root_bus_resource() to return root bus resource
+>> for input resource.
+>>
+>> For sparc mem64 support, We need that host bridge window res:
+>>   1. we need direct parent for request_resource_conflict() calling in
+>>       pci_register_legacy_regions().
+>>   2. check if return is NULL to decide if region is valid or not.
+>
+> Whenever somebody proposes a new interface that's only required for
+> one architecture, the obvious question is "what is unique about that
+> architecture that makes the new interface necessary?"
 
+Good point.
+
+I was thinking to keep the current behavior in sparc64 arch,
+as I don't want to break old setups.
+
+Later we can try to make it more like arch.
+
+>
+> Neither this patch nor the follow-on patch that adds the use of
+> pci_find_root_bus_resource() answers that question.
+>
+
+would be better to keep those two in same patch?
+
+Thanks
+
+Yinghai
