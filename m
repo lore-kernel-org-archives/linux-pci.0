@@ -1,239 +1,487 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 12 Mar 2016 05:26:35 -0600
+Date: Fri, 11 Mar 2016 15:10:53 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Arjan van de Ven <arjan@linux.intel.com>,
-	Matthew Wilcox <willy@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v10 02/59] sparc/PCI: Use correct bus address to resource
- offset
-Message-ID: <20160312112634.GB27552@localhost>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
- <1456366370-28995-3-git-send-email-yinghai@kernel.org>
- <20160310182440.GC14873@localhost>
- <CAE9FiQX=ecBEuABmkfGwN3p3H5YU-XbXDguKKbArj6weQbbAPA@mail.gmail.com>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	michals@xilinx.com, sorenb@xilinx.com, bhelgaas@google.com,
+	arnd@arndb.de, tinamdar@apm.com, treding@nvidia.com,
+	rjui@broadcom.com, Minghuan.Lian@freescale.com,
+	m-karicheri2@ti.com, hauke@hauke-m.de, marc.zyngier@arm.com,
+	dhdang@apm.com, sbranden@broadcom.com, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH v12] [PATCH] PCI: Xilinx-NWL-PCIe: Adding support for
+ Xilinx NWL PCIe Host Controller
+Message-ID: <20160311211053.GF4725@localhost>
+References: <1457281934-32068-1-git-send-email-bharatku@xilinx.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQX=ecBEuABmkfGwN3p3H5YU-XbXDguKKbArj6weQbbAPA@mail.gmail.com>
+In-Reply-To: <1457281934-32068-1-git-send-email-bharatku@xilinx.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 12, 2016 at 12:22:06AM -0800, Yinghai Lu wrote:
-> On Thu, Mar 10, 2016 at 10:24 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >> pci_sun4v f02ae7f8: PCI host bridge to bus 0000:00
-> >> pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
-> >
-> > Just double-checking that your ioport space really contains 256M ports.
-> > It's fine if it does; it's just a little unusual.
+On Sun, Mar 06, 2016 at 10:02:14PM +0530, Bharat Kumar Gogada wrote:
+> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
 > 
-> Then according to davem, OF said so.
-> ...
-> >> @@ -733,30 +733,28 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
-> >>  static int __pci_mmap_make_offset_bus(struct pci_dev *pdev, struct vm_area_struct *vma,
-> >>                                     enum pci_mmap_state mmap_state)
-> >>  {
-> >> -     struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
-> >> -     unsigned long space_size, user_offset, user_size;
-> >> -
-> >> -     if (mmap_state == pci_mmap_io) {
-> >> -             space_size = resource_size(&pbm->io_space);
-> >> -     } else {
-> >> -             space_size = resource_size(&pbm->mem_space);
-> >> -     }
-> >> +     unsigned long user_offset, user_size;
-> >> +     struct resource res, *root_bus_res;
-> >> +     struct pci_bus_region region;
-> >>
-> >>       /* Make sure the request is in range. */
-> >>       user_offset = vma->vm_pgoff << PAGE_SHIFT;
-> >>       user_size = vma->vm_end - vma->vm_start;
-> >>
-> >> -     if (user_offset >= space_size ||
-> >> -         (user_offset + user_size) > space_size)
-> >> +     region.start = user_offset;
-> >> +     region.end = user_offset + user_size - 1;
-> >> +     memset(&res, 0, sizeof(res));
-> >> +     if (mmap_state == pci_mmap_io)
-> >> +             res.flags = IORESOURCE_IO;
-> >> +     else
-> >> +             res.flags = IORESOURCE_MEM;
-> >> +
-> >> +     pcibios_bus_to_resource(pdev->bus, &res, &region);
-> >> +     root_bus_res = pci_find_root_bus_resource(pdev->bus, &res);
-> >> +     if (!root_bus_res)
-> >>               return -EINVAL;
-> >>
-> >> -     if (mmap_state == pci_mmap_io) {
-> >> -             vma->vm_pgoff = (pbm->io_space.start +
-> >> -                              user_offset) >> PAGE_SHIFT;
-> >> -     } else {
-> >> -             vma->vm_pgoff = (pbm->mem_space.start +
-> >> -                              user_offset) >> PAGE_SHIFT;
-> >> -     }
-> >> +     vma->vm_pgoff = res.start >> PAGE_SHIFT;
-> >>
-> >>       return 0;
-> >
-> > This needs to explain what's unique about sparc that means it needs
-> > pci_find_root_bus_resource() when no other arch does.
-> 
-> I just follow the old code to get pbm->io_offset, mem_offset, mem64_offset.
-> at the same use that to check boundary with that checking.
+> Reviewed-by: Marc Zyngier <marc.zyngier@arm.com>
+> Acked-by: Rob Herring <robh@kernel.org>
+> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+> Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
+> ---
+> Changes for v12:
+> -> Removed nwl_setup_sspl function, it will be added after more
+> testing.
+> -> Broke nwl_pcie_link_up into nwl_pcie_link_up, nwl_phy_link_up
+> functions.
+> -> Using generic functions for configuration read and write.
+> -> Removed unneccessary comments.
+> -> Removed unneccessary new lines.
+> -> Added #define for number of legacy interrupts.
+> -> Changed MSI interrupt handlers registering sequence.
+> ---
+>  .../devicetree/bindings/pci/xilinx-nwl-pcie.txt    |  68 ++
+>  drivers/pci/host/Kconfig                           |  10 +
+>  drivers/pci/host/Makefile                          |   1 +
+>  drivers/pci/host/pcie-xilinx-nwl.c                 | 912 +++++++++++++++++++++
+>  4 files changed, 991 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
+>  create mode 100644 drivers/pci/host/pcie-xilinx-nwl.c
 
-That's not enough of a reason to add a new interface.  I don't think
-there is anything unique about sparc, so if the existing interfaces
-work for all the other arches, they ought to work for sparc too.
+I applied this to pci/host-xilinx-nwl for v4.6.
 
-> > This is used in the pci_mmap_resource() path.  I don't understand how
-> > that path works on sparc.  I tried to work through the simple case of
-> > a user mapping the first 4096 bytes of a BAR.  Assume the BAR is 4096
-> > bytes in size:
-> >
-> >   # User does something like this:
-> >   #   mmap(NULL, 4096, ..., "/sys/.../resourceN", 0);
-> >
-> >   pci_mmap_resource
-> >
-> >     # At entry, "vma->vm_pgoff" is the offset into the BAR (in pages).
-> >     # In this case, the user wants the first page of the BAR, so
-> >     # vma->vm_pgoff == 0.
-> >
-> >     # "res" is the the pdev->resource[n], which contains the CPU
-> >     # physical address of the BAR.
-> >
-> >     pci_mmap_fits(pdev, i, vma, PCI_MMAP_SYSFS)
-> >       start = vma->vm_pgoff           # == 0
-> >       size = 4096
-> >       pci_start = 0                   # offset into BAR (PCI_MMAP_SYSFS case)
-> >
-> >       # we return 1 because [0x0000-0x0fff] is a valid area in this
-> >       # BAR
-> >
-> >     pci_resource_to_user(pdev, i, res, &start, &end);
-> >
-> >     # On most platforms: pci_resource_to_user() copies res->start to
-> >     # *start, so "start" is the CPU physical address of the
-> >     # BAR.
-> >
-> >     # On sparc: pci_resource_to_user() calls pcibios_resource_to_bus()
-> >     # (see below), so "start" is the PCI bus address of the BAR.
-> >
-> >     vma->vm_pgoff += start >> PAGE_SHIFT;
-> >
-> >     # On most platforms: "vma->vm_pgoff" is now the CPU physical page
-> >     # number of the part of the BAR we're mapping.
-> >
-> >     # On sparc: "vma->vm_pgoff" is the PCI bus page number of the part
-> >     # of the BAR we're mapping.  This seems wrong: doesn't the VM
-> >     # system assume vm_pgoff is a CPU physical page number?
-> >
-> >     if (... && iomem_is_exclusive(start))
-> >
-> >     # On most platforms, "start" is a CPU physical address, and
-> >     # iomem_is_exclusive() looks it up in the iomem_resource tree,
-> >     # which contains resources of CPU physical addresses.
-> >
-> >     # On sparc, "start" is a PCI bus address.  How can this work in
-> >     # iomem_is_exclusive()?  I assume the resources in iomem_resource
-> >     # still contain CPU physical addresses, not PCI bus addresses,
-> >     # don't they?
-> 
-> Good findings, that would break the sparc for a while.
-> (we should use res->start instead)
+I cleaned up a bunch of stuff: whitespace, spelling, unused
+definitions, etc., and also some minor code cleanups.  I can't build
+it myself, so please check and make sure I didn't break anything.
 
-We haven't even gotten to the part that your patch changes.  If my
-analysis is correct, this call to iomem_is_exclusive() is already
-broken on sparc.  I think we need the following patches:
+You can browse or check out the branch from here:
+https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-xilinx-nwl
 
-commit 4688b92991e43ab3b286d11e8f388b1b39d10b1b
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Sat Mar 12 04:27:39 2016 -0600
+Here's the diff showing what I changed relative to the patch you
+posted:
 
-    PCI: Fix iomem_is_exclusive() checking in pci_mmap_resource()
-    
-    iomem_is_exclusive() requires a CPU physical address, but on some arches we
-    supplied a PCI bus address instead.
-    
-    On most arches, pci_resource_to_user(res) returns "res->start", which is a
-    CPU physical address.  But on microblaze, mips, powerpc, and sparc, it
-    returns the PCI bus address corresponding to "res->start".
-    
-    The result is that pci_mmap_resource() may fail when it shouldn't (if the
-    bus address happens to match an existing resource), or it may succeed when
-    it should fail (if the resource is exclusive but the bus address doesn't
-    match it).
-    
-    Call iomem_is_exclusive() with "res->start", which is always a CPU physical
-    address, not the result of pci_resource_to_user().
-    
-    Fixes: e8de1481fd71 ("resource: allow MMIO exclusivity for device drivers")
-    Suggested-by: Yinghai Lu <yinghai@kernel.org>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    CC: Arjan van de Ven <arjan@linux.intel.com>
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 95d9e7b..1559d67 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1004,6 +1004,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
- 	if (i >= PCI_ROM_RESOURCE)
- 		return -ENODEV;
+diff --git a/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt b/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
+index 90e8f32..337fc97 100644
+--- a/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/xilinx-nwl-pcie.txt
+@@ -7,7 +7,7 @@ Required properties:
+ - #interrupt-cells: specifies the number of cells needed to encode an
+ 	interrupt source. The value must be 1.
+ - reg: Should contain Bridge, PCIe Controller registers location,
+-	configuration sapce, and length
++	configuration space, and length
+ - reg-names: Must include the following entries:
+ 	"breg": bridge registers
+ 	"pcireg": PCIe controller registers
+@@ -15,8 +15,8 @@ Required properties:
+ - device_type: must be "pci"
+ - interrupts: Should contain NWL PCIe interrupt
+ - interrupt-names: Must include the following entries:
+-	"msi1, msi0": interrupt asserted when msi is received
+-	"intx": interrupt that is asserted when an legacy interrupt is received
++	"msi1, msi0": interrupt asserted when MSI is received
++	"intx": interrupt asserted when a legacy interrupt is received
+ 	"misc": interrupt asserted when miscellaneous is received
+ - interrupt-map-mask and interrupt-map: standard PCI properties to define the
+ 	mapping of the PCI interface to interrupt numbers.
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 466a601..c39989a 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -21,7 +21,7 @@ config PCIE_XILINX_NWL
+ 	depends on ARCH_ZYNQMP
+ 	select PCI_MSI_IRQ_DOMAIN if PCI_MSI
+ 	help
+-	 Say 'Y' here if you want kernel to support for Xilinx
++	 Say 'Y' here if you want kernel support for Xilinx
+ 	 NWL PCIe controller. The controller can act as Root Port
+ 	 or End Point. The current option selection will only
+ 	 support root port enabling.
+diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+index e5774dc..7a2dc2e 100644
+--- a/drivers/pci/host/pcie-xilinx-nwl.c
++++ b/drivers/pci/host/pcie-xilinx-nwl.c
+@@ -27,26 +27,15 @@
  
-+	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
-+		return -EINVAL;
+ /* Bridge core config registers */
+ #define BRCFG_PCIE_RX0			0x00000000
+-#define BRCFG_PCIE_RX1			0x00000004
+-#define BRCFG_AXI_MASTER		0x00000008
+-#define BRCFG_PCIE_TX			0x0000000C
+ #define BRCFG_INTERRUPT			0x00000010
+-#define BRCFG_RAM_DISABLE0		0x00000014
+-#define BRCFG_RAM_DISABLE1		0x00000018
+-#define BRCFG_PCIE_RELAXED_ORDER	0x0000001C
+ #define BRCFG_PCIE_RX_MSG_FILTER	0x00000020
+ 
+-/* Attribute registers */
+-#define NWL_ATTRIB_100			0x00000190
+-
+ /* Egress - Bridge translation registers */
+ #define E_BREG_CAPABILITIES		0x00000200
+-#define E_BREG_STATUS			0x00000204
+ #define E_BREG_CONTROL			0x00000208
+ #define E_BREG_BASE_LO			0x00000210
+ #define E_BREG_BASE_HI			0x00000214
+ #define E_ECAM_CAPABILITIES		0x00000220
+-#define E_ECAM_STATUS			0x00000224
+ #define E_ECAM_CONTROL			0x00000228
+ #define E_ECAM_BASE_LO			0x00000230
+ #define E_ECAM_BASE_HI			0x00000234
+@@ -68,11 +57,6 @@
+ #define MSGF_MSI_STATUS_HI		0x00000444
+ #define MSGF_MSI_MASK_LO		0x00000448
+ #define MSGF_MSI_MASK_HI		0x0000044C
+-#define MSGF_RX_FIFO_POP		0x00000484
+-#define MSGF_RX_FIFO_TYPE		0x00000488
+-#define MSGF_RX_FIFO_ADDRLO		0x00000490
+-#define MSGF_RX_FIFO_ADDRHI		0x00000494
+-#define MSGF_RX_FIFO_DATA		0x00000498
+ 
+ /* Msg filter mask bits */
+ #define CFG_ENABLE_PM_MSG_FWD		BIT(1)
+@@ -116,10 +100,6 @@
+ 					MSGF_MISC_SR_PCIE_CORE | \
+ 					MSGF_MISC_SR_PCIE_CORE_ERR)
+ 
+-/* Message rx fifo type mask bits */
+-#define MSGF_RX_FIFO_TYPE_MSI		(1)
+-#define MSGF_RX_FIFO_TYPE_TYPE		GENMASK(1, 0)
+-
+ /* Legacy interrupt status mask bits */
+ #define MSGF_LEG_SR_INTA		BIT(0)
+ #define MSGF_LEG_SR_INTB		BIT(1)
+@@ -144,30 +124,27 @@
+ 
+ /* E_ECAM status mask bits */
+ #define E_ECAM_PRESENT			BIT(0)
+-#define E_ECAM_SR_WR_PEND		BIT(16)
+-#define E_ECAM_SR_RD_PEND		BIT(0)
+-#define E_ECAM_SR_MASKALL		(E_ECAM_SR_WR_PEND | E_ECAM_SR_RD_PEND)
+ #define E_ECAM_CR_ENABLE		BIT(0)
+ #define E_ECAM_SIZE_LOC			GENMASK(20, 16)
+ #define E_ECAM_SIZE_SHIFT		16
+ #define ECAM_BUS_LOC_SHIFT		20
+ #define ECAM_DEV_LOC_SHIFT		12
+ #define NWL_ECAM_VALUE_DEFAULT		12
+-#define NWL_ECAM_SIZE_MIN		4096
+ 
+-#define ATTR_UPSTREAM_FACING		BIT(6)
+ #define CFG_DMA_REG_BAR			GENMASK(2, 0)
+ 
+ #define INT_PCI_MSI_NR			(2 * 32)
+-
+ #define INTX_NUM			4
 +
- 	if (!pci_mmap_fits(pdev, i, vma, PCI_MMAP_SYSFS)) {
- 		WARN(1, "process \"%s\" tried to map 0x%08lx bytes at page 0x%08lx on %s BAR %d (start 0x%16Lx, size 0x%16Lx)\n",
- 			current->comm, vma->vm_end-vma->vm_start, vma->vm_pgoff,
-@@ -1020,10 +1023,6 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
- 	pci_resource_to_user(pdev, i, res, &start, &end);
- 	vma->vm_pgoff += start >> PAGE_SHIFT;
- 	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
--
--	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(start))
--		return -EINVAL;
--
- 	return pci_mmap_page_range(pdev, vma, mmap_type, write_combine);
+ /* Readin the PS_LINKUP */
+ #define PS_LINKUP_OFFSET		0x00000238
+ #define PCIE_PHY_LINKUP_BIT		BIT(0)
+ #define PHY_RDY_LINKUP_BIT		BIT(1)
+-#define PCIE_USER_LINKUP		0
+-#define PHY_RDY_LINKUP			1
+-#define LINKUP_ITER_CHECK		5
++
++/* Parameters for the waiting for link up routine */
++#define LINK_WAIT_MAX_RETRIES          10
++#define LINK_WAIT_USLEEP_MIN           90000
++#define LINK_WAIT_USLEEP_MAX           100000
+ 
+ struct nwl_msi {			/* MSI information */
+ 	struct irq_domain *msi_domain;
+@@ -194,7 +171,6 @@ struct nwl_pcie {
+ 	u32 ecam_value;
+ 	u8 last_busno;
+ 	u8 root_busno;
+-	u8 link_up;
+ 	struct nwl_msi msi;
+ 	struct irq_domain *legacy_irq_domain;
+ };
+@@ -223,11 +199,26 @@ static bool nwl_phy_link_up(struct nwl_pcie *pcie)
+ 	return false;
  }
  
-commit fd88769b8c4d840278137f9ca3968da5aa09c97f
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Sat Mar 12 05:10:11 2016 -0600
-
-    alpha/PCI: Only check iomem_is_exclusive() for IORESOURCE_MEM, not IORESOURCE_IO
-    
-    The alpha pci_mmap_resource() is used for both IORESOURCE_MEM and
-    IORESOURCE_IO resources, but iomem_is_exclusive() is only applicable for
-    IORESOURCE_MEM.
-    
-    Call iomem_is_exclusive() only for IORESOURCE_MEM resources, and do it
-    earlier to match the generic version of pci_mmap_resource().
-    
-    Fixes: 10a0ef39fbd1 ("PCI/alpha: pci sysfs resources")
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    CC: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-
-diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.c
-index 99e8d47..92c0d46 100644
---- a/arch/alpha/kernel/pci-sysfs.c
-+++ b/arch/alpha/kernel/pci-sysfs.c
-@@ -77,10 +77,10 @@ static int pci_mmap_resource(struct kobject *kobj,
- 	if (i >= PCI_ROM_RESOURCE)
- 		return -ENODEV;
++static int nwl_wait_for_link(struct nwl_pcie *pcie)
++{
++	int retries;
++
++	/* check if the link is up or not */
++	for (retries = 0; retries < LINK_WAIT_MAX_RETRIES; retries++) {
++		if (nwl_phy_link_up(pcie))
++			return 0;
++		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
++	}
++
++	dev_err(pcie->dev, "PHY link never came up\n");
++	return -ETIMEDOUT;
++}
++
+ static bool nwl_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
+ {
+ 	struct nwl_pcie *pcie = bus->sysdata;
  
--	if (!__pci_mmap_fits(pdev, i, vma, sparse))
-+	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
+-	/* Check link,before accessing downstream ports */
++	/* Check link before accessing downstream ports */
+ 	if (bus->number != pcie->root_busno) {
+ 		if (!nwl_pcie_link_up(pcie))
+ 			return false;
+@@ -250,9 +241,8 @@ static bool nwl_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
+  * Return: Base address of the configuration space needed to be
+  *	   accessed.
+  */
+-static void __iomem *nwl_pcie_map_bus(struct pci_bus *bus,
+-						 unsigned int devfn,
+-						 int where)
++static void __iomem *nwl_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
++				      int where)
+ {
+ 	struct nwl_pcie *pcie = bus->sysdata;
+ 	int relbus;
+@@ -323,8 +313,7 @@ static void nwl_pcie_leg_handler(struct irq_desc *desc)
+ 
+ 	while ((status = nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
+ 				MSGF_LEG_SR_MASKALL) != 0) {
+-		for_each_set_bit(bit, &status, 4) {
+-
++		for_each_set_bit(bit, &status, INTX_NUM) {
+ 			virq = irq_find_mapping(pcie->legacy_irq_domain,
+ 						bit + 1);
+ 			if (virq)
+@@ -357,29 +346,25 @@ static void nwl_pcie_handle_msi_irq(struct nwl_pcie *pcie, u32 status_reg)
+ static void nwl_pcie_msi_handler_high(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+-	struct nwl_pcie *pcie;
++	struct nwl_pcie *pcie = irq_desc_get_handler_data(desc);
+ 
+ 	chained_irq_enter(chip, desc);
+-	pcie = irq_desc_get_handler_data(desc);
+ 	nwl_pcie_handle_msi_irq(pcie, MSGF_MSI_STATUS_HI);
+-
+ 	chained_irq_exit(chip, desc);
+ }
+ 
+ static void nwl_pcie_msi_handler_low(struct irq_desc *desc)
+ {
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+-	struct nwl_pcie *pcie;
++	struct nwl_pcie *pcie = irq_desc_get_handler_data(desc);
+ 
+ 	chained_irq_enter(chip, desc);
+-	pcie = irq_desc_get_handler_data(desc);
+ 	nwl_pcie_handle_msi_irq(pcie, MSGF_MSI_STATUS_LO);
+-
+ 	chained_irq_exit(chip, desc);
+ }
+ 
+ static int nwl_legacy_map(struct irq_domain *domain, unsigned int irq,
+-				irq_hw_number_t hwirq)
++			  irq_hw_number_t hwirq)
+ {
+ 	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
+@@ -441,16 +426,13 @@ static int nwl_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
+ 	mutex_lock(&msi->lock);
+ 	bit = bitmap_find_next_zero_area(msi->bitmap, INT_PCI_MSI_NR, 0,
+ 					 nr_irqs, 0);
+-	if (bit < INT_PCI_MSI_NR)
+-		bitmap_set(msi->bitmap, bit, nr_irqs);
+-	else
+-		bit = -ENOSPC;
+-
+-	if (bit < 0) {
++	if (bit >= INT_PCI_MSI_NR) {
+ 		mutex_unlock(&msi->lock);
+-		return bit;
++		return -ENOSPC;
+ 	}
+ 
++	bitmap_set(msi->bitmap, bit, nr_irqs);
++
+ 	for (i = 0; i < nr_irqs; i++) {
+ 		irq_domain_set_info(domain, virq + i, bit + i, &nwl_irq_chip,
+ 				domain->host_data, handle_simple_irq,
+@@ -518,14 +500,14 @@ static int nwl_pcie_init_msi_irq_domain(struct nwl_pcie *pcie)
+ 	struct nwl_msi *msi = &pcie->msi;
+ 
+ 	msi->dev_domain = irq_domain_add_linear(NULL, INT_PCI_MSI_NR,
+-					&dev_msi_domain_ops, pcie);
++						&dev_msi_domain_ops, pcie);
+ 	if (!msi->dev_domain) {
+ 		dev_err(pcie->dev, "failed to create dev IRQ domain\n");
+ 		return -ENOMEM;
+ 	}
+ 	msi->msi_domain = pci_msi_create_irq_domain(fwnode,
+-							&nwl_msi_domain_info,
+-							msi->dev_domain);
++						    &nwl_msi_domain_info,
++						    msi->dev_domain);
+ 	if (!msi->msi_domain) {
+ 		dev_err(pcie->dev, "failed to create msi IRQ domain\n");
+ 		irq_domain_remove(msi->dev_domain);
+@@ -557,7 +539,6 @@ static int nwl_pcie_init_irq_domain(struct nwl_pcie *pcie)
+ 	}
+ 
+ 	nwl_pcie_init_msi_irq_domain(pcie);
+-
+ 	return 0;
+ }
+ 
+@@ -582,9 +563,10 @@ static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus *bus)
+ 		ret = -EINVAL;
+ 		goto err;
+ 	}
+-	/* Register msi handler */
++
+ 	irq_set_chained_handler_and_data(msi->irq_msi1,
+ 					 nwl_pcie_msi_handler_high, pcie);
++
+ 	/* Get msi_0 IRQ number */
+ 	msi->irq_msi0 = platform_get_irq_byname(pdev, "msi0");
+ 	if (msi->irq_msi0 < 0) {
+@@ -593,9 +575,9 @@ static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus *bus)
+ 		goto err;
+ 	}
+ 
+-	/* Register msi handler */
+ 	irq_set_chained_handler_and_data(msi->irq_msi0,
+ 					 nwl_pcie_msi_handler_low, pcie);
++
+ 	/* Check for msii_present bit */
+ 	ret = nwl_bridge_readl(pcie, I_MSII_CAPABILITIES) & MSII_PRESENT;
+ 	if (!ret) {
+@@ -618,7 +600,7 @@ static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus *bus)
+ 	nwl_bridge_writel(pcie, upper_32_bits(base), I_MSII_BASE_HI);
+ 
+ 	/*
+-	 * For high range msi interrupts: disable, clear any pending,
++	 * For high range MSI interrupts: disable, clear any pending,
+ 	 * and enable
+ 	 */
+ 	nwl_bridge_writel(pcie, (u32)~MSGF_MSI_SR_HI_MASK, MSGF_MSI_MASK_HI);
+@@ -629,7 +611,7 @@ static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus *bus)
+ 	nwl_bridge_writel(pcie, MSGF_MSI_SR_HI_MASK, MSGF_MSI_MASK_HI);
+ 
+ 	/*
+-	 * For low range msi interrupts: disable, clear any pending,
++	 * For low range MSI interrupts: disable, clear any pending,
+ 	 * and enable
+ 	 */
+ 	nwl_bridge_writel(pcie, (u32)~MSGF_MSI_SR_LO_MASK, MSGF_MSI_MASK_LO);
+@@ -651,15 +633,13 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
+ 	struct platform_device *pdev = to_platform_device(pcie->dev);
+ 	u32 breg_val, ecam_val, first_busno = 0;
+ 	int err;
+-	int check_link_up = 0;
+-	bool link_up;
+ 
+-	/* Check for BREG present bit */
+ 	breg_val = nwl_bridge_readl(pcie, E_BREG_CAPABILITIES) & BREG_PRESENT;
+ 	if (!breg_val) {
+ 		dev_err(pcie->dev, "BREG is not present\n");
+ 		return breg_val;
+ 	}
++
+ 	/* Write bridge_off to breg base */
+ 	nwl_bridge_writel(pcie, lower_32_bits(pcie->phys_breg_base),
+ 			  E_BREG_BASE_LO);
+@@ -680,15 +660,10 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
+ 	/* Enable msg filtering details */
+ 	nwl_bridge_writel(pcie, CFG_ENABLE_MSG_FILTER_MASK,
+ 			  BRCFG_PCIE_RX_MSG_FILTER);
+-	do {
+-		link_up = nwl_phy_link_up(pcie);
+-		if (!link_up) {
+-			check_link_up++;
+-			if (check_link_up > LINKUP_ITER_CHECK)
+-				return -ENODEV;
+-			msleep(1000);
+-		}
+-	} while (!link_up);
++
++	err = nwl_wait_for_link(pcie);
++	if (err)
++		return err;
+ 
+ 	ecam_val = nwl_bridge_readl(pcie, E_ECAM_CAPABILITIES) & E_ECAM_PRESENT;
+ 	if (!ecam_val) {
+@@ -718,8 +693,7 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
+ 	ecam_val |= (pcie->last_busno << E_ECAM_SIZE_SHIFT);
+ 	writel(ecam_val, (pcie->ecam_base + PCI_PRIMARY_BUS));
+ 
+-	pcie->link_up = nwl_pcie_link_up(pcie);
+-	if (pcie->link_up)
++	if (nwl_pcie_link_up(pcie))
+ 		dev_info(pcie->dev, "Link is UP\n");
+ 	else
+ 		dev_info(pcie->dev, "Link is DOWN\n");
+@@ -731,7 +705,7 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
+ 			pcie->irq_misc);
  		return -EINVAL;
+ 	}
+-	/* Register misc handler */
++
+ 	err = devm_request_irq(pcie->dev, pcie->irq_misc,
+ 			       nwl_pcie_misc_handler, IRQF_SHARED,
+ 			       "nwl_pcie:misc", pcie);
+@@ -770,7 +744,7 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
+ }
  
--	if (iomem_is_exclusive(res->start))
-+	if (!__pci_mmap_fits(pdev, i, vma, sparse))
+ static int nwl_pcie_parse_dt(struct nwl_pcie *pcie,
+-					struct platform_device *pdev)
++			     struct platform_device *pdev)
+ {
+ 	struct device_node *node = pcie->dev->of_node;
+ 	struct resource *res;
+@@ -809,7 +783,6 @@ static int nwl_pcie_parse_dt(struct nwl_pcie *pcie,
  		return -EINVAL;
+ 	}
  
- 	pcibios_resource_to_bus(pdev->bus, &bar, res);
+-	/* Register intx handler */
+ 	irq_set_chained_handler_and_data(pcie->irq_intx,
+ 					 nwl_pcie_leg_handler, pcie);
+ 
+@@ -835,16 +808,15 @@ static int nwl_pcie_probe(struct platform_device *pdev)
+ 	if (!pcie)
+ 		return -ENOMEM;
+ 
+-	pcie->ecam_value = NWL_ECAM_VALUE_DEFAULT;
+-
+ 	pcie->dev = &pdev->dev;
++	pcie->ecam_value = NWL_ECAM_VALUE_DEFAULT;
+ 
+ 	err = nwl_pcie_parse_dt(pcie, pdev);
+ 	if (err) {
+ 		dev_err(pcie->dev, "Parsing DT failed\n");
+ 		return err;
+ 	}
+-	/* Bridge initialization */
++
+ 	err = nwl_pcie_bridge_init(pcie);
+ 	if (err) {
+ 		dev_err(pcie->dev, "HW Initalization failed\n");
+@@ -868,7 +840,6 @@ static int nwl_pcie_probe(struct platform_device *pdev)
+ 	if (!bus)
+ 		return -ENOMEM;
+ 
+-	/* Enable MSI */
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		err = nwl_pcie_enable_msi(pcie, bus);
+ 		if (err < 0) {
+@@ -883,7 +854,6 @@ static int nwl_pcie_probe(struct platform_device *pdev)
+ 		pcie_bus_configure_settings(child);
+ 	pci_bus_add_devices(bus);
+ 	platform_set_drvdata(pdev, pcie);
+-
+ 	return 0;
+ }
+ 
+@@ -893,7 +863,6 @@ static int nwl_pcie_remove(struct platform_device *pdev)
+ 
+ 	nwl_pcie_free_irq_domain(pcie);
+ 	platform_set_drvdata(pdev, NULL);
+-
+ 	return 0;
+ }
+ 
