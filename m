@@ -1,173 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from li153-180.members.linode.com ([109.74.206.180]:56516 "EHLO
-	mail.tekno-soft.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751895AbcC3PVA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2016 11:21:00 -0400
-Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
-To: Tim Harvey <tharvey@gateworks.com>
-References: <m3h9fuk7ik.fsf@t19.piap.pl>
- <CAJ+vNU3yh8ivb+axTwXawSbtCTa+kHUsJY=EGoziT8WSEW1CHQ@mail.gmail.com>
- <56FB87A1.4020505@tekno-soft.it> <5245625.0MITzPXo6V@wuerfel>
- <56FBCBA2.6050903@tekno-soft.it>
- <CAJ+vNU3CcXgMBfTnazofZVt5Z4vi9bf7SkbJ9=DMQ-xksTQJJA@mail.gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	=?UTF-8?Q?Krzysztof_Ha=c5=82asa?= <khalasa@piap.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?Q?Petr_=c5=a0tetiar?= <ynezz@true.cz>,
-	Fabio Estevam <festevam@gmail.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-From: Roberto Fichera <kernel@tekno-soft.it>
-Message-ID: <56FBEEC6.6050105@tekno-soft.it>
-Date: Wed, 30 Mar 2016 17:20:38 +0200
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:33180 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752327AbcCKVQa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Mar 2016 16:16:30 -0500
+Received: by mail-ob0-f176.google.com with SMTP id fz5so125831256obc.0
+        for <linux-pci@vger.kernel.org>; Fri, 11 Mar 2016 13:16:29 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAJ+vNU3CcXgMBfTnazofZVt5Z4vi9bf7SkbJ9=DMQ-xksTQJJA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160308174558.GC19869@localhost>
+References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160308174558.GC19869@localhost>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Fri, 11 Mar 2016 13:16:09 -0800
+Message-ID: <CALCETrUHEmFoO9dYY0xbjLiLfCJQCxG7h60dkOuCMMOKonytpw@mail.gmail.com>
+Subject: Re: [PATCH v1 00/12] PCI: Rework shadow ROM handling
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Tony Luck <tony.luck@intel.com>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	=?UTF-8?Q?Bruno_Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
+	Daniel Stone <daniel@fooishbar.org>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/30/2016 03:38 PM, Tim Harvey wrote:
-> On Wed, Mar 30, 2016 at 5:50 AM, Roberto Fichera <kernel@tekno-soft.it> wrote:
->> On 03/30/2016 12:10 PM, Arnd Bergmann wrote:
->>> On Wednesday 30 March 2016 10:00:33 Roberto Fichera wrote:
->>>>> Check your XIO2001 routing and insure the following for proper IRQ mapping:
->>>>> Slot12: IDSEL A28: socket INTA = XIO2001 INTA
->>>>> Slot13: IDSEL A29: socket INTA = XIO2001 INTB
->>>>> Slot14: IDSEL A30: socket INTA = XIO2001 INTC
->>>>> Slot15: IDSEL A31: socket INTA = XIO2001 INTD
->>>> After crosschecking with our hardware designer the PCB IRQ mapping is the following:
->>>>
->>>> J2 : IDSEL  A16: => Device 0 : socket INTA = XIO2001 INTA
->>>> J3 : IDSEL  A18: => Device 2 : socket INTA = XIO2001 INTA* **(This should be INTC)*
->>>> J11: IDSEL A20: => Device 4 : socket INTA = XIO2001 INTA
->>>>
->>>> The interrupt routing for J3 is wrong. The XIO2001 driver may expect Device 2 to interrupt on INTC - but it will
->>>> interrupt on INTA.
->>> What does your interrupt-map property look like then?
->> Unfortunately it seems that J3 slot doesn't work anymore. Inserting a card there, PCIe link will not come up anymore.
->> Likely I broke it. Looking at some spare logs I have, a card inserted in J3 will get another interrupt, was 291 however
->> unfortunately I don't have an usefull lspci -vv output, sorry! Will check in it against another PCB when I can.
+On Tue, Mar 8, 2016 at 9:45 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Mar 03, 2016 at 10:53:50AM -0600, Bjorn Helgaas wrote:
+>> The purpose of this series is to:
 >>
->>> Note that you have to override both map and map-mask in this case.
->> Can you please give more details where should I have a look?
+>>   - Fix the "BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment"
+>>     messages reported by Linus [1], Andy [2], and others.
 >>
->>>       Arnd
->>>
-> Robert,
+>>   - Move arch-specific shadow ROM location knowledge, e.g.,
+>>     0xC0000-0xDFFFF, from PCI core to arch code.
+>>
+>>   - Fix the ia64 and MIPS Loongson 3 oddity of keeping virtual
+>>     addresses in shadow ROM struct resource (resources should always
+>>     contain *physical* addresses).
+>>
+>>   - Remove now-unused IORESOURCE_ROM_COPY and IORESOURCE_ROM_BIOS_COPY
+>>     flags.
+>>
+>> This series is based on v4.5-rc1, and it's available on my
+>> pci/resource git branch (along with a couple tiny unrelated patches)
+>> at [3].
+>>
+>> Bjorn
+>>
+>>
+>> [1] http://lkml.kernel.org/r/CA+55aFyVMfTBB0oz_yx8+eQOEJnzGtCsYSj9QuhEpdZ9BHdq5A@mail.gmail.com
+>> [2] http://lkml.kernel.org/r/CALCETrV+RwNPzxyL8UVNsrAGu-6cCzD_Cc9PFJT2NCTJPLZZiw@mail.gmail.com
+>> [3] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/resource
+>>
+>>
+>> ---
+>>
+>> Bjorn Helgaas (12):
+>>       PCI: Mark shadow copy of VGA ROM as IORESOURCE_PCI_FIXED
+>>       PCI: Don't assign or reassign immutable resources
+>>       PCI: Don't enable/disable ROM BAR if we're using a RAM shadow copy
+>>       PCI: Set ROM shadow location in arch code, not in PCI core
+>>       PCI: Clean up pci_map_rom() whitespace
+>>       ia64/PCI: Use temporary struct resource * to avoid repetition
+>>       ia64/PCI: Use ioremap() instead of open-coded equivalent
+>>       ia64/PCI: Keep CPU physical (not virtual) addresses in shadow ROM resource
+>>       MIPS: Loongson 3: Use temporary struct resource * to avoid repetition
+>>       MIPS: Loongson 3: Keep CPU physical (not virtual) addresses in shadow ROM resource
+>>       PCI: Remove unused IORESOURCE_ROM_COPY and IORESOURCE_ROM_BIOS_COPY
+>>       PCI: Simplify sysfs ROM cleanup
+>>
+>>
+>>  arch/ia64/pci/fixup.c              |   21 +++++++--
+>>  arch/ia64/sn/kernel/io_acpi_init.c |   22 ++++++----
+>>  arch/ia64/sn/kernel/io_init.c      |   51 ++++++++--------------
+>>  arch/mips/pci/fixup-loongson3.c    |   19 +++++---
+>>  arch/x86/pci/fixup.c               |   21 +++++++--
+>>  drivers/pci/pci-sysfs.c            |   13 +-----
+>>  drivers/pci/remove.c               |    1
+>>  drivers/pci/rom.c                  |   83 +++++++++++-------------------------
+>>  drivers/pci/setup-res.c            |    6 +++
+>>  include/linux/ioport.h             |    4 --
+>>  10 files changed, 111 insertions(+), 130 deletions(-)
 >
-> The interrupt-map / interrupt-map-mask properties are the ones that
-> dictate irq mapping. In most cases they are defined at the host
-> controller only and the kernel will assume standard interrupt
-> swizzling (aka barber pole'ing) through bridges and will rotate
-> interrupts (swizzle) for each bridge you go through. It is only if the
-> interrupts are 'not' mapped properly (as in your case, and as was mine
-> on a specific add-in card) that you need to define interrupt-map /
-> interrupt-map-mask for the actual bridge with the interrupt mapping
-> issue. So in other words, you won't have an interrupt-map/mask for
-> your TI XIO2001 'currently', but you need to add one to describe its
-> non-standard mapping.
->
-> If you look at imx6qdl.dtsi you'll see the interrupt-map/mask for
-> standard mapping is:
->
-> interrupt-map-mask = <0 0 0 0x7>;
-> interrupt-map = <0 0 0 1 &gpc GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>,
->                           <0 0 0 2 &gpc GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>,
->                           <0 0 0 3 &gpc GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>,
->                           <0 0 0 4 &gpc GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
->
-> This is because on the IMX6 INTA=GIC_123, INTB=GIC_122, INTC=GIC_121,
-> INTD=GIC_120. The interrupt-map-mask is important because it decribes
-> which bits of the 'unit interrupt specifier' each map pertains to. For
-> the standard mapping above only the pin is important because this is
-> the mapping for each slot so only the last three bits of the 'unit
-> interrupt specifier' which has four cells is specified in the mask
-> (0x7).
->
-> In your case you will need to describe a map that depends not only on
-> pin but on slot. The first 32bit cell in the 'unit interrupt
-> specifier' defines the bus/domain/function (BDF) as: bus << 16 | dev
-> << 11 | func <<8. This is also the same format for the first cell in
-> the 'reg' property that describes each PCI device.
->
-> If you are saying that your hardware did not swizzle the interrupts
-> for the various slots then that means the above mapping needs to be
-> applied to each slot the same. I
->
-> You need to nest PCI devices as they appear on the bus, specifying reg
-> properly. So, in your case you have a XIO2001 bridge hanging off of
-> the IMX6 root complex. The root complex is at BDF 0:00.0, the XIO2001
-> is at BDF 1:00.0, and its sockets are at bus=2. So you will need to
-> add the following to your device-tree (fixing pinctrl and reset-gpio
-> per your board specifics):
->
-> &pcie {
->         pinctrl-names = "default";
->         pinctrl-0 = <&pinctrl_pcie>;
->         reset-gpio = <&gpio1 29 GPIO_ACTIVE_LOW>;
->         status = "okay";
->
->        /* 0:00.0 root complex */
->        pcie@0,0,0 {
->                reg = <0 0 0 0 0>; /* bus=0, dev=0, func=0 */
->
->                /* 1:00.0 TI bridge with reversed IRQ mapping */
->                pcie@1,0,0 {
->                        device_type = "pci";
->                        #address-cells = <3>;
->                        #size-cells = <2>;
->                        reg = <0x010000 0 0 0 0>; /* bus=1, dev=0, func=0 */
->                        #interrupt-cells = <1>;
->                        interrupt-map-mask = <0xfff00 0 0 0x7>; /*
-> match bus and device as well as pin */
->                        interrupt-map =
->                                /* MAP for INTA/B/C/D in slot 2:00.00 -
-> standard mapping */
->                                <0x26000 0 0 1 &gpc GIC_SPI 123 IRQ_TYPE_LEVEL_H
->                                <0x26000 0 0 2 &gpc GIC_SPI 122 IRQ_TYPE_LEVEL_H
->                                <0x26000 0 0 3 &gpc GIC_SPI 121 IRQ_TYPE_LEVEL_H
->                                <0x26000 0 0 4 &gpc GIC_SPI 120 IRQ_TYPE_LEVEL_H
->                                /* MAP for INTA/B/C/D in slot 2:02.00 -
-> wrong mapping */
->                                <0x26800 0 0 1 &gpc GIC_SPI 123 IRQ_TYPE_LEVEL_H
->                                <0x26800 0 0 2 &gpc GIC_SPI 122 IRQ_TYPE_LEVEL_H
->                                <0x26800 0 0 3 &gpc GIC_SPI 121 IRQ_TYPE_LEVEL_H
->                                <0x26800 0 0 4 &gpc GIC_SPI 120 IRQ_TYPE_LEVEL_H
->                                /* MAP for INTA/B/C/D in slot 2:04.00 -
-> standard mapping */
->                                <0x27000 0 0 1 &gpc GIC_SPI 123 IRQ_TYPE_LEVEL_H
->                                <0x27000 0 0 2 &gpc GIC_SPI 122 IRQ_TYPE_LEVEL_H
->                                <0x27000 0 0 3 &gpc GIC_SPI 121 IRQ_TYPE_LEVEL_H
->                                <0x27000 0 0 4 &gpc GIC_SPI 120 IRQ_TYPE_LEVEL_H
-> ...
->                };
->        };
-> };
->
-> You will need to provide a full mapping which means you'll need to
-> know how INTA/B/C/D are mapped to each slot. MiniPCIe only users
-> INTA/B but afaik you have to specify all four. I 'think' what you are
-> elluding to is that the hardware engineer didn't swizzle the slots at
-> all so all slots are mapped with INTA->INTA, INTB->INTB, INTC->INTC,
-> INTD->INTD. If this is the case then you just copy the above for all
-> slots taking care to specify the first cell properly with b<<16 |
-> d<<11.
->
-> You may find http://devicetree.org/Device_Tree_Usage#Advanced_Interrupt_Mapping
-> to be helpful as well.
+> I applied this series to pci/resource for v4.6.
 
-Tim,
+This gets rid of all the warnings for me until I try to read my i915
+device's rom using sysfs.  Then I get:
 
-thanks for the detailed information. Will have a look soon.
+i915 0000:00:02.0: Invalid PCI ROM header signature: expecting 0xaa55,
+got 0xffff
 
+So I suspect that something is still subtly wrong -- I'd imagine that
+this should either work or the intialization code should detect that
+there is no usable ROM and not expose it.
 
->
-> Regards,
->
-> Tim
->
-
+(To be clear, there's no regression here.)
