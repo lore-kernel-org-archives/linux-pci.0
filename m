@@ -1,151 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43959 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751407AbcCKXyc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Mar 2016 18:54:32 -0500
-Date: Fri, 11 Mar 2016 17:54:27 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v3 2/2] PCI: tegra: Support per-lane PHYs
-Message-ID: <20160311235427.GI4725@localhost>
-References: <1457452094-5409-1-git-send-email-thierry.reding@gmail.com>
- <1457452094-5409-2-git-send-email-thierry.reding@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1457452094-5409-2-git-send-email-thierry.reding@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160310175435.GC17238@localhost>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+	<1456366370-28995-8-git-send-email-yinghai@kernel.org>
+	<20160310175435.GC17238@localhost>
+Date: Fri, 11 Mar 2016 14:21:26 -0800
+Message-ID: <CAE9FiQUY037o7YMfx9NHX9KBx3Tz+MpOjvNvaQ8ex7t5X3zK7g@mail.gmail.com>
+Subject: Re: [PATCH v10 07/59] PCI: Ignore BAR for ALi M1533 PCI-ISA bridge
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Stephen, you had some comments on the previous version.  What do you
-think about this one?
+On Thu, Mar 10, 2016 at 9:54 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Wed, Feb 24, 2016 at 06:11:58PM -0800, Yinghai Lu wrote:
+>> Meelis reported strange conflicts on sparc v210:
+>> pci 0001:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with 0001:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
+>> pci 0001:00:06.0: can't claim BAR 0 [io 0x7fe01000000-0x7fe0100000f]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
+>> pci 0001:00:0d.0: can't claim BAR 0 [io 0x7fe01000900-0x7fe01000907]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
+>> pci 0001:00:0d.0: can't claim BAR 1 [io 0x7fe01000918-0x7fe0100091f]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
+>> pci 0001:00:0d.0: can't claim BAR 2 [io 0x7fe01000910-0x7fe01000917]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
+>> pci 0001:00:0d.0: can't claim BAR 3 [io 0x7fe01000908-0x7fe0100090f]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
+>> pci 0001:00:0d.0: can't claim BAR 4 [io 0x7fe01000920-0x7fe0100092f]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
+>> PCI: /pci@1e,600000 can't claim Video RAM area [mem 0x7ff000a0000-0x7ff000bffff]: address conflict with 0001:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
+>> PCI: /pci@1e,600000 can't claim System ROM [mem 0x7ff000f0000-0x7ff000fffff]: address conflict with 0001:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
+>> PCI: /pci@1e,600000 can't claim Video ROM [mem 0x7ff000c0000-0x7ff000c7fff]: address conflict with 0001:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
+>>
+>> we have
+>> pci_bus 0001:00: root bus resource [io  0x7fe01000000-0x7fe01ffffff] (bus address [0x0000-0xffffff])
+>> pci_bus 0001:00: root bus resource [mem 0x7ff00000000-0x7ffffffffff] (bus address [0x00000000-0xffffffff])
+>>
+>> so pci bus address in the bars for 0001:00:07.0 has all 0s.
+>>
+>> 0001:00:07.0 ISA bridge: ULi Electronics Inc. M1533/M1535/M1543 PCI to ISA Bridge [Aladdin IV/V/V+]
+>>         Region 0: [virtual] I/O ports at 0000 [size=64K]
+>>         Region 1: Memory at <unassigned> (32-bit, non-prefetchable) [size=1M]
+>>         Region 2: Memory at <unassigned> (32-bit, non-prefetchable) [size=1M]
+>> 00: b9 10 33 15 0f 00 10 02 00 00 01 06 00 00 00 00
+>> 10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>> 20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+>> 30: 00 00 00 00 a0 00 00 00 00 00 00 00 00 00 00 00
+>>
+>> According to http://www.versalogic.com/Support/Downloads/pdf/ali1543.pdf
+>> page 28: The indices before 40h are read-only.
+>> and we have all 0 from 0x10-0x2f, according to lspci.
+>> So those BAR do not work as regular BAR, just clean flags, and ignore them all
+>> the way include claim and sizing and alloc etc.
+>
+> A BAR that is read-only zeroes is perfectly legal (PCI spec r3.0, sec
+> 6.2.5.1) and __pci_read_base() handles it correctly.
+>
+> Maybe you're using something other than __pci_read_base() and the problem
+> is there?
+>
+> The following dmesg logs show the [10b9:1533] device handled
+> correctly, with no implemented BARs:
+>
+>   https://bugs.freedesktop.org/attachment.cgi?id=118855
+>   http://d11mgdpsdcgrvc.cloudfront.net/dmesg.txt
+>   http://www.hivmr.com/db/sasj1xfk98zsz9amfmpp1mdkzfk3pjk3
 
-On Tue, Mar 08, 2016 at 04:48:14PM +0100, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
-> 
-> The current XUSB pad controller bindings are insufficient to describe
-> PHY devices attached to USB controllers. New bindings have been created
-> to overcome these restrictions. As a side-effect each root port now is
-> assigned a set of PHY devices, one for each lane associated with the
-> root port. This has the benefit of allowing fine-grained control of the
-> power management for each lane.
-> 
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
-> ...
+ok, then those resource info should come from OF instead of __pci_read_base().
 
->  static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
->  {
->  	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
-> @@ -883,14 +905,24 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
->  		afi_writel(pcie, value, AFI_FUSE);
->  	}
->  
-> -	if (!pcie->phy)
-> -		err = tegra_pcie_phy_enable(pcie);
-> -	else
-> -		err = phy_power_on(pcie->phy);
-> +	if (!pcie->legacy_phy) {
-> +		list_for_each_entry(port, &pcie->ports, list) {
-> +			err = tegra_pcie_port_phy_power_on(port);
-> +			if (err < 0) {
-> +				dev_err(pcie->dev,
-> +					"failed to power on PCIe port: %d\n",
-> +					err);
-> +				return err;
-> +			}
-> +		}
-> +	} else {
-> +		if (!pcie->phy)
-> +			err = tegra_pcie_phy_enable(pcie);
-> +		else
-> +			err = phy_power_on(pcie->phy);
->  
-> -	if (err < 0) {
-> -		dev_err(pcie->dev, "failed to power on PHY: %d\n", err);
-> -		return err;
-> +		if (err < 0)
-> +			dev_err(pcie->dev, "failed to power on PHY: %d\n", err);
+will drop this patch.
 
-In the legacy_phy case, we used to bail out if tegra_pcie_phy_enable()
-or phy_power_on() failed, but now we don't.  I assume this is an
-unintentional change.
+Thanks
 
-I would personally write this as follows because I hate reading
-"if (!xxx) ... else ..." (this patch applies on top of the one you
-posted).  Note that this restores the legacy_phy error path also.
-
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 625db7d..139b9ca 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -882,6 +882,31 @@ static int tegra_pcie_port_phy_power_on(struct tegra_pcie_port *port)
- 	return 0;
- }
- 
-+static int tegra_pcie_port_phy_enable(struct tegra_pcie *pcie)
-+{
-+	if (pcie->legacy_phy) {
-+		if (pcie->phy)
-+			err = phy_power_on(pcie->phy);
-+		else
-+			err = tegra_pcie_phy_enable(pcie);
-+
-+		if (err < 0)
-+			dev_err(pcie->dev, "failed to power on PHY: %d\n", err);
-+
-+		return err;
-+	}
-+
-+	list_for_each_entry(port, &pcie->ports, list) {
-+		err = tegra_pcie_port_phy_power_on(port);
-+		if (err < 0) {
-+			dev_err(pcie->dev, "failed to power on PCIe port: %d\n",
-+				err);
-+			return err;
-+		}
-+	}
-+	return 0;
-+}
-+
- static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- {
- 	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
-@@ -921,25 +946,9 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- 		afi_writel(pcie, value, AFI_FUSE);
- 	}
- 
--	if (!pcie->legacy_phy) {
--		list_for_each_entry(port, &pcie->ports, list) {
--			err = tegra_pcie_port_phy_power_on(port);
--			if (err < 0) {
--				dev_err(pcie->dev,
--					"failed to power on PCIe port: %d\n",
--					err);
--				return err;
--			}
--		}
--	} else {
--		if (!pcie->phy)
--			err = tegra_pcie_phy_enable(pcie);
--		else
--			err = phy_power_on(pcie->phy);
--
--		if (err < 0)
--			dev_err(pcie->dev, "failed to power on PHY: %d\n", err);
--	}
-+	err = tegra_pcie_port_phy_enable(pcie);
-+	if (err < 0)
-+		return err;
- 
- 	/* take the PCIe interface module out of reset */
- 	reset_control_deassert(pcie->pcie_xrst);
+Yinghai
