@@ -1,134 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f193.google.com ([209.85.213.193]:34785 "EHLO
-	mail-ig0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750850AbcC1S3a (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2016 14:29:30 -0400
+Received: from e24smtp01.br.ibm.com ([32.104.18.85]:33385 "EHLO
+	e24smtp01.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752929AbcCKNaC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Mar 2016 08:30:02 -0500
+Received: from localhost
+	by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+	Fri, 11 Mar 2016 10:30:00 -0300
+Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
+	by d24dlp02.br.ibm.com (Postfix) with ESMTP id E60361DC006F
+	for <linux-pci@vger.kernel.org>; Fri, 11 Mar 2016 08:29:50 -0500 (EST)
+Received: from d24av05.br.ibm.com (d24av05.br.ibm.com [9.18.232.44])
+	by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u2BCTRSc5964088
+	for <linux-pci@vger.kernel.org>; Fri, 11 Mar 2016 09:29:27 -0300
+Received: from d24av05.br.ibm.com (localhost [127.0.0.1])
+	by d24av05.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u2BDTsUA010208
+	for <linux-pci@vger.kernel.org>; Fri, 11 Mar 2016 08:29:55 -0500
+Subject: Re: [PATCH] powerpc/pci: Reuse PHB number on pci_controller add if
+ available
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+References: <1457633505-19857-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+ <1457633505-19857-2-git-send-email-gpiccoli@linux.vnet.ibm.com>
+ <1457645698.24238.76.camel@kernel.crashing.org>
+ <20160310231823.GA5270@gwshan>
+ <1457693533.24238.99.camel@kernel.crashing.org>
+ <20160311131419.GA7911@gwshan>
+Cc: mikey@neuling.org, paulus@samba.org, imunsie@au1.ibm.com,
+	andrew.donnellan@au1.ibm.com, linux-pci@vger.kernel.org,
+	bhelgaas@google.com, linuxppc-dev@lists.ozlabs.org
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Message-ID: <56E2C852.40508@linux.vnet.ibm.com>
+Date: Fri, 11 Mar 2016 10:29:54 -0300
 MIME-Version: 1.0
-In-Reply-To: <56EC1805.5060207@codeaurora.org>
-References: <1458252137-24497-1-git-send-email-okaya@codeaurora.org>
-	<1458252137-24497-2-git-send-email-okaya@codeaurora.org>
-	<56EBF09A.1060503@arm.com>
-	<56EC1805.5060207@codeaurora.org>
-Date: Mon, 28 Mar 2016 14:29:29 -0400
-Message-ID: <CACJDEmrzKOExg-Rchjy2hfVzkzbCZ=WNn4Bu3EVgim748VvRig@mail.gmail.com>
-Subject: Re: [PATCH 2/3] swiotlb: prefix dma_to_phys and phys_to_dma functions
-From: Konrad Rzeszutek Wilk <konrad@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Robin Murphy <robin.murphy@arm.com>,
-	linux-arm-kernel@lists.infradead.org, timur@codeaurora.org,
-	cov@codeaurora.org, nwatters@codeaurora.org,
-	linux-mips@linux-mips.org, linux-ia64@vger.kernel.org,
-	linux-xtensa@linux-xtensa.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Max Filippov <jcmvbkbc@gmail.com>,
-	Chris Metcalf <cmetcalf@ezchip.com>,
-	Paul Mackerras <paulus@samba.org>,
-	"H. Peter Anvin" <hpa@zytor.com>, Huacai Chen <chenhc@lemote.com>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Jisheng Zhang <jszhang@marvell.com>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Michael Ellerman <mpe@ellerman.id.au>, X86 <x86@kernel.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Denys Vlasenko <dvlasenk@redhat.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Akinobu Mita <akinobu.mita@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Valentin Rothberg <valentinrothberg@gmail.com>,
-	Chris Zankel <chris@zankel.net>,
-	Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, Dean Nelson <dnelson@redhat.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-	Joe Perches <joe@perches.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Stefano Stabellini <stefano.stabellini@eu.citrix.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20160311131419.GA7911@gwshan>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 18, 2016 at 11:00 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> On 3/18/2016 8:12 AM, Robin Murphy wrote:
->> Since we know for sure that swiotlb_to_phys is a no-op on arm64, it might be cleaner to simply not reference it at all. I suppose we could have some private local wrappers, e.g.:
->>
->> #define swiotlb_to_virt(addr) phys_to_virt((phys_addr_t)(addr))
->>
->> to keep the intent of the code clear (and just in case anyone ever builds a system mad enough to warrant switching out that definition, but I'd hope that never happens).
->>
->> Otherwise, looks good - thanks for doing this!
->
-> OK. I added this. Reviewed-by?
->
-> I'm not happy to submit such a big patch for all different ARCHs. I couldn't
-> find a cleaner solution. I'm willing to split this patch into multiple if there
-> is a better way.
->
-> diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
-> index ada00c3..8c0f66b 100644
-> --- a/arch/arm64/mm/dma-mapping.c
-> +++ b/arch/arm64/mm/dma-mapping.c
-> @@ -29,6 +29,14 @@
->
->  #include <asm/cacheflush.h>
->
-> +/*
-> + * If you are building a system without IOMMU, then you are using SWIOTLB
-> + * library. The ARM64 adaptation of this library does not support address
-> + * translation and it assumes that physical address = dma address for such
-> + * a use case. Please don't build a platform that violates this.
-> + */
+On 03/11/2016 10:14 AM, Gavin Shan wrote:
+> Yeah, the BUID is PHB's identifier, but we only need the low 16-bits
+> as its base is 0x800000020000000ULL in QEMU or pHyp. I think other platforms
+> (like freescale's) still need dynamically allocated domain number, which
+> could be managed by a bitmap.
 
-Why not just expand the ARM64 part to support address translation?
+Thanks very much for the suggestions Benjamin and Gavin.
+Will improve the patch and send a v2.
 
-> +#define swiotlb_to_virt(addr) phys_to_virt((phys_addr_t)(addr))
-> +
+Cheers,
 
-Adding Stefano here.
 
->  static pgprot_t __get_dma_pgprot(struct dma_attrs *attrs, pgprot_t prot,
->                                  bool coherent)
->  {
-> @@ -188,7 +196,7 @@ static void __dma_free(struct device *dev, size_t size,
->                        void *vaddr, dma_addr_t dma_handle,
->                        struct dma_attrs *attrs)
->  {
-> -       void *swiotlb_addr = phys_to_virt(swiotlb_dma_to_phys(dev, dma_handle));
-> +       void *swiotlb_addr = swiotlb_to_virt(dma_handle);
->
->         size = PAGE_ALIGN(size);
->
-> @@ -209,8 +217,7 @@ static dma_addr_t __swiotlb_map_page(struct device *dev, struct page *page,
->
->         dev_addr = swiotlb_map_page(dev, page, offset, size, dir, attrs);
->         if (!is_device_dma_coherent(dev))
-> -               __dma_map_area(phys_to_virt(swiotlb_dma_to_phys(dev, dev_addr)),
-> -                              size, dir);
-> +               __dma_map_area(swiotlb_to_virt(dev_addr), size, dir);
->
->         return dev_addr;
->  }
-> @@ -283,8 +290,7 @@ static void __swiotlb_sync_single_for_device(struct device *dev,
->  {
->         swiotlb_sync_single_for_device(dev, dev_addr, size, dir);
->         if (!is_device_dma_coherent(dev))
-> -               __dma_map_area(phys_to_virt(swiotlb_dma_to_phys(dev, dev_addr)),
-> -                              size, dir);
-> +               __dma_map_area(swiotlb_to_virt(dev_addr), size, dir);
->  }
->
->
->
->
-> --
-> Sinan Kaya
-> Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+Guilherme
+
