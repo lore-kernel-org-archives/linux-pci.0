@@ -1,139 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-Id: <fc02478da4a7dc5617b305eca807bd5fdc8aa9bb.1458475382.git.lukas@wunner.de>
-In-Reply-To: <cc23dc43ce25142f1b097a73c17bbcdada3f964d.1458475382.git.lukas@wunner.de>
-References: <cc23dc43ce25142f1b097a73c17bbcdada3f964d.1458475382.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 20 Mar 2016 13:57:20 +0100
-Subject: [PATCH 2/3] thunderbolt: Fix typos and magic number
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:38717 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932084AbcCKV6W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Mar 2016 16:58:22 -0500
+Date: Fri, 11 Mar 2016 15:58:19 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	michals@xilinx.com, sorenb@xilinx.com, bhelgaas@google.com,
+	arnd@arndb.de, tinamdar@apm.com, treding@nvidia.com,
+	rjui@broadcom.com, Minghuan.Lian@freescale.com,
+	m-karicheri2@ti.com, hauke@hauke-m.de, marc.zyngier@arm.com,
+	dhdang@apm.com, sbranden@broadcom.com, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Ravi Kiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH v12] [PATCH] PCI: Xilinx-NWL-PCIe: Adding support for
+ Xilinx NWL PCIe Host Controller
+Message-ID: <20160311215819.GB16257@localhost>
+References: <1457281934-32068-1-git-send-email-bharatku@xilinx.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1457281934-32068-1-git-send-email-bharatku@xilinx.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix typo in tb_cfg_print_error() message.
-Fix bytecount in struct tb_drom_entry_port comment.
-Replace magic number in tb_switch_alloc().
-Rename tb_sw_set_unpplugged() and TB_CAL_IECS.
-                   ^                   ^
+Hi Bharat,
 
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/thunderbolt/ctl.c     |  2 +-
- drivers/thunderbolt/eeprom.c  |  2 +-
- drivers/thunderbolt/switch.c  | 10 +++++-----
- drivers/thunderbolt/tb.c      |  2 +-
- drivers/thunderbolt/tb.h      |  2 +-
- drivers/thunderbolt/tb_regs.h |  2 +-
- 6 files changed, 10 insertions(+), 10 deletions(-)
+I forgot I still have one question here:
 
-diff --git a/drivers/thunderbolt/ctl.c b/drivers/thunderbolt/ctl.c
-index 799634b..1146ff4 100644
---- a/drivers/thunderbolt/ctl.c
-+++ b/drivers/thunderbolt/ctl.c
-@@ -249,7 +249,7 @@ static void tb_cfg_print_error(struct tb_ctl *ctl,
- 		 * cfg_read/cfg_write.
- 		 */
- 		tb_ctl_WARN(ctl,
--			"CFG_ERROR(%llx:%x): Invalid config space of offset\n",
-+			"CFG_ERROR(%llx:%x): Invalid config space or offset\n",
- 			res->response_route, res->response_port);
- 		return;
- 	case TB_CFG_ERROR_NO_SUCH_PORT:
-diff --git a/drivers/thunderbolt/eeprom.c b/drivers/thunderbolt/eeprom.c
-index 0dde34e..47e56e8 100644
---- a/drivers/thunderbolt/eeprom.c
-+++ b/drivers/thunderbolt/eeprom.c
-@@ -221,7 +221,7 @@ struct tb_drom_entry_port {
- 	u8 micro1:4;
- 	u8 micro3;
- 
--	/* BYTES 5-6, TODO: verify (find hardware that has these set) */
-+	/* BYTES 6-7, TODO: verify (find hardware that has these set) */
- 	u8 peer_port_rid:4;
- 	u8 unknown3:3;
- 	bool has_peer_port:1;
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index db73ffe..c6270f0 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -350,7 +350,7 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
- 		return NULL;
- 
- 	sw->tb = tb;
--	if (tb_cfg_read(tb->ctl, &sw->config, route, 0, 2, 0, 5))
-+	if (tb_cfg_read(tb->ctl, &sw->config, route, 0, TB_CFG_SWITCH, 0, 5))
- 		goto err;
- 	tb_info(tb,
- 		"initializing Switch at %#llx (depth: %d, up port: %d)\n",
-@@ -426,9 +426,9 @@ err:
- }
- 
- /**
-- * tb_sw_set_unpplugged() - set is_unplugged on switch and downstream switches
-+ * tb_sw_set_unplugged() - set is_unplugged on switch and downstream switches
-  */
--void tb_sw_set_unpplugged(struct tb_switch *sw)
-+void tb_sw_set_unplugged(struct tb_switch *sw)
- {
- 	int i;
- 	if (sw == sw->tb->root_switch) {
-@@ -442,7 +442,7 @@ void tb_sw_set_unpplugged(struct tb_switch *sw)
- 	sw->is_unplugged = true;
- 	for (i = 0; i <= sw->config.max_port_number; i++) {
- 		if (!tb_is_upstream_port(&sw->ports[i]) && sw->ports[i].remote)
--			tb_sw_set_unpplugged(sw->ports[i].remote->sw);
-+			tb_sw_set_unplugged(sw->ports[i].remote->sw);
- 	}
- }
- 
-@@ -484,7 +484,7 @@ int tb_switch_resume(struct tb_switch *sw)
- 			|| tb_switch_resume(port->remote->sw)) {
- 			tb_port_warn(port,
- 				     "lost during suspend, disconnecting\n");
--			tb_sw_set_unpplugged(port->remote->sw);
-+			tb_sw_set_unplugged(port->remote->sw);
- 		}
- 	}
- 	return 0;
-diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-index d2c3fe3..24b6d30 100644
---- a/drivers/thunderbolt/tb.c
-+++ b/drivers/thunderbolt/tb.c
-@@ -246,7 +246,7 @@ static void tb_handle_hotplug(struct work_struct *work)
- 	if (ev->unplug) {
- 		if (port->remote) {
- 			tb_port_info(port, "unplugged\n");
--			tb_sw_set_unpplugged(port->remote->sw);
-+			tb_sw_set_unplugged(port->remote->sw);
- 			tb_free_invalid_tunnels(tb);
- 			tb_switch_free(port->remote->sw);
- 			port->remote = NULL;
-diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-index 8b0d7cf..61d57ba 100644
---- a/drivers/thunderbolt/tb.h
-+++ b/drivers/thunderbolt/tb.h
-@@ -226,7 +226,7 @@ void tb_switch_free(struct tb_switch *sw);
- void tb_switch_suspend(struct tb_switch *sw);
- int tb_switch_resume(struct tb_switch *sw);
- int tb_switch_reset(struct tb *tb, u64 route);
--void tb_sw_set_unpplugged(struct tb_switch *sw);
-+void tb_sw_set_unplugged(struct tb_switch *sw);
- struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route);
- 
- int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
-diff --git a/drivers/thunderbolt/tb_regs.h b/drivers/thunderbolt/tb_regs.h
-index 6577af7..1e2a4a8 100644
---- a/drivers/thunderbolt/tb_regs.h
-+++ b/drivers/thunderbolt/tb_regs.h
-@@ -30,7 +30,7 @@ enum tb_cap {
- 	TB_CAP_I2C		= 0x0005,
- 	TB_CAP_PLUG_EVENTS	= 0x0105, /* also EEPROM */
- 	TB_CAP_TIME2		= 0x0305,
--	TB_CAL_IECS		= 0x0405,
-+	TB_CAP_IECS		= 0x0405,
- 	TB_CAP_LINK_CONTROLLER	= 0x0605, /* also IECS */
- };
- 
--- 
-2.8.0.rc3
+On Sun, Mar 06, 2016 at 10:02:14PM +0530, Bharat Kumar Gogada wrote:
+> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+
+> +static bool nwl_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
+> +{
+> +	struct nwl_pcie *pcie = bus->sysdata;
+> +
+> +	/* Check link,before accessing downstream ports */
+> +	if (bus->number != pcie->root_busno) {
+> +		if (!nwl_pcie_link_up(pcie))
+> +			return false;
+> +	}
+
+This seems racy.  What if we check, and the link is up, but the link
+goes down before we actually complete the config access?
+
+I'm suggesting that this check for the link being up might be
+superfluous.
+
+The hardware should do something reasonable with the config access if
+it can't send it down the link.
+
+> +
+> +	/* Only one device down on each root port */
+> +	if (bus->number == pcie->root_busno && devfn > 0)
+> +		return false;
+> +
+> +	return true;
+> +}
