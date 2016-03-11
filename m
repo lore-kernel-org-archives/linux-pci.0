@@ -1,79 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:49384 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753021AbcCHA5i (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Mar 2016 19:57:38 -0500
-Received: from localhost
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 8 Mar 2016 10:57:35 +1000
-Date: Tue, 8 Mar 2016 11:56:33 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
-	dja@axtens.net, Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: Re: [PATCH v8 42/45] drivers/of: Rename unflatten_dt_node()
-Message-ID: <20160308005633.GA30023@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-43-git-send-email-gwshan@linux.vnet.ibm.com>
- <CAL_JsqJydgmkU=SGcr-0JHsYG8wXk5GEQCQXY7y+FHH2A0LZkw@mail.gmail.com>
- <20160219031655.GA10818@gwshan>
- <CAL_JsqJFacEMD6jwi=YsT83BTVp5Asjmw4nYU6Msct-DcR2W9Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL_JsqJFacEMD6jwi=YsT83BTVp5Asjmw4nYU6Msct-DcR2W9Q@mail.gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:27372 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934114AbcCKH0n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Mar 2016 02:26:43 -0500
+From: "Yong, Jonathan" <jonathan.yong@intel.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, jonathan.yong@intel.com
+Subject: [RFC] PCI: PTM Driver
+Date: Fri, 11 Mar 2016 07:26:23 +0000
+Message-Id: <1457681184-20439-1-git-send-email-jonathan.yong@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 01, 2016 at 08:40:12PM -0600, Rob Herring wrote:
->On Thu, Feb 18, 2016 at 9:16 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->> On Wed, Feb 17, 2016 at 08:59:53AM -0600, Rob Herring wrote:
->>>On Tue, Feb 16, 2016 at 9:44 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->>>> This renames unflatten_dt_node() to unflatten_dt_nodes() as it
->>>> populates multiple device nodes from FDT blob. No logical changes
->>>> introduced.
->>>>
->>>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>>> ---
->>>>  drivers/of/fdt.c | 14 +++++++-------
->>>>  1 file changed, 7 insertions(+), 7 deletions(-)
->>>
->>>Acked-by: Rob Herring <robh@kernel.org>
->>>
->>>I'm happy to take patches 40-42 for 4.6 if the rest of the series
->>>doesn't go in given they fix a separate problem. I just need to know
->>>soon (or at least they need to go into -next soon).
->>>
->>
->> Thanks for quick response, Rob. It depends how much comments I will
->> receive for the powerpc/powernv part. Except that, all parts including
->> this one have been ack'ed. I can discuss it with Michael Ellerman.
->> By the way, how soon you need the decision to merge 40-42? If that's
->> one or two weeks later, I don't think the reivew on the whole series
->> can be done.
->
->Well, it's been 2 weeks now. I need to know this week.
->
->> Also, I think you probably can merge 40-44 as they're all about
->> fdt.c. If they can be merged at one time, I needn't bother (cc)
->> you again if I need send a updated revision. Thanks for your
->> review.
->
->I did not include 43 and 44 as they are only needed for the rest of your series.
->
+Hello LKML,
 
-Rob, sorry for late reponse. I really expect this series to be merged to 4.6 and
-I was checking reviewers' bandwidth to review it. Unfortunately, I didn't receive
-any comments except yours until now. That means this series has to miss 4.6. Please
-pick/merge 41 and 42 if no body has objection. Thanks again for your time on this.
+This is a preliminary implementation of the PTM[1] support driver, the code
+is obviously hacked together and in need of refactoring. This driver has
+only been tested against a virtual PCI bus.
 
-Thanks,
-Gavin
+The drivers job is to get to every PTM capable device, set some PCI config
+space bits, then go back to sleep [2].
+
+PTM capable PCIe devices will get a new sysfs entry to allow PTM to be
+enabled if automatic PTM activation is disabled, or disabled if so desired.
+
+Comments? Should I explain the PTM registers in more details?
+Please CC me, thanks.
+
+[1] Precision Time Measurement: A protocol for synchronizing PCIe endpoint
+clocks against the host clock as specified in the PCI Express Base
+Specification 3.1. It is identified by the 0x001f extended capability ID.
+
+PTM capable devices are split into 3 roles, master, responder and requester.
+Summary as follows:
+
+A master holds the master clock that will be used for all devices under its
+domain (not to be confused with PCI domains). There may be multiple masters
+in a PTM hierarchy, in which case, the highest master closest to the root
+complex will be selected for the PTM domain. A master is also always
+responder capable. Clock precision is signified by a Local Clock
+Granularity field, in nano-seconds.
+
+A responder responds to any PTM synchronization requests from a downstream
+device. A responder is typically a switch device. It may also hold a local
+clock signified by a non-zero Local Clock Granularity field. A value of 0
+signifies that the device simply propagates timing information from
+upstream devices.
+
+A requester is typically an endpoint that will request synchronization
+updates from an upstream PTM capable time source. The driver will update
+the Effective Clock Granularity field based on the same field from the
+PTM domain master. The field should be programed with a value of 0 if any
+intervening responder has a Local Clock Granularity field value of 0.
+
+[2] The software drivers never see the PTM packets, the PCI Express Base
+Specificaton 3.1 reads:
+	PTM capable components can make their PTM context available for
+	inspection by software, enabling software to translate timing
+	information between local times and PTM Master Time.
+
+This isn't very informative.
+
+Yong, Jonathan (1):
+  PCI: PTM preliminary implementation
+
+ drivers/pci/pci-sysfs.c     |   7 +
+ drivers/pci/pci.h           |  21 +++
+ drivers/pci/pcie/Kconfig    |   8 +
+ drivers/pci/pcie/Makefile   |   2 +-
+ drivers/pci/pcie/pcie_ptm.c | 353 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/probe.c         |   3 +
+ 6 files changed, 393 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/pci/pcie/pcie_ptm.c
+
+-- 
+2.4.10
 
