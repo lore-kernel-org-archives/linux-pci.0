@@ -1,78 +1,156 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:32987 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750993AbcCLAuR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 11 Mar 2016 19:50:17 -0500
+Received: by mail-ob0-f175.google.com with SMTP id fz5so129657571obc.0
+        for <linux-pci@vger.kernel.org>; Fri, 11 Mar 2016 16:50:16 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20160310175435.GC17238@localhost>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-	<1456366370-28995-8-git-send-email-yinghai@kernel.org>
-	<20160310175435.GC17238@localhost>
-Date: Fri, 11 Mar 2016 14:21:26 -0800
-Message-ID: <CAE9FiQUY037o7YMfx9NHX9KBx3Tz+MpOjvNvaQ8ex7t5X3zK7g@mail.gmail.com>
-Subject: Re: [PATCH v10 07/59] PCI: Ignore BAR for ALi M1533 PCI-ISA bridge
-From: Yinghai Lu <yinghai@kernel.org>
+In-Reply-To: <20160311232920.GA27552@localhost>
+References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160308174558.GC19869@localhost> <CALCETrUHEmFoO9dYY0xbjLiLfCJQCxG7h60dkOuCMMOKonytpw@mail.gmail.com>
+ <20160311232920.GA27552@localhost>
+From: Andy Lutomirski <luto@amacapital.net>
+Date: Fri, 11 Mar 2016 16:49:56 -0800
+Message-ID: <CALCETrV4D2Kzn=6ags5tAP+ortjFpeeNEKW-91UHsF=UA5bN+g@mail.gmail.com>
+Subject: Re: [PATCH v1 00/12] PCI: Rework shadow ROM handling
 To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Tony Luck <tony.luck@intel.com>,
+	DRI <dri-devel@lists.freedesktop.org>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	=?UTF-8?Q?Bruno_Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
+	Daniel Stone <daniel@fooishbar.org>,
+	Alex Deucher <alexdeucher@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	=?UTF-8?B?VmlsbGUgU3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 10, 2016 at 9:54 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Wed, Feb 24, 2016 at 06:11:58PM -0800, Yinghai Lu wrote:
->> Meelis reported strange conflicts on sparc v210:
->> pci 0001:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with 0001:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
->> pci 0001:00:06.0: can't claim BAR 0 [io 0x7fe01000000-0x7fe0100000f]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
->> pci 0001:00:0d.0: can't claim BAR 0 [io 0x7fe01000900-0x7fe01000907]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
->> pci 0001:00:0d.0: can't claim BAR 1 [io 0x7fe01000918-0x7fe0100091f]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
->> pci 0001:00:0d.0: can't claim BAR 2 [io 0x7fe01000910-0x7fe01000917]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
->> pci 0001:00:0d.0: can't claim BAR 3 [io 0x7fe01000908-0x7fe0100090f]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
->> pci 0001:00:0d.0: can't claim BAR 4 [io 0x7fe01000920-0x7fe0100092f]: address conflict with 0001:00:07.0 [io 0x7fe01000000-0x7fe0100ffff]
->> PCI: /pci@1e,600000 can't claim Video RAM area [mem 0x7ff000a0000-0x7ff000bffff]: address conflict with 0001:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
->> PCI: /pci@1e,600000 can't claim System ROM [mem 0x7ff000f0000-0x7ff000fffff]: address conflict with 0001:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
->> PCI: /pci@1e,600000 can't claim Video ROM [mem 0x7ff000c0000-0x7ff000c7fff]: address conflict with 0001:00:07.0 [mem 0x7ff00000000-0x7ff000fffff]
+On Fri, Mar 11, 2016 at 3:29 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, Mar 11, 2016 at 01:16:09PM -0800, Andy Lutomirski wrote:
+>> On Tue, Mar 8, 2016 at 9:45 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> > On Thu, Mar 03, 2016 at 10:53:50AM -0600, Bjorn Helgaas wrote:
+>> >> The purpose of this series is to:
+>> >>
+>> >>   - Fix the "BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment"
+>> >>     messages reported by Linus [1], Andy [2], and others.
+>> >>
+>> >>   - Move arch-specific shadow ROM location knowledge, e.g.,
+>> >>     0xC0000-0xDFFFF, from PCI core to arch code.
+>> >>
+>> >>   - Fix the ia64 and MIPS Loongson 3 oddity of keeping virtual
+>> >>     addresses in shadow ROM struct resource (resources should always
+>> >>     contain *physical* addresses).
+>> >>
+>> >>   - Remove now-unused IORESOURCE_ROM_COPY and IORESOURCE_ROM_BIOS_COPY
+>> >>     flags.
+>> >>
+>> >> This series is based on v4.5-rc1, and it's available on my
+>> >> pci/resource git branch (along with a couple tiny unrelated patches)
+>> >> at [3].
+>> >>
+>> >> Bjorn
+>> >>
+>> >>
+>> >> [1] http://lkml.kernel.org/r/CA+55aFyVMfTBB0oz_yx8+eQOEJnzGtCsYSj9QuhEpdZ9BHdq5A@mail.gmail.com
+>> >> [2] http://lkml.kernel.org/r/CALCETrV+RwNPzxyL8UVNsrAGu-6cCzD_Cc9PFJT2NCTJPLZZiw@mail.gmail.com
+>> >> [3] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/resource
+>> >>
+>> >>
+>> >> ---
+>> >>
+>> >> Bjorn Helgaas (12):
+>> >>       PCI: Mark shadow copy of VGA ROM as IORESOURCE_PCI_FIXED
+>> >>       PCI: Don't assign or reassign immutable resources
+>> >>       PCI: Don't enable/disable ROM BAR if we're using a RAM shadow copy
+>> >>       PCI: Set ROM shadow location in arch code, not in PCI core
+>> >>       PCI: Clean up pci_map_rom() whitespace
+>> >>       ia64/PCI: Use temporary struct resource * to avoid repetition
+>> >>       ia64/PCI: Use ioremap() instead of open-coded equivalent
+>> >>       ia64/PCI: Keep CPU physical (not virtual) addresses in shadow ROM resource
+>> >>       MIPS: Loongson 3: Use temporary struct resource * to avoid repetition
+>> >>       MIPS: Loongson 3: Keep CPU physical (not virtual) addresses in shadow ROM resource
+>> >>       PCI: Remove unused IORESOURCE_ROM_COPY and IORESOURCE_ROM_BIOS_COPY
+>> >>       PCI: Simplify sysfs ROM cleanup
+>> >>
+>> >>
+>> >>  arch/ia64/pci/fixup.c              |   21 +++++++--
+>> >>  arch/ia64/sn/kernel/io_acpi_init.c |   22 ++++++----
+>> >>  arch/ia64/sn/kernel/io_init.c      |   51 ++++++++--------------
+>> >>  arch/mips/pci/fixup-loongson3.c    |   19 +++++---
+>> >>  arch/x86/pci/fixup.c               |   21 +++++++--
+>> >>  drivers/pci/pci-sysfs.c            |   13 +-----
+>> >>  drivers/pci/remove.c               |    1
+>> >>  drivers/pci/rom.c                  |   83 +++++++++++-------------------------
+>> >>  drivers/pci/setup-res.c            |    6 +++
+>> >>  include/linux/ioport.h             |    4 --
+>> >>  10 files changed, 111 insertions(+), 130 deletions(-)
+>> >
+>> > I applied this series to pci/resource for v4.6.
 >>
->> we have
->> pci_bus 0001:00: root bus resource [io  0x7fe01000000-0x7fe01ffffff] (bus address [0x0000-0xffffff])
->> pci_bus 0001:00: root bus resource [mem 0x7ff00000000-0x7ffffffffff] (bus address [0x00000000-0xffffffff])
+>> This gets rid of all the warnings for me until I try to read my i915
+>> device's rom using sysfs.  Then I get:
 >>
->> so pci bus address in the bars for 0001:00:07.0 has all 0s.
+>> i915 0000:00:02.0: Invalid PCI ROM header signature: expecting 0xaa55,
+>> got 0xffff
 >>
->> 0001:00:07.0 ISA bridge: ULi Electronics Inc. M1533/M1535/M1543 PCI to ISA Bridge [Aladdin IV/V/V+]
->>         Region 0: [virtual] I/O ports at 0000 [size=64K]
->>         Region 1: Memory at <unassigned> (32-bit, non-prefetchable) [size=1M]
->>         Region 2: Memory at <unassigned> (32-bit, non-prefetchable) [size=1M]
->> 00: b9 10 33 15 0f 00 10 02 00 00 01 06 00 00 00 00
->> 10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> 20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->> 30: 00 00 00 00 a0 00 00 00 00 00 00 00 00 00 00 00
+>> So I suspect that something is still subtly wrong -- I'd imagine that
+>> this should either work or the intialization code should detect that
+>> there is no usable ROM and not expose it.
 >>
->> According to http://www.versalogic.com/Support/Downloads/pdf/ali1543.pdf
->> page 28: The indices before 40h are read-only.
->> and we have all 0 from 0x10-0x2f, according to lspci.
->> So those BAR do not work as regular BAR, just clean flags, and ignore them all
->> the way include claim and sizing and alloc etc.
+>> (To be clear, there's no regression here.)
 >
-> A BAR that is read-only zeroes is perfectly legal (PCI spec r3.0, sec
-> 6.2.5.1) and __pci_read_base() handles it correctly.
+> Hmmm.  Thanks for testing this.  As you say, I think this is the way
+> it's always been, but it does seem non-intuitive.
 >
-> Maybe you're using something other than __pci_read_base() and the problem
-> is there?
+> That "Invalid PCI ROM header signature" warning comes from
+> pci_get_rom_size().  We don't call that at enumeration-time; we only
+> call it later when somebody tries to read the ROM via sysfs:
 >
-> The following dmesg logs show the [10b9:1533] device handled
-> correctly, with no implemented BARs:
+>   pci_bus_add_device
+>     pci_fixup_device(pci_fixup_final)
+>       pci_fixup_video                 # final fixup
+>         res->flags = MEM | SHADOW | PCI_FIXED
+>     pci_create_sysfs_dev_files
+>       if (SHADOW)
+>         rom_size = 0x20000            # oops, I should have fixed this too
+>       if (rom_size)
+>         attr->read = pci_read_rom
+>         sysfs_create_bin_file         # sysfs "rom" file
 >
->   https://bugs.freedesktop.org/attachment.cgi?id=118855
->   http://d11mgdpsdcgrvc.cloudfront.net/dmesg.txt
->   http://www.hivmr.com/db/sasj1xfk98zsz9amfmpp1mdkzfk3pjk3
+>   pci_read_rom                        # sysfs "rom" read function
+>     pci_map_rom
+>       ioremap
+>       pci_get_rom_size
+>         dev_err("Invalid PCI ROM header signature")
+>     memcpy_fromio
+>     pci_unmap_rom
+>
+> I think this is the same for regular ROMs on the device as it is for
+> the magic VGA shadow ROM.  In both cases, we create the sysfs "rom"
+> file regardless of what the ROM contains.
+>
+> I guess we could try to read the ROM at enumeration time and look for
+> a valid signature.  I've considered doing that anyway so we could
+> cache the ROM contents and avoid permanently allocating MMIO space for
+> it, since many BIOSes don't allocate space, and Linux isn't really smart
+> enough to do a good job of it itself.
+>
+> I don't know why the PCI core cares about the ROM signature anyway,
+> since it doesn't use the content.  Maybe we should get rid of
+> pci_get_rom_size() and allow you to read whatever is there, like
+> we do for other BARs.  I suppose there's some history behind limiting
+> the size, but I don't know what it is.
 
-ok, then those resource info should come from OF instead of __pci_read_base().
+FWIW, if I disable all the checks in pci_get_rom_size, I learn that my
+video ROM consists entirely of 0xff bytes.  Maybe there just isn't a
+ROM shadow on my laptop.
 
-will drop this patch.
-
-Thanks
-
-Yinghai
+--Andy
