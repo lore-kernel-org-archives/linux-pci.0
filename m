@@ -1,42 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:49801 "EHLO
-	lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751975AbcCGEkl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 6 Mar 2016 23:40:41 -0500
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Murali Karicheri <m-karicheri2@ti.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH] PCI/keystone: check return value of devm_phy_get with EPROBE_DEFER
-Date: Mon,  7 Mar 2016 12:32:21 +0800
-Message-Id: <1457325141-1354-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail.kernel.org ([198.145.29.136]:44110 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751720AbcCLABO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Mar 2016 19:01:14 -0500
+Date: Fri, 11 Mar 2016 18:01:11 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH 1/6] PCI: No need to set d3cold_allowed to PCIe ports
+Message-ID: <20160312000111.GJ4725@localhost>
+References: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1456750566-116248-2-git-send-email-mika.westerberg@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1456750566-116248-2-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the return value of devm_phy_get is EPROBE_DEFER, we should
-defer probing the driver.
+On Mon, Feb 29, 2016 at 02:56:01PM +0200, Mika Westerberg wrote:
+> PCIe ports are already skipped by the PCI core so they are never moved to
+> D3 (or D3cold) anyway. No need to set the field.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+A pointer to where the PCI core skips these ports would be helpful.
+pci_pm_runtime_suspend() is the only place I see that tests d3cold_allowed,
+and I don't see that it checks anything about PCIe ports.
 
- drivers/pci/host/pci-keystone.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index 0aa81bd..42af6ac 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -363,6 +363,8 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 		ret = phy_init(phy);
- 		if (ret < 0)
- 			return ret;
-+	} else if (PTR_ERR(phy) == -EPROBE_DEFER) {
-+		return PTR_ERR(phy);
- 	}
- 
- 	/* index 2 is to read PCI DEVICE_ID */
--- 
-2.3.7
-
-
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+>  drivers/pci/pcie/portdrv_pci.c | 5 -----
+>  1 file changed, 5 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index be35da2e105e..6c6bb03392ea 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -134,11 +134,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+>  		return status;
+>  
+>  	pci_save_state(dev);
+> -	/*
+> -	 * D3cold may not work properly on some PCIe port, so disable
+> -	 * it by default.
+> -	 */
+> -	dev->d3cold_allowed = false;
+>  	return 0;
+>  }
+>  
+> -- 
+> 2.7.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
