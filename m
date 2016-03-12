@@ -1,110 +1,170 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56716 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753369AbcCIAla (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Mar 2016 19:41:30 -0500
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org
-Cc: linux-pci@vger.kernel.org, ravikanth.nalla@hpe.com,
-	lenb@kernel.org, harish.k@hpe.com, ashwin.reghunandanan@hpe.com,
-	bhelgaas@google.com, rjw@rjwysocki.net,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Robert Moore <robert.moore@intel.com>,
-	Lv Zheng <lv.zheng@intel.com>, linux-kernel@vger.kernel.org,
-	devel@acpica.org
-Subject: [PATCH 2/4] acpi,pci,irq: remove redundant code in acpi_irq_penalty_init
-Date: Tue,  8 Mar 2016 19:41:17 -0500
-Message-Id: <1457484079-18202-2-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
-References: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
+Received: from mail.kernel.org ([198.145.29.136]:44783 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751286AbcCLAaf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 11 Mar 2016 19:30:35 -0500
+Date: Fri, 11 Mar 2016 18:30:29 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH 4/6] PCI: Add runtime PM support for PCIe ports
+Message-ID: <20160312003029.GL4725@localhost>
+References: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1456750566-116248-5-git-send-email-mika.westerberg@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1456750566-116248-5-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-acpi_irq_get_penalty is now calculating the penalty on the fly now.
-No need to maintain global list of penalties or calculate them
-at the init time. Removing duplicate code in acpi_irq_penalty_init.
+On Mon, Feb 29, 2016 at 02:56:04PM +0200, Mika Westerberg wrote:
+> Add back runtime PM support for PCIe ports that was removed in
+> commit fe9a743a2601 ("PCI/PM: Drop unused runtime PM support code for PCIe
+> ports").
+> 
+> First of all we cannot enable it automatically for all root ports since
+> there have been problems previously, 
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- arch/x86/pci/acpi.c         |  1 -
- drivers/acpi/pci_link.c     | 35 -----------------------------------
- include/acpi/acpi_drivers.h |  1 -
- 3 files changed, 37 deletions(-)
+Pointers to these problems would be useful.
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 3cd6983..b2a4e2a 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -396,7 +396,6 @@ int __init pci_acpi_init(void)
- 		return -ENODEV;
- 
- 	printk(KERN_INFO "PCI: Using ACPI for IRQ routing\n");
--	acpi_irq_penalty_init();
- 	pcibios_enable_irq = acpi_pci_irq_enable;
- 	pcibios_disable_irq = acpi_pci_irq_disable;
- 	x86_init.pci.init_irq = x86_init_noop;
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index a5a66ca..eb8e770 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -511,41 +511,6 @@ static int acpi_irq_get_penalty(int irq)
- 	return penalty;
- }
- 
--int __init acpi_irq_penalty_init(void)
--{
--	struct acpi_pci_link *link;
--	int i;
--
--	/*
--	 * Update penalties to facilitate IRQ balancing.
--	 */
--	list_for_each_entry(link, &acpi_link_list, list) {
--
--		/*
--		 * reflect the possible and active irqs in the penalty table --
--		 * useful for breaking ties.
--		 */
--		if (link->irq.possible_count) {
--			int penalty =
--			    PIRQ_PENALTY_PCI_POSSIBLE /
--			    link->irq.possible_count;
--
--			for (i = 0; i < link->irq.possible_count; i++) {
--				if (link->irq.possible[i] < ACPI_MAX_ISA_IRQ)
--					acpi_irq_penalty[link->irq.
--							 possible[i]] +=
--					    penalty;
--			}
--
--		} else if (link->irq.active) {
--			acpi_irq_penalty[link->irq.active] +=
--			    PIRQ_PENALTY_PCI_POSSIBLE;
--		}
--	}
--
--	return 0;
--}
--
- static int acpi_irq_balance = -1;	/* 0: static, 1: balance */
- 
- static int acpi_pci_link_allocate(struct acpi_pci_link *link)
-diff --git a/include/acpi/acpi_drivers.h b/include/acpi/acpi_drivers.h
-index 29c6912..797ae2e 100644
---- a/include/acpi/acpi_drivers.h
-+++ b/include/acpi/acpi_drivers.h
-@@ -78,7 +78,6 @@
- 
- /* ACPI PCI Interrupt Link (pci_link.c) */
- 
--int acpi_irq_penalty_init(void);
- int acpi_pci_link_allocate_irq(acpi_handle handle, int index, int *triggering,
- 			       int *polarity, char **name);
- int acpi_pci_link_free_irq(acpi_handle handle);
--- 
-1.8.2.1
+> so we enable it only based on per port
+> configuration (runtime_suspend_allowed).
 
+I see that the next patch basically adds a quirk to set
+runtime_suspend_allowed for Sunrisepoint.  How do we prevent this
+from being a maintenance nightmare?  I don't want to have to add
+a quirk for every new device that supports runtime PM.
+
+> Furthermore we need to check that
+> the device, if wake capable, can do so from D3cold (which is the state it
+> goes after the root port is powered down).
+
+I don't see this check.  I was expecting something like
+device_may_wakeup(&pdev->dev) && !pci_pme_capable(pdev, PCI_D3cold)
+like you did in the "Move PCIe ports to D3hot during suspend" patch.
+
+> This follows what we did for
+> PCIe port system suspend already.
+> 
+> Runtime PM is still blocked and needs to be unblocked from userspace like
+> with other PCI devices.
+
+Can you expand on this a bit?  I assume you mean that runtime PM is
+disabled by default, and userspace has to enable it with a sysfs switch or
+something?  Can you include information about how to do that?
+
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+>  drivers/pci/pcie/portdrv_pci.c | 49 ++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 49 insertions(+)
+> 
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index fe3349685141..eb0f425f51cc 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -85,6 +85,7 @@ enum pcie_port_type {
+>  
+>  struct pcie_port_config {
+>  	bool suspend_allowed;
+> +	bool runtime_suspend_allowed;
+>  };
+>  
+>  static const struct pcie_port_config pcie_port_configs[] = {
+> @@ -154,6 +155,11 @@ static bool pcie_port_suspend_allowed(struct pci_dev *pdev)
+>  	return pcie_port_can_suspend(pdev);
+>  }
+>  
+> +static bool pcie_port_runtime_suspend_allowed(struct pci_dev *pdev)
+> +{
+> +	return pcie_port_get_config(pdev)->runtime_suspend_allowed;
+> +}
+> +
+>  static int pcie_port_suspend_noirq(struct device *dev)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+> @@ -188,6 +194,34 @@ static int pcie_port_resume_noirq(struct device *dev)
+>  	return 0;
+>  }
+>  
+> +static int pcie_port_runtime_suspend(struct device *dev)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +	/*
+> +	 * All devices behind the port are assumed to be in D3cold so
+> +	 * update their state now.
+> +	 */
+> +	__pci_bus_set_current_state(pdev->subordinate, PCI_D3cold);
+> +	return 0;
+> +}
+> +
+> +static int pcie_port_runtime_resume(struct device *dev)
+> +{
+> +	return 0;
+> +}
+> +
+> +static int pcie_port_runtime_idle(struct device *dev)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +	if (pcie_port_can_suspend(pdev)) {
+> +		pm_schedule_suspend(dev, 10);
+> +		return 0;
+> +	}
+> +	return -EBUSY;
+> +}
+> +
+>  static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+>  	.suspend	= pcie_port_device_suspend,
+>  	.resume		= pcie_port_device_resume,
+> @@ -197,12 +231,20 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+>  	.restore	= pcie_port_device_resume,
+>  	.suspend_noirq	= pcie_port_suspend_noirq,
+>  	.resume_noirq	= pcie_port_resume_noirq,
+> +	.runtime_suspend = pcie_port_runtime_suspend,
+> +	.runtime_resume	= pcie_port_runtime_resume,
+> +	.runtime_idle	= pcie_port_runtime_idle,
+>  };
+>  
+>  #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+>  
+>  #else /* !PM */
+>  
+> +static inline bool pcie_port_runtime_suspend_allowed(struct pci_dev *pdev)
+> +{
+> +	return false;
+> +}
+> +
+>  #define PCIE_PORTDRV_PM_OPS	NULL
+>  #endif /* !PM */
+>  
+> @@ -230,11 +272,18 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+>  		return status;
+>  
+>  	pci_save_state(dev);
+> +
+> +	if (pcie_port_runtime_suspend_allowed(dev))
+> +		pm_runtime_put_noidle(&dev->dev);
+> +
+>  	return 0;
+>  }
+>  
+>  static void pcie_portdrv_remove(struct pci_dev *dev)
+>  {
+> +	if (pcie_port_runtime_suspend_allowed(dev))
+> +		pm_runtime_get_noresume(&dev->dev);
+> +
+>  	pcie_port_device_remove(dev);
+>  }
+>  
+> -- 
+> 2.7.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
