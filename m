@@ -1,135 +1,191 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34062 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754246AbcCAPCW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Mar 2016 10:02:22 -0500
-Date: Tue, 1 Mar 2016 09:02:11 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tim Harvey <tharvey@gateworks.com>
-Cc: Rob Herring <robh+dt@kernel.org>,
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:34291 "EHLO
+	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754321AbcCMXbN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Mar 2016 19:31:13 -0400
+Received: by mail-wm0-f65.google.com with SMTP id p65so12431905wmp.1
+        for <linux-pci@vger.kernel.org>; Sun, 13 Mar 2016 16:31:12 -0700 (PDT)
+Message-ID: <1457911870.16725.42.camel@googlemail.com>
+Subject: [PATCH v4] PCI: imx6: Add initial imx6sx support
+From: Christoph Fritz <chf.fritz@googlemail.com>
+Reply-To: chf.fritz@googlemail.com
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>,
 	Lucas Stach <l.stach@pengutronix.de>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Subject: Re: [PATCH v2] PCI: imx6: add dt prop for link gen, default to gen1
-Message-ID: <20160301150211.GA12752@localhost>
-References: <1446735481-27326-1-git-send-email-tharvey@gateworks.com>
- <1447942365-11662-1-git-send-email-tharvey@gateworks.com>
- <20151125231435.GI8869@localhost>
- <CAJ+vNU0ar_d=2n4Yz3QX4qidSkH6PBLyfB8-w-ErLOYzwqj7rw@mail.gmail.com>
- <20160224200357.GB31108@localhost>
- <CAL_Jsq+O1vr6sVZeJ10GXLpEuhb5-kJVYrQe2EY7XB814FuF0Q@mail.gmail.com>
- <CAJ+vNU3gG=vdL__hpUa7D1OUMZcmPKqU1_hw5nGoJ3zxp6HO0A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJ+vNU3gG=vdL__hpUa7D1OUMZcmPKqU1_hw5nGoJ3zxp6HO0A@mail.gmail.com>
+	Shawn Guo <shawnguo@kernel.org>,
+	Fabio Estevam <fabio.estevam@nxp.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lee Jones <lee.jones@linaro.org>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Date: Mon, 14 Mar 2016 00:31:10 +0100
+In-Reply-To: <1457911590.16725.37.camel@googlemail.com>
+References: <1456411669-4699-1-git-send-email-chf.fritz@googlemail.com>
+	 <1456411669-4699-3-git-send-email-chf.fritz@googlemail.com>
+	 <20160311175850.GA4725@localhost>
+	 <1457911590.16725.37.camel@googlemail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 29, 2016 at 06:41:29AM -0800, Tim Harvey wrote:
-> On Wed, Feb 24, 2016 at 12:35 PM, Rob Herring <robh+dt@kernel.org> wrote:
-> > On Wed, Feb 24, 2016 at 2:03 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >> [+cc Rob, devicetree list]
-> >>
-> >> On Wed, Dec 02, 2015 at 08:35:06AM -0800, Tim Harvey wrote:
-> >>> On Wed, Nov 25, 2015 at 3:14 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >>> > On Thu, Nov 19, 2015 at 06:12:45AM -0800, Tim Harvey wrote:
-> >>> >> Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
-> >>> >> the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
-> >>> >> external clock source is present and supplied back to the IMX6 PCIe core
-> >>> >> via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
-> >>> >>
-> >>> >> Add a dt property to specify gen1 vs gen2 and check this before allowing
-> >>> >> a Gen2 link.
-> >>> >>
-> >>> >> We default to Gen1 if the property is not present because at this time there
-> >>> >> are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
-> >>> >>
-> >>> >> In order to be Gen2 compliant on IMX6 you need to:
-> >>> >>  - have a Gen2 compliant external clock generator and route that clock back
-> >>> >>    to either LVDS CLK1 or LVDS CLK2 as an input.
-> >>> >>    (see IMX6SX-SabreSD reference design)
-> >>> >>  - specify this clock in the pcie node in the dt
-> >>> >>    (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
-> >>> >>     IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
-> >>> >>
-> >>> >> [1] https://community.freescale.com/message/453209
-> >>> >>
-> >>> >> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
-> >>> >> ---
-> >>> >> v2:
-> >>> >>  - moved dt property to designware core
-> >>> >>
-> >>> >>  .../devicetree/bindings/pci/designware-pcie.txt          |  1 +
-> >>> >>  drivers/pci/host/pci-imx6.c                              | 16 ++++++++++------
-> >>> >>  drivers/pci/host/pcie-designware.c                       |  4 ++++
-> >>> >>  drivers/pci/host/pcie-designware.h                       |  1 +
-> >>> >>  4 files changed, 16 insertions(+), 6 deletions(-)
-> >>> >>
-> >>> >> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> >>> >> index 9f4faa8..a9a94b9 100644
-> >>> >> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> >>> >> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> >>> >> @@ -26,3 +26,4 @@ Optional properties:
-> >>> >>  - bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
-> >>> >>    specify this property, to keep backwards compatibility a range of 0x00-0xff
-> >>> >>    is assumed if not present)
-> >>> >> +- max-link-speed: Specify PCI gen for link capability (ie 2 for gen2)
-> >>> >
-> >>> > Is there some sort of DT or OF spec that lists "max-link-speed" as a
-> >>> > generic property?  I see Lucas' desire to have this be common across
-> >>> > DesignWare PCIe cores.  Should it be moved up a level even from there,
-> >>> > i.e., to bindings/pci/pci.txt?
-> >>>
-> >>> I don't know what the general consensus is here. As your the PCI
-> >>> maintainer I would leave that up to you. Are there other platforms
-> >>> that need to link at a lesser capability than the host controller is
-> >>> capable of? I am only aware of the IMX6 and SPEAr13XX [1]
-> >>
-> >> This is really a devicetree question, not a PCI one, so I added Rob
-> >> and the devicetree list in case they have any comments on this.
-> >
-> > Seems generally useful to me. You could want to limit the speed for a
-> > variety of reasons. There's no standard property that I'm aware of.
-> >
-> > Shouldn't this be a property of the phy though?
-> >
-> >>> > It might be worth mentioning in pci/fsl,imx6q-pcie.txt that we limit
-> >>> > the link to gen1 unless max-link-speed is present and has the value
-> >>> > "2".
-> >>
-> >> This default seems backwards.  It seems like we'd want to configure
-> >> the link to go as fast as possible unless we have a quirk, e.g.,
-> >> "max-link-speed", that imposes a device-specific link.  In other
-> >> words, why don't we penalize the broken board instead of penalizing
-> >> all the working ones?
-> >
-> > I agree. It could be argued that this way doesn't require a DT update
-> > to fix broken boards. However, this problem should really be found
-> > before production and DT updates are normal for enabling new features
-> > (such as compliant PCIe).
-> >
-> > Rob
-> 
-> Rob,
-> 
-> In this case I feel that every IMX6 based board with PCIe likely has
-> this issue because the original reference schematics from Freescale
-> did not mention that the LVDS clock source from the IMX6 did not meet
-> PCIe gen2 requirements so everyone blindly followed the reference
-> design. Only later did they seem to come out with this information and
-> if you did use an external clock you would have to setup the IMX6 pcie
-> clocks differently in the device-tree (configuring the IMX6 to use a
-> clock input instead of output), which I see no current boards doing.
-> 
-> There are several SoC's that use the designware core that likely are
-> not in this same boat, so it would be unfair to penalize them by
-> defaulting a gen1 speed tied to the mac. So yes, perhaps a property of
-> the imx6 pcie phy and defaulting it to gen1 because no current
-> device-tree's set the phy's clock as an external input makes the most
-> sense?
+Add initial PCIe support for the imx6 SoC derivate imx6sx.  PCI MSI support
+is untested as the necessary suspend/resume quirk is not included in this
+patch.
 
-I'm not an IMX6 expert, but this sounds good to me, so I'll look for a
-new rev that does this.
+This patch is heavily based on patches by Richard Zhu.
 
-Bjorn
+[bhelgaas: factor out refclk enable, fix adjacent typos in imx6q-pcie.txt]
+Signed-off-by: Christoph Fritz <chf.fritz@googlemail.com>
+Acked-by: Richard Zhu <Richard.Zhu@freescale.com>
+Acked-by: Lucas Stach <l.stach@pengutronix.de>
+---
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  8 +++-
+ drivers/pci/host/pci-imx6.c                        | 53 ++++++++++++++++++++++
+ 2 files changed, 59 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index 6fbba53..6ee4439 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -4,8 +4,8 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
+ and thus inherits all the common properties defined in designware-pcie.txt.
+ 
+ Required properties:
+-- compatible: "fsl,imx6q-pcie"
+-- reg: base addresse and length of the pcie controller
++- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie"
++- reg: base address and length of the PCIe controller
+ - interrupts: A list of interrupt outputs of the controller. Must contain an
+   entry for each entry in the interrupt-names property.
+ - interrupt-names: Must include the following entries:
+@@ -13,6 +13,10 @@ Required properties:
+ - clock-names: Must include the following additional entries:
+ 	- "pcie_phy"
+ 
++Additional required properties for imx6sx-pcie:
++- clock names: Must include the following additional entries:
++	- "pcie_inbound_axi"
++
+ Example:
+ 
+ 	pcie@0x01000000 {
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 4e0e47f..fa3a544 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -35,9 +35,11 @@ struct imx6_pcie {
+ 	struct gpio_desc	*reset_gpio;
+ 	struct clk		*pcie_bus;
+ 	struct clk		*pcie_phy;
++	struct clk		*pcie_inbound_axi;
+ 	struct clk		*pcie;
+ 	struct pcie_port	pp;
+ 	struct regmap		*iomuxc_gpr;
++	bool			is_imx6sx;
+ 	void __iomem		*mem_base;
+ };
+ 
+@@ -231,6 +233,17 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 	u32 val, gpr1, gpr12;
+ 
++	if (imx6_pcie->is_imx6sx) {
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
++				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN);
++		/* Force PCIe PHY reset */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++				   IMX6SX_GPR5_PCIE_BTNRST_RESET,
++				   IMX6SX_GPR5_PCIE_BTNRST_RESET);
++		return 0;
++	}
++
+ 	/*
+ 	 * If the bootloader already enabled the link we need some special
+ 	 * handling to get the core back into a state where it is safe to
+@@ -266,6 +279,21 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+ 
+ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
+ {
++	struct pcie_port *pp = &imx6_pcie->pp;
++	int ret;
++
++	if (imx6_pcie->is_imx6sx) {
++		ret = clk_prepare_enable(imx6_pcie->pcie_inbound_axi);
++		if (ret) {
++			dev_err(pp->dev, "unable to enable pcie_axi clock\n");
++			return ret;
++		}
++
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN, 0);
++		return ret;
++	}
++
+ 	/* power up core phy and enable ref clock */
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+@@ -319,6 +347,11 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		msleep(100);
+ 		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+ 	}
++
++	if (imx6_pcie->is_imx6sx)
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
++				   IMX6SX_GPR5_PCIE_BTNRST_RESET, 0);
++
+ 	return 0;
+ 
+ err_ref_clk:
+@@ -336,6 +369,12 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ {
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 
++	if (imx6_pcie->is_imx6sx) {
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				   IMX6SX_GPR12_PCIE_RX_EQ_MASK,
++				   IMX6SX_GPR12_PCIE_RX_EQ_2);
++	}
++
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+ 
+@@ -554,6 +593,9 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 	pp = &imx6_pcie->pp;
+ 	pp->dev = &pdev->dev;
+ 
++	imx6_pcie->is_imx6sx = of_device_is_compatible(pp->dev->of_node,
++						       "fsl,imx6sx-pcie");
++
+ 	/* Added for PCI abort handling */
+ 	hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
+ 		"imprecise external abort");
+@@ -589,6 +631,16 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(imx6_pcie->pcie);
+ 	}
+ 
++	if (imx6_pcie->is_imx6sx) {
++		imx6_pcie->pcie_inbound_axi = devm_clk_get(&pdev->dev,
++							   "pcie_inbound_axi");
++		if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
++			dev_err(&pdev->dev,
++				"pcie_incbound_axi clock missing or invalid\n");
++			return PTR_ERR(imx6_pcie->pcie_inbound_axi);
++		}
++	}
++
+ 	/* Grab GPR config register range */
+ 	imx6_pcie->iomuxc_gpr =
+ 		 syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
+@@ -615,6 +667,7 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
+ 
+ static const struct of_device_id imx6_pcie_of_match[] = {
+ 	{ .compatible = "fsl,imx6q-pcie", },
++	{ .compatible = "fsl,imx6sx-pcie", },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
+-- 
+2.1.4
+
+
