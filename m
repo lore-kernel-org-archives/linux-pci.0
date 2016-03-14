@@ -1,49 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41325 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932179AbcCKPNZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Mar 2016 10:13:25 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 449AA201F5
-	for <linux-pci@vger.kernel.org>; Fri, 11 Mar 2016 15:13:24 +0000 (UTC)
-Received: from localhost (unknown [69.71.1.1])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by mail.kernel.org (Postfix) with ESMTPSA id 86978201B4
-	for <linux-pci@vger.kernel.org>; Fri, 11 Mar 2016 15:13:23 +0000 (UTC)
-Subject: [PATCH 1/2] PCI: Don't leak memory if sysfs_create_bin_file() fails
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 11 Mar 2016 09:13:22 -0600
-Message-ID: <20160311151322.31298.25447.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160311151137.31298.19101.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160311151137.31298.19101.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+To: Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bluecherry Maintainers <maintainers@bluecherrydvr.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Joe Perches <joe@perches.com>, Jiri Slaby <jslaby@suse.com>
+Cc: linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-pci@vger.kernel.org,
+	kernel-mentors@selenic.com,
+	Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+Subject: [PATCH] Add tw5864 driver - cover letter
+Date: Mon, 14 Mar 2016 03:58:33 +0200
+Message-Id: <1457920713-21009-1-git-send-email-andrey.utkin@corp.bluecherry.net>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If sysfs_create_bin_file() fails, pci_create_attr() leaks the struct
-bin_attribute it allocated previously.
+This is a driver for multimedia devices based on Techwell/Intersil TW5864 chip.
 
-Free the struct bin_attribute if pci_create_attr() fails.
+It is basically written from scratch. There was an awful reference driver for
+2.6 kernel, which is nearly million lines of code and requires half a dozen
+special userspace libraries, and still doesn't quite work. So currently
+submitted driver is a product of reverse-engineering and heuristics. tw68
+driver was used as code skeleton.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci-sysfs.c |    2 ++
- 1 file changed, 2 insertions(+)
+The device advertises many capabilities, but this version of driver only
+supports H.264 encoding of captured video channels.
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index a4cfa52..b0c36f0 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1159,6 +1159,8 @@ static int pci_create_attr(struct pci_dev *pdev, int num, int write_combine)
- 		res_attr->size = pci_resource_len(pdev, num);
- 		res_attr->private = &pdev->resource[num];
- 		retval = sysfs_create_bin_file(&pdev->dev.kobj, res_attr);
-+		if (retval)
-+			kfree(res_attr);
- 	} else
- 		retval = -ENOMEM;
- 
+There is one known issue, which reproduces on two of five setups of which I
+know: P-frames are distorted, but I-frames are fine. Changing quality and
+framerate settings does not affect this. Currently such workaround is used:
 
+v4l2-ctl -d /dev/video$n -c video_gop_size=1
+
+GOP size is set to 1, so that every output frame is I-frame. 
+We are regularly contacting manufacturer regarding such issues, but
+unfortunately they can do little to help us.
+
+
+Andrey Utkin (1):
+  Add tw5864 driver
+
+ MAINTAINERS                                  |    7 +
+ drivers/staging/media/Kconfig                |    2 +
+ drivers/staging/media/Makefile               |    1 +
+ drivers/staging/media/tw5864/Kconfig         |   11 +
+ drivers/staging/media/tw5864/Makefile        |    3 +
+ drivers/staging/media/tw5864/tw5864-bs.h     |  154 ++
+ drivers/staging/media/tw5864/tw5864-config.c |  359 +++++
+ drivers/staging/media/tw5864/tw5864-core.c   |  453 ++++++
+ drivers/staging/media/tw5864/tw5864-h264.c   |  183 +++
+ drivers/staging/media/tw5864/tw5864-reg.h    | 2200 ++++++++++++++++++++++++++
+ drivers/staging/media/tw5864/tw5864-tables.h |  237 +++
+ drivers/staging/media/tw5864/tw5864-video.c  | 1364 ++++++++++++++++
+ drivers/staging/media/tw5864/tw5864.h        |  280 ++++
+ include/linux/pci_ids.h                      |    1 +
+ 14 files changed, 5255 insertions(+)
+ create mode 100644 drivers/staging/media/tw5864/Kconfig
+ create mode 100644 drivers/staging/media/tw5864/Makefile
+ create mode 100644 drivers/staging/media/tw5864/tw5864-bs.h
+ create mode 100644 drivers/staging/media/tw5864/tw5864-config.c
+ create mode 100644 drivers/staging/media/tw5864/tw5864-core.c
+ create mode 100644 drivers/staging/media/tw5864/tw5864-h264.c
+ create mode 100644 drivers/staging/media/tw5864/tw5864-reg.h
+ create mode 100644 drivers/staging/media/tw5864/tw5864-tables.h
+ create mode 100644 drivers/staging/media/tw5864/tw5864-video.c
+ create mode 100644 drivers/staging/media/tw5864/tw5864.h
+
+-- 
+2.7.1.380.g0fea050.dirty
