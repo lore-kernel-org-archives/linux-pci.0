@@ -1,147 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36334 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750819AbcCHVoW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Mar 2016 16:44:22 -0500
-Date: Tue, 8 Mar 2016 15:44:18 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] PCI: tegra: Implement ->{add,remove}_bus()
- callbacks
-Message-ID: <20160308214418.GD27132@localhost>
-References: <1455028248-1950-1-git-send-email-thierry.reding@gmail.com>
- <1455028248-1950-2-git-send-email-thierry.reding@gmail.com>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:34725 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755481AbcCNKCN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Mar 2016 06:02:13 -0400
+Received: by mail-wm0-f66.google.com with SMTP id p65so14231147wmp.1
+        for <linux-pci@vger.kernel.org>; Mon, 14 Mar 2016 03:02:13 -0700 (PDT)
+Date: Mon, 14 Mar 2016 11:02:59 +0100
+From: Daniel Vetter <daniel@ffwll.ch>
+To: Dave Airlie <airlied@gmail.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	dri-devel <dri-devel@lists.freedesktop.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 1/2] vga_switcheroo: add power support for windows 10
+ machines.
+Message-ID: <20160314100259.GP14170@phenom.ffwll.local>
+References: <1457504045-12738-1-git-send-email-airlied@gmail.com>
+ <2736217.utxPzJExd5@vostro.rjw.lan>
+ <20160311105815.GS1796@lahna.fi.intel.com>
+ <2759763.dR5D0KopkA@vostro.rjw.lan>
+ <CAPM=9txo4aOOa-CS-mnyQe+vYDtAOCm1bzAgfMzwJJS8ZuYmwQ@mail.gmail.com>
+ <20160314094335.GE1796@lahna.fi.intel.com>
+ <CAPM=9txx1s3ZZSaTAGDFh=hKk-Ek2Y=Wyw74CpTWu-cTDAnJ7A@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1455028248-1950-2-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <CAPM=9txx1s3ZZSaTAGDFh=hKk-Ek2Y=Wyw74CpTWu-cTDAnJ7A@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 09, 2016 at 03:30:48PM +0100, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
+On Mon, Mar 14, 2016 at 07:47:39PM +1000, Dave Airlie wrote:
+> >
+> >> -     if (pcie_port_runtime_suspend_allowed(dev))
+> >> +     if (pcie_port_runtime_suspend_allowed(dev)) {
+> >> +             pm_runtime_allow(&dev->dev);
+> >
+> > PCI drivers typically have left this decision up to the userspace. I'm
+> > wondering whether it is good idea to deviate from that here? Of course
+> > this allows immediate power savings but could potentially cause problems
+> > as well.
+> >
 > 
-> The configuration space mapping on Tegra is somewhat special, and in
-> order to avoid wasting virtual address space the configuration space
-> for each bus needs to be stitched together from several blocks which
-> form a single continuous virtual address range for accessors.
+> No distro has ever shipped userspace to do this, I really think this
+> is a bad design.
+> We have wasted countless watts of power on this stupid idea that people will
+> run powertop, only a few people in the world run powertop, lots of
+> people use Linux.
 > 
-> Currently the configuration space is mapped upon the first access to
-> one of its registers. However, the mapping operation may sleep under
-> certain circumstances, so doing it from the configuration space
-> accessors (they are protected by a spin lock) will trigger a warning.
+> The kernel should power stuff down not wait for the user to run powertop,
+> At least for the GPU it's in the area of 8W of power, and I've got the
+> GPU drivers doing this themselves,
 > 
-> To avoid the warning, use the ->add_bus() callback to perform the
-> mapping at enumeration time when the operation is allowed to sleep.
-> Also add an implementation of ->remove_bus() that undoes the mapping
-> established by the ->add_bus() callback. While it isn't currently
-> possible to unload the module, there is work underway to remedy this,
-> and this code will come in handy when that happens.
-> 
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
+> I could have the GPU driver call runtime allow for it's host bridge I suppose,
+> if we insist on the userspace cares, but I'd prefer not doing so.
 
-Applied to pci/host-tegra for v4.6, thanks!
+Yes, fully agreed. Runtime PM that's not enabled by default is useless,
+since no one runs powertop, which also means it's buggy because no one
+tests it. Not enabling power saving features by default is imo just a lame
+excuse. Shit better just work, and tuneables should only exposed if
+there's a real reason why autotuning is infeasible. E.g. we auto-ramp the
+gpu clock down/up in i915 in software to compensate for some of the
+silliness in how the hw does it alone. And the sysfs tunables are mostly
+just to make benchmarking (where slower, but without any thermal
+throttling) is sometimes preferred.
 
-> ---
-> Changes in v2:
-> - add ->remove_bus() callback implementation
-> 
->  drivers/pci/host/pci-tegra.c | 54 ++++++++++++++++++++++++++++----------------
->  1 file changed, 34 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 30323114c53c..75c55265ca73 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -426,31 +426,38 @@ free:
->  	return ERR_PTR(err);
->  }
->  
-> -/*
-> - * Look up a virtual address mapping for the specified bus number. If no such
-> - * mapping exists, try to create one.
-> - */
-> -static void __iomem *tegra_pcie_bus_map(struct tegra_pcie *pcie,
-> -					unsigned int busnr)
-> +static int tegra_pcie_add_bus(struct pci_bus *bus)
->  {
-> -	struct tegra_pcie_bus *bus;
-> +	struct tegra_pcie *pcie = sys_to_pcie(bus->sysdata);
-> +	struct tegra_pcie_bus *b;
->  
-> -	list_for_each_entry(bus, &pcie->buses, list)
-> -		if (bus->nr == busnr)
-> -			return (void __iomem *)bus->area->addr;
-> +	b = tegra_pcie_bus_alloc(pcie, bus->number);
-> +	if (IS_ERR(b))
-> +		return PTR_ERR(b);
->  
-> -	bus = tegra_pcie_bus_alloc(pcie, busnr);
-> -	if (IS_ERR(bus))
-> -		return NULL;
-> +	list_add_tail(&b->list, &pcie->buses);
->  
-> -	list_add_tail(&bus->list, &pcie->buses);
-> +	return 0;
-> +}
->  
-> -	return (void __iomem *)bus->area->addr;
-> +static void tegra_pcie_remove_bus(struct pci_bus *child)
-> +{
-> +	struct tegra_pcie *pcie = sys_to_pcie(child->sysdata);
-> +	struct tegra_pcie_bus *bus, *tmp;
-> +
-> +	list_for_each_entry_safe(bus, tmp, &pcie->buses, list) {
-> +		if (bus->nr == child->number) {
-> +			vunmap(bus->area->addr);
-> +			list_del(&bus->list);
-> +			kfree(bus);
-> +			break;
-> +		}
-> +	}
->  }
->  
-> -static void __iomem *tegra_pcie_conf_address(struct pci_bus *bus,
-> -					     unsigned int devfn,
-> -					     int where)
-> +static void __iomem *tegra_pcie_map_bus(struct pci_bus *bus,
-> +					unsigned int devfn,
-> +					int where)
->  {
->  	struct tegra_pcie *pcie = sys_to_pcie(bus->sysdata);
->  	void __iomem *addr = NULL;
-> @@ -466,7 +473,12 @@ static void __iomem *tegra_pcie_conf_address(struct pci_bus *bus,
->  			}
->  		}
->  	} else {
-> -		addr = tegra_pcie_bus_map(pcie, bus->number);
-> +		struct tegra_pcie_bus *b;
-> +
-> +		list_for_each_entry(b, &pcie->buses, list)
-> +			if (b->nr == bus->number)
-> +				addr = (void __iomem *)b->area->addr;
-> +
->  		if (!addr) {
->  			dev_err(pcie->dev,
->  				"failed to map cfg. space for bus %u\n",
-> @@ -481,7 +493,9 @@ static void __iomem *tegra_pcie_conf_address(struct pci_bus *bus,
->  }
->  
->  static struct pci_ops tegra_pcie_ops = {
-> -	.map_bus = tegra_pcie_conf_address,
-> +	.add_bus = tegra_pcie_add_bus,
-> +	.remove_bus = tegra_pcie_remove_bus,
-> +	.map_bus = tegra_pcie_map_bus,
->  	.read = pci_generic_config_read32,
->  	.write = pci_generic_config_write32,
->  };
-> -- 
-> 2.7.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And yes i915 hasn't enabled rpm yet by default because there's bugs left
+:(
+-Daniel
+-- 
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
