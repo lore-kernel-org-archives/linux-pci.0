@@ -1,82 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48084 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932703AbcCCQxz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Mar 2016 11:53:55 -0500
-Subject: [PATCH v1 00/12] PCI: Rework shadow ROM handling
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Tony Luck <tony.luck@intel.com>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-	linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Bruno =?utf-8?q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
-	Daniel Stone <daniel@fooishbar.org>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Ville =?utf-8?b?U3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
-Date: Thu, 03 Mar 2016 10:53:50 -0600
-Message-ID: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 14 Mar 2016 16:30:53 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Dave Airlie <airlied@gmail.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	dri-devel <dri-devel@lists.freedesktop.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/2] vga_switcheroo: add power support for windows 10
+ machines.
+Message-ID: <20160314143053.GJ1793@lahna.fi.intel.com>
+References: <1457504045-12738-1-git-send-email-airlied@gmail.com>
+ <2736217.utxPzJExd5@vostro.rjw.lan>
+ <20160311105815.GS1796@lahna.fi.intel.com>
+ <2759763.dR5D0KopkA@vostro.rjw.lan>
+ <CAPM=9txo4aOOa-CS-mnyQe+vYDtAOCm1bzAgfMzwJJS8ZuYmwQ@mail.gmail.com>
+ <20160314094335.GE1796@lahna.fi.intel.com>
+ <CAPM=9txx1s3ZZSaTAGDFh=hKk-Ek2Y=Wyw74CpTWu-cTDAnJ7A@mail.gmail.com>
+ <20160314102357.GA1793@lahna.fi.intel.com>
+ <CAJZ5v0igUCP8-uH+VUb5KmUeZv5khtMJRjUh-z=orHOgRrcmiw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0igUCP8-uH+VUb5KmUeZv5khtMJRjUh-z=orHOgRrcmiw@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The purpose of this series is to:
+On Mon, Mar 14, 2016 at 01:50:41PM +0100, Rafael J. Wysocki wrote:
+> On Mon, Mar 14, 2016 at 11:23 AM, Mika Westerberg
+> <mika.westerberg@linux.intel.com> wrote:
+> > On Mon, Mar 14, 2016 at 07:47:39PM +1000, Dave Airlie wrote:
+> >> >
+> >> >> -     if (pcie_port_runtime_suspend_allowed(dev))
+> >> >> +     if (pcie_port_runtime_suspend_allowed(dev)) {
+> >> >> +             pm_runtime_allow(&dev->dev);
+> >> >
+> >> > PCI drivers typically have left this decision up to the userspace. I'm
+> >> > wondering whether it is good idea to deviate from that here? Of course
+> >> > this allows immediate power savings but could potentially cause problems
+> >> > as well.
+> >> >
+> >>
+> >> No distro has ever shipped userspace to do this, I really think this
+> >> is a bad design.
+> >> We have wasted countless watts of power on this stupid idea that people will
+> >> run powertop, only a few people in the world run powertop, lots of
+> >> people use Linux.
+> >
+> > That is a fair point.
+> >
+> > I do not have anything against calling pm_runtime_allow() here. In fact
+> > we already do the same in Intel LPSS drivers. I just wanted to bring
+> > that up.
+> >
+> > Rafael, what do you think?
+> 
+> We can do that to start with.  If there are no problems in the field
+> with it, I don't see any problems in principle.
+> 
+> > If we anyway are going to add cut-off date to enable runtime PM we
+> > should expect that the hardware is also capable of doing so (and if not
+> > we can always blacklist the exceptions).
+> 
+> Sounds reasonable.
+> 
+> >> The kernel should power stuff down not wait for the user to run powertop,
+> >> At least for the GPU it's in the area of 8W of power, and I've got the
+> >> GPU drivers doing this themselves,
+> >>
+> >> I could have the GPU driver call runtime allow for it's host bridge I suppose,
+> >> if we insist on the userspace cares, but I'd prefer not doing so.
+> >>
+> >> > I think we need to add corresponding call to pm_runtime_forbid() in
+> >> > pcie_portdrv_remove().
+> >>
+> >> Yes most likely.
+> >
+> > BTW, I can add both calls to the next version of PCIe runtime PM patches
+> > if you are OK with that, and all agree this is a good idea.
+> 
+> That would be fine by me.
 
-  - Fix the "BAR 6: [??? 0x00000000 flags 0x2] has bogus alignment"
-    messages reported by Linus [1], Andy [2], and others.
+OK thanks.
 
-  - Move arch-specific shadow ROM location knowledge, e.g.,
-    0xC0000-0xDFFFF, from PCI core to arch code.
-
-  - Fix the ia64 and MIPS Loongson 3 oddity of keeping virtual
-    addresses in shadow ROM struct resource (resources should always
-    contain *physical* addresses).
-
-  - Remove now-unused IORESOURCE_ROM_COPY and IORESOURCE_ROM_BIOS_COPY
-    flags.
-
-This series is based on v4.5-rc1, and it's available on my
-pci/resource git branch (along with a couple tiny unrelated patches)
-at [3].
-
-Bjorn
-
-
-[1] http://lkml.kernel.org/r/CA+55aFyVMfTBB0oz_yx8+eQOEJnzGtCsYSj9QuhEpdZ9BHdq5A@mail.gmail.com
-[2] http://lkml.kernel.org/r/CALCETrV+RwNPzxyL8UVNsrAGu-6cCzD_Cc9PFJT2NCTJPLZZiw@mail.gmail.com
-[3] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/resource
-
-
----
-
-Bjorn Helgaas (12):
-      PCI: Mark shadow copy of VGA ROM as IORESOURCE_PCI_FIXED
-      PCI: Don't assign or reassign immutable resources
-      PCI: Don't enable/disable ROM BAR if we're using a RAM shadow copy
-      PCI: Set ROM shadow location in arch code, not in PCI core
-      PCI: Clean up pci_map_rom() whitespace
-      ia64/PCI: Use temporary struct resource * to avoid repetition
-      ia64/PCI: Use ioremap() instead of open-coded equivalent
-      ia64/PCI: Keep CPU physical (not virtual) addresses in shadow ROM resource
-      MIPS: Loongson 3: Use temporary struct resource * to avoid repetition
-      MIPS: Loongson 3: Keep CPU physical (not virtual) addresses in shadow ROM resource
-      PCI: Remove unused IORESOURCE_ROM_COPY and IORESOURCE_ROM_BIOS_COPY
-      PCI: Simplify sysfs ROM cleanup
-
-
- arch/ia64/pci/fixup.c              |   21 +++++++--
- arch/ia64/sn/kernel/io_acpi_init.c |   22 ++++++----
- arch/ia64/sn/kernel/io_init.c      |   51 ++++++++--------------
- arch/mips/pci/fixup-loongson3.c    |   19 +++++---
- arch/x86/pci/fixup.c               |   21 +++++++--
- drivers/pci/pci-sysfs.c            |   13 +-----
- drivers/pci/remove.c               |    1 
- drivers/pci/rom.c                  |   83 +++++++++++-------------------------
- drivers/pci/setup-res.c            |    6 +++
- include/linux/ioport.h             |    4 --
- 10 files changed, 111 insertions(+), 130 deletions(-)
+I'll do these changes to the next version of the patch series then.
