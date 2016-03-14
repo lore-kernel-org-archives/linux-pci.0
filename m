@@ -1,164 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40695 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965230AbcCPAsW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Mar 2016 20:48:22 -0400
-Date: Tue, 15 Mar 2016 19:48:17 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Lawrynowicz, Jacek" <jacek.lawrynowicz@intel.com>,
-	Joerg Roedel <jroedel@suse.de>, linux-pci@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: Re: [PATCH v4 3/6] PCI: Add support for multiple DMA aliases
-Message-ID: <20160316004817.GG19974@localhost>
-References: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160224194406.7585.17447.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160225143841.GA8726@localhost>
- <1457995420.78634.63.camel@infradead.org>
+Received: from li153-180.members.linode.com ([109.74.206.180]:53668 "EHLO
+	mail.tekno-soft.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933863AbcCNIpI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Mar 2016 04:45:08 -0400
+Subject: Re: iMX6q PCIe phy link never came up on kernel v4.4.x
+To: Lucas Stach <l.stach@pengutronix.de>
+References: <56D5E3DF.9030906@tekno-soft.it> <56D71F27.7070708@tekno-soft.it>
+ <20160302195634.GA19223@localhost>
+ <DBXPR04MB2706C7C2FD2348D205331998CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
+ <56D80435.90408@tekno-soft.it>
+ <DBXPR04MB2702F4BC78FA28DC82DCA218CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
+ <56D8180A.1050708@tekno-soft.it> <56D84B6D.1050800@tekno-soft.it>
+ <56D883AD.5060601@tekno-soft.it> <56DEE426.8030902@tekno-soft.it>
+ <1457448829.3207.22.camel@pengutronix.de> <56E1B04A.9010206@tekno-soft.it>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Fabio Estevam <festevam@gmail.com>
+From: Roberto Fichera <kernel@tekno-soft.it>
+Message-ID: <56E679FE.20409@tekno-soft.it>
+Date: Mon, 14 Mar 2016 09:44:46 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1457995420.78634.63.camel@infradead.org>
+In-Reply-To: <56E1B04A.9010206@tekno-soft.it>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 14, 2016 at 10:43:40PM +0000, David Woodhouse wrote:
-> On Thu, 2016-02-25 at 08:38 -0600, Bjorn Helgaas wrote:
-> > 
-> > >  /*
-> > > - * Look for aliases to or from the given device for exisiting groups.  The
-> > > - * dma_alias_devfn only supports aliases on the same bus, therefore the search
-> > > + * Look for aliases to or from the given device for existing groups. DMA
-> > > + * aliases are only supported on the same bus, therefore the search
-> > 
-> > I'm trying to reconcile this statement that "DMA aliases are only
-> > supported on the same bus" (which was there even before this patch)
-> > with the fact that pci_for_each_dma_alias() does not have that
-> > limitation.
-> 
-> Doesn't it? You can still only set a DMA alias on the same bus with
-> pci_add_dma_alias(), can't you?
+On 03/10/2016 06:35 PM, Roberto Fichera wrote:
+> On 03/08/2016 03:53 PM, Lucas Stach wrote:
+>> Am Dienstag, den 08.03.2016, 15:39 +0100 schrieb Roberto Fichera:
+>>>> On 03/03/2016 07:34 PM, Roberto Fichera wrote:
+>>>>>> On 03/03/2016 03:34 PM, Roberto Fichera wrote:
+>>>>>>
+>>>>>> I've also checked clock, pll, PMU_MISC1 and CCGR[45] registers, all looks fine
+>>>>>> and exactly equal to uboot settings.
+>>>>>>
+>>>>>> However I'm investigating a possible HW issue in the LDVS pad wiring against
+>>>>>> the bridge XIO2001. Let's see once this is also clarified.
+>>>> Our HW engineer has applied a fix to LVDS vs XIO2001 clock wiring. However I'm still getting the same problem.
+>>>>
+>>>> I've tried to boot a kernel with uboot not setting up the PCIe subsys and below there is the resulting kernel log.
+>>>> Note that the CCGR5 doesn't set the CG2 field associated to sata_clk_enable. I think this field should be set all 1 to
+>>>> enable the SATA ref at 100MHz, right?
+>>>>
+>> No, the reference manual is a bit confusing about this, but the LVDS1
+>> clock output is driven by sata_ref_100mhz, not the sata_clk gate.
+>>
+>> So the only thing that needs to be enabled for LVDS clock output is the
+>> 100MHz clock output from PLL ENET. (Register CCM_ANALOG_PLL_ENETn bit
+>> 20).
+> Guys! No more idea where to look at! Still getting PCIe link reaching L0 state under
+> uboot but doesn't progress more than POLL_ACTIVE or POLL_COMPLIANCE states
+> under kernel.
+>
+> Any idea what to do?
 
-I guess it's true that PCI_DEV_FLAGS_DMA_ALIAS_DEVFN and the proposed
-pci_add_dma_alias() only add aliases on the same bus.  I was thinking
-about a scenario like this:
+Good progress! Once kernel booted, I'm still getting the usual PCIe link not coming up:
 
-  00:00.0 PCIe-to-PCI bridge to [bus 01]
-  01:01.0 conventional PCI device
 
-where I think 01:00.0 is a DMA alias for 01:01.0 because the bridge
-takes ownership of DMA transactions from 01:01.0 and assigns a
-Requester ID of 01:00.0 (secondary bus number, device 0, function 0).
+[    0.236946] PCI host bridge /soc/pcie@0x01000000 ranges:
+[    0.236969]   No bus range found for /soc/pcie@0x01000000, using [bus 00-ff]
+[    0.237018]   err 0x01f00000..0x01f7ffff -> 0x01f00000
+[    0.237056]    IO 0x01f80000..0x01f8ffff -> 0x00000000
+[    0.237140]   MEM 0x01000000..0x01efffff -> 0x01000000
+[    3.339021] imx6q-pcie 1ffc000.pcie: phy link never came up
+[    3.339599] imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
+[    3.339622] pci_bus 0000:00: root bus resource [bus 00-ff]
+[    3.339642] pci_bus 0000:00: root bus resource [??? 0x01f00000-0x01f7ffff flags 0x0]
+[    3.339659] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+[    3.339672] pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
 
-> > >   * space is quite small (especially since we're really only looking at pcie
-> > >   * device, and therefore only expect multiple slots on the root complex or
-> > >   * downstream switch ports).  It's conceivable though that a pair of
-> > > @@ -686,11 +692,8 @@ static struct iommu_group *get_pci_alias_group(struct pci_dev *pdev,
-> > >                       continue;
-> > >  
-> > >               /* We alias them or they alias us */
-> > > -             if (((pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
-> > > -                  pdev->dma_alias_devfn == tmp->devfn) ||
-> > > -                 ((tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
-> > > -                  tmp->dma_alias_devfn == pdev->devfn)) {
-> > > -
-> > > +             if (dma_alias_is_enabled(pdev, tmp->devfn) ||
-> > > +                 dma_alias_is_enabled(tmp, pdev->devfn)) {
-> > >                       group = get_pci_alias_group(tmp, devfns);
-> > 
-> > We basically have this:
-> > 
-> >   for_each_pci_dev(tmp) {
-> >     if ()
-> >       group = get_pci_alias_group();
-> >       ...
-> >   }
-> 
-> Strictly, that's:
-> 
->  for_each_pci_dev(tmp) {
->    if (pdev is an alias of tmp || tmp is an alias of pdev)
->      group = get_pci_alias_group();
->    ...
->  }
+but when I trigger a pcie bus rescan with an "echo 1 > /sys/bus/pci/rescan" then I finally get:
 
-OK.  
+root@voneus-janas-imx6q:/sys/bus/pci# echo 1 > rescan
+[  12.306722] pci 0000:01:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+[  12.321690] PCI: bus2: Fast back to back transfers disabled
+[  12.327421] pci_bus 0000:02: [bus 02] partially hidden behind bridge 0000:01 [bus 01]
+[  12.335377] pcieport 0000:00:00.0: bridge has subordinate 01 but max busn 02
+[  12.342691] pcieport 0000:00:00.0: BAR 8: assigned [mem 0x01200000-0x012fffff]
+[  12.350041] pcieport 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
+[  12.356754] pci 0000:01:00.0: BAR 8: assigned [mem 0x01200000-0x012fffff]
+[  12.363650] pci 0000:01:00.0: BAR 7: assigned [io  0x1000-0x1fff]
+[  12.369858] pci 0000:02:04.0: BAR 1: assigned [mem 0x01200000-0x01200fff]
+[  12.376715] pci 0000:02:04.0: BAR 0: assigned [io  0x1000-0x1007]
+[  12.382939] pci 0000:01:00.0: PCI bridge to [bus 02]
+[  12.387960] pci 0000:01:00.0:   bridge window [io  0x1000-0x1fff]
+[  12.394182] pci 0000:01:00.0:   bridge window [mem 0x01200000-0x012fffff]
 
-> > I'm trying to figure out why we don't do something like the following
-> > instead:
-> > 
-> >   callback(struct pci_dev *pdev, u16 alias, void *opaque)
-> >   {
-> >     struct iommu_group *group;
-> > 
-> >     group = get_pci_alias_group();
-> >     if (group)
-> >       return group;
-> > 
-> >     return 0;
-> >   }
-> > 
-> >   pci_for_each_dma_alias(pdev, callback, ...);
-> 
-> And this would be equivalent to
-> 
->  for_each_pci_dev(tmp) {
->    if (tmp is an alias of pdev)
->      group = get_pci_alias_group();
->    ...
->  }
-> 
-> The "is an alias of" property is not commutative. Perhaps it should be.
-> But that's hard because in some cases the alias doesn't even *exist* as
-> a real PCI device. It's just that you appear to get DMA transactions
-> from a given source-id.
+root@voneus-janas-imx6q:/sys/bus/pci# lspci -v
+00:00.0 PCI bridge: Synopsys, Inc. Device abcd (rev 01) (prog-if 00 [Normal decode])
+        Flags: bus master, fast devsel, latency 0, IRQ 290
+        Memory at 01000000 (32-bit, non-prefetchable) [size=1M]
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+        [virtual] Expansion ROM at 01100000 [disabled] [size=64K]
+        Capabilities: [40] Power Management version 3
+        Capabilities: [50] MSI: Enable+ Count=1/1 Maskable+ 64bit+
+        Capabilities: [70] Express Root Port (Slot-), MSI 00
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [140] Virtual Channel
+        Kernel driver in use: pcieport
+lspci: Unable to load libkmod resources: error -12
 
-Right.  In my example above, 01:00.0 is not a PCI device; it's only a
-Requester ID that is fabricated by the bridge when it forwards DMA
-transactions upstream.
+01:00.0 PCI bridge: Texas Instruments XIO2001 PCI Express-to-PCI Bridge (prog-if 00 [Normal decode])
+        Flags: fast devsel
+        Bus: primary=01, secondary=02, subordinate=02, sec-latency=0
+        I/O behind bridge: 00001000-00001fff
+        Memory behind bridge: 01200000-012fffff
+        Capabilities: [40] Subsystem: Device 0000:0000
+        Capabilities: [48] Power Management version 3
+        Capabilities: [50] MSI: Enable- Count=1/16 Maskable- 64bit+
+        Capabilities: [70] Express PCI-Express to PCI/PCI-X Bridge, MSI 00
+        Capabilities: [100] Advanced Error Reporting
 
-I think I'm confused because I don't really understand IOMMU groups.
+02:04.0 ISDN controller: Cologne Chip Designs GmbH ISDN network Controller [HFC-4S] (rev 01)
+        Subsystem: Cologne Chip Designs GmbH HFC-4S [OpenVox B200P / B400P]
+        Flags: medium devsel, IRQ 255
+        I/O ports at 1000 [disabled] [size=8]
+        Memory at 01200000 (32-bit, non-prefetchable) [disabled] [size=4K]
+        Capabilities: [40] Power Management version 2
 
-Let me explain what I think they are and you can correct me when I go
-wrong.  The iommu_group_alloc() comment says "The IOMMU group
-represents the minimum granularity of the IOMMU."  So I suppose the
-IOMMU cannot distinguish between devices in a group.  All the devices
-in the group use the same set of DMA mappings.  Granting device A DMA
-access to a buffer grants the same access to all other members of A's
-IOMMU group.
+I've also tried to increase the polling loop timeout, but doesn't change anything.
 
-That would mean my question was fundamentally backwards.  In
-get_pci_alias_group(A), we're not trying to figure out what all the
-aliases of A are, which is what pci_for_each_dma_alias() does.
+Any suggestion?
 
-Instead, we're trying to figure out which IOMMU group A belongs to.
-But I still don't quite understand how aliases fit into this.  Let's
-go back to my example and assume we've already put 00:00.0 and 01:01.0
-in IOMMU groups:
+>
+> Cheers,
+> Roberto Fichera.
 
-  00:00.0 PCIe-to-PCI bridge to [bus 01]     # in IOMMU group G0
-  01:01.0 conventional PCI device            # in IOMMU group G1
 
-I assume these devices are in different IOMMU groups because if the
-bridge generated its own DMA, it would use Requester ID 00:00.0, which
-is distinct from the 01:00.0 it would use when forwarding DMAs from
-its secondary side.
-
-What happens when we add 01:02.0?  I think 01:01.0 and 01:02.0 should
-both end up in IOMMU group G1 because the IOMMU will see only
-Requester ID 01:00.0, so it can't distinguish them.
-
-When we add 01:02.0, the ops->add_device() ... ops->device_group()
-path calls pci_device_group(01:02.0):
-
-  pci_device_group(01:02.0)
-    pci_for_each_dma_alias(01:02.0, get_pci_alias_or_group)
-      get_pci_alias_or_group(01:02.0, 01:02.0)   # callback
-        return 0           # 01:02.0 group not set yet
-      get_pci_alias_or_group(00:00.0, 01:00.0)   # callback
-        return 1           # 00:00.0 is in G0
-
-It seems like we'll assign 01:02.0 to group G0, when I think it should
-be in G1.  Where did I go wrong?
-
-Bjorn
