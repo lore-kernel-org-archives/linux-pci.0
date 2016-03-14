@@ -1,42 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:59135 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933869AbcCNMNO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Mar 2016 08:13:14 -0400
-Date: Mon, 14 Mar 2016 12:15:38 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
-	Liviu Dudau <Liviu.Dudau@arm.com>, catalin.marinas@arm.com,
-	linux-pci@vger.kernel.org
-Subject: Re: Request for Info: Designware PCIe Root Complex support in ARM64
-Message-ID: <20160314121538.GB6629@red-moon>
-References: <56E2ACF8.6030503@synopsys.com>
- <20160311194600.GA16257@localhost>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 14 Mar 2016 16:01:47 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org, linux-pci@vger.kernel.org,
+	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
+	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
+	rjw@rjwysocki.net, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/4] acpi,pci,irq: reduce resource requirements
+Message-ID: <20160314210147.GA11459@localhost>
+References: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
+ <20160314185251.GA19703@localhost>
+ <56E7211F.3070203@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160311194600.GA16257@localhost>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <56E7211F.3070203@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 11, 2016 at 01:46:00PM -0600, Bjorn Helgaas wrote:
-> [+cc Lorenzo]
+On Mon, Mar 14, 2016 at 04:37:51PM -0400, Sinan Kaya wrote:
+> Hi Bjorn,
 > 
-> On Fri, Mar 11, 2016 at 11:33:12AM +0000, Joao Pinto wrote:
-> > Hi Liviu, Catalin and Bjorn,
+> On 3/14/2016 2:52 PM, Bjorn Helgaas wrote:
+> >> bool acpi_isa_irq_available(int irq)
+> >> > @@ -840,13 +881,6 @@ bool acpi_isa_irq_available(int irq)
+> >> >   */
+> >> >  void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
+> >> >  {
+> >> > -	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
+> >> > -		if (trigger != ACPI_MADT_TRIGGER_LEVEL ||
+> >> > -		    polarity != ACPI_MADT_POLARITY_ACTIVE_LOW)
+> >> > -			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_ALWAYS;
+> >> > -		else
+> >> > -			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
+> >> > -	}
+> > I think we lost the validation of trigger mode and polarity, didn't
+> > we?
 > > 
-> > I am currently working on the PCIe Root Complex based on the Designware Core
-> > (/pci/host/pcie-desigware.c). I have noticed that currently building a solution
-> > based on the previous for an ARM64 CPU is problematic and demands some tweaking
-> > in the ARM64 arch (like adding some functions in the pcibios, etc.).
 > 
-> If I understand you correctly, you're saying that pcie-designware.c
-> doesn't build on arm64.  It would be helpful to know exactly what
-> problem you're seeing (what kernel version, what config, what the
-> error are, etc.)
+> This function gets called to inform ACPI that this is the SCI interrupt
+> and, trigger and polarity are their attributes.
+> 
+> The return value is void and the caller is not interested in what ACPI thinks
+> about. 
+> 
+> This function adjusts the SCI penalty based on correct attributes passed
+> (ISA_ALWAYS vs. PCI_USING).
+> 
+> I agree that we lost this validation. 
+> 
+> I can keep sci_trigger/sci_polarity somewhere and keep that into the calculation
+> in get function.
+> 
+> Like this for instance,
+> 
+> 	if (irq == acpi_gbl_FADT.sci_interrupt) {
+> +		if (sci_trigger != ACPI_MADT_TRIGGER_LEVEL ||
+> +		    sci_polarity != ACPI_MADT_POLARITY_ACTIVE_LOW)
+> +			penalty += PIRQ_PENALTY_ISA_ALWAYS;
+> +		else
+> 			penalty += PIRQ_PENALTY_PCI_USING; 
+> 	}
+> 
+> Then, we can't get rid of the function just we can reduce the contents.
 
-Yes, I am not sure I understand what Joao is referring to so I would
-be grateful if he can provide us with additional details.
+I think it's important to keep that check.
 
-Thanks,
-Lorenzo
+I raised the possibility of using irq_get_trigger_type() for all IRQs
+(not just the SCI).  Did you have a chance to look into that at all?
+
+Bjorn
