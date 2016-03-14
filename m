@@ -1,134 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 2/2] PCI: Quirk PCH root port ACS for Sunrise Point
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org
-Date: Thu, 31 Mar 2016 16:34:37 -0600
-Message-ID: <20160331223437.20486.15640.stgit@gimli.home>
-In-Reply-To: <20160331222828.20486.30979.stgit@gimli.home>
-References: <20160331222828.20486.30979.stgit@gimli.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:39036 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752589AbcCNPmT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Mar 2016 11:42:19 -0400
+Date: Mon, 14 Mar 2016 10:42:15 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Yong, Jonathan" <jonathan.yong@intel.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH] PCI: PTM preliminary implementation
+Message-ID: <20160314154215.GB13471@localhost>
+References: <1457681184-20439-1-git-send-email-jonathan.yong@intel.com>
+ <1457681184-20439-2-git-send-email-jonathan.yong@intel.com>
+ <20160311155332.GA31716@localhost>
+ <56E66BF3.4080500@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56E66BF3.4080500@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As noted in the comments, these root ports attempted to implement ACS
-but used dwords for the capability and control registers, putting the
-control register at the wrong offset.  We use quirks to enable and
-test ACS for these devices, which match the standard functions modulo
-the broken control register offset.
+On Mon, Mar 14, 2016 at 03:44:51PM +0800, Yong, Jonathan wrote:
+> On 03/11/2016 23:53, Bjorn Helgaas wrote:
+> 
+> >I haven't read the PTM spec yet so I don't know how it works.  But in
+> >general, I don't like having to tweak a setting all the way up the
+> >hierarchy based on a leaf device.  That makes it hard to handle
+> >hotplug correctly, because obviously there may be many leaf devices
+> >that share part of all of the upstream path.
+> >
+> 
+> This part in 6.22.3 in the PCIe 3.1 spec:
+> 
+> Software must not have the PTM Enable bit Set in the PTM Control
+> register on a Function associated with an Upstream Port unless the
+> associated Downstream Port on the Link already has the PTM Enable
+> bit Set in its associated PTM Control register.
+> 
+> Seems to suggest starting from the leaf device, I'm open to
+> suggestions on how to better do this.
 
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- drivers/pci/quirks.c |   78 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 78 insertions(+)
+The nomenclature is confusing, but I think you're reading this
+backwards.  An Upstream Port is on the downstream end of a Link.  The
+"Upstream" definition in the PCIe spec "Terms and Acronyms" section
+says:
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 701fad6..d6606e4 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3936,6 +3936,55 @@ static int pci_quirk_intel_pch_acs(struct pci_dev *dev, u16 acs_flags)
- 	return acs_flags & ~flags ? 0 : 1;
- }
- 
-+/*
-+ * Sunrise Point PCH root ports implement ACS, but unfortunately as shown in
-+ * the datasheet (Intel 100 Series Chipset Family PCH Datasheet, Vol. 2,
-+ * 12.1.46, 12.1.47)[1] this chipset uses dwords for the ACS capability and
-+ * control registers whereas the PCIe spec packs them into words (Rev 3.0,
-+ * 7.16 ACS Extended Capability).  The bit definitions are correct, but the
-+ * control register is at offset 8 instead of 6 and we should probably use
-+ * dword accesses to them.  This applies to the following PCI Device IDs, as
-+ * found in volume 1 of the datasheet[2]:
-+ *
-+ * 0xa110-0xa11f Sunrise Point-H PCI Express Root Port #{0-16}
-+ * 0xa167-0xa16a Sunrise Point-H PCI Express Root Port #{17-20}
-+ *
-+ * NB. This doesn't fix what lspci shows.
-+ *
-+ * [1] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-2.html
-+ * [2] http://www.intel.com/content/www/us/en/chipsets/100-series-chipset-datasheet-vol-1.html
-+ */
-+static bool pci_quirk_intel_spt_pch_acs_match(struct pci_dev *dev)
-+{
-+	return pci_is_pcie(dev) &&
-+		pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
-+		((dev->device & ~0xf) == 0xa110 ||
-+		 (dev->device >= 0xa167 && dev->device <= 0xa16a));
-+}
-+
-+#define INTEL_SPT_ACS_CTRL (PCI_ACS_CAP + 4)
-+
-+static int pci_quirk_intel_spt_pch_acs(struct pci_dev *dev, u16 acs_flags)
-+{
-+	int pos;
-+	u32 cap, ctrl;
-+
-+	if (!pci_quirk_intel_spt_pch_acs_match(dev))
-+		return -ENOTTY;
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+	if (!pos)
-+		return -ENOTTY;
-+
-+	/* see pci_acs_flags_enabled() */
-+	pci_read_config_dword(dev, pos + PCI_ACS_CAP, &cap);
-+	acs_flags &= (cap | PCI_ACS_EC);
-+
-+	pci_read_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, &ctrl);
-+
-+	return acs_flags & ~ctrl ? 0 : 1;
-+}
-+
- static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
- {
- 	/*
-@@ -4024,6 +4073,7 @@ static const struct pci_dev_acs_enabled {
- 	{ PCI_VENDOR_ID_INTEL, 0x15b8, pci_quirk_mf_endpoint_acs },
- 	/* Intel PCH root ports */
- 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
-+	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_spt_pch_acs },
- 	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
- 	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
- 	/* Cavium ThunderX */
-@@ -4159,12 +4209,40 @@ static int pci_quirk_enable_intel_pch_acs(struct pci_dev *dev)
- 	return 0;
- }
- 
-+static int pci_quirk_enable_intel_spt_pch_acs(struct pci_dev *dev)
-+{
-+	int pos;
-+	u32 cap, ctrl;
-+
-+	if (!pci_quirk_intel_spt_pch_acs_match(dev))
-+		return -ENOTTY;
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+	if (!pos)
-+		return -ENOTTY;
-+
-+	pci_read_config_dword(dev, pos + PCI_ACS_CAP, &cap);
-+	pci_read_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, &ctrl);
-+
-+	ctrl |= (cap & PCI_ACS_SV);
-+	ctrl |= (cap & PCI_ACS_RR);
-+	ctrl |= (cap & PCI_ACS_CR);
-+	ctrl |= (cap & PCI_ACS_UF);
-+
-+	pci_write_config_dword(dev, pos + INTEL_SPT_ACS_CTRL, ctrl);
-+
-+	dev_info(&dev->dev, "Intel SPT PCH root port ACS workaround enabled\n");
-+
-+	return 0;
-+}
-+
- static const struct pci_dev_enable_acs {
- 	u16 vendor;
- 	u16 device;
- 	int (*enable_acs)(struct pci_dev *dev);
- } pci_dev_enable_acs[] = {
- 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_enable_intel_pch_acs },
-+	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_enable_intel_spt_pch_acs },
- 	{ 0 }
- };
- 
+  The Port on a Switch that is closest topologically to the Root Complex
+  is the Upstream Port. The Port on a component that contains only
+  Endpoint or Bridge Functions is an Upstream Port.
+
+I think the spec is saying that PTM must be enabled in a bridge before
+it is enabled in any device downstream from the bridge.
+
+Bjorn
