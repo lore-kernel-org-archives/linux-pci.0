@@ -1,38 +1,42 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from li153-180.members.linode.com ([109.74.206.180]:51450 "EHLO
-	mail.tekno-soft.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751384AbcCHPHQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Mar 2016 10:07:16 -0500
-Subject: Re: iMX6q PCIe phy link never came up on kernel v4.4.x
-To: Fabio Estevam <festevam@gmail.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-References: <56D5E3DF.9030906@tekno-soft.it>
- <1456997527.3772.37.camel@pengutronix.de>
- <CAOMZO5A4bP34weVAvz5ZiUszNu3gLqAo7yocWaG9H-3FFe+kyw@mail.gmail.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: Roberto Fichera <kernel@tekno-soft.it>
-Message-ID: <56DEEA93.4020000@tekno-soft.it>
-Date: Tue, 8 Mar 2016 16:06:59 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sun, 13 Mar 2016 19:24:58 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Andrey Utkin <andrey_utkin@fastmail.com>
+Cc: Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Bluecherry Maintainers <maintainers@bluecherrydvr.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Joe Perches <joe@perches.com>, Jiri Slaby <jslaby@suse.com>,
+	devel@driverdev.osuosl.org, kernel-mentors@selenic.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org
+Subject: Re: [PATCH] Add tw5864 driver
+Message-ID: <20160314022458.GA4036@kroah.com>
+References: <1457920461-20713-1-git-send-email-andrey_utkin@fastmail.com>
+ <1457920514-20792-1-git-send-email-andrey_utkin@fastmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOMZO5A4bP34weVAvz5ZiUszNu3gLqAo7yocWaG9H-3FFe+kyw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1457920514-20792-1-git-send-email-andrey_utkin@fastmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/08/2016 04:02 PM, Fabio Estevam wrote:
-> On Thu, Mar 3, 2016 at 6:32 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
->
->> Is this a regression from earlier kernel versions?
->>
->> If so, can you please revert 5c5fb40de8f14 (PCI: imx6: Add support for
->> active-low reset GPIO) and see if this helps?
-> This commit has been applied to 4.5-rc1. Roberto is using 4.4.x.
+On Mon, Mar 14, 2016 at 03:55:14AM +0200, Andrey Utkin wrote:
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2333,6 +2333,7 @@
+>  #define PCI_VENDOR_ID_CAVIUM		0x177d
+>  
+>  #define PCI_VENDOR_ID_TECHWELL		0x1797
+> +#define PCI_DEVICE_ID_TECHWELL_5864	0x5864
+>  #define PCI_DEVICE_ID_TECHWELL_6800	0x6800
+>  #define PCI_DEVICE_ID_TECHWELL_6801	0x6801
+>  #define PCI_DEVICE_ID_TECHWELL_6804	0x6804
 
-Yes! I've just checked that isn't present
+Please read the comments at the top of this file for why you don't need
+to put any new ids into it.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+thanks,
 
+greg k-h
