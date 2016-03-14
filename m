@@ -1,76 +1,218 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:36214 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752205AbcCGI22 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Mar 2016 03:28:28 -0500
-Date: Mon, 7 Mar 2016 09:28:23 +0100
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
+Received: from mga14.intel.com ([192.55.52.115]:57469 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752452AbcCNJVs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Mar 2016 05:21:48 -0400
+Date: Mon, 14 Mar 2016 11:18:45 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: tegra: Support per-lane PHYs
-Message-ID: <20160307082823.GA31189@ulmo.nvidia.com>
-References: <1455029465-9211-1-git-send-email-thierry.reding@gmail.com>
- <1455904860-29090-1-git-send-email-thierry.reding@gmail.com>
- <56CCA250.2010403@wwwdotorg.org>
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH 4/6] PCI: Add runtime PM support for PCIe ports
+Message-ID: <20160314091845.GA1796@lahna.fi.intel.com>
+References: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1456750566-116248-5-git-send-email-mika.westerberg@linux.intel.com>
+ <20160312003029.GL4725@localhost>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="wac7ysb48OaltWcw"
-In-Reply-To: <56CCA250.2010403@wwwdotorg.org>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160312003029.GL4725@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Mar 11, 2016 at 06:30:29PM -0600, Bjorn Helgaas wrote:
+> On Mon, Feb 29, 2016 at 02:56:04PM +0200, Mika Westerberg wrote:
+> > Add back runtime PM support for PCIe ports that was removed in
+> > commit fe9a743a2601 ("PCI/PM: Drop unused runtime PM support code for PCIe
+> > ports").
+> > 
+> > First of all we cannot enable it automatically for all root ports since
+> > there have been problems previously, 
+> 
+> Pointers to these problems would be useful.
 
---wac7ysb48OaltWcw
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Right, sorry about that.
 
-On Tue, Feb 23, 2016 at 11:17:52AM -0700, Stephen Warren wrote:
-> On 02/19/2016 11:01 AM, Thierry Reding wrote:
-[...]
-> >diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
->=20
-> >@@ -883,14 +904,24 @@ static int tegra_pcie_enable_controller(struct teg=
-ra_pcie *pcie)
->=20
-> >+	if (of_get_property(pcie->dev->of_node, "phys", NULL) =3D=3D NULL) {
->=20
-> Rather than re-parsing DT to determine this, thus duplicating the logic,
-> can't the code store some flag in tegra_pcie_phys_get() indicating which
-> path was taken, and that flag used here? Perhaps that flag could be based=
- on
-> whether pcie->phy is set, although the else block here implies that
-> particular solution won't work.
+Runtime PM for PCIe ports was disabled by commit de7d5f729c72 ("PCI/PM:
+Disable runtime PM of PCIe ports"). Changelog in that commit says that
+runtime suspending of ports might prevent things like hotplug from
+working. The bug report it refers is here:
 
-We could derive this by iterating over all ports and check whether each
-of them has its ->phys field set to !NULL. However, keeping track of it
-via a separate boolean seems to me like the less obfuscated version, so
-I've implemented that instead.
+https://bugzilla.kernel.org/show_bug.cgi?id=53811
 
-Thanks,
-Thierry
+I can add these to the changelog as well.
 
---wac7ysb48OaltWcw
-Content-Type: application/pgp-signature; name="signature.asc"
+> > so we enable it only based on per port
+> > configuration (runtime_suspend_allowed).
+> 
+> I see that the next patch basically adds a quirk to set
+> runtime_suspend_allowed for Sunrisepoint.  How do we prevent this
+> from being a maintenance nightmare?  I don't want to have to add
+> a quirk for every new device that supports runtime PM.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+One alternative is to do the same that patch [3/6] does for system
+suspend and use cut-off date.
 
-iQIcBAABCAAGBQJW3TukAAoJEN0jrNd/PrOhHu4P/Rp1BHDg6EA0ONbXqKxpLuqD
-wLP+wRxMUt/1ts+9x0A1wqHVyE3eYxMJvZXPDahbSMsbJH6klBFJ8QlsLbXKgYMk
-Z5Y6YxJX10E/vhUrx9pUf3KvOJSQlZi9hog1Cn+EPlCzmh7EsDmgi6nJMhiW/9eI
-uSVpvQknv5x05/Z/yXwCvZAM0mtODZ8Hb+2Nx50k0wtNEZHO7zMV/QO76alwPj1o
-TcK+jVvCG7RVrjmV7koM88v7HRhq+cebM3Ak7UUoE3CO3wXeT/PShk+6n2uLW0Fi
-iKhqeKyNu4j1F+yp6x0fNM45bktEgs77ZXK+GuFolP3CkWPrxpqpt+BieA29n+rt
-wvyoTjVhd0ZGyzShyNM+nwgM8AHC+EZLW67HFx1okpW3OZmdj8ZOPXS5y+BYNzY7
-u0C4i6h2Jn/8H1VBv5V3zJ92eIWC6+rhzhAQxF9oJjNBZ6UsUgwl4XzlPz7x1RA4
-fCENTayok902L6N07GN7bjcmf+lgzAKLhxFM8jDjK0pLBeAAQ+gro466sbhVNJdi
-+OfsYMMEpkaN/gJDCkLK7+qfsvQGT61WJ96CHWQFjfULiU4I8HJn7UPJ9ZxRMMDZ
-0CZVNDA7x/qrIhw77dxSWpuhI+6EboZf8xpH2TjtZaZYE9S2zY5NS2bxLa8UhbM9
-v4MxBMKaP6ohifOSmEvy
-=2+Pd
------END PGP SIGNATURE-----
+As far as I can tell Windows added RTD3 (runtime D3, similart to our
+runtime PM) support for PCIe ports quite recently so I would expect
+recent hardware to be better validated against that.
 
---wac7ysb48OaltWcw--
+> > Furthermore we need to check that
+> > the device, if wake capable, can do so from D3cold (which is the state it
+> > goes after the root port is powered down).
+> 
+> I don't see this check.  I was expecting something like
+> device_may_wakeup(&pdev->dev) && !pci_pme_capable(pdev, PCI_D3cold)
+> like you did in the "Move PCIe ports to D3hot during suspend" patch.
+
+This patch actually uses pcie_port_can_suspend() introduced in patch
+[3/6] which does the check.
+
+> > This follows what we did for
+> > PCIe port system suspend already.
+> > 
+> > Runtime PM is still blocked and needs to be unblocked from userspace like
+> > with other PCI devices.
+> 
+> Can you expand on this a bit?  I assume you mean that runtime PM is
+> disabled by default, and userspace has to enable it with a sysfs switch or
+> something?  Can you include information about how to do that?
+
+That's right. I'm calling it "unblock" to avoid confusion with "enable"
+as if runtime PM is merely enabled nothing happens until someone calls
+pm_runtime_allow() (or does the same from userspace).
+
+Here is the script I've been using:
+
+-----8<-----8<-----8<-----8<------8<-----8<-----8<------
+#!/bin/sh
+
+PORTS=$(lspci -D | grep "PCI bridge" | cut -f 1 -d ' ')
+
+# Enable runtime PM for all ports
+for port in $PORTS; do
+	# Enable runtime PM for all connected devices
+	for device in /sys/bus/pci/devices/$port/????:??:??.?; do
+		echo auto > $device/power/control
+	done
+
+	# Then for the port itself
+	echo auto > /sys/bus/pci/devices/$port/power/control
+done
+-----8<-----8<-----8<-----8<------8<-----8<-----8<------
+
+I will include that in the changelog as well.
+
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > ---
+> >  drivers/pci/pcie/portdrv_pci.c | 49 ++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 49 insertions(+)
+> > 
+> > diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> > index fe3349685141..eb0f425f51cc 100644
+> > --- a/drivers/pci/pcie/portdrv_pci.c
+> > +++ b/drivers/pci/pcie/portdrv_pci.c
+> > @@ -85,6 +85,7 @@ enum pcie_port_type {
+> >  
+> >  struct pcie_port_config {
+> >  	bool suspend_allowed;
+> > +	bool runtime_suspend_allowed;
+> >  };
+> >  
+> >  static const struct pcie_port_config pcie_port_configs[] = {
+> > @@ -154,6 +155,11 @@ static bool pcie_port_suspend_allowed(struct pci_dev *pdev)
+> >  	return pcie_port_can_suspend(pdev);
+> >  }
+> >  
+> > +static bool pcie_port_runtime_suspend_allowed(struct pci_dev *pdev)
+> > +{
+> > +	return pcie_port_get_config(pdev)->runtime_suspend_allowed;
+> > +}
+> > +
+> >  static int pcie_port_suspend_noirq(struct device *dev)
+> >  {
+> >  	struct pci_dev *pdev = to_pci_dev(dev);
+> > @@ -188,6 +194,34 @@ static int pcie_port_resume_noirq(struct device *dev)
+> >  	return 0;
+> >  }
+> >  
+> > +static int pcie_port_runtime_suspend(struct device *dev)
+> > +{
+> > +	struct pci_dev *pdev = to_pci_dev(dev);
+> > +
+> > +	/*
+> > +	 * All devices behind the port are assumed to be in D3cold so
+> > +	 * update their state now.
+> > +	 */
+> > +	__pci_bus_set_current_state(pdev->subordinate, PCI_D3cold);
+> > +	return 0;
+> > +}
+> > +
+> > +static int pcie_port_runtime_resume(struct device *dev)
+> > +{
+> > +	return 0;
+> > +}
+> > +
+> > +static int pcie_port_runtime_idle(struct device *dev)
+> > +{
+> > +	struct pci_dev *pdev = to_pci_dev(dev);
+> > +
+> > +	if (pcie_port_can_suspend(pdev)) {
+> > +		pm_schedule_suspend(dev, 10);
+> > +		return 0;
+> > +	}
+> > +	return -EBUSY;
+> > +}
+> > +
+> >  static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+> >  	.suspend	= pcie_port_device_suspend,
+> >  	.resume		= pcie_port_device_resume,
+> > @@ -197,12 +231,20 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+> >  	.restore	= pcie_port_device_resume,
+> >  	.suspend_noirq	= pcie_port_suspend_noirq,
+> >  	.resume_noirq	= pcie_port_resume_noirq,
+> > +	.runtime_suspend = pcie_port_runtime_suspend,
+> > +	.runtime_resume	= pcie_port_runtime_resume,
+> > +	.runtime_idle	= pcie_port_runtime_idle,
+> >  };
+> >  
+> >  #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+> >  
+> >  #else /* !PM */
+> >  
+> > +static inline bool pcie_port_runtime_suspend_allowed(struct pci_dev *pdev)
+> > +{
+> > +	return false;
+> > +}
+> > +
+> >  #define PCIE_PORTDRV_PM_OPS	NULL
+> >  #endif /* !PM */
+> >  
+> > @@ -230,11 +272,18 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+> >  		return status;
+> >  
+> >  	pci_save_state(dev);
+> > +
+> > +	if (pcie_port_runtime_suspend_allowed(dev))
+> > +		pm_runtime_put_noidle(&dev->dev);
+> > +
+> >  	return 0;
+> >  }
+> >  
+> >  static void pcie_portdrv_remove(struct pci_dev *dev)
+> >  {
+> > +	if (pcie_port_runtime_suspend_allowed(dev))
+> > +		pm_runtime_get_noresume(&dev->dev);
+> > +
+> >  	pcie_port_device_remove(dev);
+> >  }
+> >  
+> > -- 
+> > 2.7.0
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
