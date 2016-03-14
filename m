@@ -1,260 +1,187 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:53912 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752393AbcCRMMU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 Mar 2016 08:12:20 -0400
-Subject: Re: [PATCH 2/3] swiotlb: prefix dma_to_phys and phys_to_dma functions
-To: Sinan Kaya <okaya@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org, timur@codeaurora.org,
-	cov@codeaurora.org, nwatters@codeaurora.org
-References: <1458252137-24497-1-git-send-email-okaya@codeaurora.org>
- <1458252137-24497-2-git-send-email-okaya@codeaurora.org>
-Cc: linux-mips@linux-mips.org, linux-ia64@vger.kernel.org,
-	linux-xtensa@linux-xtensa.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Max Filippov <jcmvbkbc@gmail.com>,
-	Chris Metcalf <cmetcalf@ezchip.com>,
-	Paul Mackerras <paulus@samba.org>,
-	"H. Peter Anvin" <hpa@zytor.com>, Huacai Chen <chenhc@lemote.com>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Jisheng Zhang <jszhang@marvell.com>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Michael Ellerman <mpe@ellerman.id.au>, x86@kernel.org,
-	Ingo Molnar <mingo@redhat.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Denys Vlasenko <dvlasenk@redhat.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Akinobu Mita <akinobu.mita@gmail.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 14 Mar 2016 14:53:22 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Valentin Rothberg <valentinrothberg@gmail.com>,
-	Chris Zankel <chris@zankel.net>,
-	Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, Dean Nelson <dnelson@redhat.com>,
-	linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
-	"Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-	Joe Perches <joe@perches.com>,
-	Andrew Morton <akpm@linux-foundation.org>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <56EBF09A.1060503@arm.com>
-Date: Fri, 18 Mar 2016 12:12:10 +0000
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Mark Salter <msalter@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH v2] PCI: ACPI: IA64: fix IO port generic range check
+Message-ID: <20160314145322.GE6629@red-moon>
+References: <1455212827-9382-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20160308222125.GG27132@localhost>
+ <CAJZ5v0gnDnF_4z_mtZp+Tq8-V3FgG6p7kMykqtVA+s44ukkuaA@mail.gmail.com>
+ <20160309053332.GA22228@localhost>
+ <20160309071406.GA19555@red-moon>
+ <20160309153556.GA14873@localhost>
+ <20160310074236.GA20478@red-moon>
 MIME-Version: 1.0
-In-Reply-To: <1458252137-24497-2-git-send-email-okaya@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160310074236.GA20478@red-moon>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17/03/16 22:02, Sinan Kaya wrote:
-> Prefixing dma_to_phys and phys_to_dma API with swiotlb so that
-> they are no longer part of the DMA API. These APIs do not exist
-> on all architectures and breaks compatibility.
->
-> In preparation for the clean up, also make the ARCH implementation
-> known by defining swiotlb_phys_do_dma and swiotlb_dma_to_phys.
->
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->   arch/arm/include/asm/dma-mapping.h                 |  8 ++-
->   arch/arm64/include/asm/dma-mapping.h               |  9 ++-
->   arch/arm64/mm/dma-mapping.c                        | 75 ++++++++++++++--------
+On Thu, Mar 10, 2016 at 07:42:36AM +0000, Lorenzo Pieralisi wrote:
 
 [...]
 
-> diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
-> index a6e757c..ada00c3 100644
-> --- a/arch/arm64/mm/dma-mapping.c
-> +++ b/arch/arm64/mm/dma-mapping.c
-> @@ -107,7 +107,7 @@ static void *__dma_alloc_coherent(struct device *dev, size_t size,
->   		if (!page)
->   			return NULL;
->
-> -		*dma_handle = phys_to_dma(dev, page_to_phys(page));
-> +		*dma_handle = swiotlb_phys_to_dma(dev, page_to_phys(page));
->   		addr = page_address(page);
->   		memset(addr, 0, size);
->   		return addr;
-> @@ -121,7 +121,7 @@ static void __dma_free_coherent(struct device *dev, size_t size,
->   				struct dma_attrs *attrs)
->   {
->   	bool freed;
-> -	phys_addr_t paddr = dma_to_phys(dev, dma_handle);
-> +	phys_addr_t paddr = swiotlb_dma_to_phys(dev, dma_handle);
->
->   	if (dev == NULL) {
->   		WARN_ONCE(1, "Use an actual device structure for DMA allocation\n");
-> @@ -151,7 +151,8 @@ static void *__dma_alloc(struct device *dev, size_t size,
->   		void *addr = __alloc_from_pool(size, &page, flags);
->
->   		if (addr)
-> -			*dma_handle = phys_to_dma(dev, page_to_phys(page));
-> +			*dma_handle = swiotlb_phys_to_dma(dev,
-> +							  page_to_phys(page));
->
->   		return addr;
->   	}
-> @@ -187,7 +188,7 @@ static void __dma_free(struct device *dev, size_t size,
->   		       void *vaddr, dma_addr_t dma_handle,
->   		       struct dma_attrs *attrs)
->   {
-> -	void *swiotlb_addr = phys_to_virt(dma_to_phys(dev, dma_handle));
-> +	void *swiotlb_addr = phys_to_virt(swiotlb_dma_to_phys(dev, dma_handle));
->
->   	size = PAGE_ALIGN(size);
->
-> @@ -208,7 +209,8 @@ static dma_addr_t __swiotlb_map_page(struct device *dev, struct page *page,
->
->   	dev_addr = swiotlb_map_page(dev, page, offset, size, dir, attrs);
->   	if (!is_device_dma_coherent(dev))
-> -		__dma_map_area(phys_to_virt(dma_to_phys(dev, dev_addr)), size, dir);
-> +		__dma_map_area(phys_to_virt(swiotlb_dma_to_phys(dev, dev_addr)),
-> +			       size, dir);
->
->   	return dev_addr;
->   }
-> @@ -218,8 +220,11 @@ static void __swiotlb_unmap_page(struct device *dev, dma_addr_t dev_addr,
->   				 size_t size, enum dma_data_direction dir,
->   				 struct dma_attrs *attrs)
->   {
-> -	if (!is_device_dma_coherent(dev))
-> -		__dma_unmap_area(phys_to_virt(dma_to_phys(dev, dev_addr)), size, dir);
-> +	if (!is_device_dma_coherent(dev)) {
-> +		phys_addr_t phys = swiotlb_dma_to_phys(dev, dev_addr);
-> +
-> +		__dma_unmap_area(phys_to_virt(phys), size, dir);
-> +	}
->   	swiotlb_unmap_page(dev, dev_addr, size, dir, attrs);
->   }
->
-> @@ -232,9 +237,12 @@ static int __swiotlb_map_sg_attrs(struct device *dev, struct scatterlist *sgl,
->
->   	ret = swiotlb_map_sg_attrs(dev, sgl, nelems, dir, attrs);
->   	if (!is_device_dma_coherent(dev))
-> -		for_each_sg(sgl, sg, ret, i)
-> -			__dma_map_area(phys_to_virt(dma_to_phys(dev, sg->dma_address)),
-> -				       sg->length, dir);
-> +		for_each_sg(sgl, sg, ret, i) {
-> +			dma_addr_t dma = sg->dma_address;
-> +			phys_addr_t phys = swiotlb_dma_to_phys(dev, dma);
-> +
-> +			__dma_map_area(phys_to_virt(phys), sg->length, dir);
-> +		}
->
->   	return ret;
->   }
-> @@ -248,9 +256,12 @@ static void __swiotlb_unmap_sg_attrs(struct device *dev,
->   	int i;
->
->   	if (!is_device_dma_coherent(dev))
-> -		for_each_sg(sgl, sg, nelems, i)
-> -			__dma_unmap_area(phys_to_virt(dma_to_phys(dev, sg->dma_address)),
-> -					 sg->length, dir);
-> +		for_each_sg(sgl, sg, nelems, i) {
-> +			dma_addr_t dma = sg->dma_address;
-> +			phys_addr_t phys = swiotlb_dma_to_phys(dev, dma);
-> +
-> +			__dma_unmap_area(phys_to_virt(phys), sg->length, dir);
-> +		}
->   	swiotlb_unmap_sg_attrs(dev, sgl, nelems, dir, attrs);
->   }
->
-> @@ -258,8 +269,11 @@ static void __swiotlb_sync_single_for_cpu(struct device *dev,
->   					  dma_addr_t dev_addr, size_t size,
->   					  enum dma_data_direction dir)
->   {
-> -	if (!is_device_dma_coherent(dev))
-> -		__dma_unmap_area(phys_to_virt(dma_to_phys(dev, dev_addr)), size, dir);
-> +	if (!is_device_dma_coherent(dev)) {
-> +		phys_addr_t phys = swiotlb_dma_to_phys(dev, dev_addr);
-> +
-> +		__dma_unmap_area(phys_to_virt(phys), size, dir);
-> +	}
->   	swiotlb_sync_single_for_cpu(dev, dev_addr, size, dir);
->   }
->
-> @@ -269,7 +283,8 @@ static void __swiotlb_sync_single_for_device(struct device *dev,
->   {
->   	swiotlb_sync_single_for_device(dev, dev_addr, size, dir);
->   	if (!is_device_dma_coherent(dev))
-> -		__dma_map_area(phys_to_virt(dma_to_phys(dev, dev_addr)), size, dir);
-> +		__dma_map_area(phys_to_virt(swiotlb_dma_to_phys(dev, dev_addr)),
-> +			       size, dir);
->   }
->
->   static void __swiotlb_sync_sg_for_cpu(struct device *dev,
-> @@ -280,9 +295,12 @@ static void __swiotlb_sync_sg_for_cpu(struct device *dev,
->   	int i;
->
->   	if (!is_device_dma_coherent(dev))
-> -		for_each_sg(sgl, sg, nelems, i)
-> -			__dma_unmap_area(phys_to_virt(dma_to_phys(dev, sg->dma_address)),
-> -					 sg->length, dir);
-> +		for_each_sg(sgl, sg, nelems, i) {
-> +			dma_addr_t dma = sg->dma_address;
-> +			phys_addr_t phys = swiotlb_dma_to_phys(dev, dma);
-> +
-> +			__dma_unmap_area(phys_to_virt(phys), sg->length, dir);
-> +		}
->   	swiotlb_sync_sg_for_cpu(dev, sgl, nelems, dir);
->   }
->
-> @@ -295,9 +313,12 @@ static void __swiotlb_sync_sg_for_device(struct device *dev,
->
->   	swiotlb_sync_sg_for_device(dev, sgl, nelems, dir);
->   	if (!is_device_dma_coherent(dev))
-> -		for_each_sg(sgl, sg, nelems, i)
-> -			__dma_map_area(phys_to_virt(dma_to_phys(dev, sg->dma_address)),
-> -				       sg->length, dir);
-> +		for_each_sg(sgl, sg, nelems, i) {
-> +			dma_addr_t dma = sg->dma_address;
-> +			phys_addr_t phys = swiotlb_dma_to_phys(dev, dma);
-> +
-> +			__dma_map_area(phys_to_virt(phys), sg->length, dir);
-> +		}
->   }
->
->   static int __swiotlb_mmap(struct device *dev,
-> @@ -309,7 +330,7 @@ static int __swiotlb_mmap(struct device *dev,
->   	unsigned long nr_vma_pages = (vma->vm_end - vma->vm_start) >>
->   					PAGE_SHIFT;
->   	unsigned long nr_pages = PAGE_ALIGN(size) >> PAGE_SHIFT;
-> -	unsigned long pfn = dma_to_phys(dev, dma_addr) >> PAGE_SHIFT;
-> +	unsigned long pfn = swiotlb_dma_to_phys(dev, dma_addr) >> PAGE_SHIFT;
->   	unsigned long off = vma->vm_pgoff;
->
->   	vma->vm_page_prot = __get_dma_pgprot(attrs, vma->vm_page_prot,
-> @@ -334,9 +355,11 @@ static int __swiotlb_get_sgtable(struct device *dev, struct sg_table *sgt,
->   {
->   	int ret = sg_alloc_table(sgt, 1, GFP_KERNEL);
->
-> -	if (!ret)
-> -		sg_set_page(sgt->sgl, phys_to_page(dma_to_phys(dev, handle)),
-> -			    PAGE_ALIGN(size), 0);
-> +	if (!ret) {
-> +		phys_addr_t phys = swiotlb_dma_to_phys(dev, handle);
-> +
-> +		sg_set_page(sgt->sgl, phys_to_page(phys), PAGE_ALIGN(size), 0);
-> +	}
->
->   	return ret;
->   }
+> > > We can't do that, it may work on IA64 but the ioport_resource is a
+> > > chunk of address space on IA64/ARM64 that has nothing to do with
+> > > the physical address at which the root bridges decode IO space (which
+> > > is what's contained in the resource).
+> > 
+> > I'm stumbling over "the physical address at which the root bridges
+> > decode IO space (which is what's contained in the resource)".
+> > 
+> > x86 host bridges typically just forward CPU-generated I/O port
+> > transactions to PCI with no address translation, so it sounds like
+> > you're talking about ia64/ARM64 bridges that decode CPU MMIO space and
+> > turn accesses into PCI I/O transactions.
+> > 
+> > If we start from a driver calling inb(), the driver supplies a Linux
+> > ioport number "X".  On ia64 (and I assume ARM64 as well), inb()
+> > performs an MMIO access to memory address "Y".  A host bridge consumes
+> > that MMIO access and generates a corresponding PCI I/O transaction to
+> > PCI ioport "Z".
+> > 
+> > It is indeed true that ioport_resource has nothing to do with memory
+> > addresses like "Y".  But the driver (and this part of the ACPI
+> > infrastructure) are dealing with ioport address "X", and that is
+> > definitely in an IORESOURCE_IO struct resource.  The IORESOURCE_MEM_
+> > struct resource that contains "Y" is internal to the host bridge
+> > driver and invisible to the device driver that's using inb().
+> 
+> The problem is, that's the address like "Y" that are checked in
+> acpi_dev_ioresource_flags() with current PCI initialization flow.
+> 
+> IO ports number "X" are created in (IA64) add_io_space() that is
+> executed after acpi_pci_probe_root_resources() is called (see
+> arch/ia64/pci/pci.c), that's the code that, IIUC, translates an
+> IO resource containing a CPU physical address (which is the address
+> that is ioremapped) to an IO resource containing a port number *and*
+> a corresponding MEM resource.
+> 
+> The check that causes failures (>=0x10003) is carried out
+> on the "raw" IO resource parsed from ACPI, not the one crafted
+> in add_io_space().
+> 
+> The resource checked in acpi_dev_ioresource_flags() is created from
+> ACPI IO descriptor and does contain CPU physical MMIO addresses,
+> comparing it to a port number is bound to fail, they do NOT represent
+> the same thing, happy be corrected.
+> 
+> That's the reason why currently IA64 IO space is not working, and
+> this patch fixes it, please correct me if I am wrong.
+> 
+> I will write back next week with the commits sequence and logic that
+> led to the current failure, sorry for not being able to respond
+> more promptly and in a comprehensive way I need sometime to write up
+> my understanding of the problem and commit logs, I will do that
+> next week.
 
-Since we know for sure that swiotlb_to_phys is a no-op on arm64, it 
-might be cleaner to simply not reference it at all. I suppose we could 
-have some private local wrappers, e.g.:
+I had a further look and went through commit history and I think
+my explanation above is correct, current code for IA64 PCI IO space
+is wrong IMO and the failures started with:
 
-#define swiotlb_to_virt(addr) phys_to_virt((phys_addr_t)(addr))
+commit 3772aea7d6f3 ("ia64/PCI/ACPI: Use common ACPI resource parsing
+interface for host bridge")
 
-to keep the intent of the code clear (and just in case anyone ever 
-builds a system mad enough to warrant switching out that definition, but 
-I'd hope that never happens).
+because that's the commit that added IA64 PCI code to use
+acpi_dev_get_resources(), let me add to that.
 
-Otherwise, looks good - thanks for doing this!
+For the records, and for the same reason, let's imagine we can fix the
+(>=0x10003) check in:
 
-Robin.
+acpi_dev_ioresource_flags()
+
+the code in acpi_pci_probe_root_resources() that checks the PCI IO
+resources (ie acpi_pci_root_validate_resources()) is wrong, in that it
+validates the PCI IO resources obtained from ACPI IO descriptors against
+ioport_resource, and that's not correct, they do not represent the
+same thing.
+
+Code in acpi_dev_get_resources() walks the device (PCI host bridge in
+this case) resources (ie _CRS) with acpi_dev_process_resource().
+
+On IA64 IO space is memory mapped, therefore the CPU physical address
+at which the PCI host bridge maps the IO space has to come from ACPI
+IO descriptors.
+
+IIUC, those descriptors are parsed through:
+
+acpi_dev_resource_address_space()
+acpi_dev_resource_ext_address_space()
+
+which in turn call:
+
+acpi_decode_space()
+
+where the resource window is actually created, in particular the
+acpi_address64_attribute value contains (on IA64, I verified with
+ACPI spec working group through actual ACPI tables):
+
+attr->minimum = PCI IO port min value
+attr->translation_offset = offset to add to attr->minimum to obtain the
+                           CPU physical address at which the PCI IO
+			   bridge decodes IO space. Translation offset,
+			   according to the ACPI specification has to
+			   be used when resources on primary and
+			   secondary sides of the PCI bridge are
+			   different (IIUC secondary bus represents PCI
+			   IO ports, primary bus CPU physical addresses
+			   mapping IO ports in CPU physical address
+			   space). This is the physical address that is
+			   remapped in IA64 new_space(), to map the
+			   bridge CPU physical address into the virtual
+			   address space, and it has always been so, even
+			   before 3772aea7d6f3.
+
+Now, the resource window, in acpi_decode_space() is created as:
+
+res->start = attr->minimum + attr->translation_offset;
+res->end = attr->maximum + attr->translation_offset;
+
+and that's the resource we have in acpi_dev_ioresource_flags(), if we
+are comparing it against ioport_resource that's not correct since as I
+already mentioned, they represent *different* things.
+
+There is something we can do, which is, checking translation_type
+in acpi_dev_ioresource_flags(), if it is == TypeTranslation (which
+basically means that the IO space is MMIO) the >=10003 can be skipped,
+but that's hackish (also because I am not sure IA64 platforms set
+translation_type consistently in ACPI tables).
+
+Even if we do that, call to acpi_pci_root_validate_resources() for
+IO space is wrong on IA64, we are comparing an IO resource against
+ioport_resource there, but the Linux IO port space for the host
+bridge is created in IA64 pci_acpi_root_prepare_resources() with
+the call to add_io_space() which happens *after* the sequence above
+is executed.
+
+On IA64:
+
+pci_acpi_root_prepare_resources()
+ -> acpi_pci_probe_root_resources()
+    -> acpi_dev_get_resources()
+    -> acpi_pci_root_validate_resources()
+ -> add_io_space() # this is where the Linux IO port space for the bridge is
+                     created and that's when we can validate the IO
+		     resource against ioport_resource
+
+I have no experience/knowledge of IA64 systems so I may be totally wrong,
+I just want to understand.
+
+Comments welcome, Hanjun proved my understanding by testing on IA64 and
+current mainline just does not work (see commit log for failure messages),
+feedback from IA64 people is really needed here, we have to get this fixed
+please (and through that fix, getting it to work on ARM64 too).
+
+Thanks,
+Lorenzo
