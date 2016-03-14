@@ -1,128 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:53644 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.136]:45256 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755207AbcCRLZj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 18 Mar 2016 07:25:39 -0400
-Date: Fri, 18 Mar 2016 11:28:02 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: PCI IO resource question.
-Message-ID: <20160318112802.GA1810@red-moon>
-References: <56E987B8.1090904@ti.com>
- <20160316164531.GA28797@localhost>
- <56E9A12F.50008@ti.com>
- <20160316192904.GA2703@localhost>
- <56E9BE6A.6090107@ti.com>
- <20160316214733.GA11542@localhost>
- <56EB217F.8070603@ti.com>
+	id S1752169AbcCNREq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Mar 2016 13:04:46 -0400
+Date: Mon, 14 Mar 2016 12:04:37 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: "robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Michal Simek <michals@xilinx.com>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"rjui@broadcom.com" <rjui@broadcom.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+	"dhdang@apm.com" <dhdang@apm.com>,
+	"sbranden@broadcom.com" <sbranden@broadcom.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH v12] [PATCH] PCI: Xilinx-NWL-PCIe: Adding support for
+ Xilinx NWL PCIe Host Controller
+Message-ID: <20160314170437.GA16729@localhost>
+References: <1457281934-32068-1-git-send-email-bharatku@xilinx.com>
+ <20160311215819.GB16257@localhost>
+ <8520D5D51A55D047800579B09414719825889095@XAP-PVEXMBX01.xlnx.xilinx.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56EB217F.8070603@ti.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <8520D5D51A55D047800579B09414719825889095@XAP-PVEXMBX01.xlnx.xilinx.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 17, 2016 at 05:28:31PM -0400, Murali Karicheri wrote:
-
-[...]
-
-> > The only ways I see that PCI_PROBE_ONLY can be set on ARM are if you have
-> > "linux,pci-probe-only" in your DT or you boot with "pci=firmware".
+On Mon, Mar 14, 2016 at 03:51:01PM +0000, Bharat Kumar Gogada wrote:
+> > On Sun, Mar 06, 2016 at 10:02:14PM +0530, Bharat Kumar Gogada wrote:
+> > > Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
 > > 
-> > I expect you're in this path:
+> > > +static bool nwl_pcie_valid_device(struct pci_bus *bus, unsigned int
+> > > +devfn) {
+> > > +	struct nwl_pcie *pcie = bus->sysdata;
+> > > +
+> > > +	/* Check link,before accessing downstream ports */
+> > > +	if (bus->number != pcie->root_busno) {
+> > > +		if (!nwl_pcie_link_up(pcie))
+> > > +			return false;
+> > > +	}
 > > 
-> >   ahci_init_one
-> >     pcim_enable_device
-> >       pci_enable_device
-> >         pci_enable_device_flags(dev, IORESOURCE_MEM | IORESOURCE_IO)
-> >           # build "bars" mask
-> >           do_pci_enable_device(dev, bars)
-> >             pcibios_enable_device
-> >               if (pci_has_flag(PCI_PROBE_ONLY))
-> >                 return 0;
-> >               pci_enable_resources
+> > This seems racy.  What if we check, and the link is up, but the
+> > link goes down before we actually complete the config access?
 > > 
-> > Can you add a little debug code like this to verify that we're in this
-> > path?
-> 
-> Yes we are in the path.
-> 
-> 
-> [    1.557561] ahci_init_one
-> [    1.560214] ahci 0000:01:00.0: version 3.0
-> [    1.564302] pcim_enable_device
-> [    1.567349] pci_enable_device
-> [    1.570340] pci_enable_device_flags
-> [    1.573824] do_pci_enable_device
-> [    1.577042] pcibios_enable_device
-> [    1.580380] pci_enable_resources
+> > I'm suggesting that this check for the link being up might be
+> > superfluous.
 
-So resources are actually enabled (ie PCI_PROBE_ONLY is not set)
-and that makes sense otherwise you would not be able to use the
-MEM resources anyway (ie they would not be enabled).
-
-I suspect the PCI dev IO resources were reset in reset_resource() in
-assign_requested_resource_sorted(), hence the bar mask that is built
-in pci_enable_device_flags() does not contain the IO resources,
-it would be helpful if you can print the bar mask passed to
-pcibios_enable_device() (ie the mask parameter).
-
-Not saying that's what should happen, I think that's what's happening,
-that's the only reason I see why you do not have pci_enable_resources()
-failures when you remove the IO range from the host bridge.
-
-Lorenzo
-
-> [    1.583608] ahci 0000:01:00.0: limiting MRRS to 256
-> [    1.588595] ahci 0000:01:00.0: AHCI 0001.0000 32 slots 2 ports 6 Gbps 0x3 impl SATA mode
-> [    1.596716] ahci 0000:01:00.0: flags: 64bit ncq sntf led only pmp fbs pio slum part sxs 
-> [    1.606183] scsi host0: ahci
-> [    1.609448] scsi host1: ahci
-> [    1.612636] ata1: SATA max UDMA/133 abar m512@0x60000000 port 0x60000100 irq 82
-> [    1.619974] ata2: SATA max UDMA/133 abar m512@0x60000000 port 0x60000180 irq 82
+> Without the above check and also if there is no EP then we are getting kernel stack as follows,
+> [    2.654105] PCI host bridge /amba/pcie@fd0e0000 ranges:
+> [    2.659268]   No bus range found for /amba/pcie@fd0e0000, using [bus 00-ff]
+> [    2.666195]   MEM 0xe1000000..0xefffffff -> 0xe1000000
+> [    2.671410] nwl-pcie fd0e0000.pcie: PCI host bridge to bus 0000:00
+> [    2.677436] pci_bus 0000:00: root bus resource [bus 00-ff]
+> [    2.682883] pci_bus 0000:00: root bus resource [mem 0xe1000000-0xefffffff]
+> [    2.690031] Unhandled fault: synchronous external abort (0x96000210) at 0xffffff8000200000
+> [    2.690036] nwl-pcie fd0e0000.pcie: Slave error
+> [    2.702582] Internal error: : 96000210 [#1] SMP
+> [    2.707078] Modules linked in:
+> [    2.710108] CPU: 3 PID: 1 Comm: swapper/0 Not tainted 4.5.0-rc6+ #5
+> [    2.716332] Hardware name: ZynqMP (DT)
+> [    2.720659] task: ffffffc0798bed00 ti: ffffffc0798c0000 task.ti: ffffffc0798c0000
+> [    2.728102] PC is at pci_generic_config_read+0x38/0x9c
+> [    2.733202] LR is at pci_generic_config_read+0x1c/0x9c
+> .......
+> [    3.322701] [<ffffffc000498b1c>] pci_generic_config_read+0x38/0x9c
+> [    3.328842] [<ffffffc000498f54>] pci_bus_read_config_dword+0x80/0xb0
+> [    3.335156] [<ffffffc00049abd4>] pci_bus_read_dev_vendor_id+0x30/0x104
+> [    3.341643] [<ffffffc00049c5b0>] pci_scan_single_device+0x50/0xc4
+> [    3.347698] [<ffffffc00049c674>] pci_scan_slot+0x50/0xe8
+> [    3.352974] [<ffffffc00049d530>] pci_scan_child_bus+0x30/0xd8
+> [    3.358683] [<ffffffc00049d210>] pci_scan_bridge+0x1fc/0x4ec
+> [    3.364306] [<ffffffc00049d58c>] pci_scan_child_bus+0x8c/0xd8
+> [    3.370016] [<ffffffc0004b2d9c>] nwl_pcie_probe+0x6c4/0x8e0
+> .....
 > 
-> > 
-> >> I looked at pci_enable_resources()
-> >>
-> >> 	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
-> >> 		if (!(mask & (1 << i)))
-> >> 			continue;
-> >>
-> >> 		r = &dev->resource[i];
-> > 
-> >                 dev_info(&dev->dev, "BAR %d %pR mask %#04x parent %p\n", i, r, mask, r->parent);
-> > 
-> >>
-> >> 		if (!(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
-> >> 			continue;
-> >> 		if ((i == PCI_ROM_RESOURCE) &&
-> >> 				(!(r->flags & IORESOURCE_ROM_ENABLE)))
-> >> 			continue;
-> >>
-> >> 		if (r->flags & IORESOURCE_UNSET) {
-> >> 			dev_err(&dev->dev, "can't enable device: BAR %d %pR not assigned\n",
-> >> 				i, r);
-> >> 			return -EINVAL;
-> >> 		}
-> >>
-> >> 		if (!r->parent) {
-> >> 			dev_err(&dev->dev, "can't enable device: BAR %d %pR not claimed\n",
-> >> 				i, r);
-> >> 			return -EINVAL;
-> >> 		}
-> >>
-> >> I don't see the error "can't enable device: BAR %d %pR not assigned" , so it doesn't
-> >> depend on IO bar as you mention below or is it in a different function?
-> > 
+> > The hardware should do something reasonable with the config access if it
+> > can't send it down the link.
+>
+> When Link is down and H/W gets a ECAM access request for downstream
+> ports, hardware responds by DECERR (decode error) status on AXI
+> Interface.
+
+DECERR isn't a PCIe concept, so I assume it's something specific to
+Xilinx.  In the general case of a PCIe switch, a config access that
+targets a device where the link is down should cause an Unsupported
+Request completion (see PCIe spec r3.0, section 2.9.1, quoted below).
+Possibly your Root Complex turns Unsupported Request completions into
+DECERR.
+
+  2.9 Link Status Dependencies
+  2.9.1 Transaction Layer Behavior in DL_Down Status
+
+  DL_Down status indicates that there is no connection with another
+  component on the Link, or that the connection with the other
+  component has been lost and is not recoverable by the Physical or
+  Data Link Layers.
+
+  For a Downstream Port, DL_Down status is handled by:
+  
+   for Non-Posted Requests, forming completions for any Requests
+   submitted by the device core for Transmission, returning
+   Unsupported Request Completion Status, then discarding the Requests
+
+Linux expects reads with Unsupported Request completion status to
+return all 1's data to the CPU as in section 2.3.2:
+
+  2.3.2 Completion Handling Rules
+
+  Read Data Values with UR Completion Status
+
+  Some system configuration software depends on reading a data value
+  of all 1’s when a Configuration Read Request is terminated as an
+  Unsupported Request, particularly when probing to determine the
+  existence of a device in the system.  A Root Complex intended for
+  use with software that depends on a read-data value of all 1’s must
+  synthesize this value when UR Completion Status is returned for a
+  Configuration Read Request.
+
+> So without any EP and without this condition, Linux kernel cannot
+> determine above response from H/W. So the above condition is useful
+> only when no EP is connected.
 > 
-> 
-> -- 
-> Murali Karicheri
-> Linux Kernel, Keystone
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Now even if the link is up initially, but the link goes down before
+> we actually complete the config access, then H/W responds by DECERR,
+> then Linux kernel might throw similar stack. (We haven't observed
+> this condition yet)
+
+It'd be hard to hit this race unless you added delay in
+nwl_pcie_map_bus() after nwl_pcie_valid_device(), then removed the
+device during that delay.
+
+> It looks like we need a different type of hardware response to get
+> rid of this situation, but it's not easy way.  Have you come across
+> this/similar kind of problem anywhere else?  Can you suggest if
+> there is any other way to handle this.
+
+I'm not a hardware designer, so I don't know what to suggest here.
+The current design does seem like a robustness issue: surprise removal
+of a device may cause this external abort in rare cases.
+
+Bjorn
