@@ -1,131 +1,192 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V5 00/15] MMCONFIG refactoring and support for ARM64 PCI
- hostbridge init based on ACPI
-To: Tomasz Nowicki <tn@semihalf.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
- <56D49611.2050202@codeaurora.org> <20160303112332.GC28359@red-moon>
- <56D84938.6020102@codeaurora.org> <20160304105517.GA30693@red-moon>
- <56D97901.7080001@semihalf.com>
-Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	Stefano.Stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, yinghai@kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <56D9A121.9080508@codeaurora.org>
-Date: Fri, 4 Mar 2016 09:52:17 -0500
+Date: Mon, 14 Mar 2016 13:52:51 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org, linux-pci@vger.kernel.org,
+	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
+	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
+	rjw@rjwysocki.net, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/4] acpi,pci,irq: reduce resource requirements
+Message-ID: <20160314185251.GA19703@localhost>
+References: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <56D97901.7080001@semihalf.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Posting on top of Tomasz's email...
-
-On 3/4/2016 7:01 AM, Tomasz Nowicki wrote:
-> On 04.03.2016 11:55, Lorenzo Pieralisi wrote:
->> On Thu, Mar 03, 2016 at 09:24:56AM -0500, Sinan Kaya wrote:
->>> >On 3/3/2016 6:23 AM, Lorenzo Pieralisi wrote:
->>>> > >x86 and IA64 claim PCI resources on boot and live with that (well, minus
->>>> > >the gazillions x86 pci= parameters that change the PCI resources assignment
->>>> > >one way or another), comments very welcome in particular on the pci=realloc
->>>> > >option and its usage.
->>> >
->>> >I have been working with Linux PCIe over 3 years. I never used
->>> >pci=realloc argument.
->>> >
->>> >The v5 series minus [PATCH V5 11/15] drivers: pci: add generic code to
->>> >claim bus resources is working just fine and is ready to go upstream
->>> >in my opinion. It passed my internal testing with different types of
->>> >endpoints.
->>> >
->>> >The inclusion of this patch is now requiring everybody to add
->>> >pci=realloc argument otherwise the resources assigned by the UEFI BIOS
->>> >are not working.
->>> >
->>> >I think there is still some work to be done in this patch and is too
->>> >early to be included into the series. It is blocking progress of the
->>> >series which is sitting on review over 1 year already.
->> First off, I think that's specious, patch 11 is not blocking anything,
->> if you and Tomasz want to drop it go ahead and take responsibility
->> of the consequences.
->>
->> I am not saying patch 11 is perfect, it is there to review, if you
->> spot bugs point them out.
->>
->> If you are interested and willing to make an effort to understand why I
->> asked Tomasz to integrate it, a bit of background here:
->>
->> http://permalink.gmane.org/gmane.linux.kernel.pci/44830
->>
->> If we want to drop patch 11, we are going to discard whatever FW
->> set-up at FW/OS hand-off and reassign everything. Want to do it ?
->> Go ahead.
-
-Yes, we should ideally reuse the BAR addresses assigned by FW. And, it is not
-working as I said. It happens to work on Intel architectures. I'm saying that 
-this patch needs some more work not that it is right or wrong.
-
-How long it takes to figure this out is the question? It could have been dealt
-with separately. If you can come up with a solution in the near future, 
-I'm ready to test.
-
-There was some big push on v3 to get it tested by multiple vendors. I was under
-the impression that we are trying to get some version accepted.
-
-Since I'm the only one complaining right now, I guess nobody else is testing 
-v4 and v5.
-
->>
->> I wrote it in my previous email, probably it was not clear, so, here we
->> go again.
->>
->> If we want to at least consider the FW PCI configuration at FW/OS
->> handoff, we should read the PCI bridge apertures and claim them, when
->> that fails reassign the corresponding PCI bus hierarchy (which means
->> releasing the bridge resources and downstream devices and reassign
->> them), that's what pci=realloc does.
->>
->> I think that it is a command line option since it has to be a choice,
->> ie overriding FW set-up should be an option, not a default.
->>
->> Patch 11 does what x86 does in arch code arch/x86/pci/i386.c,
->>
->> pcibios_resource_survey()
->>
->> and that works for them (of course, minus quirks that do exist).
->>
->> I could integrate the code implementing pci=realloc in patch 11 so
->> that we realloc by default all resources claimed that failed (which
->> means that bridges are resized accordingly and you won't be forced
->> to use pci=realloc on command line).
->>
+On Tue, Mar 08, 2016 at 07:41:16PM -0500, Sinan Kaya wrote:
+> Code has been redesigned to calculate penalty requirements on the fly. This
+> significantly simplifies the implementation and removes some of the init
+> calls from x86 architecture.
 > 
-> I agree with Lorenzo. Just because v3 works it does not mean we want to go this way. Also, I think we should realloc all resources claimed that failed, w/o need to use pci=realloc on command line.
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/acpi/pci_link.c | 82 ++++++++++++++++++++++++++++++++++---------------
+>  1 file changed, 58 insertions(+), 24 deletions(-)
 > 
+> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+> index ededa90..a5a66ca 100644
+> --- a/drivers/acpi/pci_link.c
+> +++ b/drivers/acpi/pci_link.c
+> @@ -36,6 +36,8 @@
+>  #include <linux/mutex.h>
+>  #include <linux/slab.h>
+>  #include <linux/acpi.h>
+> +#include <linux/irq.h>
+> +#include <linux/interrupt.h>
+>  
+>  #include "internal.h"
+>  
+> @@ -440,7 +442,6 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
+>  #define ACPI_MAX_IRQS		256
+>  #define ACPI_MAX_ISA_IRQ	16
+>  
+> -#define PIRQ_PENALTY_PCI_AVAILABLE	(0)
+>  #define PIRQ_PENALTY_PCI_POSSIBLE	(16*16)
+>  #define PIRQ_PENALTY_PCI_USING		(16*16*16)
+>  #define PIRQ_PENALTY_ISA_TYPICAL	(16*16*16*16)
+> @@ -457,9 +458,9 @@ static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
+>  	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ6 */
+>  	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ7 parallel, spurious */
+>  	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ8 rtc, sometimes */
+> -	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ9  PCI, often acpi */
+> -	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ10 PCI */
+> -	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ11 PCI */
+> +	0,				/* IRQ9  PCI, often acpi */
+> +	0,				/* IRQ10 PCI */
+> +	0,				/* IRQ11 PCI */
+>  	PIRQ_PENALTY_ISA_USED,		/* IRQ12 mouse */
+>  	PIRQ_PENALTY_ISA_USED,		/* IRQ13 fpe, sometimes */
+>  	PIRQ_PENALTY_ISA_USED,		/* IRQ14 ide0 */
+> @@ -467,6 +468,49 @@ static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
+>  	/* >IRQ15 */
+>  };
+>  
+> +static int acpi_irq_pci_sharing_penalty(int irq)
+> +{
+> +	struct acpi_pci_link *link;
+> +	int penalty = 0;
+> +
+> +	list_for_each_entry(link, &acpi_link_list, list) {
+> +		/*
+> +		 * If a link is active, penalize its IRQ heavily
+> +		 * so we try to choose a different IRQ.
+> +		 */
+> +		if (link->irq.active && link->irq.active == irq)
+> +			penalty += PIRQ_PENALTY_PCI_USING;
+> +		else {
+> +			int i;
+> +
+> +			/*
+> +			 * If a link is inactive, penalize the IRQs it
+> +			 * might use, but not as severely.
+> +			 */
+> +			for (i = 0; i < link->irq.possible_count; i++)
+> +				if (link->irq.possible[i] == irq)
+> +					penalty += PIRQ_PENALTY_PCI_POSSIBLE /
+> +						link->irq.possible_count;
+> +		}
+> +	}
+> +
+> +	return penalty;
+> +}
+> +
+> +static int acpi_irq_get_penalty(int irq)
+> +{
+> +	int penalty = 0;
+> +
+> +	if (irq < ACPI_MAX_ISA_IRQ)
+> +		penalty += acpi_irq_penalty[irq];
+> +
+> +	if (irq == acpi_gbl_FADT.sci_interrupt)
+> +		penalty += PIRQ_PENALTY_PCI_USING;
+> +
+> +	penalty += acpi_irq_pci_sharing_penalty(irq);
+> +	return penalty;
+> +}
+> +
+>  int __init acpi_irq_penalty_init(void)
+>  {
+>  	struct acpi_pci_link *link;
+> @@ -568,7 +612,6 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+>  			    acpi_device_bid(link->device));
+>  		return -ENODEV;
+>  	} else {
+> -		acpi_irq_penalty[link->irq.active] += PIRQ_PENALTY_PCI_USING;
+>  		printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
+>  		       acpi_device_name(link->device),
+>  		       acpi_device_bid(link->device), link->irq.active);
+> @@ -787,23 +830,24 @@ static int __init acpi_irq_penalty_update(char *str, int used)
+>  	for (i = 0; i < 16; i++) {
+>  		int retval;
+>  		int irq;
+> +		int new_penalty;
+>  
+>  		retval = get_option(&str, &irq);
+>  
+>  		if (!retval)
+>  			break;	/* no number found */
+>  
+> -		if (irq < 0)
+> -			continue;
+> -
+> -		if (irq >= ARRAY_SIZE(acpi_irq_penalty))
+> +		/* see if this is a ISA IRQ */
+> +		if ((irq < 0) || (irq >= ACPI_MAX_ISA_IRQ))
+>  			continue;
+>  
+>  		if (used)
+> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_USED;
+> +			new_penalty = acpi_irq_get_penalty(irq) +
+> +					PIRQ_PENALTY_ISA_USED;
+>  		else
+> -			acpi_irq_penalty[irq] = PIRQ_PENALTY_PCI_AVAILABLE;
+> +			new_penalty = 0;
+>  
+> +		acpi_irq_penalty[irq] = new_penalty;
+>  		if (retval != 2)	/* no next number */
+>  			break;
+>  	}
+> @@ -819,12 +863,9 @@ static int __init acpi_irq_penalty_update(char *str, int used)
+>   */
+>  void acpi_penalize_isa_irq(int irq, int active)
+>  {
+> -	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
+> -		if (active)
+> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_USED;
+> -		else
+> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
+> -	}
+> +	if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_irq_penalty)))
+> +		acpi_irq_penalty[irq] = active ?
+> +			PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING;
+>  }
+>  
+>  bool acpi_isa_irq_available(int irq)
+> @@ -840,13 +881,6 @@ bool acpi_isa_irq_available(int irq)
+>   */
+>  void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
+>  {
+> -	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
+> -		if (trigger != ACPI_MADT_TRIGGER_LEVEL ||
+> -		    polarity != ACPI_MADT_POLARITY_ACTIVE_LOW)
+> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_ALWAYS;
+> -		else
+> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
+> -	}
 
-Let's give this a try. I have seen the kernel messages with and without realloc option 
-too. I don't want to see any kind of error messages if it is actually working.
+I think we lost the validation of trigger mode and polarity, didn't
+we?
 
-I don't want to get a support request that PCIe is broken even though it is not just
-because of some error message in boot log that eventually got corrected by the 
-architecture.
-
-> Tomasz
+>  }
+>  
+>  /*
 > -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> 1.8.2.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
