@@ -1,102 +1,83 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 3 Mar 2016 11:23:32 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rafael@kernel.org, hanjun.guo@linaro.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	Stefano.Stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, yinghai@kernel.org
-Subject: Re: [PATCH V5 00/15] MMCONFIG refactoring and support for ARM64 PCI
- hostbridge init based on ACPI
-Message-ID: <20160303112332.GC28359@red-moon>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
- <56D49611.2050202@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56D49611.2050202@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from new2-smtp.messagingengine.com ([66.111.4.224]:46498 "EHLO
+	new2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932180AbcCNCDD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Mar 2016 22:03:03 -0400
+Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
+	by mailnew.nyi.internal (Postfix) with ESMTP id 20A90B81
+	for <linux-pci@vger.kernel.org>; Sun, 13 Mar 2016 21:54:48 -0400 (EDT)
+From: Andrey Utkin <andrey_utkin@fastmail.com>
+To: Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bluecherry Maintainers <maintainers@bluecherrydvr.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Joe Perches <joe@perches.com>, Jiri Slaby <jslaby@suse.com>
+Cc: linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-pci@vger.kernel.org,
+	kernel-mentors@selenic.com,
+	Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+Subject: [PATCH] Add tw5864 driver - cover letter
+Date: Mon, 14 Mar 2016 03:54:21 +0200
+Message-Id: <1457920461-20713-1-git-send-email-andrey_utkin@fastmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+ Yinghai]
+From: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
 
-On Mon, Feb 29, 2016 at 02:03:45PM -0500, Sinan Kaya wrote:
-> On 2/16/2016 8:53 AM, Tomasz Nowicki wrote:
-> > From the functionality point of view this series might be split into the
-> > following logic parts:
-> > 1. Make MMCONFIG code arch-agnostic which allows all architectures to collect
-> >    PCI config regions and used when necessary.
-> > 2. Move non-arch specific bits to the core code.
-> > 3. Use MMCONFIG code and implement generic ACPI based PCI host controller driver.
-> > 4. Enable above driver on ARM64
-> > 
-> > Patches has been built on top of 4.5-rc3 and can be found here:
-> > git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v5)
-> > 
-> > NOTE, this patch set depends on Lorenzo's fixes:
-> > https://patchwork.ozlabs.org/patch/576450/
-> > which can be found in pci-acpi-v5 branch.
-> > 
-> > This has been tested on Cavium ThunderX server, JunoR2, HP RX2660 IA64, x86,
-> > Hip05, X-Gene and QEMU-aarch64. Any help in reviewing and testing is very appreciated.
-> > 
-> > v4 -> v5
-> > - dropped MCFG refactoring group patches 1-6 from series v4 and integrated Jayachandran's patch
-> >   https://patchwork.ozlabs.org/patch/575525/
-> > - rewrite PCI legacy IRQs allocation
-> > - squashed two patches 11 and 12 from series v4, fixed bisection issue
-> > - changelog improvements
-> > - rebased to 4.5-rc3
-> > 
-> > v3 -> v4
-> > - dropped Jiang's fix http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04318.html
-> > - added Lorenzo's fix patch 19/24
-> > - ACPI PCI bus domain number assigning cleanup
-> > - changed resource management, we now claim and reassign resources
-> > - improvements for applying quirks
-> > - dropped Matthew's http://www.spinics.net/lists/linux-pci/msg45950.html dependency
-> > - rebased to 4.5-rc1
-> > 
-> 
-> Having tested v4 and v5, I'm seeing some resource assignment problems
-> and address conflicts.  And problems booting QEMU.
+This is a driver for multimedia devices based on Techwell/Intersil TW5864 chip.
 
-I asked Tomasz to add resource claiming code in v4 to make sure that,
-if FW has left resources in a reasonable set-up, we reuse it as-is.
+It is basically written from scratch. There was an awful reference driver for
+2.6 kernel, which is nearly million lines of code and requires half a dozen
+special userspace libraries, and still doesn't quite work. So currently
+submitted driver is a product of reverse-engineering and heuristics. tw68
+driver was used as code skeleton.
 
-Now, I was and I am aware this could trigger resource allocation
-issues (in particular in relation to bridges apertures sizing),
-that can be nonetheless solved by forcing the kernel to reallocate
-resources (pci=realloc, that's exactly what's there for, release
-the bridge apertures, resize the busses downstream and reassign
-the respective hierarchy).
+The device advertises many capabilities, but this version of driver only
+supports H.264 encoding of captured video channels.
 
-I am not entirely aware of how consistently pci=realloc was used on
-x86, what I am aware of is the panoply of pci=* command line parameters
-defined for x86 and I would certainly avoid that.
+There is one known issue, which reproduces on two of five setups of which I
+know: P-frames are distorted, but I-frames are fine. Changing quality and
+framerate settings does not affect this. Currently such workaround is used:
 
-The decision on whether we claim resources before reassigning them
-is either dictacted by the boot method (ie ACPI->claim resources by
-default) or we should control it via a FW option or a command
-line option, PCI standard (PCI FW revision 3.1, 3.5 "Device State
-at Firmware/Operating System Handoff) IIUC does not stricly mandate
-FW configuring the whole PCI hierarchy (and to be 100% compliant
-we should check the device IO/MEM enable bits before claiming, as x86 does
-- see pcibios_allocate_dev_resources() in arch/x86/pci/i386.c).
+v4l2-ctl -d /dev/video$n -c video_gop_size=1
 
-x86 and IA64 claim PCI resources on boot and live with that (well, minus
-the gazillions x86 pci= parameters that change the PCI resources assignment
-one way or another), comments very welcome in particular on the pci=realloc
-option and its usage.
+GOP size is set to 1, so that every output frame is I-frame. 
+We are regularly contacting manufacturer regarding such issues, but
+unfortunately they can do little to help us.
 
-What's certain is, if we do not claim resources by default we will *never*
-be able to do it, it will certainly trigger regressions.
 
-Lorenzo
+Andrey Utkin (1):
+  Add tw5864 driver
+
+ MAINTAINERS                                  |    7 +
+ drivers/staging/media/Kconfig                |    2 +
+ drivers/staging/media/Makefile               |    1 +
+ drivers/staging/media/tw5864/Kconfig         |   11 +
+ drivers/staging/media/tw5864/Makefile        |    3 +
+ drivers/staging/media/tw5864/tw5864-bs.h     |  154 ++
+ drivers/staging/media/tw5864/tw5864-config.c |  359 +++++
+ drivers/staging/media/tw5864/tw5864-core.c   |  453 ++++++
+ drivers/staging/media/tw5864/tw5864-h264.c   |  183 +++
+ drivers/staging/media/tw5864/tw5864-reg.h    | 2200 ++++++++++++++++++++++++++
+ drivers/staging/media/tw5864/tw5864-tables.h |  237 +++
+ drivers/staging/media/tw5864/tw5864-video.c  | 1364 ++++++++++++++++
+ drivers/staging/media/tw5864/tw5864.h        |  280 ++++
+ include/linux/pci_ids.h                      |    1 +
+ 14 files changed, 5255 insertions(+)
+ create mode 100644 drivers/staging/media/tw5864/Kconfig
+ create mode 100644 drivers/staging/media/tw5864/Makefile
+ create mode 100644 drivers/staging/media/tw5864/tw5864-bs.h
+ create mode 100644 drivers/staging/media/tw5864/tw5864-config.c
+ create mode 100644 drivers/staging/media/tw5864/tw5864-core.c
+ create mode 100644 drivers/staging/media/tw5864/tw5864-h264.c
+ create mode 100644 drivers/staging/media/tw5864/tw5864-reg.h
+ create mode 100644 drivers/staging/media/tw5864/tw5864-tables.h
+ create mode 100644 drivers/staging/media/tw5864/tw5864-video.c
+ create mode 100644 drivers/staging/media/tw5864/tw5864.h
+
+-- 
+2.7.1.380.g0fea050.dirty
+
