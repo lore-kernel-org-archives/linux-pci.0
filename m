@@ -1,45 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:35324 "EHLO
-	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756902AbcC2OOj (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Mar 2016 10:14:39 -0400
-MIME-Version: 1.0
-In-Reply-To: <1459241739.2565.9.camel@pengutronix.de>
-References: <m3h9fuk7ik.fsf@t19.piap.pl>
-	<CAOMZO5DcZCxoLPeGRWSGkstm7F3eN-Q-yJyf6ktMTda2zLviag@mail.gmail.com>
-	<CAOMZO5B8Lzn-E4YOeYxVtN5PN11aOvZHn4eU0ixkdV8CO8+xYw@mail.gmail.com>
-	<CAJ+vNU2Sg1ZKBsGcQswrJZyTJ1WBEZor3ZqpoYUT7i9FKjEAog@mail.gmail.com>
-	<CAOMZO5DO9G18=_YSri3a+UiYbLwN6AMG4asUXbT03mpbU3hHrw@mail.gmail.com>
-	<CAJ+vNU1_YqvWQkmuDB7r8z77iZJS6pP4Mr+j9yW4sFLAeJXQDw@mail.gmail.com>
-	<CAOMZO5A2osG3=mTaCayYfMokUj-vT+Udq9ckq45b1yaUP9Tn3g@mail.gmail.com>
-	<CAJ+vNU2ST=XG5H04-OCwpHgcvkoXOQw8F3MjXhJmWhBUbxWE-g@mail.gmail.com>
-	<1459241739.2565.9.camel@pengutronix.de>
-Date: Tue, 29 Mar 2016 11:14:38 -0300
-Message-ID: <CAOMZO5Cisx9xv9hCxzYK2U-MdVCdbVMYGY2y4PVoVReWjwE8=g@mail.gmail.com>
-Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
-From: Fabio Estevam <festevam@gmail.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Tim Harvey <tharvey@gateworks.com>,
-	=?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
-	=?UTF-8?Q?Petr_=C5=A0tetiar?= <ynezz@true.cz>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
+Received: from mail.linuxfoundation.org ([140.211.169.12]:41476 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750871AbcCNDct (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Mar 2016 23:32:49 -0400
+Date: Sun, 13 Mar 2016 20:32:48 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Andrey Utkin <andrey_utkin@fastmail.com>
+Cc: Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Bluecherry Maintainers <maintainers@bluecherrydvr.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Joe Perches <joe@perches.com>, Jiri Slaby <jslaby@suse.com>,
+	devel@driverdev.osuosl.org, kernel-mentors@selenic.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org
+Subject: Re: [PATCH] Add tw5864 driver
+Message-ID: <20160314033248.GA3905@kroah.com>
+References: <1457920461-20713-1-git-send-email-andrey_utkin@fastmail.com>
+ <1457920514-20792-1-git-send-email-andrey_utkin@fastmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1457920514-20792-1-git-send-email-andrey_utkin@fastmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 29, 2016 at 5:55 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+On Mon, Mar 14, 2016 at 03:55:14AM +0200, Andrey Utkin wrote:
+> From: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+> 
+> Support for boards based on Techwell TW5864 chip which provides
+> multichannel video & audio grabbing and encoding (H.264, MJPEG,
+> ADPCM G.726).
+> 
+> Signed-off-by: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+> Tested-by: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
 
-> I would suspect that most boards specify the reset polarity the wrong
-> way around. Fixing this without breaking DT stability is hard. OTOH we
+Meta-conmment, why add this to drivers/staging/media?  Why can't it just
+go into drivers/media/ ?
 
-It is not hard if we just revert the buggy commit.
+thanks,
 
-> could just argue that the system description in DT is wrong and needs to
-> be fixed.
-
-Sure, this would be a nice thing to do as well.
+greg k-h
