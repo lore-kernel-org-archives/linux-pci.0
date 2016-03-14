@@ -1,211 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31341 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756500AbcCBU22 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Mar 2016 15:28:28 -0500
-From: Sasha Levin <sasha.levin@oracle.com>
-To: stable@vger.kernel.org, stable-commits@vger.kernel.org
-Cc: Quinn Tran <quinn.tran@qlogic.com>,
-	Alexander Gordeev <agordeev@redhat.com>,
-	qla2xxx-upstream@qlogic.com, linux-scsi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-	Sasha Levin <sasha.levin@oracle.com>
-Subject: [added to the 3.18 stable tree] qla2xxx: Use pci_enable_msix_range() instead of pci_enable_msix()
-Date: Wed,  2 Mar 2016 15:27:09 -0500
-Message-Id: <1456950474-1149-26-git-send-email-sasha.levin@oracle.com>
-In-Reply-To: <1456950474-1149-1-git-send-email-sasha.levin@oracle.com>
-References: <1456950474-1149-1-git-send-email-sasha.levin@oracle.com>
+Received: from mail-sn1nam02on0064.outbound.protection.outlook.com ([104.47.36.64]:9664
+	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S965341AbcCNPvN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Mar 2016 11:51:13 -0400
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"pawel.moll@arm.com" <pawel.moll@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
+	"galak@codeaurora.org" <galak@codeaurora.org>,
+	Michal Simek <michals@xilinx.com>,
+	Soren Brinkmann <sorenb@xilinx.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"arnd@arndb.de" <arnd@arndb.de>,
+	"tinamdar@apm.com" <tinamdar@apm.com>,
+	"treding@nvidia.com" <treding@nvidia.com>,
+	"rjui@broadcom.com" <rjui@broadcom.com>,
+	"Minghuan.Lian@freescale.com" <Minghuan.Lian@freescale.com>,
+	"m-karicheri2@ti.com" <m-karicheri2@ti.com>,
+	"hauke@hauke-m.de" <hauke@hauke-m.de>,
+	"marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+	"dhdang@apm.com" <dhdang@apm.com>,
+	"sbranden@broadcom.com" <sbranden@broadcom.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH v12] [PATCH] PCI: Xilinx-NWL-PCIe: Adding support for
+ Xilinx NWL PCIe Host Controller
+Date: Mon, 14 Mar 2016 15:51:01 +0000
+Message-ID: <8520D5D51A55D047800579B09414719825889095@XAP-PVEXMBX01.xlnx.xilinx.com>
+References: <1457281934-32068-1-git-send-email-bharatku@xilinx.com>
+ <20160311215819.GB16257@localhost>
+In-Reply-To: <20160311215819.GB16257@localhost>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Quinn Tran <quinn.tran@qlogic.com>
-
-This patch has been added to the 3.18 stable tree. If you have any
-objections, please let us know.
-
-===============
-
-[ Upstream commit 84e32a06f4f8756ce9ec3c8dc7e97896575f0771 ]
-
-As result of deprecation of MSI-X/MSI enablement functions
-pci_enable_msix() and pci_enable_msi_block() all drivers
-using these two interfaces need to be updated to use the
-new pci_enable_msi_range()  or pci_enable_msi_exact()
-and pci_enable_msix_range() or pci_enable_msix_exact()
-interfaces.
-
-Log message code 0x00c6 preserved, although it is reported
-after successful call to pci_enable_msix_range(), not before
-possibly unsuccessful call to pci_enable_msix(). Consumers
-of the error code should not notice the difference.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
-Cc: qla2xxx-upstream@qlogic.com
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
----
- drivers/scsi/qla2xxx/qla_init.c | 10 +++++-----
- drivers/scsi/qla2xxx/qla_isr.c  |  4 ++--
- drivers/scsi/qla2xxx/qla_mid.c  |  4 ++--
- drivers/scsi/qla2xxx/qla_os.c   |  6 ++++++
- drivers/scsi/qla2xxx/qla_tmpl.c | 16 ++++++++++++++++
- 5 files changed, 31 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index a894b99..c919ac0 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2146,7 +2146,7 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
- 	/* Clear outstanding commands array. */
- 	for (que = 0; que < ha->max_req_queues; que++) {
- 		req = ha->req_q_map[que];
--		if (!req)
-+		if (!req || !test_bit(que, ha->req_qid_map))
- 			continue;
- 		req->out_ptr = (void *)(req->ring + req->length);
- 		*req->out_ptr = 0;
-@@ -2163,7 +2163,7 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
+Hi Bjorn,
  
- 	for (que = 0; que < ha->max_rsp_queues; que++) {
- 		rsp = ha->rsp_q_map[que];
--		if (!rsp)
-+		if (!rsp || !test_bit(que, ha->rsp_qid_map))
- 			continue;
- 		rsp->in_ptr = (void *)(rsp->ring + rsp->length);
- 		*rsp->in_ptr = 0;
-@@ -4908,7 +4908,7 @@ qla25xx_init_queues(struct qla_hw_data *ha)
- 
- 	for (i = 1; i < ha->max_rsp_queues; i++) {
- 		rsp = ha->rsp_q_map[i];
--		if (rsp) {
-+		if (rsp && test_bit(i, ha->rsp_qid_map)) {
- 			rsp->options &= ~BIT_0;
- 			ret = qla25xx_init_rsp_que(base_vha, rsp);
- 			if (ret != QLA_SUCCESS)
-@@ -4923,8 +4923,8 @@ qla25xx_init_queues(struct qla_hw_data *ha)
- 	}
- 	for (i = 1; i < ha->max_req_queues; i++) {
- 		req = ha->req_q_map[i];
--		if (req) {
--		/* Clear outstanding commands array. */
-+		if (req && test_bit(i, ha->req_qid_map)) {
-+			/* Clear outstanding commands array. */
- 			req->options &= ~BIT_0;
- 			ret = qla25xx_init_req_que(base_vha, req);
- 			if (ret != QLA_SUCCESS)
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index a04a1b1..e191177 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2981,9 +2981,9 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 		    "MSI-X: Failed to enable support "
- 		    "-- %d/%d\n Retry with %d vectors.\n",
- 		    ha->msix_count, ret, ret);
-+		ha->msix_count = ret;
-+		ha->max_rsp_queues = ha->msix_count - 1;
- 	}
--	ha->msix_count = ret;
--	ha->max_rsp_queues = ha->msix_count - 1;
- 	ha->msix_entries = kzalloc(sizeof(struct qla_msix_entry) *
- 				ha->msix_count, GFP_KERNEL);
- 	if (!ha->msix_entries) {
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index 5c2e031..7c0b33d 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -595,7 +595,7 @@ qla25xx_delete_queues(struct scsi_qla_host *vha)
- 	/* Delete request queues */
- 	for (cnt = 1; cnt < ha->max_req_queues; cnt++) {
- 		req = ha->req_q_map[cnt];
--		if (req) {
-+		if (req && test_bit(cnt, ha->req_qid_map)) {
- 			ret = qla25xx_delete_req_que(vha, req);
- 			if (ret != QLA_SUCCESS) {
- 				ql_log(ql_log_warn, vha, 0x00ea,
-@@ -609,7 +609,7 @@ qla25xx_delete_queues(struct scsi_qla_host *vha)
- 	/* Delete response queues */
- 	for (cnt = 1; cnt < ha->max_rsp_queues; cnt++) {
- 		rsp = ha->rsp_q_map[cnt];
--		if (rsp) {
-+		if (rsp && test_bit(cnt, ha->rsp_qid_map)) {
- 			ret = qla25xx_delete_rsp_que(vha, rsp);
- 			if (ret != QLA_SUCCESS) {
- 				ql_log(ql_log_warn, vha, 0x00eb,
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index c51dee8..e859782 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -399,6 +399,9 @@ static void qla2x00_free_queues(struct qla_hw_data *ha)
- 	int cnt;
- 
- 	for (cnt = 0; cnt < ha->max_req_queues; cnt++) {
-+		if (!test_bit(cnt, ha->req_qid_map))
-+			continue;
-+
- 		req = ha->req_q_map[cnt];
- 		qla2x00_free_req_que(ha, req);
- 	}
-@@ -406,6 +409,9 @@ static void qla2x00_free_queues(struct qla_hw_data *ha)
- 	ha->req_q_map = NULL;
- 
- 	for (cnt = 0; cnt < ha->max_rsp_queues; cnt++) {
-+		if (!test_bit(cnt, ha->rsp_qid_map))
-+			continue;
-+
- 		rsp = ha->rsp_q_map[cnt];
- 		qla2x00_free_rsp_que(ha, rsp);
- 	}
-diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
-index a8c0c73..de46cb3 100644
---- a/drivers/scsi/qla2xxx/qla_tmpl.c
-+++ b/drivers/scsi/qla2xxx/qla_tmpl.c
-@@ -393,6 +393,10 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
- 	if (ent->t263.queue_type == T263_QUEUE_TYPE_REQ) {
- 		for (i = 0; i < vha->hw->max_req_queues; i++) {
- 			struct req_que *req = vha->hw->req_q_map[i];
-+
-+			if (!test_bit(i, vha->hw->req_qid_map))
-+				continue;
-+
- 			if (req || !buf) {
- 				length = req ?
- 				    req->length : REQUEST_ENTRY_CNT_24XX;
-@@ -406,6 +410,10 @@ qla27xx_fwdt_entry_t263(struct scsi_qla_host *vha,
- 	} else if (ent->t263.queue_type == T263_QUEUE_TYPE_RSP) {
- 		for (i = 0; i < vha->hw->max_rsp_queues; i++) {
- 			struct rsp_que *rsp = vha->hw->rsp_q_map[i];
-+
-+			if (!test_bit(i, vha->hw->rsp_qid_map))
-+				continue;
-+
- 			if (rsp || !buf) {
- 				length = rsp ?
- 				    rsp->length : RESPONSE_ENTRY_CNT_MQ;
-@@ -632,6 +640,10 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
- 	if (ent->t274.queue_type == T274_QUEUE_TYPE_REQ_SHAD) {
- 		for (i = 0; i < vha->hw->max_req_queues; i++) {
- 			struct req_que *req = vha->hw->req_q_map[i];
-+
-+			if (!test_bit(i, vha->hw->req_qid_map))
-+				continue;
-+
- 			if (req || !buf) {
- 				qla27xx_insert16(i, buf, len);
- 				qla27xx_insert16(1, buf, len);
-@@ -643,6 +655,10 @@ qla27xx_fwdt_entry_t274(struct scsi_qla_host *vha,
- 	} else if (ent->t274.queue_type == T274_QUEUE_TYPE_RSP_SHAD) {
- 		for (i = 0; i < vha->hw->max_rsp_queues; i++) {
- 			struct rsp_que *rsp = vha->hw->rsp_q_map[i];
-+
-+			if (!test_bit(i, vha->hw->rsp_qid_map))
-+				continue;
-+
- 			if (rsp || !buf) {
- 				qla27xx_insert16(i, buf, len);
- 				qla27xx_insert16(1, buf, len);
--- 
-2.5.0
+> I forgot I still have one question here:
+> 
+> On Sun, Mar 06, 2016 at 10:02:14PM +0530, Bharat Kumar Gogada wrote:
+> > Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+> 
+> > +static bool nwl_pcie_valid_device(struct pci_bus *bus, unsigned int
+> > +devfn) {
+> > +	struct nwl_pcie *pcie = bus->sysdata;
+> > +
+> > +	/* Check link,before accessing downstream ports */
+> > +	if (bus->number != pcie->root_busno) {
+> > +		if (!nwl_pcie_link_up(pcie))
+> > +			return false;
+> > +	}
+> 
+> This seems racy.  What if we check, and the link is up, but the link goes down
+> before we actually complete the config access?
+> 
+> I'm suggesting that this check for the link being up might be superfluous.
+Without the above check and also if there is no EP then we are getting kernel stack as follows,
+[    2.654105] PCI host bridge /amba/pcie@fd0e0000 ranges:
+[    2.659268]   No bus range found for /amba/pcie@fd0e0000, using [bus 00-ff]
+[    2.666195]   MEM 0xe1000000..0xefffffff -> 0xe1000000
+[    2.671410] nwl-pcie fd0e0000.pcie: PCI host bridge to bus 0000:00
+[    2.677436] pci_bus 0000:00: root bus resource [bus 00-ff]
+[    2.682883] pci_bus 0000:00: root bus resource [mem 0xe1000000-0xefffffff]
+[    2.690031] Unhandled fault: synchronous external abort (0x96000210) at 0xffffff8000200000
+[    2.690036] nwl-pcie fd0e0000.pcie: Slave error
+[    2.702582] Internal error: : 96000210 [#1] SMP
+[    2.707078] Modules linked in:
+[    2.710108] CPU: 3 PID: 1 Comm: swapper/0 Not tainted 4.5.0-rc6+ #5
+[    2.716332] Hardware name: ZynqMP (DT)
+[    2.720659] task: ffffffc0798bed00 ti: ffffffc0798c0000 task.ti: ffffffc0798c0000
+[    2.728102] PC is at pci_generic_config_read+0x38/0x9c
+[    2.733202] LR is at pci_generic_config_read+0x1c/0x9c
+.......
+[    3.322701] [<ffffffc000498b1c>] pci_generic_config_read+0x38/0x9c
+[    3.328842] [<ffffffc000498f54>] pci_bus_read_config_dword+0x80/0xb0
+[    3.335156] [<ffffffc00049abd4>] pci_bus_read_dev_vendor_id+0x30/0x104
+[    3.341643] [<ffffffc00049c5b0>] pci_scan_single_device+0x50/0xc4
+[    3.347698] [<ffffffc00049c674>] pci_scan_slot+0x50/0xe8
+[    3.352974] [<ffffffc00049d530>] pci_scan_child_bus+0x30/0xd8
+[    3.358683] [<ffffffc00049d210>] pci_scan_bridge+0x1fc/0x4ec
+[    3.364306] [<ffffffc00049d58c>] pci_scan_child_bus+0x8c/0xd8
+[    3.370016] [<ffffffc0004b2d9c>] nwl_pcie_probe+0x6c4/0x8e0
+.....
 
+> The hardware should do something reasonable with the config access if it
+> can't send it down the link.
+When Link is down and H/W gets a ECAM access request for downstream ports, hardware responds by DECERR (decode error) status on AXI Interface.
+
+So without any EP and without this condition, Linux kernel cannot determine above response from H/W. So the above condition is useful only when no EP is connected.
+
+Now even if the link is up initially, but the link goes down before we actually complete the config access, then H/W responds by DECERR, then Linux kernel might throw similar stack. (We haven't observed this condition yet)
+
+It looks like we need a different type of hardware response to get rid of this situation, but it's not easy way. 
+Have you come across this/similar kind of problem anywhere else? 
+Can you suggest if there is any other way to handle this.
+
+Thanks
+Bharat
