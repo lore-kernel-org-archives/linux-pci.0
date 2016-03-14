@@ -1,85 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:15684 "EHLO mga03.intel.com"
+Received: from mga04.intel.com ([192.55.52.120]:25194 "EHLO mga04.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753780AbcCWCr7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Mar 2016 22:47:59 -0400
-From: "Yong, Jonathan" <jonathan.yong@intel.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, jonathan.yong@intel.com
-Subject: [RFC v2] PCI: PTM Driver
-Date: Wed, 23 Mar 2016 02:47:50 +0000
-Message-Id: <1458701271-1866-1-git-send-email-jonathan.yong@intel.com>
+	id S1752138AbcCNI4K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 14 Mar 2016 04:56:10 -0400
+Date: Mon, 14 Mar 2016 10:56:02 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH 1/6] PCI: No need to set d3cold_allowed to PCIe ports
+Message-ID: <20160314085602.GZ1796@lahna.fi.intel.com>
+References: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1456750566-116248-2-git-send-email-mika.westerberg@linux.intel.com>
+ <20160312000111.GJ4725@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160312000111.GJ4725@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello LKML,
+On Fri, Mar 11, 2016 at 06:01:11PM -0600, Bjorn Helgaas wrote:
+> On Mon, Feb 29, 2016 at 02:56:01PM +0200, Mika Westerberg wrote:
+> > PCIe ports are already skipped by the PCI core so they are never moved to
+> > D3 (or D3cold) anyway. No need to set the field.
+> 
+> A pointer to where the PCI core skips these ports would be helpful.
+> pci_pm_runtime_suspend() is the only place I see that tests d3cold_allowed,
+> and I don't see that it checks anything about PCIe ports.
 
-This is a preliminary implementation of the PTM[1] support driver, the code
-is obviously hacked together and in need of refactoring. This driver has
-only been tested against a virtual PCI bus.
+Right, sorry about that. The changelog should say that the PCI core
+skips PCI bridges and PCIe ports.
 
-The drivers job is to get to every PTM capable device, set some PCI config
-space bits, then go back to sleep [2].
+The relevant code is in drivers/pci/pci-driver.c:pci_pm_suspend_noirq():
 
-PTM capable PCIe devices will get a new sysfs entry to allow PTM to be
-enabled if automatic PTM activation is disabled, or disabled if so desired.
+        if (!pci_dev->state_saved) {
+                pci_save_state(pci_dev);
+                if (!pci_has_subordinate(pci_dev))
+                        pci_prepare_to_sleep(pci_dev);
+        }
 
-Comments? Should I explain the PTM registers in more details?
-Please CC me, thanks.
-
-[1] Precision Time Measurement: A protocol for synchronizing PCIe endpoint
-clocks against the host clock as specified in the PCI Express Base
-Specification 3.1. It is identified by the 0x001f extended capability ID.
-
-PTM capable devices are split into 3 roles, master, responder and requester.
-Summary as follows:
-
-A master holds the master clock that will be used for all devices under its
-domain (not to be confused with PCI domains). There may be multiple masters
-in a PTM hierarchy, in which case, the highest master closest to the root
-complex will be selected for the PTM domain. A master is also always
-responder capable. Clock precision is signified by a Local Clock
-Granularity field, in nano-seconds.
-
-A responder responds to any PTM synchronization requests from a downstream
-device. A responder is typically a switch device. It may also hold a local
-clock signified by a non-zero Local Clock Granularity field. A value of 0
-signifies that the device simply propagates timing information from
-upstream devices.
-
-A requester is typically an endpoint that will request synchronization
-updates from an upstream PTM capable time source. The driver will update
-the Effective Clock Granularity field based on the same field from the
-PTM domain master. The field should be programmed with a value of 0 if any
-intervening responder has a Local Clock Granularity field value of 0.
-
-[2] The software drivers never see the PTM packets, the PCI Express Base
-Specification 3.1 reads:
-	PTM capable components can make their PTM context available for
-	inspection by software, enabling software to translate timing
-	information between local times and PTM Master Time.
-
-This isn't very informative.
-
-Changes since v1:
-* Moved register constants to pci_regs.h
-* Use pci_dev to hold PTM status
-* PTM initialization now done top-down hierarchy wise.
-
-Yong, Jonathan (1):
-  PCI: PTM preliminary implementation
-
- drivers/pci/pci-sysfs.c       |   7 ++
- drivers/pci/pci.h             |  25 +++++
- drivers/pci/pcie/Kconfig      |   8 ++
- drivers/pci/pcie/Makefile     |   2 +-
- drivers/pci/pcie/pcie_ptm.c   | 212 ++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c           |   3 +
- include/linux/pci.h           |   9 ++
- include/uapi/linux/pci_regs.h |  12 +++
- 8 files changed, 277 insertions(+), 1 deletion(-)
- create mode 100644 drivers/pci/pcie/pcie_ptm.c
-
--- 
-2.7.3
-
+It checks if the device has subordinate devices if not moves the device
+to low power state.
