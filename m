@@ -1,100 +1,45 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 14 Mar 2016 21:36:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org, linux-pci@vger.kernel.org,
-	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
-	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
-	rjw@rjwysocki.net, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/4] acpi,pci,irq: reduce resource requirements
-Message-ID: <20160315023632.GA23940@localhost>
-References: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
- <20160314185251.GA19703@localhost>
- <56E7211F.3070203@codeaurora.org>
- <20160314210147.GA11459@localhost>
- <56E73232.9030704@codeaurora.org>
- <20160315014843.GA16967@localhost>
- <56E7733B.4050308@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f172.google.com ([209.85.223.172]:34093 "EHLO
+	mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932411AbcCNDQM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Mar 2016 23:16:12 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56E7733B.4050308@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <56DED13E.9060106@intel.com>
+References: <1457316477-8153-1-git-send-email-acourbot@nvidia.com>
+ <1457316477-8153-4-git-send-email-acourbot@nvidia.com> <56DED13E.9060106@intel.com>
+From: Alexandre Courbot <gnurou@gmail.com>
+Date: Mon, 14 Mar 2016 12:15:51 +0900
+Message-ID: <CAAVeFuJS6E8f3y710+Hu52HvZp7PgwfHjbvL5FMeHz9LZ7sDYA@mail.gmail.com>
+Subject: Re: [PATCH v4 3/3] mmc: sdhci-pci: Do not set DMA mask in enable_dma()
+To: Adrian Hunter <adrian.hunter@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Alexandre Courbot <acourbot@nvidia.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linux-mmc <linux-mmc@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 14, 2016 at 10:28:11PM -0400, Sinan Kaya wrote:
-> On 3/14/2016 9:48 PM, Bjorn Helgaas wrote:
-> 
-> Yes. I was talking about PCIe on ARM64. 
-> 
-> > If you go to Fry's and buy a conventional PCI card, it is going to
-> > pull INTA# low to assert an interrupt.  It doesn't matter whether you
-> > put it in an x86 system or an arm64 system.
-> 
-> I don't see INTA# of the PCIe card at the system level. The PCIe wire 
-> interrupt gets converted to the system level interrupt by the PCIe controller.
+On Tue, Mar 8, 2016 at 10:18 PM, Adrian Hunter <adrian.hunter@intel.com> wrote:
+> On 07/03/16 04:07, Alexandre Courbot wrote:
+>> DMA mask will already be set by sdhci_set_dma_mask(), which
+>> is equivalent to the removed code since pci_set_dma_mask()
+>> expands to its DMA-API counterpart.
+>>
+>> There should also be no reason to set the DMA mask after probe.
+>
+> Let's run that by the PCI mailing list just to be sure.  The patches for
+> reference:
+>
+>         http://marc.info/?l=linux-mmc&m=145731654328126&w=2
+>         http://marc.info/?l=linux-mmc&m=145731654328128&w=2
+>
+> change the sdhci-pci driver to set the DMA mask once during probe instead of
+> every time during resume.  Is there any reason a PCI device driver might
+> need to set the DMA mask every time during resume?
 
-That's why I said *conventional PCI*.  If you have a conventional PCI
-device below either a conventional PCI host controller or a PCIe-to-PCI
-bridge, there are real INTx wires, not virtual wires, and they are
-level/low.  But I think you pointed out the key below (that the
-Interrupt resource in a PNP0C0F device encodes the trigger type).
-
-> >> > I pasted the code here again. It looks like you want to validate that
-> >> > PCI interrupts are always level low. 
-> > I don't really care whether PCI interrupts are always level low.  What
-> > matters is that the PCI interrupt line matches the configuration of
-> > the interrupt controller input.
-> > 
-> 
-> Agreed. But the interrupt controller configuration is system specific. How would
-> you check interrupt line against what the interrupt controller requires
-> on each architecture as this is common code?
-> 
-> 
-> > If the PCI interrupt can be a different type, e.g., level high, and
-> > there's a way to discover that, we can check that against the
-> > interrupt controller configuration.
-> > 
-> > This is all in the context of conventional PCI, and we're probably
-> > talking about arm64 PCIe systems, not conventional PCI. 
-> 
-> INTx interrupts are TLP messages on PCIe as you already know. There is no INTA 
-> interrupt wire.
-
-Yes, that's why I mentioned PCIe sec 2.2.8.1 below.
-
-> "6.1.2. PCI Compatible INTx Emulation" section of the PCIe spec describes
-> INTx emulation on PCIe.
->  ...
-> 
-> > I'm not sure what an Interrupt Link device means in PCIe.  I suppose it would have
-> > to connect an INTx virtual wire to a system interrupt?  The PCIe spec
-> > says this sort of mapping is system implementation specific (r3.0, sec
-> > 2.2.8.1).
-> 
-> The INTx messages are converted to the system interrupt by the PCIe controller.
-> The interrupt type between the PCIe controller and the ARM GIC interrupt 
-> controller is dictated by the ARM GIC Interrupt Controller Specification for
-> ARM64.
-> 
-> Here is what ACPI table looks like for reference
-> 
-> 	Name(_PRT, Package(){
-> 		Package(){0x0FFFF, 0, \_SB.LN0A, 0},  // Slot 0, INTA
-> 		Package(){0x0FFFF, 1, \_SB.LN0B, 0},  // Slot 0, INTB
-> 		Package(){0x0FFFF, 2, \_SB.LN0C, 0},  // Slot 0, INTC
-> 		Package(){0x0FFFF, 3, \_SB.LN0D, 0}   // Slot 0, INTD
-> 	}) 
-> 
-> Device(LN0A){
-> 	Name(_HID, EISAID("PNP0C0F")) // PCI interrupt link
-> 	Name(_UID, 1)
-> 	Name(_PRS, ResourceTemplate(){
-> 	Interrupt(ResourceProducer, Level, ActiveHigh, Exclusive, , ,) {0x123}
-> 	})
-
-I forgot that the link already include the trigger mode in it.  Maybe we
-can check for that instead of assuming level/low.
-
-Bjorn
+Not seeing much reaction for this patchset. PCI being the only
+possible point of contention, can we maybe roll it into -next and see
+what happens?
