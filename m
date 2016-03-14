@@ -1,541 +1,203 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45336 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932101AbcCKPxp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Mar 2016 10:53:45 -0500
-Date: Fri, 11 Mar 2016 09:53:32 -0600
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 14 Mar 2016 14:27:08 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Yong, Jonathan" <jonathan.yong@intel.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH] PCI: PTM preliminary implementation
-Message-ID: <20160311155332.GA31716@localhost>
-References: <1457681184-20439-1-git-send-email-jonathan.yong@intel.com>
- <1457681184-20439-2-git-send-email-jonathan.yong@intel.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Mark Salter <msalter@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH v2] PCI: ACPI: IA64: fix IO port generic range check
+Message-ID: <20160314192708.GB16621@localhost>
+References: <1455212827-9382-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20160308222125.GG27132@localhost>
+ <CAJZ5v0gnDnF_4z_mtZp+Tq8-V3FgG6p7kMykqtVA+s44ukkuaA@mail.gmail.com>
+ <20160309053332.GA22228@localhost>
+ <20160309071406.GA19555@red-moon>
+ <20160309153556.GA14873@localhost>
+ <20160310074236.GA20478@red-moon>
+ <20160314145322.GE6629@red-moon>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1457681184-20439-2-git-send-email-jonathan.yong@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160314145322.GE6629@red-moon>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jonathan,
-
-Sorry I didn't see this earlier.  I don't follow linux-kernel, so I
-didn't see it until it appeared on linux-pci.  I don't have time for a
-full review right now since the merge window is about to open, but
-I'll give you some first impressions to get started.
-
-On Fri, Mar 11, 2016 at 07:26:24AM +0000, Yong, Jonathan wrote:
-> Simplified Precision Time Measurement driver, activates PTM feature
-> if a PCIe PTM requester (as per PCI Express 3.1 Base Specification
-> section 7.32)is found, but not before checking if the rest of the
-> PCI hierarchy can support it.
+On Mon, Mar 14, 2016 at 02:53:22PM +0000, Lorenzo Pieralisi wrote:
+> On Thu, Mar 10, 2016 at 07:42:36AM +0000, Lorenzo Pieralisi wrote:
 > 
-> The driver does not take part in facilitating PTM conversations,
-> neither does it provide any useful services, it is only responsible
-> for setting up the required configuration space bits.
+> [...]
 > 
-> As of writing, there aren't any PTM capable devices on the market
-> yet, but it is supported by the Intel Apollo Lake platform.
+> > > > We can't do that, it may work on IA64 but the ioport_resource is a
+> > > > chunk of address space on IA64/ARM64 that has nothing to do with
+> > > > the physical address at which the root bridges decode IO space (which
+> > > > is what's contained in the resource).
+> > > 
+> > > I'm stumbling over "the physical address at which the root bridges
+> > > decode IO space (which is what's contained in the resource)".
+> > > 
+> > > x86 host bridges typically just forward CPU-generated I/O port
+> > > transactions to PCI with no address translation, so it sounds like
+> > > you're talking about ia64/ARM64 bridges that decode CPU MMIO space and
+> > > turn accesses into PCI I/O transactions.
+> > > 
+> > > If we start from a driver calling inb(), the driver supplies a Linux
+> > > ioport number "X".  On ia64 (and I assume ARM64 as well), inb()
+> > > performs an MMIO access to memory address "Y".  A host bridge consumes
+> > > that MMIO access and generates a corresponding PCI I/O transaction to
+> > > PCI ioport "Z".
+> > > 
+> > > It is indeed true that ioport_resource has nothing to do with memory
+> > > addresses like "Y".  But the driver (and this part of the ACPI
+> > > infrastructure) are dealing with ioport address "X", and that is
+> > > definitely in an IORESOURCE_IO struct resource.  The IORESOURCE_MEM_
+> > > struct resource that contains "Y" is internal to the host bridge
+> > > driver and invisible to the device driver that's using inb().
+> > 
+> > The problem is, that's the address like "Y" that are checked in
+> > acpi_dev_ioresource_flags() with current PCI initialization flow.
+> > 
+> > IO ports number "X" are created in (IA64) add_io_space() that is
+> > executed after acpi_pci_probe_root_resources() is called (see
+> > arch/ia64/pci/pci.c), that's the code that, IIUC, translates an
+> > IO resource containing a CPU physical address (which is the address
+> > that is ioremapped) to an IO resource containing a port number *and*
+> > a corresponding MEM resource.
+> > 
+> > The check that causes failures (>=0x10003) is carried out
+> > on the "raw" IO resource parsed from ACPI, not the one crafted
+> > in add_io_space().
+> > 
+> > The resource checked in acpi_dev_ioresource_flags() is created from
+> > ACPI IO descriptor and does contain CPU physical MMIO addresses,
+> > comparing it to a port number is bound to fail, they do NOT represent
+> > the same thing, happy be corrected.
+> > 
+> > That's the reason why currently IA64 IO space is not working, and
+> > this patch fixes it, please correct me if I am wrong.
+> > 
+> > I will write back next week with the commits sequence and logic that
+> > led to the current failure, sorry for not being able to respond
+> > more promptly and in a comprehensive way I need sometime to write up
+> > my understanding of the problem and commit logs, I will do that
+> > next week.
 > 
-> Signed-off-by: Yong, Jonathan <jonathan.yong@intel.com>
-> ---
->  drivers/pci/pci-sysfs.c     |   7 +
->  drivers/pci/pci.h           |  21 +++
->  drivers/pci/pcie/Kconfig    |   8 +
->  drivers/pci/pcie/Makefile   |   2 +-
->  drivers/pci/pcie/pcie_ptm.c | 353 ++++++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/probe.c         |   3 +
->  6 files changed, 393 insertions(+), 1 deletion(-)
->  create mode 100644 drivers/pci/pcie/pcie_ptm.c
+> I had a further look and went through commit history and I think
+> my explanation above is correct, current code for IA64 PCI IO space
+> is wrong IMO and the failures started with:
 > 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 95d9e7b..c634fd11 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -1335,6 +1335,9 @@ static int pci_create_capabilities_sysfs(struct pci_dev *dev)
->  	/* Active State Power Management */
->  	pcie_aspm_create_sysfs_dev_files(dev);
->  
-> +	/* PTM */
-
-Don't add comments like this that merely repeat the code.
-
-> +	pci_create_ptm_sysfs(dev);
-> +
->  	if (!pci_probe_reset_function(dev)) {
->  		retval = device_create_file(&dev->dev, &reset_attr);
->  		if (retval)
-> @@ -1433,6 +1436,10 @@ static void pci_remove_capabilities_sysfs(struct pci_dev *dev)
->  	}
->  
->  	pcie_aspm_remove_sysfs_dev_files(dev);
-> +
-> +	/* PTM */
-> +	pci_release_ptm_sysfs(dev);
-> +
->  	if (dev->reset_fn) {
->  		device_remove_file(&dev->dev, &reset_attr);
->  		dev->reset_fn = 0;
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 9a1660f..fb90420 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -320,6 +320,27 @@ static inline resource_size_t pci_resource_alignment(struct pci_dev *dev,
->  
->  void pci_enable_acs(struct pci_dev *dev);
->  
-> +#ifdef CONFIG_PCIEPORTBUS
-> +int pci_enable_ptm(struct pci_dev *dev);
-> +void pci_create_ptm_sysfs(struct pci_dev *dev);
-> +void pci_release_ptm_sysfs(struct pci_dev *dev);
-> +void pci_disable_ptm(struct pci_dev *dev);
-> +#else
-> +static inline int pci_enable_ptm(struct pci_dev *dev)
-> +{
-> +	return -ENXIO;
-> +}
-> +static inline void pci_create_ptm_sysfs(struct pci_dev *dev)
-> +{
-> +}
-> +static inline void pci_release_ptm_sysfs(struct pci_dev *dev)
-> +{
-> +}
-> +static inline void pci_disable_ptm(struct pci_dev *dev)
-> +{
-> +}
-> +#endif
-> +
->  struct pci_dev_reset_methods {
->  	u16 vendor;
->  	u16 device;
-> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-> index e294713..f65ff4d 100644
-> --- a/drivers/pci/pcie/Kconfig
-> +++ b/drivers/pci/pcie/Kconfig
-> @@ -80,3 +80,11 @@ endchoice
->  config PCIE_PME
->  	def_bool y
->  	depends on PCIEPORTBUS && PM
-> +
-> +config PCIE_PTM
-> +	bool "Turn on Precision Time Management by default"
-> +	depends on PCIEPORTBUS
-> +	help
-> +	  Say Y here to enable PTM feature on PCI Express devices that
-> +	  support them as they are found during device enumeration. Otherwise
-> +	  the feature can be enabled manually through sysfs entries.
-> diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
-> index 00c62df..d18b4c7 100644
-> --- a/drivers/pci/pcie/Makefile
-> +++ b/drivers/pci/pcie/Makefile
-> @@ -5,7 +5,7 @@
->  # Build PCI Express ASPM if needed
->  obj-$(CONFIG_PCIEASPM)		+= aspm.o
->  
-> -pcieportdrv-y			:= portdrv_core.o portdrv_pci.o portdrv_bus.o
-> +pcieportdrv-y			:= portdrv_core.o portdrv_pci.o portdrv_bus.o pcie_ptm.o
->  pcieportdrv-$(CONFIG_ACPI)	+= portdrv_acpi.o
->  
->  obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o
-> diff --git a/drivers/pci/pcie/pcie_ptm.c b/drivers/pci/pcie/pcie_ptm.c
-> new file mode 100644
-> index 0000000..a128c79
-> --- /dev/null
-> +++ b/drivers/pci/pcie/pcie_ptm.c
-> @@ -0,0 +1,353 @@
-> +/*
-> + * PCI Express Precision Time Measurement
-> + * Copyright (c) 2016, Intel Corporation.
-> + *
-> + * This program is free software; you can redistribute it and/or modify it
-> + * under the terms and conditions of the GNU General Public License,
-> + * version 2, as published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope it will be useful, but WITHOUT
-> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-> + * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-> + * more details.
-> + *
-> + */
-> +#include <linux/module.h>
-> +#include <linux/init.h>
-> +#include <linux/pci.h>
-> +#include "../pci.h"
-> +
-> +#define PCI_PTM_REQ		0x0001  /* Requester capable */
-> +#define  PCI_PTM_RSP		0x0002  /* Responder capable */
-> +#define  PCI_PTM_ROOT		0x0004  /* Root capable */
-> +#define  PCI_PTM_GRANULITY	0xFF00  /* Local clock granulity */
-
-s/granulity/granularity/
-
-> +#define PCI_PTM_ENABLE		0x0001  /* PTM enable */
-> +#define  PCI_PTM_ROOT_SEL	0x0002  /* Root select */
-> +
-> +#define PCI_PTM_HEADER_REG_OFFSET	0x00
-> +#define PCI_PTM_CAPABILITY_REG_OFFSET	0x04
-> +#define PCI_PTM_CONTROL_REG_OFFSET	0x08
-> +
-> +#define PCI_EXT_CAP_ID_PTM		0x001f
-
-These should go in include/uapi/linux/pci_regs.h along with the other
-PCI capability definitions.  Obviously they should match the style of
-the existing code there.
-
-> +#ifdef CONFIG_PCIE_PTM
-> +static bool disable_ptm;
-> +#else
-> +static bool disable_ptm = 1;
-> +#endif
-> +
-> +module_param_named(disable_ptm, disable_ptm, bool, S_IRUGO | S_IWUSR);
-> +MODULE_PARM_DESC(disable_ptm,
-> +	"Don't automatically enable even if supported.");
-> +
-> +static inline u8 get_granularity(u32 in)
-> +{
-> +	return (in & PCI_PTM_GRANULITY) >> 8;
-> +}
-> +
-> +static ssize_t ptm_status_show(struct device *dev,
-> +	struct device_attribute *attr, char *buf)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +	u16 word;
-> +	int pos;
-> +
-> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PTM);
-> +	if (!pos)
-> +		return -ENXIO;
-> +
-> +	pci_read_config_word(pdev, pos + PCI_PTM_CONTROL_REG_OFFSET, &word);
-> +	return sprintf(buf, "%u\n", word & PCI_PTM_ENABLE);
-> +}
-> +
-> +static ssize_t ptm_status_store(struct device *dev,
-> +	struct device_attribute *attr, const char *buf, size_t count)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +	unsigned long val;
-> +	ssize_t ret;
-> +	int pos;
-> +
-> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PTM);
-> +	if (!pos)
-> +		return -ENXIO;
-> +
-> +	ret = kstrtoul(buf, 0, &val);
-> +	if (ret)
-> +		return ret;
-> +	if (val)
-> +		return pci_enable_ptm(pdev);
-> +	pci_disable_ptm(pdev);
-> +	return 0;
-> +}
-> +
-> +static DEVICE_ATTR_RW(ptm_status);
-> +
-> +void pci_release_ptm_sysfs(struct pci_dev *dev)
-> +{
-> +	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM))
-> +		return;
-> +	device_remove_file(&dev->dev, &dev_attr_ptm_status);
-> +}
-> +
-> +void pci_create_ptm_sysfs(struct pci_dev *dev)
-> +{
-> +	if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM))
-> +		return;
-> +	device_create_file(&dev->dev, &dev_attr_ptm_status);
-> +}
-> +
-> +/**
-> + * pci_enable_ptm - Try to activate PTM functionality on device.
-> + * @dev: PCI Express device with PTM requester role to enable.
-> + *
-> + * The function will crawl through the PCI Hierarchy to determine if it is
-> + * possible to enable the Precision Time Measurement requester role on @dev,
-> + * and if so, activate it by setting the granularity field.
-> + *
-> + * NOTE: Each requester must be associated with a PTM root (not to be confused
-> + * with a root port or root complex). There can be multiple PTM roots in a
-> + * a system forming multiple domains. All intervening bridges/switches in a
-> + * domain must support PTM responder roles to relay PTM dialogues.
-> + */
-> +int pci_enable_ptm(struct pci_dev *dev)
-> +{
-
-This function is way too long to review as it is.  Can you split it up
-somehow?
-
-> +	struct pci_dev *curr, **steps;
-> +	size_t i = 0, root = 0;
-> +	int pos, pos2;
-> +	u8 granularity = 0;
-> +	u16 word;
-> +	int ret = 0;
-> +
-> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
-> +	if (!pos) {
-> +		dev_dbg(&dev->dev, "Not PTM capable, skipping.\n");
-> +		return -ENXIO;
-> +	}
-> +
-> +	if (disable_ptm)
-> +		return 0;
-> +
-> +	/* Skip if not requester role. */
-> +	pci_read_config_word(dev, pos + PCI_PTM_CAPABILITY_REG_OFFSET, &word);
-> +	if (!(word & PCI_PTM_REQ)) {
-> +		dev_dbg(&dev->dev, "Not a PTM requester, skipping for now.\n");
-> +		return 0;
-> +	}
-> +
-> +	/* Just copy and enable PTM granularity for integrated endpoints. */
-> +	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END) {
-> +		dev_dbg(&dev->dev,
-> +			"Root integrated endpoint, attempting to copy root granularity.\n");
-> +		curr = pci_upstream_bridge(dev);
-> +		if (!curr)
-> +			return 0;
-> +
-> +		pos2 = pci_find_ext_capability(curr, PCI_EXT_CAP_ID_PTM);
-> +		if (!pos2)
-> +			return 0;
-> +
-> +		/* Get granularity field. */
-> +		pci_read_config_word(curr,
-> +			pos2 + PCI_PTM_CAPABILITY_REG_OFFSET,
-> +			&word);
-> +		word &= PCI_PTM_GRANULITY;
-> +
-> +		/* Copy it over. */
-> +		word |= PCI_PTM_ENABLE;
-> +		pci_write_config_word(dev, pos + PCI_PTM_CONTROL_REG_OFFSET,
-> +			word);
-> +
-> +		/* Enable PTM on root complex if not already so. */
-> +		pci_read_config_word(curr, pos2 + PCI_PTM_CONTROL_REG_OFFSET,
-> +			&word);
-> +		if (!(word & PCI_PTM_ENABLE)) {
-> +			pci_read_config_word(curr,
-> +				pos2 + PCI_PTM_CONTROL_REG_OFFSET, &word);
-> +			word |= PCI_PTM_ENABLE | PCI_PTM_ROOT_SEL;
-> +			pci_write_config_word(curr,
-> +				pos2 + PCI_PTM_CONTROL_REG_OFFSET, word);
-> +		}
-> +	} else {
-> +		/* For holding all the bridge/switches in between. */
-> +		steps = kzalloc(sizeof(*steps) * dev->bus->number + 1,
-> +			GFP_KERNEL);
-> +		if (!steps)
-> +			return -ENOMEM;
-> +
-> +		/* Gather all the upstream devices. */
-> +		curr = pci_upstream_bridge(dev);
-> +		if (curr) {
-> +			dev_dbg(&dev->dev,
-> +				"Upstream is %d:%d:%x.%d\n",
-> +				pci_domain_nr(curr->bus),
-> +				curr->bus->number,
-> +				PCI_SLOT(curr->devfn),
-> +				PCI_FUNC(curr->devfn)
-> +				);
-> +		} else {
-> +			dev_dbg(&dev->dev, "No upstream??\n");
-> +			ret = -ENXIO;
-> +			goto abort;
-> +		}
-> +
-> +		do {
-> +			/* sanity check */
-> +			if (i > dev->bus->number)
-> +				break;
-> +			steps[i++] = curr;
-> +		} while ((curr = pci_upstream_bridge(curr)));
-> +
-> +		/* Check upstream chains capability. */
-> +		dev_dbg(&dev->dev,
-> +				   "Checking hierarchy capabilities\n");
-> +		for (i = 0; i < dev->bus->number + 1; i++) {
-> +			curr = steps[i];
-> +			if (!curr)
-> +				break;
-> +
-> +			pos2 = pci_find_ext_capability(curr,
-> +				PCI_EXT_CAP_ID_PTM);
-> +
-> +			if (!pos2) {
-> +				dev_dbg(&curr->dev,
-> +					"PTM Hierarchy %zx: not PTM aware\n",
-> +					i);
-> +				break;
-> +			}
-> +
-> +			/* End if upstream cannot respond. */
-> +			pci_read_config_word(curr,
-> +				pos2 + PCI_PTM_CAPABILITY_REG_OFFSET, &word);
-> +			if (!(word & PCI_PTM_RSP)) {
-> +				dev_dbg(&curr->dev,
-> +				"PTM Hierarchy: skipping non-responder\n");
-> +				break;
-> +			}
-> +
-> +			/* Is root capable? */
-> +			if (word & PCI_PTM_ROOT) {
-> +				root = i;
-> +				granularity = get_granularity(word);
-> +			}
-> +		}
-> +
-> +		if (!steps[root]) {
-> +			dev_dbg(&dev->dev, "Cannot find root, aborting\n");
-> +			ret = -ENXIO;
-> +			goto abort;
-> +		}
-> +
-> +		dev_dbg(&dev->dev,
-> +			"Found PTM root at %d:%d:%x.%d granularity %u\n",
-> +			pci_domain_nr(steps[root]->bus),
-> +			steps[root]->bus->number,
-> +			PCI_SLOT(steps[root]->devfn),
-> +			PCI_FUNC(steps[root]->devfn),
-> +			granularity);
-> +
-> +		/* Program granularity field. */
-> +		for (i = root;;) {
-> +			curr = steps[i];
-> +			pos2 = pci_find_ext_capability(curr,
-> +				PCI_EXT_CAP_ID_PTM);
-> +			pci_read_config_word(curr,
-> +				pos2 + PCI_PTM_CONTROL_REG_OFFSET, &word);
-> +
-> +			/* If not yet PTM enabled. */
-> +			if (!(word & PCI_PTM_ENABLE)) {
-> +				pci_read_config_word(curr,
-> +					pos2 + PCI_PTM_CAPABILITY_REG_OFFSET,
-> +					&word);
-> +				/* If requester capable, program granularity. */
-> +				if (word & PCI_PTM_REQ) {
-> +					dev_dbg(&curr->dev,
-> +						"Programming granularity %u\n",
-> +						granularity);
-> +					pci_write_config_word(curr,
-> +						pos2 +
-> +						PCI_PTM_CONTROL_REG_OFFSET,
-> +						((u16)granularity) << 8);
-> +				}
-> +				if ((word & PCI_PTM_ROOT) &&
-> +					granularity != 0 &&
-> +					((granularity < get_granularity(word))
-> +					|| get_granularity(word) == 0)) {
-> +					dev_dbg(&curr->dev,
-> +					"Updating granularity %u to %u\n",
-> +						granularity,
-> +						get_granularity(word));
-> +					granularity = get_granularity(word);
-> +				}
-> +			}
-> +			if (!i)
-> +				break;
-> +			i--;
-> +		}
-> +
-> +		/* Program current device granularity and enable it. */
-> +		pci_read_config_word(dev, pos + PCI_PTM_CONTROL_REG_OFFSET,
-> +			&word);
-> +		word = (word & ~PCI_PTM_GRANULITY) | ((u16)granularity) << 8
-> +			| PCI_PTM_ENABLE;
-> +		pci_write_config_word(dev, pos + PCI_PTM_CONTROL_REG_OFFSET,
-> +			word);
-> +		dev_dbg(&dev->dev,
-> +				"Using granularity %u, %x\n", granularity,
-> +				word);
-> +
-> +		/* Enable PTM root. */
-> +		pos2 = pci_find_ext_capability(steps[root],
-> +			PCI_EXT_CAP_ID_PTM);
-> +		pci_read_config_word(steps[root],
-> +			pos2 + PCI_PTM_CONTROL_REG_OFFSET, &word);
-> +		word |= PCI_PTM_ROOT_SEL | PCI_PTM_ENABLE;
-> +		pci_write_config_word(steps[root],
-> +			pos2 + PCI_PTM_CONTROL_REG_OFFSET, word);
-> +
-> +		/* PTM enable from the bottom up. */
-> +		for (i = 0; i <= root; i++) {
-> +			pos2 = pci_find_ext_capability(steps[i],
-> +				PCI_EXT_CAP_ID_PTM);
-> +			pci_read_config_word(steps[i],
-> +				pos2 + PCI_PTM_CONTROL_REG_OFFSET, &word);
-> +			word |= PCI_PTM_ENABLE;
-> +			pci_write_config_word(steps[i],
-> +				pos2 + PCI_PTM_CONTROL_REG_OFFSET,
-> +				word);
-> +		}
-
-I haven't read the PTM spec yet so I don't know how it works.  But in
-general, I don't like having to tweak a setting all the way up the
-hierarchy based on a leaf device.  That makes it hard to handle
-hotplug correctly, because obviously there may be many leaf devices
-that share part of all of the upstream path.
-
-> +abort:
-> +		kfree(steps);
-> +	}
-> +	return ret;
-> +}
-> +
-> +static int do_disable_ptm(struct pci_dev *dev, void *v)
-> +{
-> +	int pos;
-> +	u16 word;
-> +
-> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM);
-> +	if (!pos)
-> +		return 0;
-> +
-> +	pci_read_config_word(dev, pos + PCI_PTM_CONTROL_REG_OFFSET, &word);
-> +	word &= ~PCI_PTM_ENABLE;
-> +	pci_write_config_word(dev, pos + PCI_PTM_CONTROL_REG_OFFSET, word);
-> +	return 0;
-> +}
-> +
-> +/**
-> + * pci_disable_ptm - Turn off PTM functionality on device.
-> + * @dev: PCI Express device with PTM function to disable.
-> + *
-> + * Disables PTM functionality by clearing the PTM enable bit, if device is a
-> + * switch/bridge it will also disable PTM function on other devices behind it.
-> + */
-> +void pci_disable_ptm(struct pci_dev *dev)
-> +{
-> +	if (pci_is_bridge(dev))
-> +		pci_walk_bus(dev->bus, &do_disable_ptm, NULL);
-> +	else
-> +		do_disable_ptm(dev, NULL);
-> +}
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 6d7ab9b..8dc8bbc 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1623,6 +1623,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
->  	pci_enable_acs(dev);
->  
->  	pci_cleanup_aer_error_status_regs(dev);
-> +
-> +	/* Enable PTM Capabilities */
-
-Another superfluous comment.  No need to repeat what the code already
-says.
-
-> +	pci_enable_ptm(dev);
->  }
->  
->  /*
-> -- 
-> 2.4.10
+> commit 3772aea7d6f3 ("ia64/PCI/ACPI: Use common ACPI resource parsing
+> interface for host bridge")
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> because that's the commit that added IA64 PCI code to use
+> acpi_dev_get_resources(), let me add to that.
+> 
+> For the records, and for the same reason, let's imagine we can fix the
+> (>=0x10003) check in:
+> 
+> acpi_dev_ioresource_flags()
+> 
+> the code in acpi_pci_probe_root_resources() that checks the PCI IO
+> resources (ie acpi_pci_root_validate_resources()) is wrong, in that it
+> validates the PCI IO resources obtained from ACPI IO descriptors against
+> ioport_resource, and that's not correct, they do not represent the
+> same thing.
+> 
+> Code in acpi_dev_get_resources() walks the device (PCI host bridge in
+> this case) resources (ie _CRS) with acpi_dev_process_resource().
+> 
+> On IA64 IO space is memory mapped, therefore the CPU physical address
+> at which the PCI host bridge maps the IO space has to come from ACPI
+> IO descriptors.
+> 
+> IIUC, those descriptors are parsed through:
+> 
+> acpi_dev_resource_address_space()
+> acpi_dev_resource_ext_address_space()
+> 
+> which in turn call:
+> 
+> acpi_decode_space()
+> 
+> where the resource window is actually created, in particular the
+> acpi_address64_attribute value contains (on IA64, I verified with
+> ACPI spec working group through actual ACPI tables):
+> 
+> attr->minimum = PCI IO port min value
+> attr->translation_offset = offset to add to attr->minimum to obtain the
+>                            CPU physical address at which the PCI IO
+> 			   bridge decodes IO space. Translation offset,
+> 			   according to the ACPI specification has to
+> 			   be used when resources on primary and
+> 			   secondary sides of the PCI bridge are
+> 			   different (IIUC secondary bus represents PCI
+> 			   IO ports, primary bus CPU physical addresses
+> 			   mapping IO ports in CPU physical address
+> 			   space). This is the physical address that is
+> 			   remapped in IA64 new_space(), to map the
+> 			   bridge CPU physical address into the virtual
+> 			   address space, and it has always been so, even
+> 			   before 3772aea7d6f3.
+> 
+> Now, the resource window, in acpi_decode_space() is created as:
+> 
+> res->start = attr->minimum + attr->translation_offset;
+> res->end = attr->maximum + attr->translation_offset;
+> 
+> and that's the resource we have in acpi_dev_ioresource_flags(), if we
+> are comparing it against ioport_resource that's not correct since as I
+> already mentioned, they represent *different* things.
+> 
+> There is something we can do, which is, checking translation_type
+> in acpi_dev_ioresource_flags(), if it is == TypeTranslation (which
+> basically means that the IO space is MMIO) the >=10003 can be skipped,
+> but that's hackish (also because I am not sure IA64 platforms set
+> translation_type consistently in ACPI tables).
+> 
+> Even if we do that, call to acpi_pci_root_validate_resources() for
+> IO space is wrong on IA64, we are comparing an IO resource against
+> ioport_resource there, but the Linux IO port space for the host
+> bridge is created in IA64 pci_acpi_root_prepare_resources() with
+> the call to add_io_space() which happens *after* the sequence above
+> is executed.
+> 
+> On IA64:
+> 
+> pci_acpi_root_prepare_resources()
+>  -> acpi_pci_probe_root_resources()
+>     -> acpi_dev_get_resources()
+>     -> acpi_pci_root_validate_resources()
+>  -> add_io_space() # this is where the Linux IO port space for the bridge is
+>                      created and that's when we can validate the IO
+> 		     resource against ioport_resource
+> 
+> I have no experience/knowledge of IA64 systems so I may be totally wrong,
+> I just want to understand.
+> 
+> Comments welcome, Hanjun proved my understanding by testing on IA64 and
+> current mainline just does not work (see commit log for failure messages),
+> feedback from IA64 people is really needed here, we have to get this fixed
+> please (and through that fix, getting it to work on ARM64 too).
+
+I/O port translations makes my head hurt, but I think you're right.
+
+The raw I/O resources from ACPI _CRS are definitely different from the
+Linux ioport spaces constructed by add_io_space(), so we shouldn't
+compare the two.
+
+If we need to validate the raw I/O ports from _CRS, I suppose in
+theory we should be able to check that they're contained in the raw
+I/O port range of an upstream window.
+
+I think the problem is that 3772aea7d6f3 started applying the
+x86-specific "[0-0xffff]" restriction to all arches, so if you want to 
+back that out so it applies only on x86 (but to all devices, not just
+PNP0A03), I think that would make sense.
+
+Bjorn
