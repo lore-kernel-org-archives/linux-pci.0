@@ -1,200 +1,90 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 9 Mar 2016 21:17:50 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Alex Deucher <alexdeucher@gmail.com>
-Cc: Dave Airlie <airlied@gmail.com>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Maling list - DRI developers
-	<dri-devel@lists.freedesktop.org>, linux-pm@vger.kernel.org
-Subject: Re: [PATCH 1/2] vga_switcheroo: add power support for windows 10
- machines.
-Message-ID: <20160309201750.GA26222@wunner.de>
-References: <1457504045-12738-1-git-send-email-airlied@gmail.com>
- <20160309143336.GA26158@wunner.de>
- <CADnq5_MUW00AcYcM4WPREOd8ng9AfggZk6U4YU7j50s6BBeMNQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CADnq5_MUW00AcYcM4WPREOd8ng9AfggZk6U4YU7j50s6BBeMNQ@mail.gmail.com>
+In-Reply-To: <CAPM=9txo4aOOa-CS-mnyQe+vYDtAOCm1bzAgfMzwJJS8ZuYmwQ@mail.gmail.com>
+References: <1457504045-12738-1-git-send-email-airlied@gmail.com>
+	<2736217.utxPzJExd5@vostro.rjw.lan>
+	<20160311105815.GS1796@lahna.fi.intel.com>
+	<2759763.dR5D0KopkA@vostro.rjw.lan>
+	<CAPM=9txo4aOOa-CS-mnyQe+vYDtAOCm1bzAgfMzwJJS8ZuYmwQ@mail.gmail.com>
+Date: Mon, 14 Mar 2016 10:30:50 -0400
+Message-ID: <CADnq5_PMS+TV_csWMXGNN=aQ=GE6ATXij2beNZb-dFisBUsfUw@mail.gmail.com>
+Subject: Re: [PATCH 1/2] vga_switcheroo: add power support for windows 10 machines.
+From: Alex Deucher <alexdeucher@gmail.com>
+To: Dave Airlie <airlied@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	dri-devel <dri-devel@lists.freedesktop.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Sun, Mar 13, 2016 at 10:19 PM, Dave Airlie <airlied@gmail.com> wrote:
+> On 11 March 2016 at 23:45, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>> On Friday, March 11, 2016 12:58:15 PM Mika Westerberg wrote:
+>>> On Thu, Mar 10, 2016 at 09:57:09PM +0100, Rafael J. Wysocki wrote:
+>>> > > It doesn't seem to do any runtime PM,
+>>> > > I do wonder if pcieport should be doing it's own runtime PM handling,
+>>> > > but that is a
+>>> > > larger task than I'm thinking to tackle here.
+>>> >
+>>> > PCIe ports don't do PM - yet.  Mika has posted a series of patches to implement
+>>> > that, however, that are waiting for comments now:
+>>> >
+>>> > https://patchwork.kernel.org/patch/8453311/
+>>> > https://patchwork.kernel.org/patch/8453381/
+>>> > https://patchwork.kernel.org/patch/8453391/
+>>> > https://patchwork.kernel.org/patch/8453411/
+>>> > https://patchwork.kernel.org/patch/8453371/
+>>> > https://patchwork.kernel.org/patch/8453351/
+>>> >
+>>> > > Maybe I should be doing
+>>> > >
+>>> > > pci_set_power_state(pdev->bus->self, PCI_D3cold) ? I'm not really sure.
+>>> >
+>>> > Using pci_set_power_state() would be more appropriate IMO, but you can get
+>>> > to the bridge via dev->parent too, can't you?
+>>> >
+>>> > In any case, it looks like you and Mika need to talk. :-)
+>>>
+>>> When the vga_switcheroo device gets runtime suspended (with the above
+>>> runtime PM patchs for PCIe root ports) the root port should also be
+>>> runtime suspended by the PM core.
+>>
+>> Right, after your patches have been applied, the additional handling
+>> won't be needed.
+>>
+>> So Dave, maybe you can check if the Mika's patches help?
+>
+> Hi Mika,
+>
+> I tested your patches with a couple of changes on the Lenovo W541.
+>
+> The attached patch contains the two things I needed to get the same
+> functionality
+> as my patches.
+>
+> I'm really not in love with the per-chipset enablement for this,
+> really any chipsets
+> after a certain year should probably be better, as we'll constantly be
+> adding PCI Ids
+> for every chipset ever made, and I expect we'll forget some.
 
-On Wed, Mar 09, 2016 at 11:52:33AM -0500, Alex Deucher wrote:
-> On Wed, Mar 9, 2016 at 9:33 AM, Lukas Wunner <lukas@wunner.de> wrote:
-> > On Wed, Mar 09, 2016 at 04:14:04PM +1000, Dave Airlie wrote:
-> >> From: Dave Airlie <airlied@redhat.com>
-> >>
-> >> Windows 10 seems to have standardised power control for the
-> >> optimus/powerxpress laptops using PR3 power resource hooks.
-> >
-> > What happened to the Optimus DSM, does this still work? If not,
-> > echoing OFF to the vgaswitcheroo sysfs file won't power down the
-> > GPU now, right? (If runtime pm is disabled in nouveau.)
-> >
-> If the OS identifies itself as windows 10 or newer when initializing
-> ACPI, the standardized interfaces should be used if they exist.  I'm
-> not sure if there is any explicit policy on the vendor specific ones,
-> but I suspect they are probably broken in that case since I doubt the
-> OEM validates them when the standardized interfaces are available.
 
-The vendor interface (Optimus DSM) must be present, otherwise the call
-to nouveau_is_optimus() in patch [2/2] would return false.
+Yeah, I don't care of that either.  There are always going to be
+chipsets falling through the cracks.
 
-But indeed it seems to not be working, otherwise why would the patches
-be necessary?
+Alex
 
-My point is that the chosen approach does not square with vga_switcheroo's
-architecture: Normally it's the handler's job to power the GPU up/down.
-If runtime pm is enabled then vga_switcheroo_init_domain_pm_ops()
-activates runtime_suspend/_resume callbacks which ask the handler to
-flip the power switch.
-
-However these two patches add *additional* runtime_suspend/_resume
-callbacks which do not rely on the handler at all. The handler is thus
-useless. This becomes apparent when loading the nouveau module with
-runpm=0: Normally the user is then able to manually power the GPU
-up/down by echoing ON or OFF to the vgaswitcheroo sysfs file. With the
-chosen approach this will likely not work because the handler only knows
-how to invoke the DSM, it doesn't know anything about PR3.
-
-Hence my suggestion to solve this with an additional handler which
-gets used in lieu of the nouveau DSM handler.
-
-Best regards,
-
-Lukas
-
-> 
-> Alex
-> 
-> >> I'm not sure this is definitely the correct place to be
-> >> doing this, but it works for me here.
-> >
-> > How about implementing an additional vga_switcheroo handler somewhere
-> > in drivers/acpi/, which looks for the PR3 hooks and registers with
-> > vga_switcheroo if found. The ->power_state callback of that handler
-> > would then invoke acpi_device_set_power().
-> >
-> > The ACPI bus is scanned in the subsys_initcall section, much earlier
-> > than nouveau is loaded (in the device_initcall section). So the ACPI
-> > vga_switcheroo handler could register before the nouveau DSM handler
-> > and therefore would always have a higher precedence.
-> >
-> > In any case this patch should be amended with kerneldoc for
-> > vga_switcheroo_init_parent_pr3_ops(), I've spent considerable time
-> > last year to document everything and kindly ask that this water not
-> > be muddied again. ;-)
-> >
-> > One small nit, the headers are sorted alphabetically yet acpi.h is
-> > added at the end.
-> >
-> > Thanks,
-> >
-> > Lukas
-> >
-> >>
-> >> The ACPI device for the GPU I have is \_SB_.PCI0.PEG_.VID_
-> >> but the power resource hooks are on \_SB_.PCI0.PEG_, so
-> >> this patch creates a new power domain to turn the GPU
-> >> device parent off using standard ACPI calls.
-> >>
-> >> Signed-off-by: Dave Airlie <airlied@redhat.com>
-> >> ---
-> >>  drivers/gpu/vga/vga_switcheroo.c | 54 +++++++++++++++++++++++++++++++++++++++-
-> >>  include/linux/vga_switcheroo.h   |  3 ++-
-> >>  2 files changed, 55 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/drivers/gpu/vga/vga_switcheroo.c b/drivers/gpu/vga/vga_switcheroo.c
-> >> index 665ab9f..be32cb2 100644
-> >> --- a/drivers/gpu/vga/vga_switcheroo.c
-> >> +++ b/drivers/gpu/vga/vga_switcheroo.c
-> >> @@ -42,7 +42,7 @@
-> >>  #include <linux/uaccess.h>
-> >>  #include <linux/vgaarb.h>
-> >>  #include <linux/vga_switcheroo.h>
-> >> -
-> >> +#include <linux/acpi.h>
-> >>  /**
-> >>   * DOC: Overview
-> >>   *
-> >> @@ -997,3 +997,55 @@ vga_switcheroo_init_domain_pm_optimus_hdmi_audio(struct device *dev,
-> >>       return -EINVAL;
-> >>  }
-> >>  EXPORT_SYMBOL(vga_switcheroo_init_domain_pm_optimus_hdmi_audio);
-> >> +
-> >> +/* With Windows 10 the runtime suspend/resume can use power
-> >> +   resources on the parent device */
-> >> +static int vga_acpi_switcheroo_runtime_suspend(struct device *dev)
-> >> +{
-> >> +     struct pci_dev *pdev = to_pci_dev(dev);
-> >> +     int ret;
-> >> +     struct acpi_device *adev;
-> >> +
-> >> +     ret = dev->bus->pm->runtime_suspend(dev);
-> >> +     if (ret)
-> >> +             return ret;
-> >> +
-> >> +     ret = acpi_bus_get_device(ACPI_HANDLE(&pdev->dev), &adev);
-> >> +     if (!ret)
-> >> +             acpi_device_set_power(adev->parent, ACPI_STATE_D3_COLD);
-> >> +     return 0;
-> >> +}
-> >> +
-> >> +static int vga_acpi_switcheroo_runtime_resume(struct device *dev)
-> >> +{
-> >> +     struct pci_dev *pdev = to_pci_dev(dev);
-> >> +     struct acpi_device *adev;
-> >> +     int ret;
-> >> +
-> >> +     ret = acpi_bus_get_device(ACPI_HANDLE(&pdev->dev), &adev);
-> >> +     if (!ret)
-> >> +             acpi_device_set_power(adev->parent, ACPI_STATE_D0);
-> >> +     ret = dev->bus->pm->runtime_resume(dev);
-> >> +     if (ret)
-> >> +             return ret;
-> >> +
-> >> +     return 0;
-> >> +}
-> >> +
-> >> +int vga_switcheroo_init_parent_pr3_ops(struct device *dev,
-> >> +                                    struct dev_pm_domain *domain)
-> >> +
-> >> +{
-> >> +     /* copy over all the bus versions */
-> >> +     if (dev->bus && dev->bus->pm) {
-> >> +             domain->ops = *dev->bus->pm;
-> >> +             domain->ops.runtime_suspend = vga_acpi_switcheroo_runtime_suspend;
-> >> +             domain->ops.runtime_resume = vga_acpi_switcheroo_runtime_resume;
-> >> +
-> >> +             dev_pm_domain_set(dev, domain);
-> >> +             return 0;
-> >> +     }
-> >> +     dev_pm_domain_set(dev, NULL);
-> >> +     return -EINVAL;
-> >> +}
-> >> +EXPORT_SYMBOL(vga_switcheroo_init_parent_pr3_ops);
-> >> diff --git a/include/linux/vga_switcheroo.h b/include/linux/vga_switcheroo.h
-> >> index 69e1d4a1..5ce0cbe 100644
-> >> --- a/include/linux/vga_switcheroo.h
-> >> +++ b/include/linux/vga_switcheroo.h
-> >> @@ -144,6 +144,7 @@ void vga_switcheroo_set_dynamic_switch(struct pci_dev *pdev, enum vga_switcheroo
-> >>  int vga_switcheroo_init_domain_pm_ops(struct device *dev, struct dev_pm_domain *domain);
-> >>  void vga_switcheroo_fini_domain_pm_ops(struct device *dev);
-> >>  int vga_switcheroo_init_domain_pm_optimus_hdmi_audio(struct device *dev, struct dev_pm_domain *domain);
-> >> +int vga_switcheroo_init_parent_pr3_ops(struct device *dev, struct dev_pm_domain *domain);
-> >>  #else
-> >>
-> >>  static inline void vga_switcheroo_unregister_client(struct pci_dev *dev) {}
-> >> @@ -163,6 +164,6 @@ static inline void vga_switcheroo_set_dynamic_switch(struct pci_dev *pdev, enum
-> >>  static inline int vga_switcheroo_init_domain_pm_ops(struct device *dev, struct dev_pm_domain *domain) { return -EINVAL; }
-> >>  static inline void vga_switcheroo_fini_domain_pm_ops(struct device *dev) {}
-> >>  static inline int vga_switcheroo_init_domain_pm_optimus_hdmi_audio(struct device *dev, struct dev_pm_domain *domain) { return -EINVAL; }
-> >> -
-> >> +static inline int vga_switcheroo_init_parent_pr3_ops(struct device *dev, struct dev_pm_domain *domain) { return -EINVAL; }
-> >>  #endif
-> >>  #endif /* _LINUX_VGA_SWITCHEROO_H_ */
-> >> --
-> >> 2.5.0
+>
+> Dave.
+>
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+>
