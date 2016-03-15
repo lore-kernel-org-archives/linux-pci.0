@@ -1,52 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41523 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750940AbcCHXKZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 8 Mar 2016 18:10:25 -0500
-Date: Tue, 8 Mar 2016 17:10:17 -0600
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 14 Mar 2016 21:36:32 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Michael Auchter <michael.auchter@ni.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: add pci_clear_master() stub for !CONFIG_PCI
-Message-ID: <20160308231017.GA11153@localhost>
-References: <1457476481-13654-1-git-send-email-michael.auchter@ni.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org, linux-pci@vger.kernel.org,
+	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
+	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
+	rjw@rjwysocki.net, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/4] acpi,pci,irq: reduce resource requirements
+Message-ID: <20160315023632.GA23940@localhost>
+References: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
+ <20160314185251.GA19703@localhost>
+ <56E7211F.3070203@codeaurora.org>
+ <20160314210147.GA11459@localhost>
+ <56E73232.9030704@codeaurora.org>
+ <20160315014843.GA16967@localhost>
+ <56E7733B.4050308@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1457476481-13654-1-git-send-email-michael.auchter@ni.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <56E7733B.4050308@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Michael,
-
-On Tue, Mar 08, 2016 at 04:34:41PM -0600, Michael Auchter wrote:
-> Add a stub for pci_clear_master() for when CONFIG_PCI is not set,
-> similar to what's done for pci_set_master().
-
-Does this fix a problem?  If so, what is it?  Some driver that doesn't
-build when CONFIG_PCI is not set?
-
-> Signed-off-by: Michael Auchter <michael.auchter@ni.com>
-> ---
->  include/linux/pci.h | 1 +
->  1 file changed, 1 insertion(+)
+On Mon, Mar 14, 2016 at 10:28:11PM -0400, Sinan Kaya wrote:
+> On 3/14/2016 9:48 PM, Bjorn Helgaas wrote:
 > 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 2771625..5f684d0 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1425,6 +1425,7 @@ static inline struct pci_dev *pci_get_class(unsigned int class,
->  #define pci_dev_put(dev)	do { } while (0)
->  
->  static inline void pci_set_master(struct pci_dev *dev) { }
-> +static inline void pci_clear_master(struct pci_dev *dev) { }
->  static inline int pci_enable_device(struct pci_dev *dev) { return -EIO; }
->  static inline void pci_disable_device(struct pci_dev *dev) { }
->  static inline int pci_set_dma_mask(struct pci_dev *dev, u64 mask)
-> -- 
-> 2.1.4
+> Yes. I was talking about PCIe on ARM64. 
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > If you go to Fry's and buy a conventional PCI card, it is going to
+> > pull INTA# low to assert an interrupt.  It doesn't matter whether you
+> > put it in an x86 system or an arm64 system.
+> 
+> I don't see INTA# of the PCIe card at the system level. The PCIe wire 
+> interrupt gets converted to the system level interrupt by the PCIe controller.
+
+That's why I said *conventional PCI*.  If you have a conventional PCI
+device below either a conventional PCI host controller or a PCIe-to-PCI
+bridge, there are real INTx wires, not virtual wires, and they are
+level/low.  But I think you pointed out the key below (that the
+Interrupt resource in a PNP0C0F device encodes the trigger type).
+
+> >> > I pasted the code here again. It looks like you want to validate that
+> >> > PCI interrupts are always level low. 
+> > I don't really care whether PCI interrupts are always level low.  What
+> > matters is that the PCI interrupt line matches the configuration of
+> > the interrupt controller input.
+> > 
+> 
+> Agreed. But the interrupt controller configuration is system specific. How would
+> you check interrupt line against what the interrupt controller requires
+> on each architecture as this is common code?
+> 
+> 
+> > If the PCI interrupt can be a different type, e.g., level high, and
+> > there's a way to discover that, we can check that against the
+> > interrupt controller configuration.
+> > 
+> > This is all in the context of conventional PCI, and we're probably
+> > talking about arm64 PCIe systems, not conventional PCI. 
+> 
+> INTx interrupts are TLP messages on PCIe as you already know. There is no INTA 
+> interrupt wire.
+
+Yes, that's why I mentioned PCIe sec 2.2.8.1 below.
+
+> "6.1.2. PCI Compatible INTx Emulation" section of the PCIe spec describes
+> INTx emulation on PCIe.
+>  ...
+> 
+> > I'm not sure what an Interrupt Link device means in PCIe.  I suppose it would have
+> > to connect an INTx virtual wire to a system interrupt?  The PCIe spec
+> > says this sort of mapping is system implementation specific (r3.0, sec
+> > 2.2.8.1).
+> 
+> The INTx messages are converted to the system interrupt by the PCIe controller.
+> The interrupt type between the PCIe controller and the ARM GIC interrupt 
+> controller is dictated by the ARM GIC Interrupt Controller Specification for
+> ARM64.
+> 
+> Here is what ACPI table looks like for reference
+> 
+> 	Name(_PRT, Package(){
+> 		Package(){0x0FFFF, 0, \_SB.LN0A, 0},  // Slot 0, INTA
+> 		Package(){0x0FFFF, 1, \_SB.LN0B, 0},  // Slot 0, INTB
+> 		Package(){0x0FFFF, 2, \_SB.LN0C, 0},  // Slot 0, INTC
+> 		Package(){0x0FFFF, 3, \_SB.LN0D, 0}   // Slot 0, INTD
+> 	}) 
+> 
+> Device(LN0A){
+> 	Name(_HID, EISAID("PNP0C0F")) // PCI interrupt link
+> 	Name(_UID, 1)
+> 	Name(_PRS, ResourceTemplate(){
+> 	Interrupt(ResourceProducer, Level, ActiveHigh, Exclusive, , ,) {0x123}
+> 	})
+
+I forgot that the link already include the trigger mode in it.  Maybe we
+can check for that instead of assuming level/low.
+
+Bjorn
