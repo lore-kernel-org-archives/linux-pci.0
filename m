@@ -1,114 +1,150 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp02.in.ibm.com ([125.16.236.2]:45260 "EHLO
-	e28smtp02.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966221AbcCPKyw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Mar 2016 06:54:52 -0400
-Received: from localhost
-	by e28smtp02.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Wed, 16 Mar 2016 16:24:48 +0530
-Subject: Re: [RFC PATCH v4 0/7] vfio-pci: Allow to mmap sub-page MMIO BARs and
- MSI-X table
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org
-References: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
-	alex.williamson@redhat.com, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Message-ID: <56E93ACC.7080403@linux.vnet.ibm.com>
-Date: Wed, 16 Mar 2016 18:51:56 +0800
-MIME-Version: 1.0
-In-Reply-To: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Felipe Balbi <balbi@kernel.org>, linux-pci@vger.kernel.org,
+	linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] pci: Add definition for USB Device Controller PCI Class ID
+Date: Tue, 15 Mar 2016 14:06:00 +0200
+Message-Id: <1458043560-133063-1-git-send-email-heikki.krogerus@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+PCI-SIG has defined Interface FEh for Base Class 0Ch,
+Sub-Class 03h as "USB Device (not host controller)". It is
+already being used in various USB device controller drivers
+for matching, so converting those to use the definition.
 
-Ping.
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+---
+ drivers/pci/quirks.c                | 2 +-
+ drivers/usb/gadget/udc/amd5536udc.c | 2 +-
+ drivers/usb/gadget/udc/goku_udc.c   | 2 +-
+ drivers/usb/gadget/udc/net2280.c    | 8 ++++----
+ drivers/usb/gadget/udc/pch_udc.c    | 8 ++++----
+ include/linux/pci_ids.h             | 1 +
+ 6 files changed, 12 insertions(+), 11 deletions(-)
 
-On 2016/3/7 15:48, Yongji Xie wrote:
-> Current vfio-pci implementation disallows to mmap
-> sub-page(size < PAGE_SIZE) MMIO BARs and MSI-X table. This is because
-> sub-page BARs' mmio page may be shared with other BARs and MSI-X table
-> should not be accessed directly from the guest for security reasons.
->
-> But these will easily cause some performance issues for mmio accesses
-> in guest when vfio passthrough sub-page BARs or BARs containing MSI-X
-> table on PPC64 platform. This is because PAGE_SIZE is 64KB by default
-> on PPC64 platform and the big page may easily hit the sub-page MMIO
-> BARs' unmmapping and cause the unmmaping of the mmio page which
-> MSI-X table locate in, which lead to mmio emulation in host.
->
-> For sub-page MMIO BARs' unmmapping, this patchset modifies
-> resource_alignment kernel parameter to enforce the alignment of all
-> MMIO BARs to be at least PAGE_SZIE so that sub-page BAR's mmio page
-> will not be shared with other BARs. Then we can mmap sub-page MMIO BARs
-> in vfio-pci driver with the modified resource_alignment.
->
-> For MSI-X table's unmmapping, we think MSI-X table is safe to access
-> directly from userspace if PCI host bridge support filtering of MSIs
-> which can ensure that a given pci device can only shoot the MSIs
-> assigned for it. So we allow to mmap MSI-X table if
-> IOMMU_CAP_INTR_REMAP was set. And we add IOMMU_CAP_INTR_REMAP for
-> IODA host bridge on PPC64 platform.
->
-> With this patchset applied, we can get almost 100% improvement on
-> performance for mmio accesses when we passthrough sub-page BARs to guest
-> in our test.
->
-> The two vfio related patches(patch 5 and patch 6) are based on the
-> proposed patchset[1].
->
-> Changelog v4:
-> - Rebase on v4.5-rc6 with patchset[1] applied.
-> - Remove resource_page_aligned kernel parameter
-> - Fix some problems with resource_alignment kernel parameter
-> - Modify resource_alignment kernel parameter to support multiple
->    devices.
-> - Remove host bridge attribute: msi_filtered
-> - Use IOMMU_CAP_INTR_REMAP to check if MSI-X table can be mmapped
-> - Add IOMMU_CAP_INTR_REMAP for IODA host bridge on PPC64 platform
->
-> Changelog v3:
-> - Rebase on new linux kernel mainline with the patchset[1] applied.
-> - Add a function to check whether PCI BARs'mmio page is shared with
->    other BARs.
-> - Add a host bridge attribute to indicate PCI host bridge support
->    filtering of MSIs.
-> - Use the new host bridge attribute to check if MSI-X table can
->    be mmapped instead of CONFIG_EEH.
-> - Remove Kconfig option VFIO_PCI_MMAP_MSIX
->
-> Changelog v2:
-> - Rebase on v4.4-rc6 with the patchset[1] applied.
-> - Use kernel parameter to enforce all MMIO BARs to be page aligned
->    on PCI core code instead of doing it on PPC64 arch code.
-> - Remove flags: VFIO_DEVICE_FLAGS_PCI_PAGE_ALIGNED
-> 		VFIO_DEVICE_FLAGS_PCI_MSIX_MMAP
-> - Add a Kconfig option to support for mmapping MSI-X table.
->
-> [1] http://www.spinics.net/lists/kvm/msg127812.html
->
-> Yongji Xie (7):
->    PCI: Add a new option for resource_alignment to reassign alignment
->    PCI: Use IORESOURCE_WINDOW to identify bridge resources
->    PCI: Ignore resource_alignment if PCI_PROBE_ONLY was set
->    PCI: Modify resource_alignment to support multiple devices
->    vfio-pci: Allow to mmap sub-page MMIO BARs if the mmio page is exclusive
->    vfio-pci: Allow to mmap MSI-X table if IOMMU_CAP_INTR_REMAP was set
->    powerpc/powernv/pci-ioda: Add IOMMU_CAP_INTR_REMAP for IODA host bridge
->
->   Documentation/kernel-parameters.txt       |    9 ++-
->   arch/powerpc/platforms/powernv/pci-ioda.c |   17 ++++
->   drivers/pci/pci.c                         |  126 ++++++++++++++++++++++++-----
->   drivers/pci/probe.c                       |    3 +-
->   drivers/pci/setup-bus.c                   |   21 ++---
->   drivers/vfio/pci/vfio_pci.c               |   15 +++-
->   drivers/vfio/pci/vfio_pci_rdwr.c          |    4 +-
->   include/linux/pci.h                       |    4 +
->   8 files changed, 162 insertions(+), 37 deletions(-)
->
-
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 4b5fd72..8e67802 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -438,7 +438,7 @@ static void quirk_amd_nl_class(struct pci_dev *pdev)
+ 	u32 class = pdev->class;
+ 
+ 	/* Use "USB Device (not host controller)" class */
+-	pdev->class = (PCI_CLASS_SERIAL_USB << 8) | 0xfe;
++	pdev->class = PCI_CLASS_SERIAL_USB_DEVICE;
+ 	dev_info(&pdev->dev, "PCI class overridden (%#08x -> %#08x) so dwc3 driver can claim this instead of xhci\n",
+ 		 class, pdev->class);
+ }
+diff --git a/drivers/usb/gadget/udc/amd5536udc.c b/drivers/usb/gadget/udc/amd5536udc.c
+index cd87641..39d70b4 100644
+--- a/drivers/usb/gadget/udc/amd5536udc.c
++++ b/drivers/usb/gadget/udc/amd5536udc.c
+@@ -3397,7 +3397,7 @@ err_pcidev:
+ static const struct pci_device_id pci_id[] = {
+ 	{
+ 		PCI_DEVICE(PCI_VENDOR_ID_AMD, 0x2096),
+-		.class =	(PCI_CLASS_SERIAL_USB << 8) | 0xfe,
++		.class =	PCI_CLASS_SERIAL_USB_DEVICE,
+ 		.class_mask =	0xffffffff,
+ 	},
+ 	{},
+diff --git a/drivers/usb/gadget/udc/goku_udc.c b/drivers/usb/gadget/udc/goku_udc.c
+index 1fdfec1..d2205d9 100644
+--- a/drivers/usb/gadget/udc/goku_udc.c
++++ b/drivers/usb/gadget/udc/goku_udc.c
+@@ -1846,7 +1846,7 @@ err:
+ /*-------------------------------------------------------------------------*/
+ 
+ static const struct pci_device_id pci_ids[] = { {
+-	.class =	((PCI_CLASS_SERIAL_USB << 8) | 0xfe),
++	.class =	PCI_CLASS_SERIAL_USB_DEVICE,
+ 	.class_mask =	~0,
+ 	.vendor =	0x102f,		/* Toshiba */
+ 	.device =	0x0107,		/* this UDC */
+diff --git a/drivers/usb/gadget/udc/net2280.c b/drivers/usb/gadget/udc/net2280.c
+index 6706aef..c894b94 100644
+--- a/drivers/usb/gadget/udc/net2280.c
++++ b/drivers/usb/gadget/udc/net2280.c
+@@ -3735,7 +3735,7 @@ static void net2280_shutdown(struct pci_dev *pdev)
+ /*-------------------------------------------------------------------------*/
+ 
+ static const struct pci_device_id pci_ids[] = { {
+-	.class =	((PCI_CLASS_SERIAL_USB << 8) | 0xfe),
++	.class =	PCI_CLASS_SERIAL_USB_DEVICE,
+ 	.class_mask =	~0,
+ 	.vendor =	PCI_VENDOR_ID_PLX_LEGACY,
+ 	.device =	0x2280,
+@@ -3743,7 +3743,7 @@ static const struct pci_device_id pci_ids[] = { {
+ 	.subdevice =	PCI_ANY_ID,
+ 	.driver_data =	PLX_LEGACY | PLX_2280,
+ 	}, {
+-	.class =	((PCI_CLASS_SERIAL_USB << 8) | 0xfe),
++	.class =	PCI_CLASS_SERIAL_USB_DEVICE,
+ 	.class_mask =	~0,
+ 	.vendor =	PCI_VENDOR_ID_PLX_LEGACY,
+ 	.device =	0x2282,
+@@ -3752,7 +3752,7 @@ static const struct pci_device_id pci_ids[] = { {
+ 	.driver_data =	PLX_LEGACY,
+ 	},
+ 	{
+-	.class =	((PCI_CLASS_SERIAL_USB << 8) | 0xfe),
++	.class =	PCI_CLASS_SERIAL_USB_DEVICE,
+ 	.class_mask =	~0,
+ 	.vendor =	PCI_VENDOR_ID_PLX,
+ 	.device =	0x3380,
+@@ -3761,7 +3761,7 @@ static const struct pci_device_id pci_ids[] = { {
+ 	.driver_data =	PLX_SUPERSPEED,
+ 	 },
+ 	{
+-	.class =	((PCI_CLASS_SERIAL_USB << 8) | 0xfe),
++	.class =	PCI_CLASS_SERIAL_USB_DEVICE,
+ 	.class_mask =	~0,
+ 	.vendor =	PCI_VENDOR_ID_PLX,
+ 	.device =	0x3382,
+diff --git a/drivers/usb/gadget/udc/pch_udc.c b/drivers/usb/gadget/udc/pch_udc.c
+index 7a04157..9571ef5 100644
+--- a/drivers/usb/gadget/udc/pch_udc.c
++++ b/drivers/usb/gadget/udc/pch_udc.c
+@@ -3234,22 +3234,22 @@ static const struct pci_device_id pch_udc_pcidev_id[] = {
+ 	{
+ 		PCI_DEVICE(PCI_VENDOR_ID_INTEL,
+ 			   PCI_DEVICE_ID_INTEL_QUARK_X1000_UDC),
+-		.class = (PCI_CLASS_SERIAL_USB << 8) | 0xfe,
++		.class = PCI_CLASS_SERIAL_USB_DEVICE,
+ 		.class_mask = 0xffffffff,
+ 	},
+ 	{
+ 		PCI_DEVICE(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_EG20T_UDC),
+-		.class = (PCI_CLASS_SERIAL_USB << 8) | 0xfe,
++		.class = PCI_CLASS_SERIAL_USB_DEVICE,
+ 		.class_mask = 0xffffffff,
+ 	},
+ 	{
+ 		PCI_DEVICE(PCI_VENDOR_ID_ROHM, PCI_DEVICE_ID_ML7213_IOH_UDC),
+-		.class = (PCI_CLASS_SERIAL_USB << 8) | 0xfe,
++		.class = PCI_CLASS_SERIAL_USB_DEVICE,
+ 		.class_mask = 0xffffffff,
+ 	},
+ 	{
+ 		PCI_DEVICE(PCI_VENDOR_ID_ROHM, PCI_DEVICE_ID_ML7831_IOH_UDC),
+-		.class = (PCI_CLASS_SERIAL_USB << 8) | 0xfe,
++		.class = PCI_CLASS_SERIAL_USB_DEVICE,
+ 		.class_mask = 0xffffffff,
+ 	},
+ 	{ 0 },
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 6d249d3..247da8c 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -110,6 +110,7 @@
+ #define PCI_CLASS_SERIAL_USB_OHCI	0x0c0310
+ #define PCI_CLASS_SERIAL_USB_EHCI	0x0c0320
+ #define PCI_CLASS_SERIAL_USB_XHCI	0x0c0330
++#define PCI_CLASS_SERIAL_USB_DEVICE	0x0c03fe
+ #define PCI_CLASS_SERIAL_FIBER		0x0c04
+ #define PCI_CLASS_SERIAL_SMBUS		0x0c05
+ 
+-- 
+2.7.0
