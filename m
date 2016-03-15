@@ -1,73 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
-To: Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bluecherry Maintainers <maintainers@bluecherrydvr.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Joe Perches <joe@perches.com>, Jiri Slaby <jslaby@suse.com>
-Cc: linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-pci@vger.kernel.org,
-	kernel-mentors@selenic.com,
-	Andrey Utkin <andrey.utkin@corp.bluecherry.net>
-Subject: [PATCH] Add tw5864 driver - cover letter
-Date: Mon, 14 Mar 2016 03:58:33 +0200
-Message-Id: <1457920713-21009-1-git-send-email-andrey.utkin@corp.bluecherry.net>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:59258 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754889AbcCOOYH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Mar 2016 10:24:07 -0400
+Subject: Re: [PATCH] Remove the inclusion of pci-bridge.h and pci-dma-compat.h
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Joao Pinto <Joao.Pinto@synopsys.com>
+References: <d3ed7b3e4f746831a5d0469da5361b4cd176f5c6.1457978659.git.jpinto@synopsys.com>
+ <20160315135127.GC19974@localhost>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-snps-arc@lists.infradead.org>, <Vineet.Gupta1@synopsys.com>,
+	<Alexey.Brodkin@synopsys.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <56E81B01.3010400@synopsys.com>
+Date: Tue, 15 Mar 2016 14:24:01 +0000
+MIME-Version: 1.0
+In-Reply-To: <20160315135127.GC19974@localhost>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a driver for multimedia devices based on Techwell/Intersil TW5864 chip.
 
-It is basically written from scratch. There was an awful reference driver for
-2.6 kernel, which is nearly million lines of code and requires half a dozen
-special userspace libraries, and still doesn't quite work. So currently
-submitted driver is a product of reverse-engineering and heuristics. tw68
-driver was used as code skeleton.
+No problem! Thanks!
 
-The device advertises many capabilities, but this version of driver only
-supports H.264 encoding of captured video channels.
+On 3/15/2016 1:51 PM, Bjorn Helgaas wrote:
+> On Tue, Mar 15, 2016 at 11:06:02AM +0000, Joao Pinto wrote:
+>> While building linux-next the test robot detected that the pci.h was including
+>> two removed header files (pci-dma-compat.h and pci-bridge.h) causing the
+>> process to fail:
+>> http://lists.infradead.org/pipermail/linux-snps-arc/2016-March/000711.html
+>>
+>> This patch has the goal to fix the build problem.
+>>
+>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> 
+> Thanks, Joao, I folded this fix into the original commit.  I should have
+> caught this myself, since I'm the one who removed pci-bridge.h.
+> 
+>> ---
+>>  arch/arc/include/asm/pci.h | 3 ---
+>>  1 file changed, 3 deletions(-)
+>>
+>> diff --git a/arch/arc/include/asm/pci.h b/arch/arc/include/asm/pci.h
+>> index 2f2011c..ba56c23 100644
+>> --- a/arch/arc/include/asm/pci.h
+>> +++ b/arch/arc/include/asm/pci.h
+>> @@ -10,9 +10,6 @@
+>>  #define _ASM_ARC_PCI_H
+>>  
+>>  #ifdef __KERNEL__
+>> -#include <asm-generic/pci-dma-compat.h>
+>> -#include <asm-generic/pci-bridge.h>
+>> -
+>>  #include <linux/ioport.h>
+>>  
+>>  #define PCIBIOS_MIN_IO 0x100
+>> -- 
+>> 1.8.1.5
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-There is one known issue, which reproduces on two of five setups of which I
-know: P-frames are distorted, but I-frames are fine. Changing quality and
-framerate settings does not affect this. Currently such workaround is used:
-
-v4l2-ctl -d /dev/video$n -c video_gop_size=1
-
-GOP size is set to 1, so that every output frame is I-frame. 
-We are regularly contacting manufacturer regarding such issues, but
-unfortunately they can do little to help us.
-
-
-Andrey Utkin (1):
-  Add tw5864 driver
-
- MAINTAINERS                                  |    7 +
- drivers/staging/media/Kconfig                |    2 +
- drivers/staging/media/Makefile               |    1 +
- drivers/staging/media/tw5864/Kconfig         |   11 +
- drivers/staging/media/tw5864/Makefile        |    3 +
- drivers/staging/media/tw5864/tw5864-bs.h     |  154 ++
- drivers/staging/media/tw5864/tw5864-config.c |  359 +++++
- drivers/staging/media/tw5864/tw5864-core.c   |  453 ++++++
- drivers/staging/media/tw5864/tw5864-h264.c   |  183 +++
- drivers/staging/media/tw5864/tw5864-reg.h    | 2200 ++++++++++++++++++++++++++
- drivers/staging/media/tw5864/tw5864-tables.h |  237 +++
- drivers/staging/media/tw5864/tw5864-video.c  | 1364 ++++++++++++++++
- drivers/staging/media/tw5864/tw5864.h        |  280 ++++
- include/linux/pci_ids.h                      |    1 +
- 14 files changed, 5255 insertions(+)
- create mode 100644 drivers/staging/media/tw5864/Kconfig
- create mode 100644 drivers/staging/media/tw5864/Makefile
- create mode 100644 drivers/staging/media/tw5864/tw5864-bs.h
- create mode 100644 drivers/staging/media/tw5864/tw5864-config.c
- create mode 100644 drivers/staging/media/tw5864/tw5864-core.c
- create mode 100644 drivers/staging/media/tw5864/tw5864-h264.c
- create mode 100644 drivers/staging/media/tw5864/tw5864-reg.h
- create mode 100644 drivers/staging/media/tw5864/tw5864-tables.h
- create mode 100644 drivers/staging/media/tw5864/tw5864-video.c
- create mode 100644 drivers/staging/media/tw5864/tw5864.h
-
--- 
-2.7.1.380.g0fea050.dirty
