@@ -1,54 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39036 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752589AbcCNPmT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Mar 2016 11:42:19 -0400
-Date: Mon, 14 Mar 2016 10:42:15 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Yong, Jonathan" <jonathan.yong@intel.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH] PCI: PTM preliminary implementation
-Message-ID: <20160314154215.GB13471@localhost>
-References: <1457681184-20439-1-git-send-email-jonathan.yong@intel.com>
- <1457681184-20439-2-git-send-email-jonathan.yong@intel.com>
- <20160311155332.GA31716@localhost>
- <56E66BF3.4080500@intel.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 15 Mar 2016 14:39:58 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Dave Airlie <airlied@gmail.com>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	dri-devel <dri-devel@lists.freedesktop.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH 1/2] vga_switcheroo: add power support for windows 10
+ machines.
+Message-ID: <20160315133958.GA27793@wunner.de>
+References: <1457504045-12738-1-git-send-email-airlied@gmail.com>
+ <2736217.utxPzJExd5@vostro.rjw.lan>
+ <20160311105815.GS1796@lahna.fi.intel.com>
+ <2759763.dR5D0KopkA@vostro.rjw.lan>
+ <CAPM=9txo4aOOa-CS-mnyQe+vYDtAOCm1bzAgfMzwJJS8ZuYmwQ@mail.gmail.com>
+ <20160314094335.GE1796@lahna.fi.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56E66BF3.4080500@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160314094335.GE1796@lahna.fi.intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 14, 2016 at 03:44:51PM +0800, Yong, Jonathan wrote:
-> On 03/11/2016 23:53, Bjorn Helgaas wrote:
-> 
-> >I haven't read the PTM spec yet so I don't know how it works.  But in
-> >general, I don't like having to tweak a setting all the way up the
-> >hierarchy based on a leaf device.  That makes it hard to handle
-> >hotplug correctly, because obviously there may be many leaf devices
-> >that share part of all of the upstream path.
-> >
-> 
-> This part in 6.22.3 in the PCIe 3.1 spec:
-> 
-> Software must not have the PTM Enable bit Set in the PTM Control
-> register on a Function associated with an Upstream Port unless the
-> associated Downstream Port on the Link already has the PTM Enable
-> bit Set in its associated PTM Control register.
-> 
-> Seems to suggest starting from the leaf device, I'm open to
-> suggestions on how to better do this.
+Hi Mika,
 
-The nomenclature is confusing, but I think you're reading this
-backwards.  An Upstream Port is on the downstream end of a Link.  The
-"Upstream" definition in the PCIe spec "Terms and Acronyms" section
-says:
+On Mon, Mar 14, 2016 at 11:43:35AM +0200, Mika Westerberg wrote:
+> On Mon, Mar 14, 2016 at 12:19:14PM +1000, Dave Airlie wrote:
+> > On 11 March 2016 at 23:45, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > > On Friday, March 11, 2016 12:58:15 PM Mika Westerberg wrote:
+> > >> On Thu, Mar 10, 2016 at 09:57:09PM +0100, Rafael J. Wysocki wrote:
+> > >> > > It doesn't seem to do any runtime PM,
+> > >> > > I do wonder if pcieport should be doing it's own runtime PM handling,
+> > >> > > but that is a
+> > >> > > larger task than I'm thinking to tackle here.
+> > >> >
+> > >> > PCIe ports don't do PM - yet.  Mika has posted a series of patches to implement
+> > >> > that, however, that are waiting for comments now:
+> > >> >
+> > >> > https://patchwork.kernel.org/patch/8453311/
+> > >> > https://patchwork.kernel.org/patch/8453381/
+> > >> > https://patchwork.kernel.org/patch/8453391/
+> > >> > https://patchwork.kernel.org/patch/8453411/
+> > >> > https://patchwork.kernel.org/patch/8453371/
+> > >> > https://patchwork.kernel.org/patch/8453351/
 
-  The Port on a Switch that is closest topologically to the Root Complex
-  is the Upstream Port. The Port on a component that contains only
-  Endpoint or Bridge Functions is an Upstream Port.
+If a pciehp port is runtime suspended and pciehp_poll_mode is enabled,
+the poll timer needs to be disabled and later reenabled on runtime resume.
 
-I think the spec is saying that PTM must be enabled in a bridge before
-it is enabled in any device downstream from the bridge.
+Don't we need to add runtime pm callbacks to struct pcie_port_service_driver
+for that, and call them from pcie_port_runtime_*()?
 
-Bjorn
+Best regards,
+
+Lukas
