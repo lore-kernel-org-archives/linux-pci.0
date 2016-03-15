@@ -1,50 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sat, 12 Mar 2016 10:39:15 +0200 (EET)
-From: Meelis Roos <mroos@linux.ee>
-To: Yinghai Lu <yinghai@kernel.org>
-cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v10 06/59] PCI: Kill wrong quirk about M7101
-In-Reply-To: <CAE9FiQWeq=VssPtW86KcOuW5rLr+t5628Fid7e4RG_R_gZ+Aaw@mail.gmail.com>
-Message-ID: <alpine.LRH.2.20.1603121039020.32556@math.ut.ee>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org> <1456366370-28995-7-git-send-email-yinghai@kernel.org> <20160310174030.GB17238@localhost> <CAE9FiQVAPfb-PYGQoRJzXdn3NAOK-X25M9pWvR2m7_9qT5qQ+w@mail.gmail.com> <alpine.LRH.2.20.1603120951320.32556@math.ut.ee>
- <CAE9FiQWeq=VssPtW86KcOuW5rLr+t5628Fid7e4RG_R_gZ+Aaw@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:55994 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934119AbcCONvc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Mar 2016 09:51:32 -0400
+Date: Tue, 15 Mar 2016 08:51:28 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-snps-arc@lists.infradead.org, Vineet.Gupta1@synopsys.com,
+	Alexey.Brodkin@synopsys.com
+Subject: Re: [PATCH] Remove the inclusion of pci-bridge.h and pci-dma-compat.h
+Message-ID: <20160315135127.GC19974@localhost>
+References: <d3ed7b3e4f746831a5d0469da5361b4cd176f5c6.1457978659.git.jpinto@synopsys.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d3ed7b3e4f746831a5d0469da5361b4cd176f5c6.1457978659.git.jpinto@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Fri, Mar 11, 2016 at 11:52 PM, Meelis Roos <mroos@linux.ee> wrote:
-> >> On Thu, Mar 10, 2016 at 9:40 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >> > On Wed, Feb 24, 2016 at 06:11:57PM -0800, Yinghai Lu wrote:
-> >> >> Meelis reported that qla2000 driver does not get loaded on one sparc system.
-> >> >>
-> >> >> schizo f00732d0: PCI host bridge to bus 0001:00
-> >> >> pci_bus 0001:00: root bus resource [io  0x7fe01000000-0x7fe01ffffff] (bus address [0x0000-0xffffff])
-> >> >> pci 0001:00:06.0: quirk: [io  0x7fe01000800-0x7fe0100083f] claimed by ali7101 ACPI
-> >> >> pci 0001:00:06.0: quirk: [io  0x7fe01000600-0x7fe0100061f] claimed by ali7101 SMB
-> >> >> pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
-> >> >>
-> >> >> So the quirk for M7101 claim the io range early.
-> >
-> > But why did it work until 4.2 and only with 4.3 the allocations broke?
-> >
+On Tue, Mar 15, 2016 at 11:06:02AM +0000, Joao Pinto wrote:
+> While building linux-next the test robot detected that the pci.h was including
+> two removed header files (pci-dma-compat.h and pci-bridge.h) causing the
+> process to fail:
+> http://lists.infradead.org/pipermail/linux-snps-arc/2016-March/000711.html
 > 
-> My understanding is we really install the root bus resource and try to
-> do the sanitary checking
-> for device resource.
+> This patch has the goal to fix the build problem.
 > 
-> Or did you find exact commit between 4.2 and 4.3 cause the problem ?
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 
-No, I have not bisected that.
+Thanks, Joao, I folded this fix into the original commit.  I should have
+caught this myself, since I'm the one who removed pci-bridge.h.
 
--- 
-Meelis Roos (mroos@linux.ee)
+> ---
+>  arch/arc/include/asm/pci.h | 3 ---
+>  1 file changed, 3 deletions(-)
+> 
+> diff --git a/arch/arc/include/asm/pci.h b/arch/arc/include/asm/pci.h
+> index 2f2011c..ba56c23 100644
+> --- a/arch/arc/include/asm/pci.h
+> +++ b/arch/arc/include/asm/pci.h
+> @@ -10,9 +10,6 @@
+>  #define _ASM_ARC_PCI_H
+>  
+>  #ifdef __KERNEL__
+> -#include <asm-generic/pci-dma-compat.h>
+> -#include <asm-generic/pci-bridge.h>
+> -
+>  #include <linux/ioport.h>
+>  
+>  #define PCIBIOS_MIN_IO 0x100
+> -- 
+> 1.8.1.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
