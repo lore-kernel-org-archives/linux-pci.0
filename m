@@ -1,47 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f169.google.com ([209.85.223.169]:33717 "EHLO
-	mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751217AbcC3MqO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2016 08:46:14 -0400
-MIME-Version: 1.0
-In-Reply-To: <20160330120644.GM20367@ibawizard.net>
-References: <m3h9fuk7ik.fsf@t19.piap.pl>
-	<20160330120644.GM20367@ibawizard.net>
-Date: Wed, 30 Mar 2016 09:45:21 -0300
-Message-ID: <CAOMZO5DK-K19bHhEpyGoVak5Y7bT-xzA9GjtBSiO6Z+yfeEdgw@mail.gmail.com>
-Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
-From: Fabio Estevam <festevam@gmail.com>
-To: =?UTF-8?Q?Petr_=C5=A0tetiar?= <ynezz@true.cz>
-Cc: =?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
-	Marcel Ziswiler <marcel.ziswiler@toradex.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Stefan Agner <stefan@agner.ch>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from e24smtp03.br.ibm.com ([32.104.18.24]:57071 "EHLO
+	e24smtp03.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933752AbcCOWzL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Mar 2016 18:55:11 -0400
+Received: from localhost
+	by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+	Tue, 15 Mar 2016 19:55:08 -0300
+Received: from d24relay02.br.ibm.com (d24relay02.br.ibm.com [9.13.184.26])
+	by d24dlp02.br.ibm.com (Postfix) with ESMTP id A830D1DC0054
+	for <linux-pci@vger.kernel.org>; Tue, 15 Mar 2016 18:54:57 -0400 (EDT)
+Received: from d24av05.br.ibm.com (d24av05.br.ibm.com [9.18.232.44])
+	by d24relay02.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u2FLtClP54984832
+	for <linux-pci@vger.kernel.org>; Tue, 15 Mar 2016 18:55:12 -0300
+Received: from d24av05.br.ibm.com (localhost [127.0.0.1])
+	by d24av05.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u2FMt18B032396
+	for <linux-pci@vger.kernel.org>; Tue, 15 Mar 2016 18:55:02 -0400
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, mpe@ellerman.id.au,
+	benh@kernel.crashing.org, paulus@samba.org, imunsie@au1.ibm.com,
+	mikey@neuling.org, andrew.donnellan@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com, bhelgaas@google.com,
+	gpiccoli@linux.vnet.ibm.com
+Subject: [PATCH v2] powerpc/pci: Assign fixed PHB number based on device-tree properties
+Date: Tue, 15 Mar 2016 19:54:41 -0300
+Message-Id: <1458082481-29916-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 30, 2016 at 9:06 AM, Petr Štetiar <ynezz@true.cz> wrote:
+The domain/PHB field of PCI addresses has its value obtained from a
+global variable, incremented each time a new domain (represented by
+struct pci_controller) is added on the system. The domain addition
+process happens during boot or due to PCI device hotplug.
 
-> I'm really puzzled by this :-) With your patch applied I get following on
-> Toradex Apalis modules:
->
->  DTS:         reset-gpio = <&gpio1 28 GPIO_ACTIVE_LOW>;
->  dmesg:       imx6q-pcie 1ffc000.pcie: phy link never came up
->  gpio:        gpio-28  (                    |reset               ) out hi
->  pin voltage: 0V
->
->  DTS:         reset-gpio = <&gpio1 28 GPIO_ACTIVE_HIGH>;
->  dmesg:       ath9k 0000:01:00.0: enabling device (0140 -> 0142)
->  gpio:        gpio-28  (                    |reset               ) out lo
->  pin voltage: 3V3
->
-> So Toradex Apalis is actually active-high? Thanks.
+As recent kernels are using predictable naming for network interfaces,
+the network stack is more tied to PCI naming. This can be a problem in
+hotplug scenarios, because PCI addresses will change if devices are
+removed and then re-added. This situation seems unusual, but it can
+happen if a user wants to replace a NIC without rebooting the machine,
+for example.
 
-Yes, exactly. That's why you need to introduce a new property to
-handle the active-high case, so that old dtb's are not broken.
+This patch changes the way PCI domain values are generated: now, we use
+device-tree properties to assign fixed PHB numbers to PCI addresses
+when available (meaning pSeries and PowerNV cases). We also use a bitmap
+to allow dynamic PHB numbering when device-tree properties are not
+used. This bitmap keeps track of used PHB numbers and if a PHB is
+released (by hotplug operations for example), it allows the reuse of
+this PHB number, avoiding PCI address to change in case of device remove
+and re-add soon after. No functional changes were introduced.
+
+Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/pci-common.c | 43 +++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 40 insertions(+), 3 deletions(-)
+
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 0f7a60f..d4217f9 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -44,8 +44,11 @@
+ static DEFINE_SPINLOCK(hose_spinlock);
+ LIST_HEAD(hose_list);
+ 
+-/* XXX kill that some day ... */
+-static int global_phb_number;		/* Global phb counter */
++/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
++#define	MAX_PHBS	8192
++
++/* For dynamic PHB numbering: used/free PHBs tracking bitmap. */
++DECLARE_BITMAP(global_phb_bitmap, MAX_PHBS);
+ 
+ /* ISA Memory physical address */
+ resource_size_t isa_mem_base;
+@@ -64,6 +67,39 @@ struct dma_map_ops *get_pci_dma_ops(void)
+ }
+ EXPORT_SYMBOL(get_pci_dma_ops);
+ 
++static int get_phb_number(struct device_node *dn)
++{
++	const __be64 *prop64;
++	const __be32 *regs;
++	int phb_id = 0;
++
++	/* try fixed PHB numbering first */
++	if (machine_is(pseries)) {
++		regs = of_get_property(dn, "reg", NULL);
++		if (regs)
++			return (int)(be32_to_cpu(regs[1]) & 0xFFFF);
++	}
++
++	else { /* maybe PowerNV? */
++		prop64 = of_get_property(dn, "ibm,opal-phbid", NULL);
++		if (prop64)
++			return (int)(be64_to_cpup(prop64) & 0xFFFF);
++	}
++
++	/* dynamic PHB numbering mechanism */
++	while ((phb_id < MAX_PHBS) && test_bit(phb_id, global_phb_bitmap))
++		phb_id++;
++
++	BUG_ON(phb_id >= MAX_PHBS); /* reached maximum number of PHBs */
++	set_bit(phb_id, global_phb_bitmap);
++	return phb_id;
++}
++
++static void release_phb_number(int phb_id)
++{
++	clear_bit(phb_id, global_phb_bitmap);
++}
++
+ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
+ {
+ 	struct pci_controller *phb;
+@@ -72,7 +108,7 @@ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
+ 	if (phb == NULL)
+ 		return NULL;
+ 	spin_lock(&hose_spinlock);
+-	phb->global_number = global_phb_number++;
++	phb->global_number = get_phb_number(dev);
+ 	list_add_tail(&phb->list_node, &hose_list);
+ 	spin_unlock(&hose_spinlock);
+ 	phb->dn = dev;
+@@ -94,6 +130,7 @@ EXPORT_SYMBOL_GPL(pcibios_alloc_controller);
+ void pcibios_free_controller(struct pci_controller *phb)
+ {
+ 	spin_lock(&hose_spinlock);
++	release_phb_number(phb->global_number);
+ 	list_del(&phb->list_node);
+ 	spin_unlock(&hose_spinlock);
+ 
+-- 
+2.1.0
+
