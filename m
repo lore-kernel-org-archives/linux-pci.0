@@ -1,151 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51568 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.136]:54948 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753739AbcCAOl7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Mar 2016 09:41:59 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	David Daney <david.daney@cavium.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Russell King <linux@arm.linux.org.uk>
-Subject: [PATCH v2 1/3] drivers: pci: add generic code to claim bus resources
-Date: Tue,  1 Mar 2016 14:44:07 +0000
-Message-Id: <1456843449-19393-2-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1456843449-19393-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1456843449-19393-1-git-send-email-lorenzo.pieralisi@arm.com>
+	id S1750817AbcCONgN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Mar 2016 09:36:13 -0400
+Date: Tue, 15 Mar 2016 08:36:05 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Yong, Jonathan" <jonathan.yong@intel.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH] PCI: PTM preliminary implementation
+Message-ID: <20160315133605.GA19974@localhost>
+References: <1457681184-20439-1-git-send-email-jonathan.yong@intel.com>
+ <1457681184-20439-2-git-send-email-jonathan.yong@intel.com>
+ <20160311155332.GA31716@localhost>
+ <56E66BF3.4080500@intel.com>
+ <20160314154215.GB13471@localhost>
+ <56E7C771.6060700@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56E7C771.6060700@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+On Tue, Mar 15, 2016 at 04:27:29PM +0800, Yong, Jonathan wrote:
+> On 03/14/2016 23:42, Bjorn Helgaas wrote:
+> >
+> >The nomenclature is confusing, but I think you're reading this
+> >backwards.  An Upstream Port is on the downstream end of a Link.  The
+> >"Upstream" definition in the PCIe spec "Terms and Acronyms" section
+> >says:
+> >
+> >   The Port on a Switch that is closest topologically to the Root Complex
+> >   is the Upstream Port. The Port on a component that contains only
+> >   Endpoint or Bridge Functions is an Upstream Port.
+> >
+> >I think the spec is saying that PTM must be enabled in a bridge before
+> >it is enabled in any device downstream from the bridge.
+> >
+> 
+> Thanks for the explanation, looks like back to the drawing board. Do
+> you recommend using pci_walk_bus on all potential PTM masters?
 
-PCI core code contains a set of functions, eg:
+No, I try to avoid using pci_walk_bus().  I would try something like this
+in the pci_init_capabilities() path:
 
-pci_assign_unassigned_bus_resources()
+  pci_ptm_init(struct pci_dev *dev)
+  {
+    if (!pci_find_ext_capability(dev, PCI_EXT_CAP_ID_PTM))
+      return;
 
-that allow to assign the PCI resources for a given bus after
-enumeration.
+    type = pci_pcie_type(dev);
+    if (type == PCI_EXP_TYPE_ENDPOINT || type == PCI_EXP_TYPE_RC_END) {
+      if (pci_upstream_bridge(dev)->ptm_enabled)
+	enable_ptm(dev);
+	return;
+    }
 
-On systems where the PCI BARs are immutable (ie they must not and can
-not be assigned), PCI bus resources should still be inserted in the PCI
-resources tree (even if they are not (re)-assigned), but there is
-no generic PCI kernel function for that purpose. Currently the PCI bus
-resources insertion in the resources tree is implemented in an arch
-specific fashion through arch specific callbacks that rely on the PCI
-resources claiming API (for bridges and devices) which resulted in arches
-implementations that contain duplicated code to claim resources for a
-given PCI bus hierarchy.
+    if (type == PCI_EXP_TYPE_DOWNSTREAM) {
+      dev->ptm_enabled = pci_upstream_bridge(dev)->ptm_enabled;
+      return;
+    }
 
-This patch, based on the x86/ia64 resources claiming arch implementations,
-implements a set of functions in core PCI code that provides a PCI core
-interface for resources claiming for a given PCI bus hierarchy, paving
-the way for further resource claiming consolidation across architectures.
+    enable_ptm(dev);
+    dev_info(&dev->dev, "PTM enabled, root, granularity, etc...")
+  }
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 68 +++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h     |  1 +
- 2 files changed, 69 insertions(+)
+I've only skimmed the PTM spec, so this is just a brief and incomplete
+sketch.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7796d0a..95f0906 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1424,6 +1424,74 @@ void pci_bus_assign_resources(const struct pci_bus *bus)
- }
- EXPORT_SYMBOL(pci_bus_assign_resources);
- 
-+static void pci_claim_device_resources(struct pci_dev *dev)
-+{
-+	int i;
-+
-+	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
-+		struct resource *r = &dev->resource[i];
-+
-+		if (!r->flags || r->parent)
-+			continue;
-+
-+		pci_claim_resource(dev, i);
-+	}
-+}
-+
-+static void pci_claim_bridge_resources(struct pci_dev *dev)
-+{
-+	int i;
-+
-+	for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
-+		struct resource *r = &dev->resource[i];
-+
-+		if (!r->flags || r->parent)
-+			continue;
-+
-+		pci_claim_bridge_resource(dev, i);
-+	}
-+}
-+
-+static void pci_bus_allocate_dev_resources(struct pci_bus *b)
-+{
-+	struct pci_dev *dev;
-+	struct pci_bus *child;
-+
-+	list_for_each_entry(dev, &b->devices, bus_list) {
-+		pci_claim_device_resources(dev);
-+
-+		child = dev->subordinate;
-+		if (child)
-+			pci_bus_allocate_dev_resources(child);
-+	}
-+}
-+
-+static void pci_bus_allocate_resources(struct pci_bus *b)
-+{
-+	struct pci_bus *child;
-+
-+	/*
-+	 * Carry out a depth-first search on the PCI bus
-+	 * tree to allocate bridge apertures. Read the
-+	 * programmed bridge bases and recursively claim
-+	 * the respective bridge resources.
-+	 */
-+	if (b->self) {
-+		pci_read_bridge_bases(b);
-+		pci_claim_bridge_resources(b->self);
-+	}
-+
-+	list_for_each_entry(child, &b->children, node)
-+		pci_bus_allocate_resources(child);
-+}
-+
-+void pci_bus_claim_resources(struct pci_bus *b)
-+{
-+	pci_bus_allocate_resources(b);
-+	pci_bus_allocate_dev_resources(b);
-+}
-+EXPORT_SYMBOL(pci_bus_claim_resources);
-+
- static void __pci_bridge_assign_resources(const struct pci_dev *bridge,
- 					  struct list_head *add_head,
- 					  struct list_head *fail_head)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2771625..e66eba7 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1102,6 +1102,7 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
- /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
- resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
- void pci_bus_assign_resources(const struct pci_bus *bus);
-+void pci_bus_claim_resources(struct pci_bus *bus);
- void pci_bus_size_bridges(struct pci_bus *bus);
- int pci_claim_resource(struct pci_dev *, int);
- int pci_claim_bridge_resource(struct pci_dev *bridge, int i);
--- 
-2.5.1
-
+Bjorn
