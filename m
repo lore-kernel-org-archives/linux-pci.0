@@ -1,164 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:37176 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751496AbcCARFB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 1 Mar 2016 12:05:01 -0500
-Subject: Re: [PATCH v2] PCI: keystone: fix msi code that retrieves the pp
- struct ptr
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1456761113-8416-1-git-send-email-m-karicheri2@ti.com>
- <20160229232034.GF3653@localhost>
-CC: <linux-pci@vger.kernel.org>, <gregkh@linuxfoundation.org>,
-	<bhelgaas@google.com>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-kernel@vger.kernel.org>, Zhou Wang <wangzhou1@hisilicon.com>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Message-ID: <56D5CB8E.1090709@ti.com>
-Date: Tue, 1 Mar 2016 12:04:14 -0500
+Received: from mail.kernel.org ([198.145.29.136]:56691 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750833AbcCOOEf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 15 Mar 2016 10:04:35 -0400
+Date: Tue, 15 Mar 2016 09:04:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Roberto Fichera <kernel@tekno-soft.it>
+Cc: Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <hongxing.zhu@nxp.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Fabio Estevam <festevam@gmail.com>
+Subject: Re: iMX6q PCIe phy link never came up on kernel v4.4.x
+Message-ID: <20160315140431.GE19974@localhost>
+References: <56D80435.90408@tekno-soft.it>
+ <DBXPR04MB2702F4BC78FA28DC82DCA218CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
+ <56D8180A.1050708@tekno-soft.it>
+ <56D84B6D.1050800@tekno-soft.it>
+ <56D883AD.5060601@tekno-soft.it>
+ <56DEE426.8030902@tekno-soft.it>
+ <1457448829.3207.22.camel@pengutronix.de>
+ <56E1B04A.9010206@tekno-soft.it>
+ <56E679FE.20409@tekno-soft.it>
+ <56E7ED1E.3070506@tekno-soft.it>
 MIME-Version: 1.0
-In-Reply-To: <20160229232034.GF3653@localhost>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56E7ED1E.3070506@tekno-soft.it>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/29/2016 06:20 PM, Bjorn Helgaas wrote:
-> [-cc stable, +cc Zhou]
+On Tue, Mar 15, 2016 at 12:08:14PM +0100, Roberto Fichera wrote:
+> On 03/14/2016 09:44 AM, Roberto Fichera wrote:
+> > On 03/10/2016 06:35 PM, Roberto Fichera wrote:
+> >> > On 03/08/2016 03:53 PM, Lucas Stach wrote:
+> >>> >> Am Dienstag, den 08.03.2016, 15:39 +0100 schrieb Roberto Fichera:
+> >>>>> >>>> On 03/03/2016 07:34 PM, Roberto Fichera wrote:
+> >>>>>>> >>>>>> On 03/03/2016 03:34 PM, Roberto Fichera wrote:
+> >>>>>>> >>>>>>
+> >>>>>>> >>>>>> I've also checked clock, pll, PMU_MISC1 and CCGR[45] registers, all looks fine
+> >>>>>>> >>>>>> and exactly equal to uboot settings.
+> >>>>>>> >>>>>>
+> >>>>>>> >>>>>> However I'm investigating a possible HW issue in the LDVS pad wiring against
+> >>>>>>> >>>>>> the bridge XIO2001. Let's see once this is also clarified.
+> >>>>> >>>> Our HW engineer has applied a fix to LVDS vs XIO2001 clock wiring. However I'm still getting the same problem.
+> >>>>> >>>>
+> >>>>> >>>> I've tried to boot a kernel with uboot not setting up the PCIe subsys and below there is the resulting kernel log.
+> >>>>> >>>> Note that the CCGR5 doesn't set the CG2 field associated to sata_clk_enable. I think this field should be set all 1 to
+> >>>>> >>>> enable the SATA ref at 100MHz, right?
+> >>>>> >>>>
+> >>> >> No, the reference manual is a bit confusing about this, but the LVDS1
+> >>> >> clock output is driven by sata_ref_100mhz, not the sata_clk gate.
+> >>> >>
+> >>> >> So the only thing that needs to be enabled for LVDS clock output is the
+> >>> >> 100MHz clock output from PLL ENET. (Register CCM_ANALOG_PLL_ENETn bit
+> >>> >> 20).
+> >> > Guys! No more idea where to look at! Still getting PCIe link reaching L0 state under
+> >> > uboot but doesn't progress more than POLL_ACTIVE or POLL_COMPLIANCE states
+> >> > under kernel.
+> >> >
+> >> > Any idea what to do?
 > 
-> On Mon, Feb 29, 2016 at 10:51:53AM -0500, Murali Karicheri wrote:
->> Recent update to pcie-designware core driver, 
->> 'commit cbce7900598c ("PCI: designware: Make driver arch-agnostic")'
->> broke the keystone PCI driver. After this commit, we see a kernel crash on
->> Keystone SoC as shown below in the boot log. This is because, the way pp
->> struct ptr is retrieved from  msi desc has changed and require similar
->> update in pci-keystone-dw.c as well. This patch fixes this issue. 
->>
->> [    1.012999] pci 0000:00:00.0: PCI bridge to [bus 01]
->> [    1.018073] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
->> [    1.024308] pci 0000:00:00.0:   bridge window [mem 0x60000000-0x600fffff]
->> [    1.031216] pci 0000:00:00.0:   bridge window [mem 0x60100000-0x601fffff
->> pref]
->> [    1.038736] Unable to handle kernel NULL pointer dereference at virtual
->> address 00000030
->> [    1.046950] pgd = c0003000
->> [    1.049750] [00000030] *pgd=80000800004003, *pmd=00000000
->> [    1.055265] Internal error: Oops: 206 [#1] PREEMPT SMP ARM
->> [    1.060860] Modules linked in:
->> [    1.064013] CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.4.2-00139-gb74f926 #2
->> [    1.071266] Hardware name: Keystone
->> [    1.074853] task: eb888000 ti: eb890000 task.ti: eb890000
->> [    1.080364] PC is at ks_dw_pcie_msi_irq_unmask+0x24/0x58
->> [    1.085785] LR is at ks_dw_pcie_msi_irq_unmask+0x18/0x58
->> [    1.091206] pc : [<c02f65c8>]    lr : [<c02f65bc>]    psr: 60000093
->> [    1.091206] sp : eb891bc8  ip : 00000000  fp : ebb15010
->> [    1.102915] r10: 00000051  r9 : 60000013  r8 : ebafaa20
->> [    1.108247] r7 : ebaa9f80  r6 : eb9fd0c0  r5 : ebafa9d0  r4 : ebafa9c0
->> [    1.114889] r3 : 00000051  r2 : 00000000  r1 : 00000001  r0 : ebb14c18
->> [    1.121533] Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment
->> kernel
->> [    1.129049] Control: 30c5387d  Table: 00003000  DAC: fffffffd
->> [    1.134905] Process swapper/0 (pid: 1, stack limit = 0xeb890210)
->> [    1.141023] Stack: (0xeb891bc8 to 0xeb892000)
->>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: <stable@vger.kernel.org> # 4.4.x
->> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-> 
-> This fixes a regression, so I applied this to for-linus for v4.5, with
-> changelog as follows:
-> 
-Thanks Bjorn,
+> Just to say that I've fixed the problem by asserting PERST before to drop PCIe refclk and enable
+> power down. PERST is finally released at the usual place.
 
-Regards,
+Glad to hear that.
 
-Murali
-> commit 79e3f4a853ed161cd4c06d84b50beebf961a47c6
-> Author: Murali Karicheri <m-karicheri2@ti.com>
-> Date:   Mon Feb 29 17:18:22 2016 -0600
-> 
->     PCI: keystone: Fix MSI code that retrieves struct pcie_port pointer
->     
->     Commit cbce7900598c ("PCI: designware: Make driver arch-agnostic") changed
->     the host bridge sysdata pointer from the ARM pci_sys_data to the DesignWare
->     pcie_port structure, and changed pcie-designware.c to reflect that.  But it
->     did not change the corresponding code in pci-keystone-dw.c, so it caused
->     crashes on Keystone:
->     
->       Unable to handle kernel NULL pointer dereference at virtual address 00000030
->       pgd = c0003000
->       [00000030] *pgd=80000800004003, *pmd=00000000
->       Internal error: Oops: 206 [#1] PREEMPT SMP ARM
->       CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.4.2-00139-gb74f926 #2
->       Hardware name: Keystone
->       PC is at ks_dw_pcie_msi_irq_unmask+0x24/0x58
->     
->     Change pci-keystone-dw.c to expect sysdata to be the struct pcie_port
->     pointer.
->     
->     [bhelgaas: changelog]
->     Fixes: cbce7900598c ("PCI: designware: Make driver arch-agnostic")
->     Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     CC: stable@vger.kernel.org	# v4.4+
->     CC: Zhou Wang <wangzhou1@hisilicon.com>
-> 
->> ---
->>  v2 - Looks like I missed the fix version format for stable.
->>       Fixed it per best of my knowledge.
->>  v1 - Resending as per stable submission procedure
->>  drivers/pci/host/pci-keystone-dw.c | 11 +++--------
->>  1 file changed, 3 insertions(+), 8 deletions(-)
->>
->> diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
->> index ed34c95..6153853 100644
->> --- a/drivers/pci/host/pci-keystone-dw.c
->> +++ b/drivers/pci/host/pci-keystone-dw.c
->> @@ -58,11 +58,6 @@
->>  
->>  #define to_keystone_pcie(x)	container_of(x, struct keystone_pcie, pp)
->>  
->> -static inline struct pcie_port *sys_to_pcie(struct pci_sys_data *sys)
->> -{
->> -	return sys->private_data;
->> -}
->> -
->>  static inline void update_reg_offset_bit_pos(u32 offset, u32 *reg_offset,
->>  					     u32 *bit_pos)
->>  {
->> @@ -108,7 +103,7 @@ static void ks_dw_pcie_msi_irq_ack(struct irq_data *d)
->>  	struct pcie_port *pp;
->>  
->>  	msi = irq_data_get_msi_desc(d);
->> -	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
->> +	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
->>  	ks_pcie = to_keystone_pcie(pp);
->>  	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
->>  	update_reg_offset_bit_pos(offset, &reg_offset, &bit_pos);
->> @@ -146,7 +141,7 @@ static void ks_dw_pcie_msi_irq_mask(struct irq_data *d)
->>  	u32 offset;
->>  
->>  	msi = irq_data_get_msi_desc(d);
->> -	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
->> +	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
->>  	ks_pcie = to_keystone_pcie(pp);
->>  	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
->>  
->> @@ -167,7 +162,7 @@ static void ks_dw_pcie_msi_irq_unmask(struct irq_data *d)
->>  	u32 offset;
->>  
->>  	msi = irq_data_get_msi_desc(d);
->> -	pp = sys_to_pcie(msi_desc_to_pci_sysdata(msi));
->> +	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
->>  	ks_pcie = to_keystone_pcie(pp);
->>  	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
->>  
->> -- 
->> 1.9.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> [    0.237473] PCI host bridge /soc/pcie@0x01000000 ranges:
+> [    0.237494]   No bus range found for /soc/pcie@0x01000000, using [bus 00-ff]
+> [    0.237545]   err 0x01f00000..0x01f7ffff -> 0x01f00000
+> [    0.237585]    IO 0x01f80000..0x01f8ffff -> 0x00000000
+> [    0.237671]   MEM 0x01000000..0x01efffff -> 0x01000000
+> [    0.353847] imx6q-pcie 1ffc000.pcie: Link: Gen2 disabled
+> [    0.353866] imx6q-pcie 1ffc000.pcie: Link up, Gen=1
+> [    0.354441] imx6q-pcie 1ffc000.pcie: PCI host bridge to bus 0000:00
+> [    0.354465] pci_bus 0000:00: root bus resource [bus 00-ff]
+> [    0.354483] pci_bus 0000:00: root bus resource [??? 0x01f00000-0x01f7ffff flags 0x0]
 
+Looks like some kind of bug here.
 
--- 
-Murali Karicheri
-Linux Kernel, Keystone
+> [    0.354499] pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+> [    0.354513] pci_bus 0000:00: root bus resource [mem 0x01000000-0x01efffff]
+> [    0.354640] pci 0000:00:00.0: [16c3:abcd] type 01 class 0x060400
+> [    0.354707] pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x000fffff]
+> [    0.354745] pci 0000:00:00.0: reg 0x38: [mem 0x00000000-0x0000ffff pref]
+> [    0.354932] pci 0000:00:00.0: supports D1
+> [    0.354952] pci 0000:00:00.0: PME# supported from D0 D1 D3hot D3cold
+> [    0.355713] PCI: bus0: Fast back to back transfers disabled
+> [    0.356139] pci 0000:01:00.0: [104c:8240] type 01 class 0x060400
+> [    0.356688] pci 0000:01:00.0: supports D1 D2
+> [    0.369318] PCI: bus1: Fast back to back transfers disabled
+
+What an anachronism to see these "Fast back to back transfers"
+messages on a PCIe system where Fast Back-to-Back is meaningless.
+That code in pcibios_fixup_bus() was always generic code that should
+have been in the PCI core rather than in arch-specific code.  It'd be nice
+if somebody would clean that up someday.
+
+Bjorn
