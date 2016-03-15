@@ -1,110 +1,163 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:34301 "EHLO
-	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932608AbcCPWM6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Mar 2016 18:12:58 -0400
-Received: by mail-io0-f176.google.com with SMTP id m184so77012027iof.1
-        for <linux-pci@vger.kernel.org>; Wed, 16 Mar 2016 15:12:57 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 15 Mar 2016 12:29:09 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jack Coulter <jscinoz@jscinoz.so>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "Rafael J. Wysocki" <rafael@kernel.org>
+Subject: Re: Thunderbolt 3 (Skylake / Alpine Ridge) hotplug
+Message-ID: <20160315172909.GF19974@localhost>
+References: <56D0085B.60402@jscinoz.so>
 MIME-Version: 1.0
-In-Reply-To: <CAJ+vNU1TxqEfjH6jPLnStDuYTjHvt6TxFbe+QN2O5aVqwr1-Tg@mail.gmail.com>
-References: <56D5E3DF.9030906@tekno-soft.it>
-	<56D71F27.7070708@tekno-soft.it>
-	<20160302195634.GA19223@localhost>
-	<DBXPR04MB2706C7C2FD2348D205331998CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
-	<56D80435.90408@tekno-soft.it>
-	<DBXPR04MB2702F4BC78FA28DC82DCA218CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
-	<56D8180A.1050708@tekno-soft.it>
-	<56D84B6D.1050800@tekno-soft.it>
-	<56D883AD.5060601@tekno-soft.it>
-	<56DEE426.8030902@tekno-soft.it>
-	<1457448829.3207.22.camel@pengutronix.de>
-	<56E1B04A.9010206@tekno-soft.it>
-	<56E679FE.20409@tekno-soft.it>
-	<56E7ED1E.3070506@tekno-soft.it>
-	<CAOMZO5C9H92mMqTPiOwMYhywBCyQuXQen3Vw==ELE-ppTtogqg@mail.gmail.com>
-	<56E81C56.8060404@tekno-soft.it>
-	<CAOMZO5C0rvszTg0bPoSnT5zzL8EC2Vk1PVDJgB1m1FREy9ncaQ@mail.gmail.com>
-	<CAJ+vNU1TxqEfjH6jPLnStDuYTjHvt6TxFbe+QN2O5aVqwr1-Tg@mail.gmail.com>
-Date: Wed, 16 Mar 2016 19:12:57 -0300
-Message-ID: <CAOMZO5AV9Njwv2iVPLoZZfJg5rSiu4qGDf4P3w8grVNqk6RCrA@mail.gmail.com>
-Subject: Re: iMX6q PCIe phy link never came up on kernel v4.4.x
-From: Fabio Estevam <festevam@gmail.com>
-To: Tim Harvey <tharvey@gateworks.com>
-Cc: Roberto Fichera <kernel@tekno-soft.it>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <hongxing.zhu@nxp.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56D0085B.60402@jscinoz.so>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 16, 2016 at 6:33 PM, Tim Harvey <tharvey@gateworks.com> wrote:
+[+cc Rafael, linux-acpi]
 
-> Fabio,
->
-> The board combination I have where an XIO2001 is connected directly to
-> an IMX6 is a bit different from Roberto's setup. In our configuration
-> the XIO2001 is on an 'expansion' board that its own local PCI clock
-> generation. So, in my case the XIO2001 always has a valid clock
-> before/during/after its reset. This is different from Roberto's
-> scenario. I do recall running into an issue with the XIO2001 on
-> another product with a different host controller that had to do with
-> noise on the clk prior to its reset being asserted so I am not too
-> surprised at what Roberto has found.
->
-> I don't specifically see an issue with a change that asserts PCI_RST#
-> before the CLK gets enabled then de-asserts it after at least 100ms
-> has expired from clock enable - I think that actually follows the
-> specs wording closer than what we currently do (turning o the clock
-> prior to assert/de-assert reset). However I get very nervous at any
-> change to the IMX6 PCIe init. We have found it to be very finicky
-> because of the lack of a proper reset.
+Hi Jack,
 
-Would this be the minimal change to get Roberto's setup working with 4.5?
+On Fri, Feb 26, 2016 at 07:10:03PM +1100, Jack Coulter wrote:
+> 
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA256
+> 
+> Hi Andreas,
+> 
+> I was asking around on #linux-pci on OFTC and it was mentioned that you
+> were the maintainer for Linux Thunderbolt support, and that I should
+> direct my query to you and the linux-pci & linux-kernel lists.
+> 
+> I'm attempting to use the Thunderbolt 3 (which has a USB Type-C
+> connector) port on my laptop, a Dell XPS 15 (9550). The external device
+> I'm attempting to use is a gigabit ethernet + USB 3.0 hub, of an unknown
+> / generic brand, but bears model number KY-688 if that's of any use.
+> 
+> When the device is present at system startup, everything works
+> correctly, and shows up in lspci as a USB controller, which lsusb shows
+> having a hub and ethernet NIC attached, which the r8152 driver binds and
+> uses without issue:
+> 
+> lspci -v:
+> > 0a:00.0 USB controller: Intel Corporation Device 15b5 (prog-if 30 [XHCI])
+> >     Subsystem: Device 2222:1111
+> >     Flags: bus master, fast devsel, latency 0, IRQ 131
+> >     Memory at c4200000 (32-bit, non-prefetchable) [size=64K]
+> >     Capabilities: [80] Power Management version 3
+> >     Capabilities: [88] MSI: Enable+ Count=1/8 Maskable- 64bit+
+> >     Capabilities: [c0] Express Endpoint, MSI 00
+> >     Capabilities: [100] Device Serial Number a3-21-b5-60-a7-23-04-00
+> >     Capabilities: [200] Advanced Error Reporting
+> >     Capabilities: [300] Virtual Channel
+> >     Capabilities: [400] Power Budgeting <?>
+> >     Capabilities: [500] Vendor Specific Information: ID=1234 Rev=1
+> Len=0d8 <?>
+> >     Capabilities: [600] Latency Tolerance Reporting
+> >     Capabilities: [700] #19
+> >     Kernel driver in use: xhci_hcd
+> 
+> 
+> lspci -tv (Thunderbolt device is 15b5)
+> > -[0000:00]-+-00.0  Intel Corporation Sky Lake Host Bridge/DRAM Registers
+> >            +-01.0-[01]----00.0  NVIDIA Corporation GM107M [GeForce GTX
+> 960M]
+> >            +-02.0  Intel Corporation Device 191b
+> >            +-04.0  Intel Corporation Device 1903
+> >            +-14.0  Intel Corporation Sunrise Point-H USB 3.0 xHCI
+> Controller
+> >            +-14.2  Intel Corporation Sunrise Point-H Thermal subsystem
+> >            +-15.0  Intel Corporation Sunrise Point-H LPSS I2C
+> Controller #0
+> >            +-15.1  Intel Corporation Sunrise Point-H LPSS I2C
+> Controller #1
+> >            +-16.0  Intel Corporation Sunrise Point-H CSME HECI #1
+> >            +-1c.0-[02]----00.0  Broadcom Corporation BCM43602 802.11ac
+> Wireless LAN SoC
+> >            +-1c.1-[03]----00.0  Realtek Semiconductor Co., Ltd. Device
+> 525a
+> >            +-1d.0-[04]----00.0  Samsung Electronics Co Ltd Device a802
+> >            +-1d.4-[05]--
+> >            +-1d.6-[06-3e]----00.0-[07-0a]--+-00.0-[08]--
+> >            |                               +-01.0-[09]--
+> >            |                               \-02.0-[0a]----00.0  Intel
+> Corporation Device 15b5
+> >            +-1f.0  Intel Corporation Sunrise Point-H LPC Controller
+> >            +-1f.2  Intel Corporation Sunrise Point-H PMC
+> >            +-1f.3  Intel Corporation Sunrise Point-H HD Audio
+> >            \-1f.4  Intel Corporation Sunrise Point-H SMBus
+> 
+> lsusb -tv:
+> > /:  Bus 04.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/2p, 5000M
+> >     |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/4p, 5000M
+> >         |__ Port 1: Dev 3, If 0, Class=Vendor Specific Class,
+> Driver=r8152, 5000M
+> > /:  Bus 03.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/2p, 480M
+> >     |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/4p, 480M
+> >         |__ Port 3: Dev 3, If 0, Class=Human Interface Device,
+> Driver=usbhid, 12M
+> >         |__ Port 3: Dev 3, If 1, Class=Human Interface Device,
+> Driver=usbhid, 12M
+> >         |__ Port 3: Dev 3, If 2, Class=Human Interface Device,
+> Driver=usbhid, 12M
+> >         |__ Port 3: Dev 3, If 3, Class=Human Interface Device,
+> Driver=usbhid, 12M
+> > /:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/8p, 5000M
+> > /:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/16p, 480M
+> >     |__ Port 4: Dev 2, If 0, Class=Vendor Specific Class,
+> Driver=btusb, 12M
+> >     |__ Port 4: Dev 2, If 1, Class=Vendor Specific Class,
+> Driver=btusb, 12M
+> >     |__ Port 4: Dev 2, If 2, Class=Vendor Specific Class,
+> Driver=btusb, 12M
+> >     |__ Port 4: Dev 2, If 3, Class=Application Specific Interface,
+> Driver=, 12M
+> >     |__ Port 12: Dev 3, If 0, Class=Video, Driver=uvcvideo, 480M
+> >     |__ Port 12: Dev 3, If 1, Class=Video, Driver=uvcvideo, 480M
+> 
+> 
+> However, if the device is connected after the system boots (or
+> disconnected and reconnected), it is not detected at all. No messages
+> show up in dmesg upon connection and no additional devices show up in
+> the output of lspci & lsusb. Strangely enough, USB devices connected to
+> the external hub do still receive power.
+> 
+> I also have the following options relating to PCI hotplug set in my
+> kernel config:
+> 
+> > CONFIG_HOTPLUG_PCI_PCIE=y
+> > CONFIG_HOTPLUG_PCI=y
+> > CONFIG_HOTPLUG_PCI_ACPI=y
+> > CONFIG_HOTPLUG_PCI_ACPI_IBM=y
+> 
+> I'm running the 4.4.2 kernel, booted via EFI. From what I've read,
+> Thunderbolt hotplug has been working since 3.17, controlled by the
+> CONFIG_THUNDERBOLT option. However regardless of whether this option is
+> enabled or disabled, hotplug does not appeare to work on my hardware.
+> From reading the in-kernel help text for this option, I suspect that
+> it's only relevant for the older Cactus Ridge Thunderbolt controller
+> present in 2012-era MacBooks.
 
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -232,6 +232,15 @@ static int imx6_pcie_assert_core_reset(struct
-pcie_port *pp)
-        u32 val, gpr1, gpr12;
+Can you open a report at http://bugzilla.kernel.org, category
+drivers/PCI, and attach complete "lspci -vv" output (run as root) and
+complete dmesg logs, both when hub is attached at boot, and when
+booting without hub and attaching hub later?
 
-        /*
-+        * Some PCI bridges such as TI XIO2001 require PERST to be
-+        * asserted before enabling the PCIe ref_clk, otherwise it will
-+        * get "confused" and the PCIe link state will stuck in POLL_STATE
-+        */
-+
-+       if (gpio_is_valid(imx6_pcie->reset_gpio))
-+               gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 0);
-+
-+       /*
-         * If the bootloader already enabled the link we need some special
-         * handling to get the core back into a state where it is safe to
-         * touch it for configuration.  As there is no dedicated reset signal
-@@ -305,7 +314,6 @@ static int imx6_pcie_deassert_core_reset(struct
-pcie_port *pp)
+I don't know much about Thunderbolt.  But since it appears as a PCI
+device, I would expect some sort of hotplug notification when you
+attach the hub.  If pciehp handles hotplug, it looks like we should
+see something from pcie_isr() in the dmesg log.
 
-        /* Some boards don't have PCIe reset GPIO. */
-        if (imx6_pcie->reset_gpio) {
--               gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 0);
-                msleep(100);
-                gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
-        }
+Since you don't see that, I suspect we're getting ACPI notifications
+via the acpiphp driver.  I'm not as familiar with that, so I don't
+know what if anything it logs.  If you're inclined, you could add some
+printks in
 
-> Roberto,
->
-> Did you require the changes regarding Gen2 negotiation? My
-> IMX6+XIO2001 links reliably at Gen1 which makes sense for that chip.
+  acpiphp_add_context()
+  acpi_device_hotplug()
+  acpiphp_hotplug_notify()
+  hotplug_event()
 
-Yes, it would be nice if Roberto could clarify if the Gen2 changes are
-needed or not.
+Then we'd at least see if we get any ACPI notifications.
 
-Also, is this change also really required?
-
-     regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-             IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
-+    udelay(10);
-     regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-             IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
+Bjorn
