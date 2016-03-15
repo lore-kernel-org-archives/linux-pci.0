@@ -1,52 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f182.google.com ([209.85.223.182]:33706 "EHLO
-	mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243AbcCaSvt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Mar 2016 14:51:49 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 15 Mar 2016 21:47:41 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Dave Airlie <airlied@gmail.com>
+Cc: dri-devel <dri-devel@lists.freedesktop.org>,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/2] nouveau: use new vga_switcheroo power domain.
+Message-ID: <20160315204741.GC27934@wunner.de>
+References: <1457504045-12738-1-git-send-email-airlied@gmail.com>
+ <1457504045-12738-2-git-send-email-airlied@gmail.com>
+ <20160309144047.GB26158@wunner.de>
+ <CAPM=9txfEOoXLr35qEMQrpfMdDf_rCyUx0pQoC4HbQ=t0HNKdw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
-References: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
-Date: Thu, 31 Mar 2016 20:51:48 +0200
-Message-ID: <CACna6ryFb=CiifKWX+VOZx=-FA3Fitsr+D4RNmcmHGT6hUiQhA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPM=9txfEOoXLr35qEMQrpfMdDf_rCyUx0pQoC4HbQ=t0HNKdw@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 29 March 2016 at 20:20, Lukas Wunner <lukas@wunner.de> wrote:
-> Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ storm
-> on boot until they are reset, causing spurious interrupts if the IRQ is
-> shared. Apparently the EFI bootloader enables the device and does not
-> disable it before passing control to the OS. The bootloader contains a
-> driver for the wireless card which allows it to phone home to Cupertino.
-> This is used for Internet Recovery (download and install OS X images)
-> and probably also for Back to My Mac (remote access, RFC 6281) and to
-> discover stolen hardware.
->
-> The issue is most pronounced on 2011 and 2012 MacBook Pros where the IRQ
-> is shared with 3 other devices (Light Ridge Thunderbolt controller, SDXC
-> reader, HDA card on discrete GPU). As soon as an interrupt handler is
-> installed for one of these devices, the ensuing storm of spurious IRQs
-> causes the kernel to disable the IRQ and switch to polling. This lasts
-> until the b43 driver loads and resets the device.
->
-> Loading the b43 driver first is not always an option, in particular with
-> the Light Ridge Thunderbolt controller: The PCI hotplug IRQ handler gets
-> installed early on because it is built in, unlike b43 which is usually
-> a module.
->
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632
-> Tested-by: Lukas Wunner <lukas@wunner.de> [MacBookPro9,1]
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Hi Dave,
 
-Acked-by: Rafał Miłecki <zajec5@gmail.com>
+On Thu, Mar 10, 2016 at 08:04:26AM +1000, Dave Airlie wrote:
+> On 10 March 2016 at 00:40, Lukas Wunner <lukas@wunner.de> wrote:
+> > On Wed, Mar 09, 2016 at 04:14:05PM +1000, Dave Airlie wrote:
+> >> From: Dave Airlie <airlied@redhat.com>
+> >>
+> >> This fixes GPU auto powerdown on the Lenovo W541,
+> >> since we advertise Windows 2013 to the ACPI layer.
+> >>
+> >> Signed-off-by: Dave Airlie <airlied@redhat.com>
+> >> ---
+> >>  drivers/gpu/drm/nouveau/nouveau_vga.c | 10 +++++++---
+> >>  1 file changed, 7 insertions(+), 3 deletions(-)
+> >>
+> >> diff --git a/drivers/gpu/drm/nouveau/nouveau_vga.c b/drivers/gpu/drm/nouveau/nouveau_vga.c
+> >> index af89c36..b987427f 100644
+> >> --- a/drivers/gpu/drm/nouveau/nouveau_vga.c
+> >> +++ b/drivers/gpu/drm/nouveau/nouveau_vga.c
+> >> @@ -101,8 +101,12 @@ nouveau_vga_init(struct nouveau_drm *drm)
+> >>               runtime = true;
+> >>       vga_switcheroo_register_client(dev->pdev, &nouveau_switcheroo_ops, runtime);
+> >>
+> >> -     if (runtime && nouveau_is_v1_dsm() && !nouveau_is_optimus())
+> >> -             vga_switcheroo_init_domain_pm_ops(drm->dev->dev, &drm->vga_pm_domain);
+> >> +     if (runtime) {
+> >> +             if (nouveau_is_v1_dsm() && !nouveau_is_optimus())
+> >
+> > The " && !nouveau_is_optimus()" can be dropped because a machine cannot
+> > have both. Note the "else" in nouveau_dsm_detect():
+> 
+> I'm pretty sure I've seen a machine with both in my past, back in the
+> Vista/Win7 crossover days.
 
-For bcma part (I'm totally OK with moving BCMA_CORE_SIZE).
+Yes, but the code in nouveau_dsm_detect() is such that you'll never have
+both nouveau_is_v1_dsm() and nouveau_is_optimus() return true.
+
+So you can drop the " && !nouveau_is_optimus()".
+
+Best regards,
+
+Lukas
+
+> 
+> > You're calling this unconditionally for all Optimus machines yet
+> > I assume pre Windows 10 machines lack the PR3 hooks.
+> >
+> 
+> Yes and I've confirmed on my older machine that nothing bad happens
+> doing it unconditionally,
+> and I couldn't find any bits in the _DSM flags to tell me if I should
+> do something different.
+> 
+> Dave.
