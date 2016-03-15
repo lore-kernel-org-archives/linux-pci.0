@@ -1,46 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:37923 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753135AbcC3NZI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2016 09:25:08 -0400
+Received: from smtprelay.synopsys.com ([198.182.47.9]:55248 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752925AbcCOLdd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Mar 2016 07:33:33 -0400
+Subject: Re: Request for Info: Designware PCIe Root Complex support in ARM64
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+References: <56E2ACF8.6030503@synopsys.com> <20160311194600.GA16257@localhost>
+ <20160314121538.GB6629@red-moon>
+CC: Joao Pinto <Joao.Pinto@synopsys.com>,
+	Liviu Dudau <Liviu.Dudau@arm.com>, <catalin.marinas@arm.com>,
+	<linux-pci@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <56E7F308.2020907@synopsys.com>
+Date: Tue, 15 Mar 2016 11:33:28 +0000
 MIME-Version: 1.0
-In-Reply-To: <1459344050.2565.41.camel@pengutronix.de>
-References: <1459201536-5558-1-git-send-email-festevam@gmail.com>
-	<CAJ+vNU3kZ2886wRQFUfFTyo2kzYgjGTroKdiuPynZkaNf1BvEw@mail.gmail.com>
-	<20160330122103.GN20367@ibawizard.net>
-	<CAOMZO5Bh=JgVEMM-8JBX1cpk5Kgn2O2KBiOGdZT+QQfGUizBUg@mail.gmail.com>
-	<20160330130002.GA13529@ibawizard.net>
-	<CAOMZO5BNteOTj+m3h6y83wa25yqz7pb3c1osJbxrea+8B=se3Q@mail.gmail.com>
-	<20160330131639.GO20367@ibawizard.net>
-	<1459344050.2565.41.camel@pengutronix.de>
-Date: Wed, 30 Mar 2016 10:25:06 -0300
-Message-ID: <CAOMZO5D5dN58iiqMb3oa4+GDE4JQEjz7dRd=+Fr2EtMriYXaVw@mail.gmail.com>
-Subject: Re: [PATCH v2] Revert "PCI: imx6: Add support for active-low reset GPIO"
-From: Fabio Estevam <festevam@gmail.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: =?UTF-8?Q?Petr_=C5=A0tetiar?= <ynezz@true.cz>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	=?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@nxp.com>,
-	stable <stable@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20160314121538.GB6629@red-moon>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lucas,
 
-On Wed, Mar 30, 2016 at 10:20 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+Hi!
+Just built the linux-next for ARM64 and built beautifully so there is no issue.
+I was having an issue using 3.18, but with this new kernel no issues were found.
+Thanks for all your inputs!
 
-> We can and should fix broken DTs, but keeping DT stability means we need
-> to be able to support old (unfixed) DTs with future kernels.
->
-> So we can not just fix the DTs and move on, as kernel and DT are two
-> separate entities, even if they are currently distributed through the
-> same source tree.
+Joao
 
-Correct.
 
-Could you send your Acked-by for this patch then?
+On 3/14/2016 12:15 PM, Lorenzo Pieralisi wrote:
+> On Fri, Mar 11, 2016 at 01:46:00PM -0600, Bjorn Helgaas wrote:
+>> [+cc Lorenzo]
+>>
+>> On Fri, Mar 11, 2016 at 11:33:12AM +0000, Joao Pinto wrote:
+>>> Hi Liviu, Catalin and Bjorn,
+>>>
+>>> I am currently working on the PCIe Root Complex based on the Designware Core
+>>> (/pci/host/pcie-desigware.c). I have noticed that currently building a solution
+>>> based on the previous for an ARM64 CPU is problematic and demands some tweaking
+>>> in the ARM64 arch (like adding some functions in the pcibios, etc.).
+>>
+>> If I understand you correctly, you're saying that pcie-designware.c
+>> doesn't build on arm64.  It would be helpful to know exactly what
+>> problem you're seeing (what kernel version, what config, what the
+>> error are, etc.)
+> 
+> Yes, I am not sure I understand what Joao is referring to so I would
+> be grateful if he can provide us with additional details.
+> 
+> Thanks,
+> Lorenzo
+> 
+
