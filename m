@@ -1,67 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp08.in.ibm.com ([125.16.236.8]:43425 "EHLO
-	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752377AbcCGHto (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Mar 2016 02:49:44 -0500
-Received: from localhost
-	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Mon, 7 Mar 2016 13:19:36 +0530
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
-	alex.williamson@redhat.com, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [RFC PATCH v4 5/7] vfio-pci: Allow to mmap sub-page MMIO BARs if the mmio page is exclusive
-Date: Mon,  7 Mar 2016 15:48:36 +0800
-Message-Id: <1457336918-3893-6-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:60694 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S935027AbcCPKEC (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Mar 2016 06:04:02 -0400
+From: Jisheng Zhang <jszhang@marvell.com>
+To: <thomas.petazzoni@free-electrons.com>, <jason@lakedaemon.net>,
+	<bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, Jisheng Zhang <jszhang@marvell.com>
+Subject: [PATCH 2/2] PCI: mvebu: use SET_NOIRQ_SYSTEM_SLEEP_PM_OPS for mvebu_pcie_pm_ops
+Date: Wed, 16 Mar 2016 17:59:41 +0800
+Message-ID: <1458122381-2280-3-git-send-email-jszhang@marvell.com>
+In-Reply-To: <1458122381-2280-1-git-send-email-jszhang@marvell.com>
+References: <1458122381-2280-1-git-send-email-jszhang@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current vfio-pci implementation disallows to mmap
-sub-page(size < PAGE_SIZE) MMIO BARs because these BARs' mmio
-page may be shared with other BARs.
+use SET_NOIRQ_SYSTEM_SLEEP_PM_OPS helper macro for mvebu_pcie_pm_ops.
+The macro also setups freeze_noirq, thaw_noirq and poweroff_noirq,
+restore_noirq accordingly.
 
-But we should allow to mmap these sub-page MMIO BARs if PCI
-resource allocator can make sure these BARs' mmio page will
-not be shared with other BARs.
-
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
 ---
- drivers/vfio/pci/vfio_pci.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/pci/host/pci-mvebu.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 1ce1d36..49d7a69 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -589,7 +589,8 @@ static long vfio_pci_ioctl(void *device_data,
- 				     VFIO_REGION_INFO_FLAG_WRITE;
- 			if (IS_ENABLED(CONFIG_VFIO_PCI_MMAP) &&
- 			    pci_resource_flags(pdev, info.index) &
--			    IORESOURCE_MEM && info.size >= PAGE_SIZE) {
-+			    IORESOURCE_MEM && !pci_resources_share_page(pdev,
-+			    info.index)) {
- 				info.flags |= VFIO_REGION_INFO_FLAG_MMAP;
- 				if (info.index == vdev->msix_bar) {
- 					ret = msix_sparse_mmap_cap(vdev, &caps);
-@@ -1016,6 +1017,10 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
- 		return -EINVAL;
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index 6c43cb8..6b451df 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -1003,6 +1003,7 @@ static void mvebu_pcie_msi_enable(struct mvebu_pcie *pcie)
+ 		pcie->msi->dev = &pcie->pdev->dev;
+ }
  
- 	phys_len = pci_resource_len(pdev, index);
-+
-+	if (!pci_resources_share_page(pdev, index))
-+		phys_len = PAGE_ALIGN(phys_len);
-+
- 	req_len = vma->vm_end - vma->vm_start;
- 	pgoff = vma->vm_pgoff &
- 		((1U << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1);
++#ifdef CONFIG_PM_SLEEP
+ static int mvebu_pcie_suspend(struct device *dev)
+ {
+ 	struct mvebu_pcie *pcie;
+@@ -1031,6 +1032,7 @@ static int mvebu_pcie_resume(struct device *dev)
+ 
+ 	return 0;
+ }
++#endif
+ 
+ static void mvebu_pcie_port_clk_put(void *data)
+ {
+@@ -1299,8 +1301,7 @@ static const struct of_device_id mvebu_pcie_of_match_table[] = {
+ MODULE_DEVICE_TABLE(of, mvebu_pcie_of_match_table);
+ 
+ static const struct dev_pm_ops mvebu_pcie_pm_ops = {
+-	.suspend_noirq = mvebu_pcie_suspend,
+-	.resume_noirq = mvebu_pcie_resume,
++	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(mvebu_pcie_suspend, mvebu_pcie_resume)
+ };
+ 
+ static struct platform_driver mvebu_pcie_driver = {
 -- 
-1.7.9.5
+2.7.0
 
