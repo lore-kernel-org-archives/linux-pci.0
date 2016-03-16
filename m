@@ -1,81 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p3plsmtps2ded04.prod.phx3.secureserver.net ([208.109.80.198]:34420
-	"EHLO p3plsmtps2ded04.prod.phx3.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753639AbcC3WLk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 30 Mar 2016 18:11:40 -0400
-From: Jake Oshins <jakeo@microsoft.com>
-To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v2 1/7] drivers:hv: Lock access to hyperv_mmio resource tree
-Date: Wed, 30 Mar 2016 16:48:41 -0700
-Message-Id: <1459381727-25039-2-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1459381727-25039-1-git-send-email-jakeo@microsoft.com>
-References: <y>
- <1459381727-25039-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 16 Mar 2016 10:30:34 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
+	aik@ozlabs.ru, benh@kernel.crashing.org, paulus@samba.org,
+	mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH v4 5/7] vfio-pci: Allow to mmap sub-page MMIO BARs
+ if the mmio page is exclusive
+Message-ID: <20160316103034.48666ae0@t450s.home>
+In-Reply-To: <1457336918-3893-6-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+	<1457336918-3893-6-git-send-email-xyjxie@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In existing code, this tree of resources is created
-in single-threaded code and never modified after it is
-created, and thus needs no locking.  This patch introduces
-a semaphore for tree access, as other patches in this
-series introduce run-time modifications of this resource
-tree which can happen on multiple threads.
+On Mon,  7 Mar 2016 15:48:36 +0800
+Yongji Xie <xyjxie@linux.vnet.ibm.com> wrote:
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- drivers/hv/vmbus_drv.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+> Current vfio-pci implementation disallows to mmap
+> sub-page(size < PAGE_SIZE) MMIO BARs because these BARs' mmio
+> page may be shared with other BARs.
+> 
+> But we should allow to mmap these sub-page MMIO BARs if PCI
+> resource allocator can make sure these BARs' mmio page will
+> not be shared with other BARs.
+> 
+> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+> ---
+>  drivers/vfio/pci/vfio_pci.c |    7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> index 1ce1d36..49d7a69 100644
+> --- a/drivers/vfio/pci/vfio_pci.c
+> +++ b/drivers/vfio/pci/vfio_pci.c
+> @@ -589,7 +589,8 @@ static long vfio_pci_ioctl(void *device_data,
+>  				     VFIO_REGION_INFO_FLAG_WRITE;
+>  			if (IS_ENABLED(CONFIG_VFIO_PCI_MMAP) &&
+>  			    pci_resource_flags(pdev, info.index) &
+> -			    IORESOURCE_MEM && info.size >= PAGE_SIZE) {
+> +			    IORESOURCE_MEM && !pci_resources_share_page(pdev,
+> +			    info.index)) {
 
-diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-index 64713ff..799518b 100644
---- a/drivers/hv/vmbus_drv.c
-+++ b/drivers/hv/vmbus_drv.c
-@@ -102,6 +102,7 @@ static struct notifier_block hyperv_panic_block = {
- };
+this would be a preferable line wrap:
 
- struct resource *hyperv_mmio;
-+DEFINE_SEMAPHORE(hyperv_mmio_lock);
+                            IORESOURCE_MEM &&
+                            !pci_resources_share_page(pdev, info.index)) {
 
- static int vmbus_exists(void)
- {
-@@ -1132,7 +1133,10 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 	resource_size_t range_min, range_max, start, local_min, local_max;
- 	const char *dev_n = dev_name(&device_obj->device);
- 	u32 fb_end = screen_info.lfb_base + (screen_info.lfb_size << 1);
--	int i;
-+	int i, retval;
-+
-+	retval = -ENXIO;
-+	down(&hyperv_mmio_lock);
-
- 	for (iter = hyperv_mmio; iter; iter = iter->sibling) {
- 		if ((iter->start >= max) || (iter->end <= min))
-@@ -1169,13 +1173,17 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 			for (; start + size - 1 <= local_max; start += align) {
- 				*new = request_mem_region_exclusive(start, size,
- 								    dev_n);
--				if (*new)
--					return 0;
-+				if (*new) {
-+					retval = 0;
-+					goto exit;
-+				}
- 			}
- 		}
- 	}
-
--	return -ENXIO;
-+exit:
-+	up(&hyperv_mmio_lock);
-+	return retval;
- }
- EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
-
---
-1.9.1
-
+>  				info.flags |= VFIO_REGION_INFO_FLAG_MMAP;
+>  				if (info.index == vdev->msix_bar) {
+>  					ret = msix_sparse_mmap_cap(vdev, &caps);
+> @@ -1016,6 +1017,10 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
+>  		return -EINVAL;
+>  
+>  	phys_len = pci_resource_len(pdev, index);
+> +
+> +	if (!pci_resources_share_page(pdev, index))
+> +		phys_len = PAGE_ALIGN(phys_len);
+> +
+>  	req_len = vma->vm_end - vma->vm_start;
+>  	pgoff = vma->vm_pgoff &
+>  		((1U << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1);
