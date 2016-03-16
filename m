@@ -1,74 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:39973 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751893AbcCVTxU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 22 Mar 2016 15:53:20 -0400
+Received: from bear.ext.ti.com ([192.94.94.41]:45451 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751051AbcCPUnk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Mar 2016 16:43:40 -0400
+Subject: Re: Need Help for How to write PCIe driver code
+To: Prakash Kumar <prakash@cupolatechnology.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <1139972788.98406.7686afab-169a-45f9-a3b8-d83acec2ad75.open-xchange@webmail.cupolatechnology.com>
 From: Murali Karicheri <m-karicheri2@ti.com>
-To: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <bhelgaas@google.com>
-Subject: [PATCH next 2/2] PCI: keystone: remove unnecessary goto statement
-Date: Tue, 22 Mar 2016 15:52:58 -0400
-Message-ID: <1458676378-24377-2-git-send-email-m-karicheri2@ti.com>
-In-Reply-To: <1458676378-24377-1-git-send-email-m-karicheri2@ti.com>
-References: <1458676378-24377-1-git-send-email-m-karicheri2@ti.com>
+Message-ID: <56E9C57B.6030600@ti.com>
+Date: Wed, 16 Mar 2016 16:43:39 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1139972788.98406.7686afab-169a-45f9-a3b8-d83acec2ad75.open-xchange@webmail.cupolatechnology.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix the misuse of goto statement in ks_pcie_get_irq_controller_info()
-as simple return is more appropriate for this function. While at
-it add an error log for absence of interrupt controller node.
+On 03/15/2016 02:26 AM, Prakash Kumar wrote:
+> Hi murli,
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Pawel Moll <pawel.moll@arm.com>
-Cc: Mark Rutland <mark.rutland@arm.com>
-Cc: Ian Campbell <ijc+devicetree@hellion.org.uk>
-Cc: Kumar Gala <galak@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-keystone.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+Murali not Murli :)
 
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index 299f2f0..3563b9c 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -181,11 +181,13 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
- 	*np_temp = of_find_node_by_name(np_pcie, controller);
- 	if (!(*np_temp)) {
- 		dev_err(dev, "Node for %s is absent\n", controller);
--		goto out;
-+		return ret;
- 	}
- 	temp = of_irq_count(*np_temp);
--	if (!temp)
--		goto out;
-+	if (!temp) {
-+		dev_err(dev, "No entries in %s\n", controller);
-+		return ret;
-+	}
- 	if (temp > max_host_irqs)
- 		dev_warn(dev, "Too many %s interrupts defined %u\n",
- 			(legacy ? "legacy" : "MSI"), temp);
-@@ -203,7 +205,6 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
- 		*num_irqs = temp;
- 		ret = 0;
- 	}
--out:
- 	return ret;
- }
- 
-@@ -231,6 +232,7 @@ static void ks_pcie_setup_interrupts(struct keystone_pcie *ks_pcie)
- 	/* enable error interrupt */
- 	if (ks_pcie->error_irq > 0)
- 		ks_dw_pcie_enable_error_irq(ks_pcie->va_app_base);
-+
- }
- 
- /*
+> 
+> My name is prakash from cupola technology Bangalore ,India. currently i am trying to write the code of pcie driver for keystone II processor, so I need a sample code which describe the steps with APIs to write the driver code for keystone.
+> 
+> My setup is :
+> 
+> 1. I have a TI66AK2E02 MAC-K2 processor having PCIe connected to EDMA3 and DDR3 memory.
+> 
+> 2. I have another FPGAXC6SLX25T CSG324-2 xilinx chip ,which has PCIe connected to SRAM inside chip .
+> 
+> Now i have write the PCIe driver code which can transfer the data from DDR3 memory to SRAM (data transfer handled by EDMA3 )and vice-versa. 
+> 
+Checkout at Documentation/PCI/pci.txt for a quick intro. Could use PCI mailing list (linux-pci@vger.kernel.org) for help as well as
+this is not a  keystone specific question. For Keystone specific question, please use the e2e forum at ti.com.
+
+Murali
+>  
+> 
+> With Best Regards,
+> 
+> Prakash Kumar
+> 
+> Cupola Technology Pvt Ltd
+> 
+>  Cell :+91 9738328394 | Skype: prakash.kumar995 
+> 
+
+
 -- 
-1.9.1
-
+Murali Karicheri
+Linux Kernel, Keystone
