@@ -1,212 +1,246 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <1458316194.23434.104.camel@redhat.com>
-Subject: Re: [PATCH V5 13/15] pci, acpi: Match PCI config space accessors
- against platfrom specific quirks.
-From: Mark Salter <msalter@redhat.com>
-To: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	Stefano.Stabellini@eu.citrix.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org, jcm@redhat.com
-Date: Fri, 18 Mar 2016 11:49:54 -0400
-In-Reply-To: <1455630825-27253-14-git-send-email-tn@semihalf.com>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
-	 <1455630825-27253-14-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 16 Mar 2016 10:30:22 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
+	aik@ozlabs.ru, benh@kernel.crashing.org, paulus@samba.org,
+	mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
+Subject: Re: [RFC PATCH v4 4/7] PCI: Modify resource_alignment to support
+ multiple devices
+Message-ID: <20160316103022.246edf22@t450s.home>
+In-Reply-To: <1457336918-3893-5-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+	<1457336918-3893-5-git-send-email-xyjxie@linux.vnet.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2016-02-16 at 14:53 +0100, Tomasz Nowicki wrote:
-> Some platforms may not be fully compliant with generic set of PCI config
-> accessors. For these cases we implement the way to overwrite accessors
-> set prior to PCI buses enumeration. Algorithm traverses available quirk
-> list, matches against <platform ID (DMI), domain, bus number> tuple and
-> returns corresponding accessors. All quirks can be defined using:
-> DECLARE_ACPI_MCFG_FIXUP() and kept self contained. Example,
+On Mon,  7 Mar 2016 15:48:35 +0800
+Yongji Xie <xyjxie@linux.vnet.ibm.com> wrote:
+
+> When vfio passthrough a PCI device of which MMIO BARs
+> are smaller than PAGE_SIZE, guest will not handle the
+> mmio accesses to the BARs which leads to mmio emulations
+> in host.
 > 
-> static const struct dmi_system_id foo_dmi[] = {
->         {
->                 .ident = "<Platform ident string>",
->                 .callback = <handler>,
->                 .matches = {
->                         DMI_MATCH(DMI_SYS_VENDOR, "<system vendor>"),
->                         DMI_MATCH(DMI_PRODUCT_NAME, "<product name>"),
->                         DMI_MATCH(DMI_PRODUCT_VERSION, "product version"),
->                 },
->         },
->         { }
-> };
+> This is because vfio will not allow to passthrough one
+> BAR's mmio page which may be shared with other BARs.
 > 
-> static struct pci_ops foo_ecam_pci_ops = {
->         .map_bus = pci_mcfg_dev_base,
->         .read = foo_ecam_config_read,
->         .write = foo_ecam_config_write,
-> };
-> DECLARE_ACPI_MCFG_FIXUP(foo_dmi, NULL, &foo_ecam_pci_ops, <domain_nr>, <bus_nr>);
+> To solve this performance issue, this patch modifies
+> resource_alignment to support syntax where multiple
+> devices get the same alignment. So we can use something
+> like "pci=resource_alignment=*:*:*.*:noresize" to
+> enforce the alignment of all MMIO BARs to be at least
+> PAGE_SIZE so that one BAR's mmio page would not be
+> shared with other BARs.
 > 
-> More custom (non-DMI) matching can be done via an extra call.
-> Note that there is possibility to assign quirk related private data to
-> root->sysdata which will be available along read/wriate accessor, example:
-> 
-> static int boo_match(struct pci_mcfg_fixup *fixup, struct acpi_pci_root *root)
-> {
->         return [condition] ? 1 : 0;
-> }
-> 
-> int boo_ecam_config_read(struct pci_bus *bus, unsigned int devfn,
->                           int where, int size, u32 *val)
-> {
->         struct acpi_pci_root *root = bus->sysdata;
->         struct boo_priv_data *boo_data = root->sysdata;
-> 
->         [..]
-> }
-> 
-> static struct pci_ops boo_ecam_pci_ops = {
-> 	.map_bus = pci_mcfg_dev_base,
-> 	.read = boo_ecam_config_read,
-> 	.write = boo_ecam_config_write,
-> };
-> DECLARE_ACPI_MCFG_FIXUP(NULL, boo_match, &boo_ecam_pci_ops, <domain_nr>, <bus_nr>);
-> 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Tested-by: Duc Dang <dhdang@apm.com>
-> Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-> Tested-by: Sinan Kaya <okaya@codeaurora.org>
+> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 > ---
->  drivers/acpi/pci_mcfg.c           | 32 ++++++++++++++++++++++++++++++--
->  include/acpi/acpi_bus.h           |  1 +
->  include/asm-generic/vmlinux.lds.h |  7 +++++++
->  include/linux/pci-acpi.h          | 18 ++++++++++++++++++
->  4 files changed, 56 insertions(+), 2 deletions(-)
+>  Documentation/kernel-parameters.txt |    2 +
+>  drivers/pci/pci.c                   |   90 ++++++++++++++++++++++++++++++-----
+>  include/linux/pci.h                 |    4 ++
+>  3 files changed, 85 insertions(+), 11 deletions(-)
 > 
-> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> index 0062257..b343547 100644
-> --- a/drivers/acpi/pci_mcfg.c
-> +++ b/drivers/acpi/pci_mcfg.c
-> @@ -41,6 +41,29 @@ int __weak raw_pci_write(unsigned int domain, unsigned int bus,
->  	return PCIBIOS_DEVICE_NOT_FOUND;
->  }
->  
-> +extern struct pci_mcfg_fixup __start_acpi_mcfg_fixups[];
-> +extern struct pci_mcfg_fixup __end_acpi_mcfg_fixups[];
+> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> index 8028631..74b38ab 100644
+> --- a/Documentation/kernel-parameters.txt
+> +++ b/Documentation/kernel-parameters.txt
+> @@ -2918,6 +2918,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>  				aligned memory resources.
+>  				If <order of align> is not specified,
+>  				PAGE_SIZE is used as alignment.
+> +				<domain>, <bus>, <slot> and <func> can be set to
+> +				"*" which means match all values.
+
+I don't see anywhere that you're automatically enabling this for your
+platform, so presumably you're expecting users to determine on their
+own that they have a performance problem and hoping that they'll figure
+out that they need to use this option to resolve it.  The first irate
+question you'll get back is why doesn't this happen automatically?
+
+>  				PCI-PCI bridge can be specified, if resource
+>  				windows need to be expanded.
+>  				noresize: Don't change the resources' sizes when
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 760cce5..44ab59f 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -102,6 +102,8 @@ unsigned int pcibios_max_latency = 255;
+>  /* If set, the PCIe ARI capability will not be used. */
+>  static bool pcie_ari_disabled;
+>  
+> +bool pci_resources_page_aligned;
 > +
-> +static struct pci_ops *pci_mcfg_check_quirks(struct acpi_pci_root *root)
-> +{
-> +	struct pci_mcfg_fixup *f;
-> +	int bus_num = root->secondary.start;
-> +	int domain = root->segment;
-> +
-> +	/*
-> +	 * First match against PCI topology <domain:bus> then use DMI or
-> +	 * custom match handler.
-> +	 */
-> +	for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups; f++) {
-> +		if ((f->domain == domain || f->domain == PCI_MCFG_DOMAIN_ANY) &&
-> +		    (f->bus_num == bus_num || f->bus_num == PCI_MCFG_BUS_ANY) &&
-> +		    (f->system ? dmi_check_system(f->system) : 1 &&
-> +		     f->match ? f->match(f, root) : 1))
-
-The parens are not quite right here ^^^^
-If dmi_check_system() returns true, f->match won't get called.
-
-This should be:
-		    (f->system ? dmi_check_system(f->system) : 1) &&
-		     f->match ? f->match(f, root) : 1)
-
-> +			return f->ops;
+>  /**
+>   * pci_bus_max_busnr - returns maximum PCI bus number of given bus' children
+>   * @bus: pointer to PCI bus structure to search
+> @@ -4604,6 +4606,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+>  	int seg, bus, slot, func, align_order, count;
+>  	resource_size_t align = 0;
+>  	char *p;
+> +	bool invalid = false;
+>  
+>  	spin_lock(&resource_alignment_lock);
+>  	p = resource_alignment_param;
+> @@ -4615,16 +4618,49 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+>  		} else {
+>  			align_order = -1;
+>  		}
+> -		if (sscanf(p, "%x:%x:%x.%x%n",
+> -			&seg, &bus, &slot, &func, &count) != 4) {
+> +		if (p[0] == '*' && p[1] == ':') {
+> +			seg = -1;
+> +			count = 1;
+> +		} else if (sscanf(p, "%x%n", &seg, &count) != 1 ||
+> +				p[count] != ':') {
+> +			invalid = true;
+> +			break;
+> +		}
+> +		p += count + 1;
+> +		if (*p == '*') {
+> +			bus = -1;
+> +			count = 1;
+> +		} else if (sscanf(p, "%x%n", &bus, &count) != 1) {
+> +			invalid = true;
+> +			break;
+> +		}
+> +		p += count;
+> +		if (*p == '.') {
+> +			slot = bus;
+> +			bus = seg;
+>  			seg = 0;
+> -			if (sscanf(p, "%x:%x.%x%n",
+> -					&bus, &slot, &func, &count) != 3) {
+> -				/* Invalid format */
+> -				printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
+> -					p);
+> +			p++;
+> +		} else if (*p == ':') {
+> +			p++;
+> +			if (p[0] == '*' && p[1] == '.') {
+> +				slot = -1;
+> +				count = 1;
+> +			} else if (sscanf(p, "%x%n", &slot, &count) != 1 ||
+> +					p[count] != '.') {
+> +				invalid = true;
+>  				break;
+>  			}
+> +			p += count + 1;
+> +		} else {
+> +			invalid = true;
+> +			break;
+> +		}
+> +		if (*p == '*') {
+> +			func = -1;
+> +			count = 1;
+> +		} else if (sscanf(p, "%x%n", &func, &count) != 1) {
+> +			invalid = true;
+> +			break;
+>  		}
+>  		p += count;
+>  		if (!strncmp(p, ":noresize", 9)) {
+> @@ -4632,23 +4668,34 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+>  			p += 9;
+>  		} else
+>  			*resize = true;
+> -		if (seg == pci_domain_nr(dev->bus) &&
+> -			bus == dev->bus->number &&
+> -			slot == PCI_SLOT(dev->devfn) &&
+> -			func == PCI_FUNC(dev->devfn)) {
+> +		if ((seg == pci_domain_nr(dev->bus) || seg == -1) &&
+> +			(bus == dev->bus->number || bus == -1) &&
+> +			(slot == PCI_SLOT(dev->devfn) || slot == -1) &&
+> +			(func == PCI_FUNC(dev->devfn) || func == -1)) {
+>  			if (align_order == -1)
+>  				align = PAGE_SIZE;
+>  			else
+>  				align = 1 << align_order;
+> +			if (!pci_resources_page_aligned &&
+> +				(align >= PAGE_SIZE &&
+> +				seg == -1 && bus == -1 &&
+> +				slot == -1 && func == -1))
+> +				pci_resources_page_aligned = true;
+>  			/* Found */
+>  			break;
+>  		}
+>  		if (*p != ';' && *p != ',') {
+>  			/* End of param or invalid format */
+> +			invalid = true;
+>  			break;
+>  		}
+>  		p++;
+>  	}
+> +	if (invalid == true) {
+> +		/* Invalid format */
+> +		printk(KERN_ERR "PCI: Can't parse resource_alignment parameter:%s\n",
+> +				p);
 > +	}
-> +	return NULL;
+>  	spin_unlock(&resource_alignment_lock);
+>  	return align;
+>  }
+> @@ -4769,6 +4816,27 @@ static int __init pci_resource_alignment_sysfs_init(void)
+>  }
+>  late_initcall(pci_resource_alignment_sysfs_init);
+>  
+> +/*
+> + * This function checks whether PCI BARs' mmio page will be shared
+> + * with other BARs.
+> + */
+> +bool pci_resources_share_page(struct pci_dev *dev, int resno)
+> +{
+> +	struct resource *res = dev->resource + resno;
+> +
+> +	if (resource_size(res) >= PAGE_SIZE)
+> +		return false;
+> +	if (pci_resources_page_aligned && !(res->start & ~PAGE_MASK) &&
+> +		res->flags & IORESOURCE_MEM) {
+> +		if (res->sibling)
+> +			return (res->sibling->start & ~PAGE_MASK);
+> +		else
+> +			return false;
+> +	}
+> +	return true;
 > +}
-> +
->  void __iomem *
->  pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn, int offset)
->  {
-> @@ -63,10 +86,15 @@ static struct pci_ops default_pci_mcfg_ops = {
->  
->  struct pci_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
->  {
-> +	struct pci_ops *pci_mcfg_ops_quirk;
-> +
->  	/*
-> -	 * TODO: Match against platform specific quirks and return
-> -	 * corresponding PCI config space accessor set.
-> +	 * Match against platform specific quirks and return corresponding
-> +	 * PCI config space accessor set.
->  	 */
-> +	pci_mcfg_ops_quirk = pci_mcfg_check_quirks(root);
-> +	if (pci_mcfg_ops_quirk)
-> +		return pci_mcfg_ops_quirk;
->  
->  	return &default_pci_mcfg_ops;
->  }
-> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-> index 14362a8..0fc6f13 100644
-> --- a/include/acpi/acpi_bus.h
-> +++ b/include/acpi/acpi_bus.h
-> @@ -556,6 +556,7 @@ struct acpi_pci_root {
->  	struct pci_bus *bus;
->  	u16 segment;
->  	struct resource secondary;	/* downstream bus range */
-> +	void *sysdata;
->  
->  	u32 osc_support_set;	/* _OSC state of support bits */
->  	u32 osc_control_set;	/* _OSC state of control bits */
-> diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-> index c4bd0e2..c93fc97 100644
-> --- a/include/asm-generic/vmlinux.lds.h
-> +++ b/include/asm-generic/vmlinux.lds.h
-> @@ -298,6 +298,13 @@
->  		VMLINUX_SYMBOL(__end_pci_fixups_suspend_late) = .;	\
->  	}								\
->  									\
-> +	/* ACPI MCFG quirks */						\
-> +	.acpi_fixup        : AT(ADDR(.acpi_fixup) - LOAD_OFFSET) {	\
-> +		VMLINUX_SYMBOL(__start_acpi_mcfg_fixups) = .;		\
-> +		*(.acpi_fixup_mcfg)					\
-> +		VMLINUX_SYMBOL(__end_acpi_mcfg_fixups) = .;		\
-> +	}								\
-> +									\
->  	/* Built-in firmware blobs */					\
->  	.builtin_fw        : AT(ADDR(.builtin_fw) - LOAD_OFFSET) {	\
->  		VMLINUX_SYMBOL(__start_builtin_fw) = .;			\
-> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> index 93feb04..9e1bedd 100644
-> --- a/include/linux/pci-acpi.h
-> +++ b/include/linux/pci-acpi.h
-> @@ -123,6 +123,24 @@ struct pci_mmcfg_region {
->  	bool hot_added;
->  };
->  
-> +struct pci_mcfg_fixup {
-> +	const struct dmi_system_id *system;
-> +	int (*match)(struct pci_mcfg_fixup *, struct acpi_pci_root *);
-> +	struct pci_ops *ops;
-> +	int domain;
-> +	int bus_num;
-> +};
-> +
-> +#define PCI_MCFG_DOMAIN_ANY	-1
-> +#define PCI_MCFG_BUS_ANY	-1
-> +
-> +/* Designate a routine to fix up buggy MCFG */
-> +#define DECLARE_ACPI_MCFG_FIXUP(system, match, ops, dom, bus)		\
-> +	static const struct pci_mcfg_fixup __mcfg_fixup_##system##dom##bus\
-> +	 __used	__attribute__((__section__(".acpi_fixup_mcfg"),		\
-> +				aligned((sizeof(void *))))) =		\
-> +	{ system, match, ops, dom, bus };
-> +
->  extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
->  extern struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
->  							int end, u64 addr);
+> +EXPORT_SYMBOL_GPL(pci_resources_share_page);
 
+This should be a separate patch, there's no mention of this part of the
+change at all in the commitlog.  Also, pci_resource_page_aligned is
+only set if we use the magic wildcards to set alignment for all
+devices, it's not set if we use a specific seg:bus:dev.fn.  That's
+not consistent.  Can't we make use of the STARTALIGN flag for this or
+did that get removed when resources were assigned?
+
+The test itself is not entirely reassuring, I'd like some positive
+indication that the device has been aligned, not simply that it should
+have been and the start alignment appears that it might have happened.
+Apparently you don't trust pci_resources_page_aligned either since you
+still test the start alignment.
+
+> +
+>  static void pci_no_domains(void)
+>  {
+>  #ifdef CONFIG_PCI_DOMAINS
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 2771625..064a1b6 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1511,6 +1511,10 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+>  	 (pci_resource_end((dev), (bar)) -		\
+>  	  pci_resource_start((dev), (bar)) + 1))
+>  
+> +extern bool pci_resources_page_aligned;
+
+I'm not seeing why this shouldn't have been static since you're
+providing a function that tests it, there shouldn't really be any
+external consumers.
+
+> +
+> +bool pci_resources_share_page(struct pci_dev *dev, int resno);
+> +
+>  /* Similar to the helpers above, these manipulate per-pci_dev
+>   * driver-specific data.  They are really just a wrapper around
+>   * the generic device structure functions of these calls.
