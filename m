@@ -1,121 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:51321 "EHLO
-	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752040AbcC2SS6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Mar 2016 14:18:58 -0400
-Message-Id: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-Id: <385c18397ac1b9a999672e676641cb62f556b5b5.1458126755.git.lukas@wunner.de>
+In-Reply-To: <cover.1458126755.git.lukas@wunner.de>
+References: <cover.1458126755.git.lukas@wunner.de>
 From: Lukas Wunner <lukas@wunner.de>
-Date: Tue, 29 Mar 2016 20:20:30 +0200
-Subject: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-To: linux-pci@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	b43-dev@lists.infradead.org
-Sender: linux-pci-owner@vger.kernel.org
+Date: Wed, 16 Mar 2016 15:50:35 +0100
+Subject: [RFC 2/4] thunderbolt: Fix typos and magic number
+To: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ storm
-on boot until they are reset, causing spurious interrupts if the IRQ is
-shared. Apparently the EFI bootloader enables the device and does not
-disable it before passing control to the OS. The bootloader contains a
-driver for the wireless card which allows it to phone home to Cupertino.
-This is used for Internet Recovery (download and install OS X images)
-and probably also for Back to My Mac (remote access, RFC 6281) and to
-discover stolen hardware.
+Fix typo in tb_cfg_print_error() message.
+Fix bytecount in struct tb_drom_entry_port comment.
+Replace magic number in tb_switch_alloc().
+Rename tb_sw_set_unpplugged() and TB_CAL_IECS.
+                   ^                   ^
 
-The issue is most pronounced on 2011 and 2012 MacBook Pros where the IRQ
-is shared with 3 other devices (Light Ridge Thunderbolt controller, SDXC
-reader, HDA card on discrete GPU). As soon as an interrupt handler is
-installed for one of these devices, the ensuing storm of spurious IRQs
-causes the kernel to disable the IRQ and switch to polling. This lasts
-until the b43 driver loads and resets the device.
-
-Loading the b43 driver first is not always an option, in particular with
-the Light Ridge Thunderbolt controller: The PCI hotplug IRQ handler gets
-installed early on because it is built in, unlike b43 which is usually
-a module.
-
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632
-Tested-by: Lukas Wunner <lukas@wunner.de> [MacBookPro9,1]
+Cc: Andreas Noever <andreas.noever@gmail.com>
 Signed-off-by: Lukas Wunner <lukas@wunner.de>
 ---
- drivers/bcma/bcma_private.h |  2 --
- drivers/pci/quirks.c        | 27 +++++++++++++++++++++++++++
- include/linux/bcma/bcma.h   |  1 +
- 3 files changed, 28 insertions(+), 2 deletions(-)
+ drivers/thunderbolt/ctl.c     |  2 +-
+ drivers/thunderbolt/eeprom.c  |  2 +-
+ drivers/thunderbolt/switch.c  | 10 +++++-----
+ drivers/thunderbolt/tb.c      |  2 +-
+ drivers/thunderbolt/tb.h      |  2 +-
+ drivers/thunderbolt/tb_regs.h |  2 +-
+ 6 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index eda0909..f642c42 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -8,8 +8,6 @@
- #include <linux/bcma/bcma.h>
- #include <linux/delay.h>
+diff --git a/drivers/thunderbolt/ctl.c b/drivers/thunderbolt/ctl.c
+index 799634b..1146ff4 100644
+--- a/drivers/thunderbolt/ctl.c
++++ b/drivers/thunderbolt/ctl.c
+@@ -249,7 +249,7 @@ static void tb_cfg_print_error(struct tb_ctl *ctl,
+ 		 * cfg_read/cfg_write.
+ 		 */
+ 		tb_ctl_WARN(ctl,
+-			"CFG_ERROR(%llx:%x): Invalid config space of offset\n",
++			"CFG_ERROR(%llx:%x): Invalid config space or offset\n",
+ 			res->response_route, res->response_port);
+ 		return;
+ 	case TB_CFG_ERROR_NO_SUCH_PORT:
+diff --git a/drivers/thunderbolt/eeprom.c b/drivers/thunderbolt/eeprom.c
+index 0dde34e..47e56e8 100644
+--- a/drivers/thunderbolt/eeprom.c
++++ b/drivers/thunderbolt/eeprom.c
+@@ -221,7 +221,7 @@ struct tb_drom_entry_port {
+ 	u8 micro1:4;
+ 	u8 micro3;
  
--#define BCMA_CORE_SIZE		0x1000
--
- #define bcma_err(bus, fmt, ...) \
- 	pr_err("bus%d: " fmt, (bus)->num, ##__VA_ARGS__)
- #define bcma_warn(bus, fmt, ...) \
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 8e67802..d4fb5ee 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -25,6 +25,8 @@
- #include <linux/sched.h>
- #include <linux/ktime.h>
- #include <linux/mm.h>
-+#include <linux/bcma/bcma.h>
-+#include <linux/bcma/bcma_regs.h>
- #include <asm/dma.h>	/* isa_dma_bridge_buggy */
- #include "pci.h"
+-	/* BYTES 5-6, TODO: verify (find hardware that has these set) */
++	/* BYTES 6-7, TODO: verify (find hardware that has these set) */
+ 	u8 peer_port_rid:4;
+ 	u8 unknown3:3;
+ 	bool has_peer_port:1;
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index db73ffe..c6270f0 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -350,7 +350,7 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
+ 		return NULL;
  
-@@ -3282,6 +3284,31 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL, 0x156d,
- 			       quirk_apple_wait_for_thunderbolt);
- #endif
+ 	sw->tb = tb;
+-	if (tb_cfg_read(tb->ctl, &sw->config, route, 0, 2, 0, 5))
++	if (tb_cfg_read(tb->ctl, &sw->config, route, 0, TB_CFG_SWITCH, 0, 5))
+ 		goto err;
+ 	tb_info(tb,
+ 		"initializing Switch at %#llx (depth: %d, up port: %d)\n",
+@@ -426,9 +426,9 @@ err:
+ }
  
-+/*
-+ * Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ storm
-+ * on boot until they are reset, causing spurious interrupts if the IRQ is
-+ * shared. Apparently the EFI bootloader enables the device to phone home
-+ * to Cupertino and does not disable it before passing control to the OS.
-+ */
-+static void quirk_apple_b43_reset(struct pci_dev *dev)
-+{
-+	void __iomem *mmio;
-+
-+	if (!dmi_match(DMI_BOARD_VENDOR, "Apple Inc.") || !dev->bus->self ||
-+	    pci_pcie_type(dev->bus->self) != PCI_EXP_TYPE_ROOT_PORT)
-+		return;
-+
-+	mmio = pci_iomap(dev, 0, 0);
-+	if (!mmio) {
-+		pr_err("b43 quirk: Cannot iomap device, IRQ storm ahead\n");
-+		return;
-+	}
-+	iowrite32(BCMA_RESET_CTL_RESET,
-+		  mmio + (1 * BCMA_CORE_SIZE) + BCMA_RESET_CTL);
-+	pci_iounmap(dev, mmio);
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM, 0x4331, quirk_apple_b43_reset);
-+
- static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
- 			  struct pci_fixup *end)
+ /**
+- * tb_sw_set_unpplugged() - set is_unplugged on switch and downstream switches
++ * tb_sw_set_unplugged() - set is_unplugged on switch and downstream switches
+  */
+-void tb_sw_set_unpplugged(struct tb_switch *sw)
++void tb_sw_set_unplugged(struct tb_switch *sw)
  {
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 0367c63..5c37b58 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -158,6 +158,7 @@ struct bcma_host_ops {
- #define BCMA_CORE_DEFAULT		0xFFF
+ 	int i;
+ 	if (sw == sw->tb->root_switch) {
+@@ -442,7 +442,7 @@ void tb_sw_set_unpplugged(struct tb_switch *sw)
+ 	sw->is_unplugged = true;
+ 	for (i = 0; i <= sw->config.max_port_number; i++) {
+ 		if (!tb_is_upstream_port(&sw->ports[i]) && sw->ports[i].remote)
+-			tb_sw_set_unpplugged(sw->ports[i].remote->sw);
++			tb_sw_set_unplugged(sw->ports[i].remote->sw);
+ 	}
+ }
  
- #define BCMA_MAX_NR_CORES		16
-+#define BCMA_CORE_SIZE			0x1000
+@@ -484,7 +484,7 @@ int tb_switch_resume(struct tb_switch *sw)
+ 			|| tb_switch_resume(port->remote->sw)) {
+ 			tb_port_warn(port,
+ 				     "lost during suspend, disconnecting\n");
+-			tb_sw_set_unpplugged(port->remote->sw);
++			tb_sw_set_unplugged(port->remote->sw);
+ 		}
+ 	}
+ 	return 0;
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index d2c3fe3..24b6d30 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -246,7 +246,7 @@ static void tb_handle_hotplug(struct work_struct *work)
+ 	if (ev->unplug) {
+ 		if (port->remote) {
+ 			tb_port_info(port, "unplugged\n");
+-			tb_sw_set_unpplugged(port->remote->sw);
++			tb_sw_set_unplugged(port->remote->sw);
+ 			tb_free_invalid_tunnels(tb);
+ 			tb_switch_free(port->remote->sw);
+ 			port->remote = NULL;
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index 8b0d7cf..61d57ba 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -226,7 +226,7 @@ void tb_switch_free(struct tb_switch *sw);
+ void tb_switch_suspend(struct tb_switch *sw);
+ int tb_switch_resume(struct tb_switch *sw);
+ int tb_switch_reset(struct tb *tb, u64 route);
+-void tb_sw_set_unpplugged(struct tb_switch *sw);
++void tb_sw_set_unplugged(struct tb_switch *sw);
+ struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route);
  
- /* Chip IDs of PCIe devices */
- #define BCMA_CHIP_ID_BCM4313	0x4313
+ int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
+diff --git a/drivers/thunderbolt/tb_regs.h b/drivers/thunderbolt/tb_regs.h
+index 6577af7..1e2a4a8 100644
+--- a/drivers/thunderbolt/tb_regs.h
++++ b/drivers/thunderbolt/tb_regs.h
+@@ -30,7 +30,7 @@ enum tb_cap {
+ 	TB_CAP_I2C		= 0x0005,
+ 	TB_CAP_PLUG_EVENTS	= 0x0105, /* also EEPROM */
+ 	TB_CAP_TIME2		= 0x0305,
+-	TB_CAL_IECS		= 0x0405,
++	TB_CAP_IECS		= 0x0405,
+ 	TB_CAP_LINK_CONTROLLER	= 0x0605, /* also IECS */
+ };
+ 
 -- 
-2.8.0.rc3
+2.7.0
 
