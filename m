@@ -1,192 +1,171 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 14 Mar 2016 13:52:51 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org, linux-pci@vger.kernel.org,
-	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
-	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
-	rjw@rjwysocki.net, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/4] acpi,pci,irq: reduce resource requirements
-Message-ID: <20160314185251.GA19703@localhost>
-References: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
+Message-Id: <d90c3d66a193e4c01b8b74532c2b98c5b5aec89a.1458126755.git.lukas@wunner.de>
+In-Reply-To: <cover.1458126755.git.lukas@wunner.de>
+References: <cover.1458126755.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Wed, 16 Mar 2016 15:50:35 +0100
+Subject: [RFC 3/4] thunderbolt: Move pm code to separate file
+To: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 08, 2016 at 07:41:16PM -0500, Sinan Kaya wrote:
-> Code has been redesigned to calculate penalty requirements on the fly. This
-> significantly simplifies the implementation and removes some of the init
-> calls from x86 architecture.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/acpi/pci_link.c | 82 ++++++++++++++++++++++++++++++++++---------------
->  1 file changed, 58 insertions(+), 24 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-> index ededa90..a5a66ca 100644
-> --- a/drivers/acpi/pci_link.c
-> +++ b/drivers/acpi/pci_link.c
-> @@ -36,6 +36,8 @@
->  #include <linux/mutex.h>
->  #include <linux/slab.h>
->  #include <linux/acpi.h>
-> +#include <linux/irq.h>
-> +#include <linux/interrupt.h>
->  
->  #include "internal.h"
->  
-> @@ -440,7 +442,6 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
->  #define ACPI_MAX_IRQS		256
->  #define ACPI_MAX_ISA_IRQ	16
->  
-> -#define PIRQ_PENALTY_PCI_AVAILABLE	(0)
->  #define PIRQ_PENALTY_PCI_POSSIBLE	(16*16)
->  #define PIRQ_PENALTY_PCI_USING		(16*16*16)
->  #define PIRQ_PENALTY_ISA_TYPICAL	(16*16*16*16)
-> @@ -457,9 +458,9 @@ static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
->  	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ6 */
->  	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ7 parallel, spurious */
->  	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ8 rtc, sometimes */
-> -	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ9  PCI, often acpi */
-> -	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ10 PCI */
-> -	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ11 PCI */
-> +	0,				/* IRQ9  PCI, often acpi */
-> +	0,				/* IRQ10 PCI */
-> +	0,				/* IRQ11 PCI */
->  	PIRQ_PENALTY_ISA_USED,		/* IRQ12 mouse */
->  	PIRQ_PENALTY_ISA_USED,		/* IRQ13 fpe, sometimes */
->  	PIRQ_PENALTY_ISA_USED,		/* IRQ14 ide0 */
-> @@ -467,6 +468,49 @@ static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
->  	/* >IRQ15 */
->  };
->  
-> +static int acpi_irq_pci_sharing_penalty(int irq)
-> +{
-> +	struct acpi_pci_link *link;
-> +	int penalty = 0;
-> +
-> +	list_for_each_entry(link, &acpi_link_list, list) {
-> +		/*
-> +		 * If a link is active, penalize its IRQ heavily
-> +		 * so we try to choose a different IRQ.
-> +		 */
-> +		if (link->irq.active && link->irq.active == irq)
-> +			penalty += PIRQ_PENALTY_PCI_USING;
-> +		else {
-> +			int i;
-> +
-> +			/*
-> +			 * If a link is inactive, penalize the IRQs it
-> +			 * might use, but not as severely.
-> +			 */
-> +			for (i = 0; i < link->irq.possible_count; i++)
-> +				if (link->irq.possible[i] == irq)
-> +					penalty += PIRQ_PENALTY_PCI_POSSIBLE /
-> +						link->irq.possible_count;
-> +		}
-> +	}
-> +
-> +	return penalty;
-> +}
-> +
-> +static int acpi_irq_get_penalty(int irq)
-> +{
-> +	int penalty = 0;
-> +
-> +	if (irq < ACPI_MAX_ISA_IRQ)
-> +		penalty += acpi_irq_penalty[irq];
-> +
-> +	if (irq == acpi_gbl_FADT.sci_interrupt)
-> +		penalty += PIRQ_PENALTY_PCI_USING;
-> +
-> +	penalty += acpi_irq_pci_sharing_penalty(irq);
-> +	return penalty;
-> +}
-> +
->  int __init acpi_irq_penalty_init(void)
->  {
->  	struct acpi_pci_link *link;
-> @@ -568,7 +612,6 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
->  			    acpi_device_bid(link->device));
->  		return -ENODEV;
->  	} else {
-> -		acpi_irq_penalty[link->irq.active] += PIRQ_PENALTY_PCI_USING;
->  		printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
->  		       acpi_device_name(link->device),
->  		       acpi_device_bid(link->device), link->irq.active);
-> @@ -787,23 +830,24 @@ static int __init acpi_irq_penalty_update(char *str, int used)
->  	for (i = 0; i < 16; i++) {
->  		int retval;
->  		int irq;
-> +		int new_penalty;
->  
->  		retval = get_option(&str, &irq);
->  
->  		if (!retval)
->  			break;	/* no number found */
->  
-> -		if (irq < 0)
-> -			continue;
-> -
-> -		if (irq >= ARRAY_SIZE(acpi_irq_penalty))
-> +		/* see if this is a ISA IRQ */
-> +		if ((irq < 0) || (irq >= ACPI_MAX_ISA_IRQ))
->  			continue;
->  
->  		if (used)
-> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_USED;
-> +			new_penalty = acpi_irq_get_penalty(irq) +
-> +					PIRQ_PENALTY_ISA_USED;
->  		else
-> -			acpi_irq_penalty[irq] = PIRQ_PENALTY_PCI_AVAILABLE;
-> +			new_penalty = 0;
->  
-> +		acpi_irq_penalty[irq] = new_penalty;
->  		if (retval != 2)	/* no next number */
->  			break;
->  	}
-> @@ -819,12 +863,9 @@ static int __init acpi_irq_penalty_update(char *str, int used)
->   */
->  void acpi_penalize_isa_irq(int irq, int active)
->  {
-> -	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
-> -		if (active)
-> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_USED;
-> -		else
-> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
-> -	}
-> +	if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_irq_penalty)))
-> +		acpi_irq_penalty[irq] = active ?
-> +			PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING;
->  }
->  
->  bool acpi_isa_irq_available(int irq)
-> @@ -840,13 +881,6 @@ bool acpi_isa_irq_available(int irq)
->   */
->  void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
->  {
-> -	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
-> -		if (trigger != ACPI_MADT_TRIGGER_LEVEL ||
-> -		    polarity != ACPI_MADT_POLARITY_ACTIVE_LOW)
-> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_ALWAYS;
-> -		else
-> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
-> -	}
+No code changes.
 
-I think we lost the validation of trigger mode and polarity, didn't
-we?
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/thunderbolt/Makefile |  3 +--
+ drivers/thunderbolt/nhi.c    | 33 +--------------------------------
+ drivers/thunderbolt/power.c  | 41 +++++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/power.h  | 14 ++++++++++++++
+ 4 files changed, 57 insertions(+), 34 deletions(-)
+ create mode 100644 drivers/thunderbolt/power.c
+ create mode 100644 drivers/thunderbolt/power.h
 
->  }
->  
->  /*
-> -- 
-> 1.8.2.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/thunderbolt/Makefile b/drivers/thunderbolt/Makefile
+index 5d1053c..03c7ba5 100644
+--- a/drivers/thunderbolt/Makefile
++++ b/drivers/thunderbolt/Makefile
+@@ -1,3 +1,2 @@
+ obj-${CONFIG_THUNDERBOLT} := thunderbolt.o
+-thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o
+-
++thunderbolt-objs := nhi.o ctl.o tb.o switch.o cap.o path.o tunnel_pci.o eeprom.o power.o
+diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+index 36be23b..fa89160 100644
+--- a/drivers/thunderbolt/nhi.c
++++ b/drivers/thunderbolt/nhi.c
+@@ -7,7 +7,6 @@
+  * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
+  */
+ 
+-#include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+ #include <linux/errno.h>
+ #include <linux/pci.h>
+@@ -17,6 +16,7 @@
+ 
+ #include "nhi.h"
+ #include "nhi_regs.h"
++#include "power.h"
+ #include "tb.h"
+ 
+ #define RING_TYPE(ring) ((ring)->is_tx ? "TX ring" : "RX ring")
+@@ -493,22 +493,6 @@ static irqreturn_t nhi_msi(int irq, void *data)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static int nhi_suspend_noirq(struct device *dev)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-	struct tb *tb = pci_get_drvdata(pdev);
+-	thunderbolt_suspend(tb);
+-	return 0;
+-}
+-
+-static int nhi_resume_noirq(struct device *dev)
+-{
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-	struct tb *tb = pci_get_drvdata(pdev);
+-	thunderbolt_resume(tb);
+-	return 0;
+-}
+-
+ static void nhi_shutdown(struct tb_nhi *nhi)
+ {
+ 	int i;
+@@ -615,21 +599,6 @@ static void nhi_remove(struct pci_dev *pdev)
+ 	nhi_shutdown(nhi);
+ }
+ 
+-/*
+- * The tunneled pci bridges are siblings of us. Use resume_noirq to reenable
+- * the tunnels asap. A corresponding pci quirk blocks the downstream bridges
+- * resume_noirq until we are done.
+- */
+-static const struct dev_pm_ops nhi_pm_ops = {
+-	.suspend_noirq = nhi_suspend_noirq,
+-	.resume_noirq = nhi_resume_noirq,
+-	.freeze_noirq = nhi_suspend_noirq, /*
+-					    * we just disable hotplug, the
+-					    * pci-tunnels stay alive.
+-					    */
+-	.restore_noirq = nhi_resume_noirq,
+-};
+-
+ static struct pci_device_id nhi_ids[] = {
+ 	/*
+ 	 * We have to specify class, the TB bridges use the same device and
+diff --git a/drivers/thunderbolt/power.c b/drivers/thunderbolt/power.c
+new file mode 100644
+index 0000000..1095ad0
+--- /dev/null
++++ b/drivers/thunderbolt/power.c
+@@ -0,0 +1,41 @@
++/*
++ * Thunderbolt Cactus Ridge driver - power management
++ *
++ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
++ */
++
++#include <linux/pci.h>
++#include <linux/pm_runtime.h>
++
++#include "tb.h"
++
++static int nhi_suspend_noirq(struct device *dev)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct tb *tb = pci_get_drvdata(pdev);
++	thunderbolt_suspend(tb);
++	return 0;
++}
++
++static int nhi_resume_noirq(struct device *dev)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	struct tb *tb = pci_get_drvdata(pdev);
++	thunderbolt_resume(tb);
++	return 0;
++}
++
++/*
++ * The tunneled pci bridges are siblings of us. Use resume_noirq to reenable
++ * the tunnels asap. A corresponding pci quirk blocks the downstream bridges
++ * resume_noirq until we are done.
++ */
++const struct dev_pm_ops nhi_pm_ops = {
++	.suspend_noirq = nhi_suspend_noirq,
++	.resume_noirq  = nhi_resume_noirq,
++	.freeze_noirq  = nhi_suspend_noirq, /*
++					     * we just disable hotplug, the
++					     * pci-tunnels stay alive.
++					     */
++	.restore_noirq = nhi_resume_noirq,
++};
+diff --git a/drivers/thunderbolt/power.h b/drivers/thunderbolt/power.h
+new file mode 100644
+index 0000000..99cb900
+--- /dev/null
++++ b/drivers/thunderbolt/power.h
+@@ -0,0 +1,14 @@
++/*
++ * Thunderbolt Cactus Ridge driver - power management
++ *
++ * Copyright (c) 2014 Andreas Noever <andreas.noever@gmail.com>
++ */
++
++#ifndef POWER_H
++#define POWER_H
++
++#include <linux/pm_runtime.h>
++
++extern const struct dev_pm_ops nhi_pm_ops;
++
++#endif
+-- 
+2.7.0
+
