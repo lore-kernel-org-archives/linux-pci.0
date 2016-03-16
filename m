@@ -1,62 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38717 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932084AbcCKV6W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Mar 2016 16:58:22 -0500
-Date: Fri, 11 Mar 2016 15:58:19 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	michals@xilinx.com, sorenb@xilinx.com, bhelgaas@google.com,
-	arnd@arndb.de, tinamdar@apm.com, treding@nvidia.com,
-	rjui@broadcom.com, Minghuan.Lian@freescale.com,
-	m-karicheri2@ti.com, hauke@hauke-m.de, marc.zyngier@arm.com,
-	dhdang@apm.com, sbranden@broadcom.com, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH v12] [PATCH] PCI: Xilinx-NWL-PCIe: Adding support for
- Xilinx NWL PCIe Host Controller
-Message-ID: <20160311215819.GB16257@localhost>
-References: <1457281934-32068-1-git-send-email-bharatku@xilinx.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:10230 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932347AbcCPLof (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Mar 2016 07:44:35 -0400
+From: Jisheng Zhang <jszhang@marvell.com>
+To: <jingoohan1@gmail.com>, <pratyush.anand@gmail.com>,
+	<bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Jisheng Zhang <jszhang@marvell.com>
+Subject: [PATCH v2] PCI: designware: move remaining rc setup code to dw_pcie_setup_rc()
+Date: Wed, 16 Mar 2016 19:40:33 +0800
+Message-ID: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1457281934-32068-1-git-send-email-bharatku@xilinx.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bharat,
+dw_pcie_setup_rc(), as its name indicates, setups the RC. But current
+dw_pcie_host_init() also contains some necessary rc setup code.
 
-I forgot I still have one question here:
+Another reason: the host may lost power during suspend to ram, the RC
+need to be re-setup after resume. The rc can't be correctly resumed
+without the rc setup code in dw_pcie_host_init().
 
-On Sun, Mar 06, 2016 at 10:02:14PM +0530, Bharat Kumar Gogada wrote:
-> Adding PCIe Root Port driver for Xilinx PCIe NWL bridge IP.
+So this patch moves the code to dw_pcie_setup_rc() to address the above
+two issues. After this patch, each pcie designware driver users could
+call dw_pcie_setup_rc() to re-setup rc when resume back.
 
-> +static bool nwl_pcie_valid_device(struct pci_bus *bus, unsigned int devfn)
-> +{
-> +	struct nwl_pcie *pcie = bus->sysdata;
-> +
-> +	/* Check link,before accessing downstream ports */
-> +	if (bus->number != pcie->root_busno) {
-> +		if (!nwl_pcie_link_up(pcie))
-> +			return false;
-> +	}
+Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+---
+Since v1:
+ - fix gcc warning found by lkp, thanks
 
-This seems racy.  What if we check, and the link is up, but the link
-goes down before we actually complete the config access?
+ drivers/pci/host/pcie-designware.c | 39 +++++++++++++++++++-------------------
+ 1 file changed, 19 insertions(+), 20 deletions(-)
 
-I'm suggesting that this check for the link being up might be
-superfluous.
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index a4cccd3..261e4a11 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -434,7 +434,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	struct platform_device *pdev = to_platform_device(pp->dev);
+ 	struct pci_bus *bus, *child;
+ 	struct resource *cfg_res;
+-	u32 val;
+ 	int i, ret;
+ 	LIST_HEAD(res);
+ 	struct resource_entry *win;
+@@ -544,25 +543,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	if (pp->ops->host_init)
+ 		pp->ops->host_init(pp);
+ 
+-	/*
+-	 * If the platform provides ->rd_other_conf, it means the platform
+-	 * uses its own address translation component rather than ATU, so
+-	 * we should not program the ATU here.
+-	 */
+-	if (!pp->ops->rd_other_conf)
+-		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+-					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+-					  pp->mem_bus_addr, pp->mem_size);
+-
+-	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+-
+-	/* program correct class for RC */
+-	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
+-
+-	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+-	val |= PORT_LOGIC_SPEED_CHANGE;
+-	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+-
+ 	pp->root_bus_nr = pp->busn->start;
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
+@@ -800,6 +780,25 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	val |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
+ 		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
+ 	dw_pcie_writel_rc(pp, val, PCI_COMMAND);
++
++	/*
++	 * If the platform provides ->rd_other_conf, it means the platform
++	 * uses its own address translation component rather than ATU, so
++	 * we should not program the ATU here.
++	 */
++	if (!pp->ops->rd_other_conf)
++		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
++					  PCIE_ATU_TYPE_MEM, pp->mem_base,
++					  pp->mem_bus_addr, pp->mem_size);
++
++	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
++
++	/* program correct class for RC */
++	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
++
++	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
++	val |= PORT_LOGIC_SPEED_CHANGE;
++	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+ }
+ 
+ MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
+-- 
+2.7.0
 
-The hardware should do something reasonable with the config access if
-it can't send it down the link.
-
-> +
-> +	/* Only one device down on each root port */
-> +	if (bus->number == pcie->root_busno && devfn > 0)
-> +		return false;
-> +
-> +	return true;
-> +}
