@@ -1,170 +1,156 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f182.google.com ([209.85.223.182]:34149 "EHLO
-	mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966701AbcCPOTX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Mar 2016 10:19:23 -0400
-Received: by mail-io0-f182.google.com with SMTP id m184so60881907iof.1
-        for <linux-pci@vger.kernel.org>; Wed, 16 Mar 2016 07:19:23 -0700 (PDT)
+Received: from mail.kernel.org ([198.145.29.136]:47085 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932570AbcCPQpm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 16 Mar 2016 12:45:42 -0400
+Date: Wed, 16 Mar 2016 11:45:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: PCI IO resource question.
+Message-ID: <20160316164531.GA28797@localhost>
+References: <56E987B8.1090904@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <56E81C56.8060404@tekno-soft.it>
-References: <56D5E3DF.9030906@tekno-soft.it>
-	<56D71F27.7070708@tekno-soft.it>
-	<20160302195634.GA19223@localhost>
-	<DBXPR04MB2706C7C2FD2348D205331998CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
-	<56D80435.90408@tekno-soft.it>
-	<DBXPR04MB2702F4BC78FA28DC82DCA218CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
-	<56D8180A.1050708@tekno-soft.it>
-	<56D84B6D.1050800@tekno-soft.it>
-	<56D883AD.5060601@tekno-soft.it>
-	<56DEE426.8030902@tekno-soft.it>
-	<1457448829.3207.22.camel@pengutronix.de>
-	<56E1B04A.9010206@tekno-soft.it>
-	<56E679FE.20409@tekno-soft.it>
-	<56E7ED1E.3070506@tekno-soft.it>
-	<CAOMZO5C9H92mMqTPiOwMYhywBCyQuXQen3Vw==ELE-ppTtogqg@mail.gmail.com>
-	<56E81C56.8060404@tekno-soft.it>
-Date: Wed, 16 Mar 2016 11:19:22 -0300
-Message-ID: <CAOMZO5C0rvszTg0bPoSnT5zzL8EC2Vk1PVDJgB1m1FREy9ncaQ@mail.gmail.com>
-Subject: Re: iMX6q PCIe phy link never came up on kernel v4.4.x
-From: Fabio Estevam <festevam@gmail.com>
-To: Roberto Fichera <kernel@tekno-soft.it>,
-	Tim Harvey <tharvey@gateworks.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <hongxing.zhu@nxp.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <56E987B8.1090904@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tim,
+On Wed, Mar 16, 2016 at 12:20:08PM -0400, Murali Karicheri wrote:
+> Bjorn,
+> 
+> Keystone PCI h/w doesn't support IO access in the inbound direction
+> as stated in the hardware spec cut-n-pasted below.
+> 
+> • No support for IO access in inbound direction in RC or EP mode
+> 
+> Way back when the driver was ported, I vaguely recollect I had to
+> add a dummy IO range to satisfy PCI Driver core. I am assuming the 
+> first entry in the DTS is for this IO port access. Is it true?
 
-On Tue, Mar 15, 2016 at 11:29 AM, Roberto Fichera <kernel@tekno-soft.it> wrote:
-> On 03/15/2016 03:10 PM, Fabio Estevam wrote:
->> On Tue, Mar 15, 2016 at 8:08 AM, Roberto Fichera <kernel@tekno-soft.it> wrote:
->>
->>> Just to say that I've fixed the problem by asserting PERST before to drop PCIe refclk and enable
->>> power down. PERST is finally released at the usual place.
->> Excellent! Do you plan to submit a patch to fix this issue?
->
-> I don't know, in my case the problem was related to the XIO2001 that require PERST to be
-> asserted before to drop PCIe refclk as reported by its datasheet:
+The PCI core should not require an I/O range.
 
-Does your board detect XIO2001 bridge with kernel 4.4.x or do you also
-need something like Roberto's changes below?
+> arch/arm/boot/dts/k2e.dtsi
+> 
+>                        ranges = <0x81000000 0 0 0x23260000 0x4000 0x4000
+>                                  0x82000000 0 0x60000000 0x60000000 0 0x10000000>;
+> 
+> I see following boot log when I boot with 4.4.x kernel
+> 
+> >> keystone-pcie 21021000.pcie: error -22: failed to map resource [io 0x0000-0x400000003fff]
+> 
+> I need to fix the above entry to
+> 
+> -                       ranges = <0x81000000 0 0 0x23260000 0x4000 0x4000
+> +                       ranges = <0x81000000 0 0 0x23260000 0x0 0x4000
+>                                 0x82000000 0 0x60000000 0x60000000 0 0x10000000>;
+> 
+> 
+> to remove this error message.
+> 
+> However I am wondering if it is mandatory to define this range at all. I tried
+> to remove the entry and I get following error then
+> 
+> [    0.448772] pci 0000:00:00.0: BAR 8: assigned [mem 0x60000000-0x600fffff]
+> [    0.448783] pci 0000:00:00.0: BAR 9: assigned [mem 0x60100000-0x601fffff pref]
+> [    0.448792] pci 0000:00:00.0: BAR 7: no space for [io  size 0x1000]
+> [    0.448800] pci 0000:00:00.0: BAR 7: failed to assign [io  size 0x1000]
 
+Obviously if the host bridge doesn't support I/O port space, we will
+be unable to assign space for I/O BARs, so you will see errors like
+this.  
 
-> @@ -214,6 +352,16 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
->      struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
->      u32 val, gpr1, gpr12;
->
-> +        /*
-> +         * Our PCIe link is connected to a TI XIO2001 PCIe-to-PCI
-> +         * bridge and this require PERST to be asserted before to
-> +         * drop PCIe ref_clk otherwise it will get "confused" and
-> +         * the PCIe link state will stuck in POLL_STATE
-> +         */
-> +    if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-> +            gpio_set_value(imx6_pcie->reset_gpio, 0);
-> +        }
-> +
->      /*
->       * If the bootloader already enabled the link we need some special
->       * handling to get the core back into a state where it is safe to
-> @@ -241,6 +389,7 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
->
->      regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
->              IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
-> +    udelay(10);
->      regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
->              IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
->
->
-> I've also slightly changed the Gen2 negotiation with this relevant part where the Gen2 speed
-> change is only done if necessary
->
-> @@ -387,46 +541,57 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
->
->      /* Start LTSSM. */
->      regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> -            IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
-> -
-> -    ret = imx6_pcie_wait_for_link(pp);
-> -    if (ret)
-> -        return ret;
-> -
-> -    /* Allow Gen2 mode after the link is up. */
-> -    tmp = readl(pp->dbi_base + PCIE_RC_LCR);
-> -    tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-> -    tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
-> -    writel(tmp, pp->dbi_base + PCIE_RC_LCR);
-> -
-> -    /*
-> -     * Start Directed Speed Change so the best possible speed both link
-> -     * partners support can be negotiated.
-> -     */
-> -    tmp = readl(pp->dbi_base + PCIE_LINK_WIDTH_SPEED_CONTROL);
-> -    tmp |= PORT_LOGIC_SPEED_CHANGE;
-> -    writel(tmp, pp->dbi_base + PCIE_LINK_WIDTH_SPEED_CONTROL);
-> -
-> -    ret = imx6_pcie_wait_for_speed_change(pp);
-> -    if (ret) {
-> -        dev_err(pp->dev, "Failed to bring link up!\n");
-> -        return ret;
-> -    }
-> +                  IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
->
-> -    /* Make sure link training is finished as well! */
->      ret = imx6_pcie_wait_for_link(pp);
-> -    if (ret) {
-> -        dev_err(pp->dev, "Failed to bring link up!\n");
-> -        return ret;
-> +        if(ret)
-> +                return ret;
-> +
-> +        if(pp->link_gen == 2) {
-> +            /* Allow Gen2 mode after the link is up. */
-> +            tmp = readl(pp->dbi_base + PCIE_RC_LCR);
-> +            tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-> +            tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
-> +            writel(tmp, pp->dbi_base + PCIE_RC_LCR);
-> +
-> +            /*
-> +             * Start Directed Speed Change so the best possible speed both link
-> +             * partners support can be negotiated.
-> +             */
-> +            tmp = readl(pp->dbi_base + PCIE_LINK_WIDTH_SPEED_CONTROL);
-> +            tmp |= PORT_LOGIC_SPEED_CHANGE;
-> +            writel(tmp, pp->dbi_base + PCIE_LINK_WIDTH_SPEED_CONTROL);
-> +
-> +            ret = imx6_pcie_wait_for_speed_change(pp);
-> +            if (ret) {
-> +                dev_err(pp->dev, "Failed to bring link up!\n");
-> +                return ret;
-> +            }
-> +
-> +            /* Make sure link training is finished as well! */
-> +            ret = imx6_pcie_wait_for_link(pp);
-> +            if (ret) {
-> +                dev_err(pp->dev, "Failed to bring link up!\n");
-> +                return ret;
-> +            }
-> +
-> +    } else {
-> +        dev_info(pp->dev, "Link: Gen2 disabled\n");
->      }
->
->      tmp = readl(pp->dbi_base + PCIE_RC_LCSR);
-> -    dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
-> +    dev_info(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
->      return 0;
->  }
->
->
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
+We may be able to improve the message and/or make this less noisy.
+Guenter Roeck looked at a similar issue a while ago, but it's not
+completely trivial:
+
+  http://lkml.kernel.org/r/20150515172836.GA27797@svl-evodev-groeck.juniper.net
+
+The PCI core should check in pci_enable_device() whether all the
+device BARs have been assigned.  If not, it should fail.  But if a
+driver doesn't need I/O space, it can use pci_enable_device_mem() to
+indicate that it only needs the MEM BARs.  That should succeed even if
+the I/O BARs aren't assigned.
+
+Bottom line, if you omit I/O space on your host bridge:
+
+  - You will see annoying "no space for" and "failed to assign" messages
+  - Drivers that don't need I/O ports should still work
+  - It's far better to have the messages than it was to pretend that
+    the host bridge supported I/O space when it really didn't.
+
+> [    0.448813] pci 0000:01:00.0: BAR 6: assigned [mem 0x60100000-0x6010ffff pref]
+> [    0.448822] pci 0000:01:00.0: BAR 5: assigned [mem 0x60000000-0x600001ff]
+> [    0.448834] pci 0000:01:00.0: BAR 4: no space for [io  size 0x0010]
+> [    0.448841] pci 0000:01:00.0: BAR 4: failed to assign [io  size 0x0010]
+> [    0.448848] pci 0000:01:00.0: BAR 0: no space for [io  size 0x0008]
+> [    0.448855] pci 0000:01:00.0: BAR 0: failed to assign [io  size 0x0008]
+> [    0.448863] pci 0000:01:00.0: BAR 2: no space for [io  size 0x0008]
+> [    0.448870] pci 0000:01:00.0: BAR 2: failed to assign [io  size 0x0008]
+> [    0.448877] pci 0000:01:00.0: BAR 1: no space for [io  size 0x0004]
+> [    0.448884] pci 0000:01:00.0: BAR 1: failed to assign [io  size 0x0004]
+> [    0.448891] pci 0000:01:00.0: BAR 3: no space for [io  size 0x0004]
+> [    0.448898] pci 0000:01:00.0: BAR 3: failed to assign [io  size 0x0004]
+> [    0.448907] pci 0000:00:00.0: PCI bridge to [bus 01]
+> 
+> 
+> The original log is below and even with the error, I am able to have SATA
+> drive function as expected over this PCIe interface.
+> 
+> 
+> [    0.420648] PCI host bridge /soc/pcie@21020000 ranges:
+> [    0.420659]   No bus range found for /soc/pcie@21020000, using [bus 00-ff]
+> [    0.420679]    IO 0x23260000..0x400023263fff -> 0x00000000
+> [    0.420685] Requested IO range too big, new size set to 64K
+> [    0.420702]   MEM 0x60000000..0x6fffffff -> 0x60000000
+> [    0.420713] keystone-pcie 21021000.pcie: error -22: failed to map resource [io  0x0000-0x400000003fff]
+> [    0.431849] keystone-pcie 21021000.pcie: PCI host bridge to bus 0000:00
+> [    0.431861] pci_bus 0000:00: root bus resource [bus 00-ff]
+> [    0.431870] pci_bus 0000:00: root bus resource [io  0x0000-0x400000003fff]
+
+This range is obviously bogus, since it's way too big and not a nice
+round size.  I guess this is what you're fixing.
+
+> [    0.431879] pci_bus 0000:00: root bus resource [mem 0x60000000-0x6fffffff]
+> [    0.431906] pci 0000:00:00.0: [104c:b009] type 01 class 0x060400
+> [    0.432173] PCI: bus0: Fast back to back transfers disabled
+> [    0.432334] pci 0000:01:00.0: [1b4b:9182] type 00 class 0x010601
+> [    0.432382] pci 0000:01:00.0: reg 0x10: [io  0x8000-0x8007]
+> [    0.432402] pci 0000:01:00.0: reg 0x14: [io  0x8040-0x8043]
+> [    0.432420] pci 0000:01:00.0: reg 0x18: [io  0x8100-0x8107]
+> [    0.432439] pci 0000:01:00.0: reg 0x1c: [io  0x8140-0x8143]
+> [    0.432457] pci 0000:01:00.0: reg 0x20: [io  0x800000-0x80000f]
+> [    0.432476] pci 0000:01:00.0: reg 0x24: [mem 0x00900000-0x009001ff]
+> [    0.432495] pci 0000:01:00.0: reg 0x30: [mem 0xd0000000-0xd000ffff pref]
+> [    0.432561] pci 0000:01:00.0: PME# supported from D3hot
+> [    0.448635] PCI: bus1: Fast back to back transfers disabled
+> [    0.448717] pci 0000:00:00.0: BAR 8: assigned [mem 0x60000000-0x600fffff]
+> [    0.448729] pci 0000:00:00.0: BAR 9: assigned [mem 0x60100000-0x601fffff pref]
+> [    0.448738] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
+> [    0.448751] pci 0000:01:00.0: BAR 6: assigned [mem 0x60100000-0x6010ffff pref]
+> [    0.448760] pci 0000:01:00.0: BAR 5: assigned [mem 0x60000000-0x600001ff]
+> [    0.448772] pci 0000:01:00.0: BAR 4: assigned [io  0x1000-0x100f]
+> [    0.448784] pci 0000:01:00.0: BAR 0: assigned [io  0x1010-0x1017]
+> [    0.448796] pci 0000:01:00.0: BAR 2: assigned [io  0x1018-0x101f]
+> [    0.448808] pci 0000:01:00.0: BAR 1: assigned [io  0x1020-0x1023]
+> [    0.448820] pci 0000:01:00.0: BAR 3: assigned [io  0x1024-0x1027]
+> [    0.448833] pci 0000:00:00.0: PCI bridge to [bus 01]
+> [    0.448842] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
+> [    0.448851] pci 0000:00:00.0:   bridge window [mem 0x60000000-0x600fffff]
+> [    0.448860] pci 0000:00:00.0:   bridge window [mem 0x60100000-0x601fffff pref]
+> [    0.449077] pcieport 0000:00:00.0: Signaling PME through PCIe PME interrupt
+> [    0.449086] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
+> [    0.449095] pcie_pme 0000:00:00.0:pcie01: service driver pcie_pme loaded
+> [    0.449240] aer 0000:00:00.0:pcie02: service driver aer loaded
+> 
+> 
+> Thanks and regards,
+> 
+> -- 
+> Murali Karicheri
+> Linux Kernel, Keystone
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
