@@ -1,67 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:56076 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755626AbcC2Dnb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2016 23:43:31 -0400
-From: Simon Horman <horms+renesas@verge.net.au>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Phil Edworthy <phil.edworthy@renesas.com>,
-	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	Simon Horman <horms+renesas@verge.net.au>
-Subject: [PATCH] PCI: rcar-pcie: Remove Gen2 designation from Kconfig
-Date: Tue, 29 Mar 2016 12:43:18 +0900
-Message-Id: <1459222998-2855-1-git-send-email-horms+renesas@verge.net.au>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:2005 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933803AbcCPKkd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Mar 2016 06:40:33 -0400
+From: Jisheng Zhang <jszhang@marvell.com>
+To: <jingoohan1@gmail.com>, <pratyush.anand@gmail.com>,
+	<bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	Jisheng Zhang <jszhang@marvell.com>
+Subject: [PATCH] PCI: designware: move remaining rc setup code to dw_pcie_setup_rc()
+Date: Wed, 16 Mar 2016 18:36:22 +0800
+Message-ID: <1458124582-2511-1-git-send-email-jszhang@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It appears that Gen2 is a misnomer for the R-Car PCIE driver
-which also supports Gen 1 and Gen 3 SoCs. Accordingly, drop Gen 2
-from the help text and Kconfig symbol.
+dw_pcie_setup_rc(), as its name indicates, setups the RC. But current
+dw_pcie_host_init() also contains some necessary rc setup code.
 
-Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
-Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
----
-Bjorn, if this patch is acceptable I would like to request that we
-co-ordinate things so that I can queue-up corresponding updates for
-arm and arm64 defconfigs in the same release. From my point of view
-v4.7 would make sense.
----
- drivers/pci/host/Kconfig  | 4 ++--
- drivers/pci/host/Makefile | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Another reason: the host may lost power during suspend to ram, the RC
+need to be re-setup after resume. The rc can't be correctly resumed
+without the rc setup code in dw_pcie_host_init().
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 7a0780d56d2d..9109c6c5298c 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -69,11 +69,11 @@ config PCI_RCAR_GEN2
- 	  There are 3 internal PCI controllers available with a single
- 	  built-in EHCI/OHCI host controller present on each one.
+So this patch moves the code to dw_pcie_setup_rc() to address the above
+two issues. After this patch, each pcie designware driver users could
+call dw_pcie_setup_rc() to re-setup rc when resume back.
+
+Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+---
+ drivers/pci/host/pcie-designware.c | 38 +++++++++++++++++++-------------------
+ 1 file changed, 19 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+index a4cccd3..6474f80 100644
+--- a/drivers/pci/host/pcie-designware.c
++++ b/drivers/pci/host/pcie-designware.c
+@@ -544,25 +544,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	if (pp->ops->host_init)
+ 		pp->ops->host_init(pp);
  
--config PCI_RCAR_GEN2_PCIE
-+config PCI_RCAR_PCIE
- 	bool "Renesas R-Car PCIe controller"
- 	depends on ARCH_RENESAS || (ARM && COMPILE_TEST)
- 	help
--	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
-+	  Say Y here if you want PCIe controller support on R-Car SoCs.
+-	/*
+-	 * If the platform provides ->rd_other_conf, it means the platform
+-	 * uses its own address translation component rather than ATU, so
+-	 * we should not program the ATU here.
+-	 */
+-	if (!pp->ops->rd_other_conf)
+-		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+-					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+-					  pp->mem_bus_addr, pp->mem_size);
+-
+-	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+-
+-	/* program correct class for RC */
+-	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
+-
+-	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+-	val |= PORT_LOGIC_SPEED_CHANGE;
+-	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+-
+ 	pp->root_bus_nr = pp->busn->start;
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
+@@ -800,6 +781,25 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	val |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
+ 		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
+ 	dw_pcie_writel_rc(pp, val, PCI_COMMAND);
++
++	/*
++	 * If the platform provides ->rd_other_conf, it means the platform
++	 * uses its own address translation component rather than ATU, so
++	 * we should not program the ATU here.
++	 */
++	if (!pp->ops->rd_other_conf)
++		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
++					  PCIE_ATU_TYPE_MEM, pp->mem_base,
++					  pp->mem_bus_addr, pp->mem_size);
++
++	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
++
++	/* program correct class for RC */
++	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
++
++	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
++	val |= PORT_LOGIC_SPEED_CHANGE;
++	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+ }
  
- config PCI_HOST_COMMON
- 	bool
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index d85b5faf9bbc..042cf32c14ca 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -7,7 +7,7 @@ obj-$(CONFIG_PCI_HYPERV) += pci-hyperv.o
- obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
- obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
- obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
--obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
-+obj-$(CONFIG_PCI_RCAR_PCIE) += pcie-rcar.o
- obj-$(CONFIG_PCI_HOST_COMMON) += pci-host-common.o
- obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
- obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+ MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
 -- 
-2.1.4
+2.7.0
 
