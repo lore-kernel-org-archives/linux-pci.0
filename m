@@ -1,124 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH v1 11/12] PCI: Remove unused IORESOURCE_ROM_COPY and
- IORESOURCE_ROM_BIOS_COPY
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Tony Luck <tony.luck@intel.com>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-	linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Bruno =?utf-8?q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
-	Daniel Stone <daniel@fooishbar.org>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Ville =?utf-8?b?U3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
-Date: Thu, 03 Mar 2016 10:55:18 -0600
-Message-ID: <20160303165518.3025.86484.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:34622 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965254AbcCPVdf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Mar 2016 17:33:35 -0400
+Received: by mail-ob0-f177.google.com with SMTP id ts10so64908031obc.1
+        for <linux-pci@vger.kernel.org>; Wed, 16 Mar 2016 14:33:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAOMZO5C0rvszTg0bPoSnT5zzL8EC2Vk1PVDJgB1m1FREy9ncaQ@mail.gmail.com>
+References: <56D5E3DF.9030906@tekno-soft.it>
+	<56D71F27.7070708@tekno-soft.it>
+	<20160302195634.GA19223@localhost>
+	<DBXPR04MB2706C7C2FD2348D205331998CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
+	<56D80435.90408@tekno-soft.it>
+	<DBXPR04MB2702F4BC78FA28DC82DCA218CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
+	<56D8180A.1050708@tekno-soft.it>
+	<56D84B6D.1050800@tekno-soft.it>
+	<56D883AD.5060601@tekno-soft.it>
+	<56DEE426.8030902@tekno-soft.it>
+	<1457448829.3207.22.camel@pengutronix.de>
+	<56E1B04A.9010206@tekno-soft.it>
+	<56E679FE.20409@tekno-soft.it>
+	<56E7ED1E.3070506@tekno-soft.it>
+	<CAOMZO5C9H92mMqTPiOwMYhywBCyQuXQen3Vw==ELE-ppTtogqg@mail.gmail.com>
+	<56E81C56.8060404@tekno-soft.it>
+	<CAOMZO5C0rvszTg0bPoSnT5zzL8EC2Vk1PVDJgB1m1FREy9ncaQ@mail.gmail.com>
+Date: Wed, 16 Mar 2016 14:33:34 -0700
+Message-ID: <CAJ+vNU1TxqEfjH6jPLnStDuYTjHvt6TxFbe+QN2O5aVqwr1-Tg@mail.gmail.com>
+Subject: Re: iMX6q PCIe phy link never came up on kernel v4.4.x
+From: Tim Harvey <tharvey@gateworks.com>
+To: Fabio Estevam <festevam@gmail.com>,
+	Roberto Fichera <kernel@tekno-soft.it>
+Cc: Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <hongxing.zhu@nxp.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <Richard.Zhu@freescale.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The IORESOURCE_ROM_COPY and IORESOURCE_ROM_BIOS_COPY bits are unused.
-Remove them and code that depends on them.
+On Wed, Mar 16, 2016 at 7:19 AM, Fabio Estevam <festevam@gmail.com> wrote:
+> Tim,
+>
+> On Tue, Mar 15, 2016 at 11:29 AM, Roberto Fichera <kernel@tekno-soft.it> wrote:
+>> On 03/15/2016 03:10 PM, Fabio Estevam wrote:
+>>> On Tue, Mar 15, 2016 at 8:08 AM, Roberto Fichera <kernel@tekno-soft.it> wrote:
+>>>
+>>>> Just to say that I've fixed the problem by asserting PERST before to drop PCIe refclk and enable
+>>>> power down. PERST is finally released at the usual place.
+>>> Excellent! Do you plan to submit a patch to fix this issue?
+>>
+>> I don't know, in my case the problem was related to the XIO2001 that require PERST to be
+>> asserted before to drop PCIe refclk as reported by its datasheet:
+>
+> Does your board detect XIO2001 bridge with kernel 4.4.x or do you also
+> need something like Roberto's changes below?
+>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/remove.c   |    1 -
- drivers/pci/rom.c      |   31 +------------------------------
- include/linux/ioport.h |    2 --
- 3 files changed, 1 insertion(+), 33 deletions(-)
+Fabio,
 
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 8a280e9..6b66329 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -7,7 +7,6 @@ static void pci_free_resources(struct pci_dev *dev)
- {
- 	int i;
- 
--	pci_cleanup_rom(dev);
- 	for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 		struct resource *res = dev->resource + i;
- 		if (res->parent)
-diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
-index 2a07f34..06663d3 100644
---- a/drivers/pci/rom.c
-+++ b/drivers/pci/rom.c
-@@ -128,12 +128,6 @@ void __iomem *pci_map_rom(struct pci_dev *pdev, size_t *size)
- 	loff_t start;
- 	void __iomem *rom;
- 
--	if (res->flags & (IORESOURCE_ROM_COPY | IORESOURCE_ROM_BIOS_COPY)) {
--		*size = pci_resource_len(pdev, PCI_ROM_RESOURCE);
--		return (void __iomem *)(unsigned long)
--			pci_resource_start(pdev, PCI_ROM_RESOURCE);
--	}
--
- 	/* assign the ROM an address if it doesn't have one */
- 	if (res->parent == NULL && pci_assign_resource(pdev, PCI_ROM_RESOURCE))
- 		return NULL;
-@@ -150,8 +144,7 @@ void __iomem *pci_map_rom(struct pci_dev *pdev, size_t *size)
- 	rom = ioremap(start, *size);
- 	if (!rom) {
- 		/* restore enable if ioremap fails */
--		if (!(res->flags & (IORESOURCE_ROM_ENABLE |
--				    IORESOURCE_ROM_COPY)))
-+		if (!(res->flags & IORESOURCE_ROM_ENABLE))
- 			pci_disable_rom(pdev);
- 		return NULL;
- 	}
-@@ -177,9 +170,6 @@ void pci_unmap_rom(struct pci_dev *pdev, void __iomem *rom)
- {
- 	struct resource *res = &pdev->resource[PCI_ROM_RESOURCE];
- 
--	if (res->flags & (IORESOURCE_ROM_COPY | IORESOURCE_ROM_BIOS_COPY))
--		return;
--
- 	iounmap(rom);
- 
- 	/* Disable again before continuing */
-@@ -189,25 +179,6 @@ void pci_unmap_rom(struct pci_dev *pdev, void __iomem *rom)
- EXPORT_SYMBOL(pci_unmap_rom);
- 
- /**
-- * pci_cleanup_rom - free the ROM copy created by pci_map_rom_copy
-- * @pdev: pointer to pci device struct
-- *
-- * Free the copied ROM if we allocated one.
-- */
--void pci_cleanup_rom(struct pci_dev *pdev)
--{
--	struct resource *res = &pdev->resource[PCI_ROM_RESOURCE];
--
--	if (res->flags & IORESOURCE_ROM_COPY) {
--		kfree((void *)(unsigned long)res->start);
--		res->flags |= IORESOURCE_UNSET;
--		res->flags &= ~IORESOURCE_ROM_COPY;
--		res->start = 0;
--		res->end = 0;
--	}
--}
--
--/**
-  * pci_platform_rom - provides a pointer to any ROM image provided by the
-  * platform
-  * @pdev: pointer to pci device struct
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 2cf1667..29a6deb 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -99,8 +99,6 @@ struct resource {
- /* PCI ROM control bits (IORESOURCE_BITS) */
- #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled, same as PCI_ROM_ADDRESS_ENABLE */
- #define IORESOURCE_ROM_SHADOW		(1<<1)	/* Use RAM image, not ROM BAR */
--#define IORESOURCE_ROM_COPY		(1<<2)	/* ROM is alloc'd copy, resource field overlaid */
--#define IORESOURCE_ROM_BIOS_COPY	(1<<3)	/* ROM is BIOS copy, resource field overlaid */
- 
- /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
- #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move resource */
+The board combination I have where an XIO2001 is connected directly to
+an IMX6 is a bit different from Roberto's setup. In our configuration
+the XIO2001 is on an 'expansion' board that its own local PCI clock
+generation. So, in my case the XIO2001 always has a valid clock
+before/during/after its reset. This is different from Roberto's
+scenario. I do recall running into an issue with the XIO2001 on
+another product with a different host controller that had to do with
+noise on the clk prior to its reset being asserted so I am not too
+surprised at what Roberto has found.
+
+I don't specifically see an issue with a change that asserts PCI_RST#
+before the CLK gets enabled then de-asserts it after at least 100ms
+has expired from clock enable - I think that actually follows the
+specs wording closer than what we currently do (turning o the clock
+prior to assert/de-assert reset). However I get very nervous at any
+change to the IMX6 PCIe init. We have found it to be very finicky
+because of the lack of a proper reset.
+
+Roberto,
+
+Did you require the changes regarding Gen2 negotiation? My
+IMX6+XIO2001 links reliably at Gen1 which makes sense for that chip.
+
+Regards,
+
+Tim
