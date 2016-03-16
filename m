@@ -1,58 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55994 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934119AbcCONvc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Mar 2016 09:51:32 -0400
-Date: Tue, 15 Mar 2016 08:51:28 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-snps-arc@lists.infradead.org, Vineet.Gupta1@synopsys.com,
-	Alexey.Brodkin@synopsys.com
-Subject: Re: [PATCH] Remove the inclusion of pci-bridge.h and pci-dma-compat.h
-Message-ID: <20160315135127.GC19974@localhost>
-References: <d3ed7b3e4f746831a5d0469da5361b4cd176f5c6.1457978659.git.jpinto@synopsys.com>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:36086 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752890AbcCPRBW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 16 Mar 2016 13:01:22 -0400
+Subject: Re: [PATCH v3 2/2] PCI: tegra: Support per-lane PHYs
+To: Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+References: <1457452094-5409-1-git-send-email-thierry.reding@gmail.com>
+ <1457452094-5409-2-git-send-email-thierry.reding@gmail.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+From: Stephen Warren <swarren@wwwdotorg.org>
+Message-ID: <56E9915F.9040608@wwwdotorg.org>
+Date: Wed, 16 Mar 2016 11:01:19 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <d3ed7b3e4f746831a5d0469da5361b4cd176f5c6.1457978659.git.jpinto@synopsys.com>
+In-Reply-To: <1457452094-5409-2-git-send-email-thierry.reding@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 15, 2016 at 11:06:02AM +0000, Joao Pinto wrote:
-> While building linux-next the test robot detected that the pci.h was including
-> two removed header files (pci-dma-compat.h and pci-bridge.h) causing the
-> process to fail:
-> http://lists.infradead.org/pipermail/linux-snps-arc/2016-March/000711.html
-> 
-> This patch has the goal to fix the build problem.
-> 
-> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+On 03/08/2016 08:48 AM, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
+>
+> The current XUSB pad controller bindings are insufficient to describe
+> PHY devices attached to USB controllers. New bindings have been created
+> to overcome these restrictions. As a side-effect each root port now is
+> assigned a set of PHY devices, one for each lane associated with the
+> root port. This has the benefit of allowing fine-grained control of the
+> power management for each lane.
 
-Thanks, Joao, I folded this fix into the original commit.  I should have
-caught this myself, since I'm the one who removed pci-bridge.h.
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
 
-> ---
->  arch/arc/include/asm/pci.h | 3 ---
->  1 file changed, 3 deletions(-)
-> 
-> diff --git a/arch/arc/include/asm/pci.h b/arch/arc/include/asm/pci.h
-> index 2f2011c..ba56c23 100644
-> --- a/arch/arc/include/asm/pci.h
-> +++ b/arch/arc/include/asm/pci.h
-> @@ -10,9 +10,6 @@
->  #define _ASM_ARC_PCI_H
->  
->  #ifdef __KERNEL__
-> -#include <asm-generic/pci-dma-compat.h>
-> -#include <asm-generic/pci-bridge.h>
-> -
->  #include <linux/ioport.h>
->  
->  #define PCIBIOS_MIN_IO 0x100
-> -- 
-> 1.8.1.5
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +static int tegra_pcie_port_phy_power_on(struct tegra_pcie_port *port)
+> +{
+> +	struct device *dev = port->pcie->dev;
+> +	unsigned int i;
+> +	int err;
+> +
+> +	for (i = 0; i < port->lanes; i++) {
+> +		err = phy_power_on(port->phys[i]);
+
+This assume the number of array entries is precisely the number of 
+lanes. That seems to contradict the binding update which said the number 
+might not match. Perhaps there's an expectation that phy_power_on() is a 
+no-op for some "invalid" values like NULL or an error-pointer value? But...
+
+> +static struct phy *devm_of_phy_optional_get_index(struct device *dev,
+> +						  struct device_node *np,
+> +						  const char *consumer,
+> +						  unsigned int index)
+> +{
+> +	struct phy *phy;
+> +	char *name;
+> +
+> +	name = kasprintf(GFP_KERNEL, "%s-%u", consumer, index);
+> +	if (!name)
+> +		return ERR_PTR(-ENOMEM);
+> +
+> +	phy = devm_of_phy_get(dev, np, name);
+> +	kfree(name);
+> +
+> +	if (IS_ERR(phy) && PTR_ERR(phy) == -ENODEV)
+> +		phy = NULL;
+> +
+> +	return phy;
+> +}
+
+The error-handling there looks wrong. The function generally returns 
+either a valid PHY or an error pointer. However, in the case of -ENODEV, 
+NULL is returned. Subsystems are supposed to encode their handles as, 
+and functions are supposed to return, either NULL or an error pointer 
+for error cases, not both/either. Is the PHY API broken in this regard? 
+If so, then this code is fine, but if not it might need a fix.
+
+Aside from that, this patch looks fine.
