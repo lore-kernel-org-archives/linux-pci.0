@@ -1,48 +1,100 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V2] acpi, pci, irq: account for early penalty assignment
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1455801582-21595-1-git-send-email-okaya@codeaurora.org>
- <20160229192420.GC3653@localhost> <56D4A53A.1070708@codeaurora.org>
- <20160229223453.GA12162@localhost> <56D5E43E.7050406@codeaurora.org>
- <20160301194340.GA19783@localhost> <56D7317F.7090500@codeaurora.org>
- <56D7ABFB.3070302@codeaurora.org>
-Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org, linux-pci@vger.kernel.org,
-	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
-	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
-	rjw@rjwysocki.net, linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <56D84EA9.3080900@codeaurora.org>
-Date: Thu, 3 Mar 2016 09:48:09 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:35773 "EHLO
+	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755572AbcCQIRY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Mar 2016 04:17:24 -0400
+Received: by mail-wm0-f54.google.com with SMTP id l68so216074069wml.0
+        for <linux-pci@vger.kernel.org>; Thu, 17 Mar 2016 01:17:23 -0700 (PDT)
+Date: Thu, 17 Mar 2016 09:57:31 +0200
+From: Leon Romanovsky <leon@leon.nu>
+To: Andrey Utkin <andrey_utkin@fastmail.com>
+Cc: Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bluecherry Maintainers <maintainers@bluecherrydvr.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Joe Perches <joe@perches.com>, Jiri Slaby <jslaby@suse.com>,
+	devel@driverdev.osuosl.org, kernel-mentors@selenic.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-media@vger.kernel.org
+Subject: Re: [PATCH] Add tw5864 driver
+Message-ID: <20160317075731.GC25216@leon.nu>
+Reply-To: leon@leon.nu
+References: <1457920461-20713-1-git-send-email-andrey_utkin@fastmail.com>
+ <1457920514-20792-1-git-send-email-andrey_utkin@fastmail.com>
 MIME-Version: 1.0
-In-Reply-To: <56D7ABFB.3070302@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1457920514-20792-1-git-send-email-andrey_utkin@fastmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Taking another stab at it.
+On Mon, Mar 14, 2016 at 03:55:14AM +0200, Andrey Utkin wrote:
+> From: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+> 
+> Support for boards based on Techwell TW5864 chip which provides
+> multichannel video & audio grabbing and encoding (H.264, MJPEG,
+> ADPCM G.726).
+> 
+> Signed-off-by: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+> Tested-by: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+> ---
+>  MAINTAINERS                                  |    7 +
+>  drivers/staging/media/Kconfig                |    2 +
+>  drivers/staging/media/Makefile               |    1 +
+>  drivers/staging/media/tw5864/Kconfig         |   11 +
+>  drivers/staging/media/tw5864/Makefile        |    3 +
+>  drivers/staging/media/tw5864/tw5864-bs.h     |  154 ++
+>  drivers/staging/media/tw5864/tw5864-config.c |  359 +++++
+>  drivers/staging/media/tw5864/tw5864-core.c   |  453 ++++++
+>  drivers/staging/media/tw5864/tw5864-h264.c   |  183 +++
+>  drivers/staging/media/tw5864/tw5864-reg.h    | 2200 ++++++++++++++++++++++++++
+>  drivers/staging/media/tw5864/tw5864-tables.h |  237 +++
+>  drivers/staging/media/tw5864/tw5864-video.c  | 1364 ++++++++++++++++
+>  drivers/staging/media/tw5864/tw5864.h        |  280 ++++
+>  include/linux/pci_ids.h                      |    1 +
+>  14 files changed, 5255 insertions(+)
+>  create mode 100644 drivers/staging/media/tw5864/Kconfig
+>  create mode 100644 drivers/staging/media/tw5864/Makefile
+>  create mode 100644 drivers/staging/media/tw5864/tw5864-bs.h
+>  create mode 100644 drivers/staging/media/tw5864/tw5864-config.c
+>  create mode 100644 drivers/staging/media/tw5864/tw5864-core.c
+>  create mode 100644 drivers/staging/media/tw5864/tw5864-h264.c
+>  create mode 100644 drivers/staging/media/tw5864/tw5864-reg.h
+>  create mode 100644 drivers/staging/media/tw5864/tw5864-tables.h
+>  create mode 100644 drivers/staging/media/tw5864/tw5864-video.c
+>  create mode 100644 drivers/staging/media/tw5864/tw5864.h
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 409509d..7bb1fa9 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -11195,6 +11195,13 @@ T:	git git://linuxtv.org/media_tree.git
+>  S:	Odd fixes
+>  F:	drivers/media/usb/tm6000/
+>  
+> +TW5864 VIDEO4LINUX DRIVER
+> +M:	Bluecherry Maintainers <maintainers@bluecherrydvr.com>
 
-On 3/2/2016 10:14 PM, Sinan Kaya wrote:
-> Taking a step back here and also some inspiration from your code, why don't we
-> fix the actual problem instead of redesigning the whole thing?
+I wonder if this the right thing to do. Generally speaking a maintainer is a
+person and not a corporate.
 
-I read your email multiple times. I think you want to move the x86 specific pieces
-(ISA interrupts and its command line arguments) out of the drivers\acpi\pci_link.c.
-Is this right?
+> +M:	Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+> +L:	linux-media@vger.kernel.org
+> +S:	Supported
+> +F:	drivers/staging/media/tw5864/
 
-- the legacy ISA IRQs, i.e., the contents of acpi_irq_isa_penalty[]
-- acpi_irq_isa= from command line
+<snip>
 
- int pcibios_irq_penalty(int irq)
-  {
-    if (irq >= ACPI_MAX_ISA_IRQ)
-      return 0;
+> +
+> --- /dev/null
+> +++ b/drivers/staging/media/tw5864/tw5864-bs.h
+> @@ -0,0 +1,154 @@
+> +/*
+> + *  TW5864 driver - Exp-Golomb code functions
+> + *
+> + *  Copyright (C) 2015 Bluecherry, LLC <maintainers@bluecherrydvr.com>
+> + *  Author: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
 
-    return acpi_irq_isa_penalty[irq] + acpi_irq_cmd_line_penalty[irq];
-  }
-
-
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+You don't need to state your name here. It is written in git log.
