@@ -1,109 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52674 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751625AbcC2M5x (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Mar 2016 08:57:53 -0400
-Subject: Re: [PATCH 2/3] swiotlb: prefix dma_to_phys and phys_to_dma functions
-To: Stefano Stabellini <sstabellini@kernel.org>,
-	Konrad Rzeszutek Wilk <konrad@kernel.org>
-References: <1458252137-24497-1-git-send-email-okaya@codeaurora.org>
- <1458252137-24497-2-git-send-email-okaya@codeaurora.org>
- <56EBF09A.1060503@arm.com> <56EC1805.5060207@codeaurora.org>
- <CACJDEmrzKOExg-Rchjy2hfVzkzbCZ=WNn4Bu3EVgim748VvRig@mail.gmail.com>
- <alpine.DEB.2.02.1603291329460.18380@kaball.uk.xensource.com>
-Cc: Robin Murphy <robin.murphy@arm.com>,
-	linux-arm-kernel@lists.infradead.org, timur@codeaurora.org,
-	cov@codeaurora.org, nwatters@codeaurora.org,
-	linux-mips@linux-mips.org, linux-ia64@vger.kernel.org,
-	linux-xtensa@linux-xtensa.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Max Filippov <jcmvbkbc@gmail.com>,
-	Chris Metcalf <cmetcalf@ezchip.com>,
-	Paul Mackerras <paulus@samba.org>,
-	"H. Peter Anvin" <hpa@zytor.com>, Huacai Chen <chenhc@lemote.com>,
-	Guan Xuetao <gxt@mprc.pku.edu.cn>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Jisheng Zhang <jszhang@marvell.com>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Russell King <linux@arm.linux.org.uk>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Michael Ellerman <mpe@ellerman.id.au>, X86 <x86@kernel.org>,
-	Ingo Molnar <mingo@redhat.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Denys Vlasenko <dvlasenk@redhat.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-	Akinobu Mita <akinobu.mita@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Valentin Rothberg <valentinrothberg@gmail.com>,
-	Chris Zankel <chris@zankel.net>,
-	Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, Dean Nelson <dnelson@redhat.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	"Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
-	Joe Perches <joe@perches.com>,
-	Andrew Morton <akpm@linux-foundation.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <56FA7BC9.2010903@codeaurora.org>
-Date: Tue, 29 Mar 2016 08:57:45 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC PATCH v4 3/7] PCI: Ignore resource_alignment if
+ PCI_PROBE_ONLY was set
+To: Alex Williamson <alex.williamson@redhat.com>
+References: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1457336918-3893-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160316103151.0269f0c5@t450s.home>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
+	aik@ozlabs.ru, benh@kernel.crashing.org, paulus@samba.org,
+	mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Message-ID: <56EA9682.5050600@linux.vnet.ibm.com>
+Date: Thu, 17 Mar 2016 19:35:30 +0800
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1603291329460.18380@kaball.uk.xensource.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160316103151.0269f0c5@t450s.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/29/2016 8:44 AM, Stefano Stabellini wrote:
-> Could you please explain what is the problem that you are trying to
-> solve? In other words, what is the issue with assuming that physical
-> address = dma address (and the current dma_to_phys and phys_to_dma
-> static inlines) if no arm64 platforms violate it? That's pretty much
-> what is done on x86 too (without X86_DMA_REMAP).
-> 
-> If you want to make sure that the assumption is not violated, you can
-> introduce a boot time check or a BUG_ON somewhere.
-> 
-> If there is an arm64 platform with phys_addr != dma_addr, we need proper
-> support for it. In fact even if there is an IOMMU on that platform, when
-> running Xen on it, the IOMMU would be used by the hypervisor and Linux
-> would still end up without it, using the swiotlb.
+On 2016/3/17 0:31, Alex Williamson wrote:
+> On Mon,  7 Mar 2016 15:48:34 +0800
+> Yongji Xie <xyjxie@linux.vnet.ibm.com> wrote:
+>
+>> The resource_alignment will releases memory resources
+>> allocated by firmware so that kernel can reassign new
+>> resources later on. But this will cause the problem
+>> that no resources can be allocated by kernel if
+>> PCI_PROBE_ONLY was set, e.g. on pSeries platform
+>> because PCI_PROBE_ONLY force kernel to use firmware
+>> setup and not to reassign any resources.
+>>
+>> To solve this problem, this patch ignores
+>> resource_alignment if PCI_PROBE_ONLY was set.
+>>
+>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>> ---
+>>   Documentation/kernel-parameters.txt |    2 ++
+>>   drivers/pci/probe.c                 |    3 ++-
+>>   2 files changed, 4 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+>> index d8b29ab..8028631 100644
+>> --- a/Documentation/kernel-parameters.txt
+>> +++ b/Documentation/kernel-parameters.txt
+>> @@ -2922,6 +2922,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+>>   				windows need to be expanded.
+>>   				noresize: Don't change the resources' sizes when
+>>   				reassigning alignment.
+>> +				Note that this option will not work if
+>> +				PCI_PROBE_ONLY is set.
+> How would a user have any idea if this is set?
 
+I found the PCI_PROBE_ONLY is set on pSeries, maple and
+arm with "firmware" kernel parameter enabled.
 
-The problem is that device drivers are trying to use dma_to_phys and phys_to_dma
-APIs to do address translation even though these two API do not exist in DMA mapping
-layer. (see patch #1 and I made the same mistake in my HIDMA code)
+So can we say: Note that this option will not work on pSeries,
+maple and arm with "firmware" kernel parameter enabled?
+Or do you have any suggestion?
 
-Especially, when a device is behind an IOMMU; the DMA addresses are not equal
-to physical addresses. Usage of dma_to_phys causes a crash on the system.
-
-I'm trying to prefix the dma_to_phys and phys_to_dma API with swiotlb so that
-we know what it is intended for and usage of these API in drivers need to be
-discouraged in the future during code reviews.
-
-Since I renamed the API, Robin Murphy made a suggestion to convert this 
-
-phys_to_virt(swiotlb_dma_to_phys(dev, dma_handle))
-
-to this
-
-#define swiotlb_to_virt(addr) phys_to_virt((phys_addr_t)(addr))
-
-swiotlb_to_virt(dma_handle)
-
-just to reduce code clutter since we know swiotlb_dma_to_phys returns phys already
-for ARM64 architecture.
-
-I think we can do this exercise later. I'll undo this change for the moment. 
-Let's focus on the API rename. 
-
-I don't want this general purpose dma_to_phys API returning phys=dma value. This is
-not correct.
-
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+Thanks,
+Yongji Xie
