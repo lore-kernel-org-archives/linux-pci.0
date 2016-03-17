@@ -1,62 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48215 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932788AbcCCQyL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Mar 2016 11:54:11 -0500
-Subject: [PATCH v1 02/12] PCI: Don't assign or reassign immutable resources
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Tony Luck <tony.luck@intel.com>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-	linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Bruno =?utf-8?q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
-	Daniel Stone <daniel@fooishbar.org>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Ville =?utf-8?b?U3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
-Date: Thu, 03 Mar 2016 10:54:07 -0600
-Message-ID: <20160303165407.3025.62299.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from li153-180.members.linode.com ([109.74.206.180]:43215 "EHLO
+	mail.tekno-soft.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932713AbcCQIUa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Mar 2016 04:20:30 -0400
+Subject: Re: iMX6q PCIe phy link never came up on kernel v4.4.x
+To: Tim Harvey <tharvey@gateworks.com>,
+	Fabio Estevam <festevam@gmail.com>
+References: <56D5E3DF.9030906@tekno-soft.it> <56D71F27.7070708@tekno-soft.it>
+ <20160302195634.GA19223@localhost>
+ <DBXPR04MB2706C7C2FD2348D205331998CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
+ <56D80435.90408@tekno-soft.it>
+ <DBXPR04MB2702F4BC78FA28DC82DCA218CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
+ <56D8180A.1050708@tekno-soft.it> <56D84B6D.1050800@tekno-soft.it>
+ <56D883AD.5060601@tekno-soft.it> <56DEE426.8030902@tekno-soft.it>
+ <1457448829.3207.22.camel@pengutronix.de> <56E1B04A.9010206@tekno-soft.it>
+ <56E679FE.20409@tekno-soft.it> <56E7ED1E.3070506@tekno-soft.it>
+ <CAOMZO5C9H92mMqTPiOwMYhywBCyQuXQen3Vw==ELE-ppTtogqg@mail.gmail.com>
+ <56E81C56.8060404@tekno-soft.it>
+ <CAOMZO5C0rvszTg0bPoSnT5zzL8EC2Vk1PVDJgB1m1FREy9ncaQ@mail.gmail.com>
+ <CAJ+vNU1TxqEfjH6jPLnStDuYTjHvt6TxFbe+QN2O5aVqwr1-Tg@mail.gmail.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <hongxing.zhu@nxp.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <Richard.Zhu@freescale.com>
+From: Roberto Fichera <kernel@tekno-soft.it>
+Message-ID: <56EA68BA.9080909@tekno-soft.it>
+Date: Thu, 17 Mar 2016 09:20:10 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAJ+vNU1TxqEfjH6jPLnStDuYTjHvt6TxFbe+QN2O5aVqwr1-Tg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-IORESOURCE_PCI_FIXED means the resource can't be moved, so if it's set,
-don't bother trying to assign or reassign the resource.
+On 03/16/2016 10:33 PM, Tim Harvey wrote:
+> On Wed, Mar 16, 2016 at 7:19 AM, Fabio Estevam <festevam@gmail.com> wrote:
+>> Tim,
+>>
+>> On Tue, Mar 15, 2016 at 11:29 AM, Roberto Fichera <kernel@tekno-soft.it> wrote:
+>>> On 03/15/2016 03:10 PM, Fabio Estevam wrote:
+>>>> On Tue, Mar 15, 2016 at 8:08 AM, Roberto Fichera <kernel@tekno-soft.it> wrote:
+>>>>
+>>>>> Just to say that I've fixed the problem by asserting PERST before to drop PCIe refclk and enable
+>>>>> power down. PERST is finally released at the usual place.
+>>>> Excellent! Do you plan to submit a patch to fix this issue?
+>>> I don't know, in my case the problem was related to the XIO2001 that require PERST to be
+>>> asserted before to drop PCIe refclk as reported by its datasheet:
+>> Does your board detect XIO2001 bridge with kernel 4.4.x or do you also
+>> need something like Roberto's changes below?
+>>
+> Fabio,
+>
+> The board combination I have where an XIO2001 is connected directly to
+> an IMX6 is a bit different from Roberto's setup. In our configuration
+> the XIO2001 is on an 'expansion' board that its own local PCI clock
+> generation. So, in my case the XIO2001 always has a valid clock
+> before/during/after its reset. This is different from Roberto's
+> scenario. I do recall running into an issue with the XIO2001 on
+> another product with a different host controller that had to do with
+> noise on the clk prior to its reset being asserted so I am not too
+> surprised at what Roberto has found.
+>
+> I don't specifically see an issue with a change that asserts PCI_RST#
+> before the CLK gets enabled then de-asserts it after at least 100ms
+> has expired from clock enable - I think that actually follows the
+> specs wording closer than what we currently do (turning o the clock
+> prior to assert/de-assert reset). However I get very nervous at any
+> change to the IMX6 PCIe init. We have found it to be very finicky
+> because of the lack of a proper reset.
+>
+> Roberto,
+>
+> Did you require the changes regarding Gen2 negotiation? My
+> IMX6+XIO2001 links reliably at Gen1 which makes sense for that chip.
+You are right, I did all my tests again removing all applied changes related
+to Gen2 negotiation, and indeed the links goes up correctly at Gen1.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/setup-res.c |    6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 604011e..66c4d8f 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -276,6 +276,9 @@ int pci_assign_resource(struct pci_dev *dev, int resno)
- 	resource_size_t align, size;
- 	int ret;
- 
-+	if (res->flags & IORESOURCE_PCI_FIXED)
-+		return 0;
-+
- 	res->flags |= IORESOURCE_UNSET;
- 	align = pci_resource_alignment(dev, res);
- 	if (!align) {
-@@ -321,6 +324,9 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
- 	resource_size_t new_size;
- 	int ret;
- 
-+	if (res->flags & IORESOURCE_PCI_FIXED)
-+		return 0;
-+
- 	flags = res->flags;
- 	res->flags |= IORESOURCE_UNSET;
- 	if (!res->parent) {
+>
+> Regards,
+>
+> Tim
+>
 
