@@ -1,87 +1,93 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 14 Mar 2016 16:30:53 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Dave Airlie <airlied@gmail.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	dri-devel <dri-devel@lists.freedesktop.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/2] vga_switcheroo: add power support for windows 10
- machines.
-Message-ID: <20160314143053.GJ1793@lahna.fi.intel.com>
-References: <1457504045-12738-1-git-send-email-airlied@gmail.com>
- <2736217.utxPzJExd5@vostro.rjw.lan>
- <20160311105815.GS1796@lahna.fi.intel.com>
- <2759763.dR5D0KopkA@vostro.rjw.lan>
- <CAPM=9txo4aOOa-CS-mnyQe+vYDtAOCm1bzAgfMzwJJS8ZuYmwQ@mail.gmail.com>
- <20160314094335.GE1796@lahna.fi.intel.com>
- <CAPM=9txx1s3ZZSaTAGDFh=hKk-Ek2Y=Wyw74CpTWu-cTDAnJ7A@mail.gmail.com>
- <20160314102357.GA1793@lahna.fi.intel.com>
- <CAJZ5v0igUCP8-uH+VUb5KmUeZv5khtMJRjUh-z=orHOgRrcmiw@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:39290 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752731AbcCQLje (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Mar 2016 07:39:34 -0400
+Received: from localhost
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Thu, 17 Mar 2016 21:39:31 +1000
+Subject: Re: [RFC PATCH v4 7/7] powerpc/powernv/pci-ioda: Add
+ IOMMU_CAP_INTR_REMAP for IODA host bridge
+To: Alex Williamson <alex.williamson@redhat.com>
+References: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1457336918-3893-8-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160316103207.6fffb9b5@t450s.home>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
+	aik@ozlabs.ru, benh@kernel.crashing.org, paulus@samba.org,
+	mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Message-ID: <56EA9735.2010401@linux.vnet.ibm.com>
+Date: Thu, 17 Mar 2016 19:38:29 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0igUCP8-uH+VUb5KmUeZv5khtMJRjUh-z=orHOgRrcmiw@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20160316103207.6fffb9b5@t450s.home>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 14, 2016 at 01:50:41PM +0100, Rafael J. Wysocki wrote:
-> On Mon, Mar 14, 2016 at 11:23 AM, Mika Westerberg
-> <mika.westerberg@linux.intel.com> wrote:
-> > On Mon, Mar 14, 2016 at 07:47:39PM +1000, Dave Airlie wrote:
-> >> >
-> >> >> -     if (pcie_port_runtime_suspend_allowed(dev))
-> >> >> +     if (pcie_port_runtime_suspend_allowed(dev)) {
-> >> >> +             pm_runtime_allow(&dev->dev);
-> >> >
-> >> > PCI drivers typically have left this decision up to the userspace. I'm
-> >> > wondering whether it is good idea to deviate from that here? Of course
-> >> > this allows immediate power savings but could potentially cause problems
-> >> > as well.
-> >> >
-> >>
-> >> No distro has ever shipped userspace to do this, I really think this
-> >> is a bad design.
-> >> We have wasted countless watts of power on this stupid idea that people will
-> >> run powertop, only a few people in the world run powertop, lots of
-> >> people use Linux.
-> >
-> > That is a fair point.
-> >
-> > I do not have anything against calling pm_runtime_allow() here. In fact
-> > we already do the same in Intel LPSS drivers. I just wanted to bring
-> > that up.
-> >
-> > Rafael, what do you think?
-> 
-> We can do that to start with.  If there are no problems in the field
-> with it, I don't see any problems in principle.
-> 
-> > If we anyway are going to add cut-off date to enable runtime PM we
-> > should expect that the hardware is also capable of doing so (and if not
-> > we can always blacklist the exceptions).
-> 
-> Sounds reasonable.
-> 
-> >> The kernel should power stuff down not wait for the user to run powertop,
-> >> At least for the GPU it's in the area of 8W of power, and I've got the
-> >> GPU drivers doing this themselves,
-> >>
-> >> I could have the GPU driver call runtime allow for it's host bridge I suppose,
-> >> if we insist on the userspace cares, but I'd prefer not doing so.
-> >>
-> >> > I think we need to add corresponding call to pm_runtime_forbid() in
-> >> > pcie_portdrv_remove().
-> >>
-> >> Yes most likely.
-> >
-> > BTW, I can add both calls to the next version of PCIe runtime PM patches
-> > if you are OK with that, and all agree this is a good idea.
-> 
-> That would be fine by me.
+On 2016/3/17 0:32, Alex Williamson wrote:
+> On Mon,  7 Mar 2016 15:48:38 +0800
+> Yongji Xie <xyjxie@linux.vnet.ibm.com> wrote:
+>
+>> This patch adds IOMMU_CAP_INTR_REMAP for IODA host bridge so that
+>> we can mmap MSI-X table in vfio driver.
+>>
+>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>> ---
+>>   arch/powerpc/platforms/powernv/pci-ioda.c |   17 +++++++++++++++++
+>>   1 file changed, 17 insertions(+)
+>>
+>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> index f90dc04..f01b9ab 100644
+>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> @@ -1955,6 +1955,20 @@ static struct iommu_table_ops pnv_ioda2_iommu_ops = {
+>>   	.free = pnv_ioda2_table_free,
+>>   };
+>>   
+>> +static bool pnv_ioda_iommu_capable(enum iommu_cap cap)
+>> +{
+>> +	switch (cap) {
+>> +	case IOMMU_CAP_INTR_REMAP:
+>> +		return true;
+>> +	default:
+>> +		return false;
+>> +	}
+>> +}
+>> +
+>> +static struct iommu_ops pnv_ioda_iommu_ops = {
+>> +	.capable = pnv_ioda_iommu_capable,
+>> +};
+>> +
+>>   static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+>>   				      struct pnv_ioda_pe *pe, unsigned int base,
+>>   				      unsigned int segs)
+>> @@ -3078,6 +3092,9 @@ static void pnv_pci_ioda_fixup(void)
+>>   
+>>   	/* Link NPU IODA tables to their PCI devices. */
+>>   	pnv_npu_ioda_fixup();
+>> +
+>> +	/* Add IOMMU_CAP_INTR_REMAP */
+>> +	bus_set_iommu(&pci_bus_type, &pnv_ioda_iommu_ops);
+>>   }
+>>   
+>>   /*
+>
+> Doesn't this set you up for a world of hurt?  bus_set_iommu() calls
+> iommu_bus_init() which sets up notifiers, which maybe you don't care
+> about, but it also means that iommu_domain_alloc(&pci_bus_type) will
+> segfault because you're not providing a domain_alloc callback here.
 
-OK thanks.
+It seems to be hard to add IOMMU_CAP_INTR_REMAP on
+PPC64 platform.
 
-I'll do these changes to the next version of the patch series then.
+And can we add a new ioctl in vfio_iommu_driver to check
+if interrupt remapping is supported so that we can use our
+own way to determine that on PPC64 platform?
+
+Thanks,
+Yongji Xie
+
