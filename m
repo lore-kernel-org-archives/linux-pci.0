@@ -1,58 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:33610 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965007AbcCQVJU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Mar 2016 17:09:20 -0400
+Received: by mail-ig0-f171.google.com with SMTP id ig19so24973184igb.0
+        for <linux-pci@vger.kernel.org>; Thu, 17 Mar 2016 14:09:20 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20160310035415.GA17238@localhost>
-References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
-	<1456366370-28995-2-git-send-email-yinghai@kernel.org>
-	<20160310035415.GA17238@localhost>
-Date: Fri, 11 Mar 2016 13:21:46 -0800
-Message-ID: <CAE9FiQUfHCC+3c+hOeOcpRWwedL02KKw0O2qNNLZMymUnwW5-g@mail.gmail.com>
-Subject: Re: [PATCH v10 01/59] PCI: Add pci_find_root_bus_resource()
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
+In-Reply-To: <56EABBA8.8020300@tekno-soft.it>
+References: <56D5E3DF.9030906@tekno-soft.it>
+	<56D71F27.7070708@tekno-soft.it>
+	<20160302195634.GA19223@localhost>
+	<DBXPR04MB2706C7C2FD2348D205331998CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
+	<56D80435.90408@tekno-soft.it>
+	<DBXPR04MB2702F4BC78FA28DC82DCA218CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
+	<56D8180A.1050708@tekno-soft.it>
+	<56D84B6D.1050800@tekno-soft.it>
+	<56D883AD.5060601@tekno-soft.it>
+	<56DEE426.8030902@tekno-soft.it>
+	<1457448829.3207.22.camel@pengutronix.de>
+	<56E1B04A.9010206@tekno-soft.it>
+	<56E679FE.20409@tekno-soft.it>
+	<56E7ED1E.3070506@tekno-soft.it>
+	<CAOMZO5C9H92mMqTPiOwMYhywBCyQuXQen3Vw==ELE-ppTtogqg@mail.gmail.com>
+	<56E81C56.8060404@tekno-soft.it>
+	<CAOMZO5C0rvszTg0bPoSnT5zzL8EC2Vk1PVDJgB1m1FREy9ncaQ@mail.gmail.com>
+	<CAJ+vNU1TxqEfjH6jPLnStDuYTjHvt6TxFbe+QN2O5aVqwr1-Tg@mail.gmail.com>
+	<CAOMZO5AV9Njwv2iVPLoZZfJg5rSiu4qGDf4P3w8grVNqk6RCrA@mail.gmail.com>
+	<56EA6BA9.3010006@tekno-soft.it>
+	<CAOMZO5BcapS=TEzRpqOm__NLFfF80bCi8bJoVwVyh9dG52rqEA@mail.gmail.com>
+	<56EABBA8.8020300@tekno-soft.it>
+Date: Thu, 17 Mar 2016 18:09:19 -0300
+Message-ID: <CAOMZO5ANNKB6390tZp7ZWd-LBOmWtVjDoO0BKX=C6BDyVaNYMQ@mail.gmail.com>
+Subject: Re: iMX6q PCIe phy link never came up on kernel v4.4.x
+From: Fabio Estevam <festevam@gmail.com>
+To: Roberto Fichera <kernel@tekno-soft.it>
+Cc: Tim Harvey <tharvey@gateworks.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <hongxing.zhu@nxp.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+	Richard Zhu <Richard.Zhu@freescale.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Thu, Mar 17, 2016 at 11:14 AM, Roberto Fichera <kernel@tekno-soft.it> wrote:
 
-Thanks for taking time to look at those patches!
-
-On Wed, Mar 9, 2016 at 7:54 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Wed, Feb 24, 2016 at 06:11:52PM -0800, Yinghai Lu wrote:
->> Add pci_find_root_bus_resource() to return root bus resource
->> for input resource.
+>> Would you like to submit this patch formally? Or would you like me to do it?
 >>
->> For sparc mem64 support, We need that host bridge window res:
->>   1. we need direct parent for request_resource_conflict() calling in
->>       pci_register_legacy_regions().
->>   2. check if return is NULL to decide if region is valid or not.
+>> Please let me know.
 >
-> Whenever somebody proposes a new interface that's only required for
-> one architecture, the obvious question is "what is unique about that
-> architecture that makes the new interface necessary?"
+> Please do it for me ;-)
 
-Good point.
-
-I was thinking to keep the current behavior in sparc64 arch,
-as I don't want to break old setups.
-
-Later we can try to make it more like arch.
-
->
-> Neither this patch nor the follow-on patch that adds the use of
-> pci_find_root_bus_resource() answers that question.
->
-
-would be better to keep those two in same patch?
-
-Thanks
-
-Yinghai
+Ok, I will submit it after 4.6-rc1 is released. Thanks
