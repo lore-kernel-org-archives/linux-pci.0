@@ -1,86 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from jscinoz.so ([43.229.62.214]:54484 "EHLO mail.jscinoz.so"
+Received: from mga02.intel.com ([134.134.136.20]:6548 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755926AbcCVIGh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 22 Mar 2016 04:06:37 -0400
-Subject: Re: Thunderbolt 3 (Skylake / Alpine Ridge) hotplug
-To: Lukas Wunner <lukas@wunner.de>
-References: <56D0085B.60402@jscinoz.so> <20160315172909.GF19974@localhost>
- <20160316132228.GB28222@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Martin Andersson <martin.andersson@purplescout.se>
-From: Jack Coulter <jscinoz@jscinoz.so>
-Message-ID: <56F0FD01.2030400@jscinoz.so>
-Date: Tue, 22 Mar 2016 19:06:25 +1100
+	id S1752731AbcCQKb7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Mar 2016 06:31:59 -0400
+Date: Thu, 17 Mar 2016 12:31:54 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH 3/6] PCI: Move PCIe ports to D3hot during suspend
+Message-ID: <20160317103154.GR1793@lahna.fi.intel.com>
+References: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1456750566-116248-4-git-send-email-mika.westerberg@linux.intel.com>
+ <20160312002039.GK4725@localhost>
+ <20160314093259.GD1796@lahna.fi.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160316132228.GB28222@wunner.de>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="XToG3dNb3VFJhCjrpR380WXLboVvoQhOk"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160314093259.GD1796@lahna.fi.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---XToG3dNb3VFJhCjrpR380WXLboVvoQhOk
-Content-Type: multipart/mixed; boundary="sxt8PfR2KamC5CJb6a7P28rI0FSgFDVGu"
-From: Jack Coulter <jscinoz@jscinoz.so>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- Martin Andersson <martin.andersson@purplescout.se>
-Message-ID: <56F0FD01.2030400@jscinoz.so>
-Subject: Re: Thunderbolt 3 (Skylake / Alpine Ridge) hotplug
-References: <56D0085B.60402@jscinoz.so> <20160315172909.GF19974@localhost>
- <20160316132228.GB28222@wunner.de>
-In-Reply-To: <20160316132228.GB28222@wunner.de>
+On Mon, Mar 14, 2016 at 11:32:59AM +0200, Mika Westerberg wrote:
+> > What happens if the PCIe port initially can be put in D3hot, but we we
+> > later hot-add a device that would disqualify it?
+> > 
+> > Oh, I think I see -- we walk the subordinate devices every time we
+> > would like to put the port in D3hot:
+> > 
+> >   pcie_port_suspend_noirq
+> >     pcie_port_suspend_allowed
+> >       dmi_get_date
+> >       pcie_port_can_suspend
+> >         pci_walk_bus
+> > 
+> > I guess that should work, but it seems clunky to do all that work,
+> > even though it's not really a performance path.  What if we did this:
+> > 
+> >   - add a d3hot_allowed bit in struct pci_dev
+> > 
+> >   - when enumerating a port, set d3hot_allowed if BIOS is new enough
+> >     (it makes me a bit nervous that we apparently default to enabling
+> >     D3hot on arches without DMI)
+> > 
+> >   - when enumerating devices, clear d3hot_allowed in upstream bridge
+> >     if necessary
+> > 
+> >   - when removing last device on a bus, re-do port config (set
+> >     d3hot_allowed if appropriate)
+> 
+> Sounds reasonable. I'll give it a try.
 
---sxt8PfR2KamC5CJb6a7P28rI0FSgFDVGu
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: quoted-printable
-
-Hi Lukas,
-
-> Try booting with: pcie_hp=3Dnomsi
-
-I gave this a shot but unfortunately resulted in no change in behaviour
-- the device is still not detected if it is connected after boot, and
-nothing shows in dmesg upon connection.
-
-
-Kind regards,
-Jack
-
-
-
---sxt8PfR2KamC5CJb6a7P28rI0FSgFDVGu--
-
---XToG3dNb3VFJhCjrpR380WXLboVvoQhOk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJW8P0FAAoJEP0XuxcIDSnP7N0P/12+grEygPKciEYCOd1eJKWn
-ioyY8ygRqa1GVzMpJJITijKHvJoDCMapKpQN/BYOveI5onyOJy+ZPR34Yh1yyWJ/
-6H6eDsd6BbCApmzOXs1Odhdup14M4584DYhsyIM4iDHVRmq1XVqmfE20TBtPr4iV
-isbi3DV4gtvBQ/2SjE1BYm3VkJoNNfDIROTXL85RNBiq6hSIczSBYhgPQSB9HAtR
-4BP0Zb+xapLRybSn1riQVAFdkiV0DrJf10kOJt5KAJBM+p+7E6BGvZTSTNVjXc7y
-dnElo7U5LTXhepTmpj2MKMwTRxs1p/07vn9ZRNDB6htmhmXS7toGZQMsCS66bLIa
-TljA9x8aM0JuNkH9nQsZmS2cLYmW5Ck1oWyyueSab1x/uK78UJwGP7RYqR5ymzL4
-Jbqjew6q3TTDI6ejyL3JQppgT6Y/QeHAST4RMVmPee/AmVkUCFonO4RLsjz7F1Sw
-SxQ9oJ06nx7AgBS1Xp9VLv/65vWbE83xlAXq0d36pIjHi/ks7/9NX8SEl9KFREle
-+lWxBiP3s80fTkoIGQJs2OVgSgPh3HQqJNt4O8qRV6NOvqYyuk8YZ6o3O7wyS8Po
-T9aJlz2bA1j+LP+9uxpwX9iMi0vEdVfjs4C3S7QxS/4LLwQ6egq/h1uEMH7zMPCE
-RNu12lzzA0A6CyHAei4S
-=uaO3
------END PGP SIGNATURE-----
-
---XToG3dNb3VFJhCjrpR380WXLboVvoQhOk--
+It looks like we cannot use this approach. Userspace (and drivers) can
+prevent devices from entering D3cold by changing dev->d3cold_allowed.
+That can happen after the device has been enumerated.
