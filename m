@@ -1,89 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:41529 "EHLO
-	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756739AbcCaM5q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Mar 2016 08:57:46 -0400
-Message-Id: <2c01b1a2d7703fbacae133502cbf6fce335077a9.1459423244.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Thu, 31 Mar 2016 14:57:48 +0200
-Subject: [PATCH] PCI: Fix device attach failure handling
-To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Cc: Grygorii Strashko <grygorii.strashko@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
+Received: from e24smtp03.br.ibm.com ([32.104.18.24]:60104 "EHLO
+	e24smtp03.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932085AbcCQUEX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Mar 2016 16:04:23 -0400
+Received: from localhost
+	by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+	Thu, 17 Mar 2016 17:04:21 -0300
+Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
+	by d24dlp02.br.ibm.com (Postfix) with ESMTP id B61AC1DC008C
+	for <linux-pci@vger.kernel.org>; Thu, 17 Mar 2016 16:04:10 -0400 (EDT)
+Received: from d24av04.br.ibm.com (d24av04.br.ibm.com [9.8.31.97])
+	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u2HJ1wdg5230636
+	for <linux-pci@vger.kernel.org>; Thu, 17 Mar 2016 16:01:58 -0300
+Received: from d24av04.br.ibm.com (localhost [127.0.0.1])
+	by d24av04.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u2HK4Ele028400
+	for <linux-pci@vger.kernel.org>; Thu, 17 Mar 2016 17:04:15 -0300
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, mpe@ellerman.id.au,
+	benh@kernel.crashing.org, paulus@samba.org, imunsie@au1.ibm.com,
+	mikey@neuling.org, andrew.donnellan@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com, bhelgaas@google.com,
+	gpiccoli@linux.vnet.ibm.com
+Subject: [PATCH v3] powerpc/pci: Assign fixed PHB number based on device-tree properties
+Date: Thu, 17 Mar 2016 17:03:46 -0300
+Message-Id: <1458245026-27635-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Linux 4.5 introduced a behavioral change in device probing during the
-suspend process with commit 013c074f8642 ("PM / sleep: prohibit devices
-probing during suspend/hibernation"): It defers device probing during
-the entire suspend process, starting from the prepare phase and ending
-with the complete phase. A rule existed before that "we rely on sub-
-systems not to do any probing once a device is suspended" but it is
-enforced only now (Alan Stern, https://lkml.org/lkml/2015/9/15/908).
+The domain/PHB field of PCI addresses has its value obtained from a
+global variable, incremented each time a new domain (represented by
+struct pci_controller) is added on the system. The domain addition
+process happens during boot or due to PCI device hotplug.
 
-This resulted in a WARN splat if a PCI device (e.g. Thunderbolt) is
-plugged in while the system is asleep: Upon waking up, pciehp_resume()
-discovers new devices in the resume phase and immediately tries to bind
-them to a driver. Since probing is now deferred, device_attach() returns
--EPROBE_DEFER, which provoked a WARN in pci_bus_add_device().
+As recent kernels are using predictable naming for network interfaces,
+the network stack is more tied to PCI naming. This can be a problem in
+hotplug scenarios, because PCI addresses will change if devices are
+removed and then re-added. This situation seems unusual, but it can
+happen if a user wants to replace a NIC without rebooting the machine,
+for example.
 
-Linux 4.6-rc1 aggravates the situation with commit ab1a187bba5c ("PCI:
-Check device_attach() return value always"): pci_bus_add_device() no
-longer sets dev->is_added = 1 if device_attach() returned a negative
-value. This results in a BUG lockup in pci_bus_add_devices().
+This patch changes the way PCI domain values are generated: now, we use
+device-tree properties to assign fixed PHB numbers to PCI addresses
+when available (meaning pSeries and PowerNV cases). We also use a bitmap
+to allow dynamic PHB numbering when device-tree properties are not
+used. This bitmap keeps track of used PHB numbers and if a PHB is
+released (by hotplug operations for example), it allows the reuse of
+this PHB number, avoiding PCI address to change in case of device remove
+and re-add soon after. No functional changes were introduced.
 
-Fix the latter by not recursing to a child bus if device_attach() failed
-for the bridge leading to it.
-
-Fix the former by not interpreting -EPROBE_DEFER as failure. The device
-will be probed eventually and there is proper locking in place to avoid
-races (e.g. if devices are unplugged again und thus deleted from the
-system before deferred probing happens, I have tested this). Also, those
-functions which dereference dev->driver (e.g. pci_pm_*()) do contain
-proper NULL pointer checks. So it seems safe to ignore -EPROBE_DEFER.
-
-Note that even postponing the code in pciehp_resume() until the
-complete phase wouldn't avoid these troubles because dpm_complete()
-calls device_unblock_probing() only after ->complete has been
-executed for all devices. We lack a pm hook from which it would
-be safe to check a hotplug port and call device_attach() without
-risking -EPROBE_DEFER.
-
-Cc: Grygorii Strashko <grygorii.strashko@ti.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>
-Cc: Rafael J. Wysocki <rafael@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
 ---
- drivers/pci/bus.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ arch/powerpc/kernel/pci-common.c | 41 +++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 38 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 6c9f546..dd7cdbe 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -294,7 +294,7 @@ void pci_bus_add_device(struct pci_dev *dev)
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 0f7a60f..8777614 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -44,8 +44,11 @@
+ static DEFINE_SPINLOCK(hose_spinlock);
+ LIST_HEAD(hose_list);
  
- 	dev->match_driver = true;
- 	retval = device_attach(&dev->dev);
--	if (retval < 0) {
-+	if (retval < 0 && retval != -EPROBE_DEFER) {
- 		dev_warn(&dev->dev, "device attach failed (%d)\n", retval);
- 		pci_proc_detach_device(dev);
- 		pci_remove_sysfs_dev_files(dev);
-@@ -324,7 +324,9 @@ void pci_bus_add_devices(const struct pci_bus *bus)
- 	}
+-/* XXX kill that some day ... */
+-static int global_phb_number;		/* Global phb counter */
++/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
++#define	MAX_PHBS	8192
++
++/* For dynamic PHB numbering: used/free PHBs tracking bitmap. */
++static DECLARE_BITMAP(phb_bitmap, MAX_PHBS);
  
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
--		BUG_ON(!dev->is_added);
-+		/* Skip if device attach failed */
-+		if (!dev->is_added)
-+			continue;
- 		child = dev->subordinate;
- 		if (child)
- 			pci_bus_add_devices(child);
+ /* ISA Memory physical address */
+ resource_size_t isa_mem_base;
+@@ -64,6 +67,33 @@ struct dma_map_ops *get_pci_dma_ops(void)
+ }
+ EXPORT_SYMBOL(get_pci_dma_ops);
+ 
++static int get_phb_number(struct device_node *dn)
++{
++	const __be64 *prop64;
++	const __be32 *regs;
++	int phb_id = 0;
++
++	/* try fixed PHB numbering first, by checking archs and reading
++	 * the respective device-tree property. */
++	if (machine_is(pseries)) {
++		regs = of_get_property(dn, "reg", NULL);
++		if (regs)
++			return (int)(be32_to_cpu(regs[1]) & 0xFFFF);
++	} else {
++		if (machine_is(powernv)) {
++			prop64 = of_get_property(dn, "ibm,opal-phbid", NULL);
++			if (prop64)
++				return (int)(be64_to_cpup(prop64) & 0xFFFF);
++		}
++	}
++
++	/* if not pSeries nor PowerNV, fallback to dynamic PHB numbering */
++	phb_id = find_first_zero_bit(phb_bitmap, MAX_PHBS);
++	BUG_ON(phb_id >= MAX_PHBS); /* reached maximum number of PHBs */
++	set_bit(phb_id, phb_bitmap);
++	return phb_id;
++}
++
+ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
+ {
+ 	struct pci_controller *phb;
+@@ -72,7 +102,7 @@ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
+ 	if (phb == NULL)
+ 		return NULL;
+ 	spin_lock(&hose_spinlock);
+-	phb->global_number = global_phb_number++;
++	phb->global_number = get_phb_number(dev);
+ 	list_add_tail(&phb->list_node, &hose_list);
+ 	spin_unlock(&hose_spinlock);
+ 	phb->dn = dev;
+@@ -94,6 +124,11 @@ EXPORT_SYMBOL_GPL(pcibios_alloc_controller);
+ void pcibios_free_controller(struct pci_controller *phb)
+ {
+ 	spin_lock(&hose_spinlock);
++
++	/* clear bit of phb_bitmap to allow reuse of this phb number */
++	if (phb->global_number < MAX_PHBS)
++		clear_bit(phb->global_number, phb_bitmap);
++
+ 	list_del(&phb->list_node);
+ 	spin_unlock(&hose_spinlock);
+ 
 -- 
-2.8.0.rc3
+2.1.0
 
