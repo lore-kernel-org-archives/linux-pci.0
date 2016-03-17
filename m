@@ -1,152 +1,171 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48526 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757410AbcCCQyl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Mar 2016 11:54:41 -0500
-Subject: [PATCH v1 06/12] ia64/PCI: Use temporary struct resource * to avoid
- repetition
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Tony Luck <tony.luck@intel.com>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-	linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Bruno =?utf-8?q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
-	Daniel Stone <daniel@fooishbar.org>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Ville =?utf-8?b?U3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
-Date: Thu, 03 Mar 2016 10:54:37 -0600
-Message-ID: <20160303165437.3025.37048.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 17 Mar 2016 10:03:20 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [RFC 1/4] PCI: Add Thunderbolt device IDs
+Message-ID: <20160317150320.GA22769@localhost>
+References: <cover.1458126755.git.lukas@wunner.de>
+ <d30491f2c4c1c6d28c78c5883820f9dc28c010d9.1458126755.git.lukas@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d30491f2c4c1c6d28c78c5883820f9dc28c010d9.1458126755.git.lukas@wunner.de>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use a temporary struct resource pointer to avoid needless repetition of
-"dev->resource[idx]".  No functional change intended.
+On Wed, Mar 16, 2016 at 03:50:35PM +0100, Lukas Wunner wrote:
+> Gen 1 and 2 chips use the same ID for NHI, bridges and switch.
+> Gen 3 chips and onward use a distinct ID for the NHI.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/ia64/sn/kernel/io_acpi_init.c |   10 +++++----
- arch/ia64/sn/kernel/io_init.c      |   39 ++++++++++++++++--------------------
- 2 files changed, 22 insertions(+), 27 deletions(-)
+I assume this is strictly using #defines instead of bare numbers and
+hence "no functional change intended."
 
-diff --git a/arch/ia64/sn/kernel/io_acpi_init.c b/arch/ia64/sn/kernel/io_acpi_init.c
-index 0640739..815c291 100644
---- a/arch/ia64/sn/kernel/io_acpi_init.c
-+++ b/arch/ia64/sn/kernel/io_acpi_init.c
-@@ -429,6 +429,7 @@ sn_acpi_slot_fixup(struct pci_dev *dev)
- 	void __iomem *addr;
- 	struct pcidev_info *pcidev_info = NULL;
- 	struct sn_irq_info *sn_irq_info = NULL;
-+	struct resource *res;
- 	size_t image_size, size;
- 
- 	if (sn_acpi_get_pcidev_info(dev, &pcidev_info, &sn_irq_info)) {
-@@ -446,14 +447,13 @@ sn_acpi_slot_fixup(struct pci_dev *dev)
- 		addr = ioremap(pcidev_info->pdi_pio_mapped_addr[PCI_ROM_RESOURCE],
- 			       size);
- 		image_size = pci_get_rom_size(dev, addr, size);
--		dev->resource[PCI_ROM_RESOURCE].start = (unsigned long) addr;
--		dev->resource[PCI_ROM_RESOURCE].end =
--					(unsigned long) addr + image_size - 1;
--		dev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_BIOS_COPY;
-+		res = &dev->resource[PCI_ROM_RESOURCE];
-+		res->start = (unsigned long) addr;
-+		res->end = (unsigned long) addr + image_size - 1;
-+		res->flags |= IORESOURCE_ROM_BIOS_COPY;
- 	}
- 	sn_pci_fixup_slot(dev, pcidev_info, sn_irq_info);
- }
--
- EXPORT_SYMBOL(sn_acpi_slot_fixup);
- 
- 
-diff --git a/arch/ia64/sn/kernel/io_init.c b/arch/ia64/sn/kernel/io_init.c
-index 1be65eb..40c0263 100644
---- a/arch/ia64/sn/kernel/io_init.c
-+++ b/arch/ia64/sn/kernel/io_init.c
-@@ -150,7 +150,8 @@ void
- sn_io_slot_fixup(struct pci_dev *dev)
- {
- 	int idx;
--	unsigned long addr, end, size, start;
-+	struct resource *res;
-+	unsigned long addr, size;
- 	struct pcidev_info *pcidev_info;
- 	struct sn_irq_info *sn_irq_info;
- 	int status;
-@@ -175,33 +176,31 @@ sn_io_slot_fixup(struct pci_dev *dev)
- 
- 	/* Copy over PIO Mapped Addresses */
- 	for (idx = 0; idx <= PCI_ROM_RESOURCE; idx++) {
--
--		if (!pcidev_info->pdi_pio_mapped_addr[idx]) {
-+		if (!pcidev_info->pdi_pio_mapped_addr[idx])
- 			continue;
--		}
- 
--		start = dev->resource[idx].start;
--		end = dev->resource[idx].end;
--		size = end - start;
--		if (size == 0) {
-+		res = &dev->resource[idx];
-+
-+		size = res->end - res->start;
-+		if (size == 0)
- 			continue;
--		}
-+
- 		addr = pcidev_info->pdi_pio_mapped_addr[idx];
- 		addr = ((addr << 4) >> 4) | __IA64_UNCACHED_OFFSET;
--		dev->resource[idx].start = addr;
--		dev->resource[idx].end = addr + size;
-+		res->start = addr;
-+		res->end = addr + size;
- 
- 		/*
- 		 * if it's already in the device structure, remove it before
- 		 * inserting
- 		 */
--		if (dev->resource[idx].parent && dev->resource[idx].parent->child)
--			release_resource(&dev->resource[idx]);
-+		if (res->parent && res->parent->child)
-+			release_resource(res);
- 
--		if (dev->resource[idx].flags & IORESOURCE_IO)
--			insert_resource(&ioport_resource, &dev->resource[idx]);
-+		if (res->flags & IORESOURCE_IO)
-+			insert_resource(&ioport_resource, res);
- 		else
--			insert_resource(&iomem_resource, &dev->resource[idx]);
-+			insert_resource(&iomem_resource, res);
- 		/*
- 		 * If ROM, set the actual ROM image size, and mark as
- 		 * shadowed in PROM.
-@@ -213,17 +212,13 @@ sn_io_slot_fixup(struct pci_dev *dev)
- 			rom = ioremap(pci_resource_start(dev, PCI_ROM_RESOURCE),
- 				      size + 1);
- 			image_size = pci_get_rom_size(dev, rom, size + 1);
--			dev->resource[PCI_ROM_RESOURCE].end =
--				dev->resource[PCI_ROM_RESOURCE].start +
--				image_size - 1;
--			dev->resource[PCI_ROM_RESOURCE].flags |=
--						 IORESOURCE_ROM_BIOS_COPY;
-+			res->end = res->start + image_size - 1;
-+			res->flags |= IORESOURCE_ROM_BIOS_COPY;
- 		}
- 	}
- 
- 	sn_pci_fixup_slot(dev, pcidev_info, sn_irq_info);
- }
--
- EXPORT_SYMBOL(sn_io_slot_fixup);
- 
- /*
+> Cc: Andreas Noever <andreas.noever@gmail.com>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
 
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+I assume somebody else will merge this with the rest of the series.
+Let me know if you need anything else from me.
+
+> ---
+>  drivers/pci/quirks.c         | 16 ++++++++++------
+>  drivers/thunderbolt/nhi.c    |  8 +++++---
+>  drivers/thunderbolt/switch.c |  9 +++++----
+>  include/linux/pci_ids.h      | 18 ++++++++++++++++++
+>  4 files changed, 38 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 0575a1e..d1e3956 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3203,7 +3203,8 @@ static void quirk_apple_poweroff_thunderbolt(struct pci_dev *dev)
+>  	acpi_execute_simple_method(SXIO, NULL, 0);
+>  	acpi_execute_simple_method(SXLV, NULL, 0);
+>  }
+> -DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_INTEL, 0x1547,
+> +DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_INTEL,
+> +			       PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
+>  			       quirk_apple_poweroff_thunderbolt);
+>  
+>  /*
+> @@ -3237,9 +3238,10 @@ static void quirk_apple_wait_for_thunderbolt(struct pci_dev *dev)
+>  	if (!nhi)
+>  		goto out;
+>  	if (nhi->vendor != PCI_VENDOR_ID_INTEL
+> -			|| (nhi->device != 0x1547 && nhi->device != 0x156c)
+> -			|| nhi->subsystem_vendor != 0x2222
+> -			|| nhi->subsystem_device != 0x1111)
+> +		    || (nhi->device != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
+> +			nhi->device != PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI)
+> +		    || nhi->subsystem_vendor != 0x2222
+> +		    || nhi->subsystem_device != 0x1111)
+>  		goto out;
+>  	dev_info(&dev->dev, "quirk: waiting for thunderbolt to reestablish PCI tunnels...\n");
+>  	device_pm_wait_for_dev(&dev->dev, &nhi->dev);
+> @@ -3247,9 +3249,11 @@ out:
+>  	pci_dev_put(nhi);
+>  	pci_dev_put(sibling);
+>  }
+> -DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL, 0x1547,
+> +DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
+> +			       PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
+>  			       quirk_apple_wait_for_thunderbolt);
+> -DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL, 0x156d,
+> +DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
+> +			       PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE,
+>  			       quirk_apple_wait_for_thunderbolt);
+>  #endif
+>  
+> diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+> index 20a41f7..36be23b 100644
+> --- a/drivers/thunderbolt/nhi.c
+> +++ b/drivers/thunderbolt/nhi.c
+> @@ -633,16 +633,18 @@ static const struct dev_pm_ops nhi_pm_ops = {
+>  static struct pci_device_id nhi_ids[] = {
+>  	/*
+>  	 * We have to specify class, the TB bridges use the same device and
+> -	 * vendor (sub)id.
+> +	 * vendor (sub)id on gen 1 and gen 2 controllers.
+>  	 */
+>  	{
+>  		.class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
+> -		.vendor = PCI_VENDOR_ID_INTEL, .device = 0x1547,
+> +		.vendor = PCI_VENDOR_ID_INTEL,
+> +		.device = PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
+>  		.subvendor = 0x2222, .subdevice = 0x1111,
+>  	},
+>  	{
+>  		.class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
+> -		.vendor = PCI_VENDOR_ID_INTEL, .device = 0x156c,
+> +		.vendor = PCI_VENDOR_ID_INTEL,
+> +		.device = PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI,
+>  		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
+>  	},
+>  	{ 0,}
+> diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+> index aeb9829..db73ffe 100644
+> --- a/drivers/thunderbolt/switch.c
+> +++ b/drivers/thunderbolt/switch.c
+> @@ -293,9 +293,9 @@ static int tb_plug_events_active(struct tb_switch *sw, bool active)
+>  	if (active) {
+>  		data = data & 0xFFFFFF83;
+>  		switch (sw->config.device_id) {
+> -		case 0x1513:
+> -		case 0x151a:
+> -		case 0x1549:
+> +		case PCI_DEVICE_ID_INTEL_LIGHT_RIDGE:
+> +		case PCI_DEVICE_ID_INTEL_EAGLE_RIDGE:
+> +		case PCI_DEVICE_ID_INTEL_PORT_RIDGE:
+>  			break;
+>  		default:
+>  			data |= 4;
+> @@ -370,7 +370,8 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
+>  		tb_sw_warn(sw, "unknown switch vendor id %#x\n",
+>  			   sw->config.vendor_id);
+>  
+> -	if (sw->config.device_id != 0x1547 && sw->config.device_id != 0x1549)
+> +	if (sw->config.device_id != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
+> +	    sw->config.device_id != PCI_DEVICE_ID_INTEL_PORT_RIDGE)
+>  		tb_sw_warn(sw, "unsupported switch device id %#x\n",
+>  			   sw->config.device_id);
+>  
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 37f05cb..bec46b7 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2599,6 +2599,24 @@
+>  #define PCI_DEVICE_ID_INTEL_82441	0x1237
+>  #define PCI_DEVICE_ID_INTEL_82380FB	0x124b
+>  #define PCI_DEVICE_ID_INTEL_82439	0x1250
+> +#define PCI_DEVICE_ID_INTEL_LIGHT_RIDGE             0x1513 /* Tbt 1 Gen 1 */
+> +#define PCI_DEVICE_ID_INTEL_EAGLE_RIDGE             0x151a
+> +#define PCI_DEVICE_ID_INTEL_LIGHT_PEAK              0x151b
+> +#define PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C         0x1547 /* Tbt 1 Gen 2 */
+> +#define PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_2C         0x1548
+> +#define PCI_DEVICE_ID_INTEL_PORT_RIDGE              0x1549
+> +#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_2C_NHI    0x1566 /* Tbt 1 Gen 3 */
+> +#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_2C_BRIDGE 0x1567
+> +#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_4C_NHI    0x1568
+> +#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_4C_BRIDGE 0x1569
+> +#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI     0x156a /* Thunderbolt 2 */
+> +#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE  0x156b
+> +#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI     0x156c
+> +#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE  0x156d
+> +#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_NHI     0x1575 /* Thunderbolt 3 */
+> +#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_BRIDGE  0x1576
+> +#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_NHI     0x1577
+> +#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_BRIDGE  0x1578
+>  #define PCI_DEVICE_ID_INTEL_80960_RP	0x1960
+>  #define PCI_DEVICE_ID_INTEL_82840_HB	0x1a21
+>  #define PCI_DEVICE_ID_INTEL_82845_HB	0x1a30
+> -- 
+> 2.7.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
