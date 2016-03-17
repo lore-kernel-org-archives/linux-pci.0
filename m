@@ -1,62 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:34503 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752562AbcC1Ume (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2016 16:42:34 -0400
-Received: by mail-oi0-f48.google.com with SMTP id o62so73201078oig.1
-        for <linux-pci@vger.kernel.org>; Mon, 28 Mar 2016 13:42:34 -0700 (PDT)
+Received: from mail.kernel.org ([198.145.29.136]:46404 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932614AbcCQNkg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 17 Mar 2016 09:40:36 -0400
+Date: Thu, 17 Mar 2016 08:40:26 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, linux-pci@vger.kernel.org,
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH 3/6] PCI: Move PCIe ports to D3hot during suspend
+Message-ID: <20160317134026.GA17069@localhost>
+References: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1456750566-116248-4-git-send-email-mika.westerberg@linux.intel.com>
+ <20160312002039.GK4725@localhost>
+ <20160314093259.GD1796@lahna.fi.intel.com>
+ <20160317103154.GR1793@lahna.fi.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOMZO5DO9G18=_YSri3a+UiYbLwN6AMG4asUXbT03mpbU3hHrw@mail.gmail.com>
-References: <m3h9fuk7ik.fsf@t19.piap.pl>
-	<CAOMZO5DcZCxoLPeGRWSGkstm7F3eN-Q-yJyf6ktMTda2zLviag@mail.gmail.com>
-	<CAOMZO5B8Lzn-E4YOeYxVtN5PN11aOvZHn4eU0ixkdV8CO8+xYw@mail.gmail.com>
-	<CAJ+vNU2Sg1ZKBsGcQswrJZyTJ1WBEZor3ZqpoYUT7i9FKjEAog@mail.gmail.com>
-	<CAOMZO5DO9G18=_YSri3a+UiYbLwN6AMG4asUXbT03mpbU3hHrw@mail.gmail.com>
-Date: Mon, 28 Mar 2016 13:42:33 -0700
-Message-ID: <CAJ+vNU1_YqvWQkmuDB7r8z77iZJS6pP4Mr+j9yW4sFLAeJXQDw@mail.gmail.com>
-Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
-From: Tim Harvey <tharvey@gateworks.com>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: =?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	=?UTF-8?Q?Petr_=C5=A0tetiar?= <ynezz@true.cz>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160317103154.GR1793@lahna.fi.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 28, 2016 at 1:13 PM, Fabio Estevam <festevam@gmail.com> wrote:
-> Hi Tim,
->
-> On Mon, Mar 28, 2016 at 4:59 PM, Tim Harvey <tharvey@gateworks.com> wrote:
->
->> Fabio,
->>
->> I would agree with you on this - 5c5fb40de8f143 ("PCI: imx6: Add
->> support for active-low reset GPIO")  should be reverted.
->>
->> I just finished bisecting an issue to this specific patch only to find
->> out Krzysztof found it a few days ago ;) Thanks Krzysztof.
->
-> I sent the revert patch yesterday:
-> http://marc.info/?l=linux-pci&m=145912622805757&w=2
+On Thu, Mar 17, 2016 at 12:31:54PM +0200, Mika Westerberg wrote:
+> On Mon, Mar 14, 2016 at 11:32:59AM +0200, Mika Westerberg wrote:
+> > > What happens if the PCIe port initially can be put in D3hot, but we we
+> > > later hot-add a device that would disqualify it?
+> > > 
+> > > Oh, I think I see -- we walk the subordinate devices every time we
+> > > would like to put the port in D3hot:
+> > > 
+> > >   pcie_port_suspend_noirq
+> > >     pcie_port_suspend_allowed
+> > >       dmi_get_date
+> > >       pcie_port_can_suspend
+> > >         pci_walk_bus
+> > > 
+> > > I guess that should work, but it seems clunky to do all that work,
+> > > even though it's not really a performance path.  What if we did this:
+> > > 
+> > >   - add a d3hot_allowed bit in struct pci_dev
+> > > 
+> > >   - when enumerating a port, set d3hot_allowed if BIOS is new enough
+> > >     (it makes me a bit nervous that we apparently default to enabling
+> > >     D3hot on arches without DMI)
+> > > 
+> > >   - when enumerating devices, clear d3hot_allowed in upstream bridge
+> > >     if necessary
+> > > 
+> > >   - when removing last device on a bus, re-do port config (set
+> > >     d3hot_allowed if appropriate)
+> > 
+> > Sounds reasonable. I'll give it a try.
+> 
+> It looks like we cannot use this approach. Userspace (and drivers) can
+> prevent devices from entering D3cold by changing dev->d3cold_allowed.
+> That can happen after the device has been enumerated.
 
-Fabio,
+Well, maybe.  If we want to change d3cold_allowed after enumeration,
+we could propagate that change through whatever part of the hierarchy
+it affects at that time.  I'd rather have the complexity of DMI
+checks, walking the bus, etc., there than in the suspend path.
 
-ok - I'll respond there as I agree with the patch but not the wording
-of the commit (It's Gateworks 'Ventana' using IMX6 not Laguna and we
-do define the polarity properly as active-low in Ventana dt's). It is
-the fact that the gpio polarity has the wrong logic level that breaks
-Ventana.
-
-However, there seems to be another regression in 4.5 that's keeping
-PCI working for me and I'm still bisecting that (using 802.11n access
-points to test). Can you confirm that PCI works in v4.5 on IMX6 boards
-with only 5c5fb40de8f14391a1238db05cef88754faf9229 reverted?
-
-Tim
+Bjorn
