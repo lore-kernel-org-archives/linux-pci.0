@@ -1,63 +1,212 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22476 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934119AbcCON5s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 15 Mar 2016 09:57:48 -0400
-Date: Tue, 15 Mar 2016 15:57:43 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Dave Airlie <airlied@gmail.com>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	dri-devel <dri-devel@lists.freedesktop.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>
-Subject: Re: [PATCH 1/2] vga_switcheroo: add power support for windows 10
- machines.
-Message-ID: <20160315135743.GT1793@lahna.fi.intel.com>
-References: <1457504045-12738-1-git-send-email-airlied@gmail.com>
- <2736217.utxPzJExd5@vostro.rjw.lan>
- <20160311105815.GS1796@lahna.fi.intel.com>
- <2759763.dR5D0KopkA@vostro.rjw.lan>
- <CAPM=9txo4aOOa-CS-mnyQe+vYDtAOCm1bzAgfMzwJJS8ZuYmwQ@mail.gmail.com>
- <20160314094335.GE1796@lahna.fi.intel.com>
- <20160315133958.GA27793@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160315133958.GA27793@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1458316194.23434.104.camel@redhat.com>
+Subject: Re: [PATCH V5 13/15] pci, acpi: Match PCI config space accessors
+ against platfrom specific quirks.
+From: Mark Salter <msalter@redhat.com>
+To: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	Stefano.Stabellini@eu.citrix.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, jcm@redhat.com
+Date: Fri, 18 Mar 2016 11:49:54 -0400
+In-Reply-To: <1455630825-27253-14-git-send-email-tn@semihalf.com>
+References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
+	 <1455630825-27253-14-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 15, 2016 at 02:39:58PM +0100, Lukas Wunner wrote:
-> Hi Mika,
+On Tue, 2016-02-16 at 14:53 +0100, Tomasz Nowicki wrote:
+> Some platforms may not be fully compliant with generic set of PCI config
+> accessors. For these cases we implement the way to overwrite accessors
+> set prior to PCI buses enumeration. Algorithm traverses available quirk
+> list, matches against <platform ID (DMI), domain, bus number> tuple and
+> returns corresponding accessors. All quirks can be defined using:
+> DECLARE_ACPI_MCFG_FIXUP() and kept self contained. Example,
 > 
-> On Mon, Mar 14, 2016 at 11:43:35AM +0200, Mika Westerberg wrote:
-> > On Mon, Mar 14, 2016 at 12:19:14PM +1000, Dave Airlie wrote:
-> > > On 11 March 2016 at 23:45, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> > > > On Friday, March 11, 2016 12:58:15 PM Mika Westerberg wrote:
-> > > >> On Thu, Mar 10, 2016 at 09:57:09PM +0100, Rafael J. Wysocki wrote:
-> > > >> > > It doesn't seem to do any runtime PM,
-> > > >> > > I do wonder if pcieport should be doing it's own runtime PM handling,
-> > > >> > > but that is a
-> > > >> > > larger task than I'm thinking to tackle here.
-> > > >> >
-> > > >> > PCIe ports don't do PM - yet.  Mika has posted a series of patches to implement
-> > > >> > that, however, that are waiting for comments now:
-> > > >> >
-> > > >> > https://patchwork.kernel.org/patch/8453311/
-> > > >> > https://patchwork.kernel.org/patch/8453381/
-> > > >> > https://patchwork.kernel.org/patch/8453391/
-> > > >> > https://patchwork.kernel.org/patch/8453411/
-> > > >> > https://patchwork.kernel.org/patch/8453371/
-> > > >> > https://patchwork.kernel.org/patch/8453351/
+> static const struct dmi_system_id foo_dmi[] = {
+>         {
+>                 .ident = "<Platform ident string>",
+>                 .callback = <handler>,
+>                 .matches = {
+>                         DMI_MATCH(DMI_SYS_VENDOR, "<system vendor>"),
+>                         DMI_MATCH(DMI_PRODUCT_NAME, "<product name>"),
+>                         DMI_MATCH(DMI_PRODUCT_VERSION, "product version"),
+>                 },
+>         },
+>         { }
+> };
 > 
-> If a pciehp port is runtime suspended and pciehp_poll_mode is enabled,
-> the poll timer needs to be disabled and later reenabled on runtime resume.
+> static struct pci_ops foo_ecam_pci_ops = {
+>         .map_bus = pci_mcfg_dev_base,
+>         .read = foo_ecam_config_read,
+>         .write = foo_ecam_config_write,
+> };
+> DECLARE_ACPI_MCFG_FIXUP(foo_dmi, NULL, &foo_ecam_pci_ops, <domain_nr>, <bus_nr>);
+> 
+> More custom (non-DMI) matching can be done via an extra call.
+> Note that there is possibility to assign quirk related private data to
+> root->sysdata which will be available along read/wriate accessor, example:
+> 
+> static int boo_match(struct pci_mcfg_fixup *fixup, struct acpi_pci_root *root)
+> {
+>         return [condition] ? 1 : 0;
+> }
+> 
+> int boo_ecam_config_read(struct pci_bus *bus, unsigned int devfn,
+>                           int where, int size, u32 *val)
+> {
+>         struct acpi_pci_root *root = bus->sysdata;
+>         struct boo_priv_data *boo_data = root->sysdata;
+> 
+>         [..]
+> }
+> 
+> static struct pci_ops boo_ecam_pci_ops = {
+> 	.map_bus = pci_mcfg_dev_base,
+> 	.read = boo_ecam_config_read,
+> 	.write = boo_ecam_config_write,
+> };
+> DECLARE_ACPI_MCFG_FIXUP(NULL, boo_match, &boo_ecam_pci_ops, <domain_nr>, <bus_nr>);
+> 
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Tested-by: Duc Dang <dhdang@apm.com>
+> Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+> Tested-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/acpi/pci_mcfg.c           | 32 ++++++++++++++++++++++++++++++--
+>  include/acpi/acpi_bus.h           |  1 +
+>  include/asm-generic/vmlinux.lds.h |  7 +++++++
+>  include/linux/pci-acpi.h          | 18 ++++++++++++++++++
+>  4 files changed, 56 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> index 0062257..b343547 100644
+> --- a/drivers/acpi/pci_mcfg.c
+> +++ b/drivers/acpi/pci_mcfg.c
+> @@ -41,6 +41,29 @@ int __weak raw_pci_write(unsigned int domain, unsigned int bus,
+>  	return PCIBIOS_DEVICE_NOT_FOUND;
+>  }
+>  
+> +extern struct pci_mcfg_fixup __start_acpi_mcfg_fixups[];
+> +extern struct pci_mcfg_fixup __end_acpi_mcfg_fixups[];
+> +
+> +static struct pci_ops *pci_mcfg_check_quirks(struct acpi_pci_root *root)
+> +{
+> +	struct pci_mcfg_fixup *f;
+> +	int bus_num = root->secondary.start;
+> +	int domain = root->segment;
+> +
+> +	/*
+> +	 * First match against PCI topology <domain:bus> then use DMI or
+> +	 * custom match handler.
+> +	 */
+> +	for (f = __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups; f++) {
+> +		if ((f->domain == domain || f->domain == PCI_MCFG_DOMAIN_ANY) &&
+> +		    (f->bus_num == bus_num || f->bus_num == PCI_MCFG_BUS_ANY) &&
+> +		    (f->system ? dmi_check_system(f->system) : 1 &&
+> +		     f->match ? f->match(f, root) : 1))
 
-If we disable the timer then we can't detect when a new device is
-connected to the port.
+The parens are not quite right here ^^^^
+If dmi_check_system() returns true, f->match won't get called.
 
-I think in this case it might be better not to enable runtime PM for the
-port at all.
+This should be:
+		    (f->system ? dmi_check_system(f->system) : 1) &&
+		     f->match ? f->match(f, root) : 1)
+
+> +			return f->ops;
+> +	}
+> +	return NULL;
+> +}
+> +
+>  void __iomem *
+>  pci_mcfg_dev_base(struct pci_bus *bus, unsigned int devfn, int offset)
+>  {
+> @@ -63,10 +86,15 @@ static struct pci_ops default_pci_mcfg_ops = {
+>  
+>  struct pci_ops *pci_mcfg_get_ops(struct acpi_pci_root *root)
+>  {
+> +	struct pci_ops *pci_mcfg_ops_quirk;
+> +
+>  	/*
+> -	 * TODO: Match against platform specific quirks and return
+> -	 * corresponding PCI config space accessor set.
+> +	 * Match against platform specific quirks and return corresponding
+> +	 * PCI config space accessor set.
+>  	 */
+> +	pci_mcfg_ops_quirk = pci_mcfg_check_quirks(root);
+> +	if (pci_mcfg_ops_quirk)
+> +		return pci_mcfg_ops_quirk;
+>  
+>  	return &default_pci_mcfg_ops;
+>  }
+> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+> index 14362a8..0fc6f13 100644
+> --- a/include/acpi/acpi_bus.h
+> +++ b/include/acpi/acpi_bus.h
+> @@ -556,6 +556,7 @@ struct acpi_pci_root {
+>  	struct pci_bus *bus;
+>  	u16 segment;
+>  	struct resource secondary;	/* downstream bus range */
+> +	void *sysdata;
+>  
+>  	u32 osc_support_set;	/* _OSC state of support bits */
+>  	u32 osc_control_set;	/* _OSC state of control bits */
+> diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+> index c4bd0e2..c93fc97 100644
+> --- a/include/asm-generic/vmlinux.lds.h
+> +++ b/include/asm-generic/vmlinux.lds.h
+> @@ -298,6 +298,13 @@
+>  		VMLINUX_SYMBOL(__end_pci_fixups_suspend_late) = .;	\
+>  	}								\
+>  									\
+> +	/* ACPI MCFG quirks */						\
+> +	.acpi_fixup        : AT(ADDR(.acpi_fixup) - LOAD_OFFSET) {	\
+> +		VMLINUX_SYMBOL(__start_acpi_mcfg_fixups) = .;		\
+> +		*(.acpi_fixup_mcfg)					\
+> +		VMLINUX_SYMBOL(__end_acpi_mcfg_fixups) = .;		\
+> +	}								\
+> +									\
+>  	/* Built-in firmware blobs */					\
+>  	.builtin_fw        : AT(ADDR(.builtin_fw) - LOAD_OFFSET) {	\
+>  		VMLINUX_SYMBOL(__start_builtin_fw) = .;			\
+> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+> index 93feb04..9e1bedd 100644
+> --- a/include/linux/pci-acpi.h
+> +++ b/include/linux/pci-acpi.h
+> @@ -123,6 +123,24 @@ struct pci_mmcfg_region {
+>  	bool hot_added;
+>  };
+>  
+> +struct pci_mcfg_fixup {
+> +	const struct dmi_system_id *system;
+> +	int (*match)(struct pci_mcfg_fixup *, struct acpi_pci_root *);
+> +	struct pci_ops *ops;
+> +	int domain;
+> +	int bus_num;
+> +};
+> +
+> +#define PCI_MCFG_DOMAIN_ANY	-1
+> +#define PCI_MCFG_BUS_ANY	-1
+> +
+> +/* Designate a routine to fix up buggy MCFG */
+> +#define DECLARE_ACPI_MCFG_FIXUP(system, match, ops, dom, bus)		\
+> +	static const struct pci_mcfg_fixup __mcfg_fixup_##system##dom##bus\
+> +	 __used	__attribute__((__section__(".acpi_fixup_mcfg"),		\
+> +				aligned((sizeof(void *))))) =		\
+> +	{ system, match, ops, dom, bus };
+> +
+>  extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
+>  extern struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
+>  							int end, u64 addr);
+
