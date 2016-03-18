@@ -1,68 +1,133 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 16 Mar 2016 10:30:34 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
-	aik@ozlabs.ru, benh@kernel.crashing.org, paulus@samba.org,
-	mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com
-Subject: Re: [RFC PATCH v4 5/7] vfio-pci: Allow to mmap sub-page MMIO BARs
- if the mmio page is exclusive
-Message-ID: <20160316103034.48666ae0@t450s.home>
-In-Reply-To: <1457336918-3893-6-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-	<1457336918-3893-6-git-send-email-xyjxie@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e24smtp02.br.ibm.com ([32.104.18.86]:60595 "EHLO
+	e24smtp02.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753706AbcCRVtc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 18 Mar 2016 17:49:32 -0400
+Received: from localhost
+	by e24smtp02.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+	Fri, 18 Mar 2016 18:49:30 -0300
+Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
+	by d24dlp01.br.ibm.com (Postfix) with ESMTP id AD1B9352006E
+	for <linux-pci@vger.kernel.org>; Fri, 18 Mar 2016 17:49:16 -0400 (EDT)
+Received: from d24av04.br.ibm.com (d24av04.br.ibm.com [9.8.31.97])
+	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u2IKl9Kr4698172
+	for <linux-pci@vger.kernel.org>; Fri, 18 Mar 2016 17:47:09 -0300
+Received: from d24av04.br.ibm.com (localhost [127.0.0.1])
+	by d24av04.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u2ILnPhs021329
+	for <linux-pci@vger.kernel.org>; Fri, 18 Mar 2016 18:49:26 -0300
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, mpe@ellerman.id.au,
+	benh@kernel.crashing.org, paulus@samba.org, imunsie@au1.ibm.com,
+	mikey@neuling.org, andrew.donnellan@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com, bhelgaas@google.com,
+	gpiccoli@linux.vnet.ibm.com
+Subject: [PATCH v4] powerpc/pci: Assign fixed PHB number based on device-tree properties
+Date: Fri, 18 Mar 2016 18:49:06 -0300
+Message-Id: <1458337746-20337-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon,  7 Mar 2016 15:48:36 +0800
-Yongji Xie <xyjxie@linux.vnet.ibm.com> wrote:
+The domain/PHB field of PCI addresses has its value obtained from a
+global variable, incremented each time a new domain (represented by
+struct pci_controller) is added on the system. The domain addition
+process happens during boot or due to PCI device hotplug.
 
-> Current vfio-pci implementation disallows to mmap
-> sub-page(size < PAGE_SIZE) MMIO BARs because these BARs' mmio
-> page may be shared with other BARs.
-> 
-> But we should allow to mmap these sub-page MMIO BARs if PCI
-> resource allocator can make sure these BARs' mmio page will
-> not be shared with other BARs.
-> 
-> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-> ---
->  drivers/vfio/pci/vfio_pci.c |    7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> index 1ce1d36..49d7a69 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -589,7 +589,8 @@ static long vfio_pci_ioctl(void *device_data,
->  				     VFIO_REGION_INFO_FLAG_WRITE;
->  			if (IS_ENABLED(CONFIG_VFIO_PCI_MMAP) &&
->  			    pci_resource_flags(pdev, info.index) &
-> -			    IORESOURCE_MEM && info.size >= PAGE_SIZE) {
-> +			    IORESOURCE_MEM && !pci_resources_share_page(pdev,
-> +			    info.index)) {
+As recent kernels are using predictable naming for network interfaces,
+the network stack is more tied to PCI naming. This can be a problem in
+hotplug scenarios, because PCI addresses will change if devices are
+removed and then re-added. This situation seems unusual, but it can
+happen if a user wants to replace a NIC without rebooting the machine,
+for example.
 
-this would be a preferable line wrap:
+This patch changes the way PCI domain values are generated: now, we use
+device-tree properties to assign fixed PHB numbers to PCI addresses
+when available (meaning pSeries and PowerNV cases). We also use a bitmap
+to allow dynamic PHB numbering when device-tree properties are not
+used. This bitmap keeps track of used PHB numbers and if a PHB is
+released (by hotplug operations for example), it allows the reuse of
+this PHB number, avoiding PCI address to change in case of device remove
+and re-add soon after. No functional changes were introduced.
 
-                            IORESOURCE_MEM &&
-                            !pci_resources_share_page(pdev, info.index)) {
+Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+---
+ arch/powerpc/kernel/pci-common.c | 40 +++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 37 insertions(+), 3 deletions(-)
 
->  				info.flags |= VFIO_REGION_INFO_FLAG_MMAP;
->  				if (info.index == vdev->msix_bar) {
->  					ret = msix_sparse_mmap_cap(vdev, &caps);
-> @@ -1016,6 +1017,10 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
->  		return -EINVAL;
->  
->  	phys_len = pci_resource_len(pdev, index);
-> +
-> +	if (!pci_resources_share_page(pdev, index))
-> +		phys_len = PAGE_ALIGN(phys_len);
-> +
->  	req_len = vma->vm_end - vma->vm_start;
->  	pgoff = vma->vm_pgoff &
->  		((1U << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1);
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 0f7a60f..bc31ac1 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -44,8 +44,11 @@
+ static DEFINE_SPINLOCK(hose_spinlock);
+ LIST_HEAD(hose_list);
+ 
+-/* XXX kill that some day ... */
+-static int global_phb_number;		/* Global phb counter */
++/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
++#define	MAX_PHBS	8192
++
++/* For dynamic PHB numbering: used/free PHBs tracking bitmap. */
++static DECLARE_BITMAP(phb_bitmap, MAX_PHBS);
+ 
+ /* ISA Memory physical address */
+ resource_size_t isa_mem_base;
+@@ -64,6 +67,32 @@ struct dma_map_ops *get_pci_dma_ops(void)
+ }
+ EXPORT_SYMBOL(get_pci_dma_ops);
+ 
++static int get_phb_number(struct device_node *dn)
++{
++	const __be64 *prop64;
++	const __be32 *regs;
++	int phb_id = 0;
++
++	/* try fixed PHB numbering first, by checking archs and reading
++	 * the respective device-tree property. */
++	if (machine_is(pseries)) {
++		regs = of_get_property(dn, "reg", NULL);
++		if (regs)
++			return (int)(be32_to_cpu(regs[1]) & 0xFFFF);
++	} else if (machine_is(powernv)) {
++		prop64 = of_get_property(dn, "ibm,opal-phbid", NULL);
++		if (prop64)
++			return (int)(be64_to_cpup(prop64) & 0xFFFF);
++	}
++
++	/* if not pSeries nor PowerNV, fallback to dynamic PHB numbering */
++	phb_id = find_first_zero_bit(phb_bitmap, MAX_PHBS);
++	BUG_ON(phb_id >= MAX_PHBS); /* reached maximum number of PHBs */
++	set_bit(phb_id, phb_bitmap);
++
++	return phb_id;
++}
++
+ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
+ {
+ 	struct pci_controller *phb;
+@@ -72,7 +101,7 @@ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
+ 	if (phb == NULL)
+ 		return NULL;
+ 	spin_lock(&hose_spinlock);
+-	phb->global_number = global_phb_number++;
++	phb->global_number = get_phb_number(dev);
+ 	list_add_tail(&phb->list_node, &hose_list);
+ 	spin_unlock(&hose_spinlock);
+ 	phb->dn = dev;
+@@ -94,6 +123,11 @@ EXPORT_SYMBOL_GPL(pcibios_alloc_controller);
+ void pcibios_free_controller(struct pci_controller *phb)
+ {
+ 	spin_lock(&hose_spinlock);
++
++	/* clear bit of phb_bitmap to allow reuse of this phb number */
++	if (phb->global_number < MAX_PHBS)
++		clear_bit(phb->global_number, phb_bitmap);
++
+ 	list_del(&phb->list_node);
+ 	spin_unlock(&hose_spinlock);
+ 
+-- 
+2.1.0
+
