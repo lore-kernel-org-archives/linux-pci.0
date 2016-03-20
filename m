@@ -1,60 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:41637 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932333AbcCCOx0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Mar 2016 09:53:26 -0500
-From: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-To: helgaas@kernel.org
-Cc: jroedel@suse.de, dwmw2@infradead.org, alex.williamson@redhat.com,
-	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-	Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-Subject: [PATCH v5 5/6] PCI: Add DMA alias quirk for mic_x200_dma
-Date: Thu,  3 Mar 2016 15:53:20 +0100
-Message-Id: <1457016800-11903-1-git-send-email-jacek.lawrynowicz@intel.com>
-In-Reply-To: <20160224194423.7585.46582.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160224194423.7585.46582.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sun, 20 Mar 2016 10:12:46 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [RFC 1/4] PCI: Add Thunderbolt device IDs
+Message-ID: <20160320171246.GB16658@kroah.com>
+References: <cover.1458126755.git.lukas@wunner.de>
+ <d30491f2c4c1c6d28c78c5883820f9dc28c010d9.1458126755.git.lukas@wunner.de>
+ <20160317150320.GA22769@localhost>
+ <20160320131135.GA29174@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160320131135.GA29174@wunner.de>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-MIC x200 NTB forwards PCIe traffic using multiple alien RID. They have to
-be added as aliases to the DMA device in order to allow buffer access
-when IOMMU is enabled.
+On Sun, Mar 20, 2016 at 02:11:35PM +0100, Lukas Wunner wrote:
+> Hi Bjorn,
+> 
+> On Thu, Mar 17, 2016 at 10:03:20AM -0500, Bjorn Helgaas wrote:
+> > On Wed, Mar 16, 2016 at 03:50:35PM +0100, Lukas Wunner wrote:
+> > > Gen 1 and 2 chips use the same ID for NHI, bridges and switch.
+> > > Gen 3 chips and onward use a distinct ID for the NHI.
+> > 
+> > I assume this is strictly using #defines instead of bare numbers and
+> > hence "no functional change intended."
+> > 
+> > > Cc: Andreas Noever <andreas.noever@gmail.com>
+> > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> > 
+> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Thanks, I've just posted a 3 patch series to support the Light Ridge
+> Thunderbolt controller and included your ack for this patch.
+> 
+> 
+> > I assume somebody else will merge this with the rest of the series.
+> 
+> The maintainer of the thunderbolt driver is Andreas Noever, however
+> I don't think Andreas sends pull requests to Linus. Everything in
+> drivers/thunderbolt/ has so far been picked up by Greg KH.
+> 
+> I have more thunderbolt stuff in the pipeline, some of which needs
+> changes to drivers/pci/. Therefore it would be ideal from my perspective
+> if my thunderbolt patches could go in via your tree, if that is possible.
 
-Signed-off-by: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-Acked-by: David Woodhouse <David.Woodhouse@intel.com>
----
- Updated quirk comment with requirement that aliases have to be matching
- values programmed in the EEPROM. The LUT table on x200 is static so there
- is no need to program it from the driver.
+I have no objection if they go through the PCI tree, especially as
+Thunderbolt really just is PCI express, it makes sense to take them that
+way.
 
- drivers/pci/quirks.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+thanks,
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 51927a5..e66f09d 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3696,6 +3696,20 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
- DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
- 
- /*
-+ * MIC x200 NTB forwards PCIe traffic using multiple alien RIDs. They have to
-+ * be added as aliases to the DMA device in order to allow buffer access
-+ * when IOMMU is enabled. Following devfns have to match RIT-LUT table
-+ * programmed in the EEPROM.
-+ */
-+static void quirk_mic_x200_dma_alias(struct pci_dev *pdev)
-+{
-+	pci_add_dma_alias(pdev, PCI_DEVFN(0x10, 0x0));
-+	pci_add_dma_alias(pdev, PCI_DEVFN(0x11, 0x0));
-+	pci_add_dma_alias(pdev, PCI_DEVFN(0x12, 0x3));
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2264, quirk_mic_x200_dma_alias);
-+
-+/*
-  * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
-  * class code.  Fix it.
-  */
--- 
-1.8.3.1
-
+greg k-h
