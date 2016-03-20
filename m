@@ -1,90 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:33850 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752435AbcCHPsU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Mar 2016 10:48:20 -0500
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: [PATCH 1/2] dt-bindings: pci: tegra: Update for per-lane PHYs
-Date: Tue,  8 Mar 2016 16:48:13 +0100
-Message-Id: <1457452094-5409-1-git-send-email-thierry.reding@gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:38016 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750713AbcCTSRP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Mar 2016 14:17:15 -0400
+Subject: Re: [PATCH 1/4] acpi,pci,irq: reduce resource requirements
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
+ <20160314185251.GA19703@localhost> <56E7211F.3070203@codeaurora.org>
+ <20160314210147.GA11459@localhost> <56E73232.9030704@codeaurora.org>
+ <20160315014843.GA16967@localhost> <56E7733B.4050308@codeaurora.org>
+ <20160315023632.GA23940@localhost> <56E80F19.7010503@codeaurora.org>
+Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org, linux-pci@vger.kernel.org,
+	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
+	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
+	rjw@rjwysocki.net, linux-kernel@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <56EEE925.7070202@codeaurora.org>
+Date: Sun, 20 Mar 2016 14:17:09 -0400
+MIME-Version: 1.0
+In-Reply-To: <56E80F19.7010503@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+Hi Bjorn,
 
-Changes to the pad controller device tree binding have required that
-each lane be associated with a separate PHY. Update the PCI host bridge
-device tree binding to allow each root port to define the list of PHYs
-required to drive the lanes associated with it.
+>>>
+>>> Device(LN0A){
+>>> 	Name(_HID, EISAID("PNP0C0F")) // PCI interrupt link
+>>> 	Name(_UID, 1)
+>>> 	Name(_PRS, ResourceTemplate(){
+>>> 	Interrupt(ResourceProducer, Level, ActiveHigh, Exclusive, , ,) {0x123}
+>>> 	})
+>>
+>> I forgot that the link already include the trigger mode in it.  Maybe we
+>> can check for that instead of assuming level/low.
+>>
+> 
+> Let me explore this area.
+> 
+>> Bjorn
 
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- .../devicetree/bindings/pci/nvidia,tegra20-pcie.txt    | 18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
+I have been implementing this. 
 
-diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-index 75321ae23c08..033fe4b5afac 100644
---- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-@@ -60,11 +60,14 @@ Required properties:
-   - afi
-   - pcie_x
+I see that placing the check in allocate function is not right. The interrupts get
+registered with ACPI subsystem after locating the interrupt in register_gsi function.
+Trying to find the IRQ type with get_trigger_type() for an unregistered interrupt
+didn't look right to me.
+
+I think it is best if we move these checks into get_penalty function.
+
+I also see that the code is currently allowing EDGE type PCI interrupts assuming they are
+exclusive only. Let me if this looks alright. I'm also curious about the PCI checks.
+
+static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
+
+I know you want to validate that all PCI interrupts are level, it looks like the code
+is allowing other combinations.
+
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index 85be579e..5056a9c 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -495,6 +495,45 @@ static int acpi_irq_pci_sharing_penalty(int irq)
+ 	return penalty;
+ }
  
--Required properties on Tegra124 and later:
-+Required properties on Tegra124 and later (deprecated):
- - phys: Must contain an entry for each entry in phy-names.
- - phy-names: Must include the following entries:
-   - pcie
- 
-+These properties are deprecated in favour of per-lane PHYs define in each of
-+the root ports (see below).
++static int acpi_link_trigger(int irq, u8 *polarity, u8 *triggering)
++{
++	struct acpi_pci_link *link;
++	int link_trigger = 0;
 +
- Power supplies for Tegra20:
- - avdd-pex-supply: Power supply for analog PCIe logic. Must supply 1.05 V.
- - vdd-pex-supply: Power supply for digital PCIe I/O. Must supply 1.05 V.
-@@ -122,6 +125,13 @@ Required properties:
-   - Root port 0 uses 4 lanes, root port 1 is unused.
-   - Both root ports use 2 lanes.
- 
-+Required properties for Tegra124 and later:
-+- phys: Must contain an phandle to a PHY for each entry in phy-names.
-+- phy-names: Must include an entry for each active lane. Note that the number
-+  of entries does not have to (though usually will) be equal to the specified
-+  number of lanes in the nvidia,num-lanes property. Entries are of the form
-+  "pcie-N": where N ranges from 0 to the value specified in nvidia,num-lanes.
++	list_for_each_entry(link, &acpi_link_list, list) {
++		int i;
 +
- Example:
- 
- SoC DTSI:
-@@ -169,6 +179,9 @@ SoC DTSI:
- 			ranges;
- 
- 			nvidia,num-lanes = <2>;
++		if (link->irq.active && link->irq.active == irq) {
++			*polarity = link->polarity;
++			*triggering = link->triggering;
++			return 0;
++		}
 +
-+			phys = <&{/padctl@0,7009f000/pads/pcie/pcie-4}>;
-+			phy-names = "pcie-0";
- 		};
- 
- 		pci@2,0 {
-@@ -183,6 +196,9 @@ SoC DTSI:
- 			ranges;
- 
- 			nvidia,num-lanes = <2>;
++		for (i = 0; i < link->irq.possible_count; i++)
++			if (link->irq.possible[i] == irq) {
++				*polarity = link->polarity;
++				*triggering = link->triggering;
++				return 0;
++			}
++	}
 +
-+			phys = <&{/padctl@0,7009f000/pads/pcie/pcie-2}>;
-+			phy-names = "pcie-0";
- 		};
- 	};
++	return -EINVAL;
++}
++
++static bool acpi_pci_compatible_trigger(int irq)
++{
++	u8 polarity;
++	u8 triggering;
++	int type = irq_get_trigger_type(irq);
++	int rc;
++
++	rc = acpi_link_trigger(irq, &polarity, &triggering, &sharing)
++	if (rc)
++		return false;
++
++	return (type == IRQ_TYPE_LEVEL_LOW || type == IRQ_TYPE_NONE);
++}
++
+ static int acpi_irq_get_penalty(int irq)
+ {
+ 	int penalty = 0;
+@@ -502,8 +541,21 @@ static int acpi_irq_get_penalty(int irq)
+ 	if (irq < ACPI_MAX_ISA_IRQ)
+ 		penalty += acpi_irq_isa_penalty[irq];
  
+-	if (irq == acpi_gbl_FADT.sci_interrupt)
+-		penalty += PIRQ_PENALTY_PCI_USING;
++	if (irq == acpi_gbl_FADT.sci_interrupt) {
++		u8 sci_polarity;
++		u8 sci_trigger;
++
++		rc = acpi_link_trigger(irq, &polarity, &sci_trigger);
++		if (!rc) {
++			if (sci_trigger != ACPI_LEVEL_SENSITIVE ||
++			    sci_polarity != ACPI_ACTIVE_LOW)
++				penalty += PIRQ_PENALTY_ISA_ALWAYS;
++			else
++				penalty += PIRQ_PENALTY_PCI_USING;
++		} else {
++			return ~0;
++		}
++	}
+ 
+ 	penalty += acpi_irq_pci_sharing_penalty(irq);
+ 	return penalty; 
+
+
 -- 
-2.7.1
-
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
