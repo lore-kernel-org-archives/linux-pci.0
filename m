@@ -1,170 +1,185 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.73]:59612 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933112AbcCQKzM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 17 Mar 2016 06:55:12 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Russell King <linux@arm.linux.org.uk>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH] arm/arm64/irqchip/pci: select PCI_MSI instead of depending on it
-Date: Thu, 17 Mar 2016 11:52:49 +0100
-Message-Id: <1458212069-896315-1-git-send-email-arnd@arndb.de>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:47841 "EHLO
+	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755585AbcCTM5w (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Mar 2016 08:57:52 -0400
+Message-Id: <ce586f6668ea9b86d41d982e6e916b52abe6e2c4.1458475382.git.lukas@wunner.de>
+In-Reply-To: <cc23dc43ce25142f1b097a73c17bbcdada3f964d.1458475382.git.lukas@wunner.de>
+References: <cc23dc43ce25142f1b097a73c17bbcdada3f964d.1458475382.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 20 Mar 2016 13:57:20 +0100
+Subject: [PATCH 3/3] thunderbolt: Support 1st gen Light Ridge controller
+To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI_MSI symbol is used inconsistently throughout the tree,
-with some drivers using 'select' and others using 'depends on',
-or using conditional selects. This keeps causing problems,
-and the latest one is a result of ARCH_ALPINE using a 'select'
-statement to enable its platform specific MSI driver but not
-enabling MSI support first:
+Built into:
+iMac12,1       2011  21.5"
+iMac12,2       2011  27"
+Macmini5,1     2011  i5 2.3 GHz
+Macmini5,2     2011  i5 2.5 GHz
+Macmini5,3     2011  i7 2.0 GHz
+MacBookPro8,1  2011  13"
+MacBookPro8,2  2011  15"
+MacBookPro8,3  2011  17"
+MacBookPro9,1  2012  15"
+MacBookPro9,2  2012  13"
 
-warning: (ARCH_ALPINE) selects ALPINE_MSI which has unmet direct dependencies (PCI && PCI_MSI)
-drivers/irqchip/irq-alpine-msi.c:104:15: error: variable 'alpine_msix_domain_info' has initializer but incomplete type
- static struct msi_domain_info alpine_msix_domain_info = {
-               ^~~~~~~~~~~~~~~
-drivers/irqchip/irq-alpine-msi.c:105:2: error: unknown field 'flags' specified in initializer
-  .flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
-  ^
-drivers/irqchip/irq-alpine-msi.c:105:11: error: 'MSI_FLAG_USE_DEF_DOM_OPS' undeclared here (not in a function)
-  .flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
-           ^~~~~~~~~~~~~~~~~~~~~~~~
+Light Ridge (CV82524) was the very first copper Thunderbolt controller,
+introduced 2010 alongside its fiber-optic cousin Light Peak (CVL2510).
+Consequently the chip suffers from some teething troubles:
 
-There is little reason to enable PCI support for a platform that
-uses MSI but then leaving MSI disabled at compile time, so this
-patch changes the various Kconfig statement relating to PCI_MSI
-so they all use 'select'.
+MSI is broken for hotplug signaling on the downstream bridges: The chip
+just never sends an interrupt. It requests 32 MSIs for each of its six
+bridges and the pcieport driver only allocates one per bridge. However
+I've verified that even if 32 MSIs are allocated there's no interrupt
+on hotplug. The only option is thus to disable MSI, which is also what
+OS X does. Apparently all Thunderbolt chips up to revision 1 of Cactus
+Ridge 4C are plagued by this issue so quirk those as well.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Suggested-by: Marc Zyngier <marc.zyngier@arm.com>
+The chip supports a maximum hop_count of 32, unlike its successors
+which support only 12. Fixup ring_interrupt_active() to cope with
+values >= 32.
+
+Another peculiarity is that the chip supports a maximum of 13 ports
+whereas its successors support 12. However the additional port (#5)
+seems to be unusable as reading its TB_CFG_PORT config space results
+in TB_CFG_ERROR_INVALID_CONFIG_SPACE. Add a quirk to mark the port
+disabled on the root switch, assuming that's necessary on all Macs
+using this chip.
+
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Tested-by: Lukas Wunner <lukas@wunner.de> [MacBookPro9,1]
+Tested-by: William Brown <william@blackhats.net.au> [MacBookPro8,2]
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
 ---
- arch/arm/Kconfig         |  3 ++-
- arch/arm64/Kconfig       |  4 ++--
- drivers/irqchip/Kconfig  | 11 ++++++++---
- drivers/pci/host/Kconfig | 10 ++++++----
- 4 files changed, 18 insertions(+), 10 deletions(-)
+ drivers/pci/quirks.c         | 29 ++++++++++++++++++++++++++++-
+ drivers/thunderbolt/eeprom.c |  5 +++++
+ drivers/thunderbolt/nhi.c    | 11 +++++++++--
+ drivers/thunderbolt/switch.c |  3 ++-
+ 4 files changed, 44 insertions(+), 4 deletions(-)
 
-diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-index aa9f67a89620..1c4e38764f02 100644
---- a/arch/arm/Kconfig
-+++ b/arch/arm/Kconfig
-@@ -703,9 +703,10 @@ config ARCH_VIRT
- 	depends on ARCH_MULTI_V7
- 	select ARM_AMBA
- 	select ARM_GIC
--	select ARM_GIC_V2M if PCI_MSI
-+	select ARM_GIC_V2M
- 	select ARM_GIC_V3
- 	select ARM_PSCI
-+	select PCI
- 	select HAVE_ARM_ARCH_TIMER
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index b584ddf..b1ff270 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3185,6 +3185,29 @@ static void quirk_no_pm_reset(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_VENDOR_ID_ATI, PCI_ANY_ID,
+ 			       PCI_CLASS_DISPLAY_VGA, 8, quirk_no_pm_reset);
  
- #
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 4f436220384f..c9a3161e0aed 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -19,9 +19,9 @@ config ARM64
- 	select ARM_ARCH_TIMER
- 	select ARM_GIC
- 	select AUDIT_ARCH_COMPAT_GENERIC
--	select ARM_GIC_V2M if PCI_MSI
-+	select ARM_GIC_V2M
- 	select ARM_GIC_V3
--	select ARM_GIC_V3_ITS if PCI_MSI
-+	select ARM_GIC_V3_ITS
- 	select ARM_PSCI_FW
- 	select BUILDTIME_EXTABLE_SORT
- 	select CLONE_BACKWARDS
-diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
-index 7e8c441ff2de..73ab0ecb9b3b 100644
---- a/drivers/irqchip/Kconfig
-+++ b/drivers/irqchip/Kconfig
-@@ -16,7 +16,8 @@ config ARM_GIC_MAX_NR
- config ARM_GIC_V2M
- 	bool
- 	depends on ARM_GIC
--	depends on PCI && PCI_MSI
-+	depends on PCI
-+	select PCI_MSI
- 	select PCI_MSI_IRQ_DOMAIN
++/*
++ * Thunderbolt controllers with broken MSI hotplug signaling:
++ * Entire 1st generation (Light Ridge, Eagle Ridge, Light Peak) and part
++ * of the 2nd generation (Cactus Ridge 4C up to revision 1, Port Ridge).
++ */
++static void quirk_thunderbolt_hotplug_msi(struct pci_dev *pdev)
++{
++	if (pdev->is_hotplug_bridge &&
++	    (pdev->device != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C ||
++	     pdev->revision <= 1))
++		pdev->no_msi = 1;
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_LIGHT_RIDGE,
++			quirk_thunderbolt_hotplug_msi);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_EAGLE_RIDGE,
++			quirk_thunderbolt_hotplug_msi);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_LIGHT_PEAK,
++			quirk_thunderbolt_hotplug_msi);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
++			quirk_thunderbolt_hotplug_msi);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_PORT_RIDGE,
++			quirk_thunderbolt_hotplug_msi);
++
+ #ifdef CONFIG_ACPI
+ /*
+  * Apple: Shutdown Cactus Ridge Thunderbolt controller.
+@@ -3267,7 +3290,8 @@ static void quirk_apple_wait_for_thunderbolt(struct pci_dev *dev)
+ 	if (!nhi)
+ 		goto out;
+ 	if (nhi->vendor != PCI_VENDOR_ID_INTEL
+-		    || (nhi->device != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
++		    || (nhi->device != PCI_DEVICE_ID_INTEL_LIGHT_RIDGE &&
++			nhi->device != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
+ 			nhi->device != PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI)
+ 		    || nhi->subsystem_vendor != 0x2222
+ 		    || nhi->subsystem_device != 0x1111)
+@@ -3279,6 +3303,9 @@ out:
+ 	pci_dev_put(sibling);
+ }
+ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
++			       PCI_DEVICE_ID_INTEL_LIGHT_RIDGE,
++			       quirk_apple_wait_for_thunderbolt);
++DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
+ 			       PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
+ 			       quirk_apple_wait_for_thunderbolt);
+ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
+diff --git a/drivers/thunderbolt/eeprom.c b/drivers/thunderbolt/eeprom.c
+index 47e56e8..0c052e2 100644
+--- a/drivers/thunderbolt/eeprom.c
++++ b/drivers/thunderbolt/eeprom.c
+@@ -388,6 +388,11 @@ int tb_drom_read(struct tb_switch *sw)
+ 		sw->ports[4].link_nr = 1;
+ 		sw->ports[3].dual_link_port = &sw->ports[4];
+ 		sw->ports[4].dual_link_port = &sw->ports[3];
++
++		/* Port 5 is inaccessible on this gen 1 controller */
++		if (sw->config.device_id == PCI_DEVICE_ID_INTEL_LIGHT_RIDGE)
++			sw->ports[5].disabled = true;
++
+ 		return 0;
+ 	}
  
- config GIC_NON_BANKED
-@@ -30,6 +31,8 @@ config ARM_GIC_V3
+diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+index 36be23b..9c15344 100644
+--- a/drivers/thunderbolt/nhi.c
++++ b/drivers/thunderbolt/nhi.c
+@@ -37,7 +37,8 @@ static int ring_interrupt_index(struct tb_ring *ring)
+  */
+ static void ring_interrupt_active(struct tb_ring *ring, bool active)
+ {
+-	int reg = REG_RING_INTERRUPT_BASE + ring_interrupt_index(ring) / 32;
++	int reg = REG_RING_INTERRUPT_BASE +
++		  ring_interrupt_index(ring) / 32 * 4;
+ 	int bit = ring_interrupt_index(ring) & 31;
+ 	int mask = 1 << bit;
+ 	u32 old, new;
+@@ -564,7 +565,7 @@ static int nhi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	/* cannot fail - table is allocated bin pcim_iomap_regions */
+ 	nhi->iobase = pcim_iomap_table(pdev)[0];
+ 	nhi->hop_count = ioread32(nhi->iobase + REG_HOP_COUNT) & 0x3ff;
+-	if (nhi->hop_count != 12)
++	if (nhi->hop_count != 12 && nhi->hop_count != 32)
+ 		dev_warn(&pdev->dev, "unexpected hop count: %d\n",
+ 			 nhi->hop_count);
+ 	INIT_WORK(&nhi->interrupt_work, nhi_interrupt_work);
+@@ -638,6 +639,12 @@ static struct pci_device_id nhi_ids[] = {
+ 	{
+ 		.class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
+ 		.vendor = PCI_VENDOR_ID_INTEL,
++		.device = PCI_DEVICE_ID_INTEL_LIGHT_RIDGE,
++		.subvendor = 0x2222, .subdevice = 0x1111,
++	},
++	{
++		.class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
++		.vendor = PCI_VENDOR_ID_INTEL,
+ 		.device = PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
+ 		.subvendor = 0x2222, .subdevice = 0x1111,
+ 	},
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index c6270f0..1e116f5 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -370,7 +370,8 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
+ 		tb_sw_warn(sw, "unknown switch vendor id %#x\n",
+ 			   sw->config.vendor_id);
  
- config ARM_GIC_V3_ITS
- 	bool
-+	depends on PCI
-+	select PCI_MSI
- 	select PCI_MSI_IRQ_DOMAIN
- 
- config HISILICON_IRQ_MBIGEN
-@@ -63,11 +66,13 @@ config ARM_VIC_NR
- config ARMADA_370_XP_IRQ
- 	bool
- 	select GENERIC_IRQ_CHIP
--	select PCI_MSI_IRQ_DOMAIN if PCI_MSI
-+	select PCI_MSI if PCI
-+	select PCI_MSI_IRQ_DOMAIN if PCI
- 
- config ALPINE_MSI
- 	bool
--	depends on PCI && PCI_MSI
-+	depends on PCI
-+	select PCI_MSI
- 	select GENERIC_IRQ_CHIP
- 	select PCI_MSI_IRQ_DOMAIN
- 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index c5014bf95a20..844d7eb79c45 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -118,7 +118,6 @@ config PCI_XGENE
- 	depends on ARCH_XGENE
- 	depends on OF
- 	select PCIEPORTBUS
--	select PCI_MSI_IRQ_DOMAIN if PCI_MSI
- 	help
- 	  Say Y here if you want internal PCI support on APM X-Gene SoC.
- 	  There are 5 internal PCIe ports available. Each port is GEN3 capable
-@@ -126,7 +125,9 @@ config PCI_XGENE
- 
- config PCI_XGENE_MSI
- 	bool "X-Gene v1 PCIe MSI feature"
--	depends on PCI_XGENE && PCI_MSI
-+	depends on PCI_XGENE
-+	select PCI_MSI
-+	select PCI_MSI_IRQ_DOMAIN
- 	default y
- 	help
- 	  Say Y here if you want PCIe MSI support for the APM X-Gene v1 SoC.
-@@ -175,7 +176,7 @@ config PCIE_IPROC_BCMA
- config PCIE_IPROC_MSI
- 	bool "Broadcom iProc PCIe MSI support"
- 	depends on PCIE_IPROC_PLATFORM || PCIE_IPROC_BCMA
--	depends on PCI_MSI
-+	select PCI_MSI
- 	select PCI_MSI_IRQ_DOMAIN
- 	default ARCH_BCM_IPROC
- 	help
-@@ -193,7 +194,8 @@ config PCIE_ALTERA
- 
- config PCIE_ALTERA_MSI
- 	bool "Altera PCIe MSI feature"
--	depends on PCIE_ALTERA && PCI_MSI
-+	depends on PCIE_ALTERA
-+	select PCI_MSI
- 	select PCI_MSI_IRQ_DOMAIN
- 	help
- 	  Say Y here if you want PCIe MSI support for the Altera FPGA.
+-	if (sw->config.device_id != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
++	if (sw->config.device_id != PCI_DEVICE_ID_INTEL_LIGHT_RIDGE &&
++	    sw->config.device_id != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
+ 	    sw->config.device_id != PCI_DEVICE_ID_INTEL_PORT_RIDGE)
+ 		tb_sw_warn(sw, "unsupported switch device id %#x\n",
+ 			   sw->config.device_id);
 -- 
-2.7.0
+2.8.0.rc3
 
