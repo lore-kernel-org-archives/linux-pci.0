@@ -1,174 +1,139 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20160309143336.GA26158@wunner.de>
-References: <1457504045-12738-1-git-send-email-airlied@gmail.com>
-	<20160309143336.GA26158@wunner.de>
-Date: Wed, 9 Mar 2016 11:52:33 -0500
-Message-ID: <CADnq5_MUW00AcYcM4WPREOd8ng9AfggZk6U4YU7j50s6BBeMNQ@mail.gmail.com>
-Subject: Re: [PATCH 1/2] vga_switcheroo: add power support for windows 10 machines.
-From: Alex Deucher <alexdeucher@gmail.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Dave Airlie <airlied@gmail.com>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Maling list - DRI developers
-	<dri-devel@lists.freedesktop.org>, linux-pm@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-Id: <fc02478da4a7dc5617b305eca807bd5fdc8aa9bb.1458475382.git.lukas@wunner.de>
+In-Reply-To: <cc23dc43ce25142f1b097a73c17bbcdada3f964d.1458475382.git.lukas@wunner.de>
+References: <cc23dc43ce25142f1b097a73c17bbcdada3f964d.1458475382.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 20 Mar 2016 13:57:20 +0100
+Subject: [PATCH 2/3] thunderbolt: Fix typos and magic number
+To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 9, 2016 at 9:33 AM, Lukas Wunner <lukas@wunner.de> wrote:
-> Hi Dave,
->
-> On Wed, Mar 09, 2016 at 04:14:04PM +1000, Dave Airlie wrote:
->> From: Dave Airlie <airlied@redhat.com>
->>
->> Windows 10 seems to have standardised power control for the
->> optimus/powerxpress laptops using PR3 power resource hooks.
->
-> What happened to the Optimus DSM, does this still work? If not,
-> echoing OFF to the vgaswitcheroo sysfs file won't power down the
-> GPU now, right? (If runtime pm is disabled in nouveau.)
->
+Fix typo in tb_cfg_print_error() message.
+Fix bytecount in struct tb_drom_entry_port comment.
+Replace magic number in tb_switch_alloc().
+Rename tb_sw_set_unpplugged() and TB_CAL_IECS.
+                   ^                   ^
 
-If the OS identifies itself as windows 10 or newer when initializing
-ACPI, the standardized interfaces should be used if they exist.  I'm
-not sure if there is any explicit policy on the vendor specific ones,
-but I suspect they are probably broken in that case since I doubt the
-OEM validates them when the standardized interfaces are available.
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/thunderbolt/ctl.c     |  2 +-
+ drivers/thunderbolt/eeprom.c  |  2 +-
+ drivers/thunderbolt/switch.c  | 10 +++++-----
+ drivers/thunderbolt/tb.c      |  2 +-
+ drivers/thunderbolt/tb.h      |  2 +-
+ drivers/thunderbolt/tb_regs.h |  2 +-
+ 6 files changed, 10 insertions(+), 10 deletions(-)
 
-Alex
-
->> I'm not sure this is definitely the correct place to be
->> doing this, but it works for me here.
->
-> How about implementing an additional vga_switcheroo handler somewhere
-> in drivers/acpi/, which looks for the PR3 hooks and registers with
-> vga_switcheroo if found. The ->power_state callback of that handler
-> would then invoke acpi_device_set_power().
->
-> The ACPI bus is scanned in the subsys_initcall section, much earlier
-> than nouveau is loaded (in the device_initcall section). So the ACPI
-> vga_switcheroo handler could register before the nouveau DSM handler
-> and therefore would always have a higher precedence.
->
-> In any case this patch should be amended with kerneldoc for
-> vga_switcheroo_init_parent_pr3_ops(), I've spent considerable time
-> last year to document everything and kindly ask that this water not
-> be muddied again. ;-)
->
-> One small nit, the headers are sorted alphabetically yet acpi.h is
-> added at the end.
->
-> Thanks,
->
-> Lukas
->
->>
->> The ACPI device for the GPU I have is \_SB_.PCI0.PEG_.VID_
->> but the power resource hooks are on \_SB_.PCI0.PEG_, so
->> this patch creates a new power domain to turn the GPU
->> device parent off using standard ACPI calls.
->>
->> Signed-off-by: Dave Airlie <airlied@redhat.com>
->> ---
->>  drivers/gpu/vga/vga_switcheroo.c | 54 +++++++++++++++++++++++++++++++++++++++-
->>  include/linux/vga_switcheroo.h   |  3 ++-
->>  2 files changed, 55 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/gpu/vga/vga_switcheroo.c b/drivers/gpu/vga/vga_switcheroo.c
->> index 665ab9f..be32cb2 100644
->> --- a/drivers/gpu/vga/vga_switcheroo.c
->> +++ b/drivers/gpu/vga/vga_switcheroo.c
->> @@ -42,7 +42,7 @@
->>  #include <linux/uaccess.h>
->>  #include <linux/vgaarb.h>
->>  #include <linux/vga_switcheroo.h>
->> -
->> +#include <linux/acpi.h>
->>  /**
->>   * DOC: Overview
->>   *
->> @@ -997,3 +997,55 @@ vga_switcheroo_init_domain_pm_optimus_hdmi_audio(struct device *dev,
->>       return -EINVAL;
->>  }
->>  EXPORT_SYMBOL(vga_switcheroo_init_domain_pm_optimus_hdmi_audio);
->> +
->> +/* With Windows 10 the runtime suspend/resume can use power
->> +   resources on the parent device */
->> +static int vga_acpi_switcheroo_runtime_suspend(struct device *dev)
->> +{
->> +     struct pci_dev *pdev = to_pci_dev(dev);
->> +     int ret;
->> +     struct acpi_device *adev;
->> +
->> +     ret = dev->bus->pm->runtime_suspend(dev);
->> +     if (ret)
->> +             return ret;
->> +
->> +     ret = acpi_bus_get_device(ACPI_HANDLE(&pdev->dev), &adev);
->> +     if (!ret)
->> +             acpi_device_set_power(adev->parent, ACPI_STATE_D3_COLD);
->> +     return 0;
->> +}
->> +
->> +static int vga_acpi_switcheroo_runtime_resume(struct device *dev)
->> +{
->> +     struct pci_dev *pdev = to_pci_dev(dev);
->> +     struct acpi_device *adev;
->> +     int ret;
->> +
->> +     ret = acpi_bus_get_device(ACPI_HANDLE(&pdev->dev), &adev);
->> +     if (!ret)
->> +             acpi_device_set_power(adev->parent, ACPI_STATE_D0);
->> +     ret = dev->bus->pm->runtime_resume(dev);
->> +     if (ret)
->> +             return ret;
->> +
->> +     return 0;
->> +}
->> +
->> +int vga_switcheroo_init_parent_pr3_ops(struct device *dev,
->> +                                    struct dev_pm_domain *domain)
->> +
->> +{
->> +     /* copy over all the bus versions */
->> +     if (dev->bus && dev->bus->pm) {
->> +             domain->ops = *dev->bus->pm;
->> +             domain->ops.runtime_suspend = vga_acpi_switcheroo_runtime_suspend;
->> +             domain->ops.runtime_resume = vga_acpi_switcheroo_runtime_resume;
->> +
->> +             dev_pm_domain_set(dev, domain);
->> +             return 0;
->> +     }
->> +     dev_pm_domain_set(dev, NULL);
->> +     return -EINVAL;
->> +}
->> +EXPORT_SYMBOL(vga_switcheroo_init_parent_pr3_ops);
->> diff --git a/include/linux/vga_switcheroo.h b/include/linux/vga_switcheroo.h
->> index 69e1d4a1..5ce0cbe 100644
->> --- a/include/linux/vga_switcheroo.h
->> +++ b/include/linux/vga_switcheroo.h
->> @@ -144,6 +144,7 @@ void vga_switcheroo_set_dynamic_switch(struct pci_dev *pdev, enum vga_switcheroo
->>  int vga_switcheroo_init_domain_pm_ops(struct device *dev, struct dev_pm_domain *domain);
->>  void vga_switcheroo_fini_domain_pm_ops(struct device *dev);
->>  int vga_switcheroo_init_domain_pm_optimus_hdmi_audio(struct device *dev, struct dev_pm_domain *domain);
->> +int vga_switcheroo_init_parent_pr3_ops(struct device *dev, struct dev_pm_domain *domain);
->>  #else
->>
->>  static inline void vga_switcheroo_unregister_client(struct pci_dev *dev) {}
->> @@ -163,6 +164,6 @@ static inline void vga_switcheroo_set_dynamic_switch(struct pci_dev *pdev, enum
->>  static inline int vga_switcheroo_init_domain_pm_ops(struct device *dev, struct dev_pm_domain *domain) { return -EINVAL; }
->>  static inline void vga_switcheroo_fini_domain_pm_ops(struct device *dev) {}
->>  static inline int vga_switcheroo_init_domain_pm_optimus_hdmi_audio(struct device *dev, struct dev_pm_domain *domain) { return -EINVAL; }
->> -
->> +static inline int vga_switcheroo_init_parent_pr3_ops(struct device *dev, struct dev_pm_domain *domain) { return -EINVAL; }
->>  #endif
->>  #endif /* _LINUX_VGA_SWITCHEROO_H_ */
->> --
->> 2.5.0
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+diff --git a/drivers/thunderbolt/ctl.c b/drivers/thunderbolt/ctl.c
+index 799634b..1146ff4 100644
+--- a/drivers/thunderbolt/ctl.c
++++ b/drivers/thunderbolt/ctl.c
+@@ -249,7 +249,7 @@ static void tb_cfg_print_error(struct tb_ctl *ctl,
+ 		 * cfg_read/cfg_write.
+ 		 */
+ 		tb_ctl_WARN(ctl,
+-			"CFG_ERROR(%llx:%x): Invalid config space of offset\n",
++			"CFG_ERROR(%llx:%x): Invalid config space or offset\n",
+ 			res->response_route, res->response_port);
+ 		return;
+ 	case TB_CFG_ERROR_NO_SUCH_PORT:
+diff --git a/drivers/thunderbolt/eeprom.c b/drivers/thunderbolt/eeprom.c
+index 0dde34e..47e56e8 100644
+--- a/drivers/thunderbolt/eeprom.c
++++ b/drivers/thunderbolt/eeprom.c
+@@ -221,7 +221,7 @@ struct tb_drom_entry_port {
+ 	u8 micro1:4;
+ 	u8 micro3;
+ 
+-	/* BYTES 5-6, TODO: verify (find hardware that has these set) */
++	/* BYTES 6-7, TODO: verify (find hardware that has these set) */
+ 	u8 peer_port_rid:4;
+ 	u8 unknown3:3;
+ 	bool has_peer_port:1;
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index db73ffe..c6270f0 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -350,7 +350,7 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
+ 		return NULL;
+ 
+ 	sw->tb = tb;
+-	if (tb_cfg_read(tb->ctl, &sw->config, route, 0, 2, 0, 5))
++	if (tb_cfg_read(tb->ctl, &sw->config, route, 0, TB_CFG_SWITCH, 0, 5))
+ 		goto err;
+ 	tb_info(tb,
+ 		"initializing Switch at %#llx (depth: %d, up port: %d)\n",
+@@ -426,9 +426,9 @@ err:
+ }
+ 
+ /**
+- * tb_sw_set_unpplugged() - set is_unplugged on switch and downstream switches
++ * tb_sw_set_unplugged() - set is_unplugged on switch and downstream switches
+  */
+-void tb_sw_set_unpplugged(struct tb_switch *sw)
++void tb_sw_set_unplugged(struct tb_switch *sw)
+ {
+ 	int i;
+ 	if (sw == sw->tb->root_switch) {
+@@ -442,7 +442,7 @@ void tb_sw_set_unpplugged(struct tb_switch *sw)
+ 	sw->is_unplugged = true;
+ 	for (i = 0; i <= sw->config.max_port_number; i++) {
+ 		if (!tb_is_upstream_port(&sw->ports[i]) && sw->ports[i].remote)
+-			tb_sw_set_unpplugged(sw->ports[i].remote->sw);
++			tb_sw_set_unplugged(sw->ports[i].remote->sw);
+ 	}
+ }
+ 
+@@ -484,7 +484,7 @@ int tb_switch_resume(struct tb_switch *sw)
+ 			|| tb_switch_resume(port->remote->sw)) {
+ 			tb_port_warn(port,
+ 				     "lost during suspend, disconnecting\n");
+-			tb_sw_set_unpplugged(port->remote->sw);
++			tb_sw_set_unplugged(port->remote->sw);
+ 		}
+ 	}
+ 	return 0;
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index d2c3fe3..24b6d30 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -246,7 +246,7 @@ static void tb_handle_hotplug(struct work_struct *work)
+ 	if (ev->unplug) {
+ 		if (port->remote) {
+ 			tb_port_info(port, "unplugged\n");
+-			tb_sw_set_unpplugged(port->remote->sw);
++			tb_sw_set_unplugged(port->remote->sw);
+ 			tb_free_invalid_tunnels(tb);
+ 			tb_switch_free(port->remote->sw);
+ 			port->remote = NULL;
+diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
+index 8b0d7cf..61d57ba 100644
+--- a/drivers/thunderbolt/tb.h
++++ b/drivers/thunderbolt/tb.h
+@@ -226,7 +226,7 @@ void tb_switch_free(struct tb_switch *sw);
+ void tb_switch_suspend(struct tb_switch *sw);
+ int tb_switch_resume(struct tb_switch *sw);
+ int tb_switch_reset(struct tb *tb, u64 route);
+-void tb_sw_set_unpplugged(struct tb_switch *sw);
++void tb_sw_set_unplugged(struct tb_switch *sw);
+ struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route);
+ 
+ int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
+diff --git a/drivers/thunderbolt/tb_regs.h b/drivers/thunderbolt/tb_regs.h
+index 6577af7..1e2a4a8 100644
+--- a/drivers/thunderbolt/tb_regs.h
++++ b/drivers/thunderbolt/tb_regs.h
+@@ -30,7 +30,7 @@ enum tb_cap {
+ 	TB_CAP_I2C		= 0x0005,
+ 	TB_CAP_PLUG_EVENTS	= 0x0105, /* also EEPROM */
+ 	TB_CAP_TIME2		= 0x0305,
+-	TB_CAL_IECS		= 0x0405,
++	TB_CAP_IECS		= 0x0405,
+ 	TB_CAP_LINK_CONTROLLER	= 0x0605, /* also IECS */
+ };
+ 
+-- 
+2.8.0.rc3
