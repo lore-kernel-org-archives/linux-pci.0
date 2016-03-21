@@ -1,200 +1,161 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f196.google.com ([209.85.217.196]:35696 "EHLO
+	mail-lb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755484AbcCUMmE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Mar 2016 08:42:04 -0400
 MIME-Version: 1.0
-In-Reply-To: <20160303225152.GA10472@localhost>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
- <1455630825-27253-2-git-send-email-tn@semihalf.com> <20160303225152.GA10472@localhost>
-From: Jayachandran Chandrashekaran Nair
-	<jayachandran.chandrashekaran@broadcom.com>
-Date: Fri, 4 Mar 2016 14:05:56 +0530
-Message-ID: <CAKc_7PUyf8ND8Nd32yDBtBnFbkd1mJ-VsCih6YsEA5ZuBUz5zA@mail.gmail.com>
-Subject: Re: [PATCH V5 01/15] ACPI: MCFG: Move mmcfg_list management to drivers/acpi
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>, Arnd Bergmann <arnd@arndb.de>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
+In-Reply-To: <1458558775-6242-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1458558775-6242-1-git-send-email-lorenzo.pieralisi@arm.com>
+Date: Mon, 21 Mar 2016 13:42:01 +0100
+Message-ID: <CAJZ5v0gvB8fHzmgrnz2wOPdLakJyuRg0eQ65oo13LP0_PHRAbg@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: ACPI: IA64: fix IO port generic range check
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
 	Hanjun Guo <hanjun.guo@linaro.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	okaya@codeaurora.org, jiang.liu@linux.intel.com,
-	Jayachandran Chandrashekaran Nair <jchandra@broadcom.com>,
-	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>,
-	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
-	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Jon Masters <jcm@redhat.com>
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Mark Salter <msalter@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 4, 2016 at 4:21 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> Hi Tomasz, Jayachandran, et al,
+On Mon, Mar 21, 2016 at 12:12 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> The [0 - 64k] ACPI PCI IO port resource boundary check in:
 >
-> On Tue, Feb 16, 2016 at 02:53:31PM +0100, Tomasz Nowicki wrote:
->> From: Jayachandran C <jchandra@broadcom.com>
->>
->> Move pci_mmcfg_list handling to a drivers/acpi/pci_mcfg.c. This is
->> to share the API and code with ARM64 later. The corresponding
->> declarations are moved from asm/pci_x86.h to linux/pci-acpi.h
->>
->> As a part of this we introduce three functions that can be
->> implemented by the arch code: pci_mmconfig_map_resource() to map a
->> mcfg entry, pci_mmconfig_unmap_resource to do the corresponding
->> unmap and pci_mmconfig_enabled to see if the arch setup of
->> mcfg entries was successful. We also provide weak implementations
->> of these, which will be used from ARM64. On x86, we retain the
->> old logic by providing platform specific implementation.
->>
->> This patch is purely rearranging code, it should not have any
->> impact on the logic of MCFG parsing or list handling.
+> acpi_dev_ioresource_flags()
 >
-> I definitely want to figure out how to make this work well on ARM64.
-> I need to ponder this some more, so these are just some initial
-> thoughts.
+> is currently applied blindly in the ACPI resource parsing to all
+> architectures, but only x86 suffers from that IO space limitation.
 >
-> My first impression is that (a) the x86 MCFG code is an unmitigated
-> disaster, and (b) we're trying a little too hard to make that mess
-> generic.  I think we might be better served if we came up with some
-> cleaner, more generic code that we can use for ARM64 today, and
-> migrate x86 toward that over time.
+> On arches (ie IA64 and ARM64) where IO space is memory mapped,
+> the PCI root bridges IO resource windows are firstly initialized from
+> the _CRS (in acpi_decode_space()) and contain the CPU physical address
+> at which a root bridge decodes IO space in the CPU physical address
+> space with the offset value representing the offset required to translate
+> the PCI bus address into the CPU physical address.
 >
-> My concern is that if we elevate the current x86 code to be
-> "arch-independent", we will be perpetuating some interfaces and
-> designs that shouldn't be allowed to escape arch/x86.
+> The IO resource windows are then parsed and updated in arch code
+> before creating and enumerating PCI buses (eg IA64 add_io_space())
+> to map in an arch specific way the obtained CPU physical address range
+> to a slice of virtual address space reserved to map PCI IO space,
+> ending up with PCI bridges resource windows containing IO
+> resources like the following on a working IA64 configuration:
+>
+> PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [io  0x1000000-0x100ffff window] (bus
+> address [0x0000-0xffff])
+> pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000fffff window]
+> pci_bus 0000:00: root bus resource [mem 0x80000000-0x8fffffff window]
+> pci_bus 0000:00: root bus resource [mem 0x80004000000-0x800ffffffff window]
+> pci_bus 0000:00: root bus resource [bus 00]
+>
+> This implies that the [0 - 64K] check in acpi_dev_ioresource_flags()
+> leaves platforms with memory mapped IO space (ie IA64) broken (ie kernel
+> can't claim IO resources since the host bridge IO resource is disabled
+> and discarded by ACPI core code, see log on IA64 with missing root bridge
+> IO resource, silently filtered by current [0 - 64k] check in
+> acpi_dev_ioresource_flags()):
+>
+> PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000fffff window]
+> pci_bus 0000:00: root bus resource [mem 0x80000000-0x8fffffff window]
+> pci_bus 0000:00: root bus resource [mem 0x80004000000-0x800ffffffff window]
+> pci_bus 0000:00: root bus resource [bus 00]
+>
+> [...]
+>
+> pci 0000:00:03.0: [1002:515e] type 00 class 0x030000
+> pci 0000:00:03.0: reg 0x10: [mem 0x80000000-0x87ffffff pref]
+> pci 0000:00:03.0: reg 0x14: [io  0x1000-0x10ff]
+> pci 0000:00:03.0: reg 0x18: [mem 0x88020000-0x8802ffff]
+> pci 0000:00:03.0: reg 0x30: [mem 0x88000000-0x8801ffff pref]
+> pci 0000:00:03.0: supports D1 D2
+> pci 0000:00:03.0: can't claim BAR 1 [io  0x1000-0x10ff]: no compatible
+> bridge window
+>
+> For this reason, the IO port resources boundaries check in generic ACPI
+> parsing code should be guarded with a CONFIG_X86 guard so that more arches
+> (ie ARM64) can benefit from the generic ACPI resources parsing interface
+> without incurring in unexpected resource filtering, fixing at the same
+> time current breakage on IA64.
+>
+> This patch factors out IO ports boundary [0 - 64k] check in generic ACPI
+> code and makes the IO space check X86 specific to make sure that IO
+> space resources are usable on other arches too.
+>
+> Fixes: 3772aea7d6f3 ("ia64/PCI/ACPI: Use common ACPI resource parsing
+> interface for host bridge")
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> Cc: Jiang Liu <jiang.liu@linux.intel.com>
+> Cc: Tony Luck <tony.luck@intel.com>
+> Cc: Tomasz Nowicki <tn@semihalf.com>
+> Cc: Mark Salter <msalter@redhat.com>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> ---
+> v2 -> v3
+>
+> - Moved IO resource check to generic ACPI resource code
+> - Dropped Tested-by tags
+> - Rebased against v4.5
+>
+> v2: https://marc.info/?l=linux-acpi&m=145521271330332&w=2
+>
+> v1 -> v2
+>
+> - Updated commit log to report missing IO resources
+> - Fixed function ioport_valid() comment 16k/64k typo
+>
+> v1: https://marc.info/?l=linux-acpi&m=145432228025354&w=2
+>
+>  drivers/acpi/resource.c | 14 +++++++++++++-
+>  1 file changed, 13 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> index d02fd53..56241eb 100644
+> --- a/drivers/acpi/resource.c
+> +++ b/drivers/acpi/resource.c
+> @@ -27,8 +27,20 @@
+>
+>  #ifdef CONFIG_X86
+>  #define valid_IRQ(i) (((i) != 0) && ((i) != 2))
+> +static inline bool acpi_iospace_resource_valid(struct resource *res)
+> +{
+> +       /* On X86 IO space is limited to the [0 - 64K] IO port range */
+> +       return res->end < 0x10003;
+> +}
+>  #else
+>  #define valid_IRQ(i) (true)
+> +/*
+> + * ACPI IO descriptors on arches other than X86 contain MMIO CPU physical
+> + * addresses mapping IO space in CPU physical address space, IO space
+> + * resources can be placed anywhere in the 64-bit physical address space.
+> + */
+> +static inline bool
+> +acpi_iospace_resource_valid(struct resource *res) { return true; }
+>  #endif
+>
+>  static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
+> @@ -127,7 +139,7 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+>         if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
+>                 res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+>
+> -       if (res->end >= 0x10003)
+> +       if (!acpi_iospace_resource_valid(res))
+>                 res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+>
+>         if (io_decode == ACPI_DECODE_16)
+> --
 
-I think the major decision is whether to maintain the pci_mmcfg_list
-for all architectures or not. My initial plan was not to do this because
-of the mess (basically the ECAM region info should be attached to
-the pci root and not maintained in a separate list that needs locking),
-The patch I posted initially https://patchwork.ozlabs.org/patch/553464/
-had a much simpler way of handling the MCFG table without using
-the list.
+This is fine by me.
 
-In x86 case it is not feasible to remove using the pci_mmcfg_list.
-The only use of it outside is in xen that can be fixed up.
-
-> Some of the code that moved to drivers/acpi/pci_mcfg.c is not really
-> ACPI-specific, and could potentially be used for non-ACPI bridges that
-> support ECAM.  I'd like to see that sort of code moved to a new file
-> like drivers/pci/ecam.c.
->
-> There's a little bit of overlap here with the ECAM code in
-> pci-host-generic.c.  I'm not sure whether or how to include that, but
-> it's a very good example of how simple this *should* be: probe the
-> host bridge, discover the ECAM region, request the region, ioremap it,
-> done.
-
-I had a similar approach in my initial patchset, please see the patch
-above. The resource for ECAM is mapped similar to the the way
-pci-host-generic.c handled it. An additional step I could do was to
-move the common code (ioremap and mapbus) into a common
-file and share the code with pci-host-generic.c
-
->> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
->> new file mode 100644
->> index 0000000..ea84365
->> --- /dev/null
->> +++ b/drivers/acpi/pci_mcfg.c
->> ...
->> +int __weak pci_mmconfig_map_resource(struct device *dev,
->> +     struct pci_mmcfg_region *mcfg)
->> +{
->> +     struct resource *tmp;
->> +     void __iomem *vaddr;
->> +
->> +     tmp = insert_resource_conflict(&iomem_resource, &mcfg->res);
->> +     if (tmp) {
->> +             dev_warn(dev, "MMCONFIG %pR conflicts with %s %pR\n",
->> +                     &mcfg->res, tmp->name, tmp);
->> +             return -EBUSY;
->> +     }
->
-> I think this is a mistake in the x86 MCFG support that we should not
-> carry over to a generic implementation.  We should not use the MCFG
-> table for resource reservation because MCFG is not defined by the ACPI
-> spec and an OS need not include support for it.  The platform must
-> indicate in some other, more generic way, that ECAM space is reserved.
-> This probably means ECAM space should be declared in a PNP0C02 _CRS
-> method (see the PCI Firmware Spec r3.0, sec 4.1.2, note 2).
->
-> We might need some kind of x86-specific quirk that does this, or a
-> pcibios hook or something here; I just don't think it should be
-> generic.
->
->> +int __init pci_mmconfig_parse_table(void)
->> +{
->> +     return acpi_sfi_table_parse(ACPI_SIG_MCFG, pci_parse_mcfg);
->> +}
->
-> I don't like the fact that we parse the entire MCFG table at once
-> here.  I think we should look for the information we need when we are
-> claiming a PCI host bridge, e.g., in acpi_pci_root_add().  This might
-> not be a great fit for the way ACPI table management works, but I
-> think it's better to do things on-demand rather than just-in-case.
-
-There is an overhead of looking up this table, and the information
-available there is very limited (i.e, segment, start_bus, end_bus
-and address). My approach in the above patch is to save this info
-into an array at boot time and avoid multiple lookups.
-
->> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
->> index 89ab057..e9450ef 100644
->> --- a/include/linux/pci-acpi.h
->> +++ b/include/linux/pci-acpi.h
->> @@ -106,6 +106,39 @@ extern const u8 pci_acpi_dsm_uuid[];
->>  #define RESET_DELAY_DSM              0x08
->>  #define FUNCTION_DELAY_DSM   0x09
->>
->> +/* common API to maintain list of MCFG regions */
->> +/* "PCI MMCONFIG %04x [bus %02x-%02x]" */
->> +#define PCI_MMCFG_RESOURCE_NAME_LEN (22 + 4 + 2 + 2)
->> +
->> +struct pci_mmcfg_region {
->> +     struct list_head list;
->> +     struct resource res;
->> +     u64 address;
->> +     char __iomem *virt;
->> +     u16 segment;
->> +     u8 start_bus;
->> +     u8 end_bus;
->> +     char name[PCI_MMCFG_RESOURCE_NAME_LEN];
->> +};
->> +
->> +extern int pci_mmconfig_insert(struct device *dev, u16 seg, u8 start, u8 end,
->> +                            phys_addr_t addr);
->> +extern int pci_mmconfig_delete(u16 seg, u8 start, u8 end);
->> +
->> +extern struct pci_mmcfg_region *pci_mmconfig_lookup(int segment, int bus);
->> +extern struct pci_mmcfg_region *pci_mmconfig_add(int segment, int start,
->> +                                                     int end, u64 addr);
->> +extern int pci_mmconfig_map_resource(struct device *dev,
->> +     struct pci_mmcfg_region *mcfg);
->> +extern void pci_mmconfig_unmap_resource(struct pci_mmcfg_region *mcfg);
->> +extern int pci_mmconfig_enabled(void);
->> +extern int __init pci_mmconfig_parse_table(void);
->> +
->> +extern struct list_head pci_mmcfg_list;
->> +
->> +#define PCI_MMCFG_BUS_OFFSET(bus)      ((bus) << 20)
->> +#define PCI_MMCFG_OFFSET(bus, devfn)   ((bus) << 20 | (devfn) << 12)
->> +
->
-> With the exception of pci_mmconfig_parse_table(), nothing here is
-> ACPI-specific.  I'd like to see the PCI ECAM-related interfaces
-> (hopefully not these exact ones, but a more rational set) put in
-> something like include/linux/pci-ecam.h.
->
->>  #else        /* CONFIG_ACPI */
->>  static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
->>  static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
-
-I can update this patch to
- -  drop the pci_mmcfg_list handling from generic case
- -  move common ECAM code so that it can be shared with
-    pci-host-generic.c
-if that is what you are looking for. The code will end up looking much
-simpler.
-
-Thanks,
-JC.
+Bjorn?
