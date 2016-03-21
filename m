@@ -1,32 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1457921220.11972.58.camel@perches.com>
-Subject: Re: [PATCH] Add tw5864 driver
-From: Joe Perches <joe@perches.com>
-To: Andrey Utkin <andrey.utkin@corp.bluecherry.net>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bluecherry Maintainers <maintainers@bluecherrydvr.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Kalle Valo <kvalo@codeaurora.org>, Jiri Slaby <jslaby@suse.com>
-Cc: linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-pci@vger.kernel.org,
-	kernel-mentors@selenic.com
-Date: Sun, 13 Mar 2016 19:07:00 -0700
-In-Reply-To: <1457920751-21101-1-git-send-email-andrey.utkin@corp.bluecherry.net>
-References: <1457920713-21009-1-git-send-email-andrey.utkin@corp.bluecherry.net>
-	 <1457920751-21101-1-git-send-email-andrey.utkin@corp.bluecherry.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60363 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753166AbcCUMkp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 21 Mar 2016 08:40:45 -0400
+Date: Mon, 21 Mar 2016 07:40:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tero Roponen <tero.roponen@gmail.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Restore inclusion of pci/hotplug Kconfig
+Message-ID: <20160321124042.GB28507@localhost>
+References: <alpine.LFD.2.20.1603210924030.16682@terrop.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LFD.2.20.1603210924030.16682@terrop.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2016-03-14 at 03:59 +0200, Andrey Utkin wrote:
-> Support for boards based on Techwell TW5864 chip which provides
-> multichannel video & audio grabbing and encoding (H.264, MJPEG,
-> ADPCM G.726).
+On Mon, Mar 21, 2016 at 09:26:41AM +0200, Tero Roponen wrote:
+> Commit e7e127e3c767 ("PCI: Include pci/hotplug Kconfig directly
+> from pci/Kconfig") added one line to pci/Kconfig. However, for
+> some mysterious reason it isn't there now, even though there
+> are no traces of removing it in the git log.
+> 
+> I detected this issue when 'make oldconfig' removed all the
+> options that depended on HOTPLUG_PCI.
+> 
+> Signed-off-by: Tero Roponen <tero.roponen@gmail.com>
 
-trivia:
+Thanks for catching this, Tero!  I botched the pci/hv merge and
+dropped this line.  I applied this to for-linus and will ask Linus to
+pull it before v4.6-rc1.
 
-Perhaps all the __used arrays could be const
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index a1f37db..209292e 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -128,4 +128,5 @@ config PCI_HYPERV
+>            The PCI device frontend driver allows the kernel to import arbitrary
+>            PCI devices from a PCI backend to support PCI driver domains.
+>  
+> +source "drivers/pci/hotplug/Kconfig"
+>  source "drivers/pci/host/Kconfig"
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
