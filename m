@@ -1,162 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from li153-180.members.linode.com ([109.74.206.180]:51070 "EHLO
-	mail.tekno-soft.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751833AbcCHOjx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Mar 2016 09:39:53 -0500
-Subject: Re: iMX6q PCIe phy link never came up on kernel v4.4.x
-To: Richard Zhu <hongxing.zhu@nxp.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-References: <56D5E3DF.9030906@tekno-soft.it> <56D71F27.7070708@tekno-soft.it>
- <20160302195634.GA19223@localhost>
- <DBXPR04MB2706C7C2FD2348D205331998CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
- <56D80435.90408@tekno-soft.it>
- <DBXPR04MB2702F4BC78FA28DC82DCA218CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
- <56D8180A.1050708@tekno-soft.it> <56D84B6D.1050800@tekno-soft.it>
- <56D883AD.5060601@tekno-soft.it>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-From: Roberto Fichera <kernel@tekno-soft.it>
-Message-ID: <56DEE426.8030902@tekno-soft.it>
-Date: Tue, 8 Mar 2016 15:39:34 +0100
+Received: from mail.kernel.org ([198.145.29.136]:48276 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756270AbcCUQgm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 21 Mar 2016 12:36:42 -0400
+Date: Mon, 21 Mar 2016 11:36:37 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mike Lothian <mike@fireburn.co.uk>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
+	linux-nvme <linux-nvme@lists.infradead.org>,
+	Rafael Wysocki <rjw@rjwysocki.net>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Subject: Re: [Bug 112121] New: Some PCIe options cause devices to be removed
+ after suspend
+Message-ID: <20160321163637.GA12288@localhost>
+References: <bug-112121-41252@https.bugzilla.kernel.org/>
+ <CAErSpo4beDk_ajsgqMUNJ3TGxDv=ysyPzhXHcx2AhUEUE9ROKA@mail.gmail.com>
+ <CAHbf0-GBiMVr4=n3ZT1NSH8Xgdh3TcdDd=Di+pok6Ep6h42ZOQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <56D883AD.5060601@tekno-soft.it>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAHbf0-GBiMVr4=n3ZT1NSH8Xgdh3TcdDd=Di+pok6Ep6h42ZOQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/03/2016 07:34 PM, Roberto Fichera wrote:
-> On 03/03/2016 03:34 PM, Roberto Fichera wrote:
->
-> I've also checked clock, pll, PMU_MISC1 and CCGR[45] registers, all looks fine
-> and exactly equal to uboot settings.
->
-> However I'm investigating a possible HW issue in the LDVS pad wiring against
-> the bridge XIO2001. Let's see once this is also clarified.
+Hi Mike,
 
-Our HW engineer has applied a fix to LVDS vs XIO2001 clock wiring. However I'm still getting the same problem.
+I'm sorry this slipped through the cracks.   I apologize for the
+inability of Google Inbox to send plaintext email; I use mutt
+because that's a hassle for me, too.
 
-I've tried to boot a kernel with uboot not setting up the PCIe subsys and below there is the resulting kernel log.
-Note that the CCGR5 doesn't set the CG2 field associated to sata_clk_enable. I think this field should be set all 1 to
-enable the SATA ref at 100MHz, right?
+On Sat, Feb 13, 2016 at 11:39:52PM +0000, Mike Lothian wrote:
+> On 8 February 2016 at 13:51, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > [+cc linux-pci, NVMe folks, power management folks]
+> >
+> > On Sun, Feb 7, 2016 at 11:04 AM,  <bugzilla-daemon@bugzilla.kernel.org> wrote:
+> >> https://bugzilla.kernel.org/show_bug.cgi?id=112121
+> >>
+> >>             Bug ID: 112121
+> >>            Summary: Some PCIe options cause devices to be removed after
+> >>                     syspend
+> >>            Product: Drivers
+> >>            Version: 2.5
+> >>     Kernel Version: 4.5-rc2
+> >>           Hardware: All
+> >>                 OS: Linux
+> >>               Tree: Mainline
+> >>             Status: NEW
+> >>           Severity: normal
+> >>           Priority: P1
+> >>          Component: PCI
+> >>           Assignee: drivers_pci@kernel-bugs.osdl.org
+> >>           Reporter: mike@fireburn.co.uk
+> >>         Regression: No
+> >>
+> >> Created attachment 203091
+> >>   --> https://bugzilla.kernel.org/attachment.cgi?id=203091&action=edit
+> >> Dmesg showing PCIe device removals
+> >>
+> >> I was having issues with suspend, when the machine was being resumed iommu
+> >> started removing devices - including my PCIe NVMe drive which contained my root
+> >> partition
+> >>
+> >> The problem showed up with:
+> >>
+> >> [*] PCI support
+> >> [*]   Support mmconfig PCI config space access
+> >> [*]   PCI Express Port Bus support
+> >> [*]     PCI Express Hotplug driver
+> >> [*]     Root Port Advanced Error Reporting support
+> >> [*]       PCI Express ECRC settings control
+> >> < >       PCIe AER error injector support
+> >> -*-     PCI Express ASPM control
+> >> [ ]       Debug PCI Express ASPM
+> >>           Default ASPM policy (BIOS default)  --->
+> >> [*]   Message Signaled Interrupts (MSI and MSI-X)
+> >> [ ]   PCI Debugging
+> >> [*]   Enable PCI resource re-allocation detection
+> >> < >   PCI Stub driver
+> >> [*]   Interrupts on hypertransport devices
+> >> [ ] PCI IOV support
+> >> [*] PCI PRI support
+> >> -*- PCI PASID support
+> >>     PCI host controller drivers  ----
+> >> < > PCCard (PCMCIA/CardBus) support  ----
+> >> [*] Support for PCI Hotplug  --->
+> >> < > RapidIO support
+> >>
+> >>
+> >> This is what I have now:
+> >>
+> >> [*] PCI support
+> >> [*]   Support mmconfig PCI config space access
+> >> [*]   PCI Express Port Bus support
+> >> [ ]     Root Port Advanced Error Reporting support
+> >> -*-     PCI Express ASPM control
+> >> [ ]       Debug PCI Express ASPM
+> >>           Default ASPM policy (BIOS default)  --->
+> >> [*]   Message Signaled Interrupts (MSI and MSI-X)
+> >> [*]   PCI Debugging
+> >> [ ]   Enable PCI resource re-allocation detection
+> >> < >   PCI Stub driver
+> >> [*]   Interrupts on hypertransport devices
+> >> [ ] PCI IOV support
+> >> [ ] PCI PRI support
+> >> [ ] PCI PASID support
+> >>     PCI host controller drivers  ----
+> >> < > PCCard (PCMCIA/CardBus) support  ----
+> >> [ ] Support for PCI Hotplug  ----
+> >> < > RapidIO support
+> >>
+> >> I tried disabling the iommu driver first but it had no effect
+> >>
+> >> If people are interested I could play with the above options to see which one
+> >> causes the issue
+> >
+> > My guess is that PCI hotplug is the important one.  It would be nice
+> > if dmesg contained enough information to connect nvme0n1 to a PCI
+> > device.  It'd be even nicer if the PCI core noted device removals or
+> > whatever happened here.
+> >
+> > You don't get any more details if you boot with "ignore_loglevel", do you?
+> >
+> > Mike, you didn't mark this as a regression, so I assume it's always
+> > been this way, and we just haven't noticed it because most people
+> > enable PCI hotplug (or whatever the relevant config option is).
+> 
+> I've just tested this again, I enabled PCI Hotplug & PCIe Hotplug and
+> nothing - then I noticed I hadn't enabled the ACPI Hotplug driver -
+> once I did the issue re-appeared
+> 
+> I then had to use testdisk to restore my partition table :'(
+> 
+> I've attached the updated dmesg & my .config
 
-﻿﻿﻿﻿﻿﻿[    0.237052] PCI host bridge /soc/pcie@0x01000000 ranges:
-[    0.237070]   No bus range found for /soc/pcie@0x01000000, using [bus 00-ff]
-[    0.237119]   err 0x01f00000..0x01f7ffff -> 0x01f00000
-[    0.237157]    IO 0x01f80000..0x01f8ffff -> 0x00000000
-[    0.237241]   MEM 0x01000000..0x01efffff -> 0x01000000
-[    0.437893] imx6q-pcie 1ffc000.pcie: >>> GPR[1]: 0x48611005
-[    0.437913] imx6q-pcie 1ffc000.pcie: >>> GPR[8]: 0xfffd4000
-[    0.437927] imx6q-pcie 1ffc000.pcie: >>> GPR[12]: 0x0f004000
-[    0.437945] imx6q-pcie 1ffc000.pcie: >>> ANA_MISC1: 0x8000040b
-[    0.437959] imx6q-pcie 1ffc000.pcie: >>> PLL_ENET: 0x80182001
-[    0.437973] imx6q-pcie 1ffc000.pcie: >>> CCM_CCGR4 (0xf08f8078): 0x00fff303
-[    0.437989] imx6q-pcie 1ffc000.pcie: >>> CCM_CCGR5 (0xf08f807c): 0x0f0000c3
-[    0.438003] imx6q-pcie 1ffc000.pcie: >>> PCIE_RC_LCR (0xf08f007c): 0x0011cc11
-[    4.437756] imx6q-pcie 1ffc000.pcie: phy link never came up
-[    4.437774] imx6q-pcie 1ffc000.pcie: LTSSM current state: 0x2 (S_POLL_ACTIVE)
-[    4.437786] imx6q-pcie 1ffc000.pcie: PIPE transmit K indication: 0
+Correct me if I'm wrong:
 
->
->> On 03/03/2016 11:55 AM, Roberto Fichera wrote:
->>> On 03/03/2016 10:39 AM, Richard Zhu wrote:
->>>
->>> Hi Richard,
->>>
->>>> [Zhu hongxing] The registers configured during the initialization.
->>>> Regarding to the current situation at your side, the pcie link is up in uboot, but is down in kernel.
->>>> So, you can compare the dump of the register configured during the pcie initialization between uboot and kernel.
->>> Here is the register status before to start LTSSM under uboot
->>>
->>> ...
->>> I2C:   ready
->>> DRAM:  2 GiB
->>> MMC:   FSL_SDHC: 0, FSL_SDHC: 1
->>>>>> GPR[1] (0x020e0004): 0x48611005
->>>>>> GPR[5] (0x020e0014): 0x00000000
->>>>>> GPR[8] (0x020e0020): 0xfffd4000
->>>>>> GPR[12] (0x020e0030): 0x0f004090
->>>>>> GPC_BASE_ADDR + 0 (0x020dc000): 0x00100000
->>>>>> MX6_DBI_ADDR + 0x7c (0x01ffc07c): 0x0011cc11
->>> DEBUG_R0: 0x036e2b11, DEBUG_R1: 0x08000410
->>>   LTSSM current state: 0x11 (S_L0)
->>>   PIPE transmit K indication: 0
->>>   PIPE Transmit data: 0x6e2b
->>>   Receiver is receiving logical idle: yes
->>>
->>> but the funny thing is under kernel, maybe related to some clock setting? see below
->> Was my fault! Value are exactly the same I'm getting under uboot:
->>
->> I2C:   ready
->> DRAM:  2 GiB
->> MMC:   FSL_SDHC: 0, FSL_SDHC: 1
->>>>> GPR[1] (0x020e0004): 0x48611005
->>>>> GPR[8] (0x020e0020): 0xfffd4000
->>>>> GPR[12] (0x020e0030): 0x0f004090
->>>>> MX6_DBI_ADDR + 0x7c (0x01ffc07c): 0x0011cc11
->> kernel:
->>
->> [    0.377668] imx6q-pcie 1ffc000.pcie: >>> GPR[1]: 0x48611005
->> [    0.377705] imx6q-pcie 1ffc000.pcie: >>> GPR[8]: 0xfffd4000
->> [    0.377720] imx6q-pcie 1ffc000.pcie: >>> GPR[12]: 0x0f004090
->> [    0.377734] imx6q-pcie 1ffc000.pcie: >>> PCIE_RC_LCR (0xf08f007c): 0x0011cc11
->> [    0.586591] imx6q-pcie 1ffc000.pcie: phy link never came up
->>
->>
->>> [    0.235456] PCI host bridge /soc/pcie@0x01000000 ranges:
->>> [    0.235475]   No bus range found for /soc/pcie@0x01000000, using [bus 00-ff]
->>> [    0.235527]   err 0x01f00000..0x01f7ffff -> 0x01f00000
->>> [    0.235577]    IO 0x01f80000..0x01f8ffff -> 0x00000000
->>> [    0.235659]   MEM 0x01000000..0x01efffff -> 0x01000000
->>> [    0.377644] imx6q-pcie 1ffc000.pcie: >>> GPR[1] (0x00000004): 0x00000000
->>> [    0.377666] imx6q-pcie 1ffc000.pcie: >>> GPR[5] (0x00000014): 0x00000000
->>> [    0.377684] imx6q-pcie 1ffc000.pcie: >>> GPR[8] (0x00000020): 0x00000000
->>> [    0.377701] imx6q-pcie 1ffc000.pcie: >>> GPR[12] (0x00000030): 0x00000000
->>> [    0.377717] imx6q-pcie 1ffc000.pcie: >>> PCIE_RC_LCR (0xf08f007c): 0x0011cc11
->>> [    0.586532] imx6q-pcie 1ffc000.pcie: phy link never came up
->>> [    0.586551] imx6q-pcie 1ffc000.pcie: LTSSM current state: 0x3 (S_POLL_COMPLIANCE)
->>> [    0.586566] imx6q-pcie 1ffc000.pcie: PIPE transmit K indication: 1
->>> [    0.586579] imx6q-pcie 1ffc000.pcie: PIPE Transmit data: 0xb5bc
->>> [    0.586592] imx6q-pcie 1ffc000.pcie: Receiver is receiving logical idle: no
->>>
->>> The code I've used to dump the register is using regmap_read(),
->>>
->>> #define IMX6_DUMP_REGISTER(__map, __reg, __name) \
->>>   do {\
->>>     uint32_t val;\
->>>     val = regmap_read(__map, __reg, &val);\
->>>     dev_err(pp->dev, ">>> " __name " (0x%08p): 0x%08x\n", __reg, val);\
->>>   } while(0)
->>>
->>> #define IMX6_DUMP_REGISTER2(__reg, __name) \
->>>   do {\
->>>     uint32_t val;\
->>>     val = readl(__reg);\
->>>     dev_err(pp->dev, ">>> " __name " (0x%08p): 0x%08x\n", __reg, val);\
->>>   } while(0)
->>>
->>>
->>> static void imx6_pcie_dump_registers(struct pcie_port *pp)
->>> {
->>>     struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
->>>
->>>         IMX6_DUMP_REGISTER(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, "GPR[1]");
->>>         IMX6_DUMP_REGISTER(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5, "GPR[5]");
->>>         IMX6_DUMP_REGISTER(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8, "GPR[8]");
->>>         IMX6_DUMP_REGISTER(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, "GPR[12]");
->>>         IMX6_DUMP_REGISTER2(pp->dbi_base + PCIE_RC_LCR, "PCIE_RC_LCR");
->>> }
->>>
->>> Cheers,
->>> Roberto Fichera.
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
-
+  - With CONFIG_HOTPLUG_PCI_ACPI not set, suspend/resume works fine
+  - With CONFIG_HOTPLUG_PCI_ACPI=y, resume fails as shown in your dmesg log
+    (https://bugzilla.kernel.org/attachment.cgi?id=203621)
