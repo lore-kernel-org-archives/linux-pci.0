@@ -1,36 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ni.piap.pl ([195.187.100.4]:55466 "EHLO ni.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751696AbcCUJj4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 21 Mar 2016 05:39:56 -0400
+From: khalasa@piap.pl (Krzysztof Halasa)
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] Extend PCIE_BUS_PEER2PEER to set MRSS=128 to fix CNS3xxx BM DMA.
+Date: Mon, 21 Mar 2016 10:39:52 +0100
+Message-ID: <m3pouoqidz.fsf@t19.piap.pl>
 MIME-Version: 1.0
-In-Reply-To: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
-References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
-Date: Thu, 17 Mar 2016 09:58:26 +0530
-Message-ID: <CAHM4w1ki8wJetiZqth9QQ8wtKcvVe-WTwpgE0EBudttfYUE3WA@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code to dw_pcie_setup_rc()
-From: Pratyush Anand <pratyush.anand@gmail.com>
-To: Jisheng Zhang <jszhang@marvell.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-kernel@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 16, 2016 at 5:10 PM, Jisheng Zhang <jszhang@marvell.com> wrote:
-> dw_pcie_setup_rc(), as its name indicates, setups the RC. But current
-> dw_pcie_host_init() also contains some necessary rc setup code.
->
-> Another reason: the host may lost power during suspend to ram, the RC
-> need to be re-setup after resume. The rc can't be correctly resumed
-> without the rc setup code in dw_pcie_host_init().
->
-> So this patch moves the code to dw_pcie_setup_rc() to address the above
-> two issues. After this patch, each pcie designware driver users could
-> call dw_pcie_setup_rc() to re-setup rc when resume back.
->
-> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+The platform in question is Cavium CNS3xxx, ARMv6.
 
-Seems reasonable. Thanks for the cleanup. :-)
+A recent patch by Arnd Bergmann (498a92d42596 "ARM: cns3xxx: pci: avoid
+potential stack overflow") converted an explicit setting of
+PCI_EXP_DEVCTL_READRQ = 0 (i.e., max 128 bytes for bus-mastering PCIe DMA
+read request) to:
++    pcie_bus_config = PCIE_BUS_PEER2PEER;
 
-Acked-by: Pratyush Anand <pratyush.anand@gmail.com>
+with the following commentary:
+    "The second part is how the driver sets up the Max_Read_Request_Size
+    value for the first device/function on bus 1, i.e. the device
+    plugged directly into the PCIe root port.
+    For all I can tell, this is in fact incomplete, as it does not
+    perform the same setting on devices attached to a PCIe switch,
+    or multi-function devices.
+    The solution for this part fortunately is even easier: if we
+    just set the global pcie_bus_config variable to PCIE_BUS_PEER2PEER,
+    all PCIe devices in the system are limited to 128 byte MPS, which
+    in turn limits the MRRS to 128 bytes for all devices, and we
+    no longer even need to touch any devices."
+
+The problem is the MRRS setting is never written to the hardware.
+I propose the following, though I'm not sure if we can do this safely,
+especially given the comments in probe.c. OTOH, this change may be
+required in other (all?) cases when the user requests
+PCIE_BUS_PEER2PEER.
+
+On this Laguna GW-2388 the following patch fixes BM DMA with:
+0000:00:00.0 PCI bridge: Cavium Networks Device 3400 (rev 01)
+0000:01:00.0 PCI bridge: Texas Instruments XIO2001 PCI Express-to-PCI Bridge
+0000:02:0e.0 (PCI devices behind the bridge, these are doing actual BM xfers)
+0001:00:00.0 PCI bridge: Cavium Networks Device 3400 (rev 01 - this is
+	     the second lane from the CPU)
+
+pci 0000:00:00.0: Max Payload Size set to  128/ 128 (was  128), Max Read Rq  128
+pci 0000:01:00.0: Max Payload Size set to  128/ 512 (was  128), Max Read Rq  128
+pci 0001:00:00.0: Max Payload Size set to  128/ 128 (was  128), Max Read Rq  128
+
+Signed-off-by: Krzysztof Hałasa <khalasa@piap.pl>
+Fixes: 498a92d42596 ("ARM: cns3xxx: pci: avoid potential stack overflow")
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6d7ab9b..91713b6 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1919,7 +1919,8 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+ 	/* In the "safe" case, do not configure the MRRS.  There appear to be
+ 	 * issues with setting MRRS to 0 on a number of devices.
+ 	 */
+-	if (pcie_bus_config != PCIE_BUS_PERFORMANCE)
++	if (pcie_bus_config != PCIE_BUS_PERFORMANCE &&
++	    pcie_bus_config != PCIE_BUS_PEER2PEER)
+ 		return;
+ 
+ 	/* For Max performance, the MRRS must be set to the largest supported
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2771625..6f5088a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -756,7 +756,7 @@ enum pcie_bus_config_types {
+ 	PCIE_BUS_DEFAULT,	/* ensure MPS matches upstream bridge */
+ 	PCIE_BUS_SAFE,		/* use largest MPS boot-time devices support */
+ 	PCIE_BUS_PERFORMANCE,	/* use MPS and MRRS for best performance */
+-	PCIE_BUS_PEER2PEER,	/* set MPS = 128 for all devices */
++	PCIE_BUS_PEER2PEER,	/* set MPS and MRSS to 128 for all devices */
+ };
+ 
+ extern enum pcie_bus_config_types pcie_bus_config;
