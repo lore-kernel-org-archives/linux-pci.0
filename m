@@ -1,124 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:29238 "EHLO
-	ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750806AbcDVEYB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Apr 2016 00:24:01 -0400
-From: Alistair Popple <alistair@popple.id.au>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-	grant.likely@linaro.org, robherring2@gmail.com,
-	bhelgaas@google.com, dja@axtens.net
-Subject: Re: [PATCH v8 36/45] powerpc/powernv: Support PCI slot ID
-Date: Fri, 22 Apr 2016 14:23:54 +1000
-Message-ID: <5008269.vZDqGUuHuL@new-mexico>
-In-Reply-To: <57170215.7080405@ozlabs.ru>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com> <20160420022840.GC28594@gwshan> <57170215.7080405@ozlabs.ru>
+Received: from ni.piap.pl ([195.187.100.4]:46731 "EHLO ni.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757188AbcDEF2G convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2016 01:28:06 -0400
+From: khalasa@piap.pl (Krzysztof Halasa)
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH REPOST] Extend PCIE_BUS_PEER2PEER to set MRSS=128 to fix CNS3xxx BM DMA.
+Date: Mon, 21 Mar 2016 10:39:52 +0100
+Message-ID: <m3h9fghbfh.fsf@t19.piap.pl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 20 Apr 2016 14:14:13 Alexey Kardashevskiy wrote:
+I think this bug needs to be fixed, this way or another.
 
-<snip>
+The platform in question is Cavium CNS3xxx, ARMv6.
 
-> >
-> >>
-> >> btw how will new OPAL react if old kernel is running, i.e. not passing @state
-> >> at all? If it is initialized to NULL somewher - fine but what exactly does
-> >> this initialization and makes sure that OPAL won't see garbage as a second
-> >> parameter?
-> >>
-> >
-> > @state is always NULL for old kernel + new OPAL.
-> 
-> What piece of code writes NULL to "state"? Old kernel will do 
-> opal_pci_poll(id) and omit the "state" so something has to take care of it 
-> and write NULL where OPAL expects to see a pointer to "state" (which we set 
-> to NULL) and that place would be some GPR which may have garbage.
-> 
-> I am looking at
-> #define OPAL_CALL(name, token)
-> 
-> and cannot see where the second parameter (which old kernel omits) is 
-> reset, i.e. gpr4 (or gpr5?) is cleared.
+A recent patch by Arnd Bergmann (498a92d42596 "ARM: cns3xxx: pci: avoid
+potential stack overflow") converted an explicit setting of
+PCI_EXP_DEVCTL_READRQ = 0 (i.e., max 128 bytes for bus-mastering PCIe DMA
+read request) to:
++    pcie_bus_config = PCIE_BUS_PEER2PEER;
 
-Gavin walked me through the code here and he's right that this won't cause a
-problem at the moment. Not because @state is NULL on old kernels (as you point
-out it isn't) but because old kernels call a specific sequence of OPAL calls 
-which mean that the new Skiboot wont check @state when an old kernel is running.
+with the following commentary:
+    "The second part is how the driver sets up the Max_Read_Request_Size
+    value for the first device/function on bus 1, i.e. the device
+    plugged directly into the PCIe root port.
+    For all I can tell, this is in fact incomplete, as it does not
+    perform the same setting on devices attached to a PCIe switch,
+    or multi-function devices.
+    The solution for this part fortunately is even easier: if we
+    just set the global pcie_bus_config variable to PCIE_BUS_PEER2PEER,
+    all PCIe devices in the system are limited to 128 byte MPS, which
+    in turn limits the MRRS to 128 bytes for all devices, and we
+    no longer even need to touch any devices."
 
-However this is more a side-effect and is very brittle. It would need far more
-commenting on the OPAL side and there's still a good chance someone will break
-it by accident. Far easier just to add another OPAL call - eg. opal_pci_poll2().
+The problem is the MRRS setting is never written to the hardware.
+I propose the following, though I'm not sure if we can do this safely,
+especially given the comments in probe.c. OTOH, this change may be
+required in other (all?) cases when the user requests
+PCIE_BUS_PEER2PEER.
 
-> > @state is used in
-> > PCI hotplug functionality in OPAL only. As old kernel doesn't support
-> > PCI hotplug, @state is never used. I'm not sure it's the answer you
-> > want?
-> 
-> No, it is not :)
-> 
-> >> When ABI like this changes, I expect to see opal_pci_poll2() or
-> >> opal_pci_poll_ex() rather than just an additional parameter to
-> >> opal_pci_poll()...
-> >>
-> >
-> > It's a good suggestion but it would be nicer if you raised this
-> > early. One question I have: current opal_pci_poll() is enough
-> > to cover all cases, why we need introduce and maintain another
-> > similar one? Sorry that I don't see the reason from your context
-> > and could you please provide more details?
+On this Laguna GW-2388 the following patch fixes BM DMA with:
+0000:00:00.0 PCI bridge: Cavium Networks Device 3400 (rev 01)
+0000:01:00.0 PCI bridge: Texas Instruments XIO2001 PCI Express-to-PCI Bridge
+0000:02:0e.0 (PCI devices behind the bridge, these are doing actual BM xfers)
+0001:00:00.0 PCI bridge: Cavium Networks Device 3400 (rev 01 - this is
+	     the second lane from the CPU)
 
-Because @state will be some non-NULL random number when opal_pci_poll() is
-called on older kernels and if OPAL ever dereferences it you will at best get
-a machine check and at worst random memory corruption. It would be far easier
-to maintain a new OPAL call than to deal with these kind of problems in the
-future.
+pci 0000:00:00.0: Max Payload Size set to  128/ 128 (was  128), Max Read Rq  128
+pci 0000:01:00.0: Max Payload Size set to  128/ 512 (was  128), Max Read Rq  128
+pci 0001:00:00.0: Max Payload Size set to  128/ 128 (was  128), Max Read Rq  128
 
-Also it is an important suggestion that has potentially saved some difficult
-debugging. Whilst it is *preferable* for reviewers to notice things earlier in
-the review process it is also *preferable* for developers to not write bugs in
-the first place. Unfortunately we all miss things and make mistakes. It's far
-more important that we catch and correct these problems even if they are noticed
-later than we would desire.
+Signed-off-by: Krzysztof Hałasa <khalasa@piap.pl>
+Fixes: 498a92d42596 ("ARM: cns3xxx: pci: avoid potential stack overflow")
 
-- Alistair
-
-> >>> +
-> >>> +	return (rval == OPAL_SUCCESS) ? 0 : -EIO;
-> >>> +}
-> >>> +
-> >>>   #ifdef CONFIG_PCI_MSI
-> >>>   int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
-> >>>   {
-> >>> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-> >>> index 0cddde3..6857703 100644
-> >>> --- a/arch/powerpc/platforms/powernv/pci.h
-> >>> +++ b/arch/powerpc/platforms/powernv/pci.h
-> >>> @@ -192,6 +192,7 @@ extern int pnv_tce_xchg(struct iommu_table *tbl, long index,
-> >>>   		unsigned long *hpa, enum dma_data_direction *direction);
-> >>>   extern unsigned long pnv_tce_get(struct iommu_table *tbl, long index);
-> >>>
-> >>> +int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *state);
-> >>>   void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
-> >>>   				unsigned char *log_buff);
-> >>>   int pnv_pci_cfg_read(struct pci_dn *pdn,
-> >>>
-> >>
-> >>
-> >> --
-> >> Alexey
-> >>
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
-> 
-> 
-> 
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6d7ab9b..91713b6 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1919,7 +1919,8 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+ 	/* In the "safe" case, do not configure the MRRS.  There appear to be
+ 	 * issues with setting MRRS to 0 on a number of devices.
+ 	 */
+-	if (pcie_bus_config != PCIE_BUS_PERFORMANCE)
++	if (pcie_bus_config != PCIE_BUS_PERFORMANCE &&
++	    pcie_bus_config != PCIE_BUS_PEER2PEER)
+ 		return;
+ 
+ 	/* For Max performance, the MRRS must be set to the largest supported
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 2771625..6f5088a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -756,7 +756,7 @@ enum pcie_bus_config_types {
+ 	PCIE_BUS_DEFAULT,	/* ensure MPS matches upstream bridge */
+ 	PCIE_BUS_SAFE,		/* use largest MPS boot-time devices support */
+ 	PCIE_BUS_PERFORMANCE,	/* use MPS and MRRS for best performance */
+-	PCIE_BUS_PEER2PEER,	/* set MPS = 128 for all devices */
++	PCIE_BUS_PEER2PEER,	/* set MPS and MRSS to 128 for all devices */
+ };
+ 
+ extern enum pcie_bus_config_types pcie_bus_config;
