@@ -1,96 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V5 00/15] MMCONFIG refactoring and support for ARM64 PCI
- hostbridge init based on ACPI
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>
-References: <1455630825-27253-1-git-send-email-tn@semihalf.com>
- <56D49611.2050202@codeaurora.org> <20160303112332.GC28359@red-moon>
- <56D84938.6020102@codeaurora.org> <20160304105517.GA30693@red-moon>
-Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	Stefano.Stabellini@eu.citrix.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, yinghai@kernel.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <56D97901.7080001@semihalf.com>
-Date: Fri, 4 Mar 2016 13:01:05 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:36760 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759418AbcCVOca (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Mar 2016 10:32:30 -0400
+Date: Tue, 22 Mar 2016 09:32:27 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Sekhar Nori <nsekhar@ti.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Tero Roponen <tero.roponen@gmail.com>
+Subject: [GIT PULL] PCI fixes for v4.6
+Message-ID: <20160322143227.GA23108@localhost>
 MIME-Version: 1.0
-In-Reply-To: <20160304105517.GA30693@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04.03.2016 11:55, Lorenzo Pieralisi wrote:
-> On Thu, Mar 03, 2016 at 09:24:56AM -0500, Sinan Kaya wrote:
->> >On 3/3/2016 6:23 AM, Lorenzo Pieralisi wrote:
->>> > >x86 and IA64 claim PCI resources on boot and live with that (well, minus
->>> > >the gazillions x86 pci= parameters that change the PCI resources assignment
->>> > >one way or another), comments very welcome in particular on the pci=realloc
->>> > >option and its usage.
->> >
->> >I have been working with Linux PCIe over 3 years. I never used
->> >pci=realloc argument.
->> >
->> >The v5 series minus [PATCH V5 11/15] drivers: pci: add generic code to
->> >claim bus resources is working just fine and is ready to go upstream
->> >in my opinion. It passed my internal testing with different types of
->> >endpoints.
->> >
->> >The inclusion of this patch is now requiring everybody to add
->> >pci=realloc argument otherwise the resources assigned by the UEFI BIOS
->> >are not working.
->> >
->> >I think there is still some work to be done in this patch and is too
->> >early to be included into the series. It is blocking progress of the
->> >series which is sitting on review over 1 year already.
-> First off, I think that's specious, patch 11 is not blocking anything,
-> if you and Tomasz want to drop it go ahead and take responsibility
-> of the consequences.
->
-> I am not saying patch 11 is perfect, it is there to review, if you
-> spot bugs point them out.
->
-> If you are interested and willing to make an effort to understand why I
-> asked Tomasz to integrate it, a bit of background here:
->
-> http://permalink.gmane.org/gmane.linux.kernel.pci/44830
->
-> If we want to drop patch 11, we are going to discard whatever FW
-> set-up at FW/OS hand-off and reassign everything. Want to do it ?
-> Go ahead.
->
-> I wrote it in my previous email, probably it was not clear, so, here we
-> go again.
->
-> If we want to at least consider the FW PCI configuration at FW/OS
-> handoff, we should read the PCI bridge apertures and claim them, when
-> that fails reassign the corresponding PCI bus hierarchy (which means
-> releasing the bridge resources and downstream devices and reassign
-> them), that's what pci=realloc does.
->
-> I think that it is a command line option since it has to be a choice,
-> ie overriding FW set-up should be an option, not a default.
->
-> Patch 11 does what x86 does in arch code arch/x86/pci/i386.c,
->
-> pcibios_resource_survey()
->
-> and that works for them (of course, minus quirks that do exist).
->
-> I could integrate the code implementing pci=realloc in patch 11 so
-> that we realloc by default all resources claimed that failed (which
-> means that bridges are resized accordingly and you won't be forced
-> to use pci=realloc on command line).
->
+Hi Linus,
 
-I agree with Lorenzo. Just because v3 works it does not mean we want to 
-go this way. Also, I think we should realloc all resources claimed that 
-failed, w/o need to use pci=realloc on command line.
+Here are two fixes for v4.6:
 
-Tomasz
+  - You merged a fix for a TI DRA7xx reset issue from another source, so
+    Sekhar removed the "broken" tag from the driver, and
+
+  - I botched a Kconfig merge and broke hotplug configuration for
+    everybody, so Tero fixed that.
+
+Bjorn
+
+
+The following changes since commit 643ad15d47410d37d43daf3ef1c8ac52c281efa5:
+
+  Merge branch 'mm-pkeys-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip (2016-03-20 19:08:56 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.6-fixes-1
+
+for you to fetch changes up to 9188269a2e8ea5b32affef99d42c5eda91c07fdf:
+
+  Revert "PCI: dra7xx: Mark driver as broken" (2016-03-22 07:50:11 -0500)
+
+----------------------------------------------------------------
+PCI updates for v4.6:
+
+  TI DRA7xx host bridge driver
+    Revert "PCI: dra7xx: Mark driver as broken" (Sekhar Nori)
+
+  Miscellaneous
+    Restore inclusion of pci/hotplug Kconfig (Tero Roponen)
+
+----------------------------------------------------------------
+Sekhar Nori (1):
+      Revert "PCI: dra7xx: Mark driver as broken"
+
+Tero Roponen (1):
+      PCI: Restore inclusion of pci/hotplug Kconfig
+
+ drivers/pci/Kconfig      | 1 +
+ drivers/pci/host/Kconfig | 1 -
+ 2 files changed, 1 insertion(+), 1 deletion(-)
