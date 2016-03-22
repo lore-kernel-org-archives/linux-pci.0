@@ -1,201 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0058.outbound.protection.outlook.com ([104.47.38.58]:11360
-	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751516AbcCHPyK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 8 Mar 2016 10:54:10 -0500
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Michal Simek <michals@xilinx.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	"lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-	"paul.burton@imgtec.com" <paul.burton@imgtec.com>,
-	"yinghai@kernel.org" <yinghai@kernel.org>,
-	"wangyijing@huawei.com" <wangyijing@huawei.com>,
-	"robh@kernel.org" <robh@kernel.org>,
-	"russell.joyce@york.ac.uk" <russell.joyce@york.ac.uk>,
-	Soren Brinkmann <sorenb@xilinx.com>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"galak@codeaurora.org" <galak@codeaurora.org>
-CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: RE: [PATCH V4 5/5] Microblaze: Modifying microblaze PCI subsytem to
- support generic Xilinx AXI PCIe Host Bridge IP driver
-Date: Tue, 8 Mar 2016 15:54:01 +0000
-Message-ID: <8520D5D51A55D047800579B09414719825887D2E@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1455208091-15556-1-git-send-email-bharatku@xilinx.com>
- <1455208091-15556-6-git-send-email-bharatku@xilinx.com>
- <56CC3DB2.3080900@xilinx.com>
-In-Reply-To: <56CC3DB2.3080900@xilinx.com>
-Content-Type: text/plain; charset="us-ascii"
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Mark Salter <msalter@redhat.com>
+Subject: Re: [PATCH v3] PCI: ACPI: IA64: fix IO port generic range check
+Date: Tue, 22 Mar 2016 15:42:58 +0100
+Message-ID: <6828228.erfiER1Ahm@vostro.rjw.lan>
+In-Reply-To: <20160322130219.GB19418@localhost>
+References: <1458558775-6242-1-git-send-email-lorenzo.pieralisi@arm.com> <CAJZ5v0gvB8fHzmgrnz2wOPdLakJyuRg0eQ65oo13LP0_PHRAbg@mail.gmail.com> <20160322130219.GB19418@localhost>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Tuesday, March 22, 2016 08:02:19 AM Bjorn Helgaas wrote:
+> On Mon, Mar 21, 2016 at 01:42:01PM +0100, Rafael J. Wysocki wrote:
+> > On Mon, Mar 21, 2016 at 12:12 PM, Lorenzo Pieralisi
 
-Can you please take this in to your tree.
+[cut]
 
-Thanks,
-Bharat
+> > >
+> > > Fixes: 3772aea7d6f3 ("ia64/PCI/ACPI: Use common ACPI resource parsing
+> > > interface for host bridge")
+> > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> > > Cc: Jiang Liu <jiang.liu@linux.intel.com>
+> > > Cc: Tony Luck <tony.luck@intel.com>
+> > > Cc: Tomasz Nowicki <tn@semihalf.com>
+> > > Cc: Mark Salter <msalter@redhat.com>
+> > > Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> > > ---
+> > > v2 -> v3
+> > >
+> > > - Moved IO resource check to generic ACPI resource code
+> > > - Dropped Tested-by tags
+> > > - Rebased against v4.5
+> > >
+> > > v2: https://marc.info/?l=linux-acpi&m=145521271330332&w=2
+> > >
+> > > v1 -> v2
+> > >
+> > > - Updated commit log to report missing IO resources
+> > > - Fixed function ioport_valid() comment 16k/64k typo
+> > >
+> > > v1: https://marc.info/?l=linux-acpi&m=145432228025354&w=2
+> > >
+> > >  drivers/acpi/resource.c | 14 +++++++++++++-
+> > >  1 file changed, 13 insertions(+), 1 deletion(-)
+> > >
+> > > diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> > > index d02fd53..56241eb 100644
+> > > --- a/drivers/acpi/resource.c
+> > > +++ b/drivers/acpi/resource.c
+> > > @@ -27,8 +27,20 @@
+> > >
+> > >  #ifdef CONFIG_X86
+> > >  #define valid_IRQ(i) (((i) != 0) && ((i) != 2))
+> > > +static inline bool acpi_iospace_resource_valid(struct resource *res)
+> > > +{
+> > > +       /* On X86 IO space is limited to the [0 - 64K] IO port range */
+> > > +       return res->end < 0x10003;
+> > > +}
+> > >  #else
+> > >  #define valid_IRQ(i) (true)
+> > > +/*
+> > > + * ACPI IO descriptors on arches other than X86 contain MMIO CPU physical
+> > > + * addresses mapping IO space in CPU physical address space, IO space
+> > > + * resources can be placed anywhere in the 64-bit physical address space.
+> > > + */
+> > > +static inline bool
+> > > +acpi_iospace_resource_valid(struct resource *res) { return true; }
+> > >  #endif
+> > >
+> > >  static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
+> > > @@ -127,7 +139,7 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+> > >         if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
+> > >                 res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+> > >
+> > > -       if (res->end >= 0x10003)
+> > > +       if (!acpi_iospace_resource_valid(res))
+> > >                 res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+> > >
+> > >         if (io_decode == ACPI_DECODE_16)
+> > > --
+> > 
+> > This is fine by me.
+> > 
+> > Bjorn?
+> 
+> Looks good to me.
 
-> On 11.2.2016 17:28, Bharat Kumar Gogada wrote:
-> > This patch does required modifications to microblaze PCI subsystem, to
-> > work with generic driver (drivers/pci/host/pcie-xilinx.c) on
-> > Microblaze and Zynq.
-> >
-> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> > Signed-off-by: Ravi Kiran Gummaluri <rgummal@xilinx.com>
-> > ---
-> > Changes:
-> > Removed pcibios_get_phb_of_node in pci-common.c, using generic
-> version
-> > instead.
-> > Modified pcibios_fixup_bus in pci-common.c, as per generic architecuture.
-> > Modified pcibios_align_resource in pci-common.c, as per generic
-> > architecuture, removed temporary variable.
-> > Removed pci_domain_nr in pci-common.c, instead using generic code.
-> > Added pcibios_add_device in pci-common.c, as per generic architecuture.
-> > Adding Kernel configuration in arch/microblaze as required for generic
-> > PCI domains.
-> > Added kernel configuration for driver to support Microblaze.
-> > ---
-> >  arch/microblaze/Kconfig          |  3 +++
-> >  arch/microblaze/pci/pci-common.c | 56 +++++++-------------------------------
-> --
-> >  drivers/pci/host/Kconfig         |  2 +-
-> >  3 files changed, 14 insertions(+), 47 deletions(-)
-> >
-> > diff --git a/arch/microblaze/Kconfig b/arch/microblaze/Kconfig index
-> > 0bce820..c3702b9 100644
-> > --- a/arch/microblaze/Kconfig
-> > +++ b/arch/microblaze/Kconfig
-> > @@ -271,6 +271,9 @@ config PCI
-> >  config PCI_DOMAINS
-> >  	def_bool PCI
-> >
-> > +config PCI_DOMAINS_GENERIC
-> > +	def_bool PCI_DOMAINS
-> > +
-> >  config PCI_SYSCALL
-> >  	def_bool PCI
-> >
-> > diff --git a/arch/microblaze/pci/pci-common.c
-> > b/arch/microblaze/pci/pci-common.c
-> > index ae838ed..35654be 100644
-> > --- a/arch/microblaze/pci/pci-common.c
-> > +++ b/arch/microblaze/pci/pci-common.c
-> > @@ -123,17 +123,6 @@ unsigned long pci_address_to_pio(phys_addr_t
-> > address)  }  EXPORT_SYMBOL_GPL(pci_address_to_pio);
-> >
-> > -/*
-> > - * Return the domain number for this bus.
-> > - */
-> > -int pci_domain_nr(struct pci_bus *bus) -{
-> > -	struct pci_controller *hose = pci_bus_to_host(bus);
-> > -
-> > -	return hose->global_number;
-> > -}
-> > -EXPORT_SYMBOL(pci_domain_nr);
-> > -
-> >  /* This routine is meant to be used early during boot, when the
-> >   * PCI bus numbers have not yet been assigned, and you need to
-> >   * issue PCI config cycles to an OF device.
-> > @@ -863,26 +852,10 @@ void pcibios_setup_bus_devices(struct pci_bus
-> > *bus)
-> >
-> >  void pcibios_fixup_bus(struct pci_bus *bus)  {
-> > -	/* When called from the generic PCI probe, read PCI<->PCI bridge
-> > -	 * bases. This is -not- called when generating the PCI tree from
-> > -	 * the OF device-tree.
-> > -	 */
-> > -	if (bus->self != NULL)
-> > -		pci_read_bridge_bases(bus);
-> > -
-> > -	/* Now fixup the bus bus */
-> > -	pcibios_setup_bus_self(bus);
-> > -
-> > -	/* Now fixup devices on that bus */
-> > -	pcibios_setup_bus_devices(bus);
-> > +	/* nothing to do */
-> >  }
-> >  EXPORT_SYMBOL(pcibios_fixup_bus);
-> >
-> > -static int skip_isa_ioresource_align(struct pci_dev *dev) -{
-> > -	return 0;
-> > -}
-> > -
-> >  /*
-> >   * We need to avoid collisions with `mirrored' VGA ports
-> >   * and other strange ISA hardware, so we always want the @@ -899,20
-> > +872,18 @@ static int skip_isa_ioresource_align(struct pci_dev *dev)
-> > resource_size_t pcibios_align_resource(void *data, const struct resource
-> *res,
-> >  				resource_size_t size, resource_size_t align)  {
-> > -	struct pci_dev *dev = data;
-> > -	resource_size_t start = res->start;
-> > -
-> > -	if (res->flags & IORESOURCE_IO) {
-> > -		if (skip_isa_ioresource_align(dev))
-> > -			return start;
-> > -		if (start & 0x300)
-> > -			start = (start + 0x3ff) & ~0x3ff;
-> > -	}
-> > -
-> > -	return start;
-> > +	return res->start;
-> >  }
-> >  EXPORT_SYMBOL(pcibios_align_resource);
-> >
-> > +int pcibios_add_device(struct pci_dev *dev) {
-> > +	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> > +
-> > +	return 0;
-> > +}
-> > +EXPORT_SYMBOL(pcibios_add_device);
-> > +
-> >  /*
-> >   * Reparent resource children of pr that conflict with res
-> >   * under res, and make res replace those children.
-> > @@ -1333,13 +1304,6 @@ static void pcibios_setup_phb_resources(struct
-> pci_controller *hose,
-> >  		 (unsigned long)hose->io_base_virt - _IO_BASE);  }
-> >
-> > -struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus) -{
-> > -	struct pci_controller *hose = bus->sysdata;
-> > -
-> > -	return of_node_get(hose->dn);
-> > -}
-> > -
-> >  static void pcibios_scan_phb(struct pci_controller *hose)  {
-> >  	LIST_HEAD(resources);
-> > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig index
-> > d5e58ba..7c56c2e 100644
-> > --- a/drivers/pci/host/Kconfig
-> > +++ b/drivers/pci/host/Kconfig
-> > @@ -79,7 +79,7 @@ config PCI_KEYSTONE
-> >
-> >  config PCIE_XILINX
-> >  	bool "Xilinx AXI PCIe host bridge support"
-> > -	depends on ARCH_ZYNQ
-> > +	depends on ARCH_ZYNQ || MICROBLAZE
-> >  	help
-> >  	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
-> >  	  Host Bridge driver.
-> >
-> 
-> Less code in arch is better.
-> 
-> Acked-by: Michal Simek <michal.simek@xilinx.com>
-> 
-> Bjorn: Please take this via your tree.
-> 
-> Thanks,
-> Michal
+OK, thanks!
+
+May I take this as an ACK? :-)
+
