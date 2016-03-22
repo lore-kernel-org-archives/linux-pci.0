@@ -1,194 +1,168 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54757 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751923AbcCCR3F (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Mar 2016 12:29:05 -0500
-Subject: Re: [PATCH V2] acpi, pci, irq: account for early penalty assignment
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1455801582-21595-1-git-send-email-okaya@codeaurora.org>
- <20160229192420.GC3653@localhost> <56D4A53A.1070708@codeaurora.org>
- <20160229223453.GA12162@localhost> <56D5E43E.7050406@codeaurora.org>
- <20160301194340.GA19783@localhost> <56D7317F.7090500@codeaurora.org>
- <56D7ABFB.3070302@codeaurora.org> <56D84EA9.3080900@codeaurora.org>
- <20160303151048.GA3290@localhost> <56D8546B.5040908@codeaurora.org>
-Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org, linux-pci@vger.kernel.org,
-	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
-	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
-	rjw@rjwysocki.net, linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <56D8745D.70509@codeaurora.org>
-Date: Thu, 3 Mar 2016 12:29:01 -0500
+Received: from mail.kernel.org ([198.145.29.136]:59846 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758702AbcCVNCa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Mar 2016 09:02:30 -0400
+Date: Tue, 22 Mar 2016 08:02:19 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Mark Salter <msalter@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH v3] PCI: ACPI: IA64: fix IO port generic range check
+Message-ID: <20160322130219.GB19418@localhost>
+References: <1458558775-6242-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <CAJZ5v0gvB8fHzmgrnz2wOPdLakJyuRg0eQ65oo13LP0_PHRAbg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <56D8546B.5040908@codeaurora.org>
-Content-Type: multipart/mixed;
- boundary="------------040700060206040706070804"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0gvB8fHzmgrnz2wOPdLakJyuRg0eQ65oo13LP0_PHRAbg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------040700060206040706070804
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-
-On 3/3/2016 10:12 AM, Sinan Kaya wrote:
-> On 3/3/2016 10:10 AM, Bjorn Helgaas wrote:
->> That was my idea, but your minimal patch from last night looks awfully
->> attractive, and maybe it's not worth moving it to arch/x86.  I do think we
->> could simplify the code significantly by getting rid of the kzalloc and
->> acpi_irq_penalty_list from acpi_irq_set_penalty().  How about pushing on
->> that a little bit first, and see what it looks like then?
+On Mon, Mar 21, 2016 at 01:42:01PM +0100, Rafael J. Wysocki wrote:
+> On Mon, Mar 21, 2016 at 12:12 PM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> > The [0 - 64k] ACPI PCI IO port resource boundary check in:
+> >
+> > acpi_dev_ioresource_flags()
+> >
+> > is currently applied blindly in the ACPI resource parsing to all
+> > architectures, but only x86 suffers from that IO space limitation.
+> >
+> > On arches (ie IA64 and ARM64) where IO space is memory mapped,
+> > the PCI root bridges IO resource windows are firstly initialized from
+> > the _CRS (in acpi_decode_space()) and contain the CPU physical address
+> > at which a root bridge decodes IO space in the CPU physical address
+> > space with the offset value representing the offset required to translate
+> > the PCI bus address into the CPU physical address.
+> >
+> > The IO resource windows are then parsed and updated in arch code
+> > before creating and enumerating PCI buses (eg IA64 add_io_space())
+> > to map in an arch specific way the obtained CPU physical address range
+> > to a slice of virtual address space reserved to map PCI IO space,
+> > ending up with PCI bridges resource windows containing IO
+> > resources like the following on a working IA64 configuration:
+> >
+> > PCI host bridge to bus 0000:00
+> > pci_bus 0000:00: root bus resource [io  0x1000000-0x100ffff window] (bus
+> > address [0x0000-0xffff])
+> > pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000fffff window]
+> > pci_bus 0000:00: root bus resource [mem 0x80000000-0x8fffffff window]
+> > pci_bus 0000:00: root bus resource [mem 0x80004000000-0x800ffffffff window]
+> > pci_bus 0000:00: root bus resource [bus 00]
+> >
+> > This implies that the [0 - 64K] check in acpi_dev_ioresource_flags()
+> > leaves platforms with memory mapped IO space (ie IA64) broken (ie kernel
+> > can't claim IO resources since the host bridge IO resource is disabled
+> > and discarded by ACPI core code, see log on IA64 with missing root bridge
+> > IO resource, silently filtered by current [0 - 64k] check in
+> > acpi_dev_ioresource_flags()):
+> >
+> > PCI host bridge to bus 0000:00
+> > pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000fffff window]
+> > pci_bus 0000:00: root bus resource [mem 0x80000000-0x8fffffff window]
+> > pci_bus 0000:00: root bus resource [mem 0x80004000000-0x800ffffffff window]
+> > pci_bus 0000:00: root bus resource [bus 00]
+> >
+> > [...]
+> >
+> > pci 0000:00:03.0: [1002:515e] type 00 class 0x030000
+> > pci 0000:00:03.0: reg 0x10: [mem 0x80000000-0x87ffffff pref]
+> > pci 0000:00:03.0: reg 0x14: [io  0x1000-0x10ff]
+> > pci 0000:00:03.0: reg 0x18: [mem 0x88020000-0x8802ffff]
+> > pci 0000:00:03.0: reg 0x30: [mem 0x88000000-0x8801ffff pref]
+> > pci 0000:00:03.0: supports D1 D2
+> > pci 0000:00:03.0: can't claim BAR 1 [io  0x1000-0x10ff]: no compatible
+> > bridge window
+> >
+> > For this reason, the IO port resources boundaries check in generic ACPI
+> > parsing code should be guarded with a CONFIG_X86 guard so that more arches
+> > (ie ARM64) can benefit from the generic ACPI resources parsing interface
+> > without incurring in unexpected resource filtering, fixing at the same
+> > time current breakage on IA64.
+> >
+> > This patch factors out IO ports boundary [0 - 64k] check in generic ACPI
+> > code and makes the IO space check X86 specific to make sure that IO
+> > space resources are usable on other arches too.
+> >
+> > Fixes: 3772aea7d6f3 ("ia64/PCI/ACPI: Use common ACPI resource parsing
+> > interface for host bridge")
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> > Cc: Jiang Liu <jiang.liu@linux.intel.com>
+> > Cc: Tony Luck <tony.luck@intel.com>
+> > Cc: Tomasz Nowicki <tn@semihalf.com>
+> > Cc: Mark Salter <msalter@redhat.com>
+> > Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+> > ---
+> > v2 -> v3
+> >
+> > - Moved IO resource check to generic ACPI resource code
+> > - Dropped Tested-by tags
+> > - Rebased against v4.5
+> >
+> > v2: https://marc.info/?l=linux-acpi&m=145521271330332&w=2
+> >
+> > v1 -> v2
+> >
+> > - Updated commit log to report missing IO resources
+> > - Fixed function ioport_valid() comment 16k/64k typo
+> >
+> > v1: https://marc.info/?l=linux-acpi&m=145432228025354&w=2
+> >
+> >  drivers/acpi/resource.c | 14 +++++++++++++-
+> >  1 file changed, 13 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
+> > index d02fd53..56241eb 100644
+> > --- a/drivers/acpi/resource.c
+> > +++ b/drivers/acpi/resource.c
+> > @@ -27,8 +27,20 @@
+> >
+> >  #ifdef CONFIG_X86
+> >  #define valid_IRQ(i) (((i) != 0) && ((i) != 2))
+> > +static inline bool acpi_iospace_resource_valid(struct resource *res)
+> > +{
+> > +       /* On X86 IO space is limited to the [0 - 64K] IO port range */
+> > +       return res->end < 0x10003;
+> > +}
+> >  #else
+> >  #define valid_IRQ(i) (true)
+> > +/*
+> > + * ACPI IO descriptors on arches other than X86 contain MMIO CPU physical
+> > + * addresses mapping IO space in CPU physical address space, IO space
+> > + * resources can be placed anywhere in the 64-bit physical address space.
+> > + */
+> > +static inline bool
+> > +acpi_iospace_resource_valid(struct resource *res) { return true; }
+> >  #endif
+> >
+> >  static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
+> > @@ -127,7 +139,7 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
+> >         if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
+> >                 res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+> >
+> > -       if (res->end >= 0x10003)
+> > +       if (!acpi_iospace_resource_valid(res))
+> >                 res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
+> >
+> >         if (io_decode == ACPI_DECODE_16)
+> > --
 > 
-> OK. Let me go that direction.
+> This is fine by me.
 > 
+> Bjorn?
 
-How about this?
+Looks good to me.
 
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
-
---------------040700060206040706070804
-Content-Type: text/plain; charset=UTF-8;
- name="0001-acpi-pci-irq-account-for-early-penalty-assignment.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename*0="0001-acpi-pci-irq-account-for-early-penalty-assignment.patch"
-
->From 6cc33747feb469fe4da2088f34e2c875a36f58f4 Mon Sep 17 00:00:00 2001
-From: Sinan Kaya <okaya@codeaurora.org>
-Date: Thu, 3 Mar 2016 10:14:22 -0500
-Subject: [PATCH] acpi,pci,irq: account for early penalty assignment
-
----
- drivers/acpi/pci_link.c | 77 ++++++++++++++++++++++++++++++-------------------
- 1 file changed, 47 insertions(+), 30 deletions(-)
-
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index fa28635..09eea42 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -87,6 +87,7 @@ struct acpi_pci_link {
-
- static LIST_HEAD(acpi_link_list);
- static DEFINE_MUTEX(acpi_link_lock);
-+static int sci_irq, sci_irq_penalty;
-
- /* --------------------------------------------------------------------------
-                             PCI Link Device Management
-@@ -466,56 +467,71 @@ static int acpi_irq_isa_penalty[ACPI_MAX_ISA_IRQ] = {
- 	PIRQ_PENALTY_ISA_USED,		/* IRQ15 ide1 */
- };
-
--struct irq_penalty_info {
--	int irq;
--	int penalty;
--	struct list_head node;
--};
-+static int acpi_irq_pci_sharing_penalty(int irq)
-+{
-+	struct acpi_pci_link *link;
-+	int penalty = 0;
-+	bool found = false;
-+
-+	list_for_each_entry(link, &acpi_link_list, list) {
-+		/*
-+		 * If a link is active, penalize its IRQ heavily
-+		 * so we try to choose a different IRQ.
-+		 */
-+		if (link->irq.active && link->irq.active == irq) {
-+			penalty += PIRQ_PENALTY_PCI_USING;
-+			found = true;
-+		} else {
-+			int i;
-+
-+			/*
-+			 * If a link is inactive, penalize the IRQs it
-+			 * might, but not as severely.
-+			 */
-+			for (i = 0; i < link->irq.possible_count; i++) {
-+				if (link->irq.possible[i] == irq) {
-+					penalty += PIRQ_PENALTY_PCI_POSSIBLE /
-+						link->irq.possible_count;
-+					found = true;
-+				}
-+			}
-+		}
-+	}
-
--static LIST_HEAD(acpi_irq_penalty_list);
-+	if (found)
-+		return penalty;
-+
-+	return PIRQ_PENALTY_PCI_AVAILABLE;
-+}
-
- static int acpi_irq_get_penalty(int irq)
- {
--	struct irq_penalty_info *irq_info;
--
- 	if (irq < ACPI_MAX_ISA_IRQ)
- 		return acpi_irq_isa_penalty[irq];
-
--	list_for_each_entry(irq_info, &acpi_irq_penalty_list, node) {
--		if (irq_info->irq == irq)
--			return irq_info->penalty;
--	}
-+	if (irq == sci_irq)
-+		return sci_irq_penalty;
-
--	return 0;
-+	return acpi_irq_pci_sharing_penalty(irq);
- }
-
- static int acpi_irq_set_penalty(int irq, int new_penalty)
- {
--	struct irq_penalty_info *irq_info;
--
- 	/* see if this is a ISA IRQ */
- 	if (irq < ACPI_MAX_ISA_IRQ) {
- 		acpi_irq_isa_penalty[irq] = new_penalty;
- 		return 0;
- 	}
-
--	/* next, try to locate from the dynamic list */
--	list_for_each_entry(irq_info, &acpi_irq_penalty_list, node) {
--		if (irq_info->irq == irq) {
--			irq_info->penalty  = new_penalty;
--			return 0;
--		}
-+	if (irq == sci_irq) {
-+		sci_irq_penalty = new_penalty;
-+		return 0;
- 	}
-
--	/* nope, let's allocate a slot for this IRQ */
--	irq_info = kzalloc(sizeof(*irq_info), GFP_KERNEL);
--	if (!irq_info)
--		return -ENOMEM;
--
--	irq_info->irq = irq;
--	irq_info->penalty = new_penalty;
--	list_add_tail(&irq_info->node, &acpi_irq_penalty_list);
--
-+	/*
-+	 * This is the remaining PCI IRQs. They are calculated on the
-+	 * flight in acpi_irq_get_penalty function.
-+	 */
- 	return 0;
- }
-
-@@ -900,6 +916,7 @@ void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
- 	if (irq < 0)
- 		return;
-
-+	sci_irq = irq;
- 	if (trigger != ACPI_MADT_TRIGGER_LEVEL ||
- 	    polarity != ACPI_MADT_POLARITY_ACTIVE_LOW)
- 		penalty = PIRQ_PENALTY_ISA_ALWAYS;
---
-1.8.2.1
-
-
---------------040700060206040706070804--
+Bjorn
