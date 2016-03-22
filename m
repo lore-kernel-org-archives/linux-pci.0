@@ -1,85 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2on0140.outbound.protection.outlook.com ([207.46.100.140]:39712
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757186AbcCaNoj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Mar 2016 09:44:39 -0400
-Message-ID: <1459431869.1998.12.camel@rtd-VirtualBox>
-Subject: Re: PCI IRQ issue since 4.2 kernel
-From: Rob Groner <rgroner@rtd.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: Thunderbolt 3 (Skylake / Alpine Ridge) hotplug
 To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>
-Date: Thu, 31 Mar 2016 09:44:29 -0400
-In-Reply-To: <20160331134000.GA31995@localhost>
-References: <1459430795.1998.11.camel@rtd-VirtualBox>
-	 <20160331134000.GA31995@localhost>
-Content-Type: text/plain; charset="UTF-8"
+References: <56D0085B.60402@jscinoz.so> <20160315172909.GF19974@localhost>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, "Rafael J. Wysocki" <rafael@kernel.org>
+From: Jack Coulter <jscinoz@jscinoz.so>
+Message-ID: <56F101C2.7010904@jscinoz.so>
+Date: Tue, 22 Mar 2016 19:26:42 +1100
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160315172909.GF19974@localhost>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="dS6p978QL5GtkaJO3eLAG1o5kNmQN8Ikn"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2016-03-31 at 09:40 -0400, Bjorn Helgaas wrote:
-> Hi Rob,
-> 
-> On Thu, Mar 31, 2016 at 09:26:35AM -0400, Rob Groner wrote:
-> > We became aware of an issue with our Linux drivers when used with a 4.4
-> > kernel.  These drivers had worked previously from 2.6.35 to 4.2 kernels.
-> > The symptoms were that, even though the request_irq() call was
-> > successful, we did not receive any IRQs.  IRQs did arrive on a different
-> > IRQ line, however, and the kernel disabled that line because there was
-> > no handler.
-> 
-> Others have seen similar issues, so we reverted 991de2e59090 ("PCI, x86:
-> Implement pcibios_alloc_irq() and pcibios_free_irq()").
-> 
-> The revert, 6c777e8799a9 ("Revert "PCI, x86: Implement pcibios_alloc_irq()
-> and pcibios_free_irq()""), appeared in v4.5-rc6, so if you try that or a
-> later kernel (including v4.5), it should work.
-> 
-> Let us know if you still see problems.
-> 
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--dS6p978QL5GtkaJO3eLAG1o5kNmQN8Ikn
+Content-Type: multipart/mixed; boundary="k2WcETCtVujjDCtvn9m6SdflWLVkmS6SF"
+From: Jack Coulter <jscinoz@jscinoz.so>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+ "Rafael J. Wysocki" <rafael@kernel.org>
+Message-ID: <56F101C2.7010904@jscinoz.so>
+Subject: Re: Thunderbolt 3 (Skylake / Alpine Ridge) hotplug
+References: <56D0085B.60402@jscinoz.so> <20160315172909.GF19974@localhost>
+In-Reply-To: <20160315172909.GF19974@localhost>
+
+--k2WcETCtVujjDCtvn9m6SdflWLVkmS6SF
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: quoted-printable
+
+Hi Bjorn,
+
+> Can you open a report at http://bugzilla.kernel.org, category
+> drivers/PCI, and attach complete "lspci -vv" output (run as root) and
+> complete dmesg logs, both when hub is attached at boot, and when
+> booting without hub and attaching hub later?
+>
+> I don't know much about Thunderbolt.  But since it appears as a PCI
+> device, I would expect some sort of hotplug notification when you
+> attach the hub.  If pciehp handles hotplug, it looks like we should
+> see something from pcie_isr() in the dmesg log.
+>
+> Since you don't see that, I suspect we're getting ACPI notifications
+> via the acpiphp driver.  I'm not as familiar with that, so I don't
+> know what if anything it logs.  If you're inclined, you could add some
+> printks in
+>
+>   acpiphp_add_context()
+>   acpi_device_hotplug()
+>   acpiphp_hotplug_notify()
+>   hotplug_event()
+>
+> Then we'd at least see if we get any ACPI notifications.
+>
 > Bjorn
 
-Thank you!  I will try the 4.5 kernel from kernel.org today.
+I've logged a report with the requested details; it can be found here:
 
-Rob
-
-
-> >  -----------------------------------------------------------------------
-> >  rtd@kernel-dev:~/git/kernels/linux$ git bisect good
-> >  991de2e59090e55c65a7f59a049142e3c480f7bd is the first bad commit
-> >  commit 991de2e59090e55c65a7f59a049142e3c480f7bd
-> >  Author: Jiang Liu <jiang.liu@linux.intel.com>
-> >  Date:   Wed Jun 10 16:54:59 2015 +0800
-> >  
-> >      PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()
-> >      
-> >      To support IOAPIC hotplug, we need to allocate PCI IRQ resources on
-> >  demand
-> >      and free them when not used anymore.
-> >      
-> >      Implement pcibios_alloc_irq() and pcibios_free_irq() to dynamically
-> >      allocate and free PCI IRQs.
-> >      
-> >      Remove mp_should_keep_irq(), which is no longer used.
-> >      
-> >      [bhelgaas: changelog]
-> >      Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
-> >      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >      Acked-by: Thomas Gleixner <tglx@linutronix.de>
-> >  
-> >  :040000 040000 765e2d5232d53247ec260b34b51589c3bccb36ae
-> >  f680234a27685e94b1a35ae2a7218f8eafa9071a M    arch
-> >  :040000 040000 d55a682bcde72682e883365e88ad1df6186fd54d
-> >  f82c470a04a6845fcf5e0aa934512c75628f798d M    drivers
-> >  ----------------------------------------------------------------
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  https://na01.safelinks.protection.outlook.com/?url=http%3a%2f%2fvger.kernel.org%2fmajordomo-info.html&data=01%7c01%7crgroner%40rtd.com%7c4e5022d941bc4c056cfe08d35969f836%7c16f82b7977b8423dbafdd6c19032e267%7c1&sdata=4iqUGR6coY75Peouz%2buK6NUAk9pQFAHsGemGwzFXlc0%3d
+https://bugzilla.kernel.org/show_bug.cgi?id=3D115121
 
 
+
+Kind regards,
+Jack
+
+
+
+--k2WcETCtVujjDCtvn9m6SdflWLVkmS6SF--
+
+--dS6p978QL5GtkaJO3eLAG1o5kNmQN8Ikn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJW8QHGAAoJEP0XuxcIDSnPh0QQAJoT6WyAO02yXww9EPBqxlCD
+qLd8RoRimnQgHKCqbgF0iWWNX1VAt19rA9KdW8OIJ8X40Q7NyjzVvm1p+AVbtqrS
+Sq2O4VB02hJewQr/O7IVQ8bafR0VAlYyaSRJ5Sw2pUEygpVXgbVz23WQA3pK/cR8
+ERPr821v32xI+ICrnR4jbg1Tn+xCAT1+eyIFh14CHq+r0J2KET8n2qym/0oF0pXn
+0dp8vhk/XQ2XeFqUejllHPWuXv6rcuDGb50DJOcafTtagwh41JZ53FLhCndxISMP
+/Eh5jVHvKvVxBvWEw3Pf0weBpNTjVm/KQ8CLYcBn+KNfQ+T4TJOh4FX4vFj1CVQl
+Nu+8StFZc49fLiKYAtr7TZXfsndOgHJ/C7ax/mSn/RW0ZRyPOUsAcADZulak8ZGq
+ZPToJvOok8ac5j+9eL2pjypwi+WNL+wPOW5UvV0okAmu9zzDptMfytkdreF2ufOa
+Swyw8QuJvco1/VeDh0k1jTDyO3CKo6ojB/gKt65vxqEkqnbwPZ3SKzxbxZCyRS/p
+NzvS6vvTw+X6nKlCNmo7G77sSKQtSAUgn7lV13gTCgaTllL8JM+28EyPsWlBs2gv
+pIqfhvmGWqBjK2LFb+pKoIUBEDJDQlJBRo/J+upVXvB8XvWFkJKyc6Q+32HjgLgR
+ka0ulclz5cqFlFh/i2WF
+=+Mgr
+-----END PGP SIGNATURE-----
+
+--dS6p978QL5GtkaJO3eLAG1o5kNmQN8Ikn--
