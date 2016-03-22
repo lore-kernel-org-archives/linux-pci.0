@@ -1,127 +1,209 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52727 "EHLO mx1.redhat.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:35137 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751394AbcCFWJ4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 6 Mar 2016 17:09:56 -0500
-Date: Mon, 7 Mar 2016 00:09:51 +0200
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: "Robin H. Johnson" <robbat2@gentoo.org>
-Cc: linux-kernel@vger.kernel.org, perex@perex.cz, tiwai@suse.com,
-	bhelgaas@google.com, Dave Airlie <airlied@gmail.com>,
-	dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org,
-	Gerd Hoffmann <kraxel@redhat.com>
-Subject: Re: [PATCH resend] PCI: QEMU top-level IDs for (sub)vendor & device
-Message-ID: <20160307000837-mutt-send-email-mst@redhat.com>
-References: <20160306220230.GB3720@orbis-terrarum.net>
+	id S1750856AbcCVTxT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 22 Mar 2016 15:53:19 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <bhelgaas@google.com>
+Subject: [PATCH next 1/2] PCI: keystone: add pci error irq handler
+Date: Tue, 22 Mar 2016 15:52:57 -0400
+Message-ID: <1458676378-24377-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160306220230.GB3720@orbis-terrarum.net>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Mar 06, 2016 at 10:02:30PM +0000, Robin H. Johnson wrote:
-> Introduce PCI_VENDOR/PCI_SUBVENDOR/PCI_SUBDEVICE defines to replace the
-> constants scattered in the kernel already used to detect QEMU.
-> 
-> They are defined in the QEMU codebase per docs/specs/pci-ids.txt.
-> 
-> Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
-> Reviewed-by: Takashi Iwai <tiwai@suse.de>
-> Reviewed-by: Gerd Hoffmann <kraxel@redhat.com>
-> ---
+Keystone PCI hardware generates error interrupts at RC using platform
+irq instead of standard msi/legacy irq. Add a simple error handler that
+logs the fatal interrupt status to the console.
 
-Acked-by: Michael S. Tsirkin <mst@redhat.com>
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Pawel Moll <pawel.moll@arm.com>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: Ian Campbell <ijc+devicetree@hellion.org.uk>
+Cc: Kumar Gala <galak@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ .../devicetree/bindings/pci/pci-keystone.txt       |  1 +
+ drivers/pci/host/pci-keystone-dw.c                 | 46 ++++++++++++++++++++++
+ drivers/pci/host/pci-keystone.c                    | 32 +++++++++++++++
+ drivers/pci/host/pci-keystone.h                    |  6 +++
+ 4 files changed, 85 insertions(+)
 
-PCI tree seems to make the most sense.
-Bjorn, can you merge this please?
+diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
+index 54eae29..d08a4d5 100644
+--- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
++++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
+@@ -56,6 +56,7 @@ Optional properties:-
+ 	phy-names: name of the Generic Keystine SerDes phy for PCI
+ 	  - If boot loader already does PCI link establishment, then phys and
+ 	    phy-names shouldn't be present.
++	interrupts: platform interrupt for error interrupts.
+ 
+ Designware DT Properties not applicable for Keystone PCI
+ 
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index ed34c95..524901d 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -53,6 +53,29 @@
+ #define IRQ_STATUS			0x184
+ #define MSI_IRQ_OFFSET			4
+ 
++/*
++ * error IRQ bits. Enable following errors
++ *  - ERR_AER  - ECRC error - BIT(5)
++ *  - ERR_AXI  - AXI tag lookup fatal error BIT(4)
++ *  - ERR_CORR - Correctable error BIT(3)
++ *  - ERR_NONFATAL - Non fatal error BIT(2)
++ *  - ERR_FATAL - Fatal error BIT(1)
++ *  - ERR_SYS - System error (fatal, nonfatal or correctable error)
++ */
++#define ERR_AER				BIT(5)
++#define ERR_AXI				BIT(4)
++#define ERR_CORR			BIT(3)
++#define ERR_NONFATAL			BIT(2)
++#define ERR_FATAL			BIT(1)
++#define ERR_SYS				BIT(0)
++#define ERR_IRQ_ALL			(ERR_AER | ERR_AXI | ERR_CORR | \
++					ERR_NONFATAL | ERR_FATAL | ERR_SYS)
++#define ERR_FATAL_IRQ			(ERR_FATAL | ERR_AXI)
++#define ERR_IRQ_STATUS_RAW		0x1c0
++#define ERR_IRQ_STATUS			0x1c4
++#define ERR_IRQ_ENABLE_SET		0x1c8
++#define ERR_IRQ_ENABLE_CLR		0x1cc
++
+ /* Config space registers */
+ #define DEBUG0				0x728
+ 
+@@ -248,6 +271,29 @@ void ks_dw_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie, int offset)
+ 	writel(offset, ks_pcie->va_app_base + IRQ_EOI);
+ }
+ 
++void ks_dw_pcie_enable_error_irq(void __iomem *reg_base)
++{
++	writel(ERR_IRQ_ALL, reg_base + ERR_IRQ_ENABLE_SET);
++}
++
++bool ks_dw_pcie_handle_error_irq(struct device *dev, void __iomem *reg_base)
++{
++	u32 status;
++	bool ret = false;
++
++	status = readl(reg_base + ERR_IRQ_STATUS_RAW) & ERR_IRQ_ALL;
++	if (status) {
++		/* The PCIESS interrupt status buts are "write 1 to clear" */
++		if (status & ERR_FATAL_IRQ)
++			dev_err(dev, "PCIE fatal error detected\n");
++
++		/* ack the irq event. */
++		writel(status, reg_base + ERR_IRQ_STATUS);
++		ret = true;
++	}
++	return ret;
++}
++
+ static void ks_dw_pcie_ack_legacy_irq(struct irq_data *d)
+ {
+ }
+diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+index b71f55b..299f2f0 100644
+--- a/drivers/pci/host/pci-keystone.c
++++ b/drivers/pci/host/pci-keystone.c
+@@ -15,6 +15,7 @@
+ #include <linux/irqchip/chained_irq.h>
+ #include <linux/clk.h>
+ #include <linux/delay.h>
++#include <linux/interrupt.h>
+ #include <linux/irqdomain.h>
+ #include <linux/module.h>
+ #include <linux/msi.h>
+@@ -226,6 +227,10 @@ static void ks_pcie_setup_interrupts(struct keystone_pcie *ks_pcie)
+ 							 ks_pcie);
+ 		}
+ 	}
++
++	/* enable error interrupt */
++	if (ks_pcie->error_irq > 0)
++		ks_dw_pcie_enable_error_irq(ks_pcie->va_app_base);
+ }
+ 
+ /*
+@@ -289,6 +294,16 @@ static struct pcie_host_ops keystone_pcie_host_ops = {
+ 	.scan_bus = ks_dw_pcie_v3_65_scan_bus,
+ };
+ 
++static irqreturn_t pcie_err_irq_handler(int irq, void *priv)
++{
++	struct keystone_pcie *ks_pcie = priv;
++
++	if (ks_dw_pcie_handle_error_irq(ks_pcie->pp.dev, ks_pcie->va_app_base))
++		return IRQ_HANDLED;
++
++	return IRQ_NONE;
++}
++
+ static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
+ 			 struct platform_device *pdev)
+ {
+@@ -309,6 +324,22 @@ static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
+ 			return ret;
+ 	}
+ 
++	/*
++	 * index 0 is the platform interrupt for error interrupt
++	 * from RC. As this is optional to define this, we will
++	 * just print a warning
++	 */
++	ks_pcie->error_irq = irq_of_parse_and_map(ks_pcie->np, 0);
++	if (ks_pcie->error_irq <= 0)
++		dev_warn(&pdev->dev, "No error irq defined\n");
++	else {
++		if (request_irq(ks_pcie->error_irq, pcie_err_irq_handler,
++				IRQF_SHARED, "pcie-error-irq", ks_pcie) < 0) {
++			dev_err(&pdev->dev, "failed to request error irq\n");
++			return ret;
++		}
++	}
++
+ 	pp->root_bus_nr = -1;
+ 	pp->ops = &keystone_pcie_host_ops;
+ 	ret = ks_dw_pcie_host_init(ks_pcie, ks_pcie->msi_intc_np);
+@@ -376,6 +407,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	devm_release_mem_region(dev, res->start, resource_size(res));
+ 
+ 	pp->dev = dev;
++	ks_pcie->np = node;
+ 	platform_set_drvdata(pdev, ks_pcie);
+ 	ks_pcie->clk = devm_clk_get(dev, "pcie");
+ 	if (IS_ERR(ks_pcie->clk)) {
+diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/host/pci-keystone.h
+index f0944e8..2daa215 100644
+--- a/drivers/pci/host/pci-keystone.h
++++ b/drivers/pci/host/pci-keystone.h
+@@ -29,6 +29,10 @@ struct keystone_pcie {
+ 	int			msi_host_irqs[MAX_MSI_HOST_IRQS];
+ 	struct			device_node *msi_intc_np;
+ 	struct irq_domain	*legacy_irq_domain;
++	struct device_node	*np;
++
++	/* error interrupt */
++	int error_irq;
+ 
+ 	/* Application register space */
+ 	void __iomem		*va_app_base;
+@@ -42,6 +46,8 @@ phys_addr_t ks_dw_pcie_get_msi_addr(struct pcie_port *pp);
+ /* Keystone specific PCI controller APIs */
+ void ks_dw_pcie_enable_legacy_irqs(struct keystone_pcie *ks_pcie);
+ void ks_dw_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie, int offset);
++void ks_dw_pcie_enable_error_irq(void __iomem *reg_base);
++bool ks_dw_pcie_handle_error_irq(struct device *dev, void __iomem *reg_base);
+ int  ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
+ 			struct device_node *msi_intc_np);
+ int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+-- 
+1.9.1
 
-> This change prompted by a near-miss in the review of recent change:
-> 'drm/i915: refine qemu south bridge detection'
-> 
-> This patch was previously sent to LKML 25 Jan 2016; and got some
-> reviews, but otherwise slipped through the cracks.
-> 
-> ---
->  drivers/gpu/drm/bochs/bochs_drv.c   | 4 ++--
->  drivers/gpu/drm/cirrus/cirrus_drv.c | 5 +++--
->  drivers/virtio/virtio_pci_common.c  | 2 +-
->  include/linux/pci_ids.h             | 4 ++++
->  sound/pci/intel8x0.c                | 4 ++--
->  5 files changed, 12 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/gpu/drm/bochs/bochs_drv.c b/drivers/gpu/drm/bochs/bochs_drv.c
-> index 7f1a360..b332b4d3 100644
-> --- a/drivers/gpu/drm/bochs/bochs_drv.c
-> +++ b/drivers/gpu/drm/bochs/bochs_drv.c
-> @@ -182,8 +182,8 @@ static const struct pci_device_id bochs_pci_tbl[] = {
->  	{
->  		.vendor      = 0x1234,
->  		.device      = 0x1111,
-> -		.subvendor   = 0x1af4,
-> -		.subdevice   = 0x1100,
-> +		.subvendor   = PCI_SUBVENDOR_ID_REDHAT_QUMRANET,
-> +		.subdevice   = PCI_SUBDEVICE_ID_QEMU,
->  		.driver_data = BOCHS_QEMU_STDVGA,
->  	},
->  	{
-> diff --git a/drivers/gpu/drm/cirrus/cirrus_drv.c b/drivers/gpu/drm/cirrus/cirrus_drv.c
-> index b1619e2..7bc394e 100644
-> --- a/drivers/gpu/drm/cirrus/cirrus_drv.c
-> +++ b/drivers/gpu/drm/cirrus/cirrus_drv.c
-> @@ -33,8 +33,9 @@ static struct drm_driver driver;
->  
->  /* only bind to the cirrus chip in qemu */
->  static const struct pci_device_id pciidlist[] = {
-> -	{ PCI_VENDOR_ID_CIRRUS, PCI_DEVICE_ID_CIRRUS_5446, 0x1af4, 0x1100, 0,
-> -	  0, 0 },
-> +	{ PCI_VENDOR_ID_CIRRUS, PCI_DEVICE_ID_CIRRUS_5446,
-> +	  PCI_SUBVENDOR_ID_REDHAT_QUMRANET, PCI_SUBDEVICE_ID_QEMU,
-> +	  0, 0, 0 },
->  	{ PCI_VENDOR_ID_CIRRUS, PCI_DEVICE_ID_CIRRUS_5446, PCI_VENDOR_ID_XEN,
->  	  0x0001, 0, 0, 0 },
->  	{0,}
-> diff --git a/drivers/virtio/virtio_pci_common.c b/drivers/virtio/virtio_pci_common.c
-> index 36205c2..127dfe4 100644
-> --- a/drivers/virtio/virtio_pci_common.c
-> +++ b/drivers/virtio/virtio_pci_common.c
-> @@ -467,7 +467,7 @@ static const struct dev_pm_ops virtio_pci_pm_ops = {
->  
->  /* Qumranet donated their vendor ID for devices 0x1000 thru 0x10FF. */
->  static const struct pci_device_id virtio_pci_id_table[] = {
-> -	{ PCI_DEVICE(0x1af4, PCI_ANY_ID) },
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_REDHAT_QUMRANET, PCI_ANY_ID) },
->  	{ 0 }
->  };
->  
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 37f05cb..6d249d3 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2506,6 +2506,10 @@
->  
->  #define PCI_VENDOR_ID_AZWAVE		0x1a3b
->  
-> +#define PCI_VENDOR_ID_REDHAT_QUMRANET    0x1af4
-> +#define PCI_SUBVENDOR_ID_REDHAT_QUMRANET 0x1af4
-> +#define PCI_SUBDEVICE_ID_QEMU            0x1100
-> +
->  #define PCI_VENDOR_ID_ASMEDIA		0x1b21
->  
->  #define PCI_VENDOR_ID_CIRCUITCO		0x1cc8
-> diff --git a/sound/pci/intel8x0.c b/sound/pci/intel8x0.c
-> index 42bcbac..12c2c18 100644
-> --- a/sound/pci/intel8x0.c
-> +++ b/sound/pci/intel8x0.c
-> @@ -2980,8 +2980,8 @@ static int snd_intel8x0_inside_vm(struct pci_dev *pci)
->  		goto fini;
->  
->  	/* check for known (emulated) devices */
-> -	if (pci->subsystem_vendor == 0x1af4 &&
-> -	    pci->subsystem_device == 0x1100) {
-> +	if (pci->subsystem_vendor == PCI_SUBVENDOR_ID_REDHAT_QUMRANET &&
-> +	    pci->subsystem_device == PCI_SUBDEVICE_ID_QEMU) {
->  		/* KVM emulated sound, PCI SSID: 1af4:1100 */
->  		msg = "enable KVM";
->  	} else if (pci->subsystem_vendor == 0x1ab8) {
-> -- 
-> 2.3.0
