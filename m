@@ -1,83 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from new2-smtp.messagingengine.com ([66.111.4.224]:46498 "EHLO
-	new2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932180AbcCNCDD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 13 Mar 2016 22:03:03 -0400
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-	by mailnew.nyi.internal (Postfix) with ESMTP id 20A90B81
-	for <linux-pci@vger.kernel.org>; Sun, 13 Mar 2016 21:54:48 -0400 (EDT)
-From: Andrey Utkin <andrey_utkin@fastmail.com>
-To: Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bluecherry Maintainers <maintainers@bluecherrydvr.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Joe Perches <joe@perches.com>, Jiri Slaby <jslaby@suse.com>
-Cc: linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-pci@vger.kernel.org,
-	kernel-mentors@selenic.com,
-	Andrey Utkin <andrey.utkin@corp.bluecherry.net>
-Subject: [PATCH] Add tw5864 driver - cover letter
-Date: Mon, 14 Mar 2016 03:54:21 +0200
-Message-Id: <1457920461-20713-1-git-send-email-andrey_utkin@fastmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: Thunderbolt 3 (Skylake / Alpine Ridge) hotplug
+To: Andreas Noever <andreas.noever@gmail.com>
+References: <56D0085B.60402@jscinoz.so>
+ <CAMxnaaU0B_47xZuD+vi0=b1_U7kPr7YVF5-Y0q3GP3ez_eo3CQ@mail.gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-acpi@vger.kernel.org, "Rafael J. Wysocki" <rafael@kernel.org>
+From: Jack Coulter <jscinoz@jscinoz.so>
+Message-ID: <56F0FE22.6050206@jscinoz.so>
+Date: Tue, 22 Mar 2016 19:11:14 +1100
+MIME-Version: 1.0
+In-Reply-To: <CAMxnaaU0B_47xZuD+vi0=b1_U7kPr7YVF5-Y0q3GP3ez_eo3CQ@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="bXuq4tQlAVSBdPuwDRTlUkQn2uE7BO2eC"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Andrey Utkin <andrey.utkin@corp.bluecherry.net>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--bXuq4tQlAVSBdPuwDRTlUkQn2uE7BO2eC
+Content-Type: multipart/mixed; boundary="QHO6trbLfwQtLmXM1I1R5wX92TNT2sXXb"
+From: Jack Coulter <jscinoz@jscinoz.so>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ linux-acpi@vger.kernel.org, "Rafael J. Wysocki" <rafael@kernel.org>
+Message-ID: <56F0FE22.6050206@jscinoz.so>
+Subject: Re: Thunderbolt 3 (Skylake / Alpine Ridge) hotplug
+References: <56D0085B.60402@jscinoz.so>
+ <CAMxnaaU0B_47xZuD+vi0=b1_U7kPr7YVF5-Y0q3GP3ez_eo3CQ@mail.gmail.com>
+In-Reply-To: <CAMxnaaU0B_47xZuD+vi0=b1_U7kPr7YVF5-Y0q3GP3ez_eo3CQ@mail.gmail.com>
 
-This is a driver for multimedia devices based on Techwell/Intersil TW5864 chip.
+--QHO6trbLfwQtLmXM1I1R5wX92TNT2sXXb
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-It is basically written from scratch. There was an awful reference driver for
-2.6 kernel, which is nearly million lines of code and requires half a dozen
-special userspace libraries, and still doesn't quite work. So currently
-submitted driver is a product of reverse-engineering and heuristics. tw68
-driver was used as code skeleton.
+Hi Andreas,
 
-The device advertises many capabilities, but this version of driver only
-supports H.264 encoding of captured video channels.
+> That is correct. On your device TB should be handled by the firmware.
+>
+> Bj=C3=B6rn suggested that we might not be reacting to acpi notification=
+s
+> (or pci hotplug interrupts) properly. To confirm this you could try to
+> issue a manual pci rescan via
+>
+> echo "1" > /sys/bus/pci/rescan
+>
+> This should make the device appear (if the issue lies with our
+> handling of hotplug events).
+I tried this but unfortunately no additional devices showed up, nor was
+any additional dmesg output generated.
 
-There is one known issue, which reproduces on two of five setups of which I
-know: P-frames are distorted, but I-frames are fine. Changing quality and
-framerate settings does not affect this. Currently such workaround is used:
-
-v4l2-ctl -d /dev/video$n -c video_gop_size=1
-
-GOP size is set to 1, so that every output frame is I-frame. 
-We are regularly contacting manufacturer regarding such issues, but
-unfortunately they can do little to help us.
+> Otherwise you might want to take a look at the ACPI tables and search
+> for code which turn off thunderbolt or something like that. Does
+> hotplug work under Windows (without additional drivers)?
+I'm unable to comment as to whether it works under Windows - I do not
+have Windows installed on this machine nor do I have sufficient
+unallocated disk space to install it.
 
 
-Andrey Utkin (1):
-  Add tw5864 driver
+Kind regards,
+Jack
 
- MAINTAINERS                                  |    7 +
- drivers/staging/media/Kconfig                |    2 +
- drivers/staging/media/Makefile               |    1 +
- drivers/staging/media/tw5864/Kconfig         |   11 +
- drivers/staging/media/tw5864/Makefile        |    3 +
- drivers/staging/media/tw5864/tw5864-bs.h     |  154 ++
- drivers/staging/media/tw5864/tw5864-config.c |  359 +++++
- drivers/staging/media/tw5864/tw5864-core.c   |  453 ++++++
- drivers/staging/media/tw5864/tw5864-h264.c   |  183 +++
- drivers/staging/media/tw5864/tw5864-reg.h    | 2200 ++++++++++++++++++++++++++
- drivers/staging/media/tw5864/tw5864-tables.h |  237 +++
- drivers/staging/media/tw5864/tw5864-video.c  | 1364 ++++++++++++++++
- drivers/staging/media/tw5864/tw5864.h        |  280 ++++
- include/linux/pci_ids.h                      |    1 +
- 14 files changed, 5255 insertions(+)
- create mode 100644 drivers/staging/media/tw5864/Kconfig
- create mode 100644 drivers/staging/media/tw5864/Makefile
- create mode 100644 drivers/staging/media/tw5864/tw5864-bs.h
- create mode 100644 drivers/staging/media/tw5864/tw5864-config.c
- create mode 100644 drivers/staging/media/tw5864/tw5864-core.c
- create mode 100644 drivers/staging/media/tw5864/tw5864-h264.c
- create mode 100644 drivers/staging/media/tw5864/tw5864-reg.h
- create mode 100644 drivers/staging/media/tw5864/tw5864-tables.h
- create mode 100644 drivers/staging/media/tw5864/tw5864-video.c
- create mode 100644 drivers/staging/media/tw5864/tw5864.h
 
--- 
-2.7.1.380.g0fea050.dirty
+--QHO6trbLfwQtLmXM1I1R5wX92TNT2sXXb--
 
+--bXuq4tQlAVSBdPuwDRTlUkQn2uE7BO2eC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJW8P4iAAoJEP0XuxcIDSnPPkUP/0DMRRDfpDSQef/AGvfPb4Ea
+iCwbN4FSc0A1bz3O1p7OfPv/1+mWhk016uhqBYzXdg2ONCOq1j00h9LLZ6L06nvM
+VqbG+OnEg81Pm4a78+FwiIWmcCkSq1/7IjGKDQbiXFCcTvXD6TvsVbrsS13/1Vcs
+7YsrO03eyqJGIMhgVbvuFz1IJfw8vI6jeofRcropKQQ8y5qOcnc6GTERUlLfBj0o
+eoqcysN59Off3pofFMBMs6Uc/gntKFl0dUPKrCZSZBxqogzXT5gxGd+Y0WyZmpY6
+y1T3WR40B/YEmHvFxiUZVjEBp3mfWmPFBrl0TWeGHiXumE0tSHTPx5tcu9amsdEF
+FielKIb1dRDOvUrHD/whh32MFEfdCZI1m/lXo0wkDMPjBqYsGjDJRPNjA8qKViFc
+qtWVlunRvMK6vKoBetqBxj/dQR8jQgPzPzKJxiw81/xWXZElFMbeHQp3uuixm39f
+/Y7kgHjB35X7fp2sB6XA1nvt2H23mZx67GUJ9uNH4uHt9pwiWyPUMOlTPFaS7XCU
+8j+CawyU0DNFiFTiDtHb1OvhFVB7JtmWukK6UI3bpTMLxj9CxTfhqz2bY6NEi+y9
+NUdLKzHZ1sU1+vTHu9LZzMN3hysjWsd/3FWgmR1FvPK2uHH7Yk+OWjKctQMm2GRQ
+VFLs9OgaNbgTlKwqri62
+=TjLC
+-----END PGP SIGNATURE-----
+
+--bXuq4tQlAVSBdPuwDRTlUkQn2uE7BO2eC--
