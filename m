@@ -1,94 +1,110 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH 1/2] pci: add pci_unmap_iospace function for PCI_IOBASE
-To: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com
-References: <1457389310-3538-1-git-send-email-okaya@codeaurora.org>
-Cc: agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <56E9E8EB.6040707@codeaurora.org>
-Date: Wed, 16 Mar 2016 19:14:51 -0400
+Subject: Re: [PATCH v3] PCI: ACPI: IA64: fix IO port generic range check
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+References: <1458558775-6242-1-git-send-email-lorenzo.pieralisi@arm.com>
+Cc: linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Mark Salter <msalter@redhat.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Message-ID: <56F25552.3080609@linaro.org>
+Date: Wed, 23 Mar 2016 16:35:30 +0800
 MIME-Version: 1.0
-In-Reply-To: <1457389310-3538-1-git-send-email-okaya@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <1458558775-6242-1-git-send-email-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn,
-Any feedback here?
-
-On 3/7/2016 5:21 PM, Sinan Kaya wrote:
-> The PCI_IOBASE needs to be released after hotplug removal so that it can be
-> re-added back by the pci_remap_iospace function during insertion.
-> 
-> Adding unmap function to follow IO remap function.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+On 2016/3/21 19:12, Lorenzo Pieralisi wrote:
+> The [0 - 64k] ACPI PCI IO port resource boundary check in:
+>
+> acpi_dev_ioresource_flags()
+>
+> is currently applied blindly in the ACPI resource parsing to all
+> architectures, but only x86 suffers from that IO space limitation.
+>
+> On arches (ie IA64 and ARM64) where IO space is memory mapped,
+> the PCI root bridges IO resource windows are firstly initialized from
+> the _CRS (in acpi_decode_space()) and contain the CPU physical address
+> at which a root bridge decodes IO space in the CPU physical address
+> space with the offset value representing the offset required to translate
+> the PCI bus address into the CPU physical address.
+>
+> The IO resource windows are then parsed and updated in arch code
+> before creating and enumerating PCI buses (eg IA64 add_io_space())
+> to map in an arch specific way the obtained CPU physical address range
+> to a slice of virtual address space reserved to map PCI IO space,
+> ending up with PCI bridges resource windows containing IO
+> resources like the following on a working IA64 configuration:
+>
+> PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [io  0x1000000-0x100ffff window] (bus
+> address [0x0000-0xffff])
+> pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000fffff window]
+> pci_bus 0000:00: root bus resource [mem 0x80000000-0x8fffffff window]
+> pci_bus 0000:00: root bus resource [mem 0x80004000000-0x800ffffffff window]
+> pci_bus 0000:00: root bus resource [bus 00]
+>
+> This implies that the [0 - 64K] check in acpi_dev_ioresource_flags()
+> leaves platforms with memory mapped IO space (ie IA64) broken (ie kernel
+> can't claim IO resources since the host bridge IO resource is disabled
+> and discarded by ACPI core code, see log on IA64 with missing root bridge
+> IO resource, silently filtered by current [0 - 64k] check in
+> acpi_dev_ioresource_flags()):
+>
+> PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000fffff window]
+> pci_bus 0000:00: root bus resource [mem 0x80000000-0x8fffffff window]
+> pci_bus 0000:00: root bus resource [mem 0x80004000000-0x800ffffffff window]
+> pci_bus 0000:00: root bus resource [bus 00]
+>
+> [...]
+>
+> pci 0000:00:03.0: [1002:515e] type 00 class 0x030000
+> pci 0000:00:03.0: reg 0x10: [mem 0x80000000-0x87ffffff pref]
+> pci 0000:00:03.0: reg 0x14: [io  0x1000-0x10ff]
+> pci 0000:00:03.0: reg 0x18: [mem 0x88020000-0x8802ffff]
+> pci 0000:00:03.0: reg 0x30: [mem 0x88000000-0x8801ffff pref]
+> pci 0000:00:03.0: supports D1 D2
+> pci 0000:00:03.0: can't claim BAR 1 [io  0x1000-0x10ff]: no compatible
+> bridge window
+>
+> For this reason, the IO port resources boundaries check in generic ACPI
+> parsing code should be guarded with a CONFIG_X86 guard so that more arches
+> (ie ARM64) can benefit from the generic ACPI resources parsing interface
+> without incurring in unexpected resource filtering, fixing at the same
+> time current breakage on IA64.
+>
+> This patch factors out IO ports boundary [0 - 64k] check in generic ACPI
+> code and makes the IO space check X86 specific to make sure that IO
+> space resources are usable on other arches too.
+>
+> Fixes: 3772aea7d6f3 ("ia64/PCI/ACPI: Use common ACPI resource parsing
+> interface for host bridge")
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Hanjun Guo <hanjun.guo@linaro.org>
+> Cc: Jiang Liu <jiang.liu@linux.intel.com>
+> Cc: Tony Luck <tony.luck@intel.com>
+> Cc: Tomasz Nowicki <tn@semihalf.com>
+> Cc: Mark Salter <msalter@redhat.com>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 > ---
->  drivers/pci/pci.c   | 25 +++++++++++++++++++++++++
->  include/linux/pci.h |  1 +
->  2 files changed, 26 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 3a516c0..f5faed2 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -26,6 +26,7 @@
->  #include <linux/device.h>
->  #include <linux/pm_runtime.h>
->  #include <linux/pci_hotplug.h>
-> +#include <linux/vmalloc.h>
->  #include <asm-generic/pci-bridge.h>
->  #include <asm/setup.h>
->  #include <linux/aer.h>
-> @@ -3169,6 +3170,30 @@ int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
->  #endif
->  }
->  
-> +/**
-> + *	pci_unmap_iospace - Unmap the memory mapped I/O space
-> + *	@virt_addr: virtual address to be unmapped
-> + *	@size: size of the physical address to be unmapped
-> + *
-> + *	Unmap the CPU virtual address @virt_addr from virtual address space.
-> + *	Only architectures that have memory mapped IO functions defined
-> + *	(and the PCI_IOBASE value defined) should call this function.
-> + */
-> +void  __weak pci_unmap_iospace(struct resource *res)
-> +{
-> +#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
-> +	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
-> +
-> +	unmap_kernel_range(vaddr, resource_size(res));
-> +#else
-> +	/*
-> +	 * This architecture does not have memory mapped I/O space,
-> +	 * so this function should never be called.
-> +	 */
-> +	WARN_ONCE(1, "This architecture does not support memory mapped I/O\n");
-> +#endif
-> +}
-> +
->  static void __pci_set_master(struct pci_dev *dev, bool enable)
->  {
->  	u16 old_cmd, cmd;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 398ae7e..c6e3f0e 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1172,6 +1172,7 @@ int pci_register_io_range(phys_addr_t addr, resource_size_t size);
->  unsigned long pci_address_to_pio(phys_addr_t addr);
->  phys_addr_t pci_pio_to_address(unsigned long pio);
->  int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
-> +void pci_unmap_iospace(struct resource *res);
->  
->  static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
->  {
-> 
+> v2 -> v3
+>
+> - Moved IO resource check to generic ACPI resource code
+> - Dropped Tested-by tags
+> - Rebased against v4.5
 
-Sinan
+Add this patch on top of Linus's latest tree, and test it
+on a HP rx2660 IA64 machine, the machine boot with NIC
+working properly, and no regressions in boot log.
 
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+
+Thanks
+Hanjun
