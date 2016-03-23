@@ -1,170 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44783 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751286AbcCLAaf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Mar 2016 19:30:35 -0500
-Date: Fri, 11 Mar 2016 18:30:29 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org
-Subject: Re: [PATCH 4/6] PCI: Add runtime PM support for PCIe ports
-Message-ID: <20160312003029.GL4725@localhost>
-References: <1456750566-116248-1-git-send-email-mika.westerberg@linux.intel.com>
- <1456750566-116248-5-git-send-email-mika.westerberg@linux.intel.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:53276 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754993AbcCWM0v (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Mar 2016 08:26:51 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Kefeng Wang <wangkefeng.wang@huawei.com>,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+	Lorenzo.Pieralisi@arm.com,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Linuxarm <linuxarm@huawei.com>, linux-kernel@vger.kernel.org,
+	Zhou Wang <wangzhou1@hisilicon.com>
+Subject: Re: Question about PCI I/O space in ARM64
+Date: Wed, 23 Mar 2016 13:26:09 +0100
+Message-ID: <8793380.nuVa09lFue@wuerfel>
+In-Reply-To: <20160323101840.GA21390@e104818-lin.cambridge.arm.com>
+References: <56F209A9.4040304@huawei.com> <20160323101840.GA21390@e104818-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1456750566-116248-5-git-send-email-mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 29, 2016 at 02:56:04PM +0200, Mika Westerberg wrote:
-> Add back runtime PM support for PCIe ports that was removed in
-> commit fe9a743a2601 ("PCI/PM: Drop unused runtime PM support code for PCIe
-> ports").
+On Wednesday 23 March 2016 10:18:40 Catalin Marinas wrote:
+> On Wed, Mar 23, 2016 at 11:12:41AM +0800, Kefeng Wang wrote:
+> > If no pci, the PCI I/O space(16M) is mapped into an irrelevant mem space(right ?),
 > 
-> First of all we cannot enable it automatically for all root ports since
-> there have been problems previously, 
-
-Pointers to these problems would be useful.
-
-> so we enable it only based on per port
-> configuration (runtime_suspend_allowed).
-
-I see that the next patch basically adds a quirk to set
-runtime_suspend_allowed for Sunrisepoint.  How do we prevent this
-from being a maintenance nightmare?  I don't want to have to add
-a quirk for every new device that supports runtime PM.
-
-> Furthermore we need to check that
-> the device, if wake capable, can do so from D3cold (which is the state it
-> goes after the root port is powered down).
-
-I don't see this check.  I was expecting something like
-device_may_wakeup(&pdev->dev) && !pci_pme_capable(pdev, PCI_D3cold)
-like you did in the "Move PCIe ports to D3hot during suspend" patch.
-
-> This follows what we did for
-> PCIe port system suspend already.
+> No. It is not mapped at all.
 > 
-> Runtime PM is still blocked and needs to be unblocked from userspace like
-> with other PCI devices.
-
-Can you expand on this a bit?  I assume you mean that runtime PM is
-disabled by default, and userspace has to enable it with a sysfs switch or
-something?  Can you include information about how to do that?
-
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/pci/pcie/portdrv_pci.c | 49 ++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 49 insertions(+)
+> > not a right IO space,
+> > that is, no one call pci_remap_iospace() to remap the memory mapped I/O space, once driver
+> > like f71805f loaded, write value to IO space(see f71805f_init->f71805f_find->superio_enter->outb),
+> > we met following oops,
+> > ------------------------
+> > Unable to handle kernel paging request at virtual address ffffffbffee0002e
+> > pgd = ffffffc1d68d4000
+> > [ffffffbffee0002e] *pgd=0000000000000000, *pud=0000000000000000
+> > Internal error: Oops: 94000046 [#1] PREEMPT SMP
+> > Modules linked in: f71805f(+) hwmon
+> > CPU: 3 PID: 1659 Comm: insmod Not tainted 4.5.0+ #88
+> > Hardware name: linux,dummy-virt (DT)
+> > task: ffffffc1f6665400 ti: ffffffc1d6418000 task.ti: ffffffc1d6418000
+> > PC is at f71805f_find+0x6c/0x358 [f71805f]
+> > ------------------------
 > 
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index fe3349685141..eb0f425f51cc 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -85,6 +85,7 @@ enum pcie_port_type {
->  
->  struct pcie_port_config {
->  	bool suspend_allowed;
-> +	bool runtime_suspend_allowed;
->  };
->  
->  static const struct pcie_port_config pcie_port_configs[] = {
-> @@ -154,6 +155,11 @@ static bool pcie_port_suspend_allowed(struct pci_dev *pdev)
->  	return pcie_port_can_suspend(pdev);
->  }
->  
-> +static bool pcie_port_runtime_suspend_allowed(struct pci_dev *pdev)
-> +{
-> +	return pcie_port_get_config(pdev)->runtime_suspend_allowed;
-> +}
-> +
->  static int pcie_port_suspend_noirq(struct device *dev)
->  {
->  	struct pci_dev *pdev = to_pci_dev(dev);
-> @@ -188,6 +194,34 @@ static int pcie_port_resume_noirq(struct device *dev)
->  	return 0;
->  }
->  
-> +static int pcie_port_runtime_suspend(struct device *dev)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +	/*
-> +	 * All devices behind the port are assumed to be in D3cold so
-> +	 * update their state now.
-> +	 */
-> +	__pci_bus_set_current_state(pdev->subordinate, PCI_D3cold);
-> +	return 0;
-> +}
-> +
-> +static int pcie_port_runtime_resume(struct device *dev)
-> +{
-> +	return 0;
-> +}
-> +
-> +static int pcie_port_runtime_idle(struct device *dev)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +	if (pcie_port_can_suspend(pdev)) {
-> +		pm_schedule_suspend(dev, 10);
-> +		return 0;
-> +	}
-> +	return -EBUSY;
-> +}
-> +
->  static const struct dev_pm_ops pcie_portdrv_pm_ops = {
->  	.suspend	= pcie_port_device_suspend,
->  	.resume		= pcie_port_device_resume,
-> @@ -197,12 +231,20 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
->  	.restore	= pcie_port_device_resume,
->  	.suspend_noirq	= pcie_port_suspend_noirq,
->  	.resume_noirq	= pcie_port_resume_noirq,
-> +	.runtime_suspend = pcie_port_runtime_suspend,
-> +	.runtime_resume	= pcie_port_runtime_resume,
-> +	.runtime_idle	= pcie_port_runtime_idle,
->  };
->  
->  #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
->  
->  #else /* !PM */
->  
-> +static inline bool pcie_port_runtime_suspend_allowed(struct pci_dev *pdev)
-> +{
-> +	return false;
-> +}
-> +
->  #define PCIE_PORTDRV_PM_OPS	NULL
->  #endif /* !PM */
->  
-> @@ -230,11 +272,18 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
->  		return status;
->  
->  	pci_save_state(dev);
-> +
-> +	if (pcie_port_runtime_suspend_allowed(dev))
-> +		pm_runtime_put_noidle(&dev->dev);
-> +
->  	return 0;
->  }
->  
->  static void pcie_portdrv_remove(struct pci_dev *dev)
->  {
-> +	if (pcie_port_runtime_suspend_allowed(dev))
-> +		pm_runtime_get_noresume(&dev->dev);
-> +
->  	pcie_port_device_remove(dev);
->  }
->  
-> -- 
-> 2.7.0
+> That's caused by not having a mapped PCI I/O space.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > I am not clear about PCI I/O, but if this is indeed a bug, how to solve this issue,
+> > any advice will be appreciated.
+> 
+> You need a PCI host controller driver (e.g.
+> drivers/pci/host/pci-host-generic.c) and corresponding bindings in DT or
+> ACPI.
+
+I think getting an Oops is not the best behavior though, it would be
+nice if that could be improved in some way.
+
+Ideally, each driver that accesses PCI I/O space would call request_region()
+before doing so, and it would be good if that call could be made to
+return an error when asked about an address that has not been mapped.
+
+I see that ioport_resource gets initialized to the {0, IO_SPACE_LIMIT}
+range. If we could change it so that pci_remap_iospace() hooks up
+to ioport_resource and extends it whenever something gets mapped
+there up to IO_SPACE_LIMIT, we can change the default range to
+{0,0}, which would fail for any request_region call before the
+first pci_remap_iospace.
+
+This won't help for the specific f71805f driver example, because that
+does not call request_region(), but we can treat that as a driver bug
+and fix it.
+
+	Arnd
