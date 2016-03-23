@@ -1,66 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55478 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750915AbcCKSIa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 11 Mar 2016 13:08:30 -0500
-Date: Fri, 11 Mar 2016 12:08:26 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Simon Horman <horms+renesas@verge.net.au>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH] PCI: rcar, rcar-gen2: Use ARCH_RENESAS
-Message-ID: <20160311180826.GB4725@localhost>
-References: <1456361156-16798-1-git-send-email-horms+renesas@verge.net.au>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1456361156-16798-1-git-send-email-horms+renesas@verge.net.au>
+Received: from aserp1040.oracle.com ([141.146.126.69]:18929 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752230AbcCWT3Y (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Mar 2016 15:29:24 -0400
+From: Babu Moger <babu.moger@oracle.com>
+To: davem@davemloft.net, bhelgaas@google.com
+Cc: wangyijing@huawei.com, sowmini.varadhan@oracle.com,
+	babu.moger@oracle.com, jiang.liu@linux.intel.com,
+	eric.snowberg@oracle.com, yinghai@kernel.org,
+	dan.j.williams@intel.com, sparclinux@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	ethan.zhao@oracle.com
+Subject: [PATCH v2] sparc/PCI: Fix for panic while enabling SR-IOV
+Date: Wed, 23 Mar 2016 12:28:58 -0700
+Message-Id: <1458761338-60155-1-git-send-email-babu.moger@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 25, 2016 at 09:45:56AM +0900, Simon Horman wrote:
-> Make use of ARCH_RENESAS in place of ARCH_SHMOBILE.
-> 
-> This is part of an ongoing process to migrate from ARCH_SHMOBILE to
-> ARCH_RENESAS the motivation for which being that RENESAS seems to be a more
-> appropriate name than SHMOBILE for the majority of Renesas ARM based SoCs.
-> 
-> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+We noticed this panic while enabling SR-IOV in sparc.
 
-Applied with Geert's ack to pci/host-rcar for v4.6, thanks, Simon!
+mlx4_core: Mellanox ConnectX core driver v2.2-1 (Jan  1 2015)
+mlx4_core: Initializing 0007:01:00.0
+mlx4_core 0007:01:00.0: Enabling SR-IOV with 5 VFs
+mlx4_core: Initializing 0007:01:00.1
+Unable to handle kernel NULL pointer dereference
+insmod(10010): Oops [#1]
+CPU: 391 PID: 10010 Comm: insmod Not tainted
+		4.1.12-32.el6uek.kdump2.sparc64 #1
+TPC: <dma_supported+0x20/0x80>
+I7: <__mlx4_init_one+0x324/0x500 [mlx4_core]>
+Call Trace:
+ [00000000104c5ea4] __mlx4_init_one+0x324/0x500 [mlx4_core]
+ [00000000104c613c] mlx4_init_one+0xbc/0x120 [mlx4_core]
+ [0000000000725f14] local_pci_probe+0x34/0xa0
+ [0000000000726028] pci_call_probe+0xa8/0xe0
+ [0000000000726310] pci_device_probe+0x50/0x80
+ [000000000079f700] really_probe+0x140/0x420
+ [000000000079fa24] driver_probe_device+0x44/0xa0
+ [000000000079fb5c] __device_attach+0x3c/0x60
+ [000000000079d85c] bus_for_each_drv+0x5c/0xa0
+ [000000000079f588] device_attach+0x88/0xc0
+ [000000000071acd0] pci_bus_add_device+0x30/0x80
+ [0000000000736090] virtfn_add.clone.1+0x210/0x360
+ [00000000007364a4] sriov_enable+0x2c4/0x520
+ [000000000073672c] pci_enable_sriov+0x2c/0x40
+ [00000000104c2d58] mlx4_enable_sriov+0xf8/0x180 [mlx4_core]
+ [00000000104c49ac] mlx4_load_one+0x42c/0xd40 [mlx4_core]
+Disabling lock debugging due to kernel taint
+Caller[00000000104c5ea4]: __mlx4_init_one+0x324/0x500 [mlx4_core]
+Caller[00000000104c613c]: mlx4_init_one+0xbc/0x120 [mlx4_core]
+Caller[0000000000725f14]: local_pci_probe+0x34/0xa0
+Caller[0000000000726028]: pci_call_probe+0xa8/0xe0
+Caller[0000000000726310]: pci_device_probe+0x50/0x80
+Caller[000000000079f700]: really_probe+0x140/0x420
+Caller[000000000079fa24]: driver_probe_device+0x44/0xa0
+Caller[000000000079fb5c]: __device_attach+0x3c/0x60
+Caller[000000000079d85c]: bus_for_each_drv+0x5c/0xa0
+Caller[000000000079f588]: device_attach+0x88/0xc0
+Caller[000000000071acd0]: pci_bus_add_device+0x30/0x80
+Caller[0000000000736090]: virtfn_add.clone.1+0x210/0x360
+Caller[00000000007364a4]: sriov_enable+0x2c4/0x520
+Caller[000000000073672c]: pci_enable_sriov+0x2c/0x40
+Caller[00000000104c2d58]: mlx4_enable_sriov+0xf8/0x180 [mlx4_core]
+Caller[00000000104c49ac]: mlx4_load_one+0x42c/0xd40 [mlx4_core]
+Caller[00000000104c5f90]: __mlx4_init_one+0x410/0x500 [mlx4_core]
+Caller[00000000104c613c]: mlx4_init_one+0xbc/0x120 [mlx4_core]
+Caller[0000000000725f14]: local_pci_probe+0x34/0xa0
+Caller[0000000000726028]: pci_call_probe+0xa8/0xe0
+Caller[0000000000726310]: pci_device_probe+0x50/0x80
+Caller[000000000079f700]: really_probe+0x140/0x420
+Caller[000000000079fa24]: driver_probe_device+0x44/0xa0
+Caller[000000000079fb08]: __driver_attach+0x88/0xa0
+Caller[000000000079d90c]: bus_for_each_dev+0x6c/0xa0
+Caller[000000000079f29c]: driver_attach+0x1c/0x40
+Caller[000000000079e35c]: bus_add_driver+0x17c/0x220
+Caller[00000000007a02d4]: driver_register+0x74/0x120
+Caller[00000000007263fc]: __pci_register_driver+0x3c/0x60
+Caller[00000000104f62bc]: mlx4_init+0x60/0xcc [mlx4_core]
+Kernel panic - not syncing: Fatal exception
+Press Stop-A (L1-A) to return to the boot prom
+---[ end Kernel panic - not syncing: Fatal exception
 
-> ---
->  drivers/pci/host/Kconfig | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
->  Based on the next branch of the pci tree
-> 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 75a605426538..dcf4d5a349ca 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -41,7 +41,7 @@ config PCI_TEGRA
->  config PCI_RCAR_GEN2
->  	bool "Renesas R-Car Gen2 Internal PCI controller"
->  	depends on ARM
-> -	depends on ARCH_SHMOBILE || COMPILE_TEST
-> +	depends on ARCH_RENESAS || COMPILE_TEST
->  	help
->  	  Say Y here if you want internal PCI support on R-Car Gen2 SoC.
->  	  There are 3 internal PCI controllers available with a single
-> @@ -49,7 +49,7 @@ config PCI_RCAR_GEN2
->  
->  config PCI_RCAR_GEN2_PCIE
->  	bool "Renesas R-Car PCIe controller"
-> -	depends on ARCH_SHMOBILE || (ARM && COMPILE_TEST)
-> +	depends on ARCH_RENESAS || (ARM && COMPILE_TEST)
->  	help
->  	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
->  
-> -- 
-> 2.7.0.rc3.207.g0ac5344
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Details:
+Here is the call sequence
+virtfn_add->__mlx4_init_one->dma_set_mask->dma_supported
+
+The panic happened at line 760(file arch/sparc/kernel/iommu.c)
+
+758 int dma_supported(struct device *dev, u64 device_mask)
+759 {
+760         struct iommu *iommu = dev->archdata.iommu;
+761         u64 dma_addr_mask = iommu->dma_addr_mask;
+762
+763         if (device_mask >= (1UL << 32UL))
+764                 return 0;
+765
+766         if ((device_mask & dma_addr_mask) == dma_addr_mask)
+767                 return 1;
+768
+769 #ifdef CONFIG_PCI
+770         if (dev_is_pci(dev))
+771		return pci64_dma_supported(to_pci_dev(dev), device_mask);
+772 #endif
+773
+774         return 0;
+775 }
+776 EXPORT_SYMBOL(dma_supported);
+
+Same panic happened with Intel ixgbe driver also.
+
+SR-IOV code looks for arch specific data while enabling
+VFs. When VF device is added, driver probe function makes set
+of calls to initialize the pci device. Because the VF device is
+added different way than the normal PF device(which happens via
+of_create_pci_dev for sparc), some of the arch specific initialization
+does not happen for VF device.  That causes panic when archdata is
+accessed.
+
+To fix this, I have used already defined weak function
+pcibios_setup_device to copy archdata from PF to VF.
+Also verified the fix.
+
+Signed-off-by: Babu Moger <babu.moger@oracle.com>
+Signed-off-by: Sowmini Varadhan <sowmini.varadhan@oracle.com>
+Reviewed-by: Ethan Zhao <ethan.zhao@oracle.com>
+---
+v2:
+ Removed RFC.
+ Made changes per comments from Ethan Zhao.
+ Now the changes are only in Sparc specific code.
+ Removed the changes from driver/pci.
+ Implemented already defined weak function pcibios_add_device
+ in arch/sparc/kernel/pci.c to initialize sriov archdata. 
+ 
+ arch/sparc/kernel/pci.c |   15 +++++++++++++++
+ 1 files changed, 15 insertions(+), 0 deletions(-)
+
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index badf095..7749b65 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -994,6 +994,21 @@ void pcibios_set_master(struct pci_dev *dev)
+ 	/* No special bus mastering setup handling */
+ }
+ 
++int pcibios_add_device(struct pci_dev *dev)
++{
++	struct pci_dev *pdev;
++	/*
++	 * Add sriov arch specific initialization here.
++	 * Copy dev_archdata from PF to VF
++	 */
++	if (dev->is_virtfn) {
++		pdev = dev->physfn;
++		memcpy(&dev->dev.archdata, &pdev->dev.archdata,
++				sizeof(struct dev_archdata));
++	}
++	return 0;
++}
++
+ static int __init pcibios_init(void)
+ {
+ 	pci_dfl_cache_line_size = 64 >> 2;
+-- 
+1.7.1
+
