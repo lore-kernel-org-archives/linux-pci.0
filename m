@@ -1,163 +1,233 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 15 Mar 2016 12:29:09 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jack Coulter <jscinoz@jscinoz.so>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-acpi@vger.kernel.org, "Rafael J. Wysocki" <rafael@kernel.org>
-Subject: Re: Thunderbolt 3 (Skylake / Alpine Ridge) hotplug
-Message-ID: <20160315172909.GF19974@localhost>
-References: <56D0085B.60402@jscinoz.so>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:48542 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751945AbcCWWAR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 Mar 2016 18:00:17 -0400
+Date: Wed, 23 Mar 2016 22:02:47 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: PCI IO resource question.
+Message-ID: <20160323220247.GD3442@red-moon>
+References: <20160316192904.GA2703@localhost>
+ <56E9BE6A.6090107@ti.com>
+ <20160316214733.GA11542@localhost>
+ <56EB217F.8070603@ti.com>
+ <20160318112802.GA1810@red-moon>
+ <56EC1A27.7000206@ti.com>
+ <20160318230536.GA3264@red-moon>
+ <56F0122A.6000701@ti.com>
+ <20160321180245.GA13331@red-moon>
+ <56F1A007.70908@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56D0085B.60402@jscinoz.so>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <56F1A007.70908@ti.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael, linux-acpi]
+On Tue, Mar 22, 2016 at 03:41:59PM -0400, Murali Karicheri wrote:
+> On 03/21/2016 02:02 PM, Lorenzo Pieralisi wrote:
+> > On Mon, Mar 21, 2016 at 11:24:26AM -0400, Murali Karicheri wrote:
+> > 
+> > [...]
+> > 
+> >>>> I know that some of our customers use PCIe SATA from u-boot and would
+> >>>> like to honor the assignment in Linux space.. I believe they use
+> >>>> PCI_PROBE_ONLY by setting the bootarg. So Keystone PCI should work in
+> >>>> both cases.
+> >>>
+> >>> Please, tell us more about it, what does "would like to honour" mean ?
+> >>>
+> >>> Do they (ab)use pci=firmware bootarg just to keep FW PCIe SATA settings ?
+> >>>
+> >>> There are two ways of setting PCI_PROBE_ONLY on ARM/ARM64 (unfortunately):
+> >>>
+> >>> - DT chosen node
+> >>> - pci=firmware (on arm 32-bit platforms only)
+> >>>
+> >> second one. pci=firmware.
+> > 
+> > And that's an abuse that has to be stopped, I am removing that flag
+> > straight away for this precise reason.
+> > 
+> Let me speak up again. Keystone usage of pci=firmware was used by our
+> customer to address a specific problem. I am assuming they used it 
+> work around the BAR re-assignment problem in Linux space in v3.13 kernel
+> they were working with. 
+> 
+> The kernel-parameters.txt states
+> 
+>                 firmware        [ARM] Do not re-enumerate the bus but instead
+>                                 just use the configuration from the
+>                                 bootloader. This is currently used on
+>                                 IXP2000 systems where the bus has to be
+> 
+> Probably they used it to avoid re-enumerate similar to IXP2000. But as I
+> said before, I can't confirm the reason as this happened almost 2 years ago.
 
-Hi Jack,
+Ok.
 
-On Fri, Feb 26, 2016 at 07:10:03PM +1100, Jack Coulter wrote:
+> >>> PCIe designware does not check the DT chosen node property, so you are
+> >>> telling me that some customers are abusing pci=firmware command line, that
+> >>> was never meant to be used on platforms other than ARM IXP2000 systems
+> >>> (see Documentation/kernel-parameters.txt).
 > 
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA256
-> 
-> Hi Andreas,
-> 
-> I was asking around on #linux-pci on OFTC and it was mentioned that you
-> were the maintainer for Linux Thunderbolt support, and that I should
-> direct my query to you and the linux-pci & linux-kernel lists.
-> 
-> I'm attempting to use the Thunderbolt 3 (which has a USB Type-C
-> connector) port on my laptop, a Dell XPS 15 (9550). The external device
-> I'm attempting to use is a gigabit ethernet + USB 3.0 hub, of an unknown
-> / generic brand, but bears model number KY-688 if that's of any use.
-> 
-> When the device is present at system startup, everything works
-> correctly, and shows up in lspci as a USB controller, which lsusb shows
-> having a hub and ethernet NIC attached, which the r8152 driver binds and
-> uses without issue:
-> 
-> lspci -v:
-> > 0a:00.0 USB controller: Intel Corporation Device 15b5 (prog-if 30 [XHCI])
-> >     Subsystem: Device 2222:1111
-> >     Flags: bus master, fast devsel, latency 0, IRQ 131
-> >     Memory at c4200000 (32-bit, non-prefetchable) [size=64K]
-> >     Capabilities: [80] Power Management version 3
-> >     Capabilities: [88] MSI: Enable+ Count=1/8 Maskable- 64bit+
-> >     Capabilities: [c0] Express Endpoint, MSI 00
-> >     Capabilities: [100] Device Serial Number a3-21-b5-60-a7-23-04-00
-> >     Capabilities: [200] Advanced Error Reporting
-> >     Capabilities: [300] Virtual Channel
-> >     Capabilities: [400] Power Budgeting <?>
-> >     Capabilities: [500] Vendor Specific Information: ID=1234 Rev=1
-> Len=0d8 <?>
-> >     Capabilities: [600] Latency Tolerance Reporting
-> >     Capabilities: [700] #19
-> >     Kernel driver in use: xhci_hcd
-> 
-> 
-> lspci -tv (Thunderbolt device is 15b5)
-> > -[0000:00]-+-00.0  Intel Corporation Sky Lake Host Bridge/DRAM Registers
-> >            +-01.0-[01]----00.0  NVIDIA Corporation GM107M [GeForce GTX
-> 960M]
-> >            +-02.0  Intel Corporation Device 191b
-> >            +-04.0  Intel Corporation Device 1903
-> >            +-14.0  Intel Corporation Sunrise Point-H USB 3.0 xHCI
-> Controller
-> >            +-14.2  Intel Corporation Sunrise Point-H Thermal subsystem
-> >            +-15.0  Intel Corporation Sunrise Point-H LPSS I2C
-> Controller #0
-> >            +-15.1  Intel Corporation Sunrise Point-H LPSS I2C
-> Controller #1
-> >            +-16.0  Intel Corporation Sunrise Point-H CSME HECI #1
-> >            +-1c.0-[02]----00.0  Broadcom Corporation BCM43602 802.11ac
-> Wireless LAN SoC
-> >            +-1c.1-[03]----00.0  Realtek Semiconductor Co., Ltd. Device
-> 525a
-> >            +-1d.0-[04]----00.0  Samsung Electronics Co Ltd Device a802
-> >            +-1d.4-[05]--
-> >            +-1d.6-[06-3e]----00.0-[07-0a]--+-00.0-[08]--
-> >            |                               +-01.0-[09]--
-> >            |                               \-02.0-[0a]----00.0  Intel
-> Corporation Device 15b5
-> >            +-1f.0  Intel Corporation Sunrise Point-H LPC Controller
-> >            +-1f.2  Intel Corporation Sunrise Point-H PMC
-> >            +-1f.3  Intel Corporation Sunrise Point-H HD Audio
-> >            \-1f.4  Intel Corporation Sunrise Point-H SMBus
-> 
-> lsusb -tv:
-> > /:  Bus 04.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/2p, 5000M
-> >     |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/4p, 5000M
-> >         |__ Port 1: Dev 3, If 0, Class=Vendor Specific Class,
-> Driver=r8152, 5000M
-> > /:  Bus 03.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/2p, 480M
-> >     |__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/4p, 480M
-> >         |__ Port 3: Dev 3, If 0, Class=Human Interface Device,
-> Driver=usbhid, 12M
-> >         |__ Port 3: Dev 3, If 1, Class=Human Interface Device,
-> Driver=usbhid, 12M
-> >         |__ Port 3: Dev 3, If 2, Class=Human Interface Device,
-> Driver=usbhid, 12M
-> >         |__ Port 3: Dev 3, If 3, Class=Human Interface Device,
-> Driver=usbhid, 12M
-> > /:  Bus 02.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/8p, 5000M
-> > /:  Bus 01.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/16p, 480M
-> >     |__ Port 4: Dev 2, If 0, Class=Vendor Specific Class,
-> Driver=btusb, 12M
-> >     |__ Port 4: Dev 2, If 1, Class=Vendor Specific Class,
-> Driver=btusb, 12M
-> >     |__ Port 4: Dev 2, If 2, Class=Vendor Specific Class,
-> Driver=btusb, 12M
-> >     |__ Port 4: Dev 2, If 3, Class=Application Specific Interface,
-> Driver=, 12M
-> >     |__ Port 12: Dev 3, If 0, Class=Video, Driver=uvcvideo, 480M
-> >     |__ Port 12: Dev 3, If 1, Class=Video, Driver=uvcvideo, 480M
-> 
-> 
-> However, if the device is connected after the system boots (or
-> disconnected and reconnected), it is not detected at all. No messages
-> show up in dmesg upon connection and no additional devices show up in
-> the output of lspci & lsusb. Strangely enough, USB devices connected to
-> the external hub do still receive power.
-> 
-> I also have the following options relating to PCI hotplug set in my
-> kernel config:
-> 
-> > CONFIG_HOTPLUG_PCI_PCIE=y
-> > CONFIG_HOTPLUG_PCI=y
-> > CONFIG_HOTPLUG_PCI_ACPI=y
-> > CONFIG_HOTPLUG_PCI_ACPI_IBM=y
-> 
-> I'm running the 4.4.2 kernel, booted via EFI. From what I've read,
-> Thunderbolt hotplug has been working since 3.17, controlled by the
-> CONFIG_THUNDERBOLT option. However regardless of whether this option is
-> enabled or disabled, hotplug does not appeare to work on my hardware.
-> From reading the in-kernel help text for this option, I suspect that
-> it's only relevant for the older Cactus Ridge Thunderbolt controller
-> present in 2012-era MacBooks.
+> If the problem is same why you blame using this approach on non IXP2000 system?
 
-Can you open a report at http://bugzilla.kernel.org, category
-drivers/PCI, and attach complete "lspci -vv" output (run as root) and
-complete dmesg logs, both when hub is attached at boot, and when
-booting without hub and attaching hub later?
+The problem with PCI_PROBE_ONLY on ARM/ARM64 is that is not
+well-defined, so I do not want people to use it to paper over
+issues or to put it differently as a workaround that means
+different things on different platforms.
 
-I don't know much about Thunderbolt.  But since it appears as a PCI
-device, I would expect some sort of hotplug notification when you
-attach the hub.  If pciehp handles hotplug, it looks like we should
-see something from pcie_isr() in the dmesg log.
+PCI resources management must be managed at architectural level,
+not with a flag that means different things on different platforms.
 
-Since you don't see that, I suspect we're getting ACPI notifications
-via the acpiphp driver.  I'm not as familiar with that, so I don't
-know what if anything it logs.  If you're inclined, you could add some
-printks in
+I understand your point, I hope I made mine clear, *currently* we
+still have no clear definition of what PCI_PROBE_ONLY means on ARM,
+and, as you experienced, by setting the bootarg people may already
+abuse it and we are stuck with it forever.
 
-  acpiphp_add_context()
-  acpi_device_hotplug()
-  acpiphp_hotplug_notify()
-  hotplug_event()
+Let's wipe the slate clean, remove the flag and if we need it
+let's define its usage properly (along with FW bindings to set it),
+in a documented way.
 
-Then we'd at least see if we get any ACPI notifications.
+> 
+> >>>
+> >>> Usage of PCI_PROBE_ONLY on ARM has been controversial and is completely
+> >>> ill-defined, so we are trying to get rid of its usage.
+> 
+> No issues. At this point, I don't have the use case I described
+> working in our internal TI kernel based on v4.1.x or v4.4.x or
+> upstream. However it will be interesting to find the ARM platforms out
+> there that uses firmware option, irrespective of whether they abused
+> its usage or not. Someone hopefully respond to your patches if it
+> breaks these platforms.
 
-Bjorn
+I hope it has not been used as such, unfortunately removing is the
+only way to find out.
+
+> >>> Now, commit ed00c83cd490 ("PCI: designware: Remove PCI_PROBE_ONLY handling")
+> >>> removed, after mailing list initial investigation and patch review
+> >>>
+> >>> http://www.spinics.net/lists/linux-pci/msg48248.html
+> >>>
+> >>> PCI_PROBE_ONLY handling from PCIe designware, which means that even if
+> >>> you pass pci=firmware parameter on the command line (wrongly, see above)
+> >>> the kernel reassigns resources and set-up PCIe settings.
+> >>>
+> >>> Does this trigger issues on Keystone ? Or the systems that set that
+> >>> bootarg work even if the flag is ignored ? I want to understand and
+> >>> I really would like to avoid asking Bjorn to revert that commit for
+> >>> what looks like an abuse, I prefer finding a workaround if this is
+> >>> really an issue.
+> 
+> As I have said, I don't have the use case with pci=firmware working to
+> help you in this.
+
+Great.
+
+> >> Unfortunately the customer uses an older version of kernel v3.13. The
+> >> Ubuntu Linux distro runs on Keystone based board using this version of
+> >> kernel. We have internal version of the PCI-keystone driver that runs on
+> >> this kernel. The requirement was like this at a high level. The U-Boot
+> >> requires the SATA hard drive to be initialized to load and run images from
+> >> hard disk. When Linux boots up, the hard drive file system is used as
+> >> rootfs.
+> >>
+> >> So few changes added in Kernel PCI driver to support this. 
+> >> 1. Linux PCI driver assumes, the PCI Link is initialized in u-boot. So
+> >> it just don't do re-initialization of the SerDes link. It checks the
+> >> link status and continue initialize the PCI-Keystone RC driver.
+> >> 2. Uses pci=firmware to make sure the memory BARs are not re-assigned.
+> >>
+> >> Without that, the Linux kernel PCI driver got some issues and I don't
+> >> have the details now as this happened almost 2 years ago.
+> > 
+> > Ok, it is not a mainline problem then and it is not something we have
+> > to fix, other than removing that bootarg flag as soon as possible
+> > since as you describe here it can be (ab/mis)used.
+> > 
+> >> I believe at least on K2E, this is a use case that we need to support.
+> >> K2E board has a Marvel SATA controller with a SATA port that we can hook
+> >> up a hard drive. I have a TODO item to bring up PCI and SATA on u-boot
+> >> and boot up Linux the same way as described above. So how this use case
+> >> is expected to work on ARM? I assume arch/arm/kernel/bios32.c is a
+> >> pseudo bios driver to emulate BIOS specific handling PCI initialization.
+> > 
+> > PCI bios is a set of helper functions that are there as PCI arm arch
+> > back-end and to be honest I am not entirely sure I understand what you
+> > expect it to do, it certainly does not emulate any BIOS to the best
+> > of my knowledge.
+> > 
+> >> I am sure this is a use case that needs to be supported. Aren't there
+> >> other ARM based boards that uses SATA hard disks in u-boot to boot to
+> >> Linux? 
+> > 
+> > First off, PCI_PROBE_ONLY prevents reassigning resources and
+> > reprogramming PCIe settings for the whole PCI(e) hierarchy managed
+> > by all host controllers, it is not about one single device (and I
+> > do not even understand what's the problem you are facing), this
+> > for the records so that we are on the same page (maybe that's
+> > the only device in that system, but I thought I should mention
+> > that).
+> > 
+> >> How the above use case is handled if you remove the PCI_PROBE_ONLY support?
+> > 
+> > U-boot loads and boots the kernel in memory, quiesces the PCIe SATA device
+> > before kernel handover and the kernel carries out PCI enumeration, loads and
+> > probes the required device drivers.
+> > 
+> 
+> I am with you on this. Will re-visit if I ever has to support PCI in u-boot
+> to work with SATA.
+
+Sounds good.
+
+> > Can you define precisely what the problem is please ? In particular
+> > I want to understand why, by setting the PCI_PROBE_ONLY flag you want
+> > to make sure your PCIe SATA device BARs are not reassigned.
+> > 
+> 
+> No idea. As I have said, the customer did this in their custom board.
+
+See above.
+
+> > Now, the question related to FW/OS handover of PCI resources is a
+> > complicated one and on ARM it was never solved/defined properly.
+> > 
+> > The question here, and I am not sure it can be answered with a simple
+> > answer, is how we make sure the OS does not touch PCI resources that
+> > have been initialized in FW and are not meant to be changed (whatever
+> > that means).
+> > 
+> > To at least have some hope to sort this out, the kernel must try to
+> > claim PCI resources as set-up by FW, if they are in a "reasonable" state
+> > they are claimed and not touched. For resources for which claiming
+> > fails, a reassignment policy must be implemented, that might require
+> > re-sizing bridges and release resources so that they can be effectively
+> > reallocated.
+> > 
+> > At present, on ALL ARM platforms out there (except for some oddballs
+> > and possibly some arm platforms that abused the pci=firmware parameter that
+> > I am hunting down and I am not aware of) the whole PCI resource space is
+> > always reassigned by the kernel (which does not mean that's always the
+> > right thing to do BTW, as it is it just works).
+> > 
+> > We must not try to "fix" this by misusing boot arguments and PCI_PROBE_ONLY,
+> > we must come up with a PCI resources allocation policy that implements what
+> > I mention above, my point is, PCI_PROBE_ONLY must mean the same thing
+> > for all ARM/ARM64 platforms otherwise it becomes complicated to handle in
+> > a sane way.
+> > 
+> 
+> Sounds good. Personally, I have never understood the usage of pci=firmware
+> or PCI_PROBE_ONLY. As you have said, ideally SATA over PCI should work fine
+> in u-boot and then again in the linux space like any other device drivers
+> do. Will re-visit when I have to support this use case again on our board
+> with latest kernel.
+
+That sounds like a plan, thank you.
+
+Lorenzo
