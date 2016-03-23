@@ -1,153 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:33999 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755555AbcCTNzD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Mar 2016 09:55:03 -0400
+Received: from lhrrgout.huawei.com ([194.213.3.17]:39094 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751039AbcCWKXr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Mar 2016 06:23:47 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Jayachandran C <jchandra@broadcom.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	"rafael@kernel.org" <rafael@kernel.org>
+CC: Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	"Catalin Marinas" <catalin.marinas@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	"okaya@codeaurora.org" <okaya@codeaurora.org>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>,
+	"robert.richter@caviumnetworks.com"
+	<robert.richter@caviumnetworks.com>,
+	Marcin Wojtas <mw@semihalf.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	David Daney <ddaney@caviumnetworks.com>,
+	Wangyijing <wangyijing@huawei.com>,
+	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+	Jon Masters <jcm@redhat.com>
+Subject: RE: [RFC PATCH 0/4] ACPI based PCI host driver with generic ECAM
+Date: Wed, 23 Mar 2016 10:22:45 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED2A787@lhreml503-mbs>
+References: <CAKc_7PVK3VtaR-LDHNXPr5cSjbCcH--hsepFx=jVATNi=+a9Hw@mail.gmail.com>
+ <1458245913-17211-1-git-send-email-jchandra@broadcom.com>
+ <CAKc_7PWfP0eQJ8dRN=CLu37=GKxin32Uf5rjiZGZgQCbiab2iA@mail.gmail.com>
+In-Reply-To: <CAKc_7PWfP0eQJ8dRN=CLu37=GKxin32Uf5rjiZGZgQCbiab2iA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <385c18397ac1b9a999672e676641cb62f556b5b5.1458126755.git.lukas@wunner.de>
-References: <cover.1458126755.git.lukas@wunner.de> <385c18397ac1b9a999672e676641cb62f556b5b5.1458126755.git.lukas@wunner.de>
-From: Andreas Noever <andreas.noever@gmail.com>
-Date: Sun, 20 Mar 2016 14:54:41 +0100
-Message-ID: <CAMxnaaUqtxM1Q9NiLN+3TmWMAtNjrP1ao7vVX9UDFiYH6Daw9Q@mail.gmail.com>
-Subject: Re: [RFC 2/4] thunderbolt: Fix typos and magic number
-To: Lukas Wunner <lukas@wunner.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-acpi@vger.kernel.org,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 16, 2016 at 3:50 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> Fix typo in tb_cfg_print_error() message.
-> Fix bytecount in struct tb_drom_entry_port comment.
-> Replace magic number in tb_switch_alloc().
-> Rename tb_sw_set_unpplugged() and TB_CAL_IECS.
->                    ^                   ^
->
-> Cc: Andreas Noever <andreas.noever@gmail.com>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> ---
->  drivers/thunderbolt/ctl.c     |  2 +-
->  drivers/thunderbolt/eeprom.c  |  2 +-
->  drivers/thunderbolt/switch.c  | 10 +++++-----
->  drivers/thunderbolt/tb.c      |  2 +-
->  drivers/thunderbolt/tb.h      |  2 +-
->  drivers/thunderbolt/tb_regs.h |  2 +-
->  6 files changed, 10 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/thunderbolt/ctl.c b/drivers/thunderbolt/ctl.c
-> index 799634b..1146ff4 100644
-> --- a/drivers/thunderbolt/ctl.c
-> +++ b/drivers/thunderbolt/ctl.c
-> @@ -249,7 +249,7 @@ static void tb_cfg_print_error(struct tb_ctl *ctl,
->                  * cfg_read/cfg_write.
->                  */
->                 tb_ctl_WARN(ctl,
-> -                       "CFG_ERROR(%llx:%x): Invalid config space of offset\n",
-> +                       "CFG_ERROR(%llx:%x): Invalid config space or offset\n",
->                         res->response_route, res->response_port);
->                 return;
->         case TB_CFG_ERROR_NO_SUCH_PORT:
-> diff --git a/drivers/thunderbolt/eeprom.c b/drivers/thunderbolt/eeprom.c
-> index 0dde34e..47e56e8 100644
-> --- a/drivers/thunderbolt/eeprom.c
-> +++ b/drivers/thunderbolt/eeprom.c
-> @@ -221,7 +221,7 @@ struct tb_drom_entry_port {
->         u8 micro1:4;
->         u8 micro3;
->
-> -       /* BYTES 5-6, TODO: verify (find hardware that has these set) */
-> +       /* BYTES 6-7, TODO: verify (find hardware that has these set) */
->         u8 peer_port_rid:4;
->         u8 unknown3:3;
->         bool has_peer_port:1;
-> diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-> index db73ffe..c6270f0 100644
-> --- a/drivers/thunderbolt/switch.c
-> +++ b/drivers/thunderbolt/switch.c
-> @@ -350,7 +350,7 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
->                 return NULL;
->
->         sw->tb = tb;
-> -       if (tb_cfg_read(tb->ctl, &sw->config, route, 0, 2, 0, 5))
-> +       if (tb_cfg_read(tb->ctl, &sw->config, route, 0, TB_CFG_SWITCH, 0, 5))
->                 goto err;
->         tb_info(tb,
->                 "initializing Switch at %#llx (depth: %d, up port: %d)\n",
-> @@ -426,9 +426,9 @@ err:
->  }
->
->  /**
-> - * tb_sw_set_unpplugged() - set is_unplugged on switch and downstream switches
-> + * tb_sw_set_unplugged() - set is_unplugged on switch and downstream switches
->   */
-> -void tb_sw_set_unpplugged(struct tb_switch *sw)
-> +void tb_sw_set_unplugged(struct tb_switch *sw)
->  {
->         int i;
->         if (sw == sw->tb->root_switch) {
-> @@ -442,7 +442,7 @@ void tb_sw_set_unpplugged(struct tb_switch *sw)
->         sw->is_unplugged = true;
->         for (i = 0; i <= sw->config.max_port_number; i++) {
->                 if (!tb_is_upstream_port(&sw->ports[i]) && sw->ports[i].remote)
-> -                       tb_sw_set_unpplugged(sw->ports[i].remote->sw);
-> +                       tb_sw_set_unplugged(sw->ports[i].remote->sw);
->         }
->  }
->
-> @@ -484,7 +484,7 @@ int tb_switch_resume(struct tb_switch *sw)
->                         || tb_switch_resume(port->remote->sw)) {
->                         tb_port_warn(port,
->                                      "lost during suspend, disconnecting\n");
-> -                       tb_sw_set_unpplugged(port->remote->sw);
-> +                       tb_sw_set_unplugged(port->remote->sw);
->                 }
->         }
->         return 0;
-> diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
-> index d2c3fe3..24b6d30 100644
-> --- a/drivers/thunderbolt/tb.c
-> +++ b/drivers/thunderbolt/tb.c
-> @@ -246,7 +246,7 @@ static void tb_handle_hotplug(struct work_struct *work)
->         if (ev->unplug) {
->                 if (port->remote) {
->                         tb_port_info(port, "unplugged\n");
-> -                       tb_sw_set_unpplugged(port->remote->sw);
-> +                       tb_sw_set_unplugged(port->remote->sw);
->                         tb_free_invalid_tunnels(tb);
->                         tb_switch_free(port->remote->sw);
->                         port->remote = NULL;
-> diff --git a/drivers/thunderbolt/tb.h b/drivers/thunderbolt/tb.h
-> index 8b0d7cf..61d57ba 100644
-> --- a/drivers/thunderbolt/tb.h
-> +++ b/drivers/thunderbolt/tb.h
-> @@ -226,7 +226,7 @@ void tb_switch_free(struct tb_switch *sw);
->  void tb_switch_suspend(struct tb_switch *sw);
->  int tb_switch_resume(struct tb_switch *sw);
->  int tb_switch_reset(struct tb *tb, u64 route);
-> -void tb_sw_set_unpplugged(struct tb_switch *sw);
-> +void tb_sw_set_unplugged(struct tb_switch *sw);
->  struct tb_switch *get_switch_at_route(struct tb_switch *sw, u64 route);
->
->  int tb_wait_for_port(struct tb_port *port, bool wait_if_unplugged);
-> diff --git a/drivers/thunderbolt/tb_regs.h b/drivers/thunderbolt/tb_regs.h
-> index 6577af7..1e2a4a8 100644
-> --- a/drivers/thunderbolt/tb_regs.h
-> +++ b/drivers/thunderbolt/tb_regs.h
-> @@ -30,7 +30,7 @@ enum tb_cap {
->         TB_CAP_I2C              = 0x0005,
->         TB_CAP_PLUG_EVENTS      = 0x0105, /* also EEPROM */
->         TB_CAP_TIME2            = 0x0305,
-> -       TB_CAL_IECS             = 0x0405,
-> +       TB_CAP_IECS             = 0x0405,
->         TB_CAP_LINK_CONTROLLER  = 0x0605, /* also IECS */
->  };
->
-> --
-> 2.7.0
-
-Acked-by: Andreas Noever <andreas.noever@gmail.com>
-
-Thanks!
+SGkgSmF5YWNoYW5kcmFuDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTog
+bGludXgta2VybmVsLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LWtlcm5lbC0N
+Cj4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgSmF5YWNoYW5kcmFuIEMNCj4g
+U2VudDogMTggTWFyY2ggMjAxNiAxNzo0OA0KPiBUbzogQmpvcm4gSGVsZ2FhczsgVG9tYXN6IE5v
+d2lja2k7IHJhZmFlbEBrZXJuZWwub3JnDQo+IENjOiBKYXlhY2hhbmRyYW4gQzsgQXJuZCBCZXJn
+bWFubjsgV2lsbCBEZWFjb247IENhdGFsaW4gTWFyaW5hczsgSGFuanVuDQo+IEd1bzsgTG9yZW56
+byBQaWVyYWxpc2k7IG9rYXlhQGNvZGVhdXJvcmEub3JnOw0KPiBqaWFuZy5saXVAbGludXguaW50
+ZWwuY29tOyBTdGVmYW5vIFN0YWJlbGxpbmk7DQo+IHJvYmVydC5yaWNodGVyQGNhdml1bW5ldHdv
+cmtzLmNvbTsgTWFyY2luIFdvanRhczsgTGl2aXUuRHVkYXVAYXJtLmNvbTsNCj4gRGF2aWQgRGFu
+ZXk7IFdhbmd5aWppbmc7IFN1cmF2ZWUuU3V0aGlrdWxwYW5pdEBhbWQuY29tOw0KPiBtc2FsdGVy
+QHJlZGhhdC5jb207IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWFybS0NCj4ga2Vy
+bmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7IGxpbnV4LWFjcGlAdmdlci5rZXJuZWwub3JnOyBsaW51
+eC0NCj4ga2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGluYXJvLWFjcGlAbGlzdHMubGluYXJvLm9y
+ZzsgSm9uIE1hc3RlcnMNCj4gU3ViamVjdDogUmU6IFtSRkMgUEFUQ0ggMC80XSBBQ1BJIGJhc2Vk
+IFBDSSBob3N0IGRyaXZlciB3aXRoIGdlbmVyaWMNCj4gRUNBTQ0KPiANCj4gT24gRnJpLCBNYXIg
+MTgsIDIwMTYgYXQgMTo0OCBBTSwgSmF5YWNoYW5kcmFuIEMgPGpjaGFuZHJhQGJyb2FkY29tLmNv
+bT4NCj4gd3JvdGU6DQo+ID4gSGkgQmpvcm4sDQo+ID4NCj4gPiBIZXJlIGlzIGEgbmV3IHBhdGNo
+c2V0IGZvciB0aGUgQUNQSSBQQ0kgY29udHJvbGxlciBkcml2ZXIgYmFzZWQgb24NCj4gdGhlDQo+
+ID4gZWFybGllciBkaXNjdXNzaW9uWzFdLg0KPiA+DQo+ID4gVGhlIGZpcnN0IHR3byBwYXRjaGVz
+IGluIHRoZSBwYXRjaHNldCBpbXBsZW1lbnRzIHBjaS9lY2FtLmMgZm9yDQo+IGdlbmVyaWMNCj4g
+PiBjb25maWcgc3BhY2UgYWNjZXNzIGFuZCB1c2VzIGl0IGluIHBjaS1ob3N0LWdlbmVyaWMuYyBh
+bmQgcmVsYXRlZA0KPiBmaWxlcy4NCj4gPg0KPiA+IFRoZSB0aGlyZCBwYXRjaCBpbXBsZW1lbnRz
+IHRoZSBBQ1BJIFBDSSBob3N0IGRyaXZlciB1c2luZyB0aGUgc2FtZQ0KPiBlY2FtDQo+ID4gYWNj
+ZXNzIGZ1bmN0aW9ucy4gVGhlIGZvdXJ0aCBwYXRjaCBhZGRzIHRoZSBpbXBsZW1lbnRhdGlvbiBv
+ZiByYXcNCj4gPiBvcGVyYXRpb25zLg0KPiA+DQo+ID4gSSBoYXZlIG5vdCB1c2VkIHRoZSBwY2lf
+bW1jZmdfbGlzdCBvciB0aGUgcmVnaW9uIGRlZmluaXRpb25zIGZyb20NCj4geDg2LA0KPiA+IGJ1
+dCBoYXZlIHVzZWQgYSBtdWNoIHNpbXBsZXIgYXBwcm9hY2ggaGVyZS4NCj4gPg0KPiA+IFRoaXMg
+c2hvdWxkIGFwcGx5IGNsZWFubHkgb24gdG9wIG9mIHRoZSBjdXJyZW50IHBjaSBuZXh0IHRyZWUs
+IGFuZA0KPiA+IGNhbiBiZSByZXZpZXdlZCBhcyBhIHBhdGNoc2V0LiAgVG8gdXNlIGl0IG9uIEFS
+TTY0LCB3ZSBuZWVkIHRvIHB1bGwNCj4gPiBpbiBhYm91dCA3IHBhdGNoZXMgbW9yZSBmcm9tIFRv
+bWFzeiBwYXRjaHNldCB0aGF0IGZpeGVzIHZhcmlvdXMNCj4gPiBpc3N1ZXMgKGxpa2Ugc3R1YiBj
+b2RlIGluIGFybTY0IHBjaS5jLCBBQ1BJIGNvbXBhbmlvbiBzZXR1cCwNCj4gPiBkb21haW4gbnVt
+YmVyIGFzc2lnbm1lbnQsIElPIHJlc291cmNlcyBmaXh1cCBldGMuKS4NCj4gPg0KPiA+IElmIHlv
+dSBhcmUgb2theSB3aXRoIHRoaXMgYXBwcm9hY2gsIEkgd2lsbCB3b3JrIHdpdGggVG9tYXN6IGFu
+ZA0KPiA+IHBvc3QgdGhlIGZ1bGwgcGF0Y2hzZXQuDQo+ID4NCj4gPiBUaGlzIGhhcyBiZWVuIHRl
+c3RlZCBvbiBxZW11IHdpdGggT1ZNRiBmb3IgdGhlIEFDUEkgcGFydCBhbmQgd2l0aA0KPiA+IGRl
+dmljZSB0cmVlIGZvciBwY2ktaG9zdC1nZW5lcmljIGNvZGUuDQo+IA0KPiBUaGUgZnVsbCBwYXRj
+aHNldCBpcyBhdmFpbGFibGUgYXQgaHR0cHM6Ly9naXRodWIuY29tL2pjaGFuZHJhLQ0KPiBicmNt
+L2xpbnV4LmdpdCBvbg0KPiBicmFuY2ggYXJtNjQtYWNwaS1wY2ksIGlmIGFueW9uZSB3YW50cyB0
+byB0cnkgaXQuDQoNCkkgaGFkIGEgbG9vayBhdCB5b3VyIHBhdGNoc2V0IGFuZCBhbHNvIGluIHlv
+dXIgZ2l0IHJlcG8gYXQgdGhlIG90aGVyDQpwYXRjaGVzIHRoYXQgeW91IHBvcnRlZCBvdmVyIGZy
+b20gVG9tYXN6OyBpdCBzZWVtcyB0aGF0IG5vdyB3ZSBtaXNzDQphIHF1aXJrIG1lY2hhbmlzbSB0
+byBlbmFibGUgY29udHJvbGxlciB0aGF0IGFyZSBub3QgZnVsbHkgRUNBTS4NCg0KVGhpcyB3YXMg
+cHJvdmlkZWQgYmVmb3JlIGJ5IFRvbWFzeiBpbjoNCmh0dHBzOi8vbGttbC5vcmcvbGttbC8yMDE2
+LzIvMTYvNDEwDQoNCkkgdGhpbmsgd2Ugc2hvdWxkIHB1dCBzb21ldGhpbmcgbGlrZSB0aGF0IGJh
+Y2sgaW4uLi4NCg0KVGhhbmtzDQoNCkdhYg0KDQo+IA0KPiBDb21tZW50cywgc3VnZ2VzdGlvbnMg
+YW5kIHRlc3Rpbmcgd291bGQgYmUgd2VsY29tZS4NCj4gDQo+IFRoYW5rcywNCj4gSkMuDQo=
