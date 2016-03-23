@@ -1,55 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:36838 "EHLO mga03.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:5385 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754099AbcCBWbH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 2 Mar 2016 17:31:07 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 1/2] VMD: Document code for maintainability
-Date: Wed,  2 Mar 2016 15:31:03 -0700
-Message-Id: <1456957864-1603-1-git-send-email-keith.busch@intel.com>
+	id S1751595AbcCWWDZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 Mar 2016 18:03:25 -0400
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: helgaas@kernel.org
+Cc: Jon Derrick <jonathan.derrick@intel.com>, keith.busch@intel.com,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] pci: Added flag to pci_host_bridge to hint not to use acpi
+Date: Wed, 23 Mar 2016 16:01:58 -0600
+Message-Id: <1458770518-10203-1-git-send-email-jonathan.derrick@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This comments the less obvious portion of the code for setting up
-memory windows, and the platform dependency for initializing the h/w
-with appropriate resources.
+This patch adds a hint, no_acpi, to the pci_host_bridge struct which
+informs the hotplug driver to not try and release the host bridge from
+acpi.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+The VMD driver creates a root port which does not have an acpi entry.
+This patch will allow the hotplug driver to bypass acpi release when
+enumerating the VMD root port as a hotplug slot.
+
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 ---
- arch/x86/pci/vmd.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ arch/x86/pci/vmd.c              | 4 ++++
+ drivers/pci/pcie/portdrv_acpi.c | 5 +++++
+ include/linux/pci.h             | 1 +
+ 3 files changed, 10 insertions(+)
 
 diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-index d57e480..68faa5e 100644
+index 7792aba..a196be3 100644
 --- a/arch/x86/pci/vmd.c
 +++ b/arch/x86/pci/vmd.c
-@@ -532,6 +532,23 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
- 		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
- 	};
+@@ -531,6 +531,7 @@ static int vmd_find_free_domain(void)
+ static int vmd_enable_domain(struct vmd_dev *vmd)
+ {
+ 	struct pci_sysdata *sd = &vmd->sysdata;
++	struct pci_host_bridge *host_bridge;
+ 	struct resource *res;
+ 	u32 upper_bits;
+ 	unsigned long flags;
+@@ -609,6 +610,9 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
+ 		return -ENODEV;
+ 	}
  
-+	/*
-+	 * If the window is below 4GB, clear IORESOURCE_MEM_64 so we can
-+	 * put 32-bit resources in the window.
-+	 *
-+	 * There's no hardware reason why a 64-bit window *couldn't*
-+	 * contain a 32-bit resource, but pbus_size_mem() computes the
-+	 * bridge window size assuming a 64-bit window will contain no
-+	 * 32-bit resources.  __pci_assign_resource() enforces that
-+	 * artificial restriction to make sure everything will fit.
-+	 *
-+	 * The only way we could use a 64-bit non-prefechable MEMBAR is
-+	 * if its address is <4GB so that we can convert it to a 32-bit
-+	 * resource. To be visible to the host OS, all VMD endpoints must
-+	 * be initially configured by platform BIOS, which includes setting
-+	 * up these resources. We can assume the device is configured
-+	 * according to the platform needs.
-+	 */
- 	res = &vmd->dev->resource[VMD_MEMBAR1];
- 	upper_bits = upper_32_bits(res->end);
- 	flags = res->flags & ~IORESOURCE_SIZEALIGN;
++	host_bridge = to_pci_host_bridge(vmd->bus->bridge);
++	host_bridge->no_acpi = true;
++
+ 	vmd_attach_resources(vmd);
+ 	vmd_setup_dma_ops(vmd);
+ 	dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
+diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
+index b4d2894..0e6fa69 100644
+--- a/drivers/pci/pcie/portdrv_acpi.c
++++ b/drivers/pci/pcie/portdrv_acpi.c
+@@ -35,12 +35,17 @@
+ int pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
+ {
+ 	struct acpi_pci_root *root;
++	struct pci_host_bridge *host_bridge;
+ 	acpi_handle handle;
+ 	u32 flags;
+ 
+ 	if (acpi_pci_disabled)
+ 		return 0;
+ 
++	host_bridge = pci_find_host_bridge(port->bus);
++	if (host_bridge && host_bridge->no_acpi)
++		return 0;
++
+ 	handle = acpi_find_root_bridge_handle(port);
+ 	if (!handle)
+ 		return -EINVAL;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 15f466e..a6958e9b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -407,6 +407,7 @@ struct pci_host_bridge {
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+ 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
++	unsigned int no_acpi:1;			/* bypasses acpi release */
+ 	/* Resource alignment requirements */
+ 	resource_size_t (*align_resource)(struct pci_dev *dev,
+ 			const struct resource *res,
 -- 
-2.7.2
+1.8.3.1
 
