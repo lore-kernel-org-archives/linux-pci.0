@@ -1,72 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:33824 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753702AbcCIPkB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 9 Mar 2016 10:40:01 -0500
-Received: by mail-wm0-f66.google.com with SMTP id p65so10846342wmp.1
-        for <linux-pci@vger.kernel.org>; Wed, 09 Mar 2016 07:40:00 -0800 (PST)
-Message-ID: <1457537997.17531.3.camel@googlemail.com>
-Subject: Re: [PATCH v3 0/2] Add PCIe driver support for imx6sx
-From: Christoph Fritz <chf.fritz@googlemail.com>
-Reply-To: chf.fritz@googlemail.com
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lee Jones <lee.jones@linaro.org>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <hongxing.zhu@nxp.com>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Fabio Estevam <fabio.estevam@nxp.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Date: Wed, 09 Mar 2016 16:39:57 +0100
-In-Reply-To: <1457338819.1904.4.camel@googlemail.com>
-References: <1456411669-4699-1-git-send-email-chf.fritz@googlemail.com>
-	 <DBXPR04MB27013C807F30DABB9CB667D8CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
-	 <1457338819.1904.4.camel@googlemail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.kernel.org ([198.145.29.136]:53987 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751686AbcCWPKd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 23 Mar 2016 11:10:33 -0400
+Date: Wed, 23 Mar 2016 10:10:27 -0500
+From: Rob Herring <robh@kernel.org>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	bhelgaas@google.com
+Subject: Re: [PATCH next 1/2] PCI: keystone: add pci error irq handler
+Message-ID: <20160323151027.GA17771@rob-hp-laptop>
+References: <1458676378-24377-1-git-send-email-m-karicheri2@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1458676378-24377-1-git-send-email-m-karicheri2@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2016-03-07 at 09:20 +0100, Christoph Fritz wrote:
-> On Thu, 2016-03-03 at 01:48 +0000, Richard Zhu wrote:
-> > > -----Original Message-----
-> > > From: Christoph Fritz [mailto:chf.fritz@googlemail.com]
-> > > Sent: Thursday, February 25, 2016 10:48 PM
-> > > To: Richard Zhu; Lucas Stach; Shawn Guo; Fabio Estevam; Bjorn Helgaas; Lee
-> > > Jones
-> > > Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org
-> > > Subject: [PATCH v3 0/2] Add PCIe driver support for imx6sx
-> > > 
-> > > v3:
-> > >  * adapt devicetree bindings documentation fsl,imx6q-pcie.txt
-> > > v2:
-> > >  * leave out regulator handling from driver, will be done later
-> > >    in PM subsystem
-> > >  * use BIT() macro for MFD
-> > > 
-> > > Christoph Fritz (2):
-> > >   MFD: imx6sx: Add PCIe register definitions for iomuxc gpr
-> > >   PCI: imx6: add initial imx6sx support
-> > > 
-> > >  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |   6 +-
-> > >  drivers/pci/host/pci-imx6.c                        | 130 ++++++++++++++-------
-> > >  include/linux/mfd/syscon/imx6q-iomuxc-gpr.h        |   5 +
-> > >  3 files changed, 101 insertions(+), 40 deletions(-)
-> > > 
-> > > --
-> > > 2.1.4
-> > 
-> > [Zhu hongxing]  Acked-by: Richard Zhu <Richard.Zhu@freescale.com>
-> > Richard
-> > Best Regards
+On Tue, Mar 22, 2016 at 03:52:57PM -0400, Murali Karicheri wrote:
+> Keystone PCI hardware generates error interrupts at RC using platform
+> irq instead of standard msi/legacy irq. Add a simple error handler that
+> logs the fatal interrupt status to the console.
 > 
-> @Bjorn: I suppose the PCI patch need to go through your tree. Would you
-> pick up this patch?
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Pawel Moll <pawel.moll@arm.com>
+> Cc: Mark Rutland <mark.rutland@arm.com>
+> Cc: Ian Campbell <ijc+devicetree@hellion.org.uk>
+> Cc: Kumar Gala <galak@codeaurora.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  .../devicetree/bindings/pci/pci-keystone.txt       |  1 +
 
-*ping*
-Do you want me to rebase my patch to your pci/host-imx6 branch?
+Acked-by: Rob Herring <robh@kernel.org>
 
-Thanks
- -- Christoph
-
+>  drivers/pci/host/pci-keystone-dw.c                 | 46 ++++++++++++++++++++++
+>  drivers/pci/host/pci-keystone.c                    | 32 +++++++++++++++
+>  drivers/pci/host/pci-keystone.h                    |  6 +++
+>  4 files changed, 85 insertions(+)
