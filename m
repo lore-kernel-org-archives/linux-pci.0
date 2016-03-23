@@ -1,65 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:59258 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754889AbcCOOYH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Mar 2016 10:24:07 -0400
-Subject: Re: [PATCH] Remove the inclusion of pci-bridge.h and pci-dma-compat.h
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-References: <d3ed7b3e4f746831a5d0469da5361b4cd176f5c6.1457978659.git.jpinto@synopsys.com>
- <20160315135127.GC19974@localhost>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-snps-arc@lists.infradead.org>, <Vineet.Gupta1@synopsys.com>,
-	<Alexey.Brodkin@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <56E81B01.3010400@synopsys.com>
-Date: Tue, 15 Mar 2016 14:24:01 +0000
-MIME-Version: 1.0
-In-Reply-To: <20160315135127.GC19974@localhost>
-Content-Type: text/plain; charset="windows-1252"
+Received: from mail.codelabs.ch ([217.150.249.120]:58090 "EHLO
+	fenrir.codelabs.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754534AbcCWKok (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Mar 2016 06:44:40 -0400
+From: Adrian-Ken Rueegsegger <ken@codelabs.ch>
+To: linux-pci@vger.kernel.org
+Cc: ken@codelabs.ch
+Subject: PCI support check in pcibios_init()
+Date: Wed, 23 Mar 2016 11:34:28 +0100
+Message-Id: <1458729269-9440-1-git-send-email-ken@codelabs.ch>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi,
 
-No problem! Thanks!
+We are running Linux as a VM on top of the Muen Separation Kernel [1], where
+we only allow PCI config space access of pass-through devices via MMCONFIG. In
+this use case the PCI support check in pcibios_init() fails as raw_pci_ops is
+not set:
 
-On 3/15/2016 1:51 PM, Bjorn Helgaas wrote:
-> On Tue, Mar 15, 2016 at 11:06:02AM +0000, Joao Pinto wrote:
->> While building linux-next the test robot detected that the pci.h was including
->> two removed header files (pci-dma-compat.h and pci-bridge.h) causing the
->> process to fail:
->> http://lists.infradead.org/pipermail/linux-snps-arc/2016-March/000711.html
->>
->> This patch has the goal to fix the build problem.
->>
->> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> 
-> Thanks, Joao, I folded this fix into the original commit.  I should have
-> caught this myself, since I'm the one who removed pci-bridge.h.
-> 
->> ---
->>  arch/arc/include/asm/pci.h | 3 ---
->>  1 file changed, 3 deletions(-)
->>
->> diff --git a/arch/arc/include/asm/pci.h b/arch/arc/include/asm/pci.h
->> index 2f2011c..ba56c23 100644
->> --- a/arch/arc/include/asm/pci.h
->> +++ b/arch/arc/include/asm/pci.h
->> @@ -10,9 +10,6 @@
->>  #define _ASM_ARC_PCI_H
->>  
->>  #ifdef __KERNEL__
->> -#include <asm-generic/pci-dma-compat.h>
->> -#include <asm-generic/pci-bridge.h>
->> -
->>  #include <linux/ioport.h>
->>  
->>  #define PCIBIOS_MIN_IO 0x100
->> -- 
->> 1.8.1.5
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+int __init pcibios_init(void)
+{
+    if (!raw_pci_ops) {
+        printk(KERN_WARNING "PCI: System does not support PCI\n");
+        return 0;
+    }
+	...
+}
+
+As a consequence device resources are not allocated since the following call to
+pcibios_resource_survey() is skipped. Extending the check to also consider
+raw_pci_ext_ops (see patch) leads to the proper resource allocation in our use
+case.
+
+Is the described change the correct solution or is there a particular reason to
+only check raw_pci_ops in pcibios_init()?
+
+Regards,
+Adrian
+
+[1] - https://muen.codelabs.ch/
 
