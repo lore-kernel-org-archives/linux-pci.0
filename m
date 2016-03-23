@@ -1,38 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:41584 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933535AbcCNHoy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 14 Mar 2016 03:44:54 -0400
-Message-ID: <56E66BF3.4080500@intel.com>
-Date: Mon, 14 Mar 2016 15:44:51 +0800
-From: "Yong, Jonathan" <jonathan.yong@intel.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	"Yong, Jonathan" <jonathan.yong@intel.com>
-Subject: Re: [PATCH] PCI: PTM preliminary implementation
-References: <1457681184-20439-1-git-send-email-jonathan.yong@intel.com> <1457681184-20439-2-git-send-email-jonathan.yong@intel.com> <20160311155332.GA31716@localhost>
-In-Reply-To: <20160311155332.GA31716@localhost>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail.codelabs.ch ([217.150.249.120]:58089 "EHLO
+	fenrir.codelabs.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752037AbcCWKok (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Mar 2016 06:44:40 -0400
+From: Adrian-Ken Rueegsegger <ken@codelabs.ch>
+To: linux-pci@vger.kernel.org
+Cc: ken@codelabs.ch
+Subject: [RFC PATCH] x86/PCI: Refine PCI support check in pcibios_init()
+Date: Wed, 23 Mar 2016 11:34:29 +0100
+Message-Id: <1458729269-9440-2-git-send-email-ken@codelabs.ch>
+In-Reply-To: <1458729269-9440-1-git-send-email-ken@codelabs.ch>
+References: <1458729269-9440-1-git-send-email-ken@codelabs.ch>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/11/2016 23:53, Bjorn Helgaas wrote:
+Also consider raw_pci_ext_ops when validating if a system has PCI
+support. This leads to proper resource allocation via
+pcibios_resource_survey() in the case where PCI config space is
+exclusively accessed through MMCONFIG.
 
-> I haven't read the PTM spec yet so I don't know how it works.  But in
-> general, I don't like having to tweak a setting all the way up the
-> hierarchy based on a leaf device.  That makes it hard to handle
-> hotplug correctly, because obviously there may be many leaf devices
-> that share part of all of the upstream path.
->
+Signed-off-by: Adrian-Ken Rueegsegger <ken@codelabs.ch>
+---
+ arch/x86/pci/common.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-This part in 6.22.3 in the PCIe 3.1 spec:
-
-Software must not have the PTM Enable bit Set in the PTM Control 
-register on a Function associated with an Upstream Port unless the 
-associated Downstream Port on the Link already has the PTM Enable bit 
-Set in its associated PTM Control register.
-
-Seems to suggest starting from the leaf device, I'm open to suggestions 
-on how to better do this.
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 8fd6f44..50b123d 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -517,7 +517,7 @@ void __init pcibios_set_cache_line_size(void)
+ 
+ int __init pcibios_init(void)
+ {
+-	if (!raw_pci_ops) {
++	if (!raw_pci_ops && !raw_pci_ext_ops) {
+ 		printk(KERN_WARNING "PCI: System does not support PCI\n");
+ 		return 0;
+ 	}
+-- 
+2.1.4
 
