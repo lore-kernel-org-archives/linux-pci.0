@@ -1,52 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v11 0/4] ARC: Add PCI support
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Joao Pinto <Joao.Pinto@synopsys.com>
-References: <20160226162554.11964.96983.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <6C7E76B729B341419CE4B84926C1D2CD010BCE1D@DE02WEMBXB.internal.synopsys.com>
- <20160229192211.GA10370@localhost>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"Alexey.Brodkin@synopsys.com" <Alexey.Brodkin@synopsys.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"pawel.moll@arm.com" <pawel.moll@arm.com>,
-	"ijc+devicetree@hellion.org.uk" <ijc+devicetree@hellion.org.uk>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Vineet.Gupta1@synopsys.com" <Vineet.Gupta1@synopsys.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"CARLOS.PALMINHA@synopsys.com" <CARLOS.PALMINHA@synopsys.com>,
-	"robh+dt@kernel.org" <robh+dt@kernel.org>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	"galak@codeaurora.org" <galak@codeaurora.org>,
-	"Jingoo Han" <jingoohan1@gmail.com>,
-	"linux-snps-arc@lists.infradead.org"
-	<linux-snps-arc@lists.infradead.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <56D57594.8000004@synopsys.com>
-Date: Tue, 1 Mar 2016 10:57:24 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from li153-180.members.linode.com ([109.74.206.180]:36811 "EHLO
+	mail.tekno-soft.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751925AbcCWLBz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 23 Mar 2016 07:01:55 -0400
+Subject: Re: iMX6q: Kernel panic when enabling interrupt for more than 2 cards
+ behind a PCIe-to-PCI bridge
+To: Lucas Stach <l.stach@pengutronix.de>
+References: <56F1747A.7080602@tekno-soft.it>
+ <CAOMZO5Ccu-w9cSRwSP0gQC+JAWh9Mn6VW3+33wzVW1nfRdbQcw@mail.gmail.com>
+ <1458728766.2171.39.camel@pengutronix.de> <56F2727F.8080205@tekno-soft.it>
+ <1458730121.2171.44.camel@pengutronix.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <hongxing.zhu@nxp.com>,
+	Fabio Estevam <festevam@gmail.com>
+From: Roberto Fichera <kernel@tekno-soft.it>
+Message-ID: <56F27792.9080600@tekno-soft.it>
+Date: Wed, 23 Mar 2016 12:01:38 +0100
 MIME-Version: 1.0
-In-Reply-To: <20160229192211.GA10370@localhost>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1458730121.2171.44.camel@pengutronix.de>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi!
-
-On 2/29/2016 7:22 PM, Bjorn Helgaas wrote:
-> On Mon, Feb 29, 2016 at 06:30:52PM +0000, Joao Pinto wrote:
->> Hi Bjorn!
+On 03/23/2016 11:48 AM, Lucas Stach wrote:
+> Am Mittwoch, den 23.03.2016, 11:39 +0100 schrieb Roberto Fichera:
+>> On 03/23/2016 11:26 AM, Lucas Stach wrote:
 >>
->> Is it possible to pull this patch set into 4.5?
-> 
-> No, it's a little late for v4.5.  We're already at v4.5-rc6, so it's
-> only critical bug fixes until the v4.6 merge window opens.
+>> Hi Lucas,
+>>
+>>> Am Mittwoch, den 23.03.2016, 07:13 -0300 schrieb Fabio Estevam:
+>>>> On Tue, Mar 22, 2016 at 1:36 PM, Roberto Fichera <kernel@tekno-soft.it> wrote:
+>>>>> Hi All,
+>>>>>
+>>>>> I'm getting a kernel panic with a kernel v4.4.x when enabling interrupt for 2 cards behind a PCIe-to-PCI bridge
+>>>>> not sharing the same IRQ. If they don't share the same IRQ most often I'm getting a message claiming the emmc
+>>>>> is stuck. I've disabled MSI from PCI config because the cards are not getting any interrupt delivered.
+>>> Is the interrupt-map on your PCIe-to-PCI bridge correct? If it isn't the
+>>> CPU may drown in unhandled IRQ storms.
+>> Can you please be more specific? Are you talking about INTA/B/C/D mapping?
+>>
+> Yes. If you are using legacy interrupts that are not shared between
+> devices I suppose you are using multiple IRQ pins.
+>
+> The interrupt-map on the i.MX6 PCI controller maps those legacy IRQs to
+> the internal ARM GIC IRQs, but it doesn't say anything about how your
+> bridge maps them.
+>
+> If it doesn't map them 1:1, you need to have an interrupt-map property
+> at the bridge to define how the mapping is done.
 
-Ok, makes sense!
+Ok! Now I see! The bridge uses only INTA/B for the miniPCI slots
 
 >
-> Bjorn
+> Regards,
+> Lucas
+>
+>
 >
 
-Thanks!
-Joao
