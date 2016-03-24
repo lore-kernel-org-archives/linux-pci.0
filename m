@@ -1,49 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:34225 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752573AbcCaXNv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Mar 2016 19:13:51 -0400
-Date: Fri, 1 Apr 2016 00:13:46 +0100
-From: Chris Bainbridge <chris.bainbridge@gmail.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-Message-ID: <20160331231346.GA7469@localhost>
-References: <E1akxli-00030z-BC@bombadil.infradead.org>
+Received: from mga04.intel.com ([192.55.52.120]:18699 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756561AbcCXQmB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 24 Mar 2016 12:42:01 -0400
+Date: Thu, 24 Mar 2016 16:42:00 +0000
+From: Keith Busch <keith.busch@intel.com>
+To: Jon Derrick <jonathan.derrick@intel.com>
+Cc: helgaas@kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci: Added flag to pci_host_bridge to hint not to use
+ acpi
+Message-ID: <20160324164159.GB25518@localhost.localdomain>
+References: <1458770518-10203-1-git-send-email-jonathan.derrick@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E1akxli-00030z-BC@bombadil.infradead.org>
+In-Reply-To: <1458770518-10203-1-git-send-email-jonathan.derrick@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 29, 2016 at 07:41:30PM +0200, Lukas Wunner wrote:
-> Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ storm
-> on boot until they are reset, causing spurious interrupts if the IRQ is
-> shared. Apparently the EFI bootloader enables the device and does not
-> disable it before passing control to the OS. The bootloader contains a
-> driver for the wireless card which allows it to phone home to Cupertino.
-> This is used for Internet Recovery (download and install OS X images)
-> and probably also for Back to My Mac (remote access, RFC 6281) and to
-> discover stolen hardware.
+On Wed, Mar 23, 2016 at 04:01:58PM -0600, Jon Derrick wrote:
+> This patch adds a hint, no_acpi, to the pci_host_bridge struct which
+> informs the hotplug driver to not try and release the host bridge from
+> acpi.
 > 
-> The issue is most pronounced on 2011 and 2012 MacBook Pros where the IRQ
-> is shared with 3 other devices (Light Ridge Thunderbolt controller, SDXC
-> reader, HDA card on discrete GPU). As soon as an interrupt handler is
-> installed for one of these devices, the ensuing storm of spurious IRQs
-> causes the kernel to disable the IRQ and switch to polling. This lasts
-> until the b43 driver loads and resets the device.
-> 
-> Loading the b43 driver first is not always an option, in particular with
-> the Light Ridge Thunderbolt controller: The PCI hotplug IRQ handler gets
-> installed early on because it is built in, unlike b43 which is usually
-> a module.
-> 
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632
+> The VMD driver creates a root port which does not have an acpi entry.
+> This patch will allow the hotplug driver to bypass acpi release when
+> enumerating the VMD root port as a hotplug slot.
 
-Should also fix https://bugzilla.kernel.org/show_bug.cgi?id=111781 ?
-Given that this is a serious bug that can corrupt filesystems it would
-be good to see the fix in stable too.
+I want to add a little context to this for the motivation for this
+implementation.
+
+Currently we have to set kernel parameter "pcie_ports=native" for pciehp
+to work on these domains since they are not known to ACPI. We don't want
+to force a system wide PCIe parameter for something specific to a subset
+of domains.
+
+If the implementation here sounds reasonable, I suggest having a helper
+API function in pci to check for the host bridge requested acpi disabled.
+
+>  arch/x86/pci/vmd.c              | 4 ++++
+>  drivers/pci/pcie/portdrv_acpi.c | 5 +++++
+>  include/linux/pci.h             | 1 +
+>  3 files changed, 10 insertions(+)
+> 
+> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
+> index 7792aba..a196be3 100644
+> --- a/arch/x86/pci/vmd.c
+> +++ b/arch/x86/pci/vmd.c
+> @@ -531,6 +531,7 @@ static int vmd_find_free_domain(void)
+>  static int vmd_enable_domain(struct vmd_dev *vmd)
+>  {
+>  	struct pci_sysdata *sd = &vmd->sysdata;
+> +	struct pci_host_bridge *host_bridge;
+>  	struct resource *res;
+>  	u32 upper_bits;
+>  	unsigned long flags;
+> @@ -609,6 +610,9 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
+>  		return -ENODEV;
+>  	}
+>  
+> +	host_bridge = to_pci_host_bridge(vmd->bus->bridge);
+> +	host_bridge->no_acpi = true;
+> +
+>  	vmd_attach_resources(vmd);
+>  	vmd_setup_dma_ops(vmd);
+>  	dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
+> diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
+> index b4d2894..0e6fa69 100644
+> --- a/drivers/pci/pcie/portdrv_acpi.c
+> +++ b/drivers/pci/pcie/portdrv_acpi.c
+> @@ -35,12 +35,17 @@
+>  int pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
+>  {
+>  	struct acpi_pci_root *root;
+> +	struct pci_host_bridge *host_bridge;
+>  	acpi_handle handle;
+>  	u32 flags;
+>  
+>  	if (acpi_pci_disabled)
+>  		return 0;
+>  
+> +	host_bridge = pci_find_host_bridge(port->bus);
+> +	if (host_bridge && host_bridge->no_acpi)
+> +		return 0;
+> +
+>  	handle = acpi_find_root_bridge_handle(port);
+>  	if (!handle)
+>  		return -EINVAL;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 15f466e..a6958e9b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -407,6 +407,7 @@ struct pci_host_bridge {
+>  	void (*release_fn)(struct pci_host_bridge *);
+>  	void *release_data;
+>  	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
+> +	unsigned int no_acpi:1;			/* bypasses acpi release */
+>  	/* Resource alignment requirements */
+>  	resource_size_t (*align_resource)(struct pci_dev *dev,
+>  			const struct resource *res,
+> -- 
+> 1.8.3.1
