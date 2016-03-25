@@ -1,82 +1,141 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V2] acpi, pci, irq: account for early penalty assignment
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <20160301194340.GA19783@localhost>
- <56D7317F.7090500@codeaurora.org> <56D7ABFB.3070302@codeaurora.org>
- <56D84EA9.3080900@codeaurora.org> <20160303151048.GA3290@localhost>
- <56D8546B.5040908@codeaurora.org> <56D8745D.70509@codeaurora.org>
- <20160304180959.GA4794@localhost> <56DDB28F.1040300@codeaurora.org>
- <20160308002558.GC26149@localhost> <20160308002909.GA13250@localhost>
-Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org, linux-pci@vger.kernel.org,
-	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
-	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
-	rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
-	Thomas Gleixner <tglx@linutronix.de>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <56DF2258.8020004@codeaurora.org>
-Date: Tue, 8 Mar 2016 14:04:56 -0500
-MIME-Version: 1.0
-In-Reply-To: <20160308002909.GA13250@localhost>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ozlabs.org ([103.22.144.67]:45437 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751239AbcCYJdI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 25 Mar 2016 05:33:08 -0400
+In-Reply-To: <1458337746-20337-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+From: Michael Ellerman <mpe@ellerman.id.au>
+Cc: mikey@neuling.org, gpiccoli@linux.vnet.ibm.com,
+	linux-pci@vger.kernel.org, gwshan@linux.vnet.ibm.com,
+	paulus@samba.org, imunsie@au1.ibm.com,
+	andrew.donnellan@au1.ibm.com, bhelgaas@google.com
+Subject: Re: [v4] powerpc/pci: Assign fixed PHB number based on device-tree properties
+Message-Id: <3qWdQC0MVDz9s9Y@ozlabs.org>
+Date: Fri, 25 Mar 2016 20:33:06 +1100 (AEDT)
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Guilherme,
 
->>>> I think there are two issues here that should be teased apart a bit
->>>> more:
->>>>
->>>>   1) Trigger settings: If the IRQ is configured as anything other than
->>>>   level-triggered, active-low, we can't use it at all for a PCI
->>>>   interrupt, and we should return an "infinite" penalty.  We currently
->>>>   increase the penalty for the SCI IRQ if it's not level/low, but
->>>>   doesn't it apply to *all* IRQs, not just the SCI IRQ?
->>>
->>> It makes sense for SCI as it is Intel specific.
->>>
->>> Unfortunately, this cannot be done in an arch independent way. Of course,
->>> ARM had to implement its own thing. While level-triggered, active-low is
->>> good for intel world, it is not for the ARM world. ARM uses active-high
->>> level triggered.
->>
->> I'm confused.  I don't think SCI is Intel-specific.  Per PCI Spec
->> r3.0, sec 2.2.6, PCI interrupts are level-sensitive, asserted low.
->> Per ACPI Spec v3.0, sec 2.1, the SCI is an "active, low, shareable,
->> level interrupt".
->>
->> Are you saying SCI is active-high on ARM?  If so, I don't think that's
->> necessarily a huge problem, although we'd have to audit the ACPI code
->> to make sure we handle it correctly.
+Some comments below ...
 
-We don't have an SCI interrupt on ARM. That's why, I assumed it is an Intel specific
-interrupt. However, all legacy interrupts are active-high level sensitive. This is a
-limitation of the ARM GIC Interrupt Controller.
+On Fri, 2016-18-03 at 21:49:06 UTC, "Guilherme G. Piccoli" wrote:
+> The domain/PHB field of PCI addresses has its value obtained from a
+> global variable, incremented each time a new domain (represented by
+> struct pci_controller) is added on the system. The domain addition
+> process happens during boot or due to PCI device hotplug.
+> 
+> As recent kernels are using predictable naming for network interfaces,
+> the network stack is more tied to PCI naming. This can be a problem in
+> hotplug scenarios, because PCI addresses will change if devices are
+> removed and then re-added. This situation seems unusual, but it can
+> happen if a user wants to replace a NIC without rebooting the machine,
+> for example.
+> 
+> This patch changes the way PCI domain values are generated: now, we use
+> device-tree properties to assign fixed PHB numbers to PCI addresses
+> when available (meaning pSeries and PowerNV cases). We also use a bitmap
+> to allow dynamic PHB numbering when device-tree properties are not
+> used. This bitmap keeps track of used PHB numbers and if a PHB is
+> released (by hotplug operations for example), it allows the reuse of
+> this PHB number, avoiding PCI address to change in case of device remove
+> and re-add soon after. No functional changes were introduced.
+> 
+> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/kernel/pci-common.c | 40 +++++++++++++++++++++++++++++++++++++---
+>  1 file changed, 37 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> index 0f7a60f..bc31ac1 100644
+> --- a/arch/powerpc/kernel/pci-common.c
+> +++ b/arch/powerpc/kernel/pci-common.c
+> @@ -44,8 +44,11 @@
+>  static DEFINE_SPINLOCK(hose_spinlock);
+>  LIST_HEAD(hose_list);
+>  
+> -/* XXX kill that some day ... */
+> -static int global_phb_number;		/* Global phb counter */
+> +/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
+> +#define	MAX_PHBS	8192
 
-Here is what a PCI Link object looks like.
+Did we just make that up? It seems like a lot, but then we have some big
+systems?
 
-Device(LN0D){
-	Name(_HID, EISAID("PNP0C0F")) // PCI interrupt link
-	Name(_UID, 4)
-	Name(_PRS, ResourceTemplate(){
-		Interrupt(ResourceProducer, Level, ActiveHigh, Exclusive, , ,) {123}
-	})
-	Method(_DIS) {}
-	Method(_CRS) { Return (_PRS) }
-	Method(_SRS, 1) {}
-} 
+> +/* For dynamic PHB numbering: used/free PHBs tracking bitmap. */
 
->>
->> The point here is that a PCI Interrupt Link can only use an IRQ that
->> is level-triggered, active low.  If an IRQ is already set to any other
->> state, whether for an ISA device or for an active-high SCI, we can't
->> use it for a PCI Interrupt Link.
+Locking? It looks like it's protected by the hose_spinlock, but you should say
+that here, and also in the comment for hose_spinlock.
 
-Unfortunately, this still doesn't hold. 
+> +static DECLARE_BITMAP(phb_bitmap, MAX_PHBS);
+>  
+>  /* ISA Memory physical address */
+>  resource_size_t isa_mem_base;
+> @@ -64,6 +67,32 @@ struct dma_map_ops *get_pci_dma_ops(void)
+>  }
+>  EXPORT_SYMBOL(get_pci_dma_ops);
+>  
 
-A patch is long overdue for this series. I'll post v3. We can go from there.
+There should be a comment here saying what the locking requirements are for
+this function.
 
+> +static int get_phb_number(struct device_node *dn)
+> +{
+> +	const __be64 *prop64;
+> +	const __be32 *regs;
+> +	int phb_id = 0;
+> +
+> +	/* try fixed PHB numbering first, by checking archs and reading
+> +	 * the respective device-tree property. */
+> +	if (machine_is(pseries)) {
 
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+Firstly I don't see why this check needs to be conditional on pseries. Any
+machine where the PHB has a 'reg' property should be able to use 'reg' for
+numbering.
+
+> +		regs = of_get_property(dn, "reg", NULL);
+> +		if (regs)
+> +			return (int)(be32_to_cpu(regs[1]) & 0xFFFF);
+
+This should use of_property_read_u32().
+
+> +	} else if (machine_is(powernv)) {
+
+This shouldn't be a machine check, it should just look for 'ibm,opal-phbid'
+first, before 'reg'.
+
+> +		prop64 = of_get_property(dn, "ibm,opal-phbid", NULL);
+> +		if (prop64)
+> +			return (int)(be64_to_cpup(prop64) & 0xFFFF);
+
+of_property_read_u64().
+
+> +	}
+
+And finally in either case above, where you get a number from the device tree,
+you must check that it's not already allocated. Otherwise if you have a system
+where some PHBs have a property but others don't, you may give out the same
+number twice. Also you could have firmware give you the same number twice
+(which would be a firmware bug, but those happen).
+
+If the number is allocated you fall back to dynamic numbering.
+
+If it's not allocated you must mark it as allocated in the bitmap.
+
+> +
+> +	/* if not pSeries nor PowerNV, fallback to dynamic PHB numbering */
+> +	phb_id = find_first_zero_bit(phb_bitmap, MAX_PHBS);
+> +	BUG_ON(phb_id >= MAX_PHBS); /* reached maximum number of PHBs */
+> +	set_bit(phb_id, phb_bitmap);
+> +
+> +	return phb_id;
+> +}
+> +
+>  struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
+>  {
+>  	struct pci_controller *phb;
+
+cheers
