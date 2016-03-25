@@ -1,82 +1,180 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:33719 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751422AbcCYCAf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 24 Mar 2016 22:00:35 -0400
 MIME-Version: 1.0
-In-Reply-To: <56C28633.60003@codeaurora.org>
-References: <1455554508-18174-1-git-send-email-okaya@codeaurora.org>
-	<CAJZ5v0iszEN+ep8yGNX35RP04_ZwnF1K_w+VW5tFR9Jz2_ZJqw@mail.gmail.com>
-	<56C28633.60003@codeaurora.org>
-Date: Wed, 24 Feb 2016 14:04:48 +0100
-Message-ID: <CAJZ5v0j7CwbBw+i1Fc6OCkHO5AZvdLo8yeDhk4asyCFB68ghKg@mail.gmail.com>
-Subject: Re: [PATCH] acpi, pci, irq: account for early penalty assignment
+Date: Fri, 25 Mar 2016 03:00:32 +0100
+Message-ID: <CAJZ5v0jZxKwpdQq1fpnBZoxcaCYw4S9rsjgB9kPKRAx24A0_qg@mail.gmail.com>
+Subject: [GIT PULL] Power management and ACPI material for v4.6-rc1, part 2
 From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Timur Tabi <timur@codeaurora.org>,
-	Christopher Covington <cov@codeaurora.org>,
-	Linux PCI <linux-pci@vger.kernel.org>, ravikanth.nalla@hpe.com,
-	Len Brown <lenb@kernel.org>, harish.k@hpe.com,
-	ashwin.reghunandanan@hpe.com, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
 	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Hi Linus,
 
-On Tue, Feb 16, 2016 at 3:15 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> On 2/15/2016 7:26 PM, Rafael J. Wysocki wrote:
->> On Mon, Feb 15, 2016 at 5:41 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
->>> A crash has been observed when assigning penalty on x86 systems.
->>>
->>> It looks like this problem happens on x86 platforms with IOAPIC and an SCI
->>> interrupt override in the ACPI table with interrupt number greater than
->>> 16. (22 in this example)
->>>
->>> The bug has been introduced by "ACPI, PCI, irq: remove interrupt count
->>> restriction" commit. The code was using kmalloc to resize the interrupt
->>> list. In this use case, the set penalty call is coming from early phase
->>> and the heap is not initialized yet.
->>>
->>> BUG: unable to handle kernel NULL pointer dereference at 0000000000000018
->>> IP: [<ffffffff811e8b9d>] kmem_cache_alloc_trace+0xad/0x1c0
->>> PGD 0
->>> Oops: 0000 [#1] SMP
->>> Modules linked in:
->>> CPU: 0 PID: 0 Comm: swapper Not tainted 4.5.0-rc2Feb-3_RK #1
->>> Hardware name: HP Superdome2 16s, BIOS Bundle: 007.006.000 SFW: 033.162.000
->>> 10/30/2015
->>> [<ffffffff813bc190>] acpi_irq_set_penalty+0x60/0x8e
->>> [<ffffffff813bc1df>] acpi_irq_add_penalty+0x21/0x26
->>> [<ffffffff813bc76d>] acpi_penalize_sci_irq+0x25/0x28
->>> [<ffffffff81b8260d>] acpi_sci_ioapic_setup+0x68/0x78
->>> [<ffffffff81b830fc>] acpi_boot_init+0x2cc/0x533
->>> [<ffffffff810677c8>] ? set_pte_vaddr_pud+0x48/0x50
->>> [<ffffffff81b828cf>] ? acpi_parse_x2apic+0x77/0x77
->>> [<ffffffff81b82858>] ? dmi_ignore_irq0_timer_override+0x30/0x30
->>> [<ffffffff81b77c1e>] setup_arch+0xc24/0xce9
->>> [<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
->>> [<ffffffff81b6ed94>] start_kernel+0xfc/0x506
->>> [<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
->>> [<ffffffff81b6e120>] ? early_idt_handler_array+0x120/0x120
->>> [<ffffffff81b6e5ee>] x86_64_start_reservations+0x2a/0x2c
->>> [<ffffffff81b6e73c>] x86_64_start_kernel+0x14c/0x16f
->>>
->>> Besides from the use case above, there is one more situation where
->>> set_penalty is being called from the init context like. There is support
->>> for setting the penalty through kernel command line.
->>>
->>> Adding support to be called from early context for limited number of
->>> interrupts.
->>>
->>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->>
->> This looks somewhat hackish to me to be honest.
-> I know.
+Please pull from
 
-So after an e-mail exchange with Bjorn I've decided to revert the
-problematic commit for 4.5, so please submit it again with the fix
-folded in (or a better way to address the issue if you have one).
+ git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+ pm+acpi-4.6-rc1-2
 
-Thanks,
-Rafael
+to receive the second batch of power management and ACPI updates for
+v4.6-rc1 with top-most commit ee0140dc8ffc89bdc7b74a858089d5a75a654b4a
+
+ Merge branches 'acpi-soc', 'acpi-misc', 'acpi-pci' and 'device-properties'
+
+on top of commit 277edbabf6fece057b14fb6db5e3a34e00f42f42
+
+ Merge tag 'pm+acpi-4.6-rc1-1' of
+git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm
+
+Included are fixups on top of the previous PM/ACPI pull request and
+other material that didn't make into it but still should go into 4.6.
+
+Among other things, there's a fix for an intel_pstate driver
+issue uncovered by recent cpufreq changes, a workaround for a
+boot hang on Skylake-H related to the handling of deep C-states
+by the platform and a PCI/ACPI fix for the handling of IO port
+resources on non-x86 architectures plus some new device IDs and
+similar.
+
+Specifics:
+
+ - Fix for an intel_pstate driver issue related to the handling of
+   MSR updates uncovered by the recent cpufreq rework (Rafael Wysocki).
+
+ - cpufreq core cleanups related to starting governors and frequency
+   synchronization during resume from system suspend and a locking
+   fix for cpufreq_quick_get() (Rafael Wysocki, Richard Cochran).
+
+ - acpi-cpufreq and powernv cpufreq driver updates (Jisheng Zhang,
+   Michael Neuling, Richard Cochran, Shilpasri Bhat).
+
+ - intel_idle driver update preventing some Skylake-H systems
+   from hanging during initialization by disabling deep C-states
+   mishandled by the platform in the problematic configurations (Len
+   Brown).
+
+ - Intel Xeon Phi Processor x200 support for intel_idle (Dasaratharaman
+   Chandramouli).
+
+ - cpuidle menu governor updates to make it always honor PM QoS
+   latency constraints (and prevent C1 from being used as the
+   fallback C-state on x86 when they are set below its exit latency)
+   and to restore the previous behavior to fall back to C1 if the next
+   timer event is set far enough in the future that was changed in 4.4
+   which led to an energy consumption regression (Rik van Riel, Rafael
+   Wysocki).
+
+ - New device ID for a future AMD UART controller in the ACPI driver
+   for AMD SoCs (Wang Hongcheng).
+
+ - Rockchip rk3399 support for the rockchip-io-domain adaptive voltage
+   scaling (AVS) driver (David Wu).
+
+ - ACPI PCI resources management fix for the handling of IO space
+   resources on architectures where the IO space is memory mapped
+   (IA64 and ARM64) broken by the introduction of common ACPI
+   resources parsing for PCI host bridges in 4.4 (Lorenzo Pieralisi).
+
+ - Fix for the ACPI backend of the generic device properties API
+   to make it parse non-device (data node only) children of an
+   ACPI device correctly (Irina Tirdea).
+
+ - Fixes for the handling of global suspend flags (introduced in 4.4)
+   during hibernation and resume from it (Lukas Wunner).
+
+ - Support for obtaining configuration information from Device Trees
+   in the PM clocks framework (Jon Hunter).
+
+ - ACPI _DSM helper code and devfreq framework cleanups (Colin Ian
+   King, Geert Uytterhoeven).
+
+Thanks!
+
+
+---------------
+
+Colin Ian King (1):
+      ACPI / util: cast data to u64 before shifting to fix sign extension
+
+Dasaratharaman Chandramouli (1):
+      intel_idle: Support for Intel Xeon Phi Processor x200 Product Family
+
+David Wu (1):
+      PM / AVS: rockchip-io: add io selectors and supplies for rk3399
+
+Geert Uytterhoeven (1):
+      PM / devfreq: Spelling s/frequnecy/frequency/
+
+Irina Tirdea (1):
+      ACPI / property: fix data node parsing in acpi_get_next_subnode()
+
+Jisheng Zhang (1):
+      cpufreq: acpi-cpufreq: make Intel/AMD MSR access, io port access static
+
+Jon Hunter (1):
+      PM / clk: Add support for obtaining clocks from device-tree
+
+Len Brown (1):
+      intel_idle: prevent SKL-H boot failure when C8+C9+C10 enabled
+
+Lorenzo Pieralisi (1):
+      PCI: ACPI: IA64: fix IO port generic range check
+
+Lukas Wunner (2):
+      PM / sleep: Clear pm_suspend_global_flags upon hibernate
+      ACPI / PM: Runtime resume devices when waking from hibernate
+
+Michael Neuling (1):
+      cpufreq: powernv: Define per_cpu chip pointer to optimize hot-path
+
+Rafael J. Wysocki (6):
+      intel_pstate: Do not call wrmsrl_on_cpu() with disabled interrupts
+      cpuidle: menu: Fall back to polling if next timer event is near
+      cpufreq: Introduce cpufreq_start_governor()
+      cpufreq: Introduce cpufreq_update_current_freq()
+      cpufreq: Always update current frequency before startig governor
+      cpufreq: governor: Always schedule work on the CPU running update
+
+Richard Cochran (2):
+      cpufreq: Make cpufreq_quick_get() safe to call
+      cpufreq: acpi-cpufreq: Clean up hot plug notifier callback
+
+Rik van Riel (1):
+      cpuidle: menu: use high confidence factors only when considering polling
+
+Shilpasri G Bhat (1):
+      cpufreq: powernv: Add sysfs attributes to show throttle stats
+
+Wang Hongcheng (1):
+      ACPI / APD: Add device HID for future AMD UART controller
+
+---------------
+
+ Documentation/ABI/testing/sysfs-devices-system-cpu |  69 +++++++++++
+ .../bindings/power/rockchip-io-domain.txt          |  11 ++
+ drivers/acpi/acpi_apd.c                            |   1 +
+ drivers/acpi/property.c                            |   1 +
+ drivers/acpi/resource.c                            |  14 ++-
+ drivers/acpi/sleep.c                               |   1 +
+ drivers/acpi/utils.c                               |   2 +-
+ drivers/base/power/clock_ops.c                     |  89 ++++++++++++++
+ drivers/cpufreq/acpi-cpufreq.c                     |  18 +--
+ drivers/cpufreq/cpufreq.c                          |  98 ++++++++-------
+ drivers/cpufreq/cpufreq_governor.c                 |   2 +-
+ drivers/cpufreq/intel_pstate.c                     |  73 ++++++-----
+ drivers/cpufreq/powernv-cpufreq.c                  | 124 +++++++++++++------
+ drivers/cpuidle/governors/menu.c                   |  50 ++++----
+ drivers/devfreq/Kconfig                            |   2 +-
+ drivers/idle/intel_idle.c                          | 133 +++++++++++++++++----
+ drivers/power/avs/rockchip-io-domain.c             |  58 +++++++++
+ include/linux/pm_clock.h                           |   9 ++
+ kernel/power/hibernate.c                           |   1 +
+ 19 files changed, 593 insertions(+), 163 deletions(-)
