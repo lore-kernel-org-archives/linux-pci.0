@@ -1,112 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47671 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932088AbcCJU7K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 10 Mar 2016 15:59:10 -0500
-Date: Thu, 10 Mar 2016 14:59:05 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jon Derrick <jonathan.derrick@intel.com>
-Cc: keith.busch@intel.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCHv2] VMD: Attach vmd resources to parent domain's resource
- tree
-Message-ID: <20160310205905.GG14873@localhost>
-References: <1456333597-10469-1-git-send-email-jonathan.derrick@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1456333597-10469-1-git-send-email-jonathan.derrick@intel.com>
+Received: from down.free-electrons.com ([37.187.137.238]:38983 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752547AbcC0JbT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Mar 2016 05:31:19 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Hanna Hawa <hannah@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 0/2] pci: host: new driver for Marvell Armada 7K/8K PCIe controller
+Date: Sun, 27 Mar 2016 11:30:56 +0200
+Message-Id: <1459071058-18328-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 24, 2016 at 10:06:37AM -0700, Jon Derrick wrote:
-> This patch attaches the new VMD domain's resources to the VMD device's
-> resources. This allows /proc/iomem to display a more complete picture.
-> 
-> Before:
->   c0000000-c1ffffff : 0000:5d:05.5
->   c2000000-c3ffffff : 0000:5d:05.5
->     c2010000-c2013fff : nvme
->   c4000000-c40fffff : 0000:5d:05.5
-> 
-> After:
->   c0000000-c1ffffff : 0000:5d:05.5
->   c2000000-c3ffffff : 0000:5d:05.5
->     c2000000-c3ffffff : VMD MEMBAR1
->       c2000000-c22fffff : PCI Bus 10000:01
->         c2000000-c200ffff : 10000:01:00.0
->         c2010000-c2013fff : 10000:01:00.0
->           c2010000-c2013fff : nvme
->       c2300000-c24fffff : PCI Bus 10000:01
->   c4000000-c40fffff : 0000:5d:05.5
->     c4002000-c40fffff : VMD MEMBAR2
-> 
-> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+Hello,
 
-Applied with Keith's Reviewed-by to pci/host-vmd for v4.6, thanks, Jon!
+This set of two patches add support for the PCIe controller found in
+the Marvell Armada 7K/8K ARM processors. The first patch adds the
+Device Tree binding documentation, the second patch the driver itself.
 
-> ---
-> v1->v2: Dropped the CFGBAR resource from the tree
->  arch/x86/pci/vmd.c | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
-> 
-> diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-> index d57e480..d0c4542 100644
-> --- a/arch/x86/pci/vmd.c
-> +++ b/arch/x86/pci/vmd.c
-> @@ -503,6 +503,18 @@ static struct pci_ops vmd_ops = {
->  	.write		= vmd_pci_write,
->  };
->  
-> +static void vmd_attach_resources(struct vmd_dev *vmd)
-> +{
-> +	vmd->dev->resource[VMD_MEMBAR1].child = &vmd->resources[1];
-> +	vmd->dev->resource[VMD_MEMBAR2].child = &vmd->resources[2];
-> +}
-> +
-> +static void vmd_detach_resources(struct vmd_dev *vmd)
-> +{
-> +	vmd->dev->resource[VMD_MEMBAR1].child = NULL;
-> +	vmd->dev->resource[VMD_MEMBAR2].child = NULL;
-> +}
-> +
->  /*
->   * VMD domains start at 0x1000 to not clash with ACPI _SEG domains.
->   */
-> @@ -542,6 +554,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
->  		.start = res->start,
->  		.end   = res->end,
->  		.flags = flags,
-> +		.parent = res,
->  	};
->  
->  	res = &vmd->dev->resource[VMD_MEMBAR2];
-> @@ -554,6 +567,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
->  		.start = res->start + 0x2000,
->  		.end   = res->end,
->  		.flags = flags,
-> +		.parent = res,
->  	};
->  
->  	sd->domain = vmd_find_free_domain();
-> @@ -578,6 +592,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
->  		return -ENODEV;
->  	}
->  
-> +	vmd_attach_resources(vmd);
->  	vmd_setup_dma_ops(vmd);
->  	dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
->  	pci_rescan_bus(vmd->bus);
-> @@ -674,6 +689,7 @@ static void vmd_remove(struct pci_dev *dev)
->  {
->  	struct vmd_dev *vmd = pci_get_drvdata(dev);
->  
-> +	vmd_detach_resources(vmd);
->  	pci_set_drvdata(dev, NULL);
->  	sysfs_remove_link(&vmd->dev->dev.kobj, "domain");
->  	pci_stop_root_bus(vmd->bus);
-> -- 
-> 1.8.3.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The driver is really simple, since the PCIe controller is based on the
+Designware design, and only a little bit of vendor-specific glue is
+needed.
+
+Thanks!
+
+Thomas
+
+Thomas Petazzoni (2):
+  dt-bindings: pci: add DT binding for Marvell Armada 7K/8K PCIe
+    controller
+  pci: host: new driver for Marvell Armada 7K/8K PCIe controller
+
+ .../devicetree/bindings/pci/pci-armada8k.txt       |  41 ++++
+ drivers/pci/host/Kconfig                           |  11 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pcie-armada8k.c                   | 261 +++++++++++++++++++++
+ 4 files changed, 314 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/pci-armada8k.txt
+ create mode 100644 drivers/pci/host/pcie-armada8k.c
+
+-- 
+2.6.4
+
