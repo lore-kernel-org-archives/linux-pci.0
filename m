@@ -1,61 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from li153-180.members.linode.com ([109.74.206.180]:43482 "EHLO
-	mail.tekno-soft.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752082AbcC2QOQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Mar 2016 12:14:16 -0400
-Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
-To: Tim Harvey <tharvey@gateworks.com>, Arnd Bergmann <arnd@arndb.de>
-References: <m3h9fuk7ik.fsf@t19.piap.pl> <23031613.R8qN30TbTq@wuerfel>
- <CAJ+vNU2BKLDREOWP8EWXZR43to10yw+qvKwv1MzS4a_L9n5ozg@mail.gmail.com>
- <5741237.2X2Q0sCFQj@wuerfel>
- <CAJ+vNU3kBk+J-hU1OWPOS6kbFq+J0zM9QpfVy4x1VXL3hgrMTg@mail.gmail.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	=?UTF-8?Q?Krzysztof_Ha=c5=82asa?= <khalasa@piap.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?Q?Petr_=c5=a0tetiar?= <ynezz@true.cz>,
-	Fabio Estevam <festevam@gmail.com>
-From: Roberto Fichera <kernel@tekno-soft.it>
-Message-ID: <56FAA9C1.5060107@tekno-soft.it>
-Date: Tue, 29 Mar 2016 18:13:53 +0200
+Received: from vps0.lunn.ch ([178.209.37.122]:38827 "EHLO vps0.lunn.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751535AbcC0OD4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 27 Mar 2016 10:03:56 -0400
+Date: Sun, 27 Mar 2016 16:03:48 +0200
+From: Andrew Lunn <andrew@lunn.ch>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Hanna Hawa <hannah@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Yehuda Yitschak <yehuday@marvell.com>
+Subject: Re: [PATCH 2/2] pci: host: new driver for Marvell Armada 7K/8K PCIe
+ controller
+Message-ID: <20160327140348.GA19498@lunn.ch>
+References: <1459071058-18328-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1459071058-18328-3-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJ+vNU3kBk+J-hU1OWPOS6kbFq+J0zM9QpfVy4x1VXL3hgrMTg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1459071058-18328-3-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/29/2016 05:10 PM, Tim Harvey wrote:
-> Arnd,
->
-> Right, on the IMX the MSI interrupt is GIC-120 which is also the
-> legacy INTD and I do see that if I happen to put a radio in a slot
-> where due to swizzling its pin1 becomes INTD (GIC-120) the interrupt
-> does fire and the device works. Any other slot using GIC-123 (INTA),
-> GIC-122 (INTB), or GIC-121 (INTC) never fires so its very possible
-> that something in the designware core is masking out the legacy irqs.
-> I would also think this was something IMX specific, but I really don't
-> see any codepaths in pci-imx6.c that would cause that: a driver
-> requesting a legacy PCI would get a GIC interrupt which is handled by
-> the IMX6 gpc interrupt controller.
->
-> Any dra7xxx, exynos, spear13xx, keystone, layerscape, hisi, qcom SoC
-> users of designware PCIe core out there that can verify PCI MSI and
-> legacy are both working at the same time?
->
-> Lucas is the expert here and I believe he has the documentation for
-> the designware core that Freescale doens't provide with the IMX6
-> documentation so hopefully he can provide some insight. He's the one
-> that has authored all the MSI support and has been using it.
->
-> I typically advise our users to 'not' enable MSI because
-> architecturally you can spread 4 distinct legacy irq's across CPU's
-> better than a single shared irq.
+> +static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
+> +{
+> +	struct pcie_port *pp = arg;
+> +	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
+> +	void __iomem *base = pcie->base;
+> +	u32 val;
+> +
+> +	val = readl(base + PCIE_GLOBAL_INT_CAUSE1_REG);
+> +	writel(val, base + PCIE_GLOBAL_INT_CAUSE1_REG);
+> +
+> +	return IRQ_HANDLED;
 
-Don't know if I'm facing similar problem, however devices connected in miniPCI slot behind
-a PCIe-to-PCI bridge (MSI is disabled) using INTA all is working ok, including shared IRQ.
-In case of INTB will not work, and the GIC irq quite often get stuck.
+Hi Thomas
 
+Maybe a comment as to why you are just throwing them away.
+
+> +}
+> +
+> +static struct pcie_host_ops armada8k_pcie_host_ops = {
+> +	.link_up = armada8k_pcie_link_up,
+> +	.host_init = armada8k_pcie_host_init,
+> +};
+> +
+> +static int armada8k_pcie_probe(struct platform_device *pdev)
+> +{
+> +	struct armada8k_pcie *pcie;
+> +	struct pcie_port *pp;
+> +	struct device *dev = &pdev->dev;
+> +	struct resource *base;
+> +	int ret;
+> +
+> +	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+> +	if (!pcie)
+> +		return -ENOMEM;
+> +
+> +	pcie->main_clk = devm_clk_get(dev, "main");
+> +	if (!IS_ERR(pcie->main_clk))
+> +		clk_prepare_enable(pcie->main_clk);
+> +
+> +	pcie->lane_clk = devm_clk_get(dev, "port");
+> +	if (!IS_ERR(pcie->lane_clk))
+> +		clk_prepare_enable(pcie->lane_clk);
+
+Any need to handle -EPRODE_DEFERED here?
+
+    Andrew
