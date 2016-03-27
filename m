@@ -1,78 +1,88 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org
-Cc: linux-pci@vger.kernel.org, ravikanth.nalla@hpe.com,
-	lenb@kernel.org, harish.k@hpe.com, ashwin.reghunandanan@hpe.com,
-	bhelgaas@google.com, rjw@rjwysocki.net,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 3/4] acpi,pci,irq: remove SCI penalize function
-Date: Tue,  8 Mar 2016 19:41:18 -0500
-Message-Id: <1457484079-18202-3-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
-References: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from down.free-electrons.com ([37.187.137.238]:38997 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753028AbcC0JbU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Mar 2016 05:31:20 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Hanna Hawa <hannah@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 1/2] dt-bindings: pci: add DT binding for Marvell Armada 7K/8K PCIe controller
+Date: Sun, 27 Mar 2016 11:30:57 +0200
+Message-Id: <1459071058-18328-2-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1459071058-18328-1-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1459071058-18328-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Removing the SCI penalize function as the penalty is now calculated on the
-fly.
+This commit adds the Device Tree binding documentation that allows to
+describe the PCIe controller found in Marvell Armada 7K/8K SoCs.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 ---
- arch/x86/kernel/acpi/boot.c | 1 -
- drivers/acpi/pci_link.c     | 9 ---------
- include/linux/acpi.h        | 1 -
- 3 files changed, 11 deletions(-)
+ .../devicetree/bindings/pci/pci-armada8k.txt       | 41 ++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/pci-armada8k.txt
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index e759076..5e99f22 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -445,7 +445,6 @@ static void __init acpi_sci_ioapic_setup(u8 bus_irq, u16 polarity, u16 trigger,
- 		polarity = acpi_sci_flags & ACPI_MADT_POLARITY_MASK;
- 
- 	mp_override_legacy_irq(bus_irq, polarity, trigger, gsi);
--	acpi_penalize_sci_irq(bus_irq, trigger, polarity);
- 
- 	/*
- 	 * stash over-ride to indicate we've been here
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index eb8e770..6bd77f1 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -840,15 +840,6 @@ bool acpi_isa_irq_available(int irq)
- }
- 
- /*
-- * Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict with
-- * PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be use for
-- * PCI IRQs.
-- */
--void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
--{
--}
--
--/*
-  * Over-ride default table to reserve additional IRQs for use by ISA
-  * e.g. acpi_irq_isa=5
-  * Useful for telling ACPI how not to interfere with your ISA sound card.
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 06ed7e5..0f41317 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -311,7 +311,6 @@ struct pci_dev;
- int acpi_pci_irq_enable (struct pci_dev *dev);
- void acpi_penalize_isa_irq(int irq, int active);
- bool acpi_isa_irq_available(int irq);
--void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
- void acpi_pci_irq_disable (struct pci_dev *dev);
- 
- extern int ec_read(u8 addr, u8 *val);
+diff --git a/Documentation/devicetree/bindings/pci/pci-armada8k.txt b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
+new file mode 100644
+index 0000000..577de5b
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
+@@ -0,0 +1,41 @@
++* Marvell Armada 7K/8K PCIe interface
++
++This PCIe host controller is based on the Synopsis Designware PCIe IP
++and thus inherits all the common properties defined in designware-pcie.txt.
++
++Required properties:
++- compatible: "marvell,armada8k-pcie"
++- reg: must contain two register regions
++   - the control register region
++   - the config space region
++- reg-names:
++   - "ctrl" for the control register region
++   - "config" for the config space region
++- interrupts: Interrupt specifier for the PCIe controler
++- clock-names: May contain the following entries:
++	- "main", for the main clock, shared by several PCIe ports
++	- "port", for the port clock
++
++Example:
++
++	pcie@f2600000 {
++		compatible = "marvell,armada8k-pcie", "snps,dw-pcie";
++		reg = <0 0xf2600000 0 0x10000>, <0 0xf6f00000 0 0x80000>;
++		reg-names = "ctrl", "config";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		#interrupt-cells = <1>;
++		device_type = "pci";
++		dma-coherent;
++
++		bus-range = <0 0xff>;
++		ranges = <0x81000000 0 0xf9000000 0  0xf9000000 0 0x10000	/* downstream I/O */
++			  0x82000000 0 0xf6000000 0  0xf6000000 0 0xf00000>;	/* non-prefetchable memory */
++		interrupt-map-mask = <0 0 0 0>;
++		interrupt-map = <0 0 0 0 &gic 0 GIC_SPI 32 IRQ_TYPE_LEVEL_HIGH>;
++		interrupts = <GIC_SPI 32 IRQ_TYPE_LEVEL_HIGH>;
++		num-lanes = <1>;
++		clocks = <&cpm_syscon0 1 14>, <&cpm_syscon0 1 13>;
++		clock-names = "main", "port";
++		status = "disabled";
++	};
 -- 
-1.8.2.1
+2.6.4
 
