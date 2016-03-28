@@ -1,66 +1,66 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [RFC PATCH 0/4] ACPI based PCI host driver with generic ECAM
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	"rafael@kernel.org" <rafael@kernel.org>
+References: <CAKc_7PVK3VtaR-LDHNXPr5cSjbCcH--hsepFx=jVATNi=+a9Hw@mail.gmail.com>
+ <1458245913-17211-1-git-send-email-jchandra@broadcom.com>
+ <CAKc_7PWfP0eQJ8dRN=CLu37=GKxin32Uf5rjiZGZgQCbiab2iA@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED2A787@lhreml503-mbs>
+Cc: Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>,
+	"robert.richter@caviumnetworks.com"
+	<robert.richter@caviumnetworks.com>,
+	Marcin Wojtas <mw@semihalf.com>,
+	"Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+	David Daney <ddaney@caviumnetworks.com>,
+	Wangyijing <wangyijing@huawei.com>,
+	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+	"msalter@redhat.com" <msalter@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+	Jon Masters <jcm@redhat.com>
 From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com
-Cc: agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] pci, acpi: free IO resource during shutdown
-Date: Mon,  7 Mar 2016 17:21:50 -0500
-Message-Id: <1457389310-3538-2-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1457389310-3538-1-git-send-email-okaya@codeaurora.org>
-References: <1457389310-3538-1-git-send-email-okaya@codeaurora.org>
+Message-ID: <56F934B1.4080908@codeaurora.org>
+Date: Mon, 28 Mar 2016 09:42:09 -0400
+MIME-Version: 1.0
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ED2A787@lhreml503-mbs>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The ACPI PCI driver is leaking out memory mappings
-when a slot is removed. Upon insertion following a
-removal, we are hitting a BUG statement. Second call
-to the remap API hits a bug statement because the area is
-already mapped. This patch releases additional virtual
-memory mapped by pci_remap_iospace function as part of
-__release_pci_root_info function if the region type is IO.
+Hi,
 
- BUG: failure at kernel/lib/ioremap.c:31/ioremap_pte_range()!
- Kernel panic - not syncing: BUG!
- CPU: 1 PID: 630 Comm: kworker/u48:3 Not tainted
- Workqueue: kacpi_hotplug acpi_hotplug_work_fn Call trace:
- dump_backtrace+0x0/0x10c [<ffff800000086e58>]
- show_stack+0x10/0x1c [<ffff8000004d1f50>]
- dump_stack+0x74/0xc4
- panic+0xe4/0x21c [<ffff8000002577cc>]
- ioremap_page_range+0x290/0x30c [<ffff8000002861dc>]
- pci_remap_iospace+0x88/0xa0 [<ffff8000000908f8>]
- setup_resource+0x114/0x16c [<ffff8000002c0fc0>]
- acpi_walk_resource_buffer+0x54/0xb0
- acpi_walk_resources+0x90/0xbc
- pci_acpi_scan_root+0x184/0x2d0
- acpi_pci_root_add+0x368/0x434
- acpi_bus_attach+0x124/0x22c [<ffff8000002a5628>]
- acpi_bus_scan+0x58/0x74 [<ffff8000002a57c0>]
- acpi_device_hotplug+0xc4/0x3f0 [<ffff8000002a0468>]
- acpi_hotplug_work_fn+0x1c/0x34 [<ffff8000000b9310>]
- process_one_work+0x1e8/0x308 [<ffff8000000b9b04>]
- worker_thread+0x294/0x3cc  [<ffff8000000bd9
+On 3/23/2016 6:22 AM, Gabriele Paoloni wrote:
+> I had a look at your patchset and also in your git repo at the other
+> patches that you ported over from Tomasz; it seems that now we miss
+> a quirk mechanism to enable controller that are not fully ECAM.
+> 
+> This was provided before by Tomasz in:
+> https://lkml.org/lkml/2016/2/16/410
+> 
+> I think we should put something like that back in...
+> 
+> Thanks
+> 
+> Gab
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/acpi/pci_root.c | 2 ++
- 1 file changed, 2 insertions(+)
+I was requested to test your patchset. I'll need this mechanism before
+I can start.
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 71bbfae..6d4bc2d 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -946,6 +946,8 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
- 
- 	resource_list_for_each_entry(entry, &bridge->windows) {
- 		res = entry->res;
-+		if (res->flags & IORESOURCE_IO)
-+			pci_unmap_iospace(res);
- 		if (res->parent &&
- 		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
- 			release_resource(res);
+Sinan
+
 -- 
-1.8.2.1
-
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
