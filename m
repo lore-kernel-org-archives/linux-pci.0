@@ -1,124 +1,47 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 10 Mar 2016 07:42:36 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Mark Salter <msalter@redhat.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH v2] PCI: ACPI: IA64: fix IO port generic range check
-Message-ID: <20160310074236.GA20478@red-moon>
-References: <1455212827-9382-1-git-send-email-lorenzo.pieralisi@arm.com>
- <20160308222125.GG27132@localhost>
- <CAJZ5v0gnDnF_4z_mtZp+Tq8-V3FgG6p7kMykqtVA+s44ukkuaA@mail.gmail.com>
- <20160309053332.GA22228@localhost>
- <20160309071406.GA19555@red-moon>
- <20160309153556.GA14873@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([217.72.192.75]:54383 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755361AbcC1VWr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2016 17:22:47 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Hanna Hawa <hannah@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [PATCH 2/2] pci: host: new driver for Marvell Armada 7K/8K PCIe controller
+Date: Mon, 28 Mar 2016 23:21:57 +0200
+Message-ID: <3196859.0zi20qjiKR@wuerfel>
+In-Reply-To: <1459071058-18328-3-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1459071058-18328-1-git-send-email-thomas.petazzoni@free-electrons.com> <1459071058-18328-3-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160309153556.GA14873@localhost>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 09, 2016 at 09:35:56AM -0600, Bjorn Helgaas wrote:
-> On Wed, Mar 09, 2016 at 07:14:06AM +0000, Lorenzo Pieralisi wrote:
-> > On Tue, Mar 08, 2016 at 11:33:32PM -0600, Bjorn Helgaas wrote:
+On Sunday 27 March 2016 11:30:58 Thomas Petazzoni wrote:
+> +       /* Wait until the link becomes active again */
+> +       while (timeout) {
+> +               if (armada8k_pcie_link_up(pp))
+> +                       break;
+> +               udelay(1);
+> +               timeout--;
+> +       }
 > 
-> > > Maybe acpi_dev_ioresource_flags() should instead check res->end
-> > > against ioport_resource.end, as we already do in
-> > > acpi_pci_root_validate_resources()?  Each arch already sets its own
-> > > ioport_resource.end using IO_SPACE_LIMIT:
-> > > 
-> > >   arch/x86/include/asm/io.h   #define IO_SPACE_LIMIT 0xffff
-> > >   arch/ia64/include/asm/io.h  #define IO_SPACE_LIMIT 0xffffffffffffffffUL
-> 
-> I suspect we're saying the same thing with slightly different words,
-> so I apologize if I'm beating a dead horse.
-> 
-> ioport_resource defines the universe of Linux ioport space.  Every
-> IORESOURCE_IO struct resource must be contained in ioport_resource.
-> Such a resource contains Linux ioport numbers, i.e., things that could
-> appear in /proc/ioports and could be passed as an argument to
-> request_region() and the inb()/outb() functions.
 
-That's agreed but that's not where the problem is on IA64/ARM64 IO
-ACPI descriptors parsing.
+Why the busy-loop here?
 
-> > We can't do that, it may work on IA64 but the ioport_resource is a
-> > chunk of address space on IA64/ARM64 that has nothing to do with
-> > the physical address at which the root bridges decode IO space (which
-> > is what's contained in the resource).
-> 
-> I'm stumbling over "the physical address at which the root bridges
-> decode IO space (which is what's contained in the resource)".
-> 
-> x86 host bridges typically just forward CPU-generated I/O port
-> transactions to PCI with no address translation, so it sounds like
-> you're talking about ia64/ARM64 bridges that decode CPU MMIO space and
-> turn accesses into PCI I/O transactions.  
-> 
-> If we start from a driver calling inb(), the driver supplies a Linux
-> ioport number "X".  On ia64 (and I assume ARM64 as well), inb()
-> performs an MMIO access to memory address "Y".  A host bridge consumes
-> that MMIO access and generates a corresponding PCI I/O transaction to
-> PCI ioport "Z".
-> 
-> It is indeed true that ioport_resource has nothing to do with memory
-> addresses like "Y".  But the driver (and this part of the ACPI
-> infrastructure) are dealing with ioport address "X", and that is
-> definitely in an IORESOURCE_IO struct resource.  The IORESOURCE_MEM_
-> struct resource that contains "Y" is internal to the host bridge
-> driver and invisible to the device driver that's using inb().
+Maybe just do a single msleep(1) here to wait for the link to
+come up instead?
 
-The problem is, that's the address like "Y" that are checked in
-acpi_dev_ioresource_flags() with current PCI initialization flow.
-
-IO ports number "X" are created in (IA64) add_io_space() that is
-executed after acpi_pci_probe_root_resources() is called (see
-arch/ia64/pci/pci.c), that's the code that, IIUC, translates an
-IO resource containing a CPU physical address (which is the address
-that is ioremapped) to an IO resource containing a port number *and*
-a corresponding MEM resource.
-
-The check that causes failures (>=0x10003) is carried out
-on the "raw" IO resource parsed from ACPI, not the one crafted
-in add_io_space().
-
-The resource checked in acpi_dev_ioresource_flags() is created from
-ACPI IO descriptor and does contain CPU physical MMIO addresses,
-comparing it to a port number is bound to fail, they do NOT represent
-the same thing, happy be corrected.
-
-That's the reason why currently IA64 IO space is not working, and
-this patch fixes it, please correct me if I am wrong.
-
-I will write back next week with the commits sequence and logic that
-led to the current failure, sorry for not being able to respond
-more promptly and in a comprehensive way I need sometime to write up
-my understanding of the problem and commit logs, I will do that
-next week.
-
-Thanks,
-Lorenzo
-
-> 
-> For example, you could have something like this (with made-up
-> addresses):
-> 
->   [io  0x0000-0xffff]              # Linux ioport space
->   [mem 0x100000000-0x10000ffff]    # MMIO space consumed by host bridge
->   [bus 0x0000-0xffff]              # PCI bus I/O transaction space
-> 
->   [io  0x10000-0x1ffff]            # Linux ioport space ("X")
->   [mem 0x200000000-0x20000ffff]    # MMIO space consumed by host bridge ("Y")
->   [bus 0x0000-0xffff]              # PCI bus I/O transaction space ("Z")
-> 
-> Bjorn
-> 
+	Arnd
