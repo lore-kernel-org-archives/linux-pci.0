@@ -1,71 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48736 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932935AbcCCQzH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Mar 2016 11:55:07 -0500
-Subject: [PATCH v1 09/12] MIPS: Loongson 3: Use temporary struct resource *
- to avoid repetition
-To: linux-pci@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>,
-	Tony Luck <tony.luck@intel.com>,
-	DRI <dri-devel@lists.freedesktop.org>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-	linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Bruno =?utf-8?q?Pr=C3=A9mont?= <bonbons@linux-vserver.org>,
-	Daniel Stone <daniel@fooishbar.org>,
-	Alex Deucher <alexdeucher@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Ville =?utf-8?b?U3lyasOkbMOk?= <ville.syrjala@linux.intel.com>
-Date: Thu, 03 Mar 2016 10:55:00 -0600
-Message-ID: <20160303165500.3025.78202.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160303164533.3025.82439.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail-qg0-f53.google.com ([209.85.192.53]:34008 "EHLO
+	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752441AbcC1AuW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Mar 2016 20:50:22 -0400
+From: Fabio Estevam <festevam@gmail.com>
+To: bhelgaas@google.com
+Cc: l.stach@pengutronix.de, hongxing.zhu@nxp.com, khalasa@piap.pl,
+	ynezz@true.cz, linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@nxp.com>, <stable@vger.kernel.org>
+Subject: [PATCH] Revert "PCI: imx6: Add support for active-low reset GPIO"
+Date: Sun, 27 Mar 2016 21:49:56 -0300
+Message-Id: <1459126196-15063-1-git-send-email-festevam@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use a temporary struct resource pointer to avoid needless repetition of
-"pdev->resource[PCI_ROM_RESOURCE]".  No functional change intended.
+From: Fabio Estevam <fabio.estevam@nxp.com>
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Commit 5c5fb40de8f14 ("PCI: imx6: Add support for active-low reset GPIO")
+has the following issues:
+
+1. It can break old dtb's that didn't take into account the gpio polarity
+specified in the device tree (For example: Gateworks Laguna
+imx6qdl-gw54xx.dtsi no longer works after this commit)
+
+2. It sets the gpio polarity in the wrong logic level
+
+So revert the commit to avoid such regressions.
+
+Cc: <stable@vger.kernel.org> # 4.5
+Reported-by: Krzysztof Hałasa <khalasa@piap.pl>
+Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
 ---
- arch/mips/pci/fixup-loongson3.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/pci/host/pci-imx6.c | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
 
-diff --git a/arch/mips/pci/fixup-loongson3.c b/arch/mips/pci/fixup-loongson3.c
-index d708ae4..b66b1eb 100644
---- a/arch/mips/pci/fixup-loongson3.c
-+++ b/arch/mips/pci/fixup-loongson3.c
-@@ -40,20 +40,20 @@ int __init pcibios_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index eb5a275..2f817fa 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -32,7 +32,7 @@
+ #define to_imx6_pcie(x)	container_of(x, struct imx6_pcie, pp)
  
- static void pci_fixup_radeon(struct pci_dev *pdev)
+ struct imx6_pcie {
+-	struct gpio_desc	*reset_gpio;
++	int			reset_gpio;
+ 	struct clk		*pcie_bus;
+ 	struct clk		*pcie_phy;
+ 	struct clk		*pcie;
+@@ -309,10 +309,10 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 	usleep_range(200, 500);
+ 
+ 	/* Some boards don't have PCIe reset GPIO. */
+-	if (imx6_pcie->reset_gpio) {
+-		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 0);
++	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
++		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
+ 		msleep(100);
+-		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
++		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+ 	}
+ 	return 0;
+ 
+@@ -523,6 +523,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
  {
--	if (pdev->resource[PCI_ROM_RESOURCE].start)
-+	struct resource *res = &pdev->resource[PCI_ROM_RESOURCE];
-+
-+	if (res->start)
- 		return;
+ 	struct imx6_pcie *imx6_pcie;
+ 	struct pcie_port *pp;
++	struct device_node *np = pdev->dev.of_node;
+ 	struct resource *dbi_base;
+ 	struct device_node *node = pdev->dev.of_node;
+ 	int ret;
+@@ -544,8 +545,15 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(pp->dbi_base);
  
- 	if (!loongson_sysconf.vgabios_addr)
- 		return;
+ 	/* Fetch GPIOs */
+-	imx6_pcie->reset_gpio = devm_gpiod_get_optional(&pdev->dev, "reset",
+-							GPIOD_OUT_LOW);
++	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
++	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
++		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
++					    GPIOF_OUT_INIT_LOW, "PCIe reset");
++		if (ret) {
++			dev_err(&pdev->dev, "unable to get reset gpio\n");
++			return ret;
++		}
++	}
  
--	pdev->resource[PCI_ROM_RESOURCE].start =
--		loongson_sysconf.vgabios_addr;
--	pdev->resource[PCI_ROM_RESOURCE].end   =
--		loongson_sysconf.vgabios_addr + 256*1024 - 1;
--	pdev->resource[PCI_ROM_RESOURCE].flags |= IORESOURCE_ROM_COPY;
-+	res->start = loongson_sysconf.vgabios_addr;
-+	res->end   = res->start + 256*1024 - 1;
-+	res->flags |= IORESOURCE_ROM_COPY;
- 
- 	dev_info(&pdev->dev, "BAR %d: assigned %pR for Radeon ROM\n",
--			PCI_ROM_RESOURCE, &pdev->resource[PCI_ROM_RESOURCE]);
-+		 PCI_ROM_RESOURCE, res);
- }
- 
- DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_VENDOR_ID_ATI, PCI_ANY_ID,
+ 	/* Fetch clocks */
+ 	imx6_pcie->pcie_phy = devm_clk_get(&pdev->dev, "pcie_phy");
+-- 
+1.9.1
 
