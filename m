@@ -1,110 +1,40 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v3] PCI: ACPI: IA64: fix IO port generic range check
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
-References: <1458558775-6242-1-git-send-email-lorenzo.pieralisi@arm.com>
-Cc: linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Mark Salter <msalter@redhat.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-From: Hanjun Guo <hanjun.guo@linaro.org>
-Message-ID: <56F25552.3080609@linaro.org>
-Date: Wed, 23 Mar 2016 16:35:30 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.135]:62175 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754065AbcC1VS6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2016 17:18:58 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Hanna Hawa <hannah@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [PATCH 1/2] dt-bindings: pci: add DT binding for Marvell Armada 7K/8K PCIe controller
+Date: Mon, 28 Mar 2016 23:18:02 +0200
+Message-ID: <5192758.5yjNn0Uus9@wuerfel>
+In-Reply-To: <1459071058-18328-2-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1459071058-18328-1-git-send-email-thomas.petazzoni@free-electrons.com> <1459071058-18328-2-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-In-Reply-To: <1458558775-6242-1-git-send-email-lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/3/21 19:12, Lorenzo Pieralisi wrote:
-> The [0 - 64k] ACPI PCI IO port resource boundary check in:
->
-> acpi_dev_ioresource_flags()
->
-> is currently applied blindly in the ACPI resource parsing to all
-> architectures, but only x86 suffers from that IO space limitation.
->
-> On arches (ie IA64 and ARM64) where IO space is memory mapped,
-> the PCI root bridges IO resource windows are firstly initialized from
-> the _CRS (in acpi_decode_space()) and contain the CPU physical address
-> at which a root bridge decodes IO space in the CPU physical address
-> space with the offset value representing the offset required to translate
-> the PCI bus address into the CPU physical address.
->
-> The IO resource windows are then parsed and updated in arch code
-> before creating and enumerating PCI buses (eg IA64 add_io_space())
-> to map in an arch specific way the obtained CPU physical address range
-> to a slice of virtual address space reserved to map PCI IO space,
-> ending up with PCI bridges resource windows containing IO
-> resources like the following on a working IA64 configuration:
->
-> PCI host bridge to bus 0000:00
-> pci_bus 0000:00: root bus resource [io  0x1000000-0x100ffff window] (bus
-> address [0x0000-0xffff])
-> pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000fffff window]
-> pci_bus 0000:00: root bus resource [mem 0x80000000-0x8fffffff window]
-> pci_bus 0000:00: root bus resource [mem 0x80004000000-0x800ffffffff window]
-> pci_bus 0000:00: root bus resource [bus 00]
->
-> This implies that the [0 - 64K] check in acpi_dev_ioresource_flags()
-> leaves platforms with memory mapped IO space (ie IA64) broken (ie kernel
-> can't claim IO resources since the host bridge IO resource is disabled
-> and discarded by ACPI core code, see log on IA64 with missing root bridge
-> IO resource, silently filtered by current [0 - 64k] check in
-> acpi_dev_ioresource_flags()):
->
-> PCI host bridge to bus 0000:00
-> pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000fffff window]
-> pci_bus 0000:00: root bus resource [mem 0x80000000-0x8fffffff window]
-> pci_bus 0000:00: root bus resource [mem 0x80004000000-0x800ffffffff window]
-> pci_bus 0000:00: root bus resource [bus 00]
->
-> [...]
->
-> pci 0000:00:03.0: [1002:515e] type 00 class 0x030000
-> pci 0000:00:03.0: reg 0x10: [mem 0x80000000-0x87ffffff pref]
-> pci 0000:00:03.0: reg 0x14: [io  0x1000-0x10ff]
-> pci 0000:00:03.0: reg 0x18: [mem 0x88020000-0x8802ffff]
-> pci 0000:00:03.0: reg 0x30: [mem 0x88000000-0x8801ffff pref]
-> pci 0000:00:03.0: supports D1 D2
-> pci 0000:00:03.0: can't claim BAR 1 [io  0x1000-0x10ff]: no compatible
-> bridge window
->
-> For this reason, the IO port resources boundaries check in generic ACPI
-> parsing code should be guarded with a CONFIG_X86 guard so that more arches
-> (ie ARM64) can benefit from the generic ACPI resources parsing interface
-> without incurring in unexpected resource filtering, fixing at the same
-> time current breakage on IA64.
->
-> This patch factors out IO ports boundary [0 - 64k] check in generic ACPI
-> code and makes the IO space check X86 specific to make sure that IO
-> space resources are usable on other arches too.
->
-> Fixes: 3772aea7d6f3 ("ia64/PCI/ACPI: Use common ACPI resource parsing
-> interface for host bridge")
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> Cc: Jiang Liu <jiang.liu@linux.intel.com>
-> Cc: Tony Luck <tony.luck@intel.com>
-> Cc: Tomasz Nowicki <tn@semihalf.com>
-> Cc: Mark Salter <msalter@redhat.com>
-> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> ---
-> v2 -> v3
->
-> - Moved IO resource check to generic ACPI resource code
-> - Dropped Tested-by tags
-> - Rebased against v4.5
+On Sunday 27 March 2016 11:30:57 Thomas Petazzoni wrote:
+> +               ranges = <0x81000000 0 0xf9000000 0  0xf9000000 0 0x10000       /* downstream I/O */
+> +                         0x82000000 0 0xf6000000 0  0xf6000000 0 0xf00000>;    /* non-prefetchable memory */
+> 
 
-Add this patch on top of Linus's latest tree, and test it
-on a HP rx2660 IA64 machine, the machine boot with NIC
-working properly, and no regressions in boot log.
+No 64-bit (prefetchable) MMIO area? Is this a hardware limitation,
+or did you just forget to add it?
 
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-
-Thanks
-Hanjun
+	Arnd
