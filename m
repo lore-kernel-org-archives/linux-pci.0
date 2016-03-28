@@ -1,26 +1,21 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ob0-f181.google.com ([209.85.214.181]:36335 "EHLO
-	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754750AbcC1WGy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2016 18:06:54 -0400
-Received: by mail-ob0-f181.google.com with SMTP id m7so109615034obh.3
-        for <linux-pci@vger.kernel.org>; Mon, 28 Mar 2016 15:06:53 -0700 (PDT)
+Received: from mail-io0-f170.google.com ([209.85.223.170]:34303 "EHLO
+	mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751537AbcC1UNn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2016 16:13:43 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAOMZO5A2osG3=mTaCayYfMokUj-vT+Udq9ckq45b1yaUP9Tn3g@mail.gmail.com>
+In-Reply-To: <CAJ+vNU2Sg1ZKBsGcQswrJZyTJ1WBEZor3ZqpoYUT7i9FKjEAog@mail.gmail.com>
 References: <m3h9fuk7ik.fsf@t19.piap.pl>
 	<CAOMZO5DcZCxoLPeGRWSGkstm7F3eN-Q-yJyf6ktMTda2zLviag@mail.gmail.com>
 	<CAOMZO5B8Lzn-E4YOeYxVtN5PN11aOvZHn4eU0ixkdV8CO8+xYw@mail.gmail.com>
 	<CAJ+vNU2Sg1ZKBsGcQswrJZyTJ1WBEZor3ZqpoYUT7i9FKjEAog@mail.gmail.com>
-	<CAOMZO5DO9G18=_YSri3a+UiYbLwN6AMG4asUXbT03mpbU3hHrw@mail.gmail.com>
-	<CAJ+vNU1_YqvWQkmuDB7r8z77iZJS6pP4Mr+j9yW4sFLAeJXQDw@mail.gmail.com>
-	<CAOMZO5A2osG3=mTaCayYfMokUj-vT+Udq9ckq45b1yaUP9Tn3g@mail.gmail.com>
-Date: Mon, 28 Mar 2016 15:06:53 -0700
-Message-ID: <CAJ+vNU2ST=XG5H04-OCwpHgcvkoXOQw8F3MjXhJmWhBUbxWE-g@mail.gmail.com>
+Date: Mon, 28 Mar 2016 17:13:42 -0300
+Message-ID: <CAOMZO5DO9G18=_YSri3a+UiYbLwN6AMG4asUXbT03mpbU3hHrw@mail.gmail.com>
 Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
-From: Tim Harvey <tharvey@gateworks.com>
-To: Fabio Estevam <festevam@gmail.com>,
-	Lucas Stach <l.stach@pengutronix.de>
+From: Fabio Estevam <festevam@gmail.com>
+To: Tim Harvey <tharvey@gateworks.com>
 Cc: =?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
+	Lucas Stach <l.stach@pengutronix.de>,
 	=?UTF-8?Q?Petr_=C5=A0tetiar?= <ynezz@true.cz>,
 	Richard Zhu <Richard.Zhu@freescale.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
@@ -32,59 +27,17 @@ Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 28, 2016 at 2:30 PM, Fabio Estevam <festevam@gmail.com> wrote:
-> On Mon, Mar 28, 2016 at 5:42 PM, Tim Harvey <tharvey@gateworks.com> wrote:
+Hi Tim,
+
+On Mon, Mar 28, 2016 at 4:59 PM, Tim Harvey <tharvey@gateworks.com> wrote:
+
+> Fabio,
 >
->> Fabio,
->>
->> ok - I'll respond there as I agree with the patch but not the wording
->> of the commit (It's Gateworks 'Ventana' using IMX6 not Laguna and we
->> do define the polarity properly as active-low in Ventana dt's). It is
->> the fact that the gpio polarity has the wrong logic level that breaks
->> Ventana.
+> I would agree with you on this - 5c5fb40de8f143 ("PCI: imx6: Add
+> support for active-low reset GPIO")  should be reverted.
 >
-> Ok, I will change the wording in v2.
->
->>
->> However, there seems to be another regression in 4.5 that's keeping
->> PCI working for me and I'm still bisecting that (using 802.11n access
->> points to test). Can you confirm that PCI works in v4.5 on IMX6 boards
->> with only 5c5fb40de8f14391a1238db05cef88754faf9229 reverted?
->
-> On imx6qdl-sabresd.dtsi the PCI reset gpio polarity is set to high,
-> which is not correct, so the Wifi card could be detected even with
-> 5c5fb40de8f. So two errors in sequence and PCI still works on this
-> board :-)
+> I just finished bisecting an issue to this specific patch only to find
+> out Krzysztof found it a few days ago ;) Thanks Krzysztof.
 
-ouch - two wrongs did make a right!
-
-It's not too easy to tell how many IMX6 boards incorrectly specify
-their reset-gpio polarity. I don't know what the best way to determine
-what boards use the IMX6 pcie host controller. Is there a dtc usage
-that will display the compiled dtb's then we grep out 'compatible =
-"fsl,imx6q-pcie"' to at least get the list of boards to inspect? I'm
-curious if its just one or two boards that incorrectly specify the
-polarity of their PCI reset.
-
->
-> I don't have access to the board at the moment, but the only test I
-> did was to see that the Wifi card got detected. I haven't really tried
-> to communicate via Wifi.
-
-I figured out it was the change to enable CONFIG_PCI_MSI in v4.5 that
-is causing interrupts to fail for me.
-
-Lucas, the case that is failing for me is when I have 4 miniPCI radios
-behind a PCIe->PCI bridge. In this case the radios get legacy
-INTA/B/C/D mapped to them correctly from what I can tell (GIC
-123/122/121/120 swizzled appropriately), but those interrupts never
-fire. I don't think this case is necessarily a regression, I'm not
-clear that it has ever worked. In fact I can't seem to come up with a
-scenario where the MSI irq is firing either: IMX6->ath9k radio (no
-bridge) with MSI doesn't fire the PCI-MSI interrupt or the GPC 123
-interrupt that gets mapped to it via the driver. Any ideas what can be
-going on here?
-
-Regards,
-
-Tim
+I sent the revert patch yesterday:
+http://marc.info/?l=linux-pci&m=145912622805757&w=2
