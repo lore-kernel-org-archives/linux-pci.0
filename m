@@ -1,133 +1,148 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58095 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751621AbcCPT3J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 16 Mar 2016 15:29:09 -0400
-Date: Wed, 16 Mar 2016 14:29:04 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: PCI IO resource question.
-Message-ID: <20160316192904.GA2703@localhost>
-References: <56E987B8.1090904@ti.com>
- <20160316164531.GA28797@localhost>
- <56E9A12F.50008@ti.com>
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:35476 "EHLO
+	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756902AbcC2PKJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Mar 2016 11:10:09 -0400
+Received: by mail-oi0-f50.google.com with SMTP id h6so25880282oia.2
+        for <linux-pci@vger.kernel.org>; Tue, 29 Mar 2016 08:10:08 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56E9A12F.50008@ti.com>
+In-Reply-To: <5741237.2X2Q0sCFQj@wuerfel>
+References: <m3h9fuk7ik.fsf@t19.piap.pl>
+	<23031613.R8qN30TbTq@wuerfel>
+	<CAJ+vNU2BKLDREOWP8EWXZR43to10yw+qvKwv1MzS4a_L9n5ozg@mail.gmail.com>
+	<5741237.2X2Q0sCFQj@wuerfel>
+Date: Tue, 29 Mar 2016 08:10:08 -0700
+Message-ID: <CAJ+vNU3kBk+J-hU1OWPOS6kbFq+J0zM9QpfVy4x1VXL3hgrMTg@mail.gmail.com>
+Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
+From: Tim Harvey <tharvey@gateworks.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Lucas Stach <l.stach@pengutronix.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	=?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	=?UTF-8?Q?Petr_=C5=A0tetiar?= <ynezz@true.cz>,
+	Fabio Estevam <festevam@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 16, 2016 at 02:08:47PM -0400, Murali Karicheri wrote:
-> Bjorn,
-> 
-> Thanks for your quick response! Please see below some clarification
-> and follow up question.
-> 
-> On 03/16/2016 12:45 PM, Bjorn Helgaas wrote:
-> 0x1000]
-> > 
-> > Obviously if the host bridge doesn't support I/O port space, we will
-> > be unable to assign space for I/O BARs, so you will see errors like
-> > this.  
-> > 
-> > We may be able to improve the message and/or make this less noisy.
-> > Guenter Roeck looked at a similar issue a while ago, but it's not
-> > completely trivial:
-> > 
-> >   http://lkml.kernel.org/r/20150515172836.GA27797@svl-evodev-groeck.juniper.net
-> > 
-> > The PCI core should check in pci_enable_device() whether all the
-> > device BARs have been assigned.  If not, it should fail.  But if a
-> > driver doesn't need I/O space, it can use pci_enable_device_mem() to
-> > indicate that it only needs the MEM BARs.  That should succeed even if
-> > the I/O BARs aren't assigned.
-> > 
-> > Bottom line, if you omit I/O space on your host bridge:
-> > 
-> >   - You will see annoying "no space for" and "failed to assign" messages
-> >   - Drivers that don't need I/O ports should still work
-> >   - It's far better to have the messages than it was to pretend that
-> >     the host bridge supported I/O space when it really didn't.
-> > 
-> >> [    0.448813] pci 0000:01:00.0: BAR 6: assigned [mem 0x60100000-0x6010ffff pref]
-> >> [    0.448822] pci 0000:01:00.0: BAR 5: assigned [mem 0x60000000-0x600001ff]
-> >> [    0.448834] pci 0000:01:00.0: BAR 4: no space for [io  size 0x0010]
-> >> [    0.448841] pci 0000:01:00.0: BAR 4: failed to assign [io  size 0x0010]
-> >> [    0.448848] pci 0000:01:00.0: BAR 0: no space for [io  size 0x0008]
-> >> [    0.448855] pci 0000:01:00.0: BAR 0: failed to assign [io  size 0x0008]
-> >> [    0.448863] pci 0000:01:00.0: BAR 2: no space for [io  size 0x0008]
-> >> [    0.448870] pci 0000:01:00.0: BAR 2: failed to assign [io  size 0x0008]
-> >> [    0.448877] pci 0000:01:00.0: BAR 1: no space for [io  size 0x0004]
-> >> [    0.448884] pci 0000:01:00.0: BAR 1: failed to assign [io  size 0x0004]
-> >> [    0.448891] pci 0000:01:00.0: BAR 3: no space for [io  size 0x0004]
-> >> [    0.448898] pci 0000:01:00.0: BAR 3: failed to assign [io  size 0x0004]
-> >> [    0.448907] pci 0000:00:00.0: PCI bridge to [bus 01]
-> >>
-> >>
-> >> The original log is below and even with the error, I am able to have SATA
-> >> drive function as expected over this PCIe interface.
-> >>
-> >>
-> >> [    0.420648] PCI host bridge /soc/pcie@21020000 ranges:
-> >> [    0.420659]   No bus range found for /soc/pcie@21020000, using [bus 00-ff]
-> >> [    0.420679]    IO 0x23260000..0x400023263fff -> 0x00000000
-> >> [    0.420685] Requested IO range too big, new size set to 64K
-> >> [    0.420702]   MEM 0x60000000..0x6fffffff -> 0x60000000
-> >> [    0.420713] keystone-pcie 21021000.pcie: error -22: failed to map resource [io  0x0000-0x400000003fff]
-> >> [    0.431849] keystone-pcie 21021000.pcie: PCI host bridge to bus 0000:00
-> >> [    0.431861] pci_bus 0000:00: root bus resource [bus 00-ff]
-> >> [    0.431870] pci_bus 0000:00: root bus resource [io  0x0000-0x400000003fff]
-> > 
-> > This range is obviously bogus, since it's way too big and not a nice
-> > round size.  I guess this is what you're fixing.
-> 
-> Yes. But from your response, I gather it is better to remove the bogus range.
-> I removed the range, and did a read/write test to the hard drive connected 
-> to the Marvel SATA that is hooked to the PCIe interface and it still work
-> without issues. 
+On Tue, Mar 29, 2016 at 7:50 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Tuesday 29 March 2016 07:29:34 Tim Harvey wrote:
+>> On Tue, Mar 29, 2016 at 6:52 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> > On Tuesday 29 March 2016 06:32:29 Tim Harvey wrote:
+>
+>> >> I think 31e98e0d24cd2537a63e06e235e050a06b175df7 "ARM:
+>> >> imx_v6_v7_defconfig: enable PCI_MSI" should be reverted as well until
+>> >> we figure this out.
+>> >
+>> > That doesn't sound like a helpful solution, multi_v7_defconfig for
+>> > instance will still be broken because it enables PCI_MSI, and so
+>> > will be all major distros.
+>>
+>> Arnd,
+>>
+>> True, but keep in mind that as far as I can tell this behavior has
+>> been around since MSI was added to the IMX6 (breakage of devices that
+>> use legacy irq's if MSI is enabled) which was in 3.16.
+>
+> I see. This part wasn't clear to me.
+>
+>> > What happens if we patch the pci-imx6 driver to not make use of
+>> > its MSI support even when that is enabled in the kernel? Does that
+>> > get both devices in your GW5xxx to work with legacy interrupts or
+>> > is one or both of them still broken?
+>> >
+>> >         Arnd
+>> >
+>> > diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+>> > index eb5a2755a164..d7607b2695c6 100644
+>> > --- a/drivers/pci/host/pci-imx6.c
+>> > +++ b/drivers/pci/host/pci-imx6.c
+>> > @@ -470,7 +470,7 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+>> >
+>> >         imx6_pcie_establish_link(pp);
+>> >
+>> > -       if (IS_ENABLED(CONFIG_PCI_MSI))
+>> > +       if (0 && IS_ENABLED(CONFIG_PCI_MSI))
+>> >                 dw_pcie_msi_init(pp);
+>> >  }
+>> >
+>> > @@ -490,7 +490,7 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+>> >  {
+>> >         int ret;
+>> >
+>> > -       if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>> > +       if (0 && IS_ENABLED(CONFIG_PCI_MSI)) {
+>> >                 pp->msi_irq = platform_get_irq_byname(pdev, "msi");
+>> >                 if (pp->msi_irq <= 0) {
+>> >                         dev_err(&pdev->dev, "failed to get MSI irq\n");
+>> >
+>>
+>> That is not enough - we would also need to disable a couple more in
+>> the designware core that imx6 uses, which is also used by several
+>> other SoC's. We should probably get some feedback from people with
+>> those SoC's regarding MSI breaking legacy irqs.
+>
+> Good point. I really just meant this as an experiment, trying to
+> figure out what causes it to break. I'd be surprised if the
+> MSI support in the generic pcie-designware driver caused the same
+> problem on the other SoCs.
+>
+>> PCI_MSI was enabled in imx_v6_v7_defconfig in 4.5 and enabled in
+>> multi_v7_defconfig back in 3.16. PCI MSI was first introduced for the
+>> IMX6 host controller in 3.16 as well. I verified that the same issue
+>> exists all the way back to 3.16.
+>
+> Thanks for doing that research.
+>
+>> I don't know if its worse to disable PCI MSI for IMX6/designware all
+>> the way back to 3.16 or to disable it just back to 4.5 where imx_v6_v7
+>> enabled it, or perhaps just figure out the actual issue and get that
+>> backported?
+>
+> I'd like to see the problem understood better before we talk about
+> backports.
+>
+> One thing I just noticed is that the same GPC interrupt line (GIC_SPI
+> 120) is used for MSI and for IntD. Maybe there is something going on with
+> sharing an interrupt line between a nested irqchip and a device?
+>
+> Could this be a bug in the generic IRQ handling code? Can you check
+> which interrupt the broken device(s) on your machine are using? Is
+> it always the 120 (IntD) line, or are the other three lines broken
+> as well? I don't actually know how to look it up, but the 'lspci -t'
+> output should let us reconstruct the swizzling manually.
+>
+>         Arnd
 
-If your bridge doesn't support I/O space, you should definitely remove
-the range.
+Arnd,
 
-I'm curious about this Marvell SATA device, though.  It is this
-device?
+Right, on the IMX the MSI interrupt is GIC-120 which is also the
+legacy INTD and I do see that if I happen to put a radio in a slot
+where due to swizzling its pin1 becomes INTD (GIC-120) the interrupt
+does fire and the device works. Any other slot using GIC-123 (INTA),
+GIC-122 (INTB), or GIC-121 (INTC) never fires so its very possible
+that something in the designware core is masking out the legacy irqs.
+I would also think this was something IMX specific, but I really don't
+see any codepaths in pci-imx6.c that would cause that: a driver
+requesting a legacy PCI would get a GIC interrupt which is handled by
+the IMX6 gpc interrupt controller.
 
-  pci 0000:01:00.0: [1b4b:9182] type 00 class 0x010601
-  pci 0000:01:00.0: reg 0x10: [io  0x8000-0x8007] 
-  pci 0000:01:00.0: reg 0x14: [io  0x8040-0x8043] 
-  pci 0000:01:00.0: reg 0x18: [io  0x8100-0x8107] 
-  pci 0000:01:00.0: reg 0x1c: [io  0x8140-0x8143] 
-  pci 0000:01:00.0: reg 0x20: [io  0x800000-0x80000f]
-  pci 0000:01:00.0: reg 0x24: [mem 0x00900000-0x009001ff]
-  pci 0000:01:00.0: reg 0x30: [mem 0xd0000000-0xd000ffff pref]
+Any dra7xxx, exynos, spear13xx, keystone, layerscape, hisi, qcom SoC
+users of designware PCIe core out there that can verify PCI MSI and
+legacy are both working at the same time?
 
-If so, it looks like it uses the drivers/ata/ahci.c driver, which uses
-pcim_enable_device(), which should require all BARs to be assigned.
-(It doesn't look like there is a pcim_enable_device_mem() variant.)
+Lucas is the expert here and I believe he has the documentation for
+the designware core that Freescale doens't provide with the IMX6
+documentation so hopefully he can provide some insight. He's the one
+that has authored all the MSI support and has been using it.
 
-But if you're on an arm or arm64 platform and you have PCI_PROBE_ONLY
-set, pcibios_enable_device() doesn't check whether resources are
-assigned, so the problem would be masked.  We're trying to remove
-PCI_PROBE_ONLY, or at least remove it from paths like this, so this
-might become a problem soon.
+I typically advise our users to 'not' enable MSI because
+architecturally you can spread 4 distinct legacy irq's across CPU's
+better than a single shared irq.
 
-This might be a reason to add a pcim_enable_device_mem() interface
-that ahci_init_one() could use.  It looks like ahci_init_one() doesn't
-actually depend on the I/O BAR.
-
-> Another thing to worry about is the customers who are using custom
-> fpga pci devices connected to the pcie bus and presently using 
-> pci_enable_device() in their driver. So I guess if they fix their driver
-> to use pci_enable_device_mem() instead, it should continue to work
-> without issues, right? 
-
-Yes.
-
-If the FPGA PCI devices don't have I/O BARs, it doesn't matter whether
-the driver uses pci_enable_device() or pci_enable_device_mem().  If
-the device has an I/O BAR, but the driver doesn't need it, the driver
-should use pci_enable_device_mem().  That will make it more portable.
-
-Bjorn
+Tim
