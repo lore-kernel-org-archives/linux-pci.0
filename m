@@ -1,196 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:55298 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756755AbcCCX7p (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Mar 2016 18:59:45 -0500
-Received: from localhost
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 4 Mar 2016 09:59:42 +1000
-Received: from d23relay06.au.ibm.com (d23relay06.au.ibm.com [9.185.63.219])
-	by d23dlp02.au.ibm.com (Postfix) with ESMTP id 5F90F2BB0055
-	for <linux-pci@vger.kernel.org>; Fri,  4 Mar 2016 10:59:40 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-	by d23relay06.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u23NxWdr459112
-	for <linux-pci@vger.kernel.org>; Fri, 4 Mar 2016 10:59:40 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-	by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u23Nx7Rd009984
-	for <linux-pci@vger.kernel.org>; Fri, 4 Mar 2016 10:59:07 +1100
-Date: Fri, 4 Mar 2016 10:58:42 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	bhelgaas@google.com, mpe@ellerman.id.au, aik@ozlabs.ru,
-	ruscur@russell.cc
-Subject: Re: [PATCH v14 0/9] EEH Support for SRIOV VFs
-Message-ID: <20160303235842.GA7162@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:33384 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757681AbcC2Qkx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Mar 2016 12:40:53 -0400
+Received: by mail-oi0-f49.google.com with SMTP id d205so29913902oia.0
+        for <linux-pci@vger.kernel.org>; Tue, 29 Mar 2016 09:40:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1455084177-15525-1-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <56FAA9C1.5060107@tekno-soft.it>
+References: <m3h9fuk7ik.fsf@t19.piap.pl>
+	<23031613.R8qN30TbTq@wuerfel>
+	<CAJ+vNU2BKLDREOWP8EWXZR43to10yw+qvKwv1MzS4a_L9n5ozg@mail.gmail.com>
+	<5741237.2X2Q0sCFQj@wuerfel>
+	<CAJ+vNU3kBk+J-hU1OWPOS6kbFq+J0zM9QpfVy4x1VXL3hgrMTg@mail.gmail.com>
+	<56FAA9C1.5060107@tekno-soft.it>
+Date: Tue, 29 Mar 2016 09:40:06 -0700
+Message-ID: <CAJ+vNU0bQVd0qyLg+09CUHx4WsrEqwZ4hLVuuvazR8DWpiHE_g@mail.gmail.com>
+Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
+From: Tim Harvey <tharvey@gateworks.com>
+To: Roberto Fichera <kernel@tekno-soft.it>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	=?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	=?UTF-8?Q?Petr_=C5=A0tetiar?= <ynezz@true.cz>,
+	Fabio Estevam <festevam@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 10, 2016 at 05:02:48PM +1100, Gavin Shan wrote:
-
-In this series, there're some issues on attempt to recover errors on
-pass-throu VFs. Updated series (v15) with more patches sent to address
-the issues:
-
-So please ignore this series and look at v15.
-
-Thanks,
-Gavin
-
->This applies to linux-powerpc-next and additional unmerged patches:
+On Tue, Mar 29, 2016 at 9:13 AM, Roberto Fichera <kernel@tekno-soft.it> wrote:
+> On 03/29/2016 05:10 PM, Tim Harvey wrote:
+>> Arnd,
+>>
+>> Right, on the IMX the MSI interrupt is GIC-120 which is also the
+>> legacy INTD and I do see that if I happen to put a radio in a slot
+>> where due to swizzling its pin1 becomes INTD (GIC-120) the interrupt
+>> does fire and the device works. Any other slot using GIC-123 (INTA),
+>> GIC-122 (INTB), or GIC-121 (INTC) never fires so its very possible
+>> that something in the designware core is masking out the legacy irqs.
+>> I would also think this was something IMX specific, but I really don't
+>> see any codepaths in pci-imx6.c that would cause that: a driver
+>> requesting a legacy PCI would get a GIC interrupt which is handled by
+>> the IMX6 gpc interrupt controller.
+>>
+>> Any dra7xxx, exynos, spear13xx, keystone, layerscape, hisi, qcom SoC
+>> users of designware PCIe core out there that can verify PCI MSI and
+>> legacy are both working at the same time?
+>>
+>> Lucas is the expert here and I believe he has the documentation for
+>> the designware core that Freescale doens't provide with the IMX6
+>> documentation so hopefully he can provide some insight. He's the one
+>> that has authored all the MSI support and has been using it.
+>>
+>> I typically advise our users to 'not' enable MSI because
+>> architecturally you can spread 4 distinct legacy irq's across CPU's
+>> better than a single shared irq.
 >
->[v2,1/4] powerpc/eeh: Fix stale cached primary bus
->powerpc/eeh: fix incorrect function name in comment
->[V2] powerpc/powernv: Remove support for p5ioc2
->[V7,1/6] powerpc/powernv: don't enable SRIOV when VF BAR has non 64bit-prefetchable BAR
->92e963f Linux 4.5-rc1 - Linux powerpc next branch
->
->This patchset enables EEH on SRIOV VFs. The general idea is to create proper
->VF edev and VF PE and handle them properly.
->
->Different from the Bus PE, VF PE just contain one VF. This introduces the
->difference of EEH error handling on a VF PE. Generally, it has several
->differences.
->
->First, the VF's removal and re-enumerate rely on its PF. VF has a tight
->relationship between its PF. This is not proper to enumerate a VF by usual
->scan procedure. That's why virtfn_add/virtfn_remove are exported in this patch
->set.
->
->Second, the reset/restore of a VF is done in kernel space. FW is not aware of
->the VF, this means the usual reset function done in FW will not work. One of
->the patch will imitate the reset/restore function in kernel space.
->
->Third, the VF may be removed during the PF's error_detected function. In this
->case, the original error_detected->slot_reset->resume sequence is not proper
->to those removed VFs, since they are re-created by PF in a fresh state. A flag
->in eeh_dev is introduce to mark the eeh_dev is in error state. By doing so, we
->track whether this device needs to be reset or not.
->
->This has been tested both on host and in guest on Power8 with latest kernel
->version.
->
->Changelog
->=========
->v14:
->   * Rebased to linux-powerpc-next branch, plus additional patches related to
->     powerpc/pci and powerpc/eeh subsystems.
->   * Minor code changes
->   * Fix build error on pSeries reported by mpe
->v13:
->   * move eeh_rmv_data{} to eeh_driver.c
->v12:
->   * Rephrase some commit log to make it more clear and specific
->   * move vf_index assignment in CONFIG_PPC_POWERNV
->   * merge "Cache VF index in pci_dn" with "Support error recovery for VF PE"
->   * check the return value after eeh_dev_init() for VF
->   * initialize the parameter before pass to read_config()
->   * make pnv_pci_fixup_vf_mps() a dedicated patch, which fixup and store mps
->     value in pci_dn
->v11:
->   * move vf_index assignment in marco CONFIG_PPC_POWERNV
->   * merge Patch "Cache VF index in pci_dn" into Patch "Support error recovery
->     for VF PE"
->v10:
->   * rebased on v4.2
->   * delete the last patch "powerpc/powernv: compound PE for VFs" since after
->     redesign of SRIOV, there is no compound PE for VFs now.
->   * add two patches which fix problems found during tests
->     powerpc/eeh: Support error recovery for VF PE
->     powerpc/eeh: Handle hot removed VF when PF is EEH aware
->v9:
->   * split pcibios_bus_add_device() into a separate patch
->   * Bjorn acked the PCI part and agreed this patch set to be merged from ppc
->     tree
->   * rebased on mpe/linux.git next branch
->v8:
->   * fix on checking the return value of pnv_eeh_do_flr()
->   * introduced a weak function pcibios_bus_add_device() to create PE for VFs
->v7:
->   * fix compile error when PCI_IOV is not set
->v6:
->   * code / commit log refactor by Gavin
->v5:
->   * remove the compound field, iterate on Master VF PE instead
->   * some code refine on PCI config restore and reset on VF
->     the wait time for assert and deassert
->     PCI device address format
->     check on edev->pcie_cap and edev->aer_cap before access them
->v4:
->   * refine the change logs, comment and code style
->   * change pnv_pci_fixup_vf_eeh() to pnv_eeh_vf_final_fixup() and remove the
->     CONFIG_PCI_IOV macro
->   * reorder patch 5/6 to make the logic more reasonable
->   * remove remove_dev_pci_data()
->   * remove the EEH_DEV_VF flag, use edev->physfn to identify a VF EEH DEV and
->     remove related CONFIG_PCI_IOV macro
->   * add the option for VF reset
->   * fix the pnv_eeh_cfg_blocked() logic
->   * replace pnv_pci_cfg_{read,write} with eeh_ops->{read,write}_config in
->     pnv_eeh_vf_restore_config()
->   * rename pnv_eeh_vf_restore_config() to pnv_eeh_restore_vf_config()
->   * rename pnv_pci_fixup_vf_caps() to pnv_pci_vf_header_fixup() and move it
->     to arch/powerpc/platforms/powernv/pci.c
->   * add a field compound in pnv_ioda_pe to link compound PEs
->   * handle compound PE for VF PEs
->v3:
->   * add back vf_index in pci_dn to track the VF's index
->   * rename ppdev in eeh_dev to physfn for consistency
->   * move edev->physfn assignment before dev->dev.archdata.edev is set
->   * move pnv_pci_fixup_vf_eeh() and pnv_pci_fixup_vf_caps() to eeh-powernv.c
->   * more clear and detail in commit log and comment in code
->   * merge eeh_rmv_virt_device() with eeh_rmv_device()
->   * move the cfg_blocked check logic from pnv_eeh_read/write_config() to
->     pnv_eeh_cfg_blocked()
->   * move the vf reset/restore logic into its own patch, two patches are
->     created.
->     powerpc/powernv: Support PCI config restore for VFs
->     powerpc/powernv: Support EEH reset for VFs
->   * simplify the vf reset logic
->v2:
->   * add prefix pci_iov_ to virtfn_add/virtfn_remove
->   * use EEH_DEV_VF as a flag for a VF's eeh_dev
->   * use eeh_dev instead of edev in change log
->   * remove vf_index in eeh_dev, calculate it from pdn->busno and devfn
->   * do eeh_add_device_late() and eeh_sysfs_add_device() both after pci_dev is
->     well initialized
->   * do FLR to reset a VF PE
->   * imitate the restore function in FW for VF
->   * remove the reverse order patch, since it is still under discussion
->
->Wei Yang (9):
->  PCI/IOV: Rename and export virtfn_{add, remove}
->  PCI: Add pcibios_bus_add_device() weak function
->  powerpc/pci: Remove VFs prior to PF
->  powerpc/eeh: Cache normal BARs, not windows or IOV BARs
->  powerpc/eeh: EEH device for VF
->  powerpc/eeh: Create PE for VFs
->  powerpc/powernv: Support EEH reset for VF PE
->  powerpc/powernv: Support PCI config restore for VFs
->  powerpc/eeh: powerpc/eeh: Support error recovery for VF PE
->
-> arch/powerpc/include/asm/eeh.h               |   5 +
-> arch/powerpc/include/asm/pci-bridge.h        |   2 +
-> arch/powerpc/kernel/eeh.c                    |  17 +-
-> arch/powerpc/kernel/eeh_cache.c              |  11 +-
-> arch/powerpc/kernel/eeh_dev.c                |   1 +
-> arch/powerpc/kernel/eeh_driver.c             | 137 ++++++++++++---
-> arch/powerpc/kernel/eeh_pe.c                 |  10 +-
-> arch/powerpc/kernel/pci-hotplug.c            |   2 +-
-> arch/powerpc/kernel/pci_dn.c                 |  19 ++-
-> arch/powerpc/platforms/powernv/eeh-powernv.c | 238 ++++++++++++++++++++++++++-
-> drivers/pci/bus.c                            |   3 +
-> drivers/pci/iov.c                            |  10 +-
-> include/linux/pci.h                          |   9 +
-> 13 files changed, 417 insertions(+), 47 deletions(-)
->
->-- 
->2.1.0
+> Don't know if I'm facing similar problem, however devices connected in miniPCI slot behind
+> a PCIe-to-PCI bridge (MSI is disabled) using INTA all is working ok, including shared IRQ.
+> In case of INTB will not work, and the GIC irq quite often get stuck.
 >
 
+Roberto,
+
+What board/platform is this and what does /proc/interrupts look like?
+
+This sounds like what would happen if the downstream interrupts on the
+PCIe-to-PCI bridge are not mapped properly as was the case with a
+board I support (in which case I had to work out a bootloader fixup
+that placed a non-standard interrupt-map in the device-tree for the
+bridge). What bridge are you using?
+
+Tim
