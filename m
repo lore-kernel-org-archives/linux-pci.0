@@ -1,63 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
-	alex.williamson@redhat.com, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [RFC PATCH v4 7/7] powerpc/powernv/pci-ioda: Add IOMMU_CAP_INTR_REMAP for IODA host bridge
-Date: Mon,  7 Mar 2016 15:48:38 +0800
-Message-Id: <1457336918-3893-8-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:56076 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755626AbcC2Dnb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 28 Mar 2016 23:43:31 -0400
+From: Simon Horman <horms+renesas@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>,
+	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH] PCI: rcar-pcie: Remove Gen2 designation from Kconfig
+Date: Tue, 29 Mar 2016 12:43:18 +0900
+Message-Id: <1459222998-2855-1-git-send-email-horms+renesas@verge.net.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds IOMMU_CAP_INTR_REMAP for IODA host bridge so that
-we can mmap MSI-X table in vfio driver.
+It appears that Gen2 is a misnomer for the R-Car PCIE driver
+which also supports Gen 1 and Gen 3 SoCs. Accordingly, drop Gen 2
+from the help text and Kconfig symbol.
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c |   17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+Bjorn, if this patch is acceptable I would like to request that we
+co-ordinate things so that I can queue-up corresponding updates for
+arm and arm64 defconfigs in the same release. From my point of view
+v4.7 would make sense.
+---
+ drivers/pci/host/Kconfig  | 4 ++--
+ drivers/pci/host/Makefile | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index f90dc04..f01b9ab 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1955,6 +1955,20 @@ static struct iommu_table_ops pnv_ioda2_iommu_ops = {
- 	.free = pnv_ioda2_table_free,
- };
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 7a0780d56d2d..9109c6c5298c 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -69,11 +69,11 @@ config PCI_RCAR_GEN2
+ 	  There are 3 internal PCI controllers available with a single
+ 	  built-in EHCI/OHCI host controller present on each one.
  
-+static bool pnv_ioda_iommu_capable(enum iommu_cap cap)
-+{
-+	switch (cap) {
-+	case IOMMU_CAP_INTR_REMAP:
-+		return true;
-+	default:
-+		return false;
-+	}
-+}
-+
-+static struct iommu_ops pnv_ioda_iommu_ops = {
-+	.capable = pnv_ioda_iommu_capable,
-+};
-+
- static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
- 				      struct pnv_ioda_pe *pe, unsigned int base,
- 				      unsigned int segs)
-@@ -3078,6 +3092,9 @@ static void pnv_pci_ioda_fixup(void)
+-config PCI_RCAR_GEN2_PCIE
++config PCI_RCAR_PCIE
+ 	bool "Renesas R-Car PCIe controller"
+ 	depends on ARCH_RENESAS || (ARM && COMPILE_TEST)
+ 	help
+-	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
++	  Say Y here if you want PCIe controller support on R-Car SoCs.
  
- 	/* Link NPU IODA tables to their PCI devices. */
- 	pnv_npu_ioda_fixup();
-+
-+	/* Add IOMMU_CAP_INTR_REMAP */
-+	bus_set_iommu(&pci_bus_type, &pnv_ioda_iommu_ops);
- }
- 
- /*
+ config PCI_HOST_COMMON
+ 	bool
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index d85b5faf9bbc..042cf32c14ca 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -7,7 +7,7 @@ obj-$(CONFIG_PCI_HYPERV) += pci-hyperv.o
+ obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+ obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+ obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+-obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
++obj-$(CONFIG_PCI_RCAR_PCIE) += pcie-rcar.o
+ obj-$(CONFIG_PCI_HOST_COMMON) += pci-host-common.o
+ obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
+ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
 -- 
-1.7.9.5
+2.1.4
+
