@@ -1,56 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db3on0058.outbound.protection.outlook.com ([157.55.234.58]:42496
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755857AbcCCBsm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 2 Mar 2016 20:48:42 -0500
-From: Richard Zhu <hongxing.zhu@nxp.com>
-To: Christoph Fritz <chf.fritz@googlemail.com>,
+Received: from ni.piap.pl ([195.187.100.4]:51883 "EHLO ni.piap.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750696AbcC2FVK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Mar 2016 01:21:10 -0400
+From: khalasa@piap.pl (Krzysztof =?utf-8?Q?Ha=C5=82asa?=)
+To: Tim Harvey <tharvey@gateworks.com>
+Cc: Fabio Estevam <festevam@gmail.com>,
 	Lucas Stach <l.stach@pengutronix.de>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Fabio Estevam <fabio.estevam@nxp.com>,
+	Petr =?utf-8?Q?=C5=A0tetiar?= <ynezz@true.cz>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Lee Jones <lee.jones@linaro.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH v3 0/2] Add PCIe driver support for imx6sx
-Date: Thu, 3 Mar 2016 01:48:36 +0000
-Message-ID: <DBXPR04MB27013C807F30DABB9CB667D8CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
-References: <1456411669-4699-1-git-send-email-chf.fritz@googlemail.com>
-In-Reply-To: <1456411669-4699-1-git-send-email-chf.fritz@googlemail.com>
-Content-Type: text/plain; charset="us-ascii"
+	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel\@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
+References: <m3h9fuk7ik.fsf@t19.piap.pl>
+	<CAOMZO5DcZCxoLPeGRWSGkstm7F3eN-Q-yJyf6ktMTda2zLviag@mail.gmail.com>
+	<CAOMZO5B8Lzn-E4YOeYxVtN5PN11aOvZHn4eU0ixkdV8CO8+xYw@mail.gmail.com>
+	<CAJ+vNU2Sg1ZKBsGcQswrJZyTJ1WBEZor3ZqpoYUT7i9FKjEAog@mail.gmail.com>
+	<CAOMZO5DO9G18=_YSri3a+UiYbLwN6AMG4asUXbT03mpbU3hHrw@mail.gmail.com>
+	<CAJ+vNU1_YqvWQkmuDB7r8z77iZJS6pP4Mr+j9yW4sFLAeJXQDw@mail.gmail.com>
+Date: Tue, 29 Mar 2016 07:21:04 +0200
+In-Reply-To: <CAJ+vNU1_YqvWQkmuDB7r8z77iZJS6pP4Mr+j9yW4sFLAeJXQDw@mail.gmail.com>
+	(Tim Harvey's message of "Mon, 28 Mar 2016 13:42:33 -0700")
+Message-ID: <m3a8lhkgfz.fsf@t19.piap.pl>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Christoph Fritz [mailto:chf.fritz@googlemail.com]
-> Sent: Thursday, February 25, 2016 10:48 PM
-> To: Richard Zhu; Lucas Stach; Shawn Guo; Fabio Estevam; Bjorn Helgaas; Lee
-> Jones
-> Cc: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org
-> Subject: [PATCH v3 0/2] Add PCIe driver support for imx6sx
-> 
-> v3:
->  * adapt devicetree bindings documentation fsl,imx6q-pcie.txt
-> v2:
->  * leave out regulator handling from driver, will be done later
->    in PM subsystem
->  * use BIT() macro for MFD
-> 
-> Christoph Fritz (2):
->   MFD: imx6sx: Add PCIe register definitions for iomuxc gpr
->   PCI: imx6: add initial imx6sx support
-> 
->  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |   6 +-
->  drivers/pci/host/pci-imx6.c                        | 130 ++++++++++++++-------
->  include/linux/mfd/syscon/imx6q-iomuxc-gpr.h        |   5 +
->  3 files changed, 101 insertions(+), 40 deletions(-)
-> 
-> --
-> 2.1.4
+Tim Harvey <tharvey@gateworks.com> writes:
 
-[Zhu hongxing]  Acked-by: Richard Zhu <Richard.Zhu@freescale.com>
-Richard
-Best Regards
+> ok - I'll respond there as I agree with the patch but not the wording
+> of the commit (It's Gateworks 'Ventana' using IMX6 not Laguna and we
+> do define the polarity properly as active-low in Ventana dt's).
+
+Right, it's Ventana of course (I had been working with Laguna boards
+recently).
+
+> However, there seems to be another regression in 4.5 that's keeping
+> PCI working for me and I'm still bisecting that (using 802.11n access
+> points to test). Can you confirm that PCI works in v4.5 on IMX6 boards
+> with only 5c5fb40de8f14391a1238db05cef88754faf9229 reverted?
+
+I will check with my frame buffer and wifi cards.
+-- 
+Krzysztof Halasa
+
+Industrial Research Institute for Automation and Measurements PIAP
+Al. Jerozolimskie 202, 02-486 Warsaw, Poland
