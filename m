@@ -1,107 +1,45 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	"linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jiang Liu <jiang.liu@linux.intel.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Mark Salter <msalter@redhat.com>
-Subject: Re: [PATCH v3] PCI: ACPI: IA64: fix IO port generic range check
-Date: Tue, 22 Mar 2016 15:42:58 +0100
-Message-ID: <6828228.erfiER1Ahm@vostro.rjw.lan>
-In-Reply-To: <20160322130219.GB19418@localhost>
-References: <1458558775-6242-1-git-send-email-lorenzo.pieralisi@arm.com> <CAJZ5v0gvB8fHzmgrnz2wOPdLakJyuRg0eQ65oo13LP0_PHRAbg@mail.gmail.com> <20160322130219.GB19418@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f171.google.com ([209.85.223.171]:35324 "EHLO
+	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756902AbcC2OOj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Mar 2016 10:14:39 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1459241739.2565.9.camel@pengutronix.de>
+References: <m3h9fuk7ik.fsf@t19.piap.pl>
+	<CAOMZO5DcZCxoLPeGRWSGkstm7F3eN-Q-yJyf6ktMTda2zLviag@mail.gmail.com>
+	<CAOMZO5B8Lzn-E4YOeYxVtN5PN11aOvZHn4eU0ixkdV8CO8+xYw@mail.gmail.com>
+	<CAJ+vNU2Sg1ZKBsGcQswrJZyTJ1WBEZor3ZqpoYUT7i9FKjEAog@mail.gmail.com>
+	<CAOMZO5DO9G18=_YSri3a+UiYbLwN6AMG4asUXbT03mpbU3hHrw@mail.gmail.com>
+	<CAJ+vNU1_YqvWQkmuDB7r8z77iZJS6pP4Mr+j9yW4sFLAeJXQDw@mail.gmail.com>
+	<CAOMZO5A2osG3=mTaCayYfMokUj-vT+Udq9ckq45b1yaUP9Tn3g@mail.gmail.com>
+	<CAJ+vNU2ST=XG5H04-OCwpHgcvkoXOQw8F3MjXhJmWhBUbxWE-g@mail.gmail.com>
+	<1459241739.2565.9.camel@pengutronix.de>
+Date: Tue, 29 Mar 2016 11:14:38 -0300
+Message-ID: <CAOMZO5Cisx9xv9hCxzYK2U-MdVCdbVMYGY2y4PVoVReWjwE8=g@mail.gmail.com>
+Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
+From: Fabio Estevam <festevam@gmail.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Tim Harvey <tharvey@gateworks.com>,
+	=?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
+	=?UTF-8?Q?Petr_=C5=A0tetiar?= <ynezz@true.cz>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, March 22, 2016 08:02:19 AM Bjorn Helgaas wrote:
-> On Mon, Mar 21, 2016 at 01:42:01PM +0100, Rafael J. Wysocki wrote:
-> > On Mon, Mar 21, 2016 at 12:12 PM, Lorenzo Pieralisi
+On Tue, Mar 29, 2016 at 5:55 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
 
-[cut]
+> I would suspect that most boards specify the reset polarity the wrong
+> way around. Fixing this without breaking DT stability is hard. OTOH we
 
-> > >
-> > > Fixes: 3772aea7d6f3 ("ia64/PCI/ACPI: Use common ACPI resource parsing
-> > > interface for host bridge")
-> > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> > > Cc: Jiang Liu <jiang.liu@linux.intel.com>
-> > > Cc: Tony Luck <tony.luck@intel.com>
-> > > Cc: Tomasz Nowicki <tn@semihalf.com>
-> > > Cc: Mark Salter <msalter@redhat.com>
-> > > Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-> > > ---
-> > > v2 -> v3
-> > >
-> > > - Moved IO resource check to generic ACPI resource code
-> > > - Dropped Tested-by tags
-> > > - Rebased against v4.5
-> > >
-> > > v2: https://marc.info/?l=linux-acpi&m=145521271330332&w=2
-> > >
-> > > v1 -> v2
-> > >
-> > > - Updated commit log to report missing IO resources
-> > > - Fixed function ioport_valid() comment 16k/64k typo
-> > >
-> > > v1: https://marc.info/?l=linux-acpi&m=145432228025354&w=2
-> > >
-> > >  drivers/acpi/resource.c | 14 +++++++++++++-
-> > >  1 file changed, 13 insertions(+), 1 deletion(-)
-> > >
-> > > diff --git a/drivers/acpi/resource.c b/drivers/acpi/resource.c
-> > > index d02fd53..56241eb 100644
-> > > --- a/drivers/acpi/resource.c
-> > > +++ b/drivers/acpi/resource.c
-> > > @@ -27,8 +27,20 @@
-> > >
-> > >  #ifdef CONFIG_X86
-> > >  #define valid_IRQ(i) (((i) != 0) && ((i) != 2))
-> > > +static inline bool acpi_iospace_resource_valid(struct resource *res)
-> > > +{
-> > > +       /* On X86 IO space is limited to the [0 - 64K] IO port range */
-> > > +       return res->end < 0x10003;
-> > > +}
-> > >  #else
-> > >  #define valid_IRQ(i) (true)
-> > > +/*
-> > > + * ACPI IO descriptors on arches other than X86 contain MMIO CPU physical
-> > > + * addresses mapping IO space in CPU physical address space, IO space
-> > > + * resources can be placed anywhere in the 64-bit physical address space.
-> > > + */
-> > > +static inline bool
-> > > +acpi_iospace_resource_valid(struct resource *res) { return true; }
-> > >  #endif
-> > >
-> > >  static bool acpi_dev_resource_len_valid(u64 start, u64 end, u64 len, bool io)
-> > > @@ -127,7 +139,7 @@ static void acpi_dev_ioresource_flags(struct resource *res, u64 len,
-> > >         if (!acpi_dev_resource_len_valid(res->start, res->end, len, true))
-> > >                 res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
-> > >
-> > > -       if (res->end >= 0x10003)
-> > > +       if (!acpi_iospace_resource_valid(res))
-> > >                 res->flags |= IORESOURCE_DISABLED | IORESOURCE_UNSET;
-> > >
-> > >         if (io_decode == ACPI_DECODE_16)
-> > > --
-> > 
-> > This is fine by me.
-> > 
-> > Bjorn?
-> 
-> Looks good to me.
+It is not hard if we just revert the buggy commit.
 
-OK, thanks!
+> could just argue that the system description in DT is wrong and needs to
+> be fixed.
 
-May I take this as an ACK? :-)
-
+Sure, this would be a nice thing to do as well.
