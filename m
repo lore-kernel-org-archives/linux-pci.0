@@ -1,112 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45074 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933284AbcCOC2Q (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 14 Mar 2016 22:28:16 -0400
-Subject: Re: [PATCH 1/4] acpi,pci,irq: reduce resource requirements
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1457484079-18202-1-git-send-email-okaya@codeaurora.org>
- <20160314185251.GA19703@localhost> <56E7211F.3070203@codeaurora.org>
- <20160314210147.GA11459@localhost> <56E73232.9030704@codeaurora.org>
- <20160315014843.GA16967@localhost>
-Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org, linux-pci@vger.kernel.org,
-	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
-	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
-	rjw@rjwysocki.net, linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <56E7733B.4050308@codeaurora.org>
-Date: Mon, 14 Mar 2016 22:28:11 -0400
+Received: from mail.kernel.org ([198.145.29.136]:44663 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751915AbcC2Mp5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 29 Mar 2016 08:45:57 -0400
+Date: Tue, 29 Mar 2016 13:44:41 +0100 (BST)
+From: Stefano Stabellini <sstabellini@kernel.org>
+To: Konrad Rzeszutek Wilk <konrad@kernel.org>
+cc: Sinan Kaya <okaya@codeaurora.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	linux-arm-kernel@lists.infradead.org, timur@codeaurora.org,
+	cov@codeaurora.org, nwatters@codeaurora.org,
+	linux-mips@linux-mips.org, linux-ia64@vger.kernel.org,
+	linux-xtensa@linux-xtensa.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Max Filippov <jcmvbkbc@gmail.com>,
+	Chris Metcalf <cmetcalf@ezchip.com>,
+	Paul Mackerras <paulus@samba.org>,
+	"H. Peter Anvin" <hpa@zytor.com>, Huacai Chen <chenhc@lemote.com>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Jisheng Zhang <jszhang@marvell.com>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Michael Ellerman <mpe@ellerman.id.au>, X86 <x86@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Denys Vlasenko <dvlasenk@redhat.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Akinobu Mita <akinobu.mita@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Valentin Rothberg <valentinrothberg@gmail.com>,
+	Chris Zankel <chris@zankel.net>,
+	Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, Dean Nelson <dnelson@redhat.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+	Joe Perches <joe@perches.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	sstabellini@kernel.org
+Subject: Re: [PATCH 2/3] swiotlb: prefix dma_to_phys and phys_to_dma
+ functions
+In-Reply-To: <CACJDEmrzKOExg-Rchjy2hfVzkzbCZ=WNn4Bu3EVgim748VvRig@mail.gmail.com>
+Message-ID: <alpine.DEB.2.02.1603291329460.18380@kaball.uk.xensource.com>
+References: <1458252137-24497-1-git-send-email-okaya@codeaurora.org> <1458252137-24497-2-git-send-email-okaya@codeaurora.org> <56EBF09A.1060503@arm.com> <56EC1805.5060207@codeaurora.org> <CACJDEmrzKOExg-Rchjy2hfVzkzbCZ=WNn4Bu3EVgim748VvRig@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160315014843.GA16967@localhost>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/14/2016 9:48 PM, Bjorn Helgaas wrote:
-
-Yes. I was talking about PCIe on ARM64. 
-
-> If you go to Fry's and buy a conventional PCI card, it is going to
-> pull INTA# low to assert an interrupt.  It doesn't matter whether you
-> put it in an x86 system or an arm64 system.
+On Mon, 28 Mar 2016, Konrad Rzeszutek Wilk wrote:
+> On Fri, Mar 18, 2016 at 11:00 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
+> > On 3/18/2016 8:12 AM, Robin Murphy wrote:
+> >> Since we know for sure that swiotlb_to_phys is a no-op on arm64, it might be cleaner to simply not reference it at all. I suppose we could have some private local wrappers, e.g.:
+> >>
+> >> #define swiotlb_to_virt(addr) phys_to_virt((phys_addr_t)(addr))
+> >>
+> >> to keep the intent of the code clear (and just in case anyone ever builds a system mad enough to warrant switching out that definition, but I'd hope that never happens).
+> >>
+> >> Otherwise, looks good - thanks for doing this!
+> >
+> > OK. I added this. Reviewed-by?
+> >
+> > I'm not happy to submit such a big patch for all different ARCHs. I couldn't
+> > find a cleaner solution. I'm willing to split this patch into multiple if there
+> > is a better way.
+> >
+> > diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
+> > index ada00c3..8c0f66b 100644
+> > --- a/arch/arm64/mm/dma-mapping.c
+> > +++ b/arch/arm64/mm/dma-mapping.c
+> > @@ -29,6 +29,14 @@
+> >
+> >  #include <asm/cacheflush.h>
+> >
+> > +/*
+> > + * If you are building a system without IOMMU, then you are using SWIOTLB
+> > + * library. The ARM64 adaptation of this library does not support address
+> > + * translation and it assumes that physical address = dma address for such
+> > + * a use case. Please don't build a platform that violates this.
+> > + */
 > 
-
-I don't see INTA# of the PCIe card at the system level. The PCIe wire 
-interrupt gets converted to the system level interrupt by the PCIe controller.
-
->> > I pasted the code here again. It looks like you want to validate that
->> > PCI interrupts are always level low. 
-> I don't really care whether PCI interrupts are always level low.  What
-> matters is that the PCI interrupt line matches the configuration of
-> the interrupt controller input.
+> Why not just expand the ARM64 part to support address translation?
+>
+> > +#define swiotlb_to_virt(addr) phys_to_virt((phys_addr_t)(addr))
+> > +
 > 
+> Adding Stefano here.
 
-Agreed. But the interrupt controller configuration is system specific. How would
-you check interrupt line against what the interrupt controller requires
-on each architecture as this is common code?
+Could you please explain what is the problem that you are trying to
+solve? In other words, what is the issue with assuming that physical
+address = dma address (and the current dma_to_phys and phys_to_dma
+static inlines) if no arm64 platforms violate it? That's pretty much
+what is done on x86 too (without X86_DMA_REMAP).
 
+If you want to make sure that the assumption is not violated, you can
+introduce a boot time check or a BUG_ON somewhere.
 
-> If the PCI interrupt can be a different type, e.g., level high, and
-> there's a way to discover that, we can check that against the
-> interrupt controller configuration.
+If there is an arm64 platform with phys_addr != dma_addr, we need proper
+support for it. In fact even if there is an IOMMU on that platform, when
+running Xen on it, the IOMMU would be used by the hypervisor and Linux
+would still end up without it, using the swiotlb.
+
+ 
+> >  static pgprot_t __get_dma_pgprot(struct dma_attrs *attrs, pgprot_t prot,
+> >                                  bool coherent)
+> >  {
+> > @@ -188,7 +196,7 @@ static void __dma_free(struct device *dev, size_t size,
+> >                        void *vaddr, dma_addr_t dma_handle,
+> >                        struct dma_attrs *attrs)
+> >  {
+> > -       void *swiotlb_addr = phys_to_virt(swiotlb_dma_to_phys(dev, dma_handle));
+> > +       void *swiotlb_addr = swiotlb_to_virt(dma_handle);
+> >
+> >         size = PAGE_ALIGN(size);
+> >
+> > @@ -209,8 +217,7 @@ static dma_addr_t __swiotlb_map_page(struct device *dev, struct page *page,
+> >
+> >         dev_addr = swiotlb_map_page(dev, page, offset, size, dir, attrs);
+> >         if (!is_device_dma_coherent(dev))
+> > -               __dma_map_area(phys_to_virt(swiotlb_dma_to_phys(dev, dev_addr)),
+> > -                              size, dir);
+> > +               __dma_map_area(swiotlb_to_virt(dev_addr), size, dir);
+> >
+> >         return dev_addr;
+> >  }
+> > @@ -283,8 +290,7 @@ static void __swiotlb_sync_single_for_device(struct device *dev,
+> >  {
+> >         swiotlb_sync_single_for_device(dev, dev_addr, size, dir);
+> >         if (!is_device_dma_coherent(dev))
+> > -               __dma_map_area(phys_to_virt(swiotlb_dma_to_phys(dev, dev_addr)),
+> > -                              size, dir);
+> > +               __dma_map_area(swiotlb_to_virt(dev_addr), size, dir);
+> >  }
+> >
+> >
+> >
+> >
+> > --
+> > Sinan Kaya
+> > Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+> > Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
 > 
-> This is all in the context of conventional PCI, and we're probably
-> talking about arm64 PCIe systems, not conventional PCI. 
-
-INTx interrupts are TLP messages on PCIe as you already know. There is no INTA 
-interrupt wire.
-
-"6.1.2. PCI Compatible INTx Emulation" section of the PCIe spec describes
-INTx emulation on PCIe.
-
-I pasted that section here for your reference.
-
-"Two types of Messages are defined, Assert_INTx and Deassert_INTx, for emulation of PCI INTx
-signaling, where x is A, B, C, and D for respective PCI interrupt signals. These Messages are used to
-provide “virtual wires” for signaling interrupts across a Link. Switches collect these virtual wires and
-present a combined set at the Switch’s Upstream Port. Ultimately, the virtual wires are routed to the
-Root Complex which maps the virtual wires to system interrupt resources. Devices must use
-10 assert/de-assert Messages in pairs to emulate PCI interrupt level-triggered signaling. Actual
-mapping of PCI Express INTx emulation to system interrupts is implementation specific as is
-mapping of physical interrupt signals in conventional PCI."
-
-
-> I'm not sure what an Interrupt Link device means in PCIe.  I suppose it would have
-> to connect an INTx virtual wire to a system interrupt?  The PCIe spec
-> says this sort of mapping is system implementation specific (r3.0, sec
-> 2.2.8.1).
-> 
-
-The INTx messages are converted to the system interrupt by the PCIe controller.
-The interrupt type between the PCIe controller and the ARM GIC interrupt 
-controller is dictated by the ARM GIC Interrupt Controller Specification for
-ARM64.
-
-Here is what ACPI table looks like for reference
-
-	Name(_PRT, Package(){
-		Package(){0x0FFFF, 0, \_SB.LN0A, 0},  // Slot 0, INTA
-		Package(){0x0FFFF, 1, \_SB.LN0B, 0},  // Slot 0, INTB
-		Package(){0x0FFFF, 2, \_SB.LN0C, 0},  // Slot 0, INTC
-		Package(){0x0FFFF, 3, \_SB.LN0D, 0}   // Slot 0, INTD
-	}) 
-
-Device(LN0A){
-	Name(_HID, EISAID("PNP0C0F")) // PCI interrupt link
-	Name(_UID, 1)
-	Name(_PRS, ResourceTemplate(){
-	Interrupt(ResourceProducer, Level, ActiveHigh, Exclusive, , ,) {0x123}
-	})
-	Method(_DIS) {}
-	Method(_CRS) { Return (_PRS) }
-	Method(_SRS, 1) {}
-} 
-
-
-
-
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
