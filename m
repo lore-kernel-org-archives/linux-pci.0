@@ -1,57 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52944 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756924AbcCCRnR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Mar 2016 12:43:17 -0500
-Date: Thu, 3 Mar 2016 11:43:13 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Minghuan Lian <Minghuan.Lian@nxp.com>,
-	Murali Karicheri <m-karicheri2@ti.com>
-Subject: [GIT PULL] PCI fixes for v4.5
-Message-ID: <20160303174313.GA9613@localhost>
+Received: from smtp.codeaurora.org ([198.145.29.96]:52674 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751625AbcC2M5x (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Mar 2016 08:57:53 -0400
+Subject: Re: [PATCH 2/3] swiotlb: prefix dma_to_phys and phys_to_dma functions
+To: Stefano Stabellini <sstabellini@kernel.org>,
+	Konrad Rzeszutek Wilk <konrad@kernel.org>
+References: <1458252137-24497-1-git-send-email-okaya@codeaurora.org>
+ <1458252137-24497-2-git-send-email-okaya@codeaurora.org>
+ <56EBF09A.1060503@arm.com> <56EC1805.5060207@codeaurora.org>
+ <CACJDEmrzKOExg-Rchjy2hfVzkzbCZ=WNn4Bu3EVgim748VvRig@mail.gmail.com>
+ <alpine.DEB.2.02.1603291329460.18380@kaball.uk.xensource.com>
+Cc: Robin Murphy <robin.murphy@arm.com>,
+	linux-arm-kernel@lists.infradead.org, timur@codeaurora.org,
+	cov@codeaurora.org, nwatters@codeaurora.org,
+	linux-mips@linux-mips.org, linux-ia64@vger.kernel.org,
+	linux-xtensa@linux-xtensa.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Max Filippov <jcmvbkbc@gmail.com>,
+	Chris Metcalf <cmetcalf@ezchip.com>,
+	Paul Mackerras <paulus@samba.org>,
+	"H. Peter Anvin" <hpa@zytor.com>, Huacai Chen <chenhc@lemote.com>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Jisheng Zhang <jszhang@marvell.com>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Michael Ellerman <mpe@ellerman.id.au>, X86 <x86@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Fenghua Yu <fenghua.yu@intel.com>,
+	Denys Vlasenko <dvlasenk@redhat.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Akinobu Mita <akinobu.mita@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Valentin Rothberg <valentinrothberg@gmail.com>,
+	Chris Zankel <chris@zankel.net>,
+	Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, Dean Nelson <dnelson@redhat.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+	Joe Perches <joe@perches.com>,
+	Andrew Morton <akpm@linux-foundation.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <56FA7BC9.2010903@codeaurora.org>
+Date: Tue, 29 Mar 2016 08:57:45 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.02.1603291329460.18380@kaball.uk.xensource.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On 3/29/2016 8:44 AM, Stefano Stabellini wrote:
+> Could you please explain what is the problem that you are trying to
+> solve? In other words, what is the issue with assuming that physical
+> address = dma address (and the current dma_to_phys and phys_to_dma
+> static inlines) if no arm64 platforms violate it? That's pretty much
+> what is done on x86 too (without X86_DMA_REMAP).
+> 
+> If you want to make sure that the assumption is not violated, you can
+> introduce a boot time check or a BUG_ON somewhere.
+> 
+> If there is an arm64 platform with phys_addr != dma_addr, we need proper
+> support for it. In fact even if there is an IOMMU on that platform, when
+> running Xen on it, the IOMMU would be used by the hypervisor and Linux
+> would still end up without it, using the swiotlb.
 
-Here are a couple more fixes for v4.5.  These only affect the Layerscape
-and Keystone host controllers, and they fix system crashes and hangs.
 
-Bjorn
+The problem is that device drivers are trying to use dma_to_phys and phys_to_dma
+APIs to do address translation even though these two API do not exist in DMA mapping
+layer. (see patch #1 and I made the same mistake in my HIDMA code)
 
+Especially, when a device is behind an IOMMU; the DMA addresses are not equal
+to physical addresses. Usage of dma_to_phys causes a crash on the system.
 
-The following changes since commit 61d9e854dfb91b46b99ffd3d31fc7d45d2b95f31:
+I'm trying to prefix the dma_to_phys and phys_to_dma API with swiotlb so that
+we know what it is intended for and usage of these API in drivers need to be
+discouraged in the future during code reviews.
 
-  PCI: mvebu: Restrict build to 32-bit ARM (2016-02-27 08:52:20 -0600)
+Since I renamed the API, Robin Murphy made a suggestion to convert this 
 
-are available in the git repository at:
+phys_to_virt(swiotlb_dma_to_phys(dev, dma_handle))
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.5-fixes-4
+to this
 
-for you to fetch changes up to 1195c103f6c98d9ff381cac3a8760d4f8a133627:
+#define swiotlb_to_virt(addr) phys_to_virt((phys_addr_t)(addr))
 
-  PCI: layerscape: Fix MSG TLP drop setting (2016-02-29 17:24:15 -0600)
+swiotlb_to_virt(dma_handle)
 
-----------------------------------------------------------------
-PCI updates for v4.5:
+just to reduce code clutter since we know swiotlb_dma_to_phys returns phys already
+for ARM64 architecture.
 
-  Freescale Layerscape host bridge driver
-    Fix MSG TLP drop setting (Minghuan Lian)
+I think we can do this exercise later. I'll undo this change for the moment. 
+Let's focus on the API rename. 
 
-  TI Keystone host bridge driver
-    Fix MSI code that retrieves struct pcie_port pointer (Murali Karicheri)
+I don't want this general purpose dma_to_phys API returning phys=dma value. This is
+not correct.
 
-----------------------------------------------------------------
-Minghuan Lian (1):
-      PCI: layerscape: Fix MSG TLP drop setting
-
-Murali Karicheri (1):
-      PCI: keystone: Fix MSI code that retrieves struct pcie_port pointer
-
- drivers/pci/host/pci-keystone-dw.c | 11 +++--------
- drivers/pci/host/pci-layerscape.c  | 21 +++++++++++++--------
- 2 files changed, 16 insertions(+), 16 deletions(-)
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
