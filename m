@@ -1,37 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db3on0057.outbound.protection.outlook.com ([157.55.234.57]:7424
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752427AbcCGHty convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Mar 2016 02:49:54 -0500
-From: Ilya Lesokhin <ilyal@mellanox.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "helgaas@kernel.org" <helgaas@kernel.org>,
-	Haggai Eran <haggaie@mellanox.com>
-Subject: pci_enable_sriov is not thread safe
-Date: Mon, 7 Mar 2016 07:17:57 +0000
-Message-ID: <VI1PR05MB1119F15E98C4277F6FD1AA30D4B10@VI1PR05MB1119.eurprd05.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mout.kundenserver.de ([212.227.17.13]:51802 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753970AbcC2TgN (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Mar 2016 15:36:13 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org,
+	Denys Vlasenko <dvlasenk@redhat.com>
+Cc: Konrad Rzeszutek Wilk <konrad@kernel.org>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-mips@linux-mips.org,
+	linux-ia64@vger.kernel.org, Fenghua Yu <fenghua.yu@intel.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Max Filippov <jcmvbkbc@gmail.com>,
+	Chris Metcalf <cmetcalf@ezchip.com>,
+	Paul Mackerras <paulus@samba.org>,
+	"H. Peter Anvin" <hpa@zytor.com>, Huacai Chen <chenhc@lemote.com>,
+	Guan Xuetao <gxt@mprc.pku.edu.cn>,
+	Stefano Stabellini <stefano.stabellini@eu.citrix.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Jisheng Zhang <jszhang@marvell.com>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Michael Ellerman <mpe@ellerman.id.au>, timur@codeaurora.org,
+	X86 <x86@kernel.org>, Ingo Molnar <mingo@redhat.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+	Akinobu Mita <akinobu.mita@gmail.com>, cov@codeaurora.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Valentin Rothberg <valentinrothberg@gmail.com>,
+	Chris Zankel <chris@zankel.net>,
+	Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, Dean Nelson <dnelson@redhat.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Ralf Baechle <ralf@linux-mips.org>,
+	"Suthikulpanit, Suravee" <Suravee.Suthikulpanit@amd.com>,
+	Joe Perches <joe@perches.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Robin Murphy <robin.murphy@arm.com>, nwatters@codeaurora.org
+Subject: Re: [PATCH 2/3] swiotlb: prefix dma_to_phys and phys_to_dma functions
+Date: Tue, 29 Mar 2016 21:32:07 +0200
+Message-ID: <6420021.rzhE3kJKJP@wuerfel>
+In-Reply-To: <CACJDEmrzKOExg-Rchjy2hfVzkzbCZ=WNn4Bu3EVgim748VvRig@mail.gmail.com>
+References: <1458252137-24497-1-git-send-email-okaya@codeaurora.org> <56EC1805.5060207@codeaurora.org> <CACJDEmrzKOExg-Rchjy2hfVzkzbCZ=WNn4Bu3EVgim748VvRig@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-I've noticed that pci_enable_sriov() is not thread safe. 
-Running it in parallel with the following command:
-echo 2 >  /sys/class/net/enp66s0f0/device/sriov_numvfs  & echo 2 >  /sys/class/net/enp66s0f0/device/sriov_numvfs
-triggers the BUG_ON() at [1].
-I'm wondering if device driver is supposed to prevent this?
-Or whether this is acceptable because admin privileges are required to trigger it?
+On Monday 28 March 2016 14:29:29 Konrad Rzeszutek Wilk wrote:
+> > diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
+> > index ada00c3..8c0f66b 100644
+> > --- a/arch/arm64/mm/dma-mapping.c
+> > +++ b/arch/arm64/mm/dma-mapping.c
+> > @@ -29,6 +29,14 @@
+> >
+> >  #include <asm/cacheflush.h>
+> >
+> > +/*
+> > + * If you are building a system without IOMMU, then you are using SWIOTLB
+> > + * library. The ARM64 adaptation of this library does not support address
+> > + * translation and it assumes that physical address = dma address for such
+> > + * a use case. Please don't build a platform that violates this.
+> > + */
+> 
+> Why not just expand the ARM64 part to support address translation?
 
-This issue concerns me because I'm working on VFIO sriov support[2] 
-and I would like give untrusted VMs the ability to call pci_enable_sriov().
+Because so far all hardware we have is relatively sane. We only
+need to implement this if someone accidentally puts their DMA
+space at the wrong address.
 
-I've noticed that we do have an sriov mutex but we take it only inside virtfn_add()
-rather than around the entire sriov_enable() function. Is there a good reason for that?
+There is at least one platform that could in theory use this because
+their RAM starts at an address that is outside of the reach of 32-bit
+devices, and a static IOMMU mapping (created by firmware) could be
+used to map the start of RAM into DMA address zero, to avoid having
+to use an IOMMU all the time, but it was considered not worth the
+effort to implement that.
 
-[1] http://lxr.free-electrons.com/source/drivers/pci/iov.c#L155
-[2] http://www.spinics.net/lists/kvm/msg127075.html
-
-Thanks,
-Ilya
+	Arnd
