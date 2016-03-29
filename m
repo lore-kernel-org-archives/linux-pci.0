@@ -1,85 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51556 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753690AbcCAOl5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 1 Mar 2016 09:41:57 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	David Daney <david.daney@cavium.com>,
-	Will Deacon <will.deacon@arm.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Tim Harvey <tharvey@gateworks.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Krzysztof =?utf-8?B?SGHFgmFzYQ==?= <khalasa@piap.pl>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Russell King <linux@arm.linux.org.uk>
-Subject: [PATCH v2 0/3] arm/arm64: pci: PCI_PROBE_ONLY clean-up
-Date: Tue,  1 Mar 2016 14:44:06 +0000
-Message-Id: <1456843449-19393-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+	Petr =?utf-8?B?xaB0ZXRpYXI=?= <ynezz@true.cz>,
+	Fabio Estevam <festevam@gmail.com>
+Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
+Date: Tue, 29 Mar 2016 15:52:11 +0200
+Message-ID: <23031613.R8qN30TbTq@wuerfel>
+In-Reply-To: <CAJ+vNU3o98T2cev1Pj0VJR884kOxVxhrzmowDixGuV2Tb=Sh1Q@mail.gmail.com>
+References: <m3h9fuk7ik.fsf@t19.piap.pl> <1459248921.2565.15.camel@pengutronix.de> <CAJ+vNU3o98T2cev1Pj0VJR884kOxVxhrzmowDixGuV2Tb=Sh1Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current arm/arm64 code prevents enabling resources in the respective
-pcibios_enable_device() callbacks if the PCI_PROBE_ONLY flag is set,
-in that on those platforms the resources tree was not validated properly
-since PCI resources are not currently claimed on arm/arm64 PCI_PROBE_ONLY
-systems.
+On Tuesday 29 March 2016 06:32:29 Tim Harvey wrote:
+> >
+> > There is no upstream driver for this chip, so I don't know where to look
+> > to find out if the driver tries to enable MSI.
+> >
+> > Is what you are saying that if you enable MSI support in the kernel, it
+> > breaks legacy IRQs?
+> 
+> Yes - any driver that does not support MSI will use legacy IRQ's and
+> they never fire.
+> 
+> The Ventana GW53xx and GW54xx boards have a Marvell PCIe GigE
+> supported by the sky2 driver as eth1 which does support MSI and I
+> verified it gets an MSI interrupt and does work (along ath9k devices
+> with legacy interrupts that fail to work).
+> 
+> root@ventana:~# cat /proc/interrupts | grep MSI
+> 299:          0          0   PCI-MSI   0 Edge      PCIe PME, aerdrv
+> 308:       8726          0   PCI-MSI   9 Edge      eth1
+> 
+> So it appears that MSI works for those drivers that use it, but does
+> somehow cause legacy IRQ's to break.
+> 
+> I sent you a GW5400 dev kit over a while back to use for through
+> bridge testing on IMX6 that you should be able to repeat this with
+> assuming you have a PCIe card with a driver that doesn't support MSI
+> (or that you can tweak its driver to not support MSI).
+> 
+> I think 31e98e0d24cd2537a63e06e235e050a06b175df7 "ARM:
+> imx_v6_v7_defconfig: enable PCI_MSI" should be reverted as well until
+> we figure this out.
 
-This is a temporary kludge, in that PCI_PROBE_ONLY flag is used to
-describe systems with fixed resources, that can nonetheless be enabled
-through the standard pci_enable_resources() call present in PCI core code,
-(ie via the generic pcibios_enable_device() call).
+That doesn't sound like a helpful solution, multi_v7_defconfig for
+instance will still be broken because it enables PCI_MSI, and so
+will be all major distros.
 
-To remove the PCI_PROBE_ONLY flag in arm/arm64 pcibios_enable_device()
-callbacks, the PCI host controllers that can be used with
-PCI_PROBE_ONLY configurations must make sure that devices resources are
-validated and inserted in the kernel resource tree even on PCI_PROBE_ONLY
-systems so that the generic pcibios_enable_device() generic code, while
-enabling resources (pci_enable_resources()), does not find dangling
-resources pointers (ie missing parent pointers) that are omens of
-an incomplete resource tree, causing failures in resources enablement.
+What happens if we patch the pci-imx6 driver to not make use of
+its MSI support even when that is enabled in the kernel? Does that
+get both devices in your GW5xxx to work with legacy interrupts or
+is one or both of them still broken?
 
-PCI core code provides interfaces to assign/reassign/reallocate PCI
-bus resources but it is currently lacking an interface to claim
-resources for a specific bus. Arches implement resources claiming through
-ad-hoc code built on top of pci_claim_resource() API, but that code
-cannot be leveraged on architectures like arm/arm64 that rely on the
-generic PCI infrastructure to carry out resources claiming/assignment.
+	Arnd
 
-Therefore, to clean up the arm/arm64 resources enablement on PCI_PROBE_ONLY
-systems this patchset implements three patches:
-
-PATCH 1: Create PCI core code infrastructure to claim bus resources
-PATCH 2: Leverage the infrastructure in PATCH 1 to claim resources in
-         the PCI generic host controller on PCI_PROBE_ONLY systems
-PATCH 3: Remove PCI_PROBE_ONLY kludges from arm/arm64 PCI back-ends to
-         complete the clean-up and leverage the PCI generic
-         pcibios_enable_device() implementation
-
-Tested on arm/arm64 systems with kvmtool and PCI host generic.
-
-v1 -> v2
-
-- Rewrote patch 1 to recursively claim resources for the whole PCI bus
-  hierarchy
-- Updated commits logs/tags
-- Rebased against v4.5-rc6
-
-v1: https://patchwork.ozlabs.org/patch/545669/
-
-Lorenzo Pieralisi (3):
-  drivers: pci: add generic code to claim bus resources
-  drivers: pci: host-generic: claim bus resources on PCI_PROBE_ONLY
-    set-ups
-  arm/arm64: pci: remove arch specific pcibios_enable_device()
-
- arch/arm/kernel/bios32.c            | 12 -------
- arch/arm64/kernel/pci.c             | 13 -------
- drivers/pci/host/pci-host-generic.c |  5 ++-
- drivers/pci/setup-bus.c             | 68 +++++++++++++++++++++++++++++++++++++
- include/linux/pci.h                 |  1 +
- 5 files changed, 73 insertions(+), 26 deletions(-)
-
--- 
-2.5.1
-
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index eb5a2755a164..d7607b2695c6 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -470,7 +470,7 @@ static void imx6_pcie_host_init(struct pcie_port *pp)
+ 
+ 	imx6_pcie_establish_link(pp);
+ 
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
++	if (0 && IS_ENABLED(CONFIG_PCI_MSI))
+ 		dw_pcie_msi_init(pp);
+ }
+ 
+@@ -490,7 +490,7 @@ static int __init imx6_add_pcie_port(struct pcie_port *pp,
+ {
+ 	int ret;
+ 
+-	if (IS_ENABLED(CONFIG_PCI_MSI)) {
++	if (0 && IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
+ 		if (pp->msi_irq <= 0) {
+ 			dev_err(&pdev->dev, "failed to get MSI irq\n");
