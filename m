@@ -1,79 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f49.google.com ([209.85.218.49]:33384 "EHLO
-	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757681AbcC2Qkx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 29 Mar 2016 12:40:53 -0400
-Received: by mail-oi0-f49.google.com with SMTP id d205so29913902oia.0
-        for <linux-pci@vger.kernel.org>; Tue, 29 Mar 2016 09:40:53 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <56FAA9C1.5060107@tekno-soft.it>
-References: <m3h9fuk7ik.fsf@t19.piap.pl>
-	<23031613.R8qN30TbTq@wuerfel>
-	<CAJ+vNU2BKLDREOWP8EWXZR43to10yw+qvKwv1MzS4a_L9n5ozg@mail.gmail.com>
-	<5741237.2X2Q0sCFQj@wuerfel>
-	<CAJ+vNU3kBk+J-hU1OWPOS6kbFq+J0zM9QpfVy4x1VXL3hgrMTg@mail.gmail.com>
-	<56FAA9C1.5060107@tekno-soft.it>
-Date: Tue, 29 Mar 2016 09:40:06 -0700
-Message-ID: <CAJ+vNU0bQVd0qyLg+09CUHx4WsrEqwZ4hLVuuvazR8DWpiHE_g@mail.gmail.com>
-Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
-From: Tim Harvey <tharvey@gateworks.com>
-To: Roberto Fichera <kernel@tekno-soft.it>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	=?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?Q?Petr_=C5=A0tetiar?= <ynezz@true.cz>,
-	Fabio Estevam <festevam@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from p3plsmtps2ded02.prod.phx3.secureserver.net ([208.109.80.59]:54989
+	"EHLO p3plsmtps2ded02.prod.phx3.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753420AbcC3WLy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Mar 2016 18:11:54 -0400
+From: Jake Oshins <jakeo@microsoft.com>
+To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v2 4/7] drivers:hv: Reverse order of resources in hyperv_mmio
+Date: Wed, 30 Mar 2016 16:48:44 -0700
+Message-Id: <1459381727-25039-5-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1459381727-25039-1-git-send-email-jakeo@microsoft.com>
+References: <y>
+ <1459381727-25039-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 29, 2016 at 9:13 AM, Roberto Fichera <kernel@tekno-soft.it> wrote:
-> On 03/29/2016 05:10 PM, Tim Harvey wrote:
->> Arnd,
->>
->> Right, on the IMX the MSI interrupt is GIC-120 which is also the
->> legacy INTD and I do see that if I happen to put a radio in a slot
->> where due to swizzling its pin1 becomes INTD (GIC-120) the interrupt
->> does fire and the device works. Any other slot using GIC-123 (INTA),
->> GIC-122 (INTB), or GIC-121 (INTC) never fires so its very possible
->> that something in the designware core is masking out the legacy irqs.
->> I would also think this was something IMX specific, but I really don't
->> see any codepaths in pci-imx6.c that would cause that: a driver
->> requesting a legacy PCI would get a GIC interrupt which is handled by
->> the IMX6 gpc interrupt controller.
->>
->> Any dra7xxx, exynos, spear13xx, keystone, layerscape, hisi, qcom SoC
->> users of designware PCIe core out there that can verify PCI MSI and
->> legacy are both working at the same time?
->>
->> Lucas is the expert here and I believe he has the documentation for
->> the designware core that Freescale doens't provide with the IMX6
->> documentation so hopefully he can provide some insight. He's the one
->> that has authored all the MSI support and has been using it.
->>
->> I typically advise our users to 'not' enable MSI because
->> architecturally you can spread 4 distinct legacy irq's across CPU's
->> better than a single shared irq.
->
-> Don't know if I'm facing similar problem, however devices connected in miniPCI slot behind
-> a PCIe-to-PCI bridge (MSI is disabled) using INTA all is working ok, including shared IRQ.
-> In case of INTB will not work, and the GIC irq quite often get stuck.
->
+A patch later in this series allocates child nodes
+in this resource tree.  For that to work, this tree
+needs to be sorted in ascending order.
 
-Roberto,
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/hv/vmbus_drv.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-What board/platform is this and what does /proc/interrupts look like?
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index 60553c1..1ce47d0 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -1049,7 +1049,6 @@ static acpi_status vmbus_walk_resources(struct acpi_resource *res, void *ctx)
+ 	new_res->end = end;
 
-This sounds like what would happen if the downstream interrupts on the
-PCIe-to-PCI bridge are not mapped properly as was the case with a
-board I support (in which case I had to work out a bootloader fixup
-that placed a non-standard interrupt-map in the device-tree for the
-bridge). What bridge are you using?
+ 	/*
+-	 * Stick ranges from higher in address space at the front of the list.
+ 	 * If two ranges are adjacent, merge them.
+ 	 */
+ 	do {
+@@ -1070,7 +1069,7 @@ static acpi_status vmbus_walk_resources(struct acpi_resource *res, void *ctx)
+ 			break;
+ 		}
 
-Tim
+-		if ((*old_res)->end < new_res->start) {
++		if ((*old_res)->start > new_res->end) {
+ 			new_res->sibling = *old_res;
+ 			if (prev_res)
+ 				(*prev_res)->sibling = new_res;
+--
+1.9.1
+
