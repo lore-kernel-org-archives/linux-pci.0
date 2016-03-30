@@ -1,156 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:42140 "EHLO
-	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755416AbcCTM5d (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 20 Mar 2016 08:57:33 -0400
-Message-Id: <cc23dc43ce25142f1b097a73c17bbcdada3f964d.1458475382.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 20 Mar 2016 13:57:20 +0100
-Subject: [PATCH 1/3] PCI: Add Thunderbolt device IDs
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jake Oshins <jakeo@microsoft.com>
+To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v2 6/7] drivers:hv: Record MMIO range in use by frame buffer
+Date: Wed, 30 Mar 2016 16:48:46 -0700
+Message-Id: <1459381727-25039-7-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1459381727-25039-1-git-send-email-jakeo@microsoft.com>
+References: <y>
+ <1459381727-25039-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Gen 1 and 2 chips use the same ID for NHI, bridges and switch.
-Gen 3 chips and onward use a distinct ID for the NHI.
+Later in the boot sequence, we need to figure out which memory
+ranges can be given out to various paravirtual drivers.  The
+hyperv_fb driver should, ideally, be placed right on top of
+the frame buffer, without some other device getting plopped on
+top of this range in the meantime.  Recording this now allows
+that to be guaranteed by the code introduced in the next patch.
 
-No functional change intended.
-
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- drivers/pci/quirks.c         | 16 ++++++++++------
- drivers/thunderbolt/nhi.c    |  8 +++++---
- drivers/thunderbolt/switch.c |  9 +++++----
- include/linux/pci_ids.h      | 18 ++++++++++++++++++
- 4 files changed, 38 insertions(+), 13 deletions(-)
+ drivers/hv/vmbus_drv.c | 37 ++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 36 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 8e67802..b584ddf 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3232,7 +3232,8 @@ static void quirk_apple_poweroff_thunderbolt(struct pci_dev *dev)
- 	acpi_execute_simple_method(SXIO, NULL, 0);
- 	acpi_execute_simple_method(SXLV, NULL, 0);
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index dfc6149..f8fa7b8 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -41,6 +41,7 @@
+ #include <linux/ptrace.h>
+ #include <linux/screen_info.h>
+ #include <linux/kdebug.h>
++#include <linux/efi.h>
+ #include "hyperv_vmbus.h"
+
+ static struct acpi_device  *hv_acpi_dev;
+@@ -101,6 +102,8 @@ static struct notifier_block hyperv_panic_block = {
+ 	.notifier_call = hyperv_panic_event,
+ };
+
++static const char *fb_mmio_name = "fb_range";
++static struct resource *fb_mmio;
+ struct resource *hyperv_mmio;
+ DEFINE_SEMAPHORE(hyperv_mmio_lock);
+
+@@ -1091,6 +1094,12 @@ static int vmbus_acpi_remove(struct acpi_device *device)
+ 	struct resource *next_res;
+
+ 	if (hyperv_mmio) {
++		if (fb_mmio) {
++			__release_region(hyperv_mmio, fb_mmio->start,
++					 fb_mmio->end - fb_mmio->start + 1);
++			fb_mmio = NULL;
++		}
++
+ 		for (cur_res = hyperv_mmio; cur_res; cur_res = next_res) {
+ 			next_res = cur_res->sibling;
+ 			kfree(cur_res);
+@@ -1100,6 +1109,30 @@ static int vmbus_acpi_remove(struct acpi_device *device)
+ 	return 0;
  }
--DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_INTEL, 0x1547,
-+DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_INTEL,
-+			       PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
- 			       quirk_apple_poweroff_thunderbolt);
- 
- /*
-@@ -3266,9 +3267,10 @@ static void quirk_apple_wait_for_thunderbolt(struct pci_dev *dev)
- 	if (!nhi)
- 		goto out;
- 	if (nhi->vendor != PCI_VENDOR_ID_INTEL
--			|| (nhi->device != 0x1547 && nhi->device != 0x156c)
--			|| nhi->subsystem_vendor != 0x2222
--			|| nhi->subsystem_device != 0x1111)
-+		    || (nhi->device != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
-+			nhi->device != PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI)
-+		    || nhi->subsystem_vendor != 0x2222
-+		    || nhi->subsystem_device != 0x1111)
- 		goto out;
- 	dev_info(&dev->dev, "quirk: waiting for thunderbolt to reestablish PCI tunnels...\n");
- 	device_pm_wait_for_dev(&dev->dev, &nhi->dev);
-@@ -3276,9 +3278,11 @@ out:
- 	pci_dev_put(nhi);
- 	pci_dev_put(sibling);
- }
--DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL, 0x1547,
-+DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
-+			       PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
- 			       quirk_apple_wait_for_thunderbolt);
--DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL, 0x156d,
-+DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
-+			       PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE,
- 			       quirk_apple_wait_for_thunderbolt);
- #endif
- 
-diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
-index 20a41f7..36be23b 100644
---- a/drivers/thunderbolt/nhi.c
-+++ b/drivers/thunderbolt/nhi.c
-@@ -633,16 +633,18 @@ static const struct dev_pm_ops nhi_pm_ops = {
- static struct pci_device_id nhi_ids[] = {
- 	/*
- 	 * We have to specify class, the TB bridges use the same device and
--	 * vendor (sub)id.
-+	 * vendor (sub)id on gen 1 and gen 2 controllers.
- 	 */
- 	{
- 		.class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
--		.vendor = PCI_VENDOR_ID_INTEL, .device = 0x1547,
-+		.vendor = PCI_VENDOR_ID_INTEL,
-+		.device = PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
- 		.subvendor = 0x2222, .subdevice = 0x1111,
- 	},
- 	{
- 		.class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
--		.vendor = PCI_VENDOR_ID_INTEL, .device = 0x156c,
-+		.vendor = PCI_VENDOR_ID_INTEL,
-+		.device = PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI,
- 		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
- 	},
- 	{ 0,}
-diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
-index aeb9829..db73ffe 100644
---- a/drivers/thunderbolt/switch.c
-+++ b/drivers/thunderbolt/switch.c
-@@ -293,9 +293,9 @@ static int tb_plug_events_active(struct tb_switch *sw, bool active)
- 	if (active) {
- 		data = data & 0xFFFFFF83;
- 		switch (sw->config.device_id) {
--		case 0x1513:
--		case 0x151a:
--		case 0x1549:
-+		case PCI_DEVICE_ID_INTEL_LIGHT_RIDGE:
-+		case PCI_DEVICE_ID_INTEL_EAGLE_RIDGE:
-+		case PCI_DEVICE_ID_INTEL_PORT_RIDGE:
+
++static void vmbus_reserve_fb(void)
++{
++	int size;
++	/*
++	 * Make a claim for the frame buffer in the resource tree under the
++	 * first node, which will be the one below 4GB.  The length seems to
++	 * be underreported, particularly in a Generation 1 VM.  So start out
++	 * reserving a larger area and make it smaller until it succeeds.
++	 */
++
++	if (screen_info.lfb_base) {
++		if (efi_enabled(EFI_BOOT))
++			size = screen_info.lfb_size;
++		else
++			size = max_t(__u32, screen_info.lfb_size, 0x4000000);
++
++		for (; !fb_mmio && (size >= 0x100000); size >>= 1) {
++			fb_mmio = __request_region(hyperv_mmio,
++						   screen_info.lfb_base, size,
++						   fb_mmio_name, 0);
++		}
++	}
++}
++
+ /**
+  * vmbus_allocate_mmio() - Pick a memory-mapped I/O range.
+  * @new:		If successful, supplied a pointer to the
+@@ -1261,8 +1294,10 @@ static int vmbus_acpi_add(struct acpi_device *device)
+
+ 		if (ACPI_FAILURE(result))
+ 			continue;
+-		if (hyperv_mmio)
++		if (hyperv_mmio) {
++			vmbus_reserve_fb();
  			break;
- 		default:
- 			data |= 4;
-@@ -370,7 +370,8 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
- 		tb_sw_warn(sw, "unknown switch vendor id %#x\n",
- 			   sw->config.vendor_id);
- 
--	if (sw->config.device_id != 0x1547 && sw->config.device_id != 0x1549)
-+	if (sw->config.device_id != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
-+	    sw->config.device_id != PCI_DEVICE_ID_INTEL_PORT_RIDGE)
- 		tb_sw_warn(sw, "unsupported switch device id %#x\n",
- 			   sw->config.device_id);
- 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 247da8c..c58752f 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2604,6 +2604,24 @@
- #define PCI_DEVICE_ID_INTEL_82441	0x1237
- #define PCI_DEVICE_ID_INTEL_82380FB	0x124b
- #define PCI_DEVICE_ID_INTEL_82439	0x1250
-+#define PCI_DEVICE_ID_INTEL_LIGHT_RIDGE             0x1513 /* Tbt 1 Gen 1 */
-+#define PCI_DEVICE_ID_INTEL_EAGLE_RIDGE             0x151a
-+#define PCI_DEVICE_ID_INTEL_LIGHT_PEAK              0x151b
-+#define PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C         0x1547 /* Tbt 1 Gen 2 */
-+#define PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_2C         0x1548
-+#define PCI_DEVICE_ID_INTEL_PORT_RIDGE              0x1549
-+#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_2C_NHI    0x1566 /* Tbt 1 Gen 3 */
-+#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_2C_BRIDGE 0x1567
-+#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_4C_NHI    0x1568
-+#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_4C_BRIDGE 0x1569
-+#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI     0x156a /* Thunderbolt 2 */
-+#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE  0x156b
-+#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI     0x156c
-+#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE  0x156d
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_NHI     0x1575 /* Thunderbolt 3 */
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_BRIDGE  0x1576
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_NHI     0x1577
-+#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_BRIDGE  0x1578
- #define PCI_DEVICE_ID_INTEL_80960_RP	0x1960
- #define PCI_DEVICE_ID_INTEL_82840_HB	0x1a21
- #define PCI_DEVICE_ID_INTEL_82845_HB	0x1a30
--- 
-2.8.0.rc3
++		}
+ 	}
+ 	ret_val = 0;
 
+--
+1.9.1
