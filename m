@@ -1,135 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp03.br.ibm.com ([32.104.18.24]:57071 "EHLO
-	e24smtp03.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933752AbcCOWzL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 15 Mar 2016 18:55:11 -0400
-Received: from localhost
-	by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-	Tue, 15 Mar 2016 19:55:08 -0300
-Received: from d24relay02.br.ibm.com (d24relay02.br.ibm.com [9.13.184.26])
-	by d24dlp02.br.ibm.com (Postfix) with ESMTP id A830D1DC0054
-	for <linux-pci@vger.kernel.org>; Tue, 15 Mar 2016 18:54:57 -0400 (EDT)
-Received: from d24av05.br.ibm.com (d24av05.br.ibm.com [9.18.232.44])
-	by d24relay02.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u2FLtClP54984832
-	for <linux-pci@vger.kernel.org>; Tue, 15 Mar 2016 18:55:12 -0300
-Received: from d24av05.br.ibm.com (localhost [127.0.0.1])
-	by d24av05.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u2FMt18B032396
-	for <linux-pci@vger.kernel.org>; Tue, 15 Mar 2016 18:55:02 -0400
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, mpe@ellerman.id.au,
-	benh@kernel.crashing.org, paulus@samba.org, imunsie@au1.ibm.com,
-	mikey@neuling.org, andrew.donnellan@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com, bhelgaas@google.com,
-	gpiccoli@linux.vnet.ibm.com
-Subject: [PATCH v2] powerpc/pci: Assign fixed PHB number based on device-tree properties
-Date: Tue, 15 Mar 2016 19:54:41 -0300
-Message-Id: <1458082481-29916-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Received: from p3plsmtps2ded04.prod.phx3.secureserver.net ([208.109.80.198]:34420
+	"EHLO p3plsmtps2ded04.prod.phx3.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755144AbcC3WLe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Mar 2016 18:11:34 -0400
+From: Jake Oshins <jakeo@microsoft.com>
+To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v2 0/7] drivers:hv: Ensure that bridge windows don't overlap
+Date: Wed, 30 Mar 2016 16:48:40 -0700
+Message-Id: <1459381727-25039-1-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <y>
+References: <y>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The domain/PHB field of PCI addresses has its value obtained from a
-global variable, incremented each time a new domain (represented by
-struct pci_controller) is added on the system. The domain addition
-process happens during boot or due to PCI device hotplug.
+This series differs from v1 in that the last two patches have been
+modified to simplify the tracking of the frame buffer area during
+early boot, which is done so that other devices which may get probed
+and started first don't choose memory space that's in use by that
+frame buffer.
 
-As recent kernels are using predictable naming for network interfaces,
-the network stack is more tied to PCI naming. This can be a problem in
-hotplug scenarios, because PCI addresses will change if devices are
-removed and then re-added. This situation seems unusual, but it can
-happen if a user wants to replace a NIC without rebooting the machine,
-for example.
+Hyper-V VMs expose paravirtual drivers through a mechanism called
+VMBus, which is managed by hv_vmbus.ko.  For each parvirtual service
+instance, this driver exposes a new child device.  Some of these child
+devices need memory address space, into which Hyper-V will map things
+like the virtual video frame buffer.  This memory-mapped address space
+is chosen by the guest OS, not the hypervisor.
 
-This patch changes the way PCI domain values are generated: now, we use
-device-tree properties to assign fixed PHB numbers to PCI addresses
-when available (meaning pSeries and PowerNV cases). We also use a bitmap
-to allow dynamic PHB numbering when device-tree properties are not
-used. This bitmap keeps track of used PHB numbers and if a PHB is
-released (by hotplug operations for example), it allows the reuse of
-this PHB number, avoiding PCI address to change in case of device remove
-and re-add soon after. No functional changes were introduced.
+This is difficult to map onto the Linux pnp layer, as the code in the
+pnp layer to choose MMIO space keys off of bus type and it doesn't know
+anything about VMBus.  The maintainers of the pnp layer have asked that
+we not offer patches to it that make it understand VMBus, but that we
+rather find ways of using the code in its current state.  So hv_vmbus.ko
+exports a function, vmbus_allocate_mmio() for choosing the address space
+for any child driver that needs this facility.
 
-Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
----
- arch/powerpc/kernel/pci-common.c | 43 +++++++++++++++++++++++++++++++++++++---
- 1 file changed, 40 insertions(+), 3 deletions(-)
+The recently introduced PCI front-end driver for Hyper-V VMs
+(pci-hyperv.ko) uses vmbus_allocate_mmio() for choosing both the region
+of memory space into which real PCI Express devices are mapped.  The
+regions allocated are made to look like root PCI bus bridge windows
+to the PCI driver, reusing all the code in the PCI driver for the rest
+of PCI device management.
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 0f7a60f..d4217f9 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -44,8 +44,11 @@
- static DEFINE_SPINLOCK(hose_spinlock);
- LIST_HEAD(hose_list);
- 
--/* XXX kill that some day ... */
--static int global_phb_number;		/* Global phb counter */
-+/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
-+#define	MAX_PHBS	8192
-+
-+/* For dynamic PHB numbering: used/free PHBs tracking bitmap. */
-+DECLARE_BITMAP(global_phb_bitmap, MAX_PHBS);
- 
- /* ISA Memory physical address */
- resource_size_t isa_mem_base;
-@@ -64,6 +67,39 @@ struct dma_map_ops *get_pci_dma_ops(void)
- }
- EXPORT_SYMBOL(get_pci_dma_ops);
- 
-+static int get_phb_number(struct device_node *dn)
-+{
-+	const __be64 *prop64;
-+	const __be32 *regs;
-+	int phb_id = 0;
-+
-+	/* try fixed PHB numbering first */
-+	if (machine_is(pseries)) {
-+		regs = of_get_property(dn, "reg", NULL);
-+		if (regs)
-+			return (int)(be32_to_cpu(regs[1]) & 0xFFFF);
-+	}
-+
-+	else { /* maybe PowerNV? */
-+		prop64 = of_get_property(dn, "ibm,opal-phbid", NULL);
-+		if (prop64)
-+			return (int)(be64_to_cpup(prop64) & 0xFFFF);
-+	}
-+
-+	/* dynamic PHB numbering mechanism */
-+	while ((phb_id < MAX_PHBS) && test_bit(phb_id, global_phb_bitmap))
-+		phb_id++;
-+
-+	BUG_ON(phb_id >= MAX_PHBS); /* reached maximum number of PHBs */
-+	set_bit(phb_id, global_phb_bitmap);
-+	return phb_id;
-+}
-+
-+static void release_phb_number(int phb_id)
-+{
-+	clear_bit(phb_id, global_phb_bitmap);
-+}
-+
- struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
- {
- 	struct pci_controller *phb;
-@@ -72,7 +108,7 @@ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
- 	if (phb == NULL)
- 		return NULL;
- 	spin_lock(&hose_spinlock);
--	phb->global_number = global_phb_number++;
-+	phb->global_number = get_phb_number(dev);
- 	list_add_tail(&phb->list_node, &hose_list);
- 	spin_unlock(&hose_spinlock);
- 	phb->dn = dev;
-@@ -94,6 +130,7 @@ EXPORT_SYMBOL_GPL(pcibios_alloc_controller);
- void pcibios_free_controller(struct pci_controller *phb)
- {
- 	spin_lock(&hose_spinlock);
-+	release_phb_number(phb->global_number);
- 	list_del(&phb->list_node);
- 	spin_unlock(&hose_spinlock);
- 
--- 
-2.1.0
+The problem is that these bridge windows are marked in such a way that
+devices can still allocate from the memory space spanned by them, and
+this means that if two different PCI buses are created in the VM, each
+with devices under them, they may allocate the same memory space, leading
+to PCI Base Address Register which overlap.
+
+This patch series fixes the problem by tracking allocations to child
+devices in a separate resource tree, marking them such that the bridge
+windows can't overlap.  The main memory resource tree, iomem_resource,
+contains resources properly marked as bridge windows, allowing their
+children to overlap with them.
+
+Jake Oshins (7):
+  drivers:hv: Lock access to hyperv_mmio resource tree
+  drivers:hv: Make a function to free mmio regions through vmbus
+  drivers:hv: Use new vmbus_mmio_free() from client drivers.
+  drivers:hv: Reverse order of resources in hyperv_mmio
+  drivers:hv: Track allocations of children of hv_vmbus in private
+    resource tree
+  drivers:hv: Record MMIO range in use by frame buffer
+  drivers:hv: Separate out frame buffer logic when picking MMIO range
+
+ drivers/hv/vmbus_drv.c          | 142 +++++++++++++++++++++++++++++-----------
+ drivers/pci/host/pci-hyperv.c   |  14 ++--
+ drivers/video/fbdev/hyperv_fb.c |   4 +-
+ include/linux/hyperv.h          |   2 +-
+ 4 files changed, 114 insertions(+), 48 deletions(-)
+
+--
+1.9.1
 
