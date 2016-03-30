@@ -1,57 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:38983 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752547AbcC0JbT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Mar 2016 05:31:19 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Hanna Hawa <hannah@marvell.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 0/2] pci: host: new driver for Marvell Armada 7K/8K PCIe controller
-Date: Sun, 27 Mar 2016 11:30:56 +0200
-Message-Id: <1459071058-18328-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from ibawizard.net ([82.208.49.253]:35583 "EHLO
+	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751432AbcC3MVL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2016 08:21:11 -0400
+Date: Wed, 30 Mar 2016 14:21:03 +0200
+From: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>
+To: Tim Harvey <tharvey@gateworks.com>
+Cc: Fabio Estevam <festevam@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Krzysztof =?iso-8859-2?Q?Ha=B3asa?= <khalasa@piap.pl>,
+	Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fabio Estevam <fabio.estevam@nxp.com>, stable@vger.kernel.org
+Subject: Re: [PATCH v2] Revert "PCI: imx6: Add support for active-low reset
+	GPIO"
+Message-ID: <20160330122103.GN20367@ibawizard.net>
+Reply-To: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>
+References: <1459201536-5558-1-git-send-email-festevam@gmail.com> <CAJ+vNU3kZ2886wRQFUfFTyo2kzYgjGTroKdiuPynZkaNf1BvEw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJ+vNU3kZ2886wRQFUfFTyo2kzYgjGTroKdiuPynZkaNf1BvEw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Tim Harvey <tharvey@gateworks.com> [2016-03-29 06:43:19]:
 
-This set of two patches add support for the PCIe controller found in
-the Marvell Armada 7K/8K ARM processors. The first patch adds the
-Device Tree binding documentation, the second patch the driver itself.
+> > Commit 5c5fb40de8f14 ("PCI: imx6: Add support for active-low reset GPIO")
+> > cause regressions on some boards like MX6 Gateworks Ventana, for example.
 
-The driver is really simple, since the PCIe controller is based on the
-Designware design, and only a little bit of vendor-specific glue is
-needed.
+Sorry for the problems.
 
-Thanks!
+> > The reason for the breakage is that this commit sets the gpio polarity
+> > in the wrong logic level.
 
-Thomas
+It's just a nitpick :-) but this commit doesn't set the polarity in the wrong
+logic level, 
 
-Thomas Petazzoni (2):
-  dt-bindings: pci: add DT binding for Marvell Armada 7K/8K PCIe
-    controller
-  pci: host: new driver for Marvell Armada 7K/8K PCIe controller
+> > -       if (imx6_pcie->reset_gpio) {
+> > -               gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 0);
+> > +       if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+> > +               gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
+> >                 msleep(100);
+> > -               gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+> > +               gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
 
- .../devicetree/bindings/pci/pci-armada8k.txt       |  41 ++++
- drivers/pci/host/Kconfig                           |  11 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pcie-armada8k.c                   | 261 +++++++++++++++++++++
- 4 files changed, 314 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/pci-armada8k.txt
- create mode 100644 drivers/pci/host/pcie-armada8k.c
+as you can see, the polarity was simply wrong from the beginning[1]. My patch
+has just probably made the error more exposed.
 
--- 
-2.6.4
+1. https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/pci/host/pci-imx6.c?id=bb38919ec56e0758c3ae56dfc091dcde1391353e
 
+-- ynezz
