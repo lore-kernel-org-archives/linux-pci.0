@@ -1,68 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2on0104.outbound.protection.outlook.com ([65.55.169.104]:39362
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751359AbcCaPwS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 31 Mar 2016 11:52:18 -0400
-Message-ID: <1459437434.1998.15.camel@rtd-VirtualBox>
-Subject: Re: PCI IRQ issue since 4.2 kernel
-From: Rob Groner <rgroner@rtd.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"tglx@linutronix.de" <tglx@linutronix.de>
-Date: Thu, 31 Mar 2016 11:17:14 -0400
-In-Reply-To: <20160331151401.GA15801@localhost>
-References: <1459430795.1998.11.camel@rtd-VirtualBox>
-	 <20160331134000.GA31995@localhost>
-	 <1459436757.1998.14.camel@rtd-VirtualBox>
-	 <20160331151401.GA15801@localhost>
-Content-Type: text/plain; charset="UTF-8"
+Received: from ibawizard.net ([82.208.49.253]:40937 "EHLO
+	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752983AbcC3NAK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2016 09:00:10 -0400
+Date: Wed, 30 Mar 2016 15:00:02 +0200
+From: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Krzysztof =?iso-8859-2?Q?Ha=B3asa?= <khalasa@piap.pl>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fabio Estevam <fabio.estevam@nxp.com>,
+	stable <stable@vger.kernel.org>
+Subject: Re: [PATCH v2] Revert "PCI: imx6: Add support for active-low reset
+	GPIO"
+Message-ID: <20160330130002.GA13529@ibawizard.net>
+Reply-To: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>
+References: <1459201536-5558-1-git-send-email-festevam@gmail.com> <CAJ+vNU3kZ2886wRQFUfFTyo2kzYgjGTroKdiuPynZkaNf1BvEw@mail.gmail.com> <20160330122103.GN20367@ibawizard.net> <CAOMZO5Bh=JgVEMM-8JBX1cpk5Kgn2O2KBiOGdZT+QQfGUizBUg@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAOMZO5Bh=JgVEMM-8JBX1cpk5Kgn2O2KBiOGdZT+QQfGUizBUg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2016-03-31 at 10:14 -0500, Bjorn Helgaas wrote:
-> On Thu, Mar 31, 2016 at 11:05:57AM -0400, Rob Groner wrote:
-> > On Thu, 2016-03-31 at 09:40 -0400, Bjorn Helgaas wrote:
-> > > Hi Rob,
-> > > 
-> > > On Thu, Mar 31, 2016 at 09:26:35AM -0400, Rob Groner wrote:
-> > > > We became aware of an issue with our Linux drivers when used with a 4.4
-> > > > kernel.  These drivers had worked previously from 2.6.35 to 4.2 kernels.
-> > > > The symptoms were that, even though the request_irq() call was
-> > > > successful, we did not receive any IRQs.  IRQs did arrive on a different
-> > > > IRQ line, however, and the kernel disabled that line because there was
-> > > > no handler.
-> > > 
-> > > Others have seen similar issues, so we reverted 991de2e59090 ("PCI, x86:
-> > > Implement pcibios_alloc_irq() and pcibios_free_irq()").
-> > > 
-> > > The revert, 6c777e8799a9 ("Revert "PCI, x86: Implement pcibios_alloc_irq()
-> > > and pcibios_free_irq()""), appeared in v4.5-rc6, so if you try that or a
-> > > later kernel (including v4.5), it should work.
-> > > 
-> > > Let us know if you still see problems.
-> > > 
-> > > Bjorn
-> > 
-> > I installed the 4.5 kernel from https://na01.safelinks.protection.outlook.com/?url=kernel.org&data=01%7c01%7crgroner%40rtd.com%7c008e1e58aa0c4690a8b208d359771c14%7c16f82b7977b8423dbafdd6c19032e267%7c1&sdata=rZhvAmnOFRBM9kCk97hFxVJ4Q%2fharqu1CpSfPhyawyY%3d and my issue has been
-> > resolved.  Thank you very much!
-> > 
-> > Will this revert possibly make it into 4.3 and 4.4, or will I have to
-> > tell people to avoid those versions?
-> 
-> Shoot, I forgot to mark that revert for stable.  I'll see if I can
-> figure out how to do that after the fact.  Of course, you'll still
-> have to tell people to use the latest 4.3.x or 4.4.x stable kernels,
-> not the original 4.3 and 4.5.
-> 
-> Bjorn
+Fabio Estevam <festevam@gmail.com> [2016-03-30 09:36:35]:
 
-Ok, will do.  Thanks!
+Hi Fabio,
 
-Rob
+> In order to make the Toradex board to work without breaking old dtb's is to
+> introduce a property like 'phy-reset-active-high' and handle it in the
+> driver.
 
+do we really need to do this?  With Krzysztof's patch it should work for both
+cases correctly. If I understand gpiolib correctly, you don't need to
+introduce reset-active-high, if you use gpiod_* functions, then the GPIO
+polarity is handled correctly inside the gpiolib framework[1] and all you need
+is to define pin's polarity correctly via gpio pin definition. Or am I missing
+something?
 
+Then we need to just fix the broken DTBs.
 
+1. http://lxr.free-electrons.com/source/drivers/gpio/gpiolib.c#L1759
+
+-- ynezz
