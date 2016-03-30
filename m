@@ -1,225 +1,136 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp05.in.ibm.com ([125.16.236.5]:36079 "EHLO
-	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752402AbcCGHtu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 7 Mar 2016 02:49:50 -0500
-Received: from localhost
-	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Mon, 7 Mar 2016 13:19:47 +0530
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
-	alex.williamson@redhat.com, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [RFC PATCH v4 4/7] PCI: Modify resource_alignment to support multiple devices
-Date: Mon,  7 Mar 2016 15:48:35 +0800
-Message-Id: <1457336918-3893-5-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1457336918-3893-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Received: from p3plsmtps2ded02.prod.phx3.secureserver.net ([208.109.80.59]:54989
+	"EHLO p3plsmtps2ded02.prod.phx3.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753155AbcC3WMH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Mar 2016 18:12:07 -0400
+From: Jake Oshins <jakeo@microsoft.com>
+To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v2 7/7] drivers:hv: Separate out frame buffer logic when picking MMIO range
+Date: Wed, 30 Mar 2016 16:48:47 -0700
+Message-Id: <1459381727-25039-8-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1459381727-25039-1-git-send-email-jakeo@microsoft.com>
+References: <y>
+ <1459381727-25039-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When vfio passthrough a PCI device of which MMIO BARs
-are smaller than PAGE_SIZE, guest will not handle the
-mmio accesses to the BARs which leads to mmio emulations
-in host.
+Simplify the logic that picks MMIO ranges by pulling out the
+logic related to trying to lay frame buffer claim on top of where
+the firmware placed the frame buffer.
 
-This is because vfio will not allow to passthrough one
-BAR's mmio page which may be shared with other BARs.
-
-To solve this performance issue, this patch modifies
-resource_alignment to support syntax where multiple
-devices get the same alignment. So we can use something
-like "pci=resource_alignment=*:*:*.*:noresize" to
-enforce the alignment of all MMIO BARs to be at least
-PAGE_SIZE so that one BAR's mmio page would not be
-shared with other BARs.
-
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- Documentation/kernel-parameters.txt |    2 +
- drivers/pci/pci.c                   |   90 ++++++++++++++++++++++++++++++-----
- include/linux/pci.h                 |    4 ++
- 3 files changed, 85 insertions(+), 11 deletions(-)
+ drivers/hv/vmbus_drv.c | 79 ++++++++++++++++++++++----------------------------
+ 1 file changed, 34 insertions(+), 45 deletions(-)
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 8028631..74b38ab 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -2918,6 +2918,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 				aligned memory resources.
- 				If <order of align> is not specified,
- 				PAGE_SIZE is used as alignment.
-+				<domain>, <bus>, <slot> and <func> can be set to
-+				"*" which means match all values.
- 				PCI-PCI bridge can be specified, if resource
- 				windows need to be expanded.
- 				noresize: Don't change the resources' sizes when
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 760cce5..44ab59f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -102,6 +102,8 @@ unsigned int pcibios_max_latency = 255;
- /* If set, the PCIe ARI capability will not be used. */
- static bool pcie_ari_disabled;
- 
-+bool pci_resources_page_aligned;
-+
- /**
-  * pci_bus_max_busnr - returns maximum PCI bus number of given bus' children
-  * @bus: pointer to PCI bus structure to search
-@@ -4604,6 +4606,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 	int seg, bus, slot, func, align_order, count;
- 	resource_size_t align = 0;
- 	char *p;
-+	bool invalid = false;
- 
- 	spin_lock(&resource_alignment_lock);
- 	p = resource_alignment_param;
-@@ -4615,16 +4618,49 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 		} else {
- 			align_order = -1;
- 		}
--		if (sscanf(p, "%x:%x:%x.%x%n",
--			&seg, &bus, &slot, &func, &count) != 4) {
-+		if (p[0] == '*' && p[1] == ':') {
-+			seg = -1;
-+			count = 1;
-+		} else if (sscanf(p, "%x%n", &seg, &count) != 1 ||
-+				p[count] != ':') {
-+			invalid = true;
-+			break;
-+		}
-+		p += count + 1;
-+		if (*p == '*') {
-+			bus = -1;
-+			count = 1;
-+		} else if (sscanf(p, "%x%n", &bus, &count) != 1) {
-+			invalid = true;
-+			break;
-+		}
-+		p += count;
-+		if (*p == '.') {
-+			slot = bus;
-+			bus = seg;
- 			seg = 0;
--			if (sscanf(p, "%x:%x.%x%n",
--					&bus, &slot, &func, &count) != 3) {
--				/* Invalid format */
--				printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
--					p);
-+			p++;
-+		} else if (*p == ':') {
-+			p++;
-+			if (p[0] == '*' && p[1] == '.') {
-+				slot = -1;
-+				count = 1;
-+			} else if (sscanf(p, "%x%n", &slot, &count) != 1 ||
-+					p[count] != '.') {
-+				invalid = true;
- 				break;
- 			}
-+			p += count + 1;
-+		} else {
-+			invalid = true;
-+			break;
-+		}
-+		if (*p == '*') {
-+			func = -1;
-+			count = 1;
-+		} else if (sscanf(p, "%x%n", &func, &count) != 1) {
-+			invalid = true;
-+			break;
- 		}
- 		p += count;
- 		if (!strncmp(p, ":noresize", 9)) {
-@@ -4632,23 +4668,34 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 			p += 9;
- 		} else
- 			*resize = true;
--		if (seg == pci_domain_nr(dev->bus) &&
--			bus == dev->bus->number &&
--			slot == PCI_SLOT(dev->devfn) &&
--			func == PCI_FUNC(dev->devfn)) {
-+		if ((seg == pci_domain_nr(dev->bus) || seg == -1) &&
-+			(bus == dev->bus->number || bus == -1) &&
-+			(slot == PCI_SLOT(dev->devfn) || slot == -1) &&
-+			(func == PCI_FUNC(dev->devfn) || func == -1)) {
- 			if (align_order == -1)
- 				align = PAGE_SIZE;
- 			else
- 				align = 1 << align_order;
-+			if (!pci_resources_page_aligned &&
-+				(align >= PAGE_SIZE &&
-+				seg == -1 && bus == -1 &&
-+				slot == -1 && func == -1))
-+				pci_resources_page_aligned = true;
- 			/* Found */
- 			break;
- 		}
- 		if (*p != ';' && *p != ',') {
- 			/* End of param or invalid format */
-+			invalid = true;
- 			break;
- 		}
- 		p++;
- 	}
-+	if (invalid == true) {
-+		/* Invalid format */
-+		printk(KERN_ERR "PCI: Can't parse resource_alignment parameter:%s\n",
-+				p);
-+	}
- 	spin_unlock(&resource_alignment_lock);
- 	return align;
- }
-@@ -4769,6 +4816,27 @@ static int __init pci_resource_alignment_sysfs_init(void)
- }
- late_initcall(pci_resource_alignment_sysfs_init);
- 
-+/*
-+ * This function checks whether PCI BARs' mmio page will be shared
-+ * with other BARs.
-+ */
-+bool pci_resources_share_page(struct pci_dev *dev, int resno)
-+{
-+	struct resource *res = dev->resource + resno;
-+
-+	if (resource_size(res) >= PAGE_SIZE)
-+		return false;
-+	if (pci_resources_page_aligned && !(res->start & ~PAGE_MASK) &&
-+		res->flags & IORESOURCE_MEM) {
-+		if (res->sibling)
-+			return (res->sibling->start & ~PAGE_MASK);
-+		else
-+			return false;
-+	}
-+	return true;
-+}
-+EXPORT_SYMBOL_GPL(pci_resources_share_page);
-+
- static void pci_no_domains(void)
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index f8fa7b8..ec6fa42 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -1162,64 +1162,53 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			bool fb_overlap_ok)
  {
- #ifdef CONFIG_PCI_DOMAINS
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 2771625..064a1b6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1511,6 +1511,10 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- 	 (pci_resource_end((dev), (bar)) -		\
- 	  pci_resource_start((dev), (bar)) + 1))
- 
-+extern bool pci_resources_page_aligned;
+ 	struct resource *iter, *shadow;
+-	resource_size_t range_min, range_max, start, local_min, local_max;
++	resource_size_t range_min, range_max, start;
+ 	const char *dev_n = dev_name(&device_obj->device);
+-	u32 fb_end = screen_info.lfb_base + (screen_info.lfb_size << 1);
+-	int i, retval;
++	int retval;
+
+ 	retval = -ENXIO;
+ 	down(&hyperv_mmio_lock);
+
++	/*
++	 * If overlaps with frame buffers are allowed, then first attempt to
++	 * make the allocation from within the reserved region.  Because it
++	 * is already reserved, no shadow allocation is necessary.
++	 */
++	if (fb_overlap_ok && fb_mmio) {
 +
-+bool pci_resources_share_page(struct pci_dev *dev, int resno);
++		range_min = fb_mmio->start;
++		range_max = fb_mmio->end;
++		start = (range_min + align - 1) & ~(align - 1);
++		for (; start + size - 1 <= range_max; start += align) {
++			*new = request_mem_region_exclusive(start, size, dev_n);
++			if (*new) {
++				retval = 0;
++				goto exit;
++			}
++		}
++	}
 +
- /* Similar to the helpers above, these manipulate per-pci_dev
-  * driver-specific data.  They are really just a wrapper around
-  * the generic device structure functions of these calls.
--- 
-1.7.9.5
+ 	for (iter = hyperv_mmio; iter; iter = iter->sibling) {
+ 		if ((iter->start >= max) || (iter->end <= min))
+ 			continue;
+
+ 		range_min = iter->start;
+ 		range_max = iter->end;
+-
+-		/* If this range overlaps the frame buffer, split it into
+-		   two tries. */
+-		for (i = 0; i < 2; i++) {
+-			local_min = range_min;
+-			local_max = range_max;
+-			if (fb_overlap_ok || (range_min >= fb_end) ||
+-			    (range_max <= screen_info.lfb_base)) {
+-				i++;
+-			} else {
+-				if ((range_min <= screen_info.lfb_base) &&
+-				    (range_max >= screen_info.lfb_base)) {
+-					/*
+-					 * The frame buffer is in this window,
+-					 * so trim this into the part that
+-					 * preceeds the frame buffer.
+-					 */
+-					local_max = screen_info.lfb_base - 1;
+-					range_min = fb_end;
+-				} else {
+-					range_min = fb_end;
+-					continue;
+-				}
++		start = (range_min + align - 1) & ~(align - 1);
++		for (; start + size - 1 <= range_max; start += align) {
++			shadow = __request_region(iter, start, size, NULL,
++						  IORESOURCE_BUSY);
++			if (!shadow)
++				continue;
++
++			*new = request_mem_region_exclusive(start, size, dev_n);
++			if (*new) {
++				shadow->name = (char *)*new;
++				retval = 0;
++				goto exit;
+ 			}
+
+-			start = (local_min + align - 1) & ~(align - 1);
+-			for (; start + size - 1 <= local_max; start += align) {
+-				shadow = __request_region(iter, start,
+-							  size,
+-							  NULL,
+-							  IORESOURCE_BUSY);
+-				if (!shadow)
+-					continue;
+-
+-				*new = request_mem_region_exclusive(start, size,
+-								    dev_n);
+-				if (*new) {
+-					shadow->name = (char *)*new;
+-					retval = 0;
+-					goto exit;
+-				}
+-
+-				__release_region(iter, start, size);
+-			}
++			__release_region(iter, start, size);
+ 		}
+ 	}
+
+--
+1.9.1
 
