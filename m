@@ -1,88 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:38997 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753028AbcC0JbU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 27 Mar 2016 05:31:20 -0400
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Hanna Hawa <hannah@marvell.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCH 1/2] dt-bindings: pci: add DT binding for Marvell Armada 7K/8K PCIe controller
-Date: Sun, 27 Mar 2016 11:30:57 +0200
-Message-Id: <1459071058-18328-2-git-send-email-thomas.petazzoni@free-electrons.com>
-In-Reply-To: <1459071058-18328-1-git-send-email-thomas.petazzoni@free-electrons.com>
-References: <1459071058-18328-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from p3plsmtps2ded03.prod.phx3.secureserver.net ([208.109.80.60]:56353
+	"EHLO p3plsmtps2ded03.prod.phx3.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753420AbcC3WL6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 30 Mar 2016 18:11:58 -0400
+From: Jake Oshins <jakeo@microsoft.com>
+To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v2 5/7] drivers:hv: Track allocations of children of hv_vmbus in private resource tree
+Date: Wed, 30 Mar 2016 16:48:45 -0700
+Message-Id: <1459381727-25039-6-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1459381727-25039-1-git-send-email-jakeo@microsoft.com>
+References: <y>
+ <1459381727-25039-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adds the Device Tree binding documentation that allows to
-describe the PCIe controller found in Marvell Armada 7K/8K SoCs.
+This patch changes vmbus_allocate_mmio() and vmbus_free_mmio() so
+that when child paravirtual devices allocate memory-mapped I/O
+space, they allocate it privately from a resource tree pointed
+at by hyperv_mmio and also by the public resource tree
+iomem_resource.  This allows the region to be marked as "busy"
+in the private tree, but a "bridge window" in the public tree,
+guaranteeing that no two bridge windows will overlap each other
+but while also allowing the PCI device children of the bridge
+windows to overlap that window.
 
-Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+One might conclude that this belongs in the pnp layer, rather
+than in this driver.  Rafael Wysocki, the maintainter of the
+pnp layer, has previously asked that we not modify the pnp layer
+as it is considered deprecated.  This patch is thus essentially
+a workaround.
+
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- .../devicetree/bindings/pci/pci-armada8k.txt       | 41 ++++++++++++++++++++++
- 1 file changed, 41 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/pci-armada8k.txt
+ drivers/hv/vmbus_drv.c | 22 +++++++++++++++++++++-
+ 1 file changed, 21 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/pci-armada8k.txt b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
-new file mode 100644
-index 0000000..577de5b
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/pci-armada8k.txt
-@@ -0,0 +1,41 @@
-+* Marvell Armada 7K/8K PCIe interface
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index 1ce47d0..dfc6149 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -1128,7 +1128,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			resource_size_t size, resource_size_t align,
+ 			bool fb_overlap_ok)
+ {
+-	struct resource *iter;
++	struct resource *iter, *shadow;
+ 	resource_size_t range_min, range_max, start, local_min, local_max;
+ 	const char *dev_n = dev_name(&device_obj->device);
+ 	u32 fb_end = screen_info.lfb_base + (screen_info.lfb_size << 1);
+@@ -1170,12 +1170,22 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+
+ 			start = (local_min + align - 1) & ~(align - 1);
+ 			for (; start + size - 1 <= local_max; start += align) {
++				shadow = __request_region(iter, start,
++							  size,
++							  NULL,
++							  IORESOURCE_BUSY);
++				if (!shadow)
++					continue;
 +
-+This PCIe host controller is based on the Synopsis Designware PCIe IP
-+and thus inherits all the common properties defined in designware-pcie.txt.
+ 				*new = request_mem_region_exclusive(start, size,
+ 								    dev_n);
+ 				if (*new) {
++					shadow->name = (char *)*new;
+ 					retval = 0;
+ 					goto exit;
+ 				}
 +
-+Required properties:
-+- compatible: "marvell,armada8k-pcie"
-+- reg: must contain two register regions
-+   - the control register region
-+   - the config space region
-+- reg-names:
-+   - "ctrl" for the control register region
-+   - "config" for the config space region
-+- interrupts: Interrupt specifier for the PCIe controler
-+- clock-names: May contain the following entries:
-+	- "main", for the main clock, shared by several PCIe ports
-+	- "port", for the port clock
++				__release_region(iter, start, size);
+ 			}
+ 		}
+ 	}
+@@ -1196,7 +1206,17 @@ EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
+  */
+ void vmbus_free_mmio(resource_size_t start, resource_size_t size)
+ {
++	struct resource *iter;
 +
-+Example:
++	down(&hyperv_mmio_lock);
++	for (iter = hyperv_mmio; iter; iter = iter->sibling) {
++		if ((iter->start >= start + size) || (iter->end <= start))
++			continue;
 +
-+	pcie@f2600000 {
-+		compatible = "marvell,armada8k-pcie", "snps,dw-pcie";
-+		reg = <0 0xf2600000 0 0x10000>, <0 0xf6f00000 0 0x80000>;
-+		reg-names = "ctrl", "config";
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		#interrupt-cells = <1>;
-+		device_type = "pci";
-+		dma-coherent;
-+
-+		bus-range = <0 0xff>;
-+		ranges = <0x81000000 0 0xf9000000 0  0xf9000000 0 0x10000	/* downstream I/O */
-+			  0x82000000 0 0xf6000000 0  0xf6000000 0 0xf00000>;	/* non-prefetchable memory */
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic 0 GIC_SPI 32 IRQ_TYPE_LEVEL_HIGH>;
-+		interrupts = <GIC_SPI 32 IRQ_TYPE_LEVEL_HIGH>;
-+		num-lanes = <1>;
-+		clocks = <&cpm_syscon0 1 14>, <&cpm_syscon0 1 13>;
-+		clock-names = "main", "port";
-+		status = "disabled";
-+	};
--- 
-2.6.4
++		__release_region(iter, start, size);
++	}
+ 	release_mem_region(start, size);
++	up(&hyperv_mmio_lock);
+
+ }
+ EXPORT_SYMBOL_GPL(vmbus_free_mmio);
+--
+1.9.1
 
