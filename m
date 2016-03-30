@@ -1,145 +1,73 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 7 Mar 2016 22:24:27 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Krzysztof Ha??asa <khalasa@piap.pl>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH] Fix NULL ptr dereference in pci_bus_assign_domain_nr()
- on ARM
-Message-ID: <20160308042427.GA20580@localhost>
-References: <m337sapw89.fsf@t19.piap.pl>
- <20160307223311.GB26149@localhost>
- <20160308030106.GA18190@red-moon>
+From: khalasa@piap.pl (Krzysztof =?utf-8?Q?Ha=C5=82asa?=)
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Tim Harvey <tharvey@gateworks.com>,
+	Fabio Estevam <festevam@gmail.com>,
+	Petr =?utf-8?Q?=C5=A0tetiar?= <ynezz@true.cz>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel\@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	linux-kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
+References: <m3h9fuk7ik.fsf@t19.piap.pl>
+	<CAOMZO5DcZCxoLPeGRWSGkstm7F3eN-Q-yJyf6ktMTda2zLviag@mail.gmail.com>
+	<CAOMZO5B8Lzn-E4YOeYxVtN5PN11aOvZHn4eU0ixkdV8CO8+xYw@mail.gmail.com>
+	<CAJ+vNU2Sg1ZKBsGcQswrJZyTJ1WBEZor3ZqpoYUT7i9FKjEAog@mail.gmail.com>
+	<CAOMZO5DO9G18=_YSri3a+UiYbLwN6AMG4asUXbT03mpbU3hHrw@mail.gmail.com>
+	<CAJ+vNU1_YqvWQkmuDB7r8z77iZJS6pP4Mr+j9yW4sFLAeJXQDw@mail.gmail.com>
+	<CAOMZO5A2osG3=mTaCayYfMokUj-vT+Udq9ckq45b1yaUP9Tn3g@mail.gmail.com>
+	<CAJ+vNU2ST=XG5H04-OCwpHgcvkoXOQw8F3MjXhJmWhBUbxWE-g@mail.gmail.com>
+	<1459241739.2565.9.camel@pengutronix.de> <m3shz9in52.fsf@t19.piap.pl>
+	<1459248921.2565.15.camel@pengutronix.de>
+Date: Wed, 30 Mar 2016 10:10:31 +0200
+In-Reply-To: <1459248921.2565.15.camel@pengutronix.de> (Lucas Stach's message
+	of "Tue, 29 Mar 2016 12:55:21 +0200")
+Message-ID: <m3oa9widxk.fsf@t19.piap.pl>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160308030106.GA18190@red-moon>
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 08, 2016 at 03:01:20AM +0000, Lorenzo Pieralisi wrote:
-> On Mon, Mar 07, 2016 at 04:33:11PM -0600, Bjorn Helgaas wrote:
-> > [+cc Lorenzo]
-> > 
-> > On Tue, Mar 01, 2016 at 07:07:18AM +0100, Krzysztof Ha??asa wrote:
-> > > Many ARM platforms use a wrapper:
-> > > /*
-> > >  * Compatibility wrapper for older platforms that do not care about
-> > >  * passing the parent device.
-> > >  */
-> > > static inline void pci_common_init(struct hw_pci *hw)
-> > > {
-> > >         pci_common_init_dev(NULL, hw);
-> > > }
-> > > 
-> > > which means that pci_bus_assign_domain_nr() can be called without
-> > > a parent. This patch fixes the NULL pointer dereference.
-> > > 
-> > > Signed-off-by: Krzysztof Ha??asa <khalasa@piap.pl>
-> > > Cc: stable@vger.kernel.org
-> > 
-> > I applied this to for-linus with changelog as below for v4.5, thanks!
-> > 
-> > Wow, this is terrible.  All ARM32 systems that use pci_common_init()
-> > crash at boot.  That includes cns3xxx, dove, footbridge, iopl13xx,
-> > ip32x, iop33x, ixp4xx, ks8695, mv78xx0, orion5x, pxa, sa1100, etc.
-> > Apparently they've been crashing since v4.0, when 7c674700098c and
-> > 8c7d14746abc appeared.  I can hardly believe nobody noticed until now.
-> > 
-> > Actually, I did find one problem report:
-> > http://forum.doozan.com/read.php?2,17868,22070,quote=1 from last May,
-> > but apparently it got lost in a forum and never found its way
-> > upstream.
-> > 
-> > I reworked the changelog because this problem will affect *any* arch
-> > that enables CONFIG_PCI_DOMAINS_GENERIC and supplies NULL "parent"
-> > pointers -- ia64, mips, mn10300, s390, x86, etc., would be affected if
-> > they enabled CONFIG_PCI_DOMAINS_GENERIC.
-> > 
-> > I also added a "Fixes:" tag for 7c674700098c, since that's the commit
-> > that added the generic code we're fixing.  Backports of 7c674700098c
-> > should also backport this change.
-> 
-> That's really unfortunate, when I moved code from arm64 to generic I
-> did not spot this issue in the original code and carried it over, you
-> summarized the reasons in the commit log so without any further ado (and
-> with my apologies):
-> 
-> Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Lucas Stach <l.stach@pengutronix.de> writes:
 
-No worries, it just goes with the territory.  What surprises me is
-that it took us so long to notice.  v4.0 was released almost a year
-ago (April 12, 2015), so I can't figure out how nobody noticed until
-now.
+>> TW6869: PCI 0000:04:00.0, IRQ 336, MMIO 0x1100000
+>> TW686x 0000:04:00.0: enabling device (0140 -> 0142)
+>>
+> I don't see whee the device even tries to use MSI IRQs. Even if the
+> infrastructure is enabled it opts to use legacy INTA.
 
-And I don't know what happened with the problem report in the forum.
-That's a case where somebody *did* notice, but I guess they just gave
-up on v4.0 and went back to v3.18.  What a shame :)  I don't know if
-people just have low expectations of Linux, or they feel like it's too
-hard to report bugs, or we don't make it easy enough, or we're not
-approachable enough, or what.  I notice that many times somebody finds
-a workaround, and people seem satisfied with that, and we don't get a
-chance to fix the real problem.
+It only tries to use normal IRQ.
 
-Bjorn
+> There is no upstream driver for this chip, so I don't know where to look
+> to find out if the driver tries to enable MSI.
 
-> > commit 71babd2a89fe
-> > Author: Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>
-> > Date:   Tue Mar 1 07:07:18 2016 +0100
-> > 
-> >     PCI: Allow a NULL "parent" pointer in pci_bus_assign_domain_nr()
-> >     
-> >     pci_create_root_bus() passes a "parent" pointer to
-> >     pci_bus_assign_domain_nr().  When CONFIG_PCI_DOMAINS_GENERIC is defined,
-> >     pci_bus_assign_domain_nr() dereferences that pointer.  Many callers of
-> >     pci_create_root_bus() supply a NULL "parent" pointer, which leads to a NULL
-> >     pointer dereference error.
-> >     
-> >     7c674700098c ("PCI: Move domain assignment from arm64 to generic code")
-> >     moved the "parent" dereference from arm64 to generic code.  Only arm64 used
-> >     that code (because only arm64 defined CONFIG_PCI_DOMAINS_GENERIC), and it
-> >     always supplied a valid "parent" pointer.  Other arches supplied NULL
-> >     "parent" pointers but didn't defined CONFIG_PCI_DOMAINS_GENERIC, so they
-> >     used a no-op version of pci_bus_assign_domain_nr().
-> >     
-> >     8c7d14746abc ("ARM/PCI: Move to generic PCI domains") defined
-> >     CONFIG_PCI_DOMAINS_GENERIC on ARM, and many ARM platforms use
-> >     pci_common_init(), which supplies a NULL "parent" pointer.
-> >     These platforms (cns3xxx, dove, footbridge, iop13xx, etc.) crash
-> >     with a NULL pointer dereference like this while probing PCI:
-> >     
-> >       Unable to handle kernel NULL pointer dereference at virtual address 000000a4
-> >       PC is at pci_bus_assign_domain_nr+0x10/0x84
-> >       LR is at pci_create_root_bus+0x48/0x2e4
-> >       Kernel panic - not syncing: Attempted to kill init!
-> >     
-> >     [bhelgaas: changelog, add "Reported:" and "Fixes:" tags]
-> >     Reported: http://forum.doozan.com/read.php?2,17868,22070,quote=1
-> >     Fixes: 8c7d14746abc ("ARM/PCI: Move to generic PCI domains")
-> >     Fixes: 7c674700098c ("PCI: Move domain assignment from arm64 to generic code")
-> >     Signed-off-by: Krzysztof Ha??asa <khalasa@piap.pl>
-> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> >     CC: stable@vger.kernel.org	# v4.0+
-> > 
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 602eb42..f89db3a 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -4772,8 +4772,10 @@ int pci_get_new_domain_nr(void)
-> >  void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> >  {
-> >  	static int use_dt_domains = -1;
-> > -	int domain = of_get_pci_domain_nr(parent->of_node);
-> > +	int domain = -1;
-> >  
-> > +	if (parent)
-> > +		domain = of_get_pci_domain_nr(parent->of_node);
-> >  	/*
-> >  	 * Check DT domain and use_dt_domains values.
-> >  	 *
-> > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It's been posted on linux-media list... I added pci_enable_msi() to this
+driver and it didn't help.
+
+> Is what you are saying that if you enable MSI support in the kernel, it
+> breaks legacy IRQs?
+
+Precisely.
+
+However, MSI doesn't seem to work either. Could be a problem specific to
+this TW6869 card.
+
+Ventana GW5410 has 5 mPCIe slots, and (with MSI enabled in the system)
+those IRQs (non-MSI) don't work in any slot:
+
+304: 0 0 0 0  PCI-MSI   0 Edge   PCIe PME, aerdrv
+336: 0 0 0 0      GPC 123 Level  TW8689 in J7 slot
+337: 0 0 0 0      GPC 122 Level  TW8689 in J8, J10, J11
+338: 0 0 0 0      GPC 121 Level  TW8689 in J6)
+
+If I enable MSI on this card (adding pci_enable_msi()):
+313: 0 0 0 0  PCI-MSI   9 Edge   TW6869 in J7 slot
+
+The only way I can get it to work is by disabling MSI (system wide).
+-- 
+Krzysztof Halasa
+
+Industrial Research Institute for Automation and Measurements PIAP
+Al. Jerozolimskie 202, 02-486 Warsaw, Poland
