@@ -1,52 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48022 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933474AbcCIRSP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 9 Mar 2016 12:18:15 -0500
-Date: Wed, 9 Mar 2016 11:18:11 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: [GIT PULL] PCI fixes for v4.5
-Message-ID: <20160309171811.GA21388@localhost>
+Received: from mail-io0-f169.google.com ([209.85.223.169]:33717 "EHLO
+	mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751217AbcC3MqO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 30 Mar 2016 08:46:14 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160330120644.GM20367@ibawizard.net>
+References: <m3h9fuk7ik.fsf@t19.piap.pl>
+	<20160330120644.GM20367@ibawizard.net>
+Date: Wed, 30 Mar 2016 09:45:21 -0300
+Message-ID: <CAOMZO5DK-K19bHhEpyGoVak5Y7bT-xzA9GjtBSiO6Z+yfeEdgw@mail.gmail.com>
+Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
+From: Fabio Estevam <festevam@gmail.com>
+To: =?UTF-8?Q?Petr_=C5=A0tetiar?= <ynezz@true.cz>
+Cc: =?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
+	Marcel Ziswiler <marcel.ziswiler@toradex.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Stefan Agner <stefan@agner.ch>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On Wed, Mar 30, 2016 at 9:06 AM, Petr Štetiar <ynezz@true.cz> wrote:
 
-Here's another fix for v4.5.  It fixes an ARM regression in v4.0 that
-causes many boxes to crash on boot, including cns3xxx, dove, footbridge,
-iopl13xx, ip32x, iop33x, ixp4xx, ks8695, mv78xx0, orion5x, pxa, sa1100,
-etc.  The change is in code that's only built for ARM and ARM64.
+> I'm really puzzled by this :-) With your patch applied I get following on
+> Toradex Apalis modules:
+>
+>  DTS:         reset-gpio = <&gpio1 28 GPIO_ACTIVE_LOW>;
+>  dmesg:       imx6q-pcie 1ffc000.pcie: phy link never came up
+>  gpio:        gpio-28  (                    |reset               ) out hi
+>  pin voltage: 0V
+>
+>  DTS:         reset-gpio = <&gpio1 28 GPIO_ACTIVE_HIGH>;
+>  dmesg:       ath9k 0000:01:00.0: enabling device (0140 -> 0142)
+>  gpio:        gpio-28  (                    |reset               ) out lo
+>  pin voltage: 3V3
+>
+> So Toradex Apalis is actually active-high? Thanks.
 
-Bjorn
-
-
-The following changes since commit 1195c103f6c98d9ff381cac3a8760d4f8a133627:
-
-  PCI: layerscape: Fix MSG TLP drop setting (2016-02-29 17:24:15 -0600)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.5-fixes-5
-
-for you to fetch changes up to 54c6e2dd00c313d0add58e5befe62fe6f286d03b:
-
-  PCI: Allow a NULL "parent" pointer in pci_bus_assign_domain_nr() (2016-03-07 14:33:16 -0600)
-
-----------------------------------------------------------------
-PCI updates for v4.5:
-
-  Enumeration
-    Allow generic PCI domains without bridge "parent" pointer (Krzysztof Hałasa)
-
-----------------------------------------------------------------
-Krzysztof =?utf-8?Q?Ha=C5=82asa?= (1):
-      PCI: Allow a NULL "parent" pointer in pci_bus_assign_domain_nr()
-
- drivers/pci/pci.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Yes, exactly. That's why you need to introduce a new property to
+handle the active-high case, so that old dtb's are not broken.
