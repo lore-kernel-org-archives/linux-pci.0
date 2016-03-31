@@ -1,50 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db3on0087.outbound.protection.outlook.com ([157.55.234.87]:64512
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750896AbcCCFV7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 3 Mar 2016 00:21:59 -0500
-From: Richard Zhu <hongxing.zhu@nxp.com>
-To: "chf.fritz@googlemail.com" <chf.fritz@googlemail.com>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Lucas Stach <l.stach@pengutronix.de>
-CC: Fabio Estevam <fabio.estevam@nxp.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lee Jones <lee.jones@linaro.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH v3 0/2] Add PCIe driver support for imx6sx
-Date: Thu, 3 Mar 2016 01:46:02 +0000
-Message-ID: <DBXPR04MB2708AB0A3F95E78580FC7408CBD0@DBXPR04MB270.eurprd04.prod.outlook.com>
-References: <1456411669-4699-1-git-send-email-chf.fritz@googlemail.com>
- <1456969281.2246.0.camel@googlemail.com>
-In-Reply-To: <1456969281.2246.0.camel@googlemail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from bues.ch ([80.190.117.144]:41512 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752578AbcCaTuP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 31 Mar 2016 15:50:15 -0400
+Date: Thu, 31 Mar 2016 21:09:36 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
+Message-ID: <20160331210936.6b195135@wiggum>
+In-Reply-To: <E1akxli-00030z-Jz@bombadil.infradead.org>
+References: <E1akxli-00030z-Jz@bombadil.infradead.org>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/_xYEW=6KCZST_Ps4z+y3D02"; protocol="application/pgp-signature"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBDaHJpc3RvcGggRnJpdHogW21h
-aWx0bzpjaGYuZnJpdHpAZ29vZ2xlbWFpbC5jb21dDQo+IFNlbnQ6IFRodXJzZGF5LCBNYXJjaCAw
-MywgMjAxNiA5OjQxIEFNDQo+IFRvOiBSaWNoYXJkIFpodTsgU2hhd24gR3VvOyBMdWNhcyBTdGFj
-aA0KPiBDYzogRmFiaW8gRXN0ZXZhbTsgQmpvcm4gSGVsZ2FhczsgTGVlIEpvbmVzOyBsaW51eC1w
-Y2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC0NCj4gYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQu
-b3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjMgMC8yXSBBZGQgUENJZSBkcml2ZXIgc3VwcG9y
-dCBmb3IgaW14NnN4DQo+IA0KPiAqcGluZyoNCj4gDQo+IE9uIFRodSwgMjAxNi0wMi0yNSBhdCAx
-NTo0NyArMDEwMCwgQ2hyaXN0b3BoIEZyaXR6IHdyb3RlOg0KPiA+IHYzOg0KPiA+ICAqIGFkYXB0
-IGRldmljZXRyZWUgYmluZGluZ3MgZG9jdW1lbnRhdGlvbiBmc2wsaW14NnEtcGNpZS50eHQNCj4g
-PiB2MjoNCj4gPiAgKiBsZWF2ZSBvdXQgcmVndWxhdG9yIGhhbmRsaW5nIGZyb20gZHJpdmVyLCB3
-aWxsIGJlIGRvbmUgbGF0ZXINCj4gPiAgICBpbiBQTSBzdWJzeXN0ZW0NCj4gPiAgKiB1c2UgQklU
-KCkgbWFjcm8gZm9yIE1GRA0KPiA+DQo+ID4gQ2hyaXN0b3BoIEZyaXR6ICgyKToNCj4gPiAgIE1G
-RDogaW14NnN4OiBBZGQgUENJZSByZWdpc3RlciBkZWZpbml0aW9ucyBmb3IgaW9tdXhjIGdwcg0K
-PiA+ICAgUENJOiBpbXg2OiBhZGQgaW5pdGlhbCBpbXg2c3ggc3VwcG9ydA0KPiA+DQo+ID4gIC4u
-Li9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9mc2wsaW14NnEtcGNpZS50eHQgICAgIHwgICA2ICst
-DQo+ID4gIGRyaXZlcnMvcGNpL2hvc3QvcGNpLWlteDYuYyAgICAgICAgICAgICAgICAgICAgICAg
-IHwgMTMwICsrKysrKysrKysrKysrLS0tLS0tLQ0KPiA+ICBpbmNsdWRlL2xpbnV4L21mZC9zeXNj
-b24vaW14NnEtaW9tdXhjLWdwci5oICAgICAgICB8ICAgNSArDQo+ID4gIDMgZmlsZXMgY2hhbmdl
-ZCwgMTAxIGluc2VydGlvbnMoKyksIDQwIGRlbGV0aW9ucygtKQ0KPiA+DQo+IA0KPiANCltaaHUg
-aG9uZ3hpbmddIEhpIENocmlzdG9waDoNCkknbSBva2F5IHdpdGggdGhpcyBwYXRjaC1zZXQuIEhv
-cGUgdGhlIHJlZ3VsYXRvciBoYW5kaW5nIHBhdGNoIG1hbmRhdG9yeSByZXF1aXJlZCBieSBpbXg2
-c3ggcGNpZQ0KaXMgbWVyZ2VkIGluIFBNIHN5c3RlbSBhc2FwLiA6KS4NClRoYW5rcy4NClJpY2hh
-cmQNCg==
+--Sig_/_xYEW=6KCZST_Ps4z+y3D02
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 29 Mar 2016 19:41:30 +0200
+Lukas Wunner <lukas@wunner.de> wrote:
+
+> +static void quirk_apple_b43_reset(struct pci_dev *dev)
+> +{
+> +	void __iomem *mmio;
+> +
+> +	if (!dmi_match(DMI_BOARD_VENDOR, "Apple Inc.") || !dev->bus->self ||
+> +	    pci_pcie_type(dev->bus->self) !=3D PCI_EXP_TYPE_ROOT_PORT)
+> +		return;
+> +
+> +	mmio =3D pci_iomap(dev, 0, 0);
+> +	if (!mmio) {
+> +		pr_err("b43 quirk: Cannot iomap device, IRQ storm ahead\n");
+> +		return;
+> +	}
+> +	iowrite32(BCMA_RESET_CTL_RESET,
+> +		  mmio + (1 * BCMA_CORE_SIZE) + BCMA_RESET_CTL);
+> +	pci_iounmap(dev, mmio);
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM, 0x4331, quirk_apple_b43_=
+reset);
+
+Looks good, as long as the wireless core is always guaranteed to be
+the second core on that PCI device.
+
+--=20
+Michael
+
+--Sig_/_xYEW=6KCZST_Ps4z+y3D02
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJW/XXwAAoJEPUyvh2QjYsOSY0P/RcRZmmRUggMrGRKGl4Vh9Q0
+cYq+ij/D5n8F/ro7Vev4k/b1Bv+Qw5Q0U/yVoep5NRco3Xj6YKLrw+GdoQNE8Ks1
+zCWPufKHCL6nn1r8aN0NFtGa3ICI1mDoMKcEuJE41m58KJmsaz+oEPH2MXBQEaq6
+ljPX6EWIIV2fLv4PUwb+/vPmJwn0GtU28tTdKh7dncAjHRh4E57Dsd55kCwhqAm5
+85AWXf1e0O4DHFwdAGa+jPMIk+XVpLZQw2kFh3YQFbDCvow0L1OoIrbnaXLyruhX
+SaxKJ3PLNvurLe6vsl71tbq/COHHkFKJb3OvlDle+QEIUdHXZCZsqodKoBfrbojl
+zdjn31echMj97Dt+HqgH1xC+WVEq8LSEvsJZEDWOk/3JaslDSHPAlEi8DhrMOpwZ
+XnLRu84yNifpDWCtlLjsEanqL12tJ3oCZxeIL78JgbLZUwgq3tQ9JYphdFIOzyqh
+mSA9E5hQhu9srkG27u25rlWVfLqZOKZIGGBZF2Z8AWM7gn1WA0gIQkDEH5zb5csG
+5q+Z/hRb7UA/2bldr7SkoQguZE1LCl5EmoMTAowiMLtOXu8j4JEUKNc937DQwsEU
+x63XWwFXEWl6R2GdYQ+z0Daj7BAtRofshsuua4snwEZFhogs5htiq4CDQl8S6588
+Qu/zRGuizNHbZXKZ1Kg8
+=oJbH
+-----END PGP SIGNATURE-----
+
+--Sig_/_xYEW=6KCZST_Ps4z+y3D02--
