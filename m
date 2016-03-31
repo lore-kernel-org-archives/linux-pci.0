@@ -1,123 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from li153-180.members.linode.com ([109.74.206.180]:41965 "EHLO
-	mail.tekno-soft.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754611AbcCCJjF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 3 Mar 2016 04:39:05 -0500
-Subject: Re: iMX6q PCIe phy link never came up on kernel v4.4.x
-To: Lucas Stach <l.stach@pengutronix.de>
-References: <56D5E3DF.9030906@tekno-soft.it>
- <1456997527.3772.37.camel@pengutronix.de>
-Cc: linux-pci@vger.kernel.org
-From: Roberto Fichera <kernel@tekno-soft.it>
-Message-ID: <56D80625.70903@tekno-soft.it>
-Date: Thu, 3 Mar 2016 10:38:45 +0100
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:34225 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752573AbcCaXNv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 31 Mar 2016 19:13:51 -0400
+Date: Fri, 1 Apr 2016 00:13:46 +0100
+From: Chris Bainbridge <chris.bainbridge@gmail.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
+Message-ID: <20160331231346.GA7469@localhost>
+References: <E1akxli-00030z-BC@bombadil.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <1456997527.3772.37.camel@pengutronix.de>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <E1akxli-00030z-BC@bombadil.infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/03/2016 10:32 AM, Lucas Stach wrote:
-> Hi Roberto,
+On Tue, Mar 29, 2016 at 07:41:30PM +0200, Lukas Wunner wrote:
+> Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ storm
+> on boot until they are reset, causing spurious interrupts if the IRQ is
+> shared. Apparently the EFI bootloader enables the device and does not
+> disable it before passing control to the OS. The bootloader contains a
+> driver for the wireless card which allows it to phone home to Cupertino.
+> This is used for Internet Recovery (download and install OS X images)
+> and probably also for Back to My Mac (remote access, RFC 6281) and to
+> discover stolen hardware.
+> 
+> The issue is most pronounced on 2011 and 2012 MacBook Pros where the IRQ
+> is shared with 3 other devices (Light Ridge Thunderbolt controller, SDXC
+> reader, HDA card on discrete GPU). As soon as an interrupt handler is
+> installed for one of these devices, the ensuing storm of spurious IRQs
+> causes the kernel to disable the IRQ and switch to polling. This lasts
+> until the b43 driver loads and resets the device.
+> 
+> Loading the b43 driver first is not always an option, in particular with
+> the Light Ridge Thunderbolt controller: The PCI hotplug IRQ handler gets
+> installed early on because it is built in, unlike b43 which is usually
+> a module.
+> 
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
+> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951
+> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
+> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632
 
-Hi Lucas,
-
->
-> Am Dienstag, den 01.03.2016, 19:47 +0100 schrieb Roberto Fichera:
->> Hi There,
->>
->> Working on a custom iMX6q board I'm getting a PCIe phy link never came up, even if uboot seems detecting
->> everything ok. My DTS is enabling PCIe with
->>
->> &pcie {
->>     pinctrl-names = "default";
->>     pinctrl-0 = <&pinctrl_pcie_reset>;
->>     reset-gpio = <&gpio7 12 0>;
->>     status = "okay";
->> };
->>
->> The PCIe is connected to a PCIe-to-PCI TI XIO2001. The XIO2001 power is controlled by GPIO_9 and 
->> the corresponding fixed regulator is set as
->>
->> 		reg_pcie: regulator@4 {
->> 			compatible = "regulator-fixed";
->> 			reg = <4>;
->> 			pinctrl-names = "default";
->> 			pinctrl-0 = <&pinctrl_pcie_reg>;
->> 			regulator-name = "MPCIE_3V3";
->> 			regulator-min-microvolt = <3300000>;
->> 			regulator-max-microvolt = <3300000>;
->> 			gpio = <&gpio1 9 0>;
->> 			regulator-always-on;
->> 			enable-active-high;
->> 		};
->>
->> so I'd like to know if there is any other special setup to do in order to get it to work on a v4.4.x kernel.
->> Or anyway how to debug it.
->>
->> Any suggestion?
-> Is this a regression from earlier kernel versions?
-
-No it isn't. I'm working with a brand new custom PCB so I've started my testing against v4.4.x kernel.
-
-> If so, can you please revert 5c5fb40de8f14 (PCI: imx6: Add support for
-> active-low reset GPIO) and see if this helps?
-
-Currently for testing I've changed the reset procedure to follow exactly the one I've in uboot, which seems
-working:
-
-U-Boot 2014.04-imx_v2014.04_3.14.38_6qp_beta+g6e9282c (Mar 03 2016 - 10:21:24)
-
-CPU:   Freescale i.MX6Q rev1.5 at 792 MHz
-CPU:   Temperature 37 C, calibration data: 0x5664d569
-Reset cause: WDOG
-Board: Janas iMX6Q (ID:e315c064140749d4)
-I2C:   ready
-DRAM:  2 GiB
-MMC:   FSL_SDHC: 0, FSL_SDHC: 1
-DEBUG_R0: 0x03584e11, DEBUG_R1: 0x08000410
-  LTSSM current state: 0x11 (S_L0)
-  PIPE transmit K indication: 0
-  PIPE Transmit data: 0x584e
-  Receiver is receiving logical idle: yes
-  Second symbol is also idle (16-bit PHY interface only): yes
-  Currently receiving k237 (PAD) in place of link number: no
-  Currently receiving k237 (PAD) in place of lane number: no
-  Link control bits advertised by link partner: 0x0
-  Receiver detected lane reversal: no
-  TS2 training sequence received: no
-  TS1 training sequence received: no
-  Receiver reports skip reception: no
-  LTSSM reports PHY link up: yes
-  A skip ordered set has been transmitted: no
-  Link number advertised/confirmed by link partner: 4
-  Application request to initiate training reset: no
-  PIPE transmit compliance request: no
-  PIPE transmit electrical idle request: no
-  PIPE receiver detect/loopback request: no
-  LTSSM-negotiated link reset: yes
-  LTSSM testing for polarity reversal: no
-  LTSSM performing link training: no
-  LTSSM in DISABLE state; link inoperable: no
-  Scrambling disabled for the link: no
-  00:01.0     - 16c3:abcd - Bridge device
-   01:00.0    - 104c:8240 - Bridge device
-    02:04.0   - 1397:08b4 - Network controller
-In:    serial
-Out:   serial
-Err:   serial
-Found PFUZE100! deviceid=10,revid=21
-mmc1(part 0) is current device
-Net:   Phy not found
-PHY reset timed out
-FEC [PRIME]
-Normal Boot
-Hit any key to stop autoboot:  0
-
-Cheers,
-Roberto Fichera.
-
->
-> Regards,
-> Lucas
-
+Should also fix https://bugzilla.kernel.org/show_bug.cgi?id=111781 ?
+Given that this is a serious bug that can corrupt filesystems it would
+be good to see the fix in stable too.
