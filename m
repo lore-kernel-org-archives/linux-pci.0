@@ -1,111 +1,85 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <56E34518.5020800@caviumnetworks.com>
-Date: Fri, 11 Mar 2016 14:22:16 -0800
-From: David Daney <ddaney@caviumnetworks.com>
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2on0140.outbound.protection.outlook.com ([207.46.100.140]:39712
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757186AbcCaNoj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 31 Mar 2016 09:44:39 -0400
+Message-ID: <1459431869.1998.12.camel@rtd-VirtualBox>
+Subject: Re: PCI IRQ issue since 4.2 kernel
+From: Rob Groner <rgroner@rtd.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-CC: David Daney <ddaney.cavm@gmail.com>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Will Deacon <will.deacon@arm.com>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<devicetree@vger.kernel.org>,
-	Dann Frazier <dann.frazier@canonical.com>,
-	David Daney <david.daney@cavium.com>
-Subject: Re: [PATCH v7 0/3] Add host controller drivers for Cavium ThunderX
- PCI
-References: <1457130708-3231-1-git-send-email-ddaney.cavm@gmail.com> <20160311221848.GG4725@localhost>
-In-Reply-To: <20160311221848.GG4725@localhost>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"jiang.liu@linux.intel.com" <jiang.liu@linux.intel.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"tglx@linutronix.de" <tglx@linutronix.de>
+Date: Thu, 31 Mar 2016 09:44:29 -0400
+In-Reply-To: <20160331134000.GA31995@localhost>
+References: <1459430795.1998.11.camel@rtd-VirtualBox>
+	 <20160331134000.GA31995@localhost>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/11/2016 02:18 PM, Bjorn Helgaas wrote:
-> On Fri, Mar 04, 2016 at 02:31:45PM -0800, David Daney wrote:
->> From: David Daney <david.daney@cavium.com>
->>
->> Some Cavium ThunderX processors require quirky access methods for the
->> config space of the PCIe bridge.
->>
->> There are now three patches:
->>
->> 1) Refactor code in pci-host-generic so that it can more easily be
->>     used by other drivers.  This splits the driver for CAM and ECAM
->>     access methods to a separate file from the common host driver code.
->>
->> 2) Add the ThunderX PCIe driver to external PCIe buses, which
->>     leverages the code in pci-host-generic
->>
->> 3) Add ThunderX PCI driver for internel SoC buses used on early
->>     ThunderX chip revisions.
->>
->> Changes from v6: Updated 3/3 to support Thunder pass-2.x silicon.
->>
->> Changes from v5: Added Acked-by Rob Herring for the device tree
->> binding in 3/3.  Fixed typo and split large functions as suggested by
->> Bjorn Helgaas.
->>
->> Changes from v4: Added patch 3/3.  Stylistic changes to 2/3 suggested
->> by Bjorn Helgaas.  When expanding config write width to 32-bits, mask
->> out unintened writes to W1C bits, also suggested by Bjorn Helgaas.
->>
->> Changes from v3: Add some Acked-by, rebased to v4.5.0-rc1
->>
->> Changes from v2: Improve device tree binding example as noted by Rob
->> Herring.  Rename pcie-thunder-pem.* to pci-thunder-pem.* for better
->> consistency.  Update MAINTAINERS to reflect the changes.
->>
->> Changes from v1: Split CAM and ECAM code from common driver code as
->> suggested by Arnd Bergmann.  Fix spelling errors in
->> pcie-thunder-pem.txt
->>
->>
->> David Daney (3):
->>    PCI: generic: Refactor code to enable reuse by other drivers.
->>    pci, pci-thunder-pem: Add PCIe host driver for ThunderX processors.
->>    pci, pci-thunder-ecam: Add driver for ThunderX-pass{1,2} on-chip
->>      devices
->>
->>   .../devicetree/bindings/pci/pci-thunder-ecam.txt   |  30 ++
->>   .../devicetree/bindings/pci/pci-thunder-pem.txt    |  43 +++
->>   MAINTAINERS                                        |   9 +
->>   drivers/pci/host/Kconfig                           |  18 +
->>   drivers/pci/host/Makefile                          |   3 +
->>   drivers/pci/host/pci-host-common.c                 | 194 ++++++++++
->>   drivers/pci/host/pci-host-common.h                 |  47 +++
->>   drivers/pci/host/pci-host-generic.c                | 181 +--------
->>   drivers/pci/host/pci-thunder-ecam.c                | 407 +++++++++++++++++++++
->>   drivers/pci/host/pci-thunder-pem.c                 | 347 ++++++++++++++++++
->>   10 files changed, 1102 insertions(+), 177 deletions(-)
->>   create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-ecam.txt
->>   create mode 100644 Documentation/devicetree/bindings/pci/pci-thunder-pem.txt
->>   create mode 100644 drivers/pci/host/pci-host-common.c
->>   create mode 100644 drivers/pci/host/pci-host-common.h
->>   create mode 100644 drivers/pci/host/pci-thunder-ecam.c
->>   create mode 100644 drivers/pci/host/pci-thunder-pem.c
->
-> These all look great!
->
-> I applied them to pci/host-thunder for v4.6.
->
-> I did split up the first patch into three:
->
->    PCI: generic: Move structure definitions to separate header file
->    PCI: generic: Add pci_host_common_probe(), based on gen_pci_probe()
->    PCI: generic: Expose pci_host_common_probe() for use by other drivers
->
-> simply to make them smaller and easier to review, bisect, and revert.  I
-> verified that the result was identical to your original patch, but
-> hopefully I didn't break anything in the intermediate states.  The zero-day
-> build robot should catch obvious goofs.
->
+On Thu, 2016-03-31 at 09:40 -0400, Bjorn Helgaas wrote:
+> Hi Rob,
+> 
+> On Thu, Mar 31, 2016 at 09:26:35AM -0400, Rob Groner wrote:
+> > We became aware of an issue with our Linux drivers when used with a 4.4
+> > kernel.  These drivers had worked previously from 2.6.35 to 4.2 kernels.
+> > The symptoms were that, even though the request_irq() call was
+> > successful, we did not receive any IRQs.  IRQs did arrive on a different
+> > IRQ line, however, and the kernel disabled that line because there was
+> > no handler.
+> 
+> Others have seen similar issues, so we reverted 991de2e59090 ("PCI, x86:
+> Implement pcibios_alloc_irq() and pcibios_free_irq()").
+> 
+> The revert, 6c777e8799a9 ("Revert "PCI, x86: Implement pcibios_alloc_irq()
+> and pcibios_free_irq()""), appeared in v4.5-rc6, so if you try that or a
+> later kernel (including v4.5), it should work.
+> 
+> Let us know if you still see problems.
+> 
+> Bjorn
 
-Thank you for having the patience to work through all these patch 
-revisions with me.
+Thank you!  I will try the 4.5 kernel from kernel.org today.
 
-David Daney
+Rob
+
+
+> >  -----------------------------------------------------------------------
+> >  rtd@kernel-dev:~/git/kernels/linux$ git bisect good
+> >  991de2e59090e55c65a7f59a049142e3c480f7bd is the first bad commit
+> >  commit 991de2e59090e55c65a7f59a049142e3c480f7bd
+> >  Author: Jiang Liu <jiang.liu@linux.intel.com>
+> >  Date:   Wed Jun 10 16:54:59 2015 +0800
+> >  
+> >      PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()
+> >      
+> >      To support IOAPIC hotplug, we need to allocate PCI IRQ resources on
+> >  demand
+> >      and free them when not used anymore.
+> >      
+> >      Implement pcibios_alloc_irq() and pcibios_free_irq() to dynamically
+> >      allocate and free PCI IRQs.
+> >      
+> >      Remove mp_should_keep_irq(), which is no longer used.
+> >      
+> >      [bhelgaas: changelog]
+> >      Signed-off-by: Jiang Liu <jiang.liu@linux.intel.com>
+> >      Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >      Acked-by: Thomas Gleixner <tglx@linutronix.de>
+> >  
+> >  :040000 040000 765e2d5232d53247ec260b34b51589c3bccb36ae
+> >  f680234a27685e94b1a35ae2a7218f8eafa9071a M    arch
+> >  :040000 040000 d55a682bcde72682e883365e88ad1df6186fd54d
+> >  f82c470a04a6845fcf5e0aa934512c75628f798d M    drivers
+> >  ----------------------------------------------------------------
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  https://na01.safelinks.protection.outlook.com/?url=http%3a%2f%2fvger.kernel.org%2fmajordomo-info.html&data=01%7c01%7crgroner%40rtd.com%7c4e5022d941bc4c056cfe08d35969f836%7c16f82b7977b8423dbafdd6c19032e267%7c1&sdata=4iqUGR6coY75Peouz%2buK6NUAk9pQFAHsGemGwzFXlc0%3d
+
+
