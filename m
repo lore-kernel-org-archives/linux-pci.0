@@ -1,73 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:54945 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933213AbcDENqH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2016 09:46:07 -0400
-Received: from localhost
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Tue, 5 Apr 2016 23:46:05 +1000
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
-	alex.williamson@redhat.com, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com, Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [RFC v5 2/7] PCI: Do not Use IORESOURCE_STARTALIGN to identify bridge resources
-Date: Tue,  5 Apr 2016 21:43:30 +0800
-Message-Id: <1459863813-2830-3-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1459863813-2830-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1459863813-2830-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Received: from ibawizard.net ([82.208.49.253]:56490 "EHLO
+	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753043AbcDAMux (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Apr 2016 08:50:53 -0400
+From: =?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
+To: devicetree@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Tim Harvey <tharvey@gateworks.com>,
+	=?UTF-8?q?Krzysztof=20Ha=C5=82asa?= <khalasa@piap.pl>,
+	Fabio Estevam <festevam@gmail.com>,
+	Marcel Ziswiler <marcel.ziswiler@toradex.com>, stefan@agner.ch
+Subject: [PATCH] ARM: imx6: Fix PCIe reset gpio polarity on Toradex Apalis
+Date: Fri,  1 Apr 2016 14:41:46 +0200
+Message-Id: <1459514508-8557-1-git-send-email-ynezz@true.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now we use the IORESOURCE_STARTALIGN to identify
-bridge resources in __assign_resources_sorted().
-That's quite fragile. We can't make sure that
-the PCI devices' resources will not use
-IORESOURCE_STARTALIGN any more.
+In commit 5c5fb40de8f14 "PCI: imx6: Add support for active-low reset GPIO"
+I've made GPIO reset polarity aware, which made the PCIe working on Apalis SoM
+(reset active-high), but it has broken PCIe on several other i.MX6 boards
+(reset active-low) due to wrong logic level. It has made the default reset
+logic active-high, but it was active-low since beginning due to the bug in the
+reset code:
 
-In this patch, we try to use a more robust way
-to identify bridge resources.
+	gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
+	msleep(100);
+	gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- drivers/pci/setup-bus.c |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+This breakage couldn't be fixed correctly by fixing the reset code snippet
+mentioned above and fixing the broken DTBs, as we can't touch the DTBs, so the
+5c5fb40de8f14 commit is going to be reverted, making PCIe reset broken on
+Apalis modules again.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7796d0a..bffcf1e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -391,6 +391,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
- 	unsigned long fail_type;
- 	resource_size_t add_align, align;
-+	int index;
- 
- 	/* Check if optional add_size is there */
- 	if (!realloc_head || list_empty(realloc_head))
-@@ -411,11 +412,14 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 		/*
- 		 * There are two kinds of additional resources in the list:
--		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
--		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
-+		 * 1. bridge resource
-+		 * 2. SR-IOV resource
- 		 * Here just fix the additional alignment for bridge
- 		 */
--		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
-+		index = dev_res->res - dev_res->dev->resource;
-+		if (pci_is_bridge(dev_res->dev) &&
-+			index >= PCI_BRIDGE_RESOURCES &&
-+			index <= PCI_BRIDGE_RESOURCE_END)
- 			continue;
- 
- 		add_align = get_res_add_align(realloc_head, dev_res->res);
--- 
-1.7.9.5
-
+As suggested by Fabio, to fix this situation in backward compatible manner, we
+should introduce new boolean DT property reset-gpio-active-high, which would
+set PCIe reset GPIO polarity as needed. This patch series tries to do so.
