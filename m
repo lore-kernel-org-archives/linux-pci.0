@@ -1,91 +1,75 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC v5 2/7] PCI: Do not Use IORESOURCE_STARTALIGN to identify
- bridge resources
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1459863813-2830-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1459863813-2830-3-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160406005534.GB6187@gwshan>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
-	aik@ozlabs.ru, alex.williamson@redhat.com,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	nikunj@linux.vnet.ibm.com
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Message-ID: <57047183.9000003@linux.vnet.ibm.com>
-Date: Wed, 6 Apr 2016 10:16:35 +0800
-MIME-Version: 1.0
-In-Reply-To: <20160406005534.GB6187@gwshan>
-Content-Type: text/plain; charset=utf-8; format=flowed
+From: Jake Oshins <jakeo@microsoft.com>
+To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v3 1/7] drivers:hv: Lock access to hyperv_mmio resource tree
+Date: Fri,  1 Apr 2016 16:11:26 -0700
+Message-Id: <1459552292-1297-2-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1459552292-1297-1-git-send-email-jakeo@microsoft.com>
+References: <y>
+ <1459552292-1297-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/4/6 8:55, Gavin Shan wrote:
-> On Tue, Apr 05, 2016 at 09:43:30PM +0800, Yongji Xie wrote:
->> Now we use the IORESOURCE_STARTALIGN to identify
->> bridge resources in __assign_resources_sorted().
->> That's quite fragile. We can't make sure that
->> the PCI devices' resources will not use
->> IORESOURCE_STARTALIGN any more.
->>
->> In this patch, we try to use a more robust way
->> to identify bridge resources.
->>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->> drivers/pci/setup-bus.c |   10 +++++++---
->> 1 file changed, 7 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->> index 7796d0a..bffcf1e 100644
->> --- a/drivers/pci/setup-bus.c
->> +++ b/drivers/pci/setup-bus.c
->> @@ -391,6 +391,7 @@ static void __assign_resources_sorted(struct list_head *head,
->> 	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
->> 	unsigned long fail_type;
->> 	resource_size_t add_align, align;
->> +	int index;
->>
->> 	/* Check if optional add_size is there */
->> 	if (!realloc_head || list_empty(realloc_head))
->> @@ -411,11 +412,14 @@ static void __assign_resources_sorted(struct list_head *head,
->>
->> 		/*
->> 		 * There are two kinds of additional resources in the list:
->> -		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
->> -		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
->> +		 * 1. bridge resource
->> +		 * 2. SR-IOV resource
->> 		 * Here just fix the additional alignment for bridge
->> 		 */
->> -		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
->> +		index = dev_res->res - dev_res->dev->resource;
->> +		if (pci_is_bridge(dev_res->dev) &&
->> +			index >= PCI_BRIDGE_RESOURCES &&
->> +			index <= PCI_BRIDGE_RESOURCE_END)
->> 			continue;
-> Yongji, the condition seems incorrect. According to the comments in
-> the code, it's resizing bridge's windows. So I think the code would
-> be something like below?
->
-> 		if (!pci_is_bridge(dev_res->dev) ||
-> 		    index < PCI_BRIDGE_RESOURCES ||
-> 		    index > PCI_BRIDGE_RESOURCE_END)
-> 			continue;
+In existing code, this tree of resources is created
+in single-threaded code and never modified after it is
+created, and thus needs no locking.  This patch introduces
+a semaphore for tree access, as other patches in this
+series introduce run-time modifications of this resource
+tree which can happen on multiple threads.
 
-Yes. I made a mistake here. It should be something like
-the above code.
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/hv/vmbus_drv.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-Thanks,
-Yongji
-
->> 		add_align = get_res_add_align(realloc_head, dev_res->res);
-> Thanks,
-> Gavin
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe kvm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index 64713ff..799518b 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -102,6 +102,7 @@ static struct notifier_block hyperv_panic_block = {
+ };
+ 
+ struct resource *hyperv_mmio;
++DEFINE_SEMAPHORE(hyperv_mmio_lock);
+ 
+ static int vmbus_exists(void)
+ {
+@@ -1132,7 +1133,10 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 	resource_size_t range_min, range_max, start, local_min, local_max;
+ 	const char *dev_n = dev_name(&device_obj->device);
+ 	u32 fb_end = screen_info.lfb_base + (screen_info.lfb_size << 1);
+-	int i;
++	int i, retval;
++
++	retval = -ENXIO;
++	down(&hyperv_mmio_lock);
+ 
+ 	for (iter = hyperv_mmio; iter; iter = iter->sibling) {
+ 		if ((iter->start >= max) || (iter->end <= min))
+@@ -1169,13 +1173,17 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			for (; start + size - 1 <= local_max; start += align) {
+ 				*new = request_mem_region_exclusive(start, size,
+ 								    dev_n);
+-				if (*new)
+-					return 0;
++				if (*new) {
++					retval = 0;
++					goto exit;
++				}
+ 			}
+ 		}
+ 	}
+ 
+-	return -ENXIO;
++exit:
++	up(&hyperv_mmio_lock);
++	return retval;
+ }
+ EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
+ 
+-- 
+1.9.1
