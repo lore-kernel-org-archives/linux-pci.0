@@ -1,100 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 13/60] PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
-Date: Thu,  7 Apr 2016 17:15:26 -0700
-Message-Id: <1460074573-7481-14-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:44805 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752585AbcDAWSC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Apr 2016 18:18:02 -0400
+Date: Sat, 2 Apr 2016 06:17:09 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Jake Oshins <jakeo@microsoft.com>
+Cc: kbuild-all@01.org, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org, kys@microsoft.com,
+	linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
+	olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
+	haiyangz@microsoft.com, haddenh@microsoft.com,
+	Jake Oshins <jakeo@microsoft.com>
+Subject: Re: [PATCH v3 6/7] drivers:hv: Record MMIO range in use by frame
+ buffer
+Message-ID: <201604020637.7vhdSs6i%fengguang.wu@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1459552292-1297-7-git-send-email-jakeo@microsoft.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If any bridge up to root only have 32bit pref mmio, We don't need to
-treat device non-pref mmio64 as as pref mmio64.
+Hi Jake,
 
-We need to move pci_bridge_check_ranges calling early.
-For parent bridges pref mmio BAR may not allocated by BIOS, res flags
-is still 0, we need to have it correct set before we check them for
-child device resources.
+[auto build test WARNING on v4.6-rc1]
+[also build test WARNING on next-20160401]
+[if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
 
--v2: check all bus resources instead of just res[15].
+url:    https://github.com/0day-ci/linux/commits/Jake-Oshins/drivers-hv-Ensure-that-bridge-windows-don-t-overlap/20160402-053702
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+
+coccinelle warnings: (new ones prefixed by >>)
+
+>> drivers/hv/vmbus_drv.c:1099:15-18: ERROR: Missing resource_size with fb_mmio
+
+Please review and possibly fold the followup patch.
+
 ---
- drivers/pci/setup-bus.c | 31 +++++++++++++++++++++++++++++--
- 1 file changed, 29 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index b3b1565..ffb1941 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -738,6 +738,29 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 	return -EINVAL;
- }
- 
-+static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
-+{
-+	if (pci_is_root_bus(bus))
-+		return true;
-+
-+	if (bus->self) {
-+		int i;
-+		bool found = false;
-+		struct resource *res;
-+
-+		pci_bus_for_each_resource(bus, res, i)
-+			if (res->flags & IORESOURCE_MEM_64) {
-+				found = true;
-+				break;
-+			}
-+
-+		if (!found)
-+			return false;
-+	}
-+
-+	return pci_up_path_over_pref_mem64(bus->parent);
-+}
-+
- int pci_resource_pref_compatible(const struct pci_dev *dev,
- 				 struct resource *res)
- {
-@@ -746,7 +769,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
- 
- 	if ((res->flags & IORESOURCE_MEM) &&
- 	    (res->flags & IORESOURCE_MEM_64) &&
--	    dev->on_all_pcie_path)
-+	    dev->on_all_pcie_path &&
-+	    pci_up_path_over_pref_mem64(dev->bus))
- 		return res->flags | IORESOURCE_PREFETCH;
- 
- 	return res->flags;
-@@ -1239,6 +1263,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	struct resource *b_res;
- 	int ret;
- 
-+	if (!pci_is_root_bus(bus) &&
-+	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
-+		pci_bridge_check_ranges(bus);
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		struct pci_bus *b = dev->subordinate;
- 		if (!b)
-@@ -1266,7 +1294,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		break;
- 
- 	case PCI_CLASS_BRIDGE_PCI:
--		pci_bridge_check_ranges(bus);
- 		if (bus->self->is_hotplug_bridge) {
- 			additional_io_size  = pci_hotplug_io_size;
- 			additional_mem_size = pci_hotplug_mem_size;
--- 
-1.8.4.5
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
