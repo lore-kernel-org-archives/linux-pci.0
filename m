@@ -1,202 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:34140 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757376AbcDMHsK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 03:48:10 -0400
-Received: by mail-pa0-f48.google.com with SMTP id ot11so29052001pab.1
-        for <linux-pci@vger.kernel.org>; Wed, 13 Apr 2016 00:48:09 -0700 (PDT)
-Subject: Re: [PATCH v8 13/45] powerpc/powernv/ioda1: M64 support on P7IOC
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-14-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
-	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <570DF9AF.6020104@ozlabs.ru>
-Date: Wed, 13 Apr 2016 17:47:59 +1000
-MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-14-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:35388 "EHLO
+	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752250AbcDARO3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Apr 2016 13:14:29 -0400
+Received: by mail-pf0-f175.google.com with SMTP id n5so95549709pfn.2
+        for <linux-pci@vger.kernel.org>; Fri, 01 Apr 2016 10:14:29 -0700 (PDT)
+From: Tim Harvey <tharvey@gateworks.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Lucas Stach <l.stach@pengutronix.de>,
+	Fabio Estevam <fabio.estevam@freescale.com>,
+	Zhu Richard <Richard.Zhu@freescale.com>,
+	Akshay Bhat <akshay.bhat@timesys.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Shawn Guo <shawnguo@kernel.org>
+Subject: [PATCH v3] PCI: imx6: add dt prop for link gen, default to gen1
+Date: Fri,  1 Apr 2016 10:17:09 -0700
+Message-Id: <1459531029-16208-1-git-send-email-tharvey@gateworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/17/2016 02:43 PM, Gavin Shan wrote:
-> This enables M64 window on P7IOC, which has been enabled on PHB3.
-> Different from PHB3 where 16 M64 BARs are supported and each of
-> them can be owned by one particular PE# exclusively or divided
-> evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
-> of them are divided to 8 segments. So every P7IOC PHB supports
-> 128 M64 segments in total. P7IOC has M64DT, which helps mapping
-> one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
-> M64DT, indicating that one M64 segment can only be pinned to the
-> fixed PE#. In order to have same code to support M64 on P7IOC and
-> PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
-> of them is pinned to the fixed PE# by bypassing the function of
-> M64DT. In turn, we just need different phb->init_m64() for P7IOC
-> and PHB3 to support M64.
+Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
+the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
+external clock source is present and supplied back to the IMX6 PCIe core
+via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
 
-The comment is not quite correct - in addition to pnv_ioda1_init_m64(), you 
-also need to hack pnv_ioda_pick_m64_pe().
+Add a dt property to specify gen1 vs gen2 and check this before allowing
+a Gen2 link.
 
+We default to Gen1 if the property is not present because at this time there
+are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
 
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/platforms/powernv/pci-ioda.c | 86 +++++++++++++++++++++++++++++--
->   arch/powerpc/platforms/powernv/pci.h      |  3 ++
->   2 files changed, 86 insertions(+), 3 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index 1dc663a..8488238 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -246,6 +246,64 @@ static void pnv_ioda_reserve_dev_m64_pe(struct pci_dev *pdev,
->   	}
->   }
->
-> +static int pnv_ioda1_init_m64(struct pnv_phb *phb)
-> +{
-> +	struct resource *r;
-> +	int index;
-> +
-> +	/*
-> +	 * There are 16 M64 BARs, each of which has 8 segments. So
-> +	 * there are as many M64 segments as the maximum number of
-> +	 * PEs, which is 128.
-> +	 */
-> +	for (index = 0; index < PNV_IODA1_M64_NUM; index++) {
-> +		unsigned long base, segsz = phb->ioda.m64_segsize;
-> +		int64_t rc;
-> +
-> +		base = phb->ioda.m64_base +
-> +		       index * PNV_IODA1_M64_SEGS * segsz;
-> +		rc = opal_pci_set_phb_mem_window(phb->opal_id,
-> +				OPAL_M64_WINDOW_TYPE, index, base, 0,
-> +				PNV_IODA1_M64_SEGS * segsz);
-> +		if (rc != OPAL_SUCCESS) {
-> +			pr_warn("  Error %lld setting M64 PHB#%d-BAR#%d\n",
-> +				rc, phb->hose->global_number, index);
-> +			goto fail;
-> +		}
-> +
-> +		rc = opal_pci_phb_mmio_enable(phb->opal_id,
-> +				OPAL_M64_WINDOW_TYPE, index,
-> +				OPAL_ENABLE_M64_SPLIT);
-> +		if (rc != OPAL_SUCCESS) {
-> +			pr_warn("  Error %lld enabling M64 PHB#%d-BAR#%d\n",
-> +				rc, phb->hose->global_number, index);
-> +			goto fail;
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * Exclude the segment used by the reserved PE, which
-> +	 * is expected to be 0 or last supported PE#.
-> +	 */
-> +	r = &phb->hose->mem_resources[1];
-> +	if (phb->ioda.reserved_pe_idx == 0)
-> +		r->start += phb->ioda.m64_segsize;
-> +	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
-> +		r->end -= phb->ioda.m64_segsize;
-> +	else
-> +		pr_warn("  Cannot cut M64 segment for reserved PE#%d\n",
-> +			phb->ioda.reserved_pe_idx);
-> +
-> +	return 0;
-> +
-> +fail:
-> +	for ( ; index >= 0; index--)
-> +		opal_pci_phb_mmio_enable(phb->opal_id,
-> +			OPAL_M64_WINDOW_TYPE, index, OPAL_DISABLE_M64);
-> +
-> +	return -EIO;
-> +}
-> +
->   static void pnv_ioda_reserve_m64_pe(struct pci_bus *bus,
->   				    unsigned long *pe_bitmap,
->   				    bool all)
-> @@ -315,6 +373,26 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
->   			pe->master = master_pe;
->   			list_add_tail(&pe->list, &master_pe->slaves);
->   		}
-> +
-> +		/*
-> +		 * P7IOC supports M64DT, which helps mapping M64 segment
-> +		 * to one particular PE#. However, PHB3 has fixed mapping
-> +		 * between M64 segment and PE#. In order to have same logic
-> +		 * for P7IOC and PHB3, we enforce fixed mapping between M64
-> +		 * segment and PE# on P7IOC.
-> +		 */
-> +		if (phb->type == PNV_PHB_IODA1) {
-> +			int64_t rc;
-> +
-> +			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-> +					pe->pe_number, OPAL_M64_WINDOW_TYPE,
-> +					pe->pe_number / PNV_IODA1_M64_SEGS,
-> +					pe->pe_number % PNV_IODA1_M64_SEGS);
-> +			if (rc != OPAL_SUCCESS)
-> +				pr_warn("%s: Error %lld mapping M64 for PHB#%d-PE#%d\n",
-> +					__func__, rc, phb->hose->global_number,
-> +					pe->pe_number);
-> +		}
+In order to be Gen2 compliant on IMX6 you need to:
+ - have a Gen2 compliant external clock generator and route that clock back
+   to either LVDS CLK1 or LVDS CLK2 as an input.
+   (see IMX6SX-SabreSD reference design)
+ - specify this clock in the pcie node in the dt
+   (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
+    IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
 
+[1] https://community.freescale.com/message/453209
 
-Cannot this go to pnv_ioda1_init_m64()? From the commit log I understood 
-that this setup is supposed to be static so it can be done once. Or it is 
-sort of enable/disable PE? Then make is a helper and call it 
-ioda1_pe_enable() or something.
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Fabio Estevam <fabio.estevam@freescale.com>
+Cc: Zhu Richard <Richard.Zhu@freescale.com>
+Cc: Akshay Bhat <akshay.bhat@timesys.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Shawn Guo <shawnguo@kernel.org>
+Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+---
+v3:
+ - added note in dt bindings doc that we limit to gen1 unless this is specified
+   as gen2 capable
+ - move property to imx6 pcie phy instead of designware core
+ - don't use &ret as temp storage as of_property_read_u32() doesn't change the
+   outval if property isn't found
+v2:
+ - moved dt property to designware core
 
+Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+---
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  6 ++++++
+ drivers/pci/host/pci-imx6.c                        | 23 ++++++++++++++++------
+ 2 files changed, 23 insertions(+), 6 deletions(-)
 
->   	}
->
->   	kfree(pe_alloc);
-> @@ -329,8 +407,7 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
->   	const u32 *r;
->   	u64 pci_addr;
->
-> -	/* FIXME: Support M64 for P7IOC */
-> -	if (phb->type != PNV_PHB_IODA2) {
-> +	if (phb->type != PNV_PHB_IODA1 && phb->type != PNV_PHB_IODA2) {
->   		pr_info("  Not support M64 window\n");
->   		return;
->   	}
-> @@ -364,7 +441,10 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
->
->   	/* Use last M64 BAR to cover M64 window */
->   	phb->ioda.m64_bar_idx = 15;
-> -	phb->init_m64 = pnv_ioda2_init_m64;
-> +	if (phb->type == PNV_PHB_IODA1)
-> +		phb->init_m64 = pnv_ioda1_init_m64;
-> +	else
-> +		phb->init_m64 = pnv_ioda2_init_m64;
->   	phb->reserve_m64_pe = pnv_ioda_reserve_m64_pe;
->   	phb->pick_m64_pe = pnv_ioda_pick_m64_pe;
->   }
-> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-> index 866a5ea..00539ff 100644
-> --- a/arch/powerpc/platforms/powernv/pci.h
-> +++ b/arch/powerpc/platforms/powernv/pci.h
-> @@ -82,6 +82,9 @@ struct pnv_ioda_pe {
->   	struct list_head	list;
->   };
->
-> +#define PNV_IODA1_M64_NUM	16	/* Number of M64 BARs   */
-> +#define PNV_IODA1_M64_SEGS	8	/* Segments per M64 BAR */
-> +
-
-Why here, not in the beginning of arch/powerpc/platforms/powernv/pci-ioda.c 
-? It exposes symbols but nothing is using them (except pci-ioda.c) and code 
-browsing gets bit more inconvenient.
-
-
-
->   #define PNV_PHB_FLAG_EEH	(1 << 0)
->
->   struct pnv_phb {
->
-
-
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index 6fbba53..4ffaf19 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -13,6 +13,12 @@ Required properties:
+ - clock-names: Must include the following additional entries:
+ 	- "pcie_phy"
+ 
++Optional properties:
++- max-link-speed: Specify PCI gen for link capability. Must be '2' for
++  gen2, otherwise will default to gen1. Note that the IMX6 LVDS clock outputs
++  do not meet gen2 jitter requirements and thus for gen2 capability a gen2
++  compliant clock generator should be used and configured.
++
+ Example:
+ 
+ 	pcie@0x01000000 {
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 88ccfea..d1bfcff 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -39,6 +39,7 @@ struct imx6_pcie {
+ 	struct pcie_port	pp;
+ 	struct regmap		*iomuxc_gpr;
+ 	void __iomem		*mem_base;
++	int			link_gen;
+ };
+ 
+ /* PCIe Root Complex registers (memory-mapped) */
+@@ -393,11 +394,15 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
+ 	if (ret)
+ 		return ret;
+ 
+-	/* Allow Gen2 mode after the link is up. */
+-	tmp = readl(pp->dbi_base + PCIE_RC_LCR);
+-	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+-	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
+-	writel(tmp, pp->dbi_base + PCIE_RC_LCR);
++	if (imx6_pcie->link_gen == 2) {
++		/* Allow Gen2 mode after the link is up. */
++		tmp = readl(pp->dbi_base + PCIE_RC_LCR);
++		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
++		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
++		writel(tmp, pp->dbi_base + PCIE_RC_LCR);
++	} else {
++		dev_info(pp->dev, "Link: Gen2 disabled\n");
++	}
+ 
+ 	/*
+ 	 * Start Directed Speed Change so the best possible speed both link
+@@ -421,7 +426,7 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
+ 	}
+ 
+ 	tmp = readl(pp->dbi_base + PCIE_RC_LCSR);
+-	dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
++	dev_info(pp->dev, "Link up, Gen%i\n", (tmp >> 16) & 0xf);
+ 	return 0;
+ }
+ 
+@@ -622,6 +627,12 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(imx6_pcie->iomuxc_gpr);
+ 	}
+ 
++	/* Limit link speed */
++	ret = of_property_read_u32(pp->dev->of_node, "max-link-speed",
++				   &imx6_pcie->link_gen);
++	if (ret)
++		imx6_pcie->link_gen = -1;
++
+ 	ret = imx6_add_pcie_port(pp, pdev);
+ 	if (ret < 0)
+ 		return ret;
 -- 
-Alexey
+1.9.1
+
