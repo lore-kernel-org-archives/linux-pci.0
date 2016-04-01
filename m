@@ -1,76 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:51067 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750916AbcDKIrz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Apr 2016 04:47:55 -0400
-Date: Mon, 11 Apr 2016 11:47:50 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH v2 2/4] PCI: Move PCIe ports to D3 during suspend
-Message-ID: <20160411084750.GA1727@lahna.fi.intel.com>
-References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
- <1460111790-92836-3-git-send-email-mika.westerberg@linux.intel.com>
- <20160408150723.GA29919@kroah.com>
+Received: from ibawizard.net ([82.208.49.253]:56486 "EHLO
+	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753305AbcDAMux (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Apr 2016 08:50:53 -0400
+From: =?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
+To: devicetree@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Tim Harvey <tharvey@gateworks.com>,
+	=?UTF-8?q?Krzysztof=20Ha=C5=82asa?= <khalasa@piap.pl>,
+	Fabio Estevam <festevam@gmail.com>,
+	Marcel Ziswiler <marcel.ziswiler@toradex.com>, stefan@agner.ch,
+	=?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
+Subject: [PATCH 2/2] PCI: imx6: Add reset-gpio-active-high boolean property to DT
+Date: Fri,  1 Apr 2016 14:41:48 +0200
+Message-Id: <1459514508-8557-3-git-send-email-ynezz@true.cz>
+In-Reply-To: <1459514508-8557-1-git-send-email-ynezz@true.cz>
+References: <1459514508-8557-1-git-send-email-ynezz@true.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160408150723.GA29919@kroah.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 08, 2016 at 08:07:23AM -0700, Greg Kroah-Hartman wrote:
-> On Fri, Apr 08, 2016 at 01:36:28PM +0300, Mika Westerberg wrote:
-> > diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
-> > index f0640b7a1c42..aafc1b093bc8 100644
-> > --- a/drivers/usb/host/xhci-pci.c
-> > +++ b/drivers/usb/host/xhci-pci.c
-> > @@ -379,7 +379,7 @@ static int xhci_pci_suspend(struct usb_hcd *hcd, bool do_wakeup)
-> >  	 * need to have the registers polled during D3, so avoid D3cold.
-> >  	 */
-> >  	if (xhci->quirks & XHCI_COMP_MODE_QUIRK)
-> > -		pdev->no_d3cold = true;
-> > +		pci_enable_d3cold(pdev, false);
-> >  
-> >  	if (xhci->quirks & XHCI_PME_STUCK_QUIRK)
-> >  		xhci_pme_quirk(hcd);
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 004b8133417d..d8801587b4ca 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -296,6 +296,7 @@ struct pci_dev {
-> >  	unsigned int	d2_support:1;	/* Low power state D2 is supported */
-> >  	unsigned int	no_d1d2:1;	/* D1 and D2 are forbidden */
-> >  	unsigned int	no_d3cold:1;	/* D3cold is forbidden */
-> > +	unsigned int	bridge_d3:1;	/* Allow D3 for bridge */
-> >  	unsigned int	d3cold_allowed:1;	/* D3cold is allowed by user */
-> >  	unsigned int	mmio_always_on:1;	/* disallow turning off io/mem
-> >  						   decoding during bar sizing */
-> > @@ -1085,6 +1086,7 @@ int pci_back_from_sleep(struct pci_dev *dev);
-> >  bool pci_dev_run_wake(struct pci_dev *dev);
-> >  bool pci_check_pme_status(struct pci_dev *dev);
-> >  void pci_pme_wakeup_bus(struct pci_bus *bus);
-> > +void pci_enable_d3cold(struct pci_dev *dev, bool enable);
-> 
-> That's an ackward api, as is seen in the above use in the xhci driver
-> (enable false?)
-> 
-> Why not just make 2 functions:
-> 	pci_dc3cold_enable(struct pci_dev *dev)
-> 	pci_dc3cold_disable(struct pci_dev *dev)
-> which makes it obvious what is going on.
-> 
-> Whenever you add a bool to a function, it requires the developer to go
-> look up the implementation to see what it means and how to use it, to
-> check if the usage is correct.  Just make it obvious in the name itself
-> so everyone knows exactly what is going on.
-> 
-> Same thing goes for pci_bridge_pm_update(), even with the documentation
-> I'm not quite sure what the bool flag is for.  Please split this into
-> two calls as well.
+We need that property in order to make the Toradex Apalis SoMs working
+without breaking old DTBs. On Apalis SoMs the GPIO1_IO28 used to PCIe
+reset is not connected directly to PERST# PCIe signal, but it's ORed
+with RESETBMCU coming off the PMIC, and thus is inverted, active-high.
 
-Will, do. Thanks for the excellent explanation :)
+Signed-off-by: Petr Štetiar <ynezz@true.cz>
+---
+ drivers/pci/host/pci-imx6.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 2f817fa..1b3bcfe 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -33,6 +33,7 @@
+ 
+ struct imx6_pcie {
+ 	int			reset_gpio;
++	bool			gpio_active_high;
+ 	struct clk		*pcie_bus;
+ 	struct clk		*pcie_phy;
+ 	struct clk		*pcie;
+@@ -310,9 +311,11 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 
+ 	/* Some boards don't have PCIe reset GPIO. */
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+-		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
++		gpio_set_value_cansleep(imx6_pcie->reset_gpio,
++					!!imx6_pcie->gpio_active_high);
+ 		msleep(100);
+-		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
++		gpio_set_value_cansleep(imx6_pcie->reset_gpio,
++					!imx6_pcie->gpio_active_high);
+ 	}
+ 	return 0;
+ 
+@@ -546,9 +549,14 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 
+ 	/* Fetch GPIOs */
+ 	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
++	imx6_pcie->gpio_active_high = of_property_read_bool(np,
++						"reset-gpio-active-high");
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+ 		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
+-					    GPIOF_OUT_INIT_LOW, "PCIe reset");
++				imx6_pcie->gpio_active_high ?
++					GPIOF_OUT_INIT_HIGH :
++					GPIOF_OUT_INIT_LOW,
++				"PCIe reset");
+ 		if (ret) {
+ 			dev_err(&pdev->dev, "unable to get reset gpio\n");
+ 			return ret;
+-- 
+1.9.1
+
