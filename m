@@ -1,68 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:51727 "EHLO bues.ch"
+Received: from p3plsmtps2ded02.prod.phx3.secureserver.net ([208.109.80.59]:43490
+	"EHLO p3plsmtps2ded02.prod.phx3.secureserver.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751785AbcDFPRs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Apr 2016 11:17:48 -0400
-Date: Wed, 6 Apr 2016 17:17:24 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-Message-ID: <20160406171724.2b7b070b@wiggum>
-In-Reply-To: <20160406133151.GA4976@localhost>
-References: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
- <20160405194015.GC15353@localhost>
- <20160405214945.1214e13b@wiggum>
- <20160406133151.GA4976@localhost>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/0ALe0+3.7Zgklwdn0Cb3tFS"; protocol="application/pgp-signature"
+	id S1755668AbcDAXKj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Apr 2016 19:10:39 -0400
+From: Jake Oshins <jakeo@microsoft.com>
+To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v4 7/7] drivers:hv: Separate out frame buffer logic when picking MMIO range
+Date: Fri,  1 Apr 2016 17:47:47 -0700
+Message-Id: <1459558067-1725-8-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
+References: <y>
+ <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---Sig_/0ALe0+3.7Zgklwdn0Cb3tFS
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Simplify the logic that picks MMIO ranges by pulling out the
+logic related to trying to lay frame buffer claim on top of where
+the firmware placed the frame buffer.
 
-On Wed, 6 Apr 2016 08:31:51 -0500
-Bjorn Helgaas <helgaas@kernel.org> wrote:
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/hv/vmbus_drv.c | 80 ++++++++++++++++++++++----------------------------
+ 1 file changed, 35 insertions(+), 45 deletions(-)
 
-> Even for interrupts, it's only a 90% solution because we do still get
-> a few interrupts before the quirk runs.  There may not be enough to
-> trigger the "IRQ nobody cared" check,
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index eaa5c3b..a29a6c0 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -1162,64 +1162,54 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			bool fb_overlap_ok)
+ {
+ 	struct resource *iter, *shadow;
+-	resource_size_t range_min, range_max, start, local_min, local_max;
++	resource_size_t range_min, range_max, start;
+ 	const char *dev_n = dev_name(&device_obj->device);
+-	u32 fb_end = screen_info.lfb_base + (screen_info.lfb_size << 1);
+-	int i, retval;
++	int retval;
+ 
+ 	retval = -ENXIO;
+ 	down(&hyperv_mmio_lock);
+ 
++	/*
++	 * If overlaps with frame buffers are allowed, then first attempt to
++	 * make the allocation from within the reserved region.  Because it
++	 * is already reserved, no shadow allocation is necessary.
++	 */
++	if (fb_overlap_ok && fb_mmio && !(min > fb_mmio->end) &&
++	    !(max < fb_mmio->start)) {
++
++		range_min = fb_mmio->start;
++		range_max = fb_mmio->end;
++		start = (range_min + align - 1) & ~(align - 1);
++		for (; start + size - 1 <= range_max; start += align) {
++			*new = request_mem_region_exclusive(start, size, dev_n);
++			if (*new) {
++				retval = 0;
++				goto exit;
++			}
++		}
++	}
++
+ 	for (iter = hyperv_mmio; iter; iter = iter->sibling) {
+ 		if ((iter->start >= max) || (iter->end <= min))
+ 			continue;
+ 
+ 		range_min = iter->start;
+ 		range_max = iter->end;
+-
+-		/* If this range overlaps the frame buffer, split it into
+-		   two tries. */
+-		for (i = 0; i < 2; i++) {
+-			local_min = range_min;
+-			local_max = range_max;
+-			if (fb_overlap_ok || (range_min >= fb_end) ||
+-			    (range_max <= screen_info.lfb_base)) {
+-				i++;
+-			} else {
+-				if ((range_min <= screen_info.lfb_base) &&
+-				    (range_max >= screen_info.lfb_base)) {
+-					/*
+-					 * The frame buffer is in this window,
+-					 * so trim this into the part that
+-					 * preceeds the frame buffer.
+-					 */
+-					local_max = screen_info.lfb_base - 1;
+-					range_min = fb_end;
+-				} else {
+-					range_min = fb_end;
+-					continue;
+-				}
++		start = (range_min + align - 1) & ~(align - 1);
++		for (; start + size - 1 <= range_max; start += align) {
++			shadow = __request_region(iter, start, size, NULL,
++						  IORESOURCE_BUSY);
++			if (!shadow)
++				continue;
++
++			*new = request_mem_region_exclusive(start, size, dev_n);
++			if (*new) {
++				shadow->name = (char *)*new;
++				retval = 0;
++				goto exit;
+ 			}
+ 
+-			start = (local_min + align - 1) & ~(align - 1);
+-			for (; start + size - 1 <= local_max; start += align) {
+-				shadow = __request_region(iter, start,
+-							  size,
+-							  NULL,
+-							  IORESOURCE_BUSY);
+-				if (!shadow)
+-					continue;
+-
+-				*new = request_mem_region_exclusive(start, size,
+-								    dev_n);
+-				if (*new) {
+-					shadow->name = (char *)*new;
+-					retval = 0;
+-					goto exit;
+-				}
+-
+-				__release_region(iter, start, size);
+-			}
++			__release_region(iter, start, size);
+ 		}
+ 	}
+ 
+-- 
+1.9.1
 
-If no driver requested the shared interrupt yet, it should be disabled
-in the interrupt controller. So the interrupts do not reach the CPU.
-The interrupt storm (on the CPU) starts as soon as some driver
-that shares the interrupt with b43 requests and thus enables the
-interrupt. And that always happens after the PCI fixup. Thus this is
-safe.
-
---=20
-Michael
-
---Sig_/0ALe0+3.7Zgklwdn0Cb3tFS
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJXBSiEAAoJEPUyvh2QjYsODOYP/0OBtiN2bBd3I9EUofJ7zL0l
-uAxQOreDCAfUPqmEN+mf2QPQrbVmrC/TxoZh2l2Qex8jj2UysIpiSJusKDZpcICx
-n574mSHsik9peQScntG3zfhaHmkWizXkm2jGjRn2nUq33v4+RYaP1gS3mT3GPlnl
-RUwZRoCCJH99GmuLkkKQKFFSxUCsfeKYDx+ScnUgUo16kaeGfIrhpsYuYh0RzI13
-LAuh+rbKje5lPtqMI4f7ANEaU/It0os1PKzXA4QTkh5Zob5vRj22bbJw5KhKmCiq
-EN52RIWufV7xHG+usECE6L79zHdXrpl/AQiziGxZqDNJ2hIac7vl28ac50Hu1VWm
-/lsOcBPn80lIrXRNkd4dqZN1qbaGfpP06XQNkU55OCUwP9YJFkb5QWIuaKcOQjKL
-5eeIrOc5NO++9OxBG174siHFEvcU1/igW1hZveRj17OuIPm+ig+GPWRIALC7Ih6f
-ltHrytdDojviJ353qpHg4c8PUMnHrzwZ2T0zi/7HGW01XegH0gesDwtH/iQ5HBts
-YQ29wY56bY7cQA4GHlg6OyYEWh8WoIUfBalG1PRWdJ1TDEBE2GKMGRdFHvqbCxtc
-pYbUwvl8dv0jm5ky+vlsRyb0sThKxBcRuwbsZ1mFSlNe/RoVDrxskNYGrnT1XRB1
-z31HsfQ4VC0pN2V5/Z7r
-=Bcpp
------END PGP SIGNATURE-----
-
---Sig_/0ALe0+3.7Zgklwdn0Cb3tFS--
