@@ -1,56 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:60111 "EHLO mga11.intel.com"
+Received: from p3plsmtps2ded03.prod.phx3.secureserver.net ([208.109.80.60]:58904
+	"EHLO p3plsmtps2ded03.prod.phx3.secureserver.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751577AbcDNKEe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Apr 2016 06:04:34 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [PATCH v3 1/4] PCI: No need to set d3cold_allowed to PCIe ports
-Date: Thu, 14 Apr 2016 13:04:25 +0300
-Message-Id: <1460628268-16204-2-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1460628268-16204-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1460628268-16204-1-git-send-email-mika.westerberg@linux.intel.com>
+	id S1755178AbcDAXKZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Apr 2016 19:10:25 -0400
+From: Jake Oshins <jakeo@microsoft.com>
+To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v4 1/7] drivers:hv: Lock access to hyperv_mmio resource tree
+Date: Fri,  1 Apr 2016 17:47:41 -0700
+Message-Id: <1459558067-1725-2-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
+References: <y>
+ <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Linux PCI core skips PCI bridges and PCIe ports when system is
-suspended. The PCI core checks return value of pci_has_subordinate() in
-pci_pm_suspend_noirq() to skip all devices where it is non-zero (which
-means PCI bridges and PCIe ports).
+In existing code, this tree of resources is created
+in single-threaded code and never modified after it is
+created, and thus needs no locking.  This patch introduces
+a semaphore for tree access, as other patches in this
+series introduce run-time modifications of this resource
+tree which can happen on multiple threads.
 
-Since PCIe ports are never suspended in the first place, there is no need
-to set d3cold_allowed for them.
-
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- drivers/pci/pcie/portdrv_pci.c | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/hv/vmbus_drv.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index be35da2e105e..6c6bb03392ea 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -134,11 +134,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
- 		return status;
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index 64713ff..799518b 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -102,6 +102,7 @@ static struct notifier_block hyperv_panic_block = {
+ };
  
- 	pci_save_state(dev);
--	/*
--	 * D3cold may not work properly on some PCIe port, so disable
--	 * it by default.
--	 */
--	dev->d3cold_allowed = false;
- 	return 0;
+ struct resource *hyperv_mmio;
++DEFINE_SEMAPHORE(hyperv_mmio_lock);
+ 
+ static int vmbus_exists(void)
+ {
+@@ -1132,7 +1133,10 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 	resource_size_t range_min, range_max, start, local_min, local_max;
+ 	const char *dev_n = dev_name(&device_obj->device);
+ 	u32 fb_end = screen_info.lfb_base + (screen_info.lfb_size << 1);
+-	int i;
++	int i, retval;
++
++	retval = -ENXIO;
++	down(&hyperv_mmio_lock);
+ 
+ 	for (iter = hyperv_mmio; iter; iter = iter->sibling) {
+ 		if ((iter->start >= max) || (iter->end <= min))
+@@ -1169,13 +1173,17 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			for (; start + size - 1 <= local_max; start += align) {
+ 				*new = request_mem_region_exclusive(start, size,
+ 								    dev_n);
+-				if (*new)
+-					return 0;
++				if (*new) {
++					retval = 0;
++					goto exit;
++				}
+ 			}
+ 		}
+ 	}
+ 
+-	return -ENXIO;
++exit:
++	up(&hyperv_mmio_lock);
++	return retval;
  }
+ EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
  
 -- 
-2.8.0.rc3
+1.9.1
 
