@@ -1,52 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Yongji Xie' <xyjxie@linux.vnet.ibm.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
-CC: "alistair@popple.id.au" <alistair@popple.id.au>,
-	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
-	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
-	"eric.auger@linaro.org" <eric.auger@linaro.org>,
-	"aik@ozlabs.ru" <aik@ozlabs.ru>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
-	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"paulus@samba.org" <paulus@samba.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: RE: [RFC v6 06/10] PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
-Date: Mon, 18 Apr 2016 11:30:07 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D5F4A45A8@AcuExch.aculab.com>
-References: <1460977120-29367-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1460977120-29367-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from p3plsmtps2ded02.prod.phx3.secureserver.net ([208.109.80.59]:43490
+	"EHLO p3plsmtps2ded02.prod.phx3.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755345AbcDAXK1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Apr 2016 19:10:27 -0400
+From: Jake Oshins <jakeo@microsoft.com>
+To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v4 2/7] drivers:hv: Make a function to free mmio regions through vmbus
+Date: Fri,  1 Apr 2016 17:47:42 -0700
+Message-Id: <1459558067-1725-3-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
+References: <y>
+ <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-RnJvbTogWW9uZ2ppIFhpZQ0KPiBTZW50OiAxOCBBcHJpbCAyMDE2IDExOjU5DQo+IFdlIGludHJv
-ZHVjZSBhIG5ldyBwY2lfYnVzX2ZsYWdzLCBQQ0lfQlVTX0ZMQUdTX01TSV9SRU1BUA0KPiB3aGlj
-aCBpbmRpY2F0ZXMgYWxsIGRldmljZXMgb24gdGhlIGJ1cyBhcmUgcHJvdGVjdGVkIGJ5IHRoZQ0K
-PiBoYXJkd2FyZSB3aGljaCBzdXBwb3J0cyBJUlEgcmVtYXBwaW5nKGludGVsIG5hbWluZykuDQo+
-IA0KPiBUaGlzIGZsYWcgd2lsbCBiZSB1c2VkIHRvIGtub3cgd2hldGhlciBpdCdzIHNhZmUgdG8g
-ZXhwb3NlDQo+IE1TSS1YIHRhYmxlcyBvZiBQQ0kgQkFScyB0byB1c2Vyc3BhY2UuIEJlY2F1c2Ug
-dGhlIGNhcGFiaWxpdHkNCj4gb2YgSVJRIHJlbWFwcGluZyBjYW4gZ3VhcmFudGVlIHRoZSBQQ0kg
-ZGV2aWNlIGNhbm5vdCB0cmlnZ2VyDQo+IE1TSXMgdGhhdCBjb3JyZXNwb25kIHRvIGludGVycnVw
-dCBJRHMgb2Ygb3RoZXIgZGV2aWNlcy4NCg0KSSdtIHdvcnJpZWQgdGhhdCB0aGlzIGVudGlyZSBz
-ZXJpZXMgaXMgZ29pbmcgdG8gYnJlYWsgZHJpdmVycw0KZm9yIGV4aXN0aW5nIGhhcmR3YXJlLg0K
-DQpJIHVuZGVyc3RhbmQgc29tZSBvZiB0aGUgcmVhc29uaW5nIGZvciAndm0gcGFzcyB0aHJvdWdo
-JyBjb25maWd1cmF0aW9ucywNCmJ1dCB0aGVyZSB3aWxsIGJlIFBDSWUgZGV2aWNlcyBvdXQgdGhl
-cmUgdGhhdCBoYXZlIHRoZSBNU0ktWCB0YWJsZXMNCmluIHRoZSBzYW1lIEJBUiBhcyBvdGhlciBk
-ZXZpY2UgcmVnaXN0ZXJzLg0KSWYgeW91IGFyZSBsdWNreSBub3RoaW5nIGVsc2UgaXMgaW4gdGhl
-IHNhbWUgNGsgYXJlYSwgYnV0IEkgd291bGRuJ3QNCmFzc3VtZSBpdC4NCg0KSW4gYW55IGNhc2Us
-IGlmIHRoZSBoYXJkd2FyZSBjYW4ndCBwb2xpY2UgdGhlIGNhcmQncyBtYXN0ZXIgdHJhbnNmZXJz
-DQp0aGVyZSBpcyBub3RoaW5nIHRvIHN0b3AgYSBkaWZmZXJlbnQgYnVzIG1hc3RlciBibG9jayBv
-biB0aGUgY2FyZA0KZnJvbSByYWlzaW5nIE1TSS1YIGludGVycnVwdHMgLSB0aGV5IGFyZSBqdXN0
-IGEgUENJZSB3cml0ZS4NClNvIGFsbCB5b3UgYXJlIGRvaW5nIGlzIHJhaXNpbmcgdGhlIGJhciBz
-bGlnaHRseSBhbmQgZ2l2aW5nIGEgdmVyeSBmYWxzZQ0Kc2Vuc2Ugb2Ygc2VjdXJpdHkuDQoNCglE
-YXZpZA0KDQo=
+This patch introduces a function that reverses everything
+done by vmbus_allocate_mmio().  Existing code just called
+release_mem_region().  Future patches in this series
+require a more complex sequence of actions, so this function
+is introduced to wrap those actions.
+
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/hv/vmbus_drv.c | 15 +++++++++++++++
+ include/linux/hyperv.h |  2 +-
+ 2 files changed, 16 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index 799518b..60553c1 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -1188,6 +1188,21 @@ exit:
+ EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
+ 
+ /**
++ * vmbus_free_mmio() - Free a memory-mapped I/O range.
++ * @start:		Base address of region to release.
++ * @size:		Size of the range to be allocated
++ *
++ * This function releases anything requested by
++ * vmbus_mmio_allocate().
++ */
++void vmbus_free_mmio(resource_size_t start, resource_size_t size)
++{
++	release_mem_region(start, size);
++
++}
++EXPORT_SYMBOL_GPL(vmbus_free_mmio);
++
++/**
+  * vmbus_cpu_number_to_vp_number() - Map CPU to VP.
+  * @cpu_number: CPU number in Linux terms
+  *
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index aa0fadc..ecd81c3 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -1091,7 +1091,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			resource_size_t min, resource_size_t max,
+ 			resource_size_t size, resource_size_t align,
+ 			bool fb_overlap_ok);
+-
++void vmbus_free_mmio(resource_size_t start, resource_size_t size);
+ int vmbus_cpu_number_to_vp_number(int cpu_number);
+ u64 hv_do_hypercall(u64 control, void *input, void *output);
+ 
+-- 
+1.9.1
+
