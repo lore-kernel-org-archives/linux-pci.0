@@ -1,265 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f179.google.com ([209.85.223.179]:35677 "EHLO
-	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752513AbcDTPpu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2016 11:45:50 -0400
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Andrey Smirnov <andrew.smirnov@gmail.com>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	gary.bisson@boundarydevices.com
-Subject: [PATCH v3 1/3] PCI: imx6: Use enum instead of bool for variant indicator
-Date: Wed, 20 Apr 2016 08:45:29 -0700
-Message-Id: <1461167131-26025-1-git-send-email-andrew.smirnov@gmail.com>
+Received: from p3plsmtps2ded02.prod.phx3.secureserver.net ([208.109.80.59]:43496
+	"EHLO p3plsmtps2ded02.prod.phx3.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755178AbcDAXK3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Apr 2016 19:10:29 -0400
+From: Jake Oshins <jakeo@microsoft.com>
+To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v4 3/7] drivers:hv: Use new vmbus_mmio_free() from client drivers.
+Date: Fri,  1 Apr 2016 17:47:43 -0700
+Message-Id: <1459558067-1725-4-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
+References: <y>
+ <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use enumerated type instead of a boolean flag to specify the variant of
-the PCIe IP block (6Q, 6SX, etc). This patch has zero functional impact,
-however it makes the code easier to extend for the case of more than 2
-possible variants of an IP block (of which there are).
+This patch modifies all the callers of vmbus_mmio_allocate()
+to call vmbus_mmio_free() instead of release_mem_region().
 
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
+ drivers/pci/host/pci-hyperv.c   | 14 +++++++-------
+ drivers/video/fbdev/hyperv_fb.c |  4 ++--
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-Changes since v2:
-	- Removed default clause in all introduced switch statements
-	- Switched to using of_device_get_match_data instead of
-          explicit of_device_is_compatible checks
-	- Added a mention of the new DT compatibility string in the documentation
-
-Changes since v1:
-
-	- Patchset is rebased against
-          https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-imx6
-
-	- DTS files changes moved into a separate patch
-
- drivers/pci/host/pci-imx6.c | 124 ++++++++++++++++++++++++--------------------
- 1 file changed, 67 insertions(+), 57 deletions(-)
-
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 0f6d630..a77e7fd 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -19,6 +19,7 @@
- #include <linux/mfd/syscon/imx6q-iomuxc-gpr.h>
- #include <linux/module.h>
- #include <linux/of_gpio.h>
-+#include <linux/of_device.h>
- #include <linux/pci.h>
- #include <linux/platform_device.h>
- #include <linux/regmap.h>
-@@ -31,6 +32,11 @@
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index ed651ba..f2559b6 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -1795,14 +1795,14 @@ static void hv_pci_free_bridge_windows(struct hv_pcibus_device *hbus)
  
- #define to_imx6_pcie(x)	container_of(x, struct imx6_pcie, pp)
- 
-+enum imx6_pcie_variants {
-+	IMX6Q,
-+	IMX6SX
-+};
-+
- struct imx6_pcie {
- 	struct gpio_desc	*reset_gpio;
- 	struct clk		*pcie_bus;
-@@ -39,7 +45,7 @@ struct imx6_pcie {
- 	struct clk		*pcie;
- 	struct pcie_port	pp;
- 	struct regmap		*iomuxc_gpr;
--	bool			is_imx6sx;
-+	enum imx6_pcie_variants variant;
- 	void __iomem		*mem_base;
- 	u32			tx_deemph_gen1;
- 	u32			tx_deemph_gen2_3p5db;
-@@ -238,7 +244,8 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
- 	u32 val, gpr1, gpr12;
- 
--	if (imx6_pcie->is_imx6sx) {
-+	switch (imx6_pcie->variant) {
-+	case IMX6SX:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
- 				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN);
-@@ -246,72 +253,76 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
- 				   IMX6SX_GPR5_PCIE_BTNRST_RESET,
- 				   IMX6SX_GPR5_PCIE_BTNRST_RESET);
--		return 0;
--	}
--
--	/*
--	 * If the bootloader already enabled the link we need some special
--	 * handling to get the core back into a state where it is safe to
--	 * touch it for configuration.  As there is no dedicated reset signal
--	 * wired up for MX6QDL, we need to manually force LTSSM into "detect"
--	 * state before completely disabling LTSSM, which is a prerequisite
--	 * for core configuration.
--	 *
--	 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
--	 * indication that the bootloader activated the link.
--	 */
--	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
--	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
--
--	if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
--	    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
--		val = readl(pp->dbi_base + PCIE_PL_PFLR);
--		val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
--		val |= PCIE_PL_PFLR_FORCE_LINK;
--		writel(val, pp->dbi_base + PCIE_PL_PFLR);
-+		break;
-+	case IMX6Q:
-+		/*
-+		 * If the bootloader already enabled the link we need some special
-+		 * handling to get the core back into a state where it is safe to
-+		 * touch it for configuration.  As there is no dedicated reset signal
-+		 * wired up for MX6QDL, we need to manually force LTSSM into "detect"
-+		 * state before completely disabling LTSSM, which is a prerequisite
-+		 * for core configuration.
-+		 *
-+		 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
-+		 * indication that the bootloader activated the link.
-+		 */
-+		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
-+		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
-+
-+		if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
-+		    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
-+			val = readl(pp->dbi_base + PCIE_PL_PFLR);
-+			val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
-+			val |= PCIE_PL_PFLR_FORCE_LINK;
-+			writel(val, pp->dbi_base + PCIE_PL_PFLR);
-+
-+			regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+					   IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
-+		}
- 
--		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
--				IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+				   IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+				   IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
-+		break;
+ 	if (hbus->low_mmio_space && hbus->low_mmio_res) {
+ 		hbus->low_mmio_res->flags |= IORESOURCE_BUSY;
+-		release_mem_region(hbus->low_mmio_res->start,
+-				   resource_size(hbus->low_mmio_res));
++		vmbus_free_mmio(hbus->low_mmio_res->start,
++				resource_size(hbus->low_mmio_res));
  	}
  
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
--
- 	return 0;
+ 	if (hbus->high_mmio_space && hbus->high_mmio_res) {
+ 		hbus->high_mmio_res->flags |= IORESOURCE_BUSY;
+-		release_mem_region(hbus->high_mmio_res->start,
+-				   resource_size(hbus->high_mmio_res));
++		vmbus_free_mmio(hbus->high_mmio_res->start,
++				resource_size(hbus->high_mmio_res));
+ 	}
  }
  
- static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
+@@ -1880,8 +1880,8 @@ static int hv_pci_allocate_bridge_windows(struct hv_pcibus_device *hbus)
+ 
+ release_low_mmio:
+ 	if (hbus->low_mmio_res) {
+-		release_mem_region(hbus->low_mmio_res->start,
+-				   resource_size(hbus->low_mmio_res));
++		vmbus_free_mmio(hbus->low_mmio_res->start,
++				resource_size(hbus->low_mmio_res));
+ 	}
+ 
+ 	return ret;
+@@ -1924,7 +1924,7 @@ static int hv_allocate_config_window(struct hv_pcibus_device *hbus)
+ 
+ static void hv_free_config_window(struct hv_pcibus_device *hbus)
  {
- 	struct pcie_port *pp = &imx6_pcie->pp;
--	int ret;
-+	int ret = 0;
- 
--	if (imx6_pcie->is_imx6sx) {
-+	switch (imx6_pcie->variant) {
-+	case IMX6SX:
- 		ret = clk_prepare_enable(imx6_pcie->pcie_inbound_axi);
- 		if (ret) {
- 			dev_err(pp->dev, "unable to enable pcie_axi clock\n");
--			return ret;
-+			break;
- 		}
- 
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN, 0);
--		return ret;
-+		break;
-+	case IMX6Q:
-+		/* power up core phy and enable ref clock */
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+				   IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
-+		/*
-+		 * the async reset input need ref clock to sync internally,
-+		 * when the ref clock comes after reset, internal synced
-+		 * reset time is too short, cannot meet the requirement.
-+		 * add one ~10us delay here.
-+		 */
-+		udelay(10);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+				   IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
-+		break;
- 	}
- 
--	/* power up core phy and enable ref clock */
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
--	/*
--	 * the async reset input need ref clock to sync internally,
--	 * when the ref clock comes after reset, internal synced
--	 * reset time is too short, cannot meet the requirement.
--	 * add one ~10us delay here.
--	 */
--	udelay(10);
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
--	return 0;
-+	return ret;
+-	release_mem_region(hbus->mem_config->start, PCI_CONFIG_MMIO_LENGTH);
++	vmbus_free_mmio(hbus->mem_config->start, PCI_CONFIG_MMIO_LENGTH);
  }
  
- static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
-@@ -353,7 +364,7 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
- 	}
+ /**
+diff --git a/drivers/video/fbdev/hyperv_fb.c b/drivers/video/fbdev/hyperv_fb.c
+index e2451bd..2fd49b2 100644
+--- a/drivers/video/fbdev/hyperv_fb.c
++++ b/drivers/video/fbdev/hyperv_fb.c
+@@ -743,7 +743,7 @@ static int hvfb_getmem(struct hv_device *hdev, struct fb_info *info)
+ err3:
+ 	iounmap(fb_virt);
+ err2:
+-	release_mem_region(par->mem->start, screen_fb_size);
++	vmbus_free_mmio(par->mem->start, screen_fb_size);
+ 	par->mem = NULL;
+ err1:
+ 	if (!gen2vm)
+@@ -758,7 +758,7 @@ static void hvfb_putmem(struct fb_info *info)
+ 	struct hvfb_par *par = info->par;
  
--	if (imx6_pcie->is_imx6sx)
-+	if (imx6_pcie->variant == IMX6SX)
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
- 				   IMX6SX_GPR5_PCIE_BTNRST_RESET, 0);
- 
-@@ -374,11 +385,10 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
- {
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
- 
--	if (imx6_pcie->is_imx6sx) {
-+	if (imx6_pcie->variant == IMX6SX)
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				   IMX6SX_GPR12_PCIE_RX_EQ_MASK,
- 				   IMX6SX_GPR12_PCIE_RX_EQ_2);
--	}
- 
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
-@@ -585,8 +595,8 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 	pp = &imx6_pcie->pp;
- 	pp->dev = &pdev->dev;
- 
--	imx6_pcie->is_imx6sx = of_device_is_compatible(pp->dev->of_node,
--						       "fsl,imx6sx-pcie");
-+	imx6_pcie->variant =
-+		(enum imx6_pcie_variants)of_device_get_match_data(&pdev->dev);
- 
- 	/* Added for PCI abort handling */
- 	hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
-@@ -623,7 +633,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(imx6_pcie->pcie);
- 	}
- 
--	if (imx6_pcie->is_imx6sx) {
-+	if (imx6_pcie->variant == IMX6SX) {
- 		imx6_pcie->pcie_inbound_axi = devm_clk_get(&pdev->dev,
- 							   "pcie_inbound_axi");
- 		if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
-@@ -679,8 +689,8 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
+ 	iounmap(info->screen_base);
+-	release_mem_region(par->mem->start, screen_fb_size);
++	vmbus_free_mmio(par->mem->start, screen_fb_size);
+ 	par->mem = NULL;
  }
  
- static const struct of_device_id imx6_pcie_of_match[] = {
--	{ .compatible = "fsl,imx6q-pcie", },
--	{ .compatible = "fsl,imx6sx-pcie", },
-+	{ .compatible = "fsl,imx6q-pcie",  .data = (void *)IMX6Q,  },
-+	{ .compatible = "fsl,imx6sx-pcie", .data = (void *)IMX6SX, },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
 -- 
-2.5.5
+1.9.1
 
