@@ -1,54 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:8579 "EHLO mga02.intel.com"
+Received: from p3plsmtps2ded01.prod.phx3.secureserver.net ([208.109.80.58]:53353
+	"EHLO p3plsmtps2ded01.prod.phx3.secureserver.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756517AbcDHKgn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Apr 2016 06:36:43 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [PATCH v2 1/4] PCI: No need to set d3cold_allowed to PCIe ports
-Date: Fri,  8 Apr 2016 13:36:27 +0300
-Message-Id: <1460111790-92836-2-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+	id S1755621AbcDAXKh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 1 Apr 2016 19:10:37 -0400
+From: Jake Oshins <jakeo@microsoft.com>
+To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v4 6/7] drivers:hv: Record MMIO range in use by frame buffer
+Date: Fri,  1 Apr 2016 17:47:46 -0700
+Message-Id: <1459558067-1725-7-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
+References: <y>
+ <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Linux PCI core skips PCI bridges and PCIe ports when system is
-suspended. The PCI core checks return value of pci_has_subordinate() in
-pci_pm_suspend_noirq() to skip all devices where it is non-zero (which
-means PCI bridges and PCIe ports).
+Later in the boot sequence, we need to figure out which memory
+ranges can be given out to various paravirtual drivers.  The
+hyperv_fb driver should, ideally, be placed right on top of
+the frame buffer, without some other device getting plopped on
+top of this range in the meantime.  Recording this now allows
+that to be guaranteed.
 
-Since PCIe ports are never suspended in the first place, there is no need
-to set d3cold_allowed for them.
-
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 ---
- drivers/pci/pcie/portdrv_pci.c | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/hv/vmbus_drv.c | 37 ++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 36 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index be35da2e105e..6c6bb03392ea 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -134,11 +134,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
- 		return status;
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index dfc6149..eaa5c3b 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -41,6 +41,7 @@
+ #include <linux/ptrace.h>
+ #include <linux/screen_info.h>
+ #include <linux/kdebug.h>
++#include <linux/efi.h>
+ #include "hyperv_vmbus.h"
  
- 	pci_save_state(dev);
--	/*
--	 * D3cold may not work properly on some PCIe port, so disable
--	 * it by default.
--	 */
--	dev->d3cold_allowed = false;
+ static struct acpi_device  *hv_acpi_dev;
+@@ -101,6 +102,8 @@ static struct notifier_block hyperv_panic_block = {
+ 	.notifier_call = hyperv_panic_event,
+ };
+ 
++static const char *fb_mmio_name = "fb_range";
++static struct resource *fb_mmio;
+ struct resource *hyperv_mmio;
+ DEFINE_SEMAPHORE(hyperv_mmio_lock);
+ 
+@@ -1091,6 +1094,12 @@ static int vmbus_acpi_remove(struct acpi_device *device)
+ 	struct resource *next_res;
+ 
+ 	if (hyperv_mmio) {
++		if (fb_mmio) {
++			__release_region(hyperv_mmio, fb_mmio->start,
++					 resource_size(fb_mmio));
++			fb_mmio = NULL;
++		}
++
+ 		for (cur_res = hyperv_mmio; cur_res; cur_res = next_res) {
+ 			next_res = cur_res->sibling;
+ 			kfree(cur_res);
+@@ -1100,6 +1109,30 @@ static int vmbus_acpi_remove(struct acpi_device *device)
  	return 0;
  }
  
++static void vmbus_reserve_fb(void)
++{
++	int size;
++	/*
++	 * Make a claim for the frame buffer in the resource tree under the
++	 * first node, which will be the one below 4GB.  The length seems to
++	 * be underreported, particularly in a Generation 1 VM.  So start out
++	 * reserving a larger area and make it smaller until it succeeds.
++	 */
++
++	if (screen_info.lfb_base) {
++		if (efi_enabled(EFI_BOOT))
++			size = max_t(__u32, screen_info.lfb_size, 0x800000);
++		else
++			size = max_t(__u32, screen_info.lfb_size, 0x4000000);
++
++		for (; !fb_mmio && (size >= 0x100000); size >>= 1) {
++			fb_mmio = __request_region(hyperv_mmio,
++						   screen_info.lfb_base, size,
++						   fb_mmio_name, 0);
++		}
++	}
++}
++
+ /**
+  * vmbus_allocate_mmio() - Pick a memory-mapped I/O range.
+  * @new:		If successful, supplied a pointer to the
+@@ -1261,8 +1294,10 @@ static int vmbus_acpi_add(struct acpi_device *device)
+ 
+ 		if (ACPI_FAILURE(result))
+ 			continue;
+-		if (hyperv_mmio)
++		if (hyperv_mmio) {
++			vmbus_reserve_fb();
+ 			break;
++		}
+ 	}
+ 	ret_val = 0;
+ 
 -- 
-2.8.0.rc3
+1.9.1
 
