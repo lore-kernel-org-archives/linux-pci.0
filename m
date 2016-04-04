@@ -1,124 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 43/60] PCI: Move saved required resource list out of required+optional assigning
-Date: Thu,  7 Apr 2016 17:15:56 -0700
-Message-Id: <1460074573-7481-44-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:32860 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755823AbcDDOBp (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 4 Apr 2016 10:01:45 -0400
+Received: by mail-oi0-f43.google.com with SMTP id w85so36495998oiw.0
+        for <linux-pci@vger.kernel.org>; Mon, 04 Apr 2016 07:01:43 -0700 (PDT)
+MIME-Version: 1.0
+Date: Mon, 4 Apr 2016 16:01:42 +0200
+Message-ID: <CACmAtJvLMDbJG7FrnfcRoaLM843GNx5+9rehwn4-tD_QWTEn=Q@mail.gmail.com>
+Subject: Dell XPS13 9350 thunderbolt 3
+From: Martin Andersson <martin.andersson@purplescout.se>
+To: linux-pci@vger.kernel.org
+Cc: Lukas Wunner <lukas@wunner.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We will need to share saved required list for alt_size support, so move
-it out from required+optional assigning.
+Hi all,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 30 ++++++++++++++++--------------
- 1 file changed, 16 insertions(+), 14 deletions(-)
+I have a Dell XPS 13 9350 laptop with a Dell Thunderbolt 3 dock (TB15)
+that I'm trying to get to talk to each other. I hope this is the right
+forum.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 373f76f..6c58b4a 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -455,6 +455,9 @@ static bool has_addon(struct list_head *head,
- 	int add_count = 0;
- 	struct pci_dev_resource *dev_res, *tmp_res;
- 
-+	if (!realloc_head)
-+		return false;
-+
- 	/* check if we have add really */
- 	list_for_each_entry(dev_res, head, list) {
- 		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
-@@ -491,9 +494,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
- }
- 
- static bool __assign_resources_required_optional_sorted(struct list_head *head,
-+				 struct list_head *save_head,
- 				 struct list_head *realloc_head)
- {
--	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
- 	struct pci_dev_resource *dev_res, *tmp_res;
-@@ -501,12 +504,6 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 	resource_size_t add_align, add_size;
- 	struct resource *res;
- 
--	if (!has_addon(head, realloc_head))
--		return false;
--
--	if (!save_resources(head, &save_head))
--		return false;
--
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
- 		res = dev_res->res;
-@@ -547,7 +544,6 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 		/* Remove head list from realloc_head list */
- 		list_for_each_entry(dev_res, head, list)
- 			remove_from_list(realloc_head, dev_res->res);
--		free_list(&save_head);
- 		free_list(head);
- 
- 		return true;
-@@ -561,7 +557,7 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 		if (res->parent && !pci_need_to_release(fail_type, res)) {
- 			/* remove it from realloc_head list */
- 			remove_from_list(realloc_head, res);
--			remove_from_list(&save_head, res);
-+			remove_from_list(save_head, res);
- 			list_del(&dev_res->list);
- 			kfree(dev_res);
- 		}
-@@ -580,11 +576,9 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 		}
- 	}
- 	/* Restore start/end/flags from saved list */
--	list_for_each_entry(save_res, &save_head, list)
-+	list_for_each_entry(save_res, save_head, list)
- 		restore_resource(save_res, save_res->res);
- 
--	free_list(&save_head);
--
- 	return false;
- }
- 
-@@ -602,16 +596,24 @@ static void __assign_resources_sorted(struct list_head *head,
- 	 *    then try to reassign add_size for some resources.
- 	 */
- 
-+	LIST_HEAD(save_head);
-+
- 	/* Check required+optional add */
--	if (realloc_head &&
--	    __assign_resources_required_optional_sorted(head, realloc_head))
-+	if (has_addon(head, realloc_head) &&
-+	    save_resources(head, &save_head) &&
-+	    __assign_resources_required_optional_sorted(head, &save_head,
-+					       realloc_head)) {
-+		free_list(&save_head);
- 		return;
-+	}
- 
- 	sort_resources(head);
- 
- 	/* Satisfy the must-have resource requests */
- 	assign_requested_resources_sorted(head, fail_head);
- 
-+	free_list(&save_head);
-+
- 	/* Try to satisfy any additional optional resource
- 		requests */
- 	if (realloc_head)
--- 
-1.8.4.5
+Lukas Wunner was kind enough to give me some pointers and after
+upgrading the thunderbolt firmware and disabling all the security
+settings for thunderbolt in the bios I'm able to see a usb hub
+(ASMedia Technology) from the dock with lspci. But that's it. Nothing
+happens when I attach any usb devices to the dock and I see no sign of
+the ethernet or audio devices in the dock.
+
+cut from lspci -vv:
+
+09:00.0 USB controller: ASMedia Technology Inc. ASM1042A USB 3.0 Host
+Controller (prog-if 30 [XHCI])
+        Subsystem: ASMedia Technology Inc. ASM1042A USB 3.0 Host Controller
+        Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop-
+ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+        Interrupt: pin A routed to IRQ 18
+        Region 0: Memory at c4100000 (64-bit, non-prefetchable) [size=32K]
+        Capabilities: <access denied>
+        Kernel driver in use: xhci_hcd
+
+
+Also I only see the usb hub when I boot with the dock attached. I have
+tried with pcie_hp=nomsi and echo "1" > /sys/bus/pci/rescan with no
+luck. But hotplug is, of course, not my main concern at this point ;)
+
+Should I open a bug at the kernel bugzilla and attach dmesg logs?
+
+Thanks in advance! I'm happy for any pointers in the right direction.
+
+Regards,
+Martin Andersson
