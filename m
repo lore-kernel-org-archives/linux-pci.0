@@ -1,302 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de, linux-block@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Cc: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 5/8] blk-mq: allow the driver to pass in an affinity mask
-Date: Fri, 15 Apr 2016 18:35:49 -0700
-Message-Id: <1460770552-31260-6-git-send-email-hch@lst.de>
-In-Reply-To: <1460770552-31260-1-git-send-email-hch@lst.de>
-References: <1460770552-31260-1-git-send-email-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:47906 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759022AbcDENsq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2016 09:48:46 -0400
+Received: from localhost
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Tue, 5 Apr 2016 23:48:44 +1000
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
+	alex.williamson@redhat.com, benh@kernel.crashing.org,
+	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [RFC v5 7/7] vfio-pci: Allow to mmap MSI-X table if interrupt remapping is supported
+Date: Tue,  5 Apr 2016 21:46:44 +0800
+Message-Id: <1459864004-2869-2-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1459864004-2869-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1459864004-2869-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allow drivers to pass in the affinity mask from the generic interrupt
-layer, and spread queues based on that.  If the driver doesn't pass in
-a mask we will create it using the genirq helper.  As this helper was
-modelled after the blk-mq algorithm there should be no change in behavior.
+This patch enables mmapping MSI-X tables if
+hardware supports interrupt remapping which
+can ensure that a given pci device can only
+shoot the MSIs assigned for it.
 
-XXX: Just as with the core IRQ spreading code this doesn't handle CPU
-hotplug yet.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
- block/Makefile         |   2 +-
- block/blk-mq-cpumap.c  | 120 -------------------------------------------------
- block/blk-mq.c         |  60 ++++++++++++++++++++++++-
- block/blk-mq.h         |   8 ----
- include/linux/blk-mq.h |   1 +
- 5 files changed, 60 insertions(+), 131 deletions(-)
- delete mode 100644 block/blk-mq-cpumap.c
+ drivers/vfio/pci/vfio_pci.c         |    9 +++++++--
+ drivers/vfio/pci/vfio_pci_private.h |    1 +
+ drivers/vfio/pci/vfio_pci_rdwr.c    |    2 +-
+ 3 files changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/block/Makefile b/block/Makefile
-index 9eda232..aeb318d 100644
---- a/block/Makefile
-+++ b/block/Makefile
-@@ -6,7 +6,7 @@ obj-$(CONFIG_BLOCK) := bio.o elevator.o blk-core.o blk-tag.o blk-sysfs.o \
- 			blk-flush.o blk-settings.o blk-ioc.o blk-map.o \
- 			blk-exec.o blk-merge.o blk-softirq.o blk-timeout.o \
- 			blk-lib.o blk-mq.o blk-mq-tag.o \
--			blk-mq-sysfs.o blk-mq-cpu.o blk-mq-cpumap.o ioctl.o \
-+			blk-mq-sysfs.o blk-mq-cpu.o ioctl.o \
- 			genhd.o scsi_ioctl.o partition-generic.o ioprio.o \
- 			badblocks.o partitions/
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index c60d790..ef02896 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -201,6 +201,10 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
+ 	} else
+ 		vdev->msix_bar = 0xFF;
  
-diff --git a/block/blk-mq-cpumap.c b/block/blk-mq-cpumap.c
-deleted file mode 100644
-index d0634bc..0000000
---- a/block/blk-mq-cpumap.c
-+++ /dev/null
-@@ -1,120 +0,0 @@
--/*
-- * CPU <-> hardware queue mapping helpers
-- *
-- * Copyright (C) 2013-2014 Jens Axboe
-- */
--#include <linux/kernel.h>
--#include <linux/threads.h>
--#include <linux/module.h>
--#include <linux/mm.h>
--#include <linux/smp.h>
--#include <linux/cpu.h>
--
--#include <linux/blk-mq.h>
--#include "blk.h"
--#include "blk-mq.h"
--
--static int cpu_to_queue_index(unsigned int nr_cpus, unsigned int nr_queues,
--			      const int cpu)
--{
--	return cpu * nr_queues / nr_cpus;
--}
--
--static int get_first_sibling(unsigned int cpu)
--{
--	unsigned int ret;
--
--	ret = cpumask_first(topology_sibling_cpumask(cpu));
--	if (ret < nr_cpu_ids)
--		return ret;
--
--	return cpu;
--}
--
--int blk_mq_update_queue_map(unsigned int *map, unsigned int nr_queues,
--			    const struct cpumask *online_mask)
--{
--	unsigned int i, nr_cpus, nr_uniq_cpus, queue, first_sibling;
--	cpumask_var_t cpus;
--
--	if (!alloc_cpumask_var(&cpus, GFP_ATOMIC))
--		return 1;
--
--	cpumask_clear(cpus);
--	nr_cpus = nr_uniq_cpus = 0;
--	for_each_cpu(i, online_mask) {
--		nr_cpus++;
--		first_sibling = get_first_sibling(i);
--		if (!cpumask_test_cpu(first_sibling, cpus))
--			nr_uniq_cpus++;
--		cpumask_set_cpu(i, cpus);
--	}
--
--	queue = 0;
--	for_each_possible_cpu(i) {
--		if (!cpumask_test_cpu(i, online_mask)) {
--			map[i] = 0;
--			continue;
--		}
--
--		/*
--		 * Easy case - we have equal or more hardware queues. Or
--		 * there are no thread siblings to take into account. Do
--		 * 1:1 if enough, or sequential mapping if less.
--		 */
--		if (nr_queues >= nr_cpus || nr_cpus == nr_uniq_cpus) {
--			map[i] = cpu_to_queue_index(nr_cpus, nr_queues, queue);
--			queue++;
--			continue;
--		}
--
--		/*
--		 * Less then nr_cpus queues, and we have some number of
--		 * threads per cores. Map sibling threads to the same
--		 * queue.
--		 */
--		first_sibling = get_first_sibling(i);
--		if (first_sibling == i) {
--			map[i] = cpu_to_queue_index(nr_uniq_cpus, nr_queues,
--							queue);
--			queue++;
--		} else
--			map[i] = map[first_sibling];
--	}
--
--	free_cpumask_var(cpus);
--	return 0;
--}
--
--unsigned int *blk_mq_make_queue_map(struct blk_mq_tag_set *set)
--{
--	unsigned int *map;
--
--	/* If cpus are offline, map them to first hctx */
--	map = kzalloc_node(sizeof(*map) * nr_cpu_ids, GFP_KERNEL,
--				set->numa_node);
--	if (!map)
--		return NULL;
--
--	if (!blk_mq_update_queue_map(map, set->nr_hw_queues, cpu_online_mask))
--		return map;
--
--	kfree(map);
--	return NULL;
--}
--
--/*
-- * We have no quick way of doing reverse lookups. This is only used at
-- * queue init time, so runtime isn't important.
-- */
--int blk_mq_hw_queue_to_node(unsigned int *mq_map, unsigned int index)
--{
--	int i;
--
--	for_each_possible_cpu(i) {
--		if (index == mq_map[i])
--			return local_memory_node(cpu_to_node(i));
--	}
--
--	return NUMA_NO_NODE;
--}
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 1699baf..ab156bb 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -22,6 +22,7 @@
- #include <linux/sched/sysctl.h>
- #include <linux/delay.h>
- #include <linux/crash_dump.h>
-+#include <linux/interrupt.h>
- 
- #include <trace/events/block.h>
- 
-@@ -1954,6 +1955,22 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_tag_set *set)
- }
- EXPORT_SYMBOL(blk_mq_init_queue);
- 
-+/*
-+ * We have no quick way of doing reverse lookups. This is only used at
-+ * queue init time, so runtime isn't important.
-+ */
-+static int blk_mq_hw_queue_to_node(unsigned int *mq_map, unsigned int index)
-+{
-+	int i;
++	if (iommu_capable(pdev->dev.bus, IOMMU_CAP_INTR_REMAP) ||
++		pdev->bus->bus_flags | PCI_BUS_FLAGS_MSI_REMAP)
++		vdev->msi_remap = true;
 +
-+	for_each_possible_cpu(i) {
-+		if (index == mq_map[i])
-+			return local_memory_node(cpu_to_node(i));
-+	}
-+
-+	return NUMA_NO_NODE;
-+}
-+
- static void blk_mq_realloc_hw_ctxs(struct blk_mq_tag_set *set,
- 						struct request_queue *q)
- {
-@@ -2013,6 +2030,30 @@ static void blk_mq_realloc_hw_ctxs(struct blk_mq_tag_set *set,
- 	blk_mq_sysfs_register(q);
- }
+ 	if (!vfio_vga_disabled() && vfio_pci_is_vga(pdev))
+ 		vdev->has_vga = true;
  
-+static unsigned int *
-+affinity_mask_to_queue_map(const struct cpumask *affinity_mask, int node)
-+{
-+	unsigned int *map;
-+	int queue = -1, cpu = 0;
-+
-+	map = kzalloc_node(sizeof(*map) * nr_cpu_ids, GFP_KERNEL, node);
-+	if (!map)
-+		return NULL;
-+
-+	if (!affinity_mask)
-+		return map;	/* map all cpus to queue 0 */
-+
-+	/* If cpus are offline, map them to first hctx */
-+	for_each_online_cpu(cpu) {
-+		if (cpumask_test_cpu(cpu, affinity_mask))
-+			queue++;
-+		if (queue > 0)
-+			map[cpu] = queue;
-+	}
-+
-+	return map;
-+}
-+
- struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
- 						  struct request_queue *q)
- {
-@@ -2028,7 +2069,21 @@ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
- 	if (!q->queue_hw_ctx)
- 		goto err_percpu;
+@@ -635,7 +639,8 @@ static long vfio_pci_ioctl(void *device_data,
+ 				     VFIO_REGION_INFO_FLAG_WRITE;
+ 			if (vdev->bar_mmap_supported[info.index]) {
+ 				info.flags |= VFIO_REGION_INFO_FLAG_MMAP;
+-				if (info.index == vdev->msix_bar) {
++				if (info.index == vdev->msix_bar &&
++						!vdev->msi_remap) {
+ 					ret = msix_sparse_mmap_cap(vdev, &caps);
+ 					if (ret)
+ 						return ret;
+@@ -1067,7 +1072,7 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
+ 	if (req_start + req_len > phys_len)
+ 		return -EINVAL;
  
--	q->mq_map = blk_mq_make_queue_map(set);
-+	if (set->affinity_mask) {
-+		q->mq_map = affinity_mask_to_queue_map(set->affinity_mask,
-+				set->numa_node);
-+	} else {
-+		struct cpumask *affinity_mask;
-+		int ret;
-+
-+		ret = irq_create_affinity_mask(&affinity_mask, set->nr_hw_queues);
-+		if (ret)
-+			goto err_map;
-+
-+		q->mq_map = affinity_mask_to_queue_map(affinity_mask, set->numa_node);
-+		kfree(affinity_mask);
-+	}
-+
- 	if (!q->mq_map)
- 		goto err_map;
+-	if (index == vdev->msix_bar) {
++	if (index == vdev->msix_bar && !vdev->msi_remap) {
+ 		/*
+ 		 * Disallow mmaps overlapping the MSI-X table; users don't
+ 		 * get to touch this directly.  We could find somewhere
+diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
+index 0ea4c62..4f20963 100644
+--- a/drivers/vfio/pci/vfio_pci_private.h
++++ b/drivers/vfio/pci/vfio_pci_private.h
+@@ -78,6 +78,7 @@ struct vfio_pci_device {
+ 	int			irq_type;
+ 	int			num_regions;
+ 	struct vfio_pci_region	*region;
++	bool			msi_remap;
+ 	u8			msi_qmax;
+ 	u8			msix_bar;
+ 	u16			msix_size;
+diff --git a/drivers/vfio/pci/vfio_pci_rdwr.c b/drivers/vfio/pci/vfio_pci_rdwr.c
+index 5ffd1d9..606ee3c 100644
+--- a/drivers/vfio/pci/vfio_pci_rdwr.c
++++ b/drivers/vfio/pci/vfio_pci_rdwr.c
+@@ -164,7 +164,7 @@ ssize_t vfio_pci_bar_rw(struct vfio_pci_device *vdev, char __user *buf,
+ 	} else
+ 		io = vdev->barmap[bar];
  
-@@ -2111,7 +2166,8 @@ static void blk_mq_queue_reinit(struct request_queue *q,
- 
- 	blk_mq_sysfs_unregister(q);
- 
--	blk_mq_update_queue_map(q->mq_map, q->nr_hw_queues, online_mask);
-+//	XXX: figure out what to do about cpu hotplug in the new world order
-+//	blk_mq_update_queue_map(q->mq_map, q->nr_hw_queues, online_mask);
- 
- 	/*
- 	 * redo blk_mq_init_cpu_queues and blk_mq_init_hw_queues. FIXME: maybe
-diff --git a/block/blk-mq.h b/block/blk-mq.h
-index 9087b11..fe7e21f 100644
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -45,14 +45,6 @@ void blk_mq_enable_hotplug(void);
- void blk_mq_disable_hotplug(void);
- 
- /*
-- * CPU -> queue mappings
-- */
--extern unsigned int *blk_mq_make_queue_map(struct blk_mq_tag_set *set);
--extern int blk_mq_update_queue_map(unsigned int *map, unsigned int nr_queues,
--				   const struct cpumask *online_mask);
--extern int blk_mq_hw_queue_to_node(unsigned int *map, unsigned int);
--
--/*
-  * sysfs helpers
-  */
- extern int blk_mq_sysfs_register(struct request_queue *q);
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 2498fdf..21ffe10 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -74,6 +74,7 @@ struct blk_mq_tag_set {
- 	unsigned int		timeout;
- 	unsigned int		flags;		/* BLK_MQ_F_* */
- 	void			*driver_data;
-+	struct cpumask		*affinity_mask;
- 
- 	struct blk_mq_tags	**tags;
- 
+-	if (bar == vdev->msix_bar) {
++	if (bar == vdev->msix_bar && !vdev->msi_remap) {
+ 		x_start = vdev->msix_offset;
+ 		x_end = vdev->msix_offset + vdev->msix_size;
+ 	}
 -- 
-2.1.4
+1.7.9.5
+
