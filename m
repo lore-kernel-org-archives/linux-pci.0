@@ -1,103 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36633 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932680AbcDHAW2 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:22:28 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 42/60] PCI: Skip required+optional if there is no optional
-Date: Thu,  7 Apr 2016 17:15:55 -0700
-Message-Id: <1460074573-7481-43-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 5 Apr 2016 18:12:19 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jisheng Zhang <jszhang@marvell.com>
+Cc: jingoohan1@gmail.com, pratyush.anand@gmail.com,
+	bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code to
+ dw_pcie_setup_rc()
+Message-ID: <20160405231219.GG15353@localhost>
+References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the bridge does not support hotplug and has no child with sriov support,
-We will not have optional resources. We could get out early and
-don't try required+optional allocation.
+On Wed, Mar 16, 2016 at 07:40:33PM +0800, Jisheng Zhang wrote:
+> dw_pcie_setup_rc(), as its name indicates, setups the RC. But current
+> dw_pcie_host_init() also contains some necessary rc setup code.
+> 
+> Another reason: the host may lost power during suspend to ram, the RC
+> need to be re-setup after resume. The rc can't be correctly resumed
+> without the rc setup code in dw_pcie_host_init().
+> 
+> So this patch moves the code to dw_pcie_setup_rc() to address the above
+> two issues. After this patch, each pcie designware driver users could
+> call dw_pcie_setup_rc() to re-setup rc when resume back.
+> 
+> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
 
-Also in the loop that update res with optional add info, skip resource
-that add_size is 0.
+Very nice, applied with Pratyush's ack to pci/host-designware for
+v4.7, thanks!
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 32 +++++++++++++++++++++++++++++---
- 1 file changed, 29 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a4f53ec..373f76f 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -449,6 +449,24 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
- 	return false;	/* should not get here */
- }
- 
-+static bool has_addon(struct list_head *head,
-+			struct list_head *realloc_head)
-+{
-+	int add_count = 0;
-+	struct pci_dev_resource *dev_res, *tmp_res;
-+
-+	/* check if we have add really */
-+	list_for_each_entry(dev_res, head, list) {
-+		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
-+		if (!tmp_res || !tmp_res->add_size)
-+			continue;
-+
-+		add_count++;
-+	}
-+
-+	return add_count != 0;
-+}
-+
- static bool save_resources(struct list_head *head,
- 			   struct list_head *save_head)
- {
-@@ -480,16 +498,24 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
- 	struct pci_dev_resource *save_res;
- 	struct pci_dev_resource *dev_res, *tmp_res;
- 	unsigned long fail_type;
--	resource_size_t add_align;
-+	resource_size_t add_align, add_size;
- 	struct resource *res;
- 
-+	if (!has_addon(head, realloc_head))
-+		return false;
-+
- 	if (!save_resources(head, &save_head))
- 		return false;
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
- 		res = dev_res->res;
--		res->end += get_res_add_size(realloc_head, res);
-+		add_size = get_res_add_size(realloc_head, res);
-+
-+		if (!add_size)
-+			continue;
-+
-+		res->end += add_size;
- 
- 		/*
- 		 * There are two kinds of additional resources in the list:
-@@ -577,7 +603,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 	 */
- 
- 	/* Check required+optional add */
--	if (realloc_head && !list_empty(realloc_head) &&
-+	if (realloc_head &&
- 	    __assign_resources_required_optional_sorted(head, realloc_head))
- 		return;
- 
--- 
-1.8.4.5
-
+> ---
+> Since v1:
+>  - fix gcc warning found by lkp, thanks
+> 
+>  drivers/pci/host/pcie-designware.c | 39 +++++++++++++++++++-------------------
+>  1 file changed, 19 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index a4cccd3..261e4a11 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -434,7 +434,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  	struct platform_device *pdev = to_platform_device(pp->dev);
+>  	struct pci_bus *bus, *child;
+>  	struct resource *cfg_res;
+> -	u32 val;
+>  	int i, ret;
+>  	LIST_HEAD(res);
+>  	struct resource_entry *win;
+> @@ -544,25 +543,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  	if (pp->ops->host_init)
+>  		pp->ops->host_init(pp);
+>  
+> -	/*
+> -	 * If the platform provides ->rd_other_conf, it means the platform
+> -	 * uses its own address translation component rather than ATU, so
+> -	 * we should not program the ATU here.
+> -	 */
+> -	if (!pp->ops->rd_other_conf)
+> -		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+> -					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+> -					  pp->mem_bus_addr, pp->mem_size);
+> -
+> -	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+> -
+> -	/* program correct class for RC */
+> -	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
+> -
+> -	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+> -	val |= PORT_LOGIC_SPEED_CHANGE;
+> -	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+> -
+>  	pp->root_bus_nr = pp->busn->start;
+>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>  		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
+> @@ -800,6 +780,25 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>  	val |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
+>  		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
+>  	dw_pcie_writel_rc(pp, val, PCI_COMMAND);
+> +
+> +	/*
+> +	 * If the platform provides ->rd_other_conf, it means the platform
+> +	 * uses its own address translation component rather than ATU, so
+> +	 * we should not program the ATU here.
+> +	 */
+> +	if (!pp->ops->rd_other_conf)
+> +		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+> +					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+> +					  pp->mem_bus_addr, pp->mem_size);
+> +
+> +	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+> +
+> +	/* program correct class for RC */
+> +	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
+> +
+> +	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+> +	val |= PORT_LOGIC_SPEED_CHANGE;
+> +	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+>  }
+>  
+>  MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
+> -- 
+> 2.7.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
