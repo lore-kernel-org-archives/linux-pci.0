@@ -1,115 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:20727 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755194AbcDGIjL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 04:39:11 -0400
-Date: Thu, 7 Apr 2016 16:34:43 +0800
-From: Jisheng Zhang <jszhang@marvell.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-CC: "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code to
- dw_pcie_setup_rc()
-Message-ID: <20160407163443.291fbd49@xhacker>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
-References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
-	<EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
-	<20160407103734.55e72da7@xhacker>
-	<EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Received: from e28smtp04.in.ibm.com ([125.16.236.4]:42814 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932888AbcDENok (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2016 09:44:40 -0400
+Received: from localhost
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Tue, 5 Apr 2016 19:14:37 +0530
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
+	alex.williamson@redhat.com, benh@kernel.crashing.org,
+	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com, Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [RFC v5 0/7] vfio-pci: Allow to mmap sub-page MMIO BARs and MSI-X table
+Date: Tue,  5 Apr 2016 21:43:28 +0800
+Message-Id: <1459863813-2830-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gabriele,
+Current vfio-pci implementation disallows to mmap
+sub-page(size < PAGE_SIZE) MMIO BARs and MSI-X table. This is because
+sub-page BARs' mmio page may be shared with other BARs and MSI-X table
+should not be accessed directly from the guest for security reasons.
 
-On Thu, 7 Apr 2016 08:20:28 +0000 Gabriele Paoloni wrote:
+But it will easily cause some performance issues for mmio accesses
+in guest when vfio passthrough sub-page BARs or BARs containing MSI-X
+table on PPC64 platform. This is because PAGE_SIZE is 64KB by default
+on PPC64 platform and the big page may easily hit the sub-page MMIO
+BARs' unmmapping and cause the unmmaping of the mmio page which
+MSI-X table locate in, which lead to mmio emulation in host.
 
-> Hi Jisheng
-> 
-> Thanks for your reply
-> 
-> > -----Original Message-----
-> > From: Jisheng Zhang [mailto:jszhang@marvell.com]
-> > Sent: 07 April 2016 03:38
-> > To: Gabriele Paoloni; jingoohan1@gmail.com; pratyush.anand@gmail.com;
-> > bhelgaas@google.com
-> > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-arm-
-> > kernel@lists.infradead.org
-> > Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code
-> > to dw_pcie_setup_rc()
-> > 
-> > Hi Gabriele,
-> > 
-> > On Wed, 6 Apr 2016 14:50:29 +0000 Gabriele Paoloni wrote:
-> >   
-> > > Hi, sorry to be late on this
-> > >  
-> > > > -----Original Message-----
-> > > > From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
-> > > > owner@vger.kernel.org] On Behalf Of Jisheng Zhang
-> > > > Sent: 16 March 2016 11:41
-> > > > To: jingoohan1@gmail.com; pratyush.anand@gmail.com;  
-> > bhelgaas@google.com  
-> > > > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-  
-> > arm-  
-> > > > kernel@lists.infradead.org; Jisheng Zhang
-> > > > Subject: [PATCH v2] PCI: designware: move remaining rc setup code  
-> > to  
-> > > > dw_pcie_setup_rc()
-> > > >
-> > > > dw_pcie_setup_rc(), as its name indicates, setups the RC. But  
-> > current  
-> > > > dw_pcie_host_init() also contains some necessary rc setup code.
-> > > >
-> > > > Another reason: the host may lost power during suspend to ram, the  
-> > RC  
-> > > > need to be re-setup after resume. The rc can't be correctly resumed
-> > > > without the rc setup code in dw_pcie_host_init().
-> > > >
-> > > > So this patch moves the code to dw_pcie_setup_rc() to address the  
-> > above  
-> > > > two issues. After this patch, each pcie designware driver users  
-> > could  
-> > > > call dw_pcie_setup_rc() to re-setup rc when resume back.  
-> > >
-> > > I think this patch breaks the Hisilicon driver...
-> > >
-> > > Our driver performs linkup setup in UEFI therefore we do not call
-> > > dw_pcie_setup_rc(), we only call dw_pcie_host_init().  
-> > 
-> > Thanks for the information. So pcie-hisi rely on UEFI to do something
-> > similar
-> > in dw_pcie_setup_rc(), this comes to a common driver implement
-> > question: should
-> > linux device driver rely on bootloader to configure HW device?  
-> 
-> I don't see any issue with this...
-> 
-> > 
-> > Is it acceptable that pcie-hisi adds a call to dw_pcie_setup_rc() in
-> > hisi_add_pcie_port()?  
-> 
-> I don't think so...that would try to overwrite what is already set by
-> the bootloader; so it is wrong in principle and maybe it can lead to
-> undefined behaviours...
+For sub-page MMIO BARs' unmmapping, this patchset modifies
+resource_alignment kernel parameter to enforce the alignment of all
+MMIO BARs to be at least PAGE_SZIE so that sub-page BAR's mmio page
+will not be shared with other BARs. And we also add shadow resources
+to the vfio device and put them into the holes of mmio pages in case
+that hot-add device's BARs are assigned into the holes. Then we can 
+mmap sub-page MMIO BARs safely.
 
-make sense! This commit is intend to re-setup the rc when waken from s2ram (in
-s2ram state, the host lost power)
+For MSI-X table's unmmapping, we think MSI-X table is safe to access
+directly from userspace if hardware supports the capbility of 
+interrupt remapping which can ensure that a given pci device can 
+only shoot the MSIs assigned for it. So it's safe to mmap MSI-X
+table if IOMMU_CAP_INTR_REMAP was set. But on PPC64, it's hard to 
+use this existing flag to indicate the capbility because we never 
+set/use iommu_ops. Now I'm trying to find a proper way to indicate 
+that on PPC64. In this patchset, we add a new bit to pci_bus_flags
+to indicate that. But I'm not sure whether it's good enough.
 
-I have no good solution but to introduce one function e.g 
-dw_pcie_setup_rc_after_linkup(), then move related code from dw_pcie_host_init
-to it, then let my host driver resume hook to call.
+With this patchset applied, we can get almost 100% improvement on
+performance for mmio accesses when we passthrough sub-page BARs to guest
+in our test.
 
-Hi Pratyush, Jingoo and Bjorn etc.
+Changelog v5: 
+- Rebase on vfio/next
+- Change the order of patch 1,2,3
+- Move the warning "resource_alignment will not work with
+  PCI_PROBE_ONLY set" from documentation to kernel log
+- Remove IORESOURCE_WINDOW
+- Add description for parameter "resize"
+- Add PCIBIOS_MIN_ALIGNMENT to force all MMIO BARs to
+  get minimum alignment
+- Add shadow resources to make sure sub-page BAR's mmio
+  page will not be shared with hot-add BARs.
+- Add a new bit to pci_bus_flags to indicate the capbility
+  of interrupt remapping on PPC64
+- Remove IOMMU_CAP_INTR_REMAP on PPC64
+- Add a property msi_remap to vfio_pci_device to cache the
+  capbility of interrupt remapping
 
-any suggestions are appreciated!
+Changelog v4: 
+- Rebase on v4.5-rc6 with patchset[1] applied.
+- Remove resource_page_aligned kernel parameter
+- Fix some problems with resource_alignment kernel parameter
+- Modify resource_alignment kernel parameter to support multiple
+  devices.
+- Remove host bridge attribute: msi_filtered
+- Use IOMMU_CAP_INTR_REMAP to check if MSI-X table can be mmapped
+- Add IOMMU_CAP_INTR_REMAP for IODA host bridge on PPC64 platform
 
-Thanks,
-Jisheng
+Changelog v3:
+- Rebase on new linux kernel mainline with the patchset[1] applied.
+- Add a function to check whether PCI BARs'mmio page is shared with
+  other BARs.
+- Add a host bridge attribute to indicate PCI host bridge support
+  filtering of MSIs.
+- Use the new host bridge attribute to check if MSI-X table can
+  be mmapped instead of CONFIG_EEH.
+- Remove Kconfig option VFIO_PCI_MMAP_MSIX
+
+Changelog v2:
+- Rebase on v4.4-rc6 with the patchset[1] applied.
+- Use kernel parameter to enforce all MMIO BARs to be page aligned
+  on PCI core code instead of doing it on PPC64 arch code.
+- Remove flags: VFIO_DEVICE_FLAGS_PCI_PAGE_ALIGNED
+	        VFIO_DEVICE_FLAGS_PCI_MSIX_MMAP
+- Add a Kconfig option to support for mmapping MSI-X table.
+
+[1] http://www.spinics.net/lists/kvm/msg127812.html
+
+Yongji Xie (7):
+  PCI: Ignore resource_alignment if PCI_PROBE_ONLY was set
+  PCI: Do not Use IORESOURCE_STARTALIGN to identify bridge resources
+  PCI: Add a new option for resource_alignment to reassign alignment
+  PCI: Add support for enforcing all MMIO BARs to be page aligned
+  vfio-pci: Allow to mmap sub-page MMIO BARs if the mmio page is exclusive
+  PCI: Add a new bit to pci_bus_flags to indicate interrupt remapping
+  vfio-pci: Allow to mmap MSI-X table if interrupt remapping is supported
+
+ Documentation/kernel-parameters.txt       |    7 +-
+ arch/powerpc/include/asm/pci.h            |    2 +
+ arch/powerpc/platforms/powernv/pci-ioda.c |    8 +++
+ drivers/pci/pci.c                         |  107 +++++++++++++++++++++++------
+ drivers/pci/setup-bus.c                   |   10 ++-
+ drivers/vfio/pci/vfio_pci.c               |   67 +++++++++++++++---
+ drivers/vfio/pci/vfio_pci_private.h       |    9 +++
+ drivers/vfio/pci/vfio_pci_rdwr.c          |    2 +-
+ include/linux/pci.h                       |    1 +
+ 9 files changed, 178 insertions(+), 35 deletions(-)
+
+-- 
+1.7.9.5
 
