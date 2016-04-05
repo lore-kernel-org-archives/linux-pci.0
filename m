@@ -1,195 +1,119 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH next v2 2/2] PCI: keystone: remove unnecessary goto
- statement
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1460386231-8377-1-git-send-email-m-karicheri2@ti.com>
- <1460386231-8377-2-git-send-email-m-karicheri2@ti.com>
- <20160420010627.GJ17863@localhost>
-CC: <bhelgaas@google.com>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Message-ID: <5717922E.4000306@ti.com>
-Date: Wed, 20 Apr 2016 10:29:02 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:51975 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754001AbcDEVbW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Apr 2016 17:31:22 -0400
+Date: Tue, 5 Apr 2016 16:31:17 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: bhelgaas@google.com, l.stach@pengutronix.de,
+	Richard.Zhu@freescale.com, khalasa@piap.pl, ynezz@true.cz,
+	linux-pci@vger.kernel.org, tharvey@gateworks.com,
+	Fabio Estevam <fabio.estevam@nxp.com>, stable@vger.kernel.org
+Subject: Re: [PATCH v2] Revert "PCI: imx6: Add support for active-low reset
+ GPIO"
+Message-ID: <20160405213117.GD15353@localhost>
+References: <1459201536-5558-1-git-send-email-festevam@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160420010627.GJ17863@localhost>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1459201536-5558-1-git-send-email-festevam@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/19/2016 09:06 PM, Bjorn Helgaas wrote:
-> Hi Murali,
-> 
-> On Mon, Apr 11, 2016 at 10:50:31AM -0400, Murali Karicheri wrote:
->> Fix the misuse of goto statement in ks_pcie_get_irq_controller_info()
->> as simple return is more appropriate for this function. While at
->> it add an error log for absence of interrupt controller node.
->>
->> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
->> Cc: Rob Herring <robh+dt@kernel.org>
->> Cc: Pawel Moll <pawel.moll@arm.com>
->> Cc: Mark Rutland <mark.rutland@arm.com>
->> Cc: Ian Campbell <ijc+devicetree@hellion.org.uk>
->> Cc: Kumar Gala <galak@codeaurora.org>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->>
->> ---
->>  v2 - removed an unnecessary extra line added in the previous version
->>  v1 - same as before initial version
->>  drivers/pci/host/pci-keystone.c | 9 +++++----
->>  1 file changed, 5 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
->> index 299f2f0..0234828 100644
->> --- a/drivers/pci/host/pci-keystone.c
->> +++ b/drivers/pci/host/pci-keystone.c
->> @@ -181,11 +181,13 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
->>  	*np_temp = of_find_node_by_name(np_pcie, controller);
->>  	if (!(*np_temp)) {
->>  		dev_err(dev, "Node for %s is absent\n", controller);
->> -		goto out;
->> +		return ret;
->>  	}
->>  	temp = of_irq_count(*np_temp);
->> -	if (!temp)
->> -		goto out;
->> +	if (!temp) {
->> +		dev_err(dev, "No entries in %s\n", controller);
->> +		return ret;
->> +	}
->>  	if (temp > max_host_irqs)
->>  		dev_warn(dev, "Too many %s interrupts defined %u\n",
->>  			(legacy ? "legacy" : "MSI"), temp);
->> @@ -203,7 +205,6 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
->>  		*num_irqs = temp;
->>  		ret = 0;
->>  	}
->> -out:
->>  	return ret;
-> 
-> I really like these cleanups; thanks for doing them.
-> 
-> I went a step further because I think we always know the value of
-> "ret" at each of these places, so I inserted those and dropped "ret"
-> altogether.
-> 
-> I applied the patch below to pci/host-keystone for v4.7.
-Bjorn,
+Hi Fabio,
 
-Which repo has your  pci/host-keystone branch?
-
-I did a fetch of the remote pci at git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
-and could see only following host branches:-
-
-git branch -r | grep "pci/pci/host-"
-
-pci/pci/host-designware
-pci/pci/host-generic
-pci/pci/host-imx6
-pci/pci/host-iproc
-pci/pci/host-mvebu
-pci/pci/host-rcar
-pci/pci/host-tegra
-pci/pci/host-vmd
-pci/pci/host-xgene
-pci/pci/host-xgene-dd2
-pci/pci/host-xilinx-nwl
-
-Thanks and Regards,
-
-Murali
-
+On Mon, Mar 28, 2016 at 06:45:36PM -0300, Fabio Estevam wrote:
+> From: Fabio Estevam <fabio.estevam@nxp.com>
 > 
+> Commit 5c5fb40de8f14 ("PCI: imx6: Add support for active-low reset GPIO")
+> cause regressions on some boards like MX6 Gateworks Ventana, for example.
 > 
-> commit a7ed67a22484f70b8d0c33c76ad7faeac97222a7
-> Author: Murali Karicheri <m-karicheri2@ti.com>
-> Date:   Mon Apr 11 10:50:31 2016 -0400
+> The reason for the breakage is that this commit sets the gpio polarity
+> in the wrong logic level.
 > 
->     PCI: keystone: Remove unnecessary goto statement
->     
->     Fix the misuse of goto statement in ks_pcie_get_irq_controller_info() as
->     simple return is more appropriate for this function.  While at it add an
->     error log for absence of interrupt controller node.
->     
->     [bhelgaas: drop "ret" altogether since we always know the return value]
->     Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     CC: Rob Herring <robh+dt@kernel.org>
->     CC: Pawel Moll <pawel.moll@arm.com>
->     CC: Mark Rutland <mark.rutland@arm.com>
->     CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
->     CC: Kumar Gala <galak@codeaurora.org>
+> Also, the commit log is wrong because active-low reset GPIO is what the
+> driver used to support since the beginning.
 > 
-> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-> index 6868918..95a66f77 100644
-> --- a/drivers/pci/host/pci-keystone.c
-> +++ b/drivers/pci/host/pci-keystone.c
-> @@ -160,7 +160,7 @@ static void ks_pcie_legacy_irq_handler(struct irq_desc *desc)
->  static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
->  					   char *controller, int *num_irqs)
+> So keep the old behavior that ignores the gpio polarity specified in
+> the device tree and treat the PCI reset GPIO as active-low.
+> 
+> Cc: <stable@vger.kernel.org> # 4.5
+> Reported-by: Krzysztof Hałasa <khalasa@piap.pl>
+> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+
+Applied with acks from Tim and Lucas to for-linus for v4.6, thanks!
+
+If I understand correctly, the revert fixes Gateworks Ventana, but
+breaks Toradex Apalis Ixora.  It would be really nice to get Petr's
+patches to fix that system in at the same time.  Looks like we just
+need a minor documentation update there?
+
+Bjorn
+
+> ---
+> Changes since v1:
+> - Improve wording of commit log (Tim)
+> 
+>  drivers/pci/host/pci-imx6.c | 20 ++++++++++++++------
+>  1 file changed, 14 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index eb5a275..2f817fa 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -32,7 +32,7 @@
+>  #define to_imx6_pcie(x)	container_of(x, struct imx6_pcie, pp)
+>  
+>  struct imx6_pcie {
+> -	struct gpio_desc	*reset_gpio;
+> +	int			reset_gpio;
+>  	struct clk		*pcie_bus;
+>  	struct clk		*pcie_phy;
+>  	struct clk		*pcie;
+> @@ -309,10 +309,10 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+>  	usleep_range(200, 500);
+>  
+>  	/* Some boards don't have PCIe reset GPIO. */
+> -	if (imx6_pcie->reset_gpio) {
+> -		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 0);
+> +	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+> +		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
+>  		msleep(100);
+> -		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+> +		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+>  	}
+>  	return 0;
+>  
+> @@ -523,6 +523,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
 >  {
-> -	int temp, max_host_irqs, legacy = 1, *host_irqs, ret = -EINVAL;
-> +	int temp, max_host_irqs, legacy = 1, *host_irqs;
->  	struct device *dev = ks_pcie->pp.dev;
->  	struct device_node *np_pcie = dev->of_node, **np_temp;
+>  	struct imx6_pcie *imx6_pcie;
+>  	struct pcie_port *pp;
+> +	struct device_node *np = pdev->dev.of_node;
+>  	struct resource *dbi_base;
+>  	struct device_node *node = pdev->dev.of_node;
+>  	int ret;
+> @@ -544,8 +545,15 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>  		return PTR_ERR(pp->dbi_base);
 >  
-> @@ -181,11 +181,15 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
->  	*np_temp = of_find_node_by_name(np_pcie, controller);
->  	if (!(*np_temp)) {
->  		dev_err(dev, "Node for %s is absent\n", controller);
-> -		goto out;
-> +		return -EINVAL;
->  	}
-> +
->  	temp = of_irq_count(*np_temp);
-> -	if (!temp)
-> -		goto out;
-> +	if (!temp) {
-> +		dev_err(dev, "No IRQ entries in %s\n", controller);
-> +		return -EINVAL;
+>  	/* Fetch GPIOs */
+> -	imx6_pcie->reset_gpio = devm_gpiod_get_optional(&pdev->dev, "reset",
+> -							GPIOD_OUT_LOW);
+> +	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+> +	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+> +		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
+> +					    GPIOF_OUT_INIT_LOW, "PCIe reset");
+> +		if (ret) {
+> +			dev_err(&pdev->dev, "unable to get reset gpio\n");
+> +			return ret;
+> +		}
 > +	}
-> +
->  	if (temp > max_host_irqs)
->  		dev_warn(dev, "Too many %s interrupts defined %u\n",
->  			(legacy ? "legacy" : "MSI"), temp);
-> @@ -199,12 +203,13 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
->  		if (!host_irqs[temp])
->  			break;
->  	}
-> +
->  	if (temp) {
->  		*num_irqs = temp;
-> -		ret = 0;
-> +		return 0;
->  	}
-> -out:
-> -	return ret;
-> +
-> +	return -EINVAL;
->  }
 >  
->  static void ks_pcie_setup_interrupts(struct keystone_pcie *ks_pcie)
-> @@ -345,7 +350,7 @@ static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
->  		return ret;
->  	}
->  
-> -	return ret;
-> +	return 0;
->  }
->  
->  static const struct of_device_id ks_pcie_of_match[] = {
-> @@ -374,7 +379,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
->  	struct resource *res;
->  	void __iomem *reg_p;
->  	struct phy *phy;
-> -	int ret = 0;
-> +	int ret;
->  
->  	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
->  				GFP_KERNEL);
+>  	/* Fetch clocks */
+>  	imx6_pcie->pcie_phy = devm_clk_get(&pdev->dev, "pcie_phy");
+> -- 
+> 1.9.1
 > 
-
-
--- 
-Murali Karicheri
-Linux Kernel, Keystone
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
