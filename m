@@ -1,75 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39614 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751363AbcDSAGw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 18 Apr 2016 20:06:52 -0400
-Date: Mon, 18 Apr 2016 19:06:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Hariprasad Shenai <hariprasad@chelsio.com>,
-	Steve Wise <swise@opengridcomputing.com>,
-	Casey Leedom <leedom@chelsio.com>,
-	Fabio Estevam <fabio.estevam@nxp.com>,
-	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
-	Tim Harvey <tharvey@gateworks.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Hannes Reinecke <hare@suse.com>
-Subject: [GIT PULL] PCI fixes for v4.6
-Message-ID: <20160419000647.GA10952@localhost>
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:34705 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753883AbcDEVlB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2016 17:41:01 -0400
+Received: by mail-oi0-f52.google.com with SMTP id s79so34505375oie.1
+        for <linux-pci@vger.kernel.org>; Tue, 05 Apr 2016 14:41:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160404221804.GL24264@redhat.com>
+References: <CACmAtJvLMDbJG7FrnfcRoaLM843GNx5+9rehwn4-tD_QWTEn=Q@mail.gmail.com>
+	<20160404195317.GA19031@localhost>
+	<20160404221804.GL24264@redhat.com>
+Date: Tue, 5 Apr 2016 23:40:59 +0200
+Message-ID: <CACmAtJvOm34e0=qk0d7q6mE442i2Wkx0MqVEtzZn5wuGY6LhWg@mail.gmail.com>
+Subject: Re: Dell XPS13 9350 thunderbolt 3
+From: Martin Andersson <martin.andersson@purplescout.se>
+To: Jarod Wilson <jarod@redhat.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	Lukas Wunner <lukas@wunner.de>, prarit@redhat.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+I have filed a bug at the kernel bugzilla
+ https://bugzilla.kernel.org/show_bug.cgi?id=115931
 
-These are fixes for two issues:
+dmesg, lspci -vv and lsusb -vv are attached.
 
-  - The VPD parsing code we added for v4.6 keeps some devices from crashing,
-    but also keeps cxgb4 from reading non-standard extra VPD data that is
-    relies on.  Hariprasad added a way for the driver to specify how much
-    VPD is valid.
+I have also referenced the bug you mentioned, Bjorn.
 
-  - The i.MX6 active-low reset GPIO support we added in v4.5 caused
-    regressions on some boards, so we're reverting that.
+Jarod, I haven't had time to try the patch you mentioned.
 
-Bjorn
+Looking through dmesg logs it appears, at least, the network
+controller in the dock is recognized but the then the usb hub fails
+and the devices are disconnected (from dmesg attached in the bug):
+
+[   13.135684] xhci_hcd 0000:09:00.0: Stopped the command ring failed,
+maybe the host is dead
+[   13.135744] xhci_hcd 0000:09:00.0: Host not halted after 16000 microseconds.
+[   13.135756] xhci_hcd 0000:09:00.0: Abort command ring failed
+[   13.135777] xhci_hcd 0000:09:00.0: HC died; cleaning up
+[   13.135834] xhci_hcd 0000:09:00.0: Error while assigning device slot ID
+[   13.135841] xhci_hcd 0000:09:00.0: Timeout while waiting for
+configure endpoint command
+[   13.135854] xhci_hcd 0000:09:00.0: Max number of devices this xHCI
+host supports is 255.
+[   13.135866] usb 3-1-port5: couldn't allocate usb_device
+[   13.135913] usb 3-1: USB disconnect, device number 2
+[   13.137034] usb 4-1: USB disconnect, device number 2
+[   13.137046] usb 4-1.2: USB disconnect, device number 3
 
 
-The following changes since commit 9735a22799b9214d17d3c231fe377fc852f042e9:
+On Tue, Apr 5, 2016 at 12:18 AM, Jarod Wilson <jarod@redhat.com> wrote:
+> On Mon, Apr 04, 2016 at 02:53:17PM -0500, Bjorn Helgaas wrote:
+>> On Mon, Apr 04, 2016 at 04:01:42PM +0200, Martin Andersson wrote:
+>> > Hi all,
+>> >
+>> > I have a Dell XPS 13 9350 laptop with a Dell Thunderbolt 3 dock (TB15)
+>> > that I'm trying to get to talk to each other. I hope this is the right
+>> > forum.
+>> >
+>> > Lukas Wunner was kind enough to give me some pointers and after
+>> > upgrading the thunderbolt firmware and disabling all the security
+>> > settings for thunderbolt in the bios I'm able to see a usb hub
+>> > (ASMedia Technology) from the dock with lspci. But that's it. Nothing
+>> > happens when I attach any usb devices to the dock and I see no sign of
+>> > the ethernet or audio devices in the dock.
+>> >
+>> > cut from lspci -vv:
+>> >
+>> > 09:00.0 USB controller: ASMedia Technology Inc. ASM1042A USB 3.0 Host
+>> > Controller (prog-if 30 [XHCI])
+>> >         Subsystem: ASMedia Technology Inc. ASM1042A USB 3.0 Host Controller
+>> >         Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop-
+>> > ParErr- Stepping- SERR- FastB2B- DisINTx-
+>> >         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+>> > <TAbort- <MAbort- >SERR- <PERR- INTx-
+>> >         Interrupt: pin A routed to IRQ 18
+>> >         Region 0: Memory at c4100000 (64-bit, non-prefetchable) [size=32K]
+>> >         Capabilities: <access denied>
+>> >         Kernel driver in use: xhci_hcd
+>> >
+>> >
+>> > Also I only see the usb hub when I boot with the dock attached. I have
+>> > tried with pcie_hp=nomsi and echo "1" > /sys/bus/pci/rescan with no
+>> > luck. But hotplug is, of course, not my main concern at this point ;)
+>> >
+>> > Should I open a bug at the kernel bugzilla and attach dmesg logs?
+>>
+>> Looks like https://bugzilla.kernel.org/show_bug.cgi?id=115121
+>
+> This looks possibly relevant:
+>
+> http://marc.info/?l=linux-acpi&m=145929159015853&w=2
+>
+> I believe it was sussed out on a Dell Precision 5510, with the Dell tb3
+> dock. I actually have said dock and a 3510 here in hand, and have been
+> meaning to give Prarit's patch a spin myself.
+>
+> --
+> Jarod Wilson
+> jarod@redhat.com
+>
 
-  Linux 4.6-rc2 (2016-04-03 09:09:40 -0500)
 
-are available in the git repository at:
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.6-fixes-2
-
-for you to fetch changes up to 67e658794ca191b3221b143f2a1c10d002c40bc8:
-
-  cxgb4: Set VPD size so we can read both VPD structures (2016-04-15 13:00:18 -0500)
-
-----------------------------------------------------------------
-PCI updates for v4.6:
-
-  VPD
-    Add pci_set_vpd_size() (Hariprasad Shenai)
-    cxgb4: Set VPD size so we can read both VPD structures (Hariprasad Shenai)
-
-  Freescale i.MX6 host bridge driver
-    Revert "PCI: imx6: Add support for active-low reset GPIO" (Fabio Estevam)
-
-----------------------------------------------------------------
-Fabio Estevam (1):
-      Revert "PCI: imx6: Add support for active-low reset GPIO"
-
-Hariprasad Shenai (2):
-      PCI: Add pci_set_vpd_size() to set VPD size
-      cxgb4: Set VPD size so we can read both VPD structures
-
- drivers/net/ethernet/chelsio/cxgb4/t4_hw.c | 10 +++++++
- drivers/pci/access.c                       | 42 ++++++++++++++++++++++++++++++
- drivers/pci/host/pci-imx6.c                | 20 +++++++++-----
- drivers/pci/pci.h                          |  1 +
- include/linux/pci.h                        |  1 +
- 5 files changed, 68 insertions(+), 6 deletions(-)
+-- 
+Hälsningar,
+Martin Andersson
+Purple Scout AB
++46 732 05 14 01
