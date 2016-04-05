@@ -1,177 +1,144 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:34884 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752895AbcDMPvx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 11:51:53 -0400
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Andrey Smirnov <asmirnov@spaceflightindustries.com>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	gary.bisson@boundarydevices.com
-Subject: [PATCH] PCI: imx6: Implement reset sequence for i.MX6+
-Date: Wed, 13 Apr 2016 08:51:25 -0700
-Message-Id: <1460562685-15168-1-git-send-email-asmirnov@spaceflightindustries.com>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:35067 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753936AbcDEQ1n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2016 12:27:43 -0400
+Received: by mail-pa0-f51.google.com with SMTP id td3so13516284pab.2
+        for <linux-pci@vger.kernel.org>; Tue, 05 Apr 2016 09:27:24 -0700 (PDT)
+From: Tim Harvey <tharvey@gateworks.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Lucas Stach <l.stach@pengutronix.de>,
+	Fabio Estevam <fabio.estevam@freescale.com>,
+	Zhu Richard <Richard.Zhu@freescale.com>,
+	Akshay Bhat <akshay.bhat@timesys.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Shawn Guo <shawnguo@kernel.org>
+Subject: [PATCH v4] PCI: imx6: add dt prop for link gen, default to gen1
+Date: Tue,  5 Apr 2016 09:29:14 -0700
+Message-Id: <1459873754-31410-1-git-send-email-tharvey@gateworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I.MX6+ has a dedicated bit for reseting PCIe core, which should be used
-instead of a regular reset sequence since using the latter will hang the
-SoC.
+Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
+the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
+external clock source is present and supplied back to the IMX6 PCIe core
+via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
 
-This commit is based on c34068d48273e24d392d9a49a38be807954420ed from
-http://git.freescale.com/git/cgit.cgi/imx/linux-2.6-imx.git
+Add a dt property to specify gen1 vs gen2 and check this before allowing
+a Gen2 link.
 
-Signed-off-by: Andrey Smirnov <asmirnov@spaceflightindustries.com>
+We default to Gen1 if the property is not present because at this time there
+are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
+
+In order to be Gen2 compliant on IMX6 you need to:
+ - have a Gen2 compliant external clock generator and route that clock back
+   to either LVDS CLK1 or LVDS CLK2 as an input.
+   (see IMX6SX-SabreSD reference design)
+ - specify this clock in the pcie node in the dt
+   (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
+    IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
+
+[1] https://community.freescale.com/message/453209
+
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Fabio Estevam <fabio.estevam@freescale.com>
+Cc: Zhu Richard <Richard.Zhu@freescale.com>
+Cc: Akshay Bhat <akshay.bhat@timesys.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Shawn Guo <shawnguo@kernel.org>
+Signed-off-by: Tim Harvey <tharvey@gateworks.com>
 ---
- arch/arm/boot/dts/imx6qp.dtsi               |  3 ++
- drivers/pci/host/pci-imx6.c                 | 82 +++++++++++++++++++----------
- include/linux/mfd/syscon/imx6q-iomuxc-gpr.h |  1 +
- 3 files changed, 58 insertions(+), 28 deletions(-)
+v4:
+ - rebase against linux-pci/master
+ - add fsl vendor prefix to dt prop
 
-diff --git a/arch/arm/boot/dts/imx6qp.dtsi b/arch/arm/boot/dts/imx6qp.dtsi
-index 1ada714..886dbf2 100644
---- a/arch/arm/boot/dts/imx6qp.dtsi
-+++ b/arch/arm/boot/dts/imx6qp.dtsi
-@@ -82,5 +82,8 @@
- 				      "ldb_di0", "ldb_di1", "prg";
- 		};
+v3:
+ - added note in dt bindings doc that we limit to gen1 unless this is specified
+   as gen2 capable
+ - move property to imx6 pcie phy instead of designware core
+ - don't use &ret as temp storage as of_property_read_u32() doesn't change the
+   outval if property isn't found
+v2:
+ - moved dt property to designware core
+
+Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+---
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  4 ++++
+ drivers/pci/host/pci-imx6.c                        | 24 +++++++++++++++-------
+ 2 files changed, 21 insertions(+), 7 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index 3be80c6..b92fafb 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -19,6 +19,10 @@ Optional properties:
+ - fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
+ - fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
+ - fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
++- fsl,max-link-speed: Specify PCI gen for link capability. Must be '2' for
++  gen2, otherwise will default to gen1. Note that the IMX6 LVDS clock outputs
++  do not meet gen2 jitter requirements and thus for gen2 capability a gen2
++  compliant clock generator should be used and configured.
  
-+		pcie: pcie@0x01000000 {
-+			compatible = "fsl,imx6qp-pcie", "snps,dw-pcie";
-+		};
- 	};
- };
+ Example:
+ 
 diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index eb5a275..99f5cac 100644
+index eb5a275..9656ac7 100644
 --- a/drivers/pci/host/pci-imx6.c
 +++ b/drivers/pci/host/pci-imx6.c
-@@ -85,6 +85,14 @@ struct imx6_pcie {
- #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
- #define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1 << 3)
- 
-+static inline bool is_imx6qp_pcie(struct imx6_pcie *imx6_pcie)
-+{
-+	struct pcie_port *pp = &imx6_pcie->pp;
-+	struct device_node *np = pp->dev->of_node;
-+
-+	return of_device_is_compatible(np, "fsl,imx6qp-pcie");
-+}
-+
- static int pcie_phy_poll_ack(void __iomem *dbi_base, int exp_val)
- {
- 	u32 val;
-@@ -236,35 +244,44 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
- 	u32 val, gpr1, gpr12;
- 
--	/*
--	 * If the bootloader already enabled the link we need some special
--	 * handling to get the core back into a state where it is safe to
--	 * touch it for configuration.  As there is no dedicated reset signal
--	 * wired up for MX6QDL, we need to manually force LTSSM into "detect"
--	 * state before completely disabling LTSSM, which is a prerequisite
--	 * for core configuration.
--	 *
--	 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
--	 * indication that the bootloader activated the link.
--	 */
--	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
--	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
--
--	if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
--	    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
--		val = readl(pp->dbi_base + PCIE_PL_PFLR);
--		val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
--		val |= PCIE_PL_PFLR_FORCE_LINK;
--		writel(val, pp->dbi_base + PCIE_PL_PFLR);
--
--		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
--				IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
--	}
-+	if (is_imx6qp_pcie(imx6_pcie)) {
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+				   IMX6Q_GPR1_PCIE_SW_RST,
-+				   IMX6Q_GPR1_PCIE_SW_RST);
-+	} else {
-+		/*
-+		 * If the bootloader already enabled the link we need
-+		 * some special handling to get the core back into a
-+		 * state where it is safe to touch it for
-+		 * configuration.  As there is no dedicated reset
-+		 * signal wired up for MX6QDL, we need to manually
-+		 * force LTSSM into "detect" state before completely
-+		 * disabling LTSSM, which is a prerequisite for core
-+		 * configuration.
-+		 *
-+		 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active
-+		 * we have a strong indication that the bootloader
-+		 * activated the link.
-+		 */
-+		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
-+		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
-+
-+		if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
-+		    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
-+			val = readl(pp->dbi_base + PCIE_PL_PFLR);
-+			val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
-+			val |= PCIE_PL_PFLR_FORCE_LINK;
-+			writel(val, pp->dbi_base + PCIE_PL_PFLR);
-+
-+			regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+					   IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
-+		}
- 
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+				   IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+				   IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
-+	}
- 
- 	return 0;
- }
-@@ -314,6 +331,14 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 		msleep(100);
- 		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
- 	}
-+
-+	if (is_imx6qp_pcie(imx6_pcie)) {
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+				   IMX6Q_GPR1_PCIE_SW_RST, 0);
-+
-+		usleep_range(200, 500);
-+	}
-+
- 	return 0;
- 
- err_pcie:
-@@ -616,6 +641,7 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
- 
- static const struct of_device_id imx6_pcie_of_match[] = {
- 	{ .compatible = "fsl,imx6q-pcie", },
-+	{ .compatible = "fsl,imx6qp-pcie", },
- 	{},
+@@ -44,6 +44,7 @@ struct imx6_pcie {
+ 	u32			tx_deemph_gen2_6db;
+ 	u32			tx_swing_full;
+ 	u32			tx_swing_low;
++	int			link_gen;
  };
- MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
-diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-index 238c8db..5b08e3c 100644
---- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-+++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-@@ -95,6 +95,7 @@
- #define IMX6Q_GPR0_DMAREQ_MUX_SEL0_IOMUX	BIT(0)
  
- #define IMX6Q_GPR1_PCIE_REQ_MASK		(0x3 << 30)
-+#define IMX6Q_GPR1_PCIE_SW_RST			BIT(29)
- #define IMX6Q_GPR1_PCIE_EXIT_L1			BIT(28)
- #define IMX6Q_GPR1_PCIE_RDY_L23			BIT(27)
- #define IMX6Q_GPR1_PCIE_ENTER_L1		BIT(26)
+ /* PCIe Root Complex registers (memory-mapped) */
+@@ -417,11 +418,15 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
+ 		goto err_reset_phy;
+ 	}
+ 
+-	/* Allow Gen2 mode after the link is up. */
+-	tmp = readl(pp->dbi_base + PCIE_RC_LCR);
+-	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+-	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
+-	writel(tmp, pp->dbi_base + PCIE_RC_LCR);
++	if (imx6_pcie->link_gen == 2) {
++		/* Allow Gen2 mode after the link is up. */
++		tmp = readl(pp->dbi_base + PCIE_RC_LCR);
++		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
++		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
++		writel(tmp, pp->dbi_base + PCIE_RC_LCR);
++	} else {
++		dev_info(pp->dev, "Link: Gen2 disabled\n");
++	}
+ 
+ 	/*
+ 	 * Start Directed Speed Change so the best possible speed both link
+@@ -445,8 +450,7 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
+ 	}
+ 
+ 	tmp = readl(pp->dbi_base + PCIE_RC_LCSR);
+-	dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
+-
++	dev_info(pp->dev, "Link up, Gen%i\n", (tmp >> 16) & 0xf);
+ 	return 0;
+ 
+ err_reset_phy:
+@@ -598,6 +602,12 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 				 &imx6_pcie->tx_swing_low))
+ 		imx6_pcie->tx_swing_low = 127;
+ 
++	/* Limit link speed */
++	ret = of_property_read_u32(pp->dev->of_node, "fsl,max-link-speed",
++				   &imx6_pcie->link_gen);
++	if (ret)
++		imx6_pcie->link_gen = -1;
++
+ 	ret = imx6_add_pcie_port(pp, pdev);
+ 	if (ret < 0)
+ 		return ret;
 -- 
-2.5.5
+1.9.1
 
