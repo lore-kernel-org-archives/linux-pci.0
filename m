@@ -1,104 +1,93 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 7 Apr 2016 11:00:04 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:41146 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932097AbcDESK6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Apr 2016 14:10:58 -0400
+Date: Tue, 5 Apr 2016 13:10:54 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
-	agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] pci: add pci_unmap_iospace function for PCI_IOBASE
-Message-ID: <20160407160004.GA8780@localhost>
-References: <1457389310-3538-1-git-send-email-okaya@codeaurora.org>
+To: Simon Horman <horms+renesas@verge.net.au>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v2] PCI: rcar-pcie: Remove Gen2 designation from Kconfig
+Message-ID: <20160405181054.GB15353@localhost>
+References: <1459384523-16146-1-git-send-email-horms+renesas@verge.net.au>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1457389310-3538-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1459384523-16146-1-git-send-email-horms+renesas@verge.net.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sinan,
+Hi Simon,
 
-On Mon, Mar 07, 2016 at 05:21:49PM -0500, Sinan Kaya wrote:
-> The PCI_IOBASE needs to be released after hotplug removal so that it can be
-> re-added back by the pci_remap_iospace function during insertion.
+On Thu, Mar 31, 2016 at 09:35:23AM +0900, Simon Horman wrote:
+> It appears that Gen2 is a misnomer for the R-Car PCIE driver
+> which also supports Gen 1 and Gen 3 SoCs. Accordingly, drop Gen 2
+> from the help text and Kconfig symbol.
 > 
-> Adding unmap function to follow IO remap function.
+> Also, re-arange the Kconfig symbol name to use PCIE as the prefix.
+> This appears to be in keeping with other PCIE Kconfig symbols.
 > 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 > ---
->  drivers/pci/pci.c   | 25 +++++++++++++++++++++++++
->  include/linux/pci.h |  1 +
->  2 files changed, 26 insertions(+)
+> Bjorn, if this patch is acceptable I would like to request that we
+> co-ordinate things so that I can queue-up corresponding updates for
+> arm and arm64 defconfigs in the same release. From my point of view
+> v4.7 would make sense.
+
+I'm fine with this.  What sort of coordination do you want to do?
+It would probably be nice to combine this patch with the defconfig updates
+so we don't have a bisection problem.  If you want to include this patch
+and merge through another tree,
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> v2
+> * As suggested by Geert Uytterhoeven:
+>   - Use PCIE as prefix in Kconfig symbol
+> ---
+>  drivers/pci/host/Kconfig  | 4 ++--
+>  drivers/pci/host/Makefile | 2 +-
+>  2 files changed, 3 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 3a516c0..f5faed2 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -26,6 +26,7 @@
->  #include <linux/device.h>
->  #include <linux/pm_runtime.h>
->  #include <linux/pci_hotplug.h>
-> +#include <linux/vmalloc.h>
->  #include <asm-generic/pci-bridge.h>
->  #include <asm/setup.h>
->  #include <linux/aer.h>
-> @@ -3169,6 +3170,30 @@ int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
->  #endif
->  }
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 7a0780d56d2d..8fb1cf54617d 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -69,11 +69,11 @@ config PCI_RCAR_GEN2
+>  	  There are 3 internal PCI controllers available with a single
+>  	  built-in EHCI/OHCI host controller present on each one.
 >  
-> +/**
-> + *	pci_unmap_iospace - Unmap the memory mapped I/O space
-> + *	@virt_addr: virtual address to be unmapped
-> + *	@size: size of the physical address to be unmapped
-> + *
-> + *	Unmap the CPU virtual address @virt_addr from virtual address space.
-> + *	Only architectures that have memory mapped IO functions defined
-> + *	(and the PCI_IOBASE value defined) should call this function.
-> + */
-> +void  __weak pci_unmap_iospace(struct resource *res)
-
-Why is this weak?  I assume probably because pci_remap_iospace() is
-weak, but I don't see any reason why *that* needs to be weak.  There's
-only one implementation.  I think neither one should be weak unless we
-have an actual need for that.
-
-> +{
-> +#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
-> +	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
-> +
-> +	unmap_kernel_range(vaddr, resource_size(res));
-
-There really aren't any other generic uses of unmap_kernel_range().
-This isn't an unusual scenario, so I would expect this code to use a
-pattern that's used elsewhere.
-
-> +#else
-> +	/*
-> +	 * This architecture does not have memory mapped I/O space,
-> +	 * so this function should never be called.
-> +	 */
-> +	WARN_ONCE(1, "This architecture does not support memory mapped I/O\n");
-> +#endif
-> +}
-> +
->  static void __pci_set_master(struct pci_dev *dev, bool enable)
->  {
->  	u16 old_cmd, cmd;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 398ae7e..c6e3f0e 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1172,6 +1172,7 @@ int pci_register_io_range(phys_addr_t addr, resource_size_t size);
->  unsigned long pci_address_to_pio(phys_addr_t addr);
->  phys_addr_t pci_pio_to_address(unsigned long pio);
->  int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
-> +void pci_unmap_iospace(struct resource *res);
+> -config PCI_RCAR_GEN2_PCIE
+> +config PCIE_RCAR
+>  	bool "Renesas R-Car PCIe controller"
+>  	depends on ARCH_RENESAS || (ARM && COMPILE_TEST)
+>  	help
+> -	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
+> +	  Say Y here if you want PCIe controller support on R-Car SoCs.
 >  
->  static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
->  {
+>  config PCI_HOST_COMMON
+>  	bool
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> index d85b5faf9bbc..d3d8e1b36fb9 100644
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+> @@ -7,7 +7,7 @@ obj-$(CONFIG_PCI_HYPERV) += pci-hyperv.o
+>  obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+>  obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+>  obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+> -obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
+> +obj-$(CONFIG_PCIE_RCAR) += pcie-rcar.o
+>  obj-$(CONFIG_PCI_HOST_COMMON) += pci-host-common.o
+>  obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
+>  obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
 > -- 
-> 1.8.2.1
+> 2.1.4
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
