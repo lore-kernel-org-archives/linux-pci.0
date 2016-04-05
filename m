@@ -1,121 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:56209 "EHLO
-	mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751336AbcDEQnt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2016 12:43:49 -0400
-Date: Tue, 5 Apr 2016 18:45:47 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Grygorii Strashko <grygorii.strashko@ti.com>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: Fix device attach failure handling
-Message-ID: <20160405164547.GA11953@wunner.de>
-References: <2c01b1a2d7703fbacae133502cbf6fce335077a9.1459423244.git.lukas@wunner.de>
- <5703A1A2.8040002@ti.com>
+Received: from mail.kernel.org ([198.145.29.136]:40224 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751765AbcDER7x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Apr 2016 13:59:53 -0400
+Date: Tue, 5 Apr 2016 12:59:49 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jake Oshins <jakeo@microsoft.com>
+Cc: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
+Subject: Re: [PATCH v4 3/7] drivers:hv: Use new vmbus_mmio_free() from client
+ drivers.
+Message-ID: <20160405175949.GA15353@localhost>
+References: <y>
+ <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
+ <1459558067-1725-4-git-send-email-jakeo@microsoft.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5703A1A2.8040002@ti.com>
+In-Reply-To: <1459558067-1725-4-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Grygorii,
+Hi Jake,
 
-On Tue, Apr 05, 2016 at 02:29:38PM +0300, Grygorii Strashko wrote:
-> On 03/31/2016 03:57 PM, Lukas Wunner wrote:
-> > Linux 4.5 introduced a behavioral change in device probing during the
-> > suspend process with commit 013c074f8642 ("PM / sleep: prohibit devices
-> > probing during suspend/hibernation"): It defers device probing during
-> > the entire suspend process, starting from the prepare phase and ending
-> > with the complete phase. A rule existed before that "we rely on sub-
-> > systems not to do any probing once a device is suspended" but it is
-> > enforced only now (Alan Stern, https://lkml.org/lkml/2015/9/15/908).
-> > 
-> > This resulted in a WARN splat if a PCI device (e.g. Thunderbolt) is
-> > plugged in while the system is asleep: Upon waking up, pciehp_resume()
-> > discovers new devices in the resume phase and immediately tries to bind
-> > them to a driver. Since probing is now deferred, device_attach() returns
-> > -EPROBE_DEFER, which provoked a WARN in pci_bus_add_device().
-> > 
-> > Linux 4.6-rc1 aggravates the situation with commit ab1a187bba5c ("PCI:
-> > Check device_attach() return value always"): pci_bus_add_device() no
-> > longer sets dev->is_added = 1 if device_attach() returned a negative
-> > value. This results in a BUG lockup in pci_bus_add_devices().
-> > 
-> > Fix the latter by not recursing to a child bus if device_attach() failed
-> > for the bridge leading to it.
-> > 
-> > Fix the former by not interpreting -EPROBE_DEFER as failure. The device
-> > will be probed eventually and there is proper locking in place to avoid
-> > races (e.g. if devices are unplugged again und thus deleted from the
-> > system before deferred probing happens, I have tested this). Also, those
-> > functions which dereference dev->driver (e.g. pci_pm_*()) do contain
-> > proper NULL pointer checks. So it seems safe to ignore -EPROBE_DEFER.
-> > 
-> > Note that even postponing the code in pciehp_resume() until the
-> > complete phase wouldn't avoid these troubles because dpm_complete()
-> > calls device_unblock_probing() only after ->complete has been
-> > executed for all devices. We lack a pm hook from which it would
-> > be safe to check a hotplug port and call device_attach() without
-> > risking -EPROBE_DEFER.
+On Fri, Apr 01, 2016 at 05:47:43PM -0700, Jake Oshins wrote:
+> This patch modifies all the callers of vmbus_mmio_allocate()
+> to call vmbus_mmio_free() instead of release_mem_region().
+
+This changelog merely restates the C code.  Presumably there's some
+important difference between release_mem_region() and
+vmbus_mmio_free(), and we need a hint about what that is.
+
+Oh, I see, there actually is no difference *yet*, but it's coming.
+I'd combine this with patch 2.  Then the patch is obviously correct
+all by itself, and the changelog for patch 2 makes clear what's
+happening.
+
+In changelogs, don't bother with "this patch does" or "this function
+is introduced."  The context is obvious because the changelog is part
+of the commit.  Write imperative sentences, e.g., "Call
+vmbus_mmio_free() instead of release_mem_region()."
+
+> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+
+I think this is the only change that touches PCI, so I assume this
+series will be merged by somebody else.
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> ---
+>  drivers/pci/host/pci-hyperv.c   | 14 +++++++-------
+>  drivers/video/fbdev/hyperv_fb.c |  4 ++--
+>  2 files changed, 9 insertions(+), 9 deletions(-)
 > 
-> Unfortunately, I can't say too much about pci in general.
-> Regarding checking a hotplug port - Potentially,
-> PM notifiers can be used PM_SUSPEND_PREPARE/PM_POST_SUSPEND.
-> Smth. similar (more or less) was implemented for MMC
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index ed651ba..f2559b6 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -1795,14 +1795,14 @@ static void hv_pci_free_bridge_windows(struct hv_pcibus_device *hbus)
+>  
+>  	if (hbus->low_mmio_space && hbus->low_mmio_res) {
+>  		hbus->low_mmio_res->flags |= IORESOURCE_BUSY;
+> -		release_mem_region(hbus->low_mmio_res->start,
+> -				   resource_size(hbus->low_mmio_res));
+> +		vmbus_free_mmio(hbus->low_mmio_res->start,
+> +				resource_size(hbus->low_mmio_res));
+>  	}
+>  
+>  	if (hbus->high_mmio_space && hbus->high_mmio_res) {
+>  		hbus->high_mmio_res->flags |= IORESOURCE_BUSY;
+> -		release_mem_region(hbus->high_mmio_res->start,
+> -				   resource_size(hbus->high_mmio_res));
+> +		vmbus_free_mmio(hbus->high_mmio_res->start,
+> +				resource_size(hbus->high_mmio_res));
+>  	}
+>  }
+>  
+> @@ -1880,8 +1880,8 @@ static int hv_pci_allocate_bridge_windows(struct hv_pcibus_device *hbus)
+>  
+>  release_low_mmio:
+>  	if (hbus->low_mmio_res) {
+> -		release_mem_region(hbus->low_mmio_res->start,
+> -				   resource_size(hbus->low_mmio_res));
+> +		vmbus_free_mmio(hbus->low_mmio_res->start,
+> +				resource_size(hbus->low_mmio_res));
+>  	}
+>  
+>  	return ret;
+> @@ -1924,7 +1924,7 @@ static int hv_allocate_config_window(struct hv_pcibus_device *hbus)
+>  
+>  static void hv_free_config_window(struct hv_pcibus_device *hbus)
+>  {
+> -	release_mem_region(hbus->mem_config->start, PCI_CONFIG_MMIO_LENGTH);
+> +	vmbus_free_mmio(hbus->mem_config->start, PCI_CONFIG_MMIO_LENGTH);
+>  }
+>  
+>  /**
+> diff --git a/drivers/video/fbdev/hyperv_fb.c b/drivers/video/fbdev/hyperv_fb.c
+> index e2451bd..2fd49b2 100644
+> --- a/drivers/video/fbdev/hyperv_fb.c
+> +++ b/drivers/video/fbdev/hyperv_fb.c
+> @@ -743,7 +743,7 @@ static int hvfb_getmem(struct hv_device *hdev, struct fb_info *info)
+>  err3:
+>  	iounmap(fb_virt);
+>  err2:
+> -	release_mem_region(par->mem->start, screen_fb_size);
+> +	vmbus_free_mmio(par->mem->start, screen_fb_size);
+>  	par->mem = NULL;
+>  err1:
+>  	if (!gen2vm)
+> @@ -758,7 +758,7 @@ static void hvfb_putmem(struct fb_info *info)
+>  	struct hvfb_par *par = info->par;
+>  
+>  	iounmap(info->screen_base);
+> -	release_mem_region(par->mem->start, screen_fb_size);
+> +	vmbus_free_mmio(par->mem->start, screen_fb_size);
+>  	par->mem = NULL;
+>  }
+>  
+> -- 
+> 1.9.1
 > 
-> bbd4368 mmc: core: Signal wakeup event at card insert/removal
-> 4c2ef25 mmc: fix all hangs related to mmc/sd card insert/removal during suspend/resume
-
-Thank you, I hadn't thought of PM notifiers.
-
-That would indeed be a viable alternative solution:
-- Call pcie_disable_notification() on PM_SUSPEND_PREPARE /
-  PM_HIBERNATION_PREPARE.
-- Run the code in pciehp_resume() on PM_POST_SUSPEND / PM_POST_HIBERNATION.
-  (This includes pcie_enable_notification(). The pciehp_suspend() and
-  pciehp_resume() could be dropped completely.)
-
-Bjorn, please let me know if you'd prefer that in favor of the patch below.
-(The portion which replaces the BUG_ON would still be needed though.)
-
-Thanks,
-
-Lukas
-
-> > 
-> > Cc: Grygorii Strashko <grygorii.strashko@ti.com>
-> > Cc: Alan Stern <stern@rowland.harvard.edu>
-> > Cc: Rafael J. Wysocki <rafael@kernel.org>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> > ---
-> >   drivers/pci/bus.c | 6 ++++--
-> >   1 file changed, 4 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> > index 6c9f546..dd7cdbe 100644
-> > --- a/drivers/pci/bus.c
-> > +++ b/drivers/pci/bus.c
-> > @@ -294,7 +294,7 @@ void pci_bus_add_device(struct pci_dev *dev)
-> >   
-> >   	dev->match_driver = true;
-> >   	retval = device_attach(&dev->dev);
-> > -	if (retval < 0) {
-> > +	if (retval < 0 && retval != -EPROBE_DEFER) {
-> >   		dev_warn(&dev->dev, "device attach failed (%d)\n", retval);
-> >   		pci_proc_detach_device(dev);
-> >   		pci_remove_sysfs_dev_files(dev);
-> > @@ -324,7 +324,9 @@ void pci_bus_add_devices(const struct pci_bus *bus)
-> >   	}
-> >   
-> >   	list_for_each_entry(dev, &bus->devices, bus_list) {
-> > -		BUG_ON(!dev->is_added);
-> > +		/* Skip if device attach failed */
-> > +		if (!dev->is_added)
-> > +			continue;
-> >   		child = dev->subordinate;
-> >   		if (child)
-> >   			pci_bus_add_devices(child);
-> > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
