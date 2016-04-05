@@ -1,109 +1,160 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Jisheng Zhang <jszhang@marvell.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
+From: KY Srinivasan <kys@microsoft.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Jake Oshins <jakeo@microsoft.com>
 CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH v2] PCI: designware: move remaining rc setup code to
- dw_pcie_setup_rc()
-Date: Thu, 7 Apr 2016 08:20:28 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
-References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
-	<EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
- <20160407103734.55e72da7@xhacker>
-In-Reply-To: <20160407103734.55e72da7@xhacker>
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>,
+	"apw@canonical.com" <apw@canonical.com>,
+	"vkuznets@redhat.com" <vkuznets@redhat.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Hadden Hoppert <haddenh@microsoft.com>
+Subject: RE: [PATCH v4 3/7] drivers:hv: Use new vmbus_mmio_free() from client
+ drivers.
+Date: Tue, 5 Apr 2016 18:20:53 +0000
+Message-ID: <SN2PR03MB2142A8133C29A60FC1F97A9FA09E0@SN2PR03MB2142.namprd03.prod.outlook.com>
+References: <y> <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
+ <1459558067-1725-4-git-send-email-jakeo@microsoft.com>
+ <20160405175949.GA15353@localhost>
+In-Reply-To: <20160405175949.GA15353@localhost>
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jisheng
 
-Thanks for your reply
 
 > -----Original Message-----
-> From: Jisheng Zhang [mailto:jszhang@marvell.com]
-> Sent: 07 April 2016 03:38
-> To: Gabriele Paoloni; jingoohan1@gmail.com; pratyush.anand@gmail.com;
-> bhelgaas@google.com
-> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org
-> Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code
-> to dw_pcie_setup_rc()
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Tuesday, April 5, 2016 11:00 AM
+> To: Jake Oshins <jakeo@microsoft.com>
+> Cc: linux-pci@vger.kernel.org; gregkh@linuxfoundation.org; KY Srinivasan
+> <kys@microsoft.com>; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; olaf@aepfle.de; apw@canonical.com;
+> vkuznets@redhat.com; Haiyang Zhang <haiyangz@microsoft.com>; Hadden
+> Hoppert <haddenh@microsoft.com>
+> Subject: Re: [PATCH v4 3/7] drivers:hv: Use new vmbus_mmio_free() from
+> client drivers.
 > 
-> Hi Gabriele,
+> Hi Jake,
 > 
-> On Wed, 6 Apr 2016 14:50:29 +0000 Gabriele Paoloni wrote:
+> On Fri, Apr 01, 2016 at 05:47:43PM -0700, Jake Oshins wrote:
+> > This patch modifies all the callers of vmbus_mmio_allocate()
+> > to call vmbus_mmio_free() instead of release_mem_region().
 > 
-> > Hi, sorry to be late on this
-> >
-> > > -----Original Message-----
-> > > From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
-> > > owner@vger.kernel.org] On Behalf Of Jisheng Zhang
-> > > Sent: 16 March 2016 11:41
-> > > To: jingoohan1@gmail.com; pratyush.anand@gmail.com;
-> bhelgaas@google.com
-> > > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-
-> arm-
-> > > kernel@lists.infradead.org; Jisheng Zhang
-> > > Subject: [PATCH v2] PCI: designware: move remaining rc setup code
-> to
-> > > dw_pcie_setup_rc()
-> > >
-> > > dw_pcie_setup_rc(), as its name indicates, setups the RC. But
-> current
-> > > dw_pcie_host_init() also contains some necessary rc setup code.
-> > >
-> > > Another reason: the host may lost power during suspend to ram, the
-> RC
-> > > need to be re-setup after resume. The rc can't be correctly resumed
-> > > without the rc setup code in dw_pcie_host_init().
-> > >
-> > > So this patch moves the code to dw_pcie_setup_rc() to address the
-> above
-> > > two issues. After this patch, each pcie designware driver users
-> could
-> > > call dw_pcie_setup_rc() to re-setup rc when resume back.
-> >
-> > I think this patch breaks the Hisilicon driver...
-> >
-> > Our driver performs linkup setup in UEFI therefore we do not call
-> > dw_pcie_setup_rc(), we only call dw_pcie_host_init().
+> This changelog merely restates the C code.  Presumably there's some
+> important difference between release_mem_region() and
+> vmbus_mmio_free(), and we need a hint about what that is.
 > 
-> Thanks for the information. So pcie-hisi rely on UEFI to do something
-> similar
-> in dw_pcie_setup_rc(), this comes to a common driver implement
-> question: should
-> linux device driver rely on bootloader to configure HW device?
+> Oh, I see, there actually is no difference *yet*, but it's coming.
+> I'd combine this with patch 2.  Then the patch is obviously correct
+> all by itself, and the changelog for patch 2 makes clear what's
+> happening.
+> 
+> In changelogs, don't bother with "this patch does" or "this function
+> is introduced."  The context is obvious because the changelog is part
+> of the commit.  Write imperative sentences, e.g., "Call
+> vmbus_mmio_free() instead of release_mem_region()."
+> 
+> > Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+> 
+> I think this is the only change that touches PCI, so I assume this
+> series will be merged by somebody else.
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-I don't see any issue with this...
+I am hoping this will go through Greg's tree.
 
+K. Y
 > 
-> Is it acceptable that pcie-hisi adds a call to dw_pcie_setup_rc() in
-> hisi_add_pcie_port()?
-
-I don't think so...that would try to overwrite what is already set by
-the bootloader; so it is wrong in principle and maybe it can lead to
-undefined behaviours...
-
-Thanks
-
-Gab
-
-> 
-> Thanks,
-> Jisheng
-> 
+> > ---
+> >  drivers/pci/host/pci-hyperv.c   | 14 +++++++-------
+> >  drivers/video/fbdev/hyperv_fb.c |  4 ++--
+> >  2 files changed, 9 insertions(+), 9 deletions(-)
 > >
-> > Maybe better to group the part of code to be moved in as separate
-> > function...
+> > diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> > index ed651ba..f2559b6 100644
+> > --- a/drivers/pci/host/pci-hyperv.c
+> > +++ b/drivers/pci/host/pci-hyperv.c
+> > @@ -1795,14 +1795,14 @@ static void hv_pci_free_bridge_windows(struct
+> hv_pcibus_device *hbus)
 > >
-> > Thanks and sorry for late reply.
+> >  	if (hbus->low_mmio_space && hbus->low_mmio_res) {
+> >  		hbus->low_mmio_res->flags |= IORESOURCE_BUSY;
+> > -		release_mem_region(hbus->low_mmio_res->start,
+> > -				   resource_size(hbus->low_mmio_res));
+> > +		vmbus_free_mmio(hbus->low_mmio_res->start,
+> > +				resource_size(hbus->low_mmio_res));
+> >  	}
 > >
-> > Gab
+> >  	if (hbus->high_mmio_space && hbus->high_mmio_res) {
+> >  		hbus->high_mmio_res->flags |= IORESOURCE_BUSY;
+> > -		release_mem_region(hbus->high_mmio_res->start,
+> > -				   resource_size(hbus->high_mmio_res));
+> > +		vmbus_free_mmio(hbus->high_mmio_res->start,
+> > +				resource_size(hbus->high_mmio_res));
+> >  	}
+> >  }
 > >
+> > @@ -1880,8 +1880,8 @@ static int hv_pci_allocate_bridge_windows(struct
+> hv_pcibus_device *hbus)
 > >
+> >  release_low_mmio:
+> >  	if (hbus->low_mmio_res) {
+> > -		release_mem_region(hbus->low_mmio_res->start,
+> > -				   resource_size(hbus->low_mmio_res));
+> > +		vmbus_free_mmio(hbus->low_mmio_res->start,
+> > +				resource_size(hbus->low_mmio_res));
+> >  	}
+> >
+> >  	return ret;
+> > @@ -1924,7 +1924,7 @@ static int hv_allocate_config_window(struct
+> hv_pcibus_device *hbus)
+> >
+> >  static void hv_free_config_window(struct hv_pcibus_device *hbus)
+> >  {
+> > -	release_mem_region(hbus->mem_config->start,
+> PCI_CONFIG_MMIO_LENGTH);
+> > +	vmbus_free_mmio(hbus->mem_config->start,
+> PCI_CONFIG_MMIO_LENGTH);
+> >  }
+> >
+> >  /**
+> > diff --git a/drivers/video/fbdev/hyperv_fb.c
+> b/drivers/video/fbdev/hyperv_fb.c
+> > index e2451bd..2fd49b2 100644
+> > --- a/drivers/video/fbdev/hyperv_fb.c
+> > +++ b/drivers/video/fbdev/hyperv_fb.c
+> > @@ -743,7 +743,7 @@ static int hvfb_getmem(struct hv_device *hdev,
+> struct fb_info *info)
+> >  err3:
+> >  	iounmap(fb_virt);
+> >  err2:
+> > -	release_mem_region(par->mem->start, screen_fb_size);
+> > +	vmbus_free_mmio(par->mem->start, screen_fb_size);
+> >  	par->mem = NULL;
+> >  err1:
+> >  	if (!gen2vm)
+> > @@ -758,7 +758,7 @@ static void hvfb_putmem(struct fb_info *info)
+> >  	struct hvfb_par *par = info->par;
+> >
+> >  	iounmap(info->screen_base);
+> > -	release_mem_region(par->mem->start, screen_fb_size);
+> > +	vmbus_free_mmio(par->mem->start, screen_fb_size);
+> >  	par->mem = NULL;
+> >  }
+> >
+> > --
+> > 1.9.1
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at
+> https://na01.safelinks.protection.outlook.com/?url=http%3a%2f%2fvger.ker
+> nel.org%2fmajordomo-
+> info.html&data=01%7c01%7ckys%40microsoft.com%7cf391db0d7312429368e
+> 908d35d7c17ed%7c72f988bf86f141af91ab2d7cd011db47%7c1&sdata=bH6jnta
+> OKCSn%2fZw%2bCN1P9wV9%2bRk0om8hw4evDezjR0Q%3d
