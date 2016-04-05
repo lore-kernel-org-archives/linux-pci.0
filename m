@@ -1,134 +1,173 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V6 02/13] pci, acpi: Provide generic way to assign bus domain number.
-Date: Fri, 15 Apr 2016 19:06:37 +0200
-Message-Id: <1460740008-19489-3-git-send-email-tn@semihalf.com>
-In-Reply-To: <1460740008-19489-1-git-send-email-tn@semihalf.com>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bues.ch ([80.190.117.144]:51532 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752112AbcDETuT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Apr 2016 15:50:19 -0400
+Date: Tue, 5 Apr 2016 21:49:45 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
+Message-ID: <20160405214945.1214e13b@wiggum>
+In-Reply-To: <20160405194015.GC15353@localhost>
+References: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
+	<20160405194015.GC15353@localhost>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/fO4VeQPYDcfvPGNxmbx=/bP"; protocol="application/pgp-signature"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-As we now have valid PCI host bridge device reference we can
-introduce code that is going to find its bus domain number using
-ACPI _SEG method.
+--Sig_/fO4VeQPYDcfvPGNxmbx=/bP
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Note that _SEG method is optional, therefore _SEG absence means
-that all PCI buses belong to domain 0.
+On Tue, 5 Apr 2016 14:40:15 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-While at it, for the sake of code clarity we put ACPI and DT domain
-assign methods into the corresponding helpers.
+> [+cc Matthew]
+>=20
+> Hi Lukas,
+>=20
+> On Tue, Mar 29, 2016 at 08:20:30PM +0200, Lukas Wunner wrote:
+> > Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ storm
+> > on boot until they are reset, causing spurious interrupts if the IRQ is
+> > shared. Apparently the EFI bootloader enables the device and does not
+> > disable it before passing control to the OS. The bootloader contains a
+> > driver for the wireless card which allows it to phone home to Cupertino.
+> > This is used for Internet Recovery (download and install OS X images)
+> > and probably also for Back to My Mac (remote access, RFC 6281) and to
+> > discover stolen hardware.
+> >=20
+> > The issue is most pronounced on 2011 and 2012 MacBook Pros where the IRQ
+> > is shared with 3 other devices (Light Ridge Thunderbolt controller, SDXC
+> > reader, HDA card on discrete GPU). As soon as an interrupt handler is
+> > installed for one of these devices, the ensuing storm of spurious IRQs
+> > causes the kernel to disable the IRQ and switch to polling. This lasts
+> > until the b43 driver loads and resets the device.
+> >=20
+> > Loading the b43 driver first is not always an option, in particular with
+> > the Light Ridge Thunderbolt controller: The PCI hotplug IRQ handler gets
+> > installed early on because it is built in, unlike b43 which is usually
+> > a module.
+> >=20
+> > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=3D79301
+> > Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=3D895951
+> > Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=3D1009819
+> > Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=3D1149632
+> > Tested-by: Lukas Wunner <lukas@wunner.de> [MacBookPro9,1]
+> > Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> > ---
+> >  drivers/bcma/bcma_private.h |  2 --
+> >  drivers/pci/quirks.c        | 27 +++++++++++++++++++++++++++
+> >  include/linux/bcma/bcma.h   |  1 +
+> >  3 files changed, 28 insertions(+), 2 deletions(-)
+> >=20
+> > diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+> > index eda0909..f642c42 100644
+> > --- a/drivers/bcma/bcma_private.h
+> > +++ b/drivers/bcma/bcma_private.h
+> > @@ -8,8 +8,6 @@
+> >  #include <linux/bcma/bcma.h>
+> >  #include <linux/delay.h>
+> > =20
+> > -#define BCMA_CORE_SIZE		0x1000
+> > -
+> >  #define bcma_err(bus, fmt, ...) \
+> >  	pr_err("bus%d: " fmt, (bus)->num, ##__VA_ARGS__)
+> >  #define bcma_warn(bus, fmt, ...) \
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index 8e67802..d4fb5ee 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -25,6 +25,8 @@
+> >  #include <linux/sched.h>
+> >  #include <linux/ktime.h>
+> >  #include <linux/mm.h>
+> > +#include <linux/bcma/bcma.h>
+> > +#include <linux/bcma/bcma_regs.h>
+> >  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+> >  #include "pci.h"
+> > =20
+> > @@ -3282,6 +3284,31 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INT=
+EL, 0x156d,
+> >  			       quirk_apple_wait_for_thunderbolt);
+> >  #endif
+> > =20
+> > +/*
+> > + * Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ s=
+torm
+> > + * on boot until they are reset, causing spurious interrupts if the IR=
+Q is
+> > + * shared. Apparently the EFI bootloader enables the device to phone h=
+ome
+> > + * to Cupertino and does not disable it before passing control to the =
+OS.
+> > + */
+> > +static void quirk_apple_b43_reset(struct pci_dev *dev)
+> > +{
+> > +	void __iomem *mmio;
+> > +
+> > +	if (!dmi_match(DMI_BOARD_VENDOR, "Apple Inc.") || !dev->bus->self ||
+> > +	    pci_pcie_type(dev->bus->self) !=3D PCI_EXP_TYPE_ROOT_PORT)
+> > +		return;
+> > +
+> > +	mmio =3D pci_iomap(dev, 0, 0);
+> > +	if (!mmio) {
+> > +		pr_err("b43 quirk: Cannot iomap device, IRQ storm ahead\n");
+> > +		return;
+> > +	}
+> > +	iowrite32(BCMA_RESET_CTL_RESET,
+> > +		  mmio + (1 * BCMA_CORE_SIZE) + BCMA_RESET_CTL);
+> > +	pci_iounmap(dev, mmio); =20
+>=20
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D111781 and
+> https://mjg59.dreamwidth.org/11235.html describe a sort of similar
+> issue, but with DMA.  An interrupt from the device is probably to
+> signal a DMA completion, but these problem reports only mention the
+> "IRQ nobody cared" issue; I don't see anything about memory
+> corruption.
+>=20
+> If this resets the device, I guess that should prevent future DMA as
+> well as future interrupts.  Would pci_reset_function() do the same
+> thing in a more generic way?
+>=20
+> I'm a little bit hesitant to put a quirk like this in Linux because
+> it's only a 90% solution.  If the only problem is the interrupts, it's
+> probably OK since a few extra interrupts doesn't hurt anything.  But
+> if there is also DMA that might corrupt something, a 90% solution just
+> makes it harder to debug for the remaining 10%.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
-Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Tested-by: Jeremy Linton <jeremy.linton@arm.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/acpi/pci_root.c  | 18 ++++++++++++++++++
- drivers/pci/pci.c        | 11 +++++++++--
- include/linux/pci-acpi.h |  2 ++
- 3 files changed, 29 insertions(+), 2 deletions(-)
+This was already discussed in this thread.
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 4581e0e..d9a70c4 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -419,6 +419,24 @@ out:
- }
- EXPORT_SYMBOL(acpi_pci_osc_control_set);
- 
-+int acpi_pci_bus_domain_nr(struct device *parent)
-+{
-+	struct acpi_device *acpi_dev = to_acpi_device(parent);
-+	unsigned long long segment = 0;
-+	acpi_status status;
-+
-+	/*
-+	 * If _SEG method does not exist, following ACPI spec (6.5.6)
-+	 * all PCI buses belong to domain 0.
-+	 */
-+	status = acpi_evaluate_integer(acpi_dev->handle, METHOD_NAME__SEG, NULL,
-+				       &segment);
-+	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
-+		dev_err(&acpi_dev->dev, "can't evaluate _SEG\n");
-+
-+	return segment;
-+}
-+
- static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
- {
- 	u32 support, control, requested;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 25e0327..1a74e87 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -19,6 +19,7 @@
- #include <linux/spinlock.h>
- #include <linux/string.h>
- #include <linux/log2.h>
-+#include <linux/pci-acpi.h>
- #include <linux/pci-aspm.h>
- #include <linux/pm_wakeup.h>
- #include <linux/interrupt.h>
-@@ -4779,7 +4780,7 @@ int pci_get_new_domain_nr(void)
- }
- 
- #ifdef CONFIG_PCI_DOMAINS_GENERIC
--void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-+static int of_pci_bus_domain_nr(struct device *parent)
- {
- 	static int use_dt_domains = -1;
- 	int domain = -1;
-@@ -4823,7 +4824,13 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
- 		domain = -1;
- 	}
- 
--	bus->domain_nr = domain;
-+	return domain;
-+}
-+
-+void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-+{
-+	bus->domain_nr = acpi_disabled ? of_pci_bus_domain_nr(parent) :
-+					 acpi_pci_bus_domain_nr(parent);
- }
- #endif
- #endif
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index 89ab057..a72e22d 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -22,6 +22,7 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
- {
- 	return acpi_remove_pm_notifier(dev);
- }
-+extern int acpi_pci_bus_domain_nr(struct device *parent);
- extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
- 
- static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
-@@ -109,6 +110,7 @@ extern const u8 pci_acpi_dsm_uuid[];
- #else	/* CONFIG_ACPI */
- static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
- static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
-+static inline int acpi_pci_bus_domain_nr(struct device *parent) { return -1; }
- #endif	/* CONFIG_ACPI */
- 
- #ifdef CONFIG_ACPI_APEI
--- 
-1.9.1
+It is not a 90% solution. It fixes the IRQ issue. It is not supposed to
+fix the DMA issue. And it can't. It does mitigate it a tiny bit though.
 
+--=20
+Michael
+
+--Sig_/fO4VeQPYDcfvPGNxmbx=/bP
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJXBBbZAAoJEPUyvh2QjYsOBAcP/RXw9pkTKfHakA5e/bI6AqH+
++wvuQHLjG9FzHImMxYsHexuIsXytv8zatgU+lYD8DdtgdvLUm8K8mD31Y9txDrrK
+jzAbLYBYnGpCvPbqKQ3OLyNeFr6cGv6cd9KdB6F6OTOhZJjPLW0HegyN8YXMAQkm
+wNRbYguw/ZNh51Kv3hc3P1SVeuQSEfLBGGQNMXH9kLa/8Arx0blM9b2sbKCUztlJ
+Lu6FKraXLNxQcIu9D1D42/Y6HWlGVfkW1ddorL7ta8oEI2WpUZ9UbOFAOOmL/aXY
+r5TPd2NUIAM2ziEv5thcOF6TqnivmTpx16F1E1EPbs0NGNI4Kq2pVtVx5eebYEs9
+INBzrBuilsIVjcKP0AvLh6ttu1Rm4yPyseS0Re2pI6TNxDtxFb06uraIThignKA0
+NhVNGyIgA5QRKZ1nwR2/1IaBTZeQLah3SkrHzDjtfytc1K83KOse9bh6gpsx46qv
+p/6TX62UKJX/uWoNn0UAmSEn/kk1WF2gMbNBNnTSmq5h9TJ6fPskTZMwa2myHotN
+U7HAmCDTD+K4Slrhlx9LIlUGxE/6uCVUnZ5w/sLbGgFk8/SyaEOiwJAGejUFk4JN
+v5Du/h63UFNmY+EtdW+q2I2liZ4hGf8dJlpXqxvAjoJXwvjQjhvHSx7cp/MrB9sK
+S+01n0MLCQ9sKFfDbZNl
+=Mj4p
+-----END PGP SIGNATURE-----
+
+--Sig_/fO4VeQPYDcfvPGNxmbx=/bP--
