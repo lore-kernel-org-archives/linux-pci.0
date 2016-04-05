@@ -1,87 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:38122 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753798AbcDSLPW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 07:15:22 -0400
+Received: from e23smtp03.au.ibm.com ([202.81.31.145]:47311 "EHLO
+	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933273AbcDENqS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2016 09:46:18 -0400
 Received: from localhost
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Tue, 19 Apr 2016 21:15:19 +1000
-Subject: Re: [RFC v6 06/10] PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
-To: David Laight <David.Laight@ACULAB.COM>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
-References: <1460977120-29367-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <063D6719AE5E284EB5DD2968C1650D6D5F4A45A8@AcuExch.aculab.com>
-Cc: "alistair@popple.id.au" <alistair@popple.id.au>,
-	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
-	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
-	"eric.auger@linaro.org" <eric.auger@linaro.org>,
-	"aik@ozlabs.ru" <aik@ozlabs.ru>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
-	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"paulus@samba.org" <paulus@samba.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
+	Tue, 5 Apr 2016 23:46:15 +1000
 From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Message-ID: <571612F2.1080502@linux.vnet.ibm.com>
-Date: Tue, 19 Apr 2016 19:13:54 +0800
-MIME-Version: 1.0
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D5F4A45A8@AcuExch.aculab.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org
+Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
+	alex.williamson@redhat.com, benh@kernel.crashing.org,
+	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com, Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [RFC v5 3/7] PCI: Add a new option for resource_alignment to reassign alignment
+Date: Tue,  5 Apr 2016 21:43:31 +0800
+Message-Id: <1459863813-2830-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1459863813-2830-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1459863813-2830-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/4/18 19:30, David Laight wrote:
-> From: Yongji Xie
->> Sent: 18 April 2016 11:59
->> We introduce a new pci_bus_flags, PCI_BUS_FLAGS_MSI_REMAP
->> which indicates all devices on the bus are protected by the
->> hardware which supports IRQ remapping(intel naming).
->>
->> This flag will be used to know whether it's safe to expose
->> MSI-X tables of PCI BARs to userspace. Because the capability
->> of IRQ remapping can guarantee the PCI device cannot trigger
->> MSIs that correspond to interrupt IDs of other devices.
-> I'm worried that this entire series is going to break drivers
-> for existing hardware.
->
-> I understand some of the reasoning for 'vm pass through' configurations,
-> but there will be PCIe devices out there that have the MSI-X tables
-> in the same BAR as other device registers.
-> If you are lucky nothing else is in the same 4k area, but I wouldn't
-> assume it.
+When using resource_alignment kernel parameter,
+the current implement reassigns the alignment by
+changing resources' size which can potentially
+break some drivers. For example, the driver uses
+the size to locate some register whose length is
+related to the size.
 
-Thanks for your comments. But I didn't get your point here.
-Why will exposing MSI-X table to userspace break the driver
-for hardware which have the MSI-X tables in the same BAR as
-other device registers? Could you give me more details?
+This adds a new option "noresize" for the
+parameter to solve this problem.
 
-The reason why we want to mmap MSI-X table is that there
-may be some other critical device registers in the same page
-as the MSI-X table. We prefer to handle the mmio access to
-these registers in guest rather than in QEMU. So we would
-like to see there is something else in the same 4k/64k area.
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ Documentation/kernel-parameters.txt |    5 ++++-
+ drivers/pci/pci.c                   |   37 +++++++++++++++++++++++++----------
+ 2 files changed, 31 insertions(+), 11 deletions(-)
 
-> In any case, if the hardware can't police the card's master transfers
-> there is nothing to stop a different bus master block on the card
-> from raising MSI-X interrupts - they are just a PCIe write.
-> So all you are doing is raising the bar slightly and giving a very false
-> sense of security.
-
-Do you mean we can request a DMA to the target address
-area that raises MSI-X interrupts? But for PPC64 with IODA
-bridge, this invalid PCIe write will be prevented on PHB before
-raising MSI-X interrupt. And I think the capability of interrupt
-remapping or ITS can also do the same thing. If hardware didn't
-support this, we would not expose MSI-X table in my patch.
-
-Thanks,
-Yongji
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 9a53c92..d8b29ab 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2912,13 +2912,16 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				window. The default value is 64 megabytes.
+ 		resource_alignment=
+ 				Format:
+-				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
++				[<order of align>@][<domain>:]<bus>:<slot>.<func>
++				[:noresize][; ...]
+ 				Specifies alignment and device to reassign
+ 				aligned memory resources.
+ 				If <order of align> is not specified,
+ 				PAGE_SIZE is used as alignment.
+ 				PCI-PCI bridge can be specified, if resource
+ 				windows need to be expanded.
++				noresize: Don't change the resources' sizes when
++				reassigning alignment.
+ 		ecrc=		Enable/disable PCIe ECRC (transaction layer
+ 				end-to-end CRC checking).
+ 				bios: Use BIOS/firmware settings. This is the
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 1db9267..7271ce3 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4594,11 +4594,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
+ /**
+  * pci_specified_resource_alignment - get resource alignment specified by user.
+  * @dev: the PCI device to get
++ * @resize: whether or not to change resources' size when reassigning alignment
+  *
+  * RETURNS: Resource alignment if it is specified.
+  *          Zero if it is not specified.
+  */
+-static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
++static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
++		bool *resize)
+ {
+ 	int seg, bus, slot, func, align_order, count;
+ 	resource_size_t align = 0;
+@@ -4632,6 +4634,11 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 			}
+ 		}
+ 		p += count;
++		if (!strncmp(p, ":noresize", 9)) {
++			*resize = false;
++			p += 9;
++		} else
++			*resize = true;
+ 		if (seg == pci_domain_nr(dev->bus) &&
+ 			bus == dev->bus->number &&
+ 			slot == PCI_SLOT(dev->devfn) &&
+@@ -4664,11 +4671,12 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ {
+ 	int i;
+ 	struct resource *r;
++	bool resize = true;
+ 	resource_size_t align, size;
+ 	u16 command;
+ 
+ 	/* check if specified PCI is target device to reassign */
+-	align = pci_specified_resource_alignment(dev);
++	align = pci_specified_resource_alignment(dev, &resize);
+ 	if (!align)
+ 		return;
+ 
+@@ -4690,15 +4698,24 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		if (!(r->flags & IORESOURCE_MEM))
+ 			continue;
+ 		size = resource_size(r);
+-		if (size < align) {
+-			size = align;
+-			dev_info(&dev->dev,
+-				"Rounding up size of resource #%d to %#llx.\n",
+-				i, (unsigned long long)size);
++		if (resize) {
++			if (size < align) {
++				size = align;
++				dev_info(&dev->dev,
++					"Rounding up size of resource #%d to %#llx.\n",
++					i, (unsigned long long)size);
++			}
++			r->flags |= IORESOURCE_UNSET;
++			r->end = size - 1;
++			r->start = 0;
++		} else {
++			if (size > align)
++				align = size;
++			r->flags &= ~IORESOURCE_SIZEALIGN;
++			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
++			r->start = align;
++			r->end = r->start + size - 1;
+ 		}
+-		r->flags |= IORESOURCE_UNSET;
+-		r->end = size - 1;
+-		r->start = 0;
+ 	}
+ 	/* Need to disable bridge's resource window,
+ 	 * to enable the kernel to reassign new resource
+-- 
+1.7.9.5
 
