@@ -1,217 +1,123 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 27 Apr 2016 15:26:59 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>, arnd@arndb.de,
-	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
-	hanjun.guo@linaro.org, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-Subject: Re: [PATCH V6 05/13] acpi, pci: Support IO resources when parsing
- PCI host bridge resources.
-Message-ID: <20160427141429.GA7324@red-moon>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-6-git-send-email-tn@semihalf.com>
- <20160427023916.GF6789@localhost>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 6 Apr 2016 10:11:14 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
+	aik@ozlabs.ru, alex.williamson@redhat.com,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
+	nikunj@linux.vnet.ibm.com, eric.auger@linaro.org,
+	will.deacon@arm.com, gwshan@linux.vnet.ibm.com,
+	alistair@popple.id.au, ruscur@russell.cc
+Subject: Re: [RFC v5 6/7] PCI: Add a new bit to pci_bus_flags to indicate
+ interrupt remapping
+Message-ID: <20160406001114.GA4976@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1459864004-2869-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160427023916.GF6789@localhost>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1459864004-2869-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 26, 2016 at 09:39:16PM -0500, Bjorn Helgaas wrote:
-> On Fri, Apr 15, 2016 at 07:06:40PM +0200, Tomasz Nowicki wrote:
-> > Platforms that have memory mapped IO port (such as ARM64) need special
-> > handling for PCI I/O resources. For host bridge's resource probing case
-> > these resources need to be fixed up with pci_register_io_range/pci_remap_iospace etc.
-> 
-> ia64 also has memory-mapped I/O port space.  It would be ideal to find
-> some way to handle ia64 and ARM64 similarly.  At the very least, we
-> have to make sure that this doesn't break ia64.  The ia64 dense/sparse
-> I/O spaces complicate things; I don't know if ARM64 has something
-> similar or not.
+On Tue, Apr 05, 2016 at 09:46:43PM +0800, Yongji Xie wrote:
+>I'm trying to find a proper way to indicate
+>the capability of interrupt remapping on PPC64
+>because we need this to determine whether it is
+>safe to mmap MSI-X table in VFIO driver.
+>
+>There is a existing flag for this in the IOMMU
+>space:
+>
+>enum iommu_cap {
+>	IOMMU_CAP_CACHE_COHERENCY,
+>--->    IOMMU_CAP_INTR_REMAP,
+>	IOMMU_CAP_NOEXEC,
+>};
+>
+>But it seems to be not a good idea to use
+>bus_set_iommu() to add this flag on PPC64 which
+>never set/use iommu_ops.
+>
+>Eric also posted a patchset [1] to abstract
+>this capability on MSI controller side for ARM.
+>But I found we also never use msi_domain_info
+>on PPC64. We have to rework the MSI code on
+>PPC64 to support msi_domain_ops if we want to
+>use msi_domain_info.
+>
+>Then I noticed that interrupt remapping is
+>abstracted on PCI host bridge side on PPC64.
+>So I'm thinking whether we could add a new
+>bit to pci_bus_flags to indicate this
+>capability, like this patch does.
+>
+>Compared with IOMMU_CAP_INTR_REMAP, this
+>flag is more common. Any arch can set/use this
+>easily. And it can provide a better granularity
+>(pci_bus_type -> pci_bus).
+>
+>[1] http://www.spinics.net/lists/kvm/msg130262.html
+>
+>Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>---
+> arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
+> include/linux/pci.h                       |    1 +
+> 2 files changed, 9 insertions(+)
+>
+>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>index f90dc04..9557638 100644
+>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>@@ -3080,6 +3080,12 @@ static void pnv_pci_ioda_fixup(void)
+> 	pnv_npu_ioda_fixup();
+> }
+>
+>+int pnv_pci_ioda_root_bridge_prepare(struct pci_host_bridge *bridge)
+>+{
+>+	bridge->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
+>+	return 0;
+>+}
+>+
 
-No it does not, and that's exactly the same problem we faced with
-the DT generic version of of_pci_range_to_resource() which basically
-relies on PCI_IOBASE to be defined to add code that creates IO port
-resources out of the MMIO resource describing how IO port space is
-mapped to MMIO (physical) address space.
+A irelevent question: Here we set the flag unconditionally. Can the
+MSIx table be exposed to user space unconditionally? Do we have issues
+if the MSIx related BAR isn't page aligned or overlapped with others?
 
-IIRC everything hinges on PCI_IOBASE definition to make sure that
-of_pci_range_to_resource() *works*, which means that if PCI_IOBASE is
-not defined (ie IA64) that code - acpi_pci_root_remap_iospace() in this
-case - does nothing.
+> /*
+>  * Returns the alignment for I/O or memory windows for P2P
+>  * bridges. That actually depends on how PEs are segmented.
+>@@ -3364,6 +3370,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+> 	 */
+> 	ppc_md.pcibios_fixup = pnv_pci_ioda_fixup;
+>
+>+	ppc_md.pcibios_root_bridge_prepare = pnv_pci_ioda_root_bridge_prepare;
+>+
+> 	if (phb->type == PNV_PHB_NPU)
+> 		hose->controller_ops = pnv_npu_ioda_controller_ops;
+> 	else
+>diff --git a/include/linux/pci.h b/include/linux/pci.h
+>index 27df4a6..741dcaf 100644
+>--- a/include/linux/pci.h
+>+++ b/include/linux/pci.h
+>@@ -193,6 +193,7 @@ typedef unsigned short __bitwise pci_bus_flags_t;
+> enum pci_bus_flags {
+> 	PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
+> 	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
+>+	PCI_BUS_FLAGS_MSI_REMAP = (__force pci_bus_flags_t) 3,
 
-So acpi_pci_root_remap_iospace() is of_pci_range_to_resource() ACPI
-equivalent + the pci_remap_iospace() call (I have to dig into the
-logs to check why Liviu did not add a call to pci_remap_iospace()
-in of_pci_get_host_bridge_resources() - I want to do that actually).
-
-The point here is: IO space (in DT and ACPI) handling is arch specific.
-
-For DT, by relying on PCI_IOBASE, we left that code in drivers/of and
-it works (well, with some niggles - see the thread with Murali on IO
-space on TI keystone) for ARM/ARM64.
-
-http://www.spinics.net/lists/linux-pci/msg49725.html
-
-What are we going to do with the ACPI version ?
-
-Do we want to add an arch specific call that takes the raw resource
-describing IO space and creates an IO port resource (and the MMIO
-equivalent - that's what add_io_space() does in IA64) and use that
-in generic ACPI parsing code ?
-
-Or we just do what Tomasz does, which is basically the approach we took
-for DT ?
-
-> > Furthermore, the same I/O resources need to be released after hotplug
-> > removal so that it can be re-added back by the pci_remap_iospace
-> > function during insertion. Therefore we implement new pci_unmap_iospace call
-> > which unmaps I/O space as the symmetry to pci_remap_iospace.
-> 
-> "Furthermore" is a hint that we should check to see if this can be
-> split into two patches.
-> 
-> We already have a pci_remap_iospace(), and you're adding
-> pci_unmap_iospace(), which will be used for hotplug removal.  So let's 
-> add pci_unmap_iospace() first in a patch by itself because that's
-> potentially useful for other callers of pci_remap_iospace(), even if
-> they don't need the acpi_pci_root_remap_iospace() stuff.
-
-I agree.
+Yongji, I guess the corresponding value to PCI_BUS_FLAGS_MSI_REMAP
+would be 4 other than 3. Otherwise, two of the flags cannot exist
+at the same time.
 
 Thanks,
-Lorenzo
+Gavin
 
-> > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
-> > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> > Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> > ---
-> >  drivers/acpi/pci_root.c | 33 +++++++++++++++++++++++++++++++++
-> >  drivers/pci/pci.c       | 24 ++++++++++++++++++++++++
-> >  include/linux/pci.h     |  1 +
-> >  3 files changed, 58 insertions(+)
-> > 
-> > diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> > index d9a70c4..815b6ca 100644
-> > --- a/drivers/acpi/pci_root.c
-> > +++ b/drivers/acpi/pci_root.c
-> > @@ -742,6 +742,34 @@ next:
-> >  			resource_list_add_tail(entry, resources);
-> >  	}
-> >  }
-> > +static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
-> > +{
-> > +#ifdef PCI_IOBASE
-> > +	struct resource *res = entry->res;
-> > +	resource_size_t cpu_addr = res->start;
-> > +	resource_size_t pci_addr = cpu_addr - entry->offset;
-> > +	resource_size_t length = resource_size(res);
-> > +	unsigned long port;
-> > +
-> > +	if (pci_register_io_range(cpu_addr, length))
-> > +		goto err;
-> > +
-> > +	port = pci_address_to_pio(cpu_addr);
-> > +	if (port == (unsigned long)-1)
-> > +		goto err;
-> > +
-> > +	res->start = port;
-> > +	res->end = port + length - 1;
-> > +	entry->offset = port - pci_addr;
-> > +
-> > +	if (pci_remap_iospace(res, cpu_addr) < 0)
-> > +		goto err;
-> > +	pr_info("Remapped I/O %pa to %pR\n", &cpu_addr, res);
-> > +	return;
-> > +err:
-> > +	res->flags |= IORESOURCE_DISABLED;
-> > +#endif
-> > +}
-> >  
-> >  int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
-> >  {
-> > @@ -763,6 +791,9 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
-> >  			"no IO and memory resources present in _CRS\n");
-> >  	else {
-> >  		resource_list_for_each_entry_safe(entry, tmp, list) {
-> > +			if (entry->res->flags & IORESOURCE_IO)
-> > +				acpi_pci_root_remap_iospace(entry);
-> > +
-> >  			if (entry->res->flags & IORESOURCE_DISABLED)
-> >  				resource_list_destroy_entry(entry);
-> >  			else
-> > @@ -834,6 +865,8 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
-> >  
-> >  	resource_list_for_each_entry(entry, &bridge->windows) {
-> >  		res = entry->res;
-> > +		if (res->flags & IORESOURCE_IO)
-> > +			pci_unmap_iospace(res);
-> >  		if (res->parent &&
-> >  		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
-> >  			release_resource(res);
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 89e9996..c0f8a4e 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -26,6 +26,7 @@
-> >  #include <linux/device.h>
-> >  #include <linux/pm_runtime.h>
-> >  #include <linux/pci_hotplug.h>
-> > +#include <linux/vmalloc.h>
-> >  #include <asm/setup.h>
-> >  #include <linux/aer.h>
-> >  #include "pci.h"
-> > @@ -3168,6 +3169,29 @@ int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
-> >  #endif
-> >  }
-> >  
-> > +/**
-> > + *	pci_unmap_iospace - Unmap the memory mapped I/O space
-> > + *	@res: resource to be unmapped
-> > + *
-> > + *	Unmap the CPU virtual address @res from virtual address space.
-> > + *	Only architectures that have memory mapped IO functions defined
-> > + *	(and the PCI_IOBASE value defined) should call this function.
-> > + */
-> > +void  pci_unmap_iospace(struct resource *res)
-> > +{
-> > +#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
-> > +	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
-> > +
-> > +	unmap_kernel_range(vaddr, resource_size(res));
-> > +#else
-> > +	/*
-> > +	 * This architecture does not have memory mapped I/O space,
-> > +	 * so this function should never be called.
-> > +	 */
-> > +	WARN_ONCE(1, "This architecture does not support memory mapped I/O\n");
-> > +#endif
-> > +}
-> > +
-> >  static void __pci_set_master(struct pci_dev *dev, bool enable)
-> >  {
-> >  	u16 old_cmd, cmd;
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index c28adb4..df1f33d 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -1168,6 +1168,7 @@ int pci_register_io_range(phys_addr_t addr, resource_size_t size);
-> >  unsigned long pci_address_to_pio(phys_addr_t addr);
-> >  phys_addr_t pci_pio_to_address(unsigned long pio);
-> >  int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
-> > +void pci_unmap_iospace(struct resource *res);
-> >  
-> >  static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
-> >  {
-> > -- 
-> > 1.9.1
-> > 
-> 
+> };
+>
+> /* These values come from the PCI Express Spec */
+>-- 
+>1.7.9.5
+>
