@@ -1,74 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23365 "EHLO mga11.intel.com"
+Received: from mail.sysgo.com ([176.9.12.79]:49072 "EHLO mail.sysgo.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932511AbcDYPWB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Apr 2016 11:22:01 -0400
-Date: Mon, 25 Apr 2016 20:56:43 +0530
-From: Vinod Koul <vinod.koul@intel.com>
-To: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>, Lee Jones <lee@kernel.org>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Mark Brown <broonie@kernel.org>,
-	Alexandre Belloni <alexandre.belloni@free-electrons.com>,
-	Joe Perches <joe@perches.com>, devicetree@vger.kernel.org,
-	linux-input@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	dmaengine@vger.kernel.org
-Subject: Re: [PATCH 06/14] dmaengine: bcm2835: DT spelling
- s/interrupts-names/interrupt-names/
-Message-ID: <20160425152643.GZ2274@localhost>
-References: <1461166339-11109-1-git-send-email-geert+renesas@glider.be>
- <1461166339-11109-7-git-send-email-geert+renesas@glider.be>
+	id S1754472AbcDFMBk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Apr 2016 08:01:40 -0400
+From: David Engraf <david.engraf@sysgo.com>
+Subject: Exception due to PCI: Use pci_is_root_bus() to check for root bus
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org
+Message-ID: <5704F85B.4080501@sysgo.com>
+Date: Wed, 6 Apr 2016 13:51:55 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1461166339-11109-7-git-send-email-geert+renesas@glider.be>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 20, 2016 at 05:32:11PM +0200, Geert Uytterhoeven wrote:
-> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> ---
->  Documentation/devicetree/bindings/sound/davinci-mcbsp.txt | 2 +-
+Hi,
 
-This change does not apply for me, can you please split it up and send the
-sound ones thru sound tree
+I have an exception in __pci_bus_size_bridges() when pci_is_root_bus 
+returns false but bus->self == NULL. My driver registers a virtual bus, 
+like virtfn_add_bus(). pci_add_new_bus() is called with a parent but 
+without a pci_dev. Thus bus->parent is set but bus->self is NULL. When 
+__pci_bus_size_bridges() is called I get an exception at:
 
--- 
-~Vinod
+switch (bus->self->class >> 8)
 
->  drivers/dma/bcm2835-dma.c                                 | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/sound/davinci-mcbsp.txt b/Documentation/devicetree/bindings/sound/davinci-mcbsp.txt
-> index 55b53e1fd72c9d6e..e0b6165c9cfcec19 100644
-> --- a/Documentation/devicetree/bindings/sound/davinci-mcbsp.txt
-> +++ b/Documentation/devicetree/bindings/sound/davinci-mcbsp.txt
-> @@ -43,7 +43,7 @@ mcbsp0: mcbsp@1d10000 {
->  		<0x00310000 0x1000>;
->  	reg-names = "mpu", "dat";
->  	interrupts = <97 98>;
-> -	interrupts-names = "rx", "tx";
-> +	interrupt-names = "rx", "tx";
->  	dmas = <&edma0 3 1
->  		&edma0 2 1>;
->  	dma-names = "tx", "rx";
-> diff --git a/drivers/dma/bcm2835-dma.c b/drivers/dma/bcm2835-dma.c
-> index 974015193b93cdb3..d724393e904e9a41 100644
-> --- a/drivers/dma/bcm2835-dma.c
-> +++ b/drivers/dma/bcm2835-dma.c
-> @@ -974,7 +974,7 @@ static int bcm2835_dma_probe(struct platform_device *pdev)
->  
->  		/* legacy device tree case handling */
->  		dev_warn_once(&pdev->dev,
-> -			      "missing interrupts-names property in device tree - legacy interpretation is used");
-> +			      "missing interrupt-names property in device tree - legacy interpretation is used");
->  		/*
->  		 * in case of channel >= 11
->  		 * use the 11th interrupt and that is shared
-> -- 
-> 1.9.1
-> 
+The previous version of the code, checking for bus->self != NULL worked 
+for me. I think an additional check is required to make sure we're not 
+accessing a NULL pointer.
+
+Best regards
+David Engraf
+
