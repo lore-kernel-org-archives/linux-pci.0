@@ -1,79 +1,169 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 28 Apr 2016 16:18:34 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Tomasz Nowicki <tn@semihalf.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
-	Jon Masters <jcm@redhat.com>, linaro-acpi@lists.linaro.org,
-	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com,
-	David Daney <ddaney@caviumnetworks.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	robert.richter@caviumnetworks.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, Wangyijing <wangyijing@huawei.com>,
-	Marcin Wojtas <mw@semihalf.com>
-Subject: Re: [PATCH V6 08/13] PCI: generic, thunder: update to use generic
- ECAM API
-Message-ID: <20160428211834.GE25125@localhost>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <8950494.UV8UrWiFbx@wuerfel>
- <20160428201439.GD25125@localhost>
- <5813591.CkzahFEfSl@wuerfel>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:35632 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750953AbcDFOAv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2016 10:00:51 -0400
+Received: by mail-oi0-f43.google.com with SMTP id p188so58893610oih.2
+        for <linux-pci@vger.kernel.org>; Wed, 06 Apr 2016 07:00:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5813591.CkzahFEfSl@wuerfel>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1459935692.2256.26.camel@pengutronix.de>
+References: <1459873754-31410-1-git-send-email-tharvey@gateworks.com>
+	<1459935692.2256.26.camel@pengutronix.de>
+Date: Wed, 6 Apr 2016 07:00:45 -0700
+Message-ID: <CAJ+vNU3XGboOAh2CnMHyQDgGQ40qYFGt=XQkRu54G6-tmR=9MA@mail.gmail.com>
+Subject: Re: [PATCH v4] PCI: imx6: add dt prop for link gen, default to gen1
+From: Tim Harvey <tharvey@gateworks.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Fabio Estevam <fabio.estevam@freescale.com>,
+	Zhu Richard <Richard.Zhu@freescale.com>,
+	Akshay Bhat <akshay.bhat@timesys.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Shawn Guo <shawnguo@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 28, 2016 at 10:40:35PM +0200, Arnd Bergmann wrote:
-> On Thursday 28 April 2016 15:14:39 Bjorn Helgaas wrote:
-> > On Thu, Apr 21, 2016 at 11:36:53AM +0200, Arnd Bergmann wrote:
-> > > On Thursday 21 April 2016 11:28:15 Tomasz Nowicki wrote:
-> > > > On 19.04.2016 15:06, Arnd Bergmann wrote:
-> > > > > On Monday 18 April 2016 21:31:54 Tomasz Nowicki wrote:
-> > > > >>
-> > > > >> Basically the whole content of pci-thunder-ecam.c and pci-thunder-pem.c.
-> > > > >>
-> > > > >> pci-thunder-ecam.c contains config space accessors. Similar for
-> > > > >> pci-thunder-pem.c but it also has extra init call (it is now called
-> > > > >> thunder_pem_init) which finds and maps related registers.
-> > > > >
-> > > > > They seem to do much more than just override the accessors, they actually
-> > > > > change the contents of the config space as well. Is that really necessary
-> > > > > on ACPI based systems as well?
-> > > > 
-> > > > Yes, the pci-thunder-ecam.c accessors are meant to emulate config space 
-> > > > capabilities. They are necessary to synthesize EA capabilities (fixed 
-> > > > PCI BARs), it wont work without this, for ACPI boot as well.
-> > > 
-> > > Why is that? I thought the BARs never get reassigned when using ACPI,
-> > 
-> > In general, there's no reason we can't reassign BARs, whether we're
-> > using DT, ACPI, or whatever.  In many cases, systems with ACPI also
-> > assign all the BARs in firmware, and Linux doesn't reassign them
-> > unless it needs to.  But that's just a coincidence.  There's no
-> > requirement that Linux leave BARs as firmware programmed them.
-> 
-> I'm thought I've seen systems in which the ACPI BIOS assumes that
-> certain PCI devices never move around, because it pokes the registers
-> from AML, and changing them would require never using the same device
-> through ACPI. It's likely that this is against some standard, but that
-> won't help you if you have to deal with the system anyway.
+On Wed, Apr 6, 2016 at 2:41 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> Am Dienstag, den 05.04.2016, 09:29 -0700 schrieb Tim Harvey:
+>> Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
+>> the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
+>> external clock source is present and supplied back to the IMX6 PCIe core
+>> via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
+>>
+>> Add a dt property to specify gen1 vs gen2 and check this before allowing
+>> a Gen2 link.
+>>
+>> We default to Gen1 if the property is not present because at this time there
+>> are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
+>>
+>> In order to be Gen2 compliant on IMX6 you need to:
+>>  - have a Gen2 compliant external clock generator and route that clock back
+>>    to either LVDS CLK1 or LVDS CLK2 as an input.
+>>    (see IMX6SX-SabreSD reference design)
+>>  - specify this clock in the pcie node in the dt
+>>    (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
+>>     IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
+>>
+>> [1] https://community.freescale.com/message/453209
+>>
+>> Cc: Lucas Stach <l.stach@pengutronix.de>
+>> Cc: Bjorn Helgaas <helgaas@kernel.org>
+>> Cc: Fabio Estevam <fabio.estevam@freescale.com>
+>> Cc: Zhu Richard <Richard.Zhu@freescale.com>
+>> Cc: Akshay Bhat <akshay.bhat@timesys.com>
+>> Cc: Rob Herring <robh+dt@kernel.org>
+>> Cc: Shawn Guo <shawnguo@kernel.org>
+>> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+>
+> One nit below. Maybe Bjorn can fix this up while applying, otherwise if
+> you need to resend you may carry the blow tag.
+>
+> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+>> ---
+>> v4:
+>>  - rebase against linux-pci/master
+>>  - add fsl vendor prefix to dt prop
+>>
+>> v3:
+>>  - added note in dt bindings doc that we limit to gen1 unless this is specified
+>>    as gen2 capable
+>>  - move property to imx6 pcie phy instead of designware core
+>>  - don't use &ret as temp storage as of_property_read_u32() doesn't change the
+>>    outval if property isn't found
+>> v2:
+>>  - moved dt property to designware core
+>>
+>> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+>> ---
+>>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  4 ++++
+>>  drivers/pci/host/pci-imx6.c                        | 24 +++++++++++++++-------
+>>  2 files changed, 21 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+>> index 3be80c6..b92fafb 100644
+>> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+>> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+>> @@ -19,6 +19,10 @@ Optional properties:
+>>  - fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
+>>  - fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
+>>  - fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
+>> +- fsl,max-link-speed: Specify PCI gen for link capability. Must be '2' for
+>> +  gen2, otherwise will default to gen1. Note that the IMX6 LVDS clock outputs
+>> +  do not meet gen2 jitter requirements and thus for gen2 capability a gen2
+>> +  compliant clock generator should be used and configured.
+>>
+>>  Example:
+>>
+>> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+>> index eb5a275..9656ac7 100644
+>> --- a/drivers/pci/host/pci-imx6.c
+>> +++ b/drivers/pci/host/pci-imx6.c
+>> @@ -44,6 +44,7 @@ struct imx6_pcie {
+>>       u32                     tx_deemph_gen2_6db;
+>>       u32                     tx_swing_full;
+>>       u32                     tx_swing_low;
+>> +     int                     link_gen;
+>>  };
+>>
+>>  /* PCIe Root Complex registers (memory-mapped) */
+>> @@ -417,11 +418,15 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
+>>               goto err_reset_phy;
+>>       }
+>>
+>> -     /* Allow Gen2 mode after the link is up. */
+>> -     tmp = readl(pp->dbi_base + PCIE_RC_LCR);
+>> -     tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+>> -     tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
+>> -     writel(tmp, pp->dbi_base + PCIE_RC_LCR);
+>> +     if (imx6_pcie->link_gen == 2) {
+>> +             /* Allow Gen2 mode after the link is up. */
+>> +             tmp = readl(pp->dbi_base + PCIE_RC_LCR);
+>> +             tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+>> +             tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
+>> +             writel(tmp, pp->dbi_base + PCIE_RC_LCR);
+>> +     } else {
+>> +             dev_info(pp->dev, "Link: Gen2 disabled\n");
+>> +     }
+>>
+>>       /*
+>>        * Start Directed Speed Change so the best possible speed both link
+>> @@ -445,8 +450,7 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
+>>       }
+>>
+>>       tmp = readl(pp->dbi_base + PCIE_RC_LCSR);
+>> -     dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
+>> -
+>> +     dev_info(pp->dev, "Link up, Gen%i\n", (tmp >> 16) & 0xf);
+>>       return 0;
+>>
+>>  err_reset_phy:
+>> @@ -598,6 +602,12 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>>                                &imx6_pcie->tx_swing_low))
+>>               imx6_pcie->tx_swing_low = 127;
+>>
+>> +     /* Limit link speed */
+>> +     ret = of_property_read_u32(pp->dev->of_node, "fsl,max-link-speed",
+>> +                                &imx6_pcie->link_gen);
+>> +     if (ret)
+>> +             imx6_pcie->link_gen = -1;
+>
+> The binding specifies that if the property is absent, it will default to
+> Gen1, so I would like to see this reflected here by setting the link_gen
+> to 1, not -1.
+>
+>> +
+>>       ret = imx6_add_pcie_port(pp, pdev);
+>>       if (ret < 0)
+>>               return ret;
+>
+>
 
-Yes, I'm pretty sure there are systems like that, e.g., I think SMM
-code on some HP servers assumes the iLO address never changes.  I
-think that is a firmware defect because I don't think there's any spec
-that says firmware retains control over PCI BARs after handoff.  And
-this particular case isn't really ACPI-specific.
+Lucas,
 
-But as you say, we have to deal with these systems anyway, even if we
-consider that behavior broken.  My proposal has been to add quirks to
-mark those devices as IORESOURCE_PCI_FIXED, but I don't think anybody
-has gotten around to doing that.
+I can resend if really necessary but link_gen = -1 specifies to the
+code that there was no default. When link_gen is used during link
+'that' is where it defaults to gen1 if not specifically gen 2.
 
-Bjorn
+Tim
