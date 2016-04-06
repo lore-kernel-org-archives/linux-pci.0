@@ -1,282 +1,149 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ibawizard.net ([82.208.49.253]:49261 "EHLO
+	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755246AbcDFMg5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2016 08:36:57 -0400
+From: =?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
+To: devicetree@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
 	Rob Herring <robh+dt@kernel.org>,
-	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC PATCH 06/11] drivers: iommu: make of_xlate() interface DT agnostic
-Date: Thu, 14 Apr 2016 18:25:38 +0100
-Message-Id: <1460654743-7896-7-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Sascha Hauer <kernel@pengutronix.de>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Tim Harvey <tharvey@gateworks.com>,
+	=?UTF-8?q?Krzysztof=20Ha=C5=82asa?= <khalasa@piap.pl>,
+	Fabio Estevam <festevam@gmail.com>,
+	Marcel Ziswiler <marcel.ziswiler@toradex.com>, stefan@agner.ch,
+	=?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
+Subject: [PATCH v3 2/2] PCI: imx6: Add reset-gpio-active-high boolean property to DT
+Date: Wed,  6 Apr 2016 14:36:47 +0200
+Message-Id: <1459946207-11923-1-git-send-email-ynezz@true.cz>
+In-Reply-To: <1459936100.2256.30.camel@pengutronix.de>
+References: <1459936100.2256.30.camel@pengutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On systems booting with ACPI, the IOMMU drivers require the same
-kind of id mapping carried out with a DT tree through the of_xlate()
-API in order to map devices identifiers to IOMMU ones.
+Currently the reset-gpio DT property which controls the PCI bus device
+reset signal defaults to active-low reset sequence (L=reset state,
+H=operation state) plus the code in reset function isn't GPIO polarity
+aware - it doesn't matter if the defined reset-gpio is active-low or
+active-high, it will always result into active-low reset sequence.
 
-On ACPI systems, since DT nodes are not present (ie struct
-device.of_node == NULL), to identify the device requiring the translation
-the struct device_node (and the structure used to pass translation
-information - struct of_phandle_args - that contains a struct device_node)
-cannot be used, so a generic translation structure to be used for IOMMU
-mapping should be defined, based on the firmware agnostic fwnode_handle
-type.
+I've tried to fix it properly and changed the reset-gpio reset sequence
+to be polarity aware, but this patch has been accepted and then reverted
+as it has introduced few backward incompatible issues:
 
-This patch mechanically refactors/renames the of_xlate API to make
-it DT agnostic, by declaring a new type (struct iommu_fwspec), that
-allows the kernel to pass a device identifier (fwnode - which can
-represent either a DT node or an IOMMU FW node) and by changing the
-of_xlate signature so that it does not take anymore the DT specific
-of_phandle_args argument and replaces it with the DT agnostic
-iommu_fwspec one.
+1. Some of the DTBs as for example imx6qdl-sabresd, doesn't define
+reset-gpio polarity correctly:
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Matthias Brugger <matthias.bgg@gmail.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Marek Szyprowski <m.szyprowski@samsung.com>
+  reset-gpio = <&gpio7 12 0>;
+
+which means, that it's defined as active-high, but in reality it's
+active-low, thus it wouldn't work without DTS fix.
+
+2. The logic in reset function is inverted:
+
+	gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0)
+	msleep(100);
+	gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+
+so even if some of the i.MX6 boards had reset-gpio polarity defined
+correctly in their DTSes, they would stop working.
+
+As we can't break old DTBs, we can't fix them and that's why we need to
+introduce this new DT reset-gpio-active-high boolean property, so we can
+support boards with active-high reset sequence.
+
+This active-high reset sequence is for example needed on Apalis SoMs,
+where GPIO1_IO28, used to PCIe reset is not connected directly to PERST#
+PCIe signal, but it's ORed with RESETBMCU coming off the PMIC, and thus
+is inverted, active-high.
+
+Signed-off-by: Petr Štetiar <ynezz@true.cz>
 ---
- drivers/iommu/arm-smmu.c     | 12 +++++++-----
- drivers/iommu/exynos-iommu.c | 11 +++++++----
- drivers/iommu/mtk_iommu.c    | 13 ++++++++-----
- drivers/iommu/of_iommu.c     | 20 ++++++++++++++++++--
- include/linux/iommu.h        | 24 ++++++++++++++++++++----
- 5 files changed, 60 insertions(+), 20 deletions(-)
+ Changes since v1:
 
-diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
-index 6c42770..84bcff7 100644
---- a/drivers/iommu/arm-smmu.c
-+++ b/drivers/iommu/arm-smmu.c
-@@ -1440,18 +1440,20 @@ out_unlock:
- 	return ret;
- }
+  * Added documentation of reset-gpio and reset-gpio-active-high DT properties
+  * Removed unnecessary double negation of GPIO value
+
+ Changes since v2:
+
+  * Changed commit message so it explains in more detail why we need new DT
+    property
+  * Changed PHY to 'bus device' in binding's documentation
+
+ Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt |  6 ++++++
+ drivers/pci/host/pci-imx6.c                              | 14 +++++++++++---
+ 2 files changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index 3be80c6..072efbf 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -19,6 +19,12 @@ Optional properties:
+ - fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
+ - fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
+ - fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
++- reset-gpio: Should specify the GPIO for controlling the PCI bus device reset
++  signal. Its not polarity aware and defaults to active-low reset sequence
++  (L=reset state, H=operation state).
++- reset-gpio-active-high: If present then the reset sequence using the GPIO
++  specified in the "reset-gpio" property is reversed (H=reset state,
++  L=operation state).
  
--static int arm_smmu_of_xlate(struct device *dev, struct of_phandle_args *args)
-+static int arm_smmu_fw_xlate(struct device *dev, struct iommu_fwspec *args)
- {
- 	struct arm_smmu_device *smmu;
--	struct platform_device *smmu_pdev;
-+	struct platform_device *smmu_pdev = NULL;
-+
-+	if (is_of_node(args->fwnode))
-+		smmu_pdev = of_find_device_by_node(to_of_node(args->fwnode));
+ Example:
  
--	smmu_pdev = of_find_device_by_node(args->np);
- 	if (!smmu_pdev)
- 		return -ENODEV;
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 2f817fa..17f4cc3 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -33,6 +33,7 @@
  
- 	smmu = platform_get_drvdata(smmu_pdev);
+ struct imx6_pcie {
+ 	int			reset_gpio;
++	bool			gpio_active_high;
+ 	struct clk		*pcie_bus;
+ 	struct clk		*pcie_phy;
+ 	struct clk		*pcie;
+@@ -310,9 +311,11 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
  
--	return arm_smmu_add_dev_streamid(smmu, dev, args->args[0]);
-+	return arm_smmu_add_dev_streamid(smmu, dev, args->param[0]);
- }
- 
- static struct iommu_ops arm_smmu_ops = {
-@@ -1468,7 +1470,7 @@ static struct iommu_ops arm_smmu_ops = {
- 	.device_group		= arm_smmu_device_group,
- 	.domain_get_attr	= arm_smmu_domain_get_attr,
- 	.domain_set_attr	= arm_smmu_domain_set_attr,
--	.of_xlate		= arm_smmu_of_xlate,
-+	.fw_xlate		= arm_smmu_fw_xlate,
- 	.pgsize_bitmap		= -1UL, /* Restricted during device attach */
- };
- 
-diff --git a/drivers/iommu/exynos-iommu.c b/drivers/iommu/exynos-iommu.c
-index 5ecc86c..84ff5bb 100644
---- a/drivers/iommu/exynos-iommu.c
-+++ b/drivers/iommu/exynos-iommu.c
-@@ -1250,13 +1250,16 @@ static void exynos_iommu_remove_device(struct device *dev)
- 	iommu_group_remove_device(dev);
- }
- 
--static int exynos_iommu_of_xlate(struct device *dev,
--				 struct of_phandle_args *spec)
-+static int exynos_iommu_fw_xlate(struct device *dev,
-+				 struct iommu_fwspec *args)
- {
- 	struct exynos_iommu_owner *owner = dev->archdata.iommu;
--	struct platform_device *sysmmu = of_find_device_by_node(spec->np);
-+	struct platform_device *sysmmu = NULL;
- 	struct sysmmu_drvdata *data;
- 
-+	if (is_of_node(args->fwnode))
-+		sysmmu = of_find_device_by_node(to_of_node(args->fwnode));
-+
- 	if (!sysmmu)
- 		return -ENODEV;
- 
-@@ -1290,7 +1293,7 @@ static struct iommu_ops exynos_iommu_ops = {
- 	.add_device = exynos_iommu_add_device,
- 	.remove_device = exynos_iommu_remove_device,
- 	.pgsize_bitmap = SECT_SIZE | LPAGE_SIZE | SPAGE_SIZE,
--	.of_xlate = exynos_iommu_of_xlate,
-+	.fw_xlate = exynos_iommu_fw_xlate,
- };
- 
- static bool init_done;
-diff --git a/drivers/iommu/mtk_iommu.c b/drivers/iommu/mtk_iommu.c
-index 929a66a..e08dc0a 100644
---- a/drivers/iommu/mtk_iommu.c
-+++ b/drivers/iommu/mtk_iommu.c
-@@ -436,20 +436,23 @@ static struct iommu_group *mtk_iommu_device_group(struct device *dev)
- 	return data->m4u_group;
- }
- 
--static int mtk_iommu_of_xlate(struct device *dev, struct of_phandle_args *args)
-+static int mtk_iommu_fw_xlate(struct device *dev, struct iommu_fwspec *args)
- {
- 	struct mtk_iommu_client_priv *head, *priv, *next;
- 	struct platform_device *m4updev;
- 
--	if (args->args_count != 1) {
-+	if (!is_of_node(args->fwnode))
-+		return -ENODEV;
-+
-+	if (args->param_count != 1) {
- 		dev_err(dev, "invalid #iommu-cells(%d) property for IOMMU\n",
--			args->args_count);
-+			args->param_count);
- 		return -EINVAL;
+ 	/* Some boards don't have PCIe reset GPIO. */
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+-		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
++		gpio_set_value_cansleep(imx6_pcie->reset_gpio,
++					imx6_pcie->gpio_active_high);
+ 		msleep(100);
+-		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
++		gpio_set_value_cansleep(imx6_pcie->reset_gpio,
++					!imx6_pcie->gpio_active_high);
  	}
- 
- 	if (!dev->archdata.iommu) {
- 		/* Get the m4u device */
--		m4updev = of_find_device_by_node(args->np);
-+		m4updev = of_find_device_by_node(to_of_node(args->fwnode));
- 		of_node_put(args->np);
- 		if (WARN_ON(!m4updev))
- 			return -EINVAL;
-@@ -469,7 +472,7 @@ static int mtk_iommu_of_xlate(struct device *dev, struct of_phandle_args *args)
- 	if (!priv)
- 		goto err_free_mem;
- 
--	priv->mtk_m4u_id = args->args[0];
-+	priv->mtk_m4u_id = args->param[0];
- 	list_add_tail(&priv->client, &head->client);
- 
  	return 0;
-diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-index 910826c..331dd78 100644
---- a/drivers/iommu/of_iommu.c
-+++ b/drivers/iommu/of_iommu.c
-@@ -135,6 +135,18 @@ struct iommu_ops *of_iommu_get_ops(struct device_node *np)
- 	return ops;
- }
  
-+static void of_phandle_args_to_fwspec(struct of_phandle_args *iommu_data,
-+				      struct iommu_fwspec *fwspec)
-+{
-+	int i;
-+
-+	fwspec->fwnode = iommu_data->np ? &iommu_data->np->fwnode : NULL;
-+	fwspec->param_count = iommu_data->args_count;
-+
-+	for (i = 0; i < iommu_data->args_count; i++)
-+		fwspec->param[i] = iommu_data->args[i];
-+}
-+
- static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
- {
- 	struct of_phandle_args *iommu_spec = data;
-@@ -148,6 +160,7 @@ struct iommu_ops *of_iommu_configure(struct device *dev,
- 				     struct device_node *master_np)
- {
- 	struct of_phandle_args iommu_spec;
-+	struct iommu_fwspec fwspec;
- 	struct device_node *np = NULL;
- 	struct iommu_ops *ops = NULL;
- 	int idx = 0;
-@@ -170,8 +183,9 @@ struct iommu_ops *of_iommu_configure(struct device *dev,
+@@ -546,9 +549,14 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
  
- 		iommu_spec.np = np;
- 		iommu_spec.args_count = 1;
-+		of_phandle_args_to_fwspec(&iommu_spec, &fwspec);
- 		ops = of_iommu_get_ops(np);
--		if (!ops || !ops->of_xlate || ops->of_xlate(dev, &iommu_spec))
-+		if (!ops || !ops->fw_xlate || ops->fw_xlate(dev, &fwspec))
- 			goto err_put_node;
- 
- 		of_node_put(np);
-@@ -189,7 +203,9 @@ struct iommu_ops *of_iommu_configure(struct device *dev,
- 		np = iommu_spec.np;
- 		ops = of_iommu_get_ops(np);
- 
--		if (!ops || !ops->of_xlate || ops->of_xlate(dev, &iommu_spec))
-+		of_phandle_args_to_fwspec(&iommu_spec, &fwspec);
-+
-+		if (!ops || !ops->fw_xlate || ops->fw_xlate(dev, &fwspec))
- 			goto err_put_node;
- 
- 		of_node_put(np);
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index 0bba25e..5184d81 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -85,6 +85,24 @@ struct iommu_domain {
- 	void *iova_cookie;
- };
- 
-+#define IOMMU_MAP_SPEC_PARAMS 16
-+
-+/**
-+ * struct iommu_fwspec - generic IOMMU specifier structure
-+ *
-+ * @fwnode:		Pointer to a firmware-specific descriptor
-+ * @param_count:	Number of device-specific parameters
-+ * @param:		Device-specific parameters
-+ *
-+ * This structure, directly modeled after of_phandle_args, is used to
-+ * pass a device-specific description of an IOMMU mapping.
-+ */
-+struct iommu_fwspec {
-+	struct fwnode_handle *fwnode;
-+	int param_count;
-+	u32 param[IOMMU_MAP_SPEC_PARAMS];
-+};
-+
- enum iommu_cap {
- 	IOMMU_CAP_CACHE_COHERENCY,	/* IOMMU can enforce cache coherent DMA
- 					   transactions */
-@@ -155,7 +173,7 @@ struct iommu_dm_region {
-  * @domain_window_disable: Disable a particular window for a domain
-  * @domain_set_windows: Set the number of windows for a domain
-  * @domain_get_windows: Return the number of windows for a domain
-- * @of_xlate: add OF master IDs to iommu grouping
-+ * @fw_xlate: add FW master IDs to iommu grouping
-  * @pgsize_bitmap: bitmap of supported page sizes
-  * @priv: per-instance data private to the iommu driver
-  */
-@@ -196,9 +214,7 @@ struct iommu_ops {
- 	/* Get the number of windows per domain */
- 	u32 (*domain_get_windows)(struct iommu_domain *domain);
- 
--#ifdef CONFIG_OF_IOMMU
--	int (*of_xlate)(struct device *dev, struct of_phandle_args *args);
--#endif
-+	int (*fw_xlate)(struct device *dev, struct iommu_fwspec *args);
- 
- 	unsigned long pgsize_bitmap;
- 	void *priv;
+ 	/* Fetch GPIOs */
+ 	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
++	imx6_pcie->gpio_active_high = of_property_read_bool(np,
++						"reset-gpio-active-high");
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+ 		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
+-					    GPIOF_OUT_INIT_LOW, "PCIe reset");
++				imx6_pcie->gpio_active_high ?
++					GPIOF_OUT_INIT_HIGH :
++					GPIOF_OUT_INIT_LOW,
++				"PCIe reset");
+ 		if (ret) {
+ 			dev_err(&pdev->dev, "unable to get reset gpio\n");
+ 			return ret;
 -- 
-2.6.4
+1.9.1
 
