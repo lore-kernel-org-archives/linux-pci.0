@@ -1,73 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:33409 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751781AbcDSIr3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 04:47:29 -0400
-Received: by mail-pa0-f51.google.com with SMTP id zm5so4667513pac.0
-        for <linux-pci@vger.kernel.org>; Tue, 19 Apr 2016 01:47:28 -0700 (PDT)
-Subject: Re: [PATCH v8 32/45] powerpc/pci: Update bridge windows on PCI plug
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-33-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
-	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <5715F099.1060901@ozlabs.ru>
-Date: Tue, 19 Apr 2016 18:47:21 +1000
-MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-33-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Received: from p3plsmtps2ded01.prod.phx3.secureserver.net ([208.109.80.58]:60441
+	"EHLO p3plsmtps2ded01.prod.phx3.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760550AbcDEXlC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Apr 2016 19:41:02 -0400
+From: Jake Oshins <jakeo@microsoft.com>
+To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com,
+	helgaas@kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v5 4/6] drivers:hv: Track allocations of children of hv_vmbus in private resource tree
+Date: Tue,  5 Apr 2016 18:18:20 -0700
+Message-Id: <1459905502-20798-5-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1459905502-20798-1-git-send-email-jakeo@microsoft.com>
+References: <1459905502-20798-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/17/2016 02:44 PM, Gavin Shan wrote:
-> On the PCI plugging event, PCI slot's subordinate devices are
-> scanned and their (IO and MMIO) resources are assigned. Platform
-> dependent resources (PE#, IO/MMIO/DMA windows) are allocated or
-> created on updating windows of the slot's upstream bridge.
->
-> This updates the windows of the hot plugged slot's upstream bridge
-> in pcibios_finish_adding_to_bus() so that the platform resources
-> (PE#, IO/MMIO/DMA segments) are allocated or created accordingly.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+This patch changes vmbus_allocate_mmio() and vmbus_free_mmio() so
+that when child paravirtual devices allocate memory-mapped I/O
+space, they allocate it privately from a resource tree pointed
+at by hyperv_mmio and also by the public resource tree
+iomem_resource.  This allows the region to be marked as "busy"
+in the private tree, but a "bridge window" in the public tree,
+guaranteeing that no two bridge windows will overlap each other
+but while also allowing the PCI device children of the bridge
+windows to overlap that window.
 
+One might conclude that this belongs in the pnp layer, rather
+than in this driver.  Rafael Wysocki, the maintainter of the
+pnp layer, has previously asked that we not modify the pnp layer
+as it is considered deprecated.  This patch is thus essentially
+a workaround.
 
-To my very limited knowledge of the common PCI code, looks good.
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/hv/vmbus_drv.c | 22 +++++++++++++++++++++-
+ 1 file changed, 21 insertions(+), 1 deletion(-)
 
-
-Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-
-
-
-
-> ---
->   arch/powerpc/kernel/pci-common.c | 8 ++++++--
->   1 file changed, 6 insertions(+), 2 deletions(-)
->
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index 40df3a5..be9e515 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -1444,8 +1444,12 @@ void pcibios_finish_adding_to_bus(struct pci_bus *bus)
->   	/* Allocate bus and devices resources */
->   	pcibios_allocate_bus_resources(bus);
->   	pcibios_claim_one_bus(bus);
-> -	if (!pci_has_flag(PCI_PROBE_ONLY))
-> -		pci_assign_unassigned_bus_resources(bus);
-> +	if (!pci_has_flag(PCI_PROBE_ONLY)) {
-> +		if (bus->self)
-> +			pci_assign_unassigned_bridge_resources(bus->self);
-> +		else
-> +			pci_assign_unassigned_bus_resources(bus);
-> +	}
->
->   	/* Fixup EEH */
->   	eeh_add_device_tree_late(bus);
->
-
-
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index 1ce47d0..dfc6149 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -1128,7 +1128,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			resource_size_t size, resource_size_t align,
+ 			bool fb_overlap_ok)
+ {
+-	struct resource *iter;
++	struct resource *iter, *shadow;
+ 	resource_size_t range_min, range_max, start, local_min, local_max;
+ 	const char *dev_n = dev_name(&device_obj->device);
+ 	u32 fb_end = screen_info.lfb_base + (screen_info.lfb_size << 1);
+@@ -1170,12 +1170,22 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 
+ 			start = (local_min + align - 1) & ~(align - 1);
+ 			for (; start + size - 1 <= local_max; start += align) {
++				shadow = __request_region(iter, start,
++							  size,
++							  NULL,
++							  IORESOURCE_BUSY);
++				if (!shadow)
++					continue;
++
+ 				*new = request_mem_region_exclusive(start, size,
+ 								    dev_n);
+ 				if (*new) {
++					shadow->name = (char *)*new;
+ 					retval = 0;
+ 					goto exit;
+ 				}
++
++				__release_region(iter, start, size);
+ 			}
+ 		}
+ 	}
+@@ -1196,7 +1206,17 @@ EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
+  */
+ void vmbus_free_mmio(resource_size_t start, resource_size_t size)
+ {
++	struct resource *iter;
++
++	down(&hyperv_mmio_lock);
++	for (iter = hyperv_mmio; iter; iter = iter->sibling) {
++		if ((iter->start >= start + size) || (iter->end <= start))
++			continue;
++
++		__release_region(iter, start, size);
++	}
+ 	release_mem_region(start, size);
++	up(&hyperv_mmio_lock);
+ 
+ }
+ EXPORT_SYMBOL_GPL(vmbus_free_mmio);
 -- 
-Alexey
+1.9.1
+
