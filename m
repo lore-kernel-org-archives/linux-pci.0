@@ -1,122 +1,131 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:50003 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753400AbcDFACp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2016 20:02:45 -0400
-Received: from localhost
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 6 Apr 2016 10:02:42 +1000
-Date: Wed, 6 Apr 2016 10:00:52 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
-	aik@ozlabs.ru, alex.williamson@redhat.com,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	nikunj@linux.vnet.ibm.com, eric.auger@linaro.org,
-	will.deacon@arm.com, gwshan@linux.vnet.ibm.com,
-	alistair@popple.id.au, ruscur@russell.cc
-Subject: Re: [RFC v5 7/7] vfio-pci: Allow to mmap MSI-X table if interrupt
- remapping is supported
-Message-ID: <20160406000052.GA4545@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1459864004-2869-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1459864004-2869-2-git-send-email-xyjxie@linux.vnet.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1459864004-2869-2-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jake Oshins <jakeo@microsoft.com>
+To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com,
+	helgaas@kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v5 6/6] drivers:hv: Separate out frame buffer logic when picking MMIO range
+Date: Tue,  5 Apr 2016 18:18:22 -0700
+Message-Id: <1459905502-20798-7-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1459905502-20798-1-git-send-email-jakeo@microsoft.com>
+References: <1459905502-20798-1-git-send-email-jakeo@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 05, 2016 at 09:46:44PM +0800, Yongji Xie wrote:
->This patch enables mmapping MSI-X tables if
->hardware supports interrupt remapping which
->can ensure that a given pci device can only
->shoot the MSIs assigned for it.
->
->Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->---
-> drivers/vfio/pci/vfio_pci.c         |    9 +++++++--
-> drivers/vfio/pci/vfio_pci_private.h |    1 +
-> drivers/vfio/pci/vfio_pci_rdwr.c    |    2 +-
-> 3 files changed, 9 insertions(+), 3 deletions(-)
->
->diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
->index c60d790..ef02896 100644
->--- a/drivers/vfio/pci/vfio_pci.c
->+++ b/drivers/vfio/pci/vfio_pci.c
->@@ -201,6 +201,10 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
-> 	} else
-> 		vdev->msix_bar = 0xFF;
->
->+	if (iommu_capable(pdev->dev.bus, IOMMU_CAP_INTR_REMAP) ||
->+		pdev->bus->bus_flags | PCI_BUS_FLAGS_MSI_REMAP)
->+		vdev->msi_remap = true;
->+
+Simplify the logic that picks MMIO ranges by pulling out the
+logic related to trying to lay frame buffer claim on top of where
+the firmware placed the frame buffer.
 
-I guess you probably need a "&" here. Otherwise, the condition
-is always true.
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/hv/vmbus_drv.c | 80 ++++++++++++++++++++++----------------------------
+ 1 file changed, 35 insertions(+), 45 deletions(-)
 
-> 	if (!vfio_vga_disabled() && vfio_pci_is_vga(pdev))
-> 		vdev->has_vga = true;
->
->@@ -635,7 +639,8 @@ static long vfio_pci_ioctl(void *device_data,
-> 				     VFIO_REGION_INFO_FLAG_WRITE;
-> 			if (vdev->bar_mmap_supported[info.index]) {
-> 				info.flags |= VFIO_REGION_INFO_FLAG_MMAP;
->-				if (info.index == vdev->msix_bar) {
->+				if (info.index == vdev->msix_bar &&
->+						!vdev->msi_remap) {
-> 					ret = msix_sparse_mmap_cap(vdev, &caps);
-> 					if (ret)
-> 						return ret;
->@@ -1067,7 +1072,7 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
-> 	if (req_start + req_len > phys_len)
-> 		return -EINVAL;
->
->-	if (index == vdev->msix_bar) {
->+	if (index == vdev->msix_bar && !vdev->msi_remap) {
-> 		/*
-> 		 * Disallow mmaps overlapping the MSI-X table; users don't
-> 		 * get to touch this directly.  We could find somewhere
->diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
->index 0ea4c62..4f20963 100644
->--- a/drivers/vfio/pci/vfio_pci_private.h
->+++ b/drivers/vfio/pci/vfio_pci_private.h
->@@ -78,6 +78,7 @@ struct vfio_pci_device {
-> 	int			irq_type;
-> 	int			num_regions;
-> 	struct vfio_pci_region	*region;
->+	bool			msi_remap;
-> 	u8			msi_qmax;
-> 	u8			msix_bar;
-> 	u16			msix_size;
->diff --git a/drivers/vfio/pci/vfio_pci_rdwr.c b/drivers/vfio/pci/vfio_pci_rdwr.c
->index 5ffd1d9..606ee3c 100644
->--- a/drivers/vfio/pci/vfio_pci_rdwr.c
->+++ b/drivers/vfio/pci/vfio_pci_rdwr.c
->@@ -164,7 +164,7 @@ ssize_t vfio_pci_bar_rw(struct vfio_pci_device *vdev, char __user *buf,
-> 	} else
-> 		io = vdev->barmap[bar];
->
->-	if (bar == vdev->msix_bar) {
->+	if (bar == vdev->msix_bar && !vdev->msi_remap) {
-> 		x_start = vdev->msix_offset;
-> 		x_end = vdev->msix_offset + vdev->msix_size;
-> 	}
-
-When PCI_BUS_FLAGS_MSI_REMAP is set, the MSIx table can be accessed by
-read/write interface except mmap(). The commit log doesn't mention it.
-It would be better if you have some words about it.
-
-Thanks,
-Gavin
-
-
->-- 
->1.7.9.5
->
-
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index eaa5c3b..a29a6c0 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -1162,64 +1162,54 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+ 			bool fb_overlap_ok)
+ {
+ 	struct resource *iter, *shadow;
+-	resource_size_t range_min, range_max, start, local_min, local_max;
++	resource_size_t range_min, range_max, start;
+ 	const char *dev_n = dev_name(&device_obj->device);
+-	u32 fb_end = screen_info.lfb_base + (screen_info.lfb_size << 1);
+-	int i, retval;
++	int retval;
+ 
+ 	retval = -ENXIO;
+ 	down(&hyperv_mmio_lock);
+ 
++	/*
++	 * If overlaps with frame buffers are allowed, then first attempt to
++	 * make the allocation from within the reserved region.  Because it
++	 * is already reserved, no shadow allocation is necessary.
++	 */
++	if (fb_overlap_ok && fb_mmio && !(min > fb_mmio->end) &&
++	    !(max < fb_mmio->start)) {
++
++		range_min = fb_mmio->start;
++		range_max = fb_mmio->end;
++		start = (range_min + align - 1) & ~(align - 1);
++		for (; start + size - 1 <= range_max; start += align) {
++			*new = request_mem_region_exclusive(start, size, dev_n);
++			if (*new) {
++				retval = 0;
++				goto exit;
++			}
++		}
++	}
++
+ 	for (iter = hyperv_mmio; iter; iter = iter->sibling) {
+ 		if ((iter->start >= max) || (iter->end <= min))
+ 			continue;
+ 
+ 		range_min = iter->start;
+ 		range_max = iter->end;
+-
+-		/* If this range overlaps the frame buffer, split it into
+-		   two tries. */
+-		for (i = 0; i < 2; i++) {
+-			local_min = range_min;
+-			local_max = range_max;
+-			if (fb_overlap_ok || (range_min >= fb_end) ||
+-			    (range_max <= screen_info.lfb_base)) {
+-				i++;
+-			} else {
+-				if ((range_min <= screen_info.lfb_base) &&
+-				    (range_max >= screen_info.lfb_base)) {
+-					/*
+-					 * The frame buffer is in this window,
+-					 * so trim this into the part that
+-					 * preceeds the frame buffer.
+-					 */
+-					local_max = screen_info.lfb_base - 1;
+-					range_min = fb_end;
+-				} else {
+-					range_min = fb_end;
+-					continue;
+-				}
++		start = (range_min + align - 1) & ~(align - 1);
++		for (; start + size - 1 <= range_max; start += align) {
++			shadow = __request_region(iter, start, size, NULL,
++						  IORESOURCE_BUSY);
++			if (!shadow)
++				continue;
++
++			*new = request_mem_region_exclusive(start, size, dev_n);
++			if (*new) {
++				shadow->name = (char *)*new;
++				retval = 0;
++				goto exit;
+ 			}
+ 
+-			start = (local_min + align - 1) & ~(align - 1);
+-			for (; start + size - 1 <= local_max; start += align) {
+-				shadow = __request_region(iter, start,
+-							  size,
+-							  NULL,
+-							  IORESOURCE_BUSY);
+-				if (!shadow)
+-					continue;
+-
+-				*new = request_mem_region_exclusive(start, size,
+-								    dev_n);
+-				if (*new) {
+-					shadow->name = (char *)*new;
+-					retval = 0;
+-					goto exit;
+-				}
+-
+-				__release_region(iter, start, size);
+-			}
++			__release_region(iter, start, size);
+ 		}
+ 	}
+ 
+-- 
+1.9.1
