@@ -1,80 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:56936 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932606AbcDLQJd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 12:09:33 -0400
-Received: from dlelxv90.itg.ti.com ([172.17.2.17])
-	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id u3CG9Rdo024774
-	for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2016 11:09:27 -0500
-Received: from DLEE71.ent.ti.com (dlee71.ent.ti.com [157.170.170.114])
-	by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id u3CG9QvH016664
-	for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2016 11:09:27 -0500
-Received: from [158.218.103.0] (ileax41-snat.itg.ti.com [10.172.224.153])	by
- dlep32.itg.ti.com (8.14.3/8.13.8) with ESMTP id u3CG9Q0w013188	for
- <linux-pci@vger.kernel.org>; Tue, 12 Apr 2016 11:09:26 -0500
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Subject: PCI Endpoint device running Linux?
-Message-ID: <570D1DC7.6040001@ti.com>
-Date: Tue, 12 Apr 2016 12:09:43 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC v5 2/7] PCI: Do not Use IORESOURCE_STARTALIGN to identify
+ bridge resources
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1459863813-2830-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1459863813-2830-3-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160406005534.GB6187@gwshan>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
+	aik@ozlabs.ru, alex.williamson@redhat.com,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
+	nikunj@linux.vnet.ibm.com
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Message-ID: <57047183.9000003@linux.vnet.ibm.com>
+Date: Wed, 6 Apr 2016 10:16:35 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160406005534.GB6187@gwshan>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On 2016/4/6 8:55, Gavin Shan wrote:
+> On Tue, Apr 05, 2016 at 09:43:30PM +0800, Yongji Xie wrote:
+>> Now we use the IORESOURCE_STARTALIGN to identify
+>> bridge resources in __assign_resources_sorted().
+>> That's quite fragile. We can't make sure that
+>> the PCI devices' resources will not use
+>> IORESOURCE_STARTALIGN any more.
+>>
+>> In this patch, we try to use a more robust way
+>> to identify bridge resources.
+>>
+>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>> ---
+>> drivers/pci/setup-bus.c |   10 +++++++---
+>> 1 file changed, 7 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+>> index 7796d0a..bffcf1e 100644
+>> --- a/drivers/pci/setup-bus.c
+>> +++ b/drivers/pci/setup-bus.c
+>> @@ -391,6 +391,7 @@ static void __assign_resources_sorted(struct list_head *head,
+>> 	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
+>> 	unsigned long fail_type;
+>> 	resource_size_t add_align, align;
+>> +	int index;
+>>
+>> 	/* Check if optional add_size is there */
+>> 	if (!realloc_head || list_empty(realloc_head))
+>> @@ -411,11 +412,14 @@ static void __assign_resources_sorted(struct list_head *head,
+>>
+>> 		/*
+>> 		 * There are two kinds of additional resources in the list:
+>> -		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
+>> -		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
+>> +		 * 1. bridge resource
+>> +		 * 2. SR-IOV resource
+>> 		 * Here just fix the additional alignment for bridge
+>> 		 */
+>> -		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
+>> +		index = dev_res->res - dev_res->dev->resource;
+>> +		if (pci_is_bridge(dev_res->dev) &&
+>> +			index >= PCI_BRIDGE_RESOURCES &&
+>> +			index <= PCI_BRIDGE_RESOURCE_END)
+>> 			continue;
+> Yongji, the condition seems incorrect. According to the comments in
+> the code, it's resizing bridge's windows. So I think the code would
+> be something like below?
+>
+> 		if (!pci_is_bridge(dev_res->dev) ||
+> 		    index < PCI_BRIDGE_RESOURCES ||
+> 		    index > PCI_BRIDGE_RESOURCE_END)
+> 			continue;
 
-Has anyone wrote EP software for PCI h/w running Linux and
-would like to share your experience? If so, please continue
-to read below and provide your feedback.
+Yes. I made a mistake here. It should be something like
+the above code.
 
-Some of the PCI h/w such as Designware h/w that I work with 
-support both EP and RC functions in the same h/w. It needs to be
-configured to work in one of the mode. So far I have seen only
-such h/w work in RC mode such as pcie-designware.c. But I haven't
-come across any driver in Linux that implements a EP controller
-similar to RC controller. At this point I am trying to do some
-research to educate myself on what is required to be implemented
-in Linux and what is the available software in PCI subsystem to
-support EP controller and EP device function.
+Thanks,
+Yongji
 
-To support an EP such as a Ethernet NIC or FPGA, there is a 
-firmaware/software in the EP h/w which as a standalone entity does
-setup the Link, initialize the PCI h/w, configure its BAR sizes
-etc and initialize itself so that it is detectable when RC side
-boots up and do the enumeration. In addition, there is PCI device
-driver running on RC side that communicates with the EP H/w
-to implement a specific PCI device function such as NIC. My focus
-is only on the EP side.
-
->From my understanding, at a high level, EP s/w needs to implement
-3 main components similar to RC side.
-
-1. EP Controller. This is what initialize the PCI H/W so that
-   it becomes discoverable on a PCIe bus. It initialize the PCI
-   h/w, setup PCI bus (SerDes), and make sure PCI Link is up
-   and register itself with PCI sub system (assuming PCI in 
-   Linux does support EP controller as well). But I don't know,
-   if same API such as pci_scan_root_bus(), pci_bus_add_devices()
-   etc are used in this case. Comments?
-
-2. PCI Core functions such as resource management, APIs etc.
-   For example, multiple functions can be implemented at the EP
-   and memory/config resource windows to be allocated and
-   managed similar to RC side. PCI core support EP as well??
-
-3. EP PCI device functions. Device drivers for individual PCI
-   device function. 
-
->From a high level, it appears similar to PCI RC side functions.
-Is my understanding correct? Does the existing PCI
-Core support implementing EP side software on Linux? and if so,
-I believe, we need to enhance the existing RC controller to
-work as EP and then write a PCI device driver to support the
-EP PCI device function to work with RC side device driver.
-Comments?
-
-Thanks for reading and awaiting your feedback!
--- 
-Murali Karicheri
-Linux Kernel, Keystone
+>> 		add_align = get_res_add_align(realloc_head, dev_res->res);
+> Thanks,
+> Gavin
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe kvm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
