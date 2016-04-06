@@ -1,281 +1,132 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:53737 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750876AbcD1LdL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Apr 2016 07:33:11 -0400
-Date: Thu, 28 Apr 2016 14:33:04 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
-Subject: Re: [PATCH v4 2/4] PCI: Move PCIe ports to D3 during suspend
-Message-ID: <20160428113304.GJ10202@lahna.fi.intel.com>
-References: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
- <1461578004-129094-3-git-send-email-mika.westerberg@linux.intel.com>
- <CAJZ5v0itrp_=KUo9kFHh8rSN5RYfPk0+iEgeAWZR5rrnFq-jDA@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC v5 6/7] PCI: Add a new bit to pci_bus_flags to indicate
+ interrupt remapping
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1459864004-2869-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20160406001114.GA4976@gwshan>
+Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
+	aik@ozlabs.ru, alex.williamson@redhat.com,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
+	nikunj@linux.vnet.ibm.com, eric.auger@linaro.org,
+	will.deacon@arm.com, alistair@popple.id.au, ruscur@russell.cc
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Message-ID: <57048013.5070802@linux.vnet.ibm.com>
+Date: Wed, 6 Apr 2016 11:18:43 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0itrp_=KUo9kFHh8rSN5RYfPk0+iEgeAWZR5rrnFq-jDA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160406001114.GA4976@gwshan>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 26, 2016 at 11:04:55PM +0200, Rafael J. Wysocki wrote:
-> On Mon, Apr 25, 2016 at 11:53 AM, Mika Westerberg
-> <mika.westerberg@linux.intel.com> wrote:
-> > Currently the Linux PCI core does not touch power state of PCI bridges and
-> > PCIe ports when system suspend is entered. Leaving them in D0 consumes
-> > power which is not good thing in portable devices such as laptops. This may
-> > also prevent the CPU from entering deeper C-states.
-> >
-> > With recent PCIe hardware we can power down the ports to save power given
-> > that we take into account few restrictions:
-> >
-> >   - The PCIe port hardware is recent enough, starting from 2015.
-> >
-> >   - Devices connected to PCIe ports are effectively in D3cold once the port
-> >     is moved to D3 (the config space is not accessible anymore and the link
-> >     may be powered down).
-> >
-> >   - Devices behind the PCIe port need to be allowed to transition to D3cold
-> >     and back. There is a way both drivers and userspace can forbid this.
-> >
-> >   - If the device behind the PCIe port is capable of waking the system it
-> >     needs to be able to do so from D3cold.
-> >
-> > This patch adds a new flag to struct pci_device called 'bridge_d3'. This
-> > flag is set and cleared by the PCI core whenever there is a change in power
-> > management state of any of the devices behind the PCIe port (we provide
-> > helper functions that should be used to change state of the device, like
-> > pci_d3cold_disable()). When system later on is suspended we only need to
-> > check this flag and if it is true transition the port to D3 otherwise we
-> > leave it in D0.
-> >
-> > Also provide override mechanism via command line parameter
-> > "pcie_port_pm=[off|force]" that can be used to disable or enable the
-> > feature regardless of the BIOS manufacturing date.
-> >
-> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > ---
-> >  Documentation/kernel-parameters.txt |   4 +
-> >  drivers/pci/bus.c                   |   1 +
-> >  drivers/pci/pci-driver.c            |  10 +-
-> >  drivers/pci/pci-sysfs.c             |   5 +
-> >  drivers/pci/pci.c                   | 176 ++++++++++++++++++++++++++++++++++++
-> >  drivers/pci/pci.h                   |   2 +
-> >  drivers/pci/remove.c                |   2 +
-> >  drivers/usb/host/xhci-pci.c         |   2 +-
-> >  include/linux/pci.h                 |   3 +
-> >  9 files changed, 200 insertions(+), 5 deletions(-)
-> >
-> > diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-> > index 0b3de80ec8f6..90e1f43760be 100644
-> > --- a/Documentation/kernel-parameters.txt
-> > +++ b/Documentation/kernel-parameters.txt
-> > @@ -3008,6 +3008,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
-> >                 compat  Treat PCIe ports as PCI-to-PCI bridges, disable the PCIe
-> >                         ports driver.
-> >
-> > +       pcie_port_pm=   [PCIE] PCIe port power management handling:
-> > +               off     Disable power management of all PCIe ports
-> > +               force   Forcibly enable power management of all PCIe ports
-> > +
-> >         pcie_pme=       [PCIE,PM] Native PCIe PME signaling options:
-> >                 nomsi   Do not use MSI for native PCIe PME signaling (this makes
-> >                         all PCIe root ports use INTx for all services).
-> > diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> > index 6c9f5467bc5f..b1738162d69a 100644
-> > --- a/drivers/pci/bus.c
-> > +++ b/drivers/pci/bus.c
-> > @@ -291,6 +291,7 @@ void pci_bus_add_device(struct pci_dev *dev)
-> >         pci_fixup_device(pci_fixup_final, dev);
-> >         pci_create_sysfs_dev_files(dev);
-> >         pci_proc_attach_device(dev);
-> > +       pci_bridge_d3_device_changed(dev);
-> >
-> >         dev->match_driver = true;
-> >         retval = device_attach(&dev->dev);
-> > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> > index d7ffd66814bb..e3ece0e25fa3 100644
-> > --- a/drivers/pci/pci-driver.c
-> > +++ b/drivers/pci/pci-driver.c
-> > @@ -777,7 +777,12 @@ static int pci_pm_suspend_noirq(struct device *dev)
-> >
-> >         if (!pci_dev->state_saved) {
-> >                 pci_save_state(pci_dev);
-> > -               if (!pci_has_subordinate(pci_dev))
-> > +               /*
-> > +                * Check if given device can go to low power state. Currently
-> > +                * we allow normal PCI devices and PCI bridges if their
-> > +                * bridge_d3 is set.
-> > +                */
-> > +               if (!pci_has_subordinate(pci_dev) || pci_dev->bridge_d3)
-> 
-> I'd add a helper for this, say pci_power_manageable() or similar.
+On 2016/4/6 8:11, Gavin Shan wrote:
+> On Tue, Apr 05, 2016 at 09:46:43PM +0800, Yongji Xie wrote:
+>> I'm trying to find a proper way to indicate
+>> the capability of interrupt remapping on PPC64
+>> because we need this to determine whether it is
+>> safe to mmap MSI-X table in VFIO driver.
+>>
+>> There is a existing flag for this in the IOMMU
+>> space:
+>>
+>> enum iommu_cap {
+>> 	IOMMU_CAP_CACHE_COHERENCY,
+>> --->    IOMMU_CAP_INTR_REMAP,
+>> 	IOMMU_CAP_NOEXEC,
+>> };
+>>
+>> But it seems to be not a good idea to use
+>> bus_set_iommu() to add this flag on PPC64 which
+>> never set/use iommu_ops.
+>>
+>> Eric also posted a patchset [1] to abstract
+>> this capability on MSI controller side for ARM.
+>> But I found we also never use msi_domain_info
+>> on PPC64. We have to rework the MSI code on
+>> PPC64 to support msi_domain_ops if we want to
+>> use msi_domain_info.
+>>
+>> Then I noticed that interrupt remapping is
+>> abstracted on PCI host bridge side on PPC64.
+>> So I'm thinking whether we could add a new
+>> bit to pci_bus_flags to indicate this
+>> capability, like this patch does.
+>>
+>> Compared with IOMMU_CAP_INTR_REMAP, this
+>> flag is more common. Any arch can set/use this
+>> easily. And it can provide a better granularity
+>> (pci_bus_type -> pci_bus).
+>>
+>> [1] http://www.spinics.net/lists/kvm/msg130262.html
+>>
+>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>> ---
+>> arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
+>> include/linux/pci.h                       |    1 +
+>> 2 files changed, 9 insertions(+)
+>>
+>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> index f90dc04..9557638 100644
+>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>> @@ -3080,6 +3080,12 @@ static void pnv_pci_ioda_fixup(void)
+>> 	pnv_npu_ioda_fixup();
+>> }
+>>
+>> +int pnv_pci_ioda_root_bridge_prepare(struct pci_host_bridge *bridge)
+>> +{
+>> +	bridge->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
+>> +	return 0;
+>> +}
+>> +
+> A irelevent question: Here we set the flag unconditionally. Can the
+> MSIx table be exposed to user space unconditionally? Do we have issues
+> if the MSIx related BAR isn't page aligned or overlapped with others?
 
-OK
+This flag is just used to indicate the capability of MSI
+remapping which means PCI devices on this bus
+can only shoot the MSIs assigned for them. It does
+not mean MSIx table can be exposed to user space
+unconditionally.
 
-> >                         pci_prepare_to_sleep(pci_dev);
-> >         }
-> >
-> > @@ -1144,7 +1149,6 @@ static int pci_pm_runtime_suspend(struct device *dev)
-> >                 return -ENOSYS;
-> >
-> >         pci_dev->state_saved = false;
-> > -       pci_dev->no_d3cold = false;
-> >         error = pm->runtime_suspend(dev);
-> >         if (error) {
-> >                 /*
-> > @@ -1161,8 +1165,6 @@ static int pci_pm_runtime_suspend(struct device *dev)
-> >
-> >                 return error;
-> >         }
-> > -       if (!pci_dev->d3cold_allowed)
-> > -               pci_dev->no_d3cold = true;
-> >
-> >         pci_fixup_device(pci_fixup_suspend, pci_dev);
-> >
-> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> > index 342b6918bbde..1a0854be5b18 100644
-> > --- a/drivers/pci/pci-sysfs.c
-> > +++ b/drivers/pci/pci-sysfs.c
-> > @@ -406,6 +406,11 @@ static ssize_t d3cold_allowed_store(struct device *dev,
-> >                 return -EINVAL;
-> >
-> >         pdev->d3cold_allowed = !!val;
-> > +       if (pdev->d3cold_allowed)
-> > +               pci_d3cold_enable(pdev);
-> > +       else
-> > +               pci_d3cold_disable(pdev);
-> > +
-> >         pm_runtime_resume(dev);
-> >
-> >         return count;
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 25e0327d4429..69878d5e2c2f 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -9,6 +9,7 @@
-> >
-> >  #include <linux/kernel.h>
-> >  #include <linux/delay.h>
-> > +#include <linux/dmi.h>
-> >  #include <linux/init.h>
-> >  #include <linux/of.h>
-> >  #include <linux/of_pci.h>
-> > @@ -101,6 +102,21 @@ unsigned int pcibios_max_latency = 255;
-> >  /* If set, the PCIe ARI capability will not be used. */
-> >  static bool pcie_ari_disabled;
-> >
-> > +/* Disable bridge_d3 for all PCIe ports */
-> > +static bool pci_bridge_d3_disable;
-> > +/* Force bridge_d3 for all PCIe ports */
-> > +static bool pci_bridge_d3_force;
-> > +
-> > +static int __init pcie_port_pm_setup(char *str)
-> > +{
-> > +       if (!strcmp(str, "off"))
-> > +               pci_bridge_d3_disable = true;
-> > +       else if (!strcmp(str, "force"))
-> > +               pci_bridge_d3_force = true;
-> > +       return 1;
-> > +}
-> > +__setup("pcie_port_pm=", pcie_port_pm_setup);
-> > +
-> >  /**
-> >   * pci_bus_max_busnr - returns maximum PCI bus number of given bus' children
-> >   * @bus: pointer to PCI bus structure to search
-> > @@ -2156,6 +2172,165 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
-> >  }
-> >
-> >  /**
-> > + * pci_bridge_d3_possible - Is it possible to move the bridge to D3
-> 
-> It is better to say "transition" than "move" here IMO.  Or even "put
-> ... into ..".
+>> /*
+>>   * Returns the alignment for I/O or memory windows for P2P
+>>   * bridges. That actually depends on how PEs are segmented.
+>> @@ -3364,6 +3370,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>> 	 */
+>> 	ppc_md.pcibios_fixup = pnv_pci_ioda_fixup;
+>>
+>> +	ppc_md.pcibios_root_bridge_prepare = pnv_pci_ioda_root_bridge_prepare;
+>> +
+>> 	if (phb->type == PNV_PHB_NPU)
+>> 		hose->controller_ops = pnv_npu_ioda_controller_ops;
+>> 	else
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 27df4a6..741dcaf 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -193,6 +193,7 @@ typedef unsigned short __bitwise pci_bus_flags_t;
+>> enum pci_bus_flags {
+>> 	PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
+>> 	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
+>> +	PCI_BUS_FLAGS_MSI_REMAP = (__force pci_bus_flags_t) 3,
+> Yongji, I guess the corresponding value to PCI_BUS_FLAGS_MSI_REMAP
+> would be 4 other than 3. Otherwise, two of the flags cannot exist
+> at the same time.
+>
+> Thanks,
+> Gavin
 
-I'll use "put the bridge into D3". Thanks.
+Yes, you are right. It should be 4 (1 << 2).
 
-> > + * @bridge: Bridge to check
-> > + *
-> > + * This function checks if it is possible to move the bridge to D3.
-> > + * Currently we only allow D3 for recent enough PCIe ports.
-> > + */
-> > +static bool pci_bridge_d3_possible(struct pci_dev *bridge)
-> > +{
-> > +       unsigned int year;
-> > +
-> > +       if (!pci_is_pcie(bridge))
-> > +               return false;
-> > +
-> > +       switch (pci_pcie_type(bridge)) {
-> > +       case PCI_EXP_TYPE_ROOT_PORT:
-> > +       case PCI_EXP_TYPE_UPSTREAM:
-> > +       case PCI_EXP_TYPE_DOWNSTREAM:
-> > +               if (pci_bridge_d3_disable)
-> > +                       return false;
-> > +               if (pci_bridge_d3_force)
-> > +                       return true;
-> > +
-> > +               /*
-> > +                * PCIe ports from 2015 and newer should be capable of
-> > +                * entering D3.
-> 
-> This is more about safety than capability.
-> 
-> I'm sure that older PCIe ports can go to D3 too, but at least some of
-> them will not work correctly after going back to D0.
-> 
-> So I'd say "It should be safe to put PCIe ports from 2015 or newer into D3".
+Thanks,
+Yongji
 
-OK
-
-> > +                */
-> > +               if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) &&
-> > +                   year >= 2015) {
-> > +                       return true;
-> > +               }
-> > +               break;
-> > +       }
-> > +
-> > +       return false;
-> > +}
-> > +
-> > +static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
-> > +{
-> > +       bool *d3cold_ok = data;
-> > +
-> > +       /*
-> > +        * The device needs to be allowed to go D3cold and if it is wake
-> > +        * capable to do so from D3cold. If the device is bridge then it
-> > +        * needs to have D3 allowed.
-> > +        */
-> > +       if (dev->no_d3cold || !dev->d3cold_allowed)
-> > +               *d3cold_ok = false;
-> > +       if (device_may_wakeup(&dev->dev) && !pci_pme_capable(dev, PCI_D3cold))
-> > +               *d3cold_ok = false;
-> > +       if (pci_has_subordinate(dev) && !dev->bridge_d3)
-> > +               *d3cold_ok = false;
-> 
-> What about:
-> 
-> bool no_d3cold;
-> 
-> no_d3cold = dev->no_d3cold || !dev->d3cold_allowed ||
->          (device_may_wakeup(&dev->dev) && !pci_pme_capable(dev, PCI_D3cold) ||
->          !pci_power_manageable(dev);
-> 
-> *d3cold_ok = !no_d3cold;
-> 
-> return no_d3cold;
-
-Works for me.
-
-Thanks for the comments!
+>> };
+>>
+>> /* These values come from the PCI Express Spec */
+>> -- 
+>> 1.7.9.5
+>>
