@@ -1,102 +1,111 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
-	alex.williamson@redhat.com, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	eric.auger@linaro.org, will.deacon@arm.com,
-	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
-	ruscur@russell.cc, Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [RFC v5 6/7] PCI: Add a new bit to pci_bus_flags to indicate interrupt remapping
-Date: Tue,  5 Apr 2016 21:46:43 +0800
-Message-Id: <1459864004-2869-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ibawizard.net ([82.208.49.253]:52713 "EHLO
+	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932159AbcDFJeL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2016 05:34:11 -0400
+From: =?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
+To: devicetree@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+	Russell King <linux@arm.linux.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	Tim Harvey <tharvey@gateworks.com>,
+	=?UTF-8?q?Krzysztof=20Ha=C5=82asa?= <khalasa@piap.pl>,
+	Fabio Estevam <festevam@gmail.com>,
+	Marcel Ziswiler <marcel.ziswiler@toradex.com>, stefan@agner.ch,
+	=?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
+Subject: [PATCH v2 2/2] PCI: imx6: Add reset-gpio-active-high boolean property to DT
+Date: Wed,  6 Apr 2016 11:34:04 +0200
+Message-Id: <1459935244-10077-1-git-send-email-ynezz@true.cz>
+In-Reply-To: <CAOMZO5AnN4_RrA4bksWNmioAP1PCBT1Ax4of_OnoCvG+VXgDUQ@mail.gmail.com>
+References: <CAOMZO5AnN4_RrA4bksWNmioAP1PCBT1Ax4of_OnoCvG+VXgDUQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'm trying to find a proper way to indicate
-the capability of interrupt remapping on PPC64
-because we need this to determine whether it is
-safe to mmap MSI-X table in VFIO driver.
+We need that property in order to make the Toradex Apalis SoMs working
+without breaking old DTBs. On Apalis SoMs the GPIO1_IO28 used to PCIe
+reset is not connected directly to PERST# PCIe signal, but it's ORed
+with RESETBMCU coming off the PMIC, and thus is inverted, active-high.
 
-There is a existing flag for this in the IOMMU
-space:
-
-enum iommu_cap {
-	IOMMU_CAP_CACHE_COHERENCY,
---->    IOMMU_CAP_INTR_REMAP,
-	IOMMU_CAP_NOEXEC,
-};
-
-But it seems to be not a good idea to use
-bus_set_iommu() to add this flag on PPC64 which
-never set/use iommu_ops.
-
-Eric also posted a patchset [1] to abstract
-this capability on MSI controller side for ARM.
-But I found we also never use msi_domain_info
-on PPC64. We have to rework the MSI code on
-PPC64 to support msi_domain_ops if we want to
-use msi_domain_info.
-
-Then I noticed that interrupt remapping is
-abstracted on PCI host bridge side on PPC64.
-So I'm thinking whether we could add a new
-bit to pci_bus_flags to indicate this
-capability, like this patch does.
-
-Compared with IOMMU_CAP_INTR_REMAP, this
-flag is more common. Any arch can set/use this
-easily. And it can provide a better granularity
-(pci_bus_type -> pci_bus).
-
-[1] http://www.spinics.net/lists/kvm/msg130262.html
-
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Signed-off-by: Petr Štetiar <ynezz@true.cz>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
- include/linux/pci.h                       |    1 +
- 2 files changed, 9 insertions(+)
+ Changes since v1:
+  
+  * Added documentation of reset-gpio and reset-gpio-active-high DT properties
+  * Removed unnecessary double negation of GPIO value
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index f90dc04..9557638 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -3080,6 +3080,12 @@ static void pnv_pci_ioda_fixup(void)
- 	pnv_npu_ioda_fixup();
- }
+ Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt |  5 +++++
+ drivers/pci/host/pci-imx6.c                              | 14 +++++++++++---
+ 2 files changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index 3be80c6..23ecb47 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -19,6 +19,11 @@ Optional properties:
+ - fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
+ - fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
+ - fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
++- reset-gpio: Should specify the GPIO for PHY reset. Its not polarity aware
++  and defaults to active-low reset sequence (L=reset state, H=operation state).
++- reset-gpio-active-high: If present then the reset sequence using the GPIO
++  specified in the "reset-gpio" property is reversed (H=reset state,
++  L=operation state).
  
-+int pnv_pci_ioda_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
-+	return 0;
-+}
-+
- /*
-  * Returns the alignment for I/O or memory windows for P2P
-  * bridges. That actually depends on how PEs are segmented.
-@@ -3364,6 +3370,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	 */
- 	ppc_md.pcibios_fixup = pnv_pci_ioda_fixup;
+ Example:
  
-+	ppc_md.pcibios_root_bridge_prepare = pnv_pci_ioda_root_bridge_prepare;
-+
- 	if (phb->type == PNV_PHB_NPU)
- 		hose->controller_ops = pnv_npu_ioda_controller_ops;
- 	else
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 27df4a6..741dcaf 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -193,6 +193,7 @@ typedef unsigned short __bitwise pci_bus_flags_t;
- enum pci_bus_flags {
- 	PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
- 	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
-+	PCI_BUS_FLAGS_MSI_REMAP = (__force pci_bus_flags_t) 3,
- };
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 2f817fa..17f4cc3 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -33,6 +33,7 @@
  
- /* These values come from the PCI Express Spec */
+ struct imx6_pcie {
+ 	int			reset_gpio;
++	bool			gpio_active_high;
+ 	struct clk		*pcie_bus;
+ 	struct clk		*pcie_phy;
+ 	struct clk		*pcie;
+@@ -310,9 +311,11 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 
+ 	/* Some boards don't have PCIe reset GPIO. */
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+-		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
++		gpio_set_value_cansleep(imx6_pcie->reset_gpio,
++					imx6_pcie->gpio_active_high);
+ 		msleep(100);
+-		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
++		gpio_set_value_cansleep(imx6_pcie->reset_gpio,
++					!imx6_pcie->gpio_active_high);
+ 	}
+ 	return 0;
+ 
+@@ -546,9 +549,14 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 
+ 	/* Fetch GPIOs */
+ 	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
++	imx6_pcie->gpio_active_high = of_property_read_bool(np,
++						"reset-gpio-active-high");
+ 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+ 		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
+-					    GPIOF_OUT_INIT_LOW, "PCIe reset");
++				imx6_pcie->gpio_active_high ?
++					GPIOF_OUT_INIT_HIGH :
++					GPIOF_OUT_INIT_LOW,
++				"PCIe reset");
+ 		if (ret) {
+ 			dev_err(&pdev->dev, "unable to get reset gpio\n");
+ 			return ret;
 -- 
-1.7.9.5
+1.9.1
+
