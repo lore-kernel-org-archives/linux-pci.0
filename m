@@ -1,116 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44213 "EHLO mail.kernel.org"
+Received: from mail.sysgo.com ([176.9.12.79]:51688 "EHLO mail.sysgo.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752757AbcDUPsg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 21 Apr 2016 11:48:36 -0400
-Date: Thu, 21 Apr 2016 10:48:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Jisheng Zhang <jszhang@marvell.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code to
- dw_pcie_setup_rc()
-Message-ID: <20160421154832.GC32739@localhost>
-References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
- <20160407103734.55e72da7@xhacker>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
- <20160407163443.291fbd49@xhacker>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED44208@lhreml503-mbs>
- <20160407140551.GA2648@localhost>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED45C38@lhreml503-mbs>
- <20160408160145.GA10565@localhost>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED4B88D@lhreml503-mbs>
+	id S1751827AbcDFOBu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 6 Apr 2016 10:01:50 -0400
+Subject: Re: Exception due to PCI: Use pci_is_root_bus() to check for root bus
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <5704F85B.4080501@sysgo.com> <20160406133502.GB4976@localhost>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org
+From: David Engraf <david.engraf@sysgo.com>
+Message-ID: <570516CB.7080406@sysgo.com>
+Date: Wed, 6 Apr 2016 16:01:47 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ED4B88D@lhreml503-mbs>
+In-Reply-To: <20160406133502.GB4976@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 12, 2016 at 09:43:32AM +0000, Gabriele Paoloni wrote:
-> Hi Bjorn
-> 
-> [...]
-> 
-> > > >
-> > > > What's the hisi plan for resuming after suspend-to-RAM?  How does
-> > the
-> > > > RC get reprogrammed after it loses all its state?
-> > >
-> > > PM is not part of the driver yet. This is planned for near
-> > > future release so haven't made such considerations yet
-> > > >
-> > > > What would break if hisi did call dw_pcie_setup_rc()?  I know you
-> > said
-> > > > it would overwrite what the bootloader already did, which is true.
-> > >
-> > > I am try to figure this out now with our HW team.
-> > >
-> > > >
-> > > > But hisi does call dw_pcie_host_init(), so it reads pp->mem (which
-> > > > determines pp->mem_base) and pp->lanes from the DT.  Other drivers
-> > > > then call dw_pcie_setup_rc() which programs the RC based on
-> > > > pp->mem_base and pp->lanes.  So hisi assumes UEFI programmed the RC
-> > to
-> > > > match the DT, while the other drivers read the DT and program the
-> > RC
-> > > > to match.  The latter seems more robust because it enforces the
-> > > > consistency rather than relying on it.
-> > >
-> > > Yes I agree with you, however we have preferred to move RC config to
-> > > BIOS to have a single driver to support multiple versions of the
-> > > same SoC.
-> > 
-> > I think there are two reasonable approaches:
-> > 
-> >   1) A single generic driver that doesn't have any knowledge about the
-> >   chipset registers; it uses run-time firmware interfaces to manage
-> >   the bridge.  The ACPI pci_root.c driver is the best example so far
-> >   and works very well.  It supports basically all x86 and ia64
-> >   chipsets and requires no kernel work for new ones.
-> > 
-> >   2) Native drivers specific to each chipset.  These may get
-> >   configuration information from DT, but they do their own
-> >   register-level programming of the device without run-time help from
-> >   firmware.
-> > 
-> > I think hisi is a native driver because it uses hip05/hip06 registers
-> > to check link state and perform config operations.  And apparently you
-> > rely on the ATU, BAR, class, and link width programming currently done
-> > in dw_pcie_host_init().  But you want to rely on pre-boot firmware to
-> > set up the link.  That doesn't make sense to me -- if the driver wants
-> > to twiddle the registers, it should know how to do it all.  I don't
-> > see how you can reasonably manage this half-way approach.
-> > 
-> > > The patch I proposed above does the same job as the original patch
-> > > proposed by Jisheng and also allows hisi driver to call the moved
-> > > code.
-> > >
-> > > Do you see anything wrong with it?
-> > 
-> > Only that it makes the structure more complicated and we haven't
-> > identified a corresponding benefit yet.
-> 
-> Finally I have checked that assigning .host_init function pointer
-> in our driver to call dw_pcie_setup_rc() will not affect the values
-> already set by BIOS.
-> 
-> Also I agree with you that a hybrid approach is not ideal.
-> 
-> So I will update the driver to call dw_pcie_setup_rc() from
-> .host_init and ask the BIOS team to update the firmware for next
-> releases (the driver will be backward compatible anyway). 
+Hi Bjorn,
 
-Am I right in assuming that the patch currently in my tree:
+Am 06.04.2016 um 15:35 schrieb Bjorn Helgaas:
+> Hi David,
+>
+> On Wed, Apr 06, 2016 at 01:51:55PM +0200, David Engraf wrote:
+>> Hi,
+>>
+>> I have an exception in __pci_bus_size_bridges() when pci_is_root_bus
+>> returns false but bus->self == NULL. My driver registers a virtual
+>> bus, like virtfn_add_bus(). pci_add_new_bus() is called with a
+>> parent but without a pci_dev. Thus bus->parent is set but bus->self
+>> is NULL. When __pci_bus_size_bridges() is called I get an exception
+>> at:
+>>
+>> switch (bus->self->class >> 8)
+>>
+>> The previous version of the code, checking for bus->self != NULL
+>> worked for me. I think an additional check is required to make sure
+>> we're not accessing a NULL pointer.
+>
+> When you say "previous version of the code," do you mean a previous
+> version of Linux worked correctly but a newer version does not?  What
+> versions are they?  Did you identify a commit that changed the
+> behavior?  I assume you're talking about an out-of-tree driver that
+> registers a virtual bus?  Can you point us to the code?  Can you share
+> the dmesg log, including the backtrace?
 
-https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-designware&id=1488aefa37a4033080942c860294d13c613ec829
+With previous version, I mean reverting commit 
+2ba29e270e977b213a7d58ae1152c23a1c3074a3. This will check for bus->self 
+instead of using pci_is_root_bus().
+I'm working on a driver which is basically based on drivers/pci/iov.c.
 
-will work for you?  I'm going to assume so unless I hear otherwise.
+The code looks like this:
 
-Bjorn
+child = pci_add_new_bus(parent, NULL, busnr);
+
+This will create child with child->parent = parent and child->self = 
+NULL. When the kernel calls __pci_bus_size_bridges(), accessing 
+bus->self->class crashes:
+
+/* The root bus? */
+if (pci_is_root_bus(bus))
+	return;
+
+switch (bus->self->class >> 8) { <- crash here because of bus->self == NULL
+
+Best regards
+David
