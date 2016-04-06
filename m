@@ -1,169 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:35632 "EHLO
-	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750953AbcDFOAv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2016 10:00:51 -0400
-Received: by mail-oi0-f43.google.com with SMTP id p188so58893610oih.2
-        for <linux-pci@vger.kernel.org>; Wed, 06 Apr 2016 07:00:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1459935692.2256.26.camel@pengutronix.de>
-References: <1459873754-31410-1-git-send-email-tharvey@gateworks.com>
-	<1459935692.2256.26.camel@pengutronix.de>
-Date: Wed, 6 Apr 2016 07:00:45 -0700
-Message-ID: <CAJ+vNU3XGboOAh2CnMHyQDgGQ40qYFGt=XQkRu54G6-tmR=9MA@mail.gmail.com>
-Subject: Re: [PATCH v4] PCI: imx6: add dt prop for link gen, default to gen1
-From: Tim Harvey <tharvey@gateworks.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	Zhu Richard <Richard.Zhu@freescale.com>,
-	Akshay Bhat <akshay.bhat@timesys.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Shawn Guo <shawnguo@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from p3plsmtps2ded04.prod.phx3.secureserver.net ([208.109.80.198]:34437
+	"EHLO p3plsmtps2ded04.prod.phx3.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760559AbcDEXlD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Apr 2016 19:41:03 -0400
+From: Jake Oshins <jakeo@microsoft.com>
+To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com,
+	helgaas@kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v5 5/6] drivers:hv: Record MMIO range in use by frame buffer
+Date: Tue,  5 Apr 2016 18:18:21 -0700
+Message-Id: <1459905502-20798-6-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <1459905502-20798-1-git-send-email-jakeo@microsoft.com>
+References: <1459905502-20798-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 6, 2016 at 2:41 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> Am Dienstag, den 05.04.2016, 09:29 -0700 schrieb Tim Harvey:
->> Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
->> the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
->> external clock source is present and supplied back to the IMX6 PCIe core
->> via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
->>
->> Add a dt property to specify gen1 vs gen2 and check this before allowing
->> a Gen2 link.
->>
->> We default to Gen1 if the property is not present because at this time there
->> are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
->>
->> In order to be Gen2 compliant on IMX6 you need to:
->>  - have a Gen2 compliant external clock generator and route that clock back
->>    to either LVDS CLK1 or LVDS CLK2 as an input.
->>    (see IMX6SX-SabreSD reference design)
->>  - specify this clock in the pcie node in the dt
->>    (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
->>     IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
->>
->> [1] https://community.freescale.com/message/453209
->>
->> Cc: Lucas Stach <l.stach@pengutronix.de>
->> Cc: Bjorn Helgaas <helgaas@kernel.org>
->> Cc: Fabio Estevam <fabio.estevam@freescale.com>
->> Cc: Zhu Richard <Richard.Zhu@freescale.com>
->> Cc: Akshay Bhat <akshay.bhat@timesys.com>
->> Cc: Rob Herring <robh+dt@kernel.org>
->> Cc: Shawn Guo <shawnguo@kernel.org>
->> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
->
-> One nit below. Maybe Bjorn can fix this up while applying, otherwise if
-> you need to resend you may carry the blow tag.
->
-> Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
->> ---
->> v4:
->>  - rebase against linux-pci/master
->>  - add fsl vendor prefix to dt prop
->>
->> v3:
->>  - added note in dt bindings doc that we limit to gen1 unless this is specified
->>    as gen2 capable
->>  - move property to imx6 pcie phy instead of designware core
->>  - don't use &ret as temp storage as of_property_read_u32() doesn't change the
->>    outval if property isn't found
->> v2:
->>  - moved dt property to designware core
->>
->> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
->> ---
->>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  4 ++++
->>  drivers/pci/host/pci-imx6.c                        | 24 +++++++++++++++-------
->>  2 files changed, 21 insertions(+), 7 deletions(-)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
->> index 3be80c6..b92fafb 100644
->> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
->> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
->> @@ -19,6 +19,10 @@ Optional properties:
->>  - fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
->>  - fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
->>  - fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
->> +- fsl,max-link-speed: Specify PCI gen for link capability. Must be '2' for
->> +  gen2, otherwise will default to gen1. Note that the IMX6 LVDS clock outputs
->> +  do not meet gen2 jitter requirements and thus for gen2 capability a gen2
->> +  compliant clock generator should be used and configured.
->>
->>  Example:
->>
->> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
->> index eb5a275..9656ac7 100644
->> --- a/drivers/pci/host/pci-imx6.c
->> +++ b/drivers/pci/host/pci-imx6.c
->> @@ -44,6 +44,7 @@ struct imx6_pcie {
->>       u32                     tx_deemph_gen2_6db;
->>       u32                     tx_swing_full;
->>       u32                     tx_swing_low;
->> +     int                     link_gen;
->>  };
->>
->>  /* PCIe Root Complex registers (memory-mapped) */
->> @@ -417,11 +418,15 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
->>               goto err_reset_phy;
->>       }
->>
->> -     /* Allow Gen2 mode after the link is up. */
->> -     tmp = readl(pp->dbi_base + PCIE_RC_LCR);
->> -     tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
->> -     tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
->> -     writel(tmp, pp->dbi_base + PCIE_RC_LCR);
->> +     if (imx6_pcie->link_gen == 2) {
->> +             /* Allow Gen2 mode after the link is up. */
->> +             tmp = readl(pp->dbi_base + PCIE_RC_LCR);
->> +             tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
->> +             tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
->> +             writel(tmp, pp->dbi_base + PCIE_RC_LCR);
->> +     } else {
->> +             dev_info(pp->dev, "Link: Gen2 disabled\n");
->> +     }
->>
->>       /*
->>        * Start Directed Speed Change so the best possible speed both link
->> @@ -445,8 +450,7 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
->>       }
->>
->>       tmp = readl(pp->dbi_base + PCIE_RC_LCSR);
->> -     dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
->> -
->> +     dev_info(pp->dev, "Link up, Gen%i\n", (tmp >> 16) & 0xf);
->>       return 0;
->>
->>  err_reset_phy:
->> @@ -598,6 +602,12 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
->>                                &imx6_pcie->tx_swing_low))
->>               imx6_pcie->tx_swing_low = 127;
->>
->> +     /* Limit link speed */
->> +     ret = of_property_read_u32(pp->dev->of_node, "fsl,max-link-speed",
->> +                                &imx6_pcie->link_gen);
->> +     if (ret)
->> +             imx6_pcie->link_gen = -1;
->
-> The binding specifies that if the property is absent, it will default to
-> Gen1, so I would like to see this reflected here by setting the link_gen
-> to 1, not -1.
->
->> +
->>       ret = imx6_add_pcie_port(pp, pdev);
->>       if (ret < 0)
->>               return ret;
->
->
+Later in the boot sequence, we need to figure out which memory
+ranges can be given out to various paravirtual drivers.  The
+hyperv_fb driver should, ideally, be placed right on top of
+the frame buffer, without some other device getting plopped on
+top of this range in the meantime.  Recording this now allows
+that to be guaranteed.
 
-Lucas,
+Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+---
+ drivers/hv/vmbus_drv.c | 37 ++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 36 insertions(+), 1 deletion(-)
 
-I can resend if really necessary but link_gen = -1 specifies to the
-code that there was no default. When link_gen is used during link
-'that' is where it defaults to gen1 if not specifically gen 2.
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index dfc6149..eaa5c3b 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -41,6 +41,7 @@
+ #include <linux/ptrace.h>
+ #include <linux/screen_info.h>
+ #include <linux/kdebug.h>
++#include <linux/efi.h>
+ #include "hyperv_vmbus.h"
+ 
+ static struct acpi_device  *hv_acpi_dev;
+@@ -101,6 +102,8 @@ static struct notifier_block hyperv_panic_block = {
+ 	.notifier_call = hyperv_panic_event,
+ };
+ 
++static const char *fb_mmio_name = "fb_range";
++static struct resource *fb_mmio;
+ struct resource *hyperv_mmio;
+ DEFINE_SEMAPHORE(hyperv_mmio_lock);
+ 
+@@ -1091,6 +1094,12 @@ static int vmbus_acpi_remove(struct acpi_device *device)
+ 	struct resource *next_res;
+ 
+ 	if (hyperv_mmio) {
++		if (fb_mmio) {
++			__release_region(hyperv_mmio, fb_mmio->start,
++					 resource_size(fb_mmio));
++			fb_mmio = NULL;
++		}
++
+ 		for (cur_res = hyperv_mmio; cur_res; cur_res = next_res) {
+ 			next_res = cur_res->sibling;
+ 			kfree(cur_res);
+@@ -1100,6 +1109,30 @@ static int vmbus_acpi_remove(struct acpi_device *device)
+ 	return 0;
+ }
+ 
++static void vmbus_reserve_fb(void)
++{
++	int size;
++	/*
++	 * Make a claim for the frame buffer in the resource tree under the
++	 * first node, which will be the one below 4GB.  The length seems to
++	 * be underreported, particularly in a Generation 1 VM.  So start out
++	 * reserving a larger area and make it smaller until it succeeds.
++	 */
++
++	if (screen_info.lfb_base) {
++		if (efi_enabled(EFI_BOOT))
++			size = max_t(__u32, screen_info.lfb_size, 0x800000);
++		else
++			size = max_t(__u32, screen_info.lfb_size, 0x4000000);
++
++		for (; !fb_mmio && (size >= 0x100000); size >>= 1) {
++			fb_mmio = __request_region(hyperv_mmio,
++						   screen_info.lfb_base, size,
++						   fb_mmio_name, 0);
++		}
++	}
++}
++
+ /**
+  * vmbus_allocate_mmio() - Pick a memory-mapped I/O range.
+  * @new:		If successful, supplied a pointer to the
+@@ -1261,8 +1294,10 @@ static int vmbus_acpi_add(struct acpi_device *device)
+ 
+ 		if (ACPI_FAILURE(result))
+ 			continue;
+-		if (hyperv_mmio)
++		if (hyperv_mmio) {
++			vmbus_reserve_fb();
+ 			break;
++		}
+ 	}
+ 	ret_val = 0;
+ 
+-- 
+1.9.1
 
-Tim
