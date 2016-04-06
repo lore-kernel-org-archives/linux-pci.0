@@ -1,64 +1,68 @@
-Return-Path: <matt@console-pimps.org>
-Return-Path: <matt@console-pimps.org>
-Date: Sat, 30 Apr 2016 22:17:38 +0100
-From: Matt Fleming <matt@codeblueprint.co.uk>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Alexander Graf <agraf@suse.de>,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	linux-pci@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Peter Jones <pjones@redhat.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH] arm64: Relocate screen_info.lfb_base on PCI BAR
- allocation
-Message-ID: <20160430211738.GN2839@codeblueprint.co.uk>
-References: <20160428180641.GA25125@localhost>
- <57228317.1030808@suse.de>
- <20160429134126.GA949@localhost>
- <CAKv+Gu-4vqT-tQXdwJbLV0r3FhtrYk=TOWxDYS6LjG_BNf=b_A@mail.gmail.com>
- <20160429200609.GA28261@localhost>
- <35998183-0322-49D4-91CD-4D441577C44F@linaro.org>
- <5723C956.4040907@suse.de>
- <20160429213751.GB5359@localhost>
- <5723D7AF.3080108@suse.de>
- <20160429233119.GA10197@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ibawizard.net ([82.208.49.253]:41429 "EHLO
+	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753843AbcDFILr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2016 04:11:47 -0400
+Date: Wed, 6 Apr 2016 10:11:40 +0200
+From: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Krzysztof =?iso-8859-2?Q?Ha=B3asa?= <khalasa@piap.pl>,
+	Marcel Ziswiler <marcel.ziswiler@toradex.com>,
+	Stefan Agner <stefan@agner.ch>
+Subject: Re: [PATCH 2/2] PCI: imx6: Add reset-gpio-active-high boolean
+	property to DT
+Message-ID: <20160406081140.GR20367@ibawizard.net>
+Reply-To: Petr =?iso-8859-2?Q?=A9tetiar?= <ynezz@true.cz>
+References: <1459514508-8557-1-git-send-email-ynezz@true.cz> <1459514508-8557-3-git-send-email-ynezz@true.cz> <CAOMZO5AnN4_RrA4bksWNmioAP1PCBT1Ax4of_OnoCvG+VXgDUQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160429233119.GA10197@localhost>
+In-Reply-To: <CAOMZO5AnN4_RrA4bksWNmioAP1PCBT1Ax4of_OnoCvG+VXgDUQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(Pulling in efifb maintainer, Peter)
+Fabio Estevam <festevam@gmail.com> [2016-04-05 12:46:53]:
 
-On Fri, 29 Apr, at 06:31:19PM, Bjorn Helgaas wrote:
+> > @@ -546,9 +549,14 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+> >
+> >         /* Fetch GPIOs */
+> >         imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+> > +       imx6_pcie->gpio_active_high = of_property_read_bool(np,
+> > +                                               "reset-gpio-active-high");
 > 
-> The efifb.c driver doesn't do anything at all with PCI (it includes
-> linux/pci.h, but probably doesn't need it).  That's part of what I'm
-> suggesting -- if it *did* register as a PCI device driver, then it
-> would look at pci_dev->resource[n], which is populated by the PCI
-> core based on the BAR values.
- 
-This discussion came up recently here,
+> You need to document reset-gpio-active-high property in
+> Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt.
 
-  https://lkml.kernel.org/r/20160216151859.GB11373@redhat.com
+Is something like this fine?
 
-There's nothing PCI-specific about the EFI framebuffer per se, but in
-practice it's always a PCI device.
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index 3be80c6..23ecb47 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -19,6 +19,11 @@ Optional properties:
+ - fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
+ - fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
+ - fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
++- reset-gpio: Should specify the GPIO for PHY reset. Its not polarity aware
++  and defaults to active-low reset sequence (L=reset state, H=operation state).
++- reset-gpio-active-high: If present then the reset sequence using the GPIO
++  specified in the "reset-gpio" property is reversed (H=reset state,
++  L=operation state).
 
-> Is ConOut what you're after?  I.e., is the whole point of this
-> exercise to get a framebuffer driver attached to the device that was
-> the firmware console?  I would think the ConOut path should be
-> decodable -- it has to tell you how to navigate the interconnect from
-> the CPU to the device.  But I don't know how to do it.
-> 
-> It looks like on x86, at least, setup_gop32()/setup_gop64() might be
-> extracting the framebuffer address from the ConOut device and stuffing
-> it into screen_info, which is what efifb.c later looks at (maybe this
-> is what Ard was referring to).
- 
-Matthew Garrett wrote the x86 code for guessing where the console is.
-We look for the ConOut protocol with a fallback to first GOP device if
-we can't find it. I think the heuristic was based on reading the
-implementation in EDK2. See commit 38cb5ef4473c ("X86: Improve GOP
-detection in the EFI boot stub").
+-- ynezz
