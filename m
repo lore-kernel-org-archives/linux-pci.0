@@ -1,135 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:35966 "EHLO
-	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751035AbcDSE27 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 00:28:59 -0400
-Received: by mail-pf0-f173.google.com with SMTP id e128so2410708pfe.3
-        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 21:28:58 -0700 (PDT)
-Subject: Re: [PATCH v8 22/45] powerpc/powernv/ioda1: Support releasing IODA1
- TCE table
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-23-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
-	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <5715B403.7050408@ozlabs.ru>
-Date: Tue, 19 Apr 2016 14:28:51 +1000
-MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-23-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:32781 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754364AbcDFXMR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2016 19:12:17 -0400
+Received: by mail-pa0-f54.google.com with SMTP id zm5so42007665pac.0
+        for <linux-pci@vger.kernel.org>; Wed, 06 Apr 2016 16:12:17 -0700 (PDT)
+From: Tim Harvey <tharvey@gateworks.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Lucas Stach <l.stach@pengutronix.de>,
+	Fabio Estevam <fabio.estevam@freescale.com>,
+	Zhu Richard <Richard.Zhu@freescale.com>,
+	Akshay Bhat <akshay.bhat@timesys.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Shawn Guo <shawnguo@kernel.org>
+Subject: [PATCH v5] PCI: imx6: add dt prop for link gen, default to gen1
+Date: Wed,  6 Apr 2016 16:14:54 -0700
+Message-Id: <1459984494-15782-1-git-send-email-tharvey@gateworks.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/17/2016 02:44 PM, Gavin Shan wrote:
-> pnv_pci_ioda_table_free_pages() can be reused to release the IODA1
-> TCE table when releasing IODA1 PE in subsequent patches.
->
-> This renames the following functions to support releasing IODA1 TCE
-> table: pnv_pci_ioda2_table_free_pages() to pnv_pci_ioda_table_free_pages(),
-> pnv_pci_ioda2_table_do_free_pages() to pnv_pci_ioda_table_do_free_pages().
-> No logical changes introduced.
+Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
+the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
+external clock source is present and supplied back to the IMX6 PCIe core
+via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
 
-I can only see renaming here but it seems (from 
-IODA_architecture_04-14-2008.pdf) that IODA1 does not support multi-level 
-TCE tables in the way IODA2 does.
+Add a dt property to specify gen1 vs gen2 and check this before allowing
+a Gen2 link.
 
+We default to Gen1 if the property is not present because at this time there
+are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
 
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/platforms/powernv/pci-ioda.c | 18 +++++++++---------
->   1 file changed, 9 insertions(+), 9 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index d360607..077f9db 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -51,7 +51,7 @@
->   #define POWERNV_IOMMU_DEFAULT_LEVELS	1
->   #define POWERNV_IOMMU_MAX_LEVELS	5
->
-> -static void pnv_pci_ioda2_table_free_pages(struct iommu_table *tbl);
-> +static void pnv_pci_ioda_table_free_pages(struct iommu_table *tbl);
->
->   static void pe_level_printk(const struct pnv_ioda_pe *pe, const char *level,
->   			    const char *fmt, ...)
-> @@ -1352,7 +1352,7 @@ static void pnv_pci_ioda2_release_dma_pe(struct pci_dev *dev, struct pnv_ioda_pe
->   		iommu_group_put(pe->table_group.group);
->   		BUG_ON(pe->table_group.group);
->   	}
-> -	pnv_pci_ioda2_table_free_pages(tbl);
-> +	pnv_pci_ioda_table_free_pages(tbl);
->   	iommu_free_table(tbl, of_node_full_name(dev->dev.of_node));
->   }
->
-> @@ -1946,7 +1946,7 @@ static void pnv_ioda2_tce_free(struct iommu_table *tbl, long index,
->
->   static void pnv_ioda2_table_free(struct iommu_table *tbl)
->   {
-> -	pnv_pci_ioda2_table_free_pages(tbl);
-> +	pnv_pci_ioda_table_free_pages(tbl);
->   	iommu_free_table(tbl, "pnv");
->   }
->
-> @@ -2448,7 +2448,7 @@ static __be64 *pnv_pci_ioda2_table_do_alloc_pages(int nid, unsigned shift,
->   	return addr;
->   }
->
-> -static void pnv_pci_ioda2_table_do_free_pages(__be64 *addr,
-> +static void pnv_pci_ioda_table_do_free_pages(__be64 *addr,
->   		unsigned long size, unsigned level);
->
->   static long pnv_pci_ioda2_table_alloc_pages(int nid, __u64 bus_offset,
-> @@ -2487,7 +2487,7 @@ static long pnv_pci_ioda2_table_alloc_pages(int nid, __u64 bus_offset,
->   	 * release partially allocated table.
->   	 */
->   	if (offset < tce_table_size) {
-> -		pnv_pci_ioda2_table_do_free_pages(addr,
-> +		pnv_pci_ioda_table_do_free_pages(addr,
->   				1ULL << (level_shift - 3), levels - 1);
->   		return -ENOMEM;
->   	}
-> @@ -2505,7 +2505,7 @@ static long pnv_pci_ioda2_table_alloc_pages(int nid, __u64 bus_offset,
->   	return 0;
->   }
->
-> -static void pnv_pci_ioda2_table_do_free_pages(__be64 *addr,
-> +static void pnv_pci_ioda_table_do_free_pages(__be64 *addr,
->   		unsigned long size, unsigned level)
->   {
->   	const unsigned long addr_ul = (unsigned long) addr &
-> @@ -2521,7 +2521,7 @@ static void pnv_pci_ioda2_table_do_free_pages(__be64 *addr,
->   			if (!(hpa & (TCE_PCI_READ | TCE_PCI_WRITE)))
->   				continue;
->
-> -			pnv_pci_ioda2_table_do_free_pages(__va(hpa), size,
-> +			pnv_pci_ioda_table_do_free_pages(__va(hpa), size,
->   					level - 1);
->   		}
->   	}
-> @@ -2529,7 +2529,7 @@ static void pnv_pci_ioda2_table_do_free_pages(__be64 *addr,
->   	free_pages(addr_ul, get_order(size << 3));
->   }
->
-> -static void pnv_pci_ioda2_table_free_pages(struct iommu_table *tbl)
-> +static void pnv_pci_ioda_table_free_pages(struct iommu_table *tbl)
->   {
->   	const unsigned long size = tbl->it_indirect_levels ?
->   			tbl->it_level_size : tbl->it_size;
-> @@ -2537,7 +2537,7 @@ static void pnv_pci_ioda2_table_free_pages(struct iommu_table *tbl)
->   	if (!tbl->it_size)
->   		return;
->
-> -	pnv_pci_ioda2_table_do_free_pages((__be64 *)tbl->it_base, size,
-> +	pnv_pci_ioda_table_do_free_pages((__be64 *)tbl->it_base, size,
->   			tbl->it_indirect_levels);
->   }
->
->
+In order to be Gen2 compliant on IMX6 you need to:
+ - have a Gen2 compliant external clock generator and route that clock back
+   to either LVDS CLK1 or LVDS CLK2 as an input.
+   (see IMX6SX-SabreSD reference design)
+ - specify this clock in the pcie node in the dt
+   (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
+    IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
 
+[1] https://community.freescale.com/message/453209
 
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Fabio Estevam <fabio.estevam@freescale.com>
+Cc: Zhu Richard <Richard.Zhu@freescale.com>
+Cc: Akshay Bhat <akshay.bhat@timesys.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Shawn Guo <shawnguo@kernel.org>
+Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+---
+v5:
+ - clearly default link gen to 1 when dt prop is read to avoid confusion
+v4:
+ - rebase against linux-pci/master
+ - add fsl vendor prefix to dt prop
+
+v3:
+ - added note in dt bindings doc that we limit to gen1 unless this is specified
+   as gen2 capable
+ - move property to imx6 pcie phy instead of designware core
+ - don't use &ret as temp storage as of_property_read_u32() doesn't change the
+   outval if property isn't found
+v2:
+ - moved dt property to designware core
+
+Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+---
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  4 ++++
+ drivers/pci/host/pci-imx6.c                        | 24 +++++++++++++++-------
+ 2 files changed, 21 insertions(+), 7 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index 3be80c6..b92fafb 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -19,6 +19,10 @@ Optional properties:
+ - fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
+ - fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
+ - fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
++- fsl,max-link-speed: Specify PCI gen for link capability. Must be '2' for
++  gen2, otherwise will default to gen1. Note that the IMX6 LVDS clock outputs
++  do not meet gen2 jitter requirements and thus for gen2 capability a gen2
++  compliant clock generator should be used and configured.
+ 
+ Example:
+ 
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index eb5a275..60a14b8 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -44,6 +44,7 @@ struct imx6_pcie {
+ 	u32			tx_deemph_gen2_6db;
+ 	u32			tx_swing_full;
+ 	u32			tx_swing_low;
++	int			link_gen;
+ };
+ 
+ /* PCIe Root Complex registers (memory-mapped) */
+@@ -417,11 +418,15 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
+ 		goto err_reset_phy;
+ 	}
+ 
+-	/* Allow Gen2 mode after the link is up. */
+-	tmp = readl(pp->dbi_base + PCIE_RC_LCR);
+-	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+-	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
+-	writel(tmp, pp->dbi_base + PCIE_RC_LCR);
++	if (imx6_pcie->link_gen == 2) {
++		/* Allow Gen2 mode after the link is up. */
++		tmp = readl(pp->dbi_base + PCIE_RC_LCR);
++		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
++		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
++		writel(tmp, pp->dbi_base + PCIE_RC_LCR);
++	} else {
++		dev_info(pp->dev, "Link: Gen2 disabled\n");
++	}
+ 
+ 	/*
+ 	 * Start Directed Speed Change so the best possible speed both link
+@@ -445,8 +450,7 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
+ 	}
+ 
+ 	tmp = readl(pp->dbi_base + PCIE_RC_LCSR);
+-	dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
+-
++	dev_info(pp->dev, "Link up, Gen%i\n", (tmp >> 16) & 0xf);
+ 	return 0;
+ 
+ err_reset_phy:
+@@ -598,6 +602,12 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 				 &imx6_pcie->tx_swing_low))
+ 		imx6_pcie->tx_swing_low = 127;
+ 
++	/* Limit link speed */
++	ret = of_property_read_u32(pp->dev->of_node, "fsl,max-link-speed",
++				   &imx6_pcie->link_gen);
++	if (ret)
++		imx6_pcie->link_gen = 1;
++
+ 	ret = imx6_add_pcie_port(pp, pdev);
+ 	if (ret < 0)
+ 		return ret;
 -- 
-Alexey
+1.9.1
+
