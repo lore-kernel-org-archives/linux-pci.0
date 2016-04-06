@@ -1,119 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:56065 "EHLO mga03.intel.com"
+Received: from p3plsmtps2ded03.prod.phx3.secureserver.net ([208.109.80.60]:57539
+	"EHLO p3plsmtps2ded03.prod.phx3.secureserver.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753064AbcDNKEf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Apr 2016 06:04:35 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [PATCH v3 0/4] PCI: Add support for suspending (including runtime) of PCIe ports
-Date: Thu, 14 Apr 2016 13:04:24 +0300
-Message-Id: <1460628268-16204-1-git-send-email-mika.westerberg@linux.intel.com>
+	id S1753543AbcDEXkr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 5 Apr 2016 19:40:47 -0400
+From: Jake Oshins <jakeo@microsoft.com>
+To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com,
+	helgaas@kernel.org
+Cc: Jake Oshins <jakeo@microsoft.com>
+Subject: [PATCH v5 0/6] drivers:hv: Ensure that bridge windows don't overlap
+Date: Tue,  5 Apr 2016 18:18:16 -0700
+Message-Id: <1459905502-20798-1-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current Linux PCI core does not do any kind of power management to PCIe
-ports. This means that we waste energy and consume laptop battery even if
-the port has nothing connected to. These patches aim to change that to the
-right direction.
+This version incorporates feedback from Bjorn Helgaas, folding two
+patches together.
 
-Previous versions of the patches can be found below:
+Hyper-V VMs expose paravirtual drivers through a mechanism called
+VMBus, which is managed by hv_vmbus.ko.  For each parvirtual service
+instance, this driver exposes a new child device.  Some of these child
+devices need memory address space, into which Hyper-V will map things
+like the virtual video frame buffer.  This memory-mapped address space
+is chosen by the guest OS, not the hypervisor.
 
-  v1: http://www.spinics.net/lists/linux-pci/msg49313.html
-  v2: http://www.spinics.net/lists/linux-pci/msg50167.html
+This is difficult to map onto the Linux pnp layer, as the code in the
+pnp layer to choose MMIO space keys off of bus type and it doesn't know
+anything about VMBus.  The maintainers of the pnp layer have asked that
+we not offer patches to it that make it understand VMBus, but that we
+rather find ways of using the code in its current state.  So hv_vmbus.ko
+exports a function, vmbus_allocate_mmio() for choosing the address space
+for any child driver that needs this facility.
 
-This assumes that recent (starting from 2015) PCIe ports are capable of
-transition to D3hot/D3cold. We add a new flag to struct pci_dev 'bridge_d3'
-that is set whenever the PCI core thinks the port can be put to D3. The
-check in pci_pm_suspend_noirq() is then extended to cover devices where
-'bridge_d3' is set.
+The recently introduced PCI front-end driver for Hyper-V VMs
+(pci-hyperv.ko) uses vmbus_allocate_mmio() for choosing both the region
+of memory space into which real PCI Express devices are mapped.  The
+regions allocated are made to look like root PCI bus bridge windows
+to the PCI driver, reusing all the code in the PCI driver for the rest
+of PCI device management.
 
-We then add two new functions pci_bridge_d3_device_changed/removed(). These
-are used to set and clear 'bridge_d3' whenever there is a change in device
-power management policy (or if the device is removed). For example when
-userspace forbids the device to enter D3cold pci_bridge_d3_device_changed()
-will clear 'bridge_d3' of the upstream bridge.
+The problem is that these bridge windows are marked in such a way that
+devices can still allocate from the memory space spanned by them, and
+this means that if two different PCI buses are created in the VM, each
+with devices under them, they may allocate the same memory space, leading
+to PCI Base Address Register which overlap.
 
-For all PCI ports where 'bridge_d3' is set we also enable and unblock
-runtime PM automatically. Only exception is when the PCIe port claims to
-support ACPI based hotplug. More information about that is in the changelog
-of patch [4/4].
+This patch series fixes the problem by tracking allocations to child
+devices in a separate resource tree, marking them such that the bridge
+windows can't overlap.  The main memory resource tree, iomem_resource,
+contains resources properly marked as bridge windows, allowing their
+children to overlap with them.
 
-Since this also touches xhci, I'm adding Mathias and Greg to check if the
-change looks reasonable.
+Jake Oshins (6):
+  drivers:hv: Lock access to hyperv_mmio resource tree
+  drivers:hv: Call vmbus_mmio_free() to reverse vmbus_mmio_allocate()
+  drivers:hv: Reverse order of resources in hyperv_mmio
+  drivers:hv: Track allocations of children of hv_vmbus in private
+    resource tree
+  drivers:hv: Record MMIO range in use by frame buffer
+  drivers:hv: Separate out frame buffer logic when picking MMIO range
 
-Changes to v2:
-  - Renamed and split pci_enable_d3cold() into two functions
-    pci_d3cold_enable()/disable().
+ drivers/hv/vmbus_drv.c          | 143 +++++++++++++++++++++++++++++-----------
+ drivers/pci/host/pci-hyperv.c   |  14 ++--
+ drivers/video/fbdev/hyperv_fb.c |   4 +-
+ include/linux/hyperv.h          |   2 +-
+ 4 files changed, 115 insertions(+), 48 deletions(-)
 
-  - Renamed pci_bridge_pm_update() into two functions
-    pci_bridge_d3_device_changed() and pci_bridge_d3_device_removed() that
-    should match better what they are doing.
-
-  - Propagate ->bridge_d3 change to upstream bridges in
-    pci_bridge_d3_update().
-
-  - Removed pci_can_suspend() in favor of doing ->bridge_d3 check directly
-    in pci_pm_suspend_noirq().
-
-  - Extend runtime PM enabling for ports that are using native PCIe
-    hotplug.
-
-  - Call pm_runtime_no_callbacks() for PCIe port service devices (the are
-    handled by the parent device).
-
-I did not change the cut-off date from 2015 yet to be on the safe side,
-even if older Macs seem to work just fine. Maybe it can be lowered to 2013
-or so but I would like to hear from Bjorn and Rafael what they think about
-that.
-
-I also tried this series on my Ivy Bridge laptop (from 2013) and I did not
-see any problems.
-
-Changes to v1:
-
-  - Dropped patch [2/6] as there is no need to use that function from other
-    files anymore.
-
-  - Dropped patches [5-6/6] in favor of using cut-off date.
-
-  - Updated changelog of [1/4] to mention where in the PCI core PCI bridge
-    and PCIe ports are skipped from being power managed.
-
-  - Instead of checking at suspend time if it is possible to transition the
-    port to D3, do it whenever power management status of a device (below a
-    port) is changed or when it is added or removed to the bus.
-
-  - Added patch [3/4] to runtime resume a bridge when ACPI hotplug event is
-    received.
-
-Mika Westerberg (4):
-  PCI: No need to set d3cold_allowed to PCIe ports
-  PCI: Move PCIe ports to D3 during suspend
-  ACPI / hotplug / PCI: Runtime resume bridge before rescan
-  PCI: Add runtime PM support for PCIe ports
-
- drivers/pci/bus.c                  |   1 +
- drivers/pci/hotplug/acpiphp_glue.c |   8 +-
- drivers/pci/pci-driver.c           |   7 +-
- drivers/pci/pci-sysfs.c            |   1 +
- drivers/pci/pci.c                  | 156 +++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h                  |   2 +
- drivers/pci/pcie/portdrv_core.c    |   2 +
- drivers/pci/pcie/portdrv_pci.c     | 112 ++++++++++++++++++++++++--
- drivers/pci/remove.c               |   2 +
- drivers/usb/host/xhci-pci.c        |   2 +-
- include/linux/pci.h                |   3 +
- 11 files changed, 287 insertions(+), 9 deletions(-)
-
--- 
-2.8.0.rc3
+--
+1.9.1
 
