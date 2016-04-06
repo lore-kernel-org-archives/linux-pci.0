@@ -1,68 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:34611 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751094AbcDKBoV (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Apr 2016 21:44:21 -0400
-Received: by mail-pa0-f41.google.com with SMTP id ot11so27816334pab.1
-        for <linux-pci@vger.kernel.org>; Sun, 10 Apr 2016 18:44:20 -0700 (PDT)
-In-Reply-To: <1460238624-2086-1-git-send-email-zajec5@gmail.com>
-References: <1460238624-2086-1-git-send-email-zajec5@gmail.com>
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:36486 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753677AbcDFL2d (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2016 07:28:33 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Subject: Re: [PATCH 1/2] PCI: iproc: Support DT property for ignoring aborts when probing
-From: Florian Fainelli <f.fainelli@gmail.com>
-Date: Sun, 10 Apr 2016 18:43:52 -0700
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>
-CC: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
-	linux-arm-kernel@lists.infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-Message-ID: <79DC79A7-D4CE-4983-B1C5-CBD2E9CBBFB9@gmail.com>
+In-Reply-To: <20160405195946.GA18194@srcf.ucam.org>
+References: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
+	<20160405194015.GC15353@localhost>
+	<20160405195946.GA18194@srcf.ucam.org>
+Date: Wed, 6 Apr 2016 21:28:27 +1000
+Message-ID: <CA+Y=x3=02_ScR_jVcxy_9O0LE-HhdjOT80kPCT6oJX949i+Crg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
+From: Andrew Worsley <amworsley@gmail.com>
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On April 9, 2016 2:50:23 PM PDT, "Rafał Miłecki" <zajec5@gmail.com> wrote:
->Some devices (e.g. Northstar ones) may have bridges that forward
->harmless errors to the ARM core. In such case we need an option to
->add a handler ignoring them.
+That patch appears to be the grub 1 equivalent  to  grub2
+git://git.savannah.gnu.org/grub.git rev 9d34bb8 which puts the network
+device into D3 power state.
+
+I am running grub2 with that patch and it doesn't fix my irq 17 problem.
+
+Can we not fix this in grub2 via something like Lukas original patch
+or disable any DMA transfers before the kernel starts?
+
+Andrew
+On 6 April 2016 at 05:59, Matthew Garrett <mjg59@srcf.ucam.org> wrote:
+> On Tue, Apr 05, 2016 at 02:40:15PM -0500, Bjorn Helgaas wrote:
 >
->Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->---
-
->+- brcm,pcie-hook-abort-handler: During PCI bus probing (device
->enumeration)
->+  there can be errors that are expected and harmless. Unfortunately
->some bridges
->+  can't be configured to ignore them and they forward them to the ARM
->core
->+  triggering die().
->+  This property should be set in such case, it will make driver add
->its own
->+  handler ignoring such errors.
-
-The property is named after the function that allows you to catch abort handlers, whereas you should be describing the HW here. Something like brcm,bridge-error-forward or a better name even would be preferable.
-
->+#ifdef CONFIG_ARM
->+static int iproc_pcie_abort_handler(unsigned long addr, unsigned int
->fsr,
->+				    struct pt_regs *regs)
->+{
->+	if (fsr == 0x1406)
->+		return 0;
->+
->+	return 1;
-
-As you later noted this prevents this driver from being a module now. Since the expectation is that either a fixed bootloader or a platform should enot produce these data aborts, or allow them to be ignored, why not just put this code back where it belongs in the machine specific file which kills many birds with the same stone:
-
-- code is ways built-in, and hook_fault_code is installed prior to PCIe loading (function is marked with __init)
-- platforms which do not need that, just do not install it for that specific code
-- it is clear which platforms need it and which do not, yet the driver remains agnostic
-
-NB: there could be other platforms some day needing that which also propagate the error differently, forcing you to add more and more of these codes in the PCIe driver.
-
--- 
-Florian
+>> https://bugzilla.kernel.org/show_bug.cgi?id=111781 and
+>> https://mjg59.dreamwidth.org/11235.html describe a sort of similar
+>> issue, but with DMA.  An interrupt from the device is probably to
+>> signal a DMA completion, but these problem reports only mention the
+>> "IRQ nobody cared" issue; I don't see anything about memory
+>> corruption.
+>
+> I "fixed" this with
+> https://github.com/mjg59/grub-fedora/commit/21fcd6d79b7601e4b20ad70c5408adff2dabbc1d
+> - doing the same in the kernel EFI stub would probably be the best way
+> to handle it. This way you're guaranteed to stop DMA before the kernel
+> reclaims boot services memory, which guarantees you won't have any
+> corruption.
