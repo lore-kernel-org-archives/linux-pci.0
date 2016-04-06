@@ -1,194 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:35815 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752777AbcDKWxJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Apr 2016 18:53:09 -0400
-Received: by mail-pa0-f46.google.com with SMTP id td3so550438pab.2
-        for <linux-pci@vger.kernel.org>; Mon, 11 Apr 2016 15:53:08 -0700 (PDT)
-Subject: Re: [PATCH 1/2] PCI: iproc: Support DT property for ignoring aborts
- when probing
-To: Ray Jui <ray.jui@broadcom.com>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	Scott Branden <scott.branden@broadcom.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>
-References: <1460238624-2086-1-git-send-email-zajec5@gmail.com>
- <79DC79A7-D4CE-4983-B1C5-CBD2E9CBBFB9@gmail.com>
- <4768648c-841b-490d-a752-f31cba545f74@broadcom.com>
- <570C1D47.7010102@gmail.com>
- <ccabf53c-c035-be4b-a016-389bb7531557@broadcom.com>
- <570C24B3.4080104@broadcom.com>
- <18045be8-9ee3-7644-6fbb-d352e107d111@broadcom.com>
- <570C2806.8070700@gmail.com>
- <0464ed02-5d41-f111-b8c1-aa9aa638c872@broadcom.com>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
-	linux-arm-kernel@lists.infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-From: Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <570C2A59.4010105@gmail.com>
-Date: Mon, 11 Apr 2016 15:51:05 -0700
+Received: from e24smtp03.br.ibm.com ([32.104.18.24]:40592 "EHLO
+	e24smtp03.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753352AbcDFVvv (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2016 17:51:51 -0400
+Received: from localhost
+	by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+	Wed, 6 Apr 2016 18:51:48 -0300
+Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
+	by d24dlp01.br.ibm.com (Postfix) with ESMTP id 138ED3520070
+	for <linux-pci@vger.kernel.org>; Wed,  6 Apr 2016 17:51:34 -0400 (EDT)
+Received: from d24av05.br.ibm.com (d24av05.br.ibm.com [9.18.232.44])
+	by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u36Kp8OT12648778
+	for <linux-pci@vger.kernel.org>; Wed, 6 Apr 2016 17:51:09 -0300
+Received: from d24av05.br.ibm.com (localhost [127.0.0.1])
+	by d24av05.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u36LphMR005721
+	for <linux-pci@vger.kernel.org>; Wed, 6 Apr 2016 17:51:45 -0400
+Subject: Re: [PATCH v4] powerpc/pci: Assign fixed PHB number based on
+ device-tree properties
+To: Ian Munsie <imunsie@au1.ibm.com>
+References: <1458337746-20337-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+ <1459971134-sup-6269@x230.ozlabs.ibm.com>
+Cc: mikey <mikey@neuling.org>,
+	Michael C Hollinger <mchollin@us.ibm.com>,
+	Frederic Barrat <frederic.barrat@fr.ibm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	"Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>,
+	gwshan <gwshan@linux.vnet.ibm.com>,
+	Manoj Kumar <kumarmn@us.ibm.com>, paulus <paulus@samba.org>,
+	"andrew.donnellan" <andrew.donnellan@au1.ibm.com>,
+	bhelgaas <bhelgaas@google.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Michael Ellerman <mpe@ellerman.id.au>
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Message-ID: <570584EF.1010904@linux.vnet.ibm.com>
+Date: Wed, 6 Apr 2016 18:51:43 -0300
 MIME-Version: 1.0
-In-Reply-To: <0464ed02-5d41-f111-b8c1-aa9aa638c872@broadcom.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1459971134-sup-6269@x230.ozlabs.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/04/16 15:51, Ray Jui wrote:
-> 
-> 
-> On 4/11/2016 3:41 PM, Florian Fainelli wrote:
->> On 11/04/16 15:34, Ray Jui wrote:
->>>
->>>
->>> On 4/11/2016 3:26 PM, Scott Branden wrote:
->>>> One Comment below
->>>>
->>>> On 16-04-11 03:24 PM, Ray Jui wrote:
->>>>>
->>>>>
->>>>> On 4/11/2016 2:55 PM, Florian Fainelli wrote:
->>>>>> On 11/04/16 13:06, Ray Jui wrote:
->>>>>>>
->>>>>>>
->>>>>>> On 4/10/2016 6:43 PM, Florian Fainelli wrote:
->>>>>>>> On April 9, 2016 2:50:23 PM PDT, "Rafał Miłecki" <zajec5@gmail.com>
->>>>>>>> wrote:
->>>>>>>>> Some devices (e.g. Northstar ones) may have bridges that forward
->>>>>>>>> harmless errors to the ARM core. In such case we need an option to
->>>>>>>>> add a handler ignoring them.
->>>>>>>>>
->>>>>>>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->>>>>>>>> ---
->>>>>>>>
->>>>>>>>> +- brcm,pcie-hook-abort-handler: During PCI bus probing (device
->>>>>>>>> enumeration)
->>>>>>>>> +  there can be errors that are expected and harmless.
->>>>>>>>> Unfortunately
->>>>>>>>> some bridges
->>>>>>>>> +  can't be configured to ignore them and they forward them to the
->>>>>>>>> ARM
->>>>>>>>> core
->>>>>>>>> +  triggering die().
->>>>>>>>> +  This property should be set in such case, it will make
->>>>>>>>> driver add
->>>>>>>>> its own
->>>>>>>>> +  handler ignoring such errors.
->>>>>>>>
->>>>>>>> The property is named after the function that allows you to catch
->>>>>>>> abort handlers, whereas you should be describing the HW here.
->>>>>>>> Something like brcm,bridge-error-forward or a better name even
->>>>>>>> would
->>>>>>>> be preferable.
->>>>>>>>
->>>>>>>>> +#ifdef CONFIG_ARM
->>>>>>>>> +static int iproc_pcie_abort_handler(unsigned long addr, unsigned
->>>>>>>>> int
->>>>>>>>> fsr,
->>>>>>>>> +                    struct pt_regs *regs)
->>>>>>>>> +{
->>>>>>>>> +    if (fsr == 0x1406)
->>>>>>>>> +        return 0;
->>>>>>>>> +
->>>>>>>>> +    return 1;
->>>>>>>>
->>>>>>>> As you later noted this prevents this driver from being a module
->>>>>>>> now.
->>>>>>>> Since the expectation is that either a fixed bootloader or a
->>>>>>>> platform
->>>>>>>> should enot produce these data aborts, or allow them to be ignored,
->>>>>>>> why not just put this code back where it belongs in the machine
->>>>>>>> specific file which kills many birds with the same stone:
->>>>>>>>
->>>>>>>
->>>>>>> I assume the module compile issue can be simply fixed by exporting
->>>>>>> symbol of "hook_fault_code"?
->>>>>>
->>>>>> I do not think it is desireable for this symbol to be exported in the
->>>>>> first place, also last I looked, this was a one time registration
->>>>>> thing,
->>>>>> you cannot undo the hook you installed, but everything can be fixed.
->>>>>>
->>>>>
->>>>> Okay.
->>>>>
->>>>>>>
->>>>>>> I believe ARM64 based NS2 that uses the same iProc PCIe driver might
->>>>>>> also need something like this (I'm still waiting for Jon Mason to
->>>>>>> give
->>>>>>> me some more information on the NS2 errors that he saw, which is
->>>>>>> likely
->>>>>>> related to this). I assume there will be something similar to the
->>>>>>> ARM
->>>>>>> specific "hook_fault_code" for ARM64, but then ARM64 does not
->>>>>>> have any
->>>>>>> "mach" specific directory. Where can this type of hook be installed
->>>>>>> for
->>>>>>> ARM64 based platforms if not in the PCIe driver?
->>>>>>
->>>>>> OK, that is a fair point, then maybe have a two stage process,
->>>>>> where we
->>>>>> make sure that the part that installs the hook is always available
->>>>>> and
->>>>>> built-into the kernel, but let the iProc PCIe driver remain a module?
->>>>>>
->>>>>
->>>>> I guess we are sort of stuck on this. If "hook_fault_code" is not
->>>>> supposed to be used by any driver compiled as module like you
->>>>> described,
->>>>> then yes, I agree, I don't see how we can leave this in the iProc PCIe
->>>>> driver.
->>>>>
->>>> Why does thie PCI driver need to be compiled as module though?  Why
->>>> can't we limit it to being linked in the kernel?
->>>>
->>>> Regards,
->>>> Scott
->>>
->>> There are minor benefits allowing this driver to be compiled as module,
->>> although in our use case (Cygnus and NS2), we always compile this driver
->>> as statically linked in the kernel. I'm not sure if NS/BCMA has any use
->>> case that requires this driver to be a module.
->>>
->>> In fact, being able to compile this driver as a module and loaded after
->>> kernel init process is done just helped to confirm this imprecise abort
->>> issue to be PCIe specific, :)
->>
->> For the STB platforms for instance, we actually like to have the PCIE RC
->> driver as a module (not iproc-pcie, still downstream for now) because it
->> allows us to put the entire set of EPs and RCs into the lowest power
->> state (L23 + turning off external regulators) without messing with PCI
->> bus scanning. In general, it seems like a good practice to allow this
->> since, that helps with distributions not having to ship gigantic kernels
->> that need this driver built in, and also helps us with development (when
->> faults are handled).
->>
->> My suggestion about the PCIe-specific hook fault handler is to do
->> something like this: introduce a iproc-pcie-fault.c file which is
->> built-into the kernel if PCIE_IPROC=m || PCIE_IPROC=y and have it
->> contain a function which is hooked at arch_initcall level for instance,
->> so before module_init.
->>
->> Of course, there could be different ways to solve that problem, it just
->> happens to be one of them.
->>
-> 
-> That sounds good to me.
-> 
-> But how is the hook in iproc-pcie-fault.c activated? Still based on a DT
-> property under the iProc PCIe device node or based on a specific
-> architecture dependent config flag (note we do not have any platform
-> specific config flag under ARM64)?
+On 04/06/2016 04:38 PM, Ian Munsie wrote:
+>> +    /* try fixed PHB numbering first, by checking archs and reading
+>> +     * the respective device-tree property. */
+>> +    if (machine_is(pseries)) {
+>> +        regs = of_get_property(dn, "reg", NULL);
+>> +        if (regs)
+>> +            return (int)(be32_to_cpu(regs[1]) & 0xFFFF);
+>> +    } else if (machine_is(powernv)) {
+>> +        prop64 = of_get_property(dn, "ibm,opal-phbid", NULL);
+>> +        if (prop64)
+>> +            return (int)(be64_to_cpup(prop64) & 0xFFFF);
+>> +    }
+>
+> I think these cases should still set the bit in phb_bitmap, otherwise a
+> virtual PHB (e.g. as used in cxl/cxlflash) will be assigned PHB 0, and
+> since that is already taken it will fail - we're already seeing a
+> failure in Ubuntu Xenial since Canonical picked this patch up already
+> (though have not confirmed that this is definitely the cause yet).
+>
+> There might also be some interesting races to think about here if a
+> virtual PHB grabs a PHB number before the real one gets a chance.
 
-I would go with something that does:
+This is a very interesting case I didn't think before. Thanks for 
+pointing this Ian.
 
-if (of_machine_is_compatible("brcm,bcm53012") ||
-    of_machine_is_compatible("brcm.ns2"))
+We can, as you suggested, set the bitmap in any case to avoid conflicts 
+with virtual PHBs.
 
-or something along these lines, as opposed to a boolean flag at the PCIe
-DT node level, but maybe this is not quite a good understanding of how
-the HW works.
--- 
-Florian
+And in the case a virtual PHB grabs the bitmap before, we just need to 
+add Michael's suggested check and fallback to bitmap PHB numbering in 
+this case.
+
+Do you think this is enough to avoid issues with cxl'a virtual PHBs?
+
+Thanks,
+
+
+Guilherme
+
