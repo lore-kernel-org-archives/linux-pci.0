@@ -1,77 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:38523 "EHLO
-	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752067AbcD1QCs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2016 12:02:48 -0400
-Date: Thu, 28 Apr 2016 18:05:26 +0200
+Received: from mailout3.hostsharing.net ([176.9.242.54]:35825 "EHLO
+	mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752127AbcDFVeH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2016 17:34:07 -0400
+Date: Wed, 6 Apr 2016 23:36:08 +0200
 From: Lukas Wunner <lukas@wunner.de>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH v4 4/4] PCI: Add runtime PM support for PCIe ports
-Message-ID: <20160428160526.GA18261@wunner.de>
-References: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
- <1461578004-129094-5-git-send-email-mika.westerberg@linux.intel.com>
- <20160428142216.GA18211@wunner.de>
- <20160428151356.GF32610@lahna.fi.intel.com>
+To: Michael =?iso-8859-1?Q?B=FCsch?= <m@bues.ch>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
+Message-ID: <20160406213608.GB12421@wunner.de>
+References: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
+ <20160405194015.GC15353@localhost>
+ <20160405214945.1214e13b@wiggum>
+ <20160406133151.GA4976@localhost>
+ <20160406171724.2b7b070b@wiggum>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160428151356.GF32610@lahna.fi.intel.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20160406171724.2b7b070b@wiggum>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mika,
+Hi,
 
-On Thu, Apr 28, 2016 at 06:13:56PM +0300, Mika Westerberg wrote:
-> On Thu, Apr 28, 2016 at 04:22:16PM +0200, Lukas Wunner wrote:
-> > As said I've amended my series to allow runtime pm on hotplug ports
-> > if they're Thunderbolt ports on a Mac:
-> > https://github.com/l1k/linux/commit/a6810db929485c7fc8677f265b1c68e31879ce61
+On Wed, Apr 06, 2016 at 05:17:24PM +0200, Michael Büsch wrote:
+> On Wed, 6 Apr 2016 08:31:51 -0500 Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> > Even for interrupts, it's only a 90% solution because we do still get
+> > a few interrupts before the quirk runs.  There may not be enough to
+> > trigger the "IRQ nobody cared" check,
 > 
-> If we are going to add more conditions, I think it makes sense to
-> introduce pcie_port_runtime_pm_possible() or similar which includes all
-> these checks.
+> If no driver requested the shared interrupt yet, it should be disabled
+> in the interrupt controller. So the interrupts do not reach the CPU.
+> The interrupt storm (on the CPU) starts as soon as some driver
+> that shares the interrupt with b43 requests and thus enables the
+> interrupt. And that always happens after the PCI fixup. Thus this is
+> safe.
 
-Initially I reintroduced that in my patch (bikeshedded the name to
-pcie_port_can_runtime_suspend() though ;) ), then decided to throw
-it away because I'm just adding a one-liner for Thunderbolt on Macs
-to the if-condition. Your call. :)
+Yes, that is correct. I only see 67 interrupts for IRQ 17 with the
+PCI quirk compiled in, all of which seem to come from the initialization
+of pciehp, mmc and the hda sound card (which share the IRQ with b43 on my
+machine).
 
-If you decide to reintroduce it, you could use IS_ENABLED to avoid
-having to declare an additional inline stub that returns false, e.g.
-
-if (IS_ENABLED(CONFIG_PM) && pcie_port_can_runtime_suspend()) {
-	...
-	pm_runtime_allow(&dev->dev);
-}
-
-
-> > So you could just drop the .runtime_resume entry here and it shouldn't
-> > result in any functional change:
-> > 
-> > > @@ -101,6 +122,9 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
-> > >  	.poweroff	= pcie_port_device_suspend,
-> > >  	.restore	= pcie_port_device_resume,
-> > >  	.resume_noirq	= pcie_port_resume_noirq,
-> > > +	.runtime_suspend = pcie_port_runtime_suspend,
-> > > +	.runtime_resume	= pcie_port_runtime_resume,
-> > > +	.runtime_idle	= pcie_port_runtime_idle,
-> 
-> Hmm, PM core calls pci_pm_runtime_resume() for PCI drivers which then
-> delegates to driver->runtime_resume() if set. However, if it is missing
-> it just returns -ENOSYS and does not put the device back to D0.
-> 
-> So if I'm reading this right we actually need to provide
-> pcie_port_runtime_resume().
-
-Ugh, you're right.
-
-Best regards,
+Thanks,
 
 Lukas
