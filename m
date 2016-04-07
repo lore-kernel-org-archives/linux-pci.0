@@ -1,154 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Jisheng Zhang <jszhang@marvell.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH v2] PCI: designware: move remaining rc setup code to
- dw_pcie_setup_rc()
-Date: Thu, 21 Apr 2016 15:53:29 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED60600@lhreml503-mbs>
-References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
- <20160407103734.55e72da7@xhacker>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
- <20160407163443.291fbd49@xhacker>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED44208@lhreml503-mbs>
- <20160407140551.GA2648@localhost>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED45C38@lhreml503-mbs>
- <20160408160145.GA10565@localhost>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED4B88D@lhreml503-mbs>
- <20160421154832.GC32739@localhost>
-In-Reply-To: <20160421154832.GC32739@localhost>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 7 Apr 2016 16:34:29 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jon Derrick <jonathan.derrick@intel.com>
+Cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH] pci: Added flag to pci_host_bridge to hint not to use
+ acpi
+Message-ID: <20160407213429.GA24492@localhost>
+References: <1458770518-10203-1-git-send-email-jonathan.derrick@intel.com>
+ <20160324164159.GB25518@localhost.localdomain>
+ <20160407174224.GE8780@localhost>
+ <20160407201216.GA9986@localhost.localdomain>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160407201216.GA9986@localhost.localdomain>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
-
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: 21 April 2016 16:49
-> To: Gabriele Paoloni
-> Cc: Jisheng Zhang; jingoohan1@gmail.com; pratyush.anand@gmail.com;
-> bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org
-> Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code
-> to dw_pcie_setup_rc()
+On Thu, Apr 07, 2016 at 02:12:16PM -0600, Jon Derrick wrote:
+> Hi Bjorn,
 > 
-> On Tue, Apr 12, 2016 at 09:43:32AM +0000, Gabriele Paoloni wrote:
-> > Hi Bjorn
-> >
-> > [...]
-> >
-> > > > >
-> > > > > What's the hisi plan for resuming after suspend-to-RAM?  How
-> does
-> > > the
-> > > > > RC get reprogrammed after it loses all its state?
-> > > >
-> > > > PM is not part of the driver yet. This is planned for near
-> > > > future release so haven't made such considerations yet
-> > > > >
-> > > > > What would break if hisi did call dw_pcie_setup_rc()?  I know
-> you
-> > > said
-> > > > > it would overwrite what the bootloader already did, which is
-> true.
-> > > >
-> > > > I am try to figure this out now with our HW team.
-> > > >
-> > > > >
-> > > > > But hisi does call dw_pcie_host_init(), so it reads pp->mem
-> (which
-> > > > > determines pp->mem_base) and pp->lanes from the DT.  Other
-> drivers
-> > > > > then call dw_pcie_setup_rc() which programs the RC based on
-> > > > > pp->mem_base and pp->lanes.  So hisi assumes UEFI programmed
-> the RC
-> > > to
-> > > > > match the DT, while the other drivers read the DT and program
-> the
-> > > RC
-> > > > > to match.  The latter seems more robust because it enforces the
-> > > > > consistency rather than relying on it.
-> > > >
-> > > > Yes I agree with you, however we have preferred to move RC config
-> to
-> > > > BIOS to have a single driver to support multiple versions of the
-> > > > same SoC.
-> > >
-> > > I think there are two reasonable approaches:
-> > >
-> > >   1) A single generic driver that doesn't have any knowledge about
-> the
-> > >   chipset registers; it uses run-time firmware interfaces to manage
-> > >   the bridge.  The ACPI pci_root.c driver is the best example so
-> far
-> > >   and works very well.  It supports basically all x86 and ia64
-> > >   chipsets and requires no kernel work for new ones.
-> > >
-> > >   2) Native drivers specific to each chipset.  These may get
-> > >   configuration information from DT, but they do their own
-> > >   register-level programming of the device without run-time help
-> from
-> > >   firmware.
-> > >
-> > > I think hisi is a native driver because it uses hip05/hip06
-> registers
-> > > to check link state and perform config operations.  And apparently
-> you
-> > > rely on the ATU, BAR, class, and link width programming currently
-> done
-> > > in dw_pcie_host_init().  But you want to rely on pre-boot firmware
-> to
-> > > set up the link.  That doesn't make sense to me -- if the driver
-> wants
-> > > to twiddle the registers, it should know how to do it all.  I don't
-> > > see how you can reasonably manage this half-way approach.
-> > >
-> > > > The patch I proposed above does the same job as the original
-> patch
-> > > > proposed by Jisheng and also allows hisi driver to call the moved
-> > > > code.
-> > > >
-> > > > Do you see anything wrong with it?
-> > >
-> > > Only that it makes the structure more complicated and we haven't
-> > > identified a corresponding benefit yet.
-> >
-> > Finally I have checked that assigning .host_init function pointer
-> > in our driver to call dw_pcie_setup_rc() will not affect the values
-> > already set by BIOS.
-> >
-> > Also I agree with you that a hybrid approach is not ideal.
-> >
-> > So I will update the driver to call dw_pcie_setup_rc() from
-> > .host_init and ask the BIOS team to update the firmware for next
-> > releases (the driver will be backward compatible anyway).
+> First, thanks for the review
 > 
-> Am I right in assuming that the patch currently in my tree:
+> > The spec (PCI Firmware spec 3.0, sec 4.5) says _OSC is a child of an
+> > ACPI device and applies to that device.  In your case, I think there
+> > is no ACPI PNP0A0x device for the VMD host bridge, and hence there is
+> > no _OSC method for it.  There's no ACPI handle for the VMD bridge, so
+> > I think pcie_port_acpi_setup() returns -EINVAL, which causes
+> > get_port_device_capability() to give up and decide that the port
+> > can't support *any* PCIe services.
+> > 
+> > I think that's the real problem: the fact that there's no ACPI device
+> > corresponding to the bridge should not be an error.  It should just
+> > mean the platform doesn't have an opportunity to limit what services
+> > the kernel can manage.  I think pcie_port_acpi_setup() should return 0
+> > in all cases.  Can you try that and see if it fixes the problem?
+> > 
 > 
-> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=
-> pci/host-designware&id=1488aefa37a4033080942c860294d13c613ec829
+> I believe what you are suggesting is:
 > 
-> will work for you?  I'm going to assume so unless I hear otherwise.
-
-Yes you are right.
-
-I thought it was clear by the last conclusion.
-Sorry if it was not explicit.
-
-Many Thanks and Regards
-
-Gab
-
-
 > 
-> Bjorn
+>         handle = acpi_find_root_bridge_handle(port);
+>         if (!handle)
+> -               return -EINVAL;
+> +               return 0;
+> 
+>         root = acpi_pci_find_root(handle);
+>         if (!root)
+> -               return -ENODEV;
+> +               return 0;
+
+Yes, that's what I think we should do.
+
+Bjorn
