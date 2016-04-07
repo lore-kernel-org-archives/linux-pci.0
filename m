@@ -1,187 +1,258 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51487 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:41091 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752235AbcDGQTx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 Apr 2016 12:19:53 -0400
-Date: Thu, 7 Apr 2016 11:19:42 -0500
+	id S1753999AbcDGOF5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 Apr 2016 10:05:57 -0400
+Date: Thu, 7 Apr 2016 09:05:52 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Russell King <linux@arm.linux.org.uk>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH] arm/arm64/irqchip/pci: select PCI_MSI instead of
- depending on it
-Message-ID: <20160407161942.GC8780@localhost>
-References: <1458212069-896315-1-git-send-email-arnd@arndb.de>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Jisheng Zhang <jszhang@marvell.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code to
+ dw_pcie_setup_rc()
+Message-ID: <20160407140551.GA2648@localhost>
+References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
+ <20160407103734.55e72da7@xhacker>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
+ <20160407163443.291fbd49@xhacker>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED44208@lhreml503-mbs>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1458212069-896315-1-git-send-email-arnd@arndb.de>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ED44208@lhreml503-mbs>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 17, 2016 at 11:52:49AM +0100, Arnd Bergmann wrote:
-> The PCI_MSI symbol is used inconsistently throughout the tree,
-> with some drivers using 'select' and others using 'depends on',
-> or using conditional selects. This keeps causing problems,
-> and the latest one is a result of ARCH_ALPINE using a 'select'
-> statement to enable its platform specific MSI driver but not
-> enabling MSI support first:
+On Thu, Apr 07, 2016 at 10:06:45AM +0000, Gabriele Paoloni wrote:
+> Hi Jisheng
 > 
-> warning: (ARCH_ALPINE) selects ALPINE_MSI which has unmet direct dependencies (PCI && PCI_MSI)
-> drivers/irqchip/irq-alpine-msi.c:104:15: error: variable 'alpine_msix_domain_info' has initializer but incomplete type
->  static struct msi_domain_info alpine_msix_domain_info = {
->                ^~~~~~~~~~~~~~~
-> drivers/irqchip/irq-alpine-msi.c:105:2: error: unknown field 'flags' specified in initializer
->   .flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
->   ^
-> drivers/irqchip/irq-alpine-msi.c:105:11: error: 'MSI_FLAG_USE_DEF_DOM_OPS' undeclared here (not in a function)
->   .flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
->            ^~~~~~~~~~~~~~~~~~~~~~~~
+> > -----Original Message-----
+> > From: Jisheng Zhang [mailto:jszhang@marvell.com]
+> > Sent: 07 April 2016 09:35
+> > To: Gabriele Paoloni
+> > Cc: jingoohan1@gmail.com; pratyush.anand@gmail.com;
+> > bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
+> > kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org
+> > Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code
+> > to dw_pcie_setup_rc()
+> > 
+> > Hi Gabriele,
+> > 
+> > On Thu, 7 Apr 2016 08:20:28 +0000 Gabriele Paoloni wrote:
+> > 
+> > > Hi Jisheng
+> > >
+> > > Thanks for your reply
+> > >
+> > > > -----Original Message-----
+> > > > From: Jisheng Zhang [mailto:jszhang@marvell.com]
+> > > > Sent: 07 April 2016 03:38
+> > > > To: Gabriele Paoloni; jingoohan1@gmail.com;
+> > pratyush.anand@gmail.com;
+> > > > bhelgaas@google.com
+> > > > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-
+> > arm-
+> > > > kernel@lists.infradead.org
+> > > > Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup
+> > code
+> > > > to dw_pcie_setup_rc()
+> > > >
+> > > > Hi Gabriele,
+> > > >
+> > > > On Wed, 6 Apr 2016 14:50:29 +0000 Gabriele Paoloni wrote:
+> > > >
+> > > > > Hi, sorry to be late on this
+> > > > >
+> > > > > > -----Original Message-----
+> > > > > > From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
+> > > > > > owner@vger.kernel.org] On Behalf Of Jisheng Zhang
+> > > > > > Sent: 16 March 2016 11:41
+> > > > > > To: jingoohan1@gmail.com; pratyush.anand@gmail.com;
+> > > > bhelgaas@google.com
+> > > > > > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
+> > linux-
+> > > > arm-
+> > > > > > kernel@lists.infradead.org; Jisheng Zhang
+> > > > > > Subject: [PATCH v2] PCI: designware: move remaining rc setup
+> > code
+> > > > to
+> > > > > > dw_pcie_setup_rc()
+> > > > > >
+> > > > > > dw_pcie_setup_rc(), as its name indicates, setups the RC. But
+> > > > current
+> > > > > > dw_pcie_host_init() also contains some necessary rc setup code.
+> > > > > >
+> > > > > > Another reason: the host may lost power during suspend to ram,
+> > the
+> > > > RC
+> > > > > > need to be re-setup after resume. The rc can't be correctly
+> > resumed
+> > > > > > without the rc setup code in dw_pcie_host_init().
+> > > > > >
+> > > > > > So this patch moves the code to dw_pcie_setup_rc() to address
+> > the
+> > > > above
+> > > > > > two issues. After this patch, each pcie designware driver users
+> > > > could
+> > > > > > call dw_pcie_setup_rc() to re-setup rc when resume back.
+> > > > >
+> > > > > I think this patch breaks the Hisilicon driver...
+> > > > >
+> > > > > Our driver performs linkup setup in UEFI therefore we do not call
+> > > > > dw_pcie_setup_rc(), we only call dw_pcie_host_init().
+> > > >
+> > > > Thanks for the information. So pcie-hisi rely on UEFI to do
+> > something
+> > > > similar
+> > > > in dw_pcie_setup_rc(), this comes to a common driver implement
+> > > > question: should
+> > > > linux device driver rely on bootloader to configure HW device?
+> > >
+> > > I don't see any issue with this...
+> > >
+> > > >
+> > > > Is it acceptable that pcie-hisi adds a call to dw_pcie_setup_rc()
+> > in
+> > > > hisi_add_pcie_port()?
+> > >
+> > > I don't think so...that would try to overwrite what is already set by
+> > > the bootloader; so it is wrong in principle and maybe it can lead to
+> > > undefined behaviours...
+> > 
+> > make sense! This commit is intend to re-setup the rc when waken from
+> > s2ram (in
+> > s2ram state, the host lost power)
+> > 
+> > I have no good solution but to introduce one function e.g
+> > dw_pcie_setup_rc_after_linkup(), then move related code from
+> > dw_pcie_host_init
+> > to it, then let my host driver resume hook to call.
+> > 
+> > Hi Pratyush, Jingoo and Bjorn etc.
+> > 
+> > any suggestions are appreciated!
 > 
-> There is little reason to enable PCI support for a platform that
-> uses MSI but then leaving MSI disabled at compile time, so this
-> patch changes the various Kconfig statement relating to PCI_MSI
-> so they all use 'select'.
+> What about:
 > 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Suggested-by: Marc Zyngier <marc.zyngier@arm.com>
+> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
+> index a4cccd3..e461f5d 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -434,7 +434,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  	struct platform_device *pdev = to_platform_device(pp->dev);
+>  	struct pci_bus *bus, *child;
+>  	struct resource *cfg_res;
+> -	u32 val;
+>  	int i, ret;
+>  	LIST_HEAD(res);
+>  	struct resource_entry *win;
+> @@ -544,25 +543,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  	if (pp->ops->host_init)
+>  		pp->ops->host_init(pp);
+>  
+> -	/*
+> -	 * If the platform provides ->rd_other_conf, it means the platform
+> -	 * uses its own address translation component rather than ATU, so
+> -	 * we should not program the ATU here.
+> -	 */
+> -	if (!pp->ops->rd_other_conf)
+> -		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+> -					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+> -					  pp->mem_bus_addr, pp->mem_size);
+> -
+> -	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+> -
+> -	/* program correct class for RC */
+> -	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
+> -
+> -	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+> -	val |= PORT_LOGIC_SPEED_CHANGE;
+> -	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+> -
+>  	pp->root_bus_nr = pp->busn->start;
+>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>  		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
+> @@ -725,6 +705,29 @@ static struct pci_ops dw_pcie_ops = {
+>  	.write = dw_pcie_wr_conf,
+>  };
+>  
+> +void dw_pcie_setup_own_cfg(struct pcie_port *pp)
+> +{
+> +	u32 val;
+> +	/*
+> +	 * If the platform provides ->rd_other_conf, it means the platform
+> +	 * uses its own address translation component rather than ATU, so
+> +	 * we should not program the ATU here.
+> +	 */
+> +	if (!pp->ops->rd_other_conf)
+> +		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+> +					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+> +					  pp->mem_bus_addr, pp->mem_size);
+> +
+> +	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+> +
+> +	/* program correct class for RC */
+> +	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
+> +
+> +	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+> +	val |= PORT_LOGIC_SPEED_CHANGE;
+> +	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+> +}
+> +
+>  void dw_pcie_setup_rc(struct pcie_port *pp)
+>  {
+>  	u32 val;
+> @@ -800,6 +803,8 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+>  	val |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
+>  		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
+>  	dw_pcie_writel_rc(pp, val, PCI_COMMAND);
+> +
+> +	dw_pcie_setup_own_cfg(pp);
+>  }
+>  
+>  MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
+> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
+> index f437f9b..caf0f5d 100644
+> --- a/drivers/pci/host/pcie-designware.h
+> +++ b/drivers/pci/host/pcie-designware.h
+> @@ -85,5 +85,6 @@ int dw_pcie_wait_for_link(struct pcie_port *pp);
+>  int dw_pcie_link_up(struct pcie_port *pp);
+>  void dw_pcie_setup_rc(struct pcie_port *pp);
+>  int dw_pcie_host_init(struct pcie_port *pp);
+> +void dw_pcie_setup_own_cfg(struct pcie_port *pp);
+>  
+>  #endif /* _PCIE_DESIGNWARE_H */
+> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+> index 3e98d4e..8da29b2 100644
+> --- a/drivers/pci/host/pcie-hisi.c
+> +++ b/drivers/pci/host/pcie-hisi.c
+> @@ -164,6 +164,7 @@ static int hisi_add_pcie_port(struct pcie_port *pp,
+>  		dev_err(&pdev->dev, "failed to initialize host\n");
+>  		return ret;
+>  	}
+> +	dw_pcie_setup_own_cfg(pp);
+>  
+>  	return 0;
+>  }
 
-I tentatively applied this with Jason's ack to pci/msi for v4.7.
+What's the hisi plan for resuming after suspend-to-RAM?  How does the
+RC get reprogrammed after it loses all its state?
 
-But it sounds like ALPINE is currently broken, so maybe this should go
-in v4.6 instead?  Or if it should go through a different tree, that's
-fine too.  Just let me know.
+What would break if hisi did call dw_pcie_setup_rc()?  I know you said
+it would overwrite what the bootloader already did, which is true.
 
-> ---
->  arch/arm/Kconfig         |  3 ++-
->  arch/arm64/Kconfig       |  4 ++--
->  drivers/irqchip/Kconfig  | 11 ++++++++---
->  drivers/pci/host/Kconfig | 10 ++++++----
->  4 files changed, 18 insertions(+), 10 deletions(-)
-> 
-> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-> index aa9f67a89620..1c4e38764f02 100644
-> --- a/arch/arm/Kconfig
-> +++ b/arch/arm/Kconfig
-> @@ -703,9 +703,10 @@ config ARCH_VIRT
->  	depends on ARCH_MULTI_V7
->  	select ARM_AMBA
->  	select ARM_GIC
-> -	select ARM_GIC_V2M if PCI_MSI
-> +	select ARM_GIC_V2M
->  	select ARM_GIC_V3
->  	select ARM_PSCI
-> +	select PCI
->  	select HAVE_ARM_ARCH_TIMER
->  
->  #
-> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-> index 4f436220384f..c9a3161e0aed 100644
-> --- a/arch/arm64/Kconfig
-> +++ b/arch/arm64/Kconfig
-> @@ -19,9 +19,9 @@ config ARM64
->  	select ARM_ARCH_TIMER
->  	select ARM_GIC
->  	select AUDIT_ARCH_COMPAT_GENERIC
-> -	select ARM_GIC_V2M if PCI_MSI
-> +	select ARM_GIC_V2M
->  	select ARM_GIC_V3
-> -	select ARM_GIC_V3_ITS if PCI_MSI
-> +	select ARM_GIC_V3_ITS
->  	select ARM_PSCI_FW
->  	select BUILDTIME_EXTABLE_SORT
->  	select CLONE_BACKWARDS
-> diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
-> index 7e8c441ff2de..73ab0ecb9b3b 100644
-> --- a/drivers/irqchip/Kconfig
-> +++ b/drivers/irqchip/Kconfig
-> @@ -16,7 +16,8 @@ config ARM_GIC_MAX_NR
->  config ARM_GIC_V2M
->  	bool
->  	depends on ARM_GIC
-> -	depends on PCI && PCI_MSI
-> +	depends on PCI
-> +	select PCI_MSI
->  	select PCI_MSI_IRQ_DOMAIN
->  
->  config GIC_NON_BANKED
-> @@ -30,6 +31,8 @@ config ARM_GIC_V3
->  
->  config ARM_GIC_V3_ITS
->  	bool
-> +	depends on PCI
-> +	select PCI_MSI
->  	select PCI_MSI_IRQ_DOMAIN
->  
->  config HISILICON_IRQ_MBIGEN
-> @@ -63,11 +66,13 @@ config ARM_VIC_NR
->  config ARMADA_370_XP_IRQ
->  	bool
->  	select GENERIC_IRQ_CHIP
-> -	select PCI_MSI_IRQ_DOMAIN if PCI_MSI
-> +	select PCI_MSI if PCI
-> +	select PCI_MSI_IRQ_DOMAIN if PCI
->  
->  config ALPINE_MSI
->  	bool
-> -	depends on PCI && PCI_MSI
-> +	depends on PCI
-> +	select PCI_MSI
->  	select GENERIC_IRQ_CHIP
->  	select PCI_MSI_IRQ_DOMAIN
->  
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index c5014bf95a20..844d7eb79c45 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -118,7 +118,6 @@ config PCI_XGENE
->  	depends on ARCH_XGENE
->  	depends on OF
->  	select PCIEPORTBUS
-> -	select PCI_MSI_IRQ_DOMAIN if PCI_MSI
->  	help
->  	  Say Y here if you want internal PCI support on APM X-Gene SoC.
->  	  There are 5 internal PCIe ports available. Each port is GEN3 capable
-> @@ -126,7 +125,9 @@ config PCI_XGENE
->  
->  config PCI_XGENE_MSI
->  	bool "X-Gene v1 PCIe MSI feature"
-> -	depends on PCI_XGENE && PCI_MSI
-> +	depends on PCI_XGENE
-> +	select PCI_MSI
-> +	select PCI_MSI_IRQ_DOMAIN
->  	default y
->  	help
->  	  Say Y here if you want PCIe MSI support for the APM X-Gene v1 SoC.
-> @@ -175,7 +176,7 @@ config PCIE_IPROC_BCMA
->  config PCIE_IPROC_MSI
->  	bool "Broadcom iProc PCIe MSI support"
->  	depends on PCIE_IPROC_PLATFORM || PCIE_IPROC_BCMA
-> -	depends on PCI_MSI
-> +	select PCI_MSI
->  	select PCI_MSI_IRQ_DOMAIN
->  	default ARCH_BCM_IPROC
->  	help
-> @@ -193,7 +194,8 @@ config PCIE_ALTERA
->  
->  config PCIE_ALTERA_MSI
->  	bool "Altera PCIe MSI feature"
-> -	depends on PCIE_ALTERA && PCI_MSI
-> +	depends on PCIE_ALTERA
-> +	select PCI_MSI
->  	select PCI_MSI_IRQ_DOMAIN
->  	help
->  	  Say Y here if you want PCIe MSI support for the Altera FPGA.
-> -- 
-> 2.7.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+But hisi does call dw_pcie_host_init(), so it reads pp->mem (which
+determines pp->mem_base) and pp->lanes from the DT.  Other drivers
+then call dw_pcie_setup_rc() which programs the RC based on
+pp->mem_base and pp->lanes.  So hisi assumes UEFI programmed the RC to
+match the DT, while the other drivers read the DT and program the RC
+to match.  The latter seems more robust because it enforces the
+consistency rather than relying on it.
+
+Bjorn
