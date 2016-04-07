@@ -1,66 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:52042 "EHLO muru.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752211AbcDZQIl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Apr 2016 12:08:41 -0400
-Date: Tue, 26 Apr 2016 09:08:31 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: Rob Herring <robh+dt@kernel.org>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Lee Jones <lee@kernel.org>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Mark Brown <broonie@kernel.org>,
-	Alexandre Belloni <alexandre.belloni@free-electrons.com>,
-	Joe Perches <joe@perches.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
+Received: from lhrrgout.huawei.com ([194.213.3.17]:26179 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750963AbcDGIOM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 04:14:12 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Pratyush Anand <pratyush.anand@gmail.com>
+CC: Jisheng Zhang <jszhang@marvell.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	dmaengine@vger.kernel.org
-Subject: Re: [PATCH 04/14] ARM: dts: OMAP36xx: : DT spelling
- s/#address-cell/#address-cells/
-Message-ID: <20160426160831.GT5995@atomide.com>
-References: <1461166339-11109-1-git-send-email-geert+renesas@glider.be>
- <1461166339-11109-5-git-send-email-geert+renesas@glider.be>
- <CAL_JsqKSbGPKNZdZnowGpdF8zxXbh6g-wkq96+KmBNLwp7n=HQ@mail.gmail.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH v2] PCI: designware: move remaining rc setup code to
+ dw_pcie_setup_rc()
+Date: Thu, 7 Apr 2016 08:14:00 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED43F7E@lhreml503-mbs>
+References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
+	<EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
+ <CAHM4w1khRn4xbWbj5Qk-p5DMGjEdWfgr1W1OSsXPFVaYenFa8A@mail.gmail.com>
+In-Reply-To: <CAHM4w1khRn4xbWbj5Qk-p5DMGjEdWfgr1W1OSsXPFVaYenFa8A@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL_JsqKSbGPKNZdZnowGpdF8zxXbh6g-wkq96+KmBNLwp7n=HQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-* Rob Herring <robh+dt@kernel.org> [160420 16:48]:
-> On Wed, Apr 20, 2016 at 10:32 AM, Geert Uytterhoeven
-> <geert+renesas@glider.be> wrote:
-> > Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> > ---
-> >  arch/arm/boot/dts/omap36xx.dtsi | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/arch/arm/boot/dts/omap36xx.dtsi b/arch/arm/boot/dts/omap36xx.dtsi
-> > index ce1e242d4dc07ea8..8b797915300894d8 100644
-> > --- a/arch/arm/boot/dts/omap36xx.dtsi
-> > +++ b/arch/arm/boot/dts/omap36xx.dtsi
-> > @@ -44,7 +44,7 @@
-> >                 abb_mpu_iva: regulator-abb-mpu {
-> >                         compatible = "ti,abb-v1";
-> >                         regulator-name = "abb_mpu_iva";
-> > -                       #address-cell = <0>;
-> > +                       #address-cells = <0>;
-> 
-> dtc should flag this if it was really needed. However, it looks like
-> it isn't as there are no child nodes (unless the board files add
-> them).
-> 
-> A nice dtc check would be to flag unnecessary #address-cells or
-> #size-cells. That would only help here after your fix though.
-
-Yeah. Applying patches 2 - 4 into omap-for-v4.7/dt thanks.
-
-Tony
+SGkgUHJhdHl1c2gNCg0KTWFueSB0aGFua3MgZm9yIHF1aWNrIHJlcGx5aW5nDQoNCj4gLS0tLS1P
+cmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUHJhdHl1c2ggQW5hbmQgW21haWx0bzpwcmF0
+eXVzaC5hbmFuZEBnbWFpbC5jb21dDQo+IFNlbnQ6IDA3IEFwcmlsIDIwMTYgMDc6NTkNCj4gVG86
+IEdhYnJpZWxlIFBhb2xvbmkNCj4gQ2M6IEppc2hlbmcgWmhhbmc7IGppbmdvb2hhbjFAZ21haWwu
+Y29tOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZzsg
+bGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLQ0KPiBrZXJuZWxAbGlzdHMu
+aW5mcmFkZWFkLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYyXSBQQ0k6IGRlc2lnbndhcmU6
+IG1vdmUgcmVtYWluaW5nIHJjIHNldHVwIGNvZGUNCj4gdG8gZHdfcGNpZV9zZXR1cF9yYygpDQo+
+IA0KPiBIaSBHYWIsDQo+IA0KPiBUaGFua3MgZm9yIGJyaW5naW5nIGl0Lg0KPiANCj4gDQo+IE9u
+IFdlZCwgQXByIDYsIDIwMTYgYXQgODoyMCBQTSwgR2FicmllbGUgUGFvbG9uaQ0KPiA8Z2Ficmll
+bGUucGFvbG9uaUBodWF3ZWkuY29tPiB3cm90ZToNCj4gPiBIaSwgc29ycnkgdG8gYmUgbGF0ZSBv
+biB0aGlzDQo+ID4NCj4gPj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPj4gRnJvbTog
+bGludXgta2VybmVsLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LWtlcm5lbC0N
+Cj4gPj4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgSmlzaGVuZyBaaGFuZw0K
+PiA+PiBTZW50OiAxNiBNYXJjaCAyMDE2IDExOjQxDQo+ID4+IFRvOiBqaW5nb29oYW4xQGdtYWls
+LmNvbTsgcHJhdHl1c2guYW5hbmRAZ21haWwuY29tOw0KPiBiaGVsZ2Fhc0Bnb29nbGUuY29tDQo+
+ID4+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJu
+ZWwub3JnOyBsaW51eC0NCj4gYXJtLQ0KPiA+PiBrZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsg
+SmlzaGVuZyBaaGFuZw0KPiA+PiBTdWJqZWN0OiBbUEFUQ0ggdjJdIFBDSTogZGVzaWdud2FyZTog
+bW92ZSByZW1haW5pbmcgcmMgc2V0dXAgY29kZSB0bw0KPiA+PiBkd19wY2llX3NldHVwX3JjKCkN
+Cj4gPj4NCj4gPj4gZHdfcGNpZV9zZXR1cF9yYygpLCBhcyBpdHMgbmFtZSBpbmRpY2F0ZXMsIHNl
+dHVwcyB0aGUgUkMuIEJ1dA0KPiBjdXJyZW50DQo+ID4+IGR3X3BjaWVfaG9zdF9pbml0KCkgYWxz
+byBjb250YWlucyBzb21lIG5lY2Vzc2FyeSByYyBzZXR1cCBjb2RlLg0KPiA+Pg0KPiA+PiBBbm90
+aGVyIHJlYXNvbjogdGhlIGhvc3QgbWF5IGxvc3QgcG93ZXIgZHVyaW5nIHN1c3BlbmQgdG8gcmFt
+LCB0aGUNCj4gUkMNCj4gPj4gbmVlZCB0byBiZSByZS1zZXR1cCBhZnRlciByZXN1bWUuIFRoZSBy
+YyBjYW4ndCBiZSBjb3JyZWN0bHkgcmVzdW1lZA0KPiA+PiB3aXRob3V0IHRoZSByYyBzZXR1cCBj
+b2RlIGluIGR3X3BjaWVfaG9zdF9pbml0KCkuDQo+ID4+DQo+ID4+IFNvIHRoaXMgcGF0Y2ggbW92
+ZXMgdGhlIGNvZGUgdG8gZHdfcGNpZV9zZXR1cF9yYygpIHRvIGFkZHJlc3MgdGhlDQo+IGFib3Zl
+DQo+ID4+IHR3byBpc3N1ZXMuIEFmdGVyIHRoaXMgcGF0Y2gsIGVhY2ggcGNpZSBkZXNpZ253YXJl
+IGRyaXZlciB1c2Vycw0KPiBjb3VsZA0KPiA+PiBjYWxsIGR3X3BjaWVfc2V0dXBfcmMoKSB0byBy
+ZS1zZXR1cCByYyB3aGVuIHJlc3VtZSBiYWNrLg0KPiA+DQo+ID4gSSB0aGluayB0aGlzIHBhdGNo
+IGJyZWFrcyB0aGUgSGlzaWxpY29uIGRyaXZlci4uLg0KPiA+DQo+ID4gT3VyIGRyaXZlciBwZXJm
+b3JtcyBsaW5rdXAgc2V0dXAgaW4gVUVGSSB0aGVyZWZvcmUgd2UgZG8gbm90IGNhbGwNCj4gPiBk
+d19wY2llX3NldHVwX3JjKCksIHdlIG9ubHkgY2FsbCBkd19wY2llX2hvc3RfaW5pdCgpLg0KPiA+
+DQo+ID4gTWF5YmUgYmV0dGVyIHRvIGdyb3VwIHRoZSBwYXJ0IG9mIGNvZGUgdG8gYmUgbW92ZWQg
+aW4gYXMgc2VwYXJhdGUNCj4gPiBmdW5jdGlvbi4uLg0KPiA+DQo+ID4gVGhhbmtzIGFuZCBzb3Jy
+eSBmb3IgbGF0ZSByZXBseS4NCj4gPg0KPiANCj4gSSBhbSBqdXN0IHdvbmRlcmluZywgc2hvdWxk
+IG4ndCB0aGVuIHdoYXQgZXZlciB3ZSBkbyBpbg0KPiBkd19wY2llX3NldHVwX3JjKCkgYmUgZG9u
+ZSBpbiB5b3VyIGJvb3QgbG9hZGVyIGFuZCBub3QganVzdCBsaW5rIHVwLg0KDQpDdXJyZW50bHkg
+dGhlIEhpU2lsaWNvbiBkcml2ZXIgZG9lcyBub3QgY2FsbCBkd19wY2llX3NldHVwX3JjKCkgYXQg
+YWxsOw0Kc28gZXZlcnl0aGluZyBpcyBkb25lIGluIGR3X3BjaWVfc2V0dXBfcmMoKSBpcyBkb25l
+IGluIGJvb3Rsb2FkZXIuDQoNCkkgZ3Vlc3MgeW91ciBxdWVzdGlvbiBpcyBpZiB3ZSBjYW4gZXhl
+Y3V0ZSBpbiBib290bG9hZGVyIHRoZSBwYXJ0IG9mDQpjb2RlIHRoZSB0aGlzIHBhdGNoIGhhcyBt
+b3ZlZCB0byBpbiAiZHdfcGNpZV9zZXR1cF9yYygpIi4gSSB0aGluayB0aGUNCnByb2JsZW0gaGVy
+ZSBpcyB0aGF0IGV2ZW4gaWYgaXQgd2FzIHBvc3NpYmxlIHdlIHdvdWxkIGJyZWFrIGJhY2t3YXJk
+DQpjb21wYXRpYmlsaXR5IHdpdGggcHJldmlvdXMgYm9vdGxvYWRlcnMuLi4NCg0KVGhhbmtzDQoN
+CkdhYiANCg0KDQo+IA0KPiB+UHJhdHl1c2gNCg==
