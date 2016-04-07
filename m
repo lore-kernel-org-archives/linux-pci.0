@@ -1,85 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:34838 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751450AbcDSEPM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 00:15:12 -0400
-Received: by mail-wm0-f68.google.com with SMTP id a140so1529679wma.2
-        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 21:15:11 -0700 (PDT)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:20727 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755194AbcDGIjL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 04:39:11 -0400
+Date: Thu, 7 Apr 2016 16:34:43 +0800
+From: Jisheng Zhang <jszhang@marvell.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+CC: "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code to
+ dw_pcie_setup_rc()
+Message-ID: <20160407163443.291fbd49@xhacker>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
+References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
+	<EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
+	<20160407103734.55e72da7@xhacker>
+	<EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
 MIME-Version: 1.0
-In-Reply-To: <20160419001453.GA4597@localhost>
-References: <20160419001453.GA4597@localhost>
-Date: Tue, 19 Apr 2016 12:15:10 +0800
-Message-ID: <CADjb_WSAo4Wa8xy1sBwOg+5=Ez8jQYsc=mmbedokY1N9=A0aMA@mail.gmail.com>
-Subject: Re: [BUG?] Thunderbolt BAR 8: no space / failed to assign
-From: yu chen <yu.chen.surf@gmail.com>
-To: Chris Bainbridge <chris.bainbridge@gmail.com>
-Cc: andreas.noever@gmail.com, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="US-ASCII"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 19, 2016 at 8:14 AM, Chris Bainbridge
-<chris.bainbridge@gmail.com> wrote:
-> Not sure if this is an actual bug since I don't have any Thunderbolt
-> devices to test with, but on every boot:
->
-> [    0.418473] pci 0000:05:05.0: res[8]=[mem 0x00100000-0x000fffff] res_to_dev_res add_size 200000 min_align 100000
-> [    0.418474] pci 0000:05:05.0: res[8]=[mem 0x00100000-0x002fffff] res_to_dev_res add_size 200000 min_align 100000
-> [    0.418476] pci 0000:05:05.0: res[9]=[mem 0x00100000-0x000fffff 64bit pref] res_to_dev_res add_size 200000 min_align 100000
-> [    0.418478] pci 0000:05:05.0: res[9]=[mem 0x00100000-0x002fffff 64bit pref] res_to_dev_res add_size 200000 min_align 100000
-> [    0.418479] pci 0000:05:06.0: res[8]=[mem 0x00100000-0x000fffff] res_to_dev_res add_size 200000 min_align 100000
-> [    0.418481] pci 0000:05:06.0: res[8]=[mem 0x00100000-0x002fffff] res_to_dev_res add_size 200000 min_align 100000
-> [    0.418483] pci 0000:05:06.0: res[9]=[mem 0x00100000-0x000fffff 64bit pref] res_to_dev_res add_size 200000 min_align 100000
-> [    0.418484] pci 0000:05:06.0: res[9]=[mem 0x00100000-0x002fffff 64bit pref] res_to_dev_res add_size 200000 min_align 100000
-> [    0.418486] pci 0000:05:05.0: res[7]=[io  0x1000-0x0fff] res_to_dev_res add_size 1000 min_align 1000
-> [    0.418487] pci 0000:05:05.0: res[7]=[io  0x1000-0x1fff] res_to_dev_res add_size 1000 min_align 1000
-> [    0.418489] pci 0000:05:06.0: res[7]=[io  0x1000-0x0fff] res_to_dev_res add_size 1000 min_align 1000
-> [    0.418490] pci 0000:05:06.0: res[7]=[io  0x1000-0x1fff] res_to_dev_res add_size 1000 min_align 1000
-> [    0.418492] pci 0000:05:05.0: BAR 8: no space for [mem size 0x00200000]
-> [    0.418496] pci 0000:05:05.0: BAR 8: failed to assign [mem size 0x00200000]
-> [    0.418502] pci 0000:05:05.0: BAR 9: no space for [mem size 0x00200000 64bit pref]
-> [    0.418507] pci 0000:05:05.0: BAR 9: failed to assign [mem size 0x00200000 64bit pref]
-> [    0.418513] pci 0000:05:06.0: BAR 8: no space for [mem size 0x00200000]
-> [    0.418516] pci 0000:05:06.0: BAR 8: failed to assign [mem size 0x00200000]
-> [    0.418521] pci 0000:05:06.0: BAR 9: no space for [mem size 0x00200000 64bit pref]
-> [    0.418526] pci 0000:05:06.0: BAR 9: failed to assign [mem size 0x00200000 64bit pref]
-> [    0.418532] pci 0000:05:05.0: BAR 7: no space for [io  size 0x1000]
-> [    0.418536] pci 0000:05:05.0: BAR 7: failed to assign [io  size 0x1000]
-> [    0.418539] pci 0000:05:06.0: BAR 7: no space for [io  size 0x1000]
-> [    0.418543] pci 0000:05:06.0: BAR 7: failed to assign [io  size 0x1000]
-> [    0.418547] pci 0000:05:06.0: BAR 8: no space for [mem size 0x00200000]
-> [    0.418551] pci 0000:05:06.0: BAR 8: failed to assign [mem size 0x00200000]
-> [    0.418555] pci 0000:05:06.0: BAR 9: no space for [mem size 0x00200000 64bit pref]
-> [    0.418561] pci 0000:05:06.0: BAR 9: failed to assign [mem size 0x00200000 64bit pref]
-> [    0.418566] pci 0000:05:06.0: BAR 7: no space for [io  size 0x1000]
-> [    0.418570] pci 0000:05:06.0: BAR 7: failed to assign [io  size 0x1000]
-> [    0.418574] pci 0000:05:05.0: BAR 8: no space for [mem size 0x00200000]
-> [    0.418577] pci 0000:05:05.0: BAR 8: failed to assign [mem size 0x00200000]
-> [    0.418582] pci 0000:05:05.0: BAR 9: no space for [mem size 0x00200000 64bit pref]
-> [    0.418587] pci 0000:05:05.0: BAR 9: failed to assign [mem size 0x00200000 64bit pref]
-> [    0.418593] pci 0000:05:05.0: BAR 7: no space for [io  size 0x1000]
-> [    0.418596] pci 0000:05:05.0: BAR 7: failed to assign [io  size 0x1000]
-> [    0.418600] pci 0000:05:00.0: PCI bridge to [bus 06]
-> [    0.418606] pci 0000:05:00.0:   bridge window [mem 0xa0700000-0xa07fffff]
-> [    0.418615] pci 0000:05:03.0: PCI bridge to [bus 07-37]
-> [    0.418619] pci 0000:05:03.0:   bridge window [io  0x3000-0x3fff]
-> [    0.418625] pci 0000:05:03.0:   bridge window [mem 0xa0800000-0xa47fffff]
-> [    0.418630] pci 0000:05:03.0:   bridge window [mem 0xac800000-0xb07fffff 64bit pref]
-> [    0.418638] pci 0000:05:04.0: PCI bridge to [bus 38-68]
-> [    0.418642] pci 0000:05:04.0:   bridge window [io  0x4000-0x4fff]
-> [    0.418648] pci 0000:05:04.0:   bridge window [mem 0xa4800000-0xa87fffff]
-> [    0.418653] pci 0000:05:04.0:   bridge window [mem 0xb0800000-0xb47fffff 64bit pref]
-> [    0.418662] pci 0000:05:05.0: PCI bridge to [bus 69]
-> [    0.418672] pci 0000:05:06.0: PCI bridge to [bus 6a]
->
-> Hardware is 2012 Macbook Ivybridge.
-> Error occurs on kernels from 7bc5a2bad0b8 (which enabled Thunderbolt on
-> Apple hardware) onwards.
+Hi Gabriele,
 
-I also saw this error on Macbook Pro 12 . Looks like there
-is no space left  in the pci bridge.
+On Thu, 7 Apr 2016 08:20:28 +0000 Gabriele Paoloni wrote:
 
+> Hi Jisheng
+> 
+> Thanks for your reply
+> 
+> > -----Original Message-----
+> > From: Jisheng Zhang [mailto:jszhang@marvell.com]
+> > Sent: 07 April 2016 03:38
+> > To: Gabriele Paoloni; jingoohan1@gmail.com; pratyush.anand@gmail.com;
+> > bhelgaas@google.com
+> > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-arm-
+> > kernel@lists.infradead.org
+> > Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code
+> > to dw_pcie_setup_rc()
+> > 
+> > Hi Gabriele,
+> > 
+> > On Wed, 6 Apr 2016 14:50:29 +0000 Gabriele Paoloni wrote:
+> >   
+> > > Hi, sorry to be late on this
+> > >  
+> > > > -----Original Message-----
+> > > > From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
+> > > > owner@vger.kernel.org] On Behalf Of Jisheng Zhang
+> > > > Sent: 16 March 2016 11:41
+> > > > To: jingoohan1@gmail.com; pratyush.anand@gmail.com;  
+> > bhelgaas@google.com  
+> > > > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-  
+> > arm-  
+> > > > kernel@lists.infradead.org; Jisheng Zhang
+> > > > Subject: [PATCH v2] PCI: designware: move remaining rc setup code  
+> > to  
+> > > > dw_pcie_setup_rc()
+> > > >
+> > > > dw_pcie_setup_rc(), as its name indicates, setups the RC. But  
+> > current  
+> > > > dw_pcie_host_init() also contains some necessary rc setup code.
+> > > >
+> > > > Another reason: the host may lost power during suspend to ram, the  
+> > RC  
+> > > > need to be re-setup after resume. The rc can't be correctly resumed
+> > > > without the rc setup code in dw_pcie_host_init().
+> > > >
+> > > > So this patch moves the code to dw_pcie_setup_rc() to address the  
+> > above  
+> > > > two issues. After this patch, each pcie designware driver users  
+> > could  
+> > > > call dw_pcie_setup_rc() to re-setup rc when resume back.  
+> > >
+> > > I think this patch breaks the Hisilicon driver...
+> > >
+> > > Our driver performs linkup setup in UEFI therefore we do not call
+> > > dw_pcie_setup_rc(), we only call dw_pcie_host_init().  
+> > 
+> > Thanks for the information. So pcie-hisi rely on UEFI to do something
+> > similar
+> > in dw_pcie_setup_rc(), this comes to a common driver implement
+> > question: should
+> > linux device driver rely on bootloader to configure HW device?  
+> 
+> I don't see any issue with this...
+> 
+> > 
+> > Is it acceptable that pcie-hisi adds a call to dw_pcie_setup_rc() in
+> > hisi_add_pcie_port()?  
+> 
+> I don't think so...that would try to overwrite what is already set by
+> the bootloader; so it is wrong in principle and maybe it can lead to
+> undefined behaviours...
 
--- 
-Regards,
-Yu
+make sense! This commit is intend to re-setup the rc when waken from s2ram (in
+s2ram state, the host lost power)
+
+I have no good solution but to introduce one function e.g 
+dw_pcie_setup_rc_after_linkup(), then move related code from dw_pcie_host_init
+to it, then let my host driver resume hook to call.
+
+Hi Pratyush, Jingoo and Bjorn etc.
+
+any suggestions are appreciated!
+
+Thanks,
+Jisheng
+
