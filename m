@@ -1,98 +1,127 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp04.au.ibm.com ([202.81.31.146]:42767 "EHLO
-	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751881AbcDTBNJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 21:13:09 -0400
-Received: from localhost
-	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 20 Apr 2016 11:13:07 +1000
-Date: Wed, 20 Apr 2016 11:12:05 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
-	robherring2@gmail.com, grant.likely@linaro.org
-Subject: Re: [PATCH v8 21/45] powerpc/powernv: Create PEs at PCI hot plugging
- time
-Message-ID: <20160420011205.GA21871@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-22-git-send-email-gwshan@linux.vnet.ibm.com>
- <5715B12A.6020203@ozlabs.ru>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH 1/2] pci: add pci_unmap_iospace function for PCI_IOBASE
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1457389310-3538-1-git-send-email-okaya@codeaurora.org>
+ <20160407160004.GA8780@localhost>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+	agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <57069DB5.9060404@codeaurora.org>
+Date: Thu, 7 Apr 2016 13:49:41 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5715B12A.6020203@ozlabs.ru>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160407160004.GA8780@localhost>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 19, 2016 at 02:16:42PM +1000, Alexey Kardashevskiy wrote:
->On 02/17/2016 02:44 PM, Gavin Shan wrote:
->>Currently, the PEs and their associated resources are assigned
->>in ppc_md.pcibios_fixup() except those used by SRIOV VFs.
->
->But this new code does not affect IOV and VF's PEs will still be created
->somewhere else rather than pnv_pci_setup_bridge()?
->
-
-Correct. VF PEs cannot be created in pnv_pci_setup_bridge() as the PF's
-IOV capability isn't enabled at that point.
-
->
->>The
->>function is called for once after PCI probing and resources
->>assignment is completed. So it isn't hotplug friendly.
+On 4/7/2016 12:00 PM, Bjorn Helgaas wrote:
+> Hi Sinan,
+> 
+> On Mon, Mar 07, 2016 at 05:21:49PM -0500, Sinan Kaya wrote:
+>> The PCI_IOBASE needs to be released after hotplug removal so that it can be
+>> re-added back by the pci_remap_iospace function during insertion.
 >>
->>This creates PEs dynamically by ppc_md.pcibios_setup_bridge(), which
->>is called on the event during system bootup and PCI hotplug: updating
->>PCI bridge's windows after resource assignment/reassignment are done.
->>For partial hotplug case, where not all PCI devices belonging to the
->>PE are unplugged and plugged again, we just need unbinding/binding
->>the affected PCI devices with the corresponding PE without creating
->>new one.
+>> Adding unmap function to follow IO remap function.
 >>
->>As there is no upstream bridge for root bus that needs to be covered
->>by PE, we have to create PE for root bus in ppc_md.pcibios_setup_bridge()
->>before any other PEs can be created, as PE for root bus is the ancestor
->>to anyone else.
->
->We did not need a root bus PE before? What is the other PE reserved for?
->Comments only say "reserved"...
->
-
-No, A PE for root bus is needed before. other PEs can be for the PCI bus
-originated from root port and the subordinate domains.
- 
+>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>> ---
+>>  drivers/pci/pci.c   | 25 +++++++++++++++++++++++++
+>>  include/linux/pci.h |  1 +
+>>  2 files changed, 26 insertions(+)
 >>
->>Also, the windows of root port or the upstream port of PCIe switch behind
->>root port are extended to be PHB's apertures to accommodate the additional
->>resources needed by newly plugged devices based on the fact: hotpluggable
->>slot is behind root port or downstream port of the PCIe switch behind
->>root port. The extension for those PCI brdiges' windows is done in
->>ppc_md.pcibios_setup_bridge() as well.
->
->
->This patch seems to be doing way too many things, hard to follow.
->
->Could you please split the patch into smaller chunks? For example (you can do
->it totally different):
->- move pnv_pci_ioda_setup_opal_tce_kill()
->- move PE creation from pnv_pci_ioda_fixup() to pnv_pci_setup_bridge();
->- add pnv_pci_fixup_bridge_resources()
->- add an extra reserved PE for the root bus (and all this magic with
->root_pe_idx/root_pe_populated)
->- ...
->
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 3a516c0..f5faed2 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -26,6 +26,7 @@
+>>  #include <linux/device.h>
+>>  #include <linux/pm_runtime.h>
+>>  #include <linux/pci_hotplug.h>
+>> +#include <linux/vmalloc.h>
+>>  #include <asm-generic/pci-bridge.h>
+>>  #include <asm/setup.h>
+>>  #include <linux/aer.h>
+>> @@ -3169,6 +3170,30 @@ int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+>>  #endif
+>>  }
+>>  
+>> +/**
+>> + *	pci_unmap_iospace - Unmap the memory mapped I/O space
+>> + *	@virt_addr: virtual address to be unmapped
+>> + *	@size: size of the physical address to be unmapped
+>> + *
+>> + *	Unmap the CPU virtual address @virt_addr from virtual address space.
+>> + *	Only architectures that have memory mapped IO functions defined
+>> + *	(and the PCI_IOBASE value defined) should call this function.
+>> + */
+>> +void  __weak pci_unmap_iospace(struct resource *res)
+> 
+> Why is this weak?  I assume probably because pci_remap_iospace() is
+> weak, but I don't see any reason why *that* needs to be weak.  There's
+> only one implementation.  I think neither one should be weak unless we
+> have an actual need for that.
+> 
 
-I'll evaluate it later. It's always nice to have small patches. Thanks
-for the comments.
+Right, copy paste mistake. Even the function parameter description above
+is not right. 
 
->
->
->
->-- 
->Alexey
->
+I can get rid of the __weak from both on the next iteration.
 
+>> +{
+>> +#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
+>> +	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
+>> +
+>> +	unmap_kernel_range(vaddr, resource_size(res));
+> 
+> There really aren't any other generic uses of unmap_kernel_range().
+> This isn't an unusual scenario, so I would expect this code to use a
+> pattern that's used elsewhere.
+
+OK, What's the best way to remove a mapping? I'm open for suggestions.
+I copied this pattern from GHES driver.
+
+> 
+>> +#else
+>> +	/*
+>> +	 * This architecture does not have memory mapped I/O space,
+>> +	 * so this function should never be called.
+>> +	 */
+>> +	WARN_ONCE(1, "This architecture does not support memory mapped I/O\n");
+>> +#endif
+>> +}
+>> +
+>>  static void __pci_set_master(struct pci_dev *dev, bool enable)
+>>  {
+>>  	u16 old_cmd, cmd;
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 398ae7e..c6e3f0e 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1172,6 +1172,7 @@ int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+>>  unsigned long pci_address_to_pio(phys_addr_t addr);
+>>  phys_addr_t pci_pio_to_address(unsigned long pio);
+>>  int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
+>> +void pci_unmap_iospace(struct resource *res);
+>>  
+>>  static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
+>>  {
+>> -- 
+>> 1.8.2.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
