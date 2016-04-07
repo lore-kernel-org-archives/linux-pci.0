@@ -1,62 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ni.piap.pl ([195.187.100.4]:58043 "EHLO ni.piap.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753070AbcDDKhM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 4 Apr 2016 06:37:12 -0400
-From: khalasa@piap.pl (Krzysztof =?utf-8?Q?Ha=C5=82asa?=)
-To: Tim Harvey <tharvey@gateworks.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>,
-	Petr =?utf-8?Q?=C5=A0tetiar?= <ynezz@true.cz>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel\@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity
-References: <m3h9fuk7ik.fsf@t19.piap.pl>
-	<CAOMZO5DcZCxoLPeGRWSGkstm7F3eN-Q-yJyf6ktMTda2zLviag@mail.gmail.com>
-	<CAOMZO5B8Lzn-E4YOeYxVtN5PN11aOvZHn4eU0ixkdV8CO8+xYw@mail.gmail.com>
-	<CAJ+vNU2Sg1ZKBsGcQswrJZyTJ1WBEZor3ZqpoYUT7i9FKjEAog@mail.gmail.com>
-	<CAOMZO5DO9G18=_YSri3a+UiYbLwN6AMG4asUXbT03mpbU3hHrw@mail.gmail.com>
-	<CAJ+vNU1_YqvWQkmuDB7r8z77iZJS6pP4Mr+j9yW4sFLAeJXQDw@mail.gmail.com>
-	<CAOMZO5A2osG3=mTaCayYfMokUj-vT+Udq9ckq45b1yaUP9Tn3g@mail.gmail.com>
-	<CAJ+vNU2ST=XG5H04-OCwpHgcvkoXOQw8F3MjXhJmWhBUbxWE-g@mail.gmail.com>
-	<1459241739.2565.9.camel@pengutronix.de> <m3shz9in52.fsf@t19.piap.pl>
-	<1459248921.2565.15.camel@pengutronix.de> <m3oa9widxk.fsf@t19.piap.pl>
-	<CAJ+vNU0iKSXrKmA6jzdw5R5K3TnR3qftVn-8Ou5chHdz5aTpTA@mail.gmail.com>
-Date: Mon, 04 Apr 2016 12:37:07 +0200
-In-Reply-To: <CAJ+vNU0iKSXrKmA6jzdw5R5K3TnR3qftVn-8Ou5chHdz5aTpTA@mail.gmail.com>
-	(Tim Harvey's message of "Thu, 31 Mar 2016 09:19:31 -0700")
-Message-ID: <m337r1irsc.fsf@t19.piap.pl>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:50434 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751925AbcDGCKG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2016 22:10:06 -0400
+Received: from localhost
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <imunsie@au1.ibm.com>;
+	Thu, 7 Apr 2016 12:10:03 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 0A0A82CE805E
+	for <linux-pci@vger.kernel.org>; Thu,  7 Apr 2016 12:09:54 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u3729j0X4981052
+	for <linux-pci@vger.kernel.org>; Thu, 7 Apr 2016 12:09:53 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+	by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u37296Bh016455
+	for <linux-pci@vger.kernel.org>; Thu, 7 Apr 2016 12:09:07 +1000
+Content-Type: text/plain; charset=UTF-8
+From: Ian Munsie <imunsie@au1.ibm.com>
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Cc: mikey <mikey@neuling.org>,
+	Michael C Hollinger <mchollin@us.ibm.com>,
+	Frederic Barrat <frederic.barrat@fr.ibm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	"Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>,
+	gwshan <gwshan@linux.vnet.ibm.com>,
+	Manoj Kumar <kumarmn@us.ibm.com>, paulus <paulus@samba.org>,
+	"andrew.donnellan" <andrew.donnellan@au1.ibm.com>,
+	bhelgaas <bhelgaas@google.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	Michael Ellerman <mpe@ellerman.id.au>
+Subject: Re: [PATCH v4] powerpc/pci: Assign fixed PHB number based on device-tree properties
+In-reply-to: <570584EF.1010904@linux.vnet.ibm.com>
+References: <1458337746-20337-1-git-send-email-gpiccoli@linux.vnet.ibm.com> <1459971134-sup-6269@x230.ozlabs.ibm.com> <570584EF.1010904@linux.vnet.ibm.com>
+Date: Wed, 06 Apr 2016 21:08:03 -0500
+Message-Id: <1459994859-sup-3399@x230.ozlabs.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tim,
+Excerpts from Guilherme G. Piccoli's message of 2016-04-06 16:51:43 -0500:
+> And in the case a virtual PHB grabs the bitmap before, we just need to 
+> add Michael's suggested check and fallback to bitmap PHB numbering in 
+> this case.
+> 
+> Do you think this is enough to avoid issues with cxl'a virtual PHBs?
 
-> So perhaps there is something else going on with the tw8689
-> device/driver that is causing it to not work with MSI. We have an
-> avc8000 miniPCIe with tw8689 here and can test if you send me your
-> patches that enable tw8689 with msi.
+Yep, that should be fine :)
 
-I think you can use this:
-http://git.linuxtv.org/hverkuil/media_tree.git/log/?h=tw686x
+Cheers,
+-Ian
 
-> Regardless of MSI working in our tests we still disable it because of
-> it breaking legacy irqs and for performance reasons.
-
-So do I. However I'm also using Fedora 23 and this means I have to
-recompile the kernel, since they build it with MSI enabled.
-I think we should fix it, either by disabling in run time, or making it
-work.
-
-Performance-wise, I found it "surprising" that one can't have multiple
-MSIs with separate hw vector for each.
--- 
-Krzysztof Halasa
-
-Industrial Research Institute for Automation and Measurements PIAP
-Al. Jerozolimskie 202, 02-486 Warsaw, Poland
