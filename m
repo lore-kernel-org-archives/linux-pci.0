@@ -1,88 +1,151 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:42164 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760488AbcDFC6J (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2016 22:58:09 -0400
-Received: from localhost
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Wed, 6 Apr 2016 12:58:06 +1000
-Subject: Re: [RFC v5 1/7] PCI: Ignore resource_alignment if PCI_PROBE_ONLY was
- set
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1459863813-2830-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1459863813-2830-2-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160406004840.GA6187@gwshan>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
-	aik@ozlabs.ru, alex.williamson@redhat.com,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	nikunj@linux.vnet.ibm.com
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Message-ID: <57047AF3.7070401@linux.vnet.ibm.com>
-Date: Wed, 6 Apr 2016 10:56:51 +0800
-MIME-Version: 1.0
-In-Reply-To: <20160406004840.GA6187@gwshan>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:59830 "EHLO
+	metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752991AbcDGOaZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 10:30:25 -0400
+Message-ID: <1460039421.32099.12.camel@pengutronix.de>
+Subject: Re: [PATCH v5] PCI: imx6: add dt prop for link gen, default to gen1
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Tim Harvey <tharvey@gateworks.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@freescale.com>,
+	Zhu Richard <Richard.Zhu@freescale.com>,
+	Akshay Bhat <akshay.bhat@timesys.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Shawn Guo <shawnguo@kernel.org>
+Date: Thu, 07 Apr 2016 16:30:21 +0200
+In-Reply-To: <1459984494-15782-1-git-send-email-tharvey@gateworks.com>
+References: <1459984494-15782-1-git-send-email-tharvey@gateworks.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/4/6 8:48, Gavin Shan wrote:
-> On Tue, Apr 05, 2016 at 09:43:29PM +0800, Yongji Xie wrote:
->> The resource_alignment will releases memory
->> resources allocated by firmware so that kernel
->> can reassign new resources later on. But this
->> will cause the problem that no resources can be
->> allocated by kernel if PCI_PROBE_ONLY was set,
->> e.g. on pSeries platform because PCI_PROBE_ONLY
->> force kernel to use firmware setup and not to
->> reassign any resources.
->>
->> To solve this problem, this patch ignores
->> resource_alignment if PCI_PROBE_ONLY was set.
->>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->> drivers/pci/pci.c |    6 ++++++
->> 1 file changed, 6 insertions(+)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 602eb42..1db9267 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -4607,6 +4607,12 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
->> 	spin_lock(&resource_alignment_lock);
->> 	p = resource_alignment_param;
->> 	while (*p) {
->> +		if (pci_has_flag(PCI_PROBE_ONLY)) {
->> +			printk(KERN_ERR "PCI: Ignore resource_alignment parameter: %s with"
->> +					" PCI_PROBE_ONLY set\n", p);
->> +			*p = 0;
->> +			break;
-> It seems no "*p = 0" isn't required if I don't miss anything. If the check
-> on flag PCI_PROBE_ONLY is moved before the spin_lock(), it would save a bit
-> CPU cycles at least. Also, the logic looks more clear.
+Am Mittwoch, den 06.04.2016, 16:14 -0700 schrieb Tim Harvey:
+> Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
+> the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
+> external clock source is present and supplied back to the IMX6 PCIe core
+> via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
+> 
+> Add a dt property to specify gen1 vs gen2 and check this before allowing
+> a Gen2 link.
+> 
+> We default to Gen1 if the property is not present because at this time there
+> are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
+> 
+> In order to be Gen2 compliant on IMX6 you need to:
+>  - have a Gen2 compliant external clock generator and route that clock back
+>    to either LVDS CLK1 or LVDS CLK2 as an input.
+>    (see IMX6SX-SabreSD reference design)
+>  - specify this clock in the pcie node in the dt
+>    (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
+>     IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
+> 
+> [1] https://community.freescale.com/message/453209
+> 
+> Cc: Lucas Stach <l.stach@pengutronix.de>
+> Cc: Bjorn Helgaas <helgaas@kernel.org>
+> Cc: Fabio Estevam <fabio.estevam@freescale.com>
+> Cc: Zhu Richard <Richard.Zhu@freescale.com>
+> Cc: Akshay Bhat <akshay.bhat@timesys.com>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Shawn Guo <shawnguo@kernel.org>
+> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
 
-I used "*p = 0" in case that the warning is called
-in every pci_device_add().
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
 
-And the warning should be called only when users
-use resource_alignment parameter. So we test
-while(*p) before we call the warning.
+> ---
+> v5:
+>  - clearly default link gen to 1 when dt prop is read to avoid confusion
+> v4:
+>  - rebase against linux-pci/master
+>  - add fsl vendor prefix to dt prop
+> 
+> v3:
+>  - added note in dt bindings doc that we limit to gen1 unless this is specified
+>    as gen2 capable
+>  - move property to imx6 pcie phy instead of designware core
+>  - don't use &ret as temp storage as of_property_read_u32() doesn't change the
+>    outval if property isn't found
+> v2:
+>  - moved dt property to designware core
+> 
+> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+> ---
+>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  4 ++++
+>  drivers/pci/host/pci-imx6.c                        | 24 +++++++++++++++-------
+>  2 files changed, 21 insertions(+), 7 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> index 3be80c6..b92fafb 100644
+> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> @@ -19,6 +19,10 @@ Optional properties:
+>  - fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
+>  - fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
+>  - fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
+> +- fsl,max-link-speed: Specify PCI gen for link capability. Must be '2' for
+> +  gen2, otherwise will default to gen1. Note that the IMX6 LVDS clock outputs
+> +  do not meet gen2 jitter requirements and thus for gen2 capability a gen2
+> +  compliant clock generator should be used and configured.
+>  
+>  Example:
+>  
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index eb5a275..60a14b8 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -44,6 +44,7 @@ struct imx6_pcie {
+>  	u32			tx_deemph_gen2_6db;
+>  	u32			tx_swing_full;
+>  	u32			tx_swing_low;
+> +	int			link_gen;
+>  };
+>  
+>  /* PCIe Root Complex registers (memory-mapped) */
+> @@ -417,11 +418,15 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
+>  		goto err_reset_phy;
+>  	}
+>  
+> -	/* Allow Gen2 mode after the link is up. */
+> -	tmp = readl(pp->dbi_base + PCIE_RC_LCR);
+> -	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+> -	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
+> -	writel(tmp, pp->dbi_base + PCIE_RC_LCR);
+> +	if (imx6_pcie->link_gen == 2) {
+> +		/* Allow Gen2 mode after the link is up. */
+> +		tmp = readl(pp->dbi_base + PCIE_RC_LCR);
+> +		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+> +		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
+> +		writel(tmp, pp->dbi_base + PCIE_RC_LCR);
+> +	} else {
+> +		dev_info(pp->dev, "Link: Gen2 disabled\n");
+> +	}
+>  
+>  	/*
+>  	 * Start Directed Speed Change so the best possible speed both link
+> @@ -445,8 +450,7 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
+>  	}
+>  
+>  	tmp = readl(pp->dbi_base + PCIE_RC_LCSR);
+> -	dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
+> -
+> +	dev_info(pp->dev, "Link up, Gen%i\n", (tmp >> 16) & 0xf);
+>  	return 0;
+>  
+>  err_reset_phy:
+> @@ -598,6 +602,12 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>  				 &imx6_pcie->tx_swing_low))
+>  		imx6_pcie->tx_swing_low = 127;
+>  
+> +	/* Limit link speed */
+> +	ret = of_property_read_u32(pp->dev->of_node, "fsl,max-link-speed",
+> +				   &imx6_pcie->link_gen);
+> +	if (ret)
+> +		imx6_pcie->link_gen = 1;
+> +
+>  	ret = imx6_add_pcie_port(pp, pdev);
+>  	if (ret < 0)
+>  		return ret;
 
-Thanks,
-Yongji
-
->> +		}
->> 		count = 0;
->> 		if (sscanf(p, "%d%n", &align_order, &count) == 1 &&
->> 							p[count] == '@') {
-> Thanks,
-> Gavin
->
->> -- 
->> 1.7.9.5
->>
 
