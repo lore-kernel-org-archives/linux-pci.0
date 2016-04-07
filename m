@@ -1,118 +1,53 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 7 Apr 2016 14:12:16 -0600
 From: Jon Derrick <jonathan.derrick@intel.com>
-To: Rafael Wysocki <rjw@rjwysocki.net>
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Keith Busch <keith.busch@intel.com>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 2/2] PCI/PCIe: Fixups for acpi port setup not being allowed to fail
-Date: Fri,  8 Apr 2016 10:01:20 -0600
-Message-Id: <1460131280-184287-3-git-send-email-jonathan.derrick@intel.com>
-In-Reply-To: <1460131280-184287-1-git-send-email-jonathan.derrick@intel.com>
-References: <1460131280-184287-1-git-send-email-jonathan.derrick@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-acpi@vger.kernel.org
+Subject: Re: [PATCH] pci: Added flag to pci_host_bridge to hint not to use
+ acpi
+Message-ID: <20160407201216.GA9986@localhost.localdomain>
+References: <1458770518-10203-1-git-send-email-jonathan.derrick@intel.com>
+ <20160324164159.GB25518@localhost.localdomain>
+ <20160407174224.GE8780@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160407174224.GE8780@localhost>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that pcie_port_acpi_setup cannot fail, the callers do not need to
-check the return values of it and pcie_port_platform_notify.
+Hi Bjorn,
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- drivers/pci/pcie/portdrv.h      | 11 ++++-------
- drivers/pci/pcie/portdrv_acpi.c | 10 ++++------
- drivers/pci/pcie/portdrv_core.c |  8 ++------
- 3 files changed, 10 insertions(+), 19 deletions(-)
+First, thanks for the review
 
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index d525548..463b609 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -67,17 +67,14 @@ static inline void pcie_pme_interrupt_enable(struct pci_dev *dev, bool en) {}
- #endif /* !CONFIG_PCIE_PME */
- 
- #ifdef CONFIG_ACPI
--int pcie_port_acpi_setup(struct pci_dev *port, int *mask);
-+void pcie_port_acpi_setup(struct pci_dev *port, int *mask);
- 
--static inline int pcie_port_platform_notify(struct pci_dev *port, int *mask)
-+static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask)
- {
--	return pcie_port_acpi_setup(port, mask);
-+	pcie_port_acpi_setup(port, mask);
- }
- #else /* !CONFIG_ACPI */
--static inline int pcie_port_platform_notify(struct pci_dev *port, int *mask)
--{
--	return 0;
--}
-+static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask){}
- #endif /* !CONFIG_ACPI */
- 
- #endif /* _PORTDRV_H_ */
-diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
-index f097a73..9f4ed71 100644
---- a/drivers/pci/pcie/portdrv_acpi.c
-+++ b/drivers/pci/pcie/portdrv_acpi.c
-@@ -32,22 +32,22 @@
-  * NOTE: It turns out that we cannot do that for individual port services
-  * separately, because that would make some systems work incorrectly.
-  */
--int pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
-+void pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
- {
- 	struct acpi_pci_root *root;
- 	acpi_handle handle;
- 	u32 flags;
- 
- 	if (acpi_pci_disabled)
--		return 0;
-+		return;
- 
- 	handle = acpi_find_root_bridge_handle(port);
- 	if (!handle)
--		return 0;
-+		return;
- 
- 	root = acpi_pci_find_root(handle);
- 	if (!root)
--		return 0;
-+		return;
- 
- 	flags = root->osc_control_set;
- 
-@@ -58,6 +58,4 @@ int pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
- 		*srv_mask |= PCIE_PORT_SERVICE_PME;
- 	if (flags & OSC_PCI_EXPRESS_AER_CONTROL)
- 		*srv_mask |= PCIE_PORT_SERVICE_AER;
--
--	return 0;
- }
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 88122dc..de7a85b 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -256,7 +256,6 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	int services = 0;
- 	u32 reg32;
- 	int cap_mask = 0;
--	int err;
- 
- 	if (pcie_ports_disabled)
- 		return 0;
-@@ -266,11 +265,8 @@ static int get_port_device_capability(struct pci_dev *dev)
- 	if (pci_aer_available())
- 		cap_mask |= PCIE_PORT_SERVICE_AER;
- 
--	if (pcie_ports_auto) {
--		err = pcie_port_platform_notify(dev, &cap_mask);
--		if (err)
--			return 0;
--	}
-+	if (pcie_ports_auto)
-+		pcie_port_platform_notify(dev, &cap_mask);
- 
- 	/* Hot-Plug Capable */
- 	if ((cap_mask & PCIE_PORT_SERVICE_HP) &&
--- 
-1.8.3.1
+> The spec (PCI Firmware spec 3.0, sec 4.5) says _OSC is a child of an
+> ACPI device and applies to that device.  In your case, I think there
+> is no ACPI PNP0A0x device for the VMD host bridge, and hence there is
+> no _OSC method for it.  There's no ACPI handle for the VMD bridge, so
+> I think pcie_port_acpi_setup() returns -EINVAL, which causes
+> get_port_device_capability() to give up and decide that the port
+> can't support *any* PCIe services.
+> 
+> I think that's the real problem: the fact that there's no ACPI device
+> corresponding to the bridge should not be an error.  It should just
+> mean the platform doesn't have an opportunity to limit what services
+> the kernel can manage.  I think pcie_port_acpi_setup() should return 0
+> in all cases.  Can you try that and see if it fixes the problem?
+> 
+
+I believe what you are suggesting is:
+
+
+        handle = acpi_find_root_bridge_handle(port);
+        if (!handle)
+-               return -EINVAL;
++               return 0;
+
+        root = acpi_pci_find_root(handle);
+        if (!root)
+-               return -ENODEV;
++               return 0;
+
+
+This works for me. I will follow up with a proper patch.
 
