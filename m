@@ -1,140 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from [193.47.165.129] ([193.47.165.129]:47080 "EHLO mellanox.co.il"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932482AbcDSQeO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 Apr 2016 12:34:14 -0400
-From: Majd Dibbiny <majd@mellanox.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, ogerlitz@mellanox.com,
-	Noa Osherovich <noaos@mellanox.com>,
-	Majd Dibbiny <majd@mellanox.com>
-Subject: [PATCH] PCI: Refine broken INTx masking for Mellanox devices
-Date: Tue, 19 Apr 2016 19:33:36 +0300
-Message-Id: <1461083616-30099-1-git-send-email-majd@mellanox.com>
+Received: from mail.kernel.org ([198.145.29.136]:45299 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750925AbcDGVlM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 7 Apr 2016 17:41:12 -0400
+Date: Thu, 7 Apr 2016 16:41:08 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+	agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] pci, acpi: free IO resource during shutdown
+Message-ID: <20160407214108.GB24492@localhost>
+References: <1457389310-3538-1-git-send-email-okaya@codeaurora.org>
+ <1457389310-3538-2-git-send-email-okaya@codeaurora.org>
+ <20160407160624.GB8780@localhost>
+ <57069CAF.8090803@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <57069CAF.8090803@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Noa Osherovich <noaos@mellanox.com>
+On Thu, Apr 07, 2016 at 01:45:19PM -0400, Sinan Kaya wrote:
+> On 4/7/2016 12:06 PM, Bjorn Helgaas wrote:
+> >> __release_pci_root_info function if the region type is IO.
+> > I don't know what "removing a slot" means.  You're changing
+> > pci_root.c, so I assume this is really an ACPI host bridge removal?
+> > 
+> 
+> Correct, I'm removing the host bridge.
+> 
+> > The release should correspond to a mapping, and the changelog should
+> > point out where that mapping happens so we can see the symmetry.
+> > 
+> 
+> I apologize. This is based on Tomasz's v5 patch here.
+> 
+> https://github.com/semihalf-nowicki-tomasz/linux/blob/pci-acpi-v5/drivers/acpi/pci_root.c
+> 
+> 
+> > You say this is undoing the effect of pci_remap_iospace(), but that's
+> > only called by native drivers and the generic (OF) driver, not by
+> > pci_root.c.
+> 
+> See the ACPI root bridge driver above.
 
-Mellanox devices were marked as having INTx masking ability broken.
-As a result, the VFIO driver fails to load when the device was
-passed-through to a VM.
+If this is a fix to patches that haven't been merged yet, we need to
+squash the fix into the patches.
 
-This patch excludes ConnectX-4, ConnectX4-Lx and Connect-IB from the
-list of Mellanox devices marked as having broken INTx masking:
+> > Please combine this with the previous patch so we have the new
+> > function and its use in the same patch.
+> 
+> I can do that. I was trying to keep the reviews as small as possible.
 
-- ConnectX-4 and ConnectX4-Lx either declare INTx are not supported
-  (FW versions 12.14.2036 / 14.12.2036) or support them properly
-  (starting May 2016 firmware release). Users having earlier firmware
-  versions will have to update to either one.
-- Connect-IB does not support INTx currently so will not cause any
-  problem.
+The object is not to make patches as small as possible.  The object is
+to make them easy to review, merge, bisect, revert, and backport.  If
+we're adding something new and it's called by many arches or many
+drivers, we might have to split it up for merging through several
+trees or so we can revert pieces independently.  But here there's only
+one caller and I don't think we get any benefit from splitting it.
 
-Fixes: 11e42532ada31 ('PCI: Assume all Mellanox devices have ...')
-Signed-off-by: Noa Osherovich <noaos@mellanox.com>
-Signed-off-by: Majd Dibbiny <majd@mellanox.com>
----
- drivers/pci/quirks.c    | 61 ++++++++++++++++++++++++++++++++++++++++++++++++-
- include/linux/pci_ids.h | 14 ++++++++++++
- 2 files changed, 74 insertions(+), 1 deletion(-)
+But I guess this is all moot since it should be squashed into whatever
+added the pci_remap_iospace() in the first place.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 8e67802..6a1856e 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3147,7 +3147,66 @@ DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
-  */
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
- 			 quirk_broken_intx_masking);
--DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
-+
-+/*
-+ * Mellanox devices that fail under PCI device assignment using DisINTx masking
-+ */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_TAVOR,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-+			 PCI_DEVICE_ID_MELLANOX_TAVOR_BRIDGE,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_ARBEL,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-+			 PCI_DEVICE_ID_MELLANOX_ARBEL_COMPAT,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_SINAI,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-+			 PCI_DEVICE_ID_MELLANOX_SINAI_OLD,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-+			 PCI_DEVICE_ID_MELLANOX_HERMON_SDR,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-+			 PCI_DEVICE_ID_MELLANOX_HERMON_DDR,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-+			 PCI_DEVICE_ID_MELLANOX_HERMON_QDR,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-+			 PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-+			 PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-+			 PCI_DEVICE_ID_MELLANOX_HERMON_EN,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-+			 PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-+			 PCI_DEVICE_ID_MELLANOX_CONNECTX_EN,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-+			 PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-+			 PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-+			 PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-+			 PCI_DEVICE_ID_MELLANOX_CONNECTX2,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-+			 PCI_DEVICE_ID_MELLANOX_CONNECTX3,
-+			 quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-+			 PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO,
- 			 quirk_broken_intx_masking);
- 
- static void quirk_no_bus_reset(struct pci_dev *dev)
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 247da8c..bc8918e 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -2262,6 +2262,20 @@
- #define PCI_DEVICE_ID_MELLANOX_ARBEL	0x6282
- #define PCI_DEVICE_ID_MELLANOX_SINAI_OLD 0x5e8c
- #define PCI_DEVICE_ID_MELLANOX_SINAI	0x6274
-+#define PCI_DEVICE_ID_MELLANOX_HERMON_SDR 0x6340
-+#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR 0x634a
-+#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR 0x6354
-+#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2 0x6732
-+#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2 0x673c
-+#define PCI_DEVICE_ID_MELLANOX_HERMON_EN 0x6368
-+#define PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2 0x6750
-+#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN 0x6372
-+#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2 0x675a
-+#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2 0x6764
-+#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2 0x6746
-+#define PCI_DEVICE_ID_MELLANOX_CONNECTX2 0x676e
-+#define PCI_DEVICE_ID_MELLANOX_CONNECTX3 0x1003
-+#define PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO 0x1007
- 
- #define PCI_VENDOR_ID_DFI		0x15bd
- 
--- 
-1.8.3.1
-
+Bjorn
