@@ -1,128 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40224 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751765AbcDER7x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 5 Apr 2016 13:59:53 -0400
-Date: Tue, 5 Apr 2016 12:59:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jake Oshins <jakeo@microsoft.com>
-Cc: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
-Subject: Re: [PATCH v4 3/7] drivers:hv: Use new vmbus_mmio_free() from client
- drivers.
-Message-ID: <20160405175949.GA15353@localhost>
-References: <y>
- <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
- <1459558067-1725-4-git-send-email-jakeo@microsoft.com>
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:38288 "EHLO
+	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757483AbcDHGvX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Apr 2016 02:51:23 -0400
+Received: by mail-wm0-f50.google.com with SMTP id u206so10106291wme.1
+        for <linux-pci@vger.kernel.org>; Thu, 07 Apr 2016 23:51:22 -0700 (PDT)
+Subject: Re: [PATCH 2/2] pci, acpi: free IO resource during shutdown
+To: Sinan Kaya <okaya@codeaurora.org>,
+	Bjorn Helgaas <helgaas@kernel.org>
+References: <1457389310-3538-1-git-send-email-okaya@codeaurora.org>
+ <1457389310-3538-2-git-send-email-okaya@codeaurora.org>
+ <20160407160624.GB8780@localhost> <57069CAF.8090803@codeaurora.org>
+ <20160407214108.GB24492@localhost> <5707281B.6020805@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+	agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <570754D7.3010009@semihalf.com>
+Date: Fri, 8 Apr 2016 08:51:03 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1459558067-1725-4-git-send-email-jakeo@microsoft.com>
+In-Reply-To: <5707281B.6020805@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jake,
+Hi Sinan,
 
-On Fri, Apr 01, 2016 at 05:47:43PM -0700, Jake Oshins wrote:
-> This patch modifies all the callers of vmbus_mmio_allocate()
-> to call vmbus_mmio_free() instead of release_mem_region().
+On 08.04.2016 05:40, Sinan Kaya wrote:
+> Hi Tomasz,
+>
+> On 4/7/2016 5:41 PM, Bjorn Helgaas wrote:
+>>>> You say this is undoing the effect of pci_remap_iospace(), but that's
+>>>>>> only called by native drivers and the generic (OF) driver, not by
+>>>>>> pci_root.c.
+>>>>
+>>>> See the ACPI root bridge driver above.
+>> If this is a fix to patches that haven't been merged yet, we need to
+>> squash the fix into the patches.
+>>
+>
+> Can you merge these to two patches to your series for the next post?
+>
+> I need to remove weak on the first patch per direction from Bjorn and
+> fix the function comments. You could as well do this while you are merging.
+>
+> Let me know what your preference is.
+>
 
-This changelog merely restates the C code.  Presumably there's some
-important difference between release_mem_region() and
-vmbus_mmio_free(), and we need a hint about what that is.
+Please do necessary fixes for your patches and send me the repo 
+reference link. I will merge these to my patch set. Thanks!
 
-Oh, I see, there actually is no difference *yet*, but it's coming.
-I'd combine this with patch 2.  Then the patch is obviously correct
-all by itself, and the changelog for patch 2 makes clear what's
-happening.
-
-In changelogs, don't bother with "this patch does" or "this function
-is introduced."  The context is obvious because the changelog is part
-of the commit.  Write imperative sentences, e.g., "Call
-vmbus_mmio_free() instead of release_mem_region()."
-
-> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
-
-I think this is the only change that touches PCI, so I assume this
-series will be merged by somebody else.
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> ---
->  drivers/pci/host/pci-hyperv.c   | 14 +++++++-------
->  drivers/video/fbdev/hyperv_fb.c |  4 ++--
->  2 files changed, 9 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index ed651ba..f2559b6 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -1795,14 +1795,14 @@ static void hv_pci_free_bridge_windows(struct hv_pcibus_device *hbus)
->  
->  	if (hbus->low_mmio_space && hbus->low_mmio_res) {
->  		hbus->low_mmio_res->flags |= IORESOURCE_BUSY;
-> -		release_mem_region(hbus->low_mmio_res->start,
-> -				   resource_size(hbus->low_mmio_res));
-> +		vmbus_free_mmio(hbus->low_mmio_res->start,
-> +				resource_size(hbus->low_mmio_res));
->  	}
->  
->  	if (hbus->high_mmio_space && hbus->high_mmio_res) {
->  		hbus->high_mmio_res->flags |= IORESOURCE_BUSY;
-> -		release_mem_region(hbus->high_mmio_res->start,
-> -				   resource_size(hbus->high_mmio_res));
-> +		vmbus_free_mmio(hbus->high_mmio_res->start,
-> +				resource_size(hbus->high_mmio_res));
->  	}
->  }
->  
-> @@ -1880,8 +1880,8 @@ static int hv_pci_allocate_bridge_windows(struct hv_pcibus_device *hbus)
->  
->  release_low_mmio:
->  	if (hbus->low_mmio_res) {
-> -		release_mem_region(hbus->low_mmio_res->start,
-> -				   resource_size(hbus->low_mmio_res));
-> +		vmbus_free_mmio(hbus->low_mmio_res->start,
-> +				resource_size(hbus->low_mmio_res));
->  	}
->  
->  	return ret;
-> @@ -1924,7 +1924,7 @@ static int hv_allocate_config_window(struct hv_pcibus_device *hbus)
->  
->  static void hv_free_config_window(struct hv_pcibus_device *hbus)
->  {
-> -	release_mem_region(hbus->mem_config->start, PCI_CONFIG_MMIO_LENGTH);
-> +	vmbus_free_mmio(hbus->mem_config->start, PCI_CONFIG_MMIO_LENGTH);
->  }
->  
->  /**
-> diff --git a/drivers/video/fbdev/hyperv_fb.c b/drivers/video/fbdev/hyperv_fb.c
-> index e2451bd..2fd49b2 100644
-> --- a/drivers/video/fbdev/hyperv_fb.c
-> +++ b/drivers/video/fbdev/hyperv_fb.c
-> @@ -743,7 +743,7 @@ static int hvfb_getmem(struct hv_device *hdev, struct fb_info *info)
->  err3:
->  	iounmap(fb_virt);
->  err2:
-> -	release_mem_region(par->mem->start, screen_fb_size);
-> +	vmbus_free_mmio(par->mem->start, screen_fb_size);
->  	par->mem = NULL;
->  err1:
->  	if (!gen2vm)
-> @@ -758,7 +758,7 @@ static void hvfb_putmem(struct fb_info *info)
->  	struct hvfb_par *par = info->par;
->  
->  	iounmap(info->screen_base);
-> -	release_mem_region(par->mem->start, screen_fb_size);
-> +	vmbus_free_mmio(par->mem->start, screen_fb_size);
->  	par->mem = NULL;
->  }
->  
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Tomasz
