@@ -1,165 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:37739 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755419AbcDGOZG (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 10:25:06 -0400
-Received: by mail-wm0-f51.google.com with SMTP id n3so107189653wmn.0
-        for <linux-pci@vger.kernel.org>; Thu, 07 Apr 2016 07:25:04 -0700 (PDT)
-Subject: Re: [RFC v5 7/7] vfio-pci: Allow to mmap MSI-X table if interrupt
- remapping is supported
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>,
-	Alex Williamson <alex.williamson@redhat.com>
-References: <1459864004-2869-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1459864004-2869-2-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160406084504.1a1cc16d@t450s.home> <570646AB.8050406@linux.vnet.ibm.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
-	aik@ozlabs.ru, benh@kernel.crashing.org, paulus@samba.org,
-	mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	will.deacon@arm.com, gwshan@linux.vnet.ibm.com,
-	alistair@popple.id.au, ruscur@russell.cc
-From: Eric Auger <eric.auger@linaro.org>
-Message-ID: <57066D76.9050303@linaro.org>
-Date: Thu, 7 Apr 2016 16:23:50 +0200
-MIME-Version: 1.0
-In-Reply-To: <570646AB.8050406@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=utf-8
+Received: from userp1040.oracle.com ([156.151.31.81]:35109 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756935AbcDHARF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:17:05 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, Meelis Roos <mroos@linux.ee>
+Subject: [PATCH v11 08/60] PCI: Kill wrong quirk about M7101
+Date: Thu,  7 Apr 2016 17:15:21 -0700
+Message-Id: <1460074573-7481-9-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yongji,
-On 04/07/2016 01:38 PM, Yongji Xie wrote:
-> On 2016/4/6 22:45, Alex Williamson wrote:
->> On Tue,  5 Apr 2016 21:46:44 +0800
->> Yongji Xie <xyjxie@linux.vnet.ibm.com> wrote:
->>
->>> This patch enables mmapping MSI-X tables if
->>> hardware supports interrupt remapping which
->>> can ensure that a given pci device can only
->>> shoot the MSIs assigned for it.
->>>
->>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->>> ---
->>>   drivers/vfio/pci/vfio_pci.c         |    9 +++++++--
->>>   drivers/vfio/pci/vfio_pci_private.h |    1 +
->>>   drivers/vfio/pci/vfio_pci_rdwr.c    |    2 +-
->>>   3 files changed, 9 insertions(+), 3 deletions(-)
->>>
->>> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
->>> index c60d790..ef02896 100644
->>> --- a/drivers/vfio/pci/vfio_pci.c
->>> +++ b/drivers/vfio/pci/vfio_pci.c
->>> @@ -201,6 +201,10 @@ static int vfio_pci_enable(struct
->>> vfio_pci_device *vdev)
->>>       } else
->>>           vdev->msix_bar = 0xFF;
->>>   +    if (iommu_capable(pdev->dev.bus, IOMMU_CAP_INTR_REMAP) ||
->> This doesn't address the issue I raised earlier where ARM SMMU sets
->> this capability, but doesn't really provide per vector isolation.  ARM
->> either needs to be fixed or we need to consider the whole capability
->> tainted for this application and standardize around the bus flags.
->> It's not very desirable to have two different ways to test this anyway.
-> 
-> I saw Eric posted a patchset [1] which introduce a flag
-> MSI_FLAG_IRQ_REMAPPING to indicate the capability
-> for ARM SMMU. With this patchset applied, it would
-> be  workable to use bus_flags to test the capability
-> of ARM SMMU:
+Meelis reported that qla2000 driver does not get loaded on one sparc system.
 
-My purpose was to remove the advertising of IOMMU_CAP_INTR_REMAP from
-arm-smmu.c, "fix" mentionned by Alex (by the way I also need to do the
-same in v3 code) and to advertise the functionality on MSI controller
-instead (since the IRQ REMAPPING functionality is abstracted in GICv3
-ITS MSI controller)
+schizo f00732d0: PCI host bridge to bus 0001:00
+pci_bus 0001:00: root bus resource [io  0x7fe01000000-0x7fe01ffffff] (bus address [0x0000-0xffffff])
+pci 0001:00:06.0: quirk: [io  0x7fe01000800-0x7fe0100083f] claimed by ali7101 ACPI
+pci 0001:00:06.0: quirk: [io  0x7fe01000600-0x7fe0100061f] claimed by ali7101 SMB
+pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
 
-On top of that, on ARM we have platform (non PCI) MSI controllers so my
-understanding is the capability advertising should be possible beyond
-the PCI bus?
+So the quirk for M7101 claim the io range early.
 
-Best Regards
+According to spec with M7101 in M1543 page 103/104,
+	http://www.versalogic.com/Support/Downloads/pdf/ali1543.pdf
+0xe0, and 0xe2 do not include address info for acpi/smb.
 
-Eric
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index a080f44..b2d1756 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -1134,6 +1134,21 @@ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
->  }
->  EXPORT_SYMBOL_GPL(msi_desc_to_pci_sysdata);
-> 
-> +void pci_check_msi_remapping(struct pci_bus *bus)
-> +{
-> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
-> +        struct irq_domain *domain;
-> +        struct msi_domain_info *info;
-> +
-> +        domain = dev_get_msi_domain(&bus->dev);
-> +        if (domain) {
-> +                info = msi_get_domain_info(domain);
-> +                if (info->flags & MSI_FLAG_IRQ_REMAPPING)
-> +                        pdev->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
-> +        }
-> +#endif
-> +}
-> +
->  #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
->  /**
->   * pci_msi_domain_write_msg - Helper to write MSI message to PCI config
-> space
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 6d7ab9b..24e9606 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2115,6 +2115,7 @@ struct pci_bus *pci_create_root_bus(struct device
-> *parent, int bus,
->         device_enable_async_suspend(b->bridge);
->         pci_set_bus_of_node(b);
->         pci_set_bus_msi_domain(b);
-> +       pci_check_msi_remapping(b);
-> 
->         if (!parent)
->                 set_dev_node(b->bridge, pcibus_to_node(b));
-> diff --git a/include/linux/msi.h b/include/linux/msi.h
-> index a2a0068..fe8ce7b 100644
-> --- a/include/linux/msi.h
-> +++ b/include/linux/msi.h
-> @@ -15,6 +15,7 @@ extern int pci_msi_ignore_mask;
->  struct irq_data;
->  struct msi_desc;
->  struct pci_dev;
-> +struct pci_bus;
->  struct platform_msi_priv_data;
->  void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->  void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
-> @@ -155,6 +156,8 @@ void arch_restore_msi_irqs(struct pci_dev *dev);
->  void default_teardown_msi_irqs(struct pci_dev *dev);
->  void default_restore_msi_irqs(struct pci_dev *dev);
-> 
-> +void pci_check_msi_remapping(struct pci_bus *bus);
-> +
->  struct msi_controller {
->         struct module *owner;
->         struct device *dev;
-> 
-> Next we just need to find a proper way to make
-> bus_flags compatible with IOMMU_CAP_INTR_REMAP, right?
-> 
-> I think a good place to do that is add_iommu_group().
-> But I'm not sure whether iommu drivers must be
-> initialized after PCI enumeration.  Do you have any comment?
-> 
-> [1] http://www.spinics.net/lists/kvm/msg130256.html
-> 
->>> +        pdev->bus->bus_flags | PCI_BUS_FLAGS_MSI_REMAP)
->> Perhaps some sort of wrapper for testing these flags would help avoid
->> this kind of coding error (| vs &)
-> 
-> Thank you.  I'll try not to make the same mistake again.
-> 
-> Regards,
-> Yongji
-> 
+We can not find how the code got there. But per Linus
+we should remove that quirk according to the datasheet.
+
+Kill wrong quirk about them.
+
+Link: http://kodu.ut.ee/~mroos/dm/dm.v240
+Link: http://kodu.ut.ee/~mroos/dm/dm.sb100
+Reported-by: Meelis Roos <mroos@linux.ee>
+Cc: Meelis Roos <mroos@linux.ee>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+---
+ drivers/pci/quirks.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 8e67802..21d545d 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -445,24 +445,6 @@ static void quirk_amd_nl_class(struct pci_dev *pdev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL_USB,
+ 		quirk_amd_nl_class);
+ 
+-/*
+- * Let's make the southbridge information explicit instead
+- * of having to worry about people probing the ACPI areas,
+- * for example.. (Yes, it happens, and if you read the wrong
+- * ACPI register it will put the machine to sleep with no
+- * way of waking it up again. Bummer).
+- *
+- * ALI M7101: Two IO regions pointed to by words at
+- *	0xE0 (64 bytes of ACPI registers)
+- *	0xE2 (32 bytes of SMB registers)
+- */
+-static void quirk_ali7101_acpi(struct pci_dev *dev)
+-{
+-	quirk_io_region(dev, 0xE0, 64, PCI_BRIDGE_RESOURCES, "ali7101 ACPI");
+-	quirk_io_region(dev, 0xE2, 32, PCI_BRIDGE_RESOURCES+1, "ali7101 SMB");
+-}
+-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AL,	PCI_DEVICE_ID_AL_M7101,		quirk_ali7101_acpi);
+-
+ static void piix4_io_quirk(struct pci_dev *dev, const char *name, unsigned int port, unsigned int enable)
+ {
+ 	u32 devres;
+-- 
+1.8.4.5
 
