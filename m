@@ -1,115 +1,65 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 29 Apr 2016 09:37:09 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>, arnd@arndb.de,
-	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
-	hanjun.guo@linaro.org, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-Subject: Re: [PATCH V6 09/13] pci, acpi: Support for ACPI based generic PCI
- host controller
-Message-ID: <20160429083709.GA3249@red-moon>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-10-git-send-email-tn@semihalf.com>
- <20160428214800.GG25125@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160428214800.GG25125@localhost>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:41435 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756517AbcDHKgo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Apr 2016 06:36:44 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [PATCH v2 3/4] ACPI / hotplug / PCI: Runtime resume bridge before rescan
+Date: Fri,  8 Apr 2016 13:36:29 +0300
+Message-Id: <1460111790-92836-4-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 28, 2016 at 04:48:00PM -0500, Bjorn Helgaas wrote:
+If a PCI bridge (or PCIe port) that is runtime suspended gets an ACPI
+hotplug event, such as BUS_CHECK we need to make sure it is resumed before
+devices below the bridge are re-scanned. Otherwise the devices behind the
+port are not accessible and will be treated as hot-unplugged.
 
-[...]
+To fix this, resume PCI bridges from runtime suspend while rescanning.
 
-> > +static int pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root,
-> > +				       struct acpi_pci_generic_root_info *ri)
-> > +{
-> > +	u16 seg = root->segment;
-> > +	u8 bus_start = root->secondary.start;
-> > +	u8 bus_end = root->secondary.end;
-> > +	struct pci_config_window *cfg;
-> > +	struct mcfg_entry *e;
-> > +	phys_addr_t addr;
-> > +	int err = 0;
-> > +
-> > +	mutex_lock(&pci_mcfg_lock);
-> 
-> What does this lock protect?  The pci_mcfg_list should already be
-> initialized by the time we get there, and it should be immutable for
-> the life of the system.  In fact, I would prefer if we could just
-> search the static table itself whenever we need it rather than caching
-> it in our own list.  But I don't think we can easily do that because
-> acpi_table_parse() is __init.
-> 
-> > +	e = pci_mcfg_lookup(seg, bus_start);
-> 
-> I would argue that we should check for _CBA first, and fall back to
-> MCFG if _CBA doesn't exist.
-> 
-> > +	if (!e) {
-> > +		addr = acpi_pci_root_get_mcfg_addr(root->device->handle);
-> 
-> IMO, acpi_pci_root_get_mcfg_addr() is misnamed.  It should be
-> acpi_pci_config_base_addr() or similar.  It definitely is not related
-> to MCFG.  Not your fault, obviously.
-> 
-> > +		if (addr == 0) {
-> > +			pr_err(PREFIX"%04x:%02x-%02x bus range error\n",
-> > +			       seg, bus_start, bus_end);
-> > +			err = -ENOENT;
-> > +			goto err_out;
-> > +		}
-> > +	} else {
-> > +		if (bus_start != e->bus_start) {
-> > +			pr_err("%04x:%02x-%02x bus range mismatch %02x\n",
-> > +			       seg, bus_start, bus_end, e->bus_start);
-> > +			err = -EINVAL;
-> > +			goto err_out;
-> > +		} else if (bus_end != e->bus_end) {
-> > +			pr_warn("%04x:%02x-%02x bus end mismatch %02x\n",
-> > +				seg, bus_start, bus_end, e->bus_end);
-> > +			bus_end = min(bus_end, e->bus_end);
-> > +		}
-> > +		addr = e->addr;
-> > +	}
-> 
-> I really don't think you need a lock around this, so you can factor
-> out the address lookup into something like:
-> 
->   addr = acpi_pci_config_base_addr(...);
->   if (addr)
->     return addr;
-> 
->   return acpi_pci_mcfg_lookup(seg, busn_res);
-> 
-> You can check inside acpi_pci_mcfg_lookup() to make sure the entry you
-> find covers the entire [busn_res.start-busn_res.end] range and return
-> failure if it doesn't.  At this point, I'm not sure it's worth it to
-> truncate the host bridge bus range to match something we find in MCFG.
-> 
-> If the MCFG entry covers *more* than the host bridge range from _CRS,
-> that's fine.  In any case, we have to be careful with the start address,
-> because the MCFG start address is always based on bus 0, but I think
-> pci_generic_ecam_create() expects the start address based on the
-> bus_start you pass to it.
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-Yes, I spotted this too, it is unfortunate but DT and MCFG handle
-the ECAM regions differently. In DT the reg property is relative
-to bus_start - ie reg MMIO region maps config space starting at
-the first bus in bus-range:
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index fa49f9143b80..d64ce8aa99b3 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -756,8 +756,10 @@ static void hotplug_event(u32 type, struct acpiphp_context *context)
+ 
+ 	acpi_lock_hp_context();
+ 	bridge = context->bridge;
+-	if (bridge)
++	if (bridge) {
+ 		get_bridge(bridge);
++		pm_runtime_get_sync(&bridge->pci_dev->dev);
++	}
+ 
+ 	acpi_unlock_hp_context();
+ 
+@@ -797,8 +799,10 @@ static void hotplug_event(u32 type, struct acpiphp_context *context)
+ 	}
+ 
+ 	pci_unlock_rescan_remove();
+-	if (bridge)
++	if (bridge) {
++		pm_runtime_put(&bridge->pci_dev->dev);
+ 		put_bridge(bridge);
++	}
+ }
+ 
+ static int acpiphp_hotplug_notify(struct acpi_device *adev, u32 type)
+-- 
+2.8.0.rc3
 
-Documentation/devicetree/bindings/pci/host-generic-pci.txt
-
-in ACPI(MCFG) as you said it is always relative to bus 0, it is
-unfortunate but the address to be mapped should be computed
-differently in the ECAM layer.
-
-Lorenzo
