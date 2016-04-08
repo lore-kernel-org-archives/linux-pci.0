@@ -1,147 +1,134 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:33130 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751714AbcDND1C (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 23:27:02 -0400
-Received: by mail-pa0-f52.google.com with SMTP id zm5so40646296pac.0
-        for <linux-pci@vger.kernel.org>; Wed, 13 Apr 2016 20:27:01 -0700 (PDT)
-Subject: Re: [PATCH v8 00/45] powerpc/powernv: PCI hotplug support
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <570DF50F.6010805@ozlabs.ru> <20160413074236.GA28853@gwshan>
- <570E0E13.6080409@ozlabs.ru> <20160413234246.GA5330@gwshan>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
-	robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <570F0DFB.9090509@ozlabs.ru>
-Date: Thu, 14 Apr 2016 13:26:51 +1000
+Received: from mail.kernel.org ([198.145.29.136]:55016 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753260AbcDHTLq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Apr 2016 15:11:46 -0400
+Date: Fri, 8 Apr 2016 14:11:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH v4 1/2] dt-bindings: pci: tegra: Update for per-lane PHYs
+Message-ID: <20160408191142.GD15034@localhost>
+References: <1460131994-24493-1-git-send-email-thierry.reding@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160413234246.GA5330@gwshan>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1460131994-24493-1-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/14/2016 09:42 AM, Gavin Shan wrote:
-> On Wed, Apr 13, 2016 at 07:14:59PM +1000, Alexey Kardashevskiy wrote:
->> On 04/13/2016 05:42 PM, Gavin Shan wrote:
->>> On Wed, Apr 13, 2016 at 05:28:15PM +1000, Alexey Kardashevskiy wrote:
->>>> On 02/17/2016 02:43 PM, Gavin Shan wrote:
->>>>> This series of patches rebases on powerpc/next branch, plus below additional
->>>>> patches:
->>>>>
->>>>>     <This series of patches>
->>>>>     <Followup 3 patches from Gavin on SRIOV EEH, which aren't posted>
->>>>>     https://patchwork.ozlabs.org/patch/581315/	(PATCH[1/9] Richard's SRIOV EEH)
->>>>>     https://patchwork.ozlabs.org/patch/582639/	(PATCH[1/1] Gavin's EEH fix)
->>>>>     https://patchwork.ozlabs.org/patch/582093/	(PATCH[1/1] Gavin's EEH fix)
->>>>>     https://patchwork.ozlabs.org/patch/580626/	(PATCH[1/4] Gavin's PCI fix)
->>>>>     https://patchwork.ozlabs.org/patch/580153/	(PATCH[1/1] Andrew's EEH minor fix)
->>>>>     https://patchwork.ozlabs.org/patch/566827/	(PATCH[1/1] Russell's P5IOC2 removal)
->>>>>     https://patchwork.ozlabs.org/patch/534154/	(PATCH[1/7] Richard's SRIOV rework)
->>>>>     commit 388f7b1 ("Linux 4.5-rc3")
->>>>>
->>>>> The series of patches intend to support PCI slot for PowerPC PowerNV platform,
->>>>> which is running on top of skiboot firmware. The patchset requires corresponding
->>>>> changes from skiboot firmware, which is sent to skiboot@lists.ozlabs.org
->>>>> for review. The PCI slots are exposed by skiboot with device node properties,
->>>>> and kernel utilizes those properties to populated PCI slots accordingly.
->>>>>
->>>>> The original PCI infrastructure on PowerNV platform can't support hotplug
->>>>> because the PE is assigned during PHB fixup time, which is called for once
->>>>> during system boot time. For this, the PCI infrastructure on PowerNV platform
->>>>> has been reworked for a lot. After that, the PE and its corresponding resources
->>>>> (IODT, M32DT, M64 segments, DMA32 and bypass window) are assigned upon updating
->>>>> PCI bridge's resources, which might decide PE# assigned to the PE (e.g. M64
->>>>> resources, on P8 strictly speaking). Each PE will maintain a reference count,
->>>>> which is (number of child PCI devices + 1). That indicates when last child PCI
->>>>> device leaves the PE, the PE and its included resources will be relased and put
->>>>> back into free pool again. With this design, the PE will be released when EEH PE
->>>>> is released. PATCH[1 - 23] are related to this part.
->>>>>
->>>>>  From skiboot perspective, PCI slot is providing (hot/fundamental/complete)
->>>>> resets to EEH. The kernel gets to know if skiboot supports various reset on one
->>>>> particular PCI slot through device-tree node. If it does, EEH will utilize the
->>>>> functionality provided by skiboot. Besides, the device-tree nodes have to change
->>>>> in order to support PCI hotplug. For example, when one PCI adapter inserted to
->>>>> one slot, its device-tree node should be added to the system dynamically. Conversely,
->>>>> the device-tree node should be removed from the system when the PCI adapter is going
->>>>> to be offline. Since pci_dn and eeh_dev have same life cyle as PCI device nodes,
->>>>> they should be added/removed accordingly during PCI hotplug. PATCH[24 - 39] are
->>>>> doing the related work.
->>>>>
->>>>> The OF driver is changed to support unflattening FDT blob for sub-stree, which
->>>>> is covered by PATCH[40 - 44].
->>>>>
->>>>> The last one, PATCH[45], is the standalone PCI hotplug driver for PowerPC PowerNV
->>>>> platform.
->>>>>
->>>>> =======
->>>>> Testing
->>>>> =======
->>>>> 1. Unplug adapters behind non-empty slot, then plug them.
->>>>>
->>>>>     1.1 Check status
->>>>>     # cat /sys/bus/pci/slots/C10/address
->>>>>     0003:09:00
->>>>>     # cat /sys/bus/pci/slots/C10/adapter
->>>>>     1
->>>>>     # cat /sys/bus/pci/slots/C10/power
->>>>>     1
->>>>>     # lspci
->>>>>     0003:09:00.0 Ethernet controller: \
->>>>>     Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
->>>>>     0003:09:00.1 Ethernet controller: \
->>>>>     Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
->>>>>     0003:09:00.2 Ethernet controller: \
->>>>>     Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
->>>>>     0003:09:00.3 Ethernet controller: \
->>>>>     Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
->>>>>     # lspci -t
->>>>>     # lspci -t
->>>>>     -+-[0003:00]---00.0-[01-13]----00.0-[02-13]--+-01.0-[03]----00.0
->>>>>      |                                           +-08.0-[04-08]--
->>>>>      |                                           +-09.0-[09]--+-00.0
->>>>>      |                                           |            +-00.1
->>>>>      |                                           |            +-00.2
->>>>>      |                                           |            \-00.3
->>>>>      |                                           +-10.0-[0a-0e]--
->>>>>      |                                           \-11.0-[0f-13]--
->>>>>
->>>>>     1.2 Unplug adapter 0003:09.00.x
->>>>>     # echo 0 > /sys/bus/pci/slots/C10/power
->>>>>     # lspci -t
->>>>>     -+-[0003:00]---00.0-[01-13]----00.0-[02-13]--+-01.0-[03]----00.0
->>>>>      |                                           +-08.0-[04-08]--
->>>>>      |                                           +-09.0-[09]--
->>>>>      |                                           +-10.0-[0a-0e]--
->>>>>      |                                           \-11.0-[0f-13]--
->>>>>
->>>>>     1.3 Plug adapter 0003:09.00.x
->>>>>     # echo 1 > /sys/bus/pci/slots/C10/power
->>>>
->>>>
->>>> Do I understand correctly that the adapter was not physically moved in/out of
->>>> the slot between 1.2 and 1.3?
->>>>
->>>
->>> Correct.
->>
->>
->> This is not right then... Someone should try it, on both P7 and P8.
->>
->
-> Do you mean physically pull the adapter out and insert the same
-> adapter back? What's the point for the test case?
+Hi Thierry,
 
+I have a couple more questions, probably just because I'm
+DT-illiterate.
 
-Because this is what the patchset is for - to replace a physical device on 
-a physical machine. Powering on/off the slots via sysfs is just an 
-approximation (which is fine when you are debugging), something can go 
-wrong and require some work but you do not know it for sure.
+On Fri, Apr 08, 2016 at 06:13:13PM +0200, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
+> 
+> Changes to the pad controller device tree binding have required that
+> each lane be associated with a separate PHY. Update the PCI host bridge
+> device tree binding to allow each root port to define the list of PHYs
+> required to drive the lanes associated with it.
+> 
+> Acked-by: Rob Herring <robh@kernel.org>
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
+> ---
+> Changes in v4:
+> - add additional lanes subnode when dereferencing PHYs from the XUSB pad
+>   controller to reflect changes in its binding
+> 
+>  .../devicetree/bindings/pci/nvidia,tegra20-pcie.txt    | 18 +++++++++++++++++-
+>  1 file changed, 17 insertions(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+> index 75321ae23c08..f5364084b494 100644
+> --- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+> @@ -60,11 +60,14 @@ Required properties:
+>    - afi
+>    - pcie_x
+>  
+> -Required properties on Tegra124 and later:
+> +Required properties on Tegra124 and later (deprecated):
+>  - phys: Must contain an entry for each entry in phy-names.
+>  - phy-names: Must include the following entries:
+>    - pcie
+>  
+> +These properties are deprecated in favour of per-lane PHYs define in each of
+> +the root ports (see below).
+> +
+>  Power supplies for Tegra20:
+>  - avdd-pex-supply: Power supply for analog PCIe logic. Must supply 1.05 V.
+>  - vdd-pex-supply: Power supply for digital PCIe I/O. Must supply 1.05 V.
+> @@ -122,6 +125,13 @@ Required properties:
+>    - Root port 0 uses 4 lanes, root port 1 is unused.
+>    - Both root ports use 2 lanes.
+>  
+> +Required properties for Tegra124 and later:
 
+I had a little trouble disambiguating this from the "Required
+properties on Tegra124 and later (deprecated)" line above.  It might
+help if they said:
 
+  Required PCIe controller properties on Tegra124 and later (deprecated):
+  Required PCIe Root Port properties for Tegra124 and later:
 
--- 
-Alexey
+I'm not sure how to interpret the "deprecated" part.  Assume I'm
+writing a DTS.  What am I supposed to include?
+
+  - "phys" and "phy-names" under the PCIe controller *and*
+    "phys" and "phy-names" under the Root Port?
+
+  - "phys" and "phy-names" under the PCIe controller only if I don't
+    supply "phys" and "phy-names" under the Root Port?
+
+My guess is that a board with more than one PHY for PCIe should omit
+"phys" and "phy-names" under the PCIe controller and include them
+under each Root Port.  And a board with only one PHY could conceivably
+supply these properties either under the controller or the Root Port
+or both.
+
+> +- phys: Must contain an phandle to a PHY for each entry in phy-names.
+> +- phy-names: Must include an entry for each active lane. Note that the number
+> +  of entries does not have to (though usually will) be equal to the specified
+> +  number of lanes in the nvidia,num-lanes property. Entries are of the form
+> +  "pcie-N": where N ranges from 0 to the value specified in nvidia,num-lanes.
+> +
+>  Example:
+>  
+>  SoC DTSI:
+> @@ -169,6 +179,9 @@ SoC DTSI:
+>  			ranges;
+>  
+>  			nvidia,num-lanes = <2>;
+> +
+> +			phys = <&{/padctl@0,7009f000/pads/pcie/lanes/pcie-4}>;
+> +			phy-names = "pcie-0";
+
+I'm also a little confused here because it looks like this root port
+supports two lanes, but there's only one entry in phy-names.  I
+thought you needed one entry for each lane.
+
+>  		};
+>  
+>  		pci@2,0 {
+> @@ -183,6 +196,9 @@ SoC DTSI:
+>  			ranges;
+>  
+>  			nvidia,num-lanes = <2>;
+> +
+> +			phys = <&{/padctl@0,7009f000/pads/pcie/lanes/pcie-2}>;
+> +			phy-names = "pcie-0";
+>  		};
+>  	};
+>  
+> -- 
+> 2.8.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
