@@ -1,187 +1,143 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org, linux-doc@vger.kernel.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com, Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [RFC v6 05/10] vfio-pci: Allow to mmap sub-page MMIO BARs if the mmio page is exclusive
-Date: Mon, 18 Apr 2016 18:56:01 +0800
-Message-Id: <1460976961-29328-5-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1460976961-29328-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1460976961-29328-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:43473 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932582AbcDHAW3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:22:29 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 57/60] PCI, x86: Add pci=assign_pref_bars to reallocate pref BARs
+Date: Thu,  7 Apr 2016 17:16:10 -0700
+Message-Id: <1460074573-7481-58-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current vfio-pci implementation disallows to mmap
-sub-page(size < PAGE_SIZE) MMIO BARs because these BARs' mmio
-page may be shared with other BARs.
+Now some BIOS tend to allocate pref MMIO under non-pref MMIO, or allocate
+64bit pref MMIO under 4G.
 
-But we should allow to mmap these sub-page MMIO BARs if we can
-make sure these BARs' mmio page will not be shared with other BARs.
+Add pci=assign_pref_bars to clear and allocate resource to pref BARS.
+So could reallocate pref mmio64 above 4G and pref under bridges pref BARs.
 
-To acheive that, we firstly need to enforce all PCI MMIO BARs
-to be page aligned like the commit "PCI: Add support for
-enforcing all MMIO BARs to be page aligned" does. Most of PCI
-BARs will be assigned into an exclusive page with a hole. Then,
-we must make sure that hot-add device's BAR will never be assigned
-into the hole. So we add shadow resources and put them into the
-hole in this patch. With these two guarantees, I think it should
-be safe to mmap sub-page BAR.
-
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/vfio/pci/vfio_pci.c         |   58 ++++++++++++++++++++++++++++++-----
- drivers/vfio/pci/vfio_pci_private.h |    8 +++++
- 2 files changed, 59 insertions(+), 7 deletions(-)
+ arch/x86/include/asm/pci_x86.h |  1 +
+ arch/x86/pci/common.c          |  3 +++
+ arch/x86/pci/i386.c            | 56 ++++++++++++++++++++++++++----------------
+ 3 files changed, 39 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 98059df..dc1779c 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -110,13 +110,47 @@ static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
- 	return (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA;
+diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
+index d1f919e..6a1a97e 100644
+--- a/arch/x86/include/asm/pci_x86.h
++++ b/arch/x86/include/asm/pci_x86.h
+@@ -34,6 +34,7 @@ do {						\
+ #define PCI_NOASSIGN_ROMS	0x80000
+ #define PCI_ROOT_NO_CRS		0x100000
+ #define PCI_NOASSIGN_BARS	0x200000
++#define PCI_ASSIGN_PREF_BARS	0x400000
+ 
+ extern unsigned int pci_probe;
+ extern unsigned long pirq_table_addr;
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 09a16b7..b40b4a5 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -605,6 +605,9 @@ char *__init pcibios_setup(char *str)
+ 	} else if (!strcmp(str, "assign-busses")) {
+ 		pci_probe |= PCI_ASSIGN_ALL_BUSSES;
+ 		return NULL;
++	} else if (!strcmp(str, "assign_pref_bars")) {
++		pci_probe |= PCI_ASSIGN_PREF_BARS;
++		return NULL;
+ 	} else if (!strcmp(str, "use_crs")) {
+ 		pci_probe |= PCI_USE__CRS;
+ 		return NULL;
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 6121ef3..2df7723 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -227,16 +227,25 @@ static void pcibios_allocate_bridge_resources(struct pci_dev *dev)
+ 			continue;
+ 		if (r->parent)	/* Already allocated */
+ 			continue;
+-		if (!r->start || pci_claim_bridge_resource(dev, idx) < 0) {
+-			/*
+-			 * Something is wrong with the region.
+-			 * Invalidate the resource to prevent
+-			 * child resource allocations in this
+-			 * range.
+-			 */
+-			r->start = r->end = 0;
+-			r->flags = 0;
+-		}
++
++		if ((r->flags & IORESOURCE_PREFETCH) &&
++		    (pci_probe & PCI_ASSIGN_PREF_BARS))
++			goto clear;
++
++		if (!r->start)
++			goto clear;
++
++		if (pci_claim_bridge_resource(dev, idx) == 0)
++			continue;
++
++clear:
++		/*
++		 * Something is wrong with the region.
++		 * Invalidate the resource to prevent
++		 * child resource allocations in this range.
++		 */
++		r->start = r->end = 0;
++		r->flags = 0;
+ 	}
  }
  
-+static bool vfio_pci_bar_mmap_supported(struct vfio_pci_device *vdev, int index)
-+{
-+	struct resource *res = vdev->pdev->resource + index;
-+	struct vfio_pci_shadow_resource *shadow_res;
+@@ -282,21 +291,26 @@ static void pcibios_allocate_dev_resources(struct pci_dev *dev, int pass)
+ 			else
+ 				disabled = !(command & PCI_COMMAND_MEMORY);
+ 			if (pass == disabled) {
++				if ((r->flags & IORESOURCE_PREFETCH) &&
++				    (pci_probe & PCI_ASSIGN_PREF_BARS))
++					goto clear;
 +
-+	if (IS_ENABLED(CONFIG_VFIO_PCI_MMAP) && res->flags & IORESOURCE_MEM &&
-+		resource_size(res) > 0) {
-+		if (resource_size(res) >= PAGE_SIZE)
-+			return true;
+ 				dev_dbg(&dev->dev,
+ 					"BAR %d: reserving %pr (d=%d, p=%d)\n",
+ 					idx, r, disabled, pass);
+-				if (pci_claim_resource(dev, idx) < 0) {
+-					if (r->flags & IORESOURCE_PCI_FIXED) {
+-						dev_info(&dev->dev, "BAR %d %pR is immovable\n",
+-							 idx, r);
+-					} else {
+-						/* We'll assign a new address later */
+-						pcibios_save_fw_addr(dev,
+-								idx, r->start);
+-						r->end -= r->start;
+-						r->start = 0;
+-					}
++				if (pci_claim_resource(dev, idx) == 0)
++					continue;
++				if (r->flags & IORESOURCE_PCI_FIXED) {
++					dev_info(&dev->dev, "BAR %d %pR is immovable\n",
++						 idx, r);
++					continue;
+ 				}
 +
-+		if (!(res->start & ~PAGE_MASK)) {
-+			/*
-+			 * Add shadow resource for sub-page bar whose mmio
-+			 * page is exclusive in case that hot-add device's
-+			 * bar is assigned into the mem hole.
-+			 */
-+			shadow_res = kzalloc(sizeof(*shadow_res), GFP_KERNEL);
-+			shadow_res->resource.start = res->end + 1;
-+			shadow_res->resource.end = res->start + PAGE_SIZE - 1;
-+			shadow_res->resource.flags = res->flags;
-+			if (request_resource(res->parent,
-+					&shadow_res->resource)) {
-+				kfree(shadow_res);
-+				return false;
-+			}
-+			shadow_res->index = index;
-+			list_add(&shadow_res->res_next,
-+					&vdev->shadow_resources_list);
-+			return true;
-+		}
-+	}
-+	return false;
-+}
-+
- static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev);
- static void vfio_pci_disable(struct vfio_pci_device *vdev);
- 
- static int vfio_pci_enable(struct vfio_pci_device *vdev)
- {
- 	struct pci_dev *pdev = vdev->pdev;
--	int ret;
-+	int ret, bar;
- 	u16 cmd;
- 	u8 msix_pos;
- 
-@@ -183,12 +217,17 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
++clear:
++				/* We'll assign a new address later */
++				pcibios_save_fw_addr(dev, idx, r->start);
++				r->end -= r->start;
++				r->start = 0;
+ 			}
  		}
- 	}
- 
-+	for (bar = PCI_STD_RESOURCES; bar <= PCI_STD_RESOURCE_END; bar++) {
-+		vdev->bar_mmap_supported[bar] =
-+				vfio_pci_bar_mmap_supported(vdev, bar);
-+	}
- 	return 0;
- }
- 
- static void vfio_pci_disable(struct vfio_pci_device *vdev)
- {
- 	struct pci_dev *pdev = vdev->pdev;
-+	struct vfio_pci_shadow_resource *shadow_res, *tmp;
- 	int i, bar;
- 
- 	/* Stop the device from further DMA */
-@@ -217,6 +256,13 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
- 		vdev->barmap[bar] = NULL;
- 	}
- 
-+	list_for_each_entry_safe(shadow_res, tmp,
-+				 &vdev->shadow_resources_list, res_next) {
-+		list_del(&shadow_res->res_next);
-+		release_resource(&shadow_res->resource);
-+		kfree(shadow_res);
-+	}
-+
- 	vdev->needs_reset = true;
- 
- 	/*
-@@ -587,9 +633,7 @@ static long vfio_pci_ioctl(void *device_data,
- 
- 			info.flags = VFIO_REGION_INFO_FLAG_READ |
- 				     VFIO_REGION_INFO_FLAG_WRITE;
--			if (IS_ENABLED(CONFIG_VFIO_PCI_MMAP) &&
--			    pci_resource_flags(pdev, info.index) &
--			    IORESOURCE_MEM && info.size >= PAGE_SIZE) {
-+			if (vdev->bar_mmap_supported[info.index]) {
- 				info.flags |= VFIO_REGION_INFO_FLAG_MMAP;
- 				if (info.index == vdev->msix_bar) {
- 					ret = msix_sparse_mmap_cap(vdev, &caps);
-@@ -1011,16 +1055,16 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
- 		return -EINVAL;
- 	if (index >= VFIO_PCI_ROM_REGION_INDEX)
- 		return -EINVAL;
--	if (!(pci_resource_flags(pdev, index) & IORESOURCE_MEM))
-+	if (!vdev->bar_mmap_supported[index])
- 		return -EINVAL;
- 
--	phys_len = pci_resource_len(pdev, index);
-+	phys_len = PAGE_ALIGN(pci_resource_len(pdev, index));
- 	req_len = vma->vm_end - vma->vm_start;
- 	pgoff = vma->vm_pgoff &
- 		((1U << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1);
- 	req_start = pgoff << PAGE_SHIFT;
- 
--	if (phys_len < PAGE_SIZE || req_start + req_len > phys_len)
-+	if (req_start + req_len > phys_len)
- 		return -EINVAL;
- 
- 	if (index == vdev->msix_bar) {
-diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
-index 8a7d546..0ea4c62 100644
---- a/drivers/vfio/pci/vfio_pci_private.h
-+++ b/drivers/vfio/pci/vfio_pci_private.h
-@@ -57,9 +57,16 @@ struct vfio_pci_region {
- 	u32				flags;
- };
- 
-+struct vfio_pci_shadow_resource {
-+	struct resource		resource;
-+	int			index;
-+	struct list_head	res_next;
-+};
-+
- struct vfio_pci_device {
- 	struct pci_dev		*pdev;
- 	void __iomem		*barmap[PCI_STD_RESOURCE_END + 1];
-+	bool			bar_mmap_supported[PCI_STD_RESOURCE_END + 1];
- 	u8			*pci_config_map;
- 	u8			*vconfig;
- 	struct perm_bits	*msi_perm;
-@@ -87,6 +94,7 @@ struct vfio_pci_device {
- 	int			refcnt;
- 	struct eventfd_ctx	*err_trigger;
- 	struct eventfd_ctx	*req_trigger;
-+	struct list_head	shadow_resources_list;
- };
- 
- #define is_intx(vdev) (vdev->irq_type == VFIO_PCI_INTX_IRQ_INDEX)
+ 	if (!pass) {
 -- 
-1.7.9.5
+1.8.4.5
+
