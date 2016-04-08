@@ -1,128 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:35371 "EHLO
-	mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751092AbcDTUXh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2016 16:23:37 -0400
-MIME-Version: 1.0
-In-Reply-To: <20160420192211.GA16093@wunner.de>
-References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
-	<1460111790-92836-5-git-send-email-mika.westerberg@linux.intel.com>
-	<20160412175203.GB13637@wunner.de>
-	<20160413083352.GI1714@lahna.fi.intel.com>
-	<20160418143823.GA15165@wunner.de>
-	<20160419123131.GE1725@lahna.fi.intel.com>
-	<20160420192211.GA16093@wunner.de>
-Date: Wed, 20 Apr 2016 22:23:33 +0200
-Message-ID: <CAJZ5v0ic6YpYtM4cymLJ4oV2-J4CK4MxFi9-6bWNADD-QY3B6A@mail.gmail.com>
-Subject: Re: [PATCH v2 4/4] PCI: Add runtime PM support for PCIe ports
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Andreas Noever <andreas.noever@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from userp1040.oracle.com ([156.151.31.81]:36665 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932568AbcDHAWe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:22:34 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 48/60] PCI: Move ISA io port align out of calculate_iosize()
+Date: Thu,  7 Apr 2016 17:16:01 -0700
+Message-Id: <1460074573-7481-49-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 20, 2016 at 9:22 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> Hi Mika,
->
-> On Tue, Apr 19, 2016 at 03:31:31PM +0300, Mika Westerberg wrote:
->> On Mon, Apr 18, 2016 at 04:38:23PM +0200, Lukas Wunner wrote:
->> > In case you agree with this, I've prepared a fixup patch which you
->> > can apply with "git rebase --autosquash":
->> > https://github.com/l1k/linux/commit/24fc9d7b34ff
->>
->> Based on the above, I'm going to fold your commit to [4/4]. Are you OK
->> if I add your Signed-off-by to that patch?
->
-> Sure.
->
->
->> > Another thing I've spotted but that wasn't needed to get my patches
->> > working: When the bridge_d3 attribute changes to true, you need to
->> > notify the PM core thereof by calling pm_request_idle() for the
->> > bridge device, otherwise the bridge needlessly stays awake. This
->> > needs to be added near the end of pci_bridge_d3_update() I guess.
->>
->> I've been testing this by writing to 'd3cold_allowed' sysfs file and it
->> suspends just fine when it is 1. How do you reproduce this?
->
-> Testing with d3cold_allowed is misleading in this case because
-> d3cold_allowed_store() already calls pm_runtime_resume(dev),
-> and the next time dev runtime suspends, it automatically calls
-> rpm_idle() on its parent. This masks that a call to pm_request_idle()
-> is currently missing in pci_bridge_d3_update().
->
-> However pci_bridge_d3_update() also gets called e.g. from
-> pci_remove_bus_device() and there's no call to pm_request_idle()
-> there, so a bridge would stay awake even if a child that has blocked
-> d3 has been removed.
->
-> I only noticed this because I force bridge_d3 = true when loading
-> the thunderbolt upstream bridge driver, as a workaround for the BIOS
-> cut-off date, and noticed that I had to call pm_request_idle() because
-> otherwise the bridges would stay awake.
->
->
-> I hadn't played with d3cold_allowed before but tested it now that
-> you've mentioned it. Found a bug there:
->
-> If d3cold_allowed is set to false for a device via sysfs, the bridge_d3
-> attribute of its parent bridges will correctly be updated to false.
->
-> If d3cold_allowed is then set to true and the device has runtime
-> suspended in the meantime, the bridge_d3 attribute of its parent bridges
-> is *not* reverted back to true as it should. The reason is that when the
-> device runtime suspended, its no_d3cold attribute was set to false in
-> pci_pm_runtime_suspend() because d3cold_allowed was false. But no_d3cold
-> isn't reverted back to true when setting d3cold_allowed to true and
-> because this attribute is checked in pci_dev_check_d3cold(), the parent
-> bridges' bridge_d3 attribute remains false.
->
-> no_d3cold is just a transient variable used by pci_pm_runtime_suspend()
-> and acpi_pci_choose_state(), which is indirectly called from it via
-> pci_finish_runtime_suspend(). One can fix this by reverting no_d3cold
-> back to false at the end of pci_pm_runtime_suspend(), like this:
-> https://github.com/l1k/linux/commit/9b9ffb8
->
->
->> > One detail I'm not sure about: If you've got a hotplug downstream port
->> > behind an upstream port and the upstream port goes to D3hot, is it
->> > still possible for the downstream port to signal hotplug interrupts?
->> > In other words, can INTx or MSI interrupts generated by the downstream
->> > bridge still be routed via the upstream bridge if the upstream bridge
->> > is in D3hot? I cannot easily test this, I'd have to hack the tg3 driver
->> > for my Thunderbolt Ethernet adapter to use runtime suspend.
->>
->> If the downstream port is able to trigger wake (PME) from D3cold, I
->> think it should work but I'm not 100% sure.
->
-> I've been able to test this now with a hacked tg3 driver and it's as
-> I expected: A hotplug port may go to D3hot and will still generate
-> interrupts on hotplug, but all its parent ports are *not* allowed
-> to go to D3hot because otherwise the hotplug interrupts will no longer
-> come through. The algorithm in pci_bridge_d3_update() and
-> pci_dev_check_d3cold() needs to be amended to take that into account.
-> Hm, it's nontrivial I guess, allowing bridge_d3 = true for the lowest
-> hotplug bridge in a hierarchy but not for anything above?
->
->
->> > My opinion is that we should strive for maximum power saving, thus try
->> > (at least) 2010 and blacklist individual devices as needed.
->>
->> IMHO we should strive for working systems and not maximum power saving
->> but I'm OK to change that if Bjorn or Rafael are fine with it.
->
-> They've kept mum so far. :-)
+We need to move ISA io port align out of calculate_iosize(),
+so we could unify calculate_iosize and calculate_memsize later.
 
-Breaking any systems that work today is not an option.  if that
-happens, the commit that has done that is a clear candidate for
-reverting.
+That extra aligning or offset is to work around ISA devices:
+When one bridge have several children devices, and every device
+has several io port resources and resource size < 0x400.
+We need to check size, and add extra size to make sure bit8/9
+to be zero.
+
+Also need to apply same checking for optional size path.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 39 +++++++++++++++++++++++++++------------
+ 1 file changed, 27 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 11a4c1d..c202854 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1113,11 +1113,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
+ 		size = min_size;
+ 	if (old_size == 1)
+ 		old_size = 0;
+-	/* To be fixed in 2.5: we should have sort of HAVE_ISA
+-	   flag in the struct pci_bus. */
+-#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
+-	size = (size & 0xff) + ((size & ~0xffUL) << 2);
+-#endif
+ 	size = ALIGN(size + size1, align);
+ 	if (size < old_size)
+ 		size = old_size;
+@@ -1171,6 +1166,18 @@ static resource_size_t window_alignment(struct pci_bus *bus,
+ 	return max(align, arch_align);
+ }
+ 
++static resource_size_t size_aligned_for_isa(resource_size_t size)
++{
++	/*
++	 * To be fixed in 2.5: we should have sort of HAVE_ISA
++	 *  flag in the struct pci_bus.
++	 */
++#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
++	size = (size & 0xff) + ((size & ~0xffUL) << 2);
++#endif
++	return size;
++}
++
+ /**
+  * pbus_size_io() - size the io window of a given bus
+  *
+@@ -1188,11 +1195,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ {
+ 	struct pci_dev *dev;
+ 	resource_size_t min_sum_size = 0;
+-	resource_size_t sum_add_size;
+ 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
+ 							IORESOURCE_IO);
+ 	resource_size_t size = 0, size0 = 0, size1 = 0;
+-	resource_size_t children_add_size = 0;
++	resource_size_t sum_add_size = 0, sum_add_size1 = 0;
+ 	resource_size_t min_align, align;
+ 
+ 	if (!b_res)
+@@ -1209,7 +1215,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 			struct resource *r = &dev->resource[i];
+-			unsigned long r_size;
++			unsigned long r_size, r_add_size;
+ 
+ 			if (r->parent || !(r->flags & IORESOURCE_IO))
+ 				continue;
+@@ -1225,18 +1231,27 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 			if (align > min_align)
+ 				min_align = align;
+ 
+-			if (realloc_head)
+-				children_add_size += get_res_add_size(realloc_head, r);
++			if (realloc_head) {
++				r_add_size = get_res_add_size(realloc_head, r);
++				r_add_size += r_size;
++				if (r_add_size < 0x400)
++					/* Might be re-aligned for ISA */
++					sum_add_size += r_add_size;
++				else
++					sum_add_size1 += r_add_size;
++			}
+ 		}
+ 	}
+ 
++	size = size_aligned_for_isa(size);
+ 	size0 = calculate_iosize(size, min_size, size1,
+ 			resource_size(b_res), min_align);
+-	sum_add_size = children_add_size + size + size1;
++	sum_add_size = size_aligned_for_isa(sum_add_size);
++	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+ 	size1 = !realloc_head ? size0 :
+-		calculate_iosize(size, min_size, sum_add_size - size,
++		calculate_iosize(sum_add_size, min_size, 0,
+ 			resource_size(b_res), min_align);
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+-- 
+1.8.4.5
+
