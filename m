@@ -1,113 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:34932 "EHLO
-	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753208AbcDSJfD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 05:35:03 -0400
-Received: by mail-pf0-f181.google.com with SMTP id n1so5189472pfn.2
-        for <linux-pci@vger.kernel.org>; Tue, 19 Apr 2016 02:35:02 -0700 (PDT)
-Subject: Re: [PATCH v8 37/45] powerpc/powernv: Use firmware PCI slot reset
- infrastructure
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-38-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
-	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <5715FBBF.2000108@ozlabs.ru>
-Date: Tue, 19 Apr 2016 19:34:55 +1000
-MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-38-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Received: from aserp1040.oracle.com ([141.146.126.69]:42784 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757109AbcDHATJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:19:09 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 24/60] PCI: Cleanup res_to_dev_res() printout
+Date: Thu,  7 Apr 2016 17:15:37 -0700
+Message-Id: <1460074573-7481-25-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/17/2016 02:44 PM, Gavin Shan wrote:
-> The skiboot firmware might provide the PCI slot reset capability
-> which is identified by property "ibm,reset-by-firmware" on the
-> PCI slot associated device node.
->
-> This checks the property. If it exists, the reset request is routed
-> to firmware. Otherwise, the reset is done by kernel as before.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/platforms/powernv/eeh-powernv.c | 41 +++++++++++++++++++++++++++-
->   1 file changed, 40 insertions(+), 1 deletion(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> index e23b063..c8a5217 100644
-> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> @@ -789,7 +789,7 @@ static int pnv_eeh_root_reset(struct pci_controller *hose, int option)
->   	return ret;
->   }
->
-> -static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
-> +static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
->   {
->   	struct pci_dn *pdn = pci_get_pdn_by_devfn(dev->bus, dev->devfn);
->   	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
-> @@ -840,6 +840,45 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
->   	return 0;
->   }
->
-> +static int pnv_eeh_bridge_reset(struct pci_dev *pdev, int option)
-> +{
-> +	struct pci_controller *hose;
-> +	struct pnv_phb *phb;
-> +	struct device_node *dn = pdev ? pci_device_to_OF_node(pdev) : NULL;
-> +	uint64_t id = (0x1ul << 60);
+Now get_res_add_size() and get_res_add_align() all have same printout
+from res_to_dev_res(), and it is confusing.
+
+Move out debug messages printout from res_to_dev_res(),
+so later we will reuse res_to_dev_res() in other functions.
+
+-v2: does not print out when add_size or min_align is 0
+-v3: change to %#llx according to Bjorn.
 
 
-What is this 1<<60 for?
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 34 ++++++++++++++++++++--------------
+ 1 file changed, 20 insertions(+), 14 deletions(-)
 
-
-> +	uint8_t scope;
-> +	int64_t rc;
-> +
-> +	/*
-> +	 * If the firmware can't handle it, we will issue hot reset
-> +	 * on the secondary bus despite the requested reset type.
-> +	 */
-> +	if (!dn || !of_get_property(dn, "ibm,reset-by-firmware", NULL))
-> +		return __pnv_eeh_bridge_reset(pdev, option);
-> +
-> +	/* The firmware can handle the request */
-> +	switch (option) {
-> +	case EEH_RESET_HOT:
-> +		scope = OPAL_RESET_PCI_HOT;
-> +		break;
-> +	case EEH_RESET_FUNDAMENTAL:
-> +		scope = OPAL_RESET_PCI_FUNDAMENTAL;
-> +		break;
-> +	case EEH_RESET_DEACTIVATE:
-> +		return 0;
-> +	default:
-> +		dev_warn(&pdev->dev, "%s: Unsupported reset %d\n",
-> +			 __func__, option);
-
-
-Can the userspace trigger this case (via VFIO-EEH) and flood dmesg?
-
-
-
-> +		return -EINVAL;
-> +	}
-> +
-> +	hose = pci_bus_to_host(pdev->bus);
-> +	phb = hose->private_data;
-> +	id |= (pdev->bus->number << 24) | (pdev->devfn << 16) | phb->opal_id;
-> +	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
-> +	return pnv_pci_poll(id, rc, NULL);
-> +}
-> +
->   static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
->   {
->   	int *freset = data;
->
-
-
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 4674e6b..dd33234 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -103,19 +103,9 @@ static struct pci_dev_resource *res_to_dev_res(struct list_head *head,
+ {
+ 	struct pci_dev_resource *dev_res;
+ 
+-	list_for_each_entry(dev_res, head, list) {
+-		if (dev_res->res == res) {
+-			int idx = res - &dev_res->dev->resource[0];
+-
+-			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
+-				 "res[%d]=%pR res_to_dev_res add_size %llx min_align %llx\n",
+-				 idx, dev_res->res,
+-				 (unsigned long long)dev_res->add_size,
+-				 (unsigned long long)dev_res->min_align);
+-
++	list_for_each_entry(dev_res, head, list)
++		if (dev_res->res == res)
+ 			return dev_res;
+-		}
+-	}
+ 
+ 	return NULL;
+ }
+@@ -126,7 +116,15 @@ static resource_size_t get_res_add_size(struct list_head *head,
+ 	struct pci_dev_resource *dev_res;
+ 
+ 	dev_res = res_to_dev_res(head, res);
+-	return dev_res ? dev_res->add_size : 0;
++	if (!dev_res || !dev_res->add_size)
++		return 0;
++
++	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
++		   "BAR %d: %pR get_res_add_size add_size   %#llx\n",
++		   (int)(res - &dev_res->dev->resource[0]),
++		   res, (unsigned long long)dev_res->add_size);
++
++	return dev_res->add_size;
+ }
+ 
+ static resource_size_t get_res_add_align(struct list_head *head,
+@@ -135,7 +133,15 @@ static resource_size_t get_res_add_align(struct list_head *head,
+ 	struct pci_dev_resource *dev_res;
+ 
+ 	dev_res = res_to_dev_res(head, res);
+-	return dev_res ? dev_res->min_align : 0;
++	if (!dev_res || !dev_res->min_align)
++		return 0;
++
++	dev_printk(KERN_DEBUG, &dev_res->dev->dev,
++		   "BAR %d: %pR get_res_add_align min_align %#llx\n",
++		   (int)(res - &dev_res->dev->resource[0]),
++		   res, (unsigned long long)dev_res->min_align);
++
++	return dev_res->min_align;
+ }
+ 
+ 
 -- 
-Alexey
+1.8.4.5
+
