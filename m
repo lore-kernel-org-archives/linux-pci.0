@@ -1,98 +1,339 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:2074 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751213AbcDPLF4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Apr 2016 07:05:56 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: kbuild test robot <lkp@intel.com>
-CC: "kbuild-all@01.org" <kbuild-all@01.org>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+Received: from mail.kernel.org ([198.145.29.136]:42122 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751924AbcDHQBv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Apr 2016 12:01:51 -0400
+Date: Fri, 8 Apr 2016 11:01:45 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Jisheng Zhang <jszhang@marvell.com>,
 	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	Linuxarm <linuxarm@huawei.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"helgaas@kernel.org" <helgaas@kernel.org>
-Subject: RE: [PATCH] PCI: Designware: remove wrong RC memory base/limit
- configuration
-Date: Sat, 16 Apr 2016 11:05:25 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED55444@lhreml503-mbs>
-References: <1460737283-117495-1-git-send-email-gabriele.paoloni@huawei.com>
- <201604160047.8h0rkLwN%fengguang.wu@intel.com>
-In-Reply-To: <201604160047.8h0rkLwN%fengguang.wu@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code to
+ dw_pcie_setup_rc()
+Message-ID: <20160408160145.GA10565@localhost>
+References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
+ <20160407103734.55e72da7@xhacker>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
+ <20160407163443.291fbd49@xhacker>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED44208@lhreml503-mbs>
+ <20160407140551.GA2648@localhost>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED45C38@lhreml503-mbs>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ED45C38@lhreml503-mbs>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: kbuild test robot [mailto:lkp@intel.com]
-> Sent: 15 April 2016 17:24
-> To: Gabriele Paoloni
-> Cc: kbuild-all@01.org; pratyush.anand@gmail.com; jingoohan1@gmail.com;
-> Gabriele Paoloni; Linuxarm; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org; helgaas@kernel.org
-> Subject: Re: [PATCH] PCI: Designware: remove wrong RC memory base/limit
-> configuration
+On Fri, Apr 08, 2016 at 01:33:28PM +0000, Gabriele Paoloni wrote:
+> Hi Bjorn
 > 
-> Hi gabriele,
+> Many thanks for your reply
 > 
-> [auto build test WARNING on pci/next]
-> [also build test WARNING on v4.6-rc3 next-20160415]
-> [if your patch is applied to the wrong git tree, please drop us a note
-> to help improving the system]
+> > -----Original Message-----
+> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > Sent: 07 April 2016 15:06
+> > To: Gabriele Paoloni
+> > Cc: Jisheng Zhang; jingoohan1@gmail.com; pratyush.anand@gmail.com;
+> > bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
+> > kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org
+> > Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code
+> > to dw_pcie_setup_rc()
+> > 
+> > On Thu, Apr 07, 2016 at 10:06:45AM +0000, Gabriele Paoloni wrote:
+> > > Hi Jisheng
+> > >
+> > > > -----Original Message-----
+> > > > From: Jisheng Zhang [mailto:jszhang@marvell.com]
+> > > > Sent: 07 April 2016 09:35
+> > > > To: Gabriele Paoloni
+> > > > Cc: jingoohan1@gmail.com; pratyush.anand@gmail.com;
+> > > > bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
+> > > > kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org
+> > > > Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup
+> > code
+> > > > to dw_pcie_setup_rc()
+> > > >
+> > > > Hi Gabriele,
+> > > >
+> > > > On Thu, 7 Apr 2016 08:20:28 +0000 Gabriele Paoloni wrote:
+> > > >
+> > > > > Hi Jisheng
+> > > > >
+> > > > > Thanks for your reply
+> > > > >
+> > > > > > -----Original Message-----
+> > > > > > From: Jisheng Zhang [mailto:jszhang@marvell.com]
+> > > > > > Sent: 07 April 2016 03:38
+> > > > > > To: Gabriele Paoloni; jingoohan1@gmail.com;
+> > > > pratyush.anand@gmail.com;
+> > > > > > bhelgaas@google.com
+> > > > > > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
+> > linux-
+> > > > arm-
+> > > > > > kernel@lists.infradead.org
+> > > > > > Subject: Re: [PATCH v2] PCI: designware: move remaining rc
+> > setup
+> > > > code
+> > > > > > to dw_pcie_setup_rc()
+> > > > > >
+> > > > > > Hi Gabriele,
+> > > > > >
+> > > > > > On Wed, 6 Apr 2016 14:50:29 +0000 Gabriele Paoloni wrote:
+> > > > > >
+> > > > > > > Hi, sorry to be late on this
+> > > > > > >
+> > > > > > > > -----Original Message-----
+> > > > > > > > From: linux-kernel-owner@vger.kernel.org [mailto:linux-
+> > kernel-
+> > > > > > > > owner@vger.kernel.org] On Behalf Of Jisheng Zhang
+> > > > > > > > Sent: 16 March 2016 11:41
+> > > > > > > > To: jingoohan1@gmail.com; pratyush.anand@gmail.com;
+> > > > > > bhelgaas@google.com
+> > > > > > > > Cc: linux-pci@vger.kernel.org; linux-
+> > kernel@vger.kernel.org;
+> > > > linux-
+> > > > > > arm-
+> > > > > > > > kernel@lists.infradead.org; Jisheng Zhang
+> > > > > > > > Subject: [PATCH v2] PCI: designware: move remaining rc
+> > setup
+> > > > code
+> > > > > > to
+> > > > > > > > dw_pcie_setup_rc()
+> > > > > > > >
+> > > > > > > > dw_pcie_setup_rc(), as its name indicates, setups the RC.
+> > But
+> > > > > > current
+> > > > > > > > dw_pcie_host_init() also contains some necessary rc setup
+> > code.
+> > > > > > > >
+> > > > > > > > Another reason: the host may lost power during suspend to
+> > ram,
+> > > > the
+> > > > > > RC
+> > > > > > > > need to be re-setup after resume. The rc can't be correctly
+> > > > resumed
+> > > > > > > > without the rc setup code in dw_pcie_host_init().
+> > > > > > > >
+> > > > > > > > So this patch moves the code to dw_pcie_setup_rc() to
+> > address
+> > > > the
+> > > > > > above
+> > > > > > > > two issues. After this patch, each pcie designware driver
+> > users
+> > > > > > could
+> > > > > > > > call dw_pcie_setup_rc() to re-setup rc when resume back.
+> > > > > > >
+> > > > > > > I think this patch breaks the Hisilicon driver...
+> > > > > > >
+> > > > > > > Our driver performs linkup setup in UEFI therefore we do not
+> > call
+> > > > > > > dw_pcie_setup_rc(), we only call dw_pcie_host_init().
+> > > > > >
+> > > > > > Thanks for the information. So pcie-hisi rely on UEFI to do
+> > > > something
+> > > > > > similar
+> > > > > > in dw_pcie_setup_rc(), this comes to a common driver implement
+> > > > > > question: should
+> > > > > > linux device driver rely on bootloader to configure HW device?
+> > > > >
+> > > > > I don't see any issue with this...
+> > > > >
+> > > > > >
+> > > > > > Is it acceptable that pcie-hisi adds a call to
+> > dw_pcie_setup_rc()
+> > > > in
+> > > > > > hisi_add_pcie_port()?
+> > > > >
+> > > > > I don't think so...that would try to overwrite what is already
+> > set by
+> > > > > the bootloader; so it is wrong in principle and maybe it can lead
+> > to
+> > > > > undefined behaviours...
+> > > >
+> > > > make sense! This commit is intend to re-setup the rc when waken
+> > from
+> > > > s2ram (in
+> > > > s2ram state, the host lost power)
+> > > >
+> > > > I have no good solution but to introduce one function e.g
+> > > > dw_pcie_setup_rc_after_linkup(), then move related code from
+> > > > dw_pcie_host_init
+> > > > to it, then let my host driver resume hook to call.
+> > > >
+> > > > Hi Pratyush, Jingoo and Bjorn etc.
+> > > >
+> > > > any suggestions are appreciated!
+> > >
+> > > What about:
+> > >
+> > > diff --git a/drivers/pci/host/pcie-designware.c
+> > b/drivers/pci/host/pcie-designware.c
+> > > index a4cccd3..e461f5d 100644
+> > > --- a/drivers/pci/host/pcie-designware.c
+> > > +++ b/drivers/pci/host/pcie-designware.c
+> > > @@ -434,7 +434,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+> > >  	struct platform_device *pdev = to_platform_device(pp->dev);
+> > >  	struct pci_bus *bus, *child;
+> > >  	struct resource *cfg_res;
+> > > -	u32 val;
+> > >  	int i, ret;
+> > >  	LIST_HEAD(res);
+> > >  	struct resource_entry *win;
+> > > @@ -544,25 +543,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+> > >  	if (pp->ops->host_init)
+> > >  		pp->ops->host_init(pp);
+> > >
+> > > -	/*
+> > > -	 * If the platform provides ->rd_other_conf, it means the
+> > platform
+> > > -	 * uses its own address translation component rather than ATU, so
+> > > -	 * we should not program the ATU here.
+> > > -	 */
+> > > -	if (!pp->ops->rd_other_conf)
+> > > -		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+> > > -					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+> > > -					  pp->mem_bus_addr, pp->mem_size);
+> > > -
+> > > -	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+> > > -
+> > > -	/* program correct class for RC */
+> > > -	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2,
+> > PCI_CLASS_BRIDGE_PCI);
+> > > -
+> > > -	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+> > > -	val |= PORT_LOGIC_SPEED_CHANGE;
+> > > -	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+> > > -
+> > >  	pp->root_bus_nr = pp->busn->start;
+> > >  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> > >  		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
+> > > @@ -725,6 +705,29 @@ static struct pci_ops dw_pcie_ops = {
+> > >  	.write = dw_pcie_wr_conf,
+> > >  };
+> > >
+> > > +void dw_pcie_setup_own_cfg(struct pcie_port *pp)
+> > > +{
+> > > +	u32 val;
+> > > +	/*
+> > > +	 * If the platform provides ->rd_other_conf, it means the
+> > platform
+> > > +	 * uses its own address translation component rather than ATU, so
+> > > +	 * we should not program the ATU here.
+> > > +	 */
+> > > +	if (!pp->ops->rd_other_conf)
+> > > +		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+> > > +					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+> > > +					  pp->mem_bus_addr, pp->mem_size);
+> > > +
+> > > +	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+> > > +
+> > > +	/* program correct class for RC */
+> > > +	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2,
+> > PCI_CLASS_BRIDGE_PCI);
+> > > +
+> > > +	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+> > > +	val |= PORT_LOGIC_SPEED_CHANGE;
+> > > +	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+> > > +}
+> > > +
+> > >  void dw_pcie_setup_rc(struct pcie_port *pp)
+> > >  {
+> > >  	u32 val;
+> > > @@ -800,6 +803,8 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+> > >  	val |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
+> > >  		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
+> > >  	dw_pcie_writel_rc(pp, val, PCI_COMMAND);
+> > > +
+> > > +	dw_pcie_setup_own_cfg(pp);
+> > >  }
+> > >
+> > >  MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
+> > > diff --git a/drivers/pci/host/pcie-designware.h
+> > b/drivers/pci/host/pcie-designware.h
+> > > index f437f9b..caf0f5d 100644
+> > > --- a/drivers/pci/host/pcie-designware.h
+> > > +++ b/drivers/pci/host/pcie-designware.h
+> > > @@ -85,5 +85,6 @@ int dw_pcie_wait_for_link(struct pcie_port *pp);
+> > >  int dw_pcie_link_up(struct pcie_port *pp);
+> > >  void dw_pcie_setup_rc(struct pcie_port *pp);
+> > >  int dw_pcie_host_init(struct pcie_port *pp);
+> > > +void dw_pcie_setup_own_cfg(struct pcie_port *pp);
+> > >
+> > >  #endif /* _PCIE_DESIGNWARE_H */
+> > > diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-
+> > hisi.c
+> > > index 3e98d4e..8da29b2 100644
+> > > --- a/drivers/pci/host/pcie-hisi.c
+> > > +++ b/drivers/pci/host/pcie-hisi.c
+> > > @@ -164,6 +164,7 @@ static int hisi_add_pcie_port(struct pcie_port
+> > *pp,
+> > >  		dev_err(&pdev->dev, "failed to initialize host\n");
+> > >  		return ret;
+> > >  	}
+> > > +	dw_pcie_setup_own_cfg(pp);
+> > >
+> > >  	return 0;
+> > >  }
+> > 
+> > What's the hisi plan for resuming after suspend-to-RAM?  How does the
+> > RC get reprogrammed after it loses all its state?
 > 
-> url:    https://github.com/0day-ci/linux/commits/Gabriele-Paoloni/PCI-
-> Designware-remove-wrong-RC-memory-base-limit-configuration/20160416-
-> 000746
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
-> next
-> config: x86_64-randconfig-x011-201615 (attached as .config)
-> reproduce:
->         # save the attached .config to linux build tree
->         make ARCH=x86_64
+> PM is not part of the driver yet. This is planned for near
+> future release so haven't made such considerations yet
+> > 
+> > What would break if hisi did call dw_pcie_setup_rc()?  I know you said
+> > it would overwrite what the bootloader already did, which is true.
 > 
-> All warnings (new ones prefixed by >>):
+> I am try to figure this out now with our HW team.
 > 
->    drivers/pci/host/pcie-designware.c: In function 'dw_pcie_setup_rc':
-> >> drivers/pci/host/pcie-designware.c:732:6: warning: unused variable
-> 'memlimit' [-Wunused-variable]
->      u32 memlimit;
->          ^
-> >> drivers/pci/host/pcie-designware.c:731:6: warning: unused variable
-> 'membase' [-Wunused-variable]
->      u32 membase;
->          ^
+> > 
+> > But hisi does call dw_pcie_host_init(), so it reads pp->mem (which
+> > determines pp->mem_base) and pp->lanes from the DT.  Other drivers
+> > then call dw_pcie_setup_rc() which programs the RC based on
+> > pp->mem_base and pp->lanes.  So hisi assumes UEFI programmed the RC to
+> > match the DT, while the other drivers read the DT and program the RC
+> > to match.  The latter seems more robust because it enforces the
+> > consistency rather than relying on it.
+> 
+> Yes I agree with you, however we have preferred to move RC config to
+> BIOS to have a single driver to support multiple versions of the
+> same SoC.
 
-Just sent v2 to fix this
+I think there are two reasonable approaches:
 
-Gab
+  1) A single generic driver that doesn't have any knowledge about the
+  chipset registers; it uses run-time firmware interfaces to manage
+  the bridge.  The ACPI pci_root.c driver is the best example so far
+  and works very well.  It supports basically all x86 and ia64
+  chipsets and requires no kernel work for new ones.
 
+  2) Native drivers specific to each chipset.  These may get
+  configuration information from DT, but they do their own
+  register-level programming of the device without run-time help from
+  firmware.
+
+I think hisi is a native driver because it uses hip05/hip06 registers
+to check link state and perform config operations.  And apparently you
+rely on the ATU, BAR, class, and link width programming currently done
+in dw_pcie_host_init().  But you want to rely on pre-boot firmware to
+set up the link.  That doesn't make sense to me -- if the driver wants
+to twiddle the registers, it should know how to do it all.  I don't
+see how you can reasonably manage this half-way approach.
+
+> The patch I proposed above does the same job as the original patch
+> proposed by Jisheng and also allows hisi driver to call the moved
+> code.
 > 
-> vim +/memlimit +732 drivers/pci/host/pcie-designware.c
-> 
-> 4b1ced84 Jingoo Han    2013-07-31  725  	.write = dw_pcie_wr_conf,
-> 340cba60 Jingoo Han    2013-06-21  726  };
-> 340cba60 Jingoo Han    2013-06-21  727
-> 4b1ced84 Jingoo Han    2013-07-31  728  void dw_pcie_setup_rc(struct
-> pcie_port *pp)
-> 340cba60 Jingoo Han    2013-06-21  729  {
-> 340cba60 Jingoo Han    2013-06-21  730  	u32 val;
-> 340cba60 Jingoo Han    2013-06-21 @731  	u32 membase;
-> 340cba60 Jingoo Han    2013-06-21 @732  	u32 memlimit;
-> 340cba60 Jingoo Han    2013-06-21  733
-> 66c5c34b Mohit Kumar   2014-04-14  734  	/* set the number of lanes */
-> f7b7868c Seungwon Jeon 2013-08-28  735  	dw_pcie_readl_rc(pp,
-> PCIE_PORT_LINK_CONTROL, &val);
-> 
-> :::::: The code at line 732 was first introduced by commit
-> :::::: 340cba6092c2c1688629d327b74e7eb746a571a7 pci: Add PCIe driver
-> for Samsung Exynos
-> 
-> :::::: TO: Jingoo Han <jg1.han@samsung.com>
-> :::::: CC: Arnd Bergmann <arnd@arndb.de>
-> 
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology
-> Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel
-> Corporation
+> Do you see anything wrong with it?
+
+Only that it makes the structure more complicated and we haven't
+identified a corresponding benefit yet.
+
+Bjorn
