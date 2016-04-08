@@ -1,75 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44864 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751522AbcDHUTF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Apr 2016 16:19:05 -0400
-Date: Fri, 8 Apr 2016 14:19:03 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>,
-	linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org
-Subject: Re: [PATCH v4 2/6] PCI: Move informational printk to
- pci_add_dma_alias()
-Message-ID: <20160408141903.30f1ca9d@t450s.home>
-In-Reply-To: <20160224194354.7585.30654.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<20160224194354.7585.30654.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from userp1040.oracle.com ([156.151.31.81]:36722 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932745AbcDHAWs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:22:48 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+Subject: [PATCH v11 02/60] alpha/PCI: Only check iomem_is_exclusive() for IORESOURCE_MEM, not IORESOURCE_IO
+Date: Thu,  7 Apr 2016 17:15:15 -0700
+Message-Id: <1460074573-7481-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 24 Feb 2016 13:43:54 -0600
-Bjorn Helgaas <bhelgaas@google.com> wrote:
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-> From: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-> 
-> One of the quirks that adds DMA aliases logs an informational message in
-> dmesg.  Move that to pci_add_dma_alias() so all users log the message
-> consistently.  No functional change intended (except extra message).
-> ---
->  drivers/pci/pci.c    |    2 ++
->  drivers/pci/quirks.c |    6 +-----
->  2 files changed, 3 insertions(+), 5 deletions(-)
+The alpha pci_mmap_resource() is used for both IORESOURCE_MEM and
+IORESOURCE_IO resources, but iomem_is_exclusive() is only applicable for
+IORESOURCE_MEM.
 
+Call iomem_is_exclusive() only for IORESOURCE_MEM resources, and do it
+earlier to match the generic version of pci_mmap_resource().
 
-Needs a Sign-off, otherwise:
+Fixes: 10a0ef39fbd1 ("PCI/alpha: pci sysfs resources")
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+CC: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+---
+ arch/alpha/kernel/pci-sysfs.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
-
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 7fccc8a..8b0a637 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4580,6 +4580,8 @@ void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
->  {
->  	dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 0);
->  	dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-> +	dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
-> +		 PCI_SLOT(devfn), PCI_FUNC(devfn));
->  }
->  
->  bool pci_device_is_present(struct pci_dev *pdev)
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index df28dce..cf023ea 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3662,12 +3662,8 @@ static void quirk_fixed_dma_alias(struct pci_dev *dev)
->  	const struct pci_device_id *id;
->  
->  	id = pci_match_id(fixed_dma_alias_tbl, dev);
-> -	if (id) {
-> +	if (id)
->  		pci_add_dma_alias(dev, id->driver_data);
-> -		dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
-> -			 PCI_SLOT(id->driver_data),
-> -			 PCI_FUNC(id->driver_data));
-> -	}
->  }
->  
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ADAPTEC2, 0x0285, quirk_fixed_dma_alias);
-> 
+diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.c
+index 99e8d47..92c0d46 100644
+--- a/arch/alpha/kernel/pci-sysfs.c
++++ b/arch/alpha/kernel/pci-sysfs.c
+@@ -77,10 +77,10 @@ static int pci_mmap_resource(struct kobject *kobj,
+ 	if (i >= PCI_ROM_RESOURCE)
+ 		return -ENODEV;
+ 
+-	if (!__pci_mmap_fits(pdev, i, vma, sparse))
++	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
+ 		return -EINVAL;
+ 
+-	if (iomem_is_exclusive(res->start))
++	if (!__pci_mmap_fits(pdev, i, vma, sparse))
+ 		return -EINVAL;
+ 
+ 	pcibios_resource_to_bus(pdev->bus, &bar, res);
+-- 
+1.8.4.5
 
