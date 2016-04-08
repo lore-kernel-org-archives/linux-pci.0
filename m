@@ -1,67 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:55193 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752383AbcDYJxa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Apr 2016 05:53:30 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:35042 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756850AbcDHARB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:17:01 -0400
+From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [PATCH v4 3/4] ACPI / hotplug / PCI: Runtime resume bridge before rescan
-Date: Mon, 25 Apr 2016 12:53:23 +0300
-Message-Id: <1461578004-129094-4-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
+Subject: [PATCH v11 06/60] sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+Date: Thu,  7 Apr 2016 17:15:19 -0700
+Message-Id: <1460074573-7481-7-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If a PCI bridge (or PCIe port) that is runtime suspended gets an ACPI
-hotplug event, such as BUS_CHECK we need to make sure it is resumed before
-devices below the bridge are re-scanned. Otherwise the devices behind the
-port are not accessible and will be treated as hot-unplugged.
+For device resource with PREF bit setting under bridge 64-bit pref resource,
+we need to make sure only set PREF for 64bit resource.
 
-To fix this, resume PCI bridges from runtime suspend while rescanning.
+so this patch set IORESOUCE_MEM_64 for 64bit resource during OF device resource
+flags parsing.
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
 ---
- drivers/pci/hotplug/acpiphp_glue.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ arch/sparc/kernel/of_device_32.c | 5 +++--
+ arch/sparc/kernel/of_device_64.c | 5 +++--
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index fa49f9143b80..d64ce8aa99b3 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -756,8 +756,10 @@ static void hotplug_event(u32 type, struct acpiphp_context *context)
- 
- 	acpi_lock_hp_context();
- 	bridge = context->bridge;
--	if (bridge)
-+	if (bridge) {
- 		get_bridge(bridge);
-+		pm_runtime_get_sync(&bridge->pci_dev->dev);
-+	}
- 
- 	acpi_unlock_hp_context();
- 
-@@ -797,8 +799,10 @@ static void hotplug_event(u32 type, struct acpiphp_context *context)
+diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
+index 185aa96..3e9f273 100644
+--- a/arch/sparc/kernel/of_device_32.c
++++ b/arch/sparc/kernel/of_device_32.c
+@@ -83,11 +83,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
  	}
- 
- 	pci_unlock_rescan_remove();
--	if (bridge)
-+	if (bridge) {
-+		pm_runtime_put(&bridge->pci_dev->dev);
- 		put_bridge(bridge);
-+	}
- }
- 
- static int acpiphp_hotplug_notify(struct acpi_device *adev, u32 type)
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
+diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
+index 7bbdc26..defee61 100644
+--- a/arch/sparc/kernel/of_device_64.c
++++ b/arch/sparc/kernel/of_device_64.c
+@@ -146,11 +146,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
+ 	}
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
 -- 
-2.8.0.rc3
+1.8.4.5
 
