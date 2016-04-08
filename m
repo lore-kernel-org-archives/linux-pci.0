@@ -1,258 +1,306 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41091 "EHLO mail.kernel.org"
+Received: from mga02.intel.com ([134.134.136.20]:35931 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753999AbcDGOF5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 Apr 2016 10:05:57 -0400
-Date: Thu, 7 Apr 2016 09:05:52 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Jisheng Zhang <jszhang@marvell.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code to
- dw_pcie_setup_rc()
-Message-ID: <20160407140551.GA2648@localhost>
-References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
- <20160407103734.55e72da7@xhacker>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
- <20160407163443.291fbd49@xhacker>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED44208@lhreml503-mbs>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ED44208@lhreml503-mbs>
+	id S1757915AbcDHKgn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Apr 2016 06:36:43 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [PATCH v2 2/4] PCI: Move PCIe ports to D3 during suspend
+Date: Fri,  8 Apr 2016 13:36:28 +0300
+Message-Id: <1460111790-92836-3-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 07, 2016 at 10:06:45AM +0000, Gabriele Paoloni wrote:
-> Hi Jisheng
-> 
-> > -----Original Message-----
-> > From: Jisheng Zhang [mailto:jszhang@marvell.com]
-> > Sent: 07 April 2016 09:35
-> > To: Gabriele Paoloni
-> > Cc: jingoohan1@gmail.com; pratyush.anand@gmail.com;
-> > bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
-> > kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org
-> > Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code
-> > to dw_pcie_setup_rc()
-> > 
-> > Hi Gabriele,
-> > 
-> > On Thu, 7 Apr 2016 08:20:28 +0000 Gabriele Paoloni wrote:
-> > 
-> > > Hi Jisheng
-> > >
-> > > Thanks for your reply
-> > >
-> > > > -----Original Message-----
-> > > > From: Jisheng Zhang [mailto:jszhang@marvell.com]
-> > > > Sent: 07 April 2016 03:38
-> > > > To: Gabriele Paoloni; jingoohan1@gmail.com;
-> > pratyush.anand@gmail.com;
-> > > > bhelgaas@google.com
-> > > > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-
-> > arm-
-> > > > kernel@lists.infradead.org
-> > > > Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup
-> > code
-> > > > to dw_pcie_setup_rc()
-> > > >
-> > > > Hi Gabriele,
-> > > >
-> > > > On Wed, 6 Apr 2016 14:50:29 +0000 Gabriele Paoloni wrote:
-> > > >
-> > > > > Hi, sorry to be late on this
-> > > > >
-> > > > > > -----Original Message-----
-> > > > > > From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
-> > > > > > owner@vger.kernel.org] On Behalf Of Jisheng Zhang
-> > > > > > Sent: 16 March 2016 11:41
-> > > > > > To: jingoohan1@gmail.com; pratyush.anand@gmail.com;
-> > > > bhelgaas@google.com
-> > > > > > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
-> > linux-
-> > > > arm-
-> > > > > > kernel@lists.infradead.org; Jisheng Zhang
-> > > > > > Subject: [PATCH v2] PCI: designware: move remaining rc setup
-> > code
-> > > > to
-> > > > > > dw_pcie_setup_rc()
-> > > > > >
-> > > > > > dw_pcie_setup_rc(), as its name indicates, setups the RC. But
-> > > > current
-> > > > > > dw_pcie_host_init() also contains some necessary rc setup code.
-> > > > > >
-> > > > > > Another reason: the host may lost power during suspend to ram,
-> > the
-> > > > RC
-> > > > > > need to be re-setup after resume. The rc can't be correctly
-> > resumed
-> > > > > > without the rc setup code in dw_pcie_host_init().
-> > > > > >
-> > > > > > So this patch moves the code to dw_pcie_setup_rc() to address
-> > the
-> > > > above
-> > > > > > two issues. After this patch, each pcie designware driver users
-> > > > could
-> > > > > > call dw_pcie_setup_rc() to re-setup rc when resume back.
-> > > > >
-> > > > > I think this patch breaks the Hisilicon driver...
-> > > > >
-> > > > > Our driver performs linkup setup in UEFI therefore we do not call
-> > > > > dw_pcie_setup_rc(), we only call dw_pcie_host_init().
-> > > >
-> > > > Thanks for the information. So pcie-hisi rely on UEFI to do
-> > something
-> > > > similar
-> > > > in dw_pcie_setup_rc(), this comes to a common driver implement
-> > > > question: should
-> > > > linux device driver rely on bootloader to configure HW device?
-> > >
-> > > I don't see any issue with this...
-> > >
-> > > >
-> > > > Is it acceptable that pcie-hisi adds a call to dw_pcie_setup_rc()
-> > in
-> > > > hisi_add_pcie_port()?
-> > >
-> > > I don't think so...that would try to overwrite what is already set by
-> > > the bootloader; so it is wrong in principle and maybe it can lead to
-> > > undefined behaviours...
-> > 
-> > make sense! This commit is intend to re-setup the rc when waken from
-> > s2ram (in
-> > s2ram state, the host lost power)
-> > 
-> > I have no good solution but to introduce one function e.g
-> > dw_pcie_setup_rc_after_linkup(), then move related code from
-> > dw_pcie_host_init
-> > to it, then let my host driver resume hook to call.
-> > 
-> > Hi Pratyush, Jingoo and Bjorn etc.
-> > 
-> > any suggestions are appreciated!
-> 
-> What about:
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index a4cccd3..e461f5d 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -434,7 +434,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  	struct platform_device *pdev = to_platform_device(pp->dev);
->  	struct pci_bus *bus, *child;
->  	struct resource *cfg_res;
-> -	u32 val;
->  	int i, ret;
->  	LIST_HEAD(res);
->  	struct resource_entry *win;
-> @@ -544,25 +543,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  	if (pp->ops->host_init)
->  		pp->ops->host_init(pp);
->  
-> -	/*
-> -	 * If the platform provides ->rd_other_conf, it means the platform
-> -	 * uses its own address translation component rather than ATU, so
-> -	 * we should not program the ATU here.
-> -	 */
-> -	if (!pp->ops->rd_other_conf)
-> -		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-> -					  PCIE_ATU_TYPE_MEM, pp->mem_base,
-> -					  pp->mem_bus_addr, pp->mem_size);
-> -
-> -	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
-> -
-> -	/* program correct class for RC */
-> -	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
-> -
-> -	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
-> -	val |= PORT_LOGIC_SPEED_CHANGE;
-> -	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
-> -
->  	pp->root_bus_nr = pp->busn->start;
->  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
->  		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
-> @@ -725,6 +705,29 @@ static struct pci_ops dw_pcie_ops = {
->  	.write = dw_pcie_wr_conf,
->  };
->  
-> +void dw_pcie_setup_own_cfg(struct pcie_port *pp)
-> +{
-> +	u32 val;
-> +	/*
-> +	 * If the platform provides ->rd_other_conf, it means the platform
-> +	 * uses its own address translation component rather than ATU, so
-> +	 * we should not program the ATU here.
-> +	 */
-> +	if (!pp->ops->rd_other_conf)
-> +		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-> +					  PCIE_ATU_TYPE_MEM, pp->mem_base,
-> +					  pp->mem_bus_addr, pp->mem_size);
-> +
-> +	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
-> +
-> +	/* program correct class for RC */
-> +	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
-> +
-> +	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
-> +	val |= PORT_LOGIC_SPEED_CHANGE;
-> +	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
-> +}
-> +
->  void dw_pcie_setup_rc(struct pcie_port *pp)
->  {
->  	u32 val;
-> @@ -800,6 +803,8 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  	val |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
->  		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
->  	dw_pcie_writel_rc(pp, val, PCI_COMMAND);
-> +
-> +	dw_pcie_setup_own_cfg(pp);
->  }
->  
->  MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
-> diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-> index f437f9b..caf0f5d 100644
-> --- a/drivers/pci/host/pcie-designware.h
-> +++ b/drivers/pci/host/pcie-designware.h
-> @@ -85,5 +85,6 @@ int dw_pcie_wait_for_link(struct pcie_port *pp);
->  int dw_pcie_link_up(struct pcie_port *pp);
->  void dw_pcie_setup_rc(struct pcie_port *pp);
->  int dw_pcie_host_init(struct pcie_port *pp);
-> +void dw_pcie_setup_own_cfg(struct pcie_port *pp);
->  
->  #endif /* _PCIE_DESIGNWARE_H */
-> diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-> index 3e98d4e..8da29b2 100644
-> --- a/drivers/pci/host/pcie-hisi.c
-> +++ b/drivers/pci/host/pcie-hisi.c
-> @@ -164,6 +164,7 @@ static int hisi_add_pcie_port(struct pcie_port *pp,
->  		dev_err(&pdev->dev, "failed to initialize host\n");
->  		return ret;
->  	}
-> +	dw_pcie_setup_own_cfg(pp);
->  
->  	return 0;
->  }
+Currently the Linux PCI core does not touch power state of PCI bridges and
+PCIe ports when system suspend is entered. Leaving them in D0 consumes
+power which is not good thing in portable devices such as laptops. This may
+also prevent the CPU from entering deeper C-states.
 
-What's the hisi plan for resuming after suspend-to-RAM?  How does the
-RC get reprogrammed after it loses all its state?
+With recent PCIe hardware we can power down the ports to save power given
+that we take into account few restrictions:
 
-What would break if hisi did call dw_pcie_setup_rc()?  I know you said
-it would overwrite what the bootloader already did, which is true.
+  - The PCIe port hardware is recent enough, starting from 2015.
 
-But hisi does call dw_pcie_host_init(), so it reads pp->mem (which
-determines pp->mem_base) and pp->lanes from the DT.  Other drivers
-then call dw_pcie_setup_rc() which programs the RC based on
-pp->mem_base and pp->lanes.  So hisi assumes UEFI programmed the RC to
-match the DT, while the other drivers read the DT and program the RC
-to match.  The latter seems more robust because it enforces the
-consistency rather than relying on it.
+  - Devices connected to PCIe ports are effectively in D3cold once the port
+    is moved to D3 (the config space is not accessible anymore and the link
+    may be powered down).
 
-Bjorn
+  - Devices behind the PCIe port need to be allowed to transition to D3cold
+    and back. There is a way both drivers and userspace can forbid this.
+
+  - If the device behind the PCIe port is capable of waking the system it
+    needs to be able to do so from D3cold.
+
+This patch adds a new flag to struct pci_device called 'bridge_d3'. This
+flag is set and cleared by the PCI core whenever there is a change in power
+management state of any of the  devices behind the PCIe port. If the above
+restrictions are met we set 'bridge_d3' to true and transition the port to
+D3 when system is suspended.
+
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/bus.c           |   1 +
+ drivers/pci/pci-driver.c    |  15 ++++++-
+ drivers/pci/pci-sysfs.c     |   1 +
+ drivers/pci/pci.c           | 103 ++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h           |   1 +
+ drivers/pci/remove.c        |   2 +
+ drivers/usb/host/xhci-pci.c |   2 +-
+ include/linux/pci.h         |   2 +
+ 8 files changed, 125 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 6c9f5467bc5f..3ef836b5794b 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -291,6 +291,7 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 	pci_fixup_device(pci_fixup_final, dev);
+ 	pci_create_sysfs_dev_files(dev);
+ 	pci_proc_attach_device(dev);
++	pci_bridge_pm_update(dev, false);
+ 
+ 	dev->match_driver = true;
+ 	retval = device_attach(&dev->dev);
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index d7ffd66814bb..2d52c0b5d9a0 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -744,6 +744,19 @@ static int pci_pm_suspend(struct device *dev)
+ 	return 0;
+ }
+ 
++/*
++ * Check if given device can go to low power state. Currently we allow
++ * normal PCI devices and PCI bridges if their bridge_d3 is set.
++ */
++static bool pci_can_suspend(struct pci_dev *pdev)
++{
++	if (!pci_has_subordinate(pdev))
++		return true;
++	else if (pdev->bridge_d3)
++		return true;
++	return false;
++}
++
+ static int pci_pm_suspend_noirq(struct device *dev)
+ {
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+@@ -777,7 +790,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+ 
+ 	if (!pci_dev->state_saved) {
+ 		pci_save_state(pci_dev);
+-		if (!pci_has_subordinate(pci_dev))
++		if (pci_can_suspend(pci_dev))
+ 			pci_prepare_to_sleep(pci_dev);
+ 	}
+ 
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index e982010f0ed1..94ceea990775 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -407,6 +407,7 @@ static ssize_t d3cold_allowed_store(struct device *dev,
+ 
+ 	pdev->d3cold_allowed = !!val;
+ 	pm_runtime_resume(dev);
++	pci_bridge_pm_update(pdev, false);
+ 
+ 	return count;
+ }
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 25e0327d4429..fe31aad3ab3a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -9,6 +9,7 @@
+ 
+ #include <linux/kernel.h>
+ #include <linux/delay.h>
++#include <linux/dmi.h>
+ #include <linux/init.h>
+ #include <linux/of.h>
+ #include <linux/of_pci.h>
+@@ -2156,6 +2157,107 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
+ }
+ 
+ /**
++ * pci_bridge_d3_possible - Is it possible to move the bridge to D3
++ * @bridge: Bridge to check
++ *
++ * This function checks if it is possible to move the bridge to D3.
++ * Currently we only allow D3 for recent enough PCIe ports.
++ */
++static bool pci_bridge_d3_possible(struct pci_dev *bridge)
++{
++	unsigned int year;
++
++	if (!pci_is_pcie(bridge))
++		return false;
++
++	switch (pci_pcie_type(bridge)) {
++	case PCI_EXP_TYPE_ROOT_PORT:
++	case PCI_EXP_TYPE_UPSTREAM:
++	case PCI_EXP_TYPE_DOWNSTREAM:
++		/*
++		 * PCIe ports from 2015 and newer should be capable of
++		 * entering D3.
++		 */
++		if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) &&
++		    year >= 2015) {
++			return true;
++		}
++		break;
++	}
++
++	return false;
++}
++
++static int pci_dev_check_d3cold(struct pci_dev *pdev, void *data)
++{
++	bool *d3cold_ok = data;
++
++	/*
++	 * The device needs to be allowed to go D3cold and if it is wake
++	 * capable to do so from D3cold.
++	 */
++	if (pdev->no_d3cold || !pdev->d3cold_allowed)
++		*d3cold_ok = false;
++	if (device_may_wakeup(&pdev->dev) && !pci_pme_capable(pdev, PCI_D3cold))
++		*d3cold_ok = false;
++
++	return !*d3cold_ok;
++}
++
++/**
++ * pci_bridge_pm_update - Update PM capabilities of upstream PCI bridge
++ * @dev: PCI device whose configuration changed
++ * @remove: Is the PCI device about to be removed
++ *
++ * When PM configuration of a PCI device is changed this function updates
++ * PM capabilities of the upstream PCI bridge accordingly.
++ */
++void pci_bridge_pm_update(struct pci_dev *pdev, bool remove)
++{
++	struct pci_dev *bridge;
++	bool d3cold_ok = true;
++
++	bridge = pci_upstream_bridge(pdev);
++	if (!bridge || !pci_bridge_d3_possible(bridge))
++		return;
++
++	pci_dev_get(bridge);
++	if (!remove)
++		pci_dev_check_d3cold(pdev, &d3cold_ok);
++
++	if (d3cold_ok) {
++		/*
++		 * We need to go through all children to find out if all of
++		 * them can still go to D3cold.
++		 */
++		pci_walk_bus(bridge->subordinate, pci_dev_check_d3cold,
++			     &d3cold_ok);
++	}
++	bridge->bridge_d3 = d3cold_ok;
++	pci_dev_put(bridge);
++}
++
++/**
++ * pci_enable_d3cold - Enables or disables D3cold from the device
++ * @pdev: PCI device to handle
++ * @enable: Enable or disable D3cold
++ *
++ * This function can be used in drivers to prevent D3cold from the device
++ * they handle. It also updates upstream PCI bridge PM capabilities
++ * accordingly.
++ */
++void pci_enable_d3cold(struct pci_dev *pdev, bool enable)
++{
++	bool no_d3cold = !enable;
++
++	if (pdev->no_d3cold != no_d3cold) {
++		pdev->no_d3cold = !enable;
++		pci_bridge_pm_update(pdev, false);
++	}
++}
++EXPORT_SYMBOL_GPL(pci_enable_d3cold);
++
++/**
+  * pci_pm_init - Initialize PM functions of given PCI device
+  * @dev: PCI device to handle.
+  */
+@@ -2189,6 +2291,7 @@ void pci_pm_init(struct pci_dev *dev)
+ 	dev->pm_cap = pm;
+ 	dev->d3_delay = PCI_PM_D3_WAIT;
+ 	dev->d3cold_delay = PCI_PM_D3COLD_WAIT;
++	dev->bridge_d3 = pci_bridge_d3_possible(dev);
+ 	dev->d3cold_allowed = true;
+ 
+ 	dev->d1_support = false;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index d0fb93481573..de3e95cf26c8 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -78,6 +78,7 @@ bool pci_dev_keep_suspended(struct pci_dev *dev);
+ void pci_dev_complete_resume(struct pci_dev *pci_dev);
+ void pci_config_pm_runtime_get(struct pci_dev *dev);
+ void pci_config_pm_runtime_put(struct pci_dev *dev);
++void pci_bridge_pm_update(struct pci_dev *dev, bool remove);
+ void pci_pm_init(struct pci_dev *dev);
+ void pci_ea_init(struct pci_dev *dev);
+ void pci_allocate_cap_save_buffers(struct pci_dev *dev);
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 8982026637d5..a06bfd3626cc 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -96,6 +96,8 @@ static void pci_remove_bus_device(struct pci_dev *dev)
+ 		dev->subordinate = NULL;
+ 	}
+ 
++	pci_bridge_pm_update(dev, true);
++
+ 	pci_destroy_dev(dev);
+ }
+ 
+diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
+index f0640b7a1c42..aafc1b093bc8 100644
+--- a/drivers/usb/host/xhci-pci.c
++++ b/drivers/usb/host/xhci-pci.c
+@@ -379,7 +379,7 @@ static int xhci_pci_suspend(struct usb_hcd *hcd, bool do_wakeup)
+ 	 * need to have the registers polled during D3, so avoid D3cold.
+ 	 */
+ 	if (xhci->quirks & XHCI_COMP_MODE_QUIRK)
+-		pdev->no_d3cold = true;
++		pci_enable_d3cold(pdev, false);
+ 
+ 	if (xhci->quirks & XHCI_PME_STUCK_QUIRK)
+ 		xhci_pme_quirk(hcd);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 004b8133417d..d8801587b4ca 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -296,6 +296,7 @@ struct pci_dev {
+ 	unsigned int	d2_support:1;	/* Low power state D2 is supported */
+ 	unsigned int	no_d1d2:1;	/* D1 and D2 are forbidden */
+ 	unsigned int	no_d3cold:1;	/* D3cold is forbidden */
++	unsigned int	bridge_d3:1;	/* Allow D3 for bridge */
+ 	unsigned int	d3cold_allowed:1;	/* D3cold is allowed by user */
+ 	unsigned int	mmio_always_on:1;	/* disallow turning off io/mem
+ 						   decoding during bar sizing */
+@@ -1085,6 +1086,7 @@ int pci_back_from_sleep(struct pci_dev *dev);
+ bool pci_dev_run_wake(struct pci_dev *dev);
+ bool pci_check_pme_status(struct pci_dev *dev);
+ void pci_pme_wakeup_bus(struct pci_bus *bus);
++void pci_enable_d3cold(struct pci_dev *dev, bool enable);
+ 
+ static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+ 				  bool enable)
+-- 
+2.8.0.rc3
+
