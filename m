@@ -1,164 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:35069 "EHLO
-	mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751431AbcDTDjr (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 23:39:47 -0400
-Received: by mail-pf0-f182.google.com with SMTP id n1so13456551pfn.2
-        for <linux-pci@vger.kernel.org>; Tue, 19 Apr 2016 20:39:46 -0700 (PDT)
-Subject: Re: [PATCH v8 29/45] powerpc/pci: Export pci_traverse_device_nodes()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-30-git-send-email-gwshan@linux.vnet.ibm.com>
- <5715C747.4080005@ozlabs.ru> <20160420012737.GB24704@gwshan>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
-	robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <5716F9FB.2010501@ozlabs.ru>
-Date: Wed, 20 Apr 2016 13:39:39 +1000
-MIME-Version: 1.0
-In-Reply-To: <20160420012737.GB24704@gwshan>
-Content-Type: text/plain; charset=koi8-r; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 13/60] PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
+Date: Thu,  7 Apr 2016 17:15:26 -0700
+Message-Id: <1460074573-7481-14-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/20/2016 11:27 AM, Gavin Shan wrote:
-> On Tue, Apr 19, 2016 at 03:51:03PM +1000, Alexey Kardashevskiy wrote:
->> On 02/17/2016 02:44 PM, Gavin Shan wrote:
->>> This renames traverse_pci_devices() to pci_traverse_device_nodes().
->>> The function traverses all subordinate device nodes of the specified
->>> one. Also, below cleanup applied to the function. No logical changes
->>> introduced.
->>>
->>>     * Rename "pre" to "fn".
->>>     * Avoid assignment in if condition reported from checkpatch.pl.
->>>
->>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>> ---
->>>   arch/powerpc/include/asm/ppc-pci.h   |  6 +++---
->>>   arch/powerpc/kernel/pci_dn.c         | 15 ++++++++++-----
->>>   arch/powerpc/platforms/pseries/msi.c |  4 ++--
->>>   3 files changed, 15 insertions(+), 10 deletions(-)
->>>
->>> diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
->>> index ca0c5bf..8753e4e 100644
->>> --- a/arch/powerpc/include/asm/ppc-pci.h
->>> +++ b/arch/powerpc/include/asm/ppc-pci.h
->>> @@ -33,9 +33,9 @@ extern struct pci_dev *isa_bridge_pcidev;	/* may be NULL if no ISA bus */
->>>   struct device_node;
->>>   struct pci_dn;
->>>
->>> -typedef void *(*traverse_func)(struct device_node *me, void *data);
->>
->>
->>
->> Why removing this typedef? Typedef's are good.
->>
->> Anyway,
->>
->
-> Could you please provide more details why it's good? I removed it
-> because it was used for only once.
+If any bridge up to root only have 32bit pref mmio, We don't need to
+treat device non-pref mmio64 as as pref mmio64.
 
+We need to move pci_bridge_check_ranges calling early.
+For parent bridges pref mmio BAR may not allocated by BIOS, res flags
+is still 0, we need to have it correct set before we check them for
+child device resources.
 
-I have some thoughts but never mind, nobody seems to care about this and 
-typedefs are considered bad by the CodingStyle.
+-v2: check all bus resources instead of just res[15].
 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+---
+ drivers/pci/setup-bus.c | 31 +++++++++++++++++++++++++++++--
+ 1 file changed, 29 insertions(+), 2 deletions(-)
 
->
->
->>
->> Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
->>
->>
->>
->>
->>> -void *traverse_pci_devices(struct device_node *start, traverse_func pre,
->>> -		void *data);
->>> +void *pci_traverse_device_nodes(struct device_node *start,
->>> +				void *(*fn)(struct device_node *, void *),
->>> +				void *data);
->>>   void *traverse_pci_dn(struct pci_dn *root,
->>>   		      void *(*fn)(struct pci_dn *, void *),
->>>   		      void *data);
->>> diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
->>> index ce10281..ecdccce 100644
->>> --- a/arch/powerpc/kernel/pci_dn.c
->>> +++ b/arch/powerpc/kernel/pci_dn.c
->>> @@ -372,8 +372,9 @@ EXPORT_SYMBOL_GPL(pci_remove_device_node_info);
->>>    * one of these nodes we also assume its siblings are non-pci for
->>>    * performance.
->>>    */
->>> -void *traverse_pci_devices(struct device_node *start, traverse_func pre,
->>> -		void *data)
->>> +void *pci_traverse_device_nodes(struct device_node *start,
->>> +				void *(*fn)(struct device_node *, void *),
->>> +				void *data)
->>>   {
->>>   	struct device_node *dn, *nextdn;
->>>   	void *ret;
->>> @@ -388,8 +389,11 @@ void *traverse_pci_devices(struct device_node *start, traverse_func pre,
->>>   		if (classp)
->>>   			class = of_read_number(classp, 1);
->>>
->>> -		if (pre && ((ret = pre(dn, data)) != NULL))
->>> -			return ret;
->>> +		if (fn) {
->>> +			ret = fn(dn, data);
->>> +			if (ret)
->>> +				return ret;
->>> +		}
->>>
->>>   		/* If we are a PCI bridge, go down */
->>>   		if (dn->child && ((class >> 8) == PCI_CLASS_BRIDGE_PCI ||
->>> @@ -411,6 +415,7 @@ void *traverse_pci_devices(struct device_node *start, traverse_func pre,
->>>   	}
->>>   	return NULL;
->>>   }
->>> +EXPORT_SYMBOL_GPL(pci_traverse_device_nodes);
->>>
->>>   static struct pci_dn *pci_dn_next_one(struct pci_dn *root,
->>>   				      struct pci_dn *pdn)
->>> @@ -487,7 +492,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
->>>   	}
->>>
->>>   	/* Update dn->phb ptrs for new phb and children devices */
->>> -	traverse_pci_devices(dn, add_pdn, phb);
->>> +	pci_traverse_device_nodes(dn, add_pdn, phb);
->>>   }
->>>
->>>   /**
->>> diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
->>> index 272e9ec..543a638 100644
->>> --- a/arch/powerpc/platforms/pseries/msi.c
->>> +++ b/arch/powerpc/platforms/pseries/msi.c
->>> @@ -305,7 +305,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
->>>   	memset(&counts, 0, sizeof(struct msi_counts));
->>>
->>>   	/* Work out how many devices we have below this PE */
->>> -	traverse_pci_devices(pe_dn, count_non_bridge_devices, &counts);
->>> +	pci_traverse_device_nodes(pe_dn, count_non_bridge_devices, &counts);
->>>
->>>   	if (counts.num_devices == 0) {
->>>   		pr_err("rtas_msi: found 0 devices under PE for %s\n",
->>> @@ -320,7 +320,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
->>>   	/* else, we have some more calculating to do */
->>>   	counts.requestor = pci_device_to_OF_node(dev);
->>>   	counts.request = request;
->>> -	traverse_pci_devices(pe_dn, count_spare_msis, &counts);
->>> +	pci_traverse_device_nodes(pe_dn, count_spare_msis, &counts);
->>>
->>>   	/* If the quota isn't an integer multiple of the total, we can
->>>   	 * use the remainder as spare MSIs for anyone that wants them. */
->>>
->>
->>
->> --
->> Alexey
->>
->
-
-
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index b3b1565..ffb1941 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -738,6 +738,29 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+ 	return -EINVAL;
+ }
+ 
++static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
++{
++	if (pci_is_root_bus(bus))
++		return true;
++
++	if (bus->self) {
++		int i;
++		bool found = false;
++		struct resource *res;
++
++		pci_bus_for_each_resource(bus, res, i)
++			if (res->flags & IORESOURCE_MEM_64) {
++				found = true;
++				break;
++			}
++
++		if (!found)
++			return false;
++	}
++
++	return pci_up_path_over_pref_mem64(bus->parent);
++}
++
+ int pci_resource_pref_compatible(const struct pci_dev *dev,
+ 				 struct resource *res)
+ {
+@@ -746,7 +769,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
+ 
+ 	if ((res->flags & IORESOURCE_MEM) &&
+ 	    (res->flags & IORESOURCE_MEM_64) &&
+-	    dev->on_all_pcie_path)
++	    dev->on_all_pcie_path &&
++	    pci_up_path_over_pref_mem64(dev->bus))
+ 		return res->flags | IORESOURCE_PREFETCH;
+ 
+ 	return res->flags;
+@@ -1239,6 +1263,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	struct resource *b_res;
+ 	int ret;
+ 
++	if (!pci_is_root_bus(bus) &&
++	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
++		pci_bridge_check_ranges(bus);
++
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		struct pci_bus *b = dev->subordinate;
+ 		if (!b)
+@@ -1266,7 +1294,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		break;
+ 
+ 	case PCI_CLASS_BRIDGE_PCI:
+-		pci_bridge_check_ranges(bus);
+ 		if (bus->self->is_hotplug_bridge) {
+ 			additional_io_size  = pci_hotplug_io_size;
+ 			additional_mem_size = pci_hotplug_mem_size;
 -- 
-Alexey
+1.8.4.5
