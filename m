@@ -1,136 +1,272 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:12106 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751848AbcDZUr6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Apr 2016 16:47:58 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Martin Mares <mj@ucw.cz>, linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCH] Add support for Downstream Port Containment
-Date: Tue, 26 Apr 2016 14:47:53 -0600
-Message-Id: <1461703673-29363-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 55/60] PCI, x86: Allocate from high in available window for MMIO
+Date: Thu,  7 Apr 2016 17:16:08 -0700
+Message-Id: <1460074573-7481-56-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI SIG added the Downstream Port Containment capability. This patch
-decodes this for lspci and defines the extended capability for setpci.
+Current code just use aligned start from avialable window, that could waste
+big alignment from start.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+We can align to the end from avialable window, so will save
+start with big align to others: like second try for pref mmio
+after first try already have non-pref assigned.
+
+pci tree:
+-[0000:00]-+-00.0
+           +-1c.0-[01-10]--+-00.0-[02-10]--+-01.0-[03]----00.0  PLX Technology, Inc. Device 87b1
+           |               |               +-02.0-[04-09]--+-00.0-[05-09]--+-01.0-[06]----00.0  PLX Technology, Inc. Device 87b1
+           |               |               |               |               +-02.0-[07]----00.0  Broadcom Corporation Device 8650
+           |               |               |               |               +-03.0-[08]--
+           |               |               |               |               \-04.0-[09]----00.0  Altera Corporation Device 0201
+           |               |               |               +-00.1  PLX Technology, Inc. Device 87d0
+           |               |               |               +-00.2  PLX Technology, Inc. Device 87d0
+           |               |               |               +-00.3  PLX Technology, Inc. Device 87d0
+           |               |               |               \-00.4  PLX Technology, Inc. Device 87d0
+           |               |               +-03.0-[0a-0f]--+-00.0-[0b-0f]--+-01.0-[0c]----00.0  PLX Technology, Inc. Device 87b1
+           |               |               |               |               +-02.0-[0d]----00.0  Broadcom Corporation Device 8650
+           |               |               |               |               +-03.0-[0e]--
+           |               |               |               |               \-04.0-[0f]----00.0  Altera Corporation Device 0201
+           |               |               |               +-00.1  PLX Technology, Inc. Device 87d0
+           |               |               |               +-00.2  PLX Technology, Inc. Device 87d0
+           |               |               |               +-00.3  PLX Technology, Inc. Device 87d0
+           |               |               |               \-00.4  PLX Technology, Inc. Device 87d0
+           |               |               \-04.0-[10]--
+           |               +-00.1  PLX Technology, Inc. Device 87d0
+           |               +-00.2  PLX Technology, Inc. Device 87d0
+           |               +-00.3  PLX Technology, Inc. Device 87d0
+           |               \-00.4  PLX Technology, Inc. Device 87d0
+           +-1c.3-[11]----00.0
+
+hotplug device under 0000:02:03.0
+
+before the patch:
+
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 8: assigned [mem 0xb0000000-0xb01fffff]  **************
+pci 0000:0a:00.0: BAR 0: assigned [mem 0xb0200000-0xb023ffff]
+pci 0000:0a:00.1: BAR 0: assigned [mem 0xb0240000-0xb0241fff]
+pci 0000:0a:00.2: BAR 0: assigned [mem 0xb0242000-0xb0243fff]
+pci 0000:0a:00.3: BAR 0: assigned [mem 0xb0244000-0xb0245fff]
+pci 0000:0a:00.4: BAR 0: assigned [mem 0xb0246000-0xb0247fff]
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0b:01.0: BAR 8: assigned [mem 0xb0000000-0xb00fffff]
+pci 0000:0b:02.0: BAR 8: assigned [mem 0xb0100000-0xb01fffff]
+pci 0000:0c:00.0: BAR 0: assigned [mem 0xb0000000-0xb003ffff]
+pci 0000:0b:01.0: PCI bridge to [bus 0c]
+pci 0000:0b:01.0:   bridge window [mem 0xb0000000-0xb00fffff]
+pci 0000:0d:00.0: BAR 0: assigned [mem 0xb0100000-0xb013ffff 64bit]
+pci 0000:0b:02.0: PCI bridge to [bus 0d]
+pci 0000:0b:02.0:   bridge window [mem 0xb0100000-0xb01fffff]
+pci 0000:0b:03.0: PCI bridge to [bus 0e]
+pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
+pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
+pci 0000:0b:04.0: PCI bridge to [bus 0f]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
+pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb01fffff]
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
+pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
+pcieport 0000:02:03.0:   bridge window [mem 0x80200000-0x803fffff 64bit pref]
+PCI: No. 2 try to assign unassigned res
+pcieport 0000:02:03.0: resource 9 [mem 0x80200000-0x803fffff 64bit pref] released
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x02100000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x02100000 64bit pref]   **************
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x02100000 64bit pref]   **************
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
+pci 0000:0b:01.0: PCI bridge to [bus 0c]
+pci 0000:0b:01.0:   bridge window [mem 0xb0000000-0xb00fffff]
+pci 0000:0b:02.0: PCI bridge to [bus 0d]
+pci 0000:0b:02.0:   bridge window [mem 0xb0100000-0xb01fffff]
+pci 0000:0b:03.0: PCI bridge to [bus 0e]
+pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
+pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
+pci 0000:0b:04.0: PCI bridge to [bus 0f]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
+pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb01fffff]
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
+pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
+
+
+after the patch:
+
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 8: assigned [mem 0xb2300000-0xb24fffff]   *************
+pci 0000:0a:00.0: BAR 0: assigned [mem 0xb22c0000-0xb22fffff]
+pci 0000:0a:00.1: BAR 0: assigned [mem 0xb22be000-0xb22bffff]
+pci 0000:0a:00.2: BAR 0: assigned [mem 0xb22bc000-0xb22bdfff]
+pci 0000:0a:00.3: BAR 0: assigned [mem 0xb22ba000-0xb22bbfff]
+pci 0000:0a:00.4: BAR 0: assigned [mem 0xb22b8000-0xb22b9fff]
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0b:01.0: BAR 8: assigned [mem 0xb2400000-0xb24fffff]
+pci 0000:0b:02.0: BAR 8: assigned [mem 0xb2300000-0xb23fffff]
+pci 0000:0c:00.0: BAR 0: assigned [mem 0xb24c0000-0xb24fffff]
+pci 0000:0b:01.0: PCI bridge to [bus 0c]
+pci 0000:0b:01.0:   bridge window [mem 0xb2400000-0xb24fffff]
+pci 0000:0d:00.0: BAR 0: assigned [mem 0xb23c0000-0xb23fffff 64bit]
+pci 0000:0b:02.0: PCI bridge to [bus 0d]
+pci 0000:0b:02.0:   bridge window [mem 0xb2300000-0xb23fffff]
+pci 0000:0b:03.0: PCI bridge to [bus 0e]
+pci 0000:0f:00.0: BAR 0: no space for [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 0: failed to assign [mem size 0x02000000 64bit pref]
+pci 0000:0f:00.0: BAR 2: no space for [mem size 0x00010000 64bit pref]
+pci 0000:0f:00.0: BAR 2: failed to assign [mem size 0x00010000 64bit pref]
+pci 0000:0b:04.0: PCI bridge to [bus 0f]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
+pci 0000:0a:00.0:   bridge window [mem 0xb2300000-0xb24fffff]
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
+pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
+pcieport 0000:02:03.0:   bridge window [mem 0x9fc00000-0x9fdfffff 64bit pref]
+PCI: No. 2 try to assign unassigned res
+pcieport 0000:02:03.0: resource 9 [mem 0x9fc00000-0x9fdfffff 64bit pref] released
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: no space for [mem size 0x02100000 64bit pref]
+pcieport 0000:02:03.0: BAR 9: failed to assign [mem size 0x02100000 64bit pref]
+pci 0000:0a:00.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0a:00.0: BAR 9: assigned [mem 0xb0000000-0xb20fffff 64bit pref]  *********
+pci 0000:0b:04.0: BAR 9: no space for [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: failed to assign [mem size 0x03000000 64bit pref]
+pci 0000:0b:04.0: BAR 9: assigned [mem 0xb0000000-0xb20fffff 64bit pref]  *********
+pci 0000:0b:01.0: PCI bridge to [bus 0c]
+pci 0000:0b:01.0:   bridge window [mem 0xb2400000-0xb24fffff]
+pci 0000:0b:02.0: PCI bridge to [bus 0d]
+pci 0000:0b:02.0:   bridge window [mem 0xb2300000-0xb23fffff]
+pci 0000:0b:03.0: PCI bridge to [bus 0e]
+pci 0000:0f:00.0: BAR 0: assigned [mem 0xb0000000-0xb1ffffff 64bit pref]   ********
+pci 0000:0f:00.0: BAR 2: assigned [mem 0xb20f0000-0xb20fffff 64bit pref]   ********
+pci 0000:0b:04.0: PCI bridge to [bus 0f]
+pci 0000:0b:04.0:   bridge window [mem 0xb0000000-0xb20fffff 64bit pref]
+pci 0000:0a:00.0: PCI bridge to [bus 0b-0f]
+pci 0000:0a:00.0:   bridge window [mem 0xb2300000-0xb24fffff]
+pci 0000:0a:00.0:   bridge window [mem 0xb0000000-0xb20fffff 64bit pref]
+pcieport 0000:02:03.0: PCI bridge to [bus 0a-0f]
+pcieport 0000:02:03.0:   bridge window [io  0x2000-0x2fff]
+pcieport 0000:02:03.0:   bridge window [mem 0xb0000000-0xb24fffff]
+
+So we allocate high for 0a:00.0 and etc, and leave low range like 0xb0000000 to
+0b:04.0 and 0f:00.0
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- lib/header.h | 26 ++++++++++++++++++++++++++
- ls-ecaps.c   | 34 ++++++++++++++++++++++++++++++++++
- setpci.c     |  1 +
- 3 files changed, 61 insertions(+)
+ arch/x86/pci/i386.c     | 20 ++++++++++++++++++++
+ drivers/pci/setup-bus.c | 11 ++++++++++-
+ include/linux/pci.h     |  3 +++
+ 3 files changed, 33 insertions(+), 1 deletion(-)
 
-diff --git a/lib/header.h b/lib/header.h
-index b8f7dc1..b7cbc9d 100644
---- a/lib/header.h
-+++ b/lib/header.h
-@@ -230,6 +230,7 @@
- #define PCI_EXT_CAP_ID_LTR	0x18	/* Latency Tolerance Reporting */
- #define PCI_EXT_CAP_ID_PASID	0x1b	/* Process Address Space ID */
- #define PCI_EXT_CAP_ID_L1PM	0x1e	/* L1 PM Substates */
-+#define PCI_EXT_CAP_ID_DPC	0x1d	/* Downstream Port Containment */
- 
- /*** Definitions of capabilities ***/
- 
-@@ -1090,6 +1091,31 @@
- #define  PCI_PASID_CTRL_ENABLE	0x01	/* Enable bit */
- #define  PCI_PASID_CTRL_EXEC	0x02	/* Exec permissions Enable */
- #define  PCI_PASID_CTRL_PRIV	0x04	/* Privilege Mode Enable */
-+
-+#define PCI_DPC_CAP		4	/* DPC Capability */
-+#define  PCI_DPC_CAP_INT_MSG(x) ((x) & 0x1f)	/* DPC Interrupt Message Number */
-+#define  PCI_DPC_CAP_RP_EXT	0x20		/* DPC Root Port Extentions */
-+#define  PCI_DPC_CAP_TLP_BLOCK	0x40		/* DPC Poisoned TLP Egress Blocking */
-+#define  PCI_DPC_CAP_SW_TRIGGER	0x80		/* DPC Software Trigger */
-+#define  PCI_DPC_CAP_RP_LOG(x)	(((x) >> 8) & 0xf) /* DPC RP PIO Log Size */
-+#define  PCI_DPC_CAP_DL_ACT_ERR	0x1000		/* DPC DL_Active ERR_COR Signal */
-+#define PCI_DPC_CTL		6	/* DPC Control */
-+#define  PCI_DPC_CTL_TRIGGER(x) ((x) & 0x3)	/* DPC Trigger Enable */
-+#define  PCI_DPC_CTL_CMPL	0x4		/* DPC Completion Control */
-+#define  PCI_DPC_CTL_INT	0x8		/* DPC Interrupt Enabled */
-+#define  PCI_DPC_CTL_ERR_COR	0x10		/* DPC ERR_COR Enabled */
-+#define  PCI_DPC_CTL_TLP	0x20		/* DPC Poisoned TLP Egress Blocking Enabled */
-+#define  PCI_DPC_CTL_SW_TRIGGER	0x40		/* DPC Software Trigger */
-+#define  PCI_DPC_CTL_DL_ACTIVE	0x80		/* DPC DL_Active ERR_COR Enable */
-+#define PCI_DPC_STATUS		8	/* DPC STATUS */
-+#define  PCI_DPC_STS_TRIGGER	0x01		/* DPC Trigger Status */
-+#define  PCI_DPC_STS_REASON(x) (((x) >> 1) & 0x3) /* DPC Trigger Reason */
-+#define  PCI_DPC_STS_INT	0x08		/* DPC Interrupt Status */
-+#define  PCI_DPC_STS_RP_BUSY	0x10		/* DPC Root Port Busy */
-+#define  PCI_DPC_STS_TRIGGER_EXT(x) (((x) >> 5) & 0x3) /* Trigger Reason Extention */
-+#define  PCI_DPC_STS_PIO_FEP(x) (((x) >> 8) & 0x1f) /* DPC PIO First Error Pointer */
-+#define PCI_DPC_SOURCE		10	/* DPC Source ID */
-+
- /*
-  * The PCI interface treats multi-function devices as independent
-  * devices.  The slot/function address of each device is encoded
-diff --git a/ls-ecaps.c b/ls-ecaps.c
-index 8298435..e02c1be 100644
---- a/ls-ecaps.c
-+++ b/ls-ecaps.c
-@@ -137,6 +137,37 @@ cap_aer(struct device *d, int where)
- 
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index cf296f5..6121ef3 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -128,6 +128,24 @@ static void __init pcibios_fw_addr_list_del(void)
+ 	pcibios_fw_addr_done = true;
  }
  
-+static void cap_dpc(struct device *d, int where)
++resource_size_t
++pcibios_align_end_resource(void *data, const struct resource *res,
++			resource_size_t size, resource_size_t align)
 +{
-+  u16 l;
++	resource_size_t start = res->start;
 +
-+  printf("Downstream Port Containment\n");
-+  if (verbose < 2)
-+    return;
++	/* Take near end */
++	if (res->end + 1 > size) {
++		resource_size_t new_start;
 +
-+  if (!config_fetch(d, where + PCI_DPC_CAP, 8))
-+    return;
++		new_start = round_down(res->end + 1 - size, align);
++		if (new_start > start)
++			start = new_start;
++	}
 +
-+  l = get_conf_word(d, where + PCI_DPC_CAP);
-+  printf("\t\tDpcCap:\tINT Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
-+    PCI_DPC_CAP_INT_MSG(l), FLAG(l, PCI_DPC_CAP_RP_EXT), FLAG(l, PCI_DPC_CAP_TLP_BLOCK),
-+    FLAG(l, PCI_DPC_CAP_SW_TRIGGER), PCI_DPC_CAP_RP_LOG(l), FLAG(l, PCI_DPC_CAP_DL_ACT_ERR));
-+
-+  l = get_conf_word(d, where + PCI_DPC_CTL);
-+  printf("\t\tDpcCtl:\tTrigger:%x Cmpl%c INT%c ErrCor%c PoisonedTLP%c SwTrigger%c DL_ActiveErr%c\n",
-+    PCI_DPC_CTL_TRIGGER(l), FLAG(l, PCI_DPC_CTL_CMPL), FLAG(l, PCI_DPC_CTL_INT),
-+    FLAG(l, PCI_DPC_CTL_ERR_COR), FLAG(l, PCI_DPC_CTL_TLP), FLAG(l, PCI_DPC_CTL_SW_TRIGGER),
-+    FLAG(l, PCI_DPC_CTL_DL_ACTIVE));
-+
-+  l = get_conf_word(d, where + PCI_DPC_STATUS);
-+  printf("\t\tDpcSta:\tTrigger%c Reason:%02x INT%c RPBusy%c TriggerExt:%02x RP PIO ErrPtr:%02x\n",
-+    FLAG(l, PCI_DPC_STS_TRIGGER), PCI_DPC_STS_REASON(l), FLAG(l, PCI_DPC_STS_INT),
-+    FLAG(l, PCI_DPC_STS_RP_BUSY), PCI_DPC_STS_TRIGGER_EXT(l), PCI_DPC_STS_PIO_FEP(l));
-+
-+  l = get_conf_word(d, where + PCI_DPC_SOURCE);
-+  printf("\t\tSource:\t%04x\n", l);
++	return start;
 +}
 +
- static void
- cap_acs(struct device *d, int where)
- {
-@@ -580,6 +611,9 @@ show_ext_caps(struct device *d)
- 	  case PCI_EXT_CAP_ID_AER:
- 	    cap_aer(d, where);
- 	    break;
-+	  case PCI_EXT_CAP_ID_DPC:
-+	    cap_dpc(d, where);
-+	    break;
- 	  case PCI_EXT_CAP_ID_VC:
- 	  case PCI_EXT_CAP_ID_VC2:
- 	    cap_vc(d, where);
-diff --git a/setpci.c b/setpci.c
-index acf7689..e77dc13 100644
---- a/setpci.c
-+++ b/setpci.c
-@@ -301,6 +301,7 @@ static const struct reg_name pci_reg_names[] = {
-   { 0x2000e,	0, 0, "ECAP_ARI" },
-   { 0x2000f,	0, 0, "ECAP_ATS" },
-   { 0x20010,	0, 0, "ECAP_SRIOV" },
-+  { 0x2001d,	0, 0, "ECAP_DPC" },
-   {       0,    0, 0, NULL }
- };
+ /*
+  * We need to avoid collisions with `mirrored' VGA ports
+  * and other strange ISA hardware, so we always want the
+@@ -154,6 +172,8 @@ pcibios_align_resource(void *data, const struct resource *res,
+ 		if (start & 0x300)
+ 			start = (start + 0x3ff) & ~0x3ff;
+ 	} else if (res->flags & IORESOURCE_MEM) {
++		start = pcibios_align_end_resource(data, res, size, align);
++
+ 		/* The low 1MB range is reserved for ISA cards */
+ 		if (start < BIOS_END)
+ 			start = BIOS_END;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 65a41e7..c282b86 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1318,6 +1318,15 @@ static void sort_align_test(struct list_head *head)
+ 	}
+ }
  
++resource_size_t __weak pcibios_align_end_resource(void *data,
++					  const struct resource *res,
++					  resource_size_t size,
++					  resource_size_t align)
++{
++	/* default is not aligned to end */
++	return res->start;
++}
++
+ static bool is_align_size_good(struct list_head *head,
+ 			resource_size_t min_align, resource_size_t size,
+ 			resource_size_t start)
+@@ -1335,7 +1344,7 @@ static bool is_align_size_good(struct list_head *head,
+ 	list_for_each_entry(p, head, list)
+ 		if (allocate_resource(&root, &p->res, p->size,
+ 				0, (resource_size_t)-1ULL,
+-				p->align, NULL, NULL))
++				p->align, pcibios_align_end_resource, NULL))
+ 			return false;
+ 
+ 	return true;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d7b1ceb..41d06ce 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -800,6 +800,9 @@ char *pcibios_setup(char *str);
+ resource_size_t pcibios_align_resource(void *, const struct resource *,
+ 				resource_size_t,
+ 				resource_size_t);
++resource_size_t pcibios_align_end_resource(void *, const struct resource *,
++				resource_size_t,
++				resource_size_t);
+ void pcibios_update_irq(struct pci_dev *, int irq);
+ 
+ /* Weak but can be overriden by arch */
 -- 
-2.7.2
-
+1.8.4.5
