@@ -1,74 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:26179 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750963AbcDGIOM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 04:14:12 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Pratyush Anand <pratyush.anand@gmail.com>
-CC: Jisheng Zhang <jszhang@marvell.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH v2] PCI: designware: move remaining rc setup code to
- dw_pcie_setup_rc()
-Date: Thu, 7 Apr 2016 08:14:00 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED43F7E@lhreml503-mbs>
-References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
-	<EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
- <CAHM4w1khRn4xbWbj5Qk-p5DMGjEdWfgr1W1OSsXPFVaYenFa8A@mail.gmail.com>
-In-Reply-To: <CAHM4w1khRn4xbWbj5Qk-p5DMGjEdWfgr1W1OSsXPFVaYenFa8A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 33/60] PCI: Treat ROM resource as optional during realloc
+Date: Thu,  7 Apr 2016 17:15:46 -0700
+Message-Id: <1460074573-7481-34-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgUHJhdHl1c2gNCg0KTWFueSB0aGFua3MgZm9yIHF1aWNrIHJlcGx5aW5nDQoNCj4gLS0tLS1P
-cmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUHJhdHl1c2ggQW5hbmQgW21haWx0bzpwcmF0
-eXVzaC5hbmFuZEBnbWFpbC5jb21dDQo+IFNlbnQ6IDA3IEFwcmlsIDIwMTYgMDc6NTkNCj4gVG86
-IEdhYnJpZWxlIFBhb2xvbmkNCj4gQ2M6IEppc2hlbmcgWmhhbmc7IGppbmdvb2hhbjFAZ21haWwu
-Y29tOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZzsg
-bGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLQ0KPiBrZXJuZWxAbGlzdHMu
-aW5mcmFkZWFkLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYyXSBQQ0k6IGRlc2lnbndhcmU6
-IG1vdmUgcmVtYWluaW5nIHJjIHNldHVwIGNvZGUNCj4gdG8gZHdfcGNpZV9zZXR1cF9yYygpDQo+
-IA0KPiBIaSBHYWIsDQo+IA0KPiBUaGFua3MgZm9yIGJyaW5naW5nIGl0Lg0KPiANCj4gDQo+IE9u
-IFdlZCwgQXByIDYsIDIwMTYgYXQgODoyMCBQTSwgR2FicmllbGUgUGFvbG9uaQ0KPiA8Z2Ficmll
-bGUucGFvbG9uaUBodWF3ZWkuY29tPiB3cm90ZToNCj4gPiBIaSwgc29ycnkgdG8gYmUgbGF0ZSBv
-biB0aGlzDQo+ID4NCj4gPj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPj4gRnJvbTog
-bGludXgta2VybmVsLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LWtlcm5lbC0N
-Cj4gPj4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgSmlzaGVuZyBaaGFuZw0K
-PiA+PiBTZW50OiAxNiBNYXJjaCAyMDE2IDExOjQxDQo+ID4+IFRvOiBqaW5nb29oYW4xQGdtYWls
-LmNvbTsgcHJhdHl1c2guYW5hbmRAZ21haWwuY29tOw0KPiBiaGVsZ2Fhc0Bnb29nbGUuY29tDQo+
-ID4+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJu
-ZWwub3JnOyBsaW51eC0NCj4gYXJtLQ0KPiA+PiBrZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsg
-SmlzaGVuZyBaaGFuZw0KPiA+PiBTdWJqZWN0OiBbUEFUQ0ggdjJdIFBDSTogZGVzaWdud2FyZTog
-bW92ZSByZW1haW5pbmcgcmMgc2V0dXAgY29kZSB0bw0KPiA+PiBkd19wY2llX3NldHVwX3JjKCkN
-Cj4gPj4NCj4gPj4gZHdfcGNpZV9zZXR1cF9yYygpLCBhcyBpdHMgbmFtZSBpbmRpY2F0ZXMsIHNl
-dHVwcyB0aGUgUkMuIEJ1dA0KPiBjdXJyZW50DQo+ID4+IGR3X3BjaWVfaG9zdF9pbml0KCkgYWxz
-byBjb250YWlucyBzb21lIG5lY2Vzc2FyeSByYyBzZXR1cCBjb2RlLg0KPiA+Pg0KPiA+PiBBbm90
-aGVyIHJlYXNvbjogdGhlIGhvc3QgbWF5IGxvc3QgcG93ZXIgZHVyaW5nIHN1c3BlbmQgdG8gcmFt
-LCB0aGUNCj4gUkMNCj4gPj4gbmVlZCB0byBiZSByZS1zZXR1cCBhZnRlciByZXN1bWUuIFRoZSBy
-YyBjYW4ndCBiZSBjb3JyZWN0bHkgcmVzdW1lZA0KPiA+PiB3aXRob3V0IHRoZSByYyBzZXR1cCBj
-b2RlIGluIGR3X3BjaWVfaG9zdF9pbml0KCkuDQo+ID4+DQo+ID4+IFNvIHRoaXMgcGF0Y2ggbW92
-ZXMgdGhlIGNvZGUgdG8gZHdfcGNpZV9zZXR1cF9yYygpIHRvIGFkZHJlc3MgdGhlDQo+IGFib3Zl
-DQo+ID4+IHR3byBpc3N1ZXMuIEFmdGVyIHRoaXMgcGF0Y2gsIGVhY2ggcGNpZSBkZXNpZ253YXJl
-IGRyaXZlciB1c2Vycw0KPiBjb3VsZA0KPiA+PiBjYWxsIGR3X3BjaWVfc2V0dXBfcmMoKSB0byBy
-ZS1zZXR1cCByYyB3aGVuIHJlc3VtZSBiYWNrLg0KPiA+DQo+ID4gSSB0aGluayB0aGlzIHBhdGNo
-IGJyZWFrcyB0aGUgSGlzaWxpY29uIGRyaXZlci4uLg0KPiA+DQo+ID4gT3VyIGRyaXZlciBwZXJm
-b3JtcyBsaW5rdXAgc2V0dXAgaW4gVUVGSSB0aGVyZWZvcmUgd2UgZG8gbm90IGNhbGwNCj4gPiBk
-d19wY2llX3NldHVwX3JjKCksIHdlIG9ubHkgY2FsbCBkd19wY2llX2hvc3RfaW5pdCgpLg0KPiA+
-DQo+ID4gTWF5YmUgYmV0dGVyIHRvIGdyb3VwIHRoZSBwYXJ0IG9mIGNvZGUgdG8gYmUgbW92ZWQg
-aW4gYXMgc2VwYXJhdGUNCj4gPiBmdW5jdGlvbi4uLg0KPiA+DQo+ID4gVGhhbmtzIGFuZCBzb3Jy
-eSBmb3IgbGF0ZSByZXBseS4NCj4gPg0KPiANCj4gSSBhbSBqdXN0IHdvbmRlcmluZywgc2hvdWxk
-IG4ndCB0aGVuIHdoYXQgZXZlciB3ZSBkbyBpbg0KPiBkd19wY2llX3NldHVwX3JjKCkgYmUgZG9u
-ZSBpbiB5b3VyIGJvb3QgbG9hZGVyIGFuZCBub3QganVzdCBsaW5rIHVwLg0KDQpDdXJyZW50bHkg
-dGhlIEhpU2lsaWNvbiBkcml2ZXIgZG9lcyBub3QgY2FsbCBkd19wY2llX3NldHVwX3JjKCkgYXQg
-YWxsOw0Kc28gZXZlcnl0aGluZyBpcyBkb25lIGluIGR3X3BjaWVfc2V0dXBfcmMoKSBpcyBkb25l
-IGluIGJvb3Rsb2FkZXIuDQoNCkkgZ3Vlc3MgeW91ciBxdWVzdGlvbiBpcyBpZiB3ZSBjYW4gZXhl
-Y3V0ZSBpbiBib290bG9hZGVyIHRoZSBwYXJ0IG9mDQpjb2RlIHRoZSB0aGlzIHBhdGNoIGhhcyBt
-b3ZlZCB0byBpbiAiZHdfcGNpZV9zZXR1cF9yYygpIi4gSSB0aGluayB0aGUNCnByb2JsZW0gaGVy
-ZSBpcyB0aGF0IGV2ZW4gaWYgaXQgd2FzIHBvc3NpYmxlIHdlIHdvdWxkIGJyZWFrIGJhY2t3YXJk
-DQpjb21wYXRpYmlsaXR5IHdpdGggcHJldmlvdXMgYm9vdGxvYWRlcnMuLi4NCg0KVGhhbmtzDQoN
-CkdhYiANCg0KDQo+IA0KPiB+UHJhdHl1c2gNCg==
+Current on realloc path, we just ignore ROM resource if we can not assign
+them in first try.
+
+Treat ROM resources as optional resources,so try to allocate them together
+with required ones, if can not assign them, could go with other required
+resources only, and try to allocate them second time in expand path.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 37 ++++++++++++++++++++-----------------
+ 1 file changed, 20 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 9cd0411..f9e6a00 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -376,18 +376,10 @@ static void assign_requested_resources_sorted(struct list_head *head,
+ 		idx = res - &dev_res->dev->resource[0];
+ 		if (resource_size(res) &&
+ 		    pci_assign_resource(dev_res->dev, idx)) {
+-			if (fail_head) {
+-				/*
+-				 * if the failed res is for ROM BAR, and it will
+-				 * be enabled later, don't add it to the list
+-				 */
+-				if (!((idx == PCI_ROM_RESOURCE) &&
+-				      (!(res->flags & IORESOURCE_ROM_ENABLE))))
+-					add_to_list(fail_head,
+-						    dev_res->dev, res,
+-						    0 /* don't care */,
+-						    0 /* don't care */);
+-			}
++			if (fail_head)
++				add_to_list(fail_head, dev_res->dev, res,
++					    0 /* don't care */,
++					    0 /* don't care */);
+ 			reset_resource(res);
+ 		}
+ 	}
+@@ -1185,6 +1177,19 @@ out:
+ 	return good_align;
+ }
+ 
++static inline bool is_optional(int i)
++{
++
++	if (i == PCI_ROM_RESOURCE)
++		return true;
++
++#ifdef CONFIG_PCI_IOV
++	if (i >= PCI_IOV_RESOURCES && i <= PCI_IOV_RESOURCE_END)
++		return true;
++#endif
++
++	return false;
++}
+ /**
+  * pbus_size_mem() - size the memory window of a given bus
+  *
+@@ -1243,10 +1248,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 
+ 			r_size = resource_size(r);
+ 			align = pci_resource_alignment(dev, r);
+-#ifdef CONFIG_PCI_IOV
+-			/* put SRIOV requested res to the optional list */
+-			if (realloc_head && i >= PCI_IOV_RESOURCES &&
+-					i <= PCI_IOV_RESOURCE_END) {
++			/* put SRIOV/ROM res to realloc list */
++			if (realloc_head && is_optional(i)) {
+ 				add_to_align_test_list(&align_test_add_list,
+ 							align, r_size);
+ 				r->end = r->start - 1;
+@@ -1256,7 +1259,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 					max_add_align = align;
+ 				continue;
+ 			}
+-#endif
++
+ 			if (align > (1ULL<<37)) { /*128 Gb*/
+ 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
+ 					i, r, (unsigned long long) align);
+-- 
+1.8.4.5
