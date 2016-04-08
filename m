@@ -1,61 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 51/60] PCI: Allow bridge optional only io port resource required size to be 0
-Date: Thu,  7 Apr 2016 17:16:04 -0700
-Message-Id: <1460074573-7481-52-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1on0147.outbound.protection.outlook.com ([157.56.110.147]:56320
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758920AbcDHV65 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Apr 2016 17:58:57 -0400
+From: Casey Leedom <leedom@chelsio.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+	Hannes Reinecke <hare@suse.com>,
+	Hariprasad S <hariprasad@chelsio.com>
+Subject: 4.6-rc2 regression with commit 104daa71b396: check VPD access offset
+ against length
+Date: Fri, 8 Apr 2016 21:58:53 +0000
+Message-ID: <BY2PR12MB06480E12BB40936FAAEDE01EC8910@BY2PR12MB0648.namprd12.prod.outlook.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When there is no child device under the non hotplug bridge,
-We can use 0 for required size, and do not use old size as required size.
+[[ I apologize if this is a duplicate message.  I've been struggling all
+    afternoon to get a message successfully delivered to the linux-pci
+    list.
+    -- Casey ]]
 
-That will save some io port range for other bridges, as BIOS could do
-some partial assign, and we want to use those not used io port range.
+  kernel.org commit 104daa71b396 added a check to make sure that efforts to
+read/write the VPD wouldn't extend past the computed length of the VPD.
+Later, kernel.org commit 408641e93aa5 folded the pci_vpd_pci22 into
+struct pci_vpd so things moved around a bit after that and an error return
+got changed into a silent failure instead of -EINVAL.
 
-When there is child device, size will not be 0.
-when the bridge supports hotplug, min_size will not be 0.
-So they will still honor the old size as required size.
+  The problem is that the previous pci_vpd_pci22_read() didn't check for a read with
+a VPD Offset > VPD Length and the new pci_vpd_read() is checking that.  Worse
+yet, when a VPD Offset is greater than the recorded VPD Length, it simply
+returns 0 rather than -EINVAL.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+  The problem is stemming from the fact that the Chelsio adapters actually have
+two VPD structures stored in the VPD.  An abbreviated on at Offset 0x0 and the
+complete VPD at Offset 0x400.  The abbreviated one only contains the PN, SN and
+EC Keywords, while the complete VPD contains those plus various adapter
+constants contained in V0, V1, etc.  And it also contains the Base Ethernet MAC
+Address in the "NA" Keyword which the cxgb4 driver needs when it can't contact
+the adapter firmware.  (We don't have the "NA" Keywork in the VPD Structure at
+Offset 0x0 because that's not an allowed VPD Keyword in the PCI-E 3.0
+specification.)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index b071035..28dfd8e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1229,8 +1229,9 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 	size = size_aligned_for_isa(size);
- 	size += size1;
--	size0 = calculate_size(size, min_size,
--			resource_size(b_res), min_align);
-+	if (size || min_size)
-+		size0 = calculate_size(size, min_size,
-+					resource_size(b_res), min_align);
- 	sum_add_size = size_aligned_for_isa(sum_add_size);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
-@@ -1246,7 +1247,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		return;
- 	}
- 
--	b_res->start = min_align;
-+	b_res->start = size0 ? min_align : 0;
- 	b_res->end = b_res->start + size0 - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--- 
-1.8.4.5
+  With the new code, the computed size of the VPD is 0x200 and so our efforts
+to read the VPD at Offset 0x400 silently fails.  We check the result of the
+read looking for a signature 0x82 byte but we're checking against random stack
+garbage.
+
+  The end result is that the cxgb4 driver now fails the PCI-E Probe.
+
+  Again,  apologies if I'm not communicating this to the Linux Development
+Community properly -- I'm usually not allowed out of my cage.
+
+Casey
