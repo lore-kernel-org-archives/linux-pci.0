@@ -1,73 +1,43 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20160405232712.GI15353@localhost>
-References: <cover.1458126755.git.lukas@wunner.de> <d30491f2c4c1c6d28c78c5883820f9dc28c010d9.1458126755.git.lukas@wunner.de>
- <20160317150320.GA22769@localhost> <20160320131135.GA29174@wunner.de>
- <20160320171246.GB16658@kroah.com> <20160405232712.GI15353@localhost>
-From: Andreas Noever <andreas.noever@gmail.com>
-Date: Fri, 8 Apr 2016 00:42:21 +0200
-Message-ID: <CAMxnaaW5hFw_wb-tAYofyj-+tP--Ehz1Rw6MNVzXrYKwAxCeEA@mail.gmail.com>
-Subject: Re: [RFC 1/4] PCI: Add Thunderbolt device IDs
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:34865 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751221AbcDHGZL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Apr 2016 02:25:11 -0400
+Message-ID: <1460096669.31740.19.camel@kernel.crashing.org>
+Subject: Re: [PATCH v11 44/60] PCI: Add alt_size ressource allocation support
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-acpi@vger.kernel.org,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Matthew Garrett <mjg59@srcf.ucam.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date: Fri, 08 Apr 2016 16:24:29 +1000
+In-Reply-To: <CA+55aFyhXkzU_-RXNKoh83gz8XKwNqdJmGATXa+-MhT7bzvn2w@mail.gmail.com>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+	 <1460074573-7481-45-git-send-email-yinghai@kernel.org>
+	 <CA+55aFyhXkzU_-RXNKoh83gz8XKwNqdJmGATXa+-MhT7bzvn2w@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Thu, 2016-04-07 at 17:56 -0700, Linus Torvalds wrote:
+> Maybe the kernel should just accept the smaller alignment. If the
+> minimum alignment we use is bigger than necessary, then we're just
+> wrong about it, and perhaps we should just use the smaller alignment
+> that the bios used.
+> 
+> So instead of adding this notion of alternate alignment, maybe we
+> should just not be so uptight about our own minimum alignment
+> requirements?
 
-I think merging thunderbolt through your tree makes sense, so that is
-fine with me!
+On the other hand it's nice to align things at page boundaries when
+these resources can possibly be mapped by user space or KVM guests...
 
-Best,
-Andreas
+Cheers,
+Ben.
 
-On Wed, Apr 6, 2016 at 1:27 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Sun, Mar 20, 2016 at 10:12:46AM -0700, Greg Kroah-Hartman wrote:
->> On Sun, Mar 20, 2016 at 02:11:35PM +0100, Lukas Wunner wrote:
->> > Hi Bjorn,
->> >
->> > On Thu, Mar 17, 2016 at 10:03:20AM -0500, Bjorn Helgaas wrote:
->> > > On Wed, Mar 16, 2016 at 03:50:35PM +0100, Lukas Wunner wrote:
->> > > > Gen 1 and 2 chips use the same ID for NHI, bridges and switch.
->> > > > Gen 3 chips and onward use a distinct ID for the NHI.
->> > >
->> > > I assume this is strictly using #defines instead of bare numbers and
->> > > hence "no functional change intended."
->> > >
->> > > > Cc: Andreas Noever <andreas.noever@gmail.com>
->> > > > Signed-off-by: Lukas Wunner <lukas@wunner.de>
->> > >
->> > > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->> >
->> > Thanks, I've just posted a 3 patch series to support the Light Ridge
->> > Thunderbolt controller and included your ack for this patch.
->> >
->> >
->> > > I assume somebody else will merge this with the rest of the series.
->> >
->> > The maintainer of the thunderbolt driver is Andreas Noever, however
->> > I don't think Andreas sends pull requests to Linus. Everything in
->> > drivers/thunderbolt/ has so far been picked up by Greg KH.
->> >
->> > I have more thunderbolt stuff in the pipeline, some of which needs
->> > changes to drivers/pci/. Therefore it would be ideal from my perspective
->> > if my thunderbolt patches could go in via your tree, if that is possible.
->>
->> I have no objection if they go through the PCI tree, especially as
->> Thunderbolt really just is PCI express, it makes sense to take them that
->> way.
->
-> Andreas, what's your preference?  If you want me to merge Thunderbolt
-> stuff via my PCI tree, I can do that.  But I don't know anything about
-> Thunderbolt and don't have specs or ability to test it, so I would
-> rely on you to ack any changes.  If you'd like to merge Thunderbolt
-> stuff yourself, that would be less work for me, so even better :)  But
-> either way is fine.
->
-> Bjorn
