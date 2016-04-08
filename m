@@ -1,128 +1,190 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34687 "EHLO
-	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756174AbcDLXgP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 19:36:15 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:53067 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751522AbcDHUTR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Apr 2016 16:19:17 -0400
+Date: Fri, 8 Apr 2016 14:19:15 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+Cc: helgaas@kernel.org, jroedel@suse.de, dwmw2@infradead.org,
+	linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org
+Subject: Re: [PATCH v5 3/6] PCI: Add support for multiple DMA aliases
+Message-ID: <20160408141915.24094f6a@t450s.home>
+In-Reply-To: <1457015882-11793-1-git-send-email-jacek.lawrynowicz@intel.com>
+References: <20160229224417.GD3653@localhost>
+	<1457015882-11793-1-git-send-email-jacek.lawrynowicz@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160410221743.GC5852@localhost>
-References: <1455827823254.98505@Dell.com>
-	<20160410221743.GC5852@localhost>
-Date: Tue, 12 Apr 2016 18:36:14 -0500
-Message-ID: <CAC1AzdcBH7wLz+tAE4R00q6YQ7KRRzBDyP5w8wJQueJgT2agnQ@mail.gmail.com>
-Subject: Re: [PATCH v3] Create pci slot files for SMBIOS Type 9 entries
-From: Jordan Hargrave <jharg93@gmail.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, tglx@linutronix.de,
-	mingo@redhat.com, hpa@zytor.com,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-	x86@kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 10, 2016 at 5:17 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> Hi Jordan,
->
-> On Thu, Feb 18, 2016 at 08:40:32PM +0000, Jordan_Hargrave@Dell.com wrote:
->> The following diff builds on the "[PATCHv3] Save SMBIOS Type 9 System Slots"
->>
->> This will create a /sys/bus/pci/slots/XXX file for each Type 9 entry.  This will be \
->> used for systemd enumeration of NICs.
->>
->> Only build if CONFIG_DMI is set
->>
->> Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
->> ---
->>  arch/x86/pci/common.c | 21 +++++++++++++++++++++
->>  1 file changed, 21 insertions(+)
->>
->> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
->> index eccd4d9..bfa3c85 100644
->> --- a/arch/x86/pci/common.c
->> +++ b/arch/x86/pci/common.c
->> @@ -173,6 +173,27 @@ void pcibios_fixup_bus(struct pci_bus *b)
->>
->>  void pcibios_add_bus(struct pci_bus *bus)
->>  {
->> +#ifdef CONFIG_DMI
->> +     const struct dmi_device *dmi;
->> +     struct dmi_dev_onboard *dslot;
->> +     char sname[128];
->> +
->> +     dmi = NULL;
->> +     while ((dmi = dmi_find_device(DMI_DEV_TYPE_DEV_SLOT,
->> +                                   NULL, dmi)) != NULL) {
->> +             dslot = dmi->device_data;
->> +             if (dslot->segment == pci_domain_nr(bus) &&
->> +                 dslot->bus == bus->number) {
->> +                     dev_info(&bus->dev, "Found SMBIOS Slot %s\n",
->> +                              dslot->dev.name);
->> +                     snprintf(sname, sizeof(sname), "%s-%d",
->> +                              dslot->dev.name,
->> +                              dslot->instance);
->> +                     pci_create_slot(bus, dslot->devfn,
->> +                                     sname, NULL);
->> +             }
->> +     }
->> +#endif
->
-> arm64, ia64, and x86 all support CONFIG_DMI, so this would have to be
-> a bit more generic.
+On Thu,  3 Mar 2016 15:38:02 +0100
+Jacek Lawrynowicz <jacek.lawrynowicz@intel.com> wrote:
 
-The SMBIOS tables for DMI_DEV_TYPE_DEV_SLOT are scanned in
-firmware/dmi_scan.c which requires CONFIG_DMI
+> This patch solves IOMMU support issues with PCIe non-transparent bridges
+> that use Requester ID look-up tables (RID-LUT), e.g. PEX8733.
+> 
+> The NTB connects devices in two independent PCI domains. Devices
+> separated by the NTB are not able to discover each other. A PCI packet
+> being forwared from one domain to another has to have its RID modified
+> so it appears on correct bus and completions are forwarded back to the
+> original domain through the NTB. RID is translated using preprogrammed
+> table (LUT) and the PCI packet propagates upstream away from the NTB.
+> If the destination system has IOMMU enabled, the packet will be
+> discarded because the new RID is unknown to the IOMMU. Adding a DMA
+> alias for the new RID allows IOMMU to properly recognize the packet.
+> 
+> Each device behind the NTB has a unique RID assigned in the RID-LUT.
+> Current DMA alias implementation supports only single alias, so it's not
+> possible to support mutiple devices behind the NTB when IOMMU is enabled.
+> 
+> This implementation enables all possible aliases on a given bus (256)
+> that are stored in a bitset. Alias devfn is directly translated to a bit
+> number. The bitset is not allocated for devices that have no need for
+> DMA aliases.
+> 
+> More details can be found in following article:
+> http://www.plxtech.com/files/pdf/technical/expresslane/RTC_Enabling%20MulitHostSystemDesigns.pdf
+> 
+> Signed-off-by: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+> Acked-by: David Woodhouse <David.Woodhouse@intel.com>
+> Acked-by: Joerg Roedel <jroedel@suse.de>
+> ---
+>  I updated the commit message based on discussion with Bjorn. It should be
+>  now a little easier to understand. I'm not resubmitting the whole patch set
+>  because it could make the thread harder to follow.
+>  
+>  This time resubmitting with correct subject.
+> 
+>  drivers/iommu/iommu.c | 17 ++++++++++-------
+>  drivers/pci/pci.c     | 11 +++++++++--
+>  drivers/pci/probe.c   |  1 +
+>  drivers/pci/search.c  | 14 +++++++++-----
+>  include/linux/pci.h   |  4 +---
+>  5 files changed, 30 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+> index bfd4f7c..4c10da1 100644
+> --- a/drivers/iommu/iommu.c
+> +++ b/drivers/iommu/iommu.c
+> @@ -659,9 +659,15 @@ static struct iommu_group *get_pci_function_alias_group(struct pci_dev *pdev,
+>  	return NULL;
+>  }
+>  
+> +static bool dma_alias_is_enabled(struct pci_dev *dev, u8 devfn)
+> +{
+> +	return dev->dma_alias_mask &&
+> +	       test_bit(devfn, dev->dma_alias_mask);
+> +}
+> +
+>  /*
+> - * Look for aliases to or from the given device for exisiting groups.  The
+> - * dma_alias_devfn only supports aliases on the same bus, therefore the search
+> + * Look for aliases to or from the given device for existing groups. DMA
+> + * aliases are only supported on the same bus, therefore the search
+>   * space is quite small (especially since we're really only looking at pcie
+>   * device, and therefore only expect multiple slots on the root complex or
+>   * downstream switch ports).  It's conceivable though that a pair of
+> @@ -686,11 +692,8 @@ static struct iommu_group *get_pci_alias_group(struct pci_dev *pdev,
+>  			continue;
+>  
+>  		/* We alias them or they alias us */
+> -		if (((pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
+> -		     pdev->dma_alias_devfn == tmp->devfn) ||
+> -		    ((tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
+> -		     tmp->dma_alias_devfn == pdev->devfn)) {
+> -
+> +		if (dma_alias_is_enabled(pdev, tmp->devfn) ||
+> +		    dma_alias_is_enabled(tmp, pdev->devfn)) {
+>  			group = get_pci_alias_group(tmp, devfns);
+>  			if (group) {
+>  				pci_dev_put(tmp);
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index e5e2c9d..33f3d24 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4577,8 +4577,15 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
+>   */
+>  void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
+>  {
+> -	dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 0);
+> -	dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
+> +	if (!dev->dma_alias_mask)
+> +		dev->dma_alias_mask = kcalloc(BITS_TO_LONGS(U8_MAX),
+> +					      sizeof(long), GFP_KERNEL);
+> +	if (!dev->dma_alias_mask) {
+> +		dev_warn(&dev->dev, "Unable to allocate DMA alias mask\n");
+> +		return;
+> +	}
+> +
+> +	set_bit(devfn, dev->dma_alias_mask);
 
->
-> Is there a spec that describes this SMBIOS entry?  It seems to have
-> segment/bus/devfn, so maybe this should be done on a per-device basis,
-> not a per-bus basis?
->
+This silently fixes the bug in 1/, it should be updated after 1/ is
+fixed.  Otherwise,
 
-Yes, the SMBIOS specification for Type 9 System Slots.  The fields for
-PCI mapping were added in SMBIOS 2.6
-
-https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.0.0.pdf
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
 
 
-> Does this do the same thing ctrl_slot_setup() does with
-> get_SMBIOS_entry()?  (This is in the cpqphp hotplug driver; I have no
-> idea if anybody still uses that.)
+>  	dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
+>  		 PCI_SLOT(devfn), PCI_FUNC(devfn));
+>  }
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 5eb378f..cf09307 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1502,6 +1502,7 @@ static void pci_release_dev(struct device *dev)
+>  	pcibios_release_device(pci_dev);
+>  	pci_bus_put(pci_dev->bus);
+>  	kfree(pci_dev->driver_override);
+> +	kfree(pci_dev->dma_alias_mask);
+>  	kfree(pci_dev);
+>  }
+>  
+> diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+> index a20ce7d..33e0f03 100644
+> --- a/drivers/pci/search.c
+> +++ b/drivers/pci/search.c
+> @@ -40,11 +40,15 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
+>  	 * If the device is broken and uses an alias requester ID for
+>  	 * DMA, iterate over that too.
+>  	 */
+> -	if (unlikely(pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN)) {
+> -		ret = fn(pdev, PCI_DEVID(pdev->bus->number,
+> -					 pdev->dma_alias_devfn), data);
+> -		if (ret)
+> -			return ret;
+> +	if (unlikely(pdev->dma_alias_mask)) {
+> +		u8 devfn;
+> +
+> +		for_each_set_bit(devfn, pdev->dma_alias_mask, U8_MAX) {
+> +			ret = fn(pdev, PCI_DEVID(pdev->bus->number, devfn),
+> +				 data);
+> +			if (ret)
+> +				return ret;
+> +		}
+>  	}
+>  
+>  	for (bus = pdev->bus; !pci_is_root_bus(bus); bus = bus->parent) {
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 614d70d..0c176e5 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -172,8 +172,6 @@ enum pci_dev_flags {
+>  	PCI_DEV_FLAGS_ASSIGNED = (__force pci_dev_flags_t) (1 << 2),
+>  	/* Flag for quirk use to store if quirk-specific ACS is enabled */
+>  	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) (1 << 3),
+> -	/* Flag to indicate the device uses dma_alias_devfn */
+> -	PCI_DEV_FLAGS_DMA_ALIAS_DEVFN = (__force pci_dev_flags_t) (1 << 4),
+>  	/* Use a PCIe-to-PCI bridge alias even if !pci_is_pcie */
+>  	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 5),
+>  	/* Do not use bus resets for device */
+> @@ -279,7 +277,7 @@ struct pci_dev {
+>  	u8		rom_base_reg;	/* which config register controls the ROM */
+>  	u8		pin;		/* which interrupt pin this device uses */
+>  	u16		pcie_flags_reg;	/* cached PCIe Capabilities Register */
+> -	u8		dma_alias_devfn;/* devfn of DMA alias, if any */
+> +	unsigned long	*dma_alias_mask;/* mask of enabled devfn aliases */
+>  
+>  	struct pci_driver *driver;	/* which driver has allocated this device */
+>  	u64		dma_mask;	/* Mask of the bits of bus address this
 
-Looks like cpqphp driver is looking for SMBIOS Type 9, but < 2.5 table
-structure. It's looking for the slot ID number (this number is
-equivalent to dslot->instance).
-
-
->
-> There's quite a collection of pci_create_slot() callers, and I'd like
-> to know how this new addition would coexist with the others.  In
-> particular, what about the one in pciehp?  I think we only expose a
-> slot name in sysfs if pciehp claims a downstream port, but I'm not
-> sure that's the right thing.  The slot number might be useful even if
-> the slot doesn't support hotplug or if hotplug is disabled for some
-> reason.
->
-
-pciehp requires the BIOS has setup the slot number in PCI properly....
-I've seen systems with two PCIE 'slots' which had the same slot
-number.  Of course the SMBIOS table requires the BIOS got it right
-too....
-
->>       acpi_pci_add_bus(bus);
->>  }
->>
->> --
->> 2.5.0
->>
->>
->>
->>
->>
->>
->>
->> --jordan hargrave
->>  Dell Enterprise Linux Engineering  --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
