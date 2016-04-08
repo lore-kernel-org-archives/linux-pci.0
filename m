@@ -1,77 +1,240 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V6 09/13] pci, acpi: Support for ACPI based generic PCI
- host controller
-To: Tomasz Nowicki <tn@semihalf.com>,
-	Jayachandran C <jchandra@broadcom.com>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-10-git-send-email-tn@semihalf.com>
- <CAKc_7PXLbX+wxesGVKni7tkKPUbfo7AgfPNxA+Uc25ctOWRk=Q@mail.gmail.com>
- <57189824.7080908@semihalf.com> <571A37DD.4070003@redhat.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
-	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
-	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
-	Wangyijing <wangyijing@huawei.com>,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org
-From: Jon Masters <jcm@redhat.com>
-Message-ID: <571B937B.7050905@redhat.com>
-Date: Sat, 23 Apr 2016 11:23:39 -0400
-MIME-Version: 1.0
-In-Reply-To: <571A37DD.4070003@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42787 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757126AbcDHATJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:19:09 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 28/60] PCI: Optimize bus align/size calculation for optional during sizing
+Date: Thu,  7 Apr 2016 17:15:41 -0700
+Message-Id: <1460074573-7481-29-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/22/2016 10:40 AM, Jon Masters wrote:
-> On 04/21/2016 05:06 AM, Tomasz Nowicki wrote:
->> On 20.04.2016 21:12, Jayachandran C wrote:
->>> On Fri, Apr 15, 2016 at 10:36 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
-> 
->>>> This patch is heavily based on the updated version from Jayachandran C:
->>>> https://lkml.org/lkml/2016/4/11/908
->>>> git: https://github.com/jchandra-brcm/linux/ (arm64-acpi-pci-v3)
->>>
->>> This is a little bit unusual because I had not posted the v3 patch
->>> to the mailing list yet, but you posted a variant of it The git
->>> repository
->>> should not be in the commit comment because it is a temporary location.
->>
->> We all agree this too important for everybody to delay this series. So
->> main motivation is to keep all discussion&patches within one unified
->> series. I would like to finally find direction we need to go. Stating
->> another discussion based on my previous patch set v5 confused people,
->> they do no know who is driving this. Again, lets cooperate to move it
->> forward within one patch set.
-> 
-> We need one person in the driver's seat here for this patch series. I
-> believe the intention is that this is Tomasz, with others cooperating
-> and assisting. The previous alternative patch series did serve to cause
-> confusion, and worse, they made it look like the ARM vendors can't work
-> together. That ends. Right now. I've raised this individually with each
-> of you (and with all of the other vendors), as well as inside Linaro.
-> There will be one person driving this, and everyone else will help.
+Current add_align always use max align, that make required+optional
+to get allocated more than needed in some cases.
 
-As a quick update, since yesterday I have confirmed that several
-different microarchitecture implementations (different PCIe) have tested
-and validated this patch series. Those minimally include:
+Now we have new calculate_mem_align(), so we could use it for
+add_align calculation.
 
-* Cavium Networks ThunderX
-* Qualcomm Technologies Inc QDF2XXX
-* AMD A1100 ("Seattle")
+Need to create separated list for required+optional align/size info.
 
-Another is working on testing over the weekend. Still waiting for an ARM
-tested-by on Juno I think. I will personally be testing this and future
-releases on all of the above mentioned hw.
+After that we can get smaller add_align/size, and we have more chance
+to make required+optional to get allocated sucessfully.
 
-Jon.
+The result for bridge that have Intel 4x10g card installed:
 
+ pci 0000:20:03.2: bridge window [mem 0x00000000-0x000fffff 64bit pref]
+	to [bus 2a-31] calculate_mem for required
+ align/size:
+   00800000/00800000, 00800000/00800000, 00800000/00800000,
+   00800000/00800000, 00008000/00008000, 00008000/00008000,
+   00008000/00008000, 00008000/00008000
+ original min_align/min_size: 00400000/02400000
+ new min_align/min_size: 00400000/02400000
+
+ pci 0000:20:03.2: bridge window [mem 0x00000000-0x000fffff 64bit pref]
+	to [bus 2a-31] calculate_mem for required+optional
+ align/size:
+   00800000/00800000, 00800000/00800000, 00800000/00800000,
+   00800000/00800000, 00010000/00200000, 00010000/00200000,
+   00010000/00200000, 00010000/00200000, 00008000/00008000,
+   00008000/00008000, 00008000/00008000, 00008000/00008000,
+   00004000/00080000, 00004000/00080000, 00004000/00080000,
+   00004000/00080000
+ original code min_align/min_size: 00800000/03000000
+ new min_align/min_size: 00100000/02b00000
+
+so required align/size: 0x400000/0x2400000, and
+new required+optional align/size: 0x100000/0x2b00000, and it is much better
+than original required+optional align/size: 0x800000/0x3000000
+and even have smaller min_align than required.
+
+
+-v2: remove not used size1 in calculate_memsize
+
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
+Reported-by: TJ <linux@iam.tj>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 82 ++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 51 insertions(+), 31 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 3051bb7..12fd6d9 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -943,7 +943,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
+ 
+ static resource_size_t calculate_memsize(resource_size_t size,
+ 		resource_size_t min_size,
+-		resource_size_t size1,
+ 		resource_size_t old_size,
+ 		resource_size_t align)
+ {
+@@ -953,7 +952,7 @@ static resource_size_t calculate_memsize(resource_size_t size,
+ 		old_size = 0;
+ 	if (size < old_size)
+ 		size = old_size;
+-	size = ALIGN(size + size1, align);
++	size = ALIGN(size, align);
+ 	return size;
+ }
+ 
+@@ -1216,26 +1215,23 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			 struct list_head *realloc_head)
+ {
+ 	struct pci_dev *dev;
+-	resource_size_t min_align, align, size, size0, size1;
+-	resource_size_t max_align = 0;
++	resource_size_t min_align = 0, min_add_align = 0;
++	resource_size_t max_align = 0, max_add_align = 0;
++	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
+ 	struct resource *b_res = find_free_bus_resource(bus,
+ 					mask | IORESOURCE_PREFETCH, type);
+-	resource_size_t children_add_size = 0;
+-	resource_size_t children_add_align = 0;
+-	resource_size_t add_align = 0;
+ 	LIST_HEAD(align_test_list);
++	LIST_HEAD(align_test_add_list);
+ 
+ 	if (!b_res)
+ 		return -ENOSPC;
+ 
+-	size = 0;
+-
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+ 
+ 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
+ 			struct resource *r = &dev->resource[i];
+-			resource_size_t r_size;
++			resource_size_t r_size, align;
+ 			int flags = pci_resource_pref_compatible(dev, r);
+ 
+ 			if (r->parent || (flags & IORESOURCE_PCI_FIXED) ||
+@@ -1243,19 +1239,23 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 			     (flags & mask) != type2 &&
+ 			     (flags & mask) != type3))
+ 				continue;
++
+ 			r_size = resource_size(r);
++			align = pci_resource_alignment(dev, r);
+ #ifdef CONFIG_PCI_IOV
+ 			/* put SRIOV requested res to the optional list */
+ 			if (realloc_head && i >= PCI_IOV_RESOURCES &&
+ 					i <= PCI_IOV_RESOURCE_END) {
+-				add_align = max(pci_resource_alignment(dev, r), add_align);
++				add_to_align_test_list(&align_test_add_list,
++							align, r_size);
+ 				r->end = r->start - 1;
+ 				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
+-				children_add_size += r_size;
++				sum_add_size += r_size;
++				if (align > max_add_align)
++					max_add_align = align;
+ 				continue;
+ 			}
+ #endif
+-			align = pci_resource_alignment(dev, r);
+ 			if (align > (1ULL<<37)) { /*128 Gb*/
+ 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
+ 					i, r, (unsigned long long) align);
+@@ -1263,33 +1263,52 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				continue;
+ 			}
+ 
+-			if (r_size > 1)
++			if (r_size > 1) {
+ 				add_to_align_test_list(&align_test_list,
+ 							align, r_size);
+-			size += r_size;
+-			if (align > max_align)
+-				max_align = align;
++				size += r_size;
++				if (align > max_align)
++					max_align = align;
++			}
+ 
+ 			if (realloc_head) {
+-				children_add_size += get_res_add_size(realloc_head, r);
+-				children_add_align = get_res_add_align(realloc_head, r);
+-				add_align = max(add_align, children_add_align);
++				resource_size_t add_r_size, add_align;
++
++				add_r_size = get_res_add_size(realloc_head, r);
++				add_align = get_res_add_align(realloc_head, r);
++				/* no add on ? */
++				if (add_align < align)
++					add_align = align;
++				add_to_align_test_list(&align_test_add_list,
++							add_align,
++							r_size + add_r_size);
++				sum_add_size += r_size + add_r_size;
++				if (add_align > max_add_align)
++					max_add_align = add_align;
+ 			}
+ 		}
+ 	}
+ 
+ 	max_align = max(max_align, window_alignment(bus, b_res->flags));
+-	min_align = calculate_mem_align(&align_test_list, max_align, size,
+-					window_alignment(bus, b_res->flags));
+-	size0 = calculate_memsize(size, min_size, 0,
++	if (size || min_size) {
++		min_align = calculate_mem_align(&align_test_list, max_align,
++				 size, window_alignment(bus, b_res->flags));
++		size0 = calculate_memsize(size, min_size,
+ 				  resource_size(b_res), min_align);
++	}
+ 	free_align_test_list(&align_test_list);
+-	add_align = max(min_align, add_align);
+-	if (children_add_size > add_size)
+-		add_size = children_add_size;
+-	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
+-		calculate_memsize(size, min_size, add_size,
+-				resource_size(b_res), add_align);
++
++	if ((sum_add_size - size) < add_size)
++		sum_add_size = size + add_size;
++	if (sum_add_size > size && realloc_head) {
++		min_add_align = calculate_mem_align(&align_test_add_list,
++					max_add_align, sum_add_size,
++					window_alignment(bus, b_res->flags));
++		size1 = calculate_memsize(sum_add_size, min_size,
++				 resource_size(b_res), min_add_align);
++	}
++	free_align_test_list(&align_test_add_list);
++
+ 	if (!size0 && !size1) {
+ 		if (b_res->start || b_res->end)
+ 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
+@@ -1301,11 +1320,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
++		add_to_list(realloc_head, bus->self, b_res, size1 - size0,
++				min_add_align);
+ 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
+ 			   b_res, &bus->busn_res,
+ 			   (unsigned long long) (size1 - size0),
+-			   (unsigned long long) add_align);
++			   (unsigned long long) min_add_align);
+ 	}
+ 	return 0;
+ }
 -- 
-Computer Architect | Sent from my Fedora powered laptop
+1.8.4.5
 
