@@ -1,186 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40484 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759174AbcDMFxF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Apr 2016 01:53:05 -0400
-Subject: [PATCH 2/2] Revert "PCI,
- x86: Implement pcibios_alloc_irq() and pcibios_free_irq()"
-To: stable@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: =?utf-8?b?0J7Qu9C10LM=?= =?utf-8?b?0JzQvtGA0L7Qtw==?=
-	<oleg.moroz@mcc.vniiem.ru>,
-	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
-	Rob Groner <rgroner@rtd.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Date: Wed, 13 Apr 2016 00:53:02 -0500
-Message-ID: <20160413055302.6737.39980.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160413055208.6737.53693.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160413055208.6737.53693.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from aserp1040.oracle.com ([141.146.126.69]:46371 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755863AbcDHAer (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:34:47 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 53/60] PCI: Kill macro checking for bus io port sizing
+Date: Thu,  7 Apr 2016 17:16:06 -0700
+Message-Id: <1460074573-7481-54-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This reverts commit 991de2e59090e55c65a7f59a049142e3c480f7bd.
+We can use new generic version skip_isa_ioresource_align() instead
+of macro, and then kill the marco.
 
-991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and
-pcibios_free_irq()") appeared in v4.3 and helps support IOAPIC hotplug.
-
-Олег reported that the Elcus-1553 TA1-PCI driver worked in v4.2 but not
-v4.3 and bisected it to 991de2e59090.  Sunjin reported that the RocketRAID
-272x driver worked in v4.2 but not v4.3.  In both cases booting with
-"pci=routirq" is a workaround.
-
-I think the problem is that after 991de2e59090, we no longer call
-pcibios_enable_irq() for upstream bridges.  Prior to 991de2e59090, when a
-driver called pci_enable_device(), we recursively called
-pcibios_enable_irq() for upstream bridges via pci_enable_bridge().
-
-After 991de2e59090, we call pcibios_enable_irq() from pci_device_probe()
-instead of the pci_enable_device() path, which does *not* call
-pcibios_enable_irq() for upstream bridges.
-
-Revert 991de2e59090 to fix these driver regressions.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=111211
-Fixes: 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
-Reported-and-tested-by: Олег Мороз <oleg.moroz@mcc.vniiem.ru>
-Reported-by: Sunjin Yang <fan4326@gmail.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Rafael J. Wysocki <rafael@kernel.org>
-CC: stable@vger.kernel.org	# v4.3
-CC: Jiang Liu <jiang.liu@linux.intel.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- arch/x86/include/asm/pci_x86.h |    2 ++
- arch/x86/pci/common.c          |   20 +++++++++++---------
- arch/x86/pci/intel_mid_pci.c   |    7 ++-----
- arch/x86/pci/irq.c             |   15 ++++++++++++++-
- drivers/acpi/pci_irq.c         |    9 ++++++++-
- 5 files changed, 37 insertions(+), 16 deletions(-)
+ drivers/pci/setup-bus.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci_x86.h b/arch/x86/include/asm/pci_x86.h
-index fa1195d..164e3f8 100644
---- a/arch/x86/include/asm/pci_x86.h
-+++ b/arch/x86/include/asm/pci_x86.h
-@@ -93,6 +93,8 @@ extern raw_spinlock_t pci_config_lock;
- extern int (*pcibios_enable_irq)(struct pci_dev *dev);
- extern void (*pcibios_disable_irq)(struct pci_dev *dev);
- 
-+extern bool mp_should_keep_irq(struct device *dev);
-+
- struct pci_raw_ops {
- 	int (*read)(unsigned int domain, unsigned int bus, unsigned int devfn,
- 						int reg, int len, u32 *val);
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index dc78a4a..8fd6f44 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -673,20 +673,22 @@ int pcibios_add_device(struct pci_dev *dev)
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 5ba4bf5..65a41e7 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1159,15 +1159,12 @@ int skip_isa_ioresource_align(struct pci_bus *bus)
  	return 0;
  }
  
--int pcibios_alloc_irq(struct pci_dev *dev)
-+int pcibios_enable_device(struct pci_dev *dev, int mask)
+-static resource_size_t size_aligned_for_isa(resource_size_t size)
++static resource_size_t size_aligned_for_isa(resource_size_t size,
++					    struct pci_bus *bus)
  {
--	return pcibios_enable_irq(dev);
--}
-+	int err;
- 
--void pcibios_free_irq(struct pci_dev *dev)
--{
--	if (pcibios_disable_irq)
--		pcibios_disable_irq(dev);
-+	if ((err = pci_enable_resources(dev, mask)) < 0)
-+		return err;
+-	/*
+-	 * To be fixed in 2.5: we should have sort of HAVE_ISA
+-	 *  flag in the struct pci_bus.
+-	 */
+-#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
+-	size = (size & 0xff) + ((size & ~0xffUL) << 2);
+-#endif
++	if (!skip_isa_ioresource_align(bus))
++		size = (size & 0xff) + ((size & ~0xffUL) << 2);
 +
-+	if (!pci_dev_msi_enabled(dev))
-+		return pcibios_enable_irq(dev);
-+	return 0;
+ 	return size;
  }
  
--int pcibios_enable_device(struct pci_dev *dev, int mask)
-+void pcibios_disable_device (struct pci_dev *dev)
- {
--	return pci_enable_resources(dev, mask);
-+	if (!pci_dev_msi_enabled(dev) && pcibios_disable_irq)
-+		pcibios_disable_irq(dev);
- }
- 
- int pci_ext_cfg_avail(void)
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 8826ff5..8b93e63 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -256,13 +256,10 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 
- static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- {
--	if (dev->irq_managed && dev->irq > 0) {
-+	if (!mp_should_keep_irq(&dev->dev) && dev->irq_managed &&
-+	    dev->irq > 0) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq_managed = 0;
--		/*
--		 * Don't reset dev->irq here, otherwise
--		 * intel_mid_pci_irq_enable() will fail on next call.
--		 */
+@@ -1236,12 +1233,12 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		}
  	}
- }
  
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 72108f0..9bd1154 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1257,9 +1257,22 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 	return 0;
- }
- 
-+bool mp_should_keep_irq(struct device *dev)
-+{
-+	if (dev->power.is_prepared)
-+		return true;
-+#ifdef CONFIG_PM
-+	if (dev->power.runtime_status == RPM_SUSPENDING)
-+		return true;
-+#endif
-+
-+	return false;
-+}
-+
- static void pirq_disable_irq(struct pci_dev *dev)
- {
--	if (io_apic_assign_pci_irqs && dev->irq_managed && dev->irq) {
-+	if (io_apic_assign_pci_irqs && !mp_should_keep_irq(&dev->dev) &&
-+	    dev->irq_managed && dev->irq) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq = 0;
- 		dev->irq_managed = 0;
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index 172b74d..8a10a7a 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -481,6 +481,14 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	if (!pin || !dev->irq_managed || dev->irq <= 0)
- 		return;
- 
-+	/* Keep IOAPIC pin configuration when suspending */
-+	if (dev->dev.power.is_prepared)
-+		return;
-+#ifdef	CONFIG_PM
-+	if (dev->dev.power.runtime_status == RPM_SUSPENDING)
-+		return;
-+#endif
-+
- 	entry = acpi_pci_irq_lookup(dev, pin);
- 	if (!entry)
- 		return;
-@@ -501,6 +509,5 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	if (gsi >= 0) {
- 		acpi_unregister_gsi(gsi);
- 		dev->irq_managed = 0;
--		dev->irq = 0;
- 	}
- }
+-	size = size_aligned_for_isa(size);
++	size = size_aligned_for_isa(size, bus);
+ 	size += size1;
+ 	if (size || min_size)
+ 		size0 = calculate_size(size, min_size,
+ 					resource_size(b_res), min_align);
+-	sum_add_size = size_aligned_for_isa(sum_add_size);
++	sum_add_size = size_aligned_for_isa(sum_add_size, bus);
+ 	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+ 		sum_add_size = min_sum_size;
+-- 
+1.8.4.5
 
