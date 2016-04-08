@@ -1,83 +1,87 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 26 Apr 2016 17:36:18 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: kbuild test robot <lkp@intel.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>, kbuild-all@01.org, arnd@arndb.de,
-	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
-	hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com,
-	okaya@codeaurora.org, jiang.liu@linux.intel.com,
-	jchandra@broadcom.com, robert.richter@caviumnetworks.com,
-	mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-Subject: Re: [PATCH V6 01/13] pci, acpi, x86, ia64: Move ACPI host bridge
- device companion assignment to core code.
-Message-ID: <20160426223618.GB6789@localhost>
-References: <1460740008-19489-2-git-send-email-tn@semihalf.com>
- <201604160430.P8zNe8Vl%fengguang.wu@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201604160430.P8zNe8Vl%fengguang.wu@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:8579 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756517AbcDHKgm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Apr 2016 06:36:42 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [PATCH v2 0/4] PCI: Add support for suspending (including runtime) of PCIe ports
+Date: Fri,  8 Apr 2016 13:36:26 +0300
+Message-Id: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 16, 2016 at 04:41:45AM +0800, kbuild test robot wrote:
-> Hi Tomasz,
-> 
-> [auto build test ERROR on pci/next]
-> [also build test ERROR on v4.6-rc3 next-20160415]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
-> 
-> url:    https://github.com/0day-ci/linux/commits/Tomasz-Nowicki/Support-for-generic-ACPI-based-PCI-host-controller/20160416-011935
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
-> config: ia64-allmodconfig (attached as .config)
-> reproduce:
->         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # save the attached .config to linux build tree
->         make.cross ARCH=ia64 
-> 
-> All errors (new ones prefixed by >>):
-> 
->    drivers/pci/hotplug/sgi_hotplug.c: In function 'enable_slot':
-> >> drivers/pci/hotplug/sgi_hotplug.c:412:61: error: 'struct pci_controller' has no member named 'companion'
->       phandle = acpi_device_handle(PCI_CONTROLLER(slot->pci_bus)->companion);
->                                                                 ^
->    drivers/pci/hotplug/sgi_hotplug.c: In function 'disable_slot':
->    drivers/pci/hotplug/sgi_hotplug.c:491:32: error: 'struct pci_controller' has no member named 'companion'
->       PCI_CONTROLLER(slot->pci_bus)->companion) {
->                                    ^
->    drivers/pci/hotplug/sgi_hotplug.c:500:61: error: 'struct pci_controller' has no member named 'companion'
->       phandle = acpi_device_handle(PCI_CONTROLLER(slot->pci_bus)->companion);
->                                                                 ^
+Current Linux PCI core does not do any kind of power management to PCIe
+ports. This means that we waste energy and consume laptop battery even if
+the port has nothing connected to. These patches aim to change that to the
+right direction.
 
-I assume somebody is fixing this?
+The first version of the patches can be found here:
 
-> 
-> vim +412 drivers/pci/hotplug/sgi_hotplug.c
-> 
-> 3e643e77 John Keller       2007-01-30  406  		struct acpi_device *pdevice;
-> 3e643e77 John Keller       2007-01-30  407  		acpi_handle phandle;
-> 3e643e77 John Keller       2007-01-30  408  		acpi_handle chandle = NULL;
-> 3e643e77 John Keller       2007-01-30  409  		acpi_handle rethandle;
-> 3e643e77 John Keller       2007-01-30  410  		acpi_status ret;
-> 3e643e77 John Keller       2007-01-30  411  
-> 7b199811 Rafael J. Wysocki 2013-11-11 @412  		phandle = acpi_device_handle(PCI_CONTROLLER(slot->pci_bus)->companion);
-> 3e643e77 John Keller       2007-01-30  413  
-> 3e643e77 John Keller       2007-01-30  414  		if (acpi_bus_get_device(phandle, &pdevice)) {
-> 227f0647 Ryan Desfosses    2014-04-18  415  			dev_dbg(&slot->pci_bus->self->dev, "no parent device, assuming NULL\n");
-> 
-> :::::: The code at line 412 was first introduced by commit
-> :::::: 7b1998116bbb2f3e5dd6cb9a8ee6db479b0b50a9 ACPI / driver core: Store an ACPI device pointer in struct acpi_dev_node
-> 
-> :::::: TO: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> :::::: CC: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+  http://www.spinics.net/lists/linux-pci/msg49313.html
 
+This assumes that recent (starting from 2015) PCIe ports are capable of
+transition to D3hot/D3cold. We add a new flag to struct pci_dev 'bridge_d3'
+that is set whenever the PCI core thinks the port can be put to D3. The
+check in pci_pm_suspend_noirq() is then extended to cover devices where
+'bridge_d3' is set.
+
+We then add pci_bridge_pm_update() that tries to set/clear 'bridge_d3'
+whenever power management status of a device is changed. For example when
+userspace writes to 'd3cold_allowed' sysfs file.
+
+For all PCI ports where 'bridge_d3' is set we also enable and unblock
+runtime PM automatically. Only exception is when the PCIe port claims to
+support hotplug. More information about that is in the changelog of patch
+[4/4].
+
+Since this also touches xhci, I'm adding Mathias and Greg to check if the
+change looks reasonable.
+
+Changes to the previous version:
+
+  - Dropped patch [2/6] as there is no need to use that function from other
+    files anymore.
+
+  - Dropped patches [5-6/6] in favor of using cut-off date.
+
+  - Updated changelog of [1/4] to mention where in the PCI core PCI bridge
+    and PCIe ports are skipped from being power managed.
+
+  - Instead of checking at suspend time if it is possible to transition the
+    port to D3, do it whenever power management status of a device (below a
+    port) is changed or when it is added or removed to the bus.
+
+  - Added patch [3/4] to runtime resume a bridge when ACPI hotplug event is
+    received.
+
+Please review.
+
+Mika Westerberg (4):
+  PCI: No need to set d3cold_allowed to PCIe ports
+  PCI: Move PCIe ports to D3 during suspend
+  ACPI / hotplug / PCI: Runtime resume bridge before rescan
+  PCI: Add runtime PM support for PCIe ports
+
+ drivers/pci/bus.c                  |   1 +
+ drivers/pci/hotplug/acpiphp_glue.c |   8 ++-
+ drivers/pci/pci-driver.c           |  15 +++++-
+ drivers/pci/pci-sysfs.c            |   1 +
+ drivers/pci/pci.c                  | 103 +++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h                  |   1 +
+ drivers/pci/pcie/portdrv_pci.c     |  90 ++++++++++++++++++++++++++++++--
+ drivers/pci/remove.c               |   2 +
+ drivers/usb/host/xhci-pci.c        |   2 +-
+ include/linux/pci.h                |   2 +
+ 10 files changed, 216 insertions(+), 9 deletions(-)
+
+-- 
+2.8.0.rc3
 
