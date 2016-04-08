@@ -1,151 +1,205 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 26 Apr 2016 21:26:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-Subject: Re: [PATCH V6 02/13] pci, acpi: Provide generic way to assign bus
- domain number.
-Message-ID: <20160427022649.GD6789@localhost>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-3-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:48905 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751433AbcDHRbw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Apr 2016 13:31:52 -0400
+Date: Fri, 8 Apr 2016 11:31:49 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: David Woodhouse <dwmw2@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Lawrynowicz, Jacek" <jacek.lawrynowicz@intel.com>,
+	Joerg Roedel <jroedel@suse.de>, linux-pci@vger.kernel.org,
+	iommu@lists.linux-foundation.org
+Subject: Re: [PATCH v4 3/6] PCI: Add support for multiple DMA aliases
+Message-ID: <20160408113149.1386ec8c@t450s.home>
+In-Reply-To: <20160408160632.GF8780@localhost>
+References: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	<20160224194406.7585.17447.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	<20160225143841.GA8726@localhost>
+	<1457995420.78634.63.camel@infradead.org>
+	<20160316004817.GG19974@localhost>
+	<20160408160632.GF8780@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460740008-19489-3-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 15, 2016 at 07:06:37PM +0200, Tomasz Nowicki wrote:
-> As we now have valid PCI host bridge device reference we can
-> introduce code that is going to find its bus domain number using
-> ACPI _SEG method.
-> 
-> Note that _SEG method is optional, therefore _SEG absence means
-> that all PCI buses belong to domain 0.
-> 
-> While at it, for the sake of code clarity we put ACPI and DT domain
-> assign methods into the corresponding helpers.
-> 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> Tested-by: Jeremy Linton <jeremy.linton@arm.com>
-> Tested-by: Duc Dang <dhdang@apm.com>
-> Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-> Tested-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/acpi/pci_root.c  | 18 ++++++++++++++++++
->  drivers/pci/pci.c        | 11 +++++++++--
->  include/linux/pci-acpi.h |  2 ++
->  3 files changed, 29 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 4581e0e..d9a70c4 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -419,6 +419,24 @@ out:
->  }
->  EXPORT_SYMBOL(acpi_pci_osc_control_set);
->  
-> +int acpi_pci_bus_domain_nr(struct device *parent)
-> +{
-> +	struct acpi_device *acpi_dev = to_acpi_device(parent);
-> +	unsigned long long segment = 0;
-> +	acpi_status status;
-> +
-> +	/*
-> +	 * If _SEG method does not exist, following ACPI spec (6.5.6)
-> +	 * all PCI buses belong to domain 0.
-> +	 */
-> +	status = acpi_evaluate_integer(acpi_dev->handle, METHOD_NAME__SEG, NULL,
-> +				       &segment);
+On Fri, 8 Apr 2016 11:06:32 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-We already have code in acpi_pci_root_add() to evaluate _SEG.  We
-don't want to evaluate it *twice*, do we?
+> On Tue, Mar 15, 2016 at 07:48:17PM -0500, Bjorn Helgaas wrote:
+> > On Mon, Mar 14, 2016 at 10:43:40PM +0000, David Woodhouse wrote:  
+> > > On Thu, 2016-02-25 at 08:38 -0600, Bjorn Helgaas wrote:  
+> > > >   
+> > > > >  /*
+> > > > > - * Look for aliases to or from the given device for exisiting groups.  The
+> > > > > - * dma_alias_devfn only supports aliases on the same bus, therefore the search
+> > > > > + * Look for aliases to or from the given device for existing groups. DMA
+> > > > > + * aliases are only supported on the same bus, therefore the search  
+> > > > 
+> > > > I'm trying to reconcile this statement that "DMA aliases are only
+> > > > supported on the same bus" (which was there even before this patch)
+> > > > with the fact that pci_for_each_dma_alias() does not have that
+> > > > limitation.  
+> > > 
+> > > Doesn't it? You can still only set a DMA alias on the same bus with
+> > > pci_add_dma_alias(), can't you?  
+> > 
+> > I guess it's true that PCI_DEV_FLAGS_DMA_ALIAS_DEVFN and the proposed
+> > pci_add_dma_alias() only add aliases on the same bus.  I was thinking
+> > about a scenario like this:
+> > 
+> >   00:00.0 PCIe-to-PCI bridge to [bus 01]
+> >   01:01.0 conventional PCI device
+> > 
+> > where I think 01:00.0 is a DMA alias for 01:01.0 because the bridge
+> > takes ownership of DMA transactions from 01:01.0 and assigns a
+> > Requester ID of 01:00.0 (secondary bus number, device 0, function 0).
 
-I was sort of expecting that if you added it here, we'd remove the
-existing call, but it looks like you're keeping both?
+This is true, but this is a topology alias, not a quirk.
+pci_for_each_dma_alias() already handles this case.  It would trigger
+the callback function for any direct alias of the conventional device
+as well as the bridge itself.  Obviously we don't end up with any
+quirks for conventional devices because the aliases are masked behind
+the bridge anyway.
+ 
+> > > > >   * space is quite small (especially since we're really only looking at pcie
+> > > > >   * device, and therefore only expect multiple slots on the root complex or
+> > > > >   * downstream switch ports).  It's conceivable though that a pair of
+> > > > > @@ -686,11 +692,8 @@ static struct iommu_group *get_pci_alias_group(struct pci_dev *pdev,
+> > > > >                       continue;
+> > > > >  
+> > > > >               /* We alias them or they alias us */
+> > > > > -             if (((pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
+> > > > > -                  pdev->dma_alias_devfn == tmp->devfn) ||
+> > > > > -                 ((tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
+> > > > > -                  tmp->dma_alias_devfn == pdev->devfn)) {
+> > > > > -
+> > > > > +             if (dma_alias_is_enabled(pdev, tmp->devfn) ||
+> > > > > +                 dma_alias_is_enabled(tmp, pdev->devfn)) {
+> > > > >                       group = get_pci_alias_group(tmp, devfns);  
+> > > > 
+> > > > We basically have this:
+> > > > 
+> > > >   for_each_pci_dev(tmp) {
+> > > >     if ()
+> > > >       group = get_pci_alias_group();
+> > > >       ...
+> > > >   }  
+> > > 
+> > > Strictly, that's:
+> > > 
+> > >  for_each_pci_dev(tmp) {
+> > >    if (pdev is an alias of tmp || tmp is an alias of pdev)
+> > >      group = get_pci_alias_group();
+> > >    ...
+> > >  }  
+> > 
+> > OK.  
+> >   
+> > > > I'm trying to figure out why we don't do something like the following
+> > > > instead:
+> > > > 
+> > > >   callback(struct pci_dev *pdev, u16 alias, void *opaque)
+> > > >   {
+> > > >     struct iommu_group *group;
+> > > > 
+> > > >     group = get_pci_alias_group();
+> > > >     if (group)
+> > > >       return group;
+> > > > 
+> > > >     return 0;
+> > > >   }
+> > > > 
+> > > >   pci_for_each_dma_alias(pdev, callback, ...);  
+> > > 
+> > > And this would be equivalent to
+> > > 
+> > >  for_each_pci_dev(tmp) {
+> > >    if (tmp is an alias of pdev)
+> > >      group = get_pci_alias_group();
+> > >    ...
+> > >  }
+> > > 
+> > > The "is an alias of" property is not commutative. Perhaps it should be.
+> > > But that's hard because in some cases the alias doesn't even *exist* as
+> > > a real PCI device. It's just that you appear to get DMA transactions
+> > > from a given source-id.  
+> > 
+> > Right.  In my example above, 01:00.0 is not a PCI device; it's only a
+> > Requester ID that is fabricated by the bridge when it forwards DMA
+> > transactions upstream.
+> > 
+> > I think I'm confused because I don't really understand IOMMU groups.
+> > 
+> > Let me explain what I think they are and you can correct me when I go
+> > wrong.  The iommu_group_alloc() comment says "The IOMMU group
+> > represents the minimum granularity of the IOMMU."  So I suppose the
+> > IOMMU cannot distinguish between devices in a group.  All the devices
+> > in the group use the same set of DMA mappings.  Granting device A DMA
+> > access to a buffer grants the same access to all other members of A's
+> > IOMMU group.
+> > 
+> > That would mean my question was fundamentally backwards.  In
+> > get_pci_alias_group(A), we're not trying to figure out what all the
+> > aliases of A are, which is what pci_for_each_dma_alias() does.
+> > 
+> > Instead, we're trying to figure out which IOMMU group A belongs to.
+> > But I still don't quite understand how aliases fit into this.  Let's
+> > go back to my example and assume we've already put 00:00.0 and 01:01.0
+> > in IOMMU groups:
+> > 
+> >   00:00.0 PCIe-to-PCI bridge to [bus 01]     # in IOMMU group G0
+> >   01:01.0 conventional PCI device            # in IOMMU group G1
+> > 
+> > I assume these devices are in different IOMMU groups because if the
+> > bridge generated its own DMA, it would use Requester ID 00:00.0, which
+> > is distinct from the 01:00.0 it would use when forwarding DMAs from
+> > its secondary side.
 
-> +	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
-> +		dev_err(&acpi_dev->dev, "can't evaluate _SEG\n");
-> +
-> +	return segment;
-> +}
-> +
->  static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
->  {
->  	u32 support, control, requested;
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 25e0327..1a74e87 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -19,6 +19,7 @@
->  #include <linux/spinlock.h>
->  #include <linux/string.h>
->  #include <linux/log2.h>
-> +#include <linux/pci-acpi.h>
->  #include <linux/pci-aspm.h>
->  #include <linux/pm_wakeup.h>
->  #include <linux/interrupt.h>
-> @@ -4779,7 +4780,7 @@ int pci_get_new_domain_nr(void)
->  }
->  
->  #ifdef CONFIG_PCI_DOMAINS_GENERIC
-> -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> +static int of_pci_bus_domain_nr(struct device *parent)
->  {
->  	static int use_dt_domains = -1;
->  	int domain = -1;
-> @@ -4823,7 +4824,13 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
->  		domain = -1;
->  	}
->  
-> -	bus->domain_nr = domain;
-> +	return domain;
-> +}
-> +
-> +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> +{
-> +	bus->domain_nr = acpi_disabled ? of_pci_bus_domain_nr(parent) :
-> +					 acpi_pci_bus_domain_nr(parent);
->  }
->  #endif
->  #endif
-> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> index 89ab057..a72e22d 100644
-> --- a/include/linux/pci-acpi.h
-> +++ b/include/linux/pci-acpi.h
-> @@ -22,6 +22,7 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
->  {
->  	return acpi_remove_pm_notifier(dev);
->  }
-> +extern int acpi_pci_bus_domain_nr(struct device *parent);
->  extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
->  
->  static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
-> @@ -109,6 +110,7 @@ extern const u8 pci_acpi_dsm_uuid[];
->  #else	/* CONFIG_ACPI */
->  static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
->  static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
-> +static inline int acpi_pci_bus_domain_nr(struct device *parent) { return -1; }
->  #endif	/* CONFIG_ACPI */
->  
->  #ifdef CONFIG_ACPI_APEI
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The actual requester ID of the bridge depends on quirks as well, see
+PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS, so it might either be the bridge itself
+or the subordinate bus address.  However, trace how these groups would
+be created, the bridge device is discovered first, so we call
+pci_device_group() for it.  since it's on the root bus and it's the 0th
+function, there will be no existing groups for it to alias, so it gets
+a new group.  Then we discover 01:01.0, pci_device_group() calls
+pci_for_each_dma_alias(), which hits the bridge, regardless of which
+alias is used.  So 01:01.0 ends up in the same iommu group as the
+bridge.
+
+>From the purist standpoint of iommu groups, your expectations are
+probably correct, but we also include within IOMMU groups DMA isolation
+between devices.  So if two devices can DMA between each other without
+it necessarily passing through the iommu, the devices are grouped
+together.  The more important cases of this are ACS isolation on PCI-e
+devices, but it still sort of applies to this conventional PCI example
+here.
+ 
+> > What happens when we add 01:02.0?  I think 01:01.0 and 01:02.0
+> > should both end up in IOMMU group G1 because the IOMMU will see only
+> > Requester ID 01:00.0, so it can't distinguish them.
+> > 
+> > When we add 01:02.0, the ops->add_device() ... ops->device_group()
+> > path calls pci_device_group(01:02.0):
+> > 
+> >   pci_device_group(01:02.0)
+> >     pci_for_each_dma_alias(01:02.0, get_pci_alias_or_group)
+> >       get_pci_alias_or_group(01:02.0, 01:02.0)   # callback
+> >         return 0           # 01:02.0 group not set yet
+> >       get_pci_alias_or_group(00:00.0, 01:00.0)   # callback
+> >         return 1           # 00:00.0 is in G0
+> > 
+> > It seems like we'll assign 01:02.0 to group G0, when I think it
+> > should be in G1.  Where did I go wrong?  
+
+In fact they're all part of G0, so you went wrong assuming the initial
+grouping rather than applying the same rules and tracing how 01:01.0 is
+added.  It's not an ideal representation, it tends to be more
+conservative than necessary in some cases, but keeping the group
+attached to devices has advantages in being able to search and find
+points like this where we don't necessarily have access to the group
+behind the bridge without tying it to the bridge itself.  Thanks,
+
+Alex
