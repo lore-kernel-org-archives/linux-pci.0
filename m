@@ -1,89 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f195.google.com ([209.85.217.195]:33534 "EHLO
-	mail-lb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750938AbcDTU1B (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2016 16:27:01 -0400
-MIME-Version: 1.0
-In-Reply-To: <20160420200652.GA16139@wunner.de>
-References: <2c01b1a2d7703fbacae133502cbf6fce335077a9.1459423244.git.lukas@wunner.de>
-	<20160419232329.GE17863@localhost>
-	<20160420145455.GA15912@wunner.de>
-	<20160420194807.GA22802@localhost>
-	<20160420200652.GA16139@wunner.de>
-Date: Wed, 20 Apr 2016 22:26:58 +0200
-Message-ID: <CAJZ5v0ihJfjq5n+HKiFxaS0OHPSN0H_zU5ijZ4YMfo=u3TpBqg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Fix device attach failure handling
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Grygorii Strashko <grygorii.strashko@ti.com>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andreas Noever <andreas.noever@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from userp1040.oracle.com ([156.151.31.81]:36633 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932680AbcDHAW2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:22:28 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 42/60] PCI: Skip required+optional if there is no optional
+Date: Thu,  7 Apr 2016 17:15:55 -0700
+Message-Id: <1460074573-7481-43-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 20, 2016 at 10:06 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> Hi Bjorn,
->
-> On Wed, Apr 20, 2016 at 02:48:08PM -0500, Bjorn Helgaas wrote:
->> On Wed, Apr 20, 2016 at 04:54:55PM +0200, Lukas Wunner wrote:
->> > On Tue, Apr 19, 2016 at 06:23:29PM -0500, Bjorn Helgaas wrote:
->> > > On Thu, Mar 31, 2016 at 02:57:48PM +0200, Lukas Wunner wrote:
->> > > > Linux 4.5 introduced a behavioral change in device probing during the
->> > > > suspend process with commit 013c074f8642 ("PM / sleep: prohibit devices
->> > > > probing during suspend/hibernation"): It defers device probing during
->> > > > the entire suspend process, starting from the prepare phase and ending
->> > > > with the complete phase. A rule existed before that "we rely on sub-
->> > > > systems not to do any probing once a device is suspended" but it is
->> > > > enforced only now (Alan Stern, https://lkml.org/lkml/2015/9/15/908).
->> > > >
->> > > > This resulted in a WARN splat if a PCI device (e.g. Thunderbolt) is
->> > > > plugged in while the system is asleep: Upon waking up, pciehp_resume()
->> > > > discovers new devices in the resume phase and immediately tries to bind
->> > > > them to a driver. Since probing is now deferred, device_attach() returns
->> > > > -EPROBE_DEFER, which provoked a WARN in pci_bus_add_device().
->> > > >
->> > > > Linux 4.6-rc1 aggravates the situation with commit ab1a187bba5c ("PCI:
->> > > > Check device_attach() return value always"): pci_bus_add_device() no
->> > > > longer sets dev->is_added = 1 if device_attach() returned a negative
->> > > > value. This results in a BUG lockup in pci_bus_add_devices().
->>
->> What is the connection here?  013c074f8642 causes device_attach() to
->> return -EPROBE_DEFER, and your patch makes pci_bus_add_device() treat
->> that as success, so it continues on and sets dev->is_added.
->>
->> Since we will now set dev->is_added even for -EPROBE_DEFER, why do we
->> need to change the "BUG_ON(!dev->is_added)" in pci_bus_add_devices()?
->>
->> I agree that device_attach() might fail for reasons other than
->> -EPROBE_DEFER, and it might be nice to avoid the BUG_ON then.  It just
->> seems like those scenarios are different from the -EPROBE_DEFER one.
->
-> Correct. The idea is that your commit ab1a187bba5c already throws a
-> warning message and undoes the steps preceding device_attach(),
-> so there's no reason to BUG_ON at this point. If we want to BUG_ON
-> whenever device_attach() fails we should do that in pci_bus_add_devices()
-> right after the call to device_attach().
->
-> It just doesn't seem to make sense to BUG_ON, there's no bug here,
-> ever since ab1a187bba5c got introduced, dev->is_added == false is now
-> a legitimate and expected result if device_attach() failed.
->
-> The commit message above is written from a user's point of view:
-> In 4.5 users got a WARN, in 4.6 they got a BUG when doing the same thing.
+If the bridge does not support hotplug and has no child with sriov support,
+We will not have optional resources. We could get out early and
+don't try required+optional allocation.
 
-Which is unfortunate.
+Also in the loop that update res with optional add info, skip resource
+that add_size is 0.
 
->> Sorry I'm being so dense here.  I'm not very familiar with
->> suspend/resume, so I'm having a hard time following everything.
->
-> More like me writing incomprehensible / irritating stuff. Please ask
-> more questions if I failed to make everything clear.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 32 +++++++++++++++++++++++++++++---
+ 1 file changed, 29 insertions(+), 3 deletions(-)
 
-I still need to have a deeper look at your patches, sorry for the
-delay (travel & stuff).
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index a4f53ec..373f76f 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -449,6 +449,24 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
+ 	return false;	/* should not get here */
+ }
+ 
++static bool has_addon(struct list_head *head,
++			struct list_head *realloc_head)
++{
++	int add_count = 0;
++	struct pci_dev_resource *dev_res, *tmp_res;
++
++	/* check if we have add really */
++	list_for_each_entry(dev_res, head, list) {
++		tmp_res = res_to_dev_res(realloc_head, dev_res->res);
++		if (!tmp_res || !tmp_res->add_size)
++			continue;
++
++		add_count++;
++	}
++
++	return add_count != 0;
++}
++
+ static bool save_resources(struct list_head *head,
+ 			   struct list_head *save_head)
+ {
+@@ -480,16 +498,24 @@ static bool __assign_resources_required_optional_sorted(struct list_head *head,
+ 	struct pci_dev_resource *save_res;
+ 	struct pci_dev_resource *dev_res, *tmp_res;
+ 	unsigned long fail_type;
+-	resource_size_t add_align;
++	resource_size_t add_align, add_size;
+ 	struct resource *res;
+ 
++	if (!has_addon(head, realloc_head))
++		return false;
++
+ 	if (!save_resources(head, &save_head))
+ 		return false;
+ 
+ 	/* Update res in head list with add_size in realloc_head list */
+ 	list_for_each_entry(dev_res, head, list) {
+ 		res = dev_res->res;
+-		res->end += get_res_add_size(realloc_head, res);
++		add_size = get_res_add_size(realloc_head, res);
++
++		if (!add_size)
++			continue;
++
++		res->end += add_size;
+ 
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+@@ -577,7 +603,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	 */
+ 
+ 	/* Check required+optional add */
+-	if (realloc_head && !list_empty(realloc_head) &&
++	if (realloc_head &&
+ 	    __assign_resources_required_optional_sorted(head, realloc_head))
+ 		return;
+ 
+-- 
+1.8.4.5
+
