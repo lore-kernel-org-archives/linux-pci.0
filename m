@@ -1,151 +1,173 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 29/60] PCI: Don't add too much optional size for hotplug bridge MMIO
-Date: Thu,  7 Apr 2016 17:15:42 -0700
-Message-Id: <1460074573-7481-30-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:44316 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754160AbcDHQUz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Apr 2016 12:20:55 -0400
+Date: Fri, 8 Apr 2016 11:20:50 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 1/3] PCI: Add Thunderbolt device IDs
+Message-ID: <20160408162049.GG8780@localhost>
+References: <cc23dc43ce25142f1b097a73c17bbcdada3f964d.1458475382.git.lukas@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cc23dc43ce25142f1b097a73c17bbcdada3f964d.1458475382.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current code will always add 2M for hotplug bridge MMIO even
-there is child device under it already.
+[+cc Greg]
 
-For example:
-	40:03.0 --- 43:00.0 --- 44:02.0 -+- 45:00.0
-					 \- 45:00.1
+On Sun, Mar 20, 2016 at 01:57:20PM +0100, Lukas Wunner wrote:
+> Gen 1 and 2 chips use the same ID for NHI, bridges and switch.
+> Gen 3 chips and onward use a distinct ID for the NHI.
+> 
+> No functional change intended.
+> 
+> Cc: Andreas Noever <andreas.noever@gmail.com>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-44:02.0 will need 1M as must for 45:00.0 and 45:00.1
-When we calculate add_size for 44:02.0, we pass 2M as additional
-size for hotplug bridge, total will be 3M.
+All three patches applied with Andreas' ack to pci/thunderbolt for v4.7,
+thanks!
 
-That is different from code before changes for optional support,
-or even current code that treat optional as required directly by
-not passing realloc list. We only need 2M as total.
-
-The optional size should be 1M, and total size should be 2M.
-
-This patch change to comparing required+optional with min_sum_size to
-get smaller optional size.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 28 +++++++++++++++-------------
- 1 file changed, 15 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 12fd6d9..f6b7b8f 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1198,7 +1198,6 @@ out:
-  * @type2: second match type
-  * @type3: third match type
-  * @min_size : the minimum memory window that must to be allocated
-- * @add_size : additional optional memory window
-  * @realloc_head : track the additional memory window on this list
-  *
-  * Calculate the size of the bus and minimal alignment which
-@@ -1211,10 +1210,11 @@ out:
- static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			 unsigned long type, unsigned long type2,
- 			 unsigned long type3,
--			 resource_size_t min_size, resource_size_t add_size,
-+			 resource_size_t min_size,
- 			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
-+	resource_size_t min_sum_size = 0;
- 	resource_size_t min_align = 0, min_add_align = 0;
- 	resource_size_t max_align = 0, max_add_align = 0;
- 	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
-@@ -1226,6 +1226,11 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	if (!b_res)
- 		return -ENOSPC;
- 
-+	if (realloc_head) {
-+		min_sum_size = min_size;
-+		min_size = 0;
-+	}
-+
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
-@@ -1298,8 +1303,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	}
- 	free_align_test_list(&align_test_list);
- 
--	if ((sum_add_size - size) < add_size)
--		sum_add_size = size + add_size;
-+	if (sum_add_size < min_sum_size)
-+		sum_add_size = min_sum_size;
- 	if (sum_add_size > size && realloc_head) {
- 		min_add_align = calculate_mem_align(&align_test_add_list,
- 					max_add_align, sum_add_size,
-@@ -1436,7 +1441,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
--	resource_size_t additional_mem_size = 0, additional_io_size = 0;
-+	resource_size_t min_mem_size = 0, additional_io_size = 0;
- 	struct resource *b_res;
- 	int ret;
- 
-@@ -1473,7 +1478,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	case PCI_CLASS_BRIDGE_PCI:
- 		if (bus->self->is_hotplug_bridge) {
- 			additional_io_size  = pci_hotplug_io_size;
--			additional_mem_size = pci_hotplug_mem_size;
-+			min_mem_size = pci_hotplug_mem_size;
- 		}
- 		/* Fall through */
- 	default:
-@@ -1493,8 +1498,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask |= IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 				  prefmask, prefmask,
--				  realloc_head ? 0 : additional_mem_size,
--				  additional_mem_size, realloc_head);
-+				  min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, all non-prefetchable resources
-@@ -1517,8 +1521,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			prefmask &= ~IORESOURCE_MEM_64;
- 			ret = pbus_size_mem(bus, prefmask, prefmask,
- 					 prefmask, prefmask,
--					 realloc_head ? 0 : additional_mem_size,
--					 additional_mem_size, realloc_head);
-+					 min_mem_size, realloc_head);
- 
- 			/*
- 			 * If successful, only non-prefetchable resources
-@@ -1527,7 +1530,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 			if (ret == 0)
- 				mask = prefmask;
- 			else
--				additional_mem_size += additional_mem_size;
-+				min_mem_size += min_mem_size;
- 
- 			type2 = type3 = IORESOURCE_MEM;
- 		}
-@@ -1548,8 +1551,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 		 * window.
- 		 */
- 		pbus_size_mem(bus, mask, IORESOURCE_MEM, type2, type3,
--				realloc_head ? 0 : additional_mem_size,
--				additional_mem_size, realloc_head);
-+				min_mem_size, realloc_head);
- 		break;
- 	}
- }
--- 
-1.8.4.5
+> ---
+>  drivers/pci/quirks.c         | 16 ++++++++++------
+>  drivers/thunderbolt/nhi.c    |  8 +++++---
+>  drivers/thunderbolt/switch.c |  9 +++++----
+>  include/linux/pci_ids.h      | 18 ++++++++++++++++++
+>  4 files changed, 38 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 8e67802..b584ddf 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3232,7 +3232,8 @@ static void quirk_apple_poweroff_thunderbolt(struct pci_dev *dev)
+>  	acpi_execute_simple_method(SXIO, NULL, 0);
+>  	acpi_execute_simple_method(SXLV, NULL, 0);
+>  }
+> -DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_INTEL, 0x1547,
+> +DECLARE_PCI_FIXUP_SUSPEND_LATE(PCI_VENDOR_ID_INTEL,
+> +			       PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
+>  			       quirk_apple_poweroff_thunderbolt);
+>  
+>  /*
+> @@ -3266,9 +3267,10 @@ static void quirk_apple_wait_for_thunderbolt(struct pci_dev *dev)
+>  	if (!nhi)
+>  		goto out;
+>  	if (nhi->vendor != PCI_VENDOR_ID_INTEL
+> -			|| (nhi->device != 0x1547 && nhi->device != 0x156c)
+> -			|| nhi->subsystem_vendor != 0x2222
+> -			|| nhi->subsystem_device != 0x1111)
+> +		    || (nhi->device != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
+> +			nhi->device != PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI)
+> +		    || nhi->subsystem_vendor != 0x2222
+> +		    || nhi->subsystem_device != 0x1111)
+>  		goto out;
+>  	dev_info(&dev->dev, "quirk: waiting for thunderbolt to reestablish PCI tunnels...\n");
+>  	device_pm_wait_for_dev(&dev->dev, &nhi->dev);
+> @@ -3276,9 +3278,11 @@ out:
+>  	pci_dev_put(nhi);
+>  	pci_dev_put(sibling);
+>  }
+> -DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL, 0x1547,
+> +DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
+> +			       PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
+>  			       quirk_apple_wait_for_thunderbolt);
+> -DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL, 0x156d,
+> +DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL,
+> +			       PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE,
+>  			       quirk_apple_wait_for_thunderbolt);
+>  #endif
+>  
+> diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+> index 20a41f7..36be23b 100644
+> --- a/drivers/thunderbolt/nhi.c
+> +++ b/drivers/thunderbolt/nhi.c
+> @@ -633,16 +633,18 @@ static const struct dev_pm_ops nhi_pm_ops = {
+>  static struct pci_device_id nhi_ids[] = {
+>  	/*
+>  	 * We have to specify class, the TB bridges use the same device and
+> -	 * vendor (sub)id.
+> +	 * vendor (sub)id on gen 1 and gen 2 controllers.
+>  	 */
+>  	{
+>  		.class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
+> -		.vendor = PCI_VENDOR_ID_INTEL, .device = 0x1547,
+> +		.vendor = PCI_VENDOR_ID_INTEL,
+> +		.device = PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
+>  		.subvendor = 0x2222, .subdevice = 0x1111,
+>  	},
+>  	{
+>  		.class = PCI_CLASS_SYSTEM_OTHER << 8, .class_mask = ~0,
+> -		.vendor = PCI_VENDOR_ID_INTEL, .device = 0x156c,
+> +		.vendor = PCI_VENDOR_ID_INTEL,
+> +		.device = PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI,
+>  		.subvendor = PCI_ANY_ID, .subdevice = PCI_ANY_ID,
+>  	},
+>  	{ 0,}
+> diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+> index aeb9829..db73ffe 100644
+> --- a/drivers/thunderbolt/switch.c
+> +++ b/drivers/thunderbolt/switch.c
+> @@ -293,9 +293,9 @@ static int tb_plug_events_active(struct tb_switch *sw, bool active)
+>  	if (active) {
+>  		data = data & 0xFFFFFF83;
+>  		switch (sw->config.device_id) {
+> -		case 0x1513:
+> -		case 0x151a:
+> -		case 0x1549:
+> +		case PCI_DEVICE_ID_INTEL_LIGHT_RIDGE:
+> +		case PCI_DEVICE_ID_INTEL_EAGLE_RIDGE:
+> +		case PCI_DEVICE_ID_INTEL_PORT_RIDGE:
+>  			break;
+>  		default:
+>  			data |= 4;
+> @@ -370,7 +370,8 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
+>  		tb_sw_warn(sw, "unknown switch vendor id %#x\n",
+>  			   sw->config.vendor_id);
+>  
+> -	if (sw->config.device_id != 0x1547 && sw->config.device_id != 0x1549)
+> +	if (sw->config.device_id != PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C &&
+> +	    sw->config.device_id != PCI_DEVICE_ID_INTEL_PORT_RIDGE)
+>  		tb_sw_warn(sw, "unsupported switch device id %#x\n",
+>  			   sw->config.device_id);
+>  
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index 247da8c..c58752f 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -2604,6 +2604,24 @@
+>  #define PCI_DEVICE_ID_INTEL_82441	0x1237
+>  #define PCI_DEVICE_ID_INTEL_82380FB	0x124b
+>  #define PCI_DEVICE_ID_INTEL_82439	0x1250
+> +#define PCI_DEVICE_ID_INTEL_LIGHT_RIDGE             0x1513 /* Tbt 1 Gen 1 */
+> +#define PCI_DEVICE_ID_INTEL_EAGLE_RIDGE             0x151a
+> +#define PCI_DEVICE_ID_INTEL_LIGHT_PEAK              0x151b
+> +#define PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C         0x1547 /* Tbt 1 Gen 2 */
+> +#define PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_2C         0x1548
+> +#define PCI_DEVICE_ID_INTEL_PORT_RIDGE              0x1549
+> +#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_2C_NHI    0x1566 /* Tbt 1 Gen 3 */
+> +#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_2C_BRIDGE 0x1567
+> +#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_4C_NHI    0x1568
+> +#define PCI_DEVICE_ID_INTEL_REDWOOD_RIDGE_4C_BRIDGE 0x1569
+> +#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_NHI     0x156a /* Thunderbolt 2 */
+> +#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE  0x156b
+> +#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI     0x156c
+> +#define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE  0x156d
+> +#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_NHI     0x1575 /* Thunderbolt 3 */
+> +#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_2C_BRIDGE  0x1576
+> +#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_NHI     0x1577
+> +#define PCI_DEVICE_ID_INTEL_ALPINE_RIDGE_4C_BRIDGE  0x1578
+>  #define PCI_DEVICE_ID_INTEL_80960_RP	0x1960
+>  #define PCI_DEVICE_ID_INTEL_82840_HB	0x1a21
+>  #define PCI_DEVICE_ID_INTEL_82845_HB	0x1a30
+> -- 
+> 2.8.0.rc3
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
