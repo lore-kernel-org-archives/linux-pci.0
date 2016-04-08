@@ -1,126 +1,148 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 15 Apr 2016 11:14:00 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: iommu@lists.linux-foundation.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Will Deacon <will.deacon@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:35258 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932215AbcDHARP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:17:15 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [RFC PATCH 09/11] drivers: acpi: implement acpi_dma_configure
-Message-ID: <20160415161400.GC7973@localhost>
-References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1460654743-7896-10-git-send-email-lorenzo.pieralisi@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460654743-7896-10-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 16/60] PCI: Restore pref MMIO allocation logic for host bridge without mmio64
+Date: Thu,  7 Apr 2016 17:15:29 -0700
+Message-Id: <1460074573-7481-17-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 14, 2016 at 06:25:41PM +0100, Lorenzo Pieralisi wrote:
-> On DT based systems, the of_dma_configure() API implements DMA configuration
-> for a given device. On ACPI systems an API equivalent to of_dma_configure()
-> is missing which implies that it is currently not possible to set-up DMA
-> operations for devices through the ACPI generic kernel layer.
-> 
-> This patch fills the gap by introducing acpi_dma_configure/deconfigure()
-> calls, that carry out IOMMU configuration through IORT (on systems where
-> it is present) and call arch_setup_dma_ops(...) with the retrieved
-> parameters.
-> 
-> The DMA range size passed to arch_setup_dma_ops() is sized according
-> to the device coherent_dma_mask (starting at address 0x0), mirroring the
-> DT probing path behaviour when a dma-ranges property is not provided
-> for the device being probed; this changes the current arch_setup_dma_ops()
-> call parameters in the ACPI probing case, but since arch_setup_dma_ops()
-> is a NOP on all architectures but ARM/ARM64 this patch does not change
-> the current kernel behaviour on them.
-> 
-> This patch updates ACPI and PCI core code to use the newly introduced
-> acpi_dma_configure function, providing the same functionality
-> as of_dma_configure on ARM systems and leaving behaviour unchanged
-> for all other arches.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Cc: Tomasz Nowicki <tn@semihalf.com>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+>From 5b2854155 (PCI: Restrict 64-bit prefetchable bridge windows to 64-bit
+resources), we change the logic for pref mmio allocation:
+When bridge pref support mmio64, we will only put children pref
+that support mmio64 into it, and will put children pref mmio32
+into bridge's non-pref mmio32.
 
-There's only a tiny PCI change in this series, so I assume somebody
-else will merge all this.  Here's my ack for the PCI part:
+That could leave bridge pref bar not used when that pref bar is mmio64,
+and children res only has mmio32.
+Also could have allocation failure when non-pref mmio32 is not big
+enough space for those children pref mmio32.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# for drivers/pci/probe.c change
+That is not rational when the host bridge does not have 64bit mmio
+above 4g at all.
 
-One question on use of pci_for_each_dma_alias() below.
+The patch restore to old logic:
+when host bridge does not have has_mem64, put children pref mmio64 and
+pref mmio32 all under bridges pref bars.
 
-> +static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
-> +{
-> +	u32 *rid = data;
-> +
-> +	*rid = alias;
-> +	return 0;
-> +}
-> +
-> +/**
-> + * iort_iommu_configure - Set-up IOMMU configuration for a device.
-> + *
-> + * @dev: device that requires IOMMU set-up
-> + *
-> + * Returns: iommu_ops pointer on configuration success
-> + *          NULL on configuration failure
-> + */
-> +struct iommu_ops *iort_iommu_configure(struct device *dev)
-> +{
-> +	struct acpi_iort_node *node, *parent;
-> +	struct iommu_ops *ops = NULL;
-> +	struct iommu_fwspec fwspec;
-> +	struct iort_iommu_node *iommu_node;
-> +	u32 rid = 0, devid = 0;
-> +
-> +	if (dev_is_pci(dev)) {
-> +		struct pci_bus *bus = to_pci_dev(dev)->bus;
-> +
-> +		pci_for_each_dma_alias(to_pci_dev(dev), __get_pci_rid,
-> +				       &rid);
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+---
+ drivers/pci/bus.c       |  4 +++-
+ drivers/pci/setup-bus.c | 13 +++++++++----
+ drivers/pci/setup-res.c |  9 ++++++---
+ 3 files changed, 18 insertions(+), 8 deletions(-)
 
-You end up with only the last DMA alias in "rid".  Is it really true
-that you only need to call iort_dev_map_rid() for one of the aliases?
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 6c9f546..200fdac 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -204,8 +204,10 @@ int pci_bus_alloc_resource(struct pci_bus *bus, struct resource *res,
+ {
+ #ifdef CONFIG_PCI_BUS_ADDR_T_64BIT
+ 	int rc;
++	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
++				IORESOURCE_MEM_64 : 0;
+ 
+-	if (res->flags & IORESOURCE_MEM_64) {
++	if (res->flags & mmio64) {
+ 		rc = pci_bus_alloc_from_region(bus, res, size, align, min,
+ 					       type_mask, alignf, alignf_data,
+ 					       &pci_high);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 9404032..0845a57 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1311,7 +1311,8 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 		b_res = &bus->self->resource[PCI_BRIDGE_RESOURCES];
+ 		mask = IORESOURCE_MEM;
+ 		prefmask = IORESOURCE_MEM | IORESOURCE_PREFETCH;
+-		if (b_res[2].flags & IORESOURCE_MEM_64) {
++		if ((b_res[2].flags & IORESOURCE_MEM_64) &&
++		    pci_find_host_bridge(bus)->has_mem64) {
+ 			prefmask |= IORESOURCE_MEM_64;
+ 			ret = pbus_size_mem(bus, prefmask, prefmask,
+ 				  prefmask, prefmask,
+@@ -1513,17 +1514,21 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 	 *	  io port.
+ 	 *     2. if there is non pref mmio assign fail, release bridge
+ 	 *	  nonpref mmio.
+-	 *     3. if there is 64bit pref mmio assign fail, and bridge pref
++	 *     3. if there is pref mmio assign fail, and host bridge does
++	 *	  have 64bit mmio, release bridge pref mmio.
++	 *     4. if there is 64bit pref mmio assign fail, and bridge pref
+ 	 *	  is 64bit, release bridge pref mmio.
+-	 *     4. if there is pref mmio assign fail, and bridge pref is
++	 *     5. if there is pref mmio assign fail, and bridge pref is
+ 	 *	  32bit mmio, release bridge pref mmio
+-	 *     5. if there is pref mmio assign fail, and bridge pref is not
++	 *     6. if there is pref mmio assign fail, and bridge pref is not
+ 	 *	  assigned, release bridge nonpref mmio.
+ 	 */
+ 	if (type & IORESOURCE_IO)
+ 		idx = 0;
+ 	else if (!(type & IORESOURCE_PREFETCH))
+ 		idx = 1;
++	else if (!pci_find_host_bridge(bus)->has_mem64)
++		idx = 2;
+ 	else if ((type & IORESOURCE_MEM_64) &&
+ 		 (b_res[2].flags & IORESOURCE_MEM_64))
+ 		idx = 2;
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index f741fed..59271ee 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -212,6 +212,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	struct resource *res = dev->resource + resno;
+ 	resource_size_t min;
+ 	int ret;
++	unsigned long mmio64 = pci_find_host_bridge(bus)->has_mem64 ?
++				IORESOURCE_MEM_64 : 0;
+ 
+ 	min = (res->flags & IORESOURCE_IO) ? PCIBIOS_MIN_IO : PCIBIOS_MIN_MEM;
+ 
+@@ -223,7 +225,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * things differently than they were sized, not everything will fit.
+ 	 */
+ 	ret = pci_bus_alloc_resource(bus, res, size, align, min,
+-				     IORESOURCE_PREFETCH | IORESOURCE_MEM_64,
++				     IORESOURCE_PREFETCH | mmio64,
+ 				     pcibios_align_resource, dev);
+ 	if (ret == 0)
+ 		return 0;
+@@ -232,7 +234,8 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * If the prefetchable window is only 32 bits wide, we can put
+ 	 * 64-bit prefetchable resources in it.
+ 	 */
+-	if ((res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
++	if (mmio64 &&
++	    (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) ==
+ 	     (IORESOURCE_PREFETCH | IORESOURCE_MEM_64)) {
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min,
+ 					     IORESOURCE_PREFETCH,
+@@ -247,7 +250,7 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
+ 	 * non-prefetchable, the first call already tried the only possibility
+ 	 * so we don't need to try again.
+ 	 */
+-	if (res->flags & (IORESOURCE_PREFETCH | IORESOURCE_MEM_64))
++	if (res->flags & (IORESOURCE_PREFETCH | mmio64))
+ 		ret = pci_bus_alloc_resource(bus, res, size, align, min, 0,
+ 					     pcibios_align_resource, dev);
+ 
+-- 
+1.8.4.5
 
-> +		node = iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
-> +				      iort_find_dev_callback, &bus->dev);
-> +	} else
-> +		node = iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
-> +				      iort_find_dev_callback, dev);
-> +
-> +	if (!node)
-> +		return NULL;
-> +
-> +	iort_dev_map_rid(node, rid, &devid, ACPI_IORT_NODE_SMMU);
-> +
-> +	parent = iort_find_parent_node(node, ACPI_IORT_NODE_SMMU);
-> +
-> +	if (!parent)
-> +		return NULL;
-> +
-> +	iommu_node = iort_iommu_get_node(parent);
-> +	ops = iommu_node->ops;
-> +
-> +	fwspec.fwnode = iommu_node->fwnode;
-> +	fwspec.param_count = 1;
-> +	fwspec.param[0] = devid;
-> +
-> +	if (!ops || !ops->fw_xlate || ops->fw_xlate(dev, &fwspec))
-> +		return NULL;
-> +
-> +	return ops;
-> +}
