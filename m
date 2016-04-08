@@ -1,50 +1,61 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V6 11/13] pci, acpi: Match PCI config space accessors
- against platfrom specific quirks.
-To: "liudongdong (C)" <liudongdong3@huawei.com>, helgaas@kernel.org,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-12-git-send-email-tn@semihalf.com>
- <5714C6F6.8050600@huawei.com>
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Linuxarm <linuxarm@huawei.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <5714D165.4020606@semihalf.com>
-Date: Mon, 18 Apr 2016 14:21:57 +0200
-MIME-Version: 1.0
-In-Reply-To: <5714C6F6.8050600@huawei.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 51/60] PCI: Allow bridge optional only io port resource required size to be 0
+Date: Thu,  7 Apr 2016 17:16:04 -0700
+Message-Id: <1460074573-7481-52-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 18.04.2016 13:37, liudongdong (C) wrote:
-> Hi Tomasz
->
-> I merged my patchset to branch topci-acpi-v6.
-> The patchset is used for Hisilicon DO2 PCIe ACPI support.
-> I found some compile errors. The log as below.
-> drivers/pci/host/pcie-hisi-acpi.c: In function 'hisi_pcie_init':
-> drivers/pci/host/pcie-hisi-acpi.c:130:6: error: 'struct acpi_pci_root'
-> has no member named 'sysdata'
->    root->sysdata = reg_base;
->
-> In your PATCH V5, add "sysdata" for strcut acpi_pci_root, but PATCH V6
-> has not add it.
-> In my patch, I used root->sysdata which will be available along
-> read/write accessor.
-> I want to know the reason this v6 patchset does not add "sysdata". I
-> need this.
+When there is no child device under the non hotplug bridge,
+We can use 0 for required size, and do not use old size as required size.
 
-We are handling this different way. You can now use "struct 
-pci_config_window" -> priv, see pci-thunder-pem.c driver.
+That will save some io port range for other bridges, as BIOS could do
+some partial assign, and we want to use those not used io port range.
 
-Tomasz
+When there is child device, size will not be 0.
+when the bridge supports hotplug, min_size will not be 0.
+So they will still honor the old size as required size.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index b071035..28dfd8e 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1229,8 +1229,9 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 
+ 	size = size_aligned_for_isa(size);
+ 	size += size1;
+-	size0 = calculate_size(size, min_size,
+-			resource_size(b_res), min_align);
++	if (size || min_size)
++		size0 = calculate_size(size, min_size,
++					resource_size(b_res), min_align);
+ 	sum_add_size = size_aligned_for_isa(sum_add_size);
+ 	sum_add_size += sum_add_size1;
+ 	if (sum_add_size < min_sum_size)
+@@ -1246,7 +1247,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		return;
+ 	}
+ 
+-	b_res->start = min_align;
++	b_res->start = size0 ? min_align : 0;
+ 	b_res->end = b_res->start + size0 - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+ 	if (size1 > size0 && realloc_head) {
+-- 
+1.8.4.5
