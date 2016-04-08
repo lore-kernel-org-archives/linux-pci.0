@@ -1,162 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:32142 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751634AbcD2IwM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Apr 2016 04:52:12 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [PATCH v5 4/4] PCI: Add runtime PM support for PCIe ports
-Date: Fri, 29 Apr 2016 11:51:59 +0300
-Message-Id: <1461919919-120102-5-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1461919919-120102-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1461919919-120102-1-git-send-email-mika.westerberg@linux.intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:59221 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755818AbcDHDkR (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 23:40:17 -0400
+Subject: Re: [PATCH 2/2] pci, acpi: free IO resource during shutdown
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Tomasz Nowicki <tn@semihalf.com>
+References: <1457389310-3538-1-git-send-email-okaya@codeaurora.org>
+ <1457389310-3538-2-git-send-email-okaya@codeaurora.org>
+ <20160407160624.GB8780@localhost> <57069CAF.8090803@codeaurora.org>
+ <20160407214108.GB24492@localhost>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+	agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <5707281B.6020805@codeaurora.org>
+Date: Thu, 7 Apr 2016 23:40:11 -0400
+MIME-Version: 1.0
+In-Reply-To: <20160407214108.GB24492@localhost>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add back runtime PM support for PCIe ports that was removed in
-commit fe9a743a2601 ("PCI/PM: Drop unused runtime PM support code for
-PCIe ports").
+Hi Tomasz,
 
-First of all we cannot enable it automatically for all ports since there
-has been problems previously as can be seen in [1]. In summary suspended
-PCIe ports were not able to deal with ACPI based hotplug reliably. One
-reason why this might happen is the fact that when a PCIe port is powered
-down, config space access to the devices behind the port is not possible.
-If the BIOS hotplug SMI handler assumes the port is always in D0 it will
-not be able to find the hotplugged devices. To be on the safe side only
-enable runtime PM if the port does not claim to support hotplug.
+On 4/7/2016 5:41 PM, Bjorn Helgaas wrote:
+>>> You say this is undoing the effect of pci_remap_iospace(), but that's
+>>> > > only called by native drivers and the generic (OF) driver, not by
+>>> > > pci_root.c.
+>> > 
+>> > See the ACPI root bridge driver above.
+> If this is a fix to patches that haven't been merged yet, we need to
+> squash the fix into the patches.
+> 
 
-For PCIe ports not using hotplug we enable and allow runtime PM
-automatically. Since 'bridge_d3' can be changed any time we check this in
-driver ->runtime_idle() and ->runtime_suspend() and only allow runtime
-suspend if the flag is still set. Use autosuspend with default of 10ms idle
-time to prevent the port from repeatedly suspending and resuming on
-continuous configuration space access of devices behind the port.
+Can you merge these to two patches to your series for the next post?
 
-The actual power transition to D3 and back is handled in the PCI core.
+I need to remove weak on the first patch per direction from Bjorn and 
+fix the function comments. You could as well do this while you are merging. 
 
-Idea to automatically unblock (allow) runtime PM for PCIe ports came from
-Dave Airlie.
+Let me know what your preference is.
 
-[1] https://bugzilla.kernel.org/show_bug.cgi?id=53811
-
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pcie/portdrv_core.c |  2 ++
- drivers/pci/pcie/portdrv_pci.c  | 50 +++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 52 insertions(+)
-
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 88122dc2e1b1..65b1a624826b 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -11,6 +11,7 @@
- #include <linux/kernel.h>
- #include <linux/errno.h>
- #include <linux/pm.h>
-+#include <linux/pm_runtime.h>
- #include <linux/string.h>
- #include <linux/slab.h>
- #include <linux/pcieport_if.h>
-@@ -343,6 +344,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
- 		     get_descriptor_id(pci_pcie_type(pdev), service));
- 	device->parent = &pdev->dev;
- 	device_enable_async_suspend(device);
-+	pm_runtime_no_callbacks(device);
- 
- 	retval = device_register(device);
- 	if (retval) {
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 6c6bb03392ea..f4409af00756 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -93,6 +93,26 @@ static int pcie_port_resume_noirq(struct device *dev)
- 	return 0;
- }
- 
-+static int pcie_port_runtime_suspend(struct device *dev)
-+{
-+	return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
-+}
-+
-+static int pcie_port_runtime_resume(struct device *dev)
-+{
-+	return 0;
-+}
-+
-+static int pcie_port_runtime_idle(struct device *dev)
-+{
-+	/*
-+	 * Rely the PCI core has set bridge_d3 whenever it thinks the port
-+	 * should be good to go to D3. Everything else, including moving
-+	 * the port to D3, is handled by the PCI core.
-+	 */
-+	return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
-+}
-+
- static const struct dev_pm_ops pcie_portdrv_pm_ops = {
- 	.suspend	= pcie_port_device_suspend,
- 	.resume		= pcie_port_device_resume,
-@@ -101,6 +121,9 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
- 	.poweroff	= pcie_port_device_suspend,
- 	.restore	= pcie_port_device_resume,
- 	.resume_noirq	= pcie_port_resume_noirq,
-+	.runtime_suspend = pcie_port_runtime_suspend,
-+	.runtime_resume	= pcie_port_runtime_resume,
-+	.runtime_idle	= pcie_port_runtime_idle,
- };
- 
- #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
-@@ -134,11 +157,38 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
- 		return status;
- 
- 	pci_save_state(dev);
-+
-+	/*
-+	 * Prevent runtime PM if the port is advertising support for PCIe
-+	 * hotplug. Otherwise the BIOS hotplug SMI code might not be able
-+	 * to enumerate devices behind this port properly (the port is
-+	 * powered down preventing all config space accesses to the
-+	 * subordinate devices). We can't be sure for native PCIe hotplug
-+	 * either so prevent that as well.
-+	 */
-+	if (!dev->is_hotplug_bridge) {
-+		/*
-+		 * Keep the port resumed 10ms to make sure things like
-+		 * config space accesses from userspace (lspci) will not
-+		 * cause the port to repeatedly suspend and resume.
-+		 */
-+		pm_runtime_set_autosuspend_delay(&dev->dev, 10);
-+		pm_runtime_use_autosuspend(&dev->dev);
-+		pm_runtime_put_autosuspend(&dev->dev);
-+		pm_runtime_allow(&dev->dev);
-+	}
-+
- 	return 0;
- }
- 
- static void pcie_portdrv_remove(struct pci_dev *dev)
- {
-+	if (!dev->is_hotplug_bridge) {
-+		pm_runtime_forbid(&dev->dev);
-+		pm_runtime_get_noresume(&dev->dev);
-+		pm_runtime_dont_use_autosuspend(&dev->dev);
-+	}
-+
- 	pcie_port_device_remove(dev);
- }
- 
 -- 
-2.8.0.rc3
-
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
