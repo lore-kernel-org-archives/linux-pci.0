@@ -1,240 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42787 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757126AbcDHATJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:19:09 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 28/60] PCI: Optimize bus align/size calculation for optional during sizing
-Date: Thu,  7 Apr 2016 17:15:41 -0700
-Message-Id: <1460074573-7481-29-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:35449 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750825AbcDHPHY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Apr 2016 11:07:24 -0400
+Date: Fri, 8 Apr 2016 08:07:23 -0700
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v2 2/4] PCI: Move PCIe ports to D3 during suspend
+Message-ID: <20160408150723.GA29919@kroah.com>
+References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1460111790-92836-3-git-send-email-mika.westerberg@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1460111790-92836-3-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current add_align always use max align, that make required+optional
-to get allocated more than needed in some cases.
+On Fri, Apr 08, 2016 at 01:36:28PM +0300, Mika Westerberg wrote:
+> diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
+> index f0640b7a1c42..aafc1b093bc8 100644
+> --- a/drivers/usb/host/xhci-pci.c
+> +++ b/drivers/usb/host/xhci-pci.c
+> @@ -379,7 +379,7 @@ static int xhci_pci_suspend(struct usb_hcd *hcd, bool do_wakeup)
+>  	 * need to have the registers polled during D3, so avoid D3cold.
+>  	 */
+>  	if (xhci->quirks & XHCI_COMP_MODE_QUIRK)
+> -		pdev->no_d3cold = true;
+> +		pci_enable_d3cold(pdev, false);
+>  
+>  	if (xhci->quirks & XHCI_PME_STUCK_QUIRK)
+>  		xhci_pme_quirk(hcd);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 004b8133417d..d8801587b4ca 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -296,6 +296,7 @@ struct pci_dev {
+>  	unsigned int	d2_support:1;	/* Low power state D2 is supported */
+>  	unsigned int	no_d1d2:1;	/* D1 and D2 are forbidden */
+>  	unsigned int	no_d3cold:1;	/* D3cold is forbidden */
+> +	unsigned int	bridge_d3:1;	/* Allow D3 for bridge */
+>  	unsigned int	d3cold_allowed:1;	/* D3cold is allowed by user */
+>  	unsigned int	mmio_always_on:1;	/* disallow turning off io/mem
+>  						   decoding during bar sizing */
+> @@ -1085,6 +1086,7 @@ int pci_back_from_sleep(struct pci_dev *dev);
+>  bool pci_dev_run_wake(struct pci_dev *dev);
+>  bool pci_check_pme_status(struct pci_dev *dev);
+>  void pci_pme_wakeup_bus(struct pci_bus *bus);
+> +void pci_enable_d3cold(struct pci_dev *dev, bool enable);
 
-Now we have new calculate_mem_align(), so we could use it for
-add_align calculation.
+That's an ackward api, as is seen in the above use in the xhci driver
+(enable false?)
 
-Need to create separated list for required+optional align/size info.
+Why not just make 2 functions:
+	pci_dc3cold_enable(struct pci_dev *dev)
+	pci_dc3cold_disable(struct pci_dev *dev)
+which makes it obvious what is going on.
 
-After that we can get smaller add_align/size, and we have more chance
-to make required+optional to get allocated sucessfully.
+Whenever you add a bool to a function, it requires the developer to go
+look up the implementation to see what it means and how to use it, to
+check if the usage is correct.  Just make it obvious in the name itself
+so everyone knows exactly what is going on.
 
-The result for bridge that have Intel 4x10g card installed:
+Same thing goes for pci_bridge_pm_update(), even with the documentation
+I'm not quite sure what the bool flag is for.  Please split this into
+two calls as well.
 
- pci 0000:20:03.2: bridge window [mem 0x00000000-0x000fffff 64bit pref]
-	to [bus 2a-31] calculate_mem for required
- align/size:
-   00800000/00800000, 00800000/00800000, 00800000/00800000,
-   00800000/00800000, 00008000/00008000, 00008000/00008000,
-   00008000/00008000, 00008000/00008000
- original min_align/min_size: 00400000/02400000
- new min_align/min_size: 00400000/02400000
+thanks,
 
- pci 0000:20:03.2: bridge window [mem 0x00000000-0x000fffff 64bit pref]
-	to [bus 2a-31] calculate_mem for required+optional
- align/size:
-   00800000/00800000, 00800000/00800000, 00800000/00800000,
-   00800000/00800000, 00010000/00200000, 00010000/00200000,
-   00010000/00200000, 00010000/00200000, 00008000/00008000,
-   00008000/00008000, 00008000/00008000, 00008000/00008000,
-   00004000/00080000, 00004000/00080000, 00004000/00080000,
-   00004000/00080000
- original code min_align/min_size: 00800000/03000000
- new min_align/min_size: 00100000/02b00000
-
-so required align/size: 0x400000/0x2400000, and
-new required+optional align/size: 0x100000/0x2b00000, and it is much better
-than original required+optional align/size: 0x800000/0x3000000
-and even have smaller min_align than required.
-
-
--v2: remove not used size1 in calculate_memsize
-
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Reported-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 82 ++++++++++++++++++++++++++++++-------------------
- 1 file changed, 51 insertions(+), 31 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 3051bb7..12fd6d9 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -943,7 +943,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
- 
- static resource_size_t calculate_memsize(resource_size_t size,
- 		resource_size_t min_size,
--		resource_size_t size1,
- 		resource_size_t old_size,
- 		resource_size_t align)
- {
-@@ -953,7 +952,7 @@ static resource_size_t calculate_memsize(resource_size_t size,
- 		old_size = 0;
- 	if (size < old_size)
- 		size = old_size;
--	size = ALIGN(size + size1, align);
-+	size = ALIGN(size, align);
- 	return size;
- }
- 
-@@ -1216,26 +1215,23 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
--	resource_size_t min_align, align, size, size0, size1;
--	resource_size_t max_align = 0;
-+	resource_size_t min_align = 0, min_add_align = 0;
-+	resource_size_t max_align = 0, max_add_align = 0;
-+	resource_size_t size = 0, size0 = 0, size1 = 0, sum_add_size = 0;
- 	struct resource *b_res = find_free_bus_resource(bus,
- 					mask | IORESOURCE_PREFETCH, type);
--	resource_size_t children_add_size = 0;
--	resource_size_t children_add_align = 0;
--	resource_size_t add_align = 0;
- 	LIST_HEAD(align_test_list);
-+	LIST_HEAD(align_test_add_list);
- 
- 	if (!b_res)
- 		return -ENOSPC;
- 
--	size = 0;
--
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
- 
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
--			resource_size_t r_size;
-+			resource_size_t r_size, align;
- 			int flags = pci_resource_pref_compatible(dev, r);
- 
- 			if (r->parent || (flags & IORESOURCE_PCI_FIXED) ||
-@@ -1243,19 +1239,23 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			     (flags & mask) != type2 &&
- 			     (flags & mask) != type3))
- 				continue;
-+
- 			r_size = resource_size(r);
-+			align = pci_resource_alignment(dev, r);
- #ifdef CONFIG_PCI_IOV
- 			/* put SRIOV requested res to the optional list */
- 			if (realloc_head && i >= PCI_IOV_RESOURCES &&
- 					i <= PCI_IOV_RESOURCE_END) {
--				add_align = max(pci_resource_alignment(dev, r), add_align);
-+				add_to_align_test_list(&align_test_add_list,
-+							align, r_size);
- 				r->end = r->start - 1;
- 				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
--				children_add_size += r_size;
-+				sum_add_size += r_size;
-+				if (align > max_add_align)
-+					max_add_align = align;
- 				continue;
- 			}
- #endif
--			align = pci_resource_alignment(dev, r);
- 			if (align > (1ULL<<37)) { /*128 Gb*/
- 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
- 					i, r, (unsigned long long) align);
-@@ -1263,33 +1263,52 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 				continue;
- 			}
- 
--			if (r_size > 1)
-+			if (r_size > 1) {
- 				add_to_align_test_list(&align_test_list,
- 							align, r_size);
--			size += r_size;
--			if (align > max_align)
--				max_align = align;
-+				size += r_size;
-+				if (align > max_align)
-+					max_align = align;
-+			}
- 
- 			if (realloc_head) {
--				children_add_size += get_res_add_size(realloc_head, r);
--				children_add_align = get_res_add_align(realloc_head, r);
--				add_align = max(add_align, children_add_align);
-+				resource_size_t add_r_size, add_align;
-+
-+				add_r_size = get_res_add_size(realloc_head, r);
-+				add_align = get_res_add_align(realloc_head, r);
-+				/* no add on ? */
-+				if (add_align < align)
-+					add_align = align;
-+				add_to_align_test_list(&align_test_add_list,
-+							add_align,
-+							r_size + add_r_size);
-+				sum_add_size += r_size + add_r_size;
-+				if (add_align > max_add_align)
-+					max_add_align = add_align;
- 			}
- 		}
- 	}
- 
- 	max_align = max(max_align, window_alignment(bus, b_res->flags));
--	min_align = calculate_mem_align(&align_test_list, max_align, size,
--					window_alignment(bus, b_res->flags));
--	size0 = calculate_memsize(size, min_size, 0,
-+	if (size || min_size) {
-+		min_align = calculate_mem_align(&align_test_list, max_align,
-+				 size, window_alignment(bus, b_res->flags));
-+		size0 = calculate_memsize(size, min_size,
- 				  resource_size(b_res), min_align);
-+	}
- 	free_align_test_list(&align_test_list);
--	add_align = max(min_align, add_align);
--	if (children_add_size > add_size)
--		add_size = children_add_size;
--	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
--		calculate_memsize(size, min_size, add_size,
--				resource_size(b_res), add_align);
-+
-+	if ((sum_add_size - size) < add_size)
-+		sum_add_size = size + add_size;
-+	if (sum_add_size > size && realloc_head) {
-+		min_add_align = calculate_mem_align(&align_test_add_list,
-+					max_add_align, sum_add_size,
-+					window_alignment(bus, b_res->flags));
-+		size1 = calculate_memsize(sum_add_size, min_size,
-+				 resource_size(b_res), min_add_align);
-+	}
-+	free_align_test_list(&align_test_add_list);
-+
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
- 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
-@@ -1301,11 +1320,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	b_res->end = size0 + min_align - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--		add_to_list(realloc_head, bus->self, b_res, size1-size0, add_align);
-+		add_to_list(realloc_head, bus->self, b_res, size1 - size0,
-+				min_add_align);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
- 			   b_res, &bus->busn_res,
- 			   (unsigned long long) (size1 - size0),
--			   (unsigned long long) add_align);
-+			   (unsigned long long) min_add_align);
- 	}
- 	return 0;
- }
--- 
-1.8.4.5
-
+greg k-h
