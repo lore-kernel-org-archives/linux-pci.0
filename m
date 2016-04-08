@@ -1,49 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V6 05/13] acpi, pci: Support IO resources when parsing PCI
- host bridge resources.
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Tomasz Nowicki <tn@semihalf.com>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-6-git-send-email-tn@semihalf.com>
- <20160427023916.GF6789@localhost> <57204FDB.6010202@redhat.com>
-Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org
-From: Jon Masters <jcm@redhat.com>
-Message-ID: <57228671.7060606@redhat.com>
-Date: Thu, 28 Apr 2016 17:53:53 -0400
-MIME-Version: 1.0
-In-Reply-To: <57204FDB.6010202@redhat.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:8579 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756517AbcDHKgn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Apr 2016 06:36:43 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [PATCH v2 1/4] PCI: No need to set d3cold_allowed to PCIe ports
+Date: Fri,  8 Apr 2016 13:36:27 +0300
+Message-Id: <1460111790-92836-2-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/27/2016 01:36 AM, Jon Masters wrote:
-> On 04/26/2016 10:39 PM, Bjorn Helgaas wrote:
+The Linux PCI core skips PCI bridges and PCIe ports when system is
+suspended. The PCI core checks return value of pci_has_subordinate() in
+pci_pm_suspend_noirq() to skip all devices where it is non-zero (which
+means PCI bridges and PCIe ports).
 
->> It would be ideal to find
->> some way to handle ia64 and ARM64 similarly.  At the very least, we
->> have to make sure that this doesn't break ia64.  The ia64 dense/sparse
->> I/O spaces complicate things; I don't know if ARM64 has something
->> similar or not.
-> 
-> There's nothing directly similar - it's just regular MMIO.
+Since PCIe ports are never suspended in the first place, there is no need
+to set d3cold_allowed for them.
 
-Just a footnote on the IA64 thing. I'm working on getting access to a
-few Itanium systems and running V6 on these (even bought my first
-Itanium system today so I can run this at home also). I'm also chatting
-with the internal RH QE folks about testing on a few dozen x86 systems.
-Will followup when we've any results on that testing.
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/pcie/portdrv_pci.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-Jon.
-
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index be35da2e105e..6c6bb03392ea 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -134,11 +134,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 		return status;
+ 
+ 	pci_save_state(dev);
+-	/*
+-	 * D3cold may not work properly on some PCIe port, so disable
+-	 * it by default.
+-	 */
+-	dev->d3cold_allowed = false;
+ 	return 0;
+ }
+ 
 -- 
-Computer Architect | Sent from my Fedora powered laptop
+2.8.0.rc3
 
