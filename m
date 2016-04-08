@@ -1,62 +1,68 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:43384 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932505AbcDHAWL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:22:11 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC PATCH 01/11] drivers: acpi: iort: fix struct pci_dev compiler warnings
-Date: Thu, 14 Apr 2016 18:25:33 +0100
-Message-Id: <1460654743-7896-2-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 34/60] PCI: Add debug printout during releasing partial assigned resources
+Date: Thu,  7 Apr 2016 17:15:47 -0700
+Message-Id: <1460074573-7481-35-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When the kernel is configured with no IORT support the compilation
-issues the following warnings:
+We try to assign required+optional at first, and we only accept the result
+if all resources get allocated. Otherwise will release assigned in the
+list, and try to assign required and expand to optional.
 
-In file included from drivers/irqchip/irq-gic-v3-its-pci-msi.c:19:0:
-include/linux/iort.h:28:33: warning: 'struct pci_dev' declared inside
-parameter list
- u32 iort_pci_get_msi_rid(struct pci_dev *pdev, u32 req_id);
-                                 ^
-include/linux/iort.h:28:33: warning: its scope is only this definition
-or declaration, which is probably not what you want
-include/linux/iort.h:29:50: warning: 'struct pci_dev' declared inside
-parameter list
- struct fwnode_handle *iort_pci_get_domain(struct pci_dev *pdev, u32
-req_id);
+We have to do that to make sure any required has priority over any optional.
 
-This patch fixes the warnings with a struct pci_dev forward declaration
-in the IORT header file.
+When that happens, we only print out "assigned" info, that is confusing
+as it looks like same range is assigned to two peer resources at the same
+time.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>
+Add printout for releasing so we have whole picture in debug messages.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- include/linux/iort.h | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/setup-bus.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/iort.h b/include/linux/iort.h
-index 7441941..b15fe1a 100644
---- a/include/linux/iort.h
-+++ b/include/linux/iort.h
-@@ -21,6 +21,7 @@
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index f9e6a00..b22eb5f 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -525,9 +525,17 @@ static void __assign_resources_sorted(struct list_head *head,
  
- #include <linux/acpi.h>
- 
-+struct pci_dev;
- struct fwnode_handle;
- int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node);
- void iort_deregister_domain_token(int trans_id);
+ 	free_list(&local_fail_head);
+ 	/* Release assigned resource */
+-	list_for_each_entry(dev_res, head, list)
+-		if (dev_res->res->parent)
+-			release_resource(dev_res->res);
++	list_for_each_entry(dev_res, head, list) {
++		struct resource *res = dev_res->res;
++
++		if (res->parent) {
++			dev_printk(KERN_DEBUG, &dev_res->dev->dev,
++				   "BAR %d: released %pR\n",
++				   (int)(res - &dev_res->dev->resource[0]),
++				   res);
++			release_resource(res);
++		}
++	}
+ 	/* Restore start/end/flags from saved list */
+ 	list_for_each_entry(save_res, &save_head, list) {
+ 		struct resource *res = save_res->res;
 -- 
-2.6.4
+1.8.4.5
 
