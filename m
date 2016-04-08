@@ -1,74 +1,315 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p3plsmtps2ded03.prod.phx3.secureserver.net ([208.109.80.60]:57539
-	"EHLO p3plsmtps2ded03.prod.phx3.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753543AbcDEXkr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 5 Apr 2016 19:40:47 -0400
-From: Jake Oshins <jakeo@microsoft.com>
-To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com,
-	helgaas@kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v5 0/6] drivers:hv: Ensure that bridge windows don't overlap
-Date: Tue,  5 Apr 2016 18:18:16 -0700
-Message-Id: <1459905502-20798-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Jisheng Zhang <jszhang@marvell.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH v2] PCI: designware: move remaining rc setup code to
+ dw_pcie_setup_rc()
+Date: Fri, 8 Apr 2016 13:33:28 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED45C38@lhreml503-mbs>
+References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
+ <20160407103734.55e72da7@xhacker>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
+ <20160407163443.291fbd49@xhacker>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED44208@lhreml503-mbs>
+ <20160407140551.GA2648@localhost>
+In-Reply-To: <20160407140551.GA2648@localhost>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This version incorporates feedback from Bjorn Helgaas, folding two
-patches together.
+Hi Bjorn
 
-Hyper-V VMs expose paravirtual drivers through a mechanism called
-VMBus, which is managed by hv_vmbus.ko.  For each parvirtual service
-instance, this driver exposes a new child device.  Some of these child
-devices need memory address space, into which Hyper-V will map things
-like the virtual video frame buffer.  This memory-mapped address space
-is chosen by the guest OS, not the hypervisor.
+Many thanks for your reply
 
-This is difficult to map onto the Linux pnp layer, as the code in the
-pnp layer to choose MMIO space keys off of bus type and it doesn't know
-anything about VMBus.  The maintainers of the pnp layer have asked that
-we not offer patches to it that make it understand VMBus, but that we
-rather find ways of using the code in its current state.  So hv_vmbus.ko
-exports a function, vmbus_allocate_mmio() for choosing the address space
-for any child driver that needs this facility.
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: 07 April 2016 15:06
+> To: Gabriele Paoloni
+> Cc: Jisheng Zhang; jingoohan1@gmail.com; pratyush.anand@gmail.com;
+> bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org
+> Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code
+> to dw_pcie_setup_rc()
+> 
+> On Thu, Apr 07, 2016 at 10:06:45AM +0000, Gabriele Paoloni wrote:
+> > Hi Jisheng
+> >
+> > > -----Original Message-----
+> > > From: Jisheng Zhang [mailto:jszhang@marvell.com]
+> > > Sent: 07 April 2016 09:35
+> > > To: Gabriele Paoloni
+> > > Cc: jingoohan1@gmail.com; pratyush.anand@gmail.com;
+> > > bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
+> > > kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org
+> > > Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup
+> code
+> > > to dw_pcie_setup_rc()
+> > >
+> > > Hi Gabriele,
+> > >
+> > > On Thu, 7 Apr 2016 08:20:28 +0000 Gabriele Paoloni wrote:
+> > >
+> > > > Hi Jisheng
+> > > >
+> > > > Thanks for your reply
+> > > >
+> > > > > -----Original Message-----
+> > > > > From: Jisheng Zhang [mailto:jszhang@marvell.com]
+> > > > > Sent: 07 April 2016 03:38
+> > > > > To: Gabriele Paoloni; jingoohan1@gmail.com;
+> > > pratyush.anand@gmail.com;
+> > > > > bhelgaas@google.com
+> > > > > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
+> linux-
+> > > arm-
+> > > > > kernel@lists.infradead.org
+> > > > > Subject: Re: [PATCH v2] PCI: designware: move remaining rc
+> setup
+> > > code
+> > > > > to dw_pcie_setup_rc()
+> > > > >
+> > > > > Hi Gabriele,
+> > > > >
+> > > > > On Wed, 6 Apr 2016 14:50:29 +0000 Gabriele Paoloni wrote:
+> > > > >
+> > > > > > Hi, sorry to be late on this
+> > > > > >
+> > > > > > > -----Original Message-----
+> > > > > > > From: linux-kernel-owner@vger.kernel.org [mailto:linux-
+> kernel-
+> > > > > > > owner@vger.kernel.org] On Behalf Of Jisheng Zhang
+> > > > > > > Sent: 16 March 2016 11:41
+> > > > > > > To: jingoohan1@gmail.com; pratyush.anand@gmail.com;
+> > > > > bhelgaas@google.com
+> > > > > > > Cc: linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org;
+> > > linux-
+> > > > > arm-
+> > > > > > > kernel@lists.infradead.org; Jisheng Zhang
+> > > > > > > Subject: [PATCH v2] PCI: designware: move remaining rc
+> setup
+> > > code
+> > > > > to
+> > > > > > > dw_pcie_setup_rc()
+> > > > > > >
+> > > > > > > dw_pcie_setup_rc(), as its name indicates, setups the RC.
+> But
+> > > > > current
+> > > > > > > dw_pcie_host_init() also contains some necessary rc setup
+> code.
+> > > > > > >
+> > > > > > > Another reason: the host may lost power during suspend to
+> ram,
+> > > the
+> > > > > RC
+> > > > > > > need to be re-setup after resume. The rc can't be correctly
+> > > resumed
+> > > > > > > without the rc setup code in dw_pcie_host_init().
+> > > > > > >
+> > > > > > > So this patch moves the code to dw_pcie_setup_rc() to
+> address
+> > > the
+> > > > > above
+> > > > > > > two issues. After this patch, each pcie designware driver
+> users
+> > > > > could
+> > > > > > > call dw_pcie_setup_rc() to re-setup rc when resume back.
+> > > > > >
+> > > > > > I think this patch breaks the Hisilicon driver...
+> > > > > >
+> > > > > > Our driver performs linkup setup in UEFI therefore we do not
+> call
+> > > > > > dw_pcie_setup_rc(), we only call dw_pcie_host_init().
+> > > > >
+> > > > > Thanks for the information. So pcie-hisi rely on UEFI to do
+> > > something
+> > > > > similar
+> > > > > in dw_pcie_setup_rc(), this comes to a common driver implement
+> > > > > question: should
+> > > > > linux device driver rely on bootloader to configure HW device?
+> > > >
+> > > > I don't see any issue with this...
+> > > >
+> > > > >
+> > > > > Is it acceptable that pcie-hisi adds a call to
+> dw_pcie_setup_rc()
+> > > in
+> > > > > hisi_add_pcie_port()?
+> > > >
+> > > > I don't think so...that would try to overwrite what is already
+> set by
+> > > > the bootloader; so it is wrong in principle and maybe it can lead
+> to
+> > > > undefined behaviours...
+> > >
+> > > make sense! This commit is intend to re-setup the rc when waken
+> from
+> > > s2ram (in
+> > > s2ram state, the host lost power)
+> > >
+> > > I have no good solution but to introduce one function e.g
+> > > dw_pcie_setup_rc_after_linkup(), then move related code from
+> > > dw_pcie_host_init
+> > > to it, then let my host driver resume hook to call.
+> > >
+> > > Hi Pratyush, Jingoo and Bjorn etc.
+> > >
+> > > any suggestions are appreciated!
+> >
+> > What about:
+> >
+> > diff --git a/drivers/pci/host/pcie-designware.c
+> b/drivers/pci/host/pcie-designware.c
+> > index a4cccd3..e461f5d 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -434,7 +434,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+> >  	struct platform_device *pdev = to_platform_device(pp->dev);
+> >  	struct pci_bus *bus, *child;
+> >  	struct resource *cfg_res;
+> > -	u32 val;
+> >  	int i, ret;
+> >  	LIST_HEAD(res);
+> >  	struct resource_entry *win;
+> > @@ -544,25 +543,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
+> >  	if (pp->ops->host_init)
+> >  		pp->ops->host_init(pp);
+> >
+> > -	/*
+> > -	 * If the platform provides ->rd_other_conf, it means the
+> platform
+> > -	 * uses its own address translation component rather than ATU, so
+> > -	 * we should not program the ATU here.
+> > -	 */
+> > -	if (!pp->ops->rd_other_conf)
+> > -		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+> > -					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+> > -					  pp->mem_bus_addr, pp->mem_size);
+> > -
+> > -	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+> > -
+> > -	/* program correct class for RC */
+> > -	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2,
+> PCI_CLASS_BRIDGE_PCI);
+> > -
+> > -	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+> > -	val |= PORT_LOGIC_SPEED_CHANGE;
+> > -	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+> > -
+> >  	pp->root_bus_nr = pp->busn->start;
+> >  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> >  		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
+> > @@ -725,6 +705,29 @@ static struct pci_ops dw_pcie_ops = {
+> >  	.write = dw_pcie_wr_conf,
+> >  };
+> >
+> > +void dw_pcie_setup_own_cfg(struct pcie_port *pp)
+> > +{
+> > +	u32 val;
+> > +	/*
+> > +	 * If the platform provides ->rd_other_conf, it means the
+> platform
+> > +	 * uses its own address translation component rather than ATU, so
+> > +	 * we should not program the ATU here.
+> > +	 */
+> > +	if (!pp->ops->rd_other_conf)
+> > +		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
+> > +					  PCIE_ATU_TYPE_MEM, pp->mem_base,
+> > +					  pp->mem_bus_addr, pp->mem_size);
+> > +
+> > +	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+> > +
+> > +	/* program correct class for RC */
+> > +	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2,
+> PCI_CLASS_BRIDGE_PCI);
+> > +
+> > +	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+> > +	val |= PORT_LOGIC_SPEED_CHANGE;
+> > +	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
+> > +}
+> > +
+> >  void dw_pcie_setup_rc(struct pcie_port *pp)
+> >  {
+> >  	u32 val;
+> > @@ -800,6 +803,8 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+> >  	val |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
+> >  		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
+> >  	dw_pcie_writel_rc(pp, val, PCI_COMMAND);
+> > +
+> > +	dw_pcie_setup_own_cfg(pp);
+> >  }
+> >
+> >  MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
+> > diff --git a/drivers/pci/host/pcie-designware.h
+> b/drivers/pci/host/pcie-designware.h
+> > index f437f9b..caf0f5d 100644
+> > --- a/drivers/pci/host/pcie-designware.h
+> > +++ b/drivers/pci/host/pcie-designware.h
+> > @@ -85,5 +85,6 @@ int dw_pcie_wait_for_link(struct pcie_port *pp);
+> >  int dw_pcie_link_up(struct pcie_port *pp);
+> >  void dw_pcie_setup_rc(struct pcie_port *pp);
+> >  int dw_pcie_host_init(struct pcie_port *pp);
+> > +void dw_pcie_setup_own_cfg(struct pcie_port *pp);
+> >
+> >  #endif /* _PCIE_DESIGNWARE_H */
+> > diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-
+> hisi.c
+> > index 3e98d4e..8da29b2 100644
+> > --- a/drivers/pci/host/pcie-hisi.c
+> > +++ b/drivers/pci/host/pcie-hisi.c
+> > @@ -164,6 +164,7 @@ static int hisi_add_pcie_port(struct pcie_port
+> *pp,
+> >  		dev_err(&pdev->dev, "failed to initialize host\n");
+> >  		return ret;
+> >  	}
+> > +	dw_pcie_setup_own_cfg(pp);
+> >
+> >  	return 0;
+> >  }
+> 
+> What's the hisi plan for resuming after suspend-to-RAM?  How does the
+> RC get reprogrammed after it loses all its state?
 
-The recently introduced PCI front-end driver for Hyper-V VMs
-(pci-hyperv.ko) uses vmbus_allocate_mmio() for choosing both the region
-of memory space into which real PCI Express devices are mapped.  The
-regions allocated are made to look like root PCI bus bridge windows
-to the PCI driver, reusing all the code in the PCI driver for the rest
-of PCI device management.
+PM is not part of the driver yet. This is planned for near
+future release so haven't made such considerations yet
 
-The problem is that these bridge windows are marked in such a way that
-devices can still allocate from the memory space spanned by them, and
-this means that if two different PCI buses are created in the VM, each
-with devices under them, they may allocate the same memory space, leading
-to PCI Base Address Register which overlap.
+> 
+> What would break if hisi did call dw_pcie_setup_rc()?  I know you said
+> it would overwrite what the bootloader already did, which is true.
 
-This patch series fixes the problem by tracking allocations to child
-devices in a separate resource tree, marking them such that the bridge
-windows can't overlap.  The main memory resource tree, iomem_resource,
-contains resources properly marked as bridge windows, allowing their
-children to overlap with them.
+I am try to figure this out now with our HW team.
 
-Jake Oshins (6):
-  drivers:hv: Lock access to hyperv_mmio resource tree
-  drivers:hv: Call vmbus_mmio_free() to reverse vmbus_mmio_allocate()
-  drivers:hv: Reverse order of resources in hyperv_mmio
-  drivers:hv: Track allocations of children of hv_vmbus in private
-    resource tree
-  drivers:hv: Record MMIO range in use by frame buffer
-  drivers:hv: Separate out frame buffer logic when picking MMIO range
+> 
+> But hisi does call dw_pcie_host_init(), so it reads pp->mem (which
+> determines pp->mem_base) and pp->lanes from the DT.  Other drivers
+> then call dw_pcie_setup_rc() which programs the RC based on
+> pp->mem_base and pp->lanes.  So hisi assumes UEFI programmed the RC to
+> match the DT, while the other drivers read the DT and program the RC
+> to match.  The latter seems more robust because it enforces the
+> consistency rather than relying on it.
 
- drivers/hv/vmbus_drv.c          | 143 +++++++++++++++++++++++++++++-----------
- drivers/pci/host/pci-hyperv.c   |  14 ++--
- drivers/video/fbdev/hyperv_fb.c |   4 +-
- include/linux/hyperv.h          |   2 +-
- 4 files changed, 115 insertions(+), 48 deletions(-)
+Yes I agree with you, however we have preferred to move RC config to
+BIOS to have a single driver to support multiple versions of the
+same SoC.
 
---
-1.9.1
+The patch I proposed above does the same job as the original patch
+proposed by Jisheng and also allows hisi driver to call the moved
+code.
 
+Do you see anything wrong with it?
+
+Thanks
+
+Gab
+
+> 
+> Bjorn
