@@ -1,105 +1,61 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org, linux-doc@vger.kernel.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	joro@8bytes.org, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	eric.auger@linaro.org, will.deacon@arm.com,
-	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
-	ruscur@russell.cc, Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [RFC v6 08/10] PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller supports IRQ remapping
-Date: Mon, 18 Apr 2016 19:04:01 +0800
-Message-Id: <1460977443-29405-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 25/60] PCI: Reuse res_to_dev_res() in reassign_resources_sorted()
+Date: Thu,  7 Apr 2016 17:15:38 -0700
+Message-Id: <1460074573-7481-26-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On ARM HW the capability of IRQ remapping is abstracted on
-MSI controller side. MSI_FLAG_IRQ_REMAPPING is used to advertise
-this [1].
+Now res_to_dev_res() does not print out debug message anymore, so
+we can reuse it in reassign_resource_sorted() without confusing printout.
 
-To have a universal flag to test this capability for different
-archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
-when MSI_FLAG_IRQ_REMAPPING is set.
-
-[1] http://www.spinics.net/lists/kvm/msg130256.html
-
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/msi.c   |   12 ++++++++++++
- drivers/pci/probe.c |    3 +++
- include/linux/msi.h |    6 +++++-
- 3 files changed, 20 insertions(+), 1 deletion(-)
+ drivers/pci/setup-bus.c | 11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index a080f44..1661cdf 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1134,6 +1134,18 @@ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
- }
- EXPORT_SYMBOL_GPL(msi_desc_to_pci_sysdata);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index dd33234..fc30f80 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -239,26 +239,17 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
+ {
+ 	struct resource *res;
+ 	struct pci_dev_resource *add_res, *tmp;
+-	struct pci_dev_resource *dev_res;
+ 	resource_size_t add_size, align;
+ 	int idx;
  
-+void pci_bus_check_msi_remapping(struct pci_bus *bus,
-+				 struct irq_domain *domain)
-+{
-+#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-+	struct msi_domain_info *info;
-+
-+	info = msi_get_domain_info(domain);
-+	if (info->flags & MSI_FLAG_IRQ_REMAPPING)
-+		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
-+#endif
-+}
-+
- #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
- /**
-  * pci_msi_domain_write_msg - Helper to write MSI message to PCI config space
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6d7ab9b..25cf1b1 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -696,6 +696,9 @@ static void pci_set_bus_msi_domain(struct pci_bus *bus)
- 	if (!d)
- 		d = pci_host_bridge_msi_domain(b);
+ 	list_for_each_entry_safe(add_res, tmp, realloc_head, list) {
+-		bool found_match = false;
+-
+ 		res = add_res->res;
+ 		/* skip resource that has been reset */
+ 		if (!res->flags)
+ 			goto out;
  
-+	if (d && b == bus)
-+		pci_bus_check_msi_remapping(bus, d);
-+
- 	dev_set_msi_domain(&bus->dev, d);
- }
+ 		/* skip this resource if not found in head list */
+-		list_for_each_entry(dev_res, head, list) {
+-			if (dev_res->res == res) {
+-				found_match = true;
+-				break;
+-			}
+-		}
+-		if (!found_match)/* just skip */
++		if (!res_to_dev_res(head, res))
+ 			continue;
  
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 03eda72..b4c649e 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -15,6 +15,8 @@ extern int pci_msi_ignore_mask;
- struct irq_data;
- struct msi_desc;
- struct pci_dev;
-+struct pci_bus;
-+struct irq_domain;
- struct platform_msi_priv_data;
- void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
-@@ -155,6 +157,9 @@ void arch_restore_msi_irqs(struct pci_dev *dev);
- void default_teardown_msi_irqs(struct pci_dev *dev);
- void default_restore_msi_irqs(struct pci_dev *dev);
- 
-+void pci_bus_check_msi_remapping(struct pci_bus *bus,
-+				 struct irq_domain *domain);
-+
- struct msi_controller {
- 	struct module *owner;
- 	struct device *dev;
-@@ -173,7 +178,6 @@ struct msi_controller {
- #include <linux/irqhandler.h>
- #include <asm/msi.h>
- 
--struct irq_domain;
- struct irq_domain_ops;
- struct irq_chip;
- struct device_node;
+ 		idx = res - &add_res->dev->resource[0];
 -- 
-1.7.9.5
+1.8.4.5
