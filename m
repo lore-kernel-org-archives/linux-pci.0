@@ -1,4 +1,8 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42182 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756662AbcDHAQ4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:16:56 -0400
 From: Yinghai Lu <yinghai@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
@@ -9,102 +13,59 @@ Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
 	Khalid Aziz <khalid.aziz@oracle.com>,
 	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
 	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 47/60] PCI: Don't add too much optional size for hotplug bridge io
-Date: Thu,  7 Apr 2016 17:16:00 -0700
-Message-Id: <1460074573-7481-48-git-send-email-yinghai@kernel.org>
+Subject: [PATCH v11 14/60] PCI: Add has_mem64 for struct host_bridge
+Date: Thu,  7 Apr 2016 17:15:27 -0700
+Message-Id: <1460074573-7481-15-git-send-email-yinghai@kernel.org>
 In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
 References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Same as patch for MMIO (PCI: Don't add too much optional size for hotplug
-bridge MMIO), and this one is for io port.
+Add has_mem64 for struct host_bridge, on root bus that does not support
+mmio64 above 4g, will not set that.
 
-It will compare required+optional with min_sum_size to get smaller
-optional size.
+We will use that info next two following patches:
+1. Don't treat non-pref mmio64 as pref mmio, so will not put
+   it under bridge's pref range when rescan the devices
+2. will keep pref mmio64 and pref mmio32 under bridge pref bar.
 
 Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
 ---
- drivers/pci/setup-bus.c | 26 ++++++++++++++++----------
- 1 file changed, 16 insertions(+), 10 deletions(-)
+ drivers/pci/probe.c | 7 +++++++
+ include/linux/pci.h | 1 +
+ 2 files changed, 8 insertions(+)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index d2712d8..11a4c1d 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1176,7 +1176,6 @@ static resource_size_t window_alignment(struct pci_bus *bus,
-  *
-  * @bus : the bus
-  * @min_size : the minimum io window that must to be allocated
-- * @add_size : additional optional io window
-  * @realloc_head : track the additional io window on this list
-  *
-  * Sizing the IO windows of the PCI-PCI bridge is trivial,
-@@ -1185,9 +1184,11 @@ static resource_size_t window_alignment(struct pci_bus *bus,
-  * We must be careful with the ISA aliasing though.
-  */
- static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
--		resource_size_t add_size, struct list_head *realloc_head)
-+			 struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
-+	resource_size_t min_sum_size = 0;
-+	resource_size_t sum_add_size;
- 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
- 							IORESOURCE_IO);
- 	resource_size_t size = 0, size0 = 0, size1 = 0;
-@@ -1197,6 +1198,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	if (!b_res)
- 		return;
- 
-+	if (realloc_head) {
-+		min_sum_size = min_size;
-+		min_size = 0;
-+	}
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 48e6f29..6b079f4 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2230,6 +2230,13 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 		} else
+ 			bus_addr[0] = '\0';
+ 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
 +
- 	min_align = window_alignment(bus, IORESOURCE_IO);
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
-@@ -1226,10 +1232,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
++		if (resource_type(res) == IORESOURCE_MEM) {
++			if ((res->end - offset) > 0xffffffff)
++				bridge->has_mem64 = 1;
++			if ((res->start - offset) > 0xffffffff)
++				res->flags |= IORESOURCE_MEM_64;
++		}
+ 	}
  
- 	size0 = calculate_iosize(size, min_size, size1,
- 			resource_size(b_res), min_align);
--	if (children_add_size > add_size)
--		add_size = children_add_size;
--	size1 = (!realloc_head || (realloc_head && !add_size)) ? size0 :
--		calculate_iosize(size, min_size, add_size + size1,
-+	sum_add_size = children_add_size + size + size1;
-+	if (sum_add_size < min_sum_size)
-+		sum_add_size = min_sum_size;
-+	size1 = !realloc_head ? size0 :
-+		calculate_iosize(size, min_size, sum_add_size - size,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
-@@ -1757,7 +1764,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- {
- 	struct pci_dev *dev;
- 	unsigned long mask, prefmask, type2 = 0, type3 = 0;
--	resource_size_t min_mem_size = 0, additional_io_size = 0;
-+	resource_size_t min_mem_size = 0, min_io_size = 0;
- 	struct resource *b_res;
- 	int ret;
- 
-@@ -1793,13 +1800,12 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 
- 	case PCI_CLASS_BRIDGE_PCI:
- 		if (bus->self->is_hotplug_bridge) {
--			additional_io_size  = pci_hotplug_io_size;
-+			min_io_size  = pci_hotplug_io_size;
- 			min_mem_size = pci_hotplug_mem_size;
- 		}
- 		/* Fall through */
- 	default:
--		pbus_size_io(bus, realloc_head ? 0 : additional_io_size,
--			     additional_io_size, realloc_head);
-+		pbus_size_io(bus, min_io_size, realloc_head);
- 
- 		/*
- 		 * If there's a 64-bit prefetchable MMIO window, compute
+ 	down_write(&pci_bus_sem);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1527735..979be25 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -408,6 +408,7 @@ struct pci_host_bridge {
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	void *release_data;
+ 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
++	unsigned int has_mem64:1;
+ 	/* Resource alignment requirements */
+ 	resource_size_t (*align_resource)(struct pci_dev *dev,
+ 			const struct resource *res,
 -- 
 1.8.4.5
+
