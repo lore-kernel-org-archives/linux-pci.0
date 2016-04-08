@@ -1,414 +1,252 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:33161 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752546AbcD1NjE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2016 09:39:04 -0400
-Date: Thu, 28 Apr 2016 15:38:58 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH v5 2/2] PCI: tegra: Support per-lane PHYs
-Message-ID: <20160428133858.GA13916@ulmo.ba.sec>
-References: <1460991105-22861-1-git-send-email-thierry.reding@gmail.com>
- <1460991105-22861-2-git-send-email-thierry.reding@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="CE+1k2dSO48ffgeK"
-In-Reply-To: <1460991105-22861-2-git-send-email-thierry.reding@gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42168 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756283AbcDHAQz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:16:55 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 04/60] sparc/PCI: Use correct offset for bus address to resource
+Date: Thu,  7 Apr 2016 17:15:17 -0700
+Message-Id: <1460074573-7481-5-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+After we added 64bit mmio parsing, we got some "no compatible bridge window"
+warning on anther new model that support 64bit resource.
 
---CE+1k2dSO48ffgeK
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+It turns out that we can not use mem_space.start as 64bit mem space
+offset, aka there is mem_space.start != offset.
 
-On Mon, Apr 18, 2016 at 04:51:45PM +0200, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
->=20
-> The current XUSB pad controller bindings are insufficient to describe
-> PHY devices attached to USB controllers. New bindings have been created
-> to overcome these restrictions. As a side-effect each root port now is
-> assigned a set of PHY devices, one for each lane associated with the
-> root port. This has the benefit of allowing fine-grained control of the
-> power management for each lane.
->=20
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
-> ---
-> Changes in v5:
-> - fix power off sequence
->=20
-> Changes in v4:
-> - propagate failure from PHY power on
-> - refactor PHY power off sequence
->=20
-> Changes in v3:
-> - cache result of check for new PHY bindings usage (Stephen Warren)
->=20
-> Changes in v2:
-> - rework commit message to more accurately describe this change
->=20
->  drivers/pci/host/pci-tegra.c | 243 +++++++++++++++++++++++++++++++++++++=
-+++---
->  1 file changed, 226 insertions(+), 17 deletions(-)
+Use child_phys_addr to calculate exact offset and record offset in
+pbm.
 
-Hi Bjorn,
+After patch we get correct offset.
 
-still waiting for an Acked-by from you on this one so that I can take it
-into the Tegra tree because of the intertwined dependencies of a larger
-series.
+/pci@305: PCI IO [io  0x2007e00000000-0x2007e0fffffff] offset 2007e00000000
+/pci@305: PCI MEM [mem 0x2000000100000-0x200007effffff] offset 2000000000000
+/pci@305: PCI MEM64 [mem 0x2000100000000-0x2000dffffffff] offset 2000000000000
+...
+pci_sun4v f02ae7f8: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
+pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00100000-0x7effffff])
+pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x2000dffffffff] (bus address [0x100000000-0xdffffffff])
 
-I've been carrying this in a branch that feeds into linux-next and it's
-seen some good test coverage and works well. I can stabilize that branch
-and send it your way via a pull request.
+-v3: put back mem64_offset, as we found T4 has mem_offset != mem64_offset
+     check overlapping between mem64_space and mem_space.
 
-Thanks,
-Thierry
+-v5: use pcibios_bus_to_region() requested by Bjorn.
 
-> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> index 68d1f41b3cbf..12d581130645 100644
-> --- a/drivers/pci/host/pci-tegra.c
-> +++ b/drivers/pci/host/pci-tegra.c
-> @@ -295,6 +295,7 @@ struct tegra_pcie {
->  	struct reset_control *afi_rst;
->  	struct reset_control *pcie_xrst;
-> =20
-> +	bool legacy_phy;
->  	struct phy *phy;
-> =20
->  	struct tegra_msi msi;
-> @@ -311,11 +312,14 @@ struct tegra_pcie {
-> =20
->  struct tegra_pcie_port {
->  	struct tegra_pcie *pcie;
-> +	struct device_node *np;
->  	struct list_head list;
->  	struct resource regs;
->  	void __iomem *base;
->  	unsigned int index;
->  	unsigned int lanes;
-> +
-> +	struct phy **phys;
->  };
-> =20
->  struct tegra_pcie_bus {
-> @@ -860,6 +864,128 @@ static int tegra_pcie_phy_enable(struct tegra_pcie =
-*pcie)
->  	return 0;
->  }
-> =20
-> +static int tegra_pcie_phy_disable(struct tegra_pcie *pcie)
-> +{
-> +	const struct tegra_pcie_soc_data *soc =3D pcie->soc_data;
-> +	u32 value;
-> +
-> +	/* disable TX/RX data */
-> +	value =3D pads_readl(pcie, PADS_CTL);
-> +	value &=3D ~(PADS_CTL_TX_DATA_EN_1L | PADS_CTL_RX_DATA_EN_1L);
-> +	pads_writel(pcie, value, PADS_CTL);
-> +
-> +	/* override IDDQ */
-> +	value =3D pads_readl(pcie, PADS_CTL);
-> +	value |=3D PADS_CTL_IDDQ_1L;
-> +	pads_writel(pcie, PADS_CTL, value);
-> +
-> +	/* reset PLL */
-> +	value =3D pads_readl(pcie, soc->pads_pll_ctl);
-> +	value &=3D ~PADS_PLL_CTL_RST_B4SM;
-> +	pads_writel(pcie, value, soc->pads_pll_ctl);
-> +
-> +	usleep_range(20, 100);
-> +
-> +	return 0;
-> +}
-> +
-> +static int tegra_pcie_port_phy_power_on(struct tegra_pcie_port *port)
-> +{
-> +	struct device *dev =3D port->pcie->dev;
-> +	unsigned int i;
-> +	int err;
-> +
-> +	for (i =3D 0; i < port->lanes; i++) {
-> +		err =3D phy_power_on(port->phys[i]);
-> +		if (err < 0) {
-> +			dev_err(dev, "failed to power on PHY#%u: %d\n", i,
-> +				err);
-> +			return err;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int tegra_pcie_port_phy_power_off(struct tegra_pcie_port *port)
-> +{
-> +	struct device *dev =3D port->pcie->dev;
-> +	unsigned int i;
-> +	int err;
-> +
-> +	for (i =3D 0; i < port->lanes; i++) {
-> +		err =3D phy_power_off(port->phys[i]);
-> +		if (err < 0) {
-> +			dev_err(dev, "failed to power off PHY#%u: %d\n", i,
-> +				err);
-> +			return err;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
-> +{
-> +	struct tegra_pcie_port *port;
-> +	int err;
-> +
-> +	if (pcie->legacy_phy) {
-> +		if (pcie->phy)
-> +			err =3D phy_power_on(pcie->phy);
-> +		else
-> +			err =3D tegra_pcie_phy_enable(pcie);
-> +
-> +		if (err < 0)
-> +			dev_err(pcie->dev, "failed to power on PHY: %d\n", err);
-> +
-> +		return err;
-> +	}
-> +
-> +	list_for_each_entry(port, &pcie->ports, list) {
-> +		err =3D tegra_pcie_port_phy_power_on(port);
-> +		if (err < 0) {
-> +			dev_err(pcie->dev,
-> +				"failed to power on PCIe port %u PHY: %d\n",
-> +				port->index, err);
-> +			return err;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int tegra_pcie_phy_power_off(struct tegra_pcie *pcie)
-> +{
-> +	struct tegra_pcie_port *port;
-> +	int err;
-> +
-> +	if (pcie->legacy_phy) {
-> +		if (pcie->phy)
-> +			err =3D phy_power_off(pcie->phy);
-> +		else
-> +			err =3D tegra_pcie_phy_disable(pcie);
-> +
-> +		if (err < 0)
-> +			dev_err(pcie->dev, "failed to power off PHY: %d\n",
-> +				err);
-> +
-> +		return err;
-> +	}
-> +
-> +	list_for_each_entry(port, &pcie->ports, list) {
-> +		err =3D tegra_pcie_port_phy_power_off(port);
-> +		if (err < 0) {
-> +			dev_err(pcie->dev,
-> +				"failed to power off PCIe port %u PHY: %d\n",
-> +				port->index, err);
-> +			return err;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
->  {
->  	const struct tegra_pcie_soc_data *soc =3D pcie->soc_data;
-> @@ -899,13 +1025,9 @@ static int tegra_pcie_enable_controller(struct tegr=
-a_pcie *pcie)
->  		afi_writel(pcie, value, AFI_FUSE);
->  	}
-> =20
-> -	if (!pcie->phy)
-> -		err =3D tegra_pcie_phy_enable(pcie);
-> -	else
-> -		err =3D phy_power_on(pcie->phy);
-> -
-> +	err =3D tegra_pcie_phy_power_on(pcie);
->  	if (err < 0) {
-> -		dev_err(pcie->dev, "failed to power on PHY: %d\n", err);
-> +		dev_err(pcie->dev, "failed to power on PHY(s): %d\n", err);
->  		return err;
->  	}
-> =20
-> @@ -942,9 +1064,9 @@ static void tegra_pcie_power_off(struct tegra_pcie *=
-pcie)
-> =20
->  	/* TODO: disable and unprepare clocks? */
-> =20
-> -	err =3D phy_power_off(pcie->phy);
-> +	err =3D tegra_pcie_phy_power_off(pcie);
->  	if (err < 0)
-> -		dev_warn(pcie->dev, "failed to power off PHY: %d\n", err);
-> +		dev_err(pcie->dev, "failed to power off PHY(s): %d\n", err);
-> =20
->  	reset_control_assert(pcie->pcie_xrst);
->  	reset_control_assert(pcie->afi_rst);
-> @@ -1049,6 +1171,99 @@ static int tegra_pcie_resets_get(struct tegra_pcie=
- *pcie)
->  	return 0;
->  }
-> =20
-> +static int tegra_pcie_phys_get_legacy(struct tegra_pcie *pcie)
-> +{
-> +	int err;
-> +
-> +	pcie->phy =3D devm_phy_optional_get(pcie->dev, "pcie");
-> +	if (IS_ERR(pcie->phy)) {
-> +		err =3D PTR_ERR(pcie->phy);
-> +		dev_err(pcie->dev, "failed to get PHY: %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	err =3D phy_init(pcie->phy);
-> +	if (err < 0) {
-> +		dev_err(pcie->dev, "failed to initialize PHY: %d\n", err);
-> +		return err;
-> +	}
-> +
-> +	pcie->legacy_phy =3D true;
-> +
-> +	return 0;
-> +}
-> +
-> +static struct phy *devm_of_phy_optional_get_index(struct device *dev,
-> +						  struct device_node *np,
-> +						  const char *consumer,
-> +						  unsigned int index)
-> +{
-> +	struct phy *phy;
-> +	char *name;
-> +
-> +	name =3D kasprintf(GFP_KERNEL, "%s-%u", consumer, index);
-> +	if (!name)
-> +		return ERR_PTR(-ENOMEM);
-> +
-> +	phy =3D devm_of_phy_get(dev, np, name);
-> +	kfree(name);
-> +
-> +	if (IS_ERR(phy) && PTR_ERR(phy) =3D=3D -ENODEV)
-> +		phy =3D NULL;
-> +
-> +	return phy;
-> +}
-> +
-> +static int tegra_pcie_port_get_phys(struct tegra_pcie_port *port)
-> +{
-> +	struct device *dev =3D port->pcie->dev;
-> +	struct phy *phy;
-> +	unsigned int i;
-> +	int err;
-> +
-> +	port->phys =3D devm_kcalloc(dev, sizeof(phy), port->lanes, GFP_KERNEL);
-> +	if (!port->phys)
-> +		return -ENOMEM;
-> +
-> +	for (i =3D 0; i < port->lanes; i++) {
-> +		phy =3D devm_of_phy_optional_get_index(dev, port->np, "pcie", i);
-> +		if (IS_ERR(phy)) {
-> +			dev_err(dev, "failed to get PHY#%u: %ld\n", i,
-> +				PTR_ERR(phy));
-> +			return PTR_ERR(phy);
-> +		}
-> +
-> +		err =3D phy_init(phy);
-> +		if (err < 0) {
-> +			dev_err(dev, "failed to initialize PHY#%u: %d\n", i,
-> +				err);
-> +			return err;
-> +		}
-> +
-> +		port->phys[i] =3D phy;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
-> +{
-> +	struct tegra_pcie_port *port;
-> +	int err;
-> +
-> +	if (of_get_property(pcie->dev->of_node, "phys", NULL) !=3D NULL)
-> +		return tegra_pcie_phys_get_legacy(pcie);
-> +
-> +	list_for_each_entry(port, &pcie->ports, list) {
-> +		err =3D tegra_pcie_port_get_phys(port);
-> +		if (err < 0) {
-> +			return err;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
->  {
->  	struct platform_device *pdev =3D to_platform_device(pcie->dev);
-> @@ -1067,16 +1282,9 @@ static int tegra_pcie_get_resources(struct tegra_p=
-cie *pcie)
->  		return err;
->  	}
-> =20
-> -	pcie->phy =3D devm_phy_optional_get(pcie->dev, "pcie");
-> -	if (IS_ERR(pcie->phy)) {
-> -		err =3D PTR_ERR(pcie->phy);
-> -		dev_err(&pdev->dev, "failed to get PHY: %d\n", err);
-> -		return err;
-> -	}
-> -
-> -	err =3D phy_init(pcie->phy);
-> +	err =3D tegra_pcie_phys_get(pcie);
->  	if (err < 0) {
-> -		dev_err(&pdev->dev, "failed to initialize PHY: %d\n", err);
-> +		dev_err(&pdev->dev, "failed to get PHYs: %d\n", err);
->  		return err;
->  	}
-> =20
-> @@ -1752,6 +1960,7 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *p=
-cie)
->  		rp->index =3D index;
->  		rp->lanes =3D value;
->  		rp->pcie =3D pcie;
-> +		rp->np =3D port;
-> =20
->  		rp->base =3D devm_ioremap_resource(pcie->dev, &rp->regs);
->  		if (IS_ERR(rp->base))
-> --=20
-> 2.8.0
->=20
+-v6: use pci_find_bus_resource().
 
---CE+1k2dSO48ffgeK
-Content-Type: application/pgp-signature; name="signature.asc"
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+---
+ arch/sparc/kernel/pci.c        | 54 ++++++++++++++++++++----------------------
+ arch/sparc/kernel/pci_common.c | 32 ++++++++++++++++++-------
+ arch/sparc/kernel/pci_impl.h   |  4 ++++
+ 3 files changed, 54 insertions(+), 36 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index badf095..4606dc1 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -654,12 +654,12 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 	printk("PCI: Scanning PBM %s\n", node->full_name);
+ 
+ 	pci_add_resource_offset(&resources, &pbm->io_space,
+-				pbm->io_space.start);
++				pbm->io_offset);
+ 	pci_add_resource_offset(&resources, &pbm->mem_space,
+-				pbm->mem_space.start);
++				pbm->mem_offset);
+ 	if (pbm->mem64_space.flags)
+ 		pci_add_resource_offset(&resources, &pbm->mem64_space,
+-					pbm->mem_space.start);
++					pbm->mem64_offset);
+ 	pbm->busn.start = pbm->pci_first_busno;
+ 	pbm->busn.end	= pbm->pci_last_busno;
+ 	pbm->busn.flags	= IORESOURCE_BUS;
+@@ -733,30 +733,32 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ static int __pci_mmap_make_offset_bus(struct pci_dev *pdev, struct vm_area_struct *vma,
+ 				      enum pci_mmap_state mmap_state)
+ {
+-	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
+-	unsigned long space_size, user_offset, user_size;
+-
+-	if (mmap_state == pci_mmap_io) {
+-		space_size = resource_size(&pbm->io_space);
+-	} else {
+-		space_size = resource_size(&pbm->mem_space);
+-	}
++	unsigned long user_offset, user_size;
++	struct resource res, *root_bus_res;
++	struct pci_bus_region region;
++	struct pci_bus *bus;
+ 
+ 	/* Make sure the request is in range. */
+ 	user_offset = vma->vm_pgoff << PAGE_SHIFT;
+ 	user_size = vma->vm_end - vma->vm_start;
+ 
+-	if (user_offset >= space_size ||
+-	    (user_offset + user_size) > space_size)
++	region.start = user_offset;
++	region.end = user_offset + user_size - 1;
++	memset(&res, 0, sizeof(res));
++	if (mmap_state == pci_mmap_io)
++		res.flags = IORESOURCE_IO;
++	else
++		res.flags = IORESOURCE_MEM;
++
++	pcibios_bus_to_resource(pdev->bus, &res, &region);
++	bus = pdev->bus;
++	while (bus->parent)
++		bus = bus->parent;
++	root_bus_res = pci_find_bus_resource(bus, &res);
++	if (!root_bus_res)
+ 		return -EINVAL;
+ 
+-	if (mmap_state == pci_mmap_io) {
+-		vma->vm_pgoff = (pbm->io_space.start +
+-				 user_offset) >> PAGE_SHIFT;
+-	} else {
+-		vma->vm_pgoff = (pbm->mem_space.start +
+-				 user_offset) >> PAGE_SHIFT;
+-	}
++	vma->vm_pgoff = res.start >> PAGE_SHIFT;
+ 
+ 	return 0;
+ }
+@@ -977,16 +979,12 @@ void pci_resource_to_user(const struct pci_dev *pdev, int bar,
+ 			  const struct resource *rp, resource_size_t *start,
+ 			  resource_size_t *end)
+ {
+-	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
+-	unsigned long offset;
++	struct pci_bus_region region;
+ 
+-	if (rp->flags & IORESOURCE_IO)
+-		offset = pbm->io_space.start;
+-	else
+-		offset = pbm->mem_space.start;
++	pcibios_resource_to_bus(pdev->bus, &region, (struct resource *)rp);
+ 
+-	*start = rp->start - offset;
+-	*end = rp->end - offset;
++	*start = region.start;
++	*end = region.end;
+ }
+ 
+ void pcibios_set_master(struct pci_dev *dev)
+diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
+index 33524c1..76998f8 100644
+--- a/arch/sparc/kernel/pci_common.c
++++ b/arch/sparc/kernel/pci_common.c
+@@ -410,13 +410,16 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 
+ 	for (i = 0; i < num_pbm_ranges; i++) {
+ 		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
+-		unsigned long a, size;
++		unsigned long a, size, region_a;
+ 		u32 parent_phys_hi, parent_phys_lo;
++		u32 child_phys_mid, child_phys_lo;
+ 		u32 size_hi, size_lo;
+ 		int type;
+ 
+ 		parent_phys_hi = pr->parent_phys_hi;
+ 		parent_phys_lo = pr->parent_phys_lo;
++		child_phys_mid = pr->child_phys_mid;
++		child_phys_lo = pr->child_phys_lo;
+ 		if (tlb_type == hypervisor)
+ 			parent_phys_hi &= 0x0fffffff;
+ 
+@@ -426,6 +429,8 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 		type = (pr->child_phys_hi >> 24) & 0x3;
+ 		a = (((unsigned long)parent_phys_hi << 32UL) |
+ 		     ((unsigned long)parent_phys_lo  <<  0UL));
++		region_a = (((unsigned long)child_phys_mid << 32UL) |
++		     ((unsigned long)child_phys_lo  <<  0UL));
+ 		size = (((unsigned long)size_hi << 32UL) |
+ 			((unsigned long)size_lo  <<  0UL));
+ 
+@@ -440,6 +445,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 			pbm->io_space.start = a;
+ 			pbm->io_space.end = a + size - 1UL;
+ 			pbm->io_space.flags = IORESOURCE_IO;
++			pbm->io_offset = a - region_a;
+ 			saw_io = 1;
+ 			break;
+ 
+@@ -448,6 +454,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 			pbm->mem_space.start = a;
+ 			pbm->mem_space.end = a + size - 1UL;
+ 			pbm->mem_space.flags = IORESOURCE_MEM;
++			pbm->mem_offset = a - region_a;
+ 			saw_mem = 1;
+ 			break;
+ 
+@@ -456,6 +463,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 			pbm->mem64_space.start = a;
+ 			pbm->mem64_space.end = a + size - 1UL;
+ 			pbm->mem64_space.flags = IORESOURCE_MEM;
++			pbm->mem64_offset = a - region_a;
+ 			saw_mem = 1;
+ 			break;
+ 
+@@ -471,14 +479,22 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
+ 		prom_halt();
+ 	}
+ 
+-	printk("%s: PCI IO[%llx] MEM[%llx]",
+-	       pbm->name,
+-	       pbm->io_space.start,
+-	       pbm->mem_space.start);
++	if (pbm->io_space.flags)
++		printk("%s: PCI IO %pR offset %llx\n",
++		       pbm->name, &pbm->io_space, pbm->io_offset);
++	if (pbm->mem_space.flags)
++		printk("%s: PCI MEM %pR offset %llx\n",
++		       pbm->name, &pbm->mem_space, pbm->mem_offset);
++	if (pbm->mem64_space.flags && pbm->mem_space.flags) {
++		if (pbm->mem64_space.start <= pbm->mem_space.end)
++			pbm->mem64_space.start = pbm->mem_space.end + 1;
++		if (pbm->mem64_space.start > pbm->mem64_space.end)
++			pbm->mem64_space.flags = 0;
++	}
++
+ 	if (pbm->mem64_space.flags)
+-		printk(" MEM64[%llx]",
+-		       pbm->mem64_space.start);
+-	printk("\n");
++		printk("%s: PCI MEM64 %pR offset %llx\n",
++		       pbm->name, &pbm->mem64_space, pbm->mem64_offset);
+ 
+ 	pbm->io_space.name = pbm->mem_space.name = pbm->name;
+ 	pbm->mem64_space.name = pbm->name;
+diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
+index 37222ca..2853af7 100644
+--- a/arch/sparc/kernel/pci_impl.h
++++ b/arch/sparc/kernel/pci_impl.h
+@@ -99,6 +99,10 @@ struct pci_pbm_info {
+ 	struct resource			mem_space;
+ 	struct resource			mem64_space;
+ 	struct resource			busn;
++	/* offset */
++	resource_size_t			io_offset;
++	resource_size_t			mem_offset;
++	resource_size_t			mem64_offset;
+ 
+ 	/* Base of PCI Config space, can be per-PBM or shared. */
+ 	unsigned long			config_space;
+-- 
+1.8.4.5
 
-iQIcBAABCAAGBQJXIhJyAAoJEN0jrNd/PrOhfA8P/i6l3XyjiWmv4NnvsMf1aJD5
-zMpApRD8d6y2bLetv9mFarPKoU2HnGrDMXCmsGEQTp7uryur+e+hHg+YFXRBpHha
-3xs7Fl7sNgFSa/Eg8cKkcAnuIOYRaGaaHbVqznnEoXWZip0xcrpjL+vo35KleJbw
-8Y4do81MtzQw5TUlWP75T+SLM9aR22NGN005/DRTza9uEs/1qXPpYGA3OOyYt1Js
-5LPv+5eyBnvabFJzes6SFHyJcq3fEa+CwubwrQ3JarXlcQMksCa3MPwQ/ancWplT
-xzFGL6Fc/2j3G/ER/TCRJ9RNIBuhk7JK/B5b0FLZCsfSvJwcXJwUl+TZntTY/3Bn
-W1y6BGDR3CB6UnYAn2WUZ24cYAjfPCMmUqTQcc2OwvicUikm4X2qA2UWQv0goz6C
-ZBRaM+P6WzTGBDO1oTfwrt5rKljBoq/V8bCxdKHf2QPngPexNUfYF2HY1P/vTs9t
-x/KePPiCJJNj7p0Wk1kuo5TG138pEwwKYlz4M1HiNlgOiJsawT3Ta6qrm56Jtfbt
-wfoCUa+QZ/10LQLXCUZ1dpXBb6Tid/u+Wp2FqSiVBFAuodIei0pPr4QR2rE7dGil
-VDDrp+G76tIGyWsE0nd8z8CMdZ+jNddpjef/CNYYK3BmzCRUNyvzLwRq+z75XJRN
-d0SVM8Vip3XTP6ARi7oK
-=2GBv
------END PGP SIGNATURE-----
-
---CE+1k2dSO48ffgeK--
