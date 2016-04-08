@@ -1,103 +1,191 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0139.outbound.protection.outlook.com ([157.56.110.139]:14592
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751693AbcD2R2A convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2016 13:28:00 -0400
-From: Jake Oshins <jakeo@microsoft.com>
-To: Vitaly Kuznetsov <vkuznets@redhat.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	KY Srinivasan <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: RE: [PATCH] PCI: hv: report resources release after stopping the bus
-Date: Fri, 29 Apr 2016 16:55:52 +0000
-Message-ID: <DM2PR0301MB123233EA695E505148665B98AB660@DM2PR0301MB1232.namprd03.prod.outlook.com>
-References: <1461922750-26053-1-git-send-email-vkuznets@redhat.com>
-In-Reply-To: <1461922750-26053-1-git-send-email-vkuznets@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from userp1040.oracle.com ([156.151.31.81]:35203 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932211AbcDHARL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:17:11 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 00/60] PCI: Resource allocation cleanup for v4.7
+Date: Thu,  7 Apr 2016 17:15:13 -0700
+Message-Id: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Vitaly Kuznetsov [mailto:vkuznets@redhat.com]
-> Sent: Friday, April 29, 2016 2:39 AM
-> To: linux-pci@vger.kernel.org
-> Cc: devel@linuxdriverproject.org; linux-kernel@vger.kernel.org; KY
-> Srinivasan <kys@microsoft.com>; Haiyang Zhang
-> <haiyangz@microsoft.com>; Bjorn Helgaas <bhelgaas@google.com>; Jake
-> Oshins <jakeo@microsoft.com>
-> Subject: [PATCH] PCI: hv: report resources release after stopping the bus
-> 
-> Kernel hang is observed when pci-hyperv module is release with device
-> drivers still attached. E.g. when I do 'rmmod pci_hyperv' with BCM5720
-> device pass-through-ed (tg3 module) I see the following:
-> 
->  NMI watchdog: BUG: soft lockup - CPU#1 stuck for 22s! [rmmod:2104]
->  ...
->  Call Trace:
->   [<ffffffffa0641487>] tg3_read_mem+0x87/0x100 [tg3]
->   [<ffffffffa063f000>] ? 0xffffffffa063f000
->   [<ffffffffa0644375>] tg3_poll_fw+0x85/0x150 [tg3]
->   [<ffffffffa0649877>] tg3_chip_reset+0x357/0x8c0 [tg3]
->   [<ffffffffa064ca8b>] tg3_halt+0x3b/0x190 [tg3]
->   [<ffffffffa0657611>] tg3_stop+0x171/0x230 [tg3]
->   ...
->   [<ffffffffa064c550>] tg3_remove_one+0x90/0x140 [tg3]
->   [<ffffffff813bee59>] pci_device_remove+0x39/0xc0
->   [<ffffffff814a3201>] __device_release_driver+0xa1/0x160
->   [<ffffffff814a32e3>] device_release_driver+0x23/0x30
->   [<ffffffff813b794a>] pci_stop_bus_device+0x8a/0xa0
->   [<ffffffff813b7ab6>] pci_stop_root_bus+0x36/0x60
->   [<ffffffffa02c3f38>] hv_pci_remove+0x238/0x260 [pci_hyperv]
-> 
-> The problem seems to be that we report local resources release before
-> stopping the bus and removing devices from it and device drivers may
-> try to perform some operations with these resources on shutdown. Move
-> resources release report after we do pci_stop_root_bus().
-> 
-> Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
-Acked-by: Jake Oshins <jakeo@microsoft.com>
+Hi Bjorn,
 
-> ---
->  drivers/pci/host/pci-hyperv.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index f2559b6..c17e792 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -2268,11 +2268,6 @@ static int hv_pci_remove(struct hv_device *hdev)
-> 
->  	hbus = hv_get_drvdata(hdev);
-> 
-> -	ret = hv_send_resources_released(hdev);
-> -	if (ret)
-> -		dev_err(&hdev->device,
-> -			"Couldn't send resources released packet(s)\n");
-> -
->  	memset(&pkt.teardown_packet, 0, sizeof(pkt.teardown_packet));
->  	init_completion(&comp_pkt.host_event);
->  	pkt.teardown_packet.completion_func = hv_pci_generic_compl;
-> @@ -2295,6 +2290,11 @@ static int hv_pci_remove(struct hv_device *hdev)
->  		pci_unlock_rescan_remove();
->  	}
-> 
-> +	ret = hv_send_resources_released(hdev);
-> +	if (ret)
-> +		dev_err(&hdev->device,
-> +			"Couldn't send resources released packet(s)\n");
-> +
->  	vmbus_close(hdev->channel);
-> 
->  	/* Delete any children which might still exist. */
-> --
-> 2.5.5
+After 5b28541552ef (PCI: Restrict 64-bit prefetchable bridge windows
+to 64-bit resources), we have several reports on resource allocation
+failure, and we try to fix the problem with resource clip, and find
+more problems.
 
-This looks like the right fix to me.  Thanks.
+One is realloc fail with two graphics cards above 4G.
+One is from sparc that have problem with clip as we don't parse
+mem64 for it.
 
--- Jake Oshins
+Other report is about pci remove/rescan does not work on some setup
+when BIOS tend to allocate small bus size.
+
+This patchset enhance resource allocation to address those problems.
+
+patch 1-11: parse MEM64 for sparc and other system with OF
+
+patch 12-16: MMIO64 allocation enhancement
+        treat non-pref mmio64 if parent bridges are all pcie.
+        restore old pref allocation logic if hostbridge does not support mmio64.
+
+patch 17-19: FIXED resource handling during realloc
+        don't realloc resource if device firmware does not support bar change.
+
+patch 20-23: bridge MMIO allocation with hotplug and last try.
+        treat optional as required on first try when hotplug.
+        MMIO size set to 0 for last try during realloc
+
+patch 24-56: enhancement for mmio resource allocation:
+        optimize bus mmio alignment calculation.
+        optimize bus mmio optional alignment calculation.
+        add support for alt size to prefer small bus size to small bus alignment.
+        treat ROM bar as optional resource.
+        during allocation, will pick up best fit resource, and allocate near end.
+
+patch 57: add pci=assign_pref_bars to clear and assign pref bars.
+
+patch 58-59: don't clear resource when allocation fails
+
+patch 60: don't try io port allocation if root bus does not have io port.
+
+I put latest copy at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for-pci-v4.7-next
+
+That is rebased on v4.6-rc2+.
+
+Yijing and Wei Yang both tested the branch, and the patchset fixs rescan
+problem, and is working well on powerpc setup.
+
+Khalid Aziz tested on some sparc platforms that have different offset to
+mem space start or support 64bit mmio.
+
+-v11: replace pci_find_root_bus_resource with pci_find_bus_resource
+      add two patches from Bjorn for checking with pci_mmap.
+      refreshed to current linus tree v4.6-rc2+
+
+Hope at least patch 1-16 could get into v4.7.
+Patch 3-16 has been Oracle UEK4 for a while to boot on some sparc platforms as
+them have 64bt mmio above 4G.
+
+Thanks
+
+Yinghai
+
+Bjorn Helgaas (2):
+  PCI: Fix iomem_is_exclusive() checking in pci_mmap_resource()
+  alpha/PCI: Only check iomem_is_exclusive() for IORESOURCE_MEM, not IORESOURCE_IO
+
+Yinghai Lu (58):
+  PCI: Add pci_find_bus_resource()
+  sparc/PCI: Use correct offset for bus address to resource
+  sparc/PCI: Reserve legacy mmio after PCI mmio
+  sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+  sparc/PCI: Keep resource idx order with bridge register number
+  PCI: Kill wrong quirk about M7101
+  powerpc/PCI: Keep resource idx order with bridge register number
+  powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+  OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
+  PCI: Check pref compatible bit for mem64 resource of PCIe device
+  PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
+  PCI: Add has_mem64 for struct host_bridge
+  PCI: Only treat non-pref mmio64 as pref if host bridge has mmio64
+  PCI: Restore pref MMIO allocation logic for host bridge without mmio64
+  PCI: Don't release fixed resource for realloc
+  PCI: Claim fixed resource during remove/rescan path
+  PCI: Set resource to FIXED for LSI devices
+  PCI: Separate realloc list checking after allocation
+  PCI: Treat optional as required in first try for bridge rescan
+  PCI: Get new realloc size for bridge for last try
+  PCI: Don't release sibling bridge resources during hotplug
+  PCI: Cleanup res_to_dev_res() printout
+  PCI: Reuse res_to_dev_res() in reassign_resources_sorted()
+  PCI: Use correct align for optional only resources during sorting
+  PCI: Optimize bus min_align/size calculation during sizing
+  PCI: Optimize bus align/size calculation for optional during sizing
+  PCI: Don't add too much optional size for hotplug bridge MMIO
+  PCI: Reorder resources list for required/optional resources
+  PCI: Remove duplicated code for resource sorting
+  PCI: Rename pdev_sort_resources() to pdev_assign_resources_prepare()
+  PCI: Treat ROM resource as optional during realloc
+  PCI: Add debug printout during releasing partial assigned resources
+  PCI: Simplify res reference using in __assign_resources_sorted()
+  PCI: Add __add_to_list()
+  PCI: Cache window alignment value during bus sizing
+  PCI: Check if resource is allocated before trying to assign one
+  PCI: Separate out save_resources()/restore_resources()
+  PCI: Move comment to pci_need_to_release()
+  PCI: Separate required+optional assigning to another function
+  PCI: Skip required+optional if there is no optional
+  PCI: Move saved required resource list out of required+optional assigning
+  PCI: Add alt_size ressource allocation support
+  PCI: Add support for more than two alt_size entries under same bridge
+  PCI: Fix size calculation with old_size on rescan path
+  PCI: Don't add too much optional size for hotplug bridge io
+  PCI: Move ISA io port align out of calculate_iosize()
+  PCI: Don't add too much io port for hotplug bridge with old size
+  PCI: Unify calculate_size() for io port and MMIO
+  PCI: Allow bridge optional only io port resource required size to be 0
+  PCI: Unify skip_ioresource_align()
+  PCI: Kill macro checking for bus io port sizing
+  resources: Make allocate_resource() return best fit resource
+  PCI, x86: Allocate from high in available window for MMIO
+  PCI: Add debug print out for min_align and alt_size
+  PCI, x86: Add pci=assign_pref_bars to reallocate pref BARs
+  PCI: Introduce resource_disabled()
+  PCI: Don't set flags to 0 when assign resource fail
+  PCI: Only try to assign io port only for root bus that support it
+
+ arch/alpha/kernel/pci-sysfs.c             |    4 +-
+ arch/alpha/kernel/pci.c                   |    2 +-
+ arch/ia64/pci/pci.c                       |    4 +-
+ arch/microblaze/pci/pci-common.c          |   15 +-
+ arch/mn10300/unit-asb2305/pci-asb2305.c   |    4 +-
+ arch/mn10300/unit-asb2305/pci.c           |    4 +-
+ arch/powerpc/kernel/pci-common.c          |   27 +-
+ arch/powerpc/kernel/pci_of_scan.c         |   12 +-
+ arch/powerpc/platforms/powernv/pci-ioda.c |   12 +-
+ arch/s390/pci/pci.c                       |    2 +-
+ arch/sparc/kernel/of_device_32.c          |    5 +-
+ arch/sparc/kernel/of_device_64.c          |    5 +-
+ arch/sparc/kernel/pci.c                   |   65 +-
+ arch/sparc/kernel/pci_common.c            |   91 +-
+ arch/sparc/kernel/pci_impl.h              |    5 +
+ arch/x86/include/asm/pci_x86.h            |    2 +-
+ arch/x86/pci/common.c                     |    7 +-
+ arch/x86/pci/i386.c                       |   85 +-
+ arch/xtensa/kernel/pci.c                  |    4 +-
+ drivers/iommu/intel-iommu.c               |    3 +-
+ drivers/of/address.c                      |    4 +-
+ drivers/pci/bus.c                         |    6 +-
+ drivers/pci/host/pcie-rcar.c              |    2 +-
+ drivers/pci/hotplug/acpiphp_glue.c        |    1 +
+ drivers/pci/iov.c                         |    2 +-
+ drivers/pci/pci-sysfs.c                   |    7 +-
+ drivers/pci/pci.c                         |   31 +-
+ drivers/pci/pci.h                         |    4 +
+ drivers/pci/probe.c                       |   48 +-
+ drivers/pci/quirks.c                      |   55 +-
+ drivers/pci/rom.c                         |    2 +-
+ drivers/pci/setup-bus.c                   | 1316 +++++++++++++++++++++--------
+ drivers/pci/setup-res.c                   |   18 +-
+ include/linux/ioport.h                    |    6 +-
+ include/linux/pci.h                       |   10 +
+ kernel/resource.c                         |  104 ++-
+ 36 files changed, 1427 insertions(+), 547 deletions(-)
+
+-- 
+1.8.4.5
 
