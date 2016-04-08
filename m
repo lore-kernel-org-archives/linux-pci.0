@@ -1,90 +1,190 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:49926 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751751AbcDTCPN (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 22:15:13 -0400
-Received: from localhost
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 20 Apr 2016 12:15:09 +1000
-Date: Wed, 20 Apr 2016 12:13:18 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
-	robherring2@gmail.com, grant.likely@linaro.org
-Subject: Re: [PATCH v8 30/45] powerpc/pci: Delay populating pdn
-Message-ID: <20160420021318.GB28594@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-31-git-send-email-gwshan@linux.vnet.ibm.com>
- <5715EA08.3040901@ozlabs.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5715EA08.3040901@ozlabs.ru>
+Received: from mga14.intel.com ([192.55.52.115]:6082 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758162AbcDHKg4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Apr 2016 06:36:56 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [PATCH v2 4/4] PCI: Add runtime PM support for PCIe ports
+Date: Fri,  8 Apr 2016 13:36:30 +0300
+Message-Id: <1460111790-92836-5-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 19, 2016 at 06:19:20PM +1000, Alexey Kardashevskiy wrote:
->On 02/17/2016 02:44 PM, Gavin Shan wrote:
->>The pdn (struct pci_dn) instances are allocated from memblock or
->>bootmem when creating PCI controller (hoses) in setup_arch(). PCI
->>hotplug, which will be supported by proceeding patches, releases
->>PCI device nodes and their corresponding pdn on unplugging event.
->>The memory chunks for pdn instances allocated from memblock or
->>bootmem are hard to reused after being released.
->>
->>This delays creating pdn by pci_devs_phb_init() from setup_arch()
->>to core_initcall() so that they are allocated from slab. The memory
->>consumed by pdn can be released to system without problem during
->>PCI unplugging time. It indicates that pci_dn is unavailable in
->>setup_arch() and the the fixup on pdn (like AGP's) can't be carried
->>out that time. We have to do that in ppc_md.pcibios_root_bridge_prepare()
->>on maple/pasemi/powermac platforms where/when the pdn is available.
->>
->>At the mean while, the EEH device is created when pdn is populated,
->>meaning pdn and EEH device have same life cycle. In turn, we needn't
->>call eeh_dev_init() to create EEH device explicitly.
->>
->>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->
->
->Uff. It would not hurt to mention that  pcibios_root_bridge_prepare is called
->from subsys_initcall() which is executed after core_initcall() so the code
->flow does not change.
->
+Add back runtime PM support for PCIe ports that was removed in
+commit fe9a743a2601 ("PCI/PM: Drop unused runtime PM support code for
+PCIe ports").
 
-Yes, will do in next revision.
+First of all we cannot enable it automatically for all ports since there
+has been problems previously as can be seen in [1]. In summary suspended
+PCIe ports were not able to deal with hotplug reliably. One reason why this
+might happen is the fact that when a PCIe port is powered down, config
+space access to the devices behind the port is not possible. If the BIOS
+hotplug SMI handler assumes the port is always in D0 it will not be able to
+find the hotplugged devices. To be on the safe side only enable runtime PM
+if the port does not claim to be hotplug capable.
 
->Have you checked if there is anything in between
->core_initcall(pci_devs_phb_init) and subsys_initcall(pcibios_init) which
->might need device tree nodes? For example, subsys_initcall(pcibios_init)
->calls (eventually) pnv_pci_ioda_fixup(), if we are unlucky and pcibios_init()
->(and therefore pnv_pci_ioda_fixup() or what pseries/others do) is called
->before pcibios_init() - won't we crash or something?
->
+Furthermore we need to check that the PCI core thinks the port can go to D3
+in the first place. The PCI core sets 'bridge_d3' in that case. If both
+conditions are met we enable and allow runtime PM for the PCIe port. Since
+'bridge_d3' can be changed anytime we check this in driver ->runtime_idle()
+and ->runtime_suspend() and only allow runtime suspend if the flag is still
+set. The actual power transition to D3 and back is handled in the PCI core.
 
-I don't catch what you were asking. device-tree nodes (struct device_node)
-are always there. This patch doesn't affect them. Perhaps you were talking
-about pdn (PCI_DN). If it's the case, this patch delays creating pdn from
-setup_arch() to core_initcall(pci_devs_phb_init). I don't see anything need
-pdn between setup_arch() and core_initcall().
+Idea to automatically unblock (allow) runtime PM for PCIe ports came from
+Dave Airlie.
 
-The changes introduced to powermac/pasemi platforms are: move fixing the child
-pdns of the specifiec PHB's pdn from setup_arch() to subsys_initcall(pcibios_init).
-I don't see anything between them needs the fixed pdns.
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=53811
 
-I don't understand how pcibios_init() is called before pcibios_init() in your
-context. Sorry for my bad English. Perhaps you're asking the the called sequence
-on core_initcall() and subsys_init()? If so, they're defined like below:
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/pcie/portdrv_pci.c | 85 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 85 insertions(+)
 
-#define core_initcall(fn)		__define_initcall(fn, 1)
-#define subsys_initcall(fn)		__define_initcall(fn, 4)
-
->
->-- 
->Alexey
->
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 6c6bb03392ea..bbe86527788c 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -58,6 +58,10 @@ __setup("pcie_ports=", pcie_port_setup);
+ 
+ /* global data */
+ 
++struct pcie_port_data {
++	bool runtime_pm_enabled;
++};
++
+ /**
+  * pcie_clear_root_pme_status - Clear root port PME interrupt status.
+  * @dev: PCIe root port or event collector.
+@@ -93,6 +97,58 @@ static int pcie_port_resume_noirq(struct device *dev)
+ 	return 0;
+ }
+ 
++static int pcie_port_runtime_suspend(struct device *dev)
++{
++	return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
++}
++
++static int pcie_port_runtime_resume(struct device *dev)
++{
++	return 0;
++}
++
++static int pcie_port_runtime_idle(struct device *dev)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	/*
++	 * Rely the PCI core has set bridge_d3 whenever it thinks the port
++	 * should be good to go to D3. Everything else, including moving
++	 * the port to D3, is handled by the PCI core.
++	 */
++	if (pdev->bridge_d3) {
++		pm_schedule_suspend(dev, 10);
++		return 0;
++	}
++	return -EBUSY;
++}
++
++static bool pcie_port_runtime_pm_possible(struct pci_dev *pdev)
++{
++	/*
++	 * Only enable runtime PM if the PCI core agrees that this port can
++	 * even go to D3.
++	 */
++	if (!pdev->bridge_d3)
++		return false;
++
++	/*
++	 * Prevent runtime PM if the port is hotplug capable. Otherwise the
++	 * hotplug SMI code might not be able to enumerate devices behind
++	 * this port properly (the port is powered down preventing all
++	 * config space accesses to the subordinate devices).
++	 */
++	if (pcie_caps_reg(pdev) & PCI_EXP_FLAGS_SLOT) {
++		u32 sltcap;
++
++		pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &sltcap);
++		if (sltcap & (PCI_EXP_SLTCAP_HPC | PCI_EXP_SLTCAP_HPS))
++			return false;
++	}
++
++	return true;
++}
++
+ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ 	.suspend	= pcie_port_device_suspend,
+ 	.resume		= pcie_port_device_resume,
+@@ -101,12 +157,20 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ 	.poweroff	= pcie_port_device_suspend,
+ 	.restore	= pcie_port_device_resume,
+ 	.resume_noirq	= pcie_port_resume_noirq,
++	.runtime_suspend = pcie_port_runtime_suspend,
++	.runtime_resume	= pcie_port_runtime_resume,
++	.runtime_idle	= pcie_port_runtime_idle,
+ };
+ 
+ #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+ 
+ #else /* !PM */
+ 
++static inline bool pcie_port_runtime_pm_possible(struct pci_dev *pdev)
++{
++	return false;
++}
++
+ #define PCIE_PORTDRV_PM_OPS	NULL
+ #endif /* !PM */
+ 
+@@ -121,6 +185,7 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 					const struct pci_device_id *id)
+ {
++	struct pcie_port_data *pdata;
+ 	int status;
+ 
+ 	if (!pci_is_pcie(dev) ||
+@@ -134,11 +199,31 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 		return status;
+ 
+ 	pci_save_state(dev);
++
++	pdata = devm_kzalloc(&dev->dev, sizeof(*pdata), GFP_KERNEL);
++	if (!pdata)
++		return -ENOMEM;
++
++	pci_set_drvdata(dev, pdata);
++	if (pcie_port_runtime_pm_possible(dev)) {
++		pm_runtime_put_noidle(&dev->dev);
++		pm_runtime_allow(&dev->dev);
++
++		pdata->runtime_pm_enabled = true;
++	}
++
+ 	return 0;
+ }
+ 
+ static void pcie_portdrv_remove(struct pci_dev *dev)
+ {
++	const struct pcie_port_data *pdata = pci_get_drvdata(dev);
++
++	if (pdata->runtime_pm_enabled) {
++		pm_runtime_forbid(&dev->dev);
++		pm_runtime_get_noresume(&dev->dev);
++	}
++
+ 	pcie_port_device_remove(dev);
+ }
+ 
+-- 
+2.8.0.rc3
 
