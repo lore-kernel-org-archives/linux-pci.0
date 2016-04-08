@@ -1,339 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42122 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751924AbcDHQBv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Apr 2016 12:01:51 -0400
-Date: Fri, 8 Apr 2016 11:01:45 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Jisheng Zhang <jszhang@marvell.com>,
-	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code to
- dw_pcie_setup_rc()
-Message-ID: <20160408160145.GA10565@localhost>
-References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
- <20160407103734.55e72da7@xhacker>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
- <20160407163443.291fbd49@xhacker>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED44208@lhreml503-mbs>
- <20160407140551.GA2648@localhost>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED45C38@lhreml503-mbs>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ED45C38@lhreml503-mbs>
+Received: from aserp1040.oracle.com ([141.146.126.69]:43419 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932622AbcDHAWU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:22:20 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 46/60] PCI: Fix size calculation with old_size on rescan path
+Date: Thu,  7 Apr 2016 17:15:59 -0700
+Message-Id: <1460074573-7481-47-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 08, 2016 at 01:33:28PM +0000, Gabriele Paoloni wrote:
-> Hi Bjorn
-> 
-> Many thanks for your reply
-> 
-> > -----Original Message-----
-> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> > Sent: 07 April 2016 15:06
-> > To: Gabriele Paoloni
-> > Cc: Jisheng Zhang; jingoohan1@gmail.com; pratyush.anand@gmail.com;
-> > bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
-> > kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org
-> > Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code
-> > to dw_pcie_setup_rc()
-> > 
-> > On Thu, Apr 07, 2016 at 10:06:45AM +0000, Gabriele Paoloni wrote:
-> > > Hi Jisheng
-> > >
-> > > > -----Original Message-----
-> > > > From: Jisheng Zhang [mailto:jszhang@marvell.com]
-> > > > Sent: 07 April 2016 09:35
-> > > > To: Gabriele Paoloni
-> > > > Cc: jingoohan1@gmail.com; pratyush.anand@gmail.com;
-> > > > bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
-> > > > kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org
-> > > > Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup
-> > code
-> > > > to dw_pcie_setup_rc()
-> > > >
-> > > > Hi Gabriele,
-> > > >
-> > > > On Thu, 7 Apr 2016 08:20:28 +0000 Gabriele Paoloni wrote:
-> > > >
-> > > > > Hi Jisheng
-> > > > >
-> > > > > Thanks for your reply
-> > > > >
-> > > > > > -----Original Message-----
-> > > > > > From: Jisheng Zhang [mailto:jszhang@marvell.com]
-> > > > > > Sent: 07 April 2016 03:38
-> > > > > > To: Gabriele Paoloni; jingoohan1@gmail.com;
-> > > > pratyush.anand@gmail.com;
-> > > > > > bhelgaas@google.com
-> > > > > > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
-> > linux-
-> > > > arm-
-> > > > > > kernel@lists.infradead.org
-> > > > > > Subject: Re: [PATCH v2] PCI: designware: move remaining rc
-> > setup
-> > > > code
-> > > > > > to dw_pcie_setup_rc()
-> > > > > >
-> > > > > > Hi Gabriele,
-> > > > > >
-> > > > > > On Wed, 6 Apr 2016 14:50:29 +0000 Gabriele Paoloni wrote:
-> > > > > >
-> > > > > > > Hi, sorry to be late on this
-> > > > > > >
-> > > > > > > > -----Original Message-----
-> > > > > > > > From: linux-kernel-owner@vger.kernel.org [mailto:linux-
-> > kernel-
-> > > > > > > > owner@vger.kernel.org] On Behalf Of Jisheng Zhang
-> > > > > > > > Sent: 16 March 2016 11:41
-> > > > > > > > To: jingoohan1@gmail.com; pratyush.anand@gmail.com;
-> > > > > > bhelgaas@google.com
-> > > > > > > > Cc: linux-pci@vger.kernel.org; linux-
-> > kernel@vger.kernel.org;
-> > > > linux-
-> > > > > > arm-
-> > > > > > > > kernel@lists.infradead.org; Jisheng Zhang
-> > > > > > > > Subject: [PATCH v2] PCI: designware: move remaining rc
-> > setup
-> > > > code
-> > > > > > to
-> > > > > > > > dw_pcie_setup_rc()
-> > > > > > > >
-> > > > > > > > dw_pcie_setup_rc(), as its name indicates, setups the RC.
-> > But
-> > > > > > current
-> > > > > > > > dw_pcie_host_init() also contains some necessary rc setup
-> > code.
-> > > > > > > >
-> > > > > > > > Another reason: the host may lost power during suspend to
-> > ram,
-> > > > the
-> > > > > > RC
-> > > > > > > > need to be re-setup after resume. The rc can't be correctly
-> > > > resumed
-> > > > > > > > without the rc setup code in dw_pcie_host_init().
-> > > > > > > >
-> > > > > > > > So this patch moves the code to dw_pcie_setup_rc() to
-> > address
-> > > > the
-> > > > > > above
-> > > > > > > > two issues. After this patch, each pcie designware driver
-> > users
-> > > > > > could
-> > > > > > > > call dw_pcie_setup_rc() to re-setup rc when resume back.
-> > > > > > >
-> > > > > > > I think this patch breaks the Hisilicon driver...
-> > > > > > >
-> > > > > > > Our driver performs linkup setup in UEFI therefore we do not
-> > call
-> > > > > > > dw_pcie_setup_rc(), we only call dw_pcie_host_init().
-> > > > > >
-> > > > > > Thanks for the information. So pcie-hisi rely on UEFI to do
-> > > > something
-> > > > > > similar
-> > > > > > in dw_pcie_setup_rc(), this comes to a common driver implement
-> > > > > > question: should
-> > > > > > linux device driver rely on bootloader to configure HW device?
-> > > > >
-> > > > > I don't see any issue with this...
-> > > > >
-> > > > > >
-> > > > > > Is it acceptable that pcie-hisi adds a call to
-> > dw_pcie_setup_rc()
-> > > > in
-> > > > > > hisi_add_pcie_port()?
-> > > > >
-> > > > > I don't think so...that would try to overwrite what is already
-> > set by
-> > > > > the bootloader; so it is wrong in principle and maybe it can lead
-> > to
-> > > > > undefined behaviours...
-> > > >
-> > > > make sense! This commit is intend to re-setup the rc when waken
-> > from
-> > > > s2ram (in
-> > > > s2ram state, the host lost power)
-> > > >
-> > > > I have no good solution but to introduce one function e.g
-> > > > dw_pcie_setup_rc_after_linkup(), then move related code from
-> > > > dw_pcie_host_init
-> > > > to it, then let my host driver resume hook to call.
-> > > >
-> > > > Hi Pratyush, Jingoo and Bjorn etc.
-> > > >
-> > > > any suggestions are appreciated!
-> > >
-> > > What about:
-> > >
-> > > diff --git a/drivers/pci/host/pcie-designware.c
-> > b/drivers/pci/host/pcie-designware.c
-> > > index a4cccd3..e461f5d 100644
-> > > --- a/drivers/pci/host/pcie-designware.c
-> > > +++ b/drivers/pci/host/pcie-designware.c
-> > > @@ -434,7 +434,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
-> > >  	struct platform_device *pdev = to_platform_device(pp->dev);
-> > >  	struct pci_bus *bus, *child;
-> > >  	struct resource *cfg_res;
-> > > -	u32 val;
-> > >  	int i, ret;
-> > >  	LIST_HEAD(res);
-> > >  	struct resource_entry *win;
-> > > @@ -544,25 +543,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
-> > >  	if (pp->ops->host_init)
-> > >  		pp->ops->host_init(pp);
-> > >
-> > > -	/*
-> > > -	 * If the platform provides ->rd_other_conf, it means the
-> > platform
-> > > -	 * uses its own address translation component rather than ATU, so
-> > > -	 * we should not program the ATU here.
-> > > -	 */
-> > > -	if (!pp->ops->rd_other_conf)
-> > > -		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-> > > -					  PCIE_ATU_TYPE_MEM, pp->mem_base,
-> > > -					  pp->mem_bus_addr, pp->mem_size);
-> > > -
-> > > -	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
-> > > -
-> > > -	/* program correct class for RC */
-> > > -	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2,
-> > PCI_CLASS_BRIDGE_PCI);
-> > > -
-> > > -	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
-> > > -	val |= PORT_LOGIC_SPEED_CHANGE;
-> > > -	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
-> > > -
-> > >  	pp->root_bus_nr = pp->busn->start;
-> > >  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> > >  		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
-> > > @@ -725,6 +705,29 @@ static struct pci_ops dw_pcie_ops = {
-> > >  	.write = dw_pcie_wr_conf,
-> > >  };
-> > >
-> > > +void dw_pcie_setup_own_cfg(struct pcie_port *pp)
-> > > +{
-> > > +	u32 val;
-> > > +	/*
-> > > +	 * If the platform provides ->rd_other_conf, it means the
-> > platform
-> > > +	 * uses its own address translation component rather than ATU, so
-> > > +	 * we should not program the ATU here.
-> > > +	 */
-> > > +	if (!pp->ops->rd_other_conf)
-> > > +		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-> > > +					  PCIE_ATU_TYPE_MEM, pp->mem_base,
-> > > +					  pp->mem_bus_addr, pp->mem_size);
-> > > +
-> > > +	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
-> > > +
-> > > +	/* program correct class for RC */
-> > > +	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2,
-> > PCI_CLASS_BRIDGE_PCI);
-> > > +
-> > > +	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
-> > > +	val |= PORT_LOGIC_SPEED_CHANGE;
-> > > +	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
-> > > +}
-> > > +
-> > >  void dw_pcie_setup_rc(struct pcie_port *pp)
-> > >  {
-> > >  	u32 val;
-> > > @@ -800,6 +803,8 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
-> > >  	val |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
-> > >  		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
-> > >  	dw_pcie_writel_rc(pp, val, PCI_COMMAND);
-> > > +
-> > > +	dw_pcie_setup_own_cfg(pp);
-> > >  }
-> > >
-> > >  MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
-> > > diff --git a/drivers/pci/host/pcie-designware.h
-> > b/drivers/pci/host/pcie-designware.h
-> > > index f437f9b..caf0f5d 100644
-> > > --- a/drivers/pci/host/pcie-designware.h
-> > > +++ b/drivers/pci/host/pcie-designware.h
-> > > @@ -85,5 +85,6 @@ int dw_pcie_wait_for_link(struct pcie_port *pp);
-> > >  int dw_pcie_link_up(struct pcie_port *pp);
-> > >  void dw_pcie_setup_rc(struct pcie_port *pp);
-> > >  int dw_pcie_host_init(struct pcie_port *pp);
-> > > +void dw_pcie_setup_own_cfg(struct pcie_port *pp);
-> > >
-> > >  #endif /* _PCIE_DESIGNWARE_H */
-> > > diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-
-> > hisi.c
-> > > index 3e98d4e..8da29b2 100644
-> > > --- a/drivers/pci/host/pcie-hisi.c
-> > > +++ b/drivers/pci/host/pcie-hisi.c
-> > > @@ -164,6 +164,7 @@ static int hisi_add_pcie_port(struct pcie_port
-> > *pp,
-> > >  		dev_err(&pdev->dev, "failed to initialize host\n");
-> > >  		return ret;
-> > >  	}
-> > > +	dw_pcie_setup_own_cfg(pp);
-> > >
-> > >  	return 0;
-> > >  }
-> > 
-> > What's the hisi plan for resuming after suspend-to-RAM?  How does the
-> > RC get reprogrammed after it loses all its state?
-> 
-> PM is not part of the driver yet. This is planned for near
-> future release so haven't made such considerations yet
-> > 
-> > What would break if hisi did call dw_pcie_setup_rc()?  I know you said
-> > it would overwrite what the bootloader already did, which is true.
-> 
-> I am try to figure this out now with our HW team.
-> 
-> > 
-> > But hisi does call dw_pcie_host_init(), so it reads pp->mem (which
-> > determines pp->mem_base) and pp->lanes from the DT.  Other drivers
-> > then call dw_pcie_setup_rc() which programs the RC based on
-> > pp->mem_base and pp->lanes.  So hisi assumes UEFI programmed the RC to
-> > match the DT, while the other drivers read the DT and program the RC
-> > to match.  The latter seems more robust because it enforces the
-> > consistency rather than relying on it.
-> 
-> Yes I agree with you, however we have preferred to move RC config to
-> BIOS to have a single driver to support multiple versions of the
-> same SoC.
+On booting path, we don't pass realloc at first, and treat all optional
+just as required, in some case we can have smaller size/align with optional
+than required only.
 
-I think there are two reasonable approaches:
+  04:00.0 has children bridges: 05:03.0, 05:04.0
+pref layout after booting path like followings:
 
-  1) A single generic driver that doesn't have any knowledge about the
-  chipset registers; it uses run-time firmware interfaces to manage
-  the bridge.  The ACPI pci_root.c driver is the best example so far
-  and works very well.  It supports basically all x86 and ia64
-  chipsets and requires no kernel work for new ones.
+pci 0000:04:00.0: BAR 9: assigned [mem 0x84000000-0x9fffffff 64bit pref]
+pci 0000:05:04.0: BAR 9: assigned [mem 0x88000000-0x9fffffff 64bit pref]
+pci 0000:05:03.0: BAR 9: assigned [mem 0x84000000-0x841fffff 64bit pref]
+pci 0000:05:03.0: PCI bridge to [bus 08-0f]
+pci 0000:05:03.0:   bridge window [mem 0x84000000-0x841fffff 64bit pref]
+pci 0000:05:04.0: PCI bridge to [bus 10]
+pci 0000:05:04.0:   bridge window [mem 0x88000000-0x9fffffff 64bit pref]
+pci 0000:04:00.0: PCI bridge to [bus 05-10]
+pci 0000:04:00.0:   bridge window [mem 0x84000000-0x9fffffff 64bit pref]
 
-  2) Native drivers specific to each chipset.  These may get
-  configuration information from DT, but they do their own
-  register-level programming of the device without run-time help from
-  firmware.
+so the old size in rescan for 04:00.0 would be 0x1c000000, and align is 0x4000000
 
-I think hisi is a native driver because it uses hip05/hip06 registers
-to check link state and perform config operations.  And apparently you
-rely on the ATU, BAR, class, and link width programming currently done
-in dw_pcie_host_init().  But you want to rely on pre-boot firmware to
-set up the link.  That doesn't make sense to me -- if the driver wants
-to twiddle the registers, it should know how to do it all.  I don't
-see how you can reasonably manage this half-way approach.
+during remove and rescan:
 
-> The patch I proposed above does the same job as the original patch
-> proposed by Jisheng and also allows hisi driver to call the moved
-> code.
-> 
-> Do you see anything wrong with it?
+pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff 64bit pref] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
+pci 0000:05:03.0: bridge window [mem 0x00000000-0xffffffffffffffff] to [bus 08-0f] add_size 200000 add_align 100000 alt_size 0 alt_align 0 must_size 0 must_align 0
+pci 0000:05:04.0: bridge window [mem 0x08000000-0x1fffffff 64bit pref] to [bus 10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 18000000 must_align 8000000
+pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_size add_size   200000
+pci 0000:05:03.0: BAR 9: [mem 0x00000000-0xffffffffffffffff 64bit pref] get_res_add_align min_align 100000
+pci 0000:04:00.0: bridge window [mem 0x08000000-0x27ffffff 64bit pref] to [bus 05-10] add_size 0 add_align 0 alt_size 10100000 alt_align 10000000 must_size 20000000 must_align 8000000
 
-Only that it makes the structure more complicated and we haven't
-identified a corresponding benefit yet.
+align old size 0x1c000000 to 0x2000000 as size0, 0x1c000000 as size1.
+so for 04:00.0 will have big must and no optional size anymore.
 
-Bjorn
+So don't align old size, then we will have same size0 and size1,
+and use smaller add_align as must align.
+
+After the patch, rescan works properly.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 88557b9..d2712d8 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1133,9 +1133,9 @@ static resource_size_t calculate_memsize(resource_size_t size,
+ 		size = min_size;
+ 	if (old_size == 1)
+ 		old_size = 0;
++	size = ALIGN(size, align);
+ 	if (size < old_size)
+ 		size = old_size;
+-	size = ALIGN(size, align);
+ 	return size;
+ }
+ 
+@@ -1595,6 +1595,17 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 		b_res->flags = 0;
+ 		return 0;
+ 	}
++
++	/*
++	 * It happens when boot path is not passing realloc
++	 * and later rescan is passing realloc.
++	 * The old value from boot path is bigger, and calculate_size will
++	 * use old value as size0 and size1, and also have
++	 * chance optional align is smaller than must only align.
++	 */
++	if(size0 == size1 && min_align > min_add_align)
++		min_align = min_add_align;
++
+ 	b_res->start = min_align;
+ 	b_res->end = size0 + min_align - 1;
+ 	b_res->flags |= IORESOURCE_STARTALIGN;
+-- 
+1.8.4.5
+
