@@ -1,69 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:35852 "EHLO
-	mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753295AbcDZUp4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Apr 2016 16:45:56 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:43860 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751522AbcDHUT1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 8 Apr 2016 16:19:27 -0400
+Date: Fri, 8 Apr 2016 14:19:25 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>,
+	linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
+	David Woodhouse <dwmw2@infradead.org>,
+	iommu@lists.linux-foundation.org
+Subject: Re: [PATCH v4 4/6] PCI: Rename dma_alias_is_enabled() to
+ pci_devs_are_dma_aliases()
+Message-ID: <20160408141925.44e43efe@t450s.home>
+In-Reply-To: <20160224194415.7585.37290.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	<20160224194415.7585.37290.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1461578004-129094-2-git-send-email-mika.westerberg@linux.intel.com>
-References: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
-	<1461578004-129094-2-git-send-email-mika.westerberg@linux.intel.com>
-Date: Tue, 26 Apr 2016 22:45:54 +0200
-Message-ID: <CAJZ5v0htAg28F8a5KXTLhH-U65+nGEgxY1u5tWaUtRt6JGgeOA@mail.gmail.com>
-Subject: Re: [PATCH v4 1/4] PCI: No need to set d3cold_allowed to PCIe ports
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 25, 2016 at 11:53 AM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
-> The Linux PCI core skips PCI bridges and PCIe ports when system is
-> suspended. The PCI core checks return value of pci_has_subordinate() in
-> pci_pm_suspend_noirq() to skip all devices where it is non-zero (which
-> means PCI bridges and PCIe ports).
->
-> Since PCIe ports are never suspended in the first place, there is no need
-> to set d3cold_allowed for them.
->
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+On Wed, 24 Feb 2016 13:44:15 -0600
+Bjorn Helgaas <bhelgaas@google.com> wrote:
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
+> This should be folded into the previous patch.  I left it separate to show
+> the interface difference more clearly.
+> 
+> Also, pci_devs_are_dma_aliases() uses PCI internals (dma_alias_mask), so I
+> think it should be in PCI code instead of in IOMMU code.  That would mean
+> both it and pci_add_dma_alias() should probably be declared in
+> include/linux/pci.h (but not exported to modules with EXPORT_SYMBOL()).
 > ---
->  drivers/pci/pcie/portdrv_pci.c | 5 -----
->  1 file changed, 5 deletions(-)
->
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index be35da2e105e..6c6bb03392ea 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -134,11 +134,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
->                 return status;
->
->         pci_save_state(dev);
-> -       /*
-> -        * D3cold may not work properly on some PCIe port, so disable
-> -        * it by default.
-> -        */
-> -       dev->d3cold_allowed = false;
->         return 0;
+>  drivers/iommu/iommu.c |   11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
+
+Needs a Sign-off.
+
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+
+> 
+> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+> index a214e19..031d06b 100644
+> --- a/drivers/iommu/iommu.c
+> +++ b/drivers/iommu/iommu.c
+> @@ -659,10 +659,12 @@ static struct iommu_group *get_pci_function_alias_group(struct pci_dev *pdev,
+>  	return NULL;
 >  }
->
-> --
-> 2.8.0.rc3
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  
+> -static bool dma_alias_is_enabled(struct pci_dev *dev, u8 devfn)
+> +static bool pci_devs_are_dma_aliases(struct pci_dev *pdev1, struct pci_dev *pdev2)
+>  {
+> -	return dev->dma_alias_mask &&
+> -	       test_bit(devfn, dev->dma_alias_mask);
+> +	return (pdev1->dma_alias_mask &&
+> +		test_bit(pdev2->devfn, pdev1->dma_alias_mask)) ||
+> +	       (pdev2->dma_alias_mask &&
+> +		test_bit(pdev1->devfn, pdev2->dma_alias_mask));
+>  }
+>  
+>  /*
+> @@ -692,8 +694,7 @@ static struct iommu_group *get_pci_alias_group(struct pci_dev *pdev,
+>  			continue;
+>  
+>  		/* We alias them or they alias us */
+> -		if (dma_alias_is_enabled(pdev, tmp->devfn) ||
+> -		    dma_alias_is_enabled(tmp, pdev->devfn)) {
+> +		if (pci_devs_are_dma_aliases(pdev, tmp)) {
+>  			group = get_pci_alias_group(tmp, devfns);
+>  			if (group) {
+>  				pci_dev_put(tmp);
+> 
+
