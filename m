@@ -1,33 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: Rafael Wysocki <rjw@rjwysocki.net>
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Keith Busch <keith.busch@intel.com>,
-	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 0/2] Fixups for mixed pcie_ports=auto and native
-Date: Fri,  8 Apr 2016 10:01:18 -0600
-Message-Id: <1460131280-184287-1-git-send-email-jonathan.derrick@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 40/60] PCI: Move comment to pci_need_to_release()
+Date: Thu,  7 Apr 2016 17:15:53 -0700
+Message-Id: <1460074573-7481-41-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This set introduces a fixup that lets non-acpi pcie ports subscribe to
-native port services. The theory is that on an acpi system, native
-services will require acpi to release control of the port instance.
+Move comment from caller to pci_need_to_release(), as we will have one new
+caller for alt_size support.
 
-Rather than failing on non-acpi devices, we should continue as if they
-were native to begin with, and try to subscribe to native services just
-the same.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ drivers/pci/setup-bus.c | 27 +++++++++++++++------------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
 
-Jon Derrick (2):
-  PCI/ACPI: Do not fail ports without ACPI entries
-  PCI/PCIe: Fixups for acpi port setup not being allowed to fail
-
- drivers/pci/pcie/portdrv.h      | 11 ++++-------
- drivers/pci/pcie/portdrv_acpi.c | 10 ++++------
- drivers/pci/pcie/portdrv_core.c |  8 ++------
- 3 files changed, 10 insertions(+), 19 deletions(-)
-
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 1571245..b4eb37d 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -414,6 +414,20 @@ static unsigned long pci_fail_res_type_mask(struct list_head *fail_head)
+ 
+ static bool pci_need_to_release(unsigned long mask, struct resource *res)
+ {
++	/*
++	 * Separate three resource type checking if we need to release
++	 * assigned resource.
++	 *	1. if there is io port assign fail, will release assigned
++	 *	   io port.
++	 *	2. if there is pref mmio assign fail, release assigned
++	 *	   pref mmio.
++	 *	   if assigned pref mmio's parent is non-pref mmio and there
++	 *	   is non-pref mmio assign fail, will release that assigned
++	 *	   pref mmio.
++	 *	3. if there is non-pref mmio assign fail or pref mmio
++	 *	   assigned fail, will release assigned non-pref mmio.
++	 */
++
+ 	if (res->flags & IORESOURCE_IO)
+ 		return !!(mask & IORESOURCE_IO);
+ 
+@@ -470,19 +484,8 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	 *  if could do that, could get out early.
+ 	 *  if could not do that, we still try to assign requested at first,
+ 	 *    then try to reassign add_size for some resources.
+-	 *
+-	 * Separate three resource type checking if we need to release
+-	 * assigned resource after requested + add_size try.
+-	 *	1. if there is io port assign fail, will release assigned
+-	 *	   io port.
+-	 *	2. if there is pref mmio assign fail, release assigned
+-	 *	   pref mmio.
+-	 *	   if assigned pref mmio's parent is non-pref mmio and there
+-	 *	   is non-pref mmio assign fail, will release that assigned
+-	 *	   pref mmio.
+-	 *	3. if there is non-pref mmio assign fail or pref mmio
+-	 *	   assigned fail, will release assigned non-pref mmio.
+ 	 */
++
+ 	LIST_HEAD(save_head);
+ 	LIST_HEAD(local_fail_head);
+ 	struct pci_dev_resource *save_res;
 -- 
-1.8.3.1
-
+1.8.4.5
