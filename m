@@ -1,129 +1,187 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:36456 "EHLO
-	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754391AbcDMQWI (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 12:22:08 -0400
-Date: Wed, 13 Apr 2016 18:22:03 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Subject: Re: [PATCH 1/2] dt-bindings: pci: tegra: Update for per-lane PHYs
-Message-ID: <20160413162203.GB30129@ulmo.ba.sec>
-References: <1457452094-5409-1-git-send-email-thierry.reding@gmail.com>
- <56E98F2E.5010307@wwwdotorg.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 8 Apr 2016 15:22:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jon Derrick <jonathan.derrick@intel.com>
+Cc: rjw@rjwysocki.net, keith.busch@intel.com,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCHv2 0/2] Fixups for mixed pcie_ports=auto and native
+Message-ID: <20160408202231.GA23622@localhost>
+References: <1460136951-28217-1-git-send-email-jonathan.derrick@intel.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="uQr8t48UFsdbeI+V"
-In-Reply-To: <56E98F2E.5010307@wwwdotorg.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1460136951-28217-1-git-send-email-jonathan.derrick@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Apr 08, 2016 at 11:35:49AM -0600, Jon Derrick wrote:
+> This set introduces a fixup that lets non-acpi pcie ports subscribe to
+> native port services. The theory is that on an acpi system, native
+> services will require acpi to release control of the port instance.
+> 
+> Rather than failing on non-acpi devices, we should continue as if they
+> were native to begin with, and try to subscribe to native services just
+> the same.
+> 
+> No change from v1 - the emails just didn't reach all of their targets
+> 
+> Jon Derrick (2):
+>   PCI/ACPI: Do not fail ports without ACPI entries
+>   PCI/PCIe: Fixups for acpi port setup not being allowed to fail
+> 
+>  drivers/pci/pcie/portdrv.h      | 11 ++++-------
+>  drivers/pci/pcie/portdrv_acpi.c | 10 ++++------
+>  drivers/pci/pcie/portdrv_core.c |  8 ++------
+>  3 files changed, 10 insertions(+), 19 deletions(-)
 
---uQr8t48UFsdbeI+V
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Strange.  I see both patches in my mailbox this time, but only one in
+patchwork.  In any case, I applied both to pci/host-vmd for v4.7.
 
-On Wed, Mar 16, 2016 at 10:51:58AM -0600, Stephen Warren wrote:
-> On 03/08/2016 08:48 AM, Thierry Reding wrote:
-> > From: Thierry Reding <treding@nvidia.com>
-> >=20
-> > Changes to the pad controller device tree binding have required that
-> > each lane be associated with a separate PHY.
->=20
-> I still don't think this has anything to do with DT bindings. Rather, the
-> definition of a PHY (in HW and the Linux PHY subsystem) is a single lane.
-> That fact then requires drivers to support a PHY per lane rather than a
-> single multi-lane PHY, and equally means the DT bindings must be written
-> according to the correct definition of a PHY.
->=20
-> Still, I suppose the commit description is fine as is.
+Here they are for completeness and because I tweaked the changelogs:
 
-I've reworded the commit message to give a more accurate rationale for
-the change. I'll be posting a v5 soon.
+commit 52966bd1c2a09fdd3149f00568cc18f45cc09785
+Author: Jon Derrick <jonathan.derrick@intel.com>
+Date:   Fri Apr 8 14:44:24 2016 -0500
 
-> > Update the PCI host bridge
-> > device tree binding to allow each root port to define the list of PHYs
-> > required to drive the lanes associated with it.
->=20
-> > diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.=
-txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
->=20
-> > +Required properties for Tegra124 and later:
-> > +- phys: Must contain an phandle to a PHY for each entry in phy-names.
-> > +- phy-names: Must include an entry for each active lane. Note that the=
- number
-> > +  of entries does not have to (though usually will) be equal to the sp=
-ecified
-> > +  number of lanes in the nvidia,num-lanes property. Entries are of the=
- form
-> > +  "pcie-N": where N ranges from 0 to the value specified in nvidia,num=
--lanes.
->=20
-> When would the number of PHYs not equal the number of lanes? I thought the
-> whole point of this patch was to switch to per-lane PHYs? Perhaps I'm just
-> misremembering some exception, so there may be no need to change this.
+    PCI/ACPI: Allow all PCIe services on non-ACPI host bridges
+    
+    Host bridges we discover via ACPI, i.e., PNP0A03 and PNP0A08 devices, may
+    have an _OSC method by which the OS can ask the platform for control of
+    PCIe features like native hotplug, power management events, AER, etc.
+    
+    Previously, if we found a bridge without an ACPI device, we assumed we did
+    not have permission to use any of these PCIe features.  That seems
+    unreasonably restrictive.
+    
+    If we find no ACPI device, assume we can take control of all PCIe features.
+    
+    The Intel Volume Management Device (VMD) is one such bridge with no ACPI
+    device.  Prior to this change, users had to boot with "pcie_ports=native"
+    to get hotplug and other services to work below the VMD Root Port.
+    
+    [bhelgaas: changelog]
+    Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+    Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-This is useful to support the case where we want to connect a x1 or x2
-device to a root port that is configured to drive more lanes. It's a
-rather unusual configuration, but it would be possible for example to
-have an onboard x1 ethernet card, but the board layout is such that it
-runs in x1/x2 mode, with the ethernet card connected to the x2 port.
+diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
+index b4d2894..f097a73 100644
+--- a/drivers/pci/pcie/portdrv_acpi.c
++++ b/drivers/pci/pcie/portdrv_acpi.c
+@@ -43,11 +43,11 @@ int pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
+ 
+ 	handle = acpi_find_root_bridge_handle(port);
+ 	if (!handle)
+-		return -EINVAL;
++		return 0;
+ 
+ 	root = acpi_pci_find_root(handle);
+ 	if (!root)
+-		return -ENODEV;
++		return 0;
+ 
+ 	flags = root->osc_control_set;
+ 
 
-> >   Example:
-> >=20
-> >   SoC DTSI:
-> > @@ -169,6 +179,9 @@ SoC DTSI:
-> >   			ranges;
-> >=20
-> >   			nvidia,num-lanes =3D <2>;
-> > +
-> > +			phys =3D <&{/padctl@0,7009f000/pads/pcie/pcie-4}>;
-> > +			phy-names =3D "pcie-0";
-> >   		};
->=20
-> The example shows a Tegra20 PCIe controller, yet includes
-> Tegra124-or-greater properties. That seems a bit odd. Should the changes =
-to
-> the example be dropped, or does "Required properties for Tegra124 and lat=
-er"
-> mean "Required for T124+, optional for earlier chips"?
+commit 88a97da1eab7587036d8bc937d6bc874b8210df1
+Author: Jon Derrick <jonathan.derrick@intel.com>
+Date:   Fri Apr 8 11:35:51 2016 -0600
 
-I've annotated these properties with "for Tegra124 and later", hopefully
-that clarifies that these properties are only valid on Tegra124 and
-later chips. The reason is that earlier (Tegra114 didn't support PCIe,
-Tegra30 and Tegra20 did but had PHY registers within the PCI host bridge
-I/O memory).
+    PCI: Remove return values from pcie_port_platform_notify() and relatives
+    
+    Now that pcie_port_acpi_setup() always returns 0, make it and its callers
+    void functions and stop checking the return values.
+    
+    [bhelgaas: changelog]
+    Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Thierry
-
---uQr8t48UFsdbeI+V
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCAAGBQJXDnIpAAoJEN0jrNd/PrOh3DkP/0FrpZYpnWHkE13hyrqEdfsr
-HXbORfUCZVDdVjwgco3bhCzdW6lbJCk+mWECYtkqXG2mB1jvvQzSU/cpLVu75yyl
-n2sCLEI2a+8SM6NpAOfzbDArvJU/BKUj+g7oPpFuzgkBti7vrRvYX0cf7Nj5ew3j
-egFCZ96dyB56IZ7Xov+ztSBU00+rFsyvKydUvPpEQqebzXDJzTI68xEs3EcQe5iw
-+vx3CHBGKPAN0Erz20lBlR2RuWqZFaDZpxVmrMU/3dA0Ef9V1vLtKAcdH+FOEfbU
-EPkykV6fI3WcjShkZaQtRj+i/jpU3+Sgx4GShAaz+cadEavagVeBXeiZ80l5KkHz
-t5rSaWZvofvB9Lnb9V5sM+AnOWWSiA48qyTm68MJzQ6w+EoXETLZtAw8CiF/3UhS
-Fl1jptCOE5lqxJy1EKoVeHn+5LQ5LgKD84bSaBb9mm7gCs66FZzzHMTJprNkMhO6
-ZZ62FImCzJdj2O2tuXqUc1qdUd6rXJ3C4GRFIRrX5svhrddBB8CAAV4a8cHoBUK4
-XIfwKjZJwNm7uuCdlJOJ/zN4S2+7O9gBY4vPzJ/fza8bVHZ8QGYYgGlTqfcK0/IS
-WbuTBdDw5b3xLQ1o1D19fMmySvUDjbsPd1r372MoXIuiPW8qM8Xwkp77DNkTpqKo
-LPu3z6ajLousVnVNw4m2
-=X1Xj
------END PGP SIGNATURE-----
-
---uQr8t48UFsdbeI+V--
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index d525548..463b609 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -67,17 +67,14 @@ static inline void pcie_pme_interrupt_enable(struct pci_dev *dev, bool en) {}
+ #endif /* !CONFIG_PCIE_PME */
+ 
+ #ifdef CONFIG_ACPI
+-int pcie_port_acpi_setup(struct pci_dev *port, int *mask);
++void pcie_port_acpi_setup(struct pci_dev *port, int *mask);
+ 
+-static inline int pcie_port_platform_notify(struct pci_dev *port, int *mask)
++static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask)
+ {
+-	return pcie_port_acpi_setup(port, mask);
++	pcie_port_acpi_setup(port, mask);
+ }
+ #else /* !CONFIG_ACPI */
+-static inline int pcie_port_platform_notify(struct pci_dev *port, int *mask)
+-{
+-	return 0;
+-}
++static inline void pcie_port_platform_notify(struct pci_dev *port, int *mask){}
+ #endif /* !CONFIG_ACPI */
+ 
+ #endif /* _PORTDRV_H_ */
+diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
+index f097a73..9f4ed71 100644
+--- a/drivers/pci/pcie/portdrv_acpi.c
++++ b/drivers/pci/pcie/portdrv_acpi.c
+@@ -32,22 +32,22 @@
+  * NOTE: It turns out that we cannot do that for individual port services
+  * separately, because that would make some systems work incorrectly.
+  */
+-int pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
++void pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
+ {
+ 	struct acpi_pci_root *root;
+ 	acpi_handle handle;
+ 	u32 flags;
+ 
+ 	if (acpi_pci_disabled)
+-		return 0;
++		return;
+ 
+ 	handle = acpi_find_root_bridge_handle(port);
+ 	if (!handle)
+-		return 0;
++		return;
+ 
+ 	root = acpi_pci_find_root(handle);
+ 	if (!root)
+-		return 0;
++		return;
+ 
+ 	flags = root->osc_control_set;
+ 
+@@ -58,6 +58,4 @@ int pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
+ 		*srv_mask |= PCIE_PORT_SERVICE_PME;
+ 	if (flags & OSC_PCI_EXPRESS_AER_CONTROL)
+ 		*srv_mask |= PCIE_PORT_SERVICE_AER;
+-
+-	return 0;
+ }
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 88122dc..de7a85b 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -256,7 +256,6 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 	int services = 0;
+ 	u32 reg32;
+ 	int cap_mask = 0;
+-	int err;
+ 
+ 	if (pcie_ports_disabled)
+ 		return 0;
+@@ -266,11 +265,8 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 	if (pci_aer_available())
+ 		cap_mask |= PCIE_PORT_SERVICE_AER;
+ 
+-	if (pcie_ports_auto) {
+-		err = pcie_port_platform_notify(dev, &cap_mask);
+-		if (err)
+-			return 0;
+-	}
++	if (pcie_ports_auto)
++		pcie_port_platform_notify(dev, &cap_mask);
+ 
+ 	/* Hot-Plug Capable */
+ 	if ((cap_mask & PCIE_PORT_SERVICE_HP) &&
