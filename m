@@ -1,123 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:35076 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752686AbcDKX3i (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Apr 2016 19:29:38 -0400
-From: David Daney <ddaney.cavm@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	David Daney <david.daney@cavium.com>
-Subject: [PATCH] pci, pci-thunder-pem: Don't clobber read-only bits in bridge config registers.
-Date: Mon, 11 Apr 2016 16:29:32 -0700
-Message-Id: <1460417372-13147-1-git-send-email-ddaney.cavm@gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42450 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932519AbcDHARb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:17:31 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v11 60/60] PCI: Only try to assign io port only for root bus that support it
+Date: Thu,  7 Apr 2016 17:16:13 -0700
+Message-Id: <1460074573-7481-61-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney <david.daney@cavium.com>
+The PCI subsystem always assumes that I/O is supported on root bus and
+tries to assign an I/O window to each child bus even if that is not the
+case.
 
-The 32-bit addressing modes in the I/O and Prefetchable Memory
-registers are required to be read-only.  Since the underlying access
-method allows them to be set, we must emulate their read-only nature
-and always set them.
+The use cases is on Intel 8 socket system that have 8 root buses,
+last two root buses would not have io port resources from _CRS.
 
-Signed-off-by: David Daney <david.daney@cavium.com>
+Check if root bus supports I/O, and later during sizing and
+assigning, check that flags and skip those resources.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- drivers/pci/host/pci-thunder-pem.c | 42 ++++++++++++++++++++++++++++++--------
- 1 file changed, 34 insertions(+), 8 deletions(-)
+ drivers/pci/probe.c     | 6 ++++++
+ drivers/pci/setup-bus.c | 9 +++++++++
+ include/linux/pci.h     | 1 +
+ 3 files changed, 16 insertions(+)
 
-diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-index cabb92a..196adf6 100644
---- a/drivers/pci/host/pci-thunder-pem.c
-+++ b/drivers/pci/host/pci-thunder-pem.c
-@@ -153,11 +153,11 @@ static int thunder_pem_config_read(struct pci_bus *bus, unsigned int devfn,
-  * reserved bits, this makes the code simpler and is OK as the bits
-  * are not affected by writing zeros to them.
-  */
--static u32 thunder_pem_bridge_w1c_bits(int where)
-+static u32 thunder_pem_bridge_w1c_bits(u64 where_aligned)
- {
- 	u32 w1c_bits = 0;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 52ddc45..6f0488c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -345,6 +345,9 @@ static void pci_read_bridge_io(struct pci_bus *child)
+ 	struct pci_bus_region region;
+ 	struct resource *res;
  
--	switch (where & ~3) {
-+	switch (where_aligned) {
- 	case 0x04: /* Command/Status */
- 	case 0x1c: /* Base and I/O Limit/Secondary Status */
- 		w1c_bits = 0xff000000;
-@@ -184,12 +184,34 @@ static u32 thunder_pem_bridge_w1c_bits(int where)
- 	return w1c_bits;
- }
- 
-+/* Some bits must be written to one so they appear to be read-only. */
-+static u32 thunder_pem_bridge_w1_bits(u64 where_aligned)
-+{
-+	u32 w1_bits;
++	if (!pci_find_host_bridge(child)->has_ioport)
++		return;
 +
-+	switch (where_aligned) {
-+	case 0x1c: /* I/O Base / I/O Limit, Secondary Status*/
-+		/* Force 32-bit I/O addressing. */
-+		w1_bits = 0x0101;
-+		break;
-+	case 0x24: /* Prefetchable Memory Base / Prefetchable Memory Limit */
-+		/* Force 64-bit addressing */
-+		w1_bits = 0x00010001;
-+		break;
-+	default:
-+		w1_bits = 0;
-+		break;
-+	}
-+	return w1_bits;
-+}
-+
- static int thunder_pem_bridge_write(struct pci_bus *bus, unsigned int devfn,
- 				    int where, int size, u32 val)
- {
- 	struct gen_pci *pci = bus->sysdata;
- 	struct thunder_pem_pci *pem_pci;
- 	u64 write_val, read_val;
-+	u64 where_aligned = where & ~3ull;
- 	u32 mask = 0;
+ 	io_mask = PCI_IO_RANGE_MASK;
+ 	io_granularity = 0x1000;
+ 	if (dev->io_window_1k) {
+@@ -2231,6 +2234,9 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ 			bus_addr[0] = '\0';
+ 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
  
- 	pem_pci = container_of(pci, struct thunder_pem_pci, gen_pci);
-@@ -205,8 +227,7 @@ static int thunder_pem_bridge_write(struct pci_bus *bus, unsigned int devfn,
- 	 */
- 	switch (size) {
- 	case 1:
--		read_val = where & ~3ull;
--		writeq(read_val, pem_pci->pem_reg_base + PEM_CFG_RD);
-+		writeq(where_aligned, pem_pci->pem_reg_base + PEM_CFG_RD);
- 		read_val = readq(pem_pci->pem_reg_base + PEM_CFG_RD);
- 		read_val >>= 32;
- 		mask = ~(0xff << (8 * (where & 3)));
-@@ -215,8 +236,7 @@ static int thunder_pem_bridge_write(struct pci_bus *bus, unsigned int devfn,
- 		val |= (u32)read_val;
- 		break;
- 	case 2:
--		read_val = where & ~3ull;
--		writeq(read_val, pem_pci->pem_reg_base + PEM_CFG_RD);
-+		writeq(where_aligned, pem_pci->pem_reg_base + PEM_CFG_RD);
- 		read_val = readq(pem_pci->pem_reg_base + PEM_CFG_RD);
- 		read_val >>= 32;
- 		mask = ~(0xffff << (8 * (where & 3)));
-@@ -244,11 +264,17 @@ static int thunder_pem_bridge_write(struct pci_bus *bus, unsigned int devfn,
++		if (resource_type(res) == IORESOURCE_IO)
++			bridge->has_ioport = 1;
++
+ 		if (resource_type(res) == IORESOURCE_MEM) {
+ 			if ((res->end - offset) > 0xffffffff)
+ 				bridge->has_mem64 = 1;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index d07ba87..076b5db 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -225,6 +225,10 @@ static void pdev_assign_resources_prepare(struct pci_dev *dev,
+ 		if (resource_disabled(r) || r->parent)
+ 			continue;
+ 
++		if ((r->flags & IORESOURCE_IO) &&
++		    !pci_find_host_bridge(dev->bus)->has_ioport)
++			continue;
++
+ 		r_align = __pci_resource_alignment(dev, r, realloc_head);
+ 		if (!r_align) {
+ 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
+@@ -1188,6 +1192,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
+ 		min_size = 0;
  	}
  
- 	/*
-+	 * Some bits must be read-only with value of one.  Since the
-+	 * access method allows these to be cleared if a zero is
-+	 * written, force them to one before writing.
-+	 */
-+	val |= thunder_pem_bridge_w1_bits(where_aligned);
++	if (!pci_find_host_bridge(bus)->has_ioport) {
++		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
++		return;
++	}
 +
-+	/*
- 	 * Low order bits are the config address, the high order 32
- 	 * bits are the data to be written.
- 	 */
--	write_val = where & ~3ull;
--	write_val |= (((u64)val) << 32);
-+	write_val = (((u64)val) << 32) | where_aligned;
- 	writeq(write_val, pem_pci->pem_reg_base + PEM_CFG_WR);
- 	return PCIBIOS_SUCCESSFUL;
- }
+ 	min_align = window_alignment(bus, IORESOURCE_IO);
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+ 		int i;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 41d06ce..463094a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -409,6 +409,7 @@ struct pci_host_bridge {
+ 	void *release_data;
+ 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
+ 	unsigned int has_mem64:1;
++	unsigned int has_ioport:1;
+ 	/* Resource alignment requirements */
+ 	resource_size_t (*align_resource)(struct pci_dev *dev,
+ 			const struct resource *res,
 -- 
-1.8.3.1
+1.8.4.5
 
