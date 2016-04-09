@@ -1,93 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43805 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756017AbcDGOnh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 Apr 2016 10:43:37 -0400
-Date: Thu, 7 Apr 2016 09:43:33 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andrew Wray <awray@lenovo.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Martin Mares <mj@ucw.cz>
-Subject: Re: FW: lspci doesn't decode physical slot correctly for adapters
- with PLX bridges
-Message-ID: <20160407144333.GA5198@localhost>
-References: <9B943C44AF111241BB5478325481A9DD288AF8A8@AEMAILMBX03.lenovo.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <9B943C44AF111241BB5478325481A9DD288AF8A8@AEMAILMBX03.lenovo.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org
+Cc: linux-pci@vger.kernel.org, ravikanth.nalla@hpe.com,
+	lenb@kernel.org, harish.k@hpe.com, ashwin.reghunandanan@hpe.com,
+	bhelgaas@google.com, rjw@rjwysocki.net,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Robert Moore <robert.moore@intel.com>,
+	Lv Zheng <lv.zheng@intel.com>, linux-kernel@vger.kernel.org,
+	devel@acpica.org
+Subject: [PATCH V2 2/3] acpi,pci,irq: remove redundant code in acpi_irq_penalty_init
+Date: Fri,  8 Apr 2016 21:26:31 -0400
+Message-Id: <1460165192-4526-3-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1460165192-4526-1-git-send-email-okaya@codeaurora.org>
+References: <1460165192-4526-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Martin]
+acpi_irq_get_penalty is now calculating the penalty on the fly now.
+No need to maintain global list of penalties or calculate them
+at the init time. Removing duplicate code in acpi_irq_penalty_init.
 
-Hi Andy,
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ arch/x86/pci/acpi.c         |  1 -
+ drivers/acpi/pci_link.c     | 36 ------------------------------------
+ include/acpi/acpi_drivers.h |  1 -
+ 3 files changed, 38 deletions(-)
 
-On Wed, Apr 06, 2016 at 10:53:52PM +0000, Andrew Wray wrote:
-> On a Lenovo x3550 M5 system, with a multiport SAS HBA, lspci didn't decode the physical slot for the adapter correctly.
-> 
-> To clarify, the issue isn't with the dmidecode output, or the ACPI/SMBIOS tables on our systems, or the 'lspci' or 'lspci -t' output, but specficially the output of:
-> 
-> lspci -s <PCI bus:dev.func> -vvv | grep 'Physical Slot'
-> 
-> when the PCI bus:dev.func is used for an adapter that has a PLX bridge on it.  That is, the PCI bus:dev.func is used from running lspci | grep <substring of name of adapter> (that is, the PCI bus:dev.func is that of one of the PCI devices on the adapter, not the values for the slot, or the PLX itself).
-> 
-> The expectation is that if lspci is going to report a physical slot, it needs to back trace the PCI tree to a PCI bus:dev.func that corresponds to a slot, and report the information from there.
-> 
-> Here's an example:
-> 
-> In a particular DaAn (node n505) there is an Outback-4 card (N2226 12 Gbps SAS HBA) in slot 2.  The card can be found in lspci as follows:
-> 
-> > n505:~ # lspci | grep -i LSI
-> > 83:00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic SAS3008 PCI-Express Fusion-MPT SAS-3 (rev 02)
-> > 86:00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic SAS3008 PCI-Express Fusion-MPT SAS-3 (rev 02)
-> 
-> When checking the physical slot with lspci, for the first ASIC on the card (both lines above are from the same adapter), a clearly incorrect slot is shown:
-> 
-> > n505:~ # lspci -s 83:00.0 -vvv | grep 'Physical Slot'
-> >         Physical Slot: 64
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 3cd6983..b2a4e2a 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -396,7 +396,6 @@ int __init pci_acpi_init(void)
+ 		return -ENODEV;
+ 
+ 	printk(KERN_INFO "PCI: Using ACPI for IRQ routing\n");
+-	acpi_irq_penalty_init();
+ 	pcibios_enable_irq = acpi_pci_irq_enable;
+ 	pcibios_disable_irq = acpi_pci_irq_disable;
+ 	x86_init.pci.init_irq = x86_init_noop;
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index 25695ea..63dae95 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -580,42 +580,6 @@ static int acpi_irq_get_penalty(int irq)
+ 	return penalty;
+ }
+ 
+-int __init acpi_irq_penalty_init(void)
+-{
+-	struct acpi_pci_link *link;
+-	int i;
+-
+-	/*
+-	 * Update penalties to facilitate IRQ balancing.
+-	 */
+-	list_for_each_entry(link, &acpi_link_list, list) {
+-
+-		/*
+-		 * reflect the possible and active irqs in the penalty table --
+-		 * useful for breaking ties.
+-		 */
+-		if (link->irq.possible_count) {
+-			int penalty =
+-			    PIRQ_PENALTY_PCI_POSSIBLE /
+-			    link->irq.possible_count;
+-
+-			for (i = 0; i < link->irq.possible_count; i++) {
+-				if (link->irq.possible[i] < ACPI_MAX_ISA_IRQ)
+-					acpi_isa_irq_penalty[link->irq.
+-							     possible[i]] +=
+-					    penalty;
+-			}
+-
+-		} else if (link->irq.active &&
+-			   (link->irq.active < ACPI_MAX_ISA_IRQ)) {
+-			acpi_isa_irq_penalty[link->irq.active] +=
+-			    PIRQ_PENALTY_PCI_POSSIBLE;
+-		}
+-	}
+-
+-	return 0;
+-}
+-
+ static int acpi_irq_balance = -1;	/* 0: static, 1: balance */
+ 
+ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+diff --git a/include/acpi/acpi_drivers.h b/include/acpi/acpi_drivers.h
+index 29c6912..797ae2e 100644
+--- a/include/acpi/acpi_drivers.h
++++ b/include/acpi/acpi_drivers.h
+@@ -78,7 +78,6 @@
+ 
+ /* ACPI PCI Interrupt Link (pci_link.c) */
+ 
+-int acpi_irq_penalty_init(void);
+ int acpi_pci_link_allocate_irq(acpi_handle handle, int index, int *triggering,
+ 			       int *polarity, char **name);
+ int acpi_pci_link_free_irq(acpi_handle handle);
+-- 
+1.8.2.1
 
-Based on sysfs_fill_slots() in lspci, I *think* the "Physical Slot"
-comes from /sys/bus/pci/slots.  I'm not too clear on how the kernel
-populates that, but at a quick glance, I don't see it looking at the
-SMBIOS info.
-
-Can you supply the output of these commands so we can try to figure
-out what the kernel is reading from the hardware and how it populates
-/sys/bus/pci/slots?
-
-  grep -r . /sys/bus/pci/slots
-  lspci -vv
-
-If it's easier to attach these to a kernel.org bugzilla, you can do
-that and just include a pointer here.
-
-> Checking lspci -t -vvv, the PCI hierarchy for the card can be seen:
-> 
-> >  +-[0000:80]-+-02.0-[81-87]----00.0-[82-87]--+-00.0-[83-84]----00.0  LSI Logic / Symbios Logic SAS3008 PCI-Express Fusion-MPT SAS-3
-> >  |           |                               +-08.0-[85]--
-> >  |           |                               \-09.0-[86-87]----00.0  LSI Logic / Symbios Logic SAS3008 PCI-Express Fusion-MPT SAS-3
-> 
-> Going back up towards the root, we see 81-87, which is the only match to the dmidecode -t 9 output:
-
-> > ...
-> > Handle 0x003A, DMI type 9, 17 bytes
-> > System Slot Information
-> >       Designation: Slot 2
-> >       Type: x16 PCI Express 3 x16
-> >       Current Usage: In Use
-> >       Length: <OUT OF SPEC>
-> >       ID: 2
-> >       Characteristics:
-> >               3.3 V is provided
-> >       Bus Address: 0000:81:00.0
-> > ...
-
-> Which then does correspond to slot 2.
-> 
-> If lspci went back up towards the PCI root to get the 81-87 value, it could have reported the correct PCI slot.
-
-I know the kernel looks at the Physical Slot Number in the PCIe
-capability, but I'm not sure it looks at SMBIOS.  So we need to figure
-out what it's doing and what it *should* be doing.
-
-Bjorn
