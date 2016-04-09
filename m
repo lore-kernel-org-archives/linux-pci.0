@@ -1,93 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:36877 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751418AbcDROyd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Apr 2016 10:54:33 -0400
-Date: Mon, 18 Apr 2016 16:54:29 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH v5 1/2] dt-bindings: pci: tegra: Update for per-lane PHYs
-Message-ID: <20160418145429.GD20508@ulmo.ba.sec>
-References: <1460991105-22861-1-git-send-email-thierry.reding@gmail.com>
+Received: from mail-vk0-f67.google.com ([209.85.213.67]:35313 "EHLO
+	mail-vk0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750897AbcDIF3q (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Apr 2016 01:29:46 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="RYJh/3oyKhIjGcML"
-In-Reply-To: <1460991105-22861-1-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <CA+55aFy64Wv2tYiX41xFQzPpvNDvwqBv_cDmPh9usQS+KLk_Vg@mail.gmail.com>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+	<CA+55aFy64Wv2tYiX41xFQzPpvNDvwqBv_cDmPh9usQS+KLk_Vg@mail.gmail.com>
+Date: Fri, 8 Apr 2016 22:29:44 -0700
+Message-ID: <CAE9FiQWisgS-5zgAtZh-evaqCGRxCponD32XU21PBBYY-Gkvxg@mail.gmail.com>
+Subject: Re: [PATCH v11 00/60] PCI: Resource allocation cleanup for v4.7
+From: Yinghai Lu <yinghai@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Apr 7, 2016 at 5:51 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+>
+> So please, try to split this up sanely, and let's merge it in sane
+> pieces. I see that you have that M7101 quirk removal randomly in the
+> middle of this series, for example, and it doesn't seem to be the only
+> such random patch. That's entirely independent of all the other
+> patches in the series (and I thought I acked it already, but
+> whatever).
 
---RYJh/3oyKhIjGcML
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+ok, I will split them in small series.
 
-On Mon, Apr 18, 2016 at 04:51:44PM +0200, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
->=20
-> The XUSB pad controller allows PCIe lanes to be controlled individually,
-> providing fine-grained control over their power state. Previous attempts
-> at describing the XUSB pad controller in DT had erroneously assumed that
-> all PCIe lanes were driven by the same PHY, and hence the PCI host
-> controller would reference only a single PHY.
->=20
-> Moving to a representation of per-lane PHYs requires that the operating
-> system driver for the PCI host controller have access to the set of PHY
-> devices that make up the connection of each root port in order to power
-> up and down all of the lanes as necessary.
->=20
-> Acked-by: Rob Herring <robh@kernel.org>
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
-> ---
-> Changes in v5:
-> - add per-SoC examples to clarify what properties are relevant on each
->   generation
-> - clarify the rationale for moving the per-lane PHYs
->=20
-> Changes in v4:
-> - add additional lanes subnode when dereferencing PHYs from the XUSB pad
->   controller to reflect changes in its binding
->=20
->  .../bindings/pci/nvidia,tegra20-pcie.txt           | 224 +++++++++++++++=
-+++++-
->  1 file changed, 219 insertions(+), 5 deletions(-)
+Bjorn,
 
-Hi Bjorn,
+Can you review patch 1 - 16, and put them into pci-next at first ?
 
-I think I've requested this before, but in case I didn't: once you're
-happy with these changes, I'd like to take them through the Tegra tree
-to resolve the dependencies with the remainder of a series that involves
-the pinctrl and PHY drivers as well as devicetree changes. In order to
-do so I'm looking for an Acked-by.
+patch 1-11: parse MEM64 for sparc and other system with OF
 
-Once applied I can provide a stable branch containing the dependencies
-for you to pull into the PCI tree if necessary.
+patch 12-16: MMIO64 allocation enhancement
+        treat non-pref mmio64 if parent bridges are all pcie.
+        restore old pref allocation logic if hostbridge does not support mmio64.
 
-Thierry
+Bjorn Helgaas (2):
+  PCI: Fix iomem_is_exclusive() checking in pci_mmap_resource()
+  alpha/PCI: Only check iomem_is_exclusive() for IORESOURCE_MEM, not
+IORESOURCE_IO
 
---RYJh/3oyKhIjGcML
-Content-Type: application/pgp-signature; name="signature.asc"
+Yinghai Lu (58):
+  PCI: Add pci_find_bus_resource()
+  sparc/PCI: Use correct offset for bus address to resource
+  sparc/PCI: Reserve legacy mmio after PCI mmio
+  sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+  sparc/PCI: Keep resource idx order with bridge register number
+  PCI: Kill wrong quirk about M7101
+  powerpc/PCI: Keep resource idx order with bridge register number
+  powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+  OF/PCI: Add IORESOURCE_MEM_64 for 64-bit resource
+  PCI: Check pref compatible bit for mem64 resource of PCIe device
+  PCI: Only treat non-pref mmio64 as pref if all bridges have MEM_64
+  PCI: Add has_mem64 for struct host_bridge
+  PCI: Only treat non-pref mmio64 as pref if host bridge has mmio64
+  PCI: Restore pref MMIO allocation logic for host bridge without mmio64
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+I will sort out others late.
 
-iQIcBAABCAAGBQJXFPUkAAoJEN0jrNd/PrOhELcQALkBpPAht5Ix5Ux9Wtm5aL7L
-Vb2Tq5uj9ZIMjG7+nIFJyYYMOIUHmAy2pGrzlWz4cl2hlT4D+BhRiBpHhUhIBWyE
-bbzhOjllgFqItDvDuyvWjmlaoOiUuTS3NVylqCO/8xx4FnGadfraHkiu+C/YMbEJ
-83YsGyYyx26af+iHFZOU6LB5j423Qci2QT4FpyM3EAzjIVjJwS5+hqbcNgU/wAXI
-/vIZWuvN1gFrj4LrBB5qKy2tdKTDuJpU0GpktV48czg7QtnyPvdEXS/yMC5Neyxv
-f8HlDqfaJuVYYbKeXXeAKxfiVNjdZHbUNUnGkdUdnMXARTQsFTkTNkpsjDQggraF
-FAkvBbeK1KhX0tGbkhhujIxzJmiymXuh8+crOb1rZZyOg1EAy5hUo+5Y99k/Mmc2
-Q41d+Et8AXhvFyh1PoVzxymk1vhu/zZYZf3hYaLyAdx/Vd0DHDhD1oY6gHUvTdFt
-hHQt0sU+vQJWt0iCvZgWACWzad3Irv0A7LHRfzRZO4WbvvCu8sFcQzZv4Q4Qcxho
-IhpT88v27TlTJKyq92pL7hh8mm6gXMDAGrTnqIzstO8n3lP91RSjdyETdYWWug6J
-UanCoIL2HHHVzWeAVL2ZuG1CIqK+yhK9Ca0uI3egyyb4gMan0b+HXbWlkH5xpCZW
-eD+JCSAH1mZFGcdchxQN
-=9MNZ
------END PGP SIGNATURE-----
+Thanks
 
---RYJh/3oyKhIjGcML--
+Yinghai
