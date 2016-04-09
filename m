@@ -1,69 +1,51 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 28 Apr 2016 16:38:49 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: pci_ioremap_set_mem_type(), pci_remap_iospace()
-Message-ID: <20160428163849.2fb5607b@free-electrons.com>
-In-Reply-To: <20160428143332.GC12470@localhost>
-References: <20160427225827.GC17629@localhost>
- <20160428143332.GC12470@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:36361 "EHLO
+	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751689AbcDIMA6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Apr 2016 08:00:58 -0400
+Received: by mail-wm0-f52.google.com with SMTP id v188so41005638wme.1
+        for <linux-pci@vger.kernel.org>; Sat, 09 Apr 2016 05:00:57 -0700 (PDT)
+Date: Sat, 9 Apr 2016 13:00:55 +0100
+From: Matt Fleming <matt@codeblueprint.co.uk>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	b43-dev@lists.infradead.org, Matthew Garrett <mjg59@srcf.ucam.org>,
+	linux-efi@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
+Message-ID: <20160409120055.GR2701@codeblueprint.co.uk>
+References: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
+ <20160405194015.GC15353@localhost>
+ <20160406213029.GA12421@wunner.de>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Russell King <linux@arm.linux.org.uk>, Liviu Dudau <Liviu.Dudau@arm.com>,
- linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160406213029.GA12421@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Wed, 06 Apr, at 11:30:29PM, Lukas Wunner wrote:
+> 
+> More specifically, arch/x86/platform/efi/quirks.c:efi_free_boot_services()
+> makes EFI boot services memory available to the page allocator and this
+> is called near the end of init/main.c:start_kernel(). *Afterwards*, the
+> initcalls are executed via rest_init() -> kernel_init() ->
+> kernel_init_freeable() -> do_basic_setup() -> do_initcalls(). In particular,
+> PCI header fixups are executed in the subsys_initcall acpi_init().
+> 
+> Some of the possible solutions are:
+> 
+> (1) Delay efi_free_boot_services() further, e.g. until late_initcall.
+ 
+I'd prefer not to do this because boot services regions can account
+for a large amount of memory (multiple gigabytes).
 
-On Thu, 28 Apr 2016 09:33:32 -0500, Bjorn Helgaas wrote:
-> [+cc linux-pci, manually inserted reply, sorry again]
-> 
-> Liviu wrote:
-> > On Wed, Apr 27, 2016 at 05:58:27PM -0500, Bjorn Helgaas wrote:
-> >> Looking at __arm_ioremap_pfn_caller() makes me
-> >> suspect that pci_remap_iospace() is not safe on arm.
-> 
-> > Hmm, not sure how you reached that conclusion. __arm_ioremap_pfn_caller()
-> > does call in the end ioremap_page_range() for ARMv7 || ARM_LPAE, which is
-> > what pci_remap_iospace() does as well. Beside the possibly different
-> > pgprot_t values, what would make it unsafe for arm?
-> 
-> The different pgprot_t is exactly what I'm worried about.  The callers of
-> pci_ioremap_io() probably get the right thing (a pgprot tweaked to deal
-> with this Cortex problem), but other callers of ioremap_page_range(),
-> pci_remap_iospace() in particular, don't get that tweak:
-> 
->   pci_ioremap_io
->     ioremap_page_range(..., __pgprot(get_mem_type(pci_ioremap_mem_type)->prot_pte))
-> 
->   pci_remap_iospace
->     ioremap_page_range(..., pgprot_device(PAGE_KERNEL))
->       ioremap_pud_range(..., pgprot_device(PAGE_KERNEL))
->         ioremap_pmd_range(..., pgprot_device(PAGE_KERNEL))
->           ioremap_pte_range(..., pgprot_device(PAGE_KERNEL))
->             set_pte_at(..., pfn_pte(pfn, pgprot_device(PAGE_KERNEL)))
-
-Indeed. Which is why we should get rid of one of the two interfaces.
-Since pci_remap_iospace() is the generic one, I guess that's the one we
-should migrate to.
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> (2) Find out exactly which EFI boot services area is used for DMA and
+>     amend arch/x86/platform/efi/quirks.c:efi_apply_memmap_quirks() to
+>     assign that area a different type if dmi_match(DMI_SYS_VENDOR,
+>     "Apple Inc."). That way it's not freed by efi_free_boot_services().
+>     Add a late_initcall which calls free_bootmem() for that area.
+ 
+If it is possible to find out which boot services region is the
+problematic one, this would be the best solution. If there's any way
+to tie it into the PCI quirk, that would be even better so we don't
+need to maintain the blacklist in two places.
