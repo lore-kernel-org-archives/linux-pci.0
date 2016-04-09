@@ -1,86 +1,308 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:38663 "EHLO
-	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752622AbcDRNdy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Apr 2016 09:33:54 -0400
-Received: by mail-wm0-f43.google.com with SMTP id u206so124407145wme.1
-        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 06:33:52 -0700 (PDT)
-Subject: Re: [PATCH V6 00/13] Support for generic ACPI based PCI host
- controller
-To: Jayachandran C <jchandra@broadcom.com>,
-	Jon Masters <jcm@redhat.com>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <571130BB.9030508@redhat.com>
- <CAKc_7PVC6O4oh+bTmpLQRrhHrqGbaKB2hynecKOLmc5fBc-VVQ@mail.gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
-	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
-	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
-	Wangyijing <wangyijing@huawei.com>,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <5714E224.1030307@semihalf.com>
-Date: Mon, 18 Apr 2016 15:33:24 +0200
-MIME-Version: 1.0
-In-Reply-To: <CAKc_7PVC6O4oh+bTmpLQRrhHrqGbaKB2hynecKOLmc5fBc-VVQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org
+Cc: linux-pci@vger.kernel.org, ravikanth.nalla@hpe.com,
+	lenb@kernel.org, harish.k@hpe.com, ashwin.reghunandanan@hpe.com,
+	bhelgaas@google.com, rjw@rjwysocki.net,
+	Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org
+Subject: [PATCH V2 1/3] acpi,pci,irq: reduce resource requirements
+Date: Fri,  8 Apr 2016 21:26:30 -0400
+Message-Id: <1460165192-4526-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1460165192-4526-1-git-send-email-okaya@codeaurora.org>
+References: <1460165192-4526-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16.04.2016 17:31, Jayachandran C wrote:
-> On Fri, Apr 15, 2016 at 11:49 PM, Jon Masters <jcm@redhat.com> wrote:
->> On 04/15/2016 01:06 PM, Tomasz Nowicki wrote:
->>>  From the functionality point of view this series might be split into the
->>> following logic parts:
->>> 1. Necessary fixes as the preparation for using driver on ARM64.
->>> 2. New ECAM API and update for users of the pci-host-common API
->>> 3. Use new MCFG interface and implement generic ACPI based PCI host controller driver.
->>> 4. Enable above driver on ARM64
->>>
->>> Patches has been built on top of 4.6-rc2 and can be found here:
->>> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v6)
->>>
->>> This has been tested on Cavium ThunderX server. Any help in reviewing and
->>> testing is very appreciated.
->>>
->>> v5 -> v6
->>> - dropped idea of x86 MMCONFIG code refactoring
->>> - integrated JC's patches which introduce new ECAM API:
->>>    https://lkml.org/lkml/2016/4/11/907
->>>    git: https://github.com/jchandra-brcm/linux/ (arm64-acpi-pci-v3)
->>> - integrated Sinan's fix for releasing IO resources, see patch [06/13]
->>> - added ACPI support for ThunderX ECAM and PEM drivers
->>> - rebased to 4.6-rc2
->>
->> JC: can you explicitly confirm that you're ok with letting Tomasz drive
->> this? We would like to see one driver. Either that is Tomasz, or
->> Lorenzo, or it is you. But we need to have one overall cooordinated
->> effort to get this enablement into upstream as quickly as possible.
->
-> I have been concentrating on the ECAM code and ECAM based ACPI
-> host controller, the rest of the code is from Tomasz original patchset.
->
-> I am not happy with the way the ACPI quirk handling is done in Tomasz's
-> current patchset. I believe that it has to be done in a separate patchset
-> with another set of discussions. It introduces additional complexity and
-> mixing that discussion with the ECAM one will not help in making progress.
+Code has been redesigned to calculate penalty requirements on the fly. This
+significantly simplifies the implementation and removes some of the init
+calls from x86 architecture. Command line penalty assignment has been
+limited to ISA interrupts only.
 
-Of course we can split discussion into the two topics:
-1. ECAM based ACPI host controller - patches [1-10]
-2. Quirks handling and examples.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/acpi/pci_link.c | 176 ++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 140 insertions(+), 36 deletions(-)
 
-IMO, it is very helpful for reviewers to go with one unified patch set 
-and see the whole picture. Also, as you can see, quirks handling allows 
-people to test it easily with their servers (not only QEMU but real HW).
-
-Thanks,
-Tomasz
-
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index ededa90..25695ea 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -437,17 +437,15 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
+  * enabled system.
+  */
+ 
+-#define ACPI_MAX_IRQS		256
+ #define ACPI_MAX_ISA_IRQ	16
+ 
+-#define PIRQ_PENALTY_PCI_AVAILABLE	(0)
+ #define PIRQ_PENALTY_PCI_POSSIBLE	(16*16)
+ #define PIRQ_PENALTY_PCI_USING		(16*16*16)
+ #define PIRQ_PENALTY_ISA_TYPICAL	(16*16*16*16)
+ #define PIRQ_PENALTY_ISA_USED		(16*16*16*16*16)
+ #define PIRQ_PENALTY_ISA_ALWAYS		(16*16*16*16*16*16)
+ 
+-static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
++static int acpi_isa_irq_penalty[ACPI_MAX_ISA_IRQ] = {
+ 	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ0 timer */
+ 	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ1 keyboard */
+ 	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ2 cascade */
+@@ -457,9 +455,9 @@ static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
+ 	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ6 */
+ 	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ7 parallel, spurious */
+ 	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ8 rtc, sometimes */
+-	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ9  PCI, often acpi */
+-	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ10 PCI */
+-	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ11 PCI */
++	0,				/* IRQ9  PCI, often acpi */
++	0,				/* IRQ10 PCI */
++	0,				/* IRQ11 PCI */
+ 	PIRQ_PENALTY_ISA_USED,		/* IRQ12 mouse */
+ 	PIRQ_PENALTY_ISA_USED,		/* IRQ13 fpe, sometimes */
+ 	PIRQ_PENALTY_ISA_USED,		/* IRQ14 ide0 */
+@@ -467,6 +465,121 @@ static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
+ 	/* >IRQ15 */
+ };
+ 
++static int acpi_link_trigger(int irq, u8 *polarity, u8 *triggering)
++{
++	struct acpi_pci_link *link;
++	bool found = false;
++
++	*polarity = ~0;
++	*triggering = ~0;
++
++	list_for_each_entry(link, &acpi_link_list, list) {
++		int i;
++
++		if (link->irq.active && link->irq.active == irq) {
++			if (*polarity == ~0)
++				*polarity = link->irq.polarity;
++
++			if (*triggering == ~0)
++				*triggering = link->irq.triggering;
++
++			if (*polarity != link->irq.polarity)
++				return -EINVAL;
++
++			if (*triggering != link->irq.triggering)
++				return -EINVAL;
++
++			found = true;
++		}
++
++		for (i = 0; i < link->irq.possible_count; i++)
++			if (link->irq.possible[i] == irq) {
++				if (*polarity == ~0)
++					*polarity = link->irq.polarity;
++
++				if (*triggering == ~0)
++					*triggering = link->irq.triggering;
++
++				if (*polarity != link->irq.polarity)
++					return -EINVAL;
++
++				if (*triggering != link->irq.triggering)
++					return -EINVAL;
++
++				found = true;
++			}
++	}
++
++	return found ? 0 : -EINVAL;
++}
++
++static int acpi_pci_compatible_trigger(int irq)
++{
++	u8 polarity;
++	u8 triggering;
++
++	return acpi_link_trigger(irq, &polarity, &triggering);
++}
++
++static int acpi_irq_pci_sharing_penalty(int irq)
++{
++	struct acpi_pci_link *link;
++	int penalty = 0;
++
++	if (acpi_pci_compatible_trigger(irq))
++		return ~0;
++
++	list_for_each_entry(link, &acpi_link_list, list) {
++		/*
++		 * If a link is active, penalize its IRQ heavily
++		 * so we try to choose a different IRQ.
++		 */
++		if (link->irq.active && link->irq.active == irq)
++			penalty += PIRQ_PENALTY_PCI_USING;
++		else {
++			int i;
++
++			/*
++			 * If a link is inactive, penalize the IRQs it
++			 * might use, but not as severely.
++			 */
++			for (i = 0; i < link->irq.possible_count; i++)
++				if (link->irq.possible[i] == irq)
++					penalty += PIRQ_PENALTY_PCI_POSSIBLE /
++						link->irq.possible_count;
++		}
++	}
++
++	return penalty;
++}
++
++static int acpi_irq_get_penalty(int irq)
++{
++	int penalty = 0, rc;
++
++	if (irq < ACPI_MAX_ISA_IRQ)
++		penalty += acpi_isa_irq_penalty[irq];
++
++	if (irq == acpi_gbl_FADT.sci_interrupt) {
++		u8 sci_polarity;
++		u8 sci_trigger;
++
++		rc = acpi_link_trigger(irq, &sci_polarity, &sci_trigger);
++		if (!rc) {
++			if (sci_trigger != ACPI_LEVEL_SENSITIVE ||
++			    sci_polarity != ACPI_ACTIVE_LOW)
++				penalty += PIRQ_PENALTY_ISA_ALWAYS;
++			else
++				penalty += PIRQ_PENALTY_PCI_USING;
++		} else {
++			return ~0;
++		}
++	}
++
++	penalty += acpi_irq_pci_sharing_penalty(irq);
++	return penalty;
++}
++
+ int __init acpi_irq_penalty_init(void)
+ {
+ 	struct acpi_pci_link *link;
+@@ -488,13 +601,14 @@ int __init acpi_irq_penalty_init(void)
+ 
+ 			for (i = 0; i < link->irq.possible_count; i++) {
+ 				if (link->irq.possible[i] < ACPI_MAX_ISA_IRQ)
+-					acpi_irq_penalty[link->irq.
+-							 possible[i]] +=
++					acpi_isa_irq_penalty[link->irq.
++							     possible[i]] +=
+ 					    penalty;
+ 			}
+ 
+-		} else if (link->irq.active) {
+-			acpi_irq_penalty[link->irq.active] +=
++		} else if (link->irq.active &&
++			   (link->irq.active < ACPI_MAX_ISA_IRQ)) {
++			acpi_isa_irq_penalty[link->irq.active] +=
+ 			    PIRQ_PENALTY_PCI_POSSIBLE;
+ 		}
+ 	}
+@@ -547,12 +661,12 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+ 		 * the use of IRQs 9, 10, 11, and >15.
+ 		 */
+ 		for (i = (link->irq.possible_count - 1); i >= 0; i--) {
+-			if (acpi_irq_penalty[irq] >
+-			    acpi_irq_penalty[link->irq.possible[i]])
++			if (acpi_irq_get_penalty(irq) >
++			    acpi_irq_get_penalty(link->irq.possible[i]))
+ 				irq = link->irq.possible[i];
+ 		}
+ 	}
+-	if (acpi_irq_penalty[irq] >= PIRQ_PENALTY_ISA_ALWAYS) {
++	if (acpi_irq_get_penalty(irq) >= PIRQ_PENALTY_ISA_ALWAYS) {
+ 		printk(KERN_ERR PREFIX "No IRQ available for %s [%s]. "
+ 			    "Try pci=noacpi or acpi=off\n",
+ 			    acpi_device_name(link->device),
+@@ -568,7 +682,6 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+ 			    acpi_device_bid(link->device));
+ 		return -ENODEV;
+ 	} else {
+-		acpi_irq_penalty[link->irq.active] += PIRQ_PENALTY_PCI_USING;
+ 		printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
+ 		       acpi_device_name(link->device),
+ 		       acpi_device_bid(link->device), link->irq.active);
+@@ -778,7 +891,7 @@ static void acpi_pci_link_remove(struct acpi_device *device)
+ }
+ 
+ /*
+- * modify acpi_irq_penalty[] from cmdline
++ * modify acpi_isa_irq_penalty[] from cmdline
+  */
+ static int __init acpi_irq_penalty_update(char *str, int used)
+ {
+@@ -787,23 +900,24 @@ static int __init acpi_irq_penalty_update(char *str, int used)
+ 	for (i = 0; i < 16; i++) {
+ 		int retval;
+ 		int irq;
++		int new_penalty;
+ 
+ 		retval = get_option(&str, &irq);
+ 
+ 		if (!retval)
+ 			break;	/* no number found */
+ 
+-		if (irq < 0)
+-			continue;
+-
+-		if (irq >= ARRAY_SIZE(acpi_irq_penalty))
++		/* see if this is a ISA IRQ */
++		if ((irq < 0) || (irq >= ACPI_MAX_ISA_IRQ))
+ 			continue;
+ 
+ 		if (used)
+-			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_USED;
++			new_penalty = acpi_irq_get_penalty(irq) +
++					PIRQ_PENALTY_ISA_USED;
+ 		else
+-			acpi_irq_penalty[irq] = PIRQ_PENALTY_PCI_AVAILABLE;
++			new_penalty = 0;
+ 
++		acpi_isa_irq_penalty[irq] = new_penalty;
+ 		if (retval != 2)	/* no next number */
+ 			break;
+ 	}
+@@ -819,18 +933,15 @@ static int __init acpi_irq_penalty_update(char *str, int used)
+  */
+ void acpi_penalize_isa_irq(int irq, int active)
+ {
+-	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
+-		if (active)
+-			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_USED;
+-		else
+-			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
+-	}
++	if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
++		acpi_isa_irq_penalty[irq] = active ?
++			PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING;
+ }
+ 
+ bool acpi_isa_irq_available(int irq)
+ {
+-	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_irq_penalty) ||
+-			    acpi_irq_penalty[irq] < PIRQ_PENALTY_ISA_ALWAYS);
++	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_isa_irq_penalty) ||
++			 acpi_isa_irq_penalty[irq] < PIRQ_PENALTY_ISA_ALWAYS);
+ }
+ 
+ /*
+@@ -840,13 +951,6 @@ bool acpi_isa_irq_available(int irq)
+  */
+ void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
+ {
+-	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
+-		if (trigger != ACPI_MADT_TRIGGER_LEVEL ||
+-		    polarity != ACPI_MADT_POLARITY_ACTIVE_LOW)
+-			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_ALWAYS;
+-		else
+-			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
+-	}
+ }
+ 
+ /*
+-- 
+1.8.2.1
 
