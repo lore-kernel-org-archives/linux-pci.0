@@ -1,100 +1,115 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:44882 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751812AbcDMRCC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 13:02:02 -0400
-Subject: Re: [PATCH v3 2/2] PCI: tegra: Support per-lane PHYs
-To: Thierry Reding <thierry.reding@gmail.com>
-References: <1457452094-5409-1-git-send-email-thierry.reding@gmail.com>
- <1457452094-5409-2-git-send-email-thierry.reding@gmail.com>
- <56E9915F.9040608@wwwdotorg.org> <20160413160112.GA30129@ulmo.ba.sec>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-From: Stephen Warren <swarren@wwwdotorg.org>
-Message-ID: <570E7B86.1040909@wwwdotorg.org>
-Date: Wed, 13 Apr 2016 11:01:58 -0600
+Received: from mail-lf0-f47.google.com ([209.85.215.47]:34449 "EHLO
+	mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752953AbcDIVu5 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sat, 9 Apr 2016 17:50:57 -0400
+Received: by mail-lf0-f47.google.com with SMTP id j11so114548867lfb.1
+        for <linux-pci@vger.kernel.org>; Sat, 09 Apr 2016 14:50:55 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Jon Mason <jonmason@broadcom.com>
+Cc: linux-pci@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-arm-kernel@lists.infradead.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/2] PCI: iproc: Support DT property for ignoring aborts when probing
+Date: Sat,  9 Apr 2016 23:50:23 +0200
+Message-Id: <1460238624-2086-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160413160112.GA30129@ulmo.ba.sec>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/13/2016 10:01 AM, Thierry Reding wrote:
-> On Wed, Mar 16, 2016 at 11:01:19AM -0600, Stephen Warren wrote:
->> On 03/08/2016 08:48 AM, Thierry Reding wrote:
->>> From: Thierry Reding <treding@nvidia.com>
->>>
->>> The current XUSB pad controller bindings are insufficient to describe
->>> PHY devices attached to USB controllers. New bindings have been created
->>> to overcome these restrictions. As a side-effect each root port now is
->>> assigned a set of PHY devices, one for each lane associated with the
->>> root port. This has the benefit of allowing fine-grained control of the
->>> power management for each lane.
->>
->>> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
->>
->>> +static int tegra_pcie_port_phy_power_on(struct tegra_pcie_port *port)
->>> +{
->>> +	struct device *dev = port->pcie->dev;
->>> +	unsigned int i;
->>> +	int err;
->>> +
->>> +	for (i = 0; i < port->lanes; i++) {
->>> +		err = phy_power_on(port->phys[i]);
->>
->> This assume the number of array entries is precisely the number of lanes.
->> That seems to contradict the binding update which said the number might not
->> match. Perhaps there's an expectation that phy_power_on() is a no-op for
->> some "invalid" values like NULL or an error-pointer value? But...
->>
->>> +static struct phy *devm_of_phy_optional_get_index(struct device *dev,
->>> +						  struct device_node *np,
->>> +						  const char *consumer,
->>> +						  unsigned int index)
->>> +{
->>> +	struct phy *phy;
->>> +	char *name;
->>> +
->>> +	name = kasprintf(GFP_KERNEL, "%s-%u", consumer, index);
->>> +	if (!name)
->>> +		return ERR_PTR(-ENOMEM);
->>> +
->>> +	phy = devm_of_phy_get(dev, np, name);
->>> +	kfree(name);
->>> +
->>> +	if (IS_ERR(phy) && PTR_ERR(phy) == -ENODEV)
->>> +		phy = NULL;
->>> +
->>> +	return phy;
->>> +}
->>
->> The error-handling there looks wrong. The function generally returns either
->> a valid PHY or an error pointer. However, in the case of -ENODEV, NULL is
->> returned. Subsystems are supposed to encode their handles as, and functions
->> are supposed to return, either NULL or an error pointer for error cases, not
->> both/either. Is the PHY API broken in this regard? If so, then this code is
->> fine, but if not it might need a fix.
->
-> This function mimics phy_optional_get() which similarily returns NULL
-> for -ENODEV. The remainder of the PHY API treats NULL pointers as
-> "dummy" PHYs and returns early. I think that's a sensible approach to
-> handling optional resources.
->
-> It might have been more obvious had I implemented this function within
-> phy-core.c, but I didn't think it universally useful because it uses a
-> rather uncommon lookup pattern. I did keep a generic name in case it's
-> ever deemed useful outside of this driver, at which point it could
-> simply be moved into phy-core.c without requiring this driver to
-> change.
+Some devices (e.g. Northstar ones) may have bridges that forward
+harmless errors to the ARM core. In such case we need an option to
+add a handler ignoring them.
 
-Ah OK, so if a caller of this function is expected to only use IS_ERR(), 
-and hence treat NULL as a perfectly valid PHY value, and all the PHY 
-APIs deal with NULL correctly, then this is probably OK.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ .../devicetree/bindings/pci/brcm,iproc-pcie.txt         |  6 ++++++
+ drivers/pci/host/pcie-iproc-platform.c                  |  2 ++
+ drivers/pci/host/pcie-iproc.c                           | 17 +++++++++++++++++
+ drivers/pci/host/pcie-iproc.h                           |  1 +
+ 4 files changed, 26 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+index 01b88f4..c91b20a 100644
+--- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+@@ -22,6 +22,12 @@ Optional properties:
+ 
+ - brcm,pcie-ob: Some iProc SoCs do not have the outbound address mapping done
+ by the ASIC after power on reset. In this case, SW needs to configure it
++- brcm,pcie-hook-abort-handler: During PCI bus probing (device enumeration)
++  there can be errors that are expected and harmless. Unfortunately some bridges
++  can't be configured to ignore them and they forward them to the ARM core
++  triggering die().
++  This property should be set in such case, it will make driver add its own
++  handler ignoring such errors.
+ 
+ If the brcm,pcie-ob property is present, the following properties become
+ effective:
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index 1738c52..7a6eb09 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -100,6 +100,8 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
+ 		pcie->need_ob_cfg = true;
+ 	}
+ 
++	pcie->hook_abort_handler = of_property_read_bool(np, "brcm,pcie-hook-abort-handler");
++
+ 	/* PHY use is optional */
+ 	pcie->phy = devm_phy_get(&pdev->dev, "pcie-phy");
+ 	if (IS_ERR(pcie->phy)) {
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index a576aee..a5b3816 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -433,6 +433,17 @@ static int iproc_pcie_map_ranges(struct iproc_pcie *pcie,
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_ARM
++static int iproc_pcie_abort_handler(unsigned long addr, unsigned int fsr,
++				    struct pt_regs *regs)
++{
++	if (fsr == 0x1406)
++		return 0;
++
++	return 1;
++}
++#endif
++
+ static int iproc_pcie_msi_enable(struct iproc_pcie *pcie)
+ {
+ 	struct device_node *msi_node;
+@@ -498,6 +509,12 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 	}
+ 
+ #ifdef CONFIG_ARM
++	if (pcie->hook_abort_handler)
++		hook_fault_code(16 + 6, iproc_pcie_abort_handler, SIGBUS,
++				BUS_OBJERR, "imprecise external abort");
++#endif
++
++#ifdef CONFIG_ARM
+ 	pcie->sysdata.private_data = pcie;
+ 	sysdata = &pcie->sysdata;
+ #else
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index e84d93c..9a0b58d 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -72,6 +72,7 @@ struct iproc_pcie {
+ 	struct phy *phy;
+ 	int (*map_irq)(const struct pci_dev *, u8, u8);
+ 	bool need_ob_cfg;
++	bool hook_abort_handler;
+ 	struct iproc_pcie_ob ob;
+ 	struct iproc_msi *msi;
+ };
+-- 
+1.8.4.5
 
