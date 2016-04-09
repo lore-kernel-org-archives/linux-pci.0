@@ -1,58 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:44814 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751586AbcDUDxE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2016 23:53:04 -0400
-Date: Thu, 21 Apr 2016 13:53:02 +1000
-From: Simon Horman <horms@verge.net.au>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v2] PCI: rcar-pcie: Remove Gen2 designation from Kconfig
-Message-ID: <20160421035302.GA28575@verge.net.au>
-References: <1459384523-16146-1-git-send-email-horms+renesas@verge.net.au>
- <20160405181054.GB15353@localhost>
- <20160419212114.GD17863@localhost>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH 2/2] pci, acpi: free IO resource during shutdown
+To: Sinan Kaya <okaya@codeaurora.org>,
+	Bjorn Helgaas <helgaas@kernel.org>
+References: <1457389310-3538-1-git-send-email-okaya@codeaurora.org>
+ <1457389310-3538-2-git-send-email-okaya@codeaurora.org>
+ <20160407160624.GB8780@localhost> <57069CAF.8090803@codeaurora.org>
+ <20160407214108.GB24492@localhost> <5707281B.6020805@codeaurora.org>
+ <570754D7.3010009@semihalf.com> <5707EE6F.2050509@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+	timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
+	agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <5708C0E1.2020303@semihalf.com>
+Date: Sat, 9 Apr 2016 10:44:17 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160419212114.GD17863@localhost>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <5707EE6F.2050509@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 19, 2016 at 04:21:14PM -0500, Bjorn Helgaas wrote:
-> On Tue, Apr 05, 2016 at 01:10:54PM -0500, Bjorn Helgaas wrote:
-> > Hi Simon,
-> > 
-> > On Thu, Mar 31, 2016 at 09:35:23AM +0900, Simon Horman wrote:
-> > > It appears that Gen2 is a misnomer for the R-Car PCIE driver
-> > > which also supports Gen 1 and Gen 3 SoCs. Accordingly, drop Gen 2
-> > > from the help text and Kconfig symbol.
-> > > 
-> > > Also, re-arange the Kconfig symbol name to use PCIE as the prefix.
-> > > This appears to be in keeping with other PCIE Kconfig symbols.
-> > > 
-> > > Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> > > Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-> > > ---
-> > > Bjorn, if this patch is acceptable I would like to request that we
-> > > co-ordinate things so that I can queue-up corresponding updates for
-> > > arm and arm64 defconfigs in the same release. From my point of view
-> > > v4.7 would make sense.
-> > 
-> > I'm fine with this.  What sort of coordination do you want to do?
-> > It would probably be nice to combine this patch with the defconfig updates
-> > so we don't have a bisection problem.  If you want to include this patch
-> > and merge through another tree,
-> > 
-> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Ping, do you want me to do anything with this?
+On 08.04.2016 19:46, Sinan Kaya wrote:
+> Hi Tomasz,
+>
+> On 4/8/2016 2:51 AM, Tomasz Nowicki wrote:
+>> Hi Sinan,
+>>
+>> On 08.04.2016 05:40, Sinan Kaya wrote:
+>>> Hi Tomasz,
+>>>
+>>> On 4/7/2016 5:41 PM, Bjorn Helgaas wrote:
+>>>>>> You say this is undoing the effect of pci_remap_iospace(), but that's
+>>>>>>>> only called by native drivers and the generic (OF) driver, not by
+>>>>>>>> pci_root.c.
+>>>>>>
+>>>>>> See the ACPI root bridge driver above.
+>>>> If this is a fix to patches that haven't been merged yet, we need to
+>>>> squash the fix into the patches.
+>>>>
+>>>
+>>> Can you merge these to two patches to your series for the next post?
+>>>
+>>> I need to remove weak on the first patch per direction from Bjorn and
+>>> fix the function comments. You could as well do this while you are merging.
+>>>
+>>> Let me know what your preference is.
+>>>
+>>
+>> Please do necessary fixes for your patches and send me the repo reference link. I will merge these to my patch set. Thanks!
+>>
+>> Tomasz
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> I posted the updated patch here. Changes are:
+>
+> - I squashed these two patches together per Bjorn's request.
+> - Removed the weak declarations from both remap and unmap calls.
+> - Fixed the doxygen document to match the actual parameters.
+>
+> https://us.codeaurora.org/cgit/quic/server/kernel/commit/?h=okaya/pciunmapv2&id=6120a5f0c5e6d757f18a076917fa202e2c9823d0
+>
 
-Sorry, this had completely slipped my mind.
+Thanks Sinan!
 
-I have just posted
-"[PATCH v3] PCI: rcar-pcie: Remove Gen2 designation from Kconfig"
-which I am planning to take through the renesas tree.
+Tomasz
+
