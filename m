@@ -1,113 +1,77 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V6 03/13] x86, ia64: Include acpi_pci_{add|remove}_bus to the default pcibios_{add|remove}_bus implementation.
-Date: Fri, 15 Apr 2016 19:06:38 +0200
-Message-Id: <1460740008-19489-4-git-send-email-tn@semihalf.com>
-In-Reply-To: <1460740008-19489-1-git-send-email-tn@semihalf.com>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org
+Cc: linux-pci@vger.kernel.org, ravikanth.nalla@hpe.com,
+	lenb@kernel.org, harish.k@hpe.com, ashwin.reghunandanan@hpe.com,
+	bhelgaas@google.com, rjw@rjwysocki.net,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH V2 3/3] acpi,pci,irq: remove SCI penalize function
+Date: Fri,  8 Apr 2016 21:26:32 -0400
+Message-Id: <1460165192-4526-4-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1460165192-4526-1-git-send-email-okaya@codeaurora.org>
+References: <1460165192-4526-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-x86 and ia64 are the only arches that implement pcibios_{add|remove}_bus hooks
-and implement them in the same way. Moreover ARM64 is going to do the same.
-So it seems that acpi_pci_{add|remove}_bus is generic enough to be default
-option for pcibios_{add|remove}_bus hooks. Also, it is always safe to run
-acpi_pci_{add|remove}_bus as they have empty stubs for !ACPI case and
-return if ACPI has been switched off in run time.
+Removing the SCI penalize function as the penalty is now calculated on the
+fly.
 
-After all we can remove x86 and ia64 pcibios_{add|remove}_bus
-implementation.
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Tested-by: Duc Dang <dhdang@apm.com>
-Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- arch/ia64/pci/pci.c   | 10 ----------
- arch/x86/pci/common.c | 10 ----------
- drivers/pci/probe.c   |  3 +++
- 3 files changed, 3 insertions(+), 20 deletions(-)
+ arch/x86/kernel/acpi/boot.c | 1 -
+ drivers/acpi/pci_link.c     | 9 ---------
+ include/linux/acpi.h        | 1 -
+ 3 files changed, 11 deletions(-)
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 978d6af..be4c9ef 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -358,16 +358,6 @@ void pcibios_fixup_bus(struct pci_bus *b)
- 	platform_pci_fixup_bus(b);
+diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
+index e759076..5e99f22 100644
+--- a/arch/x86/kernel/acpi/boot.c
++++ b/arch/x86/kernel/acpi/boot.c
+@@ -445,7 +445,6 @@ static void __init acpi_sci_ioapic_setup(u8 bus_irq, u16 polarity, u16 trigger,
+ 		polarity = acpi_sci_flags & ACPI_MADT_POLARITY_MASK;
+ 
+ 	mp_override_legacy_irq(bus_irq, polarity, trigger, gsi);
+-	acpi_penalize_sci_irq(bus_irq, trigger, polarity);
+ 
+ 	/*
+ 	 * stash over-ride to indicate we've been here
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index 63dae95..5b9a2d0 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -909,15 +909,6 @@ bool acpi_isa_irq_available(int irq)
  }
  
--void pcibios_add_bus(struct pci_bus *bus)
--{
--	acpi_pci_add_bus(bus);
--}
--
--void pcibios_remove_bus(struct pci_bus *bus)
--{
--	acpi_pci_remove_bus(bus);
--}
--
- void pcibios_set_master (struct pci_dev *dev)
- {
- 	/* No special bus mastering setup handling */
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 381a43c..7763a84 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -170,16 +170,6 @@ void pcibios_fixup_bus(struct pci_bus *b)
- 		pcibios_fixup_device_resources(dev);
- }
- 
--void pcibios_add_bus(struct pci_bus *bus)
--{
--	acpi_pci_add_bus(bus);
--}
--
--void pcibios_remove_bus(struct pci_bus *bus)
--{
--	acpi_pci_remove_bus(bus);
--}
--
  /*
-  * Only use DMI information to set this if nothing was passed
-  * on the kernel command line (which was parsed earlier).
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 8087297..ef569e8 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -12,6 +12,7 @@
- #include <linux/slab.h>
- #include <linux/module.h>
- #include <linux/cpumask.h>
-+#include <linux/pci-acpi.h>
- #include <linux/pci-aspm.h>
- #include <linux/aer.h>
- #include <linux/acpi.h>
-@@ -2101,10 +2102,12 @@ int __weak pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+- * Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict with
+- * PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be use for
+- * PCI IRQs.
+- */
+-void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
+-{
+-}
+-
+-/*
+  * Over-ride default table to reserve additional IRQs for use by ISA
+  * e.g. acpi_irq_isa=5
+  * Useful for telling ACPI how not to interfere with your ISA sound card.
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 06ed7e5..0f41317 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -311,7 +311,6 @@ struct pci_dev;
+ int acpi_pci_irq_enable (struct pci_dev *dev);
+ void acpi_penalize_isa_irq(int irq, int active);
+ bool acpi_isa_irq_available(int irq);
+-void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
+ void acpi_pci_irq_disable (struct pci_dev *dev);
  
- void __weak pcibios_add_bus(struct pci_bus *bus)
- {
-+	acpi_pci_add_bus(bus);
- }
- 
- void __weak pcibios_remove_bus(struct pci_bus *bus)
- {
-+	acpi_pci_remove_bus(bus);
- }
- 
- struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ extern int ec_read(u8 addr, u8 *val);
 -- 
-1.9.1
+1.8.2.1
