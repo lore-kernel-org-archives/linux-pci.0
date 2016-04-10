@@ -1,69 +1,100 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 12 Apr 2016 17:44:13 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jon Masters <jcm@jonmasters.org>
-Cc: David Daney <ddaney@caviumnetworks.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Tomasz Nowicki <tn@semihalf.com>, rafael@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com,
-	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>,
-	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
-	Liviu.Dudau@arm.com, wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org, Jon Masters <jcm@redhat.com>
-Subject: Re: [PATCH v2 2/4] PCI: Provide common functions for ECAM mapping
-Message-ID: <20160412164413.GA32297@red-moon>
-References: <1460414707-19153-1-git-send-email-jchandra@broadcom.com>
- <1460414707-19153-3-git-send-email-jchandra@broadcom.com>
- <570C4034.20105@caviumnetworks.com>
- <570C78F1.4090701@jonmasters.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:34777 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751413AbcDJKJa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Apr 2016 06:09:30 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <570C78F1.4090701@jonmasters.org>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CA+Y=x3nfe7CniNhruOhGmdxY3g4B1n3YRVWChoVYJns7D8pNEg@mail.gmail.com>
+References: <E1akxli-00030z-BC@bombadil.infradead.org>
+	<CA+Y=x3=cLDHc7PK5h9n=ixdgVKWdVSu_v+-7jHJ-vBnDrv4sgg@mail.gmail.com>
+	<20160403114912.GA11540@wunner.de>
+	<CA+Y=x3nfe7CniNhruOhGmdxY3g4B1n3YRVWChoVYJns7D8pNEg@mail.gmail.com>
+Date: Sun, 10 Apr 2016 20:09:29 +1000
+Message-ID: <CA+Y=x3mVrSKMgzy74xtO5ZOc5kYLYU=iKZgqyjn0j94bXoebjg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
+From: Andrew Worsley <amworsley@gmail.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: b43-dev@lists.infradead.org, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 12, 2016 at 12:26:25AM -0400, Jon Masters wrote:
+Further testing Broadcom 4331 reset quirk to prevent IRQ storm patch
+testing reveals that:
+  1. quirk is run on initial boot up and this time appears to have
+vastly reduced the interrupts (only 81 this time):
+cat /proc/interrupts| grep 17
+ 17:         81          0          0          0          0          0
+         0          0   IO-APIC-fasteoi   snd_hda_intel
 
-[...]
+ 2. But it is apparently *NOT* run after a suspend/resume and we get
+the problem:
+ 17:     100084          0          0          0          0          0
+         0          0   IO-APIC-fasteoi   snd_hda_intel
 
-> Quoting Bjorn's original reply to the previous series:
-> 
-> > Some of the code that moved to drivers/acpi/pci_mcfg.c is not
-> > really ACPI-specific, and could potentially be used for non-ACPI
-> > bridges that support ECAM.  I'd like to see that sort of code
-> > moved to a new file like drivers/pci/ecam.c.
-> 
-> So my guess is that this is the reasoning behind JC's file layout.
-> 
-> I'm curious what Lorenzo's take on things is currently. I assume this
-> series is now to be the official coordinated version of this effort for
-> upstream, following the advice of Bjorn previously, but I would like to
-> know if everyone is behind this plan. I've (previously) requested a
-> Linaro LEG meeting this week (part of our bootarch working group) to
-> specifically discuss the status of PCI upstreaming in order to get the
-> different vendors together to ensure every single one of them is
-> tracking the correct latest effort and doing what is needed to test/aid,
-> hence my ask. If this is now plan A, I'll make sure everyone is aligned
-> behind it and start pinging people individually for testing.
+Rebooting a further nine times shows the low number (below 100) only
+happens around 1/3 of the times:
+boot #2
+ 17:      38706          0          0          0          0          0
+         0          0   IO-APIC-fasteoi   snd_hda_intel
+boot #3
+ 17:         87          0          0          0          0          0
+         0          0   IO-APIC-fasteoi   snd_hda_intel
+LOC:       2494       2031       2094       1831       1157       1171
+      1573       1271   Local timer interrupts
+boot #4
+ 17:      50616          0          0          0          0          0
+         0          0   IO-APIC-fasteoi   snd_hda_intel
+boot#5
+ 17:      26454          0          0          0          0          0
+         0          0   IO-APIC-fasteoi   snd_hda_intel
+boot#6
+ 17:      34440          0          0          0          0          0
+         0          0   IO-APIC-fasteoi   snd_hda_intel
+boot#7
+ 17:         79          0          0          0          0          0
+         0          0   IO-APIC-fasteoi   snd_hda_intel
+boot#8
+ 17:         84          0          0          0          0          0
+         0          0   IO-APIC-fasteoi   snd_hda_intel
+boot#9
+ 17:      37054          0          0          0          0          0
+         0          0   IO-APIC-fasteoi   snd_hda_intel
+boot#10
+ 17:      24648          0          0          0          0          0
+         0          0   IO-APIC-fasteoi   snd_hda_intel
 
-My take is that JC's aim is to get this four patch series reviewed and
-merged (which is *not* sufficient to get ACPI PCI to work fully on ARM64
-- see cover letter - the remaining patches in his branch are not
-fixes, it is code that is required to get things to work, these 4
-patches stand alone are not sufficient but I understand he wants to get
-them reviewed following feedback on the lists) so that we can make
-progress on ACPI PCI on ARM64.
+ Is there an easy setpci command to stop this we can add to grub?
 
-I will comment on the patches as soon as I have time to review
-them, I certainly would like to understand what we have to do with the
-rest of the code though (provided this series is good to go) see above.
+Presently I have a grub work around for black screen as described here:
+  http://askubuntu.com/questions/264247/proprietary-nvidia-drivers-with-efi-on-mac-to-prevent-overheating/613573#613573
 
-Lorenzo
+which basically involves adding a grub scriptlet to enable PCI-E bus
+mastering on graphics cards:
+
+In /etc/grub.d/01_enable_vga.conf:
+
+setpci -s "00:01.0" 3e.b=8
+setpci -s "01:00.0" 04.b=7
+
+Can we do some similar magic setpci commands to disable 04:00.0
+which is my BCM4331
+
+  lspci | grep 4331
+04:00.0 Network controller: Broadcom Corporation BCM4331 802.11a/b/g/n (rev 02)
+
+
+
+On 7 April 2016 at 22:04, Andrew Worsley <amworsley@gmail.com> wrote:
+> Sorry but testing the patch shows no difference.
+>
+> I have just compiled debian jessie kernel 3.16.7-ckt25 and booted it
+> and hibernated it twice, then did the same with your patch applied.
+> There appeared to be no difference
+>
+....
+
+Thanks for any suggestions
+
+Andrew
