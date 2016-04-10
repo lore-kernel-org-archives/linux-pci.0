@@ -1,55 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f178.google.com ([209.85.161.178]:35862 "EHLO
-	mail-yw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752950AbcD2Mwf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2016 08:52:35 -0400
-Received: by mail-yw0-f178.google.com with SMTP id o66so185120179ywc.3
-        for <linux-pci@vger.kernel.org>; Fri, 29 Apr 2016 05:52:35 -0700 (PDT)
+Received: from mail.kernel.org ([198.145.29.136]:53558 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752678AbcDJV1F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sun, 10 Apr 2016 17:27:05 -0400
+Date: Sun, 10 Apr 2016 16:27:02 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jordan Hargrave <Jordan_Hargrave@dell.com>
+Cc: bhelgaas@google.com, alexander.duyck@gmail.com,
+	linux-pci@vger.kernel.org, babu.moger@oracle.com, hare@suse.de,
+	linux-kernel@vger.kernel.org, jharg93@gmail.com
+Subject: Re: [PATCH 2/2] Create sysfs entries for PCI VPDI and VPDR tags
+Message-ID: <20160410212702.GB5852@localhost>
+References: <1455827464-11398-1-git-send-email-Jordan_Hargrave@dell.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOMZO5AiaNFashMd6XEz=zjyodm6UEAuBMsK=otQ5nHeE+voqw@mail.gmail.com>
-References: <1461167131-26025-1-git-send-email-andrew.smirnov@gmail.com>
-	<1461167131-26025-2-git-send-email-andrew.smirnov@gmail.com>
-	<CAOMZO5AiaNFashMd6XEz=zjyodm6UEAuBMsK=otQ5nHeE+voqw@mail.gmail.com>
-Date: Fri, 29 Apr 2016 14:52:34 +0200
-Message-ID: <CAAMH-yumeh+MUADCk7wbeSO-hdVLT82jmkn2swYmuD8HndrKFA@mail.gmail.com>
-Subject: Re: [PATCH v3 2/3] PCI: imx6: Implement reset sequence for i.MX6+
-From: Gary Bisson <gary.bisson@boundarydevices.com>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: Andrey Smirnov <andrew.smirnov@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1455827464-11398-1-git-send-email-Jordan_Hargrave@dell.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+On Thu, Feb 18, 2016 at 02:31:04PM -0600, Jordan Hargrave wrote:
+> The VPD-R is a readonly area of the PCI Vital Product Data region.
+> There are some standard keywords for serial number, manufacturer,
+> and vendor-specific values.  Dell Servers use a vendor-specific
+> tag to store number of ports and port mapping of partitioned NICs.
+> 
+> info = VPD-Info string
+> PN = Part Number
+> SN = Serial Number
+> MN = Manufacturer ID
+> Vx = Vendor-specific (x=0..9 A..Z)
+> 
+> This creates a sysfs subdirectory in the pci device: vpdattr with
+> 'info', 'EC', 'SN', 'V0', etc. files containing the tag values.
+> 
+> Added pci.h patch
+> 
+> Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
+> ---
+>  include/linux/pci.h     |   3 +
+>  1 files changed, 3 insertions(+)
+> 
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 8135a2f..c1313b1 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -372,6 +372,9 @@ struct pci_dev {
+>  	const struct attribute_group **msi_irq_groups;
+>  #endif
+>  	struct pci_vpd *vpd;
+> +	int vpdr_len;
+> +	u8 *vpdr_data;
+> +	char *vpdi_data;
 
-On Fri, Apr 29, 2016 at 3:47 AM, Fabio Estevam <festevam@gmail.com> wrote:
-> On Wed, Apr 20, 2016 at 12:45 PM, Andrey Smirnov
-> <andrew.smirnov@gmail.com> wrote:
->> I.MX6+ has a dedicated bit for reseting PCIe core, which should be used
->> instead of a regular reset sequence since using the latter will hang the
->> SoC.
->>
->> This commit is based on c34068d48273e24d392d9a49a38be807954420ed from
->> http://git.freescale.com/git/cgit.cgi/imx/linux-2.6-imx.git
->>
->> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
->
-> Reviewed-by: Fabio Estevam <fabio.estevam@nxp.com>
+This should be squashed into the patch that uses the fields you're adding.
 
-Tested on a Nitrogen6QP_MAX with an Intel WiFi Link 5300 PCIe card.
-Everything is working properly (Gen1 speed).
-# lspci
-00:00.0 Class 0604: 16c3:abcd
-01:00.0 Class 0280: 8086:4235
-
-Tested-by: Gary Bisson <gary.bisson@boundarydevices.com>
-
-Thanks,
-Gary
+>  #ifdef CONFIG_PCI_ATS
+>  	union {
+>  		struct pci_sriov *sriov;	/* SR-IOV capability related */
+> -- 
+> 2.5.0
+> 
