@@ -1,68 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59083 "EHLO mx1.redhat.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:45550 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752950AbcDHUTq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Apr 2016 16:19:46 -0400
-Date: Fri, 8 Apr 2016 14:19:44 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>,
-	linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org
-Subject: Re: [PATCH v4 6/6] PCI: Squash pci_dev_flags to remove holes
-Message-ID: <20160408141944.220fe2b4@t450s.home>
-In-Reply-To: <20160224194431.7585.78791.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<20160224194431.7585.78791.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+	id S1752374AbcDKOva (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Apr 2016 10:51:30 -0400
+From: Murali Karicheri <m-karicheri2@ti.com>
+To: <bhelgaas@google.com>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH next v2 2/2] PCI: keystone: remove unnecessary goto statement
+Date: Mon, 11 Apr 2016 10:50:31 -0400
+Message-ID: <1460386231-8377-2-git-send-email-m-karicheri2@ti.com>
+In-Reply-To: <1460386231-8377-1-git-send-email-m-karicheri2@ti.com>
+References: <1460386231-8377-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 24 Feb 2016 13:44:31 -0600
-Bjorn Helgaas <bhelgaas@google.com> wrote:
+Fix the misuse of goto statement in ks_pcie_get_irq_controller_info()
+as simple return is more appropriate for this function. While at
+it add an error log for absence of interrupt controller node.
 
-> From: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
-> 
-> After removing PCI_DEV_FLAGS_DMA_ALIAS_DEVFN, the (1 << 4) value was
-> unused.  Squash the other values so all the bits are adjacent.  No
-> functional change intended.
-> 
-> (I'm not sure this is worth doing.  We have 16 flag bits and we're not
-> even close to exhausting them.  But if we do squash them, it should be
-> in a separate patch so we don't clutter up the main patches.)
-> ---
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Pawel Moll <pawel.moll@arm.com>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: Ian Campbell <ijc+devicetree@hellion.org.uk>
+Cc: Kumar Gala <galak@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
 
-Needs a Sign-off
+---
+ v2 - removed an unnecessary extra line added in the previous version
+ v1 - same as before initial version
+ drivers/pci/host/pci-keystone.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
-
-
->  include/linux/pci.h |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index d9e0c84..4e36024 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -173,13 +173,13 @@ enum pci_dev_flags {
->  	/* Flag for quirk use to store if quirk-specific ACS is enabled */
->  	PCI_DEV_FLAGS_ACS_ENABLED_QUIRK = (__force pci_dev_flags_t) (1 << 3),
->  	/* Use a PCIe-to-PCI bridge alias even if !pci_is_pcie */
-> -	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 5),
-> +	PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS = (__force pci_dev_flags_t) (1 << 4),
->  	/* Do not use bus resets for device */
-> -	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 6),
-> +	PCI_DEV_FLAGS_NO_BUS_RESET = (__force pci_dev_flags_t) (1 << 5),
->  	/* Do not use PM reset even if device advertises NoSoftRst- */
-> -	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
-> +	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 6),
->  	/* Get VPD from function 0 VPD */
-> -	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
-> +	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 7),
->  };
->  
->  enum pci_irq_reroute_variant {
-> 
+diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+index 299f2f0..0234828 100644
+--- a/drivers/pci/host/pci-keystone.c
++++ b/drivers/pci/host/pci-keystone.c
+@@ -181,11 +181,13 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+ 	*np_temp = of_find_node_by_name(np_pcie, controller);
+ 	if (!(*np_temp)) {
+ 		dev_err(dev, "Node for %s is absent\n", controller);
+-		goto out;
++		return ret;
+ 	}
+ 	temp = of_irq_count(*np_temp);
+-	if (!temp)
+-		goto out;
++	if (!temp) {
++		dev_err(dev, "No entries in %s\n", controller);
++		return ret;
++	}
+ 	if (temp > max_host_irqs)
+ 		dev_warn(dev, "Too many %s interrupts defined %u\n",
+ 			(legacy ? "legacy" : "MSI"), temp);
+@@ -203,7 +205,6 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+ 		*num_irqs = temp;
+ 		ret = 0;
+ 	}
+-out:
+ 	return ret;
+ }
+ 
+-- 
+1.9.1
 
