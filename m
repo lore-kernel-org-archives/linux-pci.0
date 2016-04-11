@@ -1,69 +1,74 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <570C4034.20105@caviumnetworks.com>
-Date: Mon, 11 Apr 2016 17:24:20 -0700
-From: David Daney <ddaney@caviumnetworks.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:34876 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755231AbcDKO3g (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Apr 2016 10:29:36 -0400
+Received: from us02secmta1.synopsys.com (us02secmta1.synopsys.com [10.12.235.96])
+	by smtprelay.synopsys.com (Postfix) with ESMTP id F0F1724E121F
+	for <linux-pci@vger.kernel.org>; Mon, 11 Apr 2016 07:29:34 -0700 (PDT)
+Received: from us02secmta1.internal.synopsys.com (us02secmta1.internal.synopsys.com [127.0.0.1])
+	by us02secmta1.internal.synopsys.com (Service) with ESMTP id E4E5F4E213
+	for <linux-pci@vger.kernel.org>; Mon, 11 Apr 2016 07:29:34 -0700 (PDT)
+Received: from mailhost.synopsys.com (unknown [10.13.184.66])
+	by us02secmta1.internal.synopsys.com (Service) with ESMTP id C8E864E202
+	for <linux-pci@vger.kernel.org>; Mon, 11 Apr 2016 07:29:34 -0700 (PDT)
+Received: from mailhost.synopsys.com (localhost [127.0.0.1])
+	by mailhost.synopsys.com (Postfix) with ESMTP id BC0C3F03
+	for <linux-pci@vger.kernel.org>; Mon, 11 Apr 2016 07:29:34 -0700 (PDT)
+Received: from US01WEHTC2.internal.synopsys.com (us01wehtc2.internal.synopsys.com [10.12.239.237])
+	by mailhost.synopsys.com (Postfix) with ESMTP id B3DDCF02
+	for <linux-pci@vger.kernel.org>; Mon, 11 Apr 2016 07:29:34 -0700 (PDT)
+Subject: Re: UFS patch
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <570BB249.10508@synopsys.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <570BB4CB.40205@synopsys.com>
+Date: Mon, 11 Apr 2016 15:29:31 +0100
 MIME-Version: 1.0
-To: Jayachandran C <jchandra@broadcom.com>
-CC: Bjorn Helgaas <helgaas@kernel.org>,
-	Tomasz Nowicki <tn@semihalf.com>, <rafael@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	<okaya@codeaurora.org>, <jiang.liu@linux.intel.com>,
-	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>,
-	<robert.richter@caviumnetworks.com>,
-	Marcin Wojtas <mw@semihalf.com>, <Liviu.Dudau@arm.com>,
-	<wangyijing@huawei.com>, <Suravee.Suthikulpanit@amd.com>,
-	<msalter@redhat.com>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linaro-acpi@lists.linaro.org>, Jon Masters <jcm@redhat.com>
-Subject: Re: [PATCH v2 2/4] PCI: Provide common functions for ECAM mapping
-References: <1460414707-19153-1-git-send-email-jchandra@broadcom.com> <1460414707-19153-3-git-send-email-jchandra@broadcom.com>
-In-Reply-To: <1460414707-19153-3-git-send-email-jchandra@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <570BB249.10508@synopsys.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/11/2016 03:45 PM, Jayachandran C wrote:
-> Add config option PCI_GENERIC_ECAM and file drivers/pci/ecam.c to
-> provide generic functions for accessing memory mapped PCI config space.
->
-> The API is defined in drivers/pci/ecam.h and is written to replace the
-> API in drivers/pci/host/pci-host-common.h. The file defines a new
-> 'struct pci_config_window' to hold the information related to a PCI
-> config area and its mapping. This structure is expected to be used as
-> sysdata for controllers that have ECAM based mapping.
->
-> Helper functions are provided to setup the mapping, free the mapping
-> and to implement the map_bus method in 'struct pci_ops'
->
-> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+Sorry! Wrong mailing list :)
 
-Tested-by: David Daney <david.daney@cavium.com>
+On 4/11/2016 3:18 PM, Joao Pinto wrote:
+> Hi Martin,
+> 
+> I would like to know what are your plans regarding the UFS patches. Sending the
+> URLS for the last patch set version:
+> 
+> [PATCH v13 0/9] add support for DWC UFS Controller
+> https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1115046.html
+> 
+> [PATCH v13 1/9] fixed typo in ufshcd-pltfrm
+> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115043.html
+> 
+> [PATCH v13 2/9] add UFS 2.0 to ufshcd-pltfrm bindings
+> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115045.html
+> 
+> [PATCH v13 3/9] added UFS 2.0 capabilities
+> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115047.html
+> 
+> [PATCH v13 4/9] added unipro attributes
+> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115044.html
+> 
+> [PATCH v13 5/9] added link status to ufshci
+> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115051.html
+> 
+> [PATCH v13 6/9] added support for DesignWare Controller
+> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115053.html
+> 
+> [PATCH v13 7/9] added support for Synopsys G210 Test Chip
+> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115049.html
+> 
+> [PATCH v13 8/9] add TC G210 platform driver
+> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115048.html
+> 
+> [PATCH v13 9/9] add TC G210 pci driver
+> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115050.html
+> 
+> Thanks,
+> Joao
+> 
 
-
-> ---
->   drivers/pci/Kconfig  |   3 ++
->   drivers/pci/Makefile |   2 +
->   drivers/pci/ecam.c   | 130 +++++++++++++++++++++++++++++++++++++++++++++++++++
->   drivers/pci/ecam.h   |  58 +++++++++++++++++++++++
-
-I wonder if these files should go in drivers/pci/host ...  I understand 
-that you still have to use them from drivers/pci/acpi though.
-
-I will let others opine on this, but could you put the contents of 
-ecam.h into include/linux/pci.h along with the  pci_generic_config_*() 
-declarations?
-
-If you did that, the contents of ecam.c could  go into 
-drivers/pci/access.c...
-
-
->   4 files changed, 193 insertions(+)
->   create mode 100644 drivers/pci/ecam.c
->   create mode 100644 drivers/pci/ecam.h
->
-[...]
