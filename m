@@ -1,67 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:35031 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752293AbcDZImM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Apr 2016 04:42:12 -0400
-Date: Tue, 26 Apr 2016 10:42:08 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Hanna Hawa <hannah@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: [PATCH v2 0/2] pci: host: new driver for Marvell Armada 7K/8K
- PCIe controller
-Message-ID: <20160426104208.150cbbd0@free-electrons.com>
-In-Reply-To: <20160425172846.GB1759@localhost>
-References: <1460648177-31473-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20160425154611.3e7e9dc9@free-electrons.com>
-	<20160425172846.GB1759@localhost>
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:34637 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755361AbcDKOS7 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Apr 2016 10:18:59 -0400
+To: "Martin K. Petersen" <martin.petersen@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: UFS patch
+Message-ID: <570BB249.10508@synopsys.com>
+Date: Mon, 11 Apr 2016 15:18:49 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+Hi Martin,
 
-On Mon, 25 Apr 2016 12:28:46 -0500, Bjorn Helgaas wrote:
+I would like to know what are your plans regarding the UFS patches. Sending the
+URLS for the last patch set version:
 
-> How about if you just shuffle those bits around into
-> an armada8k_add_pcie_port() and an armada8k_pcie_establish_link(), and
-> we'll call that good for now?
+[PATCH v13 0/9] add support for DWC UFS Controller
+https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1115046.html
 
-I just sent a v3 which implements this.
+[PATCH v13 1/9] fixed typo in ufshcd-pltfrm
+https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115043.html
 
-However, to be honest, after looking at the other drivers, I found the
-XYZ_add_pcie_port() function to not be very useful: it simply
-continues the work done by the probe function, and there is really no
-reason to split the remaining work of the probe() in a separate
-function. The XYZ_add_pcie_port() is called only one time for each
-probe() call, so having a separate function is somewhat useless. In
-addition, the separation of work between probe() and
-XYZ_add_pcie_port() is not very consistent accross drivers. In
-pci-imx6, XYZ_add_pcie_port() only sets up the interrupt handler and
-calls dw_pcie_host_init(). In pci-dra7xx, XYZ_add_pcie_port() sets up
-the interrupt, maps some registers and calls dw_pcie_host_init().
+[PATCH v13 2/9] add UFS 2.0 to ufshcd-pltfrm bindings
+https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115045.html
 
-So my v3 implements what you suggested, and creates a
-armada8k_add_pcie_port() to make it consistent with the other drivers,
-but long term, I'm not sure this particular function is really useful.
+[PATCH v13 3/9] added UFS 2.0 capabilities
+https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115047.html
 
-Best regards,
+[PATCH v13 4/9] added unipro attributes
+https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115044.html
 
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+[PATCH v13 5/9] added link status to ufshci
+https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115051.html
+
+[PATCH v13 6/9] added support for DesignWare Controller
+https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115053.html
+
+[PATCH v13 7/9] added support for Synopsys G210 Test Chip
+https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115049.html
+
+[PATCH v13 8/9] add TC G210 platform driver
+https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115048.html
+
+[PATCH v13 9/9] add TC G210 pci driver
+https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115050.html
+
+Thanks,
+Joao
