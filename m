@@ -1,82 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:33953 "EHLO
-	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753065AbcDSJE1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 05:04:27 -0400
-Received: by mail-pf0-f172.google.com with SMTP id c20so4920896pfc.1
-        for <linux-pci@vger.kernel.org>; Tue, 19 Apr 2016 02:04:27 -0700 (PDT)
-Subject: Re: [PATCH v8 35/45] powerpc/powernv: Fundamental reset in
- pnv_pci_reset_secondary_bus()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-36-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
-	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <5715F493.2030002@ozlabs.ru>
-Date: Tue, 19 Apr 2016 19:04:19 +1000
+Received: from down.free-electrons.com ([37.187.137.238]:42574 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932200AbcDKP5E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Apr 2016 11:57:04 -0400
+Date: Mon, 11 Apr 2016 17:56:51 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Hanna Hawa <hannah@marvell.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Yehuda Yitschak <yehuday@marvell.com>
+Subject: Re: [PATCH 2/2] pci: host: new driver for Marvell Armada 7K/8K PCIe
+ controller
+Message-ID: <20160411175651.5f32a990@free-electrons.com>
+In-Reply-To: <20160327140348.GA19498@lunn.ch>
+References: <1459071058-18328-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1459071058-18328-3-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20160327140348.GA19498@lunn.ch>
 MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-36-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/17/2016 02:44 PM, Gavin Shan wrote:
-> In pnv_pci_reset_secondary_bus(), we should issue fundamental reset
-> if any one subordinate device of the specified bus is requesting that.
-> Otherwise, the device might not come up after the reset.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Hello,
 
+On Sun, 27 Mar 2016 16:03:48 +0200, Andrew Lunn wrote:
+> > +static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
+> > +{
+> > +	struct pcie_port *pp = arg;
+> > +	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
+> > +	void __iomem *base = pcie->base;
+> > +	u32 val;
+> > +
+> > +	val = readl(base + PCIE_GLOBAL_INT_CAUSE1_REG);
+> > +	writel(val, base + PCIE_GLOBAL_INT_CAUSE1_REG);
+> > +
+> > +	return IRQ_HANDLED;
+> 
+> Maybe a comment as to why you are just throwing them away.
 
-Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+I'll have a look into this.
 
+> > +static int armada8k_pcie_probe(struct platform_device *pdev)
+> > +{
+> > +	struct armada8k_pcie *pcie;
+> > +	struct pcie_port *pp;
+> > +	struct device *dev = &pdev->dev;
+> > +	struct resource *base;
+> > +	int ret;
+> > +
+> > +	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+> > +	if (!pcie)
+> > +		return -ENOMEM;
+> > +
+> > +	pcie->main_clk = devm_clk_get(dev, "main");
+> > +	if (!IS_ERR(pcie->main_clk))
+> > +		clk_prepare_enable(pcie->main_clk);
+> > +
+> > +	pcie->lane_clk = devm_clk_get(dev, "port");
+> > +	if (!IS_ERR(pcie->lane_clk))
+> > +		clk_prepare_enable(pcie->lane_clk);
+> 
+> Any need to handle -EPRODE_DEFERED here?
 
-Out of curiosity - what does "fundamental" reset actually do?
+Is this needed? The clocks are registered in of_clk_init(), i.e at
+time_init() time. This is way before the device drivers get probed, no?
 
+Best regards,
 
-> ---
->   arch/powerpc/platforms/powernv/eeh-powernv.c | 21 ++++++++++++++++++++-
->   1 file changed, 20 insertions(+), 1 deletion(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> index 593b8dc..c7454ba 100644
-> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
-> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-> @@ -866,9 +866,28 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
->   	return 0;
->   }
->
-> +static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
-> +{
-> +	int *freset = data;
-> +
-> +	/*
-> +	 * Stop the iteration immediately if there has any one
-> +	 * PCI device requesting fundamental reset.
-> +	 */
-> +	*freset |= pdev->needs_freset;
-> +	return *freset;
-> +}
-> +
->   void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
->   {
-> -	pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
-> +	int option, freset = 0;
-> +
-> +	if (dev->subordinate)
-> +		pci_walk_bus(dev->subordinate,
-> +			     pnv_pci_dev_reset_type, &freset);
-> +
-> +	option = freset ? EEH_RESET_FUNDAMENTAL : EEH_RESET_HOT;
-> +	pnv_eeh_bridge_reset(dev, option);
->   	pnv_eeh_bridge_reset(dev, EEH_RESET_DEACTIVATE);
->   }
->
->
-
-
+Thomas
 -- 
-Alexey
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
