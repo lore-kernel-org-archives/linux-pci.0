@@ -1,98 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43603 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752144AbcDUPmi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 21 Apr 2016 11:42:38 -0400
-Date: Thu, 21 Apr 2016 10:42:34 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Krzysztof Halasa <khalasa@piap.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH REPOST] Extend PCIE_BUS_PEER2PEER to set MRSS=128 to fix
- CNS3xxx BM DMA.
-Message-ID: <20160421154234.GB32739@localhost>
-References: <m3h9fghbfh.fsf@t19.piap.pl>
+Received: from smtp.opengridcomputing.com ([72.48.136.20]:38289 "EHLO
+	smtp.opengridcomputing.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752464AbcDKSPk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Apr 2016 14:15:40 -0400
+From: "Steve Wise" <swise@opengridcomputing.com>
+To: "'Casey Leedom'" <leedom@chelsio.com>
+Cc: <linux-pci@vger.kernel.org>, <hariprasad@chelsio.com>,
+	<hare@suse.com>, <bhelgaas@google.com>
+References: <BY2PR12MB06483CA232B6B3BFF7179012C8910@BY2PR12MB0648.namprd12.prod.outlook.com> <BY2PR12MB0648F0C35D907AA640D7E56CC8940@BY2PR12MB0648.namprd12.prod.outlook.com>
+In-Reply-To: <BY2PR12MB0648F0C35D907AA640D7E56CC8940@BY2PR12MB0648.namprd12.prod.outlook.com>
+Subject: RE: 4.6-rc2 regression with commit 104daa71b396: check VPD access offset against length
+Date: Mon, 11 Apr 2016 13:16:17 -0500
+Message-ID: <02ec01d1941e$3dda2010$b98e6030$@opengridcomputing.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <m3h9fghbfh.fsf@t19.piap.pl>
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 21, 2016 at 10:39:52AM +0100, Krzysztof Halasa wrote:
-> I think this bug needs to be fixed, this way or another.
+> kernel.org commit 104daa71b396 added a check to make sure that efforts to
+> read/write the VPD wouldn't extend past the computed length of the VPD.
+> Later, kernel.org commit 408641e93aa5 folded the pci_vpd_pci22 into
+> struct pci_vpd so things moved around a bit after that and an error return
+> got changed into a silent failure instead of -EINVAL.
 > 
-> The platform in question is Cavium CNS3xxx, ARMv6.
+>   The problem is that the previous pci_vpd_pci22_read() didn't check for a
+read with
+> a VPD Offset > VPD Length and the new pci_vpd_read() is checking that.  Worse
+> yet, when a VPD Offset is greater than the recorded VPD Length, it simply
+> returns 0 rather than -EINVAL.
 > 
-> A recent patch by Arnd Bergmann (498a92d42596 "ARM: cns3xxx: pci: avoid
-> potential stack overflow") converted an explicit setting of
-> PCI_EXP_DEVCTL_READRQ = 0 (i.e., max 128 bytes for bus-mastering PCIe DMA
-> read request) to:
-> +    pcie_bus_config = PCIE_BUS_PEER2PEER;
+>   The problem is stemming from the fact that the Chelsio adapters actually
+have
+> two VPD structures stored in the VPD.  An abbreviated on at Offset 0x0 and the
+> complete VPD at Offset 0x400.  The abbreviated one only contains the PN, SN
+and
+> EC Keywords, while the complete VPD contains those plus various adapter
+> constants contained in V0, V1, etc.  And it also contains the Base Ethernet
+MAC
+> Address in the "NA" Keyword which the cxgb4 driver needs when it can't contact
+> the adapter firmware.  (We don't have the "NA" Keywork in the VPD Structure at
+> Offset 0x0 because that's not an allowed VPD Keyword in the PCI-E 3.0
+> specification.)
+> 
+>   With the new code, the computed size of the VPD is 0x200 and so our efforts
+> to read the VPD at Offset 0x400 silently fails.  We check the result of the
+> read looking for a signature 0x82 byte but we're checking against random stack
+> garbage.
+> 
+>   The end result is that the cxgb4 driver now fails the PCI-E Probe.
+> 
 
-Any thoughts on this, Arnd?  I can (and will) look at this, but it's
-a complicated area and it will take me quite a while to dig into it.
+Silently failing is wrong, in my opinion.  And I even question truncating which
+is also done in pci_vpd_read().  To the PCI maintainers:  Should the length
+checks just be removed?    If not, what is the correct solution?  Adding a
+different "expert" API that ignores the length checks, or somehow allowing the
+device driver to set the actual VPD size? 
 
-> with the following commentary:
->     "The second part is how the driver sets up the Max_Read_Request_Size
->     value for the first device/function on bus 1, i.e. the device
->     plugged directly into the PCIe root port.
->     For all I can tell, this is in fact incomplete, as it does not
->     perform the same setting on devices attached to a PCIe switch,
->     or multi-function devices.
->     The solution for this part fortunately is even easier: if we
->     just set the global pcie_bus_config variable to PCIE_BUS_PEER2PEER,
->     all PCIe devices in the system are limited to 128 byte MPS, which
->     in turn limits the MRRS to 128 bytes for all devices, and we
->     no longer even need to touch any devices."
-> 
-> The problem is the MRRS setting is never written to the hardware.
-> I propose the following, though I'm not sure if we can do this safely,
-> especially given the comments in probe.c. OTOH, this change may be
-> required in other (all?) cases when the user requests
-> PCIE_BUS_PEER2PEER.
-> 
-> On this Laguna GW-2388 the following patch fixes BM DMA with:
-> 0000:00:00.0 PCI bridge: Cavium Networks Device 3400 (rev 01)
-> 0000:01:00.0 PCI bridge: Texas Instruments XIO2001 PCI Express-to-PCI Bridge
-> 0000:02:0e.0 (PCI devices behind the bridge, these are doing actual BM xfers)
-> 0001:00:00.0 PCI bridge: Cavium Networks Device 3400 (rev 01 - this is
-> 	     the second lane from the CPU)
-> 
-> pci 0000:00:00.0: Max Payload Size set to  128/ 128 (was  128), Max Read Rq  128
-> pci 0000:01:00.0: Max Payload Size set to  128/ 512 (was  128), Max Read Rq  128
-> pci 0001:00:00.0: Max Payload Size set to  128/ 128 (was  128), Max Read Rq  128
-> 
-> Signed-off-by: Krzysztof Hałasa <khalasa@piap.pl>
-> Fixes: 498a92d42596 ("ARM: cns3xxx: pci: avoid potential stack overflow")
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 6d7ab9b..91713b6 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1919,7 +1919,8 @@ static void pcie_write_mrrs(struct pci_dev *dev)
->  	/* In the "safe" case, do not configure the MRRS.  There appear to be
->  	 * issues with setting MRRS to 0 on a number of devices.
->  	 */
-> -	if (pcie_bus_config != PCIE_BUS_PERFORMANCE)
-> +	if (pcie_bus_config != PCIE_BUS_PERFORMANCE &&
-> +	    pcie_bus_config != PCIE_BUS_PEER2PEER)
->  		return;
->  
->  	/* For Max performance, the MRRS must be set to the largest supported
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 2771625..6f5088a 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -756,7 +756,7 @@ enum pcie_bus_config_types {
->  	PCIE_BUS_DEFAULT,	/* ensure MPS matches upstream bridge */
->  	PCIE_BUS_SAFE,		/* use largest MPS boot-time devices support */
->  	PCIE_BUS_PERFORMANCE,	/* use MPS and MRRS for best performance */
-> -	PCIE_BUS_PEER2PEER,	/* set MPS = 128 for all devices */
-> +	PCIE_BUS_PEER2PEER,	/* set MPS and MRSS to 128 for all devices */
->  };
->  
->  extern enum pcie_bus_config_types pcie_bus_config;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+
+Steve.
+
