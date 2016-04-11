@@ -1,39 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47611 "EHLO mail.kernel.org"
+Received: from foss.arm.com ([217.140.101.70]:47702 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752620AbcDSXx6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 Apr 2016 19:53:58 -0400
-Date: Tue, 19 Apr 2016 18:53:54 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/2] PCI: Skylake PCH ACS quirks
-Message-ID: <20160419235354.GF17863@localhost>
-References: <20160331222828.20486.30979.stgit@gimli.home>
+	id S1750916AbcDKI61 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 11 Apr 2016 04:58:27 -0400
+Date: Mon, 11 Apr 2016 09:57:59 +0100
+From: Mark Rutland <mark.rutland@arm.com>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Jon Mason <jonmason@broadcom.com>, linux-pci@vger.kernel.org,
+	bcm-kernel-feedback-list@broadcom.com,
+	linux-arm-kernel@lists.infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>, devicetree@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: iproc: Support DT property for ignoring aborts
+ when probing
+Message-ID: <20160411085759.GA7088@leverpostej>
+References: <1460238624-2086-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160331222828.20486.30979.stgit@gimli.home>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1460238624-2086-1-git-send-email-zajec5@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 31, 2016 at 04:34:26PM -0600, Alex Williamson wrote:
-> Intel Skylake systems attempted to implement ACS on the PCH root
-> ports, but it came out a wee bit off.  As noted in the second patch
-> and the datasheets from Intel, dwords were used for the ACS
-> capability and control words, so we see the capabilities correctly
-> but the control register is an extra 2 bytes offset.  With this
-> quirk we can fix the kernel, unfortunately lspci will still show
-> the wrong ACS control bits though.  Thanks,
+Please Cc the device tree mailing list (devicetree@vger.kernel.org) when
+sending device tree patches.
+
+On Sat, Apr 09, 2016 at 11:50:23PM +0200, Rafał Miłecki wrote:
+> Some devices (e.g. Northstar ones) may have bridges that forward
+> harmless errors to the ARM core. In such case we need an option to
+> add a handler ignoring them.
 > 
-> Alex
-> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 > ---
+>  .../devicetree/bindings/pci/brcm,iproc-pcie.txt         |  6 ++++++
+>  drivers/pci/host/pcie-iproc-platform.c                  |  2 ++
+>  drivers/pci/host/pcie-iproc.c                           | 17 +++++++++++++++++
+>  drivers/pci/host/pcie-iproc.h                           |  1 +
+>  4 files changed, 26 insertions(+)
 > 
-> Alex Williamson (2):
->       PCI: Reverse standard ACS vs device specific ACS enabling
->       PCI: Quirk PCH root port ACS for Sunrise Point
+> diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+> index 01b88f4..c91b20a 100644
+> --- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+> @@ -22,6 +22,12 @@ Optional properties:
+>  
+>  - brcm,pcie-ob: Some iProc SoCs do not have the outbound address mapping done
+>  by the ASIC after power on reset. In this case, SW needs to configure it
+> +- brcm,pcie-hook-abort-handler: During PCI bus probing (device enumeration)
+> +  there can be errors that are expected and harmless. Unfortunately some bridges
+> +  can't be configured to ignore them and they forward them to the ARM core
+> +  triggering die().
+> +  This property should be set in such case, it will make driver add its own
+> +  handler ignoring such errors.
 
-Wow, hard to imagine how that got through validation.
+Rather than describing what the kernel should do, this should describe
+the property of the hardware (e.g. this should be named something like
+brcm,spurious-probing-abort).
 
-Applied to pci/virtualization for v4.7, thanks, Alex!
+Is there absolutely no mechanism to disable this, even if
+board-specific?
+
+Are the aborts synchronous or asynchronous?
+
+When specifically do they actually occur?
+
+Thanks,
+Mark.
