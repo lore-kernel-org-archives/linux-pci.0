@@ -1,166 +1,194 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42667 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758473AbcDHQGg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Apr 2016 12:06:36 -0400
-Date: Fri, 8 Apr 2016 11:06:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Lawrynowicz, Jacek" <jacek.lawrynowicz@intel.com>,
-	Joerg Roedel <jroedel@suse.de>, linux-pci@vger.kernel.org,
-	iommu@lists.linux-foundation.org
-Subject: Re: [PATCH v4 3/6] PCI: Add support for multiple DMA aliases
-Message-ID: <20160408160632.GF8780@localhost>
-References: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160224194406.7585.17447.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160225143841.GA8726@localhost>
- <1457995420.78634.63.camel@infradead.org>
- <20160316004817.GG19974@localhost>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:35815 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752777AbcDKWxJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Apr 2016 18:53:09 -0400
+Received: by mail-pa0-f46.google.com with SMTP id td3so550438pab.2
+        for <linux-pci@vger.kernel.org>; Mon, 11 Apr 2016 15:53:08 -0700 (PDT)
+Subject: Re: [PATCH 1/2] PCI: iproc: Support DT property for ignoring aborts
+ when probing
+To: Ray Jui <ray.jui@broadcom.com>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Scott Branden <scott.branden@broadcom.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Jon Mason <jonmason@broadcom.com>
+References: <1460238624-2086-1-git-send-email-zajec5@gmail.com>
+ <79DC79A7-D4CE-4983-B1C5-CBD2E9CBBFB9@gmail.com>
+ <4768648c-841b-490d-a752-f31cba545f74@broadcom.com>
+ <570C1D47.7010102@gmail.com>
+ <ccabf53c-c035-be4b-a016-389bb7531557@broadcom.com>
+ <570C24B3.4080104@broadcom.com>
+ <18045be8-9ee3-7644-6fbb-d352e107d111@broadcom.com>
+ <570C2806.8070700@gmail.com>
+ <0464ed02-5d41-f111-b8c1-aa9aa638c872@broadcom.com>
+Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+	linux-arm-kernel@lists.infradead.org,
+	Hauke Mehrtens <hauke@hauke-m.de>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <570C2A59.4010105@gmail.com>
+Date: Mon, 11 Apr 2016 15:51:05 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20160316004817.GG19974@localhost>
+In-Reply-To: <0464ed02-5d41-f111-b8c1-aa9aa638c872@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 15, 2016 at 07:48:17PM -0500, Bjorn Helgaas wrote:
-> On Mon, Mar 14, 2016 at 10:43:40PM +0000, David Woodhouse wrote:
-> > On Thu, 2016-02-25 at 08:38 -0600, Bjorn Helgaas wrote:
-> > > 
-> > > >† /*
-> > > > - * Look for aliases to or from the given device for exisiting groups.† The
-> > > > - * dma_alias_devfn only supports aliases on the same bus, therefore the search
-> > > > + * Look for aliases to or from the given device for existing groups. DMA
-> > > > + * aliases are only supported on the same bus, therefore the search
-> > > 
-> > > I'm trying to reconcile this statement that "DMA aliases are only
-> > > supported on the same bus" (which was there even before this patch)
-> > > with the fact that pci_for_each_dma_alias() does not have that
-> > > limitation.
-> > 
-> > Doesn't it? You can still only set a DMA alias on the same bus with
-> > pci_add_dma_alias(), can't you?
+On 11/04/16 15:51, Ray Jui wrote:
 > 
-> I guess it's true that PCI_DEV_FLAGS_DMA_ALIAS_DEVFN and the proposed
-> pci_add_dma_alias() only add aliases on the same bus.  I was thinking
-> about a scenario like this:
 > 
->   00:00.0 PCIe-to-PCI bridge to [bus 01]
->   01:01.0 conventional PCI device
+> On 4/11/2016 3:41 PM, Florian Fainelli wrote:
+>> On 11/04/16 15:34, Ray Jui wrote:
+>>>
+>>>
+>>> On 4/11/2016 3:26 PM, Scott Branden wrote:
+>>>> One Comment below
+>>>>
+>>>> On 16-04-11 03:24 PM, Ray Jui wrote:
+>>>>>
+>>>>>
+>>>>> On 4/11/2016 2:55 PM, Florian Fainelli wrote:
+>>>>>> On 11/04/16 13:06, Ray Jui wrote:
+>>>>>>>
+>>>>>>>
+>>>>>>> On 4/10/2016 6:43 PM, Florian Fainelli wrote:
+>>>>>>>> On April 9, 2016 2:50:23 PM PDT, "Rafa≈Ç Mi≈Çecki" <zajec5@gmail.com>
+>>>>>>>> wrote:
+>>>>>>>>> Some devices (e.g. Northstar ones) may have bridges that forward
+>>>>>>>>> harmless errors to the ARM core. In such case we need an option to
+>>>>>>>>> add a handler ignoring them.
+>>>>>>>>>
+>>>>>>>>> Signed-off-by: Rafa≈Ç Mi≈Çecki <zajec5@gmail.com>
+>>>>>>>>> ---
+>>>>>>>>
+>>>>>>>>> +- brcm,pcie-hook-abort-handler: During PCI bus probing (device
+>>>>>>>>> enumeration)
+>>>>>>>>> +  there can be errors that are expected and harmless.
+>>>>>>>>> Unfortunately
+>>>>>>>>> some bridges
+>>>>>>>>> +  can't be configured to ignore them and they forward them to the
+>>>>>>>>> ARM
+>>>>>>>>> core
+>>>>>>>>> +  triggering die().
+>>>>>>>>> +  This property should be set in such case, it will make
+>>>>>>>>> driver add
+>>>>>>>>> its own
+>>>>>>>>> +  handler ignoring such errors.
+>>>>>>>>
+>>>>>>>> The property is named after the function that allows you to catch
+>>>>>>>> abort handlers, whereas you should be describing the HW here.
+>>>>>>>> Something like brcm,bridge-error-forward or a better name even
+>>>>>>>> would
+>>>>>>>> be preferable.
+>>>>>>>>
+>>>>>>>>> +#ifdef CONFIG_ARM
+>>>>>>>>> +static int iproc_pcie_abort_handler(unsigned long addr, unsigned
+>>>>>>>>> int
+>>>>>>>>> fsr,
+>>>>>>>>> +                    struct pt_regs *regs)
+>>>>>>>>> +{
+>>>>>>>>> +    if (fsr == 0x1406)
+>>>>>>>>> +        return 0;
+>>>>>>>>> +
+>>>>>>>>> +    return 1;
+>>>>>>>>
+>>>>>>>> As you later noted this prevents this driver from being a module
+>>>>>>>> now.
+>>>>>>>> Since the expectation is that either a fixed bootloader or a
+>>>>>>>> platform
+>>>>>>>> should enot produce these data aborts, or allow them to be ignored,
+>>>>>>>> why not just put this code back where it belongs in the machine
+>>>>>>>> specific file which kills many birds with the same stone:
+>>>>>>>>
+>>>>>>>
+>>>>>>> I assume the module compile issue can be simply fixed by exporting
+>>>>>>> symbol of "hook_fault_code"?
+>>>>>>
+>>>>>> I do not think it is desireable for this symbol to be exported in the
+>>>>>> first place, also last I looked, this was a one time registration
+>>>>>> thing,
+>>>>>> you cannot undo the hook you installed, but everything can be fixed.
+>>>>>>
+>>>>>
+>>>>> Okay.
+>>>>>
+>>>>>>>
+>>>>>>> I believe ARM64 based NS2 that uses the same iProc PCIe driver might
+>>>>>>> also need something like this (I'm still waiting for Jon Mason to
+>>>>>>> give
+>>>>>>> me some more information on the NS2 errors that he saw, which is
+>>>>>>> likely
+>>>>>>> related to this). I assume there will be something similar to the
+>>>>>>> ARM
+>>>>>>> specific "hook_fault_code" for ARM64, but then ARM64 does not
+>>>>>>> have any
+>>>>>>> "mach" specific directory. Where can this type of hook be installed
+>>>>>>> for
+>>>>>>> ARM64 based platforms if not in the PCIe driver?
+>>>>>>
+>>>>>> OK, that is a fair point, then maybe have a two stage process,
+>>>>>> where we
+>>>>>> make sure that the part that installs the hook is always available
+>>>>>> and
+>>>>>> built-into the kernel, but let the iProc PCIe driver remain a module?
+>>>>>>
+>>>>>
+>>>>> I guess we are sort of stuck on this. If "hook_fault_code" is not
+>>>>> supposed to be used by any driver compiled as module like you
+>>>>> described,
+>>>>> then yes, I agree, I don't see how we can leave this in the iProc PCIe
+>>>>> driver.
+>>>>>
+>>>> Why does thie PCI driver need to be compiled as module though?  Why
+>>>> can't we limit it to being linked in the kernel?
+>>>>
+>>>> Regards,
+>>>> Scott
+>>>
+>>> There are minor benefits allowing this driver to be compiled as module,
+>>> although in our use case (Cygnus and NS2), we always compile this driver
+>>> as statically linked in the kernel. I'm not sure if NS/BCMA has any use
+>>> case that requires this driver to be a module.
+>>>
+>>> In fact, being able to compile this driver as a module and loaded after
+>>> kernel init process is done just helped to confirm this imprecise abort
+>>> issue to be PCIe specific, :)
+>>
+>> For the STB platforms for instance, we actually like to have the PCIE RC
+>> driver as a module (not iproc-pcie, still downstream for now) because it
+>> allows us to put the entire set of EPs and RCs into the lowest power
+>> state (L23 + turning off external regulators) without messing with PCI
+>> bus scanning. In general, it seems like a good practice to allow this
+>> since, that helps with distributions not having to ship gigantic kernels
+>> that need this driver built in, and also helps us with development (when
+>> faults are handled).
+>>
+>> My suggestion about the PCIe-specific hook fault handler is to do
+>> something like this: introduce a iproc-pcie-fault.c file which is
+>> built-into the kernel if PCIE_IPROC=m || PCIE_IPROC=y and have it
+>> contain a function which is hooked at arch_initcall level for instance,
+>> so before module_init.
+>>
+>> Of course, there could be different ways to solve that problem, it just
+>> happens to be one of them.
+>>
 > 
-> where I think 01:00.0 is a DMA alias for 01:01.0 because the bridge
-> takes ownership of DMA transactions from 01:01.0 and assigns a
-> Requester ID of 01:00.0 (secondary bus number, device 0, function 0).
+> That sounds good to me.
 > 
-> > > >†† * space is quite small (especially since we're really only looking at pcie
-> > > >†† * device, and therefore only expect multiple slots on the root complex or
-> > > >†† * downstream switch ports).† It's conceivable though that a pair of
-> > > > @@ -686,11 +692,8 @@ static struct iommu_group *get_pci_alias_group(struct pci_dev *pdev,
-> > > >†††††††††††††††††††††††continue;
-> > > >††
-> > > >†††††††††††††††/* We alias them or they alias us */
-> > > > -†††††††††††††if (((pdev->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
-> > > > -††††††††††††††††† pdev->dma_alias_devfn == tmp->devfn) ||
-> > > > -†††††††††††††††† ((tmp->dev_flags & PCI_DEV_FLAGS_DMA_ALIAS_DEVFN) &&
-> > > > -††††††††††††††††† tmp->dma_alias_devfn == pdev->devfn)) {
-> > > > -
-> > > > +†††††††††††††if (dma_alias_is_enabled(pdev, tmp->devfn) ||
-> > > > +†††††††††††††††† dma_alias_is_enabled(tmp, pdev->devfn)) {
-> > > >†††††††††††††††††††††††group = get_pci_alias_group(tmp, devfns);
-> > > 
-> > > We basically have this:
-> > > 
-> > > † for_each_pci_dev(tmp) {
-> > > ††† if ()
-> > > ††††† group = get_pci_alias_group();
-> > > ††††† ...
-> > > † }
-> > 
-> > Strictly, that's:
-> > 
-> > †for_each_pci_dev(tmp) {
-> > † †if (pdev is an alias of tmp || tmp is an alias of pdev)
-> > † † †group = get_pci_alias_group();
-> > † †...
-> > †}
-> 
-> OK.  
-> 
-> > > I'm trying to figure out why we don't do something like the following
-> > > instead:
-> > > 
-> > > † callback(struct pci_dev *pdev, u16 alias, void *opaque)
-> > > † {
-> > > ††† struct iommu_group *group;
-> > > 
-> > > ††† group = get_pci_alias_group();
-> > > ††† if (group)
-> > > ††††† return group;
-> > > 
-> > > ††† return 0;
-> > > † }
-> > > 
-> > > † pci_for_each_dma_alias(pdev, callback, ...);
-> > 
-> > And this would be equivalent to
-> > 
-> > †for_each_pci_dev(tmp) {
-> > † †if (tmp is an alias of pdev)
-> > † † †group = get_pci_alias_group();
-> > † †...
-> > †}
-> > 
-> > The "is an alias of" property is not commutative. Perhaps it should be.
-> > But that's hard because in some cases the alias doesn't even *exist* as
-> > a real PCI device. It's just that you appear to get DMA transactions
-> > from a given source-id.
-> 
-> Right.  In my example above, 01:00.0 is not a PCI device; it's only a
-> Requester ID that is fabricated by the bridge when it forwards DMA
-> transactions upstream.
-> 
-> I think I'm confused because I don't really understand IOMMU groups.
-> 
-> Let me explain what I think they are and you can correct me when I go
-> wrong.  The iommu_group_alloc() comment says "The IOMMU group
-> represents the minimum granularity of the IOMMU."  So I suppose the
-> IOMMU cannot distinguish between devices in a group.  All the devices
-> in the group use the same set of DMA mappings.  Granting device A DMA
-> access to a buffer grants the same access to all other members of A's
-> IOMMU group.
-> 
-> That would mean my question was fundamentally backwards.  In
-> get_pci_alias_group(A), we're not trying to figure out what all the
-> aliases of A are, which is what pci_for_each_dma_alias() does.
-> 
-> Instead, we're trying to figure out which IOMMU group A belongs to.
-> But I still don't quite understand how aliases fit into this.  Let's
-> go back to my example and assume we've already put 00:00.0 and 01:01.0
-> in IOMMU groups:
-> 
->   00:00.0 PCIe-to-PCI bridge to [bus 01]     # in IOMMU group G0
->   01:01.0 conventional PCI device            # in IOMMU group G1
-> 
-> I assume these devices are in different IOMMU groups because if the
-> bridge generated its own DMA, it would use Requester ID 00:00.0, which
-> is distinct from the 01:00.0 it would use when forwarding DMAs from
-> its secondary side.
-> 
-> What happens when we add 01:02.0?  I think 01:01.0 and 01:02.0 should
-> both end up in IOMMU group G1 because the IOMMU will see only
-> Requester ID 01:00.0, so it can't distinguish them.
-> 
-> When we add 01:02.0, the ops->add_device() ... ops->device_group()
-> path calls pci_device_group(01:02.0):
-> 
->   pci_device_group(01:02.0)
->     pci_for_each_dma_alias(01:02.0, get_pci_alias_or_group)
->       get_pci_alias_or_group(01:02.0, 01:02.0)   # callback
->         return 0           # 01:02.0 group not set yet
->       get_pci_alias_or_group(00:00.0, 01:00.0)   # callback
->         return 1           # 00:00.0 is in G0
-> 
-> It seems like we'll assign 01:02.0 to group G0, when I think it should
-> be in G1.  Where did I go wrong?
+> But how is the hook in iproc-pcie-fault.c activated? Still based on a DT
+> property under the iProc PCIe device node or based on a specific
+> architecture dependent config flag (note we do not have any platform
+> specific config flag under ARM64)?
 
-Ping?
+I would go with something that does:
+
+if (of_machine_is_compatible("brcm,bcm53012") ||
+    of_machine_is_compatible("brcm.ns2"))
+
+or something along these lines, as opposed to a boolean flag at the PCIe
+DT node level, but maybe this is not quite a good understanding of how
+the HW works.
+-- 
+Florian
