@@ -1,51 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:57981 "EHLO
-	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752969AbcDXRBv (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 24 Apr 2016 13:01:51 -0400
-Date: Sun, 24 Apr 2016 19:04:23 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Andrew Worsley <amworsley@gmail.com>
-Cc: b43-dev@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-Message-ID: <20160424170423.GB17019@wunner.de>
-References: <E1akxli-00030z-BC@bombadil.infradead.org>
- <CA+Y=x3=cLDHc7PK5h9n=ixdgVKWdVSu_v+-7jHJ-vBnDrv4sgg@mail.gmail.com>
- <20160403114912.GA11540@wunner.de>
- <CA+Y=x3nfe7CniNhruOhGmdxY3g4B1n3YRVWChoVYJns7D8pNEg@mail.gmail.com>
- <CA+Y=x3mVrSKMgzy74xtO5ZOc5kYLYU=iKZgqyjn0j94bXoebjg@mail.gmail.com>
- <20160412183202.GC13637@wunner.de>
- <CA+Y=x3mBm6==ffohf+aH2tHm9m+RSa7mZBJkDSvSmdCmEDdkNQ@mail.gmail.com>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:37246 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753160AbcDKQzf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Apr 2016 12:55:35 -0400
+Subject: Re: [PATCH v4 1/2] dt-bindings: pci: tegra: Update for per-lane PHYs
+To: Thierry Reding <thierry.reding@gmail.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+References: <1460131994-24493-1-git-send-email-thierry.reding@gmail.com>
+ <20160408191142.GD15034@localhost> <20160411112654.GC17743@ulmo.ba.sec>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org
+From: Stephen Warren <swarren@wwwdotorg.org>
+Message-ID: <570BD704.2060900@wwwdotorg.org>
+Date: Mon, 11 Apr 2016 10:55:32 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+Y=x3mBm6==ffohf+aH2tHm9m+RSa7mZBJkDSvSmdCmEDdkNQ@mail.gmail.com>
+In-Reply-To: <20160411112654.GC17743@ulmo.ba.sec>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Andrew,
+On 04/11/2016 05:26 AM, Thierry Reding wrote:
+> On Fri, Apr 08, 2016 at 02:11:42PM -0500, Bjorn Helgaas wrote:
+>> Hi Thierry,
+>>
+>> I have a couple more questions, probably just because I'm
+>> DT-illiterate.
+>>
+>> On Fri, Apr 08, 2016 at 06:13:13PM +0200, Thierry Reding wrote:
+>>> From: Thierry Reding <treding@nvidia.com>
+>>>
+>>> Changes to the pad controller device tree binding have required that
+>>> each lane be associated with a separate PHY. Update the PCI host bridge
+>>> device tree binding to allow each root port to define the list of PHYs
+>>> required to drive the lanes associated with it.
 
-On Thu, Apr 14, 2016 at 06:42:50AM +1000, Andrew Worsley wrote:
-> The only time I am getting the IRQ 17 nobody cared message is on
-> suspend / resume. A fresh boot always had below the 100k interrupt
-> threshold level.
-> 
-> I tried your new patch and the number is even lower < 30,000 over two boots.
+>>> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
 
-Hm, that's still way too much. You should have < 100 interrupts on IRQ 17
-on *every* boot, anything else isn't satisfactory. I'm working on a patch
-that runs before EFI ExitBootServices() but will need a little longer to
-find an optimal solution.
+>>> -Required properties on Tegra124 and later:
+>>> +Required properties on Tegra124 and later (deprecated):
+>>>   - phys: Must contain an entry for each entry in phy-names.
+>>>   - phy-names: Must include the following entries:
+>>>     - pcie
+>>>
+>>> +These properties are deprecated in favour of per-lane PHYs define in each of
+>>> +the root ports (see below).
+>>> +
+>>>   Power supplies for Tegra20:
+>>>   - avdd-pex-supply: Power supply for analog PCIe logic. Must supply 1.05 V.
+>>>   - vdd-pex-supply: Power supply for digital PCIe I/O. Must supply 1.05 V.
+>>> @@ -122,6 +125,13 @@ Required properties:
+>>>     - Root port 0 uses 4 lanes, root port 1 is unused.
+>>>     - Both root ports use 2 lanes.
+>>>
+>>> +Required properties for Tegra124 and later:
+>>
+>> I had a little trouble disambiguating this from the "Required
+>> properties on Tegra124 and later (deprecated)" line above.  It might
+>> help if they said:
+>>
+>>    Required PCIe controller properties on Tegra124 and later (deprecated):
+>>    Required PCIe Root Port properties for Tegra124 and later:
+...
+>> I'm not sure how to interpret the "deprecated" part.  Assume I'm
+>> writing a DTS.  What am I supposed to include?
+>>
+>>    - "phys" and "phy-names" under the PCIe controller *and*
+>>      "phys" and "phy-names" under the Root Port?
+>>
+>>    - "phys" and "phy-names" under the PCIe controller only if I don't
+>>      supply "phys" and "phy-names" under the Root Port?
+>>
+>> My guess is that a board with more than one PHY for PCIe should omit
+>> "phys" and "phy-names" under the PCIe controller and include them
+>> under each Root Port.  And a board with only one PHY could conceivably
+>> supply these properties either under the controller or the Root Port
+>> or both.
+>
+> Whatever is marked as deprecated should not be used in new bindings at
+> all. That is, new board files should move to per-lane PHYs, no matter
+> how many lanes they enable.
+>
+> The XUSB pad controller that provides these PHYs can be driven by two
+> different drivers: a pinctrl driver that exposes a single PHY for all
+> PCI lanes (it uses per-lane nvidia,iddq properties to enable or disable
+> each of the lanes) or a PHY driver that exposes one PHY per lane. Each
+> PHY can separately be powered on.
+>
+> Perhaps a better approach would be to simply remove the deprecated
+> properties to avoid any possible confusion. It does have the drawback
+> that old device trees won't have a documentation counterpart.
 
+I recall requests during past DT binding reviews that deprecated 
+properties still be documented. That allows legacy bindings and driver 
+support for them to be understood, since they're still documented.
 
-> Have you any insights on fixing suspend to disk  / resume paths which
-> presumably face the same issue of being passed live hardware on boot
-> up?
-
-Suspend to disk involves two kernels, the boot kernel and the image kernel.
-Perhaps these two are not the same on your machine and you've only compiled
-the patch into one of them?
-
-Best regards,
-
-Lukas
