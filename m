@@ -1,67 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:33476 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751619AbcDUJ2j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Apr 2016 05:28:39 -0400
-Received: by mail-wm0-f51.google.com with SMTP id 127so2301044wmz.0
-        for <linux-pci@vger.kernel.org>; Thu, 21 Apr 2016 02:28:38 -0700 (PDT)
-Subject: Re: [PATCH V6 08/13] PCI: generic, thunder: update to use generic
- ECAM API
-To: Arnd Bergmann <arnd@arndb.de>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <10639671.xGDtp1R8bk@wuerfel> <5715362A.7070701@semihalf.com>
- <3830999.dF71UWYsBP@wuerfel>
-Cc: Jayachandran C <jchandra@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
-	Jon Masters <jcm@redhat.com>, linaro-acpi@lists.linaro.org,
-	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com,
-	David Daney <ddaney@caviumnetworks.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	robert.richter@caviumnetworks.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, Wangyijing <wangyijing@huawei.com>,
-	Marcin Wojtas <mw@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <57189D2F.9070802@semihalf.com>
-Date: Thu, 21 Apr 2016 11:28:15 +0200
+Received: from mail-bn1on0137.outbound.protection.outlook.com ([157.56.110.137]:51377
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933529AbcDLRf6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 13:35:58 -0400
+From: Casey Leedom <leedom@chelsio.com>
+To: Hannes Reinecke <hare@suse.com>,
+	Hariprasad S <hariprasad@chelsio.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>,
+	SWise OGC <swise@opengridcomputing.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+Subject: Re: 4.6-rc2 regression with commit 104daa71b396: check VPD access
+ offset against length
+Date: Tue, 12 Apr 2016 17:35:53 +0000
+Message-ID: <BY2PR12MB0648C2EDB334862B48C81043C8950@BY2PR12MB0648.namprd12.prod.outlook.com>
+References: <BY2PR12MB06483CA232B6B3BFF7179012C8910@BY2PR12MB0648.namprd12.prod.outlook.com>
+ <BY2PR12MB0648F0C35D907AA640D7E56CC8940@BY2PR12MB0648.namprd12.prod.outlook.com>
+ <02ec01d1941e$3dda2010$b98e6030$@opengridcomputing.com>
+ <20160412053700.GF11361@localhost> <570C93BD.2030102@suse.com>
+ <20160412082304.GB2771@hari-Latitude-E5550>,<570CB5FA.7010507@suse.com>
+In-Reply-To: <570CB5FA.7010507@suse.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-In-Reply-To: <3830999.dF71UWYsBP@wuerfel>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+| From: Hannes Reinecke <hare@suse.com>
+| Sent: Tuesday, April 12, 2016 1:46 AM
+| To: Hariprasad S
+| Cc: Bjorn Helgaas; SWise OGC; Casey Leedom; linux-pci@vger.kernel.org; bhelgaas@google.com
+| Subject: Re: 4.6-rc2 regression with commit 104daa71b396: check VPD access offset against length
+|
+| On 04/12/2016 10:23 AM, Hariprasad Shenai wrote:
+| [ .. ]
+| >
+| > Hi,
+| >
+| > How about adding a PCI helper function to set the actual VPD_SIZE.
+| >
+| > Some thing like below. We have tested this and works. The bnx2x and the tg3
+| > drive may also need this, because I see them calling pci_read_vpd()
+| > with non-zero offsets. The bnx2x in particular looks like it's doing something
+| > similar to cxgb4 so it would also probably benefit from this change (once it's
+| > fixed to call the new pci_set_size_vpd() API).
+|
+| That indeed looks reasonable.
+| Please find some comments inline.
+|
+| ...
+|
+| > --- a/drivers/pci/access.c
+| > +++ a/drivers/pci/access.c
+| > @@ -275,6 +275,19 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
+| >  }
+| >  EXPORT_SYMBOL(pci_write_vpd);
+| >
+| > +/**
+| > + * pci_set_size_vpd - Set size of Vital Product Data space
+| > + * @dev:     pci device struct
+| > + * @len:     size of vpd space
+| > + */
+| > +ssize_t pci_set_size_vpd(struct pci_dev *dev, size_t len)
+| > +{
+| > +     if (!dev->vpd || !dev->vpd->ops)
+| > +             return -ENODEV;
+| > +     return dev->vpd->ops->set_size(dev, len);
+| > +}
+| > +EXPORT_SYMBOL(pci_set_size_vpd);
+| > +
+| >  #define PCI_VPD_MAX_SIZE (PCI_VPD_ADDR_MASK + 1)
+| >
+| >  /**
+| > @@ -392,13 +405,8 @@ static ssize_t pci_vpd_read(struct pci_dev *dev, loff_t pos, size_t count,
+| >       if (vpd->len == 0)
+| >               return -EIO;
+| >
+| > -     if (pos > vpd->len)
+| > -             return 0;
+| > -
+| > -     if (end > vpd->len) {
+| > -             end = vpd->len;
+| > -             count = end - pos;
+| > -     }
+| > +     if (end > vpd->len)
+| > +             return -EINVAL;
+| >
+| >       if (mutex_lock_killable(&vpd->lock))
+| >               return -EINTR;
+|
+| Why do you need this change?
+| We still would be needing to validate 'pos', don't we?
+| I'd prefer not to have this bit in.
 
+Two reasons:
 
-On 19.04.2016 15:06, Arnd Bergmann wrote:
-> On Monday 18 April 2016 21:31:54 Tomasz Nowicki wrote:
->>
->> Basically the whole content of pci-thunder-ecam.c and pci-thunder-pem.c.
->>
->> pci-thunder-ecam.c contains config space accessors. Similar for
->> pci-thunder-pem.c but it also has extra init call (it is now called
->> thunder_pem_init) which finds and maps related registers.
->
-> They seem to do much more than just override the accessors, they actually
-> change the contents of the config space as well. Is that really necessary
-> on ACPI based systems as well?
+ 1. It makes pci_vpd_read() with pci_vpd_write() which has exactly this
+    logic.
 
-Yes, the pci-thunder-ecam.c accessors are meant to emulate config space 
-capabilities. They are necessary to synthesize EA capabilities (fixed 
-PCI BARs), it wont work without this, for ACPI boot as well.
+ 2. More importantly, the new implementation of pci_read_vpd() silently
+    fails to perform a VPD read and allows the caller to use random stack
+    garbage in the read buffer without knowing that it's not really VPD
+    contents.  If any portion of the VPD read isn't going to be performed,
+    we should signal that back to the caller.  We could either return an
+    error or we could return the number of bytes actually read.  The problem
+    with the latter is that it would require changing every single caller to
+    check for Requested Read Length == Actual Read Length.  Returning an
+    error is the more conservative fix and allows for rapid diagnosis of
+    problems.
 
->
-> Another idea: how about moving all of this logic into ACPI and calling
-> some AML method to access the config space if the devices are that
-> far out of spec.
+    And that last point is important because I spent quite a bit of time
+    digging around trying to figure out why cxgb4 suddenly wasn't working.
 
-Do you mean Linux specific way to call non-standard config space 
-accessors? Then non-standard accessors are going to AML methods which 
-are called from common code which handles quirks via unified API ?
+Casey
 
-Thanks,
-Tomasz
