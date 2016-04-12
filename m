@@ -1,83 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 19 Apr 2016 16:19:27 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
-	jesse.brandeburg@intel.com
-Subject: Re: [PATCH] PCI: Quirk broken INTx masking on Intel i40e NICs
-Message-ID: <20160419211927.GC17863@localhost>
-References: <20160324190328.3880.44785.stgit@gimli.home>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f196.google.com ([209.85.223.196]:36587 "EHLO
+	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933812AbcDLS24 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 14:28:56 -0400
+Received: by mail-io0-f196.google.com with SMTP id s2so3758713iod.3
+        for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2016 11:28:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160324190328.3880.44785.stgit@gimli.home>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <570827D5.5060201@ti.com>
+References: <570827D5.5060201@ti.com>
+Date: Tue, 12 Apr 2016 13:28:55 -0500
+Message-ID: <CAA8O7CpAB18JOC6ri9xf_hnrKqRAjv5TdPO1cEHfd+98BhhV7A@mail.gmail.com>
+Subject: Re: Hot reset in downstream direction (RC to EP)
+From: L H <swdevgid@gmail.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 24, 2016 at 01:03:49PM -0600, Alex Williamson wrote:
-> All of the i40e (XL710/X710) 10/20/40GbE NICs lack support for
-> indicating INTx is asserted via the interrupt bit in the PCI status
-> register.  The DisINTx bit in the command register is functional,
-> causing these devices to be incorrectly detected as supporting INTx
-> masking.  Quirk them to properly indicate no INTx masking support.
-> 
-> Device IDs copied from i40e_devids.h.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> Cc: John Ronciak <john.ronciak@intel.com>
-> Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
+I've never observed a hot reset during enumeration.  One of the
+possible triggers for the RC to issue a hot reset is after receipt of
+a fatal AER message (assuming AER is enabled).
 
-Applied to pci/virtualization for v4.7, thanks, Alex.
+Lance
 
-> ---
->  drivers/pci/quirks.c |   33 +++++++++++++++++++++++++++++++++
->  1 file changed, 33 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 0575a1e..583f040 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3121,6 +3121,39 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
->  			 quirk_broken_intx_masking);
->  
-> +/*
-> + * Intel i40e (XL710/X710) 10/20/40GbE NICs all have broken INTx masking,
-> + * DisINTx can be set but the interrupt status bit is non-functional.
-> + */
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1572,
-> +			 quirk_broken_intx_masking);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1574,
-> +			 quirk_broken_intx_masking);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1580,
-> +			 quirk_broken_intx_masking);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1581,
-> +			 quirk_broken_intx_masking);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1583,
-> +			 quirk_broken_intx_masking);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1584,
-> +			 quirk_broken_intx_masking);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1585,
-> +			 quirk_broken_intx_masking);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1586,
-> +			 quirk_broken_intx_masking);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1587,
-> +			 quirk_broken_intx_masking);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1588,
-> +			 quirk_broken_intx_masking);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1589,
-> +			 quirk_broken_intx_masking);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d0,
-> +			 quirk_broken_intx_masking);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d1,
-> +			 quirk_broken_intx_masking);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d2,
-> +			 quirk_broken_intx_masking);
-> +
->  static void quirk_no_bus_reset(struct pci_dev *dev)
->  {
->  	dev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
-> 
+On Fri, Apr 8, 2016 at 4:51 PM, Murali Karicheri <m-karicheri2@ti.com> wrote:
+> I see that hot reset is something the RC port initiate to have EP reset
+> through link management.
+>
+> ==========================================================================
+> PCIe reset sequences – The PCI Express protocol specifies a hot reset
+> mechanism, where downstream components reset through link notification.
+> Root ports should validate that this mechanism can be applied and the
+> hot reset indication is properly detected by a remote device.
+> Endpoint applications should determine the level of chip reset desired
+> in case of hot reset detection on the link to validate proper functionality.
+> ===========================================================================
+>
+> Does this happen during the enumeration? As this goes in in band, the EP's
+> link should be up. Can someone tell me what are the triggering points for
+> this from RC to EP? Does Linux RC support this? It is supposed to a bit
+> in RC's bridge configuration space that triggers this reset.
+>
+> --
+> Murali Karicheri
+> Linux Kernel, Keystone
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
