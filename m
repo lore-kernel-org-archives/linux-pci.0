@@ -1,199 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58283 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753855AbcD0WWa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Apr 2016 18:22:30 -0400
-From: Alexander Graf <agraf@suse.de>
-To: linux-kernel@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: [PATCH] arm64: Relocate screen_info.lfb_base on PCI BAR allocation
-Date: Thu, 28 Apr 2016 00:22:24 +0200
-Message-Id: <1461795744-28837-1-git-send-email-agraf@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 2/4] PCI: Provide common functions for ECAM mapping
+To: David Daney <ddaney@caviumnetworks.com>,
+	Jayachandran C <jchandra@broadcom.com>
+References: <1460414707-19153-1-git-send-email-jchandra@broadcom.com>
+ <1460414707-19153-3-git-send-email-jchandra@broadcom.com>
+ <570C4034.20105@caviumnetworks.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Tomasz Nowicki <tn@semihalf.com>, rafael@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>,
+	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
+	Liviu.Dudau@arm.com, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, Jon Masters <jcm@redhat.com>
+From: Jon Masters <jcm@jonmasters.org>
+Message-ID: <570C78F1.4090701@jonmasters.org>
+Date: Tue, 12 Apr 2016 00:26:25 -0400
+MIME-Version: 1.0
+In-Reply-To: <570C4034.20105@caviumnetworks.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When booting with efifb, we get a frame buffer address passed into the system.
-This address can be backed by any device, including PCI devices.
+Hi David, JC,
 
-PCI devices can have their BARs mapped to various places inside the PCI window
-though. Linux makes use of that on early boot and usually maps PCI BARs wherever
-it thinks makes sense.
+On 04/11/2016 08:24 PM, David Daney wrote:
 
-If we now load the efifb driver after that BAR map has happened, the frame
-buffer address we received may be invalid, because it was in a BAR map before
-Linux modified it.
+> Tested-by: David Daney <david.daney@cavium.com>
 
-To work around that issue, this patch introduces a BAR mapping callback that
-gets called every time Linux (re)allocates a BAR. That way our arm64 efi code
-can check whether the frame buffer is inside the old map and adjust it to
-the new one.
+On ThunderX (please let me know the silicon pass specifics off-list)?
+I'm planning to give this series a test run also on some other ARMv8
+hardware and will prod a few of the other vendors to do so.
 
-With this and the efifb patches applied, I can successfully see efifb output
-even after Linux remapped BARs.
+>>   drivers/pci/ecam.c   | 130
+>>   drivers/pci/ecam.h   |  58 +++++++++++++++++++++++
+> 
+> I wonder if these files should go in drivers/pci/host ...  I understand
+> that you still have to use them from drivers/pci/acpi though.
+> 
+> I will let others opine on this, but could you put the contents of
+> ecam.h into include/linux/pci.h along with the  pci_generic_config_*()
+> declarations?
+> 
+> If you did that, the contents of ecam.c could  go into
+> drivers/pci/access.c...
 
-Signed-off-by: Alexander Graf <agraf@suse.de>
----
- arch/arm64/kernel/efi.c | 40 +++++++++++++++++++++++++++++++++++++++-
- drivers/pci/setup-res.c | 29 +++++++++++++++++++++++++++++
- include/linux/pci.h     |  8 ++++++++
- 3 files changed, 76 insertions(+), 1 deletion(-)
+Quoting Bjorn's original reply to the previous series:
 
-diff --git a/arch/arm64/kernel/efi.c b/arch/arm64/kernel/efi.c
-index 56a76b6..3612110 100644
---- a/arch/arm64/kernel/efi.c
-+++ b/arch/arm64/kernel/efi.c
-@@ -27,6 +27,7 @@
- #include <linux/slab.h>
- #include <linux/spinlock.h>
- #include <linux/platform_device.h>
-+#include <linux/pci.h>
- 
- #include <asm/cacheflush.h>
- #include <asm/efi.h>
-@@ -213,6 +214,41 @@ static __init void reserve_regions(void)
- 	set_bit(EFI_MEMMAP, &efi.flags);
- }
- 
-+#ifdef CONFIG_PCI
-+static bool efi_pci_overlaps_efifb(struct pci_bar_update_info *update_info)
-+{
-+	/* is the screen_info frame buffer inside the pci BAR? */
-+	if (screen_info.lfb_base >= update_info->old_start &&
-+	    (screen_info.lfb_base + screen_info.lfb_size) <=
-+	     (update_info->old_start + update_info->size))
-+		return true;
-+
-+	return false;
-+}
-+
-+static int efi_pci_notifier(struct notifier_block *self,
-+			    unsigned long cmd, void *v)
-+{
-+	struct pci_bar_update_info *update_info = v;
-+
-+	/*
-+	 * When we reallocate a BAR that contains our frame buffer, set the
-+	 * screen_info base to where it belongs
-+	 */
-+	if (efi_pci_overlaps_efifb(update_info)) {
-+		u64 diff = (update_info->new_start - update_info->old_start);
-+		screen_info.lfb_base += diff;
-+	}
-+
-+	return NOTIFY_OK;
-+}
-+static struct notifier_block efi_pci_notifier_block = {
-+	.notifier_call = efi_pci_notifier,
-+};
-+#else
-+#define pci_notify_on_update_resource(a)
-+#endif
-+
- void __init efi_init_fdt(void *fdt)
- {
- 	struct efi_fdt_params params;
-@@ -246,8 +282,10 @@ void __init efi_init_fdt(void *fdt)
- 	reserve_regions();
- 	early_memunmap(memmap.map, params.mmap_size);
- 
--	if (screen_info.orig_video_isVGA == VIDEO_TYPE_EFI)
-+	if (screen_info.orig_video_isVGA == VIDEO_TYPE_EFI) {
-+		pci_notify_on_update_resource(&efi_pci_notifier_block);
- 		memblock_reserve(screen_info.lfb_base, screen_info.lfb_size);
-+	}
- }
- 
- static int __init register_gop_device(void)
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 604011e..d5c24fc 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -23,8 +23,10 @@
- #include <linux/ioport.h>
- #include <linux/cache.h>
- #include <linux/slab.h>
-+#include <linux/notifier.h>
- #include "pci.h"
- 
-+static RAW_NOTIFIER_HEAD(bar_update_chain);
- 
- void pci_update_resource(struct pci_dev *dev, int resno)
- {
-@@ -35,6 +37,9 @@ void pci_update_resource(struct pci_dev *dev, int resno)
- 	int reg;
- 	enum pci_bar_type type;
- 	struct resource *res = dev->resource + resno;
-+	struct pci_bar_update_info update_info;
-+	struct pci_bus_region update_reg;
-+	struct resource update_res;
- 
- 	if (dev->is_virtfn) {
- 		dev_warn(&dev->dev, "can't update VF BAR%d\n", resno);
-@@ -77,6 +82,22 @@ void pci_update_resource(struct pci_dev *dev, int resno)
- 	}
- 
- 	/*
-+	 * Fetch the old BAR location from the device, so we can notify
-+	 * users of that BAR that its location is changing.
-+	 */
-+	pci_read_config_dword(dev, reg, &check);
-+	update_reg.start = check & PCI_BASE_ADDRESS_MEM_MASK;
-+	if (check & PCI_BASE_ADDRESS_MEM_TYPE_64) {
-+		pci_read_config_dword(dev, reg, &check);
-+		update_reg.start |= ((u64)check) << 32;
-+	}
-+	update_info.size = region.end - region.start;
-+	update_reg.end = update_reg.start + update_info.size;
-+	pcibios_bus_to_resource(dev->bus, &update_res, &update_reg);
-+	update_info.old_start = update_res.start;
-+	update_info.new_start = res->start;
-+
-+	/*
- 	 * We can't update a 64-bit BAR atomically, so when possible,
- 	 * disable decoding so that a half-updated BAR won't conflict
- 	 * with another device.
-@@ -108,6 +129,14 @@ void pci_update_resource(struct pci_dev *dev, int resno)
- 
- 	if (disable)
- 		pci_write_config_word(dev, PCI_COMMAND, cmd);
-+
-+	/* Tell interested parties that the BAR mapping changed */
-+	raw_notifier_call_chain(&bar_update_chain, 0, &update_info);
-+}
-+
-+int pci_notify_on_update_resource(struct notifier_block *nb)
-+{
-+        return raw_notifier_chain_register(&bar_update_chain, nb);
- }
- 
- int pci_claim_resource(struct pci_dev *dev, int resource)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index c061250..04a430e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -30,6 +30,7 @@
- #include <linux/device.h>
- #include <linux/io.h>
- #include <linux/resource_ext.h>
-+#include <linux/notifier.h>
- #include <uapi/linux/pci.h>
- 
- #include <linux/pci_ids.h>
-@@ -1037,6 +1038,13 @@ int pci_select_bars(struct pci_dev *dev, unsigned long flags);
- bool pci_device_is_present(struct pci_dev *pdev);
- void pci_ignore_hotplug(struct pci_dev *dev);
- 
-+struct pci_bar_update_info {
-+	u64 old_start;
-+	u64 new_start;
-+	u64 size;
-+};
-+int pci_notify_on_update_resource(struct notifier_block *nb);
-+
- /* ROM control related routines */
- int pci_enable_rom(struct pci_dev *pdev);
- void pci_disable_rom(struct pci_dev *pdev);
+> Some of the code that moved to drivers/acpi/pci_mcfg.c is not
+> really ACPI-specific, and could potentially be used for non-ACPI
+> bridges that support ECAM.  I'd like to see that sort of code
+> moved to a new file like drivers/pci/ecam.c.
+
+So my guess is that this is the reasoning behind JC's file layout.
+
+I'm curious what Lorenzo's take on things is currently. I assume this
+series is now to be the official coordinated version of this effort for
+upstream, following the advice of Bjorn previously, but I would like to
+know if everyone is behind this plan. I've (previously) requested a
+Linaro LEG meeting this week (part of our bootarch working group) to
+specifically discuss the status of PCI upstreaming in order to get the
+different vendors together to ensure every single one of them is
+tracking the correct latest effort and doing what is needed to test/aid,
+hence my ask. If this is now plan A, I'll make sure everyone is aligned
+behind it and start pinging people individually for testing.
+
+Jon.
+
 -- 
-1.8.5.6
+Computer Architect
 
