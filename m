@@ -1,43 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:34865 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751221AbcDHGZL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Apr 2016 02:25:11 -0400
-Message-ID: <1460096669.31740.19.camel@kernel.crashing.org>
-Subject: Re: [PATCH v11 44/60] PCI: Add alt_size ressource allocation support
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date: Fri, 08 Apr 2016 16:24:29 +1000
-In-Reply-To: <CA+55aFyhXkzU_-RXNKoh83gz8XKwNqdJmGATXa+-MhT7bzvn2w@mail.gmail.com>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-	 <1460074573-7481-45-git-send-email-yinghai@kernel.org>
-	 <CA+55aFyhXkzU_-RXNKoh83gz8XKwNqdJmGATXa+-MhT7bzvn2w@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:35436 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965810AbcDLWdf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 18:33:35 -0400
+Received: by mail-ig0-f181.google.com with SMTP id gy3so100455369igb.0
+        for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2016 15:33:34 -0700 (PDT)
+MIME-Version: 1.0
+Date: Tue, 12 Apr 2016 15:33:34 -0700
+Message-ID: <CAH=XD5-Snbsb3tqH6s_gTuek72QpE1L9yjfWB0R1k-HO1xrexQ@mail.gmail.com>
+Subject: Hot Plug: How to determine a device has been removed
+From: Kallol Biswas <kallol@nucleodyne.com>
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2016-04-07 at 17:56 -0700, Linus Torvalds wrote:
-> Maybe the kernel should just accept the smaller alignment. If the
-> minimum alignment we use is bigger than necessary, then we're just
-> wrong about it, and perhaps we should just use the smaller alignment
-> that the bios used.
-> 
-> So instead of adding this notion of alternate alignment, maybe we
-> should just not be so uptight about our own minimum alignment
-> requirements?
+Hi,
+    We have been working on a PCIe appliance.
 
-On the other hand it's nice to align things at page boundaries when
-these resources can possibly be mapped by user space or KVM guests...
+There is a software layer (management layer) that uses pci_dev
+structure of underlying devices on downstream port.
 
-Cheers,
-Ben.
+The port supports Hot Plug.
 
+We have a test that a device with one or more functions is
+removed(surprise removal) from system.
+The linux kernel (2.6.38.1) detects presence detect interrupt and
+unconfigures the device/functions.
+
+What is the best way to detect from management layer that the
+underlying devices are gone and should not be access?
+
+We have used udev to detect device removal and addition, but with
+multi-function device we are getting into an issue that while
+processing removal event of 1st function, 2nd event comes
+asynchronously for 2nd function. If management driver is in the middle
+of accessing the config space of 2nd function, system crashes. We need
+to check somehow the underlying device is gone.
+
+Any direction/pointer will be appreciated.
+
+Thanks,
+Kallol
