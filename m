@@ -1,134 +1,149 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org, linux-doc@vger.kernel.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	joro@8bytes.org, corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	eric.auger@linaro.org, will.deacon@arm.com,
-	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
-	ruscur@russell.cc, Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [RFC v6 00/10] vfio-pci: Allow to mmap sub-page MMIO BARs and MSI-X table
-Date: Mon, 18 Apr 2016 18:53:36 +0800
-Message-Id: <1460976816-29294-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1bn0103.outbound.protection.outlook.com ([157.56.110.103]:23245
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S964972AbcDLURt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 16:17:49 -0400
+From: Casey Leedom <leedom@chelsio.com>
+To: Hannes Reinecke <hare@suse.com>,
+	Hariprasad S <hariprasad@chelsio.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>,
+	SWise OGC <swise@opengridcomputing.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	Ariel Elior <ariel.elior@qlogic.com>
+Subject: Re: 4.6-rc2 regression with commit 104daa71b396: check VPD access
+ offset against length
+Date: Tue, 12 Apr 2016 20:17:44 +0000
+Message-ID: <BY2PR12MB0648C7C38FB3FF16D0721C1DC8950@BY2PR12MB0648.namprd12.prod.outlook.com>
+References: <BY2PR12MB06483CA232B6B3BFF7179012C8910@BY2PR12MB0648.namprd12.prod.outlook.com>
+ <BY2PR12MB0648F0C35D907AA640D7E56CC8940@BY2PR12MB0648.namprd12.prod.outlook.com>
+ <02ec01d1941e$3dda2010$b98e6030$@opengridcomputing.com>
+ <20160412053700.GF11361@localhost> <570C93BD.2030102@suse.com>
+ <20160412082304.GB2771@hari-Latitude-E5550>,<570CB5FA.7010507@suse.com>,<BY2PR12MB0648C2EDB334862B48C81043C8950@BY2PR12MB0648.namprd12.prod.outlook.com>
+In-Reply-To: <BY2PR12MB0648C2EDB334862B48C81043C8950@BY2PR12MB0648.namprd12.prod.outlook.com>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current vfio-pci implementation disallows to mmap
-sub-page(size < PAGE_SIZE) MMIO BARs and MSI-X table. This is because
-sub-page BARs' mmio page may be shared with other BARs and MSI-X table
-should not be accessed directly from the guest for security reasons.
+  By the way, I should note that I don't think that cxgb4 is the only
+regression associated with kernel.org commit 104daa71b396
+which added a check for accesses beyond the computed end of
+the VPD data structures starting at offset 0x0 in the VPD Space.
+Looking at other callers to pci_read_vpd() I see at least one other
+driver which pass in a non-zero offset which seems to be the
+same kind of thing:
 
-But it will easily cause some performance issues for mmio accesses
-in guest when vfio passthrough sub-page BARs or BARs containing MSI-X
-table on PPC64 platform. This is because PAGE_SIZE is 64KB by default
-on PPC64 platform and the big page may easily hit the sub-page MMIO
-BARs' unmmapping and cause the unmmaping of the mmio page which
-MSI-X table locate in, which lead to mmio emulation in host.
+drivers/net/ethernet/broadcom/bnx2x/bnx2x_main.c:bnx2x_read_fwinfo():
 
-For sub-page MMIO BARs' unmmapping, this patchset modifies
-resource_alignment kernel parameter to enforce the alignment of all 
-MMIO BARs to be at least PAGE_SZIE so that sub-page BAR's mmio page
-will not be shared with other BARs. And we also add shadow resources
-to the vfio device and put them into the holes of mmio pages in case
-that hot-add device's BARs are assigned into the holes. Then we can 
-mmap sub-page MMIO BARs safely.
+                cnt = pci_read_vpd(bp->pdev, BNX2X_VPD_LEN,
+                                   block_end - BNX2X_VPD_LEN,
+                                   vpd_extended_data + BNX2X_VPD_LEN);
 
-For MSI-X table's unmmapping, we think MSI-X table is safe to access
-directly from userspace if hardware supports the capability of  
-interrupt remapping which can ensure that a given pci device can 
-only shoot the MSIs assigned for it. But the implenmentation of  
-this capability is arch-independent. To have a universal way 
-to test this capability on PCI side for different archs, we introduce
-a new bus_flags PCI_BUS_FLAGS_MSI_REMAP.
+Looking more in depth, if you really want to keep the new pci_read_vpd()
+logic where it can return partial reads, then we need to go through all of
+the callers and look for cases like cxgb4 where the only check is for
+return values less than zero and enhance them to deal with return
+values less than the requested VPD read request.
 
-With this patchset applied, we can get almost 100% improvement on
-performance for small block 4k random read when we passthrough a FC
-HBA containing sub-page BARs and MSI-X BARs to guest on PPC64 in
-our test.
+Casey
+________________________________________
+From: linux-pci-owner@vger.kernel.org <linux-pci-owner@vger.kernel.org> on behalf of Casey Leedom <leedom@chelsio.com>
+Sent: Tuesday, April 12, 2016 10:35 AM
+To: Hannes Reinecke; Hariprasad S
+Cc: Bjorn Helgaas; SWise OGC; linux-pci@vger.kernel.org; bhelgaas@google.com
+Subject: Re: 4.6-rc2 regression with commit 104daa71b396: check VPD access offset against length
 
-The patch 8 are based on the proposed patchset[2].
+| From: Hannes Reinecke <hare@suse.com>
+| Sent: Tuesday, April 12, 2016 1:46 AM
+| To: Hariprasad S
+| Cc: Bjorn Helgaas; SWise OGC; Casey Leedom; linux-pci@vger.kernel.org; bhelgaas@google.com
+| Subject: Re: 4.6-rc2 regression with commit 104daa71b396: check VPD access offset against length
+|
+| On 04/12/2016 10:23 AM, Hariprasad Shenai wrote:
+| [ .. ]
+| >
+| > Hi,
+| >
+| > How about adding a PCI helper function to set the actual VPD_SIZE.
+| >
+| > Some thing like below. We have tested this and works. The bnx2x and the tg3
+| > drive may also need this, because I see them calling pci_read_vpd()
+| > with non-zero offsets. The bnx2x in particular looks like it's doing something
+| > similar to cxgb4 so it would also probably benefit from this change (once it's
+| > fixed to call the new pci_set_size_vpd() API).
+|
+| That indeed looks reasonable.
+| Please find some comments inline.
+|
+| ...
+|
+| > --- a/drivers/pci/access.c
+| > +++ a/drivers/pci/access.c
+| > @@ -275,6 +275,19 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
+| >  }
+| >  EXPORT_SYMBOL(pci_write_vpd);
+| >
+| > +/**
+| > + * pci_set_size_vpd - Set size of Vital Product Data space
+| > + * @dev:     pci device struct
+| > + * @len:     size of vpd space
+| > + */
+| > +ssize_t pci_set_size_vpd(struct pci_dev *dev, size_t len)
+| > +{
+| > +     if (!dev->vpd || !dev->vpd->ops)
+| > +             return -ENODEV;
+| > +     return dev->vpd->ops->set_size(dev, len);
+| > +}
+| > +EXPORT_SYMBOL(pci_set_size_vpd);
+| > +
+| >  #define PCI_VPD_MAX_SIZE (PCI_VPD_ADDR_MASK + 1)
+| >
+| >  /**
+| > @@ -392,13 +405,8 @@ static ssize_t pci_vpd_read(struct pci_dev *dev, loff_t pos, size_t count,
+| >       if (vpd->len == 0)
+| >               return -EIO;
+| >
+| > -     if (pos > vpd->len)
+| > -             return 0;
+| > -
+| > -     if (end > vpd->len) {
+| > -             end = vpd->len;
+| > -             count = end - pos;
+| > -     }
+| > +     if (end > vpd->len)
+| > +             return -EINVAL;
+| >
+| >       if (mutex_lock_killable(&vpd->lock))
+| >               return -EINTR;
+|
+| Why do you need this change?
+| We still would be needing to validate 'pos', don't we?
+| I'd prefer not to have this bit in.
 
-Changelog v6: 
-- Rebase on vfio/next with patchset[2] applied
-- Fix some bugs of v5
-- Add three patches to make PCI_BUS_FLAGS_MSI_REMAP as
-  a universal flag to test IRQ remapping
+Two reasons:
 
-Changelog v5:
-- Rebase on vfio/next
-- Change the order of patch 1,2,3
-- Move the warning "resource_alignment will not work with
-  PCI_PROBE_ONLY set" from documentation to kernel log
-- Remove IORESOURCE_WINDOW
-- Add description for parameter "resize"
-- Add PCIBIOS_MIN_ALIGNMENT to force all MMIO BARs to
-  get minimum alignment
-- Add shadow resources to make sure sub-page BAR's mmio
-  page will not be shared with hot-add BARs.
-- Add a new bit to pci_bus_flags to indicate the capbility
-  of interrupt remapping on PPC64
-- Remove IOMMU_CAP_INTR_REMAP on PPC64
-- Add a property msi_remap to vfio_pci_device to cache the
-  capbility of interrupt remapping
+ 1. It makes pci_vpd_read() with pci_vpd_write() which has exactly this
+    logic.
 
-Changelog v4:
-- Rebase on v4.5-rc6 with patchset[1] applied.
-- Remove resource_page_aligned kernel parameter
-- Fix some problems with resource_alignment kernel parameter
-- Modify resource_alignment kernel parameter to support multiple
-  devices.
-- Remove host bridge attribute: msi_filtered
-- Use IOMMU_CAP_INTR_REMAP to check if MSI-X table can be mmapped
-- Add IOMMU_CAP_INTR_REMAP for IODA host bridge on PPC64 platform
+ 2. More importantly, the new implementation of pci_read_vpd() silently
+    fails to perform a VPD read and allows the caller to use random stack
+    garbage in the read buffer without knowing that it's not really VPD
+    contents.  If any portion of the VPD read isn't going to be performed,
+    we should signal that back to the caller.  We could either return an
+    error or we could return the number of bytes actually read.  The problem
+    with the latter is that it would require changing every single caller to
+    check for Requested Read Length == Actual Read Length.  Returning an
+    error is the more conservative fix and allows for rapid diagnosis of
+    problems.
 
-Changelog v3:
-- Rebase on new linux kernel mainline with the patchset[1] applied.
-- Add a function to check whether PCI BARs'mmio page is shared with
-  other BARs.
-- Add a host bridge attribute to indicate PCI host bridge support
-  filtering of MSIs.
-- Use the new host bridge attribute to check if MSI-X table can
-  be mmapped instead of CONFIG_EEH.
-- Remove Kconfig option VFIO_PCI_MMAP_MSIX
+    And that last point is important because I spent quite a bit of time
+    digging around trying to figure out why cxgb4 suddenly wasn't working.
 
-Changelog v2:
-- Rebase on v4.4-rc6 with the patchset[1] applied.
-- Use kernel parameter to enforce all MMIO BARs to be page aligned
-  on PCI core code instead of doing it on PPC64 arch code.
-- Remove flags: VFIO_DEVICE_FLAGS_PCI_PAGE_ALIGNED
+Casey
 
-[1] http://www.spinics.net/lists/kvm/msg127812.html
-[2] http://www.spinics.net/lists/kvm/msg130256.html
-
-Yongji Xie (10):
-  PCI: Ignore resource_alignment if PCI_PROBE_ONLY was set
-  PCI: Do not Use IORESOURCE_STARTALIGN to identify bridge resources
-  PCI: Add a new option for resource_alignment to reassign alignment
-  PCI: Add support for enforcing all MMIO BARs to be page aligned
-  vfio-pci: Allow to mmap sub-page MMIO BARs if the mmio page is exclusive
-  PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
-  iommu: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have capability of IRQ remapping
-  PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller supports IRQ remapping
-  pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
-  vfio-pci: Allow to mmap MSI-X table if interrupt remapping is supported
-
- Documentation/kernel-parameters.txt       |    7 +-
- arch/powerpc/include/asm/pci.h            |    2 +
- arch/powerpc/platforms/powernv/pci-ioda.c |    8 +++
- drivers/iommu/iommu.c                     |   15 +++++
- drivers/pci/msi.c                         |   12 ++++
- drivers/pci/pci.c                         |  105 +++++++++++++++++++++++------
- drivers/pci/probe.c                       |    3 +
- drivers/pci/setup-bus.c                   |    9 ++-
- drivers/vfio/pci/vfio_pci.c               |   65 +++++++++++++++---
- drivers/vfio/pci/vfio_pci_private.h       |    8 +++
- drivers/vfio/pci/vfio_pci_rdwr.c          |    3 +-
- include/linux/msi.h                       |    6 +-
- include/linux/pci.h                       |    1 +
- 13 files changed, 208 insertions(+), 36 deletions(-)
-
--- 
-1.7.9.5
+--
+To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
