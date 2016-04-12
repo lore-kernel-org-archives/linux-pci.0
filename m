@@ -1,144 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:34264 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751706AbcDSFvM (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 01:51:12 -0400
-Received: by mail-pa0-f46.google.com with SMTP id r5so2845984pag.1
-        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 22:51:11 -0700 (PDT)
-Subject: Re: [PATCH v8 29/45] powerpc/pci: Export pci_traverse_device_nodes()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-30-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
-	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <5715C747.4080005@ozlabs.ru>
-Date: Tue, 19 Apr 2016 15:51:03 +1000
+Received: from lhrrgout.huawei.com ([194.213.3.17]:2066 "EHLO
+	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932110AbcDLJnw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 05:43:52 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Jisheng Zhang <jszhang@marvell.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH v2] PCI: designware: move remaining rc setup code to
+ dw_pcie_setup_rc()
+Date: Tue, 12 Apr 2016 09:43:32 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED4B88D@lhreml503-mbs>
+References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
+ <20160407103734.55e72da7@xhacker>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
+ <20160407163443.291fbd49@xhacker>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED44208@lhreml503-mbs>
+ <20160407140551.GA2648@localhost>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED45C38@lhreml503-mbs>
+ <20160408160145.GA10565@localhost>
+In-Reply-To: <20160408160145.GA10565@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-30-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/17/2016 02:44 PM, Gavin Shan wrote:
-> This renames traverse_pci_devices() to pci_traverse_device_nodes().
-> The function traverses all subordinate device nodes of the specified
-> one. Also, below cleanup applied to the function. No logical changes
-> introduced.
->
->     * Rename "pre" to "fn".
->     * Avoid assignment in if condition reported from checkpatch.pl.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/include/asm/ppc-pci.h   |  6 +++---
->   arch/powerpc/kernel/pci_dn.c         | 15 ++++++++++-----
->   arch/powerpc/platforms/pseries/msi.c |  4 ++--
->   3 files changed, 15 insertions(+), 10 deletions(-)
->
-> diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
-> index ca0c5bf..8753e4e 100644
-> --- a/arch/powerpc/include/asm/ppc-pci.h
-> +++ b/arch/powerpc/include/asm/ppc-pci.h
-> @@ -33,9 +33,9 @@ extern struct pci_dev *isa_bridge_pcidev;	/* may be NULL if no ISA bus */
->   struct device_node;
->   struct pci_dn;
->
-> -typedef void *(*traverse_func)(struct device_node *me, void *data);
+Hi Bjorn
 
+[...]
 
+> > >
+> > > What's the hisi plan for resuming after suspend-to-RAM?  How does
+> the
+> > > RC get reprogrammed after it loses all its state?
+> >
+> > PM is not part of the driver yet. This is planned for near
+> > future release so haven't made such considerations yet
+> > >
+> > > What would break if hisi did call dw_pcie_setup_rc()?  I know you
+> said
+> > > it would overwrite what the bootloader already did, which is true.
+> >
+> > I am try to figure this out now with our HW team.
+> >
+> > >
+> > > But hisi does call dw_pcie_host_init(), so it reads pp->mem (which
+> > > determines pp->mem_base) and pp->lanes from the DT.  Other drivers
+> > > then call dw_pcie_setup_rc() which programs the RC based on
+> > > pp->mem_base and pp->lanes.  So hisi assumes UEFI programmed the RC
+> to
+> > > match the DT, while the other drivers read the DT and program the
+> RC
+> > > to match.  The latter seems more robust because it enforces the
+> > > consistency rather than relying on it.
+> >
+> > Yes I agree with you, however we have preferred to move RC config to
+> > BIOS to have a single driver to support multiple versions of the
+> > same SoC.
+> 
+> I think there are two reasonable approaches:
+> 
+>   1) A single generic driver that doesn't have any knowledge about the
+>   chipset registers; it uses run-time firmware interfaces to manage
+>   the bridge.  The ACPI pci_root.c driver is the best example so far
+>   and works very well.  It supports basically all x86 and ia64
+>   chipsets and requires no kernel work for new ones.
+> 
+>   2) Native drivers specific to each chipset.  These may get
+>   configuration information from DT, but they do their own
+>   register-level programming of the device without run-time help from
+>   firmware.
+> 
+> I think hisi is a native driver because it uses hip05/hip06 registers
+> to check link state and perform config operations.  And apparently you
+> rely on the ATU, BAR, class, and link width programming currently done
+> in dw_pcie_host_init().  But you want to rely on pre-boot firmware to
+> set up the link.  That doesn't make sense to me -- if the driver wants
+> to twiddle the registers, it should know how to do it all.  I don't
+> see how you can reasonably manage this half-way approach.
+> 
+> > The patch I proposed above does the same job as the original patch
+> > proposed by Jisheng and also allows hisi driver to call the moved
+> > code.
+> >
+> > Do you see anything wrong with it?
+> 
+> Only that it makes the structure more complicated and we haven't
+> identified a corresponding benefit yet.
 
-Why removing this typedef? Typedef's are good.
+Finally I have checked that assigning .host_init function pointer
+in our driver to call dw_pcie_setup_rc() will not affect the values
+already set by BIOS.
 
-Anyway,
+Also I agree with you that a hybrid approach is not ideal.
 
+So I will update the driver to call dw_pcie_setup_rc() from
+.host_init and ask the BIOS team to update the firmware for next
+releases (the driver will be backward compatible anyway). 
 
-Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+Also during my investigation I have noticed that in dw_pcie_setup_rc()
+http://lxr.free-electrons.com/source/drivers/pci/host/pcie-designware.c#L762
 
+we use pp->mem_base rather than pp->mem_bus_addr to setup
+memory base and memory limit in the Type1 header...I think this
+is wrong right?
+Also I do not see why this code is needed at all since we overwrite
+this register when we call pci_bus_assign_resources(bus) that
+will end up in calling pci_setup_bridge() and then
+pci_setup_bridge_mmio()...?  
 
+Many Thanks
 
+Gab
 
-> -void *traverse_pci_devices(struct device_node *start, traverse_func pre,
-> -		void *data);
-> +void *pci_traverse_device_nodes(struct device_node *start,
-> +				void *(*fn)(struct device_node *, void *),
-> +				void *data);
->   void *traverse_pci_dn(struct pci_dn *root,
->   		      void *(*fn)(struct pci_dn *, void *),
->   		      void *data);
-> diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-> index ce10281..ecdccce 100644
-> --- a/arch/powerpc/kernel/pci_dn.c
-> +++ b/arch/powerpc/kernel/pci_dn.c
-> @@ -372,8 +372,9 @@ EXPORT_SYMBOL_GPL(pci_remove_device_node_info);
->    * one of these nodes we also assume its siblings are non-pci for
->    * performance.
->    */
-> -void *traverse_pci_devices(struct device_node *start, traverse_func pre,
-> -		void *data)
-> +void *pci_traverse_device_nodes(struct device_node *start,
-> +				void *(*fn)(struct device_node *, void *),
-> +				void *data)
->   {
->   	struct device_node *dn, *nextdn;
->   	void *ret;
-> @@ -388,8 +389,11 @@ void *traverse_pci_devices(struct device_node *start, traverse_func pre,
->   		if (classp)
->   			class = of_read_number(classp, 1);
->
-> -		if (pre && ((ret = pre(dn, data)) != NULL))
-> -			return ret;
-> +		if (fn) {
-> +			ret = fn(dn, data);
-> +			if (ret)
-> +				return ret;
-> +		}
->
->   		/* If we are a PCI bridge, go down */
->   		if (dn->child && ((class >> 8) == PCI_CLASS_BRIDGE_PCI ||
-> @@ -411,6 +415,7 @@ void *traverse_pci_devices(struct device_node *start, traverse_func pre,
->   	}
->   	return NULL;
->   }
-> +EXPORT_SYMBOL_GPL(pci_traverse_device_nodes);
->
->   static struct pci_dn *pci_dn_next_one(struct pci_dn *root,
->   				      struct pci_dn *pdn)
-> @@ -487,7 +492,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
->   	}
->
->   	/* Update dn->phb ptrs for new phb and children devices */
-> -	traverse_pci_devices(dn, add_pdn, phb);
-> +	pci_traverse_device_nodes(dn, add_pdn, phb);
->   }
->
->   /**
-> diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
-> index 272e9ec..543a638 100644
-> --- a/arch/powerpc/platforms/pseries/msi.c
-> +++ b/arch/powerpc/platforms/pseries/msi.c
-> @@ -305,7 +305,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
->   	memset(&counts, 0, sizeof(struct msi_counts));
->
->   	/* Work out how many devices we have below this PE */
-> -	traverse_pci_devices(pe_dn, count_non_bridge_devices, &counts);
-> +	pci_traverse_device_nodes(pe_dn, count_non_bridge_devices, &counts);
->
->   	if (counts.num_devices == 0) {
->   		pr_err("rtas_msi: found 0 devices under PE for %s\n",
-> @@ -320,7 +320,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
->   	/* else, we have some more calculating to do */
->   	counts.requestor = pci_device_to_OF_node(dev);
->   	counts.request = request;
-> -	traverse_pci_devices(pe_dn, count_spare_msis, &counts);
-> +	pci_traverse_device_nodes(pe_dn, count_spare_msis, &counts);
->
->   	/* If the quota isn't an integer multiple of the total, we can
->   	 * use the remainder as spare MSIs for anyone that wants them. */
->
-
-
--- 
-Alexey
+> 
+> Bjorn
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
