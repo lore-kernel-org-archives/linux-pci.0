@@ -1,89 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lb0-f193.google.com ([209.85.217.193]:35770 "EHLO
-	mail-lb0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754161AbcDCSbH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Apr 2016 14:31:07 -0400
-Received: by mail-lb0-f193.google.com with SMTP id gk8so15851372lbc.2
-        for <linux-pci@vger.kernel.org>; Sun, 03 Apr 2016 11:31:06 -0700 (PDT)
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34687 "EHLO
+	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756174AbcDLXgP (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 19:36:15 -0400
 MIME-Version: 1.0
-Date: Sun, 3 Apr 2016 14:31:05 -0400
-Message-ID: <CAPPcaqO6K6_xHsuXtUQUNRzTWLC4iD0nX5ZBCnjZOdUiG_R0PA@mail.gmail.com>
-Subject: A question about PCIe peer-to-peer DMA
-From: Guy Crazy <superymk.adv@gmail.com>
-To: linux-pci@vger.kernel.org
+In-Reply-To: <20160410221743.GC5852@localhost>
+References: <1455827823254.98505@Dell.com>
+	<20160410221743.GC5852@localhost>
+Date: Tue, 12 Apr 2016 18:36:14 -0500
+Message-ID: <CAC1AzdcBH7wLz+tAE4R00q6YQ7KRRzBDyP5w8wJQueJgT2agnQ@mail.gmail.com>
+Subject: Re: [PATCH v3] Create pci slot files for SMBIOS Type 9 entries
+From: Jordan Hargrave <jharg93@gmail.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Jordan Hargrave <Jordan_Hargrave@dell.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, tglx@linutronix.de,
+	mingo@redhat.com, hpa@zytor.com,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+	x86@kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Sun, Apr 10, 2016 at 5:17 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> Hi Jordan,
+>
+> On Thu, Feb 18, 2016 at 08:40:32PM +0000, Jordan_Hargrave@Dell.com wrote:
+>> The following diff builds on the "[PATCHv3] Save SMBIOS Type 9 System Slots"
+>>
+>> This will create a /sys/bus/pci/slots/XXX file for each Type 9 entry.  This will be \
+>> used for systemd enumeration of NICs.
+>>
+>> Only build if CONFIG_DMI is set
+>>
+>> Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
+>> ---
+>>  arch/x86/pci/common.c | 21 +++++++++++++++++++++
+>>  1 file changed, 21 insertions(+)
+>>
+>> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+>> index eccd4d9..bfa3c85 100644
+>> --- a/arch/x86/pci/common.c
+>> +++ b/arch/x86/pci/common.c
+>> @@ -173,6 +173,27 @@ void pcibios_fixup_bus(struct pci_bus *b)
+>>
+>>  void pcibios_add_bus(struct pci_bus *bus)
+>>  {
+>> +#ifdef CONFIG_DMI
+>> +     const struct dmi_device *dmi;
+>> +     struct dmi_dev_onboard *dslot;
+>> +     char sname[128];
+>> +
+>> +     dmi = NULL;
+>> +     while ((dmi = dmi_find_device(DMI_DEV_TYPE_DEV_SLOT,
+>> +                                   NULL, dmi)) != NULL) {
+>> +             dslot = dmi->device_data;
+>> +             if (dslot->segment == pci_domain_nr(bus) &&
+>> +                 dslot->bus == bus->number) {
+>> +                     dev_info(&bus->dev, "Found SMBIOS Slot %s\n",
+>> +                              dslot->dev.name);
+>> +                     snprintf(sname, sizeof(sname), "%s-%d",
+>> +                              dslot->dev.name,
+>> +                              dslot->instance);
+>> +                     pci_create_slot(bus, dslot->devfn,
+>> +                                     sname, NULL);
+>> +             }
+>> +     }
+>> +#endif
+>
+> arm64, ia64, and x86 all support CONFIG_DMI, so this would have to be
+> a bit more generic.
 
-I try to do some experiments with PCIe peer-to-peer DMA. Specifically,
-I want to use a PCIe firewire card to read/write the MMIO of other
-devices.
+The SMBIOS tables for DMI_DEV_TYPE_DEV_SLOT are scanned in
+firmware/dmi_scan.c which requires CONFIG_DMI
 
-After reading the documents, I still confuse on the effects of the
-UPDCR register. I can set its value to be 0xf on my machine (BSPR = 0,
-IRBNCE = 0x01118000). In that case, could I access the MMIO of devices
-on Bus 0, or just access the MMIO of devices under this root port?
-Sorry that I do not have a firewire adapter at the moment (will get it
-in a few days...).
+>
+> Is there a spec that describes this SMBIOS entry?  It seems to have
+> segment/bus/devfn, so maybe this should be done on a per-device basis,
+> not a per-bus basis?
+>
 
-I'll plug the firewire card to the Root Port 1, and my hardware falls
-in pci_quirk_intel_pch_acs_ids[].
+Yes, the SMBIOS specification for Type 9 System Slots.  The fields for
+PCI mapping were added in SMBIOS 2.6
 
-Thanks a lot!
+https://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.0.0.pdf
 
--Superymk
 
-Here is my lspci -nn:
+> Does this do the same thing ctrl_slot_setup() does with
+> get_SMBIOS_entry()?  (This is in the cpqphp hotplug driver; I have no
+> idea if anybody still uses that.)
 
-00:00.0 Host bridge [0600]: Intel Corporation 2nd Generation Core
-Processor Family DRAM Controller [8086:0100] (rev 09)
-00:16.0 Communication controller [0780]: Intel Corporation 6
-Series/C200 Series Chipset Family MEI Controller #1 [8086:1c3a] (rev
-04)
-00:16.3 Serial controller [0700]: Intel Corporation 6 Series/C200
-Series Chipset Family KT Controller [8086:1c3d] (rev 04)
-00:19.0 Ethernet controller [0200]: Intel Corporation 82579LM Gigabit
-Network Connection [8086:1502] (rev 04)
-00:1a.0 USB controller [0c03]: Intel Corporation 6 Series/C200 Series
-Chipset Family USB Enhanced Host Controller #2 [8086:1c2d] (rev 04)
-00:1b.0 Audio device [0403]: Intel Corporation 6 Series/C200 Series
-Chipset Family High Definition Audio Controller [8086:1c20] (rev 04)
-00:1c.0 PCI bridge [0604]: Intel Corporation 6 Series/C200 Series
-Chipset Family PCI Express Root Port 1 [8086:1c10] (rev b4)
-00:1c.4 PCI bridge [0604]: Intel Corporation 6 Series/C200 Series
-Chipset Family PCI Express Root Port 5 [8086:1c18] (rev b4)
-00:1c.6 PCI bridge [0604]: Intel Corporation 6 Series/C200 Series
-Chipset Family PCI Express Root Port 7 [8086:1c1c] (rev b4)
-00:1c.7 PCI bridge [0604]: Intel Corporation 6 Series/C200 Series
-Chipset Family PCI Express Root Port 8 [8086:1c1e] (rev b4)
-00:1d.0 USB controller [0c03]: Intel Corporation 6 Series/C200 Series
-Chipset Family USB Enhanced Host Controller #1 [8086:1c26] (rev 04)
-00:1e.0 PCI bridge [0604]: Intel Corporation 82801 PCI Bridge
-[8086:244e] (rev a4)
-00:1f.0 ISA bridge [0601]: Intel Corporation Q67 Express Chipset
-Family LPC Controller [8086:1c4e] (rev 04)
-00:1f.2 SATA controller [0106]: Intel Corporation 6 Series/C200 Series
-Chipset Family SATA AHCI Controller [8086:1c02] (rev 04)
-00:1f.3 SMBus [0c05]: Intel Corporation 6 Series/C200 Series Chipset
-Family SMBus Controller [8086:1c22] (rev 04)
-05:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd.
-RTL-8139/8139C/8139C+ [10ec:8139] (rev 10)
+Looks like cpqphp driver is looking for SMBIOS Type 9, but < 2.5 table
+structure. It's looking for the slot ID number (this number is
+equivalent to dslot->instance).
 
-And lspci -t:
--[0000:00]-+-00.0
-           +-16.0
-           +-16.3
-           +-19.0
-           +-1a.0
-           +-1b.0
-           +-1c.0-[01]--
-           +-1c.4-[02]--
-           +-1c.6-[03]--
-           +-1c.7-[04]--
-           +-1d.0
-           +-1e.0-[05]----00.0
-           +-1f.0
-           +-1f.2
-           \-1f.3
+
+>
+> There's quite a collection of pci_create_slot() callers, and I'd like
+> to know how this new addition would coexist with the others.  In
+> particular, what about the one in pciehp?  I think we only expose a
+> slot name in sysfs if pciehp claims a downstream port, but I'm not
+> sure that's the right thing.  The slot number might be useful even if
+> the slot doesn't support hotplug or if hotplug is disabled for some
+> reason.
+>
+
+pciehp requires the BIOS has setup the slot number in PCI properly....
+I've seen systems with two PCIE 'slots' which had the same slot
+number.  Of course the SMBIOS table requires the BIOS got it right
+too....
+
+>>       acpi_pci_add_bus(bus);
+>>  }
+>>
+>> --
+>> 2.5.0
+>>
+>>
+>>
+>>
+>>
+>>
+>>
+>> --jordan hargrave
+>>  Dell Enterprise Linux Engineering  --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
