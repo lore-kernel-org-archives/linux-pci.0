@@ -1,57 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:52552 "EHLO
-	mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751837AbcD1OWk (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2016 10:22:40 -0400
-Date: Thu, 28 Apr 2016 16:25:19 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
-Subject: Re: [PATCH v4 2/4] PCI: Move PCIe ports to D3 during suspend
-Message-ID: <20160428142519.GB18211@wunner.de>
-References: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
- <1461578004-129094-3-git-send-email-mika.westerberg@linux.intel.com>
- <CAJZ5v0itrp_=KUo9kFHh8rSN5RYfPk0+iEgeAWZR5rrnFq-jDA@mail.gmail.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:36418 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751120AbcDLToW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 15:44:22 -0400
+Subject: Re: Hot reset in downstream direction (RC to EP)
+To: L H <swdevgid@gmail.com>
+References: <570827D5.5060201@ti.com>
+ <CAA8O7CpAB18JOC6ri9xf_hnrKqRAjv5TdPO1cEHfd+98BhhV7A@mail.gmail.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: Murali Karicheri <m-karicheri2@ti.com>
+Message-ID: <570D5025.4080905@ti.com>
+Date: Tue, 12 Apr 2016 15:44:37 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0itrp_=KUo9kFHh8rSN5RYfPk0+iEgeAWZR5rrnFq-jDA@mail.gmail.com>
+In-Reply-To: <CAA8O7CpAB18JOC6ri9xf_hnrKqRAjv5TdPO1cEHfd+98BhhV7A@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
-
-On Tue, Apr 26, 2016 at 11:04:55PM +0200, Rafael J. Wysocki wrote:
-> On Mon, Apr 25, 2016 at 11:53 AM, Mika Westerberg
-> <mika.westerberg@linux.intel.com> wrote:
-[snip]
-> > --- a/drivers/pci/pci-driver.c
-> > +++ b/drivers/pci/pci-driver.c
-> > @@ -777,7 +777,12 @@ static int pci_pm_suspend_noirq(struct device *dev)
-> >
-> >         if (!pci_dev->state_saved) {
-> >                 pci_save_state(pci_dev);
-> > -               if (!pci_has_subordinate(pci_dev))
-> > +               /*
-> > +                * Check if given device can go to low power state. Currently
-> > +                * we allow normal PCI devices and PCI bridges if their
-> > +                * bridge_d3 is set.
-> > +                */
-> > +               if (!pci_has_subordinate(pci_dev) || pci_dev->bridge_d3)
+On 04/12/2016 02:28 PM, L H wrote:
+> I've never observed a hot reset during enumeration.  One of the
+> possible triggers for the RC to issue a hot reset is after receipt of
+> a fatal AER message (assuming AER is enabled).
 > 
-> I'd add a helper for this, say pci_power_manageable() or similar.
+Lance,
 
-He had a helper for this in a prior version and removed it on my
-suggestion. Sorry Mika, guess I caused you additional work there. :-/
+Ok. Thanks for the response.
 
-Best regards,
+Murali
 
-Lukas
+> Lance
+> 
+> On Fri, Apr 8, 2016 at 4:51 PM, Murali Karicheri <m-karicheri2@ti.com> wrote:
+>> I see that hot reset is something the RC port initiate to have EP reset
+>> through link management.
+>>
+>> ==========================================================================
+>> PCIe reset sequences – The PCI Express protocol specifies a hot reset
+>> mechanism, where downstream components reset through link notification.
+>> Root ports should validate that this mechanism can be applied and the
+>> hot reset indication is properly detected by a remote device.
+>> Endpoint applications should determine the level of chip reset desired
+>> in case of hot reset detection on the link to validate proper functionality.
+>> ===========================================================================
+>>
+>> Does this happen during the enumeration? As this goes in in band, the EP's
+>> link should be up. Can someone tell me what are the triggering points for
+>> this from RC to EP? Does Linux RC support this? It is supposed to a bit
+>> in RC's bridge configuration space that triggers this reset.
+>>
+>> --
+>> Murali Karicheri
+>> Linux Kernel, Keystone
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+-- 
+Murali Karicheri
+Linux Kernel, Keystone
