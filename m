@@ -1,160 +1,358 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:34549 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755184AbcDKWnO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Apr 2016 18:43:14 -0400
-Received: by mail-pa0-f51.google.com with SMTP id ot11so444165pab.1
-        for <linux-pci@vger.kernel.org>; Mon, 11 Apr 2016 15:43:14 -0700 (PDT)
-Subject: Re: [PATCH 1/2] PCI: iproc: Support DT property for ignoring aborts
- when probing
-To: Ray Jui <ray.jui@broadcom.com>,
-	Scott Branden <scott.branden@broadcom.com>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>
-References: <1460238624-2086-1-git-send-email-zajec5@gmail.com>
- <79DC79A7-D4CE-4983-B1C5-CBD2E9CBBFB9@gmail.com>
- <4768648c-841b-490d-a752-f31cba545f74@broadcom.com>
- <570C1D47.7010102@gmail.com>
- <ccabf53c-c035-be4b-a016-389bb7531557@broadcom.com>
- <570C24B3.4080104@broadcom.com>
- <18045be8-9ee3-7644-6fbb-d352e107d111@broadcom.com>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
-	linux-arm-kernel@lists.infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-From: Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <570C2806.8070700@gmail.com>
-Date: Mon, 11 Apr 2016 15:41:10 -0700
+Received: from mail.kernel.org ([198.145.29.136]:37052 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751181AbcDLFTq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Apr 2016 01:19:46 -0400
+Date: Tue, 12 Apr 2016 00:19:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org, linux-pci@vger.kernel.org,
+	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
+	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
+	rjw@rjwysocki.net, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V2 1/3] acpi,pci,irq: reduce resource requirements
+Message-ID: <20160412051942.GE11361@localhost>
+References: <1460165192-4526-1-git-send-email-okaya@codeaurora.org>
+ <1460165192-4526-2-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <18045be8-9ee3-7644-6fbb-d352e107d111@broadcom.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1460165192-4526-2-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/04/16 15:34, Ray Jui wrote:
-> 
-> 
-> On 4/11/2016 3:26 PM, Scott Branden wrote:
->> One Comment below
->>
->> On 16-04-11 03:24 PM, Ray Jui wrote:
->>>
->>>
->>> On 4/11/2016 2:55 PM, Florian Fainelli wrote:
->>>> On 11/04/16 13:06, Ray Jui wrote:
->>>>>
->>>>>
->>>>> On 4/10/2016 6:43 PM, Florian Fainelli wrote:
->>>>>> On April 9, 2016 2:50:23 PM PDT, "Rafał Miłecki" <zajec5@gmail.com>
->>>>>> wrote:
->>>>>>> Some devices (e.g. Northstar ones) may have bridges that forward
->>>>>>> harmless errors to the ARM core. In such case we need an option to
->>>>>>> add a handler ignoring them.
->>>>>>>
->>>>>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->>>>>>> ---
->>>>>>
->>>>>>> +- brcm,pcie-hook-abort-handler: During PCI bus probing (device
->>>>>>> enumeration)
->>>>>>> +  there can be errors that are expected and harmless. Unfortunately
->>>>>>> some bridges
->>>>>>> +  can't be configured to ignore them and they forward them to the
->>>>>>> ARM
->>>>>>> core
->>>>>>> +  triggering die().
->>>>>>> +  This property should be set in such case, it will make driver add
->>>>>>> its own
->>>>>>> +  handler ignoring such errors.
->>>>>>
->>>>>> The property is named after the function that allows you to catch
->>>>>> abort handlers, whereas you should be describing the HW here.
->>>>>> Something like brcm,bridge-error-forward or a better name even would
->>>>>> be preferable.
->>>>>>
->>>>>>> +#ifdef CONFIG_ARM
->>>>>>> +static int iproc_pcie_abort_handler(unsigned long addr, unsigned
->>>>>>> int
->>>>>>> fsr,
->>>>>>> +                    struct pt_regs *regs)
->>>>>>> +{
->>>>>>> +    if (fsr == 0x1406)
->>>>>>> +        return 0;
->>>>>>> +
->>>>>>> +    return 1;
->>>>>>
->>>>>> As you later noted this prevents this driver from being a module now.
->>>>>> Since the expectation is that either a fixed bootloader or a platform
->>>>>> should enot produce these data aborts, or allow them to be ignored,
->>>>>> why not just put this code back where it belongs in the machine
->>>>>> specific file which kills many birds with the same stone:
->>>>>>
->>>>>
->>>>> I assume the module compile issue can be simply fixed by exporting
->>>>> symbol of "hook_fault_code"?
->>>>
->>>> I do not think it is desireable for this symbol to be exported in the
->>>> first place, also last I looked, this was a one time registration
->>>> thing,
->>>> you cannot undo the hook you installed, but everything can be fixed.
->>>>
->>>
->>> Okay.
->>>
->>>>>
->>>>> I believe ARM64 based NS2 that uses the same iProc PCIe driver might
->>>>> also need something like this (I'm still waiting for Jon Mason to give
->>>>> me some more information on the NS2 errors that he saw, which is
->>>>> likely
->>>>> related to this). I assume there will be something similar to the ARM
->>>>> specific "hook_fault_code" for ARM64, but then ARM64 does not have any
->>>>> "mach" specific directory. Where can this type of hook be installed
->>>>> for
->>>>> ARM64 based platforms if not in the PCIe driver?
->>>>
->>>> OK, that is a fair point, then maybe have a two stage process, where we
->>>> make sure that the part that installs the hook is always available and
->>>> built-into the kernel, but let the iProc PCIe driver remain a module?
->>>>
->>>
->>> I guess we are sort of stuck on this. If "hook_fault_code" is not
->>> supposed to be used by any driver compiled as module like you described,
->>> then yes, I agree, I don't see how we can leave this in the iProc PCIe
->>> driver.
->>>
->> Why does thie PCI driver need to be compiled as module though?  Why
->> can't we limit it to being linked in the kernel?
->>
->> Regards,
->> Scott
-> 
-> There are minor benefits allowing this driver to be compiled as module,
-> although in our use case (Cygnus and NS2), we always compile this driver
-> as statically linked in the kernel. I'm not sure if NS/BCMA has any use
-> case that requires this driver to be a module.
-> 
-> In fact, being able to compile this driver as a module and loaded after
-> kernel init process is done just helped to confirm this imprecise abort
-> issue to be PCIe specific, :)
+Hi Sinan,
 
-For the STB platforms for instance, we actually like to have the PCIE RC
-driver as a module (not iproc-pcie, still downstream for now) because it
-allows us to put the entire set of EPs and RCs into the lowest power
-state (L23 + turning off external regulators) without messing with PCI
-bus scanning. In general, it seems like a good practice to allow this
-since, that helps with distributions not having to ship gigantic kernels
-that need this driver built in, and also helps us with development (when
-faults are handled).
+I was hoping we could *simplify* this, but I think it's just getting
+even more complicated (it's a net addition of 100 lines), which is due
+to feature creep that I'm afraid is my fault.
 
-My suggestion about the PCIe-specific hook fault handler is to do
-something like this: introduce a iproc-pcie-fault.c file which is
-built-into the kernel if PCIE_IPROC=m || PCIE_IPROC=y and have it
-contain a function which is hooked at arch_initcall level for instance,
-so before module_init.
+IIRC, the main thing you need is to get rid of some early memory
+allocation.
 
-Of course, there could be different ways to solve that problem, it just
-happens to be one of them.
--- 
-Florian
+I don't think all the trigger mode/level checking is worth it.  The
+current code doesn't do it, and it's not fixing a problem for you.
+It's conceivable that it could even make us trip over a new problem,
+e.g., some broken BIOS that we currently tolerate.
+
+I think you could make this a little easier to review if you split
+things like the acpi_irq_penalty[] -> acpi_isa_irq_penalty[] rename
+into their own patches.  Little patches like that are trivial to
+review because a simple rename is pretty safe, and then the patches
+that actually *do* interesting things are smaller and easier to
+review, too.
+
+On Fri, Apr 08, 2016 at 09:26:30PM -0400, Sinan Kaya wrote:
+> Code has been redesigned to calculate penalty requirements on the fly. This
+> significantly simplifies the implementation and removes some of the init
+> calls from x86 architecture. Command line penalty assignment has been
+> limited to ISA interrupts only.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/acpi/pci_link.c | 176 ++++++++++++++++++++++++++++++++++++++----------
+>  1 file changed, 140 insertions(+), 36 deletions(-)
+> 
+> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+> index ededa90..25695ea 100644
+> --- a/drivers/acpi/pci_link.c
+> +++ b/drivers/acpi/pci_link.c
+> @@ -437,17 +437,15 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
+>   * enabled system.
+>   */
+>  
+> -#define ACPI_MAX_IRQS		256
+>  #define ACPI_MAX_ISA_IRQ	16
+
+ACPI_MAX_ISA_IRQ is a bit of a misnomer.  The maximum ISA IRQ is 15,
+not 16, so I think this should be named ACPI_MAX_ISA_IRQS.
+
+> -#define PIRQ_PENALTY_PCI_AVAILABLE	(0)
+>  #define PIRQ_PENALTY_PCI_POSSIBLE	(16*16)
+>  #define PIRQ_PENALTY_PCI_USING		(16*16*16)
+>  #define PIRQ_PENALTY_ISA_TYPICAL	(16*16*16*16)
+>  #define PIRQ_PENALTY_ISA_USED		(16*16*16*16*16)
+>  #define PIRQ_PENALTY_ISA_ALWAYS		(16*16*16*16*16*16)
+>  
+> -static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
+> +static int acpi_isa_irq_penalty[ACPI_MAX_ISA_IRQ] = {
+>  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ0 timer */
+>  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ1 keyboard */
+>  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ2 cascade */
+> @@ -457,9 +455,9 @@ static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
+>  	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ6 */
+>  	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ7 parallel, spurious */
+>  	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ8 rtc, sometimes */
+> -	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ9  PCI, often acpi */
+> -	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ10 PCI */
+> -	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ11 PCI */
+> +	0,				/* IRQ9  PCI, often acpi */
+> +	0,				/* IRQ10 PCI */
+> +	0,				/* IRQ11 PCI */
+>  	PIRQ_PENALTY_ISA_USED,		/* IRQ12 mouse */
+>  	PIRQ_PENALTY_ISA_USED,		/* IRQ13 fpe, sometimes */
+>  	PIRQ_PENALTY_ISA_USED,		/* IRQ14 ide0 */
+> @@ -467,6 +465,121 @@ static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
+>  	/* >IRQ15 */
+>  };
+>  
+> +static int acpi_link_trigger(int irq, u8 *polarity, u8 *triggering)
+> +{
+> +	struct acpi_pci_link *link;
+> +	bool found = false;
+> +
+> +	*polarity = ~0;
+> +	*triggering = ~0;
+> +
+> +	list_for_each_entry(link, &acpi_link_list, list) {
+> +		int i;
+> +
+> +		if (link->irq.active && link->irq.active == irq) {
+> +			if (*polarity == ~0)
+> +				*polarity = link->irq.polarity;
+> +
+> +			if (*triggering == ~0)
+> +				*triggering = link->irq.triggering;
+> +
+> +			if (*polarity != link->irq.polarity)
+> +				return -EINVAL;
+> +
+> +			if (*triggering != link->irq.triggering)
+> +				return -EINVAL;
+> +
+> +			found = true;
+> +		}
+> +
+> +		for (i = 0; i < link->irq.possible_count; i++)
+> +			if (link->irq.possible[i] == irq) {
+> +				if (*polarity == ~0)
+> +					*polarity = link->irq.polarity;
+> +
+> +				if (*triggering == ~0)
+> +					*triggering = link->irq.triggering;
+> +
+> +				if (*polarity != link->irq.polarity)
+> +					return -EINVAL;
+> +
+> +				if (*triggering != link->irq.triggering)
+> +					return -EINVAL;
+> +
+> +				found = true;
+> +			}
+> +	}
+> +
+> +	return found ? 0 : -EINVAL;
+> +}
+> +
+> +static int acpi_pci_compatible_trigger(int irq)
+> +{
+> +	u8 polarity;
+> +	u8 triggering;
+> +
+> +	return acpi_link_trigger(irq, &polarity, &triggering);
+> +}
+> +
+> +static int acpi_irq_pci_sharing_penalty(int irq)
+> +{
+> +	struct acpi_pci_link *link;
+> +	int penalty = 0;
+> +
+> +	if (acpi_pci_compatible_trigger(irq))
+> +		return ~0;
+
+This is the part (and all the acpi_link_trigger() code) that I think
+is new functionality we didn't have before, and maybe not worth doing.
+If we *do* want it, I think it should be added in a separate patch.
+
+> +
+> +	list_for_each_entry(link, &acpi_link_list, list) {
+> +		/*
+> +		 * If a link is active, penalize its IRQ heavily
+> +		 * so we try to choose a different IRQ.
+> +		 */
+> +		if (link->irq.active && link->irq.active == irq)
+> +			penalty += PIRQ_PENALTY_PCI_USING;
+> +		else {
+> +			int i;
+> +
+> +			/*
+> +			 * If a link is inactive, penalize the IRQs it
+> +			 * might use, but not as severely.
+> +			 */
+> +			for (i = 0; i < link->irq.possible_count; i++)
+> +				if (link->irq.possible[i] == irq)
+> +					penalty += PIRQ_PENALTY_PCI_POSSIBLE /
+> +						link->irq.possible_count;
+> +		}
+> +	}
+> +
+> +	return penalty;
+> +}
+> +
+> +static int acpi_irq_get_penalty(int irq)
+> +{
+> +	int penalty = 0, rc;
+> +
+> +	if (irq < ACPI_MAX_ISA_IRQ)
+> +		penalty += acpi_isa_irq_penalty[irq];
+> +
+> +	if (irq == acpi_gbl_FADT.sci_interrupt) {
+> +		u8 sci_polarity;
+> +		u8 sci_trigger;
+> +
+> +		rc = acpi_link_trigger(irq, &sci_polarity, &sci_trigger);
+> +		if (!rc) {
+> +			if (sci_trigger != ACPI_LEVEL_SENSITIVE ||
+> +			    sci_polarity != ACPI_ACTIVE_LOW)
+> +				penalty += PIRQ_PENALTY_ISA_ALWAYS;
+> +			else
+> +				penalty += PIRQ_PENALTY_PCI_USING;
+> +		} else {
+> +			return ~0;
+
+This function (acpi_irq_get_penalty()) returns a signed int,
+and I don't think ~0 is the largest possible signed int.
+
+> +		}
+> +	}
+> +
+> +	penalty += acpi_irq_pci_sharing_penalty(irq);
+> +	return penalty;
+> +}
+> +
+>  int __init acpi_irq_penalty_init(void)
+>  {
+>  	struct acpi_pci_link *link;
+> @@ -488,13 +601,14 @@ int __init acpi_irq_penalty_init(void)
+>  
+>  			for (i = 0; i < link->irq.possible_count; i++) {
+>  				if (link->irq.possible[i] < ACPI_MAX_ISA_IRQ)
+> -					acpi_irq_penalty[link->irq.
+> -							 possible[i]] +=
+> +					acpi_isa_irq_penalty[link->irq.
+> +							     possible[i]] +=
+>  					    penalty;
+>  			}
+>  
+> -		} else if (link->irq.active) {
+> -			acpi_irq_penalty[link->irq.active] +=
+> +		} else if (link->irq.active &&
+> +			   (link->irq.active < ACPI_MAX_ISA_IRQ)) {
+> +			acpi_isa_irq_penalty[link->irq.active] +=
+>  			    PIRQ_PENALTY_PCI_POSSIBLE;
+>  		}
+>  	}
+> @@ -547,12 +661,12 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+>  		 * the use of IRQs 9, 10, 11, and >15.
+>  		 */
+>  		for (i = (link->irq.possible_count - 1); i >= 0; i--) {
+> -			if (acpi_irq_penalty[irq] >
+> -			    acpi_irq_penalty[link->irq.possible[i]])
+> +			if (acpi_irq_get_penalty(irq) >
+> +			    acpi_irq_get_penalty(link->irq.possible[i]))
+>  				irq = link->irq.possible[i];
+>  		}
+>  	}
+> -	if (acpi_irq_penalty[irq] >= PIRQ_PENALTY_ISA_ALWAYS) {
+> +	if (acpi_irq_get_penalty(irq) >= PIRQ_PENALTY_ISA_ALWAYS) {
+>  		printk(KERN_ERR PREFIX "No IRQ available for %s [%s]. "
+>  			    "Try pci=noacpi or acpi=off\n",
+>  			    acpi_device_name(link->device),
+> @@ -568,7 +682,6 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+>  			    acpi_device_bid(link->device));
+>  		return -ENODEV;
+>  	} else {
+> -		acpi_irq_penalty[link->irq.active] += PIRQ_PENALTY_PCI_USING;
+>  		printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
+>  		       acpi_device_name(link->device),
+>  		       acpi_device_bid(link->device), link->irq.active);
+> @@ -778,7 +891,7 @@ static void acpi_pci_link_remove(struct acpi_device *device)
+>  }
+>  
+>  /*
+> - * modify acpi_irq_penalty[] from cmdline
+> + * modify acpi_isa_irq_penalty[] from cmdline
+>   */
+>  static int __init acpi_irq_penalty_update(char *str, int used)
+>  {
+> @@ -787,23 +900,24 @@ static int __init acpi_irq_penalty_update(char *str, int used)
+>  	for (i = 0; i < 16; i++) {
+>  		int retval;
+>  		int irq;
+> +		int new_penalty;
+>  
+>  		retval = get_option(&str, &irq);
+>  
+>  		if (!retval)
+>  			break;	/* no number found */
+>  
+> -		if (irq < 0)
+> -			continue;
+> -
+> -		if (irq >= ARRAY_SIZE(acpi_irq_penalty))
+> +		/* see if this is a ISA IRQ */
+> +		if ((irq < 0) || (irq >= ACPI_MAX_ISA_IRQ))
+>  			continue;
+>  
+>  		if (used)
+> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_USED;
+> +			new_penalty = acpi_irq_get_penalty(irq) +
+> +					PIRQ_PENALTY_ISA_USED;
+>  		else
+> -			acpi_irq_penalty[irq] = PIRQ_PENALTY_PCI_AVAILABLE;
+> +			new_penalty = 0;
+>  
+> +		acpi_isa_irq_penalty[irq] = new_penalty;
+>  		if (retval != 2)	/* no next number */
+>  			break;
+>  	}
+> @@ -819,18 +933,15 @@ static int __init acpi_irq_penalty_update(char *str, int used)
+>   */
+>  void acpi_penalize_isa_irq(int irq, int active)
+>  {
+> -	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
+> -		if (active)
+> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_USED;
+> -		else
+> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
+> -	}
+> +	if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
+> +		acpi_isa_irq_penalty[irq] = active ?
+> +			PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING;
+>  }
+>  
+>  bool acpi_isa_irq_available(int irq)
+>  {
+> -	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_irq_penalty) ||
+> -			    acpi_irq_penalty[irq] < PIRQ_PENALTY_ISA_ALWAYS);
+> +	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_isa_irq_penalty) ||
+> +			 acpi_isa_irq_penalty[irq] < PIRQ_PENALTY_ISA_ALWAYS);
+>  }
+>  
+>  /*
+> @@ -840,13 +951,6 @@ bool acpi_isa_irq_available(int irq)
+>   */
+>  void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
+>  {
+
+There's a comment just above here that doesn't make any sense after
+you remove the entire function body, so maybe you can just remove the
+comment at the same time (or move it to the place this code moved to).
+
+> -	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
+> -		if (trigger != ACPI_MADT_TRIGGER_LEVEL ||
+> -		    polarity != ACPI_MADT_POLARITY_ACTIVE_LOW)
+> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_ALWAYS;
+> -		else
+> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
+> -	}
+>  }
+>  
+>  /*
+> -- 
+> 1.8.2.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
