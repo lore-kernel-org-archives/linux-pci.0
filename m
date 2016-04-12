@@ -1,53 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 7 Apr 2016 14:12:16 -0600
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-acpi@vger.kernel.org
-Subject: Re: [PATCH] pci: Added flag to pci_host_bridge to hint not to use
- acpi
-Message-ID: <20160407201216.GA9986@localhost.localdomain>
-References: <1458770518-10203-1-git-send-email-jonathan.derrick@intel.com>
- <20160324164159.GB25518@localhost.localdomain>
- <20160407174224.GE8780@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:44107 "EHLO
+	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757198AbcDLRnc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 13:43:32 -0400
+Date: Tue, 12 Apr 2016 19:45:42 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v2 2/4] PCI: Move PCIe ports to D3 during suspend
+Message-ID: <20160412174542.GA13637@wunner.de>
+References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1460111790-92836-3-git-send-email-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160407174224.GE8780@localhost>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1460111790-92836-3-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Hi Mika,
 
-First, thanks for the review
+On Fri, Apr 08, 2016 at 01:36:28PM +0100, Mika Westerberg wrote:
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -744,6 +744,19 @@ static int pci_pm_suspend(struct device *dev)
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Check if given device can go to low power state. Currently we allow
+> + * normal PCI devices and PCI bridges if their bridge_d3 is set.
+> + */
+> +static bool pci_can_suspend(struct pci_dev *pdev)
+> +{
+> +	if (!pci_has_subordinate(pdev))
+> +		return true;
+> +	else if (pdev->bridge_d3)
+> +		return true;
+> +	return false;
+> +}
+> +
+>  static int pci_pm_suspend_noirq(struct device *dev)
+>  {
+>  	struct pci_dev *pci_dev = to_pci_dev(dev);
+> @@ -777,7 +790,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+>  
+>  	if (!pci_dev->state_saved) {
+>  		pci_save_state(pci_dev);
+> -		if (!pci_has_subordinate(pci_dev))
+> +		if (pci_can_suspend(pci_dev))
+>  			pci_prepare_to_sleep(pci_dev);
+>  	}
 
-> The spec (PCI Firmware spec 3.0, sec 4.5) says _OSC is a child of an
-> ACPI device and applies to that device.  In your case, I think there
-> is no ACPI PNP0A0x device for the VMD host bridge, and hence there is
-> no _OSC method for it.  There's no ACPI handle for the VMD bridge, so
-> I think pcie_port_acpi_setup() returns -EINVAL, which causes
-> get_port_device_capability() to give up and decide that the port
-> can't support *any* PCIe services.
-> 
-> I think that's the real problem: the fact that there's no ACPI device
-> corresponding to the bridge should not be an error.  It should just
-> mean the platform doesn't have an opportunity to limit what services
-> the kernel can manage.  I think pcie_port_acpi_setup() should return 0
-> in all cases.  Can you try that and see if it fixes the problem?
-> 
+pci_can_suspend() is only used by this single function. It may be
+worth to consider folding it into pci_pm_suspend_noirq(), i.e. simply
 
-I believe what you are suggesting is:
+		if (!pci_has_subordinate(pci_dev) || pdev->bridge_d3)
 
+together with the "Currently we allow..." comment above.
 
-        handle = acpi_find_root_bridge_handle(port);
-        if (!handle)
--               return -EINVAL;
-+               return 0;
+Best regards,
 
-        root = acpi_pci_find_root(handle);
-        if (!root)
--               return -ENODEV;
-+               return 0;
-
-
-This works for me. I will follow up with a proper patch.
-
+Lukas
