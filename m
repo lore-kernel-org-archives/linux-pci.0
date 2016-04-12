@@ -1,58 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49380 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932207AbcDTAs7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 Apr 2016 20:48:59 -0400
-Date: Tue, 19 Apr 2016 19:48:55 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Petr =?utf-8?Q?=C5=A0tetiar?= <ynezz@true.cz>
-Cc: devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Tim Harvey <tharvey@gateworks.com>,
-	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
-	Fabio Estevam <festevam@gmail.com>,
-	Marcel Ziswiler <marcel.ziswiler@toradex.com>, stefan@agner.ch
-Subject: Re: [PATCH] ARM: imx6: Fix PCIe reset gpio polarity on Toradex Apalis
-Message-ID: <20160420004855.GG17863@localhost>
-References: <1459514508-8557-1-git-send-email-ynezz@true.cz>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V2 1/3] acpi,pci,irq: reduce resource requirements
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1460165192-4526-1-git-send-email-okaya@codeaurora.org>
+ <1460165192-4526-2-git-send-email-okaya@codeaurora.org>
+ <20160412051942.GE11361@localhost>
+Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org, linux-pci@vger.kernel.org,
+	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
+	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
+	rjw@rjwysocki.net, linux-kernel@vger.kernel.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <570D2170.303@codeaurora.org>
+Date: Tue, 12 Apr 2016 12:25:20 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1459514508-8557-1-git-send-email-ynezz@true.cz>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160412051942.GE11361@localhost>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 01, 2016 at 02:41:46PM +0200, Petr Štetiar wrote:
-> In commit 5c5fb40de8f14 "PCI: imx6: Add support for active-low reset GPIO"
-> I've made GPIO reset polarity aware, which made the PCIe working on Apalis SoM
-> (reset active-high), but it has broken PCIe on several other i.MX6 boards
-> (reset active-low) due to wrong logic level. It has made the default reset
-> logic active-high, but it was active-low since beginning due to the bug in the
-> reset code:
+On 4/12/2016 1:19 AM, Bjorn Helgaas wrote:
+> Hi Sinan,
 > 
-> 	gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
-> 	msleep(100);
-> 	gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+> I was hoping we could *simplify* this, but I think it's just getting
+> even more complicated (it's a net addition of 100 lines), which is due
+> to feature creep that I'm afraid is my fault.
 > 
-> This breakage couldn't be fixed correctly by fixing the reset code snippet
-> mentioned above and fixing the broken DTBs, as we can't touch the DTBs, so the
-> 5c5fb40de8f14 commit is going to be reverted, making PCIe reset broken on
-> Apalis modules again.
+> IIRC, the main thing you need is to get rid of some early memory
+> allocation.
 > 
-> As suggested by Fabio, to fix this situation in backward compatible manner, we
-> should introduce new boolean DT property reset-gpio-active-high, which would
-> set PCIe reset GPIO polarity as needed. This patch series tries to do so.
+> I don't think all the trigger mode/level checking is worth it.  The
+> current code doesn't do it, and it's not fixing a problem for you.
+> It's conceivable that it could even make us trip over a new problem,
+> e.g., some broken BIOS that we currently tolerate.
+> 
+> I think you could make this a little easier to review if you split
+> things like the acpi_irq_penalty[] -> acpi_isa_irq_penalty[] rename
+> into their own patches.  Little patches like that are trivial to
+> review because a simple rename is pretty safe, and then the patches
+> that actually *do* interesting things are smaller and easier to
+> review, too.
 
-I applied both of these (the original Toradex Apalis Ixora DTS fix and
-the v3 "Add reset-gpio-active-high" change) to pci/host-imx6 for v4.7,
-with Lucas' Reviewed-by, Rob's Acked-by, and Tim's Tested-by.  Thanks,
-Petr!
+OK. I honestly didn't like adding this check either. I'll work on a new
+set and post with your additional comments in this patch.
+
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
