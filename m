@@ -1,248 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:33700 "EHLO
-	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751791AbcDRFvm (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Apr 2016 01:51:42 -0400
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Andrey Smirnov <andrew.smirnov@gmail.com>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	gary.bisson@boundarydevices.com
-Subject: [PATCH v2 1/3] PCI: imx6: Use enum instead of bool for variant indicator
-Date: Sun, 17 Apr 2016 22:51:15 -0700
-Message-Id: <1460958677-10604-1-git-send-email-andrew.smirnov@gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:38002 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751181AbcDLFhD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 12 Apr 2016 01:37:03 -0400
+Date: Tue, 12 Apr 2016 00:37:00 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Steve Wise <swise@opengridcomputing.com>
+Cc: 'Casey Leedom' <leedom@chelsio.com>, linux-pci@vger.kernel.org,
+	hariprasad@chelsio.com, hare@suse.com, bhelgaas@google.com
+Subject: Re: 4.6-rc2 regression with commit 104daa71b396: check VPD access
+ offset against length
+Message-ID: <20160412053700.GF11361@localhost>
+References: <BY2PR12MB06483CA232B6B3BFF7179012C8910@BY2PR12MB0648.namprd12.prod.outlook.com>
+ <BY2PR12MB0648F0C35D907AA640D7E56CC8940@BY2PR12MB0648.namprd12.prod.outlook.com>
+ <02ec01d1941e$3dda2010$b98e6030$@opengridcomputing.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <02ec01d1941e$3dda2010$b98e6030$@opengridcomputing.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use enumerated type instead of a boolean flag to specify the variant of
-the PCIe IP block (6Q, 6SX, etc). This patch has zero functional impact,
-however it makes the code easier to extend for the case of more than 2
-possible variants of an IP block (of which there are).
+On Mon, Apr 11, 2016 at 01:16:17PM -0500, Steve Wise wrote:
+> > kernel.org commit 104daa71b396 added a check to make sure that efforts to
+> > read/write the VPD wouldn't extend past the computed length of the VPD.
+> > Later, kernel.org commit 408641e93aa5 folded the pci_vpd_pci22 into
+> > struct pci_vpd so things moved around a bit after that and an error return
+> > got changed into a silent failure instead of -EINVAL.
+> > 
+> >   The problem is that the previous pci_vpd_pci22_read() didn't check for a
+> read with
+> > a VPD Offset > VPD Length and the new pci_vpd_read() is checking that.  Worse
+> > yet, when a VPD Offset is greater than the recorded VPD Length, it simply
+> > returns 0 rather than -EINVAL.
+> > 
+> >   The problem is stemming from the fact that the Chelsio adapters actually
+> have
+> > two VPD structures stored in the VPD.  An abbreviated on at Offset 0x0 and the
+> > complete VPD at Offset 0x400.  The abbreviated one only contains the PN, SN
+> and
+> > EC Keywords, while the complete VPD contains those plus various adapter
+> > constants contained in V0, V1, etc.  And it also contains the Base Ethernet
+> MAC
+> > Address in the "NA" Keyword which the cxgb4 driver needs when it can't contact
+> > the adapter firmware.  (We don't have the "NA" Keywork in the VPD Structure at
+> > Offset 0x0 because that's not an allowed VPD Keyword in the PCI-E 3.0
+> > specification.)
+> > 
+> >   With the new code, the computed size of the VPD is 0x200 and so our efforts
+> > to read the VPD at Offset 0x400 silently fails.  We check the result of the
+> > read looking for a signature 0x82 byte but we're checking against random stack
+> > garbage.
+> > 
+> >   The end result is that the cxgb4 driver now fails the PCI-E Probe.
+> > 
+> 
+> Silently failing is wrong, in my opinion.  And I even question truncating which
+> is also done in pci_vpd_read().  To the PCI maintainers:  Should the length
+> checks just be removed?    If not, what is the correct solution?  Adding a
+> different "expert" API that ignores the length checks, or somehow allowing the
+> device driver to set the actual VPD size? 
 
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
----
+I think everybody would prefer if it the kernel could just read
+whatever VPD region the user requested, without parsing the data or
+checking for length (as long as we're within the 32K space allowed by
+the spec).
 
-Changes since v1:
+The problem is that some cards crash if you read too much:
 
-	- Patchset is rebased against
-          https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-imx6
+  commit 104daa71b396
+  Author: Hannes Reinecke <hare@suse.de>
+  Date:   Mon Feb 15 09:42:01 2016 +0100
 
-	- DTS files changes moved into a separate patch
+    PCI: Determine actual VPD size on first access
+    
+    PCI-2.2 VPD entries have a maximum size of 32k, but might actually be
+    smaller than that.  To figure out the actual size one has to read the VPD
+    area until the 'end marker' is reached.
+    
+    Per spec, reading outside of the VPD space is "not allowed."  In practice,
+    it may cause simple read errors or even crash the card.  To make matters
+    worse not every PCI card implements this properly, leaving us with no 'end'
+    marker or even completely invalid data.
+    
+    Try to determine the size of the VPD data when it's first accessed.  If no
+    valid data can be read an I/O error will be returned when reading or
+    writing the sysfs attribute.
 
+So if you want to get rid of the length checks, you have to propose
+some other mechanism to avoid these issues.
 
- drivers/pci/host/pci-imx6.c | 126 +++++++++++++++++++++++++-------------------
- 1 file changed, 71 insertions(+), 55 deletions(-)
+The only ideas I have are to (1) parse the data as we do in
+104daa71b396, (2) add quirks to prevent VPD access (as in
+7c20078a8197 ("PCI: Prevent VPD access for buggy devices"), and/or (3)
+add quirks to allow access to more VPD than parsing says we can
+access.  These aren't mutually exclusive -- we already have (1) and
+(2), and I think we could easily add (3) into the mix.
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 0f6d630..c570bbb 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -31,6 +31,11 @@
- 
- #define to_imx6_pcie(x)	container_of(x, struct imx6_pcie, pp)
- 
-+enum imx6_pcie_variants {
-+	IMX6Q,
-+	IMX6SX
-+};
-+
- struct imx6_pcie {
- 	struct gpio_desc	*reset_gpio;
- 	struct clk		*pcie_bus;
-@@ -39,7 +44,7 @@ struct imx6_pcie {
- 	struct clk		*pcie;
- 	struct pcie_port	pp;
- 	struct regmap		*iomuxc_gpr;
--	bool			is_imx6sx;
-+	enum imx6_pcie_variants variant;
- 	void __iomem		*mem_base;
- 	u32			tx_deemph_gen1;
- 	u32			tx_deemph_gen2_3p5db;
-@@ -238,7 +243,8 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
- 	u32 val, gpr1, gpr12;
- 
--	if (imx6_pcie->is_imx6sx) {
-+	switch (imx6_pcie->variant) {
-+	case IMX6SX:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
- 				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN);
-@@ -246,72 +252,80 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
- 				   IMX6SX_GPR5_PCIE_BTNRST_RESET,
- 				   IMX6SX_GPR5_PCIE_BTNRST_RESET);
--		return 0;
--	}
--
--	/*
--	 * If the bootloader already enabled the link we need some special
--	 * handling to get the core back into a state where it is safe to
--	 * touch it for configuration.  As there is no dedicated reset signal
--	 * wired up for MX6QDL, we need to manually force LTSSM into "detect"
--	 * state before completely disabling LTSSM, which is a prerequisite
--	 * for core configuration.
--	 *
--	 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
--	 * indication that the bootloader activated the link.
--	 */
--	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
--	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
--
--	if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
--	    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
--		val = readl(pp->dbi_base + PCIE_PL_PFLR);
--		val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
--		val |= PCIE_PL_PFLR_FORCE_LINK;
--		writel(val, pp->dbi_base + PCIE_PL_PFLR);
-+		break;
-+	case IMX6Q:
-+		/*
-+		 * If the bootloader already enabled the link we need some special
-+		 * handling to get the core back into a state where it is safe to
-+		 * touch it for configuration.  As there is no dedicated reset signal
-+		 * wired up for MX6QDL, we need to manually force LTSSM into "detect"
-+		 * state before completely disabling LTSSM, which is a prerequisite
-+		 * for core configuration.
-+		 *
-+		 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
-+		 * indication that the bootloader activated the link.
-+		 */
-+		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
-+		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
-+
-+		if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
-+		    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
-+			val = readl(pp->dbi_base + PCIE_PL_PFLR);
-+			val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
-+			val |= PCIE_PL_PFLR_FORCE_LINK;
-+			writel(val, pp->dbi_base + PCIE_PL_PFLR);
-+
-+			regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+					   IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
-+		}
- 
--		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
--				IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+				   IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+				   IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
-+		break;
-+	default:
-+		BUG();
- 	}
- 
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
--
- 	return 0;
- }
- 
- static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
- {
- 	struct pcie_port *pp = &imx6_pcie->pp;
--	int ret;
-+	int ret = 0;
- 
--	if (imx6_pcie->is_imx6sx) {
-+	switch (imx6_pcie->variant) {
-+	case IMX6SX:
- 		ret = clk_prepare_enable(imx6_pcie->pcie_inbound_axi);
- 		if (ret) {
- 			dev_err(pp->dev, "unable to enable pcie_axi clock\n");
--			return ret;
-+			break;
- 		}
- 
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN, 0);
--		return ret;
-+		break;
-+	case IMX6Q:
-+		/* power up core phy and enable ref clock */
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+				   IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
-+		/*
-+		 * the async reset input need ref clock to sync internally,
-+		 * when the ref clock comes after reset, internal synced
-+		 * reset time is too short, cannot meet the requirement.
-+		 * add one ~10us delay here.
-+		 */
-+		udelay(10);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+				   IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
-+		break;
-+	default:
-+		BUG();
- 	}
- 
--	/* power up core phy and enable ref clock */
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
--	/*
--	 * the async reset input need ref clock to sync internally,
--	 * when the ref clock comes after reset, internal synced
--	 * reset time is too short, cannot meet the requirement.
--	 * add one ~10us delay here.
--	 */
--	udelay(10);
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
--			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
--	return 0;
-+	return ret;
- }
- 
- static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
-@@ -353,7 +367,7 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
- 	}
- 
--	if (imx6_pcie->is_imx6sx)
-+	if (imx6_pcie->variant == IMX6SX)
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
- 				   IMX6SX_GPR5_PCIE_BTNRST_RESET, 0);
- 
-@@ -374,11 +388,10 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
- {
- 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
- 
--	if (imx6_pcie->is_imx6sx) {
-+	if (imx6_pcie->variant == IMX6SX)
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				   IMX6SX_GPR12_PCIE_RX_EQ_MASK,
- 				   IMX6SX_GPR12_PCIE_RX_EQ_2);
--	}
- 
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
-@@ -585,8 +598,11 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 	pp = &imx6_pcie->pp;
- 	pp->dev = &pdev->dev;
- 
--	imx6_pcie->is_imx6sx = of_device_is_compatible(pp->dev->of_node,
--						       "fsl,imx6sx-pcie");
-+	if (of_device_is_compatible(pp->dev->of_node,
-+				    "fsl,imx6sx-pcie"))
-+		imx6_pcie->variant = IMX6SX;
-+	else
-+		imx6_pcie->variant = IMX6Q;
- 
- 	/* Added for PCI abort handling */
- 	hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
-@@ -623,7 +639,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(imx6_pcie->pcie);
- 	}
- 
--	if (imx6_pcie->is_imx6sx) {
-+	if (imx6_pcie->variant == IMX6SX) {
- 		imx6_pcie->pcie_inbound_axi = devm_clk_get(&pdev->dev,
- 							   "pcie_inbound_axi");
- 		if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
--- 
-2.5.5
+(3) seems like a possible solution for Chelsio.  In that case, it's
+the driver that needs the data, so the driver could maintain a quirk.
 
+Bjorn
