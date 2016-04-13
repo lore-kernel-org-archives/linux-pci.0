@@ -1,125 +1,351 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:33833 "EHLO
-	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750719AbcD2HTQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2016 03:19:16 -0400
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:36668 "EHLO
+	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758663AbcDMH2X (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 03:28:23 -0400
+Received: by mail-pf0-f181.google.com with SMTP id e128so29239062pfe.3
+        for <linux-pci@vger.kernel.org>; Wed, 13 Apr 2016 00:28:23 -0700 (PDT)
+Subject: Re: [PATCH v8 00/45] powerpc/powernv: PCI hotplug support
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
+	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <570DF50F.6010805@ozlabs.ru>
+Date: Wed, 13 Apr 2016 17:28:15 +1000
 MIME-Version: 1.0
-In-Reply-To: <20160428135607.GA12470@localhost>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-	<1460074573-7481-5-git-send-email-yinghai@kernel.org>
-	<20160422204920.GA17215@localhost>
-	<CAE9FiQWQ2ke3_P4Qhj+ON7pMiVCx4myhVNVaSYO4vYAL_P4njg@mail.gmail.com>
-	<20160428135607.GA12470@localhost>
-Date: Fri, 29 Apr 2016 00:19:15 -0700
-Message-ID: <CAE9FiQU_XSMfxFPSOrMjQ2DGnrM0D5T=0ORfDEBxqWggGrzc+Q@mail.gmail.com>
-Subject: Re: [PATCH v11 04/60] sparc/PCI: Use correct offset for bus address
- to resource
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Michael Ellerman <mpe@ellerman.id.au>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 28, 2016 at 6:56 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Wed, Apr 27, 2016 at 09:55:45PM -0700, Yinghai Lu wrote:
->> On Fri, Apr 22, 2016 at 1:49 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> > [+cc Ben, Michael]
->> > I'm kind of confused here.  There are two ways to mmap PCI BARs:
->> >
->> >   /proc/bus/pci/00/02.0 (proc_bus_pci_mmap()):
->> >     all BARs in one file; MEM/IO determined by ioctl()
->> >     mmap offset is a CPU physical address in the PCI resource
->> >
->> >   /sys/devices/pci0000:00/0000:00:02.0/resource0 (pci_mmap_resource()):
->> >     one file per BAR; MEM/IO determined by BAR type
->> >     mmap offset is between 0 and BAR size
->> >
->> > Both proc_bus_pci_mmap() and pci_mmap_resource() validate the
->> > requested area with pci_mmap_fits() before calling pci_mmap_page_range().
->> >
->> > In the proc_bus_pci_mmap() path, the offset in vma->vm_pgoff must be
->> > within the pdev->resource[], so the user must be supplying a CPU
->> > physical address (not an address obtained from pci_resource_to_user()).
->> > That vma->vm_pgoff is passed unchanged to pci_mmap_page_range().
->> >
->> > In the pci_mmap_resource() path, vma->vm_pgoff must be between 0 and
->> > the BAR size.  Then we add in the pci_resource_to_user() information
->> > before passing it to pci_mmap_page_range().  The comment in
->> > pci_mmap_resource() says pci_mmap_page_range() expects a "user
->> > visible" address, but I don't really believe that based on how
->> > proc_bus_pci_mmap() works.
->> >
->> > Do both proc_bus_pci_mmap() and pci_mmap_resource() work on sparc?
->> > It looks like they call pci_mmap_page_range() with different
->> > assumptions, so I don't see how they can both work.
->>
->> for sysfs path: in pci_mmap_resource
->>         pci_resource_to_user(pdev, i, res, &start, &end);
->>         vma->vm_pgoff += start >> PAGE_SHIFT;
->>      then call pci_mmap_page_range()
->>
->> the fit checking in pci_mmap_fits(),
->>         pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
->>                         pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
->>         if (start >= pci_start && start < pci_start + size &&
->>                         start + nr <= pci_start + size)
->>
->> so proc fs assume resource_start for vm_pgoff ?
->>
->> but current pci_mmap_page_range want to use bus address
->> start aka BAR value.
->>
->> and we have
->>
->>         /* pci_mmap_page_range() expects the same kind of entry as coming
->>          * from /proc/bus/pci/ which is a "user visible" value. If this is
->>          * different from the resource itself, arch will do necessary fixup.
->>          */
->>
->> so we need to fix pci_mmap_fits(), please check if it is ok, will
->> submit it as separated one.
+On 02/17/2016 02:43 PM, Gavin Shan wrote:
+> This series of patches rebases on powerpc/next branch, plus below additional
+> patches:
 >
-> 1) The sysfs path uses offsets between 0 and BAR size.  This path
-> should work identically on all arches.  "User" addresses are not
-> involved, so it doesn't make sense that this path calls
-> pci_resource_to_user() from pci_mmap_resource().
+>     <This series of patches>
+>     <Followup 3 patches from Gavin on SRIOV EEH, which aren't posted>
+>     https://patchwork.ozlabs.org/patch/581315/	(PATCH[1/9] Richard's SRIOV EEH)
+>     https://patchwork.ozlabs.org/patch/582639/	(PATCH[1/1] Gavin's EEH fix)
+>     https://patchwork.ozlabs.org/patch/582093/	(PATCH[1/1] Gavin's EEH fix)
+>     https://patchwork.ozlabs.org/patch/580626/	(PATCH[1/4] Gavin's PCI fix)
+>     https://patchwork.ozlabs.org/patch/580153/	(PATCH[1/1] Andrew's EEH minor fix)
+>     https://patchwork.ozlabs.org/patch/566827/	(PATCH[1/1] Russell's P5IOC2 removal)
+>     https://patchwork.ozlabs.org/patch/534154/	(PATCH[1/7] Richard's SRIOV rework)
+>     commit 388f7b1 ("Linux 4.5-rc3")
 >
-> 2) The procfs path uses offsets of resource values (CPU physical
-> addresses) on most architectures.  If some arches use something else,
-> e.g., "user" addresses, the grunge of dealing with them should be in
-> this path, i.e., in proc_bus_pci_mmap().  This implies that
-> pci_mmap_page_range() should deal with CPU physical addresses, not bus
-> addresses, and proc_bus_pci_mmap() should perform any necessary
-> translation.
+> The series of patches intend to support PCI slot for PowerPC PowerNV platform,
+> which is running on top of skiboot firmware. The patchset requires corresponding
+> changes from skiboot firmware, which is sent to skiboot@lists.ozlabs.org
+> for review. The PCI slots are exposed by skiboot with device node properties,
+> and kernel utilizes those properties to populated PCI slots accordingly.
 >
-> 3) If my theory that proc_bus_pci_mmap() and pci_mmap_resource() are
-> calling pci_mmap_page_range() with different assumptions is correct,
-> you should be able to write a test program that fails for one method,
-> and your patch should fix that failure.
+> The original PCI infrastructure on PowerNV platform can't support hotplug
+> because the PE is assigned during PHB fixup time, which is called for once
+> during system boot time. For this, the PCI infrastructure on PowerNV platform
+> has been reworked for a lot. After that, the PE and its corresponding resources
+> (IODT, M32DT, M64 segments, DMA32 and bypass window) are assigned upon updating
+> PCI bridge's resources, which might decide PE# assigned to the PE (e.g. M64
+> resources, on P8 strictly speaking). Each PE will maintain a reference count,
+> which is (number of child PCI devices + 1). That indicates when last child PCI
+> device leaves the PE, the PE and its included resources will be relased and put
+> back into free pool again. With this design, the PE will be released when EEH PE
+> is released. PATCH[1 - 23] are related to this part.
 >
-...>
-> This is the wrong place to deal with this.  IMO, any pci_resource_to_user()
-> fiddling should be done directly in proc_bus_pci_mmap(), and
-> pci_mmap_fits() should deal only with resources (CPU physical
-> addresses).  Then it wouldn't care where it was called from, so we
-> could get rid of the pci_mmap_api thing completely.
+>  From skiboot perspective, PCI slot is providing (hot/fundamental/complete)
+> resets to EEH. The kernel gets to know if skiboot supports various reset on one
+> particular PCI slot through device-tree node. If it does, EEH will utilize the
+> functionality provided by skiboot. Besides, the device-tree nodes have to change
+> in order to support PCI hotplug. For example, when one PCI adapter inserted to
+> one slot, its device-tree node should be added to the system dynamically. Conversely,
+> the device-tree node should be removed from the system when the PCI adapter is going
+> to be offline. Since pci_dn and eeh_dev have same life cyle as PCI device nodes,
+> they should be added/removed accordingly during PCI hotplug. PATCH[24 - 39] are
+> doing the related work.
+>
+> The OF driver is changed to support unflattening FDT blob for sub-stree, which
+> is covered by PATCH[40 - 44].
+>
+> The last one, PATCH[45], is the standalone PCI hotplug driver for PowerPC PowerNV
+> platform.
+>
+> =======
+> Testing
+> =======
+> 1. Unplug adapters behind non-empty slot, then plug them.
+>
+>     1.1 Check status
+>     # cat /sys/bus/pci/slots/C10/address
+>     0003:09:00
+>     # cat /sys/bus/pci/slots/C10/adapter
+>     1
+>     # cat /sys/bus/pci/slots/C10/power
+>     1
+>     # lspci
+>     0003:09:00.0 Ethernet controller: \
+>     Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+>     0003:09:00.1 Ethernet controller: \
+>     Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+>     0003:09:00.2 Ethernet controller: \
+>     Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+>     0003:09:00.3 Ethernet controller: \
+>     Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+>     # lspci -t
+>     # lspci -t
+>     -+-[0003:00]---00.0-[01-13]----00.0-[02-13]--+-01.0-[03]----00.0
+>      |                                           +-08.0-[04-08]--
+>      |                                           +-09.0-[09]--+-00.0
+>      |                                           |            +-00.1
+>      |                                           |            +-00.2
+>      |                                           |            \-00.3
+>      |                                           +-10.0-[0a-0e]--
+>      |                                           \-11.0-[0f-13]--
+>
+>     1.2 Unplug adapter 0003:09.00.x
+>     # echo 0 > /sys/bus/pci/slots/C10/power
+>     # lspci -t
+>     -+-[0003:00]---00.0-[01-13]----00.0-[02-13]--+-01.0-[03]----00.0
+>      |                                           +-08.0-[04-08]--
+>      |                                           +-09.0-[09]--
+>      |                                           +-10.0-[0a-0e]--
+>      |                                           \-11.0-[0f-13]--
+>
+>     1.3 Plug adapter 0003:09.00.x
+>     # echo 1 > /sys/bus/pci/slots/C10/power
 
-ok, I got it.
 
-We should offset vma->vm_pgoff back into [0, BAR)
+Do I understand correctly that the adapter was not physically moved in/out 
+of the slot between 1.2 and 1.3?
 
-will look at it Monday.
 
-Thanks
 
-Yinghai
+>     # lspci -t
+>     -+-[0003:00]---00.0-[01-13]----00.0-[02-13]--+-01.0-[03]----00.0
+>      |                                           +-08.0-[04-08]--
+>      |                                           +-09.0-[09]--+-00.0
+>      |                                           |            +-00.1
+>      |                                           |            +-00.2
+>      |                                           |            \-00.3
+>      |                                           +-10.0-[0a-0e]--
+>      |                                           \-11.0-[0f-13]--
+>
+>
+>     1.4 Inject EEH error to adapter 0003:09:00.x, which is recovered.
+
+I am confused - why is this needed to test hotplug?
+
+
+
+
+>     # cat /sys/bus/pci/devices/0003:09:00.0/eeh_pe_config_addr
+>     0x1
+>     # echo 1:0:4:0:0 > /sys/kernel/debug/powerpc/PCI0003/err_injct
+>     # lspci -ns 0003:09:00.0
+>     # dmesg | grep EEH
+>     EEH: Frozen PHB#3-PE#1 detected
+>     EEH: PE location: U78C9.001.WZS00CF-P1-C10, PHB location: N/A
+>     EEH: Detected PCI bus error on PHB#3-PE#1
+>     EEH: This PCI device has failed 1 times in the last hour
+>     EEH: Notify device drivers to shutdown
+>     EEH: Collect temporary log
+>     EEH: Reset without hotplug activity
+>     EEH: Notify device drivers the completion of reset
+>     EEH: Notify device driver to resume
+>
+> 2. Plug adapter and then unplug it. This requires hack in skiboot
+>     to skip probing the adapters behind the target (C12 in the
+>     testing) for once.
+>
+>     2.1 Check status
+>     # cat /sys/bus/pci/slots/C12/address
+>     0001:06
+>     # cat /sys/bus/pci/slots/C12/power
+>     0
+>     # cat /sys/bus/pci/slots/C12/adapter
+>     1
+>     # lspci -t
+>     +-[0001:00]---00.0-[01-0a]----00.0-[02-0a]--+-01.0-[03-04]----00.0-[04]----00.0
+>                                                 +-08.0-[05]----00.0
+>                                                 \-09.0-[06-0a]--
+>
+>     2.2 Plug adapter 0001:06:00.x
+>     # echo 1 > /sys/bus/pci/slots/C12/power
+>     # lspci -t
+>     +-[0001:00]---00.0-[01-0a]----00.0-[02-0a]--+-01.0-[03-04]----00.0-[04]----00.0
+>                                                 +-08.0-[05]----00.0
+>                                                 \-09.0-[06-0a]--+-00.0
+>                                                                 \-00.1
+>     # lspci
+>     0001:06:00.0 Ethernet controller: \
+>     Broadcom Corporation NetXtreme II BCM57810 10 Gigabit Ethernet (rev 10)
+>     0001:06:00.1 Ethernet controller: \
+>     Broadcom Corporation NetXtreme II BCM57810 10 Gigabit Ethernet (rev 10)
+>
+>     2.3 Inject EEH error to adapter 0001:06:00.x, which is recovered
+>     # cat /sys/bus/pci/devices/0001:06:00.0/eeh_pe_config_addr
+>     0x2
+>     # echo 2:0:4:0:0 > /sys/kernel/debug/powerpc/PCI0001/err_injct
+>     # dmesg | grep EEH
+>     EEH: Frozen PHB#1-PE#2 detected
+>     EEH: PE location: U78C9.001.WZS00CF-P1-C12, PHB location: N/A
+>     EEH: Detected PCI bus error on PHB#1-PE#2
+>     EEH: This PCI device has failed 1 times in the last hour
+>     EEH: Notify device drivers to shutdown
+>     EEH: Collect temporary log
+>     EEH: Reset without hotplug activity
+>     EEH: Notify device drivers the completion of reset
+>     EEH: Notify device driver to resume
+>
+>     2.4 Unplug adapter 0001:06:00.x
+>     # echo 0 > /sys/bus/pci/slots/C12/power
+>     # lspci -t
+>     +-[0001:00]---00.0-[01-0a]----00.0-[02-0a]--+-01.0-[03-04]----00.0-[04]----00.0
+>                                                 +-08.0-[05]----00.0
+>                                                 \-09.0-[06-0a]--
+>
+> =========
+> Changelog
+> =========
+> v8:
+>     * Rebased to linux-powerpc next branch.
+>     * Resolve comments from Alexey and Daniel on PCI part
+>     * Resolve comments from Rob on fdt.c
+>     * Retested (refer to the "Testing section")
+> v7:
+>     * Reworked revision to some extent.
+>     * Rebased to powerpc/next repository.
+>     * Reorder/split/merge/drop according - Alexey.
+>     * Defined macros and use array to track IO/M32/M64/DMA32 segments - Alexey.
+>     * Merged 3 files to one for the hotplug driver - Alexey.
+>     * As part of OPAL API, defined macros for PCI slot power state, hotplug
+>       message type. Defined macros for PCI slot power confirmed state in
+>       hotplug driver.
+>     * Misc comments from Alexey.
+>     * Reworked unflatten_dt_node() to avoid recursive function calls.
+>     * Use EXPORT_SYMBOL_GPL() and document function's input/output - Rob/Frank.
+> v6:
+>     * Patch reorder, split, squash - Alexey.
+>     * Minor coding style - Alexey.
+>     * Better function names for pcibios_{add,remove}_pci_devices - Bjorn
+>     * Replace pr_warn() with dev_warn() in PowerNV hotplug driver - Bjorn
+>     * Concurrent depth as parameter passed to __unflatten_dt_node() - Grant / Alexey
+>     * Replace overlay with of_changeset - Grant
+> v5:
+>     * Rebased to 4.1.rc6 and some unmerged patches as below:
+>       Alexey's DDW patchset (v11);
+>       Gavin's EEH error injection support (in mpe's next branch);
+>       Richard's EEH cleanup patches (in mpe's next branch);
+>       Richard's EEH support for VF (v7);
+>       Gavin's misc EEH fixes for 4.2;
+>     * The revision bases on skiboot corresponding patches (v7):
+>       https://patchwork.ozlabs.org/patch/480437/
+>     * Utilize OF overlay to update device-tree with help of newly introduced
+>       OPAL API opal_get_overlay_dt().
+>     * Split patches for easy review according to aik's comments.
+>     * Fix coding style from checkpatchc.pl as pointed by aik.
+>     * Code cleanup and misc fixup according to aik's input.
+> v4:
+>     * Rebased to 4.1.RC1
+>     * Added API to unflatten FDT blob to device node sub-tree, which is attached
+>       the indicated parent device node. The original mechanism based on formatted
+>       string stream has been dropped.
+>     * The PATCH[v3 09/21] ("powerpc/eeh: Delay probing EEH device during hotplug")
+>       was picked up sent to linux-ppc@ separately for review as Richard's "VF EEH
+>       Support" depends on that.
+> v3:
+>     * Rebased to 4.1.RC0
+>     * PowerNV PCI infrasturcture is total refactored in order to support PCI
+>       hotplug. The PowerNV hotplug driver is also reworked a lot because of
+>       the changes in skiboot in order to support PCI hotplug.
+>
+> Gavin Shan (45):
+>    PCI: Add pcibios_setup_bridge()
+>    powerpc/pci: Override pcibios_setup_bridge()
+>    powerpc/pci: Cleanup on struct pci_controller_ops
+>    powerpc/powernv: Cleanup on pci_controller_ops instances
+>    powerpc/powernv: Drop phb->bdfn_to_pe()
+>    powerpc/powernv: Reorder fields in struct pnv_phb
+>    powerpc/powernv: Rename PE# fields in struct pnv_phb
+>    powerpc/powernv: Fix initial IO and M32 segmap
+>    powerpc/powernv: Simplify pnv_ioda_setup_pe_seg()
+>    powerpc/powernv: IO and M32 mapping based on PCI device resources
+>    powerpc/powernv: Track M64 segment consumption
+>    powerpc/powernv: Rename M64 related functions
+>    powerpc/powernv/ioda1: M64 support on P7IOC
+>    powerpc/powernv/ioda1: Rename pnv_pci_ioda_setup_dma_pe()
+>    powerpc/powernv/ioda1: Introduce PNV_IODA1_DMA32_SEGSIZE
+>    powerpc/powernv: Remove DMA32 PE list
+>    powerpc/powernv/ioda1: Improve DMA32 segment track
+>    powerpc/powernv: Increase PE# capacity
+>    powerpc/powernv: Use PE instead of number during setup and release
+>    powerpc/powernv: Allocate PE# in reverse order
+>    powerpc/powernv: Create PEs at PCI hot plugging time
+>    powerpc/powernv/ioda1: Support releasing IODA1 TCE table
+>    powerpc/powernv: Dynamically release PEs
+>    powerpc/pci: Rename pcibios_{add,remove}_pci_devices()
+>    powerpc/pci: Rename pcibios_find_pci_bus()
+>    powerpc/pci: Move pci_find_bus_by_node() around
+>    powerpc/pci: Export pci_add_device_node_info()
+>    powerpc/pci: Introduce pci_remove_device_node_info()
+>    powerpc/pci: Export pci_traverse_device_nodes()
+>    powerpc/pci: Delay populating pdn
+>    powerpc/pci: Don't scan empty slot
+>    powerpc/pci: Update bridge windows on PCI plug
+>    powerpc/powernv: Simplify pnv_eeh_reset()
+>    powerpc/powernv: Exclude root bus in pnv_pci_reset_secondary_bus()
+>    powerpc/powernv: Fundamental reset in pnv_pci_reset_secondary_bus()
+>    powerpc/powernv: Support PCI slot ID
+>    powerpc/powernv: Use firmware PCI slot reset infrastructure
+>    powerpc/powernv: Functions to get/set PCI slot status
+>    powerpc/powernv: Select OF_DYNAMIC
+>    drivers/of: Split unflatten_dt_node()
+>    drivers/of: Avoid recursively calling unflatten_dt_node()
+>    drivers/of: Rename unflatten_dt_node()
+>    drivers/of: Specify parent node in of_fdt_unflatten_tree()
+>    drivers/of: Return allocated memory from of_fdt_unflatten_tree()
+>    PCI/hotplug: PowerPC PowerNV PCI hotplug driver
+>
+>   arch/powerpc/include/asm/eeh.h                 |    2 +-
+>   arch/powerpc/include/asm/opal-api.h            |   17 +-
+>   arch/powerpc/include/asm/opal.h                |    8 +-
+>   arch/powerpc/include/asm/pci-bridge.h          |   25 +-
+>   arch/powerpc/include/asm/pnv-pci.h             |    7 +
+>   arch/powerpc/include/asm/ppc-pci.h             |    8 +-
+>   arch/powerpc/kernel/eeh_dev.c                  |   17 +-
+>   arch/powerpc/kernel/eeh_driver.c               |   12 +-
+>   arch/powerpc/kernel/pci-common.c               |   16 +-
+>   arch/powerpc/kernel/pci-hotplug.c              |   47 +-
+>   arch/powerpc/kernel/pci_dn.c                   |   89 +-
+>   arch/powerpc/platforms/maple/pci.c             |   34 +-
+>   arch/powerpc/platforms/pasemi/pci.c            |    3 -
+>   arch/powerpc/platforms/powermac/pci.c          |   38 +-
+>   arch/powerpc/platforms/powernv/Kconfig         |    1 +
+>   arch/powerpc/platforms/powernv/eeh-powernv.c   |  179 ++--
+>   arch/powerpc/platforms/powernv/opal-wrappers.S |    4 +
+>   arch/powerpc/platforms/powernv/pci-ioda.c      | 1243 +++++++++++++++---------
+>   arch/powerpc/platforms/powernv/pci.c           |   92 +-
+>   arch/powerpc/platforms/powernv/pci.h           |   60 +-
+>   arch/powerpc/platforms/pseries/msi.c           |    4 +-
+>   arch/powerpc/platforms/pseries/pci_dlpar.c     |   32 -
+>   arch/powerpc/platforms/pseries/setup.c         |    8 +-
+>   drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c   |    2 +-
+>   drivers/of/fdt.c                               |  372 ++++---
+>   drivers/of/unittest.c                          |    2 +-
+>   drivers/pci/hotplug/Kconfig                    |   12 +
+>   drivers/pci/hotplug/Makefile                   |    3 +
+>   drivers/pci/hotplug/pnv_php.c                  |  870 +++++++++++++++++
+>   drivers/pci/hotplug/rpadlpar_core.c            |    8 +-
+>   drivers/pci/hotplug/rpaphp_core.c              |    4 +-
+>   drivers/pci/hotplug/rpaphp_pci.c               |    4 +-
+>   drivers/pci/setup-bus.c                        |    5 +
+>   include/linux/of_fdt.h                         |    5 +-
+>   include/linux/pci.h                            |    1 +
+>   35 files changed, 2360 insertions(+), 874 deletions(-)
+>   create mode 100644 drivers/pci/hotplug/pnv_php.c
+>
+
+
+-- 
+Alexey
