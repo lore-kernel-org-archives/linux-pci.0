@@ -1,113 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60245 "EHLO mx1.redhat.com"
+Received: from mga14.intel.com ([192.55.52.115]:20799 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750843AbcDFOpK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Apr 2016 10:45:10 -0400
-Date: Wed, 6 Apr 2016 08:45:04 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
-	aik@ozlabs.ru, benh@kernel.crashing.org, paulus@samba.org,
-	mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	eric.auger@linaro.org, will.deacon@arm.com,
-	gwshan@linux.vnet.ibm.com, alistair@popple.id.au, ruscur@russell.cc
-Subject: Re: [RFC v5 7/7] vfio-pci: Allow to mmap MSI-X table if interrupt
- remapping is supported
-Message-ID: <20160406084504.1a1cc16d@t450s.home>
-In-Reply-To: <1459864004-2869-2-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1459864004-2869-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-	<1459864004-2869-2-git-send-email-xyjxie@linux.vnet.ibm.com>
+	id S1759663AbcDMJQy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Apr 2016 05:16:54 -0400
+Date: Wed, 13 Apr 2016 12:16:43 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: Lukas Wunner <lukas@wunner.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux PM list <linux-pm@vger.kernel.org>
+Subject: Re: [PATCH v2 4/4] PCI: Add runtime PM support for PCIe ports
+Message-ID: <20160413091643.GL1714@lahna.fi.intel.com>
+References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1460111790-92836-5-git-send-email-mika.westerberg@linux.intel.com>
+ <20160412175203.GB13637@wunner.de>
+ <20160413083352.GI1714@lahna.fi.intel.com>
+ <CAMxnaaVEPYfU15OGwygsT_RHvqBFPU4NHFRNKK4Eng-TJixFkg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMxnaaVEPYfU15OGwygsT_RHvqBFPU4NHFRNKK4Eng-TJixFkg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue,  5 Apr 2016 21:46:44 +0800
-Yongji Xie <xyjxie@linux.vnet.ibm.com> wrote:
+On Wed, Apr 13, 2016 at 11:08:37AM +0200, Andreas Noever wrote:
+> > <- Now, my understanding is that Macs do not use ACPI hotplug but
+> > instead this is all native, correct? When you have the controller
+> > exposed all the time, of course you can get hotplug events and handle
+> > them in the driver.
+> >
+> > However, problem arises when enumeration and configuration is actually
+> > done in BIOS SMI handler, like in normal non-Mac PCs. If the port is in
+> > D3 the handler is not smart enough to move it back to D0 and then
+> > re-enumerate ports. It just gives up.
+> Is this issue specific to the "ACPI/SMI Thunderbolt" implementations
+> used in non-Mac PCs or is PCI hotplug in general done through SMI/ACPI
+> instead of the native pciehp port driver? Wouldn't it make more sense
+> to only disable runtime suspend on non-Mac thunderbolt ports (or ports
+> using ACPI hotplug, if that is detectable).
 
-> This patch enables mmapping MSI-X tables if
-> hardware supports interrupt remapping which
-> can ensure that a given pci device can only
-> shoot the MSIs assigned for it.
-> 
-> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-> ---
->  drivers/vfio/pci/vfio_pci.c         |    9 +++++++--
->  drivers/vfio/pci/vfio_pci_private.h |    1 +
->  drivers/vfio/pci/vfio_pci_rdwr.c    |    2 +-
->  3 files changed, 9 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> index c60d790..ef02896 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -201,6 +201,10 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
->  	} else
->  		vdev->msix_bar = 0xFF;
->  
-> +	if (iommu_capable(pdev->dev.bus, IOMMU_CAP_INTR_REMAP) ||
-
-This doesn't address the issue I raised earlier where ARM SMMU sets
-this capability, but doesn't really provide per vector isolation.  ARM
-either needs to be fixed or we need to consider the whole capability
-tainted for this application and standardize around the bus flags.
-It's not very desirable to have two different ways to test this anyway.
-
-> +		pdev->bus->bus_flags | PCI_BUS_FLAGS_MSI_REMAP)
-
-Perhaps some sort of wrapper for testing these flags would help avoid
-this kind of coding error (| vs &)
-
-> +		vdev->msi_remap = true;
-> +
->  	if (!vfio_vga_disabled() && vfio_pci_is_vga(pdev))
->  		vdev->has_vga = true;
->  
-> @@ -635,7 +639,8 @@ static long vfio_pci_ioctl(void *device_data,
->  				     VFIO_REGION_INFO_FLAG_WRITE;
->  			if (vdev->bar_mmap_supported[info.index]) {
->  				info.flags |= VFIO_REGION_INFO_FLAG_MMAP;
-> -				if (info.index == vdev->msix_bar) {
-> +				if (info.index == vdev->msix_bar &&
-> +						!vdev->msi_remap) {
->  					ret = msix_sparse_mmap_cap(vdev, &caps);
->  					if (ret)
->  						return ret;
-> @@ -1067,7 +1072,7 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
->  	if (req_start + req_len > phys_len)
->  		return -EINVAL;
->  
-> -	if (index == vdev->msix_bar) {
-> +	if (index == vdev->msix_bar && !vdev->msi_remap) {
->  		/*
->  		 * Disallow mmaps overlapping the MSI-X table; users don't
->  		 * get to touch this directly.  We could find somewhere
-> diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
-> index 0ea4c62..4f20963 100644
-> --- a/drivers/vfio/pci/vfio_pci_private.h
-> +++ b/drivers/vfio/pci/vfio_pci_private.h
-> @@ -78,6 +78,7 @@ struct vfio_pci_device {
->  	int			irq_type;
->  	int			num_regions;
->  	struct vfio_pci_region	*region;
-> +	bool			msi_remap;
->  	u8			msi_qmax;
->  	u8			msix_bar;
->  	u16			msix_size;
-> diff --git a/drivers/vfio/pci/vfio_pci_rdwr.c b/drivers/vfio/pci/vfio_pci_rdwr.c
-> index 5ffd1d9..606ee3c 100644
-> --- a/drivers/vfio/pci/vfio_pci_rdwr.c
-> +++ b/drivers/vfio/pci/vfio_pci_rdwr.c
-> @@ -164,7 +164,7 @@ ssize_t vfio_pci_bar_rw(struct vfio_pci_device *vdev, char __user *buf,
->  	} else
->  		io = vdev->barmap[bar];
->  
-> -	if (bar == vdev->msix_bar) {
-> +	if (bar == vdev->msix_bar && !vdev->msi_remap) {
->  		x_start = vdev->msix_offset;
->  		x_end = vdev->msix_offset + vdev->msix_size;
->  	}
-
+I think it is specific to ACPI hotplug implementations (non-Mac PCs). We
+should be able to detect which one is used. ACPI _OSC method is used to
+allow/disallow native PCIe hotplug so I think we use that information
+along with the slot capabilities to decide whether we enable or disable
+runtime PM.
