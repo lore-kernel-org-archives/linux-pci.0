@@ -1,89 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:34865 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752379AbcDSDII (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Apr 2016 23:08:08 -0400
-Received: by mail-pa0-f52.google.com with SMTP id fs9so1676580pac.2
-        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 20:08:07 -0700 (PDT)
-Subject: Re: [PATCH v8 20/45] powerpc/powernv: Allocate PE# in reverse order
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-21-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
-	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <5715A10F.2030704@ozlabs.ru>
-Date: Tue, 19 Apr 2016 13:07:59 +1000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 13 Apr 2016 08:21:01 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sudeep Holla <sudeep.holla@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Duc Dang <dhdang@apm.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: X-Gene: Unhandled fault: synchronous external abort in
+ pci_generic_config_read32
+Message-ID: <20160413132101.GA22699@localhost>
+References: <20150724224258.GA23990@google.com>
+ <CADaLNDmYZ=8XQt82W_H74QaOiX3UwkVxkE1_EWRgzhkG1boebw@mail.gmail.com>
+ <CAErSpo549xfAnx62quCqGHh3DNay5Lfb6EhEG+4EXooEuueQFQ@mail.gmail.com>
+ <CADaLNDn95H=g73DKWRsrB4SuWcf+-8mkepbwb_DC-sFsVkrk6g@mail.gmail.com>
+ <20150728212944.GA12958@google.com>
+ <CAPKp9ub7KDCvK_hhJWR4LfFGqBkYGtD2Pb8cLsd_7bQ4bK3j2w@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-21-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPKp9ub7KDCvK_hhJWR4LfFGqBkYGtD2Pb8cLsd_7bQ4bK3j2w@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/17/2016 02:44 PM, Gavin Shan wrote:
-> PE number for one particular PE can be allocated dynamically or
-> reserved according to the consumed M64 (64-bits prefetchable)
-> segments of the PE. The M64 resources, and hence their segments
-> and PE number are assigned/reserved in ascending order. The PE
-> numbers are allocated dynamically in ascending order as well.
-> It's not a problem as the PE numbers are reserved and then
-> allocated all at once in fine order. However, it will introduce
-> conflicts when PCI hotplug is supported: the PE number to be
-> reserved for newly added PE might have been assigned.
->
-> To resolve above conflicts, this forces the PE number to be
-> allocated dynamically in reverse order. With this patch applied,
-> the PE numbers are reserved in ascending order, but allocated
-> dynamically in reverse order.
+On Wed, Apr 13, 2016 at 10:58:18AM +0100, Sudeep Holla wrote:
+> Hi,
+> 
+> (sorry for replying on the old thread, but I found it could be related
+> to the issue
+> I have now)
+> 
+> On Tue, Jul 28, 2015 at 10:29 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > On Tue, Jul 28, 2015 at 10:45:26AM -0700, Duc Dang wrote:
+> >> On Tue, Jul 28, 2015 at 9:43 AM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >> > On Fri, Jul 24, 2015 at 7:05 PM, Duc Dang <dhdang@apm.com> wrote:
+> >> >> Hi Bjorn,
+> >> >>
+> >> >> On Fri, Jul 24, 2015 at 3:42 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> >> >>>
+> >> >>> I regularly see faults like this on an APM X-Gene:
+> >> >>>
+> >> >>>   U-Boot 2013.04-mustang_sw_1.14.14 (Dec 16 2014 - 15:59:33)
+> >> >>>   CPU0: APM ARM 64-bit Potenza Rev B0 2400MHz PCP 2400MHz
+> >> >>>        32 KB ICACHE, 32 KB DCACHE
+> >> >>>        SOC 2000MHz IOBAXI 400MHz AXI 250MHz AHB 200MHz GFC 125MHz
+> >> >>>   ...
+> >> >>>   Unhandled fault: synchronous external abort (0x96000010) at 0xffffff8000110034
+> >> >>>   Internal error: : 96000010 [#1] SMP
+> >> >>>   Modules linked in:
+> >> >>>   CPU: 0 PID: 3723 Comm: ... 4.1.0-smp-DEV #3
+> >> >>>   Hardware name: APM X-Gene Mustang board (DT)
+> >> >>>   task: ffffffc7dc1a4140 ti: ffffffc7dc118000 task.ti: ffffffc7dc118000
+> >> >>>   PC is at pci_generic_config_read32+0x4c/0xb8
+> >> >>>   LR is at pci_generic_config_read32+0x40/0xb8
+> >> >>>   pc : [<ffffffc00033b90c>] lr : [<ffffffc00033b900>] pstate: 600001c5
+> >> >>>   ...
+> >> >>>   Call trace:
+> >> >>>   [<ffffffc00033b90c>] pci_generic_config_read32+0x4c/0xb8
+> >> >>>   [<ffffffc00033bf58>] pci_user_read_config_byte+0x60/0xc4
+> >> >>>   [<ffffffc0003496a8>] pci_read_config+0x15c/0x238
+> >> >>>   [<ffffffc0002393b4>] sysfs_kf_bin_read+0x68/0xa0
+> >> >>>   [<ffffffc00023896c>] kernfs_fop_read+0x9c/0x1ac
+> >> >>>   [<ffffffc0001c361c>] __vfs_read+0x44/0x128
+> >> >>>   [<ffffffc0001c3e28>] vfs_read+0x84/0x144
+> >> >>>   [<ffffffc0001c4764>] SyS_read+0x50/0xb0
+> >> >>
+> >> >> The log shows kernel gets an exception when trying to access Mellanox
+> >> >> card configuration space. This is usually due to suboptimal PCIe
+> >> >> SerDes parameters are using in your board, which will cause bad link
+> >> >> quality.
+> >> >> The PCIe SerDes programming is done in U-Boot, so I suggest you do a
+> >> >> U-Boot upgrade to our latest X-Gene U-Boot release.
+> >> >
+> >> > I installed U-Boot 1.15.12, which I thought was the latest.  I'm still
+> >> > seeing this issue regularly, approx once/hour.
+> >>
+> >> Our latest U-Boot is 1.15.15, but U-Boot 1.15.12 is already a good
+> >> version to use. Are you running any PCIe traffic test when the error
+> >> happens?
+> >
+> > Nope, the machine was either idle or running a reboot test; no PCIe stress
+> > test or anything.
+> >
+> 
+> Was there any conclusion on this ?
+> I am having similar issue[1] on my Juno with sky2 PCIe driver during reboot.
 
+We found that the unhandled faults occurred when using an extender
+card.  After removing the extender card, we didn't see the faults any
+more.
 
-The patch is probably is ok, the commit log is not - I do not follow it. 
-Some PEs are reserved (for what? why does the absolute PE number matter? 
-put it in the commit log), that means that the corresponding bits in 
-pe_alloc[] should be set so when you will be allocating PEs for a just 
-plugged device, you won't pick them and you will pick free ones, and the 
-order should not matter. I would think that "reservation" happens once at 
-the boot time so you set "used" bits for the reserved PEs then and after 
-that the dynamic allocator will skip them.
-
-
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/platforms/powernv/pci-ioda.c | 14 ++++++--------
->   1 file changed, 6 insertions(+), 8 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index f182ca7..565725b 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -144,16 +144,14 @@ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
->
->   static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
->   {
-> -	unsigned long pe;
-> +	unsigned long pe = phb->ioda.total_pe_num - 1;
->
-> -	do {
-> -		pe = find_next_zero_bit(phb->ioda.pe_alloc,
-> -					phb->ioda.total_pe_num, 0);
-> -		if (pe >= phb->ioda.total_pe_num)
-> -			return NULL;
-> -	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
-> +	for (pe = phb->ioda.total_pe_num - 1; pe >= 0; pe--) {
-> +		if (!test_and_set_bit(pe, phb->ioda.pe_alloc))
-> +			return pnv_ioda_init_pe(phb, pe);
-> +	}
->
-> -	return pnv_ioda_init_pe(phb, pe);
-> +	return NULL;
->   }
->
->   static void pnv_ioda_free_pe(struct pnv_ioda_pe *pe)
->
-
-
--- 
-Alexey
+> [1] http://marc.info/?l=linux-netdev&m=146046999701956&w=2
