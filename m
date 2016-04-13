@@ -1,159 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46680 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751644AbcDONIJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 15 Apr 2016 09:08:09 -0400
-Date: Fri, 15 Apr 2016 08:08:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	David Daney <david.daney@cavium.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Russell King <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 2/3] drivers: pci: host-generic: claim bus resources
- on PCI_PROBE_ONLY set-ups
-Message-ID: <20160415130803.GA2105@localhost>
-References: <1456843449-19393-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1456843449-19393-3-git-send-email-lorenzo.pieralisi@arm.com>
- <20160412044311.GB11361@localhost>
- <20160412154810.GA32109@red-moon>
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:36456 "EHLO
+	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754391AbcDMQWI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 12:22:08 -0400
+Date: Wed, 13 Apr 2016 18:22:03 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCH 1/2] dt-bindings: pci: tegra: Update for per-lane PHYs
+Message-ID: <20160413162203.GB30129@ulmo.ba.sec>
+References: <1457452094-5409-1-git-send-email-thierry.reding@gmail.com>
+ <56E98F2E.5010307@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160412154810.GA32109@red-moon>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="uQr8t48UFsdbeI+V"
+In-Reply-To: <56E98F2E.5010307@wwwdotorg.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 12, 2016 at 04:48:10PM +0100, Lorenzo Pieralisi wrote:
-> On Mon, Apr 11, 2016 at 11:43:11PM -0500, Bjorn Helgaas wrote:
-> > Hi Lorenzo,
-> > 
-> > On Tue, Mar 01, 2016 at 02:44:08PM +0000, Lorenzo Pieralisi wrote:
-> > > The PCI host generic driver does not reassign bus resources on systems
-> > > that require the BARs set-up to be immutable (ie PCI_PROBE_ONLY) since
-> > > that would trigger system failures. Nonetheless, PCI bus resources
-> > > allocated to PCI bridge and devices must be claimed in order to be
-> > > validated and inserted in the kernel resource tree, but the current
-> > > driver omits the resources claiming and relies on arch specific kludges
-> > > to prevent probing failure (ie preventing resources enablement on
-> > > PCI_PROBE_ONLY systems).
-> > > 
-> > > This patch adds code to the PCI host generic driver that correctly
-> > > claims bus resources upon probe on systems that are required to
-> > > prevent reassignment after bus enumeration, so that the allocated
-> > > resources can be enabled successfully upon PCI device drivers probing,
-> > > without resorting to arch back-ends workarounds.
-> > > 
-> > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > > Acked-by: Will Deacon <will.deacon@arm.com>
-> > > Cc: Arnd Bergmann <arnd@arndb.de>
-> > > Cc: David Daney <david.daney@cavium.com>
-> > > Cc: Will Deacon <will.deacon@arm.com>
-> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > ---
-> > >  drivers/pci/host/pci-host-generic.c | 5 ++++-
-> > >  1 file changed, 4 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> > > index 1652bc7..e529825 100644
-> > > --- a/drivers/pci/host/pci-host-generic.c
-> > > +++ b/drivers/pci/host/pci-host-generic.c
-> > > @@ -252,7 +252,10 @@ static int gen_pci_probe(struct platform_device *pdev)
-> > >  
-> > >  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-> > >  
-> > > -	if (!pci_has_flag(PCI_PROBE_ONLY)) {
-> > > +
-> > > +	if (pci_has_flag(PCI_PROBE_ONLY)) {
-> > > +		pci_bus_claim_resources(bus);
-> > > +	} else {
-> > >  		pci_bus_size_bridges(bus);
-> > >  		pci_bus_assign_resources(bus);
-> > >  
-> > 
-> > The next patch removes the arm and arm64 pcibios_enable_device()
-> > implementations, which implies that arm and arm64 only need the generic
-> > version, which simply calls pci_enable_resources().  That assumes r->parent
-> > is set.
-> > 
-> > After this patch, we'll call pci_bus_claim_resources() for the
-> > PCI_PROBE_ONLY case, and that sets r->parent for all the resources.
-> > 
-> > Where does r->parent get set in the non-PCI_PROBE_ONLY case?  Obviously
-> > that path *works*, because you're not changing anything there.  I'd just
-> > like to have a hint that makes this change more obvious.
-> 
-> On all ARM/ARM64 PCI controllers drivers I am aware of (apart from the
-> kvmtool PCI host controller which does require PCI_PROBE_ONLY, so we need
-> this patch), resources are always reassigned and the core code reassigning
-> them takes care of assigning their parent pointers too, to answer your
-> question.
 
-Here's what I find confusing.  Consider these three cases:
+--uQr8t48UFsdbeI+V
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-  1) Firmware programs no BARs and we reassign everything.  We call
-  pci_bus_assign_resources(), and the pci_assign_resource() ...
-  allocate_resource() path makes sure everything is claimed.  This is
-  apparently the normal arm/arm64 path, and it already works.
+On Wed, Mar 16, 2016 at 10:51:58AM -0600, Stephen Warren wrote:
+> On 03/08/2016 08:48 AM, Thierry Reding wrote:
+> > From: Thierry Reding <treding@nvidia.com>
+> >=20
+> > Changes to the pad controller device tree binding have required that
+> > each lane be associated with a separate PHY.
+>=20
+> I still don't think this has anything to do with DT bindings. Rather, the
+> definition of a PHY (in HW and the Linux PHY subsystem) is a single lane.
+> That fact then requires drivers to support a PHY per lane rather than a
+> single multi-lane PHY, and equally means the DT bindings must be written
+> according to the correct definition of a PHY.
+>=20
+> Still, I suppose the commit description is fine as is.
 
-  2) Firmware programs all BARs and we set PCI_PROBE_ONLY.  After this
-  series, we'll claim the resources and remove the PCI_PROBE_ONLY
-  special case in pcibios_enable_device().  This is great!
+I've reworded the commit message to give a more accurate rationale for
+the change. I'll be posting a v5 soon.
 
-  3) Firmware programs all BARs but we don't set PCI_PROBE_ONLY.  We
-  call pci_bus_assign_resources(), but I think it does nothing because
-  everything is already assigned.  The resources are not claimed and
-  pci_enable_resources() will fail.
+> > Update the PCI host bridge
+> > device tree binding to allow each root port to define the list of PHYs
+> > required to drive the lanes associated with it.
+>=20
+> > diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.=
+txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
+>=20
+> > +Required properties for Tegra124 and later:
+> > +- phys: Must contain an phandle to a PHY for each entry in phy-names.
+> > +- phy-names: Must include an entry for each active lane. Note that the=
+ number
+> > +  of entries does not have to (though usually will) be equal to the sp=
+ecified
+> > +  number of lanes in the nvidia,num-lanes property. Entries are of the=
+ form
+> > +  "pcie-N": where N ranges from 0 to the value specified in nvidia,num=
+-lanes.
+>=20
+> When would the number of PHYs not equal the number of lanes? I thought the
+> whole point of this patch was to switch to per-lane PHYs? Perhaps I'm just
+> misremembering some exception, so there may be no need to change this.
 
-This last case 3) is the problem.  I'm guessing this case doesn't
-currently occur on arm/arm64, but it's the normal case on x86, and it
-seems perverse that things work if firmware does nothing, but they
-don't work if firmware does more setup.
+This is useful to support the case where we want to connect a x1 or x2
+device to a root port that is configured to drive more lanes. It's a
+rather unusual configuration, but it would be possible for example to
+have an onboard x1 ethernet card, but the board layout is such that it
+runs in x1/x2 mode, with the ethernet card connected to the x2 port.
 
-So I think we should add some sort of arm/arm64-specific
-pci_claim_resource() path similar to the pcibios_allocate_resources()
-stuff on x86.
+> >   Example:
+> >=20
+> >   SoC DTSI:
+> > @@ -169,6 +179,9 @@ SoC DTSI:
+> >   			ranges;
+> >=20
+> >   			nvidia,num-lanes =3D <2>;
+> > +
+> > +			phys =3D <&{/padctl@0,7009f000/pads/pcie/pcie-4}>;
+> > +			phy-names =3D "pcie-0";
+> >   		};
+>=20
+> The example shows a Tegra20 PCIe controller, yet includes
+> Tegra124-or-greater properties. That seems a bit odd. Should the changes =
+to
+> the example be dropped, or does "Required properties for Tegra124 and lat=
+er"
+> mean "Required for T124+, optional for earlier chips"?
 
-> As for this patch series, given that:
-> 
-> commit (in -next) 903589ca7165 ("ARM: 8554/1: kernel: pci: remove
-> pci=firmware command line parameter handling") removes the PCI_PROBE_ONLY
-> handling from the (ARM) command line, the PCI host generic becomes the
-> last ARM/ARM64 host controller that requires PCI_PROBE_ONLY to function
-> (depending on DT settings).
-> 
-> The idea behind adding pci_bus_claim_resources (patch 1) to core code
-> was that it could be reused by other arches too, I do not have evidence
-> though, I have to prove it, so I'd rather squash patch 1 into this one
-> and make the code claiming resources local to the PCI host generic,
-> I can't add a generic PCI core API just for one host controller
-> (IMHO we should add an API that allows us to claim bus resources and
-> realloc the ones for which claiming fail - which may mean releasing
-> bridges resources and realloc/resize them - code is in the kernel already
-> I have to write that API).
-> 
-> The code claiming resources on x86, IA64 and PowerPC looks extremely
-> similar but it has to be proven that a generic function has a chance
-> to work, so patch 1 is not really justified at present.
+I've annotated these properties with "for Tegra124 and later", hopefully
+that clarifies that these properties are only valid on Tegra124 and
+later chips. The reason is that earlier (Tegra114 didn't support PCIe,
+Tegra30 and Tegra20 did but had PHY registers within the PCI host bridge
+I/O memory).
 
-I don't really object to patch 1, but you're right that it's possible
-we could do a better job later.  I would certainly like to get that
-sort of code (including the pcibios_allocate_resources() stuff I just
-mentioned) out of the arches and into the core somehow.
+Thierry
 
-> If you have no objections I will squash patch 1 into this one (moving
-> the respective code in PCI host generic driver), and I would not merge
-> this series till the commit above in -next gets in the kernel (which
-> makes sure that PCI_PROBE_ONLY can't be set on the command line, that's
-> fundamental to this series, at least on ARM, on ARM64 DT is the only way
-> PCI_PROBE_ONLY can be set and only on host controllers that check the
-> chosen node property - ie PCI host generic, that we are patching).
+--uQr8t48UFsdbeI+V
+Content-Type: application/pgp-signature; name="signature.asc"
 
-If there's a stable branch containing 903589ca7165 ("ARM: 8554/1:
-kernel: pci: remove pci=firmware command line parameter handling"), I
-can pull that and merge your series on top of it.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-Bjorn
+iQIcBAABCAAGBQJXDnIpAAoJEN0jrNd/PrOh3DkP/0FrpZYpnWHkE13hyrqEdfsr
+HXbORfUCZVDdVjwgco3bhCzdW6lbJCk+mWECYtkqXG2mB1jvvQzSU/cpLVu75yyl
+n2sCLEI2a+8SM6NpAOfzbDArvJU/BKUj+g7oPpFuzgkBti7vrRvYX0cf7Nj5ew3j
+egFCZ96dyB56IZ7Xov+ztSBU00+rFsyvKydUvPpEQqebzXDJzTI68xEs3EcQe5iw
++vx3CHBGKPAN0Erz20lBlR2RuWqZFaDZpxVmrMU/3dA0Ef9V1vLtKAcdH+FOEfbU
+EPkykV6fI3WcjShkZaQtRj+i/jpU3+Sgx4GShAaz+cadEavagVeBXeiZ80l5KkHz
+t5rSaWZvofvB9Lnb9V5sM+AnOWWSiA48qyTm68MJzQ6w+EoXETLZtAw8CiF/3UhS
+Fl1jptCOE5lqxJy1EKoVeHn+5LQ5LgKD84bSaBb9mm7gCs66FZzzHMTJprNkMhO6
+ZZ62FImCzJdj2O2tuXqUc1qdUd6rXJ3C4GRFIRrX5svhrddBB8CAAV4a8cHoBUK4
+XIfwKjZJwNm7uuCdlJOJ/zN4S2+7O9gBY4vPzJ/fza8bVHZ8QGYYgGlTqfcK0/IS
+WbuTBdDw5b3xLQ1o1D19fMmySvUDjbsPd1r372MoXIuiPW8qM8Xwkp77DNkTpqKo
+LPu3z6ajLousVnVNw4m2
+=X1Xj
+-----END PGP SIGNATURE-----
+
+--uQr8t48UFsdbeI+V--
