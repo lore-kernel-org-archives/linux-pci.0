@@ -1,117 +1,140 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 39/60] PCI: Separate out save_resources()/restore_resources()
-Date: Thu,  7 Apr 2016 17:15:52 -0700
-Message-Id: <1460074573-7481-40-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:35098 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030369AbcDMJxZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 05:53:25 -0400
+Received: by mail-pa0-f42.google.com with SMTP id fs9so11996800pac.2
+        for <linux-pci@vger.kernel.org>; Wed, 13 Apr 2016 02:53:25 -0700 (PDT)
+Subject: Re: [PATCH v8 08/45] powerpc/powernv: Fix initial IO and M32 segmap
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-9-git-send-email-gwshan@linux.vnet.ibm.com>
+ <570DE553.80708@ozlabs.ru> <20160413075324.GA31320@gwshan>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
+	robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <570E170C.1040301@ozlabs.ru>
+Date: Wed, 13 Apr 2016 19:53:16 +1000
+MIME-Version: 1.0
+In-Reply-To: <20160413075324.GA31320@gwshan>
+Content-Type: text/plain; charset=koi8-r; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to save/restore resources several times for alt_size support,
-separate the save_resources()/resources() to save some lines later.
+On 04/13/2016 05:53 PM, Gavin Shan wrote:
+> On Wed, Apr 13, 2016 at 04:21:07PM +1000, Alexey Kardashevskiy wrote:
+>> On 02/17/2016 02:43 PM, Gavin Shan wrote:
+>>> There are two arrays for IO and M32 segment maps on every PHB.
+>>> The index of the arrays are segment number and the value stored
+>>> in the corresponding element is PE number, indicating the segment
+>>> is assigned to the PE. Initially, all elements in those two arrays
+>>> are zeroes, meaning all segments are assigned to PE#0. It's wrong.
+>>>
+>>> This fixes the initial values in the elements of those two arrays
+>>> to IODA_INVALID_PE, meaning all segments aren't assigned to any
+>>> PE.
+>>
+>> This is ok.
+>>
+>>> In order to use IODA_INVALID_PE (-1) to represent invalid PE
+>>> number, the types of those two arrays are changed from "unsigned int"
+>>> to "int".
+>>
+>> "unsigned" can carry (-1) perfectly fine, just add a type cast to
+>> IODA_INVALID_PE:
+>>
+>> #define IODA_INVALID_PE    (unsigned int)(-1)
+>>
+>> Using "signed" type for indexes which cannot be negative does not make much
+>> sense - instead of checking for the upper boundary, you have to check for "<
+>> 0" too.
+>>
+>> OPAL uses unsigned type for PE (uint64_t or uint32_t or uint16_t - this is
+>> quite funny).
+>>
+>> pnv_ioda_pe::pe_number is "unsigned" and this pe_number is the same thing as
+>> I can see in pnv_ioda_setup_dev_PE().
+>>
+>> Some printk() print the PE number as "%x" (which implies "unsigned").
+>>
+>
+> Yes, I can simply have something like below when PE number as well as
+> segment index are represented by "unsigned int" values, right?
+>
+> #define IODA_INVALID_PE		0xffffffff
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 49 ++++++++++++++++++++++++++++++-------------------
- 1 file changed, 30 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index b5529cc..1571245 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -435,6 +435,29 @@ static bool pci_need_to_release(unsigned long mask, struct resource *res)
- 	return false;	/* should not get here */
- }
- 
-+static bool save_resources(struct list_head *head,
-+			   struct list_head *save_head)
-+{
-+	struct pci_dev_resource *dev_res;
-+
-+	/* Save original start, end, flags etc at first */
-+	list_for_each_entry(dev_res, head, list)
-+		if (add_to_list(save_head, dev_res->dev, dev_res->res)) {
-+			free_list(save_head);
-+			return false;
-+		}
-+
-+	return true;
-+}
-+
-+static void restore_resource(struct pci_dev_resource *save_res,
-+			     struct resource *res)
-+{
-+	res->start = save_res->start;
-+	res->end = save_res->end;
-+	res->flags = save_res->flags;
-+}
-+
- static void __assign_resources_sorted(struct list_head *head,
- 				 struct list_head *realloc_head,
- 				 struct list_head *fail_head)
-@@ -472,13 +495,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	if (!realloc_head || list_empty(realloc_head))
- 		goto requested_and_reassign;
- 
--	/* Save original start, end, flags etc at first */
--	list_for_each_entry(dev_res, head, list) {
--		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
--			free_list(&save_head);
--			goto requested_and_reassign;
--		}
--	}
-+	if (!save_resources(head, &save_head))
-+		goto requested_and_reassign;
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
-@@ -547,12 +565,9 @@ static void __assign_resources_sorted(struct list_head *head,
- 		}
- 	}
- 	/* Restore start/end/flags from saved list */
--	list_for_each_entry(save_res, &save_head, list) {
--		res = save_res->res;
--		res->start = save_res->start;
--		res->end = save_res->end;
--		res->flags = save_res->flags;
--	}
-+	list_for_each_entry(save_res, &save_head, list)
-+		restore_resource(save_res, save_res->res);
-+
- 	free_list(&save_head);
- 
- requested_and_reassign:
-@@ -2024,9 +2039,7 @@ again:
- 	list_for_each_entry(fail_res, &fail_head, list) {
- 		struct resource *res = fail_res->res;
- 
--		res->start = fail_res->start;
--		res->end = fail_res->end;
--		res->flags = fail_res->flags;
-+		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
- 			/* last or third times and later */
-@@ -2110,9 +2123,7 @@ again:
- 	list_for_each_entry(fail_res, &fail_head, list) {
- 		struct resource *res = fail_res->res;
- 
--		res->start = fail_res->start;
--		res->end = fail_res->end;
--		res->flags = fail_res->flags;
-+		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
- 			res->flags = 0;
- 			/* last time */
+This will work too, yes.
+
+>
+>>
+>> I suggest changing the pci_dn::pe_number type from "int" to "unsigned int" to
+>> match pnv_ioda_pe::pe_number, in a separate patch. Or do not touch types for
+>> now.
+>>
+>
+> Yes, I will have a separate patch right before this one to address it.
+>
+>>
+>>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>> ---
+>>>   arch/powerpc/platforms/powernv/pci-ioda.c | 9 +++++++--
+>>>   arch/powerpc/platforms/powernv/pci.h      | 4 ++--
+>>>   2 files changed, 9 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>> index 1d2514f..44cc5f3 100644
+>>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>> @@ -3239,7 +3239,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>>   	unsigned long size, m32map_off, pemap_off, iomap_off = 0;
+>>>   	const __be64 *prop64;
+>>>   	const __be32 *prop32;
+>>> -	int len;
+>>> +	int i, len;
+>>>   	u64 phb_id;
+>>>   	void *aux;
+>>>   	long rc;
+>>> @@ -3334,8 +3334,13 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>>   	aux = memblock_virt_alloc(size, 0);
+>>>   	phb->ioda.pe_alloc = aux;
+>>>   	phb->ioda.m32_segmap = aux + m32map_off;
+>>> -	if (phb->type == PNV_PHB_IODA1)
+>>> +	for (i = 0; i < phb->ioda.total_pe_num; i++)
+>>> +		phb->ioda.m32_segmap[i] = IODA_INVALID_PE;
+>>> +	if (phb->type == PNV_PHB_IODA1) {
+>>>   		phb->ioda.io_segmap = aux + iomap_off;
+>>> +		for (i = 0; i < phb->ioda.total_pe_num; i++)
+>>> +			phb->ioda.io_segmap[i] = IODA_INVALID_PE;
+>>> +	}
+>>>   	phb->ioda.pe_array = aux + pemap_off;
+>>>   	set_bit(phb->ioda.reserved_pe_idx, phb->ioda.pe_alloc);
+>>>
+>>> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>>> index 784882a..36c4965 100644
+>>> --- a/arch/powerpc/platforms/powernv/pci.h
+>>> +++ b/arch/powerpc/platforms/powernv/pci.h
+>>> @@ -146,8 +146,8 @@ struct pnv_phb {
+>>>   		struct pnv_ioda_pe	*pe_array;
+>>>
+>>>   		/* M32 & IO segment maps */
+>>> -		unsigned int		*m32_segmap;
+>>> -		unsigned int		*io_segmap;
+>>> +		int			*m32_segmap;
+>>> +		int			*io_segmap;
+>>>
+>>>   		/* IRQ chip */
+>>>   		int			irq_chip_init;
+>>>
+>>
+>>
+>> --
+>> Alexey
+>>
+>
+
+
 -- 
-1.8.4.5
+Alexey
