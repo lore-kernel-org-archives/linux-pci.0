@@ -1,116 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0137.outbound.protection.outlook.com ([157.56.110.137]:51377
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933529AbcDLRf6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 13:35:58 -0400
-From: Casey Leedom <leedom@chelsio.com>
-To: Hannes Reinecke <hare@suse.com>,
-	Hariprasad S <hariprasad@chelsio.com>
-CC: Bjorn Helgaas <helgaas@kernel.org>,
-	SWise OGC <swise@opengridcomputing.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-Subject: Re: 4.6-rc2 regression with commit 104daa71b396: check VPD access
- offset against length
-Date: Tue, 12 Apr 2016 17:35:53 +0000
-Message-ID: <BY2PR12MB0648C2EDB334862B48C81043C8950@BY2PR12MB0648.namprd12.prod.outlook.com>
-References: <BY2PR12MB06483CA232B6B3BFF7179012C8910@BY2PR12MB0648.namprd12.prod.outlook.com>
- <BY2PR12MB0648F0C35D907AA640D7E56CC8940@BY2PR12MB0648.namprd12.prod.outlook.com>
- <02ec01d1941e$3dda2010$b98e6030$@opengridcomputing.com>
- <20160412053700.GF11361@localhost> <570C93BD.2030102@suse.com>
- <20160412082304.GB2771@hari-Latitude-E5550>,<570CB5FA.7010507@suse.com>
-In-Reply-To: <570CB5FA.7010507@suse.com>
-Content-Type: text/plain; charset=US-ASCII
+Received: from mga14.intel.com ([192.55.52.115]:22771 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754681AbcDMIe7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Apr 2016 04:34:59 -0400
+Date: Wed, 13 Apr 2016 11:34:54 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v2 2/4] PCI: Move PCIe ports to D3 during suspend
+Message-ID: <20160413083454.GJ1714@lahna.fi.intel.com>
+References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1460111790-92836-3-git-send-email-mika.westerberg@linux.intel.com>
+ <20160412174542.GA13637@wunner.de>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160412174542.GA13637@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-| From: Hannes Reinecke <hare@suse.com>
-| Sent: Tuesday, April 12, 2016 1:46 AM
-| To: Hariprasad S
-| Cc: Bjorn Helgaas; SWise OGC; Casey Leedom; linux-pci@vger.kernel.org; bhelgaas@google.com
-| Subject: Re: 4.6-rc2 regression with commit 104daa71b396: check VPD access offset against length
-|
-| On 04/12/2016 10:23 AM, Hariprasad Shenai wrote:
-| [ .. ]
-| >
-| > Hi,
-| >
-| > How about adding a PCI helper function to set the actual VPD_SIZE.
-| >
-| > Some thing like below. We have tested this and works. The bnx2x and the tg3
-| > drive may also need this, because I see them calling pci_read_vpd()
-| > with non-zero offsets. The bnx2x in particular looks like it's doing something
-| > similar to cxgb4 so it would also probably benefit from this change (once it's
-| > fixed to call the new pci_set_size_vpd() API).
-|
-| That indeed looks reasonable.
-| Please find some comments inline.
-|
-| ...
-|
-| > --- a/drivers/pci/access.c
-| > +++ a/drivers/pci/access.c
-| > @@ -275,6 +275,19 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
-| >  }
-| >  EXPORT_SYMBOL(pci_write_vpd);
-| >
-| > +/**
-| > + * pci_set_size_vpd - Set size of Vital Product Data space
-| > + * @dev:     pci device struct
-| > + * @len:     size of vpd space
-| > + */
-| > +ssize_t pci_set_size_vpd(struct pci_dev *dev, size_t len)
-| > +{
-| > +     if (!dev->vpd || !dev->vpd->ops)
-| > +             return -ENODEV;
-| > +     return dev->vpd->ops->set_size(dev, len);
-| > +}
-| > +EXPORT_SYMBOL(pci_set_size_vpd);
-| > +
-| >  #define PCI_VPD_MAX_SIZE (PCI_VPD_ADDR_MASK + 1)
-| >
-| >  /**
-| > @@ -392,13 +405,8 @@ static ssize_t pci_vpd_read(struct pci_dev *dev, loff_t pos, size_t count,
-| >       if (vpd->len == 0)
-| >               return -EIO;
-| >
-| > -     if (pos > vpd->len)
-| > -             return 0;
-| > -
-| > -     if (end > vpd->len) {
-| > -             end = vpd->len;
-| > -             count = end - pos;
-| > -     }
-| > +     if (end > vpd->len)
-| > +             return -EINVAL;
-| >
-| >       if (mutex_lock_killable(&vpd->lock))
-| >               return -EINTR;
-|
-| Why do you need this change?
-| We still would be needing to validate 'pos', don't we?
-| I'd prefer not to have this bit in.
+On Tue, Apr 12, 2016 at 07:45:42PM +0200, Lukas Wunner wrote:
+> Hi Mika,
+> 
+> On Fri, Apr 08, 2016 at 01:36:28PM +0100, Mika Westerberg wrote:
+> > --- a/drivers/pci/pci-driver.c
+> > +++ b/drivers/pci/pci-driver.c
+> > @@ -744,6 +744,19 @@ static int pci_pm_suspend(struct device *dev)
+> >  	return 0;
+> >  }
+> >  
+> > +/*
+> > + * Check if given device can go to low power state. Currently we allow
+> > + * normal PCI devices and PCI bridges if their bridge_d3 is set.
+> > + */
+> > +static bool pci_can_suspend(struct pci_dev *pdev)
+> > +{
+> > +	if (!pci_has_subordinate(pdev))
+> > +		return true;
+> > +	else if (pdev->bridge_d3)
+> > +		return true;
+> > +	return false;
+> > +}
+> > +
+> >  static int pci_pm_suspend_noirq(struct device *dev)
+> >  {
+> >  	struct pci_dev *pci_dev = to_pci_dev(dev);
+> > @@ -777,7 +790,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
+> >  
+> >  	if (!pci_dev->state_saved) {
+> >  		pci_save_state(pci_dev);
+> > -		if (!pci_has_subordinate(pci_dev))
+> > +		if (pci_can_suspend(pci_dev))
+> >  			pci_prepare_to_sleep(pci_dev);
+> >  	}
+> 
+> pci_can_suspend() is only used by this single function. It may be
+> worth to consider folding it into pci_pm_suspend_noirq(), i.e. simply
+> 
+> 		if (!pci_has_subordinate(pci_dev) || pdev->bridge_d3)
+> 
+> together with the "Currently we allow..." comment above.
 
-Two reasons:
-
- 1. It makes pci_vpd_read() with pci_vpd_write() which has exactly this
-    logic.
-
- 2. More importantly, the new implementation of pci_read_vpd() silently
-    fails to perform a VPD read and allows the caller to use random stack
-    garbage in the read buffer without knowing that it's not really VPD
-    contents.  If any portion of the VPD read isn't going to be performed,
-    we should signal that back to the caller.  We could either return an
-    error or we could return the number of bytes actually read.  The problem
-    with the latter is that it would require changing every single caller to
-    check for Requested Read Length == Actual Read Length.  Returning an
-    error is the more conservative fix and allows for rapid diagnosis of
-    problems.
-
-    And that last point is important because I spent quite a bit of time
-    digging around trying to figure out why cxgb4 suddenly wasn't working.
-
-Casey
-
+Okay.
