@@ -1,408 +1,288 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:16971 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752248AbcD1WY6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Apr 2016 18:24:58 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Keith Busch <keith.busch@intel.com>, Lukas Wunner <lukas@wunner.de>
-Subject: [PATCHv4] pcie: Add driver for Downstream Port Containment
-Date: Thu, 28 Apr 2016 16:24:48 -0600
-Message-Id: <1461882288-31506-1-git-send-email-keith.busch@intel.com>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:33419 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759388AbcDMF50 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 01:57:26 -0400
+Received: by mail-pa0-f46.google.com with SMTP id zm5so27462640pac.0
+        for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2016 22:57:25 -0700 (PDT)
+Subject: Re: [PATCH v8 07/45] powerpc/powernv: Rename PE# fields in struct
+ pnv_phb
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-8-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
+	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <570DDFBE.40302@ozlabs.ru>
+Date: Wed, 13 Apr 2016 15:57:18 +1000
+MIME-Version: 1.0
+In-Reply-To: <1455680668-23298-8-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This adds driver support for root and downstream ports that implement
-the PCI-Express Downstream Port Containment extended capability. DPC is
-an optional capability to contain uncorrectable errors below a port.
+On 02/17/2016 02:43 PM, Gavin Shan wrote:
+> This renames the fields related to PE number in "struct pnv_phb"
+> for better reflecting of their usages as Alexey suggested. No
+> logical changes introduced.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-For more information on DPC, please see PCI Express Base Specification
-Revision 4, section 7.31, or view the PCI-SIG DPC ECN here:
 
-  https://pcisig.com/sites/default/files/specification_documents/ECN_DPC_2012-02-09_finalized.pdf
+Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
 
-When a DPC event is triggered, the h/w disables downstream links, so
-the DPC driver schedules removal for all devices below this port. This
-may happen concurrently with a PCI-e hotplug driver if enabled. When all
-downstream devices are removed and the link state transitions to disabled,
-the DPC driver clears the DPC status and interrupt bits so the link may
-retrain for a newly connected device.
 
-The pcie device naming is updated to accomodate the additional service
-driver. From Lukas Wunner <lukas@wunner.de>:
+> ---
+>   arch/powerpc/platforms/powernv/eeh-powernv.c |  2 +-
+>   arch/powerpc/platforms/powernv/pci-ioda.c    | 58 ++++++++++++++--------------
+>   arch/powerpc/platforms/powernv/pci.c         |  2 +-
+>   arch/powerpc/platforms/powernv/pci.h         |  4 +-
+>   4 files changed, 33 insertions(+), 33 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+> index 950b3e5..69e41ce 100644
+> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+> @@ -75,7 +75,7 @@ static int pnv_eeh_init(void)
+>   		 * and P7IOC separately. So we should regard
+>   		 * PE#0 as valid for PHB3 and P7IOC.
+>   		 */
+> -		if (phb->ioda.reserved_pe != 0)
+> +		if (phb->ioda.reserved_pe_idx != 0)
+>   			eeh_add_flag(EEH_VALID_PE_ZERO);
+>
+>   		break;
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 10ecd97..1d2514f 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -124,7 +124,7 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
+>
+>   static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>   {
+> -	if (!(pe_no >= 0 && pe_no < phb->ioda.total_pe)) {
+> +	if (!(pe_no >= 0 && pe_no < phb->ioda.total_pe_num)) {
+>   		pr_warn("%s: Invalid PE %d on PHB#%x\n",
+>   			__func__, pe_no, phb->hose->global_number);
+>   		return;
+> @@ -144,8 +144,8 @@ static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
+>
+>   	do {
+>   		pe = find_next_zero_bit(phb->ioda.pe_alloc,
+> -					phb->ioda.total_pe, 0);
+> -		if (pe >= phb->ioda.total_pe)
+> +					phb->ioda.total_pe_num, 0);
+> +		if (pe >= phb->ioda.total_pe_num)
+>   			return IODA_INVALID_PE;
+>   	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
+>
+> @@ -199,13 +199,13 @@ static int pnv_ioda2_init_m64(struct pnv_phb *phb)
+>   	 * expected to be 0 or last one of PE capabicity.
+>   	 */
+>   	r = &phb->hose->mem_resources[1];
+> -	if (phb->ioda.reserved_pe == 0)
+> +	if (phb->ioda.reserved_pe_idx == 0)
+>   		r->start += phb->ioda.m64_segsize;
+> -	else if (phb->ioda.reserved_pe == (phb->ioda.total_pe - 1))
+> +	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
+>   		r->end -= phb->ioda.m64_segsize;
+>   	else
+>   		pr_warn("  Cannot strip M64 segment for reserved PE#%d\n",
+> -			phb->ioda.reserved_pe);
+> +			phb->ioda.reserved_pe_idx);
+>
+>   	return 0;
+>
+> @@ -274,7 +274,7 @@ static int pnv_ioda2_pick_m64_pe(struct pci_bus *bus, bool all)
+>   		return IODA_INVALID_PE;
+>
+>   	/* Allocate bitmap */
+> -	size = _ALIGN_UP(phb->ioda.total_pe / 8, sizeof(unsigned long));
+> +	size = _ALIGN_UP(phb->ioda.total_pe_num / 8, sizeof(unsigned long));
+>   	pe_alloc = kzalloc(size, GFP_KERNEL);
+>   	if (!pe_alloc) {
+>   		pr_warn("%s: Out of memory !\n",
+> @@ -290,7 +290,7 @@ static int pnv_ioda2_pick_m64_pe(struct pci_bus *bus, bool all)
+>   	 * contributed by its child buses. For the case, we needn't
+>   	 * pick M64 dependent PE#.
+>   	 */
+> -	if (bitmap_empty(pe_alloc, phb->ioda.total_pe)) {
+> +	if (bitmap_empty(pe_alloc, phb->ioda.total_pe_num)) {
+>   		kfree(pe_alloc);
+>   		return IODA_INVALID_PE;
+>   	}
+> @@ -301,8 +301,8 @@ static int pnv_ioda2_pick_m64_pe(struct pci_bus *bus, bool all)
+>   	 */
+>   	master_pe = NULL;
+>   	i = -1;
+> -	while ((i = find_next_bit(pe_alloc, phb->ioda.total_pe, i + 1)) <
+> -		phb->ioda.total_pe) {
+> +	while ((i = find_next_bit(pe_alloc, phb->ioda.total_pe_num, i + 1)) <
+> +		phb->ioda.total_pe_num) {
+>   		pe = &phb->ioda.pe_array[i];
+>
+>   		if (!master_pe) {
+> @@ -355,7 +355,7 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+>   	hose->mem_offset[1] = res->start - pci_addr;
+>
+>   	phb->ioda.m64_size = resource_size(res);
+> -	phb->ioda.m64_segsize = phb->ioda.m64_size / phb->ioda.total_pe;
+> +	phb->ioda.m64_segsize = phb->ioda.m64_size / phb->ioda.total_pe_num;
+>   	phb->ioda.m64_base = pci_addr;
+>
+>   	pr_info(" MEM64 0x%016llx..0x%016llx -> 0x%016llx\n",
+> @@ -456,7 +456,7 @@ static int pnv_ioda_get_pe_state(struct pnv_phb *phb, int pe_no)
+>   	s64 rc;
+>
+>   	/* Sanity check on PE number */
+> -	if (pe_no < 0 || pe_no >= phb->ioda.total_pe)
+> +	if (pe_no < 0 || pe_no >= phb->ioda.total_pe_num)
+>   		return OPAL_EEH_STOPPED_PERM_UNAVAIL;
+>
+>   	/*
+> @@ -1088,7 +1088,7 @@ static struct pnv_ioda_pe *pnv_ioda_setup_npu_PE(struct pci_dev *npu_pdev)
+>   	 * same GPU get assigned the same PE.
+>   	 */
+>   	gpu_pdev = pnv_pci_get_gpu_dev(npu_pdev);
+> -	for (pe_num = 0; pe_num < phb->ioda.total_pe; pe_num++) {
+> +	for (pe_num = 0; pe_num < phb->ioda.total_pe_num; pe_num++) {
+>   		pe = &phb->ioda.pe_array[pe_num];
+>   		if (!pe->pdev)
+>   			continue;
+> @@ -1537,9 +1537,9 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+>   		} else {
+>   			mutex_lock(&phb->ioda.pe_alloc_mutex);
+>   			*pdn->pe_num_map = bitmap_find_next_zero_area(
+> -				phb->ioda.pe_alloc, phb->ioda.total_pe,
+> +				phb->ioda.pe_alloc, phb->ioda.total_pe_num,
+>   				0, num_vfs, 0);
+> -			if (*pdn->pe_num_map >= phb->ioda.total_pe) {
+> +			if (*pdn->pe_num_map >= phb->ioda.total_pe_num) {
+>   				mutex_unlock(&phb->ioda.pe_alloc_mutex);
+>   				dev_info(&pdev->dev, "Failed to enable VF%d\n", num_vfs);
+>   				kfree(pdn->pe_num_map);
+> @@ -2858,7 +2858,7 @@ static void pnv_pci_ioda_fixup_iov_resources(struct pci_dev *pdev)
+>   	pdn->m64_single_mode = false;
+>
+>   	total_vfs = pci_sriov_get_totalvfs(pdev);
+> -	mul = phb->ioda.total_pe;
+> +	mul = phb->ioda.total_pe_num;
+>   	total_vf_bar_sz = 0;
+>
+>   	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
+> @@ -2960,7 +2960,7 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+>   			region.end   = res->end - phb->ioda.io_pci_base;
+>   			index = region.start / phb->ioda.io_segsize;
+>
+> -			while (index < phb->ioda.total_pe &&
+> +			while (index < phb->ioda.total_pe_num &&
+>   			       region.start <= region.end) {
+>   				phb->ioda.io_segmap[index] = pe->pe_number;
+>   				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+> @@ -2985,7 +2985,7 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+>   				       phb->ioda.m32_pci_base;
+>   			index = region.start / phb->ioda.m32_segsize;
+>
+> -			while (index < phb->ioda.total_pe &&
+> +			while (index < phb->ioda.total_pe_num &&
+>   			       region.start <= region.end) {
+>   				phb->ioda.m32_segmap[index] = pe->pe_number;
+>   				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+> @@ -3300,13 +3300,13 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>   		pr_err("  Failed to map registers !\n");
+>
+>   	/* Initialize more IODA stuff */
+> -	phb->ioda.total_pe = 1;
+> +	phb->ioda.total_pe_num = 1;
+>   	prop32 = of_get_property(np, "ibm,opal-num-pes", NULL);
+>   	if (prop32)
+> -		phb->ioda.total_pe = be32_to_cpup(prop32);
+> +		phb->ioda.total_pe_num = be32_to_cpup(prop32);
+>   	prop32 = of_get_property(np, "ibm,opal-reserved-pe", NULL);
+>   	if (prop32)
+> -		phb->ioda.reserved_pe = be32_to_cpup(prop32);
+> +		phb->ioda.reserved_pe_idx = be32_to_cpup(prop32);
+>
+>   	/* Parse 64-bit MMIO range */
+>   	pnv_ioda_parse_m64_window(phb);
+> @@ -3315,29 +3315,29 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>   	/* FW Has already off top 64k of M32 space (MSI space) */
+>   	phb->ioda.m32_size += 0x10000;
+>
+> -	phb->ioda.m32_segsize = phb->ioda.m32_size / phb->ioda.total_pe;
+> +	phb->ioda.m32_segsize = phb->ioda.m32_size / phb->ioda.total_pe_num;
+>   	phb->ioda.m32_pci_base = hose->mem_resources[0].start - hose->mem_offset[0];
+>   	phb->ioda.io_size = hose->pci_io_size;
+> -	phb->ioda.io_segsize = phb->ioda.io_size / phb->ioda.total_pe;
+> +	phb->ioda.io_segsize = phb->ioda.io_size / phb->ioda.total_pe_num;
+>   	phb->ioda.io_pci_base = 0; /* XXX calculate this ? */
+>
+>   	/* Allocate aux data & arrays. We don't have IO ports on PHB3 */
+> -	size = _ALIGN_UP(phb->ioda.total_pe / 8, sizeof(unsigned long));
+> +	size = _ALIGN_UP(phb->ioda.total_pe_num / 8, sizeof(unsigned long));
+>   	m32map_off = size;
+> -	size += phb->ioda.total_pe * sizeof(phb->ioda.m32_segmap[0]);
+> +	size += phb->ioda.total_pe_num * sizeof(phb->ioda.m32_segmap[0]);
+>   	if (phb->type == PNV_PHB_IODA1) {
+>   		iomap_off = size;
+> -		size += phb->ioda.total_pe * sizeof(phb->ioda.io_segmap[0]);
+> +		size += phb->ioda.total_pe_num * sizeof(phb->ioda.io_segmap[0]);
+>   	}
+>   	pemap_off = size;
+> -	size += phb->ioda.total_pe * sizeof(struct pnv_ioda_pe);
+> +	size += phb->ioda.total_pe_num * sizeof(struct pnv_ioda_pe);
+>   	aux = memblock_virt_alloc(size, 0);
+>   	phb->ioda.pe_alloc = aux;
+>   	phb->ioda.m32_segmap = aux + m32map_off;
+>   	if (phb->type == PNV_PHB_IODA1)
+>   		phb->ioda.io_segmap = aux + iomap_off;
+>   	phb->ioda.pe_array = aux + pemap_off;
+> -	set_bit(phb->ioda.reserved_pe, phb->ioda.pe_alloc);
+> +	set_bit(phb->ioda.reserved_pe_idx, phb->ioda.pe_alloc);
+>
+>   	INIT_LIST_HEAD(&phb->ioda.pe_dma_list);
+>   	INIT_LIST_HEAD(&phb->ioda.pe_list);
+> @@ -3356,7 +3356,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>   #endif
+>
+>   	pr_info("  %03d (%03d) PE's M32: 0x%x [segment=0x%x]\n",
+> -		phb->ioda.total_pe, phb->ioda.reserved_pe,
+> +		phb->ioda.total_pe_num, phb->ioda.reserved_pe_idx,
+>   		phb->ioda.m32_size, phb->ioda.m32_segsize);
+>   	if (phb->ioda.m64_size)
+>   		pr_info("                 M64: 0x%lx [segment=0x%lx]\n",
+> diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+> index f838fcf..a53e4c8 100644
+> --- a/arch/powerpc/platforms/powernv/pci.c
+> +++ b/arch/powerpc/platforms/powernv/pci.c
+> @@ -380,7 +380,7 @@ static void pnv_pci_config_check_eeh(struct pci_dn *pdn)
+>   	 */
+>   	pe_no = pdn->pe_number;
+>   	if (pe_no == IODA_INVALID_PE) {
+> -		pe_no = phb->ioda.reserved_pe;
+> +		pe_no = phb->ioda.reserved_pe_idx;
+>   	}
+>
+>   	/*
+> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+> index f2a1452..784882a 100644
+> --- a/arch/powerpc/platforms/powernv/pci.h
+> +++ b/arch/powerpc/platforms/powernv/pci.h
+> @@ -120,8 +120,8 @@ struct pnv_phb {
+>
+>   	struct {
+>   		/* Global bridge info */
+> -		unsigned int		total_pe;
+> -		unsigned int		reserved_pe;
+> +		unsigned int		total_pe_num;
+> +		unsigned int		reserved_pe_idx;
+>
+>   		/* 32-bit MMIO window */
+>   		unsigned int		m32_size;
+>
 
-The names of port service devices previously used one nibble to encode
-the port type and another nibble to encode the service type. Since this
-commit introduces a fifth service type, it changes device names to use
-one *byte* to encode the service type. E.g. a hotplug port service on a
-downstream bridge was previously called pcie24 and is now called pcie204.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
-Cc: Lukas Wunner <lukas@wunner.de>
----
-Thanks, everyone, for all the thorough and quick feedback!
-
-v3 -> v4:
-
-  Consistent naming (PCI Express, PCIe).
-
-  Change log now shows where anyone may find the feature defined in
-  the specification.
-
-  Moved enabling/disabling functions in line with the probe/remove. These
-  were trivial functions called from one place, so didn't improve
-  readibility by having their own function.
-
-  Move the driver to drivers/pci/pcie/; this is only one file, so does
-  not warrant having its own directory, Kconfig and Makefile.
-
-  Renamed driver from "dpcdrv" (from following the "aerdrv" convention)
-  to "pcie-dpc", as that is more informative.
-
-  Removed defines for register bit fields that weren't being used by
-  the driver.
-
-  More informative info and warn messages logged on initialization and
-  event triggering. If an event disables the PCIe links, a warning message
-  notifies that all downstream devices are being removed.
-
-  The config space position of the DPC capability is now cached. Since
-  we have to associate something with the pcie_device to cache the pos,
-  I have the driver allocate a structure for this. The structure also
-  contains the work_struct so irq handler doesn't have to allocate one.
-
- drivers/pci/pcie/Kconfig        |  15 ++++
- drivers/pci/pcie/Makefile       |   2 +
- drivers/pci/pcie/pcie-dpc.c     | 168 ++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pcie/portdrv.h      |   4 +-
- drivers/pci/pcie/portdrv_acpi.c |   2 +-
- drivers/pci/pcie/portdrv_core.c |   6 +-
- include/linux/pcieport_if.h     |   2 +
- include/uapi/linux/pci_regs.h   |  20 ++++-
- 8 files changed, 213 insertions(+), 6 deletions(-)
- create mode 100644 drivers/pci/pcie/pcie-dpc.c
-
-diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
-index e294713..82f78b8 100644
---- a/drivers/pci/pcie/Kconfig
-+++ b/drivers/pci/pcie/Kconfig
-@@ -80,3 +80,18 @@ endchoice
- config PCIE_PME
- 	def_bool y
- 	depends on PCIEPORTBUS && PM
-+
-+config PCIE_DPC
-+	tristate "PCIe Downstream Port Containment support"
-+	depends on PCIEPORTBUS
-+	default n
-+	help
-+	  This enables PCI Express Downstream Port Containment (DPC)
-+	  driver support. DPC events from Root and Downstream ports
-+	  will be handled by the DPC driver. If your system doesn't
-+	  have this capability or you do not want to use this feature,
-+	  it is safe to answer N.
-+
-+	  To compile this driver as a module, choose M here: the module
-+	  will be called pcie-dpc.
-+
-diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
-index 00c62df..b24525b 100644
---- a/drivers/pci/pcie/Makefile
-+++ b/drivers/pci/pcie/Makefile
-@@ -14,3 +14,5 @@ obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o
- obj-$(CONFIG_PCIEAER)		+= aer/
- 
- obj-$(CONFIG_PCIE_PME) += pme.o
-+
-+obj-$(CONFIG_PCIE_DPC) += pcie-dpc.o
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-new file mode 100644
-index 0000000..3ffde00
---- /dev/null
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -0,0 +1,168 @@
-+/*
-+ * PCI Express Downstream Port Containment services driver
-+ * Copyright (C) 2016 Intel Corp.
-+ *
-+ * This file is subject to the terms and conditions of the GNU General Public
-+ * License.  See the file "COPYING" in the main directory of this archive
-+ * for more details.
-+ */
-+
-+#include <linux/delay.h>
-+#include <linux/interrupt.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/pcieport_if.h>
-+
-+struct dpc_dev {
-+	struct pcie_device	*dev;
-+	struct work_struct 	work;
-+	int 			cap_pos;
-+};
-+
-+static void dpc_wait_link_inactive(struct pci_dev *pdev)
-+{
-+	unsigned long timeout = jiffies + HZ;
-+	u16 lnk_status;
-+
-+	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-+	while (lnk_status & PCI_EXP_LNKSTA_DLLLA &&
-+					!time_after(jiffies, timeout)) {
-+		msleep(10);
-+		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-+	}
-+	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
-+		dev_warn(&pdev->dev, "Link state not disabled for DPC event");
-+}
-+
-+static void interrupt_event_handler(struct work_struct *work)
-+{
-+	struct dpc_dev *dpc = container_of(work, struct dpc_dev, work);
-+	struct pci_dev *dev, *temp, *pdev = dpc->dev->port;
-+	struct pci_bus *parent = pdev->subordinate;
-+
-+	pci_lock_rescan_remove();
-+	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
-+					 bus_list) {
-+		pci_dev_get(dev);
-+		pci_stop_and_remove_bus_device(dev);
-+		pci_dev_put(dev);
-+	}
-+	pci_unlock_rescan_remove();
-+
-+	dpc_wait_link_inactive(pdev);
-+	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
-+		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
-+}
-+
-+static irqreturn_t dpc_irq(int irq, void *context)
-+{
-+	struct dpc_dev *dpc = (struct dpc_dev *)context;
-+	struct pci_dev *pdev = dpc->dev->port;
-+
-+	u16 status, source;
-+
-+	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
-+	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_SOURCE_ID, &source);
-+	if (!status)
-+		return IRQ_NONE;
-+
-+	dev_info(&dpc->dev->device,
-+		"DPC containment event, status:%04x source:%04x\n",
-+		status, source);
-+
-+	if (status & PCI_EXP_DPC_STATUS_TRIGGER) {
-+		u16 reason = (status >> 1) & 0x3;
-+
-+		dev_warn(&dpc->dev->device,
-+			"DPC %s triggered, remove downstream devices\n",
-+				(reason == 0) ? "unmasked uncorrectable error" :
-+				(reason == 1) ? "ERR_NONFATAL" :
-+				(reason == 2) ? "ERR_FATAL" :
-+						"extended error");
-+		schedule_work(&dpc->work);
-+	}
-+	return IRQ_HANDLED;
-+}
-+
-+#define FLAG(x, y) (((x) & (y)) ? '+' : '-')
-+static int dpc_probe(struct pcie_device *dev)
-+{
-+	u16 ctl, cap;
-+	int status;
-+	struct dpc_dev *dpc;
-+	struct pci_dev *pdev = dev->port;
-+
-+	dpc = kzalloc(sizeof(*dpc), GFP_KERNEL);
-+	if (!dpc)
-+		return -ENOMEM;
-+
-+	dpc->cap_pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
-+	dpc->dev = dev;
-+	INIT_WORK(&dpc->work, interrupt_event_handler);
-+	set_service_data(dev, dpc);
-+
-+	status = request_irq(dev->irq, dpc_irq, IRQF_SHARED, "pciedpc", dpc);
-+	if (status) {
-+		dev_warn(&dev->device, "request IRQ:%d failed:%d\n",
-+							dev->irq, status);
-+		goto out;
-+	}
-+
-+	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
-+	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
-+
-+	ctl |= PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
-+	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
-+
-+	dev_info(&dev->device,
-+		"DPC error containment capabilities: "\
-+		"Int Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
-+		cap & 0xf, FLAG(cap, PCI_EXP_DPC_CAP_RP_EXT),
-+		FLAG(cap, PCI_EXP_DPC_CAP_POISONED_TLP),
-+		FLAG(cap, PCI_EXP_DPC_CAP_SW_TRIGGER), (cap >> 8) & 0xf,
-+		FLAG(cap, PCI_EXP_DPC_CAP_DL_ACTIVE));
-+	return status;
-+ out:
-+	kfree(dpc);
-+	return status;
-+}
-+
-+static void dpc_remove(struct pcie_device *dev)
-+{
-+	struct dpc_dev *dpc = get_service_data(dev);
-+	struct pci_dev *pdev = dev->port;
-+	u16 ctl;
-+
-+	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
-+	ctl |= ~(PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN);
-+	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
-+
-+	free_irq(dev->irq, dpc);
-+	kfree(dpc);
-+}
-+
-+static struct pcie_port_service_driver dpcdriver = {
-+	.name		= "pciedpc",
-+	.port_type	= PCI_EXP_TYPE_ROOT_PORT | PCI_EXP_TYPE_DOWNSTREAM,
-+	.service	= PCIE_PORT_SERVICE_DPC,
-+	.probe		= dpc_probe,
-+	.remove		= dpc_remove,
-+};
-+
-+static int __init dpc_service_init(void)
-+{
-+	return pcie_port_service_register(&dpcdriver);
-+}
-+
-+static void __exit dpc_service_exit(void)
-+{
-+	pcie_port_service_unregister(&dpcdriver);
-+}
-+
-+MODULE_DESCRIPTION("PCI Express Downstream Port Containment driver");
-+MODULE_AUTHOR("Keith Busch <keith.busch@intel.com>");
-+MODULE_LICENSE("GPL");
-+MODULE_VERSION("0.1");
-+
-+module_init(dpc_service_init);
-+module_exit(dpc_service_exit);
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index d525548..7d82f6d 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -11,14 +11,14 @@
- 
- #include <linux/compiler.h>
- 
--#define PCIE_PORT_DEVICE_MAXSERVICES   4
-+#define PCIE_PORT_DEVICE_MAXSERVICES   5
- /*
-  * According to the PCI Express Base Specification 2.0, the indices of
-  * the MSI-X table entries used by port services must not exceed 31
-  */
- #define PCIE_PORT_MAX_MSIX_ENTRIES	32
- 
--#define get_descriptor_id(type, service) (((type - 4) << 4) | service)
-+#define get_descriptor_id(type, service) (((type - 4) << 8) | service)
- 
- extern struct bus_type pcie_port_bus_type;
- int pcie_port_device_register(struct pci_dev *dev);
-diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
-index b4d2894..44296eb 100644
---- a/drivers/pci/pcie/portdrv_acpi.c
-+++ b/drivers/pci/pcie/portdrv_acpi.c
-@@ -51,7 +51,7 @@ int pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
- 
- 	flags = root->osc_control_set;
- 
--	*srv_mask = PCIE_PORT_SERVICE_VC;
-+	*srv_mask = PCIE_PORT_SERVICE_VC | PCIE_PORT_SERVICE_DPC;
- 	if (flags & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL)
- 		*srv_mask |= PCIE_PORT_SERVICE_HP;
- 	if (flags & OSC_PCI_EXPRESS_PME_CONTROL)
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 88122dc..2ab0f42 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -262,7 +262,7 @@ static int get_port_device_capability(struct pci_dev *dev)
- 		return 0;
- 
- 	cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
--			| PCIE_PORT_SERVICE_VC;
-+			| PCIE_PORT_SERVICE_VC | PCIE_PORT_SERVICE_DPC;
- 	if (pci_aer_available())
- 		cap_mask |= PCIE_PORT_SERVICE_AER;
- 
-@@ -311,6 +311,8 @@ static int get_port_device_capability(struct pci_dev *dev)
- 		 */
- 		pcie_pme_interrupt_enable(dev, false);
- 	}
-+	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC))
-+		services |= PCIE_PORT_SERVICE_DPC;
- 
- 	return services;
- }
-@@ -338,7 +340,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
- 	device = &pcie->device;
- 	device->bus = &pcie_port_bus_type;
- 	device->release = release_pcie_device;	/* callback to free pcie dev */
--	dev_set_name(device, "%s:pcie%02x",
-+	dev_set_name(device, "%s:pcie%03x",
- 		     pci_name(pdev),
- 		     get_descriptor_id(pci_pcie_type(pdev), service));
- 	device->parent = &pdev->dev;
-diff --git a/include/linux/pcieport_if.h b/include/linux/pcieport_if.h
-index 4f1089f..afcd130 100644
---- a/include/linux/pcieport_if.h
-+++ b/include/linux/pcieport_if.h
-@@ -21,6 +21,8 @@
- #define PCIE_PORT_SERVICE_HP		(1 << PCIE_PORT_SERVICE_HP_SHIFT)
- #define PCIE_PORT_SERVICE_VC_SHIFT	3	/* Virtual Channel */
- #define PCIE_PORT_SERVICE_VC		(1 << PCIE_PORT_SERVICE_VC_SHIFT)
-+#define PCIE_PORT_SERVICE_DPC_SHIFT	4	/* Downstream Port Containment */
-+#define PCIE_PORT_SERVICE_DPC		(1 << PCIE_PORT_SERVICE_DPC_SHIFT)
- 
- struct pcie_device {
- 	int		irq;	    /* Service IRQ/MSI/MSI-X Vector */
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 1becea8..4040951 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -670,7 +670,8 @@
- #define PCI_EXT_CAP_ID_SECPCI	0x19	/* Secondary PCIe Capability */
- #define PCI_EXT_CAP_ID_PMUX	0x1A	/* Protocol Multiplexing */
- #define PCI_EXT_CAP_ID_PASID	0x1B	/* Process Address Space ID */
--#define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PASID
-+#define PCI_EXT_CAP_ID_DPC	0x1D	/* Downstream Port Containment */
-+#define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_DPC
- 
- #define PCI_EXT_CAP_DSN_SIZEOF	12
- #define PCI_EXT_CAP_MCAST_ENDPOINT_SIZEOF 40
-@@ -946,4 +947,21 @@
- #define PCI_TPH_CAP_ST_SHIFT	16	/* st table shift */
- #define PCI_TPH_BASE_SIZEOF	12	/* size with no st table */
- 
-+/* Downstream Port Containment */
-+#define PCI_EXP_DPC_CAP			4	/* DPC Capability */
-+#define  PCI_EXP_DPC_CAP_RP_EXT		0x20	/* Root Port Extensions for DPC */
-+#define  PCI_EXP_DPC_CAP_POISONED_TLP	0x40	/* Poisoned TLP Egress Blocking Supported */
-+#define  PCI_EXP_DPC_CAP_SW_TRIGGER	0x80	/* Software Triggering Supported */
-+#define  PCI_EXP_DPC_CAP_DL_ACTIVE	0x1000	/* ERR_COR signal on DL_Active supported */
-+
-+#define PCI_EXP_DPC_CTL			6	/* DPC control */
-+#define  PCI_EXP_DPC_CTL_EN_NONFATAL 	0x02	/* Enable trigger on ERR_NONFATAL message */
-+#define  PCI_EXP_DPC_CTL_INT_EN 	0x08	/* DPC Interrupt Enable */
-+
-+#define PCI_EXP_DPC_STATUS		8	/* DPC Status */
-+#define  PCI_EXP_DPC_STATUS_TRIGGER	0x01	/* Trigger Status */
-+#define  PCI_EXP_DPC_STATUS_INTERRUPT	0x08	/* Interrupt Status */
-+
-+#define PCI_EXP_DPC_SOURCE_ID		10	/* DPC Source Identifier */
-+
- #endif /* LINUX_PCI_REGS_H */
 -- 
-2.7.2
-
+Alexey
