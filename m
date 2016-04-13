@@ -1,147 +1,136 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V6 00/13] Support for generic ACPI based PCI host controller
-Date: Fri, 15 Apr 2016 19:06:35 +0200
-Message-Id: <1460740008-19489-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:35220 "EHLO
+	mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030309AbcDMGpw (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 02:45:52 -0400
+Received: by mail-pf0-f176.google.com with SMTP id n1so28636562pfn.2
+        for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2016 23:45:52 -0700 (PDT)
+Subject: Re: [PATCH v8 09/45] powerpc/powernv: Simplify
+ pnv_ioda_setup_pe_seg()
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-10-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
+	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <570DEB13.10906@ozlabs.ru>
+Date: Wed, 13 Apr 2016 16:45:39 +1000
+MIME-Version: 1.0
+In-Reply-To: <1455680668-23298-10-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From the functionality point of view this series might be split into the
-following logic parts:
-1. Necessary fixes as the preparation for using driver on ARM64.
-2. New ECAM API and update for users of the pci-host-common API
-3. Use new MCFG interface and implement generic ACPI based PCI host controller driver.
-4. Enable above driver on ARM64
+On 02/17/2016 02:43 PM, Gavin Shan wrote:
+> The original implementation of pnv_ioda_setup_pe_seg() configures
+> IO and M32 segments by separate logics, which can be merged by
+> by caching @segmap, @seg_size, @win in advance. This shouldn't
+> cause any behavioural changes.
+ >
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>   arch/powerpc/platforms/powernv/pci-ioda.c | 62 ++++++++++++++-----------------
+>   1 file changed, 28 insertions(+), 34 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 44cc5f3..fd7d382 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -2940,8 +2940,10 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+>   	struct pnv_phb *phb = hose->private_data;
+>   	struct pci_bus_region region;
+>   	struct resource *res;
+> -	int i, index;
+> -	int rc;
+> +	unsigned int segsize;
+> +	int *segmap, index, i;
+> +	uint16_t win;
+> +	int64_t rc;
+>
+>   	/*
+>   	 * NOTE: We only care PCI bus based PE for now. For PCI
+> @@ -2958,23 +2960,9 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+>   		if (res->flags & IORESOURCE_IO) {
+>   			region.start = res->start - phb->ioda.io_pci_base;
+>   			region.end   = res->end - phb->ioda.io_pci_base;
+> -			index = region.start / phb->ioda.io_segsize;
+> -
+> -			while (index < phb->ioda.total_pe_num &&
+> -			       region.start <= region.end) {
+> -				phb->ioda.io_segmap[index] = pe->pe_number;
+> -				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+> -					pe->pe_number, OPAL_IO_WINDOW_TYPE, 0, index);
+> -				if (rc != OPAL_SUCCESS) {
+> -					pr_err("%s: OPAL error %d when mapping IO "
+> -					       "segment #%d to PE#%d\n",
+> -					       __func__, rc, index, pe->pe_number);
+> -					break;
+> -				}
+> -
+> -				region.start += phb->ioda.io_segsize;
+> -				index++;
+> -			}
+> +			segsize      = phb->ioda.io_segsize;
+> +			segmap       = phb->ioda.io_segmap;
+> +			win          = OPAL_IO_WINDOW_TYPE;
+>   		} else if ((res->flags & IORESOURCE_MEM) &&
+>   			   !pnv_pci_is_mem_pref_64(res->flags)) {
+>   			region.start = res->start -
+> @@ -2983,23 +2971,29 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
+>   			region.end   = res->end -
+>   				       hose->mem_offset[0] -
+>   				       phb->ioda.m32_pci_base;
+> -			index = region.start / phb->ioda.m32_segsize;
+> -
+> -			while (index < phb->ioda.total_pe_num &&
+> -			       region.start <= region.end) {
+> -				phb->ioda.m32_segmap[index] = pe->pe_number;
+> -				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+> -					pe->pe_number, OPAL_M32_WINDOW_TYPE, 0, index);
+> -				if (rc != OPAL_SUCCESS) {
+> -					pr_err("%s: OPAL error %d when mapping M32 "
+> -					       "segment#%d to PE#%d",
+> -					       __func__, rc, index, pe->pe_number);
+> -					break;
+> -				}
+> +			segsize      = phb->ioda.m32_segsize;
+> +			segmap       = phb->ioda.m32_segmap;
+> +			win          = OPAL_M32_WINDOW_TYPE;
+> +		} else {
+> +			continue;
+> +		}
+>
+> -				region.start += phb->ioda.m32_segsize;
+> -				index++;
+> +		index = region.start / segsize;
+> +		while (index < phb->ioda.total_pe_num &&
+> +		       region.start <= region.end) {
+> +			segmap[index] = pe->pe_number;
+> +			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+> +					pe->pe_number, win, 0, index);
+> +			if (rc != OPAL_SUCCESS) {
+> +				pr_warn("%s: Error %lld mapping (%d) seg#%d to PHB#%d-PE#%d\n",
+> +					__func__, rc, win, index,
+> +					pe->phb->hose->global_number,
+> +					pe->pe_number);
+> +				break;
 
-Patches has been built on top of 4.6-rc2 and can be found here:
-git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v6)
+Please move this loop to a helper and stop caching segsize/segmap/win; this 
+will make the code easier to read and the next patch will look much cleaner 
+as it will not have to move this exact loop.
 
-This has been tested on Cavium ThunderX server. Any help in reviewing and
-testing is very appreciated.
 
-v5 -> v6
-- dropped idea of x86 MMCONFIG code refactoring
-- integrated JC's patches which introduce new ECAM API:
-  https://lkml.org/lkml/2016/4/11/907
-  git: https://github.com/jchandra-brcm/linux/ (arm64-acpi-pci-v3)
-- integrated Sinan's fix for releasing IO resources, see patch [06/13]
-- added ACPI support for ThunderX ECAM and PEM drivers
-- rebased to 4.6-rc2
+>   			}
+> +
+> +			region.start += segsize;
+> +			index++;
+>   		}
+>   	}
+>   }
+>
 
-v4 -> v5
-- dropped MCFG refactoring group patches 1-6 from series v4 and integrated Jayachandran's patch
-  https://patchwork.ozlabs.org/patch/575525/
-- rewrite PCI legacy IRQs allocation
-- squashed two patches 11 and 12 from series v4, fixed bisection issue
-- changelog improvements
-- rebased to 4.5-rc3
-
-v3 -> v4
-- dropped Jiang's fix http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04318.html
-- added Lorenzo's fix patch 19/24
-- ACPI PCI bus domain number assigning cleanup
-- changed resource management, we now claim and reassign resources
-- improvements for applying quirks
-- dropped Matthew's http://www.spinics.net/lists/linux-pci/msg45950.html dependency
-- rebased to 4.5-rc1
-
-v2 -> v3
-- fix legacy IRQ assigning and IO ports registration
-- remove reference to arch specific companion device for ia64
-- move ACPI PCI host controller driver to pci_root.c
-- drop generic domain assignment for x86 and ia64 as I am not
-  able to run all necessary test variants
-- drop patch which cleaned legacy IRQ assignment since it belongs to
-  Mathew's series:
-  https://patchwork.ozlabs.org/patch/557504/
-- extend MCFG quirk code
-- rebased to 4.4
-
-v1 -> v2
-- moved non-arch specific piece of code to dirver/acpi/ directory
-- fixed IO resource handling
-- introduced PCI config accessors quirks matching
-- moved ACPI_COMPANION_SET to generic code
-
-v1 - https://lkml.org/lkml/2015/10/27/504
-v2 - https://lkml.org/lkml/2015/12/16/246
-v3 - http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04308.html
-v4 - https://lkml.org/lkml/2016/2/4/646
-v5 - https://lkml.org/lkml/2016/2/16/426
-
-Jayachandran C (2):
-  PCI: Provide common functions for ECAM mapping
-  PCI: generic, thunder: update to use generic ECAM API
-
-Tomasz Nowicki (11):
-  pci, acpi, x86, ia64: Move ACPI host bridge device companion
-    assignment to core code.
-  pci, acpi: Provide generic way to assign bus domain number.
-  x86, ia64: Include acpi_pci_{add|remove}_bus to the default
-    pcibios_{add|remove}_bus implementation.
-  pci, of: Move the PCI I/O space management to PCI core code.
-  acpi, pci: Support IO resources when parsing PCI host bridge
-    resources.
-  arm64, pci, acpi: ACPI support for legacy IRQs parsing and
-    consolidation with DT code.
-  pci, acpi: Support for ACPI based generic PCI host controller
-  arm64, pci, acpi: Start using ACPI based PCI host controller driver
-    for ARM64.
-  pci, acpi: Match PCI config space accessors against platfrom specific
-    quirks.
-  pci, pci-thunder-ecam: Add ACPI support for ThunderX ECAM.
-  pci, pci-thunder-pem: Add ACPI support for ThunderX PEM.
-
- arch/arm64/Kconfig                  |  15 +++
- arch/arm64/include/asm/cpufeature.h |   3 +-
- arch/arm64/kernel/cpu_errata.c      |   8 ++
- arch/arm64/kernel/pci.c             |  35 ++---
- arch/ia64/hp/common/sba_iommu.c     |   2 +-
- arch/ia64/include/asm/pci.h         |   1 -
- arch/ia64/pci/pci.c                 |  26 ----
- arch/ia64/sn/kernel/io_acpi_init.c  |   4 +-
- arch/x86/include/asm/pci.h          |   3 -
- arch/x86/pci/acpi.c                 |  17 ---
- arch/x86/pci/common.c               |  10 --
- drivers/acpi/Kconfig                |   8 ++
- drivers/acpi/Makefile               |   1 +
- drivers/acpi/bus.c                  |   1 +
- drivers/acpi/pci_gen_host.c         | 259 ++++++++++++++++++++++++++++++++++++
- drivers/acpi/pci_root.c             |  58 +++++++-
- drivers/of/address.c                | 116 +---------------
- drivers/pci/Kconfig                 |   3 +
- drivers/pci/Makefile                |   2 +
- drivers/pci/ecam.c                  | 137 +++++++++++++++++++
- drivers/pci/ecam.h                  |  66 +++++++++
- drivers/pci/host/Kconfig            |   1 +
- drivers/pci/host/pci-host-common.c  | 119 ++++++++---------
- drivers/pci/host/pci-host-common.h  |  47 -------
- drivers/pci/host/pci-host-generic.c |  52 ++------
- drivers/pci/host/pci-thunder-ecam.c |  70 ++++++----
- drivers/pci/host/pci-thunder-pem.c  | 215 ++++++++++++++++++++++--------
- drivers/pci/pci.c                   | 150 ++++++++++++++++++++-
- drivers/pci/probe.c                 |   5 +
- include/asm-generic/vmlinux.lds.h   |   7 +
- include/linux/of_address.h          |   9 --
- include/linux/pci-acpi.h            |  20 +++
- include/linux/pci.h                 |  12 ++
- 33 files changed, 1029 insertions(+), 453 deletions(-)
- create mode 100644 drivers/acpi/pci_gen_host.c
- create mode 100644 drivers/pci/ecam.c
- create mode 100644 drivers/pci/ecam.h
- delete mode 100644 drivers/pci/host/pci-host-common.h
 
 -- 
-1.9.1
-
+Alexey
