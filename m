@@ -1,144 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:45141 "EHLO
-	mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752446AbcDCLrT (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 3 Apr 2016 07:47:19 -0400
-Date: Sun, 3 Apr 2016 13:49:12 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Andrew Worsley <amworsley@gmail.com>
-Cc: b43-dev@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-Message-ID: <20160403114912.GA11540@wunner.de>
-References: <E1akxli-00030z-BC@bombadil.infradead.org>
- <CA+Y=x3=cLDHc7PK5h9n=ixdgVKWdVSu_v+-7jHJ-vBnDrv4sgg@mail.gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:40856 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759305AbcDMF5I (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Apr 2016 01:57:08 -0400
+Subject: [PATCH 1/3] Revert "x86/PCI: Don't alloc pcibios-irq when MSI is
+ enabled"
+To: stable@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: =?utf-8?b?0J7Qu9C10LM=?= =?utf-8?b?0JzQvtGA0L7Qtw==?=
+	<oleg.moroz@mcc.vniiem.ru>, Joerg Roedel <jroedel@suse.de>,
+	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
+	Rob Groner <rgroner@rtd.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Date: Wed, 13 Apr 2016 00:57:05 -0500
+Message-ID: <20160413055705.6877.38953.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160413055439.6877.68183.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160413055439.6877.68183.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+Y=x3=cLDHc7PK5h9n=ixdgVKWdVSu_v+-7jHJ-vBnDrv4sgg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Andrew,
+This reverts commit 8affb487d4a4e223d961d7034cb41cd31982b618.
 
-On Sat, Apr 02, 2016 at 10:40:41PM +1100, Andrew Worsley wrote:
-> On 30 March 2016 at 04:41, Lukas Wunner <lukas@wunner.de> wrote:
-> > Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ storm
-> > on boot until they are reset, causing spurious interrupts if the IRQ is
-> > shared. Apparently the EFI bootloader enables the device and does not
-> > disable it before passing control to the OS. The bootloader contains a
-> > driver for the wireless card which allows it to phone home to Cupertino.
-> > This is used for Internet Recovery (download and install OS X images)
-> > and probably also for Back to My Mac (remote access, RFC 6281) and to
-> > discover stolen hardware.
-> >
-> > The issue is most pronounced on 2011 and 2012 MacBook Pros where the IRQ
-> > is shared with 3 other devices (Light Ridge Thunderbolt controller, SDXC
-> > reader, HDA card on discrete GPU). As soon as an interrupt handler is
-> > installed for one of these devices, the ensuing storm of spurious IRQs
-> > causes the kernel to disable the IRQ and switch to polling. This lasts
-> > until the b43 driver loads and resets the device.
-> >
-> > Loading the b43 driver first is not always an option, in particular with
-> > the Light Ridge Thunderbolt controller: The PCI hotplug IRQ handler gets
-> > installed early on because it is built in, unlike b43 which is usually
-> > a module.
-> >
-> > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
-> > Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951
-> > Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
-> > Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632
-> 
-> I do see an irq 17 problem on my macbook, but I thought grub is
-> supposed to stop the boardcom wireless?
-> 
-> Investigating grub2 git://git.savannah.gnu.org/grub.git I see this
-> patch  rev 9d34bb8 which says it disables Broadcom wireless hardware
-> on Apples:
+Revert 8affb487d4a4 ("x86/PCI: Don't alloc pcibios-irq when MSI is
+enabled").
 
-Thanks for the pointer to the grub2 commit, I wasn't aware of that.
+This is part of reverting 991de2e59090 ("PCI, x86: Implement
+pcibios_alloc_irq() and pcibios_free_irq()") to fix regressions it
+introduced.
 
-The commit puts the wireless card in power state D3hot but that doesn't
-stop it from sending interrupts. I have just tested that. So it's
-perfectly plausible that you're still seeing spurious interrupts
-despite using grub. Please test the patch I've posted, the spurious
-interrupts should disappear. If you "cat /proc/interrupts", you should
-then only see a few hundred interrupts on IRQ 17. Without the patch it
-should be in the 100000+ range.
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=111211
+Fixes: 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Rafael J. Wysocki <rafael@kernel.org>
+CC: stable@vger.kernel.org	# v4.4
+CC: Jiang Liu <jiang.liu@linux.intel.com>
+CC: Joerg Roedel <jroedel@suse.de>
+---
+ arch/x86/pci/common.c |    8 --------
+ 1 file changed, 8 deletions(-)
 
-Best regards,
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index eccd4d9..dc78a4a 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -675,14 +675,6 @@ int pcibios_add_device(struct pci_dev *dev)
+ 
+ int pcibios_alloc_irq(struct pci_dev *dev)
+ {
+-	/*
+-	 * If the PCI device was already claimed by core code and has
+-	 * MSI enabled, probing of the pcibios IRQ will overwrite
+-	 * dev->irq.  So bail out if MSI is already enabled.
+-	 */
+-	if (pci_dev_msi_enabled(dev))
+-		return -EBUSY;
+-
+ 	return pcibios_enable_irq(dev);
+ }
+ 
 
-Lukas
-
-> 
-> * commit 9d34bb8
-> | Author: Matthew Garrett <mjg@redhat.com>
-> | Date:   Thu May 3 17:26:55 2012 +0200
-> |
-> |       Suspend broadcom cards in order to stop their DMA.
-> |
-> |       * grub-core/Makefile.am (KERNEL_HEADER_FILES): Add pci.h on x86 EFI.
-> |       * grub-core/Makefile.core.def (kernel): Add pci.c on x86 EFI.
-> |       (pci): Don't build on x86 EFI.
-> |       * grub-core/bus/pci.c (grub_pci_find_capability): New function.
-> |       * grub-core/kern/efi/mm.c (stop_broadcom) [__i386__ || __x86_64__]:
-> |       New function.
-> |       (grub_efi_finish_boot_services) [__i386__ || __x86_64__]: Call
-> |       stop_broadcom if running on EFI.
-> |       * include/grub/pci.h (GRUB_PCI_CLASS_NETWORK): New enum value.
-> |       (GRUB_PCI_CAP_POWER_MANAGEMENT): Likewise.
-> |       (GRUB_PCI_VENDOR_BROADCOM): Likewise.
-> |       (grub_pci_find_capability): New proto.
-> |
-> |       Also-By: Vladimir Serbinenko <phcoder@gmail.com>
-> |
-> | M     ChangeLog
-> | M     grub-core/Makefile.am
-> | M     grub-core/Makefile.core.def
-> | M     grub-core/bus/pci.c
-> | M     grub-core/kern/efi/mm.c
-> | M     include/grub/pci.h
-> 
-> But I run debian grub2-common 2.02~beta2-22+deb8u1 which has this fix
-> and I *still* get this irq issue
-> 
-> ....
-> [  608.242849] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint called
-> with disabled ep ffff88008a19df48
-> [  608.242851] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint called
-> with disabled ep ffff88008a19df90
-> [  608.254975] irq 17: nobody cared (try booting with the "irqpoll" option)
-> [  608.254979] CPU: 0 PID: 0 Comm: swapper/0 Tainted: G         C O
-> 3.16.0-4-amd64 #1 Debian 3.16.7-ckt20-1+deb8u4
-> [  608.254981] Hardware name: Apple Inc.
-> MacBookPro10,1/Mac-C3EC7CD22292981F, BIOS
-> MBP101.88Z.00EE.B00.1205101839 05/10/2012
-> [  608.254985]  ffff88045a85bac4 ffffffff8150dcff ffff88045a85ba00
-> ffffffff810bd3ad
-> [  608.254987]  ffff88045a85ba00 0000000000000011 0000000000000000
-> ffffffff810bd8d1
-> [  608.254989]  0000000000000000 0000000000000000 0000000000000011
-> 0000000000000000
-> [  608.254990] Call Trace:
-> [  608.254999]  <IRQ>  [<ffffffff8150dcff>] ? dump_stack+0x41/0x51
-> [  608.255006]  [<ffffffff810bd3ad>] ? __report_bad_irq+0x2d/0xc0
-> [  608.255010]  [<ffffffff810bd8d1>] ? note_interrupt+0x241/0x290
-> [  608.255013]  [<ffffffff810bb0f1>] ? handle_irq_event_percpu+0xa1/0x190
-> [  608.255017]  [<ffffffff810bb218>] ? handle_irq_event+0x38/0x60
-> [  608.255020]  [<ffffffff810be413>] ? handle_fasteoi_irq+0x83/0x150
-> [  608.255025]  [<ffffffff810150cd>] ? handle_irq+0x1d/0x30
-> [  608.255029]  [<ffffffff81516cd9>] ? do_IRQ+0x49/0xe0
-> [  608.255033]  [<ffffffff81514b2d>] ? common_interrupt+0x6d/0x6d
-> [  608.255037]  <EOI>  [<ffffffff8108aded>] ?
-> __hrtimer_start_range_ns+0x1cd/0x390
-> [  608.255041]  [<ffffffff813dfd42>] ? cpuidle_enter_state+0x52/0xc0
-> [  608.255044]  [<ffffffff813dfd38>] ? cpuidle_enter_state+0x48/0xc0
-> [  608.255047]  [<ffffffff810a80d8>] ? cpu_startup_entry+0x2f8/0x400
-> [  608.255051]  [<ffffffff81903076>] ? start_kernel+0x497/0x4a2
-> [  608.255054]  [<ffffffff81902a04>] ? set_init_arg+0x4e/0x4e
-> [  608.255057]  [<ffffffff81902120>] ? early_idt_handler_array+0x120/0x120
-> [  608.255060]  [<ffffffff8190271f>] ? x86_64_start_kernel+0x14d/0x15c
-> [  608.255061] handlers:
-> [  608.255088] [<ffffffffa0645730>] azx_interrupt [snd_hda_controller]
-> [  608.255089] Disabling IRQ #17
-> [  608.354706] usb 1-2: reset high-speed USB device number 3 using xhci_hcd
-> ...
