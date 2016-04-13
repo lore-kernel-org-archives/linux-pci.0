@@ -1,131 +1,177 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jake Oshins <jakeo@microsoft.com>
-To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v3 7/7] drivers:hv: Separate out frame buffer logic when picking MMIO range
-Date: Fri,  1 Apr 2016 16:11:32 -0700
-Message-Id: <1459552292-1297-8-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1459552292-1297-1-git-send-email-jakeo@microsoft.com>
-References: <y>
- <1459552292-1297-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:34884 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752895AbcDMPvx (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 11:51:53 -0400
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: Andrey Smirnov <asmirnov@spaceflightindustries.com>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	gary.bisson@boundarydevices.com
+Subject: [PATCH] PCI: imx6: Implement reset sequence for i.MX6+
+Date: Wed, 13 Apr 2016 08:51:25 -0700
+Message-Id: <1460562685-15168-1-git-send-email-asmirnov@spaceflightindustries.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify the logic that picks MMIO ranges by pulling out the
-logic related to trying to lay frame buffer claim on top of where
-the firmware placed the frame buffer.
+I.MX6+ has a dedicated bit for reseting PCIe core, which should be used
+instead of a regular reset sequence since using the latter will hang the
+SoC.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+This commit is based on c34068d48273e24d392d9a49a38be807954420ed from
+http://git.freescale.com/git/cgit.cgi/imx/linux-2.6-imx.git
+
+Signed-off-by: Andrey Smirnov <asmirnov@spaceflightindustries.com>
 ---
- drivers/hv/vmbus_drv.c | 80 ++++++++++++++++++++++----------------------------
- 1 file changed, 35 insertions(+), 45 deletions(-)
+ arch/arm/boot/dts/imx6qp.dtsi               |  3 ++
+ drivers/pci/host/pci-imx6.c                 | 82 +++++++++++++++++++----------
+ include/linux/mfd/syscon/imx6q-iomuxc-gpr.h |  1 +
+ 3 files changed, 58 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-index df59bfb..bd6d064 100644
---- a/drivers/hv/vmbus_drv.c
-+++ b/drivers/hv/vmbus_drv.c
-@@ -1162,64 +1162,54 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 			bool fb_overlap_ok)
- {
- 	struct resource *iter, *shadow;
--	resource_size_t range_min, range_max, start, local_min, local_max;
-+	resource_size_t range_min, range_max, start;
- 	const char *dev_n = dev_name(&device_obj->device);
--	u32 fb_end = screen_info.lfb_base + (screen_info.lfb_size << 1);
--	int i, retval;
-+	int retval;
+diff --git a/arch/arm/boot/dts/imx6qp.dtsi b/arch/arm/boot/dts/imx6qp.dtsi
+index 1ada714..886dbf2 100644
+--- a/arch/arm/boot/dts/imx6qp.dtsi
++++ b/arch/arm/boot/dts/imx6qp.dtsi
+@@ -82,5 +82,8 @@
+ 				      "ldb_di0", "ldb_di1", "prg";
+ 		};
  
- 	retval = -ENXIO;
- 	down(&hyperv_mmio_lock);
++		pcie: pcie@0x01000000 {
++			compatible = "fsl,imx6qp-pcie", "snps,dw-pcie";
++		};
+ 	};
+ };
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index eb5a275..99f5cac 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -85,6 +85,14 @@ struct imx6_pcie {
+ #define PHY_RX_OVRD_IN_LO_RX_DATA_EN (1 << 5)
+ #define PHY_RX_OVRD_IN_LO_RX_PLL_EN (1 << 3)
  
-+	/*
-+	 * If overlaps with frame buffers are allowed, then first attempt to
-+	 * make the allocation from within the reserved region.  Because it
-+	 * is already reserved, no shadow allocation is necessary.
-+	 */
-+	if (fb_overlap_ok && fb_mmio && !(min > fb_mmio->end) &&
-+	    !(max < fb_mmio->start)) {
++static inline bool is_imx6qp_pcie(struct imx6_pcie *imx6_pcie)
++{
++	struct pcie_port *pp = &imx6_pcie->pp;
++	struct device_node *np = pp->dev->of_node;
 +
-+		range_min = fb_mmio->start;
-+		range_max = fb_mmio->end;
-+		start = (range_min + align - 1) & ~(align - 1);
-+		for (; start + size - 1 <= range_max; start += align) {
-+			*new = request_mem_region_exclusive(start, size, dev_n);
-+			if (*new) {
-+				retval = 0;
-+				goto exit;
-+			}
++	return of_device_is_compatible(np, "fsl,imx6qp-pcie");
++}
++
+ static int pcie_phy_poll_ack(void __iomem *dbi_base, int exp_val)
+ {
+ 	u32 val;
+@@ -236,35 +244,44 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 	u32 val, gpr1, gpr12;
+ 
+-	/*
+-	 * If the bootloader already enabled the link we need some special
+-	 * handling to get the core back into a state where it is safe to
+-	 * touch it for configuration.  As there is no dedicated reset signal
+-	 * wired up for MX6QDL, we need to manually force LTSSM into "detect"
+-	 * state before completely disabling LTSSM, which is a prerequisite
+-	 * for core configuration.
+-	 *
+-	 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
+-	 * indication that the bootloader activated the link.
+-	 */
+-	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
+-	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
+-
+-	if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
+-	    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
+-		val = readl(pp->dbi_base + PCIE_PL_PFLR);
+-		val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
+-		val |= PCIE_PL_PFLR_FORCE_LINK;
+-		writel(val, pp->dbi_base + PCIE_PL_PFLR);
+-
+-		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-				IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+-	}
++	if (is_imx6qp_pcie(imx6_pcie)) {
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				   IMX6Q_GPR1_PCIE_SW_RST,
++				   IMX6Q_GPR1_PCIE_SW_RST);
++	} else {
++		/*
++		 * If the bootloader already enabled the link we need
++		 * some special handling to get the core back into a
++		 * state where it is safe to touch it for
++		 * configuration.  As there is no dedicated reset
++		 * signal wired up for MX6QDL, we need to manually
++		 * force LTSSM into "detect" state before completely
++		 * disabling LTSSM, which is a prerequisite for core
++		 * configuration.
++		 *
++		 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active
++		 * we have a strong indication that the bootloader
++		 * activated the link.
++		 */
++		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
++		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
++
++		if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
++		    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
++			val = readl(pp->dbi_base + PCIE_PL_PFLR);
++			val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
++			val |= PCIE_PL_PFLR_FORCE_LINK;
++			writel(val, pp->dbi_base + PCIE_PL_PFLR);
++
++			regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++					   IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
 +		}
+ 
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				   IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				   IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
++	}
+ 
+ 	return 0;
+ }
+@@ -314,6 +331,14 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		msleep(100);
+ 		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+ 	}
++
++	if (is_imx6qp_pcie(imx6_pcie)) {
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				   IMX6Q_GPR1_PCIE_SW_RST, 0);
++
++		usleep_range(200, 500);
 +	}
 +
- 	for (iter = hyperv_mmio; iter; iter = iter->sibling) {
- 		if ((iter->start >= max) || (iter->end <= min))
- 			continue;
+ 	return 0;
  
- 		range_min = iter->start;
- 		range_max = iter->end;
--
--		/* If this range overlaps the frame buffer, split it into
--		   two tries. */
--		for (i = 0; i < 2; i++) {
--			local_min = range_min;
--			local_max = range_max;
--			if (fb_overlap_ok || (range_min >= fb_end) ||
--			    (range_max <= screen_info.lfb_base)) {
--				i++;
--			} else {
--				if ((range_min <= screen_info.lfb_base) &&
--				    (range_max >= screen_info.lfb_base)) {
--					/*
--					 * The frame buffer is in this window,
--					 * so trim this into the part that
--					 * preceeds the frame buffer.
--					 */
--					local_max = screen_info.lfb_base - 1;
--					range_min = fb_end;
--				} else {
--					range_min = fb_end;
--					continue;
--				}
-+		start = (range_min + align - 1) & ~(align - 1);
-+		for (; start + size - 1 <= range_max; start += align) {
-+			shadow = __request_region(iter, start, size, NULL,
-+						  IORESOURCE_BUSY);
-+			if (!shadow)
-+				continue;
-+
-+			*new = request_mem_region_exclusive(start, size, dev_n);
-+			if (*new) {
-+				shadow->name = (char *)*new;
-+				retval = 0;
-+				goto exit;
- 			}
+ err_pcie:
+@@ -616,6 +641,7 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
  
--			start = (local_min + align - 1) & ~(align - 1);
--			for (; start + size - 1 <= local_max; start += align) {
--				shadow = __request_region(iter, start,
--							  size,
--							  NULL,
--							  IORESOURCE_BUSY);
--				if (!shadow)
--					continue;
--
--				*new = request_mem_region_exclusive(start, size,
--								    dev_n);
--				if (*new) {
--					shadow->name = (char *)*new;
--					retval = 0;
--					goto exit;
--				}
--
--				__release_region(iter, start, size);
--			}
-+			__release_region(iter, start, size);
- 		}
- 	}
+ static const struct of_device_id imx6_pcie_of_match[] = {
+ 	{ .compatible = "fsl,imx6q-pcie", },
++	{ .compatible = "fsl,imx6qp-pcie", },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
+diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+index 238c8db..5b08e3c 100644
+--- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
++++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+@@ -95,6 +95,7 @@
+ #define IMX6Q_GPR0_DMAREQ_MUX_SEL0_IOMUX	BIT(0)
  
+ #define IMX6Q_GPR1_PCIE_REQ_MASK		(0x3 << 30)
++#define IMX6Q_GPR1_PCIE_SW_RST			BIT(29)
+ #define IMX6Q_GPR1_PCIE_EXIT_L1			BIT(28)
+ #define IMX6Q_GPR1_PCIE_RDY_L23			BIT(27)
+ #define IMX6Q_GPR1_PCIE_ENTER_L1		BIT(26)
 -- 
-1.9.1
+2.5.5
+
