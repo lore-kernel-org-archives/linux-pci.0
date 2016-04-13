@@ -1,133 +1,169 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org, linux-doc@vger.kernel.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com, Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [RFC v6 03/10] PCI: Add a new option for resource_alignment to reassign alignment
-Date: Mon, 18 Apr 2016 18:55:59 +0800
-Message-Id: <1460976961-29328-3-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1460976961-29328-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1460976961-29328-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Subject: [PATCH 2/3] Revert "PCI: Add helpers to manage pci_dev->irq and
+ pci_dev->irq_managed"
+To: stable@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: =?utf-8?b?0J7Qu9C10LM=?= =?utf-8?b?0JzQvtGA0L7Qtw==?=
+	<oleg.moroz@mcc.vniiem.ru>, Joerg Roedel <jroedel@suse.de>,
+	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
+	Rob Groner <rgroner@rtd.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Date: Wed, 13 Apr 2016 00:57:12 -0500
+Message-ID: <20160413055711.6877.39138.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160413055439.6877.68183.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160413055439.6877.68183.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When using resource_alignment kernel parameter, the current
-implement reassigns the alignment by changing resources' size
-which can potentially break some drivers. For example, the driver
-uses the size to locate some register whose length is related
-to the size.
+This reverts commit 811a4e6fce09bc9239c664c6a1a53645a678c303.
 
-This patch adds a new option "noresize" for the parameter to
-solve this problem.
+Revert 811a4e6fce09 ("PCI: Add helpers to manage pci_dev->irq and
+pci_dev->irq_managed").
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+This is part of reverting 991de2e59090 ("PCI, x86: Implement
+pcibios_alloc_irq() and pcibios_free_irq()") to fix regressions it
+introduced.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=111211
+Fixes: 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Rafael J. Wysocki <rafael@kernel.org>
+CC: stable@vger.kernel.org	# v4.4
+CC: Jiang Liu <jiang.liu@linux.intel.com>
 ---
- Documentation/kernel-parameters.txt |    5 ++++-
- drivers/pci/pci.c                   |   35 +++++++++++++++++++++++++----------
- 2 files changed, 29 insertions(+), 11 deletions(-)
+ arch/x86/pci/intel_mid_pci.c |    4 ++--
+ arch/x86/pci/irq.c           |   10 ++++++----
+ drivers/acpi/pci_irq.c       |   10 ++++++----
+ include/linux/pci.h          |   17 -----------------
+ 4 files changed, 14 insertions(+), 27 deletions(-)
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 9a53c92..d8b29ab 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -2912,13 +2912,16 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 				window. The default value is 64 megabytes.
- 		resource_alignment=
- 				Format:
--				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
-+				[<order of align>@][<domain>:]<bus>:<slot>.<func>
-+				[:noresize][; ...]
- 				Specifies alignment and device to reassign
- 				aligned memory resources.
- 				If <order of align> is not specified,
- 				PAGE_SIZE is used as alignment.
- 				PCI-PCI bridge can be specified, if resource
- 				windows need to be expanded.
-+				noresize: Don't change the resources' sizes when
-+				reassigning alignment.
- 		ecrc=		Enable/disable PCIe ECRC (transaction layer
- 				end-to-end CRC checking).
- 				bios: Use BIOS/firmware settings. This is the
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 77b7494..7564ccc 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4594,11 +4594,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
- /**
-  * pci_specified_resource_alignment - get resource alignment specified by user.
-  * @dev: the PCI device to get
-+ * @resize: whether or not to change resources' size when reassigning alignment
-  *
-  * RETURNS: Resource alignment if it is specified.
-  *          Zero if it is not specified.
-  */
--static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
-+static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
-+		bool *resize)
- {
- 	int seg, bus, slot, func, align_order, count;
- 	resource_size_t align = 0;
-@@ -4632,6 +4634,11 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
- 			}
- 		}
- 		p += count;
-+		if (!strncmp(p, ":noresize", 9)) {
-+			*resize = false;
-+			p += 9;
-+		} else
-+			*resize = true;
- 		if (seg == pci_domain_nr(dev->bus) &&
- 			bus == dev->bus->number &&
- 			slot == PCI_SLOT(dev->devfn) &&
-@@ -4664,11 +4671,12 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- {
- 	int i;
- 	struct resource *r;
-+	bool resize = true;
- 	resource_size_t align, size;
- 	u16 command;
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index 0d24e7c..8826ff5 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -215,7 +215,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 	int polarity;
+ 	int ret;
  
- 	/* check if specified PCI is target device to reassign */
--	align = pci_specified_resource_alignment(dev);
-+	align = pci_specified_resource_alignment(dev, &resize);
- 	if (!align)
+-	if (pci_has_managed_irq(dev))
++	if (dev->irq_managed && dev->irq > 0)
+ 		return 0;
+ 
+ 	switch (intel_mid_identify_cpu()) {
+@@ -256,7 +256,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 
+ static void intel_mid_pci_irq_disable(struct pci_dev *dev)
+ {
+-	if (pci_has_managed_irq(dev)) {
++	if (dev->irq_managed && dev->irq > 0) {
+ 		mp_unmap_irq(dev->irq);
+ 		dev->irq_managed = 0;
+ 		/*
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index 32e7034..72108f0 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1202,7 +1202,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 			struct pci_dev *temp_dev;
+ 			int irq;
+ 
+-			if (pci_has_managed_irq(dev))
++			if (dev->irq_managed && dev->irq > 0)
+ 				return 0;
+ 
+ 			irq = IO_APIC_get_PCI_irq_vector(dev->bus->number,
+@@ -1230,7 +1230,8 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 			}
+ 			dev = temp_dev;
+ 			if (irq >= 0) {
+-				pci_set_managed_irq(dev, irq);
++				dev->irq_managed = 1;
++				dev->irq = irq;
+ 				dev_info(&dev->dev, "PCI->APIC IRQ transform: "
+ 					 "INT %c -> IRQ %d\n", 'A' + pin - 1, irq);
+ 				return 0;
+@@ -1258,8 +1259,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 
+ static void pirq_disable_irq(struct pci_dev *dev)
+ {
+-	if (io_apic_assign_pci_irqs && pci_has_managed_irq(dev)) {
++	if (io_apic_assign_pci_irqs && dev->irq_managed && dev->irq) {
+ 		mp_unmap_irq(dev->irq);
+-		pci_reset_managed_irq(dev);
++		dev->irq = 0;
++		dev->irq_managed = 0;
+ 	}
+ }
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index c933675..172b74d 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -409,7 +409,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+ 		return 0;
+ 	}
+ 
+-	if (pci_has_managed_irq(dev))
++	if (dev->irq_managed && dev->irq > 0)
+ 		return 0;
+ 
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+@@ -454,7 +454,8 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+ 		kfree(entry);
+ 		return rc;
+ 	}
+-	pci_set_managed_irq(dev, rc);
++	dev->irq = rc;
++	dev->irq_managed = 1;
+ 
+ 	if (link)
+ 		snprintf(link_desc, sizeof(link_desc), " -> Link[%s]", link);
+@@ -477,7 +478,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	u8 pin;
+ 
+ 	pin = dev->pin;
+-	if (!pin || !pci_has_managed_irq(dev))
++	if (!pin || !dev->irq_managed || dev->irq <= 0)
  		return;
  
-@@ -4690,15 +4698,22 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 		if (!(r->flags & IORESOURCE_MEM))
- 			continue;
- 		size = resource_size(r);
--		if (size < align) {
--			size = align;
--			dev_info(&dev->dev,
--				"Rounding up size of resource #%d to %#llx.\n",
--				i, (unsigned long long)size);
-+		if (resize) {
-+			if (size < align) {
-+				size = align;
-+				dev_info(&dev->dev,
-+					"Rounding up size of resource #%d to %#llx.\n",
-+					i, (unsigned long long)size);
-+			}
-+			r->flags |= IORESOURCE_UNSET;
-+			r->end = size - 1;
-+			r->start = 0;
-+		} else {
-+			r->flags &= ~IORESOURCE_SIZEALIGN;
-+			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
-+			r->start = max(align, size);
-+			r->end = r->start + size - 1;
- 		}
--		r->flags |= IORESOURCE_UNSET;
--		r->end = size - 1;
--		r->start = 0;
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+@@ -499,6 +500,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
+ 	if (gsi >= 0) {
+ 		acpi_unregister_gsi(gsi);
+-		pci_reset_managed_irq(dev);
++		dev->irq_managed = 0;
++		dev->irq = 0;
  	}
- 	/* Need to disable bridge's resource window,
- 	 * to enable the kernel to reassign new resource
--- 
-1.7.9.5
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 6ae25aa..1cca5d8 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -988,23 +988,6 @@ static inline int pci_is_managed(struct pci_dev *pdev)
+ 	return pdev->is_managed;
+ }
+ 
+-static inline void pci_set_managed_irq(struct pci_dev *pdev, unsigned int irq)
+-{
+-	pdev->irq = irq;
+-	pdev->irq_managed = 1;
+-}
+-
+-static inline void pci_reset_managed_irq(struct pci_dev *pdev)
+-{
+-	pdev->irq = 0;
+-	pdev->irq_managed = 0;
+-}
+-
+-static inline bool pci_has_managed_irq(struct pci_dev *pdev)
+-{
+-	return pdev->irq_managed && pdev->irq > 0;
+-}
+-
+ void pci_disable_device(struct pci_dev *dev);
+ 
+ extern unsigned int pcibios_max_latency;
