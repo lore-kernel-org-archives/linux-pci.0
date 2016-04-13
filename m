@@ -1,57 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn1on0147.outbound.protection.outlook.com ([157.56.110.147]:56320
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758920AbcDHV65 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Apr 2016 17:58:57 -0400
-From: Casey Leedom <leedom@chelsio.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-	Hannes Reinecke <hare@suse.com>,
-	Hariprasad S <hariprasad@chelsio.com>
-Subject: 4.6-rc2 regression with commit 104daa71b396: check VPD access offset
- against length
-Date: Fri, 8 Apr 2016 21:58:53 +0000
-Message-ID: <BY2PR12MB06480E12BB40936FAAEDE01EC8910@BY2PR12MB0648.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:36087 "EHLO
+	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756983AbcDMHgb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 03:36:31 -0400
+Received: by mail-pf0-f175.google.com with SMTP id e128so29361355pfe.3
+        for <linux-pci@vger.kernel.org>; Wed, 13 Apr 2016 00:36:30 -0700 (PDT)
+Subject: Re: [PATCH v8 14/45] powerpc/powernv/ioda1: Rename
+ pnv_pci_ioda_setup_dma_pe()
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-15-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
+	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <570DF6F7.4010701@ozlabs.ru>
+Date: Wed, 13 Apr 2016 17:36:23 +1000
 MIME-Version: 1.0
+In-Reply-To: <1455680668-23298-15-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[[ I apologize if this is a duplicate message.  I've been struggling all
-    afternoon to get a message successfully delivered to the linux-pci
-    list.
-    -- Casey ]]
+On 02/17/2016 02:43 PM, Gavin Shan wrote:
+> This renames pnv_pci_ioda_setup_dma_pe() to pnv_pci_ioda1_setup_dma_pe()
+> as it's the counter-part of IODA2's pnv_pci_ioda2_setup_dma_pe().
+> No logical changes introduced.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-  kernel.org commit 104daa71b396 added a check to make sure that efforts to
-read/write the VPD wouldn't extend past the computed length of the VPD.
-Later, kernel.org commit 408641e93aa5 folded the pci_vpd_pci22 into
-struct pci_vpd so things moved around a bit after that and an error return
-got changed into a silent failure instead of -EINVAL.
 
-  The problem is that the previous pci_vpd_pci22_read() didn't check for a read with
-a VPD Offset > VPD Length and the new pci_vpd_read() is checking that.  Worse
-yet, when a VPD Offset is greater than the recorded VPD Length, it simply
-returns 0 rather than -EINVAL.
+Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
 
-  The problem is stemming from the fact that the Chelsio adapters actually have
-two VPD structures stored in the VPD.  An abbreviated on at Offset 0x0 and the
-complete VPD at Offset 0x400.  The abbreviated one only contains the PN, SN and
-EC Keywords, while the complete VPD contains those plus various adapter
-constants contained in V0, V1, etc.  And it also contains the Base Ethernet MAC
-Address in the "NA" Keyword which the cxgb4 driver needs when it can't contact
-the adapter firmware.  (We don't have the "NA" Keywork in the VPD Structure at
-Offset 0x0 because that's not an allowed VPD Keyword in the PCI-E 3.0
-specification.)
 
-  With the new code, the computed size of the VPD is 0x200 and so our efforts
-to read the VPD at Offset 0x400 silently fails.  We check the result of the
-read looking for a signature 0x82 byte but we're checking against random stack
-garbage.
 
-  The end result is that the cxgb4 driver now fails the PCI-E Probe.
+> ---
+>   arch/powerpc/platforms/powernv/pci-ioda.c | 9 +++++----
+>   1 file changed, 5 insertions(+), 4 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 8488238..d18b95e 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -2026,9 +2026,10 @@ static struct iommu_table_ops pnv_ioda2_iommu_ops = {
+>   	.free = pnv_ioda2_table_free,
+>   };
+>
+> -static void pnv_pci_ioda_setup_dma_pe(struct pnv_phb *phb,
+> -				      struct pnv_ioda_pe *pe, unsigned int base,
+> -				      unsigned int segs)
+> +static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
+> +				       struct pnv_ioda_pe *pe,
+> +				       unsigned int base,
+> +				       unsigned int segs)
+>   {
+>
+>   	struct page *tce_mem = NULL;
+> @@ -2616,7 +2617,7 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
+>   		if (phb->type == PNV_PHB_IODA1) {
+>   			pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
+>   				pe->dma_weight, segs);
+> -			pnv_pci_ioda_setup_dma_pe(phb, pe, base, segs);
+> +			pnv_pci_ioda1_setup_dma_pe(phb, pe, base, segs);
+>   		} else if (phb->type == PNV_PHB_IODA2) {
+>   			pe_info(pe, "Assign DMA32 space\n");
+>   			segs = 0;
+>
 
-  Again,  apologies if I'm not communicating this to the Linux Development
-Community properly -- I'm usually not allowed out of my cage.
 
-Casey
+-- 
+Alexey
