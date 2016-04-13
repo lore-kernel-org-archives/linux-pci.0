@@ -1,127 +1,169 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:54990 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760723AbcDFDaP (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2016 23:30:15 -0400
-Received: from localhost
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Wed, 6 Apr 2016 13:30:12 +1000
-Subject: Re: [RFC v5 7/7] vfio-pci: Allow to mmap MSI-X table if interrupt
- remapping is supported
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1459864004-2869-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1459864004-2869-2-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160406000052.GA4545@gwshan>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
-	aik@ozlabs.ru, alex.williamson@redhat.com,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	nikunj@linux.vnet.ibm.com, eric.auger@linaro.org,
-	will.deacon@arm.com, alistair@popple.id.au, ruscur@russell.cc
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Message-ID: <57048270.9040802@linux.vnet.ibm.com>
-Date: Wed, 6 Apr 2016 11:28:48 +0800
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH 1/2] Revert "PCI: Add helpers to manage pci_dev->irq and
+ pci_dev->irq_managed"
+To: stable@vger.kernel.org
+From: Bjorn Helgaas <bhelgaas@google.com>
+Cc: =?utf-8?b?0J7Qu9C10LM=?= =?utf-8?b?0JzQvtGA0L7Qtw==?=
+	<oleg.moroz@mcc.vniiem.ru>,
+	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
+	Rob Groner <rgroner@rtd.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Date: Wed, 13 Apr 2016 00:52:55 -0500
+Message-ID: <20160413055255.6737.53108.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160413055208.6737.53693.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+References: <20160413055208.6737.53693.stgit@bhelgaas-glaptop2.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20160406000052.GA4545@gwshan>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/4/6 8:00, Gavin Shan wrote:
-> On Tue, Apr 05, 2016 at 09:46:44PM +0800, Yongji Xie wrote:
->> This patch enables mmapping MSI-X tables if
->> hardware supports interrupt remapping which
->> can ensure that a given pci device can only
->> shoot the MSIs assigned for it.
->>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->> drivers/vfio/pci/vfio_pci.c         |    9 +++++++--
->> drivers/vfio/pci/vfio_pci_private.h |    1 +
->> drivers/vfio/pci/vfio_pci_rdwr.c    |    2 +-
->> 3 files changed, 9 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
->> index c60d790..ef02896 100644
->> --- a/drivers/vfio/pci/vfio_pci.c
->> +++ b/drivers/vfio/pci/vfio_pci.c
->> @@ -201,6 +201,10 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
->> 	} else
->> 		vdev->msix_bar = 0xFF;
->>
->> +	if (iommu_capable(pdev->dev.bus, IOMMU_CAP_INTR_REMAP) ||
->> +		pdev->bus->bus_flags | PCI_BUS_FLAGS_MSI_REMAP)
->> +		vdev->msi_remap = true;
->> +
-> I guess you probably need a "&" here. Otherwise, the condition
-> is always true.
+This reverts commit 811a4e6fce09bc9239c664c6a1a53645a678c303.
 
-Yes, you are right. I'll fix it.
+Revert 811a4e6fce09 ("PCI: Add helpers to manage pci_dev->irq and
+pci_dev->irq_managed").
 
->> 	if (!vfio_vga_disabled() && vfio_pci_is_vga(pdev))
->> 		vdev->has_vga = true;
->>
->> @@ -635,7 +639,8 @@ static long vfio_pci_ioctl(void *device_data,
->> 				     VFIO_REGION_INFO_FLAG_WRITE;
->> 			if (vdev->bar_mmap_supported[info.index]) {
->> 				info.flags |= VFIO_REGION_INFO_FLAG_MMAP;
->> -				if (info.index == vdev->msix_bar) {
->> +				if (info.index == vdev->msix_bar &&
->> +						!vdev->msi_remap) {
->> 					ret = msix_sparse_mmap_cap(vdev, &caps);
->> 					if (ret)
->> 						return ret;
->> @@ -1067,7 +1072,7 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
->> 	if (req_start + req_len > phys_len)
->> 		return -EINVAL;
->>
->> -	if (index == vdev->msix_bar) {
->> +	if (index == vdev->msix_bar && !vdev->msi_remap) {
->> 		/*
->> 		 * Disallow mmaps overlapping the MSI-X table; users don't
->> 		 * get to touch this directly.  We could find somewhere
->> diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
->> index 0ea4c62..4f20963 100644
->> --- a/drivers/vfio/pci/vfio_pci_private.h
->> +++ b/drivers/vfio/pci/vfio_pci_private.h
->> @@ -78,6 +78,7 @@ struct vfio_pci_device {
->> 	int			irq_type;
->> 	int			num_regions;
->> 	struct vfio_pci_region	*region;
->> +	bool			msi_remap;
->> 	u8			msi_qmax;
->> 	u8			msix_bar;
->> 	u16			msix_size;
->> diff --git a/drivers/vfio/pci/vfio_pci_rdwr.c b/drivers/vfio/pci/vfio_pci_rdwr.c
->> index 5ffd1d9..606ee3c 100644
->> --- a/drivers/vfio/pci/vfio_pci_rdwr.c
->> +++ b/drivers/vfio/pci/vfio_pci_rdwr.c
->> @@ -164,7 +164,7 @@ ssize_t vfio_pci_bar_rw(struct vfio_pci_device *vdev, char __user *buf,
->> 	} else
->> 		io = vdev->barmap[bar];
->>
->> -	if (bar == vdev->msix_bar) {
->> +	if (bar == vdev->msix_bar && !vdev->msi_remap) {
->> 		x_start = vdev->msix_offset;
->> 		x_end = vdev->msix_offset + vdev->msix_size;
->> 	}
-> When PCI_BUS_FLAGS_MSI_REMAP is set, the MSIx table can be accessed by
-> read/write interface except mmap(). The commit log doesn't mention it.
-> It would be better if you have some words about it.
->
-> Thanks,
-> Gavin
->
+This is part of reverting 991de2e59090 ("PCI, x86: Implement
+pcibios_alloc_irq() and pcibios_free_irq()") to fix regressions it
+introduced.
 
-OK. I will mention it in commit log.
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=111211
+Fixes: 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Rafael J. Wysocki <rafael@kernel.org>
+CC: stable@vger.kernel.org	# v4.3
+CC: Jiang Liu <jiang.liu@linux.intel.com>
+---
+ arch/x86/pci/intel_mid_pci.c |    4 ++--
+ arch/x86/pci/irq.c           |   10 ++++++----
+ drivers/acpi/pci_irq.c       |   10 ++++++----
+ include/linux/pci.h          |   17 -----------------
+ 4 files changed, 14 insertions(+), 27 deletions(-)
 
-Thanks,
-Yongji
-
->> -- 
->> 1.7.9.5
->>
-
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
+index 0d24e7c..8826ff5 100644
+--- a/arch/x86/pci/intel_mid_pci.c
++++ b/arch/x86/pci/intel_mid_pci.c
+@@ -215,7 +215,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 	int polarity;
+ 	int ret;
+ 
+-	if (pci_has_managed_irq(dev))
++	if (dev->irq_managed && dev->irq > 0)
+ 		return 0;
+ 
+ 	switch (intel_mid_identify_cpu()) {
+@@ -256,7 +256,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
+ 
+ static void intel_mid_pci_irq_disable(struct pci_dev *dev)
+ {
+-	if (pci_has_managed_irq(dev)) {
++	if (dev->irq_managed && dev->irq > 0) {
+ 		mp_unmap_irq(dev->irq);
+ 		dev->irq_managed = 0;
+ 		/*
+diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
+index 32e7034..72108f0 100644
+--- a/arch/x86/pci/irq.c
++++ b/arch/x86/pci/irq.c
+@@ -1202,7 +1202,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 			struct pci_dev *temp_dev;
+ 			int irq;
+ 
+-			if (pci_has_managed_irq(dev))
++			if (dev->irq_managed && dev->irq > 0)
+ 				return 0;
+ 
+ 			irq = IO_APIC_get_PCI_irq_vector(dev->bus->number,
+@@ -1230,7 +1230,8 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 			}
+ 			dev = temp_dev;
+ 			if (irq >= 0) {
+-				pci_set_managed_irq(dev, irq);
++				dev->irq_managed = 1;
++				dev->irq = irq;
+ 				dev_info(&dev->dev, "PCI->APIC IRQ transform: "
+ 					 "INT %c -> IRQ %d\n", 'A' + pin - 1, irq);
+ 				return 0;
+@@ -1258,8 +1259,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
+ 
+ static void pirq_disable_irq(struct pci_dev *dev)
+ {
+-	if (io_apic_assign_pci_irqs && pci_has_managed_irq(dev)) {
++	if (io_apic_assign_pci_irqs && dev->irq_managed && dev->irq) {
+ 		mp_unmap_irq(dev->irq);
+-		pci_reset_managed_irq(dev);
++		dev->irq = 0;
++		dev->irq_managed = 0;
+ 	}
+ }
+diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
+index c933675..172b74d 100644
+--- a/drivers/acpi/pci_irq.c
++++ b/drivers/acpi/pci_irq.c
+@@ -409,7 +409,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+ 		return 0;
+ 	}
+ 
+-	if (pci_has_managed_irq(dev))
++	if (dev->irq_managed && dev->irq > 0)
+ 		return 0;
+ 
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+@@ -454,7 +454,8 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
+ 		kfree(entry);
+ 		return rc;
+ 	}
+-	pci_set_managed_irq(dev, rc);
++	dev->irq = rc;
++	dev->irq_managed = 1;
+ 
+ 	if (link)
+ 		snprintf(link_desc, sizeof(link_desc), " -> Link[%s]", link);
+@@ -477,7 +478,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	u8 pin;
+ 
+ 	pin = dev->pin;
+-	if (!pin || !pci_has_managed_irq(dev))
++	if (!pin || !dev->irq_managed || dev->irq <= 0)
+ 		return;
+ 
+ 	entry = acpi_pci_irq_lookup(dev, pin);
+@@ -499,6 +500,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
+ 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
+ 	if (gsi >= 0) {
+ 		acpi_unregister_gsi(gsi);
+-		pci_reset_managed_irq(dev);
++		dev->irq_managed = 0;
++		dev->irq = 0;
+ 	}
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e90eb22..577c5fd 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -978,23 +978,6 @@ static inline int pci_is_managed(struct pci_dev *pdev)
+ 	return pdev->is_managed;
+ }
+ 
+-static inline void pci_set_managed_irq(struct pci_dev *pdev, unsigned int irq)
+-{
+-	pdev->irq = irq;
+-	pdev->irq_managed = 1;
+-}
+-
+-static inline void pci_reset_managed_irq(struct pci_dev *pdev)
+-{
+-	pdev->irq = 0;
+-	pdev->irq_managed = 0;
+-}
+-
+-static inline bool pci_has_managed_irq(struct pci_dev *pdev)
+-{
+-	return pdev->irq_managed && pdev->irq > 0;
+-}
+-
+ void pci_disable_device(struct pci_dev *dev);
+ 
+ extern unsigned int pcibios_max_latency;
