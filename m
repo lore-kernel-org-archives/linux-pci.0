@@ -1,146 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:32781 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754364AbcDFXMR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2016 19:12:17 -0400
-Received: by mail-pa0-f54.google.com with SMTP id zm5so42007665pac.0
-        for <linux-pci@vger.kernel.org>; Wed, 06 Apr 2016 16:12:17 -0700 (PDT)
-From: Tim Harvey <tharvey@gateworks.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Lucas Stach <l.stach@pengutronix.de>,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	Zhu Richard <Richard.Zhu@freescale.com>,
-	Akshay Bhat <akshay.bhat@timesys.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Shawn Guo <shawnguo@kernel.org>
-Subject: [PATCH v5] PCI: imx6: add dt prop for link gen, default to gen1
-Date: Wed,  6 Apr 2016 16:14:54 -0700
-Message-Id: <1459984494-15782-1-git-send-email-tharvey@gateworks.com>
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:34164 "EHLO
+	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754492AbcDMQXu (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 12:23:50 -0400
+Date: Wed, 13 Apr 2016 18:23:45 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH v4 1/2] dt-bindings: pci: tegra: Update for per-lane PHYs
+Message-ID: <20160413162345.GC30129@ulmo.ba.sec>
+References: <1460131994-24493-1-git-send-email-thierry.reding@gmail.com>
+ <570BE129.40907@wwwdotorg.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="mvpLiMfbWzRoNl4x"
+In-Reply-To: <570BE129.40907@wwwdotorg.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
-the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
-external clock source is present and supplied back to the IMX6 PCIe core
-via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
 
-Add a dt property to specify gen1 vs gen2 and check this before allowing
-a Gen2 link.
+--mvpLiMfbWzRoNl4x
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-We default to Gen1 if the property is not present because at this time there
-are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
+On Mon, Apr 11, 2016 at 11:38:49AM -0600, Stephen Warren wrote:
+> On 04/08/2016 10:13 AM, Thierry Reding wrote:
+> > From: Thierry Reding <treding@nvidia.com>
+> >=20
+> > Changes to the pad controller device tree binding have required that
+> > each lane be associated with a separate PHY. Update the PCI host bridge
+> > device tree binding to allow each root port to define the list of PHYs
+> > required to drive the lanes associated with it.
+>=20
+> I think the feedback I gave on v3 still applies here (I'm talking about t=
+he
+> comments on the patch, not the commit description).
+>=20
+> http://www.spinics.net/lists/linux-pci/msg49718.html
 
-In order to be Gen2 compliant on IMX6 you need to:
- - have a Gen2 compliant external clock generator and route that clock back
-   to either LVDS CLK1 or LVDS CLK2 as an input.
-   (see IMX6SX-SabreSD reference design)
- - specify this clock in the pcie node in the dt
-   (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
-    IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
+Apologies, I had missed those when going over review comments. I think
+I've addressed all of them now, or provided rationale for why the code
+and binding are the way they are.
 
-[1] https://community.freescale.com/message/453209
+I'll be sending out a v5 soon, hopefully that will have addressed any
+outstanding concerns.
 
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Fabio Estevam <fabio.estevam@freescale.com>
-Cc: Zhu Richard <Richard.Zhu@freescale.com>
-Cc: Akshay Bhat <akshay.bhat@timesys.com>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Shawn Guo <shawnguo@kernel.org>
-Signed-off-by: Tim Harvey <tharvey@gateworks.com>
----
-v5:
- - clearly default link gen to 1 when dt prop is read to avoid confusion
-v4:
- - rebase against linux-pci/master
- - add fsl vendor prefix to dt prop
+Thierry
 
-v3:
- - added note in dt bindings doc that we limit to gen1 unless this is specified
-   as gen2 capable
- - move property to imx6 pcie phy instead of designware core
- - don't use &ret as temp storage as of_property_read_u32() doesn't change the
-   outval if property isn't found
-v2:
- - moved dt property to designware core
+--mvpLiMfbWzRoNl4x
+Content-Type: application/pgp-signature; name="signature.asc"
 
-Signed-off-by: Tim Harvey <tharvey@gateworks.com>
----
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  4 ++++
- drivers/pci/host/pci-imx6.c                        | 24 +++++++++++++++-------
- 2 files changed, 21 insertions(+), 7 deletions(-)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 3be80c6..b92fafb 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -19,6 +19,10 @@ Optional properties:
- - fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
- - fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
- - fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
-+- fsl,max-link-speed: Specify PCI gen for link capability. Must be '2' for
-+  gen2, otherwise will default to gen1. Note that the IMX6 LVDS clock outputs
-+  do not meet gen2 jitter requirements and thus for gen2 capability a gen2
-+  compliant clock generator should be used and configured.
- 
- Example:
- 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index eb5a275..60a14b8 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -44,6 +44,7 @@ struct imx6_pcie {
- 	u32			tx_deemph_gen2_6db;
- 	u32			tx_swing_full;
- 	u32			tx_swing_low;
-+	int			link_gen;
- };
- 
- /* PCIe Root Complex registers (memory-mapped) */
-@@ -417,11 +418,15 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
- 		goto err_reset_phy;
- 	}
- 
--	/* Allow Gen2 mode after the link is up. */
--	tmp = readl(pp->dbi_base + PCIE_RC_LCR);
--	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
--	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
--	writel(tmp, pp->dbi_base + PCIE_RC_LCR);
-+	if (imx6_pcie->link_gen == 2) {
-+		/* Allow Gen2 mode after the link is up. */
-+		tmp = readl(pp->dbi_base + PCIE_RC_LCR);
-+		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-+		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
-+		writel(tmp, pp->dbi_base + PCIE_RC_LCR);
-+	} else {
-+		dev_info(pp->dev, "Link: Gen2 disabled\n");
-+	}
- 
- 	/*
- 	 * Start Directed Speed Change so the best possible speed both link
-@@ -445,8 +450,7 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
- 	}
- 
- 	tmp = readl(pp->dbi_base + PCIE_RC_LCSR);
--	dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
--
-+	dev_info(pp->dev, "Link up, Gen%i\n", (tmp >> 16) & 0xf);
- 	return 0;
- 
- err_reset_phy:
-@@ -598,6 +602,12 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 				 &imx6_pcie->tx_swing_low))
- 		imx6_pcie->tx_swing_low = 127;
- 
-+	/* Limit link speed */
-+	ret = of_property_read_u32(pp->dev->of_node, "fsl,max-link-speed",
-+				   &imx6_pcie->link_gen);
-+	if (ret)
-+		imx6_pcie->link_gen = 1;
-+
- 	ret = imx6_add_pcie_port(pp, pdev);
- 	if (ret < 0)
- 		return ret;
--- 
-1.9.1
+iQIcBAABCAAGBQJXDnKRAAoJEN0jrNd/PrOhCKUQALhHG7ZwR4O8o40CFexq1sKx
+Oit9kQaM9s5922COpyFYEQp26URX7iBUSj9UjIx34JLGXcy6n2O+HPoOljQiNCc1
+kLqnWDNMUwIXL6TRZBheRStKzJlbiQqCP8PfhaL1putSGecTBJ7fPAN7lCviDfcQ
+keKh6ryelZy3FEAzl5O7iVzU8mkcdewdKzuBnIkwWSZUOHw0N9g3Itux198FRy6C
+kTxuTsrBAOLcxhaG8Oh7zQkl7p2SIhnY48djkRrfiUurydW2lA7S2PNf88uJUe5C
+xzaCTQTqBspks2N0CeSYVG78j1oKpiyMjQV0w5iOT6d3g7tMQB6V0SefHDMEZlNh
+sNP0pEWhgBy25vV11H5K4od7O1B5rKG6KcVk6RCGUQ03Z1BfYHchTQMW3UG90c6z
+2CRydCJZxeaXdEnuwvY9yifHRIxAtb6hjvefDahYR1eA4/R8BBN0czrmrh0A0fAH
+0QQdERZSBJmFM7CalGm8gI3pJR0fgJtN+4dbIOUIhdULNzVBpxs7xjazuOkiVO83
+eM0qguohR0IJMli13NEWGJL16MAtylX/3lORiNC/3D2RhmWisf8/x/Y+m/E5/nsG
+3Zy6Gh3O6ZOidgiw9iJEk5loQbOwaa45uRBdLk+yXLaHI9YGHDq0FL+1IhFW5V3J
+sDwsGIWXVfc9BddYAXXo
+=f4aV
+-----END PGP SIGNATURE-----
 
+--mvpLiMfbWzRoNl4x--
