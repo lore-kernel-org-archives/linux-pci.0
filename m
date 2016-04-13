@@ -1,85 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40499 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752391AbcDZSig (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Apr 2016 14:38:36 -0400
-Date: Tue, 26 Apr 2016 13:38:31 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org, linux-pci@vger.kernel.org,
-	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
-	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
-	rjw@rjwysocki.net, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V3 2/4] acpi,pci,irq: reduce static IRQ array size to 16
-Message-ID: <20160426183831.GD27803@localhost>
-References: <1460914617-8259-1-git-send-email-okaya@codeaurora.org>
- <1460914617-8259-2-git-send-email-okaya@codeaurora.org>
+Received: from mail-bl2on0143.outbound.protection.outlook.com ([65.55.169.143]:52032
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752303AbcDMRGo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 13:06:44 -0400
+From: Casey Leedom <leedom@chelsio.com>
+To: Hannes Reinecke <hare@suse.com>,
+	Hariprasad S <hariprasad@chelsio.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>,
+	SWise OGC <swise@opengridcomputing.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	Ariel Elior <ariel.elior@qlogic.com>
+Subject: Re: 4.6-rc2 regression with commit 104daa71b396: check VPD access
+ offset against length
+Date: Wed, 13 Apr 2016 16:52:09 +0000
+Message-ID: <BY2PR12MB0648B1E60E0DE5BF73B37BF8C8960@BY2PR12MB0648.namprd12.prod.outlook.com>
+References: <BY2PR12MB06483CA232B6B3BFF7179012C8910@BY2PR12MB0648.namprd12.prod.outlook.com>
+ <BY2PR12MB0648F0C35D907AA640D7E56CC8940@BY2PR12MB0648.namprd12.prod.outlook.com>
+ <02ec01d1941e$3dda2010$b98e6030$@opengridcomputing.com>
+ <20160412053700.GF11361@localhost> <570C93BD.2030102@suse.com>
+ <20160412082304.GB2771@hari-Latitude-E5550> <570CB5FA.7010507@suse.com>
+ <BY2PR12MB0648C2EDB334862B48C81043C8950@BY2PR12MB0648.namprd12.prod.outlook.com>,<570DE062.5070500@suse.com>
+In-Reply-To: <570DE062.5070500@suse.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460914617-8259-2-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 17, 2016 at 01:36:54PM -0400, Sinan Kaya wrote:
-> Now that the supported number of PCI IRQs are no longer capped
-> with 256, renaming the static array to support ISA IRQs only
-> and removing the MAX_IRQS constant.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/acpi/pci_link.c | 40 ++++++++++++++++++++--------------------
->  1 file changed, 20 insertions(+), 20 deletions(-)
-> 
-> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-> index cc0ba16..12ea784 100644
-> --- a/drivers/acpi/pci_link.c
-> +++ b/drivers/acpi/pci_link.c
-> @@ -438,8 +438,7 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
->   * enabled system.
->   */
->  
-> -#define ACPI_MAX_IRQS		256
-> -#define ACPI_MAX_ISA_IRQ	16
-> +#define ACPI_MAX_ISA_IRQS	16
->  
->  #define PIRQ_PENALTY_PCI_POSSIBLE	(16*16)
->  #define PIRQ_PENALTY_PCI_USING		(16*16*16)
-> @@ -447,7 +446,7 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
->  #define PIRQ_PENALTY_ISA_USED		(16*16*16*16*16)
->  #define PIRQ_PENALTY_ISA_ALWAYS		(16*16*16*16*16*16)
->  
-> -static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
-> +static int acpi_isa_irq_penalty[ACPI_MAX_ISA_IRQS] = {
->  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ0 timer */
->  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ1 keyboard */
->  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ2 cascade */
-> @@ -500,8 +499,8 @@ static int acpi_irq_get_penalty(int irq)
->  {
->  	int penalty = 0;
->  
-> -	if (irq < ACPI_MAX_ISA_IRQ)
-> -		penalty += acpi_irq_penalty[irq];
-> +	if (irq < ACPI_MAX_ISA_IRQS)
+| From: linux-pci-owner@vger.kernel.org <linux-pci-owner@vger.kernel.org> on behalf of Hannes Reinecke <hare@suse.com>
+| Sent: Tuesday, April 12, 2016 11:00 PM
+|
+| On 04/12/2016 07:35 PM, Casey Leedom wrote:
+| > | From: Hannes Reinecke <hare@suse.com>
+| > | Sent: Tuesday, April 12, 2016 1:46 AM
+| > | ...
+| > | > --- a/drivers/pci/access.c
+| > | > +++ a/drivers/pci/access.c
+| > | > ...
+| > | > @@ -392,13 +405,8 @@ static ssize_t pci_vpd_read(struct pci_dev *dev, loff_t pos, size_t count,
+| > | >       if (vpd->len == 0)
+| > | >               return -EIO;
+| > | >
+| > | > -     if (pos > vpd->len)
+| > | > -             return 0;
+| > | > -
+| > | > -     if (end > vpd->len) {
+| > | > -             end = vpd->len;
+| > | > -             count = end - pos;
+| > | > -     }
+| > | > +     if (end > vpd->len)
+| > | > +             return -EINVAL;
+| > | >
+| > | >       if (mutex_lock_killable(&vpd->lock))
+| > | >               return -EINTR;
+| > |
+| > | Why do you need this change?
+| > | We still would be needing to validate 'pos', don't we?
+| > | I'd prefer not to have this bit in.
+| >
+| > Two reasons:
+| >
+| >  1. It makes pci_vpd_read() with pci_vpd_write() which has exactly this
+| >     logic.
+| >
+| >  2. More importantly, the new implementation of pci_read_vpd() silently
+| >     fails to perform a VPD read and allows the caller to use random stack
+| >     garbage in the read buffer without knowing that it's not really VPD
+| >     contents.  If any portion of the VPD read isn't going to be performed,
+| >     we should signal that back to the caller.  We could either return an
+| >     error or we could return the number of bytes actually read.  The problem
+| >     with the latter is that it would require changing every single caller to
+| >     check for Requested Read Length == Actual Read Length.  Returning an
+| >     error is the more conservative fix and allows for rapid diagnosis of
+| >     problems.
+| >
+| >     And that last point is important because I spent quite a bit of time
+| >     digging around trying to figure out why cxgb4 suddenly wasn't working.
+|
+| Okay. But wouldn't we need to check for 'pos' exceeding 'vpd->len', too?
 
-Nit: sometimes you use "irq < ACPI_MAX_ISA_IRQS", other times you use
-"irq < ARRAY_SIZE(acpi_isa_irq_penalty)".  Seems like they could be
-consistent.
+Nope.  "pos", "count", and "end" are unsigned:
 
-> -	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty))
-> -		acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
-> +	if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
-> +		acpi_isa_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
->  			active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING;
->  }
->  
->  bool acpi_isa_irq_available(int irq)
->  {
-> -	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_irq_penalty) ||
-> +	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_isa_irq_penalty) ||
->  		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
->  }
->  
-> -- 
-> 1.8.2.1
-> 
+    loff_t end = pos + count;
+
+If "pos" is greater than "vpd->len", "end" will be as well.  This is actually
+exactly the same code that's already in pci_vpd_write().
+
+Casey
