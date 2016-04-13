@@ -1,310 +1,200 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:38745 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750860AbcDROvt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Apr 2016 10:51:49 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: [PATCH v5 1/2] dt-bindings: pci: tegra: Update for per-lane PHYs
-Date: Mon, 18 Apr 2016 16:51:44 +0200
-Message-Id: <1460991105-22861-1-git-send-email-thierry.reding@gmail.com>
+Received: from mga03.intel.com ([134.134.136.65]:20901 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934271AbcDMIeM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 13 Apr 2016 04:34:12 -0400
+Date: Wed, 13 Apr 2016 11:33:52 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH v2 4/4] PCI: Add runtime PM support for PCIe ports
+Message-ID: <20160413083352.GI1714@lahna.fi.intel.com>
+References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1460111790-92836-5-git-send-email-mika.westerberg@linux.intel.com>
+ <20160412175203.GB13637@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160412175203.GB13637@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+On Tue, Apr 12, 2016 at 07:52:03PM +0200, Lukas Wunner wrote:
+> Hi Mika,
+> 
+> I'm working on runtime pm for Thunderbolt on the Mac and your patches
+> directly impact that. A Thunderbolt controller comprises an upstream
+> bridge plus multiple downstream bridges below it, the latter are the
+> actual hotplug ports. I'm using my own runtime pm code for the PCIe
+> ports at the moment but will rebase on your patches once they're
+> finalised.
+> 
+> I've just pushed v2 of my patches to GitHub, this is nearly finished,
+> just needs some more polish before I can post it:
+> https://github.com/l1k/linux/commits/thunderbolt_runpm_v2
 
-The XUSB pad controller allows PCIe lanes to be controlled individually,
-providing fine-grained control over their power state. Previous attempts
-at describing the XUSB pad controller in DT had erroneously assumed that
-all PCIe lanes were driven by the same PHY, and hence the PCI host
-controller would reference only a single PHY.
+Interesting :)
 
-Moving to a representation of per-lane PHYs requires that the operating
-system driver for the PCI host controller have access to the set of PHY
-devices that make up the connection of each root port in order to power
-up and down all of the lanes as necessary.
+> First of all, the root port on my 2012 Ivy Bridge machine suspends to
+> D3hot just fine, as do the upstream and downstream ports on the 2010
+> "Light Ridge" Thunderbolt controller. So the 2015 cut-off in patch [2/4]
+> seems extremely conservative to me, perhaps unnecessarily so. At least
+> you've made it possible to override that by setting bridge_d3 = true,
+> however I'd be happier if this could be extended further back, say,
+> to 2010. That way it would encompass all Macs with Thunderbolt.
 
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
-Changes in v5:
-- add per-SoC examples to clarify what properties are relevant on each
-  generation
-- clarify the rationale for moving the per-lane PHYs
+What about other non-Mac machines? Can we be sure that the same thing
+works there?
 
-Changes in v4:
-- add additional lanes subnode when dereferencing PHYs from the XUSB pad
-  controller to reflect changes in its binding
+I have no problem lowering the cut-off date but it should not start
+breaking things. I think Windows is doing something similar but I'm not
+sure what their cut-off date is.
 
- .../bindings/pci/nvidia,tegra20-pcie.txt           | 224 ++++++++++++++++++++-
- 1 file changed, 219 insertions(+), 5 deletions(-)
+> Secondly, you're disabling runtime pm on hotplug ports, citing a
+> bugzilla entry as an example why this is necessary, however there's
+> a patch attached to that bugzilla entry which fixes the issue:
+> https://bugzilla.kernel.org/show_bug.cgi?id=53811
+> 
+> It is therefore unclear why you're disabling it. This breaks my
+> patches and you've not provided a way to selectively re-enable
+> runtime pm for specific hotplug ports.
 
-diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-index 75321ae23c08..b8cc395fffea 100644
---- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-@@ -60,11 +60,14 @@ Required properties:
-   - afi
-   - pcie_x
- 
--Required properties on Tegra124 and later:
-+Required properties on Tegra124 and later (deprecated):
- - phys: Must contain an entry for each entry in phy-names.
- - phy-names: Must include the following entries:
-   - pcie
- 
-+These properties are deprecated in favour of per-lane PHYs define in each of
-+the root ports (see below).
-+
- Power supplies for Tegra20:
- - avdd-pex-supply: Power supply for analog PCIe logic. Must supply 1.05 V.
- - vdd-pex-supply: Power supply for digital PCIe I/O. Must supply 1.05 V.
-@@ -122,11 +125,22 @@ Required properties:
-   - Root port 0 uses 4 lanes, root port 1 is unused.
-   - Both root ports use 2 lanes.
- 
--Example:
-+Required properties for Tegra124 and later:
-+- phys: Must contain an phandle to a PHY for each entry in phy-names.
-+- phy-names: Must include an entry for each active lane. Note that the number
-+  of entries does not have to (though usually will) be equal to the specified
-+  number of lanes in the nvidia,num-lanes property. Entries are of the form
-+  "pcie-N": where N ranges from 0 to the value specified in nvidia,num-lanes.
-+
-+Examples:
-+=========
-+
-+Tegra20:
-+--------
- 
- SoC DTSI:
- 
--	pcie-controller {
-+	pcie-controller@80003000 {
- 		compatible = "nvidia,tegra20-pcie";
- 		device_type = "pci";
- 		reg = <0x80003000 0x00000800   /* PADS registers */
-@@ -186,10 +200,9 @@ SoC DTSI:
- 		};
- 	};
- 
--
- Board DTS:
- 
--	pcie-controller {
-+	pcie-controller@80003000 {
- 		status = "okay";
- 
- 		vdd-supply = <&pci_vdd_reg>;
-@@ -222,3 +235,204 @@ if a device on the PCI bus provides a non-probeable bus such as I2C or SPI,
- device nodes need to be added in order to allow the bus' children to be
- instantiated at the proper location in the operating system's device tree (as
- illustrated by the optional nodes in the example above).
-+
-+Tegra30:
-+--------
-+
-+SoC DTSI:
-+
-+	pcie-controller@00003000 {
-+		compatible = "nvidia,tegra30-pcie";
-+		device_type = "pci";
-+		reg = <0x00003000 0x00000800   /* PADS registers */
-+		       0x00003800 0x00000200   /* AFI registers */
-+		       0x10000000 0x10000000>; /* configuration space */
-+		reg-names = "pads", "afi", "cs";
-+		interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH   /* controller interrupt */
-+			      GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
-+		interrupt-names = "intr", "msi";
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &intc GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>;
-+
-+		bus-range = <0x00 0xff>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+
-+		ranges = <0x82000000 0 0x00000000 0x00000000 0 0x00001000   /* port 0 configuration space */
-+			  0x82000000 0 0x00001000 0x00001000 0 0x00001000   /* port 1 configuration space */
-+			  0x82000000 0 0x00004000 0x00004000 0 0x00001000   /* port 2 configuration space */
-+			  0x81000000 0 0          0x02000000 0 0x00010000   /* downstream I/O */
-+			  0x82000000 0 0x20000000 0x20000000 0 0x08000000   /* non-prefetchable memory */
-+			  0xc2000000 0 0x28000000 0x28000000 0 0x18000000>; /* prefetchable memory */
-+
-+		clocks = <&tegra_car TEGRA30_CLK_PCIE>,
-+			 <&tegra_car TEGRA30_CLK_AFI>,
-+			 <&tegra_car TEGRA30_CLK_PLL_E>,
-+			 <&tegra_car TEGRA30_CLK_CML0>;
-+		clock-names = "pex", "afi", "pll_e", "cml";
-+		resets = <&tegra_car 70>,
-+			 <&tegra_car 72>,
-+			 <&tegra_car 74>;
-+		reset-names = "pex", "afi", "pcie_x";
-+		status = "disabled";
-+
-+		pci@1,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82000800 0 0x00000000 0 0x1000>;
-+			reg = <0x000800 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <2>;
-+		};
-+
-+		pci@2,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82001000 0 0x00001000 0 0x1000>;
-+			reg = <0x001000 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <2>;
-+		};
-+
-+		pci@3,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82001800 0 0x00004000 0 0x1000>;
-+			reg = <0x001800 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <2>;
-+		};
-+	};
-+
-+Board DTS:
-+
-+	pcie-controller@00003000 {
-+		status = "okay";
-+
-+		avdd-pexa-supply = <&ldo1_reg>;
-+		vdd-pexa-supply = <&ldo1_reg>;
-+		avdd-pexb-supply = <&ldo1_reg>;
-+		vdd-pexb-supply = <&ldo1_reg>;
-+		avdd-pex-pll-supply = <&ldo1_reg>;
-+		avdd-plle-supply = <&ldo1_reg>;
-+		vddio-pex-ctl-supply = <&sys_3v3_reg>;
-+		hvdd-pex-supply = <&sys_3v3_pexs_reg>;
-+
-+		pci@1,0 {
-+			status = "okay";
-+		};
-+
-+		pci@3,0 {
-+			status = "okay";
-+		};
-+	};
-+
-+Tegra124:
-+---------
-+
-+SoC DTSI:
-+
-+	pcie-controller@01003000 {
-+		compatible = "nvidia,tegra124-pcie";
-+		device_type = "pci";
-+		reg = <0x0 0x01003000 0x0 0x00000800   /* PADS registers */
-+		       0x0 0x01003800 0x0 0x00000800   /* AFI registers */
-+		       0x0 0x02000000 0x0 0x10000000>; /* configuration space */
-+		reg-names = "pads", "afi", "cs";
-+		interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>, /* controller interrupt */
-+			     <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>; /* MSI interrupt */
-+		interrupt-names = "intr", "msi";
-+
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0>;
-+		interrupt-map = <0 0 0 0 &gic GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>;
-+
-+		bus-range = <0x00 0xff>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+
-+		ranges = <0x82000000 0 0x01000000 0x0 0x01000000 0 0x00001000   /* port 0 configuration space */
-+			  0x82000000 0 0x01001000 0x0 0x01001000 0 0x00001000   /* port 1 configuration space */
-+			  0x81000000 0 0x0        0x0 0x12000000 0 0x00010000   /* downstream I/O (64 KiB) */
-+			  0x82000000 0 0x13000000 0x0 0x13000000 0 0x0d000000   /* non-prefetchable memory (208 MiB) */
-+			  0xc2000000 0 0x20000000 0x0 0x20000000 0 0x20000000>; /* prefetchable memory (512 MiB) */
-+
-+		clocks = <&tegra_car TEGRA124_CLK_PCIE>,
-+			 <&tegra_car TEGRA124_CLK_AFI>,
-+			 <&tegra_car TEGRA124_CLK_PLL_E>,
-+			 <&tegra_car TEGRA124_CLK_CML0>;
-+		clock-names = "pex", "afi", "pll_e", "cml";
-+		resets = <&tegra_car 70>,
-+			 <&tegra_car 72>,
-+			 <&tegra_car 74>;
-+		reset-names = "pex", "afi", "pcie_x";
-+		status = "disabled";
-+
-+		pci@1,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82000800 0 0x01000000 0 0x1000>;
-+			reg = <0x000800 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <2>;
-+		};
-+
-+		pci@2,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82001000 0 0x01001000 0 0x1000>;
-+			reg = <0x001000 0 0 0 0>;
-+			status = "disabled";
-+
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+
-+			nvidia,num-lanes = <1>;
-+		};
-+	};
-+
-+Board DTS:
-+
-+	pcie-controller@01003000 {
-+		status = "okay";
-+
-+		avddio-pex-supply = <&vdd_1v05_run>;
-+		dvddio-pex-supply = <&vdd_1v05_run>;
-+		avdd-pex-pll-supply = <&vdd_1v05_run>;
-+		hvdd-pex-supply = <&vdd_3v3_lp0>;
-+		hvdd-pex-pll-e-supply = <&vdd_3v3_lp0>;
-+		vddio-pex-ctl-supply = <&vdd_3v3_lp0>;
-+		avdd-pll-erefe-supply = <&avdd_1v05_run>;
-+
-+		/* Mini PCIe */
-+		pci@1,0 {
-+			phys = <&{/padctl@7009f000/pads/pcie/lanes/pcie-4}>;
-+			phy-names = "pcie-0";
-+			status = "okay";
-+		};
-+
-+		/* Gigabit Ethernet */
-+		pci@2,0 {
-+			phys = <&{/padctl@7009f000/pads/pcie/lanes/pcie-2}>;
-+			phy-names = "pcie-0";
-+			status = "okay";
-+		};
-+	};
--- 
-2.8.0
+If I understand correctly, it actually does not fix anything. By luck it
+works intermittently.
 
+I've been testing on Alpine Ridge (which is the latest and greatest TBT3
+host controller) and I'm still seeing the issue ->
+
+> FWIW I've had zero issues suspending the hotplug ports on the Light
+> Ridge Thunderbolt controller. Hotplug detection works fine even in
+> D3hot, all that is necessary is to resume the port on hotplug and
+> unplug while we access the hotplugged device's config space.
+> 
+> So it looks like a hotplug port should be *allowed* to suspend,
+> but its parent ports (by default) should *not* as we wouldn't be
+> able to access the hotplug port's config space anymore. On the Mac
+> even the parent ports may suspend because there's a separate GPE
+> provided which fires on hotplug during D3cold. Just disabling
+> runtime pm *generally* on all hotplug ports is too strict.
+
+<- Now, my understanding is that Macs do not use ACPI hotplug but
+instead this is all native, correct? When you have the controller
+exposed all the time, of course you can get hotplug events and handle
+them in the driver.
+
+However, problem arises when enumeration and configuration is actually
+done in BIOS SMI handler, like in normal non-Mac PCs. If the port is in
+D3 the handler is not smart enough to move it back to D0 and then
+re-enumerate ports. It just gives up.
+
+That is the reason we do not runtime suspend those ports.
+
+We can allow runtime suspending PCIe ports that use PCIe native hotplug
+but I do not have such hardware here so I'm unable to test that but
+since you have, maybe we can co-operate on this :)
+
+> The changes required for pciehp to work with runtime suspended ports
+> are apparent from the following patch, I can spin them out into a
+> separate commit if you would like to include them in your series:
+> https://github.com/l1k/linux/commit/97d1140926670e6498f6671d91201e6d66e78680
+> 
+> 
+> > +static int pcie_port_runtime_idle(struct device *dev)
+> > +{
+> > +	struct pci_dev *pdev = to_pci_dev(dev);
+> > +
+> > +	/*
+> > +	 * Rely the PCI core has set bridge_d3 whenever it thinks the port
+> > +	 * should be good to go to D3. Everything else, including moving
+> > +	 * the port to D3, is handled by the PCI core.
+> > +	 */
+> > +	if (pdev->bridge_d3) {
+> > +		pm_schedule_suspend(dev, 10);
+> > +		return 0;
+> > +	}
+> > +	return -EBUSY;
+> > +}
+> 
+> It's unclear why the pm_schedule_suspend() is needed here and what the
+> 10 ms delay is for. I don't have that delay in my runtime pm code and
+> haven't seen any issues. If the delay is needed then I'm wondering why
+> this isn't implemented using autosuspend?
+
+This part is from the original runtime PM patch. I did not want to
+change 10ms delay here. Not sure if it is needed.
+
+However, we need to have pcie_port_runtime_idle() callback because here we
+actually check if we are allowed to suspend the port. Using autosuspend
+does not work because of that. Documentation/power/runtime_pm.txt says
+this regarding ->runtime_idle() callback:
+
+  The action performed by the idle callback is totally dependent on the
+  subsystem (or driver) in question, but the expected and recommended
+  action is to check if the device can be suspended (i.e. if all of the
+  conditions necessary for suspending the device are satisfied) and to
+  queue up a suspend request for the device in that case.
+
+So delay probably is not necessary but we need the callback to check if
+the port can be suspended.
+
+> > +static bool pcie_port_runtime_pm_possible(struct pci_dev *pdev)
+> > +{
+> > +	/*
+> > +	 * Only enable runtime PM if the PCI core agrees that this port can
+> > +	 * even go to D3.
+> > +	 */
+> > +	if (!pdev->bridge_d3)
+> > +		return false;
+> > +
+> > +	/*
+> > +	 * Prevent runtime PM if the port is hotplug capable. Otherwise the
+> > +	 * hotplug SMI code might not be able to enumerate devices behind
+> > +	 * this port properly (the port is powered down preventing all
+> > +	 * config space accesses to the subordinate devices).
+> > +	 */
+> > +	if (pcie_caps_reg(pdev) & PCI_EXP_FLAGS_SLOT) {
+> > +		u32 sltcap;
+> > +
+> > +		pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &sltcap);
+> > +		if (sltcap & (PCI_EXP_SLTCAP_HPC | PCI_EXP_SLTCAP_HPS))
+> > +			return false;
+> > +	}
+> > +
+> > +	return true;
+> > +}
+> 
+> Why do you re-read the register here, seems like just checking
+> pdev->hotplug_bridge should be sufficient?
+
+Indeed. Although it does not check for surprise hotplug I think we can
+use that field instead.
+
+> >  static void pcie_portdrv_remove(struct pci_dev *dev)
+> >  {
+> > +	const struct pcie_port_data *pdata = pci_get_drvdata(dev);
+> > +
+> > +	if (pdata->runtime_pm_enabled) {
+> > +		pm_runtime_forbid(&dev->dev);
+> > +		pm_runtime_get_noresume(&dev->dev);
+> > +	}
+> > +
+> >  	pcie_port_device_remove(dev);
+> >  }
+> 
+> I think you're missing a pci_set_drvdata(dev, NULL) here.
+
+Device core does that automatically.
+
+> In my runtime pm code I've set pm_runtime_no_callbacks() for the port
+> service devices to prevent users from mucking around with their sysfs
+> files. Feel free to copy that from the above-linked patch if you want.
+
+OK, I'll check those.
+
+Thanks!
