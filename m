@@ -1,59 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56352 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754637AbcDYNpG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Apr 2016 09:45:06 -0400
-Date: Mon, 25 Apr 2016 08:45:00 -0500
-From: Rob Herring <robh@kernel.org>
-To: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Lee Jones <lee@kernel.org>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Mark Brown <broonie@kernel.org>,
-	Alexandre Belloni <alexandre.belloni@free-electrons.com>,
-	Joe Perches <joe@perches.com>, devicetree@vger.kernel.org,
-	linux-input@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	dmaengine@vger.kernel.org
-Subject: Re: [PATCH 12/14] phy: phy-stih41x-usb: DT spelling
- s/#phy-cell/#phy-cells/
-Message-ID: <20160425134500.GA5523@rob-hp-laptop>
-References: <1461166339-11109-1-git-send-email-geert+renesas@glider.be>
- <1461166339-11109-13-git-send-email-geert+renesas@glider.be>
+Received: from mail-io0-f171.google.com ([209.85.223.171]:36856 "EHLO
+	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753803AbcDMQFL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 12:05:11 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1461166339-11109-13-git-send-email-geert+renesas@glider.be>
+In-Reply-To: <1460562685-15168-1-git-send-email-asmirnov@spaceflightindustries.com>
+References: <1460562685-15168-1-git-send-email-asmirnov@spaceflightindustries.com>
+Date: Wed, 13 Apr 2016 13:05:10 -0300
+Message-ID: <CAOMZO5Bppic3N+wmYWCOc1nFNPLF4TADTTx41V-mqpgce5EXLQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI: imx6: Implement reset sequence for i.MX6+
+From: Fabio Estevam <festevam@gmail.com>
+To: Andrey Smirnov <andrew.smirnov@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Andrey Smirnov <asmirnov@spaceflightindustries.com>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Gary Bisson <gary.bisson@boundarydevices.com>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 20, 2016 at 05:32:17PM +0200, Geert Uytterhoeven wrote:
-> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Hi Andrey,
 
-Applied, thanks.
-
-Rob
-
+On Wed, Apr 13, 2016 at 12:51 PM, Andrey Smirnov
+<andrew.smirnov@gmail.com> wrote:
+> I.MX6+ has a dedicated bit for reseting PCIe core, which should be used
+> instead of a regular reset sequence since using the latter will hang the
+> SoC.
+>
+> This commit is based on c34068d48273e24d392d9a49a38be807954420ed from
+> http://git.freescale.com/git/cgit.cgi/imx/linux-2.6-imx.git
+>
+> Signed-off-by: Andrey Smirnov <asmirnov@spaceflightindustries.com>
 > ---
->  Documentation/devicetree/bindings/phy/phy-stih41x-usb.txt | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/phy/phy-stih41x-usb.txt b/Documentation/devicetree/bindings/phy/phy-stih41x-usb.txt
-> index 00944a05ee6b4998..744b4809542edd3b 100644
-> --- a/Documentation/devicetree/bindings/phy/phy-stih41x-usb.txt
-> +++ b/Documentation/devicetree/bindings/phy/phy-stih41x-usb.txt
-> @@ -17,7 +17,7 @@ Example:
->  
->  usb2_phy: usb2phy@0 {
->  	compatible	= "st,stih416-usb-phy";
-> -	#phy-cell	= <0>;
-> +	#phy-cells	= <0>;
->  	st,syscfg	= <&syscfg_rear>;
->  	clocks		= <&clk_sysin>;
->  	clock-names	= "osc_phy";
-> -- 
-> 1.9.1
-> 
+>  arch/arm/boot/dts/imx6qp.dtsi               |  3 ++
+
+Please put the ARM change into a separate patch.
+
+>  static const struct of_device_id imx6_pcie_of_match[] = {
+>         { .compatible = "fsl,imx6q-pcie", },
+> +       { .compatible = "fsl,imx6qp-pcie", },
+
+Please base your patch against
+https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-imx6
+
+,as there is mx6sx support now in this branch.
