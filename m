@@ -1,135 +1,365 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59352 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750847AbcD1Vr0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Apr 2016 17:47:26 -0400
-Subject: Re: [PATCH V6 08/13] PCI: generic, thunder: update to use generic
- ECAM API
-To: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <8950494.UV8UrWiFbx@wuerfel> <20160428201439.GD25125@localhost>
- <5813591.CkzahFEfSl@wuerfel> <20160428211834.GE25125@localhost>
-Cc: Tomasz Nowicki <tn@semihalf.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
-	linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
-	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	robert.richter@caviumnetworks.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, Wangyijing <wangyijing@huawei.com>,
-	Marcin Wojtas <mw@semihalf.com>
-From: Jon Masters <jcm@redhat.com>
-Message-ID: <572284E3.6050209@redhat.com>
-Date: Thu, 28 Apr 2016 17:47:15 -0400
+Received: from e28smtp01.in.ibm.com ([125.16.236.1]:37865 "EHLO
+	e28smtp01.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759919AbcDMHnM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 03:43:12 -0400
+Received: from localhost
+	by e28smtp01.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 13 Apr 2016 13:13:08 +0530
+Date: Wed, 13 Apr 2016 17:42:36 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
+	robherring2@gmail.com, grant.likely@linaro.org
+Subject: Re: [PATCH v8 00/45] powerpc/powernv: PCI hotplug support
+Message-ID: <20160413074236.GA28853@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <570DF50F.6010805@ozlabs.ru>
 MIME-Version: 1.0
-In-Reply-To: <20160428211834.GE25125@localhost>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <570DF50F.6010805@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn, Arnd, all,
+On Wed, Apr 13, 2016 at 05:28:15PM +1000, Alexey Kardashevskiy wrote:
+>On 02/17/2016 02:43 PM, Gavin Shan wrote:
+>>This series of patches rebases on powerpc/next branch, plus below additional
+>>patches:
+>>
+>>    <This series of patches>
+>>    <Followup 3 patches from Gavin on SRIOV EEH, which aren't posted>
+>>    https://patchwork.ozlabs.org/patch/581315/	(PATCH[1/9] Richard's SRIOV EEH)
+>>    https://patchwork.ozlabs.org/patch/582639/	(PATCH[1/1] Gavin's EEH fix)
+>>    https://patchwork.ozlabs.org/patch/582093/	(PATCH[1/1] Gavin's EEH fix)
+>>    https://patchwork.ozlabs.org/patch/580626/	(PATCH[1/4] Gavin's PCI fix)
+>>    https://patchwork.ozlabs.org/patch/580153/	(PATCH[1/1] Andrew's EEH minor fix)
+>>    https://patchwork.ozlabs.org/patch/566827/	(PATCH[1/1] Russell's P5IOC2 removal)
+>>    https://patchwork.ozlabs.org/patch/534154/	(PATCH[1/7] Richard's SRIOV rework)
+>>    commit 388f7b1 ("Linux 4.5-rc3")
+>>
+>>The series of patches intend to support PCI slot for PowerPC PowerNV platform,
+>>which is running on top of skiboot firmware. The patchset requires corresponding
+>>changes from skiboot firmware, which is sent to skiboot@lists.ozlabs.org
+>>for review. The PCI slots are exposed by skiboot with device node properties,
+>>and kernel utilizes those properties to populated PCI slots accordingly.
+>>
+>>The original PCI infrastructure on PowerNV platform can't support hotplug
+>>because the PE is assigned during PHB fixup time, which is called for once
+>>during system boot time. For this, the PCI infrastructure on PowerNV platform
+>>has been reworked for a lot. After that, the PE and its corresponding resources
+>>(IODT, M32DT, M64 segments, DMA32 and bypass window) are assigned upon updating
+>>PCI bridge's resources, which might decide PE# assigned to the PE (e.g. M64
+>>resources, on P8 strictly speaking). Each PE will maintain a reference count,
+>>which is (number of child PCI devices + 1). That indicates when last child PCI
+>>device leaves the PE, the PE and its included resources will be relased and put
+>>back into free pool again. With this design, the PE will be released when EEH PE
+>>is released. PATCH[1 - 23] are related to this part.
+>>
+>> From skiboot perspective, PCI slot is providing (hot/fundamental/complete)
+>>resets to EEH. The kernel gets to know if skiboot supports various reset on one
+>>particular PCI slot through device-tree node. If it does, EEH will utilize the
+>>functionality provided by skiboot. Besides, the device-tree nodes have to change
+>>in order to support PCI hotplug. For example, when one PCI adapter inserted to
+>>one slot, its device-tree node should be added to the system dynamically. Conversely,
+>>the device-tree node should be removed from the system when the PCI adapter is going
+>>to be offline. Since pci_dn and eeh_dev have same life cyle as PCI device nodes,
+>>they should be added/removed accordingly during PCI hotplug. PATCH[24 - 39] are
+>>doing the related work.
+>>
+>>The OF driver is changed to support unflattening FDT blob for sub-stree, which
+>>is covered by PATCH[40 - 44].
+>>
+>>The last one, PATCH[45], is the standalone PCI hotplug driver for PowerPC PowerNV
+>>platform.
+>>
+>>=======
+>>Testing
+>>=======
+>>1. Unplug adapters behind non-empty slot, then plug them.
+>>
+>>    1.1 Check status
+>>    # cat /sys/bus/pci/slots/C10/address
+>>    0003:09:00
+>>    # cat /sys/bus/pci/slots/C10/adapter
+>>    1
+>>    # cat /sys/bus/pci/slots/C10/power
+>>    1
+>>    # lspci
+>>    0003:09:00.0 Ethernet controller: \
+>>    Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+>>    0003:09:00.1 Ethernet controller: \
+>>    Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+>>    0003:09:00.2 Ethernet controller: \
+>>    Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+>>    0003:09:00.3 Ethernet controller: \
+>>    Broadcom Corporation NetXtreme BCM5719 Gigabit Ethernet PCIe (rev 01)
+>>    # lspci -t
+>>    # lspci -t
+>>    -+-[0003:00]---00.0-[01-13]----00.0-[02-13]--+-01.0-[03]----00.0
+>>     |                                           +-08.0-[04-08]--
+>>     |                                           +-09.0-[09]--+-00.0
+>>     |                                           |            +-00.1
+>>     |                                           |            +-00.2
+>>     |                                           |            \-00.3
+>>     |                                           +-10.0-[0a-0e]--
+>>     |                                           \-11.0-[0f-13]--
+>>
+>>    1.2 Unplug adapter 0003:09.00.x
+>>    # echo 0 > /sys/bus/pci/slots/C10/power
+>>    # lspci -t
+>>    -+-[0003:00]---00.0-[01-13]----00.0-[02-13]--+-01.0-[03]----00.0
+>>     |                                           +-08.0-[04-08]--
+>>     |                                           +-09.0-[09]--
+>>     |                                           +-10.0-[0a-0e]--
+>>     |                                           \-11.0-[0f-13]--
+>>
+>>    1.3 Plug adapter 0003:09.00.x
+>>    # echo 1 > /sys/bus/pci/slots/C10/power
+>
+>
+>Do I understand correctly that the adapter was not physically moved in/out of
+>the slot between 1.2 and 1.3?
+>
 
-On 04/28/2016 05:18 PM, Bjorn Helgaas wrote:
-> On Thu, Apr 28, 2016 at 10:40:35PM +0200, Arnd Bergmann wrote:
->> On Thursday 28 April 2016 15:14:39 Bjorn Helgaas wrote:
->>> On Thu, Apr 21, 2016 at 11:36:53AM +0200, Arnd Bergmann wrote:
->>>> On Thursday 21 April 2016 11:28:15 Tomasz Nowicki wrote:
->>>>> On 19.04.2016 15:06, Arnd Bergmann wrote:
->>>>>> On Monday 18 April 2016 21:31:54 Tomasz Nowicki wrote:
->>>>>>>
->>>>>>> Basically the whole content of pci-thunder-ecam.c and pci-thunder-pem.c.
->>>>>>>
->>>>>>> pci-thunder-ecam.c contains config space accessors. Similar for
->>>>>>> pci-thunder-pem.c but it also has extra init call (it is now called
->>>>>>> thunder_pem_init) which finds and maps related registers.
->>>>>>
->>>>>> They seem to do much more than just override the accessors, they actually
->>>>>> change the contents of the config space as well. Is that really necessary
->>>>>> on ACPI based systems as well?
->>>>>
->>>>> Yes, the pci-thunder-ecam.c accessors are meant to emulate config space 
->>>>> capabilities. They are necessary to synthesize EA capabilities (fixed 
->>>>> PCI BARs), it wont work without this, for ACPI boot as well.
->>>>
->>>> Why is that? I thought the BARs never get reassigned when using ACPI,
+Correct.
 
-Just to specifically jump in here and clarify this piece, which only
-pertains to the specific platform's special extra host driver (which
-generally speaking I am encouraging all future platforms not to do). In
-other words, the following has nothing to do with the rest of the patch
-series and is entirely down to one specific SoC and its implementation.
+>
+>
+>>    # lspci -t
+>>    -+-[0003:00]---00.0-[01-13]----00.0-[02-13]--+-01.0-[03]----00.0
+>>     |                                           +-08.0-[04-08]--
+>>     |                                           +-09.0-[09]--+-00.0
+>>     |                                           |            +-00.1
+>>     |                                           |            +-00.2
+>>     |                                           |            \-00.3
+>>     |                                           +-10.0-[0a-0e]--
+>>     |                                           \-11.0-[0f-13]--
+>>
+>>
+>>    1.4 Inject EEH error to adapter 0003:09:00.x, which is recovered.
+>
+>I am confused - why is this needed to test hotplug?
+>
 
-ThunderX supports two different methods of PCIe configuration space for
-on-chip devices: with EA and without EA (which is being phased out). EA
-(Enhanced Allocation) is a fancy way of saying "read only BARs". Intel
-did the spec change for that in PCI SIG, so it wasn't us folks in the
-ARM community doing something weird. The good folks at Cavium desired a
-means to express their on-SoC hardware using PCI so that it was nice and
-enumerable, but without full boat PCI. EA fit the bill better than just
-wiring BARs as write ignore or whatever. Again, it's happening in many
-cases and there must be a reason Intel wanted to get it also.
+Without the series, the EEH reset is always done by kenrel. With the
+series applied, the EEH reset could be done in skiboot. That's the
+major change introduced by the series from EEH's perspective. Also,
+the EEH code was touched.
 
-I believe pci-thunder-ecam.c contains code to support the older devices
-that don't do full EA by faking the EA capabilities, but they can
-clarify. The point is, this is a specific and separate issue with the
-way one vendor has chosen to implement on-SoC devices as PCIe
-discoverable but using the newer PCI EA extension. And then the quirk is
-to handle that not every device that's out there yet has real EA.
-
->>> In general, there's no reason we can't reassign BARs, whether we're
->>> using DT, ACPI, or whatever.  In many cases, systems with ACPI also
->>> assign all the BARs in firmware, and Linux doesn't reassign them
->>> unless it needs to.  But that's just a coincidence.  There's no
->>> requirement that Linux leave BARs as firmware programmed them.
-
-There's no requirement, generally, that PCI compliant devices with ECAM
-can't be programmed with different base addresses. There's this PCI
-change called EA that is disjoint and some vendors have chosen to use
-it. We didn't catch that early in the definition of the SBSA for ARM,
-but just as an aside, I have already suggested we require future
-generations of chips to not use EA and only support writeable BARs (even
-for the decoders in the on-SoC platformish devices doing "PCI"). This
-isn't Cavium's fault - they did the right thing with the data at hand
-and nobody really considered the impact of PCI getting EA added. Again,
-that's something that will likely happen on x86 at some point (maybe it
-already is, I don't get any data about future Intel stuff).
-
-On the rest of the quirks and hacks. Without going into too much detail,
-some "concerned citizens" are chatting with various folks to ensure that
-many of these common quirks aren't needed in future parts.
-
->> I'm thought I've seen systems in which the ACPI BIOS assumes that
->> certain PCI devices never move around, because it pokes the registers
->> from AML, and changing them would require never using the same device
->> through ACPI. It's likely that this is against some standard, but that
->> won't help you if you have to deal with the system anyway.
-
-Right. This has happened, I think, and there you're no worse off on ARM
-than you would be on x86 if you had AML poking at something underneath.
-
-> Yes, I'm pretty sure there are systems like that, e.g., I think SMM
-> code on some HP servers assumes the iLO address never changes.  I
-> think that is a firmware defect because I don't think there's any spec
-> that says firmware retains control over PCI BARs after handoff.  And
-> this particular case isn't really ACPI-specific.
-
-If you substitute SMM for EL3 on ARM we're bound to eventually have the
-same kinds of things happening on some systems. It's just life.
-
-> But as you say, we have to deal with these systems anyway, even if we
-> consider that behavior broken.  My proposal has been to add quirks to
-> mark those devices as IORESOURCE_PCI_FIXED, but I don't think anybody
-> has gotten around to doing that.
-
-Good to know.
-
-Jon.
-
--- 
-Computer Architect | Sent from my Fedora powered laptop
+>>    # cat /sys/bus/pci/devices/0003:09:00.0/eeh_pe_config_addr
+>>    0x1
+>>    # echo 1:0:4:0:0 > /sys/kernel/debug/powerpc/PCI0003/err_injct
+>>    # lspci -ns 0003:09:00.0
+>>    # dmesg | grep EEH
+>>    EEH: Frozen PHB#3-PE#1 detected
+>>    EEH: PE location: U78C9.001.WZS00CF-P1-C10, PHB location: N/A
+>>    EEH: Detected PCI bus error on PHB#3-PE#1
+>>    EEH: This PCI device has failed 1 times in the last hour
+>>    EEH: Notify device drivers to shutdown
+>>    EEH: Collect temporary log
+>>    EEH: Reset without hotplug activity
+>>    EEH: Notify device drivers the completion of reset
+>>    EEH: Notify device driver to resume
+>>
+>>2. Plug adapter and then unplug it. This requires hack in skiboot
+>>    to skip probing the adapters behind the target (C12 in the
+>>    testing) for once.
+>>
+>>    2.1 Check status
+>>    # cat /sys/bus/pci/slots/C12/address
+>>    0001:06
+>>    # cat /sys/bus/pci/slots/C12/power
+>>    0
+>>    # cat /sys/bus/pci/slots/C12/adapter
+>>    1
+>>    # lspci -t
+>>    +-[0001:00]---00.0-[01-0a]----00.0-[02-0a]--+-01.0-[03-04]----00.0-[04]----00.0
+>>                                                +-08.0-[05]----00.0
+>>                                                \-09.0-[06-0a]--
+>>
+>>    2.2 Plug adapter 0001:06:00.x
+>>    # echo 1 > /sys/bus/pci/slots/C12/power
+>>    # lspci -t
+>>    +-[0001:00]---00.0-[01-0a]----00.0-[02-0a]--+-01.0-[03-04]----00.0-[04]----00.0
+>>                                                +-08.0-[05]----00.0
+>>                                                \-09.0-[06-0a]--+-00.0
+>>                                                                \-00.1
+>>    # lspci
+>>    0001:06:00.0 Ethernet controller: \
+>>    Broadcom Corporation NetXtreme II BCM57810 10 Gigabit Ethernet (rev 10)
+>>    0001:06:00.1 Ethernet controller: \
+>>    Broadcom Corporation NetXtreme II BCM57810 10 Gigabit Ethernet (rev 10)
+>>
+>>    2.3 Inject EEH error to adapter 0001:06:00.x, which is recovered
+>>    # cat /sys/bus/pci/devices/0001:06:00.0/eeh_pe_config_addr
+>>    0x2
+>>    # echo 2:0:4:0:0 > /sys/kernel/debug/powerpc/PCI0001/err_injct
+>>    # dmesg | grep EEH
+>>    EEH: Frozen PHB#1-PE#2 detected
+>>    EEH: PE location: U78C9.001.WZS00CF-P1-C12, PHB location: N/A
+>>    EEH: Detected PCI bus error on PHB#1-PE#2
+>>    EEH: This PCI device has failed 1 times in the last hour
+>>    EEH: Notify device drivers to shutdown
+>>    EEH: Collect temporary log
+>>    EEH: Reset without hotplug activity
+>>    EEH: Notify device drivers the completion of reset
+>>    EEH: Notify device driver to resume
+>>
+>>    2.4 Unplug adapter 0001:06:00.x
+>>    # echo 0 > /sys/bus/pci/slots/C12/power
+>>    # lspci -t
+>>    +-[0001:00]---00.0-[01-0a]----00.0-[02-0a]--+-01.0-[03-04]----00.0-[04]----00.0
+>>                                                +-08.0-[05]----00.0
+>>                                                \-09.0-[06-0a]--
+>>
+>>=========
+>>Changelog
+>>=========
+>>v8:
+>>    * Rebased to linux-powerpc next branch.
+>>    * Resolve comments from Alexey and Daniel on PCI part
+>>    * Resolve comments from Rob on fdt.c
+>>    * Retested (refer to the "Testing section")
+>>v7:
+>>    * Reworked revision to some extent.
+>>    * Rebased to powerpc/next repository.
+>>    * Reorder/split/merge/drop according - Alexey.
+>>    * Defined macros and use array to track IO/M32/M64/DMA32 segments - Alexey.
+>>    * Merged 3 files to one for the hotplug driver - Alexey.
+>>    * As part of OPAL API, defined macros for PCI slot power state, hotplug
+>>      message type. Defined macros for PCI slot power confirmed state in
+>>      hotplug driver.
+>>    * Misc comments from Alexey.
+>>    * Reworked unflatten_dt_node() to avoid recursive function calls.
+>>    * Use EXPORT_SYMBOL_GPL() and document function's input/output - Rob/Frank.
+>>v6:
+>>    * Patch reorder, split, squash - Alexey.
+>>    * Minor coding style - Alexey.
+>>    * Better function names for pcibios_{add,remove}_pci_devices - Bjorn
+>>    * Replace pr_warn() with dev_warn() in PowerNV hotplug driver - Bjorn
+>>    * Concurrent depth as parameter passed to __unflatten_dt_node() - Grant / Alexey
+>>    * Replace overlay with of_changeset - Grant
+>>v5:
+>>    * Rebased to 4.1.rc6 and some unmerged patches as below:
+>>      Alexey's DDW patchset (v11);
+>>      Gavin's EEH error injection support (in mpe's next branch);
+>>      Richard's EEH cleanup patches (in mpe's next branch);
+>>      Richard's EEH support for VF (v7);
+>>      Gavin's misc EEH fixes for 4.2;
+>>    * The revision bases on skiboot corresponding patches (v7):
+>>      https://patchwork.ozlabs.org/patch/480437/
+>>    * Utilize OF overlay to update device-tree with help of newly introduced
+>>      OPAL API opal_get_overlay_dt().
+>>    * Split patches for easy review according to aik's comments.
+>>    * Fix coding style from checkpatchc.pl as pointed by aik.
+>>    * Code cleanup and misc fixup according to aik's input.
+>>v4:
+>>    * Rebased to 4.1.RC1
+>>    * Added API to unflatten FDT blob to device node sub-tree, which is attached
+>>      the indicated parent device node. The original mechanism based on formatted
+>>      string stream has been dropped.
+>>    * The PATCH[v3 09/21] ("powerpc/eeh: Delay probing EEH device during hotplug")
+>>      was picked up sent to linux-ppc@ separately for review as Richard's "VF EEH
+>>      Support" depends on that.
+>>v3:
+>>    * Rebased to 4.1.RC0
+>>    * PowerNV PCI infrasturcture is total refactored in order to support PCI
+>>      hotplug. The PowerNV hotplug driver is also reworked a lot because of
+>>      the changes in skiboot in order to support PCI hotplug.
+>>
+>>Gavin Shan (45):
+>>   PCI: Add pcibios_setup_bridge()
+>>   powerpc/pci: Override pcibios_setup_bridge()
+>>   powerpc/pci: Cleanup on struct pci_controller_ops
+>>   powerpc/powernv: Cleanup on pci_controller_ops instances
+>>   powerpc/powernv: Drop phb->bdfn_to_pe()
+>>   powerpc/powernv: Reorder fields in struct pnv_phb
+>>   powerpc/powernv: Rename PE# fields in struct pnv_phb
+>>   powerpc/powernv: Fix initial IO and M32 segmap
+>>   powerpc/powernv: Simplify pnv_ioda_setup_pe_seg()
+>>   powerpc/powernv: IO and M32 mapping based on PCI device resources
+>>   powerpc/powernv: Track M64 segment consumption
+>>   powerpc/powernv: Rename M64 related functions
+>>   powerpc/powernv/ioda1: M64 support on P7IOC
+>>   powerpc/powernv/ioda1: Rename pnv_pci_ioda_setup_dma_pe()
+>>   powerpc/powernv/ioda1: Introduce PNV_IODA1_DMA32_SEGSIZE
+>>   powerpc/powernv: Remove DMA32 PE list
+>>   powerpc/powernv/ioda1: Improve DMA32 segment track
+>>   powerpc/powernv: Increase PE# capacity
+>>   powerpc/powernv: Use PE instead of number during setup and release
+>>   powerpc/powernv: Allocate PE# in reverse order
+>>   powerpc/powernv: Create PEs at PCI hot plugging time
+>>   powerpc/powernv/ioda1: Support releasing IODA1 TCE table
+>>   powerpc/powernv: Dynamically release PEs
+>>   powerpc/pci: Rename pcibios_{add,remove}_pci_devices()
+>>   powerpc/pci: Rename pcibios_find_pci_bus()
+>>   powerpc/pci: Move pci_find_bus_by_node() around
+>>   powerpc/pci: Export pci_add_device_node_info()
+>>   powerpc/pci: Introduce pci_remove_device_node_info()
+>>   powerpc/pci: Export pci_traverse_device_nodes()
+>>   powerpc/pci: Delay populating pdn
+>>   powerpc/pci: Don't scan empty slot
+>>   powerpc/pci: Update bridge windows on PCI plug
+>>   powerpc/powernv: Simplify pnv_eeh_reset()
+>>   powerpc/powernv: Exclude root bus in pnv_pci_reset_secondary_bus()
+>>   powerpc/powernv: Fundamental reset in pnv_pci_reset_secondary_bus()
+>>   powerpc/powernv: Support PCI slot ID
+>>   powerpc/powernv: Use firmware PCI slot reset infrastructure
+>>   powerpc/powernv: Functions to get/set PCI slot status
+>>   powerpc/powernv: Select OF_DYNAMIC
+>>   drivers/of: Split unflatten_dt_node()
+>>   drivers/of: Avoid recursively calling unflatten_dt_node()
+>>   drivers/of: Rename unflatten_dt_node()
+>>   drivers/of: Specify parent node in of_fdt_unflatten_tree()
+>>   drivers/of: Return allocated memory from of_fdt_unflatten_tree()
+>>   PCI/hotplug: PowerPC PowerNV PCI hotplug driver
+>>
+>>  arch/powerpc/include/asm/eeh.h                 |    2 +-
+>>  arch/powerpc/include/asm/opal-api.h            |   17 +-
+>>  arch/powerpc/include/asm/opal.h                |    8 +-
+>>  arch/powerpc/include/asm/pci-bridge.h          |   25 +-
+>>  arch/powerpc/include/asm/pnv-pci.h             |    7 +
+>>  arch/powerpc/include/asm/ppc-pci.h             |    8 +-
+>>  arch/powerpc/kernel/eeh_dev.c                  |   17 +-
+>>  arch/powerpc/kernel/eeh_driver.c               |   12 +-
+>>  arch/powerpc/kernel/pci-common.c               |   16 +-
+>>  arch/powerpc/kernel/pci-hotplug.c              |   47 +-
+>>  arch/powerpc/kernel/pci_dn.c                   |   89 +-
+>>  arch/powerpc/platforms/maple/pci.c             |   34 +-
+>>  arch/powerpc/platforms/pasemi/pci.c            |    3 -
+>>  arch/powerpc/platforms/powermac/pci.c          |   38 +-
+>>  arch/powerpc/platforms/powernv/Kconfig         |    1 +
+>>  arch/powerpc/platforms/powernv/eeh-powernv.c   |  179 ++--
+>>  arch/powerpc/platforms/powernv/opal-wrappers.S |    4 +
+>>  arch/powerpc/platforms/powernv/pci-ioda.c      | 1243 +++++++++++++++---------
+>>  arch/powerpc/platforms/powernv/pci.c           |   92 +-
+>>  arch/powerpc/platforms/powernv/pci.h           |   60 +-
+>>  arch/powerpc/platforms/pseries/msi.c           |    4 +-
+>>  arch/powerpc/platforms/pseries/pci_dlpar.c     |   32 -
+>>  arch/powerpc/platforms/pseries/setup.c         |    8 +-
+>>  drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c   |    2 +-
+>>  drivers/of/fdt.c                               |  372 ++++---
+>>  drivers/of/unittest.c                          |    2 +-
+>>  drivers/pci/hotplug/Kconfig                    |   12 +
+>>  drivers/pci/hotplug/Makefile                   |    3 +
+>>  drivers/pci/hotplug/pnv_php.c                  |  870 +++++++++++++++++
+>>  drivers/pci/hotplug/rpadlpar_core.c            |    8 +-
+>>  drivers/pci/hotplug/rpaphp_core.c              |    4 +-
+>>  drivers/pci/hotplug/rpaphp_pci.c               |    4 +-
+>>  drivers/pci/setup-bus.c                        |    5 +
+>>  include/linux/of_fdt.h                         |    5 +-
+>>  include/linux/pci.h                            |    1 +
+>>  35 files changed, 2360 insertions(+), 874 deletions(-)
+>>  create mode 100644 drivers/pci/hotplug/pnv_php.c
+>>
+>
+>
+>-- 
+>Alexey
+>
 
