@@ -1,76 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.32.117.8]:29797 "EHLO
-	stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755951AbcDLF3t (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 01:29:49 -0400
-Date: Tue, 12 Apr 2016 10:59:42 +0530
-From: Hariprasad Shenai <hariprasad@chelsio.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, davem@davemloft.net,
-	netdev@vger.kernel.org
-Cc: swise@opengridcomputing.com, leedom@chelsio.com,
-	santosh@chelsio.com, kumaras@chelsio.com, nirranjan@chelsio.com
-Subject: [REGRESSION, bisect] pci: cxgb4 probe fails after commit
- 104daa71b3961434 ("PCI: Determine actual VPD size on first access")
-Message-ID: <20160412052939.GA2771@hari-Latitude-E5550>
+Received: from smtp.codeaurora.org ([198.145.29.96]:58275 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753653AbcDNP7B (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2016 11:59:01 -0400
+Subject: Re: [PATCH v2 4/4] ACPI: PCI: Add generic PCI host controller
+To: Jayachandran C <jchandra@broadcom.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Tomasz Nowicki <tn@semihalf.com>, rafael@kernel.org
+References: <1460414707-19153-1-git-send-email-jchandra@broadcom.com>
+ <1460414707-19153-5-git-send-email-jchandra@broadcom.com>
+ <570FBCF6.50407@codeaurora.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	jiang.liu@linux.intel.com,
+	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>,
+	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
+	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Jon Masters <jcm@redhat.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <570FBE41.7040303@codeaurora.org>
+Date: Thu, 14 Apr 2016 11:58:57 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <570FBCF6.50407@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
+On 4/14/2016 11:53 AM, Sinan Kaya wrote:
+> On 4/11/2016 6:45 PM, Jayachandran C wrote:
+>> +/* find the entry in cfgarr which contains range bus_start..bus_end */
+>> +static int mcfg_lookup(u16 seg, u8 bus_start, u8 bus_end)
+>> +{
+>> +	struct pci_config_window *cfg;
+>> +	int i;
+>> +
+>> +	if (!cfgarr)
+>> +		return -ENOENT;
+>> +
+>> +	for (i = 0; cfgarr[i]; i++) {
+>> +		cfg = cfgarr[i];
+>> +
+> 
+> I see that you are allocating an array of cfgarr to keep the MCFG table entries.
+> The above way of checking the number of entries is not correct. 
+> 
+> You should keep track of the number of entries you found out globally instead of 
+> relying an element being NULL or not. 
+> 
+> If you exceed the array size, you may or may not be lucky to find another entry
+> in memory.
+> 
+
+I see now that you are allocating an extra element in memory. Still, looping to find
+out the number of elements didn't quite look good to me.
+
++		for (i = 0; cfgarr[i]; i++)
++			;
++		pr_info(PREFIX " MCFG table at loaded, %d entries\n", i);
 
 
-The following patch introduced a regression, causing cxgb4 driver to fail in
-PCIe probe.
-
-commit 104daa71b39614343929e1982170d5fcb0569bb5
-Author: Hannes Reinecke <hare@suse.de>
-Author: Hannes Reinecke <hare@suse.de>
-Date:   Mon Feb 15 09:42:01 2016 +0100
-
-    PCI: Determine actual VPD size on first access
-    
-    PCI-2.2 VPD entries have a maximum size of 32k, but might actually be
-    smaller than that.  To figure out the actual size one has to read the VPD
-    area until the 'end marker' is reached.
-    
-    Per spec, reading outside of the VPD space is "not allowed."  In practice,
-    it may cause simple read errors or even crash the card.  To make matters
-    worse not every PCI card implements this properly, leaving us with no 'end'
-    marker or even completely invalid data.
-    
-    Try to determine the size of the VPD data when it's first accessed.  If no
-    valid data can be read an I/O error will be returned when reading or
-    writing the sysfs attribute.
-    
-    As the amount of VPD data is unknown initially the size of the sysfs
-    attribute will always be set to '0'.
-    
-    [bhelgaas: changelog, use 0/1 (not false/true) for bitfield, tweak
-    pci_vpd_pci22_read() error checking]
-    Tested-by: Shane Seymour <shane.seymour@hpe.com>
-    Tested-by: Babu Moger <babu.moger@oracle.com>
-    Signed-off-by: Hannes Reinecke <hare@suse.de>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Cc: Alexander Duyck <alexander.duyck@gmail.com>
-
-The problem is stemming from the fact that the Chelsio adapters actually have
-two VPD structures stored in the VPD.  An abbreviated on at Offset 0x0 and the
-complete VPD at Offset 0x400.  The abbreviated one only contains the PN, SN and
-EC Keywords, while the complete VPD contains those plus various adapter
-constants contained in V0, V1, etc.  And it also contains the Base Ethernet MAC
-Address in the "NA" Keyword which the cxgb4 driver needs when it can't contact
-the adapter firmware.  (We don't have the "NA" Keywork in the VPD Structure at
-Offset 0x0 because that's not an allowed VPD Keyword in the PCI-E 3.0
-specification.)
-
-  With the new code, the computed size of the VPD is 0x200 and so our efforts
-to read the VPD at Offset 0x400 silently fails. We check the result of the
-read looking for a signature 0x82 byte but we're checking against random stack
-garbage.
-
-  The end result is that the cxgb4 driver now fails the PCI-E Probe.
-
-Thanks,
-Hari
+-- 
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
