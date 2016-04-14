@@ -1,145 +1,90 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Jon Masters <jcm@jonmasters.org>
+References: <1460414707-19153-1-git-send-email-jchandra@broadcom.com>
+ <1460414707-19153-3-git-send-email-jchandra@broadcom.com>
+ <570C4034.20105@caviumnetworks.com> <570C78F1.4090701@jonmasters.org>
+ <20160412164413.GA32297@red-moon>
+Cc: David Daney <ddaney@caviumnetworks.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Tomasz Nowicki <tn@semihalf.com>, rafael@kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
 	Will Deacon <will.deacon@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>, Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC PATCH 08/11] drivers: acpi: iort: enhance mapping API
-Date: Thu, 14 Apr 2016 18:25:40 +0100
-Message-Id: <1460654743-7896-9-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com,
+	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>,
+	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
+	Liviu.Dudau@arm.com, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org
+From: Jon Masters <jcm@jonmasters.org>
+Message-ID: <570F30D4.2030102@jonmasters.org>
+Date: Thu, 14 Apr 2016 01:55:32 -0400
+MIME-Version: 1.0
+In-Reply-To: <20160412164413.GA32297@red-moon>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [PATCH v2 2/4] PCI: Provide common functions for ECAM mapping
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The current IORT API works only for mappings that have the GIC ITS
-as a sink node and does not allow mapping components other than
-PCI root complexes.
+On 04/12/2016 12:44 PM, Lorenzo Pieralisi wrote:
+> On Tue, Apr 12, 2016 at 12:26:25AM -0400, Jon Masters wrote:
+> 
+> [...]
+> 
+>> Quoting Bjorn's original reply to the previous series:
+>>
+>>> Some of the code that moved to drivers/acpi/pci_mcfg.c is not
+>>> really ACPI-specific, and could potentially be used for non-ACPI
+>>> bridges that support ECAM.  I'd like to see that sort of code
+>>> moved to a new file like drivers/pci/ecam.c.
+>>
+>> So my guess is that this is the reasoning behind JC's file layout.
+>>
+>> I'm curious what Lorenzo's take on things is currently. I assume this
+>> series is now to be the official coordinated version of this effort for
+>> upstream, following the advice of Bjorn previously, but I would like to
+>> know if everyone is behind this plan. I've (previously) requested a
+>> Linaro LEG meeting this week (part of our bootarch working group) to
+>> specifically discuss the status of PCI upstreaming in order to get the
+>> different vendors together to ensure every single one of them is
+>> tracking the correct latest effort and doing what is needed to test/aid,
+>> hence my ask. If this is now plan A, I'll make sure everyone is aligned
+>> behind it and start pinging people individually for testing.
+> 
+> My take is that JC's aim is to get this four patch series reviewed and
+> merged
 
-This patch enhances the IORT API to allow any mapping permitted by
-the IORT specifications, inclusive of IORT translations for named
-components.
+Indeed, I see that's probably the goal, and why not :)
 
-Based on prior work by Hanjun Guo <hanjun.guo@linaro.org>.
+> (which is *not* sufficient to get ACPI PCI to work fully on ARM64
+> - see cover letter - the remaining patches in his branch are not
+> fixes, it is code that is required to get things to work, these 4
+> patches stand alone are not sufficient but I understand he wants to get
+> them reviewed following feedback on the lists) so that we can make
+> progress on ACPI PCI on ARM64.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
----
- drivers/acpi/iort.c | 59 +++++++++++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 53 insertions(+), 6 deletions(-)
+Agreed. I went through the branch and the 11 patches there, reacquainted
+myself with what's what. So what we have now is 4 patches here plus a
+few others that in total replace v5 of your previous mmconfig patches in
+functionality. The question is what happens with the rest (of JC's
+branch let's say) - do they get sent out now too?
 
-diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
-index 080888a..2b5ce65 100644
---- a/drivers/acpi/iort.c
-+++ b/drivers/acpi/iort.c
-@@ -182,15 +182,61 @@ iort_scan_node(enum acpi_iort_node_type type,
- 	return NULL;
- }
- 
-+static struct acpi_iort_node *
-+iort_find_parent_node(struct acpi_iort_node *node, u8 type)
-+{
-+	struct acpi_iort_id_mapping *id;
-+
-+	if (!node || !node->mapping_offset || !node->mapping_count)
-+		return NULL;
-+
-+	id = ACPI_ADD_PTR(struct acpi_iort_id_mapping, node,
-+			  node->mapping_offset);
-+
-+	if (!id->output_reference) {
-+		pr_err(FW_BUG "[node %p type %d] ID map has NULL parent reference\n",
-+		       node, node->type);
-+		return NULL;
-+	}
-+
-+	node = ACPI_ADD_PTR(struct acpi_iort_node, iort_table,
-+			    id->output_reference);
-+
-+	return node->type == type ? node : NULL;
-+}
-+
- static acpi_status
- iort_find_dev_callback(struct acpi_iort_node *node, void *context)
- {
--	struct acpi_iort_root_complex *pci_rc;
- 	struct device *dev = context;
--	struct pci_bus *bus;
- 
- 	switch (node->type) {
--	case ACPI_IORT_NODE_PCI_ROOT_COMPLEX:
-+	case ACPI_IORT_NODE_NAMED_COMPONENT: {
-+		struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-+		struct acpi_iort_named_component *ncomp;
-+		struct acpi_device *adev = to_acpi_device_node(dev->fwnode);
-+
-+		if (!adev)
-+			break;
-+
-+		ncomp = (struct acpi_iort_named_component *)node->node_data;
-+
-+		if (ACPI_FAILURE(acpi_get_name(adev->handle,
-+					       ACPI_FULL_PATHNAME, &buffer))) {
-+			pr_warn("Can't get device full path name\n");
-+			break;
-+		}
-+
-+		if (!strcmp(ncomp->device_name, (char *)buffer.pointer))
-+			return AE_OK;
-+
-+		break;
-+	}
-+
-+	case ACPI_IORT_NODE_PCI_ROOT_COMPLEX: {
-+		struct acpi_iort_root_complex *pci_rc;
-+		struct pci_bus *bus;
-+
- 		bus = to_pci_bus(dev);
- 		pci_rc = (struct acpi_iort_root_complex *)node->node_data;
- 
-@@ -204,20 +250,21 @@ iort_find_dev_callback(struct acpi_iort_node *node, void *context)
- 
- 		break;
- 	}
-+	}
- 
- 	return AE_NOT_FOUND;
- }
- 
- static struct acpi_iort_node *
- iort_dev_map_rid(struct acpi_iort_node *node, u32 rid_in,
--			    u32 *rid_out)
-+			    u32 *rid_out, u8 type)
- {
- 
- 	if (!node)
- 		goto out;
- 
- 	/* Go upstream */
--	while (node->type != ACPI_IORT_NODE_ITS_GROUP) {
-+	while (node->type != type) {
- 		struct acpi_iort_id_mapping *id;
- 		int i, found = 0;
- 
-@@ -283,7 +330,7 @@ iort_its_find_node_and_map_rid(struct pci_dev *pdev, u32 req_id, u32 *dev_id)
- 		return NULL;
- 	}
- 
--	return iort_dev_map_rid(node, req_id, dev_id);
-+	return iort_dev_map_rid(node, req_id, dev_id, ACPI_IORT_NODE_ITS_GROUP);
- }
- 
- /**
--- 
-2.6.4
+> I will comment on the patches as soon as I have time to review
+> them, I certainly would like to understand what we have to do with the
+> rest of the code though (provided this series is good to go) see above.
+
+Right. That's my reason for asking. I'd like to know who is driving (I
+believe that to be Lorenzo) and what the path forward is, and whether we
+need to get additional support from anyone else. There's a multi-vendor
+meeting in the morning where I'm going to summarize the current state of
+these patches and I would like to know (soon) what the plan is so that
+we can get everyone on deck to help out at least with testing (most have
+tested the previous set, but we need public acks happening).
+
+Jon.
 
