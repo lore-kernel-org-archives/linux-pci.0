@@ -1,89 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:34972 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750775AbcDKKXb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Apr 2016 06:23:31 -0400
-Date: Mon, 11 Apr 2016 12:23:27 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH v4 1/2] dt-bindings: pci: tegra: Update for per-lane PHYs
-Message-ID: <20160411102327.GA17743@ulmo.ba.sec>
-References: <1460131994-24493-1-git-send-email-thierry.reding@gmail.com>
- <20160408164814.GB15034@localhost>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="k+w/mQv8wyuph6w0"
-In-Reply-To: <20160408164814.GB15034@localhost>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Will Deacon <will.deacon@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC PATCH 02/11] drivers: acpi: iort: add support for IOMMU registration
+Date: Thu, 14 Apr 2016 18:25:34 +0100
+Message-Id: <1460654743-7896-3-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The ACPI IORT table provide entries for IOMMU (aka SMMU in ARM world)
+components that allow creating the kernel data structures required to
+probe and initialize the IOMMU devices.
 
---k+w/mQv8wyuph6w0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This patch provides support in the IORT kernel code to register IOMMU
+components.
 
-On Fri, Apr 08, 2016 at 11:48:14AM -0500, Bjorn Helgaas wrote:
-> Hi Thierry,
->=20
-> On Fri, Apr 08, 2016 at 06:13:13PM +0200, Thierry Reding wrote:
-> > From: Thierry Reding <treding@nvidia.com>
-> >=20
-> > Changes to the pad controller device tree binding=20
->=20
-> Is there a commit we can reference for this pad controller binding
-> change?  If so, I can fold it in.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+---
+ drivers/acpi/iort.c  | 42 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/iort.h |  2 ++
+ 2 files changed, 44 insertions(+)
 
-It hasn't been merged yet. Technically this patch is a prerequisite for
-getting the new binding merged. And there's a specific order that needs
-to be observed for this not to regress (albeit only temporarily).
+diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
+index 3119683..98db580 100644
+--- a/drivers/acpi/iort.c
++++ b/drivers/acpi/iort.c
+@@ -19,10 +19,13 @@
+ #define pr_fmt(fmt)	"ACPI: IORT: " fmt
+ 
+ #include <linux/export.h>
++#include <linux/iommu.h>
+ #include <linux/iort.h>
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
++#include <linux/list.h>
+ #include <linux/pci.h>
++#include <linux/slab.h>
+ 
+ struct iort_its_msi_chip {
+ 	struct list_head	list;
+@@ -30,6 +33,45 @@ struct iort_its_msi_chip {
+ 	u32			translation_id;
+ };
+ 
++struct iort_iommu_node {
++	struct list_head list;
++	struct iommu_ops *ops;
++	struct acpi_iort_node *node;
++	struct fwnode_handle	*fwnode;
++};
++static LIST_HEAD(iort_iommu_list);
++static DEFINE_SPINLOCK(iort_iommu_lock);
++
++/**
++ * iort_iommu_set_node - Create iort_mmu_node and use it to register
++ *			 iommu structures on iort_iommu_list.
++ *
++ * @ops: IOMMU operations
++ * @node: IORT table node associated with the IOMMU
++ * @fwnode: fwnode_handle associated with the IOMMU
++ *
++ * Returns: 0 on success
++ *          -ENOMEM on failure
++ */
++int iort_iommu_set_node(struct iommu_ops *ops, struct acpi_iort_node *node,
++			struct fwnode_handle *fwnode)
++{
++	struct iort_iommu_node *iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
++
++	if (WARN_ON(!iommu))
++		return -ENOMEM;
++
++	INIT_LIST_HEAD(&iommu->list);
++	iommu->ops = ops;
++	iommu->node = node;
++	iommu->fwnode = fwnode;
++	spin_lock(&iort_iommu_lock);
++	list_add_tail(&iommu->list, &iort_iommu_list);
++	spin_unlock(&iort_iommu_lock);
++
++	return 0;
++}
++
+ typedef acpi_status (*iort_find_node_callback)
+ 	(struct acpi_iort_node *node, void *context);
+ 
+diff --git a/include/linux/iort.h b/include/linux/iort.h
+index b15fe1a..148d9a1 100644
+--- a/include/linux/iort.h
++++ b/include/linux/iort.h
+@@ -28,5 +28,7 @@ void iort_deregister_domain_token(int trans_id);
+ struct fwnode_handle *iort_its_find_domain_token(int trans_id);
+ u32 iort_pci_get_msi_rid(struct pci_dev *pdev, u32 req_id);
+ struct fwnode_handle *iort_pci_get_domain(struct pci_dev *pdev, u32 req_id);
++int iort_iommu_set_node(struct iommu_ops *ops, struct acpi_iort_node *node,
++			struct fwnode_handle *fwnode);
+ 
+ #endif /* __IORT_H__ */
+-- 
+2.6.4
 
-The correct sequence for merging this would be:
-
-	1) XUSB pad controller binding & driver updates
-	2) PCI driver updates
-	3) DT changes that implement the new binding
-
-Because of the above I'd prefer to merge everything through the Tegra
-tree. If that's okay with you, I can provide stable branches once its
-all in place for you to merge back into the PCI tree.
-
-> Is there a benefit to keeping this binding patch separate from the
-> corresponding driver patch?  It seems like it'd nice to have a
-> connection between them.  (Sorry, I'm sure I've asked this before,
-> but I can't remember the answer.)
-
-I've seen both approaches applied. I think separate patches is (or was?)
-preferred because eventually the DT bindings were supposed to get moved
-to a separate repository. Having separate patches would make the
-transition easier by making it possible to cherry-pick between trees.
-
-Thierry
-
---k+w/mQv8wyuph6w0
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCAAGBQJXC3scAAoJEN0jrNd/PrOhVnoQAJQawbj9su8FAjoJiaLXV+qw
-SlKUEiJrqe5UNOKDFG682fHscmFkONiM+tLxwvy0zLVmkkvxXUo//jHD0lNJvyt2
-GM0TJDCgCow7pZiWAv54wROyaJvvRpNrRZIErBO/sYjZJQlopdW6iKxS6zqAzJo4
-3mMV5wmrXnxNkjPR5Ah7PjX9E/HU/9LwgQhUbKCRfczH616htE6MU30XevNrtp/0
-3gcLVwXIH5jMcw8hACsb+gUlFHvtwDJogjqYqx9TkVThOrH+rRnmfn6KmP8s12Pn
-thFZKARcyiCuW0VY3Roz8X8Q3JR9W0xYodzqAXXwEMnOALZewodV4NrO54eq6VWV
-uQzIlz/EQfWV41nPCsCBKnkOi0+gYm0GYdokrMSwY59bazdhZfDqB+reDcf8DTga
-tftp+91kzC7/Vr+L+9Str2V9Z8qcu+3cWCBP5vhv4Czea9ShU+yFZaoD9Z6fvB07
-jLsh8IGqwcJm5TIUcVlkMh6xnKY3GMoAcnGN1v7YHw3M2hlk2BGs+KqkvZzD9AiU
-c1dHnRV1p5EPpF/me/ucx3tNBAKHrxrV2wor/9h+c0Puy/PQBrkD79fbVajdmVoQ
-h7/SsdslZaKGOmrePKUZJ26Xr6KAkvt29zM6Sl8TtbQcEuF0bS29osYprpNTpLzG
-y3pSYkJ7argu7KfzHelp
-=85h5
------END PGP SIGNATURE-----
-
---k+w/mQv8wyuph6w0--
