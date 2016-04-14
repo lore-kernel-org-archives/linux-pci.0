@@ -1,88 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <570C429A.6090006@caviumnetworks.com>
-References: <1460414707-19153-1-git-send-email-jchandra@broadcom.com>
- <1460414707-19153-4-git-send-email-jchandra@broadcom.com> <570C429A.6090006@caviumnetworks.com>
-From: Jayachandran C <jchandra@broadcom.com>
-Date: Thu, 14 Apr 2016 19:45:43 +0530
-Message-ID: <CAKc_7PXdVYmm5LEUzCttagf9b4O9R--3OO1+u1CXTjGgi-K_rw@mail.gmail.com>
-Subject: Re: [PATCH v2 3/4] PCI: generic, thunder: update to use generic ECAM API
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Tomasz Nowicki <tn@semihalf.com>, rafael@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
 	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Tomasz Nowicki <tn@semihalf.com>,
 	Hanjun Guo <hanjun.guo@linaro.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
-	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>,
-	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
-	Liviu.Dudau@arm.com, Wangyijing <wangyijing@huawei.com>,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org, Jon Masters <jcm@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+	Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC PATCH 07/11] drivers: iommu: arm-smmu: allow ACPI based streamid translation
+Date: Thu, 14 Apr 2016 18:25:39 +0100
+Message-Id: <1460654743-7896-8-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi David,
+The ACPI IORT table provides data to ARM IOMMU drivers to carry out
+streamid mappings and the kernel has the infrastructure to implement
+it through the fw_xlate() struct iommu_ops hook.
 
-On Tue, Apr 12, 2016 at 6:04 AM, David Daney <ddaney@caviumnetworks.com> wrote:
-> On 04/11/2016 03:45 PM, Jayachandran C wrote:
->>
->> Use functions provided by drivers/pci/ecam.h for mapping the config
->> space in drivers/pci/host/pci-host-common.c, and update its users to
->> use 'struct pci_config_window' and 'struct pci_generic_ecam_ops'
->>
->> The changes are mostly to use 'struct pci_config_window' in place of
->> 'struct gen_pci'. Some of the fields of gen_pci were only used
->> temporarily and can be eliminated by using local variables or function
->> arguments, these are not carried over to struct pci_config_window.
->>
->> pci-thunder-ecam.c and pci-thunder-pem.c are the only users of the
->> pci_host_common_probe function and the gen_pci structure, these have
->> been updated to use the new API as well.
->>
->> The patch does not introduce any functional changes other than a very
->> minor one: with the new code, on 64-bit platforms, we do just a single
->> ioremap for the whole config space.
->>
->> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
->
->
-> Tested-by: David Daney <david.daney@cavium.com>
+By relying on the DT agnostic struct iommu_fwspec fields, this
+patch adds code in the ARM SMMU fw_xlate() callback that allows
+streamid translation on ACPI based ARM system.
 
-Thanks.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+---
+ drivers/iommu/arm-smmu.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-> However, ...
->
->> ---
->>   drivers/pci/ecam.h                  |   5 ++
->>   drivers/pci/host/Kconfig            |   1 +
->>   drivers/pci/host/pci-host-common.c  | 121
->> ++++++++++++++++--------------------
->>   drivers/pci/host/pci-host-common.h  |  47 --------------
->>   drivers/pci/host/pci-host-generic.c |  50 +++------------
->>   drivers/pci/host/pci-thunder-ecam.c |  37 +++--------
->>   drivers/pci/host/pci-thunder-pem.c  |  53 +++++-----------
->
->
-> ... The patch conflicts with a bug-fix patch I just sent to
-> pci-thunder-pem.c, so there will be a race to see who gets in first.
+diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+index 84bcff7..0f1e784 100644
+--- a/drivers/iommu/arm-smmu.c
++++ b/drivers/iommu/arm-smmu.c
+@@ -1440,6 +1440,20 @@ out_unlock:
+ 	return ret;
+ }
+ 
++static int arm_smmu_dev_node_match(struct device *dev, void *data)
++{
++	return is_fwnode_iommu(dev->fwnode) && dev->fwnode == data;
++}
++
++static struct platform_device *arm_smmu_get_dev(struct fwnode_handle *fwnode)
++{
++	struct device *dev;
++
++	dev = bus_find_device(&platform_bus_type, NULL, fwnode,
++			      arm_smmu_dev_node_match);
++	return dev ? to_platform_device(dev) : NULL;
++}
++
+ static int arm_smmu_fw_xlate(struct device *dev, struct iommu_fwspec *args)
+ {
+ 	struct arm_smmu_device *smmu;
+@@ -1447,6 +1461,8 @@ static int arm_smmu_fw_xlate(struct device *dev, struct iommu_fwspec *args)
+ 
+ 	if (is_of_node(args->fwnode))
+ 		smmu_pdev = of_find_device_by_node(to_of_node(args->fwnode));
++	else if (is_fwnode_iommu(args->fwnode))
++		smmu_pdev = arm_smmu_get_dev(args->fwnode);
+ 
+ 	if (!smmu_pdev)
+ 		return -ENODEV;
+-- 
+2.6.4
 
-I would expect this patchset to take more time than the bugfix.
-I will update the patches when the fix is queued to -next.
-
-> Also, I don't know if it would make sense to split out the pci-thunder-*
-> changes to a separate patch.
-
-In this case, I think splitting the pci-thunder-* will make it more
-complex than just switching everything to ecam.h in one go.
-
-If the patch needs to be split, I can move some of the simplification
-that was done to gen_pci structure and pci-host-common to a separate
-patch.
-
-JC.
