@@ -1,44 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:35436 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965810AbcDLWdf (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 18:33:35 -0400
-Received: by mail-ig0-f181.google.com with SMTP id gy3so100455369igb.0
-        for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2016 15:33:34 -0700 (PDT)
+Received: from down.free-electrons.com ([37.187.137.238]:51113 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752399AbcDNO1E (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2016 10:27:04 -0400
+Date: Thu, 14 Apr 2016 16:26:51 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Hanna Hawa <hannah@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [PATCH 2/2] pci: host: new driver for Marvell Armada 7K/8K PCIe
+ controller
+Message-ID: <20160414162651.6765241a@free-electrons.com>
+In-Reply-To: <3196859.0zi20qjiKR@wuerfel>
+References: <1459071058-18328-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1459071058-18328-3-git-send-email-thomas.petazzoni@free-electrons.com>
+	<3196859.0zi20qjiKR@wuerfel>
 MIME-Version: 1.0
-Date: Tue, 12 Apr 2016 15:33:34 -0700
-Message-ID: <CAH=XD5-Snbsb3tqH6s_gTuek72QpE1L9yjfWB0R1k-HO1xrexQ@mail.gmail.com>
-Subject: Hot Plug: How to determine a device has been removed
-From: Kallol Biswas <kallol@nucleodyne.com>
-To: linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-    We have been working on a PCIe appliance.
+Hello,
 
-There is a software layer (management layer) that uses pci_dev
-structure of underlying devices on downstream port.
+On Mon, 28 Mar 2016 23:21:57 +0200, Arnd Bergmann wrote:
+> On Sunday 27 March 2016 11:30:58 Thomas Petazzoni wrote:
+> > +       /* Wait until the link becomes active again */
+> > +       while (timeout) {
+> > +               if (armada8k_pcie_link_up(pp))
+> > +                       break;
+> > +               udelay(1);
+> > +               timeout--;
+> > +       }
+> > 
+> 
+> Why the busy-loop here?
+> 
+> Maybe just do a single msleep(1) here to wait for the link to
+> come up instead?
 
-The port supports Hot Plug.
+I've changed the udelay(1) by msleep(1). Thanks!
 
-We have a test that a device with one or more functions is
-removed(surprise removal) from system.
-The linux kernel (2.6.38.1) detects presence detect interrupt and
-unconfigures the device/functions.
-
-What is the best way to detect from management layer that the
-underlying devices are gone and should not be access?
-
-We have used udev to detect device removal and addition, but with
-multi-function device we are getting into an issue that while
-processing removal event of 1st function, 2nd event comes
-asynchronously for 2nd function. If management driver is in the middle
-of accessing the config space of 2nd function, system crashes. We need
-to check somehow the underlying device is gone.
-
-Any direction/pointer will be appreciated.
-
-Thanks,
-Kallol
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
