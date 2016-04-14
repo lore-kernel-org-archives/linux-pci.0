@@ -1,55 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:33318 "EHLO
-	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752865AbcDTOmH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2016 10:42:07 -0400
-Message-Id: <158b8ef6bf71ae69ef54871e4762b98deb981d6e.1461162854.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Wed, 20 Apr 2016 16:44:27 +0200
-Subject: [PATCH v2 1/2] PCI: Fix BUG on device attach failure
-To: linux-pci@vger.kernel.org
-Cc: linux-pm@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 14 Apr 2016 17:50:44 +0200
+From: Joerg Roedel <jroedel@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: stable@vger.kernel.org,
+	=?utf-8?B?0J7Qu9C10LPQnNC+0YDQvtC3?= <oleg.moroz@mcc.vniiem.ru>,
+	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
+	Rob Groner <rgroner@rtd.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH 0/3] v4.4: Revert "PCI: Implement pcibios_alloc_irq() and
+Message-ID: <20160414155044.GB3886@suse.de>
+References: <20160413055439.6877.68183.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160413055439.6877.68183.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Previously when pci_bus_add_device() called device_attach() and it
-returned a negative value, we emitted a WARN but carried on.
+Hi Bjorn,
 
-Commit ab1a187bba5c ("PCI: Check device_attach() return value always"),
-introduced in Linux 4.6-rc1, changed this to unwind all steps preceding
-device_attach() and to not set dev->is_added = 1.
+On Wed, Apr 13, 2016 at 12:56:59AM -0500, Bjorn Helgaas wrote:
+> We reverted the following changes from v4.5 to fix a regression:
+> 
+>   8affb487d4a4 ("x86/PCI: Don't alloc pcibios-irq when MSI is enabled")
+>   811a4e6fce09 ("PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed")
+>   991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
 
-The latter leads to a BUG if pci_bus_add_device() was called from
-pci_bus_add_devices(). Fix by not recursing to a child bus if
-device_attach() failed for the bridge leading to it.
+Do you have a link to the thread about these issues? I'd like to have a
+look at what has been tried to solve the regressions before the revert.
 
-This can be triggered by plugging in a PCI device (e.g. Thunderbolt)
-while the system is asleep. The system locks up when woken because
-device_attach() returns -EPROBE_DEFER.
+I had a look at commit 991de2e59090 and noted that the main difference
+it introduces is that the pcibios-irq is allocated earlier (probe time,
+before the commit it was pci_enable_device() time). In fact, it is now
+allocated before pci_enable_resources() has been called on the device
+(as far as I can see). I wonder if the regression can be fixed by
+also moving pci_enable_resources() to probe time.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
-v2: Split commit in two (Bjorn Helgaas).
 
- drivers/pci/bus.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Regards,
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 6c9f546..23a39fd 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -324,7 +324,9 @@ void pci_bus_add_devices(const struct pci_bus *bus)
- 	}
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
--		BUG_ON(!dev->is_added);
-+		/* Skip if device attach failed */
-+		if (!dev->is_added)
-+			continue;
- 		child = dev->subordinate;
- 		if (child)
- 			pci_bus_add_devices(child);
--- 
-2.8.0.rc3
-
+	Joerg
