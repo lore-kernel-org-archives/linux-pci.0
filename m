@@ -1,133 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.opengridcomputing.com ([72.48.136.20]:40697 "EHLO
-	smtp.opengridcomputing.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933456AbcDLVvg (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 17:51:36 -0400
-Subject: Re: 4.6-rc2 regression with commit 104daa71b396: check VPD access
- offset against length
-To: Casey Leedom <leedom@chelsio.com>, Hannes Reinecke <hare@suse.com>,
-	Hariprasad S <hariprasad@chelsio.com>
-References: <BY2PR12MB06483CA232B6B3BFF7179012C8910@BY2PR12MB0648.namprd12.prod.outlook.com>
- <BY2PR12MB0648F0C35D907AA640D7E56CC8940@BY2PR12MB0648.namprd12.prod.outlook.com>
- <02ec01d1941e$3dda2010$b98e6030$@opengridcomputing.com>
- <20160412053700.GF11361@localhost> <570C93BD.2030102@suse.com>
- <20160412082304.GB2771@hari-Latitude-E5550> <570CB5FA.7010507@suse.com>
- <BY2PR12MB0648C2EDB334862B48C81043C8950@BY2PR12MB0648.namprd12.prod.outlook.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>
-From: Steve Wise <swise@opengridcomputing.com>
-Message-ID: <570D6E0F.9050707@opengridcomputing.com>
-Date: Tue, 12 Apr 2016 16:52:15 -0500
-MIME-Version: 1.0
-In-Reply-To: <BY2PR12MB0648C2EDB334862B48C81043C8950@BY2PR12MB0648.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC PATCH 04/11] drivers: acpi: iort: introduce linker section for IORT entries probing
+Date: Thu, 14 Apr 2016 18:25:36 +0100
+Message-Id: <1460654743-7896-5-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/12/2016 12:35 PM, Casey Leedom wrote:
-> | From: Hannes Reinecke <hare@suse.com>
-> | Sent: Tuesday, April 12, 2016 1:46 AM
-> | To: Hariprasad S
-> | Cc: Bjorn Helgaas; SWise OGC; Casey Leedom; linux-pci@vger.kernel.org; bhelgaas@google.com
-> | Subject: Re: 4.6-rc2 regression with commit 104daa71b396: check VPD access offset against length
-> |
-> | On 04/12/2016 10:23 AM, Hariprasad Shenai wrote:
-> | [ .. ]
-> | >
-> | > Hi,
-> | >
-> | > How about adding a PCI helper function to set the actual VPD_SIZE.
-> | >
-> | > Some thing like below. We have tested this and works. The bnx2x and the tg3
-> | > drive may also need this, because I see them calling pci_read_vpd()
-> | > with non-zero offsets. The bnx2x in particular looks like it's doing something
-> | > similar to cxgb4 so it would also probably benefit from this change (once it's
-> | > fixed to call the new pci_set_size_vpd() API).
-> |
-> | That indeed looks reasonable.
-> | Please find some comments inline.
-> |
-> | ...
-> |
-> | > --- a/drivers/pci/access.c
-> | > +++ a/drivers/pci/access.c
-> | > @@ -275,6 +275,19 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
-> | >  }
-> | >  EXPORT_SYMBOL(pci_write_vpd);
-> | >
-> | > +/**
-> | > + * pci_set_size_vpd - Set size of Vital Product Data space
-> | > + * @dev:     pci device struct
-> | > + * @len:     size of vpd space
-> | > + */
-> | > +ssize_t pci_set_size_vpd(struct pci_dev *dev, size_t len)
-> | > +{
-> | > +     if (!dev->vpd || !dev->vpd->ops)
-> | > +             return -ENODEV;
-> | > +     return dev->vpd->ops->set_size(dev, len);
-> | > +}
-> | > +EXPORT_SYMBOL(pci_set_size_vpd);
-> | > +
-> | >  #define PCI_VPD_MAX_SIZE (PCI_VPD_ADDR_MASK + 1)
-> | >
-> | >  /**
-> | > @@ -392,13 +405,8 @@ static ssize_t pci_vpd_read(struct pci_dev *dev, loff_t pos, size_t count,
-> | >       if (vpd->len == 0)
-> | >               return -EIO;
-> | >
-> | > -     if (pos > vpd->len)
-> | > -             return 0;
-> | > -
-> | > -     if (end > vpd->len) {
-> | > -             end = vpd->len;
-> | > -             count = end - pos;
-> | > -     }
-> | > +     if (end > vpd->len)
-> | > +             return -EINVAL;
-> | >
-> | >       if (mutex_lock_killable(&vpd->lock))
-> | >               return -EINTR;
-> |
-> | Why do you need this change?
-> | We still would be needing to validate 'pos', don't we?
-> | I'd prefer not to have this bit in.
->
-> Two reasons:
->
->   1. It makes pci_vpd_read() with pci_vpd_write() which has exactly this
->      logic.
->
->   2. More importantly, the new implementation of pci_read_vpd() silently
->      fails to perform a VPD read and allows the caller to use random stack
->      garbage in the read buffer without knowing that it's not really VPD
->      contents.  If any portion of the VPD read isn't going to be performed,
->      we should signal that back to the caller.  We could either return an
->      error or we could return the number of bytes actually read.  The problem
->      with the latter is that it would require changing every single caller to
->      check for Requested Read Length == Actual Read Length.  Returning an
->      error is the more conservative fix and allows for rapid diagnosis of
->      problems.
->
->      And that last point is important because I spent quite a bit of time
->      digging around trying to figure out why cxgb4 suddenly wasn't working.
->
->
+Since commit e647b532275b ("ACPI: Add early device probing
+infrastructure") the kernel has gained the infrastructure that allows
+adding linker script section entries to execute ACPI driver callbacks
+(ie probe routines) for all subsystems that register a table entry
+in the respective kernel section (eg clocksource, irqchip).
 
-I agree with Casey.  As I said before, pci_vpd_read() returning 0 and 
-not reading anything has to be a bug, right?  IMO it needs to return a 
-negative errno if the region defined by the offset/length being read 
-exceeds the entire vpd region length.  I don't see the use of a partial 
-read anyway.  Is there utility in that?
+Since ARM IOMMU devices data is described through IORT tables when
+booting with ACPI, the ARM IOMMU drivers must be made able to hook ACPI
+callback routines that are called to probe IORT entries and initialize
+the respective IOMMU devices.
 
-Also, I suggest the patch Hari sent out be split into two patches:
+To avoid adding driver specific hooks into IORT table initialization
+code (breaking therefore code modularity - ie ACPI IORT code must be made
+aware of ARM SMMU drivers ACPI init callbacks), this patch adds code
+that allows ARM SMMU drivers to take advantage of the ACPI early probing
+infrastructure, so that they can add linker script section entries
+containing drivers callback to be executed on IORT tables detection.
 
-1) add the pci_set_size_vpd() API and usage by cxgb4 - this is critical 
-for 4.6-rc
-2) fixing pci_vpd_read() - perhaps less critical, but if we converge on 
-a consensus, it can hit 4.6-rc or 4.7
+Since IORT nodes are differentiated by a type, the callback routines
+can easily parse the IORT table entries, check the IORT nodes and
+carry out some actions whenever the IORT node type associated with
+the driver specific callback is matched.
 
-Thoughts?
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/acpi/iort.c               | 2 ++
+ include/asm-generic/vmlinux.lds.h | 1 +
+ include/linux/iort.h              | 3 +++
+ 3 files changed, 6 insertions(+)
 
-
+diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
+index 98db580..080888a 100644
+--- a/drivers/acpi/iort.c
++++ b/drivers/acpi/iort.c
+@@ -372,6 +372,8 @@ static int __init iort_table_detect(void)
+ 		return -EINVAL;
+ 	}
+ 
++	acpi_probe_device_table(iort);
++
+ 	return 0;
+ }
+ arch_initcall(iort_table_detect);
+diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+index 339125b..0aae448 100644
+--- a/include/asm-generic/vmlinux.lds.h
++++ b/include/asm-generic/vmlinux.lds.h
+@@ -536,6 +536,7 @@
+ 	IRQCHIP_OF_MATCH_TABLE()					\
+ 	ACPI_PROBE_TABLE(irqchip)					\
+ 	ACPI_PROBE_TABLE(clksrc)					\
++	ACPI_PROBE_TABLE(iort)						\
+ 	EARLYCON_TABLE()
+ 
+ #define INIT_TEXT							\
+diff --git a/include/linux/iort.h b/include/linux/iort.h
+index 148d9a1..766adda 100644
+--- a/include/linux/iort.h
++++ b/include/linux/iort.h
+@@ -31,4 +31,7 @@ struct fwnode_handle *iort_pci_get_domain(struct pci_dev *pdev, u32 req_id);
+ int iort_iommu_set_node(struct iommu_ops *ops, struct acpi_iort_node *node,
+ 			struct fwnode_handle *fwnode);
+ 
++#define IORT_ACPI_DECLARE(name, table_id, fn)		\
++	ACPI_DECLARE_PROBE_ENTRY(iort, name, table_id, 0, NULL, 0, fn)
++
+ #endif /* __IORT_H__ */
+-- 
+2.6.4
 
