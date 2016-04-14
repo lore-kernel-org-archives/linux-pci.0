@@ -1,151 +1,159 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 26/60] PCI: Use correct align for optional only resources during sorting
-Date: Thu,  7 Apr 2016 17:15:39 -0700
-Message-Id: <1460074573-7481-27-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:36328 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932643AbcDNP2H convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2016 11:28:07 -0400
+Received: by mail-ob0-f171.google.com with SMTP id j9so50309917obd.3
+        for <linux-pci@vger.kernel.org>; Thu, 14 Apr 2016 08:28:07 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1459946207-11923-1-git-send-email-ynezz@true.cz>
+References: <1459936100.2256.30.camel@pengutronix.de>
+	<1459946207-11923-1-git-send-email-ynezz@true.cz>
+Date: Thu, 14 Apr 2016 08:28:06 -0700
+Message-ID: <CAJ+vNU1y1owta3e-Th4sbBDV_n2y85dKM2acxJWrCiJnc3vQ9A@mail.gmail.com>
+Subject: Re: [PATCH v3 2/2] PCI: imx6: Add reset-gpio-active-high boolean
+ property to DT
+From: Tim Harvey <tharvey@gateworks.com>
+To: =?UTF-8?Q?Petr_=C5=A0tetiar?= <ynezz@true.cz>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Russell King <linux@arm.linux.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Sascha Hauer <kernel@pengutronix.de>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	=?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
+	Fabio Estevam <festevam@gmail.com>,
+	Marcel Ziswiler <marcel.ziswiler@toradex.com>, stefan@agner.ch
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During sorting before assign, we only put resource with non-zero align
-in the sorted list, so for optional resources that required size is 0 and
-only have optional parts, we need to have correct align.
+On Wed, Apr 6, 2016 at 5:36 AM, Petr Štetiar <ynezz@true.cz> wrote:
+> Currently the reset-gpio DT property which controls the PCI bus device
+> reset signal defaults to active-low reset sequence (L=reset state,
+> H=operation state) plus the code in reset function isn't GPIO polarity
+> aware - it doesn't matter if the defined reset-gpio is active-low or
+> active-high, it will always result into active-low reset sequence.
+>
+> I've tried to fix it properly and changed the reset-gpio reset sequence
+> to be polarity aware, but this patch has been accepted and then reverted
+> as it has introduced few backward incompatible issues:
+>
+> 1. Some of the DTBs as for example imx6qdl-sabresd, doesn't define
+> reset-gpio polarity correctly:
+>
+>   reset-gpio = <&gpio7 12 0>;
+>
+> which means, that it's defined as active-high, but in reality it's
+> active-low, thus it wouldn't work without DTS fix.
+>
+> 2. The logic in reset function is inverted:
+>
+>         gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0)
+>         msleep(100);
+>         gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+>
+> so even if some of the i.MX6 boards had reset-gpio polarity defined
+> correctly in their DTSes, they would stop working.
+>
+> As we can't break old DTBs, we can't fix them and that's why we need to
+> introduce this new DT reset-gpio-active-high boolean property, so we can
+> support boards with active-high reset sequence.
+>
+> This active-high reset sequence is for example needed on Apalis SoMs,
+> where GPIO1_IO28, used to PCIe reset is not connected directly to PERST#
+> PCIe signal, but it's ORed with RESETBMCU coming off the PMIC, and thus
+> is inverted, active-high.
+>
+> Signed-off-by: Petr Štetiar <ynezz@true.cz>
+> ---
+>  Changes since v1:
+>
+>   * Added documentation of reset-gpio and reset-gpio-active-high DT properties
+>   * Removed unnecessary double negation of GPIO value
+>
+>  Changes since v2:
+>
+>   * Changed commit message so it explains in more detail why we need new DT
+>     property
+>   * Changed PHY to 'bus device' in binding's documentation
+>
+>  Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt |  6 ++++++
+>  drivers/pci/host/pci-imx6.c                              | 14 +++++++++++---
+>  2 files changed, 17 insertions(+), 3 deletions(-)
+>
+> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> index 3be80c6..072efbf 100644
+> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> @@ -19,6 +19,12 @@ Optional properties:
+>  - fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
+>  - fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
+>  - fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
+> +- reset-gpio: Should specify the GPIO for controlling the PCI bus device reset
+> +  signal. Its not polarity aware and defaults to active-low reset sequence
+> +  (L=reset state, H=operation state).
+> +- reset-gpio-active-high: If present then the reset sequence using the GPIO
+> +  specified in the "reset-gpio" property is reversed (H=reset state,
+> +  L=operation state).
+>
+>  Example:
+>
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index 2f817fa..17f4cc3 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -33,6 +33,7 @@
+>
+>  struct imx6_pcie {
+>         int                     reset_gpio;
+> +       bool                    gpio_active_high;
+>         struct clk              *pcie_bus;
+>         struct clk              *pcie_phy;
+>         struct clk              *pcie;
+> @@ -310,9 +311,11 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+>
+>         /* Some boards don't have PCIe reset GPIO. */
+>         if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+> -               gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
+> +               gpio_set_value_cansleep(imx6_pcie->reset_gpio,
+> +                                       imx6_pcie->gpio_active_high);
+>                 msleep(100);
+> -               gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+> +               gpio_set_value_cansleep(imx6_pcie->reset_gpio,
+> +                                       !imx6_pcie->gpio_active_high);
+>         }
+>         return 0;
+>
+> @@ -546,9 +549,14 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>
+>         /* Fetch GPIOs */
+>         imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
+> +       imx6_pcie->gpio_active_high = of_property_read_bool(np,
+> +                                               "reset-gpio-active-high");
+>         if (gpio_is_valid(imx6_pcie->reset_gpio)) {
+>                 ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
+> -                                           GPIOF_OUT_INIT_LOW, "PCIe reset");
+> +                               imx6_pcie->gpio_active_high ?
+> +                                       GPIOF_OUT_INIT_HIGH :
+> +                                       GPIOF_OUT_INIT_LOW,
+> +                               "PCIe reset");
+>                 if (ret) {
+>                         dev_err(&pdev->dev, "unable to get reset gpio\n");
+>                         return ret;
+> --
+> 1.9.1
+>
 
-While treating SRIOV as optional resources, we always read alignment for
-SRIOV bars every time, so they are ok.
-Hotplug bridge resources are using STARTALIGN so it is ok when size is 0
-if we have correct start for them.
+Tested on Gateworks Ventana boards (which have active-low PERST#)
 
-Later we want to treat the ROM BAR as optional resource, and it has
-SIZEALIGN, so align=size will be 0. We need to find a way to get align
-for them.
-
-We can use optional resource align instead in that case, and it
-is ok for SRIOV path and hotplug bridge resource path.
-
-We need to pass realloc list from sizing stage to sorting stage, and
-get entry from realloc list and calculate align from the entry.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Reported-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 49 ++++++++++++++++++++++++++++++++++++++++++-------
- 1 file changed, 42 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index fc30f80..544f518 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -144,9 +144,42 @@ static resource_size_t get_res_add_align(struct list_head *head,
- 	return dev_res->min_align;
- }
- 
-+static resource_size_t __pci_resource_alignment(
-+				struct pci_dev *dev,
-+				struct resource *r,
-+				struct list_head *realloc_head)
-+{
-+	resource_size_t r_align = pci_resource_alignment(dev, r);
-+	resource_size_t orig_start, orig_end;
-+	struct pci_dev_resource *dev_res;
-+
-+	if (r_align || !realloc_head)
-+		return r_align;
-+
-+	dev_res = res_to_dev_res(realloc_head, r);
-+	if (!dev_res || !dev_res->add_size)
-+		return r_align;
-+
-+	orig_start = r->start;
-+	orig_end = r->end;
-+	r->end += dev_res->add_size;
-+	if ((r->flags & IORESOURCE_STARTALIGN)) {
-+		resource_size_t r_size = resource_size(r);
-+
-+		r->start = dev_res->min_align;
-+		r->end = r->start + r_size - 1;
-+	}
-+	r_align = pci_resource_alignment(dev, r);
-+	r->start = orig_start;
-+	r->end = orig_end;
-+
-+	return r_align;
-+}
- 
- /* Sort resources by alignment */
--static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
-+static void pdev_sort_resources(struct pci_dev *dev,
-+				 struct list_head *realloc_head,
-+				 struct list_head *head)
- {
- 	int i;
- 
-@@ -164,7 +197,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- 		if (!(r->flags) || r->parent)
- 			continue;
- 
--		r_align = pci_resource_alignment(dev, r);
-+		r_align = __pci_resource_alignment(dev, r, realloc_head);
- 		if (!r_align) {
- 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
- 				 i, r);
-@@ -182,8 +215,9 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- 		list_for_each_entry(dev_res, head, list) {
- 			resource_size_t align;
- 
--			align = pci_resource_alignment(dev_res->dev,
--							 dev_res->res);
-+			align = __pci_resource_alignment(dev_res->dev,
-+							 dev_res->res,
-+							 realloc_head);
- 
- 			if (r_align > align) {
- 				n = &dev_res->list;
-@@ -196,6 +230,7 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
- }
- 
- static void __dev_sort_resources(struct pci_dev *dev,
-+				 struct list_head *realloc_head,
- 				 struct list_head *head)
- {
- 	u16 class = dev->class >> 8;
-@@ -212,7 +247,7 @@ static void __dev_sort_resources(struct pci_dev *dev,
- 			return;
- 	}
- 
--	pdev_sort_resources(dev, head);
-+	pdev_sort_resources(dev, realloc_head, head);
- }
- 
- static inline void reset_resource(struct resource *res)
-@@ -506,7 +541,7 @@ static void pdev_assign_resources_sorted(struct pci_dev *dev,
- {
- 	LIST_HEAD(head);
- 
--	__dev_sort_resources(dev, &head);
-+	__dev_sort_resources(dev, add_head, &head);
- 	__assign_resources_sorted(&head, add_head, fail_head);
- 
- }
-@@ -519,7 +554,7 @@ static void pbus_assign_resources_sorted(const struct pci_bus *bus,
- 	LIST_HEAD(head);
- 
- 	list_for_each_entry(dev, &bus->devices, bus_list)
--		__dev_sort_resources(dev, &head);
-+		__dev_sort_resources(dev, realloc_head, &head);
- 
- 	__assign_resources_sorted(&head, realloc_head, fail_head);
- }
--- 
-1.8.4.5
+Tested-by: Tim Harvey <tharvey@gateworks.com>
