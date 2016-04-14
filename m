@@ -1,67 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp06.in.ibm.com ([125.16.236.6]:57315 "EHLO
-	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753071AbcD0MrA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Apr 2016 08:47:00 -0400
-Received: from localhost
-	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Wed, 27 Apr 2016 18:16:57 +0530
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	joro@8bytes.org, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	eric.auger@linaro.org, will.deacon@arm.com,
-	gwshan@linux.vnet.ibm.com, David.Laight@ACULAB.COM,
-	alistair@popple.id.au, ruscur@russell.cc,
-	Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [PATCH 4/5] pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
-Date: Wed, 27 Apr 2016 20:43:29 +0800
-Message-Id: <1461761010-5452-5-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC PATCH 01/11] drivers: acpi: iort: fix struct pci_dev compiler warnings
+Date: Thu, 14 Apr 2016 18:25:33 +0100
+Message-Id: <1460654743-7896-2-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Any IODA host bridge have the capability of IRQ remapping.
-So we set PCI_BUS_FLAGS_MSI_REMAP when this kind of host birdge
-is detected.
+When the kernel is configured with no IORT support the compilation
+issues the following warnings:
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+In file included from drivers/irqchip/irq-gic-v3-its-pci-msi.c:19:0:
+include/linux/iort.h:28:33: warning: 'struct pci_dev' declared inside
+parameter list
+ u32 iort_pci_get_msi_rid(struct pci_dev *pdev, u32 req_id);
+                                 ^
+include/linux/iort.h:28:33: warning: its scope is only this definition
+or declaration, which is probably not what you want
+include/linux/iort.h:29:50: warning: 'struct pci_dev' declared inside
+parameter list
+ struct fwnode_handle *iort_pci_get_domain(struct pci_dev *pdev, u32
+req_id);
+
+This patch fixes the warnings with a struct pci_dev forward declaration
+in the IORT header file.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
+ include/linux/iort.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index f90dc04..9557638 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -3080,6 +3080,12 @@ static void pnv_pci_ioda_fixup(void)
- 	pnv_npu_ioda_fixup();
- }
+diff --git a/include/linux/iort.h b/include/linux/iort.h
+index 7441941..b15fe1a 100644
+--- a/include/linux/iort.h
++++ b/include/linux/iort.h
+@@ -21,6 +21,7 @@
  
-+int pnv_pci_ioda_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
-+	return 0;
-+}
-+
- /*
-  * Returns the alignment for I/O or memory windows for P2P
-  * bridges. That actually depends on how PEs are segmented.
-@@ -3364,6 +3370,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	 */
- 	ppc_md.pcibios_fixup = pnv_pci_ioda_fixup;
+ #include <linux/acpi.h>
  
-+	ppc_md.pcibios_root_bridge_prepare = pnv_pci_ioda_root_bridge_prepare;
-+
- 	if (phb->type == PNV_PHB_NPU)
- 		hose->controller_ops = pnv_npu_ioda_controller_ops;
- 	else
++struct pci_dev;
+ struct fwnode_handle;
+ int iort_register_domain_token(int trans_id, struct fwnode_handle *fw_node);
+ void iort_deregister_domain_token(int trans_id);
 -- 
-1.7.9.5
+2.6.4
 
