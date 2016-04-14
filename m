@@ -1,156 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49721 "EHLO mail.kernel.org"
+Received: from foss.arm.com ([217.140.101.70]:44807 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751693AbcDTA5W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 Apr 2016 20:57:22 -0400
-Date: Tue, 19 Apr 2016 19:57:16 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tim Harvey <tharvey@gateworks.com>
-Cc: linux-pci@vger.kernel.org, Lucas Stach <l.stach@pengutronix.de>,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	Zhu Richard <Richard.Zhu@freescale.com>,
-	Akshay Bhat <akshay.bhat@timesys.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Shawn Guo <shawnguo@kernel.org>
-Subject: Re: [PATCH v5] PCI: imx6: add dt prop for link gen, default to gen1
-Message-ID: <20160420005716.GH17863@localhost>
-References: <1459984494-15782-1-git-send-email-tharvey@gateworks.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1459984494-15782-1-git-send-email-tharvey@gateworks.com>
+	id S1754995AbcDNRXN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 14 Apr 2016 13:23:13 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Will Deacon <will.deacon@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC PATCH 03/11] drivers: iommu: add FWNODE_IOMMU fwnode type
+Date: Thu, 14 Apr 2016 18:25:35 +0100
+Message-Id: <1460654743-7896-4-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 06, 2016 at 04:14:54PM -0700, Tim Harvey wrote:
-> Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
-> the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
-> external clock source is present and supplied back to the IMX6 PCIe core
-> via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
-> 
-> Add a dt property to specify gen1 vs gen2 and check this before allowing
-> a Gen2 link.
-> 
-> We default to Gen1 if the property is not present because at this time there
-> are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
-> 
-> In order to be Gen2 compliant on IMX6 you need to:
->  - have a Gen2 compliant external clock generator and route that clock back
->    to either LVDS CLK1 or LVDS CLK2 as an input.
->    (see IMX6SX-SabreSD reference design)
->  - specify this clock in the pcie node in the dt
->    (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
->     IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
-> 
-> [1] https://community.freescale.com/message/453209
-> 
-> Cc: Lucas Stach <l.stach@pengutronix.de>
-> Cc: Bjorn Helgaas <helgaas@kernel.org>
-> Cc: Fabio Estevam <fabio.estevam@freescale.com>
-> Cc: Zhu Richard <Richard.Zhu@freescale.com>
-> Cc: Akshay Bhat <akshay.bhat@timesys.com>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Shawn Guo <shawnguo@kernel.org>
-> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+On systems booting with a device tree, every struct device is
+associated with a struct device_node, that represents its DT
+representation. The device node can be used in generic kernel
+contexts (eg IRQ translation, IOMMU streamid mapping), to
+retrieve the properties associated with the device and carry
+out kernel operation accordingly. Owing to the 1:1 relationship
+between the device and its device_node, the device_node can also
+be used as a look-up token for the device (eg looking up a device
+through its device_node), to retrieve the device in kernel paths
+where the device_node is available.
 
-Applied to pci/host-imx6 for v4.7 with Lucas' Reviewed-by, thanks!
+On systems booting with ACPI, the same abstraction provided by
+the device_node is required to provide:
 
-> ---
-> v5:
->  - clearly default link gen to 1 when dt prop is read to avoid confusion
-> v4:
->  - rebase against linux-pci/master
->  - add fsl vendor prefix to dt prop
-> 
-> v3:
->  - added note in dt bindings doc that we limit to gen1 unless this is specified
->    as gen2 capable
->  - move property to imx6 pcie phy instead of designware core
->  - don't use &ret as temp storage as of_property_read_u32() doesn't change the
->    outval if property isn't found
-> v2:
->  - moved dt property to designware core
-> 
-> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
-> ---
->  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  4 ++++
->  drivers/pci/host/pci-imx6.c                        | 24 +++++++++++++++-------
->  2 files changed, 21 insertions(+), 7 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> index 3be80c6..b92fafb 100644
-> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> @@ -19,6 +19,10 @@ Optional properties:
->  - fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
->  - fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
->  - fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
-> +- fsl,max-link-speed: Specify PCI gen for link capability. Must be '2' for
-> +  gen2, otherwise will default to gen1. Note that the IMX6 LVDS clock outputs
-> +  do not meet gen2 jitter requirements and thus for gen2 capability a gen2
-> +  compliant clock generator should be used and configured.
->  
->  Example:
->  
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index eb5a275..60a14b8 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -44,6 +44,7 @@ struct imx6_pcie {
->  	u32			tx_deemph_gen2_6db;
->  	u32			tx_swing_full;
->  	u32			tx_swing_low;
-> +	int			link_gen;
->  };
->  
->  /* PCIe Root Complex registers (memory-mapped) */
-> @@ -417,11 +418,15 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
->  		goto err_reset_phy;
->  	}
->  
-> -	/* Allow Gen2 mode after the link is up. */
-> -	tmp = readl(pp->dbi_base + PCIE_RC_LCR);
-> -	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-> -	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
-> -	writel(tmp, pp->dbi_base + PCIE_RC_LCR);
-> +	if (imx6_pcie->link_gen == 2) {
-> +		/* Allow Gen2 mode after the link is up. */
-> +		tmp = readl(pp->dbi_base + PCIE_RC_LCR);
-> +		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-> +		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
-> +		writel(tmp, pp->dbi_base + PCIE_RC_LCR);
-> +	} else {
-> +		dev_info(pp->dev, "Link: Gen2 disabled\n");
-> +	}
->  
->  	/*
->  	 * Start Directed Speed Change so the best possible speed both link
-> @@ -445,8 +450,7 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
->  	}
->  
->  	tmp = readl(pp->dbi_base + PCIE_RC_LCSR);
-> -	dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
-> -
-> +	dev_info(pp->dev, "Link up, Gen%i\n", (tmp >> 16) & 0xf);
->  	return 0;
->  
->  err_reset_phy:
-> @@ -598,6 +602,12 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
->  				 &imx6_pcie->tx_swing_low))
->  		imx6_pcie->tx_swing_low = 127;
->  
-> +	/* Limit link speed */
-> +	ret = of_property_read_u32(pp->dev->of_node, "fsl,max-link-speed",
-> +				   &imx6_pcie->link_gen);
-> +	if (ret)
-> +		imx6_pcie->link_gen = 1;
-> +
->  	ret = imx6_add_pcie_port(pp, pdev);
->  	if (ret < 0)
->  		return ret;
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+- Look-up functionality
+- Identify the device in kernel functions that must be firmware
+  agnostic (eg IOMMU of_xlate() callbacks)
+
+Therefore, mirroring the approach implemented in the IRQ domain
+kernel layer, this patch adds an additional fwnode type FWNODE_IOMMU.
+
+This patch also implements a glue kernel layer that allows to
+allocate/free FWNODE_IOMMU fwnode_handle structures and associate
+them with IOMMU devices.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+---
+ include/linux/fwnode.h |  1 +
+ include/linux/iommu.h  | 25 +++++++++++++++++++++++++
+ 2 files changed, 26 insertions(+)
+
+diff --git a/include/linux/fwnode.h b/include/linux/fwnode.h
+index 8516717..6e10050 100644
+--- a/include/linux/fwnode.h
++++ b/include/linux/fwnode.h
+@@ -19,6 +19,7 @@ enum fwnode_type {
+ 	FWNODE_ACPI_DATA,
+ 	FWNODE_PDATA,
+ 	FWNODE_IRQCHIP,
++	FWNODE_IOMMU,
+ };
+ 
+ struct fwnode_handle {
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index a5c539f..0bba25e 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -37,6 +37,7 @@ struct bus_type;
+ struct device;
+ struct iommu_domain;
+ struct notifier_block;
++struct fwnode_handle;
+ 
+ /* iommu fault flags */
+ #define IOMMU_FAULT_READ	0x0
+@@ -542,4 +543,28 @@ static inline void iommu_device_unlink(struct device *dev, struct device *link)
+ 
+ #endif /* CONFIG_IOMMU_API */
+ 
++/* IOMMU fwnode handling */
++static inline bool is_fwnode_iommu(struct fwnode_handle *fwnode)
++{
++	return fwnode && fwnode->type == FWNODE_IOMMU;
++}
++
++static inline struct fwnode_handle *iommu_alloc_fwnode(void)
++{
++	struct fwnode_handle *fwnode;
++
++	fwnode = kzalloc(sizeof(struct fwnode_handle), GFP_KERNEL);
++	fwnode->type = FWNODE_IOMMU;
++
++	return fwnode;
++}
++
++static inline void iommu_free_fwnode(struct fwnode_handle *fwnode)
++{
++	if (WARN_ON(!is_fwnode_iommu(fwnode)))
++		return;
++
++	kfree(fwnode);
++}
++
+ #endif /* __LINUX_IOMMU_H */
+-- 
+2.6.4
+
