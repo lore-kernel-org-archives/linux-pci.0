@@ -1,81 +1,196 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35042 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756850AbcDHARB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:17:01 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
-Subject: [PATCH v11 06/60] sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-Date: Thu,  7 Apr 2016 17:15:19 -0700
-Message-Id: <1460074573-7481-7-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Received: from e24smtp03.br.ibm.com ([32.104.18.24]:32815 "EHLO
+	e24smtp03.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751544AbcDNVzl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2016 17:55:41 -0400
+Received: from localhost
+	by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+	Thu, 14 Apr 2016 18:55:39 -0300
+Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
+	by d24dlp01.br.ibm.com (Postfix) with ESMTP id 1DABF3520068
+	for <linux-pci@vger.kernel.org>; Thu, 14 Apr 2016 17:55:24 -0400 (EDT)
+Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
+	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u3EKrLUu4718742
+	for <linux-pci@vger.kernel.org>; Thu, 14 Apr 2016 17:53:21 -0300
+Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
+	by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u3ELtYZr004263
+	for <linux-pci@vger.kernel.org>; Thu, 14 Apr 2016 18:55:35 -0300
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au,
+	benh@kernel.crashing.org, imunsie@au1.ibm.com,
+	gwshan@linux.vnet.ibm.com
+Cc: linux-pci@vger.kernel.org, paulus@samba.org, mikey@neuling.org,
+	andrew.donnellan@au1.ibm.com, bhelgaas@google.com,
+	gpiccoli@linux.vnet.ibm.com, frederic.barrat@fr.ibm.com,
+	mrochs@linux.vnet.ibm.com
+Subject: [PATCH v5] powerpc/pci: Assign fixed PHB number based on device-tree properties
+Date: Thu, 14 Apr 2016 18:55:24 -0300
+Message-Id: <1460670924-16845-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource with PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource.
+The domain/PHB field of PCI addresses has its value obtained from a
+global variable, incremented each time a new domain (represented by
+struct pci_controller) is added on the system. The domain addition
+process happens during boot or due to PCI device hotplug.
 
-so this patch set IORESOUCE_MEM_64 for 64bit resource during OF device resource
-flags parsing.
+As recent kernels are using predictable naming for network interfaces,
+the network stack is more tied to PCI naming. This can be a problem in
+hotplug scenarios, because PCI addresses will change if devices are
+removed and then re-added. This situation seems unusual, but it can
+happen if a user wants to replace a NIC without rebooting the machine,
+for example.
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: sparclinux@vger.kernel.org
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+This patch changes the way PCI domain values are generated: now, we use
+device-tree properties to assign fixed PHB numbers to PCI addresses
+when available (meaning pSeries and PowerNV cases). We also use a bitmap
+to allow dynamic PHB numbering when device-tree properties are not
+used. This bitmap keeps track of used PHB numbers and if a PHB is
+released (by hotplug operations for example), it allows the reuse of
+this PHB number, avoiding PCI address to change in case of device remove
+and re-add soon after. No functional changes were introduced.
+
+Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
 ---
- arch/sparc/kernel/of_device_32.c | 5 +++--
- arch/sparc/kernel/of_device_64.c | 5 +++--
- 2 files changed, 6 insertions(+), 4 deletions(-)
+ arch/powerpc/kernel/pci-common.c | 66 ++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 63 insertions(+), 3 deletions(-)
 
-diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
-index 185aa96..3e9f273 100644
---- a/arch/sparc/kernel/of_device_32.c
-+++ b/arch/sparc/kernel/of_device_32.c
-@@ -83,11 +83,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
- 	case 0x01:
- 		flags |= IORESOURCE_IO;
- 		break;
--
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
- 	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
-diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
-index 7bbdc26..defee61 100644
---- a/arch/sparc/kernel/of_device_64.c
-+++ b/arch/sparc/kernel/of_device_64.c
-@@ -146,11 +146,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
- 	case 0x01:
- 		flags |= IORESOURCE_IO;
- 		break;
--
- 	case 0x02: /* 32 bits */
--	case 0x03: /* 64 bits */
- 		flags |= IORESOURCE_MEM;
- 		break;
-+	case 0x03: /* 64 bits */
-+		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
-+		break;
- 	}
- 	if (w & 0x40000000)
- 		flags |= IORESOURCE_PREFETCH;
+v5:
+  * Improved comments.
+
+  * Changed the the Fixed PHB Numbering to set the PHB number bit
+  on the bitmap anyway, avoiding issues when system has virtual PHBs.
+
+  * Changed the device-tree check order - now, firstly we check for
+  "ibm,opal-phbid" and if it's not available, we try the pSeries case.
+
+v4:
+  * Minor change (if/else nesting rearranged).
+
+v3:
+  * Made the bitmap static.
+
+  * Rearranged if/else statements of Fixed PHB checking.
+
+  * Improved bitmap checkings, by removing loop and using instead the
+  find_first_zero_bit() function.
+
+  * Removed the single-statement function release_phb_number() by
+  adding its logic directly into pcibios_free_controller().
+
+  *Added check for bitmap size before clearing bit, avoiding memory
+  corruption.
+
+v2:
+  * Added the Fixed PHB Numbering mechanism based on device-tree
+  properties.
+
+  * Changed list approach to bitmap on the Dynamic PHB Numbering
+  mechanism.
+
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 0f7a60f..ad423c1 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -41,11 +41,17 @@
+ #include <asm/ppc-pci.h>
+ #include <asm/eeh.h>
+ 
++/* hose_spinlock protects accesses to the the phb_bitmap. */
+ static DEFINE_SPINLOCK(hose_spinlock);
+ LIST_HEAD(hose_list);
+ 
+-/* XXX kill that some day ... */
+-static int global_phb_number;		/* Global phb counter */
++/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
++#define	MAX_PHBS	8192
++
++/* For dynamic PHB numbering: used/free PHBs tracking bitmap.
++ * Accesses to this bitmap should be protected by hose_spinlock.
++ */
++static DECLARE_BITMAP(phb_bitmap, MAX_PHBS);
+ 
+ /* ISA Memory physical address */
+ resource_size_t isa_mem_base;
+@@ -64,6 +70,55 @@ struct dma_map_ops *get_pci_dma_ops(void)
+ }
+ EXPORT_SYMBOL(get_pci_dma_ops);
+ 
++/* get_phb_number() function should run under locking
++ * protection, specifically hose_spinlock.
++ */
++static int get_phb_number(struct device_node *dn)
++{
++	const __be64 *prop64;
++	const __be32 *regs;
++	int phb_id = 0;
++
++	/* Try fixed PHB numbering first, by checking archs and reading
++	 * the respective device-tree properties. Firstly, try PowerNV by
++	 * reading "ibm,opal-phbid", only present in OPAL environment.
++	 */
++	prop64 = of_get_property(dn, "ibm,opal-phbid", NULL);
++	if (prop64) {
++		phb_id = (int)(be64_to_cpup(prop64) & 0xFFFF);
++
++	} else if (machine_is(pseries)) {
++		regs = of_get_property(dn, "reg", NULL);
++		if (regs)
++			phb_id = (int)(be32_to_cpu(regs[1]) & 0xFFFF);
++	} else {
++		goto dynamic_phb_numbering;
++	}
++
++	/* If we have a huge PHB number obtained from device-tree, no need
++	 * to worry with the bitmap. Otherwise, we need to be sure we're
++	 * not trying to use the same PHB number twice.
++	 */
++	if (phb_id < MAX_PHBS) {
++		if (test_bit(phb_id, phb_bitmap))
++			goto dynamic_phb_numbering;
++		set_bit(phb_id, phb_bitmap);
++	}
++
++	return phb_id;
++
++	/* If not pSeries nor PowerNV, or if fixed PHB numbering tried to add
++	 * the same PHB number twice, then fallback to dynamic PHB numbering.
++	 */
++dynamic_phb_numbering:
++
++	phb_id = find_first_zero_bit(phb_bitmap, MAX_PHBS);
++	BUG_ON(phb_id >= MAX_PHBS); /* Reached maximum number of PHBs. */
++	set_bit(phb_id, phb_bitmap);
++
++	return phb_id;
++}
++
+ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
+ {
+ 	struct pci_controller *phb;
+@@ -72,7 +127,7 @@ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
+ 	if (phb == NULL)
+ 		return NULL;
+ 	spin_lock(&hose_spinlock);
+-	phb->global_number = global_phb_number++;
++	phb->global_number = get_phb_number(dev);
+ 	list_add_tail(&phb->list_node, &hose_list);
+ 	spin_unlock(&hose_spinlock);
+ 	phb->dn = dev;
+@@ -94,6 +149,11 @@ EXPORT_SYMBOL_GPL(pcibios_alloc_controller);
+ void pcibios_free_controller(struct pci_controller *phb)
+ {
+ 	spin_lock(&hose_spinlock);
++
++	/* Clear bit of phb_bitmap to allow reuse of this PHB number. */
++	if (phb->global_number < MAX_PHBS)
++		clear_bit(phb->global_number, phb_bitmap);
++
+ 	list_del(&phb->list_node);
+ 	spin_unlock(&hose_spinlock);
+ 
 -- 
-1.8.4.5
+2.1.0
 
