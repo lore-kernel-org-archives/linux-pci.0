@@ -1,206 +1,189 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:36246 "EHLO
-	mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865AbcDQPyd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 17 Apr 2016 11:54:33 -0400
-MIME-Version: 1.0
-In-Reply-To: <570C2A59.4010105@gmail.com>
-References: <1460238624-2086-1-git-send-email-zajec5@gmail.com>
-	<79DC79A7-D4CE-4983-B1C5-CBD2E9CBBFB9@gmail.com>
-	<4768648c-841b-490d-a752-f31cba545f74@broadcom.com>
-	<570C1D47.7010102@gmail.com>
-	<ccabf53c-c035-be4b-a016-389bb7531557@broadcom.com>
-	<570C24B3.4080104@broadcom.com>
-	<18045be8-9ee3-7644-6fbb-d352e107d111@broadcom.com>
-	<570C2806.8070700@gmail.com>
-	<0464ed02-5d41-f111-b8c1-aa9aa638c872@broadcom.com>
-	<570C2A59.4010105@gmail.com>
-Date: Sun, 17 Apr 2016 17:54:32 +0200
-Message-ID: <CACna6rx=oHvEF4V2keG93R6nXB9_yRoEFC_Z+PKWTXyiUj0uug@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: iproc: Support DT property for ignoring aborts
- when probing
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Florian Fainelli <f.fainelli@gmail.com>
-Cc: Ray Jui <ray.jui@broadcom.com>,
-	Scott Branden <scott.branden@broadcom.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Tomasz Nowicki <tn@semihalf.com>, Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC PATCH 05/11] drivers: iommu: arm-smmu: split probe functions into DT/generic portions
+Date: Thu, 14 Apr 2016 18:25:37 +0100
+Message-Id: <1460654743-7896-6-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12 April 2016 at 00:51, Florian Fainelli <f.fainelli@gmail.com> wrote:
-> On 11/04/16 15:51, Ray Jui wrote:
->> On 4/11/2016 3:41 PM, Florian Fainelli wrote:
->>> On 11/04/16 15:34, Ray Jui wrote:
->>>> On 4/11/2016 3:26 PM, Scott Branden wrote:
->>>>> One Comment below
->>>>>
->>>>> On 16-04-11 03:24 PM, Ray Jui wrote:
->>>>>>
->>>>>>
->>>>>> On 4/11/2016 2:55 PM, Florian Fainelli wrote:
->>>>>>> On 11/04/16 13:06, Ray Jui wrote:
->>>>>>>>
->>>>>>>>
->>>>>>>> On 4/10/2016 6:43 PM, Florian Fainelli wrote:
->>>>>>>>> On April 9, 2016 2:50:23 PM PDT, "Rafał Miłecki" <zajec5@gmail.com>
->>>>>>>>> wrote:
->>>>>>>>>> Some devices (e.g. Northstar ones) may have bridges that forward
->>>>>>>>>> harmless errors to the ARM core. In such case we need an option to
->>>>>>>>>> add a handler ignoring them.
->>>>>>>>>>
->>>>>>>>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->>>>>>>>>> ---
->>>>>>>>>
->>>>>>>>>> +- brcm,pcie-hook-abort-handler: During PCI bus probing (device
->>>>>>>>>> enumeration)
->>>>>>>>>> +  there can be errors that are expected and harmless.
->>>>>>>>>> Unfortunately
->>>>>>>>>> some bridges
->>>>>>>>>> +  can't be configured to ignore them and they forward them to the
->>>>>>>>>> ARM
->>>>>>>>>> core
->>>>>>>>>> +  triggering die().
->>>>>>>>>> +  This property should be set in such case, it will make
->>>>>>>>>> driver add
->>>>>>>>>> its own
->>>>>>>>>> +  handler ignoring such errors.
->>>>>>>>>
->>>>>>>>> The property is named after the function that allows you to catch
->>>>>>>>> abort handlers, whereas you should be describing the HW here.
->>>>>>>>> Something like brcm,bridge-error-forward or a better name even
->>>>>>>>> would
->>>>>>>>> be preferable.
->>>>>>>>>
->>>>>>>>>> +#ifdef CONFIG_ARM
->>>>>>>>>> +static int iproc_pcie_abort_handler(unsigned long addr, unsigned
->>>>>>>>>> int
->>>>>>>>>> fsr,
->>>>>>>>>> +                    struct pt_regs *regs)
->>>>>>>>>> +{
->>>>>>>>>> +    if (fsr == 0x1406)
->>>>>>>>>> +        return 0;
->>>>>>>>>> +
->>>>>>>>>> +    return 1;
->>>>>>>>>
->>>>>>>>> As you later noted this prevents this driver from being a module
->>>>>>>>> now.
->>>>>>>>> Since the expectation is that either a fixed bootloader or a
->>>>>>>>> platform
->>>>>>>>> should enot produce these data aborts, or allow them to be ignored,
->>>>>>>>> why not just put this code back where it belongs in the machine
->>>>>>>>> specific file which kills many birds with the same stone:
->>>>>>>>>
->>>>>>>>
->>>>>>>> I assume the module compile issue can be simply fixed by exporting
->>>>>>>> symbol of "hook_fault_code"?
->>>>>>>
->>>>>>> I do not think it is desireable for this symbol to be exported in the
->>>>>>> first place, also last I looked, this was a one time registration
->>>>>>> thing,
->>>>>>> you cannot undo the hook you installed, but everything can be fixed.
->>>>>>>
->>>>>>
->>>>>> Okay.
->>>>>>
->>>>>>>>
->>>>>>>> I believe ARM64 based NS2 that uses the same iProc PCIe driver might
->>>>>>>> also need something like this (I'm still waiting for Jon Mason to
->>>>>>>> give
->>>>>>>> me some more information on the NS2 errors that he saw, which is
->>>>>>>> likely
->>>>>>>> related to this). I assume there will be something similar to the
->>>>>>>> ARM
->>>>>>>> specific "hook_fault_code" for ARM64, but then ARM64 does not
->>>>>>>> have any
->>>>>>>> "mach" specific directory. Where can this type of hook be installed
->>>>>>>> for
->>>>>>>> ARM64 based platforms if not in the PCIe driver?
->>>>>>>
->>>>>>> OK, that is a fair point, then maybe have a two stage process,
->>>>>>> where we
->>>>>>> make sure that the part that installs the hook is always available
->>>>>>> and
->>>>>>> built-into the kernel, but let the iProc PCIe driver remain a module?
->>>>>>>
->>>>>>
->>>>>> I guess we are sort of stuck on this. If "hook_fault_code" is not
->>>>>> supposed to be used by any driver compiled as module like you
->>>>>> described,
->>>>>> then yes, I agree, I don't see how we can leave this in the iProc PCIe
->>>>>> driver.
->>>>>>
->>>>> Why does thie PCI driver need to be compiled as module though?  Why
->>>>> can't we limit it to being linked in the kernel?
->>>>>
->>>>> Regards,
->>>>> Scott
->>>>
->>>> There are minor benefits allowing this driver to be compiled as module,
->>>> although in our use case (Cygnus and NS2), we always compile this driver
->>>> as statically linked in the kernel. I'm not sure if NS/BCMA has any use
->>>> case that requires this driver to be a module.
->>>>
->>>> In fact, being able to compile this driver as a module and loaded after
->>>> kernel init process is done just helped to confirm this imprecise abort
->>>> issue to be PCIe specific, :)
->>>
->>> For the STB platforms for instance, we actually like to have the PCIE RC
->>> driver as a module (not iproc-pcie, still downstream for now) because it
->>> allows us to put the entire set of EPs and RCs into the lowest power
->>> state (L23 + turning off external regulators) without messing with PCI
->>> bus scanning. In general, it seems like a good practice to allow this
->>> since, that helps with distributions not having to ship gigantic kernels
->>> that need this driver built in, and also helps us with development (when
->>> faults are handled).
->>>
->>> My suggestion about the PCIe-specific hook fault handler is to do
->>> something like this: introduce a iproc-pcie-fault.c file which is
->>> built-into the kernel if PCIE_IPROC=m || PCIE_IPROC=y and have it
->>> contain a function which is hooked at arch_initcall level for instance,
->>> so before module_init.
->>>
->>> Of course, there could be different ways to solve that problem, it just
->>> happens to be one of them.
->>>
->>
->> That sounds good to me.
->>
->> But how is the hook in iproc-pcie-fault.c activated? Still based on a DT
->> property under the iProc PCIe device node or based on a specific
->> architecture dependent config flag (note we do not have any platform
->> specific config flag under ARM64)?
->
-> I would go with something that does:
->
-> if (of_machine_is_compatible("brcm,bcm53012") ||
->     of_machine_is_compatible("brcm.ns2"))
->
-> or something along these lines, as opposed to a boolean flag at the PCIe
-> DT node level, but maybe this is not quite a good understanding of how
-> the HW works.
+Current ARM SMMU probe functions intermingle HW and DT probing
+in the initialization functions to detect and programme the ARM SMMU
+driver features. In order to allow probing the ARM SMMU with other
+firmwares than DT, this patch splits the ARM SMMU init functions into
+DT and HW specific portions so that other FW interfaces (ie ACPI) can
+reuse the HW probing functions and skip the DT portion accordingly.
 
-Is this design acceptable from DT point of view? I was thinking that
-DT is supposed to describe hardware details, it shouldn't be code
-storing list of hardware requiring some workarounds.
+This patch implements no functional change, only code reshuffling.
 
-I guess our iproc-pcie-fault.c could export some symbol that would be
-called if a related DT property is set. But after that it would be
-simply a workaround of non-exported symbol, I guess it's not something
-we want to do.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Robin Murphy <robin.murphy@arm.com>
+---
+ drivers/iommu/arm-smmu.c | 80 +++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 52 insertions(+), 28 deletions(-)
 
-I also started thinking, what if there will be another driver with
-similar hardware issue and it will need to call hook_fault_code as
-well? There can be only a one handler registered at a time.
-
+diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+index 2d65de4..6c42770 100644
+--- a/drivers/iommu/arm-smmu.c
++++ b/drivers/iommu/arm-smmu.c
+@@ -1551,7 +1551,7 @@ static int arm_smmu_device_cfg_probe(struct arm_smmu_device *smmu)
+ 	unsigned long size;
+ 	void __iomem *gr0_base = ARM_SMMU_GR0(smmu);
+ 	u32 id;
+-	bool cttw_dt, cttw_reg;
++	bool cttw_reg, cttw_fw = smmu->features & ARM_SMMU_FEAT_COHERENT_WALK;
+ 
+ 	dev_notice(smmu->dev, "probing hardware configuration...\n");
+ 	dev_notice(smmu->dev, "SMMUv%d with:\n", smmu->version);
+@@ -1593,20 +1593,18 @@ static int arm_smmu_device_cfg_probe(struct arm_smmu_device *smmu)
+ 
+ 	/*
+ 	 * In order for DMA API calls to work properly, we must defer to what
+-	 * the DT says about coherency, regardless of what the hardware claims.
++	 * the FW says about coherency, regardless of what the hardware
++	 * claims.
+ 	 * Fortunately, this also opens up a workaround for systems where the
+ 	 * ID register value has ended up configured incorrectly.
+ 	 */
+-	cttw_dt = of_dma_is_coherent(smmu->dev->of_node);
+ 	cttw_reg = !!(id & ID0_CTTW);
+-	if (cttw_dt)
+-		smmu->features |= ARM_SMMU_FEAT_COHERENT_WALK;
+-	if (cttw_dt || cttw_reg)
++	if (cttw_fw || cttw_reg)
+ 		dev_notice(smmu->dev, "\t%scoherent table walk\n",
+-			   cttw_dt ? "" : "non-");
+-	if (cttw_dt != cttw_reg)
++			   cttw_fw ? "" : "non-");
++	if (cttw_fw != cttw_reg)
+ 		dev_notice(smmu->dev,
+-			   "\t(IDR0.CTTW overridden by dma-coherent property)\n");
++			   "\t(IDR0.CTTW overridden by FW configuration)\n");
+ 
+ 	if (id & ID0_SMS) {
+ 		u32 smr, sid, mask;
+@@ -1827,30 +1825,17 @@ static int arm_smmu_probe_mmu_masters(struct arm_smmu_device *smmu)
+ 	return err;
+ }
+ 
+-static int arm_smmu_device_dt_probe(struct platform_device *pdev)
++static int arm_smmu_dt_probe(struct platform_device *pdev,
++			     struct arm_smmu_device *smmu)
+ {
+ 	const struct of_device_id *of_id;
+ 	struct resource *res;
+-	struct arm_smmu_device *smmu;
+ 	struct device *dev = &pdev->dev;
+ 	int num_irqs, i, err;
+ 
+-	smmu = devm_kzalloc(dev, sizeof(*smmu), GFP_KERNEL);
+-	if (!smmu) {
+-		dev_err(dev, "failed to allocate arm_smmu_device\n");
+-		return -ENOMEM;
+-	}
+-	smmu->dev = dev;
+-
+ 	of_id = of_match_node(arm_smmu_of_match, dev->of_node);
+ 	smmu->version = (enum arm_smmu_arch_version)of_id->data;
+ 
+-	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	smmu->base = devm_ioremap_resource(dev, res);
+-	if (IS_ERR(smmu->base))
+-		return PTR_ERR(smmu->base);
+-	smmu->size = resource_size(res);
+-
+ 	if (of_property_read_u32(dev->of_node, "#global-interrupts",
+ 				 &smmu->num_global_irqs)) {
+ 		dev_err(dev, "missing #global-interrupts property\n");
+@@ -1887,12 +1872,54 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 		smmu->irqs[i] = irq;
+ 	}
+ 
++	/*
++	 * In order for DMA API calls to work properly, we must defer to what
++	 * the DT says about coherency, regardless of what the hardware detect
++	 * through probing in arm_smmu_device_cfg_probe(). Check the DT dma
++	 * coherent property and initialize the corresponding SMMU feature
++	 * so that arm_smmu_device_cfg_probe() can check the FW reported value.
++	 */
++	if (of_dma_is_coherent(smmu->dev->of_node))
++		smmu->features |= ARM_SMMU_FEAT_COHERENT_WALK;
++
+ 	err = arm_smmu_device_cfg_probe(smmu);
+ 	if (err)
+ 		return err;
+ 
+ 	parse_driver_options(smmu);
+ 
++	/* Check first to avoid of_parse_phandle_with_args complaining */
++	if (of_property_read_bool(dev->of_node, "mmu-masters"))
++		arm_smmu_probe_mmu_masters(smmu);
++
++	return 0;
++}
++
++static int arm_smmu_device_probe(struct platform_device *pdev)
++{
++	struct resource *res;
++	struct arm_smmu_device *smmu;
++	struct device *dev = &pdev->dev;
++	int i, err;
++
++	smmu = devm_kzalloc(dev, sizeof(*smmu), GFP_KERNEL);
++	if (!smmu) {
++		dev_err(dev, "failed to allocate arm_smmu_device\n");
++		return -ENOMEM;
++	}
++	smmu->dev = dev;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	smmu->base = devm_ioremap_resource(dev, res);
++	if (IS_ERR(smmu->base))
++		return PTR_ERR(smmu->base);
++	smmu->size = resource_size(res);
++
++	err = arm_smmu_dt_probe(pdev, smmu);
++
++	if (err)
++		return err;
++
+ 	if (smmu->version > ARM_SMMU_V1 &&
+ 	    smmu->num_context_banks != smmu->num_context_irqs) {
+ 		dev_err(dev,
+@@ -1915,9 +1942,6 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	platform_set_drvdata(pdev, smmu);
+-	/* Check first to avoid of_parse_phandle_with_args complaining */
+-	if (of_property_read_bool(dev->of_node, "mmu-masters"))
+-		arm_smmu_probe_mmu_masters(smmu);
+ 	arm_smmu_device_reset(smmu);
+ 	return 0;
+ 
+@@ -1953,7 +1977,7 @@ static struct platform_driver arm_smmu_driver = {
+ 		.name		= "arm-smmu",
+ 		.of_match_table	= of_match_ptr(arm_smmu_of_match),
+ 	},
+-	.probe	= arm_smmu_device_dt_probe,
++	.probe	= arm_smmu_device_probe,
+ 	.remove	= arm_smmu_device_remove,
+ };
+ 
 -- 
-Rafał
+2.6.4
+
