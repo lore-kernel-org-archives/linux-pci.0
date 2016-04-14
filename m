@@ -1,75 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:59879 "HELO
-	cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752176AbcD2MH4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2016 08:07:56 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mathias Nyman <mathias.nyman@intel.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH v5 0/4] PCI: Add support for suspending (including runtime) of PCIe ports
-Date: Fri, 29 Apr 2016 14:10:59 +0200
-Message-ID: <86024359.9LxrAC1gtb@vostro.rjw.lan>
-In-Reply-To: <57234999.2040202@intel.com>
-References: <1461919919-120102-1-git-send-email-mika.westerberg@linux.intel.com> <57234999.2040202@intel.com>
+Received: from e28smtp05.in.ibm.com ([125.16.236.5]:36007 "EHLO
+	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751648AbcDNF0V (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2016 01:26:21 -0400
+Received: from localhost
+	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Thu, 14 Apr 2016 10:56:17 +0530
+Date: Thu, 14 Apr 2016 15:25:56 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
+	robherring2@gmail.com, grant.likely@linaro.org
+Subject: Re: [PATCH v8 00/45] powerpc/powernv: PCI hotplug support
+Message-ID: <20160414052556.GA7402@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <570DF50F.6010805@ozlabs.ru>
+ <20160413074236.GA28853@gwshan>
+ <570E0E13.6080409@ozlabs.ru>
+ <20160413234246.GA5330@gwshan>
+ <570F0DFB.9090509@ozlabs.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <570F0DFB.9090509@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, April 29, 2016 02:46:33 PM Mathias Nyman wrote:
-> On 29.04.2016 11:51, Mika Westerberg wrote:
-> > Current Linux PCI core does not do any kind of power management to PCIe
-> > ports. This means that we waste energy and consume laptop battery even if
-> > the port has nothing connected to. These patches aim to change that to the
-> > right direction.
-> >
-> > Previous versions of the patches can be found below:
-> >
-> >    v1: http://www.spinics.net/lists/linux-pci/msg49313.html
-> >    v2: http://www.spinics.net/lists/linux-pci/msg50167.html
-> >    v3: http://www.spinics.net/lists/linux-pci/msg50345.html
-> >    v4: http://www.spinics.net/lists/linux-pci/msg50665.html
-> >
-> > This assumes that recent (starting from 2015) PCIe ports are capable of
-> > transition to D3hot/D3cold. We add a new flag to struct pci_dev 'bridge_d3'
-> > that is set whenever the PCI core thinks the port can be put to D3. The
-> > check in pci_pm_suspend_noirq() is then extended to cover devices where
-> > 'bridge_d3' is set.
-> >
-> > We then add two new functions pci_bridge_d3_device_changed/removed(). These
-> > are used to set and clear 'bridge_d3' whenever there is a change in device
-> > power management policy (or if the device is removed). For example when
-> > userspace forbids the device to enter D3cold pci_bridge_d3_device_changed()
-> > will clear 'bridge_d3' of the upstream bridge.
-> >
-> > For all PCI ports where 'bridge_d3' is set we also enable and unblock
-> > runtime PM automatically. Only exception is when the PCIe port claims to
-> > support hotplug. More information about that is in the changelog of
-> > patch [4/4].
-> >
-> > Since this also touches xhci, I'm adding Mathias and Greg to check if the
-> > change looks reasonable.
-> >
-> 
-> For the non-functional one-line only xhci change in patch 2/4:
-> Acked-by: Mathias Nyman <mathias.nyman@linux.intel.com>
-> 
-> Out of curiosity, does enabling bridge d3 in any way impact #PME
-> wakeup signaling initiated by devices behind that bridge?
+On Thu, Apr 14, 2016 at 01:26:51PM +1000, Alexey Kardashevskiy wrote:
 
-If the device reports (via the config space) that it is capable of signaling
-PME from D3_{cold}, the wakeup signaling won't be affected (as long as the
-hardware design follows the spec).
+.../...
 
-The Mika's patches take that into account AFAICS.
+>>
+>>Do you mean physically pull the adapter out and insert the same
+>>adapter back? What's the point for the test case?
+>
+>
+>Because this is what the patchset is for - to replace a physical device on a
+>physical machine. Powering on/off the slots via sysfs is just an
+>approximation (which is fine when you are debugging), something can go wrong
+>and require some work but you do not know it for sure.
+>
 
-Thanks,
-Rafael
+Yes, It's absolutely worthy to be covered by the test cases though case (2)
+covers part of that. Anyway, I'll test it through in next revision. Thanks
+for your review.
+
+>
+>
+>-- 
+>Alexey
+>
 
