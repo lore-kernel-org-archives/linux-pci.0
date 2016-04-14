@@ -1,175 +1,153 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 26 Apr 2016 21:39:16 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-Subject: Re: [PATCH V6 05/13] acpi, pci: Support IO resources when parsing
- PCI host bridge resources.
-Message-ID: <20160427023916.GF6789@localhost>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-6-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:36178 "EHLO
+	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932196AbcDNP05 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2016 11:26:57 -0400
+Date: Thu, 14 Apr 2016 17:26:52 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-tegra@vger.kernel.org
+Subject: Re: [PATCH v3 2/2] PCI: tegra: Support per-lane PHYs
+Message-ID: <20160414152652.GA3366@ulmo.ba.sec>
+References: <1457452094-5409-1-git-send-email-thierry.reding@gmail.com>
+ <1457452094-5409-2-git-send-email-thierry.reding@gmail.com>
+ <56E9915F.9040608@wwwdotorg.org>
+ <20160413160112.GA30129@ulmo.ba.sec>
+ <570E7B86.1040909@wwwdotorg.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460740008-19489-6-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="ReaqsoxgOBHFXBhH"
+In-Reply-To: <570E7B86.1040909@wwwdotorg.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 15, 2016 at 07:06:40PM +0200, Tomasz Nowicki wrote:
-> Platforms that have memory mapped IO port (such as ARM64) need special
-> handling for PCI I/O resources. For host bridge's resource probing case
-> these resources need to be fixed up with pci_register_io_range/pci_remap_iospace etc.
 
-ia64 also has memory-mapped I/O port space.  It would be ideal to find
-some way to handle ia64 and ARM64 similarly.  At the very least, we
-have to make sure that this doesn't break ia64.  The ia64 dense/sparse
-I/O spaces complicate things; I don't know if ARM64 has something
-similar or not.
+--ReaqsoxgOBHFXBhH
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Furthermore, the same I/O resources need to be released after hotplug
-> removal so that it can be re-added back by the pci_remap_iospace
-> function during insertion. Therefore we implement new pci_unmap_iospace call
-> which unmaps I/O space as the symmetry to pci_remap_iospace.
+On Wed, Apr 13, 2016 at 11:01:58AM -0600, Stephen Warren wrote:
+> On 04/13/2016 10:01 AM, Thierry Reding wrote:
+> > On Wed, Mar 16, 2016 at 11:01:19AM -0600, Stephen Warren wrote:
+> > > On 03/08/2016 08:48 AM, Thierry Reding wrote:
+> > > > From: Thierry Reding <treding@nvidia.com>
+> > > >=20
+> > > > The current XUSB pad controller bindings are insufficient to descri=
+be
+> > > > PHY devices attached to USB controllers. New bindings have been cre=
+ated
+> > > > to overcome these restrictions. As a side-effect each root port now=
+ is
+> > > > assigned a set of PHY devices, one for each lane associated with the
+> > > > root port. This has the benefit of allowing fine-grained control of=
+ the
+> > > > power management for each lane.
+> > >=20
+> > > > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-te=
+gra.c
+> > >=20
+> > > > +static int tegra_pcie_port_phy_power_on(struct tegra_pcie_port *po=
+rt)
+> > > > +{
+> > > > +	struct device *dev =3D port->pcie->dev;
+> > > > +	unsigned int i;
+> > > > +	int err;
+> > > > +
+> > > > +	for (i =3D 0; i < port->lanes; i++) {
+> > > > +		err =3D phy_power_on(port->phys[i]);
+> > >=20
+> > > This assume the number of array entries is precisely the number of la=
+nes.
+> > > That seems to contradict the binding update which said the number mig=
+ht not
+> > > match. Perhaps there's an expectation that phy_power_on() is a no-op =
+for
+> > > some "invalid" values like NULL or an error-pointer value? But...
+> > >=20
+> > > > +static struct phy *devm_of_phy_optional_get_index(struct device *d=
+ev,
+> > > > +						  struct device_node *np,
+> > > > +						  const char *consumer,
+> > > > +						  unsigned int index)
+> > > > +{
+> > > > +	struct phy *phy;
+> > > > +	char *name;
+> > > > +
+> > > > +	name =3D kasprintf(GFP_KERNEL, "%s-%u", consumer, index);
+> > > > +	if (!name)
+> > > > +		return ERR_PTR(-ENOMEM);
+> > > > +
+> > > > +	phy =3D devm_of_phy_get(dev, np, name);
+> > > > +	kfree(name);
+> > > > +
+> > > > +	if (IS_ERR(phy) && PTR_ERR(phy) =3D=3D -ENODEV)
+> > > > +		phy =3D NULL;
+> > > > +
+> > > > +	return phy;
+> > > > +}
+> > >=20
+> > > The error-handling there looks wrong. The function generally returns =
+either
+> > > a valid PHY or an error pointer. However, in the case of -ENODEV, NUL=
+L is
+> > > returned. Subsystems are supposed to encode their handles as, and fun=
+ctions
+> > > are supposed to return, either NULL or an error pointer for error cas=
+es, not
+> > > both/either. Is the PHY API broken in this regard? If so, then this c=
+ode is
+> > > fine, but if not it might need a fix.
+> >=20
+> > This function mimics phy_optional_get() which similarily returns NULL
+> > for -ENODEV. The remainder of the PHY API treats NULL pointers as
+> > "dummy" PHYs and returns early. I think that's a sensible approach to
+> > handling optional resources.
+> >=20
+> > It might have been more obvious had I implemented this function within
+> > phy-core.c, but I didn't think it universally useful because it uses a
+> > rather uncommon lookup pattern. I did keep a generic name in case it's
+> > ever deemed useful outside of this driver, at which point it could
+> > simply be moved into phy-core.c without requiring this driver to
+> > change.
+>=20
+> Ah OK, so if a caller of this function is expected to only use IS_ERR(), =
+and
+> hence treat NULL as a perfectly valid PHY value, and all the PHY APIs deal
+> with NULL correctly, then this is probably OK.
 
-"Furthermore" is a hint that we should check to see if this can be
-split into two patches.
+I think it's not completely consistently used, but at least the public
+API that we do use has the necessary guards, so we should be fine.
 
-We already have a pci_remap_iospace(), and you're adding
-pci_unmap_iospace(), which will be used for hotplug removal.  So let's 
-add pci_unmap_iospace() first in a patch by itself because that's
-potentially useful for other callers of pci_remap_iospace(), even if
-they don't need the acpi_pci_root_remap_iospace() stuff.
+Thierry
 
-> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> ---
->  drivers/acpi/pci_root.c | 33 +++++++++++++++++++++++++++++++++
->  drivers/pci/pci.c       | 24 ++++++++++++++++++++++++
->  include/linux/pci.h     |  1 +
->  3 files changed, 58 insertions(+)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index d9a70c4..815b6ca 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -742,6 +742,34 @@ next:
->  			resource_list_add_tail(entry, resources);
->  	}
->  }
-> +static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
-> +{
-> +#ifdef PCI_IOBASE
-> +	struct resource *res = entry->res;
-> +	resource_size_t cpu_addr = res->start;
-> +	resource_size_t pci_addr = cpu_addr - entry->offset;
-> +	resource_size_t length = resource_size(res);
-> +	unsigned long port;
-> +
-> +	if (pci_register_io_range(cpu_addr, length))
-> +		goto err;
-> +
-> +	port = pci_address_to_pio(cpu_addr);
-> +	if (port == (unsigned long)-1)
-> +		goto err;
-> +
-> +	res->start = port;
-> +	res->end = port + length - 1;
-> +	entry->offset = port - pci_addr;
-> +
-> +	if (pci_remap_iospace(res, cpu_addr) < 0)
-> +		goto err;
-> +	pr_info("Remapped I/O %pa to %pR\n", &cpu_addr, res);
-> +	return;
-> +err:
-> +	res->flags |= IORESOURCE_DISABLED;
-> +#endif
-> +}
->  
->  int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
->  {
-> @@ -763,6 +791,9 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
->  			"no IO and memory resources present in _CRS\n");
->  	else {
->  		resource_list_for_each_entry_safe(entry, tmp, list) {
-> +			if (entry->res->flags & IORESOURCE_IO)
-> +				acpi_pci_root_remap_iospace(entry);
-> +
->  			if (entry->res->flags & IORESOURCE_DISABLED)
->  				resource_list_destroy_entry(entry);
->  			else
-> @@ -834,6 +865,8 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
->  
->  	resource_list_for_each_entry(entry, &bridge->windows) {
->  		res = entry->res;
-> +		if (res->flags & IORESOURCE_IO)
-> +			pci_unmap_iospace(res);
->  		if (res->parent &&
->  		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
->  			release_resource(res);
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 89e9996..c0f8a4e 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -26,6 +26,7 @@
->  #include <linux/device.h>
->  #include <linux/pm_runtime.h>
->  #include <linux/pci_hotplug.h>
-> +#include <linux/vmalloc.h>
->  #include <asm/setup.h>
->  #include <linux/aer.h>
->  #include "pci.h"
-> @@ -3168,6 +3169,29 @@ int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
->  #endif
->  }
->  
-> +/**
-> + *	pci_unmap_iospace - Unmap the memory mapped I/O space
-> + *	@res: resource to be unmapped
-> + *
-> + *	Unmap the CPU virtual address @res from virtual address space.
-> + *	Only architectures that have memory mapped IO functions defined
-> + *	(and the PCI_IOBASE value defined) should call this function.
-> + */
-> +void  pci_unmap_iospace(struct resource *res)
-> +{
-> +#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
-> +	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
-> +
-> +	unmap_kernel_range(vaddr, resource_size(res));
-> +#else
-> +	/*
-> +	 * This architecture does not have memory mapped I/O space,
-> +	 * so this function should never be called.
-> +	 */
-> +	WARN_ONCE(1, "This architecture does not support memory mapped I/O\n");
-> +#endif
-> +}
-> +
->  static void __pci_set_master(struct pci_dev *dev, bool enable)
->  {
->  	u16 old_cmd, cmd;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index c28adb4..df1f33d 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1168,6 +1168,7 @@ int pci_register_io_range(phys_addr_t addr, resource_size_t size);
->  unsigned long pci_address_to_pio(phys_addr_t addr);
->  phys_addr_t pci_pio_to_address(unsigned long pio);
->  int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
-> +void pci_unmap_iospace(struct resource *res);
->  
->  static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
->  {
-> -- 
-> 1.9.1
-> 
+--ReaqsoxgOBHFXBhH
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCAAGBQJXD7a4AAoJEN0jrNd/PrOhGrwP/A9qDrlbO+2Bll2adS3SGlsa
+w1AXkVIMZ/ei9Rzdol2m8nsQza4Hd3ez6InBbU+G49HrjrmDhz+4E9hAQWaPykgv
+yzHr9g1p6FmMtbWf45eTAvAurkIcOSIEm7KgV2tgUpzfxzsbwVEOx+y2kvzcpKqy
+1ML3H0COa4NbbuH031UB1TLIGXG+GacrxPpgG0uiU6Mo4ioz+1BNv6PYjtzPiLSc
+X6nk8julCUcwHMXHKEWFytsA6zaLVJyYd5TbtGUEZxV+tJSHfobXnTyyjqcJpSKK
+Q66WFhDVXktyM+WD59gEeUqHgCfgMmBaHySPXecEcKOTr3VbEninazjzDXiEAKaw
+JfleVggQXaX0LMP+uD8AK3iF9Eh2RNvRYd+CjenPxW/IXuQdPWR3w/Rwpj/XDTyu
+xFD61wxzsqj7XeQ3MIcR8ix2vFaaXfyy6pXdB0AAz/AWl1bYv0txSo2CW0Y0NAMC
+llPgpeHxsu5wUCjldb6NRBVGviTrtboaA2/+YjzR7+65tTNWy7td/R5JBqGbwAQr
++TpT5HBp7LR4uhklW5GRccdK35KlUjZ3AdOee6pjeFlPP/43eMRm8d+fTAUStiJ0
+W6ePZjnHE73vTn00fCnPIUS+ogJAK2coMc/AyTIBUouXywewPvVw4YdAZRZlKEZ8
+Y45LBdN4t/Z6vnfKDJhX
+=43Ah
+-----END PGP SIGNATURE-----
+
+--ReaqsoxgOBHFXBhH--
