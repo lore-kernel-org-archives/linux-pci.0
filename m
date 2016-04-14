@@ -1,418 +1,282 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:56900 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754229AbcDYJxa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Apr 2016 05:53:30 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [PATCH v4 2/4] PCI: Move PCIe ports to D3 during suspend
-Date: Mon, 25 Apr 2016 12:53:22 +0300
-Message-Id: <1461578004-129094-3-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: iommu@lists.linux-foundation.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [RFC PATCH 06/11] drivers: iommu: make of_xlate() interface DT agnostic
+Date: Thu, 14 Apr 2016 18:25:38 +0100
+Message-Id: <1460654743-7896-7-git-send-email-lorenzo.pieralisi@arm.com>
+In-Reply-To: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently the Linux PCI core does not touch power state of PCI bridges and
-PCIe ports when system suspend is entered. Leaving them in D0 consumes
-power which is not good thing in portable devices such as laptops. This may
-also prevent the CPU from entering deeper C-states.
+On systems booting with ACPI, the IOMMU drivers require the same
+kind of id mapping carried out with a DT tree through the of_xlate()
+API in order to map devices identifiers to IOMMU ones.
 
-With recent PCIe hardware we can power down the ports to save power given
-that we take into account few restrictions:
+On ACPI systems, since DT nodes are not present (ie struct
+device.of_node == NULL), to identify the device requiring the translation
+the struct device_node (and the structure used to pass translation
+information - struct of_phandle_args - that contains a struct device_node)
+cannot be used, so a generic translation structure to be used for IOMMU
+mapping should be defined, based on the firmware agnostic fwnode_handle
+type.
 
-  - The PCIe port hardware is recent enough, starting from 2015.
+This patch mechanically refactors/renames the of_xlate API to make
+it DT agnostic, by declaring a new type (struct iommu_fwspec), that
+allows the kernel to pass a device identifier (fwnode - which can
+represent either a DT node or an IOMMU FW node) and by changing the
+of_xlate signature so that it does not take anymore the DT specific
+of_phandle_args argument and replaces it with the DT agnostic
+iommu_fwspec one.
 
-  - Devices connected to PCIe ports are effectively in D3cold once the port
-    is moved to D3 (the config space is not accessible anymore and the link
-    may be powered down).
-
-  - Devices behind the PCIe port need to be allowed to transition to D3cold
-    and back. There is a way both drivers and userspace can forbid this.
-
-  - If the device behind the PCIe port is capable of waking the system it
-    needs to be able to do so from D3cold.
-
-This patch adds a new flag to struct pci_device called 'bridge_d3'. This
-flag is set and cleared by the PCI core whenever there is a change in power
-management state of any of the devices behind the PCIe port (we provide
-helper functions that should be used to change state of the device, like
-pci_d3cold_disable()). When system later on is suspended we only need to
-check this flag and if it is true transition the port to D3 otherwise we
-leave it in D0.
-
-Also provide override mechanism via command line parameter
-"pcie_port_pm=[off|force]" that can be used to disable or enable the
-feature regardless of the BIOS manufacturing date.
-
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Matthias Brugger <matthias.bgg@gmail.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Hanjun Guo <hanjun.guo@linaro.org>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Marek Szyprowski <m.szyprowski@samsung.com>
 ---
- Documentation/kernel-parameters.txt |   4 +
- drivers/pci/bus.c                   |   1 +
- drivers/pci/pci-driver.c            |  10 +-
- drivers/pci/pci-sysfs.c             |   5 +
- drivers/pci/pci.c                   | 176 ++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h                   |   2 +
- drivers/pci/remove.c                |   2 +
- drivers/usb/host/xhci-pci.c         |   2 +-
- include/linux/pci.h                 |   3 +
- 9 files changed, 200 insertions(+), 5 deletions(-)
+ drivers/iommu/arm-smmu.c     | 12 +++++++-----
+ drivers/iommu/exynos-iommu.c | 11 +++++++----
+ drivers/iommu/mtk_iommu.c    | 13 ++++++++-----
+ drivers/iommu/of_iommu.c     | 20 ++++++++++++++++++--
+ include/linux/iommu.h        | 24 ++++++++++++++++++++----
+ 5 files changed, 60 insertions(+), 20 deletions(-)
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 0b3de80ec8f6..90e1f43760be 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -3008,6 +3008,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 		compat	Treat PCIe ports as PCI-to-PCI bridges, disable the PCIe
- 			ports driver.
- 
-+	pcie_port_pm=	[PCIE] PCIe port power management handling:
-+		off	Disable power management of all PCIe ports
-+		force	Forcibly enable power management of all PCIe ports
-+
- 	pcie_pme=	[PCIE,PM] Native PCIe PME signaling options:
- 		nomsi	Do not use MSI for native PCIe PME signaling (this makes
- 			all PCIe root ports use INTx for all services).
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 6c9f5467bc5f..b1738162d69a 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -291,6 +291,7 @@ void pci_bus_add_device(struct pci_dev *dev)
- 	pci_fixup_device(pci_fixup_final, dev);
- 	pci_create_sysfs_dev_files(dev);
- 	pci_proc_attach_device(dev);
-+	pci_bridge_d3_device_changed(dev);
- 
- 	dev->match_driver = true;
- 	retval = device_attach(&dev->dev);
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index d7ffd66814bb..e3ece0e25fa3 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -777,7 +777,12 @@ static int pci_pm_suspend_noirq(struct device *dev)
- 
- 	if (!pci_dev->state_saved) {
- 		pci_save_state(pci_dev);
--		if (!pci_has_subordinate(pci_dev))
-+		/*
-+		 * Check if given device can go to low power state. Currently
-+		 * we allow normal PCI devices and PCI bridges if their
-+		 * bridge_d3 is set.
-+		 */
-+		if (!pci_has_subordinate(pci_dev) || pci_dev->bridge_d3)
- 			pci_prepare_to_sleep(pci_dev);
- 	}
- 
-@@ -1144,7 +1149,6 @@ static int pci_pm_runtime_suspend(struct device *dev)
- 		return -ENOSYS;
- 
- 	pci_dev->state_saved = false;
--	pci_dev->no_d3cold = false;
- 	error = pm->runtime_suspend(dev);
- 	if (error) {
- 		/*
-@@ -1161,8 +1165,6 @@ static int pci_pm_runtime_suspend(struct device *dev)
- 
- 		return error;
- 	}
--	if (!pci_dev->d3cold_allowed)
--		pci_dev->no_d3cold = true;
- 
- 	pci_fixup_device(pci_fixup_suspend, pci_dev);
- 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 342b6918bbde..1a0854be5b18 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -406,6 +406,11 @@ static ssize_t d3cold_allowed_store(struct device *dev,
- 		return -EINVAL;
- 
- 	pdev->d3cold_allowed = !!val;
-+	if (pdev->d3cold_allowed)
-+		pci_d3cold_enable(pdev);
-+	else
-+		pci_d3cold_disable(pdev);
-+
- 	pm_runtime_resume(dev);
- 
- 	return count;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 25e0327d4429..69878d5e2c2f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -9,6 +9,7 @@
- 
- #include <linux/kernel.h>
- #include <linux/delay.h>
-+#include <linux/dmi.h>
- #include <linux/init.h>
- #include <linux/of.h>
- #include <linux/of_pci.h>
-@@ -101,6 +102,21 @@ unsigned int pcibios_max_latency = 255;
- /* If set, the PCIe ARI capability will not be used. */
- static bool pcie_ari_disabled;
- 
-+/* Disable bridge_d3 for all PCIe ports */
-+static bool pci_bridge_d3_disable;
-+/* Force bridge_d3 for all PCIe ports */
-+static bool pci_bridge_d3_force;
-+
-+static int __init pcie_port_pm_setup(char *str)
-+{
-+	if (!strcmp(str, "off"))
-+		pci_bridge_d3_disable = true;
-+	else if (!strcmp(str, "force"))
-+		pci_bridge_d3_force = true;
-+	return 1;
-+}
-+__setup("pcie_port_pm=", pcie_port_pm_setup);
-+
- /**
-  * pci_bus_max_busnr - returns maximum PCI bus number of given bus' children
-  * @bus: pointer to PCI bus structure to search
-@@ -2156,6 +2172,165 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
+diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+index 6c42770..84bcff7 100644
+--- a/drivers/iommu/arm-smmu.c
++++ b/drivers/iommu/arm-smmu.c
+@@ -1440,18 +1440,20 @@ out_unlock:
+ 	return ret;
  }
  
- /**
-+ * pci_bridge_d3_possible - Is it possible to move the bridge to D3
-+ * @bridge: Bridge to check
-+ *
-+ * This function checks if it is possible to move the bridge to D3.
-+ * Currently we only allow D3 for recent enough PCIe ports.
-+ */
-+static bool pci_bridge_d3_possible(struct pci_dev *bridge)
-+{
-+	unsigned int year;
-+
-+	if (!pci_is_pcie(bridge))
-+		return false;
-+
-+	switch (pci_pcie_type(bridge)) {
-+	case PCI_EXP_TYPE_ROOT_PORT:
-+	case PCI_EXP_TYPE_UPSTREAM:
-+	case PCI_EXP_TYPE_DOWNSTREAM:
-+		if (pci_bridge_d3_disable)
-+			return false;
-+		if (pci_bridge_d3_force)
-+			return true;
-+
-+		/*
-+		 * PCIe ports from 2015 and newer should be capable of
-+		 * entering D3.
-+		 */
-+		if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) &&
-+		    year >= 2015) {
-+			return true;
-+		}
-+		break;
-+	}
-+
-+	return false;
-+}
-+
-+static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
-+{
-+	bool *d3cold_ok = data;
-+
-+	/*
-+	 * The device needs to be allowed to go D3cold and if it is wake
-+	 * capable to do so from D3cold. If the device is bridge then it
-+	 * needs to have D3 allowed.
-+	 */
-+	if (dev->no_d3cold || !dev->d3cold_allowed)
-+		*d3cold_ok = false;
-+	if (device_may_wakeup(&dev->dev) && !pci_pme_capable(dev, PCI_D3cold))
-+		*d3cold_ok = false;
-+	if (pci_has_subordinate(dev) && !dev->bridge_d3)
-+		*d3cold_ok = false;
-+
-+	return !*d3cold_ok;
-+}
-+
-+/*
-+ * pci_bridge_d3_update - Update bridge D3 capabilities
-+ * @dev: PCI device which is changed
-+ * @remove: Is the device being removed
-+ *
-+ * Updates upstream bridge PM capabilities accordingly depending on if the
-+ * device PM configuration was changed or the device is being removed. The
-+ * change is also propagated upstream.
-+ */
-+static void pci_bridge_d3_update(struct pci_dev *dev, bool remove)
-+{
-+	struct pci_dev *bridge;
-+	bool d3cold_ok = true;
-+
-+	bridge = pci_upstream_bridge(dev);
-+	if (!bridge || !pci_bridge_d3_possible(bridge))
-+		return;
-+
-+	pci_dev_get(bridge);
-+	/*
-+	 * If the device is removed we do not care about its D3cold
-+	 * capabilities.
-+	 */
-+	if (!remove)
-+		pci_dev_check_d3cold(dev, &d3cold_ok);
-+
-+	if (d3cold_ok) {
-+		/*
-+		 * We need to go through all children to find out if all of
-+		 * them can still go to D3cold.
-+		 */
-+		pci_walk_bus(bridge->subordinate, pci_dev_check_d3cold,
-+			     &d3cold_ok);
-+	}
-+
-+	if (bridge->bridge_d3 != d3cold_ok) {
-+		bridge->bridge_d3 = d3cold_ok;
-+		/* Propagate change to upstream bridges */
-+		pci_bridge_d3_update(bridge, false);
-+	}
-+
-+	pci_dev_put(bridge);
-+}
-+
-+/**
-+ * pci_bridge_d3_device_changed - Update bridge D3 capabilities on change
-+ * @dev: PCI device that was changed
-+ *
-+ * If a device is added or its PM configuration, such as is it allowed to
-+ * enter D3cold, is changed this function updates upstream bridge PM
-+ * capabilities accordingly.
-+ */
-+void pci_bridge_d3_device_changed(struct pci_dev *dev)
-+{
-+	pci_bridge_d3_update(dev, false);
-+}
-+
-+/**
-+ * pci_bridge_d3_device_removed - Update bridge D3 capabilities on remove
-+ * @dev: PCI device being removed
-+ *
-+ * Function updates upstream bridge PM capabilities based on other devices
-+ * still left on the bus.
-+ */
-+void pci_bridge_d3_device_removed(struct pci_dev *dev)
-+{
-+	pci_bridge_d3_update(dev, true);
-+}
-+
-+/**
-+ * pci_d3cold_enable - Enable D3cold for device
-+ * @dev: PCI device to handle
-+ *
-+ * This function can be used in drivers to enable D3cold from the device
-+ * they handle. It also updates upstream PCI bridge PM capabilities
-+ * accordingly.
-+ */
-+void pci_d3cold_enable(struct pci_dev *dev)
-+{
-+	if (dev->no_d3cold) {
-+		dev->no_d3cold = false;
-+		pci_bridge_d3_device_changed(dev);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(pci_d3cold_enable);
-+
-+/**
-+ * pci_d3cold_disable - Disable D3cold for device
-+ * @dev: PCI device to handle
-+ *
-+ * This function can be used in drivers to disable D3cold from the device
-+ * they handle. It also updates upstream PCI bridge PM capabilities
-+ * accordingly.
-+ */
-+void pci_d3cold_disable(struct pci_dev *dev)
-+{
-+	if (!dev->no_d3cold) {
-+		dev->no_d3cold = true;
-+		pci_bridge_d3_device_changed(dev);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(pci_d3cold_disable);
-+
-+/**
-  * pci_pm_init - Initialize PM functions of given PCI device
-  * @dev: PCI device to handle.
-  */
-@@ -2189,6 +2364,7 @@ void pci_pm_init(struct pci_dev *dev)
- 	dev->pm_cap = pm;
- 	dev->d3_delay = PCI_PM_D3_WAIT;
- 	dev->d3cold_delay = PCI_PM_D3COLD_WAIT;
-+	dev->bridge_d3 = pci_bridge_d3_possible(dev);
- 	dev->d3cold_allowed = true;
- 
- 	dev->d1_support = false;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index a814bbb80fcb..1d247e39da0a 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -82,6 +82,8 @@ void pci_pm_init(struct pci_dev *dev);
- void pci_ea_init(struct pci_dev *dev);
- void pci_allocate_cap_save_buffers(struct pci_dev *dev);
- void pci_free_cap_save_buffers(struct pci_dev *dev);
-+void pci_bridge_d3_device_changed(struct pci_dev *dev);
-+void pci_bridge_d3_device_removed(struct pci_dev *dev);
- 
- static inline void pci_wakeup_event(struct pci_dev *dev)
+-static int arm_smmu_of_xlate(struct device *dev, struct of_phandle_args *args)
++static int arm_smmu_fw_xlate(struct device *dev, struct iommu_fwspec *args)
  {
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 8982026637d5..d1ef7acf6930 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -96,6 +96,8 @@ static void pci_remove_bus_device(struct pci_dev *dev)
- 		dev->subordinate = NULL;
- 	}
- 
-+	pci_bridge_d3_device_removed(dev);
+ 	struct arm_smmu_device *smmu;
+-	struct platform_device *smmu_pdev;
++	struct platform_device *smmu_pdev = NULL;
 +
- 	pci_destroy_dev(dev);
++	if (is_of_node(args->fwnode))
++		smmu_pdev = of_find_device_by_node(to_of_node(args->fwnode));
+ 
+-	smmu_pdev = of_find_device_by_node(args->np);
+ 	if (!smmu_pdev)
+ 		return -ENODEV;
+ 
+ 	smmu = platform_get_drvdata(smmu_pdev);
+ 
+-	return arm_smmu_add_dev_streamid(smmu, dev, args->args[0]);
++	return arm_smmu_add_dev_streamid(smmu, dev, args->param[0]);
  }
  
-diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
-index 48672fac7ff3..ac352fe391f4 100644
---- a/drivers/usb/host/xhci-pci.c
-+++ b/drivers/usb/host/xhci-pci.c
-@@ -382,7 +382,7 @@ static int xhci_pci_suspend(struct usb_hcd *hcd, bool do_wakeup)
- 	 * need to have the registers polled during D3, so avoid D3cold.
- 	 */
- 	if (xhci->quirks & XHCI_COMP_MODE_QUIRK)
--		pdev->no_d3cold = true;
-+		pci_d3cold_disable(pdev);
+ static struct iommu_ops arm_smmu_ops = {
+@@ -1468,7 +1470,7 @@ static struct iommu_ops arm_smmu_ops = {
+ 	.device_group		= arm_smmu_device_group,
+ 	.domain_get_attr	= arm_smmu_domain_get_attr,
+ 	.domain_set_attr	= arm_smmu_domain_set_attr,
+-	.of_xlate		= arm_smmu_of_xlate,
++	.fw_xlate		= arm_smmu_fw_xlate,
+ 	.pgsize_bitmap		= -1UL, /* Restricted during device attach */
+ };
  
- 	if (xhci->quirks & XHCI_PME_STUCK_QUIRK)
- 		xhci_pme_quirk(hcd);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 932ec74909c6..aa7d586710c0 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -296,6 +296,7 @@ struct pci_dev {
- 	unsigned int	d2_support:1;	/* Low power state D2 is supported */
- 	unsigned int	no_d1d2:1;	/* D1 and D2 are forbidden */
- 	unsigned int	no_d3cold:1;	/* D3cold is forbidden */
-+	unsigned int	bridge_d3:1;	/* Allow D3 for bridge */
- 	unsigned int	d3cold_allowed:1;	/* D3cold is allowed by user */
- 	unsigned int	mmio_always_on:1;	/* disallow turning off io/mem
- 						   decoding during bar sizing */
-@@ -1085,6 +1086,8 @@ int pci_back_from_sleep(struct pci_dev *dev);
- bool pci_dev_run_wake(struct pci_dev *dev);
- bool pci_check_pme_status(struct pci_dev *dev);
- void pci_pme_wakeup_bus(struct pci_bus *bus);
-+void pci_d3cold_enable(struct pci_dev *dev);
-+void pci_d3cold_disable(struct pci_dev *dev);
+diff --git a/drivers/iommu/exynos-iommu.c b/drivers/iommu/exynos-iommu.c
+index 5ecc86c..84ff5bb 100644
+--- a/drivers/iommu/exynos-iommu.c
++++ b/drivers/iommu/exynos-iommu.c
+@@ -1250,13 +1250,16 @@ static void exynos_iommu_remove_device(struct device *dev)
+ 	iommu_group_remove_device(dev);
+ }
  
- static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
- 				  bool enable)
+-static int exynos_iommu_of_xlate(struct device *dev,
+-				 struct of_phandle_args *spec)
++static int exynos_iommu_fw_xlate(struct device *dev,
++				 struct iommu_fwspec *args)
+ {
+ 	struct exynos_iommu_owner *owner = dev->archdata.iommu;
+-	struct platform_device *sysmmu = of_find_device_by_node(spec->np);
++	struct platform_device *sysmmu = NULL;
+ 	struct sysmmu_drvdata *data;
+ 
++	if (is_of_node(args->fwnode))
++		sysmmu = of_find_device_by_node(to_of_node(args->fwnode));
++
+ 	if (!sysmmu)
+ 		return -ENODEV;
+ 
+@@ -1290,7 +1293,7 @@ static struct iommu_ops exynos_iommu_ops = {
+ 	.add_device = exynos_iommu_add_device,
+ 	.remove_device = exynos_iommu_remove_device,
+ 	.pgsize_bitmap = SECT_SIZE | LPAGE_SIZE | SPAGE_SIZE,
+-	.of_xlate = exynos_iommu_of_xlate,
++	.fw_xlate = exynos_iommu_fw_xlate,
+ };
+ 
+ static bool init_done;
+diff --git a/drivers/iommu/mtk_iommu.c b/drivers/iommu/mtk_iommu.c
+index 929a66a..e08dc0a 100644
+--- a/drivers/iommu/mtk_iommu.c
++++ b/drivers/iommu/mtk_iommu.c
+@@ -436,20 +436,23 @@ static struct iommu_group *mtk_iommu_device_group(struct device *dev)
+ 	return data->m4u_group;
+ }
+ 
+-static int mtk_iommu_of_xlate(struct device *dev, struct of_phandle_args *args)
++static int mtk_iommu_fw_xlate(struct device *dev, struct iommu_fwspec *args)
+ {
+ 	struct mtk_iommu_client_priv *head, *priv, *next;
+ 	struct platform_device *m4updev;
+ 
+-	if (args->args_count != 1) {
++	if (!is_of_node(args->fwnode))
++		return -ENODEV;
++
++	if (args->param_count != 1) {
+ 		dev_err(dev, "invalid #iommu-cells(%d) property for IOMMU\n",
+-			args->args_count);
++			args->param_count);
+ 		return -EINVAL;
+ 	}
+ 
+ 	if (!dev->archdata.iommu) {
+ 		/* Get the m4u device */
+-		m4updev = of_find_device_by_node(args->np);
++		m4updev = of_find_device_by_node(to_of_node(args->fwnode));
+ 		of_node_put(args->np);
+ 		if (WARN_ON(!m4updev))
+ 			return -EINVAL;
+@@ -469,7 +472,7 @@ static int mtk_iommu_of_xlate(struct device *dev, struct of_phandle_args *args)
+ 	if (!priv)
+ 		goto err_free_mem;
+ 
+-	priv->mtk_m4u_id = args->args[0];
++	priv->mtk_m4u_id = args->param[0];
+ 	list_add_tail(&priv->client, &head->client);
+ 
+ 	return 0;
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index 910826c..331dd78 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -135,6 +135,18 @@ struct iommu_ops *of_iommu_get_ops(struct device_node *np)
+ 	return ops;
+ }
+ 
++static void of_phandle_args_to_fwspec(struct of_phandle_args *iommu_data,
++				      struct iommu_fwspec *fwspec)
++{
++	int i;
++
++	fwspec->fwnode = iommu_data->np ? &iommu_data->np->fwnode : NULL;
++	fwspec->param_count = iommu_data->args_count;
++
++	for (i = 0; i < iommu_data->args_count; i++)
++		fwspec->param[i] = iommu_data->args[i];
++}
++
+ static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+ {
+ 	struct of_phandle_args *iommu_spec = data;
+@@ -148,6 +160,7 @@ struct iommu_ops *of_iommu_configure(struct device *dev,
+ 				     struct device_node *master_np)
+ {
+ 	struct of_phandle_args iommu_spec;
++	struct iommu_fwspec fwspec;
+ 	struct device_node *np = NULL;
+ 	struct iommu_ops *ops = NULL;
+ 	int idx = 0;
+@@ -170,8 +183,9 @@ struct iommu_ops *of_iommu_configure(struct device *dev,
+ 
+ 		iommu_spec.np = np;
+ 		iommu_spec.args_count = 1;
++		of_phandle_args_to_fwspec(&iommu_spec, &fwspec);
+ 		ops = of_iommu_get_ops(np);
+-		if (!ops || !ops->of_xlate || ops->of_xlate(dev, &iommu_spec))
++		if (!ops || !ops->fw_xlate || ops->fw_xlate(dev, &fwspec))
+ 			goto err_put_node;
+ 
+ 		of_node_put(np);
+@@ -189,7 +203,9 @@ struct iommu_ops *of_iommu_configure(struct device *dev,
+ 		np = iommu_spec.np;
+ 		ops = of_iommu_get_ops(np);
+ 
+-		if (!ops || !ops->of_xlate || ops->of_xlate(dev, &iommu_spec))
++		of_phandle_args_to_fwspec(&iommu_spec, &fwspec);
++
++		if (!ops || !ops->fw_xlate || ops->fw_xlate(dev, &fwspec))
+ 			goto err_put_node;
+ 
+ 		of_node_put(np);
+diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+index 0bba25e..5184d81 100644
+--- a/include/linux/iommu.h
++++ b/include/linux/iommu.h
+@@ -85,6 +85,24 @@ struct iommu_domain {
+ 	void *iova_cookie;
+ };
+ 
++#define IOMMU_MAP_SPEC_PARAMS 16
++
++/**
++ * struct iommu_fwspec - generic IOMMU specifier structure
++ *
++ * @fwnode:		Pointer to a firmware-specific descriptor
++ * @param_count:	Number of device-specific parameters
++ * @param:		Device-specific parameters
++ *
++ * This structure, directly modeled after of_phandle_args, is used to
++ * pass a device-specific description of an IOMMU mapping.
++ */
++struct iommu_fwspec {
++	struct fwnode_handle *fwnode;
++	int param_count;
++	u32 param[IOMMU_MAP_SPEC_PARAMS];
++};
++
+ enum iommu_cap {
+ 	IOMMU_CAP_CACHE_COHERENCY,	/* IOMMU can enforce cache coherent DMA
+ 					   transactions */
+@@ -155,7 +173,7 @@ struct iommu_dm_region {
+  * @domain_window_disable: Disable a particular window for a domain
+  * @domain_set_windows: Set the number of windows for a domain
+  * @domain_get_windows: Return the number of windows for a domain
+- * @of_xlate: add OF master IDs to iommu grouping
++ * @fw_xlate: add FW master IDs to iommu grouping
+  * @pgsize_bitmap: bitmap of supported page sizes
+  * @priv: per-instance data private to the iommu driver
+  */
+@@ -196,9 +214,7 @@ struct iommu_ops {
+ 	/* Get the number of windows per domain */
+ 	u32 (*domain_get_windows)(struct iommu_domain *domain);
+ 
+-#ifdef CONFIG_OF_IOMMU
+-	int (*of_xlate)(struct device *dev, struct of_phandle_args *args);
+-#endif
++	int (*fw_xlate)(struct device *dev, struct iommu_fwspec *args);
+ 
+ 	unsigned long pgsize_bitmap;
+ 	void *priv;
 -- 
-2.8.0.rc3
+2.6.4
 
