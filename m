@@ -1,182 +1,134 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:60855 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752344AbcDRKCB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 18 Apr 2016 06:02:01 -0400
-Date: Mon, 18 Apr 2016 11:01:54 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	David Daney <david.daney@cavium.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Russell King <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 2/3] drivers: pci: host-generic: claim bus resources
- on PCI_PROBE_ONLY set-ups
-Message-ID: <20160418100154.GB2427@red-moon>
-References: <1456843449-19393-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1456843449-19393-3-git-send-email-lorenzo.pieralisi@arm.com>
- <20160412044311.GB11361@localhost>
- <20160412154810.GA32109@red-moon>
- <20160415130803.GA2105@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160415130803.GA2105@localhost>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V6 02/13] pci, acpi: Provide generic way to assign bus domain number.
+Date: Fri, 15 Apr 2016 19:06:37 +0200
+Message-Id: <1460740008-19489-3-git-send-email-tn@semihalf.com>
+In-Reply-To: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 15, 2016 at 08:08:03AM -0500, Bjorn Helgaas wrote:
-> On Tue, Apr 12, 2016 at 04:48:10PM +0100, Lorenzo Pieralisi wrote:
+As we now have valid PCI host bridge device reference we can
+introduce code that is going to find its bus domain number using
+ACPI _SEG method.
 
-[...]
+Note that _SEG method is optional, therefore _SEG absence means
+that all PCI buses belong to domain 0.
 
-> > > The next patch removes the arm and arm64 pcibios_enable_device()
-> > > implementations, which implies that arm and arm64 only need the generic
-> > > version, which simply calls pci_enable_resources().  That assumes r->parent
-> > > is set.
-> > > 
-> > > After this patch, we'll call pci_bus_claim_resources() for the
-> > > PCI_PROBE_ONLY case, and that sets r->parent for all the resources.
-> > > 
-> > > Where does r->parent get set in the non-PCI_PROBE_ONLY case?  Obviously
-> > > that path *works*, because you're not changing anything there.  I'd just
-> > > like to have a hint that makes this change more obvious.
-> > 
-> > On all ARM/ARM64 PCI controllers drivers I am aware of (apart from the
-> > kvmtool PCI host controller which does require PCI_PROBE_ONLY, so we need
-> > this patch), resources are always reassigned and the core code reassigning
-> > them takes care of assigning their parent pointers too, to answer your
-> > question.
-> 
-> Here's what I find confusing.  Consider these three cases:
-> 
->   1) Firmware programs no BARs and we reassign everything.  We call
->   pci_bus_assign_resources(), and the pci_assign_resource() ...
->   allocate_resource() path makes sure everything is claimed.  This is
->   apparently the normal arm/arm64 path, and it already works.
-> 
->   2) Firmware programs all BARs and we set PCI_PROBE_ONLY.  After this
->   series, we'll claim the resources and remove the PCI_PROBE_ONLY
->   special case in pcibios_enable_device().  This is great!
-> 
->   3) Firmware programs all BARs but we don't set PCI_PROBE_ONLY.  We
->   call pci_bus_assign_resources(), but I think it does nothing because
->   everything is already assigned.  The resources are not claimed and
->   pci_enable_resources() will fail.
+While at it, for the sake of code clarity we put ACPI and DT domain
+assign methods into the corresponding helpers.
 
-I do not expect (1) and (3) to be different from a kernel resource
-allocation perspective.
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
+Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+Tested-by: Duc Dang <dhdang@apm.com>
+Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+Tested-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/acpi/pci_root.c  | 18 ++++++++++++++++++
+ drivers/pci/pci.c        | 11 +++++++++--
+ include/linux/pci-acpi.h |  2 ++
+ 3 files changed, 29 insertions(+), 2 deletions(-)
 
-If the core resource layer is asked to assign resources it will,
-regardless of what FW programmed in the BARs (the BAR regions size
-matters, that's it), I went through pci_bus_assign_resources() a couple
-of times and I have to add a bit of debugging so give me the benefit of
-the doubt please, but there is nothing that let me think it won't assign
-resources (and therefore assign a parent pointer) if the resources are
-already programmed correctly (actually I even think the kernel may
-change what FW programmed according to its resource alloc policy).
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 4581e0e..d9a70c4 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -419,6 +419,24 @@ out:
+ }
+ EXPORT_SYMBOL(acpi_pci_osc_control_set);
+ 
++int acpi_pci_bus_domain_nr(struct device *parent)
++{
++	struct acpi_device *acpi_dev = to_acpi_device(parent);
++	unsigned long long segment = 0;
++	acpi_status status;
++
++	/*
++	 * If _SEG method does not exist, following ACPI spec (6.5.6)
++	 * all PCI buses belong to domain 0.
++	 */
++	status = acpi_evaluate_integer(acpi_dev->handle, METHOD_NAME__SEG, NULL,
++				       &segment);
++	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
++		dev_err(&acpi_dev->dev, "can't evaluate _SEG\n");
++
++	return segment;
++}
++
+ static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
+ {
+ 	u32 support, control, requested;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 25e0327..1a74e87 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -19,6 +19,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/string.h>
+ #include <linux/log2.h>
++#include <linux/pci-acpi.h>
+ #include <linux/pci-aspm.h>
+ #include <linux/pm_wakeup.h>
+ #include <linux/interrupt.h>
+@@ -4779,7 +4780,7 @@ int pci_get_new_domain_nr(void)
+ }
+ 
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++static int of_pci_bus_domain_nr(struct device *parent)
+ {
+ 	static int use_dt_domains = -1;
+ 	int domain = -1;
+@@ -4823,7 +4824,13 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ 		domain = -1;
+ 	}
+ 
+-	bus->domain_nr = domain;
++	return domain;
++}
++
++void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++{
++	bus->domain_nr = acpi_disabled ? of_pci_bus_domain_nr(parent) :
++					 acpi_pci_bus_domain_nr(parent);
+ }
+ #endif
+ #endif
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 89ab057..a72e22d 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -22,6 +22,7 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
+ {
+ 	return acpi_remove_pm_notifier(dev);
+ }
++extern int acpi_pci_bus_domain_nr(struct device *parent);
+ extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
+ 
+ static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
+@@ -109,6 +110,7 @@ extern const u8 pci_acpi_dsm_uuid[];
+ #else	/* CONFIG_ACPI */
+ static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
+ static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
++static inline int acpi_pci_bus_domain_nr(struct device *parent) { return -1; }
+ #endif	/* CONFIG_ACPI */
+ 
+ #ifdef CONFIG_ACPI_APEI
+-- 
+1.9.1
 
-> This last case 3) is the problem.  I'm guessing this case doesn't
-> currently occur on arm/arm64, but it's the normal case on x86, and it
-> seems perverse that things work if firmware does nothing, but they
-> don't work if firmware does more setup.
-
-IIUC X86 claim resources as programmed by FW so it is not really the
-same situation as arm64, that claims nothing. Claimed resources are not
-reassigned, they are skipped by resource allocation/sizing code
-(because their parent pointer is set).
-
-And as I said above even if FW does some set-up that will still work
-on ARM/ARM64, otherwise this means that on ALL ARM/ARM64 systems out there
-PCI set-up at kernel handover is non-existent, otherwise we would
-have resource enablement failures NOW, right ?
-
-> So I think we should add some sort of arm/arm64-specific
-> pci_claim_resource() path similar to the pcibios_allocate_resources()
-> stuff on x86.
-
-I agree but it has to be done with care in particular in relation to
-bridges apertures, claiming resources on systems that currently reassign
-everything may trigger regressions.
-
-In particular, having an API that claims resources is NOT sufficient
-for that purpose for two reasons:
-
-- If resource claiming fails for some resources, currently the kernel
-  spits too much noise in the logs, claiming should be a best-effort
-  approach, if it fails there is no error to report in the logs, if FW
-  left resources unset that's *not* an error AFAIK
-- Bridge apertures: care must be taken so that resources downstream
-  should be sized so that bridges can accomodate them, this may require
-  releasing previously claimed bridge apertures and realloc them
-
-The approach should be:
-
-(1) Claim resources
-(2) Realloc whatever fails (which may imply releasing bridges resources
-    previously claimed)
-
-> > As for this patch series, given that:
-> > 
-> > commit (in -next) 903589ca7165 ("ARM: 8554/1: kernel: pci: remove
-> > pci=firmware command line parameter handling") removes the PCI_PROBE_ONLY
-> > handling from the (ARM) command line, the PCI host generic becomes the
-> > last ARM/ARM64 host controller that requires PCI_PROBE_ONLY to function
-> > (depending on DT settings).
-> > 
-> > The idea behind adding pci_bus_claim_resources (patch 1) to core code
-> > was that it could be reused by other arches too, I do not have evidence
-> > though, I have to prove it, so I'd rather squash patch 1 into this one
-> > and make the code claiming resources local to the PCI host generic,
-> > I can't add a generic PCI core API just for one host controller
-> > (IMHO we should add an API that allows us to claim bus resources and
-> > realloc the ones for which claiming fail - which may mean releasing
-> > bridges resources and realloc/resize them - code is in the kernel already
-> > I have to write that API).
-> > 
-> > The code claiming resources on x86, IA64 and PowerPC looks extremely
-> > similar but it has to be proven that a generic function has a chance
-> > to work, so patch 1 is not really justified at present.
-> 
-> I don't really object to patch 1, but you're right that it's possible
-> we could do a better job later.  I would certainly like to get that
-> sort of code (including the pcibios_allocate_resources() stuff I just
-> mentioned) out of the arches and into the core somehow.
-
-Problem with patch 1, is that, if resource claiming fails, it spits
-loads of noise in kernel logs (actually it is pci_claim_resource(), that
-patch 1 uses, that spits errors on claiming failure), that's a detail but
-it will make people unhappy.
-
-I do not think that if claiming for a particular resource fails we can
-consider it an error that's why I see patch 1 more PCI host generic
-PCI_PROBE_ONLY specific rather than anything else, we can't use
-it for !PCI_PROBE_ONLY systems unless I rework it to remove the
-kernel error logs on resource claiming failures.
-
-Probably on X86/IA64 resource claiming is spotless because on most
-if not all systems FW programmes the PCI bus and the kernel can take
-the set-up as-is, it is a question since I have no visibility into that.
-
-> > If you have no objections I will squash patch 1 into this one (moving
-> > the respective code in PCI host generic driver), and I would not merge
-> > this series till the commit above in -next gets in the kernel (which
-> > makes sure that PCI_PROBE_ONLY can't be set on the command line, that's
-> > fundamental to this series, at least on ARM, on ARM64 DT is the only way
-> > PCI_PROBE_ONLY can be set and only on host controllers that check the
-> > chosen node property - ie PCI host generic, that we are patching).
-> 
-> If there's a stable branch containing 903589ca7165 ("ARM: 8554/1:
-> kernel: pci: remove pci=firmware command line parameter handling"), I
-> can pull that and merge your series on top of it.
-
-I think I should at least split patch 3 in two (one for ARM and one for
-ARM64), if Russell is forced to revert the commit above (because
-we discover pci=firmware command line users) I do not want ARM64 to
-be affected.
-
-Thanks !
-Lorenzo
