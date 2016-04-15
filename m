@@ -1,78 +1,153 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41259 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753176AbcDZSnp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Apr 2016 14:43:45 -0400
-Date: Tue, 26 Apr 2016 13:43:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: pratyush.anand@gmail.com, jingoohan1@gmail.com,
-	linuxarm@huawei.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: Designware: remove wrong RC memory base/limit
- configuration
-Message-ID: <20160426184341.GF27803@localhost>
-References: <1460804619-2972-1-git-send-email-gabriele.paoloni@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460804619-2972-1-git-send-email-gabriele.paoloni@huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V6 05/13] acpi, pci: Support IO resources when parsing PCI host bridge resources.
+Date: Fri, 15 Apr 2016 19:06:40 +0200
+Message-Id: <1460740008-19489-6-git-send-email-tn@semihalf.com>
+In-Reply-To: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 16, 2016 at 12:03:39PM +0100, Gabriele Paoloni wrote:
-> Currently dw_pcie_setup_rc configures memory base and memory
-> limit in the type1 configuration header for the root complex.
-> In doing so it uses the cpu address (pp->mem_base) rather than
-> the bus address (pp->mem_bus_addr): this is wrong and it is
-> useless since the configuration is overwritten later on when
-> pci_bus_assign_resources() is called.
-> 
-> Therefore this patch just removes this configuration from
-> dw_pcie_setup_rc.
-> 
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Platforms that have memory mapped IO port (such as ARM64) need special
+handling for PCI I/O resources. For host bridge's resource probing case
+these resources need to be fixed up with pci_register_io_range/pci_remap_iospace etc.
 
-Applied with Pratyush's ack to pci/host-designware for v4.7, thanks!
+Furthermore, the same I/O resources need to be released after hotplug
+removal so that it can be re-added back by the pci_remap_iospace
+function during insertion. Therefore we implement new pci_unmap_iospace call
+which unmaps I/O space as the symmetry to pci_remap_iospace.
 
-> ---
-> 
-> v1 -> v2 : removed unused variables in dw_pcie_setup_rc()
-> 
-> ---
->  drivers/pci/host/pcie-designware.c | 8 --------
->  1 file changed, 8 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-> index a4cccd3..e3cb1f9 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -728,8 +728,6 @@ static struct pci_ops dw_pcie_ops = {
->  void dw_pcie_setup_rc(struct pcie_port *pp)
->  {
->  	u32 val;
-> -	u32 membase;
-> -	u32 memlimit;
->  
->  	/* set the number of lanes */
->  	dw_pcie_readl_rc(pp, PCIE_PORT_LINK_CONTROL, &val);
-> @@ -788,12 +786,6 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  	val |= 0x00010100;
->  	dw_pcie_writel_rc(pp, val, PCI_PRIMARY_BUS);
->  
-> -	/* setup memory base, memory limit */
-> -	membase = ((u32)pp->mem_base & 0xfff00000) >> 16;
-> -	memlimit = (pp->mem_size + (u32)pp->mem_base) & 0xfff00000;
-> -	val = memlimit | membase;
-> -	dw_pcie_writel_rc(pp, val, PCI_MEMORY_BASE);
-> -
->  	/* setup command register */
->  	dw_pcie_readl_rc(pp, PCI_COMMAND, &val);
->  	val &= 0xffff0000;
-> -- 
-> 2.1.4
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/acpi/pci_root.c | 33 +++++++++++++++++++++++++++++++++
+ drivers/pci/pci.c       | 24 ++++++++++++++++++++++++
+ include/linux/pci.h     |  1 +
+ 3 files changed, 58 insertions(+)
+
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index d9a70c4..815b6ca 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -742,6 +742,34 @@ next:
+ 			resource_list_add_tail(entry, resources);
+ 	}
+ }
++static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
++{
++#ifdef PCI_IOBASE
++	struct resource *res = entry->res;
++	resource_size_t cpu_addr = res->start;
++	resource_size_t pci_addr = cpu_addr - entry->offset;
++	resource_size_t length = resource_size(res);
++	unsigned long port;
++
++	if (pci_register_io_range(cpu_addr, length))
++		goto err;
++
++	port = pci_address_to_pio(cpu_addr);
++	if (port == (unsigned long)-1)
++		goto err;
++
++	res->start = port;
++	res->end = port + length - 1;
++	entry->offset = port - pci_addr;
++
++	if (pci_remap_iospace(res, cpu_addr) < 0)
++		goto err;
++	pr_info("Remapped I/O %pa to %pR\n", &cpu_addr, res);
++	return;
++err:
++	res->flags |= IORESOURCE_DISABLED;
++#endif
++}
+ 
+ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+ {
+@@ -763,6 +791,9 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+ 			"no IO and memory resources present in _CRS\n");
+ 	else {
+ 		resource_list_for_each_entry_safe(entry, tmp, list) {
++			if (entry->res->flags & IORESOURCE_IO)
++				acpi_pci_root_remap_iospace(entry);
++
+ 			if (entry->res->flags & IORESOURCE_DISABLED)
+ 				resource_list_destroy_entry(entry);
+ 			else
+@@ -834,6 +865,8 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
+ 
+ 	resource_list_for_each_entry(entry, &bridge->windows) {
+ 		res = entry->res;
++		if (res->flags & IORESOURCE_IO)
++			pci_unmap_iospace(res);
+ 		if (res->parent &&
+ 		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+ 			release_resource(res);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 89e9996..c0f8a4e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -26,6 +26,7 @@
+ #include <linux/device.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/pci_hotplug.h>
++#include <linux/vmalloc.h>
+ #include <asm/setup.h>
+ #include <linux/aer.h>
+ #include "pci.h"
+@@ -3168,6 +3169,29 @@ int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+ #endif
+ }
+ 
++/**
++ *	pci_unmap_iospace - Unmap the memory mapped I/O space
++ *	@res: resource to be unmapped
++ *
++ *	Unmap the CPU virtual address @res from virtual address space.
++ *	Only architectures that have memory mapped IO functions defined
++ *	(and the PCI_IOBASE value defined) should call this function.
++ */
++void  pci_unmap_iospace(struct resource *res)
++{
++#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
++	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
++
++	unmap_kernel_range(vaddr, resource_size(res));
++#else
++	/*
++	 * This architecture does not have memory mapped I/O space,
++	 * so this function should never be called.
++	 */
++	WARN_ONCE(1, "This architecture does not support memory mapped I/O\n");
++#endif
++}
++
+ static void __pci_set_master(struct pci_dev *dev, bool enable)
+ {
+ 	u16 old_cmd, cmd;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c28adb4..df1f33d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1168,6 +1168,7 @@ int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+ unsigned long pci_address_to_pio(phys_addr_t addr);
+ phys_addr_t pci_pio_to_address(unsigned long pio);
+ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
++void pci_unmap_iospace(struct resource *res);
+ 
+ static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
+ {
+-- 
+1.9.1
