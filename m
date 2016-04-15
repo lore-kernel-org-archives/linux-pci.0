@@ -1,196 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e24smtp03.br.ibm.com ([32.104.18.24]:32815 "EHLO
-	e24smtp03.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751544AbcDNVzl (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2016 17:55:41 -0400
-Received: from localhost
-	by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-	Thu, 14 Apr 2016 18:55:39 -0300
-Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
-	by d24dlp01.br.ibm.com (Postfix) with ESMTP id 1DABF3520068
-	for <linux-pci@vger.kernel.org>; Thu, 14 Apr 2016 17:55:24 -0400 (EDT)
-Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
-	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u3EKrLUu4718742
-	for <linux-pci@vger.kernel.org>; Thu, 14 Apr 2016 17:53:21 -0300
-Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
-	by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u3ELtYZr004263
-	for <linux-pci@vger.kernel.org>; Thu, 14 Apr 2016 18:55:35 -0300
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au,
-	benh@kernel.crashing.org, imunsie@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com
-Cc: linux-pci@vger.kernel.org, paulus@samba.org, mikey@neuling.org,
-	andrew.donnellan@au1.ibm.com, bhelgaas@google.com,
-	gpiccoli@linux.vnet.ibm.com, frederic.barrat@fr.ibm.com,
-	mrochs@linux.vnet.ibm.com
-Subject: [PATCH v5] powerpc/pci: Assign fixed PHB number based on device-tree properties
-Date: Thu, 14 Apr 2016 18:55:24 -0300
-Message-Id: <1460670924-16845-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org,
+	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+	hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	jchandra@broadcom.com, jcm@redhat.com,
+	linaro-acpi@lists.linaro.org, linux-pci@vger.kernel.org,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	robert.richter@caviumnetworks.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, wangyijing@huawei.com, mw@semihalf.com
+Subject: Re: [PATCH V6 08/13] PCI: generic, thunder: update to use generic ECAM API
+Date: Fri, 15 Apr 2016 20:39:27 +0200
+Message-ID: <5110401.mGEq6IVFz2@wuerfel>
+In-Reply-To: <1460740008-19489-9-git-send-email-tn@semihalf.com>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com> <1460740008-19489-9-git-send-email-tn@semihalf.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The domain/PHB field of PCI addresses has its value obtained from a
-global variable, incremented each time a new domain (represented by
-struct pci_controller) is added on the system. The domain addition
-process happens during boot or due to PCI device hotplug.
+On Friday 15 April 2016 19:06:43 Tomasz Nowicki wrote:
+> -MODULE_DEVICE_TABLE(of, thunder_pem_of_match);
+> -
+> -static int thunder_pem_probe(struct platform_device *pdev)
+> +static int thunder_pem_init(struct device *dev, struct pci_config_window *cfg)
+>  {
+> -       struct device *dev = &pdev->dev;
+> -       const struct of_device_id *of_id;
+>         resource_size_t bar4_start;
+>         struct resource *res_pem;
+>         struct thunder_pem_pci *pem_pci;
+> +       struct platform_device *pdev;
+>  
+>         pem_pci = devm_kzalloc(dev, sizeof(*pem_pci), GFP_KERNEL);
+>         if (!pem_pci)
+>                 return -ENOMEM;
+>  
+> -       of_id = of_match_node(thunder_pem_of_match, dev->of_node);
+> -       pem_pci->gen_pci.cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
+> +       pdev = to_platform_device(dev);
+>  
+>         /*
+>          * The second register range is the PEM bridge to the PCIe
+> @@ -330,7 +298,29 @@ static int thunder_pem_probe(struct platform_device *pdev)
+>         pem_pci->ea_entry[1] = (u32)(res_pem->end - bar4_start) & ~3u;
+>         pem_pci->ea_entry[2] = (u32)(bar4_start >> 32);
+>  
+> -       return pci_host_common_probe(pdev, &pem_pci->gen_pci);
+> +       cfg->priv = pem_pci;
+> +       return 0;
+> +}
+> +
+> 
 
-As recent kernels are using predictable naming for network interfaces,
-the network stack is more tied to PCI naming. This can be a problem in
-hotplug scenarios, because PCI addresses will change if devices are
-removed and then re-added. This situation seems unusual, but it can
-happen if a user wants to replace a NIC without rebooting the machine,
-for example.
+I still think it would be better to keep the loadable PCI host drivers
+separate from the ACPI PCI infrastructure. There are a number of
+simplifications that we want to do to the DT based drivers in the long
+run, so it's better if that code is not shared at this level. Abstracting
+out the ECAM code is fine, but at that point you should be able to just
+call it from the ACPI layer.
 
-This patch changes the way PCI domain values are generated: now, we use
-device-tree properties to assign fixed PHB numbers to PCI addresses
-when available (meaning pSeries and PowerNV cases). We also use a bitmap
-to allow dynamic PHB numbering when device-tree properties are not
-used. This bitmap keeps track of used PHB numbers and if a PHB is
-released (by hotplug operations for example), it allows the reuse of
-this PHB number, avoiding PCI address to change in case of device remove
-and re-add soon after. No functional changes were introduced.
-
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
----
- arch/powerpc/kernel/pci-common.c | 66 ++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 63 insertions(+), 3 deletions(-)
-
-v5:
-  * Improved comments.
-
-  * Changed the the Fixed PHB Numbering to set the PHB number bit
-  on the bitmap anyway, avoiding issues when system has virtual PHBs.
-
-  * Changed the device-tree check order - now, firstly we check for
-  "ibm,opal-phbid" and if it's not available, we try the pSeries case.
-
-v4:
-  * Minor change (if/else nesting rearranged).
-
-v3:
-  * Made the bitmap static.
-
-  * Rearranged if/else statements of Fixed PHB checking.
-
-  * Improved bitmap checkings, by removing loop and using instead the
-  find_first_zero_bit() function.
-
-  * Removed the single-statement function release_phb_number() by
-  adding its logic directly into pcibios_free_controller().
-
-  *Added check for bitmap size before clearing bit, avoiding memory
-  corruption.
-
-v2:
-  * Added the Fixed PHB Numbering mechanism based on device-tree
-  properties.
-
-  * Changed list approach to bitmap on the Dynamic PHB Numbering
-  mechanism.
-
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 0f7a60f..ad423c1 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -41,11 +41,17 @@
- #include <asm/ppc-pci.h>
- #include <asm/eeh.h>
- 
-+/* hose_spinlock protects accesses to the the phb_bitmap. */
- static DEFINE_SPINLOCK(hose_spinlock);
- LIST_HEAD(hose_list);
- 
--/* XXX kill that some day ... */
--static int global_phb_number;		/* Global phb counter */
-+/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
-+#define	MAX_PHBS	8192
-+
-+/* For dynamic PHB numbering: used/free PHBs tracking bitmap.
-+ * Accesses to this bitmap should be protected by hose_spinlock.
-+ */
-+static DECLARE_BITMAP(phb_bitmap, MAX_PHBS);
- 
- /* ISA Memory physical address */
- resource_size_t isa_mem_base;
-@@ -64,6 +70,55 @@ struct dma_map_ops *get_pci_dma_ops(void)
- }
- EXPORT_SYMBOL(get_pci_dma_ops);
- 
-+/* get_phb_number() function should run under locking
-+ * protection, specifically hose_spinlock.
-+ */
-+static int get_phb_number(struct device_node *dn)
-+{
-+	const __be64 *prop64;
-+	const __be32 *regs;
-+	int phb_id = 0;
-+
-+	/* Try fixed PHB numbering first, by checking archs and reading
-+	 * the respective device-tree properties. Firstly, try PowerNV by
-+	 * reading "ibm,opal-phbid", only present in OPAL environment.
-+	 */
-+	prop64 = of_get_property(dn, "ibm,opal-phbid", NULL);
-+	if (prop64) {
-+		phb_id = (int)(be64_to_cpup(prop64) & 0xFFFF);
-+
-+	} else if (machine_is(pseries)) {
-+		regs = of_get_property(dn, "reg", NULL);
-+		if (regs)
-+			phb_id = (int)(be32_to_cpu(regs[1]) & 0xFFFF);
-+	} else {
-+		goto dynamic_phb_numbering;
-+	}
-+
-+	/* If we have a huge PHB number obtained from device-tree, no need
-+	 * to worry with the bitmap. Otherwise, we need to be sure we're
-+	 * not trying to use the same PHB number twice.
-+	 */
-+	if (phb_id < MAX_PHBS) {
-+		if (test_bit(phb_id, phb_bitmap))
-+			goto dynamic_phb_numbering;
-+		set_bit(phb_id, phb_bitmap);
-+	}
-+
-+	return phb_id;
-+
-+	/* If not pSeries nor PowerNV, or if fixed PHB numbering tried to add
-+	 * the same PHB number twice, then fallback to dynamic PHB numbering.
-+	 */
-+dynamic_phb_numbering:
-+
-+	phb_id = find_first_zero_bit(phb_bitmap, MAX_PHBS);
-+	BUG_ON(phb_id >= MAX_PHBS); /* Reached maximum number of PHBs. */
-+	set_bit(phb_id, phb_bitmap);
-+
-+	return phb_id;
-+}
-+
- struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
- {
- 	struct pci_controller *phb;
-@@ -72,7 +127,7 @@ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
- 	if (phb == NULL)
- 		return NULL;
- 	spin_lock(&hose_spinlock);
--	phb->global_number = global_phb_number++;
-+	phb->global_number = get_phb_number(dev);
- 	list_add_tail(&phb->list_node, &hose_list);
- 	spin_unlock(&hose_spinlock);
- 	phb->dn = dev;
-@@ -94,6 +149,11 @@ EXPORT_SYMBOL_GPL(pcibios_alloc_controller);
- void pcibios_free_controller(struct pci_controller *phb)
- {
- 	spin_lock(&hose_spinlock);
-+
-+	/* Clear bit of phb_bitmap to allow reuse of this PHB number. */
-+	if (phb->global_number < MAX_PHBS)
-+		clear_bit(phb->global_number, phb_bitmap);
-+
- 	list_del(&phb->list_node);
- 	spin_unlock(&hose_spinlock);
- 
--- 
-2.1.0
-
+	Arnd
