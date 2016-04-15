@@ -1,28 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55017 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756984AbcDGQyL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 7 Apr 2016 12:54:11 -0400
-Date: Thu, 7 Apr 2016 11:54:01 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jisheng Zhang <jszhang@marvell.com>
-Cc: thomas.petazzoni@free-electrons.com, jason@lakedaemon.net,
-	bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/2] PCI: mvebu: trivial cleanup
-Message-ID: <20160407165400.GD8780@localhost>
-References: <1458122381-2280-1-git-send-email-jszhang@marvell.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1458122381-2280-1-git-send-email-jszhang@marvell.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1460654743-7896-10-git-send-email-lorenzo.pieralisi@arm.com>
+References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+	<1460654743-7896-10-git-send-email-lorenzo.pieralisi@arm.com>
+Date: Fri, 15 Apr 2016 13:29:14 -0500
+Message-ID: <CAOZdJXXtZq6uyE+5sseX7M_6Kq8wFG+37qd5TNSusKj=0gd8zA@mail.gmail.com>
+Subject: Re: [RFC PATCH 09/11] drivers: acpi: implement acpi_dma_configure
+From: Timur Tabi <timur@codeaurora.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: iommu@lists.linux-foundation.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	lkml <linux-kernel@vger.kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Hanjun Guo <hanjun.guo@linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, vikrams@codeaurora.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 16, 2016 at 05:59:39PM +0800, Jisheng Zhang wrote:
-> trivial clean ups to pci-mvebu.c
-> 
-> Jisheng Zhang (2):
->   PCI: mvebu: constify mvebu_pcie_pm_ops structure
->   PCI: mvebu: use SET_NOIRQ_SYSTEM_SLEEP_PM_OPS for mvebu_pcie_pm_ops
+On Thu, Apr 14, 2016 at 12:25 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> +void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+> +{
+> +       struct iommu_ops *iommu;
+> +
+> +       iommu = iort_iommu_configure(dev);
+> +
+> +       /*
+> +        * Assume dma valid range starts at 0 and covers the whole
+> +        * coherent_dma_mask.
+> +        */
+> +       arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
+> +                          attr == DEV_DMA_COHERENT);
+> +}
 
-Applied with Thomas' ack to pci/host-mvebu for v4.7, thanks!
+I have a network driver that is impacted by this code, so thank you
+for posting this. (See
+https://www.mail-archive.com/netdev@vger.kernel.org/msg106249.html).
+
+One one SOC, the driver needs to set the mask to 32 bits.  On another
+SOC, it needs to set it to 64 bits.  On device tree, the driver will
+use dma-ranges.
+
+In your patches, where is coherent_dma_mask initialized?  I found this
+code in add_smmu_platform_device(), but I think this is setting the
+mask for the IOMMU driver, not the individual devices.  Either way, I
+don't understand where the correct value is going to be overridden.
+
++       /*
++        * Set default dma mask value for the table walker,
++        * to be overridden on probing with correct value.
++        */
++       *pdev->dev.dma_mask = DMA_BIT_MASK(32);
++       pdev->dev.coherent_dma_mask = *pdev->dev.dma_mask;
+
+-- 
+Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project.
