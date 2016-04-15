@@ -1,100 +1,285 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 28 Apr 2016 10:45:17 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>, arnd@arndb.de,
-	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
-	hanjun.guo@linaro.org, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
 	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
 	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
 	msalter@redhat.com, linux-pci@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
 	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
 	jcm@redhat.com
-Subject: Re: [PATCH V6 05/13] acpi, pci: Support IO resources when parsing
- PCI host bridge resources.
-Message-ID: <20160428154517.GC15598@localhost>
+Subject: [PATCH V6 07/13] PCI: Provide common functions for ECAM mapping
+Date: Fri, 15 Apr 2016 19:06:42 +0200
+Message-Id: <1460740008-19489-8-git-send-email-tn@semihalf.com>
+In-Reply-To: <1460740008-19489-1-git-send-email-tn@semihalf.com>
 References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-6-git-send-email-tn@semihalf.com>
- <20160427023916.GF6789@localhost>
- <20160427141429.GA7324@red-moon>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160427141429.GA7324@red-moon>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 27, 2016 at 03:26:59PM +0100, Lorenzo Pieralisi wrote:
-> On Tue, Apr 26, 2016 at 09:39:16PM -0500, Bjorn Helgaas wrote:
-> > On Fri, Apr 15, 2016 at 07:06:40PM +0200, Tomasz Nowicki wrote:
-> > > Platforms that have memory mapped IO port (such as ARM64) need special
-> > > handling for PCI I/O resources. For host bridge's resource probing case
-> > > these resources need to be fixed up with pci_register_io_range/pci_remap_iospace etc.
-> > 
-> > ia64 also has memory-mapped I/O port space.  It would be ideal to find
-> > some way to handle ia64 and ARM64 similarly.  At the very least, we
-> > have to make sure that this doesn't break ia64.  The ia64 dense/sparse
-> > I/O spaces complicate things; I don't know if ARM64 has something
-> > similar or not.
-> 
-> No it does not, and that's exactly the same problem we faced with
-> the DT generic version of of_pci_range_to_resource() which basically
-> relies on PCI_IOBASE to be defined to add code that creates IO port
-> resources out of the MMIO resource describing how IO port space is
-> mapped to MMIO (physical) address space.
+From: Jayachandran C <jchandra@broadcom.com>
 
-Mapping IO port space into MMIO space is pretty common since most
-arches don't have inb/outb instructions like x86 does.  Several arches
-(at least ia64 and parisc) have some sort of sparse mapping, but my
-point is that the "dense" mapping (one byte MMIO space per IO port) is
-pretty similar across arches.
+Add config option PCI_GENERIC_ECAM and file drivers/pci/ecam.c to
+provide generic functions for accessing memory mapped PCI config space.
 
-There are differences in how we compute the MMIO address from the IO
-port number, of course, e.g., on arm64 the CPU virtual MMIO address is
-a simple offset from the IO port number, i.e., "vaddr = PCI_IOBASE +
-res->start" in pci_remap_iospace(), while on ia64, that CPU address is
-less constrained, i.e., "vaddr = space->mmio_base | port" in
-__ia64_mk_io_addr().
+The API is defined in drivers/pci/ecam.h and is written to replace the
+API in drivers/pci/host/pci-host-common.h. The file defines a new
+'struct pci_config_window' to hold the information related to a PCI
+config area and its mapping. This structure is expected to be used as
+sysdata for controllers that have ECAM based mapping.
 
-> IIRC everything hinges on PCI_IOBASE definition to make sure that
-> of_pci_range_to_resource() *works*, which means that if PCI_IOBASE is
-> not defined (ie IA64) that code - acpi_pci_root_remap_iospace() in this
-> case - does nothing.
+Helper functions are provided to setup the mapping, free the mapping
+and to implement the map_bus method in 'struct pci_ops'
 
-OK.  That's confusing to read, but I see that it probably works.
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+---
+ drivers/pci/Kconfig  |   3 ++
+ drivers/pci/Makefile |   2 +
+ drivers/pci/ecam.c   | 137 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/ecam.h   |  61 +++++++++++++++++++++++
+ 4 files changed, 203 insertions(+)
+ create mode 100644 drivers/pci/ecam.c
+ create mode 100644 drivers/pci/ecam.h
 
-> So acpi_pci_root_remap_iospace() is of_pci_range_to_resource() ACPI
-> equivalent + the pci_remap_iospace() call (I have to dig into the
-> logs to check why Liviu did not add a call to pci_remap_iospace()
-> in of_pci_get_host_bridge_resources() - I want to do that actually).
-> 
-> The point here is: IO space (in DT and ACPI) handling is arch specific.
-> 
-> For DT, by relying on PCI_IOBASE, we left that code in drivers/of and
-> it works (well, with some niggles - see the thread with Murali on IO
-> space on TI keystone) for ARM/ARM64.
-> 
-> http://www.spinics.net/lists/linux-pci/msg49725.html
-> 
-> What are we going to do with the ACPI version ?
-> 
-> Do we want to add an arch specific call that takes the raw resource
-> describing IO space and creates an IO port resource (and the MMIO
-> equivalent - that's what add_io_space() does in IA64) and use that
-> in generic ACPI parsing code ?
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 209292e..e930d62 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -83,6 +83,9 @@ config HT_IRQ
+ config PCI_ATS
+ 	bool
+ 
++config PCI_GENERIC_ECAM
++	bool
++
+ config PCI_IOV
+ 	bool "PCI IOV support"
+ 	depends on PCI
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 2154092..810aec8 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -55,6 +55,8 @@ obj-$(CONFIG_PCI_SYSCALL) += syscall.o
+ 
+ obj-$(CONFIG_PCI_STUB) += pci-stub.o
+ 
++obj-$(CONFIG_PCI_GENERIC_ECAM) += ecam.o
++
+ obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
+ 
+ obj-$(CONFIG_OF) += of.o
+diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
+new file mode 100644
+index 0000000..ff04c01
+--- /dev/null
++++ b/drivers/pci/ecam.c
+@@ -0,0 +1,137 @@
++/*
++ * Copyright 2016 Broadcom
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License, version 2, as
++ * published by the Free Software Foundation (the "GPL").
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License version 2 (GPLv2) for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * version 2 (GPLv2) along with this source code.
++ */
++
++#include <linux/device.h>
++#include <linux/io.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/pci.h>
++#include <linux/slab.h>
++
++#include "ecam.h"
++
++/*
++ * On 64 bit systems, we do a single ioremap for the whole config space
++ * since we have enough virtual address range available. On 32 bit, do an
++ * ioremap per bus.
++ */
++static const bool per_bus_mapping = !config_enabled(CONFIG_64BIT);
++
++/*
++ * Create a PCI config space window
++ *  - reserve mem region
++ *  - alloc struct pci_config_window with space for all mappings
++ *  - ioremap the config space
++ */
++struct pci_config_window *pci_generic_ecam_create(struct device *dev,
++				phys_addr_t addr, u8 bus_start, u8 bus_end,
++				struct pci_generic_ecam_ops *ops)
++{
++	struct pci_config_window *cfg;
++	unsigned int bus_shift, bus_range, bsz, mapsz;
++	int i, nidx;
++	int err = -ENOMEM;
++
++	if (bus_end < bus_start)
++		return ERR_PTR(-EINVAL);
++
++	bus_shift = ops->bus_shift;
++	bus_range = bus_end - bus_start + 1;
++	bsz = 1 << bus_shift;
++	nidx = per_bus_mapping ? bus_range : 1;
++	mapsz = per_bus_mapping ? bsz : bus_range * bsz;
++	cfg = kzalloc(sizeof(*cfg) + nidx * sizeof(cfg->win[0]), GFP_KERNEL);
++	if (!cfg)
++		return ERR_PTR(-ENOMEM);
++
++	cfg->bus_start = bus_start;
++	cfg->bus_end = bus_end;
++	cfg->ops = ops;
++
++	if (!request_mem_region(addr, bus_range * bsz, "Configuration Space"))
++		goto err_exit;
++
++	/* cfgaddr has to be set after request_mem_region */
++	cfg->cfgaddr = addr;
++
++	for (i = 0; i < nidx; i++) {
++		cfg->win[i] = ioremap(addr + i * mapsz, mapsz);
++		if (!cfg->win[i])
++			goto err_exit;
++	}
++
++	if (cfg->ops->init) {
++		err = cfg->ops->init(dev, cfg);
++		if (err)
++			goto err_exit;
++	}
++	return cfg;
++
++err_exit:
++	pci_generic_ecam_free(cfg);
++	return ERR_PTR(err);
++}
++
++/*
++ * Free a config space mapping
++ */
++void pci_generic_ecam_free(struct pci_config_window *cfg)
++{
++	unsigned int bus_range;
++	int i, nidx;
++
++	bus_range = cfg->bus_end - cfg->bus_start + 1;
++	nidx = per_bus_mapping ? bus_range : 1;
++	for (i = 0; i < nidx; i++)
++		if (cfg->win[i])
++			iounmap(cfg->win[i]);
++	if (cfg->cfgaddr)
++		release_mem_region(cfg->cfgaddr,
++				   bus_range << cfg->ops->bus_shift);
++	kfree(cfg);
++}
++
++/*
++ * Function to implement the pci_ops ->map_bus method
++ */
++void __iomem *pci_generic_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
++				       int where)
++{
++	struct pci_config_window *cfg = bus->sysdata;
++	unsigned int devfn_shift = cfg->ops->bus_shift - 8;
++	unsigned int busn = bus->number;
++	void __iomem *base;
++
++	if (busn < cfg->bus_start || busn > cfg->bus_end)
++		return NULL;
++
++	busn -= cfg->bus_start;
++	if (per_bus_mapping)
++		base = cfg->win[busn];
++	else
++		base = cfg->win[0] + (busn << cfg->ops->bus_shift);
++	return base + (devfn << devfn_shift) + where;
++}
++
++/* default ECAM ops */
++struct pci_generic_ecam_ops pci_generic_ecam_default_ops = {
++	.bus_shift	= 20,
++	.pci_ops		= {
++		.map_bus	= pci_generic_ecam_map_bus,
++		.read		= pci_generic_config_read,
++		.write		= pci_generic_config_write,
++	}
++};
+diff --git a/drivers/pci/ecam.h b/drivers/pci/ecam.h
+new file mode 100644
+index 0000000..34c0aba
+--- /dev/null
++++ b/drivers/pci/ecam.h
+@@ -0,0 +1,61 @@
++/*
++ * Copyright 2016 Broadcom
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License, version 2, as
++ * published by the Free Software Foundation (the "GPL").
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License version 2 (GPLv2) for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * version 2 (GPLv2) along with this source code.
++ */
++#ifndef DRIVERS_PCI_ECAM_H
++#define DRIVERS_PCI_ECAM_H
++
++#include <linux/kernel.h>
++#include <linux/platform_device.h>
++
++/*
++ * struct to hold pci ops and bus shift of the config window
++ * for a PCI controller.
++ */
++struct pci_config_window;
++struct pci_generic_ecam_ops {
++	unsigned int			bus_shift;
++	struct pci_ops			pci_ops;
++	int				(*init)(struct device *,
++						struct pci_config_window *);
++};
++
++/*
++ * struct to hold the mappings of a config space window. This
++ * will be allocated with enough entries in win[] to hold all
++ * the mappings for the bus range.
++ */
++struct pci_config_window {
++	phys_addr_t			cfgaddr;
++	u16				domain;
++	u8				bus_start;
++	u8				bus_end;
++	void				*priv;
++	struct pci_generic_ecam_ops	*ops;
++	void __iomem			*win[0];
++};
++
++/* create and free for pci_config_window */
++struct pci_config_window *pci_generic_ecam_create(struct device *dev,
++				phys_addr_t addr, u8 bus_start, u8 bus_end,
++				struct pci_generic_ecam_ops *ops);
++void pci_generic_ecam_free(struct pci_config_window *cfg);
++
++/* map_bus when ->sysdata is an instance of pci_config_window */
++void __iomem *pci_generic_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
++				       int where);
++/* default ECAM ops, bus shift 20, generic read and write */
++extern struct pci_generic_ecam_ops pci_generic_ecam_default_ops;
++
++#endif
+-- 
+1.9.1
 
-There's a lot of non-arch-specific stuff here, which is what's
-bothering me.  The arch-specific parts are:
-
-  - discovering IO port region (bus address start and size)
-  - discovering MMIO mapping address and size (CPU "mem" resource)
-  - discovering or assigning IO port base (CPU "io" resource)
-  - setting up whatever structures arch uses to implement inb()
-
-Once you have the CPU "mem" and "io" resources, the code to insert
-them into iomem_resource and ioport_resource and ioremap() the MMIO
-space should be pretty generic.  Right now that code is scattered
-through the arches and most of them don't do it correctly, e.g.,
-typically they don't request the "mem" resource.
