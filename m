@@ -1,42 +1,141 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:40677 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751508AbcDVAPC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Apr 2016 20:15:02 -0400
-Date: Fri, 22 Apr 2016 10:14:58 +1000
-From: Simon Horman <horms@verge.net.au>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Phil Edworthy <phil.edworthy@renesas.com>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-renesas-soc@vger.kernel.org,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v3] PCI: rcar-pcie: Remove Gen2 designation from Kconfig
-Message-ID: <20160422001455.GA25416@verge.net.au>
-References: <1461210715-29304-1-git-send-email-horms+renesas@verge.net.au>
- <CAMuHMdXtVvNERECxbp1EtJ1SNOQG-j_xtV3NpsGqgyDLmc7cOg@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [RFC PATCH 09/11] drivers: acpi: implement acpi_dma_configure
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1460654743-7896-10-git-send-email-lorenzo.pieralisi@arm.com>
+ <20160415161400.GC7973@localhost>
+Cc: Marc Zyngier <marc.zyngier@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+	linux-pci@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
+	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <5711177E.2000509@arm.com>
+Date: Fri, 15 Apr 2016 17:31:58 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMuHMdXtVvNERECxbp1EtJ1SNOQG-j_xtV3NpsGqgyDLmc7cOg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160415161400.GC7973@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 21, 2016 at 03:38:35PM +0200, Geert Uytterhoeven wrote:
-> On Thu, Apr 21, 2016 at 5:51 AM, Simon Horman
-> <horms+renesas@verge.net.au> wrote:
-> > It appears that Gen2 is a misnomer for the R-Car PCIE driver
-> > which also supports Gen 1 and Gen 3 SoCs. Accordingly, drop Gen 2
-> > from the help text and Kconfig symbol.
-> >
-> > Also, re-arange the Kconfig symbol name to use PCIE as the prefix.
-> > This appears to be in keeping with other PCIE Kconfig symbols.
-> >
-> > Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> > Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Acked-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Hi Bjorn,
 
-Thanks, I have queued this up.
+On 15/04/16 17:14, Bjorn Helgaas wrote:
+> On Thu, Apr 14, 2016 at 06:25:41PM +0100, Lorenzo Pieralisi wrote:
+>> On DT based systems, the of_dma_configure() API implements DMA configuration
+>> for a given device. On ACPI systems an API equivalent to of_dma_configure()
+>> is missing which implies that it is currently not possible to set-up DMA
+>> operations for devices through the ACPI generic kernel layer.
+>>
+>> This patch fills the gap by introducing acpi_dma_configure/deconfigure()
+>> calls, that carry out IOMMU configuration through IORT (on systems where
+>> it is present) and call arch_setup_dma_ops(...) with the retrieved
+>> parameters.
+>>
+>> The DMA range size passed to arch_setup_dma_ops() is sized according
+>> to the device coherent_dma_mask (starting at address 0x0), mirroring the
+>> DT probing path behaviour when a dma-ranges property is not provided
+>> for the device being probed; this changes the current arch_setup_dma_ops()
+>> call parameters in the ACPI probing case, but since arch_setup_dma_ops()
+>> is a NOP on all architectures but ARM/ARM64 this patch does not change
+>> the current kernel behaviour on them.
+>>
+>> This patch updates ACPI and PCI core code to use the newly introduced
+>> acpi_dma_configure function, providing the same functionality
+>> as of_dma_configure on ARM systems and leaving behaviour unchanged
+>> for all other arches.
+>>
+>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Robin Murphy <robin.murphy@arm.com>
+>> Cc: Tomasz Nowicki <tn@semihalf.com>
+>> Cc: Joerg Roedel <joro@8bytes.org>
+>> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+>
+> There's only a tiny PCI change in this series, so I assume somebody
+> else will merge all this.  Here's my ack for the PCI part:
+>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# for drivers/pci/probe.c change
+>
+> One question on use of pci_for_each_dma_alias() below.
+>
+>> +static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+>> +{
+>> +	u32 *rid = data;
+>> +
+>> +	*rid = alias;
+>> +	return 0;
+>> +}
+>> +
+>> +/**
+>> + * iort_iommu_configure - Set-up IOMMU configuration for a device.
+>> + *
+>> + * @dev: device that requires IOMMU set-up
+>> + *
+>> + * Returns: iommu_ops pointer on configuration success
+>> + *          NULL on configuration failure
+>> + */
+>> +struct iommu_ops *iort_iommu_configure(struct device *dev)
+>> +{
+>> +	struct acpi_iort_node *node, *parent;
+>> +	struct iommu_ops *ops = NULL;
+>> +	struct iommu_fwspec fwspec;
+>> +	struct iort_iommu_node *iommu_node;
+>> +	u32 rid = 0, devid = 0;
+>> +
+>> +	if (dev_is_pci(dev)) {
+>> +		struct pci_bus *bus = to_pci_dev(dev)->bus;
+>> +
+>> +		pci_for_each_dma_alias(to_pci_dev(dev), __get_pci_rid,
+>> +				       &rid);
+>
+> You end up with only the last DMA alias in "rid".  Is it really true
+> that you only need to call iort_dev_map_rid() for one of the aliases?
+
+Indeed - all we care about is what things look like by the time they 
+come out of the root complex on their way to the the IOMMU, so whatever 
+intermediate aliasing _within_ the PCI bus might happen along the way 
+doesn't actually matter.
+
+Robin.
+
+>> +		node = iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
+>> +				      iort_find_dev_callback, &bus->dev);
+>> +	} else
+>> +		node = iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
+>> +				      iort_find_dev_callback, dev);
+>> +
+>> +	if (!node)
+>> +		return NULL;
+>> +
+>> +	iort_dev_map_rid(node, rid, &devid, ACPI_IORT_NODE_SMMU);
+>> +
+>> +	parent = iort_find_parent_node(node, ACPI_IORT_NODE_SMMU);
+>> +
+>> +	if (!parent)
+>> +		return NULL;
+>> +
+>> +	iommu_node = iort_iommu_get_node(parent);
+>> +	ops = iommu_node->ops;
+>> +
+>> +	fwspec.fwnode = iommu_node->fwnode;
+>> +	fwspec.param_count = 1;
+>> +	fwspec.param[0] = devid;
+>> +
+>> +	if (!ops || !ops->fw_xlate || ops->fw_xlate(dev, &fwspec))
+>> +		return NULL;
+>> +
+>> +	return ops;
+>> +}
+> _______________________________________________
+> iommu mailing list
+> iommu@lists.linux-foundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/iommu
+>
+
