@@ -1,93 +1,59 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-References: <1461795744-28837-1-git-send-email-agraf@suse.de> <20160428162035.GB19785@localhost> <57223D46.7070102@suse.de> <20160428180641.GA25125@localhost> <57228317.1030808@suse.de> <20160429134126.GA949@localhost> <CAKv+Gu-4vqT-tQXdwJbLV0r3FhtrYk=TOWxDYS6LjG_BNf=b_A@mail.gmail.com> <20160429200609.GA28261@localhost>
-Mime-Version: 1.0 (1.0)
-In-Reply-To: <20160429200609.GA28261@localhost>
-Content-Type: text/plain;
-	charset=us-ascii
-Message-Id: <35998183-0322-49D4-91CD-4D441577C44F@linaro.org>
-Cc: Alexander Graf <agraf@suse.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH] arm64: Relocate screen_info.lfb_base on PCI BAR allocation
-Date: Fri, 29 Apr 2016 22:25:13 +0200
-To: Bjorn Helgaas <helgaas@kernel.org>
+Date: Fri, 15 Apr 2016 10:08:21 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joerg Roedel <jroedel@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, stable@vger.kernel.org,
+	=?utf-8?B?0J7Qu9C10LPQnNC+0YDQvtC3?= <oleg.moroz@mcc.vniiem.ru>,
+	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
+	Rob Groner <rgroner@rtd.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH 0/3] v4.4: Revert "PCI: Implement pcibios_alloc_irq() and
+Message-ID: <20160415150821.GA7973@localhost>
+References: <20160413055439.6877.68183.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160414155044.GB3886@suse.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160414155044.GB3886@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Apr 14, 2016 at 05:50:44PM +0200, Joerg Roedel wrote:
+> Hi Bjorn,
+> 
+> On Wed, Apr 13, 2016 at 12:56:59AM -0500, Bjorn Helgaas wrote:
+> > We reverted the following changes from v4.5 to fix a regression:
+> > 
+> >   8affb487d4a4 ("x86/PCI: Don't alloc pcibios-irq when MSI is enabled")
+> >   811a4e6fce09 ("PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed")
+> >   991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
+> 
+> Do you have a link to the thread about these issues? I'd like to have a
+> look at what has been tried to solve the regressions before the revert.
 
-> On 29 apr. 2016, at 22:06, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> 
->> On Fri, Apr 29, 2016 at 03:51:49PM +0200, Ard Biesheuvel wrote:
->>> On 29 April 2016 at 15:41, Bjorn Helgaas <helgaas@kernel.org> wrote:
->>>> On Thu, Apr 28, 2016 at 11:39:35PM +0200, Alexander Graf wrote:
->>>> On 28.04.16 20:06, Bjorn Helgaas wrote:
-> 
->>>>> If firmware is giving us a bare address of something, that seems like
->>>>> a clue that it might depend on that address staying the same.
->>>> 
->>>> Well, I'd look at it from the other side. It gives us a correct address
->>>> on entry with the system configured at exactly the state it's in on
->>>> entry. If Linux changes the system, some guarantees obviously don't work
->>>> anymore.
->>> 
->>> Can you point me to the part of the EFI spec that communicates this?
->>> I'm curious what the intent is and whether there's any indication that
->>> EFI expects the OS to preserve some configuration.  I don't think it's
->>> reasonable for the OS to preserve this sort of configuration because
->>> it limits how well we can support hotplug.
->>> 
->>> I wonder if we're using this frame buffer address as more than what
->>> EFI intended.  For example, maybe it was intended for use by an early
->>> console driver, but there's some other mechanism we should be using
->>> after that.
->> 
->> The UEFI spec describes this as follows (UEFIv2.6 section 11.9)
->> 
->> """
->> Graphics output may also be required as part of the startup of an
->> operating system. There are
->> potentially times in modern operating systems prior to the loading of
->> a high performance OS
->> graphics driver where access to graphics output device is required.
->> The Graphics Output Protocol
->> supports this capability by providing the EFI OS loader access to a
->> hardware frame buffer and
->> enough information to allow the OS to draw directly to the graphics
->> output device.
->> """
->> 
->> So the intent is to provide minimal framebuffer services until the
->> 'real' driver takes over.
-> 
-> Makes sense.  A 'real' driver for a PCI device would use
-> pci_register_driver() and use pci_resource_start() or similar to
-> locate the framebuffer, which would avoid the problem because the PCI
-> core doesn't change BARs while a driver owns the device.
-> 
->> The GOP protocol only describes the base and size of the framebuffer,
->> and the pixel format. At boot time, the early UEFI code in the kernel
->> could potentially figure out which PCI device it is related to, if
->> necessary, but i am not sure if this would solve the x86 case as well.
-> 
-> Does drivers/video/fbdev/efifb.c support only a single framebuffer
-> device?  If a system has several, how does it decide which to use?  I
-> assume UEFI would provide GOP for all the framebuffers?
-> 
+The revert was 6c777e8799a9 ("Revert "PCI, x86: Implement
+pcibios_alloc_irq() and pcibios_free_irq()"").
 
-Yes. The early efi code iterates over all gop instances to figure out which one is connected to the efi console.
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=111211
+Email discussion: http://lkml.kernel.org/r/56A27E7E.4080609@mcc.vniiem.ru
 
-> If we could fix this by making efifb claim a PCI device, I think that
-> would be cleaner.  I don't know how to figure out the correct device,
-> but that would solve the "BAR changed" problem, and it would have
-> cleaner ownership semantics, too.
+> I had a look at commit 991de2e59090 and noted that the main difference
+> it introduces is that the pcibios-irq is allocated earlier (probe time,
+> before the commit it was pci_enable_device() time). In fact, it is now
+> allocated before pci_enable_resources() has been called on the device
+> (as far as I can see). I wonder if the regression can be fixed by
+> also moving pci_enable_resources() to probe time.
 
-If the bus layout is static, the efi init code can record the segment/bus/device and match it with the kernel's view. is that guaranteed to be sufficient for all implementations of pci?
+I assume you're thinking about doing pci_enable_resources() before
+the core calls the driver's probe method?  One question there is how
+we would deal with pci_enable_device_mem().  If the core calls
+pci_enable_resources(), it has to assume the driver requires all BARs,
+and there are quite a few drivers that don't need the I/O BARs.
 
-> It looks like the current situation is that a device-specific driver
-> (radeon, i915, etc.) could claim the device via the usual
-> pci_register_driver() path, and the efifb driver could think it owns
-> the device at the same time.  This seems like too obvious a problem,
-> so maybe there's some ad hoc mechanism that resolves this?
+I'd be very glad if you poked at this a little more.  Jiang did a lot
+of nice work on IOAPIC hotplug, and I feel bad reverting this piece of
+it.  It's just that nobody so far has had the time or interest to work
+out a better fix.
+
+Bjorn
