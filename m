@@ -1,51 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:36587 "EHLO
-	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933812AbcDLS24 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 14:28:56 -0400
-Received: by mail-io0-f196.google.com with SMTP id s2so3758713iod.3
-        for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2016 11:28:56 -0700 (PDT)
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V6 00/13] Support for generic ACPI based PCI host
+ controller
+To: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org
+From: Jon Masters <jcm@redhat.com>
+Message-ID: <571130BB.9030508@redhat.com>
+Date: Fri, 15 Apr 2016 14:19:39 -0400
 MIME-Version: 1.0
-In-Reply-To: <570827D5.5060201@ti.com>
-References: <570827D5.5060201@ti.com>
-Date: Tue, 12 Apr 2016 13:28:55 -0500
-Message-ID: <CAA8O7CpAB18JOC6ri9xf_hnrKqRAjv5TdPO1cEHfd+98BhhV7A@mail.gmail.com>
-Subject: Re: Hot reset in downstream direction (RC to EP)
-From: L H <swdevgid@gmail.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I've never observed a hot reset during enumeration.  One of the
-possible triggers for the RC to issue a hot reset is after receipt of
-a fatal AER message (assuming AER is enabled).
+On 04/15/2016 01:06 PM, Tomasz Nowicki wrote:
+> From the functionality point of view this series might be split into the
+> following logic parts:
+> 1. Necessary fixes as the preparation for using driver on ARM64.
+> 2. New ECAM API and update for users of the pci-host-common API
+> 3. Use new MCFG interface and implement generic ACPI based PCI host controller driver.
+> 4. Enable above driver on ARM64
+> 
+> Patches has been built on top of 4.6-rc2 and can be found here:
+> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v6)
+> 
+> This has been tested on Cavium ThunderX server. Any help in reviewing and
+> testing is very appreciated.
+> 
+> v5 -> v6
+> - dropped idea of x86 MMCONFIG code refactoring
+> - integrated JC's patches which introduce new ECAM API:
+>   https://lkml.org/lkml/2016/4/11/907
+>   git: https://github.com/jchandra-brcm/linux/ (arm64-acpi-pci-v3)
+> - integrated Sinan's fix for releasing IO resources, see patch [06/13]
+> - added ACPI support for ThunderX ECAM and PEM drivers
+> - rebased to 4.6-rc2
 
-Lance
+JC: can you explicitly confirm that you're ok with letting Tomasz drive
+this? We would like to see one driver. Either that is Tomasz, or
+Lorenzo, or it is you. But we need to have one overall cooordinated
+effort to get this enablement into upstream as quickly as possible.
 
-On Fri, Apr 8, 2016 at 4:51 PM, Murali Karicheri <m-karicheri2@ti.com> wrote:
-> I see that hot reset is something the RC port initiate to have EP reset
-> through link management.
->
-> ==========================================================================
-> PCIe reset sequences – The PCI Express protocol specifies a hot reset
-> mechanism, where downstream components reset through link notification.
-> Root ports should validate that this mechanism can be applied and the
-> hot reset indication is properly detected by a remote device.
-> Endpoint applications should determine the level of chip reset desired
-> in case of hot reset detection on the link to validate proper functionality.
-> ===========================================================================
->
-> Does this happen during the enumeration? As this goes in in band, the EP's
-> link should be up. Can someone tell me what are the triggering points for
-> this from RC to EP? Does Linux RC support this? It is supposed to a bit
-> in RC's bridge configuration space that triggers this reset.
->
-> --
-> Murali Karicheri
-> Linux Kernel, Keystone
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Some of the Enterprise folks are going to otherwise end up in a very
+nasty situation of supporting the previous non-upstream patches for many
+years, which is absolutely something we want to avoid...
+
+Jon.
+
