@@ -1,140 +1,221 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:35098 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030369AbcDMJxZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 05:53:25 -0400
-Received: by mail-pa0-f42.google.com with SMTP id fs9so11996800pac.2
-        for <linux-pci@vger.kernel.org>; Wed, 13 Apr 2016 02:53:25 -0700 (PDT)
-Subject: Re: [PATCH v8 08/45] powerpc/powernv: Fix initial IO and M32 segmap
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-9-git-send-email-gwshan@linux.vnet.ibm.com>
- <570DE553.80708@ozlabs.ru> <20160413075324.GA31320@gwshan>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
-	robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <570E170C.1040301@ozlabs.ru>
-Date: Wed, 13 Apr 2016 19:53:16 +1000
-MIME-Version: 1.0
-In-Reply-To: <20160413075324.GA31320@gwshan>
-Content-Type: text/plain; charset=koi8-r; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V6 13/13] pci, pci-thunder-pem: Add ACPI support for ThunderX PEM.
+Date: Fri, 15 Apr 2016 19:06:48 +0200
+Message-Id: <1460740008-19489-14-git-send-email-tn@semihalf.com>
+In-Reply-To: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/13/2016 05:53 PM, Gavin Shan wrote:
-> On Wed, Apr 13, 2016 at 04:21:07PM +1000, Alexey Kardashevskiy wrote:
->> On 02/17/2016 02:43 PM, Gavin Shan wrote:
->>> There are two arrays for IO and M32 segment maps on every PHB.
->>> The index of the arrays are segment number and the value stored
->>> in the corresponding element is PE number, indicating the segment
->>> is assigned to the PE. Initially, all elements in those two arrays
->>> are zeroes, meaning all segments are assigned to PE#0. It's wrong.
->>>
->>> This fixes the initial values in the elements of those two arrays
->>> to IODA_INVALID_PE, meaning all segments aren't assigned to any
->>> PE.
->>
->> This is ok.
->>
->>> In order to use IODA_INVALID_PE (-1) to represent invalid PE
->>> number, the types of those two arrays are changed from "unsigned int"
->>> to "int".
->>
->> "unsigned" can carry (-1) perfectly fine, just add a type cast to
->> IODA_INVALID_PE:
->>
->> #define IODA_INVALID_PE    (unsigned int)(-1)
->>
->> Using "signed" type for indexes which cannot be negative does not make much
->> sense - instead of checking for the upper boundary, you have to check for "<
->> 0" too.
->>
->> OPAL uses unsigned type for PE (uint64_t or uint32_t or uint16_t - this is
->> quite funny).
->>
->> pnv_ioda_pe::pe_number is "unsigned" and this pe_number is the same thing as
->> I can see in pnv_ioda_setup_dev_PE().
->>
->> Some printk() print the PE number as "%x" (which implies "unsigned").
->>
->
-> Yes, I can simply have something like below when PE number as well as
-> segment index are represented by "unsigned int" values, right?
->
-> #define IODA_INVALID_PE		0xffffffff
+This patch uses DECLARE_ACPI_MCFG_FIXUP to overwrite PCI config accessors.
+Also, it provides alternative way to find additional configuration region:
+thunder_pem_get_acpi_res is looking for host bridge's child (_HID "THRX0001")
+which contains mentioned configuration region description.
+See example below:
 
+Device (PEM0) {
+    Name (_HID, EISAID ("PNP0A08"))
+    Name (_CID, EISAID ("PNP0A03"))
 
-This will work too, yes.
+    [...]
 
->
->>
->> I suggest changing the pci_dn::pe_number type from "int" to "unsigned int" to
->> match pnv_ioda_pe::pe_number, in a separate patch. Or do not touch types for
->> now.
->>
->
-> Yes, I will have a separate patch right before this one to address it.
->
->>
->>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>> ---
->>>   arch/powerpc/platforms/powernv/pci-ioda.c | 9 +++++++--
->>>   arch/powerpc/platforms/powernv/pci.h      | 4 ++--
->>>   2 files changed, 9 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>> index 1d2514f..44cc5f3 100644
->>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>> @@ -3239,7 +3239,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->>>   	unsigned long size, m32map_off, pemap_off, iomap_off = 0;
->>>   	const __be64 *prop64;
->>>   	const __be32 *prop32;
->>> -	int len;
->>> +	int i, len;
->>>   	u64 phb_id;
->>>   	void *aux;
->>>   	long rc;
->>> @@ -3334,8 +3334,13 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->>>   	aux = memblock_virt_alloc(size, 0);
->>>   	phb->ioda.pe_alloc = aux;
->>>   	phb->ioda.m32_segmap = aux + m32map_off;
->>> -	if (phb->type == PNV_PHB_IODA1)
->>> +	for (i = 0; i < phb->ioda.total_pe_num; i++)
->>> +		phb->ioda.m32_segmap[i] = IODA_INVALID_PE;
->>> +	if (phb->type == PNV_PHB_IODA1) {
->>>   		phb->ioda.io_segmap = aux + iomap_off;
->>> +		for (i = 0; i < phb->ioda.total_pe_num; i++)
->>> +			phb->ioda.io_segmap[i] = IODA_INVALID_PE;
->>> +	}
->>>   	phb->ioda.pe_array = aux + pemap_off;
->>>   	set_bit(phb->ioda.reserved_pe_idx, phb->ioda.pe_alloc);
->>>
->>> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
->>> index 784882a..36c4965 100644
->>> --- a/arch/powerpc/platforms/powernv/pci.h
->>> +++ b/arch/powerpc/platforms/powernv/pci.h
->>> @@ -146,8 +146,8 @@ struct pnv_phb {
->>>   		struct pnv_ioda_pe	*pe_array;
->>>
->>>   		/* M32 & IO segment maps */
->>> -		unsigned int		*m32_segmap;
->>> -		unsigned int		*io_segmap;
->>> +		int			*m32_segmap;
->>> +		int			*io_segmap;
->>>
->>>   		/* IRQ chip */
->>>   		int			irq_chip_init;
->>>
->>
->>
->> --
->> Alexey
->>
->
+    Device (CFG0)
+    {
+      Name (_HID, "THRX0001") // PEM configuration space resources
+      Name (_CRS, ResourceTemplate () {
+        QWordMemory(ResourceConsumer, PosDecode, MinFixed, MaxFixed,
+          NonCacheable, ReadWrite, 0, 0x87e0c5000000, 0x87E0C5FFFFFF,
+          0, 0x01000000)
+      })
+    }
+}
 
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/pci/host/pci-thunder-pem.c | 137 ++++++++++++++++++++++++++++++++++---
+ 1 file changed, 128 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+index 91cfeb9..685cd79 100644
+--- a/drivers/pci/host/pci-thunder-pem.c
++++ b/drivers/pci/host/pci-thunder-pem.c
+@@ -18,6 +18,7 @@
+ #include <linux/module.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
++#include <linux/pci-acpi.h>
+ #include <linux/platform_device.h>
+ 
+ #include "../ecam.h"
+@@ -259,6 +260,83 @@ static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
+ 	return pci_generic_config_write(bus, devfn, where, size, val);
+ }
+ 
++#ifdef CONFIG_ACPI
++
++struct pem_acpi_res {
++	struct resource	resource;
++	int found;
++};
++
++static acpi_status
++thunder_pem_cfg(struct acpi_resource *resource, void *ctx)
++{
++	struct pem_acpi_res *pem_ctx = ctx;
++	struct resource *res = &pem_ctx->resource;
++
++	if ((resource->type != ACPI_RESOURCE_TYPE_ADDRESS64) ||
++	    (resource->data.address32.resource_type != ACPI_MEMORY_RANGE))
++		return AE_OK;
++
++	res->start = resource->data.address64.address.minimum;
++	res->end = resource->data.address64.address.maximum;
++	res->flags = IORESOURCE_MEM;
++
++	pem_ctx->found++;
++	return AE_OK;
++}
++
++static acpi_status
++thunder_pem_find_dev(acpi_handle handle, u32 level, void *ctx, void **ret)
++{
++	struct pem_acpi_res *pem_ctx = ctx;
++	struct acpi_device_info *info;
++	acpi_status status = AE_OK;
++
++	status = acpi_get_object_info(handle, &info);
++	if (ACPI_FAILURE(status))
++		return AE_OK;
++
++	if (strncmp(info->hardware_id.string, "THRX0001", 8) != 0)
++		goto out;
++
++	pem_ctx->found = 0;
++	status = acpi_walk_resources(handle, METHOD_NAME__CRS, thunder_pem_cfg,
++				     pem_ctx);
++	if (ACPI_FAILURE(status))
++		goto out;
++
++	if (pem_ctx->found)
++		status = AE_CTRL_TERMINATE;
++out:
++	kfree(info);
++	return status;
++}
++
++static struct resource *thunder_pem_get_acpi_res(struct device *dev)
++{
++	struct acpi_device *adev = ACPI_COMPANION(dev);
++	acpi_handle handle = acpi_device_handle(adev);
++	struct pem_acpi_res *pem_ctx;
++	acpi_status status;
++
++	pem_ctx = devm_kzalloc(dev, sizeof(*pem_ctx), GFP_KERNEL);
++	if (!pem_ctx)
++		return NULL;
++
++	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
++				     thunder_pem_find_dev, NULL, pem_ctx, NULL);
++	if (ACPI_FAILURE(status) || !pem_ctx->found)
++		return NULL;
++
++	return &pem_ctx->resource;
++}
++#else
++static struct resource *thunder_pem_get_acpi_res(struct device *dev)
++{
++	return NULL;
++}
++#endif
++
+ static int thunder_pem_init(struct device *dev, struct pci_config_window *cfg)
+ {
+ 	resource_size_t bar4_start;
+@@ -270,16 +348,20 @@ static int thunder_pem_init(struct device *dev, struct pci_config_window *cfg)
+ 	if (!pem_pci)
+ 		return -ENOMEM;
+ 
+-	pdev = to_platform_device(dev);
+-
+-	/*
+-	 * The second register range is the PEM bridge to the PCIe
+-	 * bus.  It has a different config access method than those
+-	 * devices behind the bridge.
+-	 */
+-	res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	if (acpi_disabled) {
++		pdev = to_platform_device(dev);
++
++		/*
++		 * The second register range is the PEM bridge to the PCIe
++		 * bus.  It has a different config access method than those
++		 * devices behind the bridge.
++		 */
++		res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	} else {
++		res_pem = thunder_pem_get_acpi_res(dev);
++	}
+ 	if (!res_pem) {
+-		dev_err(dev, "missing \"reg[1]\"property\n");
++		dev_err(dev, "missing configuration region\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -332,5 +414,42 @@ static struct platform_driver thunder_pem_driver = {
+ };
+ module_platform_driver(thunder_pem_driver);
+ 
++#ifdef CONFIG_ACPI
++
++static bool thunder_pem_acpi_init(struct pci_cfg_fixup *fixup,
++				 struct acpi_pci_root *root)
++{
++	u32 midr = read_cpuid_id();
++
++	return (MIDR_IMPLEMENTOR(midr) == ARM_CPU_IMP_CAVIUM) &&
++	    (MIDR_PARTNUM(midr) == CAVIUM_CPU_PART_THUNDERX);
++}
++
++DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
++			4, PCI_MCFG_BUS_ANY);
++DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
++			5, PCI_MCFG_BUS_ANY);
++DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
++			6, PCI_MCFG_BUS_ANY);
++DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
++			7, PCI_MCFG_BUS_ANY);
++DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
++			8, PCI_MCFG_BUS_ANY);
++DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
++			9, PCI_MCFG_BUS_ANY);
++DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
++			14, PCI_MCFG_BUS_ANY);
++DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
++			15, PCI_MCFG_BUS_ANY);
++DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
++			16, PCI_MCFG_BUS_ANY);
++DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
++			17, PCI_MCFG_BUS_ANY);
++DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
++			18, PCI_MCFG_BUS_ANY);
++DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
++			19, PCI_MCFG_BUS_ANY);
++#endif
++
+ MODULE_DESCRIPTION("Thunder PEM PCIe host driver");
+ MODULE_LICENSE("GPL v2");
 -- 
-Alexey
+1.9.1
+
