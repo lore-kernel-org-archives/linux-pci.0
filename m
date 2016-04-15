@@ -1,127 +1,392 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: Andrey Smirnov <andrew.smirnov@gmail.com>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	gary.bisson@boundarydevices.com
-Subject: [PATCH v2 2/3] PCI: imx6: Implement reset sequence for i.MX6+
-Date: Sun, 17 Apr 2016 22:51:16 -0700
-Message-Id: <1460958677-10604-2-git-send-email-andrew.smirnov@gmail.com>
-In-Reply-To: <1460958677-10604-1-git-send-email-andrew.smirnov@gmail.com>
-References: <1460958677-10604-1-git-send-email-andrew.smirnov@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:46797 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750914AbcDOSNV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 15 Apr 2016 14:13:21 -0400
+Date: Fri, 15 Apr 2016 13:13:14 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Hariprasad Shenai <hariprasad@chelsio.com>
+Cc: bhelgaas@google.com, davem@davemloft.net,
+	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	Casey Leedom <leedom@chelsio.com>,
+	Steve Wise <swise@opengridcomputing.com>,
+	nirranjan@chelsio.com, santosh@chelsio.com,
+	Hannes Reinecke <hare@suse.com>,
+	Ariel Elior <ariel.elior@qlogic.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH pci] pci: Add helper function to set VPD size
+Message-ID: <20160415181314.GB13979@localhost>
+References: <1460657525-17551-1-git-send-email-hariprasad@chelsio.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1460657525-17551-1-git-send-email-hariprasad@chelsio.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I.MX6+ has a dedicated bit for reseting PCIe core, which should be used
-instead of a regular reset sequence since using the latter will hang the
-SoC.
+[+cc Hannes, Ariel, LKML]
 
-This commit is based on c34068d48273e24d392d9a49a38be807954420ed from
-http://git.freescale.com/git/cgit.cgi/imx/linux-2.6-imx.git
+On Thu, Apr 14, 2016 at 11:42:05PM +0530, Hariprasad Shenai wrote:
+> commit 104daa71b396 ("PCI: Determine actual VPD size on first access")
+> introduced a regression in cxgb4 driver and used to fail in pci probe.
+> 
+> The problem is stemming from the fact that the Chelsio adapters actually
+> have two VPD structures stored in the VPD. An abbreviated on at Offset 0x0
+> and the complete VPD at Offset 0x400. The abbreviated one only contains
+> the PN, SN and EC Keywords, while the complete VPD contains those plus
+> various adapter constants contained in V0, V1, etc. And it also contains
+> the Base Ethernet MAC Address in the "NA" Keyword which the cxgb4 driver
+> needs when it can't contact the adapter firmware. (We don't have the "NA"
+> Keywork in the VPD Structure at Offset 0x0 because that's not an allowed
+> VPD Keyword in the PCI-E 3.0 specification.)
+> 
+> With the new code, the computed size of the VPD is 0x200 and so our efforts
+> to read the VPD at Offset 0x400 silently fails. We check the result of the
+> read looking for a signature 0x82 byte but we're checking against random
+> stack garbage.
+> 
+> The fix is to add a PCI helper function to set the VPD size, so the
+> driver can expicitly set the exact size of the VPD.
+> 
+> Fixes commit 104daa71b396 ("PCI: Determine actual VPD size on first access")
+> 
+> Signed-off-by: Casey Leedom <leedom@chelsio.com>
+> Signed-off-by: Hariprasad Shenai <hariprasad@chelsio.com>
 
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
----
+This looks good to me.  I applied it with the following changes to my
+for-linus branch for v4.6:
 
-Changes since v1:
+  - Split into two patches (PCI core and Chelsio).  I did this because
+    of the concern that bnx2x might also be broken.  But I looked
+    again, and I think bnx2x is fine because the driver computes the
+    size the same way the PCI core does, and I think it only reads up
+    to that size.  It'd be good if the bnx2x folks could verify this.
 
-	- Patchset is rebased against
-          https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-imx6
+  - Renamed pci_set_size_vpd() to pci_set_vpd_size() so it reads
+    better.
 
-	- DTS files changes moved into a separate patch
+  - Changed pci_set_vpd_size() from ssize_t to int, since it only
+    returns zero or a negative errno.  Also, t4_get_raw_vpd_params()
+    puts the return value into an int.
 
- drivers/pci/host/pci-imx6.c                 | 28 ++++++++++++++++++++++++++--
- include/linux/mfd/syscon/imx6q-iomuxc-gpr.h |  1 +
- 2 files changed, 27 insertions(+), 2 deletions(-)
+I'll append the patches as applied at the end.
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index c570bbb..834c5b8 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -33,7 +33,8 @@
+> ---
+>  drivers/net/ethernet/chelsio/cxgb4/t4_hw.c | 10 +++++++
+>  drivers/pci/access.c                       | 42 ++++++++++++++++++++++++++++++
+>  drivers/pci/pci.h                          |  1 +
+>  include/linux/pci.h                        |  1 +
+>  4 files changed, 54 insertions(+)
+> 
+> diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
+> index cc1736bece0f..2033159e26a5 100644
+> --- a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
+> +++ b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
+> @@ -2557,6 +2557,7 @@ void t4_get_regs(struct adapter *adap, void *buf, size_t buf_size)
+>  }
+>  
+>  #define EEPROM_STAT_ADDR   0x7bfc
+> +#define VPD_SIZE           0x800
+>  #define VPD_BASE           0x400
+>  #define VPD_BASE_OLD       0
+>  #define VPD_LEN            1024
+> @@ -2594,6 +2595,15 @@ int t4_get_raw_vpd_params(struct adapter *adapter, struct vpd_params *p)
+>  	if (!vpd)
+>  		return -ENOMEM;
+>  
+> +	/* We have two VPD data structures stored in the adapter VPD area.
+> +	 * By default, Linux calculates the size of the VPD area by traversing
+> +	 * the first VPD area at offset 0x0, so we need to tell the OS what
+> +	 * our real VPD size is.
+> +	 */
+> +	ret = pci_set_size_vpd(adapter->pdev, VPD_SIZE);
+> +	if (ret < 0)
+> +		goto out;
+> +
+>  	/* Card information normally starts at VPD_BASE but early cards had
+>  	 * it at 0.
+>  	 */
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index 01b9d0a00abc..e69b3877bd37 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -275,6 +275,19 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
+>  }
+>  EXPORT_SYMBOL(pci_write_vpd);
+>  
+> +/**
+> + * pci_set_size_vpd - Set size of Vital Product Data space
+> + * @dev:	pci device struct
+> + * @len:	size of vpd space
+> + */
+> +ssize_t pci_set_size_vpd(struct pci_dev *dev, size_t len)
+> +{
+> +	if (!dev->vpd || !dev->vpd->ops)
+> +		return -ENODEV;
+> +	return dev->vpd->ops->set_size(dev, len);
+> +}
+> +EXPORT_SYMBOL(pci_set_size_vpd);
+> +
+>  #define PCI_VPD_MAX_SIZE (PCI_VPD_ADDR_MASK + 1)
+>  
+>  /**
+> @@ -498,9 +511,23 @@ out:
+>  	return ret ? ret : count;
+>  }
+>  
+> +static ssize_t pci_vpd_set_size(struct pci_dev *dev, size_t len)
+> +{
+> +	struct pci_vpd *vpd = dev->vpd;
+> +
+> +	if (len == 0 || len > PCI_VPD_MAX_SIZE)
+> +		return -EIO;
+> +
+> +	vpd->valid = 1;
+> +	vpd->len = len;
+> +
+> +	return 0;
+> +}
+> +
+>  static const struct pci_vpd_ops pci_vpd_ops = {
+>  	.read = pci_vpd_read,
+>  	.write = pci_vpd_write,
+> +	.set_size = pci_vpd_set_size,
+>  };
+>  
+>  static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
+> @@ -533,9 +560,24 @@ static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
+>  	return ret;
+>  }
+>  
+> +static ssize_t pci_vpd_f0_set_size(struct pci_dev *dev, size_t len)
+> +{
+> +	struct pci_dev *tdev = pci_get_slot(dev->bus,
+> +					    PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
+> +	ssize_t ret;
+> +
+> +	if (!tdev)
+> +		return -ENODEV;
+> +
+> +	ret = pci_set_size_vpd(tdev, len);
+> +	pci_dev_put(tdev);
+> +	return ret;
+> +}
+> +
+>  static const struct pci_vpd_ops pci_vpd_f0_ops = {
+>  	.read = pci_vpd_f0_read,
+>  	.write = pci_vpd_f0_write,
+> +	.set_size = pci_vpd_f0_set_size,
+>  };
+>  
+>  int pci_vpd_init(struct pci_dev *dev)
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index d0fb93481573..8239d186f1ed 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -97,6 +97,7 @@ static inline bool pci_has_subordinate(struct pci_dev *pci_dev)
+>  struct pci_vpd_ops {
+>  	ssize_t (*read)(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+>  	ssize_t (*write)(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+> +	ssize_t (*set_size)(struct pci_dev *dev, size_t len);
+>  };
+>  
+>  struct pci_vpd {
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 004b8133417d..1ab1b7458a8b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1111,6 +1111,7 @@ void pci_unlock_rescan_remove(void);
+>  /* Vital product data routines */
+>  ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+>  ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
+> +ssize_t pci_set_size_vpd(struct pci_dev *dev, size_t len);
+>  
+>  /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
+>  resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
+> -- 
+> 2.3.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+commit cb92148b58a49455f3a7204eba3aee09a8b7683c
+Author: Hariprasad Shenai <hariprasad@chelsio.com>
+Date:   Fri Apr 15 13:00:11 2016 -0500
+
+    PCI: Add pci_set_vpd_size() to set VPD size
+    
+    After 104daa71b396 ("PCI: Determine actual VPD size on first access"), the
+    PCI core computes the valid VPD size by parsing the VPD starting at offset
+    0x0.  We don't attempt to read past that valid size because that causes
+    some devices to crash.
+    
+    However, some devices do have data past that valid size.  For example,
+    Chelsio adapters contain two VPD structures, and the driver needs both of
+    them.
+    
+    Add pci_set_vpd_size().  If a driver knows it is safe to read past the end
+    of the VPD data structure at offset 0, it can use pci_set_vpd_size() to
+    allow access to as much data as it needs.
+    
+    [bhelgaas: changelog, split patches, rename to pci_set_vpd_size() and
+    return int (not ssize_t)]
+    Fixes: 104daa71b396 ("PCI: Determine actual VPD size on first access")
+    Tested-by: Steve Wise <swise@opengridcomputing.com>
+    Signed-off-by: Casey Leedom <leedom@chelsio.com>
+    Signed-off-by: Hariprasad Shenai <hariprasad@chelsio.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 01b9d0a..d11cdbb 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -275,6 +275,19 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
+ }
+ EXPORT_SYMBOL(pci_write_vpd);
  
- enum imx6_pcie_variants {
- 	IMX6Q,
--	IMX6SX
-+	IMX6SX,
-+	IMX6QP,
- };
- 
- struct imx6_pcie {
-@@ -253,6 +254,11 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
- 				   IMX6SX_GPR5_PCIE_BTNRST_RESET,
- 				   IMX6SX_GPR5_PCIE_BTNRST_RESET);
- 		break;
-+	case IMX6QP:
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+				   IMX6Q_GPR1_PCIE_SW_RST,
-+				   IMX6Q_GPR1_PCIE_SW_RST);
-+		break;
- 	case IMX6Q:
- 		/*
- 		 * If the bootloader already enabled the link we need some special
-@@ -307,6 +313,7 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN, 0);
- 		break;
-+	case IMX6QP: 		/* FALLTHROUGH */
- 	case IMX6Q:
- 		/* power up core phy and enable ref clock */
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-@@ -367,9 +374,22 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
- 	}
- 
--	if (imx6_pcie->variant == IMX6SX)
-+	switch (imx6_pcie->variant) {
-+	case IMX6SX:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
- 				   IMX6SX_GPR5_PCIE_BTNRST_RESET, 0);
-+		break;
-+	case IMX6QP:
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
-+				   IMX6Q_GPR1_PCIE_SW_RST, 0);
++/**
++ * pci_set_vpd_size - Set size of Vital Product Data space
++ * @dev:	pci device struct
++ * @len:	size of vpd space
++ */
++int pci_set_vpd_size(struct pci_dev *dev, size_t len)
++{
++	if (!dev->vpd || !dev->vpd->ops)
++		return -ENODEV;
++	return dev->vpd->ops->set_size(dev, len);
++}
++EXPORT_SYMBOL(pci_set_vpd_size);
 +
-+		usleep_range(200, 500);
-+		break;
-+	case IMX6Q:		/* Nothing to do */
-+		break;
-+	default:
-+		BUG();
-+	}
+ #define PCI_VPD_MAX_SIZE (PCI_VPD_ADDR_MASK + 1)
  
- 	return 0;
+ /**
+@@ -498,9 +511,23 @@ out:
+ 	return ret ? ret : count;
+ }
  
-@@ -601,6 +621,9 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 	if (of_device_is_compatible(pp->dev->of_node,
- 				    "fsl,imx6sx-pcie"))
- 		imx6_pcie->variant = IMX6SX;
-+	else if (of_device_is_compatible(pp->dev->of_node,
-+					 "fsl,imx6qp-pcie"))
-+		imx6_pcie->variant = IMX6QP;
- 	else
- 		imx6_pcie->variant = IMX6Q;
- 
-@@ -697,6 +720,7 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
- static const struct of_device_id imx6_pcie_of_match[] = {
- 	{ .compatible = "fsl,imx6q-pcie", },
- 	{ .compatible = "fsl,imx6sx-pcie", },
-+	{ .compatible = "fsl,imx6qp-pcie", },
- 	{},
++static int pci_vpd_set_size(struct pci_dev *dev, size_t len)
++{
++	struct pci_vpd *vpd = dev->vpd;
++
++	if (len == 0 || len > PCI_VPD_MAX_SIZE)
++		return -EIO;
++
++	vpd->valid = 1;
++	vpd->len = len;
++
++	return 0;
++}
++
+ static const struct pci_vpd_ops pci_vpd_ops = {
+ 	.read = pci_vpd_read,
+ 	.write = pci_vpd_write,
++	.set_size = pci_vpd_set_size,
  };
- MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
-diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-index 238c8db..5b08e3c 100644
---- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-+++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-@@ -95,6 +95,7 @@
- #define IMX6Q_GPR0_DMAREQ_MUX_SEL0_IOMUX	BIT(0)
  
- #define IMX6Q_GPR1_PCIE_REQ_MASK		(0x3 << 30)
-+#define IMX6Q_GPR1_PCIE_SW_RST			BIT(29)
- #define IMX6Q_GPR1_PCIE_EXIT_L1			BIT(28)
- #define IMX6Q_GPR1_PCIE_RDY_L23			BIT(27)
- #define IMX6Q_GPR1_PCIE_ENTER_L1		BIT(26)
--- 
-2.5.5
+ static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
+@@ -533,9 +560,24 @@ static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
+ 	return ret;
+ }
+ 
++static int pci_vpd_f0_set_size(struct pci_dev *dev, size_t len)
++{
++	struct pci_dev *tdev = pci_get_slot(dev->bus,
++					    PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
++	int ret;
++
++	if (!tdev)
++		return -ENODEV;
++
++	ret = pci_set_vpd_size(tdev, len);
++	pci_dev_put(tdev);
++	return ret;
++}
++
+ static const struct pci_vpd_ops pci_vpd_f0_ops = {
+ 	.read = pci_vpd_f0_read,
+ 	.write = pci_vpd_f0_write,
++	.set_size = pci_vpd_f0_set_size,
+ };
+ 
+ int pci_vpd_init(struct pci_dev *dev)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index d0fb934..a814bbb 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -97,6 +97,7 @@ static inline bool pci_has_subordinate(struct pci_dev *pci_dev)
+ struct pci_vpd_ops {
+ 	ssize_t (*read)(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+ 	ssize_t (*write)(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
++	int (*set_size)(struct pci_dev *dev, size_t len);
+ };
+ 
+ struct pci_vpd {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 004b813..932ec74 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1111,6 +1111,7 @@ void pci_unlock_rescan_remove(void);
+ /* Vital product data routines */
+ ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
+ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
++int pci_set_vpd_size(struct pci_dev *dev, size_t len);
+ 
+ /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
+ resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
+
+commit 67e658794ca191b3221b143f2a1c10d002c40bc8
+Author: Hariprasad Shenai <hariprasad@chelsio.com>
+Date:   Fri Apr 15 13:00:18 2016 -0500
+
+    cxgb4: Set VPD size so we can read both VPD structures
+    
+    Chelsio adapters have two VPD structures stored in the VPD:
+    
+      - offset 0x000: an abbreviated VPD, and
+      - offset 0x400: the complete VPD.
+    
+    After 104daa71b396 ("PCI: Determine actual VPD size on first access"), the
+    PCI core computes the valid VPD size by parsing the VPD starting at offset
+    0x0.  That size only includes the abbreviated VPD structure, so reads of
+    the complete VPD at 0x400 fail.
+    
+    Explicitly set the VPD size with pci_set_vpd_size() so the driver can read
+    both VPD structures.
+    
+    [bhelgaas: changelog, split patches, rename to pci_set_vpd_size() and
+    return int (not ssize_t)]
+    Fixes: 104daa71b396 ("PCI: Determine actual VPD size on first access")
+    Tested-by: Steve Wise <swise@opengridcomputing.com>
+    Signed-off-by: Casey Leedom <leedom@chelsio.com>
+    Signed-off-by: Hariprasad Shenai <hariprasad@chelsio.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
+index cc1736b..c7efb11 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
+@@ -2557,6 +2557,7 @@ void t4_get_regs(struct adapter *adap, void *buf, size_t buf_size)
+ }
+ 
+ #define EEPROM_STAT_ADDR   0x7bfc
++#define VPD_SIZE           0x800
+ #define VPD_BASE           0x400
+ #define VPD_BASE_OLD       0
+ #define VPD_LEN            1024
+@@ -2594,6 +2595,15 @@ int t4_get_raw_vpd_params(struct adapter *adapter, struct vpd_params *p)
+ 	if (!vpd)
+ 		return -ENOMEM;
+ 
++	/* We have two VPD data structures stored in the adapter VPD area.
++	 * By default, Linux calculates the size of the VPD area by traversing
++	 * the first VPD area at offset 0x0, so we need to tell the OS what
++	 * our real VPD size is.
++	 */
++	ret = pci_set_vpd_size(adapter->pdev, VPD_SIZE);
++	if (ret < 0)
++		goto out;
++
+ 	/* Card information normally starts at VPD_BASE but early cards had
+ 	 * it at 0.
+ 	 */
