@@ -1,105 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53227 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751303AbcD2VUZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Apr 2016 17:20:25 -0400
-Date: Fri, 29 Apr 2016 16:20:21 -0500
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 15 Apr 2016 11:14:00 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Alexander Graf <agraf@suse.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH] arm64: Relocate screen_info.lfb_base on PCI BAR
- allocation
-Message-ID: <20160429212021.GA5359@localhost>
-References: <1461795744-28837-1-git-send-email-agraf@suse.de>
- <20160428162035.GB19785@localhost>
- <57223D46.7070102@suse.de>
- <20160428180641.GA25125@localhost>
- <57228317.1030808@suse.de>
- <20160429134126.GA949@localhost>
- <CAKv+Gu-4vqT-tQXdwJbLV0r3FhtrYk=TOWxDYS6LjG_BNf=b_A@mail.gmail.com>
- <20160429200609.GA28261@localhost>
- <35998183-0322-49D4-91CD-4D441577C44F@linaro.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: iommu@lists.linux-foundation.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Will Deacon <will.deacon@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC PATCH 09/11] drivers: acpi: implement acpi_dma_configure
+Message-ID: <20160415161400.GC7973@localhost>
+References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1460654743-7896-10-git-send-email-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <35998183-0322-49D4-91CD-4D441577C44F@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1460654743-7896-10-git-send-email-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 29, 2016 at 10:25:13PM +0200, Ard Biesheuvel wrote:
+On Thu, Apr 14, 2016 at 06:25:41PM +0100, Lorenzo Pieralisi wrote:
+> On DT based systems, the of_dma_configure() API implements DMA configuration
+> for a given device. On ACPI systems an API equivalent to of_dma_configure()
+> is missing which implies that it is currently not possible to set-up DMA
+> operations for devices through the ACPI generic kernel layer.
 > 
-> > On 29 apr. 2016, at 22:06, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > 
-> >> On Fri, Apr 29, 2016 at 03:51:49PM +0200, Ard Biesheuvel wrote:
-> >>> On 29 April 2016 at 15:41, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >>>> On Thu, Apr 28, 2016 at 11:39:35PM +0200, Alexander Graf wrote:
-> >>>> On 28.04.16 20:06, Bjorn Helgaas wrote:
-> > 
-> >>>>> If firmware is giving us a bare address of something, that seems like
-> >>>>> a clue that it might depend on that address staying the same.
-> >>>> 
-> >>>> Well, I'd look at it from the other side. It gives us a correct address
-> >>>> on entry with the system configured at exactly the state it's in on
-> >>>> entry. If Linux changes the system, some guarantees obviously don't work
-> >>>> anymore.
-> >>> 
-> >>> Can you point me to the part of the EFI spec that communicates this?
-> >>> I'm curious what the intent is and whether there's any indication that
-> >>> EFI expects the OS to preserve some configuration.  I don't think it's
-> >>> reasonable for the OS to preserve this sort of configuration because
-> >>> it limits how well we can support hotplug.
-> >>> 
-> >>> I wonder if we're using this frame buffer address as more than what
-> >>> EFI intended.  For example, maybe it was intended for use by an early
-> >>> console driver, but there's some other mechanism we should be using
-> >>> after that.
-> >> 
-> >> The UEFI spec describes this as follows (UEFIv2.6 section 11.9)
-> >> 
-> >> """
-> >> Graphics output may also be required as part of the startup of an
-> >> operating system. There are
-> >> potentially times in modern operating systems prior to the loading of
-> >> a high performance OS
-> >> graphics driver where access to graphics output device is required.
-> >> The Graphics Output Protocol
-> >> supports this capability by providing the EFI OS loader access to a
-> >> hardware frame buffer and
-> >> enough information to allow the OS to draw directly to the graphics
-> >> output device.
-> >> """
-> >> 
-> >> So the intent is to provide minimal framebuffer services until the
-> >> 'real' driver takes over.
-> > 
-> > Makes sense.  A 'real' driver for a PCI device would use
-> > pci_register_driver() and use pci_resource_start() or similar to
-> > locate the framebuffer, which would avoid the problem because the PCI
-> > core doesn't change BARs while a driver owns the device.
-> > 
-> >> The GOP protocol only describes the base and size of the framebuffer,
-> >> and the pixel format. At boot time, the early UEFI code in the kernel
-> >> could potentially figure out which PCI device it is related to, if
-> >> necessary, but i am not sure if this would solve the x86 case as well.
-> > 
-> > Does drivers/video/fbdev/efifb.c support only a single framebuffer
-> > device?  If a system has several, how does it decide which to use?  I
-> > assume UEFI would provide GOP for all the framebuffers?
-> > 
+> This patch fills the gap by introducing acpi_dma_configure/deconfigure()
+> calls, that carry out IOMMU configuration through IORT (on systems where
+> it is present) and call arch_setup_dma_ops(...) with the retrieved
+> parameters.
 > 
-> Yes. The early efi code iterates over all gop instances to figure out which one is connected to the efi console.
+> The DMA range size passed to arch_setup_dma_ops() is sized according
+> to the device coherent_dma_mask (starting at address 0x0), mirroring the
+> DT probing path behaviour when a dma-ranges property is not provided
+> for the device being probed; this changes the current arch_setup_dma_ops()
+> call parameters in the ACPI probing case, but since arch_setup_dma_ops()
+> is a NOP on all architectures but ARM/ARM64 this patch does not change
+> the current kernel behaviour on them.
 > 
-> > If we could fix this by making efifb claim a PCI device, I think that
-> > would be cleaner.  I don't know how to figure out the correct device,
-> > but that would solve the "BAR changed" problem, and it would have
-> > cleaner ownership semantics, too.
+> This patch updates ACPI and PCI core code to use the newly introduced
+> acpi_dma_configure function, providing the same functionality
+> as of_dma_configure on ARM systems and leaving behaviour unchanged
+> for all other arches.
 > 
-> If the bus layout is static, the efi init code can record the segment/bus/device and match it with the kernel's view. is that guaranteed to be sufficient for all implementations of pci?
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Tomasz Nowicki <tn@semihalf.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 
-In theory, no.  The kernel can reassign bus numbers to make space for
-hotplug devices.  In practice, they're like BARs: if the firmware sets
-them up, we don't normally change them unless they're obviously
-broken.
+There's only a tiny PCI change in this series, so I assume somebody
+else will merge all this.  Here's my ack for the PCI part:
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# for drivers/pci/probe.c change
+
+One question on use of pci_for_each_dma_alias() below.
+
+> +static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+> +{
+> +	u32 *rid = data;
+> +
+> +	*rid = alias;
+> +	return 0;
+> +}
+> +
+> +/**
+> + * iort_iommu_configure - Set-up IOMMU configuration for a device.
+> + *
+> + * @dev: device that requires IOMMU set-up
+> + *
+> + * Returns: iommu_ops pointer on configuration success
+> + *          NULL on configuration failure
+> + */
+> +struct iommu_ops *iort_iommu_configure(struct device *dev)
+> +{
+> +	struct acpi_iort_node *node, *parent;
+> +	struct iommu_ops *ops = NULL;
+> +	struct iommu_fwspec fwspec;
+> +	struct iort_iommu_node *iommu_node;
+> +	u32 rid = 0, devid = 0;
+> +
+> +	if (dev_is_pci(dev)) {
+> +		struct pci_bus *bus = to_pci_dev(dev)->bus;
+> +
+> +		pci_for_each_dma_alias(to_pci_dev(dev), __get_pci_rid,
+> +				       &rid);
+
+You end up with only the last DMA alias in "rid".  Is it really true
+that you only need to call iort_dev_map_rid() for one of the aliases?
+
+> +		node = iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
+> +				      iort_find_dev_callback, &bus->dev);
+> +	} else
+> +		node = iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
+> +				      iort_find_dev_callback, dev);
+> +
+> +	if (!node)
+> +		return NULL;
+> +
+> +	iort_dev_map_rid(node, rid, &devid, ACPI_IORT_NODE_SMMU);
+> +
+> +	parent = iort_find_parent_node(node, ACPI_IORT_NODE_SMMU);
+> +
+> +	if (!parent)
+> +		return NULL;
+> +
+> +	iommu_node = iort_iommu_get_node(parent);
+> +	ops = iommu_node->ops;
+> +
+> +	fwspec.fwnode = iommu_node->fwnode;
+> +	fwspec.param_count = 1;
+> +	fwspec.param[0] = devid;
+> +
+> +	if (!ops || !ops->fw_xlate || ops->fw_xlate(dev, &fwspec))
+> +		return NULL;
+> +
+> +	return ops;
+> +}
