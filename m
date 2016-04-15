@@ -1,99 +1,352 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p3plsmtps2ded01.prod.phx3.secureserver.net ([208.109.80.58]:60441
-	"EHLO p3plsmtps2ded01.prod.phx3.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760550AbcDEXlC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 5 Apr 2016 19:41:02 -0400
-From: Jake Oshins <jakeo@microsoft.com>
-To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com,
-	helgaas@kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v5 4/6] drivers:hv: Track allocations of children of hv_vmbus in private resource tree
-Date: Tue,  5 Apr 2016 18:18:20 -0700
-Message-Id: <1459905502-20798-5-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1459905502-20798-1-git-send-email-jakeo@microsoft.com>
-References: <1459905502-20798-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V6 04/13] pci, of: Move the PCI I/O space management to PCI core code.
+Date: Fri, 15 Apr 2016 19:06:39 +0200
+Message-Id: <1460740008-19489-5-git-send-email-tn@semihalf.com>
+In-Reply-To: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch changes vmbus_allocate_mmio() and vmbus_free_mmio() so
-that when child paravirtual devices allocate memory-mapped I/O
-space, they allocate it privately from a resource tree pointed
-at by hyperv_mmio and also by the public resource tree
-iomem_resource.  This allows the region to be marked as "busy"
-in the private tree, but a "bridge window" in the public tree,
-guaranteeing that no two bridge windows will overlap each other
-but while also allowing the PCI device children of the bridge
-windows to overlap that window.
+No functional changes in this patch.
 
-One might conclude that this belongs in the pnp layer, rather
-than in this driver.  Rafael Wysocki, the maintainter of the
-pnp layer, has previously asked that we not modify the pnp layer
-as it is considered deprecated.  This patch is thus essentially
-a workaround.
+PCI I/O space mapping code does not depend on OF, therefore it can be
+moved to PCI core code. This way we will be able to use it
+e.g. in ACPI PCI code.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+CC: Arnd Bergmann <arnd@arndb.de>
+CC: Liviu Dudau <Liviu.Dudau@arm.com>
+CC: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
 ---
- drivers/hv/vmbus_drv.c | 22 +++++++++++++++++++++-
- 1 file changed, 21 insertions(+), 1 deletion(-)
+ drivers/of/address.c       | 116 +--------------------------------------------
+ drivers/pci/pci.c          | 115 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/of_address.h |   9 ----
+ include/linux/pci.h        |   5 ++
+ 4 files changed, 121 insertions(+), 124 deletions(-)
 
-diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-index 1ce47d0..dfc6149 100644
---- a/drivers/hv/vmbus_drv.c
-+++ b/drivers/hv/vmbus_drv.c
-@@ -1128,7 +1128,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 			resource_size_t size, resource_size_t align,
- 			bool fb_overlap_ok)
- {
--	struct resource *iter;
-+	struct resource *iter, *shadow;
- 	resource_size_t range_min, range_max, start, local_min, local_max;
- 	const char *dev_n = dev_name(&device_obj->device);
- 	u32 fb_end = screen_info.lfb_base + (screen_info.lfb_size << 1);
-@@ -1170,12 +1170,22 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 
- 			start = (local_min + align - 1) & ~(align - 1);
- 			for (; start + size - 1 <= local_max; start += align) {
-+				shadow = __request_region(iter, start,
-+							  size,
-+							  NULL,
-+							  IORESOURCE_BUSY);
-+				if (!shadow)
-+					continue;
-+
- 				*new = request_mem_region_exclusive(start, size,
- 								    dev_n);
- 				if (*new) {
-+					shadow->name = (char *)*new;
- 					retval = 0;
- 					goto exit;
- 				}
-+
-+				__release_region(iter, start, size);
- 			}
- 		}
- 	}
-@@ -1196,7 +1206,17 @@ EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
-  */
- void vmbus_free_mmio(resource_size_t start, resource_size_t size)
- {
-+	struct resource *iter;
-+
-+	down(&hyperv_mmio_lock);
-+	for (iter = hyperv_mmio; iter; iter = iter->sibling) {
-+		if ((iter->start >= start + size) || (iter->end <= start))
-+			continue;
-+
-+		__release_region(iter, start, size);
-+	}
- 	release_mem_region(start, size);
-+	up(&hyperv_mmio_lock);
- 
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 91a469d..0a553c0 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -4,6 +4,7 @@
+ #include <linux/ioport.h>
+ #include <linux/module.h>
+ #include <linux/of_address.h>
++#include <linux/pci.h>
+ #include <linux/pci_regs.h>
+ #include <linux/sizes.h>
+ #include <linux/slab.h>
+@@ -673,121 +674,6 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
  }
- EXPORT_SYMBOL_GPL(vmbus_free_mmio);
+ EXPORT_SYMBOL(of_get_address);
+ 
+-#ifdef PCI_IOBASE
+-struct io_range {
+-	struct list_head list;
+-	phys_addr_t start;
+-	resource_size_t size;
+-};
+-
+-static LIST_HEAD(io_range_list);
+-static DEFINE_SPINLOCK(io_range_lock);
+-#endif
+-
+-/*
+- * Record the PCI IO range (expressed as CPU physical address + size).
+- * Return a negative value if an error has occured, zero otherwise
+- */
+-int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+-{
+-	int err = 0;
+-
+-#ifdef PCI_IOBASE
+-	struct io_range *range;
+-	resource_size_t allocated_size = 0;
+-
+-	/* check if the range hasn't been previously recorded */
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(range, &io_range_list, list) {
+-		if (addr >= range->start && addr + size <= range->start + size) {
+-			/* range already registered, bail out */
+-			goto end_register;
+-		}
+-		allocated_size += range->size;
+-	}
+-
+-	/* range not registed yet, check for available space */
+-	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
+-		/* if it's too big check if 64K space can be reserved */
+-		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
+-			err = -E2BIG;
+-			goto end_register;
+-		}
+-
+-		size = SZ_64K;
+-		pr_warn("Requested IO range too big, new size set to 64K\n");
+-	}
+-
+-	/* add the range to the list */
+-	range = kzalloc(sizeof(*range), GFP_ATOMIC);
+-	if (!range) {
+-		err = -ENOMEM;
+-		goto end_register;
+-	}
+-
+-	range->start = addr;
+-	range->size = size;
+-
+-	list_add_tail(&range->list, &io_range_list);
+-
+-end_register:
+-	spin_unlock(&io_range_lock);
+-#endif
+-
+-	return err;
+-}
+-
+-phys_addr_t pci_pio_to_address(unsigned long pio)
+-{
+-	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
+-
+-#ifdef PCI_IOBASE
+-	struct io_range *range;
+-	resource_size_t allocated_size = 0;
+-
+-	if (pio > IO_SPACE_LIMIT)
+-		return address;
+-
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(range, &io_range_list, list) {
+-		if (pio >= allocated_size && pio < allocated_size + range->size) {
+-			address = range->start + pio - allocated_size;
+-			break;
+-		}
+-		allocated_size += range->size;
+-	}
+-	spin_unlock(&io_range_lock);
+-#endif
+-
+-	return address;
+-}
+-
+-unsigned long __weak pci_address_to_pio(phys_addr_t address)
+-{
+-#ifdef PCI_IOBASE
+-	struct io_range *res;
+-	resource_size_t offset = 0;
+-	unsigned long addr = -1;
+-
+-	spin_lock(&io_range_lock);
+-	list_for_each_entry(res, &io_range_list, list) {
+-		if (address >= res->start && address < res->start + res->size) {
+-			addr = address - res->start + offset;
+-			break;
+-		}
+-		offset += res->size;
+-	}
+-	spin_unlock(&io_range_lock);
+-
+-	return addr;
+-#else
+-	if (address > IO_SPACE_LIMIT)
+-		return (unsigned long)-1;
+-
+-	return (unsigned long) address;
+-#endif
+-}
+-
+ static int __of_address_to_resource(struct device_node *dev,
+ 		const __be32 *addrp, u64 size, unsigned int flags,
+ 		const char *name, struct resource *r)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 1a74e87..89e9996 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3022,6 +3022,121 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
+ }
+ EXPORT_SYMBOL(pci_request_regions_exclusive);
+ 
++#ifdef PCI_IOBASE
++struct io_range {
++	struct list_head list;
++	phys_addr_t start;
++	resource_size_t size;
++};
++
++static LIST_HEAD(io_range_list);
++static DEFINE_SPINLOCK(io_range_lock);
++#endif
++
++/*
++ * Record the PCI IO range (expressed as CPU physical address + size).
++ * Return a negative value if an error has occured, zero otherwise
++ */
++int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
++{
++	int err = 0;
++
++#ifdef PCI_IOBASE
++	struct io_range *range;
++	resource_size_t allocated_size = 0;
++
++	/* check if the range hasn't been previously recorded */
++	spin_lock(&io_range_lock);
++	list_for_each_entry(range, &io_range_list, list) {
++		if (addr >= range->start && addr + size <= range->start + size) {
++			/* range already registered, bail out */
++			goto end_register;
++		}
++		allocated_size += range->size;
++	}
++
++	/* range not registed yet, check for available space */
++	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
++		/* if it's too big check if 64K space can be reserved */
++		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
++			err = -E2BIG;
++			goto end_register;
++		}
++
++		size = SZ_64K;
++		pr_warn("Requested IO range too big, new size set to 64K\n");
++	}
++
++	/* add the range to the list */
++	range = kzalloc(sizeof(*range), GFP_ATOMIC);
++	if (!range) {
++		err = -ENOMEM;
++		goto end_register;
++	}
++
++	range->start = addr;
++	range->size = size;
++
++	list_add_tail(&range->list, &io_range_list);
++
++end_register:
++	spin_unlock(&io_range_lock);
++#endif
++
++	return err;
++}
++
++phys_addr_t pci_pio_to_address(unsigned long pio)
++{
++	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
++
++#ifdef PCI_IOBASE
++	struct io_range *range;
++	resource_size_t allocated_size = 0;
++
++	if (pio > IO_SPACE_LIMIT)
++		return address;
++
++	spin_lock(&io_range_lock);
++	list_for_each_entry(range, &io_range_list, list) {
++		if (pio >= allocated_size && pio < allocated_size + range->size) {
++			address = range->start + pio - allocated_size;
++			break;
++		}
++		allocated_size += range->size;
++	}
++	spin_unlock(&io_range_lock);
++#endif
++
++	return address;
++}
++
++unsigned long __weak pci_address_to_pio(phys_addr_t address)
++{
++#ifdef PCI_IOBASE
++	struct io_range *res;
++	resource_size_t offset = 0;
++	unsigned long addr = -1;
++
++	spin_lock(&io_range_lock);
++	list_for_each_entry(res, &io_range_list, list) {
++		if (address >= res->start && address < res->start + res->size) {
++			addr = address - res->start + offset;
++			break;
++		}
++		offset += res->size;
++	}
++	spin_unlock(&io_range_lock);
++
++	return addr;
++#else
++	if (address > IO_SPACE_LIMIT)
++		return (unsigned long)-1;
++
++	return (unsigned long) address;
++#endif
++}
++
+ /**
+  *	pci_remap_iospace - Remap the memory mapped I/O space
+  *	@res: Resource describing the I/O space
+diff --git a/include/linux/of_address.h b/include/linux/of_address.h
+index 01c0a55..3786473 100644
+--- a/include/linux/of_address.h
++++ b/include/linux/of_address.h
+@@ -47,10 +47,6 @@ void __iomem *of_io_request_and_map(struct device_node *device,
+ extern const __be32 *of_get_address(struct device_node *dev, int index,
+ 			   u64 *size, unsigned int *flags);
+ 
+-extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+-extern unsigned long pci_address_to_pio(phys_addr_t addr);
+-extern phys_addr_t pci_pio_to_address(unsigned long pio);
+-
+ extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+ 			struct device_node *node);
+ extern struct of_pci_range *of_pci_range_parser_one(
+@@ -86,11 +82,6 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
+ 	return NULL;
+ }
+ 
+-static inline phys_addr_t pci_pio_to_address(unsigned long pio)
+-{
+-	return 0;
+-}
+-
+ static inline int of_pci_range_parser_init(struct of_pci_range_parser *parser,
+ 			struct device_node *node)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 9b31d48..c28adb4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1164,6 +1164,9 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
+ 			void *alignf_data);
+ 
+ 
++int pci_register_io_range(phys_addr_t addr, resource_size_t size);
++unsigned long pci_address_to_pio(phys_addr_t addr);
++phys_addr_t pci_pio_to_address(unsigned long pio);
+ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
+ 
+ static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
+@@ -1480,6 +1483,8 @@ static inline int pci_request_regions(struct pci_dev *dev, const char *res_name)
+ { return -EIO; }
+ static inline void pci_release_regions(struct pci_dev *dev) { }
+ 
++static inline unsigned long pci_address_to_pio(phys_addr_t addr) { return -1; }
++
+ static inline void pci_block_cfg_access(struct pci_dev *dev) { }
+ static inline int pci_block_cfg_access_in_atomic(struct pci_dev *dev)
+ { return 0; }
 -- 
 1.9.1
 
