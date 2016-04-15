@@ -1,60 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f194.google.com ([209.85.213.194]:35875 "EHLO
-	mail-ig0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933030AbcDYQbA (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Apr 2016 12:31:00 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20160425152643.GZ2274@localhost>
-References: <1461166339-11109-1-git-send-email-geert+renesas@glider.be>
-	<1461166339-11109-7-git-send-email-geert+renesas@glider.be>
-	<20160425152643.GZ2274@localhost>
-Date: Mon, 25 Apr 2016 18:30:58 +0200
-Message-ID: <CAMuHMdWsAj2Tmp3hQQAwZaB39j0KM=kcsobf+NtnrAG-aX5ohg@mail.gmail.com>
-Subject: Re: [PATCH 06/14] dmaengine: bcm2835: DT spelling s/interrupts-names/interrupt-names/
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Vinod Koul <vinod.koul@intel.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>, Lee Jones <lee@kernel.org>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Mark Brown <broonie@kernel.org>,
-	Alexandre Belloni <alexandre.belloni@free-electrons.com>,
-	Joe Perches <joe@perches.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	dmaengine@vger.kernel.org
+In-Reply-To: <2994764.UGKJE3zfLx@wuerfel>
+References: <1455068984-22210-1-git-send-email-dhdang@apm.com> <2994764.UGKJE3zfLx@wuerfel>
+From: Duc Dang <dhdang@apm.com>
+Date: Fri, 15 Apr 2016 14:30:56 -0700
+Message-ID: <CADaLNDkCtUgFyX5tVgeM9grdHSQvpTHaq7qXk2WZ1tTbrP7OGA@mail.gmail.com>
+Subject: Re: [PATCH] pci: xgene: Add ECAM fixups
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Tomasz Nowicki <tn@semihalf.com>, Feng Kan <fkan@apm.com>,
+	linux-pci@vger.kernel.org, patches <patches@apm.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Loc Ho <lho@apm.com>, Mark Salter <msalter@redhat.com>,
+	Tanmay Inamdar <tinamdar@apm.com>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Vinod,
-
-On Mon, Apr 25, 2016 at 5:26 PM, Vinod Koul <vinod.koul@intel.com> wrote:
-> On Wed, Apr 20, 2016 at 05:32:11PM +0200, Geert Uytterhoeven wrote:
->> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+On Wed, Feb 10, 2016 at 6:28 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Tuesday 09 February 2016 17:49:44 Duc Dang wrote:
+>> X-Gene PCIe controller does not fully support ECAM.
+>> This patch adds required ECAM fixup to allow X-Gene
+>> PCIe controller to be functional in ACPI boot mode.
+>>
+>> This patch is based on the original work of
+>> Mark Salter <msalter@redhat.com> and depends on
+>> Tomasz's PCIe ACPI series:
+>> https://lkml.org/lkml/2016/2/4/646
+>>
+>> Signed-off-by: Duc Dang <dhdang@apm.com>
 >> ---
->>  Documentation/devicetree/bindings/sound/davinci-mcbsp.txt | 2 +-
 >
-> This change does not apply for me, can you please split it up and send the
-> sound ones thru sound tree
+> This really has nothing to do with the PCI host device driver, please
+> keep it in a separate file in drivers/acpi/.
 
-Sorry, I seem to have mixed two unrelated drivers.
-Will split and resend...
+Hi Arnd,
 
-Gr{oetje,eeting}s,
+With Tomasz latest PCIe ACPI series
+(https://lkml.org/lkml/2016/4/15/594), do you think it still better to
+keep the ACPI ECAM fixup code in a separate file in drivers/acpi
+directory?
 
-                        Geert
+Regards,
+Duc Dang.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+>
+>         Arnd
