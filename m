@@ -1,137 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p3plsmtps2ded02.prod.phx3.secureserver.net ([208.109.80.59]:43490
-	"EHLO p3plsmtps2ded02.prod.phx3.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755668AbcDAXKj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 1 Apr 2016 19:10:39 -0400
-From: Jake Oshins <jakeo@microsoft.com>
-To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v4 7/7] drivers:hv: Separate out frame buffer logic when picking MMIO range
-Date: Fri,  1 Apr 2016 17:47:47 -0700
-Message-Id: <1459558067-1725-8-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
-References: <y>
- <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de, linux-block@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Cc: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 7/8] pci: spread interrupt vectors in pci_alloc_irq_vectors
+Date: Fri, 15 Apr 2016 18:35:51 -0700
+Message-Id: <1460770552-31260-8-git-send-email-hch@lst.de>
+In-Reply-To: <1460770552-31260-1-git-send-email-hch@lst.de>
+References: <1460770552-31260-1-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify the logic that picks MMIO ranges by pulling out the
-logic related to trying to lay frame buffer claim on top of where
-the firmware placed the frame buffer.
+Set the affinity_mask before allocating vectors.  And for now we also
+need a little hack after allocation, hopefully someone smarter than me
+can move this into the core code.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/hv/vmbus_drv.c | 80 ++++++++++++++++++++++----------------------------
- 1 file changed, 35 insertions(+), 45 deletions(-)
+ drivers/pci/irq.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-index eaa5c3b..a29a6c0 100644
---- a/drivers/hv/vmbus_drv.c
-+++ b/drivers/hv/vmbus_drv.c
-@@ -1162,64 +1162,54 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 			bool fb_overlap_ok)
- {
- 	struct resource *iter, *shadow;
--	resource_size_t range_min, range_max, start, local_min, local_max;
-+	resource_size_t range_min, range_max, start;
- 	const char *dev_n = dev_name(&device_obj->device);
--	u32 fb_end = screen_info.lfb_base + (screen_info.lfb_size << 1);
--	int i, retval;
-+	int retval;
+diff --git a/drivers/pci/irq.c b/drivers/pci/irq.c
+index b683465..d26df69 100644
+--- a/drivers/pci/irq.c
++++ b/drivers/pci/irq.c
+@@ -55,9 +55,14 @@ int pci_alloc_irq_vectors(struct pci_dev *pdev, int nr_vecs)
  
- 	retval = -ENXIO;
- 	down(&hyperv_mmio_lock);
+ 	nr_vecs = min(nr_vecs, pci_nr_irq_vectors(pdev));
  
-+	/*
-+	 * If overlaps with frame buffers are allowed, then first attempt to
-+	 * make the allocation from within the reserved region.  Because it
-+	 * is already reserved, no shadow allocation is necessary.
-+	 */
-+	if (fb_overlap_ok && fb_mmio && !(min > fb_mmio->end) &&
-+	    !(max < fb_mmio->start)) {
++	ret = irq_create_affinity_mask(&pdev->dev.irq_affinity, nr_vecs);
++	if (ret)
++		return ret;
 +
-+		range_min = fb_mmio->start;
-+		range_max = fb_mmio->end;
-+		start = (range_min + align - 1) & ~(align - 1);
-+		for (; start + size - 1 <= range_max; start += align) {
-+			*new = request_mem_region_exclusive(start, size, dev_n);
-+			if (*new) {
-+				retval = 0;
-+				goto exit;
-+			}
-+		}
-+	}
-+
- 	for (iter = hyperv_mmio; iter; iter = iter->sibling) {
- 		if ((iter->start >= max) || (iter->end <= min))
- 			continue;
++	ret = -ENOMEM;
+ 	irqs = kcalloc(nr_vecs, sizeof(u32), GFP_KERNEL);
+ 	if (!irqs)
+-		return -ENOMEM;
++		goto out_free_affinity;
  
- 		range_min = iter->start;
- 		range_max = iter->end;
--
--		/* If this range overlaps the frame buffer, split it into
--		   two tries. */
--		for (i = 0; i < 2; i++) {
--			local_min = range_min;
--			local_max = range_max;
--			if (fb_overlap_ok || (range_min >= fb_end) ||
--			    (range_max <= screen_info.lfb_base)) {
--				i++;
--			} else {
--				if ((range_min <= screen_info.lfb_base) &&
--				    (range_max >= screen_info.lfb_base)) {
--					/*
--					 * The frame buffer is in this window,
--					 * so trim this into the part that
--					 * preceeds the frame buffer.
--					 */
--					local_max = screen_info.lfb_base - 1;
--					range_min = fb_end;
--				} else {
--					range_min = fb_end;
--					continue;
--				}
-+		start = (range_min + align - 1) & ~(align - 1);
-+		for (; start + size - 1 <= range_max; start += align) {
-+			shadow = __request_region(iter, start, size, NULL,
-+						  IORESOURCE_BUSY);
-+			if (!shadow)
-+				continue;
-+
-+			*new = request_mem_region_exclusive(start, size, dev_n);
-+			if (*new) {
-+				shadow->name = (char *)*new;
-+				retval = 0;
-+				goto exit;
- 			}
- 
--			start = (local_min + align - 1) & ~(align - 1);
--			for (; start + size - 1 <= local_max; start += align) {
--				shadow = __request_region(iter, start,
--							  size,
--							  NULL,
--							  IORESOURCE_BUSY);
--				if (!shadow)
--					continue;
--
--				*new = request_mem_region_exclusive(start, size,
--								    dev_n);
--				if (*new) {
--					shadow->name = (char *)*new;
--					retval = 0;
--					goto exit;
--				}
--
--				__release_region(iter, start, size);
--			}
-+			__release_region(iter, start, size);
- 		}
+ 	vecs = pci_enable_msix_range_wrapper(pdev, irqs, nr_vecs);
+ 	if (vecs <= 0) {
+@@ -75,11 +80,20 @@ int pci_alloc_irq_vectors(struct pci_dev *pdev, int nr_vecs)
+ 			irqs[i] = pdev->irq + i;
  	}
  
++	/* XXX: this should really move into the core IRQ allocation code.. */
++	if (vecs > 1) {
++		for (i = 0; i < vecs; i++)
++			irq_program_affinity(irqs[i]);
++	}
++
+ 	pdev->irqs = irqs;
+ 	return vecs;
+ 
+ out_free_irqs:
+ 	kfree(irqs);
++out_free_affinity:
++	kfree(pdev->dev.irq_affinity);
++	pdev->dev.irq_affinity = NULL;
+ 	return ret;
+ }
+ EXPORT_SYMBOL(pci_alloc_irq_vectors);
 -- 
-1.9.1
-
+2.1.4
