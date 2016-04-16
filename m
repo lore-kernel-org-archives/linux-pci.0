@@ -1,135 +1,302 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([125.16.236.3]:54587 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932404AbcDMHzZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 03:55:25 -0400
-Received: from localhost
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Wed, 13 Apr 2016 13:25:22 +0530
-Date: Wed, 13 Apr 2016 17:53:24 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
-	robherring2@gmail.com, grant.likely@linaro.org
-Subject: Re: [PATCH v8 08/45] powerpc/powernv: Fix initial IO and M32 segmap
-Message-ID: <20160413075324.GA31320@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-9-git-send-email-gwshan@linux.vnet.ibm.com>
- <570DE553.80708@ozlabs.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <570DE553.80708@ozlabs.ru>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de, linux-block@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Cc: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 5/8] blk-mq: allow the driver to pass in an affinity mask
+Date: Fri, 15 Apr 2016 18:35:49 -0700
+Message-Id: <1460770552-31260-6-git-send-email-hch@lst.de>
+In-Reply-To: <1460770552-31260-1-git-send-email-hch@lst.de>
+References: <1460770552-31260-1-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 13, 2016 at 04:21:07PM +1000, Alexey Kardashevskiy wrote:
->On 02/17/2016 02:43 PM, Gavin Shan wrote:
->>There are two arrays for IO and M32 segment maps on every PHB.
->>The index of the arrays are segment number and the value stored
->>in the corresponding element is PE number, indicating the segment
->>is assigned to the PE. Initially, all elements in those two arrays
->>are zeroes, meaning all segments are assigned to PE#0. It's wrong.
->>
->>This fixes the initial values in the elements of those two arrays
->>to IODA_INVALID_PE, meaning all segments aren't assigned to any
->>PE.
->
->This is ok.
->
->>In order to use IODA_INVALID_PE (-1) to represent invalid PE
->>number, the types of those two arrays are changed from "unsigned int"
->>to "int".
->
->"unsigned" can carry (-1) perfectly fine, just add a type cast to
->IODA_INVALID_PE:
->
->#define IODA_INVALID_PE    (unsigned int)(-1)
->
->Using "signed" type for indexes which cannot be negative does not make much
->sense - instead of checking for the upper boundary, you have to check for "<
->0" too.
->
->OPAL uses unsigned type for PE (uint64_t or uint32_t or uint16_t - this is
->quite funny).
->
->pnv_ioda_pe::pe_number is "unsigned" and this pe_number is the same thing as
->I can see in pnv_ioda_setup_dev_PE().
->
->Some printk() print the PE number as "%x" (which implies "unsigned").
->
+Allow drivers to pass in the affinity mask from the generic interrupt
+layer, and spread queues based on that.  If the driver doesn't pass in
+a mask we will create it using the genirq helper.  As this helper was
+modelled after the blk-mq algorithm there should be no change in behavior.
 
-Yes, I can simply have something like below when PE number as well as
-segment index are represented by "unsigned int" values, right?
+XXX: Just as with the core IRQ spreading code this doesn't handle CPU
+hotplug yet.
 
-#define IODA_INVALID_PE		0xffffffff
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/Makefile         |   2 +-
+ block/blk-mq-cpumap.c  | 120 -------------------------------------------------
+ block/blk-mq.c         |  60 ++++++++++++++++++++++++-
+ block/blk-mq.h         |   8 ----
+ include/linux/blk-mq.h |   1 +
+ 5 files changed, 60 insertions(+), 131 deletions(-)
+ delete mode 100644 block/blk-mq-cpumap.c
 
->
->I suggest changing the pci_dn::pe_number type from "int" to "unsigned int" to
->match pnv_ioda_pe::pe_number, in a separate patch. Or do not touch types for
->now.
->
-
-Yes, I will have a separate patch right before this one to address it.
-
->
->>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>---
->>  arch/powerpc/platforms/powernv/pci-ioda.c | 9 +++++++--
->>  arch/powerpc/platforms/powernv/pci.h      | 4 ++--
->>  2 files changed, 9 insertions(+), 4 deletions(-)
->>
->>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>index 1d2514f..44cc5f3 100644
->>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>@@ -3239,7 +3239,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->>  	unsigned long size, m32map_off, pemap_off, iomap_off = 0;
->>  	const __be64 *prop64;
->>  	const __be32 *prop32;
->>-	int len;
->>+	int i, len;
->>  	u64 phb_id;
->>  	void *aux;
->>  	long rc;
->>@@ -3334,8 +3334,13 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->>  	aux = memblock_virt_alloc(size, 0);
->>  	phb->ioda.pe_alloc = aux;
->>  	phb->ioda.m32_segmap = aux + m32map_off;
->>-	if (phb->type == PNV_PHB_IODA1)
->>+	for (i = 0; i < phb->ioda.total_pe_num; i++)
->>+		phb->ioda.m32_segmap[i] = IODA_INVALID_PE;
->>+	if (phb->type == PNV_PHB_IODA1) {
->>  		phb->ioda.io_segmap = aux + iomap_off;
->>+		for (i = 0; i < phb->ioda.total_pe_num; i++)
->>+			phb->ioda.io_segmap[i] = IODA_INVALID_PE;
->>+	}
->>  	phb->ioda.pe_array = aux + pemap_off;
->>  	set_bit(phb->ioda.reserved_pe_idx, phb->ioda.pe_alloc);
->>
->>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
->>index 784882a..36c4965 100644
->>--- a/arch/powerpc/platforms/powernv/pci.h
->>+++ b/arch/powerpc/platforms/powernv/pci.h
->>@@ -146,8 +146,8 @@ struct pnv_phb {
->>  		struct pnv_ioda_pe	*pe_array;
->>
->>  		/* M32 & IO segment maps */
->>-		unsigned int		*m32_segmap;
->>-		unsigned int		*io_segmap;
->>+		int			*m32_segmap;
->>+		int			*io_segmap;
->>
->>  		/* IRQ chip */
->>  		int			irq_chip_init;
->>
->
->
->-- 
->Alexey
->
-
+diff --git a/block/Makefile b/block/Makefile
+index 9eda232..aeb318d 100644
+--- a/block/Makefile
++++ b/block/Makefile
+@@ -6,7 +6,7 @@ obj-$(CONFIG_BLOCK) := bio.o elevator.o blk-core.o blk-tag.o blk-sysfs.o \
+ 			blk-flush.o blk-settings.o blk-ioc.o blk-map.o \
+ 			blk-exec.o blk-merge.o blk-softirq.o blk-timeout.o \
+ 			blk-lib.o blk-mq.o blk-mq-tag.o \
+-			blk-mq-sysfs.o blk-mq-cpu.o blk-mq-cpumap.o ioctl.o \
++			blk-mq-sysfs.o blk-mq-cpu.o ioctl.o \
+ 			genhd.o scsi_ioctl.o partition-generic.o ioprio.o \
+ 			badblocks.o partitions/
+ 
+diff --git a/block/blk-mq-cpumap.c b/block/blk-mq-cpumap.c
+deleted file mode 100644
+index d0634bc..0000000
+--- a/block/blk-mq-cpumap.c
++++ /dev/null
+@@ -1,120 +0,0 @@
+-/*
+- * CPU <-> hardware queue mapping helpers
+- *
+- * Copyright (C) 2013-2014 Jens Axboe
+- */
+-#include <linux/kernel.h>
+-#include <linux/threads.h>
+-#include <linux/module.h>
+-#include <linux/mm.h>
+-#include <linux/smp.h>
+-#include <linux/cpu.h>
+-
+-#include <linux/blk-mq.h>
+-#include "blk.h"
+-#include "blk-mq.h"
+-
+-static int cpu_to_queue_index(unsigned int nr_cpus, unsigned int nr_queues,
+-			      const int cpu)
+-{
+-	return cpu * nr_queues / nr_cpus;
+-}
+-
+-static int get_first_sibling(unsigned int cpu)
+-{
+-	unsigned int ret;
+-
+-	ret = cpumask_first(topology_sibling_cpumask(cpu));
+-	if (ret < nr_cpu_ids)
+-		return ret;
+-
+-	return cpu;
+-}
+-
+-int blk_mq_update_queue_map(unsigned int *map, unsigned int nr_queues,
+-			    const struct cpumask *online_mask)
+-{
+-	unsigned int i, nr_cpus, nr_uniq_cpus, queue, first_sibling;
+-	cpumask_var_t cpus;
+-
+-	if (!alloc_cpumask_var(&cpus, GFP_ATOMIC))
+-		return 1;
+-
+-	cpumask_clear(cpus);
+-	nr_cpus = nr_uniq_cpus = 0;
+-	for_each_cpu(i, online_mask) {
+-		nr_cpus++;
+-		first_sibling = get_first_sibling(i);
+-		if (!cpumask_test_cpu(first_sibling, cpus))
+-			nr_uniq_cpus++;
+-		cpumask_set_cpu(i, cpus);
+-	}
+-
+-	queue = 0;
+-	for_each_possible_cpu(i) {
+-		if (!cpumask_test_cpu(i, online_mask)) {
+-			map[i] = 0;
+-			continue;
+-		}
+-
+-		/*
+-		 * Easy case - we have equal or more hardware queues. Or
+-		 * there are no thread siblings to take into account. Do
+-		 * 1:1 if enough, or sequential mapping if less.
+-		 */
+-		if (nr_queues >= nr_cpus || nr_cpus == nr_uniq_cpus) {
+-			map[i] = cpu_to_queue_index(nr_cpus, nr_queues, queue);
+-			queue++;
+-			continue;
+-		}
+-
+-		/*
+-		 * Less then nr_cpus queues, and we have some number of
+-		 * threads per cores. Map sibling threads to the same
+-		 * queue.
+-		 */
+-		first_sibling = get_first_sibling(i);
+-		if (first_sibling == i) {
+-			map[i] = cpu_to_queue_index(nr_uniq_cpus, nr_queues,
+-							queue);
+-			queue++;
+-		} else
+-			map[i] = map[first_sibling];
+-	}
+-
+-	free_cpumask_var(cpus);
+-	return 0;
+-}
+-
+-unsigned int *blk_mq_make_queue_map(struct blk_mq_tag_set *set)
+-{
+-	unsigned int *map;
+-
+-	/* If cpus are offline, map them to first hctx */
+-	map = kzalloc_node(sizeof(*map) * nr_cpu_ids, GFP_KERNEL,
+-				set->numa_node);
+-	if (!map)
+-		return NULL;
+-
+-	if (!blk_mq_update_queue_map(map, set->nr_hw_queues, cpu_online_mask))
+-		return map;
+-
+-	kfree(map);
+-	return NULL;
+-}
+-
+-/*
+- * We have no quick way of doing reverse lookups. This is only used at
+- * queue init time, so runtime isn't important.
+- */
+-int blk_mq_hw_queue_to_node(unsigned int *mq_map, unsigned int index)
+-{
+-	int i;
+-
+-	for_each_possible_cpu(i) {
+-		if (index == mq_map[i])
+-			return local_memory_node(cpu_to_node(i));
+-	}
+-
+-	return NUMA_NO_NODE;
+-}
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 1699baf..ab156bb 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -22,6 +22,7 @@
+ #include <linux/sched/sysctl.h>
+ #include <linux/delay.h>
+ #include <linux/crash_dump.h>
++#include <linux/interrupt.h>
+ 
+ #include <trace/events/block.h>
+ 
+@@ -1954,6 +1955,22 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_tag_set *set)
+ }
+ EXPORT_SYMBOL(blk_mq_init_queue);
+ 
++/*
++ * We have no quick way of doing reverse lookups. This is only used at
++ * queue init time, so runtime isn't important.
++ */
++static int blk_mq_hw_queue_to_node(unsigned int *mq_map, unsigned int index)
++{
++	int i;
++
++	for_each_possible_cpu(i) {
++		if (index == mq_map[i])
++			return local_memory_node(cpu_to_node(i));
++	}
++
++	return NUMA_NO_NODE;
++}
++
+ static void blk_mq_realloc_hw_ctxs(struct blk_mq_tag_set *set,
+ 						struct request_queue *q)
+ {
+@@ -2013,6 +2030,30 @@ static void blk_mq_realloc_hw_ctxs(struct blk_mq_tag_set *set,
+ 	blk_mq_sysfs_register(q);
+ }
+ 
++static unsigned int *
++affinity_mask_to_queue_map(const struct cpumask *affinity_mask, int node)
++{
++	unsigned int *map;
++	int queue = -1, cpu = 0;
++
++	map = kzalloc_node(sizeof(*map) * nr_cpu_ids, GFP_KERNEL, node);
++	if (!map)
++		return NULL;
++
++	if (!affinity_mask)
++		return map;	/* map all cpus to queue 0 */
++
++	/* If cpus are offline, map them to first hctx */
++	for_each_online_cpu(cpu) {
++		if (cpumask_test_cpu(cpu, affinity_mask))
++			queue++;
++		if (queue > 0)
++			map[cpu] = queue;
++	}
++
++	return map;
++}
++
+ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
+ 						  struct request_queue *q)
+ {
+@@ -2028,7 +2069,21 @@ struct request_queue *blk_mq_init_allocated_queue(struct blk_mq_tag_set *set,
+ 	if (!q->queue_hw_ctx)
+ 		goto err_percpu;
+ 
+-	q->mq_map = blk_mq_make_queue_map(set);
++	if (set->affinity_mask) {
++		q->mq_map = affinity_mask_to_queue_map(set->affinity_mask,
++				set->numa_node);
++	} else {
++		struct cpumask *affinity_mask;
++		int ret;
++
++		ret = irq_create_affinity_mask(&affinity_mask, set->nr_hw_queues);
++		if (ret)
++			goto err_map;
++
++		q->mq_map = affinity_mask_to_queue_map(affinity_mask, set->numa_node);
++		kfree(affinity_mask);
++	}
++
+ 	if (!q->mq_map)
+ 		goto err_map;
+ 
+@@ -2111,7 +2166,8 @@ static void blk_mq_queue_reinit(struct request_queue *q,
+ 
+ 	blk_mq_sysfs_unregister(q);
+ 
+-	blk_mq_update_queue_map(q->mq_map, q->nr_hw_queues, online_mask);
++//	XXX: figure out what to do about cpu hotplug in the new world order
++//	blk_mq_update_queue_map(q->mq_map, q->nr_hw_queues, online_mask);
+ 
+ 	/*
+ 	 * redo blk_mq_init_cpu_queues and blk_mq_init_hw_queues. FIXME: maybe
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index 9087b11..fe7e21f 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -45,14 +45,6 @@ void blk_mq_enable_hotplug(void);
+ void blk_mq_disable_hotplug(void);
+ 
+ /*
+- * CPU -> queue mappings
+- */
+-extern unsigned int *blk_mq_make_queue_map(struct blk_mq_tag_set *set);
+-extern int blk_mq_update_queue_map(unsigned int *map, unsigned int nr_queues,
+-				   const struct cpumask *online_mask);
+-extern int blk_mq_hw_queue_to_node(unsigned int *map, unsigned int);
+-
+-/*
+  * sysfs helpers
+  */
+ extern int blk_mq_sysfs_register(struct request_queue *q);
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 2498fdf..21ffe10 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -74,6 +74,7 @@ struct blk_mq_tag_set {
+ 	unsigned int		timeout;
+ 	unsigned int		flags;		/* BLK_MQ_F_* */
+ 	void			*driver_data;
++	struct cpumask		*affinity_mask;
+ 
+ 	struct blk_mq_tags	**tags;
+ 
+-- 
+2.1.4
