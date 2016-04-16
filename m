@@ -1,64 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41982 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752541AbcD0Fgh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Apr 2016 01:36:37 -0400
-Subject: Re: [PATCH V6 05/13] acpi, pci: Support IO resources when parsing PCI
- host bridge resources.
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Tomasz Nowicki <tn@semihalf.com>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-6-git-send-email-tn@semihalf.com>
- <20160427023916.GF6789@localhost>
-Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org
-From: Jon Masters <jcm@redhat.com>
-Message-ID: <57204FDB.6010202@redhat.com>
-Date: Wed, 27 Apr 2016 01:36:27 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jayachandran C <jchandra@broadcom.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Tomasz Nowicki <tn@semihalf.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
+	Jon Masters <jcm@redhat.com>, linaro-acpi@lists.linaro.org,
+	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com,
+	David Daney <ddaney@caviumnetworks.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	robert.richter@caviumnetworks.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, Wangyijing <wangyijing@huawei.com>,
+	Marcin Wojtas <mw@semihalf.com>
+Subject: Re: [PATCH V6 08/13] PCI: generic, thunder: update to use generic ECAM API
+Date: Sat, 16 Apr 2016 09:31:59 +0200
+Message-ID: <4240660.NqlPcXaV7N@wuerfel>
+In-Reply-To: <CAKc_7PWFacFJZA2JpfM4RcRFVj0jyUE73HhhvmX0cKm07JGupg@mail.gmail.com>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com> <5110401.mGEq6IVFz2@wuerfel> <CAKc_7PWFacFJZA2JpfM4RcRFVj0jyUE73HhhvmX0cKm07JGupg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160427023916.GF6789@localhost>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/26/2016 10:39 PM, Bjorn Helgaas wrote:
-> On Fri, Apr 15, 2016 at 07:06:40PM +0200, Tomasz Nowicki wrote:
->> Platforms that have memory mapped IO port (such as ARM64) need special
->> handling for PCI I/O resources. For host bridge's resource probing case
->> these resources need to be fixed up with pci_register_io_range/pci_remap_iospace etc.
+On Saturday 16 April 2016 12:50:13 Jayachandran C wrote:
+> >
+> > I still think it would be better to keep the loadable PCI host drivers
+> > separate from the ACPI PCI infrastructure. There are a number of
+> > simplifications that we want to do to the DT based drivers in the long
+> > run, so it's better if that code is not shared at this level. Abstracting
+> > out the ECAM code is fine, but at that point you should be able to just
+> > call it from the ACPI layer.
 > 
-> ia64 also has memory-mapped I/O port space.
+> The issue is not with this patch (in my opinion). This patch is just
+> re-arranging how thunder specific data is maintained. Earlier it was
+> a container_of gen_pci, now it is ->priv of pci_config_window.
+> 
+> I can see the issue in patches 12 and 13 of this patchset which adds
+> ACPI fixups into the thunder OF driver.
 
-The specific references of interest to anyone here are:
+Right, I commented on this one, because it seems to rearrange the code
+in order to do the later one.
 
-*). Volume 2, Part 1: Itanium® Architecture-based Operating System
-Interaction Model with IA-32 Applications 2:267 section "10.7 I/O Port
-Space Model" which describes how they can map 4 "legacy" IO ports on a
-virtual page when operating in a "sparse" mode.
+> The simple approach when doing modular PCI drivers would be to make
+> pci-thunder-*.c like pci-host-common.c, to be compiled in if configured.
+> The fie will contain all the Thunder quirks and can export
+> pci_thunder_ecam_ops.
 
-*). Page 378 of the ACPI6.1 specification Table 6-213 I/O Resource Flag
-(Resource Type = 1) Definitions describes how a "sparse" translation can
-exist depending upon bit _TRS. This seems to be implemented in Linux
-using the ACPI_SPARSE_TRANSLATION types.
+I would argue that we should not export anything from drivers/pci/host,
+those should really be standalone drivers that do not interact with other
+subsystems.
 
-> It would be ideal to find
-> some way to handle ia64 and ARM64 similarly.  At the very least, we
-> have to make sure that this doesn't break ia64.  The ia64 dense/sparse
-> I/O spaces complicate things; I don't know if ARM64 has something
-> similar or not.
+How much code would you need to duplicate from thunder-ecam to have
+the same functionality available in ACPI? My expectation is that it's
+not really that much more compared to the code you need for sharing
+a single implementation, but you get a lower complexity here, which
+makes it easier to understand and to rework.
 
-There's nothing directly similar - it's just regular MMIO.
-
-Jon.
-
--- 
-Computer Architect | Sent from my Fedora powered laptop
-
+	Arnd
