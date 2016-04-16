@@ -1,190 +1,234 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:6082 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758162AbcDHKg4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Apr 2016 06:36:56 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [PATCH v2 4/4] PCI: Add runtime PM support for PCIe ports
-Date: Fri,  8 Apr 2016 13:36:30 +0300
-Message-Id: <1460111790-92836-5-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:48886 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751813AbcDPBf6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Apr 2016 21:35:58 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: tglx@linutronix.de, linux-block@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Cc: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 8/8] nvme: switch to use pci_alloc_irq_vectors
+Date: Fri, 15 Apr 2016 18:35:52 -0700
+Message-Id: <1460770552-31260-9-git-send-email-hch@lst.de>
+In-Reply-To: <1460770552-31260-1-git-send-email-hch@lst.de>
+References: <1460770552-31260-1-git-send-email-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add back runtime PM support for PCIe ports that was removed in
-commit fe9a743a2601 ("PCI/PM: Drop unused runtime PM support code for
-PCIe ports").
-
-First of all we cannot enable it automatically for all ports since there
-has been problems previously as can be seen in [1]. In summary suspended
-PCIe ports were not able to deal with hotplug reliably. One reason why this
-might happen is the fact that when a PCIe port is powered down, config
-space access to the devices behind the port is not possible. If the BIOS
-hotplug SMI handler assumes the port is always in D0 it will not be able to
-find the hotplugged devices. To be on the safe side only enable runtime PM
-if the port does not claim to be hotplug capable.
-
-Furthermore we need to check that the PCI core thinks the port can go to D3
-in the first place. The PCI core sets 'bridge_d3' in that case. If both
-conditions are met we enable and allow runtime PM for the PCIe port. Since
-'bridge_d3' can be changed anytime we check this in driver ->runtime_idle()
-and ->runtime_suspend() and only allow runtime suspend if the flag is still
-set. The actual power transition to D3 and back is handled in the PCI core.
-
-Idea to automatically unblock (allow) runtime PM for PCIe ports came from
-Dave Airlie.
-
-[1] https://bugzilla.kernel.org/show_bug.cgi?id=53811
-
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/pci/pcie/portdrv_pci.c | 85 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 85 insertions(+)
+ drivers/nvme/host/pci.c | 88 +++++++++++++------------------------------------
+ 1 file changed, 23 insertions(+), 65 deletions(-)
 
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 6c6bb03392ea..bbe86527788c 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -58,6 +58,10 @@ __setup("pcie_ports=", pcie_port_setup);
- 
- /* global data */
- 
-+struct pcie_port_data {
-+	bool runtime_pm_enabled;
-+};
-+
- /**
-  * pcie_clear_root_pme_status - Clear root port PME interrupt status.
-  * @dev: PCIe root port or event collector.
-@@ -93,6 +97,58 @@ static int pcie_port_resume_noirq(struct device *dev)
- 	return 0;
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index ff3c8d7..82730bf 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -89,7 +89,6 @@ struct nvme_dev {
+ 	unsigned max_qid;
+ 	int q_depth;
+ 	u32 db_stride;
+-	struct msix_entry *entry;
+ 	void __iomem *bar;
+ 	struct work_struct reset_work;
+ 	struct work_struct scan_work;
+@@ -209,6 +208,11 @@ static unsigned int nvme_cmd_size(struct nvme_dev *dev)
+ 		nvme_iod_alloc_size(dev, NVME_INT_BYTES(dev), NVME_INT_PAGES);
  }
  
-+static int pcie_port_runtime_suspend(struct device *dev)
++static int nvmeq_irq(struct nvme_queue *nvmeq)
 +{
-+	return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
++	return to_pci_dev(nvmeq->dev->dev)->irqs[nvmeq->cq_vector];
 +}
 +
-+static int pcie_port_runtime_resume(struct device *dev)
-+{
-+	return 0;
-+}
-+
-+static int pcie_port_runtime_idle(struct device *dev)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	/*
-+	 * Rely the PCI core has set bridge_d3 whenever it thinks the port
-+	 * should be good to go to D3. Everything else, including moving
-+	 * the port to D3, is handled by the PCI core.
-+	 */
-+	if (pdev->bridge_d3) {
-+		pm_schedule_suspend(dev, 10);
-+		return 0;
-+	}
-+	return -EBUSY;
-+}
-+
-+static bool pcie_port_runtime_pm_possible(struct pci_dev *pdev)
-+{
-+	/*
-+	 * Only enable runtime PM if the PCI core agrees that this port can
-+	 * even go to D3.
-+	 */
-+	if (!pdev->bridge_d3)
-+		return false;
-+
-+	/*
-+	 * Prevent runtime PM if the port is hotplug capable. Otherwise the
-+	 * hotplug SMI code might not be able to enumerate devices behind
-+	 * this port properly (the port is powered down preventing all
-+	 * config space accesses to the subordinate devices).
-+	 */
-+	if (pcie_caps_reg(pdev) & PCI_EXP_FLAGS_SLOT) {
-+		u32 sltcap;
-+
-+		pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &sltcap);
-+		if (sltcap & (PCI_EXP_SLTCAP_HPC | PCI_EXP_SLTCAP_HPS))
-+			return false;
-+	}
-+
-+	return true;
-+}
-+
- static const struct dev_pm_ops pcie_portdrv_pm_ops = {
- 	.suspend	= pcie_port_device_suspend,
- 	.resume		= pcie_port_device_resume,
-@@ -101,12 +157,20 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
- 	.poweroff	= pcie_port_device_suspend,
- 	.restore	= pcie_port_device_resume,
- 	.resume_noirq	= pcie_port_resume_noirq,
-+	.runtime_suspend = pcie_port_runtime_suspend,
-+	.runtime_resume	= pcie_port_runtime_resume,
-+	.runtime_idle	= pcie_port_runtime_idle,
- };
- 
- #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
- 
- #else /* !PM */
- 
-+static inline bool pcie_port_runtime_pm_possible(struct pci_dev *pdev)
-+{
-+	return false;
-+}
-+
- #define PCIE_PORTDRV_PM_OPS	NULL
- #endif /* !PM */
- 
-@@ -121,6 +185,7 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
- static int pcie_portdrv_probe(struct pci_dev *dev,
- 					const struct pci_device_id *id)
+ static int nvme_admin_init_hctx(struct blk_mq_hw_ctx *hctx, void *data,
+ 				unsigned int hctx_idx)
  {
-+	struct pcie_port_data *pdata;
- 	int status;
+@@ -1016,7 +1020,7 @@ static int nvme_suspend_queue(struct nvme_queue *nvmeq)
+ 		spin_unlock_irq(&nvmeq->q_lock);
+ 		return 1;
+ 	}
+-	vector = nvmeq->dev->entry[nvmeq->cq_vector].vector;
++	vector = nvmeq_irq(nvmeq);
+ 	nvmeq->dev->online_queues--;
+ 	nvmeq->cq_vector = -1;
+ 	spin_unlock_irq(&nvmeq->q_lock);
+@@ -1024,7 +1028,6 @@ static int nvme_suspend_queue(struct nvme_queue *nvmeq)
+ 	if (!nvmeq->qid && nvmeq->dev->ctrl.admin_q)
+ 		blk_mq_stop_hw_queues(nvmeq->dev->ctrl.admin_q);
  
- 	if (!pci_is_pcie(dev) ||
-@@ -134,11 +199,31 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
- 		return status;
+-	irq_set_affinity_hint(vector, NULL);
+ 	free_irq(vector, nvmeq);
  
- 	pci_save_state(dev);
-+
-+	pdata = devm_kzalloc(&dev->dev, sizeof(*pdata), GFP_KERNEL);
-+	if (!pdata)
-+		return -ENOMEM;
-+
-+	pci_set_drvdata(dev, pdata);
-+	if (pcie_port_runtime_pm_possible(dev)) {
-+		pm_runtime_put_noidle(&dev->dev);
-+		pm_runtime_allow(&dev->dev);
-+
-+		pdata->runtime_pm_enabled = true;
-+	}
-+
  	return 0;
- }
- 
- static void pcie_portdrv_remove(struct pci_dev *dev)
+@@ -1135,11 +1138,11 @@ static int queue_request_irq(struct nvme_dev *dev, struct nvme_queue *nvmeq,
+ 							const char *name)
  {
-+	const struct pcie_port_data *pdata = pci_get_drvdata(dev);
-+
-+	if (pdata->runtime_pm_enabled) {
-+		pm_runtime_forbid(&dev->dev);
-+		pm_runtime_get_noresume(&dev->dev);
-+	}
-+
- 	pcie_port_device_remove(dev);
+ 	if (use_threaded_interrupts)
+-		return request_threaded_irq(dev->entry[nvmeq->cq_vector].vector,
+-					nvme_irq_check, nvme_irq, IRQF_SHARED,
+-					name, nvmeq);
+-	return request_irq(dev->entry[nvmeq->cq_vector].vector, nvme_irq,
+-				IRQF_SHARED, name, nvmeq);
++		return request_threaded_irq(nvmeq_irq(nvmeq), nvme_irq_check,
++				nvme_irq, IRQF_SHARED, name, nvmeq);
++	else
++		return request_irq(nvmeq_irq(nvmeq), nvme_irq, IRQF_SHARED,
++				name, nvmeq);
  }
  
+ static void nvme_init_queue(struct nvme_queue *nvmeq, u16 qid)
+@@ -1438,7 +1441,7 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
+ {
+ 	struct nvme_queue *adminq = dev->queues[0];
+ 	struct pci_dev *pdev = to_pci_dev(dev->dev);
+-	int result, i, vecs, nr_io_queues, size;
++	int result, nr_io_queues, size;
+ 
+ 	nr_io_queues = num_possible_cpus();
+ 	result = nvme_set_queue_count(&dev->ctrl, &nr_io_queues);
+@@ -1481,29 +1484,17 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
+ 	}
+ 
+ 	/* Deregister the admin queue's interrupt */
+-	free_irq(dev->entry[0].vector, adminq);
++	free_irq(pdev->irqs[0], adminq);
+ 
+ 	/*
+ 	 * If we enable msix early due to not intx, disable it again before
+ 	 * setting up the full range we need.
+ 	 */
+-	if (pdev->msi_enabled)
+-		pci_disable_msi(pdev);
+-	else if (pdev->msix_enabled)
+-		pci_disable_msix(pdev);
+-
+-	for (i = 0; i < nr_io_queues; i++)
+-		dev->entry[i].entry = i;
+-	vecs = pci_enable_msix_range(pdev, dev->entry, 1, nr_io_queues);
+-	if (vecs < 0) {
+-		vecs = pci_enable_msi_range(pdev, 1, min(nr_io_queues, 32));
+-		if (vecs < 0) {
+-			vecs = 1;
+-		} else {
+-			for (i = 0; i < vecs; i++)
+-				dev->entry[i].vector = i + pdev->irq;
+-		}
+-	}
++	pci_free_irq_vectors(pdev);
++	nr_io_queues = pci_alloc_irq_vectors(pdev, nr_io_queues);
++	if (nr_io_queues <= 0)
++		return -EIO;
++	dev->max_qid = nr_io_queues;
+ 
+ 	/*
+ 	 * Should investigate if there's a performance win from allocating
+@@ -1511,8 +1502,6 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
+ 	 * path to scale better, even if the receive path is limited by the
+ 	 * number of interrupts.
+ 	 */
+-	nr_io_queues = vecs;
+-	dev->max_qid = nr_io_queues;
+ 
+ 	result = queue_request_irq(dev, adminq, adminq->irqname);
+ 	if (result) {
+@@ -1526,22 +1515,6 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
+ 	return result;
+ }
+ 
+-static void nvme_set_irq_hints(struct nvme_dev *dev)
+-{
+-	struct nvme_queue *nvmeq;
+-	int i;
+-
+-	for (i = 0; i < dev->online_queues; i++) {
+-		nvmeq = dev->queues[i];
+-
+-		if (!nvmeq->tags || !(*nvmeq->tags))
+-			continue;
+-
+-		irq_set_affinity_hint(dev->entry[nvmeq->cq_vector].vector,
+-					blk_mq_tags_cpumask(*nvmeq->tags));
+-	}
+-}
+-
+ static void nvme_dev_scan(struct work_struct *work)
+ {
+ 	struct nvme_dev *dev = container_of(work, struct nvme_dev, scan_work);
+@@ -1549,7 +1522,6 @@ static void nvme_dev_scan(struct work_struct *work)
+ 	if (!dev->tagset.tags)
+ 		return;
+ 	nvme_scan_namespaces(&dev->ctrl);
+-	nvme_set_irq_hints(dev);
+ }
+ 
+ static void nvme_del_queue_end(struct request *req, int error)
+@@ -1654,6 +1626,7 @@ static int nvme_dev_add(struct nvme_dev *dev)
+ 		dev->tagset.cmd_size = nvme_cmd_size(dev);
+ 		dev->tagset.flags = BLK_MQ_F_SHOULD_MERGE;
+ 		dev->tagset.driver_data = dev;
++		dev->tagset.affinity_mask = dev->dev->irq_affinity;
+ 
+ 		if (blk_mq_alloc_tag_set(&dev->tagset))
+ 			return 0;
+@@ -1694,15 +1667,9 @@ static int nvme_pci_enable(struct nvme_dev *dev)
+ 	 * interrupts. Pre-enable a single MSIX or MSI vec for setup. We'll
+ 	 * adjust this later.
+ 	 */
+-	if (pci_enable_msix(pdev, dev->entry, 1)) {
+-		pci_enable_msi(pdev);
+-		dev->entry[0].vector = pdev->irq;
+-	}
+-
+-	if (!dev->entry[0].vector) {
+-		result = -ENODEV;
+-		goto disable;
+-	}
++	result = pci_alloc_irq_vectors(pdev, 1);
++	if (result < 0)
++		return result;
+ 
+ 	cap = lo_hi_readq(dev->bar + NVME_REG_CAP);
+ 
+@@ -1744,10 +1711,7 @@ static void nvme_pci_disable(struct nvme_dev *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev->dev);
+ 
+-	if (pdev->msi_enabled)
+-		pci_disable_msi(pdev);
+-	else if (pdev->msix_enabled)
+-		pci_disable_msix(pdev);
++	pci_free_irq_vectors(pdev);
+ 
+ 	if (pci_is_enabled(pdev)) {
+ 		pci_disable_pcie_error_reporting(pdev);
+@@ -1816,7 +1780,6 @@ static void nvme_pci_free_ctrl(struct nvme_ctrl *ctrl)
+ 	if (dev->ctrl.admin_q)
+ 		blk_put_queue(dev->ctrl.admin_q);
+ 	kfree(dev->queues);
+-	kfree(dev->entry);
+ 	kfree(dev);
+ }
+ 
+@@ -1996,10 +1959,6 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	dev = kzalloc_node(sizeof(*dev), GFP_KERNEL, node);
+ 	if (!dev)
+ 		return -ENOMEM;
+-	dev->entry = kzalloc_node(num_possible_cpus() * sizeof(*dev->entry),
+-							GFP_KERNEL, node);
+-	if (!dev->entry)
+-		goto free;
+ 	dev->queues = kzalloc_node((num_possible_cpus() + 1) * sizeof(void *),
+ 							GFP_KERNEL, node);
+ 	if (!dev->queues)
+@@ -2042,7 +2001,6 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	nvme_dev_unmap(dev);
+  free:
+ 	kfree(dev->queues);
+-	kfree(dev->entry);
+ 	kfree(dev);
+ 	return result;
+ }
 -- 
-2.8.0.rc3
+2.1.4
 
