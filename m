@@ -1,176 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 27 Apr 2016 12:17:58 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>, arnd@arndb.de,
-	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
-	hanjun.guo@linaro.org, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-Subject: Re: [PATCH V6 02/13] pci, acpi: Provide generic way to assign bus
- domain number.
-Message-ID: <20160427111758.GA6234@red-moon>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-3-git-send-email-tn@semihalf.com>
- <20160427022649.GD6789@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160427022649.GD6789@localhost>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org
+Cc: linux-pci@vger.kernel.org, ravikanth.nalla@hpe.com,
+	lenb@kernel.org, harish.k@hpe.com, ashwin.reghunandanan@hpe.com,
+	bhelgaas@google.com, rjw@rjwysocki.net,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	Robert Moore <robert.moore@intel.com>,
+	Lv Zheng <lv.zheng@intel.com>, linux-kernel@vger.kernel.org,
+	devel@acpica.org
+Subject: [PATCH V3 3/4] acpi,pci,irq: remove redundant code in acpi_irq_penalty_init
+Date: Sun, 17 Apr 2016 13:36:55 -0400
+Message-Id: <1460914617-8259-3-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1460914617-8259-1-git-send-email-okaya@codeaurora.org>
+References: <1460914617-8259-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 26, 2016 at 09:26:49PM -0500, Bjorn Helgaas wrote:
-> On Fri, Apr 15, 2016 at 07:06:37PM +0200, Tomasz Nowicki wrote:
-> > As we now have valid PCI host bridge device reference we can
-> > introduce code that is going to find its bus domain number using
-> > ACPI _SEG method.
-> > 
-> > Note that _SEG method is optional, therefore _SEG absence means
-> > that all PCI buses belong to domain 0.
-> > 
-> > While at it, for the sake of code clarity we put ACPI and DT domain
-> > assign methods into the corresponding helpers.
-> > 
-> > Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> > Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> > Tested-by: Jeremy Linton <jeremy.linton@arm.com>
-> > Tested-by: Duc Dang <dhdang@apm.com>
-> > Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-> > Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> > Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-> > Tested-by: Sinan Kaya <okaya@codeaurora.org>
-> > ---
-> >  drivers/acpi/pci_root.c  | 18 ++++++++++++++++++
-> >  drivers/pci/pci.c        | 11 +++++++++--
-> >  include/linux/pci-acpi.h |  2 ++
-> >  3 files changed, 29 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> > index 4581e0e..d9a70c4 100644
-> > --- a/drivers/acpi/pci_root.c
-> > +++ b/drivers/acpi/pci_root.c
-> > @@ -419,6 +419,24 @@ out:
-> >  }
-> >  EXPORT_SYMBOL(acpi_pci_osc_control_set);
-> >  
-> > +int acpi_pci_bus_domain_nr(struct device *parent)
-> > +{
-> > +	struct acpi_device *acpi_dev = to_acpi_device(parent);
-> > +	unsigned long long segment = 0;
-> > +	acpi_status status;
-> > +
-> > +	/*
-> > +	 * If _SEG method does not exist, following ACPI spec (6.5.6)
-> > +	 * all PCI buses belong to domain 0.
-> > +	 */
-> > +	status = acpi_evaluate_integer(acpi_dev->handle, METHOD_NAME__SEG, NULL,
-> > +				       &segment);
-> 
-> We already have code in acpi_pci_root_add() to evaluate _SEG.  We
-> don't want to evaluate it *twice*, do we?
-> 
-> I was sort of expecting that if you added it here, we'd remove the
-> existing call, but it looks like you're keeping both?
+acpi_irq_get_penalty is now calculating the penalty on the fly now.
+No need to maintain global list of penalties or calculate them
+at the init time. Removing duplicate code in acpi_irq_penalty_init.
 
-We can't remove the existing call, since it is used on X86 and IA64
-to store the segment number that, in the process, is used in their
-pci_domain_nr() arch specific callback to retrieve the domain nr.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ arch/x86/pci/acpi.c         |  1 -
+ drivers/acpi/pci_link.c     | 36 ------------------------------------
+ include/acpi/acpi_drivers.h |  1 -
+ 3 files changed, 38 deletions(-)
 
-On ARM64, that selects PCI_DOMAINS_GENERIC, we have to find a way
-to retrieve the domain number that is not arch dependent, since
-this is generic code, we can't rely on any bus->sysdata format (unless
-we do something like JC did below), therefore the only way is to call
-the _SEG method *again* here, which also forced Tomasz to go through
-the ACPI_COMPANION setting song and dance and pass the parent pointer
-to pci_create_root_bus() (see patch 1), which BTW is a source of
-trouble on its own as you noticed.
+diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+index 3cd6983..b2a4e2a 100644
+--- a/arch/x86/pci/acpi.c
++++ b/arch/x86/pci/acpi.c
+@@ -396,7 +396,6 @@ int __init pci_acpi_init(void)
+ 		return -ENODEV;
+ 
+ 	printk(KERN_INFO "PCI: Using ACPI for IRQ routing\n");
+-	acpi_irq_penalty_init();
+ 	pcibios_enable_irq = acpi_pci_irq_enable;
+ 	pcibios_disable_irq = acpi_pci_irq_disable;
+ 	x86_init.pci.init_irq = x86_init_noop;
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index 12ea784..ab39208 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -520,42 +520,6 @@ static int acpi_irq_get_penalty(int irq)
+ 	return penalty;
+ }
+ 
+-int __init acpi_irq_penalty_init(void)
+-{
+-	struct acpi_pci_link *link;
+-	int i;
+-
+-	/*
+-	 * Update penalties to facilitate IRQ balancing.
+-	 */
+-	list_for_each_entry(link, &acpi_link_list, list) {
+-
+-		/*
+-		 * reflect the possible and active irqs in the penalty table --
+-		 * useful for breaking ties.
+-		 */
+-		if (link->irq.possible_count) {
+-			int penalty =
+-			    PIRQ_PENALTY_PCI_POSSIBLE /
+-			    link->irq.possible_count;
+-
+-			for (i = 0; i < link->irq.possible_count; i++) {
+-				if (link->irq.possible[i] < ACPI_MAX_ISA_IRQS)
+-					acpi_isa_irq_penalty[link->irq.
+-							 possible[i]] +=
+-					    penalty;
+-			}
+-
+-		} else if (link->irq.active &&
+-				(link->irq.active < ACPI_MAX_ISA_IRQS)) {
+-			acpi_isa_irq_penalty[link->irq.active] +=
+-			    PIRQ_PENALTY_PCI_POSSIBLE;
+-		}
+-	}
+-
+-	return 0;
+-}
+-
+ static int acpi_irq_balance = -1;	/* 0: static, 1: balance */
+ 
+ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+diff --git a/include/acpi/acpi_drivers.h b/include/acpi/acpi_drivers.h
+index 29c6912..797ae2e 100644
+--- a/include/acpi/acpi_drivers.h
++++ b/include/acpi/acpi_drivers.h
+@@ -78,7 +78,6 @@
+ 
+ /* ACPI PCI Interrupt Link (pci_link.c) */
+ 
+-int acpi_irq_penalty_init(void);
+ int acpi_pci_link_allocate_irq(acpi_handle handle, int index, int *triggering,
+ 			       int *polarity, char **name);
+ int acpi_pci_link_free_irq(acpi_handle handle);
+-- 
+1.8.2.1
 
-JC solved it differently, via sysdata and pseudo-generic code:
-
-http://www.spinics.net/lists/arm-kernel/msg478167.html
-http://www.spinics.net/lists/arm-kernel/msg478169.html
-
-I like neither, we need the lesser of two evils though.
-
-Lorenzo
-
-> > +	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
-> > +		dev_err(&acpi_dev->dev, "can't evaluate _SEG\n");
-> > +
-> > +	return segment;
-> > +}
-> > +
-> >  static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
-> >  {
-> >  	u32 support, control, requested;
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index 25e0327..1a74e87 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -19,6 +19,7 @@
-> >  #include <linux/spinlock.h>
-> >  #include <linux/string.h>
-> >  #include <linux/log2.h>
-> > +#include <linux/pci-acpi.h>
-> >  #include <linux/pci-aspm.h>
-> >  #include <linux/pm_wakeup.h>
-> >  #include <linux/interrupt.h>
-> > @@ -4779,7 +4780,7 @@ int pci_get_new_domain_nr(void)
-> >  }
-> >  
-> >  #ifdef CONFIG_PCI_DOMAINS_GENERIC
-> > -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> > +static int of_pci_bus_domain_nr(struct device *parent)
-> >  {
-> >  	static int use_dt_domains = -1;
-> >  	int domain = -1;
-> > @@ -4823,7 +4824,13 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> >  		domain = -1;
-> >  	}
-> >  
-> > -	bus->domain_nr = domain;
-> > +	return domain;
-> > +}
-> > +
-> > +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> > +{
-> > +	bus->domain_nr = acpi_disabled ? of_pci_bus_domain_nr(parent) :
-> > +					 acpi_pci_bus_domain_nr(parent);
-> >  }
-> >  #endif
-> >  #endif
-> > diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> > index 89ab057..a72e22d 100644
-> > --- a/include/linux/pci-acpi.h
-> > +++ b/include/linux/pci-acpi.h
-> > @@ -22,6 +22,7 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
-> >  {
-> >  	return acpi_remove_pm_notifier(dev);
-> >  }
-> > +extern int acpi_pci_bus_domain_nr(struct device *parent);
-> >  extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
-> >  
-> >  static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
-> > @@ -109,6 +110,7 @@ extern const u8 pci_acpi_dsm_uuid[];
-> >  #else	/* CONFIG_ACPI */
-> >  static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
-> >  static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
-> > +static inline int acpi_pci_bus_domain_nr(struct device *parent) { return -1; }
-> >  #endif	/* CONFIG_ACPI */
-> >  
-> >  #ifdef CONFIG_ACPI_APEI
-> > -- 
-> > 1.9.1
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
