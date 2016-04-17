@@ -1,89 +1,200 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43472 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932505AbcDKNiR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Apr 2016 09:38:17 -0400
-Date: Mon, 11 Apr 2016 08:38:10 -0500
-From: Rob Herring <robh@kernel.org>
-To: Petr =?utf-8?Q?=C5=A0tetiar?= <ynezz@true.cz>
-Cc: devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Tim Harvey <tharvey@gateworks.com>,
-	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
-	Fabio Estevam <festevam@gmail.com>,
-	Marcel Ziswiler <marcel.ziswiler@toradex.com>, stefan@agner.ch
-Subject: Re: [PATCH v3 2/2] PCI: imx6: Add reset-gpio-active-high boolean
- property to DT
-Message-ID: <20160411133810.GA15094@rob-hp-laptop>
-References: <1459936100.2256.30.camel@pengutronix.de>
- <1459946207-11923-1-git-send-email-ynezz@true.cz>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1459946207-11923-1-git-send-email-ynezz@true.cz>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60624 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750696AbcDQRhS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 17 Apr 2016 13:37:18 -0400
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org
+Cc: linux-pci@vger.kernel.org, ravikanth.nalla@hpe.com,
+	lenb@kernel.org, harish.k@hpe.com, ashwin.reghunandanan@hpe.com,
+	bhelgaas@google.com, rjw@rjwysocki.net,
+	Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org
+Subject: [PATCH V3 1/4] acpi,pci,irq: reduce resource requirements
+Date: Sun, 17 Apr 2016 13:36:53 -0400
+Message-Id: <1460914617-8259-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 06, 2016 at 02:36:47PM +0200, Petr Štetiar wrote:
-> Currently the reset-gpio DT property which controls the PCI bus device
-> reset signal defaults to active-low reset sequence (L=reset state,
-> H=operation state) plus the code in reset function isn't GPIO polarity
-> aware - it doesn't matter if the defined reset-gpio is active-low or
-> active-high, it will always result into active-low reset sequence.
-> 
-> I've tried to fix it properly and changed the reset-gpio reset sequence
-> to be polarity aware, but this patch has been accepted and then reverted
-> as it has introduced few backward incompatible issues:
-> 
-> 1. Some of the DTBs as for example imx6qdl-sabresd, doesn't define
-> reset-gpio polarity correctly:
-> 
->   reset-gpio = <&gpio7 12 0>;
-> 
-> which means, that it's defined as active-high, but in reality it's
-> active-low, thus it wouldn't work without DTS fix.
-> 
-> 2. The logic in reset function is inverted:
-> 
-> 	gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0)
-> 	msleep(100);
-> 	gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
-> 
-> so even if some of the i.MX6 boards had reset-gpio polarity defined
-> correctly in their DTSes, they would stop working.
-> 
-> As we can't break old DTBs, we can't fix them and that's why we need to
-> introduce this new DT reset-gpio-active-high boolean property, so we can
-> support boards with active-high reset sequence.
-> 
-> This active-high reset sequence is for example needed on Apalis SoMs,
-> where GPIO1_IO28, used to PCIe reset is not connected directly to PERST#
-> PCIe signal, but it's ORed with RESETBMCU coming off the PMIC, and thus
-> is inverted, active-high.
-> 
-> Signed-off-by: Petr Štetiar <ynezz@true.cz>
-> ---
->  Changes since v1:
-> 
->   * Added documentation of reset-gpio and reset-gpio-active-high DT properties
->   * Removed unnecessary double negation of GPIO value
-> 
->  Changes since v2:
-> 
->   * Changed commit message so it explains in more detail why we need new DT
->     property
->   * Changed PHY to 'bus device' in binding's documentation
-> 
->  Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt |  6 ++++++
->  drivers/pci/host/pci-imx6.c                              | 14 +++++++++++---
->  2 files changed, 17 insertions(+), 3 deletions(-)
+Code has been redesigned to calculate penalty requirements on the fly. This
+significantly simplifies the implementation and removes some of the init
+calls from x86 architecture.
 
-Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/acpi/pci_link.c | 97 ++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 68 insertions(+), 29 deletions(-)
+
+diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+index ededa90..cc0ba16 100644
+--- a/drivers/acpi/pci_link.c
++++ b/drivers/acpi/pci_link.c
+@@ -36,6 +36,7 @@
+ #include <linux/mutex.h>
+ #include <linux/slab.h>
+ #include <linux/acpi.h>
++#include <linux/irq.h>
+ 
+ #include "internal.h"
+ 
+@@ -440,7 +441,6 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
+ #define ACPI_MAX_IRQS		256
+ #define ACPI_MAX_ISA_IRQ	16
+ 
+-#define PIRQ_PENALTY_PCI_AVAILABLE	(0)
+ #define PIRQ_PENALTY_PCI_POSSIBLE	(16*16)
+ #define PIRQ_PENALTY_PCI_USING		(16*16*16)
+ #define PIRQ_PENALTY_ISA_TYPICAL	(16*16*16*16)
+@@ -457,9 +457,9 @@ static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
+ 	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ6 */
+ 	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ7 parallel, spurious */
+ 	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ8 rtc, sometimes */
+-	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ9  PCI, often acpi */
+-	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ10 PCI */
+-	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ11 PCI */
++	0,				/* IRQ9  PCI, often acpi */
++	0,				/* IRQ10 PCI */
++	0,				/* IRQ11 PCI */
+ 	PIRQ_PENALTY_ISA_USED,		/* IRQ12 mouse */
+ 	PIRQ_PENALTY_ISA_USED,		/* IRQ13 fpe, sometimes */
+ 	PIRQ_PENALTY_ISA_USED,		/* IRQ14 ide0 */
+@@ -467,6 +467,60 @@ static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
+ 	/* >IRQ15 */
+ };
+ 
++static int acpi_irq_pci_sharing_penalty(int irq)
++{
++	struct acpi_pci_link *link;
++	int penalty = 0;
++
++	list_for_each_entry(link, &acpi_link_list, list) {
++		/*
++		 * If a link is active, penalize its IRQ heavily
++		 * so we try to choose a different IRQ.
++		 */
++		if (link->irq.active && link->irq.active == irq)
++			penalty += PIRQ_PENALTY_PCI_USING;
++		else {
++			int i;
++
++			/*
++			 * If a link is inactive, penalize the IRQs it
++			 * might use, but not as severely.
++			 */
++			for (i = 0; i < link->irq.possible_count; i++)
++				if (link->irq.possible[i] == irq)
++					penalty += PIRQ_PENALTY_PCI_POSSIBLE /
++						link->irq.possible_count;
++		}
++	}
++
++	return penalty;
++}
++
++static int acpi_irq_get_penalty(int irq)
++{
++	int penalty = 0;
++
++	if (irq < ACPI_MAX_ISA_IRQ)
++		penalty += acpi_irq_penalty[irq];
++
++	/*
++	* Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict
++	* with PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be
++	* use for PCI IRQs.
++	*/
++	if (irq == acpi_gbl_FADT.sci_interrupt) {
++		u32 type = irq_get_trigger_type(irq) & IRQ_TYPE_SENSE_MASK;
++
++		if (type != IRQ_TYPE_LEVEL_LOW)
++			penalty += PIRQ_PENALTY_ISA_ALWAYS;
++		else
++			penalty += PIRQ_PENALTY_PCI_USING;
++	}
++
++	penalty += acpi_irq_pci_sharing_penalty(irq);
++	return penalty;
++}
++
+ int __init acpi_irq_penalty_init(void)
+ {
+ 	struct acpi_pci_link *link;
+@@ -547,12 +601,12 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+ 		 * the use of IRQs 9, 10, 11, and >15.
+ 		 */
+ 		for (i = (link->irq.possible_count - 1); i >= 0; i--) {
+-			if (acpi_irq_penalty[irq] >
+-			    acpi_irq_penalty[link->irq.possible[i]])
++			if (acpi_irq_get_penalty(irq) >
++			    acpi_irq_get_penalty(link->irq.possible[i]))
+ 				irq = link->irq.possible[i];
+ 		}
+ 	}
+-	if (acpi_irq_penalty[irq] >= PIRQ_PENALTY_ISA_ALWAYS) {
++	if (acpi_irq_get_penalty(irq) >= PIRQ_PENALTY_ISA_ALWAYS) {
+ 		printk(KERN_ERR PREFIX "No IRQ available for %s [%s]. "
+ 			    "Try pci=noacpi or acpi=off\n",
+ 			    acpi_device_name(link->device),
+@@ -568,7 +622,6 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
+ 			    acpi_device_bid(link->device));
+ 		return -ENODEV;
+ 	} else {
+-		acpi_irq_penalty[link->irq.active] += PIRQ_PENALTY_PCI_USING;
+ 		printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
+ 		       acpi_device_name(link->device),
+ 		       acpi_device_bid(link->device), link->irq.active);
+@@ -800,9 +853,10 @@ static int __init acpi_irq_penalty_update(char *str, int used)
+ 			continue;
+ 
+ 		if (used)
+-			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_USED;
++			acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
++				PIRQ_PENALTY_ISA_USED;
+ 		else
+-			acpi_irq_penalty[irq] = PIRQ_PENALTY_PCI_AVAILABLE;
++			acpi_irq_penalty[irq] = 0;
+ 
+ 		if (retval != 2)	/* no next number */
+ 			break;
+@@ -819,34 +873,19 @@ static int __init acpi_irq_penalty_update(char *str, int used)
+  */
+ void acpi_penalize_isa_irq(int irq, int active)
+ {
+-	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
+-		if (active)
+-			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_USED;
+-		else
+-			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
+-	}
++	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty))
++		acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
++			active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING;
+ }
+ 
+ bool acpi_isa_irq_available(int irq)
+ {
+ 	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_irq_penalty) ||
+-			    acpi_irq_penalty[irq] < PIRQ_PENALTY_ISA_ALWAYS);
++		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
+ }
+ 
+-/*
+- * Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict with
+- * PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be use for
+- * PCI IRQs.
+- */
+ void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
+ {
+-	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
+-		if (trigger != ACPI_MADT_TRIGGER_LEVEL ||
+-		    polarity != ACPI_MADT_POLARITY_ACTIVE_LOW)
+-			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_ALWAYS;
+-		else
+-			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
+-	}
+ }
+ 
+ /*
+-- 
+1.8.2.1
+
