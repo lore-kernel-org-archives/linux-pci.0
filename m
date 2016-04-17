@@ -1,106 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53759 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752324AbcD0Cof (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Apr 2016 22:44:35 -0400
-Date: Tue, 26 Apr 2016 21:44:30 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-Subject: Re: [PATCH V6 06/13] arm64, pci, acpi: ACPI support for legacy IRQs
- parsing and consolidation with DT code.
-Message-ID: <20160427024430.GG6789@localhost>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-7-git-send-email-tn@semihalf.com>
+Received: from mail-io0-f170.google.com ([209.85.223.170]:35074 "EHLO
+	mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750951AbcDQPn3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 17 Apr 2016 11:43:29 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460740008-19489-7-git-send-email-tn@semihalf.com>
+In-Reply-To: <20160411085759.GA7088@leverpostej>
+References: <1460238624-2086-1-git-send-email-zajec5@gmail.com>
+	<20160411085759.GA7088@leverpostej>
+Date: Sun, 17 Apr 2016 17:43:27 +0200
+Message-ID: <CACna6rx4LP5n3KHwV4bGc0oeUM-PTS+2m29GCcxg=u1EujRmxg@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: iproc: Support DT property for ignoring aborts
+ when probing
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Mark Rutland <mark.rutland@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 15, 2016 at 07:06:41PM +0200, Tomasz Nowicki wrote:
-> To enable PCI legacy IRQs on platforms booting with ACPI, arch code
-> should include ACPI specific callbacks that parse and set-up the
-> device IRQ number, equivalent to the DT boot path. Owing to the current
-> ACPI core scan handlers implementation, ACPI PCI legacy IRQs bindings
-> cannot be parsed at device add time, since that would trigger ACPI scan
-> handlers ordering issues depending on how the ACPI tables are defined.
+On 11 April 2016 at 10:57, Mark Rutland <mark.rutland@arm.com> wrote:
+> Please Cc the device tree mailing list (devicetree@vger.kernel.org) when
+> sending device tree patches.
 
-Can you be a little more specific about the issue here?  I think you
-mean pci_device_add()-time, because that's where we call
-pcibios_add_device.  Which ACPI tables are involved?  _PRT?  Why is
-that a problem?  We don't cache those tables any more after
-181380b702ee ("PCI/ACPI: Don't cache _PRT, and don't associate them
-with bus numbers").
+Sorry, I'll remember to do that in future.
 
-x86 and ia64 both call acpi_pci_irq_enable() from
-pcibios_enable_device().  Could you do the same on ARM64?
-pcibios_enable_device() happens later than either pci_device_add() or
-pci_device_probe().
 
-> To solve this problem and consolidate FW PCI legacy IRQs parsing in
-> one single pcibios callback (pending final removal), this patch moves
-> DT PCI IRQ parsing to the pcibios_alloc_irq() callback (called by
-> PCI core code at device probe time) and adds ACPI PCI legacy IRQs
-> parsing to the same callback too, so that FW PCI legacy IRQs parsing
-> is confined in one single arch callback that can be easily removed
-> when code parsing PCI legacy IRQs is consolidated and moved to core
-> PCI code.
-> 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> ---
->  arch/arm64/kernel/pci.c | 11 ++++++++---
->  1 file changed, 8 insertions(+), 3 deletions(-)
-> 
-> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> index c72de66..15109c11 100644
-> --- a/arch/arm64/kernel/pci.c
-> +++ b/arch/arm64/kernel/pci.c
-> @@ -50,11 +50,16 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
->  }
->  
->  /*
-> - * Try to assign the IRQ number from DT when adding a new device
-> + * Try to assign the IRQ number when probing a new device
->   */
-> -int pcibios_add_device(struct pci_dev *dev)
-> +int pcibios_alloc_irq(struct pci_dev *dev)
->  {
-> -	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> +	if (acpi_disabled)
-> +		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> +#ifdef CONFIG_ACPI
-> +	else
-> +		return acpi_pci_irq_enable(dev);
-> +#endif
+> On Sat, Apr 09, 2016 at 11:50:23PM +0200, Rafał Miłecki wrote:
+>> Some devices (e.g. Northstar ones) may have bridges that forward
+>> harmless errors to the ARM core. In such case we need an option to
+>> add a handler ignoring them.
+>>
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>> ---
+>>  .../devicetree/bindings/pci/brcm,iproc-pcie.txt         |  6 ++++++
+>>  drivers/pci/host/pcie-iproc-platform.c                  |  2 ++
+>>  drivers/pci/host/pcie-iproc.c                           | 17 +++++++++++++++++
+>>  drivers/pci/host/pcie-iproc.h                           |  1 +
+>>  4 files changed, 26 insertions(+)
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+>> index 01b88f4..c91b20a 100644
+>> --- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+>> +++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+>> @@ -22,6 +22,12 @@ Optional properties:
+>>
+>>  - brcm,pcie-ob: Some iProc SoCs do not have the outbound address mapping done
+>>  by the ASIC after power on reset. In this case, SW needs to configure it
+>> +- brcm,pcie-hook-abort-handler: During PCI bus probing (device enumeration)
+>> +  there can be errors that are expected and harmless. Unfortunately some bridges
+>> +  can't be configured to ignore them and they forward them to the ARM core
+>> +  triggering die().
+>> +  This property should be set in such case, it will make driver add its own
+>> +  handler ignoring such errors.
+>
+> Rather than describing what the kernel should do, this should describe
+> the property of the hardware (e.g. this should be named something like
+> brcm,spurious-probing-abort).
 
-Not your problem, but your patch makes it obvious: it's ugly that we
-set dev->irq to the IRQ returned from of_irq_parse_and_map_pci(), but
-acpi_pci_irq_enable() sets dev->irq internally.
+Florian pointed it to me too, I'll use a better property name if we
+decide to go this way. Thanks for your comment.
 
-x86 also has the situation of calling either acpi_pci_irq_enable() or
-of_irq_parse_and_map_pci(), and it looks like they can even decide at
-run-time as you can here.  If we're solving the same problem, can we
-use a similar mechanism?  x86 sets a pcibios_enable_irq function
-pointer.
-
->  	return 0;
->  }
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Rafał
