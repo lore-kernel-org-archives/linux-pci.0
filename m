@@ -1,141 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:35388 "EHLO
-	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752250AbcDARO3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Apr 2016 13:14:29 -0400
-Received: by mail-pf0-f175.google.com with SMTP id n5so95549709pfn.2
-        for <linux-pci@vger.kernel.org>; Fri, 01 Apr 2016 10:14:29 -0700 (PDT)
-From: Tim Harvey <tharvey@gateworks.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Lucas Stach <l.stach@pengutronix.de>,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	Zhu Richard <Richard.Zhu@freescale.com>,
-	Akshay Bhat <akshay.bhat@timesys.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Shawn Guo <shawnguo@kernel.org>
-Subject: [PATCH v3] PCI: imx6: add dt prop for link gen, default to gen1
-Date: Fri,  1 Apr 2016 10:17:09 -0700
-Message-Id: <1459531029-16208-1-git-send-email-tharvey@gateworks.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V6 08/13] PCI: generic, thunder: update to use generic
+ ECAM API
+To: Arnd Bergmann <arnd@arndb.de>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <CAKc_7PWw5VaPxcOpWbonksx6k4W5fe9yO8wBfigXNRkFAYAYEg@mail.gmail.com>
+ <5714DB37.7000907@semihalf.com> <10639671.xGDtp1R8bk@wuerfel>
+Cc: Jayachandran C <jchandra@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
+	Jon Masters <jcm@redhat.com>, linaro-acpi@lists.linaro.org,
+	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com,
+	David Daney <ddaney@caviumnetworks.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	robert.richter@caviumnetworks.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, Wangyijing <wangyijing@huawei.com>,
+	Marcin Wojtas <mw@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <5715362A.7070701@semihalf.com>
+Date: Mon, 18 Apr 2016 21:31:54 +0200
+MIME-Version: 1.0
+In-Reply-To: <10639671.xGDtp1R8bk@wuerfel>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
-the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
-external clock source is present and supplied back to the IMX6 PCIe core
-via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
+On 18.04.2016 16:44, Arnd Bergmann wrote:
+> On Monday 18 April 2016 15:03:51 Tomasz Nowicki wrote:
+>> On 16.04.2016 16:36, Jayachandran C wrote:
+>>> On Sat, Apr 16, 2016 at 1:01 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>>>> On Saturday 16 April 2016 12:50:13 Jayachandran C wrote:
+>>> The whole pci-thunder-*.c is to support thunder PCI quirks since the
+>>> generic OF is handled by pci-host-common.c and generic ECAM is now
+>>> separated -  duplicating the whole file for ACPI will be bad.
+>>
+>> Yes, it would be too much code duplication. Also, we already know
+>> drivers which need quirks.
+>>
+>> We really need to agree on best approach here. Here are requirements
+>> which came up (please correct me if misunderstood sth):
+>>
+>> Arnd:
+>> 1. Initial DT driver should be standalone [Arnd]
+>> 2. No exported symbols [Arnd]
+>> 3. Duplicate necessary code to ACPI framework.
+>
+> Correct.
+>
+>> JC:
+>> 1. Adding linker section is wrong.
+>> 2. Quirks should be exported (pci_thunder_ecam_ops), then no need for
+>> adding linker section
+>> 3. To much duplication to copy code into the ACPI framework.
+>>
+>> My opinion:
+>> 1. I like linker section because it is easy to maintain and no need to
+>> export symbols.
+>> 2. We need more sophisticated algorithm for matching quirks (DMI is not
+>> enough and not only for ThunderX drivers). Of course I am open to any
+>> new suggestions.
+>
+> Agreed.
+>
+>> 3. To much duplication to copy code into the ACPI framework.
+>>
+>> Thanks in advance for any pointers.
+>
+> Can you be more specific about what code actually would need to
+> be duplicated? Anything besides the config space operations?
+>
 
-Add a dt property to specify gen1 vs gen2 and check this before allowing
-a Gen2 link.
+Basically the whole content of pci-thunder-ecam.c and pci-thunder-pem.c.
 
-We default to Gen1 if the property is not present because at this time there
-are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
+pci-thunder-ecam.c contains config space accessors. Similar for 
+pci-thunder-pem.c but it also has extra init call (it is now called 
+thunder_pem_init) which finds and maps related registers.
 
-In order to be Gen2 compliant on IMX6 you need to:
- - have a Gen2 compliant external clock generator and route that clock back
-   to either LVDS CLK1 or LVDS CLK2 as an input.
-   (see IMX6SX-SabreSD reference design)
- - specify this clock in the pcie node in the dt
-   (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
-    IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
-
-[1] https://community.freescale.com/message/453209
-
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Fabio Estevam <fabio.estevam@freescale.com>
-Cc: Zhu Richard <Richard.Zhu@freescale.com>
-Cc: Akshay Bhat <akshay.bhat@timesys.com>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Shawn Guo <shawnguo@kernel.org>
-Signed-off-by: Tim Harvey <tharvey@gateworks.com>
----
-v3:
- - added note in dt bindings doc that we limit to gen1 unless this is specified
-   as gen2 capable
- - move property to imx6 pcie phy instead of designware core
- - don't use &ret as temp storage as of_property_read_u32() doesn't change the
-   outval if property isn't found
-v2:
- - moved dt property to designware core
-
-Signed-off-by: Tim Harvey <tharvey@gateworks.com>
----
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  6 ++++++
- drivers/pci/host/pci-imx6.c                        | 23 ++++++++++++++++------
- 2 files changed, 23 insertions(+), 6 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 6fbba53..4ffaf19 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -13,6 +13,12 @@ Required properties:
- - clock-names: Must include the following additional entries:
- 	- "pcie_phy"
- 
-+Optional properties:
-+- max-link-speed: Specify PCI gen for link capability. Must be '2' for
-+  gen2, otherwise will default to gen1. Note that the IMX6 LVDS clock outputs
-+  do not meet gen2 jitter requirements and thus for gen2 capability a gen2
-+  compliant clock generator should be used and configured.
-+
- Example:
- 
- 	pcie@0x01000000 {
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 88ccfea..d1bfcff 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -39,6 +39,7 @@ struct imx6_pcie {
- 	struct pcie_port	pp;
- 	struct regmap		*iomuxc_gpr;
- 	void __iomem		*mem_base;
-+	int			link_gen;
- };
- 
- /* PCIe Root Complex registers (memory-mapped) */
-@@ -393,11 +394,15 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
- 	if (ret)
- 		return ret;
- 
--	/* Allow Gen2 mode after the link is up. */
--	tmp = readl(pp->dbi_base + PCIE_RC_LCR);
--	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
--	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
--	writel(tmp, pp->dbi_base + PCIE_RC_LCR);
-+	if (imx6_pcie->link_gen == 2) {
-+		/* Allow Gen2 mode after the link is up. */
-+		tmp = readl(pp->dbi_base + PCIE_RC_LCR);
-+		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-+		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
-+		writel(tmp, pp->dbi_base + PCIE_RC_LCR);
-+	} else {
-+		dev_info(pp->dev, "Link: Gen2 disabled\n");
-+	}
- 
- 	/*
- 	 * Start Directed Speed Change so the best possible speed both link
-@@ -421,7 +426,7 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
- 	}
- 
- 	tmp = readl(pp->dbi_base + PCIE_RC_LCSR);
--	dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
-+	dev_info(pp->dev, "Link up, Gen%i\n", (tmp >> 16) & 0xf);
- 	return 0;
- }
- 
-@@ -622,6 +627,12 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(imx6_pcie->iomuxc_gpr);
- 	}
- 
-+	/* Limit link speed */
-+	ret = of_property_read_u32(pp->dev->of_node, "max-link-speed",
-+				   &imx6_pcie->link_gen);
-+	if (ret)
-+		imx6_pcie->link_gen = -1;
-+
- 	ret = imx6_add_pcie_port(pp, pdev);
- 	if (ret < 0)
- 		return ret;
--- 
-1.9.1
+Thanks,
+Tomasz
 
