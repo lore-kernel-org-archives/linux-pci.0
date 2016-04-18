@@ -1,66 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:40247 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751823AbcDPXdZ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sat, 16 Apr 2016 19:33:25 -0400
-Date: Sun, 17 Apr 2016 09:33:21 +1000
-From: Simon Horman <horms@verge.net.au>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: rcar: select PCI_MSI_IRQ_DOMAIN
-Message-ID: <20160416233321.GC15763@verge.net.au>
-References: <1460837798-1239513-1-git-send-email-arnd@arndb.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 18 Apr 2016 11:30:07 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Timur Tabi <timur@codeaurora.org>
+Cc: iommu@lists.linux-foundation.org,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	lkml <linux-kernel@vger.kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, Hanjun Guo <hanjun.guo@linaro.org>,
+	Jon Masters <jcm@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, vikrams@codeaurora.org
+Subject: Re: [RFC PATCH 09/11] drivers: acpi: implement acpi_dma_configure
+Message-ID: <20160418103007.GC2427@red-moon>
+References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1460654743-7896-10-git-send-email-lorenzo.pieralisi@arm.com>
+ <CAOZdJXXtZq6uyE+5sseX7M_6Kq8wFG+37qd5TNSusKj=0gd8zA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460837798-1239513-1-git-send-email-arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAOZdJXXtZq6uyE+5sseX7M_6Kq8wFG+37qd5TNSusKj=0gd8zA@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 16, 2016 at 10:15:46PM +0200, Arnd Bergmann wrote:
-> The R-CAR PCIe driver requires the use of irq domains for its
-> MSI code:
+On Fri, Apr 15, 2016 at 01:29:14PM -0500, Timur Tabi wrote:
+> On Thu, Apr 14, 2016 at 12:25 PM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> > +void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+> > +{
+> > +       struct iommu_ops *iommu;
+> > +
+> > +       iommu = iort_iommu_configure(dev);
+> > +
+> > +       /*
+> > +        * Assume dma valid range starts at 0 and covers the whole
+> > +        * coherent_dma_mask.
+> > +        */
+> > +       arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
+> > +                          attr == DEV_DMA_COHERENT);
+> > +}
 > 
-> drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_msi_irq':
-> drivers/pci/host/pcie-rcar.c:635:9: error: implicit declaration of function 'irq_find_mapping' [-Werror=implicit-function-declaration]
-> drivers/pci/host/pcie-rcar.c: In function 'rcar_msi_setup_irq':
-> drivers/pci/host/pcie-rcar.c:666:8: error: implicit declaration of function 'irq_create_mapping' [-Werror=implicit-function-declaration]
-> drivers/pci/host/pcie-rcar.c: In function 'rcar_pcie_enable_msi':
-> drivers/pci/host/pcie-rcar.c:725:16: error: implicit declaration of function 'irq_domain_add_linear' [-Werror=implicit-function-declaration]
-> drivers/pci/host/pcie-rcar.c:725:14: error: assignment makes pointer from integer without a cast [-Werror=int-conversion]
->   msi->domain = irq_domain_add_linear(pcie->dev->of_node, INT_PCI_MSI_NR,
->               ^
-> drivers/pci/host/pcie-rcar.c:762:2: error: implicit declaration of function 'irq_domain_remove' [-Werror=implicit-function-declaration]
+> I have a network driver that is impacted by this code, so thank you
+> for posting this. (See
+> https://www.mail-archive.com/netdev@vger.kernel.org/msg106249.html).
 > 
-> This ensures that the feature is always enabled by adding a
-> Kconfig select statement. This is not consistent with what the
-> other drivers do at the moment, but I have another patch that
-> changes them to do it like this one, which is more logical.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> One one SOC, the driver needs to set the mask to 32 bits.  On another
+> SOC, it needs to set it to 64 bits.  On device tree, the driver will
+> use dma-ranges.
 
-This seems reasonable to me:
+First off I think we agree this patch does not change current behaviour
+as far as the devices default dma_mask are concerned. They are
+initialized in PCI/ACPI core code:
 
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
+- pci_setup_device()
+- acpi_create_platform_device()
 
-> ---
->  drivers/pci/host/Kconfig | 2 ++
->  1 file changed, 2 insertions(+)
+As for ACPI DT-dma-ranges equivalent I have to check if I can use
+the _DMA method for that so that we can put in place the same
+mechanism as DT to override the default masks, other than that it is
+up to the drivers to set-up the dma mask accordingly, that's not
+something this patchset is changing anyway.
+
+> In your patches, where is coherent_dma_mask initialized?  I found this
+> code in add_smmu_platform_device(), but I think this is setting the
+> mask for the IOMMU driver, not the individual devices.  Either way, I
+> don't understand where the correct value is going to be overridden.
+
+For the ARM SMMU table walker:
+
+arm_smmu_device_cfg_probe() - dma_set_mask_and_coherent()
+
+For other devices see above.
+
+Thanks,
+Lorenzo
+
 > 
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index 169c545bf70a..6d642aa390b0 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -72,6 +72,8 @@ config PCI_RCAR_GEN2
->  config PCI_RCAR_GEN2_PCIE
->  	bool "Renesas R-Car PCIe controller"
->  	depends on ARCH_RENESAS || (ARM && COMPILE_TEST)
-> +	select PCI_MSI
-> +	select PCI_MSI_IRQ_DOMAIN
->  	help
->  	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
->  
+> +       /*
+> +        * Set default dma mask value for the table walker,
+> +        * to be overridden on probing with correct value.
+> +        */
+> +       *pdev->dev.dma_mask = DMA_BIT_MASK(32);
+> +       pdev->dev.coherent_dma_mask = *pdev->dev.dma_mask;
+> 
 > -- 
-> 2.7.0
+> Qualcomm Innovation Center, Inc.
+> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+> a Linux Foundation Collaborative Project.
 > 
