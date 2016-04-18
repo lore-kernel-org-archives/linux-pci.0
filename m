@@ -1,90 +1,39 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Jon Masters <jcm@jonmasters.org>
-References: <1460414707-19153-1-git-send-email-jchandra@broadcom.com>
- <1460414707-19153-3-git-send-email-jchandra@broadcom.com>
- <570C4034.20105@caviumnetworks.com> <570C78F1.4090701@jonmasters.org>
- <20160412164413.GA32297@red-moon>
-Cc: David Daney <ddaney@caviumnetworks.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Tomasz Nowicki <tn@semihalf.com>, rafael@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com,
-	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>,
-	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
-	Liviu.Dudau@arm.com, wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org
-From: Jon Masters <jcm@jonmasters.org>
-Message-ID: <570F30D4.2030102@jonmasters.org>
-Date: Thu, 14 Apr 2016 01:55:32 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from www.linutronix.de ([62.245.132.108]:33486 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975AbcDRIbt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Apr 2016 04:31:49 -0400
+Date: Mon, 18 Apr 2016 10:30:18 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Christoph Hellwig <hch@lst.de>
+cc: linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 7/8] pci: spread interrupt vectors in
+ pci_alloc_irq_vectors
+In-Reply-To: <1460770552-31260-8-git-send-email-hch@lst.de>
+Message-ID: <alpine.DEB.2.11.1604181026290.3941@nanos>
+References: <1460770552-31260-1-git-send-email-hch@lst.de> <1460770552-31260-8-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20160412164413.GA32297@red-moon>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [PATCH v2 2/4] PCI: Provide common functions for ECAM mapping
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/12/2016 12:44 PM, Lorenzo Pieralisi wrote:
-> On Tue, Apr 12, 2016 at 12:26:25AM -0400, Jon Masters wrote:
+On Fri, 15 Apr 2016, Christoph Hellwig wrote:
+> Set the affinity_mask before allocating vectors.  And for now we also
+> need a little hack after allocation, hopefully someone smarter than me
+> can move this into the core code.
 > 
-> [...]
-> 
->> Quoting Bjorn's original reply to the previous series:
->>
->>> Some of the code that moved to drivers/acpi/pci_mcfg.c is not
->>> really ACPI-specific, and could potentially be used for non-ACPI
->>> bridges that support ECAM.  I'd like to see that sort of code
->>> moved to a new file like drivers/pci/ecam.c.
->>
->> So my guess is that this is the reasoning behind JC's file layout.
->>
->> I'm curious what Lorenzo's take on things is currently. I assume this
->> series is now to be the official coordinated version of this effort for
->> upstream, following the advice of Bjorn previously, but I would like to
->> know if everyone is behind this plan. I've (previously) requested a
->> Linaro LEG meeting this week (part of our bootarch working group) to
->> specifically discuss the status of PCI upstreaming in order to get the
->> different vendors together to ensure every single one of them is
->> tracking the correct latest effort and doing what is needed to test/aid,
->> hence my ask. If this is now plan A, I'll make sure everyone is aligned
->> behind it and start pinging people individually for testing.
-> 
-> My take is that JC's aim is to get this four patch series reviewed and
-> merged
+>  
+> +	/* XXX: this should really move into the core IRQ allocation code.. */
+> +	if (vecs > 1) {
+> +		for (i = 0; i < vecs; i++)
+> +			irq_program_affinity(irqs[i]);
 
-Indeed, I see that's probably the goal, and why not :)
+No. We don't want to do that at allocation time. The problem here is that we
+set the IRQF_NOBALANCING flag for the allocated interrupts and therefor the
+affinity is not set from request_irq(). We'll fix it there.
 
-> (which is *not* sufficient to get ACPI PCI to work fully on ARM64
-> - see cover letter - the remaining patches in his branch are not
-> fixes, it is code that is required to get things to work, these 4
-> patches stand alone are not sufficient but I understand he wants to get
-> them reviewed following feedback on the lists) so that we can make
-> progress on ACPI PCI on ARM64.
+Thanks,
 
-Agreed. I went through the branch and the 11 patches there, reacquainted
-myself with what's what. So what we have now is 4 patches here plus a
-few others that in total replace v5 of your previous mmconfig patches in
-functionality. The question is what happens with the rest (of JC's
-branch let's say) - do they get sent out now too?
-
-> I will comment on the patches as soon as I have time to review
-> them, I certainly would like to understand what we have to do with the
-> rest of the code though (provided this series is good to go) see above.
-
-Right. That's my reason for asking. I'd like to know who is driving (I
-believe that to be Lorenzo) and what the path forward is, and whether we
-need to get additional support from anyone else. There's a multi-vendor
-meeting in the morning where I'm going to summarize the current state of
-these patches and I would like to know (soon) what the plan is so that
-we can get everyone on deck to help out at least with testing (most have
-tested the previous set, but we need public acks happening).
-
-Jon.
+	tglx
 
