@@ -1,81 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p3plsmtps2ded03.prod.phx3.secureserver.net ([208.109.80.60]:58904
-	"EHLO p3plsmtps2ded03.prod.phx3.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755178AbcDAXKZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 1 Apr 2016 19:10:25 -0400
-From: Jake Oshins <jakeo@microsoft.com>
-To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v4 1/7] drivers:hv: Lock access to hyperv_mmio resource tree
-Date: Fri,  1 Apr 2016 17:47:41 -0700
-Message-Id: <1459558067-1725-2-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
-References: <y>
- <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
+Received: from mout.kundenserver.de ([212.227.17.10]:59352 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751682AbcDROjk (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Apr 2016 10:39:40 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: Jayachandran C <jchandra@broadcom.com>,
+	Jon Masters <jcm@redhat.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
+	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
+	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
+	Wangyijing <wangyijing@huawei.com>,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org
+Subject: Re: [PATCH V6 00/13] Support for generic ACPI based PCI host controller
+Date: Mon, 18 Apr 2016 16:38:26 +0200
+Message-ID: <4253385.YPSgBqNLfg@wuerfel>
+In-Reply-To: <5714E224.1030307@semihalf.com>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com> <CAKc_7PVC6O4oh+bTmpLQRrhHrqGbaKB2hynecKOLmc5fBc-VVQ@mail.gmail.com> <5714E224.1030307@semihalf.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In existing code, this tree of resources is created
-in single-threaded code and never modified after it is
-created, and thus needs no locking.  This patch introduces
-a semaphore for tree access, as other patches in this
-series introduce run-time modifications of this resource
-tree which can happen on multiple threads.
+On Monday 18 April 2016 15:33:24 Tomasz Nowicki wrote:
+> 
+> Of course we can split discussion into the two topics:
+> 1. ECAM based ACPI host controller - patches [1-10]
+> 2. Quirks handling and examples.
+> 
+> IMO, it is very helpful for reviewers to go with one unified patch set 
+> and see the whole picture. Also, as you can see, quirks handling allows 
+> people to test it easily with their servers (not only QEMU but real HW).
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- drivers/hv/vmbus_drv.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+I think splitting the two would help tremendously. The regular
+PCI support should just get merged (it should have been completed
+years ago when ACPI for ARM64 was first implemented), while the quirks
+handling contains all ugly nonstandard hacks we have to be careful
+about.
 
-diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-index 64713ff..799518b 100644
---- a/drivers/hv/vmbus_drv.c
-+++ b/drivers/hv/vmbus_drv.c
-@@ -102,6 +102,7 @@ static struct notifier_block hyperv_panic_block = {
- };
- 
- struct resource *hyperv_mmio;
-+DEFINE_SEMAPHORE(hyperv_mmio_lock);
- 
- static int vmbus_exists(void)
- {
-@@ -1132,7 +1133,10 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 	resource_size_t range_min, range_max, start, local_min, local_max;
- 	const char *dev_n = dev_name(&device_obj->device);
- 	u32 fb_end = screen_info.lfb_base + (screen_info.lfb_size << 1);
--	int i;
-+	int i, retval;
-+
-+	retval = -ENXIO;
-+	down(&hyperv_mmio_lock);
- 
- 	for (iter = hyperv_mmio; iter; iter = iter->sibling) {
- 		if ((iter->start >= max) || (iter->end <= min))
-@@ -1169,13 +1173,17 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 			for (; start + size - 1 <= local_max; start += align) {
- 				*new = request_mem_region_exclusive(start, size,
- 								    dev_n);
--				if (*new)
--					return 0;
-+				if (*new) {
-+					retval = 0;
-+					goto exit;
-+				}
- 			}
- 		}
- 	}
- 
--	return -ENXIO;
-+exit:
-+	up(&hyperv_mmio_lock);
-+	return retval;
- }
- EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
- 
--- 
-1.9.1
-
+	Arnd
