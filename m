@@ -1,123 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:11798 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751565AbcDUNKK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 21 Apr 2016 09:10:10 -0400
-Date: Thu, 21 Apr 2016 16:10:02 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH v2 4/4] PCI: Add runtime PM support for PCIe ports
-Message-ID: <20160421131002.GX1725@lahna.fi.intel.com>
-References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
- <1460111790-92836-5-git-send-email-mika.westerberg@linux.intel.com>
- <20160412175203.GB13637@wunner.de>
- <20160413083352.GI1714@lahna.fi.intel.com>
- <20160418143823.GA15165@wunner.de>
- <20160419123131.GE1725@lahna.fi.intel.com>
- <20160420192211.GA16093@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160420192211.GA16093@wunner.de>
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:58303 "EHLO
+	metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751692AbcDRJB6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Apr 2016 05:01:58 -0400
+Message-ID: <1460970117.2331.7.camel@pengutronix.de>
+Subject: Re: [PATCH v2 3/3] ARM: dts: imx6qp: Specify imx6qp version of PCIe
+ core
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Andrey Smirnov <andrew.smirnov@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	gary.bisson@boundarydevices.com
+Date: Mon, 18 Apr 2016 11:01:57 +0200
+In-Reply-To: <1460958677-10604-3-git-send-email-andrew.smirnov@gmail.com>
+References: <1460958677-10604-1-git-send-email-andrew.smirnov@gmail.com>
+	 <1460958677-10604-3-git-send-email-andrew.smirnov@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 20, 2016 at 09:22:11PM +0200, Lukas Wunner wrote:
-> > I've been testing this by writing to 'd3cold_allowed' sysfs file and it
-> > suspends just fine when it is 1. How do you reproduce this?
+Am Sonntag, den 17.04.2016, 22:51 -0700 schrieb Andrey Smirnov:
+> I.MX6Quad Plus has a slightly different version of PCIe core than
+> reqular i.MX6Quad.
 > 
-> Testing with d3cold_allowed is misleading in this case because
-> d3cold_allowed_store() already calls pm_runtime_resume(dev),
-> and the next time dev runtime suspends, it automatically calls
-> rpm_idle() on its parent. This masks that a call to pm_request_idle()
-> is currently missing in pci_bridge_d3_update().
+> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
 
-I don't think pci_bridge_d3_* functions should care about device runtime
-PM at all. They are meant to update whether the bridge can go to D3 or
-not nothing else.
+Under the assumption that the missing documentation for this compatible
+is added in patch 2/3 in the next revision of this patchset:
 
-> However pci_bridge_d3_update() also gets called e.g. from
-> pci_remove_bus_device() and there's no call to pm_request_idle()
-> there, so a bridge would stay awake even if a child that has blocked
-> d3 has been removed.
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
 
-As far as I can tell removing a device ends up calling
-__device_release_driver() where runtime PM is updated accordingly. That
-should trigger the parent device (upstream bridge) to runtime suspend if
-there is no more active children.
-
-> I only noticed this because I force bridge_d3 = true when loading
-> the thunderbolt upstream bridge driver, as a workaround for the BIOS
-> cut-off date, and noticed that I had to call pm_request_idle() because
-> otherwise the bridges would stay awake.
-
-Well, that's probably the right thing to do. bridge_d3 is about whether
-the bridge can go to D3, not if it should runtime suspend right now.
-
-> I hadn't played with d3cold_allowed before but tested it now that
-> you've mentioned it. Found a bug there:
+> ---
 > 
-> If d3cold_allowed is set to false for a device via sysfs, the bridge_d3
-> attribute of its parent bridges will correctly be updated to false.
+> Changes since v1:
 > 
-> If d3cold_allowed is then set to true and the device has runtime
-> suspended in the meantime, the bridge_d3 attribute of its parent bridges
-> is *not* reverted back to true as it should. The reason is that when the
-> device runtime suspended, its no_d3cold attribute was set to false in
-> pci_pm_runtime_suspend() because d3cold_allowed was false. But no_d3cold
-> isn't reverted back to true when setting d3cold_allowed to true and
-> because this attribute is checked in pci_dev_check_d3cold(), the parent
-> bridges' bridge_d3 attribute remains false.
-
-Yes, you are right.
-
-> no_d3cold is just a transient variable used by pci_pm_runtime_suspend()
-> and acpi_pci_choose_state(), which is indirectly called from it via
-> pci_finish_runtime_suspend(). One can fix this by reverting no_d3cold
-> back to false at the end of pci_pm_runtime_suspend(), like this:
-> https://github.com/l1k/linux/commit/9b9ffb8
-
-That works or alternatively we could make no_d3cold sticky by making all
-changes go through pci_d3cold_enable()/disable(). That way upstream
-bridges ->bridge_d3 should be in always in sync.
-
-> > > One detail I'm not sure about: If you've got a hotplug downstream port
-> > > behind an upstream port and the upstream port goes to D3hot, is it
-> > > still possible for the downstream port to signal hotplug interrupts?
-> > > In other words, can INTx or MSI interrupts generated by the downstream
-> > > bridge still be routed via the upstream bridge if the upstream bridge
-> > > is in D3hot? I cannot easily test this, I'd have to hack the tg3 driver
-> > > for my Thunderbolt Ethernet adapter to use runtime suspend.
-> > 
-> > If the downstream port is able to trigger wake (PME) from D3cold, I
-> > think it should work but I'm not 100% sure.
+> 	- Patchset is rebased against
+>           https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-imx6
 > 
-> I've been able to test this now with a hacked tg3 driver and it's as
-> I expected: A hotplug port may go to D3hot and will still generate
-> interrupts on hotplug, but all its parent ports are *not* allowed
-> to go to D3hot because otherwise the hotplug interrupts will no longer
-> come through.
+> 	- DTS files changes moved into a separate patch
+> 
+>  arch/arm/boot/dts/imx6qp.dtsi | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/arch/arm/boot/dts/imx6qp.dtsi b/arch/arm/boot/dts/imx6qp.dtsi
+> index 1ada714..886dbf2 100644
+> --- a/arch/arm/boot/dts/imx6qp.dtsi
+> +++ b/arch/arm/boot/dts/imx6qp.dtsi
+> @@ -82,5 +82,8 @@
+>  				      "ldb_di0", "ldb_di1", "prg";
+>  		};
+>  
+> +		pcie: pcie@0x01000000 {
+> +			compatible = "fsl,imx6qp-pcie", "snps,dw-pcie";
+> +		};
+>  	};
+>  };
 
-Interrupts are not possible from any other state than D0 so it is always
-PME that gets sent upstream.
 
-Once you move parent port of that downstream port to D3hot it means that
-the downstream port is, in fact in D3cold and the link may be in L2 or
-L3 (depending on the platform). So a hotplug capable port must be able
-to trigger PME from D3cold and you need to enable that as well.
-
-> The algorithm in pci_bridge_d3_update() and pci_dev_check_d3cold()
-> needs to be amended to take that into account. Hm, it's nontrivial I
-> guess, allowing bridge_d3 = true for the lowest hotplug bridge in a
-> hierarchy but not for anything above?
-
-If we need to do things like that, it will get pretty complex and we
-still cannot be sure whether hotplug works. I think it is safer to go
-back to what I already had and disable runtime PM from such ports.
