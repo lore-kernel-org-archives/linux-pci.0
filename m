@@ -1,58 +1,186 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from andre.telenet-ops.be ([195.130.132.53]:35631 "EHLO
-	andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751671AbcDTPcX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2016 11:32:23 -0400
-From: Geert Uytterhoeven <geert+renesas@glider.be>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>, Lee Jones <lee@kernel.org>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Mark Brown <broonie@kernel.org>,
-	Alexandre Belloni <alexandre.belloni@free-electrons.com>,
-	Joe Perches <joe@perches.com>
-Cc: devicetree@vger.kernel.org, linux-input@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, dmaengine@vger.kernel.org,
-	Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH 11/14] PCI: hisi: DT spelling s/interrupts-*/interrupt-*/
-Date: Wed, 20 Apr 2016 17:32:16 +0200
-Message-Id: <1461166339-11109-12-git-send-email-geert+renesas@glider.be>
-In-Reply-To: <1461166339-11109-1-git-send-email-geert+renesas@glider.be>
-References: <1461166339-11109-1-git-send-email-geert+renesas@glider.be>
+Received: from e28smtp08.in.ibm.com ([125.16.236.8]:45109 "EHLO
+	e28smtp08.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753669AbcDRK5G (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Apr 2016 06:57:06 -0400
+Received: from localhost
+	by e28smtp08.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Mon, 18 Apr 2016 16:27:03 +0530
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org, linux-doc@vger.kernel.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com, Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [RFC v6 04/10] PCI: Add support for enforcing all MMIO BARs to be page aligned
+Date: Mon, 18 Apr 2016 18:56:00 +0800
+Message-Id: <1460976961-29328-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1460976961-29328-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1460976961-29328-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
- Documentation/devicetree/bindings/pci/hisilicon-pcie.txt | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+When vfio passthrough a PCI device of which MMIO BARs are
+smaller than PAGE_SIZE, guest will not handle the mmio
+accesses to the BARs which leads to mmio emulations in host.
 
-diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-index b721beacfe4dae6c..59c2f47aa303ae24 100644
---- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-@@ -34,11 +34,11 @@ Hip05 Example (note that Hip06 is the same except compatible):
- 		ranges = <0x82000000 0 0x00000000 0x220 0x00000000 0 0x10000000>;
- 		num-lanes = <8>;
- 		port-id = <1>;
--		#interrupts-cells = <1>;
--		interrupts-map-mask = <0xf800 0 0 7>;
--		interrupts-map = <0x0 0 0 1 &mbigen_pcie 1 10
--				  0x0 0 0 2 &mbigen_pcie 2 11
--				  0x0 0 0 3 &mbigen_pcie 3 12
--				  0x0 0 0 4 &mbigen_pcie 4 13>;
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0xf800 0 0 7>;
-+		interrupt-map = <0x0 0 0 1 &mbigen_pcie 1 10
-+				 0x0 0 0 2 &mbigen_pcie 2 11
-+				 0x0 0 0 3 &mbigen_pcie 3 12
-+				 0x0 0 0 4 &mbigen_pcie 4 13>;
- 		status = "ok";
- 	};
+This is because vfio will not allow to passthrough one BAR's
+mmio page which may be shared with other BARs. Otherwise,
+there will be a backdoor that guest can use to access BARs
+of other guest.
+
+To solve this issue, this patch modifies resource_alignment
+to support syntax where multiple devices get the same
+alignment. So we can use something like
+"pci=resource_alignment=*:*:*.*:noresize" to enforce the
+alignment of all MMIO BARs to be at least PAGE_SIZE so that
+one BAR's mmio page would not be shared with other BARs.
+
+And we also define a macro PCIBIOS_MIN_ALIGNMENT to enable this
+automatically on PPC64 platform which can easily hit this issue
+because its PAGE_SIZE is 64KB.
+
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ Documentation/kernel-parameters.txt |    2 ++
+ arch/powerpc/include/asm/pci.h      |    2 ++
+ drivers/pci/pci.c                   |   64 +++++++++++++++++++++++++++++------
+ 3 files changed, 57 insertions(+), 11 deletions(-)
+
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index d8b29ab..542be4a 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2918,6 +2918,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				aligned memory resources.
+ 				If <order of align> is not specified,
+ 				PAGE_SIZE is used as alignment.
++				<domain>, <bus>, <slot> and <func> can be set to
++				"*" which means match all values.
+ 				PCI-PCI bridge can be specified, if resource
+ 				windows need to be expanded.
+ 				noresize: Don't change the resources' sizes when
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index 6f8065a..78f230f 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -30,6 +30,8 @@
+ #define PCIBIOS_MIN_IO		0x1000
+ #define PCIBIOS_MIN_MEM		0x10000000
+ 
++#define PCIBIOS_MIN_ALIGNMENT  PAGE_SIZE
++
+ struct pci_dev;
+ 
+ /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7564ccc..0381c28 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4605,7 +4605,12 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 	int seg, bus, slot, func, align_order, count;
+ 	resource_size_t align = 0;
+ 	char *p;
++	bool invalid = false;
+ 
++#ifdef PCIBIOS_MIN_ALIGNMENT
++	align = PCIBIOS_MIN_ALIGNMENT;
++	*resize = false;
++#endif
+ 	spin_lock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
+ 	while (*p) {
+@@ -4622,16 +4627,49 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 		} else {
+ 			align_order = -1;
+ 		}
+-		if (sscanf(p, "%x:%x:%x.%x%n",
+-			&seg, &bus, &slot, &func, &count) != 4) {
++		if (p[0] == '*' && p[1] == ':') {
++			seg = -1;
++			count = 1;
++		} else if (sscanf(p, "%x%n", &seg, &count) != 1 ||
++				p[count] != ':') {
++			invalid = true;
++			break;
++		}
++		p += count + 1;
++		if (*p == '*') {
++			bus = -1;
++			count = 1;
++		} else if (sscanf(p, "%x%n", &bus, &count) != 1) {
++			invalid = true;
++			break;
++		}
++		p += count;
++		if (*p == '.') {
++			slot = bus;
++			bus = seg;
+ 			seg = 0;
+-			if (sscanf(p, "%x:%x.%x%n",
+-					&bus, &slot, &func, &count) != 3) {
+-				/* Invalid format */
+-				printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
+-					p);
++			p++;
++		} else if (*p == ':') {
++			p++;
++			if (p[0] == '*' && p[1] == '.') {
++				slot = -1;
++				count = 1;
++			} else if (sscanf(p, "%x%n", &slot, &count) != 1 ||
++					p[count] != '.') {
++				invalid = true;
+ 				break;
+ 			}
++			p += count + 1;
++		} else {
++			invalid = true;
++			break;
++		}
++		if (*p == '*') {
++			func = -1;
++			count = 1;
++		} else if (sscanf(p, "%x%n", &func, &count) != 1) {
++			invalid = true;
++			break;
+ 		}
+ 		p += count;
+ 		if (!strncmp(p, ":noresize", 9)) {
+@@ -4639,10 +4677,10 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 			p += 9;
+ 		} else
+ 			*resize = true;
+-		if (seg == pci_domain_nr(dev->bus) &&
+-			bus == dev->bus->number &&
+-			slot == PCI_SLOT(dev->devfn) &&
+-			func == PCI_FUNC(dev->devfn)) {
++		if ((seg == pci_domain_nr(dev->bus) || seg == -1) &&
++			(bus == dev->bus->number || bus == -1) &&
++			(slot == PCI_SLOT(dev->devfn) || slot == -1) &&
++			(func == PCI_FUNC(dev->devfn) || func == -1)) {
+ 			if (align_order == -1)
+ 				align = PAGE_SIZE;
+ 			else
+@@ -4652,10 +4690,14 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+ 		}
+ 		if (*p != ';' && *p != ',') {
+ 			/* End of param or invalid format */
++			invalid = true;
+ 			break;
+ 		}
+ 		p++;
+ 	}
++	if (invalid)
++		printk(KERN_ERR "PCI: Can't parse resource_alignment parameter:%s\n",
++				p);
+ 	spin_unlock(&resource_alignment_lock);
+ 	return align;
+ }
 -- 
-1.9.1
+1.7.9.5
 
