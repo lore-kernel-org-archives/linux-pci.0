@@ -1,69 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.sysgo.com ([176.9.12.79]:51688 "EHLO mail.sysgo.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751827AbcDFOBu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 6 Apr 2016 10:01:50 -0400
-Subject: Re: Exception due to PCI: Use pci_is_root_bus() to check for root bus
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <5704F85B.4080501@sysgo.com> <20160406133502.GB4976@localhost>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org
-From: David Engraf <david.engraf@sysgo.com>
-Message-ID: <570516CB.7080406@sysgo.com>
-Date: Wed, 6 Apr 2016 16:01:47 +0200
-MIME-Version: 1.0
-In-Reply-To: <20160406133502.GB4976@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from e28smtp06.in.ibm.com ([125.16.236.6]:38783 "EHLO
+	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753006AbcDRK4e (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Apr 2016 06:56:34 -0400
+Received: from localhost
+	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Mon, 18 Apr 2016 16:26:31 +0530
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org, linux-doc@vger.kernel.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com, Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [RFC v6 01/10] PCI: Ignore resource_alignment if PCI_PROBE_ONLY was set
+Date: Mon, 18 Apr 2016 18:55:57 +0800
+Message-Id: <1460976961-29328-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+The resource_alignment will releases memory resources allocated
+by firmware so that kernel can reassign new resources later on.
+But this will cause the problem that no resources can be
+allocated by kernel if PCI_PROBE_ONLY was set, e.g. on pSeries
+platform because PCI_PROBE_ONLY force kernel to use firmware
+setup and not to reassign any resources.
 
-Am 06.04.2016 um 15:35 schrieb Bjorn Helgaas:
-> Hi David,
->
-> On Wed, Apr 06, 2016 at 01:51:55PM +0200, David Engraf wrote:
->> Hi,
->>
->> I have an exception in __pci_bus_size_bridges() when pci_is_root_bus
->> returns false but bus->self == NULL. My driver registers a virtual
->> bus, like virtfn_add_bus(). pci_add_new_bus() is called with a
->> parent but without a pci_dev. Thus bus->parent is set but bus->self
->> is NULL. When __pci_bus_size_bridges() is called I get an exception
->> at:
->>
->> switch (bus->self->class >> 8)
->>
->> The previous version of the code, checking for bus->self != NULL
->> worked for me. I think an additional check is required to make sure
->> we're not accessing a NULL pointer.
->
-> When you say "previous version of the code," do you mean a previous
-> version of Linux worked correctly but a newer version does not?  What
-> versions are they?  Did you identify a commit that changed the
-> behavior?  I assume you're talking about an out-of-tree driver that
-> registers a virtual bus?  Can you point us to the code?  Can you share
-> the dmesg log, including the backtrace?
+To solve this problem, this patch ignores resource_alignment
+if PCI_PROBE_ONLY was set.
 
-With previous version, I mean reverting commit 
-2ba29e270e977b213a7d58ae1152c23a1c3074a3. This will check for bus->self 
-instead of using pci_is_root_bus().
-I'm working on a driver which is basically based on drivers/pci/iov.c.
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/pci/pci.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-The code looks like this:
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 602eb42..77b7494 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4607,6 +4607,12 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 	spin_lock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
+ 	while (*p) {
++		if (pci_has_flag(PCI_PROBE_ONLY)) {
++			printk(KERN_ERR "PCI: Ignore resource_alignment parameter: %s with PCI_PROBE_ONLY set\n",
++					p);
++			*p = 0;
++			break;
++		}
+ 		count = 0;
+ 		if (sscanf(p, "%d%n", &align_order, &count) == 1 &&
+ 							p[count] == '@') {
+-- 
+1.7.9.5
 
-child = pci_add_new_bus(parent, NULL, busnr);
-
-This will create child with child->parent = parent and child->self = 
-NULL. When the kernel calls __pci_bus_size_bridges(), accessing 
-bus->self->class crashes:
-
-/* The root bus? */
-if (pci_is_root_bus(bus))
-	return;
-
-switch (bus->self->class >> 8) { <- crash here because of bus->self == NULL
-
-Best regards
-David
