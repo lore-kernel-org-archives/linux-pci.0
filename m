@@ -1,173 +1,248 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54183 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751082AbcDZMrU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Apr 2016 08:47:20 -0400
-Date: Tue, 26 Apr 2016 13:47:20 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	David Daney <david.daney@cavium.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Russell King <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 1/3] drivers: pci: add generic code to claim bus
- resources
-Message-ID: <20160426124720.GD2204@red-moon>
-References: <1456843449-19393-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1456843449-19393-2-git-send-email-lorenzo.pieralisi@arm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1456843449-19393-2-git-send-email-lorenzo.pieralisi@arm.com>
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:33700 "EHLO
+	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751791AbcDRFvm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Apr 2016 01:51:42 -0400
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: Andrey Smirnov <andrew.smirnov@gmail.com>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	gary.bisson@boundarydevices.com
+Subject: [PATCH v2 1/3] PCI: imx6: Use enum instead of bool for variant indicator
+Date: Sun, 17 Apr 2016 22:51:15 -0700
+Message-Id: <1460958677-10604-1-git-send-email-andrew.smirnov@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[Replying to self]
+Use enumerated type instead of a boolean flag to specify the variant of
+the PCIe IP block (6Q, 6SX, etc). This patch has zero functional impact,
+however it makes the code easier to extend for the case of more than 2
+possible variants of an IP block (of which there are).
 
-On Tue, Mar 01, 2016 at 02:44:07PM +0000, Lorenzo Pieralisi wrote:
-> From: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-> 
-> PCI core code contains a set of functions, eg:
-> 
-> pci_assign_unassigned_bus_resources()
-> 
-> that allow to assign the PCI resources for a given bus after
-> enumeration.
-> 
-> On systems where the PCI BARs are immutable (ie they must not and can
-> not be assigned), PCI bus resources should still be inserted in the PCI
-> resources tree (even if they are not (re)-assigned), but there is
-> no generic PCI kernel function for that purpose. Currently the PCI bus
-> resources insertion in the resources tree is implemented in an arch
-> specific fashion through arch specific callbacks that rely on the PCI
-> resources claiming API (for bridges and devices) which resulted in arches
-> implementations that contain duplicated code to claim resources for a
-> given PCI bus hierarchy.
-> 
-> This patch, based on the x86/ia64 resources claiming arch implementations,
-> implements a set of functions in core PCI code that provides a PCI core
-> interface for resources claiming for a given PCI bus hierarchy, paving
-> the way for further resource claiming consolidation across architectures.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> ---
->  drivers/pci/setup-bus.c | 68 +++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h     |  1 +
->  2 files changed, 69 insertions(+)
+Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+---
 
-I have v3 ready, which does not change this patch, however I have
-some questions below before asking to merge it.
+Changes since v1:
 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 7796d0a..95f0906 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1424,6 +1424,74 @@ void pci_bus_assign_resources(const struct pci_bus *bus)
->  }
->  EXPORT_SYMBOL(pci_bus_assign_resources);
->  
-> +static void pci_claim_device_resources(struct pci_dev *dev)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
-> +		struct resource *r = &dev->resource[i];
-> +
-> +		if (!r->flags || r->parent)
-> +			continue;
-> +
-> +		pci_claim_resource(dev, i);
+	- Patchset is rebased against
+          https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-imx6
 
-pci_claim_resource() (and in particular pci_find_parent_resource()) fails
-if resource.start == 0x0. Is this intentional ? The resource.start == 0x0
-check is used in other bits of the kernel to detect an "invalid"
-resource, I am not sure I understand its implications correctly.
+	- DTS files changes moved into a separate patch
 
-> +	}
-> +}
-> +
-> +static void pci_claim_bridge_resources(struct pci_dev *dev)
-> +{
-> +	int i;
-> +
-> +	for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
-> +		struct resource *r = &dev->resource[i];
-> +
-> +		if (!r->flags || r->parent)
-> +			continue;
-> +
-> +		pci_claim_bridge_resource(dev, i);
-> +	}
-> +}
-> +
-> +static void pci_bus_allocate_dev_resources(struct pci_bus *b)
-> +{
-> +	struct pci_dev *dev;
-> +	struct pci_bus *child;
-> +
-> +	list_for_each_entry(dev, &b->devices, bus_list) {
-> +		pci_claim_device_resources(dev);
-> +
-> +		child = dev->subordinate;
-> +		if (child)
-> +			pci_bus_allocate_dev_resources(child);
-> +	}
-> +}
-> +
-> +static void pci_bus_allocate_resources(struct pci_bus *b)
-> +{
-> +	struct pci_bus *child;
-> +
-> +	/*
-> +	 * Carry out a depth-first search on the PCI bus
-> +	 * tree to allocate bridge apertures. Read the
-> +	 * programmed bridge bases and recursively claim
-> +	 * the respective bridge resources.
-> +	 */
-> +	if (b->self) {
 
-Is it *always* correct to check b->self to detect a device backing
-the PCI bridge ? All PCI bridges should have their ->self pointer
-set-up correctly, I wanted to countercheck anyway.
+ drivers/pci/host/pci-imx6.c | 126 +++++++++++++++++++++++++-------------------
+ 1 file changed, 71 insertions(+), 55 deletions(-)
 
-Comments welcome, thanks.
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 0f6d630..c570bbb 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -31,6 +31,11 @@
+ 
+ #define to_imx6_pcie(x)	container_of(x, struct imx6_pcie, pp)
+ 
++enum imx6_pcie_variants {
++	IMX6Q,
++	IMX6SX
++};
++
+ struct imx6_pcie {
+ 	struct gpio_desc	*reset_gpio;
+ 	struct clk		*pcie_bus;
+@@ -39,7 +44,7 @@ struct imx6_pcie {
+ 	struct clk		*pcie;
+ 	struct pcie_port	pp;
+ 	struct regmap		*iomuxc_gpr;
+-	bool			is_imx6sx;
++	enum imx6_pcie_variants variant;
+ 	void __iomem		*mem_base;
+ 	u32			tx_deemph_gen1;
+ 	u32			tx_deemph_gen2_3p5db;
+@@ -238,7 +243,8 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 	u32 val, gpr1, gpr12;
+ 
+-	if (imx6_pcie->is_imx6sx) {
++	switch (imx6_pcie->variant) {
++	case IMX6SX:
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
+ 				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN);
+@@ -246,72 +252,80 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
+ 				   IMX6SX_GPR5_PCIE_BTNRST_RESET,
+ 				   IMX6SX_GPR5_PCIE_BTNRST_RESET);
+-		return 0;
+-	}
+-
+-	/*
+-	 * If the bootloader already enabled the link we need some special
+-	 * handling to get the core back into a state where it is safe to
+-	 * touch it for configuration.  As there is no dedicated reset signal
+-	 * wired up for MX6QDL, we need to manually force LTSSM into "detect"
+-	 * state before completely disabling LTSSM, which is a prerequisite
+-	 * for core configuration.
+-	 *
+-	 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
+-	 * indication that the bootloader activated the link.
+-	 */
+-	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
+-	regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
+-
+-	if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
+-	    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
+-		val = readl(pp->dbi_base + PCIE_PL_PFLR);
+-		val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
+-		val |= PCIE_PL_PFLR_FORCE_LINK;
+-		writel(val, pp->dbi_base + PCIE_PL_PFLR);
++		break;
++	case IMX6Q:
++		/*
++		 * If the bootloader already enabled the link we need some special
++		 * handling to get the core back into a state where it is safe to
++		 * touch it for configuration.  As there is no dedicated reset signal
++		 * wired up for MX6QDL, we need to manually force LTSSM into "detect"
++		 * state before completely disabling LTSSM, which is a prerequisite
++		 * for core configuration.
++		 *
++		 * If both LTSSM_ENABLE and REF_SSP_ENABLE are active we have a strong
++		 * indication that the bootloader activated the link.
++		 */
++		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1, &gpr1);
++		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12, &gpr12);
++
++		if ((gpr1 & IMX6Q_GPR1_PCIE_REF_CLK_EN) &&
++		    (gpr12 & IMX6Q_GPR12_PCIE_CTL_2)) {
++			val = readl(pp->dbi_base + PCIE_PL_PFLR);
++			val &= ~PCIE_PL_PFLR_LINK_STATE_MASK;
++			val |= PCIE_PL_PFLR_FORCE_LINK;
++			writel(val, pp->dbi_base + PCIE_PL_PFLR);
++
++			regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++					   IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
++		}
+ 
+-		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-				IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				   IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				   IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
++		break;
++	default:
++		BUG();
+ 	}
+ 
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_TEST_PD, 1 << 18);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
+-
+ 	return 0;
+ }
+ 
+ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
+ {
+ 	struct pcie_port *pp = &imx6_pcie->pp;
+-	int ret;
++	int ret = 0;
+ 
+-	if (imx6_pcie->is_imx6sx) {
++	switch (imx6_pcie->variant) {
++	case IMX6SX:
+ 		ret = clk_prepare_enable(imx6_pcie->pcie_inbound_axi);
+ 		if (ret) {
+ 			dev_err(pp->dev, "unable to enable pcie_axi clock\n");
+-			return ret;
++			break;
+ 		}
+ 
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN, 0);
+-		return ret;
++		break;
++	case IMX6Q:
++		/* power up core phy and enable ref clock */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				   IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
++		/*
++		 * the async reset input need ref clock to sync internally,
++		 * when the ref clock comes after reset, internal synced
++		 * reset time is too short, cannot meet the requirement.
++		 * add one ~10us delay here.
++		 */
++		udelay(10);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				   IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
++		break;
++	default:
++		BUG();
+ 	}
+ 
+-	/* power up core phy and enable ref clock */
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_TEST_PD, 0 << 18);
+-	/*
+-	 * the async reset input need ref clock to sync internally,
+-	 * when the ref clock comes after reset, internal synced
+-	 * reset time is too short, cannot meet the requirement.
+-	 * add one ~10us delay here.
+-	 */
+-	udelay(10);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+-			IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+-	return 0;
++	return ret;
+ }
+ 
+ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+@@ -353,7 +367,7 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+ 	}
+ 
+-	if (imx6_pcie->is_imx6sx)
++	if (imx6_pcie->variant == IMX6SX)
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
+ 				   IMX6SX_GPR5_PCIE_BTNRST_RESET, 0);
+ 
+@@ -374,11 +388,10 @@ static void imx6_pcie_init_phy(struct pcie_port *pp)
+ {
+ 	struct imx6_pcie *imx6_pcie = to_imx6_pcie(pp);
+ 
+-	if (imx6_pcie->is_imx6sx) {
++	if (imx6_pcie->variant == IMX6SX)
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 				   IMX6SX_GPR12_PCIE_RX_EQ_MASK,
+ 				   IMX6SX_GPR12_PCIE_RX_EQ_2);
+-	}
+ 
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+@@ -585,8 +598,11 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 	pp = &imx6_pcie->pp;
+ 	pp->dev = &pdev->dev;
+ 
+-	imx6_pcie->is_imx6sx = of_device_is_compatible(pp->dev->of_node,
+-						       "fsl,imx6sx-pcie");
++	if (of_device_is_compatible(pp->dev->of_node,
++				    "fsl,imx6sx-pcie"))
++		imx6_pcie->variant = IMX6SX;
++	else
++		imx6_pcie->variant = IMX6Q;
+ 
+ 	/* Added for PCI abort handling */
+ 	hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
+@@ -623,7 +639,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(imx6_pcie->pcie);
+ 	}
+ 
+-	if (imx6_pcie->is_imx6sx) {
++	if (imx6_pcie->variant == IMX6SX) {
+ 		imx6_pcie->pcie_inbound_axi = devm_clk_get(&pdev->dev,
+ 							   "pcie_inbound_axi");
+ 		if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
+-- 
+2.5.5
 
-Lorenzo
-
-> +		pci_read_bridge_bases(b);
-> +		pci_claim_bridge_resources(b->self);
-> +	}
-> +
-> +	list_for_each_entry(child, &b->children, node)
-> +		pci_bus_allocate_resources(child);
-> +}
-> +
-> +void pci_bus_claim_resources(struct pci_bus *b)
-> +{
-> +	pci_bus_allocate_resources(b);
-> +	pci_bus_allocate_dev_resources(b);
-> +}
-> +EXPORT_SYMBOL(pci_bus_claim_resources);
-> +
->  static void __pci_bridge_assign_resources(const struct pci_dev *bridge,
->  					  struct list_head *add_head,
->  					  struct list_head *fail_head)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 2771625..e66eba7 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1102,6 +1102,7 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
->  /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
->  resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
->  void pci_bus_assign_resources(const struct pci_bus *bus);
-> +void pci_bus_claim_resources(struct pci_bus *bus);
->  void pci_bus_size_bridges(struct pci_bus *bus);
->  int pci_claim_resource(struct pci_dev *, int);
->  int pci_claim_bridge_resource(struct pci_dev *bridge, int i);
-> -- 
-> 2.5.1
-> 
