@@ -1,74 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46371 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755863AbcDHAer (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:34:47 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 53/60] PCI: Kill macro checking for bus io port sizing
-Date: Thu,  7 Apr 2016 17:16:06 -0700
-Message-Id: <1460074573-7481-54-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:35526 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753159AbcDRRcG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 Apr 2016 13:32:06 -0400
+Date: Mon, 18 Apr 2016 18:31:49 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	David Daney <david.daney@cavium.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Russell King <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 2/3] drivers: pci: host-generic: claim bus resources
+ on PCI_PROBE_ONLY set-ups
+Message-ID: <20160418173149.GA8846@red-moon>
+References: <1456843449-19393-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <20160415130803.GA2105@localhost>
+ <20160418100154.GB2427@red-moon>
+ <5357164.ryYLtkY3PQ@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5357164.ryYLtkY3PQ@wuerfel>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We can use new generic version skip_isa_ioresource_align() instead
-of macro, and then kill the marco.
+On Mon, Apr 18, 2016 at 04:49:43PM +0200, Arnd Bergmann wrote:
+> On Monday 18 April 2016 11:01:54 Lorenzo Pieralisi wrote:
+> > On Fri, Apr 15, 2016 at 08:08:03AM -0500, Bjorn Helgaas wrote:
+> > > On Tue, Apr 12, 2016 at 04:48:10PM +0100, Lorenzo Pieralisi wrote:
+> 
+> > > This last case 3) is the problem.  I'm guessing this case doesn't
+> > > currently occur on arm/arm64, but it's the normal case on x86, and it
+> > > seems perverse that things work if firmware does nothing, but they
+> > > don't work if firmware does more setup.
+> > 
+> > IIUC X86 claim resources as programmed by FW so it is not really the
+> > same situation as arm64, that claims nothing. Claimed resources are not
+> > reassigned, they are skipped by resource allocation/sizing code
+> > (because their parent pointer is set).
+> > 
+> > And as I said above even if FW does some set-up that will still work
+> > on ARM/ARM64, otherwise this means that on ALL ARM/ARM64 systems out there
+> > PCI set-up at kernel handover is non-existent, otherwise we would
+> > have resource enablement failures NOW, right ?
+> 
+> The embedded systems (in which I would count all arm32 machines) tend
+> to not do proper bus probing in their bootloaders, so we have to do it
+> ourselves in the kernel.
+> 
+> For server systems (all UEFI based ones), I'd argue that we should
+> rely on the firmware to do it just like we do on x86, possibly with
+> a blacklist of known-broken machines on which we have to do it
+> manually as well. Once ACPI spreads, we will likely see an increasing
+> number of machines on which we must not reassign the resources or
+> bad things happen to stuff that is owned by the BIOS.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+The only way I can pull that off, is by writing an ARM64 PCI resource
+allocation function that does the following:
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 5ba4bf5..65a41e7 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1159,15 +1159,12 @@ int skip_isa_ioresource_align(struct pci_bus *bus)
- 	return 0;
- }
- 
--static resource_size_t size_aligned_for_isa(resource_size_t size)
-+static resource_size_t size_aligned_for_isa(resource_size_t size,
-+					    struct pci_bus *bus)
- {
--	/*
--	 * To be fixed in 2.5: we should have sort of HAVE_ISA
--	 *  flag in the struct pci_bus.
--	 */
--#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
--	size = (size & 0xff) + ((size & ~0xffUL) << 2);
--#endif
-+	if (!skip_isa_ioresource_align(bus))
-+		size = (size & 0xff) + ((size & ~0xffUL) << 2);
-+
- 	return size;
- }
- 
-@@ -1236,12 +1233,12 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		}
- 	}
- 
--	size = size_aligned_for_isa(size);
-+	size = size_aligned_for_isa(size, bus);
- 	size += size1;
- 	if (size || min_size)
- 		size0 = calculate_size(size, min_size,
- 					resource_size(b_res), min_align);
--	sum_add_size = size_aligned_for_isa(sum_add_size);
-+	sum_add_size = size_aligned_for_isa(sum_add_size, bus);
- 	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
--- 
-1.8.4.5
+- Try to claim the FW set-up
+- Realloc on claiming failures, inclusive of bridges resources
+  releasing/resizing
 
+When to call it it has to be seen, either I do it on all ARM64 machines
+(but this requires significant testing because regressions are more
+than likely given that there are platforms on which we reassign everything
+already) or on !acpi_disabled (but I think that's wrong because I do not
+see why it is *only* dependent on ACPI), the sooner we implement it the
+better (and actually that's the reason why I wanted this function to
+be in the ACPI host controller code for ARM64 from the beginning - but
+if we do it at arch level it can be even more generic - again, when
+to call it it must be decided).
+
+Lorenzo
