@@ -1,89 +1,105 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 21/60] PCI: Treat optional as required in first try for bridge rescan
-Date: Thu,  7 Apr 2016 17:15:34 -0700
-Message-Id: <1460074573-7481-22-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org, linux-doc@vger.kernel.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [RFC v6 08/10] PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller supports IRQ remapping
+Date: Mon, 18 Apr 2016 19:04:01 +0800
+Message-Id: <1460977443-29405-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For rescan bridge/bus that children are removed before, we should treat
-optional as required just like root bus the boot time in 19aa7ee432ce
-(PCI: make re-allocation try harder by reassigning ranges higher in
-the heirarchy).
+On ARM HW the capability of IRQ remapping is abstracted on
+MSI controller side. MSI_FLAG_IRQ_REMAPPING is used to advertise
+this [1].
 
-The reason: allocate required and expand to optional path do not
-put failed resource to fail list, so will lose required info before
-next try.
+To have a universal flag to test this capability for different
+archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
+when MSI_FLAG_IRQ_REMAPPING is set.
 
-So we are using following way:
-1. First and following try before last try:
-   We don't keep realloc list so treat every optional as required.
-   allocate for required+optional and put failed in the fail list.
-   then size info (include must and optonal separatedly) will be kept
-   for next try.
-2. last try:
-   a: try to allocate required+optional to see if all get allocated.
-   b: try to allocate required then expand to optional.
+[1] http://www.spinics.net/lists/kvm/msg130256.html
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
- drivers/pci/setup-bus.c | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+ drivers/pci/msi.c   |   12 ++++++++++++
+ drivers/pci/probe.c |    3 +++
+ include/linux/msi.h |    6 +++++-
+ 3 files changed, 20 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7d58f3f..3dc4ac9 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1845,25 +1845,34 @@ void __init pci_assign_unassigned_resources(void)
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- {
- 	struct pci_bus *parent = bridge->subordinate;
--	LIST_HEAD(add_list); /* list of resources that
-+	LIST_HEAD(realloc_head); /* list of resources that
- 					want additional resources */
-+	struct list_head *add_list = NULL;
- 	int tried_times = 0;
- 	LIST_HEAD(fail_head);
- 	struct pci_dev_resource *fail_res;
- 	int retval;
- 	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
- 				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
-+	int pci_try_num = 2;
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index a080f44..1661cdf 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1134,6 +1134,18 @@ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
+ }
+ EXPORT_SYMBOL_GPL(msi_desc_to_pci_sysdata);
  
- again:
--	__pci_bus_size_bridges(parent, &add_list);
--	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
--	pci_bus_check_realloc(&add_list);
-+	/*
-+	 * last try will use add_list, otherwise will try good to have as
-+	 * must have, so can realloc parent bridge resource
-+	 */
-+	if (tried_times + 1 == pci_try_num)
-+		add_list = &realloc_head;
-+	__pci_bus_size_bridges(parent, add_list);
-+	__pci_bridge_assign_resources(bridge, add_list, &fail_head);
-+	if (add_list)
-+		pci_bus_check_realloc(add_list);
- 	tried_times++;
++void pci_bus_check_msi_remapping(struct pci_bus *bus,
++				 struct irq_domain *domain)
++{
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++	struct msi_domain_info *info;
++
++	info = msi_get_domain_info(domain);
++	if (info->flags & MSI_FLAG_IRQ_REMAPPING)
++		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
++#endif
++}
++
+ #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+ /**
+  * pci_msi_domain_write_msg - Helper to write MSI message to PCI config space
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6d7ab9b..25cf1b1 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -696,6 +696,9 @@ static void pci_set_bus_msi_domain(struct pci_bus *bus)
+ 	if (!d)
+ 		d = pci_host_bridge_msi_domain(b);
  
- 	if (list_empty(&fail_head))
- 		goto enable_all;
++	if (d && b == bus)
++		pci_bus_check_msi_remapping(bus, d);
++
+ 	dev_set_msi_domain(&bus->dev, d);
+ }
  
--	if (tried_times >= 2) {
-+	if (tried_times >= pci_try_num) {
- 		/* still fail, don't need to try more */
- 		free_list(&fail_head);
- 		goto enable_all;
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 03eda72..b4c649e 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -15,6 +15,8 @@ extern int pci_msi_ignore_mask;
+ struct irq_data;
+ struct msi_desc;
+ struct pci_dev;
++struct pci_bus;
++struct irq_domain;
+ struct platform_msi_priv_data;
+ void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
+@@ -155,6 +157,9 @@ void arch_restore_msi_irqs(struct pci_dev *dev);
+ void default_teardown_msi_irqs(struct pci_dev *dev);
+ void default_restore_msi_irqs(struct pci_dev *dev);
+ 
++void pci_bus_check_msi_remapping(struct pci_bus *bus,
++				 struct irq_domain *domain);
++
+ struct msi_controller {
+ 	struct module *owner;
+ 	struct device *dev;
+@@ -173,7 +178,6 @@ struct msi_controller {
+ #include <linux/irqhandler.h>
+ #include <asm/msi.h>
+ 
+-struct irq_domain;
+ struct irq_domain_ops;
+ struct irq_chip;
+ struct device_node;
 -- 
-1.8.4.5
+1.7.9.5
