@@ -1,90 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:38333 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752199AbcDKI4L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 11 Apr 2016 04:56:11 -0400
-Date: Mon, 11 Apr 2016 11:56:05 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Zheng, Qi" <qi.zheng@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"Zha, Qipeng" <qipeng.zha@intel.com>,
-	Dave Airlie <airlied@gmail.com>,
-	"Nyman, Mathias" <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
-Subject: Re: [PATCH v2 2/4] PCI: Move PCIe ports to D3 during suspend
-Message-ID: <20160411085605.GB1727@lahna.fi.intel.com>
-References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
- <1460111790-92836-3-git-send-email-mika.westerberg@linux.intel.com>
- <0DD381DBF8F68D419C32ACFCEB28EB2521D2B374@SHSMSX101.ccr.corp.intel.com>
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:38663 "EHLO
+	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752622AbcDRNdy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Apr 2016 09:33:54 -0400
+Received: by mail-wm0-f43.google.com with SMTP id u206so124407145wme.1
+        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 06:33:52 -0700 (PDT)
+Subject: Re: [PATCH V6 00/13] Support for generic ACPI based PCI host
+ controller
+To: Jayachandran C <jchandra@broadcom.com>,
+	Jon Masters <jcm@redhat.com>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <571130BB.9030508@redhat.com>
+ <CAKc_7PVC6O4oh+bTmpLQRrhHrqGbaKB2hynecKOLmc5fBc-VVQ@mail.gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
+	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
+	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
+	Wangyijing <wangyijing@huawei.com>,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <5714E224.1030307@semihalf.com>
+Date: Mon, 18 Apr 2016 15:33:24 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0DD381DBF8F68D419C32ACFCEB28EB2521D2B374@SHSMSX101.ccr.corp.intel.com>
+In-Reply-To: <CAKc_7PVC6O4oh+bTmpLQRrhHrqGbaKB2hynecKOLmc5fBc-VVQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 11, 2016 at 03:36:41AM +0000, Zheng, Qi wrote:
-> > +static int pci_dev_check_d3cold(struct pci_dev *pdev, void *data) {
-> > +	bool *d3cold_ok = data;
-> > +
-> > +	/*
-> > +	 * The device needs to be allowed to go D3cold and if it is wake
-> > +	 * capable to do so from D3cold.
-> > +	 */
-> > +	if (pdev->no_d3cold || !pdev->d3cold_allowed)
-> > +		*d3cold_ok = false;
-> > +	if (device_may_wakeup(&pdev->dev) && !pci_pme_capable(pdev, PCI_D3cold))
-> > +		*d3cold_ok = false;
-> > +
-> > +	return !*d3cold_ok;
-> >+}
-> 
-> How about the pme_poll?
-> IMHO, if the pme_poll is set for some device, the PCIe port couldn't
-> go to sleep as well.
+On 16.04.2016 17:31, Jayachandran C wrote:
+> On Fri, Apr 15, 2016 at 11:49 PM, Jon Masters <jcm@redhat.com> wrote:
+>> On 04/15/2016 01:06 PM, Tomasz Nowicki wrote:
+>>>  From the functionality point of view this series might be split into the
+>>> following logic parts:
+>>> 1. Necessary fixes as the preparation for using driver on ARM64.
+>>> 2. New ECAM API and update for users of the pci-host-common API
+>>> 3. Use new MCFG interface and implement generic ACPI based PCI host controller driver.
+>>> 4. Enable above driver on ARM64
+>>>
+>>> Patches has been built on top of 4.6-rc2 and can be found here:
+>>> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v6)
+>>>
+>>> This has been tested on Cavium ThunderX server. Any help in reviewing and
+>>> testing is very appreciated.
+>>>
+>>> v5 -> v6
+>>> - dropped idea of x86 MMCONFIG code refactoring
+>>> - integrated JC's patches which introduce new ECAM API:
+>>>    https://lkml.org/lkml/2016/4/11/907
+>>>    git: https://github.com/jchandra-brcm/linux/ (arm64-acpi-pci-v3)
+>>> - integrated Sinan's fix for releasing IO resources, see patch [06/13]
+>>> - added ACPI support for ThunderX ECAM and PEM drivers
+>>> - rebased to 4.6-rc2
+>>
+>> JC: can you explicitly confirm that you're ok with letting Tomasz drive
+>> this? We would like to see one driver. Either that is Tomasz, or
+>> Lorenzo, or it is you. But we need to have one overall cooordinated
+>> effort to get this enablement into upstream as quickly as possible.
+>
+> I have been concentrating on the ECAM code and ECAM based ACPI
+> host controller, the rest of the code is from Tomasz original patchset.
+>
+> I am not happy with the way the ACPI quirk handling is done in Tomasz's
+> current patchset. I believe that it has to be done in a separate patchset
+> with another set of discussions. It introduces additional complexity and
+> mixing that discussion with the ECAM one will not help in making progress.
 
-I wasn't sure about that. If the device has pme_poll set, and the bridge
-is in D3 (or anything else than D0) the it will not be scanned for PME
-(this is done in pci_pme_list_scan()).
+Of course we can split discussion into the two topics:
+1. ECAM based ACPI host controller - patches [1-10]
+2. Quirks handling and examples.
 
-My understanding is that pme_poll is a workaround for bridges which do not
-forward PME messages upstream properly. Since this whole thing is only
-enabled for recent PCIe hardware, I would expect that this works also :)
+IMO, it is very helpful for reviewers to go with one unified patch set 
+and see the whole picture. Also, as you can see, quirks handling allows 
+people to test it easily with their servers (not only QEMU but real HW).
 
-> > +void pci_bridge_pm_update(struct pci_dev *pdev, bool remove) {
-> > +	struct pci_dev *bridge;
-> > +	bool d3cold_ok = true;
-> > +
-> > +	bridge = pci_upstream_bridge(pdev);
-> > +	if (!bridge || !pci_bridge_d3_possible(bridge))
-> > +		return;
-> > +
-> > +	pci_dev_get(bridge);
-> > +	if (!remove)
-> > +		pci_dev_check_d3cold(pdev, &d3cold_ok);
-> > +
-> > +	if (d3cold_ok) {
-> > +		/*
-> > +		 * We need to go through all children to find out if all of
-> > +		 * them can still go to D3cold.
-> > +		 */
-> > +		pci_walk_bus(bridge->subordinate, pci_dev_check_d3cold,
-> > +			     &d3cold_ok);
-> > +	}
-> > +	bridge->bridge_d3 = d3cold_ok;
-> > +	pci_dev_put(bridge);
-> > +}
-> 
-> IMHO, the PCIe port can go to sleep if all the devices behind it are
-> already in D3, not they have the capability to enter D3.
+Thanks,
+Tomasz
 
-The capability check in pci_pme_capable() means that we expect the
-device to be capable of triggering PME from D3cold.
 
-> Besides, why the devices should in D3cold? Why D3hot can't?
-
-Because when you power down a bridge you cannot access config space of
-the devices below that bridge anymore. It may also trigger the PCIe link
-to go to L2 or L3.
