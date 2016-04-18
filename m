@@ -1,78 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:36131 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750812AbcDSEQw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 00:16:52 -0400
-Received: by mail-pa0-f50.google.com with SMTP id er2so2250680pad.3
-        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 21:16:52 -0700 (PDT)
-Subject: Re: [PATCH v8 21/45] powerpc/powernv: Create PEs at PCI hot plugging
- time
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-22-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
-	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <5715B12A.6020203@ozlabs.ru>
-Date: Tue, 19 Apr 2016 14:16:42 +1000
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V6 08/13] PCI: generic, thunder: update to use generic
+ ECAM API
+To: Jayachandran C <jchandra@broadcom.com>,
+	Arnd Bergmann <arnd@arndb.de>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <5110401.mGEq6IVFz2@wuerfel>
+ <CAKc_7PWFacFJZA2JpfM4RcRFVj0jyUE73HhhvmX0cKm07JGupg@mail.gmail.com>
+ <4240660.NqlPcXaV7N@wuerfel>
+ <CAKc_7PWw5VaPxcOpWbonksx6k4W5fe9yO8wBfigXNRkFAYAYEg@mail.gmail.com>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
+	Jon Masters <jcm@redhat.com>, linaro-acpi@lists.linaro.org,
+	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com,
+	David Daney <ddaney@caviumnetworks.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	robert.richter@caviumnetworks.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, Wangyijing <wangyijing@huawei.com>,
+	Marcin Wojtas <mw@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <5714DB37.7000907@semihalf.com>
+Date: Mon, 18 Apr 2016 15:03:51 +0200
 MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-22-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAKc_7PWw5VaPxcOpWbonksx6k4W5fe9yO8wBfigXNRkFAYAYEg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/17/2016 02:44 PM, Gavin Shan wrote:
-> Currently, the PEs and their associated resources are assigned
-> in ppc_md.pcibios_fixup() except those used by SRIOV VFs.
-
-But this new code does not affect IOV and VF's PEs will still be created 
-somewhere else rather than pnv_pci_setup_bridge()?
-
-
-> The
-> function is called for once after PCI probing and resources
-> assignment is completed. So it isn't hotplug friendly.
+On 16.04.2016 16:36, Jayachandran C wrote:
+> On Sat, Apr 16, 2016 at 1:01 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> On Saturday 16 April 2016 12:50:13 Jayachandran C wrote:
+>>>>
+>>>> I still think it would be better to keep the loadable PCI host drivers
+>>>> separate from the ACPI PCI infrastructure. There are a number of
+>>>> simplifications that we want to do to the DT based drivers in the long
+>>>> run, so it's better if that code is not shared at this level. Abstracting
+>>>> out the ECAM code is fine, but at that point you should be able to just
+>>>> call it from the ACPI layer.
+>>>
+>>> The issue is not with this patch (in my opinion). This patch is just
+>>> re-arranging how thunder specific data is maintained. Earlier it was
+>>> a container_of gen_pci, now it is ->priv of pci_config_window.
+>>>
+>>> I can see the issue in patches 12 and 13 of this patchset which adds
+>>> ACPI fixups into the thunder OF driver.
+>>
+>> Right, I commented on this one, because it seems to rearrange the code
+>> in order to do the later one.
 >
-> This creates PEs dynamically by ppc_md.pcibios_setup_bridge(), which
-> is called on the event during system bootup and PCI hotplug: updating
-> PCI bridge's windows after resource assignment/reassignment are done.
-> For partial hotplug case, where not all PCI devices belonging to the
-> PE are unplugged and plugged again, we just need unbinding/binding
-> the affected PCI devices with the corresponding PE without creating
-> new one.
+> Patches 11- 13 are not from me, and I am not completely on board
+> on the approach of adding the sections.We can look at reworking this.
 >
-> As there is no upstream bridge for root bus that needs to be covered
-> by PE, we have to create PE for root bus in ppc_md.pcibios_setup_bridge()
-> before any other PEs can be created, as PE for root bus is the ancestor
-> to anyone else.
-
-We did not need a root bus PE before? What is the other PE reserved for? 
-Comments only say "reserved"...
-
+>>> The simple approach when doing modular PCI drivers would be to make
+>>> pci-thunder-*.c like pci-host-common.c, to be compiled in if configured.
+>>> The fie will contain all the Thunder quirks and can export
+>>> pci_thunder_ecam_ops.
+>>
+>> I would argue that we should not export anything from drivers/pci/host,
+>> those should really be standalone drivers that do not interact with other
+>> subsystems.
 >
-> Also, the windows of root port or the upstream port of PCIe switch behind
-> root port are extended to be PHB's apertures to accommodate the additional
-> resources needed by newly plugged devices based on the fact: hotpluggable
-> slot is behind root port or downstream port of the PCIe switch behind
-> root port. The extension for those PCI brdiges' windows is done in
-> ppc_md.pcibios_setup_bridge() as well.
+> pci-host-common.c goes against being standalone. The files calling
+> pci_host_common_probe() are expected to have custom ECAM ops
+> the way it is written now. We need to have a reasonable way to share
+> those ECAM ops if needed by ACPI.
+>
+>> How much code would you need to duplicate from thunder-ecam to have
+>> the same functionality available in ACPI? My expectation is that it's
+>> not really that much more compared to the code you need for sharing
+>> a single implementation, but you get a lower complexity here, which
+>> makes it easier to understand and to rework.
+>
+> Like I wrote above, the sharing is really simple because both generic
+> ACPI and pci-host-common.c have been written for "ECAM with quirks".
+>
+> The whole pci-thunder-*.c is to support thunder PCI quirks since the
+> generic OF is handled by pci-host-common.c and generic ECAM is now
+> separated -  duplicating the whole file for ACPI will be bad.
 
+Yes, it would be too much code duplication. Also, we already know 
+drivers which need quirks.
 
-This patch seems to be doing way too many things, hard to follow.
+We really need to agree on best approach here. Here are requirements 
+which came up (please correct me if misunderstood sth):
 
-Could you please split the patch into smaller chunks? For example (you can 
-do it totally different):
-- move pnv_pci_ioda_setup_opal_tce_kill()
-- move PE creation from pnv_pci_ioda_fixup() to pnv_pci_setup_bridge();
-- add pnv_pci_fixup_bridge_resources()
-- add an extra reserved PE for the root bus (and all this magic with 
-root_pe_idx/root_pe_populated)
-- ...
+Arnd:
+1. Initial DT driver should be standalone [Arnd]
+2. No exported symbols [Arnd]
+3. Duplicate necessary code to ACPI framework.
 
+JC:
+1. Adding linker section is wrong.
+2. Quirks should be exported (pci_thunder_ecam_ops), then no need for 
+adding linker section
+3. To much duplication to copy code into the ACPI framework.
 
+My opinion:
+1. I like linker section because it is easy to maintain and no need to 
+export symbols.
+2. We need more sophisticated algorithm for matching quirks (DMI is not 
+enough and not only for ThunderX drivers). Of course I am open to any 
+new suggestions.
+3. To much duplication to copy code into the ACPI framework.
 
+Thanks in advance for any pointers.
 
--- 
-Alexey
+Thanks,
+Tomasz
+
