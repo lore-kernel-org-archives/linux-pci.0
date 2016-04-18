@@ -1,47 +1,57 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAOMZO5DFd4+NQcBHgaoXVNnixOQ4xYbi_LJsUcWzjMzTidGcgA@mail.gmail.com>
-References: <1461167131-26025-1-git-send-email-andrew.smirnov@gmail.com>
-	<1461167131-26025-3-git-send-email-andrew.smirnov@gmail.com>
-	<CAOMZO5DFd4+NQcBHgaoXVNnixOQ4xYbi_LJsUcWzjMzTidGcgA@mail.gmail.com>
-Date: Fri, 29 Apr 2016 14:52:50 +0200
-Message-ID: <CAAMH-yt8fGJzhhHENFobWO86E3JZ-Xgc0tZso_HkdScoKdfVDA@mail.gmail.com>
-Subject: Re: [PATCH v3 3/3] ARM: dts: imx6qp: Specify imx6qp version of PCIe core
-From: Gary Bisson <gary.bisson@boundarydevices.com>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: Andrey Smirnov <andrew.smirnov@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	linux-kernel <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Shawn Guo <shawnguo@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org, linux-doc@vger.kernel.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [RFC v6 09/10] pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
+Date: Mon, 18 Apr 2016 19:04:02 +0800
+Message-Id: <1460977443-29405-2-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1460977443-29405-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1460977443-29405-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi all,
+Any IODA host bridge have the capability of IRQ remapping.
+So we set PCI_BUS_FLAGS_MSI_REMAP when this kind of host birdge
+is detected.
 
-On Fri, Apr 29, 2016 at 3:48 AM, Fabio Estevam <festevam@gmail.com> wrote:
-> On Wed, Apr 20, 2016 at 12:45 PM, Andrey Smirnov
-> <andrew.smirnov@gmail.com> wrote:
->> I.MX6Quad Plus has a slightly different version of PCIe core than
->> reqular i.MX6Quad.
->>
->> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
->
-> Reviewed-by: Fabio Estevam <fabio.estevam@nxp.com>
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Tested on a Nitrogen6QP_MAX with an Intel WiFi Link 5300 PCIe card.
-Everything is working properly (Gen1 speed).
-# lspci
-00:00.0 Class 0604: 16c3:abcd
-01:00.0 Class 0280: 8086:4235
-
-Tested-by: Gary Bisson <gary.bisson@boundarydevices.com>
-
-Thanks,
-Gary
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index f90dc04..9557638 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -3080,6 +3080,12 @@ static void pnv_pci_ioda_fixup(void)
+ 	pnv_npu_ioda_fixup();
+ }
+ 
++int pnv_pci_ioda_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
++	return 0;
++}
++
+ /*
+  * Returns the alignment for I/O or memory windows for P2P
+  * bridges. That actually depends on how PEs are segmented.
+@@ -3364,6 +3370,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	 */
+ 	ppc_md.pcibios_fixup = pnv_pci_ioda_fixup;
+ 
++	ppc_md.pcibios_root_bridge_prepare = pnv_pci_ioda_root_bridge_prepare;
++
+ 	if (phb->type == PNV_PHB_NPU)
+ 		hose->controller_ops = pnv_npu_ioda_controller_ops;
+ 	else
+-- 
+1.7.9.5
