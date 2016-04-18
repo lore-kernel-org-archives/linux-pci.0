@@ -1,128 +1,134 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:34246 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752468AbcD0Lqk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 27 Apr 2016 07:46:40 -0400
-Date: Wed, 27 Apr 2016 12:46:37 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>, arnd@arndb.de,
-	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
-	hanjun.guo@linaro.org, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-Subject: Re: [PATCH V6 06/13] arm64, pci, acpi: ACPI support for legacy IRQs
- parsing and consolidation with DT code.
-Message-ID: <20160427114637.GA6795@red-moon>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-7-git-send-email-tn@semihalf.com>
- <20160427024430.GG6789@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160427024430.GG6789@localhost>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org, linux-doc@vger.kernel.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
+	ruscur@russell.cc, Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [RFC v6 00/10] vfio-pci: Allow to mmap sub-page MMIO BARs and MSI-X table
+Date: Mon, 18 Apr 2016 18:53:36 +0800
+Message-Id: <1460976816-29294-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 26, 2016 at 09:44:30PM -0500, Bjorn Helgaas wrote:
-> On Fri, Apr 15, 2016 at 07:06:41PM +0200, Tomasz Nowicki wrote:
-> > To enable PCI legacy IRQs on platforms booting with ACPI, arch code
-> > should include ACPI specific callbacks that parse and set-up the
-> > device IRQ number, equivalent to the DT boot path. Owing to the current
-> > ACPI core scan handlers implementation, ACPI PCI legacy IRQs bindings
-> > cannot be parsed at device add time, since that would trigger ACPI scan
-> > handlers ordering issues depending on how the ACPI tables are defined.
-> 
-> Can you be a little more specific about the issue here?  I think you
-> mean pci_device_add()-time, because that's where we call
-> pcibios_add_device.  Which ACPI tables are involved?  _PRT?  Why is
-> that a problem?  We don't cache those tables any more after
-> 181380b702ee ("PCI/ACPI: Don't cache _PRT, and don't associate them
-> with bus numbers").
+Current vfio-pci implementation disallows to mmap
+sub-page(size < PAGE_SIZE) MMIO BARs and MSI-X table. This is because
+sub-page BARs' mmio page may be shared with other BARs and MSI-X table
+should not be accessed directly from the guest for security reasons.
 
-https://lists.linaro.org/pipermail/linaro-acpi/2015-October/005944.html
+But it will easily cause some performance issues for mmio accesses
+in guest when vfio passthrough sub-page BARs or BARs containing MSI-X
+table on PPC64 platform. This is because PAGE_SIZE is 64KB by default
+on PPC64 platform and the big page may easily hit the sub-page MMIO
+BARs' unmmapping and cause the unmmaping of the mmio page which
+MSI-X table locate in, which lead to mmio emulation in host.
 
-I think it is a scan handler ordering issue and probably by caching
-_PRT this problem would not exist but I have to read the commit above
-in details to understand if that's the case.
+For sub-page MMIO BARs' unmmapping, this patchset modifies
+resource_alignment kernel parameter to enforce the alignment of all 
+MMIO BARs to be at least PAGE_SZIE so that sub-page BAR's mmio page
+will not be shared with other BARs. And we also add shadow resources
+to the vfio device and put them into the holes of mmio pages in case
+that hot-add device's BARs are assigned into the holes. Then we can 
+mmap sub-page MMIO BARs safely.
 
-> x86 and ia64 both call acpi_pci_irq_enable() from
-> pcibios_enable_device().  Could you do the same on ARM64?
-> pcibios_enable_device() happens later than either pci_device_add() or
-> pci_device_probe().
+For MSI-X table's unmmapping, we think MSI-X table is safe to access
+directly from userspace if hardware supports the capability of  
+interrupt remapping which can ensure that a given pci device can 
+only shoot the MSIs assigned for it. But the implenmentation of  
+this capability is arch-independent. To have a universal way 
+to test this capability on PCI side for different archs, we introduce
+a new bus_flags PCI_BUS_FLAGS_MSI_REMAP.
 
-We could in theory. In practice we have to see if that triggers DT
-regressions on PCI host controllers that do not call pci_fixup_irqs(),
-but rely on the legacy IRQ routing to be done in arm64
-pcibios_add_device().
+With this patchset applied, we can get almost 100% improvement on
+performance for small block 4k random read when we passthrough a FC
+HBA containing sub-page BARs and MSI-X BARs to guest on PPC64 in
+our test.
 
-> > To solve this problem and consolidate FW PCI legacy IRQs parsing in
-> > one single pcibios callback (pending final removal), this patch moves
-> > DT PCI IRQ parsing to the pcibios_alloc_irq() callback (called by
-> > PCI core code at device probe time) and adds ACPI PCI legacy IRQs
-> > parsing to the same callback too, so that FW PCI legacy IRQs parsing
-> > is confined in one single arch callback that can be easily removed
-> > when code parsing PCI legacy IRQs is consolidated and moved to core
-> > PCI code.
-> > 
-> > Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> > Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > ---
-> >  arch/arm64/kernel/pci.c | 11 ++++++++---
-> >  1 file changed, 8 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> > index c72de66..15109c11 100644
-> > --- a/arch/arm64/kernel/pci.c
-> > +++ b/arch/arm64/kernel/pci.c
-> > @@ -50,11 +50,16 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
-> >  }
-> >  
-> >  /*
-> > - * Try to assign the IRQ number from DT when adding a new device
-> > + * Try to assign the IRQ number when probing a new device
-> >   */
-> > -int pcibios_add_device(struct pci_dev *dev)
-> > +int pcibios_alloc_irq(struct pci_dev *dev)
-> >  {
-> > -	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> > +	if (acpi_disabled)
-> > +		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> > +#ifdef CONFIG_ACPI
-> > +	else
-> > +		return acpi_pci_irq_enable(dev);
-> > +#endif
-> 
-> Not your problem, but your patch makes it obvious: it's ugly that we
-> set dev->irq to the IRQ returned from of_irq_parse_and_map_pci(), but
-> acpi_pci_irq_enable() sets dev->irq internally.
-> 
-> x86 also has the situation of calling either acpi_pci_irq_enable() or
-> of_irq_parse_and_map_pci(), and it looks like they can even decide at
-> run-time as you can here.  If we're solving the same problem, can we
-> use a similar mechanism?  x86 sets a pcibios_enable_irq function
-> pointer.
+The patch 8 are based on the proposed patchset[2].
 
-Yes we could, but that's orthogonal to this patch, it's basically
-rewriting this code in a different way and adding flexibility to the
-function mapping irqs.
+Changelog v6: 
+- Rebase on vfio/next with patchset[2] applied
+- Fix some bugs of v5
+- Add three patches to make PCI_BUS_FLAGS_MSI_REMAP as
+  a universal flag to test IRQ remapping
 
-Thanks,
-Lorenzo
+Changelog v5:
+- Rebase on vfio/next
+- Change the order of patch 1,2,3
+- Move the warning "resource_alignment will not work with
+  PCI_PROBE_ONLY set" from documentation to kernel log
+- Remove IORESOURCE_WINDOW
+- Add description for parameter "resize"
+- Add PCIBIOS_MIN_ALIGNMENT to force all MMIO BARs to
+  get minimum alignment
+- Add shadow resources to make sure sub-page BAR's mmio
+  page will not be shared with hot-add BARs.
+- Add a new bit to pci_bus_flags to indicate the capbility
+  of interrupt remapping on PPC64
+- Remove IOMMU_CAP_INTR_REMAP on PPC64
+- Add a property msi_remap to vfio_pci_device to cache the
+  capbility of interrupt remapping
 
-> 
-> >  	return 0;
-> >  }
-> > -- 
-> > 1.9.1
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Changelog v4:
+- Rebase on v4.5-rc6 with patchset[1] applied.
+- Remove resource_page_aligned kernel parameter
+- Fix some problems with resource_alignment kernel parameter
+- Modify resource_alignment kernel parameter to support multiple
+  devices.
+- Remove host bridge attribute: msi_filtered
+- Use IOMMU_CAP_INTR_REMAP to check if MSI-X table can be mmapped
+- Add IOMMU_CAP_INTR_REMAP for IODA host bridge on PPC64 platform
+
+Changelog v3:
+- Rebase on new linux kernel mainline with the patchset[1] applied.
+- Add a function to check whether PCI BARs'mmio page is shared with
+  other BARs.
+- Add a host bridge attribute to indicate PCI host bridge support
+  filtering of MSIs.
+- Use the new host bridge attribute to check if MSI-X table can
+  be mmapped instead of CONFIG_EEH.
+- Remove Kconfig option VFIO_PCI_MMAP_MSIX
+
+Changelog v2:
+- Rebase on v4.4-rc6 with the patchset[1] applied.
+- Use kernel parameter to enforce all MMIO BARs to be page aligned
+  on PCI core code instead of doing it on PPC64 arch code.
+- Remove flags: VFIO_DEVICE_FLAGS_PCI_PAGE_ALIGNED
+
+[1] http://www.spinics.net/lists/kvm/msg127812.html
+[2] http://www.spinics.net/lists/kvm/msg130256.html
+
+Yongji Xie (10):
+  PCI: Ignore resource_alignment if PCI_PROBE_ONLY was set
+  PCI: Do not Use IORESOURCE_STARTALIGN to identify bridge resources
+  PCI: Add a new option for resource_alignment to reassign alignment
+  PCI: Add support for enforcing all MMIO BARs to be page aligned
+  vfio-pci: Allow to mmap sub-page MMIO BARs if the mmio page is exclusive
+  PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
+  iommu: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have capability of IRQ remapping
+  PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller supports IRQ remapping
+  pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
+  vfio-pci: Allow to mmap MSI-X table if interrupt remapping is supported
+
+ Documentation/kernel-parameters.txt       |    7 +-
+ arch/powerpc/include/asm/pci.h            |    2 +
+ arch/powerpc/platforms/powernv/pci-ioda.c |    8 +++
+ drivers/iommu/iommu.c                     |   15 +++++
+ drivers/pci/msi.c                         |   12 ++++
+ drivers/pci/pci.c                         |  105 +++++++++++++++++++++++------
+ drivers/pci/probe.c                       |    3 +
+ drivers/pci/setup-bus.c                   |    9 ++-
+ drivers/vfio/pci/vfio_pci.c               |   65 +++++++++++++++---
+ drivers/vfio/pci/vfio_pci_private.h       |    8 +++
+ drivers/vfio/pci/vfio_pci_rdwr.c          |    3 +-
+ include/linux/msi.h                       |    6 +-
+ include/linux/pci.h                       |    1 +
+ 13 files changed, 208 insertions(+), 36 deletions(-)
+
+-- 
+1.7.9.5
