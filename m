@@ -1,215 +1,127 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 27 Apr 2016 11:44:53 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>, arnd@arndb.de,
-	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
-	hanjun.guo@linaro.org, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-Subject: Re: [PATCH V6 02/13] pci, acpi: Provide generic way to assign bus
- domain number.
-Message-ID: <20160427164453.GB17629@localhost>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-3-git-send-email-tn@semihalf.com>
- <20160427022649.GD6789@localhost>
- <20160427111758.GA6234@red-moon>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160427111758.GA6234@red-moon>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: Andrey Smirnov <andrew.smirnov@gmail.com>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	gary.bisson@boundarydevices.com
+Subject: [PATCH v2 2/3] PCI: imx6: Implement reset sequence for i.MX6+
+Date: Sun, 17 Apr 2016 22:51:16 -0700
+Message-Id: <1460958677-10604-2-git-send-email-andrew.smirnov@gmail.com>
+In-Reply-To: <1460958677-10604-1-git-send-email-andrew.smirnov@gmail.com>
+References: <1460958677-10604-1-git-send-email-andrew.smirnov@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 27, 2016 at 12:17:58PM +0100, Lorenzo Pieralisi wrote:
-> On Tue, Apr 26, 2016 at 09:26:49PM -0500, Bjorn Helgaas wrote:
-> > On Fri, Apr 15, 2016 at 07:06:37PM +0200, Tomasz Nowicki wrote:
-> > > As we now have valid PCI host bridge device reference we can
-> > > introduce code that is going to find its bus domain number using
-> > > ACPI _SEG method.
-> > > 
-> > > Note that _SEG method is optional, therefore _SEG absence means
-> > > that all PCI buses belong to domain 0.
-> > > 
-> > > While at it, for the sake of code clarity we put ACPI and DT domain
-> > > assign methods into the corresponding helpers.
-> > > 
-> > > Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> > > Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
-> > > Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> > > Tested-by: Jeremy Linton <jeremy.linton@arm.com>
-> > > Tested-by: Duc Dang <dhdang@apm.com>
-> > > Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-> > > Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> > > Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-> > > Tested-by: Sinan Kaya <okaya@codeaurora.org>
-> > > ---
-> > >  drivers/acpi/pci_root.c  | 18 ++++++++++++++++++
-> > >  drivers/pci/pci.c        | 11 +++++++++--
-> > >  include/linux/pci-acpi.h |  2 ++
-> > >  3 files changed, 29 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> > > index 4581e0e..d9a70c4 100644
-> > > --- a/drivers/acpi/pci_root.c
-> > > +++ b/drivers/acpi/pci_root.c
-> > > @@ -419,6 +419,24 @@ out:
-> > >  }
-> > >  EXPORT_SYMBOL(acpi_pci_osc_control_set);
-> > >  
-> > > +int acpi_pci_bus_domain_nr(struct device *parent)
+I.MX6+ has a dedicated bit for reseting PCIe core, which should be used
+instead of a regular reset sequence since using the latter will hang the
+SoC.
 
-It looks like acpi_pci_bus_domain_nr() could be under #ifdef
-CONFIG_PCI_DOMAINS_GENERIC, right?
+This commit is based on c34068d48273e24d392d9a49a38be807954420ed from
+http://git.freescale.com/git/cgit.cgi/imx/linux-2.6-imx.git
 
-> > > +{
-> > > +	struct acpi_device *acpi_dev = to_acpi_device(parent);
-> > > +	unsigned long long segment = 0;
-> > > +	acpi_status status;
-> > > +
-> > > +	/*
-> > > +	 * If _SEG method does not exist, following ACPI spec (6.5.6)
-> > > +	 * all PCI buses belong to domain 0.
-> > > +	 */
-> > > +	status = acpi_evaluate_integer(acpi_dev->handle, METHOD_NAME__SEG, NULL,
-> > > +				       &segment);
-> > 
-> > We already have code in acpi_pci_root_add() to evaluate _SEG.  We
-> > don't want to evaluate it *twice*, do we?
-> > 
-> > I was sort of expecting that if you added it here, we'd remove the
-> > existing call, but it looks like you're keeping both?
-> 
-> We can't remove the existing call, since it is used on X86 and IA64
-> to store the segment number that, in the process, is used in their
-> pci_domain_nr() arch specific callback to retrieve the domain nr.
-> 
-> On ARM64, that selects PCI_DOMAINS_GENERIC, we have to find a way
-> to retrieve the domain number that is not arch dependent, since
-> this is generic code, we can't rely on any bus->sysdata format (unless
-> we do something like JC did below), therefore the only way is to call
-> the _SEG method *again* here, which also forced Tomasz to go through
-> the ACPI_COMPANION setting song and dance and pass the parent pointer
-> to pci_create_root_bus() (see patch 1), which BTW is a source of
-> trouble on its own as you noticed.
-> 
-> JC solved it differently, via sysdata and pseudo-generic code:
-> 
-> http://www.spinics.net/lists/arm-kernel/msg478167.html
+Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+---
 
-The thing I don't like about this is the special case of checking
-parent and parent->of_node to figure out whether we should use the
-segment from ACPI and the fragility of depending on the fact that the
-companion hasn't been set yet.
+Changes since v1:
 
-> http://www.spinics.net/lists/arm-kernel/msg478169.html
-> 
-> I like neither, we need the lesser of two evils though.
+	- Patchset is rebased against
+          https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-imx6
 
-Today we call pci_bus_assign_domain_nr() from the PCI core (from
-pci_create_root_bus()).  This is only implemented for
-PCI_DOMAINS_GENERIC, but even so, it fiddles around to figure out
-whether to get the domain from DT or to assign a new one.
+	- DTS files changes moved into a separate patch
 
-That seems backwards to me.  The host bridge drivers already know
-where the domain should come from (ACPI _SEG, DT, etc.) and in the
-long term, I think they should be responsible for looking up or
-assigning a domain number *before* they call pci_create_root_bus().
+ drivers/pci/host/pci-imx6.c                 | 28 ++++++++++++++++++++++++++--
+ include/linux/mfd/syscon/imx6q-iomuxc-gpr.h |  1 +
+ 2 files changed, 27 insertions(+), 2 deletions(-)
 
-> > > +	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
-> > > +		dev_err(&acpi_dev->dev, "can't evaluate _SEG\n");
-> > > +
-> > > +	return segment;
-> > > +}
-> > > +
-> > >  static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
-> > >  {
-> > >  	u32 support, control, requested;
-> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > > index 25e0327..1a74e87 100644
-> > > --- a/drivers/pci/pci.c
-> > > +++ b/drivers/pci/pci.c
-> > > @@ -19,6 +19,7 @@
-> > >  #include <linux/spinlock.h>
-> > >  #include <linux/string.h>
-> > >  #include <linux/log2.h>
-> > > +#include <linux/pci-acpi.h>
-> > >  #include <linux/pci-aspm.h>
-> > >  #include <linux/pm_wakeup.h>
-> > >  #include <linux/interrupt.h>
-> > > @@ -4779,7 +4780,7 @@ int pci_get_new_domain_nr(void)
-> > >  }
-> > >  
-> > >  #ifdef CONFIG_PCI_DOMAINS_GENERIC
-> > > -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> > > +static int of_pci_bus_domain_nr(struct device *parent)
-> > >  {
-> > >  	static int use_dt_domains = -1;
-> > >  	int domain = -1;
-> > > @@ -4823,7 +4824,13 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> > >  		domain = -1;
-> > >  	}
-> > >  
-> > > -	bus->domain_nr = domain;
-> > > +	return domain;
-> > > +}
-> > > +
-> > > +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> > > +{
-> > > +	bus->domain_nr = acpi_disabled ? of_pci_bus_domain_nr(parent) :
-> > > +					 acpi_pci_bus_domain_nr(parent);
-
-We have the pci_bus * here, so to_pci_host_bridge(bus->bridge) gives
-us the struct pci_host_bridge.  I can't remember why we put domain_nr
-in the struct pci_bus instead of in the struct pci_host_bridge.  It
-seems like pci_host_bridge is the more logical place for it, because
-every bus below the host bridge must have the same domain by
-definition.
-
-Would it be feasible to either (a) move domain_nr to the
-pci_host_bridge, or (b) change acpi_pci_bus_domain_nr() so it uses the
-struct pci_bus * or the struct device * to find the struct
-acpi_pci_root where segment has already been stored by
-acpi_pci_root_add()?
-
-Another wrinkle is the quirk added by 1f09b09b4de0 ("x86/PCI: Ignore
-_SEG on HP xw9300").  x86 doesn't use PCI_DOMAINS_GENERIC yet, so this
-patch wouldn't break it, but I hope x86 can use PCI_DOMAINS_GENERIC in
-the future, and then it will be a problem if we evaluate _SEG again.
-
-> > >  }
-> > >  #endif
-> > >  #endif
-> > > diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> > > index 89ab057..a72e22d 100644
-> > > --- a/include/linux/pci-acpi.h
-> > > +++ b/include/linux/pci-acpi.h
-> > > @@ -22,6 +22,7 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
-> > >  {
-> > >  	return acpi_remove_pm_notifier(dev);
-> > >  }
-> > > +extern int acpi_pci_bus_domain_nr(struct device *parent);
-> > >  extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
-> > >  
-> > >  static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
-> > > @@ -109,6 +110,7 @@ extern const u8 pci_acpi_dsm_uuid[];
-> > >  #else	/* CONFIG_ACPI */
-> > >  static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
-> > >  static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
-> > > +static inline int acpi_pci_bus_domain_nr(struct device *parent) { return -1; }
-> > >  #endif	/* CONFIG_ACPI */
-> > >  
-> > >  #ifdef CONFIG_ACPI_APEI
-> > > -- 
-> > > 1.9.1
-> > > 
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index c570bbb..834c5b8 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -33,7 +33,8 @@
+ 
+ enum imx6_pcie_variants {
+ 	IMX6Q,
+-	IMX6SX
++	IMX6SX,
++	IMX6QP,
+ };
+ 
+ struct imx6_pcie {
+@@ -253,6 +254,11 @@ static int imx6_pcie_assert_core_reset(struct pcie_port *pp)
+ 				   IMX6SX_GPR5_PCIE_BTNRST_RESET,
+ 				   IMX6SX_GPR5_PCIE_BTNRST_RESET);
+ 		break;
++	case IMX6QP:
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				   IMX6Q_GPR1_PCIE_SW_RST,
++				   IMX6Q_GPR1_PCIE_SW_RST);
++		break;
+ 	case IMX6Q:
+ 		/*
+ 		 * If the bootloader already enabled the link we need some special
+@@ -307,6 +313,7 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN, 0);
+ 		break;
++	case IMX6QP: 		/* FALLTHROUGH */
+ 	case IMX6Q:
+ 		/* power up core phy and enable ref clock */
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+@@ -367,9 +374,22 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
+ 		gpiod_set_value_cansleep(imx6_pcie->reset_gpio, 1);
+ 	}
+ 
+-	if (imx6_pcie->variant == IMX6SX)
++	switch (imx6_pcie->variant) {
++	case IMX6SX:
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
+ 				   IMX6SX_GPR5_PCIE_BTNRST_RESET, 0);
++		break;
++	case IMX6QP:
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
++				   IMX6Q_GPR1_PCIE_SW_RST, 0);
++
++		usleep_range(200, 500);
++		break;
++	case IMX6Q:		/* Nothing to do */
++		break;
++	default:
++		BUG();
++	}
+ 
+ 	return 0;
+ 
+@@ -601,6 +621,9 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 	if (of_device_is_compatible(pp->dev->of_node,
+ 				    "fsl,imx6sx-pcie"))
+ 		imx6_pcie->variant = IMX6SX;
++	else if (of_device_is_compatible(pp->dev->of_node,
++					 "fsl,imx6qp-pcie"))
++		imx6_pcie->variant = IMX6QP;
+ 	else
+ 		imx6_pcie->variant = IMX6Q;
+ 
+@@ -697,6 +720,7 @@ static void imx6_pcie_shutdown(struct platform_device *pdev)
+ static const struct of_device_id imx6_pcie_of_match[] = {
+ 	{ .compatible = "fsl,imx6q-pcie", },
+ 	{ .compatible = "fsl,imx6sx-pcie", },
++	{ .compatible = "fsl,imx6qp-pcie", },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, imx6_pcie_of_match);
+diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+index 238c8db..5b08e3c 100644
+--- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
++++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+@@ -95,6 +95,7 @@
+ #define IMX6Q_GPR0_DMAREQ_MUX_SEL0_IOMUX	BIT(0)
+ 
+ #define IMX6Q_GPR1_PCIE_REQ_MASK		(0x3 << 30)
++#define IMX6Q_GPR1_PCIE_SW_RST			BIT(29)
+ #define IMX6Q_GPR1_PCIE_EXIT_L1			BIT(28)
+ #define IMX6Q_GPR1_PCIE_RDY_L23			BIT(27)
+ #define IMX6Q_GPR1_PCIE_ENTER_L1		BIT(26)
+-- 
+2.5.5
