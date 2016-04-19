@@ -1,161 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp03.au.ibm.com ([202.81.31.145]:40292 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751447AbcDOBkQ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2016 21:40:16 -0400
-Received: from localhost
-	by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 15 Apr 2016 11:40:13 +1000
-Date: Fri, 15 Apr 2016 11:39:10 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alistair Popple <alistair@popple.id.au>
-Cc: linuxppc-dev@lists.ozlabs.org,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	devicetree@vger.kernel.org, aik@ozlabs.ru,
-	linux-pci@vger.kernel.org, grant.likely@linaro.org,
-	robherring2@gmail.com, bhelgaas@google.com, dja@axtens.net
-Subject: Re: [PATCH v8 45/45] PCI/hotplug: PowerPC PowerNV PCI hotplug driver
-Message-ID: <20160415013909.GA22105@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:33735 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751520AbcDSCCb (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Apr 2016 22:02:31 -0400
+Received: by mail-pa0-f54.google.com with SMTP id zm5so1147927pac.0
+        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 19:02:30 -0700 (PDT)
+Subject: Re: [PATCH v8 18/45] powerpc/powernv: Increase PE# capacity
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
 References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-46-git-send-email-gwshan@linux.vnet.ibm.com>
- <1907698.219Ro8drPf@new-mexico>
+ <1455680668-23298-19-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
+	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <571591AF.7080804@ozlabs.ru>
+Date: Tue, 19 Apr 2016 12:02:23 +1000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1907698.219Ro8drPf@new-mexico>
+In-Reply-To: <1455680668-23298-19-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 15, 2016 at 10:47:52AM +1000, Alistair Popple wrote:
->Hi Gavin,
+On 02/17/2016 02:44 PM, Gavin Shan wrote:
+> Each PHB maintains an array helping to translate 2-bytes Request
+> ID (RID) to PE# with the assumption that PE# takes one byte, meaning
+> that we can't have more than 256 PEs. However, pci_dn->pe_number
+> already had 4-bytes for the PE#.
 >
->I was reading through this to understand how it all works and noticed a couple
->of things, comments below.
+> This extends the PE# capacity for every PHB. After that, the PE number
+> is represented by 4-bytes value. Then we can reuse IODA_INVALID_PE to
+> check the PE# in phb->pe_rmap[] is valid or not.
+
+
+This should be merged into "[PATCH v8 21/45] powerpc/powernv: Create PEs at 
+PCI hot plugging time" as it does not make sense alone (this patch does the 
+initialization but only 3 patches apart this default value is analyzed -> 
+hard to review).
+
+
+
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Reviewed-by: Daniel Axtens <dja@axtens.net>
+> ---
+>   arch/powerpc/platforms/powernv/pci-ioda.c | 6 +++++-
+>   arch/powerpc/platforms/powernv/pci.h      | 7 ++-----
+>   2 files changed, 7 insertions(+), 6 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 59782fba..7800897 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -757,7 +757,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>
+>   	/* Clear the reverse map */
+>   	for (rid = pe->rid; rid < rid_end; rid++)
+> -		phb->ioda.pe_rmap[rid] = 0;
+> +		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
+>
+>   	/* Release from all parents PELT-V */
+>   	while (parent) {
+> @@ -3387,6 +3387,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>   	if (prop32)
+>   		phb->ioda.reserved_pe_idx = be32_to_cpup(prop32);
+>
+> +	/* Invalidate RID to PE# mapping */
+> +	for (i = 0; i < ARRAY_SIZE(phb->ioda.pe_rmap); ++i)
+> +		phb->ioda.pe_rmap[i] = IODA_INVALID_PE;
+> +
+>   	/* Parse 64-bit MMIO range */
+>   	pnv_ioda_parse_m64_window(phb);
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+> index 350e630..928cf81 100644
+> --- a/arch/powerpc/platforms/powernv/pci.h
+> +++ b/arch/powerpc/platforms/powernv/pci.h
+> @@ -160,11 +160,8 @@ struct pnv_phb {
+>   		struct list_head	pe_list;
+>   		struct mutex            pe_list_mutex;
+>
+> -		/* Reverse map of PEs, will have to extend if
+> -		 * we are to support more than 256 PEs, indexed
+> -		 * bus { bus, devfn }
+> -		 */
+> -		unsigned char		pe_rmap[0x10000];
+> +		/* Reverse map of PEs, indexed by {bus, devfn} */
+> +		int			pe_rmap[0x10000];
+>
+>   		/* TCE cache invalidate registers (physical and
+>   		 * remapped)
 >
 
-Alistair, thanks for your time on review.
 
->
->On Wed, 17 Feb 2016 14:44:28 Gavin Shan wrote:
->
-><snip>
->
->> +
->> +static void pnv_php_handle_poweron(struct pnv_php_slot *php_slot)
->> +{
->> +	void *fdt, *fdt1, *dt;
->> +	int confirm = PNV_PHP_POWER_CONFIRMED_SUCCESS;
->> +	int ret;
->> +
->> +	/* We don't know the FDT blob size. We try to get it through
->> +	 * maximal memory chunk and then copy it to another chunk that
->> +	 * fits the real size.
->> +	 */
->> +	fdt1 = kzalloc(0x10000, GFP_KERNEL);
->> +	if (!fdt1)
->> +		goto error;
->> +
->> +	ret = pnv_pci_get_device_tree(php_slot->dn->phandle, fdt1, 0x10000);
->> +	if (ret)
->> +		goto free_fdt1;
->> +
->> +	fdt = kzalloc(fdt_totalsize(fdt1), GFP_KERNEL);
->> +	if (!fdt)
->> +		goto free_fdt1;
->> +
->> +	/* Unflatten device tree blob */
->> +	memcpy(fdt, fdt1, fdt_totalsize(fdt1));
->> +	dt = of_fdt_unflatten_tree(fdt, php_slot->dn, NULL);
->> +	if (!dt) {
->> +		dev_warn(&php_slot->pdev->dev, "Cannot unflatten FDT\n");
->> +		goto free_fdt;
->> +	}
->> +
->> +	/* Initialize and apply the changeset */
->> +	of_changeset_init(&php_slot->ocs);
->> +	ret = pnv_php_populate_changeset(&php_slot->ocs, php_slot->dn);
->> +	if (ret) {
->> +		dev_warn(&php_slot->pdev->dev, "Error %d populating changeset\n",
->> +			 ret);
->> +		goto free_dt;
->> +	}
->> +
->> +	php_slot->dn->child = NULL;
->> +	ret = of_changeset_apply(&php_slot->ocs);
->> +	if (ret) {
->> +		dev_warn(&php_slot->pdev->dev, "Error %d applying changeset\n",
->> +			 ret);
->> +		goto destroy_changeset;
->> +	}
->> +
->> +	/* Add device node firmware data */
->> +	pnv_php_add_pdns(php_slot);
->> +	php_slot->fdt = fdt;
->> +	php_slot->dt  = dt;
->> +	goto out;
->
->Doesn't this leak memory from fdt1? I can't see where it gets freed in this
->case.
->
-
-You're right that @fdt1 should be released here. I'll fix it in
-next revision.
-
->> +destroy_changeset:
->> +	of_changeset_destroy(&php_slot->ocs);
->> +free_dt:
->> +	kfree(dt);
->> +	php_slot->dn->child = NULL;
->> +free_fdt:
->> +	kfree(fdt);
->> +free_fdt1:
->> +	kfree(fdt1);
->> +error:
->> +	confirm = PNV_PHP_POWER_CONFIRMED_FAIL;
->> +out:
->> +	/* Confirm status change */
->> +	php_slot->power_state_confirmed = confirm;
->> +	wake_up_interruptible(&php_slot->queue);
->> +}
->> +
->
-><snip>
->
->> +
->> +static void __exit pnv_php_exit(void)
->> +{
->> +	struct device_node *dn;
->> +
->> +	for_each_compatible_node(dn, NULL, "ibm,ioda-phb")
->> +		pnv_php_unregister(dn);
->> +	for_each_compatible_node(dn, NULL, "ibm,ioda2-phb")
->> +		pnv_php_unregister(dn);
->> +
->> +	pnv_pci_hotplug_notifier_unregister(&php_msg_nb);
->
->Do you flush the workqueues anywhere? Usually you would stop work being queued 
->and call something like flush_workqueue() to ensure no work is still
->running/queued before unloading the module.
->
-
-Good question. Yeah, I'll flush the workqueue before the module is going
-to be unloaded.
-
-Thanks,
-Gavin
-
->- Alistair
->
->> +}
->> +
->> +module_init(pnv_php_init);
->> +module_exit(pnv_php_exit);
->> +
->> +MODULE_VERSION(DRIVER_VERSION);
->> +MODULE_LICENSE("GPL v2");
->> +MODULE_AUTHOR(DRIVER_AUTHOR);
->> +MODULE_DESCRIPTION(DRIVER_DESC);
->> 
->
-
+-- 
+Alexey
