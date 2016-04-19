@@ -1,72 +1,84 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: Jayachandran C <jchandra@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
-	Jon Masters <jcm@redhat.com>, linaro-acpi@lists.linaro.org,
-	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com,
-	David Daney <ddaney@caviumnetworks.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	robert.richter@caviumnetworks.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, Wangyijing <wangyijing@huawei.com>,
-	Marcin Wojtas <mw@semihalf.com>
-Subject: Re: [PATCH V6 08/13] PCI: generic, thunder: update to use generic ECAM API
-Date: Mon, 18 Apr 2016 16:44:13 +0200
-Message-ID: <10639671.xGDtp1R8bk@wuerfel>
-In-Reply-To: <5714DB37.7000907@semihalf.com>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com> <CAKc_7PWw5VaPxcOpWbonksx6k4W5fe9yO8wBfigXNRkFAYAYEg@mail.gmail.com> <5714DB37.7000907@semihalf.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 19 Apr 2016 16:19:27 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	john.ronciak@intel.com, linux-kernel@vger.kernel.org,
+	jesse.brandeburg@intel.com
+Subject: Re: [PATCH] PCI: Quirk broken INTx masking on Intel i40e NICs
+Message-ID: <20160419211927.GC17863@localhost>
+References: <20160324190328.3880.44785.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160324190328.3880.44785.stgit@gimli.home>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday 18 April 2016 15:03:51 Tomasz Nowicki wrote:
-> On 16.04.2016 16:36, Jayachandran C wrote:
-> > On Sat, Apr 16, 2016 at 1:01 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> >> On Saturday 16 April 2016 12:50:13 Jayachandran C wrote:
-> > The whole pci-thunder-*.c is to support thunder PCI quirks since the
-> > generic OF is handled by pci-host-common.c and generic ECAM is now
-> > separated -  duplicating the whole file for ACPI will be bad.
+On Thu, Mar 24, 2016 at 01:03:49PM -0600, Alex Williamson wrote:
+> All of the i40e (XL710/X710) 10/20/40GbE NICs lack support for
+> indicating INTx is asserted via the interrupt bit in the PCI status
+> register.  The DisINTx bit in the command register is functional,
+> causing these devices to be incorrectly detected as supporting INTx
+> masking.  Quirk them to properly indicate no INTx masking support.
 > 
-> Yes, it would be too much code duplication. Also, we already know 
-> drivers which need quirks.
+> Device IDs copied from i40e_devids.h.
 > 
-> We really need to agree on best approach here. Here are requirements 
-> which came up (please correct me if misunderstood sth):
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> Cc: John Ronciak <john.ronciak@intel.com>
+> Cc: Jesse Brandeburg <jesse.brandeburg@intel.com>
+
+Applied to pci/virtualization for v4.7, thanks, Alex.
+
+> ---
+>  drivers/pci/quirks.c |   33 +++++++++++++++++++++++++++++++++
+>  1 file changed, 33 insertions(+)
 > 
-> Arnd:
-> 1. Initial DT driver should be standalone [Arnd]
-> 2. No exported symbols [Arnd]
-> 3. Duplicate necessary code to ACPI framework.
-
-Correct.
-
-> JC:
-> 1. Adding linker section is wrong.
-> 2. Quirks should be exported (pci_thunder_ecam_ops), then no need for 
-> adding linker section
-> 3. To much duplication to copy code into the ACPI framework.
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 0575a1e..583f040 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3121,6 +3121,39 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
+>  			 quirk_broken_intx_masking);
+>  
+> +/*
+> + * Intel i40e (XL710/X710) 10/20/40GbE NICs all have broken INTx masking,
+> + * DisINTx can be set but the interrupt status bit is non-functional.
+> + */
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1572,
+> +			 quirk_broken_intx_masking);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1574,
+> +			 quirk_broken_intx_masking);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1580,
+> +			 quirk_broken_intx_masking);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1581,
+> +			 quirk_broken_intx_masking);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1583,
+> +			 quirk_broken_intx_masking);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1584,
+> +			 quirk_broken_intx_masking);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1585,
+> +			 quirk_broken_intx_masking);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1586,
+> +			 quirk_broken_intx_masking);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1587,
+> +			 quirk_broken_intx_masking);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1588,
+> +			 quirk_broken_intx_masking);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x1589,
+> +			 quirk_broken_intx_masking);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d0,
+> +			 quirk_broken_intx_masking);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d1,
+> +			 quirk_broken_intx_masking);
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x37d2,
+> +			 quirk_broken_intx_masking);
+> +
+>  static void quirk_no_bus_reset(struct pci_dev *dev)
+>  {
+>  	dev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
 > 
-> My opinion:
-> 1. I like linker section because it is easy to maintain and no need to 
-> export symbols.
-> 2. We need more sophisticated algorithm for matching quirks (DMI is not 
-> enough and not only for ThunderX drivers). Of course I am open to any 
-> new suggestions.
-
-Agreed.
-
-> 3. To much duplication to copy code into the ACPI framework.
-> 
-> Thanks in advance for any pointers.
-
-Can you be more specific about what code actually would need to
-be duplicated? Anything besides the config space operations?
-
-	Arnd
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
