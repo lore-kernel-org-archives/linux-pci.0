@@ -1,57 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60842 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752738AbcDGRpY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 13:45:24 -0400
-Subject: Re: [PATCH 2/2] pci, acpi: free IO resource during shutdown
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1457389310-3538-1-git-send-email-okaya@codeaurora.org>
- <1457389310-3538-2-git-send-email-okaya@codeaurora.org>
- <20160407160624.GB8780@localhost>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
-	agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <57069CAF.8090803@codeaurora.org>
-Date: Thu, 7 Apr 2016 13:45:19 -0400
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:38122 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753798AbcDSLPW (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 07:15:22 -0400
+Received: from localhost
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Tue, 19 Apr 2016 21:15:19 +1000
+Subject: Re: [RFC v6 06/10] PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
+To: David Laight <David.Laight@ACULAB.COM>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+References: <1460977120-29367-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <063D6719AE5E284EB5DD2968C1650D6D5F4A45A8@AcuExch.aculab.com>
+Cc: "alistair@popple.id.au" <alistair@popple.id.au>,
+	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
+	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
+	"eric.auger@linaro.org" <eric.auger@linaro.org>,
+	"aik@ozlabs.ru" <aik@ozlabs.ru>,
+	"joro@8bytes.org" <joro@8bytes.org>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
+	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	"paulus@samba.org" <paulus@samba.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Message-ID: <571612F2.1080502@linux.vnet.ibm.com>
+Date: Tue, 19 Apr 2016 19:13:54 +0800
 MIME-Version: 1.0
-In-Reply-To: <20160407160624.GB8780@localhost>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D5F4A45A8@AcuExch.aculab.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/7/2016 12:06 PM, Bjorn Helgaas wrote:
->> __release_pci_root_info function if the region type is IO.
-> I don't know what "removing a slot" means.  You're changing
-> pci_root.c, so I assume this is really an ACPI host bridge removal?
-> 
+On 2016/4/18 19:30, David Laight wrote:
+> From: Yongji Xie
+>> Sent: 18 April 2016 11:59
+>> We introduce a new pci_bus_flags, PCI_BUS_FLAGS_MSI_REMAP
+>> which indicates all devices on the bus are protected by the
+>> hardware which supports IRQ remapping(intel naming).
+>>
+>> This flag will be used to know whether it's safe to expose
+>> MSI-X tables of PCI BARs to userspace. Because the capability
+>> of IRQ remapping can guarantee the PCI device cannot trigger
+>> MSIs that correspond to interrupt IDs of other devices.
+> I'm worried that this entire series is going to break drivers
+> for existing hardware.
+>
+> I understand some of the reasoning for 'vm pass through' configurations,
+> but there will be PCIe devices out there that have the MSI-X tables
+> in the same BAR as other device registers.
+> If you are lucky nothing else is in the same 4k area, but I wouldn't
+> assume it.
 
-Correct, I'm removing the host bridge.
+Thanks for your comments. But I didn't get your point here.
+Why will exposing MSI-X table to userspace break the driver
+for hardware which have the MSI-X tables in the same BAR as
+other device registers? Could you give me more details?
 
-> The release should correspond to a mapping, and the changelog should
-> point out where that mapping happens so we can see the symmetry.
-> 
+The reason why we want to mmap MSI-X table is that there
+may be some other critical device registers in the same page
+as the MSI-X table. We prefer to handle the mmio access to
+these registers in guest rather than in QEMU. So we would
+like to see there is something else in the same 4k/64k area.
 
-I apologize. This is based on Tomasz's v5 patch here.
+> In any case, if the hardware can't police the card's master transfers
+> there is nothing to stop a different bus master block on the card
+> from raising MSI-X interrupts - they are just a PCIe write.
+> So all you are doing is raising the bar slightly and giving a very false
+> sense of security.
 
-https://github.com/semihalf-nowicki-tomasz/linux/blob/pci-acpi-v5/drivers/acpi/pci_root.c
+Do you mean we can request a DMA to the target address
+area that raises MSI-X interrupts? But for PPC64 with IODA
+bridge, this invalid PCIe write will be prevented on PHB before
+raising MSI-X interrupt. And I think the capability of interrupt
+remapping or ITS can also do the same thing. If hardware didn't
+support this, we would not expose MSI-X table in my patch.
 
+Thanks,
+Yongji
 
-> You say this is undoing the effect of pci_remap_iospace(), but that's
-> only called by native drivers and the generic (OF) driver, not by
-> pci_root.c.
-
-See the ACPI root bridge driver above.
-
-> 
-> Please combine this with the previous patch so we have the new
-> function and its use in the same patch.
-> 
-
-I can do that. I was trying to keep the reviews as small as possible.
-
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
