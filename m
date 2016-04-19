@@ -1,239 +1,213 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Nalla, Ravikanth" <ravikanth.nalla@hpe.com>
-To: Sinan Kaya <okaya@codeaurora.org>,
-	Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-	"timur@codeaurora.org" <timur@codeaurora.org>,
-	"cov@codeaurora.org" <cov@codeaurora.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"lenb@kernel.org" <lenb@kernel.org>,
-	"K, Harish (MCOU/UPEL)" <harish.k@hpe.com>,
-	"Reghunandanan, Ashwin (STSD)" <ashwin.reghunandanan@hpe.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"rjw@rjwysocki.net" <rjw@rjwysocki.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH V3 1/4] acpi,pci,irq: reduce resource requirements
-Date: Tue, 26 Apr 2016 20:33:52 +0000
-Message-ID: <49D617FA63152941907AADE32CF072F12FF073CC@G4W3290.americas.hpqcorp.net>
-References: <1460914617-8259-1-git-send-email-okaya@codeaurora.org>
- <20160426183611.GC27803@localhost> <571FBACB.1020606@codeaurora.org>
-In-Reply-To: <571FBACB.1020606@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:35886 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753359AbcDSKla (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 06:41:30 -0400
+Received: by mail-ob0-f170.google.com with SMTP id j9so10676326obd.3
+        for <linux-pci@vger.kernel.org>; Tue, 19 Apr 2016 03:41:29 -0700 (PDT)
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <571607C0.10909@semihalf.com>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+	<1460740008-19489-13-git-send-email-tn@semihalf.com>
+	<571607C0.10909@semihalf.com>
+Date: Tue, 19 Apr 2016 11:41:29 +0100
+Message-ID: <CAGCh1+=2vufNvw7wGg=GgQ-s8cH1JQoJBq2FSSc2-b=a6Qh+2g@mail.gmail.com>
+Subject: Re: [Linaro-acpi] [PATCH V6 12/13] pci, pci-thunder-ecam: Add ACPI
+ support for ThunderX ECAM.
+From: G Gregory <graeme.gregory@linaro.org>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: helgaas@kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
+	jchandra@broadcom.com, Jon Masters <jcm@redhat.com>,
+	Linaro ACPI Mailman List <linaro-acpi@lists.linaro.org>,
+	linux-pci@vger.kernel.org, Liviu Dudau <Liviu.Dudau@arm.com>,
+	ddaney@caviumnetworks.com,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	okaya@codeaurora.org,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	robert.richter@caviumnetworks.com,
+	Yijing Wang <wangyijing@huawei.com>, mw@semihalf.com,
+	Jiang Liu <jiang.liu@linux.intel.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-Hi Sinan Kaya,
-
-Will  verify and comeback with the results soon.
-
-Thanks,
-Ravi
-
------Original Message-----
-From: Sinan Kaya [mailto:okaya@codeaurora.org] 
-Sent: Wednesday, April 27, 2016 12:30 AM
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-acpi@vger.kernel.org; timur@codeaurora.org; cov@codeaurora.org; linux-pci@vger.kernel.org; Nalla, Ravikanth <ravikanth.nalla@hpe.com>; lenb@kernel.org; K, Harish (MCOU/UPEL) <harish.k@hpe.com>; Reghunandanan, Ashwin (STSD) <ashwin.reghunandanan@hpe.com>; bhelgaas@google.com; rjw@rjwysocki.net; linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V3 1/4] acpi,pci,irq: reduce resource requirements
-
-On 4/26/2016 2:36 PM, Bjorn Helgaas wrote:
-> On Sun, Apr 17, 2016 at 01:36:53PM -0400, Sinan Kaya wrote:
->> Code has been redesigned to calculate penalty requirements on the 
->> fly. This significantly simplifies the implementation and removes 
->> some of the init calls from x86 architecture.
+On 19 April 2016 at 11:26, Tomasz Nowicki <tn@semihalf.com> wrote:
+> On 15.04.2016 19:06, Tomasz Nowicki wrote:
 >>
->> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> 
-> For all four patches:
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Thanks, can the HPE developers in CC test the series in order to avoid another revert? 
-
-> 
+>> Passes 1.x miss PCI enhanced allocation (EA) header for fixed-BARs,
+>> thus these passes should use Cavium-specific config access functions
+>> that synthesize the missing EA capabilities.
+>>
+>> We already have DT driver which addresses errata requirements and
+>> allows to use special PCI config accessors. Currently this driver uses
+>> compatible = "cavium,pci-host-thunder-ecam" to mach against the errata.
+>> For ACPI case we need explicit errata number and corresponding
+>> DECLARE_ACPI_MCFG_FIXUP fixup code.
+>>
+>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 >> ---
->>  drivers/acpi/pci_link.c | 97 
->> ++++++++++++++++++++++++++++++++++---------------
->>  1 file changed, 68 insertions(+), 29 deletions(-)
+>>   arch/arm64/Kconfig                  | 14 ++++++++++++++
+>>   arch/arm64/include/asm/cpufeature.h |  3 ++-
+>>   arch/arm64/kernel/cpu_errata.c      |  8 ++++++++
+>>   drivers/pci/host/pci-thunder-ecam.c | 35
+>> +++++++++++++++++++++++++++++++++++
+>>   4 files changed, 59 insertions(+), 1 deletion(-)
 >>
->> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c index 
->> ededa90..cc0ba16 100644
->> --- a/drivers/acpi/pci_link.c
->> +++ b/drivers/acpi/pci_link.c
->> @@ -36,6 +36,7 @@
->>  #include <linux/mutex.h>
->>  #include <linux/slab.h>
->>  #include <linux/acpi.h>
->> +#include <linux/irq.h>
->>  
->>  #include "internal.h"
->>  
->> @@ -440,7 +441,6 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
->>  #define ACPI_MAX_IRQS		256
->>  #define ACPI_MAX_ISA_IRQ	16
->>  
->> -#define PIRQ_PENALTY_PCI_AVAILABLE	(0)
->>  #define PIRQ_PENALTY_PCI_POSSIBLE	(16*16)
->>  #define PIRQ_PENALTY_PCI_USING		(16*16*16)
->>  #define PIRQ_PENALTY_ISA_TYPICAL	(16*16*16*16)
->> @@ -457,9 +457,9 @@ static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
->>  	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ6 */
->>  	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ7 parallel, spurious */
->>  	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ8 rtc, sometimes */
->> -	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ9  PCI, often acpi */
->> -	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ10 PCI */
->> -	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ11 PCI */
->> +	0,				/* IRQ9  PCI, often acpi */
->> +	0,				/* IRQ10 PCI */
->> +	0,				/* IRQ11 PCI */
->>  	PIRQ_PENALTY_ISA_USED,		/* IRQ12 mouse */
->>  	PIRQ_PENALTY_ISA_USED,		/* IRQ13 fpe, sometimes */
->>  	PIRQ_PENALTY_ISA_USED,		/* IRQ14 ide0 */
->> @@ -467,6 +467,60 @@ static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
->>  	/* >IRQ15 */
->>  };
->>  
->> +static int acpi_irq_pci_sharing_penalty(int irq) {
->> +	struct acpi_pci_link *link;
->> +	int penalty = 0;
+>> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+>> index 1bded87..b7614b8 100644
+>> --- a/arch/arm64/Kconfig
+>> +++ b/arch/arm64/Kconfig
+>> @@ -445,6 +445,20 @@ config CAVIUM_ERRATUM_27456
+>>
+>>           If unsure, say Y.
+>>
+>> +config CAVIUM_ERRATUM_24575
+>> +       bool "Cavium erratum 24575: Enhanced Allocation (EA) emualaion"
+>> +       default y
+>> +       help
+>> +         Enable workaround for erratum 24575.
 >> +
->> +	list_for_each_entry(link, &acpi_link_list, list) {
->> +		/*
->> +		 * If a link is active, penalize its IRQ heavily
->> +		 * so we try to choose a different IRQ.
->> +		 */
->> +		if (link->irq.active && link->irq.active == irq)
->> +			penalty += PIRQ_PENALTY_PCI_USING;
->> +		else {
->> +			int i;
+>> +         Early versions of the Cavium Thunder CN88XX processor are
+>> missing
+>> +         Enhanced Allocation (EA) capabilities for the fixed BAR
+>> addresses used
+>> +         by the on-SoC hardware blocks. The erratum adds config access
+>> +         functions that synthesize the missing EA capabilities for
+>> versions
+>> +         that are missing that information.
 >> +
->> +			/*
->> +			 * If a link is inactive, penalize the IRQs it
->> +			 * might use, but not as severely.
->> +			 */
->> +			for (i = 0; i < link->irq.possible_count; i++)
->> +				if (link->irq.possible[i] == irq)
->> +					penalty += PIRQ_PENALTY_PCI_POSSIBLE /
->> +						link->irq.possible_count;
->> +		}
->> +	}
+>> +         If unsure, say Y.
 >> +
->> +	return penalty;
+>>   endmenu
+>>
+>>
+>> diff --git a/arch/arm64/include/asm/cpufeature.h
+>> b/arch/arm64/include/asm/cpufeature.h
+>> index b9b6494..a78364e 100644
+>> --- a/arch/arm64/include/asm/cpufeature.h
+>> +++ b/arch/arm64/include/asm/cpufeature.h
+>> @@ -35,8 +35,9 @@
+>>   #define ARM64_ALT_PAN_NOT_UAO                 10
+>>   #define ARM64_HAS_VIRT_HOST_EXTN              11
+>>   #define ARM64_WORKAROUND_CAVIUM_27456         12
+>> +#define ARM64_WORKAROUND_CAVIUM_24575          13
+>>
+>> -#define ARM64_NCAPS                            13
+>> +#define ARM64_NCAPS                            14
+>>
+>>   #ifndef __ASSEMBLY__
+>>
+>> diff --git a/arch/arm64/kernel/cpu_errata.c
+>> b/arch/arm64/kernel/cpu_errata.c
+>> index 06afd04..89c13d7 100644
+>> --- a/arch/arm64/kernel/cpu_errata.c
+>> +++ b/arch/arm64/kernel/cpu_errata.c
+>> @@ -97,6 +97,14 @@ const struct arm64_cpu_capabilities arm64_errata[] = {
+>>                            (1 << MIDR_VARIANT_SHIFT) | 1),
+>>         },
+>>   #endif
+>> +#ifdef CONFIG_CAVIUM_ERRATUM_24575
+>> +       {
+>> +       /* Cavium ThunderX, pass 1.x */
+>> +               .desc = "Cavium erratum 24575",
+>> +               .capability = ARM64_WORKAROUND_CAVIUM_24575,
+>> +               MIDR_RANGE(MIDR_THUNDERX, 0x00, 0x01),
+>> +       },
+>> +#endif
+>>         {
+>>         }
+>>   };
+>> diff --git a/drivers/pci/host/pci-thunder-ecam.c
+>> b/drivers/pci/host/pci-thunder-ecam.c
+>> index f67c6d7..01de697 100644
+>> --- a/drivers/pci/host/pci-thunder-ecam.c
+>> +++ b/drivers/pci/host/pci-thunder-ecam.c
+>> @@ -11,10 +11,14 @@
+>>   #include <linux/ioport.h>
+>>   #include <linux/of_pci.h>
+>>   #include <linux/of.h>
+>> +#include <linux/pci-acpi.h>
+>>   #include <linux/platform_device.h>
+>>
+>> +#include <asm/virt.h>
+>> +
+>>   #include "../ecam.h"
+>>
+>> +
+>>   static void set_val(u32 v, int where, int size, u32 *val)
+>>   {
+>>         int shift = (where & 3) * 8;
+>> @@ -376,5 +380,36 @@ static struct platform_driver thunder_ecam_driver = {
+>>   };
+>>   module_platform_driver(thunder_ecam_driver);
+>>
+>> +#ifdef CONFIG_ACPI
+>> +
+>> +static bool needs_cavium_erratum_24575(struct pci_cfg_fixup *fixup,
+>> +                                     struct acpi_pci_root *root)
+>> +{
+>> +       /*
+>> +        * We must match errata code and be hypervisor, quirk does not
+>> apply
+>> +        * for virtual machines.
+>> +        */
+>> +       return cpus_have_cap(ARM64_WORKAROUND_CAVIUM_24575) &&
+>> +              is_hyp_mode_available();
 >> +}
 >> +
->> +static int acpi_irq_get_penalty(int irq) {
->> +	int penalty = 0;
+>> +DECLARE_ACPI_MCFG_FIXUP(NULL, needs_cavium_erratum_24575,
+>> &pci_thunder_ecam_ops,
+>> +                       0, PCI_MCFG_BUS_ANY);
+>> +DECLARE_ACPI_MCFG_FIXUP(NULL, needs_cavium_erratum_24575,
+>> &pci_thunder_ecam_ops,
+>> +                       1, PCI_MCFG_BUS_ANY);
+>> +DECLARE_ACPI_MCFG_FIXUP(NULL, needs_cavium_erratum_24575,
+>> &pci_thunder_ecam_ops,
+>> +                       2, PCI_MCFG_BUS_ANY);
+>> +DECLARE_ACPI_MCFG_FIXUP(NULL, needs_cavium_erratum_24575,
+>> &pci_thunder_ecam_ops,
+>> +                       3, PCI_MCFG_BUS_ANY);
+>> +DECLARE_ACPI_MCFG_FIXUP(NULL, needs_cavium_erratum_24575,
+>> &pci_thunder_ecam_ops,
+>> +                       10, PCI_MCFG_BUS_ANY);
+>> +DECLARE_ACPI_MCFG_FIXUP(NULL, needs_cavium_erratum_24575,
+>> &pci_thunder_ecam_ops,
+>> +                       11, PCI_MCFG_BUS_ANY);
+>> +DECLARE_ACPI_MCFG_FIXUP(NULL, needs_cavium_erratum_24575,
+>> &pci_thunder_ecam_ops,
+>> +                       12, PCI_MCFG_BUS_ANY);
+>> +DECLARE_ACPI_MCFG_FIXUP(NULL, needs_cavium_erratum_24575,
+>> &pci_thunder_ecam_ops,
+>> +                       13, PCI_MCFG_BUS_ANY);
+>> +#endif
 >> +
->> +	if (irq < ACPI_MAX_ISA_IRQ)
->> +		penalty += acpi_irq_penalty[irq];
->> +
->> +	/*
->> +	* Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict
->> +	* with PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be
->> +	* use for PCI IRQs.
->> +	*/
->> +	if (irq == acpi_gbl_FADT.sci_interrupt) {
->> +		u32 type = irq_get_trigger_type(irq) & IRQ_TYPE_SENSE_MASK;
->> +
->> +		if (type != IRQ_TYPE_LEVEL_LOW)
->> +			penalty += PIRQ_PENALTY_ISA_ALWAYS;
->> +		else
->> +			penalty += PIRQ_PENALTY_PCI_USING;
->> +	}
->> +
->> +	penalty += acpi_irq_pci_sharing_penalty(irq);
->> +	return penalty;
->> +}
->> +
->>  int __init acpi_irq_penalty_init(void)  {
->>  	struct acpi_pci_link *link;
->> @@ -547,12 +601,12 @@ static int acpi_pci_link_allocate(struct acpi_pci_link *link)
->>  		 * the use of IRQs 9, 10, 11, and >15.
->>  		 */
->>  		for (i = (link->irq.possible_count - 1); i >= 0; i--) {
->> -			if (acpi_irq_penalty[irq] >
->> -			    acpi_irq_penalty[link->irq.possible[i]])
->> +			if (acpi_irq_get_penalty(irq) >
->> +			    acpi_irq_get_penalty(link->irq.possible[i]))
->>  				irq = link->irq.possible[i];
->>  		}
->>  	}
->> -	if (acpi_irq_penalty[irq] >= PIRQ_PENALTY_ISA_ALWAYS) {
->> +	if (acpi_irq_get_penalty(irq) >= PIRQ_PENALTY_ISA_ALWAYS) {
->>  		printk(KERN_ERR PREFIX "No IRQ available for %s [%s]. "
->>  			    "Try pci=noacpi or acpi=off\n",
->>  			    acpi_device_name(link->device), @@ -568,7 +622,6 @@ static 
->> int acpi_pci_link_allocate(struct acpi_pci_link *link)
->>  			    acpi_device_bid(link->device));
->>  		return -ENODEV;
->>  	} else {
->> -		acpi_irq_penalty[link->irq.active] += PIRQ_PENALTY_PCI_USING;
->>  		printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
->>  		       acpi_device_name(link->device),
->>  		       acpi_device_bid(link->device), link->irq.active); @@ -800,9 
->> +853,10 @@ static int __init acpi_irq_penalty_update(char *str, int used)
->>  			continue;
->>  
->>  		if (used)
->> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_USED;
->> +			acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
->> +				PIRQ_PENALTY_ISA_USED;
->>  		else
->> -			acpi_irq_penalty[irq] = PIRQ_PENALTY_PCI_AVAILABLE;
->> +			acpi_irq_penalty[irq] = 0;
->>  
->>  		if (retval != 2)	/* no next number */
->>  			break;
->> @@ -819,34 +873,19 @@ static int __init acpi_irq_penalty_update(char *str, int used)
->>   */
->>  void acpi_penalize_isa_irq(int irq, int active)  {
->> -	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
->> -		if (active)
->> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_USED;
->> -		else
->> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
->> -	}
->> +	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty))
->> +		acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
->> +			active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING;
->>  }
->>  
->>  bool acpi_isa_irq_available(int irq)  {
->>  	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_irq_penalty) ||
->> -			    acpi_irq_penalty[irq] < PIRQ_PENALTY_ISA_ALWAYS);
->> +		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
->>  }
->>  
->> -/*
->> - * Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes 
->> conflict with
->> - * PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be 
->> use for
->> - * PCI IRQs.
->> - */
->>  void acpi_penalize_sci_irq(int irq, int trigger, int polarity)  {
->> -	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
->> -		if (trigger != ACPI_MADT_TRIGGER_LEVEL ||
->> -		    polarity != ACPI_MADT_POLARITY_ACTIVE_LOW)
->> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_ISA_ALWAYS;
->> -		else
->> -			acpi_irq_penalty[irq] += PIRQ_PENALTY_PCI_USING;
->> -	}
->>  }
->>  
->>  /*
->> --
->> 1.8.2.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" 
->> in the body of a message to majordomo@vger.kernel.org More majordomo 
->> info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+> I wonder if we can identify quirk based on _DSD properties, like that:
+>
+> Name (_DSD, Package () {
+>         ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+>         Package () {
+>                 Package (2) {"cavium,pci-host-thunder-ecam", 1},
+>         }
+> })
+>
+> similar for PEM driver:
+>
+> Name (_DSD, Package () {
+>         ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+>         Package () {
+>                 Package (2) {"cavium,pci-host-thunder-pem", 1},
+>         }
+> })
+>
+> Do you think it is right thing to do?
+>
 
+Well if your adding new properties why not add a Cavium specific _CID?
 
---
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+Graeme
