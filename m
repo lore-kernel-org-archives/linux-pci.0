@@ -1,106 +1,234 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42450 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932519AbcDHARb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:17:31 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 60/60] PCI: Only try to assign io port only for root bus that support it
-Date: Thu,  7 Apr 2016 17:16:13 -0700
-Message-Id: <1460074573-7481-61-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:36131 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751011AbcDSF2n (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 01:28:43 -0400
+Received: by mail-pa0-f43.google.com with SMTP id er2so2891471pad.3
+        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 22:28:43 -0700 (PDT)
+Subject: Re: [PATCH v8 24/45] powerpc/pci: Rename
+ pcibios_{add,remove}_pci_devices()
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-25-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
+	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <5715C204.20004@ozlabs.ru>
+Date: Tue, 19 Apr 2016 15:28:36 +1000
+MIME-Version: 1.0
+In-Reply-To: <1455680668-23298-25-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI subsystem always assumes that I/O is supported on root bus and
-tries to assign an I/O window to each child bus even if that is not the
-case.
+On 02/17/2016 02:44 PM, Gavin Shan wrote:
+> This renames pcibios_{add,remove}_pci_devices() to avoid conflicts
+> with names of the weak functions in PCI subsystem, which have the
+> prefix "pcibios". No logical changes introduced.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>   arch/powerpc/include/asm/pci-bridge.h |  4 ++--
+>   arch/powerpc/kernel/eeh_driver.c      | 12 ++++++------
+>   arch/powerpc/kernel/pci-hotplug.c     | 15 +++++++--------
+>   drivers/pci/hotplug/rpadlpar_core.c   |  2 +-
+>   drivers/pci/hotplug/rpaphp_core.c     |  4 ++--
+>   drivers/pci/hotplug/rpaphp_pci.c      |  2 +-
+>   6 files changed, 19 insertions(+), 20 deletions(-)
+>
+> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+> index 4dd6ef4..c817f38 100644
+> --- a/arch/powerpc/include/asm/pci-bridge.h
+> +++ b/arch/powerpc/include/asm/pci-bridge.h
+> @@ -263,10 +263,10 @@ static inline struct eeh_dev *pdn_to_eeh_dev(struct pci_dn *pdn)
+>   extern struct pci_bus *pcibios_find_pci_bus(struct device_node *dn);
+>
+>   /** Remove all of the PCI devices under this bus */
+> -extern void pcibios_remove_pci_devices(struct pci_bus *bus);
+> +extern void pci_remove_pci_devices(struct pci_bus *bus);
 
-The use cases is on Intel 8 socket system that have 8 root buses,
-last two root buses would not have io port resources from _CRS.
 
-Check if root bus supports I/O, and later during sizing and
-assigning, check that flags and skip those resources.
+pci_lala_pci_lala() ("pci" is used twice) looks weird, if the prefix is 
+"pci", what other device types can they handle?...
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/probe.c     | 6 ++++++
- drivers/pci/setup-bus.c | 9 +++++++++
- include/linux/pci.h     | 1 +
- 3 files changed, 16 insertions(+)
+May be pcihp_add_devices(), pcihp_remove_devices() as these as defined in 
+pci-hotplug.c?
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 52ddc45..6f0488c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -345,6 +345,9 @@ static void pci_read_bridge_io(struct pci_bus *child)
- 	struct pci_bus_region region;
- 	struct resource *res;
- 
-+	if (!pci_find_host_bridge(child)->has_ioport)
-+		return;
-+
- 	io_mask = PCI_IO_RANGE_MASK;
- 	io_granularity = 0x1000;
- 	if (dev->io_window_1k) {
-@@ -2231,6 +2234,9 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 			bus_addr[0] = '\0';
- 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
- 
-+		if (resource_type(res) == IORESOURCE_IO)
-+			bridge->has_ioport = 1;
-+
- 		if (resource_type(res) == IORESOURCE_MEM) {
- 			if ((res->end - offset) > 0xffffffff)
- 				bridge->has_mem64 = 1;
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index d07ba87..076b5db 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -225,6 +225,10 @@ static void pdev_assign_resources_prepare(struct pci_dev *dev,
- 		if (resource_disabled(r) || r->parent)
- 			continue;
- 
-+		if ((r->flags & IORESOURCE_IO) &&
-+		    !pci_find_host_bridge(dev->bus)->has_ioport)
-+			continue;
-+
- 		r_align = __pci_resource_alignment(dev, r, realloc_head);
- 		if (!r_align) {
- 			dev_warn(&dev->dev, "BAR %d: %pR has bogus alignment\n",
-@@ -1188,6 +1192,11 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		min_size = 0;
- 	}
- 
-+	if (!pci_find_host_bridge(bus)->has_ioport) {
-+		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
-+		return;
-+	}
-+
- 	min_align = window_alignment(bus, IORESOURCE_IO);
- 	list_for_each_entry(dev, &bus->devices, bus_list) {
- 		int i;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 41d06ce..463094a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -409,6 +409,7 @@ struct pci_host_bridge {
- 	void *release_data;
- 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
- 	unsigned int has_mem64:1;
-+	unsigned int has_ioport:1;
- 	/* Resource alignment requirements */
- 	resource_size_t (*align_resource)(struct pci_dev *dev,
- 			const struct resource *res,
+
+>
+>   /** Discover new pci devices under this bus, and add them */
+> -extern void pcibios_add_pci_devices(struct pci_bus *bus);
+> +extern void pci_add_pci_devices(struct pci_bus *bus);
+>
+>
+>   extern void isa_bridge_find_early(struct pci_controller *hose);
+> diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
+> index fb6207d..59e53fe 100644
+> --- a/arch/powerpc/kernel/eeh_driver.c
+> +++ b/arch/powerpc/kernel/eeh_driver.c
+> @@ -621,7 +621,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus,
+>   	 * We don't remove the corresponding PE instances because
+>   	 * we need the information afterwords. The attached EEH
+>   	 * devices are expected to be attached soon when calling
+> -	 * into pcibios_add_pci_devices().
+> +	 * into pci_add_pci_devices().
+>   	 */
+>   	eeh_pe_state_mark(pe, EEH_PE_KEEP);
+>   	if (bus) {
+> @@ -630,7 +630,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus,
+>   		} else {
+>   			eeh_pe_state_clear(pe, EEH_PE_PRI_BUS);
+>   			pci_lock_rescan_remove();
+> -			pcibios_remove_pci_devices(bus);
+> +			pci_remove_pci_devices(bus);
+>   			pci_unlock_rescan_remove();
+>   		}
+>   	} else if (frozen_bus) {
+> @@ -681,7 +681,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus,
+>   		if (pe->type & EEH_PE_VF)
+>   			eeh_add_virt_device(edev, NULL);
+>   		else
+> -			pcibios_add_pci_devices(bus);
+> +			pci_add_pci_devices(bus);
+>   	} else if (frozen_bus && rmv_data->removed) {
+>   		pr_info("EEH: Sleep 5s ahead of partial hotplug\n");
+>   		ssleep(5);
+> @@ -691,7 +691,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus,
+>   		if (pe->type & EEH_PE_VF)
+>   			eeh_add_virt_device(edev, NULL);
+>   		else
+> -			pcibios_add_pci_devices(frozen_bus);
+> +			pci_add_pci_devices(frozen_bus);
+>   	}
+>   	eeh_pe_state_clear(pe, EEH_PE_KEEP);
+>
+> @@ -896,7 +896,7 @@ perm_error:
+>   			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
+>
+>   			pci_lock_rescan_remove();
+> -			pcibios_remove_pci_devices(frozen_bus);
+> +			pci_remove_pci_devices(frozen_bus);
+>   			pci_unlock_rescan_remove();
+>   		}
+>   	}
+> @@ -981,7 +981,7 @@ static void eeh_handle_special_event(void)
+>   				bus = eeh_pe_bus_get(phb_pe);
+>   				eeh_pe_dev_traverse(pe,
+>   					eeh_report_failure, NULL);
+> -				pcibios_remove_pci_devices(bus);
+> +				pci_remove_pci_devices(bus);
+>   			}
+>   			pci_unlock_rescan_remove();
+>   		}
+> diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+> index 59c4361..78bf2a1 100644
+> --- a/arch/powerpc/kernel/pci-hotplug.c
+> +++ b/arch/powerpc/kernel/pci-hotplug.c
+> @@ -38,20 +38,20 @@ void pcibios_release_device(struct pci_dev *dev)
+>   }
+>
+>   /**
+> - * pcibios_remove_pci_devices - remove all devices under this bus
+> + * pci_remove_pci_devices - remove all devices under this bus
+>    * @bus: the indicated PCI bus
+>    *
+>    * Remove all of the PCI devices under this bus both from the
+>    * linux pci device tree, and from the powerpc EEH address cache.
+>    */
+> -void pcibios_remove_pci_devices(struct pci_bus *bus)
+> +void pci_remove_pci_devices(struct pci_bus *bus)
+>   {
+>   	struct pci_dev *dev, *tmp;
+>   	struct pci_bus *child_bus;
+>
+>   	/* First go down child busses */
+>   	list_for_each_entry(child_bus, &bus->children, node)
+> -		pcibios_remove_pci_devices(child_bus);
+> +		pci_remove_pci_devices(child_bus);
+>
+>   	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
+>   		 pci_domain_nr(bus),  bus->number);
+> @@ -60,11 +60,10 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
+>   		pci_stop_and_remove_bus_device(dev);
+>   	}
+>   }
+> -
+> -EXPORT_SYMBOL_GPL(pcibios_remove_pci_devices);
+> +EXPORT_SYMBOL_GPL(pci_remove_pci_devices);
+>
+>   /**
+> - * pcibios_add_pci_devices - adds new pci devices to bus
+> + * pci_add_pci_devices - adds new pci devices to bus
+>    * @bus: the indicated PCI bus
+>    *
+>    * This routine will find and fixup new pci devices under
+> @@ -74,7 +73,7 @@ EXPORT_SYMBOL_GPL(pcibios_remove_pci_devices);
+>    * is how this routine differs from other, similar pcibios
+>    * routines.)
+>    */
+> -void pcibios_add_pci_devices(struct pci_bus * bus)
+> +void pci_add_pci_devices(struct pci_bus *bus)
+>   {
+>   	int slotno, mode, pass, max;
+>   	struct pci_dev *dev;
+> @@ -114,4 +113,4 @@ void pcibios_add_pci_devices(struct pci_bus * bus)
+>   	}
+>   	pcibios_finish_adding_to_bus(bus);
+>   }
+> -EXPORT_SYMBOL_GPL(pcibios_add_pci_devices);
+> +EXPORT_SYMBOL_GPL(pci_add_pci_devices);
+> diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
+> index b46b57d..730982b 100644
+> --- a/drivers/pci/hotplug/rpadlpar_core.c
+> +++ b/drivers/pci/hotplug/rpadlpar_core.c
+> @@ -380,7 +380,7 @@ int dlpar_remove_pci_slot(char *drc_name, struct device_node *dn)
+>   	}
+>
+>   	/* Remove all devices below slot */
+> -	pcibios_remove_pci_devices(bus);
+> +	pci_remove_pci_devices(bus);
+>
+>   	/* Unmap PCI IO space */
+>   	if (pcibios_unmap_io_space(bus)) {
+> diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
+> index 611f605..bba07b3 100644
+> --- a/drivers/pci/hotplug/rpaphp_core.c
+> +++ b/drivers/pci/hotplug/rpaphp_core.c
+> @@ -404,7 +404,7 @@ static int enable_slot(struct hotplug_slot *hotplug_slot)
+>
+>   	if (state == PRESENT) {
+>   		pci_lock_rescan_remove();
+> -		pcibios_add_pci_devices(slot->bus);
+> +		pci_add_pci_devices(slot->bus);
+>   		pci_unlock_rescan_remove();
+>   		slot->state = CONFIGURED;
+>   	} else if (state == EMPTY) {
+> @@ -426,7 +426,7 @@ static int disable_slot(struct hotplug_slot *hotplug_slot)
+>   		return -EINVAL;
+>
+>   	pci_lock_rescan_remove();
+> -	pcibios_remove_pci_devices(slot->bus);
+> +	pci_remove_pci_devices(slot->bus);
+>   	pci_unlock_rescan_remove();
+>   	vm_unmap_aliases();
+>
+> diff --git a/drivers/pci/hotplug/rpaphp_pci.c b/drivers/pci/hotplug/rpaphp_pci.c
+> index 7836d69..1099b38 100644
+> --- a/drivers/pci/hotplug/rpaphp_pci.c
+> +++ b/drivers/pci/hotplug/rpaphp_pci.c
+> @@ -116,7 +116,7 @@ int rpaphp_enable_slot(struct slot *slot)
+>   		}
+>
+>   		if (list_empty(&bus->devices))
+> -			pcibios_add_pci_devices(bus);
+> +			pci_add_pci_devices(bus);
+>
+>   		if (!list_empty(&bus->devices)) {
+>   			info->adapter_status = CONFIGURED;
+>
+
+
 -- 
-1.8.4.5
-
+Alexey
