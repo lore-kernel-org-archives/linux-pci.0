@@ -1,221 +1,95 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com, Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V6 13/13] pci, pci-thunder-pem: Add ACPI support for ThunderX PEM.
-Date: Fri, 15 Apr 2016 19:06:48 +0200
-Message-Id: <1460740008-19489-14-git-send-email-tn@semihalf.com>
-In-Reply-To: <1460740008-19489-1-git-send-email-tn@semihalf.com>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:13575 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751325AbcDSGYR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Apr 2016 02:24:17 -0400
+From: "Yong, Jonathan" <jonathan.yong@intel.com>
+To: linux-pci@vger.kernel.org
+Cc: jonathan.yong@intell.com, bhelgaas@google.com
+Subject: [RFC v4] PCI: PTM Driver
+Date: Tue, 19 Apr 2016 06:24:13 +0000
+Message-Id: <1461047054-4692-1-git-send-email-jonathan.yong@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch uses DECLARE_ACPI_MCFG_FIXUP to overwrite PCI config accessors.
-Also, it provides alternative way to find additional configuration region:
-thunder_pem_get_acpi_res is looking for host bridge's child (_HID "THRX0001")
-which contains mentioned configuration region description.
-See example below:
+Hello LKML,
 
-Device (PEM0) {
-    Name (_HID, EISAID ("PNP0A08"))
-    Name (_CID, EISAID ("PNP0A03"))
+This is a preliminary implementation of the PTM[1] support driver. This driver
+has only been tested against a virtual PCI bus since there are no known
+endpoints utilizing it yet.
 
-    [...]
+The drivers job is to get to every PTM capable device, set some PCI config
+space bits, then go back to sleep [2].
 
-    Device (CFG0)
-    {
-      Name (_HID, "THRX0001") // PEM configuration space resources
-      Name (_CRS, ResourceTemplate () {
-        QWordMemory(ResourceConsumer, PosDecode, MinFixed, MaxFixed,
-          NonCacheable, ReadWrite, 0, 0x87e0c5000000, 0x87E0C5FFFFFF,
-          0, 0x01000000)
-      })
-    }
-}
+PTM capable PCIe devices will get a new sysfs entry to allow PTM to be
+enabled/disabled individually (enable by default).
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- drivers/pci/host/pci-thunder-pem.c | 137 ++++++++++++++++++++++++++++++++++---
- 1 file changed, 128 insertions(+), 9 deletions(-)
+Comments? Should I explain the PTM registers in more details?
+Please CC me, thanks.
 
-diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-index 91cfeb9..685cd79 100644
---- a/drivers/pci/host/pci-thunder-pem.c
-+++ b/drivers/pci/host/pci-thunder-pem.c
-@@ -18,6 +18,7 @@
- #include <linux/module.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-+#include <linux/pci-acpi.h>
- #include <linux/platform_device.h>
- 
- #include "../ecam.h"
-@@ -259,6 +260,83 @@ static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
- 	return pci_generic_config_write(bus, devfn, where, size, val);
- }
- 
-+#ifdef CONFIG_ACPI
-+
-+struct pem_acpi_res {
-+	struct resource	resource;
-+	int found;
-+};
-+
-+static acpi_status
-+thunder_pem_cfg(struct acpi_resource *resource, void *ctx)
-+{
-+	struct pem_acpi_res *pem_ctx = ctx;
-+	struct resource *res = &pem_ctx->resource;
-+
-+	if ((resource->type != ACPI_RESOURCE_TYPE_ADDRESS64) ||
-+	    (resource->data.address32.resource_type != ACPI_MEMORY_RANGE))
-+		return AE_OK;
-+
-+	res->start = resource->data.address64.address.minimum;
-+	res->end = resource->data.address64.address.maximum;
-+	res->flags = IORESOURCE_MEM;
-+
-+	pem_ctx->found++;
-+	return AE_OK;
-+}
-+
-+static acpi_status
-+thunder_pem_find_dev(acpi_handle handle, u32 level, void *ctx, void **ret)
-+{
-+	struct pem_acpi_res *pem_ctx = ctx;
-+	struct acpi_device_info *info;
-+	acpi_status status = AE_OK;
-+
-+	status = acpi_get_object_info(handle, &info);
-+	if (ACPI_FAILURE(status))
-+		return AE_OK;
-+
-+	if (strncmp(info->hardware_id.string, "THRX0001", 8) != 0)
-+		goto out;
-+
-+	pem_ctx->found = 0;
-+	status = acpi_walk_resources(handle, METHOD_NAME__CRS, thunder_pem_cfg,
-+				     pem_ctx);
-+	if (ACPI_FAILURE(status))
-+		goto out;
-+
-+	if (pem_ctx->found)
-+		status = AE_CTRL_TERMINATE;
-+out:
-+	kfree(info);
-+	return status;
-+}
-+
-+static struct resource *thunder_pem_get_acpi_res(struct device *dev)
-+{
-+	struct acpi_device *adev = ACPI_COMPANION(dev);
-+	acpi_handle handle = acpi_device_handle(adev);
-+	struct pem_acpi_res *pem_ctx;
-+	acpi_status status;
-+
-+	pem_ctx = devm_kzalloc(dev, sizeof(*pem_ctx), GFP_KERNEL);
-+	if (!pem_ctx)
-+		return NULL;
-+
-+	status = acpi_walk_namespace(ACPI_TYPE_DEVICE, handle, 1,
-+				     thunder_pem_find_dev, NULL, pem_ctx, NULL);
-+	if (ACPI_FAILURE(status) || !pem_ctx->found)
-+		return NULL;
-+
-+	return &pem_ctx->resource;
-+}
-+#else
-+static struct resource *thunder_pem_get_acpi_res(struct device *dev)
-+{
-+	return NULL;
-+}
-+#endif
-+
- static int thunder_pem_init(struct device *dev, struct pci_config_window *cfg)
- {
- 	resource_size_t bar4_start;
-@@ -270,16 +348,20 @@ static int thunder_pem_init(struct device *dev, struct pci_config_window *cfg)
- 	if (!pem_pci)
- 		return -ENOMEM;
- 
--	pdev = to_platform_device(dev);
--
--	/*
--	 * The second register range is the PEM bridge to the PCIe
--	 * bus.  It has a different config access method than those
--	 * devices behind the bridge.
--	 */
--	res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+	if (acpi_disabled) {
-+		pdev = to_platform_device(dev);
-+
-+		/*
-+		 * The second register range is the PEM bridge to the PCIe
-+		 * bus.  It has a different config access method than those
-+		 * devices behind the bridge.
-+		 */
-+		res_pem = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+	} else {
-+		res_pem = thunder_pem_get_acpi_res(dev);
-+	}
- 	if (!res_pem) {
--		dev_err(dev, "missing \"reg[1]\"property\n");
-+		dev_err(dev, "missing configuration region\n");
- 		return -EINVAL;
- 	}
- 
-@@ -332,5 +414,42 @@ static struct platform_driver thunder_pem_driver = {
- };
- module_platform_driver(thunder_pem_driver);
- 
-+#ifdef CONFIG_ACPI
-+
-+static bool thunder_pem_acpi_init(struct pci_cfg_fixup *fixup,
-+				 struct acpi_pci_root *root)
-+{
-+	u32 midr = read_cpuid_id();
-+
-+	return (MIDR_IMPLEMENTOR(midr) == ARM_CPU_IMP_CAVIUM) &&
-+	    (MIDR_PARTNUM(midr) == CAVIUM_CPU_PART_THUNDERX);
-+}
-+
-+DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
-+			4, PCI_MCFG_BUS_ANY);
-+DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
-+			5, PCI_MCFG_BUS_ANY);
-+DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
-+			6, PCI_MCFG_BUS_ANY);
-+DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
-+			7, PCI_MCFG_BUS_ANY);
-+DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
-+			8, PCI_MCFG_BUS_ANY);
-+DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
-+			9, PCI_MCFG_BUS_ANY);
-+DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
-+			14, PCI_MCFG_BUS_ANY);
-+DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
-+			15, PCI_MCFG_BUS_ANY);
-+DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
-+			16, PCI_MCFG_BUS_ANY);
-+DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
-+			17, PCI_MCFG_BUS_ANY);
-+DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
-+			18, PCI_MCFG_BUS_ANY);
-+DECLARE_ACPI_MCFG_FIXUP(NULL, thunder_pem_acpi_init, &pci_thunder_pem_ops,
-+			19, PCI_MCFG_BUS_ANY);
-+#endif
-+
- MODULE_DESCRIPTION("Thunder PEM PCIe host driver");
- MODULE_LICENSE("GPL v2");
+[1] Precision Time Measurement: A protocol for synchronizing PCIe endpoint
+clocks against the host clock as specified in the PCI Express Base
+Specification 3.1. It is identified by the 0x001f extended capability ID.
+
+PTM capable devices are split into 3 roles, master, responder and requester.
+Summary as follows:
+
+A master holds the master clock that will be used for all devices under its
+domain (not to be confused with PCI domains). There may be multiple masters
+in a PTM hierarchy, in which case, the highest master closest to the root
+complex will be selected for the PTM domain. A master is also always
+responder capable. Clock precision is signified by a Local Clock
+Granularity field, in nano-seconds.
+
+A responder responds to any PTM synchronization requests from a downstream
+device. A responder is typically a switch device. It may also hold a local
+clock signified by a non-zero Local Clock Granularity field. A value of 0
+signifies that the device simply propagates timing information from
+upstream devices.
+
+A requester is typically an endpoint that will request synchronization
+updates from an upstream PTM capable time source. The driver will update
+the Effective Clock Granularity field based on the same field from the
+PTM domain master. The field should be programmed with a value of 0 if any
+intervening responder has a Local Clock Granularity field value of 0.
+
+[2] The software drivers never see the PTM packets, the PCI Express Base
+Specification 3.1 reads:
+        PTM capable components can make their PTM context available for
+        inspection by software, enabling software to translate timing
+        information between local times and PTM Master Time.
+
+This isn't very informative.
+
+Changes since v1:
+* Moved register constants to pci_regs.h
+* Use pci_dev to hold PTM status
+* PTM initialization now done top-down hierarchy wise.
+
+Changes since v2:
+* Added missing void return in the pci_ptm_init inline stub.
+
+Changes since v3:
+* Clearing CONFIG_PCIE_PTM now completely prevents the driver from being built.
+* Renamed pci_*_ptm_sysfs to pcie_ptm_*_sysfs_dev_files for consistency.
+* Removed useless prototypes.
+* Driver no longer checks PTM capability version
+* PCI_EXT_CAP_ID_MAX updated to include PTM (0x1F)
+
+Yong, Jonathan (1):
+  PCI: PTM preliminary implementation
+
+ drivers/pci/pci-sysfs.c       |   7 ++
+ drivers/pci/pci.h             |  20 +++++
+ drivers/pci/pcie/Kconfig      |   9 ++
+ drivers/pci/pcie/Makefile     |   3 +
+ drivers/pci/pcie/pcie_ptm.c   | 194 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/probe.c           |   3 +
+ include/linux/pci.h           |  11 +++
+ include/uapi/linux/pci_regs.h |  14 ++-
+ 8 files changed, 260 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/pci/pcie/pcie_ptm.c
+
 -- 
-1.9.1
+2.7.3
 
