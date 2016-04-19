@@ -1,75 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jake Oshins <jakeo@microsoft.com>
-To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v3 1/7] drivers:hv: Lock access to hyperv_mmio resource tree
-Date: Fri,  1 Apr 2016 16:11:26 -0700
-Message-Id: <1459552292-1297-2-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1459552292-1297-1-git-send-email-jakeo@microsoft.com>
-References: <y>
- <1459552292-1297-1-git-send-email-jakeo@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:39614 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751363AbcDSAGw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 18 Apr 2016 20:06:52 -0400
+Date: Mon, 18 Apr 2016 19:06:47 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Hariprasad Shenai <hariprasad@chelsio.com>,
+	Steve Wise <swise@opengridcomputing.com>,
+	Casey Leedom <leedom@chelsio.com>,
+	Fabio Estevam <fabio.estevam@nxp.com>,
+	Krzysztof =?utf-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
+	Tim Harvey <tharvey@gateworks.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Hannes Reinecke <hare@suse.com>
+Subject: [GIT PULL] PCI fixes for v4.6
+Message-ID: <20160419000647.GA10952@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In existing code, this tree of resources is created
-in single-threaded code and never modified after it is
-created, and thus needs no locking.  This patch introduces
-a semaphore for tree access, as other patches in this
-series introduce run-time modifications of this resource
-tree which can happen on multiple threads.
+Hi Linus,
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- drivers/hv/vmbus_drv.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+These are fixes for two issues:
 
-diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-index 64713ff..799518b 100644
---- a/drivers/hv/vmbus_drv.c
-+++ b/drivers/hv/vmbus_drv.c
-@@ -102,6 +102,7 @@ static struct notifier_block hyperv_panic_block = {
- };
- 
- struct resource *hyperv_mmio;
-+DEFINE_SEMAPHORE(hyperv_mmio_lock);
- 
- static int vmbus_exists(void)
- {
-@@ -1132,7 +1133,10 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 	resource_size_t range_min, range_max, start, local_min, local_max;
- 	const char *dev_n = dev_name(&device_obj->device);
- 	u32 fb_end = screen_info.lfb_base + (screen_info.lfb_size << 1);
--	int i;
-+	int i, retval;
-+
-+	retval = -ENXIO;
-+	down(&hyperv_mmio_lock);
- 
- 	for (iter = hyperv_mmio; iter; iter = iter->sibling) {
- 		if ((iter->start >= max) || (iter->end <= min))
-@@ -1169,13 +1173,17 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 			for (; start + size - 1 <= local_max; start += align) {
- 				*new = request_mem_region_exclusive(start, size,
- 								    dev_n);
--				if (*new)
--					return 0;
-+				if (*new) {
-+					retval = 0;
-+					goto exit;
-+				}
- 			}
- 		}
- 	}
- 
--	return -ENXIO;
-+exit:
-+	up(&hyperv_mmio_lock);
-+	return retval;
- }
- EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
- 
--- 
-1.9.1
+  - The VPD parsing code we added for v4.6 keeps some devices from crashing,
+    but also keeps cxgb4 from reading non-standard extra VPD data that is
+    relies on.  Hariprasad added a way for the driver to specify how much
+    VPD is valid.
+
+  - The i.MX6 active-low reset GPIO support we added in v4.5 caused
+    regressions on some boards, so we're reverting that.
+
+Bjorn
+
+
+The following changes since commit 9735a22799b9214d17d3c231fe377fc852f042e9:
+
+  Linux 4.6-rc2 (2016-04-03 09:09:40 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.6-fixes-2
+
+for you to fetch changes up to 67e658794ca191b3221b143f2a1c10d002c40bc8:
+
+  cxgb4: Set VPD size so we can read both VPD structures (2016-04-15 13:00:18 -0500)
+
+----------------------------------------------------------------
+PCI updates for v4.6:
+
+  VPD
+    Add pci_set_vpd_size() (Hariprasad Shenai)
+    cxgb4: Set VPD size so we can read both VPD structures (Hariprasad Shenai)
+
+  Freescale i.MX6 host bridge driver
+    Revert "PCI: imx6: Add support for active-low reset GPIO" (Fabio Estevam)
+
+----------------------------------------------------------------
+Fabio Estevam (1):
+      Revert "PCI: imx6: Add support for active-low reset GPIO"
+
+Hariprasad Shenai (2):
+      PCI: Add pci_set_vpd_size() to set VPD size
+      cxgb4: Set VPD size so we can read both VPD structures
+
+ drivers/net/ethernet/chelsio/cxgb4/t4_hw.c | 10 +++++++
+ drivers/pci/access.c                       | 42 ++++++++++++++++++++++++++++++
+ drivers/pci/host/pci-imx6.c                | 20 +++++++++-----
+ drivers/pci/pci.h                          |  1 +
+ include/linux/pci.h                        |  1 +
+ 5 files changed, 68 insertions(+), 6 deletions(-)
