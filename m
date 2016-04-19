@@ -1,79 +1,50 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 2/4] PCI: Provide common functions for ECAM mapping
-To: David Daney <ddaney@caviumnetworks.com>,
-	Jayachandran C <jchandra@broadcom.com>
-References: <1460414707-19153-1-git-send-email-jchandra@broadcom.com>
- <1460414707-19153-3-git-send-email-jchandra@broadcom.com>
- <570C4034.20105@caviumnetworks.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Tomasz Nowicki <tn@semihalf.com>, rafael@kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	okaya@codeaurora.org, jiang.liu@linux.intel.com,
-	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>,
-	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
-	Liviu.Dudau@arm.com, wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org, Jon Masters <jcm@redhat.com>
-From: Jon Masters <jcm@jonmasters.org>
-Message-ID: <570C78F1.4090701@jonmasters.org>
-Date: Tue, 12 Apr 2016 00:26:25 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:35814 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753013AbcDSJmE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Apr 2016 05:42:04 -0400
+Date: Tue, 19 Apr 2016 11:41:48 +0200
+From: Joerg Roedel <jroedel@suse.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, stable@vger.kernel.org,
+	=?utf-8?B?0J7Qu9C10LPQnNC+0YDQvtC3?= <oleg.moroz@mcc.vniiem.ru>,
+	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
+	Rob Groner <rgroner@rtd.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Jiang Liu <jiang.liu@linux.intel.com>
+Subject: Re: [PATCH 0/3] v4.4: Revert "PCI: Implement pcibios_alloc_irq() and
+Message-ID: <20160419094148.GG3886@suse.de>
+References: <20160413055439.6877.68183.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+ <20160414155044.GB3886@suse.de>
+ <20160415150821.GA7973@localhost>
+ <20160418115015.GE3886@suse.de>
+ <20160418144336.GA17863@localhost>
 MIME-Version: 1.0
-In-Reply-To: <570C4034.20105@caviumnetworks.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160418144336.GA17863@localhost>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi David, JC,
+On Mon, Apr 18, 2016 at 09:43:36AM -0500, Bjorn Helgaas wrote:
+> That might work, but the problem seems to be that we aren't enabling
+> IRQs correctly, so I'd rather have a fix that explicitly addresses
+> IRQs than one that relies on some non-obvious connection between
+> enabling BARs and IRQs.
 
-On 04/11/2016 08:24 PM, David Daney wrote:
+Yeah, either we or the BIOS does something wrong. The bugzilla entry
+states that it works with pci=routeirq. The dmesg from kernel 4.3 shows
+that per default ACPI routing is used for IRQs.
 
-> Tested-by: David Daney <david.daney@cavium.com>
+The difference this makes in the code is the pcibios_enable_irq function
+pointer. For ACPI it points to acpi_pci_irq_enable and in the
+pci=routeirq case to pirq_enable_irq.
 
-On ThunderX (please let me know the silicon pass specifics off-list)?
-I'm planning to give this series a test run also on some other ARMv8
-hardware and will prod a few of the other vendors to do so.
+So the problem appears when acpi_pci_irq_enable is used with device
+resources disabled. This might very well also be a bios issue that we
+have to work around, no?
 
->>   drivers/pci/ecam.c   | 130
->>   drivers/pci/ecam.h   |  58 +++++++++++++++++++++++
-> 
-> I wonder if these files should go in drivers/pci/host ...  I understand
-> that you still have to use them from drivers/pci/acpi though.
-> 
-> I will let others opine on this, but could you put the contents of
-> ecam.h into include/linux/pci.h along with the  pci_generic_config_*()
-> declarations?
-> 
-> If you did that, the contents of ecam.c could  go into
-> drivers/pci/access.c...
 
-Quoting Bjorn's original reply to the previous series:
 
-> Some of the code that moved to drivers/acpi/pci_mcfg.c is not
-> really ACPI-specific, and could potentially be used for non-ACPI
-> bridges that support ECAM.  I'd like to see that sort of code
-> moved to a new file like drivers/pci/ecam.c.
-
-So my guess is that this is the reasoning behind JC's file layout.
-
-I'm curious what Lorenzo's take on things is currently. I assume this
-series is now to be the official coordinated version of this effort for
-upstream, following the advice of Bjorn previously, but I would like to
-know if everyone is behind this plan. I've (previously) requested a
-Linaro LEG meeting this week (part of our bootarch working group) to
-specifically discuss the status of PCI upstreaming in order to get the
-different vendors together to ensure every single one of them is
-tracking the correct latest effort and doing what is needed to test/aid,
-hence my ask. If this is now plan A, I'll make sure everyone is aligned
-behind it and start pinging people individually for testing.
-
-Jon.
-
--- 
-Computer Architect
+	Joerg
 
