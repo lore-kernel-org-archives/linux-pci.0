@@ -1,49 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V2 1/3] acpi,pci,irq: reduce resource requirements
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1460165192-4526-1-git-send-email-okaya@codeaurora.org>
- <1460165192-4526-2-git-send-email-okaya@codeaurora.org>
- <20160412051942.GE11361@localhost>
-Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org, linux-pci@vger.kernel.org,
-	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
-	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
-	rjw@rjwysocki.net, linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <570D2170.303@codeaurora.org>
-Date: Tue, 12 Apr 2016 12:25:20 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:34592 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752625AbcDSIT1 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 04:19:27 -0400
+Received: by mail-pa0-f41.google.com with SMTP id r5so4056935pag.1
+        for <linux-pci@vger.kernel.org>; Tue, 19 Apr 2016 01:19:27 -0700 (PDT)
+Subject: Re: [PATCH v8 30/45] powerpc/pci: Delay populating pdn
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-31-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
+	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <5715EA08.3040901@ozlabs.ru>
+Date: Tue, 19 Apr 2016 18:19:20 +1000
 MIME-Version: 1.0
-In-Reply-To: <20160412051942.GE11361@localhost>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1455680668-23298-31-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/12/2016 1:19 AM, Bjorn Helgaas wrote:
-> Hi Sinan,
-> 
-> I was hoping we could *simplify* this, but I think it's just getting
-> even more complicated (it's a net addition of 100 lines), which is due
-> to feature creep that I'm afraid is my fault.
-> 
-> IIRC, the main thing you need is to get rid of some early memory
-> allocation.
-> 
-> I don't think all the trigger mode/level checking is worth it.  The
-> current code doesn't do it, and it's not fixing a problem for you.
-> It's conceivable that it could even make us trip over a new problem,
-> e.g., some broken BIOS that we currently tolerate.
-> 
-> I think you could make this a little easier to review if you split
-> things like the acpi_irq_penalty[] -> acpi_isa_irq_penalty[] rename
-> into their own patches.  Little patches like that are trivial to
-> review because a simple rename is pretty safe, and then the patches
-> that actually *do* interesting things are smaller and easier to
-> review, too.
+On 02/17/2016 02:44 PM, Gavin Shan wrote:
+> The pdn (struct pci_dn) instances are allocated from memblock or
+> bootmem when creating PCI controller (hoses) in setup_arch(). PCI
+> hotplug, which will be supported by proceeding patches, releases
+> PCI device nodes and their corresponding pdn on unplugging event.
+> The memory chunks for pdn instances allocated from memblock or
+> bootmem are hard to reused after being released.
+>
+> This delays creating pdn by pci_devs_phb_init() from setup_arch()
+> to core_initcall() so that they are allocated from slab. The memory
+> consumed by pdn can be released to system without problem during
+> PCI unplugging time. It indicates that pci_dn is unavailable in
+> setup_arch() and the the fixup on pdn (like AGP's) can't be carried
+> out that time. We have to do that in ppc_md.pcibios_root_bridge_prepare()
+> on maple/pasemi/powermac platforms where/when the pdn is available.
+>
+> At the mean while, the EEH device is created when pdn is populated,
+> meaning pdn and EEH device have same life cycle. In turn, we needn't
+> call eeh_dev_init() to create EEH device explicitly.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-OK. I honestly didn't like adding this check either. I'll work on a new
-set and post with your additional comments in this patch.
+
+Uff. It would not hurt to mention that  pcibios_root_bridge_prepare is 
+called from subsys_initcall() which is executed after core_initcall() so 
+the code flow does not change.
+
+Have you checked if there is anything in between 
+core_initcall(pci_devs_phb_init) and subsys_initcall(pcibios_init) which 
+might need device tree nodes? For example, subsys_initcall(pcibios_init) 
+calls (eventually) pnv_pci_ioda_fixup(), if we are unlucky and 
+pcibios_init() (and therefore pnv_pci_ioda_fixup() or what pseries/others 
+do) is called before pcibios_init() - won't we crash or something?
+
+
+
 
 -- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+Alexey
