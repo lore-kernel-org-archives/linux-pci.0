@@ -1,58 +1,144 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 28 Apr 2016 15:14:39 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Tomasz Nowicki <tn@semihalf.com>,
-	Jayachandran C <jchandra@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
-	Jon Masters <jcm@redhat.com>, linaro-acpi@lists.linaro.org,
-	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com,
-	David Daney <ddaney@caviumnetworks.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	robert.richter@caviumnetworks.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, Wangyijing <wangyijing@huawei.com>,
-	Marcin Wojtas <mw@semihalf.com>
-Subject: Re: [PATCH V6 08/13] PCI: generic, thunder: update to use generic
- ECAM API
-Message-ID: <20160428201439.GD25125@localhost>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <3830999.dF71UWYsBP@wuerfel>
- <57189D2F.9070802@semihalf.com>
- <8950494.UV8UrWiFbx@wuerfel>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:34264 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751706AbcDSFvM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 01:51:12 -0400
+Received: by mail-pa0-f46.google.com with SMTP id r5so2845984pag.1
+        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 22:51:11 -0700 (PDT)
+Subject: Re: [PATCH v8 29/45] powerpc/pci: Export pci_traverse_device_nodes()
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-30-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
+	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <5715C747.4080005@ozlabs.ru>
+Date: Tue, 19 Apr 2016 15:51:03 +1000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8950494.UV8UrWiFbx@wuerfel>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1455680668-23298-30-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 21, 2016 at 11:36:53AM +0200, Arnd Bergmann wrote:
-> On Thursday 21 April 2016 11:28:15 Tomasz Nowicki wrote:
-> > On 19.04.2016 15:06, Arnd Bergmann wrote:
-> > > On Monday 18 April 2016 21:31:54 Tomasz Nowicki wrote:
-> > >>
-> > >> Basically the whole content of pci-thunder-ecam.c and pci-thunder-pem.c.
-> > >>
-> > >> pci-thunder-ecam.c contains config space accessors. Similar for
-> > >> pci-thunder-pem.c but it also has extra init call (it is now called
-> > >> thunder_pem_init) which finds and maps related registers.
-> > >
-> > > They seem to do much more than just override the accessors, they actually
-> > > change the contents of the config space as well. Is that really necessary
-> > > on ACPI based systems as well?
-> > 
-> > Yes, the pci-thunder-ecam.c accessors are meant to emulate config space 
-> > capabilities. They are necessary to synthesize EA capabilities (fixed 
-> > PCI BARs), it wont work without this, for ACPI boot as well.
-> 
-> Why is that? I thought the BARs never get reassigned when using ACPI,
+On 02/17/2016 02:44 PM, Gavin Shan wrote:
+> This renames traverse_pci_devices() to pci_traverse_device_nodes().
+> The function traverses all subordinate device nodes of the specified
+> one. Also, below cleanup applied to the function. No logical changes
+> introduced.
+>
+>     * Rename "pre" to "fn".
+>     * Avoid assignment in if condition reported from checkpatch.pl.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>   arch/powerpc/include/asm/ppc-pci.h   |  6 +++---
+>   arch/powerpc/kernel/pci_dn.c         | 15 ++++++++++-----
+>   arch/powerpc/platforms/pseries/msi.c |  4 ++--
+>   3 files changed, 15 insertions(+), 10 deletions(-)
+>
+> diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
+> index ca0c5bf..8753e4e 100644
+> --- a/arch/powerpc/include/asm/ppc-pci.h
+> +++ b/arch/powerpc/include/asm/ppc-pci.h
+> @@ -33,9 +33,9 @@ extern struct pci_dev *isa_bridge_pcidev;	/* may be NULL if no ISA bus */
+>   struct device_node;
+>   struct pci_dn;
+>
+> -typedef void *(*traverse_func)(struct device_node *me, void *data);
 
-In general, there's no reason we can't reassign BARs, whether we're
-using DT, ACPI, or whatever.  In many cases, systems with ACPI also
-assign all the BARs in firmware, and Linux doesn't reassign them
-unless it needs to.  But that's just a coincidence.  There's no
-requirement that Linux leave BARs as firmware programmed them.
+
+
+Why removing this typedef? Typedef's are good.
+
+Anyway,
+
+
+Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+
+
+
+
+> -void *traverse_pci_devices(struct device_node *start, traverse_func pre,
+> -		void *data);
+> +void *pci_traverse_device_nodes(struct device_node *start,
+> +				void *(*fn)(struct device_node *, void *),
+> +				void *data);
+>   void *traverse_pci_dn(struct pci_dn *root,
+>   		      void *(*fn)(struct pci_dn *, void *),
+>   		      void *data);
+> diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+> index ce10281..ecdccce 100644
+> --- a/arch/powerpc/kernel/pci_dn.c
+> +++ b/arch/powerpc/kernel/pci_dn.c
+> @@ -372,8 +372,9 @@ EXPORT_SYMBOL_GPL(pci_remove_device_node_info);
+>    * one of these nodes we also assume its siblings are non-pci for
+>    * performance.
+>    */
+> -void *traverse_pci_devices(struct device_node *start, traverse_func pre,
+> -		void *data)
+> +void *pci_traverse_device_nodes(struct device_node *start,
+> +				void *(*fn)(struct device_node *, void *),
+> +				void *data)
+>   {
+>   	struct device_node *dn, *nextdn;
+>   	void *ret;
+> @@ -388,8 +389,11 @@ void *traverse_pci_devices(struct device_node *start, traverse_func pre,
+>   		if (classp)
+>   			class = of_read_number(classp, 1);
+>
+> -		if (pre && ((ret = pre(dn, data)) != NULL))
+> -			return ret;
+> +		if (fn) {
+> +			ret = fn(dn, data);
+> +			if (ret)
+> +				return ret;
+> +		}
+>
+>   		/* If we are a PCI bridge, go down */
+>   		if (dn->child && ((class >> 8) == PCI_CLASS_BRIDGE_PCI ||
+> @@ -411,6 +415,7 @@ void *traverse_pci_devices(struct device_node *start, traverse_func pre,
+>   	}
+>   	return NULL;
+>   }
+> +EXPORT_SYMBOL_GPL(pci_traverse_device_nodes);
+>
+>   static struct pci_dn *pci_dn_next_one(struct pci_dn *root,
+>   				      struct pci_dn *pdn)
+> @@ -487,7 +492,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
+>   	}
+>
+>   	/* Update dn->phb ptrs for new phb and children devices */
+> -	traverse_pci_devices(dn, add_pdn, phb);
+> +	pci_traverse_device_nodes(dn, add_pdn, phb);
+>   }
+>
+>   /**
+> diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
+> index 272e9ec..543a638 100644
+> --- a/arch/powerpc/platforms/pseries/msi.c
+> +++ b/arch/powerpc/platforms/pseries/msi.c
+> @@ -305,7 +305,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
+>   	memset(&counts, 0, sizeof(struct msi_counts));
+>
+>   	/* Work out how many devices we have below this PE */
+> -	traverse_pci_devices(pe_dn, count_non_bridge_devices, &counts);
+> +	pci_traverse_device_nodes(pe_dn, count_non_bridge_devices, &counts);
+>
+>   	if (counts.num_devices == 0) {
+>   		pr_err("rtas_msi: found 0 devices under PE for %s\n",
+> @@ -320,7 +320,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
+>   	/* else, we have some more calculating to do */
+>   	counts.requestor = pci_device_to_OF_node(dev);
+>   	counts.request = request;
+> -	traverse_pci_devices(pe_dn, count_spare_msis, &counts);
+> +	pci_traverse_device_nodes(pe_dn, count_spare_msis, &counts);
+>
+>   	/* If the quota isn't an integer multiple of the total, we can
+>   	 * use the remainder as spare MSIs for anyone that wants them. */
+>
+
+
+-- 
+Alexey
