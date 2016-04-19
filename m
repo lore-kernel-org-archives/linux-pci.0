@@ -1,152 +1,361 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:35095 "EHLO
-	metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755195AbcDFMkh (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2016 08:40:37 -0400
-Message-ID: <1459946402.14999.1.camel@pengutronix.de>
-Subject: Re: [PATCH v3 2/2] PCI: imx6: Add reset-gpio-active-high boolean
- property to DT
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Petr =?UTF-8?Q?=C5=A0tetiar?= <ynezz@true.cz>
-Cc: devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Tim Harvey <tharvey@gateworks.com>,
-	Krzysztof =?UTF-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
-	Fabio Estevam <festevam@gmail.com>,
-	Marcel Ziswiler <marcel.ziswiler@toradex.com>, stefan@agner.ch
-Date: Wed, 06 Apr 2016 14:40:02 +0200
-In-Reply-To: <1459946207-11923-1-git-send-email-ynezz@true.cz>
-References: <1459936100.2256.30.camel@pengutronix.de>
-	 <1459946207-11923-1-git-send-email-ynezz@true.cz>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:36035 "EHLO
+	mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751756AbcDSCvH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Apr 2016 22:51:07 -0400
+Received: by mail-pf0-f178.google.com with SMTP id e128so1551814pfe.3
+        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 19:51:06 -0700 (PDT)
+Subject: Re: [PATCH v8 19/45] powerpc/powernv: Use PE instead of number during
+ setup and release
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-20-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
+	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <57159D11.9050808@ozlabs.ru>
+Date: Tue, 19 Apr 2016 12:50:57 +1000
+MIME-Version: 1.0
+In-Reply-To: <1455680668-23298-20-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Mittwoch, den 06.04.2016, 14:36 +0200 schrieb Petr Štetiar:
-> Currently the reset-gpio DT property which controls the PCI bus device
-> reset signal defaults to active-low reset sequence (L=reset state,
-> H=operation state) plus the code in reset function isn't GPIO polarity
-> aware - it doesn't matter if the defined reset-gpio is active-low or
-> active-high, it will always result into active-low reset sequence.
-> 
-> I've tried to fix it properly and changed the reset-gpio reset sequence
-> to be polarity aware, but this patch has been accepted and then reverted
-> as it has introduced few backward incompatible issues:
-> 
-> 1. Some of the DTBs as for example imx6qdl-sabresd, doesn't define
-> reset-gpio polarity correctly:
-> 
->   reset-gpio = <&gpio7 12 0>;
-> 
-> which means, that it's defined as active-high, but in reality it's
-> active-low, thus it wouldn't work without DTS fix.
-> 
-> 2. The logic in reset function is inverted:
-> 
-> 	gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0)
-> 	msleep(100);
-> 	gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
-> 
-> so even if some of the i.MX6 boards had reset-gpio polarity defined
-> correctly in their DTSes, they would stop working.
-> 
-> As we can't break old DTBs, we can't fix them and that's why we need to
-> introduce this new DT reset-gpio-active-high boolean property, so we can
-> support boards with active-high reset sequence.
-> 
-> This active-high reset sequence is for example needed on Apalis SoMs,
-> where GPIO1_IO28, used to PCIe reset is not connected directly to PERST#
-> PCIe signal, but it's ORed with RESETBMCU coming off the PMIC, and thus
-> is inverted, active-high.
-> 
-> Signed-off-by: Petr Štetiar <ynezz@true.cz>
+On 02/17/2016 02:44 PM, Gavin Shan wrote:
+> In current implementation, the PEs that are allocated or picked
+> from the reserved list are identified by PE number. The PE instance
+> has to be picked according to the PE number eventually. We have
+> same issue when PE is released.
+>
+> For pnv_ioda_pick_m64_pe() and pnv_ioda_alloc_pe(), this returns
+> PE instance so that pnv_ioda_setup_bus_PE() can use the allocated
+> or reserved PE instance directly. Also, pnv_ioda_setup_bus_PE()
+> returns the reserved/allocated PE instance to be used in subsequent
+> patches. On the other hand, pnv_ioda_free_pe() uses PE instance
+> (not number) as its argument. No logical changes introduced.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+
+Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+
 
 > ---
->  Changes since v1:
-> 
->   * Added documentation of reset-gpio and reset-gpio-active-high DT properties
->   * Removed unnecessary double negation of GPIO value
-> 
->  Changes since v2:
-> 
->   * Changed commit message so it explains in more detail why we need new DT
->     property
->   * Changed PHY to 'bus device' in binding's documentation
-> 
->  Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt |  6 ++++++
->  drivers/pci/host/pci-imx6.c                              | 14 +++++++++++---
->  2 files changed, 17 insertions(+), 3 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> index 3be80c6..072efbf 100644
-> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> @@ -19,6 +19,12 @@ Optional properties:
->  - fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
->  - fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
->  - fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
-> +- reset-gpio: Should specify the GPIO for controlling the PCI bus device reset
-> +  signal. Its not polarity aware and defaults to active-low reset sequence
-> +  (L=reset state, H=operation state).
-> +- reset-gpio-active-high: If present then the reset sequence using the GPIO
-> +  specified in the "reset-gpio" property is reversed (H=reset state,
-> +  L=operation state).
->  
->  Example:
->  
-> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> index 2f817fa..17f4cc3 100644
-> --- a/drivers/pci/host/pci-imx6.c
-> +++ b/drivers/pci/host/pci-imx6.c
-> @@ -33,6 +33,7 @@
->  
->  struct imx6_pcie {
->  	int			reset_gpio;
-> +	bool			gpio_active_high;
->  	struct clk		*pcie_bus;
->  	struct clk		*pcie_phy;
->  	struct clk		*pcie;
-> @@ -310,9 +311,11 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
->  
->  	/* Some boards don't have PCIe reset GPIO. */
->  	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
-> -		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
-> +		gpio_set_value_cansleep(imx6_pcie->reset_gpio,
-> +					imx6_pcie->gpio_active_high);
->  		msleep(100);
-> -		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
-> +		gpio_set_value_cansleep(imx6_pcie->reset_gpio,
-> +					!imx6_pcie->gpio_active_high);
->  	}
->  	return 0;
->  
-> @@ -546,9 +549,14 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
->  
->  	/* Fetch GPIOs */
->  	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
-> +	imx6_pcie->gpio_active_high = of_property_read_bool(np,
-> +						"reset-gpio-active-high");
->  	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
->  		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
-> -					    GPIOF_OUT_INIT_LOW, "PCIe reset");
-> +				imx6_pcie->gpio_active_high ?
-> +					GPIOF_OUT_INIT_HIGH :
-> +					GPIOF_OUT_INIT_LOW,
-> +				"PCIe reset");
->  		if (ret) {
->  			dev_err(&pdev->dev, "unable to get reset gpio\n");
->  			return ret;
+>   arch/powerpc/platforms/powernv/pci-ioda.c | 104 +++++++++++++++++-------------
+>   arch/powerpc/platforms/powernv/pci.h      |   2 +-
+>   2 files changed, 59 insertions(+), 47 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 7800897..f182ca7 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -119,6 +119,14 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
+>   		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
+>   }
+>
+> +static struct pnv_ioda_pe *pnv_ioda_init_pe(struct pnv_phb *phb, int pe_no)
+> +{
+> +	phb->ioda.pe_array[pe_no].phb = phb;
+> +	phb->ioda.pe_array[pe_no].pe_number = pe_no;
+> +
+> +	return &phb->ioda.pe_array[pe_no];
+> +}
+> +
+>   static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>   {
+>   	if (!(pe_no >= 0 && pe_no < phb->ioda.total_pe_num)) {
+> @@ -131,11 +139,10 @@ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>   		pr_debug("%s: PE %d was reserved on PHB#%x\n",
+>   			 __func__, pe_no, phb->hose->global_number);
+>
+> -	phb->ioda.pe_array[pe_no].phb = phb;
+> -	phb->ioda.pe_array[pe_no].pe_number = pe_no;
+> +	pnv_ioda_init_pe(phb, pe_no);
+>   }
+>
+> -static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
+> +static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
+>   {
+>   	unsigned long pe;
+>
+> @@ -143,20 +150,20 @@ static int pnv_ioda_alloc_pe(struct pnv_phb *phb)
+>   		pe = find_next_zero_bit(phb->ioda.pe_alloc,
+>   					phb->ioda.total_pe_num, 0);
+>   		if (pe >= phb->ioda.total_pe_num)
+> -			return IODA_INVALID_PE;
+> +			return NULL;
+>   	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
+>
+> -	phb->ioda.pe_array[pe].phb = phb;
+> -	phb->ioda.pe_array[pe].pe_number = pe;
+> -	return pe;
+> +	return pnv_ioda_init_pe(phb, pe);
+>   }
+>
+> -static void pnv_ioda_free_pe(struct pnv_phb *phb, int pe)
+> +static void pnv_ioda_free_pe(struct pnv_ioda_pe *pe)
+>   {
+> -	WARN_ON(phb->ioda.pe_array[pe].pdev);
+> +	struct pnv_phb *phb = pe->phb;
+>
+> -	memset(&phb->ioda.pe_array[pe], 0, sizeof(struct pnv_ioda_pe));
+> -	clear_bit(pe, phb->ioda.pe_alloc);
+> +	WARN_ON(pe->pdev);
+> +
+> +	memset(pe, 0, sizeof(struct pnv_ioda_pe));
+> +	clear_bit(pe->pe_number, phb->ioda.pe_alloc);
+>   }
+>
+>   /* The default M64 BAR is shared by all PEs */
+> @@ -316,7 +323,7 @@ static void pnv_ioda_reserve_m64_pe(struct pci_bus *bus,
+>   	}
+>   }
+>
+> -static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+> +static struct pnv_ioda_pe *pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>   {
+>   	struct pci_controller *hose = pci_bus_to_host(bus);
+>   	struct pnv_phb *phb = hose->private_data;
+> @@ -326,7 +333,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>
+>   	/* Root bus shouldn't use M64 */
+>   	if (pci_is_root_bus(bus))
+> -		return IODA_INVALID_PE;
+> +		return NULL;
+>
+>   	/* Allocate bitmap */
+>   	size = _ALIGN_UP(phb->ioda.total_pe_num / 8, sizeof(unsigned long));
+> @@ -334,7 +341,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>   	if (!pe_alloc) {
+>   		pr_warn("%s: Out of memory !\n",
+>   			__func__);
+> -		return IODA_INVALID_PE;
+> +		return NULL;
+>   	}
+>
+>   	/* Figure out reserved PE numbers by the PE */
+> @@ -347,7 +354,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>   	 */
+>   	if (bitmap_empty(pe_alloc, phb->ioda.total_pe_num)) {
+>   		kfree(pe_alloc);
+> -		return IODA_INVALID_PE;
+> +		return NULL;
+>   	}
+>
+>   	/*
+> @@ -393,7 +400,7 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>   	}
+>
+>   	kfree(pe_alloc);
+> -	return master_pe->pe_number;
+> +	return master_pe;
+>   }
+>
+>   static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+> @@ -959,7 +966,6 @@ static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
+>   	struct pnv_phb *phb = hose->private_data;
+>   	struct pci_dn *pdn = pci_get_pdn(dev);
+>   	struct pnv_ioda_pe *pe;
+> -	int pe_num;
+>
+>   	if (!pdn) {
+>   		pr_err("%s: Device tree node not associated properly\n",
+> @@ -969,8 +975,8 @@ static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
+>   	if (pdn->pe_number != IODA_INVALID_PE)
+>   		return NULL;
+>
+> -	pe_num = pnv_ioda_alloc_pe(phb);
+> -	if (pe_num == IODA_INVALID_PE) {
+> +	pe = pnv_ioda_alloc_pe(phb);
+> +	if (!pe) {
+>   		pr_warning("%s: Not enough PE# available, disabling device\n",
+>   			   pci_name(dev));
+>   		return NULL;
+> @@ -983,10 +989,9 @@ static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
+>   	 *
+>   	 * At some point we want to remove the PDN completely anyways
+>   	 */
+> -	pe = &phb->ioda.pe_array[pe_num];
+>   	pci_dev_get(dev);
+>   	pdn->pcidev = dev;
+> -	pdn->pe_number = pe_num;
+> +	pdn->pe_number = pe->pe_number;
+>   	pe->flags = PNV_IODA_PE_DEV;
+>   	pe->pdev = dev;
+>   	pe->pbus = NULL;
+> @@ -997,8 +1002,7 @@ static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
+>
+>   	if (pnv_ioda_configure_pe(phb, pe)) {
+>   		/* XXX What do we do here ? */
+> -		if (pe_num)
+> -			pnv_ioda_free_pe(phb, pe_num);
+> +		pnv_ioda_free_pe(pe);
+>   		pdn->pe_number = IODA_INVALID_PE;
+>   		pe->pdev = NULL;
+>   		pci_dev_put(dev);
+> @@ -1033,28 +1037,26 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+>    * subordinate PCI devices and buses. The second type of PE is normally
+>    * orgiriated by PCIe-to-PCI bridge or PLX switch downstream ports.
+>    */
+> -static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+> +static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>   {
+>   	struct pci_controller *hose = pci_bus_to_host(bus);
+>   	struct pnv_phb *phb = hose->private_data;
+> -	struct pnv_ioda_pe *pe;
+> -	int pe_num = IODA_INVALID_PE;
+> +	struct pnv_ioda_pe *pe = NULL;
+>
+>   	/* Check if PE is determined by M64 */
+>   	if (phb->pick_m64_pe)
+> -		pe_num = phb->pick_m64_pe(bus, all);
+> +		pe = phb->pick_m64_pe(bus, all);
+>
+>   	/* The PE number isn't pinned by M64 */
+> -	if (pe_num == IODA_INVALID_PE)
+> -		pe_num = pnv_ioda_alloc_pe(phb);
+> +	if (!pe)
+> +		pe = pnv_ioda_alloc_pe(phb);
+>
+> -	if (pe_num == IODA_INVALID_PE) {
+> +	if (!pe) {
+>   		pr_warning("%s: Not enough PE# available for PCI bus %04x:%02x\n",
+>   			__func__, pci_domain_nr(bus), bus->number);
+> -		return;
+> +		return NULL;
+>   	}
+>
+> -	pe = &phb->ioda.pe_array[pe_num];
+>   	pe->flags |= (all ? PNV_IODA_PE_BUS_ALL : PNV_IODA_PE_BUS);
+>   	pe->pbus = bus;
+>   	pe->pdev = NULL;
+> @@ -1063,17 +1065,16 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>
+>   	if (all)
+>   		pe_info(pe, "Secondary bus %d..%d associated with PE#%d\n",
+> -			bus->busn_res.start, bus->busn_res.end, pe_num);
+> +			bus->busn_res.start, bus->busn_res.end, pe->pe_number);
+>   	else
+>   		pe_info(pe, "Secondary bus %d associated with PE#%d\n",
+> -			bus->busn_res.start, pe_num);
+> +			bus->busn_res.start, pe->pe_number);
+>
+>   	if (pnv_ioda_configure_pe(phb, pe)) {
+>   		/* XXX What do we do here ? */
+> -		if (pe_num)
+> -			pnv_ioda_free_pe(phb, pe_num);
+> +		pnv_ioda_free_pe(pe);
+>   		pe->pbus = NULL;
+> -		return;
+> +		return NULL;
+>   	}
+>
+>   	/* Associate it with all child devices */
+> @@ -1081,6 +1082,8 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>
+>   	/* Put PE to the list */
+>   	list_add_tail(&pe->list, &phb->ioda.pe_list);
+> +
+> +	return pe;
+>   }
+>
+>   static struct pnv_ioda_pe *pnv_ioda_setup_npu_PE(struct pci_dev *npu_pdev)
+> @@ -1392,7 +1395,7 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
+>
+>   		pnv_ioda_deconfigure_pe(phb, pe);
+>
+> -		pnv_ioda_free_pe(phb, pe->pe_number);
+> +		pnv_ioda_free_pe(pe);
+>   	}
+>   }
+>
+> @@ -1401,6 +1404,7 @@ void pnv_pci_sriov_disable(struct pci_dev *pdev)
+>   	struct pci_bus        *bus;
+>   	struct pci_controller *hose;
+>   	struct pnv_phb        *phb;
+> +	struct pnv_ioda_pe    *pe;
+>   	struct pci_dn         *pdn;
+>   	struct pci_sriov      *iov;
+>   	u16                    num_vfs, i;
+> @@ -1425,8 +1429,11 @@ void pnv_pci_sriov_disable(struct pci_dev *pdev)
+>   		/* Release PE numbers */
+>   		if (pdn->m64_single_mode) {
+>   			for (i = 0; i < num_vfs; i++) {
+> -				if (pdn->pe_num_map[i] != IODA_INVALID_PE)
+> -					pnv_ioda_free_pe(phb, pdn->pe_num_map[i]);
+> +				if (pdn->pe_num_map[i] == IODA_INVALID_PE)
+> +					continue;
+> +
+> +				pe = &phb->ioda.pe_array[pdn->pe_num_map[i]];
+> +				pnv_ioda_free_pe(pe);
+>   			}
+>   		} else
+>   			bitmap_clear(phb->ioda.pe_alloc, *pdn->pe_num_map, num_vfs);
+> @@ -1479,8 +1486,7 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
+>
+>   		if (pnv_ioda_configure_pe(phb, pe)) {
+>   			/* XXX What do we do here ? */
+> -			if (pe_num)
+> -				pnv_ioda_free_pe(phb, pe_num);
+> +			pnv_ioda_free_pe(pe);
+>   			pe->pdev = NULL;
+>   			continue;
+>   		}
+> @@ -1499,6 +1505,7 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+>   	struct pci_bus        *bus;
+>   	struct pci_controller *hose;
+>   	struct pnv_phb        *phb;
+> +	struct pnv_ioda_pe    *pe;
+>   	struct pci_dn         *pdn;
+>   	int                    ret;
+>   	u16                    i;
+> @@ -1541,11 +1548,13 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+>   		/* Calculate available PE for required VFs */
+>   		if (pdn->m64_single_mode) {
+>   			for (i = 0; i < num_vfs; i++) {
+> -				pdn->pe_num_map[i] = pnv_ioda_alloc_pe(phb);
+> -				if (pdn->pe_num_map[i] == IODA_INVALID_PE) {
+> +				pe = pnv_ioda_alloc_pe(phb);
+> +				if (!pe) {
+>   					ret = -EBUSY;
+>   					goto m64_failed;
+>   				}
+> +
+> +				pdn->pe_num_map[i] = pe->pe_number;
+>   			}
+>   		} else {
+>   			mutex_lock(&phb->ioda.pe_alloc_mutex);
+> @@ -1590,8 +1599,11 @@ int pnv_pci_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
+>   m64_failed:
+>   	if (pdn->m64_single_mode) {
+>   		for (i = 0; i < num_vfs; i++) {
+> -			if (pdn->pe_num_map[i] != IODA_INVALID_PE)
+> -				pnv_ioda_free_pe(phb, pdn->pe_num_map[i]);
+> +			if (pdn->pe_num_map[i] == IODA_INVALID_PE)
+> +				continue;
+> +
+> +			pe = &phb->ioda.pe_array[pdn->pe_num_map[i]];
+> +			pnv_ioda_free_pe(pe);
+>   		}
+>   	} else
+>   		bitmap_clear(phb->ioda.pe_alloc, *pdn->pe_num_map, num_vfs);
+> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+> index 928cf81..ef9924a 100644
+> --- a/arch/powerpc/platforms/powernv/pci.h
+> +++ b/arch/powerpc/platforms/powernv/pci.h
+> @@ -109,7 +109,7 @@ struct pnv_phb {
+>   	int (*init_m64)(struct pnv_phb *phb);
+>   	void (*reserve_m64_pe)(struct pci_bus *bus,
+>   			       unsigned long *pe_bitmap, bool all);
+> -	int (*pick_m64_pe)(struct pci_bus *bus, bool all);
+> +	struct pnv_ioda_pe *(*pick_m64_pe)(struct pci_bus *bus, bool all);
+>   	int (*get_pe_state)(struct pnv_phb *phb, int pe_no);
+>   	void (*freeze_pe)(struct pnv_phb *phb, int pe_no);
+>   	int (*unfreeze_pe)(struct pnv_phb *phb, int pe_no, int opt);
+>
 
 
+-- 
+Alexey
