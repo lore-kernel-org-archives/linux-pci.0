@@ -1,234 +1,179 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:48886 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751813AbcDPBf6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Apr 2016 21:35:58 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de, linux-block@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Cc: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 8/8] nvme: switch to use pci_alloc_irq_vectors
-Date: Fri, 15 Apr 2016 18:35:52 -0700
-Message-Id: <1460770552-31260-9-git-send-email-hch@lst.de>
-In-Reply-To: <1460770552-31260-1-git-send-email-hch@lst.de>
-References: <1460770552-31260-1-git-send-email-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V6 12/13] pci, pci-thunder-ecam: Add ACPI support for
+ ThunderX ECAM.
+To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, rafael@kernel.org
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <1460740008-19489-13-git-send-email-tn@semihalf.com>
+Cc: hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	jchandra@broadcom.com, robert.richter@caviumnetworks.com,
+	mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <571607C0.10909@semihalf.com>
+Date: Tue, 19 Apr 2016 12:26:08 +0200
+MIME-Version: 1.0
+In-Reply-To: <1460740008-19489-13-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/nvme/host/pci.c | 88 +++++++++++++------------------------------------
- 1 file changed, 23 insertions(+), 65 deletions(-)
+On 15.04.2016 19:06, Tomasz Nowicki wrote:
+> Passes 1.x miss PCI enhanced allocation (EA) header for fixed-BARs,
+> thus these passes should use Cavium-specific config access functions
+> that synthesize the missing EA capabilities.
+>
+> We already have DT driver which addresses errata requirements and
+> allows to use special PCI config accessors. Currently this driver uses
+> compatible = "cavium,pci-host-thunder-ecam" to mach against the errata.
+> For ACPI case we need explicit errata number and corresponding
+> DECLARE_ACPI_MCFG_FIXUP fixup code.
+>
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> ---
+>   arch/arm64/Kconfig                  | 14 ++++++++++++++
+>   arch/arm64/include/asm/cpufeature.h |  3 ++-
+>   arch/arm64/kernel/cpu_errata.c      |  8 ++++++++
+>   drivers/pci/host/pci-thunder-ecam.c | 35 +++++++++++++++++++++++++++++++++++
+>   4 files changed, 59 insertions(+), 1 deletion(-)
+>
+> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+> index 1bded87..b7614b8 100644
+> --- a/arch/arm64/Kconfig
+> +++ b/arch/arm64/Kconfig
+> @@ -445,6 +445,20 @@ config CAVIUM_ERRATUM_27456
+>
+>   	  If unsure, say Y.
+>
+> +config CAVIUM_ERRATUM_24575
+> +	bool "Cavium erratum 24575: Enhanced Allocation (EA) emualaion"
+> +	default y
+> +	help
+> +	  Enable workaround for erratum 24575.
+> +
+> +	  Early versions of the Cavium Thunder CN88XX processor are missing
+> +	  Enhanced Allocation (EA) capabilities for the fixed BAR addresses used
+> +	  by the on-SoC hardware blocks. The erratum adds config access
+> +	  functions that synthesize the missing EA capabilities for versions
+> +	  that are missing that information.
+> +
+> +	  If unsure, say Y.
+> +
+>   endmenu
+>
+>
+> diff --git a/arch/arm64/include/asm/cpufeature.h b/arch/arm64/include/asm/cpufeature.h
+> index b9b6494..a78364e 100644
+> --- a/arch/arm64/include/asm/cpufeature.h
+> +++ b/arch/arm64/include/asm/cpufeature.h
+> @@ -35,8 +35,9 @@
+>   #define ARM64_ALT_PAN_NOT_UAO			10
+>   #define ARM64_HAS_VIRT_HOST_EXTN		11
+>   #define ARM64_WORKAROUND_CAVIUM_27456		12
+> +#define ARM64_WORKAROUND_CAVIUM_24575		13
+>
+> -#define ARM64_NCAPS				13
+> +#define ARM64_NCAPS				14
+>
+>   #ifndef __ASSEMBLY__
+>
+> diff --git a/arch/arm64/kernel/cpu_errata.c b/arch/arm64/kernel/cpu_errata.c
+> index 06afd04..89c13d7 100644
+> --- a/arch/arm64/kernel/cpu_errata.c
+> +++ b/arch/arm64/kernel/cpu_errata.c
+> @@ -97,6 +97,14 @@ const struct arm64_cpu_capabilities arm64_errata[] = {
+>   			   (1 << MIDR_VARIANT_SHIFT) | 1),
+>   	},
+>   #endif
+> +#ifdef CONFIG_CAVIUM_ERRATUM_24575
+> +	{
+> +	/* Cavium ThunderX, pass 1.x */
+> +		.desc = "Cavium erratum 24575",
+> +		.capability = ARM64_WORKAROUND_CAVIUM_24575,
+> +		MIDR_RANGE(MIDR_THUNDERX, 0x00, 0x01),
+> +	},
+> +#endif
+>   	{
+>   	}
+>   };
+> diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/host/pci-thunder-ecam.c
+> index f67c6d7..01de697 100644
+> --- a/drivers/pci/host/pci-thunder-ecam.c
+> +++ b/drivers/pci/host/pci-thunder-ecam.c
+> @@ -11,10 +11,14 @@
+>   #include <linux/ioport.h>
+>   #include <linux/of_pci.h>
+>   #include <linux/of.h>
+> +#include <linux/pci-acpi.h>
+>   #include <linux/platform_device.h>
+>
+> +#include <asm/virt.h>
+> +
+>   #include "../ecam.h"
+>
+> +
+>   static void set_val(u32 v, int where, int size, u32 *val)
+>   {
+>   	int shift = (where & 3) * 8;
+> @@ -376,5 +380,36 @@ static struct platform_driver thunder_ecam_driver = {
+>   };
+>   module_platform_driver(thunder_ecam_driver);
+>
+> +#ifdef CONFIG_ACPI
+> +
+> +static bool needs_cavium_erratum_24575(struct pci_cfg_fixup *fixup,
+> +				      struct acpi_pci_root *root)
+> +{
+> +	/*
+> +	 * We must match errata code and be hypervisor, quirk does not apply
+> +	 * for virtual machines.
+> +	 */
+> +	return cpus_have_cap(ARM64_WORKAROUND_CAVIUM_24575) &&
+> +	       is_hyp_mode_available();
+> +}
+> +
+> +DECLARE_ACPI_MCFG_FIXUP(NULL, needs_cavium_erratum_24575, &pci_thunder_ecam_ops,
+> +			0, PCI_MCFG_BUS_ANY);
+> +DECLARE_ACPI_MCFG_FIXUP(NULL, needs_cavium_erratum_24575, &pci_thunder_ecam_ops,
+> +			1, PCI_MCFG_BUS_ANY);
+> +DECLARE_ACPI_MCFG_FIXUP(NULL, needs_cavium_erratum_24575, &pci_thunder_ecam_ops,
+> +			2, PCI_MCFG_BUS_ANY);
+> +DECLARE_ACPI_MCFG_FIXUP(NULL, needs_cavium_erratum_24575, &pci_thunder_ecam_ops,
+> +			3, PCI_MCFG_BUS_ANY);
+> +DECLARE_ACPI_MCFG_FIXUP(NULL, needs_cavium_erratum_24575, &pci_thunder_ecam_ops,
+> +			10, PCI_MCFG_BUS_ANY);
+> +DECLARE_ACPI_MCFG_FIXUP(NULL, needs_cavium_erratum_24575, &pci_thunder_ecam_ops,
+> +			11, PCI_MCFG_BUS_ANY);
+> +DECLARE_ACPI_MCFG_FIXUP(NULL, needs_cavium_erratum_24575, &pci_thunder_ecam_ops,
+> +			12, PCI_MCFG_BUS_ANY);
+> +DECLARE_ACPI_MCFG_FIXUP(NULL, needs_cavium_erratum_24575, &pci_thunder_ecam_ops,
+> +			13, PCI_MCFG_BUS_ANY);
+> +#endif
+> +
 
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index ff3c8d7..82730bf 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -89,7 +89,6 @@ struct nvme_dev {
- 	unsigned max_qid;
- 	int q_depth;
- 	u32 db_stride;
--	struct msix_entry *entry;
- 	void __iomem *bar;
- 	struct work_struct reset_work;
- 	struct work_struct scan_work;
-@@ -209,6 +208,11 @@ static unsigned int nvme_cmd_size(struct nvme_dev *dev)
- 		nvme_iod_alloc_size(dev, NVME_INT_BYTES(dev), NVME_INT_PAGES);
- }
- 
-+static int nvmeq_irq(struct nvme_queue *nvmeq)
-+{
-+	return to_pci_dev(nvmeq->dev->dev)->irqs[nvmeq->cq_vector];
-+}
-+
- static int nvme_admin_init_hctx(struct blk_mq_hw_ctx *hctx, void *data,
- 				unsigned int hctx_idx)
- {
-@@ -1016,7 +1020,7 @@ static int nvme_suspend_queue(struct nvme_queue *nvmeq)
- 		spin_unlock_irq(&nvmeq->q_lock);
- 		return 1;
- 	}
--	vector = nvmeq->dev->entry[nvmeq->cq_vector].vector;
-+	vector = nvmeq_irq(nvmeq);
- 	nvmeq->dev->online_queues--;
- 	nvmeq->cq_vector = -1;
- 	spin_unlock_irq(&nvmeq->q_lock);
-@@ -1024,7 +1028,6 @@ static int nvme_suspend_queue(struct nvme_queue *nvmeq)
- 	if (!nvmeq->qid && nvmeq->dev->ctrl.admin_q)
- 		blk_mq_stop_hw_queues(nvmeq->dev->ctrl.admin_q);
- 
--	irq_set_affinity_hint(vector, NULL);
- 	free_irq(vector, nvmeq);
- 
- 	return 0;
-@@ -1135,11 +1138,11 @@ static int queue_request_irq(struct nvme_dev *dev, struct nvme_queue *nvmeq,
- 							const char *name)
- {
- 	if (use_threaded_interrupts)
--		return request_threaded_irq(dev->entry[nvmeq->cq_vector].vector,
--					nvme_irq_check, nvme_irq, IRQF_SHARED,
--					name, nvmeq);
--	return request_irq(dev->entry[nvmeq->cq_vector].vector, nvme_irq,
--				IRQF_SHARED, name, nvmeq);
-+		return request_threaded_irq(nvmeq_irq(nvmeq), nvme_irq_check,
-+				nvme_irq, IRQF_SHARED, name, nvmeq);
-+	else
-+		return request_irq(nvmeq_irq(nvmeq), nvme_irq, IRQF_SHARED,
-+				name, nvmeq);
- }
- 
- static void nvme_init_queue(struct nvme_queue *nvmeq, u16 qid)
-@@ -1438,7 +1441,7 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
- {
- 	struct nvme_queue *adminq = dev->queues[0];
- 	struct pci_dev *pdev = to_pci_dev(dev->dev);
--	int result, i, vecs, nr_io_queues, size;
-+	int result, nr_io_queues, size;
- 
- 	nr_io_queues = num_possible_cpus();
- 	result = nvme_set_queue_count(&dev->ctrl, &nr_io_queues);
-@@ -1481,29 +1484,17 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
- 	}
- 
- 	/* Deregister the admin queue's interrupt */
--	free_irq(dev->entry[0].vector, adminq);
-+	free_irq(pdev->irqs[0], adminq);
- 
- 	/*
- 	 * If we enable msix early due to not intx, disable it again before
- 	 * setting up the full range we need.
- 	 */
--	if (pdev->msi_enabled)
--		pci_disable_msi(pdev);
--	else if (pdev->msix_enabled)
--		pci_disable_msix(pdev);
--
--	for (i = 0; i < nr_io_queues; i++)
--		dev->entry[i].entry = i;
--	vecs = pci_enable_msix_range(pdev, dev->entry, 1, nr_io_queues);
--	if (vecs < 0) {
--		vecs = pci_enable_msi_range(pdev, 1, min(nr_io_queues, 32));
--		if (vecs < 0) {
--			vecs = 1;
--		} else {
--			for (i = 0; i < vecs; i++)
--				dev->entry[i].vector = i + pdev->irq;
--		}
--	}
-+	pci_free_irq_vectors(pdev);
-+	nr_io_queues = pci_alloc_irq_vectors(pdev, nr_io_queues);
-+	if (nr_io_queues <= 0)
-+		return -EIO;
-+	dev->max_qid = nr_io_queues;
- 
- 	/*
- 	 * Should investigate if there's a performance win from allocating
-@@ -1511,8 +1502,6 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
- 	 * path to scale better, even if the receive path is limited by the
- 	 * number of interrupts.
- 	 */
--	nr_io_queues = vecs;
--	dev->max_qid = nr_io_queues;
- 
- 	result = queue_request_irq(dev, adminq, adminq->irqname);
- 	if (result) {
-@@ -1526,22 +1515,6 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
- 	return result;
- }
- 
--static void nvme_set_irq_hints(struct nvme_dev *dev)
--{
--	struct nvme_queue *nvmeq;
--	int i;
--
--	for (i = 0; i < dev->online_queues; i++) {
--		nvmeq = dev->queues[i];
--
--		if (!nvmeq->tags || !(*nvmeq->tags))
--			continue;
--
--		irq_set_affinity_hint(dev->entry[nvmeq->cq_vector].vector,
--					blk_mq_tags_cpumask(*nvmeq->tags));
--	}
--}
--
- static void nvme_dev_scan(struct work_struct *work)
- {
- 	struct nvme_dev *dev = container_of(work, struct nvme_dev, scan_work);
-@@ -1549,7 +1522,6 @@ static void nvme_dev_scan(struct work_struct *work)
- 	if (!dev->tagset.tags)
- 		return;
- 	nvme_scan_namespaces(&dev->ctrl);
--	nvme_set_irq_hints(dev);
- }
- 
- static void nvme_del_queue_end(struct request *req, int error)
-@@ -1654,6 +1626,7 @@ static int nvme_dev_add(struct nvme_dev *dev)
- 		dev->tagset.cmd_size = nvme_cmd_size(dev);
- 		dev->tagset.flags = BLK_MQ_F_SHOULD_MERGE;
- 		dev->tagset.driver_data = dev;
-+		dev->tagset.affinity_mask = dev->dev->irq_affinity;
- 
- 		if (blk_mq_alloc_tag_set(&dev->tagset))
- 			return 0;
-@@ -1694,15 +1667,9 @@ static int nvme_pci_enable(struct nvme_dev *dev)
- 	 * interrupts. Pre-enable a single MSIX or MSI vec for setup. We'll
- 	 * adjust this later.
- 	 */
--	if (pci_enable_msix(pdev, dev->entry, 1)) {
--		pci_enable_msi(pdev);
--		dev->entry[0].vector = pdev->irq;
--	}
--
--	if (!dev->entry[0].vector) {
--		result = -ENODEV;
--		goto disable;
--	}
-+	result = pci_alloc_irq_vectors(pdev, 1);
-+	if (result < 0)
-+		return result;
- 
- 	cap = lo_hi_readq(dev->bar + NVME_REG_CAP);
- 
-@@ -1744,10 +1711,7 @@ static void nvme_pci_disable(struct nvme_dev *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev->dev);
- 
--	if (pdev->msi_enabled)
--		pci_disable_msi(pdev);
--	else if (pdev->msix_enabled)
--		pci_disable_msix(pdev);
-+	pci_free_irq_vectors(pdev);
- 
- 	if (pci_is_enabled(pdev)) {
- 		pci_disable_pcie_error_reporting(pdev);
-@@ -1816,7 +1780,6 @@ static void nvme_pci_free_ctrl(struct nvme_ctrl *ctrl)
- 	if (dev->ctrl.admin_q)
- 		blk_put_queue(dev->ctrl.admin_q);
- 	kfree(dev->queues);
--	kfree(dev->entry);
- 	kfree(dev);
- }
- 
-@@ -1996,10 +1959,6 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	dev = kzalloc_node(sizeof(*dev), GFP_KERNEL, node);
- 	if (!dev)
- 		return -ENOMEM;
--	dev->entry = kzalloc_node(num_possible_cpus() * sizeof(*dev->entry),
--							GFP_KERNEL, node);
--	if (!dev->entry)
--		goto free;
- 	dev->queues = kzalloc_node((num_possible_cpus() + 1) * sizeof(void *),
- 							GFP_KERNEL, node);
- 	if (!dev->queues)
-@@ -2042,7 +2001,6 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	nvme_dev_unmap(dev);
-  free:
- 	kfree(dev->queues);
--	kfree(dev->entry);
- 	kfree(dev);
- 	return result;
- }
--- 
-2.1.4
+I wonder if we can identify quirk based on _DSD properties, like that:
 
+Name (_DSD, Package () {
+	ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+	Package () {
+		Package (2) {"cavium,pci-host-thunder-ecam", 1},
+	}
+})
+
+similar for PEM driver:
+
+Name (_DSD, Package () {
+	ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+	Package () {
+		Package (2) {"cavium,pci-host-thunder-pem", 1},
+	}
+})
+
+Do you think it is right thing to do?
+
+Tomasz
