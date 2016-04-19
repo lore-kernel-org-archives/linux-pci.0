@@ -1,110 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.sysgo.com ([176.9.12.79]:36786 "EHLO mail.sysgo.com"
+Received: from mail.kernel.org ([198.145.29.136]:40066 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932174AbcDYNEu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Apr 2016 09:04:50 -0400
-Subject: [PATCH] Re: Exception due to PCI: Use pci_is_root_bus() to check for
- root bus
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <5704F85B.4080501@sysgo.com> <20160406133502.GB4976@localhost>
- <570516CB.7080406@sysgo.com>
+	id S1754931AbcDSVVT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Apr 2016 17:21:19 -0400
+Date: Tue, 19 Apr 2016 16:21:14 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Simon Horman <horms+renesas@verge.net.au>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>,
-	linux-pci@vger.kernel.org
-From: David Engraf <david.engraf@sysgo.com>
-Message-ID: <571E15EF.9080507@sysgo.com>
-Date: Mon, 25 Apr 2016 15:04:47 +0200
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v2] PCI: rcar-pcie: Remove Gen2 designation from Kconfig
+Message-ID: <20160419212114.GD17863@localhost>
+References: <1459384523-16146-1-git-send-email-horms+renesas@verge.net.au>
+ <20160405181054.GB15353@localhost>
 MIME-Version: 1.0
-In-Reply-To: <570516CB.7080406@sysgo.com>
-Content-Type: multipart/mixed;
- boundary="------------020009000100000500090904"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160405181054.GB15353@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------020009000100000500090904
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+On Tue, Apr 05, 2016 at 01:10:54PM -0500, Bjorn Helgaas wrote:
+> Hi Simon,
+> 
+> On Thu, Mar 31, 2016 at 09:35:23AM +0900, Simon Horman wrote:
+> > It appears that Gen2 is a misnomer for the R-Car PCIE driver
+> > which also supports Gen 1 and Gen 3 SoCs. Accordingly, drop Gen 2
+> > from the help text and Kconfig symbol.
+> > 
+> > Also, re-arange the Kconfig symbol name to use PCIE as the prefix.
+> > This appears to be in keeping with other PCIE Kconfig symbols.
+> > 
+> > Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> > Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+> > ---
+> > Bjorn, if this patch is acceptable I would like to request that we
+> > co-ordinate things so that I can queue-up corresponding updates for
+> > arm and arm64 defconfigs in the same release. From my point of view
+> > v4.7 would make sense.
+> 
+> I'm fine with this.  What sort of coordination do you want to do?
+> It would probably be nice to combine this patch with the defconfig updates
+> so we don't have a bisection problem.  If you want to include this patch
+> and merge through another tree,
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Hi Bjorn,
+Ping, do you want me to do anything with this?
 
-Am 06.04.2016 um 16:01 schrieb David Engraf:
-> Hi Bjorn,
->
-> Am 06.04.2016 um 15:35 schrieb Bjorn Helgaas:
->> Hi David,
->>
->> On Wed, Apr 06, 2016 at 01:51:55PM +0200, David Engraf wrote:
->>> Hi,
->>>
->>> I have an exception in __pci_bus_size_bridges() when pci_is_root_bus
->>> returns false but bus->self == NULL. My driver registers a virtual
->>> bus, like virtfn_add_bus(). pci_add_new_bus() is called with a
->>> parent but without a pci_dev. Thus bus->parent is set but bus->self
->>> is NULL. When __pci_bus_size_bridges() is called I get an exception
->>> at:
->>>
->>> switch (bus->self->class >> 8)
->>>
->>> The previous version of the code, checking for bus->self != NULL
->>> worked for me. I think an additional check is required to make sure
->>> we're not accessing a NULL pointer.
->>
->> When you say "previous version of the code," do you mean a previous
->> version of Linux worked correctly but a newer version does not?  What
->> versions are they?  Did you identify a commit that changed the
->> behavior?  I assume you're talking about an out-of-tree driver that
->> registers a virtual bus?  Can you point us to the code?  Can you share
->> the dmesg log, including the backtrace?
->
-> With previous version, I mean reverting commit
-> 2ba29e270e977b213a7d58ae1152c23a1c3074a3. This will check for bus->self
-> instead of using pci_is_root_bus().
-> I'm working on a driver which is basically based on drivers/pci/iov.c.
->
-> The code looks like this:
->
-> child = pci_add_new_bus(parent, NULL, busnr);
->
-> This will create child with child->parent = parent and child->self =
-> NULL. When the kernel calls __pci_bus_size_bridges(), accessing
-> bus->self->class crashes:
->
-> /* The root bus? */
-> if (pci_is_root_bus(bus))
->      return;
->
-> switch (bus->self->class >> 8) { <- crash here because of bus->self == NULL
-
-With this patch the system no longer crashes and the virtual PCI bus 
-works. It returns on bus->self == NULL, thus the switch instruction does 
-not access a NULL pointer.
-
-Best regards
-- David
-
-
---------------020009000100000500090904
-Content-Type: text/x-diff;
- name="setup-pci.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="setup-pci.patch"
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 55641a3..ddb3381 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1245,6 +1245,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
- 	if (pci_is_root_bus(bus))
- 		return;
- 
-+	/* bridge device available? */
-+	if (!bus->self)
-+		return;
-+
- 	switch (bus->self->class >> 8) {
- 	case PCI_CLASS_BRIDGE_CARDBUS:
- 		/* don't size cardbuses yet. */
-
---------------020009000100000500090904--
+> > v2
+> > * As suggested by Geert Uytterhoeven:
+> >   - Use PCIE as prefix in Kconfig symbol
+> > ---
+> >  drivers/pci/host/Kconfig  | 4 ++--
+> >  drivers/pci/host/Makefile | 2 +-
+> >  2 files changed, 3 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> > index 7a0780d56d2d..8fb1cf54617d 100644
+> > --- a/drivers/pci/host/Kconfig
+> > +++ b/drivers/pci/host/Kconfig
+> > @@ -69,11 +69,11 @@ config PCI_RCAR_GEN2
+> >  	  There are 3 internal PCI controllers available with a single
+> >  	  built-in EHCI/OHCI host controller present on each one.
+> >  
+> > -config PCI_RCAR_GEN2_PCIE
+> > +config PCIE_RCAR
+> >  	bool "Renesas R-Car PCIe controller"
+> >  	depends on ARCH_RENESAS || (ARM && COMPILE_TEST)
+> >  	help
+> > -	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
+> > +	  Say Y here if you want PCIe controller support on R-Car SoCs.
+> >  
+> >  config PCI_HOST_COMMON
+> >  	bool
+> > diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> > index d85b5faf9bbc..d3d8e1b36fb9 100644
+> > --- a/drivers/pci/host/Makefile
+> > +++ b/drivers/pci/host/Makefile
+> > @@ -7,7 +7,7 @@ obj-$(CONFIG_PCI_HYPERV) += pci-hyperv.o
+> >  obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+> >  obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+> >  obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+> > -obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
+> > +obj-$(CONFIG_PCIE_RCAR) += pcie-rcar.o
+> >  obj-$(CONFIG_PCI_HOST_COMMON) += pci-host-common.o
+> >  obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
+> >  obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+> > -- 
+> > 2.1.4
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
