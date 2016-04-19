@@ -1,201 +1,308 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32843 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932143AbcDYNzg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Apr 2016 09:55:36 -0400
-Date: Mon, 25 Apr 2016 07:55:35 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Majd Dibbiny <majd@mellanox.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	"Noa Osherovich" <noaos@mellanox.com>
-Subject: Re: [PATCH] PCI: Refine broken INTx masking for Mellanox devices
-Message-ID: <20160425075535.6c297c26@ul30vt.home>
-In-Reply-To: <cf7d745d-a43c-dcf7-e2e0-00afbbe26a72@mellanox.com>
-References: <1461083616-30099-1-git-send-email-majd@mellanox.com>
-	<20160419130435.7d681f6d@t450s.home>
-	<7b67ed14-516d-aae9-2b72-6dae420caa65@mellanox.com>
-	<cf7d745d-a43c-dcf7-e2e0-00afbbe26a72@mellanox.com>
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:35583 "EHLO
+	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751557AbcDSBuS (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Apr 2016 21:50:18 -0400
+Received: by mail-pf0-f181.google.com with SMTP id n1so1050476pfn.2
+        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 18:50:17 -0700 (PDT)
+Subject: Re: [PATCH v8 17/45] powerpc/powernv/ioda1: Improve DMA32 segment
+ track
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-18-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
+	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <57158ED2.5050203@ozlabs.ru>
+Date: Tue, 19 Apr 2016 11:50:10 +1000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <1455680668-23298-18-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 25 Apr 2016 15:45:37 +0300
-Majd Dibbiny <majd@mellanox.com> wrote:
+On 02/17/2016 02:44 PM, Gavin Shan wrote:
+> In current implementation, the DMA32 segments required by one specific
+> PE isn't calculated with the information hold in the PE independently.
+> It conflicts with the PCI hotplug design: PE centralized, meaning the
+> PE's DMA32 segments should be calculated from the information hold in
+> the PE independently.
+>
+> This introduces an array (@dma32_segmap) for every PHB to track the
+> DMA32 segmeng usage. Besides, this moves the logic calculating PE's
+> consumed DMA32 segments to pnv_pci_ioda1_setup_dma_pe() so that PE's
+> DMA32 segments are calculated/allocated from the information hold in
+> the PE (DMA32 weight). Also the logic is improved: we try to allocate
+> as much DMA32 segments as we can. It's acceptable that number of DMA32
+> segments less than the expected number are allocated.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-> Hi Bjorn,
-> 
-> Can you please merge this?
-> 
-> Thanks
-> 
-> On 4/21/2016 10:12 AM, Majd Dibbiny wrote:
-> >
-> >
-> > On 4/19/2016 10:04 PM, Alex Williamson wrote:  
-> >> On Tue, 19 Apr 2016 19:33:36 +0300
-> >> Majd Dibbiny <majd@mellanox.com> wrote:
-> >>  
-> >>> From: Noa Osherovich <noaos@mellanox.com>
-> >>>
-> >>> Mellanox devices were marked as having INTx masking ability broken.
-> >>> As a result, the VFIO driver fails to load when the device was
-> >>> passed-through to a VM.
-> >>>
-> >>> This patch excludes ConnectX-4, ConnectX4-Lx and Connect-IB from the
-> >>> list of Mellanox devices marked as having broken INTx masking:
-> >>>
-> >>> - ConnectX-4 and ConnectX4-Lx either declare INTx are not supported
-> >>>    (FW versions 12.14.2036 / 14.12.2036) or support them properly
-> >>>    (starting May 2016 firmware release). Users having earlier firmware
-> >>>    versions will have to update to either one.
-> >>> - Connect-IB does not support INTx currently so will not cause any
-> >>>    problem.  
-> >> What's the user and support experience here?  A user gets a new kernel
-> >> that no longer marks INTx masking as bad (note that if the device does
-> >> not support INTx by returing 0 in the pin register, it doesn't matter
-> >> whether it's marked bad or not), they try to assign the device and get
-> >> an interrupt storm on the guest and go complain to support. Support
-> >> tries to reproduce, maybe can, maybe can't, depending on the firmware
-> >> version they happen to have running, everyone gets very unhappy until
-> >> the thing that almost never works, "are you running the latest
-> >> firmware", actually works.  Can we instead add a new function for
-> >> mellanox that can probe the firmware version and continue marking INTx
-> >> masking bad with a warning noting that a firmware update will resolve
-> >> it?  Thanks,
-> >>
-> >> Alex  
-> > Hi Alex,
-> > I understand your concern and therefore we have documented this in our 
-> > Release notes to ease the troubleshooting experience for everyone.. We 
-> > have also added the Firmware versions in the commit messages to make 
-> > it clearer...
-> >
-> > What do you think?
 
-My comment is trying to highlight the problem that users are not likely
-to check for updated firmware for every device *before* installing a new
-kernel, so there's a reasonable chance that a user will see this change
-first as a regression in the kernel.  So documentation in the firmware
-release notes is really only going to help very meticulous users.  For
-everyone else it still looks like a kernel regression and a detailed
-commit log is an after the fact aid to resolving the problem.  So, is
-there some way we can detect the firmware from the quirk and make a
-determination whether to enable broken intx, with a dmesg entry
-indicating to update device firmware?  Thanks,
+This DMA segments business was the reason why I have not even tried 
+implementing DDW for POWER7 - it is way too different from POWER8 and there 
+is no chance that anyone outside Ozlabs will ever try using this in 
+practice; the same applies to PCI hotplug on POWER7.
 
-Alex
+I am suggesting to ditch all IODA1 changes from this patchset as this code 
+will hang around (unused) for may be a year or so and then will be gone as 
+p5ioc2.
 
-> >>> Fixes: 11e42532ada31 ('PCI: Assume all Mellanox devices have ...')
-> >>> Signed-off-by: Noa Osherovich <noaos@mellanox.com>
-> >>> Signed-off-by: Majd Dibbiny <majd@mellanox.com>
-> >>> ---
-> >>>   drivers/pci/quirks.c    | 61 
-> >>> ++++++++++++++++++++++++++++++++++++++++++++++++-
-> >>>   include/linux/pci_ids.h | 14 ++++++++++++
-> >>>   2 files changed, 74 insertions(+), 1 deletion(-)
-> >>>
-> >>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> >>> index 8e67802..6a1856e 100644
-> >>> --- a/drivers/pci/quirks.c
-> >>> +++ b/drivers/pci/quirks.c
-> >>> @@ -3147,7 +3147,66 @@ DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* 
-> >>> Ralink RT2800 802.11n PCI */
-> >>>    */
-> >>>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
-> >>>                quirk_broken_intx_masking);
-> >>> -DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
-> >>> +
-> >>> +/*
-> >>> + * Mellanox devices that fail under PCI device assignment using 
-> >>> DisINTx masking
-> >>> + */
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, 
-> >>> PCI_DEVICE_ID_MELLANOX_TAVOR,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-> >>> +             PCI_DEVICE_ID_MELLANOX_TAVOR_BRIDGE,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, 
-> >>> PCI_DEVICE_ID_MELLANOX_ARBEL,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-> >>> +             PCI_DEVICE_ID_MELLANOX_ARBEL_COMPAT,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, 
-> >>> PCI_DEVICE_ID_MELLANOX_SINAI,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-> >>> +             PCI_DEVICE_ID_MELLANOX_SINAI_OLD,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-> >>> +             PCI_DEVICE_ID_MELLANOX_HERMON_SDR,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-> >>> +             PCI_DEVICE_ID_MELLANOX_HERMON_DDR,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-> >>> +             PCI_DEVICE_ID_MELLANOX_HERMON_QDR,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-> >>> +             PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-> >>> +             PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-> >>> +             PCI_DEVICE_ID_MELLANOX_HERMON_EN,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-> >>> +             PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-> >>> +             PCI_DEVICE_ID_MELLANOX_CONNECTX_EN,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-> >>> +             PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-> >>> +             PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-> >>> +             PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-> >>> +             PCI_DEVICE_ID_MELLANOX_CONNECTX2,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-> >>> +             PCI_DEVICE_ID_MELLANOX_CONNECTX3,
-> >>> +             quirk_broken_intx_masking);
-> >>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
-> >>> +             PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO,
-> >>>                quirk_broken_intx_masking);
-> >>>     static void quirk_no_bus_reset(struct pci_dev *dev)
-> >>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> >>> index 247da8c..bc8918e 100644
-> >>> --- a/include/linux/pci_ids.h
-> >>> +++ b/include/linux/pci_ids.h
-> >>> @@ -2262,6 +2262,20 @@
-> >>>   #define PCI_DEVICE_ID_MELLANOX_ARBEL    0x6282
-> >>>   #define PCI_DEVICE_ID_MELLANOX_SINAI_OLD 0x5e8c
-> >>>   #define PCI_DEVICE_ID_MELLANOX_SINAI    0x6274
-> >>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_SDR 0x6340
-> >>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR 0x634a
-> >>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR 0x6354
-> >>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2 0x6732
-> >>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2 0x673c
-> >>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_EN 0x6368
-> >>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2 0x6750
-> >>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN 0x6372
-> >>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2 0x675a
-> >>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2 0x6764
-> >>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2 0x6746
-> >>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX2 0x676e
-> >>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX3 0x1003
-> >>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO 0x1007
-> >>>     #define PCI_VENDOR_ID_DFI        0x15bd  
-> >  
-> 
 
+
+> ---
+>   arch/powerpc/platforms/powernv/pci-ioda.c | 111 +++++++++++++++++-------------
+>   arch/powerpc/platforms/powernv/pci.h      |   7 +-
+>   2 files changed, 66 insertions(+), 52 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 0fc2309..59782fba 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -2007,20 +2007,54 @@ static unsigned int pnv_pci_ioda_total_dma_weight(struct pnv_phb *phb)
+>   }
+>
+>   static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
+> -				       struct pnv_ioda_pe *pe,
+> -				       unsigned int base,
+> -				       unsigned int segs)
+> +				       struct pnv_ioda_pe *pe)
+>   {
+>
+>   	struct page *tce_mem = NULL;
+>   	struct iommu_table *tbl;
+> -	unsigned int tce32_segsz, i;
+> +	unsigned int weight, total_weight;
+> +	unsigned int tce32_segsz, base, segs, i;
+>   	int64_t rc;
+>   	void *addr;
+>
+>   	/* XXX FIXME: Handle 64-bit only DMA devices */
+>   	/* XXX FIXME: Provide 64-bit DMA facilities & non-4K TCE tables etc.. */
+>   	/* XXX FIXME: Allocate multi-level tables on PHB3 */
+> +	total_weight = pnv_pci_ioda_total_dma_weight(phb);
+> +	weight = pnv_pci_ioda_pe_dma_weight(pe);
+> +
+> +	segs = (weight * phb->ioda.dma32_count) / total_weight;
+> +	if (!segs)
+> +		segs = 1;
+> +
+> +	/*
+> +	 * Allocate contiguous DMA32 segments. We begin with the expected
+> +	 * number of segments. With one more attempt, the number of DMA32
+> +	 * segments to be allocated is decreased by one until one segment
+> +	 * is allocated successfully.
+> +	 */
+> +	while (segs) {
+> +		for (base = 0; base <= phb->ioda.dma32_count - segs; base++) {
+> +			for (i = base; i < base + segs; i++) {
+> +				if (phb->ioda.dma32_segmap[i] !=
+> +				    IODA_INVALID_PE)
+> +					break;
+> +			}
+> +
+> +			if (i >= base + segs)
+> +				break;
+> +		}
+> +
+> +		if (i >= base + segs)
+> +			break;
+> +
+> +		segs--;
+> +	}
+> +
+> +	if (!segs) {
+> +		pe_warn(pe, "No available DMA32 segments\n");
+> +		return;
+> +	}
+>
+>   	tbl = pnv_pci_table_alloc(phb->hose->node);
+>   	iommu_register_group(&pe->table_group, phb->hose->global_number,
+> @@ -2028,6 +2062,8 @@ static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
+>   	pnv_pci_link_table_and_group(phb->hose->node, 0, tbl, &pe->table_group);
+>
+>   	/* Grab a 32-bit TCE table */
+> +	pe_info(pe, "DMA weight %d (%d), assigned (%d) %d DMA32 segments\n",
+> +		weight, total_weight, base, segs);
+>   	pe_info(pe, " Setting up 32-bit TCE table at %08x..%08x\n",
+>   		base * PNV_IODA1_DMA32_SEGSIZE,
+>   		(base + segs) * PNV_IODA1_DMA32_SEGSIZE - 1);
+> @@ -2064,6 +2100,10 @@ static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
+>   		}
+>   	}
+>
+> +	/* Setup DMA32 segment mapping */
+> +	for (i = base; i < base + segs; i++)
+> +		phb->ioda.dma32_segmap[i] = pe->pe_number;
+> +
+>   	/* Setup linux iommu table */
+>   	pnv_pci_setup_iommu_table(tbl, addr, tce32_segsz * segs,
+>   				  base * PNV_IODA1_DMA32_SEGSIZE,
+> @@ -2538,70 +2578,34 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
+>   static void pnv_ioda_setup_dma(struct pnv_phb *phb)
+>   {
+>   	struct pci_controller *hose = phb->hose;
+> -	unsigned int weight, total_weight, dma_pe_count;
+> -	unsigned int residual, remaining, segs, base;
+>   	struct pnv_ioda_pe *pe;
+> -
+> -	total_weight = pnv_pci_ioda_total_dma_weight(phb);
+> -	dma_pe_count = 0;
+> -	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
+> -		weight = pnv_pci_ioda_pe_dma_weight(pe);
+> -		if (weight > 0)
+> -			dma_pe_count++;
+> -	}
+> +	unsigned int weight;
+>
+>   	/* If we have more PE# than segments available, hand out one
+>   	 * per PE until we run out and let the rest fail. If not,
+>   	 * then we assign at least one segment per PE, plus more based
+>   	 * on the amount of devices under that PE
+>   	 */
+> -	if (dma_pe_count > phb->ioda.tce32_count)
+> -		residual = 0;
+> -	else
+> -		residual = phb->ioda.tce32_count - dma_pe_count;
+> -
+>   	pr_info("PCI: Domain %04x has %ld available 32-bit DMA segments\n",
+> -		hose->global_number, phb->ioda.tce32_count);
+> -	pr_info("PCI: %d PE# for a total weight of %d\n",
+> -		dma_pe_count, total_weight);
+> +		hose->global_number, phb->ioda.dma32_count);
+>
+>   	pnv_pci_ioda_setup_opal_tce_kill(phb);
+>
+> -	/* Walk our PE list and configure their DMA segments, hand them
+> -	 * out one base segment plus any residual segments based on
+> -	 * weight
+> -	 */
+> -	remaining = phb->ioda.tce32_count;
+> -	base = 0;
+> +	/* Walk our PE list and configure their DMA segments */
+>   	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
+>   		weight = pnv_pci_ioda_pe_dma_weight(pe);
+>   		if (!weight)
+>   			continue;
+>
+> -		if (!remaining) {
+> -			pe_warn(pe, "No DMA32 resources available\n");
+> -			continue;
+> -		}
+> -		segs = 1;
+> -		if (residual) {
+> -			segs += ((weight * residual) + (total_weight / 2)) /
+> -				total_weight;
+> -			if (segs > remaining)
+> -				segs = remaining;
+> -		}
+> -
+>   		/*
+>   		 * For IODA2 compliant PHB3, we needn't care about the weight.
+>   		 * The all available 32-bits DMA space will be assigned to
+>   		 * the specific PE.
+>   		 */
+>   		if (phb->type == PNV_PHB_IODA1) {
+> -			pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
+> -				weight, segs);
+> -			pnv_pci_ioda1_setup_dma_pe(phb, pe, base, segs);
+> +			pnv_pci_ioda1_setup_dma_pe(phb, pe);
+>   		} else if (phb->type == PNV_PHB_IODA2) {
+>   			pe_info(pe, "Assign DMA32 space\n");
+> -			segs = 0;
+>   			pnv_pci_ioda2_setup_dma_pe(phb, pe);
+>   		} else if (phb->type == PNV_PHB_NPU) {
+>   			/*
+> @@ -2611,9 +2615,6 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
+>   			 * as the PHB3 TVT.
+>   			 */
+>   		}
+> -
+> -		remaining -= segs;
+> -		base += segs;
+>   	}
+>   }
+>
+> @@ -3313,7 +3314,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>   {
+>   	struct pci_controller *hose;
+>   	struct pnv_phb *phb;
+> -	unsigned long size, m64map_off, m32map_off, pemap_off, iomap_off = 0;
+> +	unsigned long size, m64map_off, m32map_off, pemap_off;
+> +	unsigned long iomap_off = 0, dma32map_off = 0;
+>   	const __be64 *prop64;
+>   	const __be32 *prop32;
+>   	int i, len;
+> @@ -3398,6 +3400,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>   	phb->ioda.io_segsize = phb->ioda.io_size / phb->ioda.total_pe_num;
+>   	phb->ioda.io_pci_base = 0; /* XXX calculate this ? */
+>
+> +	/* Calculate how many 32-bit TCE segments we have */
+> +	phb->ioda.dma32_count = phb->ioda.m32_pci_base /
+> +				PNV_IODA1_DMA32_SEGSIZE;
+> +
+>   	/* Allocate aux data & arrays. We don't have IO ports on PHB3 */
+>   	size = _ALIGN_UP(phb->ioda.total_pe_num / 8, sizeof(unsigned long));
+>   	m64map_off = size;
+> @@ -3407,6 +3413,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>   	if (phb->type == PNV_PHB_IODA1) {
+>   		iomap_off = size;
+>   		size += phb->ioda.total_pe_num * sizeof(phb->ioda.io_segmap[0]);
+> +		dma32map_off = size;
+> +		size += phb->ioda.dma32_count *
+> +			sizeof(phb->ioda.dma32_segmap[0]);
+>   	}
+>   	pemap_off = size;
+>   	size += phb->ioda.total_pe_num * sizeof(struct pnv_ioda_pe);
+> @@ -3422,6 +3431,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>   		phb->ioda.io_segmap = aux + iomap_off;
+>   		for (i = 0; i < phb->ioda.total_pe_num; i++)
+>   			phb->ioda.io_segmap[i] = IODA_INVALID_PE;
+> +
+> +		phb->ioda.dma32_segmap = aux + dma32map_off;
+> +		for (i = 0; i < phb->ioda.dma32_count; i++)
+> +			phb->ioda.dma32_segmap[i] = IODA_INVALID_PE;
+>   	}
+>   	phb->ioda.pe_array = aux + pemap_off;
+>   	set_bit(phb->ioda.reserved_pe_idx, phb->ioda.pe_alloc);
+> @@ -3430,7 +3443,7 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>   	mutex_init(&phb->ioda.pe_list_mutex);
+>
+>   	/* Calculate how many 32-bit TCE segments we have */
+> -	phb->ioda.tce32_count = phb->ioda.m32_pci_base /
+> +	phb->ioda.dma32_count = phb->ioda.m32_pci_base /
+>   				PNV_IODA1_DMA32_SEGSIZE;
+>
+>   #if 0 /* We should really do that ... */
+> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+> index e90bcbe..350e630 100644
+> --- a/arch/powerpc/platforms/powernv/pci.h
+> +++ b/arch/powerpc/platforms/powernv/pci.h
+> @@ -146,6 +146,10 @@ struct pnv_phb {
+>   		int			*m32_segmap;
+>   		int			*io_segmap;
+>
+> +		/* DMA32 segment maps - IODA1 only */
+> +		unsigned long		dma32_count;
+> +		int			*dma32_segmap;
+> +
+>   		/* IRQ chip */
+>   		int			irq_chip_init;
+>   		struct irq_chip		irq_chip;
+> @@ -162,9 +166,6 @@ struct pnv_phb {
+>   		 */
+>   		unsigned char		pe_rmap[0x10000];
+>
+> -		/* 32-bit TCE tables allocation */
+> -		unsigned long		tce32_count;
+> -
+>   		/* TCE cache invalidate registers (physical and
+>   		 * remapped)
+>   		 */
+>
+
+
+-- 
+Alexey
