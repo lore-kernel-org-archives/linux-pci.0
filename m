@@ -1,55 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:55394 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750843AbcDZTJ3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Apr 2016 15:09:29 -0400
-Date: Tue, 26 Apr 2016 21:09:26 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
-	Yehuda Yitschak <yehuday@marvell.com>,
-	Jason Cooper <jason@lakedaemon.net>,
-	Hanna Hawa <hannah@marvell.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: [PATCH v2 0/2] pci: host: new driver for Marvell Armada 7K/8K
- PCIe controller
-Message-ID: <20160426210926.7028d15d@free-electrons.com>
-In-Reply-To: <20160426170004.GA27803@localhost>
-References: <1460648177-31473-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20160425154611.3e7e9dc9@free-electrons.com>
-	<20160425172846.GB1759@localhost>
-	<20160426104208.150cbbd0@free-electrons.com>
-	<20160426170004.GA27803@localhost>
+Received: from mail.kernel.org ([198.145.29.136]:47611 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752620AbcDSXx6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Apr 2016 19:53:58 -0400
+Date: Tue, 19 Apr 2016 18:53:54 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/2] PCI: Skylake PCH ACS quirks
+Message-ID: <20160419235354.GF17863@localhost>
+References: <20160331222828.20486.30979.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160331222828.20486.30979.stgit@gimli.home>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
-
-On Tue, 26 Apr 2016 12:00:04 -0500, Bjorn Helgaas wrote:
-
-> > So my v3 implements what you suggested, and creates a
-> > armada8k_add_pcie_port() to make it consistent with the other drivers,
-> > but long term, I'm not sure this particular function is really useful.
+On Thu, Mar 31, 2016 at 04:34:26PM -0600, Alex Williamson wrote:
+> Intel Skylake systems attempted to implement ACS on the PCH root
+> ports, but it came out a wee bit off.  As noted in the second patch
+> and the datasheets from Intel, dwords were used for the ACS
+> capability and control words, so we see the capabilities correctly
+> but the control register is an extra 2 bytes offset.  With this
+> quirk we can fix the kernel, unfortunately lspci will still show
+> the wrong ACS control bits though.  Thanks,
 > 
-> I agree completely with everything you said.  I would be thrilled if
-> somebody were to make this more sensible, as long as we did it to
-> *all* the drivers, not just one.
+> Alex
+> 
+> ---
+> 
+> Alex Williamson (2):
+>       PCI: Reverse standard ACS vs device specific ACS enabling
+>       PCI: Quirk PCH root port ACS for Sunrise Point
 
-OK. I'll see if I can come up with a few patches. Thanks!
+Wow, hard to imagine how that got through validation.
 
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+Applied to pci/virtualization for v4.7, thanks, Alex!
