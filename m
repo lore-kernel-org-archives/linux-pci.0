@@ -1,64 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:52689 "EHLO
-	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752021AbcDZVDY (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Apr 2016 17:03:24 -0400
-Date: Tue, 26 Apr 2016 23:05:58 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] pcie: Add driver for Downstream Port Containment
-Message-ID: <20160426210558.GB17561@wunner.de>
-References: <1461703693-29400-1-git-send-email-keith.busch@intel.com>
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:34932 "EHLO
+	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753208AbcDSJfD (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 05:35:03 -0400
+Received: by mail-pf0-f181.google.com with SMTP id n1so5189472pfn.2
+        for <linux-pci@vger.kernel.org>; Tue, 19 Apr 2016 02:35:02 -0700 (PDT)
+Subject: Re: [PATCH v8 37/45] powerpc/powernv: Use firmware PCI slot reset
+ infrastructure
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-38-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
+	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <5715FBBF.2000108@ozlabs.ru>
+Date: Tue, 19 Apr 2016 19:34:55 +1000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1461703693-29400-1-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1455680668-23298-38-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Keith,
-
-On Tue, Apr 26, 2016 at 02:48:13PM -0600, Keith Busch wrote:
-> --- a/drivers/pci/pcie/portdrv.h
-> +++ b/drivers/pci/pcie/portdrv.h
-> @@ -11,7 +11,7 @@
->  
->  #include <linux/compiler.h>
->  
-> -#define PCIE_PORT_DEVICE_MAXSERVICES   4
-> +#define PCIE_PORT_DEVICE_MAXSERVICES   5
-
-You're adding a fifth port service yet the name of port service devices
-encodes the service type in one nibble, so there's only room for four
-service types.
-
-You need to amend your patch to fixup get_descriptor_id() in portdrv.h
-as well as dev_set_name() in portdrv_core.c to cope with more than four
-service types, as I've done in this commit:
-
-https://github.com/l1k/linux/commit/b688d6e4873ab082e5916b1a993bc1d38c6f4178
-
-
-You may also want to fixup these small nits in the commit message:
-
-> This adds driver support for root and downstream ports that implement
-> the Downstream Port PCI-Express extended capability. DPC is an optional
-                     ^
-                     Containment
-> capability to contained uncorrectable errors below a downstream port.
-                ^
-                contain
-> 
-> When a DPC is triggered due to receipt of an uncorrectable error message,
-> the DPC driver will schedule removal for all downstream devices as DPC
-> capable ports disable downstream links. This may happen concurrently
-> with a PCI-e hotplug driver if enabled. After the downstream devices
-> are removed, the DPC driver will clear the status and interrupt bits
-                                                                      ^
-                                                                      and
-> the link may retrain for a newly connected device.
+On 02/17/2016 02:44 PM, Gavin Shan wrote:
+> The skiboot firmware might provide the PCI slot reset capability
+> which is identified by property "ibm,reset-by-firmware" on the
+> PCI slot associated device node.
+>
+> This checks the property. If it exists, the reset request is routed
+> to firmware. Otherwise, the reset is done by kernel as before.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>   arch/powerpc/platforms/powernv/eeh-powernv.c | 41 +++++++++++++++++++++++++++-
+>   1 file changed, 40 insertions(+), 1 deletion(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+> index e23b063..c8a5217 100644
+> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+> @@ -789,7 +789,7 @@ static int pnv_eeh_root_reset(struct pci_controller *hose, int option)
+>   	return ret;
+>   }
+>
+> -static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+> +static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>   {
+>   	struct pci_dn *pdn = pci_get_pdn_by_devfn(dev->bus, dev->devfn);
+>   	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+> @@ -840,6 +840,45 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>   	return 0;
+>   }
+>
+> +static int pnv_eeh_bridge_reset(struct pci_dev *pdev, int option)
+> +{
+> +	struct pci_controller *hose;
+> +	struct pnv_phb *phb;
+> +	struct device_node *dn = pdev ? pci_device_to_OF_node(pdev) : NULL;
+> +	uint64_t id = (0x1ul << 60);
 
 
-Best regards,
+What is this 1<<60 for?
 
-Lukas
+
+> +	uint8_t scope;
+> +	int64_t rc;
+> +
+> +	/*
+> +	 * If the firmware can't handle it, we will issue hot reset
+> +	 * on the secondary bus despite the requested reset type.
+> +	 */
+> +	if (!dn || !of_get_property(dn, "ibm,reset-by-firmware", NULL))
+> +		return __pnv_eeh_bridge_reset(pdev, option);
+> +
+> +	/* The firmware can handle the request */
+> +	switch (option) {
+> +	case EEH_RESET_HOT:
+> +		scope = OPAL_RESET_PCI_HOT;
+> +		break;
+> +	case EEH_RESET_FUNDAMENTAL:
+> +		scope = OPAL_RESET_PCI_FUNDAMENTAL;
+> +		break;
+> +	case EEH_RESET_DEACTIVATE:
+> +		return 0;
+> +	default:
+> +		dev_warn(&pdev->dev, "%s: Unsupported reset %d\n",
+> +			 __func__, option);
+
+
+Can the userspace trigger this case (via VFIO-EEH) and flood dmesg?
+
+
+
+> +		return -EINVAL;
+> +	}
+> +
+> +	hose = pci_bus_to_host(pdev->bus);
+> +	phb = hose->private_data;
+> +	id |= (pdev->bus->number << 24) | (pdev->devfn << 16) | phb->opal_id;
+> +	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
+> +	return pnv_pci_poll(id, rc, NULL);
+> +}
+> +
+>   static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
+>   {
+>   	int *freset = data;
+>
+
+
+-- 
+Alexey
