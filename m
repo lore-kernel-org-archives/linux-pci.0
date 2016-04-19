@@ -1,75 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p3plsmtps2ded02.prod.phx3.secureserver.net ([208.109.80.59]:43490
-	"EHLO p3plsmtps2ded02.prod.phx3.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755345AbcDAXK1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 1 Apr 2016 19:10:27 -0400
-From: Jake Oshins <jakeo@microsoft.com>
-To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v4 2/7] drivers:hv: Make a function to free mmio regions through vmbus
-Date: Fri,  1 Apr 2016 17:47:42 -0700
-Message-Id: <1459558067-1725-3-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
-References: <y>
- <1459558067-1725-1-git-send-email-jakeo@microsoft.com>
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:33409 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751781AbcDSIr3 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 04:47:29 -0400
+Received: by mail-pa0-f51.google.com with SMTP id zm5so4667513pac.0
+        for <linux-pci@vger.kernel.org>; Tue, 19 Apr 2016 01:47:28 -0700 (PDT)
+Subject: Re: [PATCH v8 32/45] powerpc/pci: Update bridge windows on PCI plug
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-33-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
+	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <5715F099.1060901@ozlabs.ru>
+Date: Tue, 19 Apr 2016 18:47:21 +1000
+MIME-Version: 1.0
+In-Reply-To: <1455680668-23298-33-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch introduces a function that reverses everything
-done by vmbus_allocate_mmio().  Existing code just called
-release_mem_region().  Future patches in this series
-require a more complex sequence of actions, so this function
-is introduced to wrap those actions.
+On 02/17/2016 02:44 PM, Gavin Shan wrote:
+> On the PCI plugging event, PCI slot's subordinate devices are
+> scanned and their (IO and MMIO) resources are assigned. Platform
+> dependent resources (PE#, IO/MMIO/DMA windows) are allocated or
+> created on updating windows of the slot's upstream bridge.
+>
+> This updates the windows of the hot plugged slot's upstream bridge
+> in pcibios_finish_adding_to_bus() so that the platform resources
+> (PE#, IO/MMIO/DMA segments) are allocated or created accordingly.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- drivers/hv/vmbus_drv.c | 15 +++++++++++++++
- include/linux/hyperv.h |  2 +-
- 2 files changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-index 799518b..60553c1 100644
---- a/drivers/hv/vmbus_drv.c
-+++ b/drivers/hv/vmbus_drv.c
-@@ -1188,6 +1188,21 @@ exit:
- EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
- 
- /**
-+ * vmbus_free_mmio() - Free a memory-mapped I/O range.
-+ * @start:		Base address of region to release.
-+ * @size:		Size of the range to be allocated
-+ *
-+ * This function releases anything requested by
-+ * vmbus_mmio_allocate().
-+ */
-+void vmbus_free_mmio(resource_size_t start, resource_size_t size)
-+{
-+	release_mem_region(start, size);
-+
-+}
-+EXPORT_SYMBOL_GPL(vmbus_free_mmio);
-+
-+/**
-  * vmbus_cpu_number_to_vp_number() - Map CPU to VP.
-  * @cpu_number: CPU number in Linux terms
-  *
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index aa0fadc..ecd81c3 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -1091,7 +1091,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
- 			resource_size_t min, resource_size_t max,
- 			resource_size_t size, resource_size_t align,
- 			bool fb_overlap_ok);
--
-+void vmbus_free_mmio(resource_size_t start, resource_size_t size);
- int vmbus_cpu_number_to_vp_number(int cpu_number);
- u64 hv_do_hypercall(u64 control, void *input, void *output);
- 
+To my very limited knowledge of the common PCI code, looks good.
+
+
+Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+
+
+
+
+> ---
+>   arch/powerpc/kernel/pci-common.c | 8 ++++++--
+>   1 file changed, 6 insertions(+), 2 deletions(-)
+>
+> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> index 40df3a5..be9e515 100644
+> --- a/arch/powerpc/kernel/pci-common.c
+> +++ b/arch/powerpc/kernel/pci-common.c
+> @@ -1444,8 +1444,12 @@ void pcibios_finish_adding_to_bus(struct pci_bus *bus)
+>   	/* Allocate bus and devices resources */
+>   	pcibios_allocate_bus_resources(bus);
+>   	pcibios_claim_one_bus(bus);
+> -	if (!pci_has_flag(PCI_PROBE_ONLY))
+> -		pci_assign_unassigned_bus_resources(bus);
+> +	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+> +		if (bus->self)
+> +			pci_assign_unassigned_bridge_resources(bus->self);
+> +		else
+> +			pci_assign_unassigned_bus_resources(bus);
+> +	}
+>
+>   	/* Fixup EEH */
+>   	eeh_add_device_tree_late(bus);
+>
+
+
 -- 
-1.9.1
-
+Alexey
