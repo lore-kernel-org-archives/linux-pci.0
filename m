@@ -1,175 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:33637 "EHLO
-	mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752477AbcDZVKR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Apr 2016 17:10:17 -0400
+Received: from mail-ob0-f195.google.com ([209.85.214.195]:34675 "EHLO
+	mail-ob0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752304AbcDSMOa (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 08:14:30 -0400
+Received: by mail-ob0-f195.google.com with SMTP id tz8so1802977obc.1
+        for <linux-pci@vger.kernel.org>; Tue, 19 Apr 2016 05:14:24 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1461578004-129094-5-git-send-email-mika.westerberg@linux.intel.com>
-References: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
-	<1461578004-129094-5-git-send-email-mika.westerberg@linux.intel.com>
-Date: Tue, 26 Apr 2016 23:10:15 +0200
-Message-ID: <CAJZ5v0gNkC8G8nWeyk9su91F+v9+J1Wg154JG7HpVcQ8u15Kpw@mail.gmail.com>
-Subject: Re: [PATCH v4 4/4] PCI: Add runtime PM support for PCIe ports
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
+In-Reply-To: <CADjb_WSAo4Wa8xy1sBwOg+5=Ez8jQYsc=mmbedokY1N9=A0aMA@mail.gmail.com>
+References: <20160419001453.GA4597@localhost> <CADjb_WSAo4Wa8xy1sBwOg+5=Ez8jQYsc=mmbedokY1N9=A0aMA@mail.gmail.com>
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Tue, 19 Apr 2016 14:14:04 +0200
+Message-ID: <CAMxnaaWEGePgWnGSF0cpjYFTJvfzqpPwM+8RNGkL1TkPjzEVNw@mail.gmail.com>
+Subject: Re: [BUG?] Thunderbolt BAR 8: no space / failed to assign
+To: yu chen <yu.chen.surf@gmail.com>
+Cc: Chris Bainbridge <chris.bainbridge@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 25, 2016 at 11:53 AM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
-> Add back runtime PM support for PCIe ports that was removed in
-> commit fe9a743a2601 ("PCI/PM: Drop unused runtime PM support code for
-> PCIe ports").
->
-> First of all we cannot enable it automatically for all ports since there
-> has been problems previously as can be seen in [1]. In summary suspended
-> PCIe ports were not able to deal with ACPI based hotplug reliably. One
-> reason why this might happen is the fact that when a PCIe port is powered
-> down, config space access to the devices behind the port is not possible.
-> If the BIOS hotplug SMI handler assumes the port is always in D0 it will
-> not be able to find the hotplugged devices. To be on the safe side only
-> enable runtime PM if the port does not claim to support hotplug.
->
-> For PCIe ports not using hotplug we enable and allow runtime PM
-> automatically. Since 'bridge_d3' can be changed any time we check this in
-> driver ->runtime_idle() and ->runtime_suspend() and only allow runtime
-> suspend if the flag is still set. Use autosuspend with default of 10ms idle
-> time to prevent the port from repeatedly suspending and resuming on
-> continuous configuration space access of devices behind the port.
->
-> The actual power transition to D3 and back is handled in the PCI core.
->
-> Idea to automatically unblock (allow) runtime PM for PCIe ports came from
-> Dave Airlie.
->
-> [1] https://bugzilla.kernel.org/show_bug.cgi?id=53811
->
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+On Tue, Apr 19, 2016 at 6:15 AM, yu chen <yu.chen.surf@gmail.com> wrote:
+> On Tue, Apr 19, 2016 at 8:14 AM, Chris Bainbridge
+> <chris.bainbridge@gmail.com> wrote:
+>> Not sure if this is an actual bug since I don't have any Thunderbolt
+>> devices to test with, but on every boot:
+>>
+>> [    0.418473] pci 0000:05:05.0: res[8]=[mem 0x00100000-0x000fffff] res_to_dev_res add_size 200000 min_align 100000
+>> [    0.418474] pci 0000:05:05.0: res[8]=[mem 0x00100000-0x002fffff] res_to_dev_res add_size 200000 min_align 100000
+>> [    0.418476] pci 0000:05:05.0: res[9]=[mem 0x00100000-0x000fffff 64bit pref] res_to_dev_res add_size 200000 min_align 100000
+>> [    0.418478] pci 0000:05:05.0: res[9]=[mem 0x00100000-0x002fffff 64bit pref] res_to_dev_res add_size 200000 min_align 100000
+>> [    0.418479] pci 0000:05:06.0: res[8]=[mem 0x00100000-0x000fffff] res_to_dev_res add_size 200000 min_align 100000
+>> [    0.418481] pci 0000:05:06.0: res[8]=[mem 0x00100000-0x002fffff] res_to_dev_res add_size 200000 min_align 100000
+>> [    0.418483] pci 0000:05:06.0: res[9]=[mem 0x00100000-0x000fffff 64bit pref] res_to_dev_res add_size 200000 min_align 100000
+>> [    0.418484] pci 0000:05:06.0: res[9]=[mem 0x00100000-0x002fffff 64bit pref] res_to_dev_res add_size 200000 min_align 100000
+>> [    0.418486] pci 0000:05:05.0: res[7]=[io  0x1000-0x0fff] res_to_dev_res add_size 1000 min_align 1000
+>> [    0.418487] pci 0000:05:05.0: res[7]=[io  0x1000-0x1fff] res_to_dev_res add_size 1000 min_align 1000
+>> [    0.418489] pci 0000:05:06.0: res[7]=[io  0x1000-0x0fff] res_to_dev_res add_size 1000 min_align 1000
+>> [    0.418490] pci 0000:05:06.0: res[7]=[io  0x1000-0x1fff] res_to_dev_res add_size 1000 min_align 1000
+>> [    0.418492] pci 0000:05:05.0: BAR 8: no space for [mem size 0x00200000]
+>> [    0.418496] pci 0000:05:05.0: BAR 8: failed to assign [mem size 0x00200000]
+>> [    0.418502] pci 0000:05:05.0: BAR 9: no space for [mem size 0x00200000 64bit pref]
+>> [    0.418507] pci 0000:05:05.0: BAR 9: failed to assign [mem size 0x00200000 64bit pref]
+>> [    0.418513] pci 0000:05:06.0: BAR 8: no space for [mem size 0x00200000]
+>> [    0.418516] pci 0000:05:06.0: BAR 8: failed to assign [mem size 0x00200000]
+>> [    0.418521] pci 0000:05:06.0: BAR 9: no space for [mem size 0x00200000 64bit pref]
+>> [    0.418526] pci 0000:05:06.0: BAR 9: failed to assign [mem size 0x00200000 64bit pref]
+>> [    0.418532] pci 0000:05:05.0: BAR 7: no space for [io  size 0x1000]
+>> [    0.418536] pci 0000:05:05.0: BAR 7: failed to assign [io  size 0x1000]
+>> [    0.418539] pci 0000:05:06.0: BAR 7: no space for [io  size 0x1000]
+>> [    0.418543] pci 0000:05:06.0: BAR 7: failed to assign [io  size 0x1000]
+>> [    0.418547] pci 0000:05:06.0: BAR 8: no space for [mem size 0x00200000]
+>> [    0.418551] pci 0000:05:06.0: BAR 8: failed to assign [mem size 0x00200000]
+>> [    0.418555] pci 0000:05:06.0: BAR 9: no space for [mem size 0x00200000 64bit pref]
+>> [    0.418561] pci 0000:05:06.0: BAR 9: failed to assign [mem size 0x00200000 64bit pref]
+>> [    0.418566] pci 0000:05:06.0: BAR 7: no space for [io  size 0x1000]
+>> [    0.418570] pci 0000:05:06.0: BAR 7: failed to assign [io  size 0x1000]
+>> [    0.418574] pci 0000:05:05.0: BAR 8: no space for [mem size 0x00200000]
+>> [    0.418577] pci 0000:05:05.0: BAR 8: failed to assign [mem size 0x00200000]
+>> [    0.418582] pci 0000:05:05.0: BAR 9: no space for [mem size 0x00200000 64bit pref]
+>> [    0.418587] pci 0000:05:05.0: BAR 9: failed to assign [mem size 0x00200000 64bit pref]
+>> [    0.418593] pci 0000:05:05.0: BAR 7: no space for [io  size 0x1000]
+>> [    0.418596] pci 0000:05:05.0: BAR 7: failed to assign [io  size 0x1000]
+>> [    0.418600] pci 0000:05:00.0: PCI bridge to [bus 06]
+>> [    0.418606] pci 0000:05:00.0:   bridge window [mem 0xa0700000-0xa07fffff]
+>> [    0.418615] pci 0000:05:03.0: PCI bridge to [bus 07-37]
+>> [    0.418619] pci 0000:05:03.0:   bridge window [io  0x3000-0x3fff]
+>> [    0.418625] pci 0000:05:03.0:   bridge window [mem 0xa0800000-0xa47fffff]
+>> [    0.418630] pci 0000:05:03.0:   bridge window [mem 0xac800000-0xb07fffff 64bit pref]
+>> [    0.418638] pci 0000:05:04.0: PCI bridge to [bus 38-68]
+>> [    0.418642] pci 0000:05:04.0:   bridge window [io  0x4000-0x4fff]
+>> [    0.418648] pci 0000:05:04.0:   bridge window [mem 0xa4800000-0xa87fffff]
+>> [    0.418653] pci 0000:05:04.0:   bridge window [mem 0xb0800000-0xb47fffff 64bit pref]
+>> [    0.418662] pci 0000:05:05.0: PCI bridge to [bus 69]
+>> [    0.418672] pci 0000:05:06.0: PCI bridge to [bus 6a]
+>>
+>> Hardware is 2012 Macbook Ivybridge.
+>> Error occurs on kernels from 7bc5a2bad0b8 (which enabled Thunderbolt on
+>> Apple hardware) onwards.
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+These messages can be safely ignored.
 
-> ---
->  drivers/pci/pcie/portdrv_core.c |  2 ++
->  drivers/pci/pcie/portdrv_pci.c  | 51 +++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 53 insertions(+)
->
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index 88122dc2e1b1..65b1a624826b 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -11,6 +11,7 @@
->  #include <linux/kernel.h>
->  #include <linux/errno.h>
->  #include <linux/pm.h>
-> +#include <linux/pm_runtime.h>
->  #include <linux/string.h>
->  #include <linux/slab.h>
->  #include <linux/pcieport_if.h>
-> @@ -343,6 +344,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
->                      get_descriptor_id(pci_pcie_type(pdev), service));
->         device->parent = &pdev->dev;
->         device_enable_async_suspend(device);
-> +       pm_runtime_no_callbacks(device);
->
->         retval = device_register(device);
->         if (retval) {
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index 6c6bb03392ea..22ee69dc8773 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -93,6 +93,27 @@ static int pcie_port_resume_noirq(struct device *dev)
->         return 0;
->  }
->
-> +static int pcie_port_runtime_suspend(struct device *dev)
-> +{
-> +       return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
-> +}
-> +
-> +static int pcie_port_runtime_resume(struct device *dev)
-> +{
-> +       pm_runtime_mark_last_busy(dev);
-> +       return 0;
-> +}
-> +
-> +static int pcie_port_runtime_idle(struct device *dev)
-> +{
-> +       /*
-> +        * Rely the PCI core has set bridge_d3 whenever it thinks the port
-> +        * should be good to go to D3. Everything else, including moving
-> +        * the port to D3, is handled by the PCI core.
-> +        */
-> +       return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
-> +}
-> +
->  static const struct dev_pm_ops pcie_portdrv_pm_ops = {
->         .suspend        = pcie_port_device_suspend,
->         .resume         = pcie_port_device_resume,
-> @@ -101,6 +122,9 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
->         .poweroff       = pcie_port_device_suspend,
->         .restore        = pcie_port_device_resume,
->         .resume_noirq   = pcie_port_resume_noirq,
-> +       .runtime_suspend = pcie_port_runtime_suspend,
-> +       .runtime_resume = pcie_port_runtime_resume,
-> +       .runtime_idle   = pcie_port_runtime_idle,
->  };
->
->  #define PCIE_PORTDRV_PM_OPS    (&pcie_portdrv_pm_ops)
-> @@ -134,11 +158,38 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
->                 return status;
->
->         pci_save_state(dev);
-> +
-> +       /*
-> +        * Prevent runtime PM if the port is advertising support for PCIe
-> +        * hotplug. Otherwise the BIOS hotplug SMI code might not be able
-> +        * to enumerate devices behind this port properly (the port is
-> +        * powered down preventing all config space accesses to the
-> +        * subordinate devices). We can't be sure for native PCIe hotplug
-> +        * either so prevent that as well.
-> +        */
-> +       if (!dev->is_hotplug_bridge) {
-> +               /*
-> +                * Keep the port resumed 10ms to make sure things like
-> +                * config space accesses from userspace (lspci) will not
-> +                * cause the port to repeatedly suspend and resume.
-> +                */
-> +               pm_runtime_set_autosuspend_delay(&dev->dev, 10);
-> +               pm_runtime_use_autosuspend(&dev->dev);
-> +               pm_runtime_put_autosuspend(&dev->dev);
-> +               pm_runtime_allow(&dev->dev);
-> +       }
-> +
->         return 0;
->  }
->
->  static void pcie_portdrv_remove(struct pci_dev *dev)
->  {
-> +       if (!dev->is_hotplug_bridge) {
-> +               pm_runtime_forbid(&dev->dev);
-> +               pm_runtime_get_noresume(&dev->dev);
-> +               pm_runtime_dont_use_autosuspend(&dev->dev);
-> +       }
-> +
->         pcie_port_device_remove(dev);
->  }
->
-> --
-> 2.8.0.rc3
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The firmware does not assign any resources to the 05:05 and 05:06
+bridges (all resources are assigned to :03, :04). The kernel's pci
+resource allocation heuristic tries to reserve some memory/io
+resources for every hotplug capable bridge that it finds during boot.
+Here the parent bridge's resource windows are already exhausted so
+this fails. This is not a problem here since thunderbolt hotplug will
+only be done on the :03, :04 bridges. 7bc5a2bad0b8 prevents the
+thunderbolt controller from powering off during boot, which is why
+these messages appear after that commit.
+
+Andreas
