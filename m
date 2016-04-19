@@ -1,90 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38419 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932713AbcDSVED (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 Apr 2016 17:04:03 -0400
-Date: Tue, 19 Apr 2016 16:03:59 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>,
-	David Daney <david.daney@cavium.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Russell King <linux@arm.linux.org.uk>
-Subject: Re: [PATCH v2 2/3] drivers: pci: host-generic: claim bus resources
- on PCI_PROBE_ONLY set-ups
-Message-ID: <20160419210359.GB17863@localhost>
-References: <1456843449-19393-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1456843449-19393-3-git-send-email-lorenzo.pieralisi@arm.com>
- <20160412044311.GB11361@localhost>
- <20160412154810.GA32109@red-moon>
- <20160415130803.GA2105@localhost>
- <20160418100154.GB2427@red-moon>
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:35966 "EHLO
+	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751035AbcDSE27 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 00:28:59 -0400
+Received: by mail-pf0-f173.google.com with SMTP id e128so2410708pfe.3
+        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 21:28:58 -0700 (PDT)
+Subject: Re: [PATCH v8 22/45] powerpc/powernv/ioda1: Support releasing IODA1
+ TCE table
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-23-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
+	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <5715B403.7050408@ozlabs.ru>
+Date: Tue, 19 Apr 2016 14:28:51 +1000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160418100154.GB2427@red-moon>
+In-Reply-To: <1455680668-23298-23-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 18, 2016 at 11:01:54AM +0100, Lorenzo Pieralisi wrote:
-> On Fri, Apr 15, 2016 at 08:08:03AM -0500, Bjorn Helgaas wrote:
-> > On Tue, Apr 12, 2016 at 04:48:10PM +0100, Lorenzo Pieralisi wrote:
-> 
-> [...]
-> 
-> > > > The next patch removes the arm and arm64 pcibios_enable_device()
-> > > > implementations, which implies that arm and arm64 only need the generic
-> > > > version, which simply calls pci_enable_resources().  That assumes r->parent
-> > > > is set.
-> > > > 
-> > > > After this patch, we'll call pci_bus_claim_resources() for the
-> > > > PCI_PROBE_ONLY case, and that sets r->parent for all the resources.
-> > > > 
-> > > > Where does r->parent get set in the non-PCI_PROBE_ONLY case?  Obviously
-> > > > that path *works*, because you're not changing anything there.  I'd just
-> > > > like to have a hint that makes this change more obvious.
-> > > 
-> > > On all ARM/ARM64 PCI controllers drivers I am aware of (apart from the
-> > > kvmtool PCI host controller which does require PCI_PROBE_ONLY, so we need
-> > > this patch), resources are always reassigned and the core code reassigning
-> > > them takes care of assigning their parent pointers too, to answer your
-> > > question.
-> > 
-> > Here's what I find confusing.  Consider these three cases:
-> > 
-> >   1) Firmware programs no BARs and we reassign everything.  We call
-> >   pci_bus_assign_resources(), and the pci_assign_resource() ...
-> >   allocate_resource() path makes sure everything is claimed.  This is
-> >   apparently the normal arm/arm64 path, and it already works.
-> > 
-> >   2) Firmware programs all BARs and we set PCI_PROBE_ONLY.  After this
-> >   series, we'll claim the resources and remove the PCI_PROBE_ONLY
-> >   special case in pcibios_enable_device().  This is great!
-> > 
-> >   3) Firmware programs all BARs but we don't set PCI_PROBE_ONLY.  We
-> >   call pci_bus_assign_resources(), but I think it does nothing because
-> >   everything is already assigned.  The resources are not claimed and
-> >   pci_enable_resources() will fail.
-> 
-> I do not expect (1) and (3) to be different from a kernel resource
-> allocation perspective.
-> 
-> If the core resource layer is asked to assign resources it will,
-> regardless of what FW programmed in the BARs (the BAR regions size
-> matters, that's it), I went through pci_bus_assign_resources() a couple
-> of times and I have to add a bit of debugging so give me the benefit of
-> the doubt please, but there is nothing that let me think it won't assign
-> resources (and therefore assign a parent pointer) if the resources are
-> already programmed correctly (actually I even think the kernel may
-> change what FW programmed according to its resource alloc policy).
+On 02/17/2016 02:44 PM, Gavin Shan wrote:
+> pnv_pci_ioda_table_free_pages() can be reused to release the IODA1
+> TCE table when releasing IODA1 PE in subsequent patches.
+>
+> This renames the following functions to support releasing IODA1 TCE
+> table: pnv_pci_ioda2_table_free_pages() to pnv_pci_ioda_table_free_pages(),
+> pnv_pci_ioda2_table_do_free_pages() to pnv_pci_ioda_table_do_free_pages().
+> No logical changes introduced.
 
-OK.  If you're saying that even if FW programmed the BARs, the core
-will assign resources and set r->parent, that's all I'm looking for.
-I *would* like a comment where we test PCI_PROBE_ONLY to the effect
-that for PCI_PROBE_ONLY we call pci_bus_claim_resources(), and for
-!PCI_PROBE_ONLY, we claim the resources in pci_bus_assign_resources().
+I can only see renaming here but it seems (from 
+IODA_architecture_04-14-2008.pdf) that IODA1 does not support multi-level 
+TCE tables in the way IODA2 does.
 
-Bjorn
+
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>   arch/powerpc/platforms/powernv/pci-ioda.c | 18 +++++++++---------
+>   1 file changed, 9 insertions(+), 9 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index d360607..077f9db 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -51,7 +51,7 @@
+>   #define POWERNV_IOMMU_DEFAULT_LEVELS	1
+>   #define POWERNV_IOMMU_MAX_LEVELS	5
+>
+> -static void pnv_pci_ioda2_table_free_pages(struct iommu_table *tbl);
+> +static void pnv_pci_ioda_table_free_pages(struct iommu_table *tbl);
+>
+>   static void pe_level_printk(const struct pnv_ioda_pe *pe, const char *level,
+>   			    const char *fmt, ...)
+> @@ -1352,7 +1352,7 @@ static void pnv_pci_ioda2_release_dma_pe(struct pci_dev *dev, struct pnv_ioda_pe
+>   		iommu_group_put(pe->table_group.group);
+>   		BUG_ON(pe->table_group.group);
+>   	}
+> -	pnv_pci_ioda2_table_free_pages(tbl);
+> +	pnv_pci_ioda_table_free_pages(tbl);
+>   	iommu_free_table(tbl, of_node_full_name(dev->dev.of_node));
+>   }
+>
+> @@ -1946,7 +1946,7 @@ static void pnv_ioda2_tce_free(struct iommu_table *tbl, long index,
+>
+>   static void pnv_ioda2_table_free(struct iommu_table *tbl)
+>   {
+> -	pnv_pci_ioda2_table_free_pages(tbl);
+> +	pnv_pci_ioda_table_free_pages(tbl);
+>   	iommu_free_table(tbl, "pnv");
+>   }
+>
+> @@ -2448,7 +2448,7 @@ static __be64 *pnv_pci_ioda2_table_do_alloc_pages(int nid, unsigned shift,
+>   	return addr;
+>   }
+>
+> -static void pnv_pci_ioda2_table_do_free_pages(__be64 *addr,
+> +static void pnv_pci_ioda_table_do_free_pages(__be64 *addr,
+>   		unsigned long size, unsigned level);
+>
+>   static long pnv_pci_ioda2_table_alloc_pages(int nid, __u64 bus_offset,
+> @@ -2487,7 +2487,7 @@ static long pnv_pci_ioda2_table_alloc_pages(int nid, __u64 bus_offset,
+>   	 * release partially allocated table.
+>   	 */
+>   	if (offset < tce_table_size) {
+> -		pnv_pci_ioda2_table_do_free_pages(addr,
+> +		pnv_pci_ioda_table_do_free_pages(addr,
+>   				1ULL << (level_shift - 3), levels - 1);
+>   		return -ENOMEM;
+>   	}
+> @@ -2505,7 +2505,7 @@ static long pnv_pci_ioda2_table_alloc_pages(int nid, __u64 bus_offset,
+>   	return 0;
+>   }
+>
+> -static void pnv_pci_ioda2_table_do_free_pages(__be64 *addr,
+> +static void pnv_pci_ioda_table_do_free_pages(__be64 *addr,
+>   		unsigned long size, unsigned level)
+>   {
+>   	const unsigned long addr_ul = (unsigned long) addr &
+> @@ -2521,7 +2521,7 @@ static void pnv_pci_ioda2_table_do_free_pages(__be64 *addr,
+>   			if (!(hpa & (TCE_PCI_READ | TCE_PCI_WRITE)))
+>   				continue;
+>
+> -			pnv_pci_ioda2_table_do_free_pages(__va(hpa), size,
+> +			pnv_pci_ioda_table_do_free_pages(__va(hpa), size,
+>   					level - 1);
+>   		}
+>   	}
+> @@ -2529,7 +2529,7 @@ static void pnv_pci_ioda2_table_do_free_pages(__be64 *addr,
+>   	free_pages(addr_ul, get_order(size << 3));
+>   }
+>
+> -static void pnv_pci_ioda2_table_free_pages(struct iommu_table *tbl)
+> +static void pnv_pci_ioda_table_free_pages(struct iommu_table *tbl)
+>   {
+>   	const unsigned long size = tbl->it_indirect_levels ?
+>   			tbl->it_level_size : tbl->it_size;
+> @@ -2537,7 +2537,7 @@ static void pnv_pci_ioda2_table_free_pages(struct iommu_table *tbl)
+>   	if (!tbl->it_size)
+>   		return;
+>
+> -	pnv_pci_ioda2_table_do_free_pages((__be64 *)tbl->it_base, size,
+> +	pnv_pci_ioda_table_do_free_pages((__be64 *)tbl->it_base, size,
+>   			tbl->it_indirect_levels);
+>   }
+>
+>
+
+
+-- 
+Alexey
