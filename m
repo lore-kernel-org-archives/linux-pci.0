@@ -1,167 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34552 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:38419 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751772AbcDZRbs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Apr 2016 13:31:48 -0400
-Date: Tue, 26 Apr 2016 12:31:44 -0500
+	id S932713AbcDSVED (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Apr 2016 17:04:03 -0400
+Date: Tue, 19 Apr 2016 16:03:59 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Hanna Hawa <hannah@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>
-Subject: Re: [PATCH v3 0/2] pci: host: new driver for Marvell Armada 7K/8K
- PCIe controller
-Message-ID: <20160426173144.GB27803@localhost>
-References: <1461659506-10387-1-git-send-email-thomas.petazzoni@free-electrons.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>,
+	David Daney <david.daney@cavium.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Russell King <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 2/3] drivers: pci: host-generic: claim bus resources
+ on PCI_PROBE_ONLY set-ups
+Message-ID: <20160419210359.GB17863@localhost>
+References: <1456843449-19393-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1456843449-19393-3-git-send-email-lorenzo.pieralisi@arm.com>
+ <20160412044311.GB11361@localhost>
+ <20160412154810.GA32109@red-moon>
+ <20160415130803.GA2105@localhost>
+ <20160418100154.GB2427@red-moon>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1461659506-10387-1-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <20160418100154.GB2427@red-moon>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 26, 2016 at 10:31:44AM +0200, Thomas Petazzoni wrote:
-> Hello,
+On Mon, Apr 18, 2016 at 11:01:54AM +0100, Lorenzo Pieralisi wrote:
+> On Fri, Apr 15, 2016 at 08:08:03AM -0500, Bjorn Helgaas wrote:
+> > On Tue, Apr 12, 2016 at 04:48:10PM +0100, Lorenzo Pieralisi wrote:
 > 
-> Here is the third iteration of the PCIe host controller driver needed
-> for the ARM64 Marvell Armada 7K/8K platform.
+> [...]
 > 
-> Changes since v2:
+> > > > The next patch removes the arm and arm64 pcibios_enable_device()
+> > > > implementations, which implies that arm and arm64 only need the generic
+> > > > version, which simply calls pci_enable_resources().  That assumes r->parent
+> > > > is set.
+> > > > 
+> > > > After this patch, we'll call pci_bus_claim_resources() for the
+> > > > PCI_PROBE_ONLY case, and that sets r->parent for all the resources.
+> > > > 
+> > > > Where does r->parent get set in the non-PCI_PROBE_ONLY case?  Obviously
+> > > > that path *works*, because you're not changing anything there.  I'd just
+> > > > like to have a hint that makes this change more obvious.
+> > > 
+> > > On all ARM/ARM64 PCI controllers drivers I am aware of (apart from the
+> > > kvmtool PCI host controller which does require PCI_PROBE_ONLY, so we need
+> > > this patch), resources are always reassigned and the core code reassigning
+> > > them takes care of assigning their parent pointers too, to answer your
+> > > question.
+> > 
+> > Here's what I find confusing.  Consider these three cases:
+> > 
+> >   1) Firmware programs no BARs and we reassign everything.  We call
+> >   pci_bus_assign_resources(), and the pci_assign_resource() ...
+> >   allocate_resource() path makes sure everything is claimed.  This is
+> >   apparently the normal arm/arm64 path, and it already works.
+> > 
+> >   2) Firmware programs all BARs and we set PCI_PROBE_ONLY.  After this
+> >   series, we'll claim the resources and remove the PCI_PROBE_ONLY
+> >   special case in pcibios_enable_device().  This is great!
+> > 
+> >   3) Firmware programs all BARs but we don't set PCI_PROBE_ONLY.  We
+> >   call pci_bus_assign_resources(), but I think it does nothing because
+> >   everything is already assigned.  The resources are not claimed and
+> >   pci_enable_resources() will fail.
 > 
->  - Added Rob Herring's Acked-by on the Device Tree binding patch.
+> I do not expect (1) and (3) to be different from a kernel resource
+> allocation perspective.
 > 
->  - Reworked the PCIe host driver following the suggestion of Bjorn
->    Helgaas: creation of armada8k_add_pcie_port() and
->    armada8k_pcie_establish_link() in order to follow the convention of
->    other Designware based drivers.
-> 
-> Thanks!
-> 
-> Thomas
-> 
-> Thomas Petazzoni (2):
->   dt-bindings: pci: add DT binding for Marvell Armada 7K/8K PCIe
->     controller
->   pci: host: new driver for Marvell Armada 7K/8K PCIe controller
-> 
->  .../devicetree/bindings/pci/pci-armada8k.txt       |  38 +++
->  drivers/pci/host/Kconfig                           |  11 +
->  drivers/pci/host/Makefile                          |   1 +
->  drivers/pci/host/pcie-armada8k.c                   | 276 +++++++++++++++++++++
->  4 files changed, 326 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/pci-armada8k.txt
->  create mode 100644 drivers/pci/host/pcie-armada8k.c
+> If the core resource layer is asked to assign resources it will,
+> regardless of what FW programmed in the BARs (the BAR regions size
+> matters, that's it), I went through pci_bus_assign_resources() a couple
+> of times and I have to add a bit of debugging so give me the benefit of
+> the doubt please, but there is nothing that let me think it won't assign
+> resources (and therefore assign a parent pointer) if the resources are
+> already programmed correctly (actually I even think the kernel may
+> change what FW programmed according to its resource alloc policy).
 
-Thanks, Thomas, I applied these to pci/host-armada for v4.7.
-
-I added the tweaks below to use dev_dbg() instead of pr_debug(), use
-dw_pcie_wait_for_link() instead of another hand-coded timeout loop,
-and fix a typo and remove unused constants.
+OK.  If you're saying that even if FW programmed the BARs, the core
+will assign resources and set r->parent, that's all I'm looking for.
+I *would* like a comment where we test PCI_PROBE_ONLY to the effect
+that for PCI_PROBE_ONLY we call pci_bus_claim_resources(), and for
+!PCI_PROBE_ONLY, we claim the resources in pci_bus_assign_resources().
 
 Bjorn
-
-
-diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/host/pcie-armada8k.c
-index 7302de2..811ddf8 100644
---- a/drivers/pci/host/pcie-armada8k.c
-+++ b/drivers/pci/host/pcie-armada8k.c
-@@ -10,8 +10,6 @@
-  * warranty of any kind, whether express or implied.
-  */
- 
--#define pr_fmt(fmt) "armada-8k-pcie: " fmt
--
- #include <linux/clk.h>
- #include <linux/delay.h>
- #include <linux/interrupt.h>
-@@ -39,8 +37,6 @@ struct armada8k_pcie {
- #define PCIE_APP_LTSSM_EN		BIT(2)
- #define PCIE_DEVICE_TYPE_SHIFT		4
- #define PCIE_DEVICE_TYPE_MASK		0xF
--#define PCIE_DEVICE_TYPE_EP		0x0 /* Endpoint */
--#define PCIE_DEVICE_TYPE_LEP		0x1 /* Legacy endpoint */
- #define PCIE_DEVICE_TYPE_RC		0x4 /* Root complex */
- 
- #define PCIE_GLOBAL_STATUS_REG		0x8
-@@ -69,14 +65,12 @@ struct armada8k_pcie {
- #define AX_USER_DOMAIN_MASK		0x3
- #define AX_USER_DOMAIN_SHIFT		4
- 
--
--
- #define to_armada8k_pcie(x)	container_of(x, struct armada8k_pcie, pp)
- 
- static int armada8k_pcie_link_up(struct pcie_port *pp)
- {
--	u32 reg;
- 	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
-+	u32 reg;
- 	u32 mask = PCIE_GLB_STS_RDLH_LINK_UP | PCIE_GLB_STS_PHY_LINK_UP;
- 
- 	reg = readl(pcie->base + PCIE_GLOBAL_STATUS_REG);
-@@ -84,7 +78,7 @@ static int armada8k_pcie_link_up(struct pcie_port *pp)
- 	if ((reg & mask) == mask)
- 		return 1;
- 
--	pr_debug("No link detected (Global-Status: 0x%08x).\n", reg);
-+	dev_dbg(pp->dev, "No link detected (Global-Status: 0x%08x).\n", reg);
- 	return 0;
- }
- 
-@@ -92,10 +86,9 @@ static void armada8k_pcie_establish_link(struct pcie_port *pp)
- {
- 	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
- 	void __iomem *base = pcie->base;
--	int timeout = 1000;
- 	u32 reg;
- 
--	if (!armada8k_pcie_link_up(pp)) {
-+	if (!dw_pcie_link_up(pp)) {
- 		/* Disable LTSSM state machine to enable configuration */
- 		reg = readl(base + PCIE_GLOBAL_CONTROL_REG);
- 		reg &= ~(PCIE_APP_LTSSM_EN);
-@@ -129,7 +122,7 @@ static void armada8k_pcie_establish_link(struct pcie_port *pp)
- 	       PCIE_INT_C_ASSERT_MASK | PCIE_INT_D_ASSERT_MASK;
- 	writel(reg, base + PCIE_GLOBAL_INT_MASK1_REG);
- 
--	if (!armada8k_pcie_link_up(pp)) {
-+	if (!dw_pcie_link_up(pp)) {
- 		/* Configuration done. Start LTSSM */
- 		reg = readl(base + PCIE_GLOBAL_CONTROL_REG);
- 		reg |= PCIE_APP_LTSSM_EN;
-@@ -137,14 +130,7 @@ static void armada8k_pcie_establish_link(struct pcie_port *pp)
- 	}
- 
- 	/* Wait until the link becomes active again */
--	while (timeout) {
--		if (armada8k_pcie_link_up(pp))
--			break;
--		msleep(1);
--		timeout--;
--	}
--
--	if (timeout == 0)
-+	if (dw_pcie_wait_for_link(pp))
- 		dev_err(pp->dev, "Link not up after reconfiguration\n");
- }
- 
-@@ -163,7 +149,7 @@ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
- 
- 	/*
- 	 * Interrupts are directly handled by the device driver of the
--	 * PCI device. However, there are also latched into the PCIe
-+	 * PCI device.  However, they are also latched into the PCIe
- 	 * controller, so we simply discard them.
- 	 */
- 	val = readl(base + PCIE_GLOBAL_INT_CAUSE1_REG);
