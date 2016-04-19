@@ -1,243 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:15889 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753003AbcDNKEy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Apr 2016 06:04:54 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [PATCH v3 4/4] PCI: Add runtime PM support for PCIe ports
-Date: Thu, 14 Apr 2016 13:04:28 +0300
-Message-Id: <1460628268-16204-5-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1460628268-16204-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1460628268-16204-1-git-send-email-mika.westerberg@linux.intel.com>
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:35458 "EHLO
+	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751417AbcDSFsf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 01:48:35 -0400
+Received: by mail-pf0-f174.google.com with SMTP id n1so3149426pfn.2
+        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 22:48:35 -0700 (PDT)
+Subject: Re: [PATCH v8 28/45] powerpc/pci: Introduce
+ pci_remove_device_node_info()
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-29-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
+	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <5715C6AA.2060606@ozlabs.ru>
+Date: Tue, 19 Apr 2016 15:48:26 +1000
+MIME-Version: 1.0
+In-Reply-To: <1455680668-23298-29-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add back runtime PM support for PCIe ports that was removed in
-commit fe9a743a2601 ("PCI/PM: Drop unused runtime PM support code for
-PCIe ports").
+On 02/17/2016 02:44 PM, Gavin Shan wrote:
+> This implements and exports pci_remove_device_node_info(). It's
+> used to remove the pdn (struct pci_dn) for the indicated device
+> node. The function is going to be used by PowerNV PCI hotplug
+> driver.
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-First of all we cannot enable it automatically for all ports since there
-has been problems previously as can be seen in [1]. In summary suspended
-PCIe ports were not able to deal with ACPI based hotplug reliably. One
-reason why this might happen is the fact that when a PCIe port is powered
-down, config space access to the devices behind the port is not possible.
-If the BIOS hotplug SMI handler assumes the port is always in D0 it will
-not be able to find the hotplugged devices. To be on the safe side only
-enable runtime PM if the port does not claim to use ACPI based hotplug.
-Ports using native PCIe hotplug are not restricted by this.
+Kind of strange that there is no such helper for pseries, is there?
 
-Furthermore we need to check that the PCI core thinks the port can go to D3
-in the first place. The PCI core sets 'bridge_d3' in that case. If both
-conditions are met we enable and allow runtime PM for the PCIe port. Since
-'bridge_d3' can be changed anytime we check this in driver ->runtime_idle()
-and ->runtime_suspend() and only allow runtime suspend if the flag is still
-set. The actual power transition to D3 and back is handled in the PCI core.
 
-Idea to automatically unblock (allow) runtime PM for PCIe ports came from
-Dave Airlie.
+Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
 
-[1] https://bugzilla.kernel.org/show_bug.cgi?id=53811
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/pcie/portdrv_core.c |   2 +
- drivers/pci/pcie/portdrv_pci.c  | 107 ++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 109 insertions(+)
+> ---
+>   arch/powerpc/include/asm/pci-bridge.h |  1 +
+>   arch/powerpc/kernel/pci_dn.c          | 23 +++++++++++++++++++++++
+>   2 files changed, 24 insertions(+)
+>
+> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
+> index 72a9d4e..c6310e2 100644
+> --- a/arch/powerpc/include/asm/pci-bridge.h
+> +++ b/arch/powerpc/include/asm/pci-bridge.h
+> @@ -240,6 +240,7 @@ extern struct pci_dn *add_dev_pci_data(struct pci_dev *pdev);
+>   extern void remove_dev_pci_data(struct pci_dev *pdev);
+>   extern struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
+>   					       struct device_node *dn);
+> +extern void pci_remove_device_node_info(struct device_node *dn);
+>
+>   static inline int pci_device_from_OF_node(struct device_node *np,
+>   					  u8 *bus, u8 *devfn)
+> diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+> index 0a249ff..ce10281 100644
+> --- a/arch/powerpc/kernel/pci_dn.c
+> +++ b/arch/powerpc/kernel/pci_dn.c
+> @@ -331,6 +331,29 @@ struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
+>   }
+>   EXPORT_SYMBOL_GPL(pci_add_device_node_info);
+>
+> +void pci_remove_device_node_info(struct device_node *dn)
+> +{
+> +	struct pci_dn *pdn = dn ? PCI_DN(dn) : NULL;
+> +#ifdef CONFIG_EEH
+> +	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+> +
+> +	if (edev)
+> +		edev->pdn = NULL;
+> +#endif
+> +
+> +	if (!pdn)
+> +		return;
+> +
+> +	WARN_ON(!list_empty(&pdn->child_list));
+> +	list_del(&pdn->list);
+> +	if (pdn->parent)
+> +		of_node_put(pdn->parent->node);
+> +
+> +	dn->data = NULL;
+> +	kfree(pdn);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_remove_device_node_info);
+> +
+>   /*
+>    * Traverse a device tree stopping each PCI device in the tree.
+>    * This is done depth first.  As each node is processed, a "pre"
+>
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 88122dc2e1b1..65b1a624826b 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -11,6 +11,7 @@
- #include <linux/kernel.h>
- #include <linux/errno.h>
- #include <linux/pm.h>
-+#include <linux/pm_runtime.h>
- #include <linux/string.h>
- #include <linux/slab.h>
- #include <linux/pcieport_if.h>
-@@ -343,6 +344,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
- 		     get_descriptor_id(pci_pcie_type(pdev), service));
- 	device->parent = &pdev->dev;
- 	device_enable_async_suspend(device);
-+	pm_runtime_no_callbacks(device);
- 
- 	retval = device_register(device);
- 	if (retval) {
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 6c6bb03392ea..83150650570e 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -17,6 +17,8 @@
- #include <linux/aer.h>
- #include <linux/dmi.h>
- #include <linux/pci-aspm.h>
-+#include <linux/pci-acpi.h>
-+#include <linux/acpi.h>
- 
- #include "portdrv.h"
- #include "aer/aerdrv.h"
-@@ -58,6 +60,10 @@ __setup("pcie_ports=", pcie_port_setup);
- 
- /* global data */
- 
-+struct pcie_port_data {
-+	bool runtime_pm_enabled;
-+};
-+
- /**
-  * pcie_clear_root_pme_status - Clear root port PME interrupt status.
-  * @dev: PCIe root port or event collector.
-@@ -93,6 +99,78 @@ static int pcie_port_resume_noirq(struct device *dev)
- 	return 0;
- }
- 
-+static int pcie_port_runtime_suspend(struct device *dev)
-+{
-+	return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
-+}
-+
-+static int pcie_port_runtime_resume(struct device *dev)
-+{
-+	return 0;
-+}
-+
-+static int pcie_port_runtime_idle(struct device *dev)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	/*
-+	 * Rely the PCI core has set bridge_d3 whenever it thinks the port
-+	 * should be good to go to D3. Everything else, including moving
-+	 * the port to D3, is handled by the PCI core.
-+	 */
-+	if (pdev->bridge_d3) {
-+		pm_schedule_suspend(dev, 10);
-+		return 0;
-+	}
-+	return -EBUSY;
-+}
-+
-+#ifdef CONFIG_ACPI
-+static bool pcie_port_uses_acpi_hotplug(struct pci_dev *pdev)
-+{
-+	const struct acpi_pci_root *root;
-+	acpi_handle handle;
-+
-+	if (!pdev->is_hotplug_bridge)
-+		return false;
-+
-+	handle = acpi_find_root_bridge_handle(pdev);
-+	if (!handle)
-+		return false;
-+
-+	root = acpi_pci_find_root(handle);
-+	if (!root)
-+		return false;
-+
-+	return !(root->osc_control_set & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL);
-+}
-+#else
-+static inline bool pcie_port_uses_acpi_hotplug(struct pci_dev *pdev)
-+{
-+	return false;
-+}
-+#endif
-+
-+static bool pcie_port_runtime_pm_possible(struct pci_dev *pdev)
-+{
-+	/*
-+	 * Only enable runtime PM if the PCI core agrees that this port can
-+	 * even go to D3.
-+	 */
-+	if (!pdev->bridge_d3)
-+		return false;
-+
-+	/*
-+	 * Prevent runtime PM if the port is using ACPI based hotplug.
-+	 * Otherwise the BIOS hotplug SMI code might not be able to
-+	 * enumerate devices behind this port properly (the port is powered
-+	 * down preventing all config space accesses to the subordinate
-+	 * devices). Native hotplug is expected to work with runtime PM
-+	 * enabled.
-+	 */
-+	return !pcie_port_uses_acpi_hotplug(pdev);
-+}
-+
- static const struct dev_pm_ops pcie_portdrv_pm_ops = {
- 	.suspend	= pcie_port_device_suspend,
- 	.resume		= pcie_port_device_resume,
-@@ -101,12 +179,20 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
- 	.poweroff	= pcie_port_device_suspend,
- 	.restore	= pcie_port_device_resume,
- 	.resume_noirq	= pcie_port_resume_noirq,
-+	.runtime_suspend = pcie_port_runtime_suspend,
-+	.runtime_resume	= pcie_port_runtime_resume,
-+	.runtime_idle	= pcie_port_runtime_idle,
- };
- 
- #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
- 
- #else /* !PM */
- 
-+static inline bool pcie_port_runtime_pm_possible(struct pci_dev *pdev)
-+{
-+	return false;
-+}
-+
- #define PCIE_PORTDRV_PM_OPS	NULL
- #endif /* !PM */
- 
-@@ -121,6 +207,7 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
- static int pcie_portdrv_probe(struct pci_dev *dev,
- 					const struct pci_device_id *id)
- {
-+	struct pcie_port_data *pdata;
- 	int status;
- 
- 	if (!pci_is_pcie(dev) ||
-@@ -134,11 +221,31 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
- 		return status;
- 
- 	pci_save_state(dev);
-+
-+	pdata = devm_kzalloc(&dev->dev, sizeof(*pdata), GFP_KERNEL);
-+	if (!pdata)
-+		return -ENOMEM;
-+
-+	pci_set_drvdata(dev, pdata);
-+	if (pcie_port_runtime_pm_possible(dev)) {
-+		pm_runtime_put_noidle(&dev->dev);
-+		pm_runtime_allow(&dev->dev);
-+
-+		pdata->runtime_pm_enabled = true;
-+	}
-+
- 	return 0;
- }
- 
- static void pcie_portdrv_remove(struct pci_dev *dev)
- {
-+	const struct pcie_port_data *pdata = pci_get_drvdata(dev);
-+
-+	if (pdata->runtime_pm_enabled) {
-+		pm_runtime_forbid(&dev->dev);
-+		pm_runtime_get_noresume(&dev->dev);
-+	}
-+
- 	pcie_port_device_remove(dev);
- }
- 
+
 -- 
-2.8.0.rc3
-
+Alexey
