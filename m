@@ -1,160 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 6 Apr 2016 11:43:09 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
-	aik@ozlabs.ru, alex.williamson@redhat.com,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	nikunj@linux.vnet.ibm.com, gwshan@linux.vnet.ibm.com
-Subject: Re: [RFC v5 3/7] PCI: Add a new option for resource_alignment to
- reassign alignment
-Message-ID: <20160406014309.GA17201@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1459863813-2830-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1459863813-2830-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:34138 "EHLO
+	mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751798AbcDSIUF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 04:20:05 -0400
+Received: by mail-pf0-f170.google.com with SMTP id c20so4553978pfc.1
+        for <linux-pci@vger.kernel.org>; Tue, 19 Apr 2016 01:20:05 -0700 (PDT)
+Subject: Re: [PATCH v8 31/45] powerpc/pci: Don't scan empty slot
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-32-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
+	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <5715EA2E.4090105@ozlabs.ru>
+Date: Tue, 19 Apr 2016 18:19:58 +1000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1459863813-2830-4-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1455680668-23298-32-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 05, 2016 at 09:43:31PM +0800, Yongji Xie wrote:
->When using resource_alignment kernel parameter,
->the current implement reassigns the alignment by
->changing resources' size which can potentially
->break some drivers. For example, the driver uses
->the size to locate some register whose length is
->related to the size.
+On 02/17/2016 02:44 PM, Gavin Shan wrote:
+> In hotplug case, function pci_add_pci_devices() is called to rescan
+> the specified PCI bus, which might not have any child devices. Access
+> to the PCI bus's child device node will cause kernel crash without
+> exception.
 >
->This adds a new option "noresize" for the
->parameter to solve this problem.
+> This adds one more check to skip scanning PCI bus that doesn't have
+> any subordinate devices from device-tree, in order to avoid kernel
+> crash.
 >
->Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->---
-> Documentation/kernel-parameters.txt |    5 ++++-
-> drivers/pci/pci.c                   |   37 +++++++++++++++++++++++++----------
-> 2 files changed, 31 insertions(+), 11 deletions(-)
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+
+
+Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+
+
+> ---
+>   arch/powerpc/kernel/pci-hotplug.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
 >
->diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
->index 9a53c92..d8b29ab 100644
->--- a/Documentation/kernel-parameters.txt
->+++ b/Documentation/kernel-parameters.txt
->@@ -2912,13 +2912,16 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
-> 				window. The default value is 64 megabytes.
-> 		resource_alignment=
-> 				Format:
->-				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
->+				[<order of align>@][<domain>:]<bus>:<slot>.<func>
->+				[:noresize][; ...]
-
-If I'm correct enough, it breaks existing application using this interface. "noresize"
-would be a optinal parallel property to "align". So the string would have below format
-if nobody else objects:
-
-	order,noresize@domain:bus:slot.func
-
-> 				Specifies alignment and device to reassign
-> 				aligned memory resources.
-> 				If <order of align> is not specified,
-> 				PAGE_SIZE is used as alignment.
-> 				PCI-PCI bridge can be specified, if resource
-> 				windows need to be expanded.
->+				noresize: Don't change the resources' sizes when
->+				reassigning alignment.
-> 		ecrc=		Enable/disable PCIe ECRC (transaction layer
-> 				end-to-end CRC checking).
-> 				bios: Use BIOS/firmware settings. This is the
->diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->index 1db9267..7271ce3 100644
->--- a/drivers/pci/pci.c
->+++ b/drivers/pci/pci.c
->@@ -4594,11 +4594,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
-> /**
->  * pci_specified_resource_alignment - get resource alignment specified by user.
->  * @dev: the PCI device to get
->+ * @resize: whether or not to change resources' size when reassigning alignment
->  *
->  * RETURNS: Resource alignment if it is specified.
->  *          Zero if it is not specified.
->  */
->-static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
->+static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
->+		bool *resize)
-> {
-> 	int seg, bus, slot, func, align_order, count;
-> 	resource_size_t align = 0;
->@@ -4632,6 +4634,11 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
-> 			}
-> 		}
-> 		p += count;
->+		if (!strncmp(p, ":noresize", 9)) {
->+			*resize = false;
->+			p += 9;
->+		} else
->+			*resize = true;
-> 		if (seg == pci_domain_nr(dev->bus) &&
-> 			bus == dev->bus->number &&
-> 			slot == PCI_SLOT(dev->devfn) &&
->@@ -4664,11 +4671,12 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
-> {
-> 	int i;
-> 	struct resource *r;
->+	bool resize = true;
-> 	resource_size_t align, size;
-> 	u16 command;
+> diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
+> index 7929a1c..3628c38 100644
+> --- a/arch/powerpc/kernel/pci-hotplug.c
+> +++ b/arch/powerpc/kernel/pci-hotplug.c
+> @@ -120,7 +120,8 @@ void pci_add_pci_devices(struct pci_bus *bus)
+>   	if (mode == PCI_PROBE_DEVTREE) {
+>   		/* use ofdt-based probe */
+>   		of_rescan_bus(dn, bus);
+> -	} else if (mode == PCI_PROBE_NORMAL) {
+> +	} else if (mode == PCI_PROBE_NORMAL &&
+> +		   dn->child && PCI_DN(dn->child)) {
+>   		/*
+>   		 * Use legacy probe. In the partial hotplug case, we
+>   		 * probably have grandchildren devices unplugged. So
 >
-> 	/* check if specified PCI is target device to reassign */
->-	align = pci_specified_resource_alignment(dev);
->+	align = pci_specified_resource_alignment(dev, &resize);
-> 	if (!align)
-> 		return;
->
->@@ -4690,15 +4698,24 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
-> 		if (!(r->flags & IORESOURCE_MEM))
-> 			continue;
-> 		size = resource_size(r);
->-		if (size < align) {
->-			size = align;
->-			dev_info(&dev->dev,
->-				"Rounding up size of resource #%d to %#llx.\n",
->-				i, (unsigned long long)size);
->+		if (resize) {
->+			if (size < align) {
->+				size = align;
->+				dev_info(&dev->dev,
->+					"Rounding up size of resource #%d to %#llx.\n",
->+					i, (unsigned long long)size);
->+			}
->+			r->flags |= IORESOURCE_UNSET;
->+			r->end = size - 1;
->+			r->start = 0;
->+		} else {
->+			if (size > align)
->+				align = size;
->+			r->flags &= ~IORESOURCE_SIZEALIGN;
->+			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
->+			r->start = align;
->+			r->end = r->start + size - 1;
 
-It could be something like below if you like:
 
-			r->start = max(align, size);
-			r->end = r->start + size - 1;
-
-> 		}
->-		r->flags |= IORESOURCE_UNSET;
->-		r->end = size - 1;
->-		r->start = 0;
-> 	}
-> 	/* Need to disable bridge's resource window,
-> 	 * to enable the kernel to reassign new resource
-
-Thanks,
-Gavin
-
->-- 
->1.7.9.5
->
+-- 
+Alexey
