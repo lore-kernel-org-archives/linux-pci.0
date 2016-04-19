@@ -1,161 +1,421 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:38064 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753077AbcD2Nvu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2016 09:51:50 -0400
-Received: by mail-ig0-f172.google.com with SMTP id m9so20066790ige.1
-        for <linux-pci@vger.kernel.org>; Fri, 29 Apr 2016 06:51:49 -0700 (PDT)
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:33846 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752114AbcDSFTI (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 01:19:08 -0400
+Received: by mail-pa0-f46.google.com with SMTP id r5so2593086pag.1
+        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 22:19:08 -0700 (PDT)
+Subject: Re: [PATCH v8 23/45] powerpc/powernv: Dynamically release PEs
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-24-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
+	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <5715BFC4.8040100@ozlabs.ru>
+Date: Tue, 19 Apr 2016 15:19:00 +1000
 MIME-Version: 1.0
-In-Reply-To: <20160429134126.GA949@localhost>
-References: <1461795744-28837-1-git-send-email-agraf@suse.de>
-	<20160428162035.GB19785@localhost>
-	<57223D46.7070102@suse.de>
-	<20160428180641.GA25125@localhost>
-	<57228317.1030808@suse.de>
-	<20160429134126.GA949@localhost>
-Date: Fri, 29 Apr 2016 15:51:49 +0200
-Message-ID: <CAKv+Gu-4vqT-tQXdwJbLV0r3FhtrYk=TOWxDYS6LjG_BNf=b_A@mail.gmail.com>
-Subject: Re: [PATCH] arm64: Relocate screen_info.lfb_base on PCI BAR allocation
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Alexander Graf <agraf@suse.de>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, linux-pci@vger.kernel.org,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1455680668-23298-24-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 29 April 2016 at 15:41, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Thu, Apr 28, 2016 at 11:39:35PM +0200, Alexander Graf wrote:
->> On 28.04.16 20:06, Bjorn Helgaas wrote:
->> > On Thu, Apr 28, 2016 at 06:41:42PM +0200, Alexander Graf wrote:
->> >> On 04/28/2016 06:20 PM, Bjorn Helgaas wrote:
->> >>> On Thu, Apr 28, 2016 at 12:22:24AM +0200, Alexander Graf wrote:
->> >>>> When booting with efifb, we get a frame buffer address passed into the system.
->> >>>> This address can be backed by any device, including PCI devices.
->> >>> I guess we get the frame buffer address via EFI, but it doesn't tell
->> >>> us what PCI device it's connected to?
->> >>
->> >> Pretty much, yes. We can get the frame buffer address from a
->> >> multitude of sources using various boot protocols, but the case
->> >> where I ran into this was with efi on arm64.
->> >>
->> >>> This same thing could happen on any EFI arch, I guess.  Maybe even on
->> >>
->> >> Yes and no :). I would've put it into whatever code "owns"
->> >> screen_info, but I couldn't find any. So instead I figured I'd make
->> >> the approach as generic as I could and implemented the calculation
->> >> for the case where I saw it break.
->> >>
->> >> The reason we don't see this on x86 (if I understand all pieces of
->> >> the puzzle correctly) is that we get the BAR allocation from
->> >> firmware using _CRS attributes in ACPI, so firmware tells the OS
->> >> where to put the BARs.
->> >
->> > I think the real reason is that on x86, firmware typically assigns all
->> > the BARs and Linux typically doesn't change them.  PCI host bridges
->>
->> Can you point me to the code that "doesn't change them"? I couldn't find
->> it, but I haven't see Linux reallocate BARs on x86.
->
-> Lorenzo already answered this, I think.  I'll just reiterate that all
-> we can really do is check whether a BAR's current value is inside the
-> upstream bridge aperture.  If it is, we assume the BAR has been
-> assigned and we try to use that assignment unchanged.  Zero is a valid
-> BAR value, so we can't just check for something non-zero.
->
->> >> In the device tree case (which is what I'm
->> >> running on arm64) we however allocate BARs dynamically.
->
-> Side note, from a PCI core point of view, this is not a DT vs. ACPI
-> issue.  It's just a question of whether the BARs have been assigned
-> already, which might appear to correlate with DT or ACPI, but AFAIK
-> it's outside the scope of those specs.
->
-
-That is true, but the distinction is made because ACPI implies UEFI on
-arm64, so there we know there is firmware that executes before the
-kernel.
-
-A DT kernel could theoretically boot almost straight out of reset
-(i.e., on a system which does not implement the security extensions),
-which is most likely the historic explanation of why PCI on ARM
-assumes that the PCI subsystem needs to be configured from scratch.
-
->> >>> ... if there's a way to discover the frame buffer address
+On 02/17/2016 02:44 PM, Gavin Shan wrote:
+> This support releasing PEs dynamically. Firstly, this moves
+> pnv_pci_ioda2_release_dma_pe() around, which is called to
+> release DMA resource on releasing IODA2 PE.
 
 
->> >>> as a bare address rather than a "offset X into BAR Y of PCI device Z"
->> >>> sort of thing.
->> >>
->> >> It'd be perfectly doable today - we do get a cpu physical address
->> >> and use that in the notifier. All we would need to do is move the
->> >> code that I added in arm64/efi.c to something more generic that
->> >> "owns" the frame buffer address. Then any boot protocol that passes
->> >> a screen_info in would get the frame buffer relocated on BAR remap.
->> >
->> > We could consider a quirk that would mark any BAR that happened to
->> > contain the frame buffer address as IORESOURCE_PCI_FIXED.  That would
->> > (in theory, anyway) keep the PCI core from moving it.
->>
->> That's what I thought I should do at first. Then I realized that we
->> could have a PCIe GPU in the system that provides a really big BAR which
->> we would need to map into an mmio64 region to make full use of it.
->> Firmware however - because of limitations - only maps it into the mmio32
->> space though.
->>
->> That means we now break a case that would work without efifb, right?
+imho move would only make sense if we could get rid of the forward 
+declarations but this is not the case.
+
+
+> Secondly, several
+> functions are implemented to release the consumed resources
+> on releasing the PE:
 >
-> I'm not sure I understand.  Are you saying you might have, say, a 2GB
-> BAR, and firmware might put it in an mmio32 1GB host bridge aperture?
-> I guess you *could* program the BAR that way, but obviously a driver
-> would only be able to see the first 1GB of the BAR.
+>     * pnv_pci_ioda1_unset_window() to unset TVEs for the PE.
+>     * pnv_pci_ioda1_release_dma_pe() to unset TVEs for the PE and
+>       destroy the IOMMU table.
+>     * pnv_ioda_release_pe_seg() releases the consumed IO/M32/M64
+>       segments by the PE.
 >
-> Linux would consider that invalid because the BAR doesn't fit in the
-> aperture and would reassign it.  But I don't think I understand the
-> whole picture.
+> Lastly, this adds a reference count of PE, representing the number
+> of PCI devices associated with the PE. The reference count is
+> increased when PCI device joins the PE. It's decreased when PCI
+> device leaves the PE in pnv_pci_release_device(). When the count
+> becomes zero, its consumed resources are released by functions
+> as mentioned above. Note that the count is accessed concurrently.
+> So a "counter" with "int" type is enough here.
 >
->> > If firmware is giving us a bare address of something, that seems like
->> > a clue that it might depend on that address staying the same.
->>
->> Well, I'd look at it from the other side. It gives us a correct address
->> on entry with the system configured at exactly the state it's in on
->> entry. If Linux changes the system, some guarantees obviously don't work
->> anymore.
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>   arch/powerpc/platforms/powernv/pci-ioda.c | 236 ++++++++++++++++++++++++++----
+>   arch/powerpc/platforms/powernv/pci.h      |   1 +
+>   2 files changed, 209 insertions(+), 28 deletions(-)
 >
-> Can you point me to the part of the EFI spec that communicates this?
-> I'm curious what the intent is and whether there's any indication that
-> EFI expects the OS to preserve some configuration.  I don't think it's
-> reasonable for the OS to preserve this sort of configuration because
-> it limits how well we can support hotplug.
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index 077f9db..fa428a8 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -119,6 +119,158 @@ static inline bool pnv_pci_is_mem_pref_64(unsigned long flags)
+>   		(IORESOURCE_MEM_64 | IORESOURCE_PREFETCH));
+>   }
 >
-> I wonder if we're using this frame buffer address as more than what
-> EFI intended.  For example, maybe it was intended for use by an early
-> console driver, but there's some other mechanism we should be using
-> after that.
+> +static unsigned int pnv_pci_ioda_pe_dma_weight(struct pnv_ioda_pe *pe);
+> +static long pnv_pci_ioda1_unset_window(struct iommu_table_group *table_group,
+> +				       int num);
+> +static void pnv_pci_ioda1_release_dma_pe(struct pnv_ioda_pe *pe)
+> +{
+> +	struct iommu_table *tbl;
+> +	unsigned int weight = pnv_pci_ioda_pe_dma_weight(pe);
+> +	int64_t rc;
+> +
+> +	if (!weight)
+> +		return;
+> +
+> +	tbl = pe->table_group.tables[0];
+> +	rc = pnv_pci_ioda1_unset_window(&pe->table_group, 0);
+> +	if (rc)
+> +		pe_warn(pe, "OPAL error %ld release DMA window\n", rc);
+> +
+> +	if (pe->table_group.group) {
+> +		iommu_group_put(pe->table_group.group);
+> +		WARN_ON(pe->table_group.group);
+> +	}
+> +
+> +	pnv_pci_ioda_table_free_pages(tbl);
+> +	iommu_free_table(tbl, "pnv");
+> +}
+> +
+> +static long pnv_pci_ioda2_unset_window(struct iommu_table_group *table_group,
+> +				       int num);
+> +static void pnv_pci_ioda2_set_bypass(struct pnv_ioda_pe *pe, bool enable);
+> +static void pnv_pci_ioda2_release_dma_pe(struct pnv_ioda_pe *pe)
+
+
+If you left this code in its old location, it would be lot more obvious 
+what you silently changed in this function (checking for weight). Please 
+either do not move the code (this is preferred as I am hacking same chunk 
+in  "[PATCH kernel 0/2] powerpc/powernv: Fix crash on PF unbind when VF is 
+passed" and I'd like to reduce conflicts) or split it to a separate patch.
+
+
+> +{
+> +	struct iommu_table *tbl;
+> +	unsigned int weight = pnv_pci_ioda_pe_dma_weight(pe);
+> +	int64_t rc;
+> +
+> +	if (!weight)
+> +		return;
+> +
+> +	tbl = pe->table_group.tables[0];
+> +	rc = pnv_pci_ioda2_unset_window(&pe->table_group, 0);
+> +	if (rc)
+> +		pe_warn(pe, "OPAL error %ld release DMA window\n", rc);
+> +
+> +	pnv_pci_ioda2_set_bypass(pe, false);
+> +	if (pe->table_group.group) {
+> +		iommu_group_put(pe->table_group.group);
+> +		WARN_ON(pe->table_group.group);
+> +	}
+> +
+> +	pnv_pci_ioda_table_free_pages(tbl);
+> +	iommu_free_table(tbl, "pnv");
+> +}
+> +
+> +static void pnv_ioda_release_pe_seg(struct pnv_ioda_pe *pe)
+> +{
+> +	struct pnv_phb *phb = pe->phb;
+> +	int win, index, *segmap = NULL;
+> +	int64_t rc;
+> +
+> +	for (win = OPAL_M32_WINDOW_TYPE; win <= OPAL_IO_WINDOW_TYPE; win++) {
+
+
+In "Re: [PATCH v7 27/50] powerpc/powernv: Dynamically release PEs" I 
+suggested shorter & cleaner pnv_ioda_release_window(), what was wrong with it?
+
+
+
+> +		if (phb->type == PNV_PHB_IODA2 &&
+> +		    (win == OPAL_IO_WINDOW_TYPE || win == OPAL_M64_WINDOW_TYPE))
+> +			continue;
+> +
+> +		switch (win) {
+> +		case OPAL_IO_WINDOW_TYPE:
+> +			segmap = phb->ioda.io_segmap;
+> +			break;
+> +		case OPAL_M32_WINDOW_TYPE:
+> +			segmap = phb->ioda.m32_segmap;
+> +			break;
+> +		case OPAL_M64_WINDOW_TYPE:
+> +			segmap = phb->ioda.m64_segmap;
+> +			break;
+> +		}
+> +
+> +		for (index = 0; index < phb->ioda.total_pe_num; index++) {
+> +			if (segmap[index] != pe->pe_number)
+> +				continue;
+> +
+> +			if (win == OPAL_M64_WINDOW_TYPE)
+> +				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+> +						phb->ioda.reserved_pe_idx, win,
+> +						index / PNV_IODA1_M64_SEGS,
+> +						index % PNV_IODA1_M64_SEGS);
+> +			else
+> +				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+> +						phb->ioda.reserved_pe_idx, win,
+> +						0, index);
+> +			if (rc != OPAL_SUCCESS)
+> +				pe_warn(pe, "Error %ld unmapping (%d) segment#%d\n",
+> +					rc, win, index);
+> +
+> +			segmap[index] = IODA_INVALID_PE;
+> +		}
+> +	}
+> +}
+> +
+> +static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb,
+> +				   struct pnv_ioda_pe *pe);
+> +static void pnv_ioda_free_pe(struct pnv_ioda_pe *pe);
+> +static void pnv_ioda_release_pe(struct pnv_ioda_pe *pe)
+> +{
+> +	struct pnv_phb *phb = pe->phb;
+> +	struct pnv_ioda_pe *tmp, *slave;
+> +
+> +	/* Release slave PEs in compound PE */
+> +	if (pe->flags & PNV_IODA_PE_MASTER) {
+> +		list_for_each_entry_safe(slave, tmp, &pe->slaves, list)
+> +			pnv_ioda_release_pe(slave);
+> +	}
+> +
+> +	/* Remove the PE from the list */
+> +	list_del(&pe->list);
+> +
+> +	/* Release DMA segments */
+> +	switch (phb->type) {
+> +	case PNV_PHB_IODA1:
+> +		pnv_pci_ioda1_release_dma_pe(pe);
+> +		break;
+> +	case PNV_PHB_IODA2:
+> +		pnv_pci_ioda2_release_dma_pe(pe);
+> +		break;
+> +	default:
+> +		WARN_ON(1);
+> +	}
+> +
+> +	pnv_ioda_release_pe_seg(pe);
+> +	pnv_ioda_deconfigure_pe(pe->phb, pe);
+> +
+> +	pnv_ioda_free_pe(pe);
+> +}
+> +
+> +static void pnv_pci_release_device(struct pci_dev *pdev)
+> +{
+> +	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
+> +	struct pnv_phb *phb = hose->private_data;
+> +	struct pci_dn *pdn = pci_get_pdn(pdev);
+> +	struct pnv_ioda_pe *pe;
+> +
+> +	if (pdev->is_virtfn)
+> +		return;
+> +
+> +	if (!pdn || pdn->pe_number == IODA_INVALID_PE)
+> +		return;
+> +
+> +	pe = &phb->ioda.pe_array[pdn->pe_number];
+> +	WARN_ON(--pe->device_count < 0);
+> +	if (pe->device_count == 0)
+> +		pnv_ioda_release_pe(pe);
+> +}
+> +
+>   static struct pnv_ioda_pe *pnv_ioda_init_pe(struct pnv_phb *phb, int pe_no)
+>   {
+>   	phb->ioda.pe_array[pe_no].phb = phb;
+> @@ -715,7 +867,6 @@ static int pnv_ioda_set_peltv(struct pnv_phb *phb,
+>   	return 0;
+>   }
+>
+> -#ifdef CONFIG_PCI_IOV
+>   static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>   {
+>   	struct pci_dev *parent;
+> @@ -750,9 +901,11 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>   		}
+>   		rid_end = pe->rid + (count << 8);
+>   	} else {
+> +#ifdef CONFIG_PCI_IOV
+>   		if (pe->flags & PNV_IODA_PE_VF)
+>   			parent = pe->parent_dev;
+>   		else
+> +#endif
+>   			parent = pe->pdev->bus->self;
+>   		bcomp = OpalPciBusAll;
+>   		dcomp = OPAL_COMPARE_RID_DEVICE_NUMBER;
+> @@ -790,11 +943,12 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>
+>   	pe->pbus = NULL;
+>   	pe->pdev = NULL;
+> +#ifdef CONFIG_PCI_IOV
+>   	pe->parent_dev = NULL;
+> +#endif
+>
+>   	return 0;
+>   }
+> -#endif /* CONFIG_PCI_IOV */
+>
+>   static int pnv_ioda_configure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>   {
+> @@ -1031,6 +1185,7 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
+>   		if (pdn->pe_number != IODA_INVALID_PE)
+>   			continue;
+>
+> +		pe->device_count++;
+>   		pdn->pcidev = dev;
+>   		pdn->pe_number = pe->pe_number;
+>   		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
+> @@ -1095,9 +1250,8 @@ static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
+>   			bus->busn_res.start, pe->pe_number);
+>
+>   	if (pnv_ioda_configure_pe(phb, pe)) {
+> -		/* XXX What do we do here ? */
+> -		pnv_ioda_free_pe(pe);
+>   		pe->pbus = NULL;
+> +		pnv_ioda_release_pe(pe);
+>   		return NULL;
+>   	}
+>
+> @@ -1333,29 +1487,6 @@ m64_failed:
+>   	return -EBUSY;
+>   }
+>
+> -static long pnv_pci_ioda2_unset_window(struct iommu_table_group *table_group,
+> -		int num);
+> -static void pnv_pci_ioda2_set_bypass(struct pnv_ioda_pe *pe, bool enable);
+> -
+> -static void pnv_pci_ioda2_release_dma_pe(struct pci_dev *dev, struct pnv_ioda_pe *pe)
+> -{
+> -	struct iommu_table    *tbl;
+> -	int64_t               rc;
+> -
+> -	tbl = pe->table_group.tables[0];
+> -	rc = pnv_pci_ioda2_unset_window(&pe->table_group, 0);
+> -	if (rc)
+> -		pe_warn(pe, "OPAL error %ld release DMA window\n", rc);
+> -
+> -	pnv_pci_ioda2_set_bypass(pe, false);
+> -	if (pe->table_group.group) {
+> -		iommu_group_put(pe->table_group.group);
+> -		BUG_ON(pe->table_group.group);
+> -	}
+> -	pnv_pci_ioda_table_free_pages(tbl);
+> -	iommu_free_table(tbl, of_node_full_name(dev->dev.of_node));
+> -}
+> -
+>   static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
+>   {
+>   	struct pci_bus        *bus;
+> @@ -1376,7 +1507,7 @@ static void pnv_ioda_release_vf_PE(struct pci_dev *pdev)
+>   		if (pe->parent_dev != pdev)
+>   			continue;
+>
+> -		pnv_pci_ioda2_release_dma_pe(pdev, pe);
+> +		pnv_pci_ioda2_release_dma_pe(pe);
+>
+>   		/* Remove from list */
+>   		mutex_lock(&phb->ioda.pe_list_mutex);
+> @@ -1780,6 +1911,16 @@ static void pnv_pci_ioda1_tce_invalidate(struct iommu_table *tbl,
+>   	 */
+>   }
+>
+> +static void pnv_pci_ioda1_tce_invalidate_entire(struct pnv_ioda_pe *pe)
+> +{
+> +	struct iommu_table *tbl = pe->table_group.tables[0];
+> +
+> +	if (!tbl)
+> +		return;
+> +
+> +	pnv_pci_ioda1_tce_invalidate(tbl, tbl->it_offset, tbl->it_size, false);
+> +}
+> +
+>   static int pnv_ioda1_tce_build(struct iommu_table *tbl, long index,
+>   		long npages, unsigned long uaddr,
+>   		enum dma_data_direction direction,
+> @@ -2144,6 +2285,44 @@ static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
+>   	}
+>   }
+>
+> +static long pnv_pci_ioda1_unset_window(struct iommu_table_group *table_group,
+> +				       int num)
+> +{
+> +	struct pnv_ioda_pe *pe = container_of(table_group, struct pnv_ioda_pe,
+> +					      table_group);
+> +	struct pnv_phb *phb = pe->phb;
+> +	int start, count, i;
+> +	long rc = OPAL_SUCCESS;
+> +
+> +	pe_info(pe, "Removing DMA window #%d\n", num);
+> +
+> +	/* Search the used DMA32 segments */
+> +	start = -1;
+> +	count = 0;
+> +	for (i = 0; i < phb->ioda.dma32_count; i++) {
+> +		if (phb->ioda.dma32_segmap[i] != pe->pe_number)
+> +			continue;
+> +
+> +		if (count++ == 0)
+> +			start = i;
+> +	}
+> +
+> +	if (!count)
+> +		return OPAL_SUCCESS;
+> +
+> +	for (i = start; i < start + count; i++)
+> +		rc |= opal_pci_map_pe_dma_window(phb->opal_id, pe->pe_number,
+> +						 i, 0, 0ul, 0ul, 0ul);
+
+If there are 2 different bad rc, they will make up absolutely irrelevant 
+error code.
+
+
+> +	if (rc)
+> +		pe_warn(pe, "Failure %ld unmapping TVEs\n");
+> +	else
+> +		pnv_pci_ioda1_tce_invalidate_entire(pe);
+> +
+> +	pnv_pci_unlink_table_and_group(table_group->tables[num], table_group);
+> +
+> +	return rc;
+> +}
+> +
+>   static long pnv_pci_ioda2_set_window(struct iommu_table_group *table_group,
+>   		int num, struct iommu_table *tbl)
+>   {
+> @@ -3318,6 +3497,7 @@ static const struct pci_controller_ops pnv_pci_ioda_controller_ops = {
+>   	.teardown_msi_irqs	= pnv_teardown_msi_irqs,
+>   #endif
+>   	.enable_device_hook	= pnv_pci_enable_device_hook,
+> +	.release_device		= pnv_pci_release_device,
+>   	.window_alignment	= pnv_pci_window_alignment,
+>   	.setup_bridge		= pnv_pci_setup_bridge,
+>   	.reset_secondary_bus	= pnv_pci_reset_secondary_bus,
+> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+> index 01f2428..0cddde3 100644
+> --- a/arch/powerpc/platforms/powernv/pci.h
+> +++ b/arch/powerpc/platforms/powernv/pci.h
+> @@ -31,6 +31,7 @@ struct pnv_phb;
+>   struct pnv_ioda_pe {
+>   	unsigned long		flags;
+>   	struct pnv_phb		*phb;
+> +	int			device_count;
+>
+>   #define PNV_IODA_MAX_PEER_PES	8
+>   	struct pnv_ioda_pe	*peers[PNV_IODA_MAX_PEER_PES];
 >
 
-The UEFI spec describes this as follows (UEFIv2.6 section 11.9)
 
-"""
-Graphics output may also be required as part of the startup of an
-operating system. There are
-potentially times in modern operating systems prior to the loading of
-a high performance OS
-graphics driver where access to graphics output device is required.
-The Graphics Output Protocol
-supports this capability by providing the EFI OS loader access to a
-hardware frame buffer and
-enough information to allow the OS to draw directly to the graphics
-output device.
-"""
-
-So the intent is to provide minimal framebuffer services until the
-'real' driver takes over.
-
-The GOP protocol only describes the base and size of the framebuffer,
-and the pixel format. At boot time, the early UEFI code in the kernel
-could potentially figure out which PCI device it is related to, if
-necessary, but i am not sure if this would solve the x86 case as well.
+-- 
+Alexey
