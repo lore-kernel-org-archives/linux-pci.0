@@ -1,53 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:34637 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755361AbcDKOS7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Apr 2016 10:18:59 -0400
-To: "Martin K. Petersen" <martin.petersen@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: UFS patch
-Message-ID: <570BB249.10508@synopsys.com>
-Date: Mon, 11 Apr 2016 15:18:49 +0100
-MIME-Version: 1.0
+Received: from xspv0103.northgrum.com ([134.223.120.78]:20703 "EHLO
+	xspv0103.northgrum.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755181AbcDSVP2 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 17:15:28 -0400
+From: "Tang, Jason (ES)" <Jason.Tang2@ngc.com>
+To: Kallol Biswas <kallol@nucleodyne.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: PCI Hot Plug: OS can not program BARs for new devices
+Date: Tue, 19 Apr 2016 21:04:20 +0000
+Message-ID: <dad5ef4a3ace4c2e8a73dafc24df6c7f@XCGVAG27.northgrum.com>
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Martin,
-
-I would like to know what are your plans regarding the UFS patches. Sending the
-URLS for the last patch set version:
-
-[PATCH v13 0/9] add support for DWC UFS Controller
-https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1115046.html
-
-[PATCH v13 1/9] fixed typo in ufshcd-pltfrm
-https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115043.html
-
-[PATCH v13 2/9] add UFS 2.0 to ufshcd-pltfrm bindings
-https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115045.html
-
-[PATCH v13 3/9] added UFS 2.0 capabilities
-https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115047.html
-
-[PATCH v13 4/9] added unipro attributes
-https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115044.html
-
-[PATCH v13 5/9] added link status to ufshci
-https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115051.html
-
-[PATCH v13 6/9] added support for DesignWare Controller
-https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115053.html
-
-[PATCH v13 7/9] added support for Synopsys G210 Test Chip
-https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115049.html
-
-[PATCH v13 8/9] add TC G210 platform driver
-https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115048.html
-
-[PATCH v13 9/9] add TC G210 pci driver
-https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115050.html
-
-Thanks,
-Joao
+PiBGcm9tOiBsaW51eC1wY2ktb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtcGNp
+LQ0KPiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBLYWxsb2wgQmlzd2FzDQo+
+IFNlbnQ6IFR1ZXNkYXksIEFwcmlsIDE5LCAyMDE2IDE2OjM5DQo+IFRvOiBsaW51eC1wY2lAdmdl
+ci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFBDSSBIb3QgUGx1ZzogT1MgY2FuIG5vdCBwcm9ncmFt
+IEJBUnMgZm9yIG5ldyBkZXZpY2VzDQo+IA0KPiBJIGhhdmUgYSBiZWVuIHRlc3RpbmcgUENJZSBI
+b3QgUGx1ZyBmZWF0dXJlIG9uIGEgU3VwZXJpY3JvIFgxMERSTA0KPiBtb3RoZXJib2FyZCBydW5u
+aW5nIDIuNi4zOC4xIGtlcm5lbC4NCj4gDQo+IElmIGFuIGVuZHBvaW50IGlzIGFscmVhZHkgcHJl
+c2VudCBhdCBib290IHRpbWUgb24gYSBob3QgcGx1ZyBjYXBhYmxlDQo+IFBDSWUgc2xvdCB0aGVu
+IEkgY2FuIHJlbW92ZSBhbmQgYWRkIHRoZSBlbmRwb2ludCB3aXRoIHRoZSBoZWxwIG9mIGENCj4g
+UXVhcmNoIGRldmljZS4gT1MgYWxsb2NhdGVzIHJlc291cmNlcyBwcm9wZXJseSBhbmQgYWZ0ZXIg
+aG90IHVucGx1Zw0KPiBhbmQgcGx1ZywgdGhlIGRldmljZSBpcyBmdW5jdGlvbmFsLg0KPiANCj4g
+SWYgdGhlIGVuZHBvaW50IGlzIG5vdCBwcmVzZW50IGF0IGJvb3QgdGltZSAodHVybmVkIG9mZiB3
+aXRoIHRoZQ0KPiBRdWFyY2gpIHRoZW4gcHV0IGJhY2sgKHR1cm4gb24gd2l0aCBRdWFyY2gpIHRo
+ZSBPUyBjYW4gbm90IHByb2dyYW0gQkFSDQo+IHJlZ2lzdGVycy4NCjxzbmlwPg0KPiBJcyB0aGVy
+ZSBhIHdvcmthcm91bmQgZm9yIHRoaXM/IE5vdGUsIHRoZXJlIGFyZSBvdGhlciBkZXZpY2VzIG9u
+DQo+IGRvd25zdHJlYW0gUENJZSBwb3J0cywgc28gcmVtb3ZlIGFuZCByZXNjYW4gaXMgbm90IGFu
+IG9wdGlvbi4NCg0KSSBoYWQgcHJvcG9zZWQgYSBzb2x1dGlvbiB0byB0aGlzLCBpbnZvbHZpbmcg
+c3RhdGljYWxseSBlbnVtZXJhdGluZyBidXMgbnVtYmVycyBhbmQgQkFSIHJlc291cmNlcy4gU2Vl
+IGh0dHA6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvbGludXgtcGNpL21zZzQ0NzIxLmh0bWwNClVz
+aW5nIGhwbWVtc2l6ZSB3YXMgbm90IHN1ZmZpY2llbnQgZm9yIG15IGNhc2UsIGJlY2F1c2UgSSBu
+ZWVkZWQgdG8gImhvdCBhZGQiIGEgYnJpZGdlLg0KDQo=
