@@ -1,218 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40143 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751907AbcD1QUt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Apr 2016 12:20:49 -0400
-Date: Thu, 28 Apr 2016 11:20:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexander Graf <agraf@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH] arm64: Relocate screen_info.lfb_base on PCI BAR
- allocation
-Message-ID: <20160428162035.GB19785@localhost>
-References: <1461795744-28837-1-git-send-email-agraf@suse.de>
+Received: from mail-io0-f176.google.com ([209.85.223.176]:35125 "EHLO
+	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932834AbcDSVBO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 17:01:14 -0400
+Received: by mail-io0-f176.google.com with SMTP id g185so32445477ioa.2
+        for <linux-pci@vger.kernel.org>; Tue, 19 Apr 2016 14:01:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1461795744-28837-1-git-send-email-agraf@suse.de>
+In-Reply-To: <CAH=XD58Rqd-pcN+OAChKAds57sQ0OeszT1H40DUwyDZPMOQQkQ@mail.gmail.com>
+References: <CAH=XD58Rqd-pcN+OAChKAds57sQ0OeszT1H40DUwyDZPMOQQkQ@mail.gmail.com>
+Date: Tue, 19 Apr 2016 14:01:13 -0700
+Message-ID: <CAH=XD590xhdSKm5Uwbd-E2Yp1Z19QW0Yk18h-KodiKQxjtGr3Q@mail.gmail.com>
+Subject: Re: PCI Hot Plug: OS can not program BARs for new devices
+From: Kallol Biswas <kallol@nucleodyne.com>
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 28, 2016 at 12:22:24AM +0200, Alexander Graf wrote:
-> When booting with efifb, we get a frame buffer address passed into the system.
-> This address can be backed by any device, including PCI devices.
+Never mind, setting "pcie=hpmemsize=256M" works.
 
-I guess we get the frame buffer address via EFI, but it doesn't tell
-us what PCI device it's connected to?
-
-This same thing could happen on any EFI arch, I guess.  Maybe even on
-non-EFI arches, if there's a way to discover the frame buffer address
-as a bare address rather than a "offset X into BAR Y of PCI device Z"
-sort of thing.
-
-> PCI devices can have their BARs mapped to various places inside the PCI window
-> though. Linux makes use of that on early boot and usually maps PCI BARs wherever
-> it thinks makes sense.
-> 
-> If we now load the efifb driver after that BAR map has happened, the frame
-> buffer address we received may be invalid, because it was in a BAR map before
-> Linux modified it.
-> 
-> To work around that issue, this patch introduces a BAR mapping callback that
-> gets called every time Linux (re)allocates a BAR. That way our arm64 efi code
-> can check whether the frame buffer is inside the old map and adjust it to
-> the new one.
-> 
-> With this and the efifb patches applied, I can successfully see efifb output
-> even after Linux remapped BARs.
-> 
-> Signed-off-by: Alexander Graf <agraf@suse.de>
-> ---
->  arch/arm64/kernel/efi.c | 40 +++++++++++++++++++++++++++++++++++++++-
->  drivers/pci/setup-res.c | 29 +++++++++++++++++++++++++++++
->  include/linux/pci.h     |  8 ++++++++
->  3 files changed, 76 insertions(+), 1 deletion(-)
-> 
-> diff --git a/arch/arm64/kernel/efi.c b/arch/arm64/kernel/efi.c
-> index 56a76b6..3612110 100644
-> --- a/arch/arm64/kernel/efi.c
-> +++ b/arch/arm64/kernel/efi.c
-> @@ -27,6 +27,7 @@
->  #include <linux/slab.h>
->  #include <linux/spinlock.h>
->  #include <linux/platform_device.h>
-> +#include <linux/pci.h>
->  
->  #include <asm/cacheflush.h>
->  #include <asm/efi.h>
-> @@ -213,6 +214,41 @@ static __init void reserve_regions(void)
->  	set_bit(EFI_MEMMAP, &efi.flags);
->  }
->  
-> +#ifdef CONFIG_PCI
-> +static bool efi_pci_overlaps_efifb(struct pci_bar_update_info *update_info)
-> +{
-> +	/* is the screen_info frame buffer inside the pci BAR? */
-> +	if (screen_info.lfb_base >= update_info->old_start &&
-> +	    (screen_info.lfb_base + screen_info.lfb_size) <=
-> +	     (update_info->old_start + update_info->size))
-> +		return true;
-> +
-> +	return false;
-> +}
-> +
-> +static int efi_pci_notifier(struct notifier_block *self,
-> +			    unsigned long cmd, void *v)
-> +{
-> +	struct pci_bar_update_info *update_info = v;
-> +
-> +	/*
-> +	 * When we reallocate a BAR that contains our frame buffer, set the
-> +	 * screen_info base to where it belongs
-> +	 */
-> +	if (efi_pci_overlaps_efifb(update_info)) {
-> +		u64 diff = (update_info->new_start - update_info->old_start);
-> +		screen_info.lfb_base += diff;
-> +	}
-> +
-> +	return NOTIFY_OK;
-> +}
-> +static struct notifier_block efi_pci_notifier_block = {
-> +	.notifier_call = efi_pci_notifier,
-> +};
-> +#else
-> +#define pci_notify_on_update_resource(a)
-> +#endif
-> +
->  void __init efi_init_fdt(void *fdt)
->  {
->  	struct efi_fdt_params params;
-> @@ -246,8 +282,10 @@ void __init efi_init_fdt(void *fdt)
->  	reserve_regions();
->  	early_memunmap(memmap.map, params.mmap_size);
->  
-> -	if (screen_info.orig_video_isVGA == VIDEO_TYPE_EFI)
-> +	if (screen_info.orig_video_isVGA == VIDEO_TYPE_EFI) {
-> +		pci_notify_on_update_resource(&efi_pci_notifier_block);
->  		memblock_reserve(screen_info.lfb_base, screen_info.lfb_size);
-> +	}
->  }
->  
->  static int __init register_gop_device(void)
-> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> index 604011e..d5c24fc 100644
-> --- a/drivers/pci/setup-res.c
-> +++ b/drivers/pci/setup-res.c
-> @@ -23,8 +23,10 @@
->  #include <linux/ioport.h>
->  #include <linux/cache.h>
->  #include <linux/slab.h>
-> +#include <linux/notifier.h>
->  #include "pci.h"
->  
-> +static RAW_NOTIFIER_HEAD(bar_update_chain);
->  
->  void pci_update_resource(struct pci_dev *dev, int resno)
->  {
-> @@ -35,6 +37,9 @@ void pci_update_resource(struct pci_dev *dev, int resno)
->  	int reg;
->  	enum pci_bar_type type;
->  	struct resource *res = dev->resource + resno;
-> +	struct pci_bar_update_info update_info;
-> +	struct pci_bus_region update_reg;
-> +	struct resource update_res;
->  
->  	if (dev->is_virtfn) {
->  		dev_warn(&dev->dev, "can't update VF BAR%d\n", resno);
-> @@ -77,6 +82,22 @@ void pci_update_resource(struct pci_dev *dev, int resno)
->  	}
->  
->  	/*
-> +	 * Fetch the old BAR location from the device, so we can notify
-> +	 * users of that BAR that its location is changing.
-> +	 */
-> +	pci_read_config_dword(dev, reg, &check);
-> +	update_reg.start = check & PCI_BASE_ADDRESS_MEM_MASK;
-> +	if (check & PCI_BASE_ADDRESS_MEM_TYPE_64) {
-> +		pci_read_config_dword(dev, reg, &check);
-> +		update_reg.start |= ((u64)check) << 32;
-> +	}
-> +	update_info.size = region.end - region.start;
-> +	update_reg.end = update_reg.start + update_info.size;
-> +	pcibios_bus_to_resource(dev->bus, &update_res, &update_reg);
-> +	update_info.old_start = update_res.start;
-> +	update_info.new_start = res->start;
-> +
-> +	/*
->  	 * We can't update a 64-bit BAR atomically, so when possible,
->  	 * disable decoding so that a half-updated BAR won't conflict
->  	 * with another device.
-> @@ -108,6 +129,14 @@ void pci_update_resource(struct pci_dev *dev, int resno)
->  
->  	if (disable)
->  		pci_write_config_word(dev, PCI_COMMAND, cmd);
-> +
-> +	/* Tell interested parties that the BAR mapping changed */
-> +	raw_notifier_call_chain(&bar_update_chain, 0, &update_info);
-> +}
-> +
-> +int pci_notify_on_update_resource(struct notifier_block *nb)
-> +{
-> +        return raw_notifier_chain_register(&bar_update_chain, nb);
->  }
->  
->  int pci_claim_resource(struct pci_dev *dev, int resource)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index c061250..04a430e 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -30,6 +30,7 @@
->  #include <linux/device.h>
->  #include <linux/io.h>
->  #include <linux/resource_ext.h>
-> +#include <linux/notifier.h>
->  #include <uapi/linux/pci.h>
->  
->  #include <linux/pci_ids.h>
-> @@ -1037,6 +1038,13 @@ int pci_select_bars(struct pci_dev *dev, unsigned long flags);
->  bool pci_device_is_present(struct pci_dev *pdev);
->  void pci_ignore_hotplug(struct pci_dev *dev);
->  
-> +struct pci_bar_update_info {
-> +	u64 old_start;
-> +	u64 new_start;
-> +	u64 size;
-> +};
-> +int pci_notify_on_update_resource(struct notifier_block *nb);
-> +
->  /* ROM control related routines */
->  int pci_enable_rom(struct pci_dev *pdev);
->  void pci_disable_rom(struct pci_dev *pdev);
-> -- 
-> 1.8.5.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Tue, Apr 19, 2016 at 1:39 PM, Kallol Biswas <kallol@nucleodyne.com> wrote:
+> I have a been testing PCIe Hot Plug feature on a Supericro X10DRL
+> motherboard running 2.6.38.1 kernel.
+>
+> If an endpoint is already present at boot time on a hot plug capable
+> PCIe slot then I can remove and add the endpoint with the help of a
+> Quarch device. OS allocates resources properly and after hot unplug
+> and plug, the device is functional.
+>
+> If the endpoint is not present at boot time (turned off with the
+> Quarch) then put back (turn on with Quarch) the OS can not program BAR
+> registers.
+>
+> Here is the dmesg output:
+>
+> pci 0000:0c:00.0: [10ec:8168] type 0 class 0x000200
+> pci 0000:0c:00.0: reg 10: [io  0x0000-0x00ff]
+> pci 0000:0c:00.0: reg 18: [mem 0x00000000-0x00000fff 64bit]
+> pci 0000:0c:00.0: reg 20: [mem 0x00000000-0x00003fff 64bit pref]
+> pci 0000:0c:00.0: supports D1 D2
+> pci 0000:0c:00.0: PME# supported from D0 D1 D2 D3hot D3cold
+> pci 0000:0c:00.0: PME# disabled
+> pcieport 0000:09:09.0: BAR 14: can't assign mem (size 0x400000)
+> pci 0000:0c:00.0: BAR 4: assigned [mem 0x90200000-0x90203fff 64bit pref]
+> pci 0000:0c:00.0: BAR 4: set to [mem 0x90200000-0x90203fff 64bit pref]
+> (PCI address [0x90200000-0x90203fff])
+> pci 0000:0c:00.0: BAR 2: can't assign mem (size 0x1000)
+> pci 0000:0c:00.0: BAR 0: assigned [io  0x2000-0x20ff]
+> pci 0000:0c:00.0: BAR 0: set to [io  0x2000-0x20ff] (PCI address
+> [0x2000-0x20ff])
+> pcieport 0000:09:09.0: PCI bridge to [bus 0c-0c]
+> pcieport 0000:09:09.0:   bridge window [io  0x2000-0x2fff]
+> pcieport 0000:09:09.0:   bridge window [mem disabled]
+> pcieport 0000:09:09.0:   bridge window [mem 0x90200000-0x903fffff 64bit pref]
+> PCI: No. 2 try to assign unassigned res
+> release child resource [mem 0xfa800000-0xfaffffff]
+> pcieport 0000:09:19.0: resource 14 [mem 0xfa800000-0xfaffffff] released
+> pcieport 0000:09:19.0: PCI bridge to [bus 14-15]
+> pcieport 0000:09:19.0:   bridge window [mem disabled]
+> pcieport 0000:08:00.0: resource 14 [mem 0xfa800000-0xfaffffff] released
+> pcieport 0000:08:00.0: PCI bridge to [bus 09-15]
+> pcieport 0000:08:00.0:   bridge window [mem disabled]
+> pcieport 0000:09:09.0: BAR 14: can't assign mem (size 0x400000)
+> pci 0000:0c:00.0: BAR 2: can't assign mem (size 0x1000)
+> pcieport 0000:09:09.0: PCI bridge to [bus 0c-0c]
+> pcieport 0000:09:09.0:   bridge window [io  0x2000-0x2fff]
+> pcieport 0000:09:09.0:   bridge window [mem disabled]
+> pcieport 0000:09:09.0:   bridge window [mem 0x90200000-0x903fffff 64bit pref]
+> pcieport 0000:09:09.0: setting latency timer to 64
+> pciehp_readw : reg 0x1a value 0x140 ret 0x0
+> pciehp_readw : reg 0x18 value 0x27d ret 0x0
+> pciehp 0000:09:09.0:pcie24: pcie_write_cmd: written at SLOTCTRL 0x18 value 0x17d
+> pciehp_writew : reg 0x18 value 0x17d ret 0x0
+> pciehp_readw : reg 0x1a value 0x150 ret 0x0
+> pciehp_writew : reg 0x1a value 0x10 ret 0x0
+> pciehp_readw : reg 0x1a value 0x140 ret 0x0
+>
+>
+> Here is lspci -vvv -s <end point> output:
+>
+> lspci -vvv -s 0c:00.0
+> 0c:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
+> RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 06)
+> Subsystem: TP-LINK Technologies Co., Ltd. TG-3468 Gigabit PCI Express
+> Network Adapter
+> Physical Slot: 9
+> Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr-
+> Stepping- SERR+ FastB2B- DisINTx-
+> Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
+> <TAbort- <MAbort- >SERR- <PERR- INTx-
+> Interrupt: pin A routed to IRQ 255
+> Region 0: I/O ports at 2000 [disabled] [size=256]
+> Region 2: Memory at <unassigned> (64-bit, non-prefetchable) [disabled]
+> Region 4: Memory at 90200000 (64-bit, prefetchable) [disabled] [size=16K]
+> Capabilities: [40] Power Management version 3
+> Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=375mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+> Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+> Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+> Address: 0000000000000000  Data: 0000
+> Capabilities: [70] Express (v2) Endpoint, MSI 01
+> DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
+> ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+> DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+> RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
+> MaxPayload 128 bytes, MaxReadReq 512 bytes
+> DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+> LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Latency L0
+> <512ns, L1 <64us
+> ClockPM+ Surprise- LLActRep- BwNot-
+> LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+> ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+> LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive-
+> BWMgmt- ABWMgmt-
+> DevCap2: Completion Timeout: Not Supported, TimeoutDis+, LTR-, OBFF
+> Not Supported
+> DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
+> LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+> Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+> Compliance De-emphasis: -6dB
+> LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-,
+> EqualizationPhase1-
+> EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+> Capabilities: [b0] MSI-X: Enable- Count=4 Masked-
+> Vector table: BAR=4 offset=00000000
+> PBA: BAR=4 offset=00000800
+> Capabilities: [d0] Vital Product Data
+> Unknown small resource type 05, will not decode more.
+> Capabilities: [100 v1] Advanced Error Reporting
+> UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
+> MalfTLP- ECRC- UnsupReq- ACSViol-
+> UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF-
+> MalfTLP- ECRC- UnsupReq- ACSViol-
+> UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+
+> MalfTLP+ ECRC- UnsupReq- ACSViol-
+> CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+> CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+> AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+> Capabilities: [140 v1] Virtual Channel
+> Caps: LPEVC=0 RefClk=100ns PATEntryBits=1
+> Arb: Fixed- WRR32- WRR64- WRR128-
+> Ctrl: ArbSelect=Fixed
+> Status: InProgress-
+> VC0: Caps: PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+> Arb: Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+> Ctrl: Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+> Status: NegoPending- InProgress-
+> Capabilities: [160 v1] Device Serial Number 0a-40-00-00-68-4c-e0-00
+> Kernel modules: r8169
+>
+> The kernel options:
+> ro root=/dev/mapper/VolGroup-lv_root nomodeset rd_NO_LUKS rd_NO_MD
+> pci=assign-busses pcie_ports=native rd_LVM_LV=VolGroup/lv_swap
+> crashkernel=128M rd_LVM_LV=VolGroup/lv_root rd_NO_DM rhgb quiet
+> SYSFONT=latarcyrheb-sun16 LANG=en_US.UTF-8 KEYTABLE=us
+>
+> Is there a workaround for this? Note, there are other devices on
+> downstream PCIe ports, so remove and rescan is not an option.
