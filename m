@@ -1,300 +1,226 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH 06/11] drivers: iommu: make of_xlate() interface DT
- agnostic
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	iommu@lists.linux-foundation.org
-References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1460654743-7896-7-git-send-email-lorenzo.pieralisi@arm.com>
-Cc: Matthias Brugger <matthias.bgg@gmail.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Krzysztof Kozlowski <k.kozlowski@samsung.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>
-From: Marek Szyprowski <m.szyprowski@samsung.com>
-Message-id: <5715EC12.2000009@samsung.com>
-Date: Tue, 19 Apr 2016 10:28:02 +0200
-MIME-version: 1.0
-In-reply-to: <1460654743-7896-7-git-send-email-lorenzo.pieralisi@arm.com>
-Content-type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:51422 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753720AbcDTAYi (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 20:24:38 -0400
+Received: from localhost
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 20 Apr 2016 10:24:35 +1000
+Date: Wed, 20 Apr 2016 10:22:54 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
+	robherring2@gmail.com, grant.likely@linaro.org
+Subject: Re: [PATCH v8 13/45] powerpc/powernv/ioda1: M64 support on P7IOC
+Message-ID: <20160420002254.GA13506@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-14-git-send-email-gwshan@linux.vnet.ibm.com>
+ <570DF9AF.6020104@ozlabs.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <570DF9AF.6020104@ozlabs.ru>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
-
-On 2016-04-14 19:25, Lorenzo Pieralisi wrote:
-> On systems booting with ACPI, the IOMMU drivers require the same
-> kind of id mapping carried out with a DT tree through the of_xlate()
-> API in order to map devices identifiers to IOMMU ones.
+On Wed, Apr 13, 2016 at 05:47:59PM +1000, Alexey Kardashevskiy wrote:
+>On 02/17/2016 02:43 PM, Gavin Shan wrote:
+>>This enables M64 window on P7IOC, which has been enabled on PHB3.
+>>Different from PHB3 where 16 M64 BARs are supported and each of
+>>them can be owned by one particular PE# exclusively or divided
+>>evenly to 256 segments, every P7IOC PHB has 16 M64 BARs and each
+>>of them are divided to 8 segments. So every P7IOC PHB supports
+>>128 M64 segments in total. P7IOC has M64DT, which helps mapping
+>>one particular M64 segment# to arbitrary PE#. PHB3 doesn't have
+>>M64DT, indicating that one M64 segment can only be pinned to the
+>>fixed PE#. In order to have same code to support M64 on P7IOC and
+>>PHB3, we just provide 128 M64 segments on every P7IOC PHB and each
+>>of them is pinned to the fixed PE# by bypassing the function of
+>>M64DT. In turn, we just need different phb->init_m64() for P7IOC
+>>and PHB3 to support M64.
 >
-> On ACPI systems, since DT nodes are not present (ie struct
-> device.of_node == NULL), to identify the device requiring the translation
-> the struct device_node (and the structure used to pass translation
-> information - struct of_phandle_args - that contains a struct device_node)
-> cannot be used, so a generic translation structure to be used for IOMMU
-> mapping should be defined, based on the firmware agnostic fwnode_handle
-> type.
+>The comment is not quite correct - in addition to pnv_ioda1_init_m64(), you
+>also need to hack pnv_ioda_pick_m64_pe().
 >
-> This patch mechanically refactors/renames the of_xlate API to make
-> it DT agnostic, by declaring a new type (struct iommu_fwspec), that
-> allows the kernel to pass a device identifier (fwnode - which can
-> represent either a DT node or an IOMMU FW node) and by changing the
-> of_xlate signature so that it does not take anymore the DT specific
-> of_phandle_args argument and replaces it with the DT agnostic
-> iommu_fwspec one.
+
+Right, will talk about the changes to pnv_ioda_pick_m64_pe() in the
+commit log of next revision.
+
 >
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Matthias Brugger <matthias.bgg@gmail.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Hanjun Guo <hanjun.guo@linaro.org>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Cc: Tomasz Nowicki <tn@semihalf.com>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: Marek Szyprowski <m.szyprowski@samsung.com>
-
-I'm not sure if this is the right approach, although I have not enough
-knowledge on ACPI firmware. Do you plan to rewrite all subsystems to the
-new "fwspec" based interface? Right now of_xlate is rather common
-interface used by various subsystems. Maybe it will be much easier to
-just add acpi_xlate callback and plumb it to the generic code? Maybe later
-when similar code will be in other subsystems and drivers, it can be
-unified, having much more real use cases?
-
-> ---
->   drivers/iommu/arm-smmu.c     | 12 +++++++-----
->   drivers/iommu/exynos-iommu.c | 11 +++++++----
->   drivers/iommu/mtk_iommu.c    | 13 ++++++++-----
->   drivers/iommu/of_iommu.c     | 20 ++++++++++++++++++--
->   include/linux/iommu.h        | 24 ++++++++++++++++++++----
->   5 files changed, 60 insertions(+), 20 deletions(-)
+>>
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/platforms/powernv/pci-ioda.c | 86 +++++++++++++++++++++++++++++--
+>>  arch/powerpc/platforms/powernv/pci.h      |  3 ++
+>>  2 files changed, 86 insertions(+), 3 deletions(-)
+>>
+>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>index 1dc663a..8488238 100644
+>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>@@ -246,6 +246,64 @@ static void pnv_ioda_reserve_dev_m64_pe(struct pci_dev *pdev,
+>>  	}
+>>  }
+>>
+>>+static int pnv_ioda1_init_m64(struct pnv_phb *phb)
+>>+{
+>>+	struct resource *r;
+>>+	int index;
+>>+
+>>+	/*
+>>+	 * There are 16 M64 BARs, each of which has 8 segments. So
+>>+	 * there are as many M64 segments as the maximum number of
+>>+	 * PEs, which is 128.
+>>+	 */
+>>+	for (index = 0; index < PNV_IODA1_M64_NUM; index++) {
+>>+		unsigned long base, segsz = phb->ioda.m64_segsize;
+>>+		int64_t rc;
+>>+
+>>+		base = phb->ioda.m64_base +
+>>+		       index * PNV_IODA1_M64_SEGS * segsz;
+>>+		rc = opal_pci_set_phb_mem_window(phb->opal_id,
+>>+				OPAL_M64_WINDOW_TYPE, index, base, 0,
+>>+				PNV_IODA1_M64_SEGS * segsz);
+>>+		if (rc != OPAL_SUCCESS) {
+>>+			pr_warn("  Error %lld setting M64 PHB#%d-BAR#%d\n",
+>>+				rc, phb->hose->global_number, index);
+>>+			goto fail;
+>>+		}
+>>+
+>>+		rc = opal_pci_phb_mmio_enable(phb->opal_id,
+>>+				OPAL_M64_WINDOW_TYPE, index,
+>>+				OPAL_ENABLE_M64_SPLIT);
+>>+		if (rc != OPAL_SUCCESS) {
+>>+			pr_warn("  Error %lld enabling M64 PHB#%d-BAR#%d\n",
+>>+				rc, phb->hose->global_number, index);
+>>+			goto fail;
+>>+		}
+>>+	}
+>>+
+>>+	/*
+>>+	 * Exclude the segment used by the reserved PE, which
+>>+	 * is expected to be 0 or last supported PE#.
+>>+	 */
+>>+	r = &phb->hose->mem_resources[1];
+>>+	if (phb->ioda.reserved_pe_idx == 0)
+>>+		r->start += phb->ioda.m64_segsize;
+>>+	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
+>>+		r->end -= phb->ioda.m64_segsize;
+>>+	else
+>>+		pr_warn("  Cannot cut M64 segment for reserved PE#%d\n",
+>>+			phb->ioda.reserved_pe_idx);
+>>+
+>>+	return 0;
+>>+
+>>+fail:
+>>+	for ( ; index >= 0; index--)
+>>+		opal_pci_phb_mmio_enable(phb->opal_id,
+>>+			OPAL_M64_WINDOW_TYPE, index, OPAL_DISABLE_M64);
+>>+
+>>+	return -EIO;
+>>+}
+>>+
+>>  static void pnv_ioda_reserve_m64_pe(struct pci_bus *bus,
+>>  				    unsigned long *pe_bitmap,
+>>  				    bool all)
+>>@@ -315,6 +373,26 @@ static int pnv_ioda_pick_m64_pe(struct pci_bus *bus, bool all)
+>>  			pe->master = master_pe;
+>>  			list_add_tail(&pe->list, &master_pe->slaves);
+>>  		}
+>>+
+>>+		/*
+>>+		 * P7IOC supports M64DT, which helps mapping M64 segment
+>>+		 * to one particular PE#. However, PHB3 has fixed mapping
+>>+		 * between M64 segment and PE#. In order to have same logic
+>>+		 * for P7IOC and PHB3, we enforce fixed mapping between M64
+>>+		 * segment and PE# on P7IOC.
+>>+		 */
+>>+		if (phb->type == PNV_PHB_IODA1) {
+>>+			int64_t rc;
+>>+
+>>+			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
+>>+					pe->pe_number, OPAL_M64_WINDOW_TYPE,
+>>+					pe->pe_number / PNV_IODA1_M64_SEGS,
+>>+					pe->pe_number % PNV_IODA1_M64_SEGS);
+>>+			if (rc != OPAL_SUCCESS)
+>>+				pr_warn("%s: Error %lld mapping M64 for PHB#%d-PE#%d\n",
+>>+					__func__, rc, phb->hose->global_number,
+>>+					pe->pe_number);
+>>+		}
 >
-> diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
-> index 6c42770..84bcff7 100644
-> --- a/drivers/iommu/arm-smmu.c
-> +++ b/drivers/iommu/arm-smmu.c
-> @@ -1440,18 +1440,20 @@ out_unlock:
->   	return ret;
->   }
->   
-> -static int arm_smmu_of_xlate(struct device *dev, struct of_phandle_args *args)
-> +static int arm_smmu_fw_xlate(struct device *dev, struct iommu_fwspec *args)
->   {
->   	struct arm_smmu_device *smmu;
-> -	struct platform_device *smmu_pdev;
-> +	struct platform_device *smmu_pdev = NULL;
-> +
-> +	if (is_of_node(args->fwnode))
-> +		smmu_pdev = of_find_device_by_node(to_of_node(args->fwnode));
->   
-> -	smmu_pdev = of_find_device_by_node(args->np);
->   	if (!smmu_pdev)
->   		return -ENODEV;
->   
->   	smmu = platform_get_drvdata(smmu_pdev);
->   
-> -	return arm_smmu_add_dev_streamid(smmu, dev, args->args[0]);
-> +	return arm_smmu_add_dev_streamid(smmu, dev, args->param[0]);
->   }
->   
->   static struct iommu_ops arm_smmu_ops = {
-> @@ -1468,7 +1470,7 @@ static struct iommu_ops arm_smmu_ops = {
->   	.device_group		= arm_smmu_device_group,
->   	.domain_get_attr	= arm_smmu_domain_get_attr,
->   	.domain_set_attr	= arm_smmu_domain_set_attr,
-> -	.of_xlate		= arm_smmu_of_xlate,
-> +	.fw_xlate		= arm_smmu_fw_xlate,
->   	.pgsize_bitmap		= -1UL, /* Restricted during device attach */
->   };
->   
-> diff --git a/drivers/iommu/exynos-iommu.c b/drivers/iommu/exynos-iommu.c
-> index 5ecc86c..84ff5bb 100644
-> --- a/drivers/iommu/exynos-iommu.c
-> +++ b/drivers/iommu/exynos-iommu.c
-> @@ -1250,13 +1250,16 @@ static void exynos_iommu_remove_device(struct device *dev)
->   	iommu_group_remove_device(dev);
->   }
->   
-> -static int exynos_iommu_of_xlate(struct device *dev,
-> -				 struct of_phandle_args *spec)
-> +static int exynos_iommu_fw_xlate(struct device *dev,
-> +				 struct iommu_fwspec *args)
->   {
->   	struct exynos_iommu_owner *owner = dev->archdata.iommu;
-> -	struct platform_device *sysmmu = of_find_device_by_node(spec->np);
-> +	struct platform_device *sysmmu = NULL;
->   	struct sysmmu_drvdata *data;
->   
-> +	if (is_of_node(args->fwnode))
-> +		sysmmu = of_find_device_by_node(to_of_node(args->fwnode));
-> +
->   	if (!sysmmu)
->   		return -ENODEV;
->   
-> @@ -1290,7 +1293,7 @@ static struct iommu_ops exynos_iommu_ops = {
->   	.add_device = exynos_iommu_add_device,
->   	.remove_device = exynos_iommu_remove_device,
->   	.pgsize_bitmap = SECT_SIZE | LPAGE_SIZE | SPAGE_SIZE,
-> -	.of_xlate = exynos_iommu_of_xlate,
-> +	.fw_xlate = exynos_iommu_fw_xlate,
->   };
->   
->   static bool init_done;
-> diff --git a/drivers/iommu/mtk_iommu.c b/drivers/iommu/mtk_iommu.c
-> index 929a66a..e08dc0a 100644
-> --- a/drivers/iommu/mtk_iommu.c
-> +++ b/drivers/iommu/mtk_iommu.c
-> @@ -436,20 +436,23 @@ static struct iommu_group *mtk_iommu_device_group(struct device *dev)
->   	return data->m4u_group;
->   }
->   
-> -static int mtk_iommu_of_xlate(struct device *dev, struct of_phandle_args *args)
-> +static int mtk_iommu_fw_xlate(struct device *dev, struct iommu_fwspec *args)
->   {
->   	struct mtk_iommu_client_priv *head, *priv, *next;
->   	struct platform_device *m4updev;
->   
-> -	if (args->args_count != 1) {
-> +	if (!is_of_node(args->fwnode))
-> +		return -ENODEV;
-> +
-> +	if (args->param_count != 1) {
->   		dev_err(dev, "invalid #iommu-cells(%d) property for IOMMU\n",
-> -			args->args_count);
-> +			args->param_count);
->   		return -EINVAL;
->   	}
->   
->   	if (!dev->archdata.iommu) {
->   		/* Get the m4u device */
-> -		m4updev = of_find_device_by_node(args->np);
-> +		m4updev = of_find_device_by_node(to_of_node(args->fwnode));
->   		of_node_put(args->np);
->   		if (WARN_ON(!m4updev))
->   			return -EINVAL;
-> @@ -469,7 +472,7 @@ static int mtk_iommu_of_xlate(struct device *dev, struct of_phandle_args *args)
->   	if (!priv)
->   		goto err_free_mem;
->   
-> -	priv->mtk_m4u_id = args->args[0];
-> +	priv->mtk_m4u_id = args->param[0];
->   	list_add_tail(&priv->client, &head->client);
->   
->   	return 0;
-> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> index 910826c..331dd78 100644
-> --- a/drivers/iommu/of_iommu.c
-> +++ b/drivers/iommu/of_iommu.c
-> @@ -135,6 +135,18 @@ struct iommu_ops *of_iommu_get_ops(struct device_node *np)
->   	return ops;
->   }
->   
-> +static void of_phandle_args_to_fwspec(struct of_phandle_args *iommu_data,
-> +				      struct iommu_fwspec *fwspec)
-> +{
-> +	int i;
-> +
-> +	fwspec->fwnode = iommu_data->np ? &iommu_data->np->fwnode : NULL;
-> +	fwspec->param_count = iommu_data->args_count;
-> +
-> +	for (i = 0; i < iommu_data->args_count; i++)
-> +		fwspec->param[i] = iommu_data->args[i];
-> +}
-> +
->   static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
->   {
->   	struct of_phandle_args *iommu_spec = data;
-> @@ -148,6 +160,7 @@ struct iommu_ops *of_iommu_configure(struct device *dev,
->   				     struct device_node *master_np)
->   {
->   	struct of_phandle_args iommu_spec;
-> +	struct iommu_fwspec fwspec;
->   	struct device_node *np = NULL;
->   	struct iommu_ops *ops = NULL;
->   	int idx = 0;
-> @@ -170,8 +183,9 @@ struct iommu_ops *of_iommu_configure(struct device *dev,
->   
->   		iommu_spec.np = np;
->   		iommu_spec.args_count = 1;
-> +		of_phandle_args_to_fwspec(&iommu_spec, &fwspec);
->   		ops = of_iommu_get_ops(np);
-> -		if (!ops || !ops->of_xlate || ops->of_xlate(dev, &iommu_spec))
-> +		if (!ops || !ops->fw_xlate || ops->fw_xlate(dev, &fwspec))
->   			goto err_put_node;
->   
->   		of_node_put(np);
-> @@ -189,7 +203,9 @@ struct iommu_ops *of_iommu_configure(struct device *dev,
->   		np = iommu_spec.np;
->   		ops = of_iommu_get_ops(np);
->   
-> -		if (!ops || !ops->of_xlate || ops->of_xlate(dev, &iommu_spec))
-> +		of_phandle_args_to_fwspec(&iommu_spec, &fwspec);
-> +
-> +		if (!ops || !ops->fw_xlate || ops->fw_xlate(dev, &fwspec))
->   			goto err_put_node;
->   
->   		of_node_put(np);
-> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-> index 0bba25e..5184d81 100644
-> --- a/include/linux/iommu.h
-> +++ b/include/linux/iommu.h
-> @@ -85,6 +85,24 @@ struct iommu_domain {
->   	void *iova_cookie;
->   };
->   
-> +#define IOMMU_MAP_SPEC_PARAMS 16
-> +
-> +/**
-> + * struct iommu_fwspec - generic IOMMU specifier structure
-> + *
-> + * @fwnode:		Pointer to a firmware-specific descriptor
-> + * @param_count:	Number of device-specific parameters
-> + * @param:		Device-specific parameters
-> + *
-> + * This structure, directly modeled after of_phandle_args, is used to
-> + * pass a device-specific description of an IOMMU mapping.
-> + */
-> +struct iommu_fwspec {
-> +	struct fwnode_handle *fwnode;
-> +	int param_count;
-> +	u32 param[IOMMU_MAP_SPEC_PARAMS];
-> +};
-> +
->   enum iommu_cap {
->   	IOMMU_CAP_CACHE_COHERENCY,	/* IOMMU can enforce cache coherent DMA
->   					   transactions */
-> @@ -155,7 +173,7 @@ struct iommu_dm_region {
->    * @domain_window_disable: Disable a particular window for a domain
->    * @domain_set_windows: Set the number of windows for a domain
->    * @domain_get_windows: Return the number of windows for a domain
-> - * @of_xlate: add OF master IDs to iommu grouping
-> + * @fw_xlate: add FW master IDs to iommu grouping
->    * @pgsize_bitmap: bitmap of supported page sizes
->    * @priv: per-instance data private to the iommu driver
->    */
-> @@ -196,9 +214,7 @@ struct iommu_ops {
->   	/* Get the number of windows per domain */
->   	u32 (*domain_get_windows)(struct iommu_domain *domain);
->   
-> -#ifdef CONFIG_OF_IOMMU
-> -	int (*of_xlate)(struct device *dev, struct of_phandle_args *args);
-> -#endif
-> +	int (*fw_xlate)(struct device *dev, struct iommu_fwspec *args);
->   
->   	unsigned long pgsize_bitmap;
->   	void *priv;
+>
+>Cannot this go to pnv_ioda1_init_m64()? From the commit log I understood that
+>this setup is supposed to be static so it can be done once. Or it is sort of
+>enable/disable PE? Then make is a helper and call it ioda1_pe_enable() or
+>something.
+>
 
-Best regards
--- 
-Marek Szyprowski, PhD
-Samsung R&D Institute Poland
+No, we cannot. This associates the M64 segments with the PE# and it can be
+done in pnv_ioda1_init_m64() where PE# is unknown. I don't understand what
+you meant by "sort of enable/disable PE". PE starts the jurney when PELTM
+has the corresponding mapping and it doesn't depend on M64 mapping necessarily.
+
+>
+>>  	}
+>>
+>>  	kfree(pe_alloc);
+>>@@ -329,8 +407,7 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+>>  	const u32 *r;
+>>  	u64 pci_addr;
+>>
+>>-	/* FIXME: Support M64 for P7IOC */
+>>-	if (phb->type != PNV_PHB_IODA2) {
+>>+	if (phb->type != PNV_PHB_IODA1 && phb->type != PNV_PHB_IODA2) {
+>>  		pr_info("  Not support M64 window\n");
+>>  		return;
+>>  	}
+>>@@ -364,7 +441,10 @@ static void __init pnv_ioda_parse_m64_window(struct pnv_phb *phb)
+>>
+>>  	/* Use last M64 BAR to cover M64 window */
+>>  	phb->ioda.m64_bar_idx = 15;
+>>-	phb->init_m64 = pnv_ioda2_init_m64;
+>>+	if (phb->type == PNV_PHB_IODA1)
+>>+		phb->init_m64 = pnv_ioda1_init_m64;
+>>+	else
+>>+		phb->init_m64 = pnv_ioda2_init_m64;
+>>  	phb->reserve_m64_pe = pnv_ioda_reserve_m64_pe;
+>>  	phb->pick_m64_pe = pnv_ioda_pick_m64_pe;
+>>  }
+>>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>>index 866a5ea..00539ff 100644
+>>--- a/arch/powerpc/platforms/powernv/pci.h
+>>+++ b/arch/powerpc/platforms/powernv/pci.h
+>>@@ -82,6 +82,9 @@ struct pnv_ioda_pe {
+>>  	struct list_head	list;
+>>  };
+>>
+>>+#define PNV_IODA1_M64_NUM	16	/* Number of M64 BARs   */
+>>+#define PNV_IODA1_M64_SEGS	8	/* Segments per M64 BAR */
+>>+
+>
+>Why here, not in the beginning of arch/powerpc/platforms/powernv/pci-ioda.c ?
+>It exposes symbols but nothing is using them (except pci-ioda.c) and code
+>browsing gets bit more inconvenient.
+>
+
+It would be personal taste: those macros is tied with the definition
+of "struct pnv_ioda_pe" or "struct pnv_ioda_phb". On the other hand,
+those macros have to be in the header file once we split pci-ioda.c
+to multiple source files some day. However, I can move them to
+pci-ioda.c if you really want see them there. Let me know anyway.
+
+>
+>>  #define PNV_PHB_FLAG_EEH	(1 << 0)
+>>
+>>  struct pnv_phb {
+>>
+>
+>
+>-- 
+>Alexey
+>
 
