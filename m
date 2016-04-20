@@ -1,125 +1,195 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:60370 "EHLO
-	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751884AbcDTTTs (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2016 15:19:48 -0400
-Date: Wed, 20 Apr 2016 21:22:11 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH v2 4/4] PCI: Add runtime PM support for PCIe ports
-Message-ID: <20160420192211.GA16093@wunner.de>
-References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
- <1460111790-92836-5-git-send-email-mika.westerberg@linux.intel.com>
- <20160412175203.GB13637@wunner.de>
- <20160413083352.GI1714@lahna.fi.intel.com>
- <20160418143823.GA15165@wunner.de>
- <20160419123131.GE1725@lahna.fi.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH next v2 2/2] PCI: keystone: remove unnecessary goto
+ statement
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1460386231-8377-1-git-send-email-m-karicheri2@ti.com>
+ <1460386231-8377-2-git-send-email-m-karicheri2@ti.com>
+ <20160420010627.GJ17863@localhost>
+CC: <bhelgaas@google.com>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>
+From: Murali Karicheri <m-karicheri2@ti.com>
+Message-ID: <5717922E.4000306@ti.com>
+Date: Wed, 20 Apr 2016 10:29:02 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160419123131.GE1725@lahna.fi.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160420010627.GJ17863@localhost>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mika,
-
-On Tue, Apr 19, 2016 at 03:31:31PM +0300, Mika Westerberg wrote:
-> On Mon, Apr 18, 2016 at 04:38:23PM +0200, Lukas Wunner wrote:
-> > In case you agree with this, I've prepared a fixup patch which you
-> > can apply with "git rebase --autosquash":
-> > https://github.com/l1k/linux/commit/24fc9d7b34ff
+On 04/19/2016 09:06 PM, Bjorn Helgaas wrote:
+> Hi Murali,
 > 
-> Based on the above, I'm going to fold your commit to [4/4]. Are you OK
-> if I add your Signed-off-by to that patch?
-
-Sure.
-
-
-> > Another thing I've spotted but that wasn't needed to get my patches
-> > working: When the bridge_d3 attribute changes to true, you need to
-> > notify the PM core thereof by calling pm_request_idle() for the
-> > bridge device, otherwise the bridge needlessly stays awake. This
-> > needs to be added near the end of pci_bridge_d3_update() I guess.
+> On Mon, Apr 11, 2016 at 10:50:31AM -0400, Murali Karicheri wrote:
+>> Fix the misuse of goto statement in ks_pcie_get_irq_controller_info()
+>> as simple return is more appropriate for this function. While at
+>> it add an error log for absence of interrupt controller node.
+>>
+>> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>> Cc: Rob Herring <robh+dt@kernel.org>
+>> Cc: Pawel Moll <pawel.moll@arm.com>
+>> Cc: Mark Rutland <mark.rutland@arm.com>
+>> Cc: Ian Campbell <ijc+devicetree@hellion.org.uk>
+>> Cc: Kumar Gala <galak@codeaurora.org>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>>
+>> ---
+>>  v2 - removed an unnecessary extra line added in the previous version
+>>  v1 - same as before initial version
+>>  drivers/pci/host/pci-keystone.c | 9 +++++----
+>>  1 file changed, 5 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+>> index 299f2f0..0234828 100644
+>> --- a/drivers/pci/host/pci-keystone.c
+>> +++ b/drivers/pci/host/pci-keystone.c
+>> @@ -181,11 +181,13 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+>>  	*np_temp = of_find_node_by_name(np_pcie, controller);
+>>  	if (!(*np_temp)) {
+>>  		dev_err(dev, "Node for %s is absent\n", controller);
+>> -		goto out;
+>> +		return ret;
+>>  	}
+>>  	temp = of_irq_count(*np_temp);
+>> -	if (!temp)
+>> -		goto out;
+>> +	if (!temp) {
+>> +		dev_err(dev, "No entries in %s\n", controller);
+>> +		return ret;
+>> +	}
+>>  	if (temp > max_host_irqs)
+>>  		dev_warn(dev, "Too many %s interrupts defined %u\n",
+>>  			(legacy ? "legacy" : "MSI"), temp);
+>> @@ -203,7 +205,6 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+>>  		*num_irqs = temp;
+>>  		ret = 0;
+>>  	}
+>> -out:
+>>  	return ret;
 > 
-> I've been testing this by writing to 'd3cold_allowed' sysfs file and it
-> suspends just fine when it is 1. How do you reproduce this?
-
-Testing with d3cold_allowed is misleading in this case because
-d3cold_allowed_store() already calls pm_runtime_resume(dev),
-and the next time dev runtime suspends, it automatically calls
-rpm_idle() on its parent. This masks that a call to pm_request_idle()
-is currently missing in pci_bridge_d3_update().
-
-However pci_bridge_d3_update() also gets called e.g. from
-pci_remove_bus_device() and there's no call to pm_request_idle()
-there, so a bridge would stay awake even if a child that has blocked
-d3 has been removed.
-
-I only noticed this because I force bridge_d3 = true when loading
-the thunderbolt upstream bridge driver, as a workaround for the BIOS
-cut-off date, and noticed that I had to call pm_request_idle() because
-otherwise the bridges would stay awake.
-
-
-I hadn't played with d3cold_allowed before but tested it now that
-you've mentioned it. Found a bug there:
-
-If d3cold_allowed is set to false for a device via sysfs, the bridge_d3
-attribute of its parent bridges will correctly be updated to false.
-
-If d3cold_allowed is then set to true and the device has runtime
-suspended in the meantime, the bridge_d3 attribute of its parent bridges
-is *not* reverted back to true as it should. The reason is that when the
-device runtime suspended, its no_d3cold attribute was set to false in
-pci_pm_runtime_suspend() because d3cold_allowed was false. But no_d3cold
-isn't reverted back to true when setting d3cold_allowed to true and
-because this attribute is checked in pci_dev_check_d3cold(), the parent
-bridges' bridge_d3 attribute remains false.
-
-no_d3cold is just a transient variable used by pci_pm_runtime_suspend()
-and acpi_pci_choose_state(), which is indirectly called from it via
-pci_finish_runtime_suspend(). One can fix this by reverting no_d3cold
-back to false at the end of pci_pm_runtime_suspend(), like this:
-https://github.com/l1k/linux/commit/9b9ffb8
-
-
-> > One detail I'm not sure about: If you've got a hotplug downstream port
-> > behind an upstream port and the upstream port goes to D3hot, is it
-> > still possible for the downstream port to signal hotplug interrupts?
-> > In other words, can INTx or MSI interrupts generated by the downstream
-> > bridge still be routed via the upstream bridge if the upstream bridge
-> > is in D3hot? I cannot easily test this, I'd have to hack the tg3 driver
-> > for my Thunderbolt Ethernet adapter to use runtime suspend.
+> I really like these cleanups; thanks for doing them.
 > 
-> If the downstream port is able to trigger wake (PME) from D3cold, I
-> think it should work but I'm not 100% sure.
-
-I've been able to test this now with a hacked tg3 driver and it's as
-I expected: A hotplug port may go to D3hot and will still generate
-interrupts on hotplug, but all its parent ports are *not* allowed
-to go to D3hot because otherwise the hotplug interrupts will no longer
-come through. The algorithm in pci_bridge_d3_update() and
-pci_dev_check_d3cold() needs to be amended to take that into account.
-Hm, it's nontrivial I guess, allowing bridge_d3 = true for the lowest
-hotplug bridge in a hierarchy but not for anything above?
-
-
-> > My opinion is that we should strive for maximum power saving, thus try
-> > (at least) 2010 and blacklist individual devices as needed.
+> I went a step further because I think we always know the value of
+> "ret" at each of these places, so I inserted those and dropped "ret"
+> altogether.
 > 
-> IMHO we should strive for working systems and not maximum power saving
-> but I'm OK to change that if Bjorn or Rafael are fine with it.
+> I applied the patch below to pci/host-keystone for v4.7.
+Bjorn,
 
-They've kept mum so far. :-)
+Which repo has your  pci/host-keystone branch?
+
+I did a fetch of the remote pci at git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+and could see only following host branches:-
+
+git branch -r | grep "pci/pci/host-"
+
+pci/pci/host-designware
+pci/pci/host-generic
+pci/pci/host-imx6
+pci/pci/host-iproc
+pci/pci/host-mvebu
+pci/pci/host-rcar
+pci/pci/host-tegra
+pci/pci/host-vmd
+pci/pci/host-xgene
+pci/pci/host-xgene-dd2
+pci/pci/host-xilinx-nwl
+
+Thanks and Regards,
+
+Murali
+
+> 
+> 
+> commit a7ed67a22484f70b8d0c33c76ad7faeac97222a7
+> Author: Murali Karicheri <m-karicheri2@ti.com>
+> Date:   Mon Apr 11 10:50:31 2016 -0400
+> 
+>     PCI: keystone: Remove unnecessary goto statement
+>     
+>     Fix the misuse of goto statement in ks_pcie_get_irq_controller_info() as
+>     simple return is more appropriate for this function.  While at it add an
+>     error log for absence of interrupt controller node.
+>     
+>     [bhelgaas: drop "ret" altogether since we always know the return value]
+>     Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     CC: Rob Herring <robh+dt@kernel.org>
+>     CC: Pawel Moll <pawel.moll@arm.com>
+>     CC: Mark Rutland <mark.rutland@arm.com>
+>     CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+>     CC: Kumar Gala <galak@codeaurora.org>
+> 
+> diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+> index 6868918..95a66f77 100644
+> --- a/drivers/pci/host/pci-keystone.c
+> +++ b/drivers/pci/host/pci-keystone.c
+> @@ -160,7 +160,7 @@ static void ks_pcie_legacy_irq_handler(struct irq_desc *desc)
+>  static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+>  					   char *controller, int *num_irqs)
+>  {
+> -	int temp, max_host_irqs, legacy = 1, *host_irqs, ret = -EINVAL;
+> +	int temp, max_host_irqs, legacy = 1, *host_irqs;
+>  	struct device *dev = ks_pcie->pp.dev;
+>  	struct device_node *np_pcie = dev->of_node, **np_temp;
+>  
+> @@ -181,11 +181,15 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+>  	*np_temp = of_find_node_by_name(np_pcie, controller);
+>  	if (!(*np_temp)) {
+>  		dev_err(dev, "Node for %s is absent\n", controller);
+> -		goto out;
+> +		return -EINVAL;
+>  	}
+> +
+>  	temp = of_irq_count(*np_temp);
+> -	if (!temp)
+> -		goto out;
+> +	if (!temp) {
+> +		dev_err(dev, "No IRQ entries in %s\n", controller);
+> +		return -EINVAL;
+> +	}
+> +
+>  	if (temp > max_host_irqs)
+>  		dev_warn(dev, "Too many %s interrupts defined %u\n",
+>  			(legacy ? "legacy" : "MSI"), temp);
+> @@ -199,12 +203,13 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+>  		if (!host_irqs[temp])
+>  			break;
+>  	}
+> +
+>  	if (temp) {
+>  		*num_irqs = temp;
+> -		ret = 0;
+> +		return 0;
+>  	}
+> -out:
+> -	return ret;
+> +
+> +	return -EINVAL;
+>  }
+>  
+>  static void ks_pcie_setup_interrupts(struct keystone_pcie *ks_pcie)
+> @@ -345,7 +350,7 @@ static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
+>  		return ret;
+>  	}
+>  
+> -	return ret;
+> +	return 0;
+>  }
+>  
+>  static const struct of_device_id ks_pcie_of_match[] = {
+> @@ -374,7 +379,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+>  	struct resource *res;
+>  	void __iomem *reg_p;
+>  	struct phy *phy;
+> -	int ret = 0;
+> +	int ret;
+>  
+>  	ks_pcie = devm_kzalloc(&pdev->dev, sizeof(*ks_pcie),
+>  				GFP_KERNEL);
+> 
 
 
-Best regards,
-
-Lukas
+-- 
+Murali Karicheri
+Linux Kernel, Keystone
