@@ -1,48 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:35825 "EHLO
-	mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752127AbcDFVeH (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2016 17:34:07 -0400
-Date: Wed, 6 Apr 2016 23:36:08 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Michael =?iso-8859-1?Q?B=FCsch?= <m@bues.ch>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-Message-ID: <20160406213608.GB12421@wunner.de>
-References: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
- <20160405194015.GC15353@localhost>
- <20160405214945.1214e13b@wiggum>
- <20160406133151.GA4976@localhost>
- <20160406171724.2b7b070b@wiggum>
+Received: from mail.kernel.org ([198.145.29.136]:44104 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751324AbcDTXrJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 Apr 2016 19:47:09 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20160406171724.2b7b070b@wiggum>
+In-Reply-To: <1461166339-11109-5-git-send-email-geert+renesas@glider.be>
+References: <1461166339-11109-1-git-send-email-geert+renesas@glider.be> <1461166339-11109-5-git-send-email-geert+renesas@glider.be>
+From: Rob Herring <robh+dt@kernel.org>
+Date: Wed, 20 Apr 2016 18:46:45 -0500
+Message-ID: <CAL_JsqKSbGPKNZdZnowGpdF8zxXbh6g-wkq96+KmBNLwp7n=HQ@mail.gmail.com>
+Subject: Re: [PATCH 04/14] ARM: dts: OMAP36xx: : DT spelling s/#address-cell/#address-cells/
+To: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Lee Jones <lee@kernel.org>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Mark Brown <broonie@kernel.org>,
+	Alexandre Belloni <alexandre.belloni@free-electrons.com>,
+	Joe Perches <joe@perches.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	dmaengine@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On Wed, Apr 06, 2016 at 05:17:24PM +0200, Michael Büsch wrote:
-> On Wed, 6 Apr 2016 08:31:51 -0500 Bjorn Helgaas <helgaas@kernel.org> wrote:
+On Wed, Apr 20, 2016 at 10:32 AM, Geert Uytterhoeven
+<geert+renesas@glider.be> wrote:
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> ---
+>  arch/arm/boot/dts/omap36xx.dtsi | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 >
-> > Even for interrupts, it's only a 90% solution because we do still get
-> > a few interrupts before the quirk runs.  There may not be enough to
-> > trigger the "IRQ nobody cared" check,
-> 
-> If no driver requested the shared interrupt yet, it should be disabled
-> in the interrupt controller. So the interrupts do not reach the CPU.
-> The interrupt storm (on the CPU) starts as soon as some driver
-> that shares the interrupt with b43 requests and thus enables the
-> interrupt. And that always happens after the PCI fixup. Thus this is
-> safe.
+> diff --git a/arch/arm/boot/dts/omap36xx.dtsi b/arch/arm/boot/dts/omap36xx.dtsi
+> index ce1e242d4dc07ea8..8b797915300894d8 100644
+> --- a/arch/arm/boot/dts/omap36xx.dtsi
+> +++ b/arch/arm/boot/dts/omap36xx.dtsi
+> @@ -44,7 +44,7 @@
+>                 abb_mpu_iva: regulator-abb-mpu {
+>                         compatible = "ti,abb-v1";
+>                         regulator-name = "abb_mpu_iva";
+> -                       #address-cell = <0>;
+> +                       #address-cells = <0>;
 
-Yes, that is correct. I only see 67 interrupts for IRQ 17 with the
-PCI quirk compiled in, all of which seem to come from the initialization
-of pciehp, mmc and the hda sound card (which share the IRQ with b43 on my
-machine).
+dtc should flag this if it was really needed. However, it looks like
+it isn't as there are no child nodes (unless the board files add
+them).
 
-Thanks,
+A nice dtc check would be to flag unnecessary #address-cells or
+#size-cells. That would only help here after your fix though.
 
-Lukas
+Rob
+
+>                         #size-cells = <0>;
+>                         reg = <0x483072f0 0x8>, <0x48306818 0x4>;
+>                         reg-names = "base-address", "int-address";
+> --
+> 1.9.1
+>
