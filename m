@@ -1,70 +1,111 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH 2/2] pci, acpi: free IO resource during shutdown
-To: Sinan Kaya <okaya@codeaurora.org>,
-	Bjorn Helgaas <helgaas@kernel.org>
-References: <1457389310-3538-1-git-send-email-okaya@codeaurora.org>
- <1457389310-3538-2-git-send-email-okaya@codeaurora.org>
- <20160407160624.GB8780@localhost> <57069CAF.8090803@codeaurora.org>
- <20160407214108.GB24492@localhost> <5707281B.6020805@codeaurora.org>
- <570754D7.3010009@semihalf.com> <5707EE6F.2050509@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
-	agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <5708C0E1.2020303@semihalf.com>
-Date: Sat, 9 Apr 2016 10:44:17 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f169.google.com ([209.85.192.169]:36588 "EHLO
+	mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753039AbcDTDAr (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 23:00:47 -0400
+Received: by mail-pf0-f169.google.com with SMTP id e128so13009446pfe.3
+        for <linux-pci@vger.kernel.org>; Tue, 19 Apr 2016 20:00:47 -0700 (PDT)
+Subject: Re: [PATCH v8 21/45] powerpc/powernv: Create PEs at PCI hot plugging
+ time
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-22-git-send-email-gwshan@linux.vnet.ibm.com>
+ <5715B12A.6020203@ozlabs.ru> <20160420011205.GA21871@gwshan>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
+	robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <5716F0D6.7010609@ozlabs.ru>
+Date: Wed, 20 Apr 2016 13:00:38 +1000
 MIME-Version: 1.0
-In-Reply-To: <5707EE6F.2050509@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20160420011205.GA21871@gwshan>
+Content-Type: text/plain; charset=koi8-r; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08.04.2016 19:46, Sinan Kaya wrote:
-> Hi Tomasz,
+On 04/20/2016 11:12 AM, Gavin Shan wrote:
+> On Tue, Apr 19, 2016 at 02:16:42PM +1000, Alexey Kardashevskiy wrote:
+>> On 02/17/2016 02:44 PM, Gavin Shan wrote:
+>>> Currently, the PEs and their associated resources are assigned
+>>> in ppc_md.pcibios_fixup() except those used by SRIOV VFs.
+>>
+>> But this new code does not affect IOV and VF's PEs will still be created
+>> somewhere else rather than pnv_pci_setup_bridge()?
+>>
 >
-> On 4/8/2016 2:51 AM, Tomasz Nowicki wrote:
->> Hi Sinan,
+> Correct. VF PEs cannot be created in pnv_pci_setup_bridge() as the PF's
+> IOV capability isn't enabled at that point.
+>
 >>
->> On 08.04.2016 05:40, Sinan Kaya wrote:
->>> Hi Tomasz,
+>>> The
+>>> function is called for once after PCI probing and resources
+>>> assignment is completed. So it isn't hotplug friendly.
 >>>
->>> On 4/7/2016 5:41 PM, Bjorn Helgaas wrote:
->>>>>> You say this is undoing the effect of pci_remap_iospace(), but that's
->>>>>>>> only called by native drivers and the generic (OF) driver, not by
->>>>>>>> pci_root.c.
->>>>>>
->>>>>> See the ACPI root bridge driver above.
->>>> If this is a fix to patches that haven't been merged yet, we need to
->>>> squash the fix into the patches.
->>>>
+>>> This creates PEs dynamically by ppc_md.pcibios_setup_bridge(), which
+>>> is called on the event during system bootup and PCI hotplug: updating
+>>> PCI bridge's windows after resource assignment/reassignment are done.
+>>> For partial hotplug case, where not all PCI devices belonging to the
+>>> PE are unplugged and plugged again, we just need unbinding/binding
+>>> the affected PCI devices with the corresponding PE without creating
+>>> new one.
 >>>
->>> Can you merge these to two patches to your series for the next post?
->>>
->>> I need to remove weak on the first patch per direction from Bjorn and
->>> fix the function comments. You could as well do this while you are merging.
->>>
->>> Let me know what your preference is.
->>>
+>>> As there is no upstream bridge for root bus that needs to be covered
+>>> by PE, we have to create PE for root bus in ppc_md.pcibios_setup_bridge()
+>>> before any other PEs can be created, as PE for root bus is the ancestor
+>>> to anyone else.
 >>
->> Please do necessary fixes for your patches and send me the repo reference link. I will merge these to my patch set. Thanks!
+>> We did not need a root bus PE before? What is the other PE reserved for?
+>> Comments only say "reserved"...
 >>
->> Tomasz
+>
+> No, A PE for root bus is needed before.
+
+Ok. We needed a PE for the root bus and we need it now. What changed? Why 
+do you reserve another PE?
+
+
+>
+other PEs can be for the PCI bus
+> originated from root port and the subordinate domains.
+>
+>>>
+>>> Also, the windows of root port or the upstream port of PCIe switch behind
+>>> root port are extended to be PHB's apertures to accommodate the additional
+>>> resources needed by newly plugged devices based on the fact: hotpluggable
+>>> slot is behind root port or downstream port of the PCIe switch behind
+>>> root port. The extension for those PCI brdiges' windows is done in
+>>> ppc_md.pcibios_setup_bridge() as well.
+>>
+>>
+>> This patch seems to be doing way too many things, hard to follow.
+>>
+>> Could you please split the patch into smaller chunks? For example (you can do
+>> it totally different):
+>> - move pnv_pci_ioda_setup_opal_tce_kill()
+>> - move PE creation from pnv_pci_ioda_fixup() to pnv_pci_setup_bridge();
+>> - add pnv_pci_fixup_bridge_resources()
+>> - add an extra reserved PE for the root bus (and all this magic with
+>> root_pe_idx/root_pe_populated)
+>> - ...
+>>
+>
+> I'll evaluate it later. It's always nice to have small patches. Thanks
+> for the comments.
+>
+>>
+>>
+>>
 >> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Alexey
+>>
 >
-> I posted the updated patch here. Changes are:
->
-> - I squashed these two patches together per Bjorn's request.
-> - Removed the weak declarations from both remap and unmap calls.
-> - Fixed the doxygen document to match the actual parameters.
->
-> https://us.codeaurora.org/cgit/quic/server/kernel/commit/?h=okaya/pciunmapv2&id=6120a5f0c5e6d757f18a076917fa202e2c9823d0
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
 
-Thanks Sinan!
 
-Tomasz
-
+-- 
+Alexey
