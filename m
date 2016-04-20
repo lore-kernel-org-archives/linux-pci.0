@@ -1,113 +1,216 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42790 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757134AbcDHATK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:19:10 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org
-Subject: [PATCH v11 20/60] PCI: Separate realloc list checking after allocation
-Date: Thu,  7 Apr 2016 17:15:33 -0700
-Message-Id: <1460074573-7481-21-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:39896 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753749AbcDTA06 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 20:26:58 -0400
+Received: from localhost
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 20 Apr 2016 10:26:50 +1000
+Date: Wed, 20 Apr 2016 10:25:36 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
+	robherring2@gmail.com, grant.likely@linaro.org
+Subject: Re: [PATCH v8 15/45] powerpc/powernv/ioda1: Introduce
+ PNV_IODA1_DMA32_SEGSIZE
+Message-ID: <20160420002536.GA15693@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-16-git-send-email-gwshan@linux.vnet.ibm.com>
+ <570E0376.3030704@ozlabs.ru>
+ <20160413235429.GB5330@gwshan>
+ <570F1041.5090901@ozlabs.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <570F1041.5090901@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We check the realloc list, as list must be empty after allocation.
+On Thu, Apr 14, 2016 at 01:36:33PM +1000, Alexey Kardashevskiy wrote:
+>On 04/14/2016 09:54 AM, Gavin Shan wrote:
+>>On Wed, Apr 13, 2016 at 06:29:42PM +1000, Alexey Kardashevskiy wrote:
+>>>On 02/17/2016 02:43 PM, Gavin Shan wrote:
+>>>>Currently, there is one macro (TCE32_TABLE_SIZE) representing the
+>>>>TCE table size for one DMA32 segment. The constant representing
+>>>>the DMA32 segment size (1 << 28) is still used in the code.
+>>>>
+>>>>This defines PNV_IODA1_DMA32_SEGSIZE representing one DMA32
+>>>>segment size. the TCE table size can be calcualted when the page
+>>>
+>>>s/calcualted/calculated/
+>>>
+>>>
+>>>>has fixed 4KB size. So all the related calculation depends on one
+>>>>macro (PNV_IODA1_DMA32_SEGSIZE). No logical changes introduced.
+>>>
+>>>Please move PNV_IODA1_DMA32_SEGSIZE where TCE32_TABLE_SIZE was.
+>>>
+>>>
+>>>>
+>>>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>>>---
+>>>>  arch/powerpc/platforms/powernv/pci-ioda.c | 30 +++++++++++++++++-------------
+>>>>  arch/powerpc/platforms/powernv/pci.h      |  1 +
+>>>>  2 files changed, 18 insertions(+), 13 deletions(-)
+>>>>
+>>>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>index d18b95e..e60cff6 100644
+>>>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>>@@ -48,9 +48,6 @@
+>>>>  #include "powernv.h"
+>>>>  #include "pci.h"
+>>>>
+>>>>-/* 256M DMA window, 4K TCE pages, 8 bytes TCE */
+>>>>-#define TCE32_TABLE_SIZE	((0x10000000 / 0x1000) * 8)
+>>>>-
+>>>>  #define POWERNV_IOMMU_DEFAULT_LEVELS	1
+>>>>  #define POWERNV_IOMMU_MAX_LEVELS	5
+>>>>
+>>>>@@ -2034,7 +2031,7 @@ static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
+>>>>
+>>>>  	struct page *tce_mem = NULL;
+>>>>  	struct iommu_table *tbl;
+>>>>-	unsigned int i;
+>>>>+	unsigned int tce32_segsz, i;
+>>>
+>>>
+>>>PNV_IODA1_DMA32_SEGSIZE is a segment size in bytes. The name @tce32_segsz
+>>>also suggests that it is a segment size in bytes (otherwise it would be
+>>>tce32_seg_entries or something like this) but it is not, it is a number of
+>>>TCE entries (arch/powerpc/kernel/iommu.c uses "entry" for these). And
+>>>tce32_segsz never changes. So:
+>>>
+>>>const unsigned int entries = PNV_IODA1_DMA32_SEGSIZE >> (IOMMU_PAGE_SHIFT_4K
+>>>- 3);
+>>>
+>>
+>>Are you sure @tce32_segsz and equation you gave are for number of TCE entries,
+>>not the size of meory required for the DMA32 segment TCE table?
+>
+>No, I am not :) "-3" makes it a table size in bytes, so it is rather tablesz
+>then.
+>
 
-Separate the realloc list checking to another function.
+Ok. @tce32_segsz is the size of memory used for TCE entries for one segment (256MB),
+not a whole TCE table. So I think @tce32_segsz is better than @tablesz from the
+perspective.
 
-Add checking that is missed in acpiphp driver.
+>
+>>
+>>>>  	int64_t rc;
+>>>>  	void *addr;
+>>>>
+>>>>@@ -2054,29 +2051,34 @@ static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
+>>>>  	/* Grab a 32-bit TCE table */
+>>>>  	pe->tce32_seg = base;
+>>>>  	pe_info(pe, " Setting up 32-bit TCE table at %08x..%08x\n",
+>>>>-		(base << 28), ((base + segs) << 28) - 1);
+>>>>+		base * PNV_IODA1_DMA32_SEGSIZE,
+>>>>+		(base + segs) * PNV_IODA1_DMA32_SEGSIZE - 1);
+>>>>
+>>>>  	/* XXX Currently, we allocate one big contiguous table for the
+>>>>  	 * TCEs. We only really need one chunk per 256M of TCE space
+>>>>  	 * (ie per segment) but that's an optimization for later, it
+>>>>  	 * requires some added smarts with our get/put_tce implementation
+>>>>+	 *
+>>>>+	 * Each TCE page is 4KB in size and each TCE entry occupies 8
+>>>>+	 * bytes
+>>>>  	 */
+>>>>+	tce32_segsz = PNV_IODA1_DMA32_SEGSIZE >> (IOMMU_PAGE_SHIFT_4K - 3);
+>>>
+>>>>  	tce_mem = alloc_pages_node(phb->hose->node, GFP_KERNEL,
+>>>>-				   get_order(TCE32_TABLE_SIZE * segs));
+>>>>+				   get_order(tce32_segsz * segs));
+>>>>  	if (!tce_mem) {
+>>>>  		pe_err(pe, " Failed to allocate a 32-bit TCE memory\n");
+>>>>  		goto fail;
+>>>>  	}
+>>>>  	addr = page_address(tce_mem);
+>>>>-	memset(addr, 0, TCE32_TABLE_SIZE * segs);
+>>>>+	memset(addr, 0, tce32_segsz * segs);
+>>>>
+>>>>  	/* Configure HW */
+>>>>  	for (i = 0; i < segs; i++) {
+>>>>  		rc = opal_pci_map_pe_dma_window(phb->opal_id,
+>>>>  					      pe->pe_number,
+>>>>  					      base + i, 1,
+>>>>-					      __pa(addr) + TCE32_TABLE_SIZE * i,
+>>>>-					      TCE32_TABLE_SIZE, 0x1000);
+>>>>+					      __pa(addr) + tce32_segsz * i,
+>>>>+					      tce32_segsz, 0x1000);
+>>>
+>>>
+>>>As you started using IOMMU_PAGE_SHIFT_4K and you are also touching this piece
+>>>of code -
+>>>
+>>>s/0x1000/IOMMU_PAGE_SHIFT_4K/
+>>>
+>>
+>>Does 0x1000 is equal to IOMMU_PAGE_SHIFT_4K? I guess you probably suggested
+>>to use IOMMU_PAGE_SIZE_4K instead?
+>
+>
+>Ah, my bad, should have been IOMMU_PAGE_SIZE_4K. I'll pay more attention to
+>the details, sorry.
+>
 
--v2: change from BUG_ON to WARN_ON according to Rafael.
+No worries. Thanks for your review anyway.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Len Brown <lenb@kernel.org>
-Cc: linux-acpi@vger.kernel.org
----
- drivers/pci/hotplug/acpiphp_glue.c |  1 +
- drivers/pci/pci.h                  |  1 +
- drivers/pci/setup-bus.c            | 12 +++++++++---
- 3 files changed, 11 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
-index fa49f91..c35983a 100644
---- a/drivers/pci/hotplug/acpiphp_glue.c
-+++ b/drivers/pci/hotplug/acpiphp_glue.c
-@@ -507,6 +507,7 @@ static void enable_slot(struct acpiphp_slot *slot)
- 		}
- 	}
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
-+	pci_bus_check_realloc(&add_list);
- 
- 	acpiphp_sanitize_bus(bus);
- 	pcie_bus_configure_settings(bus);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 0ac4229..0bb8eee 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -238,6 +238,7 @@ void __pci_bus_size_bridges(struct pci_bus *bus,
- void __pci_bus_assign_resources(const struct pci_bus *bus,
- 				struct list_head *realloc_head,
- 				struct list_head *fail_head);
-+void pci_bus_check_realloc(struct list_head *realloc_head);
- bool pci_bus_clip_resource(struct pci_dev *dev, int idx);
- 
- void pci_reassigndev_resource_alignment(struct pci_dev *dev);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 6385cf7..7d58f3f 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -279,6 +279,12 @@ out:
- 	}
- }
- 
-+void pci_bus_check_realloc(struct list_head *realloc_head)
-+{
-+	if (WARN_ON(!list_empty(realloc_head)))
-+		free_list(realloc_head);
-+}
-+
- /**
-  * assign_requested_resources_sorted() - satisfy resource requests
-  *
-@@ -1776,7 +1782,7 @@ again:
- 	/* Depth last, allocate resources and update the hardware. */
- 	__pci_bus_assign_resources(bus, add_list, &fail_head);
- 	if (add_list)
--		BUG_ON(!list_empty(add_list));
-+		pci_bus_check_realloc(add_list);
- 	tried_times++;
- 
- 	/* any device complain? */
-@@ -1851,7 +1857,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- again:
- 	__pci_bus_size_bridges(parent, &add_list);
- 	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
--	BUG_ON(!list_empty(&add_list));
-+	pci_bus_check_realloc(&add_list);
- 	tried_times++;
- 
- 	if (list_empty(&fail_head))
-@@ -1910,6 +1916,6 @@ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
- 							 &add_list);
- 	up_read(&pci_bus_sem);
- 	__pci_bus_assign_resources(bus, &add_list, NULL);
--	BUG_ON(!list_empty(&add_list));
-+	pci_bus_check_realloc(&add_list);
- }
- EXPORT_SYMBOL_GPL(pci_assign_unassigned_bus_resources);
--- 
-1.8.4.5
+>>
+>>>>  		if (rc) {
+>>>>  			pe_err(pe, " Failed to configure 32-bit TCE table,"
+>>>>  			       " err %ld\n", rc);
+>>>>@@ -2085,8 +2087,9 @@ static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
+>>>>  	}
+>>>>
+>>>>  	/* Setup linux iommu table */
+>>>>-	pnv_pci_setup_iommu_table(tbl, addr, TCE32_TABLE_SIZE * segs,
+>>>>-				  base << 28, IOMMU_PAGE_SHIFT_4K);
+>>>>+	pnv_pci_setup_iommu_table(tbl, addr, tce32_segsz * segs,
+>>>>+				  base * PNV_IODA1_DMA32_SEGSIZE,
+>>>>+				  IOMMU_PAGE_SHIFT_4K);
+>>>>
+>>>>  	/* OPAL variant of P7IOC SW invalidated TCEs */
+>>>>  	if (phb->ioda.tce_inval_reg)
+>>>>@@ -2116,7 +2119,7 @@ static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
+>>>>  	if (pe->tce32_seg >= 0)
+>>>>  		pe->tce32_seg = -1;
+>>>>  	if (tce_mem)
+>>>>-		__free_pages(tce_mem, get_order(TCE32_TABLE_SIZE * segs));
+>>>>+		__free_pages(tce_mem, get_order(tce32_segsz * segs));
+>>>>  	if (tbl) {
+>>>>  		pnv_pci_unlink_table_and_group(tbl, &pe->table_group);
+>>>>  		iommu_free_table(tbl, "pnv");
+>>>>@@ -3445,7 +3448,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>>>>  	mutex_init(&phb->ioda.pe_list_mutex);
+>>>>
+>>>>  	/* Calculate how many 32-bit TCE segments we have */
+>>>>-	phb->ioda.tce32_count = phb->ioda.m32_pci_base >> 28;
+>>>>+	phb->ioda.tce32_count = phb->ioda.m32_pci_base /
+>>>>+				PNV_IODA1_DMA32_SEGSIZE;
+>>>>
+>>>>  #if 0 /* We should really do that ... */
+>>>>  	rc = opal_pci_set_phb_mem_window(opal->phb_id,
+>>>>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>>>>index 00539ff..1d8e775 100644
+>>>>--- a/arch/powerpc/platforms/powernv/pci.h
+>>>>+++ b/arch/powerpc/platforms/powernv/pci.h
+>>>>@@ -84,6 +84,7 @@ struct pnv_ioda_pe {
+>>>>
+>>>>  #define PNV_IODA1_M64_NUM	16	/* Number of M64 BARs   */
+>>>>  #define PNV_IODA1_M64_SEGS	8	/* Segments per M64 BAR */
+>>>>+#define PNV_IODA1_DMA32_SEGSIZE	0x10000000
+>>>>
+>>>>  #define PNV_PHB_FLAG_EEH	(1 << 0)
+>>>>
+>>>>
+>
+>-- 
+>Alexey
+>
 
