@@ -1,131 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36665 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932568AbcDHAWe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:22:34 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 48/60] PCI: Move ISA io port align out of calculate_iosize()
-Date: Thu,  7 Apr 2016 17:16:01 -0700
-Message-Id: <1460074573-7481-49-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:42767 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751881AbcDTBNJ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 21:13:09 -0400
+Received: from localhost
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 20 Apr 2016 11:13:07 +1000
+Date: Wed, 20 Apr 2016 11:12:05 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
+	robherring2@gmail.com, grant.likely@linaro.org
+Subject: Re: [PATCH v8 21/45] powerpc/powernv: Create PEs at PCI hot plugging
+ time
+Message-ID: <20160420011205.GA21871@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-22-git-send-email-gwshan@linux.vnet.ibm.com>
+ <5715B12A.6020203@ozlabs.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5715B12A.6020203@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need to move ISA io port align out of calculate_iosize(),
-so we could unify calculate_iosize and calculate_memsize later.
+On Tue, Apr 19, 2016 at 02:16:42PM +1000, Alexey Kardashevskiy wrote:
+>On 02/17/2016 02:44 PM, Gavin Shan wrote:
+>>Currently, the PEs and their associated resources are assigned
+>>in ppc_md.pcibios_fixup() except those used by SRIOV VFs.
+>
+>But this new code does not affect IOV and VF's PEs will still be created
+>somewhere else rather than pnv_pci_setup_bridge()?
+>
 
-That extra aligning or offset is to work around ISA devices:
-When one bridge have several children devices, and every device
-has several io port resources and resource size < 0x400.
-We need to check size, and add extra size to make sure bit8/9
-to be zero.
+Correct. VF PEs cannot be created in pnv_pci_setup_bridge() as the PF's
+IOV capability isn't enabled at that point.
 
-Also need to apply same checking for optional size path.
+>
+>>The
+>>function is called for once after PCI probing and resources
+>>assignment is completed. So it isn't hotplug friendly.
+>>
+>>This creates PEs dynamically by ppc_md.pcibios_setup_bridge(), which
+>>is called on the event during system bootup and PCI hotplug: updating
+>>PCI bridge's windows after resource assignment/reassignment are done.
+>>For partial hotplug case, where not all PCI devices belonging to the
+>>PE are unplugged and plugged again, we just need unbinding/binding
+>>the affected PCI devices with the corresponding PE without creating
+>>new one.
+>>
+>>As there is no upstream bridge for root bus that needs to be covered
+>>by PE, we have to create PE for root bus in ppc_md.pcibios_setup_bridge()
+>>before any other PEs can be created, as PE for root bus is the ancestor
+>>to anyone else.
+>
+>We did not need a root bus PE before? What is the other PE reserved for?
+>Comments only say "reserved"...
+>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 39 +++++++++++++++++++++++++++------------
- 1 file changed, 27 insertions(+), 12 deletions(-)
+No, A PE for root bus is needed before. other PEs can be for the PCI bus
+originated from root port and the subordinate domains.
+ 
+>>
+>>Also, the windows of root port or the upstream port of PCIe switch behind
+>>root port are extended to be PHB's apertures to accommodate the additional
+>>resources needed by newly plugged devices based on the fact: hotpluggable
+>>slot is behind root port or downstream port of the PCIe switch behind
+>>root port. The extension for those PCI brdiges' windows is done in
+>>ppc_md.pcibios_setup_bridge() as well.
+>
+>
+>This patch seems to be doing way too many things, hard to follow.
+>
+>Could you please split the patch into smaller chunks? For example (you can do
+>it totally different):
+>- move pnv_pci_ioda_setup_opal_tce_kill()
+>- move PE creation from pnv_pci_ioda_fixup() to pnv_pci_setup_bridge();
+>- add pnv_pci_fixup_bridge_resources()
+>- add an extra reserved PE for the root bus (and all this magic with
+>root_pe_idx/root_pe_populated)
+>- ...
+>
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 11a4c1d..c202854 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1113,11 +1113,6 @@ static resource_size_t calculate_iosize(resource_size_t size,
- 		size = min_size;
- 	if (old_size == 1)
- 		old_size = 0;
--	/* To be fixed in 2.5: we should have sort of HAVE_ISA
--	   flag in the struct pci_bus. */
--#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
--	size = (size & 0xff) + ((size & ~0xffUL) << 2);
--#endif
- 	size = ALIGN(size + size1, align);
- 	if (size < old_size)
- 		size = old_size;
-@@ -1171,6 +1166,18 @@ static resource_size_t window_alignment(struct pci_bus *bus,
- 	return max(align, arch_align);
- }
- 
-+static resource_size_t size_aligned_for_isa(resource_size_t size)
-+{
-+	/*
-+	 * To be fixed in 2.5: we should have sort of HAVE_ISA
-+	 *  flag in the struct pci_bus.
-+	 */
-+#if defined(CONFIG_ISA) || defined(CONFIG_EISA)
-+	size = (size & 0xff) + ((size & ~0xffUL) << 2);
-+#endif
-+	return size;
-+}
-+
- /**
-  * pbus_size_io() - size the io window of a given bus
-  *
-@@ -1188,11 +1195,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- {
- 	struct pci_dev *dev;
- 	resource_size_t min_sum_size = 0;
--	resource_size_t sum_add_size;
- 	struct resource *b_res = find_free_bus_resource(bus, IORESOURCE_IO,
- 							IORESOURCE_IO);
- 	resource_size_t size = 0, size0 = 0, size1 = 0;
--	resource_size_t children_add_size = 0;
-+	resource_size_t sum_add_size = 0, sum_add_size1 = 0;
- 	resource_size_t min_align, align;
- 
- 	if (!b_res)
-@@ -1209,7 +1215,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
--			unsigned long r_size;
-+			unsigned long r_size, r_add_size;
- 
- 			if (r->parent || !(r->flags & IORESOURCE_IO))
- 				continue;
-@@ -1225,18 +1231,27 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 			if (align > min_align)
- 				min_align = align;
- 
--			if (realloc_head)
--				children_add_size += get_res_add_size(realloc_head, r);
-+			if (realloc_head) {
-+				r_add_size = get_res_add_size(realloc_head, r);
-+				r_add_size += r_size;
-+				if (r_add_size < 0x400)
-+					/* Might be re-aligned for ISA */
-+					sum_add_size += r_add_size;
-+				else
-+					sum_add_size1 += r_add_size;
-+			}
- 		}
- 	}
- 
-+	size = size_aligned_for_isa(size);
- 	size0 = calculate_iosize(size, min_size, size1,
- 			resource_size(b_res), min_align);
--	sum_add_size = children_add_size + size + size1;
-+	sum_add_size = size_aligned_for_isa(sum_add_size);
-+	sum_add_size += sum_add_size1;
- 	if (sum_add_size < min_sum_size)
- 		sum_add_size = min_sum_size;
- 	size1 = !realloc_head ? size0 :
--		calculate_iosize(size, min_size, sum_add_size - size,
-+		calculate_iosize(sum_add_size, min_size, 0,
- 			resource_size(b_res), min_align);
- 	if (!size0 && !size1) {
- 		if (b_res->start || b_res->end)
--- 
-1.8.4.5
+I'll evaluate it later. It's always nice to have small patches. Thanks
+for the comments.
+
+>
+>
+>
+>-- 
+>Alexey
+>
 
