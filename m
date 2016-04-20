@@ -1,456 +1,258 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f179.google.com ([209.85.192.179]:36308 "EHLO
-	mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757967AbcDMI7s (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 04:59:48 -0400
-Received: by mail-pf0-f179.google.com with SMTP id e128so30532769pfe.3
-        for <linux-pci@vger.kernel.org>; Wed, 13 Apr 2016 01:59:47 -0700 (PDT)
-Subject: Re: [PATCH v8 16/45] powerpc/powernv: Remove DMA32 PE list
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-17-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
-	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <570E0A7C.70103@ozlabs.ru>
-Date: Wed, 13 Apr 2016 18:59:40 +1000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 19 Apr 2016 20:03:43 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: bhelgaas@google.com, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH next v2 1/2] PCI: keystone: add pci error irq handler
+Message-ID: <20160420010343.GI17863@localhost>
+References: <1460386231-8377-1-git-send-email-m-karicheri2@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-17-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1460386231-8377-1-git-send-email-m-karicheri2@ti.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/17/2016 02:43 PM, Gavin Shan wrote:
-> PEs are put into PHB DMA32 list (phb->ioda.pe_dma_list) according
-> to their DMA32 weight. The PEs on the list are iterated to setup
-> their TCE32 tables at system booting time. The list is used for
-> once and there is for keep having it.
+Hi Murali,
 
-"there is no need to keep it" may be?
+On Mon, Apr 11, 2016 at 10:50:30AM -0400, Murali Karicheri wrote:
+> Keystone PCI hardware generates error interrupts at RC using platform
+> irq instead of standard msi/legacy irq. Add a simple error handler that
+> logs the fatal interrupt status to the console.
+> 
+> Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+> Acked-by: Rob Herring <robh@kernel.org>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Pawel Moll <pawel.moll@arm.com>
+> Cc: Mark Rutland <mark.rutland@arm.com>
+> Cc: Ian Campbell <ijc+devicetree@hellion.org.uk>
+> Cc: Kumar Gala <galak@codeaurora.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
 
+I applied this with minor changes to pci/host-keystone for v4.7.
+See below:
 
->
-> This moves the logic calculating DMA32 weight of PHB and PE to
-> pnv_ioda_setup_dma() to drop PHB's DMA32 list. Also, every PE
-> traces the consumed DMA32 segment by @tce32_seg and @tce32_segcount
-> are useless and they're removed.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-
-
-Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-
-with few comments below...
-
-> ---
->   arch/powerpc/platforms/powernv/pci-ioda.c | 168 +++++++++++++-----------------
->   arch/powerpc/platforms/powernv/pci.h      |  19 ----
->   2 files changed, 75 insertions(+), 112 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index e60cff6..0fc2309 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -886,44 +886,6 @@ out:
->   	return 0;
->   }
->
-> -static void pnv_ioda_link_pe_by_weight(struct pnv_phb *phb,
-> -				       struct pnv_ioda_pe *pe)
-> -{
-> -	struct pnv_ioda_pe *lpe;
-> -
-> -	list_for_each_entry(lpe, &phb->ioda.pe_dma_list, dma_link) {
-> -		if (lpe->dma_weight < pe->dma_weight) {
-> -			list_add_tail(&pe->dma_link, &lpe->dma_link);
-> -			return;
-> -		}
-> -	}
-> -	list_add_tail(&pe->dma_link, &phb->ioda.pe_dma_list);
-> -}
-> -
-> -static unsigned int pnv_ioda_dma_weight(struct pci_dev *dev)
-> -{
-> -	/* This is quite simplistic. The "base" weight of a device
-> -	 * is 10. 0 means no DMA is to be accounted for it.
-> -	 */
-> -
-> -	/* If it's a bridge, no DMA */
-> -	if (dev->hdr_type != PCI_HEADER_TYPE_NORMAL)
-> -		return 0;
-> -
-> -	/* Reduce the weight of slow USB controllers */
-> -	if (dev->class == PCI_CLASS_SERIAL_USB_UHCI ||
-> -	    dev->class == PCI_CLASS_SERIAL_USB_OHCI ||
-> -	    dev->class == PCI_CLASS_SERIAL_USB_EHCI)
-> -		return 3;
-> -
-> -	/* Increase the weight of RAID (includes Obsidian) */
-> -	if ((dev->class >> 8) == PCI_CLASS_STORAGE_RAID)
-> -		return 15;
-> -
-> -	/* Default */
-> -	return 10;
-> -}
-> -
->   #ifdef CONFIG_PCI_IOV
->   static int pnv_pci_vf_resource_shift(struct pci_dev *dev, int offset)
->   {
-> @@ -1028,7 +990,6 @@ static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
->   	pe->flags = PNV_IODA_PE_DEV;
->   	pe->pdev = dev;
->   	pe->pbus = NULL;
-> -	pe->tce32_seg = -1;
->   	pe->mve_number = -1;
->   	pe->rid = dev->bus->number << 8 | pdn->devfn;
->
-> @@ -1044,16 +1005,6 @@ static struct pnv_ioda_pe *pnv_ioda_setup_dev_PE(struct pci_dev *dev)
->   		return NULL;
->   	}
->
-> -	/* Assign a DMA weight to the device */
-> -	pe->dma_weight = pnv_ioda_dma_weight(dev);
-> -	if (pe->dma_weight != 0) {
-> -		phb->ioda.dma_weight += pe->dma_weight;
-> -		phb->ioda.dma_pe_count++;
-> -	}
-> -
-> -	/* Link the PE */
-> -	pnv_ioda_link_pe_by_weight(phb, pe);
-> -
->   	return pe;
->   }
->
-> @@ -1071,7 +1022,6 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
->   		}
->   		pdn->pcidev = dev;
->   		pdn->pe_number = pe->pe_number;
-> -		pe->dma_weight += pnv_ioda_dma_weight(dev);
->   		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
->   			pnv_ioda_setup_same_PE(dev->subordinate, pe);
->   	}
-> @@ -1108,10 +1058,8 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
->   	pe->flags |= (all ? PNV_IODA_PE_BUS_ALL : PNV_IODA_PE_BUS);
->   	pe->pbus = bus;
->   	pe->pdev = NULL;
-> -	pe->tce32_seg = -1;
->   	pe->mve_number = -1;
->   	pe->rid = bus->busn_res.start << 8;
-> -	pe->dma_weight = 0;
->
->   	if (all)
->   		pe_info(pe, "Secondary bus %d..%d associated with PE#%d\n",
-> @@ -1133,17 +1081,6 @@ static void pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
->
->   	/* Put PE to the list */
->   	list_add_tail(&pe->list, &phb->ioda.pe_list);
-> -
-> -	/* Account for one DMA PE if at least one DMA capable device exist
-> -	 * below the bridge
-> -	 */
-> -	if (pe->dma_weight != 0) {
-> -		phb->ioda.dma_weight += pe->dma_weight;
-> -		phb->ioda.dma_pe_count++;
-> -	}
-> -
-> -	/* Link the PE */
-> -	pnv_ioda_link_pe_by_weight(phb, pe);
->   }
->
->   static struct pnv_ioda_pe *pnv_ioda_setup_npu_PE(struct pci_dev *npu_pdev)
-> @@ -1184,7 +1121,6 @@ static struct pnv_ioda_pe *pnv_ioda_setup_npu_PE(struct pci_dev *npu_pdev)
->   			rid = npu_pdev->bus->number << 8 | npu_pdn->devfn;
->   			npu_pdn->pcidev = npu_pdev;
->   			npu_pdn->pe_number = pe_num;
-> -			pe->dma_weight += pnv_ioda_dma_weight(npu_pdev);
->   			phb->ioda.pe_rmap[rid] = pe->pe_number;
->
->   			/* Map the PE to this link */
-> @@ -1532,7 +1468,6 @@ static void pnv_ioda_setup_vf_PE(struct pci_dev *pdev, u16 num_vfs)
->   		pe->flags = PNV_IODA_PE_VF;
->   		pe->pbus = NULL;
->   		pe->parent_dev = pdev;
-> -		pe->tce32_seg = -1;
->   		pe->mve_number = -1;
->   		pe->rid = (pci_iov_virtfn_bus(pdev, vf_index) << 8) |
->   			   pci_iov_virtfn_devfn(pdev, vf_index);
-> @@ -2023,6 +1958,54 @@ static struct iommu_table_ops pnv_ioda2_iommu_ops = {
->   	.free = pnv_ioda2_table_free,
->   };
->
-> +static int pnv_pci_ioda_dev_dma_weight(struct pci_dev *dev, void *data)
+> +bool ks_dw_pcie_handle_error_irq(struct device *dev, void __iomem *reg_base)
 > +{
-> +	unsigned int *weight = (unsigned int *)data;
+> +	u32 status;
+> +	bool ret = false;
 > +
-> +	/* This is quite simplistic. The "base" weight of a device
-> +	 * is 10. 0 means no DMA is to be accounted for it.
-> +	 */
-> +	if (dev->hdr_type != PCI_HEADER_TYPE_NORMAL)
-> +		return 0;
+> +	status = readl(reg_base + ERR_IRQ_STATUS_RAW) & ERR_IRQ_ALL;
+> +	if (status) {
+> +		/* The PCIESS interrupt status buts are "write 1 to clear" */
+> +		if (status & ERR_FATAL_IRQ)
+> +			dev_err(dev, "PCIE fatal error detected\n");
 > +
-> +	if (dev->class == PCI_CLASS_SERIAL_USB_UHCI ||
-> +	    dev->class == PCI_CLASS_SERIAL_USB_OHCI ||
-> +	    dev->class == PCI_CLASS_SERIAL_USB_EHCI)
-> +		*weight += 3;
-> +	else if ((dev->class >> 8) == PCI_CLASS_STORAGE_RAID)
-> +		*weight += 15;
-> +	else
-> +		*weight += 10;
-> +
-> +	return 0;
-> +}
-> +
-> +static unsigned int pnv_pci_ioda_pe_dma_weight(struct pnv_ioda_pe *pe)
-> +{
-> +	unsigned int weight = 0;
-> +
-> +	if ((pe->flags & PNV_IODA_PE_DEV) && pe->pdev) {
-> +		pnv_pci_ioda_dev_dma_weight(pe->pdev, &weight);
-> +	} else if ((pe->flags & PNV_IODA_PE_BUS) && pe->pbus) {
-> +		struct pci_dev *pdev;
-> +
-> +		list_for_each_entry(pdev, &pe->pbus->devices, bus_list)
-> +			pnv_pci_ioda_dev_dma_weight(pdev, &weight);
-> +	} else if ((pe->flags & PNV_IODA_PE_BUS_ALL) && pe->pbus) {
-> +		pci_walk_bus(pe->pbus, pnv_pci_ioda_dev_dma_weight, &weight);
+> +		/* ack the irq event. */
+> +		writel(status, reg_base + ERR_IRQ_STATUS);
+> +		ret = true;
 > +	}
-> +
-> +	return weight;
+> +	return ret;
 > +}
-> +
-> +static unsigned int pnv_pci_ioda_total_dma_weight(struct pnv_phb *phb)
 
+It seems pointless to me to return true/false here and then:
 
-s/pnv_pci_ioda_total_dma_weight/pnv_pci_ioda1_phb_dma_weight/ ? "total" 
-does not say much. Or just merge it into pnv_pci_ioda1_setup_dma_pe() as it 
-is useless for anything but IODA1.
-
-
-
-
+> +static irqreturn_t pcie_err_irq_handler(int irq, void *priv)
 > +{
-> +	unsigned int weight = 0;
+> +	struct keystone_pcie *ks_pcie = priv;
 > +
-> +	pci_walk_bus(phb->hose->bus, pnv_pci_ioda_dev_dma_weight, &weight);
-> +	return weight;
+> +	if (ks_dw_pcie_handle_error_irq(ks_pcie->pp.dev, ks_pcie->va_app_base))
+> +		return IRQ_HANDLED;
+> +
+> +	return IRQ_NONE;
 > +}
-> +
->   static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
->   				       struct pnv_ioda_pe *pe,
->   				       unsigned int base,
-> @@ -2039,17 +2022,12 @@ static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
->   	/* XXX FIXME: Provide 64-bit DMA facilities & non-4K TCE tables etc.. */
->   	/* XXX FIXME: Allocate multi-level tables on PHB3 */
->
-> -	/* We shouldn't already have a 32-bit DMA associated */
-> -	if (WARN_ON(pe->tce32_seg >= 0))
-> -		return;
-> -
->   	tbl = pnv_pci_table_alloc(phb->hose->node);
->   	iommu_register_group(&pe->table_group, phb->hose->global_number,
->   			pe->pe_number);
->   	pnv_pci_link_table_and_group(phb->hose->node, 0, tbl, &pe->table_group);
->
->   	/* Grab a 32-bit TCE table */
-> -	pe->tce32_seg = base;
->   	pe_info(pe, " Setting up 32-bit TCE table at %08x..%08x\n",
->   		base * PNV_IODA1_DMA32_SEGSIZE,
->   		(base + segs) * PNV_IODA1_DMA32_SEGSIZE - 1);
-> @@ -2116,8 +2094,6 @@ static void pnv_pci_ioda1_setup_dma_pe(struct pnv_phb *phb,
->   	return;
->    fail:
->   	/* XXX Failure: Try to fallback to 64-bit only ? */
-> -	if (pe->tce32_seg >= 0)
-> -		pe->tce32_seg = -1;
->   	if (tce_mem)
->   		__free_pages(tce_mem, get_order(tce32_segsz * segs));
->   	if (tbl) {
-> @@ -2528,10 +2504,6 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
->   {
->   	int64_t rc;
->
-> -	/* We shouldn't already have a 32-bit DMA associated */
-> -	if (WARN_ON(pe->tce32_seg >= 0))
-> -		return;
-> -
->   	/* TVE #1 is selected by PCI address bit 59 */
->   	pe->tce_bypass_base = 1ull << 59;
->
-> @@ -2539,7 +2511,6 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
->   			pe->pe_number);
->
->   	/* The PE will reserve all possible 32-bits space */
-> -	pe->tce32_seg = 0;
->   	pe_info(pe, "Setting up 32-bit TCE table at 0..%08x\n",
->   		phb->ioda.m32_pci_base);
->
-> @@ -2555,11 +2526,8 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
->   #endif
->
->   	rc = pnv_pci_ioda2_setup_default_config(pe);
-> -	if (rc) {
-> -		if (pe->tce32_seg >= 0)
-> -			pe->tce32_seg = -1;
-> +	if (rc)
->   		return;
-> -	}
->
->   	if (pe->flags & PNV_IODA_PE_DEV)
->   		iommu_add_device(&pe->pdev->dev);
-> @@ -2570,24 +2538,32 @@ static void pnv_pci_ioda2_setup_dma_pe(struct pnv_phb *phb,
->   static void pnv_ioda_setup_dma(struct pnv_phb *phb)
->   {
->   	struct pci_controller *hose = phb->hose;
-> -	unsigned int residual, remaining, segs, tw, base;
-> +	unsigned int weight, total_weight, dma_pe_count;
-> +	unsigned int residual, remaining, segs, base;
->   	struct pnv_ioda_pe *pe;
->
-> +	total_weight = pnv_pci_ioda_total_dma_weight(phb);
-> +	dma_pe_count = 0;
-> +	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
-> +		weight = pnv_pci_ioda_pe_dma_weight(pe);
-> +		if (weight > 0)
-> +			dma_pe_count++;
-> +	}
-> +
->   	/* If we have more PE# than segments available, hand out one
->   	 * per PE until we run out and let the rest fail. If not,
->   	 * then we assign at least one segment per PE, plus more based
->   	 * on the amount of devices under that PE
->   	 */
-> -	if (phb->ioda.dma_pe_count > phb->ioda.tce32_count)
-> +	if (dma_pe_count > phb->ioda.tce32_count)
->   		residual = 0;
->   	else
-> -		residual = phb->ioda.tce32_count -
-> -			phb->ioda.dma_pe_count;
-> +		residual = phb->ioda.tce32_count - dma_pe_count;
->
->   	pr_info("PCI: Domain %04x has %ld available 32-bit DMA segments\n",
->   		hose->global_number, phb->ioda.tce32_count);
->   	pr_info("PCI: %d PE# for a total weight of %d\n",
-> -		phb->ioda.dma_pe_count, phb->ioda.dma_weight);
-> +		dma_pe_count, total_weight);
->
->   	pnv_pci_ioda_setup_opal_tce_kill(phb);
->
-> @@ -2596,18 +2572,20 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
->   	 * weight
->   	 */
->   	remaining = phb->ioda.tce32_count;
-> -	tw = phb->ioda.dma_weight;
->   	base = 0;
-> -	list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
-> -		if (!pe->dma_weight)
-> +	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
-> +		weight = pnv_pci_ioda_pe_dma_weight(pe);
-> +		if (!weight)
->   			continue;
-> +
->   		if (!remaining) {
->   			pe_warn(pe, "No DMA32 resources available\n");
->   			continue;
->   		}
->   		segs = 1;
->   		if (residual) {
-> -			segs += ((pe->dma_weight * residual)  + (tw / 2)) / tw;
-> +			segs += ((weight * residual) + (total_weight / 2)) /
-> +				total_weight;
->   			if (segs > remaining)
->   				segs = remaining;
->   		}
-> @@ -2619,7 +2597,7 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
->   		 */
->   		if (phb->type == PNV_PHB_IODA1) {
->   			pe_info(pe, "DMA weight %d, assigned %d DMA32 segments\n",
-> -				pe->dma_weight, segs);
-> +				weight, segs);
->   			pnv_pci_ioda1_setup_dma_pe(phb, pe, base, segs);
->   		} else if (phb->type == PNV_PHB_IODA2) {
->   			pe_info(pe, "Assign DMA32 space\n");
-> @@ -3156,13 +3134,18 @@ static void pnv_npu_ioda_fixup(void)
->   	struct pci_controller *hose, *tmp;
->   	struct pnv_phb *phb;
->   	struct pnv_ioda_pe *pe;
-> +	unsigned int weight;
->
->   	list_for_each_entry_safe(hose, tmp, &hose_list, list_node) {
->   		phb = hose->private_data;
->   		if (phb->type != PNV_PHB_NPU)
->   			continue;
->
-> -		list_for_each_entry(pe, &phb->ioda.pe_dma_list, dma_link) {
-> +		list_for_each_entry(pe, &phb->ioda.pe_list, list) {
-> +			weight = pnv_pci_ioda_pe_dma_weight(pe);
-> +			if (!weight)
-> +				continue;
 
-Is this even possible for NPU PE to get weight==0? WARN_ON()? BUG_ON()?
+convert the true/false to IRQ_HANDLED/IRQ_NONE here.  So I changed
+ks_dw_pcie_handle_error_irq() to return IRQ_HANDLED/IRQ_NONE directly,
+resulting in the patch below.
+
+This is applied to pci/host-keystone for v4.7.
 
 
+commit 7be92716c1aa40f5690e6a5f01fc0d385dd72303
+Author: Murali Karicheri <m-karicheri2@ti.com>
+Date:   Mon Apr 11 10:50:30 2016 -0400
 
-> +
->   			enable_bypass = dma_get_mask(&pe->pdev->dev) ==
->   				DMA_BIT_MASK(64);
->   			pnv_npu_init_dma_pe(pe);
-> @@ -3443,7 +3426,6 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->   	phb->ioda.pe_array = aux + pemap_off;
->   	set_bit(phb->ioda.reserved_pe_idx, phb->ioda.pe_alloc);
->
-> -	INIT_LIST_HEAD(&phb->ioda.pe_dma_list);
->   	INIT_LIST_HEAD(&phb->ioda.pe_list);
->   	mutex_init(&phb->ioda.pe_list_mutex);
->
-> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-> index 1d8e775..e90bcbe 100644
-> --- a/arch/powerpc/platforms/powernv/pci.h
-> +++ b/arch/powerpc/platforms/powernv/pci.h
-> @@ -53,14 +53,7 @@ struct pnv_ioda_pe {
->   	/* PE number */
->   	unsigned int		pe_number;
->
-> -	/* "Weight" assigned to the PE for the sake of DMA resource
-> -	 * allocations
-> -	 */
-> -	unsigned int		dma_weight;
-> -
->   	/* "Base" iommu table, ie, 4K TCEs, 32-bit DMA */
-> -	int			tce32_seg;
-> -	int			tce32_segcount;
->   	struct iommu_table_group table_group;
->
->   	/* 64-bit TCE bypass region */
-> @@ -78,7 +71,6 @@ struct pnv_ioda_pe {
->   	struct list_head	slaves;
->
->   	/* Link in list of PE#s */
-> -	struct list_head	dma_link;
->   	struct list_head	list;
->   };
->
-> @@ -173,17 +165,6 @@ struct pnv_phb {
->   		/* 32-bit TCE tables allocation */
->   		unsigned long		tce32_count;
->
-> -		/* Total "weight" for the sake of DMA resources
-> -		 * allocation
-> -		 */
-> -		unsigned int		dma_weight;
-> -		unsigned int		dma_pe_count;
-> -
-> -		/* Sorted list of used PE's, sorted at
-> -		 * boot for resource allocation purposes
-> -		 */
-> -		struct list_head	pe_dma_list;
-> -
->   		/* TCE cache invalidate registers (physical and
->   		 * remapped)
->   		 */
->
+    PCI: keystone: Add error IRQ handler
+    
+    Keystone PCI hardware generates error interrupts at RC using a platform IRQ
+    instead of a standard MSI or legacy IRQ.  Add a simple error handler that
+    logs the fatal interrupt status to the console.
+    
+    [bhelgaas: tidy comments, return irqreturn_t directly]
+    Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Rob Herring <robh@kernel.org>
+    CC: Pawel Moll <pawel.moll@arm.com>
+    CC: Mark Rutland <mark.rutland@arm.com>
+    CC: Ian Campbell <ijc+devicetree@hellion.org.uk>
+    CC: Kumar Gala <galak@codeaurora.org>
 
-
--- 
-Alexey
+diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
+index 54eae29..d08a4d5 100644
+--- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
++++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
+@@ -56,6 +56,7 @@ Optional properties:-
+ 	phy-names: name of the Generic Keystine SerDes phy for PCI
+ 	  - If boot loader already does PCI link establishment, then phys and
+ 	    phy-names shouldn't be present.
++	interrupts: platform interrupt for error interrupts.
+ 
+ Designware DT Properties not applicable for Keystone PCI
+ 
+diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
+index 6153853..4151509 100644
+--- a/drivers/pci/host/pci-keystone-dw.c
++++ b/drivers/pci/host/pci-keystone-dw.c
+@@ -14,6 +14,7 @@
+ 
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
++#include <linux/irqreturn.h>
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/of_pci.h>
+@@ -53,6 +54,21 @@
+ #define IRQ_STATUS			0x184
+ #define MSI_IRQ_OFFSET			4
+ 
++/* Error IRQ bits */
++#define ERR_AER		BIT(5)	/* ECRC error */
++#define ERR_AXI		BIT(4)	/* AXI tag lookup fatal error */
++#define ERR_CORR	BIT(3)	/* Correctable error */
++#define ERR_NONFATAL	BIT(2)	/* Non-fatal error */
++#define ERR_FATAL	BIT(1)	/* Fatal error */
++#define ERR_SYS		BIT(0)	/* System (fatal, non-fatal, or correctable) */
++#define ERR_IRQ_ALL	(ERR_AER | ERR_AXI | ERR_CORR | \
++			 ERR_NONFATAL | ERR_FATAL | ERR_SYS)
++#define ERR_FATAL_IRQ	(ERR_FATAL | ERR_AXI)
++#define ERR_IRQ_STATUS_RAW		0x1c0
++#define ERR_IRQ_STATUS			0x1c4
++#define ERR_IRQ_ENABLE_SET		0x1c8
++#define ERR_IRQ_ENABLE_CLR		0x1cc
++
+ /* Config space registers */
+ #define DEBUG0				0x728
+ 
+@@ -243,6 +259,28 @@ void ks_dw_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie, int offset)
+ 	writel(offset, ks_pcie->va_app_base + IRQ_EOI);
+ }
+ 
++void ks_dw_pcie_enable_error_irq(void __iomem *reg_base)
++{
++	writel(ERR_IRQ_ALL, reg_base + ERR_IRQ_ENABLE_SET);
++}
++
++irqreturn_t ks_dw_pcie_handle_error_irq(struct device *dev,
++					void __iomem *reg_base)
++{
++	u32 status;
++
++	status = readl(reg_base + ERR_IRQ_STATUS_RAW) & ERR_IRQ_ALL;
++	if (!status)
++		return IRQ_NONE;
++
++	if (status & ERR_FATAL_IRQ)
++		dev_err(dev, "fatal error (status %#010x)\n", status);
++
++	/* Ack the IRQ; status bits are RW1C */
++	writel(status, reg_base + ERR_IRQ_STATUS);
++	return IRQ_HANDLED;
++}
++
+ static void ks_dw_pcie_ack_legacy_irq(struct irq_data *d)
+ {
+ }
+diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
+index b71f55b..6868918 100644
+--- a/drivers/pci/host/pci-keystone.c
++++ b/drivers/pci/host/pci-keystone.c
+@@ -15,6 +15,7 @@
+ #include <linux/irqchip/chained_irq.h>
+ #include <linux/clk.h>
+ #include <linux/delay.h>
++#include <linux/interrupt.h>
+ #include <linux/irqdomain.h>
+ #include <linux/module.h>
+ #include <linux/msi.h>
+@@ -226,6 +227,9 @@ static void ks_pcie_setup_interrupts(struct keystone_pcie *ks_pcie)
+ 							 ks_pcie);
+ 		}
+ 	}
++
++	if (ks_pcie->error_irq > 0)
++		ks_dw_pcie_enable_error_irq(ks_pcie->va_app_base);
+ }
+ 
+ /*
+@@ -289,6 +293,14 @@ static struct pcie_host_ops keystone_pcie_host_ops = {
+ 	.scan_bus = ks_dw_pcie_v3_65_scan_bus,
+ };
+ 
++static irqreturn_t pcie_err_irq_handler(int irq, void *priv)
++{
++	struct keystone_pcie *ks_pcie = priv;
++
++	return ks_dw_pcie_handle_error_irq(ks_pcie->pp.dev,
++					   ks_pcie->va_app_base);
++}
++
+ static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
+ 			 struct platform_device *pdev)
+ {
+@@ -309,6 +321,22 @@ static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
+ 			return ret;
+ 	}
+ 
++	/*
++	 * Index 0 is the platform interrupt for error interrupt
++	 * from RC.  This is optional.
++	 */
++	ks_pcie->error_irq = irq_of_parse_and_map(ks_pcie->np, 0);
++	if (ks_pcie->error_irq <= 0)
++		dev_info(&pdev->dev, "no error IRQ defined\n");
++	else {
++		if (request_irq(ks_pcie->error_irq, pcie_err_irq_handler,
++				IRQF_SHARED, "pcie-error-irq", ks_pcie) < 0) {
++			dev_err(&pdev->dev, "failed to request error IRQ %d\n",
++				ks_pcie->error_irq);
++			return ret;
++		}
++	}
++
+ 	pp->root_bus_nr = -1;
+ 	pp->ops = &keystone_pcie_host_ops;
+ 	ret = ks_dw_pcie_host_init(ks_pcie, ks_pcie->msi_intc_np);
+@@ -376,6 +404,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	devm_release_mem_region(dev, res->start, resource_size(res));
+ 
+ 	pp->dev = dev;
++	ks_pcie->np = node;
+ 	platform_set_drvdata(pdev, ks_pcie);
+ 	ks_pcie->clk = devm_clk_get(dev, "pcie");
+ 	if (IS_ERR(ks_pcie->clk)) {
+diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/host/pci-keystone.h
+index f0944e8..a5b0cb2 100644
+--- a/drivers/pci/host/pci-keystone.h
++++ b/drivers/pci/host/pci-keystone.h
+@@ -29,6 +29,9 @@ struct keystone_pcie {
+ 	int			msi_host_irqs[MAX_MSI_HOST_IRQS];
+ 	struct			device_node *msi_intc_np;
+ 	struct irq_domain	*legacy_irq_domain;
++	struct device_node	*np;
++
++	int error_irq;
+ 
+ 	/* Application register space */
+ 	void __iomem		*va_app_base;
+@@ -42,6 +45,9 @@ phys_addr_t ks_dw_pcie_get_msi_addr(struct pcie_port *pp);
+ /* Keystone specific PCI controller APIs */
+ void ks_dw_pcie_enable_legacy_irqs(struct keystone_pcie *ks_pcie);
+ void ks_dw_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie, int offset);
++void ks_dw_pcie_enable_error_irq(void __iomem *reg_base);
++irqreturn_t ks_dw_pcie_handle_error_irq(struct device *dev,
++					void __iomem *reg_base);
+ int  ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
+ 			struct device_node *msi_intc_np);
+ int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
