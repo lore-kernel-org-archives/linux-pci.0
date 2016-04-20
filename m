@@ -1,96 +1,138 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC PATCH 04/11] drivers: acpi: iort: introduce linker section for IORT entries probing
-Date: Thu, 14 Apr 2016 18:25:36 +0100
-Message-Id: <1460654743-7896-5-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:32804 "EHLO
+	mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751029AbcDTERO (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2016 00:17:14 -0400
+Received: by mail-pf0-f176.google.com with SMTP id 184so13879190pff.0
+        for <linux-pci@vger.kernel.org>; Tue, 19 Apr 2016 21:17:14 -0700 (PDT)
+Subject: Re: [PATCH v8 37/45] powerpc/powernv: Use firmware PCI slot reset
+ infrastructure
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-38-git-send-email-gwshan@linux.vnet.ibm.com>
+ <5715FBBF.2000108@ozlabs.ru> <20160420023306.GD28594@gwshan>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
+	robherring2@gmail.com, grant.likely@linaro.org
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <571702C3.406@ozlabs.ru>
+Date: Wed, 20 Apr 2016 14:17:07 +1000
+MIME-Version: 1.0
+In-Reply-To: <20160420023306.GD28594@gwshan>
+Content-Type: text/plain; charset=koi8-r; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since commit e647b532275b ("ACPI: Add early device probing
-infrastructure") the kernel has gained the infrastructure that allows
-adding linker script section entries to execute ACPI driver callbacks
-(ie probe routines) for all subsystems that register a table entry
-in the respective kernel section (eg clocksource, irqchip).
+On 04/20/2016 12:33 PM, Gavin Shan wrote:
+> On Tue, Apr 19, 2016 at 07:34:55PM +1000, Alexey Kardashevskiy wrote:
+>> On 02/17/2016 02:44 PM, Gavin Shan wrote:
+>>> The skiboot firmware might provide the PCI slot reset capability
+>>> which is identified by property "ibm,reset-by-firmware" on the
+>>> PCI slot associated device node.
+>>>
+>>> This checks the property. If it exists, the reset request is routed
+>>> to firmware. Otherwise, the reset is done by kernel as before.
+>>>
+>>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>> ---
+>>>   arch/powerpc/platforms/powernv/eeh-powernv.c | 41 +++++++++++++++++++++++++++-
+>>>   1 file changed, 40 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>> index e23b063..c8a5217 100644
+>>> --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>> +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>> @@ -789,7 +789,7 @@ static int pnv_eeh_root_reset(struct pci_controller *hose, int option)
+>>>   	return ret;
+>>>   }
+>>>
+>>> -static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>>> +static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>>>   {
+>>>   	struct pci_dn *pdn = pci_get_pdn_by_devfn(dev->bus, dev->devfn);
+>>>   	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+>>> @@ -840,6 +840,45 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>>>   	return 0;
+>>>   }
+>>>
+>>> +static int pnv_eeh_bridge_reset(struct pci_dev *pdev, int option)
+>>> +{
+>>> +	struct pci_controller *hose;
+>>> +	struct pnv_phb *phb;
+>>> +	struct device_node *dn = pdev ? pci_device_to_OF_node(pdev) : NULL;
+>>> +	uint64_t id = (0x1ul << 60);
+>>
+>>
+>> What is this 1<<60 for?
+>>
+>>
+>
+> As you replied in other threads, it's worthy to have some macros for this
+> piece of business. This bit indicates the ID of the slot behind a switch
+> port. If this bit is cleared, the ID represents a PHB slot.
+>
+>>> +	uint8_t scope;
+>>> +	int64_t rc;
+>>> +
+>>> +	/*
+>>> +	 * If the firmware can't handle it, we will issue hot reset
+>>> +	 * on the secondary bus despite the requested reset type.
+>>> +	 */
+>>> +	if (!dn || !of_get_property(dn, "ibm,reset-by-firmware", NULL))
+>>> +		return __pnv_eeh_bridge_reset(pdev, option);
+>>> +
+>>> +	/* The firmware can handle the request */
+>>> +	switch (option) {
+>>> +	case EEH_RESET_HOT:
+>>> +		scope = OPAL_RESET_PCI_HOT;
+>>> +		break;
+>>> +	case EEH_RESET_FUNDAMENTAL:
+>>> +		scope = OPAL_RESET_PCI_FUNDAMENTAL;
+>>> +		break;
+>>> +	case EEH_RESET_DEACTIVATE:
+>>> +		return 0;
+>>> +	default:
+>>> +		dev_warn(&pdev->dev, "%s: Unsupported reset %d\n",
+>>> +			 __func__, option);
+>>
+>>
+>> Can the userspace trigger this case (via VFIO-EEH) and flood dmesg?
+>>
+>
+> It depends on how you defined message flooding actually. It's abnormal
+> path caused by program internal error, not external users.
 
-Since ARM IOMMU devices data is described through IORT tables when
-booting with ACPI, the ARM IOMMU drivers must be made able to hook ACPI
-callback routines that are called to probe IORT entries and initialize
-the respective IOMMU devices.
 
-To avoid adding driver specific hooks into IORT table initialization
-code (breaking therefore code modularity - ie ACPI IORT code must be made
-aware of ARM SMMU drivers ACPI init callbacks), this patch adds code
-that allows ARM SMMU drivers to take advantage of the ACPI early probing
-infrastructure, so that they can add linker script section entries
-containing drivers callback to be executed on IORT tables detection.
+Can QEMU be changed to do something special (cause reset with a wrong 
+option) via VFIO/EEH interface in a loop to make this message appear? Or 
+the call with a wrong option will never reach this point?
 
-Since IORT nodes are differentiated by a type, the callback routines
-can easily parse the IORT table entries, check the IORT nodes and
-carry out some actions whenever the IORT node type associated with
-the driver specific callback is matched.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/acpi/iort.c               | 2 ++
- include/asm-generic/vmlinux.lds.h | 1 +
- include/linux/iort.h              | 3 +++
- 3 files changed, 6 insertions(+)
+>
+>>
+>>
+>>> +		return -EINVAL;
+>>> +	}
+>>> +
+>>> +	hose = pci_bus_to_host(pdev->bus);
+>>> +	phb = hose->private_data;
+>>> +	id |= (pdev->bus->number << 24) | (pdev->devfn << 16) | phb->opal_id;
+>>> +	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
+>>> +	return pnv_pci_poll(id, rc, NULL);
+>>> +}
+>>> +
+>>>   static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
+>>>   {
+>>>   	int *freset = data;
+>>>
+>>
+>>
+>> --
+>> Alexey
+>>
+>
 
-diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
-index 98db580..080888a 100644
---- a/drivers/acpi/iort.c
-+++ b/drivers/acpi/iort.c
-@@ -372,6 +372,8 @@ static int __init iort_table_detect(void)
- 		return -EINVAL;
- 	}
- 
-+	acpi_probe_device_table(iort);
-+
- 	return 0;
- }
- arch_initcall(iort_table_detect);
-diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-index 339125b..0aae448 100644
---- a/include/asm-generic/vmlinux.lds.h
-+++ b/include/asm-generic/vmlinux.lds.h
-@@ -536,6 +536,7 @@
- 	IRQCHIP_OF_MATCH_TABLE()					\
- 	ACPI_PROBE_TABLE(irqchip)					\
- 	ACPI_PROBE_TABLE(clksrc)					\
-+	ACPI_PROBE_TABLE(iort)						\
- 	EARLYCON_TABLE()
- 
- #define INIT_TEXT							\
-diff --git a/include/linux/iort.h b/include/linux/iort.h
-index 148d9a1..766adda 100644
---- a/include/linux/iort.h
-+++ b/include/linux/iort.h
-@@ -31,4 +31,7 @@ struct fwnode_handle *iort_pci_get_domain(struct pci_dev *pdev, u32 req_id);
- int iort_iommu_set_node(struct iommu_ops *ops, struct acpi_iort_node *node,
- 			struct fwnode_handle *fwnode);
- 
-+#define IORT_ACPI_DECLARE(name, table_id, fn)		\
-+	ACPI_DECLARE_PROBE_ENTRY(iort, name, table_id, 0, NULL, 0, fn)
-+
- #endif /* __IORT_H__ */
+
 -- 
-2.6.4
-
+Alexey
