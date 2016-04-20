@@ -1,154 +1,157 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC PATCH 00/11] ACPI IORT ARM SMMU support
-Date: Thu, 14 Apr 2016 18:25:32 +0100
-Message-Id: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp07.au.ibm.com ([202.81.31.140]:43271 "EHLO
+	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754217AbcDTB3N (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 21:29:13 -0400
+Received: from localhost
+	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 20 Apr 2016 11:29:09 +1000
+Date: Wed, 20 Apr 2016 11:27:37 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
+	robherring2@gmail.com, grant.likely@linaro.org
+Subject: Re: [PATCH v8 29/45] powerpc/pci: Export pci_traverse_device_nodes()
+Message-ID: <20160420012737.GB24704@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-30-git-send-email-gwshan@linux.vnet.ibm.com>
+ <5715C747.4080005@ozlabs.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5715C747.4080005@ozlabs.ru>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The ACPI IORT table provides information that allows instantiating
-ARM SMMU devices and carrying out id mappings between components on
-ARM based systems (devices, IOMMUs, interrupt controllers).
+On Tue, Apr 19, 2016 at 03:51:03PM +1000, Alexey Kardashevskiy wrote:
+>On 02/17/2016 02:44 PM, Gavin Shan wrote:
+>>This renames traverse_pci_devices() to pci_traverse_device_nodes().
+>>The function traverses all subordinate device nodes of the specified
+>>one. Also, below cleanup applied to the function. No logical changes
+>>introduced.
+>>
+>>    * Rename "pre" to "fn".
+>>    * Avoid assignment in if condition reported from checkpatch.pl.
+>>
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/include/asm/ppc-pci.h   |  6 +++---
+>>  arch/powerpc/kernel/pci_dn.c         | 15 ++++++++++-----
+>>  arch/powerpc/platforms/pseries/msi.c |  4 ++--
+>>  3 files changed, 15 insertions(+), 10 deletions(-)
+>>
+>>diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
+>>index ca0c5bf..8753e4e 100644
+>>--- a/arch/powerpc/include/asm/ppc-pci.h
+>>+++ b/arch/powerpc/include/asm/ppc-pci.h
+>>@@ -33,9 +33,9 @@ extern struct pci_dev *isa_bridge_pcidev;	/* may be NULL if no ISA bus */
+>>  struct device_node;
+>>  struct pci_dn;
+>>
+>>-typedef void *(*traverse_func)(struct device_node *me, void *data);
+>
+>
+>
+>Why removing this typedef? Typedef's are good.
+>
+>Anyway,
+>
 
-http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
+Could you please provide more details why it's good? I removed it
+because it was used for only once.
 
-Building on basic IORT support, available through this posting:
 
-https://marc.info/?l=linux-acpi&m=145976009630179&w=2
-
-this patchset enables ARM SMMU support on ACPI systems.
-
-Most of the code is aimed at building the required generic ACPI
-infrastructure to create and enable IOMMU components and to bring
-the IOMMU infrastructure for ACPI on par with DT, which is going to
-make ARM SMMUv3 and future IOMMU components easier to integrate.
-
-PATCH [1] fixes a warning caused by a missing forward structure
-          declaration.
-
-PATCH [2] provides IORT support for registering IOMMU components.
-
-PATCH [3] adds a FWNODE_IOMMU type to the struct fwnode_handle type.
-          It is required to attach a fwnode identifier to platform
-          devices allocated/detected through IORT tables entries;
-          IOMMU devices have to have an identifier to look them up
-          eg IOMMU core layer carrying out id translation. This can be
-          done through a fwnode_handle (ie IOMMU platform devices created
-          out of IORT tables are not ACPI devices hence they can't be
-          allocated as such, otherwise they would have a fwnode_handle of
-          type FWNODE_ACPI). This patch requires discussion and it is key
-          to the RFC.
-
-PATCH [4] makes use of the ACPI early probing API to add a linker script
-          section for probing devices via IORT ACPI kernel code.
-
-PATCH [5] refactors the ARM SMMU driver so that the init functions are
-          split in a way that groups together code that probes through DT
-          and code that carries out HW registers FW agnostic probing, in
-          preparation for adding the ACPI probing path.
-
-PATCH [6] makes the of_xlate() interface for IOMMUs DT agnostic by
-          changing its API and making it work on ACPI systems too
-          through the introduction of a generic IOMMU FW translation
-          specifier.
-
-PATCH [7] implements ARM SMMU streamid mapping based on the previously
-          introduced infrastructure.
-
-PATCH [8] enhances IORT kernel code to implement the full set of mappings
-          allowed through the ACPI IORT table.
-
-PATCH [9] implements the of_dma_configure() API in ACPI world -
-          acpi_dma_configure() - and patches PCI and ACPI core code to start
-          making use of it.
-
-PATCH [10] implements and enables code for probing the ARM SMMU with ACPI,
-           building on top of the previously introduced generic infrastructure.
-
-PATCH [11] is a mechanical conversion of IRQ domain infrastructure to
-           generalize its translation capabilities for other kernel
-           subsystems, and it is there to prove that the approach taken
-           to implement IOMMU translation in a DT agnostic way would lead
-           to structure data duplication that may be deemed unnecessary
-           and can therefore be avoided.
-
-This patchset is built on top and depends on these two patch series:
-
-R.Murphy "Generic DT bindings for PCI and ARM SMMU"
-https://marc.info/?l=linux-arm-kernel&m=145675372917701&w=2
-
-T.Nowicki "Introduce ACPI world to ITS irqchip"
-https://marc.info/?l=linux-acpi&m=145976009630179&w=2
-
-Tested on Juno-r2 board with both DT and ACPI probing paths.
-
-Lorenzo Pieralisi (11):
-  drivers: acpi: iort: fix struct pci_dev compiler warnings
-  drivers: acpi: iort: add support for IOMMU registration
-  drivers: iommu: add FWNODE_IOMMU fwnode type
-  drivers: acpi: iort: introduce linker section for IORT entries probing
-  drivers: iommu: arm-smmu: split probe functions into DT/generic
-    portions
-  drivers: iommu: make of_xlate() interface DT agnostic
-  drivers: iommu: arm-smmu: allow ACPI based streamid translation
-  drivers: acpi: iort: enhance mapping API
-  drivers: acpi: implement acpi_dma_configure
-  drivers: iommu: arm-smmu: implement ACPI probing
-  drivers: irqchip: make struct irq_fwspec generic
-
- Documentation/IRQ-domain.txt         |   2 +-
- arch/arm/mach-exynos/suspend.c       |   6 +-
- arch/arm/mach-imx/gpc.c              |   6 +-
- arch/arm/mach-omap2/omap-wakeupgen.c |   6 +-
- drivers/acpi/glue.c                  |   4 +-
- drivers/acpi/gsi.c                   |   2 +-
- drivers/acpi/iort.c                  | 188 ++++++++++++++++++-
- drivers/acpi/scan.c                  |  29 +++
- drivers/gpio/gpio-xgene-sb.c         |   8 +-
- drivers/iommu/arm-smmu.c             | 346 ++++++++++++++++++++++++++++++-----
- drivers/iommu/exynos-iommu.c         |  11 +-
- drivers/iommu/mtk_iommu.c            |  13 +-
- drivers/iommu/of_iommu.c             |   8 +-
- drivers/irqchip/irq-alpine-msi.c     |   2 +-
- drivers/irqchip/irq-crossbar.c       |   6 +-
- drivers/irqchip/irq-gic-v2m.c        |   2 +-
- drivers/irqchip/irq-gic-v3-its.c     |   2 +-
- drivers/irqchip/irq-gic-v3.c         |   4 +-
- drivers/irqchip/irq-gic.c            |   4 +-
- drivers/irqchip/irq-imx-gpcv2.c      |   6 +-
- drivers/irqchip/irq-mbigen.c         |   4 +-
- drivers/irqchip/irq-mips-gic.c       |   2 +-
- drivers/irqchip/irq-mtk-sysirq.c     |   6 +-
- drivers/irqchip/irq-mvebu-odmi.c     |   2 +-
- drivers/irqchip/irq-nvic.c           |   4 +-
- drivers/irqchip/irq-tegra.c          |   6 +-
- drivers/irqchip/irq-vf610-mscm-ir.c  |   6 +-
- drivers/of/base.c                    |  24 +++
- drivers/pci/probe.c                  |   3 +-
- include/acpi/acpi_bus.h              |   2 +
- include/asm-generic/vmlinux.lds.h    |   1 +
- include/linux/acpi.h                 |   5 +
- include/linux/fwnode.h               |  21 +++
- include/linux/iommu.h                |  31 +++-
- include/linux/iort.h                 |  18 ++
- include/linux/irqdomain.h            |  22 +--
- include/linux/of.h                   |   7 +
- kernel/irq/irqdomain.c               |  17 +-
- 38 files changed, 692 insertions(+), 144 deletions(-)
-
--- 
-2.6.4
+>
+>Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+>
+>
+>
+>
+>>-void *traverse_pci_devices(struct device_node *start, traverse_func pre,
+>>-		void *data);
+>>+void *pci_traverse_device_nodes(struct device_node *start,
+>>+				void *(*fn)(struct device_node *, void *),
+>>+				void *data);
+>>  void *traverse_pci_dn(struct pci_dn *root,
+>>  		      void *(*fn)(struct pci_dn *, void *),
+>>  		      void *data);
+>>diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+>>index ce10281..ecdccce 100644
+>>--- a/arch/powerpc/kernel/pci_dn.c
+>>+++ b/arch/powerpc/kernel/pci_dn.c
+>>@@ -372,8 +372,9 @@ EXPORT_SYMBOL_GPL(pci_remove_device_node_info);
+>>   * one of these nodes we also assume its siblings are non-pci for
+>>   * performance.
+>>   */
+>>-void *traverse_pci_devices(struct device_node *start, traverse_func pre,
+>>-		void *data)
+>>+void *pci_traverse_device_nodes(struct device_node *start,
+>>+				void *(*fn)(struct device_node *, void *),
+>>+				void *data)
+>>  {
+>>  	struct device_node *dn, *nextdn;
+>>  	void *ret;
+>>@@ -388,8 +389,11 @@ void *traverse_pci_devices(struct device_node *start, traverse_func pre,
+>>  		if (classp)
+>>  			class = of_read_number(classp, 1);
+>>
+>>-		if (pre && ((ret = pre(dn, data)) != NULL))
+>>-			return ret;
+>>+		if (fn) {
+>>+			ret = fn(dn, data);
+>>+			if (ret)
+>>+				return ret;
+>>+		}
+>>
+>>  		/* If we are a PCI bridge, go down */
+>>  		if (dn->child && ((class >> 8) == PCI_CLASS_BRIDGE_PCI ||
+>>@@ -411,6 +415,7 @@ void *traverse_pci_devices(struct device_node *start, traverse_func pre,
+>>  	}
+>>  	return NULL;
+>>  }
+>>+EXPORT_SYMBOL_GPL(pci_traverse_device_nodes);
+>>
+>>  static struct pci_dn *pci_dn_next_one(struct pci_dn *root,
+>>  				      struct pci_dn *pdn)
+>>@@ -487,7 +492,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
+>>  	}
+>>
+>>  	/* Update dn->phb ptrs for new phb and children devices */
+>>-	traverse_pci_devices(dn, add_pdn, phb);
+>>+	pci_traverse_device_nodes(dn, add_pdn, phb);
+>>  }
+>>
+>>  /**
+>>diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
+>>index 272e9ec..543a638 100644
+>>--- a/arch/powerpc/platforms/pseries/msi.c
+>>+++ b/arch/powerpc/platforms/pseries/msi.c
+>>@@ -305,7 +305,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
+>>  	memset(&counts, 0, sizeof(struct msi_counts));
+>>
+>>  	/* Work out how many devices we have below this PE */
+>>-	traverse_pci_devices(pe_dn, count_non_bridge_devices, &counts);
+>>+	pci_traverse_device_nodes(pe_dn, count_non_bridge_devices, &counts);
+>>
+>>  	if (counts.num_devices == 0) {
+>>  		pr_err("rtas_msi: found 0 devices under PE for %s\n",
+>>@@ -320,7 +320,7 @@ static int msi_quota_for_device(struct pci_dev *dev, int request)
+>>  	/* else, we have some more calculating to do */
+>>  	counts.requestor = pci_device_to_OF_node(dev);
+>>  	counts.request = request;
+>>-	traverse_pci_devices(pe_dn, count_spare_msis, &counts);
+>>+	pci_traverse_device_nodes(pe_dn, count_spare_msis, &counts);
+>>
+>>  	/* If the quota isn't an integer multiple of the total, we can
+>>  	 * use the remainder as spare MSIs for anyone that wants them. */
+>>
+>
+>
+>-- 
+>Alexey
+>
 
