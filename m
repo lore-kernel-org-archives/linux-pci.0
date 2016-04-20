@@ -1,201 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:55180 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933379AbcDENrB (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2016 09:47:01 -0400
-Received: from localhost
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Tue, 5 Apr 2016 23:46:59 +1000
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
-	alex.williamson@redhat.com, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com, Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [RFC v5 5/7] vfio-pci: Allow to mmap sub-page MMIO BARs if the mmio page is exclusive
-Date: Tue,  5 Apr 2016 21:43:33 +0800
-Message-Id: <1459863813-2830-6-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1459863813-2830-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1459863813-2830-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:54653 "EHLO
+	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755022AbcDTOwc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2016 10:52:32 -0400
+Date: Wed, 20 Apr 2016 16:54:55 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Grygorii Strashko <grygorii.strashko@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH] PCI: Fix device attach failure handling
+Message-ID: <20160420145455.GA15912@wunner.de>
+References: <2c01b1a2d7703fbacae133502cbf6fce335077a9.1459423244.git.lukas@wunner.de>
+ <20160419232329.GE17863@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160419232329.GE17863@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current vfio-pci implementation disallows to mmap
-sub-page(size < PAGE_SIZE) MMIO BARs because
-these BARs' mmio page may be shared with other
-BARs.
+Hi Bjorn,
 
-But we should allow to mmap these sub-page MMIO
-BARs if we can make sure these BARs' mmio page
-will not be shared with other BARs.
+On Tue, Apr 19, 2016 at 06:23:29PM -0500, Bjorn Helgaas wrote:
+> On Thu, Mar 31, 2016 at 02:57:48PM +0200, Lukas Wunner wrote:
+> > Linux 4.5 introduced a behavioral change in device probing during the
+> > suspend process with commit 013c074f8642 ("PM / sleep: prohibit devices
+> > probing during suspend/hibernation"): It defers device probing during
+> > the entire suspend process, starting from the prepare phase and ending
+> > with the complete phase. A rule existed before that "we rely on sub-
+> > systems not to do any probing once a device is suspended" but it is
+> > enforced only now (Alan Stern, https://lkml.org/lkml/2015/9/15/908).
+> > 
+> > This resulted in a WARN splat if a PCI device (e.g. Thunderbolt) is
+> > plugged in while the system is asleep: Upon waking up, pciehp_resume()
+> > discovers new devices in the resume phase and immediately tries to bind
+> > them to a driver. Since probing is now deferred, device_attach() returns
+> > -EPROBE_DEFER, which provoked a WARN in pci_bus_add_device().
+> > 
+> > Linux 4.6-rc1 aggravates the situation with commit ab1a187bba5c ("PCI:
+> > Check device_attach() return value always"): pci_bus_add_device() no
+> > longer sets dev->is_added = 1 if device_attach() returned a negative
+> > value. This results in a BUG lockup in pci_bus_add_devices().
+> 
+> If this fixes a BUG() that we introduced in v4.6-rc1, it sounds like we
+> should fix it before v4.6-final.  Please confirm.
 
-To acheive that, we firstly need to enforce all
-PCI MMIO BARs to be page aligned like the commit
-"PCI: Add support for enforcing all MMIO BARs
-to be page aligned" does. Most of PCI BARs
-will be assigned into an exclusive page with a
-hole. Then, we must make sure that hot-add
-device's BAR will never be assigned into the
-hole. So we add shadow resources and put them
-into the hole in this patch. With these two
-guarantees, I think it should be safe to mmap
-sub-page BAR.
+Affirmative.
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- drivers/vfio/pci/vfio_pci.c         |   58 ++++++++++++++++++++++++++++++-----
- drivers/vfio/pci/vfio_pci_private.h |    8 +++++
- 2 files changed, 59 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 98059df..c60d790 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -110,13 +110,47 @@ static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
- 	return (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA;
- }
- 
-+static bool vfio_pci_bar_mmap_supported(struct vfio_pci_device *vdev, int index)
-+{
-+	struct resource *res = vdev->pdev->resource + index;
-+	struct vfio_pci_shadow_resource *shadow_res;
-+
-+	if (IS_ENABLED(CONFIG_VFIO_PCI_MMAP) && res->flags & IORESOURCE_MEM &&
-+		resource_size(res) > 0) {
-+		if (resource_size(res) >= PAGE_SIZE)
-+			return true;
-+
-+		if (!(res->start & ~PAGE_MASK)) {
-+			/*
-+			 * Add shadow resource for sub-page bar whose mmio
-+			 * page is exclusive in case that hot-add device's
-+			 * bar is assigned into the mem hole.
-+			 */
-+			shadow_res = kzalloc(sizeof(*shadow_res), GFP_KERNEL);
-+			shadow_res->resource.start = res->end + 1;
-+			shadow_res->resource.end = res->start + PAGE_SIZE;
-+			shadow_res->resource.flags = res->flags;
-+			if (request_resource(res->parent,
-+					&shadow_res->resource)) {
-+				kfree(shadow_res);
-+				return false;
-+			}
-+			shadow_res->index = index;
-+			list_add(&shadow_res->res_next,
-+					&vdev->shadow_resources_list);
-+			return true;
-+		}
-+	}
-+	return false;
-+}
-+
- static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev);
- static void vfio_pci_disable(struct vfio_pci_device *vdev);
- 
- static int vfio_pci_enable(struct vfio_pci_device *vdev)
- {
- 	struct pci_dev *pdev = vdev->pdev;
--	int ret;
-+	int ret, bar;
- 	u16 cmd;
- 	u8 msix_pos;
- 
-@@ -183,12 +217,17 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
- 		}
- 	}
- 
-+	for (bar = PCI_STD_RESOURCES; bar <= PCI_STD_RESOURCE_END; bar++) {
-+		vdev->bar_mmap_supported[bar] =
-+				vfio_pci_bar_mmap_supported(vdev, bar);
-+	}
- 	return 0;
- }
- 
- static void vfio_pci_disable(struct vfio_pci_device *vdev)
- {
- 	struct pci_dev *pdev = vdev->pdev;
-+	struct vfio_pci_shadow_resource *shadow_res;
- 	int i, bar;
- 
- 	/* Stop the device from further DMA */
-@@ -217,6 +256,13 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
- 		vdev->barmap[bar] = NULL;
- 	}
- 
-+	list_for_each_entry(shadow_res, &vdev->shadow_resources_list,
-+				res_next) {
-+		list_del(&shadow_res->res_next);
-+		release_resource(&shadow_res->resource);
-+		kfree(shadow_res);
-+	}
-+
- 	vdev->needs_reset = true;
- 
- 	/*
-@@ -587,9 +633,7 @@ static long vfio_pci_ioctl(void *device_data,
- 
- 			info.flags = VFIO_REGION_INFO_FLAG_READ |
- 				     VFIO_REGION_INFO_FLAG_WRITE;
--			if (IS_ENABLED(CONFIG_VFIO_PCI_MMAP) &&
--			    pci_resource_flags(pdev, info.index) &
--			    IORESOURCE_MEM && info.size >= PAGE_SIZE) {
-+			if (vdev->bar_mmap_supported[info.index]) {
- 				info.flags |= VFIO_REGION_INFO_FLAG_MMAP;
- 				if (info.index == vdev->msix_bar) {
- 					ret = msix_sparse_mmap_cap(vdev, &caps);
-@@ -1011,16 +1055,16 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
- 		return -EINVAL;
- 	if (index >= VFIO_PCI_ROM_REGION_INDEX)
- 		return -EINVAL;
--	if (!(pci_resource_flags(pdev, index) & IORESOURCE_MEM))
-+	if (!vdev->bar_mmap_supported[index])
- 		return -EINVAL;
- 
--	phys_len = pci_resource_len(pdev, index);
-+	phys_len = PAGE_ALIGN(pci_resource_len(pdev, index));
- 	req_len = vma->vm_end - vma->vm_start;
- 	pgoff = vma->vm_pgoff &
- 		((1U << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1);
- 	req_start = pgoff << PAGE_SHIFT;
- 
--	if (phys_len < PAGE_SIZE || req_start + req_len > phys_len)
-+	if (req_start + req_len > phys_len)
- 		return -EINVAL;
- 
- 	if (index == vdev->msix_bar) {
-diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
-index 8a7d546..0ea4c62 100644
---- a/drivers/vfio/pci/vfio_pci_private.h
-+++ b/drivers/vfio/pci/vfio_pci_private.h
-@@ -57,9 +57,16 @@ struct vfio_pci_region {
- 	u32				flags;
- };
- 
-+struct vfio_pci_shadow_resource {
-+	struct resource		resource;
-+	int			index;
-+	struct list_head	res_next;
-+};
-+
- struct vfio_pci_device {
- 	struct pci_dev		*pdev;
- 	void __iomem		*barmap[PCI_STD_RESOURCE_END + 1];
-+	bool			bar_mmap_supported[PCI_STD_RESOURCE_END + 1];
- 	u8			*pci_config_map;
- 	u8			*vconfig;
- 	struct perm_bits	*msi_perm;
-@@ -87,6 +94,7 @@ struct vfio_pci_device {
- 	int			refcnt;
- 	struct eventfd_ctx	*err_trigger;
- 	struct eventfd_ctx	*req_trigger;
-+	struct list_head	shadow_resources_list;
- };
- 
- #define is_intx(vdev) (vdev->irq_type == VFIO_PCI_INTX_IRQ_INDEX)
--- 
-1.7.9.5
+> > Fix the latter by not recursing to a child bus if device_attach() failed
+> > for the bridge leading to it.
+> > 
+> > Fix the former by not interpreting -EPROBE_DEFER as failure. The device
+> > will be probed eventually and there is proper locking in place to avoid
+> > races (e.g. if devices are unplugged again und thus deleted from the
+> > system before deferred probing happens, I have tested this). Also, those
+> > functions which dereference dev->driver (e.g. pci_pm_*()) do contain
+> > proper NULL pointer checks. So it seems safe to ignore -EPROBE_DEFER.
+> 
+> This looks like two different bug fixes.  Can you split them into
+> separate patches, or is there a reason to combine them?
 
+The two bugs are related but the fix can be split in two, which I've
+just done and sent to the list as v2.
+
+
+> > Note that even postponing the code in pciehp_resume() until the
+> > complete phase wouldn't avoid these troubles because dpm_complete()
+> > calls device_unblock_probing() only after ->complete has been
+> > executed for all devices. We lack a pm hook from which it would
+> > be safe to check a hotplug port and call device_attach() without
+> > risking -EPROBE_DEFER.
+> > 
+> > Cc: Grygorii Strashko <grygorii.strashko@ti.com>
+> > Cc: Alan Stern <stern@rowland.harvard.edu>
+> > Cc: Rafael J. Wysocki <rafael@kernel.org>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> > ---
+> >  drivers/pci/bus.c | 6 ++++--
+> >  1 file changed, 4 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> > index 6c9f546..dd7cdbe 100644
+> > --- a/drivers/pci/bus.c
+> > +++ b/drivers/pci/bus.c
+> > @@ -294,7 +294,7 @@ void pci_bus_add_device(struct pci_dev *dev)
+> >  
+> >  	dev->match_driver = true;
+> >  	retval = device_attach(&dev->dev);
+> > -	if (retval < 0) {
+> > +	if (retval < 0 && retval != -EPROBE_DEFER) {
+> >  		dev_warn(&dev->dev, "device attach failed (%d)\n", retval);
+> 
+> I would prefer if the dev_warn() made a distinction between
+> -EPROBE_DEFER and other failures.  It sounds like the -EPROBE_DEFER
+> case will happen in normal operation, and we probably shouldn't treat
+> it as a warning.
+
+Both v1 and v2 of my fix do not dev_warn() at all on -EPROBE_DEFER since,
+as you've correctly stated above, it happens in normal operation.
+
+If you want I could add a dev_info() specifically for the -EPROBE_DEFER
+case but personally I don't think it's necessary, it'll probably just
+irritate users.
+
+
+> >  		pci_proc_detach_device(dev);
+> >  		pci_remove_sysfs_dev_files(dev);
+> > @@ -324,7 +324,9 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+> >  	}
+> >  
+> >  	list_for_each_entry(dev, &bus->devices, bus_list) {
+> > -		BUG_ON(!dev->is_added);
+> > +		/* Skip if device attach failed */
+> > +		if (!dev->is_added)
+> > +			continue;
+> 
+> I assume the "pci_bus_add_devices(child)" will happen *eventually*?
+> Can you add a comment about when that is?
+
+At the end of dpm_complete(), device_unblock_probing() is called and
+this will reprobe anything that's ended up on the deferred probing list.
+In other words, deferred probing happens right after ->complete has
+been called for all devices.
+
+I've amended the commit message of patch [2/2] in v2 to clarify this.
+
+Let me know if you want anything else changed. If you send a pull with
+these to Linus, please consider including the thunderbolt double-free
+patch posted by Andreas Noever with:
+
+    Subject: [PATCH] thunderbolt: Fix double free of drom buffer
+    Message-Id: <1460285307-3557-1-git-send-email-andreas.noever@gmail.com>
+    Date: Sun, 10 Apr 2016 12:48:27 +0200
+
+Thank you!
+
+Lukas
+
+> >  		child = dev->subordinate;
+> >  		if (child)
+> >  			pci_bus_add_devices(child);
+> > -- 
+> > 2.8.0.rc3
