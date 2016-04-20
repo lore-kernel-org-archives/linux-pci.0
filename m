@@ -1,254 +1,156 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 26 Apr 2016 21:45:37 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:49721 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751693AbcDTA5W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 19 Apr 2016 20:57:22 -0400
+Date: Tue, 19 Apr 2016 19:57:16 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-Subject: Re: [PATCH V6 01/13] pci, acpi, x86, ia64: Move ACPI host bridge
- device companion assignment to core code.
-Message-ID: <20160427024537.GH6789@localhost>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-2-git-send-email-tn@semihalf.com>
+To: Tim Harvey <tharvey@gateworks.com>
+Cc: linux-pci@vger.kernel.org, Lucas Stach <l.stach@pengutronix.de>,
+	Fabio Estevam <fabio.estevam@freescale.com>,
+	Zhu Richard <Richard.Zhu@freescale.com>,
+	Akshay Bhat <akshay.bhat@timesys.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Shawn Guo <shawnguo@kernel.org>
+Subject: Re: [PATCH v5] PCI: imx6: add dt prop for link gen, default to gen1
+Message-ID: <20160420005716.GH17863@localhost>
+References: <1459984494-15782-1-git-send-email-tharvey@gateworks.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460740008-19489-2-git-send-email-tn@semihalf.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1459984494-15782-1-git-send-email-tharvey@gateworks.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[question for Rafael below]
+On Wed, Apr 06, 2016 at 04:14:54PM -0700, Tim Harvey wrote:
+> Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
+> the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
+> external clock source is present and supplied back to the IMX6 PCIe core
+> via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
+> 
+> Add a dt property to specify gen1 vs gen2 and check this before allowing
+> a Gen2 link.
+> 
+> We default to Gen1 if the property is not present because at this time there
+> are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
+> 
+> In order to be Gen2 compliant on IMX6 you need to:
+>  - have a Gen2 compliant external clock generator and route that clock back
+>    to either LVDS CLK1 or LVDS CLK2 as an input.
+>    (see IMX6SX-SabreSD reference design)
+>  - specify this clock in the pcie node in the dt
+>    (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
+>     IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
+> 
+> [1] https://community.freescale.com/message/453209
+> 
+> Cc: Lucas Stach <l.stach@pengutronix.de>
+> Cc: Bjorn Helgaas <helgaas@kernel.org>
+> Cc: Fabio Estevam <fabio.estevam@freescale.com>
+> Cc: Zhu Richard <Richard.Zhu@freescale.com>
+> Cc: Akshay Bhat <akshay.bhat@timesys.com>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Shawn Guo <shawnguo@kernel.org>
+> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
 
-On Fri, Apr 15, 2016 at 07:06:36PM +0200, Tomasz Nowicki wrote:
-> Currently we have two platforms (x86 & ia64) capable of PCI ACPI host
-> bridge initialization. They both use arch-specific sysdata to pass down
-> parent device reference and both rely on NULL parent in pci_create_root_bus()
-> to validate sysdata content.
-> 
-> It looks hacky and prevents us from getting some firmware specific
-> info for PCI host controller based on its acpi_device structure
-> in generic pci_create_root_bus() function. However, we overcome that
-> blocker by passing down parent device via pci_create_root_bus parameter
-> (as the ACPI device type). Then we use ACPI_COMPANION_SET in core code
-> for ACPI boot method only. ACPI_COMPANION_SET is safe to run for all
-> cases DT, ACPI and DT&ACPI.
-> 
-> Since now PCI core code is setting ACPI companion device for us,
-> x86 & ia64 specific ACPI companion device setting turns out to be dead now.
-> We can get rid of it, including related companion reference from
-> PCI sysdata structure. Aslo, PCI_CONTROLLER macro cannot return valid
-> companion device anymore. Therefore we need to convert its usage to
-> ACPI_COMPANION.
-> 
-> Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Tested-by: Duc Dang <dhdang@apm.com>
-> Tested-by: Dongdong Liu <liudongdong3@huawei.com>
-> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
-> Tested-by: Sinan Kaya <okaya@codeaurora.org>
+Applied to pci/host-imx6 for v4.7 with Lucas' Reviewed-by, thanks!
+
 > ---
->  arch/ia64/hp/common/sba_iommu.c    |  2 +-
->  arch/ia64/include/asm/pci.h        |  1 -
->  arch/ia64/pci/pci.c                | 16 ----------------
->  arch/ia64/sn/kernel/io_acpi_init.c |  4 ++--
->  arch/x86/include/asm/pci.h         |  3 ---
->  arch/x86/pci/acpi.c                | 17 -----------------
->  drivers/acpi/pci_root.c            |  7 ++++++-
->  drivers/pci/probe.c                |  2 ++
->  8 files changed, 11 insertions(+), 41 deletions(-)
+> v5:
+>  - clearly default link gen to 1 when dt prop is read to avoid confusion
+> v4:
+>  - rebase against linux-pci/master
+>  - add fsl vendor prefix to dt prop
 > 
-> diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
-> index a6d6190..78e4444 100644
-> --- a/arch/ia64/hp/common/sba_iommu.c
-> +++ b/arch/ia64/hp/common/sba_iommu.c
-> @@ -1981,7 +1981,7 @@ sba_connect_bus(struct pci_bus *bus)
->  	if (PCI_CONTROLLER(bus)->iommu)
->  		return;
+> v3:
+>  - added note in dt bindings doc that we limit to gen1 unless this is specified
+>    as gen2 capable
+>  - move property to imx6 pcie phy instead of designware core
+>  - don't use &ret as temp storage as of_property_read_u32() doesn't change the
+>    outval if property isn't found
+> v2:
+>  - moved dt property to designware core
+> 
+> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
+> ---
+>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  4 ++++
+>  drivers/pci/host/pci-imx6.c                        | 24 +++++++++++++++-------
+>  2 files changed, 21 insertions(+), 7 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> index 3be80c6..b92fafb 100644
+> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> @@ -19,6 +19,10 @@ Optional properties:
+>  - fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
+>  - fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
+>  - fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
+> +- fsl,max-link-speed: Specify PCI gen for link capability. Must be '2' for
+> +  gen2, otherwise will default to gen1. Note that the IMX6 LVDS clock outputs
+> +  do not meet gen2 jitter requirements and thus for gen2 capability a gen2
+> +  compliant clock generator should be used and configured.
 >  
-> -	handle = acpi_device_handle(PCI_CONTROLLER(bus)->companion);
-> +	handle = acpi_device_handle(ACPI_COMPANION(bus->bridge));
->  	if (!handle)
->  		return;
+>  Example:
 >  
-> diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-> index c0835b0..12423f4 100644
-> --- a/arch/ia64/include/asm/pci.h
-> +++ b/arch/ia64/include/asm/pci.h
-> @@ -63,7 +63,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
->  #define pci_legacy_write platform_pci_legacy_write
+> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+> index eb5a275..60a14b8 100644
+> --- a/drivers/pci/host/pci-imx6.c
+> +++ b/drivers/pci/host/pci-imx6.c
+> @@ -44,6 +44,7 @@ struct imx6_pcie {
+>  	u32			tx_deemph_gen2_6db;
+>  	u32			tx_swing_full;
+>  	u32			tx_swing_low;
+> +	int			link_gen;
+>  };
 >  
->  struct pci_controller {
-> -	struct acpi_device *companion;
->  	void *iommu;
->  	int segment;
->  	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
-> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-> index 8f6ac2f..978d6af 100644
-> --- a/arch/ia64/pci/pci.c
-> +++ b/arch/ia64/pci/pci.c
-> @@ -301,28 +301,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  /* PCIe Root Complex registers (memory-mapped) */
+> @@ -417,11 +418,15 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
+>  		goto err_reset_phy;
 >  	}
 >  
->  	info->controller.segment = root->segment;
-> -	info->controller.companion = device;
->  	info->controller.node = acpi_get_node(device->handle);
->  	INIT_LIST_HEAD(&info->io_resources);
->  	return acpi_pci_root_create(root, &pci_acpi_root_ops,
->  				    &info->common, &info->controller);
->  }
+> -	/* Allow Gen2 mode after the link is up. */
+> -	tmp = readl(pp->dbi_base + PCIE_RC_LCR);
+> -	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+> -	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
+> -	writel(tmp, pp->dbi_base + PCIE_RC_LCR);
+> +	if (imx6_pcie->link_gen == 2) {
+> +		/* Allow Gen2 mode after the link is up. */
+> +		tmp = readl(pp->dbi_base + PCIE_RC_LCR);
+> +		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+> +		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
+> +		writel(tmp, pp->dbi_base + PCIE_RC_LCR);
+> +	} else {
+> +		dev_info(pp->dev, "Link: Gen2 disabled\n");
+> +	}
 >  
-> -int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-> -{
-> -	/*
-> -	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
-> -	 * here, pci_create_root_bus() has been called by someone else and
-> -	 * sysdata is likely to be different from what we expect.  Let it go in
-> -	 * that case.
-> -	 */
-> -	if (!bridge->dev.parent) {
-> -		struct pci_controller *controller = bridge->bus->sysdata;
-> -		ACPI_COMPANION_SET(&bridge->dev, controller->companion);
-> -	}
-> -	return 0;
-> -}
-> -
->  void pcibios_fixup_device_resources(struct pci_dev *dev)
->  {
->  	int idx;
-> diff --git a/arch/ia64/sn/kernel/io_acpi_init.c b/arch/ia64/sn/kernel/io_acpi_init.c
-> index 231234c..e454492 100644
-> --- a/arch/ia64/sn/kernel/io_acpi_init.c
-> +++ b/arch/ia64/sn/kernel/io_acpi_init.c
-> @@ -132,7 +132,7 @@ sn_get_bussoft_ptr(struct pci_bus *bus)
->  	struct acpi_resource_vendor_typed *vendor;
->  
->  
-> -	handle = acpi_device_handle(PCI_CONTROLLER(bus)->companion);
-> +	handle = acpi_device_handle(ACPI_COMPANION(bus->bridge));
->  	status = acpi_get_vendor_resource(handle, METHOD_NAME__CRS,
->  					  &sn_uuid, &buffer);
->  	if (ACPI_FAILURE(status)) {
-> @@ -360,7 +360,7 @@ sn_acpi_get_pcidev_info(struct pci_dev *dev, struct pcidev_info **pcidev_info,
->  	acpi_status status;
->  	struct acpi_buffer name_buffer = { ACPI_ALLOCATE_BUFFER, NULL };
->  
-> -	rootbus_handle = acpi_device_handle(PCI_CONTROLLER(dev)->companion);
-> +	rootbus_handle = acpi_device_handle(ACPI_COMPANION(dev->bus->bridge));
->          status = acpi_evaluate_integer(rootbus_handle, METHOD_NAME__SEG, NULL,
->                                         &segment);
->          if (ACPI_SUCCESS(status)) {
-> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-> index 9ab7507..24de07d 100644
-> --- a/arch/x86/include/asm/pci.h
-> +++ b/arch/x86/include/asm/pci.h
-> @@ -14,9 +14,6 @@
->  struct pci_sysdata {
->  	int		domain;		/* PCI domain */
->  	int		node;		/* NUMA node */
-> -#ifdef CONFIG_ACPI
-> -	struct acpi_device *companion;	/* ACPI companion device */
-> -#endif
->  #ifdef CONFIG_X86_64
->  	void		*iommu;		/* IOMMU private data */
->  #endif
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index 3cd6983..f4ca17a 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -340,7 +340,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  		struct pci_sysdata sd = {
->  			.domain = domain,
->  			.node = node,
-> -			.companion = root->device
->  		};
->  
->  		memcpy(bus->sysdata, &sd, sizeof(sd));
-> @@ -355,7 +354,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  		else {
->  			info->sd.domain = domain;
->  			info->sd.node = node;
-> -			info->sd.companion = root->device;
->  			bus = acpi_pci_root_create(root, &acpi_pci_root_ops,
->  						   &info->common, &info->sd);
->  		}
-> @@ -373,21 +371,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  	return bus;
->  }
->  
-> -int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
-> -{
-> -	/*
-> -	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
-> -	 * here, pci_create_root_bus() has been called by someone else and
-> -	 * sysdata is likely to be different from what we expect.  Let it go in
-> -	 * that case.
-> -	 */
-> -	if (!bridge->dev.parent) {
-> -		struct pci_sysdata *sd = bridge->bus->sysdata;
-> -		ACPI_COMPANION_SET(&bridge->dev, sd->companion);
-> -	}
-> -	return 0;
-> -}
-> -
->  int __init pci_acpi_init(void)
->  {
->  	struct pci_dev *dev = NULL;
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index ae3fe4e..4581e0e 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -564,6 +564,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
->  		}
+>  	/*
+>  	 * Start Directed Speed Change so the best possible speed both link
+> @@ -445,8 +450,7 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
 >  	}
 >  
-> +	/*
-> +	 * pci_create_root_bus() needs to detect the parent device type,
-> +	 * so initialize its companion data accordingly.
-> +	 */
-> +	ACPI_COMPANION_SET(&device->dev, device);
->  	root->device = device;
->  	root->segment = segment & 0xFFFF;
->  	strcpy(acpi_device_name(device), ACPI_PCI_ROOT_DEVICE_NAME);
-> @@ -846,7 +851,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+>  	tmp = readl(pp->dbi_base + PCIE_RC_LCSR);
+> -	dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
+> -
+> +	dev_info(pp->dev, "Link up, Gen%i\n", (tmp >> 16) & 0xf);
+>  	return 0;
 >  
->  	pci_acpi_root_add_resources(info);
->  	pci_add_resource(&info->resources, &root->secondary);
-> -	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
-> +	bus = pci_create_root_bus(&device->dev, busnum, ops->pci_ops,
->  				  sysdata, &info->resources);
-
-"device" here is a struct acpi_device *.  Rafael, is that the right
-thing to do?  I dimly recall proposing something similar long ago and
-that it turned out to be a bad idea.
-
->  	if (!bus)
->  		goto out_release_info;
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 8004f67..8087297 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -2141,6 +2141,8 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->  	bridge->dev.parent = parent;
->  	bridge->dev.release = pci_release_host_bridge_dev;
->  	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-> +	if (parent)
-> +		ACPI_COMPANION_SET(&bridge->dev, ACPI_COMPANION(parent));
->  	error = pcibios_root_bridge_prepare(bridge);
->  	if (error) {
->  		kfree(bridge);
+>  err_reset_phy:
+> @@ -598,6 +602,12 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+>  				 &imx6_pcie->tx_swing_low))
+>  		imx6_pcie->tx_swing_low = 127;
+>  
+> +	/* Limit link speed */
+> +	ret = of_property_read_u32(pp->dev->of_node, "fsl,max-link-speed",
+> +				   &imx6_pcie->link_gen);
+> +	if (ret)
+> +		imx6_pcie->link_gen = 1;
+> +
+>  	ret = imx6_add_pcie_port(pp, pdev);
+>  	if (ret < 0)
+>  		return ret;
 > -- 
 > 1.9.1
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
