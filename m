@@ -1,65 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40856 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759305AbcDMF5I (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Apr 2016 01:57:08 -0400
-Subject: [PATCH 1/3] Revert "x86/PCI: Don't alloc pcibios-irq when MSI is
- enabled"
-To: stable@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: =?utf-8?b?0J7Qu9C10LM=?= =?utf-8?b?0JzQvtGA0L7Qtw==?=
-	<oleg.moroz@mcc.vniiem.ru>, Joerg Roedel <jroedel@suse.de>,
-	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
-	Rob Groner <rgroner@rtd.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Date: Wed, 13 Apr 2016 00:57:05 -0500
-Message-ID: <20160413055705.6877.38953.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160413055439.6877.68183.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160413055439.6877.68183.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:47604 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752820AbcDTCfM (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 22:35:12 -0400
+Received: from localhost
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 20 Apr 2016 12:35:08 +1000
+Date: Wed, 20 Apr 2016 12:33:06 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
+	robherring2@gmail.com, grant.likely@linaro.org
+Subject: Re: [PATCH v8 37/45] powerpc/powernv: Use firmware PCI slot reset
+ infrastructure
+Message-ID: <20160420023306.GD28594@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-38-git-send-email-gwshan@linux.vnet.ibm.com>
+ <5715FBBF.2000108@ozlabs.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5715FBBF.2000108@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This reverts commit 8affb487d4a4e223d961d7034cb41cd31982b618.
+On Tue, Apr 19, 2016 at 07:34:55PM +1000, Alexey Kardashevskiy wrote:
+>On 02/17/2016 02:44 PM, Gavin Shan wrote:
+>>The skiboot firmware might provide the PCI slot reset capability
+>>which is identified by property "ibm,reset-by-firmware" on the
+>>PCI slot associated device node.
+>>
+>>This checks the property. If it exists, the reset request is routed
+>>to firmware. Otherwise, the reset is done by kernel as before.
+>>
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/platforms/powernv/eeh-powernv.c | 41 +++++++++++++++++++++++++++-
+>>  1 file changed, 40 insertions(+), 1 deletion(-)
+>>
+>>diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>index e23b063..c8a5217 100644
+>>--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>+++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+>>@@ -789,7 +789,7 @@ static int pnv_eeh_root_reset(struct pci_controller *hose, int option)
+>>  	return ret;
+>>  }
+>>
+>>-static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>>+static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>>  {
+>>  	struct pci_dn *pdn = pci_get_pdn_by_devfn(dev->bus, dev->devfn);
+>>  	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+>>@@ -840,6 +840,45 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+>>  	return 0;
+>>  }
+>>
+>>+static int pnv_eeh_bridge_reset(struct pci_dev *pdev, int option)
+>>+{
+>>+	struct pci_controller *hose;
+>>+	struct pnv_phb *phb;
+>>+	struct device_node *dn = pdev ? pci_device_to_OF_node(pdev) : NULL;
+>>+	uint64_t id = (0x1ul << 60);
+>
+>
+>What is this 1<<60 for?
+>
+>
 
-Revert 8affb487d4a4 ("x86/PCI: Don't alloc pcibios-irq when MSI is
-enabled").
+As you replied in other threads, it's worthy to have some macros for this
+piece of business. This bit indicates the ID of the slot behind a switch
+port. If this bit is cleared, the ID represents a PHB slot.
 
-This is part of reverting 991de2e59090 ("PCI, x86: Implement
-pcibios_alloc_irq() and pcibios_free_irq()") to fix regressions it
-introduced.
+>>+	uint8_t scope;
+>>+	int64_t rc;
+>>+
+>>+	/*
+>>+	 * If the firmware can't handle it, we will issue hot reset
+>>+	 * on the secondary bus despite the requested reset type.
+>>+	 */
+>>+	if (!dn || !of_get_property(dn, "ibm,reset-by-firmware", NULL))
+>>+		return __pnv_eeh_bridge_reset(pdev, option);
+>>+
+>>+	/* The firmware can handle the request */
+>>+	switch (option) {
+>>+	case EEH_RESET_HOT:
+>>+		scope = OPAL_RESET_PCI_HOT;
+>>+		break;
+>>+	case EEH_RESET_FUNDAMENTAL:
+>>+		scope = OPAL_RESET_PCI_FUNDAMENTAL;
+>>+		break;
+>>+	case EEH_RESET_DEACTIVATE:
+>>+		return 0;
+>>+	default:
+>>+		dev_warn(&pdev->dev, "%s: Unsupported reset %d\n",
+>>+			 __func__, option);
+>
+>
+>Can the userspace trigger this case (via VFIO-EEH) and flood dmesg?
+>
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=111211
-Fixes: 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Rafael J. Wysocki <rafael@kernel.org>
-CC: stable@vger.kernel.org	# v4.4
-CC: Jiang Liu <jiang.liu@linux.intel.com>
-CC: Joerg Roedel <jroedel@suse.de>
----
- arch/x86/pci/common.c |    8 --------
- 1 file changed, 8 deletions(-)
+It depends on how you defined message flooding actually. It's abnormal
+path caused by program internal error, not external users.
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index eccd4d9..dc78a4a 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -675,14 +675,6 @@ int pcibios_add_device(struct pci_dev *dev)
- 
- int pcibios_alloc_irq(struct pci_dev *dev)
- {
--	/*
--	 * If the PCI device was already claimed by core code and has
--	 * MSI enabled, probing of the pcibios IRQ will overwrite
--	 * dev->irq.  So bail out if MSI is already enabled.
--	 */
--	if (pci_dev_msi_enabled(dev))
--		return -EBUSY;
--
- 	return pcibios_enable_irq(dev);
- }
- 
+>
+>
+>>+		return -EINVAL;
+>>+	}
+>>+
+>>+	hose = pci_bus_to_host(pdev->bus);
+>>+	phb = hose->private_data;
+>>+	id |= (pdev->bus->number << 24) | (pdev->devfn << 16) | phb->opal_id;
+>>+	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
+>>+	return pnv_pci_poll(id, rc, NULL);
+>>+}
+>>+
+>>  static int pnv_pci_dev_reset_type(struct pci_dev *pdev, void *data)
+>>  {
+>>  	int *freset = data;
+>>
+>
+>
+>-- 
+>Alexey
+>
 
