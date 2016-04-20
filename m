@@ -1,190 +1,114 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp08.au.ibm.com ([202.81.31.141]:54796 "EHLO
-	e23smtp08.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933355AbcDENqo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 5 Apr 2016 09:46:44 -0400
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:45378 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751808AbcDTBFl (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 21:05:41 -0400
 Received: from localhost
-	by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Tue, 5 Apr 2016 23:46:41 +1000
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
-	alex.williamson@redhat.com, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com, Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [RFC v5 4/7] PCI: Add support for enforcing all MMIO BARs to be page aligned
-Date: Tue,  5 Apr 2016 21:43:32 +0800
-Message-Id: <1459863813-2830-5-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1459863813-2830-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1459863813-2830-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Wed, 20 Apr 2016 11:05:38 +1000
+Date: Wed, 20 Apr 2016 11:04:35 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
+	robherring2@gmail.com, grant.likely@linaro.org
+Subject: Re: [PATCH v8 20/45] powerpc/powernv: Allocate PE# in reverse order
+Message-ID: <20160420010435.GA20180@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-21-git-send-email-gwshan@linux.vnet.ibm.com>
+ <5715A10F.2030704@ozlabs.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5715A10F.2030704@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When vfio passthrough a PCI device of which MMIO
-BARs are smaller than PAGE_SIZE, guest will not
-handle the mmio accesses to the BARs which leads
-to mmio emulations in host.
+On Tue, Apr 19, 2016 at 01:07:59PM +1000, Alexey Kardashevskiy wrote:
+>On 02/17/2016 02:44 PM, Gavin Shan wrote:
+>>PE number for one particular PE can be allocated dynamically or
+>>reserved according to the consumed M64 (64-bits prefetchable)
+>>segments of the PE. The M64 resources, and hence their segments
+>>and PE number are assigned/reserved in ascending order. The PE
+>>numbers are allocated dynamically in ascending order as well.
+>>It's not a problem as the PE numbers are reserved and then
+>>allocated all at once in fine order. However, it will introduce
+>>conflicts when PCI hotplug is supported: the PE number to be
+>>reserved for newly added PE might have been assigned.
+>>
+>>To resolve above conflicts, this forces the PE number to be
+>>allocated dynamically in reverse order. With this patch applied,
+>>the PE numbers are reserved in ascending order, but allocated
+>>dynamically in reverse order.
+>
+>
+>The patch is probably is ok, the commit log is not - I do not follow it. Some
+>PEs are reserved (for what? why does the absolute PE number matter? put it in
+>the commit log), that means that the corresponding bits in pe_alloc[] should
+>be set so when you will be allocating PEs for a just plugged device, you
+>won't pick them and you will pick free ones, and the order should not matter.
+>I would think that "reservation" happens once at the boot time so you set
+>"used" bits for the reserved PEs then and after that the dynamic allocator
+>will skip them.
+>
 
-This is because vfio will not allow to passthrough
-one BAR's mmio page which may be shared with other
-BARs. Otherwise, there will be a backdoor that
-guest can use to access BARs of other guest.
+I will enhance the commit log in next revision, perhaps just pick part of
+below words: On PHB3, there are 16 M64 BARs in hardware. The last one is
+split ovenly into 256 segments. Each segment can be associated/assigned
+to fixed PE# (segment#x <-> PE#x) which is how the hardware was designed.
+If one plugged PE has M64 (64-bits prefetchable memory) resources, its
+PE# is equal to the segment#. Otherwise, the PE# is allocated dynamically
+if the PE doesn't contain M64 resource.
 
-To solve this issue, this patch modifies
-resource_alignment to support syntax where
-multiple devices get the same alignment. So we
-can use something like
-"pci=resource_alignment=*:*:*.*:noresize" to
-enforce the alignment of all MMIO BARs to be at
-least PAGE_SIZE so that one BAR's mmio page would
-not be shared with other BARs.
+The M64 resources are assigned from low to high end, meaning the reserved
+PE# (according to the M64 segments) are grown from low to high end. It's
+most likely to get a dynamically allocated PE# which should be reserved
+because of M64 segment. It's the conflicts the patch tries to resolve.
 
-And we also define a macro PCIBIOS_MIN_ALIGNMENT
-to enable this automatically on PPC64 platform
-which can easily hit this issue because its
-PAGE_SIZE is 64KB.
+The PE# reservation doesn't happen once at boot time because it's
+unknow how many PEs and how much M64 resources will be hot added.
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- Documentation/kernel-parameters.txt |    2 ++
- arch/powerpc/include/asm/pci.h      |    2 ++
- drivers/pci/pci.c                   |   64 +++++++++++++++++++++++++++++------
- 3 files changed, 57 insertions(+), 11 deletions(-)
-
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index d8b29ab..542be4a 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -2918,6 +2918,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 				aligned memory resources.
- 				If <order of align> is not specified,
- 				PAGE_SIZE is used as alignment.
-+				<domain>, <bus>, <slot> and <func> can be set to
-+				"*" which means match all values.
- 				PCI-PCI bridge can be specified, if resource
- 				windows need to be expanded.
- 				noresize: Don't change the resources' sizes when
-diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-index 6f8065a..78f230f 100644
---- a/arch/powerpc/include/asm/pci.h
-+++ b/arch/powerpc/include/asm/pci.h
-@@ -30,6 +30,8 @@
- #define PCIBIOS_MIN_IO		0x1000
- #define PCIBIOS_MIN_MEM		0x10000000
- 
-+#define PCIBIOS_MIN_ALIGNMENT  PAGE_SIZE
-+
- struct pci_dev;
- 
- /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7271ce3..b690bc9 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4605,7 +4605,12 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 	int seg, bus, slot, func, align_order, count;
- 	resource_size_t align = 0;
- 	char *p;
-+	bool invalid = false;
- 
-+#ifdef PCIBIOS_MIN_ALIGNMENT
-+	align = PCIBIOS_MIN_ALIGNMENT;
-+	*resize = false;
-+#endif
- 	spin_lock(&resource_alignment_lock);
- 	p = resource_alignment_param;
- 	while (*p) {
-@@ -4622,16 +4627,49 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 		} else {
- 			align_order = -1;
- 		}
--		if (sscanf(p, "%x:%x:%x.%x%n",
--			&seg, &bus, &slot, &func, &count) != 4) {
-+		if (p[0] == '*' && p[1] == ':') {
-+			seg = -1;
-+			count = 1;
-+		} else if (sscanf(p, "%x%n", &seg, &count) != 1 ||
-+				p[count] != ':') {
-+			invalid = true;
-+			break;
-+		}
-+		p += count + 1;
-+		if (*p == '*') {
-+			bus = -1;
-+			count = 1;
-+		} else if (sscanf(p, "%x%n", &bus, &count) != 1) {
-+			invalid = true;
-+			break;
-+		}
-+		p += count;
-+		if (*p == '.') {
-+			slot = bus;
-+			bus = seg;
- 			seg = 0;
--			if (sscanf(p, "%x:%x.%x%n",
--					&bus, &slot, &func, &count) != 3) {
--				/* Invalid format */
--				printk(KERN_ERR "PCI: Can't parse resource_alignment parameter: %s\n",
--					p);
-+			p++;
-+		} else if (*p == ':') {
-+			p++;
-+			if (p[0] == '*' && p[1] == '.') {
-+				slot = -1;
-+				count = 1;
-+			} else if (sscanf(p, "%x%n", &slot, &count) != 1 ||
-+					p[count] != '.') {
-+				invalid = true;
- 				break;
- 			}
-+			p += count + 1;
-+		} else {
-+			invalid = true;
-+			break;
-+		}
-+		if (*p == '*') {
-+			func = -1;
-+			count = 1;
-+		} else if (sscanf(p, "%x%n", &func, &count) != 1) {
-+			invalid = true;
-+			break;
- 		}
- 		p += count;
- 		if (!strncmp(p, ":noresize", 9)) {
-@@ -4639,10 +4677,10 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 			p += 9;
- 		} else
- 			*resize = true;
--		if (seg == pci_domain_nr(dev->bus) &&
--			bus == dev->bus->number &&
--			slot == PCI_SLOT(dev->devfn) &&
--			func == PCI_FUNC(dev->devfn)) {
-+		if ((seg == pci_domain_nr(dev->bus) || seg == -1) &&
-+			(bus == dev->bus->number || bus == -1) &&
-+			(slot == PCI_SLOT(dev->devfn) || slot == -1) &&
-+			(func == PCI_FUNC(dev->devfn) || func == -1)) {
- 			if (align_order == -1)
- 				align = PAGE_SIZE;
- 			else
-@@ -4652,10 +4690,14 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
- 		}
- 		if (*p != ';' && *p != ',') {
- 			/* End of param or invalid format */
-+			invalid = true;
- 			break;
- 		}
- 		p++;
- 	}
-+	if (invalid == true)
-+		printk(KERN_ERR "PCI: Can't parse resource_alignment parameter:%s\n",
-+				p);
- 	spin_unlock(&resource_alignment_lock);
- 	return align;
- }
--- 
-1.7.9.5
+>
+>>
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>---
+>>  arch/powerpc/platforms/powernv/pci-ioda.c | 14 ++++++--------
+>>  1 file changed, 6 insertions(+), 8 deletions(-)
+>>
+>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>index f182ca7..565725b 100644
+>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>@@ -144,16 +144,14 @@ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+>>
+>>  static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
+>>  {
+>>-	unsigned long pe;
+>>+	unsigned long pe = phb->ioda.total_pe_num - 1;
+>>
+>>-	do {
+>>-		pe = find_next_zero_bit(phb->ioda.pe_alloc,
+>>-					phb->ioda.total_pe_num, 0);
+>>-		if (pe >= phb->ioda.total_pe_num)
+>>-			return NULL;
+>>-	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
+>>+	for (pe = phb->ioda.total_pe_num - 1; pe >= 0; pe--) {
+>>+		if (!test_and_set_bit(pe, phb->ioda.pe_alloc))
+>>+			return pnv_ioda_init_pe(phb, pe);
+>>+	}
+>>
+>>-	return pnv_ioda_init_pe(phb, pe);
+>>+	return NULL;
+>>  }
+>>
+>>  static void pnv_ioda_free_pe(struct pnv_ioda_pe *pe)
+>>
+>
+>
+>-- 
+>Alexey
+>
 
