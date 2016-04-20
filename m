@@ -1,47 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:62626 "HELO
-	cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752004AbcDUTQi (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Apr 2016 15:16:38 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH v2 4/4] PCI: Add runtime PM support for PCIe ports
-Date: Thu, 21 Apr 2016 21:19:30 +0200
-Message-ID: <2823801.fOoJOI22FZ@vostro.rjw.lan>
-In-Reply-To: <20160421131224.GY1725@lahna.fi.intel.com>
-References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com> <CAJZ5v0ic6YpYtM4cymLJ4oV2-J4CK4MxFi9-6bWNADD-QY3B6A@mail.gmail.com> <20160421131224.GY1725@lahna.fi.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from mailout1.hostsharing.net ([83.223.95.204]:33318 "EHLO
+	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752865AbcDTOmH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2016 10:42:07 -0400
+Message-Id: <158b8ef6bf71ae69ef54871e4762b98deb981d6e.1461162854.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Wed, 20 Apr 2016 16:44:27 +0200
+Subject: [PATCH v2 1/2] PCI: Fix BUG on device attach failure
+To: linux-pci@vger.kernel.org
+Cc: linux-pm@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, April 21, 2016 04:12:24 PM Mika Westerberg wrote:
-> On Wed, Apr 20, 2016 at 10:23:33PM +0200, Rafael J. Wysocki wrote:
-> > Breaking any systems that work today is not an option.  if that
-> > happens, the commit that has done that is a clear candidate for
-> > reverting.
-> 
-> Understood, thanks.
-> 
-> BTW, do you have any preference regarding the cut-off date?
+Previously when pci_bus_add_device() called device_attach() and it
+returned a negative value, we emitted a WARN but carried on.
 
-Some time around when machines with Windows 10 started to ship should be
-relatively safe.
+Commit ab1a187bba5c ("PCI: Check device_attach() return value always"),
+introduced in Linux 4.6-rc1, changed this to unwind all steps preceding
+device_attach() and to not set dev->is_added = 1.
 
-I guess we can just pick a reasonable date in the initial patch and then
-try to move it back to the past subsequently and see if that breaks things
-for anyone.
+The latter leads to a BUG if pci_bus_add_device() was called from
+pci_bus_add_devices(). Fix by not recursing to a child bus if
+device_attach() failed for the bridge leading to it.
 
-Thanks,
-Rafael
+This can be triggered by plugging in a PCI device (e.g. Thunderbolt)
+while the system is asleep. The system locks up when woken because
+device_attach() returns -EPROBE_DEFER.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+v2: Split commit in two (Bjorn Helgaas).
+
+ drivers/pci/bus.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 6c9f546..23a39fd 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -324,7 +324,9 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+ 	}
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
+-		BUG_ON(!dev->is_added);
++		/* Skip if device attach failed */
++		if (!dev->is_added)
++			continue;
+ 		child = dev->subordinate;
+ 		if (child)
+ 			pci_bus_add_devices(child);
+-- 
+2.8.0.rc3
 
