@@ -1,62 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:36418 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751120AbcDLToW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 15:44:22 -0400
-Subject: Re: Hot reset in downstream direction (RC to EP)
-To: L H <swdevgid@gmail.com>
-References: <570827D5.5060201@ti.com>
- <CAA8O7CpAB18JOC6ri9xf_hnrKqRAjv5TdPO1cEHfd+98BhhV7A@mail.gmail.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Message-ID: <570D5025.4080905@ti.com>
-Date: Tue, 12 Apr 2016 15:44:37 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAA8O7CpAB18JOC6ri9xf_hnrKqRAjv5TdPO1cEHfd+98BhhV7A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from andre.telenet-ops.be ([195.130.132.53]:35628 "EHLO
+	andre.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751790AbcDTPcX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2016 11:32:23 -0400
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>, Lee Jones <lee@kernel.org>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Mark Brown <broonie@kernel.org>,
+	Alexandre Belloni <alexandre.belloni@free-electrons.com>,
+	Joe Perches <joe@perches.com>
+Cc: devicetree@vger.kernel.org, linux-input@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, dmaengine@vger.kernel.org,
+	Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: [PATCH 06/14] dmaengine: bcm2835: DT spelling s/interrupts-names/interrupt-names/
+Date: Wed, 20 Apr 2016 17:32:11 +0200
+Message-Id: <1461166339-11109-7-git-send-email-geert+renesas@glider.be>
+In-Reply-To: <1461166339-11109-1-git-send-email-geert+renesas@glider.be>
+References: <1461166339-11109-1-git-send-email-geert+renesas@glider.be>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/12/2016 02:28 PM, L H wrote:
-> I've never observed a hot reset during enumeration.  One of the
-> possible triggers for the RC to issue a hot reset is after receipt of
-> a fatal AER message (assuming AER is enabled).
-> 
-Lance,
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+---
+ Documentation/devicetree/bindings/sound/davinci-mcbsp.txt | 2 +-
+ drivers/dma/bcm2835-dma.c                                 | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Ok. Thanks for the response.
-
-Murali
-
-> Lance
-> 
-> On Fri, Apr 8, 2016 at 4:51 PM, Murali Karicheri <m-karicheri2@ti.com> wrote:
->> I see that hot reset is something the RC port initiate to have EP reset
->> through link management.
->>
->> ==========================================================================
->> PCIe reset sequences – The PCI Express protocol specifies a hot reset
->> mechanism, where downstream components reset through link notification.
->> Root ports should validate that this mechanism can be applied and the
->> hot reset indication is properly detected by a remote device.
->> Endpoint applications should determine the level of chip reset desired
->> in case of hot reset detection on the link to validate proper functionality.
->> ===========================================================================
->>
->> Does this happen during the enumeration? As this goes in in band, the EP's
->> link should be up. Can someone tell me what are the triggering points for
->> this from RC to EP? Does Linux RC support this? It is supposed to a bit
->> in RC's bridge configuration space that triggers this reset.
->>
->> --
->> Murali Karicheri
->> Linux Kernel, Keystone
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+diff --git a/Documentation/devicetree/bindings/sound/davinci-mcbsp.txt b/Documentation/devicetree/bindings/sound/davinci-mcbsp.txt
+index 55b53e1fd72c9d6e..e0b6165c9cfcec19 100644
+--- a/Documentation/devicetree/bindings/sound/davinci-mcbsp.txt
++++ b/Documentation/devicetree/bindings/sound/davinci-mcbsp.txt
+@@ -43,7 +43,7 @@ mcbsp0: mcbsp@1d10000 {
+ 		<0x00310000 0x1000>;
+ 	reg-names = "mpu", "dat";
+ 	interrupts = <97 98>;
+-	interrupts-names = "rx", "tx";
++	interrupt-names = "rx", "tx";
+ 	dmas = <&edma0 3 1
+ 		&edma0 2 1>;
+ 	dma-names = "tx", "rx";
+diff --git a/drivers/dma/bcm2835-dma.c b/drivers/dma/bcm2835-dma.c
+index 974015193b93cdb3..d724393e904e9a41 100644
+--- a/drivers/dma/bcm2835-dma.c
++++ b/drivers/dma/bcm2835-dma.c
+@@ -974,7 +974,7 @@ static int bcm2835_dma_probe(struct platform_device *pdev)
+ 
+ 		/* legacy device tree case handling */
+ 		dev_warn_once(&pdev->dev,
+-			      "missing interrupts-names property in device tree - legacy interpretation is used");
++			      "missing interrupt-names property in device tree - legacy interpretation is used");
+ 		/*
+ 		 * in case of channel >= 11
+ 		 * use the 11th interrupt and that is shared
 -- 
-Murali Karicheri
-Linux Kernel, Keystone
+1.9.1
+
