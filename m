@@ -1,163 +1,88 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V6 00/13] Support for generic ACPI based PCI host
- controller
-To: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org,
-	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
-	rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, jiang.liu@linux.intel.com,
-	jchandra@broadcom.com
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <57130E92.1020600@codeaurora.org>
-Date: Sun, 17 Apr 2016 00:18:26 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:35794 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751216AbcDTTsO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 20 Apr 2016 15:48:14 -0400
+Date: Wed, 20 Apr 2016 14:48:08 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Grygorii Strashko <grygorii.strashko@ti.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH] PCI: Fix device attach failure handling
+Message-ID: <20160420194807.GA22802@localhost>
+References: <2c01b1a2d7703fbacae133502cbf6fce335077a9.1459423244.git.lukas@wunner.de>
+ <20160419232329.GE17863@localhost>
+ <20160420145455.GA15912@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <1460740008-19489-1-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160420145455.GA15912@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/15/2016 1:06 PM, Tomasz Nowicki wrote:
->>From the functionality point of view this series might be split into the
-> following logic parts:
-> 1. Necessary fixes as the preparation for using driver on ARM64.
-> 2. New ECAM API and update for users of the pci-host-common API
-> 3. Use new MCFG interface and implement generic ACPI based PCI host controller driver.
-> 4. Enable above driver on ARM64
+On Wed, Apr 20, 2016 at 04:54:55PM +0200, Lukas Wunner wrote:
+> Hi Bjorn,
 > 
-> Patches has been built on top of 4.6-rc2 and can be found here:
-> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v6)
-> 
-> This has been tested on Cavium ThunderX server. Any help in reviewing and
-> testing is very appreciated.
-> 
-> v5 -> v6
-> - dropped idea of x86 MMCONFIG code refactoring
-> - integrated JC's patches which introduce new ECAM API:
->   https://lkml.org/lkml/2016/4/11/907
->   git: https://github.com/jchandra-brcm/linux/ (arm64-acpi-pci-v3)
-> - integrated Sinan's fix for releasing IO resources, see patch [06/13]
-> - added ACPI support for ThunderX ECAM and PEM drivers
-> - rebased to 4.6-rc2
-> 
-> v4 -> v5
-> - dropped MCFG refactoring group patches 1-6 from series v4 and integrated Jayachandran's patch
->   https://patchwork.ozlabs.org/patch/575525/
-> - rewrite PCI legacy IRQs allocation
-> - squashed two patches 11 and 12 from series v4, fixed bisection issue
-> - changelog improvements
-> - rebased to 4.5-rc3
-> 
-> v3 -> v4
-> - dropped Jiang's fix http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04318.html
-> - added Lorenzo's fix patch 19/24
-> - ACPI PCI bus domain number assigning cleanup
-> - changed resource management, we now claim and reassign resources
-> - improvements for applying quirks
-> - dropped Matthew's http://www.spinics.net/lists/linux-pci/msg45950.html dependency
-> - rebased to 4.5-rc1
-> 
-> v2 -> v3
-> - fix legacy IRQ assigning and IO ports registration
-> - remove reference to arch specific companion device for ia64
-> - move ACPI PCI host controller driver to pci_root.c
-> - drop generic domain assignment for x86 and ia64 as I am not
->   able to run all necessary test variants
-> - drop patch which cleaned legacy IRQ assignment since it belongs to
->   Mathew's series:
->   https://patchwork.ozlabs.org/patch/557504/
-> - extend MCFG quirk code
-> - rebased to 4.4
-> 
-> v1 -> v2
-> - moved non-arch specific piece of code to dirver/acpi/ directory
-> - fixed IO resource handling
-> - introduced PCI config accessors quirks matching
-> - moved ACPI_COMPANION_SET to generic code
-> 
-> v1 - https://lkml.org/lkml/2015/10/27/504
-> v2 - https://lkml.org/lkml/2015/12/16/246
-> v3 - http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04308.html
-> v4 - https://lkml.org/lkml/2016/2/4/646
-> v5 - https://lkml.org/lkml/2016/2/16/426
-> 
-> Jayachandran C (2):
->   PCI: Provide common functions for ECAM mapping
->   PCI: generic, thunder: update to use generic ECAM API
-> 
-> Tomasz Nowicki (11):
->   pci, acpi, x86, ia64: Move ACPI host bridge device companion
->     assignment to core code.
->   pci, acpi: Provide generic way to assign bus domain number.
->   x86, ia64: Include acpi_pci_{add|remove}_bus to the default
->     pcibios_{add|remove}_bus implementation.
->   pci, of: Move the PCI I/O space management to PCI core code.
->   acpi, pci: Support IO resources when parsing PCI host bridge
->     resources.
->   arm64, pci, acpi: ACPI support for legacy IRQs parsing and
->     consolidation with DT code.
->   pci, acpi: Support for ACPI based generic PCI host controller
->   arm64, pci, acpi: Start using ACPI based PCI host controller driver
->     for ARM64.
->   pci, acpi: Match PCI config space accessors against platfrom specific
->     quirks.
->   pci, pci-thunder-ecam: Add ACPI support for ThunderX ECAM.
->   pci, pci-thunder-pem: Add ACPI support for ThunderX PEM.
-> 
->  arch/arm64/Kconfig                  |  15 +++
->  arch/arm64/include/asm/cpufeature.h |   3 +-
->  arch/arm64/kernel/cpu_errata.c      |   8 ++
->  arch/arm64/kernel/pci.c             |  35 ++---
->  arch/ia64/hp/common/sba_iommu.c     |   2 +-
->  arch/ia64/include/asm/pci.h         |   1 -
->  arch/ia64/pci/pci.c                 |  26 ----
->  arch/ia64/sn/kernel/io_acpi_init.c  |   4 +-
->  arch/x86/include/asm/pci.h          |   3 -
->  arch/x86/pci/acpi.c                 |  17 ---
->  arch/x86/pci/common.c               |  10 --
->  drivers/acpi/Kconfig                |   8 ++
->  drivers/acpi/Makefile               |   1 +
->  drivers/acpi/bus.c                  |   1 +
->  drivers/acpi/pci_gen_host.c         | 259 ++++++++++++++++++++++++++++++++++++
->  drivers/acpi/pci_root.c             |  58 +++++++-
->  drivers/of/address.c                | 116 +---------------
->  drivers/pci/Kconfig                 |   3 +
->  drivers/pci/Makefile                |   2 +
->  drivers/pci/ecam.c                  | 137 +++++++++++++++++++
->  drivers/pci/ecam.h                  |  66 +++++++++
->  drivers/pci/host/Kconfig            |   1 +
->  drivers/pci/host/pci-host-common.c  | 119 ++++++++---------
->  drivers/pci/host/pci-host-common.h  |  47 -------
->  drivers/pci/host/pci-host-generic.c |  52 ++------
->  drivers/pci/host/pci-thunder-ecam.c |  70 ++++++----
->  drivers/pci/host/pci-thunder-pem.c  | 215 ++++++++++++++++++++++--------
->  drivers/pci/pci.c                   | 150 ++++++++++++++++++++-
->  drivers/pci/probe.c                 |   5 +
->  include/asm-generic/vmlinux.lds.h   |   7 +
->  include/linux/of_address.h          |   9 --
->  include/linux/pci-acpi.h            |  20 +++
->  include/linux/pci.h                 |  12 ++
->  33 files changed, 1029 insertions(+), 453 deletions(-)
->  create mode 100644 drivers/acpi/pci_gen_host.c
->  create mode 100644 drivers/pci/ecam.c
->  create mode 100644 drivers/pci/ecam.h
->  delete mode 100644 drivers/pci/host/pci-host-common.h
-> 
+> On Tue, Apr 19, 2016 at 06:23:29PM -0500, Bjorn Helgaas wrote:
+> > On Thu, Mar 31, 2016 at 02:57:48PM +0200, Lukas Wunner wrote:
+> > > Linux 4.5 introduced a behavioral change in device probing during the
+> > > suspend process with commit 013c074f8642 ("PM / sleep: prohibit devices
+> > > probing during suspend/hibernation"): It defers device probing during
+> > > the entire suspend process, starting from the prepare phase and ending
+> > > with the complete phase. A rule existed before that "we rely on sub-
+> > > systems not to do any probing once a device is suspended" but it is
+> > > enforced only now (Alan Stern, https://lkml.org/lkml/2015/9/15/908).
+> > > 
+> > > This resulted in a WARN splat if a PCI device (e.g. Thunderbolt) is
+> > > plugged in while the system is asleep: Upon waking up, pciehp_resume()
+> > > discovers new devices in the resume phase and immediately tries to bind
+> > > them to a driver. Since probing is now deferred, device_attach() returns
+> > > -EPROBE_DEFER, which provoked a WARN in pci_bus_add_device().
+> > > 
+> > > Linux 4.6-rc1 aggravates the situation with commit ab1a187bba5c ("PCI:
+> > > Check device_attach() return value always"): pci_bus_add_device() no
+> > > longer sets dev->is_added = 1 if device_attach() returned a negative
+> > > value. This results in a BUG lockup in pci_bus_add_devices().
 
-+tested by for the v6.
+What is the connection here?  013c074f8642 causes device_attach() to
+return -EPROBE_DEFER, and your patch makes pci_bus_add_device() treat
+that as success, so it continues on and sets dev->is_added.
 
-Tested-by: Sinan Kaya <okaya@codeaurora.org>
+Since we will now set dev->is_added even for -EPROBE_DEFER, why do we
+need to change the "BUG_ON(!dev->is_added)" in pci_bus_add_devices()?
 
-using the Qualcomm Technologies QDF2XXX server.
+I agree that device_attach() might fail for reasons other than
+-EPROBE_DEFER, and it might be nice to avoid the BUG_ON then.  It just
+seems like those scenarios are different from the -EPROBE_DEFER one.
 
+Sorry I'm being so dense here.  I'm not very familiar with
+suspend/resume, so I'm having a hard time following everything.
 
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+> > > @@ -294,7 +294,7 @@ void pci_bus_add_device(struct pci_dev *dev)
+> > >  
+> > >          dev->match_driver = true;
+> > >          retval = device_attach(&dev->dev);
+> > > -        if (retval < 0) {
+> > > +        if (retval < 0 && retval != -EPROBE_DEFER) {
+> > >                  dev_warn(&dev->dev, "device attach failed (%d)\n", retval);
+> > 
+> > I would prefer if the dev_warn() made a distinction between
+> > -EPROBE_DEFER and other failures.  It sounds like the -EPROBE_DEFER
+> > case will happen in normal operation, and we probably shouldn't treat
+> > it as a warning.
+> 
+> Both v1 and v2 of my fix do not dev_warn() at all on -EPROBE_DEFER since,
+> as you've correctly stated above, it happens in normal operation.
+> 
+> If you want I could add a dev_info() specifically for the -EPROBE_DEFER
+> case but personally I don't think it's necessary, it'll probably just
+> irritate users.
+
+You're right; sorry, I just wasn't reading your code clearly.  I don't
+think we need an extra message.  We should already have messages for
+detecting the new device and its BARs, and those should be enough.
+
+Bjorn
