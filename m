@@ -1,137 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:24759 "EHLO
-	ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752707AbcDOAsJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2016 20:48:09 -0400
-From: Alistair Popple <alistair@popple.id.au>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, devicetree@vger.kernel.org,
-	aik@ozlabs.ru, linux-pci@vger.kernel.org, grant.likely@linaro.org,
-	robherring2@gmail.com, bhelgaas@google.com, dja@axtens.net
-Subject: Re: [PATCH v8 45/45] PCI/hotplug: PowerPC PowerNV PCI hotplug driver
-Date: Fri, 15 Apr 2016 10:47:52 +1000
-Message-ID: <1907698.219Ro8drPf@new-mexico>
-In-Reply-To: <1455680668-23298-46-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com> <1455680668-23298-46-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:57427 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753083AbcDUTfi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 21 Apr 2016 15:35:38 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAL_Jsq+JO41w2PweW0n1Z78=wPnYh+wfa==Hb8o37L3ynDndkA@mail.gmail.com>
+References: <1461166339-11109-1-git-send-email-geert+renesas@glider.be> <CAL_Jsq+JO41w2PweW0n1Z78=wPnYh+wfa==Hb8o37L3ynDndkA@mail.gmail.com>
+From: Rob Herring <robh+dt@kernel.org>
+Date: Thu, 21 Apr 2016 14:35:15 -0500
+Message-ID: <CAL_JsqLr+vS4BB9qvkrbg93Ypm8yhzs6eqESQFpjkL5_fv+jkw@mail.gmail.com>
+Subject: Re: [PATCH 00/14] DT: Fix spelling of standard properties
+To: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Lee Jones <lee@kernel.org>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Mark Brown <broonie@kernel.org>,
+	Alexandre Belloni <alexandre.belloni@free-electrons.com>,
+	Joe Perches <joe@perches.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	dmaengine@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gavin,
+On Wed, Apr 20, 2016 at 6:58 PM, Rob Herring <robh+dt@kernel.org> wrote:
+> On Wed, Apr 20, 2016 at 10:32 AM, Geert Uytterhoeven
+> <geert+renesas@glider.be> wrote:
+>>         Hi all,
+>>
+>> This patch series fixes misspellings of various standard DT properties
+>> in DT binding documentation, DTS files, and error messages.
+>> While most of these are harmless, some of them may cause hard-to-debug
+>> failures.
+>>
+>> Please apply where appropriate.
+>
+> I'll happily take the whole series if you like, though I've not
+> reviewed it all yet.
 
-I was reading through this to understand how it all works and noticed a couple
-of things, comments below.
+Now, I have. Other than patch 4 and 14, for the series:
 
-- Alistair
+Acked-by: Rob Herring <robh@kernel.org>
 
-On Wed, 17 Feb 2016 14:44:28 Gavin Shan wrote:
-
-<snip>
-
-> +
-> +static void pnv_php_handle_poweron(struct pnv_php_slot *php_slot)
-> +{
-> +	void *fdt, *fdt1, *dt;
-> +	int confirm = PNV_PHP_POWER_CONFIRMED_SUCCESS;
-> +	int ret;
-> +
-> +	/* We don't know the FDT blob size. We try to get it through
-> +	 * maximal memory chunk and then copy it to another chunk that
-> +	 * fits the real size.
-> +	 */
-> +	fdt1 = kzalloc(0x10000, GFP_KERNEL);
-> +	if (!fdt1)
-> +		goto error;
-> +
-> +	ret = pnv_pci_get_device_tree(php_slot->dn->phandle, fdt1, 0x10000);
-> +	if (ret)
-> +		goto free_fdt1;
-> +
-> +	fdt = kzalloc(fdt_totalsize(fdt1), GFP_KERNEL);
-> +	if (!fdt)
-> +		goto free_fdt1;
-> +
-> +	/* Unflatten device tree blob */
-> +	memcpy(fdt, fdt1, fdt_totalsize(fdt1));
-> +	dt = of_fdt_unflatten_tree(fdt, php_slot->dn, NULL);
-> +	if (!dt) {
-> +		dev_warn(&php_slot->pdev->dev, "Cannot unflatten FDT\n");
-> +		goto free_fdt;
-> +	}
-> +
-> +	/* Initialize and apply the changeset */
-> +	of_changeset_init(&php_slot->ocs);
-> +	ret = pnv_php_populate_changeset(&php_slot->ocs, php_slot->dn);
-> +	if (ret) {
-> +		dev_warn(&php_slot->pdev->dev, "Error %d populating changeset\n",
-> +			 ret);
-> +		goto free_dt;
-> +	}
-> +
-> +	php_slot->dn->child = NULL;
-> +	ret = of_changeset_apply(&php_slot->ocs);
-> +	if (ret) {
-> +		dev_warn(&php_slot->pdev->dev, "Error %d applying changeset\n",
-> +			 ret);
-> +		goto destroy_changeset;
-> +	}
-> +
-> +	/* Add device node firmware data */
-> +	pnv_php_add_pdns(php_slot);
-> +	php_slot->fdt = fdt;
-> +	php_slot->dt  = dt;
-> +	goto out;
-
-Doesn't this leak memory from fdt1? I can't see where it gets freed in this
-case.
-
-> +destroy_changeset:
-> +	of_changeset_destroy(&php_slot->ocs);
-> +free_dt:
-> +	kfree(dt);
-> +	php_slot->dn->child = NULL;
-> +free_fdt:
-> +	kfree(fdt);
-> +free_fdt1:
-> +	kfree(fdt1);
-> +error:
-> +	confirm = PNV_PHP_POWER_CONFIRMED_FAIL;
-> +out:
-> +	/* Confirm status change */
-> +	php_slot->power_state_confirmed = confirm;
-> +	wake_up_interruptible(&php_slot->queue);
-> +}
-> +
-
-<snip>
-
-> +
-> +static void __exit pnv_php_exit(void)
-> +{
-> +	struct device_node *dn;
-> +
-> +	for_each_compatible_node(dn, NULL, "ibm,ioda-phb")
-> +		pnv_php_unregister(dn);
-> +	for_each_compatible_node(dn, NULL, "ibm,ioda2-phb")
-> +		pnv_php_unregister(dn);
-> +
-> +	pnv_pci_hotplug_notifier_unregister(&php_msg_nb);
-
-Do you flush the workqueues anywhere? Usually you would stop work being queued 
-and call something like flush_workqueue() to ensure no work is still
-running/queued before unloading the module.
-
-- Alistair
-
-> +}
-> +
-> +module_init(pnv_php_init);
-> +module_exit(pnv_php_exit);
-> +
-> +MODULE_VERSION(DRIVER_VERSION);
-> +MODULE_LICENSE("GPL v2");
-> +MODULE_AUTHOR(DRIVER_AUTHOR);
-> +MODULE_DESCRIPTION(DRIVER_DESC);
-> 
-
+Rob
