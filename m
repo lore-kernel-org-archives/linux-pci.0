@@ -1,49 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from michel.telenet-ops.be ([195.130.137.88]:46385 "EHLO
-	michel.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485AbcDTPcW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2016 11:32:22 -0400
-From: Geert Uytterhoeven <geert+renesas@glider.be>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>, Lee Jones <lee@kernel.org>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Mark Brown <broonie@kernel.org>,
-	Alexandre Belloni <alexandre.belloni@free-electrons.com>,
-	Joe Perches <joe@perches.com>
-Cc: devicetree@vger.kernel.org, linux-input@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, dmaengine@vger.kernel.org,
-	Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH 04/14] ARM: dts: OMAP36xx: : DT spelling s/#address-cell/#address-cells/
-Date: Wed, 20 Apr 2016 17:32:09 +0200
-Message-Id: <1461166339-11109-5-git-send-email-geert+renesas@glider.be>
-In-Reply-To: <1461166339-11109-1-git-send-email-geert+renesas@glider.be>
-References: <1461166339-11109-1-git-send-email-geert+renesas@glider.be>
+Received: from mail.kernel.org ([198.145.29.136]:44213 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752757AbcDUPsg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 21 Apr 2016 11:48:36 -0400
+Date: Thu, 21 Apr 2016 10:48:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Jisheng Zhang <jszhang@marvell.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code to
+ dw_pcie_setup_rc()
+Message-ID: <20160421154832.GC32739@localhost>
+References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
+ <20160407103734.55e72da7@xhacker>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
+ <20160407163443.291fbd49@xhacker>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED44208@lhreml503-mbs>
+ <20160407140551.GA2648@localhost>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED45C38@lhreml503-mbs>
+ <20160408160145.GA10565@localhost>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED4B88D@lhreml503-mbs>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ED4B88D@lhreml503-mbs>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
- arch/arm/boot/dts/omap36xx.dtsi | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Tue, Apr 12, 2016 at 09:43:32AM +0000, Gabriele Paoloni wrote:
+> Hi Bjorn
+> 
+> [...]
+> 
+> > > >
+> > > > What's the hisi plan for resuming after suspend-to-RAM?  How does
+> > the
+> > > > RC get reprogrammed after it loses all its state?
+> > >
+> > > PM is not part of the driver yet. This is planned for near
+> > > future release so haven't made such considerations yet
+> > > >
+> > > > What would break if hisi did call dw_pcie_setup_rc()?  I know you
+> > said
+> > > > it would overwrite what the bootloader already did, which is true.
+> > >
+> > > I am try to figure this out now with our HW team.
+> > >
+> > > >
+> > > > But hisi does call dw_pcie_host_init(), so it reads pp->mem (which
+> > > > determines pp->mem_base) and pp->lanes from the DT.  Other drivers
+> > > > then call dw_pcie_setup_rc() which programs the RC based on
+> > > > pp->mem_base and pp->lanes.  So hisi assumes UEFI programmed the RC
+> > to
+> > > > match the DT, while the other drivers read the DT and program the
+> > RC
+> > > > to match.  The latter seems more robust because it enforces the
+> > > > consistency rather than relying on it.
+> > >
+> > > Yes I agree with you, however we have preferred to move RC config to
+> > > BIOS to have a single driver to support multiple versions of the
+> > > same SoC.
+> > 
+> > I think there are two reasonable approaches:
+> > 
+> >   1) A single generic driver that doesn't have any knowledge about the
+> >   chipset registers; it uses run-time firmware interfaces to manage
+> >   the bridge.  The ACPI pci_root.c driver is the best example so far
+> >   and works very well.  It supports basically all x86 and ia64
+> >   chipsets and requires no kernel work for new ones.
+> > 
+> >   2) Native drivers specific to each chipset.  These may get
+> >   configuration information from DT, but they do their own
+> >   register-level programming of the device without run-time help from
+> >   firmware.
+> > 
+> > I think hisi is a native driver because it uses hip05/hip06 registers
+> > to check link state and perform config operations.  And apparently you
+> > rely on the ATU, BAR, class, and link width programming currently done
+> > in dw_pcie_host_init().  But you want to rely on pre-boot firmware to
+> > set up the link.  That doesn't make sense to me -- if the driver wants
+> > to twiddle the registers, it should know how to do it all.  I don't
+> > see how you can reasonably manage this half-way approach.
+> > 
+> > > The patch I proposed above does the same job as the original patch
+> > > proposed by Jisheng and also allows hisi driver to call the moved
+> > > code.
+> > >
+> > > Do you see anything wrong with it?
+> > 
+> > Only that it makes the structure more complicated and we haven't
+> > identified a corresponding benefit yet.
+> 
+> Finally I have checked that assigning .host_init function pointer
+> in our driver to call dw_pcie_setup_rc() will not affect the values
+> already set by BIOS.
+> 
+> Also I agree with you that a hybrid approach is not ideal.
+> 
+> So I will update the driver to call dw_pcie_setup_rc() from
+> .host_init and ask the BIOS team to update the firmware for next
+> releases (the driver will be backward compatible anyway). 
 
-diff --git a/arch/arm/boot/dts/omap36xx.dtsi b/arch/arm/boot/dts/omap36xx.dtsi
-index ce1e242d4dc07ea8..8b797915300894d8 100644
---- a/arch/arm/boot/dts/omap36xx.dtsi
-+++ b/arch/arm/boot/dts/omap36xx.dtsi
-@@ -44,7 +44,7 @@
- 		abb_mpu_iva: regulator-abb-mpu {
- 			compatible = "ti,abb-v1";
- 			regulator-name = "abb_mpu_iva";
--			#address-cell = <0>;
-+			#address-cells = <0>;
- 			#size-cells = <0>;
- 			reg = <0x483072f0 0x8>, <0x48306818 0x4>;
- 			reg-names = "base-address", "int-address";
--- 
-1.9.1
+Am I right in assuming that the patch currently in my tree:
 
+https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-designware&id=1488aefa37a4033080942c860294d13c613ec829
+
+will work for you?  I'm going to assume so unless I hear otherwise.
+
+Bjorn
