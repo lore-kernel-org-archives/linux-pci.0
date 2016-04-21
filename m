@@ -1,360 +1,98 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:37206 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751522AbcDROvu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Apr 2016 10:51:50 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: [PATCH v5 2/2] PCI: tegra: Support per-lane PHYs
-Date: Mon, 18 Apr 2016 16:51:45 +0200
-Message-Id: <1460991105-22861-2-git-send-email-thierry.reding@gmail.com>
-In-Reply-To: <1460991105-22861-1-git-send-email-thierry.reding@gmail.com>
-References: <1460991105-22861-1-git-send-email-thierry.reding@gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:43603 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752144AbcDUPmi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 21 Apr 2016 11:42:38 -0400
+Date: Thu, 21 Apr 2016 10:42:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Krzysztof Halasa <khalasa@piap.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH REPOST] Extend PCIE_BUS_PEER2PEER to set MRSS=128 to fix
+ CNS3xxx BM DMA.
+Message-ID: <20160421154234.GB32739@localhost>
+References: <m3h9fghbfh.fsf@t19.piap.pl>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <m3h9fghbfh.fsf@t19.piap.pl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+On Mon, Mar 21, 2016 at 10:39:52AM +0100, Krzysztof Halasa wrote:
+> I think this bug needs to be fixed, this way or another.
+> 
+> The platform in question is Cavium CNS3xxx, ARMv6.
+> 
+> A recent patch by Arnd Bergmann (498a92d42596 "ARM: cns3xxx: pci: avoid
+> potential stack overflow") converted an explicit setting of
+> PCI_EXP_DEVCTL_READRQ = 0 (i.e., max 128 bytes for bus-mastering PCIe DMA
+> read request) to:
+> +    pcie_bus_config = PCIE_BUS_PEER2PEER;
 
-The current XUSB pad controller bindings are insufficient to describe
-PHY devices attached to USB controllers. New bindings have been created
-to overcome these restrictions. As a side-effect each root port now is
-assigned a set of PHY devices, one for each lane associated with the
-root port. This has the benefit of allowing fine-grained control of the
-power management for each lane.
+Any thoughts on this, Arnd?  I can (and will) look at this, but it's
+a complicated area and it will take me quite a while to dig into it.
 
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
-Changes in v5:
-- fix power off sequence
-
-Changes in v4:
-- propagate failure from PHY power on
-- refactor PHY power off sequence
-
-Changes in v3:
-- cache result of check for new PHY bindings usage (Stephen Warren)
-
-Changes in v2:
-- rework commit message to more accurately describe this change
-
- drivers/pci/host/pci-tegra.c | 243 ++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 226 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index 68d1f41b3cbf..12d581130645 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -295,6 +295,7 @@ struct tegra_pcie {
- 	struct reset_control *afi_rst;
- 	struct reset_control *pcie_xrst;
- 
-+	bool legacy_phy;
- 	struct phy *phy;
- 
- 	struct tegra_msi msi;
-@@ -311,11 +312,14 @@ struct tegra_pcie {
- 
- struct tegra_pcie_port {
- 	struct tegra_pcie *pcie;
-+	struct device_node *np;
- 	struct list_head list;
- 	struct resource regs;
- 	void __iomem *base;
- 	unsigned int index;
- 	unsigned int lanes;
-+
-+	struct phy **phys;
- };
- 
- struct tegra_pcie_bus {
-@@ -860,6 +864,128 @@ static int tegra_pcie_phy_enable(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
-+static int tegra_pcie_phy_disable(struct tegra_pcie *pcie)
-+{
-+	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
-+	u32 value;
-+
-+	/* disable TX/RX data */
-+	value = pads_readl(pcie, PADS_CTL);
-+	value &= ~(PADS_CTL_TX_DATA_EN_1L | PADS_CTL_RX_DATA_EN_1L);
-+	pads_writel(pcie, value, PADS_CTL);
-+
-+	/* override IDDQ */
-+	value = pads_readl(pcie, PADS_CTL);
-+	value |= PADS_CTL_IDDQ_1L;
-+	pads_writel(pcie, PADS_CTL, value);
-+
-+	/* reset PLL */
-+	value = pads_readl(pcie, soc->pads_pll_ctl);
-+	value &= ~PADS_PLL_CTL_RST_B4SM;
-+	pads_writel(pcie, value, soc->pads_pll_ctl);
-+
-+	usleep_range(20, 100);
-+
-+	return 0;
-+}
-+
-+static int tegra_pcie_port_phy_power_on(struct tegra_pcie_port *port)
-+{
-+	struct device *dev = port->pcie->dev;
-+	unsigned int i;
-+	int err;
-+
-+	for (i = 0; i < port->lanes; i++) {
-+		err = phy_power_on(port->phys[i]);
-+		if (err < 0) {
-+			dev_err(dev, "failed to power on PHY#%u: %d\n", i,
-+				err);
-+			return err;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int tegra_pcie_port_phy_power_off(struct tegra_pcie_port *port)
-+{
-+	struct device *dev = port->pcie->dev;
-+	unsigned int i;
-+	int err;
-+
-+	for (i = 0; i < port->lanes; i++) {
-+		err = phy_power_off(port->phys[i]);
-+		if (err < 0) {
-+			dev_err(dev, "failed to power off PHY#%u: %d\n", i,
-+				err);
-+			return err;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
-+{
-+	struct tegra_pcie_port *port;
-+	int err;
-+
-+	if (pcie->legacy_phy) {
-+		if (pcie->phy)
-+			err = phy_power_on(pcie->phy);
-+		else
-+			err = tegra_pcie_phy_enable(pcie);
-+
-+		if (err < 0)
-+			dev_err(pcie->dev, "failed to power on PHY: %d\n", err);
-+
-+		return err;
-+	}
-+
-+	list_for_each_entry(port, &pcie->ports, list) {
-+		err = tegra_pcie_port_phy_power_on(port);
-+		if (err < 0) {
-+			dev_err(pcie->dev,
-+				"failed to power on PCIe port %u PHY: %d\n",
-+				port->index, err);
-+			return err;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int tegra_pcie_phy_power_off(struct tegra_pcie *pcie)
-+{
-+	struct tegra_pcie_port *port;
-+	int err;
-+
-+	if (pcie->legacy_phy) {
-+		if (pcie->phy)
-+			err = phy_power_off(pcie->phy);
-+		else
-+			err = tegra_pcie_phy_disable(pcie);
-+
-+		if (err < 0)
-+			dev_err(pcie->dev, "failed to power off PHY: %d\n",
-+				err);
-+
-+		return err;
-+	}
-+
-+	list_for_each_entry(port, &pcie->ports, list) {
-+		err = tegra_pcie_port_phy_power_off(port);
-+		if (err < 0) {
-+			dev_err(pcie->dev,
-+				"failed to power off PCIe port %u PHY: %d\n",
-+				port->index, err);
-+			return err;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- {
- 	const struct tegra_pcie_soc_data *soc = pcie->soc_data;
-@@ -899,13 +1025,9 @@ static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
- 		afi_writel(pcie, value, AFI_FUSE);
- 	}
- 
--	if (!pcie->phy)
--		err = tegra_pcie_phy_enable(pcie);
--	else
--		err = phy_power_on(pcie->phy);
--
-+	err = tegra_pcie_phy_power_on(pcie);
- 	if (err < 0) {
--		dev_err(pcie->dev, "failed to power on PHY: %d\n", err);
-+		dev_err(pcie->dev, "failed to power on PHY(s): %d\n", err);
- 		return err;
- 	}
- 
-@@ -942,9 +1064,9 @@ static void tegra_pcie_power_off(struct tegra_pcie *pcie)
- 
- 	/* TODO: disable and unprepare clocks? */
- 
--	err = phy_power_off(pcie->phy);
-+	err = tegra_pcie_phy_power_off(pcie);
- 	if (err < 0)
--		dev_warn(pcie->dev, "failed to power off PHY: %d\n", err);
-+		dev_err(pcie->dev, "failed to power off PHY(s): %d\n", err);
- 
- 	reset_control_assert(pcie->pcie_xrst);
- 	reset_control_assert(pcie->afi_rst);
-@@ -1049,6 +1171,99 @@ static int tegra_pcie_resets_get(struct tegra_pcie *pcie)
- 	return 0;
- }
- 
-+static int tegra_pcie_phys_get_legacy(struct tegra_pcie *pcie)
-+{
-+	int err;
-+
-+	pcie->phy = devm_phy_optional_get(pcie->dev, "pcie");
-+	if (IS_ERR(pcie->phy)) {
-+		err = PTR_ERR(pcie->phy);
-+		dev_err(pcie->dev, "failed to get PHY: %d\n", err);
-+		return err;
-+	}
-+
-+	err = phy_init(pcie->phy);
-+	if (err < 0) {
-+		dev_err(pcie->dev, "failed to initialize PHY: %d\n", err);
-+		return err;
-+	}
-+
-+	pcie->legacy_phy = true;
-+
-+	return 0;
-+}
-+
-+static struct phy *devm_of_phy_optional_get_index(struct device *dev,
-+						  struct device_node *np,
-+						  const char *consumer,
-+						  unsigned int index)
-+{
-+	struct phy *phy;
-+	char *name;
-+
-+	name = kasprintf(GFP_KERNEL, "%s-%u", consumer, index);
-+	if (!name)
-+		return ERR_PTR(-ENOMEM);
-+
-+	phy = devm_of_phy_get(dev, np, name);
-+	kfree(name);
-+
-+	if (IS_ERR(phy) && PTR_ERR(phy) == -ENODEV)
-+		phy = NULL;
-+
-+	return phy;
-+}
-+
-+static int tegra_pcie_port_get_phys(struct tegra_pcie_port *port)
-+{
-+	struct device *dev = port->pcie->dev;
-+	struct phy *phy;
-+	unsigned int i;
-+	int err;
-+
-+	port->phys = devm_kcalloc(dev, sizeof(phy), port->lanes, GFP_KERNEL);
-+	if (!port->phys)
-+		return -ENOMEM;
-+
-+	for (i = 0; i < port->lanes; i++) {
-+		phy = devm_of_phy_optional_get_index(dev, port->np, "pcie", i);
-+		if (IS_ERR(phy)) {
-+			dev_err(dev, "failed to get PHY#%u: %ld\n", i,
-+				PTR_ERR(phy));
-+			return PTR_ERR(phy);
-+		}
-+
-+		err = phy_init(phy);
-+		if (err < 0) {
-+			dev_err(dev, "failed to initialize PHY#%u: %d\n", i,
-+				err);
-+			return err;
-+		}
-+
-+		port->phys[i] = phy;
-+	}
-+
-+	return 0;
-+}
-+
-+static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
-+{
-+	struct tegra_pcie_port *port;
-+	int err;
-+
-+	if (of_get_property(pcie->dev->of_node, "phys", NULL) != NULL)
-+		return tegra_pcie_phys_get_legacy(pcie);
-+
-+	list_for_each_entry(port, &pcie->ports, list) {
-+		err = tegra_pcie_port_get_phys(port);
-+		if (err < 0) {
-+			return err;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- {
- 	struct platform_device *pdev = to_platform_device(pcie->dev);
-@@ -1067,16 +1282,9 @@ static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
- 		return err;
- 	}
- 
--	pcie->phy = devm_phy_optional_get(pcie->dev, "pcie");
--	if (IS_ERR(pcie->phy)) {
--		err = PTR_ERR(pcie->phy);
--		dev_err(&pdev->dev, "failed to get PHY: %d\n", err);
--		return err;
--	}
--
--	err = phy_init(pcie->phy);
-+	err = tegra_pcie_phys_get(pcie);
- 	if (err < 0) {
--		dev_err(&pdev->dev, "failed to initialize PHY: %d\n", err);
-+		dev_err(&pdev->dev, "failed to get PHYs: %d\n", err);
- 		return err;
- 	}
- 
-@@ -1752,6 +1960,7 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 		rp->index = index;
- 		rp->lanes = value;
- 		rp->pcie = pcie;
-+		rp->np = port;
- 
- 		rp->base = devm_ioremap_resource(pcie->dev, &rp->regs);
- 		if (IS_ERR(rp->base))
--- 
-2.8.0
-
+> with the following commentary:
+>     "The second part is how the driver sets up the Max_Read_Request_Size
+>     value for the first device/function on bus 1, i.e. the device
+>     plugged directly into the PCIe root port.
+>     For all I can tell, this is in fact incomplete, as it does not
+>     perform the same setting on devices attached to a PCIe switch,
+>     or multi-function devices.
+>     The solution for this part fortunately is even easier: if we
+>     just set the global pcie_bus_config variable to PCIE_BUS_PEER2PEER,
+>     all PCIe devices in the system are limited to 128 byte MPS, which
+>     in turn limits the MRRS to 128 bytes for all devices, and we
+>     no longer even need to touch any devices."
+> 
+> The problem is the MRRS setting is never written to the hardware.
+> I propose the following, though I'm not sure if we can do this safely,
+> especially given the comments in probe.c. OTOH, this change may be
+> required in other (all?) cases when the user requests
+> PCIE_BUS_PEER2PEER.
+> 
+> On this Laguna GW-2388 the following patch fixes BM DMA with:
+> 0000:00:00.0 PCI bridge: Cavium Networks Device 3400 (rev 01)
+> 0000:01:00.0 PCI bridge: Texas Instruments XIO2001 PCI Express-to-PCI Bridge
+> 0000:02:0e.0 (PCI devices behind the bridge, these are doing actual BM xfers)
+> 0001:00:00.0 PCI bridge: Cavium Networks Device 3400 (rev 01 - this is
+> 	     the second lane from the CPU)
+> 
+> pci 0000:00:00.0: Max Payload Size set to  128/ 128 (was  128), Max Read Rq  128
+> pci 0000:01:00.0: Max Payload Size set to  128/ 512 (was  128), Max Read Rq  128
+> pci 0001:00:00.0: Max Payload Size set to  128/ 128 (was  128), Max Read Rq  128
+> 
+> Signed-off-by: Krzysztof Hałasa <khalasa@piap.pl>
+> Fixes: 498a92d42596 ("ARM: cns3xxx: pci: avoid potential stack overflow")
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 6d7ab9b..91713b6 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1919,7 +1919,8 @@ static void pcie_write_mrrs(struct pci_dev *dev)
+>  	/* In the "safe" case, do not configure the MRRS.  There appear to be
+>  	 * issues with setting MRRS to 0 on a number of devices.
+>  	 */
+> -	if (pcie_bus_config != PCIE_BUS_PERFORMANCE)
+> +	if (pcie_bus_config != PCIE_BUS_PERFORMANCE &&
+> +	    pcie_bus_config != PCIE_BUS_PEER2PEER)
+>  		return;
+>  
+>  	/* For Max performance, the MRRS must be set to the largest supported
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 2771625..6f5088a 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -756,7 +756,7 @@ enum pcie_bus_config_types {
+>  	PCIE_BUS_DEFAULT,	/* ensure MPS matches upstream bridge */
+>  	PCIE_BUS_SAFE,		/* use largest MPS boot-time devices support */
+>  	PCIE_BUS_PERFORMANCE,	/* use MPS and MRRS for best performance */
+> -	PCIE_BUS_PEER2PEER,	/* set MPS = 128 for all devices */
+> +	PCIE_BUS_PEER2PEER,	/* set MPS and MRSS to 128 for all devices */
+>  };
+>  
+>  extern enum pcie_bus_config_types pcie_bus_config;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
