@@ -1,45 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:60212 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750923AbcD1PjE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 28 Apr 2016 11:39:04 -0400
-Date: Thu, 28 Apr 2016 18:38:58 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
-Subject: Re: [PATCH v4 4/4] PCI: Add runtime PM support for PCIe ports
-Message-ID: <20160428153858.GG32610@lahna.fi.intel.com>
-References: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
- <1461578004-129094-5-git-send-email-mika.westerberg@linux.intel.com>
- <20160428142216.GA18211@wunner.de>
- <20160428151356.GF32610@lahna.fi.intel.com>
- <CAJZ5v0h7n669VkzV23FA3YSQDFR5weWWVKrFBHF0XuCigGeMSA@mail.gmail.com>
+Received: from kirsty.vergenet.net ([202.4.237.240]:44814 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751586AbcDUDxE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2016 23:53:04 -0400
+Date: Thu, 21 Apr 2016 13:53:02 +1000
+From: Simon Horman <horms@verge.net.au>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Phil Edworthy <phil.edworthy@renesas.com>,
+	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v2] PCI: rcar-pcie: Remove Gen2 designation from Kconfig
+Message-ID: <20160421035302.GA28575@verge.net.au>
+References: <1459384523-16146-1-git-send-email-horms+renesas@verge.net.au>
+ <20160405181054.GB15353@localhost>
+ <20160419212114.GD17863@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0h7n669VkzV23FA3YSQDFR5weWWVKrFBHF0XuCigGeMSA@mail.gmail.com>
+In-Reply-To: <20160419212114.GD17863@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 28, 2016 at 05:31:58PM +0200, Rafael J. Wysocki wrote:
-> > Hmm, PM core calls pci_pm_runtime_resume() for PCI drivers which then
-> > delegates to driver->runtime_resume() if set. However, if it is missing
-> > it just returns -ENOSYS and does not put the device back to D0.
-> >
-> > So if I'm reading this right we actually need to provide
-> > pcie_port_runtime_resume().
+On Tue, Apr 19, 2016 at 04:21:14PM -0500, Bjorn Helgaas wrote:
+> On Tue, Apr 05, 2016 at 01:10:54PM -0500, Bjorn Helgaas wrote:
+> > Hi Simon,
+> > 
+> > On Thu, Mar 31, 2016 at 09:35:23AM +0900, Simon Horman wrote:
+> > > It appears that Gen2 is a misnomer for the R-Car PCIE driver
+> > > which also supports Gen 1 and Gen 3 SoCs. Accordingly, drop Gen 2
+> > > from the help text and Kconfig symbol.
+> > > 
+> > > Also, re-arange the Kconfig symbol name to use PCIE as the prefix.
+> > > This appears to be in keeping with other PCIE Kconfig symbols.
+> > > 
+> > > Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> > > Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+> > > ---
+> > > Bjorn, if this patch is acceptable I would like to request that we
+> > > co-ordinate things so that I can queue-up corresponding updates for
+> > > arm and arm64 defconfigs in the same release. From my point of view
+> > > v4.7 would make sense.
+> > 
+> > I'm fine with this.  What sort of coordination do you want to do?
+> > It would probably be nice to combine this patch with the defconfig updates
+> > so we don't have a bisection problem.  If you want to include this patch
+> > and merge through another tree,
+> > 
+> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> You do, but it could just return 0.
-> 
-> The suggestion seems to be that pm_runtime_mark_last_busy() is not
-> needed as the core will invoke it anyway.
+> Ping, do you want me to do anything with this?
 
-Ah, got it now. Thanks for the clarification!
+Sorry, this had completely slipped my mind.
+
+I have just posted
+"[PATCH v3] PCI: rcar-pcie: Remove Gen2 designation from Kconfig"
+which I am planning to take through the renesas tree.
