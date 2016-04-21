@@ -1,89 +1,121 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 7 Apr 2016 11:06:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
-	agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] pci, acpi: free IO resource during shutdown
-Message-ID: <20160407160624.GB8780@localhost>
-References: <1457389310-3538-1-git-send-email-okaya@codeaurora.org>
- <1457389310-3538-2-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1457389310-3538-2-git-send-email-okaya@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:44786 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751466AbcDUDwQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2016 23:52:16 -0400
+From: Simon Horman <horms+renesas@verge.net.au>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Phil Edworthy <phil.edworthy@renesas.com>,
+	Magnus Damm <magnus.damm@gmail.com>, linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH v3] PCI: rcar-pcie: Remove Gen2 designation from Kconfig
+Date: Thu, 21 Apr 2016 13:51:55 +1000
+Message-Id: <1461210715-29304-1-git-send-email-horms+renesas@verge.net.au>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sinan,
+It appears that Gen2 is a misnomer for the R-Car PCIE driver
+which also supports Gen 1 and Gen 3 SoCs. Accordingly, drop Gen 2
+from the help text and Kconfig symbol.
 
-On Mon, Mar 07, 2016 at 05:21:50PM -0500, Sinan Kaya wrote:
-> The ACPI PCI driver is leaking out memory mappings
-> when a slot is removed. Upon insertion following a
-> removal, we are hitting a BUG statement. Second call
-> to the remap API hits a bug statement because the area is
-> already mapped. This patch releases additional virtual
-> memory mapped by pci_remap_iospace function as part of
-> __release_pci_root_info function if the region type is IO.
+Also, re-arange the Kconfig symbol name to use PCIE as the prefix.
+This appears to be in keeping with other PCIE Kconfig symbols.
 
-I don't know what "removing a slot" means.  You're changing
-pci_root.c, so I assume this is really an ACPI host bridge removal?
+Reported-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+Hi Bjorn,
 
-The release should correspond to a mapping, and the changelog should
-point out where that mapping happens so we can see the symmetry.
+As discussed elsewhere I am planning to take this through the renesas tree.
 
-You say this is undoing the effect of pci_remap_iospace(), but that's
-only called by native drivers and the generic (OF) driver, not by
-pci_root.c.
+v3
+* Added Ack from Bjorn Helgaas
+* Added defconfig updates
 
-Please combine this with the previous patch so we have the new
-function and its use in the same patch.
+v2
+* As suggested by Geert Uytterhoeven:
+  - Use PCIE as prefix in Kconfig symbol
+---
+ arch/arm/configs/multi_v7_defconfig | 2 +-
+ arch/arm/configs/shmobile_defconfig | 2 +-
+ arch/arm64/configs/defconfig        | 2 +-
+ drivers/pci/host/Kconfig            | 4 ++--
+ drivers/pci/host/Makefile           | 2 +-
+ 5 files changed, 6 insertions(+), 6 deletions(-)
 
->  BUG: failure at kernel/lib/ioremap.c:31/ioremap_pte_range()!
->  Kernel panic - not syncing: BUG!
->  CPU: 1 PID: 630 Comm: kworker/u48:3 Not tainted
->  Workqueue: kacpi_hotplug acpi_hotplug_work_fn Call trace:
->  dump_backtrace+0x0/0x10c [<ffff800000086e58>]
->  show_stack+0x10/0x1c [<ffff8000004d1f50>]
->  dump_stack+0x74/0xc4
->  panic+0xe4/0x21c [<ffff8000002577cc>]
->  ioremap_page_range+0x290/0x30c [<ffff8000002861dc>]
->  pci_remap_iospace+0x88/0xa0 [<ffff8000000908f8>]
->  setup_resource+0x114/0x16c [<ffff8000002c0fc0>]
->  acpi_walk_resource_buffer+0x54/0xb0
->  acpi_walk_resources+0x90/0xbc
->  pci_acpi_scan_root+0x184/0x2d0
->  acpi_pci_root_add+0x368/0x434
->  acpi_bus_attach+0x124/0x22c [<ffff8000002a5628>]
->  acpi_bus_scan+0x58/0x74 [<ffff8000002a57c0>]
->  acpi_device_hotplug+0xc4/0x3f0 [<ffff8000002a0468>]
->  acpi_hotplug_work_fn+0x1c/0x34 [<ffff8000000b9310>]
->  process_one_work+0x1e8/0x308 [<ffff8000000b9b04>]
->  worker_thread+0x294/0x3cc  [<ffff8000000bd9
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/acpi/pci_root.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index 71bbfae..6d4bc2d 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -946,6 +946,8 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
->  
->  	resource_list_for_each_entry(entry, &bridge->windows) {
->  		res = entry->res;
-> +		if (res->flags & IORESOURCE_IO)
-> +			pci_unmap_iospace(res);
->  		if (res->parent &&
->  		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
->  			release_resource(res);
-> -- 
-> 1.8.2.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/arch/arm/configs/multi_v7_defconfig b/arch/arm/configs/multi_v7_defconfig
+index 434f86b110bb..a1cf13dfdea1 100644
+--- a/arch/arm/configs/multi_v7_defconfig
++++ b/arch/arm/configs/multi_v7_defconfig
+@@ -119,7 +119,7 @@ CONFIG_PCI_MSI=y
+ CONFIG_PCI_MVEBU=y
+ CONFIG_PCI_TEGRA=y
+ CONFIG_PCI_RCAR_GEN2=y
+-CONFIG_PCI_RCAR_GEN2_PCIE=y
++CONFIG_PCIE_RCAR=y
+ CONFIG_PCIEPORTBUS=y
+ CONFIG_SMP=y
+ CONFIG_NR_CPUS=16
+diff --git a/arch/arm/configs/shmobile_defconfig b/arch/arm/configs/shmobile_defconfig
+index e06acb9b38ce..f2d635566a13 100644
+--- a/arch/arm/configs/shmobile_defconfig
++++ b/arch/arm/configs/shmobile_defconfig
+@@ -24,7 +24,7 @@ CONFIG_PL310_ERRATA_588369=y
+ CONFIG_ARM_ERRATA_754322=y
+ CONFIG_PCI=y
+ CONFIG_PCI_RCAR_GEN2=y
+-CONFIG_PCI_RCAR_GEN2_PCIE=y
++CONFIG_PCIE_RCAR=y
+ CONFIG_SMP=y
+ CONFIG_SCHED_MC=y
+ CONFIG_HAVE_ARM_ARCH_TIMER=y
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index a44ef995d8ae..23dd767b2971 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -56,7 +56,7 @@ CONFIG_ARCH_ZYNQMP=y
+ CONFIG_PCI=y
+ CONFIG_PCI_MSI=y
+ CONFIG_PCI_IOV=y
+-CONFIG_PCI_RCAR_GEN2_PCIE=y
++CONFIG_PCIE_RCAR=y
+ CONFIG_PCI_HOST_GENERIC=y
+ CONFIG_PCI_XGENE=y
+ CONFIG_PCI_LAYERSCAPE=y
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 7a0780d56d2d..8fb1cf54617d 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -69,11 +69,11 @@ config PCI_RCAR_GEN2
+ 	  There are 3 internal PCI controllers available with a single
+ 	  built-in EHCI/OHCI host controller present on each one.
+ 
+-config PCI_RCAR_GEN2_PCIE
++config PCIE_RCAR
+ 	bool "Renesas R-Car PCIe controller"
+ 	depends on ARCH_RENESAS || (ARM && COMPILE_TEST)
+ 	help
+-	  Say Y here if you want PCIe controller support on R-Car Gen2 SoCs.
++	  Say Y here if you want PCIe controller support on R-Car SoCs.
+ 
+ config PCI_HOST_COMMON
+ 	bool
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index d85b5faf9bbc..d3d8e1b36fb9 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -7,7 +7,7 @@ obj-$(CONFIG_PCI_HYPERV) += pci-hyperv.o
+ obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+ obj-$(CONFIG_PCI_TEGRA) += pci-tegra.o
+ obj-$(CONFIG_PCI_RCAR_GEN2) += pci-rcar-gen2.o
+-obj-$(CONFIG_PCI_RCAR_GEN2_PCIE) += pcie-rcar.o
++obj-$(CONFIG_PCIE_RCAR) += pcie-rcar.o
+ obj-$(CONFIG_PCI_HOST_COMMON) += pci-host-common.o
+ obj-$(CONFIG_PCI_HOST_GENERIC) += pci-host-generic.o
+ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+-- 
+2.7.0.rc3.207.g0ac5344
+
