@@ -1,95 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:54583 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751325AbcDSG3V (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 Apr 2016 02:29:21 -0400
-From: "Yong, Jonathan" <jonathan.yong@intel.com>
-To: linux-pci@vger.kernel.org
-Cc: jonathan.yong@intel.com, bhelgaas@google.com
-Subject: [RFC v4] PCI: PTM Driver
-Date: Tue, 19 Apr 2016 06:29:17 +0000
-Message-Id: <1461047358-4736-1-git-send-email-jonathan.yong@intel.com>
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:34179 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751531AbcDUKJK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Apr 2016 06:09:10 -0400
+Received: by mail-lb0-f171.google.com with SMTP id b1so21323805lbi.1
+        for <linux-pci@vger.kernel.org>; Thu, 21 Apr 2016 03:09:09 -0700 (PDT)
+Subject: Re: [PATCH V6 08/13] PCI: generic, thunder: update to use generic
+ ECAM API
+To: Arnd Bergmann <arnd@arndb.de>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <3830999.dF71UWYsBP@wuerfel> <57189D2F.9070802@semihalf.com>
+ <8950494.UV8UrWiFbx@wuerfel>
+Cc: Jayachandran C <jchandra@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
+	Jon Masters <jcm@redhat.com>, linaro-acpi@lists.linaro.org,
+	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com,
+	David Daney <ddaney@caviumnetworks.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	robert.richter@caviumnetworks.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, Wangyijing <wangyijing@huawei.com>,
+	Marcin Wojtas <mw@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <5718A6AE.4080203@semihalf.com>
+Date: Thu, 21 Apr 2016 12:08:46 +0200
+MIME-Version: 1.0
+In-Reply-To: <8950494.UV8UrWiFbx@wuerfel>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello LKML,
+On 21.04.2016 11:36, Arnd Bergmann wrote:
+> On Thursday 21 April 2016 11:28:15 Tomasz Nowicki wrote:
+>> On 19.04.2016 15:06, Arnd Bergmann wrote:
+>>> On Monday 18 April 2016 21:31:54 Tomasz Nowicki wrote:
+>>>>
+>>>> Basically the whole content of pci-thunder-ecam.c and pci-thunder-pem.c.
+>>>>
+>>>> pci-thunder-ecam.c contains config space accessors. Similar for
+>>>> pci-thunder-pem.c but it also has extra init call (it is now called
+>>>> thunder_pem_init) which finds and maps related registers.
+>>>
+>>> They seem to do much more than just override the accessors, they actually
+>>> change the contents of the config space as well. Is that really necessary
+>>> on ACPI based systems as well?
+>>
+>> Yes, the pci-thunder-ecam.c accessors are meant to emulate config space
+>> capabilities. They are necessary to synthesize EA capabilities (fixed
+>> PCI BARs), it wont work without this, for ACPI boot as well.
+>
+> Why is that? I thought the BARs never get reassigned when using ACPI,
+> so I'm surprised it's actually needed. Maybe I misunderstood what
+> you mean by fixed PCI BARs.
 
-This is a preliminary implementation of the PTM[1] support driver. This driver
-has only been tested against a virtual PCI bus since there are no known
-endpoints utilizing it yet.
+Yes, I meant something else. ThunderX has non-programmable PCI BAR 
+addresses. So it uses PCI EA (Extended allocation) capabilities to get 
+know PCI BARs addresses. But the early implementation (pass1.x) misses 
+EA capabilities hence we need to emulate it in config space accessors.
 
-The drivers job is to get to every PTM capable device, set some PCI config
-space bits, then go back to sleep [2].
-
-PTM capable PCIe devices will get a new sysfs entry to allow PTM to be
-enabled/disabled individually (enable by default).
-
-Comments? Should I explain the PTM registers in more details?
-Please CC me, thanks.
-
-[1] Precision Time Measurement: A protocol for synchronizing PCIe endpoint
-clocks against the host clock as specified in the PCI Express Base
-Specification 3.1. It is identified by the 0x001f extended capability ID.
-
-PTM capable devices are split into 3 roles, master, responder and requester.
-Summary as follows:
-
-A master holds the master clock that will be used for all devices under its
-domain (not to be confused with PCI domains). There may be multiple masters
-in a PTM hierarchy, in which case, the highest master closest to the root
-complex will be selected for the PTM domain. A master is also always
-responder capable. Clock precision is signified by a Local Clock
-Granularity field, in nano-seconds.
-
-A responder responds to any PTM synchronization requests from a downstream
-device. A responder is typically a switch device. It may also hold a local
-clock signified by a non-zero Local Clock Granularity field. A value of 0
-signifies that the device simply propagates timing information from
-upstream devices.
-
-A requester is typically an endpoint that will request synchronization
-updates from an upstream PTM capable time source. The driver will update
-the Effective Clock Granularity field based on the same field from the
-PTM domain master. The field should be programmed with a value of 0 if any
-intervening responder has a Local Clock Granularity field value of 0.
-
-[2] The software drivers never see the PTM packets, the PCI Express Base
-Specification 3.1 reads:
-        PTM capable components can make their PTM context available for
-        inspection by software, enabling software to translate timing
-        information between local times and PTM Master Time.
-
-This isn't very informative.
-
-Changes since v1:
-* Moved register constants to pci_regs.h
-* Use pci_dev to hold PTM status
-* PTM initialization now done top-down hierarchy wise.
-
-Changes since v2:
-* Added missing void return in the pci_ptm_init inline stub.
-
-Changes since v3:
-* Clearing CONFIG_PCIE_PTM now completely prevents the driver from being built.
-* Renamed pci_*_ptm_sysfs to pcie_ptm_*_sysfs_dev_files for consistency.
-* Removed useless prototypes.
-* Driver no longer checks PTM capability version
-* PCI_EXT_CAP_ID_MAX updated to include PTM (0x1F)
-
-Yong, Jonathan (1):
-  PCI: PTM preliminary implementation
-
- drivers/pci/pci-sysfs.c       |   7 ++
- drivers/pci/pci.h             |  20 +++++
- drivers/pci/pcie/Kconfig      |   9 ++
- drivers/pci/pcie/Makefile     |   3 +
- drivers/pci/pcie/pcie_ptm.c   | 194 ++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c           |   3 +
- include/linux/pci.h           |  11 +++
- include/uapi/linux/pci_regs.h |  14 ++-
- 8 files changed, 260 insertions(+), 1 deletion(-)
- create mode 100644 drivers/pci/pcie/pcie_ptm.c
-
--- 
-2.7.3
-
+Tomasz
