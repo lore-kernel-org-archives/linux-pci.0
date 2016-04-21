@@ -1,98 +1,154 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:45254 "EHLO
-	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751771AbcDAWoz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 1 Apr 2016 18:44:55 -0400
-Date: Sat, 2 Apr 2016 00:46:46 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Chris Bainbridge <chris.bainbridge@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-Message-ID: <20160401224646.GA11281@wunner.de>
-References: <E1akxli-00030z-BC@bombadil.infradead.org>
- <20160331231346.GA7469@localhost>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Jisheng Zhang <jszhang@marvell.com>,
+	"jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH v2] PCI: designware: move remaining rc setup code to
+ dw_pcie_setup_rc()
+Date: Thu, 21 Apr 2016 15:53:29 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED60600@lhreml503-mbs>
+References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
+ <20160407103734.55e72da7@xhacker>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
+ <20160407163443.291fbd49@xhacker>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED44208@lhreml503-mbs>
+ <20160407140551.GA2648@localhost>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED45C38@lhreml503-mbs>
+ <20160408160145.GA10565@localhost>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED4B88D@lhreml503-mbs>
+ <20160421154832.GC32739@localhost>
+In-Reply-To: <20160421154832.GC32739@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20160331231346.GA7469@localhost>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Chris,
+Hi Bjorn
 
-On Fri, Apr 01, 2016 at 12:13:46AM +0100, Chris Bainbridge wrote:
-> On Tue, Mar 29, 2016 at 07:41:30PM +0200, Lukas Wunner wrote:
-> > Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ storm
-> > on boot until they are reset, causing spurious interrupts if the IRQ is
-> > shared. Apparently the EFI bootloader enables the device and does not
-> > disable it before passing control to the OS. The bootloader contains a
-> > driver for the wireless card which allows it to phone home to Cupertino.
-> > This is used for Internet Recovery (download and install OS X images)
-> > and probably also for Back to My Mac (remote access, RFC 6281) and to
-> > discover stolen hardware.
-> > 
-> > The issue is most pronounced on 2011 and 2012 MacBook Pros where the IRQ
-> > is shared with 3 other devices (Light Ridge Thunderbolt controller, SDXC
-> > reader, HDA card on discrete GPU). As soon as an interrupt handler is
-> > installed for one of these devices, the ensuing storm of spurious IRQs
-> > causes the kernel to disable the IRQ and switch to polling. This lasts
-> > until the b43 driver loads and resets the device.
-> > 
-> > Loading the b43 driver first is not always an option, in particular with
-> > the Light Ridge Thunderbolt controller: The PCI hotplug IRQ handler gets
-> > installed early on because it is built in, unlike b43 which is usually
-> > a module.
-> > 
-> > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
-> > Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951
-> > Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
-> > Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: 21 April 2016 16:49
+> To: Gabriele Paoloni
+> Cc: Jisheng Zhang; jingoohan1@gmail.com; pratyush.anand@gmail.com;
+> bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org
+> Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code
+> to dw_pcie_setup_rc()
 > 
-> Should also fix https://bugzilla.kernel.org/show_bug.cgi?id=111781 ?
-> Given that this is a serious bug that can corrupt filesystems it would
-> be good to see the fix in stable too.
+> On Tue, Apr 12, 2016 at 09:43:32AM +0000, Gabriele Paoloni wrote:
+> > Hi Bjorn
+> >
+> > [...]
+> >
+> > > > >
+> > > > > What's the hisi plan for resuming after suspend-to-RAM?  How
+> does
+> > > the
+> > > > > RC get reprogrammed after it loses all its state?
+> > > >
+> > > > PM is not part of the driver yet. This is planned for near
+> > > > future release so haven't made such considerations yet
+> > > > >
+> > > > > What would break if hisi did call dw_pcie_setup_rc()?  I know
+> you
+> > > said
+> > > > > it would overwrite what the bootloader already did, which is
+> true.
+> > > >
+> > > > I am try to figure this out now with our HW team.
+> > > >
+> > > > >
+> > > > > But hisi does call dw_pcie_host_init(), so it reads pp->mem
+> (which
+> > > > > determines pp->mem_base) and pp->lanes from the DT.  Other
+> drivers
+> > > > > then call dw_pcie_setup_rc() which programs the RC based on
+> > > > > pp->mem_base and pp->lanes.  So hisi assumes UEFI programmed
+> the RC
+> > > to
+> > > > > match the DT, while the other drivers read the DT and program
+> the
+> > > RC
+> > > > > to match.  The latter seems more robust because it enforces the
+> > > > > consistency rather than relying on it.
+> > > >
+> > > > Yes I agree with you, however we have preferred to move RC config
+> to
+> > > > BIOS to have a single driver to support multiple versions of the
+> > > > same SoC.
+> > >
+> > > I think there are two reasonable approaches:
+> > >
+> > >   1) A single generic driver that doesn't have any knowledge about
+> the
+> > >   chipset registers; it uses run-time firmware interfaces to manage
+> > >   the bridge.  The ACPI pci_root.c driver is the best example so
+> far
+> > >   and works very well.  It supports basically all x86 and ia64
+> > >   chipsets and requires no kernel work for new ones.
+> > >
+> > >   2) Native drivers specific to each chipset.  These may get
+> > >   configuration information from DT, but they do their own
+> > >   register-level programming of the device without run-time help
+> from
+> > >   firmware.
+> > >
+> > > I think hisi is a native driver because it uses hip05/hip06
+> registers
+> > > to check link state and perform config operations.  And apparently
+> you
+> > > rely on the ATU, BAR, class, and link width programming currently
+> done
+> > > in dw_pcie_host_init().  But you want to rely on pre-boot firmware
+> to
+> > > set up the link.  That doesn't make sense to me -- if the driver
+> wants
+> > > to twiddle the registers, it should know how to do it all.  I don't
+> > > see how you can reasonably manage this half-way approach.
+> > >
+> > > > The patch I proposed above does the same job as the original
+> patch
+> > > > proposed by Jisheng and also allows hisi driver to call the moved
+> > > > code.
+> > > >
+> > > > Do you see anything wrong with it?
+> > >
+> > > Only that it makes the structure more complicated and we haven't
+> > > identified a corresponding benefit yet.
+> >
+> > Finally I have checked that assigning .host_init function pointer
+> > in our driver to call dw_pcie_setup_rc() will not affect the values
+> > already set by BIOS.
+> >
+> > Also I agree with you that a hybrid approach is not ideal.
+> >
+> > So I will update the driver to call dw_pcie_setup_rc() from
+> > .host_init and ask the BIOS team to update the firmware for next
+> > releases (the driver will be backward compatible anyway).
+> 
+> Am I right in assuming that the patch currently in my tree:
+> 
+> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=
+> pci/host-designware&id=1488aefa37a4033080942c860294d13c613ec829
+> 
+> will work for you?  I'm going to assume so unless I hear otherwise.
 
-I cannot reproduce this particular issue on my MBP9,1 even though it
-is architecturally very similar to your MBP10,2. I tested it with
-"iommu=force intel_iommu=on", blacklisted b43 and stressed the machine
-a bit with kernel compiles. No issues.
+Yes you are right.
 
-Have you tested my patch? As Michael Büsch has pointed out correctly,
-it should mitigate that issue but will not solve it completely.
-You write in the bugzilla entry that you've seen the issue as early
-as 0.7 seconds into the boot. That's not a very precise method to
-measure boot progress but on my machine the card is reset around 1.2
-seconds, so likely too late. It's possible to execute the PCI quirk
-slightly earlier (in the header fixup section rather than the late
-fixup section) but that wouldn't make a significant difference.
+I thought it was clear by the last conclusion.
+Sorry if it was not explicit.
 
-If you use the method described in Matthew Garrett's blog post,
-i.e. boot with "memmap=0xc0$0x1568a0", does the issue go away?
-If so, we could probably add a quirk in arch/x86/kernel/e820.c
-to mark that particular area reserved, or generally mark all
-EFI boot services areas as reserved on Macs. This memory could
-then be marked usable again once the card has been reset.
+Many Thanks and Regards
 
-As to why the issue doesn't occur on my machine, my guess is that
-the wireless card only writes packets to memory if it is associated
-with a base station. Do you have an open WLAN around? Try moving
-out of its reach and test if the issue goes away. Alternatively,
-did you enter Wifi credentials in OS X? If so it has saved the
-credentials to EFI variables. To verify if it has, use this on OS X:
+Gab
 
-/usr/sbin/nvram 36C28AB5-6566-4C50-9EBD-CBB920F83843:current-network
-/usr/sbin/nvram 36C28AB5-6566-4C50-9EBD-CBB920F83843:preferred-networks
-/usr/sbin/nvram 36C28AB5-6566-4C50-9EBD-CBB920F83843:preferred-count
 
-On Linux, invoke "mount -t efivarfs none /sys/firmware/efi/efivars"
-and delete the variables (use chattr -i first if you're on Linux 4.5+).
-Test if the issue goes away.
-
-I have neither an open WLAN nearby nor Wifi credentials in my EFI
-variables, so the wireless card cannot associate with a base station
-in the pre-OS phase and that's probably the reason why the issue doesn't
-occur on my machine.
-
-Best regards,
-
-Lukas
+> 
+> Bjorn
