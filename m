@@ -1,117 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([125.16.236.4]:57087 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752940AbcD0Mqd (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Apr 2016 08:46:33 -0400
-Received: from localhost
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Wed, 27 Apr 2016 18:16:24 +0530
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	joro@8bytes.org, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	eric.auger@linaro.org, will.deacon@arm.com,
-	gwshan@linux.vnet.ibm.com, David.Laight@ACULAB.COM,
-	alistair@popple.id.au, ruscur@russell.cc,
-	Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [PATCH 3/5] PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller supports IRQ remapping
-Date: Wed, 27 Apr 2016 20:43:28 +0800
-Message-Id: <1461761010-5452-4-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Received: from mail.kernel.org ([198.145.29.136]:43142 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751841AbcDUPhj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 21 Apr 2016 11:37:39 -0400
+Date: Thu, 21 Apr 2016 10:37:33 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jake Oshins <jakeo@microsoft.com>
+Cc: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	kys@microsoft.com, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
+Subject: Re: [PATCH v5 2/6] drivers:hv: Call vmbus_mmio_free() to reverse
+ vmbus_mmio_allocate()
+Message-ID: <20160421153733.GA32739@localhost>
+References: <1459905502-20798-1-git-send-email-jakeo@microsoft.com>
+ <1459905502-20798-3-git-send-email-jakeo@microsoft.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1459905502-20798-3-git-send-email-jakeo@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On ARM HW the capability of IRQ remapping is abstracted on
-MSI controller side. MSI_FLAG_IRQ_REMAPPING is used to advertise
-this [1].
+On Tue, Apr 05, 2016 at 06:18:18PM -0700, Jake Oshins wrote:
+> Existing code just called release_mem_region().  Adding a
+> wrapper around it allows the more complex range tracking
+> that is introduced later in this patch series.
+> 
+> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
 
-To have a universal flag to test this capability for different
-archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
-when MSI_FLAG_IRQ_REMAPPING is set.
+With typo fix below,
 
-[1] http://www.spinics.net/lists/kvm/msg130256.html
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- drivers/pci/msi.c   |   12 ++++++++++++
- drivers/pci/probe.c |    3 +++
- include/linux/msi.h |    6 +++++-
- 3 files changed, 20 insertions(+), 1 deletion(-)
+This is mostly non-PCI, so I assume somebody else will merge this series.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index a080f44..1661cdf 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1134,6 +1134,18 @@ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
- }
- EXPORT_SYMBOL_GPL(msi_desc_to_pci_sysdata);
- 
-+void pci_bus_check_msi_remapping(struct pci_bus *bus,
-+				 struct irq_domain *domain)
-+{
-+#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
-+	struct msi_domain_info *info;
-+
-+	info = msi_get_domain_info(domain);
-+	if (info->flags & MSI_FLAG_IRQ_REMAPPING)
-+		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
-+#endif
-+}
-+
- #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
- /**
-  * pci_msi_domain_write_msg - Helper to write MSI message to PCI config space
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 6d7ab9b..25cf1b1 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -696,6 +696,9 @@ static void pci_set_bus_msi_domain(struct pci_bus *bus)
- 	if (!d)
- 		d = pci_host_bridge_msi_domain(b);
- 
-+	if (d && b == bus)
-+		pci_bus_check_msi_remapping(bus, d);
-+
- 	dev_set_msi_domain(&bus->dev, d);
- }
- 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 03eda72..b4c649e 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -15,6 +15,8 @@ extern int pci_msi_ignore_mask;
- struct irq_data;
- struct msi_desc;
- struct pci_dev;
-+struct pci_bus;
-+struct irq_domain;
- struct platform_msi_priv_data;
- void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
- void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
-@@ -155,6 +157,9 @@ void arch_restore_msi_irqs(struct pci_dev *dev);
- void default_teardown_msi_irqs(struct pci_dev *dev);
- void default_restore_msi_irqs(struct pci_dev *dev);
- 
-+void pci_bus_check_msi_remapping(struct pci_bus *bus,
-+				 struct irq_domain *domain);
-+
- struct msi_controller {
- 	struct module *owner;
- 	struct device *dev;
-@@ -173,7 +178,6 @@ struct msi_controller {
- #include <linux/irqhandler.h>
- #include <asm/msi.h>
- 
--struct irq_domain;
- struct irq_domain_ops;
- struct irq_chip;
- struct device_node;
--- 
-1.7.9.5
+> ---
+>  drivers/hv/vmbus_drv.c          | 15 +++++++++++++++
+>  drivers/pci/host/pci-hyperv.c   | 14 +++++++-------
+>  drivers/video/fbdev/hyperv_fb.c |  4 ++--
+>  include/linux/hyperv.h          |  2 +-
+>  4 files changed, 25 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+> index 799518b..60553c1 100644
+> --- a/drivers/hv/vmbus_drv.c
+> +++ b/drivers/hv/vmbus_drv.c
+> @@ -1188,6 +1188,21 @@ exit:
+>  EXPORT_SYMBOL_GPL(vmbus_allocate_mmio);
+>  
+>  /**
+> + * vmbus_free_mmio() - Free a memory-mapped I/O range.
+> + * @start:		Base address of region to release.
+> + * @size:		Size of the range to be allocated
+> + *
+> + * This function releases anything requested by
+> + * vmbus_mmio_allocate().
 
+s/vmbus_mmio_allocate/vmbus_allocate_mmio/, I think.
+
+> + */
+> +void vmbus_free_mmio(resource_size_t start, resource_size_t size)
+> +{
+> +	release_mem_region(start, size);
+> +
+> +}
+> +EXPORT_SYMBOL_GPL(vmbus_free_mmio);
+> +
+> +/**
+>   * vmbus_cpu_number_to_vp_number() - Map CPU to VP.
+>   * @cpu_number: CPU number in Linux terms
+>   *
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index ed651ba..f2559b6 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -1795,14 +1795,14 @@ static void hv_pci_free_bridge_windows(struct hv_pcibus_device *hbus)
+>  
+>  	if (hbus->low_mmio_space && hbus->low_mmio_res) {
+>  		hbus->low_mmio_res->flags |= IORESOURCE_BUSY;
+> -		release_mem_region(hbus->low_mmio_res->start,
+> -				   resource_size(hbus->low_mmio_res));
+> +		vmbus_free_mmio(hbus->low_mmio_res->start,
+> +				resource_size(hbus->low_mmio_res));
+>  	}
+>  
+>  	if (hbus->high_mmio_space && hbus->high_mmio_res) {
+>  		hbus->high_mmio_res->flags |= IORESOURCE_BUSY;
+> -		release_mem_region(hbus->high_mmio_res->start,
+> -				   resource_size(hbus->high_mmio_res));
+> +		vmbus_free_mmio(hbus->high_mmio_res->start,
+> +				resource_size(hbus->high_mmio_res));
+>  	}
+>  }
+>  
+> @@ -1880,8 +1880,8 @@ static int hv_pci_allocate_bridge_windows(struct hv_pcibus_device *hbus)
+>  
+>  release_low_mmio:
+>  	if (hbus->low_mmio_res) {
+> -		release_mem_region(hbus->low_mmio_res->start,
+> -				   resource_size(hbus->low_mmio_res));
+> +		vmbus_free_mmio(hbus->low_mmio_res->start,
+> +				resource_size(hbus->low_mmio_res));
+>  	}
+>  
+>  	return ret;
+> @@ -1924,7 +1924,7 @@ static int hv_allocate_config_window(struct hv_pcibus_device *hbus)
+>  
+>  static void hv_free_config_window(struct hv_pcibus_device *hbus)
+>  {
+> -	release_mem_region(hbus->mem_config->start, PCI_CONFIG_MMIO_LENGTH);
+> +	vmbus_free_mmio(hbus->mem_config->start, PCI_CONFIG_MMIO_LENGTH);
+>  }
+>  
+>  /**
+> diff --git a/drivers/video/fbdev/hyperv_fb.c b/drivers/video/fbdev/hyperv_fb.c
+> index e2451bd..2fd49b2 100644
+> --- a/drivers/video/fbdev/hyperv_fb.c
+> +++ b/drivers/video/fbdev/hyperv_fb.c
+> @@ -743,7 +743,7 @@ static int hvfb_getmem(struct hv_device *hdev, struct fb_info *info)
+>  err3:
+>  	iounmap(fb_virt);
+>  err2:
+> -	release_mem_region(par->mem->start, screen_fb_size);
+> +	vmbus_free_mmio(par->mem->start, screen_fb_size);
+>  	par->mem = NULL;
+>  err1:
+>  	if (!gen2vm)
+> @@ -758,7 +758,7 @@ static void hvfb_putmem(struct fb_info *info)
+>  	struct hvfb_par *par = info->par;
+>  
+>  	iounmap(info->screen_base);
+> -	release_mem_region(par->mem->start, screen_fb_size);
+> +	vmbus_free_mmio(par->mem->start, screen_fb_size);
+>  	par->mem = NULL;
+>  }
+>  
+> diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+> index aa0fadc..ecd81c3 100644
+> --- a/include/linux/hyperv.h
+> +++ b/include/linux/hyperv.h
+> @@ -1091,7 +1091,7 @@ int vmbus_allocate_mmio(struct resource **new, struct hv_device *device_obj,
+>  			resource_size_t min, resource_size_t max,
+>  			resource_size_t size, resource_size_t align,
+>  			bool fb_overlap_ok);
+> -
+> +void vmbus_free_mmio(resource_size_t start, resource_size_t size);
+>  int vmbus_cpu_number_to_vp_number(int cpu_number);
+>  u64 hv_do_hypercall(u64 control, void *input, void *output);
+>  
+> -- 
+> 1.9.1
+> 
