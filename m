@@ -1,38 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:43992 "EHLO
-	mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752338AbcD1OdJ (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2016 10:33:09 -0400
-Date: Thu, 28 Apr 2016 16:35:47 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCHv2] pcie: Add driver for Downstream Port Containment
-Message-ID: <20160428143547.GC18211@wunner.de>
-References: <1461779958-29368-1-git-send-email-keith.busch@intel.com>
+Received: from mail-ob0-f194.google.com ([209.85.214.194]:35772 "EHLO
+	mail-ob0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751604AbcDUXZe (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Apr 2016 19:25:34 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1461779958-29368-1-git-send-email-keith.busch@intel.com>
+In-Reply-To: <2823801.fOoJOI22FZ@vostro.rjw.lan>
+References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+ <CAJZ5v0ic6YpYtM4cymLJ4oV2-J4CK4MxFi9-6bWNADD-QY3B6A@mail.gmail.com>
+ <20160421131224.GY1725@lahna.fi.intel.com> <2823801.fOoJOI22FZ@vostro.rjw.lan>
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Fri, 22 Apr 2016 01:25:13 +0200
+Message-ID: <CAMxnaaXN7YwEDNGDR1aRbOqhj_2JFyQAiCSjqvTa500x_xRmLA@mail.gmail.com>
+Subject: Re: [PATCH v2 4/4] PCI: Add runtime PM support for PCIe ports
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Keith,
+On Thu, Apr 21, 2016 at 9:19 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> On Thursday, April 21, 2016 04:12:24 PM Mika Westerberg wrote:
+>> On Wed, Apr 20, 2016 at 10:23:33PM +0200, Rafael J. Wysocki wrote:
+>> > Breaking any systems that work today is not an option.  if that
+>> > happens, the commit that has done that is a clear candidate for
+>> > reverting.
+>>
+>> Understood, thanks.
+>>
+>> BTW, do you have any preference regarding the cut-off date?
+>
+> Some time around when machines with Windows 10 started to ship should be
+> relatively safe.
+>
+> I guess we can just pick a reasonable date in the initial patch and then
+> try to move it back to the past subsequently and see if that breaks things
+> for anyone.
 
-On Wed, Apr 27, 2016 at 11:59:18AM -0600, Keith Busch wrote:
-> v1 -> v2:
-> 
->   Fixed the descriptor id to account for more than 4 service drivers.
-> 
->   Fixed the v1's broken/incomplete link state inactive detection.
+Maybe add a boot option to overwrite the heuristic (in both
+directions) to allow people to test this on older machines and
+pinpoint breakage on newer machines?
 
-Unfortunately this is still missing the change to dev_set_name(), see
-https://github.com/l1k/linux/commit/a27efb60b9e70ae3d57fefd5c8fc5261d9b492c9#diff-1410221b2233ad36abbc4db14d2cfcb3L342
-
-It's probably worth explaining this change in the commit message.
-I've written a paragraph in the above-linked commit, feel free to
-copy that if you want to (perhaps with some kind of attribution
-or whatever).
-
-Best regards,
-
-Lukas
+> Thanks,
+> Rafael
+>
