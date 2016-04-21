@@ -1,306 +1,173 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:35931 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757915AbcDHKgn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Apr 2016 06:36:43 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [PATCH v2 2/4] PCI: Move PCIe ports to D3 during suspend
-Date: Fri,  8 Apr 2016 13:36:28 +0300
-Message-Id: <1460111790-92836-3-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+Received: from mail-am1on0091.outbound.protection.outlook.com ([157.56.112.91]:46208
+	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751920AbcDUHMU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 21 Apr 2016 03:12:20 -0400
+Subject: Re: [PATCH] PCI: Refine broken INTx masking for Mellanox devices
+To: Alex Williamson <alex.williamson@redhat.com>
+References: <1461083616-30099-1-git-send-email-majd@mellanox.com>
+ <20160419130435.7d681f6d@t450s.home>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Or Gerlitz <ogerlitz@mellanox.com>,
+	"Noa Osherovich" <noaos@mellanox.com>
+From: Majd Dibbiny <majd@mellanox.com>
+Message-ID: <7b67ed14-516d-aae9-2b72-6dae420caa65@mellanox.com>
+Date: Thu, 21 Apr 2016 10:12:05 +0300
+MIME-Version: 1.0
+In-Reply-To: <20160419130435.7d681f6d@t450s.home>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently the Linux PCI core does not touch power state of PCI bridges and
-PCIe ports when system suspend is entered. Leaving them in D0 consumes
-power which is not good thing in portable devices such as laptops. This may
-also prevent the CPU from entering deeper C-states.
 
-With recent PCIe hardware we can power down the ports to save power given
-that we take into account few restrictions:
 
-  - The PCIe port hardware is recent enough, starting from 2015.
+On 4/19/2016 10:04 PM, Alex Williamson wrote:
+> On Tue, 19 Apr 2016 19:33:36 +0300
+> Majd Dibbiny <majd@mellanox.com> wrote:
+>
+>> From: Noa Osherovich <noaos@mellanox.com>
+>>
+>> Mellanox devices were marked as having INTx masking ability broken.
+>> As a result, the VFIO driver fails to load when the device was
+>> passed-through to a VM.
+>>
+>> This patch excludes ConnectX-4, ConnectX4-Lx and Connect-IB from the
+>> list of Mellanox devices marked as having broken INTx masking:
+>>
+>> - ConnectX-4 and ConnectX4-Lx either declare INTx are not supported
+>>    (FW versions 12.14.2036 / 14.12.2036) or support them properly
+>>    (starting May 2016 firmware release). Users having earlier firmware
+>>    versions will have to update to either one.
+>> - Connect-IB does not support INTx currently so will not cause any
+>>    problem.
+> What's the user and support experience here?  A user gets a new kernel
+> that no longer marks INTx masking as bad (note that if the device does
+> not support INTx by returing 0 in the pin register, it doesn't matter
+> whether it's marked bad or not), they try to assign the device and get
+> an interrupt storm on the guest and go complain to support.  Support
+> tries to reproduce, maybe can, maybe can't, depending on the firmware
+> version they happen to have running, everyone gets very unhappy until
+> the thing that almost never works, "are you running the latest
+> firmware", actually works.  Can we instead add a new function for
+> mellanox that can probe the firmware version and continue marking INTx
+> masking bad with a warning noting that a firmware update will resolve
+> it?  Thanks,
+>
+> Alex
+Hi Alex,
+I understand your concern and therefore we have documented this in our 
+Release notes to ease the troubleshooting experience for everyone.. We 
+have also added the Firmware versions in the commit messages to make it 
+clearer...
 
-  - Devices connected to PCIe ports are effectively in D3cold once the port
-    is moved to D3 (the config space is not accessible anymore and the link
-    may be powered down).
+What do you think?
 
-  - Devices behind the PCIe port need to be allowed to transition to D3cold
-    and back. There is a way both drivers and userspace can forbid this.
-
-  - If the device behind the PCIe port is capable of waking the system it
-    needs to be able to do so from D3cold.
-
-This patch adds a new flag to struct pci_device called 'bridge_d3'. This
-flag is set and cleared by the PCI core whenever there is a change in power
-management state of any of the  devices behind the PCIe port. If the above
-restrictions are met we set 'bridge_d3' to true and transition the port to
-D3 when system is suspended.
-
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/bus.c           |   1 +
- drivers/pci/pci-driver.c    |  15 ++++++-
- drivers/pci/pci-sysfs.c     |   1 +
- drivers/pci/pci.c           | 103 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h           |   1 +
- drivers/pci/remove.c        |   2 +
- drivers/usb/host/xhci-pci.c |   2 +-
- include/linux/pci.h         |   2 +
- 8 files changed, 125 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 6c9f5467bc5f..3ef836b5794b 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -291,6 +291,7 @@ void pci_bus_add_device(struct pci_dev *dev)
- 	pci_fixup_device(pci_fixup_final, dev);
- 	pci_create_sysfs_dev_files(dev);
- 	pci_proc_attach_device(dev);
-+	pci_bridge_pm_update(dev, false);
- 
- 	dev->match_driver = true;
- 	retval = device_attach(&dev->dev);
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index d7ffd66814bb..2d52c0b5d9a0 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -744,6 +744,19 @@ static int pci_pm_suspend(struct device *dev)
- 	return 0;
- }
- 
-+/*
-+ * Check if given device can go to low power state. Currently we allow
-+ * normal PCI devices and PCI bridges if their bridge_d3 is set.
-+ */
-+static bool pci_can_suspend(struct pci_dev *pdev)
-+{
-+	if (!pci_has_subordinate(pdev))
-+		return true;
-+	else if (pdev->bridge_d3)
-+		return true;
-+	return false;
-+}
-+
- static int pci_pm_suspend_noirq(struct device *dev)
- {
- 	struct pci_dev *pci_dev = to_pci_dev(dev);
-@@ -777,7 +790,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
- 
- 	if (!pci_dev->state_saved) {
- 		pci_save_state(pci_dev);
--		if (!pci_has_subordinate(pci_dev))
-+		if (pci_can_suspend(pci_dev))
- 			pci_prepare_to_sleep(pci_dev);
- 	}
- 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index e982010f0ed1..94ceea990775 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -407,6 +407,7 @@ static ssize_t d3cold_allowed_store(struct device *dev,
- 
- 	pdev->d3cold_allowed = !!val;
- 	pm_runtime_resume(dev);
-+	pci_bridge_pm_update(pdev, false);
- 
- 	return count;
- }
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 25e0327d4429..fe31aad3ab3a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -9,6 +9,7 @@
- 
- #include <linux/kernel.h>
- #include <linux/delay.h>
-+#include <linux/dmi.h>
- #include <linux/init.h>
- #include <linux/of.h>
- #include <linux/of_pci.h>
-@@ -2156,6 +2157,107 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
- }
- 
- /**
-+ * pci_bridge_d3_possible - Is it possible to move the bridge to D3
-+ * @bridge: Bridge to check
-+ *
-+ * This function checks if it is possible to move the bridge to D3.
-+ * Currently we only allow D3 for recent enough PCIe ports.
-+ */
-+static bool pci_bridge_d3_possible(struct pci_dev *bridge)
-+{
-+	unsigned int year;
-+
-+	if (!pci_is_pcie(bridge))
-+		return false;
-+
-+	switch (pci_pcie_type(bridge)) {
-+	case PCI_EXP_TYPE_ROOT_PORT:
-+	case PCI_EXP_TYPE_UPSTREAM:
-+	case PCI_EXP_TYPE_DOWNSTREAM:
-+		/*
-+		 * PCIe ports from 2015 and newer should be capable of
-+		 * entering D3.
-+		 */
-+		if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) &&
-+		    year >= 2015) {
-+			return true;
-+		}
-+		break;
-+	}
-+
-+	return false;
-+}
-+
-+static int pci_dev_check_d3cold(struct pci_dev *pdev, void *data)
-+{
-+	bool *d3cold_ok = data;
-+
-+	/*
-+	 * The device needs to be allowed to go D3cold and if it is wake
-+	 * capable to do so from D3cold.
-+	 */
-+	if (pdev->no_d3cold || !pdev->d3cold_allowed)
-+		*d3cold_ok = false;
-+	if (device_may_wakeup(&pdev->dev) && !pci_pme_capable(pdev, PCI_D3cold))
-+		*d3cold_ok = false;
-+
-+	return !*d3cold_ok;
-+}
-+
-+/**
-+ * pci_bridge_pm_update - Update PM capabilities of upstream PCI bridge
-+ * @dev: PCI device whose configuration changed
-+ * @remove: Is the PCI device about to be removed
-+ *
-+ * When PM configuration of a PCI device is changed this function updates
-+ * PM capabilities of the upstream PCI bridge accordingly.
-+ */
-+void pci_bridge_pm_update(struct pci_dev *pdev, bool remove)
-+{
-+	struct pci_dev *bridge;
-+	bool d3cold_ok = true;
-+
-+	bridge = pci_upstream_bridge(pdev);
-+	if (!bridge || !pci_bridge_d3_possible(bridge))
-+		return;
-+
-+	pci_dev_get(bridge);
-+	if (!remove)
-+		pci_dev_check_d3cold(pdev, &d3cold_ok);
-+
-+	if (d3cold_ok) {
-+		/*
-+		 * We need to go through all children to find out if all of
-+		 * them can still go to D3cold.
-+		 */
-+		pci_walk_bus(bridge->subordinate, pci_dev_check_d3cold,
-+			     &d3cold_ok);
-+	}
-+	bridge->bridge_d3 = d3cold_ok;
-+	pci_dev_put(bridge);
-+}
-+
-+/**
-+ * pci_enable_d3cold - Enables or disables D3cold from the device
-+ * @pdev: PCI device to handle
-+ * @enable: Enable or disable D3cold
-+ *
-+ * This function can be used in drivers to prevent D3cold from the device
-+ * they handle. It also updates upstream PCI bridge PM capabilities
-+ * accordingly.
-+ */
-+void pci_enable_d3cold(struct pci_dev *pdev, bool enable)
-+{
-+	bool no_d3cold = !enable;
-+
-+	if (pdev->no_d3cold != no_d3cold) {
-+		pdev->no_d3cold = !enable;
-+		pci_bridge_pm_update(pdev, false);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(pci_enable_d3cold);
-+
-+/**
-  * pci_pm_init - Initialize PM functions of given PCI device
-  * @dev: PCI device to handle.
-  */
-@@ -2189,6 +2291,7 @@ void pci_pm_init(struct pci_dev *dev)
- 	dev->pm_cap = pm;
- 	dev->d3_delay = PCI_PM_D3_WAIT;
- 	dev->d3cold_delay = PCI_PM_D3COLD_WAIT;
-+	dev->bridge_d3 = pci_bridge_d3_possible(dev);
- 	dev->d3cold_allowed = true;
- 
- 	dev->d1_support = false;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index d0fb93481573..de3e95cf26c8 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -78,6 +78,7 @@ bool pci_dev_keep_suspended(struct pci_dev *dev);
- void pci_dev_complete_resume(struct pci_dev *pci_dev);
- void pci_config_pm_runtime_get(struct pci_dev *dev);
- void pci_config_pm_runtime_put(struct pci_dev *dev);
-+void pci_bridge_pm_update(struct pci_dev *dev, bool remove);
- void pci_pm_init(struct pci_dev *dev);
- void pci_ea_init(struct pci_dev *dev);
- void pci_allocate_cap_save_buffers(struct pci_dev *dev);
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 8982026637d5..a06bfd3626cc 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -96,6 +96,8 @@ static void pci_remove_bus_device(struct pci_dev *dev)
- 		dev->subordinate = NULL;
- 	}
- 
-+	pci_bridge_pm_update(dev, true);
-+
- 	pci_destroy_dev(dev);
- }
- 
-diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
-index f0640b7a1c42..aafc1b093bc8 100644
---- a/drivers/usb/host/xhci-pci.c
-+++ b/drivers/usb/host/xhci-pci.c
-@@ -379,7 +379,7 @@ static int xhci_pci_suspend(struct usb_hcd *hcd, bool do_wakeup)
- 	 * need to have the registers polled during D3, so avoid D3cold.
- 	 */
- 	if (xhci->quirks & XHCI_COMP_MODE_QUIRK)
--		pdev->no_d3cold = true;
-+		pci_enable_d3cold(pdev, false);
- 
- 	if (xhci->quirks & XHCI_PME_STUCK_QUIRK)
- 		xhci_pme_quirk(hcd);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 004b8133417d..d8801587b4ca 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -296,6 +296,7 @@ struct pci_dev {
- 	unsigned int	d2_support:1;	/* Low power state D2 is supported */
- 	unsigned int	no_d1d2:1;	/* D1 and D2 are forbidden */
- 	unsigned int	no_d3cold:1;	/* D3cold is forbidden */
-+	unsigned int	bridge_d3:1;	/* Allow D3 for bridge */
- 	unsigned int	d3cold_allowed:1;	/* D3cold is allowed by user */
- 	unsigned int	mmio_always_on:1;	/* disallow turning off io/mem
- 						   decoding during bar sizing */
-@@ -1085,6 +1086,7 @@ int pci_back_from_sleep(struct pci_dev *dev);
- bool pci_dev_run_wake(struct pci_dev *dev);
- bool pci_check_pme_status(struct pci_dev *dev);
- void pci_pme_wakeup_bus(struct pci_bus *bus);
-+void pci_enable_d3cold(struct pci_dev *dev, bool enable);
- 
- static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
- 				  bool enable)
--- 
-2.8.0.rc3
+Thanks
+>> Fixes: 11e42532ada31 ('PCI: Assume all Mellanox devices have ...')
+>> Signed-off-by: Noa Osherovich <noaos@mellanox.com>
+>> Signed-off-by: Majd Dibbiny <majd@mellanox.com>
+>> ---
+>>   drivers/pci/quirks.c    | 61 ++++++++++++++++++++++++++++++++++++++++++++++++-
+>>   include/linux/pci_ids.h | 14 ++++++++++++
+>>   2 files changed, 74 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index 8e67802..6a1856e 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -3147,7 +3147,66 @@ DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
+>>    */
+>>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
+>>   			 quirk_broken_intx_masking);
+>> -DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
+>> +
+>> +/*
+>> + * Mellanox devices that fail under PCI device assignment using DisINTx masking
+>> + */
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_TAVOR,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
+>> +			 PCI_DEVICE_ID_MELLANOX_TAVOR_BRIDGE,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_ARBEL,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
+>> +			 PCI_DEVICE_ID_MELLANOX_ARBEL_COMPAT,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_SINAI,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
+>> +			 PCI_DEVICE_ID_MELLANOX_SINAI_OLD,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
+>> +			 PCI_DEVICE_ID_MELLANOX_HERMON_SDR,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
+>> +			 PCI_DEVICE_ID_MELLANOX_HERMON_DDR,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
+>> +			 PCI_DEVICE_ID_MELLANOX_HERMON_QDR,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
+>> +			 PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
+>> +			 PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
+>> +			 PCI_DEVICE_ID_MELLANOX_HERMON_EN,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
+>> +			 PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
+>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX_EN,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
+>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
+>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
+>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
+>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX2,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
+>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX3,
+>> +			 quirk_broken_intx_masking);
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
+>> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO,
+>>   			 quirk_broken_intx_masking);
+>>   
+>>   static void quirk_no_bus_reset(struct pci_dev *dev)
+>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+>> index 247da8c..bc8918e 100644
+>> --- a/include/linux/pci_ids.h
+>> +++ b/include/linux/pci_ids.h
+>> @@ -2262,6 +2262,20 @@
+>>   #define PCI_DEVICE_ID_MELLANOX_ARBEL	0x6282
+>>   #define PCI_DEVICE_ID_MELLANOX_SINAI_OLD 0x5e8c
+>>   #define PCI_DEVICE_ID_MELLANOX_SINAI	0x6274
+>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_SDR 0x6340
+>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR 0x634a
+>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR 0x6354
+>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2 0x6732
+>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2 0x673c
+>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_EN 0x6368
+>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2 0x6750
+>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN 0x6372
+>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2 0x675a
+>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2 0x6764
+>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2 0x6746
+>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX2 0x676e
+>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX3 0x1003
+>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO 0x1007
+>>   
+>>   #define PCI_VENDOR_ID_DFI		0x15bd
+>>   
 
