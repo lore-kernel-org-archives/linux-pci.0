@@ -1,67 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42455 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932390AbcDHAR1 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:17:27 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	Anton Blanchard <anton@samba.org>,
-	linuxppc-dev@lists.ozlabs.org
-Subject: [PATCH v11 10/60] powerpc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
-Date: Thu,  7 Apr 2016 17:15:23 -0700
-Message-Id: <1460074573-7481-11-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:19631 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751885AbcDVJKe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 22 Apr 2016 05:10:34 -0400
+Date: Fri, 22 Apr 2016 12:10:26 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Lukas Wunner <lukas@wunner.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
+Subject: Re: [PATCH v2 4/4] PCI: Add runtime PM support for PCIe ports
+Message-ID: <20160422091026.GG1725@lahna.fi.intel.com>
+References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+ <CAJZ5v0ic6YpYtM4cymLJ4oV2-J4CK4MxFi9-6bWNADD-QY3B6A@mail.gmail.com>
+ <20160421131224.GY1725@lahna.fi.intel.com>
+ <2823801.fOoJOI22FZ@vostro.rjw.lan>
+ <CAMxnaaXN7YwEDNGDR1aRbOqhj_2JFyQAiCSjqvTa500x_xRmLA@mail.gmail.com>
+ <CAJZ5v0hwmyPz8J2YFc-fS51BpBkh6+TrtnZ1WJRhbDzsdrbqGA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0hwmyPz8J2YFc-fS51BpBkh6+TrtnZ1WJRhbDzsdrbqGA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For device resource PREF bit setting under bridge 64-bit pref resource,
-we need to make sure only set PREF for 64bit resource.
+On Fri, Apr 22, 2016 at 02:26:22AM +0200, Rafael J. Wysocki wrote:
+> On Fri, Apr 22, 2016 at 1:25 AM, Andreas Noever
+> <andreas.noever@gmail.com> wrote:
+> > On Thu, Apr 21, 2016 at 9:19 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> >> On Thursday, April 21, 2016 04:12:24 PM Mika Westerberg wrote:
+> >>> On Wed, Apr 20, 2016 at 10:23:33PM +0200, Rafael J. Wysocki wrote:
+> >>> > Breaking any systems that work today is not an option.  if that
+> >>> > happens, the commit that has done that is a clear candidate for
+> >>> > reverting.
+> >>>
+> >>> Understood, thanks.
+> >>>
+> >>> BTW, do you have any preference regarding the cut-off date?
+> >>
+> >> Some time around when machines with Windows 10 started to ship should be
+> >> relatively safe.
+> >>
+> >> I guess we can just pick a reasonable date in the initial patch and then
+> >> try to move it back to the past subsequently and see if that breaks things
+> >> for anyone.
+> >
+> > Maybe add a boot option to overwrite the heuristic (in both
+> > directions) to allow people to test this on older machines and
+> > pinpoint breakage on newer machines?
+> 
+> Yes, a kernel command line override would be fine by me.
 
-This patch set IORESOUCE_MEM_64 for 64bit resource during OF device resource
-flags parsing.
+OK, so to summarize:
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Yijing Wang <wangyijing@huawei.com>
-Cc: Anton Blanchard <anton@samba.org>
-Cc: linuxppc-dev@lists.ozlabs.org
----
- arch/powerpc/kernel/pci_of_scan.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ - Use cut-off date 2015 which is the year Windows 10 was released
 
-diff --git a/arch/powerpc/kernel/pci_of_scan.c b/arch/powerpc/kernel/pci_of_scan.c
-index 719f225..476b8ac5 100644
---- a/arch/powerpc/kernel/pci_of_scan.c
-+++ b/arch/powerpc/kernel/pci_of_scan.c
-@@ -44,8 +44,10 @@ static unsigned int pci_parse_of_flags(u32 addr0, int bridge)
- 
- 	if (addr0 & 0x02000000) {
- 		flags = IORESOURCE_MEM | PCI_BASE_ADDRESS_SPACE_MEMORY;
--		flags |= (addr0 >> 22) & PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		flags |= (addr0 >> 28) & PCI_BASE_ADDRESS_MEM_TYPE_1M;
-+		if (addr0 & 0x01000000)
-+			flags |= IORESOURCE_MEM_64
-+				 | PCI_BASE_ADDRESS_MEM_TYPE_64;
- 		if (addr0 & 0x40000000)
- 			flags |= IORESOURCE_PREFETCH
- 				 | PCI_BASE_ADDRESS_MEM_PREFETCH;
--- 
-1.8.4.5
+ - Add command line parameter that allows this to be overridden.
+   Something like:
 
+	pcie_port_pm=   [PCIE] PCIe port power management handling:
+		off     Disable power management off all PCIe ports
+		force   Forcibly enable power management of all PCIe ports
