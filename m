@@ -1,62 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:48871 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751537AbcDPBf4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Apr 2016 21:35:56 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de, linux-block@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Cc: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 4/8] genirq: add a helper to program the pre-set affinity mask into the controller
-Date: Fri, 15 Apr 2016 18:35:48 -0700
-Message-Id: <1460770552-31260-5-git-send-email-hch@lst.de>
-In-Reply-To: <1460770552-31260-1-git-send-email-hch@lst.de>
-References: <1460770552-31260-1-git-send-email-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V6 09/13] pci, acpi: Support for ACPI based generic PCI
+ host controller
+To: Tomasz Nowicki <tn@semihalf.com>,
+	Jayachandran C <jchandra@broadcom.com>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <1460740008-19489-10-git-send-email-tn@semihalf.com>
+ <CAKc_7PXLbX+wxesGVKni7tkKPUbfo7AgfPNxA+Uc25ctOWRk=Q@mail.gmail.com>
+ <57189824.7080908@semihalf.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
+	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
+	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
+	Wangyijing <wangyijing@huawei.com>,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org
+From: Jon Masters <jcm@redhat.com>
+Message-ID: <571A37DD.4070003@redhat.com>
+Date: Fri, 22 Apr 2016 10:40:29 -0400
+MIME-Version: 1.0
+In-Reply-To: <57189824.7080908@semihalf.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- include/linux/interrupt.h |  2 ++
- kernel/irq/manage.c       | 14 ++++++++++++++
- 2 files changed, 16 insertions(+)
+On 04/21/2016 05:06 AM, Tomasz Nowicki wrote:
+> On 20.04.2016 21:12, Jayachandran C wrote:
+>> On Fri, Apr 15, 2016 at 10:36 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
 
-diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-index 67bc1e1f..ae345da 100644
---- a/include/linux/interrupt.h
-+++ b/include/linux/interrupt.h
-@@ -713,4 +713,6 @@ extern char __softirqentry_text_end[];
- #define __softirq_entry
- #endif
- 
-+void irq_program_affinity(unsigned int irq);
-+
- #endif
-diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
-index cc1cc64..02552a4 100644
---- a/kernel/irq/manage.c
-+++ b/kernel/irq/manage.c
-@@ -240,6 +240,20 @@ int __irq_set_affinity(unsigned int irq, const struct cpumask *mask, bool force)
- 	return ret;
- }
- 
-+void irq_program_affinity(unsigned int irq)
-+{
-+	struct irq_desc *desc = irq_to_desc(irq);
-+	struct irq_data *data = irq_desc_get_irq_data(desc);
-+	unsigned long flags;
-+
-+	if (WARN_ON_ONCE(!desc))
-+		return;
-+
-+	raw_spin_lock_irqsave(&desc->lock, flags);
-+	irq_set_affinity_locked(data, desc->irq_common_data.affinity, false);
-+	raw_spin_unlock_irqrestore(&desc->lock, flags);
-+}
-+
- int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m)
- {
- 	unsigned long flags;
+>>> This patch is heavily based on the updated version from Jayachandran C:
+>>> https://lkml.org/lkml/2016/4/11/908
+>>> git: https://github.com/jchandra-brcm/linux/ (arm64-acpi-pci-v3)
+>>
+>> This is a little bit unusual because I had not posted the v3 patch
+>> to the mailing list yet, but you posted a variant of it The git
+>> repository
+>> should not be in the commit comment because it is a temporary location.
+> 
+> We all agree this too important for everybody to delay this series. So
+> main motivation is to keep all discussion&patches within one unified
+> series. I would like to finally find direction we need to go. Stating
+> another discussion based on my previous patch set v5 confused people,
+> they do no know who is driving this. Again, lets cooperate to move it
+> forward within one patch set.
+
+We need one person in the driver's seat here for this patch series. I
+believe the intention is that this is Tomasz, with others cooperating
+and assisting. The previous alternative patch series did serve to cause
+confusion, and worse, they made it look like the ARM vendors can't work
+together. That ends. Right now. I've raised this individually with each
+of you (and with all of the other vendors), as well as inside Linaro.
+There will be one person driving this, and everyone else will help.
+
+> I agree with you we need maintainers to join this discussion.
+
+Please. I really want to lend support to the sense of urgency of getting
+something merged that provides the basic ACPI based ECAM functionality
+on ARMv8 systems. Until that happens, there are vendors who are going to
+have to delay various other activities around ARM server until it is
+done (because of the lack of an upstream patch is a critical blocker -
+this isn't embedded, and we don't work that way).
+
+This is incredibly critical and central to the successful adoption of
+larger ARMv8 servers over the next year or so, all of which will rely
+upon PCIe, using ACPI. We therefore need all hands on deck, and all
+vendors getting overwhelmingly excited about making this patch series a
+success. As an aside, to help the engineering orgs within these vendors
+understand how much I need motion on this thread, I'm buzzing in their
+ears multiple times per week specifically on engagement on this thread.
+We need this done. If Bjorn or anyone else needs something, tell us.
+
+Jon.
+
 -- 
-2.1.4
+Computer Architect | Sent from my Fedora powered laptop
 
