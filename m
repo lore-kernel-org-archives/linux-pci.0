@@ -1,244 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:59394 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751240AbcDGKHB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 06:07:01 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Jisheng Zhang <jszhang@marvell.com>
-CC: "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH v2] PCI: designware: move remaining rc setup code to
- dw_pcie_setup_rc()
-Date: Thu, 7 Apr 2016 10:06:45 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED44208@lhreml503-mbs>
-References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
-	<EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
-	<20160407103734.55e72da7@xhacker>
-	<EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
- <20160407163443.291fbd49@xhacker>
-In-Reply-To: <20160407163443.291fbd49@xhacker>
-Content-Type: text/plain; charset="us-ascii"
+Received: from ipmail06.adl6.internode.on.net ([150.101.137.145]:29238 "EHLO
+	ipmail06.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750806AbcDVEYB (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 22 Apr 2016 00:24:01 -0400
+From: Alistair Popple <alistair@popple.id.au>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: Alexey Kardashevskiy <aik@ozlabs.ru>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	bhelgaas@google.com, dja@axtens.net
+Subject: Re: [PATCH v8 36/45] powerpc/powernv: Support PCI slot ID
+Date: Fri, 22 Apr 2016 14:23:54 +1000
+Message-ID: <5008269.vZDqGUuHuL@new-mexico>
+In-Reply-To: <57170215.7080405@ozlabs.ru>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com> <20160420022840.GC28594@gwshan> <57170215.7080405@ozlabs.ru>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jisheng
+On Wed, 20 Apr 2016 14:14:13 Alexey Kardashevskiy wrote:
 
-> -----Original Message-----
-> From: Jisheng Zhang [mailto:jszhang@marvell.com]
-> Sent: 07 April 2016 09:35
-> To: Gabriele Paoloni
-> Cc: jingoohan1@gmail.com; pratyush.anand@gmail.com;
-> bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org; linux-arm-kernel@lists.infradead.org
-> Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code
-> to dw_pcie_setup_rc()
-> 
-> Hi Gabriele,
-> 
-> On Thu, 7 Apr 2016 08:20:28 +0000 Gabriele Paoloni wrote:
-> 
-> > Hi Jisheng
-> >
-> > Thanks for your reply
-> >
-> > > -----Original Message-----
-> > > From: Jisheng Zhang [mailto:jszhang@marvell.com]
-> > > Sent: 07 April 2016 03:38
-> > > To: Gabriele Paoloni; jingoohan1@gmail.com;
-> pratyush.anand@gmail.com;
-> > > bhelgaas@google.com
-> > > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-
-> arm-
-> > > kernel@lists.infradead.org
-> > > Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup
-> code
-> > > to dw_pcie_setup_rc()
-> > >
-> > > Hi Gabriele,
-> > >
-> > > On Wed, 6 Apr 2016 14:50:29 +0000 Gabriele Paoloni wrote:
-> > >
-> > > > Hi, sorry to be late on this
-> > > >
-> > > > > -----Original Message-----
-> > > > > From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
-> > > > > owner@vger.kernel.org] On Behalf Of Jisheng Zhang
-> > > > > Sent: 16 March 2016 11:41
-> > > > > To: jingoohan1@gmail.com; pratyush.anand@gmail.com;
-> > > bhelgaas@google.com
-> > > > > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
-> linux-
-> > > arm-
-> > > > > kernel@lists.infradead.org; Jisheng Zhang
-> > > > > Subject: [PATCH v2] PCI: designware: move remaining rc setup
-> code
-> > > to
-> > > > > dw_pcie_setup_rc()
-> > > > >
-> > > > > dw_pcie_setup_rc(), as its name indicates, setups the RC. But
-> > > current
-> > > > > dw_pcie_host_init() also contains some necessary rc setup code.
-> > > > >
-> > > > > Another reason: the host may lost power during suspend to ram,
-> the
-> > > RC
-> > > > > need to be re-setup after resume. The rc can't be correctly
-> resumed
-> > > > > without the rc setup code in dw_pcie_host_init().
-> > > > >
-> > > > > So this patch moves the code to dw_pcie_setup_rc() to address
-> the
-> > > above
-> > > > > two issues. After this patch, each pcie designware driver users
-> > > could
-> > > > > call dw_pcie_setup_rc() to re-setup rc when resume back.
-> > > >
-> > > > I think this patch breaks the Hisilicon driver...
-> > > >
-> > > > Our driver performs linkup setup in UEFI therefore we do not call
-> > > > dw_pcie_setup_rc(), we only call dw_pcie_host_init().
-> > >
-> > > Thanks for the information. So pcie-hisi rely on UEFI to do
-> something
-> > > similar
-> > > in dw_pcie_setup_rc(), this comes to a common driver implement
-> > > question: should
-> > > linux device driver rely on bootloader to configure HW device?
-> >
-> > I don't see any issue with this...
-> >
-> > >
-> > > Is it acceptable that pcie-hisi adds a call to dw_pcie_setup_rc()
-> in
-> > > hisi_add_pcie_port()?
-> >
-> > I don't think so...that would try to overwrite what is already set by
-> > the bootloader; so it is wrong in principle and maybe it can lead to
-> > undefined behaviours...
-> 
-> make sense! This commit is intend to re-setup the rc when waken from
-> s2ram (in
-> s2ram state, the host lost power)
-> 
-> I have no good solution but to introduce one function e.g
-> dw_pcie_setup_rc_after_linkup(), then move related code from
-> dw_pcie_host_init
-> to it, then let my host driver resume hook to call.
-> 
-> Hi Pratyush, Jingoo and Bjorn etc.
-> 
-> any suggestions are appreciated!
+<snip>
 
-What about:
-
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index a4cccd3..e461f5d 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -434,7 +434,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	struct platform_device *pdev = to_platform_device(pp->dev);
- 	struct pci_bus *bus, *child;
- 	struct resource *cfg_res;
--	u32 val;
- 	int i, ret;
- 	LIST_HEAD(res);
- 	struct resource_entry *win;
-@@ -544,25 +543,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	if (pp->ops->host_init)
- 		pp->ops->host_init(pp);
- 
--	/*
--	 * If the platform provides ->rd_other_conf, it means the platform
--	 * uses its own address translation component rather than ATU, so
--	 * we should not program the ATU here.
--	 */
--	if (!pp->ops->rd_other_conf)
--		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
--					  PCIE_ATU_TYPE_MEM, pp->mem_base,
--					  pp->mem_bus_addr, pp->mem_size);
--
--	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
--
--	/* program correct class for RC */
--	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
--
--	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
--	val |= PORT_LOGIC_SPEED_CHANGE;
--	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
--
- 	pp->root_bus_nr = pp->busn->start;
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
-@@ -725,6 +705,29 @@ static struct pci_ops dw_pcie_ops = {
- 	.write = dw_pcie_wr_conf,
- };
- 
-+void dw_pcie_setup_own_cfg(struct pcie_port *pp)
-+{
-+	u32 val;
-+	/*
-+	 * If the platform provides ->rd_other_conf, it means the platform
-+	 * uses its own address translation component rather than ATU, so
-+	 * we should not program the ATU here.
-+	 */
-+	if (!pp->ops->rd_other_conf)
-+		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
-+					  PCIE_ATU_TYPE_MEM, pp->mem_base,
-+					  pp->mem_bus_addr, pp->mem_size);
-+
-+	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
-+
-+	/* program correct class for RC */
-+	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
-+
-+	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
-+	val |= PORT_LOGIC_SPEED_CHANGE;
-+	dw_pcie_wr_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, val);
-+}
-+
- void dw_pcie_setup_rc(struct pcie_port *pp)
- {
- 	u32 val;
-@@ -800,6 +803,8 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	val |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
- 		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
- 	dw_pcie_writel_rc(pp, val, PCI_COMMAND);
-+
-+	dw_pcie_setup_own_cfg(pp);
- }
- 
- MODULE_AUTHOR("Jingoo Han <jg1.han@samsung.com>");
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index f437f9b..caf0f5d 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -85,5 +85,6 @@ int dw_pcie_wait_for_link(struct pcie_port *pp);
- int dw_pcie_link_up(struct pcie_port *pp);
- void dw_pcie_setup_rc(struct pcie_port *pp);
- int dw_pcie_host_init(struct pcie_port *pp);
-+void dw_pcie_setup_own_cfg(struct pcie_port *pp);
- 
- #endif /* _PCIE_DESIGNWARE_H */
-diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
-index 3e98d4e..8da29b2 100644
---- a/drivers/pci/host/pcie-hisi.c
-+++ b/drivers/pci/host/pcie-hisi.c
-@@ -164,6 +164,7 @@ static int hisi_add_pcie_port(struct pcie_port *pp,
- 		dev_err(&pdev->dev, "failed to initialize host\n");
- 		return ret;
- 	}
-+	dw_pcie_setup_own_cfg(pp);
- 
- 	return 0;
- }
-
+> >
+> >>
+> >> btw how will new OPAL react if old kernel is running, i.e. not passing @state
+> >> at all? If it is initialized to NULL somewher - fine but what exactly does
+> >> this initialization and makes sure that OPAL won't see garbage as a second
+> >> parameter?
+> >>
+> >
+> > @state is always NULL for old kernel + new OPAL.
 > 
-> Thanks,
-> Jisheng
+> What piece of code writes NULL to "state"? Old kernel will do 
+> opal_pci_poll(id) and omit the "state" so something has to take care of it 
+> and write NULL where OPAL expects to see a pointer to "state" (which we set 
+> to NULL) and that place would be some GPR which may have garbage.
+> 
+> I am looking at
+> #define OPAL_CALL(name, token)
+> 
+> and cannot see where the second parameter (which old kernel omits) is 
+> reset, i.e. gpr4 (or gpr5?) is cleared.
+
+Gavin walked me through the code here and he's right that this won't cause a
+problem at the moment. Not because @state is NULL on old kernels (as you point
+out it isn't) but because old kernels call a specific sequence of OPAL calls 
+which mean that the new Skiboot wont check @state when an old kernel is running.
+
+However this is more a side-effect and is very brittle. It would need far more
+commenting on the OPAL side and there's still a good chance someone will break
+it by accident. Far easier just to add another OPAL call - eg. opal_pci_poll2().
+
+> > @state is used in
+> > PCI hotplug functionality in OPAL only. As old kernel doesn't support
+> > PCI hotplug, @state is never used. I'm not sure it's the answer you
+> > want?
+> 
+> No, it is not :)
+> 
+> >> When ABI like this changes, I expect to see opal_pci_poll2() or
+> >> opal_pci_poll_ex() rather than just an additional parameter to
+> >> opal_pci_poll()...
+> >>
+> >
+> > It's a good suggestion but it would be nicer if you raised this
+> > early. One question I have: current opal_pci_poll() is enough
+> > to cover all cases, why we need introduce and maintain another
+> > similar one? Sorry that I don't see the reason from your context
+> > and could you please provide more details?
+
+Because @state will be some non-NULL random number when opal_pci_poll() is
+called on older kernels and if OPAL ever dereferences it you will at best get
+a machine check and at worst random memory corruption. It would be far easier
+to maintain a new OPAL call than to deal with these kind of problems in the
+future.
+
+Also it is an important suggestion that has potentially saved some difficult
+debugging. Whilst it is *preferable* for reviewers to notice things earlier in
+the review process it is also *preferable* for developers to not write bugs in
+the first place. Unfortunately we all miss things and make mistakes. It's far
+more important that we catch and correct these problems even if they are noticed
+later than we would desire.
+
+- Alistair
+
+> >>> +
+> >>> +	return (rval == OPAL_SUCCESS) ? 0 : -EIO;
+> >>> +}
+> >>> +
+> >>>   #ifdef CONFIG_PCI_MSI
+> >>>   int pnv_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+> >>>   {
+> >>> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+> >>> index 0cddde3..6857703 100644
+> >>> --- a/arch/powerpc/platforms/powernv/pci.h
+> >>> +++ b/arch/powerpc/platforms/powernv/pci.h
+> >>> @@ -192,6 +192,7 @@ extern int pnv_tce_xchg(struct iommu_table *tbl, long index,
+> >>>   		unsigned long *hpa, enum dma_data_direction *direction);
+> >>>   extern unsigned long pnv_tce_get(struct iommu_table *tbl, long index);
+> >>>
+> >>> +int pnv_pci_poll(uint64_t id, int64_t rval, uint8_t *state);
+> >>>   void pnv_pci_dump_phb_diag_data(struct pci_controller *hose,
+> >>>   				unsigned char *log_buff);
+> >>>   int pnv_pci_cfg_read(struct pci_dn *pdn,
+> >>>
+> >>
+> >>
+> >> --
+> >> Alexey
+> >>
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >
+> 
+> 
+> 
 
