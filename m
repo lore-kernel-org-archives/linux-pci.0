@@ -1,240 +1,161 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:45072 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752163AbcDZWtZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Apr 2016 18:49:25 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Martin Mares <mj@ucw.cz>, linux-pci@vger.kernel.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv2] Add support for Downstream Port Containment
-Date: Tue, 26 Apr 2016 16:49:17 -0600
-Message-Id: <1461710957-316-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Sun, 24 Apr 2016 17:23:08 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-acpi@vger.kernel.org,
+	Linux PM list <linux-pm@vger.kernel.org>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [RFC 4/4] thunderbolt: Support runtime pm
+Message-ID: <20160424152308.GA16898@wunner.de>
+References: <cover.1458126755.git.lukas@wunner.de>
+ <4560ddb26a2bb15eeaf8eab565ac41c35e36d092.1458126755.git.lukas@wunner.de>
+ <CAMxnaaXLAEERtc7=odiqXAp_pA-PnsaQFw6bQhLN=DWeBngq9g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMxnaaXLAEERtc7=odiqXAp_pA-PnsaQFw6bQhLN=DWeBngq9g@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI SIG added the Downstream Port Containment capability. This patch
-decodes this for lspci, and defines the extended capability for setpci.
+Hi Andreas,
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
-v1->v2:
+thank you for your valuable feedback.
 
-  Obtained access to system using switch vendor with a released product,
-  so added DPC capable device to tests/.
+On Sun, Mar 20, 2016 at 02:53:10PM +0100, Andreas Noever wrote:
+> - My firmware does not provide the TRPE ACPI method, only XRPE. So
+> either TRPE is only post CactusRidge or it is only present in newer
+> MBPs. In any case the OS X driver looks for TRPE first and uses XRPE
+> only if TRPE does not exists. I suggest we do the same (but see below
+> for TRPE).
 
- lib/header.h  | 26 +++++++++++++++++
- ls-ecaps.c    | 34 ++++++++++++++++++++++
- setpci.c      |  1 +
- tests/cap-dpc | 91 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 152 insertions(+)
- create mode 100644 tests/cap-dpc
+I only had the acpidump of an MBA6 (2013) available when I implemented
+this and it uses TRPE. I have since been able to obtain the acpidump of
+an MBP10 (2012) and you're right, it uses XRPE. Both have the same
+controller, Cactus Ridge 4C. It looks like they changed this on machines
+introduced 2013. It's just a rename of the method, there are no machines
+which have both methods.
 
-diff --git a/lib/header.h b/lib/header.h
-index b8f7dc1..b7cbc9d 100644
---- a/lib/header.h
-+++ b/lib/header.h
-@@ -230,6 +230,7 @@
- #define PCI_EXT_CAP_ID_LTR	0x18	/* Latency Tolerance Reporting */
- #define PCI_EXT_CAP_ID_PASID	0x1b	/* Process Address Space ID */
- #define PCI_EXT_CAP_ID_L1PM	0x1e	/* L1 PM Substates */
-+#define PCI_EXT_CAP_ID_DPC	0x1d	/* Downstream Port Containment */
- 
- /*** Definitions of capabilities ***/
- 
-@@ -1090,6 +1091,31 @@
- #define  PCI_PASID_CTRL_ENABLE	0x01	/* Enable bit */
- #define  PCI_PASID_CTRL_EXEC	0x02	/* Exec permissions Enable */
- #define  PCI_PASID_CTRL_PRIV	0x04	/* Privilege Mode Enable */
-+
-+#define PCI_DPC_CAP		4	/* DPC Capability */
-+#define  PCI_DPC_CAP_INT_MSG(x) ((x) & 0x1f)	/* DPC Interrupt Message Number */
-+#define  PCI_DPC_CAP_RP_EXT	0x20		/* DPC Root Port Extentions */
-+#define  PCI_DPC_CAP_TLP_BLOCK	0x40		/* DPC Poisoned TLP Egress Blocking */
-+#define  PCI_DPC_CAP_SW_TRIGGER	0x80		/* DPC Software Trigger */
-+#define  PCI_DPC_CAP_RP_LOG(x)	(((x) >> 8) & 0xf) /* DPC RP PIO Log Size */
-+#define  PCI_DPC_CAP_DL_ACT_ERR	0x1000		/* DPC DL_Active ERR_COR Signal */
-+#define PCI_DPC_CTL		6	/* DPC Control */
-+#define  PCI_DPC_CTL_TRIGGER(x) ((x) & 0x3)	/* DPC Trigger Enable */
-+#define  PCI_DPC_CTL_CMPL	0x4		/* DPC Completion Control */
-+#define  PCI_DPC_CTL_INT	0x8		/* DPC Interrupt Enabled */
-+#define  PCI_DPC_CTL_ERR_COR	0x10		/* DPC ERR_COR Enabled */
-+#define  PCI_DPC_CTL_TLP	0x20		/* DPC Poisoned TLP Egress Blocking Enabled */
-+#define  PCI_DPC_CTL_SW_TRIGGER	0x40		/* DPC Software Trigger */
-+#define  PCI_DPC_CTL_DL_ACTIVE	0x80		/* DPC DL_Active ERR_COR Enable */
-+#define PCI_DPC_STATUS		8	/* DPC STATUS */
-+#define  PCI_DPC_STS_TRIGGER	0x01		/* DPC Trigger Status */
-+#define  PCI_DPC_STS_REASON(x) (((x) >> 1) & 0x3) /* DPC Trigger Reason */
-+#define  PCI_DPC_STS_INT	0x08		/* DPC Interrupt Status */
-+#define  PCI_DPC_STS_RP_BUSY	0x10		/* DPC Root Port Busy */
-+#define  PCI_DPC_STS_TRIGGER_EXT(x) (((x) >> 5) & 0x3) /* Trigger Reason Extention */
-+#define  PCI_DPC_STS_PIO_FEP(x) (((x) >> 8) & 0x1f) /* DPC PIO First Error Pointer */
-+#define PCI_DPC_SOURCE		10	/* DPC Source ID */
-+
- /*
-  * The PCI interface treats multi-function devices as independent
-  * devices.  The slot/function address of each device is encoded
-diff --git a/ls-ecaps.c b/ls-ecaps.c
-index 8298435..e02c1be 100644
---- a/ls-ecaps.c
-+++ b/ls-ecaps.c
-@@ -137,6 +137,37 @@ cap_aer(struct device *d, int where)
- 
- }
- 
-+static void cap_dpc(struct device *d, int where)
-+{
-+  u16 l;
-+
-+  printf("Downstream Port Containment\n");
-+  if (verbose < 2)
-+    return;
-+
-+  if (!config_fetch(d, where + PCI_DPC_CAP, 8))
-+    return;
-+
-+  l = get_conf_word(d, where + PCI_DPC_CAP);
-+  printf("\t\tDpcCap:\tINT Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
-+    PCI_DPC_CAP_INT_MSG(l), FLAG(l, PCI_DPC_CAP_RP_EXT), FLAG(l, PCI_DPC_CAP_TLP_BLOCK),
-+    FLAG(l, PCI_DPC_CAP_SW_TRIGGER), PCI_DPC_CAP_RP_LOG(l), FLAG(l, PCI_DPC_CAP_DL_ACT_ERR));
-+
-+  l = get_conf_word(d, where + PCI_DPC_CTL);
-+  printf("\t\tDpcCtl:\tTrigger:%x Cmpl%c INT%c ErrCor%c PoisonedTLP%c SwTrigger%c DL_ActiveErr%c\n",
-+    PCI_DPC_CTL_TRIGGER(l), FLAG(l, PCI_DPC_CTL_CMPL), FLAG(l, PCI_DPC_CTL_INT),
-+    FLAG(l, PCI_DPC_CTL_ERR_COR), FLAG(l, PCI_DPC_CTL_TLP), FLAG(l, PCI_DPC_CTL_SW_TRIGGER),
-+    FLAG(l, PCI_DPC_CTL_DL_ACTIVE));
-+
-+  l = get_conf_word(d, where + PCI_DPC_STATUS);
-+  printf("\t\tDpcSta:\tTrigger%c Reason:%02x INT%c RPBusy%c TriggerExt:%02x RP PIO ErrPtr:%02x\n",
-+    FLAG(l, PCI_DPC_STS_TRIGGER), PCI_DPC_STS_REASON(l), FLAG(l, PCI_DPC_STS_INT),
-+    FLAG(l, PCI_DPC_STS_RP_BUSY), PCI_DPC_STS_TRIGGER_EXT(l), PCI_DPC_STS_PIO_FEP(l));
-+
-+  l = get_conf_word(d, where + PCI_DPC_SOURCE);
-+  printf("\t\tSource:\t%04x\n", l);
-+}
-+
- static void
- cap_acs(struct device *d, int where)
- {
-@@ -580,6 +611,9 @@ show_ext_caps(struct device *d)
- 	  case PCI_EXT_CAP_ID_AER:
- 	    cap_aer(d, where);
- 	    break;
-+	  case PCI_EXT_CAP_ID_DPC:
-+	    cap_dpc(d, where);
-+	    break;
- 	  case PCI_EXT_CAP_ID_VC:
- 	  case PCI_EXT_CAP_ID_VC2:
- 	    cap_vc(d, where);
-diff --git a/setpci.c b/setpci.c
-index acf7689..873ebd7 100644
---- a/setpci.c
-+++ b/setpci.c
-@@ -301,6 +301,7 @@ static const struct reg_name pci_reg_names[] = {
-   { 0x2000e,	0, 0, "ECAP_ARI" },
-   { 0x2000f,	0, 0, "ECAP_ATS" },
-   { 0x20010,	0, 0, "ECAP_SRIOV" },
-+  { 0x2001d,	0, 0, "ECAP_DPC" },
-   {       0,    0, 0, NULL }
- };
- 
-diff --git a/tests/cap-dpc b/tests/cap-dpc
-new file mode 100644
-index 0000000..abf37b5
---- /dev/null
-+++ b/tests/cap-dpc
-@@ -0,0 +1,91 @@
-+05:01.0 Class 0604: Device 10b5:9716 (rev aa)
-+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
-+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-+	Latency: 0, Cache Line Size: 32 bytes
-+	Interrupt: pin A routed to IRQ 46
-+	NUMA node: 0
-+	Bus: primary=05, secondary=06, subordinate=06, sec-latency=0
-+	I/O behind bridge: 0000f000-00000fff
-+	Memory behind bridge: c6c00000-c6ffffff
-+	Prefetchable memory behind bridge: 0000383ff9c00000-0000383ff9ffffff
-+	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-+	BridgeCtl: Parity- SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
-+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-+	Capabilities: [40] Power Management version 3
-+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-+		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-+	Capabilities: [48] MSI: Enable+ Count=1/8 Maskable+ 64bit+
-+		Address: 00000000fee004d8  Data: 0000
-+		Masking: 000000fe  Pending: 00000000
-+	Capabilities: [68] Express (v2) Downstream Port (Slot+), MSI 00
-+		DevCap:	MaxPayload 1024 bytes, PhantFunc 0
-+			ExtTag- RBE+
-+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+
-+			MaxPayload 128 bytes, MaxReadReq 128 bytes
-+		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
-+		LnkCap:	Port #1, Speed 8GT/s, Width x4, ASPM L1, Exit Latency L0s <4us, L1 <4us
-+			ClockPM- Surprise+ LLActRep+ BwNot+ ASPMOptComp+
-+		LnkCtl:	ASPM Disabled; Disabled- CommClk-
-+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-+		LnkSta:	Speed 8GT/s, Width x4, TrErr- Train- SlotClk- DLActive+ BWMgmt+ ABWMgmt-
-+		SltCap:	AttnBtn- PwrCtrl+ MRL- AttnInd+ PwrInd+ HotPlug+ Surprise+
-+			Slot #1, PowerLimit 25.000W; Interlock- NoCompl-
-+		SltCtl:	Enable: AttnBtn- PwrFlt- MRL- PresDet+ CmdCplt+ HPIrq+ LinkChg+
-+			Control: AttnInd Off, PwrInd On, Power- Interlock-
-+		SltSta:	Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
-+			Changed: MRL- PresDet- LinkState-
-+		DevCap2: Completion Timeout: Not Supported, TimeoutDis-, LTR+, OBFF Via message ARIFwd+
-+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd+
-+		LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
-+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-+			 Compliance De-emphasis: -6dB
-+		LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete+, EqualizationPhase1+
-+			 EqualizationPhase2+, EqualizationPhase3+, LinkEqualizationRequest-
-+	Capabilities: [a4] Subsystem: Device 10b5:9716
-+	Capabilities: [100 v1] Device Serial Number 00-0e-df-10-b5-97-00-aa
-+	Capabilities: [fb4 v1] Advanced Error Reporting
-+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-+		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-+		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-+		AERCap:	First Error Pointer: 1f, GenCap+ CGenEn- ChkCap+ ChkEn-
-+	Capabilities: [138 v1] Power Budgeting <?>
-+	Capabilities: [10c v1] #19
-+	Capabilities: [148 v1] Virtual Channel
-+		Caps:	LPEVC=0 RefClk=100ns PATEntryBits=1
-+		Arb:	Fixed- WRR32- WRR64- WRR128-
-+		Ctrl:	ArbSelect=Fixed
-+		Status:	InProgress-
-+		VC0:	Caps:	PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
-+			Arb:	Fixed+ WRR32- WRR64- WRR128- TWRR128- WRR256-
-+			Ctrl:	Enable+ ID=0 ArbSelect=Fixed TC/VC=01
-+			Status:	NegoPending- InProgress-
-+	Capabilities: [f24 v1] Access Control Services
-+		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd+ EgressCtrl+ DirectTrans+
-+		ACSCtl:	SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
-+	Capabilities: [b70 v1] Vendor Specific Information: ID=0001 Rev=0 Len=010 <?>
-+	Capabilities: [b60 v1] Downstream Port Containment
-+		DpcCap:	INT Msg #0, RPExt- PoisonedTLP+ SwTrigger+ RP PIO Log 0, DL_ActiveErr+
-+		DpcCtl:	Trigger:2 Cmpl+ INT+ ErrCor- PoisonedTLP- SwTrigger- DL_ActiveErr-
-+		DpcSta:	Trigger- Reason:00 INT- RPBusy- TriggerExt:00 RP PIO ErrPtr:00
-+		Source:	0000
-+	Kernel driver in use: pcieport
-+00: b5 10 16 97 07 05 10 00 aa 00 04 06 08 00 01 00
-+10: 00 00 00 00 00 00 00 00 05 06 06 00 f1 01 00 00
-+20: c0 c6 f0 c6 c1 f9 f1 f9 3f 38 00 00 3f 38 00 00
-+30: 00 00 00 00 40 00 00 00 00 00 00 00 0a 01 12 00
-+40: 01 48 03 c8 08 00 00 00 05 68 87 01 d8 04 e0 fe
-+50: 00 00 00 00 00 00 00 00 fe 00 00 00 00 00 00 00
-+60: 00 00 00 00 00 00 00 00 10 a4 62 01 03 80 00 00
-+70: 00 08 09 00 43 68 79 01 00 00 43 60 fa 0c 08 00
-+80: f8 11 40 00 00 00 00 00 00 00 00 00 60 08 04 00
-+90: 20 00 00 00 0e 0f 00 00 03 00 1e 00 00 00 00 00
-+a0: 00 00 00 00 0d 00 00 00 b5 10 16 97 00 00 00 00
-+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+
--- 
-2.7.2
 
+> - The XRIN GPE fired immediately after the power was cut. The problem
+> seems to be that the controller takes a bit to shut down. The solution
+> is to poll until XRIL returns 1 before activating the GPE. On "Type 2"
+> devices the OS X driver polls up to 300 times with a 1ms sleep in
+> between (for me 1 or 2 iterations were always enough). Afaik no
+> polling is done on "Type 1" devices.
+
+Hm, this means that the semantics of XRIN and XRIL changed on Cactus
+Ridge. I have changed the behaviour to be exactly as you've specified
+above, this works fine on Light Ridge and should hopefully also work
+on Cactus Ridge, no distinction between Type 1 and Type 2 necessary.
+
+
+> Also the OS X interrupt handler checks XRIL
+> and only wakes up the device if it returns 0. This was not necessary
+> to do on my model - but maybe spurious interrupts can happen with
+> newer controllers?
+
+They're doing lots of stuff which seems superfluous or needlessly
+complicated, e.g. they also reset the controller upon driver load using
+the XRST method (which exists only on some models). I don't think we
+have to do everything exactly as they do as long as it works.
+FWIW I haven't seen any spurious XRIN interrupts on Light Ridge.
+
+
+> Concerning TRPE style hardware: It seems that pm is more complicated
+> here. I see a bunch of references to SX* ACPI methods (SXFP, SXLV,
+> SXIO) and have not yet figured out what they do. Maybe we should not
+> enable PM if XRPE is not present until we find someone to test it.
+
+But you do have the SX* methods on your machine even though it uses
+XRPE, right? I've mostly figured out now what these methods are there
+for and have documented them extensively in upstream.c. However I cannot
+verify if my documentation is accurate as they are not present on my
+machine, but perhaps you can if your machine has them.
+
+SXLV, SXIO and SXIL exist only on Cactus Ridge machines and utilize
+the Go2Sx and Ok2Go2Sx pins. Judging by the PCI quirk you've added,
+it seems that a Go2Sx dance is necessary on this controller before
+power is cut (either by going to S3 / S4 / S5 or by using the Force
+Power pin, which is what XRPE / TRPE / SXFP do).
+
+
+> As you have noted the "correct" place to but this logic would be at
+> the upstream bridge. Ideally the downstream bridges should go into
+> D3hot by themselves if no devices are attached. The NHI as well
+
+In v2 it works exactly like this now:
+https://github.com/l1k/linux/commits/thunderbolt_runpm_v2
+
+The trick is to allocate a Thunderbolt port service for the upstream
+bridge which we can bind to. In fact I'm allocating such a port service
+for *any* PCIe port on Thunderbolt devices, this could be useful for all
+sorts of other stuff.
+
+Binding to the upstream bridge also allows us to replace the PCI quirk
+which delays resume_noirq on the downstream bridges, as demonstrated by
+this experimental commit (works fine on Light Ridge but YMMV):
+https://github.com/l1k/linux/commit/79e0b8b8fb5da50b63836939f75212f824d8cba7
+
+
+> (did you by chance check whether the NHI can be put into D3hot without
+> killing the thunderbolt tunnels?).
+
+Amazingly this works. However the NHI does not act on hotplug events
+after thunderbolt_suspend() has been called. Even without calling
+thunderbolt_suspend(), it seems that the control channel is down
+when the NHI is in D3hot, I'm getting RX timeouts. Also, I cannot
+see any reduction in power consumption when putting the NHI in D3,
+same for the downstream bridges.
+
+You can test this for yourself by commenting out the two calls to
+pm_runtime_get() and pm_runtime_put_autosuspend() in switch.c.
+Plug in a Thunderbolt device, wait 10 sec for the NHI to autosuspend,
+try accessing the Thunderbolt device. Works for me.
+
+If the NHI suspended before you had a chance to plug in the device,
+invoke "echo on > /sys/bus/pci/devices/0000:06:00.0/power/control".
+Plug in the device and use "echo auto" to let the NHI autosuspend.
+
+
+> (1) should be possible to fix? For (2): D3Cold always requires a
+> platform specific mechanism and the pci subsystem only supports ACPI.
+> Would it be possible to add an API to tell the pci subsystem that we
+> know how to put a specific device(tree) into D3Cold from a platform
+> driver [+CC Bjorn]? Then this whole thing would become a normal pci
+> suspend operation.
+
+I simply go to D3cold in the driver's ->runtime_suspend callback.
+There's just one small fix necessary in pci_raw_set_power_state()
+for this to work. Plus some changes in portdrv to call down to the
+port service drivers on each pm transition. (It already does this
+for ->suspend and ->resume, we just need the same functionality for
+additional pm callbacks).
+
+
+> Bridges in Hotplugged TB devices might have the same PCI ids as the
+> "root" bridges (if they use the same TB chip). You probably should
+> check that dev is a bridge of the builtin controller (for example by
+> checking for the presence of ACPI methods, see the comment in the
+> other tb quirks).
+
+For the upstream bridge I'm checking if its parent is a root port now
+to determine if it's a host controller built into the machine.
+
+I think the only chance for a false positive is if two machines are
+connected with Thunderbolt and one of them has multiple Thunderbolt
+controllers built in. Might look like this:
+
+RP - UPSB - DSB - UPSB - DSB - RP - RP - UPSB - DSB
+^^^^^^^^^^^^^^^   ^^^^                   ^^^^^^^^^^
+local machine     remote machine         secondary controller on remote
+
+If the topology indeed looks like this (which I'm not sure of, I lack
+the hardware to test it), a thunderbolt_upstream driver will try to
+attach to UPSB on the secondary controller of the remote machine but
+should bail out because it can't find an ACPI handle for its NHI.
+So we should even have this corner case covered.
+
+Best regards,
+
+Lukas
