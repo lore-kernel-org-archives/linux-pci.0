@@ -1,72 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Pratyush Anand <pratyush.anand@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>
-CC: Bjorn Helgaas <helgaas@kernel.org>,
-	Jisheng Zhang <jszhang@marvell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH v2] PCI: designware: move remaining rc setup code to
- dw_pcie_setup_rc()
-Date: Thu, 14 Apr 2016 13:13:08 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED51AD0@lhreml503-mbs>
-References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
-	<EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
-	<20160407103734.55e72da7@xhacker>
-	<EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
-	<20160407163443.291fbd49@xhacker>
-	<EE11001F9E5DDD47B7634E2F8A612F2E1ED44208@lhreml503-mbs>
-	<20160407140551.GA2648@localhost>
-	<EE11001F9E5DDD47B7634E2F8A612F2E1ED45C38@lhreml503-mbs>
-	<20160408160145.GA10565@localhost>
-	<EE11001F9E5DDD47B7634E2F8A612F2E1ED4B88D@lhreml503-mbs>
-	<00a901d19548$90bffc20$b23ff460$@com>
-	<EE11001F9E5DDD47B7634E2F8A612F2E1ED4F10E@lhreml503-mbs>
-	<000001d19644$356355a0$a02a00e0$@com>
- <CAHM4w1kKmbkWoeMzKXgu+wMW+O2e5=wFe=WrKn_HLcFv4s_Qcg@mail.gmail.com>
-In-Reply-To: <CAHM4w1kKmbkWoeMzKXgu+wMW+O2e5=wFe=WrKn_HLcFv4s_Qcg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.hostsharing.net ([176.9.242.54]:56770 "EHLO
+	mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752691AbcDXQKh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 24 Apr 2016 12:10:37 -0400
+Date: Sun, 24 Apr 2016 18:13:07 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCH v2 4/4] PCI: Add runtime PM support for PCIe ports
+Message-ID: <20160424161307.GA16984@wunner.de>
+References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1460111790-92836-5-git-send-email-mika.westerberg@linux.intel.com>
+ <20160412175203.GB13637@wunner.de>
+ <20160413083352.GI1714@lahna.fi.intel.com>
+ <20160418143823.GA15165@wunner.de>
+ <20160419123131.GE1725@lahna.fi.intel.com>
+ <20160420192211.GA16093@wunner.de>
+ <20160421131002.GX1725@lahna.fi.intel.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160421131002.GX1725@lahna.fi.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgUHJhdHl1c2ggDQoNCnRoYW5rcyBmb3IgeW91IHJlcGx5IA0KDQo+IC0tLS0tT3JpZ2luYWwg
-TWVzc2FnZS0tLS0tDQo+IEZyb206IFByYXR5dXNoIEFuYW5kIFttYWlsdG86cHJhdHl1c2guYW5h
-bmRAZ21haWwuY29tXQ0KPiBTZW50OiAxNCBBcHJpbCAyMDE2IDE0OjA4DQo+IFRvOiBKaW5nb28g
-SGFuOyBHYWJyaWVsZSBQYW9sb25pDQo+IENjOiBCam9ybiBIZWxnYWFzOyBKaXNoZW5nIFpoYW5n
-OyBCam9ybiBIZWxnYWFzOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgta2Vy
-bmVsQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLQ0KPiBrZXJuZWxAbGlzdHMuaW5mcmFkZWFk
-Lm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYyXSBQQ0k6IGRlc2lnbndhcmU6IG1vdmUgcmVt
-YWluaW5nIHJjIHNldHVwIGNvZGUNCj4gdG8gZHdfcGNpZV9zZXR1cF9yYygpDQo+IA0KPiBIaSBH
-YWJyaWVsZSwNCj4gDQo+IE9uIFRodSwgQXByIDE0LCAyMDE2IGF0IDU6MjIgUE0sIEppbmdvbyBI
-YW4gPGppbmdvb2hhbjFAZ21haWwuY29tPg0KPiB3cm90ZToNCj4gPiBPbiBXZWRuZXNkYXksIEFw
-cmlsIDEzLCAyMDE2IDQ6NTggUE0sIEdhYnJpZWxlIFBhb2xvbmkgd3JvdGU6DQo+ID4+DQo+ID4+
-IEhpIEppbmdvbw0KPiA+Pg0KPiA+PiBPbiAxMyBBcHJpbCAyMDE2IDA2OjUyLCBKaW5nb28gSGFu
-IHdyb3RlOg0KPiA+PiA+IE9uIFR1ZXNkYXksIEFwcmlsIDEyLCAyMDE2IDY6NDQgUE0sIEdhYnJp
-ZWxlIFBhb2xvbmkgd3JvdGU6DQo+IA0KPiBbLi4uXQ0KPiANCj4gPj4gPiA+IFNvIEkgd2lsbCB1
-cGRhdGUgdGhlIGRyaXZlciB0byBjYWxsIGR3X3BjaWVfc2V0dXBfcmMoKSBmcm9tDQo+ID4+ID4g
-PiAuaG9zdF9pbml0IGFuZCBhc2sgdGhlIEJJT1MgdGVhbSB0byB1cGRhdGUgdGhlIGZpcm13YXJl
-IGZvciBuZXh0DQo+ID4+ID4gPiByZWxlYXNlcyAodGhlIGRyaXZlciB3aWxsIGJlIGJhY2t3YXJk
-IGNvbXBhdGlibGUgYW55d2F5KS4NCj4gPj4gPiA+DQo+ID4+ID4gPiBBbHNvIGR1cmluZyBteSBp
-bnZlc3RpZ2F0aW9uIEkgaGF2ZSBub3RpY2VkIHRoYXQgaW4NCj4gPj4gPiBkd19wY2llX3NldHVw
-X3JjKCkNCj4gPj4gPiA+IGh0dHA6Ly9seHIuZnJlZS1lbGVjdHJvbnMuY29tL3NvdXJjZS9kcml2
-ZXJzL3BjaS9ob3N0L3BjaWUtDQo+ID4+ID4gZGVzaWdud2FyZS5jI0w3NjINCj4gPj4gPiA+DQo+
-ID4+ID4gPiB3ZSB1c2UgcHAtPm1lbV9iYXNlIHJhdGhlciB0aGFuIHBwLT5tZW1fYnVzX2FkZHIg
-dG8gc2V0dXANCj4gPj4gPiA+IG1lbW9yeSBiYXNlIGFuZCBtZW1vcnkgbGltaXQgaW4gdGhlIFR5
-cGUxIGhlYWRlci4uLkkgdGhpbmsgdGhpcw0KPiA+PiA+ID4gaXMgd3JvbmcgcmlnaHQ/DQo+IA0K
-PiBZZXMuIFJDJ3MgIm1lbW9yeSBiYXNlIiBhbmQgIm1lbW9yeSBsaW1pdCIgc2hvdWxkIGJlIGdv
-dmVybmVkIGJ5IFBDSQ0KPiBhZGRyZXNzZXMgYW5kIG5vdCBDUFUgYWRkcmVzc2VzLiBTbywgaXQg
-c2hvdWxkIHVzZSBwcC0+bWVtX2J1c19hZGRyLg0KPiANCj4gPj4gPiA+IEFsc28gSSBkbyBub3Qg
-c2VlIHdoeSB0aGlzIGNvZGUgaXMgbmVlZGVkIGF0IGFsbCBzaW5jZSB3ZQ0KPiBvdmVyd3JpdGUN
-Cj4gPj4gPiA+IHRoaXMgcmVnaXN0ZXIgd2hlbiB3ZSBjYWxsIHBjaV9idXNfYXNzaWduX3Jlc291
-cmNlcyhidXMpIHRoYXQNCj4gPj4gPiA+IHdpbGwgZW5kIHVwIGluIGNhbGxpbmcgcGNpX3NldHVw
-X2JyaWRnZSgpIGFuZCB0aGVuDQo+ID4+ID4gPiBwY2lfc2V0dXBfYnJpZGdlX21taW8oKS4uLj8N
-Cj4gPj4NCj4gPj4gRG8geW91IGhhdmUgYW55IGNvbW1lbnQgb24gdGhpcyBpc3N1ZSBhYm92ZT8N
-Cj4gDQo+IFByb2JhYmx5IHRoYXRzIHdoeSB0aGluZ3MgYXJlIHdvcmtpbmcuDQo+IFRoYW5rcyBm
-b3IgZmluZGluZyBpdC4gSSB0aGluaywgLyogc2V0dXAgbWVtb3J5IGJhc2UsIG1lbW9yeSBsaW1p
-dCAqLw0KPiBodW5rIGNhbiBiZSByZW1vdmVkIGZyb20gZHdfcGNpZV9zZXR1cF9yYy4NCg0KR3Jl
-YXQsIEknbGwgc2VuZCBvdXQgYSBwYXRjaCB0byByZW1vdmUgdGhpcw0KDQpUaGFua3MNCg0KR2Fi
-DQoNCj4gDQo+IH5QcmF0eXVzaA0K
+Hi Mika,
+
+On Thu, Apr 21, 2016 at 04:10:02PM +0300, Mika Westerberg wrote:
+> On Wed, Apr 20, 2016 at 09:22:11PM +0200, Lukas Wunner wrote:
+> > However pci_bridge_d3_update() also gets called e.g. from
+> > pci_remove_bus_device() and there's no call to pm_request_idle()
+> > there, so a bridge would stay awake even if a child that has blocked
+> > d3 has been removed.
+> 
+> As far as I can tell removing a device ends up calling
+> __device_release_driver() where runtime PM is updated accordingly. That
+> should trigger the parent device (upstream bridge) to runtime suspend if
+> there is no more active children.
+
+Right, makes sense.
+
+
+> > I've been able to test this now with a hacked tg3 driver and it's as
+> > I expected: A hotplug port may go to D3hot and will still generate
+> > interrupts on hotplug, but all its parent ports are *not* allowed
+> > to go to D3hot because otherwise the hotplug interrupts will no longer
+> > come through.
+> 
+> Interrupts are not possible from any other state than D0 so it is always
+> PME that gets sent upstream.
+> 
+> Once you move parent port of that downstream port to D3hot it means that
+> the downstream port is, in fact in D3cold and the link may be in L2 or
+> L3 (depending on the platform). So a hotplug capable port must be able
+> to trigger PME from D3cold and you need to enable that as well.
+
+The PME WAKE# pin of Thunderbolt controllers built into Macs is wired
+to the southbridge so that it wakes the entire system from sleep.
+IIUC for the downstream port to deliver a side-band interrupt to
+the root port so that the root port resumes from D3, WAKE# would have
+to be wired to the root complex.
+
+In the case of Thunderbolt (as compared to CardBus or whatever),
+there's a separate wake pin on the controller which signals such
+a side-band interrupt on hotplug, on Macs it's delivered as a GPE.
+
+
+> > The algorithm in pci_bridge_d3_update() and pci_dev_check_d3cold()
+> > needs to be amended to take that into account. Hm, it's nontrivial I
+> > guess, allowing bridge_d3 = true for the lowest hotplug bridge in a
+> > hierarchy but not for anything above?
+> 
+> If we need to do things like that, it will get pretty complex and we
+> still cannot be sure whether hotplug works. I think it is safer to go
+> back to what I already had and disable runtime PM from such ports.
+
+Okay, maybe I'll just solve this by allowing D3 for all PCIe ports
+that belong to a Thunderbolt device if DMI says we're on a Mac.
+
+Best regards,
+
+Lukas
