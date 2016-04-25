@@ -1,110 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 41/60] PCI: Separate required+optional assigning to another function
-Date: Thu,  7 Apr 2016 17:15:54 -0700
-Message-Id: <1460074573-7481-42-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ig0-f194.google.com ([209.85.213.194]:35875 "EHLO
+	mail-ig0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933030AbcDYQbA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Apr 2016 12:31:00 -0400
+MIME-Version: 1.0
+In-Reply-To: <20160425152643.GZ2274@localhost>
+References: <1461166339-11109-1-git-send-email-geert+renesas@glider.be>
+	<1461166339-11109-7-git-send-email-geert+renesas@glider.be>
+	<20160425152643.GZ2274@localhost>
+Date: Mon, 25 Apr 2016 18:30:58 +0200
+Message-ID: <CAMuHMdWsAj2Tmp3hQQAwZaB39j0KM=kcsobf+NtnrAG-aX5ohg@mail.gmail.com>
+Subject: Re: [PATCH 06/14] dmaengine: bcm2835: DT spelling s/interrupts-names/interrupt-names/
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Vinod Koul <vinod.koul@intel.com>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>, Lee Jones <lee@kernel.org>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Mark Brown <broonie@kernel.org>,
+	Alexandre Belloni <alexandre.belloni@free-electrons.com>,
+	Joe Perches <joe@perches.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	dmaengine@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-__assign_resources_sorted() is getting too big if we put alt_size support
-into it.  Split out required+optional assigning code to another function.
+Hi Vinod,
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 47 +++++++++++++++++++++++++++--------------------
- 1 file changed, 27 insertions(+), 20 deletions(-)
+On Mon, Apr 25, 2016 at 5:26 PM, Vinod Koul <vinod.koul@intel.com> wrote:
+> On Wed, Apr 20, 2016 at 05:32:11PM +0200, Geert Uytterhoeven wrote:
+>> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+>> ---
+>>  Documentation/devicetree/bindings/sound/davinci-mcbsp.txt | 2 +-
+>
+> This change does not apply for me, can you please split it up and send the
+> sound ones thru sound tree
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index b4eb37d..a4f53ec 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -472,20 +472,9 @@ static void restore_resource(struct pci_dev_resource *save_res,
- 	res->flags = save_res->flags;
- }
- 
--static void __assign_resources_sorted(struct list_head *head,
--				 struct list_head *realloc_head,
--				 struct list_head *fail_head)
-+static bool __assign_resources_required_optional_sorted(struct list_head *head,
-+				 struct list_head *realloc_head)
- {
--	/*
--	 * Should not assign requested resources at first.
--	 *   they could be adjacent, so later reassign can not reallocate
--	 *   them one by one in parent resource window.
--	 * Try to assign requested + add_size at beginning
--	 *  if could do that, could get out early.
--	 *  if could not do that, we still try to assign requested at first,
--	 *    then try to reassign add_size for some resources.
--	 */
--
- 	LIST_HEAD(save_head);
- 	LIST_HEAD(local_fail_head);
- 	struct pci_dev_resource *save_res;
-@@ -494,12 +483,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 	resource_size_t add_align;
- 	struct resource *res;
- 
--	/* Check if optional add_size is there */
--	if (!realloc_head || list_empty(realloc_head))
--		goto requested_and_reassign;
--
- 	if (!save_resources(head, &save_head))
--		goto requested_and_reassign;
-+		return false;
- 
- 	/* Update res in head list with add_size in realloc_head list */
- 	list_for_each_entry(dev_res, head, list) {
-@@ -538,7 +523,8 @@ static void __assign_resources_sorted(struct list_head *head,
- 			remove_from_list(realloc_head, dev_res->res);
- 		free_list(&save_head);
- 		free_list(head);
--		return;
-+
-+		return true;
- 	}
- 
- 	/* check failed type */
-@@ -573,7 +559,28 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 	free_list(&save_head);
- 
--requested_and_reassign:
-+	return false;
-+}
-+
-+static void __assign_resources_sorted(struct list_head *head,
-+				 struct list_head *realloc_head,
-+				 struct list_head *fail_head)
-+{
-+	/*
-+	 * Should not assign required resources at first.
-+	 *   they could be adjacent, so later reassign can not reallocate
-+	 *   them one by one in parent resource window.
-+	 * Try to assign required + optional at beginning
-+	 *  if could do that, could get out early.
-+	 *  if could not do that, we still try to assign required at first,
-+	 *    then try to reassign add_size for some resources.
-+	 */
-+
-+	/* Check required+optional add */
-+	if (realloc_head && !list_empty(realloc_head) &&
-+	    __assign_resources_required_optional_sorted(head, realloc_head))
-+		return;
-+
- 	sort_resources(head);
- 
- 	/* Satisfy the must-have resource requests */
--- 
-1.8.4.5
+Sorry, I seem to have mixed two unrelated drivers.
+Will split and resend...
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
