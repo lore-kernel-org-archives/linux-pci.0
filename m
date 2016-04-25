@@ -1,71 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42182 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756662AbcDHAQ4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:16:56 -0400
-From: Yinghai Lu <yinghai@kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:55193 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754248AbcDYJxf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Apr 2016 05:53:35 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 14/60] PCI: Add has_mem64 for struct host_bridge
-Date: Thu,  7 Apr 2016 17:15:27 -0700
-Message-Id: <1460074573-7481-15-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [PATCH v4 1/4] PCI: No need to set d3cold_allowed to PCIe ports
+Date: Mon, 25 Apr 2016 12:53:21 +0300
+Message-Id: <1461578004-129094-2-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add has_mem64 for struct host_bridge, on root bus that does not support
-mmio64 above 4g, will not set that.
+The Linux PCI core skips PCI bridges and PCIe ports when system is
+suspended. The PCI core checks return value of pci_has_subordinate() in
+pci_pm_suspend_noirq() to skip all devices where it is non-zero (which
+means PCI bridges and PCIe ports).
 
-We will use that info next two following patches:
-1. Don't treat non-pref mmio64 as pref mmio, so will not put
-   it under bridge's pref range when rescan the devices
-2. will keep pref mmio64 and pref mmio32 under bridge pref bar.
+Since PCIe ports are never suspended in the first place, there is no need
+to set d3cold_allowed for them.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/pci/probe.c | 7 +++++++
- include/linux/pci.h | 1 +
- 2 files changed, 8 insertions(+)
+ drivers/pci/pcie/portdrv_pci.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 48e6f29..6b079f4 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2230,6 +2230,13 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
- 		} else
- 			bus_addr[0] = '\0';
- 		dev_info(&b->dev, "root bus resource %pR%s\n", res, bus_addr);
-+
-+		if (resource_type(res) == IORESOURCE_MEM) {
-+			if ((res->end - offset) > 0xffffffff)
-+				bridge->has_mem64 = 1;
-+			if ((res->start - offset) > 0xffffffff)
-+				res->flags |= IORESOURCE_MEM_64;
-+		}
- 	}
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index be35da2e105e..6c6bb03392ea 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -134,11 +134,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 		return status;
  
- 	down_write(&pci_bus_sem);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1527735..979be25 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -408,6 +408,7 @@ struct pci_host_bridge {
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
-+	unsigned int has_mem64:1;
- 	/* Resource alignment requirements */
- 	resource_size_t (*align_resource)(struct pci_dev *dev,
- 			const struct resource *res,
+ 	pci_save_state(dev);
+-	/*
+-	 * D3cold may not work properly on some PCIe port, so disable
+-	 * it by default.
+-	 */
+-	dev->d3cold_allowed = false;
+ 	return 0;
+ }
+ 
 -- 
-1.8.4.5
+2.8.0.rc3
 
