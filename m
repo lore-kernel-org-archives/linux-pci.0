@@ -1,72 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39157 "EHLO mail.kernel.org"
+Received: from mga11.intel.com ([192.55.52.93]:23365 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964911AbcDYVBL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Apr 2016 17:01:11 -0400
-Date: Mon, 25 Apr 2016 16:01:06 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-Subject: Re: [PATCH v11 02/60] alpha/PCI: Only check iomem_is_exclusive() for
- IORESOURCE_MEM, not IORESOURCE_IO
-Message-ID: <20160425210106.GD1759@localhost>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
- <1460074573-7481-3-git-send-email-yinghai@kernel.org>
+	id S932511AbcDYPWB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Apr 2016 11:22:01 -0400
+Date: Mon, 25 Apr 2016 20:56:43 +0530
+From: Vinod Koul <vinod.koul@intel.com>
+To: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Rob Herring <robh+dt@kernel.org>, Lee Jones <lee@kernel.org>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Mark Brown <broonie@kernel.org>,
+	Alexandre Belloni <alexandre.belloni@free-electrons.com>,
+	Joe Perches <joe@perches.com>, devicetree@vger.kernel.org,
+	linux-input@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	dmaengine@vger.kernel.org
+Subject: Re: [PATCH 06/14] dmaengine: bcm2835: DT spelling
+ s/interrupts-names/interrupt-names/
+Message-ID: <20160425152643.GZ2274@localhost>
+References: <1461166339-11109-1-git-send-email-geert+renesas@glider.be>
+ <1461166339-11109-7-git-send-email-geert+renesas@glider.be>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460074573-7481-3-git-send-email-yinghai@kernel.org>
+In-Reply-To: <1461166339-11109-7-git-send-email-geert+renesas@glider.be>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 07, 2016 at 05:15:15PM -0700, Yinghai Lu wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> The alpha pci_mmap_resource() is used for both IORESOURCE_MEM and
-> IORESOURCE_IO resources, but iomem_is_exclusive() is only applicable for
-> IORESOURCE_MEM.
-> 
-> Call iomem_is_exclusive() only for IORESOURCE_MEM resources, and do it
-> earlier to match the generic version of pci_mmap_resource().
-> 
-> Fixes: 10a0ef39fbd1 ("PCI/alpha: pci sysfs resources")
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-
-I applied these first two patches to pci/resource for v4.7.
-
+On Wed, Apr 20, 2016 at 05:32:11PM +0200, Geert Uytterhoeven wrote:
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 > ---
->  arch/alpha/kernel/pci-sysfs.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  Documentation/devicetree/bindings/sound/davinci-mcbsp.txt | 2 +-
+
+This change does not apply for me, can you please split it up and send the
+sound ones thru sound tree
+
+-- 
+~Vinod
+
+>  drivers/dma/bcm2835-dma.c                                 | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.c
-> index 99e8d47..92c0d46 100644
-> --- a/arch/alpha/kernel/pci-sysfs.c
-> +++ b/arch/alpha/kernel/pci-sysfs.c
-> @@ -77,10 +77,10 @@ static int pci_mmap_resource(struct kobject *kobj,
->  	if (i >= PCI_ROM_RESOURCE)
->  		return -ENODEV;
+> diff --git a/Documentation/devicetree/bindings/sound/davinci-mcbsp.txt b/Documentation/devicetree/bindings/sound/davinci-mcbsp.txt
+> index 55b53e1fd72c9d6e..e0b6165c9cfcec19 100644
+> --- a/Documentation/devicetree/bindings/sound/davinci-mcbsp.txt
+> +++ b/Documentation/devicetree/bindings/sound/davinci-mcbsp.txt
+> @@ -43,7 +43,7 @@ mcbsp0: mcbsp@1d10000 {
+>  		<0x00310000 0x1000>;
+>  	reg-names = "mpu", "dat";
+>  	interrupts = <97 98>;
+> -	interrupts-names = "rx", "tx";
+> +	interrupt-names = "rx", "tx";
+>  	dmas = <&edma0 3 1
+>  		&edma0 2 1>;
+>  	dma-names = "tx", "rx";
+> diff --git a/drivers/dma/bcm2835-dma.c b/drivers/dma/bcm2835-dma.c
+> index 974015193b93cdb3..d724393e904e9a41 100644
+> --- a/drivers/dma/bcm2835-dma.c
+> +++ b/drivers/dma/bcm2835-dma.c
+> @@ -974,7 +974,7 @@ static int bcm2835_dma_probe(struct platform_device *pdev)
 >  
-> -	if (!__pci_mmap_fits(pdev, i, vma, sparse))
-> +	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
->  		return -EINVAL;
->  
-> -	if (iomem_is_exclusive(res->start))
-> +	if (!__pci_mmap_fits(pdev, i, vma, sparse))
->  		return -EINVAL;
->  
->  	pcibios_resource_to_bus(pdev->bus, &bar, res);
+>  		/* legacy device tree case handling */
+>  		dev_warn_once(&pdev->dev,
+> -			      "missing interrupts-names property in device tree - legacy interpretation is used");
+> +			      "missing interrupt-names property in device tree - legacy interpretation is used");
+>  		/*
+>  		 * in case of channel >= 11
+>  		 * use the 11th interrupt and that is shared
 > -- 
-> 1.8.4.5
+> 1.9.1
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
