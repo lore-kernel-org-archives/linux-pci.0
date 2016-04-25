@@ -1,71 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:38614 "EHLO
-	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750777AbcD0KNR (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Apr 2016 06:13:17 -0400
-Received: by mail-wm0-f44.google.com with SMTP id u206so41884707wme.1
-        for <linux-pci@vger.kernel.org>; Wed, 27 Apr 2016 03:13:17 -0700 (PDT)
-Subject: Re: [PATCH V6 01/13] pci, acpi, x86, ia64: Move ACPI host bridge
- device companion assignment to core code.
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	kbuild test robot <lkp@intel.com>
-References: <1460740008-19489-2-git-send-email-tn@semihalf.com>
- <201604160430.P8zNe8Vl%fengguang.wu@intel.com>
- <20160426223618.GB6789@localhost>
-Cc: kbuild-all@01.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <572090A3.7000503@semihalf.com>
-Date: Wed, 27 Apr 2016 12:12:51 +0200
-MIME-Version: 1.0
-In-Reply-To: <20160426223618.GB6789@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mga14.intel.com ([192.55.52.115]:55193 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752383AbcDYJxa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Apr 2016 05:53:30 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [PATCH v4 3/4] ACPI / hotplug / PCI: Runtime resume bridge before rescan
+Date: Mon, 25 Apr 2016 12:53:23 +0300
+Message-Id: <1461578004-129094-4-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27.04.2016 00:36, Bjorn Helgaas wrote:
-> On Sat, Apr 16, 2016 at 04:41:45AM +0800, kbuild test robot wrote:
->> Hi Tomasz,
->>
->> [auto build test ERROR on pci/next]
->> [also build test ERROR on v4.6-rc3 next-20160415]
->> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
->>
->> url:    https://github.com/0day-ci/linux/commits/Tomasz-Nowicki/Support-for-generic-ACPI-based-PCI-host-controller/20160416-011935
->> base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
->> config: ia64-allmodconfig (attached as .config)
->> reproduce:
->>          wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->>          chmod +x ~/bin/make.cross
->>          # save the attached .config to linux build tree
->>          make.cross ARCH=ia64
->>
->> All errors (new ones prefixed by >>):
->>
->>     drivers/pci/hotplug/sgi_hotplug.c: In function 'enable_slot':
->>>> drivers/pci/hotplug/sgi_hotplug.c:412:61: error: 'struct pci_controller' has no member named 'companion'
->>        phandle = acpi_device_handle(PCI_CONTROLLER(slot->pci_bus)->companion);
->>                                                                  ^
->>     drivers/pci/hotplug/sgi_hotplug.c: In function 'disable_slot':
->>     drivers/pci/hotplug/sgi_hotplug.c:491:32: error: 'struct pci_controller' has no member named 'companion'
->>        PCI_CONTROLLER(slot->pci_bus)->companion) {
->>                                     ^
->>     drivers/pci/hotplug/sgi_hotplug.c:500:61: error: 'struct pci_controller' has no member named 'companion'
->>        phandle = acpi_device_handle(PCI_CONTROLLER(slot->pci_bus)->companion);
->>                                                                  ^
->
-> I assume somebody is fixing this?
+If a PCI bridge (or PCIe port) that is runtime suspended gets an ACPI
+hotplug event, such as BUS_CHECK we need to make sure it is resumed before
+devices below the bridge are re-scanned. Otherwise the devices behind the
+port are not accessible and will be treated as hot-unplugged.
 
-Yes, it will be fixed in next version also I will ask Hanjun to re-test 
-it on IA64 as in the past.
+To fix this, resume PCI bridges from runtime suspend while rescanning.
 
-Tomasz
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/pci/hotplug/acpiphp_glue.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug/acpiphp_glue.c
+index fa49f9143b80..d64ce8aa99b3 100644
+--- a/drivers/pci/hotplug/acpiphp_glue.c
++++ b/drivers/pci/hotplug/acpiphp_glue.c
+@@ -756,8 +756,10 @@ static void hotplug_event(u32 type, struct acpiphp_context *context)
+ 
+ 	acpi_lock_hp_context();
+ 	bridge = context->bridge;
+-	if (bridge)
++	if (bridge) {
+ 		get_bridge(bridge);
++		pm_runtime_get_sync(&bridge->pci_dev->dev);
++	}
+ 
+ 	acpi_unlock_hp_context();
+ 
+@@ -797,8 +799,10 @@ static void hotplug_event(u32 type, struct acpiphp_context *context)
+ 	}
+ 
+ 	pci_unlock_rescan_remove();
+-	if (bridge)
++	if (bridge) {
++		pm_runtime_put(&bridge->pci_dev->dev);
+ 		put_bridge(bridge);
++	}
+ }
+ 
+ static int acpiphp_hotplug_notify(struct acpi_device *adev, u32 type)
+-- 
+2.8.0.rc3
+
