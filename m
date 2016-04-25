@@ -1,185 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-am1on0061.outbound.protection.outlook.com ([157.56.112.61]:6064
-	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754584AbcDYMqW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Apr 2016 08:46:22 -0400
-Subject: Re: [PATCH] PCI: Refine broken INTx masking for Mellanox devices
-To: Alex Williamson <alex.williamson@redhat.com>
-References: <1461083616-30099-1-git-send-email-majd@mellanox.com>
- <20160419130435.7d681f6d@t450s.home>
- <7b67ed14-516d-aae9-2b72-6dae420caa65@mellanox.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	"Noa Osherovich" <noaos@mellanox.com>
-From: Majd Dibbiny <majd@mellanox.com>
-Message-ID: <cf7d745d-a43c-dcf7-e2e0-00afbbe26a72@mellanox.com>
-Date: Mon, 25 Apr 2016 15:45:37 +0300
-MIME-Version: 1.0
-In-Reply-To: <7b67ed14-516d-aae9-2b72-6dae420caa65@mellanox.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:16834 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754013AbcDYJxa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Apr 2016 05:53:30 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [PATCH v4 0/4] PCI: Add support for suspending (including runtime) of PCIe ports
+Date: Mon, 25 Apr 2016 12:53:20 +0300
+Message-Id: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Current Linux PCI core does not do any kind of power management to PCIe
+ports. This means that we waste energy and consume laptop battery even if
+the port has nothing connected to. These patches aim to change that to the
+right direction.
 
-Can you please merge this?
+Previous versions of the patches can be found below:
 
-Thanks
+  v1: http://www.spinics.net/lists/linux-pci/msg49313.html
+  v2: http://www.spinics.net/lists/linux-pci/msg50167.html
+  v3: http://www.spinics.net/lists/linux-pci/msg50345.html
 
-On 4/21/2016 10:12 AM, Majd Dibbiny wrote:
->
->
-> On 4/19/2016 10:04 PM, Alex Williamson wrote:
->> On Tue, 19 Apr 2016 19:33:36 +0300
->> Majd Dibbiny <majd@mellanox.com> wrote:
->>
->>> From: Noa Osherovich <noaos@mellanox.com>
->>>
->>> Mellanox devices were marked as having INTx masking ability broken.
->>> As a result, the VFIO driver fails to load when the device was
->>> passed-through to a VM.
->>>
->>> This patch excludes ConnectX-4, ConnectX4-Lx and Connect-IB from the
->>> list of Mellanox devices marked as having broken INTx masking:
->>>
->>> - ConnectX-4 and ConnectX4-Lx either declare INTx are not supported
->>>    (FW versions 12.14.2036 / 14.12.2036) or support them properly
->>>    (starting May 2016 firmware release). Users having earlier firmware
->>>    versions will have to update to either one.
->>> - Connect-IB does not support INTx currently so will not cause any
->>>    problem.
->> What's the user and support experience here?  A user gets a new kernel
->> that no longer marks INTx masking as bad (note that if the device does
->> not support INTx by returing 0 in the pin register, it doesn't matter
->> whether it's marked bad or not), they try to assign the device and get
->> an interrupt storm on the guest and go complain to support. Support
->> tries to reproduce, maybe can, maybe can't, depending on the firmware
->> version they happen to have running, everyone gets very unhappy until
->> the thing that almost never works, "are you running the latest
->> firmware", actually works.  Can we instead add a new function for
->> mellanox that can probe the firmware version and continue marking INTx
->> masking bad with a warning noting that a firmware update will resolve
->> it?  Thanks,
->>
->> Alex
-> Hi Alex,
-> I understand your concern and therefore we have documented this in our 
-> Release notes to ease the troubleshooting experience for everyone.. We 
-> have also added the Firmware versions in the commit messages to make 
-> it clearer...
->
-> What do you think?
->
-> Thanks
->>> Fixes: 11e42532ada31 ('PCI: Assume all Mellanox devices have ...')
->>> Signed-off-by: Noa Osherovich <noaos@mellanox.com>
->>> Signed-off-by: Majd Dibbiny <majd@mellanox.com>
->>> ---
->>>   drivers/pci/quirks.c    | 61 
->>> ++++++++++++++++++++++++++++++++++++++++++++++++-
->>>   include/linux/pci_ids.h | 14 ++++++++++++
->>>   2 files changed, 74 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->>> index 8e67802..6a1856e 100644
->>> --- a/drivers/pci/quirks.c
->>> +++ b/drivers/pci/quirks.c
->>> @@ -3147,7 +3147,66 @@ DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* 
->>> Ralink RT2800 802.11n PCI */
->>>    */
->>>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
->>>                quirk_broken_intx_masking);
->>> -DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
->>> +
->>> +/*
->>> + * Mellanox devices that fail under PCI device assignment using 
->>> DisINTx masking
->>> + */
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, 
->>> PCI_DEVICE_ID_MELLANOX_TAVOR,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +             PCI_DEVICE_ID_MELLANOX_TAVOR_BRIDGE,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, 
->>> PCI_DEVICE_ID_MELLANOX_ARBEL,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +             PCI_DEVICE_ID_MELLANOX_ARBEL_COMPAT,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, 
->>> PCI_DEVICE_ID_MELLANOX_SINAI,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +             PCI_DEVICE_ID_MELLANOX_SINAI_OLD,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +             PCI_DEVICE_ID_MELLANOX_HERMON_SDR,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +             PCI_DEVICE_ID_MELLANOX_HERMON_DDR,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +             PCI_DEVICE_ID_MELLANOX_HERMON_QDR,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +             PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +             PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +             PCI_DEVICE_ID_MELLANOX_HERMON_EN,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +             PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +             PCI_DEVICE_ID_MELLANOX_CONNECTX_EN,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +             PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +             PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +             PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +             PCI_DEVICE_ID_MELLANOX_CONNECTX2,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +             PCI_DEVICE_ID_MELLANOX_CONNECTX3,
->>> +             quirk_broken_intx_masking);
->>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->>> +             PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO,
->>>                quirk_broken_intx_masking);
->>>     static void quirk_no_bus_reset(struct pci_dev *dev)
->>> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
->>> index 247da8c..bc8918e 100644
->>> --- a/include/linux/pci_ids.h
->>> +++ b/include/linux/pci_ids.h
->>> @@ -2262,6 +2262,20 @@
->>>   #define PCI_DEVICE_ID_MELLANOX_ARBEL    0x6282
->>>   #define PCI_DEVICE_ID_MELLANOX_SINAI_OLD 0x5e8c
->>>   #define PCI_DEVICE_ID_MELLANOX_SINAI    0x6274
->>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_SDR 0x6340
->>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR 0x634a
->>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR 0x6354
->>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2 0x6732
->>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2 0x673c
->>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_EN 0x6368
->>> +#define PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2 0x6750
->>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN 0x6372
->>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2 0x675a
->>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2 0x6764
->>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2 0x6746
->>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX2 0x676e
->>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX3 0x1003
->>> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO 0x1007
->>>     #define PCI_VENDOR_ID_DFI        0x15bd
->
+This assumes that recent (starting from 2015) PCIe ports are capable of
+transition to D3hot/D3cold. We add a new flag to struct pci_dev 'bridge_d3'
+that is set whenever the PCI core thinks the port can be put to D3. The
+check in pci_pm_suspend_noirq() is then extended to cover devices where
+'bridge_d3' is set.
+
+We then add two new functions pci_bridge_d3_device_changed/removed(). These
+are used to set and clear 'bridge_d3' whenever there is a change in device
+power management policy (or if the device is removed). For example when
+userspace forbids the device to enter D3cold pci_bridge_d3_device_changed()
+will clear 'bridge_d3' of the upstream bridge.
+
+For all PCI ports where 'bridge_d3' is set we also enable and unblock
+runtime PM automatically. Only exception is when the PCIe port claims to
+support hotplug. More information about that is in the changelog of
+patch [4/4].
+
+Since this also touches xhci, I'm adding Mathias and Greg to check if the
+change looks reasonable.
+
+Changes to v3:
+
+  - Make 'no_d3cold' persist for pci_dev. Once this is set through
+    pci_d3cold_enable/disable(), it will persist unless changed again using
+    the same functions. Those also handle setting and clearing 'bridge_d3'
+    as necessary.
+
+  - Add kernel command line parameter "pcie_port_pm=off|force" that can
+    be used to forcibly disable/enable the feature.
+
+  - Use runtime PM autosuspend instead of scheduling runtime suspend
+    manually
+
+  - Allow runtime PM always except when we are dealing with a hotplug
+    bridge. Actual checking whether the port can be suspended is done in
+    ->idle() and ->runtime_suspend() hooks based on 'bridge_d3'.
+
+Changes to v2:
+
+  - Renamed and split pci_enable_d3cold() into two functions
+    pci_d3cold_enable()/disable().
+
+  - Renamed pci_bridge_pm_update() into two functions
+    pci_bridge_d3_device_changed() and pci_bridge_d3_device_removed() that
+    should match better what they are doing.
+
+  - Propagate ->bridge_d3 change to upstream bridges in
+    pci_bridge_d3_update().
+
+  - Removed pci_can_suspend() in favor of doing ->bridge_d3 check directly
+    in pci_pm_suspend_noirq().
+
+  - Extend runtime PM enabling for ports that are using native PCIe
+    hotplug.
+
+  - Call pm_runtime_no_callbacks() for PCIe port service devices (the are
+    handled by the parent device).
+
+Changes to v1:
+
+  - Dropped patch [2/6] as there is no need to use that function from other
+    files anymore.
+
+  - Dropped patches [5-6/6] in favor of using cut-off date.
+
+  - Updated changelog of [1/4] to mention where in the PCI core PCI bridge
+    and PCIe ports are skipped from being power managed.
+
+  - Instead of checking at suspend time if it is possible to transition the
+    port to D3, do it whenever power management status of a device (below a
+    port) is changed or when it is added or removed to the bus.
+
+  - Added patch [3/4] to runtime resume a bridge when ACPI hotplug event is
+    received.
+
+Mika Westerberg (4):
+  PCI: No need to set d3cold_allowed to PCIe ports
+  PCI: Move PCIe ports to D3 during suspend
+  ACPI / hotplug / PCI: Runtime resume bridge before rescan
+  PCI: Add runtime PM support for PCIe ports
+
+ Documentation/kernel-parameters.txt |   4 +
+ drivers/pci/bus.c                   |   1 +
+ drivers/pci/hotplug/acpiphp_glue.c  |   8 +-
+ drivers/pci/pci-driver.c            |  10 +-
+ drivers/pci/pci-sysfs.c             |   5 +
+ drivers/pci/pci.c                   | 176 ++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h                   |   2 +
+ drivers/pci/pcie/portdrv_core.c     |   2 +
+ drivers/pci/pcie/portdrv_pci.c      |  52 ++++++++++-
+ drivers/pci/remove.c                |   2 +
+ drivers/usb/host/xhci-pci.c         |   2 +-
+ include/linux/pci.h                 |   3 +
+ 12 files changed, 257 insertions(+), 10 deletions(-)
+
+-- 
+2.8.0.rc3
 
