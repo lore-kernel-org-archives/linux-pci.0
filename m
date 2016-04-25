@@ -1,127 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:33509 "EHLO
-	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751335AbcDSFbX (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 01:31:23 -0400
-Received: by mail-pf0-f175.google.com with SMTP id 184so3027043pff.0
-        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 22:31:23 -0700 (PDT)
-Subject: Re: [PATCH v8 25/45] powerpc/pci: Rename pcibios_find_pci_bus()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-26-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
-	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <5715C2A3.7080704@ozlabs.ru>
-Date: Tue, 19 Apr 2016 15:31:15 +1000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 25 Apr 2016 15:57:37 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Meelis Roos <mroos@linux.ee>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v10 06/59] PCI: Kill wrong quirk about M7101
+Message-ID: <20160425205737.GC1759@localhost>
+References: <1456366370-28995-1-git-send-email-yinghai@kernel.org>
+ <1456366370-28995-7-git-send-email-yinghai@kernel.org>
+ <20160310174030.GB17238@localhost>
+ <CAE9FiQVAPfb-PYGQoRJzXdn3NAOK-X25M9pWvR2m7_9qT5qQ+w@mail.gmail.com>
+ <alpine.LRH.2.20.1603120951320.32556@math.ut.ee>
+ <CAE9FiQWeq=VssPtW86KcOuW5rLr+t5628Fid7e4RG_R_gZ+Aaw@mail.gmail.com>
+ <alpine.LRH.2.20.1603121039020.32556@math.ut.ee>
 MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-26-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LRH.2.20.1603121039020.32556@math.ut.ee>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/17/2016 02:44 PM, Gavin Shan wrote:
-> This renames pcibios_find_pci_bus() to pci_find_bus_by_node() to
-> avoid conflicts with those PCI subsystem weak function names, which
-> have prefix "pcibios". No logical changes introduced.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Hi Yinghai & Meelis,
 
+On Sat, Mar 12, 2016 at 10:39:15AM +0200, Meelis Roos wrote:
+> > On Fri, Mar 11, 2016 at 11:52 PM, Meelis Roos <mroos@linux.ee> wrote:
+> > >> On Thu, Mar 10, 2016 at 9:40 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > >> > On Wed, Feb 24, 2016 at 06:11:57PM -0800, Yinghai Lu wrote:
+> > >> >> Meelis reported that qla2000 driver does not get loaded on one sparc system.
+> > >> >>
+> > >> >> schizo f00732d0: PCI host bridge to bus 0001:00
+> > >> >> pci_bus 0001:00: root bus resource [io  0x7fe01000000-0x7fe01ffffff] (bus address [0x0000-0xffffff])
+> > >> >> pci 0001:00:06.0: quirk: [io  0x7fe01000800-0x7fe0100083f] claimed by ali7101 ACPI
+> > >> >> pci 0001:00:06.0: quirk: [io  0x7fe01000600-0x7fe0100061f] claimed by ali7101 SMB
+> > >> >> pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
+> > >> >>
+> > >> >> So the quirk for M7101 claim the io range early.
+> > >
+> > > But why did it work until 4.2 and only with 4.3 the allocations broke?
+> > >
+> > 
+> > My understanding is we really install the root bus resource and try to
+> > do the sanitary checking
+> > for device resource.
+> > 
+> > Or did you find exact commit between 4.2 and 4.3 cause the problem ?
+> 
+> No, I have not bisected that.
 
-Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+I'm confused again.
 
+I opened https://bugzilla.kernel.org/show_bug.cgi?id=117191 and
+attached dmesg logs and lspci output from Meelis' original bug report,
+since you included URLs in the changelog (thank you for that), and I
+don't want Meelis to have to worry about keeping the URLs alive.
 
-> ---
->   arch/powerpc/include/asm/pci-bridge.h      | 2 +-
->   arch/powerpc/platforms/pseries/pci_dlpar.c | 5 ++---
->   drivers/pci/hotplug/rpadlpar_core.c        | 6 +++---
->   drivers/pci/hotplug/rpaphp_pci.c           | 2 +-
->   4 files changed, 7 insertions(+), 8 deletions(-)
->
-> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-> index c817f38..03f4ee7 100644
-> --- a/arch/powerpc/include/asm/pci-bridge.h
-> +++ b/arch/powerpc/include/asm/pci-bridge.h
-> @@ -260,7 +260,7 @@ static inline struct eeh_dev *pdn_to_eeh_dev(struct pci_dn *pdn)
->   #endif
->
->   /** Find the bus corresponding to the indicated device node */
-> -extern struct pci_bus *pcibios_find_pci_bus(struct device_node *dn);
-> +extern struct pci_bus *pci_find_bus_by_node(struct device_node *dn);
->
->   /** Remove all of the PCI devices under this bus */
->   extern void pci_remove_pci_devices(struct pci_bus *bus);
-> diff --git a/arch/powerpc/platforms/pseries/pci_dlpar.c b/arch/powerpc/platforms/pseries/pci_dlpar.c
-> index 5d4a3df..aee22b4 100644
-> --- a/arch/powerpc/platforms/pseries/pci_dlpar.c
-> +++ b/arch/powerpc/platforms/pseries/pci_dlpar.c
-> @@ -54,8 +54,7 @@ find_bus_among_children(struct pci_bus *bus,
->   	return child;
->   }
->
-> -struct pci_bus *
-> -pcibios_find_pci_bus(struct device_node *dn)
-> +struct pci_bus *pci_find_bus_by_node(struct device_node *dn)
->   {
->   	struct pci_dn *pdn = dn->data;
->
-> @@ -64,7 +63,7 @@ pcibios_find_pci_bus(struct device_node *dn)
->
->   	return find_bus_among_children(pdn->phb->bus, dn);
->   }
-> -EXPORT_SYMBOL_GPL(pcibios_find_pci_bus);
-> +EXPORT_SYMBOL_GPL(pci_find_bus_by_node);
->
->   struct pci_controller *init_phb_dynamic(struct device_node *dn)
->   {
-> diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
-> index 730982b..acbf041 100644
-> --- a/drivers/pci/hotplug/rpadlpar_core.c
-> +++ b/drivers/pci/hotplug/rpadlpar_core.c
-> @@ -175,7 +175,7 @@ static int dlpar_add_pci_slot(char *drc_name, struct device_node *dn)
->   	struct pci_dev *dev;
->   	struct pci_controller *phb;
->
-> -	if (pcibios_find_pci_bus(dn))
-> +	if (pci_find_bus_by_node(dn))
->   		return -EINVAL;
->
->   	/* Add pci bus */
-> @@ -212,7 +212,7 @@ static int dlpar_remove_phb(char *drc_name, struct device_node *dn)
->   	struct pci_dn *pdn;
->   	int rc = 0;
->
-> -	if (!pcibios_find_pci_bus(dn))
-> +	if (!pci_find_bus_by_node(dn))
->   		return -EINVAL;
->
->   	/* If pci slot is hotpluggable, use hotplug to remove it */
-> @@ -356,7 +356,7 @@ int dlpar_remove_pci_slot(char *drc_name, struct device_node *dn)
->
->   	pci_lock_rescan_remove();
->
-> -	bus = pcibios_find_pci_bus(dn);
-> +	bus = pci_find_bus_by_node(dn);
->   	if (!bus) {
->   		ret = -EINVAL;
->   		goto out;
-> diff --git a/drivers/pci/hotplug/rpaphp_pci.c b/drivers/pci/hotplug/rpaphp_pci.c
-> index 1099b38..a9180bb 100644
-> --- a/drivers/pci/hotplug/rpaphp_pci.c
-> +++ b/drivers/pci/hotplug/rpaphp_pci.c
-> @@ -93,7 +93,7 @@ int rpaphp_enable_slot(struct slot *slot)
->   	if (rc)
->   		return rc;
->
-> -	bus = pcibios_find_pci_bus(slot->dn);
-> +	bus = pci_find_bus_by_node(slot->dn);
->   	if (!bus) {
->   		err("%s: no pci_bus for dn %s\n", __func__, slot->dn->full_name);
->   		return -EINVAL;
->
+I extracted the following from the v210 dmesg and lspci attached there
+(I used these because they're the only matching pair of dmesg & lspci
+I saw):
 
+  PCI: Scanning PBM /pci@1e,600000
+  schizo f00732d0: PCI host bridge to bus 0001:00
+  pci_bus 0001:00: root bus resource [io  0x7fe01000000-0x7fe01ffffff] (bus address [0x0000-0xffffff])
+  pci_bus 0001:00: root bus resource [mem 0x7ff00000000-0x7ffffffffff] (bus address [0x00000000-0xffffffff])
+  pci_bus 0001:00: root bus resource [bus 00]
+  pci 0001:00:06.0: quirk: [io  0x7fe01000800-0x7fe0100083f] claimed by ali7101 ACPI
+  pci 0001:00:06.0: quirk: [io  0x7fe01000600-0x7fe0100061f] claimed by ali7101 SMB
+  pci 0001:00:07.0: can't claim BAR 0 [io  0x7fe01000000-0x7fe0100ffff]: address conflict with 0001:00:06.0 [io  0x7fe01000600-0x7fe0100061f]
+  pci 0001:00:07.0: can't claim BAR 1 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
+  pci 0001:00:07.0: can't claim BAR 2 [mem 0x7ff00000000-0x7ff000fffff]: address conflict with Video RAM area [??? 0x7ff000a0000-0x7ff000bffff flags 0x80000000]
 
--- 
-Alexey
+  0001:00:06.0 Non-VGA unclassified device: ULi Electronics Inc. M7101 Power Management Controller [PMU]
+	  Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	  Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	  Region 0: [virtual] I/O ports at <unassigned> [size=16]
+  00: b9 10 01 71 00 00 00 02 00 00 00 00 00 00 00 00
+  10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+  0001:00:07.0 ISA bridge: ULi Electronics Inc. M1533/M1535/M1543 PCI to ISA Bridge [Aladdin IV/V/V+]
+	  Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	  Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	  Latency: 0
+	  Region 0: [virtual] I/O ports at 0000 [size=64K]
+  00: b9 10 33 15 0f 00 10 02 00 00 01 06 00 00 00 00
+  10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+The PCI core thinks 0001:00:07.0 BAR 0 is 64K of I/O space.  That
+looks wrong (it's way too big), and it doesn't match the actual config
+space, which says 0x10 is 0x00000000, which would be an unimplemented
+BAR.
+
+I suspect this is because PCI enumeration on sparc gets some
+information from OBP instead of from config space.  I think we should
+fix this enumeration problem instead of throwing away the quirk.
+
+Bjorn
