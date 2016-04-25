@@ -1,200 +1,121 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.74]:60924 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752553AbcD2XCU (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2016 19:02:20 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: catalin.marinas@arm.com, linux-pci@vger.kernel.org,
-	will.deacon@arm.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>, ddaney@caviumnetworks.com,
-	robert.richter@caviumnetworks.com, msalter@redhat.com,
-	Liviu.Dudau@arm.com, jchandra@broadcom.com,
-	linux-kernel@vger.kernel.org, hanjun.guo@linaro.org,
-	Suravee.Suthikulpanit@amd.com,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 3/3] [RFC] pci: tegra: use new pci_register_host interface
-Date: Sat, 30 Apr 2016 01:01:39 +0200
-Message-Id: <1461970899-4150603-4-git-send-email-arnd@arndb.de>
-In-Reply-To: <1461970899-4150603-1-git-send-email-arnd@arndb.de>
-References: <1461970899-4150603-1-git-send-email-arnd@arndb.de>
+Received: from mail.kernel.org ([198.145.29.136]:47712 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932828AbcDYRAC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Apr 2016 13:00:02 -0400
+Date: Mon, 25 Apr 2016 11:59:56 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Engraf <david.engraf@sysgo.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH] Re: Exception due to PCI: Use pci_is_root_bus() to check
+ for root bus
+Message-ID: <20160425165956.GA1759@localhost>
+References: <5704F85B.4080501@sysgo.com>
+ <20160406133502.GB4976@localhost>
+ <570516CB.7080406@sysgo.com>
+ <571E15EF.9080507@sysgo.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <571E15EF.9080507@sysgo.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tegra is one of the remaining platforms that still use the
-traditional pci_common_init_dev() interface for probing PCI
-host bridges.
+Hi David,
 
-This demonstrates how to convert it to the pci_register_host
-interface I just added in a previous patch. This leads to
-a more linear probe sequence that can handle errors better
-because we avoid callbacks into the driver, and it makes
-the driver architecture independent.
+On Mon, Apr 25, 2016 at 03:04:47PM +0200, David Engraf wrote:
+> Hi Bjorn,
+> 
+> Am 06.04.2016 um 16:01 schrieb David Engraf:
+> >Hi Bjorn,
+> >
+> >Am 06.04.2016 um 15:35 schrieb Bjorn Helgaas:
+> >>Hi David,
+> >>
+> >>On Wed, Apr 06, 2016 at 01:51:55PM +0200, David Engraf wrote:
+> >>>Hi,
+> >>>
+> >>>I have an exception in __pci_bus_size_bridges() when pci_is_root_bus
+> >>>returns false but bus->self == NULL. My driver registers a virtual
+> >>>bus, like virtfn_add_bus(). pci_add_new_bus() is called with a
+> >>>parent but without a pci_dev. Thus bus->parent is set but bus->self
+> >>>is NULL. When __pci_bus_size_bridges() is called I get an exception
+> >>>at:
+> >>>
+> >>>switch (bus->self->class >> 8)
+> >>>
+> >>>The previous version of the code, checking for bus->self != NULL
+> >>>worked for me. I think an additional check is required to make sure
+> >>>we're not accessing a NULL pointer.
+> >>
+> >>When you say "previous version of the code," do you mean a previous
+> >>version of Linux worked correctly but a newer version does not?  What
+> >>versions are they?  Did you identify a commit that changed the
+> >>behavior?  I assume you're talking about an out-of-tree driver that
+> >>registers a virtual bus?  Can you point us to the code?  Can you share
+> >>the dmesg log, including the backtrace?
+> >
+> >With previous version, I mean reverting commit
+> >2ba29e270e977b213a7d58ae1152c23a1c3074a3. This will check for bus->self
+> >instead of using pci_is_root_bus().
+> >I'm working on a driver which is basically based on drivers/pci/iov.c.
+> >
+> >The code looks like this:
+> >
+> >child = pci_add_new_bus(parent, NULL, busnr);
+> >
+> >This will create child with child->parent = parent and child->self =
+> >NULL. When the kernel calls __pci_bus_size_bridges(), accessing
+> >bus->self->class crashes:
+> >
+> >/* The root bus? */
+> >if (pci_is_root_bus(bus))
+> >     return;
+> >
+> >switch (bus->self->class >> 8) { <- crash here because of bus->self == NULL
+> 
+> With this patch the system no longer crashes and the virtual PCI bus
+> works. It returns on bus->self == NULL, thus the switch instruction
+> does not access a NULL pointer.
 
-As a side note, I should mention that I noticed this driver
-does not register any IORESOURCE_IO resource with the bus,
-but instead registers the I/O port window as a memory
-resource, which is surely a bug.
+This would need a changelog and Signed-off-by before I could apply it;
+see
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/Documentation/SubmittingPatches
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/pci/host/pci-tegra.c | 67 ++++++++++++++++++++++++--------------------
- 1 file changed, 36 insertions(+), 31 deletions(-)
+The changelog should explain why this is the correct fix.  It's easy
+to fix any NULL pointer dereference by adding a check for the NULL
+pointer, but that's not always the correct fix.
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index c388468c202a..ece4f5d0180b 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -265,6 +265,7 @@ static inline struct tegra_msi *to_tegra_msi(struct msi_controller *chip)
- }
- 
- struct tegra_pcie {
-+	struct pci_host_bridge bridge;
- 	struct device *dev;
- 
- 	void __iomem *pads;
-@@ -615,14 +616,10 @@ static void tegra_pcie_relax_enable(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_FINAL(PCI_ANY_ID, PCI_ANY_ID, tegra_pcie_relax_enable);
- 
--static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
-+static int tegra_pcie_request_resources(struct tegra_pcie *pcie)
- {
--	struct tegra_pcie *pcie = sys_to_pcie(sys);
- 	int err;
- 
--	sys->mem_offset = pcie->offset.mem;
--	sys->io_offset = pcie->offset.io;
--
- 	err = devm_request_resource(pcie->dev, &pcie->all, &pcie->io);
- 	if (err < 0)
- 		return err;
-@@ -639,15 +636,15 @@ static int tegra_pcie_setup(int nr, struct pci_sys_data *sys)
- 	if (err)
- 		return err;
- 
--	pci_add_resource_offset(&sys->resources, &pcie->pio, sys->io_offset);
--	pci_add_resource_offset(&sys->resources, &pcie->mem, sys->mem_offset);
--	pci_add_resource_offset(&sys->resources, &pcie->prefetch,
--				sys->mem_offset);
--	pci_add_resource(&sys->resources, &pcie->busn);
-+	pci_add_resource_offset(&pcie->bridge.windows, &pcie->pio, pcie->offset.io);
-+	pci_add_resource_offset(&pcie->bridge.windows, &pcie->mem, pcie->offset.mem);
-+	pci_add_resource_offset(&pcie->bridge.windows, &pcie->prefetch,
-+				pcie->offset.mem);
-+	pci_add_resource(&pcie->bridge.windows, &pcie->busn);
- 
- 	pci_ioremap_io(pcie->pio.start, pcie->io.start);
- 
--	return 1;
-+	return 0;
- }
- 
- static int tegra_pcie_map_irq(const struct pci_dev *pdev, u8 slot, u8 pin)
-@@ -1535,6 +1532,7 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
- 	}
- 
- 	/* setup AFI/FPCI range */
-+	pcie->bridge.msi = &msi->chip;
- 	msi->pages = __get_free_pages(GFP_KERNEL, 0);
- 	base = virt_to_phys((void *)msi->pages);
- 
-@@ -2036,10 +2034,9 @@ retry:
- 	return false;
- }
- 
--static int tegra_pcie_enable(struct tegra_pcie *pcie)
-+static void tegra_pcie_enable_ports(struct tegra_pcie *pcie)
- {
- 	struct tegra_pcie_port *port, *tmp;
--	struct hw_pci hw;
- 
- 	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
- 		dev_info(pcie->dev, "probing port %u, using %u lanes\n",
-@@ -2055,22 +2052,6 @@ static int tegra_pcie_enable(struct tegra_pcie *pcie)
- 		tegra_pcie_port_disable(port);
- 		tegra_pcie_port_free(port);
- 	}
--
--	memset(&hw, 0, sizeof(hw));
--
--#ifdef CONFIG_PCI_MSI
--	hw.msi_ctrl = &pcie->msi.chip;
--#endif
--
--	hw.nr_controllers = 1;
--	hw.private_data = (void **)&pcie;
--	hw.setup = tegra_pcie_setup;
--	hw.map_irq = tegra_pcie_map_irq;
--	hw.ops = &tegra_pcie_ops;
--
--	pci_common_init_dev(pcie->dev, &hw);
--
--	return 0;
- }
- 
- static const struct tegra_pcie_soc_data tegra20_pcie_data = {
-@@ -2230,6 +2211,8 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- {
- 	const struct of_device_id *match;
- 	struct tegra_pcie *pcie;
-+	struct pci_host_bridge *bridge;
-+	struct pci_bus *child;
- 	int err;
- 
- 	match = of_match_device(tegra_pcie_of_match, &pdev->dev);
-@@ -2244,6 +2227,7 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 	INIT_LIST_HEAD(&pcie->ports);
- 	pcie->soc_data = match->data;
- 	pcie->dev = &pdev->dev;
-+	bridge = &pcie->bridge;
- 
- 	err = tegra_pcie_parse_dt(pcie);
- 	if (err < 0)
-@@ -2261,6 +2245,10 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 	if (err)
- 		goto put_resources;
- 
-+	err = tegra_pcie_request_resources(pcie);
-+	if (err)
-+		goto put_resources;
-+
- 	/* setup the AFI address translations */
- 	tegra_pcie_setup_translations(pcie);
- 
-@@ -2274,12 +2262,29 @@ static int tegra_pcie_probe(struct platform_device *pdev)
- 		}
- 	}
- 
--	err = tegra_pcie_enable(pcie);
-+	tegra_pcie_enable_ports(pcie);
-+
-+	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
-+	bridge->busnr = pcie->busn.start;
-+	bridge->dev.parent = &pdev->dev;
-+	bridge->sysdata = pcie;
-+	bridge->ops = &tegra_pcie_ops;
-+	err = pci_register_host(bridge);
-+
- 	if (err < 0) {
--		dev_err(&pdev->dev, "failed to enable PCIe ports: %d\n", err);
-+		dev_err(&pdev->dev, "failed to register host: %d\n", err);
- 		goto disable_msi;
- 	}
- 
-+        pci_fixup_irqs(pci_common_swizzle, tegra_pcie_map_irq);
-+	pci_bus_size_bridges(bridge->bus);
-+	pci_bus_assign_resources(bridge->bus);
-+
-+	list_for_each_entry(child, &bridge->bus->children, node)
-+		pcie_bus_configure_settings(child);
-+
-+        pci_bus_add_devices(bridge->bus);
-+
- 	if (IS_ENABLED(CONFIG_DEBUG_FS)) {
- 		err = tegra_pcie_debugfs_init(pcie);
- 		if (err < 0)
--- 
-2.7.0
+This particular case is in the resource assignment path, so we need to
+think about how resource assignment works for your virtual PCI bus.
+What exactly is your PCI topology?  Apparently you have a virtual PCI
+bus without a standard PCI-PCI bridge leading to it?  That sounds
+similar in some ways to the virtual bus for SR-IOV VFs, and in some
+ways to the virtual root bus constructed for drivers like
+drivers/pci/host/pci-hyperv.c and arch/x86/pci/vmd.c.
+
+There are already several special cases for the SR-IOV virtual buses
+and for root buses, so I'd like to understand better how your bus fits
+into the landscape.  Your driver apparently isn't part of the kernel
+source, so if we add special cases for it, they're hard to maintain
+because we can't see the code that relies on them.
+
+Bjorn
+
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 55641a3..ddb3381 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1245,6 +1245,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+>  	if (pci_is_root_bus(bus))
+>  		return;
+>  
+> +	/* bridge device available? */
+> +	if (!bus->self)
+> +		return;
+> +
+>  	switch (bus->self->class >> 8) {
+>  	case PCI_CLASS_BRIDGE_CARDBUS:
+>  		/* don't size cardbuses yet. */
 
