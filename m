@@ -1,48 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35195 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932217AbcDHARL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:17:11 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 15/60] PCI: Only treat non-pref mmio64 as pref if host bridge has mmio64
-Date: Thu,  7 Apr 2016 17:15:28 -0700
-Message-Id: <1460074573-7481-16-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:56189 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932231AbcDYNoP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Apr 2016 09:44:15 -0400
+Date: Mon, 25 Apr 2016 08:44:09 -0500
+From: Rob Herring <robh@kernel.org>
+To: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Lee Jones <lee@kernel.org>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Mark Brown <broonie@kernel.org>,
+	Alexandre Belloni <alexandre.belloni@free-electrons.com>,
+	Joe Perches <joe@perches.com>, devicetree@vger.kernel.org,
+	linux-input@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	dmaengine@vger.kernel.org
+Subject: Re: [PATCH 10/14] misc: sram: DT spelling
+ s/#adress-cells/#address-cells/
+Message-ID: <20160425134409.GA4060@rob-hp-laptop>
+References: <1461166339-11109-1-git-send-email-geert+renesas@glider.be>
+ <1461166339-11109-11-git-send-email-geert+renesas@glider.be>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1461166339-11109-11-git-send-email-geert+renesas@glider.be>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If host bridge does not have mmio64 above 4G, We don't need to
-treat device non-pref mmio64 as as pref mmio64.
+On Wed, Apr 20, 2016 at 05:32:15PM +0200, Geert Uytterhoeven wrote:
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
----
- drivers/pci/setup-bus.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied, thanks.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index ffb1941..9404032 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -741,7 +741,7 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
- {
- 	if (pci_is_root_bus(bus))
--		return true;
-+		return to_pci_host_bridge(bus->bridge)->has_mem64;
- 
- 	if (bus->self) {
- 		int i;
--- 
-1.8.4.5
+Rob
 
+> ---
+>  Documentation/devicetree/bindings/sram/sram.txt | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/sram/sram.txt b/Documentation/devicetree/bindings/sram/sram.txt
+> index 227e3a341af1e2b5..add48f09015e212e 100644
+> --- a/Documentation/devicetree/bindings/sram/sram.txt
+> +++ b/Documentation/devicetree/bindings/sram/sram.txt
+> @@ -51,7 +51,7 @@ sram: sram@5c000000 {
+>  	compatible = "mmio-sram";
+>  	reg = <0x5c000000 0x40000>; /* 256 KiB SRAM at address 0x5c000000 */
+>  
+> -	#adress-cells = <1>;
+> +	#address-cells = <1>;
+>  	#size-cells = <1>;
+>  	ranges = <0 0x5c000000 0x40000>;
+>  
+> -- 
+> 1.9.1
+> 
