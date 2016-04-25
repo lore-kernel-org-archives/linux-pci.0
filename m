@@ -1,112 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53511 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750953AbcDJV0h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sun, 10 Apr 2016 17:26:37 -0400
-Date: Sun, 10 Apr 2016 16:26:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jordan Hargrave <jharg93@gmail.com>
-Cc: Hannes Reinecke <hare@suse.de>,
-	Jordan Hargrave <Jordan_Hargrave@dell.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, alexander.duyck@gmail.com,
-	linux-pci@vger.kernel.org, babu.moger@oracle.com,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] Create sysfs entries for PCI VPDI and VPDR tags
-Message-ID: <20160410212632.GA5852@localhost>
-References: <1455825895-10951-1-git-send-email-Jordan_Hargrave@dell.com>
- <56C6E7D1.4@suse.de>
- <CAC1AzddUqEScGgUqPxa8CgLSH3gynVcj71vMNn6b-Roi2YTRUQ@mail.gmail.com>
+Received: from down.free-electrons.com ([37.187.137.238]:44931 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933436AbcDYTVH (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 25 Apr 2016 15:21:07 -0400
+Date: Mon, 25 Apr 2016 21:21:03 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Jason Cooper <jason@lakedaemon.net>,
+	Hanna Hawa <hannah@marvell.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [PATCH v2 0/2] pci: host: new driver for Marvell Armada 7K/8K
+ PCIe controller
+Message-ID: <20160425212103.0f646a3a@free-electrons.com>
+In-Reply-To: <20160425172846.GB1759@localhost>
+References: <1460648177-31473-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20160425154611.3e7e9dc9@free-electrons.com>
+	<20160425172846.GB1759@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CAC1AzddUqEScGgUqPxa8CgLSH3gynVcj71vMNn6b-Roi2YTRUQ@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 19, 2016 at 08:07:13AM -0600, Jordan Hargrave wrote:
-> On Fri, Feb 19, 2016 at 4:00 AM, Hannes Reinecke <hare@suse.de> wrote:
-> >
-> > On 02/18/2016 09:04 PM, Jordan Hargrave wrote:
-> > > The VPD-R is a readonly area of the PCI Vital Product Data region.
-> > > There are some standard keywords for serial number, manufacturer,
-> > > and vendor-specific values.  Dell Servers use a vendor-specific
-> > > tag to store number of ports and port mapping of partitioned NICs.
-> > >
-> > > info = VPD-Info string
-> > > PN = Part Number
-> > > SN = Serial Number
-> > > MN = Manufacturer ID
-> > > Vx = Vendor-specific (x=0..9 A..Z)
-> > >
-> > > This creates a sysfs subdirectory in the pci device: vpdattr with
-> > > 'info', 'EC', 'SN', 'V0', etc. files containing the tag values.
-> > >
-> > > Signed-off-by: Jordan Hargrave <Jordan_Hargrave@dell.com>
-> > Hmm. Can we first get an agreement on the PCI VPD parsing patches
-> > I've posted earlier?
-> > VPD parsing is really tricky, and we should aim on making the
-> > read_vpd function robust enough before we begin putting things into
-> > sysfs.
-> >
-> > Also, I'm not utterly keen on this patchset.
-> > The sysfs space is blown up with tiny pieces of information, which
-> > can easily gotten via lspci, too.
-> >
-> > Also, to my knowledge it's perfectly valid to _write_ to the VPD, in
-> > which case the entire sysfs attribute setup would be invalided.
-> > How do you propose to handle that?
-> >
+Hello,
+
+On Mon, 25 Apr 2016 12:28:46 -0500, Bjorn Helgaas wrote:
+
+> It *is* pretty trivial.  The reason I'm hesitating is because we have
+> all these DesignWare-based drivers (dra7xx, exynos, imx6, ks, ls,
+> dw_plat, hisi, qcom, spear13xx, and now armada8k), and they're
+> *mostly* similar, but they differ in minor, annoying ways.  This is
+> becoming a significant maintenance burden for me, and I'd like to
+> figure out how to mitigate that.
+
+Understood.
+
+> For now, I don't have any great ideas except that it would be nice to
+> remove needless variations.  The following is a typical code
+> structure, but it's not universally followed:
 > 
-> This patch only reads the attributes from VPD-I and VPD-R areas, not
-> the VPD-W (read write) area.
-> The VPD-W data is located after the VPD-I and VPD-R area  So nothing
-> in these attributes should change.
+>   XXX_pcie_probe
+>     XXX_add_pcie_port
+>       dw_pcie_host_init
+>         XXX_pcie_host_init
+> 	  dw_pcie_setup_rc
+> 	  XXX_pcie_establish_link
+
+Indeed, the first step towards having more common code is to make the
+code to be factorized look as similar as possible.
+
+> There's a hodge-podge of ways to get related resources (clocks and
+> PHYs) and initialize them.  IRQ setup is not really consistent across
+> all the drivers.  It's sort of disappointing that most of these
+> drivers have a "dbi_base" resource, but they use different DT property
+> names for it.
 > 
-> The main reason I want this is for replacing biosdevname (ethernet
-> naming) functionality and getting
-> the same functionality into the kernel and systemd.  Systemd doesn't
-> want to do vpd parsing, and
-> reading the vpd can take a very long time on some devices, causing
-> systemd to timeout.  
-
-Your patch really does two things: (1) caches the VPDI and VPD-R data
-data, and (2) adds sysfs entries to parse items out of that cached
-data.  The speedup is from the caching, not the kernel parsing.
-
-Maybe we should consider exporting the raw cached VPDI and VPD-R data
-via sysfs and having user-space parse it.
-
-> Another
-> disadvantage of it being in userspace is for devices using SR-IOV.  In
-> those devices the vpd only
-> exists for the physfn devices but not the virtual devices.  A
-> userspace program device will have to
-> read the entire VPD for each physical and virtual PCI device.
-
-What's the SR-IOV connection?  Is there something in the SR-IOV spec
-that says VFs can't have VPD?
-
-> Logic is something like this:
-> if (open("/sys/bus/pci/devices/X/physfn/vpd", O_RDONLY) < 0)
->    if (open("/sys/bus/pci/devices/X/vpd", O_RDONLY) < 0)
->      return;
-> }
-> parsevpd(fd);
+> The armada8k driver doesn't have a DRV_add_pcie_port() function or a
+> DRV_pcie_establish_link() function, and it has its own "wait for link"
+> timeout loop instead of using dw_pcie_wait_for_link().
 > 
-> Specifically it is parsing one of the Vx attributes for a 'DCM' or
-> 'DC2' string that contain a mapping from
-> NIC ports and partitions to PCI device
-> 
-> > Cheers,
-> >
-> > Hannes
-> >
-> > --
-> > Dr. Hannes Reinecke                Teamlead Storage & Networking
-> > hare@suse.de                                   +49 911 74053 688
-> > SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-> > GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-> > HRB 21284 (AG Nürnberg)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> How about if you just shuffle those bits around into
+> an armada8k_add_pcie_port() and an armada8k_pcie_establish_link(), and
+> we'll call that good for now?
+
+I'll take a stab at that tomorrow and send an updated version.
+
+Thanks for the feedback!
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
