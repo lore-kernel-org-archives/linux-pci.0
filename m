@@ -1,665 +1,162 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:35978 "EHLO
-	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753145AbcDORH3 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Apr 2016 13:07:29 -0400
-Received: by mail-wm0-f41.google.com with SMTP id v188so39798557wme.1
-        for <linux-pci@vger.kernel.org>; Fri, 15 Apr 2016 10:07:28 -0700 (PDT)
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com,
-	catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-Subject: [PATCH V6 08/13] PCI: generic, thunder: update to use generic ECAM API
-Date: Fri, 15 Apr 2016 19:06:43 +0200
-Message-Id: <1460740008-19489-9-git-send-email-tn@semihalf.com>
-In-Reply-To: <1460740008-19489-1-git-send-email-tn@semihalf.com>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+Received: from mga14.intel.com ([192.55.52.115]:34626 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754234AbcDYJxb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Apr 2016 05:53:31 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [PATCH v4 4/4] PCI: Add runtime PM support for PCIe ports
+Date: Mon, 25 Apr 2016 12:53:24 +0300
+Message-Id: <1461578004-129094-5-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jayachandran C <jchandra@broadcom.com>
+Add back runtime PM support for PCIe ports that was removed in
+commit fe9a743a2601 ("PCI/PM: Drop unused runtime PM support code for
+PCIe ports").
 
-Use functions provided by drivers/pci/ecam.h for mapping the config
-space in drivers/pci/host/pci-host-common.c, and update its users to
-use 'struct pci_config_window' and 'struct pci_generic_ecam_ops'
+First of all we cannot enable it automatically for all ports since there
+has been problems previously as can be seen in [1]. In summary suspended
+PCIe ports were not able to deal with ACPI based hotplug reliably. One
+reason why this might happen is the fact that when a PCIe port is powered
+down, config space access to the devices behind the port is not possible.
+If the BIOS hotplug SMI handler assumes the port is always in D0 it will
+not be able to find the hotplugged devices. To be on the safe side only
+enable runtime PM if the port does not claim to support hotplug.
 
-The changes are mostly to use 'struct pci_config_window' in place of
-'struct gen_pci'. Some of the fields of gen_pci were only used
-temporarily and can be eliminated by using local variables or function
-arguments, these are not carried over to struct pci_config_window.
+For PCIe ports not using hotplug we enable and allow runtime PM
+automatically. Since 'bridge_d3' can be changed any time we check this in
+driver ->runtime_idle() and ->runtime_suspend() and only allow runtime
+suspend if the flag is still set. Use autosuspend with default of 10ms idle
+time to prevent the port from repeatedly suspending and resuming on
+continuous configuration space access of devices behind the port.
 
-pci-thunder-ecam.c and pci-thunder-pem.c are the only users of the
-pci_host_common_probe function and the gen_pci structure, these have
-been updated to use the new API as well.
+The actual power transition to D3 and back is handled in the PCI core.
 
-The patch does not introduce any functional changes other than a very
-minor one: with the new code, on 64-bit platforms, we do just a single
-ioremap for the whole config space.
+Idea to automatically unblock (allow) runtime PM for PCIe ports came from
+Dave Airlie.
 
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=53811
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/pci/ecam.h                  |   5 ++
- drivers/pci/host/Kconfig            |   1 +
- drivers/pci/host/pci-host-common.c  | 119 ++++++++++++++++--------------------
- drivers/pci/host/pci-host-common.h  |  47 --------------
- drivers/pci/host/pci-host-generic.c |  52 +++-------------
- drivers/pci/host/pci-thunder-ecam.c |  39 +++---------
- drivers/pci/host/pci-thunder-pem.c  |  88 ++++++++++++--------------
- 7 files changed, 115 insertions(+), 236 deletions(-)
- delete mode 100644 drivers/pci/host/pci-host-common.h
+ drivers/pci/pcie/portdrv_core.c |  2 ++
+ drivers/pci/pcie/portdrv_pci.c  | 51 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 53 insertions(+)
 
-diff --git a/drivers/pci/ecam.h b/drivers/pci/ecam.h
-index 34c0aba..706621a 100644
---- a/drivers/pci/ecam.h
-+++ b/drivers/pci/ecam.h
-@@ -58,4 +58,9 @@ void __iomem *pci_generic_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
- /* default ECAM ops, bus shift 20, generic read and write */
- extern struct pci_generic_ecam_ops pci_generic_ecam_default_ops;
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 88122dc2e1b1..65b1a624826b 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -11,6 +11,7 @@
+ #include <linux/kernel.h>
+ #include <linux/errno.h>
+ #include <linux/pm.h>
++#include <linux/pm_runtime.h>
+ #include <linux/string.h>
+ #include <linux/slab.h>
+ #include <linux/pcieport_if.h>
+@@ -343,6 +344,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
+ 		     get_descriptor_id(pci_pcie_type(pdev), service));
+ 	device->parent = &pdev->dev;
+ 	device_enable_async_suspend(device);
++	pm_runtime_no_callbacks(device);
  
-+#ifdef CONFIG_PCI_HOST_GENERIC
-+/* for DT based pci controllers that support ECAM */
-+int pci_host_common_probe(struct platform_device *pdev,
-+			  struct pci_generic_ecam_ops *ops);
-+#endif
- #endif
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 7a0780d..31d6eb5 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -82,6 +82,7 @@ config PCI_HOST_GENERIC
- 	bool "Generic PCI host controller"
- 	depends on (ARM || ARM64) && OF
- 	select PCI_HOST_COMMON
-+	select PCI_GENERIC_ECAM
- 	help
- 	  Say Y here if you want to support a simple generic PCI host
- 	  controller, such as the one emulated by kvmtool.
-diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-index e9f850f..99d99b3 100644
---- a/drivers/pci/host/pci-host-common.c
-+++ b/drivers/pci/host/pci-host-common.c
-@@ -22,27 +22,21 @@
- #include <linux/of_pci.h>
- #include <linux/platform_device.h>
- 
--#include "pci-host-common.h"
-+#include "../ecam.h"
- 
--static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
--{
--	pci_free_resource_list(&pci->resources);
--}
--
--static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
-+static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
-+		       struct list_head *resources, struct resource **bus_range)
- {
- 	int err, res_valid = 0;
--	struct device *dev = pci->host.dev.parent;
- 	struct device_node *np = dev->of_node;
- 	resource_size_t iobase;
- 	struct resource_entry *win;
- 
--	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
--					       &iobase);
-+	err = of_pci_get_host_bridge_resources(np, 0, 0xff, resources, &iobase);
- 	if (err)
- 		return err;
- 
--	resource_list_for_each_entry(win, &pci->resources) {
-+	resource_list_for_each_entry(win, resources) {
- 		struct resource *parent, *res = win->res;
- 
- 		switch (resource_type(res)) {
-@@ -60,7 +54,7 @@ static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
- 			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
- 			break;
- 		case IORESOURCE_BUS:
--			pci->cfg.bus_range = res;
-+			*bus_range = res;
- 		default:
- 			continue;
- 		}
-@@ -79,65 +73,67 @@ static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
+ 	retval = device_register(device);
+ 	if (retval) {
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 6c6bb03392ea..22ee69dc8773 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -93,6 +93,27 @@ static int pcie_port_resume_noirq(struct device *dev)
  	return 0;
- 
- out_release_res:
--	gen_pci_release_of_pci_ranges(pci);
- 	return err;
  }
  
--static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
-+static void gen_pci_generic_unmap_cfg(void *ptr)
++static int pcie_port_runtime_suspend(struct device *dev)
 +{
-+	pci_generic_ecam_free((struct pci_config_window *)ptr);
++	return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
 +}
 +
-+static struct pci_config_window *gen_pci_init(struct device *dev,
-+		struct list_head *resources, struct pci_generic_ecam_ops *ops)
- {
- 	int err;
--	u8 bus_max;
--	resource_size_t busn;
--	struct resource *bus_range;
--	struct device *dev = pci->host.dev.parent;
--	struct device_node *np = dev->of_node;
--	u32 sz = 1 << pci->cfg.ops->bus_shift;
-+	struct resource cfgres;
-+	struct resource *bus_range = NULL;
-+	struct pci_config_window *cfg;
-+	unsigned int bus_shift = ops->bus_shift;
- 
--	err = of_address_to_resource(np, 0, &pci->cfg.res);
-+	/* Parse our PCI ranges and request their resources */
-+	err = gen_pci_parse_request_of_pci_ranges(dev, resources, &bus_range);
-+	if (err)
-+		goto err_out;
-+
-+	err = of_address_to_resource(dev->of_node, 0, &cfgres);
- 	if (err) {
- 		dev_err(dev, "missing \"reg\" property\n");
--		return err;
-+		goto err_out;
- 	}
- 
- 	/* Limit the bus-range to fit within reg */
--	bus_max = pci->cfg.bus_range->start +
--		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
--	pci->cfg.bus_range->end = min_t(resource_size_t,
--					pci->cfg.bus_range->end, bus_max);
--
--	pci->cfg.win = devm_kcalloc(dev, resource_size(pci->cfg.bus_range),
--				    sizeof(*pci->cfg.win), GFP_KERNEL);
--	if (!pci->cfg.win)
--		return -ENOMEM;
--
--	/* Map our Configuration Space windows */
--	if (!devm_request_mem_region(dev, pci->cfg.res.start,
--				     resource_size(&pci->cfg.res),
--				     "Configuration Space"))
--		return -ENOMEM;
--
--	bus_range = pci->cfg.bus_range;
--	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
--		u32 idx = busn - bus_range->start;
--
--		pci->cfg.win[idx] = devm_ioremap(dev,
--						 pci->cfg.res.start + idx * sz,
--						 sz);
--		if (!pci->cfg.win[idx])
--			return -ENOMEM;
-+	bus_range->end = min(bus_range->end,
-+		bus_range->start + (resource_size(&cfgres) >> bus_shift) - 1);
-+
-+	cfg = pci_generic_ecam_create(dev, cfgres.start, bus_range->start,
-+				      bus_range->end, ops);
-+	if (IS_ERR(cfg)) {
-+		err = PTR_ERR(cfg);
-+		goto err_out;
- 	}
- 
--	return 0;
-+	err = devm_add_action(dev, gen_pci_generic_unmap_cfg, cfg);
-+	if (err) {
-+		gen_pci_generic_unmap_cfg(cfg);
-+		goto err_out;
-+	}
-+	return cfg;
-+
-+err_out:
-+	pci_free_resource_list(resources);
-+	return ERR_PTR(err);
- }
- 
- int pci_host_common_probe(struct platform_device *pdev,
--			  struct gen_pci *pci)
-+			  struct pci_generic_ecam_ops *ops)
-+
- {
--	int err;
- 	const char *type;
- 	struct device *dev = &pdev->dev;
- 	struct device_node *np = dev->of_node;
- 	struct pci_bus *bus, *child;
-+	struct pci_config_window *cfg;
-+	struct list_head resources;
- 
- 	type = of_get_property(np, "device_type", NULL);
- 	if (!type || strcmp(type, "pci")) {
-@@ -147,29 +143,18 @@ int pci_host_common_probe(struct platform_device *pdev,
- 
- 	of_pci_check_probe_only();
- 
--	pci->host.dev.parent = dev;
--	INIT_LIST_HEAD(&pci->host.windows);
--	INIT_LIST_HEAD(&pci->resources);
--
--	/* Parse our PCI ranges and request their resources */
--	err = gen_pci_parse_request_of_pci_ranges(pci);
--	if (err)
--		return err;
--
- 	/* Parse and map our Configuration Space windows */
--	err = gen_pci_parse_map_cfg_windows(pci);
--	if (err) {
--		gen_pci_release_of_pci_ranges(pci);
--		return err;
--	}
-+	INIT_LIST_HEAD(&resources);
-+	cfg = gen_pci_init(dev, &resources, ops);
-+	if (IS_ERR(cfg))
-+		return PTR_ERR(cfg);
- 
- 	/* Do not reassign resources if probe only */
- 	if (!pci_has_flag(PCI_PROBE_ONLY))
- 		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
- 
--
--	bus = pci_scan_root_bus(dev, pci->cfg.bus_range->start,
--				&pci->cfg.ops->ops, pci, &pci->resources);
-+	bus = pci_scan_root_bus(dev, cfg->bus_start, &ops->pci_ops, cfg,
-+				&resources);
- 	if (!bus) {
- 		dev_err(dev, "Scanning rootbus failed");
- 		return -ENODEV;
-diff --git a/drivers/pci/host/pci-host-common.h b/drivers/pci/host/pci-host-common.h
-deleted file mode 100644
-index 09f3fa0..0000000
---- a/drivers/pci/host/pci-host-common.h
-+++ /dev/null
-@@ -1,47 +0,0 @@
--/*
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-- *
-- * Copyright (C) 2014 ARM Limited
-- *
-- * Author: Will Deacon <will.deacon@arm.com>
-- */
--
--#ifndef _PCI_HOST_COMMON_H
--#define _PCI_HOST_COMMON_H
--
--#include <linux/kernel.h>
--#include <linux/platform_device.h>
--
--struct gen_pci_cfg_bus_ops {
--	u32 bus_shift;
--	struct pci_ops ops;
--};
--
--struct gen_pci_cfg_windows {
--	struct resource				res;
--	struct resource				*bus_range;
--	void __iomem				**win;
--
--	struct gen_pci_cfg_bus_ops		*ops;
--};
--
--struct gen_pci {
--	struct pci_host_bridge			host;
--	struct gen_pci_cfg_windows		cfg;
--	struct list_head			resources;
--};
--
--int pci_host_common_probe(struct platform_device *pdev,
--			  struct gen_pci *pci);
--
--#endif /* _PCI_HOST_COMMON_H */
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index e8aa78f..0150a62 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -25,41 +25,12 @@
- #include <linux/of_pci.h>
- #include <linux/platform_device.h>
- 
--#include "pci-host-common.h"
-+#include "../ecam.h"
- 
--static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
--					     unsigned int devfn,
--					     int where)
--{
--	struct gen_pci *pci = bus->sysdata;
--	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
--
--	return pci->cfg.win[idx] + ((devfn << 8) | where);
--}
--
--static struct gen_pci_cfg_bus_ops gen_pci_cfg_cam_bus_ops = {
-+static struct pci_generic_ecam_ops gen_pci_cfg_cam_bus_ops = {
- 	.bus_shift	= 16,
--	.ops		= {
--		.map_bus	= gen_pci_map_cfg_bus_cam,
--		.read		= pci_generic_config_read,
--		.write		= pci_generic_config_write,
--	}
--};
--
--static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
--					      unsigned int devfn,
--					      int where)
--{
--	struct gen_pci *pci = bus->sysdata;
--	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
--
--	return pci->cfg.win[idx] + ((devfn << 12) | where);
--}
--
--static struct gen_pci_cfg_bus_ops gen_pci_cfg_ecam_bus_ops = {
--	.bus_shift	= 20,
--	.ops		= {
--		.map_bus	= gen_pci_map_cfg_bus_ecam,
-+	.pci_ops	= {
-+		.map_bus	= pci_generic_ecam_map_bus,
- 		.read		= pci_generic_config_read,
- 		.write		= pci_generic_config_write,
- 	}
-@@ -70,25 +41,22 @@ static const struct of_device_id gen_pci_of_match[] = {
- 	  .data = &gen_pci_cfg_cam_bus_ops },
- 
- 	{ .compatible = "pci-host-ecam-generic",
--	  .data = &gen_pci_cfg_ecam_bus_ops },
-+	  .data = &pci_generic_ecam_default_ops },
- 
- 	{ },
- };
-+
- MODULE_DEVICE_TABLE(of, gen_pci_of_match);
- 
- static int gen_pci_probe(struct platform_device *pdev)
- {
--	struct device *dev = &pdev->dev;
- 	const struct of_device_id *of_id;
--	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
--
--	if (!pci)
--		return -ENOMEM;
-+	struct pci_generic_ecam_ops *ops;
- 
--	of_id = of_match_node(gen_pci_of_match, dev->of_node);
--	pci->cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
-+	of_id = of_match_node(gen_pci_of_match, pdev->dev.of_node);
-+	ops = (struct pci_generic_ecam_ops *)of_id->data;
- 
--	return pci_host_common_probe(pdev, pci);
-+	return pci_host_common_probe(pdev, ops);
- }
- 
- static struct platform_driver gen_pci_driver = {
-diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/host/pci-thunder-ecam.c
-index d71935cb..f67c6d7 100644
---- a/drivers/pci/host/pci-thunder-ecam.c
-+++ b/drivers/pci/host/pci-thunder-ecam.c
-@@ -13,18 +13,7 @@
- #include <linux/of.h>
- #include <linux/platform_device.h>
- 
--#include "pci-host-common.h"
--
--/* Mapping is standard ECAM */
--static void __iomem *thunder_ecam_map_bus(struct pci_bus *bus,
--					  unsigned int devfn,
--					  int where)
--{
--	struct gen_pci *pci = bus->sysdata;
--	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
--
--	return pci->cfg.win[idx] + ((devfn << 12) | where);
--}
-+#include "../ecam.h"
- 
- static void set_val(u32 v, int where, int size, u32 *val)
- {
-@@ -99,7 +88,7 @@ static int handle_ea_bar(u32 e0, int bar, struct pci_bus *bus,
- static int thunder_ecam_p2_config_read(struct pci_bus *bus, unsigned int devfn,
- 				       int where, int size, u32 *val)
- {
--	struct gen_pci *pci = bus->sysdata;
-+	struct pci_config_window *cfg = bus->sysdata;
- 	int where_a = where & ~3;
- 	void __iomem *addr;
- 	u32 node_bits;
-@@ -129,7 +118,7 @@ static int thunder_ecam_p2_config_read(struct pci_bus *bus, unsigned int devfn,
- 	 * the config space access window.  Since we are working with
- 	 * the high-order 32 bits, shift everything down by 32 bits.
- 	 */
--	node_bits = (pci->cfg.res.start >> 32) & (1 << 12);
-+	node_bits = (cfg->cfgaddr >> 32) & (1 << 12);
- 
- 	v |= node_bits;
- 	set_val(v, where, size, val);
-@@ -358,36 +347,24 @@ static int thunder_ecam_config_write(struct pci_bus *bus, unsigned int devfn,
- 	return pci_generic_config_write(bus, devfn, where, size, val);
- }
- 
--static struct gen_pci_cfg_bus_ops thunder_ecam_bus_ops = {
-+static struct pci_generic_ecam_ops pci_thunder_ecam_ops = {
- 	.bus_shift	= 20,
--	.ops		= {
--		.map_bus        = thunder_ecam_map_bus,
-+	.pci_ops	= {
-+		.map_bus        = pci_generic_ecam_map_bus,
- 		.read           = thunder_ecam_config_read,
- 		.write          = thunder_ecam_config_write,
- 	}
- };
- 
- static const struct of_device_id thunder_ecam_of_match[] = {
--	{ .compatible = "cavium,pci-host-thunder-ecam",
--	  .data = &thunder_ecam_bus_ops },
--
-+	{ .compatible = "cavium,pci-host-thunder-ecam" },
- 	{ },
- };
- MODULE_DEVICE_TABLE(of, thunder_ecam_of_match);
- 
- static int thunder_ecam_probe(struct platform_device *pdev)
- {
--	struct device *dev = &pdev->dev;
--	const struct of_device_id *of_id;
--	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
--
--	if (!pci)
--		return -ENOMEM;
--
--	of_id = of_match_node(thunder_ecam_of_match, dev->of_node);
--	pci->cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
--
--	return pci_host_common_probe(pdev, pci);
-+	return pci_host_common_probe(pdev, &pci_thunder_ecam_ops);
- }
- 
- static struct platform_driver thunder_ecam_driver = {
-diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-index cabb92a..91cfeb9 100644
---- a/drivers/pci/host/pci-thunder-pem.c
-+++ b/drivers/pci/host/pci-thunder-pem.c
-@@ -20,34 +20,22 @@
- #include <linux/of_pci.h>
- #include <linux/platform_device.h>
- 
--#include "pci-host-common.h"
-+#include "../ecam.h"
- 
- #define PEM_CFG_WR 0x28
- #define PEM_CFG_RD 0x30
- 
- struct thunder_pem_pci {
--	struct gen_pci	gen_pci;
- 	u32		ea_entry[3];
- 	void __iomem	*pem_reg_base;
- };
- 
--static void __iomem *thunder_pem_map_bus(struct pci_bus *bus,
--					 unsigned int devfn, int where)
--{
--	struct gen_pci *pci = bus->sysdata;
--	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
--
--	return pci->cfg.win[idx] + ((devfn << 16) | where);
--}
--
- static int thunder_pem_bridge_read(struct pci_bus *bus, unsigned int devfn,
- 				   int where, int size, u32 *val)
- {
- 	u64 read_val;
--	struct thunder_pem_pci *pem_pci;
--	struct gen_pci *pci = bus->sysdata;
--
--	pem_pci = container_of(pci, struct thunder_pem_pci, gen_pci);
-+	struct pci_config_window *cfg = bus->sysdata;
-+	struct thunder_pem_pci *pem_pci = (struct thunder_pem_pci *)cfg->priv;
- 
- 	if (devfn != 0 || where >= 2048) {
- 		*val = ~0;
-@@ -132,17 +120,17 @@ static int thunder_pem_bridge_read(struct pci_bus *bus, unsigned int devfn,
- static int thunder_pem_config_read(struct pci_bus *bus, unsigned int devfn,
- 				   int where, int size, u32 *val)
- {
--	struct gen_pci *pci = bus->sysdata;
-+	struct pci_config_window *cfg = bus->sysdata;
- 
--	if (bus->number < pci->cfg.bus_range->start ||
--	    bus->number > pci->cfg.bus_range->end)
-+	if (bus->number < cfg->bus_start ||
-+	    bus->number > cfg->bus_end)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 
- 	/*
- 	 * The first device on the bus is the PEM PCIe bridge.
- 	 * Special case its config access.
- 	 */
--	if (bus->number == pci->cfg.bus_range->start)
-+	if (bus->number == cfg->bus_start)
- 		return thunder_pem_bridge_read(bus, devfn, where, size, val);
- 
- 	return pci_generic_config_read(bus, devfn, where, size, val);
-@@ -187,12 +175,11 @@ static u32 thunder_pem_bridge_w1c_bits(int where)
- static int thunder_pem_bridge_write(struct pci_bus *bus, unsigned int devfn,
- 				    int where, int size, u32 val)
- {
--	struct gen_pci *pci = bus->sysdata;
--	struct thunder_pem_pci *pem_pci;
-+	struct pci_config_window *cfg = bus->sysdata;
-+	struct thunder_pem_pci *pem_pci = (struct thunder_pem_pci *)cfg->priv;
- 	u64 write_val, read_val;
- 	u32 mask = 0;
- 
--	pem_pci = container_of(pci, struct thunder_pem_pci, gen_pci);
- 
- 	if (devfn != 0 || where >= 2048)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
-@@ -256,53 +243,34 @@ static int thunder_pem_bridge_write(struct pci_bus *bus, unsigned int devfn,
- static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
- 				    int where, int size, u32 val)
- {
--	struct gen_pci *pci = bus->sysdata;
-+	struct pci_config_window *cfg = bus->sysdata;
- 
--	if (bus->number < pci->cfg.bus_range->start ||
--	    bus->number > pci->cfg.bus_range->end)
-+	if (bus->number < cfg->bus_start ||
-+	    bus->number > cfg->bus_end)
- 		return PCIBIOS_DEVICE_NOT_FOUND;
- 	/*
- 	 * The first device on the bus is the PEM PCIe bridge.
- 	 * Special case its config access.
- 	 */
--	if (bus->number == pci->cfg.bus_range->start)
-+	if (bus->number == cfg->bus_start)
- 		return thunder_pem_bridge_write(bus, devfn, where, size, val);
- 
- 
- 	return pci_generic_config_write(bus, devfn, where, size, val);
- }
- 
--static struct gen_pci_cfg_bus_ops thunder_pem_bus_ops = {
--	.bus_shift	= 24,
--	.ops		= {
--		.map_bus	= thunder_pem_map_bus,
--		.read		= thunder_pem_config_read,
--		.write		= thunder_pem_config_write,
--	}
--};
--
--static const struct of_device_id thunder_pem_of_match[] = {
--	{ .compatible = "cavium,pci-host-thunder-pem",
--	  .data = &thunder_pem_bus_ops },
--
--	{ },
--};
--MODULE_DEVICE_TABLE(of, thunder_pem_of_match);
--
--static int thunder_pem_probe(struct platform_device *pdev)
-+static int thunder_pem_init(struct device *dev, struct pci_config_window *cfg)
- {
--	struct device *dev = &pdev->dev;
--	const struct of_device_id *of_id;
- 	resource_size_t bar4_start;
- 	struct resource *res_pem;
- 	struct thunder_pem_pci *pem_pci;
-+	struct platform_device *pdev;
- 
- 	pem_pci = devm_kzalloc(dev, sizeof(*pem_pci), GFP_KERNEL);
- 	if (!pem_pci)
- 		return -ENOMEM;
- 
--	of_id = of_match_node(thunder_pem_of_match, dev->of_node);
--	pem_pci->gen_pci.cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
-+	pdev = to_platform_device(dev);
- 
- 	/*
- 	 * The second register range is the PEM bridge to the PCIe
-@@ -330,7 +298,29 @@ static int thunder_pem_probe(struct platform_device *pdev)
- 	pem_pci->ea_entry[1] = (u32)(res_pem->end - bar4_start) & ~3u;
- 	pem_pci->ea_entry[2] = (u32)(bar4_start >> 32);
- 
--	return pci_host_common_probe(pdev, &pem_pci->gen_pci);
-+	cfg->priv = pem_pci;
++static int pcie_port_runtime_resume(struct device *dev)
++{
++	pm_runtime_mark_last_busy(dev);
 +	return 0;
 +}
 +
-+static struct pci_generic_ecam_ops pci_thunder_pem_ops = {
-+	.bus_shift	= 24,
-+	.init		= thunder_pem_init,
-+	.pci_ops	= {
-+		.map_bus	= pci_generic_ecam_map_bus,
-+		.read		= thunder_pem_config_read,
-+		.write		= thunder_pem_config_write,
-+	}
-+};
-+
-+static const struct of_device_id thunder_pem_of_match[] = {
-+	{ .compatible = "cavium,pci-host-thunder-pem" },
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(of, thunder_pem_of_match);
-+
-+static int thunder_pem_probe(struct platform_device *pdev)
++static int pcie_port_runtime_idle(struct device *dev)
 +{
-+	return pci_host_common_probe(pdev, &pci_thunder_pem_ops);
++	/*
++	 * Rely the PCI core has set bridge_d3 whenever it thinks the port
++	 * should be good to go to D3. Everything else, including moving
++	 * the port to D3, is handled by the PCI core.
++	 */
++	return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
++}
++
+ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ 	.suspend	= pcie_port_device_suspend,
+ 	.resume		= pcie_port_device_resume,
+@@ -101,6 +122,9 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ 	.poweroff	= pcie_port_device_suspend,
+ 	.restore	= pcie_port_device_resume,
+ 	.resume_noirq	= pcie_port_resume_noirq,
++	.runtime_suspend = pcie_port_runtime_suspend,
++	.runtime_resume	= pcie_port_runtime_resume,
++	.runtime_idle	= pcie_port_runtime_idle,
+ };
+ 
+ #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+@@ -134,11 +158,38 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 		return status;
+ 
+ 	pci_save_state(dev);
++
++	/*
++	 * Prevent runtime PM if the port is advertising support for PCIe
++	 * hotplug. Otherwise the BIOS hotplug SMI code might not be able
++	 * to enumerate devices behind this port properly (the port is
++	 * powered down preventing all config space accesses to the
++	 * subordinate devices). We can't be sure for native PCIe hotplug
++	 * either so prevent that as well.
++	 */
++	if (!dev->is_hotplug_bridge) {
++		/*
++		 * Keep the port resumed 10ms to make sure things like
++		 * config space accesses from userspace (lspci) will not
++		 * cause the port to repeatedly suspend and resume.
++		 */
++		pm_runtime_set_autosuspend_delay(&dev->dev, 10);
++		pm_runtime_use_autosuspend(&dev->dev);
++		pm_runtime_put_autosuspend(&dev->dev);
++		pm_runtime_allow(&dev->dev);
++	}
++
+ 	return 0;
  }
  
- static struct platform_driver thunder_pem_driver = {
+ static void pcie_portdrv_remove(struct pci_dev *dev)
+ {
++	if (!dev->is_hotplug_bridge) {
++		pm_runtime_forbid(&dev->dev);
++		pm_runtime_get_noresume(&dev->dev);
++		pm_runtime_dont_use_autosuspend(&dev->dev);
++	}
++
+ 	pcie_port_device_remove(dev);
+ }
+ 
 -- 
-1.9.1
+2.8.0.rc3
 
