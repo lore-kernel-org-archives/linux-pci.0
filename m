@@ -1,69 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:22771 "EHLO mga14.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:39157 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754681AbcDMIe7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 13 Apr 2016 04:34:59 -0400
-Date: Wed, 13 Apr 2016 11:34:54 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
+	id S964911AbcDYVBL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 25 Apr 2016 17:01:11 -0400
+Date: Mon, 25 Apr 2016 16:01:06 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH v2 2/4] PCI: Move PCIe ports to D3 during suspend
-Message-ID: <20160413083454.GJ1714@lahna.fi.intel.com>
-References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
- <1460111790-92836-3-git-send-email-mika.westerberg@linux.intel.com>
- <20160412174542.GA13637@wunner.de>
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+Subject: Re: [PATCH v11 02/60] alpha/PCI: Only check iomem_is_exclusive() for
+ IORESOURCE_MEM, not IORESOURCE_IO
+Message-ID: <20160425210106.GD1759@localhost>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+ <1460074573-7481-3-git-send-email-yinghai@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160412174542.GA13637@wunner.de>
+In-Reply-To: <1460074573-7481-3-git-send-email-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 12, 2016 at 07:45:42PM +0200, Lukas Wunner wrote:
-> Hi Mika,
+On Thu, Apr 07, 2016 at 05:15:15PM -0700, Yinghai Lu wrote:
+> From: Bjorn Helgaas <bhelgaas@google.com>
 > 
-> On Fri, Apr 08, 2016 at 01:36:28PM +0100, Mika Westerberg wrote:
-> > --- a/drivers/pci/pci-driver.c
-> > +++ b/drivers/pci/pci-driver.c
-> > @@ -744,6 +744,19 @@ static int pci_pm_suspend(struct device *dev)
-> >  	return 0;
-> >  }
-> >  
-> > +/*
-> > + * Check if given device can go to low power state. Currently we allow
-> > + * normal PCI devices and PCI bridges if their bridge_d3 is set.
-> > + */
-> > +static bool pci_can_suspend(struct pci_dev *pdev)
-> > +{
-> > +	if (!pci_has_subordinate(pdev))
-> > +		return true;
-> > +	else if (pdev->bridge_d3)
-> > +		return true;
-> > +	return false;
-> > +}
-> > +
-> >  static int pci_pm_suspend_noirq(struct device *dev)
-> >  {
-> >  	struct pci_dev *pci_dev = to_pci_dev(dev);
-> > @@ -777,7 +790,7 @@ static int pci_pm_suspend_noirq(struct device *dev)
-> >  
-> >  	if (!pci_dev->state_saved) {
-> >  		pci_save_state(pci_dev);
-> > -		if (!pci_has_subordinate(pci_dev))
-> > +		if (pci_can_suspend(pci_dev))
-> >  			pci_prepare_to_sleep(pci_dev);
-> >  	}
+> The alpha pci_mmap_resource() is used for both IORESOURCE_MEM and
+> IORESOURCE_IO resources, but iomem_is_exclusive() is only applicable for
+> IORESOURCE_MEM.
 > 
-> pci_can_suspend() is only used by this single function. It may be
-> worth to consider folding it into pci_pm_suspend_noirq(), i.e. simply
+> Call iomem_is_exclusive() only for IORESOURCE_MEM resources, and do it
+> earlier to match the generic version of pci_mmap_resource().
 > 
-> 		if (!pci_has_subordinate(pci_dev) || pdev->bridge_d3)
-> 
-> together with the "Currently we allow..." comment above.
+> Fixes: 10a0ef39fbd1 ("PCI/alpha: pci sysfs resources")
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
 
-Okay.
+I applied these first two patches to pci/resource for v4.7.
+
+> ---
+>  arch/alpha/kernel/pci-sysfs.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/alpha/kernel/pci-sysfs.c b/arch/alpha/kernel/pci-sysfs.c
+> index 99e8d47..92c0d46 100644
+> --- a/arch/alpha/kernel/pci-sysfs.c
+> +++ b/arch/alpha/kernel/pci-sysfs.c
+> @@ -77,10 +77,10 @@ static int pci_mmap_resource(struct kobject *kobj,
+>  	if (i >= PCI_ROM_RESOURCE)
+>  		return -ENODEV;
+>  
+> -	if (!__pci_mmap_fits(pdev, i, vma, sparse))
+> +	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
+>  		return -EINVAL;
+>  
+> -	if (iomem_is_exclusive(res->start))
+> +	if (!__pci_mmap_fits(pdev, i, vma, sparse))
+>  		return -EINVAL;
+>  
+>  	pcibios_resource_to_bus(pdev->bus, &bar, res);
+> -- 
+> 1.8.4.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
