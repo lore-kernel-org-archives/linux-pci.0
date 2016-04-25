@@ -1,155 +1,162 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:34185 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751358AbcDSFgF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 01:36:05 -0400
-Received: by mail-pa0-f42.google.com with SMTP id r5so2727789pag.1
-        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 22:36:05 -0700 (PDT)
-Subject: Re: [PATCH v8 27/45] powerpc/pci: Export pci_add_device_node_info()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-28-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
-	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <5715C3BD.2010502@ozlabs.ru>
-Date: Tue, 19 Apr 2016 15:35:57 +1000
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V6 00/13] Support for generic ACPI based PCI host
+ controller
+To: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org,
+	arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+Cc: jcm@redhat.com, linaro-acpi@lists.linaro.org,
+	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com, linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org, robert.richter@caviumnetworks.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	wangyijing@huawei.com, mw@semihalf.com,
+	linux-arm-kernel@lists.infradead.org
+From: Jeremy Linton <jeremy.linton@arm.com>
+Message-ID: <571E5288.8030602@arm.com>
+Date: Mon, 25 Apr 2016 12:23:20 -0500
 MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-28-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/17/2016 02:44 PM, Gavin Shan wrote:
-> This renames update_dn_pci_info() to pci_add_device_node_info()
-> with corresponding adjustment on the parameter type and exports it.
-> The function is used to create pdn (struct pci_dn) for the indicated
-> device node. Another function add_pdn(), almost wrapper of
-> pci_add_device_node_info(), to be used in traverse_pci_devices(). No
-> logical changes introduced.
+On 04/15/2016 12:06 PM, Tomasz Nowicki wrote:
+>  From the functionality point of view this series might be split into the
+> following logic parts:
+> 1. Necessary fixes as the preparation for using driver on ARM64.
+> 2. New ECAM API and update for users of the pci-host-common API
+> 3. Use new MCFG interface and implement generic ACPI based PCI host controller driver.
+> 4. Enable above driver on ARM64
 >
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Patches has been built on top of 4.6-rc2 and can be found here:
+> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v6)
+>
+> This has been tested on Cavium ThunderX server. Any help in reviewing and
+> testing is very appreciated.
+
+I did some basic testing of this series on ARM's JunoR2 platform. 
+Everything seems to work as expected, the on-board SATA/Ethernet work 
+correctly as do a couple of boards plugged into the slots.
+
+Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+
+Thanks!
 
 
-
-Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-
-
-> ---
->   arch/powerpc/include/asm/pci-bridge.h  |  3 ++-
->   arch/powerpc/kernel/pci_dn.c           | 30 +++++++++++++++++++-----------
->   arch/powerpc/platforms/pseries/setup.c |  2 +-
->   3 files changed, 22 insertions(+), 13 deletions(-)
 >
-> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-> index 03f4ee7..72a9d4e 100644
-> --- a/arch/powerpc/include/asm/pci-bridge.h
-> +++ b/arch/powerpc/include/asm/pci-bridge.h
-> @@ -238,7 +238,8 @@ extern struct pci_dn *pci_get_pdn_by_devfn(struct pci_bus *bus,
->   extern struct pci_dn *pci_get_pdn(struct pci_dev *pdev);
->   extern struct pci_dn *add_dev_pci_data(struct pci_dev *pdev);
->   extern void remove_dev_pci_data(struct pci_dev *pdev);
-> -extern void *update_dn_pci_info(struct device_node *dn, void *data);
-> +extern struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
-> +					       struct device_node *dn);
+> v5 -> v6
+> - dropped idea of x86 MMCONFIG code refactoring
+> - integrated JC's patches which introduce new ECAM API:
+>    https://lkml.org/lkml/2016/4/11/907
+>    git: https://github.com/jchandra-brcm/linux/ (arm64-acpi-pci-v3)
+> - integrated Sinan's fix for releasing IO resources, see patch [06/13]
+> - added ACPI support for ThunderX ECAM and PEM drivers
+> - rebased to 4.6-rc2
 >
->   static inline int pci_device_from_OF_node(struct device_node *np,
->   					  u8 *bus, u8 *devfn)
-> diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
-> index 38102cb..0a249ff 100644
-> --- a/arch/powerpc/kernel/pci_dn.c
-> +++ b/arch/powerpc/kernel/pci_dn.c
-> @@ -282,13 +282,9 @@ void remove_dev_pci_data(struct pci_dev *pdev)
->   #endif /* CONFIG_PCI_IOV */
->   }
+> v4 -> v5
+> - dropped MCFG refactoring group patches 1-6 from series v4 and integrated Jayachandran's patch
+>    https://patchwork.ozlabs.org/patch/575525/
+> - rewrite PCI legacy IRQs allocation
+> - squashed two patches 11 and 12 from series v4, fixed bisection issue
+> - changelog improvements
+> - rebased to 4.5-rc3
 >
-> -/*
-> - * Traverse_func that inits the PCI fields of the device node.
-> - * NOTE: this *must* be done before read/write config to the device.
-> - */
-> -void *update_dn_pci_info(struct device_node *dn, void *data)
-> +struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
-> +					struct device_node *dn)
->   {
-> -	struct pci_controller *phb = data;
->   	const __be32 *type = of_get_property(dn, "ibm,pci-config-space-type", NULL);
->   	const __be32 *regs;
->   	struct device_node *parent;
-> @@ -299,7 +295,7 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
->   		return NULL;
->   	dn->data = pdn;
->   	pdn->node = dn;
-> -	pdn->phb = phb;
-> +	pdn->phb = hose;
->   #ifdef CONFIG_PPC_POWERNV
->   	pdn->pe_number = IODA_INVALID_PE;
->   #endif
-> @@ -331,8 +327,9 @@ void *update_dn_pci_info(struct device_node *dn, void *data)
->   	if (pdn->parent)
->   		list_add_tail(&pdn->list, &pdn->parent->child_list);
+> v3 -> v4
+> - dropped Jiang's fix http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04318.html
+> - added Lorenzo's fix patch 19/24
+> - ACPI PCI bus domain number assigning cleanup
+> - changed resource management, we now claim and reassign resources
+> - improvements for applying quirks
+> - dropped Matthew's http://www.spinics.net/lists/linux-pci/msg45950.html dependency
+> - rebased to 4.5-rc1
 >
-> -	return NULL;
-> +	return pdn;
->   }
-> +EXPORT_SYMBOL_GPL(pci_add_device_node_info);
+> v2 -> v3
+> - fix legacy IRQ assigning and IO ports registration
+> - remove reference to arch specific companion device for ia64
+> - move ACPI PCI host controller driver to pci_root.c
+> - drop generic domain assignment for x86 and ia64 as I am not
+>    able to run all necessary test variants
+> - drop patch which cleaned legacy IRQ assignment since it belongs to
+>    Mathew's series:
+>    https://patchwork.ozlabs.org/patch/557504/
+> - extend MCFG quirk code
+> - rebased to 4.4
 >
->   /*
->    * Traverse a device tree stopping each PCI device in the tree.
-> @@ -432,6 +429,18 @@ void *traverse_pci_dn(struct pci_dn *root,
->   	return NULL;
->   }
+> v1 -> v2
+> - moved non-arch specific piece of code to dirver/acpi/ directory
+> - fixed IO resource handling
+> - introduced PCI config accessors quirks matching
+> - moved ACPI_COMPANION_SET to generic code
 >
-> +static void *add_pdn(struct device_node *dn, void *data)
-> +{
-> +	struct pci_controller *hose = data;
-> +	struct pci_dn *pdn;
-> +
-> +	pdn = pci_add_device_node_info(hose, dn);
-> +	if (!pdn)
-> +		return ERR_PTR(-ENOMEM);
-> +
-> +	return NULL;
-> +}
-> +
->   /**
->    * pci_devs_phb_init_dynamic - setup pci devices under this PHB
->    * phb: pci-to-host bridge (top-level bridge connecting to cpu)
-> @@ -446,8 +455,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
->   	struct pci_dn *pdn;
+> v1 - https://lkml.org/lkml/2015/10/27/504
+> v2 - https://lkml.org/lkml/2015/12/16/246
+> v3 - http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04308.html
+> v4 - https://lkml.org/lkml/2016/2/4/646
+> v5 - https://lkml.org/lkml/2016/2/16/426
 >
->   	/* PHB nodes themselves must not match */
-> -	update_dn_pci_info(dn, phb);
-> -	pdn = dn->data;
-> +	pdn = pci_add_device_node_info(phb, dn);
->   	if (pdn) {
->   		pdn->devfn = pdn->busno = -1;
->   		pdn->vendor_id = pdn->device_id = pdn->class_code = 0;
-> @@ -456,7 +464,7 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
->   	}
+> Jayachandran C (2):
+>    PCI: Provide common functions for ECAM mapping
+>    PCI: generic, thunder: update to use generic ECAM API
 >
->   	/* Update dn->phb ptrs for new phb and children devices */
-> -	traverse_pci_devices(dn, update_dn_pci_info, phb);
-> +	traverse_pci_devices(dn, add_pdn, phb);
->   }
+> Tomasz Nowicki (11):
+>    pci, acpi, x86, ia64: Move ACPI host bridge device companion
+>      assignment to core code.
+>    pci, acpi: Provide generic way to assign bus domain number.
+>    x86, ia64: Include acpi_pci_{add|remove}_bus to the default
+>      pcibios_{add|remove}_bus implementation.
+>    pci, of: Move the PCI I/O space management to PCI core code.
+>    acpi, pci: Support IO resources when parsing PCI host bridge
+>      resources.
+>    arm64, pci, acpi: ACPI support for legacy IRQs parsing and
+>      consolidation with DT code.
+>    pci, acpi: Support for ACPI based generic PCI host controller
+>    arm64, pci, acpi: Start using ACPI based PCI host controller driver
+>      for ARM64.
+>    pci, acpi: Match PCI config space accessors against platfrom specific
+>      quirks.
+>    pci, pci-thunder-ecam: Add ACPI support for ThunderX ECAM.
+>    pci, pci-thunder-pem: Add ACPI support for ThunderX PEM.
 >
->   /**
-> diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
-> index 36df46e..6f8d020 100644
-> --- a/arch/powerpc/platforms/pseries/setup.c
-> +++ b/arch/powerpc/platforms/pseries/setup.c
-> @@ -265,7 +265,7 @@ static int pci_dn_reconfig_notifier(struct notifier_block *nb, unsigned long act
->   		pdn = parent ? PCI_DN(parent) : NULL;
->   		if (pdn) {
->   			/* Create pdn and EEH device */
-> -			update_dn_pci_info(np, pdn->phb);
-> +			pci_add_device_node_info(pdn->phb, np);
->   			eeh_dev_init(PCI_DN(np), pdn->phb);
->   		}
->
+>   arch/arm64/Kconfig                  |  15 +++
+>   arch/arm64/include/asm/cpufeature.h |   3 +-
+>   arch/arm64/kernel/cpu_errata.c      |   8 ++
+>   arch/arm64/kernel/pci.c             |  35 ++---
+>   arch/ia64/hp/common/sba_iommu.c     |   2 +-
+>   arch/ia64/include/asm/pci.h         |   1 -
+>   arch/ia64/pci/pci.c                 |  26 ----
+>   arch/ia64/sn/kernel/io_acpi_init.c  |   4 +-
+>   arch/x86/include/asm/pci.h          |   3 -
+>   arch/x86/pci/acpi.c                 |  17 ---
+>   arch/x86/pci/common.c               |  10 --
+>   drivers/acpi/Kconfig                |   8 ++
+>   drivers/acpi/Makefile               |   1 +
+>   drivers/acpi/bus.c                  |   1 +
+>   drivers/acpi/pci_gen_host.c         | 259 ++++++++++++++++++++++++++++++++++++
+>   drivers/acpi/pci_root.c             |  58 +++++++-
+>   drivers/of/address.c                | 116 +---------------
+>   drivers/pci/Kconfig                 |   3 +
+>   drivers/pci/Makefile                |   2 +
+>   drivers/pci/ecam.c                  | 137 +++++++++++++++++++
+>   drivers/pci/ecam.h                  |  66 +++++++++
+>   drivers/pci/host/Kconfig            |   1 +
+>   drivers/pci/host/pci-host-common.c  | 119 ++++++++---------
+>   drivers/pci/host/pci-host-common.h  |  47 -------
+>   drivers/pci/host/pci-host-generic.c |  52 ++------
+>   drivers/pci/host/pci-thunder-ecam.c |  70 ++++++----
+>   drivers/pci/host/pci-thunder-pem.c  | 215 ++++++++++++++++++++++--------
+>   drivers/pci/pci.c                   | 150 ++++++++++++++++++++-
+>   drivers/pci/probe.c                 |   5 +
+>   include/asm-generic/vmlinux.lds.h   |   7 +
+>   include/linux/of_address.h          |   9 --
+>   include/linux/pci-acpi.h            |  20 +++
+>   include/linux/pci.h                 |  12 ++
+>   33 files changed, 1029 insertions(+), 453 deletions(-)
+>   create mode 100644 drivers/acpi/pci_gen_host.c
+>   create mode 100644 drivers/pci/ecam.c
+>   create mode 100644 drivers/pci/ecam.h
+>   delete mode 100644 drivers/pci/host/pci-host-common.h
 >
 
-
--- 
-Alexey
