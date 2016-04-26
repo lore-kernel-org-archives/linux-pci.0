@@ -1,83 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:48900 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752647AbcDRLAo (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 18 Apr 2016 07:00:44 -0400
-Received: from localhost
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Mon, 18 Apr 2016 21:00:42 +1000
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org, linux-doc@vger.kernel.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	joro@8bytes.org, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	eric.auger@linaro.org, will.deacon@arm.com,
-	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
-	ruscur@russell.cc, Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [RFC v6 07/10] iommu: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have capability of IRQ remapping
-Date: Mon, 18 Apr 2016 18:58:37 +0800
-Message-Id: <1460977120-29367-2-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1460977120-29367-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1460977120-29367-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Received: from muru.com ([72.249.23.125]:52042 "EHLO muru.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752211AbcDZQIl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Apr 2016 12:08:41 -0400
+Date: Tue, 26 Apr 2016 09:08:31 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Rob Herring <robh+dt@kernel.org>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Lee Jones <lee@kernel.org>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Vinod Koul <vinod.koul@intel.com>,
+	Mark Brown <broonie@kernel.org>,
+	Alexandre Belloni <alexandre.belloni@free-electrons.com>,
+	Joe Perches <joe@perches.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	dmaengine@vger.kernel.org
+Subject: Re: [PATCH 04/14] ARM: dts: OMAP36xx: : DT spelling
+ s/#address-cell/#address-cells/
+Message-ID: <20160426160831.GT5995@atomide.com>
+References: <1461166339-11109-1-git-send-email-geert+renesas@glider.be>
+ <1461166339-11109-5-git-send-email-geert+renesas@glider.be>
+ <CAL_JsqKSbGPKNZdZnowGpdF8zxXbh6g-wkq96+KmBNLwp7n=HQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL_JsqKSbGPKNZdZnowGpdF8zxXbh6g-wkq96+KmBNLwp7n=HQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The capability of IRQ remapping is abstracted on IOMMU side on
-some archs. There is a existing flag IOMMU_CAP_INTR_REMAP for this.
+* Rob Herring <robh+dt@kernel.org> [160420 16:48]:
+> On Wed, Apr 20, 2016 at 10:32 AM, Geert Uytterhoeven
+> <geert+renesas@glider.be> wrote:
+> > Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> > ---
+> >  arch/arm/boot/dts/omap36xx.dtsi | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/arch/arm/boot/dts/omap36xx.dtsi b/arch/arm/boot/dts/omap36xx.dtsi
+> > index ce1e242d4dc07ea8..8b797915300894d8 100644
+> > --- a/arch/arm/boot/dts/omap36xx.dtsi
+> > +++ b/arch/arm/boot/dts/omap36xx.dtsi
+> > @@ -44,7 +44,7 @@
+> >                 abb_mpu_iva: regulator-abb-mpu {
+> >                         compatible = "ti,abb-v1";
+> >                         regulator-name = "abb_mpu_iva";
+> > -                       #address-cell = <0>;
+> > +                       #address-cells = <0>;
+> 
+> dtc should flag this if it was really needed. However, it looks like
+> it isn't as there are no child nodes (unless the board files add
+> them).
+> 
+> A nice dtc check would be to flag unnecessary #address-cells or
+> #size-cells. That would only help here after your fix though.
 
-To have a universal flag to test this capability for different
-archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
-when IOMMU_CAP_INTR_REMAP is set.
+Yeah. Applying patches 2 - 4 into omap-for-v4.7/dt thanks.
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- drivers/iommu/iommu.c |   15 +++++++++++++++
- 1 file changed, 15 insertions(+)
-
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index 0e3b009..5d2b6f6 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -813,6 +813,16 @@ struct iommu_group *pci_device_group(struct device *dev)
- 	return group;
- }
- 
-+static void pci_check_msi_remapping(struct pci_dev *pdev,
-+					const struct iommu_ops *ops)
-+{
-+	struct pci_bus *bus = pdev->bus;
-+
-+	if (ops->capable(IOMMU_CAP_INTR_REMAP) &&
-+		!(bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP))
-+		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
-+}
-+
- /**
-  * iommu_group_get_for_dev - Find or create the IOMMU group for a device
-  * @dev: target device
-@@ -871,6 +881,9 @@ static int add_iommu_group(struct device *dev, void *data)
- 	const struct iommu_ops *ops = cb->ops;
- 	int ret;
- 
-+	if (dev_is_pci(dev) && ops->capable)
-+		pci_check_msi_remapping(to_pci_dev(dev), ops);
-+
- 	if (!ops->add_device)
- 		return 0;
- 
-@@ -913,6 +926,8 @@ static int iommu_bus_notifier(struct notifier_block *nb,
- 	 * result in ADD/DEL notifiers to group->notifier
- 	 */
- 	if (action == BUS_NOTIFY_ADD_DEVICE) {
-+		if (dev_is_pci(dev) && ops->capable)
-+			pci_check_msi_remapping(to_pci_dev(dev), ops);
- 		if (ops->add_device)
- 			return ops->add_device(dev);
- 	} else if (action == BUS_NOTIFY_REMOVED_DEVICE) {
--- 
-1.7.9.5
-
+Tony
