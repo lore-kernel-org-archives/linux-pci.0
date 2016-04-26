@@ -1,392 +1,173 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46797 "EHLO mail.kernel.org"
+Received: from foss.arm.com ([217.140.101.70]:54183 "EHLO foss.arm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750914AbcDOSNV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 15 Apr 2016 14:13:21 -0400
-Date: Fri, 15 Apr 2016 13:13:14 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Hariprasad Shenai <hariprasad@chelsio.com>
-Cc: bhelgaas@google.com, davem@davemloft.net,
-	linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-	Casey Leedom <leedom@chelsio.com>,
-	Steve Wise <swise@opengridcomputing.com>,
-	nirranjan@chelsio.com, santosh@chelsio.com,
-	Hannes Reinecke <hare@suse.com>,
-	Ariel Elior <ariel.elior@qlogic.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH pci] pci: Add helper function to set VPD size
-Message-ID: <20160415181314.GB13979@localhost>
-References: <1460657525-17551-1-git-send-email-hariprasad@chelsio.com>
+	id S1751082AbcDZMrU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Apr 2016 08:47:20 -0400
+Date: Tue, 26 Apr 2016 13:47:20 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	David Daney <david.daney@cavium.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Russell King <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v2 1/3] drivers: pci: add generic code to claim bus
+ resources
+Message-ID: <20160426124720.GD2204@red-moon>
+References: <1456843449-19393-1-git-send-email-lorenzo.pieralisi@arm.com>
+ <1456843449-19393-2-git-send-email-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460657525-17551-1-git-send-email-hariprasad@chelsio.com>
+In-Reply-To: <1456843449-19393-2-git-send-email-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Hannes, Ariel, LKML]
+[Replying to self]
 
-On Thu, Apr 14, 2016 at 11:42:05PM +0530, Hariprasad Shenai wrote:
-> commit 104daa71b396 ("PCI: Determine actual VPD size on first access")
-> introduced a regression in cxgb4 driver and used to fail in pci probe.
+On Tue, Mar 01, 2016 at 02:44:07PM +0000, Lorenzo Pieralisi wrote:
+> From: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
 > 
-> The problem is stemming from the fact that the Chelsio adapters actually
-> have two VPD structures stored in the VPD. An abbreviated on at Offset 0x0
-> and the complete VPD at Offset 0x400. The abbreviated one only contains
-> the PN, SN and EC Keywords, while the complete VPD contains those plus
-> various adapter constants contained in V0, V1, etc. And it also contains
-> the Base Ethernet MAC Address in the "NA" Keyword which the cxgb4 driver
-> needs when it can't contact the adapter firmware. (We don't have the "NA"
-> Keywork in the VPD Structure at Offset 0x0 because that's not an allowed
-> VPD Keyword in the PCI-E 3.0 specification.)
+> PCI core code contains a set of functions, eg:
 > 
-> With the new code, the computed size of the VPD is 0x200 and so our efforts
-> to read the VPD at Offset 0x400 silently fails. We check the result of the
-> read looking for a signature 0x82 byte but we're checking against random
-> stack garbage.
+> pci_assign_unassigned_bus_resources()
 > 
-> The fix is to add a PCI helper function to set the VPD size, so the
-> driver can expicitly set the exact size of the VPD.
+> that allow to assign the PCI resources for a given bus after
+> enumeration.
 > 
-> Fixes commit 104daa71b396 ("PCI: Determine actual VPD size on first access")
+> On systems where the PCI BARs are immutable (ie they must not and can
+> not be assigned), PCI bus resources should still be inserted in the PCI
+> resources tree (even if they are not (re)-assigned), but there is
+> no generic PCI kernel function for that purpose. Currently the PCI bus
+> resources insertion in the resources tree is implemented in an arch
+> specific fashion through arch specific callbacks that rely on the PCI
+> resources claiming API (for bridges and devices) which resulted in arches
+> implementations that contain duplicated code to claim resources for a
+> given PCI bus hierarchy.
 > 
-> Signed-off-by: Casey Leedom <leedom@chelsio.com>
-> Signed-off-by: Hariprasad Shenai <hariprasad@chelsio.com>
-
-This looks good to me.  I applied it with the following changes to my
-for-linus branch for v4.6:
-
-  - Split into two patches (PCI core and Chelsio).  I did this because
-    of the concern that bnx2x might also be broken.  But I looked
-    again, and I think bnx2x is fine because the driver computes the
-    size the same way the PCI core does, and I think it only reads up
-    to that size.  It'd be good if the bnx2x folks could verify this.
-
-  - Renamed pci_set_size_vpd() to pci_set_vpd_size() so it reads
-    better.
-
-  - Changed pci_set_vpd_size() from ssize_t to int, since it only
-    returns zero or a negative errno.  Also, t4_get_raw_vpd_params()
-    puts the return value into an int.
-
-I'll append the patches as applied at the end.
-
+> This patch, based on the x86/ia64 resources claiming arch implementations,
+> implements a set of functions in core PCI code that provides a PCI core
+> interface for resources claiming for a given PCI bus hierarchy, paving
+> the way for further resource claiming consolidation across architectures.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Yinghai Lu <yinghai@kernel.org>
 > ---
->  drivers/net/ethernet/chelsio/cxgb4/t4_hw.c | 10 +++++++
->  drivers/pci/access.c                       | 42 ++++++++++++++++++++++++++++++
->  drivers/pci/pci.h                          |  1 +
->  include/linux/pci.h                        |  1 +
->  4 files changed, 54 insertions(+)
-> 
-> diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-> index cc1736bece0f..2033159e26a5 100644
-> --- a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-> +++ b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-> @@ -2557,6 +2557,7 @@ void t4_get_regs(struct adapter *adap, void *buf, size_t buf_size)
+>  drivers/pci/setup-bus.c | 68 +++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h     |  1 +
+>  2 files changed, 69 insertions(+)
+
+I have v3 ready, which does not change this patch, however I have
+some questions below before asking to merge it.
+
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 7796d0a..95f0906 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -1424,6 +1424,74 @@ void pci_bus_assign_resources(const struct pci_bus *bus)
 >  }
+>  EXPORT_SYMBOL(pci_bus_assign_resources);
 >  
->  #define EEPROM_STAT_ADDR   0x7bfc
-> +#define VPD_SIZE           0x800
->  #define VPD_BASE           0x400
->  #define VPD_BASE_OLD       0
->  #define VPD_LEN            1024
-> @@ -2594,6 +2595,15 @@ int t4_get_raw_vpd_params(struct adapter *adapter, struct vpd_params *p)
->  	if (!vpd)
->  		return -ENOMEM;
->  
-> +	/* We have two VPD data structures stored in the adapter VPD area.
-> +	 * By default, Linux calculates the size of the VPD area by traversing
-> +	 * the first VPD area at offset 0x0, so we need to tell the OS what
-> +	 * our real VPD size is.
+> +static void pci_claim_device_resources(struct pci_dev *dev)
+> +{
+> +	int i;
+> +
+> +	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
+> +		struct resource *r = &dev->resource[i];
+> +
+> +		if (!r->flags || r->parent)
+> +			continue;
+> +
+> +		pci_claim_resource(dev, i);
+
+pci_claim_resource() (and in particular pci_find_parent_resource()) fails
+if resource.start == 0x0. Is this intentional ? The resource.start == 0x0
+check is used in other bits of the kernel to detect an "invalid"
+resource, I am not sure I understand its implications correctly.
+
+> +	}
+> +}
+> +
+> +static void pci_claim_bridge_resources(struct pci_dev *dev)
+> +{
+> +	int i;
+> +
+> +	for (i = PCI_BRIDGE_RESOURCES; i < PCI_NUM_RESOURCES; i++) {
+> +		struct resource *r = &dev->resource[i];
+> +
+> +		if (!r->flags || r->parent)
+> +			continue;
+> +
+> +		pci_claim_bridge_resource(dev, i);
+> +	}
+> +}
+> +
+> +static void pci_bus_allocate_dev_resources(struct pci_bus *b)
+> +{
+> +	struct pci_dev *dev;
+> +	struct pci_bus *child;
+> +
+> +	list_for_each_entry(dev, &b->devices, bus_list) {
+> +		pci_claim_device_resources(dev);
+> +
+> +		child = dev->subordinate;
+> +		if (child)
+> +			pci_bus_allocate_dev_resources(child);
+> +	}
+> +}
+> +
+> +static void pci_bus_allocate_resources(struct pci_bus *b)
+> +{
+> +	struct pci_bus *child;
+> +
+> +	/*
+> +	 * Carry out a depth-first search on the PCI bus
+> +	 * tree to allocate bridge apertures. Read the
+> +	 * programmed bridge bases and recursively claim
+> +	 * the respective bridge resources.
 > +	 */
-> +	ret = pci_set_size_vpd(adapter->pdev, VPD_SIZE);
-> +	if (ret < 0)
-> +		goto out;
+> +	if (b->self) {
+
+Is it *always* correct to check b->self to detect a device backing
+the PCI bridge ? All PCI bridges should have their ->self pointer
+set-up correctly, I wanted to countercheck anyway.
+
+Comments welcome, thanks.
+
+Lorenzo
+
+> +		pci_read_bridge_bases(b);
+> +		pci_claim_bridge_resources(b->self);
+> +	}
 > +
->  	/* Card information normally starts at VPD_BASE but early cards had
->  	 * it at 0.
->  	 */
-> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-> index 01b9d0a00abc..e69b3877bd37 100644
-> --- a/drivers/pci/access.c
-> +++ b/drivers/pci/access.c
-> @@ -275,6 +275,19 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
->  }
->  EXPORT_SYMBOL(pci_write_vpd);
->  
-> +/**
-> + * pci_set_size_vpd - Set size of Vital Product Data space
-> + * @dev:	pci device struct
-> + * @len:	size of vpd space
-> + */
-> +ssize_t pci_set_size_vpd(struct pci_dev *dev, size_t len)
-> +{
-> +	if (!dev->vpd || !dev->vpd->ops)
-> +		return -ENODEV;
-> +	return dev->vpd->ops->set_size(dev, len);
-> +}
-> +EXPORT_SYMBOL(pci_set_size_vpd);
-> +
->  #define PCI_VPD_MAX_SIZE (PCI_VPD_ADDR_MASK + 1)
->  
->  /**
-> @@ -498,9 +511,23 @@ out:
->  	return ret ? ret : count;
->  }
->  
-> +static ssize_t pci_vpd_set_size(struct pci_dev *dev, size_t len)
-> +{
-> +	struct pci_vpd *vpd = dev->vpd;
-> +
-> +	if (len == 0 || len > PCI_VPD_MAX_SIZE)
-> +		return -EIO;
-> +
-> +	vpd->valid = 1;
-> +	vpd->len = len;
-> +
-> +	return 0;
+> +	list_for_each_entry(child, &b->children, node)
+> +		pci_bus_allocate_resources(child);
 > +}
 > +
->  static const struct pci_vpd_ops pci_vpd_ops = {
->  	.read = pci_vpd_read,
->  	.write = pci_vpd_write,
-> +	.set_size = pci_vpd_set_size,
->  };
->  
->  static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
-> @@ -533,9 +560,24 @@ static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
->  	return ret;
->  }
->  
-> +static ssize_t pci_vpd_f0_set_size(struct pci_dev *dev, size_t len)
+> +void pci_bus_claim_resources(struct pci_bus *b)
 > +{
-> +	struct pci_dev *tdev = pci_get_slot(dev->bus,
-> +					    PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
-> +	ssize_t ret;
-> +
-> +	if (!tdev)
-> +		return -ENODEV;
-> +
-> +	ret = pci_set_size_vpd(tdev, len);
-> +	pci_dev_put(tdev);
-> +	return ret;
+> +	pci_bus_allocate_resources(b);
+> +	pci_bus_allocate_dev_resources(b);
 > +}
+> +EXPORT_SYMBOL(pci_bus_claim_resources);
 > +
->  static const struct pci_vpd_ops pci_vpd_f0_ops = {
->  	.read = pci_vpd_f0_read,
->  	.write = pci_vpd_f0_write,
-> +	.set_size = pci_vpd_f0_set_size,
->  };
->  
->  int pci_vpd_init(struct pci_dev *dev)
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index d0fb93481573..8239d186f1ed 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -97,6 +97,7 @@ static inline bool pci_has_subordinate(struct pci_dev *pci_dev)
->  struct pci_vpd_ops {
->  	ssize_t (*read)(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
->  	ssize_t (*write)(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
-> +	ssize_t (*set_size)(struct pci_dev *dev, size_t len);
->  };
->  
->  struct pci_vpd {
+>  static void __pci_bridge_assign_resources(const struct pci_dev *bridge,
+>  					  struct list_head *add_head,
+>  					  struct list_head *fail_head)
 > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 004b8133417d..1ab1b7458a8b 100644
+> index 2771625..e66eba7 100644
 > --- a/include/linux/pci.h
 > +++ b/include/linux/pci.h
-> @@ -1111,6 +1111,7 @@ void pci_unlock_rescan_remove(void);
->  /* Vital product data routines */
->  ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
->  ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
-> +ssize_t pci_set_size_vpd(struct pci_dev *dev, size_t len);
->  
+> @@ -1102,6 +1102,7 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
 >  /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
 >  resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
+>  void pci_bus_assign_resources(const struct pci_bus *bus);
+> +void pci_bus_claim_resources(struct pci_bus *bus);
+>  void pci_bus_size_bridges(struct pci_bus *bus);
+>  int pci_claim_resource(struct pci_dev *, int);
+>  int pci_claim_bridge_resource(struct pci_dev *bridge, int i);
 > -- 
-> 2.3.4
+> 2.5.1
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-commit cb92148b58a49455f3a7204eba3aee09a8b7683c
-Author: Hariprasad Shenai <hariprasad@chelsio.com>
-Date:   Fri Apr 15 13:00:11 2016 -0500
-
-    PCI: Add pci_set_vpd_size() to set VPD size
-    
-    After 104daa71b396 ("PCI: Determine actual VPD size on first access"), the
-    PCI core computes the valid VPD size by parsing the VPD starting at offset
-    0x0.  We don't attempt to read past that valid size because that causes
-    some devices to crash.
-    
-    However, some devices do have data past that valid size.  For example,
-    Chelsio adapters contain two VPD structures, and the driver needs both of
-    them.
-    
-    Add pci_set_vpd_size().  If a driver knows it is safe to read past the end
-    of the VPD data structure at offset 0, it can use pci_set_vpd_size() to
-    allow access to as much data as it needs.
-    
-    [bhelgaas: changelog, split patches, rename to pci_set_vpd_size() and
-    return int (not ssize_t)]
-    Fixes: 104daa71b396 ("PCI: Determine actual VPD size on first access")
-    Tested-by: Steve Wise <swise@opengridcomputing.com>
-    Signed-off-by: Casey Leedom <leedom@chelsio.com>
-    Signed-off-by: Hariprasad Shenai <hariprasad@chelsio.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 01b9d0a..d11cdbb 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -275,6 +275,19 @@ ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void
- }
- EXPORT_SYMBOL(pci_write_vpd);
- 
-+/**
-+ * pci_set_vpd_size - Set size of Vital Product Data space
-+ * @dev:	pci device struct
-+ * @len:	size of vpd space
-+ */
-+int pci_set_vpd_size(struct pci_dev *dev, size_t len)
-+{
-+	if (!dev->vpd || !dev->vpd->ops)
-+		return -ENODEV;
-+	return dev->vpd->ops->set_size(dev, len);
-+}
-+EXPORT_SYMBOL(pci_set_vpd_size);
-+
- #define PCI_VPD_MAX_SIZE (PCI_VPD_ADDR_MASK + 1)
- 
- /**
-@@ -498,9 +511,23 @@ out:
- 	return ret ? ret : count;
- }
- 
-+static int pci_vpd_set_size(struct pci_dev *dev, size_t len)
-+{
-+	struct pci_vpd *vpd = dev->vpd;
-+
-+	if (len == 0 || len > PCI_VPD_MAX_SIZE)
-+		return -EIO;
-+
-+	vpd->valid = 1;
-+	vpd->len = len;
-+
-+	return 0;
-+}
-+
- static const struct pci_vpd_ops pci_vpd_ops = {
- 	.read = pci_vpd_read,
- 	.write = pci_vpd_write,
-+	.set_size = pci_vpd_set_size,
- };
- 
- static ssize_t pci_vpd_f0_read(struct pci_dev *dev, loff_t pos, size_t count,
-@@ -533,9 +560,24 @@ static ssize_t pci_vpd_f0_write(struct pci_dev *dev, loff_t pos, size_t count,
- 	return ret;
- }
- 
-+static int pci_vpd_f0_set_size(struct pci_dev *dev, size_t len)
-+{
-+	struct pci_dev *tdev = pci_get_slot(dev->bus,
-+					    PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
-+	int ret;
-+
-+	if (!tdev)
-+		return -ENODEV;
-+
-+	ret = pci_set_vpd_size(tdev, len);
-+	pci_dev_put(tdev);
-+	return ret;
-+}
-+
- static const struct pci_vpd_ops pci_vpd_f0_ops = {
- 	.read = pci_vpd_f0_read,
- 	.write = pci_vpd_f0_write,
-+	.set_size = pci_vpd_f0_set_size,
- };
- 
- int pci_vpd_init(struct pci_dev *dev)
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index d0fb934..a814bbb 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -97,6 +97,7 @@ static inline bool pci_has_subordinate(struct pci_dev *pci_dev)
- struct pci_vpd_ops {
- 	ssize_t (*read)(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
- 	ssize_t (*write)(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
-+	int (*set_size)(struct pci_dev *dev, size_t len);
- };
- 
- struct pci_vpd {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 004b813..932ec74 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1111,6 +1111,7 @@ void pci_unlock_rescan_remove(void);
- /* Vital product data routines */
- ssize_t pci_read_vpd(struct pci_dev *dev, loff_t pos, size_t count, void *buf);
- ssize_t pci_write_vpd(struct pci_dev *dev, loff_t pos, size_t count, const void *buf);
-+int pci_set_vpd_size(struct pci_dev *dev, size_t len);
- 
- /* Helper functions for low-level code (drivers/pci/setup-[bus,res].c) */
- resource_size_t pcibios_retrieve_fw_addr(struct pci_dev *dev, int idx);
-
-commit 67e658794ca191b3221b143f2a1c10d002c40bc8
-Author: Hariprasad Shenai <hariprasad@chelsio.com>
-Date:   Fri Apr 15 13:00:18 2016 -0500
-
-    cxgb4: Set VPD size so we can read both VPD structures
-    
-    Chelsio adapters have two VPD structures stored in the VPD:
-    
-      - offset 0x000: an abbreviated VPD, and
-      - offset 0x400: the complete VPD.
-    
-    After 104daa71b396 ("PCI: Determine actual VPD size on first access"), the
-    PCI core computes the valid VPD size by parsing the VPD starting at offset
-    0x0.  That size only includes the abbreviated VPD structure, so reads of
-    the complete VPD at 0x400 fail.
-    
-    Explicitly set the VPD size with pci_set_vpd_size() so the driver can read
-    both VPD structures.
-    
-    [bhelgaas: changelog, split patches, rename to pci_set_vpd_size() and
-    return int (not ssize_t)]
-    Fixes: 104daa71b396 ("PCI: Determine actual VPD size on first access")
-    Tested-by: Steve Wise <swise@opengridcomputing.com>
-    Signed-off-by: Casey Leedom <leedom@chelsio.com>
-    Signed-off-by: Hariprasad Shenai <hariprasad@chelsio.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-index cc1736b..c7efb11 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/t4_hw.c
-@@ -2557,6 +2557,7 @@ void t4_get_regs(struct adapter *adap, void *buf, size_t buf_size)
- }
- 
- #define EEPROM_STAT_ADDR   0x7bfc
-+#define VPD_SIZE           0x800
- #define VPD_BASE           0x400
- #define VPD_BASE_OLD       0
- #define VPD_LEN            1024
-@@ -2594,6 +2595,15 @@ int t4_get_raw_vpd_params(struct adapter *adapter, struct vpd_params *p)
- 	if (!vpd)
- 		return -ENOMEM;
- 
-+	/* We have two VPD data structures stored in the adapter VPD area.
-+	 * By default, Linux calculates the size of the VPD area by traversing
-+	 * the first VPD area at offset 0x0, so we need to tell the OS what
-+	 * our real VPD size is.
-+	 */
-+	ret = pci_set_vpd_size(adapter->pdev, VPD_SIZE);
-+	if (ret < 0)
-+		goto out;
-+
- 	/* Card information normally starts at VPD_BASE but early cards had
- 	 * it at 0.
- 	 */
