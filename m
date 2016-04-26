@@ -1,119 +1,85 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: iommu@lists.linux-foundation.org
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Will Deacon <will.deacon@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Jon Masters <jcm@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [RFC PATCH 02/11] drivers: acpi: iort: add support for IOMMU registration
-Date: Thu, 14 Apr 2016 18:25:34 +0100
-Message-Id: <1460654743-7896-3-git-send-email-lorenzo.pieralisi@arm.com>
-In-Reply-To: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:40499 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752391AbcDZSig (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Apr 2016 14:38:36 -0400
+Date: Tue, 26 Apr 2016 13:38:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
+	cov@codeaurora.org, linux-pci@vger.kernel.org,
+	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
+	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
+	rjw@rjwysocki.net, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V3 2/4] acpi,pci,irq: reduce static IRQ array size to 16
+Message-ID: <20160426183831.GD27803@localhost>
+References: <1460914617-8259-1-git-send-email-okaya@codeaurora.org>
+ <1460914617-8259-2-git-send-email-okaya@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1460914617-8259-2-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The ACPI IORT table provide entries for IOMMU (aka SMMU in ARM world)
-components that allow creating the kernel data structures required to
-probe and initialize the IOMMU devices.
+On Sun, Apr 17, 2016 at 01:36:54PM -0400, Sinan Kaya wrote:
+> Now that the supported number of PCI IRQs are no longer capped
+> with 256, renaming the static array to support ISA IRQs only
+> and removing the MAX_IRQS constant.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/acpi/pci_link.c | 40 ++++++++++++++++++++--------------------
+>  1 file changed, 20 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
+> index cc0ba16..12ea784 100644
+> --- a/drivers/acpi/pci_link.c
+> +++ b/drivers/acpi/pci_link.c
+> @@ -438,8 +438,7 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
+>   * enabled system.
+>   */
+>  
+> -#define ACPI_MAX_IRQS		256
+> -#define ACPI_MAX_ISA_IRQ	16
+> +#define ACPI_MAX_ISA_IRQS	16
+>  
+>  #define PIRQ_PENALTY_PCI_POSSIBLE	(16*16)
+>  #define PIRQ_PENALTY_PCI_USING		(16*16*16)
+> @@ -447,7 +446,7 @@ static int acpi_pci_link_set(struct acpi_pci_link *link, int irq)
+>  #define PIRQ_PENALTY_ISA_USED		(16*16*16*16*16)
+>  #define PIRQ_PENALTY_ISA_ALWAYS		(16*16*16*16*16*16)
+>  
+> -static int acpi_irq_penalty[ACPI_MAX_IRQS] = {
+> +static int acpi_isa_irq_penalty[ACPI_MAX_ISA_IRQS] = {
+>  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ0 timer */
+>  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ1 keyboard */
+>  	PIRQ_PENALTY_ISA_ALWAYS,	/* IRQ2 cascade */
+> @@ -500,8 +499,8 @@ static int acpi_irq_get_penalty(int irq)
+>  {
+>  	int penalty = 0;
+>  
+> -	if (irq < ACPI_MAX_ISA_IRQ)
+> -		penalty += acpi_irq_penalty[irq];
+> +	if (irq < ACPI_MAX_ISA_IRQS)
 
-This patch provides support in the IORT kernel code to register IOMMU
-components.
+Nit: sometimes you use "irq < ACPI_MAX_ISA_IRQS", other times you use
+"irq < ARRAY_SIZE(acpi_isa_irq_penalty)".  Seems like they could be
+consistent.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Hanjun Guo <hanjun.guo@linaro.org>
-Cc: Tomasz Nowicki <tn@semihalf.com>
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
----
- drivers/acpi/iort.c  | 42 ++++++++++++++++++++++++++++++++++++++++++
- include/linux/iort.h |  2 ++
- 2 files changed, 44 insertions(+)
-
-diff --git a/drivers/acpi/iort.c b/drivers/acpi/iort.c
-index 3119683..98db580 100644
---- a/drivers/acpi/iort.c
-+++ b/drivers/acpi/iort.c
-@@ -19,10 +19,13 @@
- #define pr_fmt(fmt)	"ACPI: IORT: " fmt
- 
- #include <linux/export.h>
-+#include <linux/iommu.h>
- #include <linux/iort.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
-+#include <linux/list.h>
- #include <linux/pci.h>
-+#include <linux/slab.h>
- 
- struct iort_its_msi_chip {
- 	struct list_head	list;
-@@ -30,6 +33,45 @@ struct iort_its_msi_chip {
- 	u32			translation_id;
- };
- 
-+struct iort_iommu_node {
-+	struct list_head list;
-+	struct iommu_ops *ops;
-+	struct acpi_iort_node *node;
-+	struct fwnode_handle	*fwnode;
-+};
-+static LIST_HEAD(iort_iommu_list);
-+static DEFINE_SPINLOCK(iort_iommu_lock);
-+
-+/**
-+ * iort_iommu_set_node - Create iort_mmu_node and use it to register
-+ *			 iommu structures on iort_iommu_list.
-+ *
-+ * @ops: IOMMU operations
-+ * @node: IORT table node associated with the IOMMU
-+ * @fwnode: fwnode_handle associated with the IOMMU
-+ *
-+ * Returns: 0 on success
-+ *          -ENOMEM on failure
-+ */
-+int iort_iommu_set_node(struct iommu_ops *ops, struct acpi_iort_node *node,
-+			struct fwnode_handle *fwnode)
-+{
-+	struct iort_iommu_node *iommu = kzalloc(sizeof(*iommu), GFP_KERNEL);
-+
-+	if (WARN_ON(!iommu))
-+		return -ENOMEM;
-+
-+	INIT_LIST_HEAD(&iommu->list);
-+	iommu->ops = ops;
-+	iommu->node = node;
-+	iommu->fwnode = fwnode;
-+	spin_lock(&iort_iommu_lock);
-+	list_add_tail(&iommu->list, &iort_iommu_list);
-+	spin_unlock(&iort_iommu_lock);
-+
-+	return 0;
-+}
-+
- typedef acpi_status (*iort_find_node_callback)
- 	(struct acpi_iort_node *node, void *context);
- 
-diff --git a/include/linux/iort.h b/include/linux/iort.h
-index b15fe1a..148d9a1 100644
---- a/include/linux/iort.h
-+++ b/include/linux/iort.h
-@@ -28,5 +28,7 @@ void iort_deregister_domain_token(int trans_id);
- struct fwnode_handle *iort_its_find_domain_token(int trans_id);
- u32 iort_pci_get_msi_rid(struct pci_dev *pdev, u32 req_id);
- struct fwnode_handle *iort_pci_get_domain(struct pci_dev *pdev, u32 req_id);
-+int iort_iommu_set_node(struct iommu_ops *ops, struct acpi_iort_node *node,
-+			struct fwnode_handle *fwnode);
- 
- #endif /* __IORT_H__ */
--- 
-2.6.4
-
+> -	if (irq >= 0 && irq < ARRAY_SIZE(acpi_irq_penalty))
+> -		acpi_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
+> +	if ((irq >= 0) && (irq < ARRAY_SIZE(acpi_isa_irq_penalty)))
+> +		acpi_isa_irq_penalty[irq] = acpi_irq_get_penalty(irq) +
+>  			active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING;
+>  }
+>  
+>  bool acpi_isa_irq_available(int irq)
+>  {
+> -	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_irq_penalty) ||
+> +	return irq >= 0 && (irq >= ARRAY_SIZE(acpi_isa_irq_penalty) ||
+>  		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
+>  }
+>  
+> -- 
+> 1.8.2.1
+> 
