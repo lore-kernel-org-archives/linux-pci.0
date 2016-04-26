@@ -1,183 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:2067 "EHLO
-	lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750754AbcDMH54 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 03:57:56 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Jingoo Han <jingoohan1@gmail.com>,
-	"'Bjorn Helgaas'" <helgaas@kernel.org>
-CC: "'Jisheng Zhang'" <jszhang@marvell.com>,
-	"pratyush.anand@gmail.com" <pratyush.anand@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH v2] PCI: designware: move remaining rc setup code to
- dw_pcie_setup_rc()
-Date: Wed, 13 Apr 2016 07:57:37 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED4F10E@lhreml503-mbs>
-References: <1458128433-3020-1-git-send-email-jszhang@marvell.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED40E52@lhreml503-mbs>
- <20160407103734.55e72da7@xhacker>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED43F95@lhreml503-mbs>
- <20160407163443.291fbd49@xhacker>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED44208@lhreml503-mbs>
- <20160407140551.GA2648@localhost>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED45C38@lhreml503-mbs>
- <20160408160145.GA10565@localhost>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED4B88D@lhreml503-mbs>
- <00a901d19548$90bffc20$b23ff460$@com>
-In-Reply-To: <00a901d19548$90bffc20$b23ff460$@com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 26 Apr 2016 17:36:18 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: kbuild test robot <lkp@intel.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>, kbuild-all@01.org, arnd@arndb.de,
+	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+	hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	jchandra@broadcom.com, robert.richter@caviumnetworks.com,
+	mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+Subject: Re: [PATCH V6 01/13] pci, acpi, x86, ia64: Move ACPI host bridge
+ device companion assignment to core code.
+Message-ID: <20160426223618.GB6789@localhost>
+References: <1460740008-19489-2-git-send-email-tn@semihalf.com>
+ <201604160430.P8zNe8Vl%fengguang.wu@intel.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201604160430.P8zNe8Vl%fengguang.wu@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jingoo
-
-> -----Original Message-----
-> From: Jingoo Han [mailto:jingoohan1@gmail.com]
-> Sent: 13 April 2016 06:52
-> To: Gabriele Paoloni; 'Bjorn Helgaas'
-> Cc: 'Jisheng Zhang'; pratyush.anand@gmail.com; bhelgaas@google.com;
-> linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-arm-
-> kernel@lists.infradead.org; 'Jingoo Han'
-> Subject: Re: [PATCH v2] PCI: designware: move remaining rc setup code
-> to dw_pcie_setup_rc()
+On Sat, Apr 16, 2016 at 04:41:45AM +0800, kbuild test robot wrote:
+> Hi Tomasz,
 > 
-> On Tuesday, April 12, 2016 6:44 PM, Gabriele Paoloni wrote:
-> >
-> > Hi Bjorn
-> >
-> > [...]
-> >
-> > > > >
-> > > > > What's the hisi plan for resuming after suspend-to-RAM?  How
-> does
-> > > the
-> > > > > RC get reprogrammed after it loses all its state?
-> > > >
-> > > > PM is not part of the driver yet. This is planned for near
-> > > > future release so haven't made such considerations yet
-> > > > >
-> > > > > What would break if hisi did call dw_pcie_setup_rc()?  I know
-> you
-> > > said
-> > > > > it would overwrite what the bootloader already did, which is
-> true.
-> > > >
-> > > > I am try to figure this out now with our HW team.
-> > > >
-> > > > >
-> > > > > But hisi does call dw_pcie_host_init(), so it reads pp->mem
-> (which
-> > > > > determines pp->mem_base) and pp->lanes from the DT.  Other
-> drivers
-> > > > > then call dw_pcie_setup_rc() which programs the RC based on
-> > > > > pp->mem_base and pp->lanes.  So hisi assumes UEFI programmed
-> the RC
-> > > to
-> > > > > match the DT, while the other drivers read the DT and program
-> the
-> > > RC
-> > > > > to match.  The latter seems more robust because it enforces the
-> > > > > consistency rather than relying on it.
-> > > >
-> > > > Yes I agree with you, however we have preferred to move RC config
-> to
-> > > > BIOS to have a single driver to support multiple versions of the
-> > > > same SoC.
-> > >
-> > > I think there are two reasonable approaches:
-> > >
-> > >   1) A single generic driver that doesn't have any knowledge about
-> the
-> > >   chipset registers; it uses run-time firmware interfaces to manage
-> > >   the bridge.  The ACPI pci_root.c driver is the best example so
-> far
-> > >   and works very well.  It supports basically all x86 and ia64
-> > >   chipsets and requires no kernel work for new ones.
-> > >
-> > >   2) Native drivers specific to each chipset.  These may get
-> > >   configuration information from DT, but they do their own
-> > >   register-level programming of the device without run-time help
-> from
-> > >   firmware.
-> > >
-> > > I think hisi is a native driver because it uses hip05/hip06
-> registers
-> > > to check link state and perform config operations.  And apparently
-> you
-> > > rely on the ATU, BAR, class, and link width programming currently
-> done
-> > > in dw_pcie_host_init().  But you want to rely on pre-boot firmware
-> to
-> > > set up the link.  That doesn't make sense to me -- if the driver
-> wants
-> > > to twiddle the registers, it should know how to do it all.  I don't
-> > > see how you can reasonably manage this half-way approach.
-> > >
-> > > > The patch I proposed above does the same job as the original
-> patch
-> > > > proposed by Jisheng and also allows hisi driver to call the moved
-> > > > code.
-> > > >
-> > > > Do you see anything wrong with it?
-> > >
-> > > Only that it makes the structure more complicated and we haven't
-> > > identified a corresponding benefit yet.
-> >
-> > Finally I have checked that assigning .host_init function pointer
-> > in our driver to call dw_pcie_setup_rc() will not affect the values
-> > already set by BIOS.
-> >
-> > Also I agree with you that a hybrid approach is not ideal.
+> [auto build test ERROR on pci/next]
+> [also build test ERROR on v4.6-rc3 next-20160415]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
 > 
-> I also agree with Bjorn's opinion.
-> As far as I know, two approaches are reasonable.
+> url:    https://github.com/0day-ci/linux/commits/Tomasz-Nowicki/Support-for-generic-ACPI-based-PCI-host-controller/20160416-011935
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+> config: ia64-allmodconfig (attached as .config)
+> reproduce:
+>         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         # save the attached .config to linux build tree
+>         make.cross ARCH=ia64 
 > 
-> In the case of using UEFI, how about using 'pci-host-generic.c'?
-> You may consult with Linaro guys for this issue.
-
-Many thanks for your suggestion, I'll take it into account for next
-releases
-
-> Good luck.
+> All errors (new ones prefixed by >>):
 > 
-> Best regards,
-> Jingoo Han
+>    drivers/pci/hotplug/sgi_hotplug.c: In function 'enable_slot':
+> >> drivers/pci/hotplug/sgi_hotplug.c:412:61: error: 'struct pci_controller' has no member named 'companion'
+>       phandle = acpi_device_handle(PCI_CONTROLLER(slot->pci_bus)->companion);
+>                                                                 ^
+>    drivers/pci/hotplug/sgi_hotplug.c: In function 'disable_slot':
+>    drivers/pci/hotplug/sgi_hotplug.c:491:32: error: 'struct pci_controller' has no member named 'companion'
+>       PCI_CONTROLLER(slot->pci_bus)->companion) {
+>                                    ^
+>    drivers/pci/hotplug/sgi_hotplug.c:500:61: error: 'struct pci_controller' has no member named 'companion'
+>       phandle = acpi_device_handle(PCI_CONTROLLER(slot->pci_bus)->companion);
+>                                                                 ^
+
+I assume somebody is fixing this?
+
 > 
-> >
-> > So I will update the driver to call dw_pcie_setup_rc() from
-> > .host_init and ask the BIOS team to update the firmware for next
-> > releases (the driver will be backward compatible anyway).
-> >
-> > Also during my investigation I have noticed that in
-> dw_pcie_setup_rc()
-> > http://lxr.free-electrons.com/source/drivers/pci/host/pcie-
-> designware.c#L762
-> >
-> > we use pp->mem_base rather than pp->mem_bus_addr to setup
-> > memory base and memory limit in the Type1 header...I think this
-> > is wrong right?
-> > Also I do not see why this code is needed at all since we overwrite
-> > this register when we call pci_bus_assign_resources(bus) that
-> > will end up in calling pci_setup_bridge() and then
-> > pci_setup_bridge_mmio()...?
+> vim +412 drivers/pci/hotplug/sgi_hotplug.c
+> 
+> 3e643e77 John Keller       2007-01-30  406  		struct acpi_device *pdevice;
+> 3e643e77 John Keller       2007-01-30  407  		acpi_handle phandle;
+> 3e643e77 John Keller       2007-01-30  408  		acpi_handle chandle = NULL;
+> 3e643e77 John Keller       2007-01-30  409  		acpi_handle rethandle;
+> 3e643e77 John Keller       2007-01-30  410  		acpi_status ret;
+> 3e643e77 John Keller       2007-01-30  411  
+> 7b199811 Rafael J. Wysocki 2013-11-11 @412  		phandle = acpi_device_handle(PCI_CONTROLLER(slot->pci_bus)->companion);
+> 3e643e77 John Keller       2007-01-30  413  
+> 3e643e77 John Keller       2007-01-30  414  		if (acpi_bus_get_device(phandle, &pdevice)) {
+> 227f0647 Ryan Desfosses    2014-04-18  415  			dev_dbg(&slot->pci_bus->self->dev, "no parent device, assuming NULL\n");
+> 
+> :::::: The code at line 412 was first introduced by commit
+> :::::: 7b1998116bbb2f3e5dd6cb9a8ee6db479b0b50a9 ACPI / driver core: Store an ACPI device pointer in struct acpi_dev_node
+> 
+> :::::: TO: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> :::::: CC: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> ---
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-Do you have any comment on this issue above?
-
-> >
-> > Many Thanks
-> >
-> > Gab
-> >
-> > >
-> > > Bjorn
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-
-> pci" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
