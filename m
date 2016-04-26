@@ -1,51 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out2-smtp.messagingengine.com ([66.111.4.26]:46786 "EHLO
-	out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751560AbcDRB1v (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 17 Apr 2016 21:27:51 -0400
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-	by mailout.nyi.internal (Postfix) with ESMTP id 580AE20333
-	for <linux-pci@vger.kernel.org>; Sun, 17 Apr 2016 21:27:45 -0400 (EDT)
-Date: Mon, 18 Apr 2016 10:27:41 +0900
-From: Greg KH <greg@kroah.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: stable@vger.kernel.org,
-	=?utf-8?B?0J7Qu9C10LPQnNC+0YDQvtC3?= <oleg.moroz@mcc.vniiem.ru>,
-	Joerg Roedel <jroedel@suse.de>,
-	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
-	Rob Groner <rgroner@rtd.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH 0/3] v4.4: Revert "PCI: Implement pcibios_alloc_irq() and
-Message-ID: <20160418012741.GB8223@kroah.com>
-References: <20160413055439.6877.68183.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Received: from mail.kernel.org ([198.145.29.136]:56759 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751920AbcDZVpO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Apr 2016 17:45:14 -0400
+Date: Tue, 26 Apr 2016 16:45:10 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Hanna Hawa <hannah@marvell.com>,
+	Yehuda Yitschak <yehuday@marvell.com>
+Subject: Re: [PATCH v3 0/2] pci: host: new driver for Marvell Armada 7K/8K
+ PCIe controller
+Message-ID: <20160426214510.GA6789@localhost>
+References: <1461659506-10387-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <20160426173144.GB27803@localhost>
+ <20160426210850.13cc8a0e@free-electrons.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160413055439.6877.68183.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+In-Reply-To: <20160426210850.13cc8a0e@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 13, 2016 at 12:56:59AM -0500, Bjorn Helgaas wrote:
-> pcibios_free_irq()"
+On Tue, Apr 26, 2016 at 09:08:50PM +0200, Thomas Petazzoni wrote:
+> Hello,
 > 
-> Please apply these reverts to the v4.4 stable kernel.
+> On Tue, 26 Apr 2016 12:31:44 -0500, Bjorn Helgaas wrote:
 > 
-> We reverted the following changes from v4.5 to fix a regression:
+> > >  create mode 100644 Documentation/devicetree/bindings/pci/pci-armada8k.txt
+> > >  create mode 100644 drivers/pci/host/pcie-armada8k.c
+> > 
+> > Thanks, Thomas, I applied these to pci/host-armada for v4.7.
 > 
->   8affb487d4a4 ("x86/PCI: Don't alloc pcibios-irq when MSI is enabled")
->   811a4e6fce09 ("PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed")
->   991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
+> Thanks!
 > 
-> but I forgot to mark those reverts for stable.  This series contains the
-> backports for v4.4.
+> > I added the tweaks below to use dev_dbg() instead of pr_debug(), use
+> > dw_pcie_wait_for_link() instead of another hand-coded timeout loop,
+> > and fix a typo and remove unused constants.
 > 
-> For reference, the v4.5 reverts are:
+> Looks all good, thanks for applying! Just one tiny question below.
 > 
->   fe25d078874f ("Revert "x86/PCI: Don't alloc pcibios-irq when MSI is enabled"")
->   67b4eab91caf ("Revert "PCI: Add helpers to manage pci_dev->irq and pci_dev->irq_managed"")
->   6c777e8799a9 ("Revert "PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()"")
+> >  	/*
+> >  	 * Interrupts are directly handled by the device driver of the
+> > -	 * PCI device. However, there are also latched into the PCIe
+> > +	 * PCI device.  However, they are also latched into the PCIe
+> 
+> Any reason to have two spaces after the dot here?
 
-All now applied, thanks for these.
+Only habit because my eighth-grade typing teacher in 1979 did it that
+way, and (I think) vim does it that way by default.  Poor reasons,
+both, and definitely trumped by consistency with the rest of the file,
+which does use a single space in both other instances.  I removed the
+extra space :)
 
-greg k-h
+Bjorn
