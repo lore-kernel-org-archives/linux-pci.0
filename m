@@ -1,73 +1,31 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org
-Cc: linux-pci@vger.kernel.org, ravikanth.nalla@hpe.com,
-	lenb@kernel.org, harish.k@hpe.com, ashwin.reghunandanan@hpe.com,
-	bhelgaas@google.com, rjw@rjwysocki.net,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Len Brown <len.brown@intel.com>, Pavel Machek <pavel@ucw.cz>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH V3 4/4] acpi,pci,irq: remove SCI penalize function
-Date: Sun, 17 Apr 2016 13:36:56 -0400
-Message-Id: <1460914617-8259-4-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1460914617-8259-1-git-send-email-okaya@codeaurora.org>
-References: <1460914617-8259-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:4518 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752348AbcDZVG4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Apr 2016 17:06:56 -0400
+Date: Tue, 26 Apr 2016 21:06:42 +0000
+From: Keith Busch <keith.busch@intel.com>
+To: Martin Mares <mj@ucw.cz>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] Add support for Downstream Port Containment
+Message-ID: <20160426210641.GA24243@localhost.localdomain>
+References: <1461703673-29363-1-git-send-email-keith.busch@intel.com>
+ <mj+md-20160426.204835.23574.nikam@ucw.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <mj+md-20160426.204835.23574.nikam@ucw.cz>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Removing the SCI penalize function as the penalty is now calculated on the
-fly.
+On Tue, Apr 26, 2016 at 10:49:01PM +0200, Martin Mares wrote:
+> > The PCI SIG added the Downstream Port Containment capability. This patch
+> > decodes this for lspci and defines the extended capability for setpci.
+> 
+> Yes, that looks good.
+> 
+> Could you please add a test case to tests/ ?
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- arch/x86/kernel/acpi/boot.c | 1 -
- drivers/acpi/pci_link.c     | 4 ----
- include/linux/acpi.h        | 1 -
- 3 files changed, 6 deletions(-)
+Thanks for the quick reply!
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 8c2f1ef..edf4840 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -445,7 +445,6 @@ static void __init acpi_sci_ioapic_setup(u8 bus_irq, u16 polarity, u16 trigger,
- 		polarity = acpi_sci_flags & ACPI_MADT_POLARITY_MASK;
- 
- 	mp_override_legacy_irq(bus_irq, polarity, trigger, gsi);
--	acpi_penalize_sci_irq(bus_irq, trigger, polarity);
- 
- 	/*
- 	 * stash over-ride to indicate we've been here
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index ab39208..8fc7323 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -848,10 +848,6 @@ bool acpi_isa_irq_available(int irq)
- 		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
- }
- 
--void acpi_penalize_sci_irq(int irq, int trigger, int polarity)
--{
--}
--
- /*
-  * Over-ride default table to reserve additional IRQs for use by ISA
-  * e.g. acpi_irq_isa=5
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 06ed7e5..0f41317 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -311,7 +311,6 @@ struct pci_dev;
- int acpi_pci_irq_enable (struct pci_dev *dev);
- void acpi_penalize_isa_irq(int irq, int active);
- bool acpi_isa_irq_available(int irq);
--void acpi_penalize_sci_irq(int irq, int trigger, int polarity);
- void acpi_pci_irq_disable (struct pci_dev *dev);
- 
- extern int ec_read(u8 addr, u8 *val);
--- 
-1.8.2.1
-
+I'll confirm with the vendor that they're okay with me adding their switch
+to the test cases (I don't know if they've released this product yet).
