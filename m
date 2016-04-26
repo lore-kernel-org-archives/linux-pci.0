@@ -1,57 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:34203 "EHLO
-	mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751711AbcDVA0Y (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 21 Apr 2016 20:26:24 -0400
+Received: from mga11.intel.com ([192.55.52.93]:1723 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752610AbcDZVR3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Apr 2016 17:17:29 -0400
+Date: Tue, 26 Apr 2016 21:17:28 +0000
+From: Keith Busch <keith.busch@intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] pcie: Add driver for Downstream Port Containment
+Message-ID: <20160426211727.GB24243@localhost.localdomain>
+References: <1461703693-29400-1-git-send-email-keith.busch@intel.com>
+ <20160426210558.GB17561@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <CAMxnaaXN7YwEDNGDR1aRbOqhj_2JFyQAiCSjqvTa500x_xRmLA@mail.gmail.com>
-References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
-	<CAJZ5v0ic6YpYtM4cymLJ4oV2-J4CK4MxFi9-6bWNADD-QY3B6A@mail.gmail.com>
-	<20160421131224.GY1725@lahna.fi.intel.com>
-	<2823801.fOoJOI22FZ@vostro.rjw.lan>
-	<CAMxnaaXN7YwEDNGDR1aRbOqhj_2JFyQAiCSjqvTa500x_xRmLA@mail.gmail.com>
-Date: Fri, 22 Apr 2016 02:26:22 +0200
-Message-ID: <CAJZ5v0hwmyPz8J2YFc-fS51BpBkh6+TrtnZ1WJRhbDzsdrbqGA@mail.gmail.com>
-Subject: Re: [PATCH v2 4/4] PCI: Add runtime PM support for PCIe ports
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160426210558.GB17561@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 22, 2016 at 1:25 AM, Andreas Noever
-<andreas.noever@gmail.com> wrote:
-> On Thu, Apr 21, 2016 at 9:19 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->> On Thursday, April 21, 2016 04:12:24 PM Mika Westerberg wrote:
->>> On Wed, Apr 20, 2016 at 10:23:33PM +0200, Rafael J. Wysocki wrote:
->>> > Breaking any systems that work today is not an option.  if that
->>> > happens, the commit that has done that is a clear candidate for
->>> > reverting.
->>>
->>> Understood, thanks.
->>>
->>> BTW, do you have any preference regarding the cut-off date?
->>
->> Some time around when machines with Windows 10 started to ship should be
->> relatively safe.
->>
->> I guess we can just pick a reasonable date in the initial patch and then
->> try to move it back to the past subsequently and see if that breaks things
->> for anyone.
->
-> Maybe add a boot option to overwrite the heuristic (in both
-> directions) to allow people to test this on older machines and
-> pinpoint breakage on newer machines?
+On Tue, Apr 26, 2016 at 11:05:58PM +0200, Lukas Wunner wrote:
+> You need to amend your patch to fixup get_descriptor_id() in portdrv.h
+> as well as dev_set_name() in portdrv_core.c to cope with more than four
+> service types, as I've done in this commit:
+> 
+> https://github.com/l1k/linux/commit/b688d6e4873ab082e5916b1a993bc1d38c6f4178
 
-Yes, a kernel command line override would be fine by me.
+Thanks for the pointer. I hadn't noticed since it seemed to work as-is,
+but I see this could generate duplicate names with the PME service.
+ 
+> You may also want to fixup these small nits in the commit message:
+
+My proof-reading is atrocious. Thanks for the fixes.
+
+Will send a new version.
