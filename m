@@ -1,75 +1,64 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:52689 "EHLO
+	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752021AbcDZVDY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Apr 2016 17:03:24 -0400
+Date: Tue, 26 Apr 2016 23:05:58 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] pcie: Add driver for Downstream Port Containment
+Message-ID: <20160426210558.GB17561@wunner.de>
+References: <1461703693-29400-1-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <571130BB.9030508@redhat.com>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com> <571130BB.9030508@redhat.com>
-From: Martinez Kristofer <kristofer.s.martinez@gmail.com>
-Date: Sun, 17 Apr 2016 17:23:31 +0800
-Message-ID: <CABtop_ExTJ=esXga5f+zT2AV0Vj49zsDVgxegLfW7R4sc+Nmzw@mail.gmail.com>
-Subject: Re: [PATCH V6 00/13] Support for generic ACPI based PCI host controller
-To: Jon Masters <jcm@redhat.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org,
-	arnd@arndb.de, will.deacon@arm.com,
-	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
-	hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com,
-	okaya@codeaurora.org, jiang.liu@linux.intel.com,
-	jchandra@broadcom.com, robert.richter@caviumnetworks.com,
-	mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1461703693-29400-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 16, 2016 at 2:19 AM, Jon Masters <jcm@redhat.com> wrote:
-> On 04/15/2016 01:06 PM, Tomasz Nowicki wrote:
->> From the functionality point of view this series might be split into the
->> following logic parts:
->> 1. Necessary fixes as the preparation for using driver on ARM64.
->> 2. New ECAM API and update for users of the pci-host-common API
->> 3. Use new MCFG interface and implement generic ACPI based PCI host controller driver.
->> 4. Enable above driver on ARM64
->>
->> Patches has been built on top of 4.6-rc2 and can be found here:
->> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v6)
->>
->> This has been tested on Cavium ThunderX server. Any help in reviewing and
->> testing is very appreciated.
->>
->> v5 -> v6
->> - dropped idea of x86 MMCONFIG code refactoring
->> - integrated JC's patches which introduce new ECAM API:
->>   https://lkml.org/lkml/2016/4/11/907
->>   git: https://github.com/jchandra-brcm/linux/ (arm64-acpi-pci-v3)
->> - integrated Sinan's fix for releasing IO resources, see patch [06/13]
->> - added ACPI support for ThunderX ECAM and PEM drivers
->> - rebased to 4.6-rc2
->
-> JC: can you explicitly confirm that you're ok with letting Tomasz drive
-> this? We would like to see one driver. Either that is Tomasz, or
-> Lorenzo, or it is you. But we need to have one overall cooordinated
-> effort to get this enablement into upstream as quickly as possible.
->
-> Some of the Enterprise folks are going to otherwise end up in a very
-> nasty situation of supporting the previous non-upstream patches for many
-> years, which is absolutely something we want to avoid...
->
-Indeed, we need only one driver for this. But given there're already
-others except this
-one exist, and I believe no one want to give up their efforts. Also I
-think it's not exactly the
-same feauture provided by those drivers, so can we make some trade-off
-to combine
-those drivers into one and add the Signed-off-by for all the anthors?
-One agreement for all of us is to upstream the ACPI PCI for ARM64 asap!
+Hi Keith,
 
-M.K.
+On Tue, Apr 26, 2016 at 02:48:13PM -0600, Keith Busch wrote:
+> --- a/drivers/pci/pcie/portdrv.h
+> +++ b/drivers/pci/pcie/portdrv.h
+> @@ -11,7 +11,7 @@
+>  
+>  #include <linux/compiler.h>
+>  
+> -#define PCIE_PORT_DEVICE_MAXSERVICES   4
+> +#define PCIE_PORT_DEVICE_MAXSERVICES   5
 
->
-> Jon.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You're adding a fifth port service yet the name of port service devices
+encodes the service type in one nibble, so there's only room for four
+service types.
+
+You need to amend your patch to fixup get_descriptor_id() in portdrv.h
+as well as dev_set_name() in portdrv_core.c to cope with more than four
+service types, as I've done in this commit:
+
+https://github.com/l1k/linux/commit/b688d6e4873ab082e5916b1a993bc1d38c6f4178
+
+
+You may also want to fixup these small nits in the commit message:
+
+> This adds driver support for root and downstream ports that implement
+> the Downstream Port PCI-Express extended capability. DPC is an optional
+                     ^
+                     Containment
+> capability to contained uncorrectable errors below a downstream port.
+                ^
+                contain
+> 
+> When a DPC is triggered due to receipt of an uncorrectable error message,
+> the DPC driver will schedule removal for all downstream devices as DPC
+> capable ports disable downstream links. This may happen concurrently
+> with a PCI-e hotplug driver if enabled. After the downstream devices
+> are removed, the DPC driver will clear the status and interrupt bits
+                                                                      ^
+                                                                      and
+> the link may retrain for a newly connected device.
+
+
+Best regards,
+
+Lukas
