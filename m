@@ -1,113 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p3plsmtps2ded04.prod.phx3.secureserver.net ([208.109.80.198]:34437
-	"EHLO p3plsmtps2ded04.prod.phx3.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760559AbcDEXlD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 5 Apr 2016 19:41:03 -0400
-From: Jake Oshins <jakeo@microsoft.com>
-To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com,
-	helgaas@kernel.org
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v5 5/6] drivers:hv: Record MMIO range in use by frame buffer
-Date: Tue,  5 Apr 2016 18:18:21 -0700
-Message-Id: <1459905502-20798-6-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1459905502-20798-1-git-send-email-jakeo@microsoft.com>
-References: <1459905502-20798-1-git-send-email-jakeo@microsoft.com>
+Received: from down.free-electrons.com ([37.187.137.238]:34581 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752226AbcDZIcG (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Apr 2016 04:32:06 -0400
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Hanna Hawa <hannah@marvell.com>,
+	Yehuda Yitschak <yehuday@marvell.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH v3 0/2] pci: host: new driver for Marvell Armada 7K/8K PCIe controller
+Date: Tue, 26 Apr 2016 10:31:44 +0200
+Message-Id: <1461659506-10387-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Later in the boot sequence, we need to figure out which memory
-ranges can be given out to various paravirtual drivers.  The
-hyperv_fb driver should, ideally, be placed right on top of
-the frame buffer, without some other device getting plopped on
-top of this range in the meantime.  Recording this now allows
-that to be guaranteed.
+Hello,
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
----
- drivers/hv/vmbus_drv.c | 37 ++++++++++++++++++++++++++++++++++++-
- 1 file changed, 36 insertions(+), 1 deletion(-)
+Here is the third iteration of the PCIe host controller driver needed
+for the ARM64 Marvell Armada 7K/8K platform.
 
-diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-index dfc6149..eaa5c3b 100644
---- a/drivers/hv/vmbus_drv.c
-+++ b/drivers/hv/vmbus_drv.c
-@@ -41,6 +41,7 @@
- #include <linux/ptrace.h>
- #include <linux/screen_info.h>
- #include <linux/kdebug.h>
-+#include <linux/efi.h>
- #include "hyperv_vmbus.h"
- 
- static struct acpi_device  *hv_acpi_dev;
-@@ -101,6 +102,8 @@ static struct notifier_block hyperv_panic_block = {
- 	.notifier_call = hyperv_panic_event,
- };
- 
-+static const char *fb_mmio_name = "fb_range";
-+static struct resource *fb_mmio;
- struct resource *hyperv_mmio;
- DEFINE_SEMAPHORE(hyperv_mmio_lock);
- 
-@@ -1091,6 +1094,12 @@ static int vmbus_acpi_remove(struct acpi_device *device)
- 	struct resource *next_res;
- 
- 	if (hyperv_mmio) {
-+		if (fb_mmio) {
-+			__release_region(hyperv_mmio, fb_mmio->start,
-+					 resource_size(fb_mmio));
-+			fb_mmio = NULL;
-+		}
-+
- 		for (cur_res = hyperv_mmio; cur_res; cur_res = next_res) {
- 			next_res = cur_res->sibling;
- 			kfree(cur_res);
-@@ -1100,6 +1109,30 @@ static int vmbus_acpi_remove(struct acpi_device *device)
- 	return 0;
- }
- 
-+static void vmbus_reserve_fb(void)
-+{
-+	int size;
-+	/*
-+	 * Make a claim for the frame buffer in the resource tree under the
-+	 * first node, which will be the one below 4GB.  The length seems to
-+	 * be underreported, particularly in a Generation 1 VM.  So start out
-+	 * reserving a larger area and make it smaller until it succeeds.
-+	 */
-+
-+	if (screen_info.lfb_base) {
-+		if (efi_enabled(EFI_BOOT))
-+			size = max_t(__u32, screen_info.lfb_size, 0x800000);
-+		else
-+			size = max_t(__u32, screen_info.lfb_size, 0x4000000);
-+
-+		for (; !fb_mmio && (size >= 0x100000); size >>= 1) {
-+			fb_mmio = __request_region(hyperv_mmio,
-+						   screen_info.lfb_base, size,
-+						   fb_mmio_name, 0);
-+		}
-+	}
-+}
-+
- /**
-  * vmbus_allocate_mmio() - Pick a memory-mapped I/O range.
-  * @new:		If successful, supplied a pointer to the
-@@ -1261,8 +1294,10 @@ static int vmbus_acpi_add(struct acpi_device *device)
- 
- 		if (ACPI_FAILURE(result))
- 			continue;
--		if (hyperv_mmio)
-+		if (hyperv_mmio) {
-+			vmbus_reserve_fb();
- 			break;
-+		}
- 	}
- 	ret_val = 0;
- 
+Changes since v2:
+
+ - Added Rob Herring's Acked-by on the Device Tree binding patch.
+
+ - Reworked the PCIe host driver following the suggestion of Bjorn
+   Helgaas: creation of armada8k_add_pcie_port() and
+   armada8k_pcie_establish_link() in order to follow the convention of
+   other Designware based drivers.
+
+Thanks!
+
+Thomas
+
+Thomas Petazzoni (2):
+  dt-bindings: pci: add DT binding for Marvell Armada 7K/8K PCIe
+    controller
+  pci: host: new driver for Marvell Armada 7K/8K PCIe controller
+
+ .../devicetree/bindings/pci/pci-armada8k.txt       |  38 +++
+ drivers/pci/host/Kconfig                           |  11 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pcie-armada8k.c                   | 276 +++++++++++++++++++++
+ 4 files changed, 326 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/pci-armada8k.txt
+ create mode 100644 drivers/pci/host/pcie-armada8k.c
+
 -- 
-1.9.1
+2.6.4
 
