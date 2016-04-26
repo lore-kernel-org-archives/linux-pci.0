@@ -1,234 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:36131 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751011AbcDSF2n (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 01:28:43 -0400
-Received: by mail-pa0-f43.google.com with SMTP id er2so2891471pad.3
-        for <linux-pci@vger.kernel.org>; Mon, 18 Apr 2016 22:28:43 -0700 (PDT)
-Subject: Re: [PATCH v8 24/45] powerpc/pci: Rename
- pcibios_{add,remove}_pci_devices()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-25-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
-	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <5715C204.20004@ozlabs.ru>
-Date: Tue, 19 Apr 2016 15:28:36 +1000
+Received: from mail.kernel.org ([198.145.29.136]:34552 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751772AbcDZRbs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Apr 2016 13:31:48 -0400
+Date: Tue, 26 Apr 2016 12:31:44 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Hanna Hawa <hannah@marvell.com>,
+	Yehuda Yitschak <yehuday@marvell.com>
+Subject: Re: [PATCH v3 0/2] pci: host: new driver for Marvell Armada 7K/8K
+ PCIe controller
+Message-ID: <20160426173144.GB27803@localhost>
+References: <1461659506-10387-1-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-25-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1461659506-10387-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/17/2016 02:44 PM, Gavin Shan wrote:
-> This renames pcibios_{add,remove}_pci_devices() to avoid conflicts
-> with names of the weak functions in PCI subsystem, which have the
-> prefix "pcibios". No logical changes introduced.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/include/asm/pci-bridge.h |  4 ++--
->   arch/powerpc/kernel/eeh_driver.c      | 12 ++++++------
->   arch/powerpc/kernel/pci-hotplug.c     | 15 +++++++--------
->   drivers/pci/hotplug/rpadlpar_core.c   |  2 +-
->   drivers/pci/hotplug/rpaphp_core.c     |  4 ++--
->   drivers/pci/hotplug/rpaphp_pci.c      |  2 +-
->   6 files changed, 19 insertions(+), 20 deletions(-)
->
-> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-> index 4dd6ef4..c817f38 100644
-> --- a/arch/powerpc/include/asm/pci-bridge.h
-> +++ b/arch/powerpc/include/asm/pci-bridge.h
-> @@ -263,10 +263,10 @@ static inline struct eeh_dev *pdn_to_eeh_dev(struct pci_dn *pdn)
->   extern struct pci_bus *pcibios_find_pci_bus(struct device_node *dn);
->
->   /** Remove all of the PCI devices under this bus */
-> -extern void pcibios_remove_pci_devices(struct pci_bus *bus);
-> +extern void pci_remove_pci_devices(struct pci_bus *bus);
+On Tue, Apr 26, 2016 at 10:31:44AM +0200, Thomas Petazzoni wrote:
+> Hello,
+> 
+> Here is the third iteration of the PCIe host controller driver needed
+> for the ARM64 Marvell Armada 7K/8K platform.
+> 
+> Changes since v2:
+> 
+>  - Added Rob Herring's Acked-by on the Device Tree binding patch.
+> 
+>  - Reworked the PCIe host driver following the suggestion of Bjorn
+>    Helgaas: creation of armada8k_add_pcie_port() and
+>    armada8k_pcie_establish_link() in order to follow the convention of
+>    other Designware based drivers.
+> 
+> Thanks!
+> 
+> Thomas
+> 
+> Thomas Petazzoni (2):
+>   dt-bindings: pci: add DT binding for Marvell Armada 7K/8K PCIe
+>     controller
+>   pci: host: new driver for Marvell Armada 7K/8K PCIe controller
+> 
+>  .../devicetree/bindings/pci/pci-armada8k.txt       |  38 +++
+>  drivers/pci/host/Kconfig                           |  11 +
+>  drivers/pci/host/Makefile                          |   1 +
+>  drivers/pci/host/pcie-armada8k.c                   | 276 +++++++++++++++++++++
+>  4 files changed, 326 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/pci-armada8k.txt
+>  create mode 100644 drivers/pci/host/pcie-armada8k.c
+
+Thanks, Thomas, I applied these to pci/host-armada for v4.7.
+
+I added the tweaks below to use dev_dbg() instead of pr_debug(), use
+dw_pcie_wait_for_link() instead of another hand-coded timeout loop,
+and fix a typo and remove unused constants.
+
+Bjorn
 
 
-pci_lala_pci_lala() ("pci" is used twice) looks weird, if the prefix is 
-"pci", what other device types can they handle?...
-
-May be pcihp_add_devices(), pcihp_remove_devices() as these as defined in 
-pci-hotplug.c?
-
-
->
->   /** Discover new pci devices under this bus, and add them */
-> -extern void pcibios_add_pci_devices(struct pci_bus *bus);
-> +extern void pci_add_pci_devices(struct pci_bus *bus);
->
->
->   extern void isa_bridge_find_early(struct pci_controller *hose);
-> diff --git a/arch/powerpc/kernel/eeh_driver.c b/arch/powerpc/kernel/eeh_driver.c
-> index fb6207d..59e53fe 100644
-> --- a/arch/powerpc/kernel/eeh_driver.c
-> +++ b/arch/powerpc/kernel/eeh_driver.c
-> @@ -621,7 +621,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus,
->   	 * We don't remove the corresponding PE instances because
->   	 * we need the information afterwords. The attached EEH
->   	 * devices are expected to be attached soon when calling
-> -	 * into pcibios_add_pci_devices().
-> +	 * into pci_add_pci_devices().
->   	 */
->   	eeh_pe_state_mark(pe, EEH_PE_KEEP);
->   	if (bus) {
-> @@ -630,7 +630,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus,
->   		} else {
->   			eeh_pe_state_clear(pe, EEH_PE_PRI_BUS);
->   			pci_lock_rescan_remove();
-> -			pcibios_remove_pci_devices(bus);
-> +			pci_remove_pci_devices(bus);
->   			pci_unlock_rescan_remove();
->   		}
->   	} else if (frozen_bus) {
-> @@ -681,7 +681,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus,
->   		if (pe->type & EEH_PE_VF)
->   			eeh_add_virt_device(edev, NULL);
->   		else
-> -			pcibios_add_pci_devices(bus);
-> +			pci_add_pci_devices(bus);
->   	} else if (frozen_bus && rmv_data->removed) {
->   		pr_info("EEH: Sleep 5s ahead of partial hotplug\n");
->   		ssleep(5);
-> @@ -691,7 +691,7 @@ static int eeh_reset_device(struct eeh_pe *pe, struct pci_bus *bus,
->   		if (pe->type & EEH_PE_VF)
->   			eeh_add_virt_device(edev, NULL);
->   		else
-> -			pcibios_add_pci_devices(frozen_bus);
-> +			pci_add_pci_devices(frozen_bus);
->   	}
->   	eeh_pe_state_clear(pe, EEH_PE_KEEP);
->
-> @@ -896,7 +896,7 @@ perm_error:
->   			eeh_pe_dev_mode_mark(pe, EEH_DEV_REMOVED);
->
->   			pci_lock_rescan_remove();
-> -			pcibios_remove_pci_devices(frozen_bus);
-> +			pci_remove_pci_devices(frozen_bus);
->   			pci_unlock_rescan_remove();
->   		}
->   	}
-> @@ -981,7 +981,7 @@ static void eeh_handle_special_event(void)
->   				bus = eeh_pe_bus_get(phb_pe);
->   				eeh_pe_dev_traverse(pe,
->   					eeh_report_failure, NULL);
-> -				pcibios_remove_pci_devices(bus);
-> +				pci_remove_pci_devices(bus);
->   			}
->   			pci_unlock_rescan_remove();
->   		}
-> diff --git a/arch/powerpc/kernel/pci-hotplug.c b/arch/powerpc/kernel/pci-hotplug.c
-> index 59c4361..78bf2a1 100644
-> --- a/arch/powerpc/kernel/pci-hotplug.c
-> +++ b/arch/powerpc/kernel/pci-hotplug.c
-> @@ -38,20 +38,20 @@ void pcibios_release_device(struct pci_dev *dev)
->   }
->
->   /**
-> - * pcibios_remove_pci_devices - remove all devices under this bus
-> + * pci_remove_pci_devices - remove all devices under this bus
->    * @bus: the indicated PCI bus
->    *
->    * Remove all of the PCI devices under this bus both from the
->    * linux pci device tree, and from the powerpc EEH address cache.
->    */
-> -void pcibios_remove_pci_devices(struct pci_bus *bus)
-> +void pci_remove_pci_devices(struct pci_bus *bus)
->   {
->   	struct pci_dev *dev, *tmp;
->   	struct pci_bus *child_bus;
->
->   	/* First go down child busses */
->   	list_for_each_entry(child_bus, &bus->children, node)
-> -		pcibios_remove_pci_devices(child_bus);
-> +		pci_remove_pci_devices(child_bus);
->
->   	pr_debug("PCI: Removing devices on bus %04x:%02x\n",
->   		 pci_domain_nr(bus),  bus->number);
-> @@ -60,11 +60,10 @@ void pcibios_remove_pci_devices(struct pci_bus *bus)
->   		pci_stop_and_remove_bus_device(dev);
->   	}
->   }
-> -
-> -EXPORT_SYMBOL_GPL(pcibios_remove_pci_devices);
-> +EXPORT_SYMBOL_GPL(pci_remove_pci_devices);
->
->   /**
-> - * pcibios_add_pci_devices - adds new pci devices to bus
-> + * pci_add_pci_devices - adds new pci devices to bus
->    * @bus: the indicated PCI bus
->    *
->    * This routine will find and fixup new pci devices under
-> @@ -74,7 +73,7 @@ EXPORT_SYMBOL_GPL(pcibios_remove_pci_devices);
->    * is how this routine differs from other, similar pcibios
->    * routines.)
->    */
-> -void pcibios_add_pci_devices(struct pci_bus * bus)
-> +void pci_add_pci_devices(struct pci_bus *bus)
->   {
->   	int slotno, mode, pass, max;
->   	struct pci_dev *dev;
-> @@ -114,4 +113,4 @@ void pcibios_add_pci_devices(struct pci_bus * bus)
->   	}
->   	pcibios_finish_adding_to_bus(bus);
->   }
-> -EXPORT_SYMBOL_GPL(pcibios_add_pci_devices);
-> +EXPORT_SYMBOL_GPL(pci_add_pci_devices);
-> diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
-> index b46b57d..730982b 100644
-> --- a/drivers/pci/hotplug/rpadlpar_core.c
-> +++ b/drivers/pci/hotplug/rpadlpar_core.c
-> @@ -380,7 +380,7 @@ int dlpar_remove_pci_slot(char *drc_name, struct device_node *dn)
->   	}
->
->   	/* Remove all devices below slot */
-> -	pcibios_remove_pci_devices(bus);
-> +	pci_remove_pci_devices(bus);
->
->   	/* Unmap PCI IO space */
->   	if (pcibios_unmap_io_space(bus)) {
-> diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
-> index 611f605..bba07b3 100644
-> --- a/drivers/pci/hotplug/rpaphp_core.c
-> +++ b/drivers/pci/hotplug/rpaphp_core.c
-> @@ -404,7 +404,7 @@ static int enable_slot(struct hotplug_slot *hotplug_slot)
->
->   	if (state == PRESENT) {
->   		pci_lock_rescan_remove();
-> -		pcibios_add_pci_devices(slot->bus);
-> +		pci_add_pci_devices(slot->bus);
->   		pci_unlock_rescan_remove();
->   		slot->state = CONFIGURED;
->   	} else if (state == EMPTY) {
-> @@ -426,7 +426,7 @@ static int disable_slot(struct hotplug_slot *hotplug_slot)
->   		return -EINVAL;
->
->   	pci_lock_rescan_remove();
-> -	pcibios_remove_pci_devices(slot->bus);
-> +	pci_remove_pci_devices(slot->bus);
->   	pci_unlock_rescan_remove();
->   	vm_unmap_aliases();
->
-> diff --git a/drivers/pci/hotplug/rpaphp_pci.c b/drivers/pci/hotplug/rpaphp_pci.c
-> index 7836d69..1099b38 100644
-> --- a/drivers/pci/hotplug/rpaphp_pci.c
-> +++ b/drivers/pci/hotplug/rpaphp_pci.c
-> @@ -116,7 +116,7 @@ int rpaphp_enable_slot(struct slot *slot)
->   		}
->
->   		if (list_empty(&bus->devices))
-> -			pcibios_add_pci_devices(bus);
-> +			pci_add_pci_devices(bus);
->
->   		if (!list_empty(&bus->devices)) {
->   			info->adapter_status = CONFIGURED;
->
-
-
--- 
-Alexey
+diff --git a/drivers/pci/host/pcie-armada8k.c b/drivers/pci/host/pcie-armada8k.c
+index 7302de2..811ddf8 100644
+--- a/drivers/pci/host/pcie-armada8k.c
++++ b/drivers/pci/host/pcie-armada8k.c
+@@ -10,8 +10,6 @@
+  * warranty of any kind, whether express or implied.
+  */
+ 
+-#define pr_fmt(fmt) "armada-8k-pcie: " fmt
+-
+ #include <linux/clk.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
+@@ -39,8 +37,6 @@ struct armada8k_pcie {
+ #define PCIE_APP_LTSSM_EN		BIT(2)
+ #define PCIE_DEVICE_TYPE_SHIFT		4
+ #define PCIE_DEVICE_TYPE_MASK		0xF
+-#define PCIE_DEVICE_TYPE_EP		0x0 /* Endpoint */
+-#define PCIE_DEVICE_TYPE_LEP		0x1 /* Legacy endpoint */
+ #define PCIE_DEVICE_TYPE_RC		0x4 /* Root complex */
+ 
+ #define PCIE_GLOBAL_STATUS_REG		0x8
+@@ -69,14 +65,12 @@ struct armada8k_pcie {
+ #define AX_USER_DOMAIN_MASK		0x3
+ #define AX_USER_DOMAIN_SHIFT		4
+ 
+-
+-
+ #define to_armada8k_pcie(x)	container_of(x, struct armada8k_pcie, pp)
+ 
+ static int armada8k_pcie_link_up(struct pcie_port *pp)
+ {
+-	u32 reg;
+ 	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
++	u32 reg;
+ 	u32 mask = PCIE_GLB_STS_RDLH_LINK_UP | PCIE_GLB_STS_PHY_LINK_UP;
+ 
+ 	reg = readl(pcie->base + PCIE_GLOBAL_STATUS_REG);
+@@ -84,7 +78,7 @@ static int armada8k_pcie_link_up(struct pcie_port *pp)
+ 	if ((reg & mask) == mask)
+ 		return 1;
+ 
+-	pr_debug("No link detected (Global-Status: 0x%08x).\n", reg);
++	dev_dbg(pp->dev, "No link detected (Global-Status: 0x%08x).\n", reg);
+ 	return 0;
+ }
+ 
+@@ -92,10 +86,9 @@ static void armada8k_pcie_establish_link(struct pcie_port *pp)
+ {
+ 	struct armada8k_pcie *pcie = to_armada8k_pcie(pp);
+ 	void __iomem *base = pcie->base;
+-	int timeout = 1000;
+ 	u32 reg;
+ 
+-	if (!armada8k_pcie_link_up(pp)) {
++	if (!dw_pcie_link_up(pp)) {
+ 		/* Disable LTSSM state machine to enable configuration */
+ 		reg = readl(base + PCIE_GLOBAL_CONTROL_REG);
+ 		reg &= ~(PCIE_APP_LTSSM_EN);
+@@ -129,7 +122,7 @@ static void armada8k_pcie_establish_link(struct pcie_port *pp)
+ 	       PCIE_INT_C_ASSERT_MASK | PCIE_INT_D_ASSERT_MASK;
+ 	writel(reg, base + PCIE_GLOBAL_INT_MASK1_REG);
+ 
+-	if (!armada8k_pcie_link_up(pp)) {
++	if (!dw_pcie_link_up(pp)) {
+ 		/* Configuration done. Start LTSSM */
+ 		reg = readl(base + PCIE_GLOBAL_CONTROL_REG);
+ 		reg |= PCIE_APP_LTSSM_EN;
+@@ -137,14 +130,7 @@ static void armada8k_pcie_establish_link(struct pcie_port *pp)
+ 	}
+ 
+ 	/* Wait until the link becomes active again */
+-	while (timeout) {
+-		if (armada8k_pcie_link_up(pp))
+-			break;
+-		msleep(1);
+-		timeout--;
+-	}
+-
+-	if (timeout == 0)
++	if (dw_pcie_wait_for_link(pp))
+ 		dev_err(pp->dev, "Link not up after reconfiguration\n");
+ }
+ 
+@@ -163,7 +149,7 @@ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
+ 
+ 	/*
+ 	 * Interrupts are directly handled by the device driver of the
+-	 * PCI device. However, there are also latched into the PCIe
++	 * PCI device.  However, they are also latched into the PCIe
+ 	 * controller, so we simply discard them.
+ 	 */
+ 	val = readl(base + PCIE_GLOBAL_INT_CAUSE1_REG);
