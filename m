@@ -1,72 +1,32 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jake Oshins <jakeo@microsoft.com>
-To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v3 0/7] drivers:hv: Ensure that bridge windows don't overlap
-Date: Fri,  1 Apr 2016 16:11:25 -0700
-Message-Id: <1459552292-1297-1-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <y>
-References: <y>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from nikam.ms.mff.cuni.cz ([195.113.20.16]:38317 "EHLO
+	nikam.ms.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752510AbcDZUyn (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Apr 2016 16:54:43 -0400
+Date: Tue, 26 Apr 2016 22:49:01 +0200
+From: Martin Mares <mj@ucw.cz>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] Add support for Downstream Port Containment
+Message-ID: <mj+md-20160426.204835.23574.nikam@ucw.cz>
+References: <1461703673-29363-1-git-send-email-keith.busch@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1461703673-29363-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series differs from v2 in that it reserves not only the memory
-in use as the UEFI frame buffer but also the off-screen memory, so
-that PCI devices can't reserve that, either.
+Hi!
 
-Hyper-V VMs expose paravirtual drivers through a mechanism called
-VMBus, which is managed by hv_vmbus.ko.  For each parvirtual service
-instance, this driver exposes a new child device.  Some of these child
-devices need memory address space, into which Hyper-V will map things
-like the virtual video frame buffer.  This memory-mapped address space
-is chosen by the guest OS, not the hypervisor.
+> The PCI SIG added the Downstream Port Containment capability. This patch
+> decodes this for lspci and defines the extended capability for setpci.
 
-This is difficult to map onto the Linux pnp layer, as the code in the
-pnp layer to choose MMIO space keys off of bus type and it doesn't know
-anything about VMBus.  The maintainers of the pnp layer have asked that
-we not offer patches to it that make it understand VMBus, but that we
-rather find ways of using the code in its current state.  So hv_vmbus.ko
-exports a function, vmbus_allocate_mmio() for choosing the address space
-for any child driver that needs this facility.
+Yes, that looks good.
 
-The recently introduced PCI front-end driver for Hyper-V VMs
-(pci-hyperv.ko) uses vmbus_allocate_mmio() for choosing both the region
-of memory space into which real PCI Express devices are mapped.  The
-regions allocated are made to look like root PCI bus bridge windows
-to the PCI driver, reusing all the code in the PCI driver for the rest
-of PCI device management.
+Could you please add a test case to tests/ ?
 
-The problem is that these bridge windows are marked in such a way that
-devices can still allocate from the memory space spanned by them, and
-this means that if two different PCI buses are created in the VM, each
-with devices under them, they may allocate the same memory space, leading
-to PCI Base Address Register which overlap.
-
-This patch series fixes the problem by tracking allocations to child
-devices in a separate resource tree, marking them such that the bridge
-windows can't overlap.  The main memory resource tree, iomem_resource,
-contains resources properly marked as bridge windows, allowing their
-children to overlap with them.
-
-
-Jake Oshins (7):
-  drivers:hv: Lock access to hyperv_mmio resource tree
-  drivers:hv: Make a function to free mmio regions through vmbus
-  drivers:hv: Use new vmbus_mmio_free() from client drivers.
-  drivers:hv: Reverse order of resources in hyperv_mmio
-  drivers:hv: Track allocations of children of hv_vmbus in private
-    resource tree
-  drivers:hv: Record MMIO range in use by frame buffer
-  drivers:hv: Separate out frame buffer logic when picking MMIO range
-
- drivers/hv/vmbus_drv.c          | 143 +++++++++++++++++++++++++++++-----------
- drivers/pci/host/pci-hyperv.c   |  14 ++--
- drivers/video/fbdev/hyperv_fb.c |   4 +-
- include/linux/hyperv.h          |   2 +-
- 4 files changed, 115 insertions(+), 48 deletions(-)
-
---
-1.9.1
+				Have a nice fortnight
+-- 
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+int random(void) { return 4; /* Random number chosen by a fair dice roll. */ }
