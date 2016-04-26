@@ -1,211 +1,240 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-To: <bhelgaas@google.com>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH next v2 1/2] PCI: keystone: add pci error irq handler
-Date: Mon, 11 Apr 2016 10:50:30 -0400
-Message-ID: <1460386231-8377-1-git-send-email-m-karicheri2@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:45072 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752163AbcDZWtZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Apr 2016 18:49:25 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Martin Mares <mj@ucw.cz>, linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv2] Add support for Downstream Port Containment
+Date: Tue, 26 Apr 2016 16:49:17 -0600
+Message-Id: <1461710957-316-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Keystone PCI hardware generates error interrupts at RC using platform
-irq instead of standard msi/legacy irq. Add a simple error handler that
-logs the fatal interrupt status to the console.
+The PCI SIG added the Downstream Port Containment capability. This patch
+decodes this for lspci, and defines the extended capability for setpci.
 
-Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
-Acked-by: Rob Herring <robh@kernel.org>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Pawel Moll <pawel.moll@arm.com>
-Cc: Mark Rutland <mark.rutland@arm.com>
-Cc: Ian Campbell <ijc+devicetree@hellion.org.uk>
-Cc: Kumar Gala <galak@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-
+Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
- v2 - No change
- v1 - fixed a compilation issue reported by kbuild test robot
-    - rebased to linux-next master branch
-    - Added ack from Rob Herring
+v1->v2:
 
- .../devicetree/bindings/pci/pci-keystone.txt       |  1 +
- drivers/pci/host/pci-keystone-dw.c                 | 46 ++++++++++++++++++++++
- drivers/pci/host/pci-keystone.c                    | 32 +++++++++++++++
- drivers/pci/host/pci-keystone.h                    |  6 +++
- 4 files changed, 85 insertions(+)
+  Obtained access to system using switch vendor with a released product,
+  so added DPC capable device to tests/.
 
-diff --git a/Documentation/devicetree/bindings/pci/pci-keystone.txt b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-index 54eae29..d08a4d5 100644
---- a/Documentation/devicetree/bindings/pci/pci-keystone.txt
-+++ b/Documentation/devicetree/bindings/pci/pci-keystone.txt
-@@ -56,6 +56,7 @@ Optional properties:-
- 	phy-names: name of the Generic Keystine SerDes phy for PCI
- 	  - If boot loader already does PCI link establishment, then phys and
- 	    phy-names shouldn't be present.
-+	interrupts: platform interrupt for error interrupts.
+ lib/header.h  | 26 +++++++++++++++++
+ ls-ecaps.c    | 34 ++++++++++++++++++++++
+ setpci.c      |  1 +
+ tests/cap-dpc | 91 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 152 insertions(+)
+ create mode 100644 tests/cap-dpc
+
+diff --git a/lib/header.h b/lib/header.h
+index b8f7dc1..b7cbc9d 100644
+--- a/lib/header.h
++++ b/lib/header.h
+@@ -230,6 +230,7 @@
+ #define PCI_EXT_CAP_ID_LTR	0x18	/* Latency Tolerance Reporting */
+ #define PCI_EXT_CAP_ID_PASID	0x1b	/* Process Address Space ID */
+ #define PCI_EXT_CAP_ID_L1PM	0x1e	/* L1 PM Substates */
++#define PCI_EXT_CAP_ID_DPC	0x1d	/* Downstream Port Containment */
  
- Designware DT Properties not applicable for Keystone PCI
+ /*** Definitions of capabilities ***/
  
-diff --git a/drivers/pci/host/pci-keystone-dw.c b/drivers/pci/host/pci-keystone-dw.c
-index 6153853..2a45fe8 100644
---- a/drivers/pci/host/pci-keystone-dw.c
-+++ b/drivers/pci/host/pci-keystone-dw.c
-@@ -53,6 +53,29 @@
- #define IRQ_STATUS			0x184
- #define MSI_IRQ_OFFSET			4
- 
-+/*
-+ * error IRQ bits. Enable following errors
-+ *  - ERR_AER  - ECRC error - BIT(5)
-+ *  - ERR_AXI  - AXI tag lookup fatal error BIT(4)
-+ *  - ERR_CORR - Correctable error BIT(3)
-+ *  - ERR_NONFATAL - Non fatal error BIT(2)
-+ *  - ERR_FATAL - Fatal error BIT(1)
-+ *  - ERR_SYS - System error (fatal, nonfatal or correctable error)
-+ */
-+#define ERR_AER				BIT(5)
-+#define ERR_AXI				BIT(4)
-+#define ERR_CORR			BIT(3)
-+#define ERR_NONFATAL			BIT(2)
-+#define ERR_FATAL			BIT(1)
-+#define ERR_SYS				BIT(0)
-+#define ERR_IRQ_ALL			(ERR_AER | ERR_AXI | ERR_CORR | \
-+					ERR_NONFATAL | ERR_FATAL | ERR_SYS)
-+#define ERR_FATAL_IRQ			(ERR_FATAL | ERR_AXI)
-+#define ERR_IRQ_STATUS_RAW		0x1c0
-+#define ERR_IRQ_STATUS			0x1c4
-+#define ERR_IRQ_ENABLE_SET		0x1c8
-+#define ERR_IRQ_ENABLE_CLR		0x1cc
+@@ -1090,6 +1091,31 @@
+ #define  PCI_PASID_CTRL_ENABLE	0x01	/* Enable bit */
+ #define  PCI_PASID_CTRL_EXEC	0x02	/* Exec permissions Enable */
+ #define  PCI_PASID_CTRL_PRIV	0x04	/* Privilege Mode Enable */
 +
- /* Config space registers */
- #define DEBUG0				0x728
- 
-@@ -243,6 +266,29 @@ void ks_dw_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie, int offset)
- 	writel(offset, ks_pcie->va_app_base + IRQ_EOI);
- }
- 
-+void ks_dw_pcie_enable_error_irq(void __iomem *reg_base)
-+{
-+	writel(ERR_IRQ_ALL, reg_base + ERR_IRQ_ENABLE_SET);
-+}
++#define PCI_DPC_CAP		4	/* DPC Capability */
++#define  PCI_DPC_CAP_INT_MSG(x) ((x) & 0x1f)	/* DPC Interrupt Message Number */
++#define  PCI_DPC_CAP_RP_EXT	0x20		/* DPC Root Port Extentions */
++#define  PCI_DPC_CAP_TLP_BLOCK	0x40		/* DPC Poisoned TLP Egress Blocking */
++#define  PCI_DPC_CAP_SW_TRIGGER	0x80		/* DPC Software Trigger */
++#define  PCI_DPC_CAP_RP_LOG(x)	(((x) >> 8) & 0xf) /* DPC RP PIO Log Size */
++#define  PCI_DPC_CAP_DL_ACT_ERR	0x1000		/* DPC DL_Active ERR_COR Signal */
++#define PCI_DPC_CTL		6	/* DPC Control */
++#define  PCI_DPC_CTL_TRIGGER(x) ((x) & 0x3)	/* DPC Trigger Enable */
++#define  PCI_DPC_CTL_CMPL	0x4		/* DPC Completion Control */
++#define  PCI_DPC_CTL_INT	0x8		/* DPC Interrupt Enabled */
++#define  PCI_DPC_CTL_ERR_COR	0x10		/* DPC ERR_COR Enabled */
++#define  PCI_DPC_CTL_TLP	0x20		/* DPC Poisoned TLP Egress Blocking Enabled */
++#define  PCI_DPC_CTL_SW_TRIGGER	0x40		/* DPC Software Trigger */
++#define  PCI_DPC_CTL_DL_ACTIVE	0x80		/* DPC DL_Active ERR_COR Enable */
++#define PCI_DPC_STATUS		8	/* DPC STATUS */
++#define  PCI_DPC_STS_TRIGGER	0x01		/* DPC Trigger Status */
++#define  PCI_DPC_STS_REASON(x) (((x) >> 1) & 0x3) /* DPC Trigger Reason */
++#define  PCI_DPC_STS_INT	0x08		/* DPC Interrupt Status */
++#define  PCI_DPC_STS_RP_BUSY	0x10		/* DPC Root Port Busy */
++#define  PCI_DPC_STS_TRIGGER_EXT(x) (((x) >> 5) & 0x3) /* Trigger Reason Extention */
++#define  PCI_DPC_STS_PIO_FEP(x) (((x) >> 8) & 0x1f) /* DPC PIO First Error Pointer */
++#define PCI_DPC_SOURCE		10	/* DPC Source ID */
 +
-+bool ks_dw_pcie_handle_error_irq(struct device *dev, void __iomem *reg_base)
-+{
-+	u32 status;
-+	bool ret = false;
-+
-+	status = readl(reg_base + ERR_IRQ_STATUS_RAW) & ERR_IRQ_ALL;
-+	if (status) {
-+		/* The PCIESS interrupt status buts are "write 1 to clear" */
-+		if (status & ERR_FATAL_IRQ)
-+			dev_err(dev, "PCIE fatal error detected\n");
-+
-+		/* ack the irq event. */
-+		writel(status, reg_base + ERR_IRQ_STATUS);
-+		ret = true;
-+	}
-+	return ret;
-+}
-+
- static void ks_dw_pcie_ack_legacy_irq(struct irq_data *d)
- {
- }
-diff --git a/drivers/pci/host/pci-keystone.c b/drivers/pci/host/pci-keystone.c
-index b71f55b..299f2f0 100644
---- a/drivers/pci/host/pci-keystone.c
-+++ b/drivers/pci/host/pci-keystone.c
-@@ -15,6 +15,7 @@
- #include <linux/irqchip/chained_irq.h>
- #include <linux/clk.h>
- #include <linux/delay.h>
-+#include <linux/interrupt.h>
- #include <linux/irqdomain.h>
- #include <linux/module.h>
- #include <linux/msi.h>
-@@ -226,6 +227,10 @@ static void ks_pcie_setup_interrupts(struct keystone_pcie *ks_pcie)
- 							 ks_pcie);
- 		}
- 	}
-+
-+	/* enable error interrupt */
-+	if (ks_pcie->error_irq > 0)
-+		ks_dw_pcie_enable_error_irq(ks_pcie->va_app_base);
- }
- 
  /*
-@@ -289,6 +294,16 @@ static struct pcie_host_ops keystone_pcie_host_ops = {
- 	.scan_bus = ks_dw_pcie_v3_65_scan_bus,
+  * The PCI interface treats multi-function devices as independent
+  * devices.  The slot/function address of each device is encoded
+diff --git a/ls-ecaps.c b/ls-ecaps.c
+index 8298435..e02c1be 100644
+--- a/ls-ecaps.c
++++ b/ls-ecaps.c
+@@ -137,6 +137,37 @@ cap_aer(struct device *d, int where)
+ 
+ }
+ 
++static void cap_dpc(struct device *d, int where)
++{
++  u16 l;
++
++  printf("Downstream Port Containment\n");
++  if (verbose < 2)
++    return;
++
++  if (!config_fetch(d, where + PCI_DPC_CAP, 8))
++    return;
++
++  l = get_conf_word(d, where + PCI_DPC_CAP);
++  printf("\t\tDpcCap:\tINT Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
++    PCI_DPC_CAP_INT_MSG(l), FLAG(l, PCI_DPC_CAP_RP_EXT), FLAG(l, PCI_DPC_CAP_TLP_BLOCK),
++    FLAG(l, PCI_DPC_CAP_SW_TRIGGER), PCI_DPC_CAP_RP_LOG(l), FLAG(l, PCI_DPC_CAP_DL_ACT_ERR));
++
++  l = get_conf_word(d, where + PCI_DPC_CTL);
++  printf("\t\tDpcCtl:\tTrigger:%x Cmpl%c INT%c ErrCor%c PoisonedTLP%c SwTrigger%c DL_ActiveErr%c\n",
++    PCI_DPC_CTL_TRIGGER(l), FLAG(l, PCI_DPC_CTL_CMPL), FLAG(l, PCI_DPC_CTL_INT),
++    FLAG(l, PCI_DPC_CTL_ERR_COR), FLAG(l, PCI_DPC_CTL_TLP), FLAG(l, PCI_DPC_CTL_SW_TRIGGER),
++    FLAG(l, PCI_DPC_CTL_DL_ACTIVE));
++
++  l = get_conf_word(d, where + PCI_DPC_STATUS);
++  printf("\t\tDpcSta:\tTrigger%c Reason:%02x INT%c RPBusy%c TriggerExt:%02x RP PIO ErrPtr:%02x\n",
++    FLAG(l, PCI_DPC_STS_TRIGGER), PCI_DPC_STS_REASON(l), FLAG(l, PCI_DPC_STS_INT),
++    FLAG(l, PCI_DPC_STS_RP_BUSY), PCI_DPC_STS_TRIGGER_EXT(l), PCI_DPC_STS_PIO_FEP(l));
++
++  l = get_conf_word(d, where + PCI_DPC_SOURCE);
++  printf("\t\tSource:\t%04x\n", l);
++}
++
+ static void
+ cap_acs(struct device *d, int where)
+ {
+@@ -580,6 +611,9 @@ show_ext_caps(struct device *d)
+ 	  case PCI_EXT_CAP_ID_AER:
+ 	    cap_aer(d, where);
+ 	    break;
++	  case PCI_EXT_CAP_ID_DPC:
++	    cap_dpc(d, where);
++	    break;
+ 	  case PCI_EXT_CAP_ID_VC:
+ 	  case PCI_EXT_CAP_ID_VC2:
+ 	    cap_vc(d, where);
+diff --git a/setpci.c b/setpci.c
+index acf7689..873ebd7 100644
+--- a/setpci.c
++++ b/setpci.c
+@@ -301,6 +301,7 @@ static const struct reg_name pci_reg_names[] = {
+   { 0x2000e,	0, 0, "ECAP_ARI" },
+   { 0x2000f,	0, 0, "ECAP_ATS" },
+   { 0x20010,	0, 0, "ECAP_SRIOV" },
++  { 0x2001d,	0, 0, "ECAP_DPC" },
+   {       0,    0, 0, NULL }
  };
  
-+static irqreturn_t pcie_err_irq_handler(int irq, void *priv)
-+{
-+	struct keystone_pcie *ks_pcie = priv;
+diff --git a/tests/cap-dpc b/tests/cap-dpc
+new file mode 100644
+index 0000000..abf37b5
+--- /dev/null
++++ b/tests/cap-dpc
+@@ -0,0 +1,91 @@
++05:01.0 Class 0604: Device 10b5:9716 (rev aa)
++	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
++	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
++	Latency: 0, Cache Line Size: 32 bytes
++	Interrupt: pin A routed to IRQ 46
++	NUMA node: 0
++	Bus: primary=05, secondary=06, subordinate=06, sec-latency=0
++	I/O behind bridge: 0000f000-00000fff
++	Memory behind bridge: c6c00000-c6ffffff
++	Prefetchable memory behind bridge: 0000383ff9c00000-0000383ff9ffffff
++	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
++	BridgeCtl: Parity- SERR+ NoISA- VGA- MAbort- >Reset- FastB2B-
++		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
++	Capabilities: [40] Power Management version 3
++		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
++		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
++	Capabilities: [48] MSI: Enable+ Count=1/8 Maskable+ 64bit+
++		Address: 00000000fee004d8  Data: 0000
++		Masking: 000000fe  Pending: 00000000
++	Capabilities: [68] Express (v2) Downstream Port (Slot+), MSI 00
++		DevCap:	MaxPayload 1024 bytes, PhantFunc 0
++			ExtTag- RBE+
++		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
++			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop+
++			MaxPayload 128 bytes, MaxReadReq 128 bytes
++		DevSta:	CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr- TransPend-
++		LnkCap:	Port #1, Speed 8GT/s, Width x4, ASPM L1, Exit Latency L0s <4us, L1 <4us
++			ClockPM- Surprise+ LLActRep+ BwNot+ ASPMOptComp+
++		LnkCtl:	ASPM Disabled; Disabled- CommClk-
++			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
++		LnkSta:	Speed 8GT/s, Width x4, TrErr- Train- SlotClk- DLActive+ BWMgmt+ ABWMgmt-
++		SltCap:	AttnBtn- PwrCtrl+ MRL- AttnInd+ PwrInd+ HotPlug+ Surprise+
++			Slot #1, PowerLimit 25.000W; Interlock- NoCompl-
++		SltCtl:	Enable: AttnBtn- PwrFlt- MRL- PresDet+ CmdCplt+ HPIrq+ LinkChg+
++			Control: AttnInd Off, PwrInd On, Power- Interlock-
++		SltSta:	Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
++			Changed: MRL- PresDet- LinkState-
++		DevCap2: Completion Timeout: Not Supported, TimeoutDis-, LTR+, OBFF Via message ARIFwd+
++		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd+
++		LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-, Selectable De-emphasis: -6dB
++			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
++			 Compliance De-emphasis: -6dB
++		LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete+, EqualizationPhase1+
++			 EqualizationPhase2+, EqualizationPhase3+, LinkEqualizationRequest-
++	Capabilities: [a4] Subsystem: Device 10b5:9716
++	Capabilities: [100 v1] Device Serial Number 00-0e-df-10-b5-97-00-aa
++	Capabilities: [fb4 v1] Advanced Error Reporting
++		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
++		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
++		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
++		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
++		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
++		AERCap:	First Error Pointer: 1f, GenCap+ CGenEn- ChkCap+ ChkEn-
++	Capabilities: [138 v1] Power Budgeting <?>
++	Capabilities: [10c v1] #19
++	Capabilities: [148 v1] Virtual Channel
++		Caps:	LPEVC=0 RefClk=100ns PATEntryBits=1
++		Arb:	Fixed- WRR32- WRR64- WRR128-
++		Ctrl:	ArbSelect=Fixed
++		Status:	InProgress-
++		VC0:	Caps:	PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
++			Arb:	Fixed+ WRR32- WRR64- WRR128- TWRR128- WRR256-
++			Ctrl:	Enable+ ID=0 ArbSelect=Fixed TC/VC=01
++			Status:	NegoPending- InProgress-
++	Capabilities: [f24 v1] Access Control Services
++		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd+ EgressCtrl+ DirectTrans+
++		ACSCtl:	SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
++	Capabilities: [b70 v1] Vendor Specific Information: ID=0001 Rev=0 Len=010 <?>
++	Capabilities: [b60 v1] Downstream Port Containment
++		DpcCap:	INT Msg #0, RPExt- PoisonedTLP+ SwTrigger+ RP PIO Log 0, DL_ActiveErr+
++		DpcCtl:	Trigger:2 Cmpl+ INT+ ErrCor- PoisonedTLP- SwTrigger- DL_ActiveErr-
++		DpcSta:	Trigger- Reason:00 INT- RPBusy- TriggerExt:00 RP PIO ErrPtr:00
++		Source:	0000
++	Kernel driver in use: pcieport
++00: b5 10 16 97 07 05 10 00 aa 00 04 06 08 00 01 00
++10: 00 00 00 00 00 00 00 00 05 06 06 00 f1 01 00 00
++20: c0 c6 f0 c6 c1 f9 f1 f9 3f 38 00 00 3f 38 00 00
++30: 00 00 00 00 40 00 00 00 00 00 00 00 0a 01 12 00
++40: 01 48 03 c8 08 00 00 00 05 68 87 01 d8 04 e0 fe
++50: 00 00 00 00 00 00 00 00 fe 00 00 00 00 00 00 00
++60: 00 00 00 00 00 00 00 00 10 a4 62 01 03 80 00 00
++70: 00 08 09 00 43 68 79 01 00 00 43 60 fa 0c 08 00
++80: f8 11 40 00 00 00 00 00 00 00 00 00 60 08 04 00
++90: 20 00 00 00 0e 0f 00 00 03 00 1e 00 00 00 00 00
++a0: 00 00 00 00 0d 00 00 00 b5 10 16 97 00 00 00 00
++b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
++c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
++d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
++e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
++f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 +
-+	if (ks_dw_pcie_handle_error_irq(ks_pcie->pp.dev, ks_pcie->va_app_base))
-+		return IRQ_HANDLED;
-+
-+	return IRQ_NONE;
-+}
-+
- static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
- 			 struct platform_device *pdev)
- {
-@@ -309,6 +324,22 @@ static int __init ks_add_pcie_port(struct keystone_pcie *ks_pcie,
- 			return ret;
- 	}
- 
-+	/*
-+	 * index 0 is the platform interrupt for error interrupt
-+	 * from RC. As this is optional to define this, we will
-+	 * just print a warning
-+	 */
-+	ks_pcie->error_irq = irq_of_parse_and_map(ks_pcie->np, 0);
-+	if (ks_pcie->error_irq <= 0)
-+		dev_warn(&pdev->dev, "No error irq defined\n");
-+	else {
-+		if (request_irq(ks_pcie->error_irq, pcie_err_irq_handler,
-+				IRQF_SHARED, "pcie-error-irq", ks_pcie) < 0) {
-+			dev_err(&pdev->dev, "failed to request error irq\n");
-+			return ret;
-+		}
-+	}
-+
- 	pp->root_bus_nr = -1;
- 	pp->ops = &keystone_pcie_host_ops;
- 	ret = ks_dw_pcie_host_init(ks_pcie, ks_pcie->msi_intc_np);
-@@ -376,6 +407,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
- 	devm_release_mem_region(dev, res->start, resource_size(res));
- 
- 	pp->dev = dev;
-+	ks_pcie->np = node;
- 	platform_set_drvdata(pdev, ks_pcie);
- 	ks_pcie->clk = devm_clk_get(dev, "pcie");
- 	if (IS_ERR(ks_pcie->clk)) {
-diff --git a/drivers/pci/host/pci-keystone.h b/drivers/pci/host/pci-keystone.h
-index f0944e8..2daa215 100644
---- a/drivers/pci/host/pci-keystone.h
-+++ b/drivers/pci/host/pci-keystone.h
-@@ -29,6 +29,10 @@ struct keystone_pcie {
- 	int			msi_host_irqs[MAX_MSI_HOST_IRQS];
- 	struct			device_node *msi_intc_np;
- 	struct irq_domain	*legacy_irq_domain;
-+	struct device_node	*np;
-+
-+	/* error interrupt */
-+	int error_irq;
- 
- 	/* Application register space */
- 	void __iomem		*va_app_base;
-@@ -42,6 +46,8 @@ phys_addr_t ks_dw_pcie_get_msi_addr(struct pcie_port *pp);
- /* Keystone specific PCI controller APIs */
- void ks_dw_pcie_enable_legacy_irqs(struct keystone_pcie *ks_pcie);
- void ks_dw_pcie_handle_legacy_irq(struct keystone_pcie *ks_pcie, int offset);
-+void ks_dw_pcie_enable_error_irq(void __iomem *reg_base);
-+bool ks_dw_pcie_handle_error_irq(struct device *dev, void __iomem *reg_base);
- int  ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
- 			struct device_node *msi_intc_np);
- int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
 -- 
-1.9.1
+2.7.2
+
