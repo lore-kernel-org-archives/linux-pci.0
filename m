@@ -1,115 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f179.google.com ([209.85.192.179]:36597 "EHLO
-	mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753433AbcDTDzD (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 19 Apr 2016 23:55:03 -0400
-Received: by mail-pf0-f179.google.com with SMTP id e128so13464725pfe.3
-        for <linux-pci@vger.kernel.org>; Tue, 19 Apr 2016 20:55:02 -0700 (PDT)
-Subject: Re: [PATCH v8 30/45] powerpc/pci: Delay populating pdn
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-31-git-send-email-gwshan@linux.vnet.ibm.com>
- <5715EA08.3040901@ozlabs.ru> <20160420021318.GB28594@gwshan>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, dja@axtens.net, bhelgaas@google.com,
-	robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <5716FD8E.5010700@ozlabs.ru>
-Date: Wed, 20 Apr 2016 13:54:54 +1000
+Received: from down.free-electrons.com ([37.187.137.238]:55378 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752236AbcDZTIy (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Apr 2016 15:08:54 -0400
+Date: Tue, 26 Apr 2016 21:08:50 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Kumar Gala <galak@codeaurora.org>,
+	linux-arm-kernel@lists.infradead.org,
+	Jason Cooper <jason@lakedaemon.net>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+	Gregory Clement <gregory.clement@free-electrons.com>,
+	Nadav Haklai <nadavh@marvell.com>,
+	Lior Amsalem <alior@marvell.com>,
+	Hanna Hawa <hannah@marvell.com>,
+	Yehuda Yitschak <yehuday@marvell.com>
+Subject: Re: [PATCH v3 0/2] pci: host: new driver for Marvell Armada 7K/8K
+ PCIe controller
+Message-ID: <20160426210850.13cc8a0e@free-electrons.com>
+In-Reply-To: <20160426173144.GB27803@localhost>
+References: <1461659506-10387-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20160426173144.GB27803@localhost>
 MIME-Version: 1.0
-In-Reply-To: <20160420021318.GB28594@gwshan>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/20/2016 12:13 PM, Gavin Shan wrote:
-> On Tue, Apr 19, 2016 at 06:19:20PM +1000, Alexey Kardashevskiy wrote:
->> On 02/17/2016 02:44 PM, Gavin Shan wrote:
->>> The pdn (struct pci_dn) instances are allocated from memblock or
->>> bootmem when creating PCI controller (hoses) in setup_arch(). PCI
->>> hotplug, which will be supported by proceeding patches, releases
->>> PCI device nodes and their corresponding pdn on unplugging event.
->>> The memory chunks for pdn instances allocated from memblock or
->>> bootmem are hard to reused after being released.
->>>
->>> This delays creating pdn by pci_devs_phb_init() from setup_arch()
->>> to core_initcall() so that they are allocated from slab. The memory
->>> consumed by pdn can be released to system without problem during
->>> PCI unplugging time. It indicates that pci_dn is unavailable in
->>> setup_arch() and the the fixup on pdn (like AGP's) can't be carried
->>> out that time. We have to do that in ppc_md.pcibios_root_bridge_prepare()
->>> on maple/pasemi/powermac platforms where/when the pdn is available.
->>>
->>> At the mean while, the EEH device is created when pdn is populated,
->>> meaning pdn and EEH device have same life cycle. In turn, we needn't
->>> call eeh_dev_init() to create EEH device explicitly.
->>>
->>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>
->>
->> Uff. It would not hurt to mention that  pcibios_root_bridge_prepare is called
->>from subsys_initcall() which is executed after core_initcall() so the code
->> flow does not change.
->>
->
-> Yes, will do in next revision.
->
->> Have you checked if there is anything in between
->> core_initcall(pci_devs_phb_init) and subsys_initcall(pcibios_init) which
->> might need device tree nodes? For example, subsys_initcall(pcibios_init)
->> calls (eventually) pnv_pci_ioda_fixup(), if we are unlucky and pcibios_init()
->> (and therefore pnv_pci_ioda_fixup() or what pseries/others do) is called
->> before pcibios_init() - won't we crash or something?
->>
->
-> I don't catch what you were asking. device-tree nodes (struct device_node)
-> are always there. This patch doesn't affect them. Perhaps you were talking
-> about pdn (PCI_DN). If it's the case, this patch delays creating pdn from
-> setup_arch() to core_initcall(pci_devs_phb_init).
+Hello,
 
+On Tue, 26 Apr 2016 12:31:44 -0500, Bjorn Helgaas wrote:
 
-While thinking of explaining what I wanted to ask, I found my answer :)
+> >  create mode 100644 Documentation/devicetree/bindings/pci/pci-armada8k.txt
+> >  create mode 100644 drivers/pci/host/pcie-armada8k.c
+> 
+> Thanks, Thomas, I applied these to pci/host-armada for v4.7.
 
-pcibios_init() calls ppc_md.pcibios_root_bridge_prepare() first, then 
-ppc_md.pcibios_fixup() so we are fine here with ordering.
+Thanks!
 
+> I added the tweaks below to use dev_dbg() instead of pr_debug(), use
+> dw_pcie_wait_for_link() instead of another hand-coded timeout loop,
+> and fix a typo and remove unused constants.
 
-> I don't see anything need pdn between setup_arch() and core_initcall().
-> The changes introduced to powermac/pasemi platforms are: move fixing the child
-> pdns of the specifiec PHB's pdn from setup_arch() to subsys_initcall(pcibios_init).
-> I don't see anything between them needs the fixed pdns.
->
-> I don't understand how pcibios_init() is called before pcibios_init() in your
+Looks all good, thanks for applying! Just one tiny question below.
 
-pcibios_init() is used twice in the sentence above :)
+>  	/*
+>  	 * Interrupts are directly handled by the device driver of the
+> -	 * PCI device. However, there are also latched into the PCIe
+> +	 * PCI device.  However, they are also latched into the PCIe
 
-Anyway,
+Any reason to have two spaces after the dot here?
 
+Thanks again!
 
-Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-
-
-
-
-> context. Sorry for my bad English. Perhaps you're asking the the called sequence
-> on core_initcall() and subsys_init()? If so, they're defined like below:
->
-> #define core_initcall(fn)		__define_initcall(fn, 1)
-> #define subsys_initcall(fn)		__define_initcall(fn, 4)
- >
->
->>
->> --
->> Alexey
->>
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
+Thomas
 -- 
-Alexey
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
