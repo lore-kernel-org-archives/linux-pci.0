@@ -1,54 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, corbet@lwn.net, aik@ozlabs.ru,
-	alex.williamson@redhat.com, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com, Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [RFC v5 1/7] PCI: Ignore resource_alignment if PCI_PROBE_ONLY was set
-Date: Tue,  5 Apr 2016 21:43:29 +0800
-Message-Id: <1459863813-2830-2-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1459863813-2830-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1459863813-2830-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:53759 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752324AbcD0Cof (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 26 Apr 2016 22:44:35 -0400
+Date: Tue, 26 Apr 2016 21:44:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+Subject: Re: [PATCH V6 06/13] arm64, pci, acpi: ACPI support for legacy IRQs
+ parsing and consolidation with DT code.
+Message-ID: <20160427024430.GG6789@localhost>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <1460740008-19489-7-git-send-email-tn@semihalf.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1460740008-19489-7-git-send-email-tn@semihalf.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The resource_alignment will releases memory
-resources allocated by firmware so that kernel
-can reassign new resources later on. But this
-will cause the problem that no resources can be
-allocated by kernel if PCI_PROBE_ONLY was set,
-e.g. on pSeries platform because PCI_PROBE_ONLY
-force kernel to use firmware setup and not to
-reassign any resources.
+On Fri, Apr 15, 2016 at 07:06:41PM +0200, Tomasz Nowicki wrote:
+> To enable PCI legacy IRQs on platforms booting with ACPI, arch code
+> should include ACPI specific callbacks that parse and set-up the
+> device IRQ number, equivalent to the DT boot path. Owing to the current
+> ACPI core scan handlers implementation, ACPI PCI legacy IRQs bindings
+> cannot be parsed at device add time, since that would trigger ACPI scan
+> handlers ordering issues depending on how the ACPI tables are defined.
 
-To solve this problem, this patch ignores
-resource_alignment if PCI_PROBE_ONLY was set.
+Can you be a little more specific about the issue here?  I think you
+mean pci_device_add()-time, because that's where we call
+pcibios_add_device.  Which ACPI tables are involved?  _PRT?  Why is
+that a problem?  We don't cache those tables any more after
+181380b702ee ("PCI/ACPI: Don't cache _PRT, and don't associate them
+with bus numbers").
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- drivers/pci/pci.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+x86 and ia64 both call acpi_pci_irq_enable() from
+pcibios_enable_device().  Could you do the same on ARM64?
+pcibios_enable_device() happens later than either pci_device_add() or
+pci_device_probe().
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 602eb42..1db9267 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4607,6 +4607,12 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
- 	spin_lock(&resource_alignment_lock);
- 	p = resource_alignment_param;
- 	while (*p) {
-+		if (pci_has_flag(PCI_PROBE_ONLY)) {
-+			printk(KERN_ERR "PCI: Ignore resource_alignment parameter: %s with"
-+					" PCI_PROBE_ONLY set\n", p);
-+			*p = 0;
-+			break;
-+		}
- 		count = 0;
- 		if (sscanf(p, "%d%n", &align_order, &count) == 1 &&
- 							p[count] == '@') {
--- 
-1.7.9.5
+> To solve this problem and consolidate FW PCI legacy IRQs parsing in
+> one single pcibios callback (pending final removal), this patch moves
+> DT PCI IRQ parsing to the pcibios_alloc_irq() callback (called by
+> PCI core code at device probe time) and adds ACPI PCI legacy IRQs
+> parsing to the same callback too, so that FW PCI legacy IRQs parsing
+> is confined in one single arch callback that can be easily removed
+> when code parsing PCI legacy IRQs is consolidated and moved to core
+> PCI code.
+> 
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> ---
+>  arch/arm64/kernel/pci.c | 11 ++++++++---
+>  1 file changed, 8 insertions(+), 3 deletions(-)
+> 
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index c72de66..15109c11 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -50,11 +50,16 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+>  }
+>  
+>  /*
+> - * Try to assign the IRQ number from DT when adding a new device
+> + * Try to assign the IRQ number when probing a new device
+>   */
+> -int pcibios_add_device(struct pci_dev *dev)
+> +int pcibios_alloc_irq(struct pci_dev *dev)
+>  {
+> -	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> +	if (acpi_disabled)
+> +		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+> +#ifdef CONFIG_ACPI
+> +	else
+> +		return acpi_pci_irq_enable(dev);
+> +#endif
+
+Not your problem, but your patch makes it obvious: it's ugly that we
+set dev->irq to the IRQ returned from of_irq_parse_and_map_pci(), but
+acpi_pci_irq_enable() sets dev->irq internally.
+
+x86 also has the situation of calling either acpi_pci_irq_enable() or
+of_irq_parse_and_map_pci(), and it looks like they can even decide at
+run-time as you can here.  If we're solving the same problem, can we
+use a similar mechanism?  x86 sets a pcibios_enable_irq function
+pointer.
+
+>  	return 0;
+>  }
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
