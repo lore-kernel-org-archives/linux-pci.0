@@ -1,61 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 25/60] PCI: Reuse res_to_dev_res() in reassign_resources_sorted()
-Date: Thu,  7 Apr 2016 17:15:38 -0700
-Message-Id: <1460074573-7481-26-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41982 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752541AbcD0Fgh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 27 Apr 2016 01:36:37 -0400
+Subject: Re: [PATCH V6 05/13] acpi, pci: Support IO resources when parsing PCI
+ host bridge resources.
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Tomasz Nowicki <tn@semihalf.com>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <1460740008-19489-6-git-send-email-tn@semihalf.com>
+ <20160427023916.GF6789@localhost>
+Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org
+From: Jon Masters <jcm@redhat.com>
+Message-ID: <57204FDB.6010202@redhat.com>
+Date: Wed, 27 Apr 2016 01:36:27 -0400
+MIME-Version: 1.0
+In-Reply-To: <20160427023916.GF6789@localhost>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now res_to_dev_res() does not print out debug message anymore, so
-we can reuse it in reassign_resource_sorted() without confusing printout.
+On 04/26/2016 10:39 PM, Bjorn Helgaas wrote:
+> On Fri, Apr 15, 2016 at 07:06:40PM +0200, Tomasz Nowicki wrote:
+>> Platforms that have memory mapped IO port (such as ARM64) need special
+>> handling for PCI I/O resources. For host bridge's resource probing case
+>> these resources need to be fixed up with pci_register_io_range/pci_remap_iospace etc.
+> 
+> ia64 also has memory-mapped I/O port space.
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+The specific references of interest to anyone here are:
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index dd33234..fc30f80 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -239,26 +239,17 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
- {
- 	struct resource *res;
- 	struct pci_dev_resource *add_res, *tmp;
--	struct pci_dev_resource *dev_res;
- 	resource_size_t add_size, align;
- 	int idx;
- 
- 	list_for_each_entry_safe(add_res, tmp, realloc_head, list) {
--		bool found_match = false;
--
- 		res = add_res->res;
- 		/* skip resource that has been reset */
- 		if (!res->flags)
- 			goto out;
- 
- 		/* skip this resource if not found in head list */
--		list_for_each_entry(dev_res, head, list) {
--			if (dev_res->res == res) {
--				found_match = true;
--				break;
--			}
--		}
--		if (!found_match)/* just skip */
-+		if (!res_to_dev_res(head, res))
- 			continue;
- 
- 		idx = res - &add_res->dev->resource[0];
+*). Volume 2, Part 1: Itanium® Architecture-based Operating System
+Interaction Model with IA-32 Applications 2:267 section "10.7 I/O Port
+Space Model" which describes how they can map 4 "legacy" IO ports on a
+virtual page when operating in a "sparse" mode.
+
+*). Page 378 of the ACPI6.1 specification Table 6-213 I/O Resource Flag
+(Resource Type = 1) Definitions describes how a "sparse" translation can
+exist depending upon bit _TRS. This seems to be implemented in Linux
+using the ACPI_SPARSE_TRANSLATION types.
+
+> It would be ideal to find
+> some way to handle ia64 and ARM64 similarly.  At the very least, we
+> have to make sure that this doesn't break ia64.  The ia64 dense/sparse
+> I/O spaces complicate things; I don't know if ARM64 has something
+> similar or not.
+
+There's nothing directly similar - it's just regular MMIO.
+
+Jon.
+
 -- 
-1.8.4.5
+Computer Architect | Sent from my Fedora powered laptop
+
