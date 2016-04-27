@@ -1,153 +1,175 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 7 Apr 2016 12:42:24 -0500
+Date: Tue, 26 Apr 2016 21:39:16 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-	linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-acpi@vger.kernel.org
-Subject: Re: [PATCH] pci: Added flag to pci_host_bridge to hint not to use
- acpi
-Message-ID: <20160407174224.GE8780@localhost>
-References: <1458770518-10203-1-git-send-email-jonathan.derrick@intel.com>
- <20160324164159.GB25518@localhost.localdomain>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+Subject: Re: [PATCH V6 05/13] acpi, pci: Support IO resources when parsing
+ PCI host bridge resources.
+Message-ID: <20160427023916.GF6789@localhost>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <1460740008-19489-6-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160324164159.GB25518@localhost.localdomain>
+In-Reply-To: <1460740008-19489-6-git-send-email-tn@semihalf.com>
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael, linux-acpi]
+On Fri, Apr 15, 2016 at 07:06:40PM +0200, Tomasz Nowicki wrote:
+> Platforms that have memory mapped IO port (such as ARM64) need special
+> handling for PCI I/O resources. For host bridge's resource probing case
+> these resources need to be fixed up with pci_register_io_range/pci_remap_iospace etc.
 
-On Thu, Mar 24, 2016 at 04:42:00PM +0000, Keith Busch wrote:
-> On Wed, Mar 23, 2016 at 04:01:58PM -0600, Jon Derrick wrote:
-> > This patch adds a hint, no_acpi, to the pci_host_bridge struct which
-> > informs the hotplug driver to not try and release the host bridge from
-> > acpi.
-> > 
-> > The VMD driver creates a root port which does not have an acpi entry.
-> > This patch will allow the hotplug driver to bypass acpi release when
-> > enumerating the VMD root port as a hotplug slot.
+ia64 also has memory-mapped I/O port space.  It would be ideal to find
+some way to handle ia64 and ARM64 similarly.  At the very least, we
+have to make sure that this doesn't break ia64.  The ia64 dense/sparse
+I/O spaces complicate things; I don't know if ARM64 has something
+similar or not.
+
+> Furthermore, the same I/O resources need to be released after hotplug
+> removal so that it can be re-added back by the pci_remap_iospace
+> function during insertion. Therefore we implement new pci_unmap_iospace call
+> which unmaps I/O space as the symmetry to pci_remap_iospace.
+
+"Furthermore" is a hint that we should check to see if this can be
+split into two patches.
+
+We already have a pci_remap_iospace(), and you're adding
+pci_unmap_iospace(), which will be used for hotplug removal.  So let's 
+add pci_unmap_iospace() first in a patch by itself because that's
+potentially useful for other callers of pci_remap_iospace(), even if
+they don't need the acpi_pci_root_remap_iospace() stuff.
+
+> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> ---
+>  drivers/acpi/pci_root.c | 33 +++++++++++++++++++++++++++++++++
+>  drivers/pci/pci.c       | 24 ++++++++++++++++++++++++
+>  include/linux/pci.h     |  1 +
+>  3 files changed, 58 insertions(+)
 > 
-> I want to add a little context to this for the motivation for this
-> implementation.
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index d9a70c4..815b6ca 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -742,6 +742,34 @@ next:
+>  			resource_list_add_tail(entry, resources);
+>  	}
+>  }
+> +static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
+> +{
+> +#ifdef PCI_IOBASE
+> +	struct resource *res = entry->res;
+> +	resource_size_t cpu_addr = res->start;
+> +	resource_size_t pci_addr = cpu_addr - entry->offset;
+> +	resource_size_t length = resource_size(res);
+> +	unsigned long port;
+> +
+> +	if (pci_register_io_range(cpu_addr, length))
+> +		goto err;
+> +
+> +	port = pci_address_to_pio(cpu_addr);
+> +	if (port == (unsigned long)-1)
+> +		goto err;
+> +
+> +	res->start = port;
+> +	res->end = port + length - 1;
+> +	entry->offset = port - pci_addr;
+> +
+> +	if (pci_remap_iospace(res, cpu_addr) < 0)
+> +		goto err;
+> +	pr_info("Remapped I/O %pa to %pR\n", &cpu_addr, res);
+> +	return;
+> +err:
+> +	res->flags |= IORESOURCE_DISABLED;
+> +#endif
+> +}
+>  
+>  int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+>  {
+> @@ -763,6 +791,9 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+>  			"no IO and memory resources present in _CRS\n");
+>  	else {
+>  		resource_list_for_each_entry_safe(entry, tmp, list) {
+> +			if (entry->res->flags & IORESOURCE_IO)
+> +				acpi_pci_root_remap_iospace(entry);
+> +
+>  			if (entry->res->flags & IORESOURCE_DISABLED)
+>  				resource_list_destroy_entry(entry);
+>  			else
+> @@ -834,6 +865,8 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
+>  
+>  	resource_list_for_each_entry(entry, &bridge->windows) {
+>  		res = entry->res;
+> +		if (res->flags & IORESOURCE_IO)
+> +			pci_unmap_iospace(res);
+>  		if (res->parent &&
+>  		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+>  			release_resource(res);
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 89e9996..c0f8a4e 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -26,6 +26,7 @@
+>  #include <linux/device.h>
+>  #include <linux/pm_runtime.h>
+>  #include <linux/pci_hotplug.h>
+> +#include <linux/vmalloc.h>
+>  #include <asm/setup.h>
+>  #include <linux/aer.h>
+>  #include "pci.h"
+> @@ -3168,6 +3169,29 @@ int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+>  #endif
+>  }
+>  
+> +/**
+> + *	pci_unmap_iospace - Unmap the memory mapped I/O space
+> + *	@res: resource to be unmapped
+> + *
+> + *	Unmap the CPU virtual address @res from virtual address space.
+> + *	Only architectures that have memory mapped IO functions defined
+> + *	(and the PCI_IOBASE value defined) should call this function.
+> + */
+> +void  pci_unmap_iospace(struct resource *res)
+> +{
+> +#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
+> +	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
+> +
+> +	unmap_kernel_range(vaddr, resource_size(res));
+> +#else
+> +	/*
+> +	 * This architecture does not have memory mapped I/O space,
+> +	 * so this function should never be called.
+> +	 */
+> +	WARN_ONCE(1, "This architecture does not support memory mapped I/O\n");
+> +#endif
+> +}
+> +
+>  static void __pci_set_master(struct pci_dev *dev, bool enable)
+>  {
+>  	u16 old_cmd, cmd;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index c28adb4..df1f33d 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1168,6 +1168,7 @@ int pci_register_io_range(phys_addr_t addr, resource_size_t size);
+>  unsigned long pci_address_to_pio(phys_addr_t addr);
+>  phys_addr_t pci_pio_to_address(unsigned long pio);
+>  int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
+> +void pci_unmap_iospace(struct resource *res);
+>  
+>  static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
+>  {
+> -- 
+> 1.9.1
 > 
-> Currently we have to set kernel parameter "pcie_ports=native" for pciehp
-> to work on these domains since they are not known to ACPI. We don't want
-> to force a system wide PCIe parameter for something specific to a subset
-> of domains.
-
-I agree, we shouldn't have to ask users to boot with
-"pcie_ports=native".
-
-The PCIe port driver figures out what service drivers can be enabled
-by a combination of:
-
-  - asking the platform what services it will allow the kernel to
-    manage (on ACPI systems, this uses _OSC), and
-
-  - looking at the PCIe capability to see what services the hardware
-    supports.
-
-This happens in get_port_device_capability().  When you boot with
-"pcie_ports=native", get_port_device_capability() skips the _OSC part
-and only looks at what the hardware supports.
-
-Here's the rest of the path:
-
-  pcie_portdrv_probe                     # pci_driver.probe
-    pcie_port_device_register
-      get_port_device_capability
-        if (pcie_ports_auto)             # cleared by pcie_port=native
-	  pcie_port_platform_notify
-	    pcie_port_acpi_setup
-	      if (no_acpi)               # added by your patch
-		return 0
-	      handle = acpi_find_root_bridge_handle(port)
-	      if (!handle)
-	        return -EINVAL
-	      set mask of what we control based on _OSC
-	      return 0
-
-The spec (PCI Firmware spec 3.0, sec 4.5) says _OSC is a child of an
-ACPI device and applies to that device.  In your case, I think there
-is no ACPI PNP0A0x device for the VMD host bridge, and hence there is
-no _OSC method for it.  There's no ACPI handle for the VMD bridge, so
-I think pcie_port_acpi_setup() returns -EINVAL, which causes
-get_port_device_capability() to give up and decide that the port
-can't support *any* PCIe services.
-
-I think that's the real problem: the fact that there's no ACPI device
-corresponding to the bridge should not be an error.  It should just
-mean the platform doesn't have an opportunity to limit what services
-the kernel can manage.  I think pcie_port_acpi_setup() should return 0
-in all cases.  Can you try that and see if it fixes the problem?
-
-Bjorn
-
-> >  arch/x86/pci/vmd.c              | 4 ++++
-> >  drivers/pci/pcie/portdrv_acpi.c | 5 +++++
-> >  include/linux/pci.h             | 1 +
-> >  3 files changed, 10 insertions(+)
-> > 
-> > diff --git a/arch/x86/pci/vmd.c b/arch/x86/pci/vmd.c
-> > index 7792aba..a196be3 100644
-> > --- a/arch/x86/pci/vmd.c
-> > +++ b/arch/x86/pci/vmd.c
-> > @@ -531,6 +531,7 @@ static int vmd_find_free_domain(void)
-> >  static int vmd_enable_domain(struct vmd_dev *vmd)
-> >  {
-> >  	struct pci_sysdata *sd = &vmd->sysdata;
-> > +	struct pci_host_bridge *host_bridge;
-> >  	struct resource *res;
-> >  	u32 upper_bits;
-> >  	unsigned long flags;
-> > @@ -609,6 +610,9 @@ static int vmd_enable_domain(struct vmd_dev *vmd)
-> >  		return -ENODEV;
-> >  	}
-> >  
-> > +	host_bridge = to_pci_host_bridge(vmd->bus->bridge);
-> > +	host_bridge->no_acpi = true;
-> > +
-> >  	vmd_attach_resources(vmd);
-> >  	vmd_setup_dma_ops(vmd);
-> >  	dev_set_msi_domain(&vmd->bus->dev, vmd->irq_domain);
-> > diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
-> > index b4d2894..0e6fa69 100644
-> > --- a/drivers/pci/pcie/portdrv_acpi.c
-> > +++ b/drivers/pci/pcie/portdrv_acpi.c
-> > @@ -35,12 +35,17 @@
-> >  int pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
-> >  {
-> >  	struct acpi_pci_root *root;
-> > +	struct pci_host_bridge *host_bridge;
-> >  	acpi_handle handle;
-> >  	u32 flags;
-> >  
-> >  	if (acpi_pci_disabled)
-> >  		return 0;
-> >  
-> > +	host_bridge = pci_find_host_bridge(port->bus);
-> > +	if (host_bridge && host_bridge->no_acpi)
-> > +		return 0;
-> > +
-> >  	handle = acpi_find_root_bridge_handle(port);
-> >  	if (!handle)
-> >  		return -EINVAL;
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 15f466e..a6958e9b 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -407,6 +407,7 @@ struct pci_host_bridge {
-> >  	void (*release_fn)(struct pci_host_bridge *);
-> >  	void *release_data;
-> >  	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
-> > +	unsigned int no_acpi:1;			/* bypasses acpi release */
-> >  	/* Resource alignment requirements */
-> >  	resource_size_t (*align_resource)(struct pci_dev *dev,
-> >  			const struct resource *res,
-> > -- 
-> > 1.8.3.1
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
