@@ -1,416 +1,199 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:48864 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751753AbcDPBf6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 15 Apr 2016 21:35:58 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de, linux-block@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Cc: linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/8] genirq: Make use of dev->irq_affinity
-Date: Fri, 15 Apr 2016 18:35:46 -0700
-Message-Id: <1460770552-31260-3-git-send-email-hch@lst.de>
-In-Reply-To: <1460770552-31260-1-git-send-email-hch@lst.de>
-References: <1460770552-31260-1-git-send-email-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:58283 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753855AbcD0WWa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 27 Apr 2016 18:22:30 -0400
+From: Alexander Graf <agraf@suse.de>
+To: linux-kernel@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: [PATCH] arm64: Relocate screen_info.lfb_base on PCI BAR allocation
+Date: Thu, 28 Apr 2016 00:22:24 +0200
+Message-Id: <1461795744-28837-1-git-send-email-agraf@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thomas Gleixner <tglx@linutronix.de>
+When booting with efifb, we get a frame buffer address passed into the system.
+This address can be backed by any device, including PCI devices.
 
-This allows optimized interrupt allocation and affinity settings for multi
-queue devices MSI-X interrupts.
+PCI devices can have their BARs mapped to various places inside the PCI window
+though. Linux makes use of that on early boot and usually maps PCI BARs wherever
+it thinks makes sense.
 
-If the device holds a pointer to a cpumask, then this mask is used to:
-   - allocate the interrupt descriptor on the proper nodes
-   - set the default interrupt affinity for the interrupt
+If we now load the efifb driver after that BAR map has happened, the frame
+buffer address we received may be invalid, because it was in a BAR map before
+Linux modified it.
 
-The interrupts are excluded from balancing so the user space balancer cannot
-screw with the settings which have been requested by the multiqueue driver.
+To work around that issue, this patch introduces a BAR mapping callback that
+gets called every time Linux (re)allocates a BAR. That way our arm64 efi code
+can check whether the frame buffer is inside the old map and adjust it to
+the new one.
 
-It's yet not clear how we are going to deal with cpu offlining/onlining. Right
-now the affinity will simply break during offline. One option to handle this is:
+With this and the efifb patches applied, I can successfully see efifb output
+even after Linux remapped BARs.
 
-  If the cpu goes offline, then move the irq to a different cpu on the same
-  node. If it's the last cpu on the node or all remaining cpus on that node
-  have already a queue we "park" it and reuse it when cpus come online again.
-
-XXX: currently only works properly for MSI-X, not for MSI because MSI
-allocates a msi_desc for more than a single vector.
-
-Requested-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Fucked-up-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Alexander Graf <agraf@suse.de>
 ---
- arch/sparc/kernel/irq_64.c     |  2 +-
- arch/x86/kernel/apic/io_apic.c |  5 +++--
- include/linux/irq.h            |  4 ++--
- include/linux/irqdomain.h      |  8 ++++---
- kernel/irq/ipi.c               |  4 ++--
- kernel/irq/irqdesc.c           | 48 +++++++++++++++++++++++++++---------------
- kernel/irq/irqdomain.c         | 22 ++++++++++++-------
- kernel/irq/msi.c               | 11 ++++++++--
- 8 files changed, 67 insertions(+), 37 deletions(-)
+ arch/arm64/kernel/efi.c | 40 +++++++++++++++++++++++++++++++++++++++-
+ drivers/pci/setup-res.c | 29 +++++++++++++++++++++++++++++
+ include/linux/pci.h     |  8 ++++++++
+ 3 files changed, 76 insertions(+), 1 deletion(-)
 
-diff --git a/arch/sparc/kernel/irq_64.c b/arch/sparc/kernel/irq_64.c
-index e22416c..437d0f7 100644
---- a/arch/sparc/kernel/irq_64.c
-+++ b/arch/sparc/kernel/irq_64.c
-@@ -242,7 +242,7 @@ unsigned int irq_alloc(unsigned int dev_handle, unsigned int dev_ino)
- {
- 	int irq;
+diff --git a/arch/arm64/kernel/efi.c b/arch/arm64/kernel/efi.c
+index 56a76b6..3612110 100644
+--- a/arch/arm64/kernel/efi.c
++++ b/arch/arm64/kernel/efi.c
+@@ -27,6 +27,7 @@
+ #include <linux/slab.h>
+ #include <linux/spinlock.h>
+ #include <linux/platform_device.h>
++#include <linux/pci.h>
  
--	irq = __irq_alloc_descs(-1, 1, 1, numa_node_id(), NULL);
-+	irq = __irq_alloc_descs(-1, 1, 1, numa_node_id(), NULL, -1);
- 	if (irq <= 0)
- 		goto out;
- 
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index fdb0fbf..54267ea 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -981,7 +981,7 @@ static int alloc_irq_from_domain(struct irq_domain *domain, int ioapic, u32 gsi,
- 
- 	return __irq_domain_alloc_irqs(domain, irq, 1,
- 				       ioapic_alloc_attr_node(info),
--				       info, legacy);
-+				       info, legacy, -1);
+ #include <asm/cacheflush.h>
+ #include <asm/efi.h>
+@@ -213,6 +214,41 @@ static __init void reserve_regions(void)
+ 	set_bit(EFI_MEMMAP, &efi.flags);
  }
  
- /*
-@@ -1014,7 +1014,8 @@ static int alloc_isa_irq_from_domain(struct irq_domain *domain,
- 					  info->ioapic_pin))
- 			return -ENOMEM;
- 	} else {
--		irq = __irq_domain_alloc_irqs(domain, irq, 1, node, info, true);
-+		irq = __irq_domain_alloc_irqs(domain, irq, 1, node, info, true,
-+					      -1);
- 		if (irq >= 0) {
- 			irq_data = irq_domain_get_irq_data(domain, irq);
- 			data = irq_data->chip_data;
-diff --git a/include/linux/irq.h b/include/linux/irq.h
-index c4de623..27779d0 100644
---- a/include/linux/irq.h
-+++ b/include/linux/irq.h
-@@ -697,11 +697,11 @@ static inline struct cpumask *irq_data_get_affinity_mask(struct irq_data *d)
- unsigned int arch_dynirq_lower_bound(unsigned int from);
- 
- int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
--		struct module *owner);
-+		      struct module *owner, int targetcpu);
- 
- /* use macros to avoid needing export.h for THIS_MODULE */
- #define irq_alloc_descs(irq, from, cnt, node)	\
--	__irq_alloc_descs(irq, from, cnt, node, THIS_MODULE)
-+	__irq_alloc_descs(irq, from, cnt, node, THIS_MODULE, -1)
- 
- #define irq_alloc_desc(node)			\
- 	irq_alloc_descs(-1, 0, 1, node)
-diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
-index 2aed043..fa24663 100644
---- a/include/linux/irqdomain.h
-+++ b/include/linux/irqdomain.h
-@@ -215,7 +215,8 @@ extern struct irq_domain *irq_find_matching_fwnode(struct fwnode_handle *fwnode,
- 						   enum irq_domain_bus_token bus_token);
- extern void irq_set_default_host(struct irq_domain *host);
- extern int irq_domain_alloc_descs(int virq, unsigned int nr_irqs,
--				  irq_hw_number_t hwirq, int node);
-+				  irq_hw_number_t hwirq, int node,
-+				  int targetcpu);
- 
- static inline struct fwnode_handle *of_node_to_fwnode(struct device_node *node)
- {
-@@ -377,7 +378,7 @@ static inline struct irq_domain *irq_domain_add_hierarchy(struct irq_domain *par
- 
- extern int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
- 				   unsigned int nr_irqs, int node, void *arg,
--				   bool realloc);
-+				   bool realloc, int targetcpu);
- extern void irq_domain_free_irqs(unsigned int virq, unsigned int nr_irqs);
- extern void irq_domain_activate_irq(struct irq_data *irq_data);
- extern void irq_domain_deactivate_irq(struct irq_data *irq_data);
-@@ -385,7 +386,8 @@ extern void irq_domain_deactivate_irq(struct irq_data *irq_data);
- static inline int irq_domain_alloc_irqs(struct irq_domain *domain,
- 			unsigned int nr_irqs, int node, void *arg)
- {
--	return __irq_domain_alloc_irqs(domain, -1, nr_irqs, node, arg, false);
-+	return __irq_domain_alloc_irqs(domain, -1, nr_irqs, node, arg, false,
-+				       -1);
- }
- 
- extern int irq_domain_alloc_irqs_recursive(struct irq_domain *domain,
-diff --git a/kernel/irq/ipi.c b/kernel/irq/ipi.c
-index c37f34b..c635e61 100644
---- a/kernel/irq/ipi.c
-+++ b/kernel/irq/ipi.c
-@@ -76,14 +76,14 @@ unsigned int irq_reserve_ipi(struct irq_domain *domain,
- 		}
- 	}
- 
--	virq = irq_domain_alloc_descs(-1, nr_irqs, 0, NUMA_NO_NODE);
-+	virq = irq_domain_alloc_descs(-1, nr_irqs, 0, NUMA_NO_NODE, -1);
- 	if (virq <= 0) {
- 		pr_warn("Can't reserve IPI, failed to alloc descs\n");
- 		return 0;
- 	}
- 
- 	virq = __irq_domain_alloc_irqs(domain, virq, nr_irqs, NUMA_NO_NODE,
--				       (void *) dest, true);
-+				       (void *) dest, true, -1);
- 
- 	if (virq <= 0) {
- 		pr_warn("Can't reserve IPI, failed to alloc hw irqs\n");
-diff --git a/kernel/irq/irqdesc.c b/kernel/irq/irqdesc.c
-index 0ccd028..26d92fa 100644
---- a/kernel/irq/irqdesc.c
-+++ b/kernel/irq/irqdesc.c
-@@ -68,9 +68,17 @@ static int alloc_masks(struct irq_desc *desc, gfp_t gfp, int node)
- 	return 0;
- }
- 
--static void desc_smp_init(struct irq_desc *desc, int node)
-+static void desc_smp_init(struct irq_desc *desc, int node, int targetcpu)
- {
--	cpumask_copy(desc->irq_common_data.affinity, irq_default_affinity);
-+	if (targetcpu < 0) {
-+		cpumask_copy(desc->irq_common_data.affinity,
-+			     irq_default_affinity);
-+	} else {
-+		cpumask_copy(desc->irq_common_data.affinity,
-+			     cpumask_of(targetcpu));
-+		irq_settings_set_no_balancing(desc);
-+		irqd_set(&desc->irq_data, IRQD_NO_BALANCING);
++#ifdef CONFIG_PCI
++static bool efi_pci_overlaps_efifb(struct pci_bar_update_info *update_info)
++{
++	/* is the screen_info frame buffer inside the pci BAR? */
++	if (screen_info.lfb_base >= update_info->old_start &&
++	    (screen_info.lfb_base + screen_info.lfb_size) <=
++	     (update_info->old_start + update_info->size))
++		return true;
++
++	return false;
++}
++
++static int efi_pci_notifier(struct notifier_block *self,
++			    unsigned long cmd, void *v)
++{
++	struct pci_bar_update_info *update_info = v;
++
++	/*
++	 * When we reallocate a BAR that contains our frame buffer, set the
++	 * screen_info base to where it belongs
++	 */
++	if (efi_pci_overlaps_efifb(update_info)) {
++		u64 diff = (update_info->new_start - update_info->old_start);
++		screen_info.lfb_base += diff;
 +	}
- #ifdef CONFIG_GENERIC_PENDING_IRQ
- 	cpumask_clear(desc->pending_mask);
- #endif
-@@ -82,11 +90,11 @@ static void desc_smp_init(struct irq_desc *desc, int node)
- #else
- static inline int
- alloc_masks(struct irq_desc *desc, gfp_t gfp, int node) { return 0; }
--static inline void desc_smp_init(struct irq_desc *desc, int node) { }
-+static inline void desc_smp_init(struct irq_desc *desc, int cpu, int node) { }
- #endif
- 
--static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
--		struct module *owner)
-+static void desc_set_defaults(unsigned int irq, struct irq_desc *desc,
-+			      int node, struct module *owner, int targetcpu)
- {
- 	int cpu;
- 
-@@ -107,7 +115,7 @@ static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
- 	desc->owner = owner;
- 	for_each_possible_cpu(cpu)
- 		*per_cpu_ptr(desc->kstat_irqs, cpu) = 0;
--	desc_smp_init(desc, node);
-+	desc_smp_init(desc, node, targetcpu);
- }
- 
- int nr_irqs = NR_IRQS;
-@@ -158,7 +166,8 @@ void irq_unlock_sparse(void)
- 	mutex_unlock(&sparse_irq_lock);
- }
- 
--static struct irq_desc *alloc_desc(int irq, int node, struct module *owner)
-+static struct irq_desc *alloc_desc(int irq, int node, struct module *owner,
-+		int targetcpu)
- {
- 	struct irq_desc *desc;
- 	gfp_t gfp = GFP_KERNEL;
-@@ -178,7 +187,7 @@ static struct irq_desc *alloc_desc(int irq, int node, struct module *owner)
- 	lockdep_set_class(&desc->lock, &irq_desc_lock_class);
- 	init_rcu_head(&desc->rcu);
- 
--	desc_set_defaults(irq, desc, node, owner);
-+	desc_set_defaults(irq, desc, node, owner, targetcpu);
- 
- 	return desc;
- 
-@@ -223,13 +232,16 @@ static void free_desc(unsigned int irq)
- }
- 
- static int alloc_descs(unsigned int start, unsigned int cnt, int node,
--		       struct module *owner)
-+		       struct module *owner, int targetcpu)
- {
- 	struct irq_desc *desc;
- 	int i;
- 
-+	if (targetcpu != -1)
-+		node = cpu_to_node(targetcpu);
 +
- 	for (i = 0; i < cnt; i++) {
--		desc = alloc_desc(start + i, node, owner);
-+		desc = alloc_desc(start + i, node, owner, targetcpu);
- 		if (!desc)
- 			goto err;
- 		mutex_lock(&sparse_irq_lock);
-@@ -277,7 +289,7 @@ int __init early_irq_init(void)
- 		nr_irqs = initcnt;
- 
- 	for (i = 0; i < initcnt; i++) {
--		desc = alloc_desc(i, node, NULL);
-+		desc = alloc_desc(i, node, NULL, -1);
- 		set_bit(i, allocated_irqs);
- 		irq_insert_desc(i, desc);
- 	}
-@@ -311,7 +323,7 @@ int __init early_irq_init(void)
- 		alloc_masks(&desc[i], GFP_KERNEL, node);
- 		raw_spin_lock_init(&desc[i].lock);
- 		lockdep_set_class(&desc[i].lock, &irq_desc_lock_class);
--		desc_set_defaults(i, &desc[i], node, NULL);
-+		desc_set_defaults(i, &desc[i], node, NULL, -1);
- 	}
- 	return arch_early_irq_init();
- }
-@@ -328,12 +340,12 @@ static void free_desc(unsigned int irq)
- 	unsigned long flags;
- 
- 	raw_spin_lock_irqsave(&desc->lock, flags);
--	desc_set_defaults(irq, desc, irq_desc_get_node(desc), NULL);
-+	desc_set_defaults(irq, desc, -1, irq_desc_get_node(desc), NULL, -1);
- 	raw_spin_unlock_irqrestore(&desc->lock, flags);
- }
- 
- static inline int alloc_descs(unsigned int start, unsigned int cnt, int node,
--			      struct module *owner)
-+			      struct module *owner, int targetcpu)
- {
- 	u32 i;
- 
-@@ -453,12 +465,14 @@ EXPORT_SYMBOL_GPL(irq_free_descs);
-  * @cnt:	Number of consecutive irqs to allocate.
-  * @node:	Preferred node on which the irq descriptor should be allocated
-  * @owner:	Owning module (can be NULL)
-+ * @targetcpu:	CPU number where the irq descriptors should be allocated and
-+ *		which should be used for the default affinity.  -1 if not used.
-  *
-  * Returns the first irq number or error code
-  */
- int __ref
- __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
--		  struct module *owner)
-+		  struct module *owner, int targetcpu)
- {
- 	int start, ret;
- 
-@@ -494,7 +508,7 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
- 
- 	bitmap_set(allocated_irqs, start, cnt);
- 	mutex_unlock(&sparse_irq_lock);
--	return alloc_descs(start, cnt, node, owner);
-+	return alloc_descs(start, cnt, node, owner, targetcpu);
- 
- err:
- 	mutex_unlock(&sparse_irq_lock);
-@@ -512,7 +526,7 @@ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
-  */
- unsigned int irq_alloc_hwirqs(int cnt, int node)
- {
--	int i, irq = __irq_alloc_descs(-1, 0, cnt, node, NULL);
-+	int i, irq = __irq_alloc_descs(-1, 0, cnt, node, NULL, -1);
- 
- 	if (irq < 0)
- 		return 0;
-diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
-index 3a519a0..af7a39f 100644
---- a/kernel/irq/irqdomain.c
-+++ b/kernel/irq/irqdomain.c
-@@ -483,7 +483,7 @@ unsigned int irq_create_mapping(struct irq_domain *domain,
- 	}
- 
- 	/* Allocate a virtual interrupt number */
--	virq = irq_domain_alloc_descs(-1, 1, hwirq, of_node_to_nid(of_node));
-+	virq = irq_domain_alloc_descs(-1, 1, hwirq, of_node_to_nid(of_node), -1);
- 	if (virq <= 0) {
- 		pr_debug("-> virq allocation failed\n");
- 		return 0;
-@@ -839,19 +839,23 @@ const struct irq_domain_ops irq_domain_simple_ops = {
- EXPORT_SYMBOL_GPL(irq_domain_simple_ops);
- 
- int irq_domain_alloc_descs(int virq, unsigned int cnt, irq_hw_number_t hwirq,
--			   int node)
-+			   int node, int targetcpu)
- {
- 	unsigned int hint;
- 
- 	if (virq >= 0) {
--		virq = irq_alloc_descs(virq, virq, cnt, node);
-+		virq = __irq_alloc_descs(virq, virq, cnt, node, THIS_MODULE,
-+					 targetcpu);
- 	} else {
- 		hint = hwirq % nr_irqs;
- 		if (hint == 0)
- 			hint++;
--		virq = irq_alloc_descs_from(hint, cnt, node);
--		if (virq <= 0 && hint > 1)
--			virq = irq_alloc_descs_from(1, cnt, node);
-+		virq = __irq_alloc_descs(-1, hint, cnt, node, THIS_MODULE,
-+					 targetcpu);
-+		if (virq <= 0 && hint > 1) {
-+			virq = __irq_alloc_descs(-1, 1, cnt, node, THIS_MODULE,
-+						 targetcpu);
-+		}
- 	}
- 
- 	return virq;
-@@ -1163,6 +1167,7 @@ int irq_domain_alloc_irqs_recursive(struct irq_domain *domain,
-  * @node:	NUMA node id for memory allocation
-  * @arg:	domain specific argument
-  * @realloc:	IRQ descriptors have already been allocated if true
-+ * @targetcpu:	Optional target cpu multiqueue devices (otherwise -1)
-  *
-  * Allocate IRQ numbers and initialized all data structures to support
-  * hierarchy IRQ domains.
-@@ -1178,7 +1183,7 @@ int irq_domain_alloc_irqs_recursive(struct irq_domain *domain,
-  */
- int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
- 			    unsigned int nr_irqs, int node, void *arg,
--			    bool realloc)
-+			    bool realloc, int targetcpu)
- {
- 	int i, ret, virq;
- 
-@@ -1196,7 +1201,8 @@ int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
- 	if (realloc && irq_base >= 0) {
- 		virq = irq_base;
- 	} else {
--		virq = irq_domain_alloc_descs(irq_base, nr_irqs, 0, node);
-+		virq = irq_domain_alloc_descs(irq_base, nr_irqs, 0, node,
-+					      targetcpu);
- 		if (virq < 0) {
- 			pr_debug("cannot allocate IRQ(base %d, count %d)\n",
- 				 irq_base, nr_irqs);
-diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
-index 38e89ce..3385729 100644
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -324,7 +324,7 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
- 	struct msi_domain_ops *ops = info->ops;
- 	msi_alloc_info_t arg;
- 	struct msi_desc *desc;
--	int i, ret, virq = -1;
-+	int i, ret, virq = -1, cpu = -1;
- 
- 	ret = msi_domain_prepare_irqs(domain, dev, nvec, &arg);
- 	if (ret)
-@@ -337,8 +337,15 @@ int msi_domain_alloc_irqs(struct irq_domain *domain, struct device *dev,
- 		else
- 			virq = -1;
- 
-+		if (dev->irq_affinity) {
-+			cpu = cpumask_next(cpu, dev->irq_affinity);
-+			if (cpu > nr_cpu_ids)
-+				cpu = cpumask_first(dev->irq_affinity);
-+		}
++	return NOTIFY_OK;
++}
++static struct notifier_block efi_pci_notifier_block = {
++	.notifier_call = efi_pci_notifier,
++};
++#else
++#define pci_notify_on_update_resource(a)
++#endif
 +
- 		virq = __irq_domain_alloc_irqs(domain, virq, desc->nvec_used,
--					       dev_to_node(dev), &arg, false);
-+					       dev_to_node(dev), &arg, false,
-+					       cpu);
- 		if (virq < 0) {
- 			ret = -ENOSPC;
- 			if (ops->handle_error)
+ void __init efi_init_fdt(void *fdt)
+ {
+ 	struct efi_fdt_params params;
+@@ -246,8 +282,10 @@ void __init efi_init_fdt(void *fdt)
+ 	reserve_regions();
+ 	early_memunmap(memmap.map, params.mmap_size);
+ 
+-	if (screen_info.orig_video_isVGA == VIDEO_TYPE_EFI)
++	if (screen_info.orig_video_isVGA == VIDEO_TYPE_EFI) {
++		pci_notify_on_update_resource(&efi_pci_notifier_block);
+ 		memblock_reserve(screen_info.lfb_base, screen_info.lfb_size);
++	}
+ }
+ 
+ static int __init register_gop_device(void)
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 604011e..d5c24fc 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -23,8 +23,10 @@
+ #include <linux/ioport.h>
+ #include <linux/cache.h>
+ #include <linux/slab.h>
++#include <linux/notifier.h>
+ #include "pci.h"
+ 
++static RAW_NOTIFIER_HEAD(bar_update_chain);
+ 
+ void pci_update_resource(struct pci_dev *dev, int resno)
+ {
+@@ -35,6 +37,9 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+ 	int reg;
+ 	enum pci_bar_type type;
+ 	struct resource *res = dev->resource + resno;
++	struct pci_bar_update_info update_info;
++	struct pci_bus_region update_reg;
++	struct resource update_res;
+ 
+ 	if (dev->is_virtfn) {
+ 		dev_warn(&dev->dev, "can't update VF BAR%d\n", resno);
+@@ -77,6 +82,22 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+ 	}
+ 
+ 	/*
++	 * Fetch the old BAR location from the device, so we can notify
++	 * users of that BAR that its location is changing.
++	 */
++	pci_read_config_dword(dev, reg, &check);
++	update_reg.start = check & PCI_BASE_ADDRESS_MEM_MASK;
++	if (check & PCI_BASE_ADDRESS_MEM_TYPE_64) {
++		pci_read_config_dword(dev, reg, &check);
++		update_reg.start |= ((u64)check) << 32;
++	}
++	update_info.size = region.end - region.start;
++	update_reg.end = update_reg.start + update_info.size;
++	pcibios_bus_to_resource(dev->bus, &update_res, &update_reg);
++	update_info.old_start = update_res.start;
++	update_info.new_start = res->start;
++
++	/*
+ 	 * We can't update a 64-bit BAR atomically, so when possible,
+ 	 * disable decoding so that a half-updated BAR won't conflict
+ 	 * with another device.
+@@ -108,6 +129,14 @@ void pci_update_resource(struct pci_dev *dev, int resno)
+ 
+ 	if (disable)
+ 		pci_write_config_word(dev, PCI_COMMAND, cmd);
++
++	/* Tell interested parties that the BAR mapping changed */
++	raw_notifier_call_chain(&bar_update_chain, 0, &update_info);
++}
++
++int pci_notify_on_update_resource(struct notifier_block *nb)
++{
++        return raw_notifier_chain_register(&bar_update_chain, nb);
+ }
+ 
+ int pci_claim_resource(struct pci_dev *dev, int resource)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index c061250..04a430e 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -30,6 +30,7 @@
+ #include <linux/device.h>
+ #include <linux/io.h>
+ #include <linux/resource_ext.h>
++#include <linux/notifier.h>
+ #include <uapi/linux/pci.h>
+ 
+ #include <linux/pci_ids.h>
+@@ -1037,6 +1038,13 @@ int pci_select_bars(struct pci_dev *dev, unsigned long flags);
+ bool pci_device_is_present(struct pci_dev *pdev);
+ void pci_ignore_hotplug(struct pci_dev *dev);
+ 
++struct pci_bar_update_info {
++	u64 old_start;
++	u64 new_start;
++	u64 size;
++};
++int pci_notify_on_update_resource(struct notifier_block *nb);
++
+ /* ROM control related routines */
+ int pci_enable_rom(struct pci_dev *pdev);
+ void pci_disable_rom(struct pci_dev *pdev);
 -- 
-2.1.4
+1.8.5.6
 
