@@ -1,74 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:34876 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755231AbcDKO3g (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Apr 2016 10:29:36 -0400
-Received: from us02secmta1.synopsys.com (us02secmta1.synopsys.com [10.12.235.96])
-	by smtprelay.synopsys.com (Postfix) with ESMTP id F0F1724E121F
-	for <linux-pci@vger.kernel.org>; Mon, 11 Apr 2016 07:29:34 -0700 (PDT)
-Received: from us02secmta1.internal.synopsys.com (us02secmta1.internal.synopsys.com [127.0.0.1])
-	by us02secmta1.internal.synopsys.com (Service) with ESMTP id E4E5F4E213
-	for <linux-pci@vger.kernel.org>; Mon, 11 Apr 2016 07:29:34 -0700 (PDT)
-Received: from mailhost.synopsys.com (unknown [10.13.184.66])
-	by us02secmta1.internal.synopsys.com (Service) with ESMTP id C8E864E202
-	for <linux-pci@vger.kernel.org>; Mon, 11 Apr 2016 07:29:34 -0700 (PDT)
-Received: from mailhost.synopsys.com (localhost [127.0.0.1])
-	by mailhost.synopsys.com (Postfix) with ESMTP id BC0C3F03
-	for <linux-pci@vger.kernel.org>; Mon, 11 Apr 2016 07:29:34 -0700 (PDT)
-Received: from US01WEHTC2.internal.synopsys.com (us01wehtc2.internal.synopsys.com [10.12.239.237])
-	by mailhost.synopsys.com (Postfix) with ESMTP id B3DDCF02
-	for <linux-pci@vger.kernel.org>; Mon, 11 Apr 2016 07:29:34 -0700 (PDT)
-Subject: Re: UFS patch
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <570BB249.10508@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <570BB4CB.40205@synopsys.com>
-Date: Mon, 11 Apr 2016 15:29:31 +0100
-MIME-Version: 1.0
-In-Reply-To: <570BB249.10508@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:50304 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752953AbcD0Mqg (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Apr 2016 08:46:36 -0400
+Received: from localhost
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Wed, 27 Apr 2016 22:46:33 +1000
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, David.Laight@ACULAB.COM,
+	alistair@popple.id.au, ruscur@russell.cc,
+	Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [PATCH 0/5] vfio-pci: Add support for mmapping MSI-X table
+Date: Wed, 27 Apr 2016 20:43:25 +0800
+Message-Id: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry! Wrong mailing list :)
+Current vfio-pci implementation disallows to mmap the page 
+containing MSI-X table in case that users can write to MSI-X
+table and generate an incorrect MSIs.
 
-On 4/11/2016 3:18 PM, Joao Pinto wrote:
-> Hi Martin,
-> 
-> I would like to know what are your plans regarding the UFS patches. Sending the
-> URLS for the last patch set version:
-> 
-> [PATCH v13 0/9] add support for DWC UFS Controller
-> https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1115046.html
-> 
-> [PATCH v13 1/9] fixed typo in ufshcd-pltfrm
-> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115043.html
-> 
-> [PATCH v13 2/9] add UFS 2.0 to ufshcd-pltfrm bindings
-> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115045.html
-> 
-> [PATCH v13 3/9] added UFS 2.0 capabilities
-> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115047.html
-> 
-> [PATCH v13 4/9] added unipro attributes
-> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115044.html
-> 
-> [PATCH v13 5/9] added link status to ufshci
-> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115051.html
-> 
-> [PATCH v13 6/9] added support for DesignWare Controller
-> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115053.html
-> 
-> [PATCH v13 7/9] added support for Synopsys G210 Test Chip
-> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115049.html
-> 
-> [PATCH v13 8/9] add TC G210 platform driver
-> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115048.html
-> 
-> [PATCH v13 9/9] add TC G210 pci driver
-> https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1115050.html
-> 
-> Thanks,
-> Joao
-> 
+However, this will cause some performance issue when there
+are some critical device registers in the same page as the 
+MSI-X table. We have to handle the mmio access to these 
+registers in QEMU emulation rather than in guest.
+
+To solve this issue, this series allows to mmap MSI-X table 
+when hardware supports the capability of interrupt remapping 
+which can ensure that a given pci device can only shoot the 
+MSIs assigned for it. And we introduce a new bus_flags 
+PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side 
+for different archs.
+
+The patch 3 are based on the proposed patchset[1].
+
+[1] http://www.spinics.net/lists/kvm/msg130256.html
+
+Yongji Xie (5):
+  PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
+  iommu: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have capability of IRQ remapping
+  PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller supports IRQ remapping
+  pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
+  vfio-pci: Allow to mmap MSI-X table if interrupt remapping is supported
+
+ arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
+ drivers/iommu/iommu.c                     |   15 +++++++++++++++
+ drivers/pci/msi.c                         |   12 ++++++++++++
+ drivers/pci/probe.c                       |    3 +++
+ drivers/vfio/pci/vfio_pci.c               |    7 +++++--
+ drivers/vfio/pci/vfio_pci_rdwr.c          |    3 ++-
+ include/linux/msi.h                       |    6 +++++-
+ include/linux/pci.h                       |    1 +
+ 8 files changed, 51 insertions(+), 4 deletions(-)
+
+-- 
+1.7.9.5
 
