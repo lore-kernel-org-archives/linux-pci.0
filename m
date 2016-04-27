@@ -1,75 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:34164 "EHLO
-	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754492AbcDMQXu (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 12:23:50 -0400
-Date: Wed, 13 Apr 2016 18:23:45 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH v4 1/2] dt-bindings: pci: tegra: Update for per-lane PHYs
-Message-ID: <20160413162345.GC30129@ulmo.ba.sec>
-References: <1460131994-24493-1-git-send-email-thierry.reding@gmail.com>
- <570BE129.40907@wwwdotorg.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="mvpLiMfbWzRoNl4x"
-In-Reply-To: <570BE129.40907@wwwdotorg.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:54896 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753155AbcD0MUV (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Apr 2016 08:20:21 -0400
+Received: from localhost
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Wed, 27 Apr 2016 22:20:14 +1000
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
+	linux-doc@vger.kernel.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com, Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [PATCH 3/4] PCI: Add a new option for resource_alignment to reassign alignment
+Date: Wed, 27 Apr 2016 20:17:10 +0800
+Message-Id: <1461759432-5030-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1461759432-5030-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1461759432-5030-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+When using resource_alignment kernel parameter, the current
+implement reassigns the alignment by changing resources' size
+which can potentially break some drivers. For example, the driver
+uses the size to locate some register whose length is related
+to the size.
 
---mvpLiMfbWzRoNl4x
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This patch adds a new option "noresize" for the parameter to
+solve this problem.
 
-On Mon, Apr 11, 2016 at 11:38:49AM -0600, Stephen Warren wrote:
-> On 04/08/2016 10:13 AM, Thierry Reding wrote:
-> > From: Thierry Reding <treding@nvidia.com>
-> >=20
-> > Changes to the pad controller device tree binding have required that
-> > each lane be associated with a separate PHY. Update the PCI host bridge
-> > device tree binding to allow each root port to define the list of PHYs
-> > required to drive the lanes associated with it.
->=20
-> I think the feedback I gave on v3 still applies here (I'm talking about t=
-he
-> comments on the patch, not the commit description).
->=20
-> http://www.spinics.net/lists/linux-pci/msg49718.html
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ Documentation/kernel-parameters.txt |    5 ++++-
+ drivers/pci/pci.c                   |   35 +++++++++++++++++++++++++----------
+ 2 files changed, 29 insertions(+), 11 deletions(-)
 
-Apologies, I had missed those when going over review comments. I think
-I've addressed all of them now, or provided rationale for why the code
-and binding are the way they are.
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 0b3de80..13c25bf 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -2958,13 +2958,16 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				window. The default value is 64 megabytes.
+ 		resource_alignment=
+ 				Format:
+-				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
++				[<order of align>@][<domain>:]<bus>:<slot>.<func>
++				[:noresize][; ...]
+ 				Specifies alignment and device to reassign
+ 				aligned memory resources.
+ 				If <order of align> is not specified,
+ 				PAGE_SIZE is used as alignment.
+ 				PCI-PCI bridge can be specified, if resource
+ 				windows need to be expanded.
++				noresize: Don't change the resources' sizes when
++				reassigning alignment.
+ 		ecrc=		Enable/disable PCIe ECRC (transaction layer
+ 				end-to-end CRC checking).
+ 				bios: Use BIOS/firmware settings. This is the
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 19b9560..a6d2b66 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4604,11 +4604,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
+ /**
+  * pci_specified_resource_alignment - get resource alignment specified by user.
+  * @dev: the PCI device to get
++ * @resize: whether or not to change resources' size when reassigning alignment
+  *
+  * RETURNS: Resource alignment if it is specified.
+  *          Zero if it is not specified.
+  */
+-static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
++static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
++		bool *resize)
+ {
+ 	int seg, bus, slot, func, align_order, count;
+ 	resource_size_t align = 0;
+@@ -4642,6 +4644,11 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 			}
+ 		}
+ 		p += count;
++		if (!strncmp(p, ":noresize", 9)) {
++			*resize = false;
++			p += 9;
++		} else
++			*resize = true;
+ 		if (seg == pci_domain_nr(dev->bus) &&
+ 			bus == dev->bus->number &&
+ 			slot == PCI_SLOT(dev->devfn) &&
+@@ -4674,11 +4681,12 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ {
+ 	int i;
+ 	struct resource *r;
++	bool resize = true;
+ 	resource_size_t align, size;
+ 	u16 command;
+ 
+ 	/* check if specified PCI is target device to reassign */
+-	align = pci_specified_resource_alignment(dev);
++	align = pci_specified_resource_alignment(dev, &resize);
+ 	if (!align)
+ 		return;
+ 
+@@ -4700,15 +4708,22 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		if (!(r->flags & IORESOURCE_MEM))
+ 			continue;
+ 		size = resource_size(r);
+-		if (size < align) {
+-			size = align;
+-			dev_info(&dev->dev,
+-				"Rounding up size of resource #%d to %#llx.\n",
+-				i, (unsigned long long)size);
++		if (resize) {
++			if (size < align) {
++				size = align;
++				dev_info(&dev->dev,
++					"Rounding up size of resource #%d to %#llx.\n",
++					i, (unsigned long long)size);
++			}
++			r->flags |= IORESOURCE_UNSET;
++			r->end = size - 1;
++			r->start = 0;
++		} else {
++			r->flags &= ~IORESOURCE_SIZEALIGN;
++			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
++			r->start = max(align, size);
++			r->end = r->start + size - 1;
+ 		}
+-		r->flags |= IORESOURCE_UNSET;
+-		r->end = size - 1;
+-		r->start = 0;
+ 	}
+ 	/* Need to disable bridge's resource window,
+ 	 * to enable the kernel to reassign new resource
+-- 
+1.7.9.5
 
-I'll be sending out a v5 soon, hopefully that will have addressed any
-outstanding concerns.
-
-Thierry
-
---mvpLiMfbWzRoNl4x
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCAAGBQJXDnKRAAoJEN0jrNd/PrOhCKUQALhHG7ZwR4O8o40CFexq1sKx
-Oit9kQaM9s5922COpyFYEQp26URX7iBUSj9UjIx34JLGXcy6n2O+HPoOljQiNCc1
-kLqnWDNMUwIXL6TRZBheRStKzJlbiQqCP8PfhaL1putSGecTBJ7fPAN7lCviDfcQ
-keKh6ryelZy3FEAzl5O7iVzU8mkcdewdKzuBnIkwWSZUOHw0N9g3Itux198FRy6C
-kTxuTsrBAOLcxhaG8Oh7zQkl7p2SIhnY48djkRrfiUurydW2lA7S2PNf88uJUe5C
-xzaCTQTqBspks2N0CeSYVG78j1oKpiyMjQV0w5iOT6d3g7tMQB6V0SefHDMEZlNh
-sNP0pEWhgBy25vV11H5K4od7O1B5rKG6KcVk6RCGUQ03Z1BfYHchTQMW3UG90c6z
-2CRydCJZxeaXdEnuwvY9yifHRIxAtb6hjvefDahYR1eA4/R8BBN0czrmrh0A0fAH
-0QQdERZSBJmFM7CalGm8gI3pJR0fgJtN+4dbIOUIhdULNzVBpxs7xjazuOkiVO83
-eM0qguohR0IJMli13NEWGJL16MAtylX/3lORiNC/3D2RhmWisf8/x/Y+m/E5/nsG
-3Zy6Gh3O6ZOidgiw9iJEk5loQbOwaa45uRBdLk+yXLaHI9YGHDq0FL+1IhFW5V3J
-sDwsGIWXVfc9BddYAXXo
-=f4aV
------END PGP SIGNATURE-----
-
---mvpLiMfbWzRoNl4x--
