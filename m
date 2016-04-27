@@ -1,252 +1,151 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:42168 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756283AbcDHAQz (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:16:55 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 04/60] sparc/PCI: Use correct offset for bus address to resource
-Date: Thu,  7 Apr 2016 17:15:17 -0700
-Message-Id: <1460074573-7481-5-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 26 Apr 2016 21:26:49 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+Subject: Re: [PATCH V6 02/13] pci, acpi: Provide generic way to assign bus
+ domain number.
+Message-ID: <20160427022649.GD6789@localhost>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <1460740008-19489-3-git-send-email-tn@semihalf.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1460740008-19489-3-git-send-email-tn@semihalf.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-After we added 64bit mmio parsing, we got some "no compatible bridge window"
-warning on anther new model that support 64bit resource.
+On Fri, Apr 15, 2016 at 07:06:37PM +0200, Tomasz Nowicki wrote:
+> As we now have valid PCI host bridge device reference we can
+> introduce code that is going to find its bus domain number using
+> ACPI _SEG method.
+> 
+> Note that _SEG method is optional, therefore _SEG absence means
+> that all PCI buses belong to domain 0.
+> 
+> While at it, for the sake of code clarity we put ACPI and DT domain
+> assign methods into the corresponding helpers.
+> 
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+> Tested-by: Duc Dang <dhdang@apm.com>
+> Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+> Tested-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/acpi/pci_root.c  | 18 ++++++++++++++++++
+>  drivers/pci/pci.c        | 11 +++++++++--
+>  include/linux/pci-acpi.h |  2 ++
+>  3 files changed, 29 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index 4581e0e..d9a70c4 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -419,6 +419,24 @@ out:
+>  }
+>  EXPORT_SYMBOL(acpi_pci_osc_control_set);
+>  
+> +int acpi_pci_bus_domain_nr(struct device *parent)
+> +{
+> +	struct acpi_device *acpi_dev = to_acpi_device(parent);
+> +	unsigned long long segment = 0;
+> +	acpi_status status;
+> +
+> +	/*
+> +	 * If _SEG method does not exist, following ACPI spec (6.5.6)
+> +	 * all PCI buses belong to domain 0.
+> +	 */
+> +	status = acpi_evaluate_integer(acpi_dev->handle, METHOD_NAME__SEG, NULL,
+> +				       &segment);
 
-It turns out that we can not use mem_space.start as 64bit mem space
-offset, aka there is mem_space.start != offset.
+We already have code in acpi_pci_root_add() to evaluate _SEG.  We
+don't want to evaluate it *twice*, do we?
 
-Use child_phys_addr to calculate exact offset and record offset in
-pbm.
+I was sort of expecting that if you added it here, we'd remove the
+existing call, but it looks like you're keeping both?
 
-After patch we get correct offset.
-
-/pci@305: PCI IO [io  0x2007e00000000-0x2007e0fffffff] offset 2007e00000000
-/pci@305: PCI MEM [mem 0x2000000100000-0x200007effffff] offset 2000000000000
-/pci@305: PCI MEM64 [mem 0x2000100000000-0x2000dffffffff] offset 2000000000000
-...
-pci_sun4v f02ae7f8: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [io  0x2007e00000000-0x2007e0fffffff] (bus address [0x0000-0xfffffff])
-pci_bus 0000:00: root bus resource [mem 0x2000000100000-0x200007effffff] (bus address [0x00100000-0x7effffff])
-pci_bus 0000:00: root bus resource [mem 0x2000100000000-0x2000dffffffff] (bus address [0x100000000-0xdffffffff])
-
--v3: put back mem64_offset, as we found T4 has mem_offset != mem64_offset
-     check overlapping between mem64_space and mem_space.
-
--v5: use pcibios_bus_to_region() requested by Bjorn.
-
--v6: use pci_find_bus_resource().
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
----
- arch/sparc/kernel/pci.c        | 54 ++++++++++++++++++++----------------------
- arch/sparc/kernel/pci_common.c | 32 ++++++++++++++++++-------
- arch/sparc/kernel/pci_impl.h   |  4 ++++
- 3 files changed, 54 insertions(+), 36 deletions(-)
-
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index badf095..4606dc1 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -654,12 +654,12 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 	printk("PCI: Scanning PBM %s\n", node->full_name);
- 
- 	pci_add_resource_offset(&resources, &pbm->io_space,
--				pbm->io_space.start);
-+				pbm->io_offset);
- 	pci_add_resource_offset(&resources, &pbm->mem_space,
--				pbm->mem_space.start);
-+				pbm->mem_offset);
- 	if (pbm->mem64_space.flags)
- 		pci_add_resource_offset(&resources, &pbm->mem64_space,
--					pbm->mem_space.start);
-+					pbm->mem64_offset);
- 	pbm->busn.start = pbm->pci_first_busno;
- 	pbm->busn.end	= pbm->pci_last_busno;
- 	pbm->busn.flags	= IORESOURCE_BUS;
-@@ -733,30 +733,32 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- static int __pci_mmap_make_offset_bus(struct pci_dev *pdev, struct vm_area_struct *vma,
- 				      enum pci_mmap_state mmap_state)
- {
--	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
--	unsigned long space_size, user_offset, user_size;
--
--	if (mmap_state == pci_mmap_io) {
--		space_size = resource_size(&pbm->io_space);
--	} else {
--		space_size = resource_size(&pbm->mem_space);
--	}
-+	unsigned long user_offset, user_size;
-+	struct resource res, *root_bus_res;
-+	struct pci_bus_region region;
-+	struct pci_bus *bus;
- 
- 	/* Make sure the request is in range. */
- 	user_offset = vma->vm_pgoff << PAGE_SHIFT;
- 	user_size = vma->vm_end - vma->vm_start;
- 
--	if (user_offset >= space_size ||
--	    (user_offset + user_size) > space_size)
-+	region.start = user_offset;
-+	region.end = user_offset + user_size - 1;
-+	memset(&res, 0, sizeof(res));
-+	if (mmap_state == pci_mmap_io)
-+		res.flags = IORESOURCE_IO;
-+	else
-+		res.flags = IORESOURCE_MEM;
-+
-+	pcibios_bus_to_resource(pdev->bus, &res, &region);
-+	bus = pdev->bus;
-+	while (bus->parent)
-+		bus = bus->parent;
-+	root_bus_res = pci_find_bus_resource(bus, &res);
-+	if (!root_bus_res)
- 		return -EINVAL;
- 
--	if (mmap_state == pci_mmap_io) {
--		vma->vm_pgoff = (pbm->io_space.start +
--				 user_offset) >> PAGE_SHIFT;
--	} else {
--		vma->vm_pgoff = (pbm->mem_space.start +
--				 user_offset) >> PAGE_SHIFT;
--	}
-+	vma->vm_pgoff = res.start >> PAGE_SHIFT;
- 
- 	return 0;
- }
-@@ -977,16 +979,12 @@ void pci_resource_to_user(const struct pci_dev *pdev, int bar,
- 			  const struct resource *rp, resource_size_t *start,
- 			  resource_size_t *end)
- {
--	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
--	unsigned long offset;
-+	struct pci_bus_region region;
- 
--	if (rp->flags & IORESOURCE_IO)
--		offset = pbm->io_space.start;
--	else
--		offset = pbm->mem_space.start;
-+	pcibios_resource_to_bus(pdev->bus, &region, (struct resource *)rp);
- 
--	*start = rp->start - offset;
--	*end = rp->end - offset;
-+	*start = region.start;
-+	*end = region.end;
- }
- 
- void pcibios_set_master(struct pci_dev *dev)
-diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-index 33524c1..76998f8 100644
---- a/arch/sparc/kernel/pci_common.c
-+++ b/arch/sparc/kernel/pci_common.c
-@@ -410,13 +410,16 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 
- 	for (i = 0; i < num_pbm_ranges; i++) {
- 		const struct linux_prom_pci_ranges *pr = &pbm_ranges[i];
--		unsigned long a, size;
-+		unsigned long a, size, region_a;
- 		u32 parent_phys_hi, parent_phys_lo;
-+		u32 child_phys_mid, child_phys_lo;
- 		u32 size_hi, size_lo;
- 		int type;
- 
- 		parent_phys_hi = pr->parent_phys_hi;
- 		parent_phys_lo = pr->parent_phys_lo;
-+		child_phys_mid = pr->child_phys_mid;
-+		child_phys_lo = pr->child_phys_lo;
- 		if (tlb_type == hypervisor)
- 			parent_phys_hi &= 0x0fffffff;
- 
-@@ -426,6 +429,8 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 		type = (pr->child_phys_hi >> 24) & 0x3;
- 		a = (((unsigned long)parent_phys_hi << 32UL) |
- 		     ((unsigned long)parent_phys_lo  <<  0UL));
-+		region_a = (((unsigned long)child_phys_mid << 32UL) |
-+		     ((unsigned long)child_phys_lo  <<  0UL));
- 		size = (((unsigned long)size_hi << 32UL) |
- 			((unsigned long)size_lo  <<  0UL));
- 
-@@ -440,6 +445,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			pbm->io_space.start = a;
- 			pbm->io_space.end = a + size - 1UL;
- 			pbm->io_space.flags = IORESOURCE_IO;
-+			pbm->io_offset = a - region_a;
- 			saw_io = 1;
- 			break;
- 
-@@ -448,6 +454,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			pbm->mem_space.start = a;
- 			pbm->mem_space.end = a + size - 1UL;
- 			pbm->mem_space.flags = IORESOURCE_MEM;
-+			pbm->mem_offset = a - region_a;
- 			saw_mem = 1;
- 			break;
- 
-@@ -456,6 +463,7 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 			pbm->mem64_space.start = a;
- 			pbm->mem64_space.end = a + size - 1UL;
- 			pbm->mem64_space.flags = IORESOURCE_MEM;
-+			pbm->mem64_offset = a - region_a;
- 			saw_mem = 1;
- 			break;
- 
-@@ -471,14 +479,22 @@ void pci_determine_mem_io_space(struct pci_pbm_info *pbm)
- 		prom_halt();
- 	}
- 
--	printk("%s: PCI IO[%llx] MEM[%llx]",
--	       pbm->name,
--	       pbm->io_space.start,
--	       pbm->mem_space.start);
-+	if (pbm->io_space.flags)
-+		printk("%s: PCI IO %pR offset %llx\n",
-+		       pbm->name, &pbm->io_space, pbm->io_offset);
-+	if (pbm->mem_space.flags)
-+		printk("%s: PCI MEM %pR offset %llx\n",
-+		       pbm->name, &pbm->mem_space, pbm->mem_offset);
-+	if (pbm->mem64_space.flags && pbm->mem_space.flags) {
-+		if (pbm->mem64_space.start <= pbm->mem_space.end)
-+			pbm->mem64_space.start = pbm->mem_space.end + 1;
-+		if (pbm->mem64_space.start > pbm->mem64_space.end)
-+			pbm->mem64_space.flags = 0;
-+	}
-+
- 	if (pbm->mem64_space.flags)
--		printk(" MEM64[%llx]",
--		       pbm->mem64_space.start);
--	printk("\n");
-+		printk("%s: PCI MEM64 %pR offset %llx\n",
-+		       pbm->name, &pbm->mem64_space, pbm->mem64_offset);
- 
- 	pbm->io_space.name = pbm->mem_space.name = pbm->name;
- 	pbm->mem64_space.name = pbm->name;
-diff --git a/arch/sparc/kernel/pci_impl.h b/arch/sparc/kernel/pci_impl.h
-index 37222ca..2853af7 100644
---- a/arch/sparc/kernel/pci_impl.h
-+++ b/arch/sparc/kernel/pci_impl.h
-@@ -99,6 +99,10 @@ struct pci_pbm_info {
- 	struct resource			mem_space;
- 	struct resource			mem64_space;
- 	struct resource			busn;
-+	/* offset */
-+	resource_size_t			io_offset;
-+	resource_size_t			mem_offset;
-+	resource_size_t			mem64_offset;
- 
- 	/* Base of PCI Config space, can be per-PBM or shared. */
- 	unsigned long			config_space;
--- 
-1.8.4.5
-
+> +	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
+> +		dev_err(&acpi_dev->dev, "can't evaluate _SEG\n");
+> +
+> +	return segment;
+> +}
+> +
+>  static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
+>  {
+>  	u32 support, control, requested;
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 25e0327..1a74e87 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -19,6 +19,7 @@
+>  #include <linux/spinlock.h>
+>  #include <linux/string.h>
+>  #include <linux/log2.h>
+> +#include <linux/pci-acpi.h>
+>  #include <linux/pci-aspm.h>
+>  #include <linux/pm_wakeup.h>
+>  #include <linux/interrupt.h>
+> @@ -4779,7 +4780,7 @@ int pci_get_new_domain_nr(void)
+>  }
+>  
+>  #ifdef CONFIG_PCI_DOMAINS_GENERIC
+> -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> +static int of_pci_bus_domain_nr(struct device *parent)
+>  {
+>  	static int use_dt_domains = -1;
+>  	int domain = -1;
+> @@ -4823,7 +4824,13 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+>  		domain = -1;
+>  	}
+>  
+> -	bus->domain_nr = domain;
+> +	return domain;
+> +}
+> +
+> +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> +{
+> +	bus->domain_nr = acpi_disabled ? of_pci_bus_domain_nr(parent) :
+> +					 acpi_pci_bus_domain_nr(parent);
+>  }
+>  #endif
+>  #endif
+> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+> index 89ab057..a72e22d 100644
+> --- a/include/linux/pci-acpi.h
+> +++ b/include/linux/pci-acpi.h
+> @@ -22,6 +22,7 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
+>  {
+>  	return acpi_remove_pm_notifier(dev);
+>  }
+> +extern int acpi_pci_bus_domain_nr(struct device *parent);
+>  extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
+>  
+>  static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
+> @@ -109,6 +110,7 @@ extern const u8 pci_acpi_dsm_uuid[];
+>  #else	/* CONFIG_ACPI */
+>  static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
+>  static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
+> +static inline int acpi_pci_bus_domain_nr(struct device *parent) { return -1; }
+>  #endif	/* CONFIG_ACPI */
+>  
+>  #ifdef CONFIG_ACPI_APEI
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
