@@ -1,63 +1,176 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jayachandran C <jchandra@broadcom.com>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Tomasz Nowicki <tn@semihalf.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
-	Jon Masters <jcm@redhat.com>, linaro-acpi@lists.linaro.org,
-	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com,
-	David Daney <ddaney@caviumnetworks.com>,
-	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
-	robert.richter@caviumnetworks.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, Wangyijing <wangyijing@huawei.com>,
-	Marcin Wojtas <mw@semihalf.com>
-Subject: Re: [PATCH V6 08/13] PCI: generic, thunder: update to use generic ECAM API
-Date: Sat, 16 Apr 2016 09:31:59 +0200
-Message-ID: <4240660.NqlPcXaV7N@wuerfel>
-In-Reply-To: <CAKc_7PWFacFJZA2JpfM4RcRFVj0jyUE73HhhvmX0cKm07JGupg@mail.gmail.com>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com> <5110401.mGEq6IVFz2@wuerfel> <CAKc_7PWFacFJZA2JpfM4RcRFVj0jyUE73HhhvmX0cKm07JGupg@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 27 Apr 2016 12:17:58 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>, arnd@arndb.de,
+	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+	hanjun.guo@linaro.org, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+Subject: Re: [PATCH V6 02/13] pci, acpi: Provide generic way to assign bus
+ domain number.
+Message-ID: <20160427111758.GA6234@red-moon>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <1460740008-19489-3-git-send-email-tn@semihalf.com>
+ <20160427022649.GD6789@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160427022649.GD6789@localhost>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday 16 April 2016 12:50:13 Jayachandran C wrote:
-> >
-> > I still think it would be better to keep the loadable PCI host drivers
-> > separate from the ACPI PCI infrastructure. There are a number of
-> > simplifications that we want to do to the DT based drivers in the long
-> > run, so it's better if that code is not shared at this level. Abstracting
-> > out the ECAM code is fine, but at that point you should be able to just
-> > call it from the ACPI layer.
+On Tue, Apr 26, 2016 at 09:26:49PM -0500, Bjorn Helgaas wrote:
+> On Fri, Apr 15, 2016 at 07:06:37PM +0200, Tomasz Nowicki wrote:
+> > As we now have valid PCI host bridge device reference we can
+> > introduce code that is going to find its bus domain number using
+> > ACPI _SEG method.
+> > 
+> > Note that _SEG method is optional, therefore _SEG absence means
+> > that all PCI buses belong to domain 0.
+> > 
+> > While at it, for the sake of code clarity we put ACPI and DT domain
+> > assign methods into the corresponding helpers.
+> > 
+> > Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> > Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> > Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+> > Tested-by: Duc Dang <dhdang@apm.com>
+> > Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+> > Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+> > Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+> > Tested-by: Sinan Kaya <okaya@codeaurora.org>
+> > ---
+> >  drivers/acpi/pci_root.c  | 18 ++++++++++++++++++
+> >  drivers/pci/pci.c        | 11 +++++++++--
+> >  include/linux/pci-acpi.h |  2 ++
+> >  3 files changed, 29 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> > index 4581e0e..d9a70c4 100644
+> > --- a/drivers/acpi/pci_root.c
+> > +++ b/drivers/acpi/pci_root.c
+> > @@ -419,6 +419,24 @@ out:
+> >  }
+> >  EXPORT_SYMBOL(acpi_pci_osc_control_set);
+> >  
+> > +int acpi_pci_bus_domain_nr(struct device *parent)
+> > +{
+> > +	struct acpi_device *acpi_dev = to_acpi_device(parent);
+> > +	unsigned long long segment = 0;
+> > +	acpi_status status;
+> > +
+> > +	/*
+> > +	 * If _SEG method does not exist, following ACPI spec (6.5.6)
+> > +	 * all PCI buses belong to domain 0.
+> > +	 */
+> > +	status = acpi_evaluate_integer(acpi_dev->handle, METHOD_NAME__SEG, NULL,
+> > +				       &segment);
 > 
-> The issue is not with this patch (in my opinion). This patch is just
-> re-arranging how thunder specific data is maintained. Earlier it was
-> a container_of gen_pci, now it is ->priv of pci_config_window.
+> We already have code in acpi_pci_root_add() to evaluate _SEG.  We
+> don't want to evaluate it *twice*, do we?
 > 
-> I can see the issue in patches 12 and 13 of this patchset which adds
-> ACPI fixups into the thunder OF driver.
+> I was sort of expecting that if you added it here, we'd remove the
+> existing call, but it looks like you're keeping both?
 
-Right, I commented on this one, because it seems to rearrange the code
-in order to do the later one.
+We can't remove the existing call, since it is used on X86 and IA64
+to store the segment number that, in the process, is used in their
+pci_domain_nr() arch specific callback to retrieve the domain nr.
 
-> The simple approach when doing modular PCI drivers would be to make
-> pci-thunder-*.c like pci-host-common.c, to be compiled in if configured.
-> The fie will contain all the Thunder quirks and can export
-> pci_thunder_ecam_ops.
+On ARM64, that selects PCI_DOMAINS_GENERIC, we have to find a way
+to retrieve the domain number that is not arch dependent, since
+this is generic code, we can't rely on any bus->sysdata format (unless
+we do something like JC did below), therefore the only way is to call
+the _SEG method *again* here, which also forced Tomasz to go through
+the ACPI_COMPANION setting song and dance and pass the parent pointer
+to pci_create_root_bus() (see patch 1), which BTW is a source of
+trouble on its own as you noticed.
 
-I would argue that we should not export anything from drivers/pci/host,
-those should really be standalone drivers that do not interact with other
-subsystems.
+JC solved it differently, via sysdata and pseudo-generic code:
 
-How much code would you need to duplicate from thunder-ecam to have
-the same functionality available in ACPI? My expectation is that it's
-not really that much more compared to the code you need for sharing
-a single implementation, but you get a lower complexity here, which
-makes it easier to understand and to rework.
+http://www.spinics.net/lists/arm-kernel/msg478167.html
+http://www.spinics.net/lists/arm-kernel/msg478169.html
 
-	Arnd
+I like neither, we need the lesser of two evils though.
+
+Lorenzo
+
+> > +	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
+> > +		dev_err(&acpi_dev->dev, "can't evaluate _SEG\n");
+> > +
+> > +	return segment;
+> > +}
+> > +
+> >  static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
+> >  {
+> >  	u32 support, control, requested;
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index 25e0327..1a74e87 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -19,6 +19,7 @@
+> >  #include <linux/spinlock.h>
+> >  #include <linux/string.h>
+> >  #include <linux/log2.h>
+> > +#include <linux/pci-acpi.h>
+> >  #include <linux/pci-aspm.h>
+> >  #include <linux/pm_wakeup.h>
+> >  #include <linux/interrupt.h>
+> > @@ -4779,7 +4780,7 @@ int pci_get_new_domain_nr(void)
+> >  }
+> >  
+> >  #ifdef CONFIG_PCI_DOMAINS_GENERIC
+> > -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> > +static int of_pci_bus_domain_nr(struct device *parent)
+> >  {
+> >  	static int use_dt_domains = -1;
+> >  	int domain = -1;
+> > @@ -4823,7 +4824,13 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> >  		domain = -1;
+> >  	}
+> >  
+> > -	bus->domain_nr = domain;
+> > +	return domain;
+> > +}
+> > +
+> > +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> > +{
+> > +	bus->domain_nr = acpi_disabled ? of_pci_bus_domain_nr(parent) :
+> > +					 acpi_pci_bus_domain_nr(parent);
+> >  }
+> >  #endif
+> >  #endif
+> > diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+> > index 89ab057..a72e22d 100644
+> > --- a/include/linux/pci-acpi.h
+> > +++ b/include/linux/pci-acpi.h
+> > @@ -22,6 +22,7 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
+> >  {
+> >  	return acpi_remove_pm_notifier(dev);
+> >  }
+> > +extern int acpi_pci_bus_domain_nr(struct device *parent);
+> >  extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
+> >  
+> >  static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
+> > @@ -109,6 +110,7 @@ extern const u8 pci_acpi_dsm_uuid[];
+> >  #else	/* CONFIG_ACPI */
+> >  static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
+> >  static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
+> > +static inline int acpi_pci_bus_domain_nr(struct device *parent) { return -1; }
+> >  #endif	/* CONFIG_ACPI */
+> >  
+> >  #ifdef CONFIG_ACPI_APEI
+> > -- 
+> > 1.9.1
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
