@@ -1,50 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35814 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753013AbcDSJmE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 19 Apr 2016 05:42:04 -0400
-Date: Tue, 19 Apr 2016 11:41:48 +0200
-From: Joerg Roedel <jroedel@suse.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, stable@vger.kernel.org,
-	=?utf-8?B?0J7Qu9C10LPQnNC+0YDQvtC3?= <oleg.moroz@mcc.vniiem.ru>,
-	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
-	Rob Groner <rgroner@rtd.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH 0/3] v4.4: Revert "PCI: Implement pcibios_alloc_irq() and
-Message-ID: <20160419094148.GG3886@suse.de>
-References: <20160413055439.6877.68183.stgit@bhelgaas-glaptop2.roam.corp.google.com>
- <20160414155044.GB3886@suse.de>
- <20160415150821.GA7973@localhost>
- <20160418115015.GE3886@suse.de>
- <20160418144336.GA17863@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160418144336.GA17863@localhost>
+Received: from e23smtp06.au.ibm.com ([202.81.31.148]:48107 "EHLO
+	e23smtp06.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752555AbcD0MUm (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Apr 2016 08:20:42 -0400
+Received: from localhost
+	by e23smtp06.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Wed, 27 Apr 2016 22:20:38 +1000
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
+	linux-doc@vger.kernel.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com, Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [PATCH 2/4] PCI: Do not Use IORESOURCE_STARTALIGN to identify bridge resources
+Date: Wed, 27 Apr 2016 20:17:09 +0800
+Message-Id: <1461759432-5030-3-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1461759432-5030-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1461759432-5030-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 18, 2016 at 09:43:36AM -0500, Bjorn Helgaas wrote:
-> That might work, but the problem seems to be that we aren't enabling
-> IRQs correctly, so I'd rather have a fix that explicitly addresses
-> IRQs than one that relies on some non-obvious connection between
-> enabling BARs and IRQs.
+Now we use the IORESOURCE_STARTALIGN to identify bridge resources
+in __assign_resources_sorted(). That's quite fragile. We can't
+make sure that the PCI devices' resources will not use
+IORESOURCE_STARTALIGN any more.
 
-Yeah, either we or the BIOS does something wrong. The bugzilla entry
-states that it works with pci=routeirq. The dmesg from kernel 4.3 shows
-that per default ACPI routing is used for IRQs.
+In this patch, we try to use a more robust way to identify
+bridge resources.
 
-The difference this makes in the code is the pcibios_enable_irq function
-pointer. For ACPI it points to acpi_pci_irq_enable and in the
-pci=routeirq case to pirq_enable_irq.
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/pci/setup-bus.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-So the problem appears when acpi_pci_irq_enable is used with device
-resources disabled. This might very well also be a bios issue that we
-have to work around, no?
-
-
-
-	Joerg
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 55641a3..216ddbc 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -390,6 +390,7 @@ static void __assign_resources_sorted(struct list_head *head,
+ 	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
+ 	unsigned long fail_type;
+ 	resource_size_t add_align, align;
++	int index;
+ 
+ 	/* Check if optional add_size is there */
+ 	if (!realloc_head || list_empty(realloc_head))
+@@ -410,11 +411,13 @@ static void __assign_resources_sorted(struct list_head *head,
+ 
+ 		/*
+ 		 * There are two kinds of additional resources in the list:
+-		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
+-		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
++		 * 1. bridge resource
++		 * 2. SR-IOV resource
+ 		 * Here just fix the additional alignment for bridge
+ 		 */
+-		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
++		index = dev_res->res - dev_res->dev->resource;
++		if (index < PCI_BRIDGE_RESOURCES ||
++			index > PCI_BRIDGE_RESOURCE_END)
+ 			continue;
+ 
+ 		add_align = get_res_add_align(realloc_head, dev_res->res);
+-- 
+1.7.9.5
 
