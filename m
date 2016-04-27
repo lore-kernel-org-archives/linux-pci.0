@@ -1,54 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from p3plsmtps2ded03.prod.phx3.secureserver.net ([208.109.80.60]:43456
-	"EHLO p3plsmtps2ded03.prod.phx3.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754957AbcDAVeU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 1 Apr 2016 17:34:20 -0400
-From: Jake Oshins <jakeo@microsoft.com>
-To: linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	kys@microsoft.com, linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-	vkuznets@redhat.com, haiyangz@microsoft.com, haddenh@microsoft.com
-Cc: Jake Oshins <jakeo@microsoft.com>
-Subject: [PATCH v3 4/7] drivers:hv: Reverse order of resources in hyperv_mmio
-Date: Fri,  1 Apr 2016 16:11:29 -0700
-Message-Id: <1459552292-1297-5-git-send-email-jakeo@microsoft.com>
-In-Reply-To: <1459552292-1297-1-git-send-email-jakeo@microsoft.com>
-References: <y>
- <1459552292-1297-1-git-send-email-jakeo@microsoft.com>
+Received: from e28smtp09.in.ibm.com ([125.16.236.9]:48644 "EHLO
+	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752270AbcD0MS6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Apr 2016 08:18:58 -0400
+Received: from localhost
+	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Wed, 27 Apr 2016 17:48:56 +0530
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
+	linux-doc@vger.kernel.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com, Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [PATCH 1/4] PCI: Ignore resource_alignment if PCI_PROBE_ONLY was set
+Date: Wed, 27 Apr 2016 20:17:08 +0800
+Message-Id: <1461759432-5030-2-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1461759432-5030-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1461759432-5030-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A patch later in this series allocates child nodes
-in this resource tree.  For that to work, this tree
-needs to be sorted in ascending order.
+The resource_alignment will releases memory resources allocated
+by firmware so that kernel can reassign new resources later on.
+But this will cause the problem that no resources can be
+allocated by kernel if PCI_PROBE_ONLY was set, e.g. on pSeries
+platform because PCI_PROBE_ONLY force kernel to use firmware
+setup and not to reassign any resources.
 
-Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+To solve this problem, this patch ignores resource_alignment
+if PCI_PROBE_ONLY was set.
+
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
- drivers/hv/vmbus_drv.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/pci/pci.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-index 60553c1..1ce47d0 100644
---- a/drivers/hv/vmbus_drv.c
-+++ b/drivers/hv/vmbus_drv.c
-@@ -1049,7 +1049,6 @@ static acpi_status vmbus_walk_resources(struct acpi_resource *res, void *ctx)
- 	new_res->end = end;
- 
- 	/*
--	 * Stick ranges from higher in address space at the front of the list.
- 	 * If two ranges are adjacent, merge them.
- 	 */
- 	do {
-@@ -1070,7 +1069,7 @@ static acpi_status vmbus_walk_resources(struct acpi_resource *res, void *ctx)
- 			break;
- 		}
- 
--		if ((*old_res)->end < new_res->start) {
-+		if ((*old_res)->start > new_res->end) {
- 			new_res->sibling = *old_res;
- 			if (prev_res)
- 				(*prev_res)->sibling = new_res;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 25e0327..19b9560 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4617,6 +4617,12 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 	spin_lock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
+ 	while (*p) {
++		if (pci_has_flag(PCI_PROBE_ONLY)) {
++			printk(KERN_ERR "PCI: Ignore resource_alignment parameter: %s with PCI_PROBE_ONLY set\n",
++					p);
++			*p = 0;
++			break;
++		}
+ 		count = 0;
+ 		if (sscanf(p, "%d%n", &align_order, &count) == 1 &&
+ 							p[count] == '@') {
 -- 
-1.9.1
+1.7.9.5
 
