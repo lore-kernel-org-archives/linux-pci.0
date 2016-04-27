@@ -1,176 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:52443 "EHLO
-	metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754001AbcDFPF6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2016 11:05:58 -0400
-Message-ID: <1459955153.14999.4.camel@pengutronix.de>
-Subject: Re: [PATCH v4] PCI: imx6: add dt prop for link gen, default to gen1
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Tim Harvey <tharvey@gateworks.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Fabio Estevam <fabio.estevam@freescale.com>,
-	Zhu Richard <Richard.Zhu@freescale.com>,
-	Akshay Bhat <akshay.bhat@timesys.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Shawn Guo <shawnguo@kernel.org>
-Date: Wed, 06 Apr 2016 17:05:53 +0200
-In-Reply-To: <CAJ+vNU3XGboOAh2CnMHyQDgGQ40qYFGt=XQkRu54G6-tmR=9MA@mail.gmail.com>
-References: <1459873754-31410-1-git-send-email-tharvey@gateworks.com>
-	 <1459935692.2256.26.camel@pengutronix.de>
-	 <CAJ+vNU3XGboOAh2CnMHyQDgGQ40qYFGt=XQkRu54G6-tmR=9MA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from e28smtp04.in.ibm.com ([125.16.236.4]:57087 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752940AbcD0Mqd (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 27 Apr 2016 08:46:33 -0400
+Received: from localhost
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Wed, 27 Apr 2016 18:16:24 +0530
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, David.Laight@ACULAB.COM,
+	alistair@popple.id.au, ruscur@russell.cc,
+	Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [PATCH 3/5] PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller supports IRQ remapping
+Date: Wed, 27 Apr 2016 20:43:28 +0800
+Message-Id: <1461761010-5452-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Mittwoch, den 06.04.2016, 07:00 -0700 schrieb Tim Harvey:
-> On Wed, Apr 6, 2016 at 2:41 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> > Am Dienstag, den 05.04.2016, 09:29 -0700 schrieb Tim Harvey:
-> >> Freescale has stated [1] that the LVDS clock source of the IMX6 does not pass
-> >> the PCI Gen2 clock jitter test, therefore unless an external Gen2 compliant
-> >> external clock source is present and supplied back to the IMX6 PCIe core
-> >> via LVDS CLK1/CLK2 you can not claim Gen2 compliance.
-> >>
-> >> Add a dt property to specify gen1 vs gen2 and check this before allowing
-> >> a Gen2 link.
-> >>
-> >> We default to Gen1 if the property is not present because at this time there
-> >> are no IMX6 boards in mainline that 'input' a clock on LVDS CLK1/CLK2.
-> >>
-> >> In order to be Gen2 compliant on IMX6 you need to:
-> >>  - have a Gen2 compliant external clock generator and route that clock back
-> >>    to either LVDS CLK1 or LVDS CLK2 as an input.
-> >>    (see IMX6SX-SabreSD reference design)
-> >>  - specify this clock in the pcie node in the dt
-> >>    (ie IMX6QDL_CLK_LVDS1_IN or IMX6QDL_CLK_LVDS2_IN instead of
-> >>     IMX6QDL_CLK_LVDS1_GATE which configures it as a CLK output)
-> >>
-> >> [1] https://community.freescale.com/message/453209
-> >>
-> >> Cc: Lucas Stach <l.stach@pengutronix.de>
-> >> Cc: Bjorn Helgaas <helgaas@kernel.org>
-> >> Cc: Fabio Estevam <fabio.estevam@freescale.com>
-> >> Cc: Zhu Richard <Richard.Zhu@freescale.com>
-> >> Cc: Akshay Bhat <akshay.bhat@timesys.com>
-> >> Cc: Rob Herring <robh+dt@kernel.org>
-> >> Cc: Shawn Guo <shawnguo@kernel.org>
-> >> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
-> >
-> > One nit below. Maybe Bjorn can fix this up while applying, otherwise if
-> > you need to resend you may carry the blow tag.
-> >
-> > Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-> >> ---
-> >> v4:
-> >>  - rebase against linux-pci/master
-> >>  - add fsl vendor prefix to dt prop
-> >>
-> >> v3:
-> >>  - added note in dt bindings doc that we limit to gen1 unless this is specified
-> >>    as gen2 capable
-> >>  - move property to imx6 pcie phy instead of designware core
-> >>  - don't use &ret as temp storage as of_property_read_u32() doesn't change the
-> >>    outval if property isn't found
-> >> v2:
-> >>  - moved dt property to designware core
-> >>
-> >> Signed-off-by: Tim Harvey <tharvey@gateworks.com>
-> >> ---
-> >>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  4 ++++
-> >>  drivers/pci/host/pci-imx6.c                        | 24 +++++++++++++++-------
-> >>  2 files changed, 21 insertions(+), 7 deletions(-)
-> >>
-> >> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> >> index 3be80c6..b92fafb 100644
-> >> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> >> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> >> @@ -19,6 +19,10 @@ Optional properties:
-> >>  - fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
-> >>  - fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
-> >>  - fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
-> >> +- fsl,max-link-speed: Specify PCI gen for link capability. Must be '2' for
-> >> +  gen2, otherwise will default to gen1. Note that the IMX6 LVDS clock outputs
-> >> +  do not meet gen2 jitter requirements and thus for gen2 capability a gen2
-> >> +  compliant clock generator should be used and configured.
-> >>
-> >>  Example:
-> >>
-> >> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-> >> index eb5a275..9656ac7 100644
-> >> --- a/drivers/pci/host/pci-imx6.c
-> >> +++ b/drivers/pci/host/pci-imx6.c
-> >> @@ -44,6 +44,7 @@ struct imx6_pcie {
-> >>       u32                     tx_deemph_gen2_6db;
-> >>       u32                     tx_swing_full;
-> >>       u32                     tx_swing_low;
-> >> +     int                     link_gen;
-> >>  };
-> >>
-> >>  /* PCIe Root Complex registers (memory-mapped) */
-> >> @@ -417,11 +418,15 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
-> >>               goto err_reset_phy;
-> >>       }
-> >>
-> >> -     /* Allow Gen2 mode after the link is up. */
-> >> -     tmp = readl(pp->dbi_base + PCIE_RC_LCR);
-> >> -     tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-> >> -     tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
-> >> -     writel(tmp, pp->dbi_base + PCIE_RC_LCR);
-> >> +     if (imx6_pcie->link_gen == 2) {
-> >> +             /* Allow Gen2 mode after the link is up. */
-> >> +             tmp = readl(pp->dbi_base + PCIE_RC_LCR);
-> >> +             tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-> >> +             tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
-> >> +             writel(tmp, pp->dbi_base + PCIE_RC_LCR);
-> >> +     } else {
-> >> +             dev_info(pp->dev, "Link: Gen2 disabled\n");
-> >> +     }
-> >>
-> >>       /*
-> >>        * Start Directed Speed Change so the best possible speed both link
-> >> @@ -445,8 +450,7 @@ static int imx6_pcie_establish_link(struct pcie_port *pp)
-> >>       }
-> >>
-> >>       tmp = readl(pp->dbi_base + PCIE_RC_LCSR);
-> >> -     dev_dbg(pp->dev, "Link up, Gen=%i\n", (tmp >> 16) & 0xf);
-> >> -
-> >> +     dev_info(pp->dev, "Link up, Gen%i\n", (tmp >> 16) & 0xf);
-> >>       return 0;
-> >>
-> >>  err_reset_phy:
-> >> @@ -598,6 +602,12 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
-> >>                                &imx6_pcie->tx_swing_low))
-> >>               imx6_pcie->tx_swing_low = 127;
-> >>
-> >> +     /* Limit link speed */
-> >> +     ret = of_property_read_u32(pp->dev->of_node, "fsl,max-link-speed",
-> >> +                                &imx6_pcie->link_gen);
-> >> +     if (ret)
-> >> +             imx6_pcie->link_gen = -1;
-> >
-> > The binding specifies that if the property is absent, it will default to
-> > Gen1, so I would like to see this reflected here by setting the link_gen
-> > to 1, not -1.
-> >
-> >> +
-> >>       ret = imx6_add_pcie_port(pp, pdev);
-> >>       if (ret < 0)
-> >>               return ret;
-> >
-> >
-> 
-> Lucas,
-> 
-> I can resend if really necessary but link_gen = -1 specifies to the
-> code that there was no default. When link_gen is used during link
-> 'that' is where it defaults to gen1 if not specifically gen 2.
-> 
-I've noticed this and the code as is is correct. This is why it already
-has my Rb. ;)
-I still prefer to have it set to the binding specified default at the DT
-parsing site. It's cleaner this way IMO.
+On ARM HW the capability of IRQ remapping is abstracted on
+MSI controller side. MSI_FLAG_IRQ_REMAPPING is used to advertise
+this [1].
 
-Regards,
-Lucas
+To have a universal flag to test this capability for different
+archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
+when MSI_FLAG_IRQ_REMAPPING is set.
+
+[1] http://www.spinics.net/lists/kvm/msg130256.html
+
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/pci/msi.c   |   12 ++++++++++++
+ drivers/pci/probe.c |    3 +++
+ include/linux/msi.h |    6 +++++-
+ 3 files changed, 20 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index a080f44..1661cdf 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1134,6 +1134,18 @@ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
+ }
+ EXPORT_SYMBOL_GPL(msi_desc_to_pci_sysdata);
+ 
++void pci_bus_check_msi_remapping(struct pci_bus *bus,
++				 struct irq_domain *domain)
++{
++#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
++	struct msi_domain_info *info;
++
++	info = msi_get_domain_info(domain);
++	if (info->flags & MSI_FLAG_IRQ_REMAPPING)
++		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
++#endif
++}
++
+ #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
+ /**
+  * pci_msi_domain_write_msg - Helper to write MSI message to PCI config space
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 6d7ab9b..25cf1b1 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -696,6 +696,9 @@ static void pci_set_bus_msi_domain(struct pci_bus *bus)
+ 	if (!d)
+ 		d = pci_host_bridge_msi_domain(b);
+ 
++	if (d && b == bus)
++		pci_bus_check_msi_remapping(bus, d);
++
+ 	dev_set_msi_domain(&bus->dev, d);
+ }
+ 
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 03eda72..b4c649e 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -15,6 +15,8 @@ extern int pci_msi_ignore_mask;
+ struct irq_data;
+ struct msi_desc;
+ struct pci_dev;
++struct pci_bus;
++struct irq_domain;
+ struct platform_msi_priv_data;
+ void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
+ void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
+@@ -155,6 +157,9 @@ void arch_restore_msi_irqs(struct pci_dev *dev);
+ void default_teardown_msi_irqs(struct pci_dev *dev);
+ void default_restore_msi_irqs(struct pci_dev *dev);
+ 
++void pci_bus_check_msi_remapping(struct pci_bus *bus,
++				 struct irq_domain *domain);
++
+ struct msi_controller {
+ 	struct module *owner;
+ 	struct device *dev;
+@@ -173,7 +178,6 @@ struct msi_controller {
+ #include <linux/irqhandler.h>
+ #include <asm/msi.h>
+ 
+-struct irq_domain;
+ struct irq_domain_ops;
+ struct irq_chip;
+ struct device_node;
+-- 
+1.7.9.5
 
