@@ -1,193 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp03.in.ibm.com ([125.16.236.3]:44493 "EHLO
-	e28smtp03.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757920AbcDHIOK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Apr 2016 04:14:10 -0400
-Received: from localhost
-	by e28smtp03.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Fri, 8 Apr 2016 13:44:07 +0530
-Subject: Re: [RFC v5 7/7] vfio-pci: Allow to mmap MSI-X table if interrupt
- remapping is supported
-To: Eric Auger <eric.auger@linaro.org>,
-	Alex Williamson <alex.williamson@redhat.com>
-References: <1459864004-2869-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1459864004-2869-2-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160406084504.1a1cc16d@t450s.home> <570646AB.8050406@linux.vnet.ibm.com>
- <57066D76.9050303@linaro.org>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
-	aik@ozlabs.ru, benh@kernel.crashing.org, paulus@samba.org,
-	mpe@ellerman.id.au, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	will.deacon@arm.com, gwshan@linux.vnet.ibm.com,
-	alistair@popple.id.au, ruscur@russell.cc
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Message-ID: <5707684B.7060901@linux.vnet.ibm.com>
-Date: Fri, 8 Apr 2016 16:14:03 +0800
-MIME-Version: 1.0
-In-Reply-To: <57066D76.9050303@linaro.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	iommu@lists.linux-foundation.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	joro@8bytes.org, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	eric.auger@linaro.org, will.deacon@arm.com,
+	gwshan@linux.vnet.ibm.com, David.Laight@ACULAB.COM,
+	alistair@popple.id.au, ruscur@russell.cc,
+	Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [PATCH 2/5] iommu: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have capability of IRQ remapping
+Date: Wed, 27 Apr 2016 20:43:27 +0800
+Message-Id: <1461761010-5452-3-git-send-email-xyjxie@linux.vnet.ibm.com>
+In-Reply-To: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Eric,
-On 2016/4/7 22:23, Eric Auger wrote:
-> Hi Yongji,
-> On 04/07/2016 01:38 PM, Yongji Xie wrote:
->> On 2016/4/6 22:45, Alex Williamson wrote:
->>> On Tue,  5 Apr 2016 21:46:44 +0800
->>> Yongji Xie <xyjxie@linux.vnet.ibm.com> wrote:
->>>
->>>> This patch enables mmapping MSI-X tables if
->>>> hardware supports interrupt remapping which
->>>> can ensure that a given pci device can only
->>>> shoot the MSIs assigned for it.
->>>>
->>>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->>>> ---
->>>>    drivers/vfio/pci/vfio_pci.c         |    9 +++++++--
->>>>    drivers/vfio/pci/vfio_pci_private.h |    1 +
->>>>    drivers/vfio/pci/vfio_pci_rdwr.c    |    2 +-
->>>>    3 files changed, 9 insertions(+), 3 deletions(-)
->>>>
->>>> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
->>>> index c60d790..ef02896 100644
->>>> --- a/drivers/vfio/pci/vfio_pci.c
->>>> +++ b/drivers/vfio/pci/vfio_pci.c
->>>> @@ -201,6 +201,10 @@ static int vfio_pci_enable(struct
->>>> vfio_pci_device *vdev)
->>>>        } else
->>>>            vdev->msix_bar = 0xFF;
->>>>    +    if (iommu_capable(pdev->dev.bus, IOMMU_CAP_INTR_REMAP) ||
->>> This doesn't address the issue I raised earlier where ARM SMMU sets
->>> this capability, but doesn't really provide per vector isolation.  ARM
->>> either needs to be fixed or we need to consider the whole capability
->>> tainted for this application and standardize around the bus flags.
->>> It's not very desirable to have two different ways to test this anyway.
->> I saw Eric posted a patchset [1] which introduce a flag
->> MSI_FLAG_IRQ_REMAPPING to indicate the capability
->> for ARM SMMU. With this patchset applied, it would
->> be  workable to use bus_flags to test the capability
->> of ARM SMMU:
-> My purpose was to remove the advertising of IOMMU_CAP_INTR_REMAP from
-> arm-smmu.c, "fix" mentionned by Alex (by the way I also need to do the
-> same in v3 code) and to advertise the functionality on MSI controller
-> instead (since the IRQ REMAPPING functionality is abstracted in GICv3
-> ITS MSI controller)
+The capability of IRQ remapping is abstracted on IOMMU side on
+some archs. There is a existing flag IOMMU_CAP_INTR_REMAP for this.
 
-Thank you for your explanation.  Now we have three
-flags to test this capability with your and my patches
-applied.  We need to test something like
-IOMMU_CAP_INTR_REMAP || MSI_FLAG_IRQ_REMAPPING ||
-PCI_BUS_FLAGS_MSI_REMAP if we want to mmap
-MSI-X table. It's not very desirable if I understood
-Alex correctly. So I'm thinking whether we can make
-bus_flags compatible with other two flags and only
-test bus_flags here.
+To have a universal flag to test this capability for different
+archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
+when IOMMU_CAP_INTR_REMAP is set.
 
-> On top of that, on ARM we have platform (non PCI) MSI controllers so my
-> understanding is the capability advertising should be possible beyond
-> the PCI bus?
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/iommu/iommu.c |   15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-Actually, we just need one flag which can standardize
-the capability on PCI side. With this flag set, we can
-easily know hardware supports the capability of
-interrupt remapping and it's safe to mmap MSI-X
-tables of PCI BARs in any userspace driver.
-
-Of course, we can also achieve that by testing all the
-three flags. But I'm not sure whether it is good enough.
-
-Regards,
-Yongji
-
-> Best Regards
->
-> Eric
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index a080f44..b2d1756 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -1134,6 +1134,21 @@ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
->>   }
->>   EXPORT_SYMBOL_GPL(msi_desc_to_pci_sysdata);
->>
->> +void pci_check_msi_remapping(struct pci_bus *bus)
->> +{
->> +#ifdef CONFIG_GENERIC_MSI_IRQ_DOMAIN
->> +        struct irq_domain *domain;
->> +        struct msi_domain_info *info;
->> +
->> +        domain = dev_get_msi_domain(&bus->dev);
->> +        if (domain) {
->> +                info = msi_get_domain_info(domain);
->> +                if (info->flags & MSI_FLAG_IRQ_REMAPPING)
->> +                        pdev->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
->> +        }
->> +#endif
->> +}
->> +
->>   #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
->>   /**
->>    * pci_msi_domain_write_msg - Helper to write MSI message to PCI config
->> space
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 6d7ab9b..24e9606 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -2115,6 +2115,7 @@ struct pci_bus *pci_create_root_bus(struct device
->> *parent, int bus,
->>          device_enable_async_suspend(b->bridge);
->>          pci_set_bus_of_node(b);
->>          pci_set_bus_msi_domain(b);
->> +       pci_check_msi_remapping(b);
->>
->>          if (!parent)
->>                  set_dev_node(b->bridge, pcibus_to_node(b));
->> diff --git a/include/linux/msi.h b/include/linux/msi.h
->> index a2a0068..fe8ce7b 100644
->> --- a/include/linux/msi.h
->> +++ b/include/linux/msi.h
->> @@ -15,6 +15,7 @@ extern int pci_msi_ignore_mask;
->>   struct irq_data;
->>   struct msi_desc;
->>   struct pci_dev;
->> +struct pci_bus;
->>   struct platform_msi_priv_data;
->>   void __get_cached_msi_msg(struct msi_desc *entry, struct msi_msg *msg);
->>   void get_cached_msi_msg(unsigned int irq, struct msi_msg *msg);
->> @@ -155,6 +156,8 @@ void arch_restore_msi_irqs(struct pci_dev *dev);
->>   void default_teardown_msi_irqs(struct pci_dev *dev);
->>   void default_restore_msi_irqs(struct pci_dev *dev);
->>
->> +void pci_check_msi_remapping(struct pci_bus *bus);
->> +
->>   struct msi_controller {
->>          struct module *owner;
->>          struct device *dev;
->>
->> Next we just need to find a proper way to make
->> bus_flags compatible with IOMMU_CAP_INTR_REMAP, right?
->>
->> I think a good place to do that is add_iommu_group().
->> But I'm not sure whether iommu drivers must be
->> initialized after PCI enumeration.  Do you have any comment?
->>
->> [1] http://www.spinics.net/lists/kvm/msg130256.html
->>
->>>> +        pdev->bus->bus_flags | PCI_BUS_FLAGS_MSI_REMAP)
->>> Perhaps some sort of wrapper for testing these flags would help avoid
->>> this kind of coding error (| vs &)
->> Thank you.  I'll try not to make the same mistake again.
->>
->> Regards,
->> Yongji
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe kvm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index 0e3b009..5d2b6f6 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -813,6 +813,16 @@ struct iommu_group *pci_device_group(struct device *dev)
+ 	return group;
+ }
+ 
++static void pci_check_msi_remapping(struct pci_dev *pdev,
++					const struct iommu_ops *ops)
++{
++	struct pci_bus *bus = pdev->bus;
++
++	if (ops->capable(IOMMU_CAP_INTR_REMAP) &&
++		!(bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP))
++		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
++}
++
+ /**
+  * iommu_group_get_for_dev - Find or create the IOMMU group for a device
+  * @dev: target device
+@@ -871,6 +881,9 @@ static int add_iommu_group(struct device *dev, void *data)
+ 	const struct iommu_ops *ops = cb->ops;
+ 	int ret;
+ 
++	if (dev_is_pci(dev) && ops->capable)
++		pci_check_msi_remapping(to_pci_dev(dev), ops);
++
+ 	if (!ops->add_device)
+ 		return 0;
+ 
+@@ -913,6 +926,8 @@ static int iommu_bus_notifier(struct notifier_block *nb,
+ 	 * result in ADD/DEL notifiers to group->notifier
+ 	 */
+ 	if (action == BUS_NOTIFY_ADD_DEVICE) {
++		if (dev_is_pci(dev) && ops->capable)
++			pci_check_msi_remapping(to_pci_dev(dev), ops);
+ 		if (ops->add_device)
+ 			return ops->add_device(dev);
+ 	} else if (action == BUS_NOTIFY_REMOVED_DEVICE) {
+-- 
+1.7.9.5
