@@ -1,65 +1,184 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:55378 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752236AbcDZTIy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 26 Apr 2016 15:08:54 -0400
-Date: Tue, 26 Apr 2016 21:08:50 +0200
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Kumar Gala <galak@codeaurora.org>,
-	linux-arm-kernel@lists.infradead.org,
-	Jason Cooper <jason@lakedaemon.net>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Gregory Clement <gregory.clement@free-electrons.com>,
-	Nadav Haklai <nadavh@marvell.com>,
-	Lior Amsalem <alior@marvell.com>,
-	Hanna Hawa <hannah@marvell.com>,
-	Yehuda Yitschak <yehuday@marvell.com>
-Subject: Re: [PATCH v3 0/2] pci: host: new driver for Marvell Armada 7K/8K
- PCIe controller
-Message-ID: <20160426210850.13cc8a0e@free-electrons.com>
-In-Reply-To: <20160426173144.GB27803@localhost>
-References: <1461659506-10387-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20160426173144.GB27803@localhost>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
+	linux-doc@vger.kernel.org
+Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
+	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
+	corbet@lwn.net, warrier@linux.vnet.ibm.com,
+	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
+	gwshan@linux.vnet.ibm.com, Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [PATCH] vfio-pci: Allow to mmap sub-page MMIO BARs if the mmio page is exclusive
+Date: Wed, 27 Apr 2016 20:22:20 +0800
+Message-Id: <1461759740-5072-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Current vfio-pci implementation disallows to mmap
+sub-page(size < PAGE_SIZE) MMIO BARs because these BARs' mmio
+page may be shared with other BARs. This will cause some
+performance issues when we passthrough a PCI device with
+this kind of BARs. Guest will be not able to handle the mmio
+accesses to the BARs which leads to mmio emulations in host.
 
-On Tue, 26 Apr 2016 12:31:44 -0500, Bjorn Helgaas wrote:
+However, not all sub-page BARs will share page with other BARs.
+We should allow to mmap those sub-page MMIO BARs which we can
+make sure will not share page with other BARs.
 
-> >  create mode 100644 Documentation/devicetree/bindings/pci/pci-armada8k.txt
-> >  create mode 100644 drivers/pci/host/pcie-armada8k.c
-> 
-> Thanks, Thomas, I applied these to pci/host-armada for v4.7.
+This patch adds support for this case. And we also try to use 
+shadow resource to reserve the remaind of the page which hot-add 
+device's BAR might be assigned into.
 
-Thanks!
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/vfio/pci/vfio_pci.c         |   58 ++++++++++++++++++++++++++++++-----
+ drivers/vfio/pci/vfio_pci_private.h |    8 +++++
+ 2 files changed, 59 insertions(+), 7 deletions(-)
 
-> I added the tweaks below to use dev_dbg() instead of pr_debug(), use
-> dw_pcie_wait_for_link() instead of another hand-coded timeout loop,
-> and fix a typo and remove unused constants.
-
-Looks all good, thanks for applying! Just one tiny question below.
-
->  	/*
->  	 * Interrupts are directly handled by the device driver of the
-> -	 * PCI device. However, there are also latched into the PCIe
-> +	 * PCI device.  However, they are also latched into the PCIe
-
-Any reason to have two spaces after the dot here?
-
-Thanks again!
-
-Thomas
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 98059df..dc1779c 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -110,13 +110,47 @@ static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
+ 	return (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA;
+ }
+ 
++static bool vfio_pci_bar_mmap_supported(struct vfio_pci_device *vdev, int index)
++{
++	struct resource *res = vdev->pdev->resource + index;
++	struct vfio_pci_shadow_resource *shadow_res;
++
++	if (IS_ENABLED(CONFIG_VFIO_PCI_MMAP) && res->flags & IORESOURCE_MEM &&
++		resource_size(res) > 0) {
++		if (resource_size(res) >= PAGE_SIZE)
++			return true;
++
++		if (!(res->start & ~PAGE_MASK)) {
++			/*
++			 * Add shadow resource for sub-page bar whose mmio
++			 * page is exclusive in case that hot-add device's
++			 * bar is assigned into the mem hole.
++			 */
++			shadow_res = kzalloc(sizeof(*shadow_res), GFP_KERNEL);
++			shadow_res->resource.start = res->end + 1;
++			shadow_res->resource.end = res->start + PAGE_SIZE - 1;
++			shadow_res->resource.flags = res->flags;
++			if (request_resource(res->parent,
++					&shadow_res->resource)) {
++				kfree(shadow_res);
++				return false;
++			}
++			shadow_res->index = index;
++			list_add(&shadow_res->res_next,
++					&vdev->shadow_resources_list);
++			return true;
++		}
++	}
++	return false;
++}
++
+ static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev);
+ static void vfio_pci_disable(struct vfio_pci_device *vdev);
+ 
+ static int vfio_pci_enable(struct vfio_pci_device *vdev)
+ {
+ 	struct pci_dev *pdev = vdev->pdev;
+-	int ret;
++	int ret, bar;
+ 	u16 cmd;
+ 	u8 msix_pos;
+ 
+@@ -183,12 +217,17 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
+ 		}
+ 	}
+ 
++	for (bar = PCI_STD_RESOURCES; bar <= PCI_STD_RESOURCE_END; bar++) {
++		vdev->bar_mmap_supported[bar] =
++				vfio_pci_bar_mmap_supported(vdev, bar);
++	}
+ 	return 0;
+ }
+ 
+ static void vfio_pci_disable(struct vfio_pci_device *vdev)
+ {
+ 	struct pci_dev *pdev = vdev->pdev;
++	struct vfio_pci_shadow_resource *shadow_res, *tmp;
+ 	int i, bar;
+ 
+ 	/* Stop the device from further DMA */
+@@ -217,6 +256,13 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
+ 		vdev->barmap[bar] = NULL;
+ 	}
+ 
++	list_for_each_entry_safe(shadow_res, tmp,
++				 &vdev->shadow_resources_list, res_next) {
++		list_del(&shadow_res->res_next);
++		release_resource(&shadow_res->resource);
++		kfree(shadow_res);
++	}
++
+ 	vdev->needs_reset = true;
+ 
+ 	/*
+@@ -587,9 +633,7 @@ static long vfio_pci_ioctl(void *device_data,
+ 
+ 			info.flags = VFIO_REGION_INFO_FLAG_READ |
+ 				     VFIO_REGION_INFO_FLAG_WRITE;
+-			if (IS_ENABLED(CONFIG_VFIO_PCI_MMAP) &&
+-			    pci_resource_flags(pdev, info.index) &
+-			    IORESOURCE_MEM && info.size >= PAGE_SIZE) {
++			if (vdev->bar_mmap_supported[info.index]) {
+ 				info.flags |= VFIO_REGION_INFO_FLAG_MMAP;
+ 				if (info.index == vdev->msix_bar) {
+ 					ret = msix_sparse_mmap_cap(vdev, &caps);
+@@ -1011,16 +1055,16 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
+ 		return -EINVAL;
+ 	if (index >= VFIO_PCI_ROM_REGION_INDEX)
+ 		return -EINVAL;
+-	if (!(pci_resource_flags(pdev, index) & IORESOURCE_MEM))
++	if (!vdev->bar_mmap_supported[index])
+ 		return -EINVAL;
+ 
+-	phys_len = pci_resource_len(pdev, index);
++	phys_len = PAGE_ALIGN(pci_resource_len(pdev, index));
+ 	req_len = vma->vm_end - vma->vm_start;
+ 	pgoff = vma->vm_pgoff &
+ 		((1U << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1);
+ 	req_start = pgoff << PAGE_SHIFT;
+ 
+-	if (phys_len < PAGE_SIZE || req_start + req_len > phys_len)
++	if (req_start + req_len > phys_len)
+ 		return -EINVAL;
+ 
+ 	if (index == vdev->msix_bar) {
+diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
+index 8a7d546..0ea4c62 100644
+--- a/drivers/vfio/pci/vfio_pci_private.h
++++ b/drivers/vfio/pci/vfio_pci_private.h
+@@ -57,9 +57,16 @@ struct vfio_pci_region {
+ 	u32				flags;
+ };
+ 
++struct vfio_pci_shadow_resource {
++	struct resource		resource;
++	int			index;
++	struct list_head	res_next;
++};
++
+ struct vfio_pci_device {
+ 	struct pci_dev		*pdev;
+ 	void __iomem		*barmap[PCI_STD_RESOURCE_END + 1];
++	bool			bar_mmap_supported[PCI_STD_RESOURCE_END + 1];
+ 	u8			*pci_config_map;
+ 	u8			*vconfig;
+ 	struct perm_bits	*msi_perm;
+@@ -87,6 +94,7 @@ struct vfio_pci_device {
+ 	int			refcnt;
+ 	struct eventfd_ctx	*err_trigger;
+ 	struct eventfd_ctx	*req_trigger;
++	struct list_head	shadow_resources_list;
+ };
+ 
+ #define is_intx(vdev) (vdev->irq_type == VFIO_PCI_INTX_IRQ_INDEX)
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+1.7.9.5
