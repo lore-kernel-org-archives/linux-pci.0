@@ -1,127 +1,108 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH 1/2] pci: add pci_unmap_iospace function for PCI_IOBASE
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from down.free-electrons.com ([37.187.137.238]:37738 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752759AbcD1OhF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2016 10:37:05 -0400
+Date: Thu, 28 Apr 2016 16:36:46 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1457389310-3538-1-git-send-email-okaya@codeaurora.org>
- <20160407160004.GA8780@localhost>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-	timur@codeaurora.org, cov@codeaurora.org, jcm@redhat.com,
-	agross@codeaurora.org, linux-arm-msm@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <57069DB5.9060404@codeaurora.org>
-Date: Thu, 7 Apr 2016 13:49:41 -0400
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: pci_ioremap_set_mem_type(), pci_remap_iospace()
+Message-ID: <20160428163646.432e2c68@free-electrons.com>
+In-Reply-To: <20160428141920.GB12470@localhost>
+References: <20160427225827.GC17629@localhost>
+	<20160428141920.GB12470@localhost>
 MIME-Version: 1.0
-In-Reply-To: <20160407160004.GA8780@localhost>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/7/2016 12:00 PM, Bjorn Helgaas wrote:
-> Hi Sinan,
+Hello,
+
+On Thu, 28 Apr 2016 09:19:20 -0500, Bjorn Helgaas wrote:
+
+> >         coherency_cpu_base = of_iomap(np, 0);
+> > -       arch_ioremap_caller = armada_pcie_wa_ioremap_caller;
+> > +       arch_ioremap_caller = armada_wa_ioremap_caller;
+> > +       pci_ioremap_set_mem_type(MT_UNCACHED);
 > 
-> On Mon, Mar 07, 2016 at 05:21:49PM -0500, Sinan Kaya wrote:
->> The PCI_IOBASE needs to be released after hotplug removal so that it can be
->> re-added back by the pci_remap_iospace function during insertion.
->>
->> Adding unmap function to follow IO remap function.
->>
->> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->> ---
->>  drivers/pci/pci.c   | 25 +++++++++++++++++++++++++
->>  include/linux/pci.h |  1 +
->>  2 files changed, 26 insertions(+)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 3a516c0..f5faed2 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -26,6 +26,7 @@
->>  #include <linux/device.h>
->>  #include <linux/pm_runtime.h>
->>  #include <linux/pci_hotplug.h>
->> +#include <linux/vmalloc.h>
->>  #include <asm-generic/pci-bridge.h>
->>  #include <asm/setup.h>
->>  #include <linux/aer.h>
->> @@ -3169,6 +3170,30 @@ int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
->>  #endif
->>  }
->>  
->> +/**
->> + *	pci_unmap_iospace - Unmap the memory mapped I/O space
->> + *	@virt_addr: virtual address to be unmapped
->> + *	@size: size of the physical address to be unmapped
->> + *
->> + *	Unmap the CPU virtual address @virt_addr from virtual address space.
->> + *	Only architectures that have memory mapped IO functions defined
->> + *	(and the PCI_IOBASE value defined) should call this function.
->> + */
->> +void  __weak pci_unmap_iospace(struct resource *res)
+> This makes sense to me because I think this changes ioremap() to do
+> the right thing.
+
+What changes ioremap() to do the right thing for all mappings *except*
+PCI I/O mappings:
+
+   arch_ioremap_caller = armada_wa_ioremap_caller;
+
+>  But my concern is that ioremap_page_range() doesn't
+> actually use ioremap(), so pci_ioremap_set_mem_type() has no effect on
+> that path.  pci_remap_iospace() uses ioremap_page_range(), so I
+> suspect it will use the wrong attributes.
+
+Indeed, ioremap_page_range() doesn't use ioremap(), and that's why
+there is this separate pci_ioremap_set_mem_type() to ensure that
+mappings done for PCI I/O space are done with MT_UNCACHED.
+
+And indeed, pci_remap_iospace() would not work for me, as it wouldn't
+use the memory attributes set by pci_ioremap_set_mem_type().
+
+To be honest, I am wondering why we're not using the same memory
+attribute for PCI I/O space as the memory attributes used for anything
+else that's ioremapped. In practice, that's what happens on ARM:
+ioremap() uses MT_DEVICE by default, and pci_ioremap_io() uses
+MT_DEVICE as well.
+
+> >  1/ Providing an alternate version of pci_remap_iospace() that allows
+> >     to pass the memory attribute to be used.
 > 
-> Why is this weak?  I assume probably because pci_remap_iospace() is
-> weak, but I don't see any reason why *that* needs to be weak.  There's
-> only one implementation.  I think neither one should be weak unless we
-> have an actual need for that.
-> 
+> I'd rather fix ioremap_page_range() somehow, because that's an
+> exported interface, and if we only fix pci_remap_iospace(), we still
+> have to worry about ioremap_page_range() doing the wrong thing.
 
-Right, copy paste mistake. Even the function parameter description above
-is not right. 
+What do you want to fix in ioremap_page_range() ? It already allows
+passing the memory type that you want, so I'm not sure to understand.
 
-I can get rid of the __weak from both on the next iteration.
+It is worth mentioning that on ARM, the arch_ioremap_caller mechanism
+allows platform-specific to do its own magic for each mapping. I.e, it
+might decide to use some specific memory attributes, or some specific
+way of doing the mappings.
 
->> +{
->> +#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
->> +	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
->> +
->> +	unmap_kernel_range(vaddr, resource_size(res));
-> 
-> There really aren't any other generic uses of unmap_kernel_range().
-> This isn't an unusual scenario, so I would expect this code to use a
-> pattern that's used elsewhere.
+It is used on 5 platforms:
 
-OK, What's the best way to remove a mapping? I'm open for suggestions.
-I copied this pattern from GHES driver.
+ * EBSA110, where it does a 1:1 mapping with the physical address if I
+   understand correctly:
 
-> 
->> +#else
->> +	/*
->> +	 * This architecture does not have memory mapped I/O space,
->> +	 * so this function should never be called.
->> +	 */
->> +	WARN_ONCE(1, "This architecture does not support memory mapped I/O\n");
->> +#endif
->> +}
->> +
->>  static void __pci_set_master(struct pci_dev *dev, bool enable)
->>  {
->>  	u16 old_cmd, cmd;
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 398ae7e..c6e3f0e 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -1172,6 +1172,7 @@ int pci_register_io_range(phys_addr_t addr, resource_size_t size);
->>  unsigned long pci_address_to_pio(phys_addr_t addr);
->>  phys_addr_t pci_pio_to_address(unsigned long pio);
->>  int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
->> +void pci_unmap_iospace(struct resource *res);
->>  
->>  static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
->>  {
->> -- 
->> 1.8.2.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+static void __iomem *ebsa110_ioremap_caller(phys_addr_t cookie, size_t size,
+                                            unsigned int flags, void *caller)
+{
+        return (void __iomem *)cookie;
+}
 
+ * i.MX3, where it forces the memory attribute to be
+   MT_DEVICE_NONSHARED, but only for the mappings that are below
+   0x80000000 and not within the L2 cache registers. Otherwise, the
+   default memory attribute is used.
 
+ * iop13xx, where it really does some magic calculations to get the
+   virtual addresses matching some specific physical addresses (and
+   falls back to a real ioremap for other areas).
+
+ * ixp4xx, which does a normal ioremap() for non-PCI devices, and a 1:1
+   mapping for PCI stuff.
+
+ * mvebu, where we currently override the memory attribute to strongly
+   ordered for PCI devices only (but I need to change that so that all
+   mappings are strongly ordered)
+
+All in all, the pgprot_device() mechanism added by Liviu is not really
+sufficient to address all those customizations, which is why ARM has
+this more complicated way of allowing platform specific code to
+override the ioremap behavior.
+
+Thomas
 -- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
