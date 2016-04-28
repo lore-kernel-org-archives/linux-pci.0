@@ -1,169 +1,281 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 1/2] Revert "PCI: Add helpers to manage pci_dev->irq and
- pci_dev->irq_managed"
-To: stable@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: =?utf-8?b?0J7Qu9C10LM=?= =?utf-8?b?0JzQvtGA0L7Qtw==?=
-	<oleg.moroz@mcc.vniiem.ru>,
-	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
-	Rob Groner <rgroner@rtd.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Date: Wed, 13 Apr 2016 00:52:55 -0500
-Message-ID: <20160413055255.6737.53108.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160413055208.6737.53693.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160413055208.6737.53693.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:53737 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750876AbcD1LdL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Apr 2016 07:33:11 -0400
+Date: Thu, 28 Apr 2016 14:33:04 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
+Subject: Re: [PATCH v4 2/4] PCI: Move PCIe ports to D3 during suspend
+Message-ID: <20160428113304.GJ10202@lahna.fi.intel.com>
+References: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1461578004-129094-3-git-send-email-mika.westerberg@linux.intel.com>
+ <CAJZ5v0itrp_=KUo9kFHh8rSN5RYfPk0+iEgeAWZR5rrnFq-jDA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0itrp_=KUo9kFHh8rSN5RYfPk0+iEgeAWZR5rrnFq-jDA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This reverts commit 811a4e6fce09bc9239c664c6a1a53645a678c303.
+On Tue, Apr 26, 2016 at 11:04:55PM +0200, Rafael J. Wysocki wrote:
+> On Mon, Apr 25, 2016 at 11:53 AM, Mika Westerberg
+> <mika.westerberg@linux.intel.com> wrote:
+> > Currently the Linux PCI core does not touch power state of PCI bridges and
+> > PCIe ports when system suspend is entered. Leaving them in D0 consumes
+> > power which is not good thing in portable devices such as laptops. This may
+> > also prevent the CPU from entering deeper C-states.
+> >
+> > With recent PCIe hardware we can power down the ports to save power given
+> > that we take into account few restrictions:
+> >
+> >   - The PCIe port hardware is recent enough, starting from 2015.
+> >
+> >   - Devices connected to PCIe ports are effectively in D3cold once the port
+> >     is moved to D3 (the config space is not accessible anymore and the link
+> >     may be powered down).
+> >
+> >   - Devices behind the PCIe port need to be allowed to transition to D3cold
+> >     and back. There is a way both drivers and userspace can forbid this.
+> >
+> >   - If the device behind the PCIe port is capable of waking the system it
+> >     needs to be able to do so from D3cold.
+> >
+> > This patch adds a new flag to struct pci_device called 'bridge_d3'. This
+> > flag is set and cleared by the PCI core whenever there is a change in power
+> > management state of any of the devices behind the PCIe port (we provide
+> > helper functions that should be used to change state of the device, like
+> > pci_d3cold_disable()). When system later on is suspended we only need to
+> > check this flag and if it is true transition the port to D3 otherwise we
+> > leave it in D0.
+> >
+> > Also provide override mechanism via command line parameter
+> > "pcie_port_pm=[off|force]" that can be used to disable or enable the
+> > feature regardless of the BIOS manufacturing date.
+> >
+> > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > ---
+> >  Documentation/kernel-parameters.txt |   4 +
+> >  drivers/pci/bus.c                   |   1 +
+> >  drivers/pci/pci-driver.c            |  10 +-
+> >  drivers/pci/pci-sysfs.c             |   5 +
+> >  drivers/pci/pci.c                   | 176 ++++++++++++++++++++++++++++++++++++
+> >  drivers/pci/pci.h                   |   2 +
+> >  drivers/pci/remove.c                |   2 +
+> >  drivers/usb/host/xhci-pci.c         |   2 +-
+> >  include/linux/pci.h                 |   3 +
+> >  9 files changed, 200 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+> > index 0b3de80ec8f6..90e1f43760be 100644
+> > --- a/Documentation/kernel-parameters.txt
+> > +++ b/Documentation/kernel-parameters.txt
+> > @@ -3008,6 +3008,10 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+> >                 compat  Treat PCIe ports as PCI-to-PCI bridges, disable the PCIe
+> >                         ports driver.
+> >
+> > +       pcie_port_pm=   [PCIE] PCIe port power management handling:
+> > +               off     Disable power management of all PCIe ports
+> > +               force   Forcibly enable power management of all PCIe ports
+> > +
+> >         pcie_pme=       [PCIE,PM] Native PCIe PME signaling options:
+> >                 nomsi   Do not use MSI for native PCIe PME signaling (this makes
+> >                         all PCIe root ports use INTx for all services).
+> > diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> > index 6c9f5467bc5f..b1738162d69a 100644
+> > --- a/drivers/pci/bus.c
+> > +++ b/drivers/pci/bus.c
+> > @@ -291,6 +291,7 @@ void pci_bus_add_device(struct pci_dev *dev)
+> >         pci_fixup_device(pci_fixup_final, dev);
+> >         pci_create_sysfs_dev_files(dev);
+> >         pci_proc_attach_device(dev);
+> > +       pci_bridge_d3_device_changed(dev);
+> >
+> >         dev->match_driver = true;
+> >         retval = device_attach(&dev->dev);
+> > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> > index d7ffd66814bb..e3ece0e25fa3 100644
+> > --- a/drivers/pci/pci-driver.c
+> > +++ b/drivers/pci/pci-driver.c
+> > @@ -777,7 +777,12 @@ static int pci_pm_suspend_noirq(struct device *dev)
+> >
+> >         if (!pci_dev->state_saved) {
+> >                 pci_save_state(pci_dev);
+> > -               if (!pci_has_subordinate(pci_dev))
+> > +               /*
+> > +                * Check if given device can go to low power state. Currently
+> > +                * we allow normal PCI devices and PCI bridges if their
+> > +                * bridge_d3 is set.
+> > +                */
+> > +               if (!pci_has_subordinate(pci_dev) || pci_dev->bridge_d3)
+> 
+> I'd add a helper for this, say pci_power_manageable() or similar.
 
-Revert 811a4e6fce09 ("PCI: Add helpers to manage pci_dev->irq and
-pci_dev->irq_managed").
+OK
 
-This is part of reverting 991de2e59090 ("PCI, x86: Implement
-pcibios_alloc_irq() and pcibios_free_irq()") to fix regressions it
-introduced.
+> >                         pci_prepare_to_sleep(pci_dev);
+> >         }
+> >
+> > @@ -1144,7 +1149,6 @@ static int pci_pm_runtime_suspend(struct device *dev)
+> >                 return -ENOSYS;
+> >
+> >         pci_dev->state_saved = false;
+> > -       pci_dev->no_d3cold = false;
+> >         error = pm->runtime_suspend(dev);
+> >         if (error) {
+> >                 /*
+> > @@ -1161,8 +1165,6 @@ static int pci_pm_runtime_suspend(struct device *dev)
+> >
+> >                 return error;
+> >         }
+> > -       if (!pci_dev->d3cold_allowed)
+> > -               pci_dev->no_d3cold = true;
+> >
+> >         pci_fixup_device(pci_fixup_suspend, pci_dev);
+> >
+> > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> > index 342b6918bbde..1a0854be5b18 100644
+> > --- a/drivers/pci/pci-sysfs.c
+> > +++ b/drivers/pci/pci-sysfs.c
+> > @@ -406,6 +406,11 @@ static ssize_t d3cold_allowed_store(struct device *dev,
+> >                 return -EINVAL;
+> >
+> >         pdev->d3cold_allowed = !!val;
+> > +       if (pdev->d3cold_allowed)
+> > +               pci_d3cold_enable(pdev);
+> > +       else
+> > +               pci_d3cold_disable(pdev);
+> > +
+> >         pm_runtime_resume(dev);
+> >
+> >         return count;
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index 25e0327d4429..69878d5e2c2f 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -9,6 +9,7 @@
+> >
+> >  #include <linux/kernel.h>
+> >  #include <linux/delay.h>
+> > +#include <linux/dmi.h>
+> >  #include <linux/init.h>
+> >  #include <linux/of.h>
+> >  #include <linux/of_pci.h>
+> > @@ -101,6 +102,21 @@ unsigned int pcibios_max_latency = 255;
+> >  /* If set, the PCIe ARI capability will not be used. */
+> >  static bool pcie_ari_disabled;
+> >
+> > +/* Disable bridge_d3 for all PCIe ports */
+> > +static bool pci_bridge_d3_disable;
+> > +/* Force bridge_d3 for all PCIe ports */
+> > +static bool pci_bridge_d3_force;
+> > +
+> > +static int __init pcie_port_pm_setup(char *str)
+> > +{
+> > +       if (!strcmp(str, "off"))
+> > +               pci_bridge_d3_disable = true;
+> > +       else if (!strcmp(str, "force"))
+> > +               pci_bridge_d3_force = true;
+> > +       return 1;
+> > +}
+> > +__setup("pcie_port_pm=", pcie_port_pm_setup);
+> > +
+> >  /**
+> >   * pci_bus_max_busnr - returns maximum PCI bus number of given bus' children
+> >   * @bus: pointer to PCI bus structure to search
+> > @@ -2156,6 +2172,165 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
+> >  }
+> >
+> >  /**
+> > + * pci_bridge_d3_possible - Is it possible to move the bridge to D3
+> 
+> It is better to say "transition" than "move" here IMO.  Or even "put
+> ... into ..".
 
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=111211
-Fixes: 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Rafael J. Wysocki <rafael@kernel.org>
-CC: stable@vger.kernel.org	# v4.3
-CC: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/pci/intel_mid_pci.c |    4 ++--
- arch/x86/pci/irq.c           |   10 ++++++----
- drivers/acpi/pci_irq.c       |   10 ++++++----
- include/linux/pci.h          |   17 -----------------
- 4 files changed, 14 insertions(+), 27 deletions(-)
+I'll use "put the bridge into D3". Thanks.
 
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 0d24e7c..8826ff5 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -215,7 +215,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 	int polarity;
- 	int ret;
- 
--	if (pci_has_managed_irq(dev))
-+	if (dev->irq_managed && dev->irq > 0)
- 		return 0;
- 
- 	switch (intel_mid_identify_cpu()) {
-@@ -256,7 +256,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 
- static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- {
--	if (pci_has_managed_irq(dev)) {
-+	if (dev->irq_managed && dev->irq > 0) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq_managed = 0;
- 		/*
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 32e7034..72108f0 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1202,7 +1202,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 			struct pci_dev *temp_dev;
- 			int irq;
- 
--			if (pci_has_managed_irq(dev))
-+			if (dev->irq_managed && dev->irq > 0)
- 				return 0;
- 
- 			irq = IO_APIC_get_PCI_irq_vector(dev->bus->number,
-@@ -1230,7 +1230,8 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 			}
- 			dev = temp_dev;
- 			if (irq >= 0) {
--				pci_set_managed_irq(dev, irq);
-+				dev->irq_managed = 1;
-+				dev->irq = irq;
- 				dev_info(&dev->dev, "PCI->APIC IRQ transform: "
- 					 "INT %c -> IRQ %d\n", 'A' + pin - 1, irq);
- 				return 0;
-@@ -1258,8 +1259,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 
- static void pirq_disable_irq(struct pci_dev *dev)
- {
--	if (io_apic_assign_pci_irqs && pci_has_managed_irq(dev)) {
-+	if (io_apic_assign_pci_irqs && dev->irq_managed && dev->irq) {
- 		mp_unmap_irq(dev->irq);
--		pci_reset_managed_irq(dev);
-+		dev->irq = 0;
-+		dev->irq_managed = 0;
- 	}
- }
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index c933675..172b74d 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -409,7 +409,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 		return 0;
- 	}
- 
--	if (pci_has_managed_irq(dev))
-+	if (dev->irq_managed && dev->irq > 0)
- 		return 0;
- 
- 	entry = acpi_pci_irq_lookup(dev, pin);
-@@ -454,7 +454,8 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 		kfree(entry);
- 		return rc;
- 	}
--	pci_set_managed_irq(dev, rc);
-+	dev->irq = rc;
-+	dev->irq_managed = 1;
- 
- 	if (link)
- 		snprintf(link_desc, sizeof(link_desc), " -> Link[%s]", link);
-@@ -477,7 +478,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	u8 pin;
- 
- 	pin = dev->pin;
--	if (!pin || !pci_has_managed_irq(dev))
-+	if (!pin || !dev->irq_managed || dev->irq <= 0)
- 		return;
- 
- 	entry = acpi_pci_irq_lookup(dev, pin);
-@@ -499,6 +500,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
- 	if (gsi >= 0) {
- 		acpi_unregister_gsi(gsi);
--		pci_reset_managed_irq(dev);
-+		dev->irq_managed = 0;
-+		dev->irq = 0;
- 	}
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e90eb22..577c5fd 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -978,23 +978,6 @@ static inline int pci_is_managed(struct pci_dev *pdev)
- 	return pdev->is_managed;
- }
- 
--static inline void pci_set_managed_irq(struct pci_dev *pdev, unsigned int irq)
--{
--	pdev->irq = irq;
--	pdev->irq_managed = 1;
--}
--
--static inline void pci_reset_managed_irq(struct pci_dev *pdev)
--{
--	pdev->irq = 0;
--	pdev->irq_managed = 0;
--}
--
--static inline bool pci_has_managed_irq(struct pci_dev *pdev)
--{
--	return pdev->irq_managed && pdev->irq > 0;
--}
--
- void pci_disable_device(struct pci_dev *dev);
- 
- extern unsigned int pcibios_max_latency;
+> > + * @bridge: Bridge to check
+> > + *
+> > + * This function checks if it is possible to move the bridge to D3.
+> > + * Currently we only allow D3 for recent enough PCIe ports.
+> > + */
+> > +static bool pci_bridge_d3_possible(struct pci_dev *bridge)
+> > +{
+> > +       unsigned int year;
+> > +
+> > +       if (!pci_is_pcie(bridge))
+> > +               return false;
+> > +
+> > +       switch (pci_pcie_type(bridge)) {
+> > +       case PCI_EXP_TYPE_ROOT_PORT:
+> > +       case PCI_EXP_TYPE_UPSTREAM:
+> > +       case PCI_EXP_TYPE_DOWNSTREAM:
+> > +               if (pci_bridge_d3_disable)
+> > +                       return false;
+> > +               if (pci_bridge_d3_force)
+> > +                       return true;
+> > +
+> > +               /*
+> > +                * PCIe ports from 2015 and newer should be capable of
+> > +                * entering D3.
+> 
+> This is more about safety than capability.
+> 
+> I'm sure that older PCIe ports can go to D3 too, but at least some of
+> them will not work correctly after going back to D0.
+> 
+> So I'd say "It should be safe to put PCIe ports from 2015 or newer into D3".
+
+OK
+
+> > +                */
+> > +               if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) &&
+> > +                   year >= 2015) {
+> > +                       return true;
+> > +               }
+> > +               break;
+> > +       }
+> > +
+> > +       return false;
+> > +}
+> > +
+> > +static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
+> > +{
+> > +       bool *d3cold_ok = data;
+> > +
+> > +       /*
+> > +        * The device needs to be allowed to go D3cold and if it is wake
+> > +        * capable to do so from D3cold. If the device is bridge then it
+> > +        * needs to have D3 allowed.
+> > +        */
+> > +       if (dev->no_d3cold || !dev->d3cold_allowed)
+> > +               *d3cold_ok = false;
+> > +       if (device_may_wakeup(&dev->dev) && !pci_pme_capable(dev, PCI_D3cold))
+> > +               *d3cold_ok = false;
+> > +       if (pci_has_subordinate(dev) && !dev->bridge_d3)
+> > +               *d3cold_ok = false;
+> 
+> What about:
+> 
+> bool no_d3cold;
+> 
+> no_d3cold = dev->no_d3cold || !dev->d3cold_allowed ||
+>          (device_may_wakeup(&dev->dev) && !pci_pme_capable(dev, PCI_D3cold) ||
+>          !pci_power_manageable(dev);
+> 
+> *d3cold_ok = !no_d3cold;
+> 
+> return no_d3cold;
+
+Works for me.
+
+Thanks for the comments!
