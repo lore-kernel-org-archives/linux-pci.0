@@ -1,38 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cavan.codon.org.uk ([93.93.128.6]:39925 "EHLO
-	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754733AbcDFW5D (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2016 18:57:03 -0400
-Date: Wed, 6 Apr 2016 23:19:43 +0100
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	b43-dev@lists.infradead.org,
-	Matt Fleming <matt@codeblueprint.co.uk>,
-	linux-efi@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-Message-ID: <20160406221943.GA10955@srcf.ucam.org>
-References: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
- <20160405194015.GC15353@localhost>
- <20160406213029.GA12421@wunner.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V6 05/13] acpi, pci: Support IO resources when parsing PCI
+ host bridge resources.
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	Tomasz Nowicki <tn@semihalf.com>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <1460740008-19489-6-git-send-email-tn@semihalf.com>
+ <20160427023916.GF6789@localhost> <57204FDB.6010202@redhat.com>
+Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+	rafael@kernel.org, hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org
+From: Jon Masters <jcm@redhat.com>
+Message-ID: <57228671.7060606@redhat.com>
+Date: Thu, 28 Apr 2016 17:53:53 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160406213029.GA12421@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <57204FDB.6010202@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 06, 2016 at 11:30:29PM +0200, Lukas Wunner wrote:
+On 04/27/2016 01:36 AM, Jon Masters wrote:
+> On 04/26/2016 10:39 PM, Bjorn Helgaas wrote:
 
-> Matthew's grub patch puts the wireless card into D3hot, which does not
-> stop the interrupts. I have tested this. (It may stop the DMA, I cannot
-> verify that as it doesn't occur on my machine for lack of an access point.)
+>> It would be ideal to find
+>> some way to handle ia64 and ARM64 similarly.  At the very least, we
+>> have to make sure that this doesn't break ia64.  The ia64 dense/sparse
+>> I/O spaces complicate things; I don't know if ARM64 has something
+>> similar or not.
+> 
+> There's nothing directly similar - it's just regular MMIO.
 
-Ah, interesting. One thing to note (and which I've just noticed) is that 
-it looks like this fixup is only called when you boot with the "linux" 
-command and not with the "linuxefi" command. If you're using Ubuntu, 
-"linux" may fall back to "linuxefi" without executing this fixup. So we 
-need to add it to the kernel EFI stub anyway.
+Just a footnote on the IA64 thing. I'm working on getting access to a
+few Itanium systems and running V6 on these (even bought my first
+Itanium system today so I can run this at home also). I'm also chatting
+with the internal RH QE folks about testing on a few dozen x86 systems.
+Will followup when we've any results on that testing.
+
+Jon.
 
 -- 
-Matthew Garrett | mjg59@srcf.ucam.org
+Computer Architect | Sent from my Fedora powered laptop
+
