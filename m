@@ -1,111 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ibawizard.net ([82.208.49.253]:52713 "EHLO
-	mengele.ibawizard.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932159AbcDFJeL (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 6 Apr 2016 05:34:11 -0400
-From: =?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
-To: devicetree@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-	Russell King <linux@arm.linux.org.uk>,
-	Kumar Gala <galak@codeaurora.org>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Sascha Hauer <kernel@pengutronix.de>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Richard Zhu <Richard.Zhu@freescale.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Tim Harvey <tharvey@gateworks.com>,
-	=?UTF-8?q?Krzysztof=20Ha=C5=82asa?= <khalasa@piap.pl>,
-	Fabio Estevam <festevam@gmail.com>,
-	Marcel Ziswiler <marcel.ziswiler@toradex.com>, stefan@agner.ch,
-	=?UTF-8?q?Petr=20=C5=A0tetiar?= <ynezz@true.cz>
-Subject: [PATCH v2 2/2] PCI: imx6: Add reset-gpio-active-high boolean property to DT
-Date: Wed,  6 Apr 2016 11:34:04 +0200
-Message-Id: <1459935244-10077-1-git-send-email-ynezz@true.cz>
-In-Reply-To: <CAOMZO5AnN4_RrA4bksWNmioAP1PCBT1Ax4of_OnoCvG+VXgDUQ@mail.gmail.com>
-References: <CAOMZO5AnN4_RrA4bksWNmioAP1PCBT1Ax4of_OnoCvG+VXgDUQ@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 28 Apr 2016 16:38:49 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: pci_ioremap_set_mem_type(), pci_remap_iospace()
+Message-ID: <20160428163849.2fb5607b@free-electrons.com>
+In-Reply-To: <20160428143332.GC12470@localhost>
+References: <20160427225827.GC17629@localhost>
+ <20160428143332.GC12470@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Russell King <linux@arm.linux.org.uk>, Liviu Dudau <Liviu.Dudau@arm.com>,
+ linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need that property in order to make the Toradex Apalis SoMs working
-without breaking old DTBs. On Apalis SoMs the GPIO1_IO28 used to PCIe
-reset is not connected directly to PERST# PCIe signal, but it's ORed
-with RESETBMCU coming off the PMIC, and thus is inverted, active-high.
+Hello,
 
-Signed-off-by: Petr Štetiar <ynezz@true.cz>
----
- Changes since v1:
-  
-  * Added documentation of reset-gpio and reset-gpio-active-high DT properties
-  * Removed unnecessary double negation of GPIO value
+On Thu, 28 Apr 2016 09:33:32 -0500, Bjorn Helgaas wrote:
+> [+cc linux-pci, manually inserted reply, sorry again]
+> 
+> Liviu wrote:
+> > On Wed, Apr 27, 2016 at 05:58:27PM -0500, Bjorn Helgaas wrote:
+> >> Looking at __arm_ioremap_pfn_caller() makes me
+> >> suspect that pci_remap_iospace() is not safe on arm.
+> 
+> > Hmm, not sure how you reached that conclusion. __arm_ioremap_pfn_caller()
+> > does call in the end ioremap_page_range() for ARMv7 || ARM_LPAE, which is
+> > what pci_remap_iospace() does as well. Beside the possibly different
+> > pgprot_t values, what would make it unsafe for arm?
+> 
+> The different pgprot_t is exactly what I'm worried about.  The callers of
+> pci_ioremap_io() probably get the right thing (a pgprot tweaked to deal
+> with this Cortex problem), but other callers of ioremap_page_range(),
+> pci_remap_iospace() in particular, don't get that tweak:
+> 
+>   pci_ioremap_io
+>     ioremap_page_range(..., __pgprot(get_mem_type(pci_ioremap_mem_type)->prot_pte))
+> 
+>   pci_remap_iospace
+>     ioremap_page_range(..., pgprot_device(PAGE_KERNEL))
+>       ioremap_pud_range(..., pgprot_device(PAGE_KERNEL))
+>         ioremap_pmd_range(..., pgprot_device(PAGE_KERNEL))
+>           ioremap_pte_range(..., pgprot_device(PAGE_KERNEL))
+>             set_pte_at(..., pfn_pte(pfn, pgprot_device(PAGE_KERNEL)))
 
- Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt |  5 +++++
- drivers/pci/host/pci-imx6.c                              | 14 +++++++++++---
- 2 files changed, 16 insertions(+), 3 deletions(-)
+Indeed. Which is why we should get rid of one of the two interfaces.
+Since pci_remap_iospace() is the generic one, I guess that's the one we
+should migrate to.
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 3be80c6..23ecb47 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -19,6 +19,11 @@ Optional properties:
- - fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
- - fsl,tx-swing-full: Gen2 TX SWING FULL value. Default: 127
- - fsl,tx-swing-low: TX launch amplitude swing_low value. Default: 127
-+- reset-gpio: Should specify the GPIO for PHY reset. Its not polarity aware
-+  and defaults to active-low reset sequence (L=reset state, H=operation state).
-+- reset-gpio-active-high: If present then the reset sequence using the GPIO
-+  specified in the "reset-gpio" property is reversed (H=reset state,
-+  L=operation state).
- 
- Example:
- 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 2f817fa..17f4cc3 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -33,6 +33,7 @@
- 
- struct imx6_pcie {
- 	int			reset_gpio;
-+	bool			gpio_active_high;
- 	struct clk		*pcie_bus;
- 	struct clk		*pcie_phy;
- 	struct clk		*pcie;
-@@ -310,9 +311,11 @@ static int imx6_pcie_deassert_core_reset(struct pcie_port *pp)
- 
- 	/* Some boards don't have PCIe reset GPIO. */
- 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
--		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 0);
-+		gpio_set_value_cansleep(imx6_pcie->reset_gpio,
-+					imx6_pcie->gpio_active_high);
- 		msleep(100);
--		gpio_set_value_cansleep(imx6_pcie->reset_gpio, 1);
-+		gpio_set_value_cansleep(imx6_pcie->reset_gpio,
-+					!imx6_pcie->gpio_active_high);
- 	}
- 	return 0;
- 
-@@ -546,9 +549,14 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 
- 	/* Fetch GPIOs */
- 	imx6_pcie->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
-+	imx6_pcie->gpio_active_high = of_property_read_bool(np,
-+						"reset-gpio-active-high");
- 	if (gpio_is_valid(imx6_pcie->reset_gpio)) {
- 		ret = devm_gpio_request_one(&pdev->dev, imx6_pcie->reset_gpio,
--					    GPIOF_OUT_INIT_LOW, "PCIe reset");
-+				imx6_pcie->gpio_active_high ?
-+					GPIOF_OUT_INIT_HIGH :
-+					GPIOF_OUT_INIT_LOW,
-+				"PCIe reset");
- 		if (ret) {
- 			dev_err(&pdev->dev, "unable to get reset gpio\n");
- 			return ret;
+Thomas
 -- 
-1.9.1
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
