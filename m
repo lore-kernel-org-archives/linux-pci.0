@@ -1,49 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from baptiste.telenet-ops.be ([195.130.132.51]:33223 "EHLO
-	baptiste.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751405AbcDTPcW (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 20 Apr 2016 11:32:22 -0400
-From: Geert Uytterhoeven <geert+renesas@glider.be>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>, Lee Jones <lee@kernel.org>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Tony Lindgren <tony@atomide.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@gmail.com>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Vinod Koul <vinod.koul@intel.com>,
-	Mark Brown <broonie@kernel.org>,
-	Alexandre Belloni <alexandre.belloni@free-electrons.com>,
-	Joe Perches <joe@perches.com>
-Cc: devicetree@vger.kernel.org, linux-input@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, dmaengine@vger.kernel.org,
-	Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH 08/14] powerpc: dts: acadia: DT spelling s/#interrupts-parent/#interrupt-parent/
-Date: Wed, 20 Apr 2016 17:32:13 +0200
-Message-Id: <1461166339-11109-9-git-send-email-geert+renesas@glider.be>
-In-Reply-To: <1461166339-11109-1-git-send-email-geert+renesas@glider.be>
-References: <1461166339-11109-1-git-send-email-geert+renesas@glider.be>
+Received: from smtp.codeaurora.org ([198.145.29.96]:44829 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753635AbcD1V2J (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2016 17:28:09 -0400
+From: Christopher Covington <cov@codeaurora.org>
+To: Timur Tabi <timur@codeaurora.org>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	Mark Salter <msalter@redhat.com>,
+	Mark Langsdorf <mlangsdo@redhat.com>,
+	Jon Masters <jcm@redhat.com>
+Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Christopher Covington <cov@codeaurora.org>
+Subject: [PATCH] acpi: pci: QDF2432 32 bit config space accessors
+Date: Thu, 28 Apr 2016 17:27:38 -0400
+Message-Id: <1461878858-23798-1-git-send-email-cov@codeaurora.org>
+In-Reply-To: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
- arch/powerpc/boot/dts/acadia.dts | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Qualcomm Technologies QDF2432 SoCs require 32 bit accessors to be used
+for the PCI configuration space. Register the appropriate quirk.
 
-diff --git a/arch/powerpc/boot/dts/acadia.dts b/arch/powerpc/boot/dts/acadia.dts
-index 57291f61ffe7021a..86266159521edac2 100644
---- a/arch/powerpc/boot/dts/acadia.dts
-+++ b/arch/powerpc/boot/dts/acadia.dts
-@@ -183,7 +183,7 @@
- 			usb@ef603000 {
- 				compatible = "ohci-be";
- 				reg = <0xef603000 0x80>;
--				interrupts-parent = <&UIC0>;
-+				interrupt-parent = <&UIC0>;
- 				interrupts = <0xd 0x4 0xe 0x4>;
- 			};
+Signed-off-by: Christopher Covington <cov@codeaurora.org>
+---
+Depends on Tomasz Nowicki's latest series:
+[PATCH V6 00/13] Support for generic ACPI based PCI host controller
+---
+ drivers/acpi/pci_gen_host.c | 13 +++++++++++++
+ drivers/pci/ecam.c          | 10 ++++++++++
+ drivers/pci/ecam.h          |  3 +++
+ 3 files changed, 26 insertions(+)
+
+diff --git a/drivers/acpi/pci_gen_host.c b/drivers/acpi/pci_gen_host.c
+index e55dfca..daf8a86 100644
+--- a/drivers/acpi/pci_gen_host.c
++++ b/drivers/acpi/pci_gen_host.c
+@@ -257,3 +257,16 @@ int raw_pci_write(unsigned int domain, unsigned int busn, unsigned int devfn,
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	return bus->ops->write(bus, devfn, reg, len, val);
+ }
++
++static const struct dmi_system_id qcom_qdf2432[] = {
++	{
++		.ident = "Qualcomm Technologies QDF2432",
++		.matches = {
++			DMI_MATCH(DMI_SYS_VENDOR, "Qualcomm"),
++			DMI_MATCH(DMI_PRODUCT_NAME, "QDF2432"),
++		},
++	},
++	{ }
++};
++
++DECLARE_ACPI_MCFG_FIXUP(qcom_qdf2432, NULL, &pci_generic_ecam_32b_ops, PCI_MCFG_DOMAIN_ANY, PCI_MCFG_BUS_ANY);
+diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
+index ff04c01..720a038 100644
+--- a/drivers/pci/ecam.c
++++ b/drivers/pci/ecam.c
+@@ -135,3 +135,13 @@ struct pci_generic_ecam_ops pci_generic_ecam_default_ops = {
+ 		.write		= pci_generic_config_write,
+ 	}
+ };
++
++/* ECAM ops with 32 bit config space access quirk */
++struct pci_generic_ecam_ops pci_generic_ecam_32b_ops = {
++	.bus_shift	= 20,
++	.pci_ops		= {
++		.map_bus	= pci_generic_ecam_map_bus,
++		.read		= pci_generic_config_read32,
++		.write		= pci_generic_config_write32,
++	}
++};
+diff --git a/drivers/pci/ecam.h b/drivers/pci/ecam.h
+index 706621a..4af764f 100644
+--- a/drivers/pci/ecam.h
++++ b/drivers/pci/ecam.h
+@@ -58,6 +58,9 @@ void __iomem *pci_generic_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
+ /* default ECAM ops, bus shift 20, generic read and write */
+ extern struct pci_generic_ecam_ops pci_generic_ecam_default_ops;
  
++/* ECAM ops with 32 bit config space access quirk */
++extern struct pci_generic_ecam_ops pci_generic_ecam_32b_ops;
++
+ #ifdef CONFIG_PCI_HOST_GENERIC
+ /* for DT based pci controllers that support ECAM */
+ int pci_host_common_probe(struct platform_device *pdev,
 -- 
-1.9.1
+Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
 
