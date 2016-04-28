@@ -1,134 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55016 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:39021 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753260AbcDHTLq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Apr 2016 15:11:46 -0400
-Date: Fri, 8 Apr 2016 14:11:42 -0500
+	id S1752403AbcD1QDz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Apr 2016 12:03:55 -0400
+Date: Thu, 28 Apr 2016 11:03:39 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH v4 1/2] dt-bindings: pci: tegra: Update for per-lane PHYs
-Message-ID: <20160408191142.GD15034@localhost>
-References: <1460131994-24493-1-git-send-email-thierry.reding@gmail.com>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: pci_ioremap_set_mem_type(), pci_remap_iospace()
+Message-ID: <20160428160339.GA19785@localhost>
+References: <20160427225827.GC17629@localhost>
+ <20160428141920.GB12470@localhost>
+ <20160428163646.432e2c68@free-electrons.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460131994-24493-1-git-send-email-thierry.reding@gmail.com>
+In-Reply-To: <20160428163646.432e2c68@free-electrons.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Thierry,
-
-I have a couple more questions, probably just because I'm
-DT-illiterate.
-
-On Fri, Apr 08, 2016 at 06:13:13PM +0200, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
+On Thu, Apr 28, 2016 at 04:36:46PM +0200, Thomas Petazzoni wrote:
+> Hello,
 > 
-> Changes to the pad controller device tree binding have required that
-> each lane be associated with a separate PHY. Update the PCI host bridge
-> device tree binding to allow each root port to define the list of PHYs
-> required to drive the lanes associated with it.
+> On Thu, 28 Apr 2016 09:19:20 -0500, Bjorn Helgaas wrote:
 > 
-> Acked-by: Rob Herring <robh@kernel.org>
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
-> ---
-> Changes in v4:
-> - add additional lanes subnode when dereferencing PHYs from the XUSB pad
->   controller to reflect changes in its binding
+> > >         coherency_cpu_base = of_iomap(np, 0);
+> > > -       arch_ioremap_caller = armada_pcie_wa_ioremap_caller;
+> > > +       arch_ioremap_caller = armada_wa_ioremap_caller;
+> > > +       pci_ioremap_set_mem_type(MT_UNCACHED);
+> > 
+> > This makes sense to me because I think this changes ioremap() to do
+> > the right thing.
 > 
->  .../devicetree/bindings/pci/nvidia,tegra20-pcie.txt    | 18 +++++++++++++++++-
->  1 file changed, 17 insertions(+), 1 deletion(-)
+> What changes ioremap() to do the right thing for all mappings *except*
+> PCI I/O mappings:
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-> index 75321ae23c08..f5364084b494 100644
-> --- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-> @@ -60,11 +60,14 @@ Required properties:
->    - afi
->    - pcie_x
->  
-> -Required properties on Tegra124 and later:
-> +Required properties on Tegra124 and later (deprecated):
->  - phys: Must contain an entry for each entry in phy-names.
->  - phy-names: Must include the following entries:
->    - pcie
->  
-> +These properties are deprecated in favour of per-lane PHYs define in each of
-> +the root ports (see below).
-> +
->  Power supplies for Tegra20:
->  - avdd-pex-supply: Power supply for analog PCIe logic. Must supply 1.05 V.
->  - vdd-pex-supply: Power supply for digital PCIe I/O. Must supply 1.05 V.
-> @@ -122,6 +125,13 @@ Required properties:
->    - Root port 0 uses 4 lanes, root port 1 is unused.
->    - Both root ports use 2 lanes.
->  
-> +Required properties for Tegra124 and later:
-
-I had a little trouble disambiguating this from the "Required
-properties on Tegra124 and later (deprecated)" line above.  It might
-help if they said:
-
-  Required PCIe controller properties on Tegra124 and later (deprecated):
-  Required PCIe Root Port properties for Tegra124 and later:
-
-I'm not sure how to interpret the "deprecated" part.  Assume I'm
-writing a DTS.  What am I supposed to include?
-
-  - "phys" and "phy-names" under the PCIe controller *and*
-    "phys" and "phy-names" under the Root Port?
-
-  - "phys" and "phy-names" under the PCIe controller only if I don't
-    supply "phys" and "phy-names" under the Root Port?
-
-My guess is that a board with more than one PHY for PCIe should omit
-"phys" and "phy-names" under the PCIe controller and include them
-under each Root Port.  And a board with only one PHY could conceivably
-supply these properties either under the controller or the Root Port
-or both.
-
-> +- phys: Must contain an phandle to a PHY for each entry in phy-names.
-> +- phy-names: Must include an entry for each active lane. Note that the number
-> +  of entries does not have to (though usually will) be equal to the specified
-> +  number of lanes in the nvidia,num-lanes property. Entries are of the form
-> +  "pcie-N": where N ranges from 0 to the value specified in nvidia,num-lanes.
-> +
->  Example:
->  
->  SoC DTSI:
-> @@ -169,6 +179,9 @@ SoC DTSI:
->  			ranges;
->  
->  			nvidia,num-lanes = <2>;
-> +
-> +			phys = <&{/padctl@0,7009f000/pads/pcie/lanes/pcie-4}>;
-> +			phy-names = "pcie-0";
-
-I'm also a little confused here because it looks like this root port
-supports two lanes, but there's only one entry in phy-names.  I
-thought you needed one entry for each lane.
-
->  		};
->  
->  		pci@2,0 {
-> @@ -183,6 +196,9 @@ SoC DTSI:
->  			ranges;
->  
->  			nvidia,num-lanes = <2>;
-> +
-> +			phys = <&{/padctl@0,7009f000/pads/pcie/lanes/pcie-2}>;
-> +			phy-names = "pcie-0";
->  		};
->  	};
->  
-> -- 
-> 2.8.0
+>    arch_ioremap_caller = armada_wa_ioremap_caller;
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >  But my concern is that ioremap_page_range() doesn't
+> > actually use ioremap(), so pci_ioremap_set_mem_type() has no effect on
+> > that path.  pci_remap_iospace() uses ioremap_page_range(), so I
+> > suspect it will use the wrong attributes.
+> 
+> Indeed, ioremap_page_range() doesn't use ioremap(), and that's why
+> there is this separate pci_ioremap_set_mem_type() to ensure that
+> mappings done for PCI I/O space are done with MT_UNCACHED.
+> 
+> And indeed, pci_remap_iospace() would not work for me, as it wouldn't
+> use the memory attributes set by pci_ioremap_set_mem_type().
+
+Right.  pci_remap_iospace() is a generic interface and should work
+on all arches.  It *is* declared __weak, but there's no arch-specific
+implementation of it, and I think if we made ioremap_page_range()
+truly generic, we could make pci_remap_iospace() non-weak.
+
+> To be honest, I am wondering why we're not using the same memory
+> attribute for PCI I/O space as the memory attributes used for anything
+> else that's ioremapped. In practice, that's what happens on ARM:
+> ioremap() uses MT_DEVICE by default, and pci_ioremap_io() uses
+> MT_DEVICE as well.
+> 
+> > >  1/ Providing an alternate version of pci_remap_iospace() that allows
+> > >     to pass the memory attribute to be used.
+> > 
+> > I'd rather fix ioremap_page_range() somehow, because that's an
+> > exported interface, and if we only fix pci_remap_iospace(), we still
+> > have to worry about ioremap_page_range() doing the wrong thing.
+> 
+> What do you want to fix in ioremap_page_range() ? It already allows
+> passing the memory type that you want, so I'm not sure to understand.
+
+Yes, but in order for ioremap_page_range() to work on arm, we have to
+pass in an arm-specific memory type
+(__pgprot(get_mem_type(pci_ioremap_mem_type)->prot_pte)).
+
+We can't do that because ioremap_page_range() is a generic function,
+implemented in lib/ioremap.c and exported to modules, and generic
+callers only know about pgprot_noncached, pgprot_writecombine,
+pgprot_writethrough, pgprot_device, etc.
