@@ -1,100 +1,115 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 28 Apr 2016 10:12:12 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>, arnd@arndb.de,
-	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
-	hanjun.guo@linaro.org, okaya@codeaurora.org,
-	jiang.liu@linux.intel.com, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com,
-	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-Subject: Re: [PATCH V6 02/13] pci, acpi: Provide generic way to assign bus
- domain number.
-Message-ID: <20160428150815.GB15598@localhost>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-3-git-send-email-tn@semihalf.com>
- <20160427022649.GD6789@localhost>
- <20160427111758.GA6234@red-moon>
- <20160427164453.GB17629@localhost>
- <20160427173118.GA26653@red-moon>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f65.google.com ([209.85.213.65]:34875 "EHLO
+	mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750761AbcD1Ezq (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2016 00:55:46 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160427173118.GA26653@red-moon>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20160422204920.GA17215@localhost>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+	<1460074573-7481-5-git-send-email-yinghai@kernel.org>
+	<20160422204920.GA17215@localhost>
+Date: Wed, 27 Apr 2016 21:55:45 -0700
+Message-ID: <CAE9FiQWQ2ke3_P4Qhj+ON7pMiVCx4myhVNVaSYO4vYAL_P4njg@mail.gmail.com>
+Subject: Re: [PATCH v11 04/60] sparc/PCI: Use correct offset for bus address
+ to resource
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>,
+	Khalid Aziz <khalid.aziz@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Michael Ellerman <mpe@ellerman.id.au>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 27, 2016 at 06:31:29PM +0100, Lorenzo Pieralisi wrote:
-> On Wed, Apr 27, 2016 at 11:44:53AM -0500, Bjorn Helgaas wrote:
-> > On Wed, Apr 27, 2016 at 12:17:58PM +0100, Lorenzo Pieralisi wrote:
-> > > On Tue, Apr 26, 2016 at 09:26:49PM -0500, Bjorn Helgaas wrote:
-> > > > On Fri, Apr 15, 2016 at 07:06:37PM +0200, Tomasz Nowicki wrote:
+On Fri, Apr 22, 2016 at 1:49 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> [+cc Ben, Michael]
+> I'm kind of confused here.  There are two ways to mmap PCI BARs:
+>
+>   /proc/bus/pci/00/02.0 (proc_bus_pci_mmap()):
+>     all BARs in one file; MEM/IO determined by ioctl()
+>     mmap offset is a CPU physical address in the PCI resource
+>
+>   /sys/devices/pci0000:00/0000:00:02.0/resource0 (pci_mmap_resource()):
+>     one file per BAR; MEM/IO determined by BAR type
+>     mmap offset is between 0 and BAR size
+>
+> Both proc_bus_pci_mmap() and pci_mmap_resource() validate the
+> requested area with pci_mmap_fits() before calling pci_mmap_page_range().
+>
+> In the proc_bus_pci_mmap() path, the offset in vma->vm_pgoff must be
+> within the pdev->resource[], so the user must be supplying a CPU
+> physical address (not an address obtained from pci_resource_to_user()).
+> That vma->vm_pgoff is passed unchanged to pci_mmap_page_range().
+>
+> In the pci_mmap_resource() path, vma->vm_pgoff must be between 0 and
+> the BAR size.  Then we add in the pci_resource_to_user() information
+> before passing it to pci_mmap_page_range().  The comment in
+> pci_mmap_resource() says pci_mmap_page_range() expects a "user
+> visible" address, but I don't really believe that based on how
+> proc_bus_pci_mmap() works.
+>
+> Do both proc_bus_pci_mmap() and pci_mmap_resource() work on sparc?
+> It looks like they call pci_mmap_page_range() with different
+> assumptions, so I don't see how they can both work.
 
+for sysfs path: in pci_mmap_resource
+        pci_resource_to_user(pdev, i, res, &start, &end);
+        vma->vm_pgoff += start >> PAGE_SHIFT;
+     then call pci_mmap_page_range()
 
-> > Today we call pci_bus_assign_domain_nr() from the PCI core (from
-> > pci_create_root_bus()).  This is only implemented for
-> > PCI_DOMAINS_GENERIC, but even so, it fiddles around to figure out
-> > whether to get the domain from DT or to assign a new one.
-> > 
-> > That seems backwards to me.  The host bridge drivers already know
-> > where the domain should come from (ACPI _SEG, DT, etc.) and in the
-> > long term, I think they should be responsible for looking up or
-> > assigning a domain number *before* they call pci_create_root_bus().
-> 
-> Yes, the question still is how pci_create_root_bus() can get that
-> value (I am pretty certain this was heavily debated in the past, which
-> does not mean we can't give it another try).
+the fit checking in pci_mmap_fits(),
+        pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
+                        pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
+        if (start >= pci_start && start < pci_start + size &&
+                        start + nr <= pci_start + size)
 
-Right, we don't have a good mechanism for passing more info into
-pci_create_root_bus().  Maybe the caller could fill in a struct so we
-have a chance to extend it without having to change all the existing
-callers.
+so proc fs assume resource_start for vm_pgoff ?
 
-I wonder if there's a design pattern we can copy, e.g., would
-something like the scsi_host_alloc(), scsi_add_host(),
-scsi_scan_host() model work here?
+but current pci_mmap_page_range want to use bus address
+start aka BAR value.
 
-> > > > > +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
-> > > > > +{
-> > > > > +	bus->domain_nr = acpi_disabled ? of_pci_bus_domain_nr(parent) :
-> > > > > +					 acpi_pci_bus_domain_nr(parent);
-> > 
-> > We have the pci_bus * here, so to_pci_host_bridge(bus->bridge) gives
-> > us the struct pci_host_bridge.  I can't remember why we put domain_nr
-> > in the struct pci_bus instead of in the struct pci_host_bridge.  It
-> > seems like pci_host_bridge is the more logical place for it, because
-> > every bus below the host bridge must have the same domain by
-> > definition.
-> > 
-> > Would it be feasible to either (a) move domain_nr to the
-> > pci_host_bridge, or (b) change acpi_pci_bus_domain_nr() so it uses the
-> > struct pci_bus * or the struct device * to find the struct
-> > acpi_pci_root where segment has already been stored by
-> > acpi_pci_root_add()?
-> 
-> (b) is what JC implemented even though it works differently for
-> different hosts since it all depends on what's in bus->sysdata.
-> 
-> It can certainly be done in a generic way (that works on X86 and IA64
-> too), let's give it more thought.
-> 
-> > Another wrinkle is the quirk added by 1f09b09b4de0 ("x86/PCI: Ignore
-> > _SEG on HP xw9300").  x86 doesn't use PCI_DOMAINS_GENERIC yet, so this
-> > patch wouldn't break it, but I hope x86 can use PCI_DOMAINS_GENERIC in
-> > the future, and then it will be a problem if we evaluate _SEG again.
-> 
-> Yes, I share your concern here and I thought about that, if that's the
-> end goal let's find a solution that works across arches (or we temporarily
-> use JC's code and we then generalize it).
+and we have
 
-I would ultimately like all arches to use PCI_DOMAINS_GENERIC, because
-I don't think there's anything intrisically arch-specific about where
-we store the domain number.  The means of discovering or assigning a
-domain number might be arch-specific, but I think it would be cleanest
-if the host bridge driver handled that.
+        /* pci_mmap_page_range() expects the same kind of entry as coming
+         * from /proc/bus/pci/ which is a "user visible" value. If this is
+         * different from the resource itself, arch will do necessary fixup.
+         */
 
-Bjorn
+so we need to fix pci_mmap_fits(), please check if it is ok, will
+submit it as separated one.
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index d319a9c..3768c6a 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -969,15 +969,20 @@ void pci_remove_legacy_files(struct pci_bus *b)
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vma,
+                  enum pci_mmap_api mmap_api)
+ {
+-       unsigned long nr, start, size, pci_start;
++       unsigned long nr, start, size;
++       resource_size_t pci_start = 0, pci_end;
+
+        if (pci_resource_len(pdev, resno) == 0)
+                return 0;
+        nr = vma_pages(vma);
+        start = vma->vm_pgoff;
+        size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
+-       pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
+-                       pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
++       if (mmap_api == PCI_MMAP_PROCFS) {
++               struct resource *res = &pdev->resource[resno];
++
++               pci_resource_to_user(pdev, resno, res, &pci_start, &pci_end);
++               pci_start >>= PAGE_SHIFT;
++       }
+        if (start >= pci_start && start < pci_start + size &&
+                        start + nr <= pci_start + size)
+                return 1;
