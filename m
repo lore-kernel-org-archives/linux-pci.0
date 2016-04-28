@@ -1,132 +1,79 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC v5 6/7] PCI: Add a new bit to pci_bus_flags to indicate
- interrupt remapping
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1459864004-2869-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160406001114.GA4976@gwshan>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
-	aik@ozlabs.ru, alex.williamson@redhat.com,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	nikunj@linux.vnet.ibm.com, eric.auger@linaro.org,
-	will.deacon@arm.com, alistair@popple.id.au, ruscur@russell.cc
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Message-ID: <57048013.5070802@linux.vnet.ibm.com>
-Date: Wed, 6 Apr 2016 11:18:43 +0800
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 28 Apr 2016 16:18:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Tomasz Nowicki <tn@semihalf.com>,
+	Jayachandran C <jchandra@broadcom.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
+	Jon Masters <jcm@redhat.com>, linaro-acpi@lists.linaro.org,
+	linux-pci@vger.kernel.org, Liviu.Dudau@arm.com,
+	David Daney <ddaney@caviumnetworks.com>,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	robert.richter@caviumnetworks.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, Wangyijing <wangyijing@huawei.com>,
+	Marcin Wojtas <mw@semihalf.com>
+Subject: Re: [PATCH V6 08/13] PCI: generic, thunder: update to use generic
+ ECAM API
+Message-ID: <20160428211834.GE25125@localhost>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <8950494.UV8UrWiFbx@wuerfel>
+ <20160428201439.GD25125@localhost>
+ <5813591.CkzahFEfSl@wuerfel>
 MIME-Version: 1.0
-In-Reply-To: <20160406001114.GA4976@gwshan>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5813591.CkzahFEfSl@wuerfel>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/4/6 8:11, Gavin Shan wrote:
-> On Tue, Apr 05, 2016 at 09:46:43PM +0800, Yongji Xie wrote:
->> I'm trying to find a proper way to indicate
->> the capability of interrupt remapping on PPC64
->> because we need this to determine whether it is
->> safe to mmap MSI-X table in VFIO driver.
->>
->> There is a existing flag for this in the IOMMU
->> space:
->>
->> enum iommu_cap {
->> 	IOMMU_CAP_CACHE_COHERENCY,
->> --->    IOMMU_CAP_INTR_REMAP,
->> 	IOMMU_CAP_NOEXEC,
->> };
->>
->> But it seems to be not a good idea to use
->> bus_set_iommu() to add this flag on PPC64 which
->> never set/use iommu_ops.
->>
->> Eric also posted a patchset [1] to abstract
->> this capability on MSI controller side for ARM.
->> But I found we also never use msi_domain_info
->> on PPC64. We have to rework the MSI code on
->> PPC64 to support msi_domain_ops if we want to
->> use msi_domain_info.
->>
->> Then I noticed that interrupt remapping is
->> abstracted on PCI host bridge side on PPC64.
->> So I'm thinking whether we could add a new
->> bit to pci_bus_flags to indicate this
->> capability, like this patch does.
->>
->> Compared with IOMMU_CAP_INTR_REMAP, this
->> flag is more common. Any arch can set/use this
->> easily. And it can provide a better granularity
->> (pci_bus_type -> pci_bus).
->>
->> [1] http://www.spinics.net/lists/kvm/msg130262.html
->>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->> arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
->> include/linux/pci.h                       |    1 +
->> 2 files changed, 9 insertions(+)
->>
->> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->> index f90dc04..9557638 100644
->> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
->> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->> @@ -3080,6 +3080,12 @@ static void pnv_pci_ioda_fixup(void)
->> 	pnv_npu_ioda_fixup();
->> }
->>
->> +int pnv_pci_ioda_root_bridge_prepare(struct pci_host_bridge *bridge)
->> +{
->> +	bridge->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
->> +	return 0;
->> +}
->> +
-> A irelevent question: Here we set the flag unconditionally. Can the
-> MSIx table be exposed to user space unconditionally? Do we have issues
-> if the MSIx related BAR isn't page aligned or overlapped with others?
+On Thu, Apr 28, 2016 at 10:40:35PM +0200, Arnd Bergmann wrote:
+> On Thursday 28 April 2016 15:14:39 Bjorn Helgaas wrote:
+> > On Thu, Apr 21, 2016 at 11:36:53AM +0200, Arnd Bergmann wrote:
+> > > On Thursday 21 April 2016 11:28:15 Tomasz Nowicki wrote:
+> > > > On 19.04.2016 15:06, Arnd Bergmann wrote:
+> > > > > On Monday 18 April 2016 21:31:54 Tomasz Nowicki wrote:
+> > > > >>
+> > > > >> Basically the whole content of pci-thunder-ecam.c and pci-thunder-pem.c.
+> > > > >>
+> > > > >> pci-thunder-ecam.c contains config space accessors. Similar for
+> > > > >> pci-thunder-pem.c but it also has extra init call (it is now called
+> > > > >> thunder_pem_init) which finds and maps related registers.
+> > > > >
+> > > > > They seem to do much more than just override the accessors, they actually
+> > > > > change the contents of the config space as well. Is that really necessary
+> > > > > on ACPI based systems as well?
+> > > > 
+> > > > Yes, the pci-thunder-ecam.c accessors are meant to emulate config space 
+> > > > capabilities. They are necessary to synthesize EA capabilities (fixed 
+> > > > PCI BARs), it wont work without this, for ACPI boot as well.
+> > > 
+> > > Why is that? I thought the BARs never get reassigned when using ACPI,
+> > 
+> > In general, there's no reason we can't reassign BARs, whether we're
+> > using DT, ACPI, or whatever.  In many cases, systems with ACPI also
+> > assign all the BARs in firmware, and Linux doesn't reassign them
+> > unless it needs to.  But that's just a coincidence.  There's no
+> > requirement that Linux leave BARs as firmware programmed them.
+> 
+> I'm thought I've seen systems in which the ACPI BIOS assumes that
+> certain PCI devices never move around, because it pokes the registers
+> from AML, and changing them would require never using the same device
+> through ACPI. It's likely that this is against some standard, but that
+> won't help you if you have to deal with the system anyway.
 
-This flag is just used to indicate the capability of MSI
-remapping which means PCI devices on this bus
-can only shoot the MSIs assigned for them. It does
-not mean MSIx table can be exposed to user space
-unconditionally.
+Yes, I'm pretty sure there are systems like that, e.g., I think SMM
+code on some HP servers assumes the iLO address never changes.  I
+think that is a firmware defect because I don't think there's any spec
+that says firmware retains control over PCI BARs after handoff.  And
+this particular case isn't really ACPI-specific.
 
->> /*
->>   * Returns the alignment for I/O or memory windows for P2P
->>   * bridges. That actually depends on how PEs are segmented.
->> @@ -3364,6 +3370,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->> 	 */
->> 	ppc_md.pcibios_fixup = pnv_pci_ioda_fixup;
->>
->> +	ppc_md.pcibios_root_bridge_prepare = pnv_pci_ioda_root_bridge_prepare;
->> +
->> 	if (phb->type == PNV_PHB_NPU)
->> 		hose->controller_ops = pnv_npu_ioda_controller_ops;
->> 	else
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 27df4a6..741dcaf 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -193,6 +193,7 @@ typedef unsigned short __bitwise pci_bus_flags_t;
->> enum pci_bus_flags {
->> 	PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
->> 	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
->> +	PCI_BUS_FLAGS_MSI_REMAP = (__force pci_bus_flags_t) 3,
-> Yongji, I guess the corresponding value to PCI_BUS_FLAGS_MSI_REMAP
-> would be 4 other than 3. Otherwise, two of the flags cannot exist
-> at the same time.
->
-> Thanks,
-> Gavin
+But as you say, we have to deal with these systems anyway, even if we
+consider that behavior broken.  My proposal has been to add quirks to
+mark those devices as IORESOURCE_PCI_FIXED, but I don't think anybody
+has gotten around to doing that.
 
-Yes, you are right. It should be 4 (1 << 2).
-
-Thanks,
-Yongji
-
->> };
->>
->> /* These values come from the PCI Express Spec */
->> -- 
->> 1.7.9.5
->>
+Bjorn
