@@ -1,146 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:36432 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753531AbcDKV50 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Apr 2016 17:57:26 -0400
-Received: by mail-pa0-f42.google.com with SMTP id bx7so112982184pad.3
-        for <linux-pci@vger.kernel.org>; Mon, 11 Apr 2016 14:57:26 -0700 (PDT)
-Subject: Re: [PATCH 1/2] PCI: iproc: Support DT property for ignoring aborts
- when probing
-To: Ray Jui <ray.jui@broadcom.com>,
-	Florian Fainelli <f.fainelli@gmail.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>
-References: <1460238624-2086-1-git-send-email-zajec5@gmail.com>
- <79DC79A7-D4CE-4983-B1C5-CBD2E9CBBFB9@gmail.com>
- <4768648c-841b-490d-a752-f31cba545f74@broadcom.com>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
-	linux-arm-kernel@lists.infradead.org,
-	Hauke Mehrtens <hauke@hauke-m.de>
-From: Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <570C1D47.7010102@gmail.com>
-Date: Mon, 11 Apr 2016 14:55:19 -0700
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:35846 "EHLO
+	mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752323AbcD1PcA (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2016 11:32:00 -0400
 MIME-Version: 1.0
-In-Reply-To: <4768648c-841b-490d-a752-f31cba545f74@broadcom.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160428151356.GF32610@lahna.fi.intel.com>
+References: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
+	<1461578004-129094-5-git-send-email-mika.westerberg@linux.intel.com>
+	<20160428142216.GA18211@wunner.de>
+	<20160428151356.GF32610@lahna.fi.intel.com>
+Date: Thu, 28 Apr 2016 17:31:58 +0200
+Message-ID: <CAJZ5v0h7n669VkzV23FA3YSQDFR5weWWVKrFBHF0XuCigGeMSA@mail.gmail.com>
+Subject: Re: [PATCH v4 4/4] PCI: Add runtime PM support for PCIe ports
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Lukas Wunner <lukas@wunner.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/04/16 13:06, Ray Jui wrote:
-> 
-> 
-> On 4/10/2016 6:43 PM, Florian Fainelli wrote:
->> On April 9, 2016 2:50:23 PM PDT, "Rafał Miłecki" <zajec5@gmail.com>
->> wrote:
->>> Some devices (e.g. Northstar ones) may have bridges that forward
->>> harmless errors to the ARM core. In such case we need an option to
->>> add a handler ignoring them.
->>>
->>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->>> ---
+On Thu, Apr 28, 2016 at 5:13 PM, Mika Westerberg
+<mika.westerberg@linux.intel.com> wrote:
+> On Thu, Apr 28, 2016 at 04:22:16PM +0200, Lukas Wunner wrote:
+>> Hi Mika,
 >>
->>> +- brcm,pcie-hook-abort-handler: During PCI bus probing (device
->>> enumeration)
->>> +  there can be errors that are expected and harmless. Unfortunately
->>> some bridges
->>> +  can't be configured to ignore them and they forward them to the ARM
->>> core
->>> +  triggering die().
->>> +  This property should be set in such case, it will make driver add
->>> its own
->>> +  handler ignoring such errors.
+>> I've rebased my Thunderbolt runtime pm patches on v4 of your patches
+>> and everything seems to still work fine. d3cold_allowed also works
+>> as it should now.
+>
+> Cool, thanks for testing.
+>
+>> As said I've amended my series to allow runtime pm on hotplug ports
+>> if they're Thunderbolt ports on a Mac:
+>> https://github.com/l1k/linux/commit/a6810db929485c7fc8677f265b1c68e31879ce61
+>
+> If we are going to add more conditions, I think it makes sense to
+> introduce pcie_port_runtime_pm_possible() or similar which includes all
+> these checks.
+>
+>> I've also reviewed the patches one more time and spotted only this
+>> small nit:
 >>
->> The property is named after the function that allows you to catch
->> abort handlers, whereas you should be describing the HW here.
->> Something like brcm,bridge-error-forward or a better name even would
->> be preferable.
+>> On Mon, Apr 25, 2016 at 12:53:24PM +0300, Mika Westerberg wrote:
+>> > +static int pcie_port_runtime_resume(struct device *dev)
+>> > +{
+>> > +   pm_runtime_mark_last_busy(dev);
+>> > +   return 0;
+>> > +}
 >>
->>> +#ifdef CONFIG_ARM
->>> +static int iproc_pcie_abort_handler(unsigned long addr, unsigned int
->>> fsr,
->>> +                    struct pt_regs *regs)
->>> +{
->>> +    if (fsr == 0x1406)
->>> +        return 0;
->>> +
->>> +    return 1;
+>> The PM core seems to do this automatically, see rpm_resume():
+>> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/base/power/runtime.c#n749
 >>
->> As you later noted this prevents this driver from being a module now.
->> Since the expectation is that either a fixed bootloader or a platform
->> should enot produce these data aborts, or allow them to be ignored,
->> why not just put this code back where it belongs in the machine
->> specific file which kills many birds with the same stone:
+>> So you could just drop the .runtime_resume entry here and it shouldn't
+>> result in any functional change:
 >>
-> 
-> I assume the module compile issue can be simply fixed by exporting
-> symbol of "hook_fault_code"?
+>> > @@ -101,6 +122,9 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+>> >     .poweroff       = pcie_port_device_suspend,
+>> >     .restore        = pcie_port_device_resume,
+>> >     .resume_noirq   = pcie_port_resume_noirq,
+>> > +   .runtime_suspend = pcie_port_runtime_suspend,
+>> > +   .runtime_resume = pcie_port_runtime_resume,
+>> > +   .runtime_idle   = pcie_port_runtime_idle,
+>
+> Hmm, PM core calls pci_pm_runtime_resume() for PCI drivers which then
+> delegates to driver->runtime_resume() if set. However, if it is missing
+> it just returns -ENOSYS and does not put the device back to D0.
+>
+> So if I'm reading this right we actually need to provide
+> pcie_port_runtime_resume().
 
-I do not think it is desireable for this symbol to be exported in the
-first place, also last I looked, this was a one time registration thing,
-you cannot undo the hook you installed, but everything can be fixed.
+You do, but it could just return 0.
 
-> 
-> I believe ARM64 based NS2 that uses the same iProc PCIe driver might
-> also need something like this (I'm still waiting for Jon Mason to give
-> me some more information on the NS2 errors that he saw, which is likely
-> related to this). I assume there will be something similar to the ARM
-> specific "hook_fault_code" for ARM64, but then ARM64 does not have any
-> "mach" specific directory. Where can this type of hook be installed for
-> ARM64 based platforms if not in the PCIe driver?
-
-OK, that is a fair point, then maybe have a two stage process, where we
-make sure that the part that installs the hook is always available and
-built-into the kernel, but let the iProc PCIe driver remain a module?
-
-> 
->> - code is ways built-in, and hook_fault_code is installed prior to
->> PCIe loading (function is marked with __init)
->> - platforms which do not need that, just do not install it for that
->> specific code
->> - it is clear which platforms need it and which do not, yet the driver
->> remains agnostic
-> 
-> It's actually unclear to me which iProc platforms need this.
-> - We know NS needs it
-> - Someone mentioned NSP does not need this? But where does the
-> information come from? Do we have similar PCIe connection configuration
-> on NSP as NS?
-> - I cannot confirm whether Cygnus needs this or not since we do not have
-> similar board configurations on Cygnus (on Cygnus each host is always
-> connected to a single device). I can check with the ASIC team, but that
-> will be a very lengthy process and I'm not sure when I can get the
-> answer we need (and yes I do work at Broadcom, :))
-> - Jon Mason reported similar abort issues on NS2 when an externally
-> connected, multi function device is used. I'm still waiting for him to
-> send me the error log and see if it's the same type of data abort.
-
-Is there really no way to flip some chicken bits to prevent the PCIe
-root complex from forwarding some of these errors?
-
-Also, sorry if this is repeating information, but how can we generate
-spurious aborts if we are scanning the PCIe bus, are we possibly trying
-to access the RC's config space before it is set up (this should not
-fail), or something else?
-
-Thanks!
-
-> 
->>
->> NB: there could be other platforms some day needing that which also
->> propagate the error differently, forcing you to add more and more of
->> these codes in the PCIe driver.
->>
-> 
-> Yes, at this point, we are unsure whether the same or different code is
-> used among different platforms.
-> 
-> Thanks,
-> 
-> Ray
-
-
--- 
-Florian
+The suggestion seems to be that pm_runtime_mark_last_busy() is not
+needed as the core will invoke it anyway.
