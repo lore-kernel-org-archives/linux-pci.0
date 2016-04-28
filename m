@@ -1,131 +1,131 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:16834 "EHLO mga11.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:41995 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754013AbcDYJxa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 25 Apr 2016 05:53:30 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [PATCH v4 0/4] PCI: Add support for suspending (including runtime) of PCIe ports
-Date: Mon, 25 Apr 2016 12:53:20 +0300
-Message-Id: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
+	id S1751920AbcD1Vjj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Apr 2016 17:39:39 -0400
+Subject: Re: [PATCH] arm64: Relocate screen_info.lfb_base on PCI BAR
+ allocation
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1461795744-28837-1-git-send-email-agraf@suse.de>
+ <20160428162035.GB19785@localhost> <57223D46.7070102@suse.de>
+ <20160428180641.GA25125@localhost>
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+From: Alexander Graf <agraf@suse.de>
+Message-ID: <57228317.1030808@suse.de>
+Date: Thu, 28 Apr 2016 23:39:35 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160428180641.GA25125@localhost>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current Linux PCI core does not do any kind of power management to PCIe
-ports. This means that we waste energy and consume laptop battery even if
-the port has nothing connected to. These patches aim to change that to the
-right direction.
 
-Previous versions of the patches can be found below:
 
-  v1: http://www.spinics.net/lists/linux-pci/msg49313.html
-  v2: http://www.spinics.net/lists/linux-pci/msg50167.html
-  v3: http://www.spinics.net/lists/linux-pci/msg50345.html
+On 28.04.16 20:06, Bjorn Helgaas wrote:
+> On Thu, Apr 28, 2016 at 06:41:42PM +0200, Alexander Graf wrote:
+>> On 04/28/2016 06:20 PM, Bjorn Helgaas wrote:
+>>> On Thu, Apr 28, 2016 at 12:22:24AM +0200, Alexander Graf wrote:
+>>>> When booting with efifb, we get a frame buffer address passed into the system.
+>>>> This address can be backed by any device, including PCI devices.
+>>> I guess we get the frame buffer address via EFI, but it doesn't tell
+>>> us what PCI device it's connected to?
+>>
+>> Pretty much, yes. We can get the frame buffer address from a
+>> multitude of sources using various boot protocols, but the case
+>> where I ran into this was with efi on arm64.
+>>
+>>> This same thing could happen on any EFI arch, I guess.  Maybe even on
+>>
+>> Yes and no :). I would've put it into whatever code "owns"
+>> screen_info, but I couldn't find any. So instead I figured I'd make
+>> the approach as generic as I could and implemented the calculation
+>> for the case where I saw it break.
+>>
+>> The reason we don't see this on x86 (if I understand all pieces of
+>> the puzzle correctly) is that we get the BAR allocation from
+>> firmware using _CRS attributes in ACPI, so firmware tells the OS
+>> where to put the BARs. 
+> 
+> I think the real reason is that on x86, firmware typically assigns all
+> the BARs and Linux typically doesn't change them.  PCI host bridges
 
-This assumes that recent (starting from 2015) PCIe ports are capable of
-transition to D3hot/D3cold. We add a new flag to struct pci_dev 'bridge_d3'
-that is set whenever the PCI core thinks the port can be put to D3. The
-check in pci_pm_suspend_noirq() is then extended to cover devices where
-'bridge_d3' is set.
+Can you point me to the code that "doesn't change them"? I couldn't find
+it, but I haven't see Linux reallocate BARs on x86.
 
-We then add two new functions pci_bridge_d3_device_changed/removed(). These
-are used to set and clear 'bridge_d3' whenever there is a change in device
-power management policy (or if the device is removed). For example when
-userspace forbids the device to enter D3cold pci_bridge_d3_device_changed()
-will clear 'bridge_d3' of the upstream bridge.
+The thing is that if a BAR is already allocated, we could as well not
+remap it on arm as well - but how do we know?
 
-For all PCI ports where 'bridge_d3' is set we also enable and unblock
-runtime PM automatically. Only exception is when the PCIe port claims to
-support hotplug. More information about that is in the changelog of
-patch [4/4].
+> have _CRS, which tells us where the host bridge windows are.  PCI
+> devices themselves don't normally have _CRS; we just make sure their
+> BARs are inside the ranges of an upstream _CRS.  If/when we get x86
+> boxes where firmware doesn't assign all the BARs, we should see the
+> same problem there.
 
-Since this also touches xhci, I'm adding Mathias and Greg to check if the
-change looks reasonable.
+So the check is whether all BARs get assigned by firmware?
 
-Changes to v3:
+> 
+>> In the device tree case (which is what I'm
+>> running on arm64) we however allocate BARs dynamically.
+>>
+>>> non-EFI arches, if there's a way to discover the frame buffer address
+>>> as a bare address rather than a "offset X into BAR Y of PCI device Z"
+>>> sort of thing.
+>>
+>> It'd be perfectly doable today - we do get a cpu physical address
+>> and use that in the notifier. All we would need to do is move the
+>> code that I added in arm64/efi.c to something more generic that
+>> "owns" the frame buffer address. Then any boot protocol that passes
+>> a screen_info in would get the frame buffer relocated on BAR remap.
+> 
+> We could consider a quirk that would mark any BAR that happened to
+> contain the frame buffer address as IORESOURCE_PCI_FIXED.  That would
+> (in theory, anyway) keep the PCI core from moving it.
 
-  - Make 'no_d3cold' persist for pci_dev. Once this is set through
-    pci_d3cold_enable/disable(), it will persist unless changed again using
-    the same functions. Those also handle setting and clearing 'bridge_d3'
-    as necessary.
+That's what I thought I should do at first. Then I realized that we
+could have a PCIe GPU in the system that provides a really big BAR which
+we would need to map into an mmio64 region to make full use of it.
+Firmware however - because of limitations - only maps it into the mmio32
+space though.
 
-  - Add kernel command line parameter "pcie_port_pm=off|force" that can
-    be used to forcibly disable/enable the feature.
+That means we now break a case that would work without efifb, right?
 
-  - Use runtime PM autosuspend instead of scheduling runtime suspend
-    manually
+> Is there any run-time EFI (or other firmware) dependency on the frame
+> buffer address?  If there is, things will break when we move it, even
+> if we have your notifier to tell efifb about it.
 
-  - Allow runtime PM always except when we are dealing with a hotplug
-    bridge. Actual checking whether the port can be suspended is done in
-    ->idle() and ->runtime_suspend() hooks based on 'bridge_d3'.
+Simple answer is no :).
 
-Changes to v2:
+>> Drivers like vesafb might benefit from this as well - though
+>> apparently x86 fixed this using ACPI.
+> 
+> Where is this x86 vesafb ACPI fix?  I don't see anything ACPI-related
+> in drivers/video/fbdev/vesafb.c.  I'm just curious what this fix looks
+> like.
 
-  - Renamed and split pci_enable_d3cold() into two functions
-    pci_d3cold_enable()/disable().
+I don't know of any - I haven't found the code that would actually
+prevent the same thing from happening on x86. Ard pointed to ACPI as the
+reason it works there. I couldn't really identify why though.
 
-  - Renamed pci_bridge_pm_update() into two functions
-    pci_bridge_d3_device_changed() and pci_bridge_d3_device_removed() that
-    should match better what they are doing.
+>> I'm not sure if offb could potentially also break. At the end of the
+>> day, it might, depending on how it's backed. For that we would then
+>> need another callback, since it doesn't use screen_info.
+> 
+> If firmware is giving us a bare address of something, that seems like
+> a clue that it might depend on that address staying the same.
 
-  - Propagate ->bridge_d3 change to upstream bridges in
-    pci_bridge_d3_update().
+Well, I'd look at it from the other side. It gives us a correct address
+on entry with the system configured at exactly the state it's in on
+entry. If Linux changes the system, some guarantees obviously don't work
+anymore.
 
-  - Removed pci_can_suspend() in favor of doing ->bridge_d3 check directly
-    in pci_pm_suspend_noirq().
+Whether something is still valid for runtime services is a different
+question and should get handled differently IMHO. In the EFI case, we
+know which memory regions are marked as runtime required. We could reuse
+the notifier there too to change the virtual runtime efi page tables to
+point to the new BAR address if an RTS MMIO region falls inside a BAR.
 
-  - Extend runtime PM enabling for ports that are using native PCIe
-    hotplug.
 
-  - Call pm_runtime_no_callbacks() for PCIe port service devices (the are
-    handled by the parent device).
-
-Changes to v1:
-
-  - Dropped patch [2/6] as there is no need to use that function from other
-    files anymore.
-
-  - Dropped patches [5-6/6] in favor of using cut-off date.
-
-  - Updated changelog of [1/4] to mention where in the PCI core PCI bridge
-    and PCIe ports are skipped from being power managed.
-
-  - Instead of checking at suspend time if it is possible to transition the
-    port to D3, do it whenever power management status of a device (below a
-    port) is changed or when it is added or removed to the bus.
-
-  - Added patch [3/4] to runtime resume a bridge when ACPI hotplug event is
-    received.
-
-Mika Westerberg (4):
-  PCI: No need to set d3cold_allowed to PCIe ports
-  PCI: Move PCIe ports to D3 during suspend
-  ACPI / hotplug / PCI: Runtime resume bridge before rescan
-  PCI: Add runtime PM support for PCIe ports
-
- Documentation/kernel-parameters.txt |   4 +
- drivers/pci/bus.c                   |   1 +
- drivers/pci/hotplug/acpiphp_glue.c  |   8 +-
- drivers/pci/pci-driver.c            |  10 +-
- drivers/pci/pci-sysfs.c             |   5 +
- drivers/pci/pci.c                   | 176 ++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h                   |   2 +
- drivers/pci/pcie/portdrv_core.c     |   2 +
- drivers/pci/pcie/portdrv_pci.c      |  52 ++++++++++-
- drivers/pci/remove.c                |   2 +
- drivers/usb/host/xhci-pci.c         |   2 +-
- include/linux/pci.h                 |   3 +
- 12 files changed, 257 insertions(+), 10 deletions(-)
-
--- 
-2.8.0.rc3
-
+Alex
