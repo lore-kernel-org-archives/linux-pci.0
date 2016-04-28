@@ -1,136 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f176.google.com ([209.85.192.176]:35220 "EHLO
-	mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030309AbcDMGpw (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 02:45:52 -0400
-Received: by mail-pf0-f176.google.com with SMTP id n1so28636562pfn.2
-        for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2016 23:45:52 -0700 (PDT)
-Subject: Re: [PATCH v8 09/45] powerpc/powernv: Simplify
- pnv_ioda_setup_pe_seg()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-10-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
-	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <570DEB13.10906@ozlabs.ru>
-Date: Wed, 13 Apr 2016 16:45:39 +1000
+Received: from mailout2.hostsharing.net ([83.223.90.233]:57942 "EHLO
+	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752316AbcD1OTj (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2016 10:19:39 -0400
+Date: Thu, 28 Apr 2016 16:22:16 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v4 4/4] PCI: Add runtime PM support for PCIe ports
+Message-ID: <20160428142216.GA18211@wunner.de>
+References: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1461578004-129094-5-git-send-email-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-10-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1461578004-129094-5-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/17/2016 02:43 PM, Gavin Shan wrote:
-> The original implementation of pnv_ioda_setup_pe_seg() configures
-> IO and M32 segments by separate logics, which can be merged by
-> by caching @segmap, @seg_size, @win in advance. This shouldn't
-> cause any behavioural changes.
- >
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> ---
->   arch/powerpc/platforms/powernv/pci-ioda.c | 62 ++++++++++++++-----------------
->   1 file changed, 28 insertions(+), 34 deletions(-)
->
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index 44cc5f3..fd7d382 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -2940,8 +2940,10 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
->   	struct pnv_phb *phb = hose->private_data;
->   	struct pci_bus_region region;
->   	struct resource *res;
-> -	int i, index;
-> -	int rc;
-> +	unsigned int segsize;
-> +	int *segmap, index, i;
-> +	uint16_t win;
-> +	int64_t rc;
->
->   	/*
->   	 * NOTE: We only care PCI bus based PE for now. For PCI
-> @@ -2958,23 +2960,9 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
->   		if (res->flags & IORESOURCE_IO) {
->   			region.start = res->start - phb->ioda.io_pci_base;
->   			region.end   = res->end - phb->ioda.io_pci_base;
-> -			index = region.start / phb->ioda.io_segsize;
-> -
-> -			while (index < phb->ioda.total_pe_num &&
-> -			       region.start <= region.end) {
-> -				phb->ioda.io_segmap[index] = pe->pe_number;
-> -				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-> -					pe->pe_number, OPAL_IO_WINDOW_TYPE, 0, index);
-> -				if (rc != OPAL_SUCCESS) {
-> -					pr_err("%s: OPAL error %d when mapping IO "
-> -					       "segment #%d to PE#%d\n",
-> -					       __func__, rc, index, pe->pe_number);
-> -					break;
-> -				}
-> -
-> -				region.start += phb->ioda.io_segsize;
-> -				index++;
-> -			}
-> +			segsize      = phb->ioda.io_segsize;
-> +			segmap       = phb->ioda.io_segmap;
-> +			win          = OPAL_IO_WINDOW_TYPE;
->   		} else if ((res->flags & IORESOURCE_MEM) &&
->   			   !pnv_pci_is_mem_pref_64(res->flags)) {
->   			region.start = res->start -
-> @@ -2983,23 +2971,29 @@ static void pnv_ioda_setup_pe_seg(struct pci_controller *hose,
->   			region.end   = res->end -
->   				       hose->mem_offset[0] -
->   				       phb->ioda.m32_pci_base;
-> -			index = region.start / phb->ioda.m32_segsize;
-> -
-> -			while (index < phb->ioda.total_pe_num &&
-> -			       region.start <= region.end) {
-> -				phb->ioda.m32_segmap[index] = pe->pe_number;
-> -				rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-> -					pe->pe_number, OPAL_M32_WINDOW_TYPE, 0, index);
-> -				if (rc != OPAL_SUCCESS) {
-> -					pr_err("%s: OPAL error %d when mapping M32 "
-> -					       "segment#%d to PE#%d",
-> -					       __func__, rc, index, pe->pe_number);
-> -					break;
-> -				}
-> +			segsize      = phb->ioda.m32_segsize;
-> +			segmap       = phb->ioda.m32_segmap;
-> +			win          = OPAL_M32_WINDOW_TYPE;
-> +		} else {
-> +			continue;
-> +		}
->
-> -				region.start += phb->ioda.m32_segsize;
-> -				index++;
-> +		index = region.start / segsize;
-> +		while (index < phb->ioda.total_pe_num &&
-> +		       region.start <= region.end) {
-> +			segmap[index] = pe->pe_number;
-> +			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-> +					pe->pe_number, win, 0, index);
-> +			if (rc != OPAL_SUCCESS) {
-> +				pr_warn("%s: Error %lld mapping (%d) seg#%d to PHB#%d-PE#%d\n",
-> +					__func__, rc, win, index,
-> +					pe->phb->hose->global_number,
-> +					pe->pe_number);
-> +				break;
+Hi Mika,
 
-Please move this loop to a helper and stop caching segsize/segmap/win; this 
-will make the code easier to read and the next patch will look much cleaner 
-as it will not have to move this exact loop.
+I've rebased my Thunderbolt runtime pm patches on v4 of your patches
+and everything seems to still work fine. d3cold_allowed also works
+as it should now.
 
+As said I've amended my series to allow runtime pm on hotplug ports
+if they're Thunderbolt ports on a Mac:
+https://github.com/l1k/linux/commit/a6810db929485c7fc8677f265b1c68e31879ce61
 
->   			}
-> +
-> +			region.start += segsize;
-> +			index++;
->   		}
->   	}
->   }
->
+I've also reviewed the patches one more time and spotted only this
+small nit:
 
+On Mon, Apr 25, 2016 at 12:53:24PM +0300, Mika Westerberg wrote:
+> +static int pcie_port_runtime_resume(struct device *dev)
+> +{
+> +	pm_runtime_mark_last_busy(dev);
+> +	return 0;
+> +}
 
--- 
-Alexey
+The PM core seems to do this automatically, see rpm_resume():
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/base/power/runtime.c#n749
+
+So you could just drop the .runtime_resume entry here and it shouldn't
+result in any functional change:
+
+> @@ -101,6 +122,9 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+>  	.poweroff	= pcie_port_device_suspend,
+>  	.restore	= pcie_port_device_resume,
+>  	.resume_noirq	= pcie_port_resume_noirq,
+> +	.runtime_suspend = pcie_port_runtime_suspend,
+> +	.runtime_resume	= pcie_port_runtime_resume,
+> +	.runtime_idle	= pcie_port_runtime_idle,
+
+Best regards,
+
+Lukas
