@@ -1,99 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:34670 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756556AbcDMFwe (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 13 Apr 2016 01:52:34 -0400
-Received: by mail-pa0-f53.google.com with SMTP id ot11so27347824pab.1
-        for <linux-pci@vger.kernel.org>; Tue, 12 Apr 2016 22:52:34 -0700 (PDT)
-Subject: Re: [PATCH v8 03/45] powerpc/pci: Cleanup on struct
- pci_controller_ops
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-4-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, dja@axtens.net,
-	bhelgaas@google.com, robherring2@gmail.com, grant.likely@linaro.org
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <570DDE99.7070103@ozlabs.ru>
-Date: Wed, 13 Apr 2016 15:52:25 +1000
+Received: from mail.kernel.org ([198.145.29.136]:57175 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752159AbcD1OTZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Apr 2016 10:19:25 -0400
+Date: Thu, 28 Apr 2016 09:19:20 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: pci_ioremap_set_mem_type(), pci_remap_iospace()
+Message-ID: <20160428141920.GB12470@localhost>
+References: <20160427225827.GC17629@localhost>
 MIME-Version: 1.0
-In-Reply-To: <1455680668-23298-4-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=koi8-r; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160427225827.GC17629@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/17/2016 02:43 PM, Gavin Shan wrote:
-> Each PHB has one instance of "struct pci_controller_ops", which
-> includes various callbacks called by PCI subsystem. In the definition
-> of this struct, some callbacks have explicit names for its arguments,
-> but the left don't have.
+[+cc linux-pci, sorry, due to the @google.com DMARC hassles I can't reply
+directly to mail sent to bhelgaas@google.com or to helgaas@kernel.org
+(which is currently forwarded to bhelgaas@google.com).  I *can* reply to
+linux-pci mail because I have a non google.com account subscribed there.
+Sorry again, I know this is TMI.  I'm going to manually insert Thomas'
+response so I can respond.]
+
+Thomas Petazzoni wrote:
+> On Wed, Apr 27, 2016 at 05:58:27PM -0500, Bjorn Helgaas wrote:
+>> Hi Thomas & Liviu,
+>> 
+>> You added pci_ioremap_set_mem_type(int mem_type) with 1c8c3cf0b523
+>> ("ARM: 8060/1: mm: allow sub-architectures to override PCI I/O memory
+>> type").
+>> 
+>> I see this patch on the list: "[PATCH 3/3] ARM: mvebu: implement
+>> L2/PCIe deadlock workaround"
+>> (http://lists.infradead.org/pipermail/linux-arm-kernel/2014-March/242784.html)
+>> that does call pci_ioremap_set_mem_type(), but it doesn't look like
+>> that patch ever got merged.
+>> 
+>> Is it still useful to have pci_ioremap_set_mem_type() even though
+>> nobody calls it?
+
+> I am actually about to send a patch that makes use of it, I discussed
+> it with Arnd a few days ago / last week.
+> 
+> Essentially the story was the following. On Cortex-A9 based Marvell
+> SoCs, when HW I/O coherency is enabled, you need all non-RAM space to
+> be mapped strongly ordered. To this effect, I submitted this patch
+> series that introduces pci_ioremap_mem_type() to allow
+> platform-specific code to override the memory type used to map PCI I/O
+> space.
+> 
+> The reaction of Arnd after this patch series was to suggest that maybe
+> I should just change the memory type for all platforms, so I sent
+> another patch doing that.
+> 
+> But in the end, Russell merged the implementation of
+> pci_ioremap_mem_type() from the previous version of the patch series.
+> And the remaining patch fell through the cracks. Since PCI I/O is
+> rarely used these days, it wasn't noticed.
 >
-> This adds all explicit names of the arguments to the callbacks in
-> "struct pci_controller_ops" so that the code looks consistent.
->
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Reviewed-by: Daniel Axtens <dja@axtens.net>
+> But right now, I have this in my stack of patches to be sent:
+> ...
+> diff --git a/arch/arm/mach-mvebu/coherency.c b/arch/arm/mach-mvebu/coherency.c
+> index 7e989d6..2d1f06d 100644
+> --- a/arch/arm/mach-mvebu/coherency.c
+> +++ b/arch/arm/mach-mvebu/coherency.c
+> ...
+> @@ -186,7 +180,8 @@ static void __init armada_375_380_coherency_init(struct device_node *np)
+>         struct device_node *cache_dn;
+> 
+>         coherency_cpu_base = of_iomap(np, 0);
+> -       arch_ioremap_caller = armada_pcie_wa_ioremap_caller;
+> +       arch_ioremap_caller = armada_wa_ioremap_caller;
+> +       pci_ioremap_set_mem_type(MT_UNCACHED);
 
-With tiny nit below,
+This makes sense to me because I think this changes ioremap() to do
+the right thing.  But my concern is that ioremap_page_range() doesn't
+actually use ioremap(), so pci_ioremap_set_mem_type() has no effect on
+that path.  pci_remap_iospace() uses ioremap_page_range(), so I
+suspect it will use the wrong attributes.
 
-Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+>> I'm looking at the issue of how we ioremap memory-mapped ioport
+>> spaces, and pci_ioremap_mem_type is currently used in the arm-specific
+>> pci_ioremap_io():
+>> 
+>>   int pci_ioremap_io(unsigned int offset, phys_addr_t phys_addr)
+>>   {
+>>     BUG_ON(offset + SZ_64K > IO_SPACE_LIMIT);
+>> 
+>>     return ioremap_page_range(PCI_IO_VIRT_BASE + offset,
+>>                               PCI_IO_VIRT_BASE + offset + SZ_64K,
+>>                               phys_addr,
+>>                               __pgprot(get_mem_type(pci_ioremap_mem_type)->prot_pte));
+>>   }
+>> 
+>> Also, what about pci_remap_iospace(), added by 8b921acfeffd ("PCI: Add
+>> pci_remap_iospace() to map bus I/O resources")?
+>> 
+>>   int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+>>   {
+>>   #if defined(PCI_IOBASE) && defined(CONFIG_MMU)
+>>     unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
+>> 
+>>     if (!(res->flags & IORESOURCE_IO))
+>>       return -EINVAL;
+>> 
+>>     if (res->end > IO_SPACE_LIMIT)
+>>       return -EINVAL;
+>> 
+>>     return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
+>>                               pgprot_device(PAGE_KERNEL));
+>>     ...
 
+> Yes, I was also surprised to see two functions doing pretty much the
+> same, this probably needs to be refactored. There are 11 users of
+> pci_ioremap_io() (6 of them being Marvell related), and
+> pci_ioremap_io() is provided by ARM specific code.
+> 
+> On the other hand, pci_remap_iospace() is provided by
+> architecture-independent code, and use in 6 PCI controller drivers.
+> 
+> What about:
+> 
+>  1/ Providing an alternate version of pci_remap_iospace() that allows
+>     to pass the memory attribute to be used.
 
+I'd rather fix ioremap_page_range() somehow, because that's an
+exported interface, and if we only fix pci_remap_iospace(), we still
+have to worry about ioremap_page_range() doing the wrong thing.
 
-> ---
->   arch/powerpc/include/asm/pci-bridge.h | 13 +++++++------
->   1 file changed, 7 insertions(+), 6 deletions(-)
->
-> diff --git a/arch/powerpc/include/asm/pci-bridge.h b/arch/powerpc/include/asm/pci-bridge.h
-> index b688d04..4dd6ef4 100644
-> --- a/arch/powerpc/include/asm/pci-bridge.h
-> +++ b/arch/powerpc/include/asm/pci-bridge.h
-> @@ -21,18 +21,19 @@ struct pci_controller_ops {
->   	void		(*dma_dev_setup)(struct pci_dev *dev);
->   	void		(*dma_bus_setup)(struct pci_bus *bus);
->
-> -	int		(*probe_mode)(struct pci_bus *);
-> +	int		(*probe_mode)(struct pci_bus *bus);
->
->   	/* Called when pci_enable_device() is called. Returns true to
->   	 * allow assignment/enabling of the device. */
-> -	bool		(*enable_device_hook)(struct pci_dev *);
-> +	bool		(*enable_device_hook)(struct pci_dev *dev);
+>  2/ Convert all users of pci_ioremap_io() to pci_remap_iospace().
+> 
+>  3/ Get rid of pci_ioremap_io().
 
-
-"pdev" is slightly better as it is of the "pci_dev" type (4130 occurrences 
-of "pci_dev *pdev" and just 2833 of "pci_dev *dev" in the current kernel), 
-"dev" is for "struct device".
-
-
-
-
->
-> -	void		(*disable_device)(struct pci_dev *);
-> +	void		(*disable_device)(struct pci_dev *dev);
->
-> -	void		(*release_device)(struct pci_dev *);
-> +	void		(*release_device)(struct pci_dev *dev);
->
->   	/* Called during PCI resource reassignment */
-> -	resource_size_t (*window_alignment)(struct pci_bus *, unsigned long type);
-> +	resource_size_t (*window_alignment)(struct pci_bus *bus,
-> +					    unsigned long type);
->   	void		(*setup_bridge)(struct pci_bus *bus,
->   					unsigned long type);
->   	void		(*reset_secondary_bus)(struct pci_dev *dev);
-> @@ -46,7 +47,7 @@ struct pci_controller_ops {
->   	int             (*dma_set_mask)(struct pci_dev *dev, u64 dma_mask);
->   	u64		(*dma_get_required_mask)(struct pci_dev *dev);
->
-> -	void		(*shutdown)(struct pci_controller *);
-> +	void		(*shutdown)(struct pci_controller *hose);
->   };
->
->   /*
->
-
-
--- 
-Alexey
