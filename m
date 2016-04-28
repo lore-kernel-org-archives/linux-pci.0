@@ -1,146 +1,265 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:54187 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750760AbcD2IwM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 29 Apr 2016 04:52:12 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [PATCH v5 0/4] PCI: Add support for suspending (including runtime) of PCIe ports
-Date: Fri, 29 Apr 2016 11:51:55 +0300
-Message-Id: <1461919919-120102-1-git-send-email-mika.westerberg@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 28 Apr 2016 09:13:50 +0100
+From: Liviu.Dudau@arm.com
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Tomasz Nowicki <tn@semihalf.com>, arnd@arndb.de,
+	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+	hanjun.guo@linaro.org, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	ddaney@caviumnetworks.com, wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org, jcm@redhat.com
+Subject: Re: [PATCH V6 02/13] pci, acpi: Provide generic way to assign bus
+ domain number.
+Message-ID: <20160428081349.GU28464@e106497-lin.cambridge.arm.com>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <1460740008-19489-3-git-send-email-tn@semihalf.com>
+ <20160427022649.GD6789@localhost>
+ <20160427111758.GA6234@red-moon>
+ <20160427164453.GB17629@localhost>
+ <20160427173118.GA26653@red-moon>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160427173118.GA26653@red-moon>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current Linux PCI core does not do any kind of power management to PCIe
-ports. This means that we waste energy and consume laptop battery even if
-the port has nothing connected to. These patches aim to change that to the
-right direction.
+On Wed, Apr 27, 2016 at 06:31:29PM +0100, Lorenzo Pieralisi wrote:
+> On Wed, Apr 27, 2016 at 11:44:53AM -0500, Bjorn Helgaas wrote:
+> > On Wed, Apr 27, 2016 at 12:17:58PM +0100, Lorenzo Pieralisi wrote:
+> > > On Tue, Apr 26, 2016 at 09:26:49PM -0500, Bjorn Helgaas wrote:
+> > > > On Fri, Apr 15, 2016 at 07:06:37PM +0200, Tomasz Nowicki wrote:
+> > > > > As we now have valid PCI host bridge device reference we can
+> > > > > introduce code that is going to find its bus domain number using
+> > > > > ACPI _SEG method.
+> > > > > 
+> > > > > Note that _SEG method is optional, therefore _SEG absence means
+> > > > > that all PCI buses belong to domain 0.
+> > > > > 
+> > > > > While at it, for the sake of code clarity we put ACPI and DT domain
+> > > > > assign methods into the corresponding helpers.
+> > > > > 
+> > > > > Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> > > > > Reviewed-by: Liviu Dudau <Liviu.Dudau@arm.com>
+> > > > > Tested-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> > > > > Tested-by: Jeremy Linton <jeremy.linton@arm.com>
+> > > > > Tested-by: Duc Dang <dhdang@apm.com>
+> > > > > Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+> > > > > Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+> > > > > Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+> > > > > Tested-by: Sinan Kaya <okaya@codeaurora.org>
+> > > > > ---
+> > > > >  drivers/acpi/pci_root.c  | 18 ++++++++++++++++++
+> > > > >  drivers/pci/pci.c        | 11 +++++++++--
+> > > > >  include/linux/pci-acpi.h |  2 ++
+> > > > >  3 files changed, 29 insertions(+), 2 deletions(-)
+> > > > > 
+> > > > > diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> > > > > index 4581e0e..d9a70c4 100644
+> > > > > --- a/drivers/acpi/pci_root.c
+> > > > > +++ b/drivers/acpi/pci_root.c
+> > > > > @@ -419,6 +419,24 @@ out:
+> > > > >  }
+> > > > >  EXPORT_SYMBOL(acpi_pci_osc_control_set);
+> > > > >  
+> > > > > +int acpi_pci_bus_domain_nr(struct device *parent)
+> > 
+> > It looks like acpi_pci_bus_domain_nr() could be under #ifdef
+> > CONFIG_PCI_DOMAINS_GENERIC, right?
+> 
+> Yes it should.
+> 
+> > > > > +{
+> > > > > +	struct acpi_device *acpi_dev = to_acpi_device(parent);
+> > > > > +	unsigned long long segment = 0;
+> > > > > +	acpi_status status;
+> > > > > +
+> > > > > +	/*
+> > > > > +	 * If _SEG method does not exist, following ACPI spec (6.5.6)
+> > > > > +	 * all PCI buses belong to domain 0.
+> > > > > +	 */
+> > > > > +	status = acpi_evaluate_integer(acpi_dev->handle, METHOD_NAME__SEG, NULL,
+> > > > > +				       &segment);
+> > > > 
+> > > > We already have code in acpi_pci_root_add() to evaluate _SEG.  We
+> > > > don't want to evaluate it *twice*, do we?
+> > > > 
+> > > > I was sort of expecting that if you added it here, we'd remove the
+> > > > existing call, but it looks like you're keeping both?
+> > > 
+> > > We can't remove the existing call, since it is used on X86 and IA64
+> > > to store the segment number that, in the process, is used in their
+> > > pci_domain_nr() arch specific callback to retrieve the domain nr.
+> > > 
+> > > On ARM64, that selects PCI_DOMAINS_GENERIC, we have to find a way
+> > > to retrieve the domain number that is not arch dependent, since
+> > > this is generic code, we can't rely on any bus->sysdata format (unless
+> > > we do something like JC did below), therefore the only way is to call
+> > > the _SEG method *again* here, which also forced Tomasz to go through
+> > > the ACPI_COMPANION setting song and dance and pass the parent pointer
+> > > to pci_create_root_bus() (see patch 1), which BTW is a source of
+> > > trouble on its own as you noticed.
+> > > 
+> > > JC solved it differently, via sysdata and pseudo-generic code:
+> > > 
+> > > http://www.spinics.net/lists/arm-kernel/msg478167.html
+> > 
+> > The thing I don't like about this is the special case of checking
+> > parent and parent->of_node to figure out whether we should use the
+> > segment from ACPI and the fragility of depending on the fact that the
+> > companion hasn't been set yet.
+> > 
+> > > http://www.spinics.net/lists/arm-kernel/msg478169.html
+> > > 
+> > > I like neither, we need the lesser of two evils though.
+> > 
+> > Today we call pci_bus_assign_domain_nr() from the PCI core (from
+> > pci_create_root_bus()).  This is only implemented for
+> > PCI_DOMAINS_GENERIC, but even so, it fiddles around to figure out
+> > whether to get the domain from DT or to assign a new one.
+> > 
+> > That seems backwards to me.  The host bridge drivers already know
+> > where the domain should come from (ACPI _SEG, DT, etc.) and in the
+> > long term, I think they should be responsible for looking up or
+> > assigning a domain number *before* they call pci_create_root_bus().
+> 
+> Yes, the question still is how pci_create_root_bus() can get that
+> value (I am pretty certain this was heavily debated in the past, which
+> does not mean we can't give it another try).
 
-Previous versions of the patches can be found below:
+The main issue is that pci_create_root_bus() does a weird dance trying to
+figure out if the root bus hasn't been already allocated. It allocates a
+new bus, assigns a domain number and then it tries to find it in the list
+of already allocated busses. Because pci_alloc_bus() does not pass any
+additional information, pci_bus_assign_domain_nr() needs to try to guess
+where the barely initialised bus should live and give you back a number.
 
-  v1: http://www.spinics.net/lists/linux-pci/msg49313.html
-  v2: http://www.spinics.net/lists/linux-pci/msg50167.html
-  v3: http://www.spinics.net/lists/linux-pci/msg50345.html
-  v4: http://www.spinics.net/lists/linux-pci/msg50665.html
+Simplifying the creation of root busses to be the job of the host bridges
+would greatly simplify the code as well.
 
-This assumes that recent (starting from 2015) PCIe ports are capable of
-transition to D3hot/D3cold. We add a new flag to struct pci_dev 'bridge_d3'
-that is set whenever the PCI core thinks the port can be put to D3. The
-check in pci_pm_suspend_noirq() is then extended to cover devices where
-'bridge_d3' is set.
+Best regards,
+Liviu
 
-We then add two new functions pci_bridge_d3_device_changed/removed(). These
-are used to set and clear 'bridge_d3' whenever there is a change in device
-power management policy (or if the device is removed). For example when
-userspace forbids the device to enter D3cold pci_bridge_d3_device_changed()
-will clear 'bridge_d3' of the upstream bridge.
-
-For all PCI ports where 'bridge_d3' is set we also enable and unblock
-runtime PM automatically. Only exception is when the PCIe port claims to
-support hotplug. More information about that is in the changelog of
-patch [4/4].
-
-Since this also touches xhci, I'm adding Mathias and Greg to check if the
-change looks reasonable.
-
-Changes to v4:
-
-  - Use "Put PCIe ports into D3" instead of "move" in subject and comments.
-
-  - Add new helper function pci_power_manageable() and use it to check if
-    the port can be suspended instead of open-coding it everytime.
-
-  - Changed pci_dev_check_d3cold() to follow what Rafael suggested.
-
-  - Dropped call to pm_runtime_mark_last_busy() in pcie_port_runtime_resume()
-    as PM core does that automatically when the function returns 0.
-
-  - Added ACKs from Rafael.
-
-Changes to v3:
-
-  - Make 'no_d3cold' persist for pci_dev. Once this is set through
-    pci_d3cold_enable/disable(), it will persist unless changed again using
-    the same functions. Those also handle setting and clearing 'bridge_d3'
-    as necessary.
-
-  - Add kernel command line parameter "pcie_port_pm=off|force" that can
-    be used to forcibly disable/enable the feature.
-
-  - Use runtime PM autosuspend instead of scheduling runtime suspend
-    manually
-
-  - Allow runtime PM always except when we are dealing with a hotplug
-    bridge. Actual checking whether the port can be suspended is done in
-    ->idle() and ->runtime_suspend() hooks based on 'bridge_d3'.
-
-Changes to v2:
-
-  - Renamed and split pci_enable_d3cold() into two functions
-    pci_d3cold_enable()/disable().
-
-  - Renamed pci_bridge_pm_update() into two functions
-    pci_bridge_d3_device_changed() and pci_bridge_d3_device_removed() that
-    should match better what they are doing.
-
-  - Propagate ->bridge_d3 change to upstream bridges in
-    pci_bridge_d3_update().
-
-  - Removed pci_can_suspend() in favor of doing ->bridge_d3 check directly
-    in pci_pm_suspend_noirq().
-
-  - Extend runtime PM enabling for ports that are using native PCIe
-    hotplug.
-
-  - Call pm_runtime_no_callbacks() for PCIe port service devices (the are
-    handled by the parent device).
-
-Changes to v1:
-
-  - Dropped patch [2/6] as there is no need to use that function from other
-    files anymore.
-
-  - Dropped patches [5-6/6] in favor of using cut-off date.
-
-  - Updated changelog of [1/4] to mention where in the PCI core PCI bridge
-    and PCIe ports are skipped from being power managed.
-
-  - Instead of checking at suspend time if it is possible to transition the
-    port to D3, do it whenever power management status of a device (below a
-    port) is changed or when it is added or removed to the bus.
-
-  - Added patch [3/4] to runtime resume a bridge when ACPI hotplug event is
-    received.
-
-Mika Westerberg (4):
-  PCI: No need to set d3cold_allowed to PCIe ports
-  PCI: Put PCIe ports into D3 during suspend
-  ACPI / hotplug / PCI: Runtime resume bridge before rescan
-  PCI: Add runtime PM support for PCIe ports
-
- Documentation/kernel-parameters.txt |   4 +
- drivers/pci/bus.c                   |   1 +
- drivers/pci/hotplug/acpiphp_glue.c  |   8 +-
- drivers/pci/pci-driver.c            |   5 +-
- drivers/pci/pci-sysfs.c             |   5 ++
- drivers/pci/pci.c                   | 175 ++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h                   |  11 +++
- drivers/pci/pcie/portdrv_core.c     |   2 +
- drivers/pci/pcie/portdrv_pci.c      |  51 ++++++++++-
- drivers/pci/remove.c                |   2 +
- drivers/usb/host/xhci-pci.c         |   2 +-
- include/linux/pci.h                 |   3 +
- 12 files changed, 259 insertions(+), 10 deletions(-)
+> 
+> > > > > +	if (ACPI_FAILURE(status) && status != AE_NOT_FOUND)
+> > > > > +		dev_err(&acpi_dev->dev, "can't evaluate _SEG\n");
+> > > > > +
+> > > > > +	return segment;
+> > > > > +}
+> > > > > +
+> > > > >  static void negotiate_os_control(struct acpi_pci_root *root, int *no_aspm)
+> > > > >  {
+> > > > >  	u32 support, control, requested;
+> > > > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > > > > index 25e0327..1a74e87 100644
+> > > > > --- a/drivers/pci/pci.c
+> > > > > +++ b/drivers/pci/pci.c
+> > > > > @@ -19,6 +19,7 @@
+> > > > >  #include <linux/spinlock.h>
+> > > > >  #include <linux/string.h>
+> > > > >  #include <linux/log2.h>
+> > > > > +#include <linux/pci-acpi.h>
+> > > > >  #include <linux/pci-aspm.h>
+> > > > >  #include <linux/pm_wakeup.h>
+> > > > >  #include <linux/interrupt.h>
+> > > > > @@ -4779,7 +4780,7 @@ int pci_get_new_domain_nr(void)
+> > > > >  }
+> > > > >  
+> > > > >  #ifdef CONFIG_PCI_DOMAINS_GENERIC
+> > > > > -void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> > > > > +static int of_pci_bus_domain_nr(struct device *parent)
+> > > > >  {
+> > > > >  	static int use_dt_domains = -1;
+> > > > >  	int domain = -1;
+> > > > > @@ -4823,7 +4824,13 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> > > > >  		domain = -1;
+> > > > >  	}
+> > > > >  
+> > > > > -	bus->domain_nr = domain;
+> > > > > +	return domain;
+> > > > > +}
+> > > > > +
+> > > > > +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> > > > > +{
+> > > > > +	bus->domain_nr = acpi_disabled ? of_pci_bus_domain_nr(parent) :
+> > > > > +					 acpi_pci_bus_domain_nr(parent);
+> > 
+> > We have the pci_bus * here, so to_pci_host_bridge(bus->bridge) gives
+> > us the struct pci_host_bridge.  I can't remember why we put domain_nr
+> > in the struct pci_bus instead of in the struct pci_host_bridge.  It
+> > seems like pci_host_bridge is the more logical place for it, because
+> > every bus below the host bridge must have the same domain by
+> > definition.
+> > 
+> > Would it be feasible to either (a) move domain_nr to the
+> > pci_host_bridge, or (b) change acpi_pci_bus_domain_nr() so it uses the
+> > struct pci_bus * or the struct device * to find the struct
+> > acpi_pci_root where segment has already been stored by
+> > acpi_pci_root_add()?
+> 
+> (b) is what JC implemented even though it works differently for
+> different hosts since it all depends on what's in bus->sysdata.
+> 
+> It can certainly be done in a generic way (that works on X86 and IA64
+> too), let's give it more thought.
+> 
+> > Another wrinkle is the quirk added by 1f09b09b4de0 ("x86/PCI: Ignore
+> > _SEG on HP xw9300").  x86 doesn't use PCI_DOMAINS_GENERIC yet, so this
+> > patch wouldn't break it, but I hope x86 can use PCI_DOMAINS_GENERIC in
+> > the future, and then it will be a problem if we evaluate _SEG again.
+> 
+> Yes, I share your concern here and I thought about that, if that's the
+> end goal let's find a solution that works across arches (or we temporarily
+> use JC's code and we then generalize it).
+> 
+> Thanks,
+> Lorenzo
+> 
+> > 
+> > > > >  }
+> > > > >  #endif
+> > > > >  #endif
+> > > > > diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+> > > > > index 89ab057..a72e22d 100644
+> > > > > --- a/include/linux/pci-acpi.h
+> > > > > +++ b/include/linux/pci-acpi.h
+> > > > > @@ -22,6 +22,7 @@ static inline acpi_status pci_acpi_remove_pm_notifier(struct acpi_device *dev)
+> > > > >  {
+> > > > >  	return acpi_remove_pm_notifier(dev);
+> > > > >  }
+> > > > > +extern int acpi_pci_bus_domain_nr(struct device *parent);
+> > > > >  extern phys_addr_t acpi_pci_root_get_mcfg_addr(acpi_handle handle);
+> > > > >  
+> > > > >  static inline acpi_handle acpi_find_root_bridge_handle(struct pci_dev *pdev)
+> > > > > @@ -109,6 +110,7 @@ extern const u8 pci_acpi_dsm_uuid[];
+> > > > >  #else	/* CONFIG_ACPI */
+> > > > >  static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
+> > > > >  static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
+> > > > > +static inline int acpi_pci_bus_domain_nr(struct device *parent) { return -1; }
+> > > > >  #endif	/* CONFIG_ACPI */
+> > > > >  
+> > > > >  #ifdef CONFIG_ACPI_APEI
+> > > > > -- 
+> > > > > 1.9.1
+> > > > > 
+> > > > > --
+> > > > > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > > > 
+> > 
+> 
 
 -- 
-2.8.0.rc3
-
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
