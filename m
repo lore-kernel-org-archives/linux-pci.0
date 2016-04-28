@@ -1,245 +1,491 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37933 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932559AbcDHA1h (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 7 Apr 2016 20:27:37 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 59/60] PCI: Don't set flags to 0 when assign resource fail
-Date: Thu,  7 Apr 2016 17:16:12 -0700
-Message-Id: <1460074573-7481-60-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:51366 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751932AbcD1SvK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Apr 2016 14:51:10 -0400
+Date: Thu, 28 Apr 2016 13:51:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCHv3] pcie: Add driver for Downstream Port Containment
+Message-ID: <20160428185103.GB25125@localhost>
+References: <1461863358-12496-1-git-send-email-keith.busch@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1461863358-12496-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We want to keep resource flags instead of clearing it after resource
-allocation fails.
+Hi Keith,
 
-Make flags take IORESOURCE_UNSET | IORESOURCE_DISABLED instead.
+On Thu, Apr 28, 2016 at 11:09:18AM -0600, Keith Busch wrote:
+> This adds driver support for root and downstream ports that implement
+> the PCI-Express Downstream Port Containment extended capability. DPC is
+> an optional capability to contain uncorrectable errors below a port.
+> 
+> When a DPC event is triggered, the h/w disables downstream links, so
+> the DPC driver schedules removal for all devices below this port. This
+> may happen concurrently with a PCI-e hotplug driver if enabled. When all
+> downstream devices are removed and the link state transitions to disabled,
+> the DPC driver clears the DPC status and interrupt bits so the link may
+> retrain for a newly connected device.
+> 
+> The pcie device naming is updated to accomodate the additional service
+> driver. From Lukas Wunner <lukas@wunner.de>:
+> 
+> The names of port service devices previously used one nibble to encode
+> the port type and another nibble to encode the service type. Since this
+> commit introduces a fifth service type, it changes device names to use
+> one *byte* to encode the service type. E.g. a hotplug port service on a
+> downstream bridge was previously called pcie24 and is now called pcie204.
 
--v2: add missing UNSET for _alt retore to required path.
+Can you include a pointer to the DPC spec here?
 
-Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/bus.c       |  2 +-
- drivers/pci/setup-bus.c | 45 +++++++++++++++++++++++----------------------
- drivers/pci/setup-res.c |  3 ++-
- 3 files changed, 26 insertions(+), 24 deletions(-)
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> Cc: Lukas Wunner <lukas@wunner.de>
+> ---
+> v2 -> v3:
+> 
+>   Device naming fixes and changelog from Lukas.
+> 
+>   Using tristate for driver instead of boolean, and update Kconfig
+>   description.
+> 
+>  drivers/pci/pcie/Kconfig        |   1 +
+>  drivers/pci/pcie/Makefile       |   1 +
+>  drivers/pci/pcie/dpc/Kconfig    |  18 ++++
+>  drivers/pci/pcie/dpc/Makefile   |   5 ++
+>  drivers/pci/pcie/dpc/dpcdrv.c   | 182 ++++++++++++++++++++++++++++++++++++++++
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 200fdac..f357fb8 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -142,7 +142,7 @@ static int pci_bus_alloc_from_region(struct pci_bus *bus, struct resource *res,
- 	pci_bus_for_each_resource(bus, r, i) {
- 		resource_size_t min_used = min;
- 
--		if (!r)
-+		if (!r || resource_disabled(r))
- 			continue;
- 
- 		/* type_mask must match */
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index c77c204..d07ba87 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -263,13 +263,6 @@ static void __dev_assign_resources_prepare(struct pci_dev *dev,
- 	pdev_assign_resources_prepare(dev, realloc_head, head);
- }
- 
--static inline void reset_resource(struct resource *res)
--{
--	res->start = 0;
--	res->end = 0;
--	res->flags = 0;
--}
--
- static void sort_resources(struct list_head *head)
- {
- 	struct pci_dev_resource *res1, *tmp_res, *res2;
-@@ -336,7 +329,7 @@ static void reassign_resources_sorted(struct list_head *realloc_head,
- 			res->start = align;
- 			res->end = res->start + add_size - 1;
- 			if (pci_assign_resource(add_res->dev, idx))
--				reset_resource(res);
-+				res->flags |= IORESOURCE_DISABLED;
- 		} else {
- 			/* could just assigned with alt, add difference ? */
- 			resource_size_t size;
-@@ -390,7 +383,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 		    pci_assign_resource(dev_res->dev, idx)) {
- 			if (fail_head)
- 				add_to_list(fail_head, dev_res->dev, res);
--			reset_resource(res);
-+			res->flags |= IORESOURCE_DISABLED;
- 		}
- 	}
- }
-@@ -676,7 +669,7 @@ static void __assign_resources_alt_sorted(struct list_head *head,
- 
- 		if (!res_to_dev_res(local_fail_head, res))
- 			add_to_list(local_fail_head, fail_res->dev, res);
--		reset_resource(res);
-+		res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
- 	}
- 	free_list(&local_alt_fail_head);
- }
-@@ -842,7 +835,7 @@ static void pci_setup_bridge_io(struct pci_dev *bridge)
- 	/* Set up the top and bottom of the PCI I/O segment for this bus. */
- 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 0];
- 	pcibios_resource_to_bus(bridge->bus, &region, res);
--	if (res->flags & IORESOURCE_IO) {
-+	if ((res->flags & IORESOURCE_IO) && !(res->flags & IORESOURCE_UNSET)) {
- 		pci_read_config_word(bridge, PCI_IO_BASE, &l);
- 		io_base_lo = (region.start >> 8) & io_mask;
- 		io_limit_lo = (region.end >> 8) & io_mask;
-@@ -872,7 +865,8 @@ static void pci_setup_bridge_mmio(struct pci_dev *bridge)
- 	/* Set up the top and bottom of the PCI Memory segment for this bus. */
- 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 1];
- 	pcibios_resource_to_bus(bridge->bus, &region, res);
--	if (res->flags & IORESOURCE_MEM) {
-+	if ((res->flags & IORESOURCE_MEM) &&
-+	    !(res->flags & IORESOURCE_UNSET)) {
- 		l = (region.start >> 16) & 0xfff0;
- 		l |= region.end & 0xfff00000;
- 		dev_info(&bridge->dev, "  bridge window %pR\n", res);
-@@ -897,7 +891,8 @@ static void pci_setup_bridge_mmio_pref(struct pci_dev *bridge)
- 	bu = lu = 0;
- 	res = &bridge->resource[PCI_BRIDGE_RESOURCES + 2];
- 	pcibios_resource_to_bus(bridge->bus, &region, res);
--	if (res->flags & IORESOURCE_PREFETCH) {
-+	if ((res->flags & IORESOURCE_PREFETCH) &&
-+	    !(res->flags & IORESOURCE_UNSET)) {
- 		l = (region.start >> 16) & 0xfff0;
- 		l |= region.end & 0xfff00000;
- 		if (res->flags & IORESOURCE_MEM_64) {
-@@ -1027,6 +1022,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
- 
- 	b_res = &bridge->resource[PCI_BRIDGE_RESOURCES];
- 	b_res[1].flags |= IORESOURCE_MEM;
-+	b_res[1].flags &= ~IORESOURCE_DISABLED;
- 
- 	pci_read_config_word(bridge, PCI_IO_BASE, &io);
- 	if (!io) {
-@@ -1034,8 +1030,10 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
- 		pci_read_config_word(bridge, PCI_IO_BASE, &io);
- 		pci_write_config_word(bridge, PCI_IO_BASE, 0x0);
- 	}
--	if (io)
-+	if (io) {
- 		b_res[0].flags |= IORESOURCE_IO;
-+		b_res[0].flags &= ~IORESOURCE_DISABLED;
-+	}
- 
- 	/*  DECchip 21050 pass 2 errata: the bridge may miss an address
- 	    disconnect boundary by one PCI data phase.
-@@ -1052,6 +1050,7 @@ static void pci_bridge_check_ranges(struct pci_bus *bus)
- 	}
- 	if (pmem) {
- 		b_res[2].flags |= IORESOURCE_MEM | IORESOURCE_PREFETCH;
-+		b_res[2].flags &= ~IORESOURCE_DISABLED;
- 		if ((pmem & PCI_PREF_RANGE_TYPE_MASK) ==
- 		    PCI_PREF_RANGE_TYPE_64) {
- 			b_res[2].flags |= IORESOURCE_MEM_64;
-@@ -1197,8 +1196,10 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 			struct resource *r = &dev->resource[i];
- 			unsigned long r_size, r_add_size;
- 
--			if (r->parent || !(r->flags & IORESOURCE_IO))
-+			if (r->parent || !(r->flags & IORESOURCE_IO) ||
-+			    resource_disabled(r))
- 				continue;
-+
- 			r_size = resource_size(r);
- 
- 			if (r_size < 0x400)
-@@ -1239,7 +1240,7 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 		if (b_res->start || b_res->end)
- 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
- 				 b_res, &bus->busn_res);
--		b_res->flags = 0;
-+		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
- 		return;
- 	}
- 
-@@ -1532,7 +1533,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			if (r->parent || (flags & IORESOURCE_PCI_FIXED) ||
- 			    ((flags & mask) != type &&
- 			     (flags & mask) != type2 &&
--			     (flags & mask) != type3))
-+			     (flags & mask) != type3) ||
-+			    resource_disabled(r))
- 				continue;
- 
- 			r_size = resource_size(r);
-@@ -1553,7 +1555,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 			if (align > (1ULL<<37)) { /*128 Gb*/
- 				dev_warn(&dev->dev, "disabling BAR %d: %pR (bad alignment %#llx)\n",
- 					i, r, (unsigned long long) align);
--				r->flags = 0;
-+				r->flags |= IORESOURCE_UNSET |
-+					    IORESOURCE_DISABLED;
- 				continue;
- 			}
- 
-@@ -1650,7 +1653,7 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		if (b_res->start || b_res->end)
- 			dev_info(&bus->self->dev, "disabling bridge window %pR to %pR (unused)\n",
- 				 b_res, &bus->busn_res);
--		b_res->flags = 0;
-+		b_res->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
- 		return 0;
- 	}
- 
-@@ -2110,7 +2113,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 		/* keep the old size */
- 		r->end = resource_size(r) - 1;
- 		r->start = 0;
--		r->flags = 0;
-+		r->flags |= IORESOURCE_UNSET | IORESOURCE_DISABLED;
- 
- 		/* avoiding touch the one without PREF */
- 		if (type & IORESOURCE_PREFETCH)
-@@ -2379,7 +2382,6 @@ again:
- 
- 		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
--			res->flags = 0;
- 			/* last or third times and later */
- 			if (tried_times + 1 == pci_try_num ||
- 			    tried_times + 1 > 2)
-@@ -2463,7 +2465,6 @@ again:
- 
- 		restore_resource(fail_res, res);
- 		if (fail_res->dev->subordinate) {
--			res->flags = 0;
- 			/* last time */
- 			reset_bridge_resource_size(fail_res->dev, res);
- 		}
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 2f901f7..a3e683d 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -377,7 +377,8 @@ int pci_enable_resources(struct pci_dev *dev, int mask)
- 
- 		r = &dev->resource[i];
- 
--		if (!(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)))
-+		if (!(r->flags & (IORESOURCE_IO | IORESOURCE_MEM)) ||
-+		    resource_disabled(r))
- 			continue;
- 		if ((i == PCI_ROM_RESOURCE) &&
- 				(!(r->flags & IORESOURCE_ROM_ENABLE)))
--- 
-1.8.4.5
+Seems overkill to add a new directory for a single file.  Can you just
+put it in drivers/pci/pcie and fold the Makefile and Kconfig changes
+into the existing files?
 
+The module is named "dpcdrv" -- that will show up in lsmod and oops
+output, and I'm not sure that's as helpful as it could be.  The "drv"
+part doesn't really say anything useful, and there's no hint about it
+being PCI-related.  Maybe "pcie-dpc"?
+
+>  drivers/pci/pcie/portdrv.h      |   4 +-
+>  drivers/pci/pcie/portdrv_acpi.c |   2 +-
+>  drivers/pci/pcie/portdrv_core.c |   6 +-
+>  include/linux/pcieport_if.h     |   2 +
+>  include/uapi/linux/pci_regs.h   |  27 +++++-
+>  10 files changed, 242 insertions(+), 6 deletions(-)
+>  create mode 100644 drivers/pci/pcie/dpc/Kconfig
+>  create mode 100644 drivers/pci/pcie/dpc/Makefile
+>  create mode 100644 drivers/pci/pcie/dpc/dpcdrv.c
+> 
+> diff --git a/drivers/pci/pcie/Kconfig b/drivers/pci/pcie/Kconfig
+> index e294713..bd9fca7 100644
+> --- a/drivers/pci/pcie/Kconfig
+> +++ b/drivers/pci/pcie/Kconfig
+> @@ -23,6 +23,7 @@ config HOTPLUG_PCI_PCIE
+>  	  When in doubt, say N.
+>  
+>  source "drivers/pci/pcie/aer/Kconfig"
+> +source "drivers/pci/pcie/dpc/Kconfig"
+>  
+>  #
+>  # PCI Express ASPM
+> diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
+> index 00c62df..18604a6 100644
+> --- a/drivers/pci/pcie/Makefile
+> +++ b/drivers/pci/pcie/Makefile
+> @@ -12,5 +12,6 @@ obj-$(CONFIG_PCIEPORTBUS)	+= pcieportdrv.o
+>  
+>  # Build PCI Express AER if needed
+>  obj-$(CONFIG_PCIEAER)		+= aer/
+> +obj-$(CONFIG_PCIEDPC)		+= dpc/
+>  
+>  obj-$(CONFIG_PCIE_PME) += pme.o
+> diff --git a/drivers/pci/pcie/dpc/Kconfig b/drivers/pci/pcie/dpc/Kconfig
+> new file mode 100644
+> index 0000000..384202f
+> --- /dev/null
+> +++ b/drivers/pci/pcie/dpc/Kconfig
+> @@ -0,0 +1,18 @@
+> +#
+> +# PCI Express Device DPC Configuration
+> +#
+> +
+> +config PCIEDPC
+> +	tristate "PCI-e Downstream Port Containment support"
+> +	depends on PCIEPORTBUS
+> +	default n
+> +	help
+> +	  This enables PCI-Express Downstream Port Containment (DPC)
+
+s/PCI-e/PCIe/
+s/PCI-Express/PCI Express/ (you have both variants below)
+
+> +	  driver support. DPC events from Root and Downstream ports
+> +	  will be handled by the DPC driver. If your system doesn't
+> +	  have this capability or you do not want to use this feature,
+> +	  it is safe to answer N.
+> +
+> +	  To compile this driver as a module, choose M here: the module
+> +	  will be called dpcdrv.
+> +
+> diff --git a/drivers/pci/pcie/dpc/Makefile b/drivers/pci/pcie/dpc/Makefile
+> new file mode 100644
+> index 0000000..60273ec
+> --- /dev/null
+> +++ b/drivers/pci/pcie/dpc/Makefile
+> @@ -0,0 +1,5 @@
+> +#
+> +# Makefile for PCI-Express Downstream Port Containment Driver
+> +#
+> +
+> +obj-$(CONFIG_PCIEDPC) += dpcdrv.o
+> diff --git a/drivers/pci/pcie/dpc/dpcdrv.c b/drivers/pci/pcie/dpc/dpcdrv.c
+> new file mode 100644
+> index 0000000..8cba6ef
+> --- /dev/null
+> +++ b/drivers/pci/pcie/dpc/dpcdrv.c
+> @@ -0,0 +1,182 @@
+> +/*
+> + * PCI-Express Downstream Port Containment services driver
+> + * Copyright (C) 2016 Intel Corp.
+> + *
+> + * This file is subject to the terms and conditions of the GNU General Public
+> + * License.  See the file "COPYING" in the main directory of this archive
+> + * for more details.
+> + */
+> +
+> +#include <linux/delay.h>
+> +#include <linux/interrupt.h>
+> +#include <linux/module.h>
+> +#include <linux/pci.h>
+> +#include <linux/pcieport_if.h>
+> +
+> +struct event_info {
+> +	struct pcie_device *dev;
+> +	struct work_struct work;
+> +};
+> +
+> +static void dpc_wait_link_inactive(struct pci_dev *pdev)
+> +{
+> +	unsigned long timeout = jiffies + HZ;
+> +	u16 lnk_status;
+> +
+> +	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+> +	while (lnk_status & PCI_EXP_LNKSTA_DLLLA &&
+> +					!time_after(jiffies, timeout)) {
+> +		msleep(10);
+> +		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+> +	}
+> +	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
+> +		dev_warn(&pdev->dev, "Link state not disabled for DPC");
+> +}
+> +
+> +static void interrupt_event_handler(struct work_struct *work)
+> +{
+> +	int pos;
+> +
+> +	struct event_info *info = container_of(work, struct event_info, work);
+> +	struct pci_dev *dev, *temp, *pdev = info->dev->port;
+> +	struct pci_bus *parent = pdev->subordinate;
+> +
+> +	pci_lock_rescan_remove();
+> +	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+> +					 bus_list) {
+> +		pci_dev_get(dev);
+> +		pci_stop_and_remove_bus_device(dev);
+> +		pci_dev_put(dev);
+> +	}
+> +	pci_unlock_rescan_remove();
+> +
+> +	dpc_wait_link_inactive(pdev);
+> +
+> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
+> +	pci_write_config_word(pdev, pos + PCI_EXP_DPC_STATUS,
+> +		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
+> +
+> +	kfree(info);
+> +}
+> +
+> +static void dpc_queue_event(struct pcie_device *dev)
+> +{
+> +	struct event_info *info;
+> +
+> +	info = kmalloc(sizeof(*info), GFP_ATOMIC);
+
+Use kzalloc().  This should be a low-frequency path, and it's a hassle
+to verify that we initialize everything, and it's easy to add a field
+and forget to add the initializer.
+
+> +	if (!info) {
+> +		dev_warn(&dev->device, "dropped containment event\n");
+> +		return;
+> +	}
+> +
+> +	INIT_WORK(&info->work, interrupt_event_handler);
+> +	info->dev = dev;
+> +
+> +	schedule_work(&info->work);
+> +}
+> +
+> +static irqreturn_t dpc_irq(int irq, void *context)
+> +{
+> +	int pos;
+> +	u16 status, source;
+> +
+> +	struct pcie_device *dev = (struct pcie_device *)context;
+> +	struct pci_dev *pdev = dev->port;
+> +
+> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
+
+I think you should cache the capability offset at probe-time instead
+of searching for it every time you get an IRQ.  I know this is
+low-frequency also, so it's not a performance issue, but it just feels
+clunky.
+
+> +	pci_read_config_word(pdev, pos + PCI_EXP_DPC_STATUS, &status);
+> +	pci_read_config_word(pdev, pos + PCI_EXP_DPC_SOURCE_ID, &source);
+> +
+> +	if (!status)
+> +		return IRQ_NONE;
+> +
+> +	dev_warn(&dev->device, "dpc status:%04x source:%04x\n", status, source);
+
+Could use more informative text here.  This will show up in dmesg,
+followed by devices mysteriously (to the user) disappearing.
+
+> +
+> +	if (status & PCI_EXP_DPC_STATUS_TRIGGER)
+> +		dpc_queue_event(dev);
+> +
+> +	return IRQ_HANDLED;
+> +}
+> +
+> +#define FLAG(x, y)	(((x) & (y)) ? '+' : '-')
+> +
+> +static void dpc_enable_port(struct pcie_device *dev)
+
+Not sure splitting dpc_enable_port() and dpc_disable_port() out into
+their own functions is really worthwhile.  They're only called from
+one place, and the callers are trivial anyway.
+
+> +{
+> +	struct pci_dev *pdev = dev->port;
+> +	int pos;
+> +	u16 ctl, cap;
+> +
+> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
+> +	pci_read_config_word(pdev, pos + PCI_EXP_DPC_CAP, &cap);
+> +	pci_read_config_word(pdev, pos + PCI_EXP_DPC_CTL, &ctl);
+> +
+> +	ctl |= PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
+> +	pci_write_config_word(pdev, pos + PCI_EXP_DPC_CTL, ctl);
+> +
+> +	dev_info(&dev->device,
+> +		"DPC Int Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
+
+Maybe a more informative message here too?  "DPC error containment" or
+something?
+
+> +		cap & 0xf, FLAG(cap, PCI_EXP_DPC_CAP_RP_EXT),
+> +		FLAG(cap, PCI_EXP_DPC_CAP_POISONED_TLP),
+> +		FLAG(cap, PCI_EXP_DPC_CAP_SW_TRIGGER), (cap >> 8) & 0xf,
+> +		FLAG(cap, PCI_EXP_DPC_CAP_DL_ACTIVE));
+> +}
+> +
+> +static void dpc_disable_port(struct pcie_device *dev)
+> +{
+> +	struct pci_dev *pdev = dev->port;
+> +	int pos;
+> +	u16 ctl;
+> +
+> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_DPC);
+> +	pci_read_config_word(pdev, pos + PCI_EXP_DPC_CTL, &ctl);
+> +
+> +	ctl |= ~(PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN);
+> +	pci_write_config_word(pdev, pos + PCI_EXP_DPC_CTL, ctl);
+> +}
+> +
+> +static int dpc_probe(struct pcie_device *dev)
+> +{
+> +	int status;
+> +
+> +	status = request_irq(dev->irq, dpc_irq, IRQF_SHARED, "dpcdrv", dev);
+> +	if (status) {
+> +		dev_warn(&dev->device, "request IRQ failed\n");
+
+You have the IRQ, so why not include it in the warning message?
+
+> +		return status;
+> +	}
+> +	dpc_enable_port(dev);
+> +
+> +	return status;
+> +}
+> +
+> +static void dpc_remove(struct pcie_device *dev)
+> +{
+> +	dpc_disable_port(dev);
+> +	free_irq(dev->irq, dev);
+> +}
+> +
+> +static struct pcie_port_service_driver dpcdriver = {
+> +	.name		= "pciedpc",
+> +	.port_type	= PCI_EXP_TYPE_ROOT_PORT | PCI_EXP_TYPE_DOWNSTREAM,
+> +	.service	= PCIE_PORT_SERVICE_DPC,
+> +	.probe		= dpc_probe,
+> +	.remove		= dpc_remove,
+> +};
+> +
+> +static int __init dpc_service_init(void)
+> +{
+> +	/* XXX: Add kernel parameters to control PCIe DPC module */
+> +	return pcie_port_service_register(&dpcdriver);
+> +}
+> +
+> +static void __exit dpc_service_exit(void)
+> +{
+> +	pcie_port_service_unregister(&dpcdriver);
+> +}
+> +
+> +MODULE_DESCRIPTION("PCI Express Downstream Port Containment driver");
+> +MODULE_AUTHOR("Keith Busch <keith.busch@intel.com>");
+> +MODULE_LICENSE("GPL");
+> +MODULE_VERSION("0.1");
+> +
+> +module_init(dpc_service_init);
+> +module_exit(dpc_service_exit);
+> diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+> index d525548..7d82f6d 100644
+> --- a/drivers/pci/pcie/portdrv.h
+> +++ b/drivers/pci/pcie/portdrv.h
+> @@ -11,14 +11,14 @@
+>  
+>  #include <linux/compiler.h>
+>  
+> -#define PCIE_PORT_DEVICE_MAXSERVICES   4
+> +#define PCIE_PORT_DEVICE_MAXSERVICES   5
+>  /*
+>   * According to the PCI Express Base Specification 2.0, the indices of
+>   * the MSI-X table entries used by port services must not exceed 31
+>   */
+>  #define PCIE_PORT_MAX_MSIX_ENTRIES	32
+>  
+> -#define get_descriptor_id(type, service) (((type - 4) << 4) | service)
+> +#define get_descriptor_id(type, service) (((type - 4) << 8) | service)
+>  
+>  extern struct bus_type pcie_port_bus_type;
+>  int pcie_port_device_register(struct pci_dev *dev);
+> diff --git a/drivers/pci/pcie/portdrv_acpi.c b/drivers/pci/pcie/portdrv_acpi.c
+> index b4d2894..44296eb 100644
+> --- a/drivers/pci/pcie/portdrv_acpi.c
+> +++ b/drivers/pci/pcie/portdrv_acpi.c
+> @@ -51,7 +51,7 @@ int pcie_port_acpi_setup(struct pci_dev *port, int *srv_mask)
+>  
+>  	flags = root->osc_control_set;
+>  
+> -	*srv_mask = PCIE_PORT_SERVICE_VC;
+> +	*srv_mask = PCIE_PORT_SERVICE_VC | PCIE_PORT_SERVICE_DPC;
+>  	if (flags & OSC_PCI_EXPRESS_NATIVE_HP_CONTROL)
+>  		*srv_mask |= PCIE_PORT_SERVICE_HP;
+>  	if (flags & OSC_PCI_EXPRESS_PME_CONTROL)
+> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+> index 88122dc..2ab0f42 100644
+> --- a/drivers/pci/pcie/portdrv_core.c
+> +++ b/drivers/pci/pcie/portdrv_core.c
+> @@ -262,7 +262,7 @@ static int get_port_device_capability(struct pci_dev *dev)
+>  		return 0;
+>  
+>  	cap_mask = PCIE_PORT_SERVICE_PME | PCIE_PORT_SERVICE_HP
+> -			| PCIE_PORT_SERVICE_VC;
+> +			| PCIE_PORT_SERVICE_VC | PCIE_PORT_SERVICE_DPC;
+>  	if (pci_aer_available())
+>  		cap_mask |= PCIE_PORT_SERVICE_AER;
+>  
+> @@ -311,6 +311,8 @@ static int get_port_device_capability(struct pci_dev *dev)
+>  		 */
+>  		pcie_pme_interrupt_enable(dev, false);
+>  	}
+> +	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC))
+> +		services |= PCIE_PORT_SERVICE_DPC;
+>  
+>  	return services;
+>  }
+> @@ -338,7 +340,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
+>  	device = &pcie->device;
+>  	device->bus = &pcie_port_bus_type;
+>  	device->release = release_pcie_device;	/* callback to free pcie dev */
+> -	dev_set_name(device, "%s:pcie%02x",
+> +	dev_set_name(device, "%s:pcie%03x",
+>  		     pci_name(pdev),
+>  		     get_descriptor_id(pci_pcie_type(pdev), service));
+>  	device->parent = &pdev->dev;
+> diff --git a/include/linux/pcieport_if.h b/include/linux/pcieport_if.h
+> index 4f1089f..afcd130 100644
+> --- a/include/linux/pcieport_if.h
+> +++ b/include/linux/pcieport_if.h
+> @@ -21,6 +21,8 @@
+>  #define PCIE_PORT_SERVICE_HP		(1 << PCIE_PORT_SERVICE_HP_SHIFT)
+>  #define PCIE_PORT_SERVICE_VC_SHIFT	3	/* Virtual Channel */
+>  #define PCIE_PORT_SERVICE_VC		(1 << PCIE_PORT_SERVICE_VC_SHIFT)
+> +#define PCIE_PORT_SERVICE_DPC_SHIFT	4	/* Downstream Port Containment */
+> +#define PCIE_PORT_SERVICE_DPC		(1 << PCIE_PORT_SERVICE_DPC_SHIFT)
+>  
+>  struct pcie_device {
+>  	int		irq;	    /* Service IRQ/MSI/MSI-X Vector */
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 1becea8..c008294 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -670,7 +670,8 @@
+>  #define PCI_EXT_CAP_ID_SECPCI	0x19	/* Secondary PCIe Capability */
+>  #define PCI_EXT_CAP_ID_PMUX	0x1A	/* Protocol Multiplexing */
+>  #define PCI_EXT_CAP_ID_PASID	0x1B	/* Process Address Space ID */
+> -#define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PASID
+> +#define PCI_EXT_CAP_ID_DPC	0x1D	/* Downstream Port Containment */
+> +#define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_DPC
+>  
+>  #define PCI_EXT_CAP_DSN_SIZEOF	12
+>  #define PCI_EXT_CAP_MCAST_ENDPOINT_SIZEOF 40
+> @@ -946,4 +947,28 @@
+>  #define PCI_TPH_CAP_ST_SHIFT	16	/* st table shift */
+>  #define PCI_TPH_BASE_SIZEOF	12	/* size with no st table */
+>  
+> +/* Downstream Port Containment */
+> +#define PCI_EXP_DPC_CAP			4	/* DPC Capability */
+> +#define  PCI_EXP_DPC_CAP_RP_EXT		0x20	/* Root Port Extensions for DPC */
+> +#define  PCI_EXP_DPC_CAP_POISONED_TLP	0x40	/* Poisoned TLP Egress Blocking Supported */
+> +#define  PCI_EXP_DPC_CAP_SW_TRIGGER	0x80	/* Software Triggering Supported */
+> +#define  PCI_EXP_DPC_CAP_DL_ACTIVE	0x1000	/* ERR_COR signal on DL_Active supported */
+> +
+> +#define PCI_EXP_DPC_CTL			6	/* DPC control */
+> +#define  PCI_EXP_DPC_CTL_DISABLE 	0x00	/* Disable trigger */
+
+Only define the bits you're using.  Then it's a little easier to
+figure out whether something is supported by Linux.
+
+> +#define  PCI_EXP_DPC_CTL_EN_FATAL 	0x01	/* Enable trigger on ERR_FATAL message */
+> +#define  PCI_EXP_DPC_CTL_EN_NONFATAL 	0x02	/* Enable trigger on ERR_NONFATAL message */
+> +#define  PCI_EXP_DPC_CTL_UR 		0x04	/* Unsupported Request Completion Status */
+> +#define  PCI_EXP_DPC_CTL_INT_EN 	0x08	/* DPC Interrupt Enable */
+> +#define  PCI_EXP_DPC_CTL_ERR_COR_EN 	0x10	/* Enable ERRO_COR Message on DPC triggered */
+> +#define  PCI_EXP_DPC_CTL_POSIONED_TLP	0x20	/* Enabled Poisoned TLP Egress Blocking */
+
+And it helps avoid typos like this one (POSIONED :))
+
+> +#define  PCI_EXP_DPC_CTL_SW_T_EN	0x40	/* Trigger DPC Status */
+> +#define  PCI_EXP_DPC_CTL_DL_A_ERR_COR	0x80	/* Signal ER_COR on DL_Active */
+> +
+> +#define PCI_EXP_DPC_STATUS		8	/* DPC Status */
+> +#define  PCI_EXP_DPC_STATUS_TRIGGER	0x01	/* Trigger Status */
+> +#define  PCI_EXP_DPC_STATUS_INTERRUPT	0x08	/* Interrupt Status */
+> +
+> +#define PCI_EXP_DPC_SOURCE_ID		0x0A
+> +
+>  #endif /* LINUX_PCI_REGS_H */
+> -- 
+> 2.7.2
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
