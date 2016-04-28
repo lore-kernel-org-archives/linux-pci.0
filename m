@@ -1,123 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40760 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752900AbcDZSj5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 26 Apr 2016 14:39:57 -0400
-Date: Tue, 26 Apr 2016 13:39:52 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-acpi@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org, linux-pci@vger.kernel.org,
-	ravikanth.nalla@hpe.com, lenb@kernel.org, harish.k@hpe.com,
-	ashwin.reghunandanan@hpe.com, bhelgaas@google.com,
-	rjw@rjwysocki.net, Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Robert Moore <robert.moore@intel.com>,
-	Lv Zheng <lv.zheng@intel.com>, linux-kernel@vger.kernel.org,
-	devel@acpica.org
-Subject: Re: [PATCH V3 3/4] acpi,pci,irq: remove redundant code in
- acpi_irq_penalty_init
-Message-ID: <20160426183952.GE27803@localhost>
-References: <1460914617-8259-1-git-send-email-okaya@codeaurora.org>
- <1460914617-8259-3-git-send-email-okaya@codeaurora.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:38523 "EHLO
+	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752067AbcD1QCs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2016 12:02:48 -0400
+Date: Thu, 28 Apr 2016 18:05:26 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v4 4/4] PCI: Add runtime PM support for PCIe ports
+Message-ID: <20160428160526.GA18261@wunner.de>
+References: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1461578004-129094-5-git-send-email-mika.westerberg@linux.intel.com>
+ <20160428142216.GA18211@wunner.de>
+ <20160428151356.GF32610@lahna.fi.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460914617-8259-3-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <20160428151356.GF32610@lahna.fi.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 17, 2016 at 01:36:55PM -0400, Sinan Kaya wrote:
-> acpi_irq_get_penalty is now calculating the penalty on the fly now.
-> No need to maintain global list of penalties or calculate them
-> at the init time. Removing duplicate code in acpi_irq_penalty_init.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  arch/x86/pci/acpi.c         |  1 -
->  drivers/acpi/pci_link.c     | 36 ------------------------------------
->  include/acpi/acpi_drivers.h |  1 -
->  3 files changed, 38 deletions(-)
-> 
-> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-> index 3cd6983..b2a4e2a 100644
-> --- a/arch/x86/pci/acpi.c
-> +++ b/arch/x86/pci/acpi.c
-> @@ -396,7 +396,6 @@ int __init pci_acpi_init(void)
->  		return -ENODEV;
->  
->  	printk(KERN_INFO "PCI: Using ACPI for IRQ routing\n");
-> -	acpi_irq_penalty_init();
+Hi Mika,
 
-Yay!  Another x86-ism and init ordering issue gone!  Thanks for doing
-this!
-
->  	pcibios_enable_irq = acpi_pci_irq_enable;
->  	pcibios_disable_irq = acpi_pci_irq_disable;
->  	x86_init.pci.init_irq = x86_init_noop;
-> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-> index 12ea784..ab39208 100644
-> --- a/drivers/acpi/pci_link.c
-> +++ b/drivers/acpi/pci_link.c
-> @@ -520,42 +520,6 @@ static int acpi_irq_get_penalty(int irq)
->  	return penalty;
->  }
->  
-> -int __init acpi_irq_penalty_init(void)
-> -{
-> -	struct acpi_pci_link *link;
-> -	int i;
-> -
-> -	/*
-> -	 * Update penalties to facilitate IRQ balancing.
-> -	 */
-> -	list_for_each_entry(link, &acpi_link_list, list) {
-> -
-> -		/*
-> -		 * reflect the possible and active irqs in the penalty table --
-> -		 * useful for breaking ties.
-> -		 */
-> -		if (link->irq.possible_count) {
-> -			int penalty =
-> -			    PIRQ_PENALTY_PCI_POSSIBLE /
-> -			    link->irq.possible_count;
-> -
-> -			for (i = 0; i < link->irq.possible_count; i++) {
-> -				if (link->irq.possible[i] < ACPI_MAX_ISA_IRQS)
-> -					acpi_isa_irq_penalty[link->irq.
-> -							 possible[i]] +=
-> -					    penalty;
-> -			}
-> -
-> -		} else if (link->irq.active &&
-> -				(link->irq.active < ACPI_MAX_ISA_IRQS)) {
-> -			acpi_isa_irq_penalty[link->irq.active] +=
-> -			    PIRQ_PENALTY_PCI_POSSIBLE;
-> -		}
-> -	}
-> -
-> -	return 0;
-> -}
-> -
->  static int acpi_irq_balance = -1;	/* 0: static, 1: balance */
->  
->  static int acpi_pci_link_allocate(struct acpi_pci_link *link)
-> diff --git a/include/acpi/acpi_drivers.h b/include/acpi/acpi_drivers.h
-> index 29c6912..797ae2e 100644
-> --- a/include/acpi/acpi_drivers.h
-> +++ b/include/acpi/acpi_drivers.h
-> @@ -78,7 +78,6 @@
->  
->  /* ACPI PCI Interrupt Link (pci_link.c) */
->  
-> -int acpi_irq_penalty_init(void);
->  int acpi_pci_link_allocate_irq(acpi_handle handle, int index, int *triggering,
->  			       int *polarity, char **name);
->  int acpi_pci_link_free_irq(acpi_handle handle);
-> -- 
-> 1.8.2.1
+On Thu, Apr 28, 2016 at 06:13:56PM +0300, Mika Westerberg wrote:
+> On Thu, Apr 28, 2016 at 04:22:16PM +0200, Lukas Wunner wrote:
+> > As said I've amended my series to allow runtime pm on hotplug ports
+> > if they're Thunderbolt ports on a Mac:
+> > https://github.com/l1k/linux/commit/a6810db929485c7fc8677f265b1c68e31879ce61
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> If we are going to add more conditions, I think it makes sense to
+> introduce pcie_port_runtime_pm_possible() or similar which includes all
+> these checks.
+
+Initially I reintroduced that in my patch (bikeshedded the name to
+pcie_port_can_runtime_suspend() though ;) ), then decided to throw
+it away because I'm just adding a one-liner for Thunderbolt on Macs
+to the if-condition. Your call. :)
+
+If you decide to reintroduce it, you could use IS_ENABLED to avoid
+having to declare an additional inline stub that returns false, e.g.
+
+if (IS_ENABLED(CONFIG_PM) && pcie_port_can_runtime_suspend()) {
+	...
+	pm_runtime_allow(&dev->dev);
+}
+
+
+> > So you could just drop the .runtime_resume entry here and it shouldn't
+> > result in any functional change:
+> > 
+> > > @@ -101,6 +122,9 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+> > >  	.poweroff	= pcie_port_device_suspend,
+> > >  	.restore	= pcie_port_device_resume,
+> > >  	.resume_noirq	= pcie_port_resume_noirq,
+> > > +	.runtime_suspend = pcie_port_runtime_suspend,
+> > > +	.runtime_resume	= pcie_port_runtime_resume,
+> > > +	.runtime_idle	= pcie_port_runtime_idle,
+> 
+> Hmm, PM core calls pci_pm_runtime_resume() for PCI drivers which then
+> delegates to driver->runtime_resume() if set. However, if it is missing
+> it just returns -ENOSYS and does not put the device back to D0.
+> 
+> So if I'm reading this right we actually need to provide
+> pcie_port_runtime_resume().
+
+Ugh, you're right.
+
+Best regards,
+
+Lukas
