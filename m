@@ -1,130 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46377 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751522AbcDHUS7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 8 Apr 2016 16:18:59 -0400
-Date: Fri, 8 Apr 2016 14:18:57 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>,
-	linux-pci@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
-	David Woodhouse <dwmw2@infradead.org>,
-	iommu@lists.linux-foundation.org
-Subject: Re: [PATCH v4 1/6] PCI: Add pci_add_dma_alias() to abstract
- implementation
-Message-ID: <20160408141857.2dbcc8dd@t450s.home>
-In-Reply-To: <20160224194345.7585.20639.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160224193926.7585.10833.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-	<20160224194345.7585.20639.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 28 Apr 2016 10:12:12 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>, arnd@arndb.de,
+	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+	hanjun.guo@linaro.org, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+Subject: Re: [PATCH V6 02/13] pci, acpi: Provide generic way to assign bus
+ domain number.
+Message-ID: <20160428150815.GB15598@localhost>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <1460740008-19489-3-git-send-email-tn@semihalf.com>
+ <20160427022649.GD6789@localhost>
+ <20160427111758.GA6234@red-moon>
+ <20160427164453.GB17629@localhost>
+ <20160427173118.GA26653@red-moon>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160427173118.GA26653@red-moon>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 24 Feb 2016 13:43:45 -0600
-Bjorn Helgaas <bhelgaas@google.com> wrote:
+On Wed, Apr 27, 2016 at 06:31:29PM +0100, Lorenzo Pieralisi wrote:
+> On Wed, Apr 27, 2016 at 11:44:53AM -0500, Bjorn Helgaas wrote:
+> > On Wed, Apr 27, 2016 at 12:17:58PM +0100, Lorenzo Pieralisi wrote:
+> > > On Tue, Apr 26, 2016 at 09:26:49PM -0500, Bjorn Helgaas wrote:
+> > > > On Fri, Apr 15, 2016 at 07:06:37PM +0200, Tomasz Nowicki wrote:
 
-> From: Jacek Lawrynowicz <jacek.lawrynowicz@intel.com>
+
+> > Today we call pci_bus_assign_domain_nr() from the PCI core (from
+> > pci_create_root_bus()).  This is only implemented for
+> > PCI_DOMAINS_GENERIC, but even so, it fiddles around to figure out
+> > whether to get the domain from DT or to assign a new one.
+> > 
+> > That seems backwards to me.  The host bridge drivers already know
+> > where the domain should come from (ACPI _SEG, DT, etc.) and in the
+> > long term, I think they should be responsible for looking up or
+> > assigning a domain number *before* they call pci_create_root_bus().
 > 
-> Add a pci_add_dma_alias() interface to encapsulate the details of adding an
-> alias.  No functional change intended.
-> ---
->  drivers/pci/pci.c    |   14 ++++++++++++++
->  drivers/pci/pci.h    |    2 ++
->  drivers/pci/quirks.c |   19 +++++++------------
->  3 files changed, 23 insertions(+), 12 deletions(-)
+> Yes, the question still is how pci_create_root_bus() can get that
+> value (I am pretty certain this was heavily debated in the past, which
+> does not mean we can't give it another try).
+
+Right, we don't have a good mechanism for passing more info into
+pci_create_root_bus().  Maybe the caller could fill in a struct so we
+have a chance to extend it without having to change all the existing
+callers.
+
+I wonder if there's a design pattern we can copy, e.g., would
+something like the scsi_host_alloc(), scsi_add_host(),
+scsi_scan_host() model work here?
+
+> > > > > +void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+> > > > > +{
+> > > > > +	bus->domain_nr = acpi_disabled ? of_pci_bus_domain_nr(parent) :
+> > > > > +					 acpi_pci_bus_domain_nr(parent);
+> > 
+> > We have the pci_bus * here, so to_pci_host_bridge(bus->bridge) gives
+> > us the struct pci_host_bridge.  I can't remember why we put domain_nr
+> > in the struct pci_bus instead of in the struct pci_host_bridge.  It
+> > seems like pci_host_bridge is the more logical place for it, because
+> > every bus below the host bridge must have the same domain by
+> > definition.
+> > 
+> > Would it be feasible to either (a) move domain_nr to the
+> > pci_host_bridge, or (b) change acpi_pci_bus_domain_nr() so it uses the
+> > struct pci_bus * or the struct device * to find the struct
+> > acpi_pci_root where segment has already been stored by
+> > acpi_pci_root_add()?
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 602eb42..7fccc8a 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4568,6 +4568,20 @@ int pci_set_vga_state(struct pci_dev *dev, bool decode,
->  	return 0;
->  }
->  
-> +/**
-> + * pci_add_dma_alias - Add a DMA devfn alias for a device
-> + * @dev: the PCI device for which alias is added
-> + * @devfn: alias slot and function
-> + *
-> + * This helper encodes 8-bit devfn as bit number in dma_alias_mask.
-> + * It should be called early, preferably as PCI fixup header quirk.
-> + */
-> +void pci_add_dma_alias(struct pci_dev *dev, u8 devfn)
-> +{
-> +	dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 0);
-
-This should be:
-
-dev->dma_alias_devfn = devfn;
-
-It was silently fixed in 3/6.  Also needs a Sign-off.  With those
-changes:
-
-Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
-
-
-> +	dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-> +}
-> +
->  bool pci_device_is_present(struct pci_dev *pdev)
->  {
->  	u32 v;
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 9a1660f..c5dc8dc 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -335,4 +335,6 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
->  }
->  #endif
->  
-> +void pci_add_dma_alias(struct pci_dev *dev, u8 devfn);
-> +
->  #endif /* DRIVERS_PCI_H */
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 0575a1e..df28dce 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3581,10 +3581,8 @@ int pci_dev_specific_reset(struct pci_dev *dev, int probe)
->  
->  static void quirk_dma_func0_alias(struct pci_dev *dev)
->  {
-> -	if (PCI_FUNC(dev->devfn) != 0) {
-> -		dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 0);
-> -		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-> -	}
-> +	if (PCI_FUNC(dev->devfn) != 0)
-> +		pci_add_dma_alias(dev, PCI_DEVFN(PCI_SLOT(dev->devfn), 0));
->  }
->  
->  /*
-> @@ -3597,10 +3595,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_RICOH, 0xe476, quirk_dma_func0_alias);
->  
->  static void quirk_dma_func1_alias(struct pci_dev *dev)
->  {
-> -	if (PCI_FUNC(dev->devfn) != 1) {
-> -		dev->dma_alias_devfn = PCI_DEVFN(PCI_SLOT(dev->devfn), 1);
-> -		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-> -	}
-> +	if (PCI_FUNC(dev->devfn) != 1)
-> +		pci_add_dma_alias(dev, PCI_DEVFN(PCI_SLOT(dev->devfn), 1));
->  }
->  
->  /*
-> @@ -3667,11 +3663,10 @@ static void quirk_fixed_dma_alias(struct pci_dev *dev)
->  
->  	id = pci_match_id(fixed_dma_alias_tbl, dev);
->  	if (id) {
-> -		dev->dma_alias_devfn = id->driver_data;
-> -		dev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_DEVFN;
-> +		pci_add_dma_alias(dev, id->driver_data);
->  		dev_info(&dev->dev, "Enabling fixed DMA alias to %02x.%d\n",
-> -			 PCI_SLOT(dev->dma_alias_devfn),
-> -			 PCI_FUNC(dev->dma_alias_devfn));
-> +			 PCI_SLOT(id->driver_data),
-> +			 PCI_FUNC(id->driver_data));
->  	}
->  }
->  
+> (b) is what JC implemented even though it works differently for
+> different hosts since it all depends on what's in bus->sysdata.
 > 
+> It can certainly be done in a generic way (that works on X86 and IA64
+> too), let's give it more thought.
+> 
+> > Another wrinkle is the quirk added by 1f09b09b4de0 ("x86/PCI: Ignore
+> > _SEG on HP xw9300").  x86 doesn't use PCI_DOMAINS_GENERIC yet, so this
+> > patch wouldn't break it, but I hope x86 can use PCI_DOMAINS_GENERIC in
+> > the future, and then it will be a problem if we evaluate _SEG again.
+> 
+> Yes, I share your concern here and I thought about that, if that's the
+> end goal let's find a solution that works across arches (or we temporarily
+> use JC's code and we then generalize it).
 
+I would ultimately like all arches to use PCI_DOMAINS_GENERIC, because
+I don't think there's anything intrisically arch-specific about where
+we store the domain number.  The means of discovering or assigning a
+domain number might be arch-specific, but I think it would be cleanest
+if the host bridge driver handled that.
+
+Bjorn
