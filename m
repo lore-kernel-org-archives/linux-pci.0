@@ -1,169 +1,35 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 2/3] Revert "PCI: Add helpers to manage pci_dev->irq and
- pci_dev->irq_managed"
-To: stable@vger.kernel.org
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: =?utf-8?b?0J7Qu9C10LM=?= =?utf-8?b?0JzQvtGA0L7Qtw==?=
-	<oleg.moroz@mcc.vniiem.ru>, Joerg Roedel <jroedel@suse.de>,
-	"Rafael J. Wysocki" <rafael@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Sunjin Yang <fan4326@gmail.com>,
-	Rob Groner <rgroner@rtd.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Jiang Liu <jiang.liu@linux.intel.com>
-Date: Wed, 13 Apr 2016 00:57:12 -0500
-Message-ID: <20160413055711.6877.39138.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-In-Reply-To: <20160413055439.6877.68183.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-References: <20160413055439.6877.68183.stgit@bhelgaas-glaptop2.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga04.intel.com ([192.55.52.120]:6006 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751731AbcD1PDu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Apr 2016 11:03:50 -0400
+Date: Thu, 28 Apr 2016 18:03:12 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
+Subject: Re: [PATCH v4 2/4] PCI: Move PCIe ports to D3 during suspend
+Message-ID: <20160428150312.GE32610@lahna.fi.intel.com>
+References: <1461578004-129094-1-git-send-email-mika.westerberg@linux.intel.com>
+ <1461578004-129094-3-git-send-email-mika.westerberg@linux.intel.com>
+ <CAJZ5v0itrp_=KUo9kFHh8rSN5RYfPk0+iEgeAWZR5rrnFq-jDA@mail.gmail.com>
+ <20160428142519.GB18211@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160428142519.GB18211@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This reverts commit 811a4e6fce09bc9239c664c6a1a53645a678c303.
+On Thu, Apr 28, 2016 at 04:25:19PM +0200, Lukas Wunner wrote:
+> He had a helper for this in a prior version and removed it on my
+> suggestion. Sorry Mika, guess I caused you additional work there. :-/
 
-Revert 811a4e6fce09 ("PCI: Add helpers to manage pci_dev->irq and
-pci_dev->irq_managed").
-
-This is part of reverting 991de2e59090 ("PCI, x86: Implement
-pcibios_alloc_irq() and pcibios_free_irq()") to fix regressions it
-introduced.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=111211
-Fixes: 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq() and pcibios_free_irq()")
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Rafael J. Wysocki <rafael@kernel.org>
-CC: stable@vger.kernel.org	# v4.4
-CC: Jiang Liu <jiang.liu@linux.intel.com>
----
- arch/x86/pci/intel_mid_pci.c |    4 ++--
- arch/x86/pci/irq.c           |   10 ++++++----
- drivers/acpi/pci_irq.c       |   10 ++++++----
- include/linux/pci.h          |   17 -----------------
- 4 files changed, 14 insertions(+), 27 deletions(-)
-
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 0d24e7c..8826ff5 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -215,7 +215,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 	int polarity;
- 	int ret;
- 
--	if (pci_has_managed_irq(dev))
-+	if (dev->irq_managed && dev->irq > 0)
- 		return 0;
- 
- 	switch (intel_mid_identify_cpu()) {
-@@ -256,7 +256,7 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 
- static void intel_mid_pci_irq_disable(struct pci_dev *dev)
- {
--	if (pci_has_managed_irq(dev)) {
-+	if (dev->irq_managed && dev->irq > 0) {
- 		mp_unmap_irq(dev->irq);
- 		dev->irq_managed = 0;
- 		/*
-diff --git a/arch/x86/pci/irq.c b/arch/x86/pci/irq.c
-index 32e7034..72108f0 100644
---- a/arch/x86/pci/irq.c
-+++ b/arch/x86/pci/irq.c
-@@ -1202,7 +1202,7 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 			struct pci_dev *temp_dev;
- 			int irq;
- 
--			if (pci_has_managed_irq(dev))
-+			if (dev->irq_managed && dev->irq > 0)
- 				return 0;
- 
- 			irq = IO_APIC_get_PCI_irq_vector(dev->bus->number,
-@@ -1230,7 +1230,8 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 			}
- 			dev = temp_dev;
- 			if (irq >= 0) {
--				pci_set_managed_irq(dev, irq);
-+				dev->irq_managed = 1;
-+				dev->irq = irq;
- 				dev_info(&dev->dev, "PCI->APIC IRQ transform: "
- 					 "INT %c -> IRQ %d\n", 'A' + pin - 1, irq);
- 				return 0;
-@@ -1258,8 +1259,9 @@ static int pirq_enable_irq(struct pci_dev *dev)
- 
- static void pirq_disable_irq(struct pci_dev *dev)
- {
--	if (io_apic_assign_pci_irqs && pci_has_managed_irq(dev)) {
-+	if (io_apic_assign_pci_irqs && dev->irq_managed && dev->irq) {
- 		mp_unmap_irq(dev->irq);
--		pci_reset_managed_irq(dev);
-+		dev->irq = 0;
-+		dev->irq_managed = 0;
- 	}
- }
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index c933675..172b74d 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -409,7 +409,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 		return 0;
- 	}
- 
--	if (pci_has_managed_irq(dev))
-+	if (dev->irq_managed && dev->irq > 0)
- 		return 0;
- 
- 	entry = acpi_pci_irq_lookup(dev, pin);
-@@ -454,7 +454,8 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 		kfree(entry);
- 		return rc;
- 	}
--	pci_set_managed_irq(dev, rc);
-+	dev->irq = rc;
-+	dev->irq_managed = 1;
- 
- 	if (link)
- 		snprintf(link_desc, sizeof(link_desc), " -> Link[%s]", link);
-@@ -477,7 +478,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	u8 pin;
- 
- 	pin = dev->pin;
--	if (!pin || !pci_has_managed_irq(dev))
-+	if (!pin || !dev->irq_managed || dev->irq <= 0)
- 		return;
- 
- 	entry = acpi_pci_irq_lookup(dev, pin);
-@@ -499,6 +500,7 @@ void acpi_pci_irq_disable(struct pci_dev *dev)
- 	dev_dbg(&dev->dev, "PCI INT %c disabled\n", pin_name(pin));
- 	if (gsi >= 0) {
- 		acpi_unregister_gsi(gsi);
--		pci_reset_managed_irq(dev);
-+		dev->irq_managed = 0;
-+		dev->irq = 0;
- 	}
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 6ae25aa..1cca5d8 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -988,23 +988,6 @@ static inline int pci_is_managed(struct pci_dev *pdev)
- 	return pdev->is_managed;
- }
- 
--static inline void pci_set_managed_irq(struct pci_dev *pdev, unsigned int irq)
--{
--	pdev->irq = irq;
--	pdev->irq_managed = 1;
--}
--
--static inline void pci_reset_managed_irq(struct pci_dev *pdev)
--{
--	pdev->irq = 0;
--	pdev->irq_managed = 0;
--}
--
--static inline bool pci_has_managed_irq(struct pci_dev *pdev)
--{
--	return pdev->irq_managed && pdev->irq > 0;
--}
--
- void pci_disable_device(struct pci_dev *dev);
- 
- extern unsigned int pcibios_max_latency;
+No worries :-)
