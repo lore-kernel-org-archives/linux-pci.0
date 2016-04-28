@@ -1,203 +1,414 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:41632 "EHLO
-	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933812AbcDLS3x (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 14:29:53 -0400
-Date: Tue, 12 Apr 2016 20:32:02 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Andrew Worsley <amworsley@gmail.com>
-Cc: b43-dev@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-Message-ID: <20160412183202.GC13637@wunner.de>
-References: <E1akxli-00030z-BC@bombadil.infradead.org>
- <CA+Y=x3=cLDHc7PK5h9n=ixdgVKWdVSu_v+-7jHJ-vBnDrv4sgg@mail.gmail.com>
- <20160403114912.GA11540@wunner.de>
- <CA+Y=x3nfe7CniNhruOhGmdxY3g4B1n3YRVWChoVYJns7D8pNEg@mail.gmail.com>
- <CA+Y=x3mVrSKMgzy74xtO5ZOc5kYLYU=iKZgqyjn0j94bXoebjg@mail.gmail.com>
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:33161 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752546AbcD1NjE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 28 Apr 2016 09:39:04 -0400
+Date: Thu, 28 Apr 2016 15:38:58 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>,
+	Alexandre Courbot <gnurou@gmail.com>,
+	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH v5 2/2] PCI: tegra: Support per-lane PHYs
+Message-ID: <20160428133858.GA13916@ulmo.ba.sec>
+References: <1460991105-22861-1-git-send-email-thierry.reding@gmail.com>
+ <1460991105-22861-2-git-send-email-thierry.reding@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CA+Y=x3mVrSKMgzy74xtO5ZOc5kYLYU=iKZgqyjn0j94bXoebjg@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="CE+1k2dSO48ffgeK"
+In-Reply-To: <1460991105-22861-2-git-send-email-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Andrew,
 
-thank you for the extensive testing.
+--CE+1k2dSO48ffgeK
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Sun, Apr 10, 2016 at 08:09:29PM +1000, Andrew Worsley wrote:
-> Further testing Broadcom 4331 reset quirk to prevent IRQ storm patch
-> testing reveals that:
->   1. quirk is run on initial boot up and this time appears to have
-> vastly reduced the interrupts (only 81 this time):
-> cat /proc/interrupts| grep 17
->  17:         81          0          0          0          0          0
->          0          0   IO-APIC-fasteoi   snd_hda_intel
+On Mon, Apr 18, 2016 at 04:51:45PM +0200, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
+>=20
+> The current XUSB pad controller bindings are insufficient to describe
+> PHY devices attached to USB controllers. New bindings have been created
+> to overcome these restrictions. As a side-effect each root port now is
+> assigned a set of PHY devices, one for each lane associated with the
+> root port. This has the benefit of allowing fine-grained control of the
+> power management for each lane.
+>=20
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
+> ---
+> Changes in v5:
+> - fix power off sequence
+>=20
+> Changes in v4:
+> - propagate failure from PHY power on
+> - refactor PHY power off sequence
+>=20
+> Changes in v3:
+> - cache result of check for new PHY bindings usage (Stephen Warren)
+>=20
+> Changes in v2:
+> - rework commit message to more accurately describe this change
+>=20
+>  drivers/pci/host/pci-tegra.c | 243 +++++++++++++++++++++++++++++++++++++=
++++---
+>  1 file changed, 226 insertions(+), 17 deletions(-)
 
-Something in the ballpark of 81 interrupt requests is fine.
+Hi Bjorn,
 
-The kernel will print the error message about spurious interrupts and
-switch to polling at 100000 requests. But even 20000 is way too much.
-This just means that b43 loaded quickly enough to stop the interrupts
-before the kernel limit of 100000 was reached, but the wireless card
-wasn't reset early on as it should have been.
+still waiting for an Acked-by from you on this one so that I can take it
+into the Tegra tree because of the intertwined dependencies of a larger
+series.
 
-It looks like the patch didn't work at all on your machine for some
-reason. Do you see a message "cannot iomap device, IRQ storm ahead"
-in dmesg?
+I've been carrying this in a branch that feeds into linux-next and it's
+seen some good test coverage and works well. I can stabilize that branch
+and send it your way via a pull request.
 
-Included below is a slightly different patch which is based on the
-3.16.7-ckt tree (so it should apply cleanly to your kernel version).
-This version prints a message when the wireless card is reset. Please
-verify that you see the message "b43 quirk: resetting controller" in
-dmesg with this patch. This version of the patch also resets the card
-a bit earlier in the boot process than the previous version did.
-Please let me know if this improves the situation on your machine.
+Thanks,
+Thierry
 
-You might also want to try a newer kernel version, 3.16 is very old
-and I'm not sure if there have been any changes since which might
-negatively impact proper functioning of the patch. There are also
-official 4.4 kernels available for Jessie. Canonical ends support
-for the 3.16.y-ckt series anyway this month.
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index 68d1f41b3cbf..12d581130645 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -295,6 +295,7 @@ struct tegra_pcie {
+>  	struct reset_control *afi_rst;
+>  	struct reset_control *pcie_xrst;
+> =20
+> +	bool legacy_phy;
+>  	struct phy *phy;
+> =20
+>  	struct tegra_msi msi;
+> @@ -311,11 +312,14 @@ struct tegra_pcie {
+> =20
+>  struct tegra_pcie_port {
+>  	struct tegra_pcie *pcie;
+> +	struct device_node *np;
+>  	struct list_head list;
+>  	struct resource regs;
+>  	void __iomem *base;
+>  	unsigned int index;
+>  	unsigned int lanes;
+> +
+> +	struct phy **phys;
+>  };
+> =20
+>  struct tegra_pcie_bus {
+> @@ -860,6 +864,128 @@ static int tegra_pcie_phy_enable(struct tegra_pcie =
+*pcie)
+>  	return 0;
+>  }
+> =20
+> +static int tegra_pcie_phy_disable(struct tegra_pcie *pcie)
+> +{
+> +	const struct tegra_pcie_soc_data *soc =3D pcie->soc_data;
+> +	u32 value;
+> +
+> +	/* disable TX/RX data */
+> +	value =3D pads_readl(pcie, PADS_CTL);
+> +	value &=3D ~(PADS_CTL_TX_DATA_EN_1L | PADS_CTL_RX_DATA_EN_1L);
+> +	pads_writel(pcie, value, PADS_CTL);
+> +
+> +	/* override IDDQ */
+> +	value =3D pads_readl(pcie, PADS_CTL);
+> +	value |=3D PADS_CTL_IDDQ_1L;
+> +	pads_writel(pcie, PADS_CTL, value);
+> +
+> +	/* reset PLL */
+> +	value =3D pads_readl(pcie, soc->pads_pll_ctl);
+> +	value &=3D ~PADS_PLL_CTL_RST_B4SM;
+> +	pads_writel(pcie, value, soc->pads_pll_ctl);
+> +
+> +	usleep_range(20, 100);
+> +
+> +	return 0;
+> +}
+> +
+> +static int tegra_pcie_port_phy_power_on(struct tegra_pcie_port *port)
+> +{
+> +	struct device *dev =3D port->pcie->dev;
+> +	unsigned int i;
+> +	int err;
+> +
+> +	for (i =3D 0; i < port->lanes; i++) {
+> +		err =3D phy_power_on(port->phys[i]);
+> +		if (err < 0) {
+> +			dev_err(dev, "failed to power on PHY#%u: %d\n", i,
+> +				err);
+> +			return err;
+> +		}
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int tegra_pcie_port_phy_power_off(struct tegra_pcie_port *port)
+> +{
+> +	struct device *dev =3D port->pcie->dev;
+> +	unsigned int i;
+> +	int err;
+> +
+> +	for (i =3D 0; i < port->lanes; i++) {
+> +		err =3D phy_power_off(port->phys[i]);
+> +		if (err < 0) {
+> +			dev_err(dev, "failed to power off PHY#%u: %d\n", i,
+> +				err);
+> +			return err;
+> +		}
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int tegra_pcie_phy_power_on(struct tegra_pcie *pcie)
+> +{
+> +	struct tegra_pcie_port *port;
+> +	int err;
+> +
+> +	if (pcie->legacy_phy) {
+> +		if (pcie->phy)
+> +			err =3D phy_power_on(pcie->phy);
+> +		else
+> +			err =3D tegra_pcie_phy_enable(pcie);
+> +
+> +		if (err < 0)
+> +			dev_err(pcie->dev, "failed to power on PHY: %d\n", err);
+> +
+> +		return err;
+> +	}
+> +
+> +	list_for_each_entry(port, &pcie->ports, list) {
+> +		err =3D tegra_pcie_port_phy_power_on(port);
+> +		if (err < 0) {
+> +			dev_err(pcie->dev,
+> +				"failed to power on PCIe port %u PHY: %d\n",
+> +				port->index, err);
+> +			return err;
+> +		}
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int tegra_pcie_phy_power_off(struct tegra_pcie *pcie)
+> +{
+> +	struct tegra_pcie_port *port;
+> +	int err;
+> +
+> +	if (pcie->legacy_phy) {
+> +		if (pcie->phy)
+> +			err =3D phy_power_off(pcie->phy);
+> +		else
+> +			err =3D tegra_pcie_phy_disable(pcie);
+> +
+> +		if (err < 0)
+> +			dev_err(pcie->dev, "failed to power off PHY: %d\n",
+> +				err);
+> +
+> +		return err;
+> +	}
+> +
+> +	list_for_each_entry(port, &pcie->ports, list) {
+> +		err =3D tegra_pcie_port_phy_power_off(port);
+> +		if (err < 0) {
+> +			dev_err(pcie->dev,
+> +				"failed to power off PCIe port %u PHY: %d\n",
+> +				port->index, err);
+> +			return err;
+> +		}
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  static int tegra_pcie_enable_controller(struct tegra_pcie *pcie)
+>  {
+>  	const struct tegra_pcie_soc_data *soc =3D pcie->soc_data;
+> @@ -899,13 +1025,9 @@ static int tegra_pcie_enable_controller(struct tegr=
+a_pcie *pcie)
+>  		afi_writel(pcie, value, AFI_FUSE);
+>  	}
+> =20
+> -	if (!pcie->phy)
+> -		err =3D tegra_pcie_phy_enable(pcie);
+> -	else
+> -		err =3D phy_power_on(pcie->phy);
+> -
+> +	err =3D tegra_pcie_phy_power_on(pcie);
+>  	if (err < 0) {
+> -		dev_err(pcie->dev, "failed to power on PHY: %d\n", err);
+> +		dev_err(pcie->dev, "failed to power on PHY(s): %d\n", err);
+>  		return err;
+>  	}
+> =20
+> @@ -942,9 +1064,9 @@ static void tegra_pcie_power_off(struct tegra_pcie *=
+pcie)
+> =20
+>  	/* TODO: disable and unprepare clocks? */
+> =20
+> -	err =3D phy_power_off(pcie->phy);
+> +	err =3D tegra_pcie_phy_power_off(pcie);
+>  	if (err < 0)
+> -		dev_warn(pcie->dev, "failed to power off PHY: %d\n", err);
+> +		dev_err(pcie->dev, "failed to power off PHY(s): %d\n", err);
+> =20
+>  	reset_control_assert(pcie->pcie_xrst);
+>  	reset_control_assert(pcie->afi_rst);
+> @@ -1049,6 +1171,99 @@ static int tegra_pcie_resets_get(struct tegra_pcie=
+ *pcie)
+>  	return 0;
+>  }
+> =20
+> +static int tegra_pcie_phys_get_legacy(struct tegra_pcie *pcie)
+> +{
+> +	int err;
+> +
+> +	pcie->phy =3D devm_phy_optional_get(pcie->dev, "pcie");
+> +	if (IS_ERR(pcie->phy)) {
+> +		err =3D PTR_ERR(pcie->phy);
+> +		dev_err(pcie->dev, "failed to get PHY: %d\n", err);
+> +		return err;
+> +	}
+> +
+> +	err =3D phy_init(pcie->phy);
+> +	if (err < 0) {
+> +		dev_err(pcie->dev, "failed to initialize PHY: %d\n", err);
+> +		return err;
+> +	}
+> +
+> +	pcie->legacy_phy =3D true;
+> +
+> +	return 0;
+> +}
+> +
+> +static struct phy *devm_of_phy_optional_get_index(struct device *dev,
+> +						  struct device_node *np,
+> +						  const char *consumer,
+> +						  unsigned int index)
+> +{
+> +	struct phy *phy;
+> +	char *name;
+> +
+> +	name =3D kasprintf(GFP_KERNEL, "%s-%u", consumer, index);
+> +	if (!name)
+> +		return ERR_PTR(-ENOMEM);
+> +
+> +	phy =3D devm_of_phy_get(dev, np, name);
+> +	kfree(name);
+> +
+> +	if (IS_ERR(phy) && PTR_ERR(phy) =3D=3D -ENODEV)
+> +		phy =3D NULL;
+> +
+> +	return phy;
+> +}
+> +
+> +static int tegra_pcie_port_get_phys(struct tegra_pcie_port *port)
+> +{
+> +	struct device *dev =3D port->pcie->dev;
+> +	struct phy *phy;
+> +	unsigned int i;
+> +	int err;
+> +
+> +	port->phys =3D devm_kcalloc(dev, sizeof(phy), port->lanes, GFP_KERNEL);
+> +	if (!port->phys)
+> +		return -ENOMEM;
+> +
+> +	for (i =3D 0; i < port->lanes; i++) {
+> +		phy =3D devm_of_phy_optional_get_index(dev, port->np, "pcie", i);
+> +		if (IS_ERR(phy)) {
+> +			dev_err(dev, "failed to get PHY#%u: %ld\n", i,
+> +				PTR_ERR(phy));
+> +			return PTR_ERR(phy);
+> +		}
+> +
+> +		err =3D phy_init(phy);
+> +		if (err < 0) {
+> +			dev_err(dev, "failed to initialize PHY#%u: %d\n", i,
+> +				err);
+> +			return err;
+> +		}
+> +
+> +		port->phys[i] =3D phy;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int tegra_pcie_phys_get(struct tegra_pcie *pcie)
+> +{
+> +	struct tegra_pcie_port *port;
+> +	int err;
+> +
+> +	if (of_get_property(pcie->dev->of_node, "phys", NULL) !=3D NULL)
+> +		return tegra_pcie_phys_get_legacy(pcie);
+> +
+> +	list_for_each_entry(port, &pcie->ports, list) {
+> +		err =3D tegra_pcie_port_get_phys(port);
+> +		if (err < 0) {
+> +			return err;
+> +		}
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  static int tegra_pcie_get_resources(struct tegra_pcie *pcie)
+>  {
+>  	struct platform_device *pdev =3D to_platform_device(pcie->dev);
+> @@ -1067,16 +1282,9 @@ static int tegra_pcie_get_resources(struct tegra_p=
+cie *pcie)
+>  		return err;
+>  	}
+> =20
+> -	pcie->phy =3D devm_phy_optional_get(pcie->dev, "pcie");
+> -	if (IS_ERR(pcie->phy)) {
+> -		err =3D PTR_ERR(pcie->phy);
+> -		dev_err(&pdev->dev, "failed to get PHY: %d\n", err);
+> -		return err;
+> -	}
+> -
+> -	err =3D phy_init(pcie->phy);
+> +	err =3D tegra_pcie_phys_get(pcie);
+>  	if (err < 0) {
+> -		dev_err(&pdev->dev, "failed to initialize PHY: %d\n", err);
+> +		dev_err(&pdev->dev, "failed to get PHYs: %d\n", err);
+>  		return err;
+>  	}
+> =20
+> @@ -1752,6 +1960,7 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *p=
+cie)
+>  		rp->index =3D index;
+>  		rp->lanes =3D value;
+>  		rp->pcie =3D pcie;
+> +		rp->np =3D port;
+> =20
+>  		rp->base =3D devm_ioremap_resource(pcie->dev, &rp->regs);
+>  		if (IS_ERR(rp->base))
+> --=20
+> 2.8.0
+>=20
 
+--CE+1k2dSO48ffgeK
+Content-Type: application/pgp-signature; name="signature.asc"
 
-> Presently I have a grub work around for black screen as described here:
->   http://askubuntu.com/questions/264247/proprietary-nvidia-drivers-with-efi-on-mac-to-prevent-overheating/613573#613573
-> 
-> which basically involves adding a grub scriptlet to enable PCI-E bus
-> mastering on graphics cards:
-> 
-> In /etc/grub.d/01_enable_vga.conf:
-> 
-> setpci -s "00:01.0" 3e.b=8
-> setpci -s "01:00.0" 04.b=7
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-I think you need to upgrade to a newer version of the Nvidia driver,
-I have just verified that 352.63 will set the busmaster bit if it's
-cleared.
+iQIcBAABCAAGBQJXIhJyAAoJEN0jrNd/PrOhfA8P/i6l3XyjiWmv4NnvsMf1aJD5
+zMpApRD8d6y2bLetv9mFarPKoU2HnGrDMXCmsGEQTp7uryur+e+hHg+YFXRBpHha
+3xs7Fl7sNgFSa/Eg8cKkcAnuIOYRaGaaHbVqznnEoXWZip0xcrpjL+vo35KleJbw
+8Y4do81MtzQw5TUlWP75T+SLM9aR22NGN005/DRTza9uEs/1qXPpYGA3OOyYt1Js
+5LPv+5eyBnvabFJzes6SFHyJcq3fEa+CwubwrQ3JarXlcQMksCa3MPwQ/ancWplT
+xzFGL6Fc/2j3G/ER/TCRJ9RNIBuhk7JK/B5b0FLZCsfSvJwcXJwUl+TZntTY/3Bn
+W1y6BGDR3CB6UnYAn2WUZ24cYAjfPCMmUqTQcc2OwvicUikm4X2qA2UWQv0goz6C
+ZBRaM+P6WzTGBDO1oTfwrt5rKljBoq/V8bCxdKHf2QPngPexNUfYF2HY1P/vTs9t
+x/KePPiCJJNj7p0Wk1kuo5TG138pEwwKYlz4M1HiNlgOiJsawT3Ta6qrm56Jtfbt
+wfoCUa+QZ/10LQLXCUZ1dpXBb6Tid/u+Wp2FqSiVBFAuodIei0pPr4QR2rE7dGil
+VDDrp+G76tIGyWsE0nd8z8CMdZ+jNddpjef/CNYYK3BmzCRUNyvzLwRq+z75XJRN
+d0SVM8Vip3XTP6ARi7oK
+=2GBv
+-----END PGP SIGNATURE-----
 
-
-> Can we do some similar magic setpci commands to disable 04:00.0
-> which is my BCM4331
-
-I think grub is also able to write to mmio space of a PCI device,
-which is what's necessary to reset the wireless card, so theoretically
-yes, but the right place to fix this is in the kernel since not
-everyone is using grub.
-
-Best regards,
-
-Lukas
-
--- >8 --
-Subject: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-
-Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ storm
-on boot until they are reset, causing spurious interrupts if the IRQ is
-shared. Apparently the EFI bootloader enables the device and does not
-disable it before passing control to the OS. The bootloader contains a
-driver for the wireless card which allows it to phone home to Cupertino.
-This is used for Internet Recovery (download and install OS X images)
-and probably also for Back to My Mac (remote access, RFC 6281) and to
-discover stolen hardware.
-
-The issue is most pronounced on 2011 and 2012 MacBook Pros where the IRQ
-is shared with 3 other devices (Light Ridge Thunderbolt controller, SDXC
-reader, HDA card on discrete GPU). As soon as an interrupt handler is
-installed for one of these devices, the ensuing storm of spurious IRQs
-causes the kernel to disable the IRQ and switch to polling. This lasts
-until the b43 driver loads and resets the device.
-
-Loading the b43 driver first is not always an option, in particular with
-the Light Ridge Thunderbolt controller: The PCI hotplug IRQ handler gets
-installed early on because it is built in, unlike b43 which is usually
-a module.
-
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632
-Cc: <stable@vger.kernel.org>
-Tested-by: Lukas Wunner <lukas@wunner.de> [MacBookPro9,1]
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Acked-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/bcma_private.h |  2 --
- drivers/pci/quirks.c        | 28 ++++++++++++++++++++++++++++
- include/linux/bcma/bcma.h   |  1 +
- 3 files changed, 29 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 09b632a..7ded994 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -8,8 +8,6 @@
- #include <linux/bcma/bcma.h>
- #include <linux/delay.h>
- 
--#define BCMA_CORE_SIZE		0x1000
--
- #define bcma_err(bus, fmt, ...) \
- 	pr_err("bus%d: " fmt, (bus)->num, ##__VA_ARGS__)
- #define bcma_warn(bus, fmt, ...) \
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 1f5ea24..5a33924 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -25,6 +25,8 @@
- #include <linux/sched.h>
- #include <linux/ktime.h>
- #include <linux/mm.h>
-+#include <linux/bcma/bcma.h>
-+#include <linux/bcma/bcma_regs.h>
- #include <asm/dma.h>	/* isa_dma_bridge_buggy */
- #include "pci.h"
- 
-@@ -3082,6 +3084,32 @@ static void quirk_no_bus_reset(struct pci_dev *dev)
-  */
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0030, quirk_no_bus_reset);
- 
-+/*
-+ * Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ storm
-+ * on boot until they are reset, causing spurious interrupts if the IRQ is
-+ * shared. Apparently the EFI bootloader enables the device to phone home
-+ * to Cupertino and does not disable it before passing control to the OS.
-+ */
-+static void quirk_apple_b43_reset(struct pci_dev *dev)
-+{
-+	void __iomem *mmio;
-+
-+	if (!dmi_match(DMI_SYS_VENDOR, "Apple Inc.") || !dev->bus->self ||
-+	    pci_pcie_type(dev->bus->self) != PCI_EXP_TYPE_ROOT_PORT)
-+		return;
-+
-+	mmio = pci_iomap(dev, 0, 0);
-+	if (!mmio) {
-+		dev_err(&dev->dev, "b43 quirk: cannot iomap device, IRQ storm ahead\n");
-+		return;
-+	}
-+	dev_info(&dev->dev, "b43 quirk: resetting controller\n");
-+	iowrite32(BCMA_RESET_CTL_RESET,
-+		  mmio + (1 * BCMA_CORE_SIZE) + BCMA_RESET_CTL);
-+	pci_iounmap(dev, mmio);
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x4331, quirk_apple_b43_reset);
-+
- static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
- 			  struct pci_fixup *end)
- {
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 0b3bb16..b19c7ed 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -153,6 +153,7 @@ struct bcma_host_ops {
- #define BCMA_CORE_DEFAULT		0xFFF
- 
- #define BCMA_MAX_NR_CORES		16
-+#define BCMA_CORE_SIZE			0x1000
- 
- /* Chip IDs of PCIe devices */
- #define BCMA_CHIP_ID_BCM4313	0x4313
--- 
-1.8.5.2 (Apple Git-48)
-
+--CE+1k2dSO48ffgeK--
