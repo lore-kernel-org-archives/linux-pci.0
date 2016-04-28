@@ -1,348 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:21369 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752647AbcDNKEj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 14 Apr 2016 06:04:39 -0400
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
-	Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: [PATCH v3 2/4] PCI: Move PCIe ports to D3 during suspend
-Date: Thu, 14 Apr 2016 13:04:26 +0300
-Message-Id: <1460628268-16204-3-git-send-email-mika.westerberg@linux.intel.com>
-In-Reply-To: <1460628268-16204-1-git-send-email-mika.westerberg@linux.intel.com>
-References: <1460628268-16204-1-git-send-email-mika.westerberg@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 28 Apr 2016 10:45:17 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>, arnd@arndb.de,
+	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
+	hanjun.guo@linaro.org, okaya@codeaurora.org,
+	jiang.liu@linux.intel.com, jchandra@broadcom.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+Subject: Re: [PATCH V6 05/13] acpi, pci: Support IO resources when parsing
+ PCI host bridge resources.
+Message-ID: <20160428154517.GC15598@localhost>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <1460740008-19489-6-git-send-email-tn@semihalf.com>
+ <20160427023916.GF6789@localhost>
+ <20160427141429.GA7324@red-moon>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160427141429.GA7324@red-moon>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently the Linux PCI core does not touch power state of PCI bridges and
-PCIe ports when system suspend is entered. Leaving them in D0 consumes
-power which is not good thing in portable devices such as laptops. This may
-also prevent the CPU from entering deeper C-states.
+On Wed, Apr 27, 2016 at 03:26:59PM +0100, Lorenzo Pieralisi wrote:
+> On Tue, Apr 26, 2016 at 09:39:16PM -0500, Bjorn Helgaas wrote:
+> > On Fri, Apr 15, 2016 at 07:06:40PM +0200, Tomasz Nowicki wrote:
+> > > Platforms that have memory mapped IO port (such as ARM64) need special
+> > > handling for PCI I/O resources. For host bridge's resource probing case
+> > > these resources need to be fixed up with pci_register_io_range/pci_remap_iospace etc.
+> > 
+> > ia64 also has memory-mapped I/O port space.  It would be ideal to find
+> > some way to handle ia64 and ARM64 similarly.  At the very least, we
+> > have to make sure that this doesn't break ia64.  The ia64 dense/sparse
+> > I/O spaces complicate things; I don't know if ARM64 has something
+> > similar or not.
+> 
+> No it does not, and that's exactly the same problem we faced with
+> the DT generic version of of_pci_range_to_resource() which basically
+> relies on PCI_IOBASE to be defined to add code that creates IO port
+> resources out of the MMIO resource describing how IO port space is
+> mapped to MMIO (physical) address space.
 
-With recent PCIe hardware we can power down the ports to save power given
-that we take into account few restrictions:
+Mapping IO port space into MMIO space is pretty common since most
+arches don't have inb/outb instructions like x86 does.  Several arches
+(at least ia64 and parisc) have some sort of sparse mapping, but my
+point is that the "dense" mapping (one byte MMIO space per IO port) is
+pretty similar across arches.
 
-  - The PCIe port hardware is recent enough, starting from 2015.
+There are differences in how we compute the MMIO address from the IO
+port number, of course, e.g., on arm64 the CPU virtual MMIO address is
+a simple offset from the IO port number, i.e., "vaddr = PCI_IOBASE +
+res->start" in pci_remap_iospace(), while on ia64, that CPU address is
+less constrained, i.e., "vaddr = space->mmio_base | port" in
+__ia64_mk_io_addr().
 
-  - Devices connected to PCIe ports are effectively in D3cold once the port
-    is moved to D3 (the config space is not accessible anymore and the link
-    may be powered down).
+> IIRC everything hinges on PCI_IOBASE definition to make sure that
+> of_pci_range_to_resource() *works*, which means that if PCI_IOBASE is
+> not defined (ie IA64) that code - acpi_pci_root_remap_iospace() in this
+> case - does nothing.
 
-  - Devices behind the PCIe port need to be allowed to transition to D3cold
-    and back. There is a way both drivers and userspace can forbid this.
+OK.  That's confusing to read, but I see that it probably works.
 
-  - If the device behind the PCIe port is capable of waking the system it
-    needs to be able to do so from D3cold.
+> So acpi_pci_root_remap_iospace() is of_pci_range_to_resource() ACPI
+> equivalent + the pci_remap_iospace() call (I have to dig into the
+> logs to check why Liviu did not add a call to pci_remap_iospace()
+> in of_pci_get_host_bridge_resources() - I want to do that actually).
+> 
+> The point here is: IO space (in DT and ACPI) handling is arch specific.
+> 
+> For DT, by relying on PCI_IOBASE, we left that code in drivers/of and
+> it works (well, with some niggles - see the thread with Murali on IO
+> space on TI keystone) for ARM/ARM64.
+> 
+> http://www.spinics.net/lists/linux-pci/msg49725.html
+> 
+> What are we going to do with the ACPI version ?
+> 
+> Do we want to add an arch specific call that takes the raw resource
+> describing IO space and creates an IO port resource (and the MMIO
+> equivalent - that's what add_io_space() does in IA64) and use that
+> in generic ACPI parsing code ?
 
-This patch adds a new flag to struct pci_device called 'bridge_d3'. This
-flag is set and cleared by the PCI core whenever there is a change in power
-management state of any of the  devices behind the PCIe port. If the above
-restrictions are met we set 'bridge_d3' to true and transition the port to
-D3 when system is suspended.
+There's a lot of non-arch-specific stuff here, which is what's
+bothering me.  The arch-specific parts are:
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/pci/bus.c           |   1 +
- drivers/pci/pci-driver.c    |   7 +-
- drivers/pci/pci-sysfs.c     |   1 +
- drivers/pci/pci.c           | 156 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h           |   2 +
- drivers/pci/remove.c        |   2 +
- drivers/usb/host/xhci-pci.c |   2 +-
- include/linux/pci.h         |   3 +
- 8 files changed, 172 insertions(+), 2 deletions(-)
+  - discovering IO port region (bus address start and size)
+  - discovering MMIO mapping address and size (CPU "mem" resource)
+  - discovering or assigning IO port base (CPU "io" resource)
+  - setting up whatever structures arch uses to implement inb()
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 6c9f5467bc5f..b1738162d69a 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -291,6 +291,7 @@ void pci_bus_add_device(struct pci_dev *dev)
- 	pci_fixup_device(pci_fixup_final, dev);
- 	pci_create_sysfs_dev_files(dev);
- 	pci_proc_attach_device(dev);
-+	pci_bridge_d3_device_changed(dev);
- 
- 	dev->match_driver = true;
- 	retval = device_attach(&dev->dev);
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index d7ffd66814bb..0f55272fd27c 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -777,7 +777,12 @@ static int pci_pm_suspend_noirq(struct device *dev)
- 
- 	if (!pci_dev->state_saved) {
- 		pci_save_state(pci_dev);
--		if (!pci_has_subordinate(pci_dev))
-+		/*
-+		 * Check if given device can go to low power state. Currently
-+		 * we allow normal PCI devices and PCI bridges if their
-+		 * bridge_d3 is set.
-+		 */
-+		if (!pci_has_subordinate(pci_dev) || pci_dev->bridge_d3)
- 			pci_prepare_to_sleep(pci_dev);
- 	}
- 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index e982010f0ed1..518a4e1b5bcf 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -406,6 +406,7 @@ static ssize_t d3cold_allowed_store(struct device *dev,
- 		return -EINVAL;
- 
- 	pdev->d3cold_allowed = !!val;
-+	pci_bridge_d3_device_changed(pdev);
- 	pm_runtime_resume(dev);
- 
- 	return count;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 25e0327d4429..b2bc4c60bd26 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -9,6 +9,7 @@
- 
- #include <linux/kernel.h>
- #include <linux/delay.h>
-+#include <linux/dmi.h>
- #include <linux/init.h>
- #include <linux/of.h>
- #include <linux/of_pci.h>
-@@ -2156,6 +2157,160 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
- }
- 
- /**
-+ * pci_bridge_d3_possible - Is it possible to move the bridge to D3
-+ * @bridge: Bridge to check
-+ *
-+ * This function checks if it is possible to move the bridge to D3.
-+ * Currently we only allow D3 for recent enough PCIe ports.
-+ */
-+static bool pci_bridge_d3_possible(struct pci_dev *bridge)
-+{
-+	unsigned int year;
-+
-+	if (!pci_is_pcie(bridge))
-+		return false;
-+
-+	switch (pci_pcie_type(bridge)) {
-+	case PCI_EXP_TYPE_ROOT_PORT:
-+	case PCI_EXP_TYPE_UPSTREAM:
-+	case PCI_EXP_TYPE_DOWNSTREAM:
-+		/*
-+		 * PCIe ports from 2015 and newer should be capable of
-+		 * entering D3.
-+		 */
-+		if (dmi_get_date(DMI_BIOS_DATE, &year, NULL, NULL) &&
-+		    year >= 2015) {
-+			return true;
-+		}
-+		break;
-+	}
-+
-+	return false;
-+}
-+
-+static int pci_dev_check_d3cold(struct pci_dev *dev, void *data)
-+{
-+	bool *d3cold_ok = data;
-+
-+	/*
-+	 * The device needs to be allowed to go D3cold and if it is wake
-+	 * capable to do so from D3cold. If the device is bridge then it
-+	 * needs to have D3 allowed.
-+	 */
-+	if (dev->no_d3cold || !dev->d3cold_allowed)
-+		*d3cold_ok = false;
-+	if (device_may_wakeup(&dev->dev) && !pci_pme_capable(dev, PCI_D3cold))
-+		*d3cold_ok = false;
-+	if (pci_has_subordinate(dev) && !dev->bridge_d3)
-+		*d3cold_ok = false;
-+
-+	return !*d3cold_ok;
-+}
-+
-+/*
-+ * pci_bridge_d3_update - Update bridge D3 capabilities
-+ * @dev: PCI device which is changed
-+ * @remove: Is the device being removed
-+ *
-+ * Updates upstream bridge PM capabilities accordingly depending on if the
-+ * device PM configuration was changed or the device is being removed. The
-+ * change is also propagated upstream.
-+ */
-+static void pci_bridge_d3_update(struct pci_dev *dev, bool remove)
-+{
-+	struct pci_dev *bridge;
-+	bool d3cold_ok = true;
-+
-+	bridge = pci_upstream_bridge(dev);
-+	if (!bridge || !pci_bridge_d3_possible(bridge))
-+		return;
-+
-+	pci_dev_get(bridge);
-+	/*
-+	 * If the device is removed we do not care about its D3cold
-+	 * capabilities.
-+	 */
-+	if (!remove)
-+		pci_dev_check_d3cold(dev, &d3cold_ok);
-+
-+	if (d3cold_ok) {
-+		/*
-+		 * We need to go through all children to find out if all of
-+		 * them can still go to D3cold.
-+		 */
-+		pci_walk_bus(bridge->subordinate, pci_dev_check_d3cold,
-+			     &d3cold_ok);
-+	}
-+
-+	if (bridge->bridge_d3 != d3cold_ok) {
-+		bridge->bridge_d3 = d3cold_ok;
-+		/* Propagate change to upstream bridges */
-+		pci_bridge_d3_update(bridge, false);
-+	}
-+
-+	pci_dev_put(bridge);
-+}
-+
-+/**
-+ * pci_bridge_d3_device_changed - Update bridge D3 capabilities on change
-+ * @dev: PCI device that was changed
-+ *
-+ * If a device is added or its PM configuration, such as is it allowed to
-+ * enter D3cold, is changed this function updates upstream bridge PM
-+ * capabilities accordingly.
-+ */
-+void pci_bridge_d3_device_changed(struct pci_dev *dev)
-+{
-+	pci_bridge_d3_update(dev, false);
-+}
-+
-+/**
-+ * pci_bridge_d3_device_removed - Update bridge D3 capabilities on remove
-+ * @dev: PCI device being removed
-+ *
-+ * Function updates upstream bridge PM capabilities based on other devices
-+ * still left on the bus.
-+ */
-+void pci_bridge_d3_device_removed(struct pci_dev *dev)
-+{
-+	pci_bridge_d3_update(dev, true);
-+}
-+
-+/**
-+ * pci_d3cold_enable - Enable D3cold for device
-+ * @dev: PCI device to handle
-+ *
-+ * This function can be used in drivers to enable D3cold from the device
-+ * they handle. It also updates upstream PCI bridge PM capabilities
-+ * accordingly.
-+ */
-+void pci_d3cold_enable(struct pci_dev *dev)
-+{
-+	if (dev->no_d3cold) {
-+		dev->no_d3cold = false;
-+		pci_bridge_d3_device_changed(dev);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(pci_d3cold_enable);
-+
-+/**
-+ * pci_d3cold_disable - Disable D3cold for device
-+ * @dev: PCI device to handle
-+ *
-+ * This function can be used in drivers to disable D3cold from the device
-+ * they handle. It also updates upstream PCI bridge PM capabilities
-+ * accordingly.
-+ */
-+void pci_d3cold_disable(struct pci_dev *dev)
-+{
-+	if (!dev->no_d3cold) {
-+		dev->no_d3cold = true;
-+		pci_bridge_d3_device_changed(dev);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(pci_d3cold_disable);
-+
-+/**
-  * pci_pm_init - Initialize PM functions of given PCI device
-  * @dev: PCI device to handle.
-  */
-@@ -2189,6 +2344,7 @@ void pci_pm_init(struct pci_dev *dev)
- 	dev->pm_cap = pm;
- 	dev->d3_delay = PCI_PM_D3_WAIT;
- 	dev->d3cold_delay = PCI_PM_D3COLD_WAIT;
-+	dev->bridge_d3 = pci_bridge_d3_possible(dev);
- 	dev->d3cold_allowed = true;
- 
- 	dev->d1_support = false;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index d0fb93481573..78447935519d 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -82,6 +82,8 @@ void pci_pm_init(struct pci_dev *dev);
- void pci_ea_init(struct pci_dev *dev);
- void pci_allocate_cap_save_buffers(struct pci_dev *dev);
- void pci_free_cap_save_buffers(struct pci_dev *dev);
-+void pci_bridge_d3_device_changed(struct pci_dev *dev);
-+void pci_bridge_d3_device_removed(struct pci_dev *dev);
- 
- static inline void pci_wakeup_event(struct pci_dev *dev)
- {
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 8982026637d5..d1ef7acf6930 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -96,6 +96,8 @@ static void pci_remove_bus_device(struct pci_dev *dev)
- 		dev->subordinate = NULL;
- 	}
- 
-+	pci_bridge_d3_device_removed(dev);
-+
- 	pci_destroy_dev(dev);
- }
- 
-diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
-index f0640b7a1c42..427eba7bdf76 100644
---- a/drivers/usb/host/xhci-pci.c
-+++ b/drivers/usb/host/xhci-pci.c
-@@ -379,7 +379,7 @@ static int xhci_pci_suspend(struct usb_hcd *hcd, bool do_wakeup)
- 	 * need to have the registers polled during D3, so avoid D3cold.
- 	 */
- 	if (xhci->quirks & XHCI_COMP_MODE_QUIRK)
--		pdev->no_d3cold = true;
-+		pci_d3cold_disable(pdev);
- 
- 	if (xhci->quirks & XHCI_PME_STUCK_QUIRK)
- 		xhci_pme_quirk(hcd);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 004b8133417d..4efb2a7889eb 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -296,6 +296,7 @@ struct pci_dev {
- 	unsigned int	d2_support:1;	/* Low power state D2 is supported */
- 	unsigned int	no_d1d2:1;	/* D1 and D2 are forbidden */
- 	unsigned int	no_d3cold:1;	/* D3cold is forbidden */
-+	unsigned int	bridge_d3:1;	/* Allow D3 for bridge */
- 	unsigned int	d3cold_allowed:1;	/* D3cold is allowed by user */
- 	unsigned int	mmio_always_on:1;	/* disallow turning off io/mem
- 						   decoding during bar sizing */
-@@ -1085,6 +1086,8 @@ int pci_back_from_sleep(struct pci_dev *dev);
- bool pci_dev_run_wake(struct pci_dev *dev);
- bool pci_check_pme_status(struct pci_dev *dev);
- void pci_pme_wakeup_bus(struct pci_bus *bus);
-+void pci_d3cold_enable(struct pci_dev *dev);
-+void pci_d3cold_disable(struct pci_dev *dev);
- 
- static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
- 				  bool enable)
--- 
-2.8.0.rc3
-
+Once you have the CPU "mem" and "io" resources, the code to insert
+them into iomem_resource and ioport_resource and ioremap() the MMIO
+space should be pretty generic.  Right now that code is scattered
+through the arches and most of them don't do it correctly, e.g.,
+typically they don't request the "mem" resource.
