@@ -1,33 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35408 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:58584 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751181AbcDLEsy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 12 Apr 2016 00:48:54 -0400
-Date: Mon, 11 Apr 2016 23:48:52 -0500
+	id S1752205AbcD1Odm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 28 Apr 2016 10:33:42 -0400
+Date: Thu, 28 Apr 2016 09:33:32 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Yong, Jonathan" <jonathan.yong@intel.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [PATCH] PCI: PTM preliminary implementation
-Message-ID: <20160412044852.GD11361@localhost>
-References: <1458705848-26056-1-git-send-email-jonathan.yong@intel.com>
- <1458705848-26056-2-git-send-email-jonathan.yong@intel.com>
- <20160412042331.GA7907@localhost>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Liviu Dudau <Liviu.Dudau@arm.com>,
+	Russell King <linux@arm.linux.org.uk>,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Subject: Re: pci_ioremap_set_mem_type(), pci_remap_iospace()
+Message-ID: <20160428143332.GC12470@localhost>
+References: <20160427225827.GC17629@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160412042331.GA7907@localhost>
+In-Reply-To: <20160427225827.GC17629@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 11, 2016 at 11:23:31PM -0500, Bjorn Helgaas wrote:
+[+cc linux-pci, manually inserted reply, sorry again]
 
-> > --- a/include/uapi/linux/pci_regs.h
-> > +++ b/include/uapi/linux/pci_regs.h
-> > @@ -671,6 +671,7 @@
-> >  #define PCI_EXT_CAP_ID_PMUX	0x1A	/* Protocol Multiplexing */
-> >  #define PCI_EXT_CAP_ID_PASID	0x1B	/* Process Address Space ID */
-> >  #define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PASID
-> > +#define PCI_EXT_CAP_ID_PTM	0x1f	/* Precision Time Measurement */
-> 
-> Adjust PCI_EXT_CAP_ID_MAX.
+Liviu wrote:
+> On Wed, Apr 27, 2016 at 05:58:27PM -0500, Bjorn Helgaas wrote:
+>> Looking at __arm_ioremap_pfn_caller() makes me
+>> suspect that pci_remap_iospace() is not safe on arm.
 
-And follow hex capitalization style of existing code.
+> Hmm, not sure how you reached that conclusion. __arm_ioremap_pfn_caller()
+> does call in the end ioremap_page_range() for ARMv7 || ARM_LPAE, which is
+> what pci_remap_iospace() does as well. Beside the possibly different
+> pgprot_t values, what would make it unsafe for arm?
+
+The different pgprot_t is exactly what I'm worried about.  The callers of
+pci_ioremap_io() probably get the right thing (a pgprot tweaked to deal
+with this Cortex problem), but other callers of ioremap_page_range(),
+pci_remap_iospace() in particular, don't get that tweak:
+
+  pci_ioremap_io
+    ioremap_page_range(..., __pgprot(get_mem_type(pci_ioremap_mem_type)->prot_pte))
+
+  pci_remap_iospace
+    ioremap_page_range(..., pgprot_device(PAGE_KERNEL))
+      ioremap_pud_range(..., pgprot_device(PAGE_KERNEL))
+        ioremap_pmd_range(..., pgprot_device(PAGE_KERNEL))
+          ioremap_pte_range(..., pgprot_device(PAGE_KERNEL))
+            set_pte_at(..., pfn_pte(pfn, pgprot_device(PAGE_KERNEL)))
