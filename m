@@ -1,55 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:34365 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752285AbcDJKyX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 10 Apr 2016 06:54:23 -0400
-Received: by mail-ig0-f170.google.com with SMTP id gy3so63131456igb.1
-        for <linux-pci@vger.kernel.org>; Sun, 10 Apr 2016 03:54:23 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <201604101000.oQktaJEg%fengguang.wu@intel.com>
-References: <1460238624-2086-1-git-send-email-zajec5@gmail.com>
-	<201604101000.oQktaJEg%fengguang.wu@intel.com>
-Date: Sun, 10 Apr 2016 12:54:22 +0200
-Message-ID: <CACna6rzz+j6GONeh31xOfX+MuHERxAz9z9fREwZXp2=7Xodknw@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: iproc: Support DT property for ignoring aborts
- when probing
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: kbuild test robot <lkp@intel.com>
-Cc: kbuild-all@01.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mout.kundenserver.de ([212.227.17.10]:60428 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752412AbcD2XCY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2016 19:02:24 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: catalin.marinas@arm.com, linux-pci@vger.kernel.org,
+	will.deacon@arm.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>, ddaney@caviumnetworks.com,
+	robert.richter@caviumnetworks.com, msalter@redhat.com,
+	Liviu.Dudau@arm.com, jchandra@broadcom.com,
+	linux-kernel@vger.kernel.org, hanjun.guo@linaro.org,
+	Suravee.Suthikulpanit@amd.com,
+	Thierry Reding <thierry.reding@gmail.com>
+Subject: [RFC] experimental pci_register_host API
+Date: Sat, 30 Apr 2016 01:01:36 +0200
+Message-Id: <1461970899-4150603-1-git-send-email-arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10 April 2016 at 04:59, kbuild test robot <lkp@intel.com> wrote:
-> [auto build test ERROR on pci/next]
-> [also build test ERROR on v4.6-rc2 next-20160408]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
->
-> url:    https://github.com/0day-ci/linux/commits/Rafa-Mi-ecki/PCI-iproc-Support-DT-property-for-ignoring-aborts-when-probing/20160410-055241
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
-> config: arm-allmodconfig (attached as .config)
-> reproduce:
->         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # save the attached .config to linux build tree
->         make.cross ARCH=arm
->
-> All errors (new ones prefixed by >>):
->
->>> ERROR: "hook_fault_code" [drivers/pci/host/pcie-iproc.ko] undefined!
+As mentioned in another thread, I have tried to come up with
+a way to make the PCI host driver registration more flexible
+and simpler.
 
-Oh, it seems  hook_fault_code is not an exported SYMBOL and can't be
-used when building iproc as module.
+We have actually discussed this multiple times in the past,
+but always ended up elsewhere, so this is a proof of concept
+work, leaving all the existing interfaces in place, and
+adding a way to allocate a pci_host_bridge structure from
+a driver and register that after filling out all the interesting
+fields.
 
-Any idea how to resolve this problem?
+This is not tested at all, and certainly not meant for
+inclusion until the concept has been discussed better.
 
--- 
-Rafał
+Please have a look.
+
+        Arnd
+
+[PATCH 1/3] [RFC] pci: add new method for register PCI hosts
+[PATCH 2/3] [RFC] pci: host-common: use new pci_register_host
+[PATCH 3/3] [RFC] pci: tegra: use new pci_register_host interface
+
