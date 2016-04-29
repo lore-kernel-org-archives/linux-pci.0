@@ -1,148 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:40477 "EHLO
-	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932894AbcDLRtx (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 12 Apr 2016 13:49:53 -0400
-Date: Tue, 12 Apr 2016 19:52:03 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH v2 4/4] PCI: Add runtime PM support for PCIe ports
-Message-ID: <20160412175203.GB13637@wunner.de>
-References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
- <1460111790-92836-5-git-send-email-mika.westerberg@linux.intel.com>
+Received: from mga03.intel.com ([134.134.136.65]:3525 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752371AbcD2Ljt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 29 Apr 2016 07:39:49 -0400
+Message-ID: <57234999.2040202@intel.com>
+Date: Fri, 29 Apr 2016 14:46:33 +0300
+From: Mathias Nyman <mathias.nyman@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460111790-92836-5-git-send-email-mika.westerberg@linux.intel.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v5 0/4] PCI: Add support for suspending (including runtime)
+ of PCIe ports
+References: <1461919919-120102-1-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1461919919-120102-1-git-send-email-mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mika,
+On 29.04.2016 11:51, Mika Westerberg wrote:
+> Current Linux PCI core does not do any kind of power management to PCIe
+> ports. This means that we waste energy and consume laptop battery even if
+> the port has nothing connected to. These patches aim to change that to the
+> right direction.
+>
+> Previous versions of the patches can be found below:
+>
+>    v1: http://www.spinics.net/lists/linux-pci/msg49313.html
+>    v2: http://www.spinics.net/lists/linux-pci/msg50167.html
+>    v3: http://www.spinics.net/lists/linux-pci/msg50345.html
+>    v4: http://www.spinics.net/lists/linux-pci/msg50665.html
+>
+> This assumes that recent (starting from 2015) PCIe ports are capable of
+> transition to D3hot/D3cold. We add a new flag to struct pci_dev 'bridge_d3'
+> that is set whenever the PCI core thinks the port can be put to D3. The
+> check in pci_pm_suspend_noirq() is then extended to cover devices where
+> 'bridge_d3' is set.
+>
+> We then add two new functions pci_bridge_d3_device_changed/removed(). These
+> are used to set and clear 'bridge_d3' whenever there is a change in device
+> power management policy (or if the device is removed). For example when
+> userspace forbids the device to enter D3cold pci_bridge_d3_device_changed()
+> will clear 'bridge_d3' of the upstream bridge.
+>
+> For all PCI ports where 'bridge_d3' is set we also enable and unblock
+> runtime PM automatically. Only exception is when the PCIe port claims to
+> support hotplug. More information about that is in the changelog of
+> patch [4/4].
+>
+> Since this also touches xhci, I'm adding Mathias and Greg to check if the
+> change looks reasonable.
+>
 
-I'm working on runtime pm for Thunderbolt on the Mac and your patches
-directly impact that. A Thunderbolt controller comprises an upstream
-bridge plus multiple downstream bridges below it, the latter are the
-actual hotplug ports. I'm using my own runtime pm code for the PCIe
-ports at the moment but will rebase on your patches once they're
-finalised.
+For the non-functional one-line only xhci change in patch 2/4:
+Acked-by: Mathias Nyman <mathias.nyman@linux.intel.com>
 
-I've just pushed v2 of my patches to GitHub, this is nearly finished,
-just needs some more polish before I can post it:
-https://github.com/l1k/linux/commits/thunderbolt_runpm_v2
+Out of curiosity, does enabling bridge d3 in any way impact #PME
+wakeup signaling initiated by devices behind that bridge?
 
-First of all, the root port on my 2012 Ivy Bridge machine suspends to
-D3hot just fine, as do the upstream and downstream ports on the 2010
-"Light Ridge" Thunderbolt controller. So the 2015 cut-off in patch [2/4]
-seems extremely conservative to me, perhaps unnecessarily so. At least
-you've made it possible to override that by setting bridge_d3 = true,
-however I'd be happier if this could be extended further back, say,
-to 2010. That way it would encompass all Macs with Thunderbolt.
+-Mathias
 
-Secondly, you're disabling runtime pm on hotplug ports, citing a
-bugzilla entry as an example why this is necessary, however there's
-a patch attached to that bugzilla entry which fixes the issue:
-https://bugzilla.kernel.org/show_bug.cgi?id=53811
-
-It is therefore unclear why you're disabling it. This breaks my
-patches and you've not provided a way to selectively re-enable
-runtime pm for specific hotplug ports.
-
-FWIW I've had zero issues suspending the hotplug ports on the Light
-Ridge Thunderbolt controller. Hotplug detection works fine even in
-D3hot, all that is necessary is to resume the port on hotplug and
-unplug while we access the hotplugged device's config space.
-
-So it looks like a hotplug port should be *allowed* to suspend,
-but its parent ports (by default) should *not* as we wouldn't be
-able to access the hotplug port's config space anymore. On the Mac
-even the parent ports may suspend because there's a separate GPE
-provided which fires on hotplug during D3cold. Just disabling
-runtime pm *generally* on all hotplug ports is too strict.
-
-The changes required for pciehp to work with runtime suspended ports
-are apparent from the following patch, I can spin them out into a
-separate commit if you would like to include them in your series:
-https://github.com/l1k/linux/commit/97d1140926670e6498f6671d91201e6d66e78680
-
-
-> +static int pcie_port_runtime_idle(struct device *dev)
-> +{
-> +	struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +	/*
-> +	 * Rely the PCI core has set bridge_d3 whenever it thinks the port
-> +	 * should be good to go to D3. Everything else, including moving
-> +	 * the port to D3, is handled by the PCI core.
-> +	 */
-> +	if (pdev->bridge_d3) {
-> +		pm_schedule_suspend(dev, 10);
-> +		return 0;
-> +	}
-> +	return -EBUSY;
-> +}
-
-It's unclear why the pm_schedule_suspend() is needed here and what the
-10 ms delay is for. I don't have that delay in my runtime pm code and
-haven't seen any issues. If the delay is needed then I'm wondering why
-this isn't implemented using autosuspend?
-
-
-> +static bool pcie_port_runtime_pm_possible(struct pci_dev *pdev)
-> +{
-> +	/*
-> +	 * Only enable runtime PM if the PCI core agrees that this port can
-> +	 * even go to D3.
-> +	 */
-> +	if (!pdev->bridge_d3)
-> +		return false;
-> +
-> +	/*
-> +	 * Prevent runtime PM if the port is hotplug capable. Otherwise the
-> +	 * hotplug SMI code might not be able to enumerate devices behind
-> +	 * this port properly (the port is powered down preventing all
-> +	 * config space accesses to the subordinate devices).
-> +	 */
-> +	if (pcie_caps_reg(pdev) & PCI_EXP_FLAGS_SLOT) {
-> +		u32 sltcap;
-> +
-> +		pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &sltcap);
-> +		if (sltcap & (PCI_EXP_SLTCAP_HPC | PCI_EXP_SLTCAP_HPS))
-> +			return false;
-> +	}
-> +
-> +	return true;
-> +}
-
-Why do you re-read the register here, seems like just checking
-pdev->hotplug_bridge should be sufficient?
-
-
->  static void pcie_portdrv_remove(struct pci_dev *dev)
->  {
-> +	const struct pcie_port_data *pdata = pci_get_drvdata(dev);
-> +
-> +	if (pdata->runtime_pm_enabled) {
-> +		pm_runtime_forbid(&dev->dev);
-> +		pm_runtime_get_noresume(&dev->dev);
-> +	}
-> +
->  	pcie_port_device_remove(dev);
->  }
-
-I think you're missing a pci_set_drvdata(dev, NULL) here.
-
-
-In my runtime pm code I've set pm_runtime_no_callbacks() for the port
-service devices to prevent users from mucking around with their sysfs
-files. Feel free to copy that from the above-linked patch if you want.
-
-Best regards,
-
-Lukas
