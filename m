@@ -1,107 +1,162 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-acpi@vger.kernel.org, timur@codeaurora.org,
-	cov@codeaurora.org
-Cc: linux-pci@vger.kernel.org, ravikanth.nalla@hpe.com,
-	lenb@kernel.org, harish.k@hpe.com, ashwin.reghunandanan@hpe.com,
-	bhelgaas@google.com, rjw@rjwysocki.net,
-	Sinan Kaya <okaya@codeaurora.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	Robert Moore <robert.moore@intel.com>,
-	Lv Zheng <lv.zheng@intel.com>, linux-kernel@vger.kernel.org,
-	devel@acpica.org
-Subject: [PATCH V2 2/3] acpi,pci,irq: remove redundant code in acpi_irq_penalty_init
-Date: Fri,  8 Apr 2016 21:26:31 -0400
-Message-Id: <1460165192-4526-3-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1460165192-4526-1-git-send-email-okaya@codeaurora.org>
-References: <1460165192-4526-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:32142 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751634AbcD2IwM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 29 Apr 2016 04:52:12 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
+	Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [PATCH v5 4/4] PCI: Add runtime PM support for PCIe ports
+Date: Fri, 29 Apr 2016 11:51:59 +0300
+Message-Id: <1461919919-120102-5-git-send-email-mika.westerberg@linux.intel.com>
+In-Reply-To: <1461919919-120102-1-git-send-email-mika.westerberg@linux.intel.com>
+References: <1461919919-120102-1-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-acpi_irq_get_penalty is now calculating the penalty on the fly now.
-No need to maintain global list of penalties or calculate them
-at the init time. Removing duplicate code in acpi_irq_penalty_init.
+Add back runtime PM support for PCIe ports that was removed in
+commit fe9a743a2601 ("PCI/PM: Drop unused runtime PM support code for
+PCIe ports").
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+First of all we cannot enable it automatically for all ports since there
+has been problems previously as can be seen in [1]. In summary suspended
+PCIe ports were not able to deal with ACPI based hotplug reliably. One
+reason why this might happen is the fact that when a PCIe port is powered
+down, config space access to the devices behind the port is not possible.
+If the BIOS hotplug SMI handler assumes the port is always in D0 it will
+not be able to find the hotplugged devices. To be on the safe side only
+enable runtime PM if the port does not claim to support hotplug.
+
+For PCIe ports not using hotplug we enable and allow runtime PM
+automatically. Since 'bridge_d3' can be changed any time we check this in
+driver ->runtime_idle() and ->runtime_suspend() and only allow runtime
+suspend if the flag is still set. Use autosuspend with default of 10ms idle
+time to prevent the port from repeatedly suspending and resuming on
+continuous configuration space access of devices behind the port.
+
+The actual power transition to D3 and back is handled in the PCI core.
+
+Idea to automatically unblock (allow) runtime PM for PCIe ports came from
+Dave Airlie.
+
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=53811
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- arch/x86/pci/acpi.c         |  1 -
- drivers/acpi/pci_link.c     | 36 ------------------------------------
- include/acpi/acpi_drivers.h |  1 -
- 3 files changed, 38 deletions(-)
+ drivers/pci/pcie/portdrv_core.c |  2 ++
+ drivers/pci/pcie/portdrv_pci.c  | 50 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 52 insertions(+)
 
-diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
-index 3cd6983..b2a4e2a 100644
---- a/arch/x86/pci/acpi.c
-+++ b/arch/x86/pci/acpi.c
-@@ -396,7 +396,6 @@ int __init pci_acpi_init(void)
- 		return -ENODEV;
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 88122dc2e1b1..65b1a624826b 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -11,6 +11,7 @@
+ #include <linux/kernel.h>
+ #include <linux/errno.h>
+ #include <linux/pm.h>
++#include <linux/pm_runtime.h>
+ #include <linux/string.h>
+ #include <linux/slab.h>
+ #include <linux/pcieport_if.h>
+@@ -343,6 +344,7 @@ static int pcie_device_init(struct pci_dev *pdev, int service, int irq)
+ 		     get_descriptor_id(pci_pcie_type(pdev), service));
+ 	device->parent = &pdev->dev;
+ 	device_enable_async_suspend(device);
++	pm_runtime_no_callbacks(device);
  
- 	printk(KERN_INFO "PCI: Using ACPI for IRQ routing\n");
--	acpi_irq_penalty_init();
- 	pcibios_enable_irq = acpi_pci_irq_enable;
- 	pcibios_disable_irq = acpi_pci_irq_disable;
- 	x86_init.pci.init_irq = x86_init_noop;
-diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c
-index 25695ea..63dae95 100644
---- a/drivers/acpi/pci_link.c
-+++ b/drivers/acpi/pci_link.c
-@@ -580,42 +580,6 @@ static int acpi_irq_get_penalty(int irq)
- 	return penalty;
+ 	retval = device_register(device);
+ 	if (retval) {
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 6c6bb03392ea..f4409af00756 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -93,6 +93,26 @@ static int pcie_port_resume_noirq(struct device *dev)
+ 	return 0;
  }
  
--int __init acpi_irq_penalty_init(void)
--{
--	struct acpi_pci_link *link;
--	int i;
--
--	/*
--	 * Update penalties to facilitate IRQ balancing.
--	 */
--	list_for_each_entry(link, &acpi_link_list, list) {
--
--		/*
--		 * reflect the possible and active irqs in the penalty table --
--		 * useful for breaking ties.
--		 */
--		if (link->irq.possible_count) {
--			int penalty =
--			    PIRQ_PENALTY_PCI_POSSIBLE /
--			    link->irq.possible_count;
--
--			for (i = 0; i < link->irq.possible_count; i++) {
--				if (link->irq.possible[i] < ACPI_MAX_ISA_IRQ)
--					acpi_isa_irq_penalty[link->irq.
--							     possible[i]] +=
--					    penalty;
--			}
--
--		} else if (link->irq.active &&
--			   (link->irq.active < ACPI_MAX_ISA_IRQ)) {
--			acpi_isa_irq_penalty[link->irq.active] +=
--			    PIRQ_PENALTY_PCI_POSSIBLE;
--		}
--	}
--
--	return 0;
--}
--
- static int acpi_irq_balance = -1;	/* 0: static, 1: balance */
++static int pcie_port_runtime_suspend(struct device *dev)
++{
++	return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
++}
++
++static int pcie_port_runtime_resume(struct device *dev)
++{
++	return 0;
++}
++
++static int pcie_port_runtime_idle(struct device *dev)
++{
++	/*
++	 * Rely the PCI core has set bridge_d3 whenever it thinks the port
++	 * should be good to go to D3. Everything else, including moving
++	 * the port to D3, is handled by the PCI core.
++	 */
++	return to_pci_dev(dev)->bridge_d3 ? 0 : -EBUSY;
++}
++
+ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ 	.suspend	= pcie_port_device_suspend,
+ 	.resume		= pcie_port_device_resume,
+@@ -101,6 +121,9 @@ static const struct dev_pm_ops pcie_portdrv_pm_ops = {
+ 	.poweroff	= pcie_port_device_suspend,
+ 	.restore	= pcie_port_device_resume,
+ 	.resume_noirq	= pcie_port_resume_noirq,
++	.runtime_suspend = pcie_port_runtime_suspend,
++	.runtime_resume	= pcie_port_runtime_resume,
++	.runtime_idle	= pcie_port_runtime_idle,
+ };
  
- static int acpi_pci_link_allocate(struct acpi_pci_link *link)
-diff --git a/include/acpi/acpi_drivers.h b/include/acpi/acpi_drivers.h
-index 29c6912..797ae2e 100644
---- a/include/acpi/acpi_drivers.h
-+++ b/include/acpi/acpi_drivers.h
-@@ -78,7 +78,6 @@
+ #define PCIE_PORTDRV_PM_OPS	(&pcie_portdrv_pm_ops)
+@@ -134,11 +157,38 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+ 		return status;
  
- /* ACPI PCI Interrupt Link (pci_link.c) */
+ 	pci_save_state(dev);
++
++	/*
++	 * Prevent runtime PM if the port is advertising support for PCIe
++	 * hotplug. Otherwise the BIOS hotplug SMI code might not be able
++	 * to enumerate devices behind this port properly (the port is
++	 * powered down preventing all config space accesses to the
++	 * subordinate devices). We can't be sure for native PCIe hotplug
++	 * either so prevent that as well.
++	 */
++	if (!dev->is_hotplug_bridge) {
++		/*
++		 * Keep the port resumed 10ms to make sure things like
++		 * config space accesses from userspace (lspci) will not
++		 * cause the port to repeatedly suspend and resume.
++		 */
++		pm_runtime_set_autosuspend_delay(&dev->dev, 10);
++		pm_runtime_use_autosuspend(&dev->dev);
++		pm_runtime_put_autosuspend(&dev->dev);
++		pm_runtime_allow(&dev->dev);
++	}
++
+ 	return 0;
+ }
  
--int acpi_irq_penalty_init(void);
- int acpi_pci_link_allocate_irq(acpi_handle handle, int index, int *triggering,
- 			       int *polarity, char **name);
- int acpi_pci_link_free_irq(acpi_handle handle);
+ static void pcie_portdrv_remove(struct pci_dev *dev)
+ {
++	if (!dev->is_hotplug_bridge) {
++		pm_runtime_forbid(&dev->dev);
++		pm_runtime_get_noresume(&dev->dev);
++		pm_runtime_dont_use_autosuspend(&dev->dev);
++	}
++
+ 	pcie_port_device_remove(dev);
+ }
+ 
 -- 
-1.8.2.1
+2.8.0.rc3
 
