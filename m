@@ -1,81 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 6 Apr 2016 10:55:34 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-doc@vger.kernel.org, bhelgaas@google.com, corbet@lwn.net,
-	aik@ozlabs.ru, alex.williamson@redhat.com,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	nikunj@linux.vnet.ibm.com, gwshan@linux.vnet.ibm.com
-Subject: Re: [RFC v5 2/7] PCI: Do not Use IORESOURCE_STARTALIGN to identify
- bridge resources
-Message-ID: <20160406005534.GB6187@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1459863813-2830-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1459863813-2830-3-git-send-email-xyjxie@linux.vnet.ibm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: catalin.marinas@arm.com, linaro-acpi@lists.linaro.org,
+	linux-pci@vger.kernel.org, will.deacon@arm.com,
+	okaya@codeaurora.org, wangyijing@huawei.com,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>, rafael@kernel.org,
+	ddaney@caviumnetworks.com, linux-acpi@vger.kernel.org,
+	robert.richter@caviumnetworks.com,
+	Bjorn Helgaas <helgaas@kernel.org>, msalter@redhat.com,
+	Liviu.Dudau@arm.com, mw@semihalf.com, jcm@redhat.com,
+	jchandra@broadcom.com, linux-kernel@vger.kernel.org,
+	hanjun.guo@linaro.org, Suravee.Suthikulpanit@amd.com,
+	jiang.liu@linux.intel.com
+Subject: Re: [PATCH V6 02/13] pci, acpi: Provide generic way to assign bus domain number.
+Date: Sat, 30 Apr 2016 00:50:11 +0200
+Message-ID: <1964262.h2oIOhyNUf@wuerfel>
+In-Reply-To: <1614997.P8lXtkpXQq@wuerfel>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com> <20160428150815.GB15598@localhost> <1614997.P8lXtkpXQq@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1459863813-2830-3-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 05, 2016 at 09:43:30PM +0800, Yongji Xie wrote:
->Now we use the IORESOURCE_STARTALIGN to identify
->bridge resources in __assign_resources_sorted().
->That's quite fragile. We can't make sure that
->the PCI devices' resources will not use
->IORESOURCE_STARTALIGN any more.
->
->In this patch, we try to use a more robust way
->to identify bridge resources.
->
->Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->---
-> drivers/pci/setup-bus.c |   10 +++++++---
-> 1 file changed, 7 insertions(+), 3 deletions(-)
->
->diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
->index 7796d0a..bffcf1e 100644
->--- a/drivers/pci/setup-bus.c
->+++ b/drivers/pci/setup-bus.c
->@@ -391,6 +391,7 @@ static void __assign_resources_sorted(struct list_head *head,
-> 	struct pci_dev_resource *dev_res, *tmp_res, *dev_res2;
-> 	unsigned long fail_type;
-> 	resource_size_t add_align, align;
->+	int index;
->
-> 	/* Check if optional add_size is there */
-> 	if (!realloc_head || list_empty(realloc_head))
->@@ -411,11 +412,14 @@ static void __assign_resources_sorted(struct list_head *head,
->
-> 		/*
-> 		 * There are two kinds of additional resources in the list:
->-		 * 1. bridge resource  -- IORESOURCE_STARTALIGN
->-		 * 2. SR-IOV resource   -- IORESOURCE_SIZEALIGN
->+		 * 1. bridge resource
->+		 * 2. SR-IOV resource
-> 		 * Here just fix the additional alignment for bridge
-> 		 */
->-		if (!(dev_res->res->flags & IORESOURCE_STARTALIGN))
->+		index = dev_res->res - dev_res->dev->resource;
->+		if (pci_is_bridge(dev_res->dev) &&
->+			index >= PCI_BRIDGE_RESOURCES &&
->+			index <= PCI_BRIDGE_RESOURCE_END)
-> 			continue;
+On Thursday 28 April 2016 17:34:10 Arnd Bergmann wrote:
+> On Thursday 28 April 2016 10:12:12 Bjorn Helgaas wrote:
+> > Right, we don't have a good mechanism for passing more info into
+> > pci_create_root_bus().  Maybe the caller could fill in a struct so we
+> > have a chance to extend it without having to change all the existing
+> > callers.
+> > 
+> > I wonder if there's a design pattern we can copy, e.g., would
+> > something like the scsi_host_alloc(), scsi_add_host(),
+> > scsi_scan_host() model work here?
+> 
+> Yes, I think that is a good idea in general. Especially
+> now that we have separate the ARM code from pci_common_init_dev
+> and pci_sys_data, that can help with cleanups in the other drivers
+> as well.
+> 
+> I see two common variations in other subsystems: some use a
+> special alloc() function that you pass the size of the private
+> data into, while others just expect you to embed a structure
+> inside of the driver specific one allocate that separately to
+> have the generic registration function fill out the common fields.
+> 
+> I have a slight preference for the second, but they are really
+> the same thing basically.
 
-Yongji, the condition seems incorrect. According to the comments in
-the code, it's resizing bridge's windows. So I think the code would
-be something like below?
+I've tried this out now, and will follow up with a separate patch
+series. Overall, I think it works out well, though I haven't gotten
+to the point of actually saving code yet. I've converted two
+drivers for demonstration.
 
-		if (!pci_is_bridge(dev_res->dev) ||
-		    index < PCI_BRIDGE_RESOURCES ||
-		    index > PCI_BRIDGE_RESOURCE_END)
-			continue;
-
->
-> 		add_align = get_res_add_align(realloc_head, dev_res->res);
-
-Thanks,
-Gavin
+	Arnd
