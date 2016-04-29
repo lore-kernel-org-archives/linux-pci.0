@@ -1,173 +1,158 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-am1on0091.outbound.protection.outlook.com ([157.56.112.91]:46208
-	"EHLO emea01-am1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751920AbcDUHMU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 21 Apr 2016 03:12:20 -0400
-Subject: Re: [PATCH] PCI: Refine broken INTx masking for Mellanox devices
-To: Alex Williamson <alex.williamson@redhat.com>
-References: <1461083616-30099-1-git-send-email-majd@mellanox.com>
- <20160419130435.7d681f6d@t450s.home>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Or Gerlitz <ogerlitz@mellanox.com>,
-	"Noa Osherovich" <noaos@mellanox.com>
-From: Majd Dibbiny <majd@mellanox.com>
-Message-ID: <7b67ed14-516d-aae9-2b72-6dae420caa65@mellanox.com>
-Date: Thu, 21 Apr 2016 10:12:05 +0300
-MIME-Version: 1.0
-In-Reply-To: <20160419130435.7d681f6d@t450s.home>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Received: from mout.kundenserver.de ([212.227.17.10]:64840 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752412AbcD2XCT (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2016 19:02:19 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: catalin.marinas@arm.com, linux-pci@vger.kernel.org,
+	will.deacon@arm.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>, ddaney@caviumnetworks.com,
+	robert.richter@caviumnetworks.com, msalter@redhat.com,
+	Liviu.Dudau@arm.com, jchandra@broadcom.com,
+	linux-kernel@vger.kernel.org, hanjun.guo@linaro.org,
+	Suravee.Suthikulpanit@amd.com,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 2/3] [RFC] pci: host-common: use new pci_register_host interface
+Date: Sat, 30 Apr 2016 01:01:38 +0200
+Message-Id: <1461970899-4150603-3-git-send-email-arnd@arndb.de>
+In-Reply-To: <1461970899-4150603-1-git-send-email-arnd@arndb.de>
+References: <1461970899-4150603-1-git-send-email-arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This changes the pci-host-common implementation to call the
+new pci_register_host() interface instead of pci_scan_root_bus().
 
+As a result, we get to share the pci_host_bridge structure
+as it was originally intended anyway: We ended up having two
+copies of pci_host_bridge here because we never got it done
+until now. We can also remove the now unused "resources"
+list_head, as we add the resources to the pci_host_bridge
+directly.
 
-On 4/19/2016 10:04 PM, Alex Williamson wrote:
-> On Tue, 19 Apr 2016 19:33:36 +0300
-> Majd Dibbiny <majd@mellanox.com> wrote:
->
->> From: Noa Osherovich <noaos@mellanox.com>
->>
->> Mellanox devices were marked as having INTx masking ability broken.
->> As a result, the VFIO driver fails to load when the device was
->> passed-through to a VM.
->>
->> This patch excludes ConnectX-4, ConnectX4-Lx and Connect-IB from the
->> list of Mellanox devices marked as having broken INTx masking:
->>
->> - ConnectX-4 and ConnectX4-Lx either declare INTx are not supported
->>    (FW versions 12.14.2036 / 14.12.2036) or support them properly
->>    (starting May 2016 firmware release). Users having earlier firmware
->>    versions will have to update to either one.
->> - Connect-IB does not support INTx currently so will not cause any
->>    problem.
-> What's the user and support experience here?  A user gets a new kernel
-> that no longer marks INTx masking as bad (note that if the device does
-> not support INTx by returing 0 in the pin register, it doesn't matter
-> whether it's marked bad or not), they try to assign the device and get
-> an interrupt storm on the guest and go complain to support.  Support
-> tries to reproduce, maybe can, maybe can't, depending on the firmware
-> version they happen to have running, everyone gets very unhappy until
-> the thing that almost never works, "are you running the latest
-> firmware", actually works.  Can we instead add a new function for
-> mellanox that can probe the firmware version and continue marking INTx
-> masking bad with a warning noting that a firmware update will resolve
-> it?  Thanks,
->
-> Alex
-Hi Alex,
-I understand your concern and therefore we have documented this in our 
-Release notes to ease the troubleshooting experience for everyone.. We 
-have also added the Firmware versions in the commit messages to make it 
-clearer...
+On top of this, further generalizations are possible to shrink
+the pci-host-common.c file, in particular requesting the
+resources and scanning for child devices can be moved
+into pci_register_host().
 
-What do you think?
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/pci/host/pci-host-common.c | 38 ++++++++++++++++++++++++--------------
+ drivers/pci/host/pci-host-common.h |  1 -
+ 2 files changed, 24 insertions(+), 15 deletions(-)
 
-Thanks
->> Fixes: 11e42532ada31 ('PCI: Assume all Mellanox devices have ...')
->> Signed-off-by: Noa Osherovich <noaos@mellanox.com>
->> Signed-off-by: Majd Dibbiny <majd@mellanox.com>
->> ---
->>   drivers/pci/quirks.c    | 61 ++++++++++++++++++++++++++++++++++++++++++++++++-
->>   include/linux/pci_ids.h | 14 ++++++++++++
->>   2 files changed, 74 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index 8e67802..6a1856e 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -3147,7 +3147,66 @@ DECLARE_PCI_FIXUP_HEADER(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
->>    */
->>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_REALTEK, 0x8169,
->>   			 quirk_broken_intx_masking);
->> -DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_ANY_ID,
->> +
->> +/*
->> + * Mellanox devices that fail under PCI device assignment using DisINTx masking
->> + */
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_TAVOR,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->> +			 PCI_DEVICE_ID_MELLANOX_TAVOR_BRIDGE,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_ARBEL,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->> +			 PCI_DEVICE_ID_MELLANOX_ARBEL_COMPAT,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX, PCI_DEVICE_ID_MELLANOX_SINAI,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->> +			 PCI_DEVICE_ID_MELLANOX_SINAI_OLD,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->> +			 PCI_DEVICE_ID_MELLANOX_HERMON_SDR,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->> +			 PCI_DEVICE_ID_MELLANOX_HERMON_DDR,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->> +			 PCI_DEVICE_ID_MELLANOX_HERMON_QDR,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->> +			 PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->> +			 PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->> +			 PCI_DEVICE_ID_MELLANOX_HERMON_EN,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->> +			 PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX_EN,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX2,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX3,
->> +			 quirk_broken_intx_masking);
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MELLANOX,
->> +			 PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO,
->>   			 quirk_broken_intx_masking);
->>   
->>   static void quirk_no_bus_reset(struct pci_dev *dev)
->> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
->> index 247da8c..bc8918e 100644
->> --- a/include/linux/pci_ids.h
->> +++ b/include/linux/pci_ids.h
->> @@ -2262,6 +2262,20 @@
->>   #define PCI_DEVICE_ID_MELLANOX_ARBEL	0x6282
->>   #define PCI_DEVICE_ID_MELLANOX_SINAI_OLD 0x5e8c
->>   #define PCI_DEVICE_ID_MELLANOX_SINAI	0x6274
->> +#define PCI_DEVICE_ID_MELLANOX_HERMON_SDR 0x6340
->> +#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR 0x634a
->> +#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR 0x6354
->> +#define PCI_DEVICE_ID_MELLANOX_HERMON_DDR_GEN2 0x6732
->> +#define PCI_DEVICE_ID_MELLANOX_HERMON_QDR_GEN2 0x673c
->> +#define PCI_DEVICE_ID_MELLANOX_HERMON_EN 0x6368
->> +#define PCI_DEVICE_ID_MELLANOX_HERMON_EN_GEN2 0x6750
->> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN 0x6372
->> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_T_GEN2 0x675a
->> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_GEN2 0x6764
->> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX_EN_5_GEN2 0x6746
->> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX2 0x676e
->> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX3 0x1003
->> +#define PCI_DEVICE_ID_MELLANOX_CONNECTX3_PRO 0x1007
->>   
->>   #define PCI_VENDOR_ID_DFI		0x15bd
->>   
+diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+index e9f850f07968..3fc529f0297e 100644
+--- a/drivers/pci/host/pci-host-common.c
++++ b/drivers/pci/host/pci-host-common.c
+@@ -26,7 +26,7 @@
+ 
+ static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
+ {
+-	pci_free_resource_list(&pci->resources);
++	pci_free_resource_list(&pci->host.windows);
+ }
+ 
+ static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
+@@ -37,12 +37,12 @@ static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
+ 	resource_size_t iobase;
+ 	struct resource_entry *win;
+ 
+-	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
++	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->host.windows,
+ 					       &iobase);
+ 	if (err)
+ 		return err;
+ 
+-	resource_list_for_each_entry(win, &pci->resources) {
++	resource_list_for_each_entry(win, &pci->host.windows) {
+ 		struct resource *parent, *res = win->res;
+ 
+ 		switch (resource_type(res)) {
+@@ -130,6 +130,14 @@ static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
+ 	return 0;
+ }
+ 
++static void gen_pci_release(struct device *dev)
++{
++	struct gen_pci *pci = container_of(dev, struct gen_pci, host.dev);
++
++	gen_pci_release_of_pci_ranges(pci);
++	kfree(pci);
++}
++
+ int pci_host_common_probe(struct platform_device *pdev,
+ 			  struct gen_pci *pci)
+ {
+@@ -137,7 +145,7 @@ int pci_host_common_probe(struct platform_device *pdev,
+ 	const char *type;
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = dev->of_node;
+-	struct pci_bus *bus, *child;
++	struct pci_bus *child;
+ 
+ 	type = of_get_property(np, "device_type", NULL);
+ 	if (!type || strcmp(type, "pci")) {
+@@ -148,8 +156,8 @@ int pci_host_common_probe(struct platform_device *pdev,
+ 	of_pci_check_probe_only();
+ 
+ 	pci->host.dev.parent = dev;
++	pci->host.dev.release = gen_pci_release;
+ 	INIT_LIST_HEAD(&pci->host.windows);
+-	INIT_LIST_HEAD(&pci->resources);
+ 
+ 	/* Parse our PCI ranges and request their resources */
+ 	err = gen_pci_parse_request_of_pci_ranges(pci);
+@@ -168,24 +176,26 @@ int pci_host_common_probe(struct platform_device *pdev,
+ 		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
+ 
+ 
+-	bus = pci_scan_root_bus(dev, pci->cfg.bus_range->start,
+-				&pci->cfg.ops->ops, pci, &pci->resources);
+-	if (!bus) {
+-		dev_err(dev, "Scanning rootbus failed");
+-		return -ENODEV;
++	pci->host.ops = &pci->cfg.ops->ops;
++	pci->host.sysdata = pci;
++	pci->host.busnr = pci->cfg.bus_range->start;
++	err = pci_register_host(&pci->host);
++	if (!err) {
++		dev_err(dev, "registering host failed");
++		return err;
+ 	}
+ 
+ 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+ 
+ 	if (!pci_has_flag(PCI_PROBE_ONLY)) {
+-		pci_bus_size_bridges(bus);
+-		pci_bus_assign_resources(bus);
++		pci_bus_size_bridges(pci->host.bus);
++		pci_bus_assign_resources(pci->host.bus);
+ 
+-		list_for_each_entry(child, &bus->children, node)
++		list_for_each_entry(child, &pci->host.bus->children, node)
+ 			pcie_bus_configure_settings(child);
+ 	}
+ 
+-	pci_bus_add_devices(bus);
++	pci_bus_add_devices(pci->host.bus);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/pci/host/pci-host-common.h b/drivers/pci/host/pci-host-common.h
+index 09f3fa0a55d7..c89a756420ee 100644
+--- a/drivers/pci/host/pci-host-common.h
++++ b/drivers/pci/host/pci-host-common.h
+@@ -38,7 +38,6 @@ struct gen_pci_cfg_windows {
+ struct gen_pci {
+ 	struct pci_host_bridge			host;
+ 	struct gen_pci_cfg_windows		cfg;
+-	struct list_head			resources;
+ };
+ 
+ int pci_host_common_probe(struct platform_device *pdev,
+-- 
+2.7.0
 
