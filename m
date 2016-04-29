@@ -1,183 +1,125 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:33833 "EHLO
+	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750719AbcD2HTQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2016 03:19:16 -0400
+MIME-Version: 1.0
+In-Reply-To: <20160428135607.GA12470@localhost>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+	<1460074573-7481-5-git-send-email-yinghai@kernel.org>
+	<20160422204920.GA17215@localhost>
+	<CAE9FiQWQ2ke3_P4Qhj+ON7pMiVCx4myhVNVaSYO4vYAL_P4njg@mail.gmail.com>
+	<20160428135607.GA12470@localhost>
+Date: Fri, 29 Apr 2016 00:19:15 -0700
+Message-ID: <CAE9FiQU_XSMfxFPSOrMjQ2DGnrM0D5T=0ORfDEBxqWggGrzc+Q@mail.gmail.com>
+Subject: Re: [PATCH v11 04/60] sparc/PCI: Use correct offset for bus address
+ to resource
 From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	David Miller <davem@davemloft.net>,
 	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
 	Yijing Wang <wangyijing@huawei.com>,
 	Khalid Aziz <khalid.aziz@oracle.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v11 36/60] PCI: Add __add_to_list()
-Date: Thu,  7 Apr 2016 17:15:49 -0700
-Message-Id: <1460074573-7481-37-git-send-email-yinghai@kernel.org>
-In-Reply-To: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Michael Ellerman <mpe@ellerman.id.au>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For alt_size support, we will add more entries to realloc list.
+On Thu, Apr 28, 2016 at 6:56 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Wed, Apr 27, 2016 at 09:55:45PM -0700, Yinghai Lu wrote:
+>> On Fri, Apr 22, 2016 at 1:49 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> > [+cc Ben, Michael]
+>> > I'm kind of confused here.  There are two ways to mmap PCI BARs:
+>> >
+>> >   /proc/bus/pci/00/02.0 (proc_bus_pci_mmap()):
+>> >     all BARs in one file; MEM/IO determined by ioctl()
+>> >     mmap offset is a CPU physical address in the PCI resource
+>> >
+>> >   /sys/devices/pci0000:00/0000:00:02.0/resource0 (pci_mmap_resource()):
+>> >     one file per BAR; MEM/IO determined by BAR type
+>> >     mmap offset is between 0 and BAR size
+>> >
+>> > Both proc_bus_pci_mmap() and pci_mmap_resource() validate the
+>> > requested area with pci_mmap_fits() before calling pci_mmap_page_range().
+>> >
+>> > In the proc_bus_pci_mmap() path, the offset in vma->vm_pgoff must be
+>> > within the pdev->resource[], so the user must be supplying a CPU
+>> > physical address (not an address obtained from pci_resource_to_user()).
+>> > That vma->vm_pgoff is passed unchanged to pci_mmap_page_range().
+>> >
+>> > In the pci_mmap_resource() path, vma->vm_pgoff must be between 0 and
+>> > the BAR size.  Then we add in the pci_resource_to_user() information
+>> > before passing it to pci_mmap_page_range().  The comment in
+>> > pci_mmap_resource() says pci_mmap_page_range() expects a "user
+>> > visible" address, but I don't really believe that based on how
+>> > proc_bus_pci_mmap() works.
+>> >
+>> > Do both proc_bus_pci_mmap() and pci_mmap_resource() work on sparc?
+>> > It looks like they call pci_mmap_page_range() with different
+>> > assumptions, so I don't see how they can both work.
+>>
+>> for sysfs path: in pci_mmap_resource
+>>         pci_resource_to_user(pdev, i, res, &start, &end);
+>>         vma->vm_pgoff += start >> PAGE_SHIFT;
+>>      then call pci_mmap_page_range()
+>>
+>> the fit checking in pci_mmap_fits(),
+>>         pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
+>>                         pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
+>>         if (start >= pci_start && start < pci_start + size &&
+>>                         start + nr <= pci_start + size)
+>>
+>> so proc fs assume resource_start for vm_pgoff ?
+>>
+>> but current pci_mmap_page_range want to use bus address
+>> start aka BAR value.
+>>
+>> and we have
+>>
+>>         /* pci_mmap_page_range() expects the same kind of entry as coming
+>>          * from /proc/bus/pci/ which is a "user visible" value. If this is
+>>          * different from the resource itself, arch will do necessary fixup.
+>>          */
+>>
+>> so we need to fix pci_mmap_fits(), please check if it is ok, will
+>> submit it as separated one.
+>
+> 1) The sysfs path uses offsets between 0 and BAR size.  This path
+> should work identically on all arches.  "User" addresses are not
+> involved, so it doesn't make sense that this path calls
+> pci_resource_to_user() from pci_mmap_resource().
+>
+> 2) The procfs path uses offsets of resource values (CPU physical
+> addresses) on most architectures.  If some arches use something else,
+> e.g., "user" addresses, the grunge of dealing with them should be in
+> this path, i.e., in proc_bus_pci_mmap().  This implies that
+> pci_mmap_page_range() should deal with CPU physical addresses, not bus
+> addresses, and proc_bus_pci_mmap() should perform any necessary
+> translation.
+>
+> 3) If my theory that proc_bus_pci_mmap() and pci_mmap_resource() are
+> calling pci_mmap_page_range() with different assumptions is correct,
+> you should be able to write a test program that fails for one method,
+> and your patch should fix that failure.
+>
+...>
+> This is the wrong place to deal with this.  IMO, any pci_resource_to_user()
+> fiddling should be done directly in proc_bus_pci_mmap(), and
+> pci_mmap_fits() should deal only with resources (CPU physical
+> addresses).  Then it wouldn't care where it was called from, so we
+> could get rid of the pci_mmap_api thing completely.
 
-Add new __add_to_list() to take alt_size, alt_align.
+ok, I got it.
 
-And simplify add_to_list() not to take add/alt input.
+We should offset vma->vm_pgoff back into [0, BAR)
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- drivers/pci/setup-bus.c | 51 ++++++++++++++++++++++++++++++-------------------
- 1 file changed, 31 insertions(+), 20 deletions(-)
+will look at it Monday.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 7865e44..efa6d4e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -65,6 +65,8 @@ struct pci_dev_resource {
- 	resource_size_t end;
- 	resource_size_t add_size;
- 	resource_size_t min_align;
-+	resource_size_t alt_size;
-+	resource_size_t alt_align;
- 	unsigned long flags;
- };
- 
-@@ -87,15 +89,16 @@ static void free_list(struct list_head *head)
-  * @add_size:	additional size to be optionally added
-  *              to the resource
-  */
--static int add_to_list(struct list_head *head,
-+static int __add_to_list(struct list_head *head,
- 		 struct pci_dev *dev, struct resource *res,
--		 resource_size_t add_size, resource_size_t min_align)
-+		 resource_size_t add_size, resource_size_t min_align,
-+		 resource_size_t alt_size, resource_size_t alt_align)
- {
- 	struct pci_dev_resource *tmp;
- 
- 	tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
- 	if (!tmp) {
--		pr_warn("add_to_list: kmalloc() failed!\n");
-+		pr_warn("__add_to_list: kmalloc() failed!\n");
- 		return -ENOMEM;
- 	}
- 
-@@ -106,12 +109,20 @@ static int add_to_list(struct list_head *head,
- 	tmp->flags = res->flags;
- 	tmp->add_size = add_size;
- 	tmp->min_align = min_align;
-+	tmp->alt_size = alt_size;
-+	tmp->alt_align = alt_align;
- 
- 	list_add(&tmp->list, head);
- 
- 	return 0;
- }
- 
-+static int add_to_list(struct list_head *head,
-+		 struct pci_dev *dev, struct resource *res)
-+{
-+	return __add_to_list(head, dev, res, 0, 0, 0, 0);
-+}
-+
- static void remove_from_list(struct list_head *head,
- 				 struct resource *res)
- {
-@@ -377,9 +388,7 @@ static void assign_requested_resources_sorted(struct list_head *head,
- 		if (resource_size(res) &&
- 		    pci_assign_resource(dev_res->dev, idx)) {
- 			if (fail_head)
--				add_to_list(fail_head, dev_res->dev, res,
--					    0 /* don't care */,
--					    0 /* don't care */);
-+				add_to_list(fail_head, dev_res->dev, res);
- 			reset_resource(res);
- 		}
- 	}
-@@ -465,7 +474,7 @@ static void __assign_resources_sorted(struct list_head *head,
- 
- 	/* Save original start, end, flags etc at first */
- 	list_for_each_entry(dev_res, head, list) {
--		if (add_to_list(&save_head, dev_res->dev, dev_res->res, 0, 0)) {
-+		if (add_to_list(&save_head, dev_res->dev, dev_res->res)) {
- 			free_list(&save_head);
- 			goto requested_and_reassign;
- 		}
-@@ -1056,8 +1065,8 @@ static void pbus_size_io(struct pci_bus *bus, resource_size_t min_size,
- 	b_res->end = b_res->start + size0 - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--		add_to_list(realloc_head, bus->self, b_res, size1-size0,
--			    min_align);
-+		__add_to_list(realloc_head, bus->self, b_res,
-+			      size1 - size0, min_align, 0, 0);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx\n",
- 			   b_res, &bus->busn_res,
- 			   (unsigned long long)size1-size0);
-@@ -1261,7 +1270,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 				add_to_align_test_list(&align_test_add_list,
- 							align, r_size);
- 				r->end = r->start - 1;
--				add_to_list(realloc_head, dev, r, r_size, 0/* don't care */);
-+				__add_to_list(realloc_head, dev, r,
-+					      r_size, align, 0, 0);
- 				sum_add_size += r_size;
- 				if (align > max_add_align)
- 					max_add_align = align;
-@@ -1332,8 +1342,8 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 	b_res->end = size0 + min_align - 1;
- 	b_res->flags |= IORESOURCE_STARTALIGN;
- 	if (size1 > size0 && realloc_head) {
--		add_to_list(realloc_head, bus->self, b_res, size1 - size0,
--				min_add_align);
-+		__add_to_list(realloc_head, bus->self, b_res, size1 - size0,
-+				min_add_align, 0, 0);
- 		dev_printk(KERN_DEBUG, &bus->self->dev, "bridge window %pR to %pR add_size %llx add_align %llx\n",
- 			   b_res, &bus->busn_res,
- 			   (unsigned long long) (size1 - size0),
-@@ -1370,8 +1380,8 @@ static void pci_bus_size_cardbus(struct pci_bus *bus,
- 	b_res[0].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
- 		b_res[0].end -= pci_cardbus_io_size;
--		add_to_list(realloc_head, bridge, b_res, pci_cardbus_io_size,
--				pci_cardbus_io_size);
-+		__add_to_list(realloc_head, bridge, b_res,
-+			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
- 	}
- 
- handle_b_res_1:
-@@ -1382,8 +1392,8 @@ handle_b_res_1:
- 	b_res[1].flags |= IORESOURCE_IO | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
- 		b_res[1].end -= pci_cardbus_io_size;
--		add_to_list(realloc_head, bridge, b_res+1, pci_cardbus_io_size,
--				 pci_cardbus_io_size);
-+		__add_to_list(realloc_head, bridge, b_res + 1,
-+			      pci_cardbus_io_size, pci_cardbus_io_size, 0, 0);
- 	}
- 
- handle_b_res_2:
-@@ -1420,8 +1430,9 @@ handle_b_res_2:
- 				  IORESOURCE_STARTALIGN;
- 		if (realloc_head) {
- 			b_res[2].end -= pci_cardbus_mem_size;
--			add_to_list(realloc_head, bridge, b_res+2,
--				 pci_cardbus_mem_size, pci_cardbus_mem_size);
-+			__add_to_list(realloc_head, bridge, b_res + 2,
-+				pci_cardbus_mem_size, pci_cardbus_mem_size,
-+				0, 0);
- 		}
- 
- 		/* reduce that to half */
-@@ -1436,8 +1447,8 @@ handle_b_res_3:
- 	b_res[3].flags |= IORESOURCE_MEM | IORESOURCE_STARTALIGN;
- 	if (realloc_head) {
- 		b_res[3].end -= b_res_3_size;
--		add_to_list(realloc_head, bridge, b_res+3, b_res_3_size,
--				 pci_cardbus_mem_size);
-+		__add_to_list(realloc_head, bridge, b_res + 3,
-+				b_res_3_size, pci_cardbus_mem_size, 0, 0);
- 	}
- 
- handle_done:
--- 
-1.8.4.5
+Thanks
+
+Yinghai
