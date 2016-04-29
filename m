@@ -1,87 +1,103 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Message-ID: <571A4A9C.7000201@gmail.com>
-Date: Fri, 22 Apr 2016 09:00:28 -0700
-From: David Daney <ddaney.cavm@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn1on0139.outbound.protection.outlook.com ([157.56.110.139]:14592
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751693AbcD2R2A convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2016 13:28:00 -0400
+From: Jake Oshins <jakeo@microsoft.com>
+To: Vitaly Kuznetsov <vkuznets@redhat.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	KY Srinivasan <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: RE: [PATCH] PCI: hv: report resources release after stopping the bus
+Date: Fri, 29 Apr 2016 16:55:52 +0000
+Message-ID: <DM2PR0301MB123233EA695E505148665B98AB660@DM2PR0301MB1232.namprd03.prod.outlook.com>
+References: <1461922750-26053-1-git-send-email-vkuznets@redhat.com>
+In-Reply-To: <1461922750-26053-1-git-send-email-vkuznets@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Jon Masters <jcm@redhat.com>
-CC: Tomasz Nowicki <tn@semihalf.com>, Arnd Bergmann <arnd@arndb.de>,
-	msalter@redhat.com, Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Jayachandran C <jchandra@broadcom.com>, rafael@kernel.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	linaro-acpi@lists.linaro.org, Will Deacon <will.deacon@arm.com>,
-	David Daney <ddaney@caviumnetworks.com>,
-	linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
-	linux-acpi@vger.kernel.org, robert.richter@caviumnetworks.com,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Suravee.Suthikulpanit@amd.com, linux-pci@vger.kernel.org,
-	Wangyijing <wangyijing@huawei.com>, Liviu.Dudau@arm.com,
-	Marcin Wojtas <mw@semihalf.com>, jiang.liu@linux.intel.com,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V6 08/13] PCI: generic, thunder: update to use generic
- ECAM API
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com> <3830999.dF71UWYsBP@wuerfel> <57189D2F.9070802@semihalf.com> <8950494.UV8UrWiFbx@wuerfel> <5718A6AE.4080203@semihalf.com> <571A3587.2020704@redhat.com>
-In-Reply-To: <571A3587.2020704@redhat.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/22/2016 07:30 AM, Jon Masters wrote:
-> On 04/21/2016 06:08 AM, Tomasz Nowicki wrote:
->> On 21.04.2016 11:36, Arnd Bergmann wrote:
->>> On Thursday 21 April 2016 11:28:15 Tomasz Nowicki wrote:
->>>> On 19.04.2016 15:06, Arnd Bergmann wrote:
->>>>> On Monday 18 April 2016 21:31:54 Tomasz Nowicki wrote:
->>>>>>
->>>>>> Basically the whole content of pci-thunder-ecam.c and
->>>>>> pci-thunder-pem.c.
->>>>>>
->>>>>> pci-thunder-ecam.c contains config space accessors. Similar for
->>>>>> pci-thunder-pem.c but it also has extra init call (it is now called
->>>>>> thunder_pem_init) which finds and maps related registers.
->>>>>
->>>>> They seem to do much more than just override the accessors, they
->>>>> actually
->>>>> change the contents of the config space as well. Is that really
->>>>> necessary
->>>>> on ACPI based systems as well?
->>>>
->>>> Yes, the pci-thunder-ecam.c accessors are meant to emulate config space
->>>> capabilities. They are necessary to synthesize EA capabilities (fixed
->>>> PCI BARs), it wont work without this, for ACPI boot as well.
->>>
->>> Why is that? I thought the BARs never get reassigned when using ACPI,
->>> so I'm surprised it's actually needed. Maybe I misunderstood what
->>> you mean by fixed PCI BARs.
->>
->> Yes, I meant something else. ThunderX has non-programmable PCI BAR
->> addresses. So it uses PCI EA (Extended allocation) capabilities to get
->> know PCI BARs addresses. But the early implementation (pass1.x) misses
->> EA capabilities hence we need to emulate it in config space accessors.
->
-> Aside: In case it's helpful, at least one enterprise vendor I know of is
-> only supporting later silicon as a result of this. So IMO there's no
-> need to worry about this issue on the early preproduction chips.
->
+> -----Original Message-----
+> From: Vitaly Kuznetsov [mailto:vkuznets@redhat.com]
+> Sent: Friday, April 29, 2016 2:39 AM
+> To: linux-pci@vger.kernel.org
+> Cc: devel@linuxdriverproject.org; linux-kernel@vger.kernel.org; KY
+> Srinivasan <kys@microsoft.com>; Haiyang Zhang
+> <haiyangz@microsoft.com>; Bjorn Helgaas <bhelgaas@google.com>; Jake
+> Oshins <jakeo@microsoft.com>
+> Subject: [PATCH] PCI: hv: report resources release after stopping the bus
+> 
+> Kernel hang is observed when pci-hyperv module is release with device
+> drivers still attached. E.g. when I do 'rmmod pci_hyperv' with BCM5720
+> device pass-through-ed (tg3 module) I see the following:
+> 
+>  NMI watchdog: BUG: soft lockup - CPU#1 stuck for 22s! [rmmod:2104]
+>  ...
+>  Call Trace:
+>   [<ffffffffa0641487>] tg3_read_mem+0x87/0x100 [tg3]
+>   [<ffffffffa063f000>] ? 0xffffffffa063f000
+>   [<ffffffffa0644375>] tg3_poll_fw+0x85/0x150 [tg3]
+>   [<ffffffffa0649877>] tg3_chip_reset+0x357/0x8c0 [tg3]
+>   [<ffffffffa064ca8b>] tg3_halt+0x3b/0x190 [tg3]
+>   [<ffffffffa0657611>] tg3_stop+0x171/0x230 [tg3]
+>   ...
+>   [<ffffffffa064c550>] tg3_remove_one+0x90/0x140 [tg3]
+>   [<ffffffff813bee59>] pci_device_remove+0x39/0xc0
+>   [<ffffffff814a3201>] __device_release_driver+0xa1/0x160
+>   [<ffffffff814a32e3>] device_release_driver+0x23/0x30
+>   [<ffffffff813b794a>] pci_stop_bus_device+0x8a/0xa0
+>   [<ffffffff813b7ab6>] pci_stop_root_bus+0x36/0x60
+>   [<ffffffffa02c3f38>] hv_pci_remove+0x238/0x260 [pci_hyperv]
+> 
+> The problem seems to be that we report local resources release before
+> stopping the bus and removing devices from it and device drivers may
+> try to perform some operations with these resources on shutdown. Move
+> resources release report after we do pci_stop_root_bus().
+> 
+> Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
+Acked-by: Jake Oshins <jakeo@microsoft.com>
 
-There are two separate issues that make fixing up the ECAM space necessary:
+> ---
+>  drivers/pci/host/pci-hyperv.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index f2559b6..c17e792 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -2268,11 +2268,6 @@ static int hv_pci_remove(struct hv_device *hdev)
+> 
+>  	hbus = hv_get_drvdata(hdev);
+> 
+> -	ret = hv_send_resources_released(hdev);
+> -	if (ret)
+> -		dev_err(&hdev->device,
+> -			"Couldn't send resources released packet(s)\n");
+> -
+>  	memset(&pkt.teardown_packet, 0, sizeof(pkt.teardown_packet));
+>  	init_completion(&comp_pkt.host_event);
+>  	pkt.teardown_packet.completion_func = hv_pci_generic_compl;
+> @@ -2295,6 +2290,11 @@ static int hv_pci_remove(struct hv_device *hdev)
+>  		pci_unlock_rescan_remove();
+>  	}
+> 
+> +	ret = hv_send_resources_released(hdev);
+> +	if (ret)
+> +		dev_err(&hdev->device,
+> +			"Couldn't send resources released packet(s)\n");
+> +
+>  	vmbus_close(hdev->channel);
+> 
+>  	/* Delete any children which might still exist. */
+> --
+> 2.5.5
 
-1) As Jon mentioned, preproduction silicon lacks EA capabilities.
+This looks like the right fix to me.  Thanks.
 
-2) On 2-node NUMA systems, the EA capabilities of some devices may be 
-incorrect even in production silicon.
-
-In general, the strategy we use for dealing with both of these is to 
-hook into the ECAM access methods, and supply corrected config space 
-data.  For the case of device-tree provisioned ECAM access, the fix ups 
-are done in pci-thunder-ecam.c.  This code is already present and seems 
-to be working well.
-
-As we consider ACPI support, supporting case #2 above will be desirable. 
-  If we reuse the code in pci-thunder-ecam.c for this, we will probably 
-get support for #1 for free.
-
-David Daney
-
-
+-- Jake Oshins
 
