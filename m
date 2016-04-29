@@ -1,141 +1,238 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH 09/11] drivers: acpi: implement acpi_dma_configure
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
- <1460654743-7896-10-git-send-email-lorenzo.pieralisi@arm.com>
- <20160415161400.GC7973@localhost>
-Cc: Marc Zyngier <marc.zyngier@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	linux-kernel@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
-	linux-pci@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
-	linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <5711177E.2000509@arm.com>
-Date: Fri, 15 Apr 2016 17:31:58 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:52845 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751339AbcD2VQs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 29 Apr 2016 17:16:48 -0400
+Date: Fri, 29 Apr 2016 16:16:39 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: tglx@linutronix.de, linux-block@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH 6/8] pci: provide sensible irq vector alloc/free routines
+Message-ID: <20160429211638.GB28261@localhost>
+References: <1460770552-31260-1-git-send-email-hch@lst.de>
+ <1460770552-31260-7-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20160415161400.GC7973@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1460770552-31260-7-git-send-email-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+[+cc Alexander]
 
-On 15/04/16 17:14, Bjorn Helgaas wrote:
-> On Thu, Apr 14, 2016 at 06:25:41PM +0100, Lorenzo Pieralisi wrote:
->> On DT based systems, the of_dma_configure() API implements DMA configuration
->> for a given device. On ACPI systems an API equivalent to of_dma_configure()
->> is missing which implies that it is currently not possible to set-up DMA
->> operations for devices through the ACPI generic kernel layer.
->>
->> This patch fills the gap by introducing acpi_dma_configure/deconfigure()
->> calls, that carry out IOMMU configuration through IORT (on systems where
->> it is present) and call arch_setup_dma_ops(...) with the retrieved
->> parameters.
->>
->> The DMA range size passed to arch_setup_dma_ops() is sized according
->> to the device coherent_dma_mask (starting at address 0x0), mirroring the
->> DT probing path behaviour when a dma-ranges property is not provided
->> for the device being probed; this changes the current arch_setup_dma_ops()
->> call parameters in the ACPI probing case, but since arch_setup_dma_ops()
->> is a NOP on all architectures but ARM/ARM64 this patch does not change
->> the current kernel behaviour on them.
->>
->> This patch updates ACPI and PCI core code to use the newly introduced
->> acpi_dma_configure function, providing the same functionality
->> as of_dma_configure on ARM systems and leaving behaviour unchanged
->> for all other arches.
->>
->> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Robin Murphy <robin.murphy@arm.com>
->> Cc: Tomasz Nowicki <tn@semihalf.com>
->> Cc: Joerg Roedel <joro@8bytes.org>
->> Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>
->
-> There's only a tiny PCI change in this series, so I assume somebody
-> else will merge all this.  Here's my ack for the PCI part:
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# for drivers/pci/probe.c change
->
-> One question on use of pci_for_each_dma_alias() below.
->
->> +static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
->> +{
->> +	u32 *rid = data;
->> +
->> +	*rid = alias;
->> +	return 0;
->> +}
->> +
->> +/**
->> + * iort_iommu_configure - Set-up IOMMU configuration for a device.
->> + *
->> + * @dev: device that requires IOMMU set-up
->> + *
->> + * Returns: iommu_ops pointer on configuration success
->> + *          NULL on configuration failure
->> + */
->> +struct iommu_ops *iort_iommu_configure(struct device *dev)
->> +{
->> +	struct acpi_iort_node *node, *parent;
->> +	struct iommu_ops *ops = NULL;
->> +	struct iommu_fwspec fwspec;
->> +	struct iort_iommu_node *iommu_node;
->> +	u32 rid = 0, devid = 0;
->> +
->> +	if (dev_is_pci(dev)) {
->> +		struct pci_bus *bus = to_pci_dev(dev)->bus;
->> +
->> +		pci_for_each_dma_alias(to_pci_dev(dev), __get_pci_rid,
->> +				       &rid);
->
-> You end up with only the last DMA alias in "rid".  Is it really true
-> that you only need to call iort_dev_map_rid() for one of the aliases?
+Sorry to be a pedant, but can you please edit the subject to be:
 
-Indeed - all we care about is what things look like by the time they 
-come out of the root complex on their way to the the IOMMU, so whatever 
-intermediate aliasing _within_ the PCI bus might happen along the way 
-doesn't actually matter.
+  PCI: Provide sensible IRQ vector alloc/free routines
 
-Robin.
+so it matches the drivers/pci convention?
 
->> +		node = iort_scan_node(ACPI_IORT_NODE_PCI_ROOT_COMPLEX,
->> +				      iort_find_dev_callback, &bus->dev);
->> +	} else
->> +		node = iort_scan_node(ACPI_IORT_NODE_NAMED_COMPONENT,
->> +				      iort_find_dev_callback, dev);
->> +
->> +	if (!node)
->> +		return NULL;
->> +
->> +	iort_dev_map_rid(node, rid, &devid, ACPI_IORT_NODE_SMMU);
->> +
->> +	parent = iort_find_parent_node(node, ACPI_IORT_NODE_SMMU);
->> +
->> +	if (!parent)
->> +		return NULL;
->> +
->> +	iommu_node = iort_iommu_get_node(parent);
->> +	ops = iommu_node->ops;
->> +
->> +	fwspec.fwnode = iommu_node->fwnode;
->> +	fwspec.param_count = 1;
->> +	fwspec.param[0] = devid;
->> +
->> +	if (!ops || !ops->fw_xlate || ops->fw_xlate(dev, &fwspec))
->> +		return NULL;
->> +
->> +	return ops;
->> +}
-> _______________________________________________
-> iommu mailing list
-> iommu@lists.linux-foundation.org
-> https://lists.linuxfoundation.org/mailman/listinfo/iommu
->
+I like this idea a lot.  The MSI-X/MSI interfaces are much better than
+they used to be, and I think this would be another significant
+improvement.  What do you think, Alexander?  Here's the whole series
+in case you don't have it handy:
+http://lkml.kernel.org/r/1460770552-31260-1-git-send-email-hch@lst.de
 
+On Fri, Apr 15, 2016 at 06:35:50PM -0700, Christoph Hellwig wrote:
+> Hide all the MSI-X vs MSI vs legacy bullshit, and provide an array of
+> interrupt vectors in the pci_dev structure, and ensure we get proper
+> interrupt affinity by default.
+
+This patch doesn't do anything for affinity by itself.
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/pci/irq.c   | 89 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  drivers/pci/msi.c   |  2 +-
+>  drivers/pci/pci.h   |  5 +++
+>  include/linux/pci.h |  5 +++
+>  4 files changed, 99 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/irq.c b/drivers/pci/irq.c
+> index 6684f15..b683465 100644
+> --- a/drivers/pci/irq.c
+> +++ b/drivers/pci/irq.c
+> @@ -1,7 +1,8 @@
+>  /*
+> - * PCI IRQ failure handing code
+> + * PCI IRQ handing code
+
+s/handing/handling/ :)
+
+>   *
+>   * Copyright (c) 2008 James Bottomley <James.Bottomley@HansenPartnership.com>
+> + * Copyright (c) 2016 Christoph Hellwig.
+>   */
+>  
+>  #include <linux/acpi.h>
+> @@ -9,6 +10,92 @@
+>  #include <linux/kernel.h>
+>  #include <linux/export.h>
+>  #include <linux/pci.h>
+> +#include <linux/interrupt.h>
+> +#include "pci.h"
+> +
+> +static int pci_nr_irq_vectors(struct pci_dev *pdev)
+> +{
+> +	int nr_entries;
+> +
+> +	nr_entries = pci_msix_vec_count(pdev);
+> +	if (nr_entries <= 0 && pci_msi_supported(pdev, 1))
+> +		nr_entries = pci_msi_vec_count(pdev);
+> +	if (nr_entries <= 0)
+> +		nr_entries = 1;
+> +	return nr_entries;
+> +}
+> +
+> +static int pci_enable_msix_range_wrapper(struct pci_dev *pdev, u32 *irqs,
+> +		int nr_vecs)
+> +{
+> +	struct msix_entry *msix_entries;
+> +	int vecs, i;
+> +
+> +	msix_entries = kcalloc(nr_vecs, sizeof(struct msix_entry), GFP_KERNEL);
+> +	if (!msix_entries)
+> +		return -ENOMEM;
+> +
+> +	for (i = 0; i < nr_vecs; i++)
+> +		msix_entries[i].entry = i;
+> +
+> +	vecs = pci_enable_msix_range(pdev, msix_entries, 1, nr_vecs);
+> +	if (vecs > 0) {
+> +		for (i = 0; i < vecs; i++)
+> +			irqs[i] = msix_entries[i].vector;
+> +	}
+> +
+> +	kfree(msix_entries);
+> +	return vecs;
+> +}
+> +
+> +int pci_alloc_irq_vectors(struct pci_dev *pdev, int nr_vecs)
+> +{
+> +	int vecs, ret, i;
+> +	u32 *irqs;
+> +
+> +	nr_vecs = min(nr_vecs, pci_nr_irq_vectors(pdev));
+> +
+> +	irqs = kcalloc(nr_vecs, sizeof(u32), GFP_KERNEL);
+> +	if (!irqs)
+> +		return -ENOMEM;
+> +
+> +	vecs = pci_enable_msix_range_wrapper(pdev, irqs, nr_vecs);
+> +	if (vecs <= 0) {
+> +		vecs = pci_enable_msi_range(pdev, 1, min(nr_vecs, 32));
+
+I don't see one, but seems like we should have a #define for this
+"32".  I guess pci_enable_msi_range() already protects itself, so this
+min() is probably not strictly necessary anyway.
+
+> +		if (vecs <= 0) {
+> +			ret = -EIO;
+> +			if (!pdev->irq)
+> +				goto out_free_irqs;
+> +
+> +			/* use legacy irq */
+> +			vecs = 1;
+> +		}
+> +
+> +		for (i = 0; i < vecs; i++)
+> +			irqs[i] = pdev->irq + i;
+> +	}
+> +
+> +	pdev->irqs = irqs;
+> +	return vecs;
+> +
+> +out_free_irqs:
+> +	kfree(irqs);
+> +	return ret;
+
+  return -EIO;
+
+and remove "ret".
+
+> +}
+> +EXPORT_SYMBOL(pci_alloc_irq_vectors);
+> +
+> +void pci_free_irq_vectors(struct pci_dev *pdev)
+> +{
+> +	if (pdev->msi_enabled)
+> +		pci_disable_msi(pdev);
+> +	else if (pdev->msix_enabled)
+> +		pci_disable_msix(pdev);
+> +
+> +	kfree(pdev->dev.irq_affinity);
+> +	pdev->dev.irq_affinity = NULL;
+
+These two lines belong in a different patch.
+
+> +	kfree(pdev->irqs);
+> +}
+> +EXPORT_SYMBOL(pci_free_irq_vectors);
+>  
+>  static void pci_note_irq_problem(struct pci_dev *pdev, const char *reason)
+>  {
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index a080f44..544d306 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -815,7 +815,7 @@ out_free:
+>   * to determine if MSI/-X are supported for the device. If MSI/-X is
+>   * supported return 1, else return 0.
+>   **/
+> -static int pci_msi_supported(struct pci_dev *dev, int nvec)
+> +int pci_msi_supported(struct pci_dev *dev, int nvec)
+>  {
+>  	struct pci_bus *bus;
+>  
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index d0fb934..263422c 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -144,8 +144,13 @@ extern unsigned int pci_pm_d3_delay;
+>  
+>  #ifdef CONFIG_PCI_MSI
+>  void pci_no_msi(void);
+> +int pci_msi_supported(struct pci_dev *dev, int nvec);
+>  #else
+>  static inline void pci_no_msi(void) { }
+> +static int pci_msi_supported(struct pci_dev *dev, int nvec)
+> +{
+> +	return 0;
+> +}
+>  #endif
+>  
+>  static inline void pci_msi_set_enable(struct pci_dev *dev, int enable)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 004b813..4fbc14f 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -322,6 +322,7 @@ struct pci_dev {
+>  	 * directly, use the values stored here. They might be different!
+>  	 */
+>  	unsigned int	irq;
+> +	unsigned int	*irqs;
+>  	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
+>  
+>  	bool match_driver;		/* Skip attaching driver */
+> @@ -1235,6 +1236,9 @@ resource_size_t pcibios_iov_resource_alignment(struct pci_dev *dev, int resno);
+>  int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+>  		      unsigned int command_bits, u32 flags);
+>  
+> +int pci_alloc_irq_vectors(struct pci_dev *dev, int nr_vecs);
+> +void pci_free_irq_vectors(struct pci_dev *pdev);
+> +
+>  /* kmem_cache style wrapper around pci_alloc_consistent() */
+>  
+>  #include <linux/pci-dma.h>
+> @@ -1282,6 +1286,7 @@ static inline int pci_enable_msix_exact(struct pci_dev *dev,
+>  		return rc;
+>  	return 0;
+>  }
+> +
+>  #else
+>  static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+>  static inline void pci_msi_shutdown(struct pci_dev *dev) { }
+> -- 
+> 2.1.4
+> 
