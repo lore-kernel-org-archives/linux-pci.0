@@ -1,71 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58275 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753653AbcDNP7B (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 14 Apr 2016 11:59:01 -0400
-Subject: Re: [PATCH v2 4/4] ACPI: PCI: Add generic PCI host controller
-To: Jayachandran C <jchandra@broadcom.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Tomasz Nowicki <tn@semihalf.com>, rafael@kernel.org
-References: <1460414707-19153-1-git-send-email-jchandra@broadcom.com>
- <1460414707-19153-5-git-send-email-jchandra@broadcom.com>
- <570FBCF6.50407@codeaurora.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	jiang.liu@linux.intel.com,
-	Stefano Stabellini <Stefano.Stabellini@eu.citrix.com>,
-	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
-	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Jon Masters <jcm@redhat.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <570FBE41.7040303@codeaurora.org>
-Date: Thu, 14 Apr 2016 11:58:57 -0400
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:59879 "HELO
+	cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752176AbcD2MH4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2016 08:07:56 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mathias Nyman <mathias.nyman@intel.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v5 0/4] PCI: Add support for suspending (including runtime) of PCIe ports
+Date: Fri, 29 Apr 2016 14:10:59 +0200
+Message-ID: <86024359.9LxrAC1gtb@vostro.rjw.lan>
+In-Reply-To: <57234999.2040202@intel.com>
+References: <1461919919-120102-1-git-send-email-mika.westerberg@linux.intel.com> <57234999.2040202@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <570FBCF6.50407@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/14/2016 11:53 AM, Sinan Kaya wrote:
-> On 4/11/2016 6:45 PM, Jayachandran C wrote:
->> +/* find the entry in cfgarr which contains range bus_start..bus_end */
->> +static int mcfg_lookup(u16 seg, u8 bus_start, u8 bus_end)
->> +{
->> +	struct pci_config_window *cfg;
->> +	int i;
->> +
->> +	if (!cfgarr)
->> +		return -ENOENT;
->> +
->> +	for (i = 0; cfgarr[i]; i++) {
->> +		cfg = cfgarr[i];
->> +
+On Friday, April 29, 2016 02:46:33 PM Mathias Nyman wrote:
+> On 29.04.2016 11:51, Mika Westerberg wrote:
+> > Current Linux PCI core does not do any kind of power management to PCIe
+> > ports. This means that we waste energy and consume laptop battery even if
+> > the port has nothing connected to. These patches aim to change that to the
+> > right direction.
+> >
+> > Previous versions of the patches can be found below:
+> >
+> >    v1: http://www.spinics.net/lists/linux-pci/msg49313.html
+> >    v2: http://www.spinics.net/lists/linux-pci/msg50167.html
+> >    v3: http://www.spinics.net/lists/linux-pci/msg50345.html
+> >    v4: http://www.spinics.net/lists/linux-pci/msg50665.html
+> >
+> > This assumes that recent (starting from 2015) PCIe ports are capable of
+> > transition to D3hot/D3cold. We add a new flag to struct pci_dev 'bridge_d3'
+> > that is set whenever the PCI core thinks the port can be put to D3. The
+> > check in pci_pm_suspend_noirq() is then extended to cover devices where
+> > 'bridge_d3' is set.
+> >
+> > We then add two new functions pci_bridge_d3_device_changed/removed(). These
+> > are used to set and clear 'bridge_d3' whenever there is a change in device
+> > power management policy (or if the device is removed). For example when
+> > userspace forbids the device to enter D3cold pci_bridge_d3_device_changed()
+> > will clear 'bridge_d3' of the upstream bridge.
+> >
+> > For all PCI ports where 'bridge_d3' is set we also enable and unblock
+> > runtime PM automatically. Only exception is when the PCIe port claims to
+> > support hotplug. More information about that is in the changelog of
+> > patch [4/4].
+> >
+> > Since this also touches xhci, I'm adding Mathias and Greg to check if the
+> > change looks reasonable.
+> >
 > 
-> I see that you are allocating an array of cfgarr to keep the MCFG table entries.
-> The above way of checking the number of entries is not correct. 
+> For the non-functional one-line only xhci change in patch 2/4:
+> Acked-by: Mathias Nyman <mathias.nyman@linux.intel.com>
 > 
-> You should keep track of the number of entries you found out globally instead of 
-> relying an element being NULL or not. 
-> 
-> If you exceed the array size, you may or may not be lucky to find another entry
-> in memory.
-> 
+> Out of curiosity, does enabling bridge d3 in any way impact #PME
+> wakeup signaling initiated by devices behind that bridge?
 
-I see now that you are allocating an extra element in memory. Still, looping to find
-out the number of elements didn't quite look good to me.
+If the device reports (via the config space) that it is capable of signaling
+PME from D3_{cold}, the wakeup signaling won't be affected (as long as the
+hardware design follows the spec).
 
-+		for (i = 0; cfgarr[i]; i++)
-+			;
-+		pr_info(PREFIX " MCFG table at loaded, %d entries\n", i);
+The Mika's patches take that into account AFAICS.
 
+Thanks,
+Rafael
 
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
