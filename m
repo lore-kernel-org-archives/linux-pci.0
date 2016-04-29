@@ -1,61 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:34138 "EHLO
-	mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932505AbcDKNiK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 11 Apr 2016 09:38:10 -0400
-MIME-Version: 1.0
-In-Reply-To: <20160411085605.GB1727@lahna.fi.intel.com>
-References: <1460111790-92836-1-git-send-email-mika.westerberg@linux.intel.com>
-	<1460111790-92836-3-git-send-email-mika.westerberg@linux.intel.com>
-	<0DD381DBF8F68D419C32ACFCEB28EB2521D2B374@SHSMSX101.ccr.corp.intel.com>
-	<20160411085605.GB1727@lahna.fi.intel.com>
-Date: Mon, 11 Apr 2016 15:38:07 +0200
-Message-ID: <CAJZ5v0he594EgJqoT4MMvhsKBSRLk7d4jFBVAfR+hGHs4oRfsA@mail.gmail.com>
-Subject: Re: [PATCH v2 2/4] PCI: Move PCIe ports to D3 during suspend
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: "Zheng, Qi" <qi.zheng@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	"Zha, Qipeng" <qipeng.zha@intel.com>,
+Received: from mga01.intel.com ([192.55.52.88]:54187 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750760AbcD2IwM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 29 Apr 2016 04:52:12 -0400
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
 	Dave Airlie <airlied@gmail.com>,
-	"Nyman, Mathias" <mathias.nyman@intel.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Lukas Wunner <lukas@wunner.de>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: [PATCH v5 0/4] PCI: Add support for suspending (including runtime) of PCIe ports
+Date: Fri, 29 Apr 2016 11:51:55 +0300
+Message-Id: <1461919919-120102-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 11, 2016 at 10:56 AM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
-> On Mon, Apr 11, 2016 at 03:36:41AM +0000, Zheng, Qi wrote:
->> > +static int pci_dev_check_d3cold(struct pci_dev *pdev, void *data) {
->> > +   bool *d3cold_ok = data;
->> > +
->> > +   /*
->> > +    * The device needs to be allowed to go D3cold and if it is wake
->> > +    * capable to do so from D3cold.
->> > +    */
->> > +   if (pdev->no_d3cold || !pdev->d3cold_allowed)
->> > +           *d3cold_ok = false;
->> > +   if (device_may_wakeup(&pdev->dev) && !pci_pme_capable(pdev, PCI_D3cold))
->> > +           *d3cold_ok = false;
->> > +
->> > +   return !*d3cold_ok;
->> >+}
->>
->> How about the pme_poll?
->> IMHO, if the pme_poll is set for some device, the PCIe port couldn't
->> go to sleep as well.
->
-> I wasn't sure about that. If the device has pme_poll set, and the bridge
-> is in D3 (or anything else than D0) the it will not be scanned for PME
-> (this is done in pci_pme_list_scan()).
->
-> My understanding is that pme_poll is a workaround for bridges which do not
-> forward PME messages upstream properly. Since this whole thing is only
-> enabled for recent PCIe hardware, I would expect that this works also :)
+Current Linux PCI core does not do any kind of power management to PCIe
+ports. This means that we waste energy and consume laptop battery even if
+the port has nothing connected to. These patches aim to change that to the
+right direction.
 
-Fair enough, but we may need to do something about that in the future
-if things turn out to not work properly.
+Previous versions of the patches can be found below:
+
+  v1: http://www.spinics.net/lists/linux-pci/msg49313.html
+  v2: http://www.spinics.net/lists/linux-pci/msg50167.html
+  v3: http://www.spinics.net/lists/linux-pci/msg50345.html
+  v4: http://www.spinics.net/lists/linux-pci/msg50665.html
+
+This assumes that recent (starting from 2015) PCIe ports are capable of
+transition to D3hot/D3cold. We add a new flag to struct pci_dev 'bridge_d3'
+that is set whenever the PCI core thinks the port can be put to D3. The
+check in pci_pm_suspend_noirq() is then extended to cover devices where
+'bridge_d3' is set.
+
+We then add two new functions pci_bridge_d3_device_changed/removed(). These
+are used to set and clear 'bridge_d3' whenever there is a change in device
+power management policy (or if the device is removed). For example when
+userspace forbids the device to enter D3cold pci_bridge_d3_device_changed()
+will clear 'bridge_d3' of the upstream bridge.
+
+For all PCI ports where 'bridge_d3' is set we also enable and unblock
+runtime PM automatically. Only exception is when the PCIe port claims to
+support hotplug. More information about that is in the changelog of
+patch [4/4].
+
+Since this also touches xhci, I'm adding Mathias and Greg to check if the
+change looks reasonable.
+
+Changes to v4:
+
+  - Use "Put PCIe ports into D3" instead of "move" in subject and comments.
+
+  - Add new helper function pci_power_manageable() and use it to check if
+    the port can be suspended instead of open-coding it everytime.
+
+  - Changed pci_dev_check_d3cold() to follow what Rafael suggested.
+
+  - Dropped call to pm_runtime_mark_last_busy() in pcie_port_runtime_resume()
+    as PM core does that automatically when the function returns 0.
+
+  - Added ACKs from Rafael.
+
+Changes to v3:
+
+  - Make 'no_d3cold' persist for pci_dev. Once this is set through
+    pci_d3cold_enable/disable(), it will persist unless changed again using
+    the same functions. Those also handle setting and clearing 'bridge_d3'
+    as necessary.
+
+  - Add kernel command line parameter "pcie_port_pm=off|force" that can
+    be used to forcibly disable/enable the feature.
+
+  - Use runtime PM autosuspend instead of scheduling runtime suspend
+    manually
+
+  - Allow runtime PM always except when we are dealing with a hotplug
+    bridge. Actual checking whether the port can be suspended is done in
+    ->idle() and ->runtime_suspend() hooks based on 'bridge_d3'.
+
+Changes to v2:
+
+  - Renamed and split pci_enable_d3cold() into two functions
+    pci_d3cold_enable()/disable().
+
+  - Renamed pci_bridge_pm_update() into two functions
+    pci_bridge_d3_device_changed() and pci_bridge_d3_device_removed() that
+    should match better what they are doing.
+
+  - Propagate ->bridge_d3 change to upstream bridges in
+    pci_bridge_d3_update().
+
+  - Removed pci_can_suspend() in favor of doing ->bridge_d3 check directly
+    in pci_pm_suspend_noirq().
+
+  - Extend runtime PM enabling for ports that are using native PCIe
+    hotplug.
+
+  - Call pm_runtime_no_callbacks() for PCIe port service devices (the are
+    handled by the parent device).
+
+Changes to v1:
+
+  - Dropped patch [2/6] as there is no need to use that function from other
+    files anymore.
+
+  - Dropped patches [5-6/6] in favor of using cut-off date.
+
+  - Updated changelog of [1/4] to mention where in the PCI core PCI bridge
+    and PCIe ports are skipped from being power managed.
+
+  - Instead of checking at suspend time if it is possible to transition the
+    port to D3, do it whenever power management status of a device (below a
+    port) is changed or when it is added or removed to the bus.
+
+  - Added patch [3/4] to runtime resume a bridge when ACPI hotplug event is
+    received.
+
+Mika Westerberg (4):
+  PCI: No need to set d3cold_allowed to PCIe ports
+  PCI: Put PCIe ports into D3 during suspend
+  ACPI / hotplug / PCI: Runtime resume bridge before rescan
+  PCI: Add runtime PM support for PCIe ports
+
+ Documentation/kernel-parameters.txt |   4 +
+ drivers/pci/bus.c                   |   1 +
+ drivers/pci/hotplug/acpiphp_glue.c  |   8 +-
+ drivers/pci/pci-driver.c            |   5 +-
+ drivers/pci/pci-sysfs.c             |   5 ++
+ drivers/pci/pci.c                   | 175 ++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h                   |  11 +++
+ drivers/pci/pcie/portdrv_core.c     |   2 +
+ drivers/pci/pcie/portdrv_pci.c      |  51 ++++++++++-
+ drivers/pci/remove.c                |   2 +
+ drivers/usb/host/xhci-pci.c         |   2 +-
+ include/linux/pci.h                 |   3 +
+ 12 files changed, 259 insertions(+), 10 deletions(-)
+
+-- 
+2.8.0.rc3
+
