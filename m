@@ -1,66 +1,55 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-yw0-f178.google.com ([209.85.161.178]:35862 "EHLO
+	mail-yw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752950AbcD2Mwf (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 29 Apr 2016 08:52:35 -0400
+Received: by mail-yw0-f178.google.com with SMTP id o66so185120179ywc.3
+        for <linux-pci@vger.kernel.org>; Fri, 29 Apr 2016 05:52:35 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1460654743-7896-10-git-send-email-lorenzo.pieralisi@arm.com>
-References: <1460654743-7896-1-git-send-email-lorenzo.pieralisi@arm.com>
-	<1460654743-7896-10-git-send-email-lorenzo.pieralisi@arm.com>
-Date: Fri, 15 Apr 2016 13:29:14 -0500
-Message-ID: <CAOZdJXXtZq6uyE+5sseX7M_6Kq8wFG+37qd5TNSusKj=0gd8zA@mail.gmail.com>
-Subject: Re: [RFC PATCH 09/11] drivers: acpi: implement acpi_dma_configure
-From: Timur Tabi <timur@codeaurora.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: iommu@lists.linux-foundation.org,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	lkml <linux-kernel@vger.kernel.org>,
-	Will Deacon <will.deacon@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org, Hanjun Guo <hanjun.guo@linaro.org>,
-	Jon Masters <jcm@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
+In-Reply-To: <CAOMZO5AiaNFashMd6XEz=zjyodm6UEAuBMsK=otQ5nHeE+voqw@mail.gmail.com>
+References: <1461167131-26025-1-git-send-email-andrew.smirnov@gmail.com>
+	<1461167131-26025-2-git-send-email-andrew.smirnov@gmail.com>
+	<CAOMZO5AiaNFashMd6XEz=zjyodm6UEAuBMsK=otQ5nHeE+voqw@mail.gmail.com>
+Date: Fri, 29 Apr 2016 14:52:34 +0200
+Message-ID: <CAAMH-yumeh+MUADCk7wbeSO-hdVLT82jmkn2swYmuD8HndrKFA@mail.gmail.com>
+Subject: Re: [PATCH v3 2/3] PCI: imx6: Implement reset sequence for i.MX6+
+From: Gary Bisson <gary.bisson@boundarydevices.com>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: Andrey Smirnov <andrew.smirnov@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
 	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, vikrams@codeaurora.org
+	<linux-arm-kernel@lists.infradead.org>,
+	Richard Zhu <Richard.Zhu@freescale.com>,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lucas Stach <l.stach@pengutronix.de>
 Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 14, 2016 at 12:25 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> +void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
-> +{
-> +       struct iommu_ops *iommu;
-> +
-> +       iommu = iort_iommu_configure(dev);
-> +
-> +       /*
-> +        * Assume dma valid range starts at 0 and covers the whole
-> +        * coherent_dma_mask.
-> +        */
-> +       arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
-> +                          attr == DEV_DMA_COHERENT);
-> +}
+Hi all,
 
-I have a network driver that is impacted by this code, so thank you
-for posting this. (See
-https://www.mail-archive.com/netdev@vger.kernel.org/msg106249.html).
+On Fri, Apr 29, 2016 at 3:47 AM, Fabio Estevam <festevam@gmail.com> wrote:
+> On Wed, Apr 20, 2016 at 12:45 PM, Andrey Smirnov
+> <andrew.smirnov@gmail.com> wrote:
+>> I.MX6+ has a dedicated bit for reseting PCIe core, which should be used
+>> instead of a regular reset sequence since using the latter will hang the
+>> SoC.
+>>
+>> This commit is based on c34068d48273e24d392d9a49a38be807954420ed from
+>> http://git.freescale.com/git/cgit.cgi/imx/linux-2.6-imx.git
+>>
+>> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+>
+> Reviewed-by: Fabio Estevam <fabio.estevam@nxp.com>
 
-One one SOC, the driver needs to set the mask to 32 bits.  On another
-SOC, it needs to set it to 64 bits.  On device tree, the driver will
-use dma-ranges.
+Tested on a Nitrogen6QP_MAX with an Intel WiFi Link 5300 PCIe card.
+Everything is working properly (Gen1 speed).
+# lspci
+00:00.0 Class 0604: 16c3:abcd
+01:00.0 Class 0280: 8086:4235
 
-In your patches, where is coherent_dma_mask initialized?  I found this
-code in add_smmu_platform_device(), but I think this is setting the
-mask for the IOMMU driver, not the individual devices.  Either way, I
-don't understand where the correct value is going to be overridden.
+Tested-by: Gary Bisson <gary.bisson@boundarydevices.com>
 
-+       /*
-+        * Set default dma mask value for the table walker,
-+        * to be overridden on probing with correct value.
-+        */
-+       *pdev->dev.dma_mask = DMA_BIT_MASK(32);
-+       pdev->dev.coherent_dma_mask = *pdev->dev.dma_mask;
-
--- 
-Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project.
+Thanks,
+Gary
