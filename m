@@ -1,91 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:34530 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754126AbcDHQNS (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 8 Apr 2016 12:13:18 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>,
-	Alexandre Courbot <gnurou@gmail.com>,
-	linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: [PATCH v4 1/2] dt-bindings: pci: tegra: Update for per-lane PHYs
-Date: Fri,  8 Apr 2016 18:13:13 +0200
-Message-Id: <1460131994-24493-1-git-send-email-thierry.reding@gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:41612 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750782AbcD3MTr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 30 Apr 2016 08:19:47 -0400
+Date: Sat, 30 Apr 2016 07:19:44 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Yong, Jonathan" <jonathan.yong@intel.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH] PCI: PTM preliminary implementation
+Message-ID: <20160430121944.GB10197@localhost>
+References: <1461047358-4736-1-git-send-email-jonathan.yong@intel.com>
+ <1461047358-4736-2-git-send-email-jonathan.yong@intel.com>
+ <20160429162026.GC949@localhost>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160429162026.GC949@localhost>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+On Fri, Apr 29, 2016 at 11:20:26AM -0500, Bjorn Helgaas wrote:
+> On Tue, Apr 19, 2016 at 06:29:18AM +0000, Yong, Jonathan wrote:
+> > ...
+> > +static ssize_t ptm_status_show(struct device *dev,
+> > +	struct device_attribute *attr, char *buf)
+> > +{
+> > +	struct pci_dev *pdev = to_pci_dev(dev);
+> > +	u16 word;
+> > +	int pos;
+> > +
+> > +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PTM);
+> > +	if (!pos)
+> > +		return -ENXIO;
+> > +
+> > +	pci_read_config_word(pdev, pos + PCI_PTM_CONTROL_REG_OFFSET, &word);
+> 
+> This is a 32-bit register; read it as a dword, even though the upper
+> bits are currently reserved.
+> 
+> > +	return sprintf(buf, "%u\n", word & PCI_PTM_CTRL_ENABLE ? 1 : 0);
+> > +}
+> > +
+> > +static ssize_t ptm_status_store(struct device *dev,
+> > +	struct device_attribute *attr, const char *buf, size_t count)
+> > +{
+> > +	struct pci_dev *pdev = to_pci_dev(dev);
+> > +	unsigned long val;
+> > +	ssize_t ret;
+> > +
+> > +	ret = kstrtoul(buf, 0, &val);
+> > +	if (ret)
+> > +		return ret;
+> > +	if (val)
+> > +		return pci_enable_ptm(pdev);
+> > +	pci_disable_ptm(pdev);
+> > +	return 0;
+> > +}
+> > +
+> > +static DEVICE_ATTR_RW(ptm_status);
 
-Changes to the pad controller device tree binding have required that
-each lane be associated with a separate PHY. Update the PCI host bridge
-device tree binding to allow each root port to define the list of PHYs
-required to drive the lanes associated with it.
+Thinking about this sysfs interface some more...  Do you think we
+really need a knob in sysfs?  What's the use case for it?  I suppose
+there's potentially a performance impact because we'll send more
+messages across the link, but I'd be surprised if it were measurable.
+If it's basically free, there shouldn't be a need to enable/disable it
+individually, except maybe to work around hardware bugs.  A kernel
+boot parameter might be enough for that.  Even a kernel boot parameter
+should be regarded as a debug/testing tool, not a solution.  If we
+find broken devices, we should add quirks for them so users don't need
+to use a boot parameter.
 
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
-Changes in v4:
-- add additional lanes subnode when dereferencing PHYs from the XUSB pad
-  controller to reflect changes in its binding
-
- .../devicetree/bindings/pci/nvidia,tegra20-pcie.txt    | 18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-index 75321ae23c08..f5364084b494 100644
---- a/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/nvidia,tegra20-pcie.txt
-@@ -60,11 +60,14 @@ Required properties:
-   - afi
-   - pcie_x
- 
--Required properties on Tegra124 and later:
-+Required properties on Tegra124 and later (deprecated):
- - phys: Must contain an entry for each entry in phy-names.
- - phy-names: Must include the following entries:
-   - pcie
- 
-+These properties are deprecated in favour of per-lane PHYs define in each of
-+the root ports (see below).
-+
- Power supplies for Tegra20:
- - avdd-pex-supply: Power supply for analog PCIe logic. Must supply 1.05 V.
- - vdd-pex-supply: Power supply for digital PCIe I/O. Must supply 1.05 V.
-@@ -122,6 +125,13 @@ Required properties:
-   - Root port 0 uses 4 lanes, root port 1 is unused.
-   - Both root ports use 2 lanes.
- 
-+Required properties for Tegra124 and later:
-+- phys: Must contain an phandle to a PHY for each entry in phy-names.
-+- phy-names: Must include an entry for each active lane. Note that the number
-+  of entries does not have to (though usually will) be equal to the specified
-+  number of lanes in the nvidia,num-lanes property. Entries are of the form
-+  "pcie-N": where N ranges from 0 to the value specified in nvidia,num-lanes.
-+
- Example:
- 
- SoC DTSI:
-@@ -169,6 +179,9 @@ SoC DTSI:
- 			ranges;
- 
- 			nvidia,num-lanes = <2>;
-+
-+			phys = <&{/padctl@0,7009f000/pads/pcie/lanes/pcie-4}>;
-+			phy-names = "pcie-0";
- 		};
- 
- 		pci@2,0 {
-@@ -183,6 +196,9 @@ SoC DTSI:
- 			ranges;
- 
- 			nvidia,num-lanes = <2>;
-+
-+			phys = <&{/padctl@0,7009f000/pads/pcie/lanes/pcie-2}>;
-+			phy-names = "pcie-0";
- 		};
- 	};
- 
--- 
-2.8.0
-
+Bjorn
