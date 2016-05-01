@@ -1,42 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:3203 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752805AbcEBKQo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 2 May 2016 06:16:44 -0400
-Date: Mon, 2 May 2016 13:16:38 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Mathias Nyman <mathias.nyman@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH v5 0/4] PCI: Add support for suspending (including
- runtime) of PCIe ports
-Message-ID: <20160502101638.GN32610@lahna.fi.intel.com>
-References: <1461919919-120102-1-git-send-email-mika.westerberg@linux.intel.com>
- <57234999.2040202@intel.com>
- <86024359.9LxrAC1gtb@vostro.rjw.lan>
+Return-Path: <hch@lst.de>
+Return-Path: <hch@lst.de>
+Date: Sun, 1 May 2016 20:01:49 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, tglx@linutronix.de,
+	linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH 6/8] pci: provide sensible irq vector alloc/free
+	routines
+Message-ID: <20160501180149.GA11131@lst.de>
+References: <1460770552-31260-1-git-send-email-hch@lst.de> <1460770552-31260-7-git-send-email-hch@lst.de> <20160429211638.GB28261@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <86024359.9LxrAC1gtb@vostro.rjw.lan>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160429211638.GB28261@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 29, 2016 at 02:10:59PM +0200, Rafael J. Wysocki wrote:
-> > For the non-functional one-line only xhci change in patch 2/4:
-> > Acked-by: Mathias Nyman <mathias.nyman@linux.intel.com>
-> > 
-> > Out of curiosity, does enabling bridge d3 in any way impact #PME
-> > wakeup signaling initiated by devices behind that bridge?
+On Fri, Apr 29, 2016 at 04:16:39PM -0500, Bjorn Helgaas wrote:
+> Sorry to be a pedant, but can you please edit the subject to be:
 > 
-> If the device reports (via the config space) that it is capable of signaling
-> PME from D3_{cold}, the wakeup signaling won't be affected (as long as the
-> hardware design follows the spec).
-> 
-> The Mika's patches take that into account AFAICS.
+>   PCI: Provide sensible IRQ vector alloc/free routines
 
-Yes, that's right.
+sure.
+
+> 
+> so it matches the drivers/pci convention?
+> 
+> I like this idea a lot.  The MSI-X/MSI interfaces are much better than
+> they used to be, and I think this would be another significant
+> improvement.  What do you think, Alexander?  Here's the whole series
+> in case you don't have it handy:
+> http://lkml.kernel.org/r/1460770552-31260-1-git-send-email-hch@lst.de
+
+FYI, I spent some time trying to convert more drivers to this, and
+I think we'll need an additional flag to skip MSI or MSI-X as there
+is plenty of hardware claiming support in the capabilities flag,
+but not actually supporting one of them.
+
+> > Hide all the MSI-X vs MSI vs legacy bullshit, and provide an array of
+> > interrupt vectors in the pci_dev structure, and ensure we get proper
+> > interrupt affinity by default.
+> 
+> This patch doesn't do anything for affinity by itself.
+
+it used to in an earlier incarnation before I split that out.  But yes,
+the changelog should be updated.
+
+> > +	vecs = pci_enable_msix_range_wrapper(pdev, irqs, nr_vecs);
+> > +	if (vecs <= 0) {
+> > +		vecs = pci_enable_msi_range(pdev, 1, min(nr_vecs, 32));
+> 
+> I don't see one, but seems like we should have a #define for this
+> "32".  I guess pci_enable_msi_range() already protects itself, so this
+> min() is probably not strictly necessary anyway.
+
+Ok, I'll take a look an will either remove it entirely or add an
+define depending on the audit.
