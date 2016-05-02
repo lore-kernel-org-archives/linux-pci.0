@@ -1,140 +1,279 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp09.au.ibm.com ([202.81.31.142]:51488 "EHLO
-	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754466AbcEFA3j (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 May 2016 20:29:39 -0400
-Received: from localhost
-	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 6 May 2016 10:29:36 +1000
-Date: Fri, 6 May 2016 10:28:34 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Alexey Kardashevskiy <aik@ozlabs.ru>,
-	Bjorn Helgaas <bhelgaas@google.com>, dja@axtens.net,
-	Alistair Popple <alistair@popple.id.au>
-Subject: Re: [PATCH v9 22/22] PCI/hotplug: PowerPC PowerNV PCI hotplug driver
-Message-ID: <20160506002834.GA5509@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1462281773-26438-23-git-send-email-gwshan@linux.vnet.ibm.com>
- <CAL_JsqLAYk2S80LNvF2z2ZzPfCWAbpz2LNKK-04OgSkabjWbxQ@mail.gmail.com>
+Return-Path: <ravikanth.nalla@hpe.com>
+Return-Path: <ravikanth.nalla@hpe.com>
+From: "Nalla, Ravikanth" <ravikanth.nalla@hpe.com>
+To: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+	"timur@codeaurora.org" <timur@codeaurora.org>, "cov@codeaurora.org"
+	<cov@codeaurora.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "lenb@kernel.org" <lenb@kernel.org>, "K, Harish
+ (MCOU/UPEL)" <harish.k@hpe.com>, "Reghunandanan, Ashwin (STSD)"
+	<ashwin.reghunandanan@hpe.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"rjw@rjwysocki.net" <rjw@rjwysocki.net>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH V3 1/4] acpi,pci,irq: reduce resource requirements
+Date: Mon, 2 May 2016 17:44:11 +0000
+Message-ID: <49D617FA63152941907AADE32CF072F12FF09187@G4W3290.americas.hpqcorp.net>
+References: <1460914617-8259-1-git-send-email-okaya@codeaurora.org>
+ <20160426183611.GC27803@localhost> <571FBACB.1020606@codeaurora.org>
+In-Reply-To: <571FBACB.1020606@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAL_JsqLAYk2S80LNvF2z2ZzPfCWAbpz2LNKK-04OgSkabjWbxQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 05, 2016 at 12:04:49PM -0500, Rob Herring wrote:
->On Tue, May 3, 2016 at 8:22 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->> This adds standalone driver to support PCI hotplug for PowerPC PowerNV
->> platform that runs on top of skiboot firmware. The firmware identifies
->> hotpluggable slots and marked their device tree node with proper
->> "ibm,slot-pluggable" and "ibm,reset-by-firmware". The driver scans
->> device tree nodes to create/register PCI hotplug slot accordingly.
+
+-----Original Message-----
+From: Sinan Kaya [mailto:okaya@codeaurora.org]=20
+Sent: Wednesday, April 27, 2016 12:30 AM
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-acpi@vger.kernel.org; timur@codeaurora.org; cov@codeaurora.org; l=
+inux-pci@vger.kernel.org; Nalla, Ravikanth <ravikanth.nalla@hpe.com>; lenb@=
+kernel.org; K, Harish (MCOU/UPEL) <harish.k@hpe.com>; Reghunandanan, Ashwin=
+ (STSD) <ashwin.reghunandanan@hpe.com>; bhelgaas@google.com; rjw@rjwysocki.=
+net; linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V3 1/4] acpi,pci,irq: reduce resource requirements
+
+On 4/26/2016 2:36 PM, Bjorn Helgaas wrote:
+> On Sun, Apr 17, 2016 at 01:36:53PM -0400, Sinan Kaya wrote:
+>> Code has been redesigned to calculate penalty requirements on the=20
+>> fly. This significantly simplifies the implementation and removes=20
+>> some of the init calls from x86 architecture.
 >>
->> The PCI slots are organized in fashion of tree, which means one
->> PCI slot might have parent PCI slot and parent PCI slot possibly
->> contains multiple child PCI slots. At the plugging time, the parent
->> PCI slot is populated before its children. The child PCI slots are
->> removed before their parent PCI slot can be removed from the system.
+>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>=20
+> For all four patches:
+>=20
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> Thanks, can the HPE developers in CC test the series in order to avoid an=
+other revert?=20
+
+ I'm facing below errors while applying these patches on mainline kernel fo=
+r verification. Please check and let me know what is the issue or if I'm=20
+ missing  anything. I use outlook for mail and I copied your mail formatted=
+ patches into each individual file manually and converted these files into
+ unix format (using dos2unix cmd)  and when trying to apply with cmd "patch=
+ -p1  patch1.patch" /  "git apply patch1.patch" i see
+ below errors. I'm getting similar errors for remaining  patches too and al=
+so "checkpatch.pl" looks to be throwing errors. Hence I'm not able to=20
+ verify your changes.
+
+ linux]# dos2unix patch1.patch
+ dos2unix: converting file patch1.patch to Unix format ...
+ linux]# patch -p1 < patch1.patch
+ patching file drivers/acpi/pci_link.c
+ patch: **** malformed patch at line 99: @@ -547,12 +601,12 @@ static int a=
+cpi_pci_link_allocate(struct acpi_pci_link *link)
+ linux]# git apply patch1.patch
+ fatal: corrupt patch at line 99
+
+ "checkpatch.pl" errors:
+-----------------------------
+ linux]# ./scripts/checkpatch.pl patch1.patch
+ ERROR: open brace '{' following function declarations go on the next line
+ #44: FILE: drivers/acpi/pci_link.c:470:
+ +static int acpi_irq_pci_sharing_penalty(int irq) {
+
+ ERROR: open brace '{' following function declarations go on the next line
+ #72: FILE: drivers/acpi/pci_link.c:498:
++static int acpi_irq_get_penalty(int irq) {
+
+ERROR: patch seems to be corrupt (line wrapped?)
+#173: FILE: drivers/acpi/pci_link.c:889:
+1.8.2.1
+
+total: 3 errors, 0 warnings, 144 lines checked
+
+patch1.patch has style problems, please review.
+
+NOTE: If any of the errors are false positives, please report
+      them to the maintainer, see CHECKPATCH in MAINTAINERS.
+>=20
+>> ---
+>>  drivers/acpi/pci_link.c | 97=20
+>> ++++++++++++++++++++++++++++++++++---------------
+>>  1 file changed, 68 insertions(+), 29 deletions(-)
 >>
->> If the skiboot firmware doesn't support slot status retrieval, the PCI
->> slot device node shouldn't have property "ibm,reset-by-firmware". In
->> that case, none of valid PCI slots will be detected from device tree.
->> The skiboot firmware doesn't export the capability to access attention
->> LEDs yet and it's something for TBD.
+>> diff --git a/drivers/acpi/pci_link.c b/drivers/acpi/pci_link.c index=20
+>> ededa90..cc0ba16 100644
+>> --- a/drivers/acpi/pci_link.c
+>> +++ b/drivers/acpi/pci_link.c
+>> @@ -36,6 +36,7 @@
+>>  #include <linux/mutex.h>
+>>  #include <linux/slab.h>
+>>  #include <linux/acpi.h>
+>> +#include <linux/irq.h>
+>> =20
+>>  #include "internal.h"
+>> =20
+>> @@ -440,7 +441,6 @@ static int acpi_pci_link_set(struct acpi_pci_link *l=
+ink, int irq)
+>>  #define ACPI_MAX_IRQS		256
+>>  #define ACPI_MAX_ISA_IRQ	16
+>> =20
+>> -#define PIRQ_PENALTY_PCI_AVAILABLE	(0)
+>>  #define PIRQ_PENALTY_PCI_POSSIBLE	(16*16)
+>>  #define PIRQ_PENALTY_PCI_USING		(16*16*16)
+>>  #define PIRQ_PENALTY_ISA_TYPICAL	(16*16*16*16)
+>> @@ -457,9 +457,9 @@ static int acpi_irq_penalty[ACPI_MAX_IRQS] =3D {
+>>  	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ6 */
+>>  	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ7 parallel, spurious */
+>>  	PIRQ_PENALTY_ISA_TYPICAL,	/* IRQ8 rtc, sometimes */
+>> -	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ9  PCI, often acpi */
+>> -	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ10 PCI */
+>> -	PIRQ_PENALTY_PCI_AVAILABLE,	/* IRQ11 PCI */
+>> +	0,				/* IRQ9  PCI, often acpi */
+>> +	0,				/* IRQ10 PCI */
+>> +	0,				/* IRQ11 PCI */
+>>  	PIRQ_PENALTY_ISA_USED,		/* IRQ12 mouse */
+>>  	PIRQ_PENALTY_ISA_USED,		/* IRQ13 fpe, sometimes */
+>>  	PIRQ_PENALTY_ISA_USED,		/* IRQ14 ide0 */
+>> @@ -467,6 +467,60 @@ static int acpi_irq_penalty[ACPI_MAX_IRQS] =3D {
+>>  	/* >IRQ15 */
+>>  };
+>> =20
+>> +static int acpi_irq_pci_sharing_penalty(int irq) {
+>> +	struct acpi_pci_link *link;
+>> +	int penalty =3D 0;
+>> +
+>> +	list_for_each_entry(link, &acpi_link_list, list) {
+>> +		/*
+>> +		 * If a link is active, penalize its IRQ heavily
+>> +		 * so we try to choose a different IRQ.
+>> +		 */
+>> +		if (link->irq.active && link->irq.active =3D=3D irq)
+>> +			penalty +=3D PIRQ_PENALTY_PCI_USING;
+>> +		else {
+>> +			int i;
+>> +
+>> +			/*
+>> +			 * If a link is inactive, penalize the IRQs it
+>> +			 * might use, but not as severely.
+>> +			 */
+>> +			for (i =3D 0; i < link->irq.possible_count; i++)
+>> +				if (link->irq.possible[i] =3D=3D irq)
+>> +					penalty +=3D PIRQ_PENALTY_PCI_POSSIBLE /
+>> +						link->irq.possible_count;
+>> +		}
+>> +	}
+>> +
+>> +	return penalty;
+>> +}
+>> +
+>> +static int acpi_irq_get_penalty(int irq) {
+>> +	int penalty =3D 0;
+>> +
+>> +	if (irq < ACPI_MAX_ISA_IRQ)
+>> +		penalty +=3D acpi_irq_penalty[irq];
+>> +
+>> +	/*
+>> +	* Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes conflict
+>> +	* with PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be
+>> +	* use for PCI IRQs.
+>> +	*/
+>> +	if (irq =3D=3D acpi_gbl_FADT.sci_interrupt) {
+>> +		u32 type =3D irq_get_trigger_type(irq) & IRQ_TYPE_SENSE_MASK;
+>> +
+>> +		if (type !=3D IRQ_TYPE_LEVEL_LOW)
+>> +			penalty +=3D PIRQ_PENALTY_ISA_ALWAYS;
+>> +		else
+>> +			penalty +=3D PIRQ_PENALTY_PCI_USING;
+>> +	}
+>> +
+>> +	penalty +=3D acpi_irq_pci_sharing_penalty(irq);
+>> +	return penalty;
+>> +}
+>> +
+>>  int __init acpi_irq_penalty_init(void)  {
+>>  	struct acpi_pci_link *link;
+>> @@ -547,12 +601,12 @@ static int acpi_pci_link_allocate(struct acpi_pci_=
+link *link)
+>>  		 * the use of IRQs 9, 10, 11, and >15.
+>>  		 */
+>>  		for (i =3D (link->irq.possible_count - 1); i >=3D 0; i--) {
+>> -			if (acpi_irq_penalty[irq] >
+>> -			    acpi_irq_penalty[link->irq.possible[i]])
+>> +			if (acpi_irq_get_penalty(irq) >
+>> +			    acpi_irq_get_penalty(link->irq.possible[i]))
+>>  				irq =3D link->irq.possible[i];
+>>  		}
+>>  	}
+>> -	if (acpi_irq_penalty[irq] >=3D PIRQ_PENALTY_ISA_ALWAYS) {
+>> +	if (acpi_irq_get_penalty(irq) >=3D PIRQ_PENALTY_ISA_ALWAYS) {
+>>  		printk(KERN_ERR PREFIX "No IRQ available for %s [%s]. "
+>>  			    "Try pci=3Dnoacpi or acpi=3Doff\n",
+>>  			    acpi_device_name(link->device), @@ -568,7 +622,6 @@ static=20
+>> int acpi_pci_link_allocate(struct acpi_pci_link *link)
+>>  			    acpi_device_bid(link->device));
+>>  		return -ENODEV;
+>>  	} else {
+>> -		acpi_irq_penalty[link->irq.active] +=3D PIRQ_PENALTY_PCI_USING;
+>>  		printk(KERN_WARNING PREFIX "%s [%s] enabled at IRQ %d\n",
+>>  		       acpi_device_name(link->device),
+>>  		       acpi_device_bid(link->device), link->irq.active); @@ -800,9=20
+>> +853,10 @@ static int __init acpi_irq_penalty_update(char *str, int used=
+)
+>>  			continue;
+>> =20
+>>  		if (used)
+>> -			acpi_irq_penalty[irq] +=3D PIRQ_PENALTY_ISA_USED;
+>> +			acpi_irq_penalty[irq] =3D acpi_irq_get_penalty(irq) +
+>> +				PIRQ_PENALTY_ISA_USED;
+>>  		else
+>> -			acpi_irq_penalty[irq] =3D PIRQ_PENALTY_PCI_AVAILABLE;
+>> +			acpi_irq_penalty[irq] =3D 0;
+>> =20
+>>  		if (retval !=3D 2)	/* no next number */
+>>  			break;
+>> @@ -819,34 +873,19 @@ static int __init acpi_irq_penalty_update(char *st=
+r, int used)
+>>   */
+>>  void acpi_penalize_isa_irq(int irq, int active)  {
+>> -	if (irq >=3D 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
+>> -		if (active)
+>> -			acpi_irq_penalty[irq] +=3D PIRQ_PENALTY_ISA_USED;
+>> -		else
+>> -			acpi_irq_penalty[irq] +=3D PIRQ_PENALTY_PCI_USING;
+>> -	}
+>> +	if (irq >=3D 0 && irq < ARRAY_SIZE(acpi_irq_penalty))
+>> +		acpi_irq_penalty[irq] =3D acpi_irq_get_penalty(irq) +
+>> +			active ? PIRQ_PENALTY_ISA_USED : PIRQ_PENALTY_PCI_USING;
+>>  }
+>> =20
+>>  bool acpi_isa_irq_available(int irq)  {
+>>  	return irq >=3D 0 && (irq >=3D ARRAY_SIZE(acpi_irq_penalty) ||
+>> -			    acpi_irq_penalty[irq] < PIRQ_PENALTY_ISA_ALWAYS);
+>> +		    acpi_irq_get_penalty(irq) < PIRQ_PENALTY_ISA_ALWAYS);
+>>  }
+>> =20
+>> -/*
+>> - * Penalize IRQ used by ACPI SCI. If ACPI SCI pin attributes=20
+>> conflict with
+>> - * PCI IRQ attributes, mark ACPI SCI as ISA_ALWAYS so it won't be=20
+>> use for
+>> - * PCI IRQs.
+>> - */
+>>  void acpi_penalize_sci_irq(int irq, int trigger, int polarity)  {
+>> -	if (irq >=3D 0 && irq < ARRAY_SIZE(acpi_irq_penalty)) {
+>> -		if (trigger !=3D ACPI_MADT_TRIGGER_LEVEL ||
+>> -		    polarity !=3D ACPI_MADT_POLARITY_ACTIVE_LOW)
+>> -			acpi_irq_penalty[irq] +=3D PIRQ_PENALTY_ISA_ALWAYS;
+>> -		else
+>> -			acpi_irq_penalty[irq] +=3D PIRQ_PENALTY_PCI_USING;
+>> -	}
+>>  }
+>> =20
+>>  /*
+>> --
+>> 1.8.2.1
 >>
->> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
->[...]
->
->> +static void pnv_php_handle_poweron(struct pnv_php_slot *php_slot)
->> +{
->> +       void *fdt, *fdt1, *dt;
->> +       int confirm = PNV_PHP_POWER_CONFIRMED_SUCCESS;
->> +       int ret;
->> +
->> +       /* We don't know the FDT blob size. We try to get it through
->> +        * maximal memory chunk and then copy it to another chunk that
->> +        * fits the real size.
->> +        */
->> +       fdt1 = kzalloc(0x10000, GFP_KERNEL);
->> +       if (!fdt1)
->> +               goto error;
->> +
->> +       ret = pnv_pci_get_device_tree(php_slot->dn->phandle, fdt1, 0x10000);
->> +       if (ret)
->> +               goto free_fdt1;
->> +
->> +       fdt = kzalloc(fdt_totalsize(fdt1), GFP_KERNEL);
->> +       if (!fdt)
->> +               goto free_fdt1;
->> +
->> +       /* Unflatten device tree blob */
->> +       memcpy(fdt, fdt1, fdt_totalsize(fdt1));
->
->This is wrong. If the size is greater than 64K, then you will be
->overrunning the fdt1 buffer. You need to fetch the FDT again if it is
->bigger than 64KB.
->
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci"=20
+>> in the body of a message to majordomo@vger.kernel.org More majordomo=20
+>> info at  http://vger.kernel.org/majordomo-info.html
 
-Thanks for review, Rob. Sorry that I don't see how it's a problem. An
-errcode is returned from pnv_pci_get_device_tree() if the FDT blob
-size is greater than 64K. In this case, memcpy() won't be triggered.
-pnv_pci_get_device_tree() relies on firmware implementation which
-avoids overrunning the buffer.
 
-On the other hand, it would be reasonable to retry retriving the
-FDT blob if 64K buffer isn't enough. Also, kzalloc() can be replaced
-with alloc_pages() as 64K is the default page size on PPC64. I will
-have something like below until some one has more concerns. As the
-size of the allocated buffer will be greater than the real FDT blob
-size, some memory (not too much) is wasted. I guess it should be ok.
-
-	struct page *page;
-	void *fdt;
-	unsigned int order;
-	int ret;
-
-	for (order = 0; order < MAX_ORDER; order++) {
-		page = alloc_pages(GFP_KERNEL, order);
-		if (page) {
-			fdt = page_address(page);
-			ret = pnv_pci_get_device_tree(php_slot->dn->phandle,
-						      fdt, (1 << order) * PAGE_SIZE);
-			if (ret) {
-				dev_dbg(&php_slot->pdev.dev, "Error %d getting device tree (%d)\n",
-					ret, order);
-				free_pages(fdt, order);
-				continue;
-			}
-		}
-	}
-
-	if (order >= MAX_ORDER) {
-		dev_warn(&php_slot->pdev.dev, "Cannot get device tree\n");
-		return;
-	}
-
-	/* Unflatten the blob without copying it to another allocated buffer */
-
-Thanks,
-Gavin
-
->
->> +       dt = of_fdt_unflatten_tree(fdt, php_slot->dn, NULL);
->> +       if (!dt) {
->> +               dev_warn(&php_slot->pdev->dev, "Cannot unflatten FDT\n");
->> +               goto free_fdt;
->> +       }
->> +
->
-
+--
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux =
+Foundation Collaborative Project
