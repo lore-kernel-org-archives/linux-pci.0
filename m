@@ -1,68 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-Id: <201605301337.u4UDY4eh016595@mx0a-001b2d01.pphosted.com>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	joro@8bytes.org, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	eric.auger@linaro.org, will.deacon@arm.com,
-	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
-	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
-Subject: [PATCH v2 1/6] PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
-Date: Mon, 30 May 2016 21:32:08 +0800
-In-Reply-To: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <andreas.noever@gmail.com>
+Return-Path: <andreas.noever@gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <20160502173026.GF24851@localhost>
+References: <1460285307-3557-1-git-send-email-andreas.noever@gmail.com> <20160502173026.GF24851@localhost>
+From: Andreas Noever <andreas.noever@gmail.com>
+Date: Tue, 3 May 2016 01:18:11 +0200
+Message-ID: <CAMxnaaUQUrVYfMaZ0Z7-Cq3sGG5dom5Edz1kUwmXV-8yC6fHeg@mail.gmail.com>
+Subject: Re: [PATCH] thunderbolt: Fix double free of drom buffer
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Lukas Wunner <lukas@wunner.de>, stable@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-We introduce a new pci_bus_flags, PCI_BUS_FLAGS_MSI_REMAP
-which indicates interrupts of all devices on the bus are
-managed by the hardware enabling IRQ remapping(intel naming).
-When the capability is enabled, a given PCI device can only
-shoot the MSIs assigned for it. In other words, the hardware
-can protect system from invalid MSIs of the device by checking
-the target address and data when there is something wrong
-with MSI part in device or device driver.
+On Mon, May 2, 2016 at 7:30 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Sun, Apr 10, 2016 at 12:48:27PM +0200, Andreas Noever wrote:
+>> If tb_drom_read fails sw->drom is freed but not set to NULL. sw->drom
+>> is then freed again in the error path of sw_switch_alloc.
+>
+> s/sw_switch_alloc/tb_switch_alloc/ ?
+>
+>> The bug can be triggered by unplugging a thunderbolt device shortly
+>> after it is detected by the thunderbolt driver.
+>>
+>> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+>> Cc: Lukas Wunner <lukas@wunner.de>
+>> Cc: stable@vger.kernel.org
+>
+> How far back would this need to be applied?  What is the commit where
+> the but was introduced?
+>
+> I applied this to pci/thunderbolt for v4.7 with the following
+> changelog.  If I did it wrong, I'll gladly update it, especially if
+> you have specific symptoms of a bug or oops that would help people
+> find this fix.
+>
+>     thunderbolt: Fix double free of drom buffer
+>
+>     If tb_drom_read() fails, sw->drom is freed but not set to NULL.  sw->drom
+>     is then freed again in the error path of tb_switch_alloc().
+>
+>     The bug can be triggered by unplugging a thunderbolt device shortly after
+>     it is detected by the thunderbolt driver.
+>
+>     Clear sw->drom if tb_drom_read() fails.
+The changelog is correct. The bug can be triggered starting from
+343fcb8c ("thunderbolt: Fix nontrivial endpoint devices.") which is in
+3.17-rc1. I observed crashes during subsequent hotplug operations (pci
+core, sometimes in pciehp). But by nature of a double free bug these
+were not very reliable (used kasan to track it down).
 
-There is a existing flag for this capability in the IOMMU space:
+Thanks
+Andreas
 
-enum iommu_cap {
-	IOMMU_CAP_CACHE_COHERENCY,
---->	IOMMU_CAP_INTR_REMAP,
-	IOMMU_CAP_NOEXEC,
-};
 
-and Eric also posted a patchset [1] to abstract it on MSI
-controller side for ARM. But it would make sense to have a
-more common flag like PCI_BUS_FLAGS_MSI_REMAP so that we can
-use a universal flag to test this capability on PCI side for
-different archs.
-
-With this flag enabled, we can easily know whether it's safe
-to expose MSI-X tables of PCI BARs to userspace. Some usespace
-drivers such as VFIO may benefit from this.
-
-[1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
-
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- include/linux/pci.h |    1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 932ec74..4ec37da 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -187,6 +187,7 @@ typedef unsigned short __bitwise pci_bus_flags_t;
- enum pci_bus_flags {
- 	PCI_BUS_FLAGS_NO_MSI   = (__force pci_bus_flags_t) 1,
- 	PCI_BUS_FLAGS_NO_MMRBC = (__force pci_bus_flags_t) 2,
-+	PCI_BUS_FLAGS_MSI_REMAP = (__force pci_bus_flags_t) 4,
- };
- 
- /* These values come from the PCI Express Spec */
--- 
-1.7.9.5
+>     [bhelgaas: add Fixes:, stable versions of interest]
+>     Fixes: 343fcb8c70d7 ("thunderbolt: Fix nontrivial endpoint devices.")
+>     Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     CC: stable@vger.kernel.org  # v3.17+
+>     CC: Lukas Wunner <lukas@wunner.de>
+>
+>> ---
+>>  drivers/thunderbolt/eeprom.c | 1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/thunderbolt/eeprom.c b/drivers/thunderbolt/eeprom.c
+>> index 0dde34e..545c60c 100644
+>> --- a/drivers/thunderbolt/eeprom.c
+>> +++ b/drivers/thunderbolt/eeprom.c
+>> @@ -444,6 +444,7 @@ int tb_drom_read(struct tb_switch *sw)
+>>       return tb_drom_parse_entries(sw);
+>>  err:
+>>       kfree(sw->drom);
+>> +     sw->drom = NULL;
+>>       return -EIO;
+>>
+>>  }
+>> --
+>> 2.8.0
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
