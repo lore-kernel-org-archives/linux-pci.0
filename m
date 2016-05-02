@@ -1,43 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60466 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754425AbcEPTjd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 16 May 2016 15:39:33 -0400
-Date: Mon, 16 May 2016 14:39:29 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: agordeev@redhat.com, pjw@netapp.com, axboe@fb.com,
-	keith.busch@intel.com, linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org
-Subject: Re: [PATCH 1/2] PCI: Provide sensible irq vector alloc/free routines
-Message-ID: <20160516193929.GA20759@localhost>
-References: <1462457096-19795-1-git-send-email-hch@lst.de>
- <1462457096-19795-2-git-send-email-hch@lst.de>
- <20160509224631.GB18501@localhost>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:36852 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398AbcEBCD4 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 May 2016 22:03:56 -0400
+Received: from localhost
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Mon, 2 May 2016 12:03:53 +1000
+Date: Mon, 2 May 2016 12:02:21 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
+	dja@axtens.net, Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>
+Subject: Re: [PATCH v8 40/45] drivers/of: Split unflatten_dt_node()
+Message-ID: <20160502020221.GA16612@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-41-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAL_Jsq++L-D=RD6ZYK=CPnhqcZbhEbxsKk3xT-vK2R=Qe9Z_pg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160509224631.GB18501@localhost>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAL_Jsq++L-D=RD6ZYK=CPnhqcZbhEbxsKk3xT-vK2R=Qe9Z_pg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 09, 2016 at 05:46:31PM -0500, Bjorn Helgaas wrote:
-> On Thu, May 05, 2016 at 04:04:55PM +0200, Christoph Hellwig wrote:
-> > Add a new pci_alloc_irq_vectors helper that allocates MSI-X or multi-MSI
-> > vectors for PCI device while isolating the driver from the arcane details.
-> > 
-> > This include handling both MSI-X, MSI and legacy interrupt fallbacks
-> > transparently, automatic capping to the available vectors as well as storing
-> > the information needed for request_irq in the PCI device itself so that
-> > a lot of boiler plate code in the driver can be removed.
-> > 
-> > In the future this will also allow us to automatically set up spreading
-> > for interrupt vectors without having to duplicate it in all the drivers.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Thanks, I applied this to pci/msi for v4.7.
+On Wed, Feb 17, 2016 at 08:30:42AM -0600, Rob Herring wrote:
+>On Tue, Feb 16, 2016 at 9:44 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+>> The function unflatten_dt_node() is called recursively to unflatten
+>> device nodes and properties in the FDT blob. It looks complicated
+>> and hard to be understood.
+>>
+>> This splits the function into 3 functions: populate_properties(),
+>> populate_node() and unflatten_dt_node(). populate_properties(),
+>> which is called by populate_node(), creates properties for the
+>> indicated device node. The later one creates the device nodes
+>> from FDT blob. populate_node() gets the offset in FDT blob for
+>> next device nodes and then calls populate_node(). No logical
+>> changes introduced.
+>>
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> ---
+>>  drivers/of/fdt.c | 249 ++++++++++++++++++++++++++++++++-----------------------
+>>  1 file changed, 147 insertions(+), 102 deletions(-)
+>
+>One nit, otherwise:
+>
+>Acked-by: Rob Herring <robh@kernel.org>
+>
+>[...]
+>
+>> +               /* And we process the "ibm,phandle" property
+>> +                * used in pSeries dynamic device tree
+>> +                * stuff
+>> +                */
+>> +               if (!strcmp(pname, "ibm,phandle"))
+>> +                       np->phandle = be32_to_cpup(val);
+>> +
+>> +               pp->name   = (char *)pname;
+>> +               pp->length = sz;
+>> +               pp->value  = (__be32 *)val;
+>
+>This cast should not be needed.
+>
 
-Given the subsequent discussion, it seems a little premature to merge
-this for v4.7, so I'm dropping this for now.
+It's needed. Otherwise, we will have warning. So I will keep it. I just
+went through this one for next revision and sorry for late response.
 
-Bjorn
+drivers/of/fdt.c:225:14: warning: assignment discards ‘const’ qualifier from pointer target type
+   pp->value  = val;
+              ^
+
+Thanks,
+Gavin
+
+>> +               *pprev     = pp;
+>> +               pprev      = &pp->next;
+>> +       }
+>
+
