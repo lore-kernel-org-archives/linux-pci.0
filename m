@@ -1,60 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([125.16.236.4]:33109 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933398AbcECNds (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 09:33:48 -0400
-Received: from localhost
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 3 May 2016 18:53:36 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, robherring2@gmail.com, dja@axtens.net,
-	alistair@popple.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v9 11/22] powerpc/pci: Update bridge windows on PCI plug
-Date: Tue,  3 May 2016 23:22:42 +1000
-Message-Id: <1462281773-26438-12-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <thierry.reding@gmail.com>
+Return-Path: <thierry.reding@gmail.com>
+Date: Mon, 2 May 2016 09:19:12 +0200
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, catalin.marinas@arm.com,
+	linux-pci@vger.kernel.org, will.deacon@arm.com,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>, ddaney@caviumnetworks.com,
+	robert.richter@caviumnetworks.com, msalter@redhat.com,
+	Liviu.Dudau@arm.com, jchandra@broadcom.com,
+	linux-kernel@vger.kernel.org, hanjun.guo@linaro.org,
+	Suravee.Suthikulpanit@amd.com
+Subject: Re: [PATCH 3/3] [RFC] pci: tegra: use new pci_register_host interface
+Message-ID: <20160502071912.GC27465@ulmo.ba.sec>
+References: <1461970899-4150603-1-git-send-email-arnd@arndb.de>
+ <1461970899-4150603-4-git-send-email-arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="ncSAzJYg3Aa9+CRW"
+In-Reply-To: <1461970899-4150603-4-git-send-email-arnd@arndb.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-On the PCI plugging event, PCI slot's subordinate devices are
-scanned and their (IO and MMIO) resources are assigned. Platform
-dependent resources (PE#, IO/MMIO/DMA windows) are allocated or
-created on updating windows of the slot's upstream bridge.
 
-This updates the windows of the hot plugged slot's upstream bridge
-in pcibios_finish_adding_to_bus() so that the platform resources
-(PE#, IO/MMIO/DMA segments) are allocated or created accordingly.
+--ncSAzJYg3Aa9+CRW
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
----
- arch/powerpc/kernel/pci-common.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+On Sat, Apr 30, 2016 at 01:01:39AM +0200, Arnd Bergmann wrote:
+> Tegra is one of the remaining platforms that still use the
+> traditional pci_common_init_dev() interface for probing PCI
+> host bridges.
+>=20
+> This demonstrates how to convert it to the pci_register_host
+> interface I just added in a previous patch. This leads to
+> a more linear probe sequence that can handle errors better
+> because we avoid callbacks into the driver, and it makes
+> the driver architecture independent.
+>=20
+> As a side note, I should mention that I noticed this driver
+> does not register any IORESOURCE_IO resource with the bus,
+> but instead registers the I/O port window as a memory
+> resource, which is surely a bug.
 
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 40df3a5..be9e515 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1444,8 +1444,12 @@ void pcibios_finish_adding_to_bus(struct pci_bus *bus)
- 	/* Allocate bus and devices resources */
- 	pcibios_allocate_bus_resources(bus);
- 	pcibios_claim_one_bus(bus);
--	if (!pci_has_flag(PCI_PROBE_ONLY))
--		pci_assign_unassigned_bus_resources(bus);
-+	if (!pci_has_flag(PCI_PROBE_ONLY)) {
-+		if (bus->self)
-+			pci_assign_unassigned_bridge_resources(bus->self);
-+		else
-+			pci_assign_unassigned_bus_resources(bus);
-+	}
- 
- 	/* Fixup EEH */
- 	eeh_add_device_tree_late(bus);
--- 
-2.1.0
+How's that? I thought pci_add_resource_offset() was exactly what was
+registering the I/O resource, using the resource's flags to determine
+what type to register. Do we have to use a different API to register an
+I/O resource in particular?
 
+Overall this change looks really good. How do you want to proceed with
+the series? Would it be helpful if I picked up this patch and submit it
+to Bjorn for v4.8, provided that the core changes make it in?
+
+Thierry
+
+--ncSAzJYg3Aa9+CRW
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCAAGBQJXJv9wAAoJEN0jrNd/PrOhkwIP/iWiHB2wgy6L3RP6jUxjLofm
+vxb389mLLzr3BeME9CCSiQFpLDhJIzJTMZXbQSfE4+LUyPEFjQzZO3dnNOwZ2+Sg
+RIIES8iUyBdCHun+C76XjmaZMe+/X0abCoZTXfHIQolxPb/Ca271tuxYrGC7SFMY
+V5tT8rASK3PzsqmOTCHiS8R0s3/7ih7wShavtlGDUj3VGZkzwu23naRreaNuflrk
+WjSVOY2dL6/oPCfNqN9Xgv0XqYBBmUNqOxoZeQNmV+csqIt2fBy4Pj4QRUtb0UFt
+1xxnma3alikX3dAXzI5iFpfSF9sHnoWoKe1lIEp57j/wGi35cN9tZHz3Yr/EQewI
+nSclXcEDO4d+sfQsARlj5mYpRUBYLaH4MKvPP5kfRmCH7f5rcgIRzNpNiKsJ4+NB
+h+V/oG3wpDL5/4TTsKHImiP5mfC2RIGJ0nkTkz2+zZoKmgi2iUfN7fyVCFzf5Dkc
+rddJVT6YOa5O2HjWbhfT2WMmEMCPw770FEe2CrMqxXku3ssoH48Aqj2+/IazjQYe
+w0Bus0TJ9tXYBDYo9FP1syoCh79s3NX4RtGtFdUP9PPTqs45R2A7qHBU7lfkWSHv
+lTxkx9NSB+ixEg7rHhHUqdU1wCIc/bvOpXxRXtHVxUr96lZr1782XAfu5LcKp+Na
+agYSz3nX99Sh++A07KX7
+=h7Kf
+-----END PGP SIGNATURE-----
+
+--ncSAzJYg3Aa9+CRW--
