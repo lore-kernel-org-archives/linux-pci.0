@@ -1,79 +1,119 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Tian, Kevin" <kevin.tian@intel.com>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
-CC: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"aik@ozlabs.ru" <aik@ozlabs.ru>,
-	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-	"paulus@samba.org" <paulus@samba.org>,
-	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
-	"corbet@lwn.net" <corbet@lwn.net>,
-	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
-	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
-	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
-	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>
-Subject: RE: [PATCH] vfio-pci: Allow to mmap sub-page MMIO BARs if the mmio
- page is exclusive
-Date: Tue, 3 May 2016 02:59:30 +0000
-Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D15F84131D@SHSMSX101.ccr.corp.intel.com>
-References: <1461759740-5072-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1461759740-5072-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [PATCH V6 09/13] pci, acpi: Support for ACPI based generic PCI
+ host controller
+To: Jayachandran C <jchandra@broadcom.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <1460740008-19489-10-git-send-email-tn@semihalf.com>
+ <20160428214800.GG25125@localhost> <20160429083709.GA3249@red-moon>
+ <CAKc_7PUcjKkCrCTj9q26P8a+Tb3N_MffynnTXnJRacm6VNmFRw@mail.gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+ Will Deacon <will.deacon@arm.com>, Catalin Marinas
+ <catalin.marinas@arm.com>, rafael@kernel.org,
+ Hanjun Guo <hanjun.guo@linaro.org>, Sinan Kaya <okaya@codeaurora.org>,
+ jiang.liu@linux.intel.com, robert.richter@caviumnetworks.com,
+ Marcin Wojtas <mw@semihalf.com>, Liviu.Dudau@arm.com,
+ David Daney <ddaney@caviumnetworks.com>, Wangyijing <wangyijing@huawei.com>,
+ Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linaro-acpi@lists.linaro.org, Jon Masters <jcm@redhat.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <57273AA2.4080806@semihalf.com>
+Date: Mon, 2 May 2016 13:31:46 +0200
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAKc_7PUcjKkCrCTj9q26P8a+Tb3N_MffynnTXnJRacm6VNmFRw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Yongji Xie
-> Sent: Wednesday, April 27, 2016 8:22 PM
-> 
-> Current vfio-pci implementation disallows to mmap
-> sub-page(size < PAGE_SIZE) MMIO BARs because these BARs' mmio
-> page may be shared with other BARs. This will cause some
-> performance issues when we passthrough a PCI device with
-> this kind of BARs. Guest will be not able to handle the mmio
-> accesses to the BARs which leads to mmio emulations in host.
-> 
-> However, not all sub-page BARs will share page with other BARs.
-> We should allow to mmap those sub-page MMIO BARs which we can
-> make sure will not share page with other BARs.
-> 
-> This patch adds support for this case. And we also try to use
-> shadow resource to reserve the remaind of the page which hot-add
-> device's BAR might be assigned into.
+On 04/29/2016 07:35 PM, Jayachandran C wrote:
+> On Fri, Apr 29, 2016 at 2:07 PM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+>> On Thu, Apr 28, 2016 at 04:48:00PM -0500, Bjorn Helgaas wrote:
+>>
+>> [...]
+>>
+>>>> +static int pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root,
+>>>> +                                  struct acpi_pci_generic_root_info *ri)
+>>>> +{
+>>>> +   u16 seg = root->segment;
+>>>> +   u8 bus_start = root->secondary.start;
+>>>> +   u8 bus_end = root->secondary.end;
+>>>> +   struct pci_config_window *cfg;
+>>>> +   struct mcfg_entry *e;
+>>>> +   phys_addr_t addr;
+>>>> +   int err = 0;
+>>>> +
+>>>> +   mutex_lock(&pci_mcfg_lock);
+>>> What does this lock protect?  The pci_mcfg_list should already be
+>>> initialized by the time we get there, and it should be immutable for
+>>> the life of the system.  In fact, I would prefer if we could just
+>>> search the static table itself whenever we need it rather than caching
+>>> it in our own list.  But I don't think we can easily do that because
+>>> acpi_table_parse() is __init.
+>>>
+>>>> +   e = pci_mcfg_lookup(seg, bus_start);
+>>> I would argue that we should check for _CBA first, and fall back to
+>>> MCFG if _CBA doesn't exist.
+>>>
+>>>> +   if (!e) {
+>>>> +           addr = acpi_pci_root_get_mcfg_addr(root->device->handle);
+>>> IMO, acpi_pci_root_get_mcfg_addr() is misnamed.  It should be
+>>> acpi_pci_config_base_addr() or similar.  It definitely is not related
+>>> to MCFG.  Not your fault, obviously.
+>>>
+>>>> +           if (addr == 0) {
+>>>> +                   pr_err(PREFIX"%04x:%02x-%02x bus range error\n",
+>>>> +                          seg, bus_start, bus_end);
+>>>> +                   err = -ENOENT;
+>>>> +                   goto err_out;
+>>>> +           }
+>>>> +   } else {
+>>>> +           if (bus_start != e->bus_start) {
+>>>> +                   pr_err("%04x:%02x-%02x bus range mismatch %02x\n",
+>>>> +                          seg, bus_start, bus_end, e->bus_start);
+>>>> +                   err = -EINVAL;
+>>>> +                   goto err_out;
+>>>> +           } else if (bus_end != e->bus_end) {
+>>>> +                   pr_warn("%04x:%02x-%02x bus end mismatch %02x\n",
+>>>> +                           seg, bus_start, bus_end, e->bus_end);
+>>>> +                   bus_end = min(bus_end, e->bus_end);
+>>>> +           }
+>>>> +           addr = e->addr;
+>>>> +   }
+>>> I really don't think you need a lock around this, so you can factor
+>>> out the address lookup into something like:
+>>>
+>>>    addr = acpi_pci_config_base_addr(...);
+>>>    if (addr)
+>>>      return addr;
+>>>
+>>>    return acpi_pci_mcfg_lookup(seg, busn_res);
+>>>
+>>> You can check inside acpi_pci_mcfg_lookup() to make sure the entry you
+>>> find covers the entire [busn_res.start-busn_res.end] range and return
+>>> failure if it doesn't.  At this point, I'm not sure it's worth it to
+>>> truncate the host bridge bus range to match something we find in MCFG.
+>>>
+>>> If the MCFG entry covers *more* than the host bridge range from _CRS,
+>>> that's fine.  In any case, we have to be careful with the start address,
+>>> because the MCFG start address is always based on bus 0, but I think
+>>> pci_generic_ecam_create() expects the start address based on the
+>>> bus_start you pass to it.
+>> Yes, I spotted this too, it is unfortunate but DT and MCFG handle
+>> the ECAM regions differently. In DT the reg property is relative
+>> to bus_start - ie reg MMIO region maps config space starting at
+>> the first bus in bus-range:
+>>
+>> Documentation/devicetree/bindings/pci/host-generic-pci.txt
+>>
+>> in ACPI(MCFG) as you said it is always relative to bus 0, it is
+>> unfortunate but the address to be mapped should be computed
+>> differently in the ECAM layer.
+> Can't this be handled by fixing up the address before passing to
+> pci_generic_ecam_create?
+>
+I agree, this should work, IMO.
 
-'shadow' usually means you have a corresponding part being
-shadowed, while here looks you mostly want some 'dummy'
-resource for reservation purpose?
-
-> +
-> +		if (!(res->start & ~PAGE_MASK)) {
-> +			/*
-> +			 * Add shadow resource for sub-page bar whose mmio
-> +			 * page is exclusive in case that hot-add device's
-> +			 * bar is assigned into the mem hole.
-> +			 */
-> +			shadow_res = kzalloc(sizeof(*shadow_res), GFP_KERNEL);
-> +			shadow_res->resource.start = res->end + 1;
-> +			shadow_res->resource.end = res->start + PAGE_SIZE - 1;
-
-What about res->start not page aligned so you end up still having 
-a portion before res->start not exclusively reserved?
-
-> +			shadow_res->resource.flags = res->flags;
-> +			if (request_resource(res->parent,
-> +					&shadow_res->resource)) {
-> +				kfree(shadow_res);
-> +				return false;
-> +			}
-> +			shadow_res->index = index;
-> +			list_add(&shadow_res->res_next,
-> +					&vdev->shadow_resources_list);
-> +			return true;
-
-Thanks
-Kevin
+Tomasz
