@@ -1,114 +1,92 @@
-Return-Path: <peter@lekensteyn.nl>
-Return-Path: <peter@lekensteyn.nl>
-Date: Fri, 27 May 2016 13:10:37 +0200
-From: Peter Wu <peter@lekensteyn.nl>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	Dave Airlie <airlied@redhat.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org
-Subject: Re: [PATCH 4/4] drm/nouveau/acpi: fix lockup with PCIe runtime PM
-Message-ID: <20160527111037.GA1436@al>
-References: <1464130381-4797-1-git-send-email-peter@lekensteyn.nl>
- <1464130381-4797-5-git-send-email-peter@lekensteyn.nl>
- <20160525135535.GN1789@lahna.fi.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:50842 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754961AbcEBVJi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 2 May 2016 17:09:38 -0400
+Date: Mon, 2 May 2016 16:09:33 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: kishon@ti.com, bhelgaas@google.com, jszhang@marvell.com,
+	linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Niklas Cassel <niklass@axis.com>
+Subject: Re: [PATCH] PCI: dra7xx: program outbound atu with correct address
+Message-ID: <20160502210933.GM24851@localhost>
+References: <1462200880-30129-1-git-send-email-niklass@axis.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160525135535.GN1789@lahna.fi.intel.com>
+In-Reply-To: <1462200880-30129-1-git-send-email-niklass@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 25, 2016 at 04:55:35PM +0300, Mika Westerberg wrote:
-> On Wed, May 25, 2016 at 12:53:01AM +0200, Peter Wu wrote:
-> > Since "PCI: Add runtime PM support for PCIe ports", the parent PCIe port
-> > can be runtime-suspended which disables power resources via ACPI. This
-> > is incompatible with DSM, resulting in a GPU device which is still in D3
-> > and locks up the kernel on resume.
-> > 
-> > Mirror the behavior of Windows 8 and newer[1] (as observed via an AMLi
-> > debugger trace) and stop using the DSM functions for D3cold when power
-> > resources are available on the parent PCIe port.
-> > 
-> >  [1]: https://msdn.microsoft.com/windows/hardware/drivers/bringup/firmware-requirements-for-d3cold
-> > 
-> > Signed-off-by: Peter Wu <peter@lekensteyn.nl>
-> > ---
-> >  drivers/gpu/drm/nouveau/nouveau_acpi.c | 34 ++++++++++++++++++++++++++++++----
-> >  1 file changed, 30 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> > index df9f73e..e469df7 100644
-> > --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> > +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> > @@ -46,6 +46,7 @@ static struct nouveau_dsm_priv {
-> >  	bool dsm_detected;
-> >  	bool optimus_detected;
-> >  	bool optimus_flags_detected;
-> > +	bool optimus_skip_dsm;
-> >  	acpi_handle dhandle;
-> >  	acpi_handle rom_handle;
-> >  } nouveau_dsm_priv;
-> > @@ -212,8 +213,26 @@ static const struct vga_switcheroo_handler nouveau_dsm_handler = {
-> >  	.get_client_id = nouveau_dsm_get_client_id,
-> >  };
-> >  
-> > +/* Firmware supporting Windows 8 or later do not use _DSM to put the device into
-> > + * D3cold, they instead rely on disabling power resources on the parent. */
-> > +static bool nouveau_pr3_present(struct pci_dev *pdev)
-> > +{
-> > +	struct pci_dev *parent_pdev = pci_upstream_bridge(pdev);
-> > +	struct acpi_device *ad;
+On Mon, May 02, 2016 at 04:54:40PM +0200, Niklas Cassel wrote:
+> From: Niklas Cassel <niklas.cassel@axis.com>
 > 
-> Nit: please call this adev instead of ad.
-
-Will do.
-
-> > +
-> > +	if (!parent_pdev)
-> > +		return false;
-> > +
-> > +	ad = ACPI_COMPANION(&parent_pdev->dev);
-> > +	if (!ad)
-> > +		return false;
-> > +
-> > +	return ad->power.flags.power_resources;
+> commit 1488aefa37a4 ("PCI: designware: Move Root Complex
+> setup code to dw_pcie_setup_rc()") broke dra7xx
+> by moving code from dw_pcie_host_init to dw_pcie_setup_rc.
 > 
-> Is this sufficient to tell if the parent device has _PR3? I thought it
-> returns true if it has power resources in general, not necessarily _PR3.
+> Fix this by doing the cpu to bus calculation before calling
+> dw_pcie_setup_rc.
 > 
-> Otherwise this looks okay to me.
+> Fixes: 1488aefa37a4 ("PCI: designware: Move Root Complex setup code to dw_pcie_setup_rc()")
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> ---
+>  drivers/pci/host/pci-dra7xx.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
+> index 2ca3a1f..f441130 100644
+> --- a/drivers/pci/host/pci-dra7xx.c
+> +++ b/drivers/pci/host/pci-dra7xx.c
+> @@ -142,13 +142,13 @@ static void dra7xx_pcie_enable_interrupts(struct pcie_port *pp)
+>  
+>  static void dra7xx_pcie_host_init(struct pcie_port *pp)
+>  {
+> -	dw_pcie_setup_rc(pp);
+> -
+>  	pp->io_base &= DRA7XX_CPU_TO_BUS_ADDR;
+>  	pp->mem_base &= DRA7XX_CPU_TO_BUS_ADDR;
+>  	pp->cfg0_base &= DRA7XX_CPU_TO_BUS_ADDR;
+>  	pp->cfg1_base &= DRA7XX_CPU_TO_BUS_ADDR;
+>  
+> +	dw_pcie_setup_rc(pp);
 
-It is indeed set whenever there is any _PRx method. I wonder if it is
-appropriate to access fields directly like this, perhaps this would be
-more accurate (based on device_pm.c):
+This looks correct to me.  Prior to 1488aefa37a4, we had this path,
+which applied the dra7xx mem_base adjustment before programming the
+outbound ATU:
 
-    /* Check whether the _PR3 method is available. */
-    return adev->power.states[ACPI_STATE_D3_COLD].flags.valid;
+  dra7xx_add_pcie_port
+    dw_pcie_host_init
+      pp->mem_base = pp->mem->start                 # <-- set pp->mem_base
+      ops->host_init
+      dra7xx_pcie_host_init                         # .host_init
+        dw_pcie_setup_rc
+        pp->mem_base &= DRA7XX_CPU_TO_BUS_ADDR      # <-- update pp->mem_base
+      dw_pcie_prog_outbound_atu(pp->mem_base)       # <-- use pp->mem_base
 
-I am also considering adding a check in case the pcieport driver does
-not support D3cold via runtime PM, what do you think of this?
+After 1488aefa37a4, we have this:
 
-    if (!parent_pdev)
-        return false;
-    /* If the PCIe port does not support D3cold via runtime PM, allow a
-     * fallback to the Optimus DSM method to put the device in D3cold. */
-    if (parent_pdev->no_d3cold)
-        return false;
+  dra7xx_add_pcie_port
+    dw_pcie_host_init
+      pp->mem_base = pp->mem->start                 # <-- set pp->mem_base
+      ops->host_init
+      dra7xx_pcie_host_init                         # .host_init
+        dw_pcie_setup_rc
+          dw_pcie_prog_outbound_atu(pp->mem_base)   # <-- use pp->mem_base
+        pp->mem_base &= DRA7XX_CPU_TO_BUS_ADDR      # <-- update pp->mem_base
 
-This is needed to avoid the regression reported in the cover letter, but
-also allows pre-2015 systems to (still) have the D3cold possibility.
+So the dra7xx update is applied after we've already used it.
 
+If you agree, Kishon, I'll fold Niklas's fix into Jisheng's patch so
+there's no bisection hole for dra7xx.
 
-Out of curiosity I looked up an pre-2015 laptop (found Acer V5-573G,
-apparently from November 2013, Windows 8.1) and extracted the ACPI
-tables from the BIOS images. BIOS 2.28 (2014/05/13) introduces support
-for power resources on the parent devicea(\_SB.PCI0.PEG0._PR3 and a
-related NVP3 device) when _OSI("Windows 2013") is true. (This is added
-as alternative for the old DSM interface.)
-
-Maybe 2014 is also an appropriate cutoff date? I wonder if it is
-feasible to detect firmware use of _OSI("Windows 2013") and use that
-instead of the BIOS year.
--- 
-Kind regards,
-Peter Wu
-https://lekensteyn.nl
+>  	dra7xx_pcie_establish_link(pp);
+>  	if (IS_ENABLED(CONFIG_PCI_MSI))
+>  		dw_pcie_msi_init(pp);
+> -- 
+> 2.1.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
