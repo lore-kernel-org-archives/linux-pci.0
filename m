@@ -1,163 +1,189 @@
-Return-Path: <mika.westerberg@linux.intel.com>
-Return-Path: <mika.westerberg@linux.intel.com>
-Date: Mon, 30 May 2016 16:09:09 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Peter Wu <peter@lekensteyn.nl>
-Cc: nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	Dave Airlie <airlied@redhat.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH 4/4] drm/nouveau/acpi: fix lockup with PCIe runtime PM
-Message-ID: <20160530130909.GA1743@lahna.fi.intel.com>
-References: <1464130381-4797-1-git-send-email-peter@lekensteyn.nl>
- <1464130381-4797-5-git-send-email-peter@lekensteyn.nl>
- <20160525135535.GN1789@lahna.fi.intel.com>
- <20160527111037.GA1436@al>
- <20160530095709.GK1789@lahna.fi.intel.com>
- <20160530122010.GB1149@al>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:38630 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932362AbcEBXmh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 May 2016 19:42:37 -0400
+Received: from localhost
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 3 May 2016 09:42:34 +1000
+Date: Tue, 3 May 2016 09:41:23 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alistair Popple <alistair@popple.id.au>
+Cc: linuxppc-dev@lists.ozlabs.org,
+	Alexey Kardashevskiy <aik@ozlabs.ru>,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+	grant.likely@linaro.org, robherring2@gmail.com,
+	bhelgaas@google.com, dja@axtens.net
+Subject: Re: [PATCH v8 45/45] PCI/hotplug: PowerPC PowerNV PCI hotplug driver
+Message-ID: <20160502234123.GB5908@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1455680668-23298-46-git-send-email-gwshan@linux.vnet.ibm.com>
+ <57160A40.3020406@ozlabs.ru>
+ <5044520.n8NHsZUD6Y@new-mexico>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160530122010.GB1149@al>
+In-Reply-To: <5044520.n8NHsZUD6Y@new-mexico>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 30, 2016 at 02:20:10PM +0200, Peter Wu wrote:
-> On Mon, May 30, 2016 at 12:57:09PM +0300, Mika Westerberg wrote:
-> > +Rafael
-> > 
-> > On Fri, May 27, 2016 at 01:10:37PM +0200, Peter Wu wrote:
-> > > On Wed, May 25, 2016 at 04:55:35PM +0300, Mika Westerberg wrote:
-> > > > On Wed, May 25, 2016 at 12:53:01AM +0200, Peter Wu wrote:
-> > > > > Since "PCI: Add runtime PM support for PCIe ports", the parent PCIe port
-> > > > > can be runtime-suspended which disables power resources via ACPI. This
-> > > > > is incompatible with DSM, resulting in a GPU device which is still in D3
-> > > > > and locks up the kernel on resume.
-> > > > > 
-> > > > > Mirror the behavior of Windows 8 and newer[1] (as observed via an AMLi
-> > > > > debugger trace) and stop using the DSM functions for D3cold when power
-> > > > > resources are available on the parent PCIe port.
-> > > > > 
-> > > > >  [1]: https://msdn.microsoft.com/windows/hardware/drivers/bringup/firmware-requirements-for-d3cold
-> > > > > 
-> > > > > Signed-off-by: Peter Wu <peter@lekensteyn.nl>
-> > > > > ---
-> > > > >  drivers/gpu/drm/nouveau/nouveau_acpi.c | 34 ++++++++++++++++++++++++++++++----
-> > > > >  1 file changed, 30 insertions(+), 4 deletions(-)
-> > > > > 
-> > > > > diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> > > > > index df9f73e..e469df7 100644
-> > > > > --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> > > > > +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> > > > > @@ -46,6 +46,7 @@ static struct nouveau_dsm_priv {
-> > > > >  	bool dsm_detected;
-> > > > >  	bool optimus_detected;
-> > > > >  	bool optimus_flags_detected;
-> > > > > +	bool optimus_skip_dsm;
-> > > > >  	acpi_handle dhandle;
-> > > > >  	acpi_handle rom_handle;
-> > > > >  } nouveau_dsm_priv;
-> > > > > @@ -212,8 +213,26 @@ static const struct vga_switcheroo_handler nouveau_dsm_handler = {
-> > > > >  	.get_client_id = nouveau_dsm_get_client_id,
-> > > > >  };
-> > > > >  
-> > > > > +/* Firmware supporting Windows 8 or later do not use _DSM to put the device into
-> > > > > + * D3cold, they instead rely on disabling power resources on the parent. */
-> > > > > +static bool nouveau_pr3_present(struct pci_dev *pdev)
-> > > > > +{
-> > > > > +	struct pci_dev *parent_pdev = pci_upstream_bridge(pdev);
-> > > > > +	struct acpi_device *ad;
-> > > > 
-> > > > Nit: please call this adev instead of ad.
-> > > 
-> > > Will do.
-> > > 
-> > > > > +
-> > > > > +	if (!parent_pdev)
-> > > > > +		return false;
-> > > > > +
-> > > > > +	ad = ACPI_COMPANION(&parent_pdev->dev);
-> > > > > +	if (!ad)
-> > > > > +		return false;
-> > > > > +
-> > > > > +	return ad->power.flags.power_resources;
-> > > > 
-> > > > Is this sufficient to tell if the parent device has _PR3? I thought it
-> > > > returns true if it has power resources in general, not necessarily _PR3.
-> > > > 
-> > > > Otherwise this looks okay to me.
-> > > 
-> > > It is indeed set whenever there is any _PRx method. I wonder if it is
-> > > appropriate to access fields directly like this, perhaps this would be
-> > > more accurate (based on device_pm.c):
-> > > 
-> > >     /* Check whether the _PR3 method is available. */
-> > >     return adev->power.states[ACPI_STATE_D3_COLD].flags.valid;
-> > > 
-> > > I am also considering adding a check in case the pcieport driver does
-> > > not support D3cold via runtime PM, what do you think of this?
-> > > 
-> > >     if (!parent_pdev)
-> > >         return false;
-> > >     /* If the PCIe port does not support D3cold via runtime PM, allow a
-> > >      * fallback to the Optimus DSM method to put the device in D3cold. */
-> > >     if (parent_pdev->no_d3cold)
-> > >         return false;
-> > > 
-> > > This is needed to avoid the regression reported in the cover letter, but
-> > > also allows pre-2015 systems to (still) have the D3cold possibility.
-> > 
-> > The _DSM method with 0 as index parameter should return a bit field
-> > telling which functions are supported. Sane BIOS disables that
-> > particular function if it detects Windows 8 and newer. Have you checked
-> > if that's the case?
-> > 
-> > Then you can call _DSM only if it is supported and otherwise expect the
-> > parent device's power resources to turn off power when runtime
-> > suspended.
-> 
-> The _DSM methods (for the Nvidia device) are often still included and
-> functions are reported as supported. I guess that vendors just check
-> whether it is working and do not bother removing legacy functions. The
-> Acer case below seems exceptional.
-> 
-> I suggested the no_d3cold check such that DSM can still be called even
-> though the runtime PM on the PCIe port does nothing.
+On Wed, Apr 20, 2016 at 11:55:56AM +1000, Alistair Popple wrote:
+>On Tue, 19 Apr 2016 20:36:48 Alexey Kardashevskiy wrote:
+>> On 02/17/2016 02:44 PM, Gavin Shan wrote:
+>> > This adds standalone driver to support PCI hotplug for PowerPC PowerNV
+>> > platform that runs on top of skiboot firmware. The firmware identifies
+>> > hotpluggable slots and marked their device tree node with proper
+>> > "ibm,slot-pluggable" and "ibm,reset-by-firmware". The driver scans
+>> > device tree nodes to create/register PCI hotplug slot accordingly.
+>> >
+>> > The PCI slots are organized in fashion of tree, which means one
+>> > PCI slot might have parent PCI slot and parent PCI slot possibly
+>> > contains multiple child PCI slots. At the plugging time, the parent
+>> > PCI slot is populated before its children. The child PCI slots are
+>> > removed before their parent PCI slot can be removed from the system.
+>> >
+>> > If the skiboot firmware doesn't support slot status retrieval, the PCI
+>> > slot device node shouldn't have property "ibm,reset-by-firmware". In
+>> > that case, none of valid PCI slots will be detected from device tree.
+>> > The skiboot firmware doesn't export the capability to access attention
+>> > LEDs yet and it's something for TBD.
+>> >
+>> > Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>> > ---
+>> >   drivers/pci/hotplug/Kconfig   |  12 +
+>> >   drivers/pci/hotplug/Makefile  |   3 +
+>> >   drivers/pci/hotplug/pnv_php.c | 870 ++++++++++++++++++++++++++++++++++++++++++
+>> >   3 files changed, 885 insertions(+)
+>> >   create mode 100644 drivers/pci/hotplug/pnv_php.c
+>> >
+>> > diff --git a/drivers/pci/hotplug/Kconfig b/drivers/pci/hotplug/Kconfig
+>> > index df8caec..167c8ce 100644
+>> > --- a/drivers/pci/hotplug/Kconfig
+>> > +++ b/drivers/pci/hotplug/Kconfig
+>> > @@ -113,6 +113,18 @@ config HOTPLUG_PCI_SHPC
+>> >
+>> >   	  When in doubt, say N.
+>> >
+>> > +config HOTPLUG_PCI_POWERNV
+>> > +	tristate "PowerPC PowerNV PCI Hotplug driver"
+>> > +	depends on PPC_POWERNV && EEH
+>> > +	help
+>> > +	  Say Y here if you run PowerPC PowerNV platform that supports
+>> > +	  PCI Hotplug
+>> > +
+>> > +	  To compile this driver as a module, choose M here: the
+>> > +	  module will be called pnv-php.
+>> > +
+>> > +	  When in doubt, say N.
+>> > +
+>> >   config HOTPLUG_PCI_RPA
+>> >   	tristate "RPA PCI Hotplug driver"
+>> >   	depends on PPC_PSERIES && EEH
+>> > diff --git a/drivers/pci/hotplug/Makefile b/drivers/pci/hotplug/Makefile
+>> > index b616e75..e33cdda 100644
+>> > --- a/drivers/pci/hotplug/Makefile
+>> > +++ b/drivers/pci/hotplug/Makefile
+>> > @@ -14,6 +14,7 @@ obj-$(CONFIG_HOTPLUG_PCI_PCIE)		+= pciehp.o
+>> >   obj-$(CONFIG_HOTPLUG_PCI_CPCI_ZT5550)	+= cpcihp_zt5550.o
+>> >   obj-$(CONFIG_HOTPLUG_PCI_CPCI_GENERIC)	+= cpcihp_generic.o
+>> >   obj-$(CONFIG_HOTPLUG_PCI_SHPC)		+= shpchp.o
+>> > +obj-$(CONFIG_HOTPLUG_PCI_POWERNV)	+= pnv-php.o
+>> >   obj-$(CONFIG_HOTPLUG_PCI_RPA)		+= rpaphp.o
+>> >   obj-$(CONFIG_HOTPLUG_PCI_RPA_DLPAR)	+= rpadlpar_io.o
+>> >   obj-$(CONFIG_HOTPLUG_PCI_SGI)		+= sgi_hotplug.o
+>> > @@ -50,6 +51,8 @@ ibmphp-objs		:=	ibmphp_core.o	\
+>> >   acpiphp-objs		:=	acpiphp_core.o	\
+>> >   				acpiphp_glue.o
+>> >
+>> > +pnv-php-objs		:=	pnv_php.o
+>> > +
+>> >   rpaphp-objs		:=	rpaphp_core.o	\
+>> >   				rpaphp_pci.o	\
+>> >   				rpaphp_slot.o
+>> > diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
+>> > new file mode 100644
+>> > index 0000000..364ec36
+>> > --- /dev/null
+>> > +++ b/drivers/pci/hotplug/pnv_php.c
+>> > @@ -0,0 +1,870 @@
+>> > +/*
+>> > + * PCI Hotplug Driver for PowerPC PowerNV platform.
+>> > + *
+>> > + * Copyright Gavin Shan, IBM Corporation 2015.
+>> > + *
+>> > + * This program is free software; you can redistribute it and/or modify
+>> > + * it under the terms of the GNU General Public License as published by
+>> > + * the Free Software Foundation; either version 2 of the License, or
+>> > + * (at your option) any later version.
+>> > + */
+>> > +
+>> > +#include <linux/libfdt.h>
+>> > +#include <linux/module.h>
+>> > +#include <linux/pci.h>
+>> > +#include <linux/pci_hotplug.h>
+>> > +
+>> > +#include <asm/opal.h>
+>> > +#include <asm/pnv-pci.h>
+>> > +#include <asm/ppc-pci.h>
+>> > +
+>> > +#define DRIVER_VERSION	"0.1"
+>> > +#define DRIVER_AUTHOR	"Gavin Shan, IBM Corporation"
+>> > +#define DRIVER_DESC	"PowerPC PowerNV PCI Hotplug Driver"
+>> > +
+>> > +struct pnv_php_slot {
+>> > +	struct hotplug_slot		slot;
+>> > +	struct hotplug_slot_info	slot_info;
+>> > +	uint64_t			id;
+>> > +	char				*name;
+>> > +	int				slot_no;
+>> > +	struct kref			kref;
+>> > +#define PNV_PHP_STATE_INITIALIZED	0
+>> > +#define PNV_PHP_STATE_REGISTERED	1
+>> > +#define PNV_PHP_STATE_POPULATED		2
+>> > +	int				state;
+>> > +	struct device_node		*dn;
+>> > +	struct pci_dev			*pdev;
+>> > +	struct pci_bus			*bus;
+>> > +	bool				power_state_check;
+>> > +	int				power_state_confirmed;
+>> > +#define PNV_PHP_POWER_CONFIRMED_INVALID	0
+>> > +#define PNV_PHP_POWER_CONFIRMED_SUCCESS	1
+>> > +#define PNV_PHP_POWER_CONFIRMED_FAIL	2
+>> > +	struct opal_msg			*msg;
+>> > +	void				*fdt;
+>> > +	void				*dt;
+>> > +	struct of_changeset		ocs;
+>> > +	struct work_struct		work;
+>> > +	wait_queue_head_t		queue;
+>> > +	struct pnv_php_slot		*parent;
+>> > +	struct list_head		children;
+>> > +	struct list_head		link;
+>> > +};
+>> > +
+>> > +static LIST_HEAD(pnv_php_slot_list);
+>> > +static DEFINE_SPINLOCK(pnv_php_lock);
+>> > +
+>> > +static void pnv_php_register(struct device_node *dn);
+>> > +static void pnv_php_unregister_one(struct device_node *dn);
+>> > +static void pnv_php_unregister(struct device_node *dn);
+>> 
+>> 
+>> The names confused me. I'd suggest pnv_php_scan(), pnv_php_unregister(), 
+>> pnv_php_unregister_children() instead.
+>> 
+>> 
+>> Alistair, what do you reckon?
+>
+>To be honest I'm not sure the new names are necessarily any less confusing. I
+>will admit to having to read that code twice though so perhaps a short comment
+>describing what each of those functions does would be the best method for
+>reducing confusion.
 
-Somehow it does not feel right to poke parent device's fields directly.
+Alexey, Please confirm if I need rename those functions though I
+don't understand the confusion caused the function names.
 
-What if you just check if it has the method like:
+[unrelated content removed]
 
-	bool no_dsm = acpi_has_method(parent_adev->handle, "_PR3");
-
-That should follow what Windows is doing.
-
-> > > Out of curiosity I looked up an pre-2015 laptop (found Acer V5-573G,
-> > > apparently from November 2013, Windows 8.1) and extracted the ACPI
-> > > tables from the BIOS images. BIOS 2.28 (2014/05/13) introduces support
-> > > for power resources on the parent devicea(\_SB.PCI0.PEG0._PR3 and a
-> > > related NVP3 device) when _OSI("Windows 2013") is true. (This is added
-> > > as alternative for the old DSM interface.)
-> > > 
-> > > Maybe 2014 is also an appropriate cutoff date? I wonder if it is
-> > > feasible to detect firmware use of _OSI("Windows 2013") and use that
-> > > instead of the BIOS year.
-> > 
-> > Using BIOS year works even if there is no ACPI available.
-> 
-> I thought that you need support from ACPI to put a device in D3cold?
-
-It is not just about D3cold but D3 in general (which includes also
-D3hot). Yes, you need platform support to put the device into D3cold.
-
-> > What comes to the cutoff date, I discussed with Rafael and it was
-> > decided that we use the same year Windows 10 was released to be on the
-> > safe side. Reading the links you provided here:
-> > 
-> > https://msdn.microsoft.com/fi-fi/windows/hardware/drivers/bringup/device-power-management
-> > https://msdn.microsoft.com/en-us/library/windows/hardware/hh967709(v=vs.85).aspx
-> > 
-> > it seems that from Windows 8 they started transitioning devices into
-> > D3cold during runtime as well.
-> 
-> My impression from the ACPI tables I have seen so far is that power
-> resources support is enabled for Windows 2012 (Win8) or newer.
