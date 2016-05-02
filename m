@@ -1,367 +1,52 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	dhdang@apm.com,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	cov@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V7 03/11] pci, of: Move the PCI I/O space management to PCI core code.
-Date: Tue, 10 May 2016 17:19:53 +0200
-Message-Id: <1462893601-8937-4-git-send-email-tn@semihalf.com>
-In-Reply-To: <1462893601-8937-1-git-send-email-tn@semihalf.com>
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+Return-Path: <okaya@codeaurora.org>
+Return-Path: <okaya@codeaurora.org>
+Subject: Re: [PATCH V3 1/4] acpi,pci,irq: reduce resource requirements
+To: "Nalla, Ravikanth" <ravikanth.nalla@hpe.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+References: <1460914617-8259-1-git-send-email-okaya@codeaurora.org>
+ <20160426183611.GC27803@localhost> <571FBACB.1020606@codeaurora.org>
+ <49D617FA63152941907AADE32CF072F12FF09187@G4W3290.americas.hpqcorp.net>
+Cc: "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "timur@codeaurora.org" <timur@codeaurora.org>,
+ "cov@codeaurora.org" <cov@codeaurora.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "lenb@kernel.org" <lenb@kernel.org>, "K, Harish (MCOU/UPEL)"
+ <harish.k@hpe.com>,
+ "Reghunandanan, Ashwin (STSD)" <ashwin.reghunandanan@hpe.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "rjw@rjwysocki.net" <rjw@rjwysocki.net>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <57279551.3010000@codeaurora.org>
+Date: Mon, 2 May 2016 13:58:41 -0400
+MIME-Version: 1.0
+In-Reply-To: <49D617FA63152941907AADE32CF072F12FF09187@G4W3290.americas.hpqcorp.net>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-No functional changes in this patch.
+On 5/2/2016 1:44 PM, Nalla, Ravikanth wrote:
+>> Thanks, can the HPE developers in CC test the series in order to avoid another revert? 
+>  I'm facing below errors while applying these patches on mainline kernel for verification. Please check and let me know what is the issue or if I'm 
+>  missing  anything. I use outlook for mail and I copied your mail formatted patches into each individual file manually and converted these files into
+>  unix format (using dos2unix cmd)  and when trying to apply with cmd "patch -p1  patch1.patch" /  "git apply patch1.patch" i see
+>  below errors. I'm getting similar errors for remaining  patches too and also "checkpatch.pl" looks to be throwing errors. Hence I'm not able to 
+>  verify your changes.
 
-PCI I/O space mapping code does not depend on OF, therefore it can be
-moved to PCI core code. This way we will be able to use it
-e.g. in ACPI PCI code.
+This should get you the patch files.
 
-Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-CC: Arnd Bergmann <arnd@arndb.de>
-CC: Liviu Dudau <Liviu.Dudau@arm.com>
----
- drivers/of/address.c       | 116 +--------------------------------------------
- drivers/pci/pci.c          | 115 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/of_address.h |   9 ----
- include/linux/pci.h        |   5 ++
- 4 files changed, 121 insertions(+), 124 deletions(-)
+https://patchwork.ozlabs.org/patch/611493/raw/
+https://patchwork.ozlabs.org/patch/611496/raw/
+https://patchwork.ozlabs.org/patch/611495/raw/
+https://patchwork.ozlabs.org/patch/611494/raw/
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 91a469d..0a553c0 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -4,6 +4,7 @@
- #include <linux/ioport.h>
- #include <linux/module.h>
- #include <linux/of_address.h>
-+#include <linux/pci.h>
- #include <linux/pci_regs.h>
- #include <linux/sizes.h>
- #include <linux/slab.h>
-@@ -673,121 +674,6 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
- }
- EXPORT_SYMBOL(of_get_address);
- 
--#ifdef PCI_IOBASE
--struct io_range {
--	struct list_head list;
--	phys_addr_t start;
--	resource_size_t size;
--};
--
--static LIST_HEAD(io_range_list);
--static DEFINE_SPINLOCK(io_range_lock);
--#endif
--
--/*
-- * Record the PCI IO range (expressed as CPU physical address + size).
-- * Return a negative value if an error has occured, zero otherwise
-- */
--int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
--{
--	int err = 0;
--
--#ifdef PCI_IOBASE
--	struct io_range *range;
--	resource_size_t allocated_size = 0;
--
--	/* check if the range hasn't been previously recorded */
--	spin_lock(&io_range_lock);
--	list_for_each_entry(range, &io_range_list, list) {
--		if (addr >= range->start && addr + size <= range->start + size) {
--			/* range already registered, bail out */
--			goto end_register;
--		}
--		allocated_size += range->size;
--	}
--
--	/* range not registed yet, check for available space */
--	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
--		/* if it's too big check if 64K space can be reserved */
--		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
--			err = -E2BIG;
--			goto end_register;
--		}
--
--		size = SZ_64K;
--		pr_warn("Requested IO range too big, new size set to 64K\n");
--	}
--
--	/* add the range to the list */
--	range = kzalloc(sizeof(*range), GFP_ATOMIC);
--	if (!range) {
--		err = -ENOMEM;
--		goto end_register;
--	}
--
--	range->start = addr;
--	range->size = size;
--
--	list_add_tail(&range->list, &io_range_list);
--
--end_register:
--	spin_unlock(&io_range_lock);
--#endif
--
--	return err;
--}
--
--phys_addr_t pci_pio_to_address(unsigned long pio)
--{
--	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
--
--#ifdef PCI_IOBASE
--	struct io_range *range;
--	resource_size_t allocated_size = 0;
--
--	if (pio > IO_SPACE_LIMIT)
--		return address;
--
--	spin_lock(&io_range_lock);
--	list_for_each_entry(range, &io_range_list, list) {
--		if (pio >= allocated_size && pio < allocated_size + range->size) {
--			address = range->start + pio - allocated_size;
--			break;
--		}
--		allocated_size += range->size;
--	}
--	spin_unlock(&io_range_lock);
--#endif
--
--	return address;
--}
--
--unsigned long __weak pci_address_to_pio(phys_addr_t address)
--{
--#ifdef PCI_IOBASE
--	struct io_range *res;
--	resource_size_t offset = 0;
--	unsigned long addr = -1;
--
--	spin_lock(&io_range_lock);
--	list_for_each_entry(res, &io_range_list, list) {
--		if (address >= res->start && address < res->start + res->size) {
--			addr = address - res->start + offset;
--			break;
--		}
--		offset += res->size;
--	}
--	spin_unlock(&io_range_lock);
--
--	return addr;
--#else
--	if (address > IO_SPACE_LIMIT)
--		return (unsigned long)-1;
--
--	return (unsigned long) address;
--#endif
--}
--
- static int __of_address_to_resource(struct device_node *dev,
- 		const __be32 *addrp, u64 size, unsigned int flags,
- 		const char *name, struct resource *r)
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 25e0327..bc0c914 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3021,6 +3021,121 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
- }
- EXPORT_SYMBOL(pci_request_regions_exclusive);
- 
-+#ifdef PCI_IOBASE
-+struct io_range {
-+	struct list_head list;
-+	phys_addr_t start;
-+	resource_size_t size;
-+};
-+
-+static LIST_HEAD(io_range_list);
-+static DEFINE_SPINLOCK(io_range_lock);
-+#endif
-+
-+/*
-+ * Record the PCI IO range (expressed as CPU physical address + size).
-+ * Return a negative value if an error has occured, zero otherwise
-+ */
-+int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-+{
-+	int err = 0;
-+
-+#ifdef PCI_IOBASE
-+	struct io_range *range;
-+	resource_size_t allocated_size = 0;
-+
-+	/* check if the range hasn't been previously recorded */
-+	spin_lock(&io_range_lock);
-+	list_for_each_entry(range, &io_range_list, list) {
-+		if (addr >= range->start && addr + size <= range->start + size) {
-+			/* range already registered, bail out */
-+			goto end_register;
-+		}
-+		allocated_size += range->size;
-+	}
-+
-+	/* range not registed yet, check for available space */
-+	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
-+		/* if it's too big check if 64K space can be reserved */
-+		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
-+			err = -E2BIG;
-+			goto end_register;
-+		}
-+
-+		size = SZ_64K;
-+		pr_warn("Requested IO range too big, new size set to 64K\n");
-+	}
-+
-+	/* add the range to the list */
-+	range = kzalloc(sizeof(*range), GFP_ATOMIC);
-+	if (!range) {
-+		err = -ENOMEM;
-+		goto end_register;
-+	}
-+
-+	range->start = addr;
-+	range->size = size;
-+
-+	list_add_tail(&range->list, &io_range_list);
-+
-+end_register:
-+	spin_unlock(&io_range_lock);
-+#endif
-+
-+	return err;
-+}
-+
-+phys_addr_t pci_pio_to_address(unsigned long pio)
-+{
-+	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
-+
-+#ifdef PCI_IOBASE
-+	struct io_range *range;
-+	resource_size_t allocated_size = 0;
-+
-+	if (pio > IO_SPACE_LIMIT)
-+		return address;
-+
-+	spin_lock(&io_range_lock);
-+	list_for_each_entry(range, &io_range_list, list) {
-+		if (pio >= allocated_size && pio < allocated_size + range->size) {
-+			address = range->start + pio - allocated_size;
-+			break;
-+		}
-+		allocated_size += range->size;
-+	}
-+	spin_unlock(&io_range_lock);
-+#endif
-+
-+	return address;
-+}
-+
-+unsigned long __weak pci_address_to_pio(phys_addr_t address)
-+{
-+#ifdef PCI_IOBASE
-+	struct io_range *res;
-+	resource_size_t offset = 0;
-+	unsigned long addr = -1;
-+
-+	spin_lock(&io_range_lock);
-+	list_for_each_entry(res, &io_range_list, list) {
-+		if (address >= res->start && address < res->start + res->size) {
-+			addr = address - res->start + offset;
-+			break;
-+		}
-+		offset += res->size;
-+	}
-+	spin_unlock(&io_range_lock);
-+
-+	return addr;
-+#else
-+	if (address > IO_SPACE_LIMIT)
-+		return (unsigned long)-1;
-+
-+	return (unsigned long) address;
-+#endif
-+}
-+
- /**
-  *	pci_remap_iospace - Remap the memory mapped I/O space
-  *	@res: Resource describing the I/O space
-diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-index 01c0a55..3786473 100644
---- a/include/linux/of_address.h
-+++ b/include/linux/of_address.h
-@@ -47,10 +47,6 @@ void __iomem *of_io_request_and_map(struct device_node *device,
- extern const __be32 *of_get_address(struct device_node *dev, int index,
- 			   u64 *size, unsigned int *flags);
- 
--extern int pci_register_io_range(phys_addr_t addr, resource_size_t size);
--extern unsigned long pci_address_to_pio(phys_addr_t addr);
--extern phys_addr_t pci_pio_to_address(unsigned long pio);
--
- extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
- 			struct device_node *node);
- extern struct of_pci_range *of_pci_range_parser_one(
-@@ -86,11 +82,6 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
- 	return NULL;
- }
- 
--static inline phys_addr_t pci_pio_to_address(unsigned long pio)
--{
--	return 0;
--}
--
- static inline int of_pci_range_parser_init(struct of_pci_range_parser *parser,
- 			struct device_node *node)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 932ec74..d2a57f3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1165,6 +1165,9 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
- 			void *alignf_data);
- 
- 
-+int pci_register_io_range(phys_addr_t addr, resource_size_t size);
-+unsigned long pci_address_to_pio(phys_addr_t addr);
-+phys_addr_t pci_pio_to_address(unsigned long pio);
- int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
- 
- static inline pci_bus_addr_t pci_bus_address(struct pci_dev *pdev, int bar)
-@@ -1481,6 +1484,8 @@ static inline int pci_request_regions(struct pci_dev *dev, const char *res_name)
- { return -EIO; }
- static inline void pci_release_regions(struct pci_dev *dev) { }
- 
-+static inline unsigned long pci_address_to_pio(phys_addr_t addr) { return -1; }
-+
- static inline void pci_block_cfg_access(struct pci_dev *dev) { }
- static inline int pci_block_cfg_access_in_atomic(struct pci_dev *dev)
- { return 0; }
+You can download the mailbox files here and do "git am" instead
+
+https://patchwork.ozlabs.org/patch/611493/mbox/
+https://patchwork.ozlabs.org/patch/611496/mbox/
+https://patchwork.ozlabs.org/patch/611495/mbox/
+https://patchwork.ozlabs.org/patch/611494/mbox/
+
 -- 
-1.9.1
+Sinan Kaya
+Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
