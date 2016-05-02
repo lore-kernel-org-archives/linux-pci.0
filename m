@@ -1,120 +1,80 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	dhdang@apm.com,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	cov@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V8 4/9] acpi, pci: Support IO resources when parsing PCI host bridge resources.
-Date: Mon, 30 May 2016 17:14:17 +0200
-Message-Id: <1464621262-26770-5-git-send-email-tn@semihalf.com>
-In-Reply-To: <1464621262-26770-1-git-send-email-tn@semihalf.com>
-References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:39044 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754241AbcEBRab (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 2 May 2016 13:30:31 -0400
+Date: Mon, 2 May 2016 12:30:26 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andreas Noever <andreas.noever@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Lukas Wunner <lukas@wunner.de>, stable@vger.kernel.org
+Subject: Re: [PATCH] thunderbolt: Fix double free of drom buffer
+Message-ID: <20160502173026.GF24851@localhost>
+References: <1460285307-3557-1-git-send-email-andreas.noever@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1460285307-3557-1-git-send-email-andreas.noever@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Platforms that have memory mapped IO port (such as ARM64) need special
-handling for PCI I/O resources. For host bridge's resource probing case
-these resources need to be fixed up with pci_register_io_range/pci_remap_iospace etc.
+On Sun, Apr 10, 2016 at 12:48:27PM +0200, Andreas Noever wrote:
+> If tb_drom_read fails sw->drom is freed but not set to NULL. sw->drom
+> is then freed again in the error path of sw_switch_alloc.
 
-The same I/O resources need to be released after hotplug
-removal so that it can be re-added back by the pci_remap_iospace
-function during insertion. As a consequence we unmap I/O resources
-with pci_unmap_iospace when we release host bridge resources.
+s/sw_switch_alloc/tb_switch_alloc/ ?
 
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- drivers/acpi/pci_root.c | 39 +++++++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+> The bug can be triggered by unplugging a thunderbolt device shortly
+> after it is detected by the thunderbolt driver.
+> 
+> Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+> Cc: Lukas Wunner <lukas@wunner.de>
+> Cc: stable@vger.kernel.org
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index ae3fe4e..ee3b728 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -720,6 +720,40 @@ next:
- 	}
- }
- 
-+#ifdef PCI_IOBASE
-+static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
-+{
-+	struct resource *res = entry->res;
-+	resource_size_t cpu_addr = res->start;
-+	resource_size_t pci_addr = cpu_addr - entry->offset;
-+	resource_size_t length = resource_size(res);
-+	unsigned long port;
-+
-+	if (pci_register_io_range(cpu_addr, length))
-+		goto err;
-+
-+	port = pci_address_to_pio(cpu_addr);
-+	if (port == (unsigned long)-1)
-+		goto err;
-+
-+	res->start = port;
-+	res->end = port + length - 1;
-+	entry->offset = port - pci_addr;
-+
-+	if (pci_remap_iospace(res, cpu_addr) < 0)
-+		goto err;
-+
-+	pr_info("Remapped I/O %pa to %pR\n", &cpu_addr, res);
-+	return;
-+err:
-+	res->flags |= IORESOURCE_DISABLED;
-+}
-+#else
-+static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
-+{
-+}
-+#endif
-+
- int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- {
- 	int ret;
-@@ -740,6 +774,9 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- 			"no IO and memory resources present in _CRS\n");
- 	else {
- 		resource_list_for_each_entry_safe(entry, tmp, list) {
-+			if (entry->res->flags & IORESOURCE_IO)
-+				acpi_pci_root_remap_iospace(entry);
-+
- 			if (entry->res->flags & IORESOURCE_DISABLED)
- 				resource_list_destroy_entry(entry);
- 			else
-@@ -811,6 +848,8 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
- 
- 	resource_list_for_each_entry(entry, &bridge->windows) {
- 		res = entry->res;
-+		if (res->flags & IORESOURCE_IO)
-+			pci_unmap_iospace(res);
- 		if (res->parent &&
- 		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
- 			release_resource(res);
--- 
-1.9.1
+How far back would this need to be applied?  What is the commit where
+the but was introduced?
+
+I applied this to pci/thunderbolt for v4.7 with the following
+changelog.  If I did it wrong, I'll gladly update it, especially if
+you have specific symptoms of a bug or oops that would help people
+find this fix.
+
+    thunderbolt: Fix double free of drom buffer
+    
+    If tb_drom_read() fails, sw->drom is freed but not set to NULL.  sw->drom
+    is then freed again in the error path of tb_switch_alloc().
+    
+    The bug can be triggered by unplugging a thunderbolt device shortly after
+    it is detected by the thunderbolt driver.
+    
+    Clear sw->drom if tb_drom_read() fails.
+    
+    [bhelgaas: add Fixes:, stable versions of interest]
+    Fixes: 343fcb8c70d7 ("thunderbolt: Fix nontrivial endpoint devices.")
+    Signed-off-by: Andreas Noever <andreas.noever@gmail.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    CC: stable@vger.kernel.org	# v3.17+
+    CC: Lukas Wunner <lukas@wunner.de>
+
+> ---
+>  drivers/thunderbolt/eeprom.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/thunderbolt/eeprom.c b/drivers/thunderbolt/eeprom.c
+> index 0dde34e..545c60c 100644
+> --- a/drivers/thunderbolt/eeprom.c
+> +++ b/drivers/thunderbolt/eeprom.c
+> @@ -444,6 +444,7 @@ int tb_drom_read(struct tb_switch *sw)
+>  	return tb_drom_parse_entries(sw);
+>  err:
+>  	kfree(sw->drom);
+> +	sw->drom = NULL;
+>  	return -EIO;
+>  
+>  }
+> -- 
+> 2.8.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
