@@ -1,95 +1,235 @@
-Return-Path: <mika.westerberg@linux.intel.com>
-Return-Path: <mika.westerberg@linux.intel.com>
-Date: Tue, 31 May 2016 11:58:05 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Andreas Noever <andreas.noever@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Lukas Wunner <lukas@wunner.de>,
-	Bjorn Helgaas <helgaas@kernel.org>, Peter Wu <peter@lekensteyn.nl>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux PM list <linux-pm@vger.kernel.org>,
-	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
-	Dave Airlie <airlied@gmail.com>
-Subject: Re: [PATCH] PCI: Wait for 50ms after bridge is powered up
-Message-ID: <20160531085805.GI1743@lahna.fi.intel.com>
-References: <20160524162833.GA30762@localhost>
- <20160526104557.GA6816@wunner.de>
- <20160526110308.GX1789@lahna.fi.intel.com>
- <1576190.gfFb6HhZV6@vostro.rjw.lan>
- <20160530093326.GH1789@lahna.fi.intel.com>
- <20160530144445.GC1743@lahna.fi.intel.com>
- <CAMxnaaXhapETZYMVe6EUoBGaMtxL_fP+uzc30SQpM+6EqPF3CQ@mail.gmail.com>
- <20160531083349.GG1743@lahna.fi.intel.com>
+Return-Path: <Liviu.Dudau@arm.com>
+Return-Path: <Liviu.Dudau@arm.com>
+Date: Tue, 3 May 2016 11:04:23 +0100
+From: Liviu.Dudau@arm.com
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <helgaas@kernel.org>,
+	catalin.marinas@arm.com, linux-pci@vger.kernel.org,
+	will.deacon@arm.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Tomasz Nowicki <tn@semihalf.com>, ddaney@caviumnetworks.com,
+	robert.richter@caviumnetworks.com, msalter@redhat.com,
+	jchandra@broadcom.com, linux-kernel@vger.kernel.org,
+	hanjun.guo@linaro.org, Suravee.Suthikulpanit@amd.com
+Subject: Re: [PATCH 1/3] [RFC] pci: add new method for register PCI hosts
+Message-ID: <20160503100422.GZ28464@e106497-lin.cambridge.arm.com>
+References: <1461970899-4150603-1-git-send-email-arnd@arndb.de>
+ <1461970899-4150603-2-git-send-email-arnd@arndb.de>
+ <20160502070943.GB27465@ulmo.ba.sec>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160531083349.GG1743@lahna.fi.intel.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160502070943.GB27465@ulmo.ba.sec>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 31, 2016 at 11:33:49AM +0300, Mika Westerberg wrote:
-> On Mon, May 30, 2016 at 05:19:53PM +0200, Andreas Noever wrote:
-> > On Mon, May 30, 2016 at 4:44 PM, Mika Westerberg
-> > <mika.westerberg@linux.intel.com> wrote:
-> > > On Mon, May 30, 2016 at 12:33:26PM +0300, Mika Westerberg wrote:
-> > >> I also learned that both of these can be shortened with following
-> > >> mechanisms:
-> > >>
-> > >>  - PCIe readines notifications (6.23 in PCIe spec 3.1a)
-> > >>  - ACPI _DSM method returning readines durations from  (4.6.9 in PCI
-> > >>    firmware spec 3.2).
-> > >
-> > > BTW, looks like the latter is already implemented in
-> > > pci_acpi_optimize_delay().
+On Mon, May 02, 2016 at 09:09:43AM +0200, Thierry Reding wrote:
+> On Sat, Apr 30, 2016 at 01:01:37AM +0200, Arnd Bergmann wrote:
+> > This patch makes the existing 'pci_host_bridge' structure a proper device
+> > that is usable by PCI host drivers in a more standard way. In addition
+> > to the existing pci_scan_bus, pci_scan_root_bus, pci_scan_root_bus_msi,
+> > and pci_create_root_bus interfaces, this unfortunately means having to
+> > add yet another interface doing basically the same thing, and add some
+> > extra code in the initial step.
 > > 
+> > However, this time it's more likely to be extensible enough that we
+> > won't have to do another one again in the future, and we should be
+> > able to reduce code much more as a result.
 > > 
-> > Hmm, Lukas's trace suggest a few independent problems (or optimisations):
-> > 1. Those devices are siblings, we should wake all of them in parallel
-> > and then wait once instead of one by one.
-> > 2. Why are we waiting after _suspend at all? It seems we should only
-> > wait before the next access. Sleeping after _suspend looks like a stop
-> > gap measure to guarantee that no accesses take place?
+> > The main idea is to pull the allocation of 'struct pci_host_bridge' out
+> > of the registration, and let individual host drivers and architecture
+> > code fill the members before calling the registration function.
+> > 
+> > There are a number of things we can do based on this:
+> > 
+> > * Use a single memory allocation for the driver-specific structure
+> >   and the generic PCI host bridge
+> > * consolidate the contents of driver specific structures by moving
+> >   them into pci_host_bridge
+> > * Add a consistent interface for removing a PCI host bridge again
+> >   when unloading a host driver module
+> > * Replace the architecture specific __weak pcibios_* functions with
+> >   callbacks in a pci_host_bridge device
+> > * Move common boilerplate code from host drivers into the generic
+> >   function, based on contents of the structure
+> > * Extend pci_host_bridge with additional members when needed without
+> >   having to add arguments to pci_scan_*.
+> > * Move members of struct pci_bus into pci_host_bridge to avoid
+> >   having lots of identical copies.
+> > 
+> > As mentioned in a previous email, one open question is whether we want
+> > to export a function for allocating a pci_host_bridge device in
+> > combination with the per-device structure or let the driver itself
+> > call kzalloc.
 > 
-> I guess it is because PCI PM spec says that the delay needs to be in
-> both directions. See table 5-6 in PCI PM spec v1.2.
+> I think the most common pattern in other parts of the kernel is the
+> latter. That gives drivers the most flexibility to do whatever they
+> want or need.
 > 
-> The code in question is in pci_raw_set_power_state():
+> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> > ---
+> >  drivers/pci/probe.c | 100 ++++++++++++++++++++++++++++++----------------------
+> >  include/linux/pci.h |   7 +++-
+> >  2 files changed, 63 insertions(+), 44 deletions(-)
+> > 
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index ae7daeb83e21..fe9d9221b11e 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -520,19 +520,6 @@ static void pci_release_host_bridge_dev(struct device *dev)
+> >  	kfree(bridge);
+> >  }
+> >  
+> > -static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
+> > -{
+> > -	struct pci_host_bridge *bridge;
+> > -
+> > -	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
+> > -	if (!bridge)
+> > -		return NULL;
+> > -
+> > -	INIT_LIST_HEAD(&bridge->windows);
+> > -	bridge->bus = b;
+> > -	return bridge;
+> > -}
+> > -
+> >  static const unsigned char pcix_bus_speed[] = {
+> >  	PCI_SPEED_UNKNOWN,		/* 0 */
+> >  	PCI_SPEED_66MHz_PCIX,		/* 1 */
+> > @@ -2108,51 +2095,47 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+> >  {
+> >  }
+> >  
+> > -struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> > -		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+> > +int pci_register_host(struct pci_host_bridge *bridge)
 > 
->         /* Mandatory power management transition delays */
->         /* see PCI PM 1.1 5.6.1 table 18 */
->         if (state == PCI_D3hot || dev->current_state == PCI_D3hot)
->                 pci_dev_d3_sleep(dev);
->         else if (state == PCI_D2 || dev->current_state == PCI_D2)
->                 udelay(PCI_PM_D2_DELAY);
+> Perhaps pci_register_host_bridge() to mirror the structure name in the
+> registration function?
 > 
-> > 3. The idle timeout is too low, there should be no suspend between
-> > discovery and probing.
+> >  {
+> >  	int error;
+> > -	struct pci_host_bridge *bridge;
+> >  	struct pci_bus *b, *b2;
+> >  	struct resource_entry *window, *n;
+> > +	LIST_HEAD(resources);
+> >  	struct resource *res;
+> >  	resource_size_t offset;
+> >  	char bus_addr[64];
+> >  	char *fmt;
+> > +	struct device *parent = bridge->dev.parent;
+> >  
+> >  	b = pci_alloc_bus(NULL);
+> >  	if (!b)
+> > -		return NULL;
+> > +		return -ENOMEM;
+> > +	bridge->bus = b;
+> >  
+> > -	b->sysdata = sysdata;
+> > -	b->ops = ops;
+> > -	b->number = b->busn_res.start = bus;
+> > +	/* temporarily move resources off the list */
 > 
-> I agree. We took the 10ms from the original patch but I don't see why we
-> could not increase it to 100ms or even 500ms.
+> Might be worth mentioning why we move the resources off the list.
 > 
-> > 4. Even if the spec says 50ms, we might still want to have shorter
-> > sleep times for known good devices. Thunderbolt can produce PCI
-> > hierarchies which are 7 levels deep with 4 hp bridges on each level.
-> > Waking all of that would take 50ms * 7 * 4 = 1400ms (not counting
-> > upstream bridges which have the normal d3 delay).
+> > +	list_splice_init(&bridge->windows, &resources);
+> > +	b->sysdata = bridge->sysdata;
 > 
-> PCIe spec want to have 100ms delay from when transitioning from D3cold
-> to D0 and we already do that in __pci_start_power_transition().
-> 
-> In other words we should have all necessary delays for PCIe in place
-> already. This patch should not be needed.
+> Does the sysdata not become effectively obsolete after this series? My
+> understanding is that it's primarily used to store driver-specific data
+> along with a PCI bus, but if drivers can embed struct pci_host_bridge
+> they can simply upcast bus->bridge. 
 
-To summarize the next steps. I will send new version of the
-PCI PM patches with following changes.
+I second that. If we do this change (which is long overdue and I fully support),
+let's kill sysdata now. Generic host bridge code doesn't use sysdata on purpose.
 
-  - Drop this 50ms patch, we should have the PCIe 100ms delay already
-    covered.
+Best regards,
+Liviu
 
-  - Increase runtime PM autosuspend time from 10ms to 500ms (or whatever
-    is the prefered default).
+> I do notice that bus->bridge is
+> currently a struct device *, perhaps we can replace it by a back pointer
+> to the parent struct pci_host_bridge, which would have to gain a struct
+> device *parent to point at the device that instantiated the bridge. This
+> is becoming somewhat complicated, but maybe that can be simplified at
+> some point.
+> 
+> > +	b->msi = bridge->msi;
+> > +	b->ops = bridge->ops;
+> > +	b->number = b->busn_res.start = bridge->busnr;
+> >  	pci_bus_assign_domain_nr(b, parent);
+> > -	b2 = pci_find_bus(pci_domain_nr(b), bus);
+> > +	b2 = pci_find_bus(pci_domain_nr(b), bridge->busnr);
+> >  	if (b2) {
+> >  		/* If we already got to this bus through a different bridge, ignore it */
+> >  		dev_dbg(&b2->dev, "bus already known\n");
+> > +		error = -EEXIST;
+> >  		goto err_out;
+> >  	}
+> >  
+> > -	bridge = pci_alloc_host_bridge(b);
+> > -	if (!bridge)
+> > -		goto err_out;
+> > -
+> > -	bridge->dev.parent = parent;
+> > -	bridge->dev.release = pci_release_host_bridge_dev;
+> > -	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+> > +	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bridge->busnr);
+> >  	error = pcibios_root_bridge_prepare(bridge);
+> > -	if (error) {
+> > -		kfree(bridge);
+> > +	if (error)
+> >  		goto err_out;
+> > -	}
+> >  
+> >  	error = device_register(&bridge->dev);
+> > -	if (error) {
+> > +	if (error)
+> >  		put_device(&bridge->dev);
+> > -		goto err_out;
+> > -	}
+> > +
+> >  	b->bridge = get_device(&bridge->dev);
+> 
+> I'm not sure I understand why we continue after failing to register the
+> device. Is the usage model here that drivers set up bridge->dev with an
+> initial set of values here, such as what the bridge->dev.parent is? One
+> complication I can imagine with that is that drivers would need to have
+> an implementation for the bridge device's ->release() callback. Perhaps
+> this could be simplified by having a default release callback (maybe
+> set up by pci_register_host() if none was specified by the driver) that
+> calls a callback in struct pci_host_bridge which gets passed a struct
+> pci_host_bridge. I think that would make usage more uniform from the
+> driver perspective.
+> 
+> On a side-note, perhaps it would be worth adding a structure that
+> carries host bridge operations (struct pci_host_bridge_ops)?
+> 
+> > diff --git a/include/linux/pci.h b/include/linux/pci.h
+> > index 81f070a47ee7..8bb5dff617a1 100644
+> > --- a/include/linux/pci.h
+> > +++ b/include/linux/pci.h
+> > @@ -400,10 +400,14 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
+> >  
+> >  struct pci_host_bridge {
+> >  	struct device dev;
+> > -	struct pci_bus *bus;		/* root bus */
+> > +	struct pci_ops *ops;
+> > +	void *sysdata;
+> > +	int busnr;
+> 
+> While at it, is there any reason why this can't be made unsigned? I know
+> this must sound pedantic, but whenever I see a signed integer variable I
+> immediately ask myself what the meaning of negative values would be, and
+> I can't think of any scenario where this one could possible be negative.
+> But perhaps I'm missing something?
+> 
+> Thierry
 
-  - Add new version of ACPI hotplug patch where pm_runtime_get/put() is
-    moved into acpiphp_check_bridge().
 
-Let me know if I'm forgetting something.
 
-Bjorn, is this ok for you? It would be nice to get the updated series to
-linux-next for wider testing :)
+-- 
+====================
+| I would like to |
+| fix the world,  |
+| but they're not |
+| giving me the   |
+ \ source code!  /
+  ---------------
+    ¯\_(ツ)_/¯
