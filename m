@@ -1,60 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-Id: <201605250546.u4P5i5Di003723@mx0a-001b2d01.pphosted.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp07.in.ibm.com ([125.16.236.7]:38668 "EHLO
+	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779AbcECHgE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 03:36:04 -0400
+Received: from localhost
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+	Tue, 3 May 2016 13:06:01 +0530
+Subject: Re: [PATCH] vfio-pci: Allow to mmap sub-page MMIO BARs if the mmio
+ page is exclusive
+To: "Tian, Kevin" <kevin.tian@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+References: <1461759740-5072-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <AADFC41AFE54684AB9EE6CBC0274A5D15F84131D@SHSMSX101.ccr.corp.intel.com>
+ <00243350-1ccc-75e5-8cd8-a58dfe14637f@linux.vnet.ibm.com>
+ <AADFC41AFE54684AB9EE6CBC0274A5D15F8425FE@SHSMSX101.ccr.corp.intel.com>
+Cc: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"aik@ozlabs.ru" <aik@ozlabs.ru>,
+	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+	"paulus@samba.org" <paulus@samba.org>,
+	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
+	"corbet@lwn.net" <corbet@lwn.net>,
+	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
+	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
+	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
+	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>
 From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/5] PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1461761010-5452-2-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160524205519.GA16463@localhost>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org, alex.williamson@redhat.com,
-	bhelgaas@google.com, aik@ozlabs.ru, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, joro@8bytes.org,
-	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	nikunj@linux.vnet.ibm.com, eric.auger@linaro.org,
-	will.deacon@arm.com, gwshan@linux.vnet.ibm.com,
-	David.Laight@ACULAB.COM, alistair@popple.id.au, ruscur@russell.cc
-Date: Wed, 25 May 2016 13:46:23 +0800
+Message-ID: <ade934de-0335-d2fb-11c1-5ecf05c800b2@linux.vnet.ibm.com>
+Date: Tue, 3 May 2016 15:36:05 +0800
 MIME-Version: 1.0
-In-Reply-To: <20160524205519.GA16463@localhost>
+In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D15F8425FE@SHSMSX101.ccr.corp.intel.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/5/25 4:55, Bjorn Helgaas wrote:
+On 2016/5/3 14:11, Tian, Kevin wrote:
 
-> On Wed, Apr 27, 2016 at 08:43:26PM +0800, Yongji Xie wrote:
->> We introduce a new pci_bus_flags, PCI_BUS_FLAGS_MSI_REMAP
->> which indicates all devices on the bus are protected by the
->> hardware which supports IRQ remapping(intel naming).
-> This changelog is ambiguous.  It's possible that there is hardware
-> that *supports* IRQ remapping, but does not actually *do* IRQ
-> remapping.  For example, an IRQ remapping capability may be present
-> but not enabled.
+>> From: Yongji Xie [mailto:xyjxie@linux.vnet.ibm.com]
+>> Sent: Tuesday, May 03, 2016 1:52 PM
+>>
+>>>> +
+>>>> +		if (!(res->start & ~PAGE_MASK)) {
+>>>> +			/*
+>>>> +			 * Add shadow resource for sub-page bar whose mmio
+>>>> +			 * page is exclusive in case that hot-add device's
+>>>> +			 * bar is assigned into the mem hole.
+>>>> +			 */
+>>>> +			shadow_res = kzalloc(sizeof(*shadow_res), GFP_KERNEL);
+>>>> +			shadow_res->resource.start = res->end + 1;
+>>>> +			shadow_res->resource.end = res->start + PAGE_SIZE - 1;
+>>> What about res->start not page aligned so you end up still having
+>>> a portion before res->start not exclusively reserved?
+>> Do you mean add a 'dummy' resource to reserve the portion
+>> before res->start if res->start not page aligned?
+>>
+>> But would it happen that there is a mem hole in the portion
+>> before res->start? The resource should have been assigned
+>> into the hole at the beginning.
+>>
+> Just a quick thought. Another device might occupy that range
+> before initializing this device, and then 'another device' is hot
+> removed later...
 >
-> I think your intent is to set this flag only when MSI remapping is
-> actually *enabled* for all devices on the bus.
+> Thanks
+> Kevin
 
-Yes. This is exactly my intent. Thank you for the correction!
+That's a good point! I will add support for this case in v2.
 
-> I'd also like to know exactly what protection is implied by
-> PCI_BUS_FLAGS_MSI_REMAP and IOMMU_CAP_INTR_REMAP.  I guess it means a
-> device can only generate MSIs to a certain set of CPUs?  I assume the
-> remapping hardware only checks the target address, not the data being
-> written?
-
-When IRQ remapping is enabled, the hardware will check both target
-address and data, then compute the interrupt_index from them.
-Interrupt_index will be used to find a specific Interrupt Remapping Table
-Entry containing some fields which could be used to identify a device or
-a group of devices(these devices should be in the same isolation domain).
-Then hardware can use this to verify the interrupt request. If the interrupt
-request is not from the specific devices, it will be blocked.
-
-So this flag indicate that the hardware can ensure that a given PCI device
-can only shoot the MSIs assigned for it. When there is something wrong
-with MSI in device or device driver, this can prevent all damage from it.
-
-Regards,
+Thanks,
 Yongji
+
