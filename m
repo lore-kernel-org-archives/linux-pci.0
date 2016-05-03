@@ -1,87 +1,149 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Alex Williamson' <alex.williamson@redhat.com>,
-	"Tian, Kevin" <kevin.tian@intel.com>
-CC: Yongji Xie <xyjxie@linux.vnet.ibm.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"aik@ozlabs.ru" <aik@ozlabs.ru>,
-	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-	"paulus@samba.org" <paulus@samba.org>,
-	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
-	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
-	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
-	"eric.auger@linaro.org" <eric.auger@linaro.org>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
-	"alistair@popple.id.au" <alistair@popple.id.au>,
-	"ruscur@russell.cc" <ruscur@russell.cc>
-Subject: RE: [PATCH 5/5] vfio-pci: Allow to mmap MSI-X table if interrupt
- remapping is supported
-Date: Fri, 13 May 2016 09:16:18 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D5F4BBEDD@AcuExch.aculab.com>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-	<f7d73ac3-470d-a0d2-0a97-05be630480dd@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F842653@SHSMSX101.ccr.corp.intel.com>
-	<e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
-	<063D6719AE5E284EB5DD2968C1650D6D5F4B52B5@AcuExch.aculab.com>
-	<4be013bc-e81b-84c5-06d3-e1b3f46b3227@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F8474A4@SHSMSX101.ccr.corp.intel.com>
-	<20160505090513.56886c12@t450s.home>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F84EEBA@SHSMSX101.ccr.corp.intel.com>
-	<20160511095331.18436241@t450s.home>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F850046@SHSMSX101.ccr.corp.intel.com>
-	<20160511202042.77593861@t450s.home>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F8507E8@SHSMSX101.ccr.corp.intel.com>
-	<20160512114735.7ec61bd3@t450s.home>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F853FA4@SHSMSX101.ccr.corp.intel.com>
- <20160512233246.347b8b3c@t450s.home>
-In-Reply-To: <20160512233246.347b8b3c@t450s.home>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp04.in.ibm.com ([125.16.236.4]:33115 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933393AbcECNds (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 09:33:48 -0400
+Received: from localhost
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 3 May 2016 18:53:29 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, robherring2@gmail.com, dja@axtens.net,
+	alistair@popple.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Jyri Sarha <jsarha@ti.com>
+Subject: [PATCH v9 19/22] drivers/of: Specify parent node in of_fdt_unflatten_tree()
+Date: Tue,  3 May 2016 23:22:50 +1000
+Message-Id: <1462281773-26438-20-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> Sent: 13 May 2016 06:33
-...
-> Simply denying direct writes to the vector table or preventing mapping
-> of the vector table into the user address space does not provide any
-> tangible form of protection.  Many devices make use of window registers
-> that allow backdoors to arbitrary device registers.  Some drivers even
-> use this as the primary means for configuring MSI-X, which makes them
-> incompatible with device assignment without device specific quirks to
-> enable virtualization of these paths.
+This adds one more argument to of_fdt_unflatten_tree() to specify
+the parent node of the FDT blob that is going to be unflattened.
+In the result, the function can be used to unflatten FDT blob that
+represents device sub-tree in PowerNV PCI hotplug driver.
 
-We have one fgpa based PCIe slave where the device driver has to read
-the MSI-X table and then write the value to other fpga registers so
-that the logic can generate the correct PCIe write cycle when an
-interrupt is requested.
-The MSI-X table itself is only as a PCIe slave.
+Cc: Jyri Sarha <jsarha@ti.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Acked-by: Jyri Sarha <jsarha@ti.com>
+---
+ drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c |  2 +-
+ drivers/of/fdt.c                             | 14 ++++++++++----
+ drivers/of/unittest.c                        |  2 +-
+ include/linux/of_fdt.h                       |  1 +
+ 4 files changed, 13 insertions(+), 6 deletions(-)
 
-We also have host accessible DMA controllers that the device driver
-uses to copy data to kernel memory.
-These could easily be used to generate arbitrary MSI-X requests.
-As I've said earlier it is almost certainly possible to get any
-ethernet hardware to perform something similar.
+diff --git a/drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c b/drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c
+index 106679b..f9c79da 100644
+--- a/drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c
++++ b/drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c
+@@ -157,7 +157,7 @@ struct device_node * __init tilcdc_get_overlay(struct kfree_table *kft)
+ 	if (!overlay_data || kfree_table_add(kft, overlay_data))
+ 		return NULL;
+ 
+-	of_fdt_unflatten_tree(overlay_data, &overlay);
++	of_fdt_unflatten_tree(overlay_data, NULL, &overlay);
+ 	if (!overlay) {
+ 		pr_warn("%s: Unfattening overlay tree failed\n", __func__);
+ 		return NULL;
+diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+index 7850150..337fb1a 100644
+--- a/drivers/of/fdt.c
++++ b/drivers/of/fdt.c
+@@ -450,11 +450,13 @@ static int unflatten_dt_nodes(const void *blob,
+  * pointers of the nodes so the normal device-tree walking functions
+  * can be used.
+  * @blob: The blob to expand
++ * @dad: Parent device node
+  * @mynodes: The device_node tree created by the call
+  * @dt_alloc: An allocator that provides a virtual address to memory
+  * for the resulting tree
+  */
+ static void __unflatten_device_tree(const void *blob,
++			     struct device_node *dad,
+ 			     struct device_node **mynodes,
+ 			     void * (*dt_alloc)(u64 size, u64 align))
+ {
+@@ -479,7 +481,7 @@ static void __unflatten_device_tree(const void *blob,
+ 	}
+ 
+ 	/* First pass, scan for size */
+-	size = unflatten_dt_nodes(blob, NULL, NULL, NULL);
++	size = unflatten_dt_nodes(blob, NULL, dad, NULL);
+ 	if (size < 0)
+ 		return;
+ 
+@@ -495,7 +497,7 @@ static void __unflatten_device_tree(const void *blob,
+ 	pr_debug("  unflattening %p...\n", mem);
+ 
+ 	/* Second pass, do actual unflattening */
+-	unflatten_dt_nodes(blob, mem, NULL, mynodes);
++	unflatten_dt_nodes(blob, mem, dad, mynodes);
+ 	if (be32_to_cpup(mem + size) != 0xdeadbeef)
+ 		pr_warning("End of tree marker overwritten: %08x\n",
+ 			   be32_to_cpup(mem + size));
+@@ -512,6 +514,9 @@ static DEFINE_MUTEX(of_fdt_unflatten_mutex);
+ 
+ /**
+  * of_fdt_unflatten_tree - create tree of device_nodes from flat blob
++ * @blob: Flat device tree blob
++ * @dad: Parent device node
++ * @mynodes: The device tree created by the call
+  *
+  * unflattens the device-tree passed by the firmware, creating the
+  * tree of struct device_node. It also fills the "name" and "type"
+@@ -519,10 +524,11 @@ static DEFINE_MUTEX(of_fdt_unflatten_mutex);
+  * can be used.
+  */
+ void of_fdt_unflatten_tree(const unsigned long *blob,
++			struct device_node *dad,
+ 			struct device_node **mynodes)
+ {
+ 	mutex_lock(&of_fdt_unflatten_mutex);
+-	__unflatten_device_tree(blob, mynodes, &kernel_tree_alloc);
++	__unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
+ 	mutex_unlock(&of_fdt_unflatten_mutex);
+ }
+ EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
+@@ -1189,7 +1195,7 @@ bool __init early_init_dt_scan(void *params)
+  */
+ void __init unflatten_device_tree(void)
+ {
+-	__unflatten_device_tree(initial_boot_params, &of_root,
++	__unflatten_device_tree(initial_boot_params, NULL, &of_root,
+ 				early_init_dt_alloc_memory_arch);
+ 
+ 	/* Get pointer to "/chosen" and "/aliases" nodes for use everywhere */
+diff --git a/drivers/of/unittest.c b/drivers/of/unittest.c
+index e986e6e..8c0f11c 100644
+--- a/drivers/of/unittest.c
++++ b/drivers/of/unittest.c
+@@ -921,7 +921,7 @@ static int __init unittest_data_add(void)
+ 			"not running tests\n", __func__);
+ 		return -ENOMEM;
+ 	}
+-	of_fdt_unflatten_tree(unittest_data, &unittest_data_node);
++	of_fdt_unflatten_tree(unittest_data, NULL, &unittest_data_node);
+ 	if (!unittest_data_node) {
+ 		pr_warn("%s: No tree to attach; not running tests\n", __func__);
+ 		return -ENODATA;
+diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
+index 2fbe868..1bffcbd 100644
+--- a/include/linux/of_fdt.h
++++ b/include/linux/of_fdt.h
+@@ -38,6 +38,7 @@ extern bool of_fdt_is_big_endian(const void *blob,
+ extern int of_fdt_match(const void *blob, unsigned long node,
+ 			const char *const *compat);
+ extern void of_fdt_unflatten_tree(const unsigned long *blob,
++			       struct device_node *dad,
+ 			       struct device_node **mynodes);
+ 
+ /* TBD: Temporary export of fdt globals - remove when code fully merged */
+-- 
+2.1.0
 
-So without hardware that is able to limit the memory and MSI-X
-that each PCIe endpoint can access I believe that if a virtualisation
-system gives a guest kernel direct access to a PCIe devices it gives
-the guest kernel the ability to raise and MSI-X interrupt and read/write
-any physical memory.
-(I've not looked at the cpu virtualisation support, but do know what
-the PCIe devices can do.)
-
-More interestingly, probably the 'worst' thing (from a security point of view)
-that changing the MSI-X table lets you do is a write to an arbitrary
-physical memory address.
-
-	David
