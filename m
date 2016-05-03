@@ -1,69 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38582 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756884AbcEDBZf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 3 May 2016 21:25:35 -0400
-Date: Tue, 3 May 2016 20:25:31 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Michael Ellerman <mpe@ellerman.id.au>
-Subject: Re: [PATCH v11 04/60] sparc/PCI: Use correct offset for bus address
- to resource
-Message-ID: <20160504012531.GB17170@localhost>
-References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
- <1460074573-7481-5-git-send-email-yinghai@kernel.org>
- <20160422204920.GA17215@localhost>
- <CAE9FiQWQ2ke3_P4Qhj+ON7pMiVCx4myhVNVaSYO4vYAL_P4njg@mail.gmail.com>
- <20160428135607.GA12470@localhost>
- <CAE9FiQU_XSMfxFPSOrMjQ2DGnrM0D5T=0ORfDEBxqWggGrzc+Q@mail.gmail.com>
- <CAE9FiQX_8oXj=FD8pKe=eBL=YWZY-=C8sZ6yMbmkwegLVOR-fA@mail.gmail.com>
- <1462322260.30470.76.camel@kernel.crashing.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1462322260.30470.76.camel@kernel.crashing.org>
+Received: from e23smtp02.au.ibm.com ([202.81.31.144]:33639 "EHLO
+	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933301AbcECNYE (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 09:24:04 -0400
+Received: from localhost
+	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 3 May 2016 23:24:02 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, robherring2@gmail.com, dja@axtens.net,
+	alistair@popple.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v9 13/22] powerpc/powernv: Support PCI slot ID
+Date: Tue,  3 May 2016 23:22:44 +1000
+Message-Id: <1462281773-26438-14-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 04, 2016 at 10:37:40AM +1000, Benjamin Herrenschmidt wrote:
-> On Tue, 2016-05-03 at 15:52 -0700, Yinghai Lu wrote:
-> > BenH and DavidM,
-> > Are you ok to let /proc/bus/pci/devices to expose resource value
-> > instead of
-> > BAR value?
-> > powerpc already expose MMIO as resource value, but still keep IO as
-> > BAR value?
-> > 
-> > Or can we just dump /proc/bus/pci support from now?
-> 
-> The problem tends to be old Xserver expectations...
-> 
-> That stuff has been a can of worms over the years and we did things in
-> the kernel to work around X limitations. I'm not that keen on touching
-> /proc at all in that regard. Leave it there do what it does today, it's
-> a user visible ABI, don't change it.
+The reset and poll functionality from (OPAL) firmware supports
+PHB and PCI slot at same time. They are identified by ID. This
+supports PCI slot ID by:
 
-I did not propose changing any user-visible ABI.  To recap what I did
-propose:
+   * Rename the argument name for opal_pci_reset() and opal_pci_poll()
+     accordingly
+   * Rename pnv_eeh_phb_poll() to pnv_eeh_poll() and adjust its argument
+     name.
+   * One macro is added to produce PCI slot ID.
 
-  - The sysfs path uses offsets between 0 and BAR size on all arches.
-    It uses pci_resource_to_user() today, but I think it should not.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/opal.h              | 4 ++--
+ arch/powerpc/include/asm/pnv-pci.h           | 4 ++++
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 8 ++++----
+ 3 files changed, 10 insertions(+), 6 deletions(-)
 
-  - The procfs path uses offsets of resource values (CPU physical
-    addresses) on most architectures, but uses something else, e.g.,
-    BAR values, on others.  pci_resource_to_user() does this
-    translation.  The procfs path does not use pci_resource_to_user()
-    today, but I think it should.
+diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
+index 9d86c66..348132c 100644
+--- a/arch/powerpc/include/asm/opal.h
++++ b/arch/powerpc/include/asm/opal.h
+@@ -131,7 +131,7 @@ int64_t opal_pci_map_pe_dma_window(uint64_t phb_id, uint16_t pe_number, uint16_t
+ int64_t opal_pci_map_pe_dma_window_real(uint64_t phb_id, uint16_t pe_number,
+ 					uint16_t dma_window_number, uint64_t pci_start_addr,
+ 					uint64_t pci_mem_size);
+-int64_t opal_pci_reset(uint64_t phb_id, uint8_t reset_scope, uint8_t assert_state);
++int64_t opal_pci_reset(uint64_t id, uint8_t reset_scope, uint8_t assert_state);
+ 
+ int64_t opal_pci_get_hub_diag_data(uint64_t hub_id, void *diag_buffer,
+ 				   uint64_t diag_buffer_len);
+@@ -148,7 +148,7 @@ int64_t opal_get_dpo_status(__be64 *dpo_timeout);
+ int64_t opal_set_system_attention_led(uint8_t led_action);
+ int64_t opal_pci_next_error(uint64_t phb_id, __be64 *first_frozen_pe,
+ 			    __be16 *pci_error_type, __be16 *severity);
+-int64_t opal_pci_poll(uint64_t phb_id);
++int64_t opal_pci_poll(uint64_t id);
+ int64_t opal_return_cpu(void);
+ int64_t opal_check_token(uint64_t token);
+ int64_t opal_reinit_cpus(uint64_t flags);
+diff --git a/arch/powerpc/include/asm/pnv-pci.h b/arch/powerpc/include/asm/pnv-pci.h
+index 6f77f71..c607902 100644
+--- a/arch/powerpc/include/asm/pnv-pci.h
++++ b/arch/powerpc/include/asm/pnv-pci.h
+@@ -13,6 +13,10 @@
+ #include <linux/pci.h>
+ #include <misc/cxl-base.h>
+ 
++#define PCI_SLOT_ID_PREFIX	0x8000000000000000
++#define PCI_SLOT_ID(phb_id, bdfn)	\
++	(PCI_SLOT_ID_PREFIX | ((uint64_t)(bdfn) << 16) | (phb_id))
++
+ int pnv_phb_to_cxl_mode(struct pci_dev *dev, uint64_t mode);
+ int pnv_cxl_ioda_msi_setup(struct pci_dev *dev, unsigned int hwirq,
+ 			   unsigned int virq);
+diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
+index 593b8dc..3b17033 100644
+--- a/arch/powerpc/platforms/powernv/eeh-powernv.c
++++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
+@@ -717,12 +717,12 @@ static int pnv_eeh_get_state(struct eeh_pe *pe, int *delay)
+ 	return ret;
+ }
+ 
+-static s64 pnv_eeh_phb_poll(struct pnv_phb *phb)
++static s64 pnv_eeh_poll(unsigned long id)
+ {
+ 	s64 rc = OPAL_HARDWARE;
+ 
+ 	while (1) {
+-		rc = opal_pci_poll(phb->opal_id);
++		rc = opal_pci_poll(id);
+ 		if (rc <= 0)
+ 			break;
+ 
+@@ -762,7 +762,7 @@ int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
+ 	 * reset followed by hot reset on root bus. So we also
+ 	 * need the PCI bus settlement delay.
+ 	 */
+-	rc = pnv_eeh_phb_poll(phb);
++	rc = pnv_eeh_poll(phb->opal_id);
+ 	if (option == EEH_RESET_DEACTIVATE) {
+ 		if (system_state < SYSTEM_RUNNING)
+ 			udelay(1000 * EEH_PE_RST_SETTLE_TIME);
+@@ -805,7 +805,7 @@ static int pnv_eeh_root_reset(struct pci_controller *hose, int option)
+ 		goto out;
+ 
+ 	/* Poll state of the PHB until the request is done */
+-	rc = pnv_eeh_phb_poll(phb);
++	rc = pnv_eeh_poll(phb->opal_id);
+ 	if (option == EEH_RESET_DEACTIVATE)
+ 		msleep(EEH_PE_RST_SETTLE_TIME);
+ out:
+-- 
+2.1.0
 
-  - This implies that pci_mmap_page_range() should deal with resource
-    values (CPU physical addresses), and proc_bus_pci_mmap() should do
-    any necessary arch-specific translation from BAR values to
-    resource values.
