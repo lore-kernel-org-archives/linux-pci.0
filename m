@@ -1,235 +1,129 @@
-Return-Path: <Liviu.Dudau@arm.com>
-Return-Path: <Liviu.Dudau@arm.com>
-Date: Tue, 3 May 2016 11:04:23 +0100
-From: Liviu.Dudau@arm.com
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <helgaas@kernel.org>,
-	catalin.marinas@arm.com, linux-pci@vger.kernel.org,
-	will.deacon@arm.com, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Tomasz Nowicki <tn@semihalf.com>, ddaney@caviumnetworks.com,
-	robert.richter@caviumnetworks.com, msalter@redhat.com,
-	jchandra@broadcom.com, linux-kernel@vger.kernel.org,
-	hanjun.guo@linaro.org, Suravee.Suthikulpanit@amd.com
-Subject: Re: [PATCH 1/3] [RFC] pci: add new method for register PCI hosts
-Message-ID: <20160503100422.GZ28464@e106497-lin.cambridge.arm.com>
-References: <1461970899-4150603-1-git-send-email-arnd@arndb.de>
- <1461970899-4150603-2-git-send-email-arnd@arndb.de>
- <20160502070943.GB27465@ulmo.ba.sec>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Tue, 3 May 2016 09:46:28 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jayachandran C <jchandra@broadcom.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
+	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
+	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
+	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
+	Wangyijing <wangyijing@huawei.com>, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Jon Masters <jcm@redhat.com>
+Subject: Re: [PATCH V6 09/13] pci, acpi: Support for ACPI based generic PCI
+ host controller
+Message-ID: <20160503084628.GA31158@red-moon>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <1460740008-19489-10-git-send-email-tn@semihalf.com>
+ <20160428214800.GG25125@localhost>
+ <20160429083709.GA3249@red-moon>
+ <CAKc_7PUcjKkCrCTj9q26P8a+Tb3N_MffynnTXnJRacm6VNmFRw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20160502070943.GB27465@ulmo.ba.sec>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKc_7PUcjKkCrCTj9q26P8a+Tb3N_MffynnTXnJRacm6VNmFRw@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 02, 2016 at 09:09:43AM +0200, Thierry Reding wrote:
-> On Sat, Apr 30, 2016 at 01:01:37AM +0200, Arnd Bergmann wrote:
-> > This patch makes the existing 'pci_host_bridge' structure a proper device
-> > that is usable by PCI host drivers in a more standard way. In addition
-> > to the existing pci_scan_bus, pci_scan_root_bus, pci_scan_root_bus_msi,
-> > and pci_create_root_bus interfaces, this unfortunately means having to
-> > add yet another interface doing basically the same thing, and add some
-> > extra code in the initial step.
-> > 
-> > However, this time it's more likely to be extensible enough that we
-> > won't have to do another one again in the future, and we should be
-> > able to reduce code much more as a result.
-> > 
-> > The main idea is to pull the allocation of 'struct pci_host_bridge' out
-> > of the registration, and let individual host drivers and architecture
-> > code fill the members before calling the registration function.
-> > 
-> > There are a number of things we can do based on this:
-> > 
-> > * Use a single memory allocation for the driver-specific structure
-> >   and the generic PCI host bridge
-> > * consolidate the contents of driver specific structures by moving
-> >   them into pci_host_bridge
-> > * Add a consistent interface for removing a PCI host bridge again
-> >   when unloading a host driver module
-> > * Replace the architecture specific __weak pcibios_* functions with
-> >   callbacks in a pci_host_bridge device
-> > * Move common boilerplate code from host drivers into the generic
-> >   function, based on contents of the structure
-> > * Extend pci_host_bridge with additional members when needed without
-> >   having to add arguments to pci_scan_*.
-> > * Move members of struct pci_bus into pci_host_bridge to avoid
-> >   having lots of identical copies.
-> > 
-> > As mentioned in a previous email, one open question is whether we want
-> > to export a function for allocating a pci_host_bridge device in
-> > combination with the per-device structure or let the driver itself
-> > call kzalloc.
+On Fri, Apr 29, 2016 at 11:05:34PM +0530, Jayachandran C wrote:
+> On Fri, Apr 29, 2016 at 2:07 PM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> > On Thu, Apr 28, 2016 at 04:48:00PM -0500, Bjorn Helgaas wrote:
+> >
+> > [...]
+> >
+> >> > +static int pci_acpi_setup_ecam_mapping(struct acpi_pci_root *root,
+> >> > +                                  struct acpi_pci_generic_root_info *ri)
+> >> > +{
+> >> > +   u16 seg = root->segment;
+> >> > +   u8 bus_start = root->secondary.start;
+> >> > +   u8 bus_end = root->secondary.end;
+> >> > +   struct pci_config_window *cfg;
+> >> > +   struct mcfg_entry *e;
+> >> > +   phys_addr_t addr;
+> >> > +   int err = 0;
+> >> > +
+> >> > +   mutex_lock(&pci_mcfg_lock);
+> >>
+> >> What does this lock protect?  The pci_mcfg_list should already be
+> >> initialized by the time we get there, and it should be immutable for
+> >> the life of the system.  In fact, I would prefer if we could just
+> >> search the static table itself whenever we need it rather than caching
+> >> it in our own list.  But I don't think we can easily do that because
+> >> acpi_table_parse() is __init.
+> >>
+> >> > +   e = pci_mcfg_lookup(seg, bus_start);
+> >>
+> >> I would argue that we should check for _CBA first, and fall back to
+> >> MCFG if _CBA doesn't exist.
+> >>
+> >> > +   if (!e) {
+> >> > +           addr = acpi_pci_root_get_mcfg_addr(root->device->handle);
+> >>
+> >> IMO, acpi_pci_root_get_mcfg_addr() is misnamed.  It should be
+> >> acpi_pci_config_base_addr() or similar.  It definitely is not related
+> >> to MCFG.  Not your fault, obviously.
+> >>
+> >> > +           if (addr == 0) {
+> >> > +                   pr_err(PREFIX"%04x:%02x-%02x bus range error\n",
+> >> > +                          seg, bus_start, bus_end);
+> >> > +                   err = -ENOENT;
+> >> > +                   goto err_out;
+> >> > +           }
+> >> > +   } else {
+> >> > +           if (bus_start != e->bus_start) {
+> >> > +                   pr_err("%04x:%02x-%02x bus range mismatch %02x\n",
+> >> > +                          seg, bus_start, bus_end, e->bus_start);
+> >> > +                   err = -EINVAL;
+> >> > +                   goto err_out;
+> >> > +           } else if (bus_end != e->bus_end) {
+> >> > +                   pr_warn("%04x:%02x-%02x bus end mismatch %02x\n",
+> >> > +                           seg, bus_start, bus_end, e->bus_end);
+> >> > +                   bus_end = min(bus_end, e->bus_end);
+> >> > +           }
+> >> > +           addr = e->addr;
+> >> > +   }
+> >>
+> >> I really don't think you need a lock around this, so you can factor
+> >> out the address lookup into something like:
+> >>
+> >>   addr = acpi_pci_config_base_addr(...);
+> >>   if (addr)
+> >>     return addr;
+> >>
+> >>   return acpi_pci_mcfg_lookup(seg, busn_res);
+> >>
+> >> You can check inside acpi_pci_mcfg_lookup() to make sure the entry you
+> >> find covers the entire [busn_res.start-busn_res.end] range and return
+> >> failure if it doesn't.  At this point, I'm not sure it's worth it to
+> >> truncate the host bridge bus range to match something we find in MCFG.
+> >>
+> >> If the MCFG entry covers *more* than the host bridge range from _CRS,
+> >> that's fine.  In any case, we have to be careful with the start address,
+> >> because the MCFG start address is always based on bus 0, but I think
+> >> pci_generic_ecam_create() expects the start address based on the
+> >> bus_start you pass to it.
+> >
+> > Yes, I spotted this too, it is unfortunate but DT and MCFG handle
+> > the ECAM regions differently. In DT the reg property is relative
+> > to bus_start - ie reg MMIO region maps config space starting at
+> > the first bus in bus-range:
+> >
+> > Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> >
+> > in ACPI(MCFG) as you said it is always relative to bus 0, it is
+> > unfortunate but the address to be mapped should be computed
+> > differently in the ECAM layer.
 > 
-> I think the most common pattern in other parts of the kernel is the
-> latter. That gives drivers the most flexibility to do whatever they
-> want or need.
-> 
-> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> > ---
-> >  drivers/pci/probe.c | 100 ++++++++++++++++++++++++++++++----------------------
-> >  include/linux/pci.h |   7 +++-
-> >  2 files changed, 63 insertions(+), 44 deletions(-)
-> > 
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index ae7daeb83e21..fe9d9221b11e 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -520,19 +520,6 @@ static void pci_release_host_bridge_dev(struct device *dev)
-> >  	kfree(bridge);
-> >  }
-> >  
-> > -static struct pci_host_bridge *pci_alloc_host_bridge(struct pci_bus *b)
-> > -{
-> > -	struct pci_host_bridge *bridge;
-> > -
-> > -	bridge = kzalloc(sizeof(*bridge), GFP_KERNEL);
-> > -	if (!bridge)
-> > -		return NULL;
-> > -
-> > -	INIT_LIST_HEAD(&bridge->windows);
-> > -	bridge->bus = b;
-> > -	return bridge;
-> > -}
-> > -
-> >  static const unsigned char pcix_bus_speed[] = {
-> >  	PCI_SPEED_UNKNOWN,		/* 0 */
-> >  	PCI_SPEED_66MHz_PCIX,		/* 1 */
-> > @@ -2108,51 +2095,47 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
-> >  {
-> >  }
-> >  
-> > -struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
-> > -		struct pci_ops *ops, void *sysdata, struct list_head *resources)
-> > +int pci_register_host(struct pci_host_bridge *bridge)
-> 
-> Perhaps pci_register_host_bridge() to mirror the structure name in the
-> registration function?
-> 
-> >  {
-> >  	int error;
-> > -	struct pci_host_bridge *bridge;
-> >  	struct pci_bus *b, *b2;
-> >  	struct resource_entry *window, *n;
-> > +	LIST_HEAD(resources);
-> >  	struct resource *res;
-> >  	resource_size_t offset;
-> >  	char bus_addr[64];
-> >  	char *fmt;
-> > +	struct device *parent = bridge->dev.parent;
-> >  
-> >  	b = pci_alloc_bus(NULL);
-> >  	if (!b)
-> > -		return NULL;
-> > +		return -ENOMEM;
-> > +	bridge->bus = b;
-> >  
-> > -	b->sysdata = sysdata;
-> > -	b->ops = ops;
-> > -	b->number = b->busn_res.start = bus;
-> > +	/* temporarily move resources off the list */
-> 
-> Might be worth mentioning why we move the resources off the list.
-> 
-> > +	list_splice_init(&bridge->windows, &resources);
-> > +	b->sysdata = bridge->sysdata;
-> 
-> Does the sysdata not become effectively obsolete after this series? My
-> understanding is that it's primarily used to store driver-specific data
-> along with a PCI bus, but if drivers can embed struct pci_host_bridge
-> they can simply upcast bus->bridge. 
+> Can't this be handled by fixing up the address before passing to
+> pci_generic_ecam_create?
 
-I second that. If we do this change (which is long overdue and I fully support),
-let's kill sysdata now. Generic host bridge code doesn't use sysdata on purpose.
+Yes it can, you just need to apply the bus shift, given that we know
+it is ECAM anyway you can even add a macro in the ecam generic header to
+compute it, anyway that's a minor detail, we just should not forget to
+fix it.
 
-Best regards,
-Liviu
-
-> I do notice that bus->bridge is
-> currently a struct device *, perhaps we can replace it by a back pointer
-> to the parent struct pci_host_bridge, which would have to gain a struct
-> device *parent to point at the device that instantiated the bridge. This
-> is becoming somewhat complicated, but maybe that can be simplified at
-> some point.
-> 
-> > +	b->msi = bridge->msi;
-> > +	b->ops = bridge->ops;
-> > +	b->number = b->busn_res.start = bridge->busnr;
-> >  	pci_bus_assign_domain_nr(b, parent);
-> > -	b2 = pci_find_bus(pci_domain_nr(b), bus);
-> > +	b2 = pci_find_bus(pci_domain_nr(b), bridge->busnr);
-> >  	if (b2) {
-> >  		/* If we already got to this bus through a different bridge, ignore it */
-> >  		dev_dbg(&b2->dev, "bus already known\n");
-> > +		error = -EEXIST;
-> >  		goto err_out;
-> >  	}
-> >  
-> > -	bridge = pci_alloc_host_bridge(b);
-> > -	if (!bridge)
-> > -		goto err_out;
-> > -
-> > -	bridge->dev.parent = parent;
-> > -	bridge->dev.release = pci_release_host_bridge_dev;
-> > -	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-> > +	dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bridge->busnr);
-> >  	error = pcibios_root_bridge_prepare(bridge);
-> > -	if (error) {
-> > -		kfree(bridge);
-> > +	if (error)
-> >  		goto err_out;
-> > -	}
-> >  
-> >  	error = device_register(&bridge->dev);
-> > -	if (error) {
-> > +	if (error)
-> >  		put_device(&bridge->dev);
-> > -		goto err_out;
-> > -	}
-> > +
-> >  	b->bridge = get_device(&bridge->dev);
-> 
-> I'm not sure I understand why we continue after failing to register the
-> device. Is the usage model here that drivers set up bridge->dev with an
-> initial set of values here, such as what the bridge->dev.parent is? One
-> complication I can imagine with that is that drivers would need to have
-> an implementation for the bridge device's ->release() callback. Perhaps
-> this could be simplified by having a default release callback (maybe
-> set up by pci_register_host() if none was specified by the driver) that
-> calls a callback in struct pci_host_bridge which gets passed a struct
-> pci_host_bridge. I think that would make usage more uniform from the
-> driver perspective.
-> 
-> On a side-note, perhaps it would be worth adding a structure that
-> carries host bridge operations (struct pci_host_bridge_ops)?
-> 
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 81f070a47ee7..8bb5dff617a1 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -400,10 +400,14 @@ static inline int pci_channel_offline(struct pci_dev *pdev)
-> >  
-> >  struct pci_host_bridge {
-> >  	struct device dev;
-> > -	struct pci_bus *bus;		/* root bus */
-> > +	struct pci_ops *ops;
-> > +	void *sysdata;
-> > +	int busnr;
-> 
-> While at it, is there any reason why this can't be made unsigned? I know
-> this must sound pedantic, but whenever I see a signed integer variable I
-> immediately ask myself what the meaning of negative values would be, and
-> I can't think of any scenario where this one could possible be negative.
-> But perhaps I'm missing something?
-> 
-> Thierry
-
-
-
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+Lorenzo
