@@ -1,49 +1,121 @@
-Return-Path: <rjw@rjwysocki.net>
-Return-Path: <rjw@rjwysocki.net>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Peter Wu <peter@lekensteyn.nl>, Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, Valdis Kletnieks <valdis.kletnieks@vt.edu>, Dave Airlie <airlied@gmail.com>
-Subject: Re: [PATCH] PCI: Power on bridges before scanning new devices
-Date: Wed, 25 May 2016 22:45:48 +0200
-Message-ID: <2037523.0hP3Oc7Pg6@vostro.rjw.lan>
-In-Reply-To: <20160525131948.GL1789@lahna.fi.intel.com>
-References: <20160519231234.GB1785@al> <20160524211309.GH1789@lahna.fi.intel.com> <20160525131948.GL1789@lahna.fi.intel.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Tue, 3 May 2016 15:55:12 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Jayachandran C <jchandra@broadcom.com>
+Cc: Tomasz Nowicki <tn@semihalf.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
+	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
+	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
+	Wangyijing <wangyijing@huawei.com>, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	Jon Masters <jcm@redhat.com>
+Subject: Re: [PATCH V6 02/13] pci, acpi: Provide generic way to assign bus
+ domain number.
+Message-ID: <20160503145512.GA2429@red-moon>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <1460740008-19489-3-git-send-email-tn@semihalf.com>
+ <20160427022649.GD6789@localhost>
+ <20160427111758.GA6234@red-moon>
+ <57274B8C.5030304@semihalf.com>
+ <CAKc_7PU1AszF4y0OjZ3KVGaTEx9OL1cuT5YgOxQKhAQgQom7tA@mail.gmail.com>
+ <20160503110225.GA1055@red-moon>
+ <CAKc_7PXBrVduNkdVr13argTNekvhV+XJFB7XD6aYOnP1CY6A6w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKc_7PXBrVduNkdVr13argTNekvhV+XJFB7XD6aYOnP1CY6A6w@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, May 25, 2016 04:19:48 PM Mika Westerberg wrote:
-> On Wed, May 25, 2016 at 12:13:09AM +0300, Mika Westerberg wrote:
-> > On Tue, May 24, 2016 at 03:53:23PM +0300, Mika Westerberg wrote:
-> > > > I dropped "ACPI / hotplug / PCI: Runtime resume bridge before rescan"
-> > > > on the assumption that "PCI: Power on bridges before scanning new
-> > > > devices" is sufficient to cover both the ACPI and the generic PCi
-> > > > rescan cases, but I'd like some reassurance about that.
-> > > 
-> > > I agree with your reasoning that the patch should not be needed anymore.
-> > > However, I have the machine which needed that patch at home so I'm not
-> > > able to test it now. I'll do that later today when I get back home.
-> > 
-> > I tried now on my Lenovo Yoga 900 laptop and unfortunately "PCI: Power
-> > on bridges before scanning new devices" seems not to be enough. This
-> > machine has SD-card reader connected to one PCIe port and once I unload
-> > the sdhci-pci driver and enable runtime PM for the device, next system
-> > suspend/resume cycle loses the SD-card reader PCI device.
-> > 
-> > I will investigate more tomorrow -- it is getting late here.
+On Tue, May 03, 2016 at 07:52:52PM +0530, Jayachandran C wrote:
+> On Tue, May 3, 2016 at 4:32 PM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> > On Mon, May 02, 2016 at 06:56:13PM +0530, Jayachandran C wrote:
+> >> On Mon, May 2, 2016 at 6:13 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
+> >> > On 04/27/2016 01:17 PM, Lorenzo Pieralisi wrote:
+> >> >>
+> >> >> On Tue, Apr 26, 2016 at 09:26:49PM -0500, Bjorn Helgaas wrote:
+> >> >>>
+> >> >>> On Fri, Apr 15, 2016 at 07:06:37PM +0200, Tomasz Nowicki wrote:
+> >> >
+> >> > [...]
+> >> >
+> >> >>>   +int acpi_pci_bus_domain_nr(struct device *parent)
+> >> >>> +{
+> >> >>> +       struct acpi_device *acpi_dev = to_acpi_device(parent);
+> >> >>> +       unsigned long long segment = 0;
+> >> >>> +       acpi_status status;
+> >> >>> +
+> >> >>> +       /*
+> >> >>> +        * If _SEG method does not exist, following ACPI spec (6.5.6)
+> >> >>> +        * all PCI buses belong to domain 0.
+> >> >>> +        */
+> >> >>> +       status = acpi_evaluate_integer(acpi_dev->handle,
+> >> >>> METHOD_NAME__SEG, NULL,
+> >> >>> +                                      &segment);
+> >> >>> We already have code in acpi_pci_root_add() to evaluate _SEG.  We
+> >> >>> don't want to evaluate it *twice*, do we?
+> >> >>>
+> >> >>> I was sort of expecting that if you added it here, we'd remove the
+> >> >>> existing call, but it looks like you're keeping both?
+> >> >>
+> >> >> We can't remove the existing call, since it is used on X86 and IA64
+> >> >> to store the segment number that, in the process, is used in their
+> >> >> pci_domain_nr() arch specific callback to retrieve the domain nr.
+> >> >>
+> >> >> On ARM64, that selects PCI_DOMAINS_GENERIC, we have to find a way
+> >> >> to retrieve the domain number that is not arch dependent, since
+> >> >> this is generic code, we can't rely on any bus->sysdata format (unless
+> >> >> we do something like JC did below), therefore the only way is to call
+> >> >> the _SEG method *again* here, which also forced Tomasz to go through
+> >> >> the ACPI_COMPANION setting song and dance and pass the parent pointer
+> >> >> to pci_create_root_bus() (see patch 1), which BTW is a source of
+> >> >> trouble on its own as you noticed.
+> >> >
+> >> > What trouble in patch 1 do you mean? I may miss something.
+> >> >
+> >> > I agree that patch 1 is not necessary if we decide to use sysdata or rework
+> >> > root bus scanning to move domain to host bridge. Nevertheless, patch 1 is
+> >> > still a cleanup IMO.
+> >>
+> >> In this case, getting the domain should be trivial since the ACPI
+> >> companion on parent is already set, this should work
+> >>
+> >> int acpi_pci_bus_domain_nr(struct device *parent)
+> >> {
+> >>         struct acpi_device *acpi_dev = to_acpi_device(parent);
+> >>         struct acpi_pci_root *root = acpi_dev->driver_data;
+> >>
+> >>         return root->segment;
+> >> }
+> >>
+> >> Or am I missing something here?
+> >
+> > Well, I thought that the whole idea behind this exercise was to move
+> > the domain number into struct pci_host_bridge (Arnd did not do it with
+> > his first set but this does not mean we can't add it as Bjorn suggested),
+> > so that the domain number could be read from there straight away in an
+> > arch (and FW) independent manner, right ?
 > 
-> I think I found reason for the issue.
+> The original issue was using _SEG call again instead of using
+> the value from acpi_pci_root, and the solution for that problem
+> is very simple.
 > 
-> When the laptop resumes it will send ACPI BUS_CHECK event for the two
-> PCIe root ports. This ends up in acpiphp_check_bridge() where it goes
-> through all slots in that bridge checking if the devices are still
-> present. This happens before we call pci_scan_bridge() for the bridge
-> itself.
-> 
-> Since the bridge is in D3 config space of the device behind it is not
-> available and we determine that the device is not there anymore.
-> 
-> It looks like we either need that ACPI hotplug patch or alternatively we
-> could add pm_runtime_get/put() in acpiphp_check_bridge().
+> The pci host bridge work is of course very useful, but creating a
+> dependency with that work for an issue that can be so easily solved
+> is unnecessary.
 
-Have you tried the latter?
+It can be easily solved if we do not drop patch 1 (I understood the
+additional call to _SEG was only part of the problem). If we keep patch
+1 the code above is fine by me, if we have to drop patch 1 (IIRC by
+passing the parent pointer to pci_create_root_bus() we are affecting
+IA64 and X86 code, if that's acceptable that's fine by me) I do not
+think we can use the code above anymore, that's what my comment was
+all about because Bjorn was concerned about the fragility of the code
+setting the ACPI companion.
+
+Lorenzo
