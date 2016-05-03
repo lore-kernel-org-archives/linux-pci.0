@@ -1,117 +1,105 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:33639 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933301AbcECNYE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 09:24:04 -0400
+Received: from e28smtp07.in.ibm.com ([125.16.236.7]:34515 "EHLO
+	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933162AbcECNXZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 09:23:25 -0400
 Received: from localhost
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 3 May 2016 23:24:02 +1000
+	Tue, 3 May 2016 18:53:22 +0530
 From: Gavin Shan <gwshan@linux.vnet.ibm.com>
 To: linuxppc-dev@lists.ozlabs.org
 Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
 	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
 	bhelgaas@google.com, robherring2@gmail.com, dja@axtens.net,
 	alistair@popple.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v9 13/22] powerpc/powernv: Support PCI slot ID
-Date: Tue,  3 May 2016 23:22:44 +1000
-Message-Id: <1462281773-26438-14-git-send-email-gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v9 14/22] powerpc/powernv: Use PCI slot reset infrastructure
+Date: Tue,  3 May 2016 23:22:45 +1000
+Message-Id: <1462281773-26438-15-git-send-email-gwshan@linux.vnet.ibm.com>
 In-Reply-To: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
 References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The reset and poll functionality from (OPAL) firmware supports
-PHB and PCI slot at same time. They are identified by ID. This
-supports PCI slot ID by:
+The (OPAL) firmware might provide the PCI slot reset capability
+which is identified by property "ibm,reset-by-firmware" on the
+PCI slot associated device node.
 
-   * Rename the argument name for opal_pci_reset() and opal_pci_poll()
-     accordingly
-   * Rename pnv_eeh_phb_poll() to pnv_eeh_poll() and adjust its argument
-     name.
-   * One macro is added to produce PCI slot ID.
+This routes the reset request to firmware if "ibm,reset-by-firmware"
+exists in the PCI slot device node. Otherwise, the reset is done
+inside kernel as before.
 
 Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 ---
- arch/powerpc/include/asm/opal.h              | 4 ++--
- arch/powerpc/include/asm/pnv-pci.h           | 4 ++++
- arch/powerpc/platforms/powernv/eeh-powernv.c | 8 ++++----
- 3 files changed, 10 insertions(+), 6 deletions(-)
+ arch/powerpc/platforms/powernv/eeh-powernv.c | 41 +++++++++++++++++++++++++++-
+ 1 file changed, 40 insertions(+), 1 deletion(-)
 
-diff --git a/arch/powerpc/include/asm/opal.h b/arch/powerpc/include/asm/opal.h
-index 9d86c66..348132c 100644
---- a/arch/powerpc/include/asm/opal.h
-+++ b/arch/powerpc/include/asm/opal.h
-@@ -131,7 +131,7 @@ int64_t opal_pci_map_pe_dma_window(uint64_t phb_id, uint16_t pe_number, uint16_t
- int64_t opal_pci_map_pe_dma_window_real(uint64_t phb_id, uint16_t pe_number,
- 					uint16_t dma_window_number, uint64_t pci_start_addr,
- 					uint64_t pci_mem_size);
--int64_t opal_pci_reset(uint64_t phb_id, uint8_t reset_scope, uint8_t assert_state);
-+int64_t opal_pci_reset(uint64_t id, uint8_t reset_scope, uint8_t assert_state);
- 
- int64_t opal_pci_get_hub_diag_data(uint64_t hub_id, void *diag_buffer,
- 				   uint64_t diag_buffer_len);
-@@ -148,7 +148,7 @@ int64_t opal_get_dpo_status(__be64 *dpo_timeout);
- int64_t opal_set_system_attention_led(uint8_t led_action);
- int64_t opal_pci_next_error(uint64_t phb_id, __be64 *first_frozen_pe,
- 			    __be16 *pci_error_type, __be16 *severity);
--int64_t opal_pci_poll(uint64_t phb_id);
-+int64_t opal_pci_poll(uint64_t id);
- int64_t opal_return_cpu(void);
- int64_t opal_check_token(uint64_t token);
- int64_t opal_reinit_cpus(uint64_t flags);
-diff --git a/arch/powerpc/include/asm/pnv-pci.h b/arch/powerpc/include/asm/pnv-pci.h
-index 6f77f71..c607902 100644
---- a/arch/powerpc/include/asm/pnv-pci.h
-+++ b/arch/powerpc/include/asm/pnv-pci.h
-@@ -13,6 +13,10 @@
- #include <linux/pci.h>
- #include <misc/cxl-base.h>
- 
-+#define PCI_SLOT_ID_PREFIX	0x8000000000000000
-+#define PCI_SLOT_ID(phb_id, bdfn)	\
-+	(PCI_SLOT_ID_PREFIX | ((uint64_t)(bdfn) << 16) | (phb_id))
-+
- int pnv_phb_to_cxl_mode(struct pci_dev *dev, uint64_t mode);
- int pnv_cxl_ioda_msi_setup(struct pci_dev *dev, unsigned int hwirq,
- 			   unsigned int virq);
 diff --git a/arch/powerpc/platforms/powernv/eeh-powernv.c b/arch/powerpc/platforms/powernv/eeh-powernv.c
-index 593b8dc..3b17033 100644
+index 3b17033..1ea78e5 100644
 --- a/arch/powerpc/platforms/powernv/eeh-powernv.c
 +++ b/arch/powerpc/platforms/powernv/eeh-powernv.c
-@@ -717,12 +717,12 @@ static int pnv_eeh_get_state(struct eeh_pe *pe, int *delay)
- 	return ret;
+@@ -36,6 +36,7 @@
+ #include <asm/msi_bitmap.h>
+ #include <asm/opal.h>
+ #include <asm/ppc-pci.h>
++#include <asm/pnv-pci.h>
+ 
+ #include "powernv.h"
+ #include "pci.h"
+@@ -815,7 +816,7 @@ out:
+ 	return 0;
  }
  
--static s64 pnv_eeh_phb_poll(struct pnv_phb *phb)
-+static s64 pnv_eeh_poll(unsigned long id)
+-static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
++static int __pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
  {
- 	s64 rc = OPAL_HARDWARE;
+ 	struct pci_dn *pdn = pci_get_pdn_by_devfn(dev->bus, dev->devfn);
+ 	struct eeh_dev *edev = pdn_to_eeh_dev(pdn);
+@@ -866,6 +867,44 @@ static int pnv_eeh_bridge_reset(struct pci_dev *dev, int option)
+ 	return 0;
+ }
  
- 	while (1) {
--		rc = opal_pci_poll(phb->opal_id);
-+		rc = opal_pci_poll(id);
- 		if (rc <= 0)
- 			break;
- 
-@@ -762,7 +762,7 @@ int pnv_eeh_phb_reset(struct pci_controller *hose, int option)
- 	 * reset followed by hot reset on root bus. So we also
- 	 * need the PCI bus settlement delay.
- 	 */
--	rc = pnv_eeh_phb_poll(phb);
-+	rc = pnv_eeh_poll(phb->opal_id);
- 	if (option == EEH_RESET_DEACTIVATE) {
- 		if (system_state < SYSTEM_RUNNING)
- 			udelay(1000 * EEH_PE_RST_SETTLE_TIME);
-@@ -805,7 +805,7 @@ static int pnv_eeh_root_reset(struct pci_controller *hose, int option)
- 		goto out;
- 
- 	/* Poll state of the PHB until the request is done */
--	rc = pnv_eeh_phb_poll(phb);
-+	rc = pnv_eeh_poll(phb->opal_id);
- 	if (option == EEH_RESET_DEACTIVATE)
- 		msleep(EEH_PE_RST_SETTLE_TIME);
- out:
++static int pnv_eeh_bridge_reset(struct pci_dev *pdev, int option)
++{
++	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
++	struct pnv_phb *phb = hose->private_data;
++	struct device_node *dn = pci_device_to_OF_node(pdev);
++	uint64_t id = PCI_SLOT_ID(phb->opal_id,
++				  (pdev->bus->number << 8) | pdev->devfn);
++	uint8_t scope;
++	int64_t rc;
++
++	/* Hot reset to the bus if firmware cannot handle */
++	if (!dn || !of_get_property(dn, "ibm,reset-by-firmware", NULL))
++		return __pnv_eeh_bridge_reset(pdev, option);
++
++	switch (option) {
++	case EEH_RESET_FUNDAMENTAL:
++		scope = OPAL_RESET_PCI_FUNDAMENTAL;
++		break;
++	case EEH_RESET_HOT:
++		scope = OPAL_RESET_PCI_HOT;
++		break;
++	case EEH_RESET_DEACTIVATE:
++		return 0;
++	default:
++		dev_dbg(&pdev->dev, "%s: Unsupported reset %d\n",
++			__func__, option);
++		return -EINVAL;
++	}
++
++	rc = opal_pci_reset(id, scope, OPAL_ASSERT_RESET);
++	if (rc <= OPAL_SUCCESS)
++		goto out;
++
++	rc = pnv_eeh_poll(id);
++out:
++	return (rc == OPAL_SUCCESS) ? 0 : -EIO;
++}
++
+ void pnv_pci_reset_secondary_bus(struct pci_dev *dev)
+ {
+ 	pnv_eeh_bridge_reset(dev, EEH_RESET_HOT);
 -- 
 2.1.0
 
