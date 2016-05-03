@@ -1,60 +1,136 @@
-Return-Path: <xyjxie@linux.vnet.ibm.com>
-Return-Path: <xyjxie@linux.vnet.ibm.com>
-Message-Id: <201605250546.u4P5hvku048579@mx0a-001b2d01.pphosted.com>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/5] PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1461761010-5452-2-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160524205519.GA16463@localhost>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        iommu@lists.linux-foundation.org, alex.williamson@redhat.com,
-        bhelgaas@google.com, aik@ozlabs.ru, benh@kernel.crashing.org,
-        paulus@samba.org, mpe@ellerman.id.au, joro@8bytes.org,
-        warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-        nikunj@linux.vnet.ibm.com, eric.auger@linaro.org, will.deacon@arm.com,
-        gwshan@linux.vnet.ibm.com, David.Laight@ACULAB.COM,
-        alistair@popple.id.au, ruscur@russell.cc
-Date: Wed, 25 May 2016 13:46:23 +0800
-MIME-Version: 1.0
-In-Reply-To: <20160524205519.GA16463@localhost>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp04.in.ibm.com ([125.16.236.4]:33231 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933433AbcECNdt (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 09:33:49 -0400
+Received: from localhost
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 3 May 2016 18:53:28 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, robherring2@gmail.com, dja@axtens.net,
+	alistair@popple.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v9 20/22] drivers/of: Return allocated memory from of_fdt_unflatten_tree()
+Date: Tue,  3 May 2016 23:22:51 +1000
+Message-Id: <1462281773-26438-21-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/5/25 4:55, Bjorn Helgaas wrote:
+This returns the allocate memory chunk, storing the unflattened device
+tree, from of_fdt_unflatten_tree() so that memory chunk can be released
+on demand in PowerNV PCI hotplug driver.
 
-> On Wed, Apr 27, 2016 at 08:43:26PM +0800, Yongji Xie wrote:
->> We introduce a new pci_bus_flags, PCI_BUS_FLAGS_MSI_REMAP
->> which indicates all devices on the bus are protected by the
->> hardware which supports IRQ remapping(intel naming).
-> This changelog is ambiguous.  It's possible that there is hardware
-> that *supports* IRQ remapping, but does not actually *do* IRQ
-> remapping.  For example, an IRQ remapping capability may be present
-> but not enabled.
->
-> I think your intent is to set this flag only when MSI remapping is
-> actually *enabled* for all devices on the bus.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+ drivers/of/fdt.c       | 33 ++++++++++++++++++++++-----------
+ include/linux/of_fdt.h |  6 +++---
+ 2 files changed, 25 insertions(+), 14 deletions(-)
 
-Yes. This is exactly my intent. Thank you for the correction!
+diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+index 337fb1a..c95054c 100644
+--- a/drivers/of/fdt.c
++++ b/drivers/of/fdt.c
+@@ -454,11 +454,14 @@ static int unflatten_dt_nodes(const void *blob,
+  * @mynodes: The device_node tree created by the call
+  * @dt_alloc: An allocator that provides a virtual address to memory
+  * for the resulting tree
++ *
++ * Returns NULL on failure or the memory chunk containing the unflattened
++ * device tree on success.
+  */
+-static void __unflatten_device_tree(const void *blob,
+-			     struct device_node *dad,
+-			     struct device_node **mynodes,
+-			     void * (*dt_alloc)(u64 size, u64 align))
++static void *__unflatten_device_tree(const void *blob,
++				     struct device_node *dad,
++				     struct device_node **mynodes,
++				     void *(*dt_alloc)(u64 size, u64 align))
+ {
+ 	int size;
+ 	void *mem;
+@@ -467,7 +470,7 @@ static void __unflatten_device_tree(const void *blob,
+ 
+ 	if (!blob) {
+ 		pr_debug("No device tree pointer\n");
+-		return;
++		return NULL;
+ 	}
+ 
+ 	pr_debug("Unflattening device tree:\n");
+@@ -477,13 +480,13 @@ static void __unflatten_device_tree(const void *blob,
+ 
+ 	if (fdt_check_header(blob)) {
+ 		pr_err("Invalid device tree blob header\n");
+-		return;
++		return NULL;
+ 	}
+ 
+ 	/* First pass, scan for size */
+ 	size = unflatten_dt_nodes(blob, NULL, dad, NULL);
+ 	if (size < 0)
+-		return;
++		return NULL;
+ 
+ 	size = ALIGN(size, 4);
+ 	pr_debug("  size is %d, allocating...\n", size);
+@@ -503,6 +506,7 @@ static void __unflatten_device_tree(const void *blob,
+ 			   be32_to_cpup(mem + size));
+ 
+ 	pr_debug(" <- unflatten_device_tree()\n");
++	return mem;
+ }
+ 
+ static void *kernel_tree_alloc(u64 size, u64 align)
+@@ -522,14 +526,21 @@ static DEFINE_MUTEX(of_fdt_unflatten_mutex);
+  * tree of struct device_node. It also fills the "name" and "type"
+  * pointers of the nodes so the normal device-tree walking functions
+  * can be used.
++ *
++ * Returns NULL on failure or the memory chunk containing the unflattened
++ * device tree on success.
+  */
+-void of_fdt_unflatten_tree(const unsigned long *blob,
+-			struct device_node *dad,
+-			struct device_node **mynodes)
++void *of_fdt_unflatten_tree(const unsigned long *blob,
++			    struct device_node *dad,
++			    struct device_node **mynodes)
+ {
++	void *mem;
++
+ 	mutex_lock(&of_fdt_unflatten_mutex);
+-	__unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
++	mem = __unflatten_device_tree(blob, dad, mynodes, &kernel_tree_alloc);
+ 	mutex_unlock(&of_fdt_unflatten_mutex);
++
++	return mem;
+ }
+ EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
+ 
+diff --git a/include/linux/of_fdt.h b/include/linux/of_fdt.h
+index 1bffcbd..901ec01 100644
+--- a/include/linux/of_fdt.h
++++ b/include/linux/of_fdt.h
+@@ -37,9 +37,9 @@ extern bool of_fdt_is_big_endian(const void *blob,
+ 				 unsigned long node);
+ extern int of_fdt_match(const void *blob, unsigned long node,
+ 			const char *const *compat);
+-extern void of_fdt_unflatten_tree(const unsigned long *blob,
+-			       struct device_node *dad,
+-			       struct device_node **mynodes);
++extern void *of_fdt_unflatten_tree(const unsigned long *blob,
++				   struct device_node *dad,
++				   struct device_node **mynodes);
+ 
+ /* TBD: Temporary export of fdt globals - remove when code fully merged */
+ extern int __initdata dt_root_addr_cells;
+-- 
+2.1.0
 
-> I'd also like to know exactly what protection is implied by
-> PCI_BUS_FLAGS_MSI_REMAP and IOMMU_CAP_INTR_REMAP.  I guess it means a
-> device can only generate MSIs to a certain set of CPUs?  I assume the
-> remapping hardware only checks the target address, not the data being
-> written?
-
-When IRQ remapping is enabled, the hardware will check both target
-address and data, then compute the interrupt_index from them.
-Interrupt_index will be used to find a specific Interrupt Remapping Table
-Entry containing some fields which could be used to identify a device or
-a group of devices(these devices should be in the same isolation domain).
-Then hardware can use this to verify the interrupt request. If the interrupt
-request is not from the specific devices, it will be blocked.
-
-So this flag indicate that the hardware can ensure that a given PCI device
-can only shoot the MSIs assigned for it. When there is something wrong
-with MSI in device or device driver, this can prevent all damage from it.
-
-Regards,
-Yongji
