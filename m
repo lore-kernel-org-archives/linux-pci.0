@@ -1,151 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:39635 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753262AbcEZMel (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 26 May 2016 08:34:41 -0400
-Date: Thu, 26 May 2016 13:34:59 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Duc Dang <dhdang@apm.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>,
-	Mark Salter <msalter@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Feng Kan <fkan@apm.com>,
-	linux-pci@vger.kernel.org, patches <patches@apm.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Loc Ho <lho@apm.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [PATCH] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI boot
- for X-Gene v1
-Message-ID: <20160526123459.GA23794@red-moon>
-References: <1455069384-22323-1-git-send-email-dhdang@apm.com>
- <1456330151.5681.46.camel@redhat.com>
- <56CDD767.6020103@arm.com>
- <CADaLND=mrkxOWOzcEb8os16Rb=SDHfnn_8eSgB4bQYH3UguS3w@mail.gmail.com>
- <20160225173822.GA6349@red-moon>
- <CADaLNDnywVPER9QhmK4C6JyCLhta_M_cVSOuSkEHnmnLPFo3JA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CADaLNDnywVPER9QhmK4C6JyCLhta_M_cVSOuSkEHnmnLPFo3JA@mail.gmail.com>
+Received: from e28smtp04.in.ibm.com ([125.16.236.4]:33109 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933398AbcECNds (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 09:33:48 -0400
+Received: from localhost
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 3 May 2016 18:53:36 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, robherring2@gmail.com, dja@axtens.net,
+	alistair@popple.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v9 11/22] powerpc/pci: Update bridge windows on PCI plug
+Date: Tue,  3 May 2016 23:22:42 +1000
+Message-Id: <1462281773-26438-12-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Duc,
+On the PCI plugging event, PCI slot's subordinate devices are
+scanned and their (IO and MMIO) resources are assigned. Platform
+dependent resources (PE#, IO/MMIO/DMA windows) are allocated or
+created on updating windows of the slot's upstream bridge.
 
-On Wed, May 25, 2016 at 04:13:35PM -0700, Duc Dang wrote:
-> On Thu, Feb 25, 2016 at 9:38 AM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > On Wed, Feb 24, 2016 at 02:28:10PM -0800, Duc Dang wrote:
-> >> On Wed, Feb 24, 2016 at 8:16 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> >> > On 24/02/16 16:09, Mark Salter wrote:
-> >> >> On Tue, 2016-02-09 at 17:56 -0800, Duc Dang wrote:
-> >> >>> This patch makes pci-xgene-msi driver ACPI-aware and provides
-> >> >>> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
-> >> >>>
-> >> >>> Signed-off-by: Duc Dang <dhdang@apm.com>
-> >> >>> ---
-> >> >>>  drivers/pci/host/pci-xgene-msi.c | 35 ++++++++++++++++++++++++++++++++---
-> >> >>>  1 file changed, 32 insertions(+), 3 deletions(-)
-> >> >>>
-> >> >>> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
-> >> >>> index a6456b5..466aa93 100644
-> >> >>> --- a/drivers/pci/host/pci-xgene-msi.c
-> >> >>> +++ b/drivers/pci/host/pci-xgene-msi.c
-> >> >>> @@ -24,6 +24,7 @@
-> >> >>>  #include <linux/pci.h>
-> >> >>>  #include <linux/platform_device.h>
-> >> >>>  #include <linux/of_pci.h>
-> >> >>> +#include <linux/acpi.h>
-> >> >>>
-> >> >>>  #define MSI_IR0                     0x000000
-> >> >>>  #define MSI_INT0            0x800000
-> >> >>> @@ -39,7 +40,7 @@ struct xgene_msi_group {
-> >> >>>  };
-> >> >>>
-> >> >>>  struct xgene_msi {
-> >> >>> -    struct device_node      *node;
-> >> >>> +    struct fwnode_handle    *fwnode;
-> >> >>>      struct irq_domain       *inner_domain;
-> >> >>>      struct irq_domain       *msi_domain;
-> >> >>>      u64                     msi_addr;
-> >> >>> @@ -249,6 +250,13 @@ static const struct irq_domain_ops msi_domain_ops = {
-> >> >>>      .free   = xgene_irq_domain_free,
-> >> >>>  };
-> >> >>>
-> >> >>> +#ifdef CONFIG_ACPI
-> >> >>> +static struct fwnode_handle *xgene_msi_get_fwnode(struct device *dev)
-> >> >>> +{
-> >> >>> +    return xgene_msi_ctrl.fwnode;
-> >> >>> +}
-> >> >>> +#endif
-> >> >>> +
-> >> >>>  static int xgene_allocate_domains(struct xgene_msi *msi)
-> >> >>>  {
-> >> >>>      msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
-> >> >>> @@ -256,7 +264,7 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
-> >> >>>      if (!msi->inner_domain)
-> >> >>>              return -ENOMEM;
-> >> >>>
-> >> >>> -    msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
-> >> >>> +    msi->msi_domain = pci_msi_create_irq_domain(msi->fwnode,
-> >> >>>                                                  &xgene_msi_domain_info,
-> >> >>>                                                  msi->inner_domain);
-> >> >>
-> >> >> This doesn't work for me (ACPI probing on Mustang) unless I change this
-> >> >> to be pci_msi_create_default_irq_domain(). The problem seems to be that
-> >> >> the MSI probe happens after the PCIe RC is probed so there is no MSI domain
-> >> >> at the time the PCIe root is initialized by ACPI.
-> >> >
-> >> > pci_msi_create_default_irq_domain is the wrong thing do use, specially
-> >> > if you have multiple MSI controllers in the system. I certainly wouldn't
-> >> > want to see it being used on arm64.
-> >> >
-> >> > This is the usual dependency hell. You try moving the probing earlier,
-> >> > but that may break something else in the process.
-> >>
-> >> Hi Mark and Marc,
-> >>
-> >> I have modified Tianocore firmware to have MSI node declared before
-> >> PCIe node in Dsdt table. With this modification, the MSI driver will
-> >> be loaded before PCIe driver and MSI domain is available at the time
-> >> PCIe root is initialized.
-> >
-> > I am totally against this. We should not hack ACPI tables to make
-> > the kernel work (on top of that with unwritten ordering rules that may
-> > well require changes as kernel evolves), we should have a standard set
-> > of bindings that people use to describe HW in the DSDT and the kernel(s)
-> > has to cope with that. If there is a dependency problem in the description
-> > we may solve it at bindings level, but I absolutely do not want to rely
-> > on DSDT nodes ordering for things to work, that's fragile, no shortcuts
-> > please.
-> 
-> Hi Lorenzo, Bjorn,
-> 
-> (Refresh this thread on this merge cycle)
-> 
-> I tried to use _DEP method to describe the dependency of PCIe node to
-> MSI node but it turns out that PCIe driver does not check for the
-> dependency (only EC (ec.c) and I2C core (i2c-core.c) use
-> acpi_walk_dep_device_list to check for dependency before loading
-> dependent drivers)
-> 
-> Do you have other suggestion/example about how to ensure strict
-> ordering on driver loading in ACPI boot mode without changing the
-> order of ACPI nodes in DSDT?
+This updates the windows of the hot plugged slot's upstream bridge
+in pcibios_finish_adding_to_bus() so that the platform resources
+(PE#, IO/MMIO/DMA segments) are allocated or created accordingly.
 
-Before doing anything else, I would like to ask you to report the code
-paths leading to failures (what fails actually ?) please, and I want
-to understand what "this does not work" means.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+---
+ arch/powerpc/kernel/pci-common.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-In particular:
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 40df3a5..be9e515 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1444,8 +1444,12 @@ void pcibios_finish_adding_to_bus(struct pci_bus *bus)
+ 	/* Allocate bus and devices resources */
+ 	pcibios_allocate_bus_resources(bus);
+ 	pcibios_claim_one_bus(bus);
+-	if (!pci_has_flag(PCI_PROBE_ONLY))
+-		pci_assign_unassigned_bus_resources(bus);
++	if (!pci_has_flag(PCI_PROBE_ONLY)) {
++		if (bus->self)
++			pci_assign_unassigned_bridge_resources(bus->self);
++		else
++			pci_assign_unassigned_bus_resources(bus);
++	}
+ 
+ 	/* Fixup EEH */
+ 	eeh_add_device_tree_late(bus);
+-- 
+2.1.0
 
-- Why using pci_msi_create_default_irq_domain() works
-- Why, if you change the DSDT nodes ordering, things work (please add
-  some debugging to MSI allocation functions to detect the code paths
-  leading to correct MSI allocation)
-- What's the difference wrt the DT probe path
-
-When we have a detailed view of MSI allocation code paths and failures
-we can see what we can do to fix it in ACPI.
-
-Thanks,
-Lorenzo
