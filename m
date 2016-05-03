@@ -1,178 +1,368 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 2/2] pci: Add PCIe driver for Rockchip Soc
-To: Marc Zyngier <marc.zyngier@arm.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-References: <1463740105-7061-1-git-send-email-shawn.lin@rock-chips.com>
- <1463740156-7148-1-git-send-email-shawn.lin@rock-chips.com>
- <57483CAA.8000005@arm.com>
-Cc: Heiko Stuebner <heiko@sntech.de>, Rob Herring <robh+dt@kernel.org>,
-	devicetree@vger.kernel.org, Doug Anderson <dianders@chromium.org>,
-	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
-From: Wenrui Li <wenrui.li@rock-chips.com>
-Message-ID: <574E4EF5.7040005@rock-chips.com>
-Date: Wed, 1 Jun 2016 10:56:53 +0800
-MIME-Version: 1.0
-In-Reply-To: <57483CAA.8000005@arm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e28smtp09.in.ibm.com ([125.16.236.9]:50894 "EHLO
+	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933058AbcECNXZ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 09:23:25 -0400
+Received: from localhost
+	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 3 May 2016 18:53:23 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, robherring2@gmail.com, dja@axtens.net,
+	alistair@popple.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v9 12/22] powerpc/pci: Delay populating pdn
+Date: Tue,  3 May 2016 23:22:43 +1000
+Message-Id: <1462281773-26438-13-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi:
+The pdn (struct pci_dn) instances are allocated from memblock or
+bootmem when creating PCI controller (hoses) in setup_arch(). PCI
+hotplug, which will be supported by proceeding patches, releases
+PCI device nodes and their corresponding pdn on unplugging event.
+The memory chunks for pdn instances allocated from memblock or
+bootmem are hard to reused after being released.
 
-On 2016/5/27 20:25, Marc Zyngier Wrote:
-> [+Lorenzo]
->
-> On 20/05/16 11:29, Shawn Lin wrote:
->> RK3399 has a PCIe controller which can be used as Root Complex.
->> This driver supports a PCIe controller as Root Complex mode.
->>
+This delays creating pdn by pci_devs_phb_init() from setup_arch()
+to core_initcall() so that they are allocated from slab. The memory
+consumed by pdn can be released to system without problem during
+PCI unplugging time. It indicates that pci_dn is unavailable in
+setup_arch() and the the fixup on pdn (like AGP's) can't be carried
+out that time. We have to do that in pcibios_root_bridge_prepare()
+on maple/pasemi/powermac platforms where/when the pdn is available.
+pcibios_root_bridge_prepare is called from subsys_initcall() which
+is executed after core_initcall() so the code flow does not change.
 
-[....]
+At the mean while, the EEH device is created when pdn is populated,
+meaning pdn and EEH device have same life cycle. In turn, we needn't
+call eeh_dev_init() to create EEH device explicitly.
 
->> +static int rockchip_pcie_init_irq_domain(struct rockchip_pcie_port *pp)
->> +{
->> +	struct device *dev = pp->dev;
->> +	struct device_node *node = dev->of_node;
->> +	struct device_node *pcie_intc_node =  of_get_next_child(node, NULL);
->
-> That's really ugly, as it depends on the layout of your DT.
->
->> +
->> +	if (!pcie_intc_node) {
->> +		dev_err(dev, "No PCIe Intc node found\n");
->> +		return PTR_ERR(pcie_intc_node);
->> +	}
->> +	pp->irq_domain = irq_domain_add_linear(pcie_intc_node, 4,
->> +					       &intx_domain_ops, pp);
->
-> Why can't you just register your host controller as the interrupt
-> controller? You don't need an intermediate node for that.
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+---
+ arch/powerpc/include/asm/eeh.h         |  2 +-
+ arch/powerpc/include/asm/ppc-pci.h     |  2 --
+ arch/powerpc/kernel/eeh_dev.c          | 17 +++------------
+ arch/powerpc/kernel/pci_dn.c           | 23 ++++++++++++++++----
+ arch/powerpc/platforms/maple/pci.c     | 34 ++++++++++++++++++------------
+ arch/powerpc/platforms/pasemi/pci.c    |  3 ---
+ arch/powerpc/platforms/powermac/pci.c  | 38 +++++++++++++++++++++-------------
+ arch/powerpc/platforms/powernv/pci.c   |  3 ---
+ arch/powerpc/platforms/pseries/setup.c |  6 +-----
+ 9 files changed, 69 insertions(+), 59 deletions(-)
 
-OK, the child node is really no need here, we will use the host 
-controller as interrupt controller next patch. Thanks!
+diff --git a/arch/powerpc/include/asm/eeh.h b/arch/powerpc/include/asm/eeh.h
+index fb9f376..8721580 100644
+--- a/arch/powerpc/include/asm/eeh.h
++++ b/arch/powerpc/include/asm/eeh.h
+@@ -274,7 +274,7 @@ void eeh_pe_restore_bars(struct eeh_pe *pe);
+ const char *eeh_pe_loc_get(struct eeh_pe *pe);
+ struct pci_bus *eeh_pe_bus_get(struct eeh_pe *pe);
+ 
+-void *eeh_dev_init(struct pci_dn *pdn, void *data);
++struct eeh_dev *eeh_dev_init(struct pci_dn *pdn);
+ void eeh_dev_phb_init_dynamic(struct pci_controller *phb);
+ int eeh_init(void);
+ int __init eeh_ops_register(struct eeh_ops *ops);
+diff --git a/arch/powerpc/include/asm/ppc-pci.h b/arch/powerpc/include/asm/ppc-pci.h
+index 8753e4e..0f73de0 100644
+--- a/arch/powerpc/include/asm/ppc-pci.h
++++ b/arch/powerpc/include/asm/ppc-pci.h
+@@ -39,8 +39,6 @@ void *pci_traverse_device_nodes(struct device_node *start,
+ void *traverse_pci_dn(struct pci_dn *root,
+ 		      void *(*fn)(struct pci_dn *, void *),
+ 		      void *data);
+-
+-extern void pci_devs_phb_init(void);
+ extern void pci_devs_phb_init_dynamic(struct pci_controller *phb);
+ 
+ /* From rtas_pci.h */
+diff --git a/arch/powerpc/kernel/eeh_dev.c b/arch/powerpc/kernel/eeh_dev.c
+index 7815095..d6b2ca7 100644
+--- a/arch/powerpc/kernel/eeh_dev.c
++++ b/arch/powerpc/kernel/eeh_dev.c
+@@ -44,14 +44,13 @@
+ /**
+  * eeh_dev_init - Create EEH device according to OF node
+  * @pdn: PCI device node
+- * @data: PHB
+  *
+  * It will create EEH device according to the given OF node. The function
+  * might be called by PCI emunation, DR, PHB hotplug.
+  */
+-void *eeh_dev_init(struct pci_dn *pdn, void *data)
++struct eeh_dev *eeh_dev_init(struct pci_dn *pdn)
+ {
+-	struct pci_controller *phb = data;
++	struct pci_controller *phb = pdn->phb;
+ 	struct eeh_dev *edev;
+ 
+ 	/* Allocate EEH device */
+@@ -69,7 +68,7 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
+ 	INIT_LIST_HEAD(&edev->list);
+ 	INIT_LIST_HEAD(&edev->rmv_list);
+ 
+-	return NULL;
++	return edev;
+ }
+ 
+ /**
+@@ -81,16 +80,8 @@ void *eeh_dev_init(struct pci_dn *pdn, void *data)
+  */
+ void eeh_dev_phb_init_dynamic(struct pci_controller *phb)
+ {
+-	struct pci_dn *root = phb->pci_data;
+-
+ 	/* EEH PE for PHB */
+ 	eeh_phb_pe_create(phb);
+-
+-	/* EEH device for PHB */
+-	eeh_dev_init(root, phb);
+-
+-	/* EEH devices for children OF nodes */
+-	traverse_pci_dn(root, eeh_dev_init, phb);
+ }
+ 
+ /**
+@@ -106,8 +97,6 @@ static int __init eeh_dev_phb_init(void)
+ 	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
+ 		eeh_dev_phb_init_dynamic(phb);
+ 
+-	pr_info("EEH: devices created\n");
+-
+ 	return 0;
+ }
+ 
+diff --git a/arch/powerpc/kernel/pci_dn.c b/arch/powerpc/kernel/pci_dn.c
+index ecdccce..9cbf95a 100644
+--- a/arch/powerpc/kernel/pci_dn.c
++++ b/arch/powerpc/kernel/pci_dn.c
+@@ -209,8 +209,7 @@ struct pci_dn *add_dev_pci_data(struct pci_dev *pdev)
+ 		}
+ 
+ 		/* Create the EEH device for the VF */
+-		eeh_dev_init(pdn, pci_bus_to_host(pdev->bus));
+-		edev = pdn_to_eeh_dev(pdn);
++		edev = eeh_dev_init(pdn);
+ 		BUG_ON(!edev);
+ 		edev->physfn = pdev;
+ 	}
+@@ -289,8 +288,11 @@ struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
+ 	const __be32 *regs;
+ 	struct device_node *parent;
+ 	struct pci_dn *pdn;
++#ifdef CONFIG_EEH
++	struct eeh_dev *edev;
++#endif
+ 
+-	pdn = zalloc_maybe_bootmem(sizeof(*pdn), GFP_KERNEL);
++	pdn = kzalloc(sizeof(*pdn), GFP_KERNEL);
+ 	if (pdn == NULL)
+ 		return NULL;
+ 	dn->data = pdn;
+@@ -319,6 +321,15 @@ struct pci_dn *pci_add_device_node_info(struct pci_controller *hose,
+ 	/* Extended config space */
+ 	pdn->pci_ext_config_space = (type && of_read_number(type, 1) == 1);
+ 
++	/* Create EEH device */
++#ifdef CONFIG_EEH
++	edev = eeh_dev_init(pdn);
++	if (!edev) {
++		kfree(pdn);
++		return NULL;
++	}
++#endif
++
+ 	/* Attach to parent node */
+ 	INIT_LIST_HEAD(&pdn->child_list);
+ 	INIT_LIST_HEAD(&pdn->list);
+@@ -504,15 +515,19 @@ void pci_devs_phb_init_dynamic(struct pci_controller *phb)
+  * pci device found underneath.  This routine runs once,
+  * early in the boot sequence.
+  */
+-void __init pci_devs_phb_init(void)
++static int __init pci_devs_phb_init(void)
+ {
+ 	struct pci_controller *phb, *tmp;
+ 
+ 	/* This must be done first so the device nodes have valid pci info! */
+ 	list_for_each_entry_safe(phb, tmp, &hose_list, list_node)
+ 		pci_devs_phb_init_dynamic(phb);
++
++	return 0;
+ }
+ 
++core_initcall(pci_devs_phb_init);
++
+ static void pci_dev_pdn_setup(struct pci_dev *pdev)
+ {
+ 	struct pci_dn *pdn;
+diff --git a/arch/powerpc/platforms/maple/pci.c b/arch/powerpc/platforms/maple/pci.c
+index a923230..a2f89e6 100644
+--- a/arch/powerpc/platforms/maple/pci.c
++++ b/arch/powerpc/platforms/maple/pci.c
+@@ -568,6 +568,26 @@ void maple_pci_irq_fixup(struct pci_dev *dev)
+ 	DBG(" <- maple_pci_irq_fixup\n");
+ }
+ 
++static int maple_pci_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	struct pci_controller *hose = pci_bus_to_host(bridge->bus);
++	struct device_node *np, *child;
++
++	if (hose != u3_agp)
++		return 0;
++
++	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
++	 * assume there is no P2P bridge on the AGP bus, which should be a
++	 * safe assumptions hopefully.
++	 */
++	np = hose->dn;
++	PCI_DN(np)->busno = 0xf0;
++	for_each_child_of_node(np, child)
++		PCI_DN(child)->busno = 0xf0;
++
++	return 0;
++}
++
+ void __init maple_pci_init(void)
+ {
+ 	struct device_node *np, *root;
+@@ -605,19 +625,7 @@ void __init maple_pci_init(void)
+ 	if (ht && maple_add_bridge(ht) != 0)
+ 		of_node_put(ht);
+ 
+-	/* Setup the linkage between OF nodes and PHBs */ 
+-	pci_devs_phb_init();
+-
+-	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
+-	 * assume there is no P2P bridge on the AGP bus, which should be a
+-	 * safe assumptions hopefully.
+-	 */
+-	if (u3_agp) {
+-		struct device_node *np = u3_agp->dn;
+-		PCI_DN(np)->busno = 0xf0;
+-		for (np = np->child; np; np = np->sibling)
+-			PCI_DN(np)->busno = 0xf0;
+-	}
++	ppc_md.pcibios_root_bridge_prepare = maple_pci_root_bridge_prepare;
+ 
+ 	/* Tell pci.c to not change any resource allocations.  */
+ 	pci_add_flags(PCI_PROBE_ONLY);
+diff --git a/arch/powerpc/platforms/pasemi/pci.c b/arch/powerpc/platforms/pasemi/pci.c
+index f3a68a0..10c4e8f 100644
+--- a/arch/powerpc/platforms/pasemi/pci.c
++++ b/arch/powerpc/platforms/pasemi/pci.c
+@@ -229,9 +229,6 @@ void __init pas_pci_init(void)
+ 			of_node_get(np);
+ 
+ 	of_node_put(root);
+-
+-	/* Setup the linkage between OF nodes and PHBs */
+-	pci_devs_phb_init();
+ }
+ 
+ void __iomem *pasemi_pci_getcfgaddr(struct pci_dev *dev, int offset)
+diff --git a/arch/powerpc/platforms/powermac/pci.c b/arch/powerpc/platforms/powermac/pci.c
+index 59ab16f..6e06c3b 100644
+--- a/arch/powerpc/platforms/powermac/pci.c
++++ b/arch/powerpc/platforms/powermac/pci.c
+@@ -878,6 +878,29 @@ void pmac_pci_irq_fixup(struct pci_dev *dev)
+ #endif /* CONFIG_PPC32 */
+ }
+ 
++#ifdef CONFIG_PPC64
++static int pmac_pci_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	struct pci_controller *hose = pci_bus_to_host(bridge->bus);
++	struct device_node *np, *child;
++
++	if (hose != u3_agp)
++		return 0;
++
++	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
++	 * assume there is no P2P bridge on the AGP bus, which should be a
++	 * safe assumptions for now. We should do something better in the
++	 * future though
++	 */
++	np = hose->dn;
++	PCI_DN(np)->busno = 0xf0;
++	for_each_child_of_node(np, child)
++		PCI_DN(child)->busno = 0xf0;
++
++	return 0;
++}
++#endif /* CONFIG_PPC64 */
++
+ void __init pmac_pci_init(void)
+ {
+ 	struct device_node *np, *root;
+@@ -914,20 +937,7 @@ void __init pmac_pci_init(void)
+ 	if (ht && pmac_add_bridge(ht) != 0)
+ 		of_node_put(ht);
+ 
+-	/* Setup the linkage between OF nodes and PHBs */
+-	pci_devs_phb_init();
+-
+-	/* Fixup the PCI<->OF mapping for U3 AGP due to bus renumbering. We
+-	 * assume there is no P2P bridge on the AGP bus, which should be a
+-	 * safe assumptions for now. We should do something better in the
+-	 * future though
+-	 */
+-	if (u3_agp) {
+-		struct device_node *np = u3_agp->dn;
+-		PCI_DN(np)->busno = 0xf0;
+-		for (np = np->child; np; np = np->sibling)
+-			PCI_DN(np)->busno = 0xf0;
+-	}
++	ppc_md.pcibios_root_bridge_prepare = pmac_pci_root_bridge_prepare;
+ 	/* pmac_check_ht_link(); */
+ 
+ #else /* CONFIG_PPC64 */
+diff --git a/arch/powerpc/platforms/powernv/pci.c b/arch/powerpc/platforms/powernv/pci.c
+index 8827461..67a33e9 100644
+--- a/arch/powerpc/platforms/powernv/pci.c
++++ b/arch/powerpc/platforms/powernv/pci.c
+@@ -822,9 +822,6 @@ void __init pnv_pci_init(void)
+ 	for_each_compatible_node(np, NULL, "ibm,ioda2-npu-phb")
+ 		pnv_pci_init_npu_phb(np);
+ 
+-	/* Setup the linkage between OF nodes and PHBs */
+-	pci_devs_phb_init();
+-
+ 	/* Configure IOMMU DMA hooks */
+ 	set_pci_dma_ops(&dma_iommu_ops);
+ }
+diff --git a/arch/powerpc/platforms/pseries/setup.c b/arch/powerpc/platforms/pseries/setup.c
+index cd739da..62041a3 100644
+--- a/arch/powerpc/platforms/pseries/setup.c
++++ b/arch/powerpc/platforms/pseries/setup.c
+@@ -263,11 +263,8 @@ static int pci_dn_reconfig_notifier(struct notifier_block *nb, unsigned long act
+ 	case OF_RECONFIG_ATTACH_NODE:
+ 		parent = of_get_parent(np);
+ 		pdn = parent ? PCI_DN(parent) : NULL;
+-		if (pdn) {
+-			/* Create pdn and EEH device */
++		if (pdn)
+ 			pci_add_device_node_info(pdn->phb, np);
+-			eeh_dev_init(PCI_DN(np), pdn->phb);
+-		}
+ 
+ 		of_node_put(parent);
+ 		break;
+@@ -490,7 +487,6 @@ static void __init find_and_init_phbs(void)
+ 	}
+ 
+ 	of_node_put(root);
+-	pci_devs_phb_init();
+ 
+ 	/*
+ 	 * PCI_PROBE_ONLY and PCI_REASSIGN_ALL_BUS can be set via properties
+-- 
+2.1.0
 
->
->> +	if (!pp->irq_domain) {
->> +		dev_err(dev, "Failed to get a INTx IRQ domain\n");
->> +		return PTR_ERR(pp->irq_domain);
->> +	}
->> +
->> +	return 0;
->> +}
->> +
->> +static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
->> +{
->> +	struct rockchip_pcie_port *pp = arg;
->> +	u32 reg;
->> +	u32 sub_reg;
->> +
->> +	reg = pcie_read(pp, PCIE_CLIENT_INT_STATUS);
->> +	if (reg & LOC_INT) {
->> +		dev_dbg(pp->dev, "local interrupt recived\n");
->> +		sub_reg = pcie_read(pp, PCIE_CORE_INT_STATUS);
->> +		if (sub_reg & PRFPE)
->> +			dev_dbg(pp->dev, "Parity error detected while reading from the PNP Receive FIFO RAM\n");
->> +
->> +		if (sub_reg & CRFPE)
->> +			dev_dbg(pp->dev, "Parity error detected while reading from the Completion Receive FIFO RAM\n");
->> +
->> +		if (sub_reg & RRPE)
->> +			dev_dbg(pp->dev, "Parity error detected while reading from Replay Buffer RAM\n");
->> +
->> +		if (sub_reg & PRFO)
->> +			dev_dbg(pp->dev, "Overflow occurred in the PNP Receive FIFO\n");
->> +
->> +		if (sub_reg & CRFO)
->> +			dev_dbg(pp->dev, "Overflow occurred in the Completion Receive FIFO\n");
->> +
->> +		if (sub_reg & RT)
->> +			dev_dbg(pp->dev, "Replay timer timed out\n");
->> +
->> +		if (sub_reg & RTR)
->> +			dev_dbg(pp->dev, "Replay timer rolled over after 4 transmissions of the same TLP\n");
->> +
->> +		if (sub_reg & PE)
->> +			dev_dbg(pp->dev, "Phy error detected on receive side\n");
->> +
->> +		if (sub_reg & MTR)
->> +			dev_dbg(pp->dev, "Malformed TLP received from the link\n");
->> +
->> +		if (sub_reg & UCR)
->> +			dev_dbg(pp->dev, "Malformed TLP received from the link\n");
->> +
->> +		if (sub_reg & FCE)
->> +			dev_dbg(pp->dev, "An error was observed in the flow control advertisements from the other side\n");
->> +
->> +		if (sub_reg & CT)
->> +			dev_dbg(pp->dev, "A request timed out waiting for completion\n");
->> +
->> +		if (sub_reg & UTC)
->> +			dev_dbg(pp->dev, "Unmapped TC error\n");
->> +
->> +		if (sub_reg & MMVC)
->> +			dev_dbg(pp->dev, "MSI mask register changes\n");
->> +
->> +		pcie_write(pp, sub_reg, PCIE_CORE_INT_STATUS);
->> +	}
->> +
->> +	pcie_write(pp, reg, PCIE_CLIENT_INT_STATUS);
->> +
->> +	return IRQ_HANDLED;
->> +}
-
-[....]
-
->> +static irqreturn_t rockchip_pcie_legacy_int_handler(int irq, void *arg)
->> +{
->> +	struct rockchip_pcie_port *pp = arg;
->> +	u32 reg;
->> +
->> +	reg = pcie_read(pp, PCIE_CLIENT_INT_STATUS);
->> +	reg = (reg & ROCKCHIP_PCIE_RPIFR1_INTR_MASK) >>
->> +	       ROCKCHIP_PCIE_RPIFR1_INTR_SHIFT;
->> +	generic_handle_irq(irq_find_mapping(pp->irq_domain, ffs(reg)));
->
-> NAK. What you have here is a chained interrupt controller, please
-> implement it as such.
-
-Your mean is use handle_nested_irq instead of generic_handle_irq here?
-But, I found all other pci host controller drivers use this api.
-
->
->> +
->> +	pcie_write(pp, reg, PCIE_CLIENT_INT_STATUS);
->> +	return IRQ_HANDLED;
->> +}
->> +
-
-[...]
-
->> +static struct platform_driver rockchip_pcie_driver = {
->> +	.driver = {
->> +		.name = "rockchip-pcie",
->> +		.of_match_table = rockchip_pcie_of_match,
->> +		.suppress_bind_attrs = true,
->> +	},
->> +	.probe = rockchip_pcie_probe,
->> +	.remove = rockchip_pcie_remove,
->> +};
->> +module_platform_driver(rockchip_pcie_driver);
->> +
->> +MODULE_AUTHOR("Rockchip Inc");
->> +MODULE_DESCRIPTION("Rockchip AXI PCIe driver");
->> +MODULE_LICENSE("GPL v2");
->>
->
-> This definitely requires some rework for both the interrupt and MSI
-> parts. I'll leave Lorenzo to comment on the PCI side of things.
->
-> Thanks,
->
-> 	M.
->
-
-Best Regards,
-Li
