@@ -1,131 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gloria.sntech.de ([95.129.55.99]:60015 "EHLO gloria.sntech.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754218AbcETLUY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 20 May 2016 07:20:24 -0400
-From: Heiko Stuebner <heiko@sntech.de>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-	Doug Anderson <dianders@chromium.org>,
-	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] Documentation: add binding description of Rockchip PCIe controller
-Date: Fri, 20 May 2016 13:20:06 +0200
-Message-ID: <3930626.4a3xBnzHhK@phil>
-In-Reply-To: <1463740146-7106-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1463740105-7061-1-git-send-email-shawn.lin@rock-chips.com> <1463740146-7106-1-git-send-email-shawn.lin@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from e28smtp09.in.ibm.com ([125.16.236.9]:50828 "EHLO
+	e28smtp09.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755554AbcECNXU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 09:23:20 -0400
+Received: from localhost
+	by e28smtp09.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 3 May 2016 18:53:17 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, robherring2@gmail.com, dja@axtens.net,
+	alistair@popple.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v9 08/22] powerpc/powernv: Extend PCI bridge resources
+Date: Tue,  3 May 2016 23:22:39 +1000
+Message-Id: <1462281773-26438-9-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Shawn,
+The PCI slots are associated with root port or downstream ports
+of the PCIe switch connected to root port. When adapter is hot
+added to the PCI slot, it usually requests more IO or memory
+resource from the directly connected parent bridge (port) and
+update the bridge's windows accordingly. The resource windows
+of upstream bridges can't be updated automatically. It possibly
+leads to unbalanced resource across the bridges: The window of
+downstream bridge is overruning that of upstream bridge. The
+IO or MMIO path won't work.
 
-Am Freitag, 20. Mai 2016, 18:29:06 schrieb Shawn Lin:
-> This patch add some required and optional properties for Rockchip
-> PCIe controller. Also we add a example for how to use it.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> 
-> ---
-> 
->  .../devicetree/bindings/pci/rockchip-pcie.txt      | 93
-> ++++++++++++++++++++++ 1 file changed, 93 insertions(+)
->  create mode 100644
-> Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt new file mode
-> 100644
-> index 0000000..69a0804
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> @@ -0,0 +1,93 @@
-> +* Rockchip AXI PCIe Root Port Bridge DT description
-> +
-> +Required properties:
-> +- #address-cells: Address representation for root ports, set to <3>
-> +- #size-cells: Size representation for root ports, set to <2>
-> +- #interrupt-cells: specifies the number of cells needed to encode an
-> +		interrupt source. The value must be 1.
-> +- compatible: Should contain "rockchip,rk3399-pcie"
-> +- reg: Two register ranges as listed in the reg-names property
-> +- reg-names: The first entry must be "axi-base" for the core registers
-> +	The second entry must be "apb-base" for the client pcie registers
-> +- clocks: Must contain an entry for each entry in clock-names.
-> +		See ../clocks/clock-bindings.txt for details.
-> +- clock-names: Must include the following entries:
-> +	- "aclk_pcie"
-> +	- "aclk_perf_pcie"
-> +	- "hclk_pcie"
-> +	- "clk_pciephy_ref"
+This resolves the above issue by extending bridge windows of
+root port and upstream port of the PCIe switch connected to
+the root port to PHB's windows.
 
-clock names are always in the scope of the node/driver, so the names could 
-easily be "aclk", "aclk-perf", "hclk", "phy".
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 46 +++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
 
-Although from my cursory-glance at the phy-related code, it looks more like 
-it shouldn't be in the pcie-driver itself, but in a an actual phy-driver 
-(together with the phy reset and clock)?
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index de3f292..b518364 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -3146,6 +3146,49 @@ static resource_size_t pnv_pci_window_alignment(struct pci_bus *bus,
+ 	return phb->ioda.io_segsize;
+ }
+ 
++/*
++ * We are updating root port or the upstream port of the
++ * bridge behind the root port with PHB's windows in order
++ * to accommodate the changes on required resources during
++ * PCI (slot) hotplug, which is connected to either root
++ * port or the downstream ports of PCIe switch behind the
++ * root port.
++ */
++static void pnv_pci_fixup_bridge_resources(struct pci_bus *bus,
++					   unsigned long type)
++{
++	struct pci_controller *hose = pci_bus_to_host(bus);
++	struct pnv_phb *phb = hose->private_data;
++	struct pci_dev *bridge = bus->self;
++	struct resource *r, *w;
++	int i;
++
++	/* Check if we need apply fixup to the bridge's windows */
++	if (!pci_is_root_bus(bridge->bus) &&
++	    !pci_is_root_bus(bridge->bus->self->bus))
++		return;
++
++	/* Fixup the resources */
++	for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; i++) {
++		r = &bridge->resource[PCI_BRIDGE_RESOURCES + i];
++		if (!r->flags || !r->parent)
++			continue;
++
++		w = NULL;
++		if (r->flags & type & IORESOURCE_IO)
++			w = &hose->io_resource;
++		else if (pnv_pci_is_mem_pref_64(r->flags) &&
++			 (type & IORESOURCE_PREFETCH) &&
++			 phb->ioda.m64_segsize)
++			w = &hose->mem_resources[1];
++		else if (r->flags & type & IORESOURCE_MEM)
++			w = &hose->mem_resources[0];
++
++		r->start = w->start;
++		r->end = w->end;
++	}
++}
++
+ static void pnv_pci_setup_bridge(struct pci_bus *bus, unsigned long type)
+ {
+ 	struct pci_controller *hose = pci_bus_to_host(bus);
+@@ -3154,6 +3197,9 @@ static void pnv_pci_setup_bridge(struct pci_bus *bus, unsigned long type)
+ 	struct pnv_ioda_pe *pe;
+ 	bool all = (pci_pcie_type(bridge) == PCI_EXP_TYPE_PCI_BRIDGE);
+ 
++	/* Extend bridge's windows if necessary */
++	pnv_pci_fixup_bridge_resources(bus, type);
++
+ 	/* The PE for root bus should be realized before any one else */
+ 	if (!phb->ioda.root_pe_populated) {
+ 		pe = pnv_ioda_setup_bus_PE(phb->hose->bus, false);
+-- 
+2.1.0
 
-> +- interrupts: Three interrupt entries must be specified.
-> +- interrupt-names: Must include the following names
-> +	- "pcie-sys"
-> +	- "pcie-legacy"
-> +	- "pcie-client"
-
-Same as above, names could simply be "sys", "legacy", "client"
-
-
-> +- resets: Must contain five entries for each entry in reset-names.
-> +	   See ../reset/reset.txt for details.
-> +- reset-names: Must include the following names
-> +	- "phy-rst"
-> +	- "core-rst"
-> +	- "mgmt-rst"
-> +	- "mgmt-sticky-rst"
-> +	- "pipe-rst"
-
-and again (= without the "-rst")
-
-
-> +- rockchip,grf: phandle to the syscon managing the "general register
-> files" 
-
-> +- pcie-conf: offset of pcie client block for  configuration
-> +- pcie-status: offset of pcie client block for status
-> +- pcie-laneoff: offset of pcie client block for lane
-
-These are GRF offsets (GRF_SOC_CON8, GRF_SOC_CON5_PCIE, GRF_SOC_STATUS1)
-Those registers are generally prone to change (even their layout) for future 
-socs and I'd suggest instead of declaring them in the devicetree, move them 
-to the per-soc data in the rockchip_pcie_of_match struct.
-
-But it looks as if they're pretty phy-specific, so see comment about possible 
-separate phy driver above.
-
-
-> +- msi-parent: Link to the hardware entity that serves as the Message
-> +- pinctrl-names : The pin control state names
-> +- pinctrl-0: The "default" pinctrl state
-
-I'm not sure if pinctrl-properties need to be described when you don't need 
-special handling in the form of additional pin states. The pcie part does 
-not do any pin-handling of its own.
-
-
-> +- interrupt-map-mask and interrupt-map: standard PCI properties
-> +- interrupt-controller: identifies the node as an interrupt controller
-> +
-> +Optional Property:
-> +- ep-gpios: contain the entry for pre-reset gpio
-> +- num-lanes: number of lanes to use
-> +- assigned-clocks, assigned-clock-parents and assigned-clock-rates:
-> standard +		   clock bindings. See ../clock/clock-bindings.txt
-
-Again that (assigned-clocks handling) is not actual part of the pci-
-controllers actions, but other parts and also described already elsewhere.
-
-
-Heiko
