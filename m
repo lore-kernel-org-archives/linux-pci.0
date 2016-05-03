@@ -1,260 +1,155 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([125.16.236.4]:33110 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933401AbcECNd7 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 09:33:59 -0400
-Received: from localhost
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 3 May 2016 18:53:30 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, robherring2@gmail.com, dja@axtens.net,
-	alistair@popple.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v9 10/22] powerpc/powernv: Dynamically release PE
-Date: Tue,  3 May 2016 23:22:41 +1000
-Message-Id: <1462281773-26438-11-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mout.kundenserver.de ([212.227.126.133]:64978 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755270AbcECJgz (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 05:36:55 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Florian Fainelli <f.fainelli@gmail.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	jim2101024@gmail.com, bcm-kernel-feedback-list@broadcom.com,
+	bhelgaas@google.com
+Subject: Re: [PATCH 1/2] Documentation: DT: bindings: Add Broadcom STB PCIe bindings
+Date: Tue, 03 May 2016 11:36:21 +0200
+Message-ID: <3271950.m2VfxN38UI@wuerfel>
+In-Reply-To: <1462238749-19715-2-git-send-email-f.fainelli@gmail.com>
+References: <1462238749-19715-1-git-send-email-f.fainelli@gmail.com> <1462238749-19715-2-git-send-email-f.fainelli@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This supports releasing PEs dynamically. A reference count is
-introduced to PE representing number of PCI devices associated
-with the PE. The reference count is increased when PCI device
-joins the PE and decreased when PCI device leaves the PE in
-pnv_pci_release_device(). When the count becomes zero, the PE
-and its consumed resources are released. Note that the count
-is accessed concurrently. So a counter with "int" type is enough
-here.
+On Monday 02 May 2016 18:25:48 Florian Fainelli wrote:
+> diff --git a/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
+> new file mode 100644
+> index 000000000000..922317969ab5
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
+> @@ -0,0 +1,81 @@
+> +Brcmstb PCIe Host Controller Device Tree Bindings
+> +
+> +Introduction:
+> +
+> +The brcmstb host controller closely follows the example set in
+> +
+> +	[1] http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
+> +
+> +The rest of this document explains some added customizations and
+> +offers an example Brcmstb PCIe host controller DT node.
+> +
+> +Required Properties:
+> +  reg -- the register start address and length for the PCIe block.
+> +      Additional start,length pairs may be specified for clock addresses.
+> +  interrupts -- this must be specified but it is used indirectly.  Interrupt
+> +      zero must be specified; the Brcmstb driver code uses this interrupt
+> +      to determine the offset used for all interrupts, specifically, those
+> +      listed in interrupt-map.
 
-In order to release the sources consumed by the PE, couple of
-helper functions are introduced as below:
+The description for "interrupts" is lacking. You don't mention here
+what the interrupt names are supposed to be, how many interrupts there
+are and which functions they are connected to.
 
-   * pnv_pci_ioda1_unset_window() - Unset IODA1 DMA32 window
-   * pnv_pci_ioda1_release_dma_pe() - Release IODA1 DMA32 segments
-   * pnv_pci_ioda2_release_dma_pe() - Release IODA2 DMA resource
-   * pnv_ioda_release_pe_seg() - Unmap IO/M32/M64 segments
+> +  ranges -- See [1]; a specification of the outbound windows for the host
+> +      controller.  Each outbound window is described by a 7-tuple:
+> +          (3 entries) -- PCIe space start address (0th entry is ignored).
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 174 ++++++++++++++++++++++++++++++
- arch/powerpc/platforms/powernv/pci.h      |   1 +
- 2 files changed, 175 insertions(+)
+The "(0th entry is ignored)" makes no sense
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index b32021b..ee56ed2 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1037,6 +1037,7 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
- 		if (pdn->pe_number != IODA_INVALID_PE)
- 			continue;
- 
-+		pe->device_count++;
- 		pdn->pcidev = dev;
- 		pdn->pe_number = pe->pe_number;
- 		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
-@@ -3302,6 +3303,178 @@ static bool pnv_pci_enable_device_hook(struct pci_dev *dev)
- 	return true;
- }
- 
-+static long pnv_pci_ioda1_unset_window(struct iommu_table_group *table_group,
-+				       int num)
-+{
-+	struct pnv_ioda_pe *pe = container_of(table_group,
-+					      struct pnv_ioda_pe, table_group);
-+	struct pnv_phb *phb = pe->phb;
-+	unsigned int idx;
-+	long rc;
-+
-+	pe_info(pe, "Removing DMA window #%d\n", num);
-+	for (idx = 0; idx < phb->ioda.dma32_count; idx++) {
-+		if (phb->ioda.dma32_segmap[idx] != pe->pe_number)
-+			continue;
-+
-+		rc = opal_pci_map_pe_dma_window(phb->opal_id, pe->pe_number,
-+						idx, 0, 0ul, 0ul, 0ul);
-+		if (rc != OPAL_SUCCESS) {
-+			pe_warn(pe, "Failure %ld unmapping DMA32 segment#%d\n",
-+				rc, idx);
-+			return rc;
-+		}
-+
-+		phb->ioda.dma32_segmap[idx] = IODA_INVALID_PE;
-+	}
-+
-+	pnv_pci_unlink_table_and_group(table_group->tables[num], table_group);
-+	return OPAL_SUCCESS;
-+}
-+
-+static void pnv_pci_ioda1_release_dma_pe(struct pnv_ioda_pe *pe)
-+{
-+	unsigned int weight = pnv_pci_ioda_pe_dma_weight(pe);
-+	struct iommu_table *tbl = pe->table_group.tables[0];
-+	int64_t rc;
-+
-+	if (!weight)
-+		return;
-+
-+	rc = pnv_pci_ioda1_unset_window(&pe->table_group, 0);
-+	if (rc != OPAL_SUCCESS)
-+		return;
-+
-+	pnv_pci_ioda1_tce_invalidate(tbl, tbl->it_offset, tbl->it_size, false);
-+	if (pe->table_group.group) {
-+		iommu_group_put(pe->table_group.group);
-+		WARN_ON(pe->table_group.group);
-+	}
-+
-+	free_pages(tbl->it_base, get_order(tbl->it_size << 3));
-+	iommu_free_table(tbl, "pnv");
-+}
-+
-+static void pnv_pci_ioda2_release_dma_pe(struct pnv_ioda_pe *pe)
-+{
-+	struct iommu_table *tbl = pe->table_group.tables[0];
-+	unsigned int weight = pnv_pci_ioda_pe_dma_weight(pe);
-+#ifdef CONFIG_IOMMU_API
-+	int64_t rc;
-+#endif
-+
-+	if (!weight)
-+		return;
-+
-+#ifdef CONFIG_IOMMU_API
-+	rc = pnv_pci_ioda2_unset_window(&pe->table_group, 0);
-+	if (rc)
-+		pe_warn(pe, "OPAL error %ld release DMA window\n", rc);
-+#endif
-+
-+	pnv_pci_ioda2_set_bypass(pe, false);
-+	if (pe->table_group.group) {
-+		iommu_group_put(pe->table_group.group);
-+		WARN_ON(pe->table_group.group);
-+	}
-+
-+	pnv_pci_ioda2_table_free_pages(tbl);
-+	iommu_free_table(tbl, "pnv");
-+}
-+
-+static void pnv_ioda_free_pe_seg(struct pnv_ioda_pe *pe,
-+				 unsigned short win,
-+				 unsigned int *map)
-+{
-+	struct pnv_phb *phb = pe->phb;
-+	int idx;
-+	int64_t rc;
-+
-+	for (idx = 0; idx < phb->ioda.total_pe_num; idx++) {
-+		if (map[idx] != pe->pe_number)
-+			continue;
-+
-+		if (win == OPAL_M64_WINDOW_TYPE)
-+			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-+					phb->ioda.reserved_pe_idx, win,
-+					idx / PNV_IODA1_M64_SEGS,
-+					idx % PNV_IODA1_M64_SEGS);
-+		else
-+			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-+					phb->ioda.reserved_pe_idx, win, 0, idx);
-+
-+		if (rc != OPAL_SUCCESS)
-+			pe_warn(pe, "Error %ld unmapping (%d) segment#%d\n",
-+				rc, win, idx);
-+
-+		map[idx] = IODA_INVALID_PE;
-+	}
-+}
-+
-+static void pnv_ioda_release_pe_seg(struct pnv_ioda_pe *pe)
-+{
-+	struct pnv_phb *phb = pe->phb;
-+
-+	if (phb->type == PNV_PHB_IODA1) {
-+		pnv_ioda_free_pe_seg(pe, OPAL_IO_WINDOW_TYPE,
-+				     phb->ioda.io_segmap);
-+		pnv_ioda_free_pe_seg(pe, OPAL_M32_WINDOW_TYPE,
-+				     phb->ioda.m32_segmap);
-+		pnv_ioda_free_pe_seg(pe, OPAL_M64_WINDOW_TYPE,
-+				     phb->ioda.m64_segmap);
-+	} else if (phb->type == PNV_PHB_IODA2) {
-+		pnv_ioda_free_pe_seg(pe, OPAL_M32_WINDOW_TYPE,
-+				     phb->ioda.m32_segmap);
-+	}
-+}
-+
-+static void pnv_ioda_release_pe(struct pnv_ioda_pe *pe)
-+{
-+	struct pnv_phb *phb = pe->phb;
-+	struct pnv_ioda_pe *slave, *tmp;
-+
-+	/* Release slave PEs in compound PE */
-+	if (pe->flags & PNV_IODA_PE_MASTER) {
-+		list_for_each_entry_safe(slave, tmp, &pe->slaves, list)
-+			pnv_ioda_release_pe(slave);
-+	}
-+
-+	list_del(&pe->list);
-+	switch (phb->type) {
-+	case PNV_PHB_IODA1:
-+		pnv_pci_ioda1_release_dma_pe(pe);
-+		break;
-+	case PNV_PHB_IODA2:
-+		pnv_pci_ioda2_release_dma_pe(pe);
-+		break;
-+	default:
-+		WARN_ON(1);
-+	}
-+
-+	pnv_ioda_release_pe_seg(pe);
-+	pnv_ioda_deconfigure_pe(pe->phb, pe);
-+	pnv_ioda_free_pe(pe);
-+}
-+
-+static void pnv_pci_release_device(struct pci_dev *pdev)
-+{
-+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
-+	struct pnv_phb *phb = hose->private_data;
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+	struct pnv_ioda_pe *pe;
-+
-+	if (pdev->is_virtfn)
-+		return;
-+
-+	if (!pdn || pdn->pe_number == IODA_INVALID_PE)
-+		return;
-+
-+	pe = &phb->ioda.pe_array[pdn->pe_number];
-+	WARN_ON(--pe->device_count < 0);
-+	if (pe->device_count == 0)
-+		pnv_ioda_release_pe(pe);
-+}
-+
- static void pnv_pci_ioda_shutdown(struct pci_controller *hose)
- {
- 	struct pnv_phb *phb = hose->private_data;
-@@ -3318,6 +3491,7 @@ static const struct pci_controller_ops pnv_pci_ioda_controller_ops = {
- 	.teardown_msi_irqs	= pnv_teardown_msi_irqs,
- #endif
- 	.enable_device_hook	= pnv_pci_enable_device_hook,
-+	.release_device		= pnv_pci_release_device,
- 	.window_alignment	= pnv_pci_window_alignment,
- 	.setup_bridge		= pnv_pci_setup_bridge,
- 	.reset_secondary_bus	= pnv_pci_reset_secondary_bus,
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index a81bf01..dda5fa7 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -31,6 +31,7 @@ struct pnv_phb;
- struct pnv_ioda_pe {
- 	unsigned long		flags;
- 	struct pnv_phb		*phb;
-+	int			device_count;
- 
- #define PNV_IODA_MAX_PEER_PES	8
- 	struct pnv_ioda_pe	*peers[PNV_IODA_MAX_PEER_PES];
--- 
-2.1.0
+> +          (2 entries) -- CPU/System start address
 
+Strictly speaking, this is the address relative to the parent node, not to
+the root. The binding for a device should not care about where in the DT
+that device is located.
+
+> +          (2 entries) -- Size of region.
+> +      Due to hardware limitations, there may be a maximum of four windows
+> +      specified.
+
+I see that the example lists two separate non-prefetchable areas. It would
+be good to mention what types of mappings are valid for this device, in
+particular whether prefetchable, 64-bit or I/O space are possible.
+
+I would also mention whether the ranges for this driver are meant to
+describe what windows are set up by the boot loader, or whether they
+describe the windows that the driver itself needs to set up.
+
+> +  #interrupt-cells -- number of cells used to describe the interrupt.
+> +  interrupt-map -- See [1]; each interrupt requires 7 entries, and
+> +      currently all but the fifth entry (order 0) -- the interrupt
+> +      number -- is ignored.  There must be four interrupts specified
+> +      for the PCI's INTA, INTB, INTC, and INTD.
+
+This does not describe the relevant properties, and the part it describes
+looks wrong. I think you should just refer to the generic PCI binding
+that describes how IRQs get mapped for the odd cases e.g. when you
+have a PCIe-PCI bridge and a PCI slot IRQ line is connected to a GPIO.
+
+Also, the '7' entries here only makes sense if #address-cells for the
+parent is '2'.
+
+> +Optional Properties:
+> +  interrupt-names -- names of the interrupts listed in the interrupt map.
+> +  clocks -- list of clock phandles.  If specified, this should list one
+> +      clock.
+> +  clock-names -- the "local" names of the clocks specified in 'clocks'.  Note
+> +      that if the 'clocks' property is given, 'clock-names' is mandatory,
+> +      and the name of the clock is expected to be "sw_pcie".
+
+Replace underscores with dashes, as in "sw-pcie". What is "sw" anyway?
+
+> +  brcm,ssc -- (boolean) indicates usage of spread-spectrum clocking.
+> +  brcm,gen --  (integer) indicates desired generation of link:
+> +      1 => 2.5 Gbps, 2 => 5.0 Gbps, 3 => 8.0 Gbps.
+
+Shouldn't the link generation be probed automatically?
+
+> +  supply-names -- the names of voltage regulators that the root
+> +      complex should turn off/on/on on suspend/resume/boot.  This
+> +      is a string list.
+> +  supplies -- A collection of phandles to a regulator nodes, see
+> +	Documentation/devicetree/bindings/regulator/ for specific
+> +	bindings. The number and order of phandles must match
+> +	exactly the number of strings in the "supply-names" property.
+
+This does not follow the binding for regulators. Please change
+this to match what others do.
+
+> +Example Node:
+> +
+> +	pcie@f0460000 {
+> +		reg = <0x0 0xf0460000 0x0 0x9310>;
+
+		regs
+
+> +		interrupts = <0x0 0x0 0x4>;
+> +		compatible = "brcm,pci-plat-dev";
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		ranges = <0x02000000 0x00000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x08000000
+> +			  0x02000000 0x00000000 0x08000000 0x00000000 0xc8000000 0x00000000 0x08000000>;
+> +		#interrupt-cells = <1>;
+> +		interrupt-map-mask = <0xf800 0 0 7>;
+> +		interrupt-map = <0 0 0 1 &intc 47 3
+> +				 0 0 0 2 &intc 48 3
+> +				 0 0 0 3 &intc 49 3
+> +				 0 0 0 4 &intc 50 3>;
+
+Please reformat the lists to look like
+
+		ranges = <0x02000000 0x00000000 0x00000000  0x00000000 0xc0000000  0x00000000 0x08000000>
+			  <0x02000000 0x00000000 0x08000000  0x00000000 0xc8000000  0x00000000 0x08000000>;
+		interrupt-map = <0 0 0 1  &intc  47 3>,
+				 <0 0 0 2  &intc  48 3>,
+				 <0 0 0 3  &intc  49 3>,
+				 <0 0 0 4  &intc  50 3>;
+
+
+> +		interrupt-names = "pcie_0_inta",
+> +				  "pcie_0_intb",
+> +				  "pcie_0_intc",
+> +				  "pcie_0_intd";
+
+interrupt-names is misplaced here, you only have one entry in the "interrupts"
+property, and is different from the "inta" in your interrupt-map.
+
+	Arnd
