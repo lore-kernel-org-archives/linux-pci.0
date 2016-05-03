@@ -1,39 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:58675 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752689AbcEZBAX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 May 2016 21:00:23 -0400
-Message-ID: <1464224420.31009.0.camel@ellerman.id.au>
-Subject: Re: [v4] powerpc/pci: Assign fixed PHB number based on device-tree
- properties
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org
-Cc: mikey@neuling.org, linux-pci@vger.kernel.org,
-	gwshan@linux.vnet.ibm.com, paulus@samba.org, imunsie@au1.ibm.com,
-	andrew.donnellan@au1.ibm.com, bhelgaas@google.com
-Date: Thu, 26 May 2016 11:00:20 +1000
-In-Reply-To: <201605251303.u4PCx7bK033656@mx0a-001b2d01.pphosted.com>
-References: <3qWdQC0MVDz9s9Y@ozlabs.org>
-	 <56F9255A.1040900@linux.vnet.ibm.com>
-	 <1464155117.8573.2.camel@ellerman.id.au>
-	 <201605251303.u4PCx7bK033656@mx0a-001b2d01.pphosted.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from e23smtp04.au.ibm.com ([202.81.31.146]:37492 "EHLO
+	e23smtp04.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755926AbcECNX6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 09:23:58 -0400
+Received: from localhost
+	by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 3 May 2016 23:23:56 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, robherring2@gmail.com, dja@axtens.net,
+	alistair@popple.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v9 03/22] powerpc/powernv: Move pnv_pci_ioda_setup_opal_tce_kill() around
+Date: Tue,  3 May 2016 23:22:34 +1000
+Message-Id: <1462281773-26438-4-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2016-05-25 at 10:03 -0300, Guilherme G. Piccoli wrote:
-> On 05/25/2016 02:45 AM, Michael Ellerman wrote:
-> > 
-> > Yeah please increase the bitmap size to 65536. It will only take 8KB of memory,
-> > which is negligible.
-> 
-> Well, since I sent a v6 and you replied there too, I guess we can 
-> continue our iterations there - mostly suggestions (all except one) you 
-> gave here were implemented in v6.
+pnv_pci_ioda_setup_opal_tce_kill() called by pnv_ioda_setup_dma()
+to remap the TCE kill regiter. What's done in pnv_ioda_setup_dma()
+will be covered in pcibios_setup_bridge() which is invoked on each
+PCI bridge. It means we will possibly remap the TCE kill register
+for multiple times and it's unnecessary.
 
-Yeah sorry, I'm very behind on email :)
+This moves pnv_pci_ioda_setup_opal_tce_kill() to where the PHB is
+initialized (pnv_pci_init_ioda_phb()) to avoid above issue.
 
-cheers
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 5ee8a57..cbd4c0b 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -2599,8 +2599,6 @@ static void pnv_ioda_setup_dma(struct pnv_phb *phb)
+ 	pr_info("PCI: Domain %04x has %d available 32-bit DMA segments\n",
+ 		hose->global_number, phb->ioda.dma32_count);
+ 
+-	pnv_pci_ioda_setup_opal_tce_kill(phb);
+-
+ 	/* Walk our PE list and configure their DMA segments */
+ 	list_for_each_entry(pe, &phb->ioda.pe_list, list) {
+ 		weight = pnv_pci_ioda_pe_dma_weight(pe);
+@@ -3396,6 +3394,9 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	if (phb->regs == NULL)
+ 		pr_err("  Failed to map registers !\n");
+ 
++	/* Initialize TCE kill register */
++	pnv_pci_ioda_setup_opal_tce_kill(phb);
++
+ 	/* Initialize more IODA stuff */
+ 	phb->ioda.total_pe_num = 1;
+ 	prop32 = of_get_property(np, "ibm,opal-num-pes", NULL);
+-- 
+2.1.0
 
