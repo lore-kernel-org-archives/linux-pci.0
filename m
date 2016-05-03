@@ -1,133 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40342 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751375AbcEaV6H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 31 May 2016 17:58:07 -0400
-Subject: [PATCH] Revert "ARM: cns3xxx: pci: avoid potential stack overflow"
-To: Arnd Bergmann <arnd@arndb.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	Krzysztof =?utf-8?q?Ha=C5=82asa?= <khalasa@piap.pl>,
-	linux-kernel@vger.kernel.org
-Date: Tue, 31 May 2016 16:58:02 -0500
-Message-ID: <20160531215802.30590.97398.stgit@bhelgaas-glaptop2.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from e28smtp05.in.ibm.com ([125.16.236.5]:41637 "EHLO
+	e28smtp05.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932762AbcECNXQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 09:23:16 -0400
+Received: from localhost
+	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Tue, 3 May 2016 18:53:13 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, robherring2@gmail.com, dja@axtens.net,
+	alistair@popple.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH v9 00/22] powerpc/powernv: PCI hotplug support
+Date: Tue,  3 May 2016 23:22:31 +1000
+Message-Id: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This reverts commit 498a92d42596a7a32c042319eb62a4c3d8081cf1.
+The series is split from "[PATCH v8 00/45] powerpc/powernv: PCI hotplug
+support". Another series (A) sent to linux-ppc-dev maillist as it's only
+related to PowerPC. Besides, this series needs the firmware patches (B)
+to work. Without the firmware patches, the PCI hotplug driver won't detect
+and populate any PCI slots. So this series is working on old firmware.
 
-Krzysztof reported that this change broke Cavium CNS3xxx, ARMv6 (Laguna
-GW-2388) because the MRRS setting is never written to the hardware.
+ (A): https://patchwork.ozlabs.org/patch/617768/
+ (B): https://patchwork.ozlabs.org/patch/617749/
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-CC: Arnd Bergmann <arnd@arndb.de>
-CC: Krzysztof Hałasa <khalasa@piap.pl>
----
- arch/arm/mach-cns3xxx/pcie.c |   71 ++++++++++++++++++++++++------------------
- 1 file changed, 41 insertions(+), 30 deletions(-)
+The series of patches is highlighted as below:
 
-diff --git a/arch/arm/mach-cns3xxx/pcie.c b/arch/arm/mach-cns3xxx/pcie.c
-index 318394e..c622c30 100644
---- a/arch/arm/mach-cns3xxx/pcie.c
-+++ b/arch/arm/mach-cns3xxx/pcie.c
-@@ -65,9 +65,8 @@ static void __iomem *cns3xxx_pci_map_bus(struct pci_bus *bus,
- 
- 	/*
- 	 * The CNS PCI bridge doesn't fit into the PCI hierarchy, though
--	 * we still want to access it.
--	 * We place the host bridge on bus 0, and the directly connected
--	 * device on bus 1, slot 0.
-+	 * we still want to access it. For this to work, we must place
-+	 * the first device on the same bus as the CNS PCI bridge.
- 	 */
- 	if (busno == 0) { /* internal PCIe bus, host bridge device */
- 		if (devfn == 0) /* device# and function# are ignored by hw */
-@@ -212,46 +211,58 @@ static void __init cns3xxx_pcie_check_link(struct cns3xxx_pcie *cnspci)
- 	}
- }
- 
--static void cns3xxx_write_config(struct cns3xxx_pcie *cnspci,
--					 int where, int size, u32 val)
--{
--	void __iomem *base = cnspci->host_regs + (where & 0xffc);
--	u32 v;
--	u32 mask = (0x1ull << (size * 8)) - 1;
--	int shift = (where % 4) * 8;
--
--	v = readl_relaxed(base);
--
--	v &= ~(mask << shift);
--	v |= (val & mask) << shift;
--
--	writel_relaxed(v, base);
--	readl_relaxed(base);
--}
--
- static void __init cns3xxx_pcie_hw_init(struct cns3xxx_pcie *cnspci)
- {
-+	int port = cnspci->port;
-+	struct pci_sys_data sd = {
-+		.private_data = cnspci,
-+	};
-+	struct pci_bus bus = {
-+		.number = 0,
-+		.ops = &cns3xxx_pcie_ops,
-+		.sysdata = &sd,
-+	};
- 	u16 mem_base  = cnspci->res_mem.start >> 16;
- 	u16 mem_limit = cnspci->res_mem.end   >> 16;
- 	u16 io_base   = cnspci->res_io.start  >> 16;
- 	u16 io_limit  = cnspci->res_io.end    >> 16;
-+	u32 devfn = 0;
-+	u8 tmp8;
-+	u16 pos;
-+	u16 dc;
-+
-+	pci_bus_write_config_byte(&bus, devfn, PCI_PRIMARY_BUS, 0);
-+	pci_bus_write_config_byte(&bus, devfn, PCI_SECONDARY_BUS, 1);
-+	pci_bus_write_config_byte(&bus, devfn, PCI_SUBORDINATE_BUS, 1);
- 
--	cns3xxx_write_config(cnspci, PCI_PRIMARY_BUS, 1, 0);
--	cns3xxx_write_config(cnspci, PCI_SECONDARY_BUS, 1, 1);
--	cns3xxx_write_config(cnspci, PCI_SUBORDINATE_BUS, 1, 1);
--	cns3xxx_write_config(cnspci, PCI_MEMORY_BASE, 2, mem_base);
--	cns3xxx_write_config(cnspci, PCI_MEMORY_LIMIT, 2, mem_limit);
--	cns3xxx_write_config(cnspci, PCI_IO_BASE_UPPER16, 2, io_base);
--	cns3xxx_write_config(cnspci, PCI_IO_LIMIT_UPPER16, 2, io_limit);
-+	pci_bus_read_config_byte(&bus, devfn, PCI_PRIMARY_BUS, &tmp8);
-+	pci_bus_read_config_byte(&bus, devfn, PCI_SECONDARY_BUS, &tmp8);
-+	pci_bus_read_config_byte(&bus, devfn, PCI_SUBORDINATE_BUS, &tmp8);
-+
-+	pci_bus_write_config_word(&bus, devfn, PCI_MEMORY_BASE, mem_base);
-+	pci_bus_write_config_word(&bus, devfn, PCI_MEMORY_LIMIT, mem_limit);
-+	pci_bus_write_config_word(&bus, devfn, PCI_IO_BASE_UPPER16, io_base);
-+	pci_bus_write_config_word(&bus, devfn, PCI_IO_LIMIT_UPPER16, io_limit);
- 
- 	if (!cnspci->linked)
- 		return;
- 
- 	/* Set Device Max_Read_Request_Size to 128 byte */
--	pcie_bus_config = PCIE_BUS_PEER2PEER;
--
-+	bus.number = 1; /* directly connected PCIe device */
-+	devfn = PCI_DEVFN(0, 0);
-+	pos = pci_bus_find_capability(&bus, devfn, PCI_CAP_ID_EXP);
-+	pci_bus_read_config_word(&bus, devfn, pos + PCI_EXP_DEVCTL, &dc);
-+	if (dc & PCI_EXP_DEVCTL_READRQ) {
-+		dc &= ~PCI_EXP_DEVCTL_READRQ;
-+		pci_bus_write_config_word(&bus, devfn, pos + PCI_EXP_DEVCTL, dc);
-+		pci_bus_read_config_word(&bus, devfn, pos + PCI_EXP_DEVCTL, &dc);
-+		if (dc & PCI_EXP_DEVCTL_READRQ)
-+			pr_warn("PCIe: Unable to set device Max_Read_Request_Size\n");
-+		else
-+			pr_info("PCIe: Max_Read_Request_Size set to 128 bytes\n");
-+	}
- 	/* Disable PCIe0 Interrupt Mask INTA to INTD */
--	__raw_writel(~0x3FFF, MISC_PCIE_INT_MASK(cnspci->port));
-+	__raw_writel(~0x3FFF, MISC_PCIE_INT_MASK(port));
- }
- 
- static int cns3xxx_pcie_abort_handler(unsigned long addr, unsigned int fsr,
+   * In order to create PE during PCI hot plugging, pcibios_setup_bridge()
+     which is called to update bridge's window populates the PE, together
+     with the associated resources like IO/M32/M64 segments, DMA windows etc.
+   * One refcount is maintained by each PE to track the number of PCI devices
+     that are associated with the PE. The refcount is increased by one when
+     a new PCI device joins the PE. It is decreased by one when a PCI device
+     is released (pcibios_release_device()). The PE together with the used
+     resources will be destroyed when refcount reaches to 0, meaning no PCI
+     device needs the PE any more.
+   * If the firmware has capability to support PCI slot and reset functionality,
+     the reset required by EEH recovery is routed to firmware. Otherwise, it
+     is done in kernel as before.
+   * Changes to drivers/of/fdt.c in order to use OF changeset in hotplug driver.
+   * PCI hotplug driver for PowerNV platform. The PCI slots are identified by
+     firmware and exposed to kernel through device tree. Firmware provides APIs
+     to get presence/power state or set power state from/to PCI slot. The PCI
+     slot hotplug state is sychronized with its power state. When user changes
+     PCI slot power state from off to on through sysfs file, the PCI devices
+     behind the PCI slot will be brought into online. Otherwise, the PCI slot's
+     subordinate devices will be removed from the system.
+
+Changelog
+=========
+v9:
+   * Rebased to linux-powerpc next branch + (A).
+   * Patch order, split and merge (Alexey / Alistair)
+   * Lots of misc comments covered, I don't elaborate them one by one (Alexey)
+   * One more patch to export detach_of_node()
+   * Fixed uninitialized variables, memory leak on @fdt1. Added flush_work()
+     and other misc comments (Alexey / Alistair)
+   * Same testing scenario carried as v8. More will be carried out later.
+   * The confused function names aren't changed. Will check with Alexey and
+     Alistair. Or have a separate patch to address it later.
+v8:
+   * Rebased to linux-powerpc next branch.
+   * Resolve comments from Alexey and Daniel on PCI part
+   * Resolve comments from Rob on fdt.c
+   * Retested (refer to the "Testing section")
+v7:
+   * Reworked revision to some extent.
+   * Rebased to powerpc/next repository.
+   * Reorder/split/merge/drop according - Alexey.
+   * Defined macros and use array to track IO/M32/M64/DMA32 segments - Alexey.
+   * Merged 3 files to one for the hotplug driver - Alexey.
+   * As part of OPAL API, defined macros for PCI slot power state, hotplug
+     message type. Defined macros for PCI slot power confirmed state in
+     hotplug driver.
+   * Misc comments from Alexey.
+   * Reworked unflatten_dt_node() to avoid recursive function calls.
+   * Use EXPORT_SYMBOL_GPL() and document function's input/output - Rob/Frank.
+v6:
+   * Patch reorder, split, squash - Alexey.
+   * Minor coding style - Alexey.
+   * Better function names for pcibios_{add,remove}_pci_devices - Bjorn
+   * Replace pr_warn() with dev_warn() in PowerNV hotplug driver - Bjorn
+   * Concurrent depth as parameter passed to __unflatten_dt_node() - Grant / Alexey
+   * Replace overlay with of_changeset - Grant
+v5:
+   * Rebased to 4.1.rc6 and some unmerged patches as below:
+     Alexey's DDW patchset (v11);
+     Gavin's EEH error injection support (in mpe's next branch);
+     Richard's EEH cleanup patches (in mpe's next branch);
+     Richard's EEH support for VF (v7);
+     Gavin's misc EEH fixes for 4.2;
+   * The revision bases on skiboot corresponding patches (v7):
+     https://patchwork.ozlabs.org/patch/480437/
+   * Utilize OF overlay to update device-tree with help of newly introduced
+     OPAL API opal_get_overlay_dt().
+   * Split patches for easy review according to aik's comments.
+   * Fix coding style from checkpatchc.pl as pointed by aik.
+   * Code cleanup and misc fixup according to aik's input.
+v4:
+   * Rebased to 4.1.RC1
+   * Added API to unflatten FDT blob to device node sub-tree, which is attached
+     the indicated parent device node. The original mechanism based on formatted
+     string stream has been dropped.
+   * The PATCH[v3 09/21] ("powerpc/eeh: Delay probing EEH device during hotplug")
+     was picked up sent to linux-ppc@ separately for review as Richard's "VF EEH
+     Support" depends on that.
+v3:
+   * Rebased to 4.1.RC0
+   * PowerNV PCI infrasturcture is total refactored in order to support PCI
+     hotplug. The PowerNV hotplug driver is also reworked a lot because of
+     the changes in skiboot in order to support PCI hotplug.
+
+Gavin Shan (22):
+  PCI: Add pcibios_setup_bridge()
+  powerpc/pci: Override pcibios_setup_bridge()
+  powerpc/powernv: Move pnv_pci_ioda_setup_opal_tce_kill() around
+  powerpc/powernv: Increase PE# capacity
+  powerpc/powernv: Allocate PE# in reverse order
+  powerpc/powernv: Create PEs in pcibios_setup_bridge()
+  powerpc/powernv: Setup PE for root bus
+  powerpc/powernv: Extend PCI bridge resources
+  powerpc/powernv: Make pnv_ioda_deconfigure_pe() visible
+  powerpc/powernv: Dynamically release PE
+  powerpc/pci: Update bridge windows on PCI plug
+  powerpc/pci: Delay populating pdn
+  powerpc/powernv: Support PCI slot ID
+  powerpc/powernv: Use PCI slot reset infrastructure
+  powerpc/powernv: Functions to get/set PCI slot state
+  drivers/of: Split unflatten_dt_node()
+  drivers/of: Avoid recursively calling unflatten_dt_node()
+  drivers/of: Rename unflatten_dt_node()
+  drivers/of: Specify parent node in of_fdt_unflatten_tree()
+  drivers/of: Return allocated memory from of_fdt_unflatten_tree()
+  drivers/of: Export of_detach_node()
+  PCI/hotplug: PowerPC PowerNV PCI hotplug driver
+
+ arch/powerpc/include/asm/eeh.h                 |   2 +-
+ arch/powerpc/include/asm/opal-api.h            |  18 +-
+ arch/powerpc/include/asm/opal.h                |   9 +-
+ arch/powerpc/include/asm/pci-bridge.h          |   2 +
+ arch/powerpc/include/asm/pnv-pci.h             |  11 +
+ arch/powerpc/include/asm/ppc-pci.h             |   2 -
+ arch/powerpc/kernel/eeh_dev.c                  |  17 +-
+ arch/powerpc/kernel/pci-common.c               |  16 +-
+ arch/powerpc/kernel/pci_dn.c                   |  23 +-
+ arch/powerpc/platforms/maple/pci.c             |  34 +-
+ arch/powerpc/platforms/pasemi/pci.c            |   3 -
+ arch/powerpc/platforms/powermac/pci.c          |  38 +-
+ arch/powerpc/platforms/powernv/eeh-powernv.c   |  49 +-
+ arch/powerpc/platforms/powernv/opal-wrappers.S |   5 +
+ arch/powerpc/platforms/powernv/pci-ioda.c      | 481 ++++++++++----
+ arch/powerpc/platforms/powernv/pci.c           | 105 ++-
+ arch/powerpc/platforms/powernv/pci.h           |  10 +-
+ arch/powerpc/platforms/pseries/setup.c         |   6 +-
+ drivers/gpu/drm/tilcdc/tilcdc_slave_compat.c   |   2 +-
+ drivers/of/dynamic.c                           |   1 +
+ drivers/of/fdt.c                               | 372 +++++++----
+ drivers/of/unittest.c                          |   2 +-
+ drivers/pci/hotplug/Kconfig                    |  13 +
+ drivers/pci/hotplug/Makefile                   |   3 +
+ drivers/pci/hotplug/pnv_php.c                  | 869 +++++++++++++++++++++++++
+ drivers/pci/setup-bus.c                        |   5 +
+ include/linux/of_fdt.h                         |   5 +-
+ include/linux/pci.h                            |   1 +
+ 28 files changed, 1748 insertions(+), 356 deletions(-)
+ create mode 100644 drivers/pci/hotplug/pnv_php.c
+
+-- 
+2.1.0
 
