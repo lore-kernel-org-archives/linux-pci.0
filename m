@@ -1,55 +1,84 @@
-Return-Path: <yhlu.kernel@gmail.com>
-Return-Path: <yhlu.kernel@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:33421 "EHLO
+	bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752776AbcEDLyh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 May 2016 07:54:37 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: <niklass@axis.com>, <jespern@axis.com>, <robh+dt@kernel.org>,
+	<pawel.moll@arm.com>, <mark.rutland@arm.com>,
+	<ijc+devicetree@hellion.org.uk>, <galak@codeaurora.org>
+CC: <linux-arm-kernel@axis.com>, <linux-pci@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH 1/2] dt-bindings: pci: add DT binding for Axis ARTPEC-6 PCIe controller
+Date: Wed, 4 May 2016 13:54:17 +0200
+Message-ID: <1462362857-27481-1-git-send-email-niklass@axis.com>
 MIME-Version: 1.0
-Sender: yhlu.kernel@gmail.com
-In-Reply-To: <574D03F9.6050201@intel.com>
-References: <1464604404-11257-1-git-send-email-yu.c.chen@intel.com>
-	<20160530213305.GA21322@localhost>
-	<574D03F9.6050201@intel.com>
-Date: Tue, 31 May 2016 00:00:48 -0700
-Message-ID: <CAE9FiQV_Mc9VuyBvCB7hL_0pgj+-wW1_jupzhbTHij+VQeLF-A@mail.gmail.com>
-Subject: Re: [PATCH][RFC] PCI: Workaround to enable poweroff on Mac Pro 11
-From: Yinghai Lu <yinghai@kernel.org>
-To: Chen Yu <yu.c.chen@intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, linux-arch <linux-arch@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	"Rafael J . Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 30, 2016 at 8:24 PM, Chen Yu <yu.c.chen@intel.com> wrote:
+From: Niklas Cassel <niklas.cassel@axis.com>
 
-> and then in pcibios_assign_resources, 0000:00:1c.0 tries to allocate minimal
-> resource window and then update related base/limit registers:
->
-> [    0.865342] pci 0000:00:1c.0: bridge window [io  0x1000-0x0fff] to [bus
-> 02] add_size 1000
-> [    0.865343] pci 0000:00:1c.0: bridge window [mem 0x00100000-0x000fffff
-> 64bit pref] to [bus 02] add_size 200000 add_align 100000
-> [    0.865344] pci 0000:00:1c.0: bridge window [mem 0x00100000-0x000fffff]
-> to [bus 02] add_size 200000 add_align 100000
->
+This commit adds the Device Tree binding documentation that allows to
+describe the PCIe controller found in the Axis ARTPEC-6 SoC.
 
-That is for hotplug bridge, then we could use following instead.
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ .../devicetree/bindings/pci/axis,artpec6-pcie.txt  | 45 ++++++++++++++++++++++
+ 1 file changed, 45 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index ee72ebe..d3ec833 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -2775,6 +2775,13 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
-
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
-
-+static void quirk_hotplug_bridge_skip(struct pci_dev *dev)
-+{
-+       dev->is_hotplug_bridge = 0;
-+}
+diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+new file mode 100644
+index 0000000..fdac2a2
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+@@ -0,0 +1,45 @@
++* Axis ARTPEC-6 PCIe interface
 +
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10,
-quirk_hotplug_bridge_skip);
++This PCIe host controller is based on the Synopsis Designware PCIe IP
++and thus inherits all the common properties defined in designware-pcie.txt.
 +
- /*
-  * This is a quirk for the Ricoh MMC controller found as a part of
-  * some mulifunction chips.
++Required properties:
++- compatible: "axis,artpec6-pcie", "snps,dw-pcie"
++- reg: base addresses and lengths of the pcie controller (DBI),
++	the phy controller, and configuration address space.
++- reg-names: Must include the following entries:
++	- "dbi"
++	- "phy"
++	- "config"
++- interrupts: A list of interrupt outputs of the controller. Must contain an
++  entry for each entry in the interrupt-names property.
++- interrupt-names: Must include the following entries:
++	- "msi": The interrupt that is asserted when an MSI is received
++- syscon: Should contain a link to the syscon device node.
++
++Example:
++
++	pcie@f8050000 {
++		compatible = "axis,artpec6-pcie", "snps,dw-pcie";
++		reg = <0xf8050000 0x2000
++		       0xf8040000 0x1000
++		       0xc0000000 0x1000>;
++		reg-names = "dbi", "phy", "config";
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++			  /* downstream I/O */
++		ranges = <0x81000000 0 0	  0xc0001000 0 0x00010000
++			  /* non-prefetchable memory */
++			  0x82000000 0 0xc0011000 0xc0011000 0 0x1ffef000>;
++		num-lanes = <2>;
++		interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
++		interrupt-names = "msi";
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0x7>;
++		interrupt-map = <0 0 0 1 &intc GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH>,
++		                <0 0 0 2 &intc GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH>,
++		                <0 0 0 3 &intc GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH>,
++		                <0 0 0 4 &intc GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>;
++		syscon = <&syscon>;
++	};
+-- 
+2.1.4
+
