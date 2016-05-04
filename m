@@ -1,69 +1,43 @@
-Return-Path: <agordeev@redhat.com>
-Return-Path: <agordeev@redhat.com>
-Date: Thu, 12 May 2016 14:11:57 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: helgaas@kernel.org, pjw@netapp.com, axboe@fb.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org
-Subject: Re: [PATCH 1/2] PCI: Provide sensible irq vector alloc/free routines
-Message-ID: <20160512121155.GB8681@agordeev.lab.eng.brq.redhat.com>
-References: <1462457096-19795-1-git-send-email-hch@lst.de>
- <1462457096-19795-2-git-send-email-hch@lst.de>
- <20160511074527.GA31347@agordeev.lab.eng.brq.redhat.com>
- <20160511085049.GA20279@lst.de>
- <20160511094432.GB31347@agordeev.lab.eng.brq.redhat.com>
- <20160512073552.GA4027@lst.de>
- <20160512094432.GA14671@agordeev.lab.eng.brq.redhat.com>
- <20160512110318.GA9192@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160512110318.GA9192@lst.de>
+Return-Path: <davem@davemloft.net>
+Return-Path: <davem@davemloft.net>
+Date: Wed, 04 May 2016 00:17:05 -0400 (EDT)
+Message-Id: <20160504.001705.2292678530932661059.davem@davemloft.net>
+To: benh@kernel.crashing.org
+Cc: yinghai@kernel.org, helgaas@kernel.org, bhelgaas@google.com,
+ torvalds@linux-foundation.org, weiyang@linux.vnet.ibm.com, linux@iam.tj,
+ wangyijing@huawei.com, khalid.aziz@oracle.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, mpe@ellerman.id.au
+Subject: Re: [PATCH v11 04/60] sparc/PCI: Use correct offset for bus
+ address to resource
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1462322260.30470.76.camel@kernel.crashing.org>
+References: <CAE9FiQU_XSMfxFPSOrMjQ2DGnrM0D5T=0ORfDEBxqWggGrzc+Q@mail.gmail.com>
+	<CAE9FiQX_8oXj=FD8pKe=eBL=YWZY-=C8sZ6yMbmkwegLVOR-fA@mail.gmail.com>
+	<1462322260.30470.76.camel@kernel.crashing.org>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 12, 2016 at 01:03:18PM +0200, Christoph Hellwig wrote:
-> > Okay, now we have a subtlety here. You switch from MSI-X to MSI in case
-> > MSI-X retries exhausted. At this point nr_vecs is lowest (likely 1). So
-> > you start trying MSI from 1 rather from 32. I would suggest two subsequent
-> > loops instead.
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date: Wed, 04 May 2016 10:37:40 +1000
+
+> On Tue, 2016-05-03 at 15:52 -0700, Yinghai Lu wrote:
+>> BenH and DavidM,
+>> Are you ok to let /proc/bus/pci/devices to expose resource value
+>> instead of
+>> BAR value?
+>> powerpc already expose MMIO as resource value, but still keep IO as
+>> BAR value?
+>> 
+>> Or can we just dump /proc/bus/pci support from now?
 > 
-> So bridges could support less MSI-X entries than MSI ones?  Yikes.
-
-Not this way. MSI vectors could be a scarce resource in a platform. So
-even though devices could support more MSI-Xs than MSIs the underlying
-platform might fail to fulfil a device request. 
-
-> > Another thing, pci_alloc_irq_vectors() tries to allocate vectors in a
-> > range from 1 to nr_vecs now. So this function implicitly falls into
-> > the other two range functions family and therefore:
-> > 
-> >   (a) pci_alloc_irq_vectors() name is not perfec;
+> The problem tends to be old Xserver expectations...
 > 
-> What would you call it instead?
+> That stuff has been a can of worms over the years and we did things in
+> the kernel to work around X limitations. I'm not that keen on touching
+> /proc at all in that regard. Leave it there do what it does today, it's
+> a user visible ABI, don't change it.
 
-I do not know, really :( I would expect "range" within the name since
-a range requested indeed, but I am just hinting here.
-
-> >   (b) why not introduce 'minvec' minimal number of interrupts then?
-> >       We could have a handy pci_enable_irq_range() as result;
-> 
-> That seems pretty pointless, when the caller can simply treat a too
-> small number as failure and use the existing failure path for that.
-
-There was a huge discussion on this few years ago, when the range
-functions were introduced. Actually, the prototypes of these two is
-the outcome of that discussion. I almost sure your point was expressed
-by many at the time ;)
-
-> >   (c) if you do (b) then PCI_IRQ_NOMSIX flag becomes redundant, since
-> >       caller would invoke pci_enable_msi_range() instead;
-> 
-> pci_enable_msi_range still has a horrible API that forces the caller
-> to deal with the irq numbers differently than the MSI-X case, so it
-> should also go away in the long run.
-
-Well, if we introduce pci_enable_irq_range() (or something) and
-pci_get_dev_irq(int vector) (or something) that covers MSI-X, MSI and
-legacy IRQs then we can get it done now. Your pci_alloc_irq_vectors()
-is just few steps from there, huh?
-
-(Sorry for the weird quotting)
+I agree with Ben, whatever procfs is exporting in the past is what
+the Xserver and other things expect on sparc64 and therefore is a
+user facing ABI that can't be changed.
