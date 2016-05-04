@@ -1,68 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:50386 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752419AbcEXN6V convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 May 2016 09:58:21 -0400
-From: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-CC: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Jamet, Michael" <michael.jamet@intel.com>,
-	"Alloun, Dan" <dan.alloun@intel.com>,
-	"Westerberg, Mika" <mika.westerberg@intel.com>,
-	"Svahn, Kai" <kai.svahn@intel.com>,
-	"Shevchenko, Andriy" <andriy.shevchenko@intel.com>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [PATCH 0/6] thunderbolt: Introducing Thunderbolt(TM) networking
-Date: Tue, 24 May 2016 13:58:14 +0000
-Message-ID: <E607265CB020454880711A6F96C05A0377FBD337@hasmsx107.ger.corp.intel.com>
-References: <1463993336-2750-1-git-send-email-amir.jer.levy@intel.com>
- <20160524105506.GB5396@wunner.de>
-In-Reply-To: <20160524105506.GB5396@wunner.de>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mout.kundenserver.de ([212.227.17.13]:62122 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752697AbcEDU5F (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 May 2016 16:57:05 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Florian Fainelli <f.fainelli@gmail.com>
+Cc: jim2101024@gmail.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	bcm-kernel-feedback-list@broadcom.com, bhelgaas@google.com
+Subject: Re: [PATCH 2/2] pci: host: Add Broadcom STB PCIE RC controller
+Date: Wed, 04 May 2016 22:56:34 +0200
+Message-ID: <246366157.3SALjN7m5a@wuerfel>
+In-Reply-To: <572A5678.7020603@gmail.com>
+References: <1462238749-19715-1-git-send-email-f.fainelli@gmail.com> <4199321.vpfzMt0zhT@wuerfel> <572A5678.7020603@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Lukas Wunner [mailto:lukas@wunner.de]
-> Sent: Tuesday, May 24, 2016 13:55
-> To: Levy, Amir (Jer) <amir.jer.levy@intel.com>
-> Cc: andreas.noever@gmail.com; gregkh@linuxfoundation.org;
-> bhelgaas@google.com; linux-pci@vger.kernel.org; Jamet, Michael
-> <michael.jamet@intel.com>; Alloun, Dan <dan.alloun@intel.com>;
-> Westerberg, Mika <mika.westerberg@intel.com>; Svahn, Kai
-> <kai.svahn@intel.com>; Shevchenko, Andriy
-> <andriy.shevchenko@intel.com>; Winkler, Tomas
-> <tomas.winkler@intel.com>
-> Subject: Re: [PATCH 0/6] thunderbolt: Introducing Thunderbolt(TM)
-> networking
+On Wednesday 04 May 2016 13:07:20 Florian Fainelli wrote:
+> On 04/05/16 12:56, Arnd Bergmann wrote:
+> > On Wednesday 04 May 2016 12:36:17 Florian Fainelli wrote:
+> >> On 03/05/16 02:57, Arnd Bergmann wrote:
+> >> How about introducing helper functions but keeping the same set of
+> >> read/write pci_ops instead, would that seem more acceptable? I agree
+> >> that the macros are not the friendliest thing.
+> > 
+> > I can't think of how that would look right now. My impression was that
+> > the macros here are mainly used to implement pci_ops, so I suggested
+> > having two copies of those. Of course the two copies could call the
+> > same implementation and just pass in some constant that the compiler
+> > can then optimize again in any possible way.
 > 
-> Hi Amir,
-> 
-> On Mon, May 23, 2016 at 11:48:50AM +0300, Amir Levy wrote:
-> > Thunderbolt(TM) networking, introduced in these patches, provides the
-> > capability of connecting hosts together by emulating an Ethernet adapter.
-> 
-> Thank you for this contribution. I think it may take some time to review
-> everything, for now just some general observations:
-> 
-> - Up until now this driver was Mac-only. IIUC the functionality you're
->   adding will also be used on non-Macs. That's an important change that
->   should probably be made more explicit in the commit messages. Did you
->   test your patches on a Mac to see that nothing regresses? 
+> Providing separate copies for read_config and write_config makes sense,
+> what I wanted to avoid was 3 sets of brcm_pcie_read_config and
+> brcm_pcie_write_config, because that would be duplicating quite some
+> code, working on that now.
 
-Yes, we did some tests on MacBook Pro with Falcon Ridge.
-Note that (as written in the cover letter), the functionality that we are adding is based on ICM (Intel Connection Manager, firmware).
-These patches will keep the current functionality on Mac and will add the networking functionality on non-Macs.
- 
----------------------------------------------------------------------
-Intel Israel (74) Limited
+Ok, good.
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
 
+> >>> Don't parse the regulator properties yourself here, use the proper APIs.
+> >>
+> >> I will probably drop this for now, and  add it later, there are only a
+> >> handful of boards which requires this, and ultimately, I think we should
+> >> be seaking for a more generic solutions, we can't be the only ones doing
+> >> that.
+> > 
+> > So is this the supply for the slots attached to the PCI host rather than
+> > the host bridge itself?
+> 
+> Technically yes, there are for the attached PCI slots, not the hsost
+> bridge, so their are misplaced, we need to rework that, and I would
+> prefer if there was a way to make it pre-scan type of operation offered
+> by the core PCI code itself, but then there is a chicken and egg
+> problem: you cannot get regulators for device_nodes that have not been
+> created yet, and you can't create pci_device and their corresponding
+> device_nodes until you have turned them on...
+
+Ah, I can see how that is doable but rather tricky to get done right.
+
+Are there actually any legacy PCI slots that need this, or are they PCIe
+ports? If we are lucky, they are all PCIe ports that have a standard
+port device, so we can could add support for a regulator supply
+in drivers/pci/pcie/portdrv_pci.c: The port device will should always be
+present as a child of the root node, but the actual device connected
+to the port is what needs the regulator.
+
+> > You didn't complete this sentence, but I think I've gotten a better
+> > idea of what is going on from the code now. It looks like this
+> > is used to program a set of default DMA ranges into the host
+> > bridge, so there are now three ways of finding out what it
+> > should be:
+> > 
+> > a) count the memory controllers, assume that each one has 1GB of
+> >    address space
+> > b) read the "brcm,log2-scb-sizes" property to find out the
+> >    actual sizes
+> > c) interpret the dma-ranges property
+> > 
+> > The first two seem to things in a rather nonstandard way (the binding
+> > mentions neither of them), while the third is not implemented yet.
+> > I think we have to improve this.
+> 
+> What I meant to say is that we want to avoid programming a SCB window
+> (SCB equals memory controller for the sake of making things simple here)
+> which does not have a baking memory controller, because, well, guess
+> what happens, the PCIe RC could be trying to access non existent memory,
+> and just stall doing so because no error reporting, I can't remember
+> which chips had this problem exactly, but there were definitively some,
+> so the concern is real.
+> 
+> The "brcm,log2-scb-sizes" should be correctly populated all the time in
+> our Device Tree blobs, but we are not quite making a use of them here.
+> 
+> "dma-ranges" seems like an appropriate solution, but sorts of forces us
+> to reinforce the same information that is available somewhere in the
+> Device Tree within the memory controllers nodes themselves.
+> 
+> Let me think about this some more.
+
+Maybe a property that contains a tuple of <&mc-phandle start-addr size>
+instead of "brcm,log2-scb-sizes" would be better here?
+
+	Arnd
