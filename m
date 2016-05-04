@@ -1,222 +1,108 @@
-Return-Path: <gabriele.paoloni@huawei.com>
-Return-Path: <gabriele.paoloni@huawei.com>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ard Biesheuvel
-	<ard.biesheuvel@linaro.org>
-CC: Jon Masters <jcm@redhat.com>, Tomasz Nowicki <tn@semihalf.com>,
-        "helgaas@kernel.org" <helgaas@kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "catalin.marinas@arm.com"
-	<catalin.marinas@arm.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-        "okaya@codeaurora.org"
-	<okaya@codeaurora.org>,
-        "jchandra@broadcom.com" <jchandra@broadcom.com>,
-        "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "dhdang@apm.com"
-	<dhdang@apm.com>,
-        "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
-        "ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
-        "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
-        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-        "msalter@redhat.com" <msalter@redhat.com>,
-        Wangyijing
-	<wangyijing@huawei.com>,
-        "mw@semihalf.com" <mw@semihalf.com>,
-        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
-        "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH V7 00/11] Support for generic ACPI based PCI host
- controller
-Date: Mon, 23 May 2016 15:16:01 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1EDB35A5@lhreml503-mbs>
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED8DF51@lhreml503-mbs>
- <57331290.7070104@semihalf.com>
- <3d4aae09-51c4-f007-5100-191a4a85e27a@redhat.com>
- <CAKv+Gu8fdeJ9OvRSmtu9zyvcjK3O-4WU=jG=6-7t4xZwvV8d2g@mail.gmail.com>
- <95b1d06e-f9c5-39f3-1003-f536b65eef60@redhat.com>
- <CAKv+Gu-_xp_t_Ze3Pw_-82-fmy=tCy-h=4FbP98eLbuXVk2hHQ@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1EDAF6AC@lhreml503-mbs>
- <CAKv+Gu_zpoFsDr7e8zPCDKPpRdKDVH+vnC0nfvmGaJ7xcP3Zng@mail.gmail.com>
- <20160523105655.GA22902@red-moon>
-In-Reply-To: <20160523105655.GA22902@red-moon>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:55169 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753050AbcEDWOj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 May 2016 18:14:39 -0400
+Date: Wed, 4 May 2016 17:14:35 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	"K. Y. Srinivasan" <kys@microsoft.com>,
+	Jake Oshins <jakeo@microsoft.com>
+Subject: Re: [PATCH [RFC]] PCI: hv: add explicit fencing to config space
+ access
+Message-ID: <20160504221435.GD3117@localhost>
+References: <1462278120-7859-1-git-send-email-vkuznets@redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1462278120-7859-1-git-send-email-vkuznets@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo
+On Tue, May 03, 2016 at 02:22:00PM +0200, Vitaly Kuznetsov wrote:
+> I'm trying to pass-through Broadcom BCM5720 NIC (Dell Device 1f5b) on Dell
+> R720 server. Everything works fine when target VM has only one CPU, but
+> SMP guests reboot when NIC driver is trying to access PCI config space
+> (with  hv_pcifront_read_config/hv_pcifront_write_config). The reboot
+> appears to be induced by the hypervisor and no crash is observed. Windows
+> event logs are not helpful at all ('Virtual machine ... has quit
+> unexpectedly'). The particular access point is always different and
+> putting debug between them (printk/mdelay/...) moves the issue further
+> away. The server model affects the issue as well: on Dell R420 I'm able to
+> pass-through BCM5720 NIC to SMP guests without issues.
+> 
+> While I'm obviously failing to reveal the essence of the issue I was able
+> to come up with a (possible) solution: if explicit fencing is put to
+> hv_pcifront_read_config/hv_pcifront_write_config the issue goes away. The
+> essential minimum is rmb() at the end on _hv_pcifront_read_config() and
+> wmb() at the end of _hv_pcifront_write_config() but I'm not confident it
+> will be sufficient for all hardware. I suggest the following fencing:
+> 1) wmb()/mb() between choosing the function and writing to its space.
+> 2) mb() before releasing the spinlock in both _hv_pcifront_read_config()/
+>    _hv_pcifront_write_config to ensure that consecutive reads/writes to
+>   the space won't get re-ordered as drivers may count on that.
+> Config space access is not supposed to be performance-critical so this
+> explicit fencing is not supposed to bring any slowdown.
+> 
+> Signed-off-by: Vitaly Kuznetsov <vkuznets@redhat.com>
 
-> -----Original Message-----
-> From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]
-> Sent: 23 May 2016 11:57
-> To: Ard Biesheuvel
-> Cc: Gabriele Paoloni; Jon Masters; Tomasz Nowicki; helgaas@kernel.org;
-> arnd@arndb.de; will.deacon@arm.com; catalin.marinas@arm.com;
-> rafael@kernel.org; hanjun.guo@linaro.org; okaya@codeaurora.org;
-> jchandra@broadcom.com; linaro-acpi@lists.linaro.org; linux-
-> pci@vger.kernel.org; dhdang@apm.com; Liviu.Dudau@arm.com;
-> ddaney@caviumnetworks.com; jeremy.linton@arm.com; linux-
-> kernel@vger.kernel.org; linux-acpi@vger.kernel.org;
-> robert.richter@caviumnetworks.com; Suravee.Suthikulpanit@amd.com;
-> msalter@redhat.com; Wangyijing; mw@semihalf.com;
-> andrea.gallo@linaro.org; linux-arm-kernel@lists.infradead.org
-> Subject: Re: [PATCH V7 00/11] Support for generic ACPI based PCI host
-> controller
->=20
-> On Fri, May 20, 2016 at 11:14:03AM +0200, Ard Biesheuvel wrote:
-> > On 20 May 2016 at 10:40, Gabriele Paoloni
-> <gabriele.paoloni@huawei.com> wrote:
-> > > Hi Ard
-> > >
-> > >> -----Original Message-----
-> > >> From: Ard Biesheuvel [mailto:ard.biesheuvel@linaro.org]
-> > [...]
-> > >>
-> > >> Is the PCIe root complex so special that you cannot simply
-> describe an
-> > >> implementation that is not PNP0408 compatible as something else,
-> under
-> > >> its own unique HID? If everybody is onboard with using ACPI, how
-> is
-> > >> this any different from describing other parts of the platform
-> > >> topology? Even if the SBSA mandates generic PCI, they already
-> deviated
-> > >> from that when they built the hardware, so pretending that it is a
-> > >> PNP0408 with quirks really does not buy us anything.
-> > >
-> > > From my understanding we want to avoid this as this would allow
-> each
-> > > vendor to come up with his own code and it would be much more
-> effort
-> > > for the PCI maintainer to rework the PCI framework to accommodate
-> X86
-> > > and "all" ARM64 Host Controllers...
-> > >
-> > > I guess this approach is too risky and we want to avoid this.
-> Through
-> > > standardization we can more easily maintain the code and scale it
-> to
-> > > multiple SoCs...
-> > >
-> > > So this is my understanding; maybe Jon, Tomasz or Lorenzo can give
-> > > a bit more explanation...
-> > >
-> >
-> > OK, so that boils down to recommending to vendors to represent known
-> > non-compliant hardware as compliant, just so that we don't have to
-> > change the code to support additional flavors of ECAM ? It's fine to
-> > be pragmatic, but that sucks.
-> >
-> > We keep confusing the x86 case with the ARM case here: for x86, they
-> > needed to deal with broken hardware *after* the fact, and all they
-> > could do is find /some/ distinguishing feature in order to guess
-> which
-> > exact hardware they might be running on. For arm64, it is the
-> opposite
-> > case. We are currently in a position where we can demand vendors to
-> > comply with the standards they endorsed themselves, and (ab)using
-> ACPI
-> > + DMI as a de facto platform description rather than plain ACPI makes
-> > me think the DT crowd were actually right from the beginning. It
-> > *directly* violates the standardization principle, since it requires
-> a
-> > priori knowledge inside the OS that a certain 'generic' device must
-> be
-> > driven in a special way.
-> >
-> > So can anyone comment on the feasibility of adding support for
-> devices
-> > with vendor specific HIDs (and no generic CIDs) to the current ACPI
-> > ECAM driver in Linux?
->=20
-> Host bridges in ACPI are handled through PNP0A08/PNP0A03 ids, and
-> most of the arch specific code is handled in the respective arch
-> directories (X86 and IA64, even though IA64 does not rely on ECAM/MCFG
-> for
-> PCI ops), it is not a driver per-se, PNP0A08/PNP0A03 are detected
-> through
-> ACPI scan handlers and the respective arch code (ie pci_acpi_scan_root)
-> sets-up resources AND config space on an arch specific basis.
->=20
-> X86 deals with that with code in arch/x86 that sets-up the pci_raw_ops
-> on a platform specific basis (and it is not nice, but it works because
-> as you all know the number of platforms in X86 world is contained).
->=20
-> Will this happen for ARM64 in arch/arm64 based on vendor specific
-> HIDs ?
->=20
-> No.
->=20
-> So given the current state of play (we were requested to move the
-> arch/arm64 specific ACPI PCI bits to arch/arm64), we would end up
-> with arch/arm64 code requiring code in /drivers to set-up pci_ops
-> in a platform specific way, it is horrible, if feasible at all.
->=20
-> The only way this can be implemented is by pretending that the
-> ACPI/PCI arch/arm64 implementation is generic code (that's what this
-> series does), move it to /drivers (where it is in this series), and
-> implement _DSD vendor specific bindings (per HID) to set-up the pci
-> operations; whether this solution should go upstream, given that it
-> is just a short-term solution for early platforms bugs, it is another
-> story and my personal answer is no.
+Applied with Jake's ack to pci/host-hv for v4.7, thanks, Vitaly.
 
-I think it shouldn't be too bad to move quirk handling mechanism to
-arch/arm64. Effectively we would not move platform specific code into
-arch/arm64 but just the mechanism checking if there is any quirk that
-is defined.
+I changed "fence" to "barrier" in the changelog to follow the
+common Linux terminology.
 
-i.e.:
-
-extern struct pci_cfg_fixup __start_acpi_mcfg_fixups[];
-extern struct pci_cfg_fixup __end_acpi_mcfg_fixups[];
-
-static struct pci_ecam_ops *pci_acpi_get_ops(struct acpi_pci_root *root)
-{
-        int bus_num =3D root->secondary.start;
-        int domain =3D root->segment;
-        struct pci_cfg_fixup *f;
-
-        /*
-         * Match against platform specific quirks and return corresponding
-         * CAM ops.
-         *
-         * First match against PCI topology <domain:bus> then use DMI or
-         * custom match handler.
-         */
-        for (f =3D __start_acpi_mcfg_fixups; f < __end_acpi_mcfg_fixups; f+=
-+) {
-                if ((f->domain =3D=3D domain || f->domain =3D=3D PCI_MCFG_D=
-OMAIN_ANY) &&
-                    (f->bus_num =3D=3D bus_num || f->bus_num =3D=3D PCI_MCF=
-G_BUS_ANY) &&
-                    (f->system ? dmi_check_system(f->system) : 1) &&
-                    (f->match ? f->match(f, root) : 1))
-                        return f->ops;
-        }
-        /* No quirks, use ECAM */
-        return &pci_generic_ecam_ops;
-}
-
-Such quirks will be defined anyway in drivers/pci/host/ in the vendor
-specific quirk implementations.
-
-e.g. in HiSilicon case we would have
-
-DECLARE_ACPI_MCFG_FIXUP(NULL, hisi_pcie_match, &hisi_pcie_ecam_ops,
-			PCI_MCFG_DOMAIN_ANY, PCI_MCFG_BUS_ANY);
-
-in "drivers/pci/host/pcie-hisi-acpi.c "
-
-Thanks
-
-Gab
-
->=20
-> Lorenzo
+> ---
+>  drivers/pci/host/pci-hyperv.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index c17e792..7e9b2de 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -553,6 +553,8 @@ static void _hv_pcifront_read_config(struct hv_pci_dev *hpdev, int where,
+>  		spin_lock_irqsave(&hpdev->hbus->config_lock, flags);
+>  		/* Choose the function to be read. (See comment above) */
+>  		writel(hpdev->desc.win_slot.slot, hpdev->hbus->cfg_addr);
+> +		/* Make sure the function was chosen before we start reading. */
+> +		mb();
+>  		/* Read from that function's config space. */
+>  		switch (size) {
+>  		case 1:
+> @@ -565,6 +567,11 @@ static void _hv_pcifront_read_config(struct hv_pci_dev *hpdev, int where,
+>  			*val = readl(addr);
+>  			break;
+>  		}
+> +		/*
+> +		 * Make sure the write was done before we release the spinlock
+> +		 * allowing consecutive reads/writes.
+> +		 */
+> +		mb();
+>  		spin_unlock_irqrestore(&hpdev->hbus->config_lock, flags);
+>  	} else {
+>  		dev_err(&hpdev->hbus->hdev->device,
+> @@ -592,6 +599,8 @@ static void _hv_pcifront_write_config(struct hv_pci_dev *hpdev, int where,
+>  		spin_lock_irqsave(&hpdev->hbus->config_lock, flags);
+>  		/* Choose the function to be written. (See comment above) */
+>  		writel(hpdev->desc.win_slot.slot, hpdev->hbus->cfg_addr);
+> +		/* Make sure the function was chosen before we start writing. */
+> +		wmb();
+>  		/* Write to that function's config space. */
+>  		switch (size) {
+>  		case 1:
+> @@ -604,6 +613,11 @@ static void _hv_pcifront_write_config(struct hv_pci_dev *hpdev, int where,
+>  			writel(val, addr);
+>  			break;
+>  		}
+> +		/*
+> +		 * Make sure the write was done before we release the spinlock
+> +		 * allowing consecutive reads/writes.
+> +		 */
+> +		mb();
+>  		spin_unlock_irqrestore(&hpdev->hbus->config_lock, flags);
+>  	} else {
+>  		dev_err(&hpdev->hbus->hdev->device,
+> -- 
+> 2.5.5
+> 
