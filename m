@@ -1,120 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35447 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:54740 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751283AbcEaUND (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 31 May 2016 16:13:03 -0400
-Date: Tue, 31 May 2016 15:12:57 -0500
+	id S1753525AbcEDWBw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 4 May 2016 18:01:52 -0400
+Date: Wed, 4 May 2016 17:01:45 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Krzysztof Halasa <khalasa@piap.pl>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH REPOST] Extend PCIE_BUS_PEER2PEER to set MRSS=128 to fix
- CNS3xxx BM DMA.
-Message-ID: <20160531201257.GA24310@localhost>
-References: <m3h9fghbfh.fsf@t19.piap.pl>
- <20160421154234.GB32739@localhost>
- <20160502165322.GC24851@localhost>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI/portdrv: Use cached copy of PCI_EXP_SLTCAP_HPC bit
+Message-ID: <20160504220145.GC3117@localhost>
+References: <a1c9caeb4124f89fbf7cde171642ca3f511081b5.1462366514.git.lukas@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20160502165322.GC24851@localhost>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a1c9caeb4124f89fbf7cde171642ca3f511081b5.1462366514.git.lukas@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 02, 2016 at 11:53:22AM -0500, Bjorn Helgaas wrote:
-> On Thu, Apr 21, 2016 at 10:42:34AM -0500, Bjorn Helgaas wrote:
-> > On Mon, Mar 21, 2016 at 10:39:52AM +0100, Krzysztof Halasa wrote:
-> > > I think this bug needs to be fixed, this way or another.
-> > > 
-> > > The platform in question is Cavium CNS3xxx, ARMv6.
-> > > 
-> > > A recent patch by Arnd Bergmann (498a92d42596 "ARM: cns3xxx: pci: avoid
-> > > potential stack overflow") converted an explicit setting of
-> > > PCI_EXP_DEVCTL_READRQ = 0 (i.e., max 128 bytes for bus-mastering PCIe DMA
-> > > read request) to:
-> > > +    pcie_bus_config = PCIE_BUS_PEER2PEER;
-> > 
-> > Any thoughts on this, Arnd?  I can (and will) look at this, but it's
-> > a complicated area and it will take me quite a while to dig into it.
+On Wed, May 04, 2016 at 03:05:57PM +0200, Lukas Wunner wrote:
+> We cache the PCI_EXP_SLTCAP_HPC bit in pci_dev->is_hotplug_bridge on
+> device probe, so there's no need to read it again on allocation of
+> port service devices.
 > 
-> What should we do here?  Should we revert 498a92d42596?  It appeared in
-> v4.4, so this has been broken for a while.
+> No functional change intended.
 > 
-> It looks like 498a92d42596 merely fixed a warning, at the expense of
-> breaking DMA on Cavium.  Reverting it would bring the warning back, but
-> that's better than broken DMA.
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
 
-I propose that we revert 498a92d42596 ("ARM: cns3xxx: pci: avoid
-potential stack overflow").  I haven't had a chance to look into the
-problem with it yet.
+Applied to pci/hotplug for v4.7, thanks, Lukas!
 
-> > > with the following commentary:
-> > >     "The second part is how the driver sets up the Max_Read_Request_Size
-> > >     value for the first device/function on bus 1, i.e. the device
-> > >     plugged directly into the PCIe root port.
-> > >     For all I can tell, this is in fact incomplete, as it does not
-> > >     perform the same setting on devices attached to a PCIe switch,
-> > >     or multi-function devices.
-> > >     The solution for this part fortunately is even easier: if we
-> > >     just set the global pcie_bus_config variable to PCIE_BUS_PEER2PEER,
-> > >     all PCIe devices in the system are limited to 128 byte MPS, which
-> > >     in turn limits the MRRS to 128 bytes for all devices, and we
-> > >     no longer even need to touch any devices."
-> > > 
-> > > The problem is the MRRS setting is never written to the hardware.
-> > > I propose the following, though I'm not sure if we can do this safely,
-> > > especially given the comments in probe.c. OTOH, this change may be
-> > > required in other (all?) cases when the user requests
-> > > PCIE_BUS_PEER2PEER.
-> > > 
-> > > On this Laguna GW-2388 the following patch fixes BM DMA with:
-> > > 0000:00:00.0 PCI bridge: Cavium Networks Device 3400 (rev 01)
-> > > 0000:01:00.0 PCI bridge: Texas Instruments XIO2001 PCI Express-to-PCI Bridge
-> > > 0000:02:0e.0 (PCI devices behind the bridge, these are doing actual BM xfers)
-> > > 0001:00:00.0 PCI bridge: Cavium Networks Device 3400 (rev 01 - this is
-> > > 	     the second lane from the CPU)
-> > > 
-> > > pci 0000:00:00.0: Max Payload Size set to  128/ 128 (was  128), Max Read Rq  128
-> > > pci 0000:01:00.0: Max Payload Size set to  128/ 512 (was  128), Max Read Rq  128
-> > > pci 0001:00:00.0: Max Payload Size set to  128/ 128 (was  128), Max Read Rq  128
-> > > 
-> > > Signed-off-by: Krzysztof Hałasa <khalasa@piap.pl>
-> > > Fixes: 498a92d42596 ("ARM: cns3xxx: pci: avoid potential stack overflow")
-> > > 
-> > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > > index 6d7ab9b..91713b6 100644
-> > > --- a/drivers/pci/probe.c
-> > > +++ b/drivers/pci/probe.c
-> > > @@ -1919,7 +1919,8 @@ static void pcie_write_mrrs(struct pci_dev *dev)
-> > >  	/* In the "safe" case, do not configure the MRRS.  There appear to be
-> > >  	 * issues with setting MRRS to 0 on a number of devices.
-> > >  	 */
-> > > -	if (pcie_bus_config != PCIE_BUS_PERFORMANCE)
-> > > +	if (pcie_bus_config != PCIE_BUS_PERFORMANCE &&
-> > > +	    pcie_bus_config != PCIE_BUS_PEER2PEER)
-> > >  		return;
-> > >  
-> > >  	/* For Max performance, the MRRS must be set to the largest supported
-> > > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > > index 2771625..6f5088a 100644
-> > > --- a/include/linux/pci.h
-> > > +++ b/include/linux/pci.h
-> > > @@ -756,7 +756,7 @@ enum pcie_bus_config_types {
-> > >  	PCIE_BUS_DEFAULT,	/* ensure MPS matches upstream bridge */
-> > >  	PCIE_BUS_SAFE,		/* use largest MPS boot-time devices support */
-> > >  	PCIE_BUS_PERFORMANCE,	/* use MPS and MRRS for best performance */
-> > > -	PCIE_BUS_PEER2PEER,	/* set MPS = 128 for all devices */
-> > > +	PCIE_BUS_PEER2PEER,	/* set MPS and MRSS to 128 for all devices */
-> > >  };
-> > >  
-> > >  extern enum pcie_bus_config_types pcie_bus_config;
-> > > --
-> > > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > > the body of a message to majordomo@vger.kernel.org
-> > > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> ---
+>  drivers/pci/pcie/portdrv_core.c | 23 +++++++++--------------
+>  1 file changed, 9 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+> index 050069f..af7796d 100644
+> --- a/drivers/pci/pcie/portdrv_core.c
+> +++ b/drivers/pci/pcie/portdrv_core.c
+> @@ -254,7 +254,6 @@ static void cleanup_service_irqs(struct pci_dev *dev)
+>  static int get_port_device_capability(struct pci_dev *dev)
+>  {
+>  	int services = 0;
+> -	u32 reg32;
+>  	int cap_mask = 0;
+>  
+>  	if (pcie_ports_disabled)
+> @@ -269,19 +268,15 @@ static int get_port_device_capability(struct pci_dev *dev)
+>  		pcie_port_platform_notify(dev, &cap_mask);
+>  
+>  	/* Hot-Plug Capable */
+> -	if ((cap_mask & PCIE_PORT_SERVICE_HP) &&
+> -	    pcie_caps_reg(dev) & PCI_EXP_FLAGS_SLOT) {
+> -		pcie_capability_read_dword(dev, PCI_EXP_SLTCAP, &reg32);
+> -		if (reg32 & PCI_EXP_SLTCAP_HPC) {
+> -			services |= PCIE_PORT_SERVICE_HP;
+> -			/*
+> -			 * Disable hot-plug interrupts in case they have been
+> -			 * enabled by the BIOS and the hot-plug service driver
+> -			 * is not loaded.
+> -			 */
+> -			pcie_capability_clear_word(dev, PCI_EXP_SLTCTL,
+> -				PCI_EXP_SLTCTL_CCIE | PCI_EXP_SLTCTL_HPIE);
+> -		}
+> +	if ((cap_mask & PCIE_PORT_SERVICE_HP)
+> +	    && dev->is_hotplug_bridge) {
+> +		services |= PCIE_PORT_SERVICE_HP;
+> +		/*
+> +		 * Disable hot-plug interrupts in case they have been enabled
+> +		 * by the BIOS and the hot-plug service driver is not loaded.
+> +		 */
+> +		pcie_capability_clear_word(dev, PCI_EXP_SLTCTL,
+> +			  PCI_EXP_SLTCTL_CCIE | PCI_EXP_SLTCTL_HPIE);
+>  	}
+>  	/* AER capable */
+>  	if ((cap_mask & PCIE_PORT_SERVICE_AER)
+> -- 
+> 2.8.1
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
 > the body of a message to majordomo@vger.kernel.org
