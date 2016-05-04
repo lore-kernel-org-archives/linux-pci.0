@@ -1,91 +1,60 @@
-Return-Path: <rjwysocki@gmail.com>
-Return-Path: <rjwysocki@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:54581 "HELO
+	cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751545AbcEDU60 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 4 May 2016 16:58:26 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Qipeng Zha <qipeng.zha@intel.com>,
+	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
+	Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Lukas Wunner <lukas@wunner.de>,
+	Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v5 2/4] PCI: Put PCIe ports into D3 during suspend
+Date: Wed, 04 May 2016 23:01:38 +0200
+Message-ID: <2201324.DzICGAcWs8@vostro.rjw.lan>
+In-Reply-To: <1461919919-120102-3-git-send-email-mika.westerberg@linux.intel.com>
+References: <1461919919-120102-1-git-send-email-mika.westerberg@linux.intel.com> <1461919919-120102-3-git-send-email-mika.westerberg@linux.intel.com>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <1462893601-8937-8-git-send-email-tn@semihalf.com>
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
-	<1462893601-8937-8-git-send-email-tn@semihalf.com>
-Date: Tue, 10 May 2016 20:37:00 +0200
-Message-ID: <CAJZ5v0hM8WAr9GGku89zKgiVKt6ArHf=9CntRUyBjyMNUvie2A@mail.gmail.com>
-Subject: Re: [PATCH V7 07/11] pci, acpi: Handle ACPI companion assignment.
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, "Rafael J. Wysocki" <rafael@kernel.org>,
-	Hanjun Guo <hanjun.guo@linaro.org>, Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
-	David Daney <ddaney@caviumnetworks.com>, wangyijing@huawei.com,
-	Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>, Mark Salter <msalter@redhat.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>, Jon Masters <jcm@redhat.com>, andrea.gallo@linaro.org,
-	dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com,
-	Christopher Covington <cov@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 10, 2016 at 5:19 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
-> This patch provides a way to set the ACPI companion in PCI code.
-> We define acpi_pci_set_companion() to set the ACPI companion pointer and
-> call it from PCI core code. The function is stub for now.
->
-> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> ---
->  drivers/pci/probe.c      | 2 ++
->  include/linux/pci-acpi.h | 4 ++++
->  2 files changed, 6 insertions(+)
->
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 8004f67..fb0b752 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -12,6 +12,7 @@
->  #include <linux/slab.h>
->  #include <linux/module.h>
->  #include <linux/cpumask.h>
-> +#include <linux/pci-acpi.h>
->  #include <linux/pci-aspm.h>
->  #include <linux/aer.h>
->  #include <linux/acpi.h>
-> @@ -2141,6 +2142,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->         bridge->dev.parent = parent;
->         bridge->dev.release = pci_release_host_bridge_dev;
->         dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
-> +       acpi_pci_set_companion(bridge);
+On Friday, April 29, 2016 11:51:57 AM Mika Westerberg wrote:
+> Currently the Linux PCI core does not touch power state of PCI bridges and
+> PCIe ports when system suspend is entered. Leaving them in D0 consumes
+> power which is not good thing in portable devices such as laptops. This may
+> also prevent the CPU from entering deeper C-states.
+> 
+> With recent PCIe hardware we can power down the ports to save power given
+> that we take into account few restrictions:
+> 
+>   - The PCIe port hardware is recent enough, starting from 2015.
+> 
+>   - Devices connected to PCIe ports are effectively in D3cold once the port
+>     is transitioned to D3 (the config space is not accessible anymore and
+>     the link may be powered down).
+> 
+>   - Devices behind the PCIe port need to be allowed to transition to D3cold
+>     and back. There is a way both drivers and userspace can forbid this.
+> 
+>   - If the device behind the PCIe port is capable of waking the system it
+>     needs to be able to do so from D3cold.
+> 
+> This patch adds a new flag to struct pci_device called 'bridge_d3'. This
+> flag is set and cleared by the PCI core whenever there is a change in power
+> management state of any of the devices behind the PCIe port. When system
+> later on is suspended we only need to check this flag and if it is true
+> transition the port to D3 otherwise we leave it in D0.
+> 
+> Also provide override mechanism via command line parameter
+> "pcie_port_pm=[off|force]" that can be used to disable or enable the
+> feature regardless of the BIOS manufacturing date.
+> 
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-Yes, we'll probably add something similar here.
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Do I think now is the right time to do that?  No.
-
->         error = pcibios_root_bridge_prepare(bridge);
->         if (error) {
->                 kfree(bridge);
-> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-> index 09f9f02..1baa515 100644
-> --- a/include/linux/pci-acpi.h
-> +++ b/include/linux/pci-acpi.h
-> @@ -111,6 +111,10 @@ static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
->  static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
->  #endif /* CONFIG_ACPI */
->
-> +static inline void acpi_pci_set_companion(struct pci_host_bridge *bridge)
-> +{
-> +}
-> +
->  static inline int acpi_pci_bus_domain_nr(struct pci_bus *bus)
->  {
->         return 0;
-> --
-
-Honestly, to me it looks like this series is trying very hard to avoid
-doing any PCI host bridge configuration stuff from arch/arm64/
-although (a) that might be simpler and (b) it would allow us to
-identify the code that's common between *all* architectures using ACPI
-support for host bridge configuration and to move *that* to a common
-place later.  As done here it seems to be following the "ARM64 is
-generic and the rest of the world is special" line which isn't really
-helpful.
