@@ -1,121 +1,238 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:33983 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933771AbcECB0X (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 2 May 2016 21:26:23 -0400
-From: Florian Fainelli <f.fainelli@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com,
-	bhelgaas@google.com, Florian Fainelli <f.fainelli@gmail.com>
-Subject: [PATCH 1/2] Documentation: DT: bindings: Add Broadcom STB PCIe bindings
-Date: Mon,  2 May 2016 18:25:48 -0700
-Message-Id: <1462238749-19715-2-git-send-email-f.fainelli@gmail.com>
-In-Reply-To: <1462238749-19715-1-git-send-email-f.fainelli@gmail.com>
-References: <1462238749-19715-1-git-send-email-f.fainelli@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [PATCH V6 01/13] pci, acpi, x86, ia64: Move ACPI host bridge
+ device companion assignment to core code.
+To: Bjorn Helgaas <helgaas@kernel.org>, rafael@kernel.org
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <1460740008-19489-2-git-send-email-tn@semihalf.com>
+ <20160427024537.GH6789@localhost>
+Cc: arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com,
+ hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
+ jiang.liu@linux.intel.com, jchandra@broadcom.com,
+ robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
+ ddaney@caviumnetworks.com, wangyijing@huawei.com,
+ Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linaro-acpi@lists.linaro.org, jcm@redhat.com
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <5729AE92.2090106@semihalf.com>
+Date: Wed, 4 May 2016 10:10:58 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160427024537.GH6789@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jim Quinlan <jim2101024@gmail.com>
+On 27.04.2016 04:45, Bjorn Helgaas wrote:
+> [question for Rafael below]
+>
+> On Fri, Apr 15, 2016 at 07:06:36PM +0200, Tomasz Nowicki wrote:
+>> Currently we have two platforms (x86 & ia64) capable of PCI ACPI host
+>> bridge initialization. They both use arch-specific sysdata to pass down
+>> parent device reference and both rely on NULL parent in pci_create_root_bus()
+>> to validate sysdata content.
+>>
+>> It looks hacky and prevents us from getting some firmware specific
+>> info for PCI host controller based on its acpi_device structure
+>> in generic pci_create_root_bus() function. However, we overcome that
+>> blocker by passing down parent device via pci_create_root_bus parameter
+>> (as the ACPI device type). Then we use ACPI_COMPANION_SET in core code
+>> for ACPI boot method only. ACPI_COMPANION_SET is safe to run for all
+>> cases DT, ACPI and DT&ACPI.
+>>
+>> Since now PCI core code is setting ACPI companion device for us,
+>> x86 & ia64 specific ACPI companion device setting turns out to be dead now.
+>> We can get rid of it, including related companion reference from
+>> PCI sysdata structure. Aslo, PCI_CONTROLLER macro cannot return valid
+>> companion device anymore. Therefore we need to convert its usage to
+>> ACPI_COMPANION.
+>>
+>> Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Tested-by: Duc Dang <dhdang@apm.com>
+>> Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+>> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+>> Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+>> Tested-by: Sinan Kaya <okaya@codeaurora.org>
+>> ---
+>>   arch/ia64/hp/common/sba_iommu.c    |  2 +-
+>>   arch/ia64/include/asm/pci.h        |  1 -
+>>   arch/ia64/pci/pci.c                | 16 ----------------
+>>   arch/ia64/sn/kernel/io_acpi_init.c |  4 ++--
+>>   arch/x86/include/asm/pci.h         |  3 ---
+>>   arch/x86/pci/acpi.c                | 17 -----------------
+>>   drivers/acpi/pci_root.c            |  7 ++++++-
+>>   drivers/pci/probe.c                |  2 ++
+>>   8 files changed, 11 insertions(+), 41 deletions(-)
+>>
+>> diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
+>> index a6d6190..78e4444 100644
+>> --- a/arch/ia64/hp/common/sba_iommu.c
+>> +++ b/arch/ia64/hp/common/sba_iommu.c
+>> @@ -1981,7 +1981,7 @@ sba_connect_bus(struct pci_bus *bus)
+>>   	if (PCI_CONTROLLER(bus)->iommu)
+>>   		return;
+>>
+>> -	handle = acpi_device_handle(PCI_CONTROLLER(bus)->companion);
+>> +	handle = acpi_device_handle(ACPI_COMPANION(bus->bridge));
+>>   	if (!handle)
+>>   		return;
+>>
+>> diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+>> index c0835b0..12423f4 100644
+>> --- a/arch/ia64/include/asm/pci.h
+>> +++ b/arch/ia64/include/asm/pci.h
+>> @@ -63,7 +63,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+>>   #define pci_legacy_write platform_pci_legacy_write
+>>
+>>   struct pci_controller {
+>> -	struct acpi_device *companion;
+>>   	void *iommu;
+>>   	int segment;
+>>   	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
+>> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+>> index 8f6ac2f..978d6af 100644
+>> --- a/arch/ia64/pci/pci.c
+>> +++ b/arch/ia64/pci/pci.c
+>> @@ -301,28 +301,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>>   	}
+>>
+>>   	info->controller.segment = root->segment;
+>> -	info->controller.companion = device;
+>>   	info->controller.node = acpi_get_node(device->handle);
+>>   	INIT_LIST_HEAD(&info->io_resources);
+>>   	return acpi_pci_root_create(root, &pci_acpi_root_ops,
+>>   				    &info->common, &info->controller);
+>>   }
+>>
+>> -int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+>> -{
+>> -	/*
+>> -	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
+>> -	 * here, pci_create_root_bus() has been called by someone else and
+>> -	 * sysdata is likely to be different from what we expect.  Let it go in
+>> -	 * that case.
+>> -	 */
+>> -	if (!bridge->dev.parent) {
+>> -		struct pci_controller *controller = bridge->bus->sysdata;
+>> -		ACPI_COMPANION_SET(&bridge->dev, controller->companion);
+>> -	}
+>> -	return 0;
+>> -}
+>> -
+>>   void pcibios_fixup_device_resources(struct pci_dev *dev)
+>>   {
+>>   	int idx;
+>> diff --git a/arch/ia64/sn/kernel/io_acpi_init.c b/arch/ia64/sn/kernel/io_acpi_init.c
+>> index 231234c..e454492 100644
+>> --- a/arch/ia64/sn/kernel/io_acpi_init.c
+>> +++ b/arch/ia64/sn/kernel/io_acpi_init.c
+>> @@ -132,7 +132,7 @@ sn_get_bussoft_ptr(struct pci_bus *bus)
+>>   	struct acpi_resource_vendor_typed *vendor;
+>>
+>>
+>> -	handle = acpi_device_handle(PCI_CONTROLLER(bus)->companion);
+>> +	handle = acpi_device_handle(ACPI_COMPANION(bus->bridge));
+>>   	status = acpi_get_vendor_resource(handle, METHOD_NAME__CRS,
+>>   					  &sn_uuid, &buffer);
+>>   	if (ACPI_FAILURE(status)) {
+>> @@ -360,7 +360,7 @@ sn_acpi_get_pcidev_info(struct pci_dev *dev, struct pcidev_info **pcidev_info,
+>>   	acpi_status status;
+>>   	struct acpi_buffer name_buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+>>
+>> -	rootbus_handle = acpi_device_handle(PCI_CONTROLLER(dev)->companion);
+>> +	rootbus_handle = acpi_device_handle(ACPI_COMPANION(dev->bus->bridge));
+>>           status = acpi_evaluate_integer(rootbus_handle, METHOD_NAME__SEG, NULL,
+>>                                          &segment);
+>>           if (ACPI_SUCCESS(status)) {
+>> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+>> index 9ab7507..24de07d 100644
+>> --- a/arch/x86/include/asm/pci.h
+>> +++ b/arch/x86/include/asm/pci.h
+>> @@ -14,9 +14,6 @@
+>>   struct pci_sysdata {
+>>   	int		domain;		/* PCI domain */
+>>   	int		node;		/* NUMA node */
+>> -#ifdef CONFIG_ACPI
+>> -	struct acpi_device *companion;	/* ACPI companion device */
+>> -#endif
+>>   #ifdef CONFIG_X86_64
+>>   	void		*iommu;		/* IOMMU private data */
+>>   #endif
+>> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+>> index 3cd6983..f4ca17a 100644
+>> --- a/arch/x86/pci/acpi.c
+>> +++ b/arch/x86/pci/acpi.c
+>> @@ -340,7 +340,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>>   		struct pci_sysdata sd = {
+>>   			.domain = domain,
+>>   			.node = node,
+>> -			.companion = root->device
+>>   		};
+>>
+>>   		memcpy(bus->sysdata, &sd, sizeof(sd));
+>> @@ -355,7 +354,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>>   		else {
+>>   			info->sd.domain = domain;
+>>   			info->sd.node = node;
+>> -			info->sd.companion = root->device;
+>>   			bus = acpi_pci_root_create(root, &acpi_pci_root_ops,
+>>   						   &info->common, &info->sd);
+>>   		}
+>> @@ -373,21 +371,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>>   	return bus;
+>>   }
+>>
+>> -int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+>> -{
+>> -	/*
+>> -	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
+>> -	 * here, pci_create_root_bus() has been called by someone else and
+>> -	 * sysdata is likely to be different from what we expect.  Let it go in
+>> -	 * that case.
+>> -	 */
+>> -	if (!bridge->dev.parent) {
+>> -		struct pci_sysdata *sd = bridge->bus->sysdata;
+>> -		ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+>> -	}
+>> -	return 0;
+>> -}
+>> -
+>>   int __init pci_acpi_init(void)
+>>   {
+>>   	struct pci_dev *dev = NULL;
+>> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+>> index ae3fe4e..4581e0e 100644
+>> --- a/drivers/acpi/pci_root.c
+>> +++ b/drivers/acpi/pci_root.c
+>> @@ -564,6 +564,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>>   		}
+>>   	}
+>>
+>> +	/*
+>> +	 * pci_create_root_bus() needs to detect the parent device type,
+>> +	 * so initialize its companion data accordingly.
+>> +	 */
+>> +	ACPI_COMPANION_SET(&device->dev, device);
+>>   	root->device = device;
+>>   	root->segment = segment & 0xFFFF;
+>>   	strcpy(acpi_device_name(device), ACPI_PCI_ROOT_DEVICE_NAME);
+>> @@ -846,7 +851,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+>>
+>>   	pci_acpi_root_add_resources(info);
+>>   	pci_add_resource(&info->resources, &root->secondary);
+>> -	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
+>> +	bus = pci_create_root_bus(&device->dev, busnum, ops->pci_ops,
+>>   				  sysdata, &info->resources);
+>
+> "device" here is a struct acpi_device *.  Rafael, is that the right
+> thing to do?  I dimly recall proposing something similar long ago and
+> that it turned out to be a bad idea.
+>
 
-This patchs adds the Device Tree bindings for the Broadcom STB PCIe root
-complex hardware.
+Joining Bjorn's question. Rafael, do you recall what was the issue here 
+from the past?
 
-Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
-Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
----
- .../devicetree/bindings/pci/brcm,brcmstb-pcie.txt  | 81 ++++++++++++++++++++++
- 1 file changed, 81 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
-
-diff --git a/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
-new file mode 100644
-index 000000000000..922317969ab5
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
-@@ -0,0 +1,81 @@
-+Brcmstb PCIe Host Controller Device Tree Bindings
-+
-+Introduction:
-+
-+The brcmstb host controller closely follows the example set in
-+
-+	[1] http://devicetree.org/Device_Tree_Usage#PCI_Host_Bridge
-+
-+The rest of this document explains some added customizations and
-+offers an example Brcmstb PCIe host controller DT node.
-+
-+Required Properties:
-+  reg -- the register start address and length for the PCIe block.
-+      Additional start,length pairs may be specified for clock addresses.
-+  interrupts -- this must be specified but it is used indirectly.  Interrupt
-+      zero must be specified; the Brcmstb driver code uses this interrupt
-+      to determine the offset used for all interrupts, specifically, those
-+      listed in interrupt-map.
-+  compatible -- must be one of: "brcm,bcm7425-pcie", "brcm,bcm7435-pcie" or
-+      "brcm,bcm7445-pcie".
-+  #address-cells -- the number of address cells for PCI-space.
-+  #size-cells -- the number of size cells for PCI-space.
-+  ranges -- See [1]; a specification of the outbound windows for the host
-+      controller.  Each outbound window is described by a 7-tuple:
-+          (3 entries) -- PCIe space start address (0th entry is ignored).
-+          (2 entries) -- CPU/System start address
-+          (2 entries) -- Size of region.
-+      Due to hardware limitations, there may be a maximum of four windows
-+      specified.
-+  #interrupt-cells -- number of cells used to describe the interrupt.
-+  interrupt-map -- See [1]; each interrupt requires 7 entries, and
-+      currently all but the fifth entry (order 0) -- the interrupt
-+      number -- is ignored.  There must be four interrupts specified
-+      for the PCI's INTA, INTB, INTC, and INTD.
-+
-+Optional Properties:
-+  interrupt-names -- names of the interrupts listed in the interrupt map.
-+  clocks -- list of clock phandles.  If specified, this should list one
-+      clock.
-+  clock-names -- the "local" names of the clocks specified in 'clocks'.  Note
-+      that if the 'clocks' property is given, 'clock-names' is mandatory,
-+      and the name of the clock is expected to be "sw_pcie".
-+  brcm,ssc -- (boolean) indicates usage of spread-spectrum clocking.
-+  brcm,gen --  (integer) indicates desired generation of link:
-+      1 => 2.5 Gbps, 2 => 5.0 Gbps, 3 => 8.0 Gbps.
-+  supply-names -- the names of voltage regulators that the root
-+      complex should turn off/on/on on suspend/resume/boot.  This
-+      is a string list.
-+  supplies -- A collection of phandles to a regulator nodes, see
-+	Documentation/devicetree/bindings/regulator/ for specific
-+	bindings. The number and order of phandles must match
-+	exactly the number of strings in the "supply-names" property.
-+
-+Example Node:
-+
-+	pcie@f0460000 {
-+		reg = <0x0 0xf0460000 0x0 0x9310>;
-+		interrupts = <0x0 0x0 0x4>;
-+		compatible = "brcm,pci-plat-dev";
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		ranges = <0x02000000 0x00000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x08000000
-+			  0x02000000 0x00000000 0x08000000 0x00000000 0xc8000000 0x00000000 0x08000000>;
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0xf800 0 0 7>;
-+		interrupt-map = <0 0 0 1 &intc 47 3
-+				 0 0 0 2 &intc 48 3
-+				 0 0 0 3 &intc 49 3
-+				 0 0 0 4 &intc 50 3>;
-+		interrupt-names = "pcie_0_inta",
-+				  "pcie_0_intb",
-+				  "pcie_0_intc",
-+				  "pcie_0_intd";
-+		clocks = <&sw_pcie0>;
-+		clock-names = "sw_pcie";
-+		brcm,ssc;
-+		brcm,gen = <1>;
-+		supply-names = "vreg-wifi-pwr";
-+		supplies = <&vreg-wifi-pwr>;
-+
-+	};
--- 
-2.1.0
-
+Thanks,
+Tomasz
