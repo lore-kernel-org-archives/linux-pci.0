@@ -1,202 +1,112 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [PATCH V7 07/11] pci, acpi: Handle ACPI companion assignment.
-To: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki"
- <rafael@kernel.org>
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
- <1462893601-8937-8-git-send-email-tn@semihalf.com>
- <CAJZ5v0hM8WAr9GGku89zKgiVKt6ArHf=9CntRUyBjyMNUvie2A@mail.gmail.com>
- <20160511101101.GA16101@red-moon>
- <CAJZ5v0hgw929W5PjF0PqT+ssiOHd8TeJoSQcz4NUiAovZY2pfQ@mail.gmail.com>
- <20160511224314.GD28812@localhost>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Hanjun Guo
- <hanjun.guo@linaro.org>, Sinan Kaya <okaya@codeaurora.org>,
- jchandra@broadcom.com, robert.richter@caviumnetworks.com,
- Marcin Wojtas <mw@semihalf.com>, Liviu.Dudau@arm.com,
- David Daney <ddaney@caviumnetworks.com>, wangyijing@huawei.com,
- Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>,
- Mark Salter <msalter@redhat.com>, Linux PCI <linux-pci@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
- Jon Masters <jcm@redhat.com>, Andrea Gallo <andrea.gallo@linaro.org>,
- Duc Dang <dhdang@apm.com>, jeremy.linton@arm.com, liudongdong3@huawei.com,
- Christopher Covington <cov@codeaurora.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <57345FDF.4000804@semihalf.com>
-Date: Thu, 12 May 2016 12:50:07 +0200
+Return-Path: <yhlu.kernel@gmail.com>
+Return-Path: <yhlu.kernel@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160511224314.GD28812@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: yhlu.kernel@gmail.com
+In-Reply-To: <20160504012531.GB17170@localhost>
+References: <1460074573-7481-1-git-send-email-yinghai@kernel.org>
+	<1460074573-7481-5-git-send-email-yinghai@kernel.org>
+	<20160422204920.GA17215@localhost>
+	<CAE9FiQWQ2ke3_P4Qhj+ON7pMiVCx4myhVNVaSYO4vYAL_P4njg@mail.gmail.com>
+	<20160428135607.GA12470@localhost>
+	<CAE9FiQU_XSMfxFPSOrMjQ2DGnrM0D5T=0ORfDEBxqWggGrzc+Q@mail.gmail.com>
+	<CAE9FiQX_8oXj=FD8pKe=eBL=YWZY-=C8sZ6yMbmkwegLVOR-fA@mail.gmail.com>
+	<1462322260.30470.76.camel@kernel.crashing.org>
+	<20160504012531.GB17170@localhost>
+Date: Tue, 3 May 2016 22:08:07 -0700
+Message-ID: <CAE9FiQU=e2bf=+KDrOETf_T-KPLQsSDiG5GqVFqgtvSWXwUz4w@mail.gmail.com>
+Subject: Re: [PATCH v11 04/60] sparc/PCI: Use correct offset for bus address
+ to resource
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	David Miller <davem@davemloft.net>, Linus Torvalds <torvalds@linux-foundation.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>, Khalid Aziz <khalid.aziz@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Michael Ellerman <mpe@ellerman.id.au>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12.05.2016 00:43, Bjorn Helgaas wrote:
-> On Wed, May 11, 2016 at 10:30:51PM +0200, Rafael J. Wysocki wrote:
->> On Wed, May 11, 2016 at 12:11 PM, Lorenzo Pieralisi
->> <lorenzo.pieralisi@arm.com> wrote:
->>> On Tue, May 10, 2016 at 08:37:00PM +0200, Rafael J. Wysocki wrote:
->>>> On Tue, May 10, 2016 at 5:19 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
->>>>> This patch provides a way to set the ACPI companion in PCI code.
->>>>> We define acpi_pci_set_companion() to set the ACPI companion pointer and
->>>>> call it from PCI core code. The function is stub for now.
->>>>>
->>>>> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
->>>>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->>>>> ---
->>>>>   drivers/pci/probe.c      | 2 ++
->>>>>   include/linux/pci-acpi.h | 4 ++++
->>>>>   2 files changed, 6 insertions(+)
->>>>>
->>>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>>>> index 8004f67..fb0b752 100644
->>>>> --- a/drivers/pci/probe.c
->>>>> +++ b/drivers/pci/probe.c
->>>>> @@ -12,6 +12,7 @@
->>>>>   #include <linux/slab.h>
->>>>>   #include <linux/module.h>
->>>>>   #include <linux/cpumask.h>
->>>>> +#include <linux/pci-acpi.h>
->>>>>   #include <linux/pci-aspm.h>
->>>>>   #include <linux/aer.h>
->>>>>   #include <linux/acpi.h>
->>>>> @@ -2141,6 +2142,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->>>>>          bridge->dev.parent = parent;
->>>>>          bridge->dev.release = pci_release_host_bridge_dev;
->>>>>          dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
->>>>> +       acpi_pci_set_companion(bridge);
->>>>
->>>> Yes, we'll probably add something similar here.
->>>>
->>>> Do I think now is the right time to do that?  No.
->>>>
->>>>>          error = pcibios_root_bridge_prepare(bridge);
->>>>>          if (error) {
->>>>>                  kfree(bridge);
->>>>> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
->>>>> index 09f9f02..1baa515 100644
->>>>> --- a/include/linux/pci-acpi.h
->>>>> +++ b/include/linux/pci-acpi.h
->>>>> @@ -111,6 +111,10 @@ static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
->>>>>   static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
->>>>>   #endif /* CONFIG_ACPI */
->>>>>
->>>>> +static inline void acpi_pci_set_companion(struct pci_host_bridge *bridge)
->>>>> +{
->>>>> +}
->>>>> +
->>>>>   static inline int acpi_pci_bus_domain_nr(struct pci_bus *bus)
->>>>>   {
->>>>>          return 0;
->>>>> --
->>>>
->>>> Honestly, to me it looks like this series is trying very hard to avoid
->>>> doing any PCI host bridge configuration stuff from arch/arm64/
->>>> although (a) that might be simpler and (b) it would allow us to
->>>> identify the code that's common between *all* architectures using ACPI
->>>> support for host bridge configuration and to move *that* to a common
->>>> place later.  As done here it seems to be following the "ARM64 is
->>>> generic and the rest of the world is special" line which isn't really
->>>> helpful.
->>>
->>> I think patch [1-2] should be merged regardless (they may require minor
->>> tweaks if we decide to move pci_acpi_scan_root() to arch/arm64 though,
->>> for include files location). I guess you are referring to patch 8 in
->>> your comments above, which boils down to deciding whether:
->>>
->>> - pci_acpi_scan_root() (and unfortunately all the MCFG/ECAM handling that
->>>    goes with it) should live in arch/arm64 or drivers/acpi
+On Tue, May 3, 2016 at 6:25 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Wed, May 04, 2016 at 10:37:40AM +1000, Benjamin Herrenschmidt wrote:
 >>
->> To be precise, everything under #ifdef CONFIG_ACPI_PCI_HOST_GENERIC or
->> equivalent is de facto ARM64-specific, because (as it stands in the
->> patch series) ARM64 is the only architecture that will select that
->> option.  Unless you are aware of any more architectures planning to
->> use ACPI (and I'm not aware of any), it will stay the only
->> architecture selecting it in the foreseeable future.
+>> The problem tends to be old Xserver expectations...
 >>
->> Therefore you could replace CONFIG_ACPI_PCI_HOST_GENERIC with
->> CONFIG_ARM64 everywhere in that code which is why in my opinion the
->> code should live somewhere under arch/arm64/.
->>
->> Going forward, it should be possible to identify common parts of the
->> PCI host bridge configuration code in arch/ and move it to
->> drivers/acpi/ or drivers/pci/, but I bet that won't be the entire code
->> this series puts under CONFIG_ACPI_PCI_HOST_GENERIC.
->>
->> The above leads to a quite straightforward conclusion about the order
->> in which to do things: I'd add ACPI support for PCI host bridge on
->> ARM64 following what's been done on ia64 (as x86 is more quirky and
->> kludgy overall) as far as reasonably possible first and then think
->> about moving common stuff to a common place.
+>> That stuff has been a can of worms over the years and we did things in
+>> the kernel to work around X limitations. I'm not that keen on touching
+>> /proc at all in that regard. Leave it there do what it does today, it's
+>> a user visible ABI, don't change it.
 >
-> That does seem like a reasonable approach.  I had hoped to get more of
-> this in for v4.7, but we don't have much time left.  Maybe some of
-> Rafael's comments can be addressed by moving and slight restructuring
-> and we can still squeeze it in.
->
-> The first three patches:
->
->    PCI: Provide common functions for ECAM mapping
->    PCI: generic, thunder: Use generic ECAM API
->    PCI, of: Move PCI I/O space management to PCI core code
->
-> seem relatively straightforward, and I applied them to pci/arm64 with
-> the intent of merging them unless there are objections.  I made the
-> following tweaks, mainly to try to improve some error messages:
->
-> diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-> index 3d52005..e1add01 100644
-> --- a/drivers/pci/ecam.c
-> +++ b/drivers/pci/ecam.c
-> @@ -24,9 +24,9 @@
->   #include "ecam.h"
->
->   /*
-> - * On 64 bit systems, we do a single ioremap for the whole config space
-> - * since we have enough virtual address range available. On 32 bit, do an
-> - * ioremap per bus.
-> + * On 64-bit systems, we do a single ioremap for the whole config space
-> + * since we have enough virtual address range available.  On 32-bit, we
-> + * ioremap the config space for each bus individually.
->    */
->   static const bool per_bus_mapping = !config_enabled(CONFIG_64BIT);
->
-> @@ -42,6 +42,7 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
->   {
->   	struct pci_config_window *cfg;
->   	unsigned int bus_range, bus_range_max, bsz;
-> +	struct resource *conflict;
->   	int i, err;
->
->   	if (busr->start > busr->end)
-> @@ -58,10 +59,10 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
->   	bus_range = resource_size(&cfg->busr);
->   	bus_range_max = resource_size(cfgres) >> ops->bus_shift;
->   	if (bus_range > bus_range_max) {
-> -		dev_warn(dev, "bus max %#x reduced to %#x",
-> -					bus_range, bus_range_max);
->   		bus_range = bus_range_max;
->   		cfg->busr.end = busr->start + bus_range - 1;
-> +		dev_warn(dev, "ECAM area %pR can only accommodate %pR (reduced from %pR desired)\n",
-> +			 cfgres, &cfg->busr, busr);
->   	}
->   	bsz = 1 << ops->bus_shift;
->
-> @@ -70,9 +71,11 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
->   	cfg->res.flags = IORESOURCE_MEM | IORESOURCE_BUSY;
->   	cfg->res.name = "PCI ECAM";
->
-> -	err = request_resource(&iomem_resource, &cfg->res);
-> -	if (err) {
-> -		dev_err(dev, "request ECAM res %pR failed\n", &cfg->res);
-> +	conflict = request_resource(&iomem_resource, &cfg->res);
+> I did not propose changing any user-visible ABI.  To recap what I did
+> propose:
 
-We need request_resource_conflict here then:
--	conflict = request_resource(&iomem_resource, &cfg->res);
-+	conflict = request_resource_conflict(&iomem_resource, &cfg->res);
+I want to avoid introduce one strange pci_user_to_resource.
 
-Thanks,
-Tomasz
+>
+>   - The sysfs path uses offsets between 0 and BAR size on all arches.
+>     It uses pci_resource_to_user() today, but I think it should not.
+>
+>   - The procfs path uses offsets of resource values (CPU physical
+>     addresses) on most architectures, but uses something else, e.g.,
+>     BAR values, on others.  pci_resource_to_user() does this
+>     translation.  The procfs path does not use pci_resource_to_user()
+>     today, but I think it should.
+
+current powerpc pci_resource_to_user is strange:
+it will return resource start for io mem.
+but will return BAR (?) start for io port.
+
+sparc pci_resource_to_user does return BAR value for iomem.
+
+>
+>   - This implies that pci_mmap_page_range() should deal with resource
+>     values (CPU physical addresses), and proc_bus_pci_mmap() should do
+>     any necessary arch-specific translation from BAR values to
+>     resource values.
+
+so will need one different version pci_user_to_resource.
+and can not use pcibios_bus_to_resource directly, and will be another mess.
+
+Can you reconsider to keep the pci_mmap_page_range still use BAR value
+and only touch pci_mmap_fits() ?
+
+like i suggested before, and it does not conflict with the patchset.
+
+Subject: [PATCH] PCI: Fix pci_mmap_fits() with proc interface
+
+Passed value is user address, so need to compare it with
+user addr that is converted from dev resource.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+---
+ drivers/pci/pci-sysfs.c |   10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+Index: linux-2.6/drivers/pci/pci-sysfs.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/pci-sysfs.c
++++ linux-2.6/drivers/pci/pci-sysfs.c
+@@ -969,15 +969,19 @@ void pci_remove_legacy_files(struct pci_
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vma,
+           enum pci_mmap_api mmap_api)
+ {
+-    unsigned long nr, start, size, pci_start;
++    unsigned long nr, start, size;
++    resource_size_t pci_start = 0, pci_end;
+
+     if (pci_resource_len(pdev, resno) == 0)
+         return 0;
+     nr = vma_pages(vma);
+     start = vma->vm_pgoff;
+     size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
+-    pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
+-            pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
++    if (mmap_api == PCI_MMAP_PROCFS) {
++        pci_resource_to_user(pdev, resno, &pdev->resource[resno],
++                     &pci_start, &pci_end);
++        pci_start >>= PAGE_SHIFT;
++    }
+     if (start >= pci_start && start < pci_start + size &&
+             start + nr <= pci_start + size)
+         return 1;
