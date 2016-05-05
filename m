@@ -1,10 +1,7 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:60068 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750735AbcECFeS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 01:34:18 -0400
-From: "Tian, Kevin" <kevin.tian@intel.com>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Laight <David.Laight@ACULAB.COM>
+To: "'Tian, Kevin'" <kevin.tian@intel.com>,
+	Yongji Xie <xyjxie@linux.vnet.ibm.com>,
 	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
 	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
@@ -23,36 +20,36 @@ CC: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
 	"eric.auger@linaro.org" <eric.auger@linaro.org>,
 	"will.deacon@arm.com" <will.deacon@arm.com>,
 	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
-	"David.Laight@ACULAB.COM" <David.Laight@ACULAB.COM>,
 	"alistair@popple.id.au" <alistair@popple.id.au>,
 	"ruscur@russell.cc" <ruscur@russell.cc>
 Subject: RE: [PATCH 5/5] vfio-pci: Allow to mmap MSI-X table if interrupt
  remapping is supported
-Date: Tue, 3 May 2016 05:34:14 +0000
-Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D15F842512@SHSMSX101.ccr.corp.intel.com>
+Date: Thu, 5 May 2016 09:54:07 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D5F4B52B5@AcuExch.aculab.com>
 References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
  <1461761010-5452-6-git-send-email-xyjxie@linux.vnet.ibm.com>
-In-Reply-To: <1461761010-5452-6-git-send-email-xyjxie@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="us-ascii"
+ <AADFC41AFE54684AB9EE6CBC0274A5D15F842512@SHSMSX101.ccr.corp.intel.com>
+ <f7d73ac3-470d-a0d2-0a97-05be630480dd@linux.vnet.ibm.com>
+ <AADFC41AFE54684AB9EE6CBC0274A5D15F842653@SHSMSX101.ccr.corp.intel.com>
+ <e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
+ <AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
+In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Yongji Xie
-> Sent: Wednesday, April 27, 2016 8:43 PM
-> 
-> This patch enables mmapping MSI-X tables if hardware supports
-> interrupt remapping which can ensure that a given pci device
-> can only shoot the MSIs assigned for it.
-> 
-> With MSI-X table mmapped, we also need to expose the
-> read/write interface which will be used to access MSI-X table.
-> 
-> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-
-A curious question here. Does "allow to mmap MSI-X" essentially
-mean that KVM guest can directly read/write physical MSI-X
-structure then?
-
-Thanks
-Kevin
+RnJvbTogVGlhbiwgS2V2aW4NCj4gU2VudDogMDUgTWF5IDIwMTYgMTA6MzcNCi4uLg0KPiA+IEFj
+dXR1YWxseSwgd2UgYXJlIG5vdCBhaW1lZCBhdCBhY2Nlc3NpbmcgTVNJLVggdGFibGUgZnJvbQ0K
+PiA+IGd1ZXN0LiBTbyBJIHRoaW5rIGl0J3Mgc2FmZSB0byBwYXNzdGhyb3VnaCBNU0ktWCB0YWJs
+ZSBpZiB3ZQ0KPiA+IGNhbiBtYWtlIHN1cmUgZ3Vlc3Qga2VybmVsIHdvdWxkIG5vdCB0b3VjaCBN
+U0ktWCB0YWJsZSBpbg0KPiA+IG5vcm1hbCBjb2RlIHBhdGggc3VjaCBhcyBwYXJhLXZpcnR1YWxp
+emVkIGd1ZXN0IGtlcm5lbCBvbiBQUEM2NC4NCj4gPg0KPiANCj4gVGhlbiBob3cgZG8geW91IHBy
+ZXZlbnQgbWFsaWNpb3VzIGd1ZXN0IGtlcm5lbCBhY2Nlc3NpbmcgaXQ/DQoNCk9yIGEgbWFsaWNp
+b3VzIGd1ZXN0IGRyaXZlciBmb3IgYW4gZXRoZXJuZXQgY2FyZCBzZXR0aW5nIHVwDQp0aGUgcmVj
+ZWl2ZSBidWZmZXIgcmluZyB0byBjb250YWluIGEgc2luZ2xlIHdvcmQgZW50cnkgdGhhdA0KY29u
+dGFpbnMgdGhlIGFkZHJlc3MgYXNzb2NpYXRlZCB3aXRoIGFuIE1TSS1YIGludGVycnVwdCBhbmQN
+CnRoZW4gdXNpbmcgYSBsb29wYmFjayBtb2RlIHRvIGNhdXNlIGEgc3BlY2lmaWMgcGFja2V0IGJl
+DQpyZWNlaXZlZCB0aGF0IHdyaXRlcyB0aGUgcmVxdWlyZWQgd29yZCB0aHJvdWdoIHRoYXQgYWRk
+cmVzcy4NCg0KUmVtZW1iZXIgdGhlIFBDSWUgY3ljbGUgZm9yIGFuIGludGVycnVwdCBpcyBhIG5v
+cm1hbCBtZW1vcnkgd3JpdGUNCmN5Y2xlLg0KDQoJRGF2aWQNCg0K
