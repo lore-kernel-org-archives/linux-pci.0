@@ -1,96 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-Id: <201605250554.u4P5sPdK018206@mx0a-001b2d01.pphosted.com>
-Subject: Re: [PATCH 2/5] iommu: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have
- capability of IRQ remapping
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1461761010-5452-3-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160524211149.GC16463@localhost>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org, alex.williamson@redhat.com,
-	bhelgaas@google.com, aik@ozlabs.ru, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, joro@8bytes.org,
-	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	nikunj@linux.vnet.ibm.com, eric.auger@linaro.org,
-	will.deacon@arm.com, gwshan@linux.vnet.ibm.com,
-	David.Laight@ACULAB.COM, alistair@popple.id.au, ruscur@russell.cc
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Date: Wed, 25 May 2016 13:54:23 +0800
-MIME-Version: 1.0
-In-Reply-To: <20160524211149.GC16463@localhost>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:35967 "EHLO
+	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754682AbcEETPK (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 May 2016 15:15:10 -0400
+From: Florian Fainelli <f.fainelli@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com,
+	bhelgaas@google.com, arnd@arndb.de,
+	Florian Fainelli <f.fainelli@gmail.com>
+Subject: [PATCH v2 0/2] pci: host: Broadcom STB PCIE RC controller support
+Date: Thu,  5 May 2016 12:14:58 -0700
+Message-Id: <1462475700-1654-1-git-send-email-f.fainelli@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/5/25 5:11, Bjorn Helgaas wrote:
+Hi all,
 
-> On Wed, Apr 27, 2016 at 08:43:27PM +0800, Yongji Xie wrote:
->> The capability of IRQ remapping is abstracted on IOMMU side on
->> some archs. There is a existing flag IOMMU_CAP_INTR_REMAP for this.
->>
->> To have a universal flag to test this capability for different
->> archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
->> when IOMMU_CAP_INTR_REMAP is set.
->>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->>   drivers/iommu/iommu.c |   15 +++++++++++++++
->>   1 file changed, 15 insertions(+)
->>
->> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
->> index 0e3b009..5d2b6f6 100644
->> --- a/drivers/iommu/iommu.c
->> +++ b/drivers/iommu/iommu.c
->> @@ -813,6 +813,16 @@ struct iommu_group *pci_device_group(struct device *dev)
->>   	return group;
->>   }
->>   
->> +static void pci_check_msi_remapping(struct pci_dev *pdev,
->> +					const struct iommu_ops *ops)
->> +{
->> +	struct pci_bus *bus = pdev->bus;
->> +
->> +	if (ops->capable(IOMMU_CAP_INTR_REMAP) &&
->> +		!(bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP))
->> +		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
->> +}
-> This looks an awful lot like the pci_bus_check_msi_remapping() you add
-> elsewhere.  Why do we need both?
+This patch series adds support for Broadcom STB SoC's PCIe root complex driver.
 
-I will modify this function as you suggested.  And we add this function
-here because some iommu drivers would be initialed after PCI probing.
+This was primarily tested on BCM7445 (ARM) and BCM7435 (MIPS).
 
->>   /**
->>    * iommu_group_get_for_dev - Find or create the IOMMU group for a device
->>    * @dev: target device
->> @@ -871,6 +881,9 @@ static int add_iommu_group(struct device *dev, void *data)
->>   	const struct iommu_ops *ops = cb->ops;
->>   	int ret;
->>   
->> +	if (dev_is_pci(dev) && ops->capable)
->> +		pci_check_msi_remapping(to_pci_dev(dev), ops);
->> +
->>   	if (!ops->add_device)
->>   		return 0;
->>   
->> @@ -913,6 +926,8 @@ static int iommu_bus_notifier(struct notifier_block *nb,
->>   	 * result in ADD/DEL notifiers to group->notifier
->>   	 */
->>   	if (action == BUS_NOTIFY_ADD_DEVICE) {
->> +		if (dev_is_pci(dev) && ops->capable)
->> +			pci_check_msi_remapping(to_pci_dev(dev), ops);
-> These calls don't smell right either.  Why do we need dev_is_pci()
-> checks here?
+Jim is the original author, and I picked up our downstream 4.1 driver and
+updated it to utilize the non-ARM hw_pci functions as well as made some
+stylistic changes.
 
-Some platform devices may also call this.
+Thanks!
 
-> Can't this be done in the PCI probe path somehow, e.g.,
-> in pci_set_bus_msi_domain() or something?
->
+Jim Quinlan (2):
+  Documentation: DT: bindings: Add Broadcom STB PCIe bindings
+  pci: host: Add Broadcom STB PCIE RC controller
 
-Yes, this can be done in pci_create_root_bus(). But it could only
-handle the case that iommu drivers are initialed before PCI probing.
+ .../devicetree/bindings/pci/brcm,brcmstb-pcie.txt  |  98 +++
+ MAINTAINERS                                        |   1 +
+ drivers/pci/host/Kconfig                           |  17 +
+ drivers/pci/host/Makefile                          |   2 +
+ drivers/pci/host/pcie-brcmstb-msi.c                | 305 ++++++++
+ drivers/pci/host/pcie-brcmstb.c                    | 772 +++++++++++++++++++++
+ drivers/pci/host/pcie-brcmstb.h                    | 169 +++++
+ 7 files changed, 1364 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
+ create mode 100644 drivers/pci/host/pcie-brcmstb-msi.c
+ create mode 100644 drivers/pci/host/pcie-brcmstb.c
+ create mode 100644 drivers/pci/host/pcie-brcmstb.h
 
-Regards,
-Yongji
+-- 
+2.1.0
+
