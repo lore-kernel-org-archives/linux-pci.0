@@ -1,78 +1,93 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 9 May 2016 20:53:36 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Tomasz Nowicki <tn@semihalf.com>, arnd@arndb.de,
-	will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
-	hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com,
-	okaya@codeaurora.org, jiang.liu@linux.intel.com,
-	jchandra@broadcom.com, robert.richter@caviumnetworks.com,
-	mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
-	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	jcm@redhat.com
-Subject: Re: [PATCH V6 01/13] pci, acpi, x86, ia64: Move ACPI host bridge
- device companion assignment to core code.
-Message-ID: <20160510015336.GA29582@localhost>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-2-git-send-email-tn@semihalf.com>
- <292578579.uIxhMjkdfG@vostro.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 5/5] vfio-pci: Allow to mmap MSI-X table if interrupt
+ remapping is supported
+To: "Tian, Kevin" <kevin.tian@intel.com>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
+References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1461761010-5452-6-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <AADFC41AFE54684AB9EE6CBC0274A5D15F842512@SHSMSX101.ccr.corp.intel.com>
+ <f7d73ac3-470d-a0d2-0a97-05be630480dd@linux.vnet.ibm.com>
+ <AADFC41AFE54684AB9EE6CBC0274A5D15F842653@SHSMSX101.ccr.corp.intel.com>
+ <e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
+ <AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
+Cc: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"aik@ozlabs.ru" <aik@ozlabs.ru>,
+	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+	"paulus@samba.org" <paulus@samba.org>,
+	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
+	"joro@8bytes.org" <joro@8bytes.org>,
+	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
+	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
+	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
+	"eric.auger@linaro.org" <eric.auger@linaro.org>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
+	"David.Laight@ACULAB.COM" <David.Laight@ACULAB.COM>,
+	"alistair@popple.id.au" <alistair@popple.id.au>,
+	"ruscur@russell.cc" <ruscur@russell.cc>
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Message-ID: <7c8b4efd-9662-ff10-57bc-d908ac38a0bf@linux.vnet.ibm.com>
+Date: Thu, 5 May 2016 19:44:08 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <292578579.uIxhMjkdfG@vostro.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 10, 2016 at 12:56:37AM +0200, Rafael J. Wysocki wrote:
-> On Friday, April 15, 2016 07:06:36 PM Tomasz Nowicki wrote:
-> > Currently we have two platforms (x86 & ia64) capable of PCI ACPI host
-> > bridge initialization. They both use arch-specific sysdata to pass down
-> > parent device reference and both rely on NULL parent in pci_create_root_bus()
-> > to validate sysdata content.
-> 
-> No, this is not relied on for that.  It is just NULL, because we don't
-> have a physical parent device representation for the PCI host bridge.
-> 
-> > It looks hacky and prevents us from getting some firmware specific
-> > info for PCI host controller based on its acpi_device structure
-> > in generic pci_create_root_bus() function.
-> 
-> You can't get that info without adding ACPI-specific code to that function
-> anyway.
-> 
-> > However, we overcome that blocker by passing down parent device via
-> > pci_create_root_bus parameter (as the ACPI device type).
-> 
-> Which is completely wrong.
-> 
-> > Then we use ACPI_COMPANION_SET in core code
-> > for ACPI boot method only. ACPI_COMPANION_SET is safe to run for all
-> > cases DT, ACPI and DT&ACPI.
-> > 
-> > Since now PCI core code is setting ACPI companion device for us,
-> > x86 & ia64 specific ACPI companion device setting turns out to be dead now.
-> > We can get rid of it, including related companion reference from
-> > PCI sysdata structure. Aslo, PCI_CONTROLLER macro cannot return valid
-> > companion device anymore. Therefore we need to convert its usage to
-> > ACPI_COMPANION.
+On 2016/5/5 17:36, Tian, Kevin wrote:
 
-I think getting rid of arch-specific sysdata is a good goal (at least
-for things like the domain and ACPI companion that are really not
-arch-specific).
+>> From: Yongji Xie
+>> Sent: Tuesday, May 03, 2016 3:34 PM
+>>
+>> On 2016/5/3 14:22, Tian, Kevin wrote:
+>>
+>>>> From: Yongji Xie [mailto:xyjxie@linux.vnet.ibm.com]
+>>>> Sent: Tuesday, May 03, 2016 2:08 PM
+>>>>
+>>>> On 2016/5/3 13:34, Tian, Kevin wrote:
+>>>>
+>>>>>> From: Yongji Xie
+>>>>>> Sent: Wednesday, April 27, 2016 8:43 PM
+>>>>>>
+>>>>>> This patch enables mmapping MSI-X tables if hardware supports
+>>>>>> interrupt remapping which can ensure that a given pci device
+>>>>>> can only shoot the MSIs assigned for it.
+>>>>>>
+>>>>>> With MSI-X table mmapped, we also need to expose the
+>>>>>> read/write interface which will be used to access MSI-X table.
+>>>>>>
+>>>>>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>>>>> A curious question here. Does "allow to mmap MSI-X" essentially
+>>>>> mean that KVM guest can directly read/write physical MSI-X
+>>>>> structure then?
+>>>>>
+>>>>> Thanks
+>>>>> Kevin
+>>>>>
+>>>> Here we just allow to mmap MSI-X table in kernel. It doesn't
+>>>> mean all KVM guest can directly read/write physical MSI-X
+>>>> structure. This should be decided by QEMU. For PPC64
+>>>> platform, we would allow to passthrough the MSI-X table
+>>>> because we know guest kernel would not write physical
+>>>> MSI-X structure when enabling MSI.
+>>>>
+>>> A bit confused here. If guest kernel doesn't need to write
+>>> physical MSI-X structure, what's the point of passing through
+>>> the table then?
+>> We want to allow the MSI-X table because there may be
+>> some critical registers in the same page as the MSI-X table.
+>> We have to handle the mmio access to these register in QEMU
+>> rather than in guest if mmapping MSI-X table is disallowed.
+> So you mean critical registers in same MMIO BAR as MSI-X
+> table, instead of two MMIO BARs in same page (the latter I
+> suppose with your whole patchset it won't happen then)?
 
-But I'm afraid I've been guilty of allowing the perfect to be the
-enemy of the good.  I think it will be more useful in the end if we
-can get as much of this work in v4.7 as possible, even if there's more
-polishing we'd like to do later.
+Yes. That's what I mean!
 
-What if we keep the x86 and ia64 handling of ACPI_COMPANION the way it
-is today, and do it the same way for arm64?  Then later, after we
-merge Arnd's work to make a generic pci_register_host() or similar, I
-suspect we might be able to unify the ACPI_COMPANION stuff more
-easily.  If the driver (acpi/pci_root.c) allocates the struct
-pci_host_bridge, then maybe it will be able to fill in the domain and
-set up the ACPI_COMPANION before it calls the scan interface.
-
-Bjorn
+Thanks,
+Yongji
