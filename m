@@ -1,57 +1,66 @@
-Return-Path: <hare@suse.de>
-Return-Path: <hare@suse.de>
-Subject: Re: Build warning regression (104daa71b396 ("PCI: Determine actual
- VPD size on first access"))
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <20160509195410.GB18166@localhost>
-Cc: linux-pci@vger.kernel.org
-From: Hannes Reinecke <hare@suse.de>
-Message-ID: <57317B31.8030203@suse.de>
-Date: Tue, 10 May 2016 08:09:53 +0200
-MIME-Version: 1.0
-In-Reply-To: <20160509195410.GB18166@localhost>
-Content-Type: text/plain; charset=windows-1252
+Return-Path: <benh@kernel.crashing.org>
+Return-Path: <benh@kernel.crashing.org>
+Message-ID: <1462485774.20290.34.camel@kernel.crashing.org>
+Subject: Re: [PATCH v11 04/60] sparc/PCI: Use correct offset for bus address
+ to resource
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Yinghai Lu <yinghai@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+        David Miller <davem@davemloft.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Linus Torvalds
+	 <torvalds@linux-foundation.org>,
+        Wei Yang <weiyang@linux.vnet.ibm.com>, TJ
+	 <linux@iam.tj>,
+        Yijing Wang <wangyijing@huawei.com>,
+        Khalid Aziz
+	 <khalid.aziz@oracle.com>,
+        "linux-pci@vger.kernel.org"
+	 <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List
+	 <linux-kernel@vger.kernel.org>,
+        Michael Ellerman <mpe@ellerman.id.au>
+Date: Fri, 06 May 2016 08:02:54 +1000
+In-Reply-To: <CAE9FiQWJ0VH-PNsz96qW8_u14x6bJ6cd66+Zg=j3L4zXWvhq0Q@mail.gmail.com>
+References: <1460074573-7481-5-git-send-email-yinghai@kernel.org>
+	 <20160422204920.GA17215@localhost>
+	 <CAE9FiQWQ2ke3_P4Qhj+ON7pMiVCx4myhVNVaSYO4vYAL_P4njg@mail.gmail.com>
+	 <20160428135607.GA12470@localhost>
+	 <CAE9FiQU_XSMfxFPSOrMjQ2DGnrM0D5T=0ORfDEBxqWggGrzc+Q@mail.gmail.com>
+	 <CAE9FiQX_8oXj=FD8pKe=eBL=YWZY-=C8sZ6yMbmkwegLVOR-fA@mail.gmail.com>
+	 <1462322260.30470.76.camel@kernel.crashing.org>
+	 <20160504012531.GB17170@localhost>
+	 <CAE9FiQU=e2bf=+KDrOETf_T-KPLQsSDiG5GqVFqgtvSWXwUz4w@mail.gmail.com>
+	 <CAE9FiQV19OUsSL34GzDXYtVG=Xs724CpwHNfu3HCmYMUqbmrqQ@mail.gmail.com>
+	 <20160504151722.GA22051@localhost>
+	 <CAE9FiQXEBkVak0No9dfOidzCrR+UVu44WyBEK8SqTUSiJKeJbg@mail.gmail.com>
+	 <CAE9FiQUEMq4aj2iAq=P0xu4=1MGuOWgOubpkn=2h+YLXgwJKRQ@mail.gmail.com>
+	 <CAE9FiQWJ0VH-PNsz96qW8_u14x6bJ6cd66+Zg=j3L4zXWvhq0Q@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/09/2016 09:54 PM, Bjorn Helgaas wrote:
-> Hi Hannes,
+On Thu, 2016-05-05 at 08:53 -0700, Yinghai Lu wrote:
+> For powerpc io port, we still need extra offset from resource address
+> to final address.
 > 
-> Geert's list of build regressions and improvements
-> (http://lkml.kernel.org/r/1462782250-6231-1-git-send-email-geert@linux-m68k.org)
-> shows these new warnings:
+>      resource_size_t offset =
+>          ((resource_size_t)vma->vm_pgoff) << PAGE_SHIFT;
 > 
->   drivers/pci/access.c: warning: format '%zu' expects argument of type 'size_t', but argument 4 has type 'unsigned int' [-Wformat=]:  => 318:8
->   drivers/pci/access.c: warning: format '%zu' expects argument of type 'size_t', but argument 5 has type 'unsigned int' [-Wformat=]:  => 340:6
+> +    if (mmap_state == pci_mmap_io) {
+> +        struct pci_controller *hose = pci_bus_to_host(dev->bus);
+> +
+> +        /* hose should never be NULL */
+> +        offset += hose->io_base_phys -
+> +              ((unsigned long)hose->io_base_virt - _IO_BASE);
+> +    }
 > 
-> which I think are due to 104daa71b396 ("PCI: Determine actual VPD size on
-> first access").
+>      vma->vm_pgoff = offset >> PAGE_SHIFT;
 > 
-> Would you mind fixing those up and sending me a patch?  These were in
-> the v4.6-rc1 regressions email, and I should have noticed then, but I
-> didn't.
-> 
-This is curious.
-The code has this:
+> but sparc does not need that trick.
 
-size_t off = 0;
-
-...
-
-dev_warn(&dev->dev,
-	"invalid large VPD tag %02x size at offset %zu",
-	tag, off + 1);
-
-Which, as per my reading, suggests that the last argument to
-dev_warn() is of type size_t.
-
-Which tree has generated the above warning?
+I'm not sure how sparc handles IO space but on powerpc, the IO resource
+is not a physical address, it's a virtual address (coming from
+ioremap). 
 
 Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N�rnberg
-GF: F. Imend�rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N�rnberg)
+Ben.
