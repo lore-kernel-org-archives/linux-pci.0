@@ -1,140 +1,112 @@
-Return-Path: <rjwysocki@gmail.com>
-Return-Path: <rjwysocki@gmail.com>
+Return-Path: <jay@jcornwall.me>
+Return-Path: <jay@jcornwall.me>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <1462893601-8937-9-git-send-email-tn@semihalf.com>
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
-	<1462893601-8937-9-git-send-email-tn@semihalf.com>
-Date: Tue, 10 May 2016 20:18:42 +0200
-Message-ID: <CAJZ5v0jTLGs1J_YXnAEa901hPHaupQeF1EFH_LGK47qadrYONw@mail.gmail.com>
-Subject: Re: [PATCH V7 08/11] pci, acpi: Support for ACPI based generic PCI
- host controller
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, "Rafael J. Wysocki" <rafael@kernel.org>,
-	Hanjun Guo <hanjun.guo@linaro.org>, Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>, jchandra@broadcom.com,
-	robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
-	David Daney <ddaney@caviumnetworks.com>, wangyijing@huawei.com,
-	Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>, Mark Salter <msalter@redhat.com>,
-	Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>, Jon Masters <jcm@redhat.com>, andrea.gallo@linaro.org,
-	dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com,
-	Christopher Covington <cov@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 05 May 2016 10:40:31 -0500
+From: Jay Cornwall <jay@jcornwall.me>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: Add pci_enable_atomic_request
+In-Reply-To: <ec60daae6d886179a4d86c421ba66545@jcornwall.me>
+References: <1443110390-4080-1-git-send-email-jay@jcornwall.me>
+ <20151204182540.GC20125@localhost>
+ <c7259e37a065e8c7d386c806f521c46d@jcornwall.me>
+ <20151207162351.GH7994@localhost>
+ <ec60daae6d886179a4d86c421ba66545@jcornwall.me>
+Message-ID: <da78c9ecbf2674007ba891ba16e11297@jcornwall.me>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 10, 2016 at 5:19 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
-> This patch is going to implement generic PCI host controller for
-> ACPI world, similar to what pci-host-generic.c driver does for DT world.
->
-> All such drivers, which we have seen so far, were implemented within
-> arch/ directory since they had some arch assumptions (x86 and ia64).
-> However, they all are doing similar thing, so it makes sense to find
-> some common code and abstract it into the generic driver.
+On 2016-03-28 15:10, Jay Cornwall wrote:
+> On 2015-12-07 10:23, Bjorn Helgaas wrote:
+>> On Fri, Dec 04, 2015 at 01:33:30PM -0600, Jay Cornwall wrote:
+>>> On 2015-12-04 12:25, Bjorn Helgaas wrote:
+>>> >On Thu, Sep 24, 2015 at 10:59:50AM -0500, Jay Cornwall wrote:
+>>> >>The PCIe 3.0 AtomicOp (6.15) feature allows atomic transctions
+>>> >>to be requested
+>>> >>by, routed through and completed by PCIe components. Routing and
+>>> >>completion
+>>> >>do not require software support. Component support for each is
+>>> >>detectable via
+>>> >>the DEVCAP2 register.
+>>> >>
+>>> >>AtomicOp requests are permitted only if a component's
+>>> >>DEVCTL2.ATOMICOP_REQUESTER_ENABLE field is set. This capability
+>>> >>cannot be
+>>> >>detected but is a no-op if set on a component with no support.
+>>> >>These requests
+>>> >>can only be serviced if the upstream components support AtomicOp
+>>> >>completion
+>>> >>and/or routing to a component which does.
+>>> >>
+>>> >>A concrete example is the AMD Fiji-class GPU, which is specified
+>>> >>to support
+>>> >>AtomicOp requests, routed through a PLX 8747 switch (advertising
+>>> >>AtomicOp
+>>> >>routing) to a Haswell host bridge (advertising AtomicOp
+>>> >>completion support).
+>>> >>When AtomicOp requests are disabled the GPU logs attempts to
+>>> >>initiate requests
+>>> >>to an MMIO register for debugging.
+>>> >>
+>>> >>Add pci_enable_atomic_request for per-device control over
+>>> >>AtomicOp requests.
+>>> >>Upstream bridges are checked for AtomicOp routing capability and
+>>> >>the call
+>>> >>fails if any lack this capability. The root port is checked for
+>>> >>AtomicOp
+>>> >>completion capabilities and the call fails if it does not support any.
+>>> >>Routes to other PCIe components are not checked for AtomicOp
+>>> >>routing and
+>>> >>completion capabilities.
+>>> >>
+>>> >>v2: Check for AtomicOp route to root port with AtomicOp completion
+>>> >>v3: Style fixes
+>>> >>
+>>> >>Signed-off-by: Jay Cornwall <jay@jcornwall.me>
+>>> >
+>>> >Hi Jay,
+>>> >
+>>> >Is there a user for this new functionality?  I don't like to add things
+>>> >that have no apparent user.
+>>> >
+>>> >Bjorn
+>>> 
+>>> The client for this code is scheduled to be upstreamed in
+>>> drm/amdgpu, but we have some internal restructuring to complete
+>>> before a patchset will be available.
+>>> 
+>>> If you'd prefer, I can resubmit this patch as part of that series
+>>> when it is ready.
+>> 
+>> Yeah, that'd be great, why don't we do that.  Thanks!
+>> 
+>> Bjorn
+> 
+> We've been testing this prior to upstreaming the client code and ran
+> into a problem. When the client driver (amdgpu) is running within a
+> virtual machine on the physical PCI function (not SR-IOV) the
+> hypervisor virtualizes the PCI configuration space and blocks writes
+> to DEVCTL2.ATOMICOP_REQUESTER_ENABLE.
+> 
+> I think the host is intended to manage the PCI configuration space in
+> this model. The client driver cannot run simultaneously on the host
+> and guest. This appears to leave the PCI subsystem as the remaining
+> opportunity to enable this feature.
+> 
+> Would you object to calling pci_enable_atomic_request unconditionally
+> in pci_init_capabilites? On most PCIe devices this should be a no-op
+> but I don't see a way to check for this in the AtomicOp specification.
 
-Does it mean x86 and ia64 will now be able to use this code too?
+Did you get a chance to look at this?
 
-> In order to handle PCI config space regions properly, we define new
-> MCFG interface which does sanity checks on MCFG table and keeps its
-> root pointer. User is able to lookup MCFG regions based on that root
-> pointer and specified domain:bus_start:bus_end touple. We are using
-> pci_mmcfg_late_init old prototype to avoid another function name.
->
-> The implementation of pci_acpi_scan_root() looks up the MCFG entries
-> and sets up a new mapping (regions are not mapped until host controller ask
-> for it). Generic PCI functions are used for accessing config space.
-> Driver selects PCI_ECAM and uses functions from drivers/pci/ecam.h
-> to create and access ECAM mappings.
->
-> As mentioned in Kconfig help section, ACPI_PCI_HOST_GENERIC choice
-> should be made on a per-architecture basis.
+We're trying to figure out which pieces to upstream for the client 
+(drm/amdgpu) driver. If localising this setting to drivers/pci is 
+acceptable then we can remove the call to pci_enable_atomic_request. If 
+not, we'll have to leave the PCI passthrough case unsupported and 
+upstream the original change with the call to it from drm/amdgpu.
 
-If that code really is generic and there will be more than one
-architecture using it ever, I think it'll be better for the
-architectures that don't use it to set something like
-ARCH_ACPI_PCI_HOST and whoever doesn't set that will use the generic
-thing.  That'd be more logical at least IMO.
+Thanks,
 
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
-> ---
->  drivers/acpi/Kconfig            |   8 +++
->  drivers/acpi/Makefile           |   1 +
->  drivers/acpi/pci_mcfg.c         |  97 ++++++++++++++++++++++++++
->  drivers/acpi/pci_root_generic.c | 149 ++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/ecam.h              |   5 ++
->  include/linux/pci-acpi.h        |   5 ++
->  include/linux/pci.h             |   5 +-
->  7 files changed, 269 insertions(+), 1 deletion(-)
->  create mode 100644 drivers/acpi/pci_mcfg.c
->  create mode 100644 drivers/acpi/pci_root_generic.c
->
-> diff --git a/drivers/acpi/Kconfig b/drivers/acpi/Kconfig
-> index 183ffa3..44afc76 100644
-> --- a/drivers/acpi/Kconfig
-> +++ b/drivers/acpi/Kconfig
-> @@ -346,6 +346,14 @@ config ACPI_PCI_SLOT
->           i.e., segment/bus/device/function tuples, with physical slots in
->           the system.  If you are unsure, say N.
->
-> +config ACPI_PCI_HOST_GENERIC
-> +       bool
-> +       select PCI_ECAM
-> +       help
-> +         Select this config option from the architecture Kconfig,
-> +         if it is preferred to enable ACPI PCI host controller driver which
-> +         has no arch-specific assumptions.
-> +
->  config X86_PM_TIMER
->         bool "Power Management Timer Support" if EXPERT
->         depends on X86
-> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-> index 81e5cbc..627a2b7 100644
-> --- a/drivers/acpi/Makefile
-> +++ b/drivers/acpi/Makefile
-> @@ -40,6 +40,7 @@ acpi-$(CONFIG_ARCH_MIGHT_HAVE_ACPI_PDC) += processor_pdc.o
->  acpi-y                         += ec.o
->  acpi-$(CONFIG_ACPI_DOCK)       += dock.o
->  acpi-y                         += pci_root.o pci_link.o pci_irq.o
-> +obj-$(CONFIG_ACPI_PCI_HOST_GENERIC)    += pci_root_generic.o pci_mcfg.o
->  acpi-y                         += acpi_lpss.o acpi_apd.o
->  acpi-y                         += acpi_platform.o
->  acpi-y                         += acpi_pnp.o
-> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-> new file mode 100644
-> index 0000000..373d079
-> --- /dev/null
-> +++ b/drivers/acpi/pci_mcfg.c
-> @@ -0,0 +1,97 @@
-> +/*
-> + * Copyright (C) 2016 Broadcom
-> + *     Author: Jayachandran C <jchandra@broadcom.com>
-> + * Copyright (C) 2016 Semihalf
-> + *     Author: Tomasz Nowicki <tn@semihalf.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License, version 2, as
-> + * published by the Free Software Foundation (the "GPL").
-> + *
-> + * This program is distributed in the hope that it will be useful, but
-> + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-> + * General Public License version 2 (GPLv2) for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * version 2 (GPLv2) along with this source code.
-> + */
-> +#include <linux/kernel.h>
-> +#include <linux/pci.h>
-> +#include <linux/pci-acpi.h>
-> +
-> +#define PREFIX "ACPI: "
-
-If that is a new file (and I'm totally unconvinced about the need for
-it), can we simply define a pr_fmt() here as all messages in it seem
-to be printed by the pr_* functions?
+-- 
+Jay Cornwall
