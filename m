@@ -1,85 +1,126 @@
-Return-Path: <lukas@wunner.de>
-Return-Path: <lukas@wunner.de>
-Date: Mon, 2 May 2016 22:23:29 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] PCI: Fix BUG on device attach failure
-Message-ID: <20160502202329.GA19313@wunner.de>
-References: <158b8ef6bf71ae69ef54871e4762b98deb981d6e.1461162854.git.lukas@wunner.de>
- <20160502190133.GH24851@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:55604 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756881AbcEEPFV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 5 May 2016 11:05:21 -0400
+Date: Thu, 5 May 2016 09:05:13 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Tian, Kevin" <kevin.tian@intel.com>
+Cc: Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"aik@ozlabs.ru" <aik@ozlabs.ru>,
+	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+	"paulus@samba.org" <paulus@samba.org>,
+	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
+	"joro@8bytes.org" <joro@8bytes.org>,
+	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
+	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
+	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
+	"eric.auger@linaro.org" <eric.auger@linaro.org>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
+	"alistair@popple.id.au" <alistair@popple.id.au>,
+	"ruscur@russell.cc" <ruscur@russell.cc>
+Subject: Re: [PATCH 5/5] vfio-pci: Allow to mmap MSI-X table if interrupt
+ remapping is supported
+Message-ID: <20160505090513.56886c12@t450s.home>
+In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D15F8474A4@SHSMSX101.ccr.corp.intel.com>
+References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+	<1461761010-5452-6-git-send-email-xyjxie@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F842512@SHSMSX101.ccr.corp.intel.com>
+	<f7d73ac3-470d-a0d2-0a97-05be630480dd@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F842653@SHSMSX101.ccr.corp.intel.com>
+	<e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
+	<063D6719AE5E284EB5DD2968C1650D6D5F4B52B5@AcuExch.aculab.com>
+	<4be013bc-e81b-84c5-06d3-e1b3f46b3227@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F8474A4@SHSMSX101.ccr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160502190133.GH24851@localhost>
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Thu, 5 May 2016 12:15:46 +0000
+"Tian, Kevin" <kevin.tian@intel.com> wrote:
 
-On Mon, May 02, 2016 at 02:01:33PM -0500, Bjorn Helgaas wrote:
-> On Wed, Apr 20, 2016 at 04:44:27PM +0200, Lukas Wunner wrote:
-> > Previously when pci_bus_add_device() called device_attach() and it
-> > returned a negative value, we emitted a WARN but carried on.
+> > From: Yongji Xie [mailto:xyjxie@linux.vnet.ibm.com]
+> > Sent: Thursday, May 05, 2016 7:43 PM
 > > 
-> > Commit ab1a187bba5c ("PCI: Check device_attach() return value always"),
-> > introduced in Linux 4.6-rc1, changed this to unwind all steps preceding
-> > device_attach() and to not set dev->is_added = 1.
+> > Hi David and Kevin,
 > > 
-> > The latter leads to a BUG if pci_bus_add_device() was called from
-> > pci_bus_add_devices(). Fix by not recursing to a child bus if
-> > device_attach() failed for the bridge leading to it.
+> > On 2016/5/5 17:54, David Laight wrote:
+> >   
+> > > From: Tian, Kevin  
+> > >> Sent: 05 May 2016 10:37  
+> > > ...  
+> > >>> Acutually, we are not aimed at accessing MSI-X table from
+> > >>> guest. So I think it's safe to passthrough MSI-X table if we
+> > >>> can make sure guest kernel would not touch MSI-X table in
+> > >>> normal code path such as para-virtualized guest kernel on PPC64.
+> > >>>  
+> > >> Then how do you prevent malicious guest kernel accessing it?  
+> > > Or a malicious guest driver for an ethernet card setting up
+> > > the receive buffer ring to contain a single word entry that
+> > > contains the address associated with an MSI-X interrupt and
+> > > then using a loopback mode to cause a specific packet be
+> > > received that writes the required word through that address.
+> > >
+> > > Remember the PCIe cycle for an interrupt is a normal memory write
+> > > cycle.
+> > >
+> > > 	David
+> > >  
 > > 
-> > This can be triggered by plugging in a PCI device (e.g. Thunderbolt)
-> > while the system is asleep. The system locks up when woken because
-> > device_attach() returns -EPROBE_DEFER.
+> > If we have enough permission to load a malicious driver or
+> > kernel, we can easily break the guest without exposed
+> > MSI-X table.
 > > 
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> > I think it should be safe to expose MSI-X table if we can
+> > make sure that malicious guest driver/kernel can't use
+> > the MSI-X table to break other guest or host. The
+> > capability of IRQ remapping could provide this
+> > kind of protection.
+> >   
 > 
-> Applied both with Rafael's acks to for-linus for v4.6.
+> With IRQ remapping it doesn't mean you can pass through MSI-X
+> structure to guest. I know actual IRQ remapping might be platform
+> specific, but at least for Intel VT-d specification, MSI-X entry must
+> be configured with a remappable format by host kernel which
+> contains an index into IRQ remapping table. The index will find a
+> IRQ remapping entry which controls interrupt routing for a specific
+> device. If you allow a malicious program random index into MSI-X 
+> entry of assigned device, the hole is obvious...
 > 
-> The rationale is that ab1a187bba5c ("PCI: Check device_attach() return
-> value always") appeared in v4.6-rc1, and after that commit, plugging
-> in a Thunderbolt device while the system is asleep will cause a BUG()
-> when the system is awakened.
-> 
-> Lukas, you mentioned earlier that we might want to include Andreas'
-> patch "thunderbolt: Fix double free of drom buffer" at the same time.
-> I did apply that on pci/thunderbolt for v4.7.  I can move that to
-> for-linus and put it in v4.6 if necessary, but that bug been there
-> since v3.17.  Is there something in v4.6 that makes us more likely to
-> hit that double free?
+> Above might make sense only for a IRQ remapping implementation 
+> which doesn't rely on extended MSI-X format (e.g. simply based on 
+> BDF). If that's the case for PPC, then you should build MSI-X 
+> passthrough based on this fact instead of general IRQ remapping 
+> enabled or not.
 
-No there's not, I meant that just as a reminder. The solution you've
-settled on seems perfectly fine, thank you so much!
+I don't think anyone is expecting that we can expose the MSI-X vector
+table to the guest and the guest can make direct use of it.  The end
+goal here is that the guest on a power system is already
+paravirtualized to not program the device MSI-X by directly writing to
+the MSI-X vector table.  They have hypercalls for this since they
+always run virtualized.  Therefore a) they never intend to touch the
+MSI-X vector table and b) they have sufficient isolation that a guest
+can only hurt itself by doing so.
 
-Lukas
+On x86 we don't have a), our method of programming the MSI-X vector
+table is to directly write to it. Therefore we will always require QEMU
+to place a MemoryRegion over the vector table to intercept those
+accesses.  However with interrupt remapping, we do have b) on x86, which
+means that we don't need to be so strict in disallowing user accesses
+to the MSI-X vector table.  It's not useful for configuring MSI-X on
+the device, but the user should only be able to hurt themselves by
+writing it directly.  x86 doesn't really get anything out of this
+change, but it helps this special case on power pretty significantly
+aiui.  Thanks,
 
-> 
-> > ---
-> > v2: Split commit in two (Bjorn Helgaas).
-> > 
-> >  drivers/pci/bus.c | 4 +++-
-> >  1 file changed, 3 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> > index 6c9f546..23a39fd 100644
-> > --- a/drivers/pci/bus.c
-> > +++ b/drivers/pci/bus.c
-> > @@ -324,7 +324,9 @@ void pci_bus_add_devices(const struct pci_bus *bus)
-> >  	}
-> >  
-> >  	list_for_each_entry(dev, &bus->devices, bus_list) {
-> > -		BUG_ON(!dev->is_added);
-> > +		/* Skip if device attach failed */
-> > +		if (!dev->is_added)
-> > +			continue;
-> >  		child = dev->subordinate;
-> >  		if (child)
-> >  			pci_bus_add_devices(child);
-> > -- 
-> > 2.8.0.rc3
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Alex
