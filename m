@@ -1,286 +1,225 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com,
+Return-Path: <BATV+ebca6d033c7666f223e0+4638+infradead.org+hch@bombadil.srs.infradead.org>
+Return-Path: <BATV+ebca6d033c7666f223e0+4638+infradead.org+hch@bombadil.srs.infradead.org>
+From: Christoph Hellwig <hch@lst.de>
+To: helgaas@kernel.org
+Cc: agordeev@redhat.com,
+	pjw@netapp.com,
+	axboe@fb.com,
+	keith.busch@intel.com,
 	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	dhdang@apm.com,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	cov@codeaurora.org
-Subject: [PATCH V8 1/9] PCI: ecam: move ecam.h to linux/include/pci-ecam.h
-Date: Mon, 30 May 2016 17:14:14 +0200
-Message-Id: <1464621262-26770-2-git-send-email-tn@semihalf.com>
-In-Reply-To: <1464621262-26770-1-git-send-email-tn@semihalf.com>
-References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
+	linux-nvme@lists.infradead.org
+Subject: [PATCH 2/2] nvme: switch to use pci_alloc_irq_vectors
+Date: Thu,  5 May 2016 16:04:56 +0200
+Message-Id: <1462457096-19795-3-git-send-email-hch@lst.de>
+In-Reply-To: <1462457096-19795-1-git-send-email-hch@lst.de>
+References: <1462457096-19795-1-git-send-email-hch@lst.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jayachandran C <jchandra@broadcom.com>
-
-This header will be used from arch/arm64 for ACPI PCI implementation
-so it needs to be moved out of drivers/pci.
-
-Update users of the header file to use the new name. No functional
-changes.
-
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/pci/ecam.c                  |  3 +-
- drivers/pci/ecam.h                  | 67 -------------------------------------
- drivers/pci/host/pci-host-common.c  |  3 +-
- drivers/pci/host/pci-host-generic.c |  3 +-
- drivers/pci/host/pci-thunder-ecam.c |  3 +-
- drivers/pci/host/pci-thunder-pem.c  |  3 +-
- include/linux/pci-ecam.h            | 67 +++++++++++++++++++++++++++++++++++++
- 7 files changed, 72 insertions(+), 77 deletions(-)
- delete mode 100644 drivers/pci/ecam.h
- create mode 100644 include/linux/pci-ecam.h
+ drivers/nvme/host/pci.c | 87 +++++++++++++------------------------------------
+ 1 file changed, 22 insertions(+), 65 deletions(-)
 
-diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-index f9832ad..820e26b 100644
---- a/drivers/pci/ecam.c
-+++ b/drivers/pci/ecam.c
-@@ -19,10 +19,9 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/pci.h>
-+#include <linux/pci-ecam.h>
- #include <linux/slab.h>
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 4fd733f..0219965 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -89,7 +89,6 @@ struct nvme_dev {
+ 	unsigned max_qid;
+ 	int q_depth;
+ 	u32 db_stride;
+-	struct msix_entry *entry;
+ 	void __iomem *bar;
+ 	struct work_struct reset_work;
+ 	struct work_struct scan_work;
+@@ -209,6 +208,11 @@ static unsigned int nvme_cmd_size(struct nvme_dev *dev)
+ 		nvme_iod_alloc_size(dev, NVME_INT_BYTES(dev), NVME_INT_PAGES);
+ }
  
--#include "ecam.h"
--
- /*
-  * On 64-bit systems, we do a single ioremap for the whole config space
-  * since we have enough virtual address range available.  On 32-bit, we
-diff --git a/drivers/pci/ecam.h b/drivers/pci/ecam.h
-deleted file mode 100644
-index 9878beb..0000000
---- a/drivers/pci/ecam.h
-+++ /dev/null
-@@ -1,67 +0,0 @@
--/*
-- * Copyright 2016 Broadcom
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License, version 2, as
-- * published by the Free Software Foundation (the "GPL").
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License version 2 (GPLv2) for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * version 2 (GPLv2) along with this source code.
-- */
--#ifndef DRIVERS_PCI_ECAM_H
--#define DRIVERS_PCI_ECAM_H
--
--#include <linux/kernel.h>
--#include <linux/platform_device.h>
--
--/*
-- * struct to hold pci ops and bus shift of the config window
-- * for a PCI controller.
-- */
--struct pci_config_window;
--struct pci_ecam_ops {
--	unsigned int			bus_shift;
--	struct pci_ops			pci_ops;
--	int				(*init)(struct device *,
--						struct pci_config_window *);
--};
--
--/*
-- * struct to hold the mappings of a config space window. This
-- * is expected to be used as sysdata for PCI controllers that
-- * use ECAM.
-- */
--struct pci_config_window {
--	struct resource			res;
--	struct resource			busr;
--	void				*priv;
--	struct pci_ecam_ops		*ops;
--	union {
--		void __iomem		*win;	/* 64-bit single mapping */
--		void __iomem		**winp; /* 32-bit per-bus mapping */
--	};
--};
--
--/* create and free pci_config_window */
--struct pci_config_window *pci_ecam_create(struct device *dev,
--		struct resource *cfgres, struct resource *busr,
--		struct pci_ecam_ops *ops);
--void pci_ecam_free(struct pci_config_window *cfg);
--
--/* map_bus when ->sysdata is an instance of pci_config_window */
--void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
--			       int where);
--/* default ECAM ops */
--extern struct pci_ecam_ops pci_generic_ecam_ops;
--
--#ifdef CONFIG_PCI_HOST_GENERIC
--/* for DT-based PCI controllers that support ECAM */
--int pci_host_common_probe(struct platform_device *pdev,
--			  struct pci_ecam_ops *ops);
--#endif
--#endif
-diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-index 8cba7ab..c18b9e3 100644
---- a/drivers/pci/host/pci-host-common.c
-+++ b/drivers/pci/host/pci-host-common.c
-@@ -20,10 +20,9 @@
- #include <linux/module.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-+#include <linux/pci-ecam.h>
- #include <linux/platform_device.h>
- 
--#include "../ecam.h"
--
- static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
- 		       struct list_head *resources, struct resource **bus_range)
++static int nvmeq_irq(struct nvme_queue *nvmeq)
++{
++	return to_pci_dev(nvmeq->dev->dev)->irqs[nvmeq->cq_vector];
++}
++
+ static int nvme_admin_init_hctx(struct blk_mq_hw_ctx *hctx, void *data,
+ 				unsigned int hctx_idx)
  {
-diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-index 6eaceab..f0ca6de 100644
---- a/drivers/pci/host/pci-host-generic.c
-+++ b/drivers/pci/host/pci-host-generic.c
-@@ -23,10 +23,9 @@
- #include <linux/module.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-+#include <linux/pci-ecam.h>
- #include <linux/platform_device.h>
+@@ -1055,7 +1059,7 @@ static int nvme_suspend_queue(struct nvme_queue *nvmeq)
+ 		spin_unlock_irq(&nvmeq->q_lock);
+ 		return 1;
+ 	}
+-	vector = nvmeq->dev->entry[nvmeq->cq_vector].vector;
++	vector = nvmeq_irq(nvmeq);
+ 	nvmeq->dev->online_queues--;
+ 	nvmeq->cq_vector = -1;
+ 	spin_unlock_irq(&nvmeq->q_lock);
+@@ -1063,7 +1067,6 @@ static int nvme_suspend_queue(struct nvme_queue *nvmeq)
+ 	if (!nvmeq->qid && nvmeq->dev->ctrl.admin_q)
+ 		blk_mq_stop_hw_queues(nvmeq->dev->ctrl.admin_q);
  
--#include "../ecam.h"
--
- static struct pci_ecam_ops gen_pci_cfg_cam_bus_ops = {
- 	.bus_shift	= 16,
- 	.pci_ops	= {
-diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/host/pci-thunder-ecam.c
-index 540d030..a9fc1c9 100644
---- a/drivers/pci/host/pci-thunder-ecam.c
-+++ b/drivers/pci/host/pci-thunder-ecam.c
-@@ -11,10 +11,9 @@
- #include <linux/ioport.h>
- #include <linux/of_pci.h>
- #include <linux/of.h>
-+#include <linux/pci-ecam.h>
- #include <linux/platform_device.h>
+-	irq_set_affinity_hint(vector, NULL);
+ 	free_irq(vector, nvmeq);
  
--#include "../ecam.h"
--
- static void set_val(u32 v, int where, int size, u32 *val)
+ 	return 0;
+@@ -1182,11 +1185,11 @@ static int queue_request_irq(struct nvme_dev *dev, struct nvme_queue *nvmeq,
+ 							const char *name)
  {
- 	int shift = (where & 3) * 8;
-diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-index 9b8ab94..5020d3d 100644
---- a/drivers/pci/host/pci-thunder-pem.c
-+++ b/drivers/pci/host/pci-thunder-pem.c
-@@ -18,10 +18,9 @@
- #include <linux/module.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-+#include <linux/pci-ecam.h>
- #include <linux/platform_device.h>
+ 	if (use_threaded_interrupts)
+-		return request_threaded_irq(dev->entry[nvmeq->cq_vector].vector,
+-					nvme_irq_check, nvme_irq, IRQF_SHARED,
+-					name, nvmeq);
+-	return request_irq(dev->entry[nvmeq->cq_vector].vector, nvme_irq,
+-				IRQF_SHARED, name, nvmeq);
++		return request_threaded_irq(nvmeq_irq(nvmeq), nvme_irq_check,
++				nvme_irq, IRQF_SHARED, name, nvmeq);
++	else
++		return request_irq(nvmeq_irq(nvmeq), nvme_irq, IRQF_SHARED,
++				name, nvmeq);
+ }
  
--#include "../ecam.h"
+ static void nvme_init_queue(struct nvme_queue *nvmeq, u16 qid)
+@@ -1463,7 +1466,7 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
+ {
+ 	struct nvme_queue *adminq = dev->queues[0];
+ 	struct pci_dev *pdev = to_pci_dev(dev->dev);
+-	int result, i, vecs, nr_io_queues, size;
++	int result, nr_io_queues, size;
+ 
+ 	nr_io_queues = num_possible_cpus();
+ 	result = nvme_set_queue_count(&dev->ctrl, &nr_io_queues);
+@@ -1506,29 +1509,17 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
+ 	}
+ 
+ 	/* Deregister the admin queue's interrupt */
+-	free_irq(dev->entry[0].vector, adminq);
++	free_irq(pdev->irqs[0], adminq);
+ 
+ 	/*
+ 	 * If we enable msix early due to not intx, disable it again before
+ 	 * setting up the full range we need.
+ 	 */
+-	if (pdev->msi_enabled)
+-		pci_disable_msi(pdev);
+-	else if (pdev->msix_enabled)
+-		pci_disable_msix(pdev);
 -
- #define PEM_CFG_WR 0x28
- #define PEM_CFG_RD 0x30
+-	for (i = 0; i < nr_io_queues; i++)
+-		dev->entry[i].entry = i;
+-	vecs = pci_enable_msix_range(pdev, dev->entry, 1, nr_io_queues);
+-	if (vecs < 0) {
+-		vecs = pci_enable_msi_range(pdev, 1, min(nr_io_queues, 32));
+-		if (vecs < 0) {
+-			vecs = 1;
+-		} else {
+-			for (i = 0; i < vecs; i++)
+-				dev->entry[i].vector = i + pdev->irq;
+-		}
+-	}
++	pci_free_irq_vectors(pdev);
++	nr_io_queues = pci_alloc_irq_vectors(pdev, nr_io_queues, 0);
++	if (nr_io_queues <= 0)
++		return -EIO;
++	dev->max_qid = nr_io_queues;
  
-diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-new file mode 100644
-index 0000000..9878beb
---- /dev/null
-+++ b/include/linux/pci-ecam.h
-@@ -0,0 +1,67 @@
-+/*
-+ * Copyright 2016 Broadcom
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License, version 2, as
-+ * published by the Free Software Foundation (the "GPL").
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License version 2 (GPLv2) for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * version 2 (GPLv2) along with this source code.
-+ */
-+#ifndef DRIVERS_PCI_ECAM_H
-+#define DRIVERS_PCI_ECAM_H
-+
-+#include <linux/kernel.h>
-+#include <linux/platform_device.h>
-+
-+/*
-+ * struct to hold pci ops and bus shift of the config window
-+ * for a PCI controller.
-+ */
-+struct pci_config_window;
-+struct pci_ecam_ops {
-+	unsigned int			bus_shift;
-+	struct pci_ops			pci_ops;
-+	int				(*init)(struct device *,
-+						struct pci_config_window *);
-+};
-+
-+/*
-+ * struct to hold the mappings of a config space window. This
-+ * is expected to be used as sysdata for PCI controllers that
-+ * use ECAM.
-+ */
-+struct pci_config_window {
-+	struct resource			res;
-+	struct resource			busr;
-+	void				*priv;
-+	struct pci_ecam_ops		*ops;
-+	union {
-+		void __iomem		*win;	/* 64-bit single mapping */
-+		void __iomem		**winp; /* 32-bit per-bus mapping */
-+	};
-+};
-+
-+/* create and free pci_config_window */
-+struct pci_config_window *pci_ecam_create(struct device *dev,
-+		struct resource *cfgres, struct resource *busr,
-+		struct pci_ecam_ops *ops);
-+void pci_ecam_free(struct pci_config_window *cfg);
-+
-+/* map_bus when ->sysdata is an instance of pci_config_window */
-+void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
-+			       int where);
-+/* default ECAM ops */
-+extern struct pci_ecam_ops pci_generic_ecam_ops;
-+
-+#ifdef CONFIG_PCI_HOST_GENERIC
-+/* for DT-based PCI controllers that support ECAM */
-+int pci_host_common_probe(struct platform_device *pdev,
-+			  struct pci_ecam_ops *ops);
-+#endif
-+#endif
+ 	/*
+ 	 * Should investigate if there's a performance win from allocating
+@@ -1536,8 +1527,6 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
+ 	 * path to scale better, even if the receive path is limited by the
+ 	 * number of interrupts.
+ 	 */
+-	nr_io_queues = vecs;
+-	dev->max_qid = nr_io_queues;
+ 
+ 	result = queue_request_irq(dev, adminq, adminq->irqname);
+ 	if (result) {
+@@ -1551,22 +1540,6 @@ static int nvme_setup_io_queues(struct nvme_dev *dev)
+ 	return result;
+ }
+ 
+-static void nvme_set_irq_hints(struct nvme_dev *dev)
+-{
+-	struct nvme_queue *nvmeq;
+-	int i;
+-
+-	for (i = 0; i < dev->online_queues; i++) {
+-		nvmeq = dev->queues[i];
+-
+-		if (!nvmeq->tags || !(*nvmeq->tags))
+-			continue;
+-
+-		irq_set_affinity_hint(dev->entry[nvmeq->cq_vector].vector,
+-					blk_mq_tags_cpumask(*nvmeq->tags));
+-	}
+-}
+-
+ static void nvme_dev_scan(struct work_struct *work)
+ {
+ 	struct nvme_dev *dev = container_of(work, struct nvme_dev, scan_work);
+@@ -1574,7 +1547,6 @@ static void nvme_dev_scan(struct work_struct *work)
+ 	if (!dev->tagset.tags)
+ 		return;
+ 	nvme_scan_namespaces(&dev->ctrl);
+-	nvme_set_irq_hints(dev);
+ }
+ 
+ static void nvme_del_queue_end(struct request *req, int error)
+@@ -1713,15 +1685,9 @@ static int nvme_pci_enable(struct nvme_dev *dev)
+ 	 * interrupts. Pre-enable a single MSIX or MSI vec for setup. We'll
+ 	 * adjust this later.
+ 	 */
+-	if (pci_enable_msix(pdev, dev->entry, 1)) {
+-		pci_enable_msi(pdev);
+-		dev->entry[0].vector = pdev->irq;
+-	}
+-
+-	if (!dev->entry[0].vector) {
+-		result = -ENODEV;
+-		goto disable;
+-	}
++	result = pci_alloc_irq_vectors(pdev, 1, 0);
++	if (result < 0)
++		return result;
+ 
+ 	cap = lo_hi_readq(dev->bar + NVME_REG_CAP);
+ 
+@@ -1763,10 +1729,7 @@ static void nvme_pci_disable(struct nvme_dev *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev->dev);
+ 
+-	if (pdev->msi_enabled)
+-		pci_disable_msi(pdev);
+-	else if (pdev->msix_enabled)
+-		pci_disable_msix(pdev);
++	pci_free_irq_vectors(pdev);
+ 
+ 	if (pci_is_enabled(pdev)) {
+ 		pci_disable_pcie_error_reporting(pdev);
+@@ -1835,7 +1798,6 @@ static void nvme_pci_free_ctrl(struct nvme_ctrl *ctrl)
+ 	if (dev->ctrl.admin_q)
+ 		blk_put_queue(dev->ctrl.admin_q);
+ 	kfree(dev->queues);
+-	kfree(dev->entry);
+ 	kfree(dev);
+ }
+ 
+@@ -2010,10 +1972,6 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	dev = kzalloc_node(sizeof(*dev), GFP_KERNEL, node);
+ 	if (!dev)
+ 		return -ENOMEM;
+-	dev->entry = kzalloc_node(num_possible_cpus() * sizeof(*dev->entry),
+-							GFP_KERNEL, node);
+-	if (!dev->entry)
+-		goto free;
+ 	dev->queues = kzalloc_node((num_possible_cpus() + 1) * sizeof(void *),
+ 							GFP_KERNEL, node);
+ 	if (!dev->queues)
+@@ -2056,7 +2014,6 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	nvme_dev_unmap(dev);
+  free:
+ 	kfree(dev->queues);
+-	kfree(dev->entry);
+ 	kfree(dev);
+ 	return result;
+ }
 -- 
-1.9.1
+2.1.4
