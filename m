@@ -1,114 +1,146 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:34141 "EHLO
+	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755880AbcEETPL (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 May 2016 15:15:11 -0400
+From: Florian Fainelli <f.fainelli@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	dhdang@apm.com,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	cov@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V7 05/11] acpi, pci: Support IO resources when parsing PCI host bridge resources.
-Date: Tue, 10 May 2016 17:19:55 +0200
-Message-Id: <1462893601-8937-6-git-send-email-tn@semihalf.com>
-In-Reply-To: <1462893601-8937-1-git-send-email-tn@semihalf.com>
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+	bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com,
+	bhelgaas@google.com, arnd@arndb.de,
+	Florian Fainelli <f.fainelli@gmail.com>
+Subject: [PATCH v2 1/2] Documentation: DT: bindings: Add Broadcom STB PCIe bindings
+Date: Thu,  5 May 2016 12:14:59 -0700
+Message-Id: <1462475700-1654-2-git-send-email-f.fainelli@gmail.com>
+In-Reply-To: <1462475700-1654-1-git-send-email-f.fainelli@gmail.com>
+References: <1462475700-1654-1-git-send-email-f.fainelli@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Platforms that have memory mapped IO port (such as ARM64) need special
-handling for PCI I/O resources. For host bridge's resource probing case
-these resources need to be fixed up with pci_register_io_range/pci_remap_iospace etc.
+From: Jim Quinlan <jim2101024@gmail.com>
 
-The same I/O resources need to be released after hotplug
-removal so that it can be re-added back by the pci_remap_iospace
-function during insertion. As a consequence we unmap I/O resources
-with pci_unmap_iospace when we release host bridge resources.
+This patchs adds the Device Tree bindings for the Broadcom STB PCIe root
+complex hardware.
 
-Signed-off-by: Jayachandran C <jchandra@broadcom.com>
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
 ---
- drivers/acpi/pci_root.c | 33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+Changes in v2:
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index ae3fe4e..cb3071d 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -719,6 +719,34 @@ next:
- 			resource_list_add_tail(entry, resources);
- 	}
- }
-+static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
-+{
-+#ifdef PCI_IOBASE
-+	struct resource *res = entry->res;
-+	resource_size_t cpu_addr = res->start;
-+	resource_size_t pci_addr = cpu_addr - entry->offset;
-+	resource_size_t length = resource_size(res);
-+	unsigned long port;
+- rewrite the binding document almost from scratch to include many more
+  references to existing documents
+- describe missing properties
+- give better examples
+
+ .../devicetree/bindings/pci/brcm,brcmstb-pcie.txt  | 98 ++++++++++++++++++++++
+ 1 file changed, 98 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
+
+diff --git a/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
+new file mode 100644
+index 000000000000..3682b0f0bc26
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
+@@ -0,0 +1,98 @@
++Broadcom STB PCIe Host Controller Device Tree Bindings
 +
-+	if (pci_register_io_range(cpu_addr, length))
-+		goto err;
++This document describes the binding of the PCIe Root Complex hardware found in
++Broadcom Set Top Box System-on-Chips such as BCM7425 (MIPS), BCM7435 (MIPS) and
++BCM7445 (ARMv7).
 +
-+	port = pci_address_to_pio(cpu_addr);
-+	if (port == (unsigned long)-1)
-+		goto err;
++Required properties:
++- compatible: must be one of: "brcm,bcm7425-pcie"
++			      "brcm,bcm7435-pcie"
++			      "brcm,bcm7445-pcie"
 +
-+	res->start = port;
-+	res->end = port + length - 1;
-+	entry->offset = port - pci_addr;
++- reg: specifies the physical base address of the controller registers and
++  its length
 +
-+	if (pci_remap_iospace(res, cpu_addr) < 0)
-+		goto err;
-+	pr_info("Remapped I/O %pa to %pR\n", &cpu_addr, res);
-+	return;
-+err:
-+	res->flags |= IORESOURCE_DISABLED;
-+#endif
-+}
- 
- int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- {
-@@ -740,6 +768,9 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- 			"no IO and memory resources present in _CRS\n");
- 	else {
- 		resource_list_for_each_entry_safe(entry, tmp, list) {
-+			if (entry->res->flags & IORESOURCE_IO)
-+				acpi_pci_root_remap_iospace(entry);
++- interrupt-parent: must be a reference (phandle) to the parent interrupt
++  controller in the system (7038-l1-intc on MIPS, GIC on ARM/ARM64)
 +
- 			if (entry->res->flags & IORESOURCE_DISABLED)
- 				resource_list_destroy_entry(entry);
- 			else
-@@ -811,6 +842,8 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
- 
- 	resource_list_for_each_entry(entry, &bridge->windows) {
- 		res = entry->res;
-+		if (res->flags & IORESOURCE_IO)
-+			pci_unmap_iospace(res);
- 		if (res->parent &&
- 		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
- 			release_resource(res);
++- interrrupts: first interrupt must be the Level 1 interrupt number corresponding
++  to the main PCIe RC interrupt, second interrupt must be the MSI interrupt
++  See the interrupt-parent documentation for the number of cells and their meaning:
++  MIPS: Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7038-l1-intc.txt
++  ARM/ARM64: Documentation/devicetree/bindings/interrupt-controller/arm,gic.txt
++
++- interrupt-names: must be "pcie", and if present "msi"
++
++- interrupt-map: see pci.txt
++
++- interrupt-map-mask: see pci.txt
++
++- #address-cells: must be set to <3>, see pci.txt
++
++- #size-cells: must be set to <2>, see pci.txt
++
++- ranges: ranges for the PCI outbound windows, no I/O or prefetchable windows
++  must be specified here, only non-prefetchable. 32-bits windows or 64-bits
++  windows are allowed based on the host processor's capabilities (ARM w/ LPAE,
++  ARM64).
++
++- #interrupt-cells: set to <1>, see pci.txt
++
++- brcm,log2-scb-sizes: log2 size of the SCB window that is mapped to PCIe space
++  there must be exactly one value per memory controller present in the system
++  (ranges from 1 to 3)
++
++Optional properties:
++
++- msi-controller: indicates that this is a MSI controller node (when supported)
++
++- clocks: phandle to the functional clock that feeds into the PCIe RC block
++
++- clock-names: the name(s) of the clocks specified in 'clocks'.  Note
++  that if the 'clocks' property is given, 'clock-names' is mandatory,
++  and the name of the clock is expected to be "pcie".
++
++- brcm,ssc: boolean that indicates usage of spread-spectrum clocking
++
++- brcm,gen: integer that indicates desired forced generation of link: 1 => 2.5
++  Gbps, 2 => 5.0 Gbps, 3 => 8.0 Gbps. Will override the auto-negotation if
++  specified.
++
++- <*>-supply: see Documentation/devicetree/bindings/regulator/regulator.txt
++
++- <*>-supply-names: see Documentation/devicetree/bindings/regulator/regulator.txt
++
++Example Node:
++
++This example assumes that the top-level #address-cells = <2> and #size-cells =
++<2>, e.g: ARM LPAE configuration.
++
++	pcie0: pcie-controller@f0460000 {
++		reg = <0x0 0xf0460000 0x0 0x9310>;
++		interrupts = <0x0 0x33 0x4>, <0x0 0x34, 0x4>;
++		interrupt-names = "pcie", "msi";
++		compatible = "brcm,bcm7445-pcie";
++		#address-cells = <3>;
++		#size-cells = <2>;
++
++		/* Two non-prefetchable 32-bits memory space, each of 128MB
++ 		 * with the following mapping:
++		 * PCIe address		=> CPU physical address space
++		 * 0x00_0000_0000	=> 0x00_C000_0000
++		 * 0x00_0800_0000	=> 0x00_C800_0000
++		 */
++		ranges = <0x02000000 0x00000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x08000000>,
++			 <0x02000000 0x00000000 0x08000000 0x00000000 0xc8000000 0x00000000 0x08000000>;
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0xf800 0 0 7>;
++		interrupt-map = <0 0 0 1 &intc 47 3
++				 0 0 0 2 &intc 48 3
++				 0 0 0 3 &intc 49 3
++				 0 0 0 4 &intc 50 3>;
++		clocks = <&pcie0>;
++		clock-names = "pcie";
++		brcm,ssc;
++		brcm,log2-scb-sizes = <0x1e 0x1e 0x1e>;
++		vreg-wifi-pwr-supply-names = "vreg-wifi-pwr";
++		vreg-wifi-pwr-supply = <&vreg-wifi-pwr>;
++	};
 -- 
-1.9.1
+2.1.0
+
