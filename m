@@ -1,204 +1,236 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular2.263xmail.com ([211.157.152.3]:41402 "EHLO
-	regular2.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932088AbcE0Gsy (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 27 May 2016 02:48:54 -0400
-Subject: Re: [PATCH 2/2] pci: Add PCIe driver for Rockchip Soc
-To: Arnd Bergmann <arnd@arndb.de>, Shawn Lin <shawn.lin@rock-chips.com>
-References: <1463740105-7061-1-git-send-email-shawn.lin@rock-chips.com>
- <1463740156-7148-1-git-send-email-shawn.lin@rock-chips.com>
- <9836736.6VjP1ug4kE@wuerfel>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
-	Doug Anderson <dianders@chromium.org>,
-	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-From: Wenrui Li <wenrui.li@rock-chips.com>
-Message-ID: <5747EDC9.2080603@rock-chips.com>
-Date: Fri, 27 May 2016 14:48:41 +0800
+Received: from mail.kernel.org ([198.145.29.136]:55988 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758426AbcEFQEW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 6 May 2016 12:04:22 -0400
+Date: Fri, 6 May 2016 11:04:08 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: agordeev@redhat.com, pjw@netapp.com, axboe@fb.com,
+	keith.busch@intel.com, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org
+Subject: Re: [PATCH 1/2] PCI: Provide sensible irq vector alloc/free routines
+Message-ID: <20160506160408.GB15666@localhost>
+References: <1462457096-19795-1-git-send-email-hch@lst.de>
+ <1462457096-19795-2-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <9836736.6VjP1ug4kE@wuerfel>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1462457096-19795-2-git-send-email-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Thu, May 05, 2016 at 04:04:55PM +0200, Christoph Hellwig wrote:
+> Add a new pci_alloc_irq_vectors helper that allocates MSI-X or multi-MSI
+> vectors for PCI device while isolating the driver from the arcane details.
+> 
+> This include handling both MSI-X, MSI and legacy interrupt fallbacks
+> transparently, automatic capping to the available vectors as well as storing
+> the information needed for request_irq in the PCI device itself so that
+> a lot of boiler plate code in the driver can be removed.
+> 
+> In the future this will also allow us to automatically set up spreading
+> for interrupt vectors without having to duplicate it in all the drivers.
 
-On 2016/5/24 21:03, Arnd Bergmann wrote:
-> On Friday, May 20, 2016 6:29:16 PM CEST Shawn Lin wrote:
->
->> +static int rockchip_pcie_wr_own_conf(struct rockchip_pcie_port *pp,
->> +				     int where, int size, u32 val)
->> +{
->> +	u32 tmp;
->> +	int offset;
->> +
->> +	offset = (where & (~0x3));
->> +	tmp = readl(pp->apb_base + PCIE_RC_CONFIG_BASE + offset);
->> +	if (size == 4) {
->> +		writel(val, pp->apb_base + PCIE_RC_CONFIG_BASE + where);
->> +	} else if (size == 2) {
->> +		if (where & 0x2)
->> +			tmp = ((tmp & 0xffff) | (val << 16));
->> +		else
->> +			tmp = ((tmp & 0xffff0000) | val);
->> +
->> +		writel(tmp, pp->apb_base + PCIE_RC_CONFIG_BASE + offset);
->> +	} else if (size == 1) {
->> +		if ((where & 0x3) == 0)
->> +			tmp = ((tmp & (~0xff)) | val);
->> +		else if ((where & 0x3) == 1)
->> +			tmp = ((tmp & (~0xff00)) | (val << 8));
->> +		else if ((where & 0x3) == 2)
->> +			tmp = ((tmp & (~0xff0000)) | (val << 16));
->> +		else if ((where & 0x3) == 3)
->> +			tmp = ((tmp & (~0xff000000)) | (val << 24));
->> +
->> +		writel(tmp, pp->apb_base + PCIE_RC_CONFIG_BASE + offset);
->> +	} else {
->> +		return PCIBIOS_BAD_REGISTER_NUMBER;
->> +	}
->> +	return PCIBIOS_SUCCESSFUL;
->> +}
->
-> Why can't you access the individual sub-word registers here?
+I like this a lot.  One relatively minor comment below.
 
-Our soc not support byte and word write in these region. so we have to 
-use writel() to write these registers.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/pci/msi.c   | 108 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h |  19 +++++++++
+>  2 files changed, 127 insertions(+)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index a080f44..a510484 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -4,6 +4,7 @@
+>   *
+>   * Copyright (C) 2003-2004 Intel
+>   * Copyright (C) Tom Long Nguyen (tom.l.nguyen@intel.com)
+> + * Copyright (c) 2016 Christoph Hellwig.
+>   */
+>  
+>  #include <linux/err.h>
+> @@ -1120,6 +1121,113 @@ int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
+>  }
+>  EXPORT_SYMBOL(pci_enable_msix_range);
+>  
+> +static int __pci_enable_msix(struct pci_dev *dev, int nr_vecs)
+> +{
+> +	struct msix_entry *msix_entries;
+> +	int ret, i;
+> +
+> +	msix_entries = kcalloc(nr_vecs, sizeof(struct msix_entry), GFP_KERNEL);
+> +	if (!msix_entries)
+> +		return -ENOMEM;
+> +
+> +	for (i = 0; i < nr_vecs; i++)
+> +		msix_entries[i].entry = i;
+> +
+> +	ret = msix_capability_init(dev, msix_entries, nr_vecs);
+> +	if (ret == 0) {
+> +		for (i = 0; i < nr_vecs; i++)
+> +			dev->irqs[i] = msix_entries[i].vector;
+> +	}
+> +
+> +	kfree(msix_entries);
+> +	return ret;
+> +}
+> +
+> +static int __pci_enable_msi(struct pci_dev *dev, int nr_vecs)
+> +{
+> +	int ret, i;
+> +
+> +	ret = msi_capability_init(dev, nr_vecs);
+> +	if (ret == 0) {
+> +		for (i = 0; i < nr_vecs; i++)
+> +			dev->irqs[i] = dev->irq + i;
+> +	}
+> +
+> +	return ret;
+> +}
+> +
+> +/**
+> + * pci_alloc_irq_vectors - allocate multiple IRQs for a device
+> + * @dev:		PCI device to operate on
+> + * @nr_vecs:		number of vectors to operate on
+> + * @flags:		flags or quirks for the allocation
+> + *
+> + * Allocate @nr_vecs interrupt vectors for @dev, using MSI-X or MSI
+> + * vectors if available, and fall back to a single legacy vector
+> + * if neither is available.  Return the number of vectors allocated
+> + * (which might be smaller than @nr_vecs) if successful, or a negative
+> + * error code on error.  The Linux irq numbers for the allocated
+> + * vectors are stored in pdev->irqs.
 
->
->> +
->> +static int rockchip_pcie_rd_other_conf(struct rockchip_pcie_port *pp,
->> +				       struct pci_bus *bus, u32 devfn,
->> +				       int where, int size, u32 *val)
->> +{
->> +	u32 busdev;
->> +
->> +	busdev = PCIE_ECAM_ADDR(bus->number, PCI_SLOT(devfn),
->> +				PCI_FUNC(devfn), where);
->> +
->> +	if (busdev & (size - 1)) {
->> +		*val = 0;
->> +		return PCIBIOS_BAD_REGISTER_NUMBER;
->> +	}
->> +
->> +	if (size == 4) {
->> +		*val = readl(pp->reg_base + busdev);
->> +	} else if (size == 2) {
->> +		*val = readw(pp->reg_base + busdev);
->> +	} else if (size == 1) {
->> +		*val = readb(pp->reg_base + busdev);
->> +	} else {
->> +		*val = 0;
->> +		return PCIBIOS_BAD_REGISTER_NUMBER;
->> +	}
->> +	return PCIBIOS_SUCCESSFUL;
->> +}
->> +
->
-> This looks like the normal ECAM operations, you could just call those.
+I think the "flags" argument penalizes working devices unnecessarily.
+Everybody that implements MSI-X correctly has to pass that zero
+argument:
 
-I read ECAM reference code, I found it not support ioremap config space 
-for each bus individually on 64-bit systems. Our soc is 64-bit system, 
-and bus0 config space base address is 0xfda00000, bus1 base address is 
-0xf8100000. So I think it is not normal ECAM operations, I do not know 
-if I have understood correctly?
+  pci_alloc_irq_vectors(pdev, nr_io_queues, 0);
 
->
->> +	while (time_before(jiffies, timeout)) {
->> +		regmap_read(port->grf, port->pcie_status, &status);
->> +		if ((status & (1 << 9))) {
->> +			dev_info(port->dev, "pll locked!\n");
->> +			err = 0;
->> +			break;
->> +		}
->> +	}
->
-> Maybe add an msleep(1) here to avoid busy-looping?
+instead of putting the burden on the broken folks like this:
 
-Yeah, its a good suggestion.
+  pdev->msix_broken = 1;
+  pci_alloc_irq_vectors(pdev, nr_io_queues);
 
->
->
->> +	for (reg_no = 0; reg_no < (port->mem_size >> 20); reg_no++) {
->> +		err = rockchip_pcie_prog_ob_atu(port, reg_no + 1,
->> +						AXI_WRAPPER_MEM_WRITE,
->> +						20 - 1,
->> +						port->mem_bus_addr +
->> +							(reg_no << 20),
->> +						0);
->> +		if (err) {
->> +			dev_err(dev, "Program RC outbound atu failed\n");
->> +			return err;
->> +		}
->> +	}
->
-> What if there is more than one outbound memory window, e.g. prefetchable
-> and non-prefetchable?
->
-> Where do you set the I/O window?
+If we remember this via a bit in struct pci_dev, we can also make sure
+pci_enable_msix(), pci_enable_msix_range(), etc. fail as they should.
 
-
-Yeah, our soc support these outbound windows, we will support these 
-windows next patch.
-
->
->> +	err = rockchip_pcie_prog_ib_atu(port, 2, 32 - 1, 0x0, 0);
->> +	if (err) {
->> +		dev_err(dev, "Program RC inbound atu failed\n");
->> +		return err;
->> +	}
->
-> And this doesn't seem to reflect the DMA ranges.
-
-Our soc support all the ram region use as DMA zone. SO I set all the 32 
-bits bypass for the inbound ATS.
-
->
->> +
->> +	port->root_bus_nr = port->busn->start;
->> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
->> +		bus = pci_scan_root_bus_msi(port->dev, port->root_bus_nr,
->> +					    &rockchip_pcie_ops, port, &res,
->> +					    port->msi);
->> +	} else {
->> +		bus = pci_scan_root_bus(&pdev->dev, 0,
->> +					&rockchip_pcie_ops, port, &res);
->
->
-> PCI_MSI is selected unconditionally from Kconfig for this driver, so no
-> need for the compile-time check here.
-
-Yeah, we will delete the compile-time check in next patch.
-
->
->> +
->> +static int rockchip_pcie_remove(struct platform_device *pdev)
->> +{
->> +	struct rockchip_pcie_port *port = platform_get_drvdata(pdev);
->> +
->> +	clk_disable_unprepare(port->hclk_pcie);
->> +	clk_disable_unprepare(port->aclk_perf_pcie);
->> +	clk_disable_unprepare(port->aclk_pcie);
->> +	clk_disable_unprepare(port->clk_pciephy_ref);
->> +
->> +	return 0;
->> +}
->
-> You don't seem to remove the child devices here. Have you tried unloading the module?
->
-
-I don't seem the remove function in other pcie host driver. I think this 
-function could be deleted.
-
-> 	Arnd
->
->
->
->
->
-
-Best Regards
-Wenrui Li
-
+> + */
+> +int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
+> +		unsigned int flags)
+> +{
+> +	unsigned int ret;
+> +
+> +	if (WARN_ON_ONCE(dev->msi_enabled || dev->msix_enabled))
+> +		return -EINVAL;
+> +
+> +	if (!pci_msi_supported(dev, 1))
+> +		goto use_legacy_irq;
+> +
+> +	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX))
+> +		nr_vecs = min_t(unsigned int, nr_vecs, pci_msix_vec_count(dev));
+> +	else if (dev->msi_cap)
+> +		nr_vecs = min_t(unsigned int, nr_vecs, pci_msi_vec_count(dev));
+> +	else
+> +		goto use_legacy_irq;
+> +
+> +	dev->irqs = kcalloc(nr_vecs, sizeof(u32), GFP_KERNEL);
+> +	if (!dev->irqs)
+> +		return -ENOMEM;
+> +
+> +	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX))
+> +		ret = __pci_enable_msix(dev, nr_vecs);
+> +	else
+> +		ret = __pci_enable_msi(dev, nr_vecs);
+> +	if (ret)
+> +		goto out_free_irqs;
+> +
+> +	return 0;
+> +
+> +out_free_irqs:
+> +	kfree(dev->irqs);
+> +use_legacy_irq:
+> +	dev->irqs = &dev->irq;
+> +	return 1;
+> +}
+> +EXPORT_SYMBOL(pci_alloc_irq_vectors);
+> +
+> +/**
+> + * pci_free_irq_vectors - free previously allocated IRQs for a device
+> + * @dev:		PCI device to operate on
+> + *
+> + * Undoes the allocations and enabling in pci_alloc_irq_vectors().
+> + */
+> +void pci_free_irq_vectors(struct pci_dev *dev)
+> +{
+> +	if (dev->msix_enabled)
+> +		pci_disable_msix(dev);
+> +	else if (dev->msi_enabled)
+> +		pci_disable_msi(dev);
+> +
+> +	if (dev->irqs != &dev->irq)
+> +		kfree(dev->irqs);
+> +	dev->irqs = NULL;
+> +}
+> +EXPORT_SYMBOL(pci_free_irq_vectors);
+> +
+> +
+>  struct pci_dev *msi_desc_to_pci_dev(struct msi_desc *desc)
+>  {
+>  	return to_pci_dev(desc->dev);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 932ec74..e201d0d 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -322,6 +322,7 @@ struct pci_dev {
+>  	 * directly, use the values stored here. They might be different!
+>  	 */
+>  	unsigned int	irq;
+> +	unsigned int	*irqs;
+>  	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
+>  
+>  	bool match_driver;		/* Skip attaching driver */
+> @@ -1255,6 +1256,8 @@ struct msix_entry {
+>  	u16	entry;	/* driver uses to specify entry, OS writes */
+>  };
+>  
+> +#define PCI_IRQ_NOMSIX		(1 << 0) /* don't try to use MSI-X interrupts */
+> +
+>  #ifdef CONFIG_PCI_MSI
+>  int pci_msi_vec_count(struct pci_dev *dev);
+>  void pci_msi_shutdown(struct pci_dev *dev);
+> @@ -1283,6 +1286,10 @@ static inline int pci_enable_msix_exact(struct pci_dev *dev,
+>  		return rc;
+>  	return 0;
+>  }
+> +
+> +int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
+> +		unsigned int flags);
+> +void pci_free_irq_vectors(struct pci_dev *dev);
+>  #else
+>  static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+>  static inline void pci_msi_shutdown(struct pci_dev *dev) { }
+> @@ -1306,6 +1313,18 @@ static inline int pci_enable_msix_range(struct pci_dev *dev,
+>  static inline int pci_enable_msix_exact(struct pci_dev *dev,
+>  		      struct msix_entry *entries, int nvec)
+>  { return -ENOSYS; }
+> +
+> +static inline int pci_alloc_irq_vectors(struct pci_dev *dev,
+> +		unsigned int nr_vecs, unsigned int flags)
+> +{
+> +	dev->irqs = &dev->irq;
+> +	return 1;
+> +}
+> +
+> +static inline void pci_free_irq_vectors(struct pci_dev *dev)
+> +{
+> +	dev->irqs = NULL;
+> +}
+>  #endif
+>  
+>  #ifdef CONFIG_PCIEPORTBUS
+> -- 
+> 2.1.4
+> 
