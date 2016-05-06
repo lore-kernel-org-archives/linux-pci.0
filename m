@@ -1,202 +1,198 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:58784 "EHLO mga09.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:55128 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751450AbcELBUB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 May 2016 21:20:01 -0400
-From: "Tian, Kevin" <kevin.tian@intel.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-CC: Yongji Xie <xyjxie@linux.vnet.ibm.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"aik@ozlabs.ru" <aik@ozlabs.ru>,
-	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-	"paulus@samba.org" <paulus@samba.org>,
-	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
-	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
-	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
-	"eric.auger@linaro.org" <eric.auger@linaro.org>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
-	"alistair@popple.id.au" <alistair@popple.id.au>,
-	"ruscur@russell.cc" <ruscur@russell.cc>
-Subject: RE: [PATCH 5/5] vfio-pci: Allow to mmap MSI-X table if interrupt
- remapping is supported
-Date: Thu, 12 May 2016 01:19:44 +0000
-Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D15F850046@SHSMSX101.ccr.corp.intel.com>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-	<1461761010-5452-6-git-send-email-xyjxie@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F842512@SHSMSX101.ccr.corp.intel.com>
-	<f7d73ac3-470d-a0d2-0a97-05be630480dd@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F842653@SHSMSX101.ccr.corp.intel.com>
-	<e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
-	<063D6719AE5E284EB5DD2968C1650D6D5F4B52B5@AcuExch.aculab.com>
-	<4be013bc-e81b-84c5-06d3-e1b3f46b3227@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F8474A4@SHSMSX101.ccr.corp.intel.com>
-	<20160505090513.56886c12@t450s.home>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F84EEBA@SHSMSX101.ccr.corp.intel.com>
- <20160511095331.18436241@t450s.home>
-In-Reply-To: <20160511095331.18436241@t450s.home>
-Content-Type: text/plain; charset="us-ascii"
+	id S1758112AbcEFPtP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 6 May 2016 11:49:15 -0400
+Date: Fri, 6 May 2016 10:48:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jay Cornwall <jay@jcornwall.me>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: Add pci_enable_atomic_request
+Message-ID: <20160506154858.GA15952@localhost>
+References: <1443110390-4080-1-git-send-email-jay@jcornwall.me>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1443110390-4080-1-git-send-email-jay@jcornwall.me>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> Sent: Wednesday, May 11, 2016 11:54 PM
+On Thu, Sep 24, 2015 at 10:59:50AM -0500, Jay Cornwall wrote:
+> The PCIe 3.0 AtomicOp (6.15) feature allows atomic transctions to be requested
+> by, routed through and completed by PCIe components. Routing and completion
+> do not require software support. Component support for each is detectable via
+> the DEVCAP2 register.
 > 
-> On Wed, 11 May 2016 06:29:06 +0000
-> "Tian, Kevin" <kevin.tian@intel.com> wrote:
+> AtomicOp requests are permitted only if a component's
+> DEVCTL2.ATOMICOP_REQUESTER_ENABLE field is set. This capability cannot be
+> detected but is a no-op if set on a component with no support. These requests
+> can only be serviced if the upstream components support AtomicOp completion
+> and/or routing to a component which does.
 > 
-> > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > > Sent: Thursday, May 05, 2016 11:05 PM
-> > >
-> > > On Thu, 5 May 2016 12:15:46 +0000
-> > > "Tian, Kevin" <kevin.tian@intel.com> wrote:
-> > >
-> > > > > From: Yongji Xie [mailto:xyjxie@linux.vnet.ibm.com]
-> > > > > Sent: Thursday, May 05, 2016 7:43 PM
-> > > > >
-> > > > > Hi David and Kevin,
-> > > > >
-> > > > > On 2016/5/5 17:54, David Laight wrote:
-> > > > >
-> > > > > > From: Tian, Kevin
-> > > > > >> Sent: 05 May 2016 10:37
-> > > > > > ...
-> > > > > >>> Acutually, we are not aimed at accessing MSI-X table from
-> > > > > >>> guest. So I think it's safe to passthrough MSI-X table if we
-> > > > > >>> can make sure guest kernel would not touch MSI-X table in
-> > > > > >>> normal code path such as para-virtualized guest kernel on PPC64.
-> > > > > >>>
-> > > > > >> Then how do you prevent malicious guest kernel accessing it?
-> > > > > > Or a malicious guest driver for an ethernet card setting up
-> > > > > > the receive buffer ring to contain a single word entry that
-> > > > > > contains the address associated with an MSI-X interrupt and
-> > > > > > then using a loopback mode to cause a specific packet be
-> > > > > > received that writes the required word through that address.
-> > > > > >
-> > > > > > Remember the PCIe cycle for an interrupt is a normal memory write
-> > > > > > cycle.
-> > > > > >
-> > > > > > 	David
-> > > > > >
-> > > > >
-> > > > > If we have enough permission to load a malicious driver or
-> > > > > kernel, we can easily break the guest without exposed
-> > > > > MSI-X table.
-> > > > >
-> > > > > I think it should be safe to expose MSI-X table if we can
-> > > > > make sure that malicious guest driver/kernel can't use
-> > > > > the MSI-X table to break other guest or host. The
-> > > > > capability of IRQ remapping could provide this
-> > > > > kind of protection.
-> > > > >
-> > > >
-> > > > With IRQ remapping it doesn't mean you can pass through MSI-X
-> > > > structure to guest. I know actual IRQ remapping might be platform
-> > > > specific, but at least for Intel VT-d specification, MSI-X entry must
-> > > > be configured with a remappable format by host kernel which
-> > > > contains an index into IRQ remapping table. The index will find a
-> > > > IRQ remapping entry which controls interrupt routing for a specific
-> > > > device. If you allow a malicious program random index into MSI-X
-> > > > entry of assigned device, the hole is obvious...
-> > > >
-> > > > Above might make sense only for a IRQ remapping implementation
-> > > > which doesn't rely on extended MSI-X format (e.g. simply based on
-> > > > BDF). If that's the case for PPC, then you should build MSI-X
-> > > > passthrough based on this fact instead of general IRQ remapping
-> > > > enabled or not.
-> > >
-> > > I don't think anyone is expecting that we can expose the MSI-X vector
-> > > table to the guest and the guest can make direct use of it.  The end
-> > > goal here is that the guest on a power system is already
-> > > paravirtualized to not program the device MSI-X by directly writing to
-> > > the MSI-X vector table.  They have hypercalls for this since they
-> > > always run virtualized.  Therefore a) they never intend to touch the
-> > > MSI-X vector table and b) they have sufficient isolation that a guest
-> > > can only hurt itself by doing so.
-> > >
-> > > On x86 we don't have a), our method of programming the MSI-X vector
-> > > table is to directly write to it. Therefore we will always require QEMU
-> > > to place a MemoryRegion over the vector table to intercept those
-> > > accesses.  However with interrupt remapping, we do have b) on x86, which
-> > > means that we don't need to be so strict in disallowing user accesses
-> > > to the MSI-X vector table.  It's not useful for configuring MSI-X on
-> > > the device, but the user should only be able to hurt themselves by
-> > > writing it directly.  x86 doesn't really get anything out of this
-> > > change, but it helps this special case on power pretty significantly
-> > > aiui.  Thanks,
-> > >
-> >
-> > Allowing guest direct write to MSI-x table has system-wide impact.
-> > As I explained earlier, hypervisor needs to control "interrupt_index"
-> > programmed in MSI-X entry, which is used to associate a specific
-> > IRQ remapping entry. Now if you expose whole MSI-x table to guest,
-> > it can program random index into MSI-X entry to associate with
-> > any IRQ remapping entry and then there won't be any isolation per se.
-> >
-> > You can check "5.5.2 MSI and MSI-X Register Programming" in VT-d
-> > spec.
+> A concrete example is the AMD Fiji-class GPU, which is specified to support
+> AtomicOp requests, routed through a PLX 8747 switch (advertising AtomicOp
+> routing) to a Haswell host bridge (advertising AtomicOp completion support).
+> When AtomicOp requests are disabled the GPU logs attempts to initiate requests
+> to an MMIO register for debugging.
 > 
-> I think you're extrapolating beyond the vfio interface.  The change
-> here is to remove the vfio protection of the MSI-X vector table when
-> the system provides interrupt isolation.  The argument is that this is
-> safe to do because the hardware protects the host from erroneous and
-> malicious user programming, but it is not meant to provide a means to
-> program MSI-X directly through the vector table.  This is effectively
-
-Sorry I didn't get this point. Once we allow userspace to mmap MSI-X
-table, isn't it equivalent to allowing userspace directly program vector
-table? Or is there other mechanism to prevent direct programming?
-
-> the same as general DMA programming, if the vfio programming model is
-> not followed the device generates iommu faults.  I do have a concern
-> that userspace driver writers are going to more often presume they can
-> use the vector table directly because of this change, but I don't know
-> that that is sufficient reason to prevent such a change.  They'll
-> quickly discover the device generates faults on interrupt rather than
-> working as expected.
-
-If userspace can actually program vector table directly, there is not
-always fault triggered. As long as MSI-X table is fully under control
-of userspace, any interrupt index can be used here which may link
-to a IRQ remapping entry allocated for other devices.
-
+> Add pci_enable_atomic_request for per-device control over AtomicOp requests.
+> Upstream bridges are checked for AtomicOp routing capability and the call
+> fails if any lack this capability. The root port is checked for AtomicOp
+> completion capabilities and the call fails if it does not support any.
+> Routes to other PCIe components are not checked for AtomicOp routing and
+> completion capabilities.
 > 
-> The question of how this affects the hypervisor is completely
-> separate.  Vfio in the kernel is a userspace driver interface, not a
-> hypervisor.  QEMU is the hypervisor.  We have no plans to provide the VM
-> with direct access to the MSI-X vector table for x86 guests on QEMU.
-> There will still be a MemoryRegion emulating access to the vector table
-> in order to translate writes into vfio interrupt ioctls.  POWER would
-> drop the MemoryRegion so that the full page is mapped to the guest,
-> with the expectation that the guest never makes use of it since MSI-X
-> is always configured via hypercalls on POWER systems.  Likewise I
-> expect ARM will still make use of the MemoryRegion emulating the vector
-> table, which leaves them exposed to the performance issue POWER is
-> trying to solve here since ARM also has 64k page support and has no
-> paravirtualized MSI-X programming interface afaik.  x86 is not
-> impervious to this issue either, but a 4k page size falls within the
-> PCI spec recommendations for MSI-X structure alignment, so it's much
-> more rare to have issues. We have certainly seen hardware vendors that
-> ignore the PCI spec alignment recommendations, but so far only for
-> placing device registers within the same page as the PBA, which is an
-> easier problem to deal with since the PBA is relatively unused by
-> drivers.  This may be an area where we need to develop a paravirt
-> interface for MSI-X programming which disable the MemoryRegion
-> emulating the vector table when used.  Thanks,
+> v2: Check for AtomicOp route to root port with AtomicOp completion
+> v3: Style fixes
 > 
+> Signed-off-by: Jay Cornwall <jay@jcornwall.me>
+> ---
+>  drivers/pci/pci.c             | 70 +++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h           |  1 +
+>  include/uapi/linux/pci_regs.h |  5 ++++
+>  3 files changed, 76 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 6a9a111..edc56e4 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2453,6 +2453,76 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+>  }
+>  
+>  /**
+> + * pci_enable_atomic_request - enable or disable AtomicOp requester
+> + * @dev: the PCI device
+> + *
+> + * Return 0 if the device is capable of generating AtomicOp requests,
+> + * all upstream bridges support AtomicOp routing, and the root port supports
+> + * 32-bit, 64-bit and/or 128-bit AtomicOp completion, or negative otherwise.
+> + */
+> +int pci_enable_atomic_request(struct pci_dev *dev)
 
-I get this point. I incorrectly line allowing userspace mmap MSI-X
-table to allowing guest direct access to MSI-X.
+This interface only works for Endpoints that want to generate
+AtomicOps targeting the Root Complex.  We should make this explicit,
+e.g., by naming it "pci_enable_atomic_ops_to_root" or something.
 
-Thanks
-Kevin
+If we wanted anything else (host-to-device or device-to-device), then
+we would need to know both ends (requester and completer) before we
+could figure out whether AtomicOps were even possible.
+
+> +{
+> +	struct pci_bus *bus = dev->bus;
+> +
+> +	if (!pci_is_pcie(dev))
+> +		return -EINVAL;
+> +
+> +	switch (pci_pcie_type(dev)) {
+> +	/*
+> +	 * PCIe 3.0, 6.15 specifies that endpoints and root ports are permitted
+> +	 * to implement AtomicOp requester capabilities.
+> +	 */
+> +	case PCI_EXP_TYPE_ENDPOINT:
+> +	case PCI_EXP_TYPE_LEG_END:
+> +	case PCI_EXP_TYPE_RC_END:
+> +	case PCI_EXP_TYPE_ROOT_PORT:
+> +		break;
+> +	default:
+> +		return -EINVAL;
+> +	}
+
+This should be a little stricter: we should return error unless "dev"
+is an Endpoint.
+
+> +	while (bus->parent) {
+> +		struct pci_dev *bridge = bus->self;
+> +		u32 cap;
+> +
+> +		pcie_capability_read_dword(bridge, PCI_EXP_DEVCAP2, &cap);
+> +
+> +		switch (pci_pcie_type(bridge)) {
+> +		/*
+> +		 * Upstream, downstream and root ports may implement AtomicOp
+> +		 * routing capabilities. AtomicOp routing via a root port is
+> +		 * not considered.
+> +		 */
+> +		case PCI_EXP_TYPE_UPSTREAM:
+> +		case PCI_EXP_TYPE_DOWNSTREAM:
+> +			if (!(cap & PCI_EXP_DEVCAP2_ATOMIC_ROUTING))
+> +				return -EINVAL;
+
+I think we also need to check the AtomicOp Egress Blocking bit.  I
+think this is only applicable for Upstream Ports (Downstream Ports
+will *receive* AtomicOps from an Endpoint, but egress toward the Root
+Complex should only be via an Upstream Port).
+
+Side note: we should add "lspci" support for AtomicOp capabilities and
+control.  This can be done any time and isn't dependent on any kernel
+changes.
+
+> +			break;
+> +
+> +		/*
+> +		 * Root ports are permitted to implement AtomicOp completion
+> +		 * capabilities.
+> +		 */
+> +		case PCI_EXP_TYPE_ROOT_PORT:
+> +			if (!(cap & (PCI_EXP_DEVCAP2_ATOMIC_COMP32 |
+> +				     PCI_EXP_DEVCAP2_ATOMIC_COMP64 |
+> +				     PCI_EXP_DEVCAP2_ATOMIC_COMP128)))
+> +				return -EINVAL;
+> +			break;
+> +		}
+> +
+> +
+> +		bus = bus->parent;
+> +	}
+> +
+> +	pcie_capability_set_word(dev, PCI_EXP_DEVCTL2,
+> +				 PCI_EXP_DEVCTL2_ATOMICOP_REQ);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL(pci_enable_atomic_request);
+> +
+> +/**
+>   * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
+>   * @dev: the PCI device
+>   * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index e90eb22..4e50003 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1801,6 +1801,7 @@ void pci_request_acs(void);
+>  bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+>  bool pci_acs_path_enabled(struct pci_dev *start,
+>  			  struct pci_dev *end, u16 acs_flags);
+> +int pci_enable_atomic_request(struct pci_dev *dev);
+>  
+>  #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+>  #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 413417f..013c2bd 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -571,6 +571,10 @@
+>   */
+>  #define PCI_EXP_DEVCAP2		36	/* Device Capabilities 2 */
+>  #define  PCI_EXP_DEVCAP2_ARI		0x00000020 /* Alternative Routing-ID */
+> +#define  PCI_EXP_DEVCAP2_ATOMIC_ROUTING	0x00000040 /* AtomicOp routing */
+> +#define  PCI_EXP_DEVCAP2_ATOMIC_COMP32	0x00000080 /* 32b AtomicOp completion */
+> +#define  PCI_EXP_DEVCAP2_ATOMIC_COMP64	0x00000100 /* 64b AtomicOp completion */
+> +#define  PCI_EXP_DEVCAP2_ATOMIC_COMP128	0x00000200 /* 128b AtomicOp completion*/
+>  #define  PCI_EXP_DEVCAP2_LTR		0x00000800 /* Latency tolerance reporting */
+>  #define  PCI_EXP_DEVCAP2_OBFF_MASK	0x000c0000 /* OBFF support mechanism */
+>  #define  PCI_EXP_DEVCAP2_OBFF_MSG	0x00040000 /* New message signaling */
+> @@ -578,6 +582,7 @@
+>  #define PCI_EXP_DEVCTL2		40	/* Device Control 2 */
+>  #define  PCI_EXP_DEVCTL2_COMP_TIMEOUT	0x000f	/* Completion Timeout Value */
+>  #define  PCI_EXP_DEVCTL2_ARI		0x0020	/* Alternative Routing-ID */
+> +#define  PCI_EXP_DEVCTL2_ATOMICOP_REQ	0x0040	/* Allow AtomicOp requests */
+>  #define  PCI_EXP_DEVCTL2_IDO_REQ_EN	0x0100	/* Allow IDO for requests */
+>  #define  PCI_EXP_DEVCTL2_IDO_CMP_EN	0x0200	/* Allow IDO for completions */
+>  #define  PCI_EXP_DEVCTL2_LTR_EN		0x0400	/* Enable LTR mechanism */
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
