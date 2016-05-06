@@ -1,157 +1,140 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	dhdang@apm.com,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	cov@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V8 0/9] Support for ARM64 ACPI based PCI host controller
-Date: Mon, 30 May 2016 17:14:13 +0200
-Message-Id: <1464621262-26770-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from e23smtp09.au.ibm.com ([202.81.31.142]:51488 "EHLO
+	e23smtp09.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754466AbcEFA3j (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Thu, 5 May 2016 20:29:39 -0400
+Received: from localhost
+	by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 6 May 2016 10:29:36 +1000
+Date: Fri, 6 May 2016 10:28:34 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Alexey Kardashevskiy <aik@ozlabs.ru>,
+	Bjorn Helgaas <bhelgaas@google.com>, dja@axtens.net,
+	Alistair Popple <alistair@popple.id.au>
+Subject: Re: [PATCH v9 22/22] PCI/hotplug: PowerPC PowerNV PCI hotplug driver
+Message-ID: <20160506002834.GA5509@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1462281773-26438-23-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAL_JsqLAYk2S80LNvF2z2ZzPfCWAbpz2LNKK-04OgSkabjWbxQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL_JsqLAYk2S80LNvF2z2ZzPfCWAbpz2LNKK-04OgSkabjWbxQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->From the functionality point of view this series may be split into the
-following logic parts:
-1. Export ECAM API and add parent device to pci_config_window
-2. Add IO resources handling to PCI core code
-3. Support for generic domain assignment based on ACPI
-4. New MCFG driver
-5. Implement ARM64 ACPI based PCI host controller driver under arch/arm64/
+On Thu, May 05, 2016 at 12:04:49PM -0500, Rob Herring wrote:
+>On Tue, May 3, 2016 at 8:22 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+>> This adds standalone driver to support PCI hotplug for PowerPC PowerNV
+>> platform that runs on top of skiboot firmware. The firmware identifies
+>> hotpluggable slots and marked their device tree node with proper
+>> "ibm,slot-pluggable" and "ibm,reset-by-firmware". The driver scans
+>> device tree nodes to create/register PCI hotplug slot accordingly.
+>>
+>> The PCI slots are organized in fashion of tree, which means one
+>> PCI slot might have parent PCI slot and parent PCI slot possibly
+>> contains multiple child PCI slots. At the plugging time, the parent
+>> PCI slot is populated before its children. The child PCI slots are
+>> removed before their parent PCI slot can be removed from the system.
+>>
+>> If the skiboot firmware doesn't support slot status retrieval, the PCI
+>> slot device node shouldn't have property "ibm,reset-by-firmware". In
+>> that case, none of valid PCI slots will be detected from device tree.
+>> The skiboot firmware doesn't export the capability to access attention
+>> LEDs yet and it's something for TBD.
+>>
+>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+>[...]
+>
+>> +static void pnv_php_handle_poweron(struct pnv_php_slot *php_slot)
+>> +{
+>> +       void *fdt, *fdt1, *dt;
+>> +       int confirm = PNV_PHP_POWER_CONFIRMED_SUCCESS;
+>> +       int ret;
+>> +
+>> +       /* We don't know the FDT blob size. We try to get it through
+>> +        * maximal memory chunk and then copy it to another chunk that
+>> +        * fits the real size.
+>> +        */
+>> +       fdt1 = kzalloc(0x10000, GFP_KERNEL);
+>> +       if (!fdt1)
+>> +               goto error;
+>> +
+>> +       ret = pnv_pci_get_device_tree(php_slot->dn->phandle, fdt1, 0x10000);
+>> +       if (ret)
+>> +               goto free_fdt1;
+>> +
+>> +       fdt = kzalloc(fdt_totalsize(fdt1), GFP_KERNEL);
+>> +       if (!fdt)
+>> +               goto free_fdt1;
+>> +
+>> +       /* Unflatten device tree blob */
+>> +       memcpy(fdt, fdt1, fdt_totalsize(fdt1));
+>
+>This is wrong. If the size is greater than 64K, then you will be
+>overrunning the fdt1 buffer. You need to fetch the FDT again if it is
+>bigger than 64KB.
+>
 
-Patches has been built on top of 4.7-rc1 and can be found here:
-git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v8)
+Thanks for review, Rob. Sorry that I don't see how it's a problem. An
+errcode is returned from pnv_pci_get_device_tree() if the FDT blob
+size is greater than 64K. In this case, memcpy() won't be triggered.
+pnv_pci_get_device_tree() relies on firmware implementation which
+avoids overrunning the buffer.
 
-This has been tested on Cavium ThunderX server. Any help in reviewing and
-testing is very appreciated.
+On the other hand, it would be reasonable to retry retriving the
+FDT blob if 64K buffer isn't enough. Also, kzalloc() can be replaced
+with alloc_pages() as 64K is the default page size on PPC64. I will
+have something like below until some one has more concerns. As the
+size of the allocated buffer will be greater than the real FDT blob
+size, some memory (not too much) is wasted. I guess it should be ok.
 
-v7 -> v8
-- move code from drivers/acpi/pci_root_generic.c to arch/arm64/kernel/pci.c
-- minor changes around domain assignment
-- pci_mcfg.c improvements for parsing MCFG tables and lookup its entries
+	struct page *page;
+	void *fdt;
+	unsigned int order;
+	int ret;
 
-v6 -> v7
-- drop quirks handling
-- changes for ACPI companion and domain number assignment approach
-- implement arch pcibios_{add|remove}_bus and call acpi_pci_{add|remove}_bus from there
-- cleanups around nomenclature
-- use resources oriented API for ECAM
-- fix for based address calculation before mapping ECAM region
-- remove useless lock for MCFG lookup
-- move MCFG stuff to separated file pci_mcfg.c
-- drop MCFG entries caching
-- rebase against 4.6-rc7
+	for (order = 0; order < MAX_ORDER; order++) {
+		page = alloc_pages(GFP_KERNEL, order);
+		if (page) {
+			fdt = page_address(page);
+			ret = pnv_pci_get_device_tree(php_slot->dn->phandle,
+						      fdt, (1 << order) * PAGE_SIZE);
+			if (ret) {
+				dev_dbg(&php_slot->pdev.dev, "Error %d getting device tree (%d)\n",
+					ret, order);
+				free_pages(fdt, order);
+				continue;
+			}
+		}
+	}
 
-v5 -> v6
-- drop idea of x86 MMCONFIG code refactoring
-- integrate JC's patches which introduce new ECAM API:
-  https://lkml.org/lkml/2016/4/11/907
-  git: https://github.com/jchandra-brcm/linux/ (arm64-acpi-pci-v3)
-- integrate Sinan's fix for releasing IO resources, see patch [06/13]
-- added ACPI support for ThunderX ECAM and PEM drivers
-- rebase against 4.6-rc2
+	if (order >= MAX_ORDER) {
+		dev_warn(&php_slot->pdev.dev, "Cannot get device tree\n");
+		return;
+	}
 
-v4 -> v5
-- drop MCFG refactoring group patches 1-6 from series v4 and integrate Jayachandran's patch
-  https://patchwork.ozlabs.org/patch/575525/
-- rewrite PCI legacy IRQs allocation
-- squash two patches 11 and 12 from series v4, fixed bisection issue
-- changelog improvements
-- rebase against 4.5-rc3
+	/* Unflatten the blob without copying it to another allocated buffer */
 
-v3 -> v4
-- drop Jiang's fix http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04318.html
-- add Lorenzo's fix patch 19/24
-- ACPI PCI bus domain number assigning cleanup
-- change resource management, we now claim and reassign resources
-- improvements for applying quirks
-- drop Matthew's http://www.spinics.net/lists/linux-pci/msg45950.html dependency
-- rebase against 4.5-rc1
+Thanks,
+Gavin
 
-v2 -> v3
-- fix legacy IRQ assigning and IO ports registration
-- remove reference to arch specific companion device for ia64
-- move ACPI PCI host controller driver to pci_root.c
-- drop generic domain assignment for x86 and ia64 as I am not
-  able to run all necessary test variants
-- drop patch which cleaned legacy IRQ assignment since it belongs to
-  Mathew's series:
-  https://patchwork.ozlabs.org/patch/557504/
-- extend MCFG quirk code
-- rebase against 4.4
+>
+>> +       dt = of_fdt_unflatten_tree(fdt, php_slot->dn, NULL);
+>> +       if (!dt) {
+>> +               dev_warn(&php_slot->pdev->dev, "Cannot unflatten FDT\n");
+>> +               goto free_fdt;
+>> +       }
+>> +
+>
 
-v1 -> v2
-- move non-arch specific piece of code to dirver/acpi/ directory
-- fix IO resource handling
-- introduce PCI config accessors quirks matching
-- moved ACPI_COMPANION_SET to generic code
-
-v1 - https://lkml.org/lkml/2015/10/27/504
-v2 - https://lkml.org/lkml/2015/12/16/246
-v3 - http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04308.html
-v4 - https://lkml.org/lkml/2016/2/4/646
-v5 - https://lkml.org/lkml/2016/2/16/426
-v6 - https://lkml.org/lkml/2016/4/15/594
-
-Jayachandran C (2):
-  PCI: ecam: move ecam.h to linux/include/pci-ecam.h
-  PCI: ecam: Add parent device field to pci_config_window
-
-Tomasz Nowicki (7):
-  pci: Add new function to unmap IO resources.
-  acpi, pci: Support IO resources when parsing PCI host bridge
-    resources.
-  pci, acpi: add acpi hook to assign domain number.
-  arm64, pci, acpi: ACPI support for legacy IRQs parsing and
-    consolidation with DT code.
-  acpi: Add generic MCFG table handling
-  arm64, pci, acpi: Provide ACPI-specific prerequisites for PCI bus
-    enumeration.
-  pci, acpi: ARM64 support for ACPI based generic PCI host controller
-
- arch/arm64/Kconfig                  |   2 +
- arch/arm64/kernel/pci.c             | 143 ++++++++++++++++++++++++++++++++++--
- drivers/acpi/Kconfig                |   3 +
- drivers/acpi/Makefile               |   1 +
- drivers/acpi/pci_mcfg.c             |  94 ++++++++++++++++++++++++
- drivers/acpi/pci_root.c             |  39 ++++++++++
- drivers/pci/ecam.c                  |   6 +-
- drivers/pci/ecam.h                  |  67 -----------------
- drivers/pci/host/pci-host-common.c  |   3 +-
- drivers/pci/host/pci-host-generic.c |   3 +-
- drivers/pci/host/pci-thunder-ecam.c |   3 +-
- drivers/pci/host/pci-thunder-pem.c  |   6 +-
- drivers/pci/pci.c                   |  29 +++++++-
- include/linux/pci-acpi.h            |   2 +
- include/linux/pci-ecam.h            |  67 +++++++++++++++++
- include/linux/pci.h                 |   9 ++-
- 16 files changed, 387 insertions(+), 90 deletions(-)
- create mode 100644 drivers/acpi/pci_mcfg.c
- delete mode 100644 drivers/pci/ecam.h
- create mode 100644 include/linux/pci-ecam.h
-
--- 
-1.9.1
