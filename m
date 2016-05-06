@@ -1,99 +1,137 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:11600 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756329AbcEEJgf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Thu, 5 May 2016 05:36:35 -0400
-From: "Tian, Kevin" <kevin.tian@intel.com>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-CC: "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"aik@ozlabs.ru" <aik@ozlabs.ru>,
-	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-	"paulus@samba.org" <paulus@samba.org>,
-	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
-	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
-	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
-	"eric.auger@linaro.org" <eric.auger@linaro.org>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
-	"David.Laight@ACULAB.COM" <David.Laight@ACULAB.COM>,
-	"alistair@popple.id.au" <alistair@popple.id.au>,
-	"ruscur@russell.cc" <ruscur@russell.cc>
-Subject: RE: [PATCH 5/5] vfio-pci: Allow to mmap MSI-X table if interrupt
- remapping is supported
-Date: Thu, 5 May 2016 09:36:31 +0000
-Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1461761010-5452-6-git-send-email-xyjxie@linux.vnet.ibm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D15F842512@SHSMSX101.ccr.corp.intel.com>
- <f7d73ac3-470d-a0d2-0a97-05be630480dd@linux.vnet.ibm.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D15F842653@SHSMSX101.ccr.corp.intel.com>
- <e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
-In-Reply-To: <e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from e28smtp06.in.ibm.com ([125.16.236.6]:55974 "EHLO
+	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757949AbcEFLGF (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 May 2016 07:06:05 -0400
+Received: from localhost
+	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 6 May 2016 16:36:02 +0530
+Date: Fri, 6 May 2016 21:05:42 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, benh@kernel.crashing.org,
+	mpe@ellerman.id.au, bhelgaas@google.com, robherring2@gmail.com,
+	dja@axtens.net, alistair@popple.id.au
+Subject: Re: [PATCH v9 04/22] powerpc/powernv: Increase PE# capacity
+Message-ID: <20160506110541.GA5016@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1462281773-26438-5-git-send-email-gwshan@linux.vnet.ibm.com>
+ <2f2282ae-c1dc-1870-4beb-d5e4e8233496@ozlabs.ru>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2f2282ae-c1dc-1870-4beb-d5e4e8233496@ozlabs.ru>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBGcm9tOiBZb25namkgWGllDQo+IFNlbnQ6IFR1ZXNkYXksIE1heSAwMywgMjAxNiAzOjM0IFBN
-DQo+IA0KPiBPbiAyMDE2LzUvMyAxNDoyMiwgVGlhbiwgS2V2aW4gd3JvdGU6DQo+IA0KPiA+PiBG
-cm9tOiBZb25namkgWGllIFttYWlsdG86eHlqeGllQGxpbnV4LnZuZXQuaWJtLmNvbV0NCj4gPj4g
-U2VudDogVHVlc2RheSwgTWF5IDAzLCAyMDE2IDI6MDggUE0NCj4gPj4NCj4gPj4gT24gMjAxNi81
-LzMgMTM6MzQsIFRpYW4sIEtldmluIHdyb3RlOg0KPiA+Pg0KPiA+Pj4+IEZyb206IFlvbmdqaSBY
-aWUNCj4gPj4+PiBTZW50OiBXZWRuZXNkYXksIEFwcmlsIDI3LCAyMDE2IDg6NDMgUE0NCj4gPj4+
-Pg0KPiA+Pj4+IFRoaXMgcGF0Y2ggZW5hYmxlcyBtbWFwcGluZyBNU0ktWCB0YWJsZXMgaWYgaGFy
-ZHdhcmUgc3VwcG9ydHMNCj4gPj4+PiBpbnRlcnJ1cHQgcmVtYXBwaW5nIHdoaWNoIGNhbiBlbnN1
-cmUgdGhhdCBhIGdpdmVuIHBjaSBkZXZpY2UNCj4gPj4+PiBjYW4gb25seSBzaG9vdCB0aGUgTVNJ
-cyBhc3NpZ25lZCBmb3IgaXQuDQo+ID4+Pj4NCj4gPj4+PiBXaXRoIE1TSS1YIHRhYmxlIG1tYXBw
-ZWQsIHdlIGFsc28gbmVlZCB0byBleHBvc2UgdGhlDQo+ID4+Pj4gcmVhZC93cml0ZSBpbnRlcmZh
-Y2Ugd2hpY2ggd2lsbCBiZSB1c2VkIHRvIGFjY2VzcyBNU0ktWCB0YWJsZS4NCj4gPj4+Pg0KPiA+
-Pj4+IFNpZ25lZC1vZmYtYnk6IFlvbmdqaSBYaWUgPHh5anhpZUBsaW51eC52bmV0LmlibS5jb20+
-DQo+ID4+PiBBIGN1cmlvdXMgcXVlc3Rpb24gaGVyZS4gRG9lcyAiYWxsb3cgdG8gbW1hcCBNU0kt
-WCIgZXNzZW50aWFsbHkNCj4gPj4+IG1lYW4gdGhhdCBLVk0gZ3Vlc3QgY2FuIGRpcmVjdGx5IHJl
-YWQvd3JpdGUgcGh5c2ljYWwgTVNJLVgNCj4gPj4+IHN0cnVjdHVyZSB0aGVuPw0KPiA+Pj4NCj4g
-Pj4+IFRoYW5rcw0KPiA+Pj4gS2V2aW4NCj4gPj4+DQo+ID4+IEhlcmUgd2UganVzdCBhbGxvdyB0
-byBtbWFwIE1TSS1YIHRhYmxlIGluIGtlcm5lbC4gSXQgZG9lc24ndA0KPiA+PiBtZWFuIGFsbCBL
-Vk0gZ3Vlc3QgY2FuIGRpcmVjdGx5IHJlYWQvd3JpdGUgcGh5c2ljYWwgTVNJLVgNCj4gPj4gc3Ry
-dWN0dXJlLiBUaGlzIHNob3VsZCBiZSBkZWNpZGVkIGJ5IFFFTVUuIEZvciBQUEM2NA0KPiA+PiBw
-bGF0Zm9ybSwgd2Ugd291bGQgYWxsb3cgdG8gcGFzc3Rocm91Z2ggdGhlIE1TSS1YIHRhYmxlDQo+
-ID4+IGJlY2F1c2Ugd2Uga25vdyBndWVzdCBrZXJuZWwgd291bGQgbm90IHdyaXRlIHBoeXNpY2Fs
-DQo+ID4+IE1TSS1YIHN0cnVjdHVyZSB3aGVuIGVuYWJsaW5nIE1TSS4NCj4gPj4NCj4gPiBBIGJp
-dCBjb25mdXNlZCBoZXJlLiBJZiBndWVzdCBrZXJuZWwgZG9lc24ndCBuZWVkIHRvIHdyaXRlDQo+
-ID4gcGh5c2ljYWwgTVNJLVggc3RydWN0dXJlLCB3aGF0J3MgdGhlIHBvaW50IG9mIHBhc3Npbmcg
-dGhyb3VnaA0KPiA+IHRoZSB0YWJsZSB0aGVuPw0KPiANCj4gV2Ugd2FudCB0byBhbGxvdyB0aGUg
-TVNJLVggdGFibGUgYmVjYXVzZSB0aGVyZSBtYXkgYmUNCj4gc29tZSBjcml0aWNhbCByZWdpc3Rl
-cnMgaW4gdGhlIHNhbWUgcGFnZSBhcyB0aGUgTVNJLVggdGFibGUuDQo+IFdlIGhhdmUgdG8gaGFu
-ZGxlIHRoZSBtbWlvIGFjY2VzcyB0byB0aGVzZSByZWdpc3RlciBpbiBRRU1VDQo+IHJhdGhlciB0
-aGFuIGluIGd1ZXN0IGlmIG1tYXBwaW5nIE1TSS1YIHRhYmxlIGlzIGRpc2FsbG93ZWQuDQoNClNv
-IHlvdSBtZWFuIGNyaXRpY2FsIHJlZ2lzdGVycyBpbiBzYW1lIE1NSU8gQkFSIGFzIE1TSS1YDQp0
-YWJsZSwgaW5zdGVhZCBvZiB0d28gTU1JTyBCQVJzIGluIHNhbWUgcGFnZSAodGhlIGxhdHRlciBJ
-DQpzdXBwb3NlIHdpdGggeW91ciB3aG9sZSBwYXRjaHNldCBpdCB3b24ndCBoYXBwZW4gdGhlbik/
-DQoNCj4gDQo+ID4gSSB0aGluayB0aGUga2V5IHdoZXRoZXIgTVNJLVggdGFibGUgY2FuIGJlIHBh
-c3NlZCB0aHJvdWdoDQo+ID4gaXMgcmVsYXRlZCB0byB3aGVyZSBoeXBlcnZpc29yIGNvbnRyb2wg
-aXMgZGVwbG95ZWQuIEF0IGxlYXN0DQo+ID4gZm9yIHg4NjoNCj4gPg0KPiA+IC0gV2hlbiBpcnEg
-cmVtYXBwaW5nIGlzIG5vdCBlbmFibGVkLCBob3N0L2h5cGVydmlzb3IgbmVlZHMNCj4gPiB0byBj
-b250cm9sIHBoeXNpY2FsIGludGVycnVwdCBtZXNzYWdlIGluY2x1ZGluZyB2ZWN0b3IvZGVzdC9l
-dGMuDQo+ID4gZGlyZWN0bHkgaW4gTVNJLVggc3RydWN0dXJlLCBzbyB3ZSBjYW5ub3QgYWxsb3cg
-YSBndWVzdCB0bw0KPiA+IGFjY2VzcyBpdDsNCj4gPg0KPiA+IC0gd2hlbiBpcnEgcmVtYXBwaW5n
-IGlzIGVuYWJsZWQsIGhvc3QvaHlwZXJ2aXNvciBjYW4gY29udHJvbA0KPiA+IGludGVycnVwdCBy
-b3V0aW5nIGluIGlycSByZW1hcHBpbmcgdGFibGUuIEhvd2V2ZXIgTVNJLVgNCj4gPiBhbHNvIG5l
-ZWRzIHRvIGJlIGNvbmZpZ3VyZWQgYXMgcmVtYXBwYWJsZSBmb3JtYXQuIEluIHRoaXMNCj4gPiBt
-YW5uZXIgd2UgYWxzbyBjYW5ub3QgYWxsb3cgZGlyZWN0IGFjY2VzcyBmcm9tIGd1ZXN0Lg0KPiA+
-DQo+ID4gVGhlIG9ubHkgc2FuZSBjYXNlIHRvIHBhc3MgdGhyb3VnaCBNU0ktWCBzdHJ1Y3R1cmUs
-IGlzIGENCj4gPiBtZWNoYW5pc20gc2ltaWxhciB0byBpcnEgcmVtYXBwaW5nIGJ1dCB3L28gbmVl
-ZCB0byBjaGFuZ2UNCj4gPiBvcmlnaW5hbCBNU0ktWCBmb3JtYXQgc28gZGlyZWN0IGFjY2VzcyBm
-cm9tIGd1ZXN0IHNpZGUgaXMNCj4gPiBzYWZlLiBJcyBpdCB0aGUgY2FzZSBpbiBQUEM2ND8NCj4g
-Pg0KPiA+IFRoYW5rcw0KPiA+IEtldmluDQo+IA0KPiBBY3V0dWFsbHksIHdlIGFyZSBub3QgYWlt
-ZWQgYXQgYWNjZXNzaW5nIE1TSS1YIHRhYmxlIGZyb20NCj4gZ3Vlc3QuIFNvIEkgdGhpbmsgaXQn
-cyBzYWZlIHRvIHBhc3N0aHJvdWdoIE1TSS1YIHRhYmxlIGlmIHdlDQo+IGNhbiBtYWtlIHN1cmUg
-Z3Vlc3Qga2VybmVsIHdvdWxkIG5vdCB0b3VjaCBNU0ktWCB0YWJsZSBpbg0KPiBub3JtYWwgY29k
-ZSBwYXRoIHN1Y2ggYXMgcGFyYS12aXJ0dWFsaXplZCBndWVzdCBrZXJuZWwgb24gUFBDNjQuDQo+
-IA0KDQpUaGVuIGhvdyBkbyB5b3UgcHJldmVudCBtYWxpY2lvdXMgZ3Vlc3Qga2VybmVsIGFjY2Vz
-c2luZyBpdD8NCg0KVGhhbmtzDQpLZXZpbg0K
+On Fri, May 06, 2016 at 05:17:25PM +1000, Alexey Kardashevskiy wrote:
+>On 05/03/2016 11:22 PM, Gavin Shan wrote:
+>>Each PHB maintains an array helping to translate 2-bytes Request
+>>ID (RID) to PE# with the assumption that PE# takes one byte, meaning
+>>that we can't have more than 256 PEs. However, pci_dn->pe_number
+>>already had 4-bytes for the PE#.
+>
+>Can you possibly have more than 256 PEs? Or exactly 256? What patch in this
+>series makes use of it?
+>
+>I probably asked but do not remember the answer :)
+>
+>Looks like waste of memory - you only used a small fraction of
+>pe_rmap[0x10000] and now the waste is quadrupled.
+>
+
+The PE capacities on different hardware are different as below. So we're
+going to support 16-bits PE number in near future. That means the element
+in the array needs "unsigned short" at least and 2 pages (2 * 64KB) will
+be reserved for it.
+
+P7IOC: 127        PHB3: 256
+PHB4:  65536      NPU1: 4        NPU2: 16
+
+I agree some memory is wasted and the wasted amount depends on the PCI
+topology. No memory will be wasted if 256 busses show on one particular
+PHB. Less busses one PHB has, more memory will be wasted. As I explained
+before, the total used memory is 4 pages (4 * 64KB). Considering the memory
+capacity on PPC64 (especially PowerNV), I guess it's fine. Note that the
+memory is allocated from memblock together with PHB instance.
+
+The alternative solution (to avoid wasting memory) would be searching for
+the PE number according to the input BDFN through the PE list maintained
+in each PHB. Obviously, it will induce more logic and more CPU cycles will
+be used. So it's a kind of trade-off. If you really want to see this, I
+absolutely can do it in next revision. Another option would be to improve
+it later and keep the code as what we have. Please input your thought. 
+
+>
+>>
+>>This extends the PE# capacity for every PHB. After that, the PE number
+>>is represented by 4-bytes value. Then we can reuse IODA_INVALID_PE to
+>>check the PE# in phb->pe_rmap[] is valid or not.
+>
+>Looks like using IODA_INVALID_PE is the only reason for this patch.
+>
+
+For now, yes. In near future, It needs to be extended to represent 16-bits
+PE number for PHB4 as I explained above. 
+
+>
+>>
+>>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>Reviewed-by: Daniel Axtens <dja@axtens.net>
+>>---
+>> arch/powerpc/platforms/powernv/pci-ioda.c | 6 +++++-
+>> arch/powerpc/platforms/powernv/pci.h      | 7 ++-----
+>> 2 files changed, 7 insertions(+), 6 deletions(-)
+>>
+>>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>index cbd4c0b..cf96cb5 100644
+>>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>@@ -768,7 +768,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>>
+>> 	/* Clear the reverse map */
+>> 	for (rid = pe->rid; rid < rid_end; rid++)
+>>-		phb->ioda.pe_rmap[rid] = 0;
+>>+		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
+>>
+>> 	/* Release from all parents PELT-V */
+>> 	while (parent) {
+>>@@ -3406,6 +3406,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>> 	if (prop32)
+>> 		phb->ioda.reserved_pe_idx = be32_to_cpup(prop32);
+>>
+>>+	/* Invalidate RID to PE# mapping */
+>>+	for (segno = 0; segno < ARRAY_SIZE(phb->ioda.pe_rmap); segno++)
+>>+		phb->ioda.pe_rmap[segno] = IODA_INVALID_PE;
+>>+
+>> 	/* Parse 64-bit MMIO range */
+>> 	pnv_ioda_parse_m64_window(phb);
+>>
+>>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+>>index 904f60b..80f5326 100644
+>>--- a/arch/powerpc/platforms/powernv/pci.h
+>>+++ b/arch/powerpc/platforms/powernv/pci.h
+>>@@ -156,11 +156,8 @@ struct pnv_phb {
+>> 		struct list_head	pe_list;
+>> 		struct mutex            pe_list_mutex;
+>>
+>>-		/* Reverse map of PEs, will have to extend if
+>>-		 * we are to support more than 256 PEs, indexed
+>>-		 * bus { bus, devfn }
+>>-		 */
+>>-		unsigned char		pe_rmap[0x10000];
+>>+		/* Reverse map of PEs, indexed by {bus, devfn} */
+>>+		unsigned int		pe_rmap[0x10000];
+>>
+>> 		/* TCE cache invalidate registers (physical and
+>> 		 * remapped)
+>>
+>
+>
+>-- 
+>Alexey
+>
+
