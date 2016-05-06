@@ -1,160 +1,123 @@
-Return-Path: <dhdang@apm.com>
-Return-Path: <dhdang@apm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:55093 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758421AbcEFPsy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Fri, 6 May 2016 11:48:54 -0400
+Date: Fri, 6 May 2016 10:48:41 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jay Cornwall <jay@jcornwall.me>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: Add pci_enable_atomic_request
+Message-ID: <20160506154841.GA15666@localhost>
+References: <1443110390-4080-1-git-send-email-jay@jcornwall.me>
+ <20151204182540.GC20125@localhost>
+ <c7259e37a065e8c7d386c806f521c46d@jcornwall.me>
+ <20151207162351.GH7994@localhost>
+ <ec60daae6d886179a4d86c421ba66545@jcornwall.me>
 MIME-Version: 1.0
-In-Reply-To: <1462893601-8937-1-git-send-email-tn@semihalf.com>
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
-From: Duc Dang <dhdang@apm.com>
-Date: Thu, 12 May 2016 19:55:20 -0700
-Message-ID: <CADaLNDnXiL2nYtSmd1h-9MSnUUY4S+dAEcFXRSE_jjWhqRzufQ@mail.gmail.com>
-Subject: Re: [PATCH V7 00/11] Support for generic ACPI based PCI host controller
-To: Tomasz Nowicki <tn@semihalf.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, Rafael Wysocki <rafael@kernel.org>,
-	Hanjun Guo <hanjun.guo@linaro.org>, Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, okaya@codeaurora.org,
-	Jayachandran C <jchandra@broadcom.com>, robert.richter@caviumnetworks.com,
-	Marcin Wojtas <mw@semihalf.com>, Liviu Dudau <Liviu.Dudau@arm.com>,
-	David Daney <ddaney@caviumnetworks.com>, Yijing Wang <wangyijing@huawei.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>, Mark Salter <msalter@redhat.com>,
-	linux-pci@vger.kernel.org, linux-arm <linux-arm-kernel@lists.infradead.org>,
-	linux-acpi@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linaro-acpi@lists.linaro.org,
-	Jon Masters <jcm@redhat.com>, andrea.gallo@linaro.org, jeremy.linton@arm.com,
-	liudongdong3@huawei.com, cov@codeaurora.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ec60daae6d886179a4d86c421ba66545@jcornwall.me>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 10, 2016 at 8:19 AM, Tomasz Nowicki <tn@semihalf.com> wrote:
-> From the functionality point of view this series may be split into the
-> following logic parts:
-> 1. New ECAM API and update for users of the pci-host-common API
-> 2. Necessary fixes as the preparation for using driver on ARM64.
-> 3. Use new MCFG interface and implement generic ACPI based PCI host controller driver.
-> 4. Enable above driver on ARM64
->
-> Patches has been built on top of 4.6-rc7 and can be found here:
-> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v7)
->
-> This has been tested on Cavium ThunderX server. Any help in reviewing and
-> testing is very appreciated.
+On Mon, Mar 28, 2016 at 03:10:01PM -0500, Jay Cornwall wrote:
+> On 2015-12-07 10:23, Bjorn Helgaas wrote:
+> >On Fri, Dec 04, 2015 at 01:33:30PM -0600, Jay Cornwall wrote:
+> >>On 2015-12-04 12:25, Bjorn Helgaas wrote:
+> >>>On Thu, Sep 24, 2015 at 10:59:50AM -0500, Jay Cornwall wrote:
+> >>>>The PCIe 3.0 AtomicOp (6.15) feature allows atomic transctions
+> >>>>to be requested
+> >>>>by, routed through and completed by PCIe components. Routing and
+> >>>>completion
+> >>>>do not require software support. Component support for each is
+> >>>>detectable via
+> >>>>the DEVCAP2 register.
+> >>>>
+> >>>>AtomicOp requests are permitted only if a component's
+> >>>>DEVCTL2.ATOMICOP_REQUESTER_ENABLE field is set. This capability
+> >>>>cannot be
+> >>>>detected but is a no-op if set on a component with no support.
+> >>>>These requests
+> >>>>can only be serviced if the upstream components support AtomicOp
+> >>>>completion
+> >>>>and/or routing to a component which does.
+> >>>>
+> >>>>A concrete example is the AMD Fiji-class GPU, which is specified
+> >>>>to support
+> >>>>AtomicOp requests, routed through a PLX 8747 switch (advertising
+> >>>>AtomicOp
+> >>>>routing) to a Haswell host bridge (advertising AtomicOp
+> >>>>completion support).
+> >>>>When AtomicOp requests are disabled the GPU logs attempts to
+> >>>>initiate requests
+> >>>>to an MMIO register for debugging.
+> >>>>
+> >>>>Add pci_enable_atomic_request for per-device control over
+> >>>>AtomicOp requests.
+> >>>>Upstream bridges are checked for AtomicOp routing capability and
+> >>>>the call
+> >>>>fails if any lack this capability. The root port is checked for
+> >>>>AtomicOp
+> >>>>completion capabilities and the call fails if it does not support any.
+> >>>>Routes to other PCIe components are not checked for AtomicOp
+> >>>>routing and
+> >>>>completion capabilities.
+> >>>>
+> >>>>v2: Check for AtomicOp route to root port with AtomicOp completion
+> >>>>v3: Style fixes
+> >>>>
+> >>>>Signed-off-by: Jay Cornwall <jay@jcornwall.me>
+> >>>
+> >>>Hi Jay,
+> >>>
+> >>>Is there a user for this new functionality?  I don't like to add things
+> >>>that have no apparent user.
+> >>>
+> >>>Bjorn
+> >>
+> >>The client for this code is scheduled to be upstreamed in
+> >>drm/amdgpu, but we have some internal restructuring to complete
+> >>before a patchset will be available.
+> >>
+> >>If you'd prefer, I can resubmit this patch as part of that series
+> >>when it is ready.
+> >
+> >Yeah, that'd be great, why don't we do that.  Thanks!
+> >
+> >Bjorn
+> 
+> We've been testing this prior to upstreaming the client code and ran
+> into a problem. When the client driver (amdgpu) is running within a
+> virtual machine on the physical PCI function (not SR-IOV) the
+> hypervisor virtualizes the PCI configuration space and blocks writes
+> to DEVCTL2.ATOMICOP_REQUESTER_ENABLE.
+> 
+> I think the host is intended to manage the PCI configuration space
+> in this model. The client driver cannot run simultaneously on the
+> host and guest. This appears to leave the PCI subsystem as the
+> remaining opportunity to enable this feature.
+> 
+> Would you object to calling pci_enable_atomic_request
+> unconditionally in pci_init_capabilites? On most PCIe devices this
+> should be a no-op but I don't see a way to check for this in the
+> AtomicOp specification.
 
-I tried this series on APM X-Gene platforms (with ECAM fix-up quirk
-added) and PCIe works fine.
+The spec says "discovery of AtomicOp Requester capabilities is outside
+the scope of this specification" [PCIe r3.0, sec 6.15], so I think the
+intent is that a driver knows the capability of the device and enables
+and uses AtomicOps when appropriate.  
 
-Regards,
-Duc Dang.
->
-> v6 -> v7
-> - drop quirks handling
-> - changes for ACPI companion and domain number assignment approach
-> - implement arch pcibios_{add|remove}_bus and call acpi_pci_{add|remove}_bus from there
-> - cleanups around nomenclature
-> - use resources oriented API for ECAM
-> - fix for based address calculation before mapping ECAM region
-> - remove useless lock for MCFG lookup
-> - move MCFG stuff to separated file pci_mcfg.c
-> - drop MCFG entries caching
-> - rebase against 4.6-rc7
->
-> v5 -> v6
-> - drop idea of x86 MMCONFIG code refactoring
-> - integrate JC's patches which introduce new ECAM API:
->   https://lkml.org/lkml/2016/4/11/907
->   git: https://github.com/jchandra-brcm/linux/ (arm64-acpi-pci-v3)
-> - integrate Sinan's fix for releasing IO resources, see patch [06/13]
-> - added ACPI support for ThunderX ECAM and PEM drivers
-> - rebase against 4.6-rc2
->
-> v4 -> v5
-> - drop MCFG refactoring group patches 1-6 from series v4 and integrate Jayachandran's patch
->   https://patchwork.ozlabs.org/patch/575525/
-> - rewrite PCI legacy IRQs allocation
-> - squash two patches 11 and 12 from series v4, fixed bisection issue
-> - changelog improvements
-> - rebase against 4.5-rc3
->
-> v3 -> v4
-> - drop Jiang's fix http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04318.html
-> - add Lorenzo's fix patch 19/24
-> - ACPI PCI bus domain number assigning cleanup
-> - change resource management, we now claim and reassign resources
-> - improvements for applying quirks
-> - drop Matthew's http://www.spinics.net/lists/linux-pci/msg45950.html dependency
-> - rebase against 4.5-rc1
->
-> v2 -> v3
-> - fix legacy IRQ assigning and IO ports registration
-> - remove reference to arch specific companion device for ia64
-> - move ACPI PCI host controller driver to pci_root.c
-> - drop generic domain assignment for x86 and ia64 as I am not
->   able to run all necessary test variants
-> - drop patch which cleaned legacy IRQ assignment since it belongs to
->   Mathew's series:
->   https://patchwork.ozlabs.org/patch/557504/
-> - extend MCFG quirk code
-> - rebase against 4.4
->
-> v1 -> v2
-> - move non-arch specific piece of code to dirver/acpi/ directory
-> - fix IO resource handling
-> - introduce PCI config accessors quirks matching
-> - moved ACPI_COMPANION_SET to generic code
->
-> v1 - https://lkml.org/lkml/2015/10/27/504
-> v2 - https://lkml.org/lkml/2015/12/16/246
-> v3 - http://lkml.iu.edu/hypermail/linux/kernel/1601.1/04308.html
-> v4 - https://lkml.org/lkml/2016/2/4/646
-> v5 - https://lkml.org/lkml/2016/2/16/426
-> v6 - https://lkml.org/lkml/2016/4/15/594
->
-> Jayachandran C (2):
->   PCI: Provide common functions for ECAM mapping
->   PCI: generic, thunder: update to use generic ECAM API
->
-> Tomasz Nowicki (9):
->   pci, of: Move the PCI I/O space management to PCI core code.
->   pci: Add new function to unmap IO resources.
->   acpi, pci: Support IO resources when parsing PCI host bridge
->     resources.
->   pci, acpi: Provide a way to assign bus domain number.
->   pci, acpi: Handle ACPI companion assignment.
->   pci, acpi: Support for ACPI based generic PCI host controller
->   arm64, pci, acpi: ACPI support for legacy IRQs parsing and
->     consolidation with DT code.
->   arm64, pci, acpi: Provide ACPI-specific prerequisites for PCI bus
->     enumeration.
->   arm64, pci, acpi: Start using ACPI based PCI host controller driver
->     for ARM64.
->
->  arch/arm64/Kconfig                  |   1 +
->  arch/arm64/kernel/pci.c             |  34 +++-----
->  drivers/acpi/Kconfig                |   8 ++
->  drivers/acpi/Makefile               |   1 +
->  drivers/acpi/pci_mcfg.c             |  97 ++++++++++++++++++++++
->  drivers/acpi/pci_root.c             |  33 ++++++++
->  drivers/acpi/pci_root_generic.c     | 149 +++++++++++++++++++++++++++++++++
->  drivers/of/address.c                | 116 +-------------------------
->  drivers/pci/Kconfig                 |   3 +
->  drivers/pci/Makefile                |   2 +
->  drivers/pci/ecam.c                  | 161 ++++++++++++++++++++++++++++++++++++
->  drivers/pci/ecam.h                  |  72 ++++++++++++++++
->  drivers/pci/host/Kconfig            |   1 +
->  drivers/pci/host/pci-host-common.c  | 114 +++++++++++--------------
->  drivers/pci/host/pci-host-common.h  |  47 -----------
->  drivers/pci/host/pci-host-generic.c |  52 +++---------
->  drivers/pci/host/pci-thunder-ecam.c |  39 ++-------
->  drivers/pci/host/pci-thunder-pem.c  |  92 ++++++++++-----------
->  drivers/pci/pci.c                   | 150 ++++++++++++++++++++++++++++++++-
->  drivers/pci/probe.c                 |   2 +
->  include/linux/of_address.h          |   9 --
->  include/linux/pci-acpi.h            |  14 ++++
->  include/linux/pci.h                 |  11 ++-
->  23 files changed, 823 insertions(+), 385 deletions(-)
->  create mode 100644 drivers/acpi/pci_mcfg.c
->  create mode 100644 drivers/acpi/pci_root_generic.c
->  create mode 100644 drivers/pci/ecam.c
->  create mode 100644 drivers/pci/ecam.h
->  delete mode 100644 drivers/pci/host/pci-host-common.h
->
-> --
-> 1.9.1
->
+Once enabled in Device Control 2, a device's use of AtomicOps is
+competely device-specific.  In many cases, the device probably doesn't
+support AtomicOps, so enabling them would be a no-op.  But there could
+be devices where AtomicOps are nominally supported but untested or
+broken.  Even if we didn't change their drivers, those devices could
+start using AtomicOps, so I'm not comfortable with the PCI core
+enabling AtomicOp requests indiscriminately.
+
+I don't know anything about the interface between the hypervisor and
+the client driver.  Is there any opportunity for an ioctl or sysfs
+file or anything whereby the client could ask the hypervisor to enable
+AtomicOps?
+
+Bjorn
