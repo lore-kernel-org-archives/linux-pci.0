@@ -1,135 +1,67 @@
-Return-Path: <mika.westerberg@linux.intel.com>
-Return-Path: <mika.westerberg@linux.intel.com>
-Date: Mon, 30 May 2016 12:57:09 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Peter Wu <peter@lekensteyn.nl>
-Cc: nouveau@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	Dave Airlie <airlied@redhat.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
-Subject: Re: [PATCH 4/4] drm/nouveau/acpi: fix lockup with PCIe runtime PM
-Message-ID: <20160530095709.GK1789@lahna.fi.intel.com>
-References: <1464130381-4797-1-git-send-email-peter@lekensteyn.nl>
- <1464130381-4797-5-git-send-email-peter@lekensteyn.nl>
- <20160525135535.GN1789@lahna.fi.intel.com>
- <20160527111037.GA1436@al>
+Return-Path: <yhlu.kernel@gmail.com>
+Return-Path: <yhlu.kernel@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160527111037.GA1436@al>
+Sender: yhlu.kernel@gmail.com
+In-Reply-To: <1462485774.20290.34.camel@kernel.crashing.org>
+References: <1460074573-7481-5-git-send-email-yinghai@kernel.org>
+	<20160422204920.GA17215@localhost>
+	<CAE9FiQWQ2ke3_P4Qhj+ON7pMiVCx4myhVNVaSYO4vYAL_P4njg@mail.gmail.com>
+	<20160428135607.GA12470@localhost>
+	<CAE9FiQU_XSMfxFPSOrMjQ2DGnrM0D5T=0ORfDEBxqWggGrzc+Q@mail.gmail.com>
+	<CAE9FiQX_8oXj=FD8pKe=eBL=YWZY-=C8sZ6yMbmkwegLVOR-fA@mail.gmail.com>
+	<1462322260.30470.76.camel@kernel.crashing.org>
+	<20160504012531.GB17170@localhost>
+	<CAE9FiQU=e2bf=+KDrOETf_T-KPLQsSDiG5GqVFqgtvSWXwUz4w@mail.gmail.com>
+	<CAE9FiQV19OUsSL34GzDXYtVG=Xs724CpwHNfu3HCmYMUqbmrqQ@mail.gmail.com>
+	<20160504151722.GA22051@localhost>
+	<CAE9FiQXEBkVak0No9dfOidzCrR+UVu44WyBEK8SqTUSiJKeJbg@mail.gmail.com>
+	<CAE9FiQUEMq4aj2iAq=P0xu4=1MGuOWgOubpkn=2h+YLXgwJKRQ@mail.gmail.com>
+	<CAE9FiQWJ0VH-PNsz96qW8_u14x6bJ6cd66+Zg=j3L4zXWvhq0Q@mail.gmail.com>
+	<1462485774.20290.34.camel@kernel.crashing.org>
+Date: Thu, 5 May 2016 17:56:25 -0700
+Message-ID: <CAE9FiQUC3i=MkLnFi563T7rDVFiLXxk764WUQjktnPMJqXa93g@mail.gmail.com>
+Subject: Re: [PATCH v11 04/60] sparc/PCI: Use correct offset for bus address
+ to resource
+From: Yinghai Lu <yinghai@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, David Miller <davem@davemloft.net>,
+	Bjorn Helgaas <bhelgaas@google.com>, Linus Torvalds <torvalds@linux-foundation.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>, Khalid Aziz <khalid.aziz@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Michael Ellerman <mpe@ellerman.id.au>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-+Rafael
+On Thu, May 5, 2016 at 3:02 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Thu, 2016-05-05 at 08:53 -0700, Yinghai Lu wrote:
+>> For powerpc io port, we still need extra offset from resource address
+>> to final address.
+>>
+>>      resource_size_t offset =
+>>          ((resource_size_t)vma->vm_pgoff) << PAGE_SHIFT;
+>>
+>> +    if (mmap_state == pci_mmap_io) {
+>> +        struct pci_controller *hose = pci_bus_to_host(dev->bus);
+>> +
+>> +        /* hose should never be NULL */
+>> +        offset += hose->io_base_phys -
+>> +              ((unsigned long)hose->io_base_virt - _IO_BASE);
+>> +    }
+>>
+>>      vma->vm_pgoff = offset >> PAGE_SHIFT;
+>>
+>> but sparc does not need that trick.
+>
+> I'm not sure how sparc handles IO space but on powerpc, the IO resource
+> is not a physical address, it's a virtual address (coming from
+> ioremap).
 
-On Fri, May 27, 2016 at 01:10:37PM +0200, Peter Wu wrote:
-> On Wed, May 25, 2016 at 04:55:35PM +0300, Mika Westerberg wrote:
-> > On Wed, May 25, 2016 at 12:53:01AM +0200, Peter Wu wrote:
-> > > Since "PCI: Add runtime PM support for PCIe ports", the parent PCIe port
-> > > can be runtime-suspended which disables power resources via ACPI. This
-> > > is incompatible with DSM, resulting in a GPU device which is still in D3
-> > > and locks up the kernel on resume.
-> > > 
-> > > Mirror the behavior of Windows 8 and newer[1] (as observed via an AMLi
-> > > debugger trace) and stop using the DSM functions for D3cold when power
-> > > resources are available on the parent PCIe port.
-> > > 
-> > >  [1]: https://msdn.microsoft.com/windows/hardware/drivers/bringup/firmware-requirements-for-d3cold
-> > > 
-> > > Signed-off-by: Peter Wu <peter@lekensteyn.nl>
-> > > ---
-> > >  drivers/gpu/drm/nouveau/nouveau_acpi.c | 34 ++++++++++++++++++++++++++++++----
-> > >  1 file changed, 30 insertions(+), 4 deletions(-)
-> > > 
-> > > diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> > > index df9f73e..e469df7 100644
-> > > --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> > > +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> > > @@ -46,6 +46,7 @@ static struct nouveau_dsm_priv {
-> > >  	bool dsm_detected;
-> > >  	bool optimus_detected;
-> > >  	bool optimus_flags_detected;
-> > > +	bool optimus_skip_dsm;
-> > >  	acpi_handle dhandle;
-> > >  	acpi_handle rom_handle;
-> > >  } nouveau_dsm_priv;
-> > > @@ -212,8 +213,26 @@ static const struct vga_switcheroo_handler nouveau_dsm_handler = {
-> > >  	.get_client_id = nouveau_dsm_get_client_id,
-> > >  };
-> > >  
-> > > +/* Firmware supporting Windows 8 or later do not use _DSM to put the device into
-> > > + * D3cold, they instead rely on disabling power resources on the parent. */
-> > > +static bool nouveau_pr3_present(struct pci_dev *pdev)
-> > > +{
-> > > +	struct pci_dev *parent_pdev = pci_upstream_bridge(pdev);
-> > > +	struct acpi_device *ad;
-> > 
-> > Nit: please call this adev instead of ad.
-> 
-> Will do.
-> 
-> > > +
-> > > +	if (!parent_pdev)
-> > > +		return false;
-> > > +
-> > > +	ad = ACPI_COMPANION(&parent_pdev->dev);
-> > > +	if (!ad)
-> > > +		return false;
-> > > +
-> > > +	return ad->power.flags.power_resources;
-> > 
-> > Is this sufficient to tell if the parent device has _PR3? I thought it
-> > returns true if it has power resources in general, not necessarily _PR3.
-> > 
-> > Otherwise this looks okay to me.
-> 
-> It is indeed set whenever there is any _PRx method. I wonder if it is
-> appropriate to access fields directly like this, perhaps this would be
-> more accurate (based on device_pm.c):
-> 
->     /* Check whether the _PR3 method is available. */
->     return adev->power.states[ACPI_STATE_D3_COLD].flags.valid;
-> 
-> I am also considering adding a check in case the pcieport driver does
-> not support D3cold via runtime PM, what do you think of this?
-> 
->     if (!parent_pdev)
->         return false;
->     /* If the PCIe port does not support D3cold via runtime PM, allow a
->      * fallback to the Optimus DSM method to put the device in D3cold. */
->     if (parent_pdev->no_d3cold)
->         return false;
-> 
-> This is needed to avoid the regression reported in the cover letter, but
-> also allows pre-2015 systems to (still) have the D3cold possibility.
+That is interesting. Any reason for that ?
 
-The _DSM method with 0 as index parameter should return a bit field
-telling which functions are supported. Sane BIOS disables that
-particular function if it detects Windows 8 and newer. Have you checked
-if that's the case?
+why just cpu_addr in resource directly ?
 
-Then you can call _DSM only if it is supported and otherwise expect the
-parent device's power resources to turn off power when runtime
-suspended.
+Thanks
 
-> Out of curiosity I looked up an pre-2015 laptop (found Acer V5-573G,
-> apparently from November 2013, Windows 8.1) and extracted the ACPI
-> tables from the BIOS images. BIOS 2.28 (2014/05/13) introduces support
-> for power resources on the parent devicea(\_SB.PCI0.PEG0._PR3 and a
-> related NVP3 device) when _OSI("Windows 2013") is true. (This is added
-> as alternative for the old DSM interface.)
-> 
-> Maybe 2014 is also an appropriate cutoff date? I wonder if it is
-> feasible to detect firmware use of _OSI("Windows 2013") and use that
-> instead of the BIOS year.
-
-Using BIOS year works even if there is no ACPI available.
-
-What comes to the cutoff date, I discussed with Rafael and it was
-decided that we use the same year Windows 10 was released to be on the
-safe side. Reading the links you provided here:
-
-https://msdn.microsoft.com/fi-fi/windows/hardware/drivers/bringup/device-power-management
-https://msdn.microsoft.com/en-us/library/windows/hardware/hh967709(v=vs.85).aspx
-
-it seems that from Windows 8 they started transitioning devices into
-D3cold during runtime as well.
+Yinghai
