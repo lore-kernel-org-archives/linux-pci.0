@@ -1,79 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55880 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752253AbcEYRuq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 May 2016 13:50:46 -0400
-Date: Wed, 25 May 2016 12:50:39 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Ocean HY1 He <hehy1@lenovo.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"wangyijing@huawei.com" <wangyijing@huawei.com>,
-	"luto@kernel.org" <luto@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"prarit@redhat.com" <prarit@redhat.com>,
-	"jcm@redhat.com" <jcm@redhat.com>,
-	Nagananda Chumbalkar <nchumbalkar@lenovo.com>
-Subject: Re: [PATCH] PCI/ASPM: fix reverse ASPM L0s assignment of upstream
- and downstream
-Message-ID: <20160525175039.GC3208@localhost>
-References: <1464071269-79954-1-git-send-email-hehy1@lenovo.com>
- <20160525165726.GB3208@localhost>
- <5745DF08.9040409@codeaurora.org>
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:34150 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751773AbcEFHRc (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 May 2016 03:17:32 -0400
+Received: by mail-pa0-f53.google.com with SMTP id r5so45899145pag.1
+        for <linux-pci@vger.kernel.org>; Fri, 06 May 2016 00:17:32 -0700 (PDT)
+Subject: Re: [PATCH v9 04/22] powerpc/powernv: Increase PE# capacity
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev@lists.ozlabs.org
+References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1462281773-26438-5-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, bhelgaas@google.com,
+	robherring2@gmail.com, dja@axtens.net, alistair@popple.id.au
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <2f2282ae-c1dc-1870-4beb-d5e4e8233496@ozlabs.ru>
+Date: Fri, 6 May 2016 17:17:25 +1000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5745DF08.9040409@codeaurora.org>
+In-Reply-To: <1462281773-26438-5-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=koi8-r; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 25, 2016 at 01:21:12PM -0400, Sinan Kaya wrote:
-> Hi Bjorn,
-> 
-> OK. I see that we are dealing with two different questions.
-> 
-> > I thought you were talking about booting with
-> > "pcie_aspm.policy=powersave", where pcie_aspm_set_policy() sets
-> > aspm_policy = POLICY_POWERSAVE, then configures each link with
-> > ASPM_STATE_ALL.  But pcie_config_aspm_link() does AND the desired
-> > state (ASPM_STATE_ALL) with link->aspm_capable, which only has
-> > ASPM_STATE_L0S set if both the upstream and downstream components
-> > advertised PCIE_LINK_STATE_L0S.
-> > This path is very complicated, but I don't *think* it will enable L0s
-> > if the other end of the link doesn't support it.
-> 
-> Thanks for clarifying this. You are saying that if one side of the
-> link doesn't support L0s, Linux doesn't enable L0s on the other side.
-> This makes sense.
-> 
-> I think there is a confusion between what supported means vs. when
-> L0s can be enabled on which side of the link.
-> 
-> You clarified the supported case above that code will not enable
-> L0s if the other side doesn't support L0s.
-> 
-> 
-> > Now we enable the downstream component's transmitter to enter L0s.
-> > Per PCIe spec r3.0, sec 7.8.7, the receiver, i.e., the upstream
-> > component, must be capable of entering L0s even when its transmitter
-> > is disabled from entering L0s.
-> 
-> Let's assume that both sides actually support L0s but the link parameters
-> on one side is not compatible.
-> 
-> You are saying that it is OK to enable L0s on just one side of the
-> link as long as both sides support L0s. 
+On 05/03/2016 11:22 PM, Gavin Shan wrote:
+> Each PHB maintains an array helping to translate 2-bytes Request
+> ID (RID) to PE# with the assumption that PE# takes one byte, meaning
+> that we can't have more than 256 PEs. However, pci_dn->pe_number
+> already had 4-bytes for the PE#.
 
-I'm not sure what you mean by the link parameters not being
-compatible, but I think it is legal to enable L0s on only one
-direction.
+Can you possibly have more than 256 PEs? Or exactly 256? What patch in this 
+series makes use of it?
 
-> This part is a little bit misleading. I had HW people telling me
-> that both sides need to enable L0s at about the same time.
+I probably asked but do not remember the answer :)
 
-I don't remember seeing anything like that in the spec.  Do they have
-a pointer?  "At about the same time" is too hand-wavey to be useful to
-software.
+Looks like waste of memory - you only used a small fraction of 
+pe_rmap[0x10000] and now the waste is quadrupled.
 
-> I'm actually seeing Linux enabling L0s on one side only as you
-> described and both supports L0s.
+
+>
+> This extends the PE# capacity for every PHB. After that, the PE number
+> is represented by 4-bytes value. Then we can reuse IODA_INVALID_PE to
+> check the PE# in phb->pe_rmap[] is valid or not.
+
+Looks like using IODA_INVALID_PE is the only reason for this patch.
+
+
+>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Reviewed-by: Daniel Axtens <dja@axtens.net>
+> ---
+>  arch/powerpc/platforms/powernv/pci-ioda.c | 6 +++++-
+>  arch/powerpc/platforms/powernv/pci.h      | 7 ++-----
+>  2 files changed, 7 insertions(+), 6 deletions(-)
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index cbd4c0b..cf96cb5 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -768,7 +768,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
+>
+>  	/* Clear the reverse map */
+>  	for (rid = pe->rid; rid < rid_end; rid++)
+> -		phb->ioda.pe_rmap[rid] = 0;
+> +		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
+>
+>  	/* Release from all parents PELT-V */
+>  	while (parent) {
+> @@ -3406,6 +3406,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>  	if (prop32)
+>  		phb->ioda.reserved_pe_idx = be32_to_cpup(prop32);
+>
+> +	/* Invalidate RID to PE# mapping */
+> +	for (segno = 0; segno < ARRAY_SIZE(phb->ioda.pe_rmap); segno++)
+> +		phb->ioda.pe_rmap[segno] = IODA_INVALID_PE;
+> +
+>  	/* Parse 64-bit MMIO range */
+>  	pnv_ioda_parse_m64_window(phb);
+>
+> diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
+> index 904f60b..80f5326 100644
+> --- a/arch/powerpc/platforms/powernv/pci.h
+> +++ b/arch/powerpc/platforms/powernv/pci.h
+> @@ -156,11 +156,8 @@ struct pnv_phb {
+>  		struct list_head	pe_list;
+>  		struct mutex            pe_list_mutex;
+>
+> -		/* Reverse map of PEs, will have to extend if
+> -		 * we are to support more than 256 PEs, indexed
+> -		 * bus { bus, devfn }
+> -		 */
+> -		unsigned char		pe_rmap[0x10000];
+> +		/* Reverse map of PEs, indexed by {bus, devfn} */
+> +		unsigned int		pe_rmap[0x10000];
+>
+>  		/* TCE cache invalidate registers (physical and
+>  		 * remapped)
+>
+
+
+-- 
+Alexey
