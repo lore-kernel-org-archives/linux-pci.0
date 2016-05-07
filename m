@@ -1,84 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp07.au.ibm.com ([202.81.31.140]:55721 "EHLO
-	e23smtp07.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755920AbcECNX6 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 09:23:58 -0400
-Received: from localhost
-	by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 3 May 2016 23:23:56 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, robherring2@gmail.com, dja@axtens.net,
-	alistair@popple.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v9 04/22] powerpc/powernv: Increase PE# capacity
-Date: Tue,  3 May 2016 23:22:35 +1000
-Message-Id: <1462281773-26438-5-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from bes.se.axis.com ([195.60.68.10]:41673 "EHLO bes.se.axis.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751566AbcEGLpg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Sat, 7 May 2016 07:45:36 -0400
+Date: Sat, 7 May 2016 13:45:31 +0200
+From: Jesper Nilsson <jesper.nilsson@axis.com>
+To: Rob Herring <robh@kernel.org>
+Cc: Niklas Cassel <niklass@axis.com>, jespern@axis.com,
+	pawel.moll@arm.com, mark.rutland@arm.com,
+	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
+	linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/2] dt-bindings: pci: add DT binding for Axis ARTPEC-6
+ PCIe controller
+Message-ID: <20160507114531.GI24250@axis.com>
+References: <1462362857-27481-1-git-send-email-niklass@axis.com>
+ <20160505220331.GA9225@rob-hp-laptop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160505220331.GA9225@rob-hp-laptop>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Each PHB maintains an array helping to translate 2-bytes Request
-ID (RID) to PE# with the assumption that PE# takes one byte, meaning
-that we can't have more than 256 PEs. However, pci_dn->pe_number
-already had 4-bytes for the PE#.
+On Thu, May 05, 2016 at 05:03:31PM -0500, Rob Herring wrote:
+> On Wed, May 04, 2016 at 01:54:17PM +0200, Niklas Cassel wrote:
+> > From: Niklas Cassel <niklas.cassel@axis.com>
+> > 
+> > This commit adds the Device Tree binding documentation that allows to
+> > describe the PCIe controller found in the Axis ARTPEC-6 SoC.
+> > 
+> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> > ---
+> >  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  | 45 ++++++++++++++++++++++
+> >  1 file changed, 45 insertions(+)
+> >  create mode 100644 Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+> > 
+> > diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+> > new file mode 100644
+> > index 0000000..fdac2a2
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
+> > @@ -0,0 +1,45 @@
+> > +* Axis ARTPEC-6 PCIe interface
+> > +
+> > +This PCIe host controller is based on the Synopsis Designware PCIe IP
+> > +and thus inherits all the common properties defined in designware-pcie.txt.
+> > +
+> > +Required properties:
+> > +- compatible: "axis,artpec6-pcie", "snps,dw-pcie"
+> > +- reg: base addresses and lengths of the pcie controller (DBI),
+> > +	the phy controller, and configuration address space.
+> > +- reg-names: Must include the following entries:
+> > +	- "dbi"
+> > +	- "phy"
+> > +	- "config"
+> > +- interrupts: A list of interrupt outputs of the controller. Must contain an
+> > +  entry for each entry in the interrupt-names property.
+> > +- interrupt-names: Must include the following entries:
+> > +	- "msi": The interrupt that is asserted when an MSI is received
+> > +- syscon: Should contain a link to the syscon device node.
+> 
+> What is the syscon for? Perhaps a name that reflects the purpose.
 
-This extends the PE# capacity for every PHB. After that, the PE number
-is represented by 4-bytes value. Then we can reuse IODA_INVALID_PE to
-check the PE# in phb->pe_rmap[] is valid or not.
+It's the SoC System Controller, and holds some chip-specific registers
+for the Synopsys IP control, clocks and some termination variables spring
+to mind. It was named sysctrl earlier, although that's not very much more
+descriptive.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Reviewed-by: Daniel Axtens <dja@axtens.net>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 6 +++++-
- arch/powerpc/platforms/powernv/pci.h      | 7 ++-----
- 2 files changed, 7 insertions(+), 6 deletions(-)
+> Rob
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index cbd4c0b..cf96cb5 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -768,7 +768,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
- 
- 	/* Clear the reverse map */
- 	for (rid = pe->rid; rid < rid_end; rid++)
--		phb->ioda.pe_rmap[rid] = 0;
-+		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
- 
- 	/* Release from all parents PELT-V */
- 	while (parent) {
-@@ -3406,6 +3406,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	if (prop32)
- 		phb->ioda.reserved_pe_idx = be32_to_cpup(prop32);
- 
-+	/* Invalidate RID to PE# mapping */
-+	for (segno = 0; segno < ARRAY_SIZE(phb->ioda.pe_rmap); segno++)
-+		phb->ioda.pe_rmap[segno] = IODA_INVALID_PE;
-+
- 	/* Parse 64-bit MMIO range */
- 	pnv_ioda_parse_m64_window(phb);
- 
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 904f60b..80f5326 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -156,11 +156,8 @@ struct pnv_phb {
- 		struct list_head	pe_list;
- 		struct mutex            pe_list_mutex;
- 
--		/* Reverse map of PEs, will have to extend if
--		 * we are to support more than 256 PEs, indexed
--		 * bus { bus, devfn }
--		 */
--		unsigned char		pe_rmap[0x10000];
-+		/* Reverse map of PEs, indexed by {bus, devfn} */
-+		unsigned int		pe_rmap[0x10000];
- 
- 		/* TCE cache invalidate registers (physical and
- 		 * remapped)
+/^JN - Jesper Nilsson
 -- 
-2.1.0
-
+               Jesper Nilsson -- jesper.nilsson@axis.com
