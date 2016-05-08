@@ -1,223 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([125.16.236.4]:33211 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933413AbcECNdt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 09:33:49 -0400
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:43403 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750849AbcEHXw6 (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Sun, 8 May 2016 19:52:58 -0400
 Received: from localhost
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 3 May 2016 18:53:29 +0530
+	Mon, 9 May 2016 09:52:55 +1000
+Date: Mon, 9 May 2016 09:51:25 +1000
 From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, robherring2@gmail.com, dja@axtens.net,
-	alistair@popple.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v9 17/22] drivers/of: Avoid recursively calling unflatten_dt_node()
-Date: Tue,  3 May 2016 23:22:48 +1000
-Message-Id: <1462281773-26438-18-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Alexey Kardashevskiy <aik@ozlabs.ru>,
+	Bjorn Helgaas <bhelgaas@google.com>, dja@axtens.net,
+	Alistair Popple <alistair@popple.id.au>
+Subject: Re: [PATCH v9 22/22] PCI/hotplug: PowerPC PowerNV PCI hotplug driver
+Message-ID: <20160508235125.GA7692@gwshan>
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
 References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1462281773-26438-23-git-send-email-gwshan@linux.vnet.ibm.com>
+ <CAL_JsqLAYk2S80LNvF2z2ZzPfCWAbpz2LNKK-04OgSkabjWbxQ@mail.gmail.com>
+ <20160506002834.GA5509@gwshan>
+ <CAL_JsqKQNyL7g71PL9unwqS9834A=D41X9mx5Zr0iX=NapWLJw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL_JsqKQNyL7g71PL9unwqS9834A=D41X9mx5Zr0iX=NapWLJw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In current implementation, unflatten_dt_node() is called recursively
-to unflatten device nodes in FDT blob. It's stress to limited stack
-capacity, especially to adopt the function to unflatten device sub-tree
-that possibly has multiple root nodes. In that case, we runs out of
-stack and the system can't boot up successfully.
+On Fri, May 06, 2016 at 08:12:42AM -0500, Rob Herring wrote:
+>On Thu, May 5, 2016 at 7:28 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+>> On Thu, May 05, 2016 at 12:04:49PM -0500, Rob Herring wrote:
+>>>On Tue, May 3, 2016 at 8:22 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+>>>> This adds standalone driver to support PCI hotplug for PowerPC PowerNV
+>>>> platform that runs on top of skiboot firmware. The firmware identifies
+>>>> hotpluggable slots and marked their device tree node with proper
+>>>> "ibm,slot-pluggable" and "ibm,reset-by-firmware". The driver scans
+>>>> device tree nodes to create/register PCI hotplug slot accordingly.
+>>>>
+>>>> The PCI slots are organized in fashion of tree, which means one
+>>>> PCI slot might have parent PCI slot and parent PCI slot possibly
+>>>> contains multiple child PCI slots. At the plugging time, the parent
+>>>> PCI slot is populated before its children. The child PCI slots are
+>>>> removed before their parent PCI slot can be removed from the system.
+>>>>
+>>>> If the skiboot firmware doesn't support slot status retrieval, the PCI
+>>>> slot device node shouldn't have property "ibm,reset-by-firmware". In
+>>>> that case, none of valid PCI slots will be detected from device tree.
+>>>> The skiboot firmware doesn't export the capability to access attention
+>>>> LEDs yet and it's something for TBD.
+>>>>
+>>>> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>>> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>>>
+>>>[...]
+>>>
+>>>> +static void pnv_php_handle_poweron(struct pnv_php_slot *php_slot)
+>>>> +{
+>>>> +       void *fdt, *fdt1, *dt;
+>>>> +       int confirm = PNV_PHP_POWER_CONFIRMED_SUCCESS;
+>>>> +       int ret;
+>>>> +
+>>>> +       /* We don't know the FDT blob size. We try to get it through
+>>>> +        * maximal memory chunk and then copy it to another chunk that
+>>>> +        * fits the real size.
+>>>> +        */
+>>>> +       fdt1 = kzalloc(0x10000, GFP_KERNEL);
+>>>> +       if (!fdt1)
+>>>> +               goto error;
+>>>> +
+>>>> +       ret = pnv_pci_get_device_tree(php_slot->dn->phandle, fdt1, 0x10000);
+>>>> +       if (ret)
+>>>> +               goto free_fdt1;
+>>>> +
+>>>> +       fdt = kzalloc(fdt_totalsize(fdt1), GFP_KERNEL);
+>>>> +       if (!fdt)
+>>>> +               goto free_fdt1;
+>>>> +
+>>>> +       /* Unflatten device tree blob */
+>>>> +       memcpy(fdt, fdt1, fdt_totalsize(fdt1));
+>>>
+>>>This is wrong. If the size is greater than 64K, then you will be
+>>>overrunning the fdt1 buffer. You need to fetch the FDT again if it is
+>>>bigger than 64KB.
+>>>
+>>
+>> Thanks for review, Rob. Sorry that I don't see how it's a problem. An
+>> errcode is returned from pnv_pci_get_device_tree() if the FDT blob
+>> size is greater than 64K. In this case, memcpy() won't be triggered.
+>> pnv_pci_get_device_tree() relies on firmware implementation which
+>> avoids overrunning the buffer.
+>
+>Okay, I missed that pnv_pci_get_device_tree would error out.
+>
+>> On the other hand, it would be reasonable to retry retriving the
+>> FDT blob if 64K buffer isn't enough. Also, kzalloc() can be replaced
+>> with alloc_pages() as 64K is the default page size on PPC64. I will
+>> have something like below until some one has more concerns. As the
+>> size of the allocated buffer will be greater than the real FDT blob
+>> size, some memory (not too much) is wasted. I guess it should be ok.
+>>
+>>         struct page *page;
+>>         void *fdt;
+>>         unsigned int order;
+>>         int ret;
+>>
+>>         for (order = 0; order < MAX_ORDER; order++) {
+>>                 page = alloc_pages(GFP_KERNEL, order);
+>>                 if (page) {
+>>                         fdt = page_address(page);
+>>                         ret = pnv_pci_get_device_tree(php_slot->dn->phandle,
+>>                                                       fdt, (1 << order) * PAGE_SIZE);
+>>                         if (ret) {
+>>                                 dev_dbg(&php_slot->pdev.dev, "Error %d getting device tree (%d)\n",
+>>                                         ret, order);
+>>                                 free_pages(fdt, order);
+>>                                 continue;
+>>                         }
+>>                 }
+>>         }
+>
+>I would allocate a minimal buffer to read the header, get the actual
+>size, then allocate a new buffer. There's no point in looping. If you
+>know 64KB is the biggest size you should ever see, then how you had it
+>is reasonable, too.
+>
 
-In order to reuse the function to unflatten device sub-tree, this avoids
-calling the function recursively, meaning the device nodes are unflattened
-in one call on unflatten_dt_node(): two arrays are introduced to track the
-parent path size and the device node of current level of depth, which will
-be used by the device node on next level of depth to be unflattened. All
-device nodes in more than 64 level of depth are dropped and hopefully,
-the system can boot up successfully with the partial device-tree.
+The interface pnv_pci_get_device_tree() returns header and meta-data
+in one shoot as it was designed. Also, 64KB here is good enough as I
+can see. I will keep the code as-is. Thanks a lot for looking into
+details, Rob.
 
-Also, the parameter "poffset" and "fpsize" are unused and dropped and the
-parameter "dryrun" is figured out from "mem == NULL". Besides, the return
-value of the function is changed to indicate the size of memory consumed by
-the unflatten device tree or error code.
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Acked-by: Rob Herring <robh@kernel.org>
----
- drivers/of/fdt.c | 122 +++++++++++++++++++++++++++++++++----------------------
- 1 file changed, 74 insertions(+), 48 deletions(-)
-
-diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
-index d031c78..d1d5309 100644
---- a/drivers/of/fdt.c
-+++ b/drivers/of/fdt.c
-@@ -356,63 +356,90 @@ static unsigned long populate_node(const void *blob,
- 	return fpsize;
- }
- 
-+static void reverse_nodes(struct device_node *parent)
-+{
-+	struct device_node *child, *next;
-+
-+	/* In-depth first */
-+	child = parent->child;
-+	while (child) {
-+		reverse_nodes(child);
-+
-+		child = child->sibling;
-+	}
-+
-+	/* Reverse the nodes in the child list */
-+	child = parent->child;
-+	parent->child = NULL;
-+	while (child) {
-+		next = child->sibling;
-+
-+		child->sibling = parent->child;
-+		parent->child = child;
-+		child = next;
-+	}
-+}
-+
- /**
-  * unflatten_dt_node - Alloc and populate a device_node from the flat tree
-  * @blob: The parent device tree blob
-  * @mem: Memory chunk to use for allocating device nodes and properties
-- * @poffset: pointer to node in flat tree
-  * @dad: Parent struct device_node
-  * @nodepp: The device_node tree created by the call
-- * @fpsize: Size of the node path up at the current depth.
-- * @dryrun: If true, do not allocate device nodes but still calculate needed
-- * memory size
-+ *
-+ * It returns the size of unflattened device tree or error code
-  */
--static void *unflatten_dt_node(const void *blob,
--			       void *mem,
--			       int *poffset,
--			       struct device_node *dad,
--			       struct device_node **nodepp,
--			       unsigned long fpsize,
--			       bool dryrun)
-+static int unflatten_dt_node(const void *blob,
-+			     void *mem,
-+			     struct device_node *dad,
-+			     struct device_node **nodepp)
- {
--	struct device_node *np;
--	static int depth;
--	int old_depth;
-+	struct device_node *root;
-+	int offset = 0, depth = 0;
-+#define FDT_MAX_DEPTH	64
-+	unsigned long fpsizes[FDT_MAX_DEPTH];
-+	struct device_node *nps[FDT_MAX_DEPTH];
-+	void *base = mem;
-+	bool dryrun = !base;
- 
--	fpsize = populate_node(blob, *poffset, &mem, dad, fpsize, &np, dryrun);
--	if (!fpsize)
--		return mem;
-+	if (nodepp)
-+		*nodepp = NULL;
-+
-+	root = dad;
-+	fpsizes[depth] = dad ? strlen(of_node_full_name(dad)) : 0;
-+	nps[depth++] = dad;
-+	for (offset = 0;
-+	     offset >= 0;
-+	     offset = fdt_next_node(blob, offset, &depth)) {
-+		if (WARN_ON_ONCE(depth >= FDT_MAX_DEPTH))
-+			continue;
- 
--	old_depth = depth;
--	*poffset = fdt_next_node(blob, *poffset, &depth);
--	if (depth < 0)
--		depth = 0;
--	while (*poffset > 0 && depth > old_depth)
--		mem = unflatten_dt_node(blob, mem, poffset, np, NULL,
--					fpsize, dryrun);
-+		fpsizes[depth] = populate_node(blob, offset, &mem,
-+					       nps[depth - 1],
-+					       fpsizes[depth - 1],
-+					       &nps[depth], dryrun);
-+		if (!fpsizes[depth])
-+			return mem - base;
-+
-+		if (!dryrun && nodepp && !*nodepp)
-+			*nodepp = nps[depth];
-+		if (!dryrun && !root)
-+			root = nps[depth];
-+	}
- 
--	if (*poffset < 0 && *poffset != -FDT_ERR_NOTFOUND)
--		pr_err("unflatten: error %d processing FDT\n", *poffset);
-+	if (offset < 0 && offset != -FDT_ERR_NOTFOUND) {
-+		pr_err("%s: Error %d processing FDT\n", __func__, offset);
-+		return -EINVAL;
-+	}
- 
- 	/*
- 	 * Reverse the child list. Some drivers assumes node order matches .dts
- 	 * node order
- 	 */
--	if (!dryrun && np->child) {
--		struct device_node *child = np->child;
--		np->child = NULL;
--		while (child) {
--			struct device_node *next = child->sibling;
--			child->sibling = np->child;
--			np->child = child;
--			child = next;
--		}
--	}
--
--	if (nodepp)
--		*nodepp = np;
-+	if (!dryrun)
-+		reverse_nodes(root);
- 
--	return mem;
-+	return mem - base;
- }
- 
- /**
-@@ -431,8 +458,7 @@ static void __unflatten_device_tree(const void *blob,
- 			     struct device_node **mynodes,
- 			     void * (*dt_alloc)(u64 size, u64 align))
- {
--	unsigned long size;
--	int start;
-+	int size;
- 	void *mem;
- 
- 	pr_debug(" -> unflatten_device_tree()\n");
-@@ -453,11 +479,12 @@ static void __unflatten_device_tree(const void *blob,
- 	}
- 
- 	/* First pass, scan for size */
--	start = 0;
--	size = (unsigned long)unflatten_dt_node(blob, NULL, &start, NULL, NULL, 0, true);
--	size = ALIGN(size, 4);
-+	size = unflatten_dt_node(blob, NULL, NULL, NULL);
-+	if (size < 0)
-+		return;
- 
--	pr_debug("  size is %lx, allocating...\n", size);
-+	size = ALIGN(size, 4);
-+	pr_debug("  size is %d, allocating...\n", size);
- 
- 	/* Allocate memory for the expanded device tree */
- 	mem = dt_alloc(size + 4, __alignof__(struct device_node));
-@@ -468,8 +495,7 @@ static void __unflatten_device_tree(const void *blob,
- 	pr_debug("  unflattening %p...\n", mem);
- 
- 	/* Second pass, do actual unflattening */
--	start = 0;
--	unflatten_dt_node(blob, mem, &start, NULL, mynodes, 0, false);
-+	unflatten_dt_node(blob, mem, NULL, mynodes);
- 	if (be32_to_cpup(mem + size) != 0xdeadbeef)
- 		pr_warning("End of tree marker overwritten: %08x\n",
- 			   be32_to_cpup(mem + size));
--- 
-2.1.0
+Thanks,
+Gavin
 
