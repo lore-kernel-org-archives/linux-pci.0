@@ -1,86 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp02.au.ibm.com ([202.81.31.144]:36852 "EHLO
-	e23smtp02.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751398AbcEBCD4 (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Sun, 1 May 2016 22:03:56 -0400
-Received: from localhost
-	by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Mon, 2 May 2016 12:03:53 +1000
-Date: Mon, 2 May 2016 12:02:21 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Rob Herring <robherring2@gmail.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
-	dja@axtens.net, Bjorn Helgaas <bhelgaas@google.com>,
-	Grant Likely <grant.likely@linaro.org>
-Subject: Re: [PATCH v8 40/45] drivers/of: Split unflatten_dt_node()
-Message-ID: <20160502020221.GA16612@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1455680668-23298-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1455680668-23298-41-git-send-email-gwshan@linux.vnet.ibm.com>
- <CAL_Jsq++L-D=RD6ZYK=CPnhqcZbhEbxsKk3xT-vK2R=Qe9Z_pg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAL_Jsq++L-D=RD6ZYK=CPnhqcZbhEbxsKk3xT-vK2R=Qe9Z_pg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <jchandra@broadcom.com>
+Return-Path: <jchandra@broadcom.com>
+From: Jayachandran C <jchandra@broadcom.com>
+To: Alex Williamson <alex.williamson@redhat.com>,
+	iommu@lists.linux-foundation.org
+Cc: Jayachandran C <jchandra@broadcom.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 2/2] PCI: Handle Broadcom Vulcan DMA alias calculation quirk
+Date: Sun,  8 May 2016 15:03:21 +0530
+Message-Id: <1462700001-30086-2-git-send-email-jchandra@broadcom.com>
+In-Reply-To: <1462700001-30086-1-git-send-email-jchandra@broadcom.com>
+References: <1462700001-30086-1-git-send-email-jchandra@broadcom.com>
+In-Reply-To: <linux-pci@vger.kernel.org>
+References: <linux-pci@vger.kernel.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 17, 2016 at 08:30:42AM -0600, Rob Herring wrote:
->On Tue, Feb 16, 2016 at 9:44 PM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
->> The function unflatten_dt_node() is called recursively to unflatten
->> device nodes and properties in the FDT blob. It looks complicated
->> and hard to be understood.
->>
->> This splits the function into 3 functions: populate_properties(),
->> populate_node() and unflatten_dt_node(). populate_properties(),
->> which is called by populate_node(), creates properties for the
->> indicated device node. The later one creates the device nodes
->> from FDT blob. populate_node() gets the offset in FDT blob for
->> next device nodes and then calls populate_node(). No logical
->> changes introduced.
->>
->> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> ---
->>  drivers/of/fdt.c | 249 ++++++++++++++++++++++++++++++++-----------------------
->>  1 file changed, 147 insertions(+), 102 deletions(-)
->
->One nit, otherwise:
->
->Acked-by: Rob Herring <robh@kernel.org>
->
->[...]
->
->> +               /* And we process the "ibm,phandle" property
->> +                * used in pSeries dynamic device tree
->> +                * stuff
->> +                */
->> +               if (!strcmp(pname, "ibm,phandle"))
->> +                       np->phandle = be32_to_cpup(val);
->> +
->> +               pp->name   = (char *)pname;
->> +               pp->length = sz;
->> +               pp->value  = (__be32 *)val;
->
->This cast should not be needed.
->
+The Broadcom Vulcan PCI topology is slightly unusual, for a multi-node
+system, it looks like:
 
-It's needed. Otherwise, we will have warning. So I will keep it. I just
-went through this one for next revision and sorry for late response.
+ [bus 0]
+     |
+     +--[node 0 PCI bridge 0.0.0]
+     |           |
+     |        [bus 1]
+     |           +---[SoC PCI devices 1.4.x, 1.5.x] ........
+     |           +---[Glue bridges    1.a.x, 1.b.x]         \
+     |                    |                        .....{node 0 GIC ITS}
+     |                    |                       /
+     |                    +----[SoC PCIe controller root ports]
+     |                                |         \...... {SMMUv3 0..3}
+     |                                |
+     |                                +---- [external PCI devices]
+     +- [node 1 PCI bridge 0.0.1]
+     |           |
+     |        [bus n - similar to bus 1 above]
+     ...
 
-drivers/of/fdt.c:225:14: warning: assignment discards ‘const’ qualifier from pointer target type
-   pp->value  = val;
-              ^
+The for_each_dma_alias call for external PCI devices should not go
+beyond the PCIe controllers where the SMMU and ITS is associated, going
+further above to the glue bridges or the node bridges will find aliases
+which are not valid. For internal devices, the association is at the
+node level bridge and the alias search should not go further.
 
-Thanks,
-Gavin
+To handle this quirk, we mark the SoC PCIe bridges and node PCI bridge
+with flag PCI_DEV_FLAGS_DMA_ALIAS_ROOT so that the alias and RID
+calculations are correct.
 
->> +               *pprev     = pp;
->> +               pprev      = &pp->next;
->> +       }
->
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+---
+ drivers/pci/quirks.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 8e67802..62664b5 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3734,6 +3734,20 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
+ DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
+ 
+ /*
++ * The IOMMU and interrupt controller of Broadcom vulcan are associated
++ * not at the root bus, but at a bridge below. The DMA alias search should
++ * not go above the bridge at which the association exists.
++ */
++static void quirk_bridge_brcm_vulcan_pcie_root(struct pci_dev *pdev)
++{
++	pdev->dev_flags |= PCI_DEV_FLAGS_DMA_ALIAS_ROOT;
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9000,
++				quirk_bridge_brcm_vulcan_pcie_root);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9084,
++				quirk_bridge_brcm_vulcan_pcie_root);
++
++/*
+  * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
+  * class code.  Fix it.
+  */
+-- 
+1.9.1
