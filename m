@@ -1,78 +1,222 @@
-Return-Path: <hch@lst.de>
-Return-Path: <hch@lst.de>
-Date: Thu, 12 May 2016 13:03:18 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, helgaas@kernel.org, pjw@netapp.com,
-	axboe@fb.com, keith.busch@intel.com, linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org
-Subject: Re: [PATCH 1/2] PCI: Provide sensible irq vector alloc/free
-	routines
-Message-ID: <20160512110318.GA9192@lst.de>
-References: <1462457096-19795-1-git-send-email-hch@lst.de> <1462457096-19795-2-git-send-email-hch@lst.de> <20160511074527.GA31347@agordeev.lab.eng.brq.redhat.com> <20160511085049.GA20279@lst.de> <20160511094432.GB31347@agordeev.lab.eng.brq.redhat.com> <20160512073552.GA4027@lst.de> <20160512094432.GA14671@agordeev.lab.eng.brq.redhat.com>
+Return-Path: <rjw@rjwysocki.net>
+Return-Path: <rjw@rjwysocki.net>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: helgaas@kernel.org, arnd@arndb.de, will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org, hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org, jiang.liu@linux.intel.com, jchandra@broadcom.com, robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com, wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com, msalter@redhat.com, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org, jcm@redhat.com
+Subject: Re: [PATCH V6 01/13] pci, acpi, x86, ia64: Move ACPI host bridge device companion assignment to core code.
+Date: Tue, 10 May 2016 00:56:37 +0200
+Message-ID: <292578579.uIxhMjkdfG@vostro.rjw.lan>
+In-Reply-To: <1460740008-19489-2-git-send-email-tn@semihalf.com>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com> <1460740008-19489-2-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160512094432.GA14671@agordeev.lab.eng.brq.redhat.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 12, 2016 at 11:44:33AM +0200, Alexander Gordeev wrote:
-> On Thu, May 12, 2016 at 09:35:52AM +0200, Christoph Hellwig wrote:
-> > Hi Alex,
-> > 
-> > what do you think about the incremental patch below?  This should
-> > address the concerns about the strange PPC bridges, although I don't
-> > have a way to test one:
-> > 
-> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> > index a510484..32ce65e 100644
-> > --- a/drivers/pci/msi.c
-> > +++ b/drivers/pci/msi.c
-> > @@ -1177,6 +1177,7 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
-> >  	if (WARN_ON_ONCE(dev->msi_enabled || dev->msix_enabled))
-> >  		return -EINVAL;
-> >  
-> > +retry:
+On Friday, April 15, 2016 07:06:36 PM Tomasz Nowicki wrote:
+> Currently we have two platforms (x86 & ia64) capable of PCI ACPI host
+> bridge initialization. They both use arch-specific sysdata to pass down
+> parent device reference and both rely on NULL parent in pci_create_root_bus()
+> to validate sysdata content.
+
+No, this is not relied on for that.  It is just NULL, because we don't
+have a physical parent device representation for the PCI host bridge.
+
+> It looks hacky and prevents us from getting some firmware specific
+> info for PCI host controller based on its acpi_device structure
+> in generic pci_create_root_bus() function.
+
+You can't get that info without adding ACPI-specific code to that function
+anyway.
+
+> However, we overcome that blocker by passing down parent device via
+> pci_create_root_bus parameter (as the ACPI device type).
+
+Which is completely wrong.
+
+> Then we use ACPI_COMPANION_SET in core code
+> for ACPI boot method only. ACPI_COMPANION_SET is safe to run for all
+> cases DT, ACPI and DT&ACPI.
 > 
-> A retry does not seem needs checking MSI support each time, nor reading
-> MSI header info like number of vectors (not visible in this patch).
-
-I can easily skip the pci_msi_supported check, but we either need
-to re-read the number of vectors, as that is done differently for
-MSI vs MSIX, or totally restructure the code, which doesn't seem worth it,
-especially as the existing code also re-reads it every time.
-
-> > -out_free_irqs:
-> >  	kfree(dev->irqs);
-> > +	/* if ret is positive it's the numbers of vectors we can use, retry: */
-> > +	if (ret > 0) {
-> > +		nr_vecs = ret;
-> > +		goto retry;
-> > +	}
+> Since now PCI core code is setting ACPI companion device for us,
+> x86 & ia64 specific ACPI companion device setting turns out to be dead now.
+> We can get rid of it, including related companion reference from
+> PCI sysdata structure. Aslo, PCI_CONTROLLER macro cannot return valid
+> companion device anymore. Therefore we need to convert its usage to
+> ACPI_COMPANION.
 > 
-> Okay, now we have a subtlety here. You switch from MSI-X to MSI in case
-> MSI-X retries exhausted. At this point nr_vecs is lowest (likely 1). So
-> you start trying MSI from 1 rather from 32. I would suggest two subsequent
-> loops instead.
-
-So bridges could support less MSI-X entries than MSI ones?  Yikes.
-
-> Another thing, pci_alloc_irq_vectors() tries to allocate vectors in a
-> range from 1 to nr_vecs now. So this function implicitly falls into
-> the other two range functions family and therefore:
+> Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Reviewed-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Tested-by: Duc Dang <dhdang@apm.com>
+> Tested-by: Dongdong Liu <liudongdong3@huawei.com>
+> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Tested-by: Graeme Gregory <graeme.gregory@linaro.org>
+> Tested-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  arch/ia64/hp/common/sba_iommu.c    |  2 +-
+>  arch/ia64/include/asm/pci.h        |  1 -
+>  arch/ia64/pci/pci.c                | 16 ----------------
+>  arch/ia64/sn/kernel/io_acpi_init.c |  4 ++--
+>  arch/x86/include/asm/pci.h         |  3 ---
+>  arch/x86/pci/acpi.c                | 17 -----------------
+>  drivers/acpi/pci_root.c            |  7 ++++++-
+>  drivers/pci/probe.c                |  2 ++
+>  8 files changed, 11 insertions(+), 41 deletions(-)
 > 
->   (a) pci_alloc_irq_vectors() name is not perfec;
+> diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
+> index a6d6190..78e4444 100644
+> --- a/arch/ia64/hp/common/sba_iommu.c
+> +++ b/arch/ia64/hp/common/sba_iommu.c
+> @@ -1981,7 +1981,7 @@ sba_connect_bus(struct pci_bus *bus)
+>  	if (PCI_CONTROLLER(bus)->iommu)
+>  		return;
+>  
+> -	handle = acpi_device_handle(PCI_CONTROLLER(bus)->companion);
+> +	handle = acpi_device_handle(ACPI_COMPANION(bus->bridge));
+>  	if (!handle)
+>  		return;
+>  
+> diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+> index c0835b0..12423f4 100644
+> --- a/arch/ia64/include/asm/pci.h
+> +++ b/arch/ia64/include/asm/pci.h
+> @@ -63,7 +63,6 @@ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+>  #define pci_legacy_write platform_pci_legacy_write
+>  
+>  struct pci_controller {
+> -	struct acpi_device *companion;
+>  	void *iommu;
+>  	int segment;
+>  	int node;		/* nearest node with memory or NUMA_NO_NODE for global allocation */
+> diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+> index 8f6ac2f..978d6af 100644
+> --- a/arch/ia64/pci/pci.c
+> +++ b/arch/ia64/pci/pci.c
+> @@ -301,28 +301,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  	}
+>  
+>  	info->controller.segment = root->segment;
+> -	info->controller.companion = device;
+>  	info->controller.node = acpi_get_node(device->handle);
+>  	INIT_LIST_HEAD(&info->io_resources);
+>  	return acpi_pci_root_create(root, &pci_acpi_root_ops,
+>  				    &info->common, &info->controller);
+>  }
+>  
+> -int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+> -{
+> -	/*
+> -	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
+> -	 * here, pci_create_root_bus() has been called by someone else and
+> -	 * sysdata is likely to be different from what we expect.  Let it go in
+> -	 * that case.
+> -	 */
+> -	if (!bridge->dev.parent) {
+> -		struct pci_controller *controller = bridge->bus->sysdata;
+> -		ACPI_COMPANION_SET(&bridge->dev, controller->companion);
+> -	}
+> -	return 0;
+> -}
+> -
+>  void pcibios_fixup_device_resources(struct pci_dev *dev)
+>  {
+>  	int idx;
+> diff --git a/arch/ia64/sn/kernel/io_acpi_init.c b/arch/ia64/sn/kernel/io_acpi_init.c
+> index 231234c..e454492 100644
+> --- a/arch/ia64/sn/kernel/io_acpi_init.c
+> +++ b/arch/ia64/sn/kernel/io_acpi_init.c
+> @@ -132,7 +132,7 @@ sn_get_bussoft_ptr(struct pci_bus *bus)
+>  	struct acpi_resource_vendor_typed *vendor;
+>  
+>  
+> -	handle = acpi_device_handle(PCI_CONTROLLER(bus)->companion);
+> +	handle = acpi_device_handle(ACPI_COMPANION(bus->bridge));
+>  	status = acpi_get_vendor_resource(handle, METHOD_NAME__CRS,
+>  					  &sn_uuid, &buffer);
+>  	if (ACPI_FAILURE(status)) {
+> @@ -360,7 +360,7 @@ sn_acpi_get_pcidev_info(struct pci_dev *dev, struct pcidev_info **pcidev_info,
+>  	acpi_status status;
+>  	struct acpi_buffer name_buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+>  
+> -	rootbus_handle = acpi_device_handle(PCI_CONTROLLER(dev)->companion);
+> +	rootbus_handle = acpi_device_handle(ACPI_COMPANION(dev->bus->bridge));
+>          status = acpi_evaluate_integer(rootbus_handle, METHOD_NAME__SEG, NULL,
+>                                         &segment);
+>          if (ACPI_SUCCESS(status)) {
+> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+> index 9ab7507..24de07d 100644
+> --- a/arch/x86/include/asm/pci.h
+> +++ b/arch/x86/include/asm/pci.h
+> @@ -14,9 +14,6 @@
+>  struct pci_sysdata {
+>  	int		domain;		/* PCI domain */
+>  	int		node;		/* NUMA node */
+> -#ifdef CONFIG_ACPI
+> -	struct acpi_device *companion;	/* ACPI companion device */
+> -#endif
+>  #ifdef CONFIG_X86_64
+>  	void		*iommu;		/* IOMMU private data */
+>  #endif
+> diff --git a/arch/x86/pci/acpi.c b/arch/x86/pci/acpi.c
+> index 3cd6983..f4ca17a 100644
+> --- a/arch/x86/pci/acpi.c
+> +++ b/arch/x86/pci/acpi.c
+> @@ -340,7 +340,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  		struct pci_sysdata sd = {
+>  			.domain = domain,
+>  			.node = node,
+> -			.companion = root->device
+>  		};
+>  
+>  		memcpy(bus->sysdata, &sd, sizeof(sd));
+> @@ -355,7 +354,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  		else {
+>  			info->sd.domain = domain;
+>  			info->sd.node = node;
+> -			info->sd.companion = root->device;
+>  			bus = acpi_pci_root_create(root, &acpi_pci_root_ops,
+>  						   &info->common, &info->sd);
+>  		}
+> @@ -373,21 +371,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  	return bus;
+>  }
+>  
+> -int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+> -{
+> -	/*
+> -	 * We pass NULL as parent to pci_create_root_bus(), so if it is not NULL
+> -	 * here, pci_create_root_bus() has been called by someone else and
+> -	 * sysdata is likely to be different from what we expect.  Let it go in
+> -	 * that case.
+> -	 */
+> -	if (!bridge->dev.parent) {
+> -		struct pci_sysdata *sd = bridge->bus->sysdata;
+> -		ACPI_COMPANION_SET(&bridge->dev, sd->companion);
+> -	}
+> -	return 0;
+> -}
+> -
+>  int __init pci_acpi_init(void)
+>  {
+>  	struct pci_dev *dev = NULL;
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index ae3fe4e..4581e0e 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -564,6 +564,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
+>  		}
+>  	}
+>  
+> +	/*
+> +	 * pci_create_root_bus() needs to detect the parent device type,
+> +	 * so initialize its companion data accordingly.
+> +	 */
+> +	ACPI_COMPANION_SET(&device->dev, device);
 
-What would you call it instead?
+This is a complete nonsense, sorry.
 
->   (b) why not introduce 'minvec' minimal number of interrupts then?
->       We could have a handy pci_enable_irq_range() as result;
+This just means that the ACPI firmware object will now be an ACPI companion of
+itself.
 
-That seems pretty pointless, when the caller can simply treat a too
-small number as failure and use the existing failure path for that.
-
->   (c) if you do (b) then PCI_IRQ_NOMSIX flag becomes redundant, since
->       caller would invoke pci_enable_msi_range() instead;
-
-pci_enable_msi_range still has a horrible API that forces the caller
-to deal with the irq numbers differently than the MSI-X case, so it
-should also go away in the long run.
+Thanks,
+Rafael
