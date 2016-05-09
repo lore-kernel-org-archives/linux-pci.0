@@ -1,61 +1,26 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:35745 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751379AbcEKIr1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 11 May 2016 04:47:27 -0400
-From: "Yong, Jonathan" <jonathan.yong@intel.com>
+Received: from mail-io0-f177.google.com ([209.85.223.177]:36738 "EHLO
+	mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753002AbcEIW7z (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 May 2016 18:59:55 -0400
+Received: by mail-io0-f177.google.com with SMTP id u185so217675806iod.3
+        for <linux-pci@vger.kernel.org>; Mon, 09 May 2016 15:59:54 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAH=XD5_QVjhSezg-AwO0UrEEwraX2ingWmMbJG0iewyhqbT39Q@mail.gmail.com>
+References: <CAH=XD5_QVjhSezg-AwO0UrEEwraX2ingWmMbJG0iewyhqbT39Q@mail.gmail.com>
+Date: Mon, 9 May 2016 15:59:54 -0700
+Message-ID: <CAH=XD5-hO4Q3cMa+iRUsh2U2PLwBO57pt_O2OKAwe=PaOCdnqw@mail.gmail.com>
+Subject: Fwd: Intel NTB and a switch in between
+From: Kallol Biswas <kallol@nucleodyne.com>
 To: linux-pci@vger.kernel.org
-Cc: jonathan.yong@intel.com, bhelgaas@google.com
-Subject: [PATCH v5] PCI: PTM Driver
-Date: Wed, 11 May 2016 08:47:25 +0000
-Message-Id: <1462956446-27361-1-git-send-email-jonathan.yong@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello LKML,
+We have a requirement to setup intel processor NTB.
 
-This is a preliminary implementation of the PTM support driver. This driver
-has only been tested against a virtual PCI bus since there are no known
-endpoints utilizing it yet.
-
-Please CC me as I am not subscribed to the list.
-Thanks.
+We understand that NTB-NTB back to back connection works, but
+what if we put a transparent bridge (PCIe Switch) in between two NTBs?
 
 
-Changes since v1:
-* Moved register constants to pci_regs.h
-* Use pci_dev to hold PTM status
-* PTM initialization now done top-down hierarchy wise.
-
-Changes since v2:
-* Added missing void return in the pci_ptm_init inline stub.
-
-Changes since v3:
-* Clearing CONFIG_PCIE_PTM now completely prevents the driver from being built.
-* Renamed pci_*_ptm_sysfs to pcie_ptm_*_sysfs_dev_files for consistency.
-* Removed useless prototypes.
-* Driver no longer checks PTM capability version
-* PCI_EXT_CAP_ID_MAX updated to include PTM (0x1F)
-
-Changes since v4:
-* Using pci=noptm kernel parameter now disables ptm activation like other pci features.
-* Module param to disable ptm driver at runtime removed.
-* Sysfs file entries removed.
-
-Yong, Jonathan (1):
-  PCI: PTM preliminary implementation
-
- drivers/pci/pci.c             |   2 +
- drivers/pci/pci.h             |  13 ++++
- drivers/pci/pcie/Kconfig      |  10 +++
- drivers/pci/pcie/Makefile     |   3 +
- drivers/pci/pcie/pcie_ptm.c   | 170 ++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/probe.c           |   3 +
- include/linux/pci.h           |  13 ++++
- include/uapi/linux/pci_regs.h |  13 +++-
- 8 files changed, 226 insertions(+), 1 deletion(-)
- create mode 100644 drivers/pci/pcie/pcie_ptm.c
-
--- 
-2.7.3
-
+Kallol
