@@ -1,159 +1,154 @@
-Return-Path: <yu.c.chen@intel.com>
-Return-Path: <yu.c.chen@intel.com>
-Subject: Re: [PATCH][RFC] PCI: Workaround to enable poweroff on Mac Pro 11
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1464604404-11257-1-git-send-email-yu.c.chen@intel.com>
- <20160530213305.GA21322@localhost>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
- "Rafael J . Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- Yinghai Lu <yinghai@kernel.org>
-From: Chen Yu <yu.c.chen@intel.com>
-Message-ID: <574D03F9.6050201@intel.com>
-Date: Tue, 31 May 2016 11:24:41 +0800
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 9 May 2016 14:26:41 -0500
+From: Rob Herring <robh@kernel.org>
+To: Florian Fainelli <f.fainelli@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com,
+	bhelgaas@google.com, arnd@arndb.de
+Subject: Re: [PATCH v2 1/2] Documentation: DT: bindings: Add Broadcom STB
+ PCIe bindings
+Message-ID: <20160509192641.GA4936@rob-hp-laptop>
+References: <1462475700-1654-1-git-send-email-f.fainelli@gmail.com>
+ <1462475700-1654-2-git-send-email-f.fainelli@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160530213305.GA21322@localhost>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1462475700-1654-2-git-send-email-f.fainelli@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Thu, May 05, 2016 at 12:14:59PM -0700, Florian Fainelli wrote:
+> From: Jim Quinlan <jim2101024@gmail.com>
+> 
+> This patchs adds the Device Tree bindings for the Broadcom STB PCIe root
+> complex hardware.
+> 
+> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
+> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+> ---
+> Changes in v2:
+> 
+> - rewrite the binding document almost from scratch to include many more
+>   references to existing documents
+> - describe missing properties
+> - give better examples
+> 
+>  .../devicetree/bindings/pci/brcm,brcmstb-pcie.txt  | 98 ++++++++++++++++++++++
+>  1 file changed, 98 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
+> new file mode 100644
+> index 000000000000..3682b0f0bc26
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
+> @@ -0,0 +1,98 @@
+> +Broadcom STB PCIe Host Controller Device Tree Bindings
+> +
+> +This document describes the binding of the PCIe Root Complex hardware found in
+> +Broadcom Set Top Box System-on-Chips such as BCM7425 (MIPS), BCM7435 (MIPS) and
+> +BCM7445 (ARMv7).
+> +
+> +Required properties:
+> +- compatible: must be one of: "brcm,bcm7425-pcie"
+> +			      "brcm,bcm7435-pcie"
+> +			      "brcm,bcm7445-pcie"
+> +
+> +- reg: specifies the physical base address of the controller registers and
+> +  its length
+> +
+> +- interrupt-parent: must be a reference (phandle) to the parent interrupt
+> +  controller in the system (7038-l1-intc on MIPS, GIC on ARM/ARM64)
+> +
+> +- interrrupts: first interrupt must be the Level 1 interrupt number corresponding
+> +  to the main PCIe RC interrupt, second interrupt must be the MSI interrupt
+> +  See the interrupt-parent documentation for the number of cells and their meaning:
+> +  MIPS: Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7038-l1-intc.txt
+> +  ARM/ARM64: Documentation/devicetree/bindings/interrupt-controller/arm,gic.txt
+> +
+> +- interrupt-names: must be "pcie", and if present "msi"
+> +
+> +- interrupt-map: see pci.txt
+> +
+> +- interrupt-map-mask: see pci.txt
+> +
+> +- #address-cells: must be set to <3>, see pci.txt
+> +
+> +- #size-cells: must be set to <2>, see pci.txt
+> +
+> +- ranges: ranges for the PCI outbound windows, no I/O or prefetchable windows
+> +  must be specified here, only non-prefetchable. 32-bits windows or 64-bits
+> +  windows are allowed based on the host processor's capabilities (ARM w/ LPAE,
+> +  ARM64).
+> +
+> +- #interrupt-cells: set to <1>, see pci.txt
+> +
+> +- brcm,log2-scb-sizes: log2 size of the SCB window that is mapped to PCIe space
+> +  there must be exactly one value per memory controller present in the system
+> +  (ranges from 1 to 3)
+> +
+> +Optional properties:
+> +
+> +- msi-controller: indicates that this is a MSI controller node (when supported)
+> +
+> +- clocks: phandle to the functional clock that feeds into the PCIe RC block
+> +
+> +- clock-names: the name(s) of the clocks specified in 'clocks'.  Note
+> +  that if the 'clocks' property is given, 'clock-names' is mandatory,
+> +  and the name of the clock is expected to be "pcie".
+> +
+> +- brcm,ssc: boolean that indicates usage of spread-spectrum clocking
 
-On 2016年05月31日 05:33, Bjorn Helgaas wrote:
-> On Mon, May 30, 2016 at 06:33:24PM +0800, Chen Yu wrote:
->> Currently there are many people reported that they can not
->> do a poweroff nor a suspend to memory on their Mac Pro 11.
->> After some investigations it was found that, once the PCI bridge
->> 0000:00:1c.0 reassigns its mm windows([mem 0x7fa00000-0x7fbfffff]
->> and [mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
->> io resource 0x1804 becomes unaccessible immediately, where the
->> ACPI Sleep register is located, as a result neither poweroff(S5)
->> nor suspend to memory(S3) works.
->>
->> I don't know why setting the base/limit of PCI bridge mem resource
->> would affect another io resource region, so this quirk just simply
->> bypass the assignment of these mm resources on 0000:00:1c.0, by
->> resetting the resource flag to 0 before updating the base/limit registers.
->> This patch also introduces a new pci fixup phase before the actual bridge
->> resource assignment.
-> Split the new fixup phase into a separate patch.
->
-> I'm doubtful about this because we don't understand the root cause.
-Yes, I don't know the root cause neither, so I send this patch to ask for
-help, maybe we should  also invite Apple people in..
->
->> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
->> Tested-by: Cedric Le Goater <clg@kaod.org>
->> Tested-by: pkozlov <pkozlov.vrn@gmail.com>
->> Tested-by: Zach Norman <zach@nor.mn>
->> Tested-by: Pablo Catalina <pablo.catalina@gmail.com>
->> Signed-off-by: Chen Yu <yu.c.chen@intel.com>
->> ---
->>   drivers/pci/quirks.c              | 25 +++++++++++++++++++++++++
->>   drivers/pci/setup-bus.c           |  2 ++
->>   include/asm-generic/vmlinux.lds.h |  3 +++
->>   include/linux/pci.h               |  4 ++++
->>   scripts/mod/modpost.c             |  1 +
->>   5 files changed, 35 insertions(+)
->>
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index ee72ebe..e347047 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -3370,6 +3370,8 @@ extern struct pci_fixup __start_pci_fixups_header[];
->>   extern struct pci_fixup __end_pci_fixups_header[];
->>   extern struct pci_fixup __start_pci_fixups_final[];
->>   extern struct pci_fixup __end_pci_fixups_final[];
->> +extern struct pci_fixup __start_pci_fixups_assign[];
->> +extern struct pci_fixup __end_pci_fixups_assign[];
->>   extern struct pci_fixup __start_pci_fixups_enable[];
->>   extern struct pci_fixup __end_pci_fixups_enable[];
->>   extern struct pci_fixup __start_pci_fixups_resume[];
->> @@ -3405,6 +3407,11 @@ void pci_fixup_device(enum pci_fixup_pass pass, struct pci_dev *dev)
->>   		end = __end_pci_fixups_final;
->>   		break;
->>   
->> +	case pci_fixup_assign:
->> +		start = __start_pci_fixups_assign;
->> +		end = __end_pci_fixups_assign;
->> +		break;
->> +
->>   	case pci_fixup_enable:
->>   		start = __start_pci_fixups_enable;
->>   		end = __end_pci_fixups_enable;
->> @@ -4419,3 +4426,21 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
->>   	}
->>   }
->>   DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
->> +
->> +/*
->> + * On Mac Pro 11, the allocation of pci bridge memory resource
->> + * broke ACPI Sleep Type register region.
->> + */
->> +static void quirk_mac_disable_mmio_bar(struct pci_dev *dev)
->> +{
->> +	struct resource *b_res;
->> +
->> +	dev_info(&dev->dev, "[Quirk] Disable mmio on Mac Pro 11\n");
->> +	if ((dev->class >> 8) != PCI_CLASS_BRIDGE_PCI)
->> +		return;
-> Why test for PCI_CLASS_BRIDGE_PCI?  If you do need to test, why is the
-> test after the dev_info()?
-This checking is not needed, since we only invoke 
-pci_fixup_device(pci_fixup_assign)
-for bridges. I can remove it.
->
->> +	b_res = &dev->resource[PCI_BRIDGE_RESOURCES];
->> +	b_res[1].flags = 0;
->> +	b_res[2].flags = 0;
-> You're changing the resource flags but not the hardware itself.  I
-> assume the window is still enabled and still claims address space, so
-> we don't want to throw away the information about it, because then we
-> don't know whether downstream devices can work, and we can't safely
-> assign resources to peers.
-If I understand correctly, according to the boot logs, the pci bridge
-in question has not declaimed any valid device/bridge resource
-(both io and mem) during  probe(because base=0xfff>limit=0x0),
-so I think it has not hardware resource setting at that time(at least
-in BIOS)
-until it reaches pcibios_assign_resources and it has to allocate a
-minimal io/mem resource, then it tries to  assign them to
-[mem 0x7fa00000 - 0x7fbfffff]
-[mem 0x7fc00000-0x7fdfffff 64bit pref]
-[io 0x2000-0x2fff],
-so if we reset the flag to zero for these mem resource, the pci bridge
-  will not assign any pci mem windows for it
-(in this way
-find_free_bus_resource(bus, mask | IORESOURCE_PREFETCH, type)
-will not return any free resource, thus bypass the assignment)
+Shouldn't this be a property of the phy? Is there no separate phy to 
+control?
 
-According to the boot log at 
-https://bugzilla.kernel.org/attachment.cgi?id=210141
-,  we can see there is no bridge windows assign for 0000:00:1c.0 during 
-early probe:
+> +
+> +- brcm,gen: integer that indicates desired forced generation of link: 1 => 2.5
+> +  Gbps, 2 => 5.0 Gbps, 3 => 8.0 Gbps. Will override the auto-negotation if
+> +  specified.
+> +
+> +- <*>-supply: see Documentation/devicetree/bindings/regulator/regulator.txt
+> +
+> +- <*>-supply-names: see Documentation/devicetree/bindings/regulator/regulator.txt
+> +
+> +Example Node:
+> +
+> +This example assumes that the top-level #address-cells = <2> and #size-cells =
+> +<2>, e.g: ARM LPAE configuration.
+> +
+> +	pcie0: pcie-controller@f0460000 {
+> +		reg = <0x0 0xf0460000 0x0 0x9310>;
+> +		interrupts = <0x0 0x33 0x4>, <0x0 0x34, 0x4>;
+                                                      ^
+typo
 
-[    0.807893] pci 0000:00:1c.0: [8086:8c10] type 01 class 0x060400
-[    0.807949] pci 0000:00:1c.0: PME# supported from D0 D3hot D3cold
-[    0.831281] pci 0000:00:1c.0: PCI bridge to [bus 02]
+> +		interrupt-names = "pcie", "msi";
+> +		compatible = "brcm,bcm7445-pcie";
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +
+> +		/* Two non-prefetchable 32-bits memory space, each of 128MB
+> + 		 * with the following mapping:
+> +		 * PCIe address		=> CPU physical address space
+> +		 * 0x00_0000_0000	=> 0x00_C000_0000
+> +		 * 0x00_0800_0000	=> 0x00_C800_0000
+> +		 */
+> +		ranges = <0x02000000 0x00000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x08000000>,
+> +			 <0x02000000 0x00000000 0x08000000 0x00000000 0xc8000000 0x00000000 0x08000000>;
+> +		#interrupt-cells = <1>;
+> +		interrupt-map-mask = <0xf800 0 0 7>;
+> +		interrupt-map = <0 0 0 1 &intc 47 3
+> +				 0 0 0 2 &intc 48 3
+> +				 0 0 0 3 &intc 49 3
+> +				 0 0 0 4 &intc 50 3>;
+> +		clocks = <&pcie0>;
+> +		clock-names = "pcie";
+> +		brcm,ssc;
+> +		brcm,log2-scb-sizes = <0x1e 0x1e 0x1e>;
+> +		vreg-wifi-pwr-supply-names = "vreg-wifi-pwr";
+> +		vreg-wifi-pwr-supply = <&vreg-wifi-pwr>;
 
-and then in pcibios_assign_resources, 0000:00:1c.0 tries to allocate minimal
-resource window and then update related base/limit registers:
+The supply for the PCIE RC is called "vreg-wifi-pwr"? Seems a bit 
+strange.
 
-[    0.865342] pci 0000:00:1c.0: bridge window [io  0x1000-0x0fff] to 
-[bus 02] add_size 1000
-[    0.865343] pci 0000:00:1c.0: bridge window [mem 
-0x00100000-0x000fffff 64bit pref] to [bus 02] add_size 200000 add_align 
-100000
-[    0.865344] pci 0000:00:1c.0: bridge window [mem 
-0x00100000-0x000fffff] to [bus 02] add_size 200000 add_align 100000
-
->
->> +}
->> +DECLARE_PCI_FIXUP_ASSIGN(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_mac_disable_mmio_bar);
-> Is this device *only* used on the Mac Pro 11?  http://pci-ids.ucs.cz
-> says "8 Series/C220 Series Chipset Family PCI Express Root Port #1",
-> which sounds pretty generic.
-Maybe not only used for Mac Pro 11, so should it be a dmi match+pci quirk?
-
-thanks,
-Yu
+Rob
