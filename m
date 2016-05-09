@@ -1,134 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48774 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751148AbcEXQ2j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 24 May 2016 12:28:39 -0400
-Date: Tue, 24 May 2016 11:28:33 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Peter Wu <peter@lekensteyn.nl>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
-	Dave Airlie <airlied@gmail.com>
-Subject: Re: [PATCH] PCI: Power on bridges before scanning new devices
-Message-ID: <20160524162833.GA30762@localhost>
-References: <20160519231234.GB1785@al>
- <1463991648-85051-1-git-send-email-mika.westerberg@linux.intel.com>
- <20160523200042.GB24375@localhost>
- <20160523215015.GA31479@localhost>
- <20160524122357.GA20453@localhost>
- <20160524125323.GE1789@lahna.fi.intel.com>
+Return-Path: <alex.williamson@redhat.com>
+Return-Path: <alex.williamson@redhat.com>
+Date: Mon, 9 May 2016 15:23:51 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+        "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: PCIe issue with NIC card that has 64bit BARs
+Message-ID: <20160509152351.17389748@t450s.home>
+In-Reply-To: <5730FADF.7000009@ti.com>
+References: <5730E5DA.4020906@ti.com>
+	<20160509203436.GC18166@localhost>
+	<5730FADF.7000009@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160524125323.GE1789@lahna.fi.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 24, 2016 at 03:53:23PM +0300, Mika Westerberg wrote:
-> On Tue, May 24, 2016 at 07:23:57AM -0500, Bjorn Helgaas wrote:
-> > On Mon, May 23, 2016 at 04:50:15PM -0500, Bjorn Helgaas wrote:
-> > > [+cc Valdis, Dave]
-> > > 
-> > > On Mon, May 23, 2016 at 03:00:42PM -0500, Bjorn Helgaas wrote:
-> > > > On Mon, May 23, 2016 at 11:20:48AM +0300, Mika Westerberg wrote:
-> > > > > When a PCI device is removed through sysfs interface the upstream bridge
-> > > > > (PCIe port) can be runtime suspended if it was the last device on that bus.
-> > > > > Now, if the bridge is in D3 we cannot find devices below the bridge
-> > > > > anymore. For example following fails to find the removed device again:
-> > > > > 
-> > > > >    # echo 1 > /sys/bus/pci/devices/0000:00:01.0/0000:01:00.0/remove
-> > > > >    # echo 1 > /sys/bus/pci/devices/0000:00:01.0/rescan
-> > > > > 
-> > > > > Where 0000:00:01.0 is the bridge device.
-> > > > > 
-> > > > > In order to be able to rescan devices below the bridge add
-> > > > > pm_runtime_get_sync()/pm_runtime_put() calls to pci_scan_bridge(). This
-> > > > > should keep bridges powered on while their children devices are being
-> > > > > scanned.
-> > > > > 
-> > > > > Reported-by: Peter Wu <peter@lekensteyn.nl>
-> > > > > Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > > 
-> > > > This looks like basically the same idea as "ACPI / hotplug / PCI:
-> > > > Runtime resume bridge before rescan".
-> > > > 
-> > > > The hotplug_event() path modified by that patch eventually calls
-> > > > pci_scan_bridge():
-> > > > 
-> > > >   hotplug_event
-> > > >     enable_slot
-> > > >       pci_scan_bridge
-> > > > 
-> > > > so this patch looks a little more general.  Does it make "ACPI /
-> > > > hotplug / PCI: Runtime resume bridge before rescan" unnecessary?  
-> > > > Can I just replace that patch with this one?
-> > > 
-> > > I speculatively replaced "ACPI / hotplug / PCI: Runtime resume bridge
-> > > before rescan" with this one and pushed the result to
-> > > 
-> > >   https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/pm
-> > > 
-> > > Please take a look, test it, and let me know if I need to add the ACPI
-> > > patch back.
-> > > 
-> > > This branch also includes the fix for the lockdep splat reported by
-> > > Valdis.  This is what I hope to get into v4.7-rc1.
+On Mon, 9 May 2016 17:02:23 -0400
+Murali Karicheri <m-karicheri2@ti.com> wrote:
+
+> Hi Bjorn,
+> 
+> Thanks for your quick response!
+> See below for some follow up question.
+> 
+> On 05/09/2016 04:34 PM, Bjorn Helgaas wrote:
+> > Hi Murali,
 > > 
-> > Ping?  I'd like to ask Linus to pull this pci/pm branch before v4.7-rc1.
-> > It currently has these changes:
+> > On Mon, May 09, 2016 at 03:32:42PM -0400, Murali Karicheri wrote:  
+> >> Bjorn,
+> >>
+> >> I am running into an issue with using a rtk8168 GiB NIC card with Keystone PCIe.
+> >> It works for 32bit BARs such as the Marvel SATA controller on K2E. On another
+> >> recent SoC (K2G) that re-uses the same driver and hardware, I have issues
+> >> bringing up PCIe.
+> >>
+> >> The rtk8168 NIC gets detected, but all read values are zeros. Based on the boot
+> >> log, it appears to be getting assigned 64bit BARs. See the log on K2E with Marvell
+> >> controller and that on K2G with rtk8168. Is there way we can get it assigned
+> >> 32Bit BAR and get it functional? Keystone is a 32bit ARM A15 SoC.
+> >>
+> >> Here are the logs.
+> >>
+> >> K2E log with Marvel controller (Good working case).
+> >> ===================================================
+> >> [    0.236353] pci 0000:00:00.0: BAR 8: assigned [mem 0x60000000-0x600fffff]
+> >> [    0.236364] pci 0000:00:00.0: BAR 9: assigned [mem 0x60100000-0x601fffff pref]
+> >> [    0.236373] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
+> >> [    0.236385] pci 0000:01:00.0: BAR 6: assigned [mem 0x60100000-0x6010ffff pref]
+> >> [    0.236394] pci 0000:01:00.0: BAR 5: assigned [mem 0x60000000-0x600001ff]
+> >> [    0.236406] pci 0000:01:00.0: BAR 4: assigned [io  0x1000-0x100f]
+> >> [    0.236418] pci 0000:01:00.0: BAR 0: assigned [io  0x1010-0x1017]
+> >> [    0.236429] pci 0000:01:00.0: BAR 2: assigned [io  0x1018-0x101f]
+> >> [    0.236441] pci 0000:01:00.0: BAR 1: assigned [io  0x1020-0x1023]
+> >> [    0.236452] pci 0000:01:00.0: BAR 3: assigned [io  0x1024-0x1027]
+> >> [    0.236464] pci 0000:00:00.0: PCI bridge to [bus 01]
+> >> [    0.236472] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
+> >> [    0.236481] pci 0000:00:00.0:   bridge window [mem 0x60000000-0x600fffff]
+> >> [    0.236490] pci 0000:00:00.0:   bridge window [mem 0x60100000-0x601fffff pref]
+> >>
+> >> K2G log with Tealtek NIC card
+> >> =============================
+> >> [    2.311572] keystone-pcie 21801000.pcie: PCI host bridge to bus 0000:00
+> >> [    2.318188] pci_bus 0000:00: root bus resource [bus 00-ff]
+> >> [    2.323844] pci_bus 0000:00: root bus resource [io  0x0000-0x3fff]
+> >> [    2.330023] pci_bus 0000:00: root bus resource [mem 0x50000000-0x5fffffff]  
 > > 
-> >   8b71f5652eea PCI: Add runtime PM support for PCIe ports
-> >   af81f0fa638b PCI: Power on bridges before scanning new devices
-> >   9741a01c9f55 PCI: Put PCIe ports into D3 during suspend
-> >   b3a63ff7baf1 PCI: Don't clear d3cold_allowed for PCIe ports
-> 
-> Looks good to me. I've also tested those here and seems to work fine.
-> 
-> > I dropped "ACPI / hotplug / PCI: Runtime resume bridge before rescan"
-> > on the assumption that "PCI: Power on bridges before scanning new
-> > devices" is sufficient to cover both the ACPI and the generic PCi
-> > rescan cases, but I'd like some reassurance about that.
-> 
-> I agree with your reasoning that the patch should not be needed anymore.
-> However, I have the machine which needed that patch at home so I'm not
-> able to test it now. I'll do that later today when I get back home.
-> 
-> One thing I noticed, though. When a bridge is transitioned to D0 we only
-> wait for 10ms which is requirement for PCI functions. However, PCI PM
-> specification 1.2 (chapter 4.2) requires that for buses to transition
-> from B2 to B0 we need to wait minimum of 50ms before accessing a
-> function on that bus.
-> 
-> We even have PCI_PM_BUS_WAIT defined in include/linux/pci.h but it is
-> not used anywhere. Maybe it was not needed originally because we never
-> powered down bridges anyway but now when we do, I think it is good idea
-> to do what the spec requires.
-> 
-> What do you think? We could add a separate patch doing something like
-> below to make sure the spec is followed.
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index e785dc260e72..b3b794caa380 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2361,7 +2361,12 @@ void pci_pm_init(struct pci_dev *dev)
->  	}
+> > There's no "(bus address ...)" annotation here, which means these
+> > windows map CPU addresses to identical bus addresses.  The
+> > "[mem 0x50000000-0x5fffffff]" window is a 32-bit window.
+> >   
+> >> [    2.337567] PCI: bus0: Fast back to back transfers disabled
+> >> [    2.361159] PCI: bus1: Fast back to back transfers disabled
+> >> [    2.366889] pci 0000:00:00.0: BAR 8: assigned [mem 0x50000000-0x500fffff]
+> >> [    2.373841] pci 0000:00:00.0: BAR 9: assigned [mem 0x50100000-0x501fffff pref]
+> >> [    2.381061] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
+> >> [    2.387225] pci 0000:01:00.0: BAR 6: assigned [mem 0x50100000-0x5011ffff pref]
+> >> [    2.394505] pci 0000:01:00.0: BAR 4: assigned [mem 0x50120000-0x5012ffff 64bit pref]
+> >> [    2.402288] pci 0000:01:00.0: BAR 2: assigned [mem 0x50000000-0x50000fff 64bit]  
+> > 
+> > I assume these BARs (2 and 4) are the ones in question.  They are
+> > 64-bit BARs, but the addresses currently assigned to them fit in 32
+> > bits, so the space is already all below 4GB.
+> > 
+> > The BAR type (32-bit or 64-bit) is built into the device; Linux
+> > doesn't have any influence on that.  The type is encoded in the
+> > low-order four bits of the BAR, which are read-only.
+> >   
+> >> [    2.409610] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
+> >> [    2.415729] pci 0000:00:00.0: PCI bridge to [bus 01]
+> >> [    2.420693] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
+> >> [    2.426806] pci 0000:00:00.0:   bridge window [mem 0x50000000-0x500fffff]
+> >> [    2.433610] pci 0000:00:00.0:   bridge window [mem 0x50100000-0x501fffff pref]
+> >> [    2.441365] pcieport 0000:00:00.0: Signaling PME through PCIe PME interrupt
+> >> [    2.448323] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
+> >> [    2.455567] r8169 Gigabit Ethernet driver 2.3LK-NAPI loaded
+> >> [    2.461332] r8169 0000:01:00.0: enabling device (0140 -> 0143)
+> >> [    2.468789] r8169 0000:01:00.0 eth0: RTL8169 at 0xf0d6a000, 00:00:00:00:00:00, XID 00000000 IRQ 286  
+> > 
+> > Looks like this is printed by rtl_init_one().  I see that we read
+> > zeroes from MAC0 and TxConfig, but I don't see any PCI problem here.  
+> So if device specific configuration registers for this device are mapped
+> to the window to have 64bit access, they are to be accessed with proper
+> address to get the lower 32 bits of the data, right? So is there a chance
+> it is making access to upper 4 bytes and hence reading all zeros?
 >  
->  	dev->pm_cap = pm;
-> -	dev->d3_delay = PCI_PM_D3_WAIT;
-> +	/*
-> +	 * PCI PM 1.2 specification requires minimum of 50ms before any
-> +	 * function on the bus is accessed after the bus is transitioned
-> +	 * from B2 to B0.
-> +	 */
-> +	dev->d3_delay = pci_is_bridge(dev) ? PCI_PM_BUS_WAIT : PCI_PM_D3_WAIT;
+> > Could it be that some EEPROM on the card hasn't been programmed yet?
+> > Does the card work if you put it in a different machine?
+> >   
+> Probably. I will ask this to the owner of r8169 driver. He seems to think
+> the access is not right.  I need to find a PC that has PCIe slot to do this
+> test. Meanwhile do you know of any 1GiB NIC card that has 32bit BARs and
+> driver in Linux? 
 
-Seems plausible to me, and seems safe enough to include for v4.7 if you
-post this with a changelog and signed-off-by.
+I happen to have an Intel 82571EB (PRO/1000 PT Dual Port Server
+Adapter) that only has 32bit BARs:
 
->  	dev->d3cold_delay = PCI_PM_D3COLD_WAIT;
->  	dev->bridge_d3 = pci_bridge_d3_possible(dev);
->  	dev->d3cold_allowed = true;
+02:00.0 Ethernet controller [0200]: Intel Corporation 82571EB Gigabit Ethernet Controller [8086:105e] (rev 06)
+	Region 0: Memory at fe7e0000 (32-bit, non-prefetchable) [size=128K]
+	Region 1: Memory at fe7c0000 (32-bit, non-prefetchable) [size=128K]
+	Region 2: I/O ports at e800 [size=32]
+02:00.1 Ethernet controller [0200]: Intel Corporation 82571EB Gigabit Ethernet Controller [8086:105e] (rev 06)
+	Region 0: Memory at fe7a0000 (32-bit, non-prefetchable) [size=128K]
+	Region 1: Memory at fe780000 (32-bit, non-prefetchable) [size=128K]
+	Region 2: I/O ports at e400 [size=32]
+
+Thanks,
+Alex
