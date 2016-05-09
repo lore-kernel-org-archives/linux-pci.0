@@ -1,59 +1,37 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11043 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751561AbcEQVkC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Tue, 17 May 2016 17:40:02 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-nvme@lists.infradead.org, Jens Axboe <axboe@fb.com>,
-	Christoph Hellwig <hch@infradead.org>
-Cc: Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 2/2] nvme/pci: Enable SR-IOV capabilities
-Date: Tue, 17 May 2016 15:39:59 -0600
-Message-Id: <1463521199-16604-2-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1463521199-16604-1-git-send-email-keith.busch@intel.com>
-References: <1463521199-16604-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <jonathan.yong@intel.com>
+Return-Path: <jonathan.yong@intel.com>
+Message-ID: <572FFFD8.30709@intel.com>
+Date: Mon, 09 May 2016 11:11:20 +0800
+From: "Yong, Jonathan" <jonathan.yong@intel.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: linux-pci@vger.kernel.org, bhelgaas@google.com
+Subject: Re: [PATCH] PCI: PTM preliminary implementation
+References: <1461047358-4736-1-git-send-email-jonathan.yong@intel.com> <1461047358-4736-2-git-send-email-jonathan.yong@intel.com> <20160508023821.GA13531@localhost>
+In-Reply-To: <20160508023821.GA13531@localhost>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Registers a standard boiler-plate SR-IOV configure callback for NVMe.
+On 05/08/2016 10:38, Bjorn Helgaas wrote:
+> On Tue, Apr 19, 2016 at 06:29:18AM +0000, Yong, Jonathan wrote:
+>> Simplified Precision Time Measurement driver, activates PTM feature
+>> if a PCIe PTM requester (as per PCI Express 3.1 Base Specification
+>> section 7.32)is found, but not before checking if the rest of the
+>> PCI hierarchy can support it.
+>>
+>> The driver does not take part in facilitating PTM conversations,
+>> neither does it provide any useful services, it is only responsible
+>> for setting up the required configuration space bits.
+>>
+>> As of writing, there aren't any PTM capable devices on the market
+>> yet, but it is supported by the Intel Apollo Lake platform.
+>
+> Can you also add lspci support for the PTM capability?  That will help
+> debugging.
+>
+> Bjorn
+>
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/nvme/host/pci.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+Do I also send it to this list? Or directly to Martin?
 
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index fbe8cc2..8379b9a 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -2033,6 +2033,18 @@ static void nvme_remove(struct pci_dev *pdev)
- 	nvme_put_ctrl(&dev->ctrl);
- }
- 
-+static int nvme_sriov_configure(struct pci_dev *pdev, int numvfs)
-+{
-+	int ret = 0;
-+
-+	if (numvfs == 0)
-+		pci_disable_sriov(pdev);
-+	else
-+		ret = pci_enable_sriov(pdev, numvfs);
-+
-+	return ret ? ret : numvfs;
-+}
-+
- #ifdef CONFIG_PM_SLEEP
- static int nvme_suspend(struct device *dev)
- {
-@@ -2127,6 +2139,7 @@ static struct pci_driver nvme_driver = {
- 	.driver		= {
- 		.pm	= &nvme_dev_pm_ops,
- 	},
-+	.sriov_configure = nvme_sriov_configure,
- 	.err_handler	= &nvme_err_handler,
- };
- 
--- 
-2.7.2
-
+As for the kernel code side, still cleaning things up.
