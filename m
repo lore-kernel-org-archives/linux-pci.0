@@ -1,83 +1,672 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([125.16.236.4]:60767 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933286AbcECNdc (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 09:33:32 -0400
-Received: from localhost
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 3 May 2016 18:53:19 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, robherring2@gmail.com, dja@axtens.net,
-	alistair@popple.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v9 05/22] powerpc/powernv: Allocate PE# in reverse order
-Date: Tue,  3 May 2016 23:22:36 +1000
-Message-Id: <1462281773-26438-6-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	dhdang@apm.com,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	cov@codeaurora.org
+Subject: [PATCH V7 02/11] PCI: generic, thunder: update to use generic ECAM API
+Date: Tue, 10 May 2016 17:19:52 +0200
+Message-Id: <1462893601-8937-3-git-send-email-tn@semihalf.com>
+In-Reply-To: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-PE number for one particular PE can be allocated dynamically or
-reserved according to the consumed M64 (64-bits prefetchable)
-segments of the PE. The M64 segment can't be remapped to arbitrary
-PE, meaning the PE number is determined according to the index
-of the consumed M64 segment. As below figure shows, M64 resource
-grows from low to high end, meaning the PE (number) reserved
-according to M64 segment grows from low to high end as well,
-so does the dynamically allocated PE number. It will lead to
-conflict: PE number (M64 segment) reserved by dynamic allocation
-is required by hot added PCI adapter at later point. It fails
-the PCI hotplug because of the PE number can't be reserved
-based on the index of the consumed M64 segment.
+From: Jayachandran C <jchandra@broadcom.com>
 
-  +---+---+---+---+---+--------------------------------+-----+
-  | 0 | 1 | 2 | 3 | 4 |      .......                   | 255 |
-  +---+---+---+---+---+--------------------------------+-----+
+Use functions provided by drivers/pci/ecam.h for mapping the config
+space in drivers/pci/host/pci-host-common.c, and update its users to
+use 'struct pci_config_window' and 'struct pci_ecam_ops'
 
-  PE number for dynamic allocation          ----------------->
-  PE number reserved for M64 segment        ----------------->
+The changes are mostly to use 'struct pci_config_window' in place of
+'struct gen_pci'. Some of the fields of gen_pci were only used
+temporarily and can be eliminated by using local variables or function
+arguments, these are not carried over to struct pci_config_window.
 
-To resolve above conflicts, this forces the PE number to be
-allocated dynamically in reverse order. With this patch applied,
-the PE numbers are reserved in ascending order, but allocated
-dynamically in reverse order.
+pci-thunder-ecam.c and pci-thunder-pem.c are the only users of the
+pci_host_common_probe function and the gen_pci structure, these have
+been updated to use the new API as well.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+The patch does not introduce any functional changes other than a very
+minor one: with the new code, on 64-bit platforms, we do just a single
+ioremap for the whole config space.
+
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+ drivers/pci/ecam.h                  |   5 ++
+ drivers/pci/host/Kconfig            |   1 +
+ drivers/pci/host/pci-host-common.c  | 114 +++++++++++++++---------------------
+ drivers/pci/host/pci-host-common.h  |  47 ---------------
+ drivers/pci/host/pci-host-generic.c |  52 ++++------------
+ drivers/pci/host/pci-thunder-ecam.c |  39 +++---------
+ drivers/pci/host/pci-thunder-pem.c  |  92 ++++++++++++++---------------
+ 7 files changed, 113 insertions(+), 237 deletions(-)
+ delete mode 100644 drivers/pci/host/pci-host-common.h
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index cf96cb5..679e279 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -148,16 +148,14 @@ static void pnv_ioda_reserve_pe(struct pnv_phb *phb, int pe_no)
+diff --git a/drivers/pci/ecam.h b/drivers/pci/ecam.h
+index 57de00d..1ad2176 100644
+--- a/drivers/pci/ecam.h
++++ b/drivers/pci/ecam.h
+@@ -59,4 +59,9 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
+ /* default ECAM ops, bus shift 20, generic read and write */
+ extern struct pci_ecam_ops pci_generic_ecam_ops;
  
- static struct pnv_ioda_pe *pnv_ioda_alloc_pe(struct pnv_phb *phb)
++#ifdef CONFIG_PCI_HOST_GENERIC
++/* for DT based pci controllers that support ECAM */
++int pci_host_common_probe(struct platform_device *pdev,
++			  struct pci_ecam_ops *ops);
++#endif
+ #endif
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 7a0780d..963300d 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -77,6 +77,7 @@ config PCI_RCAR_GEN2_PCIE
+ 
+ config PCI_HOST_COMMON
+ 	bool
++	select PCI_ECAM
+ 
+ config PCI_HOST_GENERIC
+ 	bool "Generic PCI host controller"
+diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+index e9f850f..8cba7ab 100644
+--- a/drivers/pci/host/pci-host-common.c
++++ b/drivers/pci/host/pci-host-common.c
+@@ -22,27 +22,21 @@
+ #include <linux/of_pci.h>
+ #include <linux/platform_device.h>
+ 
+-#include "pci-host-common.h"
++#include "../ecam.h"
+ 
+-static void gen_pci_release_of_pci_ranges(struct gen_pci *pci)
+-{
+-	pci_free_resource_list(&pci->resources);
+-}
+-
+-static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
++static int gen_pci_parse_request_of_pci_ranges(struct device *dev,
++		       struct list_head *resources, struct resource **bus_range)
  {
--	unsigned long pe;
-+	unsigned long pe = phb->ioda.total_pe_num - 1;
+ 	int err, res_valid = 0;
+-	struct device *dev = pci->host.dev.parent;
+ 	struct device_node *np = dev->of_node;
+ 	resource_size_t iobase;
+ 	struct resource_entry *win;
  
--	do {
--		pe = find_next_zero_bit(phb->ioda.pe_alloc,
--					phb->ioda.total_pe_num, 0);
--		if (pe >= phb->ioda.total_pe_num)
--			return NULL;
--	} while(test_and_set_bit(pe, phb->ioda.pe_alloc));
-+	for (pe = phb->ioda.total_pe_num - 1; pe >= 0; pe--) {
-+		if (!test_and_set_bit(pe, phb->ioda.pe_alloc))
-+			return pnv_ioda_init_pe(phb, pe);
-+	}
+-	err = of_pci_get_host_bridge_resources(np, 0, 0xff, &pci->resources,
+-					       &iobase);
++	err = of_pci_get_host_bridge_resources(np, 0, 0xff, resources, &iobase);
+ 	if (err)
+ 		return err;
  
--	return pnv_ioda_init_pe(phb, pe);
-+	return NULL;
+-	resource_list_for_each_entry(win, &pci->resources) {
++	resource_list_for_each_entry(win, resources) {
+ 		struct resource *parent, *res = win->res;
+ 
+ 		switch (resource_type(res)) {
+@@ -60,7 +54,7 @@ static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
+ 			res_valid |= !(res->flags & IORESOURCE_PREFETCH);
+ 			break;
+ 		case IORESOURCE_BUS:
+-			pci->cfg.bus_range = res;
++			*bus_range = res;
+ 		default:
+ 			continue;
+ 		}
+@@ -79,65 +73,60 @@ static int gen_pci_parse_request_of_pci_ranges(struct gen_pci *pci)
+ 	return 0;
+ 
+ out_release_res:
+-	gen_pci_release_of_pci_ranges(pci);
+ 	return err;
  }
  
- static void pnv_ioda_free_pe(struct pnv_ioda_pe *pe)
+-static int gen_pci_parse_map_cfg_windows(struct gen_pci *pci)
++static void gen_pci_unmap_cfg(void *ptr)
++{
++	pci_ecam_free((struct pci_config_window *)ptr);
++}
++
++static struct pci_config_window *gen_pci_init(struct device *dev,
++		struct list_head *resources, struct pci_ecam_ops *ops)
+ {
+ 	int err;
+-	u8 bus_max;
+-	resource_size_t busn;
+-	struct resource *bus_range;
+-	struct device *dev = pci->host.dev.parent;
+-	struct device_node *np = dev->of_node;
+-	u32 sz = 1 << pci->cfg.ops->bus_shift;
++	struct resource cfgres;
++	struct resource *bus_range = NULL;
++	struct pci_config_window *cfg;
+ 
+-	err = of_address_to_resource(np, 0, &pci->cfg.res);
++	/* Parse our PCI ranges and request their resources */
++	err = gen_pci_parse_request_of_pci_ranges(dev, resources, &bus_range);
++	if (err)
++		goto err_out;
++
++	err = of_address_to_resource(dev->of_node, 0, &cfgres);
+ 	if (err) {
+ 		dev_err(dev, "missing \"reg\" property\n");
+-		return err;
++		goto err_out;
+ 	}
+ 
+-	/* Limit the bus-range to fit within reg */
+-	bus_max = pci->cfg.bus_range->start +
+-		  (resource_size(&pci->cfg.res) >> pci->cfg.ops->bus_shift) - 1;
+-	pci->cfg.bus_range->end = min_t(resource_size_t,
+-					pci->cfg.bus_range->end, bus_max);
+-
+-	pci->cfg.win = devm_kcalloc(dev, resource_size(pci->cfg.bus_range),
+-				    sizeof(*pci->cfg.win), GFP_KERNEL);
+-	if (!pci->cfg.win)
+-		return -ENOMEM;
+-
+-	/* Map our Configuration Space windows */
+-	if (!devm_request_mem_region(dev, pci->cfg.res.start,
+-				     resource_size(&pci->cfg.res),
+-				     "Configuration Space"))
+-		return -ENOMEM;
+-
+-	bus_range = pci->cfg.bus_range;
+-	for (busn = bus_range->start; busn <= bus_range->end; ++busn) {
+-		u32 idx = busn - bus_range->start;
+-
+-		pci->cfg.win[idx] = devm_ioremap(dev,
+-						 pci->cfg.res.start + idx * sz,
+-						 sz);
+-		if (!pci->cfg.win[idx])
+-			return -ENOMEM;
++	cfg = pci_ecam_create(dev, &cfgres, bus_range, ops);
++	if (IS_ERR(cfg)) {
++		err = PTR_ERR(cfg);
++		goto err_out;
+ 	}
+ 
+-	return 0;
++	err = devm_add_action(dev, gen_pci_unmap_cfg, cfg);
++	if (err) {
++		gen_pci_unmap_cfg(cfg);
++		goto err_out;
++	}
++	return cfg;
++
++err_out:
++	pci_free_resource_list(resources);
++	return ERR_PTR(err);
+ }
+ 
+ int pci_host_common_probe(struct platform_device *pdev,
+-			  struct gen_pci *pci)
++			  struct pci_ecam_ops *ops)
+ {
+-	int err;
+ 	const char *type;
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = dev->of_node;
+ 	struct pci_bus *bus, *child;
++	struct pci_config_window *cfg;
++	struct list_head resources;
+ 
+ 	type = of_get_property(np, "device_type", NULL);
+ 	if (!type || strcmp(type, "pci")) {
+@@ -147,29 +136,18 @@ int pci_host_common_probe(struct platform_device *pdev,
+ 
+ 	of_pci_check_probe_only();
+ 
+-	pci->host.dev.parent = dev;
+-	INIT_LIST_HEAD(&pci->host.windows);
+-	INIT_LIST_HEAD(&pci->resources);
+-
+-	/* Parse our PCI ranges and request their resources */
+-	err = gen_pci_parse_request_of_pci_ranges(pci);
+-	if (err)
+-		return err;
+-
+ 	/* Parse and map our Configuration Space windows */
+-	err = gen_pci_parse_map_cfg_windows(pci);
+-	if (err) {
+-		gen_pci_release_of_pci_ranges(pci);
+-		return err;
+-	}
++	INIT_LIST_HEAD(&resources);
++	cfg = gen_pci_init(dev, &resources, ops);
++	if (IS_ERR(cfg))
++		return PTR_ERR(cfg);
+ 
+ 	/* Do not reassign resources if probe only */
+ 	if (!pci_has_flag(PCI_PROBE_ONLY))
+ 		pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
+ 
+-
+-	bus = pci_scan_root_bus(dev, pci->cfg.bus_range->start,
+-				&pci->cfg.ops->ops, pci, &pci->resources);
++	bus = pci_scan_root_bus(dev, cfg->busr.start, &ops->pci_ops, cfg,
++				&resources);
+ 	if (!bus) {
+ 		dev_err(dev, "Scanning rootbus failed");
+ 		return -ENODEV;
+diff --git a/drivers/pci/host/pci-host-common.h b/drivers/pci/host/pci-host-common.h
+deleted file mode 100644
+index 09f3fa0..0000000
+--- a/drivers/pci/host/pci-host-common.h
++++ /dev/null
+@@ -1,47 +0,0 @@
+-/*
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+- *
+- * Copyright (C) 2014 ARM Limited
+- *
+- * Author: Will Deacon <will.deacon@arm.com>
+- */
+-
+-#ifndef _PCI_HOST_COMMON_H
+-#define _PCI_HOST_COMMON_H
+-
+-#include <linux/kernel.h>
+-#include <linux/platform_device.h>
+-
+-struct gen_pci_cfg_bus_ops {
+-	u32 bus_shift;
+-	struct pci_ops ops;
+-};
+-
+-struct gen_pci_cfg_windows {
+-	struct resource				res;
+-	struct resource				*bus_range;
+-	void __iomem				**win;
+-
+-	struct gen_pci_cfg_bus_ops		*ops;
+-};
+-
+-struct gen_pci {
+-	struct pci_host_bridge			host;
+-	struct gen_pci_cfg_windows		cfg;
+-	struct list_head			resources;
+-};
+-
+-int pci_host_common_probe(struct platform_device *pdev,
+-			  struct gen_pci *pci);
+-
+-#endif /* _PCI_HOST_COMMON_H */
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index e8aa78f..6eaceab 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -25,41 +25,12 @@
+ #include <linux/of_pci.h>
+ #include <linux/platform_device.h>
+ 
+-#include "pci-host-common.h"
++#include "../ecam.h"
+ 
+-static void __iomem *gen_pci_map_cfg_bus_cam(struct pci_bus *bus,
+-					     unsigned int devfn,
+-					     int where)
+-{
+-	struct gen_pci *pci = bus->sysdata;
+-	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
+-
+-	return pci->cfg.win[idx] + ((devfn << 8) | where);
+-}
+-
+-static struct gen_pci_cfg_bus_ops gen_pci_cfg_cam_bus_ops = {
++static struct pci_ecam_ops gen_pci_cfg_cam_bus_ops = {
+ 	.bus_shift	= 16,
+-	.ops		= {
+-		.map_bus	= gen_pci_map_cfg_bus_cam,
+-		.read		= pci_generic_config_read,
+-		.write		= pci_generic_config_write,
+-	}
+-};
+-
+-static void __iomem *gen_pci_map_cfg_bus_ecam(struct pci_bus *bus,
+-					      unsigned int devfn,
+-					      int where)
+-{
+-	struct gen_pci *pci = bus->sysdata;
+-	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
+-
+-	return pci->cfg.win[idx] + ((devfn << 12) | where);
+-}
+-
+-static struct gen_pci_cfg_bus_ops gen_pci_cfg_ecam_bus_ops = {
+-	.bus_shift	= 20,
+-	.ops		= {
+-		.map_bus	= gen_pci_map_cfg_bus_ecam,
++	.pci_ops	= {
++		.map_bus	= pci_ecam_map_bus,
+ 		.read		= pci_generic_config_read,
+ 		.write		= pci_generic_config_write,
+ 	}
+@@ -70,25 +41,22 @@ static const struct of_device_id gen_pci_of_match[] = {
+ 	  .data = &gen_pci_cfg_cam_bus_ops },
+ 
+ 	{ .compatible = "pci-host-ecam-generic",
+-	  .data = &gen_pci_cfg_ecam_bus_ops },
++	  .data = &pci_generic_ecam_ops },
+ 
+ 	{ },
+ };
++
+ MODULE_DEVICE_TABLE(of, gen_pci_of_match);
+ 
+ static int gen_pci_probe(struct platform_device *pdev)
+ {
+-	struct device *dev = &pdev->dev;
+ 	const struct of_device_id *of_id;
+-	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+-
+-	if (!pci)
+-		return -ENOMEM;
++	struct pci_ecam_ops *ops;
+ 
+-	of_id = of_match_node(gen_pci_of_match, dev->of_node);
+-	pci->cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
++	of_id = of_match_node(gen_pci_of_match, pdev->dev.of_node);
++	ops = (struct pci_ecam_ops *)of_id->data;
+ 
+-	return pci_host_common_probe(pdev, pci);
++	return pci_host_common_probe(pdev, ops);
+ }
+ 
+ static struct platform_driver gen_pci_driver = {
+diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/host/pci-thunder-ecam.c
+index d71935cb..540d030 100644
+--- a/drivers/pci/host/pci-thunder-ecam.c
++++ b/drivers/pci/host/pci-thunder-ecam.c
+@@ -13,18 +13,7 @@
+ #include <linux/of.h>
+ #include <linux/platform_device.h>
+ 
+-#include "pci-host-common.h"
+-
+-/* Mapping is standard ECAM */
+-static void __iomem *thunder_ecam_map_bus(struct pci_bus *bus,
+-					  unsigned int devfn,
+-					  int where)
+-{
+-	struct gen_pci *pci = bus->sysdata;
+-	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
+-
+-	return pci->cfg.win[idx] + ((devfn << 12) | where);
+-}
++#include "../ecam.h"
+ 
+ static void set_val(u32 v, int where, int size, u32 *val)
+ {
+@@ -99,7 +88,7 @@ static int handle_ea_bar(u32 e0, int bar, struct pci_bus *bus,
+ static int thunder_ecam_p2_config_read(struct pci_bus *bus, unsigned int devfn,
+ 				       int where, int size, u32 *val)
+ {
+-	struct gen_pci *pci = bus->sysdata;
++	struct pci_config_window *cfg = bus->sysdata;
+ 	int where_a = where & ~3;
+ 	void __iomem *addr;
+ 	u32 node_bits;
+@@ -129,7 +118,7 @@ static int thunder_ecam_p2_config_read(struct pci_bus *bus, unsigned int devfn,
+ 	 * the config space access window.  Since we are working with
+ 	 * the high-order 32 bits, shift everything down by 32 bits.
+ 	 */
+-	node_bits = (pci->cfg.res.start >> 32) & (1 << 12);
++	node_bits = (cfg->res.start >> 32) & (1 << 12);
+ 
+ 	v |= node_bits;
+ 	set_val(v, where, size, val);
+@@ -358,36 +347,24 @@ static int thunder_ecam_config_write(struct pci_bus *bus, unsigned int devfn,
+ 	return pci_generic_config_write(bus, devfn, where, size, val);
+ }
+ 
+-static struct gen_pci_cfg_bus_ops thunder_ecam_bus_ops = {
++static struct pci_ecam_ops pci_thunder_ecam_ops = {
+ 	.bus_shift	= 20,
+-	.ops		= {
+-		.map_bus        = thunder_ecam_map_bus,
++	.pci_ops	= {
++		.map_bus        = pci_ecam_map_bus,
+ 		.read           = thunder_ecam_config_read,
+ 		.write          = thunder_ecam_config_write,
+ 	}
+ };
+ 
+ static const struct of_device_id thunder_ecam_of_match[] = {
+-	{ .compatible = "cavium,pci-host-thunder-ecam",
+-	  .data = &thunder_ecam_bus_ops },
+-
++	{ .compatible = "cavium,pci-host-thunder-ecam" },
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(of, thunder_ecam_of_match);
+ 
+ static int thunder_ecam_probe(struct platform_device *pdev)
+ {
+-	struct device *dev = &pdev->dev;
+-	const struct of_device_id *of_id;
+-	struct gen_pci *pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+-
+-	if (!pci)
+-		return -ENOMEM;
+-
+-	of_id = of_match_node(thunder_ecam_of_match, dev->of_node);
+-	pci->cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
+-
+-	return pci_host_common_probe(pdev, pci);
++	return pci_host_common_probe(pdev, &pci_thunder_ecam_ops);
+ }
+ 
+ static struct platform_driver thunder_ecam_driver = {
+diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+index cabb92a..a7b61ce 100644
+--- a/drivers/pci/host/pci-thunder-pem.c
++++ b/drivers/pci/host/pci-thunder-pem.c
+@@ -20,34 +20,22 @@
+ #include <linux/of_pci.h>
+ #include <linux/platform_device.h>
+ 
+-#include "pci-host-common.h"
++#include "../ecam.h"
+ 
+ #define PEM_CFG_WR 0x28
+ #define PEM_CFG_RD 0x30
+ 
+ struct thunder_pem_pci {
+-	struct gen_pci	gen_pci;
+ 	u32		ea_entry[3];
+ 	void __iomem	*pem_reg_base;
+ };
+ 
+-static void __iomem *thunder_pem_map_bus(struct pci_bus *bus,
+-					 unsigned int devfn, int where)
+-{
+-	struct gen_pci *pci = bus->sysdata;
+-	resource_size_t idx = bus->number - pci->cfg.bus_range->start;
+-
+-	return pci->cfg.win[idx] + ((devfn << 16) | where);
+-}
+-
+ static int thunder_pem_bridge_read(struct pci_bus *bus, unsigned int devfn,
+ 				   int where, int size, u32 *val)
+ {
+ 	u64 read_val;
+-	struct thunder_pem_pci *pem_pci;
+-	struct gen_pci *pci = bus->sysdata;
+-
+-	pem_pci = container_of(pci, struct thunder_pem_pci, gen_pci);
++	struct pci_config_window *cfg = bus->sysdata;
++	struct thunder_pem_pci *pem_pci = (struct thunder_pem_pci *)cfg->priv;
+ 
+ 	if (devfn != 0 || where >= 2048) {
+ 		*val = ~0;
+@@ -132,17 +120,17 @@ static int thunder_pem_bridge_read(struct pci_bus *bus, unsigned int devfn,
+ static int thunder_pem_config_read(struct pci_bus *bus, unsigned int devfn,
+ 				   int where, int size, u32 *val)
+ {
+-	struct gen_pci *pci = bus->sysdata;
++	struct pci_config_window *cfg = bus->sysdata;
+ 
+-	if (bus->number < pci->cfg.bus_range->start ||
+-	    bus->number > pci->cfg.bus_range->end)
++	if (bus->number < cfg->busr.start ||
++	    bus->number > cfg->busr.end)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 
+ 	/*
+ 	 * The first device on the bus is the PEM PCIe bridge.
+ 	 * Special case its config access.
+ 	 */
+-	if (bus->number == pci->cfg.bus_range->start)
++	if (bus->number == cfg->busr.start)
+ 		return thunder_pem_bridge_read(bus, devfn, where, size, val);
+ 
+ 	return pci_generic_config_read(bus, devfn, where, size, val);
+@@ -187,12 +175,11 @@ static u32 thunder_pem_bridge_w1c_bits(int where)
+ static int thunder_pem_bridge_write(struct pci_bus *bus, unsigned int devfn,
+ 				    int where, int size, u32 val)
+ {
+-	struct gen_pci *pci = bus->sysdata;
+-	struct thunder_pem_pci *pem_pci;
++	struct pci_config_window *cfg = bus->sysdata;
++	struct thunder_pem_pci *pem_pci = (struct thunder_pem_pci *)cfg->priv;
+ 	u64 write_val, read_val;
+ 	u32 mask = 0;
+ 
+-	pem_pci = container_of(pci, struct thunder_pem_pci, gen_pci);
+ 
+ 	if (devfn != 0 || where >= 2048)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+@@ -256,53 +243,38 @@ static int thunder_pem_bridge_write(struct pci_bus *bus, unsigned int devfn,
+ static int thunder_pem_config_write(struct pci_bus *bus, unsigned int devfn,
+ 				    int where, int size, u32 val)
+ {
+-	struct gen_pci *pci = bus->sysdata;
++	struct pci_config_window *cfg = bus->sysdata;
+ 
+-	if (bus->number < pci->cfg.bus_range->start ||
+-	    bus->number > pci->cfg.bus_range->end)
++	if (bus->number < cfg->busr.start ||
++	    bus->number > cfg->busr.end)
+ 		return PCIBIOS_DEVICE_NOT_FOUND;
+ 	/*
+ 	 * The first device on the bus is the PEM PCIe bridge.
+ 	 * Special case its config access.
+ 	 */
+-	if (bus->number == pci->cfg.bus_range->start)
++	if (bus->number == cfg->busr.start)
+ 		return thunder_pem_bridge_write(bus, devfn, where, size, val);
+ 
+ 
+ 	return pci_generic_config_write(bus, devfn, where, size, val);
+ }
+ 
+-static struct gen_pci_cfg_bus_ops thunder_pem_bus_ops = {
+-	.bus_shift	= 24,
+-	.ops		= {
+-		.map_bus	= thunder_pem_map_bus,
+-		.read		= thunder_pem_config_read,
+-		.write		= thunder_pem_config_write,
+-	}
+-};
+-
+-static const struct of_device_id thunder_pem_of_match[] = {
+-	{ .compatible = "cavium,pci-host-thunder-pem",
+-	  .data = &thunder_pem_bus_ops },
+-
+-	{ },
+-};
+-MODULE_DEVICE_TABLE(of, thunder_pem_of_match);
+-
+-static int thunder_pem_probe(struct platform_device *pdev)
++static int thunder_pem_init(struct device *dev, struct pci_config_window *cfg)
+ {
+-	struct device *dev = &pdev->dev;
+-	const struct of_device_id *of_id;
+ 	resource_size_t bar4_start;
+ 	struct resource *res_pem;
+ 	struct thunder_pem_pci *pem_pci;
++	struct platform_device *pdev;
++
++	/* Only OF support for now */
++	if (!dev->of_node)
++		return -EINVAL;
+ 
+ 	pem_pci = devm_kzalloc(dev, sizeof(*pem_pci), GFP_KERNEL);
+ 	if (!pem_pci)
+ 		return -ENOMEM;
+ 
+-	of_id = of_match_node(thunder_pem_of_match, dev->of_node);
+-	pem_pci->gen_pci.cfg.ops = (struct gen_pci_cfg_bus_ops *)of_id->data;
++	pdev = to_platform_device(dev);
+ 
+ 	/*
+ 	 * The second register range is the PEM bridge to the PCIe
+@@ -330,7 +302,29 @@ static int thunder_pem_probe(struct platform_device *pdev)
+ 	pem_pci->ea_entry[1] = (u32)(res_pem->end - bar4_start) & ~3u;
+ 	pem_pci->ea_entry[2] = (u32)(bar4_start >> 32);
+ 
+-	return pci_host_common_probe(pdev, &pem_pci->gen_pci);
++	cfg->priv = pem_pci;
++	return 0;
++}
++
++static struct pci_ecam_ops pci_thunder_pem_ops = {
++	.bus_shift	= 24,
++	.init		= thunder_pem_init,
++	.pci_ops	= {
++		.map_bus	= pci_ecam_map_bus,
++		.read		= thunder_pem_config_read,
++		.write		= thunder_pem_config_write,
++	}
++};
++
++static const struct of_device_id thunder_pem_of_match[] = {
++	{ .compatible = "cavium,pci-host-thunder-pem" },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, thunder_pem_of_match);
++
++static int thunder_pem_probe(struct platform_device *pdev)
++{
++	return pci_host_common_probe(pdev, &pci_thunder_pem_ops);
+ }
+ 
+ static struct platform_driver thunder_pem_driver = {
 -- 
-2.1.0
-
+1.9.1
