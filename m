@@ -1,92 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0070.outbound.protection.outlook.com ([104.47.36.70]:35424
-	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754061AbcEWPPb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 May 2016 11:15:31 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-CC: Heiko Stuebner <heiko@sntech.de>,
-	Wenrui Li <wenrui.li@rock-chips.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Doug Anderson <dianders@chromium.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-rockchip@lists.infradead.org"
-	<linux-rockchip@lists.infradead.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 2/2] pci: Add PCIe driver for Rockchip Soc
-Date: Mon, 23 May 2016 15:15:20 +0000
-Message-ID: <8520D5D51A55D047800579B094147198258ACE47@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <1463740105-7061-1-git-send-email-shawn.lin@rock-chips.com>
- <1463740156-7148-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1463740156-7148-1-git-send-email-shawn.lin@rock-chips.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	dhdang@apm.com,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	cov@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V7 11/11] arm64, pci, acpi: Start using ACPI based PCI host controller driver for ARM64.
+Date: Tue, 10 May 2016 17:20:01 +0200
+Message-Id: <1462893601-8937-12-git-send-email-tn@semihalf.com>
+In-Reply-To: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-> +
-> +	irq = platform_get_irq_byname(pdev, "pcie-sys");
-> +	if (irq < 0) {
-> +		dev_err(dev, "missing pcie_sys IRQ resource\n");
-> +		return -EINVAL;
-> +	}
-> +	err = devm_request_irq(dev, irq, rockchip_pcie_subsys_irq_handler,
-> +			       IRQF_SHARED, "pcie-sys", port);
-> +	if (err) {
-> +		dev_err(dev, "failed to request pcie subsystem irq\n");
-> +		return err;
-> +	}
-> +
-> +	port->irq = platform_get_irq_byname(pdev, "pcie-legacy");
-> +	if (port->irq < 0) {
-> +		dev_err(dev, "missing pcie_legacy IRQ resource\n");
-> +		return -EINVAL;
-> +	}
-> +	err = devm_request_irq(dev, port->irq,
-> +			       rockchip_pcie_legacy_int_handler,
-> +			       IRQF_SHARED,
-> +			       "pcie-legacy",
-> +			       port);
-> +	if (err) {
-> +		dev_err(&pdev->dev, "failed to request pcie-legacy irq\n");
-> +		return err;
-> +	}
-> +
-> +	irq = platform_get_irq_byname(pdev, "pcie-client");
-> +	if (irq < 0) {
-> +		dev_err(dev, "missing pcie-client IRQ resource\n");
-> +		return -EINVAL;
-> +	}
-> +	err = devm_request_irq(dev, irq, rockchip_pcie_client_irq_handler,
-> +			       IRQF_SHARED, "pcie-client", port);
-> +	if (err) {
-> +		dev_err(dev, "failed to request pcie client irq\n");
-> +		return err;
-> +	}
-> +
+It is perfectly fine to use ACPI_PCI_HOST_GENERIC for ARM64,
+so lets get rid of PCI init and RAW ACPI accessor empty stubs
+and go with full-blown PCI host controller driver.
 
-All of the above interrupt number details are being obtained from device tree, why not move above API's to rockchip_pcie_parse_dt.
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+To: Catalin Marinas <catalin.marinas@arm.com>
+To: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+To: Will Deacon <will.deacon@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+---
+ arch/arm64/Kconfig      |  1 +
+ arch/arm64/kernel/pci.c | 24 ------------------------
+ 2 files changed, 1 insertion(+), 24 deletions(-)
 
-> +	port->dev = dev;
-> +	err = rockchip_pcie_parse_dt(port);
-> +	if (err) {
-> +		dev_err(dev, "Parsing DT failed\n");
-> +		return err;
-> +	}
-> +
-> +	pcie_write(port, 0x6040000, PCIE_RC_CONFIG_BASE + 0x8);
-> +	pcie_write(port, 0x0, PCIE_CORE_CTRL_MGMT_BASE + 0x300);
-> +
-> +	pcie_write(port, (RC_REGION_0_ADDR_TRANS_L +
-> RC_REGION_0_PASS_BITS),
-> +		   PCIE_CORE_AXI_CONF_BASE);
-> +	pcie_write(port, RC_REGION_0_ADDR_TRANS_H,
-> +		   PCIE_CORE_AXI_CONF_BASE + 0x4);
-> +	pcie_write(port, 0x0080000a, PCIE_CORE_AXI_CONF_BASE + 0x8);
-> +	pcie_write(port, 0x00000000, PCIE_CORE_AXI_CONF_BASE + 0xc);
-
-Why not move the above steps to rockchip_pcie_init_port function ? 
-Please use macros instead of using values.
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index 4f43622..1bded87 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -2,6 +2,7 @@ config ARM64
+ 	def_bool y
+ 	select ACPI_CCA_REQUIRED if ACPI
+ 	select ACPI_GENERIC_GSI if ACPI
++	select ACPI_PCI_HOST_GENERIC if ACPI
+ 	select ACPI_REDUCED_HARDWARE_ONLY if ACPI
+ 	select ARCH_HAS_DEVMEM_IS_ALLOWED
+ 	select ARCH_HAS_ATOMIC64_DEC_IF_POSITIVE
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index eeec5f6..e484c91 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -74,27 +74,3 @@ void pcibios_remove_bus(struct pci_bus *bus)
+ {
+ 	acpi_pci_remove_bus(bus);
+ }
+-
+-/*
+- * raw_pci_read/write - Platform-specific PCI config space access.
+- */
+-int raw_pci_read(unsigned int domain, unsigned int bus,
+-		  unsigned int devfn, int reg, int len, u32 *val)
+-{
+-	return -ENXIO;
+-}
+-
+-int raw_pci_write(unsigned int domain, unsigned int bus,
+-		unsigned int devfn, int reg, int len, u32 val)
+-{
+-	return -ENXIO;
+-}
+-
+-#ifdef CONFIG_ACPI
+-/* Root bridge scanning */
+-struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+-{
+-	/* TODO: Should be revisited when implementing PCI on ACPI */
+-	return NULL;
+-}
+-#endif
+-- 
+1.9.1
