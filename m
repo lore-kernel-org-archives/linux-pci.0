@@ -1,235 +1,112 @@
-Return-Path: <agordeev@redhat.com>
-Return-Path: <agordeev@redhat.com>
-Date: Wed, 11 May 2016 09:45:28 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: helgaas@kernel.org, pjw@netapp.com, axboe@fb.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org
-Subject: Re: [PATCH 1/2] PCI: Provide sensible irq vector alloc/free routines
-Message-ID: <20160511074527.GA31347@agordeev.lab.eng.brq.redhat.com>
-References: <1462457096-19795-1-git-send-email-hch@lst.de>
- <1462457096-19795-2-git-send-email-hch@lst.de>
+Return-Path: <rjwysocki@gmail.com>
+Return-Path: <rjwysocki@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1462457096-19795-2-git-send-email-hch@lst.de>
+Sender: rjwysocki@gmail.com
+In-Reply-To: <1462893601-8937-6-git-send-email-tn@semihalf.com>
+References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+	<1462893601-8937-6-git-send-email-tn@semihalf.com>
+Date: Tue, 10 May 2016 20:20:32 +0200
+Message-ID: <CAJZ5v0j-jiGmMWoyd-ab4qiKGAScbxMskqUThBQxkOxPR8unMA@mail.gmail.com>
+Subject: Re: [PATCH V7 05/11] acpi, pci: Support IO resources when parsing PCI
+ host bridge resources.
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, "Rafael J. Wysocki" <rafael@kernel.org>,
+	Hanjun Guo <hanjun.guo@linaro.org>, Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, jchandra@broadcom.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
+	David Daney <ddaney@caviumnetworks.com>, wangyijing@huawei.com,
+	Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>, Mark Salter <msalter@redhat.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>, Jon Masters <jcm@redhat.com>, andrea.gallo@linaro.org,
+	dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com,
+	Christopher Covington <cov@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 05, 2016 at 04:04:55PM +0200, Christoph Hellwig wrote:
-> Add a new pci_alloc_irq_vectors helper that allocates MSI-X or multi-MSI
-> vectors for PCI device while isolating the driver from the arcane details.
-> 
-> This include handling both MSI-X, MSI and legacy interrupt fallbacks
-> transparently, automatic capping to the available vectors as well as storing
-> the information needed for request_irq in the PCI device itself so that
-> a lot of boiler plate code in the driver can be removed.
-> 
-> In the future this will also allow us to automatically set up spreading
-> for interrupt vectors without having to duplicate it in all the drivers.
-
-Hi Christoph,
-
-Sorry for jumping in that late.
-
-The MSI/MSI-X enabling pattern you introduce seems quite common
-so I think it worth a separate function.
-
-However, it is not exactly what is stated in the changelog above,
-since it does not really do any fallbacks (see [1] below).
-
-Moreover, patch 2/2 not only removed pci_enable_msi[x]_range()
-internal fallback logic (from desired number of interrupts to
-available number of interrupts), but it also removed MSI-X to
-MSI fallback.
-
-May be it is what NVMe driver needs, but (once again) it is not
-what the changelog claims.
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Tue, May 10, 2016 at 5:19 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
+> Platforms that have memory mapped IO port (such as ARM64) need special
+> handling for PCI I/O resources. For host bridge's resource probing case
+> these resources need to be fixed up with pci_register_io_range/pci_remap_iospace etc.
+>
+> The same I/O resources need to be released after hotplug
+> removal so that it can be re-added back by the pci_remap_iospace
+> function during insertion. As a consequence we unmap I/O resources
+> with pci_unmap_iospace when we release host bridge resources.
+>
+> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 > ---
->  drivers/pci/msi.c   | 108 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h |  19 +++++++++
->  2 files changed, 127 insertions(+)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index a080f44..a510484 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -4,6 +4,7 @@
->   *
->   * Copyright (C) 2003-2004 Intel
->   * Copyright (C) Tom Long Nguyen (tom.l.nguyen@intel.com)
-> + * Copyright (c) 2016 Christoph Hellwig.
->   */
->  
->  #include <linux/err.h>
-> @@ -1120,6 +1121,113 @@ int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
+>  drivers/acpi/pci_root.c | 33 +++++++++++++++++++++++++++++++++
+>  1 file changed, 33 insertions(+)
+>
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index ae3fe4e..cb3071d 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -719,6 +719,34 @@ next:
+>                         resource_list_add_tail(entry, resources);
+>         }
 >  }
->  EXPORT_SYMBOL(pci_enable_msix_range);
->  
-> +static int __pci_enable_msix(struct pci_dev *dev, int nr_vecs)
+> +static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
 > +{
-> +	struct msix_entry *msix_entries;
-> +	int ret, i;
-> +
-> +	msix_entries = kcalloc(nr_vecs, sizeof(struct msix_entry), GFP_KERNEL);
-> +	if (!msix_entries)
-> +		return -ENOMEM;
-> +
-> +	for (i = 0; i < nr_vecs; i++)
-> +		msix_entries[i].entry = i;
-> +
-> +	ret = msix_capability_init(dev, msix_entries, nr_vecs);
-> +	if (ret == 0) {
-> +		for (i = 0; i < nr_vecs; i++)
-> +			dev->irqs[i] = msix_entries[i].vector;
-> +	}
-> +
-> +	kfree(msix_entries);
-> +	return ret;
-> +}
-> +
-> +static int __pci_enable_msi(struct pci_dev *dev, int nr_vecs)
-> +{
-> +	int ret, i;
-> +
-> +	ret = msi_capability_init(dev, nr_vecs);
-> +	if (ret == 0) {
-> +		for (i = 0; i < nr_vecs; i++)
-> +			dev->irqs[i] = dev->irq + i;
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +/**
-> + * pci_alloc_irq_vectors - allocate multiple IRQs for a device
-> + * @dev:		PCI device to operate on
-> + * @nr_vecs:		number of vectors to operate on
-> + * @flags:		flags or quirks for the allocation
-> + *
-> + * Allocate @nr_vecs interrupt vectors for @dev, using MSI-X or MSI
-> + * vectors if available, and fall back to a single legacy vector
-> + * if neither is available.  Return the number of vectors allocated
-> + * (which might be smaller than @nr_vecs) if successful, or a negative
-> + * error code on error.  The Linux irq numbers for the allocated
-> + * vectors are stored in pdev->irqs.
-> + */
-> +int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
-> +		unsigned int flags)
-> +{
-> +	unsigned int ret;
-> +
-> +	if (WARN_ON_ONCE(dev->msi_enabled || dev->msix_enabled))
-> +		return -EINVAL;
-> +
-> +	if (!pci_msi_supported(dev, 1))
-> +		goto use_legacy_irq;
-> +
-> +	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX))
-> +		nr_vecs = min_t(unsigned int, nr_vecs, pci_msix_vec_count(dev));
-> +	else if (dev->msi_cap)
-> +		nr_vecs = min_t(unsigned int, nr_vecs, pci_msi_vec_count(dev));
-> +	else
-> +		goto use_legacy_irq;
-> +
-> +	dev->irqs = kcalloc(nr_vecs, sizeof(u32), GFP_KERNEL);
-> +	if (!dev->irqs)
-> +		return -ENOMEM;
-> +
-> +	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX))
-> +		ret = __pci_enable_msix(dev, nr_vecs);
-> +	else
-> +		ret = __pci_enable_msi(dev, nr_vecs);
+> +#ifdef PCI_IOBASE
 
-1. No fallbacks.
+Same comment about the #ifdefs as in the other patch.
 
-> +	if (ret)
-> +		goto out_free_irqs;
+> +       struct resource *res = entry->res;
+> +       resource_size_t cpu_addr = res->start;
+> +       resource_size_t pci_addr = cpu_addr - entry->offset;
+> +       resource_size_t length = resource_size(res);
+> +       unsigned long port;
 > +
-> +	return 0;
+> +       if (pci_register_io_range(cpu_addr, length))
+> +               goto err;
 > +
-> +out_free_irqs:
-> +	kfree(dev->irqs);
-> +use_legacy_irq:
-> +	dev->irqs = &dev->irq;
-> +	return 1;
+> +       port = pci_address_to_pio(cpu_addr);
+> +       if (port == (unsigned long)-1)
+> +               goto err;
+> +
+> +       res->start = port;
+> +       res->end = port + length - 1;
+> +       entry->offset = port - pci_addr;
+> +
+> +       if (pci_remap_iospace(res, cpu_addr) < 0)
+> +               goto err;
+
+An empty line here?
+
+> +       pr_info("Remapped I/O %pa to %pR\n", &cpu_addr, res);
+> +       return;
+> +err:
+> +       res->flags |= IORESOURCE_DISABLED;
+> +#endif
 > +}
-> +EXPORT_SYMBOL(pci_alloc_irq_vectors);
-> +
-> +/**
-> + * pci_free_irq_vectors - free previously allocated IRQs for a device
-> + * @dev:		PCI device to operate on
-> + *
-> + * Undoes the allocations and enabling in pci_alloc_irq_vectors().
-> + */
-> +void pci_free_irq_vectors(struct pci_dev *dev)
-> +{
-> +	if (dev->msix_enabled)
-> +		pci_disable_msix(dev);
-> +	else if (dev->msi_enabled)
-> +		pci_disable_msi(dev);
-> +
-> +	if (dev->irqs != &dev->irq)
-> +		kfree(dev->irqs);
-> +	dev->irqs = NULL;
-> +}
-> +EXPORT_SYMBOL(pci_free_irq_vectors);
-> +
-> +
->  struct pci_dev *msi_desc_to_pci_dev(struct msi_desc *desc)
+>
+>  int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
 >  {
->  	return to_pci_dev(desc->dev);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 932ec74..e201d0d 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -322,6 +322,7 @@ struct pci_dev {
->  	 * directly, use the values stored here. They might be different!
->  	 */
->  	unsigned int	irq;
-> +	unsigned int	*irqs;
->  	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
->  
->  	bool match_driver;		/* Skip attaching driver */
-> @@ -1255,6 +1256,8 @@ struct msix_entry {
->  	u16	entry;	/* driver uses to specify entry, OS writes */
->  };
->  
-> +#define PCI_IRQ_NOMSIX		(1 << 0) /* don't try to use MSI-X interrupts */
+> @@ -740,6 +768,9 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+>                         "no IO and memory resources present in _CRS\n");
+>         else {
+>                 resource_list_for_each_entry_safe(entry, tmp, list) {
+> +                       if (entry->res->flags & IORESOURCE_IO)
+> +                               acpi_pci_root_remap_iospace(entry);
 > +
->  #ifdef CONFIG_PCI_MSI
->  int pci_msi_vec_count(struct pci_dev *dev);
->  void pci_msi_shutdown(struct pci_dev *dev);
-> @@ -1283,6 +1286,10 @@ static inline int pci_enable_msix_exact(struct pci_dev *dev,
->  		return rc;
->  	return 0;
->  }
-> +
-> +int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
-> +		unsigned int flags);
-> +void pci_free_irq_vectors(struct pci_dev *dev);
->  #else
->  static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
->  static inline void pci_msi_shutdown(struct pci_dev *dev) { }
-> @@ -1306,6 +1313,18 @@ static inline int pci_enable_msix_range(struct pci_dev *dev,
->  static inline int pci_enable_msix_exact(struct pci_dev *dev,
->  		      struct msix_entry *entries, int nvec)
->  { return -ENOSYS; }
-> +
-> +static inline int pci_alloc_irq_vectors(struct pci_dev *dev,
-> +		unsigned int nr_vecs, unsigned int flags)
-> +{
-> +	dev->irqs = &dev->irq;
-> +	return 1;
-> +}
-> +
-> +static inline void pci_free_irq_vectors(struct pci_dev *dev)
-> +{
-> +	dev->irqs = NULL;
-> +}
->  #endif
->  
->  #ifdef CONFIG_PCIEPORTBUS
-> -- 
-> 2.1.4
-> 
+>                         if (entry->res->flags & IORESOURCE_DISABLED)
+>                                 resource_list_destroy_entry(entry);
+>                         else
+> @@ -811,6 +842,8 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
+>
+>         resource_list_for_each_entry(entry, &bridge->windows) {
+>                 res = entry->res;
+> +               if (res->flags & IORESOURCE_IO)
+> +                       pci_unmap_iospace(res);
+>                 if (res->parent &&
+>                     (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+>                         release_resource(res);
+> --
