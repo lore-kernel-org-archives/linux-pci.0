@@ -1,197 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37478 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753598AbcEBQ5o (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 2 May 2016 12:57:44 -0400
-Date: Mon, 2 May 2016 11:57:39 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Cc: linuxppc-dev@lists.ozlabs.org, mpe@ellerman.id.au,
-	benh@kernel.crashing.org, imunsie@au1.ibm.com,
-	gwshan@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-	paulus@samba.org, mikey@neuling.org, andrew.donnellan@au1.ibm.com,
-	bhelgaas@google.com, frederic.barrat@fr.ibm.com,
-	mrochs@linux.vnet.ibm.com
-Subject: Re: [PATCH v5] powerpc/pci: Assign fixed PHB number based on
- device-tree properties
-Message-ID: <20160502165739.GD24851@localhost>
-References: <1460670924-16845-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Return-Path: <rjwysocki@gmail.com>
+Return-Path: <rjwysocki@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460670924-16845-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: rjwysocki@gmail.com
+In-Reply-To: <1462893601-8937-9-git-send-email-tn@semihalf.com>
+References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+	<1462893601-8937-9-git-send-email-tn@semihalf.com>
+Date: Tue, 10 May 2016 19:54:17 +0200
+Message-ID: <CAJZ5v0hp1+D4Hd+6EQeZb_WNn6JK=55h8AAOwAWYX2CwATP0dw@mail.gmail.com>
+Subject: Re: [PATCH V7 08/11] pci, acpi: Support for ACPI based generic PCI
+ host controller
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Tomasz Nowicki <tn@semihalf.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>, "Rafael J. Wysocki" <rafael@kernel.org>,
+	Hanjun Guo <hanjun.guo@linaro.org>, Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, jchandra@broadcom.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
+	David Daney <ddaney@caviumnetworks.com>, wangyijing@huawei.com,
+	Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>, Mark Salter <msalter@redhat.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>, Jon Masters <jcm@redhat.com>, andrea.gallo@linaro.org,
+	dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com,
+	Christopher Covington <cov@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 14, 2016 at 06:55:24PM -0300, Guilherme G. Piccoli wrote:
-> The domain/PHB field of PCI addresses has its value obtained from a
-> global variable, incremented each time a new domain (represented by
-> struct pci_controller) is added on the system. The domain addition
-> process happens during boot or due to PCI device hotplug.
-> 
-> As recent kernels are using predictable naming for network interfaces,
-> the network stack is more tied to PCI naming. This can be a problem in
-> hotplug scenarios, because PCI addresses will change if devices are
-> removed and then re-added. This situation seems unusual, but it can
-> happen if a user wants to replace a NIC without rebooting the machine,
-> for example.
-> 
-> This patch changes the way PCI domain values are generated: now, we use
-> device-tree properties to assign fixed PHB numbers to PCI addresses
-> when available (meaning pSeries and PowerNV cases). We also use a bitmap
-> to allow dynamic PHB numbering when device-tree properties are not
-> used. This bitmap keeps track of used PHB numbers and if a PHB is
-> released (by hotplug operations for example), it allows the reuse of
-> this PHB number, avoiding PCI address to change in case of device remove
-> and re-add soon after. No functional changes were introduced.
-> 
-> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
-
-I assume the powerpc guys will take care of this.  Let me know if you
-need me to do anything.
-
+On Tue, May 10, 2016 at 5:19 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
+> This patch is going to implement generic PCI host controller for
+> ACPI world, similar to what pci-host-generic.c driver does for DT world.
+>
+> All such drivers, which we have seen so far, were implemented within
+> arch/ directory since they had some arch assumptions (x86 and ia64).
+> However, they all are doing similar thing, so it makes sense to find
+> some common code and abstract it into the generic driver.
+>
+> In order to handle PCI config space regions properly, we define new
+> MCFG interface which does sanity checks on MCFG table and keeps its
+> root pointer. User is able to lookup MCFG regions based on that root
+> pointer and specified domain:bus_start:bus_end touple. We are using
+> pci_mmcfg_late_init old prototype to avoid another function name.
+>
+> The implementation of pci_acpi_scan_root() looks up the MCFG entries
+> and sets up a new mapping (regions are not mapped until host controller ask
+> for it). Generic PCI functions are used for accessing config space.
+> Driver selects PCI_ECAM and uses functions from drivers/pci/ecam.h
+> to create and access ECAM mappings.
+>
+> As mentioned in Kconfig help section, ACPI_PCI_HOST_GENERIC choice
+> should be made on a per-architecture basis.
+>
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
 > ---
->  arch/powerpc/kernel/pci-common.c | 66 ++++++++++++++++++++++++++++++++++++++--
->  1 file changed, 63 insertions(+), 3 deletions(-)
-> 
-> v5:
->   * Improved comments.
-> 
->   * Changed the the Fixed PHB Numbering to set the PHB number bit
->   on the bitmap anyway, avoiding issues when system has virtual PHBs.
-> 
->   * Changed the device-tree check order - now, firstly we check for
->   "ibm,opal-phbid" and if it's not available, we try the pSeries case.
-> 
-> v4:
->   * Minor change (if/else nesting rearranged).
-> 
-> v3:
->   * Made the bitmap static.
-> 
->   * Rearranged if/else statements of Fixed PHB checking.
-> 
->   * Improved bitmap checkings, by removing loop and using instead the
->   find_first_zero_bit() function.
-> 
->   * Removed the single-statement function release_phb_number() by
->   adding its logic directly into pcibios_free_controller().
-> 
->   *Added check for bitmap size before clearing bit, avoiding memory
->   corruption.
-> 
-> v2:
->   * Added the Fixed PHB Numbering mechanism based on device-tree
->   properties.
-> 
->   * Changed list approach to bitmap on the Dynamic PHB Numbering
->   mechanism.
-> 
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index 0f7a60f..ad423c1 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -41,11 +41,17 @@
->  #include <asm/ppc-pci.h>
->  #include <asm/eeh.h>
->  
-> +/* hose_spinlock protects accesses to the the phb_bitmap. */
->  static DEFINE_SPINLOCK(hose_spinlock);
->  LIST_HEAD(hose_list);
->  
-> -/* XXX kill that some day ... */
-> -static int global_phb_number;		/* Global phb counter */
-> +/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
-> +#define	MAX_PHBS	8192
-> +
-> +/* For dynamic PHB numbering: used/free PHBs tracking bitmap.
-> + * Accesses to this bitmap should be protected by hose_spinlock.
-> + */
-> +static DECLARE_BITMAP(phb_bitmap, MAX_PHBS);
->  
->  /* ISA Memory physical address */
->  resource_size_t isa_mem_base;
-> @@ -64,6 +70,55 @@ struct dma_map_ops *get_pci_dma_ops(void)
->  }
->  EXPORT_SYMBOL(get_pci_dma_ops);
->  
-> +/* get_phb_number() function should run under locking
-> + * protection, specifically hose_spinlock.
-> + */
-> +static int get_phb_number(struct device_node *dn)
-> +{
-> +	const __be64 *prop64;
-> +	const __be32 *regs;
-> +	int phb_id = 0;
-> +
-> +	/* Try fixed PHB numbering first, by checking archs and reading
-> +	 * the respective device-tree properties. Firstly, try PowerNV by
-> +	 * reading "ibm,opal-phbid", only present in OPAL environment.
-> +	 */
-> +	prop64 = of_get_property(dn, "ibm,opal-phbid", NULL);
-> +	if (prop64) {
-> +		phb_id = (int)(be64_to_cpup(prop64) & 0xFFFF);
-> +
-> +	} else if (machine_is(pseries)) {
-> +		regs = of_get_property(dn, "reg", NULL);
-> +		if (regs)
-> +			phb_id = (int)(be32_to_cpu(regs[1]) & 0xFFFF);
-> +	} else {
-> +		goto dynamic_phb_numbering;
-> +	}
-> +
-> +	/* If we have a huge PHB number obtained from device-tree, no need
-> +	 * to worry with the bitmap. Otherwise, we need to be sure we're
-> +	 * not trying to use the same PHB number twice.
-> +	 */
-> +	if (phb_id < MAX_PHBS) {
-> +		if (test_bit(phb_id, phb_bitmap))
-> +			goto dynamic_phb_numbering;
-> +		set_bit(phb_id, phb_bitmap);
-> +	}
-> +
-> +	return phb_id;
-> +
-> +	/* If not pSeries nor PowerNV, or if fixed PHB numbering tried to add
-> +	 * the same PHB number twice, then fallback to dynamic PHB numbering.
-> +	 */
-> +dynamic_phb_numbering:
-> +
-> +	phb_id = find_first_zero_bit(phb_bitmap, MAX_PHBS);
-> +	BUG_ON(phb_id >= MAX_PHBS); /* Reached maximum number of PHBs. */
-> +	set_bit(phb_id, phb_bitmap);
-> +
-> +	return phb_id;
-> +}
-> +
->  struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
->  {
->  	struct pci_controller *phb;
-> @@ -72,7 +127,7 @@ struct pci_controller *pcibios_alloc_controller(struct device_node *dev)
->  	if (phb == NULL)
->  		return NULL;
->  	spin_lock(&hose_spinlock);
-> -	phb->global_number = global_phb_number++;
-> +	phb->global_number = get_phb_number(dev);
->  	list_add_tail(&phb->list_node, &hose_list);
->  	spin_unlock(&hose_spinlock);
->  	phb->dn = dev;
-> @@ -94,6 +149,11 @@ EXPORT_SYMBOL_GPL(pcibios_alloc_controller);
->  void pcibios_free_controller(struct pci_controller *phb)
->  {
->  	spin_lock(&hose_spinlock);
-> +
-> +	/* Clear bit of phb_bitmap to allow reuse of this PHB number. */
-> +	if (phb->global_number < MAX_PHBS)
-> +		clear_bit(phb->global_number, phb_bitmap);
-> +
->  	list_del(&phb->list_node);
->  	spin_unlock(&hose_spinlock);
->  
-> -- 
-> 2.1.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  drivers/acpi/Kconfig            |   8 +++
+>  drivers/acpi/Makefile           |   1 +
+>  drivers/acpi/pci_mcfg.c         |  97 ++++++++++++++++++++++++++
+>  drivers/acpi/pci_root_generic.c | 149 ++++++++++++++++++++++++++++++++++++++++
+
+Why do we need a new file?  Would there be any problem with adding
+that code to pci_root.c?
