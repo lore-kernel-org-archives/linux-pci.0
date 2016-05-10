@@ -1,172 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f169.google.com ([209.85.192.169]:35469 "EHLO
-	mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753278AbcEIXPO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 9 May 2016 19:15:14 -0400
-Subject: Re: [PATCH v2 1/2] Documentation: DT: bindings: Add Broadcom STB PCIe
- bindings
-To: Rob Herring <robh@kernel.org>,
-	Florian Fainelli <f.fainelli@gmail.com>
-References: <1462475700-1654-1-git-send-email-f.fainelli@gmail.com>
- <1462475700-1654-2-git-send-email-f.fainelli@gmail.com>
- <20160509192641.GA4936@rob-hp-laptop>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com,
-	bhelgaas@google.com, arnd@arndb.de
-From: Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <573119FF.9000306@gmail.com>
-Date: Mon, 9 May 2016 16:15:11 -0700
-MIME-Version: 1.0
-In-Reply-To: <20160509192641.GA4936@rob-hp-laptop>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	dhdang@apm.com,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	cov@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V7 06/11] pci, acpi: Provide a way to assign bus domain number.
+Date: Tue, 10 May 2016 17:19:56 +0200
+Message-Id: <1462893601-8937-7-git-send-email-tn@semihalf.com>
+In-Reply-To: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/09/2016 12:26 PM, Rob Herring wrote:
-> On Thu, May 05, 2016 at 12:14:59PM -0700, Florian Fainelli wrote:
->> From: Jim Quinlan <jim2101024@gmail.com>
->>
->> This patchs adds the Device Tree bindings for the Broadcom STB PCIe root
->> complex hardware.
->>
->> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
->> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
->> ---
->> Changes in v2:
->>
->> - rewrite the binding document almost from scratch to include many more
->>   references to existing documents
->> - describe missing properties
->> - give better examples
->>
->>  .../devicetree/bindings/pci/brcm,brcmstb-pcie.txt  | 98 ++++++++++++++++++++++
->>  1 file changed, 98 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
->>
->> diff --git a/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
->> new file mode 100644
->> index 000000000000..3682b0f0bc26
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
->> @@ -0,0 +1,98 @@
->> +Broadcom STB PCIe Host Controller Device Tree Bindings
->> +
->> +This document describes the binding of the PCIe Root Complex hardware found in
->> +Broadcom Set Top Box System-on-Chips such as BCM7425 (MIPS), BCM7435 (MIPS) and
->> +BCM7445 (ARMv7).
->> +
->> +Required properties:
->> +- compatible: must be one of: "brcm,bcm7425-pcie"
->> +			      "brcm,bcm7435-pcie"
->> +			      "brcm,bcm7445-pcie"
->> +
->> +- reg: specifies the physical base address of the controller registers and
->> +  its length
->> +
->> +- interrupt-parent: must be a reference (phandle) to the parent interrupt
->> +  controller in the system (7038-l1-intc on MIPS, GIC on ARM/ARM64)
->> +
->> +- interrrupts: first interrupt must be the Level 1 interrupt number corresponding
->> +  to the main PCIe RC interrupt, second interrupt must be the MSI interrupt
->> +  See the interrupt-parent documentation for the number of cells and their meaning:
->> +  MIPS: Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7038-l1-intc.txt
->> +  ARM/ARM64: Documentation/devicetree/bindings/interrupt-controller/arm,gic.txt
->> +
->> +- interrupt-names: must be "pcie", and if present "msi"
->> +
->> +- interrupt-map: see pci.txt
->> +
->> +- interrupt-map-mask: see pci.txt
->> +
->> +- #address-cells: must be set to <3>, see pci.txt
->> +
->> +- #size-cells: must be set to <2>, see pci.txt
->> +
->> +- ranges: ranges for the PCI outbound windows, no I/O or prefetchable windows
->> +  must be specified here, only non-prefetchable. 32-bits windows or 64-bits
->> +  windows are allowed based on the host processor's capabilities (ARM w/ LPAE,
->> +  ARM64).
->> +
->> +- #interrupt-cells: set to <1>, see pci.txt
->> +
->> +- brcm,log2-scb-sizes: log2 size of the SCB window that is mapped to PCIe space
->> +  there must be exactly one value per memory controller present in the system
->> +  (ranges from 1 to 3)
->> +
->> +Optional properties:
->> +
->> +- msi-controller: indicates that this is a MSI controller node (when supported)
->> +
->> +- clocks: phandle to the functional clock that feeds into the PCIe RC block
->> +
->> +- clock-names: the name(s) of the clocks specified in 'clocks'.  Note
->> +  that if the 'clocks' property is given, 'clock-names' is mandatory,
->> +  and the name of the clock is expected to be "pcie".
->> +
->> +- brcm,ssc: boolean that indicates usage of spread-spectrum clocking
-> 
-> Shouldn't this be a property of the phy? Is there no separate phy to 
-> control?
+This patch provides a way to set the ACPI domain number in PCI code.
+pci_create_root_bus is called with NULL as parent in ACPI. This
+ends up calling pci_bus_assign_domain_nr with a NULL parent.
+So we define acpi_pci_bus_domain_nr() which is meant to retrieve
+the PCI domain number based on 'struct pci_bus' in the ACPI way.
+pci_bus_assign_domain_nr() is updated to call acpi_pci_bus_domain_nr()
+and assign domain number on the root bus, in case of ACPI.
 
-No, the PHY is baked into the PCIe root complex, which is why this is a
-property of the root complex node since the two are conflated.
+acpi_pci_bus_domain_nr function is stub for now.
 
-> 
->> +
->> +- brcm,gen: integer that indicates desired forced generation of link: 1 => 2.5
->> +  Gbps, 2 => 5.0 Gbps, 3 => 8.0 Gbps. Will override the auto-negotation if
->> +  specified.
->> +
->> +- <*>-supply: see Documentation/devicetree/bindings/regulator/regulator.txt
->> +
->> +- <*>-supply-names: see Documentation/devicetree/bindings/regulator/regulator.txt
->> +
->> +Example Node:
->> +
->> +This example assumes that the top-level #address-cells = <2> and #size-cells =
->> +<2>, e.g: ARM LPAE configuration.
->> +
->> +	pcie0: pcie-controller@f0460000 {
->> +		reg = <0x0 0xf0460000 0x0 0x9310>;
->> +		interrupts = <0x0 0x33 0x4>, <0x0 0x34, 0x4>;
->                                                       ^
-> typo
+While at it, for the sake of code clarity we put ACPI and DT domain
+assign methods into the corresponding helpers.
 
-Whoops, thanks.
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+---
+ drivers/pci/pci.c        | 11 +++++++++--
+ include/linux/pci-acpi.h |  5 +++++
+ 2 files changed, 14 insertions(+), 2 deletions(-)
 
-> 
->> +		interrupt-names = "pcie", "msi";
->> +		compatible = "brcm,bcm7445-pcie";
->> +		#address-cells = <3>;
->> +		#size-cells = <2>;
->> +
->> +		/* Two non-prefetchable 32-bits memory space, each of 128MB
->> + 		 * with the following mapping:
->> +		 * PCIe address		=> CPU physical address space
->> +		 * 0x00_0000_0000	=> 0x00_C000_0000
->> +		 * 0x00_0800_0000	=> 0x00_C800_0000
->> +		 */
->> +		ranges = <0x02000000 0x00000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x08000000>,
->> +			 <0x02000000 0x00000000 0x08000000 0x00000000 0xc8000000 0x00000000 0x08000000>;
->> +		#interrupt-cells = <1>;
->> +		interrupt-map-mask = <0xf800 0 0 7>;
->> +		interrupt-map = <0 0 0 1 &intc 47 3
->> +				 0 0 0 2 &intc 48 3
->> +				 0 0 0 3 &intc 49 3
->> +				 0 0 0 4 &intc 50 3>;
->> +		clocks = <&pcie0>;
->> +		clock-names = "pcie";
->> +		brcm,ssc;
->> +		brcm,log2-scb-sizes = <0x1e 0x1e 0x1e>;
->> +		vreg-wifi-pwr-supply-names = "vreg-wifi-pwr";
->> +		vreg-wifi-pwr-supply = <&vreg-wifi-pwr>;
-> 
-> The supply for the PCIE RC is called "vreg-wifi-pwr"? Seems a bit 
-> strange.
-
-It can be called anything, this just happens to be the example, but I
-can certainly drop that, since a) this is optional and b) we need to
-rework that in the driver anyway.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ff97a0b..a1d7bcf 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -19,6 +19,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/string.h>
+ #include <linux/log2.h>
++#include <linux/pci-acpi.h>
+ #include <linux/pci-aspm.h>
+ #include <linux/pm_wakeup.h>
+ #include <linux/interrupt.h>
+@@ -4918,7 +4919,7 @@ int pci_get_new_domain_nr(void)
+ }
+ 
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+-void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++static int of_pci_bus_domain_nr(struct device *parent)
+ {
+ 	static int use_dt_domains = -1;
+ 	int domain = -1;
+@@ -4962,7 +4963,13 @@ void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
+ 		domain = -1;
+ 	}
+ 
+-	bus->domain_nr = domain;
++	return domain;
++}
++
++void pci_bus_assign_domain_nr(struct pci_bus *bus, struct device *parent)
++{
++	bus->domain_nr = acpi_disabled ? of_pci_bus_domain_nr(parent) :
++					 acpi_pci_bus_domain_nr(bus);
+ }
+ #endif
+ #endif
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 89ab057..09f9f02 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -111,6 +111,11 @@ static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
+ static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
+ #endif	/* CONFIG_ACPI */
+ 
++static inline int acpi_pci_bus_domain_nr(struct pci_bus *bus)
++{
++	return 0;
++}
++
+ #ifdef CONFIG_ACPI_APEI
+ extern bool aer_acpi_firmware_first(void);
+ #else
 -- 
-Florian
+1.9.1
