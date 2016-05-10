@@ -1,93 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.gentoo.org ([140.211.166.183]:53720 "EHLO smtp.gentoo.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751186AbcETRcJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Fri, 20 May 2016 13:32:09 -0400
-Received: from [192.168.1.130] (CPE002401f30b73-CM78cd8ec1b205.cpe.net.cable.rogers.com [99.224.138.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	(Authenticated sender: axs)
-	by smtp.gentoo.org (Postfix) with ESMTPSA id CAEA6340BFA
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 17:32:07 +0000 (UTC)
-From: Ian Stakenvicius <axs@gentoo.org>
-Subject: [PATCH] Fix lack of exposure of pci_init for LIBPCI_3.0 on
- pciutils-3.5.0
-To: linux-pci@vger.kernel.org
-Message-ID: <1c0deb86-fee3-4de3-fb00-baf6e71ac7fd@gentoo.org>
-Date: Fri, 20 May 2016 13:31:59 -0400
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="u9GHCILH8k2kehMq6UixEl2EVg11M5TpI"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	dhdang@apm.com,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	cov@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V7 10/11] arm64, pci, acpi: Provide ACPI-specific prerequisites for PCI bus enumeration.
+Date: Tue, 10 May 2016 17:20:00 +0200
+Message-Id: <1462893601-8937-11-git-send-email-tn@semihalf.com>
+In-Reply-To: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---u9GHCILH8k2kehMq6UixEl2EVg11M5TpI
-Content-Type: multipart/mixed; boundary="iDTPCg1HqOiuiJoL8OIMNwlxMPui0LjPr"
-From: Ian Stakenvicius <axs@gentoo.org>
-To: linux-pci@vger.kernel.org
-Message-ID: <1c0deb86-fee3-4de3-fb00-baf6e71ac7fd@gentoo.org>
-Subject: [PATCH] Fix lack of exposure of pci_init for LIBPCI_3.0 on
- pciutils-3.5.0
+ACPI requires to run acpi_pci_{add|remove}_bus while new PCI bus is created.
+This allows to do some ACPI-specific additional configuration, like
+PCI hotplug slot enumeration. In order to fulfill these requirements,
+we implement arch-specific pcibios_{add|remove}_bus calls
+and call acpi_pci_{add|remove}_bus from there.
 
---iDTPCg1HqOiuiJoL8OIMNwlxMPui0LjPr
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: quoted-printable
-
-The changes included in commit ab61451d47514c473953a24aa4f4f816b77
-were not sufficient to maintain ABI compatibility with older versions
-of libpci.so.3, as pci_init is only exposed under symbol version
-LIBPCI_3.5.
-
-This patch uses the code pattern for the versioning of pci_fill_info()
-to ensure a pci_init symbol is exposed with LIBPCI_3.0 version.
-
-Bug: http://bugs.gentoo.org/583580
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+To: Catalin Marinas <catalin.marinas@arm.com>
+To: Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>
+To: Will Deacon <will.deacon@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
 ---
- lib/init.c     | 2 ++
- lib/internal.h | 1 +
- 2 files changed, 3 insertions(+)
+ arch/arm64/kernel/pci.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/lib/init.c b/lib/init.c
-index 9a043ee..c7800e0 100644
---- a/lib/init.c
-+++ b/lib/init.c
-@@ -214,6 +214,8 @@ pci_init_v35(struct pci_access *a)
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 15109c11..eeec5f6 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -17,6 +17,7 @@
+ #include <linux/mm.h>
+ #include <linux/of_pci.h>
+ #include <linux/of_platform.h>
++#include <linux/pci-acpi.h>
+ #include <linux/slab.h>
+ 
+ /*
+@@ -64,6 +65,16 @@ int pcibios_alloc_irq(struct pci_dev *dev)
+ 	return 0;
  }
-  STATIC_ALIAS(void pci_init(struct pci_access *a), pci_init_v35(a));
-+DEFINE_ALIAS(void pci_init_v30(struct pci_access *a), pci_init_v35);
-+SYMBOL_VERSION(pci_init_v30, pci_init@LIBPCI_3.0);
- SYMBOL_VERSION(pci_init_v35, pci_init@@LIBPCI_3.5);
-  void
-diff --git a/lib/internal.h b/lib/internal.h
-index f2027f8..cbac2a7 100644
---- a/lib/internal.h
-+++ b/lib/internal.h
-@@ -61,6 +61,7 @@ void *pci_malloc(struct pci_access *, int);
- void pci_mfree(void *);
- char *pci_strdup(struct pci_access *a, const char *s);
- +void pci_init_v30(struct pci_access *a) VERSIONED_ABI;
- void pci_init_v35(struct pci_access *a) VERSIONED_ABI;
-  /* access.c */
---=20
-2.7.3
-
-
-
---iDTPCg1HqOiuiJoL8OIMNwlxMPui0LjPr--
-
---u9GHCILH8k2kehMq6UixEl2EVg11M5TpI
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iF4EAREIAAYFAlc/ShUACgkQAJxUfCtlWe2GQwD+OYl7g9hlZOlL7sIwDTSzc7Of
-NmZNS3oybEz2LEAJDiIA/ilBbBYbD/c3t70qZLDYqLSyzGHwxoXFZTJFnmBAF6SU
-=S4zR
------END PGP SIGNATURE-----
-
---u9GHCILH8k2kehMq6UixEl2EVg11M5TpI--
+ 
++void pcibios_add_bus(struct pci_bus *bus)
++{
++	acpi_pci_add_bus(bus);
++}
++
++void pcibios_remove_bus(struct pci_bus *bus)
++{
++	acpi_pci_remove_bus(bus);
++}
++
+ /*
+  * raw_pci_read/write - Platform-specific PCI config space access.
+  */
+-- 
+1.9.1
