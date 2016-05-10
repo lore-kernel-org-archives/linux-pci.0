@@ -1,86 +1,122 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	dhdang@apm.com,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	cov@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V7 09/11] arm64, pci, acpi: ACPI support for legacy IRQs parsing and consolidation with DT code.
-Date: Tue, 10 May 2016 17:19:59 +0200
-Message-Id: <1462893601-8937-10-git-send-email-tn@semihalf.com>
-In-Reply-To: <1462893601-8937-1-git-send-email-tn@semihalf.com>
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:9894 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752717AbcEJDP4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 9 May 2016 23:15:56 -0400
+From: "Yong, Jonathan" <jonathan.yong@intel.com>
+To: mj@ucw.cz
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	jonathan.yong@intel.com
+Subject: [PATCH] lspci: Decode Precision Time Measurement capabiltity
+Date: Tue, 10 May 2016 03:15:55 +0000
+Message-Id: <1462850155-13790-2-git-send-email-jonathan.yong@intel.com>
+In-Reply-To: <1462850155-13790-1-git-send-email-jonathan.yong@intel.com>
+References: <1462850155-13790-1-git-send-email-jonathan.yong@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-To enable PCI legacy IRQs on platforms booting with ACPI, arch code
-should include ACPI specific callbacks that parse and set-up the
-device IRQ number, equivalent to the DT boot path. Owing to the current
-ACPI core scan handlers implementation, ACPI PCI legacy IRQs bindings
-cannot be parsed at device add time, since that would trigger ACPI scan
-handlers ordering issues depending on how the ACPI tables are defined.
+Section 7.32 Precision Time Management (or Measurement) from the
+PCI Express Base 3.1 specification is an optional Extended Capability
+for discovering and controlling the distribution of a PTM Hierarchy.
 
-To solve this problem and consolidate FW PCI legacy IRQs parsing in
-one single pcibios callback (pending final removal), this patch moves
-DT PCI IRQ parsing to the pcibios_alloc_irq() callback (called by
-PCI core code at device probe time) and adds ACPI PCI legacy IRQs
-parsing to the same callback too, so that FW PCI legacy IRQs parsing
-is confined in one single arch callback that can be easily removed
-when code parsing PCI legacy IRQs is consolidated and moved to core
-PCI code.
-
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Yong, Jonathan <jonathan.yong@intel.com>
 ---
- arch/arm64/kernel/pci.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ lib/header.h |  1 +
+ ls-ecaps.c   | 62 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 63 insertions(+)
 
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index c72de66..15109c11 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -50,11 +50,16 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+diff --git a/lib/header.h b/lib/header.h
+index b8f7dc1..8463641 100644
+--- a/lib/header.h
++++ b/lib/header.h
+@@ -230,6 +230,7 @@
+ #define PCI_EXT_CAP_ID_LTR	0x18	/* Latency Tolerance Reporting */
+ #define PCI_EXT_CAP_ID_PASID	0x1b	/* Process Address Space ID */
+ #define PCI_EXT_CAP_ID_L1PM	0x1e	/* L1 PM Substates */
++#define PCI_EXT_CAP_ID_PTM	0x1f	/* Precision Time Measurement */
+ 
+ /*** Definitions of capabilities ***/
+ 
+diff --git a/ls-ecaps.c b/ls-ecaps.c
+index 8298435..0273240 100644
+--- a/ls-ecaps.c
++++ b/ls-ecaps.c
+@@ -548,6 +548,65 @@ cap_l1pm(struct device *d, int where)
+     }
  }
  
- /*
-- * Try to assign the IRQ number from DT when adding a new device
-+ * Try to assign the IRQ number when probing a new device
-  */
--int pcibios_add_device(struct pci_dev *dev)
-+int pcibios_alloc_irq(struct pci_dev *dev)
++static void
++cap_ptm(struct device *d, int where)
++{
++  u32 buff;
++  u16 clock;
++
++  printf("Precision Time Measurement\n");
++
++  if (verbose < 2)
++    return;
++
++  if (!config_fetch(d, where + 4, 8))
++    {
++      printf("\t\t<unreadable>\n");
++      return;
++    }
++
++  buff = get_conf_long(d, where + 4);
++  printf("\t\tPTMCap: ");
++  printf("Requester:%c Responder:%c Root:%c\n",
++    FLAG(buff, 0x1),
++    FLAG(buff, 0x2),
++    FLAG(buff, 0x4));
++
++  clock = BITS(buff, 8, 8);
++  printf("\t\tPTMClockGranularity: ");
++  switch (clock)
++    {
++      case 0x00:
++        printf("Unimplemented\n");
++        break;
++      case 0xff:
++        printf("Greater than 254ns\n");
++        break;
++      default:
++        printf("%huns\n", clock);
++    }
++
++  buff = get_conf_long(d, where + 8);
++  printf("\t\tPTMControl: ");
++  printf("Enabled:%c RootSelected:%c\n",
++    FLAG(buff, 0x1),
++    FLAG(buff, 0x2));
++
++  clock = BITS(buff, 8, 8);
++  printf("\t\tPTMEffectiveGranularity: ");
++  switch (clock)
++    {
++      case 0x00:
++        printf("Unknown\n");
++        break;
++      case 0xff:
++        printf("Greater than 254ns\n");
++        break;
++      default:
++        printf("%huns\n", clock);
++    }
++}
++
+ void
+ show_ext_caps(struct device *d)
  {
--	dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-+	if (acpi_disabled)
-+		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-+#ifdef CONFIG_ACPI
-+	else
-+		return acpi_pci_irq_enable(dev);
-+#endif
- 
- 	return 0;
- }
+@@ -635,6 +694,9 @@ show_ext_caps(struct device *d)
+ 	  case PCI_EXT_CAP_ID_L1PM:
+ 	    cap_l1pm(d, where);
+ 	    break;
++	  case PCI_EXT_CAP_ID_PTM:
++	    cap_ptm(d, where);
++	    break;
+ 	  default:
+ 	    printf("#%02x\n", id);
+ 	    break;
 -- 
-1.9.1
+2.7.3
+
