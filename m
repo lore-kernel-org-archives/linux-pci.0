@@ -1,151 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp04.in.ibm.com ([125.16.236.4]:60766 "EHLO
-	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933236AbcECNdb (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 3 May 2016 09:33:31 -0400
-Received: from localhost
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Tue, 3 May 2016 18:53:23 +0530
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
-	bhelgaas@google.com, robherring2@gmail.com, dja@axtens.net,
-	alistair@popple.id.au, Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v9 07/22] powerpc/powernv: Setup PE for root bus
-Date: Tue,  3 May 2016 23:22:38 +1000
-Message-Id: <1462281773-26438-8-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	arnd@arndb.de,
+	will.deacon@arm.com,
+	catalin.marinas@arm.com,
+	rafael@kernel.org,
+	hanjun.guo@linaro.org,
+	Lorenzo.Pieralisi@arm.com,
+	okaya@codeaurora.org,
+	jchandra@broadcom.com
+Cc: robert.richter@caviumnetworks.com,
+	mw@semihalf.com,
+	Liviu.Dudau@arm.com,
+	ddaney@caviumnetworks.com,
+	wangyijing@huawei.com,
+	Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linaro-acpi@lists.linaro.org,
+	jcm@redhat.com,
+	andrea.gallo@linaro.org,
+	dhdang@apm.com,
+	jeremy.linton@arm.com,
+	liudongdong3@huawei.com,
+	cov@codeaurora.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH V7 05/11] acpi, pci: Support IO resources when parsing PCI host bridge resources.
+Date: Tue, 10 May 2016 17:19:55 +0200
+Message-Id: <1462893601-8937-6-git-send-email-tn@semihalf.com>
+In-Reply-To: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-There is no parent bridge for root bus, meaning pcibios_setup_bridge()
-isn't invoked for root bus. The PE for root bus is the ancestor of
-other PEs in PELTV. It means we need PE for root bus populated before
-all others.
+Platforms that have memory mapped IO port (such as ARM64) need special
+handling for PCI I/O resources. For host bridge's resource probing case
+these resources need to be fixed up with pci_register_io_range/pci_remap_iospace etc.
 
-This populates the PE for root bus in pcibios_setup_bridge() path
-if it's not existing. The PE number next to the reserved one is
-used as the PE# to avoid holes in continuous M64 space.
+The same I/O resources need to be released after hotplug
+removal so that it can be re-added back by the pci_remap_iospace
+function during insertion. As a consequence we unmap I/O resources
+with pci_unmap_iospace when we release host bridge resources.
 
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 ---
- arch/powerpc/platforms/powernv/pci-ioda.c | 49 ++++++++++++++++++++++++-------
- arch/powerpc/platforms/powernv/pci.h      |  2 ++
- 2 files changed, 41 insertions(+), 10 deletions(-)
+ drivers/acpi/pci_root.c | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index f63902a..de3f292 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -201,14 +201,14 @@ static int pnv_ioda2_init_m64(struct pnv_phb *phb)
- 	set_bit(phb->ioda.m64_bar_idx, &phb->ioda.m64_bar_alloc);
- 
- 	/*
--	 * Strip off the segment used by the reserved PE, which is
--	 * expected to be 0 or last one of PE capabicity.
-+	 * Exclude the segments for reserved and root bus PE, which
-+	 * are first or last two PEs.
- 	 */
- 	r = &phb->hose->mem_resources[1];
- 	if (phb->ioda.reserved_pe_idx == 0)
--		r->start += phb->ioda.m64_segsize;
-+		r->start += (2 * phb->ioda.m64_segsize);
- 	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
--		r->end -= phb->ioda.m64_segsize;
-+		r->end -= (2 * phb->ioda.m64_segsize);
- 	else
- 		pr_warn("  Cannot strip M64 segment for reserved PE#%d\n",
- 			phb->ioda.reserved_pe_idx);
-@@ -288,14 +288,14 @@ static int pnv_ioda1_init_m64(struct pnv_phb *phb)
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index ae3fe4e..cb3071d 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -719,6 +719,34 @@ next:
+ 			resource_list_add_tail(entry, resources);
  	}
- 
- 	/*
--	 * Exclude the segment used by the reserved PE, which
--	 * is expected to be 0 or last supported PE#.
-+	 * Exclude the segments for reserved and root bus PE, which
-+	 * are first or last two PEs.
- 	 */
- 	r = &phb->hose->mem_resources[1];
- 	if (phb->ioda.reserved_pe_idx == 0)
--		r->start += phb->ioda.m64_segsize;
-+		r->start += (2 * phb->ioda.m64_segsize);
- 	else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1))
--		r->end -= phb->ioda.m64_segsize;
-+		r->end -= (2 * phb->ioda.m64_segsize);
- 	else
- 		pr_warn("  Cannot cut M64 segment for reserved PE#%d\n",
- 			phb->ioda.reserved_pe_idx);
-@@ -1066,8 +1066,13 @@ static struct pnv_ioda_pe *pnv_ioda_setup_bus_PE(struct pci_bus *bus, bool all)
- 		return NULL;
- 	}
- 
-+	/* PE number for root bus should have been reserved */
-+	if (pci_is_root_bus(bus) &&
-+	    phb->ioda.root_pe_idx != IODA_INVALID_PE)
-+		pe = &phb->ioda.pe_array[phb->ioda.root_pe_idx];
+ }
++static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
++{
++#ifdef PCI_IOBASE
++	struct resource *res = entry->res;
++	resource_size_t cpu_addr = res->start;
++	resource_size_t pci_addr = cpu_addr - entry->offset;
++	resource_size_t length = resource_size(res);
++	unsigned long port;
 +
- 	/* Check if PE is determined by M64 */
--	if (phb->pick_m64_pe)
-+	if (!pe && phb->pick_m64_pe)
- 		pe = phb->pick_m64_pe(bus, all);
- 
- 	/* The PE number isn't pinned by M64 */
-@@ -3149,6 +3154,15 @@ static void pnv_pci_setup_bridge(struct pci_bus *bus, unsigned long type)
- 	struct pnv_ioda_pe *pe;
- 	bool all = (pci_pcie_type(bridge) == PCI_EXP_TYPE_PCI_BRIDGE);
- 
-+	/* The PE for root bus should be realized before any one else */
-+	if (!phb->ioda.root_pe_populated) {
-+		pe = pnv_ioda_setup_bus_PE(phb->hose->bus, false);
-+		if (pe) {
-+			phb->ioda.root_pe_idx = pe->pe_number;
-+			phb->ioda.root_pe_populated = true;
-+		}
-+	}
++	if (pci_register_io_range(cpu_addr, length))
++		goto err;
 +
- 	/* Don't assign PE to PCI bus, which doesn't have subordinate devices */
- 	if (list_empty(&bus->devices))
- 		return;
-@@ -3413,7 +3427,22 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 			phb->ioda.dma32_segmap[segno] = IODA_INVALID_PE;
- 	}
- 	phb->ioda.pe_array = aux + pemap_off;
--	set_bit(phb->ioda.reserved_pe_idx, phb->ioda.pe_alloc);
++	port = pci_address_to_pio(cpu_addr);
++	if (port == (unsigned long)-1)
++		goto err;
 +
-+	/*
-+	 * Choose PE number for root bus, which shouldn't have
-+	 * M64 resources consumed by its child devices. To pick
-+	 * the PE number adjacent to the reserved one if possible.
-+	 */
-+	pnv_ioda_reserve_pe(phb, phb->ioda.reserved_pe_idx);
-+	if (phb->ioda.reserved_pe_idx == 0) {
-+		phb->ioda.root_pe_idx = 1;
-+		pnv_ioda_reserve_pe(phb, phb->ioda.root_pe_idx);
-+	} else if (phb->ioda.reserved_pe_idx == (phb->ioda.total_pe_num - 1)) {
-+		phb->ioda.root_pe_idx = phb->ioda.reserved_pe_idx - 1;
-+		pnv_ioda_reserve_pe(phb, phb->ioda.root_pe_idx);
-+	} else {
-+		phb->ioda.root_pe_idx = IODA_INVALID_PE;
-+	}
++	res->start = port;
++	res->end = port + length - 1;
++	entry->offset = port - pci_addr;
++
++	if (pci_remap_iospace(res, cpu_addr) < 0)
++		goto err;
++	pr_info("Remapped I/O %pa to %pR\n", &cpu_addr, res);
++	return;
++err:
++	res->flags |= IORESOURCE_DISABLED;
++#endif
++}
  
- 	INIT_LIST_HEAD(&phb->ioda.pe_list);
- 	mutex_init(&phb->ioda.pe_list_mutex);
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 80f5326..a81bf01 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -114,6 +114,8 @@ struct pnv_phb {
- 		/* Global bridge info */
- 		unsigned int		total_pe_num;
- 		unsigned int		reserved_pe_idx;
-+		unsigned int		root_pe_idx;
-+		bool			root_pe_populated;
+ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+ {
+@@ -740,6 +768,9 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
+ 			"no IO and memory resources present in _CRS\n");
+ 	else {
+ 		resource_list_for_each_entry_safe(entry, tmp, list) {
++			if (entry->res->flags & IORESOURCE_IO)
++				acpi_pci_root_remap_iospace(entry);
++
+ 			if (entry->res->flags & IORESOURCE_DISABLED)
+ 				resource_list_destroy_entry(entry);
+ 			else
+@@ -811,6 +842,8 @@ static void acpi_pci_root_release_info(struct pci_host_bridge *bridge)
  
- 		/* 32-bit MMIO window */
- 		unsigned int		m32_size;
+ 	resource_list_for_each_entry(entry, &bridge->windows) {
+ 		res = entry->res;
++		if (res->flags & IORESOURCE_IO)
++			pci_unmap_iospace(res);
+ 		if (res->parent &&
+ 		    (res->flags & (IORESOURCE_MEM | IORESOURCE_IO)))
+ 			release_resource(res);
 -- 
-2.1.0
-
+1.9.1
