@@ -1,182 +1,222 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43140 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.136]:60479 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751338AbcEKPxi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 11 May 2016 11:53:38 -0400
-Date: Wed, 11 May 2016 09:53:31 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Tian, Kevin" <kevin.tian@intel.com>
-Cc: Yongji Xie <xyjxie@linux.vnet.ibm.com>,
-	David Laight <David.Laight@ACULAB.COM>,
-	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"aik@ozlabs.ru" <aik@ozlabs.ru>,
-	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-	"paulus@samba.org" <paulus@samba.org>,
-	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
-	"joro@8bytes.org" <joro@8bytes.org>,
-	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
-	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
-	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
-	"eric.auger@linaro.org" <eric.auger@linaro.org>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
-	"alistair@popple.id.au" <alistair@popple.id.au>,
-	"ruscur@russell.cc" <ruscur@russell.cc>
-Subject: Re: [PATCH 5/5] vfio-pci: Allow to mmap MSI-X table if interrupt
- remapping is supported
-Message-ID: <20160511095331.18436241@t450s.home>
-In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D15F84EEBA@SHSMSX101.ccr.corp.intel.com>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-	<1461761010-5452-6-git-send-email-xyjxie@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F842512@SHSMSX101.ccr.corp.intel.com>
-	<f7d73ac3-470d-a0d2-0a97-05be630480dd@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F842653@SHSMSX101.ccr.corp.intel.com>
-	<e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
-	<063D6719AE5E284EB5DD2968C1650D6D5F4B52B5@AcuExch.aculab.com>
-	<4be013bc-e81b-84c5-06d3-e1b3f46b3227@linux.vnet.ibm.com>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F8474A4@SHSMSX101.ccr.corp.intel.com>
-	<20160505090513.56886c12@t450s.home>
-	<AADFC41AFE54684AB9EE6CBC0274A5D15F84EEBA@SHSMSX101.ccr.corp.intel.com>
+	id S1750951AbcEJRpX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Tue, 10 May 2016 13:45:23 -0400
+Date: Tue, 10 May 2016 12:45:18 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, Myron Stowe <mstowe@redhat.com>,
+	x86@kernel.org, Andi Kleen <ak@linux.intel.com>
+Subject: Re: [PATCH] x86/PCI: Fix Broadwell-EP Home Agent & PCU non-compliant
+ BARs
+Message-ID: <20160510174518.GC29582@localhost>
+References: <1462818195-6533-1-git-send-email-prarit@redhat.com>
+ <20160509192030.GA18166@localhost>
+ <5731DCD5.4030208@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5731DCD5.4030208@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 11 May 2016 06:29:06 +0000
-"Tian, Kevin" <kevin.tian@intel.com> wrote:
-
-> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
-> > Sent: Thursday, May 05, 2016 11:05 PM
-> > 
-> > On Thu, 5 May 2016 12:15:46 +0000
-> > "Tian, Kevin" <kevin.tian@intel.com> wrote:
-> >   
-> > > > From: Yongji Xie [mailto:xyjxie@linux.vnet.ibm.com]
-> > > > Sent: Thursday, May 05, 2016 7:43 PM
-> > > >
-> > > > Hi David and Kevin,
-> > > >
-> > > > On 2016/5/5 17:54, David Laight wrote:
-> > > >  
-> > > > > From: Tian, Kevin  
-> > > > >> Sent: 05 May 2016 10:37  
-> > > > > ...  
-> > > > >>> Acutually, we are not aimed at accessing MSI-X table from
-> > > > >>> guest. So I think it's safe to passthrough MSI-X table if we
-> > > > >>> can make sure guest kernel would not touch MSI-X table in
-> > > > >>> normal code path such as para-virtualized guest kernel on PPC64.
-> > > > >>>  
-> > > > >> Then how do you prevent malicious guest kernel accessing it?  
-> > > > > Or a malicious guest driver for an ethernet card setting up
-> > > > > the receive buffer ring to contain a single word entry that
-> > > > > contains the address associated with an MSI-X interrupt and
-> > > > > then using a loopback mode to cause a specific packet be
-> > > > > received that writes the required word through that address.
-> > > > >
-> > > > > Remember the PCIe cycle for an interrupt is a normal memory write
-> > > > > cycle.
-> > > > >
-> > > > > 	David
-> > > > >  
-> > > >
-> > > > If we have enough permission to load a malicious driver or
-> > > > kernel, we can easily break the guest without exposed
-> > > > MSI-X table.
-> > > >
-> > > > I think it should be safe to expose MSI-X table if we can
-> > > > make sure that malicious guest driver/kernel can't use
-> > > > the MSI-X table to break other guest or host. The
-> > > > capability of IRQ remapping could provide this
-> > > > kind of protection.
-> > > >  
-> > >
-> > > With IRQ remapping it doesn't mean you can pass through MSI-X
-> > > structure to guest. I know actual IRQ remapping might be platform
-> > > specific, but at least for Intel VT-d specification, MSI-X entry must
-> > > be configured with a remappable format by host kernel which
-> > > contains an index into IRQ remapping table. The index will find a
-> > > IRQ remapping entry which controls interrupt routing for a specific
-> > > device. If you allow a malicious program random index into MSI-X
-> > > entry of assigned device, the hole is obvious...
-> > >
-> > > Above might make sense only for a IRQ remapping implementation
-> > > which doesn't rely on extended MSI-X format (e.g. simply based on
-> > > BDF). If that's the case for PPC, then you should build MSI-X
-> > > passthrough based on this fact instead of general IRQ remapping
-> > > enabled or not.  
-> > 
-> > I don't think anyone is expecting that we can expose the MSI-X vector
-> > table to the guest and the guest can make direct use of it.  The end
-> > goal here is that the guest on a power system is already
-> > paravirtualized to not program the device MSI-X by directly writing to
-> > the MSI-X vector table.  They have hypercalls for this since they
-> > always run virtualized.  Therefore a) they never intend to touch the
-> > MSI-X vector table and b) they have sufficient isolation that a guest
-> > can only hurt itself by doing so.
-> > 
-> > On x86 we don't have a), our method of programming the MSI-X vector
-> > table is to directly write to it. Therefore we will always require QEMU
-> > to place a MemoryRegion over the vector table to intercept those
-> > accesses.  However with interrupt remapping, we do have b) on x86, which
-> > means that we don't need to be so strict in disallowing user accesses
-> > to the MSI-X vector table.  It's not useful for configuring MSI-X on
-> > the device, but the user should only be able to hurt themselves by
-> > writing it directly.  x86 doesn't really get anything out of this
-> > change, but it helps this special case on power pretty significantly
-> > aiui.  Thanks,
-> >   
+On Tue, May 10, 2016 at 09:06:29AM -0400, Prarit Bhargava wrote:
 > 
-> Allowing guest direct write to MSI-x table has system-wide impact.
-> As I explained earlier, hypervisor needs to control "interrupt_index"
-> programmed in MSI-X entry, which is used to associate a specific
-> IRQ remapping entry. Now if you expose whole MSI-x table to guest, 
-> it can program random index into MSI-X entry to associate with 
-> any IRQ remapping entry and then there won't be any isolation per se.
 > 
-> You can check "5.5.2 MSI and MSI-X Register Programming" in VT-d
-> spec.
+> On 05/09/2016 03:20 PM, Bjorn Helgaas wrote:
+> > [+cc Andi]
+> > 
+> > Hi Prarit,
+> > 
+> > On Mon, May 09, 2016 at 02:23:15PM -0400, Prarit Bhargava wrote:
+> >> commit b894157 ("x86/PCI: Mark Broadwell-EP Home Agent & PCU as having
+> >> non-compliant BARs") marks Home Agent 0 & PCU has having non-compliant
+> >> BARs.
+> > 
+> > By convention, I use 12-char SHA1 ("[core] abbrev=12" in .git/config)
+> > when citing commits.
+> > 
+> >> Before commit b894157,
+> >>
+> >> pci 0000:ff:12.0: BAR 2: failed to assign [mem size 0x00000040]
+> >> pci 0000:ff:12.0: BAR 4: failed to assign [mem size 0x00000040]
+> >> pci 0000:ff:12.4: BAR 2: failed to assign [mem size 0x00000040]
+> >> pci 0000:ff:12.4: BAR 4: failed to assign [mem size 0x00000040]
+> >> pci 0000:ff:12.0: BAR 1: failed to assign [mem size 0x00000010]
+> >> pci 0000:ff:12.0: BAR 3: failed to assign [mem size 0x00000010]
+> >> pci 0000:ff:12.0: BAR 5: failed to assign [mem size 0x00000010]
+> >> pci 0000:ff:12.4: BAR 1: failed to assign [mem size 0x00000010]
+> >> pci 0000:ff:12.4: BAR 3: failed to assign [mem size 0x00000010]
+> >> pci 0000:ff:12.4: BAR 5: failed to assign [mem size 0x00000010]
+> >> pci 0000:7f:12.0: BAR 2: failed to assign [mem size 0x00000040]
+> >> pci 0000:7f:12.0: BAR 4: failed to assign [mem size 0x00000040]
+> >> pci 0000:7f:12.4: BAR 2: failed to assign [mem size 0x00000040]
+> >> pci 0000:7f:12.4: BAR 4: failed to assign [mem size 0x00000040]
+> >> pci 0000:7f:12.0: BAR 1: failed to assign [mem size 0x00000010]
+> >> pci 0000:7f:12.0: BAR 3: failed to assign [mem size 0x00000010]
+> >> pci 0000:7f:12.0: BAR 5: failed to assign [mem size 0x00000010]
+> >> pci 0000:7f:12.4: BAR 1: failed to assign [mem size 0x00000010]
+> >> pci 0000:7f:12.4: BAR 3: failed to assign [mem size 0x00000010]
+> >> pci 0000:7f:12.4: BAR 5: failed to assign [mem size 0x00000010]
+> >>
+> >> After commit b894157, there are still "failed to assign" messages,
+> >> as well as new "failed to assign" messages for ff:12.0, ff:1e.3,
+> >> 7f:12.0, and 7f:1e.3.
+> >>
+> >>  pci 0000:ff:12.4: BAR 2: failed to assign [mem size 0x00000040]
+> >>  pci 0000:ff:12.4: BAR 4: failed to assign [mem size 0x00000040]
+> >>  pci 0000:ff:12.4: BAR 1: failed to assign [mem size 0x00000010]
+> >>  pci 0000:ff:12.4: BAR 3: failed to assign [mem size 0x00000010]
+> >>  pci 0000:ff:12.4: BAR 5: failed to assign [mem size 0x00000010]
+> >>  pci 0000:ff:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
+> >>  pci 0000:ff:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
+> >>  pci 0000:7f:12.4: BAR 2: failed to assign [mem size 0x00000040]
+> >>  pci 0000:7f:12.4: BAR 4: failed to assign [mem size 0x00000040]
+> >>  pci 0000:7f:12.4: BAR 1: failed to assign [mem size 0x00000010]
+> >>  pci 0000:7f:12.4: BAR 3: failed to assign [mem size 0x00000010]
+> >>  pci 0000:7f:12.4: BAR 5: failed to assign [mem size 0x00000010]
+> >>  pci 0000:7f:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
+> >>  pci 0000:7f:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
+> >>
+> >> There are two issues with commit b894157.
+> >>
+> >> The first is that there is another device, Home Agent 1 & PCU, that must
+> >> also be quirked in the same way.
+> >>
+> >> \# lspci -n -s 7f:12.4
+> >> 7f:12.4 0880: 8086:6f60 (rev 01)
+> > 
+> > I think we should split this into two patches: one to add quirks for
+> > the Home Agent 1 & PCU, and a second for the resource assignment
+> > issue.
+> > 
+> > Can you dig up a spec for these devices?  I should have asked Andi for
+> > that the first time around, but I didn't.  Maybe there's something
+> > we're not interpreting correctly.  I still have a hard time believing
+> > that Intel would produce a PCI device with non-BAR registers where the
+> > BARs are supposed to be.  Maybe there's supposed to be an EA
+> > capability or something that tells us to ignore these registers.
+> 
+> It looks like Andi has provided this information in his reply.  I will add some
+> of that info in my next post.
+> 
+> > 
+> > Can you collect "lspci -vvxxx" output for one of these devices?
+> 
+> # lspci -xxxvv -s 7f:12.4
+> 7f:12.4 System peripheral: Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3
+> v4/Xeon D Home Agent 1 (rev 01)
+>         Subsystem: Intel Corporation Xeon E7 v4/Xeon E5 v4/Xeon E3 v4/Xeon D
+> Home Agent 1
+>         Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr-
+> Stepping- SERR- FastB2B- DisINTx-
+>         Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort-
+> <MAbort- >SERR- <PERR- INTx-
+> 00: 86 80 60 6f 00 00 00 00 01 00 80 08 00 00 80 00
+> 10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 20: 00 00 00 00 00 00 00 00 00 00 00 00 86 80 60 6f
+> 30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 40: 04 f5 01 00 04 f5 21 00 00 f0 21 00 00 f0 21 00
+> 50: 00 f0 21 00 00 f0 21 00 00 f0 21 00 00 f0 21 00
+> 60: 00 f0 21 00 00 f0 21 00 00 f0 21 00 00 f0 21 00
+> 70: 00 00 02 00 00 00 00 00 00 00 88 44 04 00 00 00
+> 80: 02 82 30 03 88 4a 61 40 00 00 00 00 00 00 00 00
+> 90: 00 00 02 00 00 00 01 00 5c 00 00 00 18 00 00 00
+> a0: 00 00 00 00 93 97 15 00 0d 34 90 00 00 30 00 00
+> b0: 00 00 00 00 00 00 00 00 00 00 00 00 0c 00 00 00
+> c0: 00 00 00 00 00 00 00 00 2d 2d 00 00 f8 e3 00 00
+> d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+> 
+> 
+> > 
+> >> After applying the quirk patch, we end up with:
+> >>
+> >> pci 0000:ff:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
+> >> pci 0000:ff:12.4: BAR 6: failed to assign [mem size 0x00000001 pref]
+> >> pci 0000:ff:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
+> >> pci 0000:7f:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
+> >> pci 0000:7f:12.4: BAR 6: failed to assign [mem size 0x00000001 pref]
+> >> pci 0000:7f:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
+> >>
+> >> which drives us to the second issue.  Since the PCI devices now
+> >> have unnassigned resources (BARs), pcibios_assign_resources()
+> >> call pci_assign_unassigned_root_bus_resources().  This results in the
+> >> messages above.  I have added a non_compliant_bars check in
+> >> pbus_assign_resources_sorted() to avoid the unassigned device's resources
+> >> from being added to the failed resources list for the bus.
+> > 
+> > I don't understand this part yet.  If we mark a device with
+> > non_compliant_bars, __pci_read_base() will return without doing
+> > anything, so we should not fill in the struct resource at all.  It
+> > wouldn't have the "mem" or "pref" bits shown above, and it shouldn't
+> > participate in pcibios_assign_resources() at all.  All of these are
+> > for BAR 6 (the ROM BAR), so maybe there's something wrong with the way
+> > to handle that in particular.
+> 
+> I did some additional debugging after reading your comment.  I dumped out the
+> contents of the resources for each bus's devices.  I concentrated on one
+> particular device, 7f:12.4 (the output of lspci is above).
+> 
+> Before the call to pcibios_assign_resources(), 7f:12.4 has
+> 
+> pci 0000:7f:12.4: PRARIT:    BAR 6: [mem 0x00000000 pref]
+> 
+> so that means it the resource was not changed/modified in the call of
+> pcibios_assign_resources().
+> 
+> I took a closer look at the code, and I think I know what the issue is.  In
+> pci_read_bases() the code does
+> 
+>         if (rom) {
+>                 struct resource *res = &dev->resource[PCI_ROM_RESOURCE];
+>                 dev->rom_base_reg = rom;
+>                 res->flags = IORESOURCE_MEM | IORESOURCE_PREFETCH |
+>                                 IORESOURCE_READONLY | IORESOURCE_CACHEABLE |
+>                                 IORESOURCE_SIZEALIGN;
+>                 __pci_read_base(dev, pci_bar_mem32, res, rom);
+>         }
+> 
+> which initializes the res->flags field.  This field is later checked in
+> pcibios_allocate_dev_rom_resource() which is called from
+> pcibios_assign_resources(), and the resource is declared unassigned because it
+> has a res->flags field.
+> 
+> Perhaps (sorry for the cut-and-paste) this is a more correct fix which would
+> avoid the setting of res->flags?  There is no point in setting
+> dev->rom_base_reg, etc., if this is a non-compliant device.
 
-I think you're extrapolating beyond the vfio interface.  The change
-here is to remove the vfio protection of the MSI-X vector table when
-the system provides interrupt isolation.  The argument is that this is
-safe to do because the hardware protects the host from erroneous and
-malicious user programming, but it is not meant to provide a means to
-program MSI-X directly through the vector table.  This is effectively
-the same as general DMA programming, if the vfio programming model is
-not followed the device generates iommu faults.  I do have a concern
-that userspace driver writers are going to more often presume they can
-use the vector table directly because of this change, but I don't know
-that that is sufficient reason to prevent such a change.  They'll
-quickly discover the device generates faults on interrupt rather than
-working as expected.
+Right, thanks for the analysis.  I think this is a much better fix. We
+should not set any flags in this case.
 
-The question of how this affects the hypervisor is completely
-separate.  Vfio in the kernel is a userspace driver interface, not a
-hypervisor.  QEMU is the hypervisor.  We have no plans to provide the VM
-with direct access to the MSI-X vector table for x86 guests on QEMU.
-There will still be a MemoryRegion emulating access to the vector table
-in order to translate writes into vfio interrupt ioctls.  POWER would
-drop the MemoryRegion so that the full page is mapped to the guest,
-with the expectation that the guest never makes use of it since MSI-X
-is always configured via hypercalls on POWER systems.  Likewise I
-expect ARM will still make use of the MemoryRegion emulating the vector
-table, which leaves them exposed to the performance issue POWER is
-trying to solve here since ARM also has 64k page support and has no
-paravirtualized MSI-X programming interface afaik.  x86 is not
-impervious to this issue either, but a 4k page size falls within the
-PCI spec recommendations for MSI-X structure alignment, so it's much
-more rare to have issues. We have certainly seen hardware vendors that
-ignore the PCI spec alignment recommendations, but so far only for
-placing device registers within the same page as the PBA, which is an
-easier problem to deal with since the PBA is relatively unused by
-drivers.  This may be an area where we need to develop a paravirt
-interface for MSI-X programming which disable the MemoryRegion
-emulating the vector table when used.  Thanks,
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 2384100..818731a 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -361,7 +361,7 @@ static void pci_read_bases(struct pci_dev *dev, unsigned int
+>                 pos += __pci_read_base(dev, pci_bar_unknown, res, reg);
+>         }
+> 
+> -       if (rom) {
+> +       if (rom && !dev->non_compliant_bars) {
 
-Alex
+What if we just checked dev->non_compliant_bars as the very first
+thing in pci_read_bases()?  I think I originally put the check in
+__pci_read_base() because we considered doing this on a per-BAR basis.
+But I later decided that was overkill.
+
+I could be convinced either way, but if we put the check in
+pci_read_bases(), I think we could probably drop the one in
+__pci_read_base().  We do call __pci_read_base() directly from
+sriov_init(), but we don't have any issues with BARs in SR-IOV
+capabilities yet, so we probably don't need to worry about that path.
+
+>                 struct resource *res = &dev->resource[PCI_ROM_RESOURCE];
+>                 dev->rom_base_reg = rom;
+>                 res->flags = IORESOURCE_MEM | IORESOURCE_PREFETCH |
+> 
+> P.
