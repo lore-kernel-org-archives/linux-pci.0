@@ -1,223 +1,154 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-Id: <201605230345.u4N3hUYr043556@mx0a-001b2d01.pphosted.com>
-Subject: Re: [PATCH v3] vfio-pci: Allow to mmap sub-page MMIO BARs if the mmio
- page is exclusive
+Return-Path: <m-karicheri2@ti.com>
+Return-Path: <m-karicheri2@ti.com>
+Subject: Re: PCIe issue with NIC card that has 64bit BARs
 To: Alex Williamson <alex.williamson@redhat.com>
-References: <1463048451-7086-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160519163319.0fdaf76a@ul30vt.home>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	nikunj@linux.vnet.ibm.com, gwshan@linux.vnet.ibm.com,
-	kevin.tian@intel.com
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Date: Mon, 23 May 2016 11:45:34 +0800
+References: <5730E5DA.4020906@ti.com> <20160509203436.GC18166@localhost>
+ <5730FADF.7000009@ti.com> <20160509152351.17389748@t450s.home>
+ <57310353.5020802@ti.com> <20160509171246.3c33478b@t450s.home>
+CC: Bjorn Helgaas <helgaas@kernel.org>,
+        "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+From: Murali Karicheri <m-karicheri2@ti.com>
+Message-ID: <5731E880.1020400@ti.com>
+Date: Tue, 10 May 2016 09:56:16 -0400
 MIME-Version: 1.0
-In-Reply-To: <20160519163319.0fdaf76a@ul30vt.home>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20160509171246.3c33478b@t450s.home>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/5/20 6:33, Alex Williamson wrote:
-
-> On Thu, 12 May 2016 18:20:51 +0800
-> Yongji Xie <xyjxie@linux.vnet.ibm.com> wrote:
->
->> Current vfio-pci implementation disallows to mmap
->> sub-page(size < PAGE_SIZE) MMIO BARs because these BARs' mmio
->> page may be shared with other BARs. This will cause some
->> performance issues when we passthrough a PCI device with
->> this kind of BARs. Guest will be not able to handle the mmio
->> accesses to the BARs which leads to mmio emulations in host.
+On 05/09/2016 07:12 PM, Alex Williamson wrote:
+> On Mon, 9 May 2016 17:38:27 -0400
+> Murali Karicheri <m-karicheri2@ti.com> wrote:
+> 
+>> On 05/09/2016 05:23 PM, Alex Williamson wrote:
+>>> On Mon, 9 May 2016 17:02:23 -0400
+>>> Murali Karicheri <m-karicheri2@ti.com> wrote:
+>>>   
+>>>> Hi Bjorn,
+>>>>
+>>>> Thanks for your quick response!
+>>>> See below for some follow up question.
+>>>>
+>>>> On 05/09/2016 04:34 PM, Bjorn Helgaas wrote:  
+>>>>> Hi Murali,
+>>>>>
+>>>>> On Mon, May 09, 2016 at 03:32:42PM -0400, Murali Karicheri wrote:    
+>>>>>> Bjorn,
+>>>>>>
+>>>>>> I am running into an issue with using a rtk8168 GiB NIC card with Keystone PCIe.
+>>>>>> It works for 32bit BARs such as the Marvel SATA controller on K2E. On another
+>>>>>> recent SoC (K2G) that re-uses the same driver and hardware, I have issues
+>>>>>> bringing up PCIe.
+>>>>>>
+>>>>>> The rtk8168 NIC gets detected, but all read values are zeros. Based on the boot
+>>>>>> log, it appears to be getting assigned 64bit BARs. See the log on K2E with Marvell
+>>>>>> controller and that on K2G with rtk8168. Is there way we can get it assigned
+>>>>>> 32Bit BAR and get it functional? Keystone is a 32bit ARM A15 SoC.
+>>>>>>
+>>>>>> Here are the logs.
+>>>>>>
+>>>>>> K2E log with Marvel controller (Good working case).
+>>>>>> ===================================================
+>>>>>> [    0.236353] pci 0000:00:00.0: BAR 8: assigned [mem 0x60000000-0x600fffff]
+>>>>>> [    0.236364] pci 0000:00:00.0: BAR 9: assigned [mem 0x60100000-0x601fffff pref]
+>>>>>> [    0.236373] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
+>>>>>> [    0.236385] pci 0000:01:00.0: BAR 6: assigned [mem 0x60100000-0x6010ffff pref]
+>>>>>> [    0.236394] pci 0000:01:00.0: BAR 5: assigned [mem 0x60000000-0x600001ff]
+>>>>>> [    0.236406] pci 0000:01:00.0: BAR 4: assigned [io  0x1000-0x100f]
+>>>>>> [    0.236418] pci 0000:01:00.0: BAR 0: assigned [io  0x1010-0x1017]
+>>>>>> [    0.236429] pci 0000:01:00.0: BAR 2: assigned [io  0x1018-0x101f]
+>>>>>> [    0.236441] pci 0000:01:00.0: BAR 1: assigned [io  0x1020-0x1023]
+>>>>>> [    0.236452] pci 0000:01:00.0: BAR 3: assigned [io  0x1024-0x1027]
+>>>>>> [    0.236464] pci 0000:00:00.0: PCI bridge to [bus 01]
+>>>>>> [    0.236472] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
+>>>>>> [    0.236481] pci 0000:00:00.0:   bridge window [mem 0x60000000-0x600fffff]
+>>>>>> [    0.236490] pci 0000:00:00.0:   bridge window [mem 0x60100000-0x601fffff pref]
+>>>>>>
+>>>>>> K2G log with Tealtek NIC card
+>>>>>> =============================
+>>>>>> [    2.311572] keystone-pcie 21801000.pcie: PCI host bridge to bus 0000:00
+>>>>>> [    2.318188] pci_bus 0000:00: root bus resource [bus 00-ff]
+>>>>>> [    2.323844] pci_bus 0000:00: root bus resource [io  0x0000-0x3fff]
+>>>>>> [    2.330023] pci_bus 0000:00: root bus resource [mem 0x50000000-0x5fffffff]    
+>>>>>
+>>>>> There's no "(bus address ...)" annotation here, which means these
+>>>>> windows map CPU addresses to identical bus addresses.  The
+>>>>> "[mem 0x50000000-0x5fffffff]" window is a 32-bit window.
+>>>>>     
+>>>>>> [    2.337567] PCI: bus0: Fast back to back transfers disabled
+>>>>>> [    2.361159] PCI: bus1: Fast back to back transfers disabled
+>>>>>> [    2.366889] pci 0000:00:00.0: BAR 8: assigned [mem 0x50000000-0x500fffff]
+>>>>>> [    2.373841] pci 0000:00:00.0: BAR 9: assigned [mem 0x50100000-0x501fffff pref]
+>>>>>> [    2.381061] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
+>>>>>> [    2.387225] pci 0000:01:00.0: BAR 6: assigned [mem 0x50100000-0x5011ffff pref]
+>>>>>> [    2.394505] pci 0000:01:00.0: BAR 4: assigned [mem 0x50120000-0x5012ffff 64bit pref]
+>>>>>> [    2.402288] pci 0000:01:00.0: BAR 2: assigned [mem 0x50000000-0x50000fff 64bit]    
+>>>>>
+>>>>> I assume these BARs (2 and 4) are the ones in question.  They are
+>>>>> 64-bit BARs, but the addresses currently assigned to them fit in 32
+>>>>> bits, so the space is already all below 4GB.
+>>>>>
+>>>>> The BAR type (32-bit or 64-bit) is built into the device; Linux
+>>>>> doesn't have any influence on that.  The type is encoded in the
+>>>>> low-order four bits of the BAR, which are read-only.
+>>>>>     
+>>>>>> [    2.409610] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
+>>>>>> [    2.415729] pci 0000:00:00.0: PCI bridge to [bus 01]
+>>>>>> [    2.420693] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
+>>>>>> [    2.426806] pci 0000:00:00.0:   bridge window [mem 0x50000000-0x500fffff]
+>>>>>> [    2.433610] pci 0000:00:00.0:   bridge window [mem 0x50100000-0x501fffff pref]
+>>>>>> [    2.441365] pcieport 0000:00:00.0: Signaling PME through PCIe PME interrupt
+>>>>>> [    2.448323] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
+>>>>>> [    2.455567] r8169 Gigabit Ethernet driver 2.3LK-NAPI loaded
+>>>>>> [    2.461332] r8169 0000:01:00.0: enabling device (0140 -> 0143)
+>>>>>> [    2.468789] r8169 0000:01:00.0 eth0: RTL8169 at 0xf0d6a000, 00:00:00:00:00:00, XID 00000000 IRQ 286    
+>>>>>
+>>>>> Looks like this is printed by rtl_init_one().  I see that we read
+>>>>> zeroes from MAC0 and TxConfig, but I don't see any PCI problem here.    
+>>>> So if device specific configuration registers for this device are mapped
+>>>> to the window to have 64bit access, they are to be accessed with proper
+>>>> address to get the lower 32 bits of the data, right? So is there a chance
+>>>> it is making access to upper 4 bytes and hence reading all zeros?
+>>>>    
+>>>>> Could it be that some EEPROM on the card hasn't been programmed yet?
+>>>>> Does the card work if you put it in a different machine?
+>>>>>     
+>>>> Probably. I will ask this to the owner of r8169 driver. He seems to think
+>>>> the access is not right.  I need to find a PC that has PCIe slot to do this
+>>>> test. Meanwhile do you know of any 1GiB NIC card that has 32bit BARs and
+>>>> driver in Linux?   
+>>>
+>>> I happen to have an Intel 82571EB (PRO/1000 PT Dual Port Server
+>>> Adapter) that only has 32bit BARs:
+>>>
+>>> 02:00.0 Ethernet controller [0200]: Intel Corporation 82571EB Gigabit Ethernet Controller [8086:105e] (rev 06)
+>>> 	Region 0: Memory at fe7e0000 (32-bit, non-prefetchable) [size=128K]
+>>> 	Region 1: Memory at fe7c0000 (32-bit, non-prefetchable) [size=128K]
+>>> 	Region 2: I/O ports at e800 [size=32]
+>>> 02:00.1 Ethernet controller [0200]: Intel Corporation 82571EB Gigabit Ethernet Controller [8086:105e] (rev 06)
+>>> 	Region 0: Memory at fe7a0000 (32-bit, non-prefetchable) [size=128K]
+>>> 	Region 1: Memory at fe780000 (32-bit, non-prefetchable) [size=128K]
+>>> 	Region 2: I/O ports at e400 [size=32]  
+>> Alex,
 >>
->> However, not all sub-page BARs will share page with other BARs.
->> We should allow to mmap the sub-page MMIO BARs which we can
->> make sure will not share page with other BARs.
+>> Thanks for the response. I see following mini pci card which match with your
+>> description.
 >>
->> This patch adds support for this case. And we try to add a
->> dummy resource to reserve the remainder of the page which
->> hot-add device's BAR might be assigned into. But it's not
->> necessary to handle the case when the BAR is not page aligned.
->> Because we can't expect the BAR will be assigned into the same
->> location in a page in guest when we passthrough the BAR. And
->> it's hard to access this BAR in userspace because we have
->> no way to get the BAR's location in a page.
+>> http://www.amazon.com/Intel-1000-Dual-Server-Adapter/dp/B000BMZHX2/ref=sr_1_1?ie=UTF8&qid=1462829688&sr=8-1&keywords=intel+expi9402pt
 >>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->>   drivers/vfio/pci/vfio_pci.c         |   70 +++++++++++++++++++++++++++++++----
->>   drivers/vfio/pci/vfio_pci_private.h |    8 ++++
->>   2 files changed, 71 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
->> index 188b1ff..253c22f 100644
->> --- a/drivers/vfio/pci/vfio_pci.c
->> +++ b/drivers/vfio/pci/vfio_pci.c
->> @@ -110,6 +110,50 @@ static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
->>   	return (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA;
->>   }
->>   
->> +static bool vfio_pci_bar_mmap_supported(struct vfio_pci_device *vdev, int index)
->> +{
->> +	struct resource *res = vdev->pdev->resource + index;
->> +	struct vfio_pci_dummy_resource *dummy_res = NULL;
->> +
->> +	if (!IS_ENABLED(CONFIG_VFIO_PCI_MMAP))
->> +		return false;
->> +
->> +	if (!(res->flags & IORESOURCE_MEM))
->> +		return false;
->> +
->> +	/*
->> +	 * The PCI core shouldn't set up a resource with a type but
->> +	 * zero size. But there may be bugs that cause us to do that.
->> +	 */
->> +	if (!resource_size(res))
->> +		return false;
->> +
->> +	if (resource_size(res) >= PAGE_SIZE)
->> +		return true;
->> +
->> +	if (!(res->start & ~PAGE_MASK)) {
->> +		/*
->> +		 * Add a dummy resource to reserve the remainder
->> +		 * of the exclusive page in case that hot-add
->> +		 * device's bar is assigned into it.
->> +		 */
->> +		dummy_res = kzalloc(sizeof(*dummy_res), GFP_KERNEL);
->> +		if (dummy_res == NULL)
->> +			return false;
->> +		dummy_res->resource.start = res->end + 1;
->> +		dummy_res->resource.end = res->start + PAGE_SIZE - 1;
->> +		dummy_res->resource.flags = res->flags;
->> +		if (request_resource(res->parent, &dummy_res->resource)) {
->> +			kfree(dummy_res);
->> +			return false;
->> +		}
->> +		dummy_res->index = index;
->> +		list_add(&dummy_res->res_next, &vdev->dummy_resources_list);
->> +		return true;
->> +	}
->> +	return false;
->> +}
-> The name of this function is vfio_pci_bar_mmap_supported(), which
-> suggests we should be able to call it at any point to test if mmap is
-> supported, but that's not what it does.  It's actually a one time setup
-> function, that also happens to return what it found or managed to
-> reserve.  If we were to call this a second time, we might get a
-> different result.  So I think this either needs to change to something
-> like:
->
-> static void vfio_pci_probe_mmaps(struct vfio_pci_device *vdev)
->
-> where it loops through all the BARs and results in a valid
-> bar_mmap_supported array, or the function should be made smart enough
-> to identify if the necessary resource has already been allocated such
-> that it can be call multiple times per BAR, at which point we could
-> remove the bar_mmap_supported array.
+>> Is this same thing? I assume e1000e/82571.c is the driver for this.
+>> Could you please confirm so that I can procure the same?
+> 
+> I would venture to say yes, but I offer no guarantees ;)
+> 
+> Ark seems to indicate all 1000 PT dual port cards use that chip:
+> http://ark.intel.com/products/50494/Intel-PRO1000-PT-Dual-Port-Server-Adapter
+> 
+Thanks Alex!
 
-Thanks for your comment. I would change the name of this function
-and reserve bar_mmap_supported array to cache the result.
+Murali
 
-> A comment describing why we can only support sub-page mmaps for
-> resources aligned at the start of a page would also be helpful for
-> future maintenance here.
-
-OK. I will add this.
-
->> +
->>   static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev);
->>   static void vfio_pci_disable(struct vfio_pci_device *vdev);
->>   
->> @@ -145,10 +189,12 @@ static bool vfio_pci_nointx(struct pci_dev *pdev)
->>   static int vfio_pci_enable(struct vfio_pci_device *vdev)
->>   {
->>   	struct pci_dev *pdev = vdev->pdev;
->> -	int ret;
->> +	int ret, bar;
->>   	u16 cmd;
->>   	u8 msix_pos;
->>   
->> +	INIT_LIST_HEAD(&vdev->dummy_resources_list);
->> +
->>   	pci_set_power_state(pdev, PCI_D0);
->>   
->>   	/* Don't allow our initial saved state to include busmaster */
->> @@ -218,12 +264,17 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
->>   		}
->>   	}
->>   
->> +	for (bar = PCI_STD_RESOURCES; bar <= PCI_STD_RESOURCE_END; bar++) {
->> +		vdev->bar_mmap_supported[bar] =
->> +				vfio_pci_bar_mmap_supported(vdev, bar);
->> +	}
->>   	return 0;
->>   }
->>   
->>   static void vfio_pci_disable(struct vfio_pci_device *vdev)
->>   {
->>   	struct pci_dev *pdev = vdev->pdev;
->> +	struct vfio_pci_dummy_resource *dummy_res, *tmp;
->>   	int i, bar;
->>   
->>   	/* Stop the device from further DMA */
->> @@ -252,6 +303,13 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
->>   		vdev->barmap[bar] = NULL;
->>   	}
->>   
->> +	list_for_each_entry_safe(dummy_res, tmp,
->> +				 &vdev->dummy_resources_list, res_next) {
->> +		list_del(&dummy_res->res_next);
->> +		release_resource(&dummy_res->resource);
->> +		kfree(dummy_res);
->> +	}
->> +
->>   	vdev->needs_reset = true;
->>   
->>   	/*
->> @@ -623,9 +681,7 @@ static long vfio_pci_ioctl(void *device_data,
->>   
->>   			info.flags = VFIO_REGION_INFO_FLAG_READ |
->>   				     VFIO_REGION_INFO_FLAG_WRITE;
->> -			if (IS_ENABLED(CONFIG_VFIO_PCI_MMAP) &&
->> -			    pci_resource_flags(pdev, info.index) &
->> -			    IORESOURCE_MEM && info.size >= PAGE_SIZE) {
->> +			if (vdev->bar_mmap_supported[info.index]) {
->>   				info.flags |= VFIO_REGION_INFO_FLAG_MMAP;
->>   				if (info.index == vdev->msix_bar) {
->>   					ret = msix_sparse_mmap_cap(vdev, &caps);
->> @@ -1049,16 +1105,16 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
->>   		return -EINVAL;
->>   	if (index >= VFIO_PCI_ROM_REGION_INDEX)
->>   		return -EINVAL;
->> -	if (!(pci_resource_flags(pdev, index) & IORESOURCE_MEM))
->> +	if (!vdev->bar_mmap_supported[index])
->>   		return -EINVAL;
->>   
->> -	phys_len = pci_resource_len(pdev, index);
->> +	phys_len = PAGE_ALIGN(pci_resource_len(pdev, index));
->>   	req_len = vma->vm_end - vma->vm_start;
->>   	pgoff = vma->vm_pgoff &
->>   		((1U << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1);
->>   	req_start = pgoff << PAGE_SHIFT;
->>   
->> -	if (phys_len < PAGE_SIZE || req_start + req_len > phys_len)
->> +	if (req_start + req_len > phys_len)
->>   		return -EINVAL;
-> I'm only able to find your QEMU patch from last year, have you posted a
-> version making use of this latest proposal?  Is the expectation still
-> that QEMU modify the BAR size as seen from the guest to the host page
-> size for sub-page regions exposing the MMAP flag?  Does that result in
-> any known incompatibilities with drivers in the guest?  Thanks,
->
-> Alex
-
-I will post the latest version soon. In QEMU, we would change the size of
-MemoryRegion instead of VFIORegion. So guest will see the real size. The
-only limit is that BAR must be in a exclusive page in guest too. Otherwise,
-we would not allow to passthrough this BAR. On Power, we have changed
-the SLOF to enforce all BARs to be page aligned in guest.
-
-Thanks,
-Yongji
+-- 
+Murali Karicheri
+Linux Kernel, Keystone
