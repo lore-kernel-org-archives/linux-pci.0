@@ -1,96 +1,64 @@
-Return-Path: <xyjxie@linux.vnet.ibm.com>
-Return-Path: <xyjxie@linux.vnet.ibm.com>
-Message-Id: <201605250554.u4P5sRqv014439@mx0a-001b2d01.pphosted.com>
-Subject: Re: [PATCH 2/5] iommu: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have
- capability of IRQ remapping
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1461761010-5452-3-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160524211149.GC16463@localhost>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        iommu@lists.linux-foundation.org, alex.williamson@redhat.com,
-        bhelgaas@google.com, aik@ozlabs.ru, benh@kernel.crashing.org,
-        paulus@samba.org, mpe@ellerman.id.au, joro@8bytes.org,
-        warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-        nikunj@linux.vnet.ibm.com, eric.auger@linaro.org, will.deacon@arm.com,
-        gwshan@linux.vnet.ibm.com, David.Laight@ACULAB.COM,
-        alistair@popple.id.au, ruscur@russell.cc
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Date: Wed, 25 May 2016 13:54:23 +0800
+Return-Path: <yhlu.kernel@gmail.com>
+Return-Path: <yhlu.kernel@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20160524211149.GC16463@localhost>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: yhlu.kernel@gmail.com
+In-Reply-To: <20160506182600.GA22909@localhost>
+References: <CAE9FiQU_XSMfxFPSOrMjQ2DGnrM0D5T=0ORfDEBxqWggGrzc+Q@mail.gmail.com>
+	<CAE9FiQX_8oXj=FD8pKe=eBL=YWZY-=C8sZ6yMbmkwegLVOR-fA@mail.gmail.com>
+	<1462322260.30470.76.camel@kernel.crashing.org>
+	<20160504012531.GB17170@localhost>
+	<CAE9FiQU=e2bf=+KDrOETf_T-KPLQsSDiG5GqVFqgtvSWXwUz4w@mail.gmail.com>
+	<CAE9FiQV19OUsSL34GzDXYtVG=Xs724CpwHNfu3HCmYMUqbmrqQ@mail.gmail.com>
+	<20160504151722.GA22051@localhost>
+	<CAE9FiQXEBkVak0No9dfOidzCrR+UVu44WyBEK8SqTUSiJKeJbg@mail.gmail.com>
+	<CAE9FiQUEMq4aj2iAq=P0xu4=1MGuOWgOubpkn=2h+YLXgwJKRQ@mail.gmail.com>
+	<CAE9FiQWJ0VH-PNsz96qW8_u14x6bJ6cd66+Zg=j3L4zXWvhq0Q@mail.gmail.com>
+	<20160506182600.GA22909@localhost>
+Date: Mon, 9 May 2016 23:18:41 -0700
+Message-ID: <CAE9FiQUJAsJf_z7218q0Ar65sr4jPbm0hEQEg2QwaK=cypzJAg@mail.gmail.com>
+Subject: Re: [PATCH v11 04/60] sparc/PCI: Use correct offset for bus address
+ to resource
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, David Miller <davem@davemloft.net>,
+	Bjorn Helgaas <bhelgaas@google.com>, Linus Torvalds <torvalds@linux-foundation.org>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
+	Yijing Wang <wangyijing@huawei.com>, Khalid Aziz <khalid.aziz@oracle.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Michael Ellerman <mpe@ellerman.id.au>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/5/25 5:11, Bjorn Helgaas wrote:
-
-> On Wed, Apr 27, 2016 at 08:43:27PM +0800, Yongji Xie wrote:
->> The capability of IRQ remapping is abstracted on IOMMU side on
->> some archs. There is a existing flag IOMMU_CAP_INTR_REMAP for this.
->>
->> To have a universal flag to test this capability for different
->> archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
->> when IOMMU_CAP_INTR_REMAP is set.
->>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->>   drivers/iommu/iommu.c |   15 +++++++++++++++
->>   1 file changed, 15 insertions(+)
->>
->> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
->> index 0e3b009..5d2b6f6 100644
->> --- a/drivers/iommu/iommu.c
->> +++ b/drivers/iommu/iommu.c
->> @@ -813,6 +813,16 @@ struct iommu_group *pci_device_group(struct device *dev)
->>   	return group;
->>   }
->>   
->> +static void pci_check_msi_remapping(struct pci_dev *pdev,
->> +					const struct iommu_ops *ops)
->> +{
->> +	struct pci_bus *bus = pdev->bus;
->> +
->> +	if (ops->capable(IOMMU_CAP_INTR_REMAP) &&
->> +		!(bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP))
->> +		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
->> +}
-> This looks an awful lot like the pci_bus_check_msi_remapping() you add
-> elsewhere.  Why do we need both?
-
-I will modify this function as you suggested.  And we add this function
-here because some iommu drivers would be initialed after PCI probing.
-
->>   /**
->>    * iommu_group_get_for_dev - Find or create the IOMMU group for a device
->>    * @dev: target device
->> @@ -871,6 +881,9 @@ static int add_iommu_group(struct device *dev, void *data)
->>   	const struct iommu_ops *ops = cb->ops;
->>   	int ret;
->>   
->> +	if (dev_is_pci(dev) && ops->capable)
->> +		pci_check_msi_remapping(to_pci_dev(dev), ops);
->> +
->>   	if (!ops->add_device)
->>   		return 0;
->>   
->> @@ -913,6 +926,8 @@ static int iommu_bus_notifier(struct notifier_block *nb,
->>   	 * result in ADD/DEL notifiers to group->notifier
->>   	 */
->>   	if (action == BUS_NOTIFY_ADD_DEVICE) {
->> +		if (dev_is_pci(dev) && ops->capable)
->> +			pci_check_msi_remapping(to_pci_dev(dev), ops);
-> These calls don't smell right either.  Why do we need dev_is_pci()
-> checks here?
-
-Some platform devices may also call this.
-
-> Can't this be done in the PCI probe path somehow, e.g.,
-> in pci_set_bus_msi_domain() or something?
+On Fri, May 6, 2016 at 11:26 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> v3, that have more change to pass *res to make powerpc prot setting simple.
 >
+> This looks corrupted.  On v4.6-rc2:
+>
+>   $ stg import -M m/yh3
+>   Checking for changes in the working directory ... done
+>   Importing patch "re-patch-v11-04-60-sparc-pci" ... fatal: corrupt patch at line 266
+>   stg import: Diff does not apply cleanly
 
-Yes, this can be done in pci_create_root_bus(). But it could only
-handle the case that iommu drivers are initialed before PCI probing.
+Just resent them in plain/text mail. Please have a look.
 
-Regards,
-Yongji
+>
+...
+>
+> This looks like it could possibly be split into several patches.  I
+> think it's too big to apply as-is.
+
+Not that big except it remove lots of lines.
+
+>
+> I'm not sure what bug this is fixing or what improvement it's making.
+
+fix sparc64 proc mmap path, as it can not pass checking in pci_mmap_fits()
+with comparing BAR value and resource adder without offset.
+
+also it will make
+   sparc/PCI: Use correct offset for bus address to resource
+and other one much simple.
+
+Thanks
+
+Yinghai
