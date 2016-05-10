@@ -1,239 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:5699 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750710AbcEWERp (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 23 May 2016 00:17:45 -0400
-Received: from pps.filterd (m0075771.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4N3dRq5038764
-	for <linux-pci@vger.kernel.org>; Sun, 22 May 2016 23:45:46 -0400
-Message-Id: <201605230345.u4N3dRq5038764@mx0a-001b2d01.pphosted.com>
-Received: from e28smtp04.in.ibm.com (e28smtp04.in.ibm.com [125.16.236.4])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 232te9mf5m-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Sun, 22 May 2016 23:45:46 -0400
-Received: from localhost
-	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Mon, 23 May 2016 09:15:42 +0530
-Subject: Re: [PATCH v3] vfio-pci: Allow to mmap sub-page MMIO BARs if the mmio
- page is exclusive
-To: Alex Williamson <alex.williamson@redhat.com>
-References: <1463048451-7086-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160519163319.0fdaf76a@ul30vt.home>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, bhelgaas@google.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	nikunj@linux.vnet.ibm.com, gwshan@linux.vnet.ibm.com,
-	kevin.tian@intel.com
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Date: Mon, 23 May 2016 11:45:34 +0800
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:34341 "EHLO
+	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750978AbcEJRAQ (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Tue, 10 May 2016 13:00:16 -0400
+Subject: Re: [PATCH v2 1/2] Documentation: DT: bindings: Add Broadcom STB PCIe
+ bindings
+To: Arnd Bergmann <arnd@arndb.de>,
+	Florian Fainelli <f.fainelli@gmail.com>
+References: <1462475700-1654-1-git-send-email-f.fainelli@gmail.com>
+ <1462475700-1654-2-git-send-email-f.fainelli@gmail.com>
+ <4513390.VWu0VVAxOl@wuerfel>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com,
+	bhelgaas@google.com
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <5732139C.80101@gmail.com>
+Date: Tue, 10 May 2016 10:00:12 -0700
 MIME-Version: 1.0
-In-Reply-To: <20160519163319.0fdaf76a@ul30vt.home>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <4513390.VWu0VVAxOl@wuerfel>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/5/20 6:33, Alex Williamson wrote:
-
-> On Thu, 12 May 2016 18:20:51 +0800
-> Yongji Xie <xyjxie@linux.vnet.ibm.com> wrote:
->
->> Current vfio-pci implementation disallows to mmap
->> sub-page(size < PAGE_SIZE) MMIO BARs because these BARs' mmio
->> page may be shared with other BARs. This will cause some
->> performance issues when we passthrough a PCI device with
->> this kind of BARs. Guest will be not able to handle the mmio
->> accesses to the BARs which leads to mmio emulations in host.
->>
->> However, not all sub-page BARs will share page with other BARs.
->> We should allow to mmap the sub-page MMIO BARs which we can
->> make sure will not share page with other BARs.
->>
->> This patch adds support for this case. And we try to add a
->> dummy resource to reserve the remainder of the page which
->> hot-add device's BAR might be assigned into. But it's not
->> necessary to handle the case when the BAR is not page aligned.
->> Because we can't expect the BAR will be assigned into the same
->> location in a page in guest when we passthrough the BAR. And
->> it's hard to access this BAR in userspace because we have
->> no way to get the BAR's location in a page.
->>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->>   drivers/vfio/pci/vfio_pci.c         |   70 +++++++++++++++++++++++++++++++----
->>   drivers/vfio/pci/vfio_pci_private.h |    8 ++++
->>   2 files changed, 71 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
->> index 188b1ff..253c22f 100644
->> --- a/drivers/vfio/pci/vfio_pci.c
->> +++ b/drivers/vfio/pci/vfio_pci.c
->> @@ -110,6 +110,50 @@ static inline bool vfio_pci_is_vga(struct pci_dev *pdev)
->>   	return (pdev->class >> 8) == PCI_CLASS_DISPLAY_VGA;
->>   }
->>   
->> +static bool vfio_pci_bar_mmap_supported(struct vfio_pci_device *vdev, int index)
->> +{
->> +	struct resource *res = vdev->pdev->resource + index;
->> +	struct vfio_pci_dummy_resource *dummy_res = NULL;
+On 05/05/2016 02:15 PM, Arnd Bergmann wrote:
+>> +Required properties:
+>> +- compatible: must be one of: "brcm,bcm7425-pcie"
+>> +			      "brcm,bcm7435-pcie"
+>> +			      "brcm,bcm7445-pcie"
 >> +
->> +	if (!IS_ENABLED(CONFIG_VFIO_PCI_MMAP))
->> +		return false;
+>> +- reg: specifies the physical base address of the controller registers and
+>> +  its length
 >> +
->> +	if (!(res->flags & IORESOURCE_MEM))
->> +		return false;
+>> +- interrupt-parent: must be a reference (phandle) to the parent interrupt
+>> +  controller in the system (7038-l1-intc on MIPS, GIC on ARM/ARM64)
 >> +
->> +	/*
->> +	 * The PCI core shouldn't set up a resource with a type but
->> +	 * zero size. But there may be bugs that cause us to do that.
->> +	 */
->> +	if (!resource_size(res))
->> +		return false;
+>> +- interrrupts: first interrupt must be the Level 1 interrupt number corresponding
+>> +  to the main PCIe RC interrupt, second interrupt must be the MSI interrupt
+>> +  See the interrupt-parent documentation for the number of cells and their meaning:
+>> +  MIPS: Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7038-l1-intc.txt
+>> +  ARM/ARM64: Documentation/devicetree/bindings/interrupt-controller/arm,gic.txt
 >> +
->> +	if (resource_size(res) >= PAGE_SIZE)
->> +		return true;
->> +
->> +	if (!(res->start & ~PAGE_MASK)) {
->> +		/*
->> +		 * Add a dummy resource to reserve the remainder
->> +		 * of the exclusive page in case that hot-add
->> +		 * device's bar is assigned into it.
->> +		 */
->> +		dummy_res = kzalloc(sizeof(*dummy_res), GFP_KERNEL);
->> +		if (dummy_res == NULL)
->> +			return false;
->> +		dummy_res->resource.start = res->end + 1;
->> +		dummy_res->resource.end = res->start + PAGE_SIZE - 1;
->> +		dummy_res->resource.flags = res->flags;
->> +		if (request_resource(res->parent, &dummy_res->resource)) {
->> +			kfree(dummy_res);
->> +			return false;
->> +		}
->> +		dummy_res->index = index;
->> +		list_add(&dummy_res->res_next, &vdev->dummy_resources_list);
->> +		return true;
->> +	}
->> +	return false;
->> +}
-> The name of this function is vfio_pci_bar_mmap_supported(), which
-> suggests we should be able to call it at any point to test if mmap is
-> supported, but that's not what it does.  It's actually a one time setup
-> function, that also happens to return what it found or managed to
-> reserve.  If we were to call this a second time, we might get a
-> different result.  So I think this either needs to change to something
-> like:
->
-> static void vfio_pci_probe_mmaps(struct vfio_pci_device *vdev)
->
-> where it loops through all the BARs and results in a valid
-> bar_mmap_supported array, or the function should be made smart enough
-> to identify if the necessary resource has already been allocated such
-> that it can be call multiple times per BAR, at which point we could
-> remove the bar_mmap_supported array.
+>> +- interrupt-names: must be "pcie", and if present "msi"
+> 
+> When I suggested splitting out the MSI support, I was thinking (but not writing)
+> that you'd use an msi-parent property to refer to the node that holds the
+> msi-controller as well.
 
-Thanks for your comment. I would change the name of this function
-and reserve bar_mmap_supported array to cache the result.
+Oh got it now, and it can actually refer to iself.
 
-> A comment describing why we can only support sub-page mmaps for
-> resources aligned at the start of a page would also be helpful for
-> future maintenance here.
+> 
+>> +- ranges: ranges for the PCI outbound windows, no I/O or prefetchable windows
+>> +  must be specified here, only non-prefetchable. 32-bits windows or 64-bits
+>> +  windows are allowed based on the host processor's capabilities (ARM w/ LPAE,
+>> +  ARM64).
+> 
+> So this supports 64-bit non-prefetchable windows? Usually 64-bit windows
+> are prefetchable.
 
-OK. I will add this.
+I have yet to verify this, but on ARM64-based STB this should indeed be
+the case.
 
->> +
->>   static void vfio_pci_try_bus_reset(struct vfio_pci_device *vdev);
->>   static void vfio_pci_disable(struct vfio_pci_device *vdev);
->>   
->> @@ -145,10 +189,12 @@ static bool vfio_pci_nointx(struct pci_dev *pdev)
->>   static int vfio_pci_enable(struct vfio_pci_device *vdev)
->>   {
->>   	struct pci_dev *pdev = vdev->pdev;
->> -	int ret;
->> +	int ret, bar;
->>   	u16 cmd;
->>   	u8 msix_pos;
->>   
->> +	INIT_LIST_HEAD(&vdev->dummy_resources_list);
->> +
->>   	pci_set_power_state(pdev, PCI_D0);
->>   
->>   	/* Don't allow our initial saved state to include busmaster */
->> @@ -218,12 +264,17 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
->>   		}
->>   	}
->>   
->> +	for (bar = PCI_STD_RESOURCES; bar <= PCI_STD_RESOURCE_END; bar++) {
->> +		vdev->bar_mmap_supported[bar] =
->> +				vfio_pci_bar_mmap_supported(vdev, bar);
->> +	}
->>   	return 0;
->>   }
->>   
->>   static void vfio_pci_disable(struct vfio_pci_device *vdev)
->>   {
->>   	struct pci_dev *pdev = vdev->pdev;
->> +	struct vfio_pci_dummy_resource *dummy_res, *tmp;
->>   	int i, bar;
->>   
->>   	/* Stop the device from further DMA */
->> @@ -252,6 +303,13 @@ static void vfio_pci_disable(struct vfio_pci_device *vdev)
->>   		vdev->barmap[bar] = NULL;
->>   	}
->>   
->> +	list_for_each_entry_safe(dummy_res, tmp,
->> +				 &vdev->dummy_resources_list, res_next) {
->> +		list_del(&dummy_res->res_next);
->> +		release_resource(&dummy_res->resource);
->> +		kfree(dummy_res);
->> +	}
->> +
->>   	vdev->needs_reset = true;
->>   
->>   	/*
->> @@ -623,9 +681,7 @@ static long vfio_pci_ioctl(void *device_data,
->>   
->>   			info.flags = VFIO_REGION_INFO_FLAG_READ |
->>   				     VFIO_REGION_INFO_FLAG_WRITE;
->> -			if (IS_ENABLED(CONFIG_VFIO_PCI_MMAP) &&
->> -			    pci_resource_flags(pdev, info.index) &
->> -			    IORESOURCE_MEM && info.size >= PAGE_SIZE) {
->> +			if (vdev->bar_mmap_supported[info.index]) {
->>   				info.flags |= VFIO_REGION_INFO_FLAG_MMAP;
->>   				if (info.index == vdev->msix_bar) {
->>   					ret = msix_sparse_mmap_cap(vdev, &caps);
->> @@ -1049,16 +1105,16 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
->>   		return -EINVAL;
->>   	if (index >= VFIO_PCI_ROM_REGION_INDEX)
->>   		return -EINVAL;
->> -	if (!(pci_resource_flags(pdev, index) & IORESOURCE_MEM))
->> +	if (!vdev->bar_mmap_supported[index])
->>   		return -EINVAL;
->>   
->> -	phys_len = pci_resource_len(pdev, index);
->> +	phys_len = PAGE_ALIGN(pci_resource_len(pdev, index));
->>   	req_len = vma->vm_end - vma->vm_start;
->>   	pgoff = vma->vm_pgoff &
->>   		((1U << (VFIO_PCI_OFFSET_SHIFT - PAGE_SHIFT)) - 1);
->>   	req_start = pgoff << PAGE_SHIFT;
->>   
->> -	if (phys_len < PAGE_SIZE || req_start + req_len > phys_len)
->> +	if (req_start + req_len > phys_len)
->>   		return -EINVAL;
-> I'm only able to find your QEMU patch from last year, have you posted a
-> version making use of this latest proposal?  Is the expectation still
-> that QEMU modify the BAR size as seen from the guest to the host page
-> size for sub-page regions exposing the MMAP flag?  Does that result in
-> any known incompatibilities with drivers in the guest?  Thanks,
->
-> Alex
+> 
+>> +- brcm,log2-scb-sizes: log2 size of the SCB window that is mapped to PCIe space
+>> +  there must be exactly one value per memory controller present in the system
+>> +  (ranges from 1 to 3)
+> 
+> I'm still not too happy with this property. I see no reason for the log2
+> format (rather than length in bytes, or offset/length tuples, or dma-ranges,
+> or phandles pointing to the memory controllers). I think we need to discuss
+> this some more.
 
-I will post the latest version soon. In QEMU, we would change the size of
-MemoryRegion instead of VFIORegion. So guest will see the real size. The
-only limit is that BAR must be in a exclusive page in guest too. Otherwise,
-we would not allow to passthrough this BAR. On Power, we have changed
-the SLOF to enforce all BARs to be page aligned in guest.
+The two critical pieces of information that the PCIe RC needs are:
 
-Thanks,
-Yongji
+- number of memory controllers present in the system to avoid
+configuring a window to a non-existing or non-populated memory controller
 
+- size of the memory populated on the memory controller
+
+You would think that we should somehow be able to derive this
+information from the "memory" node, but there are a few caveats:
+
+- on MIPS platforms, we have discontiguous physical memory ranges (256MB
+@ 0x0, then 768MB or 1792MB @ 0x 0x20000000 and 1GB @ 0x90000000), yet
+the PCIe RC does not know about the hole(s)
+
+- on ARM platforms, we have an identiy mapping for the PAs below 4GB,
+but when we cross it, we have additional non-linear memory regions
+
+Both of these memory nodes would imply we know how to identify which
+physical address belongs to which memory controller, while this is
+actually possible and known, it creates a dependency on another piece of
+driver to provide that information.
+
+We do have memory controller nodes populated in the Device Tree, however
+their binding (out of tree for the moment) does only specify their
+programmable register interface, and not how how much physical memory
+and where they provide to the system.
+
+It does seem like we should be able to utilize the "dma-ranges" property
+to determine both the memory controller number and their respective
+populated memory sizes.
+
+In the case where we have an identiy mapping though, this seems a little
+redundant, but less of a stretch than our custom properties and nodes.
+
+Does that sound reasonable to you?
+-- 
+Florian
