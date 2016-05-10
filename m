@@ -1,153 +1,102 @@
-Return-Path: <gabriele.paoloni@huawei.com>
-Return-Path: <gabriele.paoloni@huawei.com>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Tomasz Nowicki <tn@semihalf.com>,
-        "helgaas@kernel.org"
-	<helgaas@kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "will.deacon@arm.com"
-	<will.deacon@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "hanjun.guo@linaro.org"
-	<hanjun.guo@linaro.org>,
-        "Lorenzo.Pieralisi@arm.com"
-	<Lorenzo.Pieralisi@arm.com>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jchandra@broadcom.com" <jchandra@broadcom.com>
-CC: "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
-        "mw@semihalf.com" <mw@semihalf.com>,
-        "Liviu.Dudau@arm.com"
-	<Liviu.Dudau@arm.com>,
-        "ddaney@caviumnetworks.com"
-	<ddaney@caviumnetworks.com>,
-        Wangyijing <wangyijing@huawei.com>,
-        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-        "msalter@redhat.com" <msalter@redhat.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-        "linux-acpi@vger.kernel.org"
-	<linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "linaro-acpi@lists.linaro.org"
-	<linaro-acpi@lists.linaro.org>,
-        "jcm@redhat.com" <jcm@redhat.com>,
-        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
-        "dhdang@apm.com"
-	<dhdang@apm.com>,
-        "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>,
-        "cov@codeaurora.org"
-	<cov@codeaurora.org>
-Subject: RE: [PATCH V7 00/11] Support for generic ACPI based PCI host
- controller
-Date: Wed, 11 May 2016 12:53:25 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED8E264@lhreml503-mbs>
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED8DF51@lhreml503-mbs>
- <57331290.7070104@semihalf.com>
-In-Reply-To: <57331290.7070104@semihalf.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Tue, 10 May 2016 11:27:21 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Tomasz Nowicki <tn@semihalf.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	rafael@kernel.org, arnd@arndb.de, will.deacon@arm.com,
+	catalin.marinas@arm.com, hanjun.guo@linaro.org,
+	okaya@codeaurora.org, jiang.liu@linux.intel.com,
+	jchandra@broadcom.com, robert.richter@caviumnetworks.com,
+	mw@semihalf.com, Liviu.Dudau@arm.com, ddaney@caviumnetworks.com,
+	wangyijing@huawei.com, Suravee.Suthikulpanit@amd.com,
+	msalter@redhat.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
+	jcm@redhat.com
+Subject: Re: [PATCH V6 01/13] pci, acpi, x86, ia64: Move ACPI host bridge
+ device companion assignment to core code.
+Message-ID: <20160510102721.GB15552@red-moon>
+References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
+ <20160427024537.GH6789@localhost>
+ <5729AE92.2090106@semihalf.com>
+ <8183907.bBqvG1yEkP@vostro.rjw.lan>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8183907.bBqvG1yEkP@vostro.rjw.lan>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tomasz
+On Tue, May 10, 2016 at 12:18:59AM +0200, Rafael J. Wysocki wrote:
 
-> -----Original Message-----
-> From: Tomasz Nowicki [mailto:tn@semihalf.com]
-> Sent: 11 May 2016 12:08
-> To: Gabriele Paoloni; helgaas@kernel.org; arnd@arndb.de;
-> will.deacon@arm.com; catalin.marinas@arm.com; rafael@kernel.org;
-> hanjun.guo@linaro.org; Lorenzo.Pieralisi@arm.com; okaya@codeaurora.org;
-> jchandra@broadcom.com
-> Cc: robert.richter@caviumnetworks.com; mw@semihalf.com;
-> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; Wangyijing;
-> Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
-> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
-> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
-> acpi@lists.linaro.org; jcm@redhat.com; andrea.gallo@linaro.org;
-> dhdang@apm.com; jeremy.linton@arm.com; liudongdong (C);
-> cov@codeaurora.org
-> Subject: Re: [PATCH V7 00/11] Support for generic ACPI based PCI host
-> controller
->=20
-> Hi Gabriele,
->=20
-> On 11.05.2016 12:41, Gabriele Paoloni wrote:
-> > Hi Tomasz
-> >
-> >> -----Original Message-----
-> >> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
-> >> owner@vger.kernel.org] On Behalf Of Tomasz Nowicki
-> >> Sent: 10 May 2016 16:20
-> >> To: helgaas@kernel.org; arnd@arndb.de; will.deacon@arm.com;
-> >> catalin.marinas@arm.com; rafael@kernel.org; hanjun.guo@linaro.org;
-> >> Lorenzo.Pieralisi@arm.com; okaya@codeaurora.org;
-> jchandra@broadcom.com
-> >> Cc: robert.richter@caviumnetworks.com; mw@semihalf.com;
-> >> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; Wangyijing;
-> >> Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
-> >> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
-> >> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
-> >> acpi@lists.linaro.org; jcm@redhat.com; andrea.gallo@linaro.org;
-> >> dhdang@apm.com; jeremy.linton@arm.com; liudongdong (C);
-> >> cov@codeaurora.org; Tomasz Nowicki
-> >> Subject: [PATCH V7 00/11] Support for generic ACPI based PCI host
-> >> controller
-> >>
-> >>  From the functionality point of view this series may be split into
-> the
-> >> following logic parts:
-> >> 1. New ECAM API and update for users of the pci-host-common API
-> >> 2. Necessary fixes as the preparation for using driver on ARM64.
-> >> 3. Use new MCFG interface and implement generic ACPI based PCI host
-> >> controller driver.
-> >> 4. Enable above driver on ARM64
-> >>
-> >> Patches has been built on top of 4.6-rc7 and can be found here:
-> >> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v7)
-> >>
-> >> This has been tested on Cavium ThunderX server. Any help in
-> reviewing
-> >> and
-> >> testing is very appreciated.
-> >>
-> >> v6 -> v7
-> >> - drop quirks handling
-> >
-> > Maybe I missed something in the v6 discussion thread; when was it
-> > decided to drop quirk handling?
->=20
-> I had such requests in previous series.
->=20
-> >
-> > I think it is important to have this in place to accommodate
-> different
-> > vendors. If the intention is to keep this patchset "clean" maybe
-> > we can add it as a separate patch on top later on...
-> >
-> > What's your view?
->=20
-> Yes, keeping these things separated should help in review. Obviously I
-> agree that we need quirk handling but currently there is no
-> implementation which we all agree upon. For the test, you can use quirk
-> handling approach from the previous series until we sort out final
-> solution.
+[...]
 
-Great
+> > >> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> > >> index ae3fe4e..4581e0e 100644
+> > >> --- a/drivers/acpi/pci_root.c
+> > >> +++ b/drivers/acpi/pci_root.c
+> > >> @@ -564,6 +564,11 @@ static int acpi_pci_root_add(struct acpi_device *device,
+> > >>   		}
+> > >>   	}
+> > >>
+> > >> +	/*
+> > >> +	 * pci_create_root_bus() needs to detect the parent device type,
+> > >> +	 * so initialize its companion data accordingly.
+> > >> +	 */
+> > >> +	ACPI_COMPANION_SET(&device->dev, device);
+> > >>   	root->device = device;
+> > >>   	root->segment = segment & 0xFFFF;
+> > >>   	strcpy(acpi_device_name(device), ACPI_PCI_ROOT_DEVICE_NAME);
+> > >> @@ -846,7 +851,7 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+> > >>
+> > >>   	pci_acpi_root_add_resources(info);
+> > >>   	pci_add_resource(&info->resources, &root->secondary);
+> > >> -	bus = pci_create_root_bus(NULL, busnum, ops->pci_ops,
+> > >> +	bus = pci_create_root_bus(&device->dev, busnum, ops->pci_ops,
+> > >>   				  sysdata, &info->resources);
+> > >
+> > > "device" here is a struct acpi_device *.  Rafael, is that the right
+> > > thing to do?  I dimly recall proposing something similar long ago and
+> > > that it turned out to be a bad idea.
+> > >
+> > 
+> > Joining Bjorn's question. Rafael, do you recall what was the issue here 
+> > from the past?
+> 
+> Yes, I do.
+> 
+> Anything struct acpi_device doesn't represent a real device.  It
+> represents a firmware object that can be associated with a device.
+> IOW, nothing under LNXSYSTM\:00/ should ever be used as the parent or
+> sibling etc with respect to anything outside of that directory.  In
+> fact, the entire LNXSYSTM\:00/ should be located under
+> /sys/firmware/acpi/ and it was a mistake to put it under
+> /sys/devices/.
+> 
+> One immediate consequence of the above change, AFAICS, would be that
+> the whole PCI hierarchy would now hang under
+> /sys/devices/LNXSYSTM\:00/LNXSYBUS\:00/PNP0A08\:00/ which would not
+> make any sense whatever, because
+> /sys/devices/LNXSYSTM\:00/LNXSYBUS\:00/PNP0A08\:00/physical_node
+> already points to /sys/devices/pci0000\:00/.
+> 
+> IOW, both PNP0A08\:00/ and pci0000\:00/ already represent the same
+> thing, ie. the host bridge.
+> 
+> If you want to have a parent for pci0000\:00/, you need a
+> physical_node for LNXSYBUS\:00 and point to that as the parent from
+> pci0000\:00/.  That at least will lead to a sysfs hierarchy that makes
+> sense, although it may break user space tools I suppose (which may be
+> assuming that pci0000\:00/ will always be present directly under
+> /sys/devices/).
 
-This explains perfectly
+Ok, I have a question though. As an example, DT based host controllers
+(that pass the parent pointer to pci_create_root_bus()), are already
+rooted at the respective host controller platform device sysfs path, so
+if user space can't cope with that, that is a problem *now* on some
+systems unless I am missing something.
 
-We will apply previous series quirks and try to test the patchset
-from Huawei side
+Anyway, thanks for clarifying the companion handling mechanism, we
+decidedly have to find a proper way to handle it instead of working
+around it.
 
-Many Thanks
-
-Gab
-
->=20
-> Thanks,
-> Tomasz
+Lorenzo
