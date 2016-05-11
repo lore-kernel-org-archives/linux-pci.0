@@ -1,68 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50611 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753329AbcEWPHQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 23 May 2016 11:07:16 -0400
-Date: Mon, 23 May 2016 09:07:11 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Keith Busch <keith.busch@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	Jens Axboe <axboe@fb.com>, linux-nvme@lists.infradead.org
-Subject: Re: [PATCH 1/2] pci: Error disabling SR-IOV if in VFs assigned
-Message-ID: <20160523090711.12fa34f9@ul30vt.home>
-In-Reply-To: <20160523105532.GB26331@infradead.org>
-References: <1463521199-16604-1-git-send-email-keith.busch@intel.com>
-	<20160517160832.51fc0304@t450s.home>
-	<20160523105532.GB26331@infradead.org>
+Return-Path: <keith.busch@intel.com>
+Return-Path: <keith.busch@intel.com>
+Date: Wed, 11 May 2016 13:06:50 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCHv4] pcie: Add driver for Downstream Port Containment
+Message-ID: <20160511170649.GA31047@localhost.localdomain>
+References: <1461882288-31506-1-git-send-email-keith.busch@intel.com>
+ <20160511160817.GA24089@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160511160817.GA24089@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 23 May 2016 03:55:32 -0700
-Christoph Hellwig <hch@infradead.org> wrote:
-
-> On Tue, May 17, 2016 at 04:08:32PM -0600, Alex Williamson wrote:
-> > On Tue, 17 May 2016 15:39:58 -0600
-> > Keith Busch <keith.busch@intel.com> wrote:
-> >   
-> > > Every sriov capable driver has to check if any guest is using a virtual
-> > > function prior to disabling, so let's make it common code.  
-> > 
-> > This is not true, the PCI_DEV_FLAGS_ASSIGNED flag is inherently racy,
-> > so checking it is really only a courtesy for broken drivers that
-> > still make use of it.  I don't object to adding it here, though I
-> > wish the entire interface was deprecated, but it's only a minimal amount
-> > of insurance as a VF might get assigned immediately following your added
-> > test or might not participate in the assigned device flagging at all.  
+On Wed, May 11, 2016 at 11:08:17AM -0500, Bjorn Helgaas wrote:
 > 
-> Si should we just kill it? As far as I can tell it's only used in these
-> kinds of boilerplate checks.
-
-Long term, yes, but perhaps KVM legacy PCI device assignment needs to
-be not only deprecated, but removed first.
-
-> > I
-> > believe the better way to handle this is with proper host drivers for
-> > assigned devices that manage the driver .remove callback properly while
-> > devices are in use.  The only reason to handle assigned devices
-> > specially in this case is when they don't have proper host drivers
-> > managing them, which is a problem that we've fixed.  Thanks,  
+> I know I already merged this, but I just thought of a more
+> philosophical question.  Why is this a "port service driver" as
+> opposed to being simply part of the PCI core like ARI, ACS, etc.?
 > 
-> We always use pci-stub now, don't we?
+> I guess you did make DPC tristate, so from that point of view, it
+> probably has to use the driver structure to make it convenient to load
+> after boot.  Does that add value?  Do we expect people to make a
+> decision about whether to load pcie-dpc?  Or maybe we plan to autoload
+> it if the DPC capability is present?  Does your patch enable that,
+> i.e., does it expose something udev can use to autoload it?
+> 
+> I've been wondering whether the portdrv service driver concept was a
+> mistake.  With the exception of DPC, I think all the portdrv service
+> drivers are bool, so there's no question of having to load a module.
+> I think using portdrv means we delay initialization of some things
+> that we should do earlier.  For example, I think we should setup
+> pciehp much earlier, when we enumerate the bridge.  And the service
+> driver registration and capability discovery code adds a fair amount
+> of complication that I'm not sure is necessary.
+> 
+> So I guess the question is: why did you make DPC a portdrv service
+> driver, and what bad things would happen if we integrated it into the
+> PCI core without exposing it as a separate service.
 
-pci-stub's only purpose is to prevent other drivers from binding to a
-device, such as while it's in used by legacy KVM device assignment.
-pci-stub has no visibility whether a device is in use or not, and will
-happily unbind the device at any point in time.  Thus legacy KVM device
-assignment with pci-stub makes use of this horrible flag in a vain
-attempt to prevent devices from disappearing, littering every possible
-remove path with these sorts of checks when really the driver holding
-the assigned device should block or maybe allow an error return from
-the .remove callback.  Xen pci-back also sets this flag, but I would
-hope there's a sensible solution available there and they just adopted
-use of this flag without really questioning that it works or makes
-sense. Thanks,
+Good points. I actually hadn't considered making this part of core,
+so I don't have all the pros+cons for making this a port services
+driver. Mainly, DPC seemed similar to HP and AER since it takes
+interrupts, so followed their example. The other optional extended
+capabilities you mention don't need interrupts. Since we rely on the
+port driver to initialize port's interrupt vectors, DPC has to be a port
+services driver in order to safely use these, right?
 
-Alex
+I made this tristate from vendor request to allow unloading the module;
+sounded reasonable at the time, but didn't consider the implications.
+I don't think anyone tested it that way, so may have been a mistake. We
+don't have the rules for when it needs to load, so it'd have to load
+manually at which point it looks too late.
