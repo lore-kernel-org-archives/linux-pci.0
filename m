@@ -1,150 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:54840 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750985AbcEYG0E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 25 May 2016 02:26:04 -0400
-In-Reply-To: <201605180148.u4I1iVkr005251@mx0a-001b2d01.pphosted.com>
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, benh@kernel.crashing.org,
-	paulus@samba.org
-From: Michael Ellerman <mpe@ellerman.id.au>
-Cc: mikey@neuling.org, mrochs@linux.vnet.ibm.com,
-	gpiccoli@linux.vnet.ibm.com, linux-pci@vger.kernel.org,
-	frederic.barrat@fr.ibm.com, gwshan@linux.vnet.ibm.com,
-	imunsie@au1.ibm.com, andrew.donnellan@au1.ibm.com,
-	bhelgaas@google.com
-Subject: Re: [v6] powerpc/pci: Assign fixed PHB number based on device-tree properties
-Message-Id: <3rF2NB4btGz9sds@ozlabs.org>
-Date: Wed, 25 May 2016 16:26:02 +1000 (AEST)
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Prarit Bhargava <prarit@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: Prarit Bhargava <prarit@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, Andi Kleen <ak@linux.intel.com>
+Subject: [PATCH 1/2] x86/PCI: Add pci_bdwep_bar() quirk entry for Broadwell-EP Home Agent 1
+Date: Wed, 11 May 2016 06:52:09 -0400
+Message-Id: <1462963930-18506-2-git-send-email-prarit@redhat.com>
+In-Reply-To: <1462963930-18506-1-git-send-email-prarit@redhat.com>
+References: <1462963930-18506-1-git-send-email-prarit@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2016-18-05 at 01:48:00 UTC, "Guilherme G. Piccoli" wrote:
-> The domain/PHB field of PCI addresses has its value obtained from a
-> global variable, incremented each time a new domain (represented by
-> struct pci_controller) is added on the system. The domain addition
-> process happens during boot or due to PHB hotplug add.
-> 
-> As recent kernels are using predictable naming for network interfaces,
-> the network stack is more tied to PCI naming. This can be a problem in
-> hotplug scenarios, because PCI addresses will change if devices are
-> removed and then re-added. This situation seems unusual, but it can
-> happen if a user wants to replace a NIC without rebooting the machine,
-> for example.
-> 
-> This patch changes the way PCI domain values are generated: now, we use
-> device-tree properties to assign fixed PHB numbers to PCI addresses
-> when available (meaning pSeries and PowerNV cases). We also use a bitmap
-> to allow dynamic PHB numbering when device-tree properties are not
-> used. This bitmap keeps track of used PHB numbers and if a PHB is
-> released (by hotplug operations for example), it allows the reuse of
-> this PHB number, avoiding PCI address to change in case of device remove
-> and re-add soon after. No functional changes were introduced.
-> 
-> Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
-> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Reviewed-by: Ian Munsie <imunsie@au1.ibm.com>
-> ---
-> v6:
->     * Dropped the of_get_property() use to use instead
-> of_property_read_u64()/of_property_read_u32_array as per Michael's
-> suggestion. Since these 2 functions deal with endianness conversion,
-> no need to manually convert endianness anymore. Logic was simplified.
+commit b894157145e4 ("x86/PCI: Mark Broadwell-EP Home Agent & PCU as having
+non-compliant BARs") marks Home Agent 0 & PCU has having non-compliant
+BARs.  The commit is missing device 0x6f60 for Home Agent 1.
 
-Thanks.
+The problem with these devices is documented in the Xeon v4 specification
+update (but is unfortunately missing this ID):
 
->     * Changed MAX_PHBS to 64K as per Gavin's suggestion. Changed 0xFFFF
-> to (MAX_PHBS - 1) then.
+BDF2
+PCI BARs in the Home Agent Will Return Non-Zero Values During Enumeration
+Problem:
+During system initialization the Operating System may access the standard
+PCI BARs (Base Address Registers). Due to this erratum, accesses to the
+Home Agent BAR registers (Bus 1; Device 18; Function 0,4; Offsets (0x14-0x24)
+will return non-zero values.
+Implication:
+The operating system may issue a warning. Intel has not observed any
+functional failures due to this erratum.
+Workaround:
+None identified.
 
-Thanks.
+Link: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v4-spec-update.html
+Fixes: b894157145e4 ("x86/PCI: Mark Broadwell-EP Home Agent & PCU as having non-compliant BARs")
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>
+Cc: x86@kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: Andi Kleen <ak@linux.intel.com>
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
 
->     * Changed test_bit() and set_bit() to test_and_set_bit() as per
-> Gavin's suggestion.
-> 
->     * Removed some obvious comments.
-> 
->     * Didn't remove machine check for pSeries on "reg" property lookup.
-> It's worthy to keep it, since almost every platform (if not all of them)
-> contain the "reg" property on PHB node in device-tree, but only in
-> pSeries we're 100% sure it can be used as the PHB unique identifier.
-> Since the patch has a dynamic PHB numbering mechanism, the other platforms
-> won't have trouble with it.
+---
+ arch/x86/pci/fixup.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-I'll drop it and test here on Cell & others.
-
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index 0f7a60f..4afc9c1 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -41,11 +41,18 @@
->  #include <asm/ppc-pci.h>
->  #include <asm/eeh.h>
->  
-> +/* hose_spinlock protects accesses to the the phb_bitmap. */
->  static DEFINE_SPINLOCK(hose_spinlock);
->  LIST_HEAD(hose_list);
->  
-> -/* XXX kill that some day ... */
-> -static int global_phb_number;		/* Global phb counter */
-> +/* For dynamic PHB numbering on get_phb_number(): max number of PHBs. */
-> +#define MAX_PHBS 0x10000
-> +
-> +/*
-> + * For dynamic PHB numbering: used/free PHBs tracking bitmap.
-> + * Accesses to this bitmap should be protected by hose_spinlock.
-> + */
-> +static DECLARE_BITMAP(phb_bitmap, MAX_PHBS);
->  
->  /* ISA Memory physical address */
->  resource_size_t isa_mem_base;
-> @@ -64,6 +71,47 @@ struct dma_map_ops *get_pci_dma_ops(void)
->  }
->  EXPORT_SYMBOL(get_pci_dma_ops);
->  
-> +/*
-> + * This function should run under locking protection, specifically
-> + * hose_spinlock.
-> + */
-> +static int get_phb_number(struct device_node *dn)
-> +{
-> +	u64 prop;
-> +	int ret;
-> +	int phb_id;
-> +
-> +	/*
-> +	 * Try fixed PHB numbering first, by checking archs and reading
-> +	 * the respective device-tree properties. Firstly, try PowerNV by
-> +	 * reading "ibm,opal-phbid", only present in OPAL environment.
-> +	 */
-> +	ret = of_property_read_u64(dn, "ibm,opal-phbid", &prop);
-> +	if (ret && machine_is(pseries))
-> +		ret = of_property_read_u32_array(dn, "reg", (u32 *)&prop, 2);
-> +	if (ret)
-> +		goto dynamic_phb_numbering;
-> +
-> +	phb_id = (int)(prop & (MAX_PHBS - 1));
-> +
-> +	/* We need to be sure to not use the same PHB number twice. */
-> +	if (test_and_set_bit(phb_id, phb_bitmap))
-> +		goto dynamic_phb_numbering;
-> +
-> +	return phb_id;
-> +
-> +	/*
-> +	 * If not pSeries nor PowerNV, or if fixed PHB numbering tried to add
-> +	 * the same PHB number twice, then fallback to dynamic PHB numbering.
-> +	 */
-> +dynamic_phb_numbering:
-> +	phb_id = find_first_zero_bit(phb_bitmap, MAX_PHBS);
-> +	BUG_ON(phb_id >= MAX_PHBS);
-> +	set_bit(phb_id, phb_bitmap);
-> +
-> +	return phb_id;
-> +}
-
-You really shouldn't need a goto in a function this simple.
-
-Either rearrange it so you can do the logic once, or just put the dynamic case
-into a helper function.
-
-cheers
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index b7de1929714b..6d8ab876b732 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -552,9 +552,18 @@ static void twinhead_reserve_killing_zone(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x27B9, twinhead_reserve_killing_zone);
+ 
++/*
++ * Broadwell EP Home Agent BARs erroneously return non-zero values
++ * during enumeration which cause bogus warnings during resource
++ * allocation.
++ *
++ *   See: http://www.intel.com/content/www/us/en/processors/xeon/xeon-e5-v4-spec-update.html
++ *   entry BDF2.
++ */
+ static void pci_bdwep_bar(struct pci_dev *dev)
+ {
+ 	dev->non_compliant_bars = 1;
+ }
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_bdwep_bar);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_bdwep_bar);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_bdwep_bar);
+-- 
+1.7.9.3
