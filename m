@@ -1,121 +1,44 @@
-Return-Path: <sean.stalley@intel.com>
-Return-Path: <sean.stalley@intel.com>
-From: "Stalley, Sean" <sean.stalley@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "mj@ucw.cz"
-	<mj@ucw.cz>, "bhelgaas@google.com" <bhelgaas@google.com>,
-	"alex.williamson@redhat.com" <alex.williamson@redhat.com>,
-	"david.daney@cavium.com" <david.daney@cavium.com>
-Subject: RE: [PATCH v4 1/2] pci: Identify Enhanced Allocation (EA) BAR
- Equivalent resources
-Date: Mon, 16 May 2016 22:07:54 +0000
-Message-ID: <5FE5E296BC647B42A2509AB982F88C1322A9FB06@ORSMSX116.amr.corp.intel.com>
-References: <1455238345-5602-1-git-send-email-sean.stalley@intel.com>
- <1455238345-5602-2-git-send-email-sean.stalley@intel.com>
- <20160516203144.GC20759@localhost>
-In-Reply-To: <20160516203144.GC20759@localhost>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <hch@lst.de>
+Return-Path: <hch@lst.de>
+Date: Wed, 11 May 2016 10:50:49 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, helgaas@kernel.org, pjw@netapp.com,
+	axboe@fb.com, keith.busch@intel.com, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org
+Subject: Re: [PATCH 1/2] PCI: Provide sensible irq vector alloc/free
+	routines
+Message-ID: <20160511085049.GA20279@lst.de>
+References: <1462457096-19795-1-git-send-email-hch@lst.de> <1462457096-19795-2-git-send-email-hch@lst.de> <20160511074527.GA31347@agordeev.lab.eng.brq.redhat.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160511074527.GA31347@agordeev.lab.eng.brq.redhat.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks Bjorn & Martin!
+Hi Alexander,
 
--Sean
+> Moreover, patch 2/2 not only removed pci_enable_msi[x]_range()
+> internal fallback logic (from desired number of interrupts to
+> available number of interrupts), but it also removed MSI-X to
+> MSI fallback.
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Monday, May 16, 2016 1:32 PM
-> To: Stalley, Sean <sean.stalley@intel.com>
-> Cc: linux-pci@vger.kernel.org; mj@ucw.cz; bhelgaas@google.com;
-> alex.williamson@redhat.com; david.daney@cavium.com
-> Subject: Re: [PATCH v4 1/2] pci: Identify Enhanced Allocation (EA) BAR
-> Equivalent resources
->=20
-> On Thu, Feb 11, 2016 at 04:52:24PM -0800, Sean O. Stalley wrote:
-> > From: Alex Williamson <alex.williamson@redhat.com>
-> >
-> > Resource flags are exposed to userspace via the sysfs "resource" file.
-> > lspci reads the sysfs file to determine resource properties.
-> > Adding this flag allows lspci to distinguish between [virtual] and
-> > [enhanced] resources.
-> >
-> > If the resource is not aligned, userspace could deduce where the
-> > resource is EA based on the size & address fields.
-> > However, a flag indicating whether a PCI resource is a traditional BAR
-> > or BAR equivalent seems like a much simpler solution and works if the
-> > EA resource is aligned.
-> >
-> > Although this patchset only improves lspci, other uses for this flag
-> > have been identified. For example, vfio makes assumptions about
-> > alignment and sizing, and runs into problems when attempting to
-> > emulate a BAR Equivalent EA resource.
-> >
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> > Signed-off-by: Sean O. Stalley <sean.stalley@intel.com>
->=20
-> I applied this to pci/resource and intend to merge it for v4.7.
->=20
-> > ---
-> >  drivers/pci/pci.c      | 2 +-
-> >  include/linux/ioport.h | 7 +++++++
-> >  2 files changed, 8 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c index
-> > d1a7105..8ff678c 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -2229,7 +2229,7 @@ void pci_pm_init(struct pci_dev *dev)
-> >
-> >  static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)  {
-> > -	unsigned long flags =3D IORESOURCE_PCI_FIXED;
-> > +	unsigned long flags =3D IORESOURCE_PCI_FIXED |
-> IORESOURCE_PCI_EA_BEI;
-> >
-> >  	switch (prop) {
-> >  	case PCI_EA_P_MEM:
-> > diff --git a/include/linux/ioport.h b/include/linux/ioport.h index
-> > 24bea08..88816f9 100644
-> > --- a/include/linux/ioport.h
-> > +++ b/include/linux/ioport.h
-> > @@ -25,7 +25,11 @@ struct resource {
-> >
-> >  /*
-> >   * IO resources have these defined flags.
-> > + *
-> > + * PCI devices expose these flags to userspace in the "resource"
-> > + sysfs file,
-> > + * Moving them around could break stuff, so don't do it.
-> >   */
-> > +
-> >  #define IORESOURCE_BITS		0x000000ff	/* Bus-specific bits */
-> >
-> >  #define IORESOURCE_TYPE_BITS	0x00001f00	/* Resource type */
-> > @@ -97,6 +101,7 @@ struct resource {
-> >  #define IORESOURCE_IO_SPARSE		(1<<2)
-> >
-> >  /* PCI ROM control bits (IORESOURCE_BITS) */
-> > +
-> >  #define IORESOURCE_ROM_ENABLE		(1<<0)	/* ROM is enabled,
-> same as PCI_ROM_ADDRESS_ENABLE */
-> >  #define IORESOURCE_ROM_SHADOW		(1<<1)	/* ROM is copy at
-> C000:0 */
-> >  #define IORESOURCE_ROM_COPY		(1<<2)	/* ROM is alloc'd copy,
-> resource field overlaid */
-> > @@ -105,6 +110,8 @@ struct resource {
-> >  /* PCI control bits.  Shares IORESOURCE_BITS with above PCI ROM.  */
-> >  #define IORESOURCE_PCI_FIXED		(1<<4)	/* Do not move
-> resource */
-> >
-> > +/* PCI Enhanced Allocation defined BAR equivalent resource */
-> > +#define IORESOURCE_PCI_EA_BEI		(1<<5)
-> >
-> >  /* helpers to define resources */
-> >  #define DEFINE_RES_NAMED(_start, _size, _name, _flags)
-> 	\
-> > --
-> > 1.9.1
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci"
-> > in the body of a message to majordomo@vger.kernel.org More majordomo
-> > info at  http://vger.kernel.org/majordomo-info.html
+That is done in the very begining of the function, see the quoted
+part of the patch just below:
+
+> > +	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX))
+> > +		nr_vecs = min_t(unsigned int, nr_vecs, pci_msix_vec_count(dev));
+> > +	else if (dev->msi_cap)
+> > +		nr_vecs = min_t(unsigned int, nr_vecs, pci_msi_vec_count(dev));
+> > +	else
+> > +		goto use_legacy_irq;
+
+> > +	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX))
+> > +		ret = __pci_enable_msix(dev, nr_vecs);
+> > +	else
+> > +		ret = __pci_enable_msi(dev, nr_vecs);
+> 
+> 1. No fallbacks.
+
+I read through the code in msi.c in detail and could not find a legitimate
+case where we have msix_cap but actually fail the MSI-X allocation.  If that
+is a valid case I can happily add the fallback here as well.
