@@ -1,96 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-Id: <201605250548.u4P5i1tA003562@mx0a-001b2d01.pphosted.com>
-Subject: Re: [PATCH 3/5] PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller
- supports IRQ remapping
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1461761010-5452-4-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20160524210434.GB16463@localhost>
-Cc: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org, alex.williamson@redhat.com,
-	bhelgaas@google.com, aik@ozlabs.ru, benh@kernel.crashing.org,
-	paulus@samba.org, mpe@ellerman.id.au, joro@8bytes.org,
-	warrier@linux.vnet.ibm.com, zhong@linux.vnet.ibm.com,
-	nikunj@linux.vnet.ibm.com, eric.auger@linaro.org,
-	will.deacon@arm.com, gwshan@linux.vnet.ibm.com,
-	David.Laight@ACULAB.COM, alistair@popple.id.au, ruscur@russell.cc
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Date: Wed, 25 May 2016 13:48:00 +0800
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [PATCH V7 00/11] Support for generic ACPI based PCI host
+ controller
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "helgaas@kernel.org" <helgaas@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "rafael@kernel.org" <rafael@kernel.org>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ "Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "jchandra@broadcom.com" <jchandra@broadcom.com>
+References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED8DF51@lhreml503-mbs>
+Cc: "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
+ "mw@semihalf.com" <mw@semihalf.com>,
+ "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
+ "ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
+ Wangyijing <wangyijing@huawei.com>,
+ "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+ "msalter@redhat.com" <msalter@redhat.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+ "jcm@redhat.com" <jcm@redhat.com>,
+ "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
+ "dhdang@apm.com" <dhdang@apm.com>,
+ "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
+ "liudongdong (C)" <liudongdong3@huawei.com>,
+ "cov@codeaurora.org" <cov@codeaurora.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <57331290.7070104@semihalf.com>
+Date: Wed, 11 May 2016 13:08:00 +0200
 MIME-Version: 1.0
-In-Reply-To: <20160524210434.GB16463@localhost>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ED8DF51@lhreml503-mbs>
+Content-Type: text/plain; charset=gbk; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2016/5/25 5:04, Bjorn Helgaas wrote:
+Hi Gabriele,
 
-> On Wed, Apr 27, 2016 at 08:43:28PM +0800, Yongji Xie wrote:
->> On ARM HW the capability of IRQ remapping is abstracted on
->> MSI controller side. MSI_FLAG_IRQ_REMAPPING is used to advertise
->> this [1].
+On 11.05.2016 12:41, Gabriele Paoloni wrote:
+> Hi Tomasz
+>
+>> -----Original Message-----
+>> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
+>> owner@vger.kernel.org] On Behalf Of Tomasz Nowicki
+>> Sent: 10 May 2016 16:20
+>> To: helgaas@kernel.org; arnd@arndb.de; will.deacon@arm.com;
+>> catalin.marinas@arm.com; rafael@kernel.org; hanjun.guo@linaro.org;
+>> Lorenzo.Pieralisi@arm.com; okaya@codeaurora.org; jchandra@broadcom.com
+>> Cc: robert.richter@caviumnetworks.com; mw@semihalf.com;
+>> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; Wangyijing;
+>> Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
+>> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
+>> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
+>> acpi@lists.linaro.org; jcm@redhat.com; andrea.gallo@linaro.org;
+>> dhdang@apm.com; jeremy.linton@arm.com; liudongdong (C);
+>> cov@codeaurora.org; Tomasz Nowicki
+>> Subject: [PATCH V7 00/11] Support for generic ACPI based PCI host
+>> controller
 >>
->> To have a universal flag to test this capability for different
->> archs on PCI side, we set PCI_BUS_FLAGS_MSI_REMAP for PCI buses
->> when MSI_FLAG_IRQ_REMAPPING is set.
+>>  From the functionality point of view this series may be split into the
+>> following logic parts:
+>> 1. New ECAM API and update for users of the pci-host-common API
+>> 2. Necessary fixes as the preparation for using driver on ARM64.
+>> 3. Use new MCFG interface and implement generic ACPI based PCI host
+>> controller driver.
+>> 4. Enable above driver on ARM64
 >>
->> [1] http://www.spinics.net/lists/kvm/msg130256.html
+>> Patches has been built on top of 4.6-rc7 and can be found here:
+>> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v7)
 >>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->>   drivers/pci/msi.c   |   12 ++++++++++++
->>   drivers/pci/probe.c |    3 +++
->>   include/linux/msi.h |    6 +++++-
->>   3 files changed, 20 insertions(+), 1 deletion(-)
+>> This has been tested on Cavium ThunderX server. Any help in reviewing
+>> and
+>> testing is very appreciated.
 >>
->> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
->> index a080f44..1661cdf 100644
->> --- a/drivers/pci/msi.c
->> +++ b/drivers/pci/msi.c
->> @@ -1134,6 +1134,18 @@ void *msi_desc_to_pci_sysdata(struct msi_desc *desc)
->>   }
->>   EXPORT_SYMBOL_GPL(msi_desc_to_pci_sysdata);
->>   
->> +void pci_bus_check_msi_remapping(struct pci_bus *bus,
->> +				 struct irq_domain *domain)
->> +{
->> +#ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
->> +	struct msi_domain_info *info;
->> +
->> +	info = msi_get_domain_info(domain);
->> +	if (info->flags & MSI_FLAG_IRQ_REMAPPING)
->> +		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
->> +#endif
->> +}
-> Functions named "check_foo" are a pet peeve of mine because the name
-> doesn't tell us anything about what the function *does*.  In this
-> case, we know it checks something about MSI remapping, but we don't
-> know whether we're checking whether it's enabled, disabled, or some
-> other property.
+>> v6 -> v7
+>> - drop quirks handling
 >
-> I'd prefer something like:
->
->    int pci_bus_msi_isolated(struct pci_bus *bus, struct irq_domain *domain)
->    {
->      struct msi_domain_info *info;
->
->      if (!domain)
->        return 0;
->
->      info = msi_get_domain_info(domain);
->      if (info->flags & MSI_FLAG_IRQ_REMAPPING)
->        return 1;
->
->      return 0;
->    }
->
->    void pci_set_bus_msi_domain(struct pci_bus *bus)
->    {
->      ...
->      if (b == bus && pci_bus_msi_isolated(bus, d))
->        bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
+> Maybe I missed something in the v6 discussion thread; when was it
+> decided to drop quirk handling?
 
-Yes. This looks more reasonable. Thank you!
+I had such requests in previous series.
 
-Regards,
-Yongji
+>
+> I think it is important to have this in place to accommodate different
+> vendors. If the intention is to keep this patchset "clean" maybe
+> we can add it as a separate patch on top later on...
+>
+> What¡¯s your view?
+
+Yes, keeping these things separated should help in review. Obviously I 
+agree that we need quirk handling but currently there is no 
+implementation which we all agree upon. For the test, you can use quirk 
+handling approach from the previous series until we sort out final solution.
+
+Thanks,
+Tomasz
