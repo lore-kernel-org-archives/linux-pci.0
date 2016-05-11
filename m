@@ -1,79 +1,153 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	arnd@arndb.de,
-	will.deacon@arm.com,
-	catalin.marinas@arm.com,
-	rafael@kernel.org,
-	hanjun.guo@linaro.org,
-	Lorenzo.Pieralisi@arm.com,
-	okaya@codeaurora.org,
-	jchandra@broadcom.com
-Cc: robert.richter@caviumnetworks.com,
-	mw@semihalf.com,
-	Liviu.Dudau@arm.com,
-	ddaney@caviumnetworks.com,
-	wangyijing@huawei.com,
-	Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linaro-acpi@lists.linaro.org,
-	jcm@redhat.com,
-	andrea.gallo@linaro.org,
-	dhdang@apm.com,
-	jeremy.linton@arm.com,
-	liudongdong3@huawei.com,
-	cov@codeaurora.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH V8 8/9] arm64, pci, acpi: Provide ACPI-specific prerequisites for PCI bus enumeration.
-Date: Mon, 30 May 2016 17:14:21 +0200
-Message-Id: <1464621262-26770-9-git-send-email-tn@semihalf.com>
-In-Reply-To: <1464621262-26770-1-git-send-email-tn@semihalf.com>
-References: <1464621262-26770-1-git-send-email-tn@semihalf.com>
+Return-Path: <gabriele.paoloni@huawei.com>
+Return-Path: <gabriele.paoloni@huawei.com>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Tomasz Nowicki <tn@semihalf.com>,
+        "helgaas@kernel.org"
+	<helgaas@kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "will.deacon@arm.com"
+	<will.deacon@arm.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "hanjun.guo@linaro.org"
+	<hanjun.guo@linaro.org>,
+        "Lorenzo.Pieralisi@arm.com"
+	<Lorenzo.Pieralisi@arm.com>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "jchandra@broadcom.com" <jchandra@broadcom.com>
+CC: "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
+        "mw@semihalf.com" <mw@semihalf.com>,
+        "Liviu.Dudau@arm.com"
+	<Liviu.Dudau@arm.com>,
+        "ddaney@caviumnetworks.com"
+	<ddaney@caviumnetworks.com>,
+        Wangyijing <wangyijing@huawei.com>,
+        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+        "msalter@redhat.com" <msalter@redhat.com>,
+        "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+        "linux-acpi@vger.kernel.org"
+	<linux-acpi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>,
+        "linaro-acpi@lists.linaro.org"
+	<linaro-acpi@lists.linaro.org>,
+        "jcm@redhat.com" <jcm@redhat.com>,
+        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
+        "dhdang@apm.com"
+	<dhdang@apm.com>,
+        "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>,
+        "cov@codeaurora.org"
+	<cov@codeaurora.org>
+Subject: RE: [PATCH V7 00/11] Support for generic ACPI based PCI host
+ controller
+Date: Wed, 11 May 2016 12:53:25 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED8E264@lhreml503-mbs>
+References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1ED8DF51@lhreml503-mbs>
+ <57331290.7070104@semihalf.com>
+In-Reply-To: <57331290.7070104@semihalf.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-ACPI requires to run acpi_pci_{add|remove}_bus while new PCI bus is created.
-This allows to do some ACPI-specific additional configuration, like
-PCI hotplug slot enumeration. In order to fulfill these requirements,
-we implement arch-specific pcibios_{add|remove}_bus calls
-and call acpi_pci_{add|remove}_bus from there.
+Hi Tomasz
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
----
- arch/arm64/kernel/pci.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+> -----Original Message-----
+> From: Tomasz Nowicki [mailto:tn@semihalf.com]
+> Sent: 11 May 2016 12:08
+> To: Gabriele Paoloni; helgaas@kernel.org; arnd@arndb.de;
+> will.deacon@arm.com; catalin.marinas@arm.com; rafael@kernel.org;
+> hanjun.guo@linaro.org; Lorenzo.Pieralisi@arm.com; okaya@codeaurora.org;
+> jchandra@broadcom.com
+> Cc: robert.richter@caviumnetworks.com; mw@semihalf.com;
+> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; Wangyijing;
+> Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
+> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
+> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
+> acpi@lists.linaro.org; jcm@redhat.com; andrea.gallo@linaro.org;
+> dhdang@apm.com; jeremy.linton@arm.com; liudongdong (C);
+> cov@codeaurora.org
+> Subject: Re: [PATCH V7 00/11] Support for generic ACPI based PCI host
+> controller
+>=20
+> Hi Gabriele,
+>=20
+> On 11.05.2016 12:41, Gabriele Paoloni wrote:
+> > Hi Tomasz
+> >
+> >> -----Original Message-----
+> >> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
+> >> owner@vger.kernel.org] On Behalf Of Tomasz Nowicki
+> >> Sent: 10 May 2016 16:20
+> >> To: helgaas@kernel.org; arnd@arndb.de; will.deacon@arm.com;
+> >> catalin.marinas@arm.com; rafael@kernel.org; hanjun.guo@linaro.org;
+> >> Lorenzo.Pieralisi@arm.com; okaya@codeaurora.org;
+> jchandra@broadcom.com
+> >> Cc: robert.richter@caviumnetworks.com; mw@semihalf.com;
+> >> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; Wangyijing;
+> >> Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
+> >> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
+> >> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
+> >> acpi@lists.linaro.org; jcm@redhat.com; andrea.gallo@linaro.org;
+> >> dhdang@apm.com; jeremy.linton@arm.com; liudongdong (C);
+> >> cov@codeaurora.org; Tomasz Nowicki
+> >> Subject: [PATCH V7 00/11] Support for generic ACPI based PCI host
+> >> controller
+> >>
+> >>  From the functionality point of view this series may be split into
+> the
+> >> following logic parts:
+> >> 1. New ECAM API and update for users of the pci-host-common API
+> >> 2. Necessary fixes as the preparation for using driver on ARM64.
+> >> 3. Use new MCFG interface and implement generic ACPI based PCI host
+> >> controller driver.
+> >> 4. Enable above driver on ARM64
+> >>
+> >> Patches has been built on top of 4.6-rc7 and can be found here:
+> >> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v7)
+> >>
+> >> This has been tested on Cavium ThunderX server. Any help in
+> reviewing
+> >> and
+> >> testing is very appreciated.
+> >>
+> >> v6 -> v7
+> >> - drop quirks handling
+> >
+> > Maybe I missed something in the v6 discussion thread; when was it
+> > decided to drop quirk handling?
+>=20
+> I had such requests in previous series.
+>=20
+> >
+> > I think it is important to have this in place to accommodate
+> different
+> > vendors. If the intention is to keep this patchset "clean" maybe
+> > we can add it as a separate patch on top later on...
+> >
+> > What's your view?
+>=20
+> Yes, keeping these things separated should help in review. Obviously I
+> agree that we need quirk handling but currently there is no
+> implementation which we all agree upon. For the test, you can use quirk
+> handling approach from the previous series until we sort out final
+> solution.
 
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index 336deef..3663be1 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -17,6 +17,7 @@
- #include <linux/mm.h>
- #include <linux/of_pci.h>
- #include <linux/of_platform.h>
-+#include <linux/pci-acpi.h>
- #include <linux/slab.h>
- 
- /*
-@@ -96,4 +97,15 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 	/* TODO: Should be revisited when implementing PCI on ACPI */
- 	return NULL;
- }
-+
-+void pcibios_add_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_add_bus(bus);
-+}
-+
-+void pcibios_remove_bus(struct pci_bus *bus)
-+{
-+	acpi_pci_remove_bus(bus);
-+}
-+
- #endif
--- 
-1.9.1
+Great
+
+This explains perfectly
+
+We will apply previous series quirks and try to test the patchset
+from Huawei side
+
+Many Thanks
+
+Gab
+
+>=20
+> Thanks,
+> Tomasz
