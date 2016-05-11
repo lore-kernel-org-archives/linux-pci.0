@@ -1,99 +1,108 @@
-Return-Path: <lorenzo.pieralisi@arm.com>
-Return-Path: <lorenzo.pieralisi@arm.com>
-Date: Tue, 3 May 2016 12:02:25 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Jayachandran C <jchandra@broadcom.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, rafael@kernel.org,
-	Hanjun Guo <hanjun.guo@linaro.org>,
-	Sinan Kaya <okaya@codeaurora.org>, jiang.liu@linux.intel.com,
-	robert.richter@caviumnetworks.com, Marcin Wojtas <mw@semihalf.com>,
-	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
-	Wangyijing <wangyijing@huawei.com>, Suravee.Suthikulpanit@amd.com,
-	msalter@redhat.com, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org,
-	Jon Masters <jcm@redhat.com>
-Subject: Re: [PATCH V6 02/13] pci, acpi: Provide generic way to assign bus
- domain number.
-Message-ID: <20160503110225.GA1055@red-moon>
-References: <1460740008-19489-1-git-send-email-tn@semihalf.com>
- <1460740008-19489-3-git-send-email-tn@semihalf.com>
- <20160427022649.GD6789@localhost>
- <20160427111758.GA6234@red-moon>
- <57274B8C.5030304@semihalf.com>
- <CAKc_7PU1AszF4y0OjZ3KVGaTEx9OL1cuT5YgOxQKhAQgQom7tA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKc_7PU1AszF4y0OjZ3KVGaTEx9OL1cuT5YgOxQKhAQgQom7tA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:50303 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751338AbcEKKwP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 11 May 2016 06:52:15 -0400
+From: Prarit Bhargava <prarit@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: Prarit Bhargava <prarit@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+	linux-kernel@vger.kernel.org, Andi Kleen <ak@linux.intel.com>
+Subject: [PATCH 0/2 v2] Fix Broadwell-EP Home Agent & PCU non-compliant BARs
+Date: Wed, 11 May 2016 06:52:08 -0400
+Message-Id: <1462963930-18506-1-git-send-email-prarit@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 02, 2016 at 06:56:13PM +0530, Jayachandran C wrote:
-> On Mon, May 2, 2016 at 6:13 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
-> > On 04/27/2016 01:17 PM, Lorenzo Pieralisi wrote:
-> >>
-> >> On Tue, Apr 26, 2016 at 09:26:49PM -0500, Bjorn Helgaas wrote:
-> >>>
-> >>> On Fri, Apr 15, 2016 at 07:06:37PM +0200, Tomasz Nowicki wrote:
-> >
-> > [...]
-> >
-> >>>   +int acpi_pci_bus_domain_nr(struct device *parent)
-> >>> +{
-> >>> +       struct acpi_device *acpi_dev = to_acpi_device(parent);
-> >>> +       unsigned long long segment = 0;
-> >>> +       acpi_status status;
-> >>> +
-> >>> +       /*
-> >>> +        * If _SEG method does not exist, following ACPI spec (6.5.6)
-> >>> +        * all PCI buses belong to domain 0.
-> >>> +        */
-> >>> +       status = acpi_evaluate_integer(acpi_dev->handle,
-> >>> METHOD_NAME__SEG, NULL,
-> >>> +                                      &segment);
-> >>> We already have code in acpi_pci_root_add() to evaluate _SEG.  We
-> >>> don't want to evaluate it *twice*, do we?
-> >>>
-> >>> I was sort of expecting that if you added it here, we'd remove the
-> >>> existing call, but it looks like you're keeping both?
-> >>
-> >> We can't remove the existing call, since it is used on X86 and IA64
-> >> to store the segment number that, in the process, is used in their
-> >> pci_domain_nr() arch specific callback to retrieve the domain nr.
-> >>
-> >> On ARM64, that selects PCI_DOMAINS_GENERIC, we have to find a way
-> >> to retrieve the domain number that is not arch dependent, since
-> >> this is generic code, we can't rely on any bus->sysdata format (unless
-> >> we do something like JC did below), therefore the only way is to call
-> >> the _SEG method *again* here, which also forced Tomasz to go through
-> >> the ACPI_COMPANION setting song and dance and pass the parent pointer
-> >> to pci_create_root_bus() (see patch 1), which BTW is a source of
-> >> trouble on its own as you noticed.
-> >
-> > What trouble in patch 1 do you mean? I may miss something.
-> >
-> > I agree that patch 1 is not necessary if we decide to use sysdata or rework
-> > root bus scanning to move domain to host bridge. Nevertheless, patch 1 is
-> > still a cleanup IMO.
-> 
-> In this case, getting the domain should be trivial since the ACPI
-> companion on parent is already set, this should work
-> 
-> int acpi_pci_bus_domain_nr(struct device *parent)
-> {
->         struct acpi_device *acpi_dev = to_acpi_device(parent);
->         struct acpi_pci_root *root = acpi_dev->driver_data;
-> 
->         return root->segment;
-> }
-> 
-> Or am I missing something here?
+commit b894157145e4 ("x86/PCI: Mark Broadwell-EP Home Agent & PCU as having
+non-compliant BARs") marks Home Agent 0 & PCU has having non-compliant
+BARs.  commit b84106b4e229 ("PCI: Disable IO/MEM decoding for devices with
+non-compliant BARs") introduces a check for non_compliant_bars to avoid
+assigning resources to the individual BARs for a device.
 
-Well, I thought that the whole idea behind this exercise was to move
-the domain number into struct pci_host_bridge (Arnd did not do it with
-his first set but this does not mean we can't add it as Bjorn suggested),
-so that the domain number could be read from there straight away in an
-arch (and FW) independent manner, right ?
+Before these commits,
 
-Lorenzo
+pci 0000:ff:12.0: BAR 2: failed to assign [mem size 0x00000040]
+pci 0000:ff:12.0: BAR 4: failed to assign [mem size 0x00000040]
+pci 0000:ff:12.4: BAR 2: failed to assign [mem size 0x00000040]
+pci 0000:ff:12.4: BAR 4: failed to assign [mem size 0x00000040]
+pci 0000:ff:12.0: BAR 1: failed to assign [mem size 0x00000010]
+pci 0000:ff:12.0: BAR 3: failed to assign [mem size 0x00000010]
+pci 0000:ff:12.0: BAR 5: failed to assign [mem size 0x00000010]
+pci 0000:ff:12.4: BAR 1: failed to assign [mem size 0x00000010]
+pci 0000:ff:12.4: BAR 3: failed to assign [mem size 0x00000010]
+pci 0000:ff:12.4: BAR 5: failed to assign [mem size 0x00000010]
+pci 0000:7f:12.0: BAR 2: failed to assign [mem size 0x00000040]
+pci 0000:7f:12.0: BAR 4: failed to assign [mem size 0x00000040]
+pci 0000:7f:12.4: BAR 2: failed to assign [mem size 0x00000040]
+pci 0000:7f:12.4: BAR 4: failed to assign [mem size 0x00000040]
+pci 0000:7f:12.0: BAR 1: failed to assign [mem size 0x00000010]
+pci 0000:7f:12.0: BAR 3: failed to assign [mem size 0x00000010]
+pci 0000:7f:12.0: BAR 5: failed to assign [mem size 0x00000010]
+pci 0000:7f:12.4: BAR 1: failed to assign [mem size 0x00000010]
+pci 0000:7f:12.4: BAR 3: failed to assign [mem size 0x00000010]
+pci 0000:7f:12.4: BAR 5: failed to assign [mem size 0x00000010]
+
+After the commits, there are still "failed to assign" messages,
+as well as new "failed to assign" messages for ff:12.0, ff:1e.3,
+7f:12.0, and 7f:1e.3.
+
+ pci 0000:ff:12.4: BAR 2: failed to assign [mem size 0x00000040]
+ pci 0000:ff:12.4: BAR 4: failed to assign [mem size 0x00000040]
+ pci 0000:ff:12.4: BAR 1: failed to assign [mem size 0x00000010]
+ pci 0000:ff:12.4: BAR 3: failed to assign [mem size 0x00000010]
+ pci 0000:ff:12.4: BAR 5: failed to assign [mem size 0x00000010]
+ pci 0000:ff:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
+ pci 0000:ff:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
+ pci 0000:7f:12.4: BAR 2: failed to assign [mem size 0x00000040]
+ pci 0000:7f:12.4: BAR 4: failed to assign [mem size 0x00000040]
+ pci 0000:7f:12.4: BAR 1: failed to assign [mem size 0x00000010]
+ pci 0000:7f:12.4: BAR 3: failed to assign [mem size 0x00000010]
+ pci 0000:7f:12.4: BAR 5: failed to assign [mem size 0x00000010]
+ pci 0000:7f:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
+ pci 0000:7f:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
+
+There are two issues that need to be fixed.  The first is that there is another
+device, Home Agent 1 & PCU (device ID 0x6f60) that must also be "blacklisted"
+in the same way. After applying the first patch in this patchset the log still
+contains these messages:
+
+pci 0000:ff:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
+pci 0000:ff:12.4: BAR 6: failed to assign [mem size 0x00000001 pref]
+pci 0000:ff:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
+pci 0000:7f:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
+pci 0000:7f:12.4: BAR 6: failed to assign [mem size 0x00000001 pref]
+pci 0000:7f:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
+
+This second patch fixes these issues by moving the non_compliant_bars_check to
+pci_read_bases() where it applies to all of a device's BARs.
+
+v2: Separate into two patches.  Applied non_compliant_bars check to
+pci_read_bases().  Added additional explanation to the commit log from
+the BDW errata for the Home Agent devices.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>
+Cc: x86@kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: Andi Kleen <ak@linux.intel.com>
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+
+Prarit Bhargava (2):
+  x86/PCI: Add pci_bdwep_bar() quirk entry for Broadwell-EP Home Agent
+    1
+  x86/PCI: Disable IO/MEM decoding for ROM BARs for devices with
+    non-compliant BARs
+
+ arch/x86/pci/fixup.c |    9 +++++++++
+ drivers/pci/probe.c  |    6 +++---
+ 2 files changed, 12 insertions(+), 3 deletions(-)
+
+-- 
+1.7.9.3
+
