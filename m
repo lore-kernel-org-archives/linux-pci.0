@@ -1,154 +1,95 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 9 May 2016 14:26:41 -0500
-From: Rob Herring <robh@kernel.org>
-To: Florian Fainelli <f.fainelli@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com,
-	bhelgaas@google.com, arnd@arndb.de
-Subject: Re: [PATCH v2 1/2] Documentation: DT: bindings: Add Broadcom STB
- PCIe bindings
-Message-ID: <20160509192641.GA4936@rob-hp-laptop>
-References: <1462475700-1654-1-git-send-email-f.fainelli@gmail.com>
- <1462475700-1654-2-git-send-email-f.fainelli@gmail.com>
+Return-Path: <rjwysocki@gmail.com>
+Return-Path: <rjwysocki@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1462475700-1654-2-git-send-email-f.fainelli@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: rjwysocki@gmail.com
+In-Reply-To: <20160511193645.GB28812@localhost>
+References: <1461919919-120102-1-git-send-email-mika.westerberg@linux.intel.com>
+	<1461919919-120102-2-git-send-email-mika.westerberg@linux.intel.com>
+	<20160511193645.GB28812@localhost>
+Date: Wed, 11 May 2016 22:12:19 +0200
+Message-ID: <CAJZ5v0h4GbFzBwwzQYG0HF0DBysaVYX212_N0n5iQ-Kq==2cpg@mail.gmail.com>
+Subject: Re: [PATCH v5 1/4] PCI: No need to set d3cold_allowed to PCIe ports
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
+	Dave Airlie <airlied@gmail.com>, Mathias Nyman <mathias.nyman@intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Lukas Wunner <lukas@wunner.de>,
+	Andreas Noever <andreas.noever@gmail.com>, Linux PCI <linux-pci@vger.kernel.org>,
+	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 05, 2016 at 12:14:59PM -0700, Florian Fainelli wrote:
-> From: Jim Quinlan <jim2101024@gmail.com>
-> 
-> This patchs adds the Device Tree bindings for the Broadcom STB PCIe root
-> complex hardware.
-> 
-> Signed-off-by: Jim Quinlan <jim2101024@gmail.com>
-> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
-> ---
-> Changes in v2:
-> 
-> - rewrite the binding document almost from scratch to include many more
->   references to existing documents
-> - describe missing properties
-> - give better examples
-> 
->  .../devicetree/bindings/pci/brcm,brcmstb-pcie.txt  | 98 ++++++++++++++++++++++
->  1 file changed, 98 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
-> new file mode 100644
-> index 000000000000..3682b0f0bc26
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/brcm,brcmstb-pcie.txt
-> @@ -0,0 +1,98 @@
-> +Broadcom STB PCIe Host Controller Device Tree Bindings
-> +
-> +This document describes the binding of the PCIe Root Complex hardware found in
-> +Broadcom Set Top Box System-on-Chips such as BCM7425 (MIPS), BCM7435 (MIPS) and
-> +BCM7445 (ARMv7).
-> +
-> +Required properties:
-> +- compatible: must be one of: "brcm,bcm7425-pcie"
-> +			      "brcm,bcm7435-pcie"
-> +			      "brcm,bcm7445-pcie"
-> +
-> +- reg: specifies the physical base address of the controller registers and
-> +  its length
-> +
-> +- interrupt-parent: must be a reference (phandle) to the parent interrupt
-> +  controller in the system (7038-l1-intc on MIPS, GIC on ARM/ARM64)
-> +
-> +- interrrupts: first interrupt must be the Level 1 interrupt number corresponding
-> +  to the main PCIe RC interrupt, second interrupt must be the MSI interrupt
-> +  See the interrupt-parent documentation for the number of cells and their meaning:
-> +  MIPS: Documentation/devicetree/bindings/interrupt-controller/brcm,bcm7038-l1-intc.txt
-> +  ARM/ARM64: Documentation/devicetree/bindings/interrupt-controller/arm,gic.txt
-> +
-> +- interrupt-names: must be "pcie", and if present "msi"
-> +
-> +- interrupt-map: see pci.txt
-> +
-> +- interrupt-map-mask: see pci.txt
-> +
-> +- #address-cells: must be set to <3>, see pci.txt
-> +
-> +- #size-cells: must be set to <2>, see pci.txt
-> +
-> +- ranges: ranges for the PCI outbound windows, no I/O or prefetchable windows
-> +  must be specified here, only non-prefetchable. 32-bits windows or 64-bits
-> +  windows are allowed based on the host processor's capabilities (ARM w/ LPAE,
-> +  ARM64).
-> +
-> +- #interrupt-cells: set to <1>, see pci.txt
-> +
-> +- brcm,log2-scb-sizes: log2 size of the SCB window that is mapped to PCIe space
-> +  there must be exactly one value per memory controller present in the system
-> +  (ranges from 1 to 3)
-> +
-> +Optional properties:
-> +
-> +- msi-controller: indicates that this is a MSI controller node (when supported)
-> +
-> +- clocks: phandle to the functional clock that feeds into the PCIe RC block
-> +
-> +- clock-names: the name(s) of the clocks specified in 'clocks'.  Note
-> +  that if the 'clocks' property is given, 'clock-names' is mandatory,
-> +  and the name of the clock is expected to be "pcie".
-> +
-> +- brcm,ssc: boolean that indicates usage of spread-spectrum clocking
+On Wed, May 11, 2016 at 9:36 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, Apr 29, 2016 at 11:51:56AM +0300, Mika Westerberg wrote:
+>> The Linux PCI core skips PCI bridges and PCIe ports when system is
+>> suspended. The PCI core checks return value of pci_has_subordinate() in
+>> pci_pm_suspend_noirq() to skip all devices where it is non-zero (which
+>> means PCI bridges and PCIe ports).
+>
+> This patch looks fine to me.
+>
+> But I wonder whether it's correct for pci_pm_suspend_noirq() (and the
+> other PM functions) to use pci_has_subordinate() as opposed to
+> pci_is_bridge().
+>
+> pci_is_bridge() is true for all bridge devices (plain old PCI-PCI
+> bridges, PCIe ports, CardBus bridges, etc.)
+>
+> pci_has_subordinate() is true only if the bridge has a struct pci_bus
+> allocated for its secondary bus.  This is probably the case for all or
+> almost all bridges, but it's conceivable that if we don't have enough
+> bus number space for the secondary bus, we might not allocate that
+> struct pci_bus.
+>
+> What do you PM guys think?  I don't know what you would want to do
+> with a bridge that didn't have any reachable devices below it.
 
-Shouldn't this be a property of the phy? Is there no separate phy to 
-control?
+Well, that's funny. :-)
 
-> +
-> +- brcm,gen: integer that indicates desired forced generation of link: 1 => 2.5
-> +  Gbps, 2 => 5.0 Gbps, 3 => 8.0 Gbps. Will override the auto-negotation if
-> +  specified.
-> +
-> +- <*>-supply: see Documentation/devicetree/bindings/regulator/regulator.txt
-> +
-> +- <*>-supply-names: see Documentation/devicetree/bindings/regulator/regulator.txt
-> +
-> +Example Node:
-> +
-> +This example assumes that the top-level #address-cells = <2> and #size-cells =
-> +<2>, e.g: ARM LPAE configuration.
-> +
-> +	pcie0: pcie-controller@f0460000 {
-> +		reg = <0x0 0xf0460000 0x0 0x9310>;
-> +		interrupts = <0x0 0x33 0x4>, <0x0 0x34, 0x4>;
-                                                      ^
-typo
+The function we used in there used to be called pci_is_bridge(), as
+per commit 46939f8b15e4 "PCI PM: Put devices into low power states
+during late suspend (rev. 2)".
 
-> +		interrupt-names = "pcie", "msi";
-> +		compatible = "brcm,bcm7445-pcie";
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +
-> +		/* Two non-prefetchable 32-bits memory space, each of 128MB
-> + 		 * with the following mapping:
-> +		 * PCIe address		=> CPU physical address space
-> +		 * 0x00_0000_0000	=> 0x00_C000_0000
-> +		 * 0x00_0800_0000	=> 0x00_C800_0000
-> +		 */
-> +		ranges = <0x02000000 0x00000000 0x00000000 0x00000000 0xc0000000 0x00000000 0x08000000>,
-> +			 <0x02000000 0x00000000 0x08000000 0x00000000 0xc8000000 0x00000000 0x08000000>;
-> +		#interrupt-cells = <1>;
-> +		interrupt-map-mask = <0xf800 0 0 7>;
-> +		interrupt-map = <0 0 0 1 &intc 47 3
-> +				 0 0 0 2 &intc 48 3
-> +				 0 0 0 3 &intc 49 3
-> +				 0 0 0 4 &intc 50 3>;
-> +		clocks = <&pcie0>;
-> +		clock-names = "pcie";
-> +		brcm,ssc;
-> +		brcm,log2-scb-sizes = <0x1e 0x1e 0x1e>;
-> +		vreg-wifi-pwr-supply-names = "vreg-wifi-pwr";
-> +		vreg-wifi-pwr-supply = <&vreg-wifi-pwr>;
+But then, it was renamed to pci_has_subordinate(), by commit
+326c1cdae741 "PCI: Rename pci_is_bridge() to pci_has_subordinate()".
 
-The supply for the PCIE RC is called "vreg-wifi-pwr"? Seems a bit 
-strange.
+Next, a new pci_is_bridge() was introduced, by commit 1c86438c9423
+"PCI: Add new pci_is_bridge() interface".  It is kind of hard to say
+why that happened, because the changelog of that commit doesn't say
+anything about the reason, but evidently the new one is not exactly
+equivalent to the old one (as you mention).  The author of that commit
+apparently was afraid to make that change in the PM code.
 
-Rob
+Now, I think what we do makes sense, because we want to avoid touching
+bridges that have something below them (so as to avoid disrupting the
+things below the bridge) and I'm not aware of any problems coming from
+that.
+
+
+>> Since PCIe ports are never suspended in the first place, there is no need
+>> to set d3cold_allowed for them.
+>>
+>> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+>> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>> ---
+>>  drivers/pci/pcie/portdrv_pci.c | 5 -----
+>>  1 file changed, 5 deletions(-)
+>>
+>> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+>> index be35da2e105e..6c6bb03392ea 100644
+>> --- a/drivers/pci/pcie/portdrv_pci.c
+>> +++ b/drivers/pci/pcie/portdrv_pci.c
+>> @@ -134,11 +134,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
+>>               return status;
+>>
+>>       pci_save_state(dev);
+>> -     /*
+>> -      * D3cold may not work properly on some PCIe port, so disable
+>> -      * it by default.
+>> -      */
+>> -     dev->d3cold_allowed = false;
+>>       return 0;
+>>  }
+>>
+>> --
