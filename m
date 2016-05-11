@@ -1,74 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bes.se.axis.com ([195.60.68.10]:41673 "EHLO bes.se.axis.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751566AbcEGLpg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Sat, 7 May 2016 07:45:36 -0400
-Date: Sat, 7 May 2016 13:45:31 +0200
-From: Jesper Nilsson <jesper.nilsson@axis.com>
-To: Rob Herring <robh@kernel.org>
-Cc: Niklas Cassel <niklass@axis.com>, jespern@axis.com,
-	pawel.moll@arm.com, mark.rutland@arm.com,
-	ijc+devicetree@hellion.org.uk, galak@codeaurora.org,
-	linux-arm-kernel@axis.com, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] dt-bindings: pci: add DT binding for Axis ARTPEC-6
- PCIe controller
-Message-ID: <20160507114531.GI24250@axis.com>
-References: <1462362857-27481-1-git-send-email-niklass@axis.com>
- <20160505220331.GA9225@rob-hp-laptop>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Return-Path: <lorenzo.pieralisi@arm.com>
+Date: Wed, 11 May 2016 11:11:01 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Tomasz Nowicki <tn@semihalf.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Hanjun Guo <hanjun.guo@linaro.org>,
+	Sinan Kaya <okaya@codeaurora.org>, jchandra@broadcom.com,
+	robert.richter@caviumnetworks.com, mw@semihalf.com,
+	Liviu.Dudau@arm.com, David Daney <ddaney@caviumnetworks.com>,
+	wangyijing@huawei.com,
+	Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>,
+	Mark Salter <msalter@redhat.com>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+	Jon Masters <jcm@redhat.com>, andrea.gallo@linaro.org,
+	dhdang@apm.com, jeremy.linton@arm.com, liudongdong3@huawei.com,
+	Christopher Covington <cov@codeaurora.org>
+Subject: Re: [PATCH V7 07/11] pci, acpi: Handle ACPI companion assignment.
+Message-ID: <20160511101101.GA16101@red-moon>
+References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+ <1462893601-8937-8-git-send-email-tn@semihalf.com>
+ <CAJZ5v0hM8WAr9GGku89zKgiVKt6ArHf=9CntRUyBjyMNUvie2A@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160505220331.GA9225@rob-hp-laptop>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAJZ5v0hM8WAr9GGku89zKgiVKt6ArHf=9CntRUyBjyMNUvie2A@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 05, 2016 at 05:03:31PM -0500, Rob Herring wrote:
-> On Wed, May 04, 2016 at 01:54:17PM +0200, Niklas Cassel wrote:
-> > From: Niklas Cassel <niklas.cassel@axis.com>
-> > 
-> > This commit adds the Device Tree binding documentation that allows to
-> > describe the PCIe controller found in the Axis ARTPEC-6 SoC.
-> > 
-> > Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+On Tue, May 10, 2016 at 08:37:00PM +0200, Rafael J. Wysocki wrote:
+> On Tue, May 10, 2016 at 5:19 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
+> > This patch provides a way to set the ACPI companion in PCI code.
+> > We define acpi_pci_set_companion() to set the ACPI companion pointer and
+> > call it from PCI core code. The function is stub for now.
+> >
+> > Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+> > Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
 > > ---
-> >  .../devicetree/bindings/pci/axis,artpec6-pcie.txt  | 45 ++++++++++++++++++++++
-> >  1 file changed, 45 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
-> > 
-> > diff --git a/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
-> > new file mode 100644
-> > index 0000000..fdac2a2
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/pci/axis,artpec6-pcie.txt
-> > @@ -0,0 +1,45 @@
-> > +* Axis ARTPEC-6 PCIe interface
-> > +
-> > +This PCIe host controller is based on the Synopsis Designware PCIe IP
-> > +and thus inherits all the common properties defined in designware-pcie.txt.
-> > +
-> > +Required properties:
-> > +- compatible: "axis,artpec6-pcie", "snps,dw-pcie"
-> > +- reg: base addresses and lengths of the pcie controller (DBI),
-> > +	the phy controller, and configuration address space.
-> > +- reg-names: Must include the following entries:
-> > +	- "dbi"
-> > +	- "phy"
-> > +	- "config"
-> > +- interrupts: A list of interrupt outputs of the controller. Must contain an
-> > +  entry for each entry in the interrupt-names property.
-> > +- interrupt-names: Must include the following entries:
-> > +	- "msi": The interrupt that is asserted when an MSI is received
-> > +- syscon: Should contain a link to the syscon device node.
+> >  drivers/pci/probe.c      | 2 ++
+> >  include/linux/pci-acpi.h | 4 ++++
+> >  2 files changed, 6 insertions(+)
+> >
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index 8004f67..fb0b752 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -12,6 +12,7 @@
+> >  #include <linux/slab.h>
+> >  #include <linux/module.h>
+> >  #include <linux/cpumask.h>
+> > +#include <linux/pci-acpi.h>
+> >  #include <linux/pci-aspm.h>
+> >  #include <linux/aer.h>
+> >  #include <linux/acpi.h>
+> > @@ -2141,6 +2142,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+> >         bridge->dev.parent = parent;
+> >         bridge->dev.release = pci_release_host_bridge_dev;
+> >         dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+> > +       acpi_pci_set_companion(bridge);
 > 
-> What is the syscon for? Perhaps a name that reflects the purpose.
+> Yes, we'll probably add something similar here.
+> 
+> Do I think now is the right time to do that?  No.
+> 
+> >         error = pcibios_root_bridge_prepare(bridge);
+> >         if (error) {
+> >                 kfree(bridge);
+> > diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+> > index 09f9f02..1baa515 100644
+> > --- a/include/linux/pci-acpi.h
+> > +++ b/include/linux/pci-acpi.h
+> > @@ -111,6 +111,10 @@ static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
+> >  static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
+> >  #endif /* CONFIG_ACPI */
+> >
+> > +static inline void acpi_pci_set_companion(struct pci_host_bridge *bridge)
+> > +{
+> > +}
+> > +
+> >  static inline int acpi_pci_bus_domain_nr(struct pci_bus *bus)
+> >  {
+> >         return 0;
+> > --
+> 
+> Honestly, to me it looks like this series is trying very hard to avoid
+> doing any PCI host bridge configuration stuff from arch/arm64/
+> although (a) that might be simpler and (b) it would allow us to
+> identify the code that's common between *all* architectures using ACPI
+> support for host bridge configuration and to move *that* to a common
+> place later.  As done here it seems to be following the "ARM64 is
+> generic and the rest of the world is special" line which isn't really
+> helpful.
 
-It's the SoC System Controller, and holds some chip-specific registers
-for the Synopsys IP control, clocks and some termination variables spring
-to mind. It was named sysctrl earlier, although that's not very much more
-descriptive.
+I think patch [1-2] should be merged regardless (they may require minor
+tweaks if we decide to move pci_acpi_scan_root() to arch/arm64 though,
+for include files location). I guess you are referring to patch 8 in
+your comments above, which boils down to deciding whether:
 
-> Rob
+- pci_acpi_scan_root() (and unfortunately all the MCFG/ECAM handling that
+  goes with it) should live in arch/arm64 or drivers/acpi
 
-/^JN - Jesper Nilsson
--- 
-               Jesper Nilsson -- jesper.nilsson@axis.com
+acpi_pci_bus_domain_nr() is a bit more problematic since it is meant
+to be called from PCI core code (ARM64 selects PCI_DOMAINS_GENERIC for
+DT and same kernel has to work with OF and ACPI selected) and it is
+arch specific (because what we have in bus->sysdata is arch specific,
+waiting for the domain number to be embedded in struct pci_host_bridge).
+
+Your point is fair, I am not sure that moving the pci_acpi_scan_root()
+to arch/arm64 would make things much simpler though, it is just a matter
+of deciding where that code has to live.
+
+How do you want us to proceed ?
+
+Thanks,
+Lorenzo
