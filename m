@@ -1,59 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:38105 "EHLO
-	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752312AbcEXKDK (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 May 2016 06:03:10 -0400
-Date: Tue, 24 May 2016 12:06:31 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: "Shevchenko, Andriy" <andriy.shevchenko@intel.com>
-Cc: "andreas.noever@gmail.com" <andreas.noever@gmail.com>,
-	"Levy, Amir (Jer)" <amir.jer.levy@intel.com>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"Svahn, Kai" <kai.svahn@intel.com>,
+Received: from mga14.intel.com ([192.55.52.115]:47874 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751136AbcEKG3J convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Wed, 11 May 2016 02:29:09 -0400
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Jamet, Michael" <michael.jamet@intel.com>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>,
-	"Alloun, Dan" <dan.alloun@intel.com>,
-	"Westerberg, Mika" <mika.westerberg@intel.com>
-Subject: Re: [PATCH 1/6] thunderbolt: Updating the register definitions
-Message-ID: <20160524100631.GA5396@wunner.de>
-References: <1463993336-2750-1-git-send-email-amir.jer.levy@intel.com>
- <1463993336-2750-2-git-send-email-amir.jer.levy@intel.com>
- <1463998286.31269.24.camel@intel.com>
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"aik@ozlabs.ru" <aik@ozlabs.ru>,
+	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+	"paulus@samba.org" <paulus@samba.org>,
+	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
+	"joro@8bytes.org" <joro@8bytes.org>,
+	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
+	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
+	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
+	"eric.auger@linaro.org" <eric.auger@linaro.org>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
+	"alistair@popple.id.au" <alistair@popple.id.au>,
+	"ruscur@russell.cc" <ruscur@russell.cc>
+Subject: RE: [PATCH 5/5] vfio-pci: Allow to mmap MSI-X table if interrupt
+ remapping is supported
+Date: Wed, 11 May 2016 06:29:06 +0000
+Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D15F84EEBA@SHSMSX101.ccr.corp.intel.com>
+References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+	<1461761010-5452-6-git-send-email-xyjxie@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F842512@SHSMSX101.ccr.corp.intel.com>
+	<f7d73ac3-470d-a0d2-0a97-05be630480dd@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F842653@SHSMSX101.ccr.corp.intel.com>
+	<e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
+	<063D6719AE5E284EB5DD2968C1650D6D5F4B52B5@AcuExch.aculab.com>
+	<4be013bc-e81b-84c5-06d3-e1b3f46b3227@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F8474A4@SHSMSX101.ccr.corp.intel.com>
+ <20160505090513.56886c12@t450s.home>
+In-Reply-To: <20160505090513.56886c12@t450s.home>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1463998286.31269.24.camel@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Andriy, Hi Amir,
-
-On Mon, May 23, 2016 at 10:10:11AM +0000, Shevchenko, Andriy wrote:
-> On Mon, 2016-05-23 at 11:48 +0300, Amir Levy wrote:
-> > --- a/include/linux/pci_ids.h
-> > +++ b/include/linux/pci_ids.h
-> > @@ -2618,6 +2618,8 @@
-> >  #define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_2C_BRIDGE  0x156b
-> >  #define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_NHI     0x156c
-> >  #define PCI_DEVICE_ID_INTEL_FALCON_RIDGE_4C_BRIDGE  0x156d
+> From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> Sent: Thursday, May 05, 2016 11:05 PM
 > 
-> > +#define PCI_DEVICE_ID_INTEL_WIN_RIDGE_2C_NHI        0x157d
-> > +#define PCI_DEVICE_ID_INTEL_WIN_RIDGE_2C_BRIDGE     0x157e
+> On Thu, 5 May 2016 12:15:46 +0000
+> "Tian, Kevin" <kevin.tian@intel.com> wrote:
 > 
-> Are those IDs going to be used somewhere else than one driver?
+> > > From: Yongji Xie [mailto:xyjxie@linux.vnet.ibm.com]
+> > > Sent: Thursday, May 05, 2016 7:43 PM
+> > >
+> > > Hi David and Kevin,
+> > >
+> > > On 2016/5/5 17:54, David Laight wrote:
+> > >
+> > > > From: Tian, Kevin
+> > > >> Sent: 05 May 2016 10:37
+> > > > ...
+> > > >>> Acutually, we are not aimed at accessing MSI-X table from
+> > > >>> guest. So I think it's safe to passthrough MSI-X table if we
+> > > >>> can make sure guest kernel would not touch MSI-X table in
+> > > >>> normal code path such as para-virtualized guest kernel on PPC64.
+> > > >>>
+> > > >> Then how do you prevent malicious guest kernel accessing it?
+> > > > Or a malicious guest driver for an ethernet card setting up
+> > > > the receive buffer ring to contain a single word entry that
+> > > > contains the address associated with an MSI-X interrupt and
+> > > > then using a loopback mode to cause a specific packet be
+> > > > received that writes the required word through that address.
+> > > >
+> > > > Remember the PCIe cycle for an interrupt is a normal memory write
+> > > > cycle.
+> > > >
+> > > > 	David
+> > > >
+> > >
+> > > If we have enough permission to load a malicious driver or
+> > > kernel, we can easily break the guest without exposed
+> > > MSI-X table.
+> > >
+> > > I think it should be safe to expose MSI-X table if we can
+> > > make sure that malicious guest driver/kernel can't use
+> > > the MSI-X table to break other guest or host. The
+> > > capability of IRQ remapping could provide this
+> > > kind of protection.
+> > >
+> >
+> > With IRQ remapping it doesn't mean you can pass through MSI-X
+> > structure to guest. I know actual IRQ remapping might be platform
+> > specific, but at least for Intel VT-d specification, MSI-X entry must
+> > be configured with a remappable format by host kernel which
+> > contains an index into IRQ remapping table. The index will find a
+> > IRQ remapping entry which controls interrupt routing for a specific
+> > device. If you allow a malicious program random index into MSI-X
+> > entry of assigned device, the hole is obvious...
+> >
+> > Above might make sense only for a IRQ remapping implementation
+> > which doesn't rely on extended MSI-X format (e.g. simply based on
+> > BDF). If that's the case for PPC, then you should build MSI-X
+> > passthrough based on this fact instead of general IRQ remapping
+> > enabled or not.
+> 
+> I don't think anyone is expecting that we can expose the MSI-X vector
+> table to the guest and the guest can make direct use of it.  The end
+> goal here is that the guest on a power system is already
+> paravirtualized to not program the device MSI-X by directly writing to
+> the MSI-X vector table.  They have hypercalls for this since they
+> always run virtualized.  Therefore a) they never intend to touch the
+> MSI-X vector table and b) they have sufficient isolation that a guest
+> can only hurt itself by doing so.
+> 
+> On x86 we don't have a), our method of programming the MSI-X vector
+> table is to directly write to it. Therefore we will always require QEMU
+> to place a MemoryRegion over the vector table to intercept those
+> accesses.  However with interrupt remapping, we do have b) on x86, which
+> means that we don't need to be so strict in disallowing user accesses
+> to the MSI-X vector table.  It's not useful for configuring MSI-X on
+> the device, but the user should only be able to hurt themselves by
+> writing it directly.  x86 doesn't really get anything out of this
+> change, but it helps this special case on power pretty significantly
+> aiui.  Thanks,
+> 
 
-We have a number of Thunderbolt quirks in drivers/pci/quirks.c.
-Although they do not pertain to Win Ridge right now, it's good to have
-the list complete.
+Allowing guest direct write to MSI-x table has system-wide impact.
+As I explained earlier, hypervisor needs to control "interrupt_index"
+programmed in MSI-X entry, which is used to associate a specific
+IRQ remapping entry. Now if you expose whole MSI-x table to guest, 
+it can program random index into MSI-X entry to associate with 
+any IRQ remapping entry and then there won't be any isolation per se.
 
-However the list should be sorted numerically, so these should go below
-Alpine Ridge. I assume Win Ridge is DSL5110, so a comment would be good
-to signify that it's not Thunderbolt 2 or 3, e.g.:
+You can check "5.5.2 MSI and MSI-X Register Programming" in VT-d
+spec.
 
-#define PCI_DEVICE_ID_INTEL_WIN_RIDGE_2C_NHI        0x157d /* Tbt 1 Low Pwr */
-#define PCI_DEVICE_ID_INTEL_WIN_RIDGE_2C_BRIDGE     0x157e
-
-Thanks,
-
-Lukas
+Thanks
+Kevin
