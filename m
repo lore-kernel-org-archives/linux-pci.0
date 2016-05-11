@@ -1,67 +1,72 @@
-Return-Path: <yhlu.kernel@gmail.com>
-Return-Path: <yhlu.kernel@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60364 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751709AbcEKQI1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Wed, 11 May 2016 12:08:27 -0400
+Date: Wed, 11 May 2016 11:08:17 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCHv4] pcie: Add driver for Downstream Port Containment
+Message-ID: <20160511160817.GA24089@localhost>
+References: <1461882288-31506-1-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-Sender: yhlu.kernel@gmail.com
-In-Reply-To: <1462485774.20290.34.camel@kernel.crashing.org>
-References: <1460074573-7481-5-git-send-email-yinghai@kernel.org>
-	<20160422204920.GA17215@localhost>
-	<CAE9FiQWQ2ke3_P4Qhj+ON7pMiVCx4myhVNVaSYO4vYAL_P4njg@mail.gmail.com>
-	<20160428135607.GA12470@localhost>
-	<CAE9FiQU_XSMfxFPSOrMjQ2DGnrM0D5T=0ORfDEBxqWggGrzc+Q@mail.gmail.com>
-	<CAE9FiQX_8oXj=FD8pKe=eBL=YWZY-=C8sZ6yMbmkwegLVOR-fA@mail.gmail.com>
-	<1462322260.30470.76.camel@kernel.crashing.org>
-	<20160504012531.GB17170@localhost>
-	<CAE9FiQU=e2bf=+KDrOETf_T-KPLQsSDiG5GqVFqgtvSWXwUz4w@mail.gmail.com>
-	<CAE9FiQV19OUsSL34GzDXYtVG=Xs724CpwHNfu3HCmYMUqbmrqQ@mail.gmail.com>
-	<20160504151722.GA22051@localhost>
-	<CAE9FiQXEBkVak0No9dfOidzCrR+UVu44WyBEK8SqTUSiJKeJbg@mail.gmail.com>
-	<CAE9FiQUEMq4aj2iAq=P0xu4=1MGuOWgOubpkn=2h+YLXgwJKRQ@mail.gmail.com>
-	<CAE9FiQWJ0VH-PNsz96qW8_u14x6bJ6cd66+Zg=j3L4zXWvhq0Q@mail.gmail.com>
-	<1462485774.20290.34.camel@kernel.crashing.org>
-Date: Thu, 5 May 2016 17:56:25 -0700
-Message-ID: <CAE9FiQUC3i=MkLnFi563T7rDVFiLXxk764WUQjktnPMJqXa93g@mail.gmail.com>
-Subject: Re: [PATCH v11 04/60] sparc/PCI: Use correct offset for bus address
- to resource
-From: Yinghai Lu <yinghai@kernel.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, David Miller <davem@davemloft.net>,
-	Bjorn Helgaas <bhelgaas@google.com>, Linus Torvalds <torvalds@linux-foundation.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>, Khalid Aziz <khalid.aziz@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Michael Ellerman <mpe@ellerman.id.au>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1461882288-31506-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 5, 2016 at 3:02 PM, Benjamin Herrenschmidt
-<benh@kernel.crashing.org> wrote:
-> On Thu, 2016-05-05 at 08:53 -0700, Yinghai Lu wrote:
->> For powerpc io port, we still need extra offset from resource address
->> to final address.
->>
->>      resource_size_t offset =
->>          ((resource_size_t)vma->vm_pgoff) << PAGE_SHIFT;
->>
->> +    if (mmap_state == pci_mmap_io) {
->> +        struct pci_controller *hose = pci_bus_to_host(dev->bus);
->> +
->> +        /* hose should never be NULL */
->> +        offset += hose->io_base_phys -
->> +              ((unsigned long)hose->io_base_virt - _IO_BASE);
->> +    }
->>
->>      vma->vm_pgoff = offset >> PAGE_SHIFT;
->>
->> but sparc does not need that trick.
->
-> I'm not sure how sparc handles IO space but on powerpc, the IO resource
-> is not a physical address, it's a virtual address (coming from
-> ioremap).
+Hi Keith,
 
-That is interesting. Any reason for that ?
+On Thu, Apr 28, 2016 at 04:24:48PM -0600, Keith Busch wrote:
+> This adds driver support for root and downstream ports that implement
+> the PCI-Express Downstream Port Containment extended capability. DPC is
+> an optional capability to contain uncorrectable errors below a port.
+> 
+> For more information on DPC, please see PCI Express Base Specification
+> Revision 4, section 7.31, or view the PCI-SIG DPC ECN here:
+> 
+>   https://pcisig.com/sites/default/files/specification_documents/ECN_DPC_2012-02-09_finalized.pdf
+> 
+> When a DPC event is triggered, the h/w disables downstream links, so
+> the DPC driver schedules removal for all devices below this port. This
+> may happen concurrently with a PCI-e hotplug driver if enabled. When all
+> downstream devices are removed and the link state transitions to disabled,
+> the DPC driver clears the DPC status and interrupt bits so the link may
+> retrain for a newly connected device.
+> 
+> The pcie device naming is updated to accomodate the additional service
+> driver. From Lukas Wunner <lukas@wunner.de>:
+> 
+> The names of port service devices previously used one nibble to encode
+> the port type and another nibble to encode the service type. Since this
+> commit introduces a fifth service type, it changes device names to use
+> one *byte* to encode the service type. E.g. a hotplug port service on a
+> downstream bridge was previously called pcie24 and is now called pcie204.
 
-why just cpu_addr in resource directly ?
+I know I already merged this, but I just thought of a more
+philosophical question.  Why is this a "port service driver" as
+opposed to being simply part of the PCI core like ARI, ACS, etc.?
 
-Thanks
+I guess you did make DPC tristate, so from that point of view, it
+probably has to use the driver structure to make it convenient to load
+after boot.  Does that add value?  Do we expect people to make a
+decision about whether to load pcie-dpc?  Or maybe we plan to autoload
+it if the DPC capability is present?  Does your patch enable that,
+i.e., does it expose something udev can use to autoload it?
 
-Yinghai
+I've been wondering whether the portdrv service driver concept was a
+mistake.  With the exception of DPC, I think all the portdrv service
+drivers are bool, so there's no question of having to load a module.
+I think using portdrv means we delay initialization of some things
+that we should do earlier.  For example, I think we should setup
+pciehp much earlier, when we enumerate the bridge.  And the service
+driver registration and capability discovery code adds a fair amount
+of complication that I'm not sure is necessary.
+
+So I guess the question is: why did you make DPC a portdrv service
+driver, and what bad things would happen if we integrated it into the
+PCI core without exposing it as a separate service.
+
+Bjorn
