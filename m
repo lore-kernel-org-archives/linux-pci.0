@@ -1,137 +1,225 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e28smtp06.in.ibm.com ([125.16.236.6]:55974 "EHLO
-	e28smtp06.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757949AbcEFLGF (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 6 May 2016 07:06:05 -0400
-Received: from localhost
-	by e28smtp06.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 6 May 2016 16:36:02 +0530
-Date: Fri, 6 May 2016 21:05:42 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, bhelgaas@google.com, robherring2@gmail.com,
-	dja@axtens.net, alistair@popple.id.au
-Subject: Re: [PATCH v9 04/22] powerpc/powernv: Increase PE# capacity
-Message-ID: <20160506110541.GA5016@gwshan>
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1462281773-26438-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1462281773-26438-5-git-send-email-gwshan@linux.vnet.ibm.com>
- <2f2282ae-c1dc-1870-4beb-d5e4e8233496@ozlabs.ru>
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [PATCH V7 03/11] pci, of: Move the PCI I/O space management to
+ PCI core code.
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+ <1462893601-8937-4-git-send-email-tn@semihalf.com>
+ <CAJZ5v0ge+LGwp=AkPF50H1ZXFA6J5ByazuY7Opc-aLJwWrBNxg@mail.gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+ Will Deacon <will.deacon@arm.com>, Catalin Marinas
+ <catalin.marinas@arm.com>, Hanjun Guo <hanjun.guo@linaro.org>,
+ Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ Sinan Kaya <okaya@codeaurora.org>, jchandra@broadcom.com,
+ robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
+ David Daney <ddaney@caviumnetworks.com>, wangyijing@huawei.com,
+ Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>,
+ Mark Salter <msalter@redhat.com>, Linux PCI <linux-pci@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+ Jon Masters <jcm@redhat.com>, andrea.gallo@linaro.org, dhdang@apm.com,
+ jeremy.linton@arm.com, liudongdong3@huawei.com,
+ Christopher Covington <cov@codeaurora.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <5732E11A.9090002@semihalf.com>
+Date: Wed, 11 May 2016 09:36:58 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2f2282ae-c1dc-1870-4beb-d5e4e8233496@ozlabs.ru>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAJZ5v0ge+LGwp=AkPF50H1ZXFA6J5ByazuY7Opc-aLJwWrBNxg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 06, 2016 at 05:17:25PM +1000, Alexey Kardashevskiy wrote:
->On 05/03/2016 11:22 PM, Gavin Shan wrote:
->>Each PHB maintains an array helping to translate 2-bytes Request
->>ID (RID) to PE# with the assumption that PE# takes one byte, meaning
->>that we can't have more than 256 PEs. However, pci_dn->pe_number
->>already had 4-bytes for the PE#.
+On 10.05.2016 19:59, Rafael J. Wysocki wrote:
+> On Tue, May 10, 2016 at 5:19 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
+>> No functional changes in this patch.
+>>
+>> PCI I/O space mapping code does not depend on OF, therefore it can be
+>> moved to PCI core code. This way we will be able to use it
+>> e.g. in ACPI PCI code.
+>>
+>> Suggested-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>> CC: Arnd Bergmann <arnd@arndb.de>
+>> CC: Liviu Dudau <Liviu.Dudau@arm.com>
+>> ---
+>>   drivers/of/address.c       | 116 +--------------------------------------------
+>>   drivers/pci/pci.c          | 115 ++++++++++++++++++++++++++++++++++++++++++++
+>>   include/linux/of_address.h |   9 ----
+>>   include/linux/pci.h        |   5 ++
+>>   4 files changed, 121 insertions(+), 124 deletions(-)
+>>
+>> diff --git a/drivers/of/address.c b/drivers/of/address.c
+>> index 91a469d..0a553c0 100644
+>> --- a/drivers/of/address.c
+>> +++ b/drivers/of/address.c
+>> @@ -4,6 +4,7 @@
+>>   #include <linux/ioport.h>
+>>   #include <linux/module.h>
+>>   #include <linux/of_address.h>
+>> +#include <linux/pci.h>
+>>   #include <linux/pci_regs.h>
+>>   #include <linux/sizes.h>
+>>   #include <linux/slab.h>
+>> @@ -673,121 +674,6 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
+>>   }
+>>   EXPORT_SYMBOL(of_get_address);
+>>
+>> -#ifdef PCI_IOBASE
+>> -struct io_range {
+>> -       struct list_head list;
+>> -       phys_addr_t start;
+>> -       resource_size_t size;
+>> -};
+>> -
+>> -static LIST_HEAD(io_range_list);
+>> -static DEFINE_SPINLOCK(io_range_lock);
+>> -#endif
+>> -
+>> -/*
+>> - * Record the PCI IO range (expressed as CPU physical address + size).
+>> - * Return a negative value if an error has occured, zero otherwise
+>> - */
+>> -int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+>> -{
+>> -       int err = 0;
+>> -
+>> -#ifdef PCI_IOBASE
+>> -       struct io_range *range;
+>> -       resource_size_t allocated_size = 0;
+>> -
+>> -       /* check if the range hasn't been previously recorded */
+>> -       spin_lock(&io_range_lock);
+>> -       list_for_each_entry(range, &io_range_list, list) {
+>> -               if (addr >= range->start && addr + size <= range->start + size) {
+>> -                       /* range already registered, bail out */
+>> -                       goto end_register;
+>> -               }
+>> -               allocated_size += range->size;
+>> -       }
+>> -
+>> -       /* range not registed yet, check for available space */
+>> -       if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
+>> -               /* if it's too big check if 64K space can be reserved */
+>> -               if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
+>> -                       err = -E2BIG;
+>> -                       goto end_register;
+>> -               }
+>> -
+>> -               size = SZ_64K;
+>> -               pr_warn("Requested IO range too big, new size set to 64K\n");
+>> -       }
+>> -
+>> -       /* add the range to the list */
+>> -       range = kzalloc(sizeof(*range), GFP_ATOMIC);
+>> -       if (!range) {
+>> -               err = -ENOMEM;
+>> -               goto end_register;
+>> -       }
+>> -
+>> -       range->start = addr;
+>> -       range->size = size;
+>> -
+>> -       list_add_tail(&range->list, &io_range_list);
+>> -
+>> -end_register:
+>> -       spin_unlock(&io_range_lock);
+>> -#endif
+>> -
+>> -       return err;
+>> -}
+>> -
+>> -phys_addr_t pci_pio_to_address(unsigned long pio)
+>> -{
+>> -       phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
+>> -
+>> -#ifdef PCI_IOBASE
+>> -       struct io_range *range;
+>> -       resource_size_t allocated_size = 0;
+>> -
+>> -       if (pio > IO_SPACE_LIMIT)
+>> -               return address;
+>> -
+>> -       spin_lock(&io_range_lock);
+>> -       list_for_each_entry(range, &io_range_list, list) {
+>> -               if (pio >= allocated_size && pio < allocated_size + range->size) {
+>> -                       address = range->start + pio - allocated_size;
+>> -                       break;
+>> -               }
+>> -               allocated_size += range->size;
+>> -       }
+>> -       spin_unlock(&io_range_lock);
+>> -#endif
+>> -
+>> -       return address;
+>> -}
+>> -
+>> -unsigned long __weak pci_address_to_pio(phys_addr_t address)
+>> -{
+>> -#ifdef PCI_IOBASE
+>> -       struct io_range *res;
+>> -       resource_size_t offset = 0;
+>> -       unsigned long addr = -1;
+>> -
+>> -       spin_lock(&io_range_lock);
+>> -       list_for_each_entry(res, &io_range_list, list) {
+>> -               if (address >= res->start && address < res->start + res->size) {
+>> -                       addr = address - res->start + offset;
+>> -                       break;
+>> -               }
+>> -               offset += res->size;
+>> -       }
+>> -       spin_unlock(&io_range_lock);
+>> -
+>> -       return addr;
+>> -#else
+>> -       if (address > IO_SPACE_LIMIT)
+>> -               return (unsigned long)-1;
+>> -
+>> -       return (unsigned long) address;
+>> -#endif
+>> -}
+>> -
+>>   static int __of_address_to_resource(struct device_node *dev,
+>>                  const __be32 *addrp, u64 size, unsigned int flags,
+>>                  const char *name, struct resource *r)
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 25e0327..bc0c914 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -3021,6 +3021,121 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
+>>   }
+>>   EXPORT_SYMBOL(pci_request_regions_exclusive);
+>>
+>> +#ifdef PCI_IOBASE
+>> +struct io_range {
+>> +       struct list_head list;
+>> +       phys_addr_t start;
+>> +       resource_size_t size;
+>> +};
+>> +
+>> +static LIST_HEAD(io_range_list);
+>> +static DEFINE_SPINLOCK(io_range_lock);
+>> +#endif
+>> +
+>> +/*
+>> + * Record the PCI IO range (expressed as CPU physical address + size).
+>> + * Return a negative value if an error has occured, zero otherwise
+>> + */
+>> +int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+>> +{
+>> +       int err = 0;
+>> +
+>> +#ifdef PCI_IOBASE
 >
->Can you possibly have more than 256 PEs? Or exactly 256? What patch in this
->series makes use of it?
->
->I probably asked but do not remember the answer :)
->
->Looks like waste of memory - you only used a small fraction of
->pe_rmap[0x10000] and now the waste is quadrupled.
+> I understand that this moves code around, but those in-function
+> #ifdefs aren't nice.  Any chance to get rid of them but putting whole
+> functions under the #ifdef?
 >
 
-The PE capacities on different hardware are different as below. So we're
-going to support 16-bits PE number in near future. That means the element
-in the array needs "unsigned short" at least and 2 pages (2 * 64KB) will
-be reserved for it.
+This is a __weak implementation, so assuming I would move #ifdef out of 
+function I need to provide another empty __weak stub. I do not know 
+which solution is more ugly. In any case we can do that cleanup separately.
 
-P7IOC: 127        PHB3: 256
-PHB4:  65536      NPU1: 4        NPU2: 16
-
-I agree some memory is wasted and the wasted amount depends on the PCI
-topology. No memory will be wasted if 256 busses show on one particular
-PHB. Less busses one PHB has, more memory will be wasted. As I explained
-before, the total used memory is 4 pages (4 * 64KB). Considering the memory
-capacity on PPC64 (especially PowerNV), I guess it's fine. Note that the
-memory is allocated from memblock together with PHB instance.
-
-The alternative solution (to avoid wasting memory) would be searching for
-the PE number according to the input BDFN through the PE list maintained
-in each PHB. Obviously, it will induce more logic and more CPU cycles will
-be used. So it's a kind of trade-off. If you really want to see this, I
-absolutely can do it in next revision. Another option would be to improve
-it later and keep the code as what we have. Please input your thought. 
-
->
->>
->>This extends the PE# capacity for every PHB. After that, the PE number
->>is represented by 4-bytes value. Then we can reuse IODA_INVALID_PE to
->>check the PE# in phb->pe_rmap[] is valid or not.
->
->Looks like using IODA_INVALID_PE is the only reason for this patch.
->
-
-For now, yes. In near future, It needs to be extended to represent 16-bits
-PE number for PHB4 as I explained above. 
-
->
->>
->>Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->>Reviewed-by: Daniel Axtens <dja@axtens.net>
->>---
->> arch/powerpc/platforms/powernv/pci-ioda.c | 6 +++++-
->> arch/powerpc/platforms/powernv/pci.h      | 7 ++-----
->> 2 files changed, 7 insertions(+), 6 deletions(-)
->>
->>diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->>index cbd4c0b..cf96cb5 100644
->>--- a/arch/powerpc/platforms/powernv/pci-ioda.c
->>+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->>@@ -768,7 +768,7 @@ static int pnv_ioda_deconfigure_pe(struct pnv_phb *phb, struct pnv_ioda_pe *pe)
->>
->> 	/* Clear the reverse map */
->> 	for (rid = pe->rid; rid < rid_end; rid++)
->>-		phb->ioda.pe_rmap[rid] = 0;
->>+		phb->ioda.pe_rmap[rid] = IODA_INVALID_PE;
->>
->> 	/* Release from all parents PELT-V */
->> 	while (parent) {
->>@@ -3406,6 +3406,10 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->> 	if (prop32)
->> 		phb->ioda.reserved_pe_idx = be32_to_cpup(prop32);
->>
->>+	/* Invalidate RID to PE# mapping */
->>+	for (segno = 0; segno < ARRAY_SIZE(phb->ioda.pe_rmap); segno++)
->>+		phb->ioda.pe_rmap[segno] = IODA_INVALID_PE;
->>+
->> 	/* Parse 64-bit MMIO range */
->> 	pnv_ioda_parse_m64_window(phb);
->>
->>diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
->>index 904f60b..80f5326 100644
->>--- a/arch/powerpc/platforms/powernv/pci.h
->>+++ b/arch/powerpc/platforms/powernv/pci.h
->>@@ -156,11 +156,8 @@ struct pnv_phb {
->> 		struct list_head	pe_list;
->> 		struct mutex            pe_list_mutex;
->>
->>-		/* Reverse map of PEs, will have to extend if
->>-		 * we are to support more than 256 PEs, indexed
->>-		 * bus { bus, devfn }
->>-		 */
->>-		unsigned char		pe_rmap[0x10000];
->>+		/* Reverse map of PEs, indexed by {bus, devfn} */
->>+		unsigned int		pe_rmap[0x10000];
->>
->> 		/* TCE cache invalidate registers (physical and
->> 		 * remapped)
->>
->
->
->-- 
->Alexey
->
-
+Tomasz
