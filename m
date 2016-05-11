@@ -1,381 +1,178 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 4 May 2016 10:17:22 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	David Miller <davem@davemloft.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Wei Yang <weiyang@linux.vnet.ibm.com>, TJ <linux@iam.tj>,
-	Yijing Wang <wangyijing@huawei.com>,
-	Khalid Aziz <khalid.aziz@oracle.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Michael Ellerman <mpe@ellerman.id.au>
-Subject: Re: [PATCH v11 04/60] sparc/PCI: Use correct offset for bus address
- to resource
-Message-ID: <20160504151722.GA22051@localhost>
-References: <1460074573-7481-5-git-send-email-yinghai@kernel.org>
- <20160422204920.GA17215@localhost>
- <CAE9FiQWQ2ke3_P4Qhj+ON7pMiVCx4myhVNVaSYO4vYAL_P4njg@mail.gmail.com>
- <20160428135607.GA12470@localhost>
- <CAE9FiQU_XSMfxFPSOrMjQ2DGnrM0D5T=0ORfDEBxqWggGrzc+Q@mail.gmail.com>
- <CAE9FiQX_8oXj=FD8pKe=eBL=YWZY-=C8sZ6yMbmkwegLVOR-fA@mail.gmail.com>
- <1462322260.30470.76.camel@kernel.crashing.org>
- <20160504012531.GB17170@localhost>
- <CAE9FiQU=e2bf=+KDrOETf_T-KPLQsSDiG5GqVFqgtvSWXwUz4w@mail.gmail.com>
- <CAE9FiQV19OUsSL34GzDXYtVG=Xs724CpwHNfu3HCmYMUqbmrqQ@mail.gmail.com>
+Return-Path: <gabriele.paoloni@huawei.com>
+Return-Path: <gabriele.paoloni@huawei.com>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Tomasz Nowicki <tn@semihalf.com>,
+        "helgaas@kernel.org"
+	<helgaas@kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "will.deacon@arm.com"
+	<will.deacon@arm.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "hanjun.guo@linaro.org"
+	<hanjun.guo@linaro.org>,
+        "Lorenzo.Pieralisi@arm.com"
+	<Lorenzo.Pieralisi@arm.com>,
+        "okaya@codeaurora.org" <okaya@codeaurora.org>,
+        "jchandra@broadcom.com" <jchandra@broadcom.com>
+CC: "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
+        "mw@semihalf.com" <mw@semihalf.com>,
+        "Liviu.Dudau@arm.com"
+	<Liviu.Dudau@arm.com>,
+        "ddaney@caviumnetworks.com"
+	<ddaney@caviumnetworks.com>,
+        Wangyijing <wangyijing@huawei.com>,
+        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+        "msalter@redhat.com" <msalter@redhat.com>,
+        "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+        "linux-acpi@vger.kernel.org"
+	<linux-acpi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>,
+        "linaro-acpi@lists.linaro.org"
+	<linaro-acpi@lists.linaro.org>,
+        "jcm@redhat.com" <jcm@redhat.com>,
+        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
+        "dhdang@apm.com"
+	<dhdang@apm.com>,
+        "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>,
+        "cov@codeaurora.org"
+	<cov@codeaurora.org>
+Subject: RE: [PATCH V7 00/11] Support for generic ACPI based PCI host
+ controller
+Date: Wed, 11 May 2016 10:41:15 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED8DF51@lhreml503-mbs>
+References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+In-Reply-To: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQV19OUsSL34GzDXYtVG=Xs724CpwHNfu3HCmYMUqbmrqQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 03, 2016 at 10:52:33PM -0700, Yinghai Lu wrote:
-> On Tue, May 3, 2016 at 10:08 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > On Tue, May 3, 2016 at 6:25 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >> I did not propose changing any user-visible ABI.  To recap what I did
-> >> propose:
-> >
-> > I want to avoid introduce one strange pci_user_to_resource.
-> >
-> >>
-> >>   - The sysfs path uses offsets between 0 and BAR size on all arches.
-> >>     It uses pci_resource_to_user() today, but I think it should not.
-> >>
-> >>   - The procfs path uses offsets of resource values (CPU physical
-> >>     addresses) on most architectures, but uses something else, e.g.,
-> >>     BAR values, on others.  pci_resource_to_user() does this
-> >>     translation.  The procfs path does not use pci_resource_to_user()
-> >>     today, but I think it should.
-> >
-> > current powerpc pci_resource_to_user is strange:
-> > it will return resource start for io mem.
-> > but will return BAR (?) start for io port.
-> >
-> > sparc pci_resource_to_user does return BAR value for iomem.
-
-That means it should be implemented using pcibios_resource_to_bus().
-
-> >>   - This implies that pci_mmap_page_range() should deal with resource
-> >>     values (CPU physical addresses), and proc_bus_pci_mmap() should do
-> >>     any necessary arch-specific translation from BAR values to
-> >>     resource values.
-> >
-> > so will need one different version pci_user_to_resource.
-> > and can not use pcibios_bus_to_resource directly, and will be another mess.
-
-What mess do you mean?  The fact that you could only use
-pcibios_bus_to_resource() for MEM, and something else for IO?  Even
-if we could only use pcibios_bus_to_resource() for MEM, that sounds
-like an improvement, not a mess.
-
-> looks like we can avoid that pci_user_to_resource() via trying out.
-> Please check it:
-> 
-> 
-> Subject: [RFC PATCH] PCI: Let pci_mmap_page_range() take resource addr
-> 
-> Some arch where cpu address (resource value) is not same as pci bus address
-> (BAR value in pci BAR registers), include sparc, powerpc, microblaze.
-
-This comment is irrelevant.  *Lots* of arches have CPU addresses
-different from PCI bus addresses, including alpha, arm, ia64, mips,
-mn10300, parisc, tile, xtensa, and x86.
-
-> In 8c05cd08a7 ("PCI: fix offset check for sysfs mmapped files"), try
-> to check exposed value with resource start/end in proc mmap path.
-> |        start = vma->vm_pgoff;
-> |        size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
-> |        pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
-> |                        pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
-> |        if (start >= pci_start && start < pci_start + size &&
-> |                        start + nr <= pci_start + size)
-> That would break sparc that exposed value is still BAR value.
-> 
-> According to Bjorn, we could just pass resource addr instead of BAR.
-> 
-> In the patch:
-> 1. in proc path: proc_bus_pci_mmap, try convert back to resource
->    before calling pci_mmap_page_range
-> 2. in sysfs path: pci_mmap_resource will just offset with resource start.
-> 3. all pci_mmap_page_range will all have vma->vm_pgoff with in resource range
->    instead of BAR value.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> 
-> ---
->  arch/microblaze/pci/pci-common.c |   14 ++++----------
->  arch/powerpc/kernel/pci-common.c |   14 ++++----------
->  arch/sparc/kernel/pci.c          |   27 +++++++++------------------
->  arch/xtensa/kernel/pci.c         |   11 ++++-------
->  drivers/pci/pci-sysfs.c          |    8 +-------
->  drivers/pci/proc.c               |   13 +++++++++++++
->  6 files changed, 35 insertions(+), 52 deletions(-)
-> 
-> Index: linux-2.6/arch/microblaze/pci/pci-common.c
-> ===================================================================
-> --- linux-2.6.orig/arch/microblaze/pci/pci-common.c
-> +++ linux-2.6/arch/microblaze/pci/pci-common.c
-> @@ -169,23 +169,16 @@ static struct resource *__pci_mmap_make_
->                             enum pci_mmap_state mmap_state)
->  {
->      struct pci_controller *hose = pci_bus_to_host(dev->bus);
-> -    unsigned long io_offset = 0;
->      int i, res_bit;
-> 
->      if (!hose)
->          return NULL;        /* should never happen */
-> 
->      /* If memory, add on the PCI bridge address offset */
-> -    if (mmap_state == pci_mmap_mem) {
-> -#if 0 /* See comment in pci_resource_to_user() for why this is disabled */
-> -        *offset += hose->pci_mem_offset;
-> -#endif
-> +    if (mmap_state == pci_mmap_mem)
->          res_bit = IORESOURCE_MEM;
-> -    } else {
-> -        io_offset = (unsigned long)hose->io_base_virt - _IO_BASE;
-> -        *offset += io_offset;
-> +    else
->          res_bit = IORESOURCE_IO;
-> -    }
-> 
->      /*
->       * Check that the offset requested corresponds to one of the
-> @@ -209,7 +202,8 @@ static struct resource *__pci_mmap_make_
-> 
->          /* found it! construct the final physical address */
->          if (mmap_state == pci_mmap_io)
-> -            *offset += hose->io_base_phys - io_offset;
-> +            *offset += hose->io_base_phys -
-> +                 ((unsigned long)hose->io_base_virt - _IO_BASE);
->          return rp;
->      }
-
-Most of __pci_mmap_make_offset() is pointless.
-
-We might need something there for I/O regions, but for MEM, the
-vma->vm_pgoff coming into pci_mmap_page_range() should be exactly what
-we need and we shouldn't touch it.  I think __pci_mmap_make_offset()
-actually does leave it alone for MEM, but you have to read the code
-carefully to figure that out.
-
-All the validation stuff ("Check that the offset requested corresponds
-to one of the resources...") should be removed or moved to
-pci_mmap_fits().
-
-> Index: linux-2.6/arch/powerpc/kernel/pci-common.c
-> ===================================================================
-> --- linux-2.6.orig/arch/powerpc/kernel/pci-common.c
-> +++ linux-2.6/arch/powerpc/kernel/pci-common.c
-> @@ -308,23 +308,16 @@ static struct resource *__pci_mmap_make_
->                             enum pci_mmap_state mmap_state)
->  {
->      struct pci_controller *hose = pci_bus_to_host(dev->bus);
-> -    unsigned long io_offset = 0;
->      int i, res_bit;
-> 
->      if (hose == NULL)
->          return NULL;        /* should never happen */
-> 
->      /* If memory, add on the PCI bridge address offset */
-> -    if (mmap_state == pci_mmap_mem) {
-> -#if 0 /* See comment in pci_resource_to_user() for why this is disabled */
-> -        *offset += hose->pci_mem_offset;
-> -#endif
-> +    if (mmap_state == pci_mmap_mem)
->          res_bit = IORESOURCE_MEM;
-> -    } else {
-> -        io_offset = (unsigned long)hose->io_base_virt - _IO_BASE;
-> -        *offset += io_offset;
-> +    else
->          res_bit = IORESOURCE_IO;
-> -    }
-> 
->      /*
->       * Check that the offset requested corresponds to one of the
-> @@ -348,7 +341,8 @@ static struct resource *__pci_mmap_make_
-> 
->          /* found it! construct the final physical address */
->          if (mmap_state == pci_mmap_io)
-> -            *offset += hose->io_base_phys - io_offset;
-> +            *offset += hose->io_base_phys -
-> +                 ((unsigned long)hose->io_base_virt - _IO_BASE);
->          return rp;
->      }
-> 
-> Index: linux-2.6/arch/sparc/kernel/pci.c
-> ===================================================================
-> --- linux-2.6.orig/arch/sparc/kernel/pci.c
-> +++ linux-2.6/arch/sparc/kernel/pci.c
-> @@ -743,30 +743,21 @@ static int __pci_mmap_make_offset_bus(st
->                        enum pci_mmap_state mmap_state)
->  {
->      struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
-> -    unsigned long space_size, user_offset, user_size;
-> +    unsigned long start, end;
-> +    struct resource *res;
-> 
-> -    if (mmap_state == pci_mmap_io) {
-> -        space_size = resource_size(&pbm->io_space);
-> -    } else {
-> -        space_size = resource_size(&pbm->mem_space);
-> -    }
-> +    if (mmap_state == pci_mmap_io)
-> +        res = &pbm->io_space;
-> +    else
-> +        res = &pbm->mem_space;
-> 
->      /* Make sure the request is in range. */
-> -    user_offset = vma->vm_pgoff << PAGE_SHIFT;
-> -    user_size = vma->vm_end - vma->vm_start;
-> +    start = vma->vm_pgoff << PAGE_SHIFT;
-> +    end = vma->vm_end - vma->vm_start + start - 1;
-> 
-> -    if (user_offset >= space_size ||
-> -        (user_offset + user_size) > space_size)
-> +    if (!((res->start <= start) && (res->end >= end)))
->          return -EINVAL;
-> 
-> -    if (mmap_state == pci_mmap_io) {
-> -        vma->vm_pgoff = (pbm->io_space.start +
-> -                 user_offset) >> PAGE_SHIFT;
-> -    } else {
-> -        vma->vm_pgoff = (pbm->mem_space.start +
-> -                 user_offset) >> PAGE_SHIFT;
-> -    }
-> -
->      return 0;
->  }
-> 
-> Index: linux-2.6/arch/xtensa/kernel/pci.c
-> ===================================================================
-> --- linux-2.6.orig/arch/xtensa/kernel/pci.c
-> +++ linux-2.6/arch/xtensa/kernel/pci.c
-> @@ -288,20 +288,16 @@ __pci_mmap_make_offset(struct pci_dev *d
->  {
->      struct pci_controller *pci_ctrl = (struct pci_controller*) dev->sysdata;
->      unsigned long offset = vma->vm_pgoff << PAGE_SHIFT;
-> -    unsigned long io_offset = 0;
->      int i, res_bit;
-> 
->      if (pci_ctrl == 0)
->          return -EINVAL;        /* should never happen */
-> 
->      /* If memory, add on the PCI bridge address offset */
-> -    if (mmap_state == pci_mmap_mem) {
-> +    if (mmap_state == pci_mmap_mem)
->          res_bit = IORESOURCE_MEM;
-> -    } else {
-> -        io_offset = (unsigned long)pci_ctrl->io_space.base;
-> -        offset += io_offset;
-> +    else
->          res_bit = IORESOURCE_IO;
-> -    }
-> 
->      /*
->       * Check that the offset requested corresponds to one of the
-> @@ -325,7 +321,8 @@ __pci_mmap_make_offset(struct pci_dev *d
-> 
->          /* found it! construct the final physical address */
->          if (mmap_state == pci_mmap_io)
-> -            offset += pci_ctrl->io_space.start - io_offset;
-> +            offset += pci_ctrl->io_space.start -
-> +                    pci_ctrl->io_space.base;
->          vma->vm_pgoff = offset >> PAGE_SHIFT;
->          return 0;
->      }
-> Index: linux-2.6/drivers/pci/pci-sysfs.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/pci-sysfs.c
-> +++ linux-2.6/drivers/pci/pci-sysfs.c
-> @@ -999,7 +999,6 @@ static int pci_mmap_resource(struct kobj
->      struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
->      struct resource *res = attr->private;
->      enum pci_mmap_state mmap_type;
-> -    resource_size_t start, end;
->      int i;
-> 
->      for (i = 0; i < PCI_ROM_RESOURCE; i++)
-> @@ -1020,12 +1019,7 @@ static int pci_mmap_resource(struct kobj
->          return -EINVAL;
->      }
-> 
-> -    /* pci_mmap_page_range() expects the same kind of entry as coming
-> -     * from /proc/bus/pci/ which is a "user visible" value. If this is
-> -     * different from the resource itself, arch will do necessary fixup.
-> -     */
-> -    pci_resource_to_user(pdev, i, res, &start, &end);
-> -    vma->vm_pgoff += start >> PAGE_SHIFT;
-> +    vma->vm_pgoff += res->start >> PAGE_SHIFT;
->      mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
->      return pci_mmap_page_range(pdev, vma, mmap_type, write_combine);
-
-This is a definite improvement.  This path doesn't use user addresses,
-so getting rid of pci_resource_to_user() here helps a lot.
-
->  }
-> Index: linux-2.6/drivers/pci/proc.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/pci/proc.c
-> +++ linux-2.6/drivers/pci/proc.c
-> @@ -231,13 +231,26 @@ static int proc_bus_pci_mmap(struct file
->  {
->      struct pci_dev *dev = PDE_DATA(file_inode(file));
->      struct pci_filp_private *fpriv = file->private_data;
-> +    resource_size_t start, end, offset;
-> +    struct resource *res;
->      int i, ret;
-> 
->      if (!capable(CAP_SYS_RAWIO))
->          return -EPERM;
-> 
-> +    offset = vma->vm_pgoff << PAGE_SHIFT;
-> +
->      /* Make sure the caller is mapping a real resource for this device */
->      for (i = 0; i < PCI_ROM_RESOURCE; i++) {
-> +        res = &dev->resource[i];
-> +        if (!res->flags)
-> +            continue;
-> +
-> +        pci_resource_to_user(dev, i, res, &start, &end);
-> +        if (!(offset >= start && offset <= end))
-> +            continue;
-> +
-> +        vma->vm_pgoff = (res->start + (offset - start)) >> PAGE_SHIFT;
->          if (pci_mmap_fits(dev, i, vma,  PCI_MMAP_PROCFS))
-
-This is sort of OK, but I think we can do better.  I don't see any
-problem with introducing pci_user_to_resource() as the inverse of
-pci_resource_to_user().  I think it will make this code read much
-better.
-
-The default pci_user_to_resource() would do nothing, just like the
-default pci_resource_to_user().
-
-For sparc, I think pci_user_to_resource() can use
-pcibios_bus_to_resource(), and pci_resource_to_user() can be rewritten
-to use pcibios_resource_to_bus().  That makes it much more obvious
-what's happening.
-
-It looks like microblaze and powerpc should use
-pcibios_resource_to_bus() for I/O resources and the default "user
-address == resource address" for MMIO (?)
-
-My goal is to make pci_mmap_resource() and proc_bus_pci_mmap() look
-very similar, e.g.,
-
-  /* locate resource */
-  pci_user_to_resource()                # only in proc_bus_pci_mmap()
-  if (!pci_mmap_fits()) {
-    WARN(...);
-    return -EINVAL;
-  }
-  pci_mmap_page_range();
-
-Obviously there are several steps in getting here.  Reworking
-pci_resource_to_user() to use pcibios_resource_to_bus() when possible
-would be a good start.
-
-Bjorn
+SGkgVG9tYXN6DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgt
+a2VybmVsLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LWtlcm5lbC0NCj4gb3du
+ZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgVG9tYXN6IE5vd2lja2kNCj4gU2VudDog
+MTAgTWF5IDIwMTYgMTY6MjANCj4gVG86IGhlbGdhYXNAa2VybmVsLm9yZzsgYXJuZEBhcm5kYi5k
+ZTsgd2lsbC5kZWFjb25AYXJtLmNvbTsNCj4gY2F0YWxpbi5tYXJpbmFzQGFybS5jb207IHJhZmFl
+bEBrZXJuZWwub3JnOyBoYW5qdW4uZ3VvQGxpbmFyby5vcmc7DQo+IExvcmVuem8uUGllcmFsaXNp
+QGFybS5jb207IG9rYXlhQGNvZGVhdXJvcmEub3JnOyBqY2hhbmRyYUBicm9hZGNvbS5jb20NCj4g
+Q2M6IHJvYmVydC5yaWNodGVyQGNhdml1bW5ldHdvcmtzLmNvbTsgbXdAc2VtaWhhbGYuY29tOw0K
+PiBMaXZpdS5EdWRhdUBhcm0uY29tOyBkZGFuZXlAY2F2aXVtbmV0d29ya3MuY29tOyBXYW5neWlq
+aW5nOw0KPiBTdXJhdmVlLlN1dGhpa3VscGFuaXRAYW1kLmNvbTsgbXNhbHRlckByZWRoYXQuY29t
+OyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5p
+bmZyYWRlYWQub3JnOyBsaW51eC0NCj4gYWNwaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5l
+bEB2Z2VyLmtlcm5lbC5vcmc7IGxpbmFyby0NCj4gYWNwaUBsaXN0cy5saW5hcm8ub3JnOyBqY21A
+cmVkaGF0LmNvbTsgYW5kcmVhLmdhbGxvQGxpbmFyby5vcmc7DQo+IGRoZGFuZ0BhcG0uY29tOyBq
+ZXJlbXkubGludG9uQGFybS5jb207IGxpdWRvbmdkb25nIChDKTsNCj4gY292QGNvZGVhdXJvcmEu
+b3JnOyBUb21hc3ogTm93aWNraQ0KPiBTdWJqZWN0OiBbUEFUQ0ggVjcgMDAvMTFdIFN1cHBvcnQg
+Zm9yIGdlbmVyaWMgQUNQSSBiYXNlZCBQQ0kgaG9zdA0KPiBjb250cm9sbGVyDQo+IA0KPiBGcm9t
+IHRoZSBmdW5jdGlvbmFsaXR5IHBvaW50IG9mIHZpZXcgdGhpcyBzZXJpZXMgbWF5IGJlIHNwbGl0
+IGludG8gdGhlDQo+IGZvbGxvd2luZyBsb2dpYyBwYXJ0czoNCj4gMS4gTmV3IEVDQU0gQVBJIGFu
+ZCB1cGRhdGUgZm9yIHVzZXJzIG9mIHRoZSBwY2ktaG9zdC1jb21tb24gQVBJDQo+IDIuIE5lY2Vz
+c2FyeSBmaXhlcyBhcyB0aGUgcHJlcGFyYXRpb24gZm9yIHVzaW5nIGRyaXZlciBvbiBBUk02NC4N
+Cj4gMy4gVXNlIG5ldyBNQ0ZHIGludGVyZmFjZSBhbmQgaW1wbGVtZW50IGdlbmVyaWMgQUNQSSBi
+YXNlZCBQQ0kgaG9zdA0KPiBjb250cm9sbGVyIGRyaXZlci4NCj4gNC4gRW5hYmxlIGFib3ZlIGRy
+aXZlciBvbiBBUk02NA0KPiANCj4gUGF0Y2hlcyBoYXMgYmVlbiBidWlsdCBvbiB0b3Agb2YgNC42
+LXJjNyBhbmQgY2FuIGJlIGZvdW5kIGhlcmU6DQo+IGdpdEBnaXRodWIuY29tOnNlbWloYWxmLW5v
+d2lja2ktdG9tYXN6L2xpbnV4LmdpdCAocGNpLWFjcGktdjcpDQo+IA0KPiBUaGlzIGhhcyBiZWVu
+IHRlc3RlZCBvbiBDYXZpdW0gVGh1bmRlclggc2VydmVyLiBBbnkgaGVscCBpbiByZXZpZXdpbmcN
+Cj4gYW5kDQo+IHRlc3RpbmcgaXMgdmVyeSBhcHByZWNpYXRlZC4NCj4gDQo+IHY2IC0+IHY3DQo+
+IC0gZHJvcCBxdWlya3MgaGFuZGxpbmcNCg0KTWF5YmUgSSBtaXNzZWQgc29tZXRoaW5nIGluIHRo
+ZSB2NiBkaXNjdXNzaW9uIHRocmVhZDsgd2hlbiB3YXMgaXQNCmRlY2lkZWQgdG8gZHJvcCBxdWly
+ayBoYW5kbGluZz8NCg0KSSB0aGluayBpdCBpcyBpbXBvcnRhbnQgdG8gaGF2ZSB0aGlzIGluIHBs
+YWNlIHRvIGFjY29tbW9kYXRlIGRpZmZlcmVudA0KdmVuZG9ycy4gSWYgdGhlIGludGVudGlvbiBp
+cyB0byBrZWVwIHRoaXMgcGF0Y2hzZXQgImNsZWFuIiBtYXliZQ0Kd2UgY2FuIGFkZCBpdCBhcyBh
+IHNlcGFyYXRlIHBhdGNoIG9uIHRvcCBsYXRlciBvbi4uLg0KDQpXaGF0oa9zIHlvdXIgdmlldz8N
+Cg0KVGhhbmtzDQoNCkdhYg0KDQoNCj4gLSBjaGFuZ2VzIGZvciBBQ1BJIGNvbXBhbmlvbiBhbmQg
+ZG9tYWluIG51bWJlciBhc3NpZ25tZW50IGFwcHJvYWNoDQo+IC0gaW1wbGVtZW50IGFyY2ggcGNp
+Ymlvc197YWRkfHJlbW92ZX1fYnVzIGFuZCBjYWxsDQo+IGFjcGlfcGNpX3thZGR8cmVtb3ZlfV9i
+dXMgZnJvbSB0aGVyZQ0KPiAtIGNsZWFudXBzIGFyb3VuZCBub21lbmNsYXR1cmUNCj4gLSB1c2Ug
+cmVzb3VyY2VzIG9yaWVudGVkIEFQSSBmb3IgRUNBTQ0KPiAtIGZpeCBmb3IgYmFzZWQgYWRkcmVz
+cyBjYWxjdWxhdGlvbiBiZWZvcmUgbWFwcGluZyBFQ0FNIHJlZ2lvbg0KPiAtIHJlbW92ZSB1c2Vs
+ZXNzIGxvY2sgZm9yIE1DRkcgbG9va3VwDQo+IC0gbW92ZSBNQ0ZHIHN0dWZmIHRvIHNlcGFyYXRl
+ZCBmaWxlIHBjaV9tY2ZnLmMNCj4gLSBkcm9wIE1DRkcgZW50cmllcyBjYWNoaW5nDQo+IC0gcmVi
+YXNlIGFnYWluc3QgNC42LXJjNw0KPiANCj4gdjUgLT4gdjYNCj4gLSBkcm9wIGlkZWEgb2YgeDg2
+IE1NQ09ORklHIGNvZGUgcmVmYWN0b3JpbmcNCj4gLSBpbnRlZ3JhdGUgSkMncyBwYXRjaGVzIHdo
+aWNoIGludHJvZHVjZSBuZXcgRUNBTSBBUEk6DQo+ICAgaHR0cHM6Ly9sa21sLm9yZy9sa21sLzIw
+MTYvNC8xMS85MDcNCj4gICBnaXQ6IGh0dHBzOi8vZ2l0aHViLmNvbS9qY2hhbmRyYS1icmNtL2xp
+bnV4LyAoYXJtNjQtYWNwaS1wY2ktdjMpDQo+IC0gaW50ZWdyYXRlIFNpbmFuJ3MgZml4IGZvciBy
+ZWxlYXNpbmcgSU8gcmVzb3VyY2VzLCBzZWUgcGF0Y2ggWzA2LzEzXQ0KPiAtIGFkZGVkIEFDUEkg
+c3VwcG9ydCBmb3IgVGh1bmRlclggRUNBTSBhbmQgUEVNIGRyaXZlcnMNCj4gLSByZWJhc2UgYWdh
+aW5zdCA0LjYtcmMyDQo+IA0KPiB2NCAtPiB2NQ0KPiAtIGRyb3AgTUNGRyByZWZhY3RvcmluZyBn
+cm91cCBwYXRjaGVzIDEtNiBmcm9tIHNlcmllcyB2NCBhbmQgaW50ZWdyYXRlDQo+IEpheWFjaGFu
+ZHJhbidzIHBhdGNoDQo+ICAgaHR0cHM6Ly9wYXRjaHdvcmsub3psYWJzLm9yZy9wYXRjaC81NzU1
+MjUvDQo+IC0gcmV3cml0ZSBQQ0kgbGVnYWN5IElSUXMgYWxsb2NhdGlvbg0KPiAtIHNxdWFzaCB0
+d28gcGF0Y2hlcyAxMSBhbmQgMTIgZnJvbSBzZXJpZXMgdjQsIGZpeGVkIGJpc2VjdGlvbiBpc3N1
+ZQ0KPiAtIGNoYW5nZWxvZyBpbXByb3ZlbWVudHMNCj4gLSByZWJhc2UgYWdhaW5zdCA0LjUtcmMz
+DQo+IA0KPiB2MyAtPiB2NA0KPiAtIGRyb3AgSmlhbmcncyBmaXgNCj4gaHR0cDovL2xrbWwuaXUu
+ZWR1L2h5cGVybWFpbC9saW51eC9rZXJuZWwvMTYwMS4xLzA0MzE4Lmh0bWwNCj4gLSBhZGQgTG9y
+ZW56bydzIGZpeCBwYXRjaCAxOS8yNA0KPiAtIEFDUEkgUENJIGJ1cyBkb21haW4gbnVtYmVyIGFz
+c2lnbmluZyBjbGVhbnVwDQo+IC0gY2hhbmdlIHJlc291cmNlIG1hbmFnZW1lbnQsIHdlIG5vdyBj
+bGFpbSBhbmQgcmVhc3NpZ24gcmVzb3VyY2VzDQo+IC0gaW1wcm92ZW1lbnRzIGZvciBhcHBseWlu
+ZyBxdWlya3MNCj4gLSBkcm9wIE1hdHRoZXcncyBodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3Rz
+L2xpbnV4LXBjaS9tc2c0NTk1MC5odG1sDQo+IGRlcGVuZGVuY3kNCj4gLSByZWJhc2UgYWdhaW5z
+dCA0LjUtcmMxDQo+IA0KPiB2MiAtPiB2Mw0KPiAtIGZpeCBsZWdhY3kgSVJRIGFzc2lnbmluZyBh
+bmQgSU8gcG9ydHMgcmVnaXN0cmF0aW9uDQo+IC0gcmVtb3ZlIHJlZmVyZW5jZSB0byBhcmNoIHNw
+ZWNpZmljIGNvbXBhbmlvbiBkZXZpY2UgZm9yIGlhNjQNCj4gLSBtb3ZlIEFDUEkgUENJIGhvc3Qg
+Y29udHJvbGxlciBkcml2ZXIgdG8gcGNpX3Jvb3QuYw0KPiAtIGRyb3AgZ2VuZXJpYyBkb21haW4g
+YXNzaWdubWVudCBmb3IgeDg2IGFuZCBpYTY0IGFzIEkgYW0gbm90DQo+ICAgYWJsZSB0byBydW4g
+YWxsIG5lY2Vzc2FyeSB0ZXN0IHZhcmlhbnRzDQo+IC0gZHJvcCBwYXRjaCB3aGljaCBjbGVhbmVk
+IGxlZ2FjeSBJUlEgYXNzaWdubWVudCBzaW5jZSBpdCBiZWxvbmdzIHRvDQo+ICAgTWF0aGV3J3Mg
+c2VyaWVzOg0KPiAgIGh0dHBzOi8vcGF0Y2h3b3JrLm96bGFicy5vcmcvcGF0Y2gvNTU3NTA0Lw0K
+PiAtIGV4dGVuZCBNQ0ZHIHF1aXJrIGNvZGUNCj4gLSByZWJhc2UgYWdhaW5zdCA0LjQNCj4gDQo+
+IHYxIC0+IHYyDQo+IC0gbW92ZSBub24tYXJjaCBzcGVjaWZpYyBwaWVjZSBvZiBjb2RlIHRvIGRp
+cnZlci9hY3BpLyBkaXJlY3RvcnkNCj4gLSBmaXggSU8gcmVzb3VyY2UgaGFuZGxpbmcNCj4gLSBp
+bnRyb2R1Y2UgUENJIGNvbmZpZyBhY2Nlc3NvcnMgcXVpcmtzIG1hdGNoaW5nDQo+IC0gbW92ZWQg
+QUNQSV9DT01QQU5JT05fU0VUIHRvIGdlbmVyaWMgY29kZQ0KPiANCj4gdjEgLSBodHRwczovL2xr
+bWwub3JnL2xrbWwvMjAxNS8xMC8yNy81MDQNCj4gdjIgLSBodHRwczovL2xrbWwub3JnL2xrbWwv
+MjAxNS8xMi8xNi8yNDYNCj4gdjMgLSBodHRwOi8vbGttbC5pdS5lZHUvaHlwZXJtYWlsL2xpbnV4
+L2tlcm5lbC8xNjAxLjEvMDQzMDguaHRtbA0KPiB2NCAtIGh0dHBzOi8vbGttbC5vcmcvbGttbC8y
+MDE2LzIvNC82NDYNCj4gdjUgLSBodHRwczovL2xrbWwub3JnL2xrbWwvMjAxNi8yLzE2LzQyNg0K
+PiB2NiAtIGh0dHBzOi8vbGttbC5vcmcvbGttbC8yMDE2LzQvMTUvNTk0DQo+IA0KPiBKYXlhY2hh
+bmRyYW4gQyAoMik6DQo+ICAgUENJOiBQcm92aWRlIGNvbW1vbiBmdW5jdGlvbnMgZm9yIEVDQU0g
+bWFwcGluZw0KPiAgIFBDSTogZ2VuZXJpYywgdGh1bmRlcjogdXBkYXRlIHRvIHVzZSBnZW5lcmlj
+IEVDQU0gQVBJDQo+IA0KPiBUb21hc3ogTm93aWNraSAoOSk6DQo+ICAgcGNpLCBvZjogTW92ZSB0
+aGUgUENJIEkvTyBzcGFjZSBtYW5hZ2VtZW50IHRvIFBDSSBjb3JlIGNvZGUuDQo+ICAgcGNpOiBB
+ZGQgbmV3IGZ1bmN0aW9uIHRvIHVubWFwIElPIHJlc291cmNlcy4NCj4gICBhY3BpLCBwY2k6IFN1
+cHBvcnQgSU8gcmVzb3VyY2VzIHdoZW4gcGFyc2luZyBQQ0kgaG9zdCBicmlkZ2UNCj4gICAgIHJl
+c291cmNlcy4NCj4gICBwY2ksIGFjcGk6IFByb3ZpZGUgYSB3YXkgdG8gYXNzaWduIGJ1cyBkb21h
+aW4gbnVtYmVyLg0KPiAgIHBjaSwgYWNwaTogSGFuZGxlIEFDUEkgY29tcGFuaW9uIGFzc2lnbm1l
+bnQuDQo+ICAgcGNpLCBhY3BpOiBTdXBwb3J0IGZvciBBQ1BJIGJhc2VkIGdlbmVyaWMgUENJIGhv
+c3QgY29udHJvbGxlcg0KPiAgIGFybTY0LCBwY2ksIGFjcGk6IEFDUEkgc3VwcG9ydCBmb3IgbGVn
+YWN5IElSUXMgcGFyc2luZyBhbmQNCj4gICAgIGNvbnNvbGlkYXRpb24gd2l0aCBEVCBjb2RlLg0K
+PiAgIGFybTY0LCBwY2ksIGFjcGk6IFByb3ZpZGUgQUNQSS1zcGVjaWZpYyBwcmVyZXF1aXNpdGVz
+IGZvciBQQ0kgYnVzDQo+ICAgICBlbnVtZXJhdGlvbi4NCj4gICBhcm02NCwgcGNpLCBhY3BpOiBT
+dGFydCB1c2luZyBBQ1BJIGJhc2VkIFBDSSBob3N0IGNvbnRyb2xsZXIgZHJpdmVyDQo+ICAgICBm
+b3IgQVJNNjQuDQo+IA0KPiAgYXJjaC9hcm02NC9LY29uZmlnICAgICAgICAgICAgICAgICAgfCAg
+IDEgKw0KPiAgYXJjaC9hcm02NC9rZXJuZWwvcGNpLmMgICAgICAgICAgICAgfCAgMzQgKysrLS0t
+LS0NCj4gIGRyaXZlcnMvYWNwaS9LY29uZmlnICAgICAgICAgICAgICAgIHwgICA4ICsrDQo+ICBk
+cml2ZXJzL2FjcGkvTWFrZWZpbGUgICAgICAgICAgICAgICB8ICAgMSArDQo+ICBkcml2ZXJzL2Fj
+cGkvcGNpX21jZmcuYyAgICAgICAgICAgICB8ICA5NyArKysrKysrKysrKysrKysrKysrKysrDQo+
+ICBkcml2ZXJzL2FjcGkvcGNpX3Jvb3QuYyAgICAgICAgICAgICB8ICAzMyArKysrKysrKw0KPiAg
+ZHJpdmVycy9hY3BpL3BjaV9yb290X2dlbmVyaWMuYyAgICAgfCAxNDkNCj4gKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrDQo+ICBkcml2ZXJzL29mL2FkZHJlc3MuYyAgICAgICAgICAg
+ICAgICB8IDExNiArLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiAgZHJpdmVycy9wY2kvS2Nv
+bmZpZyAgICAgICAgICAgICAgICAgfCAgIDMgKw0KPiAgZHJpdmVycy9wY2kvTWFrZWZpbGUgICAg
+ICAgICAgICAgICAgfCAgIDIgKw0KPiAgZHJpdmVycy9wY2kvZWNhbS5jICAgICAgICAgICAgICAg
+ICAgfCAxNjENCj4gKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrDQo+ICBkcml2
+ZXJzL3BjaS9lY2FtLmggICAgICAgICAgICAgICAgICB8ICA3MiArKysrKysrKysrKysrKysrDQo+
+ICBkcml2ZXJzL3BjaS9ob3N0L0tjb25maWcgICAgICAgICAgICB8ICAgMSArDQo+ICBkcml2ZXJz
+L3BjaS9ob3N0L3BjaS1ob3N0LWNvbW1vbi5jICB8IDExNCArKysrKysrKysrKy0tLS0tLS0tLS0t
+LS0tDQo+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaS1ob3N0LWNvbW1vbi5oICB8ICA0NyAtLS0tLS0t
+LS0tLQ0KPiAgZHJpdmVycy9wY2kvaG9zdC9wY2ktaG9zdC1nZW5lcmljLmMgfCAgNTIgKysrLS0t
+LS0tLS0tDQo+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaS10aHVuZGVyLWVjYW0uYyB8ICAzOSArKy0t
+LS0tLS0NCj4gIGRyaXZlcnMvcGNpL2hvc3QvcGNpLXRodW5kZXItcGVtLmMgIHwgIDkyICsrKysr
+KysrKystLS0tLS0tLS0tLQ0KPiAgZHJpdmVycy9wY2kvcGNpLmMgICAgICAgICAgICAgICAgICAg
+fCAxNTANCj4gKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystDQo+ICBkcml2ZXJzL3Bj
+aS9wcm9iZS5jICAgICAgICAgICAgICAgICB8ICAgMiArDQo+ICBpbmNsdWRlL2xpbnV4L29mX2Fk
+ZHJlc3MuaCAgICAgICAgICB8ICAgOSAtLQ0KPiAgaW5jbHVkZS9saW51eC9wY2ktYWNwaS5oICAg
+ICAgICAgICAgfCAgMTQgKysrKw0KPiAgaW5jbHVkZS9saW51eC9wY2kuaCAgICAgICAgICAgICAg
+ICAgfCAgMTEgKystDQo+ICAyMyBmaWxlcyBjaGFuZ2VkLCA4MjMgaW5zZXJ0aW9ucygrKSwgMzg1
+IGRlbGV0aW9ucygtKQ0KPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvYWNwaS9wY2lfbWNm
+Zy5jDQo+ICBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9hY3BpL3BjaV9yb290X2dlbmVyaWMu
+Yw0KPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvcGNpL2VjYW0uYw0KPiAgY3JlYXRlIG1v
+ZGUgMTAwNjQ0IGRyaXZlcnMvcGNpL2VjYW0uaA0KPiAgZGVsZXRlIG1vZGUgMTAwNjQ0IGRyaXZl
+cnMvcGNpL2hvc3QvcGNpLWhvc3QtY29tbW9uLmgNCj4gDQo+IC0tDQo+IDEuOS4xDQoNCg==
