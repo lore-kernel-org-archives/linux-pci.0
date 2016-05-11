@@ -1,83 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44789 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932082AbcEKTgu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Wed, 11 May 2016 15:36:50 -0400
-Date: Wed, 11 May 2016 14:36:45 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Qipeng Zha <qipeng.zha@intel.com>,
-	Qi Zheng <qi.zheng@intel.com>, Dave Airlie <airlied@gmail.com>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH v5 1/4] PCI: No need to set d3cold_allowed to PCIe ports
-Message-ID: <20160511193645.GB28812@localhost>
-References: <1461919919-120102-1-git-send-email-mika.westerberg@linux.intel.com>
- <1461919919-120102-2-git-send-email-mika.westerberg@linux.intel.com>
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [PATCH V7 05/11] acpi, pci: Support IO resources when parsing PCI
+ host bridge resources.
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+ <1462893601-8937-6-git-send-email-tn@semihalf.com>
+ <CAJZ5v0j-jiGmMWoyd-ab4qiKGAScbxMskqUThBQxkOxPR8unMA@mail.gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+ Will Deacon <will.deacon@arm.com>, Catalin Marinas
+ <catalin.marinas@arm.com>, Hanjun Guo <hanjun.guo@linaro.org>,
+ Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ Sinan Kaya <okaya@codeaurora.org>, jchandra@broadcom.com,
+ robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
+ David Daney <ddaney@caviumnetworks.com>, wangyijing@huawei.com,
+ Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>,
+ Mark Salter <msalter@redhat.com>, Linux PCI <linux-pci@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+ Jon Masters <jcm@redhat.com>, andrea.gallo@linaro.org, dhdang@apm.com,
+ jeremy.linton@arm.com, liudongdong3@huawei.com,
+ Christopher Covington <cov@codeaurora.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <5732E1B6.1000709@semihalf.com>
+Date: Wed, 11 May 2016 09:39:34 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1461919919-120102-2-git-send-email-mika.westerberg@linux.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAJZ5v0j-jiGmMWoyd-ab4qiKGAScbxMskqUThBQxkOxPR8unMA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 29, 2016 at 11:51:56AM +0300, Mika Westerberg wrote:
-> The Linux PCI core skips PCI bridges and PCIe ports when system is
-> suspended. The PCI core checks return value of pci_has_subordinate() in
-> pci_pm_suspend_noirq() to skip all devices where it is non-zero (which
-> means PCI bridges and PCIe ports).
+On 10.05.2016 20:20, Rafael J. Wysocki wrote:
+> On Tue, May 10, 2016 at 5:19 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
+>> Platforms that have memory mapped IO port (such as ARM64) need special
+>> handling for PCI I/O resources. For host bridge's resource probing case
+>> these resources need to be fixed up with pci_register_io_range/pci_remap_iospace etc.
+>>
+>> The same I/O resources need to be released after hotplug
+>> removal so that it can be re-added back by the pci_remap_iospace
+>> function during insertion. As a consequence we unmap I/O resources
+>> with pci_unmap_iospace when we release host bridge resources.
+>>
+>> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>> ---
+>>   drivers/acpi/pci_root.c | 33 +++++++++++++++++++++++++++++++++
+>>   1 file changed, 33 insertions(+)
+>>
+>> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+>> index ae3fe4e..cb3071d 100644
+>> --- a/drivers/acpi/pci_root.c
+>> +++ b/drivers/acpi/pci_root.c
+>> @@ -719,6 +719,34 @@ next:
+>>                          resource_list_add_tail(entry, resources);
+>>          }
+>>   }
+>> +static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
+>> +{
+>> +#ifdef PCI_IOBASE
+>
+> Same comment about the #ifdefs as in the other patch.
 
-This patch looks fine to me.
+OK
 
-But I wonder whether it's correct for pci_pm_suspend_noirq() (and the
-other PM functions) to use pci_has_subordinate() as opposed to
-pci_is_bridge().
+>
+>> +       struct resource *res = entry->res;
+>> +       resource_size_t cpu_addr = res->start;
+>> +       resource_size_t pci_addr = cpu_addr - entry->offset;
+>> +       resource_size_t length = resource_size(res);
+>> +       unsigned long port;
+>> +
+>> +       if (pci_register_io_range(cpu_addr, length))
+>> +               goto err;
+>> +
+>> +       port = pci_address_to_pio(cpu_addr);
+>> +       if (port == (unsigned long)-1)
+>> +               goto err;
+>> +
+>> +       res->start = port;
+>> +       res->end = port + length - 1;
+>> +       entry->offset = port - pci_addr;
+>> +
+>> +       if (pci_remap_iospace(res, cpu_addr) < 0)
+>> +               goto err;
+>
+> An empty line here?
 
-pci_is_bridge() is true for all bridge devices (plain old PCI-PCI
-bridges, PCIe ports, CardBus bridges, etc.)
+yes, empty line would be nice here.
 
-pci_has_subordinate() is true only if the bridge has a struct pci_bus
-allocated for its secondary bus.  This is probably the case for all or
-almost all bridges, but it's conceivable that if we don't have enough
-bus number space for the secondary bus, we might not allocate that
-struct pci_bus.
-
-What do you PM guys think?  I don't know what you would want to do
-with a bridge that didn't have any reachable devices below it.
-
-> Since PCIe ports are never suspended in the first place, there is no need
-> to set d3cold_allowed for them.
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
->  drivers/pci/pcie/portdrv_pci.c | 5 -----
->  1 file changed, 5 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index be35da2e105e..6c6bb03392ea 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -134,11 +134,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
->  		return status;
->  
->  	pci_save_state(dev);
-> -	/*
-> -	 * D3cold may not work properly on some PCIe port, so disable
-> -	 * it by default.
-> -	 */
-> -	dev->d3cold_allowed = false;
->  	return 0;
->  }
->  
-> -- 
-> 2.8.0.rc3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Tomasz
