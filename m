@@ -1,92 +1,125 @@
-Return-Path: <agordeev@redhat.com>
-Return-Path: <agordeev@redhat.com>
-Date: Thu, 12 May 2016 11:44:33 +0200
-From: Alexander Gordeev <agordeev@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: helgaas@kernel.org, pjw@netapp.com, axboe@fb.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org
-Subject: Re: [PATCH 1/2] PCI: Provide sensible irq vector alloc/free routines
-Message-ID: <20160512094432.GA14671@agordeev.lab.eng.brq.redhat.com>
-References: <1462457096-19795-1-git-send-email-hch@lst.de>
- <1462457096-19795-2-git-send-email-hch@lst.de>
- <20160511074527.GA31347@agordeev.lab.eng.brq.redhat.com>
- <20160511085049.GA20279@lst.de>
- <20160511094432.GB31347@agordeev.lab.eng.brq.redhat.com>
- <20160512073552.GA4027@lst.de>
+Return-Path: <lukas@wunner.de>
+Return-Path: <lukas@wunner.de>
+Date: Wed, 11 May 2016 21:55:48 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: [PATCHv4] pcie: Add driver for Downstream Port Containment
+Message-ID: <20160511195548.GA22271@wunner.de>
+References: <1461882288-31506-1-git-send-email-keith.busch@intel.com>
+ <20160511160817.GA24089@localhost>
+ <20160511170649.GA31047@localhost.localdomain>
+ <20160511182853.GA28812@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160512073552.GA4027@lst.de>
+In-Reply-To: <20160511182853.GA28812@localhost>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 12, 2016 at 09:35:52AM +0200, Christoph Hellwig wrote:
-> Hi Alex,
+Hi Bjorn,
+
+On Wed, May 11, 2016 at 01:28:53PM -0500, Bjorn Helgaas wrote:
+> On Wed, May 11, 2016 at 01:06:50PM -0400, Keith Busch wrote:
+> > On Wed, May 11, 2016 at 11:08:17AM -0500, Bjorn Helgaas wrote:
+> > > 
+> > > I know I already merged this, but I just thought of a more
+> > > philosophical question.  Why is this a "port service driver" as
+> > > opposed to being simply part of the PCI core like ARI, ACS, etc.?
+> > > 
+> > > I guess you did make DPC tristate, so from that point of view, it
+> > > probably has to use the driver structure to make it convenient to load
+> > > after boot.  Does that add value?  Do we expect people to make a
+> > > decision about whether to load pcie-dpc?  Or maybe we plan to autoload
+> > > it if the DPC capability is present?  Does your patch enable that,
+> > > i.e., does it expose something udev can use to autoload it?
+> > > 
+> > > I've been wondering whether the portdrv service driver concept was a
+> > > mistake.  With the exception of DPC, I think all the portdrv service
+> > > drivers are bool, so there's no question of having to load a module.
+> > > I think using portdrv means we delay initialization of some things
+> > > that we should do earlier.  For example, I think we should setup
+> > > pciehp much earlier, when we enumerate the bridge.  And the service
+> > > driver registration and capability discovery code adds a fair amount
+> > > of complication that I'm not sure is necessary.
+> > > 
+> > > So I guess the question is: why did you make DPC a portdrv service
+> > > driver, and what bad things would happen if we integrated it into the
+> > > PCI core without exposing it as a separate service.
+> > 
+> > Good points. I actually hadn't considered making this part of core,
+> > so I don't have all the pros+cons for making this a port services
+> > driver. Mainly, DPC seemed similar to HP and AER since it takes
+> > interrupts, so followed their example. The other optional extended
+> > capabilities you mention don't need interrupts. Since we rely on the
+> > port driver to initialize port's interrupt vectors, DPC has to be a port
+> > services driver in order to safely use these, right?
 > 
-> what do you think about the incremental patch below?  This should
-> address the concerns about the strange PPC bridges, although I don't
-> have a way to test one:
+> Yes, I think you're probably right about the interrupts; I hadn't
+> thought about that.
 > 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index a510484..32ce65e 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -1177,6 +1177,7 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
->  	if (WARN_ON_ONCE(dev->msi_enabled || dev->msix_enabled))
->  		return -EINVAL;
->  
-> +retry:
+> > I made this tristate from vendor request to allow unloading the module;
+> > sounded reasonable at the time, but didn't consider the implications.
+> > I don't think anyone tested it that way, so may have been a mistake. We
+> > don't have the rules for when it needs to load, so it'd have to load
+> > manually at which point it looks too late.
+> 
+> I suppose the vendor concern might be minimizing unused code in the
+> kernel, which makes a lot of sense, although I have to say that DPC
+> looks like about the smallest driver one could imagine.
+> 
+> A modular driver that can't be loaded automatically seems sort of
+> pointless since hardly anybody would actually use it.
+> 
+> Part of my issue with portdrv is that it exposes additional stuff in
+> sysfs that seems a little bit disconnected from the rest of PCI,
+> namely, things like this:
+> 
+>   /sys/bus/pci_express/devices/
+>   /sys/devices/pci0000:00/0000:00:1c.0/0000:00:1c.0:pcie01/
+> 
+> Having devices like that might help autoload drivers, but as far as I
+> can tell, only pciehp was ever supported as a modular driver (and it
+> can no longer be modular), so I don't think this is much of a benefit.
+> 
+> Lukas, I think you're considering another portdrv service driver for
+> Thunderbolt; do you have any thoughts on this?  Would you want your
+> driver to be modular?
 
-A retry does not seem needs checking MSI support each time, nor reading
-MSI header info like number of vectors (not visible in this patch).
+Yes, the driver is part of thunderbolt.ko, which is only used on Macs,
+it's probably good to not spend RAM on it on non-Macs.
 
->  	if (!pci_msi_supported(dev, 1))
->  		goto use_legacy_irq;
->  
-> @@ -1191,17 +1192,26 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
->  	if (!dev->irqs)
->  		return -ENOMEM;
->  
-> -	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX))
-> +	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX)) {
->  		ret = __pci_enable_msix(dev, nr_vecs);
-> -	else
-> +		if (ret < 0)
-> +			flags |= PCI_IRQ_NOMSIX;
-> +	} else {
->  		ret = __pci_enable_msi(dev, nr_vecs);
-> -	if (ret)
-> -		goto out_free_irqs;
-> +	}
->  
-> -	return 0;
-> +	/* if we succeeded getting all vectors return the number we got: */
-> +	if (!ret)
-> +		return nr_vecs;
->  
-> -out_free_irqs:
->  	kfree(dev->irqs);
-> +	/* if ret is positive it's the numbers of vectors we can use, retry: */
-> +	if (ret > 0) {
-> +		nr_vecs = ret;
-> +		goto retry;
-> +	}
+The reason I used a port service driver for this is because I need to
+attach to the upstream bridge of the Thunderbolt controller, which is
+a port, and there's no other way to do this but with a port service
+driver. A Thunderbolt controller is a PCIe switch, i.e a collection
+of bridges, and appears to the OS like this:
 
-Okay, now we have a subtlety here. You switch from MSI-X to MSI in case
-MSI-X retries exhausted. At this point nr_vecs is lowest (likely 1). So
-you start trying MSI from 1 rather from 32. I would suggest two subsequent
-loops instead.
+  (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
+                                     +-- Downstream Bridge 1 --
+                                     +-- Downstream Bridge 2 --
+                                     ...
 
-Another thing, pci_alloc_irq_vectors() tries to allocate vectors in a
-range from 1 to nr_vecs now. So this function implicitly falls into
-the other two range functions family and therefore:
+When power is cut to the controller, all these devices go to D3cold.
+If this was a device-tree platform, these bridges would be part of
+one generic power domain. But this is an ACPI platform, so to Linux
+each bridge appears as a separate device in a hierarchy. By positioning
+power control on the topmost device in the hierarchy (the upstream
+bridge), I'm able to conform to Linux' power management model (a parent
+always resumes before its children).
 
-  (a) pci_alloc_irq_vectors() name is not perfec;
-  (b) why not introduce 'minvec' minimal number of interrupts then?
-      We could have a handy pci_enable_irq_range() as result;
-  (c) if you do (b) then PCI_IRQ_NOMSIX flag becomes redundant, since
-      caller would invoke pci_enable_msi_range() instead;
+I found the ability to add a port service driver from a module quite
+convenient and flexible, though I believe there's no other driver doing
+this. (In case you grep over the Linux tree now to find other port service
+drivers beyond drivers/pci/, be aware that mwifiex is a false positive,
+it includes pcieport_if.h even though it doesn't need it, I've submitted
+a patch to remove that, was queued for 4.7 by Kalle Valo today.)
 
-> +
-> +	/* no MSI or MSI-X vectors available, fall back to the legacy IRQ: */
->  use_legacy_irq:
->  	dev->irqs = &dev->irq;
->  	return 1;
+Hope I've answered your question, if not just ask again.
+
+For the curious, the Thunderbolt port service driver I'm referring to is:
+https://github.com/l1k/linux/commit/ddbb53bc3f37006f0acd6795bb840603b9dab2eb
+
+Thanks,
+
+Lukas
