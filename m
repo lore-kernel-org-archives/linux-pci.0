@@ -1,178 +1,202 @@
-Return-Path: <gabriele.paoloni@huawei.com>
-Return-Path: <gabriele.paoloni@huawei.com>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Tomasz Nowicki <tn@semihalf.com>,
-        "helgaas@kernel.org"
-	<helgaas@kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "will.deacon@arm.com"
-	<will.deacon@arm.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "hanjun.guo@linaro.org"
-	<hanjun.guo@linaro.org>,
-        "Lorenzo.Pieralisi@arm.com"
-	<Lorenzo.Pieralisi@arm.com>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>,
-        "jchandra@broadcom.com" <jchandra@broadcom.com>
-CC: "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
-        "mw@semihalf.com" <mw@semihalf.com>,
-        "Liviu.Dudau@arm.com"
-	<Liviu.Dudau@arm.com>,
-        "ddaney@caviumnetworks.com"
-	<ddaney@caviumnetworks.com>,
-        Wangyijing <wangyijing@huawei.com>,
-        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-        "msalter@redhat.com" <msalter@redhat.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-        "linux-acpi@vger.kernel.org"
-	<linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "linaro-acpi@lists.linaro.org"
-	<linaro-acpi@lists.linaro.org>,
-        "jcm@redhat.com" <jcm@redhat.com>,
-        "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
-        "dhdang@apm.com"
-	<dhdang@apm.com>,
-        "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>,
-        "cov@codeaurora.org"
-	<cov@codeaurora.org>
-Subject: RE: [PATCH V7 00/11] Support for generic ACPI based PCI host
- controller
-Date: Wed, 11 May 2016 10:41:15 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1ED8DF51@lhreml503-mbs>
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [PATCH V7 07/11] pci, acpi: Handle ACPI companion assignment.
+To: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki"
+ <rafael@kernel.org>
 References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
-In-Reply-To: <1462893601-8937-1-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset="gb2312"
+ <1462893601-8937-8-git-send-email-tn@semihalf.com>
+ <CAJZ5v0hM8WAr9GGku89zKgiVKt6ArHf=9CntRUyBjyMNUvie2A@mail.gmail.com>
+ <20160511101101.GA16101@red-moon>
+ <CAJZ5v0hgw929W5PjF0PqT+ssiOHd8TeJoSQcz4NUiAovZY2pfQ@mail.gmail.com>
+ <20160511224314.GD28812@localhost>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Hanjun Guo
+ <hanjun.guo@linaro.org>, Sinan Kaya <okaya@codeaurora.org>,
+ jchandra@broadcom.com, robert.richter@caviumnetworks.com,
+ Marcin Wojtas <mw@semihalf.com>, Liviu.Dudau@arm.com,
+ David Daney <ddaney@caviumnetworks.com>, wangyijing@huawei.com,
+ Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>,
+ Mark Salter <msalter@redhat.com>, Linux PCI <linux-pci@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+ Jon Masters <jcm@redhat.com>, Andrea Gallo <andrea.gallo@linaro.org>,
+ Duc Dang <dhdang@apm.com>, jeremy.linton@arm.com, liudongdong3@huawei.com,
+ Christopher Covington <cov@codeaurora.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <57345FDF.4000804@semihalf.com>
+Date: Thu, 12 May 2016 12:50:07 +0200
 MIME-Version: 1.0
+In-Reply-To: <20160511224314.GD28812@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgVG9tYXN6DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgt
-a2VybmVsLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LWtlcm5lbC0NCj4gb3du
-ZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgVG9tYXN6IE5vd2lja2kNCj4gU2VudDog
-MTAgTWF5IDIwMTYgMTY6MjANCj4gVG86IGhlbGdhYXNAa2VybmVsLm9yZzsgYXJuZEBhcm5kYi5k
-ZTsgd2lsbC5kZWFjb25AYXJtLmNvbTsNCj4gY2F0YWxpbi5tYXJpbmFzQGFybS5jb207IHJhZmFl
-bEBrZXJuZWwub3JnOyBoYW5qdW4uZ3VvQGxpbmFyby5vcmc7DQo+IExvcmVuem8uUGllcmFsaXNp
-QGFybS5jb207IG9rYXlhQGNvZGVhdXJvcmEub3JnOyBqY2hhbmRyYUBicm9hZGNvbS5jb20NCj4g
-Q2M6IHJvYmVydC5yaWNodGVyQGNhdml1bW5ldHdvcmtzLmNvbTsgbXdAc2VtaWhhbGYuY29tOw0K
-PiBMaXZpdS5EdWRhdUBhcm0uY29tOyBkZGFuZXlAY2F2aXVtbmV0d29ya3MuY29tOyBXYW5neWlq
-aW5nOw0KPiBTdXJhdmVlLlN1dGhpa3VscGFuaXRAYW1kLmNvbTsgbXNhbHRlckByZWRoYXQuY29t
-OyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgtYXJtLWtlcm5lbEBsaXN0cy5p
-bmZyYWRlYWQub3JnOyBsaW51eC0NCj4gYWNwaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5l
-bEB2Z2VyLmtlcm5lbC5vcmc7IGxpbmFyby0NCj4gYWNwaUBsaXN0cy5saW5hcm8ub3JnOyBqY21A
-cmVkaGF0LmNvbTsgYW5kcmVhLmdhbGxvQGxpbmFyby5vcmc7DQo+IGRoZGFuZ0BhcG0uY29tOyBq
-ZXJlbXkubGludG9uQGFybS5jb207IGxpdWRvbmdkb25nIChDKTsNCj4gY292QGNvZGVhdXJvcmEu
-b3JnOyBUb21hc3ogTm93aWNraQ0KPiBTdWJqZWN0OiBbUEFUQ0ggVjcgMDAvMTFdIFN1cHBvcnQg
-Zm9yIGdlbmVyaWMgQUNQSSBiYXNlZCBQQ0kgaG9zdA0KPiBjb250cm9sbGVyDQo+IA0KPiBGcm9t
-IHRoZSBmdW5jdGlvbmFsaXR5IHBvaW50IG9mIHZpZXcgdGhpcyBzZXJpZXMgbWF5IGJlIHNwbGl0
-IGludG8gdGhlDQo+IGZvbGxvd2luZyBsb2dpYyBwYXJ0czoNCj4gMS4gTmV3IEVDQU0gQVBJIGFu
-ZCB1cGRhdGUgZm9yIHVzZXJzIG9mIHRoZSBwY2ktaG9zdC1jb21tb24gQVBJDQo+IDIuIE5lY2Vz
-c2FyeSBmaXhlcyBhcyB0aGUgcHJlcGFyYXRpb24gZm9yIHVzaW5nIGRyaXZlciBvbiBBUk02NC4N
-Cj4gMy4gVXNlIG5ldyBNQ0ZHIGludGVyZmFjZSBhbmQgaW1wbGVtZW50IGdlbmVyaWMgQUNQSSBi
-YXNlZCBQQ0kgaG9zdA0KPiBjb250cm9sbGVyIGRyaXZlci4NCj4gNC4gRW5hYmxlIGFib3ZlIGRy
-aXZlciBvbiBBUk02NA0KPiANCj4gUGF0Y2hlcyBoYXMgYmVlbiBidWlsdCBvbiB0b3Agb2YgNC42
-LXJjNyBhbmQgY2FuIGJlIGZvdW5kIGhlcmU6DQo+IGdpdEBnaXRodWIuY29tOnNlbWloYWxmLW5v
-d2lja2ktdG9tYXN6L2xpbnV4LmdpdCAocGNpLWFjcGktdjcpDQo+IA0KPiBUaGlzIGhhcyBiZWVu
-IHRlc3RlZCBvbiBDYXZpdW0gVGh1bmRlclggc2VydmVyLiBBbnkgaGVscCBpbiByZXZpZXdpbmcN
-Cj4gYW5kDQo+IHRlc3RpbmcgaXMgdmVyeSBhcHByZWNpYXRlZC4NCj4gDQo+IHY2IC0+IHY3DQo+
-IC0gZHJvcCBxdWlya3MgaGFuZGxpbmcNCg0KTWF5YmUgSSBtaXNzZWQgc29tZXRoaW5nIGluIHRo
-ZSB2NiBkaXNjdXNzaW9uIHRocmVhZDsgd2hlbiB3YXMgaXQNCmRlY2lkZWQgdG8gZHJvcCBxdWly
-ayBoYW5kbGluZz8NCg0KSSB0aGluayBpdCBpcyBpbXBvcnRhbnQgdG8gaGF2ZSB0aGlzIGluIHBs
-YWNlIHRvIGFjY29tbW9kYXRlIGRpZmZlcmVudA0KdmVuZG9ycy4gSWYgdGhlIGludGVudGlvbiBp
-cyB0byBrZWVwIHRoaXMgcGF0Y2hzZXQgImNsZWFuIiBtYXliZQ0Kd2UgY2FuIGFkZCBpdCBhcyBh
-IHNlcGFyYXRlIHBhdGNoIG9uIHRvcCBsYXRlciBvbi4uLg0KDQpXaGF0oa9zIHlvdXIgdmlldz8N
-Cg0KVGhhbmtzDQoNCkdhYg0KDQoNCj4gLSBjaGFuZ2VzIGZvciBBQ1BJIGNvbXBhbmlvbiBhbmQg
-ZG9tYWluIG51bWJlciBhc3NpZ25tZW50IGFwcHJvYWNoDQo+IC0gaW1wbGVtZW50IGFyY2ggcGNp
-Ymlvc197YWRkfHJlbW92ZX1fYnVzIGFuZCBjYWxsDQo+IGFjcGlfcGNpX3thZGR8cmVtb3ZlfV9i
-dXMgZnJvbSB0aGVyZQ0KPiAtIGNsZWFudXBzIGFyb3VuZCBub21lbmNsYXR1cmUNCj4gLSB1c2Ug
-cmVzb3VyY2VzIG9yaWVudGVkIEFQSSBmb3IgRUNBTQ0KPiAtIGZpeCBmb3IgYmFzZWQgYWRkcmVz
-cyBjYWxjdWxhdGlvbiBiZWZvcmUgbWFwcGluZyBFQ0FNIHJlZ2lvbg0KPiAtIHJlbW92ZSB1c2Vs
-ZXNzIGxvY2sgZm9yIE1DRkcgbG9va3VwDQo+IC0gbW92ZSBNQ0ZHIHN0dWZmIHRvIHNlcGFyYXRl
-ZCBmaWxlIHBjaV9tY2ZnLmMNCj4gLSBkcm9wIE1DRkcgZW50cmllcyBjYWNoaW5nDQo+IC0gcmVi
-YXNlIGFnYWluc3QgNC42LXJjNw0KPiANCj4gdjUgLT4gdjYNCj4gLSBkcm9wIGlkZWEgb2YgeDg2
-IE1NQ09ORklHIGNvZGUgcmVmYWN0b3JpbmcNCj4gLSBpbnRlZ3JhdGUgSkMncyBwYXRjaGVzIHdo
-aWNoIGludHJvZHVjZSBuZXcgRUNBTSBBUEk6DQo+ICAgaHR0cHM6Ly9sa21sLm9yZy9sa21sLzIw
-MTYvNC8xMS85MDcNCj4gICBnaXQ6IGh0dHBzOi8vZ2l0aHViLmNvbS9qY2hhbmRyYS1icmNtL2xp
-bnV4LyAoYXJtNjQtYWNwaS1wY2ktdjMpDQo+IC0gaW50ZWdyYXRlIFNpbmFuJ3MgZml4IGZvciBy
-ZWxlYXNpbmcgSU8gcmVzb3VyY2VzLCBzZWUgcGF0Y2ggWzA2LzEzXQ0KPiAtIGFkZGVkIEFDUEkg
-c3VwcG9ydCBmb3IgVGh1bmRlclggRUNBTSBhbmQgUEVNIGRyaXZlcnMNCj4gLSByZWJhc2UgYWdh
-aW5zdCA0LjYtcmMyDQo+IA0KPiB2NCAtPiB2NQ0KPiAtIGRyb3AgTUNGRyByZWZhY3RvcmluZyBn
-cm91cCBwYXRjaGVzIDEtNiBmcm9tIHNlcmllcyB2NCBhbmQgaW50ZWdyYXRlDQo+IEpheWFjaGFu
-ZHJhbidzIHBhdGNoDQo+ICAgaHR0cHM6Ly9wYXRjaHdvcmsub3psYWJzLm9yZy9wYXRjaC81NzU1
-MjUvDQo+IC0gcmV3cml0ZSBQQ0kgbGVnYWN5IElSUXMgYWxsb2NhdGlvbg0KPiAtIHNxdWFzaCB0
-d28gcGF0Y2hlcyAxMSBhbmQgMTIgZnJvbSBzZXJpZXMgdjQsIGZpeGVkIGJpc2VjdGlvbiBpc3N1
-ZQ0KPiAtIGNoYW5nZWxvZyBpbXByb3ZlbWVudHMNCj4gLSByZWJhc2UgYWdhaW5zdCA0LjUtcmMz
-DQo+IA0KPiB2MyAtPiB2NA0KPiAtIGRyb3AgSmlhbmcncyBmaXgNCj4gaHR0cDovL2xrbWwuaXUu
-ZWR1L2h5cGVybWFpbC9saW51eC9rZXJuZWwvMTYwMS4xLzA0MzE4Lmh0bWwNCj4gLSBhZGQgTG9y
-ZW56bydzIGZpeCBwYXRjaCAxOS8yNA0KPiAtIEFDUEkgUENJIGJ1cyBkb21haW4gbnVtYmVyIGFz
-c2lnbmluZyBjbGVhbnVwDQo+IC0gY2hhbmdlIHJlc291cmNlIG1hbmFnZW1lbnQsIHdlIG5vdyBj
-bGFpbSBhbmQgcmVhc3NpZ24gcmVzb3VyY2VzDQo+IC0gaW1wcm92ZW1lbnRzIGZvciBhcHBseWlu
-ZyBxdWlya3MNCj4gLSBkcm9wIE1hdHRoZXcncyBodHRwOi8vd3d3LnNwaW5pY3MubmV0L2xpc3Rz
-L2xpbnV4LXBjaS9tc2c0NTk1MC5odG1sDQo+IGRlcGVuZGVuY3kNCj4gLSByZWJhc2UgYWdhaW5z
-dCA0LjUtcmMxDQo+IA0KPiB2MiAtPiB2Mw0KPiAtIGZpeCBsZWdhY3kgSVJRIGFzc2lnbmluZyBh
-bmQgSU8gcG9ydHMgcmVnaXN0cmF0aW9uDQo+IC0gcmVtb3ZlIHJlZmVyZW5jZSB0byBhcmNoIHNw
-ZWNpZmljIGNvbXBhbmlvbiBkZXZpY2UgZm9yIGlhNjQNCj4gLSBtb3ZlIEFDUEkgUENJIGhvc3Qg
-Y29udHJvbGxlciBkcml2ZXIgdG8gcGNpX3Jvb3QuYw0KPiAtIGRyb3AgZ2VuZXJpYyBkb21haW4g
-YXNzaWdubWVudCBmb3IgeDg2IGFuZCBpYTY0IGFzIEkgYW0gbm90DQo+ICAgYWJsZSB0byBydW4g
-YWxsIG5lY2Vzc2FyeSB0ZXN0IHZhcmlhbnRzDQo+IC0gZHJvcCBwYXRjaCB3aGljaCBjbGVhbmVk
-IGxlZ2FjeSBJUlEgYXNzaWdubWVudCBzaW5jZSBpdCBiZWxvbmdzIHRvDQo+ICAgTWF0aGV3J3Mg
-c2VyaWVzOg0KPiAgIGh0dHBzOi8vcGF0Y2h3b3JrLm96bGFicy5vcmcvcGF0Y2gvNTU3NTA0Lw0K
-PiAtIGV4dGVuZCBNQ0ZHIHF1aXJrIGNvZGUNCj4gLSByZWJhc2UgYWdhaW5zdCA0LjQNCj4gDQo+
-IHYxIC0+IHYyDQo+IC0gbW92ZSBub24tYXJjaCBzcGVjaWZpYyBwaWVjZSBvZiBjb2RlIHRvIGRp
-cnZlci9hY3BpLyBkaXJlY3RvcnkNCj4gLSBmaXggSU8gcmVzb3VyY2UgaGFuZGxpbmcNCj4gLSBp
-bnRyb2R1Y2UgUENJIGNvbmZpZyBhY2Nlc3NvcnMgcXVpcmtzIG1hdGNoaW5nDQo+IC0gbW92ZWQg
-QUNQSV9DT01QQU5JT05fU0VUIHRvIGdlbmVyaWMgY29kZQ0KPiANCj4gdjEgLSBodHRwczovL2xr
-bWwub3JnL2xrbWwvMjAxNS8xMC8yNy81MDQNCj4gdjIgLSBodHRwczovL2xrbWwub3JnL2xrbWwv
-MjAxNS8xMi8xNi8yNDYNCj4gdjMgLSBodHRwOi8vbGttbC5pdS5lZHUvaHlwZXJtYWlsL2xpbnV4
-L2tlcm5lbC8xNjAxLjEvMDQzMDguaHRtbA0KPiB2NCAtIGh0dHBzOi8vbGttbC5vcmcvbGttbC8y
-MDE2LzIvNC82NDYNCj4gdjUgLSBodHRwczovL2xrbWwub3JnL2xrbWwvMjAxNi8yLzE2LzQyNg0K
-PiB2NiAtIGh0dHBzOi8vbGttbC5vcmcvbGttbC8yMDE2LzQvMTUvNTk0DQo+IA0KPiBKYXlhY2hh
-bmRyYW4gQyAoMik6DQo+ICAgUENJOiBQcm92aWRlIGNvbW1vbiBmdW5jdGlvbnMgZm9yIEVDQU0g
-bWFwcGluZw0KPiAgIFBDSTogZ2VuZXJpYywgdGh1bmRlcjogdXBkYXRlIHRvIHVzZSBnZW5lcmlj
-IEVDQU0gQVBJDQo+IA0KPiBUb21hc3ogTm93aWNraSAoOSk6DQo+ICAgcGNpLCBvZjogTW92ZSB0
-aGUgUENJIEkvTyBzcGFjZSBtYW5hZ2VtZW50IHRvIFBDSSBjb3JlIGNvZGUuDQo+ICAgcGNpOiBB
-ZGQgbmV3IGZ1bmN0aW9uIHRvIHVubWFwIElPIHJlc291cmNlcy4NCj4gICBhY3BpLCBwY2k6IFN1
-cHBvcnQgSU8gcmVzb3VyY2VzIHdoZW4gcGFyc2luZyBQQ0kgaG9zdCBicmlkZ2UNCj4gICAgIHJl
-c291cmNlcy4NCj4gICBwY2ksIGFjcGk6IFByb3ZpZGUgYSB3YXkgdG8gYXNzaWduIGJ1cyBkb21h
-aW4gbnVtYmVyLg0KPiAgIHBjaSwgYWNwaTogSGFuZGxlIEFDUEkgY29tcGFuaW9uIGFzc2lnbm1l
-bnQuDQo+ICAgcGNpLCBhY3BpOiBTdXBwb3J0IGZvciBBQ1BJIGJhc2VkIGdlbmVyaWMgUENJIGhv
-c3QgY29udHJvbGxlcg0KPiAgIGFybTY0LCBwY2ksIGFjcGk6IEFDUEkgc3VwcG9ydCBmb3IgbGVn
-YWN5IElSUXMgcGFyc2luZyBhbmQNCj4gICAgIGNvbnNvbGlkYXRpb24gd2l0aCBEVCBjb2RlLg0K
-PiAgIGFybTY0LCBwY2ksIGFjcGk6IFByb3ZpZGUgQUNQSS1zcGVjaWZpYyBwcmVyZXF1aXNpdGVz
-IGZvciBQQ0kgYnVzDQo+ICAgICBlbnVtZXJhdGlvbi4NCj4gICBhcm02NCwgcGNpLCBhY3BpOiBT
-dGFydCB1c2luZyBBQ1BJIGJhc2VkIFBDSSBob3N0IGNvbnRyb2xsZXIgZHJpdmVyDQo+ICAgICBm
-b3IgQVJNNjQuDQo+IA0KPiAgYXJjaC9hcm02NC9LY29uZmlnICAgICAgICAgICAgICAgICAgfCAg
-IDEgKw0KPiAgYXJjaC9hcm02NC9rZXJuZWwvcGNpLmMgICAgICAgICAgICAgfCAgMzQgKysrLS0t
-LS0NCj4gIGRyaXZlcnMvYWNwaS9LY29uZmlnICAgICAgICAgICAgICAgIHwgICA4ICsrDQo+ICBk
-cml2ZXJzL2FjcGkvTWFrZWZpbGUgICAgICAgICAgICAgICB8ICAgMSArDQo+ICBkcml2ZXJzL2Fj
-cGkvcGNpX21jZmcuYyAgICAgICAgICAgICB8ICA5NyArKysrKysrKysrKysrKysrKysrKysrDQo+
-ICBkcml2ZXJzL2FjcGkvcGNpX3Jvb3QuYyAgICAgICAgICAgICB8ICAzMyArKysrKysrKw0KPiAg
-ZHJpdmVycy9hY3BpL3BjaV9yb290X2dlbmVyaWMuYyAgICAgfCAxNDkNCj4gKysrKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrDQo+ICBkcml2ZXJzL29mL2FkZHJlc3MuYyAgICAgICAgICAg
-ICAgICB8IDExNiArLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiAgZHJpdmVycy9wY2kvS2Nv
-bmZpZyAgICAgICAgICAgICAgICAgfCAgIDMgKw0KPiAgZHJpdmVycy9wY2kvTWFrZWZpbGUgICAg
-ICAgICAgICAgICAgfCAgIDIgKw0KPiAgZHJpdmVycy9wY2kvZWNhbS5jICAgICAgICAgICAgICAg
-ICAgfCAxNjENCj4gKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrDQo+ICBkcml2
-ZXJzL3BjaS9lY2FtLmggICAgICAgICAgICAgICAgICB8ICA3MiArKysrKysrKysrKysrKysrDQo+
-ICBkcml2ZXJzL3BjaS9ob3N0L0tjb25maWcgICAgICAgICAgICB8ICAgMSArDQo+ICBkcml2ZXJz
-L3BjaS9ob3N0L3BjaS1ob3N0LWNvbW1vbi5jICB8IDExNCArKysrKysrKysrKy0tLS0tLS0tLS0t
-LS0tDQo+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaS1ob3N0LWNvbW1vbi5oICB8ICA0NyAtLS0tLS0t
-LS0tLQ0KPiAgZHJpdmVycy9wY2kvaG9zdC9wY2ktaG9zdC1nZW5lcmljLmMgfCAgNTIgKysrLS0t
-LS0tLS0tDQo+ICBkcml2ZXJzL3BjaS9ob3N0L3BjaS10aHVuZGVyLWVjYW0uYyB8ICAzOSArKy0t
-LS0tLS0NCj4gIGRyaXZlcnMvcGNpL2hvc3QvcGNpLXRodW5kZXItcGVtLmMgIHwgIDkyICsrKysr
-KysrKystLS0tLS0tLS0tLQ0KPiAgZHJpdmVycy9wY2kvcGNpLmMgICAgICAgICAgICAgICAgICAg
-fCAxNTANCj4gKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystDQo+ICBkcml2ZXJzL3Bj
-aS9wcm9iZS5jICAgICAgICAgICAgICAgICB8ICAgMiArDQo+ICBpbmNsdWRlL2xpbnV4L29mX2Fk
-ZHJlc3MuaCAgICAgICAgICB8ICAgOSAtLQ0KPiAgaW5jbHVkZS9saW51eC9wY2ktYWNwaS5oICAg
-ICAgICAgICAgfCAgMTQgKysrKw0KPiAgaW5jbHVkZS9saW51eC9wY2kuaCAgICAgICAgICAgICAg
-ICAgfCAgMTEgKystDQo+ICAyMyBmaWxlcyBjaGFuZ2VkLCA4MjMgaW5zZXJ0aW9ucygrKSwgMzg1
-IGRlbGV0aW9ucygtKQ0KPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvYWNwaS9wY2lfbWNm
-Zy5jDQo+ICBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9hY3BpL3BjaV9yb290X2dlbmVyaWMu
-Yw0KPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvcGNpL2VjYW0uYw0KPiAgY3JlYXRlIG1v
-ZGUgMTAwNjQ0IGRyaXZlcnMvcGNpL2VjYW0uaA0KPiAgZGVsZXRlIG1vZGUgMTAwNjQ0IGRyaXZl
-cnMvcGNpL2hvc3QvcGNpLWhvc3QtY29tbW9uLmgNCj4gDQo+IC0tDQo+IDEuOS4xDQoNCg==
+On 12.05.2016 00:43, Bjorn Helgaas wrote:
+> On Wed, May 11, 2016 at 10:30:51PM +0200, Rafael J. Wysocki wrote:
+>> On Wed, May 11, 2016 at 12:11 PM, Lorenzo Pieralisi
+>> <lorenzo.pieralisi@arm.com> wrote:
+>>> On Tue, May 10, 2016 at 08:37:00PM +0200, Rafael J. Wysocki wrote:
+>>>> On Tue, May 10, 2016 at 5:19 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
+>>>>> This patch provides a way to set the ACPI companion in PCI code.
+>>>>> We define acpi_pci_set_companion() to set the ACPI companion pointer and
+>>>>> call it from PCI core code. The function is stub for now.
+>>>>>
+>>>>> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+>>>>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>>>>> ---
+>>>>>   drivers/pci/probe.c      | 2 ++
+>>>>>   include/linux/pci-acpi.h | 4 ++++
+>>>>>   2 files changed, 6 insertions(+)
+>>>>>
+>>>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>>>> index 8004f67..fb0b752 100644
+>>>>> --- a/drivers/pci/probe.c
+>>>>> +++ b/drivers/pci/probe.c
+>>>>> @@ -12,6 +12,7 @@
+>>>>>   #include <linux/slab.h>
+>>>>>   #include <linux/module.h>
+>>>>>   #include <linux/cpumask.h>
+>>>>> +#include <linux/pci-acpi.h>
+>>>>>   #include <linux/pci-aspm.h>
+>>>>>   #include <linux/aer.h>
+>>>>>   #include <linux/acpi.h>
+>>>>> @@ -2141,6 +2142,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+>>>>>          bridge->dev.parent = parent;
+>>>>>          bridge->dev.release = pci_release_host_bridge_dev;
+>>>>>          dev_set_name(&bridge->dev, "pci%04x:%02x", pci_domain_nr(b), bus);
+>>>>> +       acpi_pci_set_companion(bridge);
+>>>>
+>>>> Yes, we'll probably add something similar here.
+>>>>
+>>>> Do I think now is the right time to do that?  No.
+>>>>
+>>>>>          error = pcibios_root_bridge_prepare(bridge);
+>>>>>          if (error) {
+>>>>>                  kfree(bridge);
+>>>>> diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+>>>>> index 09f9f02..1baa515 100644
+>>>>> --- a/include/linux/pci-acpi.h
+>>>>> +++ b/include/linux/pci-acpi.h
+>>>>> @@ -111,6 +111,10 @@ static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
+>>>>>   static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
+>>>>>   #endif /* CONFIG_ACPI */
+>>>>>
+>>>>> +static inline void acpi_pci_set_companion(struct pci_host_bridge *bridge)
+>>>>> +{
+>>>>> +}
+>>>>> +
+>>>>>   static inline int acpi_pci_bus_domain_nr(struct pci_bus *bus)
+>>>>>   {
+>>>>>          return 0;
+>>>>> --
+>>>>
+>>>> Honestly, to me it looks like this series is trying very hard to avoid
+>>>> doing any PCI host bridge configuration stuff from arch/arm64/
+>>>> although (a) that might be simpler and (b) it would allow us to
+>>>> identify the code that's common between *all* architectures using ACPI
+>>>> support for host bridge configuration and to move *that* to a common
+>>>> place later.  As done here it seems to be following the "ARM64 is
+>>>> generic and the rest of the world is special" line which isn't really
+>>>> helpful.
+>>>
+>>> I think patch [1-2] should be merged regardless (they may require minor
+>>> tweaks if we decide to move pci_acpi_scan_root() to arch/arm64 though,
+>>> for include files location). I guess you are referring to patch 8 in
+>>> your comments above, which boils down to deciding whether:
+>>>
+>>> - pci_acpi_scan_root() (and unfortunately all the MCFG/ECAM handling that
+>>>    goes with it) should live in arch/arm64 or drivers/acpi
+>>
+>> To be precise, everything under #ifdef CONFIG_ACPI_PCI_HOST_GENERIC or
+>> equivalent is de facto ARM64-specific, because (as it stands in the
+>> patch series) ARM64 is the only architecture that will select that
+>> option.  Unless you are aware of any more architectures planning to
+>> use ACPI (and I'm not aware of any), it will stay the only
+>> architecture selecting it in the foreseeable future.
+>>
+>> Therefore you could replace CONFIG_ACPI_PCI_HOST_GENERIC with
+>> CONFIG_ARM64 everywhere in that code which is why in my opinion the
+>> code should live somewhere under arch/arm64/.
+>>
+>> Going forward, it should be possible to identify common parts of the
+>> PCI host bridge configuration code in arch/ and move it to
+>> drivers/acpi/ or drivers/pci/, but I bet that won't be the entire code
+>> this series puts under CONFIG_ACPI_PCI_HOST_GENERIC.
+>>
+>> The above leads to a quite straightforward conclusion about the order
+>> in which to do things: I'd add ACPI support for PCI host bridge on
+>> ARM64 following what's been done on ia64 (as x86 is more quirky and
+>> kludgy overall) as far as reasonably possible first and then think
+>> about moving common stuff to a common place.
+>
+> That does seem like a reasonable approach.  I had hoped to get more of
+> this in for v4.7, but we don't have much time left.  Maybe some of
+> Rafael's comments can be addressed by moving and slight restructuring
+> and we can still squeeze it in.
+>
+> The first three patches:
+>
+>    PCI: Provide common functions for ECAM mapping
+>    PCI: generic, thunder: Use generic ECAM API
+>    PCI, of: Move PCI I/O space management to PCI core code
+>
+> seem relatively straightforward, and I applied them to pci/arm64 with
+> the intent of merging them unless there are objections.  I made the
+> following tweaks, mainly to try to improve some error messages:
+>
+> diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
+> index 3d52005..e1add01 100644
+> --- a/drivers/pci/ecam.c
+> +++ b/drivers/pci/ecam.c
+> @@ -24,9 +24,9 @@
+>   #include "ecam.h"
+>
+>   /*
+> - * On 64 bit systems, we do a single ioremap for the whole config space
+> - * since we have enough virtual address range available. On 32 bit, do an
+> - * ioremap per bus.
+> + * On 64-bit systems, we do a single ioremap for the whole config space
+> + * since we have enough virtual address range available.  On 32-bit, we
+> + * ioremap the config space for each bus individually.
+>    */
+>   static const bool per_bus_mapping = !config_enabled(CONFIG_64BIT);
+>
+> @@ -42,6 +42,7 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
+>   {
+>   	struct pci_config_window *cfg;
+>   	unsigned int bus_range, bus_range_max, bsz;
+> +	struct resource *conflict;
+>   	int i, err;
+>
+>   	if (busr->start > busr->end)
+> @@ -58,10 +59,10 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
+>   	bus_range = resource_size(&cfg->busr);
+>   	bus_range_max = resource_size(cfgres) >> ops->bus_shift;
+>   	if (bus_range > bus_range_max) {
+> -		dev_warn(dev, "bus max %#x reduced to %#x",
+> -					bus_range, bus_range_max);
+>   		bus_range = bus_range_max;
+>   		cfg->busr.end = busr->start + bus_range - 1;
+> +		dev_warn(dev, "ECAM area %pR can only accommodate %pR (reduced from %pR desired)\n",
+> +			 cfgres, &cfg->busr, busr);
+>   	}
+>   	bsz = 1 << ops->bus_shift;
+>
+> @@ -70,9 +71,11 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
+>   	cfg->res.flags = IORESOURCE_MEM | IORESOURCE_BUSY;
+>   	cfg->res.name = "PCI ECAM";
+>
+> -	err = request_resource(&iomem_resource, &cfg->res);
+> -	if (err) {
+> -		dev_err(dev, "request ECAM res %pR failed\n", &cfg->res);
+> +	conflict = request_resource(&iomem_resource, &cfg->res);
+
+We need request_resource_conflict here then:
+-	conflict = request_resource(&iomem_resource, &cfg->res);
++	conflict = request_resource_conflict(&iomem_resource, &cfg->res);
+
+Thanks,
+Tomasz
