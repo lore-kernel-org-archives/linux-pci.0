@@ -1,118 +1,97 @@
-Return-Path: <lukas@wunner.de>
-Return-Path: <lukas@wunner.de>
-Date: Thu, 26 May 2016 12:45:57 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Peter Wu <peter@lekensteyn.nl>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
-	Dave Airlie <airlied@gmail.com>,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH] PCI: Wait for 50ms after bridge is powered up
-Message-ID: <20160526104557.GA6816@wunner.de>
-References: <20160524162833.GA30762@localhost>
- <1464188696-25782-1-git-send-email-mika.westerberg@linux.intel.com>
- <20160526101006.GA6744@wunner.de>
- <20160526102520.GV1789@lahna.fi.intel.com>
+Return-Path: <m-karicheri2@ti.com>
+Return-Path: <m-karicheri2@ti.com>
+Subject: Re: PCIe issue with NIC card that has 64bit BARs
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <5730E5DA.4020906@ti.com> <20160509203436.GC18166@localhost>
+ <5730FADF.7000009@ti.com> <20160509152351.17389748@t450s.home>
+ <57310353.5020802@ti.com> <20160509171246.3c33478b@t450s.home>
+ <5733A849.7020508@ti.com> <20160511225515.GE28812@localhost>
+CC: Alex Williamson <alex.williamson@redhat.com>,
+        "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+From: Murali Karicheri <m-karicheri2@ti.com>
+Message-ID: <57348C97.5000002@ti.com>
+Date: Thu, 12 May 2016 10:00:55 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160526102520.GV1789@lahna.fi.intel.com>
+In-Reply-To: <20160511225515.GE28812@localhost>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 26, 2016 at 01:25:20PM +0300, Mika Westerberg wrote:
-> On Thu, May 26, 2016 at 12:10:06PM +0200, Lukas Wunner wrote:
-> > On Wed, May 25, 2016 at 06:04:56PM +0300, Mika Westerberg wrote:
-> > > The PCI PM 1.2 specification requires minimum of 50ms before function on a
-> > > bus is accessed after the bus is transitioned from B2 to B0. Now that we
-> > > actually power down bridges we should make sure the specification is
-> > > followed accordingly.
-> > 
-> > This patch has the unfortunate side effect of increasing boot time on
-> > Macs with Thunderbolt by 320 ms. Granted, it's not much, but still
-> > noticeable:
+Bjorn,
+
+On 05/11/2016 06:55 PM, Bjorn Helgaas wrote:
+> On Wed, May 11, 2016 at 05:46:49PM -0400, Murali Karicheri wrote:
+>> Bjorn, Alex,
+
+>> 500200D0:00000000 00000000 00000000 00000000
+>> 500200E0:00000000 00000000 00000000 00000000
+>> 500200F0:00000000 00000000 00000000 00000000
+>>
+>> Corresponding PCI boot log
+>>
+>> [    2.310465] PCI host bridge /soc/pcie@21800000 ranges:
+>> [    2.316146]   No bus range found for /soc/pcie@21800000, using [bus 00-ff]
+>> [    2.323302]    IO 0x23250000..0x23253fff -> 0x00000000
+>> [    2.328455]   MEM 0x50000000..0x5fffffff -> 0x50000000
+>> [    2.335406] keystone-pcie 21801000.pcie: PCI host bridge to bus 0000:00
+>> [    2.342206] pci_bus 0000:00: root bus resource [bus 00-ff]
+>> [    2.347691] pci_bus 0000:00: root bus resource [io  0x0000-0x3fff]
+>> [    2.353937] pci_bus 0000:00: root bus resource [mem 0x50000000-0x5fffffff]
+>> [    2.361483] PCI: bus0: Fast back to back transfers disabled
+>> [    2.368357] pci 0000:01:00.0: disabling ASPM on pre-1.1 PCIe device.  You can enable it with 'pcie_aspm=force'
+>> [    2.378560] PCI: bus1: Fast back to back transfers disabled
+>> [    2.384366] pci 0000:00:00.0: BAR 8: assigned [mem 0x50000000-0x500fffff]
+>> [    2.391314] pci 0000:00:00.0: BAR 9: assigned [mem 0x50100000-0x501fffff pref]
+>> [    2.398534] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
+>> [    2.404699] pci 0000:01:00.0: BAR 0: assigned [mem 0x50000000-0x5001ffff]
+>> [    2.411555] pci 0000:01:00.0: BAR 1: assigned [mem 0x50020000-0x5003ffff]
+>> [    2.418348] pci 0000:01:00.0: BAR 6: assigned [mem 0x50100000-0x5011ffff pref]
+>> [    2.425591] pci 0000:01:00.0: BAR 2: assigned [io  0x1000-0x101f]
+>> [    2.431712] pci 0000:00:00.0: PCI bridge to [bus 01]
+>> [    2.436675] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
+>> [    2.442788] pci 0000:00:00.0:   bridge window [mem 0x50000000-0x500fffff]
+>> [    2.449572] pci 0000:00:00.0:   bridge window [mem 0x50100000-0x501fffff pref]
+>> [    2.457313] pcieport 0000:00:00.0: Signaling PME through PCIe PME interrupt
+>> [    2.464412] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
+>>
+>>
+>> Any idea where to start to debug this issue? Suggestion?
 > 
-> Yes, that's the drawback.
+> If I understand correctly, K2G is the platform where these NICs don't
+> work. 
+
+Yes.
+
+> Do *any* PCI devices work correctly on that platform? 
+
+No. I am trying to test a SATA controller and see if that works.
+Marvel SATA controller works fine using Keystone PCIe controller, but this
+is on K2E EVM and this shares the same PCIe controller hardware (designware).
+
+> Maybe
+> there's some host controller configuration problem related to the MMIO
+> aperture?
 > 
-> > [    2.358041] pcieport 0000:06:03.0: enabling device (0000 -> 0002)
-> > [    2.358195] pcieport 0000:06:03.0: rpm_idle
-> > [    2.358222] pcieport 0000:06:03.0: rpm_suspend
-> > [    2.411664] pcieport 0000:06:04.0: enabling device (0000 -> 0003)
-> > [    2.411821] pcieport 0000:06:04.0: rpm_idle
-> > [    2.411848] pcieport 0000:06:04.0: rpm_suspend
-> > [    2.467664] pcieport 0000:06:05.0: enabling device (0000 -> 0003)
-> > [    2.467817] pcieport 0000:06:05.0: rpm_idle
-> > [    2.467843] pcieport 0000:06:05.0: rpm_suspend
-> > [    2.523664] pcieport 0000:06:06.0: enabling device (0000 -> 0002)
-> > [    2.523822] pcieport 0000:06:06.0: rpm_idle
-> > [    2.523848] pcieport 0000:06:06.0: rpm_suspend
-> > [    2.579685] pci_hotplug: PCI Hot Plug PCI Core version: 0.5
-> > [    2.579722] pcieport 0000:06:03.0: rpm_resume
-> > [    2.635750] pciehp 0000:06:03.0:pcie204: Slot #3 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
-> > [    2.635853] pciehp 0000:06:03.0:pcie204: service driver pciehp loaded
-> > [    2.635858] pcieport 0000:06:03.0: rpm_idle
-> > [    2.635886] pcieport 0000:06:04.0: rpm_resume
-> > [    2.647645] pcieport 0000:06:03.0: rpm_suspend
-> > [    2.691747] pciehp 0000:06:04.0:pcie204: Slot #4 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
-> > [    2.691856] pciehp 0000:06:04.0:pcie204: service driver pciehp loaded
-> > [    2.691859] pcieport 0000:06:04.0: rpm_idle
-> > [    2.691888] pcieport 0000:06:05.0: rpm_resume
-> > [    2.703649] pcieport 0000:06:04.0: rpm_suspend
-> > [    2.747748] pciehp 0000:06:05.0:pcie204: Slot #5 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
-> > [    2.747842] pciehp 0000:06:05.0:pcie204: service driver pciehp loaded
-> > [    2.747845] pcieport 0000:06:06.0: rpm_resume
-> > [    2.749213] pcieport 0000:06:05.0: rpm_idle
-> > [    2.759650] pcieport 0000:06:05.0: rpm_suspend
-> > [    2.805049] pciehp 0000:06:06.0:pcie204: Slot #6 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
-> > [    2.806464] pciehp 0000:06:06.0:pcie204: service driver pciehp loaded
-> > [    2.806471] pciehp: PCI Express Hot Plug Controller Driver version: 0.4
-> > [    2.807876] intel_idle: MWAIT substates: 0x21120
-> > [    2.807878] intel_idle: v0.4.1 model 0x3A
-> > [    2.808170] intel_idle: lapic_timer_reliable_states 0xffffffff
-> > [    2.808201] GHES: HEST is not enabled!
-> > [    2.809613] pcieport 0000:06:06.0: rpm_idle
-> > [    2.809644] Serial: 8250/16550 driver, 4 ports, IRQ sharing enabled
-> > [    2.810096] Linux agpgart interface v0.103
-> > [    2.810158] AMD IOMMUv2 driver by Joerg Roedel <jroedel@suse.de>
-> > [    2.810158] AMD IOMMUv2 functionality not available on this system
-> > [    2.816468] pcieport 0000:06:06.0: rpm_suspend
-> > 
-> > I've added debug messages whenever ->runtime_idle / _suspend / _resume
-> > is called for a device.
-> > 
-> > As can be seen, the PCI core now waits 50 ms after ->runtime_suspend.
-> > Also, the ports are resumed when the pciehp service driver is loaded,
-> > adding another 50 ms delay. For four hotplug ports, that's a total of
-> > 400 ms (versus 80 ms without the patch).
-> > 
-> > I'm wondering if the delay after ->runtime_suspend is really needed. Is
-> > this mandated by the spec? We could perhaps increase the autosuspend_delay
-> > in pcie_portdrv_probe() slightly to prevent the port from going to sleep
-> > between pci_enable_device() and loading the pciehp service driver.
+> If you have an analyzer, I guess you could look for your Read Requests
+> and Completions, but I doubt you'd learn anything.  I assume the NICs
+> are sending data over the link correctly, and something is happening
+> to the data between the device and the CPU.
 > 
-> The PCI PM specification version 1.2 says this in chapter 4.2 (page 37):
+> I would suspect something in the host controller.  Most controllers
+> would give you 0xffffffff back instead of zeros if there's a problem,
+> but maybe yours is special.
+I will work with our hardware folks to see if they can suggest something
+to debug.
+
+Thanks for you response.
+
+Murali
 > 
->   There is a minimum time requirement of 50 ms which must be provided by
->   system software between when the bus is switched from B2 to B0 and
->   when a function on the bus is accessed to allow time for the clock to
->   start up and the bus to settle.
-
-But why do we wait 50 ms when *suspending*, i.e. going from B0 to B2?
-
-(Assuming B2 is the state when the bridge goes to D3hot, which I'm not
-sure of. The spec says that the bus state may optionally be B3 if the
-bridge is in D3hot.)
+> Bjorn
+> 
 
 
-> Not sure how much of that still applies to modern hardware.
-
-Could you ask hardware engineers at Intel what the bus state is on
-modern chipsets (say, ILK or newer) and Thunderbolt ports to clarify
-this?
-
-Thanks,
-
-Lukas
-
->
-> I don't see why we cannot increase autosuspend delay time, though.
+-- 
+Murali Karicheri
+Linux Kernel, Keystone
