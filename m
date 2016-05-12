@@ -1,132 +1,232 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-Id: <201605301305.u4UD4HOA018335@mx0a-001b2d01.pphosted.com>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com
-Subject: [PATCH v2 3/4] PCI: Add a new option for resource_alignment to reassign alignment
-Date: Mon, 30 May 2016 21:00:17 +0800
-In-Reply-To: <1464613218-23973-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1464613218-23973-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Date: Thu, 12 May 2016 11:47:35 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Tian, Kevin" <kevin.tian@intel.com>
+Cc: Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"aik@ozlabs.ru" <aik@ozlabs.ru>,
+	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+	"paulus@samba.org" <paulus@samba.org>,
+	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
+	"joro@8bytes.org" <joro@8bytes.org>,
+	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
+	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
+	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
+	"eric.auger@linaro.org" <eric.auger@linaro.org>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
+	"alistair@popple.id.au" <alistair@popple.id.au>,
+	"ruscur@russell.cc" <ruscur@russell.cc>
+Subject: Re: [PATCH 5/5] vfio-pci: Allow to mmap MSI-X table if interrupt
+ remapping is supported
+Message-ID: <20160512114735.7ec61bd3@t450s.home>
+In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D15F8507E8@SHSMSX101.ccr.corp.intel.com>
+References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F842512@SHSMSX101.ccr.corp.intel.com>
+	<f7d73ac3-470d-a0d2-0a97-05be630480dd@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F842653@SHSMSX101.ccr.corp.intel.com>
+	<e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
+	<063D6719AE5E284EB5DD2968C1650D6D5F4B52B5@AcuExch.aculab.com>
+	<4be013bc-e81b-84c5-06d3-e1b3f46b3227@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F8474A4@SHSMSX101.ccr.corp.intel.com>
+	<20160505090513.56886c12@t450s.home>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F84EEBA@SHSMSX101.ccr.corp.intel.com>
+	<20160511095331.18436241@t450s.home>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F850046@SHSMSX101.ccr.corp.intel.com>
+	<20160511202042.77593861@t450s.home>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F8507E8@SHSMSX101.ccr.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When using resource_alignment kernel parameter, the current
-implement reassigns the alignment by changing resources' size
-which can potentially break some drivers. For example, the driver
-uses the size to locate some register whose length is related
-to the size.
+On Thu, 12 May 2016 04:53:19 +0000
+"Tian, Kevin" <kevin.tian@intel.com> wrote:
 
-This patch adds a new option "noresize" for the parameter to
-solve this problem.
+> > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > Sent: Thursday, May 12, 2016 10:21 AM
+> > 
+> > On Thu, 12 May 2016 01:19:44 +0000
+> > "Tian, Kevin" <kevin.tian@intel.com> wrote:
+> >   
+> > > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > > > Sent: Wednesday, May 11, 2016 11:54 PM
+> > > >
+> > > > On Wed, 11 May 2016 06:29:06 +0000
+> > > > "Tian, Kevin" <kevin.tian@intel.com> wrote:
+> > > >  
+> > > > > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > > > > > Sent: Thursday, May 05, 2016 11:05 PM
+> > > > > >
+> > > > > > On Thu, 5 May 2016 12:15:46 +0000
+> > > > > > "Tian, Kevin" <kevin.tian@intel.com> wrote:
+> > > > > >  
+> > > > > > > > From: Yongji Xie [mailto:xyjxie@linux.vnet.ibm.com]
+> > > > > > > > Sent: Thursday, May 05, 2016 7:43 PM
+> > > > > > > >
+> > > > > > > > Hi David and Kevin,
+> > > > > > > >
+> > > > > > > > On 2016/5/5 17:54, David Laight wrote:
+> > > > > > > >  
+> > > > > > > > > From: Tian, Kevin  
+> > > > > > > > >> Sent: 05 May 2016 10:37  
+> > > > > > > > > ...  
+> > > > > > > > >>> Acutually, we are not aimed at accessing MSI-X table from
+> > > > > > > > >>> guest. So I think it's safe to passthrough MSI-X table if we
+> > > > > > > > >>> can make sure guest kernel would not touch MSI-X table in
+> > > > > > > > >>> normal code path such as para-virtualized guest kernel on PPC64.
+> > > > > > > > >>>  
+> > > > > > > > >> Then how do you prevent malicious guest kernel accessing it?  
+> > > > > > > > > Or a malicious guest driver for an ethernet card setting up
+> > > > > > > > > the receive buffer ring to contain a single word entry that
+> > > > > > > > > contains the address associated with an MSI-X interrupt and
+> > > > > > > > > then using a loopback mode to cause a specific packet be
+> > > > > > > > > received that writes the required word through that address.
+> > > > > > > > >
+> > > > > > > > > Remember the PCIe cycle for an interrupt is a normal memory write
+> > > > > > > > > cycle.
+> > > > > > > > >
+> > > > > > > > > 	David
+> > > > > > > > >  
+> > > > > > > >
+> > > > > > > > If we have enough permission to load a malicious driver or
+> > > > > > > > kernel, we can easily break the guest without exposed
+> > > > > > > > MSI-X table.
+> > > > > > > >
+> > > > > > > > I think it should be safe to expose MSI-X table if we can
+> > > > > > > > make sure that malicious guest driver/kernel can't use
+> > > > > > > > the MSI-X table to break other guest or host. The
+> > > > > > > > capability of IRQ remapping could provide this
+> > > > > > > > kind of protection.
+> > > > > > > >  
+> > > > > > >
+> > > > > > > With IRQ remapping it doesn't mean you can pass through MSI-X
+> > > > > > > structure to guest. I know actual IRQ remapping might be platform
+> > > > > > > specific, but at least for Intel VT-d specification, MSI-X entry must
+> > > > > > > be configured with a remappable format by host kernel which
+> > > > > > > contains an index into IRQ remapping table. The index will find a
+> > > > > > > IRQ remapping entry which controls interrupt routing for a specific
+> > > > > > > device. If you allow a malicious program random index into MSI-X
+> > > > > > > entry of assigned device, the hole is obvious...
+> > > > > > >
+> > > > > > > Above might make sense only for a IRQ remapping implementation
+> > > > > > > which doesn't rely on extended MSI-X format (e.g. simply based on
+> > > > > > > BDF). If that's the case for PPC, then you should build MSI-X
+> > > > > > > passthrough based on this fact instead of general IRQ remapping
+> > > > > > > enabled or not.  
+> > > > > >
+> > > > > > I don't think anyone is expecting that we can expose the MSI-X vector
+> > > > > > table to the guest and the guest can make direct use of it.  The end
+> > > > > > goal here is that the guest on a power system is already
+> > > > > > paravirtualized to not program the device MSI-X by directly writing to
+> > > > > > the MSI-X vector table.  They have hypercalls for this since they
+> > > > > > always run virtualized.  Therefore a) they never intend to touch the
+> > > > > > MSI-X vector table and b) they have sufficient isolation that a guest
+> > > > > > can only hurt itself by doing so.
+> > > > > >
+> > > > > > On x86 we don't have a), our method of programming the MSI-X vector
+> > > > > > table is to directly write to it. Therefore we will always require QEMU
+> > > > > > to place a MemoryRegion over the vector table to intercept those
+> > > > > > accesses.  However with interrupt remapping, we do have b) on x86, which
+> > > > > > means that we don't need to be so strict in disallowing user accesses
+> > > > > > to the MSI-X vector table.  It's not useful for configuring MSI-X on
+> > > > > > the device, but the user should only be able to hurt themselves by
+> > > > > > writing it directly.  x86 doesn't really get anything out of this
+> > > > > > change, but it helps this special case on power pretty significantly
+> > > > > > aiui.  Thanks,
+> > > > > >  
+> > > > >
+> > > > > Allowing guest direct write to MSI-x table has system-wide impact.
+> > > > > As I explained earlier, hypervisor needs to control "interrupt_index"
+> > > > > programmed in MSI-X entry, which is used to associate a specific
+> > > > > IRQ remapping entry. Now if you expose whole MSI-x table to guest,
+> > > > > it can program random index into MSI-X entry to associate with
+> > > > > any IRQ remapping entry and then there won't be any isolation per se.
+> > > > >
+> > > > > You can check "5.5.2 MSI and MSI-X Register Programming" in VT-d
+> > > > > spec.  
+> > > >
+> > > > I think you're extrapolating beyond the vfio interface.  The change
+> > > > here is to remove the vfio protection of the MSI-X vector table when
+> > > > the system provides interrupt isolation.  The argument is that this is
+> > > > safe to do because the hardware protects the host from erroneous and
+> > > > malicious user programming, but it is not meant to provide a means to
+> > > > program MSI-X directly through the vector table.  This is effectively  
+> > >
+> > > Sorry I didn't get this point. Once we allow userspace to mmap MSI-X
+> > > table, isn't it equivalent to allowing userspace directly program vector
+> > > table? Or is there other mechanism to prevent direct programming?  
+> > 
+> > This would remove the mechanism that prevents direct programming.
+> > Users can configure the device to perform DMA w/o setting up an IOMMU
+> > mapping, which generates a fault.  Users can incorrectly manipulate the
+> > MSI-X vector table instead of using the proper vfio programming
+> > interface, which generates a fault.
+> >   
+> > > > the same as general DMA programming, if the vfio programming model is
+> > > > not followed the device generates iommu faults.  I do have a concern
+> > > > that userspace driver writers are going to more often presume they can
+> > > > use the vector table directly because of this change, but I don't know
+> > > > that that is sufficient reason to prevent such a change.  They'll
+> > > > quickly discover the device generates faults on interrupt rather than
+> > > > working as expected.  
+> > >
+> > > If userspace can actually program vector table directly, there is not
+> > > always fault triggered. As long as MSI-X table is fully under control
+> > > of userspace, any interrupt index can be used here which may link
+> > > to a IRQ remapping entry allocated for other devices.  
+> > 
+> > Is not part of the vector lookup comparing the source ID of the DMA
+> > write?  If not then VT-d interrupt remapping offers us no protection
+> > from a malicious guest performing DMA to the same address.  Thanks,
+> >   
+> 
+> For x86 IRQ remapping doesn't rely on existing DMAR remapping table for
+> DMA. Instead IRQ remapping table is a global table per VT-d engine, shared
+> by all devices behind this VT-d engine. Each IRQ remapping table entry 
+> (IRTE) can specify:
+> 
+> - whether to validate source-id of the interrupt requests;
+> - whether to verify the whole source id;
+> - whether to verify some bits of the source id;
+> ...
+> (section 9.10 Interrupt Remapping Table Entry (IRTE) in VT-d spec)
+> 
+> IRTE index is programmed into corresponding MSI-X entry of a device.
+> When an interrupt message is triggered from that device, IRQ remapping
+> hardware will use the index to find the IRTE entry.
+> 
+> As long as host kernel has strict control of MSI-X table, it can choose to
+> not validate source-id as long as IRTE index is trusted.
+> 
+> That is why I concerned you cannot do this simply based on whether 
+> IRQ remapping is available on x86. If such usage is really required,
+> you'll need some more accurate indicator per iommu structure to tell
+> whether safe to allow mmap MSI-X to user space.
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- Documentation/kernel-parameters.txt |    5 ++++-
- drivers/pci/pci.c                   |   35 +++++++++++++++++++++++++----------
- 2 files changed, 29 insertions(+), 11 deletions(-)
+As argued previously in this thread, there's nothing special about a
+DMA write to memory versus a DMA write to a special address that
+triggers an MSI vector.  If the device is DMA capable, which we assume
+all are, it can be fooled into generating those DMA writes regardless
+of whether we actively block access to the MSI-X vector table itself.
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 82b42c9..c4802f5 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -2997,13 +2997,16 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 				window. The default value is 64 megabytes.
- 		resource_alignment=
- 				Format:
--				[<order of align>@][<domain>:]<bus>:<slot>.<func>[; ...]
-+				[<order of align>@][<domain>:]<bus>:<slot>.<func>
-+				[:noresize][; ...]
- 				Specifies alignment and device to reassign
- 				aligned memory resources.
- 				If <order of align> is not specified,
- 				PAGE_SIZE is used as alignment.
- 				PCI-PCI bridge can be specified, if resource
- 				windows need to be expanded.
-+				noresize: Don't change the resources' sizes when
-+				reassigning alignment.
- 		ecrc=		Enable/disable PCIe ECRC (transaction layer
- 				end-to-end CRC checking).
- 				bios: Use BIOS/firmware settings. This is the
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a259394..3ee13e5 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4748,11 +4748,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
- /**
-  * pci_specified_resource_alignment - get resource alignment specified by user.
-  * @dev: the PCI device to get
-+ * @resize: whether or not to change resources' size when reassigning alignment
-  *
-  * RETURNS: Resource alignment if it is specified.
-  *          Zero if it is not specified.
-  */
--static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
-+static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
-+		bool *resize)
- {
- 	int seg, bus, slot, func, align_order, count;
- 	resource_size_t align = 0;
-@@ -4786,6 +4788,11 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
- 			}
- 		}
- 		p += count;
-+		if (!strncmp(p, ":noresize", 9)) {
-+			*resize = false;
-+			p += 9;
-+		} else
-+			*resize = true;
- 		if (seg == pci_domain_nr(dev->bus) &&
- 			bus == dev->bus->number &&
- 			slot == PCI_SLOT(dev->devfn) &&
-@@ -4818,11 +4825,12 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- {
- 	int i;
- 	struct resource *r;
-+	bool resize = true;
- 	resource_size_t align, size;
- 	u16 command;
- 
- 	/* check if specified PCI is target device to reassign */
--	align = pci_specified_resource_alignment(dev);
-+	align = pci_specified_resource_alignment(dev, &resize);
- 	if (!align)
- 		return;
- 
-@@ -4844,15 +4852,22 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 		if (!(r->flags & IORESOURCE_MEM))
- 			continue;
- 		size = resource_size(r);
--		if (size < align) {
--			size = align;
--			dev_info(&dev->dev,
--				"Rounding up size of resource #%d to %#llx.\n",
--				i, (unsigned long long)size);
-+		if (resize) {
-+			if (size < align) {
-+				size = align;
-+				dev_info(&dev->dev,
-+					"Rounding up size of resource #%d to %#llx.\n",
-+					i, (unsigned long long)size);
-+			}
-+			r->flags |= IORESOURCE_UNSET;
-+			r->end = size - 1;
-+			r->start = 0;
-+		} else {
-+			r->flags &= ~IORESOURCE_SIZEALIGN;
-+			r->flags |= IORESOURCE_STARTALIGN | IORESOURCE_UNSET;
-+			r->start = max(align, size);
-+			r->end = r->start + size - 1;
- 		}
--		r->flags |= IORESOURCE_UNSET;
--		r->end = size - 1;
--		r->start = 0;
- 	}
- 	/* Need to disable bridge's resource window,
- 	 * to enable the kernel to reassign new resource
--- 
-1.7.9.5
+With respect to the IRTE, these entries are always under host control,
+and aside from the potential opt-in gap when using the intremap=nosid
+boot option, they always make use of source-id validation as Linux is
+written today.  Compatibility mode support is also disabled.  Nothing
+here changes that.  In fact, I suspect the only advantage to blocking
+MSI-X vector table access w/o interrupt remapping is to avoid obvious
+collisions if it were to be programmed directly, it doesn't actually
+prevent an identical DMA transaction from being generated by other
+means.  The MSI-X vector table of a device is always considered
+untrusted which is why we require user opt-ins to subvert that
+protection.  Thanks,
+
+Alex
