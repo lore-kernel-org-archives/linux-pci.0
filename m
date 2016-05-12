@@ -1,268 +1,227 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from e23smtp05.au.ibm.com ([202.81.31.147]:39079 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754760AbcETGnO (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Fri, 20 May 2016 02:43:14 -0400
-Received: from localhost
-	by e23smtp05.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-	Fri, 20 May 2016 16:43:12 +1000
-Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
-	by d23dlp01.au.ibm.com (Postfix) with ESMTP id 9B7A02CE8060
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:08 +1000 (EST)
-Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
-	by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4K6h0YP7668152
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:43:08 +1000
-Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
-	by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4K6gYSa031471
-	for <linux-pci@vger.kernel.org>; Fri, 20 May 2016 16:42:36 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, benh@kernel.crashing.org,
-	mpe@ellerman.id.au, alistair@popple.id.au, aik@ozlabs.ru,
-	Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH v10 11/18] powerpc/powernv: Dynamically release PE
-Date: Fri, 20 May 2016 16:41:35 +1000
-Message-Id: <1463726502-14679-12-git-send-email-gwshan@linux.vnet.ibm.com>
-In-Reply-To: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1463726502-14679-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <hch@lst.de>
+Return-Path: <hch@lst.de>
+Date: Thu, 12 May 2016 16:29:02 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, helgaas@kernel.org, pjw@netapp.com,
+	axboe@fb.com, keith.busch@intel.com, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org
+Subject: Re: [PATCH 1/2] PCI: Provide sensible irq vector alloc/free
+	routines
+Message-ID: <20160512142902.GA14166@lst.de>
+References: <1462457096-19795-1-git-send-email-hch@lst.de> <1462457096-19795-2-git-send-email-hch@lst.de> <20160511074527.GA31347@agordeev.lab.eng.brq.redhat.com> <20160511085049.GA20279@lst.de> <20160511094432.GB31347@agordeev.lab.eng.brq.redhat.com> <20160512073552.GA4027@lst.de> <20160512094432.GA14671@agordeev.lab.eng.brq.redhat.com> <20160512110318.GA9192@lst.de> <20160512121155.GB8681@agordeev.lab.eng.brq.redhat.com> <20160512121933.GA11084@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160512121933.GA11084@lst.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-This supports releasing PEs dynamically. A reference count is
-introduced to PE representing number of PCI devices associated
-with the PE. The reference count is increased when PCI device
-joins the PE and decreased when PCI device leaves the PE in
-pnv_pci_release_device(). When the count becomes zero, the PE
-and its consumed resources are released. Note that the count
-is accessed concurrently. So a counter with "int" type is enough
-here.
+Alexander, what do you think about the version below?  Survived
+quick testing with nvme so far.
 
-In order to release the sources consumed by the PE, couple of
-helper functions are introduced as below:
 
-   * pnv_pci_ioda1_unset_window() - Unset IODA1 DMA32 window
-   * pnv_pci_ioda1_release_dma_pe() - Release IODA1 DMA32 segments
-   * pnv_pci_ioda2_release_dma_pe() - Release IODA2 DMA resource
-   * pnv_ioda_release_pe_seg() - Unmap IO/M32/M64 segments
-
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
----
- arch/powerpc/platforms/powernv/pci-ioda.c | 174 ++++++++++++++++++++++++++++++
- arch/powerpc/platforms/powernv/pci.h      |   1 +
- 2 files changed, 175 insertions(+)
-
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index ba7b3a0..bde7f76 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -1033,6 +1033,7 @@ static void pnv_ioda_setup_same_PE(struct pci_bus *bus, struct pnv_ioda_pe *pe)
- 		if (pdn->pe_number != IODA_INVALID_PE)
- 			continue;
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index a510484..cee3962 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1121,98 +1121,131 @@ int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
+ }
+ EXPORT_SYMBOL(pci_enable_msix_range);
  
-+		pe->device_count++;
- 		pdn->pcidev = dev;
- 		pdn->pe_number = pe->pe_number;
- 		if ((pe->flags & PNV_IODA_PE_BUS_ALL) && dev->subordinate)
-@@ -3377,6 +3378,178 @@ static bool pnv_pci_enable_device_hook(struct pci_dev *dev)
- 	return true;
+-static int __pci_enable_msix(struct pci_dev *dev, int nr_vecs)
++static int __pci_enable_msi(struct pci_dev *dev, unsigned int min_vecs,
++		unsigned int max_vecs)
+ {
+-	struct msix_entry *msix_entries;
+-	int ret, i;
++	int nr_vecs, i;
+ 
+-	msix_entries = kcalloc(nr_vecs, sizeof(struct msix_entry), GFP_KERNEL);
+-	if (!msix_entries)
+-		return -ENOMEM;
++	nr_vecs = pci_msi_vec_count(dev);
++	if (nr_vecs <= 0)
++		return -EINVAL;
++	max_vecs = min_t(unsigned int, max_vecs, nr_vecs);
+ 
+-	for (i = 0; i < nr_vecs; i++)
+-		msix_entries[i].entry = i;
++	nr_vecs = pci_enable_msi_range(dev, min_vecs, max_vecs);
++	if (nr_vecs > 1) {
++		dev->irqs = kcalloc(nr_vecs, sizeof(u32), GFP_KERNEL);
++		if (!dev->irqs) {
++			pci_disable_msi(dev);
++			return -ENOMEM;
++		}
+ 
+-	ret = msix_capability_init(dev, msix_entries, nr_vecs);
+-	if (ret == 0) {
+ 		for (i = 0; i < nr_vecs; i++)
+-			dev->irqs[i] = msix_entries[i].vector;
++			dev->irqs[i] = dev->irq + i;
++	} else if (nr_vecs == 1) {
++		dev->irqs = &dev->irq;
+ 	}
+ 
+-	kfree(msix_entries);
+-	return ret;
++	WARN_ON_ONCE(nr_vecs == 0);
++	return nr_vecs;
  }
  
-+static long pnv_pci_ioda1_unset_window(struct iommu_table_group *table_group,
-+				       int num)
-+{
-+	struct pnv_ioda_pe *pe = container_of(table_group,
-+					      struct pnv_ioda_pe, table_group);
-+	struct pnv_phb *phb = pe->phb;
-+	unsigned int idx;
-+	long rc;
-+
-+	pe_info(pe, "Removing DMA window #%d\n", num);
-+	for (idx = 0; idx < phb->ioda.dma32_count; idx++) {
-+		if (phb->ioda.dma32_segmap[idx] != pe->pe_number)
-+			continue;
-+
-+		rc = opal_pci_map_pe_dma_window(phb->opal_id, pe->pe_number,
-+						idx, 0, 0ul, 0ul, 0ul);
-+		if (rc != OPAL_SUCCESS) {
-+			pe_warn(pe, "Failure %ld unmapping DMA32 segment#%d\n",
-+				rc, idx);
-+			return rc;
-+		}
-+
-+		phb->ioda.dma32_segmap[idx] = IODA_INVALID_PE;
-+	}
-+
-+	pnv_pci_unlink_table_and_group(table_group->tables[num], table_group);
-+	return OPAL_SUCCESS;
-+}
-+
-+static void pnv_pci_ioda1_release_pe_dma(struct pnv_ioda_pe *pe)
-+{
-+	unsigned int weight = pnv_pci_ioda_pe_dma_weight(pe);
-+	struct iommu_table *tbl = pe->table_group.tables[0];
-+	int64_t rc;
-+
-+	if (!weight)
-+		return;
-+
-+	rc = pnv_pci_ioda1_unset_window(&pe->table_group, 0);
-+	if (rc != OPAL_SUCCESS)
-+		return;
-+
-+	pnv_pci_ioda1_tce_invalidate(tbl, tbl->it_offset, tbl->it_size, false);
-+	if (pe->table_group.group) {
-+		iommu_group_put(pe->table_group.group);
-+		WARN_ON(pe->table_group.group);
-+	}
-+
-+	free_pages(tbl->it_base, get_order(tbl->it_size << 3));
-+	iommu_free_table(tbl, "pnv");
-+}
-+
-+static void pnv_pci_ioda2_release_pe_dma(struct pnv_ioda_pe *pe)
-+{
-+	struct iommu_table *tbl = pe->table_group.tables[0];
-+	unsigned int weight = pnv_pci_ioda_pe_dma_weight(pe);
-+#ifdef CONFIG_IOMMU_API
-+	int64_t rc;
-+#endif
-+
-+	if (!weight)
-+		return;
-+
-+#ifdef CONFIG_IOMMU_API
-+	rc = pnv_pci_ioda2_unset_window(&pe->table_group, 0);
-+	if (rc)
-+		pe_warn(pe, "OPAL error %ld release DMA window\n", rc);
-+#endif
-+
-+	pnv_pci_ioda2_set_bypass(pe, false);
-+	if (pe->table_group.group) {
-+		iommu_group_put(pe->table_group.group);
-+		WARN_ON(pe->table_group.group);
-+	}
-+
-+	pnv_pci_ioda2_table_free_pages(tbl);
-+	iommu_free_table(tbl, "pnv");
-+}
-+
-+static void pnv_ioda_free_pe_seg(struct pnv_ioda_pe *pe,
-+				 unsigned short win,
-+				 unsigned int *map)
-+{
-+	struct pnv_phb *phb = pe->phb;
-+	int idx;
-+	int64_t rc;
-+
-+	for (idx = 0; idx < phb->ioda.total_pe_num; idx++) {
-+		if (map[idx] != pe->pe_number)
-+			continue;
-+
-+		if (win == OPAL_M64_WINDOW_TYPE)
-+			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-+					phb->ioda.reserved_pe_idx, win,
-+					idx / PNV_IODA1_M64_SEGS,
-+					idx % PNV_IODA1_M64_SEGS);
-+		else
-+			rc = opal_pci_map_pe_mmio_window(phb->opal_id,
-+					phb->ioda.reserved_pe_idx, win, 0, idx);
-+
-+		if (rc != OPAL_SUCCESS)
-+			pe_warn(pe, "Error %ld unmapping (%d) segment#%d\n",
-+				rc, win, idx);
-+
-+		map[idx] = IODA_INVALID_PE;
-+	}
-+}
-+
-+static void pnv_ioda_release_pe_seg(struct pnv_ioda_pe *pe)
-+{
-+	struct pnv_phb *phb = pe->phb;
-+
-+	if (phb->type == PNV_PHB_IODA1) {
-+		pnv_ioda_free_pe_seg(pe, OPAL_IO_WINDOW_TYPE,
-+				     phb->ioda.io_segmap);
-+		pnv_ioda_free_pe_seg(pe, OPAL_M32_WINDOW_TYPE,
-+				     phb->ioda.m32_segmap);
-+		pnv_ioda_free_pe_seg(pe, OPAL_M64_WINDOW_TYPE,
-+				     phb->ioda.m64_segmap);
-+	} else if (phb->type == PNV_PHB_IODA2) {
-+		pnv_ioda_free_pe_seg(pe, OPAL_M32_WINDOW_TYPE,
-+				     phb->ioda.m32_segmap);
-+	}
-+}
-+
-+static void pnv_ioda_release_pe(struct pnv_ioda_pe *pe)
-+{
-+	struct pnv_phb *phb = pe->phb;
-+	struct pnv_ioda_pe *slave, *tmp;
-+
-+	/* Release slave PEs in compound PE */
-+	if (pe->flags & PNV_IODA_PE_MASTER) {
-+		list_for_each_entry_safe(slave, tmp, &pe->slaves, list)
-+			pnv_ioda_release_pe(slave);
-+	}
-+
-+	list_del(&pe->list);
-+	switch (phb->type) {
-+	case PNV_PHB_IODA1:
-+		pnv_pci_ioda1_release_pe_dma(pe);
-+		break;
-+	case PNV_PHB_IODA2:
-+		pnv_pci_ioda2_release_pe_dma(pe);
-+		break;
-+	default:
-+		WARN_ON(1);
-+	}
-+
-+	pnv_ioda_release_pe_seg(pe);
-+	pnv_ioda_deconfigure_pe(pe->phb, pe);
-+	pnv_ioda_free_pe(pe);
-+}
-+
-+static void pnv_pci_release_device(struct pci_dev *pdev)
-+{
-+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
-+	struct pnv_phb *phb = hose->private_data;
-+	struct pci_dn *pdn = pci_get_pdn(pdev);
-+	struct pnv_ioda_pe *pe;
-+
-+	if (pdev->is_virtfn)
-+		return;
-+
-+	if (!pdn || pdn->pe_number == IODA_INVALID_PE)
-+		return;
-+
-+	pe = &phb->ioda.pe_array[pdn->pe_number];
-+	WARN_ON(--pe->device_count < 0);
-+	if (pe->device_count == 0)
-+		pnv_ioda_release_pe(pe);
-+}
-+
- static void pnv_pci_ioda_shutdown(struct pci_controller *hose)
+-static int __pci_enable_msi(struct pci_dev *dev, int nr_vecs)
++static int __pci_enable_msix(struct pci_dev *dev, unsigned int min_vecs,
++		unsigned int max_vecs)
  {
- 	struct pnv_phb *phb = hose->private_data;
-@@ -3393,6 +3566,7 @@ static const struct pci_controller_ops pnv_pci_ioda_controller_ops = {
- 	.teardown_msi_irqs	= pnv_teardown_msi_irqs,
- #endif
- 	.enable_device_hook	= pnv_pci_enable_device_hook,
-+	.release_device		= pnv_pci_release_device,
- 	.window_alignment	= pnv_pci_window_alignment,
- 	.setup_bridge		= pnv_pci_setup_bridge,
- 	.reset_secondary_bus	= pnv_pci_reset_secondary_bus,
-diff --git a/arch/powerpc/platforms/powernv/pci.h b/arch/powerpc/platforms/powernv/pci.h
-index 8927e5d..3a97990 100644
---- a/arch/powerpc/platforms/powernv/pci.h
-+++ b/arch/powerpc/platforms/powernv/pci.h
-@@ -30,6 +30,7 @@ struct pnv_phb;
- struct pnv_ioda_pe {
- 	unsigned long		flags;
- 	struct pnv_phb		*phb;
-+	int			device_count;
+-	int ret, i;
++	struct msix_entry *msix_entries;
++	int nr_vecs, i;
  
- 	/* A PE can be associated with a single device or an
- 	 * entire bus (& children). In the former case, pdev
--- 
-2.1.0
-
+-	ret = msi_capability_init(dev, nr_vecs);
+-	if (ret == 0) {
+-		for (i = 0; i < nr_vecs; i++)
+-			dev->irqs[i] = dev->irq + i;
++	nr_vecs = pci_msix_vec_count(dev);
++	if (nr_vecs <= 0)
++		return -EINVAL;
++	max_vecs = min_t(unsigned int, max_vecs, nr_vecs);
++
++	msix_entries = kcalloc(max_vecs, sizeof(struct msix_entry), GFP_KERNEL);
++	if (!msix_entries)
++		return -ENOMEM;
++
++	for (i = 0; i < max_vecs; i++)
++		msix_entries[i].entry = i;
++
++	nr_vecs = pci_enable_msix_range(dev, msix_entries, min_vecs, max_vecs);
++	if (nr_vecs < 0)
++		goto out_free_entries;
++
++	dev->irqs = kcalloc(nr_vecs, sizeof(u32), GFP_KERNEL);
++	if (!dev->irqs) {
++		pci_disable_msix(dev);
++		nr_vecs = -ENOMEM;
++		goto out_free_entries;
+ 	}
+ 
+-	return ret;
++	for (i = 0; i < nr_vecs; i++)
++		dev->irqs[i] = msix_entries[i].vector;
++
++out_free_entries:
++	WARN_ON_ONCE(nr_vecs == 0);
++	kfree(msix_entries);
++	return nr_vecs;
+ }
+ 
+ /**
+  * pci_alloc_irq_vectors - allocate multiple IRQs for a device
+  * @dev:		PCI device to operate on
+- * @nr_vecs:		number of vectors to operate on
++ * @min_vecs:		minimum vectors required
++ * @max_vecs:		maximum vectors requested
+  * @flags:		flags or quirks for the allocation
+  *
+- * Allocate @nr_vecs interrupt vectors for @dev, using MSI-X or MSI
+- * vectors if available, and fall back to a single legacy vector
+- * if neither is available.  Return the number of vectors allocated
+- * (which might be smaller than @nr_vecs) if successful, or a negative
+- * error code on error.  The Linux irq numbers for the allocated
+- * vectors are stored in pdev->irqs.
++ * Allocate up to @max_vecs interrupt vectors for @dev, using MSI-X or MSI
++ * vectors if available, and fall back to a single legacy vector if neither
++ * is available.  Return the number of vectors allocated (which might be
++ * smaller than @max_vecs) if successful, or a negative error code on error.
++ *
++ * The Linux irq numbers for the allocated vectors are stored in pdev->irqs.
++ *
++ * If @min_vecs is set to a number bigger than zero the function will fail
++ * with -%ENOSPC if les than @min_vecs vectors are available.
+  */
+-int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
+-		unsigned int flags)
++int pci_alloc_irq_vectors_range(struct pci_dev *dev, unsigned int min_vecs,
++		unsigned int max_vecs, unsigned int flags)
+ {
+-	unsigned int ret;
+-
++	if (WARN_ON_ONCE(min_vecs == 0))
++		return -EINVAL;
++	if (WARN_ON_ONCE(max_vecs < min_vecs))
++		return -EINVAL;
+ 	if (WARN_ON_ONCE(dev->msi_enabled || dev->msix_enabled))
+ 		return -EINVAL;
+ 
+-	if (!pci_msi_supported(dev, 1))
+-		goto use_legacy_irq;
+-
+-	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX))
+-		nr_vecs = min_t(unsigned int, nr_vecs, pci_msix_vec_count(dev));
+-	else if (dev->msi_cap)
+-		nr_vecs = min_t(unsigned int, nr_vecs, pci_msi_vec_count(dev));
+-	else
+-		goto use_legacy_irq;
+-
+-	dev->irqs = kcalloc(nr_vecs, sizeof(u32), GFP_KERNEL);
+-	if (!dev->irqs)
+-		return -ENOMEM;
+-
+-	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX))
+-		ret = __pci_enable_msix(dev, nr_vecs);
+-	else
+-		ret = __pci_enable_msi(dev, nr_vecs);
+-	if (ret)
+-		goto out_free_irqs;
+-
+-	return 0;
++	if (pci_msi_supported(dev, 1)) {
++		if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX)) {
++			int ret = __pci_enable_msix(dev, min_vecs, max_vecs);
++			if (ret > 0)
++				return ret;
++		}
++		if (dev->msi_cap) {
++			int ret = __pci_enable_msi(dev, min_vecs, max_vecs);
++			if (ret > 0)
++				return ret;
++		}
++	}
+ 
+-out_free_irqs:
+-	kfree(dev->irqs);
+-use_legacy_irq:
++	/* no MSI or MSI-X vectors available, use the legacy IRQ: */
+ 	dev->irqs = &dev->irq;
+ 	return 1;
+ }
++EXPORT_SYMBOL(pci_alloc_irq_vectors_range);
++
++int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
++		unsigned int flags)
++{
++	return pci_alloc_irq_vectors_range(dev, 1, nr_vecs, flags);
++}
+ EXPORT_SYMBOL(pci_alloc_irq_vectors);
+ 
+ /**
+  * pci_free_irq_vectors - free previously allocated IRQs for a device
+  * @dev:		PCI device to operate on
+  *
+- * Undoes the allocations and enabling in pci_alloc_irq_vectors().
++ * Undoes the allocations and enabling in pci_alloc_irq_vectors() or
++ * pci_alloc_irq_vectors_range().
+  */
+ void pci_free_irq_vectors(struct pci_dev *dev)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e201d0d..cd5800a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1289,6 +1289,8 @@ static inline int pci_enable_msix_exact(struct pci_dev *dev,
+ 
+ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
+ 		unsigned int flags);
++int pci_alloc_irq_vectors_range(struct pci_dev *dev, unsigned int min_vecs,
++		unsigned int max_vecs, unsigned int flags);
+ void pci_free_irq_vectors(struct pci_dev *dev);
+ #else
+ static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
