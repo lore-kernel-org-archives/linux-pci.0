@@ -1,50 +1,57 @@
-Return-Path: <okaya@codeaurora.org>
-Return-Path: <okaya@codeaurora.org>
-Subject: Re: [PATCH] PCI/ASPM: fix reverse ASPM L0s assignment of upstream and
- downstream
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.sysgo.com ([176.9.12.79]:58654 "EHLO mail.sysgo.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751963AbcELG5B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Thu, 12 May 2016 02:57:01 -0400
+From: David Engraf <david.engraf@sysgo.com>
+Subject: [PATCH] PCI: Fix __pci_bus_size_bridges when bridge is not available
 To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1464071269-79954-1-git-send-email-hehy1@lenovo.com>
- <20160525165726.GB3208@localhost> <5745DF08.9040409@codeaurora.org>
- <20160525175039.GC3208@localhost>
-Cc: Ocean HY1 He <hehy1@lenovo.com>, "bhelgaas@google.com"
- <bhelgaas@google.com>, "wangyijing@huawei.com" <wangyijing@huawei.com>,
- "luto@kernel.org" <luto@kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "prarit@redhat.com" <prarit@redhat.com>, "jcm@redhat.com" <jcm@redhat.com>,
- Nagananda Chumbalkar <nchumbalkar@lenovo.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <5745EC95.1020506@codeaurora.org>
-Date: Wed, 25 May 2016 14:19:01 -0400
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Wei Yang <weiyang@linux.vnet.ibm.com>,
+	linux-pci@vger.kernel.org
+Message-ID: <5734293A.6040702@sysgo.com>
+Date: Thu, 12 May 2016 08:56:58 +0200
 MIME-Version: 1.0
-In-Reply-To: <20160525175039.GC3208@localhost>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: multipart/mixed;
+ boundary="------------010505070306040704090109"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/25/2016 1:50 PM, Bjorn Helgaas wrote:
->> > You are saying that it is OK to enable L0s on just one side of the
->> > link as long as both sides support L0s. 
-> I'm not sure what you mean by the link parameters not being
-> compatible, but I think it is legal to enable L0s on only one
-> direction.
+This is a multi-part message in MIME format.
+--------------010505070306040704090109
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I'm talking about L0s acceptable and entry latency times used to
-determine when L0s can be enabled.
+A virtual PCI controller may not have a bridge device, thus when 
+__pci_bus_size_bridges is called, it will generate a NULL pointer 
+exception when accessing bus->self->class. The attached patch adds a 
+check to verify if a bridge has been set. Without a bridge device, the 
+function returns.
 
-> 
->> > This part is a little bit misleading. I had HW people telling me
->> > that both sides need to enable L0s at about the same time.
-> I don't remember seeing anything like that in the spec.  Do they have
-> a pointer?  "At about the same time" is too hand-wavey to be useful to
-> software.
-> 
+Signed-off-by: David Engraf <david.engraf <at> sysgo.com>
 
-OK. Let me do some more push back. I wanted to understand the OS
-behavior and its reasoning.
 
-Your answers are sufficient.
+--------------010505070306040704090109
+Content-Type: text/x-diff;
+ name="setup-pci.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="setup-pci.patch"
 
--- 
-Sinan Kaya
-Qualcomm Technologies, Inc. on behalf of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 55641a3..ddb3381 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1245,6 +1245,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+ 	if (pci_is_root_bus(bus))
+ 		return;
+ 
++	/* bridge device available? */
++	if (!bus->self)
++		return;
++
+ 	switch (bus->self->class >> 8) {
+ 	case PCI_CLASS_BRIDGE_CARDBUS:
+ 		/* don't size cardbuses yet. */
+
+--------------010505070306040704090109--
