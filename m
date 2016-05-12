@@ -1,129 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:56822 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752057AbcEYNDt (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Wed, 25 May 2016 09:03:49 -0400
-Received: from pps.filterd (m0048817.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4PCx70b039074
-	for <linux-pci@vger.kernel.org>; Wed, 25 May 2016 09:03:48 -0400
-Message-Id: <201605251303.u4PCx70b039074@mx0a-001b2d01.pphosted.com>
-Received: from e24smtp02.br.ibm.com (e24smtp02.br.ibm.com [32.104.18.86])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 234qhy8bb0-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 25 May 2016 09:03:47 -0400
-Received: from localhost
-	by e24smtp02.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-	Wed, 25 May 2016 10:03:45 -0300
-Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
-	by d24dlp02.br.ibm.com (Postfix) with ESMTP id A00EC1DC006D
-	for <linux-pci@vger.kernel.org>; Wed, 25 May 2016 09:03:36 -0400 (EDT)
-Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.8.31.91])
-	by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u4PD3hMC16253310
-	for <linux-pci@vger.kernel.org>; Wed, 25 May 2016 10:03:43 -0300
-Received: from d24av01.br.ibm.com (localhost [127.0.0.1])
-	by d24av01.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u4PD3fYu015327
-	for <linux-pci@vger.kernel.org>; Wed, 25 May 2016 10:03:43 -0300
-Subject: Re: [v4] powerpc/pci: Assign fixed PHB number based on device-tree
- properties
-To: Michael Ellerman <mpe@ellerman.id.au>,
-	linuxppc-dev@lists.ozlabs.org
-References: <3qWdQC0MVDz9s9Y@ozlabs.org> <56F9255A.1040900@linux.vnet.ibm.com>
- <1464155117.8573.2.camel@ellerman.id.au>
-Cc: mikey@neuling.org, linux-pci@vger.kernel.org,
-	gwshan@linux.vnet.ibm.com, paulus@samba.org, imunsie@au1.ibm.com,
-	andrew.donnellan@au1.ibm.com, bhelgaas@google.com
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Date: Wed, 25 May 2016 10:03:41 -0300
+Return-Path: <agordeev@redhat.com>
+Return-Path: <agordeev@redhat.com>
+Date: Thu, 12 May 2016 11:44:33 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: helgaas@kernel.org, pjw@netapp.com, axboe@fb.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org
+Subject: Re: [PATCH 1/2] PCI: Provide sensible irq vector alloc/free routines
+Message-ID: <20160512094432.GA14671@agordeev.lab.eng.brq.redhat.com>
+References: <1462457096-19795-1-git-send-email-hch@lst.de>
+ <1462457096-19795-2-git-send-email-hch@lst.de>
+ <20160511074527.GA31347@agordeev.lab.eng.brq.redhat.com>
+ <20160511085049.GA20279@lst.de>
+ <20160511094432.GB31347@agordeev.lab.eng.brq.redhat.com>
+ <20160512073552.GA4027@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <1464155117.8573.2.camel@ellerman.id.au>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160512073552.GA4027@lst.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/25/2016 02:45 AM, Michael Ellerman wrote:
-> Hi Guilherme,
->
-> Sorry for the very late reply, this got lost in my email filters.
+On Thu, May 12, 2016 at 09:35:52AM +0200, Christoph Hellwig wrote:
+> Hi Alex,
+> 
+> what do you think about the incremental patch below?  This should
+> address the concerns about the strange PPC bridges, although I don't
+> have a way to test one:
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index a510484..32ce65e 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -1177,6 +1177,7 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
+>  	if (WARN_ON_ONCE(dev->msi_enabled || dev->msix_enabled))
+>  		return -EINVAL;
+>  
+> +retry:
 
-No problem Michael, thanks for replying!
+A retry does not seem needs checking MSI support each time, nor reading
+MSI header info like number of vectors (not visible in this patch).
 
+>  	if (!pci_msi_supported(dev, 1))
+>  		goto use_legacy_irq;
+>  
+> @@ -1191,17 +1192,26 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
+>  	if (!dev->irqs)
+>  		return -ENOMEM;
+>  
+> -	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX))
+> +	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX)) {
+>  		ret = __pci_enable_msix(dev, nr_vecs);
+> -	else
+> +		if (ret < 0)
+> +			flags |= PCI_IRQ_NOMSIX;
+> +	} else {
+>  		ret = __pci_enable_msi(dev, nr_vecs);
+> -	if (ret)
+> -		goto out_free_irqs;
+> +	}
+>  
+> -	return 0;
+> +	/* if we succeeded getting all vectors return the number we got: */
+> +	if (!ret)
+> +		return nr_vecs;
+>  
+> -out_free_irqs:
+>  	kfree(dev->irqs);
+> +	/* if ret is positive it's the numbers of vectors we can use, retry: */
+> +	if (ret > 0) {
+> +		nr_vecs = ret;
+> +		goto retry;
+> +	}
 
-> On Mon, 2016-03-28 at 09:36 -0300, Guilherme G. Piccoli wrote:
->> On 03/25/2016 06:33 AM, Michael Ellerman wrote:
->
->>>> +static int get_phb_number(struct device_node *dn)
->>>> +{
->>>> +	const __be64 *prop64;
->>>> +	const __be32 *regs;
->>>> +	int phb_id = 0;
->>>> +
->>>> +	/* try fixed PHB numbering first, by checking archs and reading
->>>> +	 * the respective device-tree property. */
->>>> +	if (machine_is(pseries)) {
->>>
->>> Firstly I don't see why this check needs to be conditional on pseries. Any
->>> machine where the PHB has a 'reg' property should be able to use 'reg' for
->>> numbering.
->>
->> This is something I'm not sure for all the powerpc sub-architectures,
->> like Cell - that's the reason of the check. If you are sure about this,
->> I'll gladly remove this check =)
->
-> Please do.
->
-> I'll test on Cell & other platforms. If there are bugs we can fix them. Maybe
-> if we can't get it to work on eg. Cell then we need a machine_is() check, but
-> that should be the last resort.
->
->>>> +		regs = of_get_property(dn, "reg", NULL);
->>>> +		if (regs)
->>>> +			return (int)(be32_to_cpu(regs[1]) & 0xFFFF);
->>>
->>> This should use of_property_read_u32().
->
-> You missed this in v5 ^
->
->>> And finally in either case above, where you get a number from the device tree,
->>> you must check that it's not already allocated. Otherwise if you have a system
->>> where some PHBs have a property but others don't, you may give out the same
->>> number twice. Also you could have firmware give you the same number twice
->>> (which would be a firmware bug, but those happen).
->>>
->>> If the number is allocated you fall back to dynamic numbering.
->>>
->>> If it's not allocated you must mark it as allocated in the bitmap.
->>
->> Hmm..interesting. I thought in performing such check, but I wasn't able
->> to imagine a system in which we can have some PHBs indexed by
->> device-tree properties and others don't, seemed impossible to me. The
->> buggy fw case is an example, I can implement this modification if you
->> think it's valid.
->>
->> But, notice that for consistency in implementation, I'll might need to
->> increase the MAX_PHBS value to 65536, otherwise we won't cover all the
->> possible wrong cases, since I'm performing an AND with 0xFFFF mask
->> (imagine if we can have a buggy fw exposing same value for two different
->> PHBs, and this value is higher than 8192). What do you think about this?
->
-> Yeah please increase the bitmap size to 65536. It will only take 8KB of memory,
-> which is negligible.
+Okay, now we have a subtlety here. You switch from MSI-X to MSI in case
+MSI-X retries exhausted. At this point nr_vecs is lowest (likely 1). So
+you start trying MSI from 1 rather from 32. I would suggest two subsequent
+loops instead.
 
-Well, since I sent a v6 and you replied there too, I guess we can 
-continue our iterations there - mostly suggestions (all except one) you 
-gave here were implemented in v6.
+Another thing, pci_alloc_irq_vectors() tries to allocate vectors in a
+range from 1 to nr_vecs now. So this function implicitly falls into
+the other two range functions family and therefore:
 
-Thanks,
+  (a) pci_alloc_irq_vectors() name is not perfec;
+  (b) why not introduce 'minvec' minimal number of interrupts then?
+      We could have a handy pci_enable_irq_range() as result;
+  (c) if you do (b) then PCI_IRQ_NOMSIX flag becomes redundant, since
+      caller would invoke pci_enable_msi_range() instead;
 
-
-Guilherme
-
->
-> cheers
->
-> _______________________________________________
-> Linuxppc-dev mailing list
-> Linuxppc-dev@lists.ozlabs.org
-> https://lists.ozlabs.org/listinfo/linuxppc-dev
->
-
+> +
+> +	/* no MSI or MSI-X vectors available, fall back to the legacy IRQ: */
+>  use_legacy_irq:
+>  	dev->irqs = &dev->irq;
+>  	return 1;
