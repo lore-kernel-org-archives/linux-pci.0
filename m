@@ -1,111 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36754 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750711AbcEPVLs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-	Mon, 16 May 2016 17:11:48 -0400
-Date: Mon, 16 May 2016 16:11:43 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-	linux-kernel@vger.kernel.org, Andi Kleen <ak@linux.intel.com>
-Subject: Re: [PATCH 0/2 v2] Fix Broadwell-EP Home Agent & PCU non-compliant
- BARs
-Message-ID: <20160516211143.GD20759@localhost>
-References: <1462984036-32084-1-git-send-email-prarit@redhat.com>
+Return-Path: <agordeev@redhat.com>
+Return-Path: <agordeev@redhat.com>
+Date: Thu, 12 May 2016 14:11:57 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: helgaas@kernel.org, pjw@netapp.com, axboe@fb.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org
+Subject: Re: [PATCH 1/2] PCI: Provide sensible irq vector alloc/free routines
+Message-ID: <20160512121155.GB8681@agordeev.lab.eng.brq.redhat.com>
+References: <1462457096-19795-1-git-send-email-hch@lst.de>
+ <1462457096-19795-2-git-send-email-hch@lst.de>
+ <20160511074527.GA31347@agordeev.lab.eng.brq.redhat.com>
+ <20160511085049.GA20279@lst.de>
+ <20160511094432.GB31347@agordeev.lab.eng.brq.redhat.com>
+ <20160512073552.GA4027@lst.de>
+ <20160512094432.GA14671@agordeev.lab.eng.brq.redhat.com>
+ <20160512110318.GA9192@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1462984036-32084-1-git-send-email-prarit@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20160512110318.GA9192@lst.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 11, 2016 at 12:27:14PM -0400, Prarit Bhargava wrote:
-> commit b894157145e4 ("x86/PCI: Mark Broadwell-EP Home Agent & PCU as having
-> non-compliant BARs") marks Home Agent 0 & PCU has having non-compliant
-> BARs.  commit b84106b4e229 ("PCI: Disable IO/MEM decoding for devices with
-> non-compliant BARs") introduces a check for non_compliant_bars to avoid
-> assigning resources to the individual BARs for a device.
+On Thu, May 12, 2016 at 01:03:18PM +0200, Christoph Hellwig wrote:
+> > Okay, now we have a subtlety here. You switch from MSI-X to MSI in case
+> > MSI-X retries exhausted. At this point nr_vecs is lowest (likely 1). So
+> > you start trying MSI from 1 rather from 32. I would suggest two subsequent
+> > loops instead.
 > 
-> Before these commits,
-> 
-> pci 0000:ff:12.0: BAR 2: failed to assign [mem size 0x00000040]
-> pci 0000:ff:12.0: BAR 4: failed to assign [mem size 0x00000040]
-> pci 0000:ff:12.4: BAR 2: failed to assign [mem size 0x00000040]
-> pci 0000:ff:12.4: BAR 4: failed to assign [mem size 0x00000040]
-> pci 0000:ff:12.0: BAR 1: failed to assign [mem size 0x00000010]
-> pci 0000:ff:12.0: BAR 3: failed to assign [mem size 0x00000010]
-> pci 0000:ff:12.0: BAR 5: failed to assign [mem size 0x00000010]
-> pci 0000:ff:12.4: BAR 1: failed to assign [mem size 0x00000010]
-> pci 0000:ff:12.4: BAR 3: failed to assign [mem size 0x00000010]
-> pci 0000:ff:12.4: BAR 5: failed to assign [mem size 0x00000010]
-> pci 0000:7f:12.0: BAR 2: failed to assign [mem size 0x00000040]
-> pci 0000:7f:12.0: BAR 4: failed to assign [mem size 0x00000040]
-> pci 0000:7f:12.4: BAR 2: failed to assign [mem size 0x00000040]
-> pci 0000:7f:12.4: BAR 4: failed to assign [mem size 0x00000040]
-> pci 0000:7f:12.0: BAR 1: failed to assign [mem size 0x00000010]
-> pci 0000:7f:12.0: BAR 3: failed to assign [mem size 0x00000010]
-> pci 0000:7f:12.0: BAR 5: failed to assign [mem size 0x00000010]
-> pci 0000:7f:12.4: BAR 1: failed to assign [mem size 0x00000010]
-> pci 0000:7f:12.4: BAR 3: failed to assign [mem size 0x00000010]
-> pci 0000:7f:12.4: BAR 5: failed to assign [mem size 0x00000010]
-> 
-> After the commits, there are still "failed to assign" messages,
-> as well as new "failed to assign" messages for ff:12.0, ff:1e.3,
-> 7f:12.0, and 7f:1e.3.
-> 
->  pci 0000:ff:12.4: BAR 2: failed to assign [mem size 0x00000040]
->  pci 0000:ff:12.4: BAR 4: failed to assign [mem size 0x00000040]
->  pci 0000:ff:12.4: BAR 1: failed to assign [mem size 0x00000010]
->  pci 0000:ff:12.4: BAR 3: failed to assign [mem size 0x00000010]
->  pci 0000:ff:12.4: BAR 5: failed to assign [mem size 0x00000010]
->  pci 0000:ff:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
->  pci 0000:ff:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
->  pci 0000:7f:12.4: BAR 2: failed to assign [mem size 0x00000040]
->  pci 0000:7f:12.4: BAR 4: failed to assign [mem size 0x00000040]
->  pci 0000:7f:12.4: BAR 1: failed to assign [mem size 0x00000010]
->  pci 0000:7f:12.4: BAR 3: failed to assign [mem size 0x00000010]
->  pci 0000:7f:12.4: BAR 5: failed to assign [mem size 0x00000010]
->  pci 0000:7f:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
->  pci 0000:7f:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
-> 
-> There are two issues that need to be fixed.  The first is that there is another
-> device, Home Agent 1 & PCU (device ID 0x6f60) that must also be "blacklisted"
-> in the same way. After applying the first patch in this patchset the log still
-> contains these messages:
-> 
-> pci 0000:ff:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
-> pci 0000:ff:12.4: BAR 6: failed to assign [mem size 0x00000001 pref]
-> pci 0000:ff:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
-> pci 0000:7f:12.0: BAR 6: failed to assign [mem size 0x00000001 pref]
-> pci 0000:7f:12.4: BAR 6: failed to assign [mem size 0x00000001 pref]
-> pci 0000:7f:1e.3: BAR 6: failed to assign [mem size 0x00000001 pref]
-> 
-> This second patch fixes these issues by moving the non_compliant_bars_check to
-> pci_read_bases() where it applies to all of a device's BARs.
-> 
-> v2: Separate into two patches.  Applied non_compliant_bars check to
-> pci_read_bases().  Added additional explanation to the commit log from
-> the BDW errata for the Home Agent devices.
-> 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Ingo Molnar <mingo@redhat.com>
-> Cc: "H. Peter Anvin" <hpa@zytor.com>
-> Cc: x86@kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: Andi Kleen <ak@linux.intel.com>
-> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
-> 
-> Prarit Bhargava (2):
->   x86/PCI: Add pci_bdwep_bar() quirk entry for Broadwell-EP Home Agent
->     1
->   x86/PCI: Disable IO/MEM decoding for ROM BARs for devices with
->     non-compliant BARs
-> 
->  arch/x86/pci/fixup.c |    9 +++++++++
->  drivers/pci/probe.c  |    6 +++---
->  2 files changed, 12 insertions(+), 3 deletions(-)
+> So bridges could support less MSI-X entries than MSI ones?  Yikes.
 
-I applied these to pci/resource and intend to merge them for v4.7.
+Not this way. MSI vectors could be a scarce resource in a platform. So
+even though devices could support more MSI-Xs than MSIs the underlying
+platform might fail to fulfil a device request. 
+
+> > Another thing, pci_alloc_irq_vectors() tries to allocate vectors in a
+> > range from 1 to nr_vecs now. So this function implicitly falls into
+> > the other two range functions family and therefore:
+> > 
+> >   (a) pci_alloc_irq_vectors() name is not perfec;
+> 
+> What would you call it instead?
+
+I do not know, really :( I would expect "range" within the name since
+a range requested indeed, but I am just hinting here.
+
+> >   (b) why not introduce 'minvec' minimal number of interrupts then?
+> >       We could have a handy pci_enable_irq_range() as result;
+> 
+> That seems pretty pointless, when the caller can simply treat a too
+> small number as failure and use the existing failure path for that.
+
+There was a huge discussion on this few years ago, when the range
+functions were introduced. Actually, the prototypes of these two is
+the outcome of that discussion. I almost sure your point was expressed
+by many at the time ;)
+
+> >   (c) if you do (b) then PCI_IRQ_NOMSIX flag becomes redundant, since
+> >       caller would invoke pci_enable_msi_range() instead;
+> 
+> pci_enable_msi_range still has a horrible API that forces the caller
+> to deal with the irq numbers differently than the MSI-X case, so it
+> should also go away in the long run.
+
+Well, if we introduce pci_enable_irq_range() (or something) and
+pci_get_dev_irq(int vector) (or something) that covers MSI-X, MSI and
+legacy IRQs then we can get it done now. Your pci_alloc_irq_vectors()
+is just few steps from there, huh?
+
+(Sorry for the weird quotting)
