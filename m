@@ -1,227 +1,212 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"aik@ozlabs.ru" <aik@ozlabs.ru>,
+	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+	"paulus@samba.org" <paulus@samba.org>,
+	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
+	"joro@8bytes.org" <joro@8bytes.org>,
+	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
+	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
+	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
+	"eric.auger@linaro.org" <eric.auger@linaro.org>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
+	"alistair@popple.id.au" <alistair@popple.id.au>,
+	"ruscur@russell.cc" <ruscur@russell.cc>
+Subject: RE: [PATCH 5/5] vfio-pci: Allow to mmap MSI-X table if interrupt
+ remapping is supported
+Date: Thu, 12 May 2016 04:53:19 +0000
+Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D15F8507E8@SHSMSX101.ccr.corp.intel.com>
+References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+	<1461761010-5452-6-git-send-email-xyjxie@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F842512@SHSMSX101.ccr.corp.intel.com>
+	<f7d73ac3-470d-a0d2-0a97-05be630480dd@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F842653@SHSMSX101.ccr.corp.intel.com>
+	<e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
+	<063D6719AE5E284EB5DD2968C1650D6D5F4B52B5@AcuExch.aculab.com>
+	<4be013bc-e81b-84c5-06d3-e1b3f46b3227@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F8474A4@SHSMSX101.ccr.corp.intel.com>
+	<20160505090513.56886c12@t450s.home>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F84EEBA@SHSMSX101.ccr.corp.intel.com>
+	<20160511095331.18436241@t450s.home>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F850046@SHSMSX101.ccr.corp.intel.com>
+ <20160511202042.77593861@t450s.home>
+In-Reply-To: <20160511202042.77593861@t450s.home>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20160526123459.GA23794@red-moon>
-References: <1455069384-22323-1-git-send-email-dhdang@apm.com>
- <1456330151.5681.46.camel@redhat.com> <56CDD767.6020103@arm.com>
- <CADaLND=mrkxOWOzcEb8os16Rb=SDHfnn_8eSgB4bQYH3UguS3w@mail.gmail.com>
- <20160225173822.GA6349@red-moon> <CADaLNDnywVPER9QhmK4C6JyCLhta_M_cVSOuSkEHnmnLPFo3JA@mail.gmail.com>
- <20160526123459.GA23794@red-moon>
-From: Duc Dang <dhdang@apm.com>
-Date: Thu, 26 May 2016 13:49:23 -0700
-Message-ID: <CADaLNDnf8SRbUkBN9fZMvrvsnTQs+DLyqnZfVpWqVyyY8Hk=1Q@mail.gmail.com>
-Subject: Re: [PATCH] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI boot
- for X-Gene v1
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Marc Zyngier <marc.zyngier@arm.com>,
-	Mark Salter <msalter@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Feng Kan <fkan@apm.com>,
-	linux-pci@vger.kernel.org, patches <patches@apm.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Loc Ho <lho@apm.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Tanmay Inamdar <tinamdar@apm.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+> From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> Sent: Thursday, May 12, 2016 10:21 AM
+> 
+> On Thu, 12 May 2016 01:19:44 +0000
+> "Tian, Kevin" <kevin.tian@intel.com> wrote:
+> 
+> > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > > Sent: Wednesday, May 11, 2016 11:54 PM
+> > >
+> > > On Wed, 11 May 2016 06:29:06 +0000
+> > > "Tian, Kevin" <kevin.tian@intel.com> wrote:
+> > >
+> > > > > From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> > > > > Sent: Thursday, May 05, 2016 11:05 PM
+> > > > >
+> > > > > On Thu, 5 May 2016 12:15:46 +0000
+> > > > > "Tian, Kevin" <kevin.tian@intel.com> wrote:
+> > > > >
+> > > > > > > From: Yongji Xie [mailto:xyjxie@linux.vnet.ibm.com]
+> > > > > > > Sent: Thursday, May 05, 2016 7:43 PM
+> > > > > > >
+> > > > > > > Hi David and Kevin,
+> > > > > > >
+> > > > > > > On 2016/5/5 17:54, David Laight wrote:
+> > > > > > >
+> > > > > > > > From: Tian, Kevin
+> > > > > > > >> Sent: 05 May 2016 10:37
+> > > > > > > > ...
+> > > > > > > >>> Acutually, we are not aimed at accessing MSI-X table from
+> > > > > > > >>> guest. So I think it's safe to passthrough MSI-X table if we
+> > > > > > > >>> can make sure guest kernel would not touch MSI-X table in
+> > > > > > > >>> normal code path such as para-virtualized guest kernel on PPC64.
+> > > > > > > >>>
+> > > > > > > >> Then how do you prevent malicious guest kernel accessing it?
+> > > > > > > > Or a malicious guest driver for an ethernet card setting up
+> > > > > > > > the receive buffer ring to contain a single word entry that
+> > > > > > > > contains the address associated with an MSI-X interrupt and
+> > > > > > > > then using a loopback mode to cause a specific packet be
+> > > > > > > > received that writes the required word through that address.
+> > > > > > > >
+> > > > > > > > Remember the PCIe cycle for an interrupt is a normal memory write
+> > > > > > > > cycle.
+> > > > > > > >
+> > > > > > > > 	David
+> > > > > > > >
+> > > > > > >
+> > > > > > > If we have enough permission to load a malicious driver or
+> > > > > > > kernel, we can easily break the guest without exposed
+> > > > > > > MSI-X table.
+> > > > > > >
+> > > > > > > I think it should be safe to expose MSI-X table if we can
+> > > > > > > make sure that malicious guest driver/kernel can't use
+> > > > > > > the MSI-X table to break other guest or host. The
+> > > > > > > capability of IRQ remapping could provide this
+> > > > > > > kind of protection.
+> > > > > > >
+> > > > > >
+> > > > > > With IRQ remapping it doesn't mean you can pass through MSI-X
+> > > > > > structure to guest. I know actual IRQ remapping might be platform
+> > > > > > specific, but at least for Intel VT-d specification, MSI-X entry must
+> > > > > > be configured with a remappable format by host kernel which
+> > > > > > contains an index into IRQ remapping table. The index will find a
+> > > > > > IRQ remapping entry which controls interrupt routing for a specific
+> > > > > > device. If you allow a malicious program random index into MSI-X
+> > > > > > entry of assigned device, the hole is obvious...
+> > > > > >
+> > > > > > Above might make sense only for a IRQ remapping implementation
+> > > > > > which doesn't rely on extended MSI-X format (e.g. simply based on
+> > > > > > BDF). If that's the case for PPC, then you should build MSI-X
+> > > > > > passthrough based on this fact instead of general IRQ remapping
+> > > > > > enabled or not.
+> > > > >
+> > > > > I don't think anyone is expecting that we can expose the MSI-X vector
+> > > > > table to the guest and the guest can make direct use of it.  The end
+> > > > > goal here is that the guest on a power system is already
+> > > > > paravirtualized to not program the device MSI-X by directly writing to
+> > > > > the MSI-X vector table.  They have hypercalls for this since they
+> > > > > always run virtualized.  Therefore a) they never intend to touch the
+> > > > > MSI-X vector table and b) they have sufficient isolation that a guest
+> > > > > can only hurt itself by doing so.
+> > > > >
+> > > > > On x86 we don't have a), our method of programming the MSI-X vector
+> > > > > table is to directly write to it. Therefore we will always require QEMU
+> > > > > to place a MemoryRegion over the vector table to intercept those
+> > > > > accesses.  However with interrupt remapping, we do have b) on x86, which
+> > > > > means that we don't need to be so strict in disallowing user accesses
+> > > > > to the MSI-X vector table.  It's not useful for configuring MSI-X on
+> > > > > the device, but the user should only be able to hurt themselves by
+> > > > > writing it directly.  x86 doesn't really get anything out of this
+> > > > > change, but it helps this special case on power pretty significantly
+> > > > > aiui.  Thanks,
+> > > > >
+> > > >
+> > > > Allowing guest direct write to MSI-x table has system-wide impact.
+> > > > As I explained earlier, hypervisor needs to control "interrupt_index"
+> > > > programmed in MSI-X entry, which is used to associate a specific
+> > > > IRQ remapping entry. Now if you expose whole MSI-x table to guest,
+> > > > it can program random index into MSI-X entry to associate with
+> > > > any IRQ remapping entry and then there won't be any isolation per se.
+> > > >
+> > > > You can check "5.5.2 MSI and MSI-X Register Programming" in VT-d
+> > > > spec.
+> > >
+> > > I think you're extrapolating beyond the vfio interface.  The change
+> > > here is to remove the vfio protection of the MSI-X vector table when
+> > > the system provides interrupt isolation.  The argument is that this is
+> > > safe to do because the hardware protects the host from erroneous and
+> > > malicious user programming, but it is not meant to provide a means to
+> > > program MSI-X directly through the vector table.  This is effectively
+> >
+> > Sorry I didn't get this point. Once we allow userspace to mmap MSI-X
+> > table, isn't it equivalent to allowing userspace directly program vector
+> > table? Or is there other mechanism to prevent direct programming?
+> 
+> This would remove the mechanism that prevents direct programming.
+> Users can configure the device to perform DMA w/o setting up an IOMMU
+> mapping, which generates a fault.  Users can incorrectly manipulate the
+> MSI-X vector table instead of using the proper vfio programming
+> interface, which generates a fault.
+> 
+> > > the same as general DMA programming, if the vfio programming model is
+> > > not followed the device generates iommu faults.  I do have a concern
+> > > that userspace driver writers are going to more often presume they can
+> > > use the vector table directly because of this change, but I don't know
+> > > that that is sufficient reason to prevent such a change.  They'll
+> > > quickly discover the device generates faults on interrupt rather than
+> > > working as expected.
+> >
+> > If userspace can actually program vector table directly, there is not
+> > always fault triggered. As long as MSI-X table is fully under control
+> > of userspace, any interrupt index can be used here which may link
+> > to a IRQ remapping entry allocated for other devices.
+> 
+> Is not part of the vector lookup comparing the source ID of the DMA
+> write?  If not then VT-d interrupt remapping offers us no protection
+> from a malicious guest performing DMA to the same address.  Thanks,
+> 
 
-On Thu, May 26, 2016 at 5:34 AM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> Hi Duc,
->
-> On Wed, May 25, 2016 at 04:13:35PM -0700, Duc Dang wrote:
->> On Thu, Feb 25, 2016 at 9:38 AM, Lorenzo Pieralisi
->> <lorenzo.pieralisi@arm.com> wrote:
->> > On Wed, Feb 24, 2016 at 02:28:10PM -0800, Duc Dang wrote:
->> >> On Wed, Feb 24, 2016 at 8:16 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
->> >> > On 24/02/16 16:09, Mark Salter wrote:
->> >> >> On Tue, 2016-02-09 at 17:56 -0800, Duc Dang wrote:
->> >> >>> This patch makes pci-xgene-msi driver ACPI-aware and provides
->> >> >>> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
->> >> >>>
->> >> >>> Signed-off-by: Duc Dang <dhdang@apm.com>
->> >> >>> ---
->> >> >>>  drivers/pci/host/pci-xgene-msi.c | 35 ++++++++++++++++++++++++++++++++---
->> >> >>>  1 file changed, 32 insertions(+), 3 deletions(-)
->> >> >>>
->> >> >>> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
->> >> >>> index a6456b5..466aa93 100644
->> >> >>> --- a/drivers/pci/host/pci-xgene-msi.c
->> >> >>> +++ b/drivers/pci/host/pci-xgene-msi.c
->> >> >>> @@ -24,6 +24,7 @@
->> >> >>>  #include <linux/pci.h>
->> >> >>>  #include <linux/platform_device.h>
->> >> >>>  #include <linux/of_pci.h>
->> >> >>> +#include <linux/acpi.h>
->> >> >>>
->> >> >>>  #define MSI_IR0                     0x000000
->> >> >>>  #define MSI_INT0            0x800000
->> >> >>> @@ -39,7 +40,7 @@ struct xgene_msi_group {
->> >> >>>  };
->> >> >>>
->> >> >>>  struct xgene_msi {
->> >> >>> -    struct device_node      *node;
->> >> >>> +    struct fwnode_handle    *fwnode;
->> >> >>>      struct irq_domain       *inner_domain;
->> >> >>>      struct irq_domain       *msi_domain;
->> >> >>>      u64                     msi_addr;
->> >> >>> @@ -249,6 +250,13 @@ static const struct irq_domain_ops msi_domain_ops = {
->> >> >>>      .free   = xgene_irq_domain_free,
->> >> >>>  };
->> >> >>>
->> >> >>> +#ifdef CONFIG_ACPI
->> >> >>> +static struct fwnode_handle *xgene_msi_get_fwnode(struct device *dev)
->> >> >>> +{
->> >> >>> +    return xgene_msi_ctrl.fwnode;
->> >> >>> +}
->> >> >>> +#endif
->> >> >>> +
->> >> >>>  static int xgene_allocate_domains(struct xgene_msi *msi)
->> >> >>>  {
->> >> >>>      msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
->> >> >>> @@ -256,7 +264,7 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
->> >> >>>      if (!msi->inner_domain)
->> >> >>>              return -ENOMEM;
->> >> >>>
->> >> >>> -    msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
->> >> >>> +    msi->msi_domain = pci_msi_create_irq_domain(msi->fwnode,
->> >> >>>                                                  &xgene_msi_domain_info,
->> >> >>>                                                  msi->inner_domain);
->> >> >>
->> >> >> This doesn't work for me (ACPI probing on Mustang) unless I change this
->> >> >> to be pci_msi_create_default_irq_domain(). The problem seems to be that
->> >> >> the MSI probe happens after the PCIe RC is probed so there is no MSI domain
->> >> >> at the time the PCIe root is initialized by ACPI.
->> >> >
->> >> > pci_msi_create_default_irq_domain is the wrong thing do use, specially
->> >> > if you have multiple MSI controllers in the system. I certainly wouldn't
->> >> > want to see it being used on arm64.
->> >> >
->> >> > This is the usual dependency hell. You try moving the probing earlier,
->> >> > but that may break something else in the process.
->> >>
->> >> Hi Mark and Marc,
->> >>
->> >> I have modified Tianocore firmware to have MSI node declared before
->> >> PCIe node in Dsdt table. With this modification, the MSI driver will
->> >> be loaded before PCIe driver and MSI domain is available at the time
->> >> PCIe root is initialized.
->> >
->> > I am totally against this. We should not hack ACPI tables to make
->> > the kernel work (on top of that with unwritten ordering rules that may
->> > well require changes as kernel evolves), we should have a standard set
->> > of bindings that people use to describe HW in the DSDT and the kernel(s)
->> > has to cope with that. If there is a dependency problem in the description
->> > we may solve it at bindings level, but I absolutely do not want to rely
->> > on DSDT nodes ordering for things to work, that's fragile, no shortcuts
->> > please.
->>
->> Hi Lorenzo, Bjorn,
->>
->> (Refresh this thread on this merge cycle)
->>
->> I tried to use _DEP method to describe the dependency of PCIe node to
->> MSI node but it turns out that PCIe driver does not check for the
->> dependency (only EC (ec.c) and I2C core (i2c-core.c) use
->> acpi_walk_dep_device_list to check for dependency before loading
->> dependent drivers)
->>
->> Do you have other suggestion/example about how to ensure strict
->> ordering on driver loading in ACPI boot mode without changing the
->> order of ACPI nodes in DSDT?
->
-> Before doing anything else, I would like to ask you to report the code
-> paths leading to failures (what fails actually ?) please, and I want
-> to understand what "this does not work" means.
->
-> In particular:
->
-> - Why using pci_msi_create_default_irq_domain() works
-> - Why, if you change the DSDT nodes ordering, things work (please add
->   some debugging to MSI allocation functions to detect the code paths
->   leading to correct MSI allocation)
-> - What's the difference wrt the DT probe path
+For x86 IRQ remapping doesn't rely on existing DMAR remapping table for
+DMA. Instead IRQ remapping table is a global table per VT-d engine, shared
+by all devices behind this VT-d engine. Each IRQ remapping table entry 
+(IRTE) can specify:
 
-The MSI allocation happens with following code path (I use PMC pm80xx
-SAS driver as an example (drivers/scsi/pm8001/pm8001_init.c)):
-pci_enable_msix_exact
-    pci_enable_msix_range
-        pci_enable_msix
-            msix_capbility_init
-                pci_msi_setup_msi_irqs
-                    pci_msi_get_domain
-                        dev_get_msi_domain
-                        arch_get_pci_msi_domain
-                            return pci_msi_default_domain;
+- whether to validate source-id of the interrupt requests;
+- whether to verify the whole source id;
+- whether to verify some bits of the source id;
+...
+(section 9.10 Interrupt Remapping Table Entry (IRTE) in VT-d spec)
 
-In my failing case: pci_msi_get_domain return NULL, so MSI allocation
-function (pci_enable_msix_exact) fails.
+IRTE index is programmed into corresponding MSI-X entry of a device.
+When an interrupt message is triggered from that device, IRQ remapping
+hardware will use the index to find the IRTE entry.
 
-The expected MSI domain is registered when X-Gene MSI driver is
-initialized and is attached to each PCI bus by calling
-pci_set_bus_msi_domain during PCIe bus-scan:
-pci_scan_root_bus
-    pci_scan_root_bus_msi
-        pci_scan_child_bus
-            pci_scan_bridge
-                pci_add_new_bus
-                    pci_alloc_child_bus
-                        pci_set_bus_msi_domain
-                            pci_host_bridge_msi_domain
-                                pci_host_bridge_of_msi_domain
-                                pci_host_bridge_acpi_msi_domain
+As long as host kernel has strict control of MSI-X table, it can choose to
+not validate source-id as long as IRTE index is trusted.
 
-+ When booting with DT: X-Gene MSI driver is initialized early
-(subsys_initcall level); X-Gene PCIe driver is initialized later at
-device_initcall level (using module_platform_driver). Because of that
-when PCIe enumeration happens, the X-Gene MSI domain was already
-registered and available. So when the driver of PCIe Endpoint devices
-gets loaded, the call to pci_enable_msix_exact (to allocate MSI)
-succeeds.
+That is why I concerned you cannot do this simply based on whether 
+IRQ remapping is available on x86. If such usage is really required,
+you'll need some more accurate indicator per iommu structure to tell
+whether safe to allow mmap MSI-X to user space.
 
-+ When booting with ACPI: acpi_scan_init is called at subsys_initcall
-level (the same level with X-Gene MSI driver):
-acpi_init
-    acpi_bus_init (GIC is initialized here)
-        acpi_scan_init
-            acpi_pci_root_init
-            acpi_pci_link_init
-            ...
-            acpi_bus_scan
-                acpi_bus_check_add
- ...
-
-Currently, in DSDT table, X-Gene MSI node is defined right after
-X-Gene PCIe nodes. So PCIe driver initialization and PCIe enumeration
-happens before MSI driver is initialized. During PCIe bus scan, the
-pci_set_bus_msi_domain gets a NULL  irq_domain value from
-pci_host_bridge_msi_domain (as MSI driver is not initialized), so
-there is no MSI support for PCIe bus.
-
-+ Using pci_msi_create_default_irq_domain() helps MSI allocation
-succeed as pci_msi_get_domain (in the code path of
-pci_enable_msix_exact above) can fall back to get a valid domain from
-arch_get_pci_msi_domain (please note that PCIe endpoint driver gets
-called later (at device_initcall level (using module_init)), so at the
-time PCIe endpoint driver probe function executes, the MSI driver
-already register the global MSI domain with
-pci_msi_create_default_irq_domain)
-
-+ If changing DSDT node ordering, to define MSI node before PCIe
-nodes, then X-Gene MSI driver will be loaded before PCIe host driver.
-At the time PCIe enumeration happens, X-Gene MSI driver already
-registered a valid MSI domain (by calling
-pci_msi_register_fwnode_provider to register the fwnode provider
-function), so all the detected PCIe buses (and PCIe endpoint devices)
-will have a valid MSI domain attached to them (as a result of function
-pci_set_bus_msi_domain)
-
-Regards,
-Duc Dang.
->
-> When we have a detailed view of MSI allocation code paths and failures
-> we can see what we can do to fix it in ACPI.
->
-> Thanks,
-> Lorenzo
+Thanks
+Kevin
