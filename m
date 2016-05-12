@@ -1,95 +1,68 @@
-Return-Path: <rjwysocki@gmail.com>
-Return-Path: <rjwysocki@gmail.com>
+Return-Path: <hch@lst.de>
+Return-Path: <hch@lst.de>
+Date: Thu, 12 May 2016 09:35:52 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, helgaas@kernel.org, pjw@netapp.com,
+	axboe@fb.com, keith.busch@intel.com, linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org
+Subject: Re: [PATCH 1/2] PCI: Provide sensible irq vector alloc/free
+	routines
+Message-ID: <20160512073552.GA4027@lst.de>
+References: <1462457096-19795-1-git-send-email-hch@lst.de> <1462457096-19795-2-git-send-email-hch@lst.de> <20160511074527.GA31347@agordeev.lab.eng.brq.redhat.com> <20160511085049.GA20279@lst.de> <20160511094432.GB31347@agordeev.lab.eng.brq.redhat.com>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <20160511193645.GB28812@localhost>
-References: <1461919919-120102-1-git-send-email-mika.westerberg@linux.intel.com>
-	<1461919919-120102-2-git-send-email-mika.westerberg@linux.intel.com>
-	<20160511193645.GB28812@localhost>
-Date: Wed, 11 May 2016 22:12:19 +0200
-Message-ID: <CAJZ5v0h4GbFzBwwzQYG0HF0DBysaVYX212_N0n5iQ-Kq==2cpg@mail.gmail.com>
-Subject: Re: [PATCH v5 1/4] PCI: No need to set d3cold_allowed to PCIe ports
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Qipeng Zha <qipeng.zha@intel.com>, Qi Zheng <qi.zheng@intel.com>,
-	Dave Airlie <airlied@gmail.com>, Mathias Nyman <mathias.nyman@intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Lukas Wunner <lukas@wunner.de>,
-	Andreas Noever <andreas.noever@gmail.com>, Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160511094432.GB31347@agordeev.lab.eng.brq.redhat.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 11, 2016 at 9:36 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Fri, Apr 29, 2016 at 11:51:56AM +0300, Mika Westerberg wrote:
->> The Linux PCI core skips PCI bridges and PCIe ports when system is
->> suspended. The PCI core checks return value of pci_has_subordinate() in
->> pci_pm_suspend_noirq() to skip all devices where it is non-zero (which
->> means PCI bridges and PCIe ports).
->
-> This patch looks fine to me.
->
-> But I wonder whether it's correct for pci_pm_suspend_noirq() (and the
-> other PM functions) to use pci_has_subordinate() as opposed to
-> pci_is_bridge().
->
-> pci_is_bridge() is true for all bridge devices (plain old PCI-PCI
-> bridges, PCIe ports, CardBus bridges, etc.)
->
-> pci_has_subordinate() is true only if the bridge has a struct pci_bus
-> allocated for its secondary bus.  This is probably the case for all or
-> almost all bridges, but it's conceivable that if we don't have enough
-> bus number space for the secondary bus, we might not allocate that
-> struct pci_bus.
->
-> What do you PM guys think?  I don't know what you would want to do
-> with a bridge that didn't have any reachable devices below it.
+Hi Alex,
 
-Well, that's funny. :-)
+what do you think about the incremental patch below?  This should
+address the concerns about the strange PPC bridges, although I don't
+have a way to test one:
 
-The function we used in there used to be called pci_is_bridge(), as
-per commit 46939f8b15e4 "PCI PM: Put devices into low power states
-during late suspend (rev. 2)".
-
-But then, it was renamed to pci_has_subordinate(), by commit
-326c1cdae741 "PCI: Rename pci_is_bridge() to pci_has_subordinate()".
-
-Next, a new pci_is_bridge() was introduced, by commit 1c86438c9423
-"PCI: Add new pci_is_bridge() interface".  It is kind of hard to say
-why that happened, because the changelog of that commit doesn't say
-anything about the reason, but evidently the new one is not exactly
-equivalent to the old one (as you mention).  The author of that commit
-apparently was afraid to make that change in the PM code.
-
-Now, I think what we do makes sense, because we want to avoid touching
-bridges that have something below them (so as to avoid disrupting the
-things below the bridge) and I'm not aware of any problems coming from
-that.
-
-
->> Since PCIe ports are never suspended in the first place, there is no need
->> to set d3cold_allowed for them.
->>
->> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
->> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> ---
->>  drivers/pci/pcie/portdrv_pci.c | 5 -----
->>  1 file changed, 5 deletions(-)
->>
->> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
->> index be35da2e105e..6c6bb03392ea 100644
->> --- a/drivers/pci/pcie/portdrv_pci.c
->> +++ b/drivers/pci/pcie/portdrv_pci.c
->> @@ -134,11 +134,6 @@ static int pcie_portdrv_probe(struct pci_dev *dev,
->>               return status;
->>
->>       pci_save_state(dev);
->> -     /*
->> -      * D3cold may not work properly on some PCIe port, so disable
->> -      * it by default.
->> -      */
->> -     dev->d3cold_allowed = false;
->>       return 0;
->>  }
->>
->> --
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index a510484..32ce65e 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1177,6 +1177,7 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
+ 	if (WARN_ON_ONCE(dev->msi_enabled || dev->msix_enabled))
+ 		return -EINVAL;
+ 
++retry:
+ 	if (!pci_msi_supported(dev, 1))
+ 		goto use_legacy_irq;
+ 
+@@ -1191,17 +1192,26 @@ int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
+ 	if (!dev->irqs)
+ 		return -ENOMEM;
+ 
+-	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX))
++	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX)) {
+ 		ret = __pci_enable_msix(dev, nr_vecs);
+-	else
++		if (ret < 0)
++			flags |= PCI_IRQ_NOMSIX;
++	} else {
+ 		ret = __pci_enable_msi(dev, nr_vecs);
+-	if (ret)
+-		goto out_free_irqs;
++	}
+ 
+-	return 0;
++	/* if we succeeded getting all vectors return the number we got: */
++	if (!ret)
++		return nr_vecs;
+ 
+-out_free_irqs:
+ 	kfree(dev->irqs);
++	/* if ret is positive it's the numbers of vectors we can use, retry: */
++	if (ret > 0) {
++		nr_vecs = ret;
++		goto retry;
++	}
++
++	/* no MSI or MSI-X vectors available, fall back to the legacy IRQ: */
+ use_legacy_irq:
+ 	dev->irqs = &dev->irq;
+ 	return 1;
