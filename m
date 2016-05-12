@@ -1,147 +1,218 @@
-Return-Path: <alex.williamson@redhat.com>
-Return-Path: <alex.williamson@redhat.com>
-Date: Mon, 9 May 2016 17:12:46 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-        "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: PCIe issue with NIC card that has 64bit BARs
-Message-ID: <20160509171246.3c33478b@t450s.home>
-In-Reply-To: <57310353.5020802@ti.com>
-References: <5730E5DA.4020906@ti.com>
-	<20160509203436.GC18166@localhost>
-	<5730FADF.7000009@ti.com>
-	<20160509152351.17389748@t450s.home>
-	<57310353.5020802@ti.com>
+Return-Path: <agordeev@redhat.com>
+Return-Path: <agordeev@redhat.com>
+Date: Thu, 12 May 2016 13:04:58 +0200
+From: Alexander Gordeev <agordeev@redhat.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: helgaas@kernel.org, pjw@netapp.com, axboe@fb.com, keith.busch@intel.com,
+        linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org
+Subject: Re: [PATCH 1/2] PCI: Provide sensible irq vector alloc/free routines
+Message-ID: <20160512110456.GA8681@agordeev.lab.eng.brq.redhat.com>
+References: <1462457096-19795-1-git-send-email-hch@lst.de>
+ <1462457096-19795-2-git-send-email-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1462457096-19795-2-git-send-email-hch@lst.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 9 May 2016 17:38:27 -0400
-Murali Karicheri <m-karicheri2@ti.com> wrote:
-
-> On 05/09/2016 05:23 PM, Alex Williamson wrote:
-> > On Mon, 9 May 2016 17:02:23 -0400
-> > Murali Karicheri <m-karicheri2@ti.com> wrote:
-> >   
-> >> Hi Bjorn,
-> >>
-> >> Thanks for your quick response!
-> >> See below for some follow up question.
-> >>
-> >> On 05/09/2016 04:34 PM, Bjorn Helgaas wrote:  
-> >>> Hi Murali,
-> >>>
-> >>> On Mon, May 09, 2016 at 03:32:42PM -0400, Murali Karicheri wrote:    
-> >>>> Bjorn,
-> >>>>
-> >>>> I am running into an issue with using a rtk8168 GiB NIC card with Keystone PCIe.
-> >>>> It works for 32bit BARs such as the Marvel SATA controller on K2E. On another
-> >>>> recent SoC (K2G) that re-uses the same driver and hardware, I have issues
-> >>>> bringing up PCIe.
-> >>>>
-> >>>> The rtk8168 NIC gets detected, but all read values are zeros. Based on the boot
-> >>>> log, it appears to be getting assigned 64bit BARs. See the log on K2E with Marvell
-> >>>> controller and that on K2G with rtk8168. Is there way we can get it assigned
-> >>>> 32Bit BAR and get it functional? Keystone is a 32bit ARM A15 SoC.
-> >>>>
-> >>>> Here are the logs.
-> >>>>
-> >>>> K2E log with Marvel controller (Good working case).
-> >>>> ===================================================
-> >>>> [    0.236353] pci 0000:00:00.0: BAR 8: assigned [mem 0x60000000-0x600fffff]
-> >>>> [    0.236364] pci 0000:00:00.0: BAR 9: assigned [mem 0x60100000-0x601fffff pref]
-> >>>> [    0.236373] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
-> >>>> [    0.236385] pci 0000:01:00.0: BAR 6: assigned [mem 0x60100000-0x6010ffff pref]
-> >>>> [    0.236394] pci 0000:01:00.0: BAR 5: assigned [mem 0x60000000-0x600001ff]
-> >>>> [    0.236406] pci 0000:01:00.0: BAR 4: assigned [io  0x1000-0x100f]
-> >>>> [    0.236418] pci 0000:01:00.0: BAR 0: assigned [io  0x1010-0x1017]
-> >>>> [    0.236429] pci 0000:01:00.0: BAR 2: assigned [io  0x1018-0x101f]
-> >>>> [    0.236441] pci 0000:01:00.0: BAR 1: assigned [io  0x1020-0x1023]
-> >>>> [    0.236452] pci 0000:01:00.0: BAR 3: assigned [io  0x1024-0x1027]
-> >>>> [    0.236464] pci 0000:00:00.0: PCI bridge to [bus 01]
-> >>>> [    0.236472] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
-> >>>> [    0.236481] pci 0000:00:00.0:   bridge window [mem 0x60000000-0x600fffff]
-> >>>> [    0.236490] pci 0000:00:00.0:   bridge window [mem 0x60100000-0x601fffff pref]
-> >>>>
-> >>>> K2G log with Tealtek NIC card
-> >>>> =============================
-> >>>> [    2.311572] keystone-pcie 21801000.pcie: PCI host bridge to bus 0000:00
-> >>>> [    2.318188] pci_bus 0000:00: root bus resource [bus 00-ff]
-> >>>> [    2.323844] pci_bus 0000:00: root bus resource [io  0x0000-0x3fff]
-> >>>> [    2.330023] pci_bus 0000:00: root bus resource [mem 0x50000000-0x5fffffff]    
-> >>>
-> >>> There's no "(bus address ...)" annotation here, which means these
-> >>> windows map CPU addresses to identical bus addresses.  The
-> >>> "[mem 0x50000000-0x5fffffff]" window is a 32-bit window.
-> >>>     
-> >>>> [    2.337567] PCI: bus0: Fast back to back transfers disabled
-> >>>> [    2.361159] PCI: bus1: Fast back to back transfers disabled
-> >>>> [    2.366889] pci 0000:00:00.0: BAR 8: assigned [mem 0x50000000-0x500fffff]
-> >>>> [    2.373841] pci 0000:00:00.0: BAR 9: assigned [mem 0x50100000-0x501fffff pref]
-> >>>> [    2.381061] pci 0000:00:00.0: BAR 7: assigned [io  0x1000-0x1fff]
-> >>>> [    2.387225] pci 0000:01:00.0: BAR 6: assigned [mem 0x50100000-0x5011ffff pref]
-> >>>> [    2.394505] pci 0000:01:00.0: BAR 4: assigned [mem 0x50120000-0x5012ffff 64bit pref]
-> >>>> [    2.402288] pci 0000:01:00.0: BAR 2: assigned [mem 0x50000000-0x50000fff 64bit]    
-> >>>
-> >>> I assume these BARs (2 and 4) are the ones in question.  They are
-> >>> 64-bit BARs, but the addresses currently assigned to them fit in 32
-> >>> bits, so the space is already all below 4GB.
-> >>>
-> >>> The BAR type (32-bit or 64-bit) is built into the device; Linux
-> >>> doesn't have any influence on that.  The type is encoded in the
-> >>> low-order four bits of the BAR, which are read-only.
-> >>>     
-> >>>> [    2.409610] pci 0000:01:00.0: BAR 0: assigned [io  0x1000-0x10ff]
-> >>>> [    2.415729] pci 0000:00:00.0: PCI bridge to [bus 01]
-> >>>> [    2.420693] pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
-> >>>> [    2.426806] pci 0000:00:00.0:   bridge window [mem 0x50000000-0x500fffff]
-> >>>> [    2.433610] pci 0000:00:00.0:   bridge window [mem 0x50100000-0x501fffff pref]
-> >>>> [    2.441365] pcieport 0000:00:00.0: Signaling PME through PCIe PME interrupt
-> >>>> [    2.448323] pci 0000:01:00.0: Signaling PME through PCIe PME interrupt
-> >>>> [    2.455567] r8169 Gigabit Ethernet driver 2.3LK-NAPI loaded
-> >>>> [    2.461332] r8169 0000:01:00.0: enabling device (0140 -> 0143)
-> >>>> [    2.468789] r8169 0000:01:00.0 eth0: RTL8169 at 0xf0d6a000, 00:00:00:00:00:00, XID 00000000 IRQ 286    
-> >>>
-> >>> Looks like this is printed by rtl_init_one().  I see that we read
-> >>> zeroes from MAC0 and TxConfig, but I don't see any PCI problem here.    
-> >> So if device specific configuration registers for this device are mapped
-> >> to the window to have 64bit access, they are to be accessed with proper
-> >> address to get the lower 32 bits of the data, right? So is there a chance
-> >> it is making access to upper 4 bytes and hence reading all zeros?
-> >>    
-> >>> Could it be that some EEPROM on the card hasn't been programmed yet?
-> >>> Does the card work if you put it in a different machine?
-> >>>     
-> >> Probably. I will ask this to the owner of r8169 driver. He seems to think
-> >> the access is not right.  I need to find a PC that has PCIe slot to do this
-> >> test. Meanwhile do you know of any 1GiB NIC card that has 32bit BARs and
-> >> driver in Linux?   
-> > 
-> > I happen to have an Intel 82571EB (PRO/1000 PT Dual Port Server
-> > Adapter) that only has 32bit BARs:
-> > 
-> > 02:00.0 Ethernet controller [0200]: Intel Corporation 82571EB Gigabit Ethernet Controller [8086:105e] (rev 06)
-> > 	Region 0: Memory at fe7e0000 (32-bit, non-prefetchable) [size=128K]
-> > 	Region 1: Memory at fe7c0000 (32-bit, non-prefetchable) [size=128K]
-> > 	Region 2: I/O ports at e800 [size=32]
-> > 02:00.1 Ethernet controller [0200]: Intel Corporation 82571EB Gigabit Ethernet Controller [8086:105e] (rev 06)
-> > 	Region 0: Memory at fe7a0000 (32-bit, non-prefetchable) [size=128K]
-> > 	Region 1: Memory at fe780000 (32-bit, non-prefetchable) [size=128K]
-> > 	Region 2: I/O ports at e400 [size=32]  
-> Alex,
+On Thu, May 05, 2016 at 04:04:55PM +0200, Christoph Hellwig wrote:
+> Add a new pci_alloc_irq_vectors helper that allocates MSI-X or multi-MSI
+> vectors for PCI device while isolating the driver from the arcane details.
 > 
-> Thanks for the response. I see following mini pci card which match with your
-> description.
+> This include handling both MSI-X, MSI and legacy interrupt fallbacks
+> transparently, automatic capping to the available vectors as well as storing
+> the information needed for request_irq in the PCI device itself so that
+> a lot of boiler plate code in the driver can be removed.
 > 
-> http://www.amazon.com/Intel-1000-Dual-Server-Adapter/dp/B000BMZHX2/ref=sr_1_1?ie=UTF8&qid=1462829688&sr=8-1&keywords=intel+expi9402pt
+> In the future this will also allow us to automatically set up spreading
+> for interrupt vectors without having to duplicate it in all the drivers.
 > 
-> Is this same thing? I assume e1000e/82571.c is the driver for this.
-> Could you please confirm so that I can procure the same?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/pci/msi.c   | 108 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h |  19 +++++++++
+>  2 files changed, 127 insertions(+)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index a080f44..a510484 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -4,6 +4,7 @@
+>   *
+>   * Copyright (C) 2003-2004 Intel
+>   * Copyright (C) Tom Long Nguyen (tom.l.nguyen@intel.com)
+> + * Copyright (c) 2016 Christoph Hellwig.
+>   */
+>  
+>  #include <linux/err.h>
+> @@ -1120,6 +1121,113 @@ int pci_enable_msix_range(struct pci_dev *dev, struct msix_entry *entries,
+>  }
+>  EXPORT_SYMBOL(pci_enable_msix_range);
+>  
+> +static int __pci_enable_msix(struct pci_dev *dev, int nr_vecs)
+> +{
+> +	struct msix_entry *msix_entries;
+> +	int ret, i;
+> +
+> +	msix_entries = kcalloc(nr_vecs, sizeof(struct msix_entry), GFP_KERNEL);
+> +	if (!msix_entries)
+> +		return -ENOMEM;
+> +
+> +	for (i = 0; i < nr_vecs; i++)
+> +		msix_entries[i].entry = i;
+> +
+> +	ret = msix_capability_init(dev, msix_entries, nr_vecs);
+> +	if (ret == 0) {
+> +		for (i = 0; i < nr_vecs; i++)
+> +			dev->irqs[i] = msix_entries[i].vector;
+> +	}
+> +
+> +	kfree(msix_entries);
+> +	return ret;
+> +}
+> +
+> +static int __pci_enable_msi(struct pci_dev *dev, int nr_vecs)
+> +{
+> +	int ret, i;
+> +
+> +	ret = msi_capability_init(dev, nr_vecs);
+> +	if (ret == 0) {
+> +		for (i = 0; i < nr_vecs; i++)
+> +			dev->irqs[i] = dev->irq + i;
+> +	}
+> +
+> +	return ret;
+> +}
+> +
+> +/**
+> + * pci_alloc_irq_vectors - allocate multiple IRQs for a device
+> + * @dev:		PCI device to operate on
+> + * @nr_vecs:		number of vectors to operate on
+> + * @flags:		flags or quirks for the allocation
+> + *
+> + * Allocate @nr_vecs interrupt vectors for @dev, using MSI-X or MSI
+> + * vectors if available, and fall back to a single legacy vector
+> + * if neither is available.  Return the number of vectors allocated
+> + * (which might be smaller than @nr_vecs) if successful, or a negative
+> + * error code on error.  The Linux irq numbers for the allocated
+> + * vectors are stored in pdev->irqs.
 
-I would venture to say yes, but I offer no guarantees ;)
+Because MSI vectors are allocated sequentially we do not really
+need pdev->irqs[] for MSI. It is 32 items at most, but still.
 
-Ark seems to indicate all 1000 PT dual port cards use that chip:
-http://ark.intel.com/products/50494/Intel-PRO1000-PT-Dual-Port-Server-Adapter
+> + */
+> +int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
+> +		unsigned int flags)
+> +{
+> +	unsigned int ret;
+> +
+> +	if (WARN_ON_ONCE(dev->msi_enabled || dev->msix_enabled))
+> +		return -EINVAL;
+> +
+> +	if (!pci_msi_supported(dev, 1))
+> +		goto use_legacy_irq;
+> +
+> +	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX))
+> +		nr_vecs = min_t(unsigned int, nr_vecs, pci_msix_vec_count(dev));
+> +	else if (dev->msi_cap)
+> +		nr_vecs = min_t(unsigned int, nr_vecs, pci_msi_vec_count(dev));
+> +	else
+> +		goto use_legacy_irq;
+> +
+> +	dev->irqs = kcalloc(nr_vecs, sizeof(u32), GFP_KERNEL);
+> +	if (!dev->irqs)
+> +		return -ENOMEM;
+> +
+> +	if (dev->msix_cap && !(flags & PCI_IRQ_NOMSIX))
+> +		ret = __pci_enable_msix(dev, nr_vecs);
+> +	else
+> +		ret = __pci_enable_msi(dev, nr_vecs);
+> +	if (ret)
+> +		goto out_free_irqs;
+> +
+> +	return 0;
+> +
+> +out_free_irqs:
+> +	kfree(dev->irqs);
+> +use_legacy_irq:
+> +	dev->irqs = &dev->irq;
+> +	return 1;
+> +}
+> +EXPORT_SYMBOL(pci_alloc_irq_vectors);
+> +
+> +/**
+> + * pci_free_irq_vectors - free previously allocated IRQs for a device
+> + * @dev:		PCI device to operate on
+> + *
+> + * Undoes the allocations and enabling in pci_alloc_irq_vectors().
+> + */
+> +void pci_free_irq_vectors(struct pci_dev *dev)
+> +{
+> +	if (dev->msix_enabled)
+> +		pci_disable_msix(dev);
+> +	else if (dev->msi_enabled)
+> +		pci_disable_msi(dev);
+> +
+> +	if (dev->irqs != &dev->irq)
+> +		kfree(dev->irqs);
+> +	dev->irqs = NULL;
+> +}
+> +EXPORT_SYMBOL(pci_free_irq_vectors);
+> +
+> +
+>  struct pci_dev *msi_desc_to_pci_dev(struct msi_desc *desc)
+>  {
+>  	return to_pci_dev(desc->dev);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 932ec74..e201d0d 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -322,6 +322,7 @@ struct pci_dev {
+>  	 * directly, use the values stored here. They might be different!
+>  	 */
+>  	unsigned int	irq;
+> +	unsigned int	*irqs;
+>  	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
+>  
+>  	bool match_driver;		/* Skip attaching driver */
+> @@ -1255,6 +1256,8 @@ struct msix_entry {
+>  	u16	entry;	/* driver uses to specify entry, OS writes */
+>  };
+>  
+> +#define PCI_IRQ_NOMSIX		(1 << 0) /* don't try to use MSI-X interrupts */
+> +
+>  #ifdef CONFIG_PCI_MSI
+>  int pci_msi_vec_count(struct pci_dev *dev);
+>  void pci_msi_shutdown(struct pci_dev *dev);
+> @@ -1283,6 +1286,10 @@ static inline int pci_enable_msix_exact(struct pci_dev *dev,
+>  		return rc;
+>  	return 0;
+>  }
+> +
+> +int pci_alloc_irq_vectors(struct pci_dev *dev, unsigned int nr_vecs,
+> +		unsigned int flags);
+> +void pci_free_irq_vectors(struct pci_dev *dev);
+>  #else
+>  static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+>  static inline void pci_msi_shutdown(struct pci_dev *dev) { }
+> @@ -1306,6 +1313,18 @@ static inline int pci_enable_msix_range(struct pci_dev *dev,
+>  static inline int pci_enable_msix_exact(struct pci_dev *dev,
+>  		      struct msix_entry *entries, int nvec)
+>  { return -ENOSYS; }
+> +
+> +static inline int pci_alloc_irq_vectors(struct pci_dev *dev,
+> +		unsigned int nr_vecs, unsigned int flags)
+> +{
+> +	dev->irqs = &dev->irq;
+> +	return 1;
+> +}
+> +
+> +static inline void pci_free_irq_vectors(struct pci_dev *dev)
+> +{
+> +	dev->irqs = NULL;
+> +}
+>  #endif
+>  
+>  #ifdef CONFIG_PCIEPORTBUS
+> -- 
+> 2.1.4
+> 
