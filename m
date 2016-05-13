@@ -1,45 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 1/2] Documentation: DT: bindings: Add Broadcom STB PCIe
- bindings
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1462475700-1654-1-git-send-email-f.fainelli@gmail.com>
- <1462475700-1654-2-git-send-email-f.fainelli@gmail.com>
- <8520D5D51A55D047800579B094147198258955CE@XAP-PVEXMBX01.xlnx.xilinx.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"bcm-kernel-feedback-list@broadcom.com"
-	<bcm-kernel-feedback-list@broadcom.com>,
-	"jim2101024@gmail.com" <jim2101024@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"arnd@arndb.de" <arnd@arndb.de>
-From: Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <573A795F.2040209@gmail.com>
-Date: Mon, 16 May 2016 18:52:31 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f195.google.com ([209.85.223.195]:35415 "EHLO
+	mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750784AbcEMHQs (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 May 2016 03:16:48 -0400
 MIME-Version: 1.0
-In-Reply-To: <8520D5D51A55D047800579B094147198258955CE@XAP-PVEXMBX01.xlnx.xilinx.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAL_JsqJGpV-+JYyA1g0dw_nEduhmrMEouTH03kHtuCkGSOP57Q@mail.gmail.com>
+References: <1446642770-4681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+	<1446642770-4681-46-git-send-email-gwshan@linux.vnet.ibm.com>
+	<CAL_JsqJGpV-+JYyA1g0dw_nEduhmrMEouTH03kHtuCkGSOP57Q@mail.gmail.com>
+Date: Fri, 13 May 2016 09:16:47 +0200
+Message-ID: <CAMuHMdUnsDhTS5-C6_SvrqGb6hVTBZOz00=HBGhtqAQbwYv6hg@mail.gmail.com>
+Subject: Re: [PATCH v7 45/50] drivers/of: Avoid recursively calling unflatten_dt_node()
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Rob Herring <robherring2@gmail.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Michael Ellerman <mpe@ellerman.id.au>, aik@ozlabs.ru,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Grant Likely <grant.likely@linaro.org>,
+	Pantelis Antoniou <panto@antoniou-consulting.com>,
+	Frank Rowand <frowand.list@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/11/2016 07:45 AM, Bharat Kumar Gogada wrote:
->> +- brcm,log2-scb-sizes: log2 size of the SCB window that is mapped to
->> +PCIe space
->> +  there must be exactly one value per memory controller present in the
->> +system
->> +  (ranges from 1 to 3)
-> 
-> Can you please give more insight on what does this property do ?
+On Wed, Nov 4, 2015 at 5:07 PM, Rob Herring <robherring2@gmail.com> wrote:
+> On Wed, Nov 4, 2015 at 7:12 AM, Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+>> In current implementation, unflatten_dt_node() is called recursively
+>> to unflatten device nodes in FDT blob. It's stress to limited stack
+>> capacity.
+>
+> Did you actually hit a problem?
+>
+> Now we have a max depth of 64. Seems like that should be plenty... Any
+> idea how this compares to when we run out of stack space?
 
-There is another part of the thread that should tell you a bit more what
-this is about, here is where it starts:
+FWIW, on arm64:
 
-http://www.spinics.net/lists/linux-pci/msg50973.html
+drivers/of/fdt.c:443:1: warning: the frame size of 1136 bytes is
+larger than 1024 bytes [-Wframe-larger-than=]
 
-And this is where we discuss what we should be doing about it:
+Gr{oetje,eeting}s,
 
-http://www.spinics.net/lists/linux-pci/msg51070.html
--- 
-Florian
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
