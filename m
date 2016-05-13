@@ -1,102 +1,98 @@
-Return-Path: <tn@semihalf.com>
-Return-Path: <tn@semihalf.com>
-Subject: Re: [PATCH V7 00/11] Support for generic ACPI based PCI host
- controller
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "helgaas@kernel.org" <helgaas@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "rafael@kernel.org" <rafael@kernel.org>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- "Lorenzo.Pieralisi@arm.com" <Lorenzo.Pieralisi@arm.com>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "jchandra@broadcom.com" <jchandra@broadcom.com>
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1ED8DF51@lhreml503-mbs>
-Cc: "robert.richter@caviumnetworks.com" <robert.richter@caviumnetworks.com>,
- "mw@semihalf.com" <mw@semihalf.com>,
- "Liviu.Dudau@arm.com" <Liviu.Dudau@arm.com>,
- "ddaney@caviumnetworks.com" <ddaney@caviumnetworks.com>,
- Wangyijing <wangyijing@huawei.com>,
- "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
- "msalter@redhat.com" <msalter@redhat.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
- "jcm@redhat.com" <jcm@redhat.com>,
- "andrea.gallo@linaro.org" <andrea.gallo@linaro.org>,
- "dhdang@apm.com" <dhdang@apm.com>,
- "jeremy.linton@arm.com" <jeremy.linton@arm.com>,
- "liudongdong (C)" <liudongdong3@huawei.com>,
- "cov@codeaurora.org" <cov@codeaurora.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <57331290.7070104@semihalf.com>
-Date: Wed, 11 May 2016 13:08:00 +0200
-MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1ED8DF51@lhreml503-mbs>
-Content-Type: text/plain; charset=gbk; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:36501 "EHLO
+	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752538AbcEMLQU (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 May 2016 07:16:20 -0400
+Message-Id: <3e694101e5fa1551e07b5ecf92157087922e952f.1463134231.git.lukas@wunner.de>
+In-Reply-To: <cover.1463134231.git.lukas@wunner.de>
+References: <cover.1463134231.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Fri, 13 May 2016 13:15:31 +0200
+Subject: [PATCH v2 03/13] PCI: Add Thunderbolt portdrv service type
+To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gabriele,
+A Thunderbolt controller is a PCIe switch which, as defined in the PCIe
+spec, appears to the OS "as a collection of virtual PCI-to-PCI bridges".
 
-On 11.05.2016 12:41, Gabriele Paoloni wrote:
-> Hi Tomasz
->
->> -----Original Message-----
->> From: linux-kernel-owner@vger.kernel.org [mailto:linux-kernel-
->> owner@vger.kernel.org] On Behalf Of Tomasz Nowicki
->> Sent: 10 May 2016 16:20
->> To: helgaas@kernel.org; arnd@arndb.de; will.deacon@arm.com;
->> catalin.marinas@arm.com; rafael@kernel.org; hanjun.guo@linaro.org;
->> Lorenzo.Pieralisi@arm.com; okaya@codeaurora.org; jchandra@broadcom.com
->> Cc: robert.richter@caviumnetworks.com; mw@semihalf.com;
->> Liviu.Dudau@arm.com; ddaney@caviumnetworks.com; Wangyijing;
->> Suravee.Suthikulpanit@amd.com; msalter@redhat.com; linux-
->> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-
->> acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
->> acpi@lists.linaro.org; jcm@redhat.com; andrea.gallo@linaro.org;
->> dhdang@apm.com; jeremy.linton@arm.com; liudongdong (C);
->> cov@codeaurora.org; Tomasz Nowicki
->> Subject: [PATCH V7 00/11] Support for generic ACPI based PCI host
->> controller
->>
->>  From the functionality point of view this series may be split into the
->> following logic parts:
->> 1. New ECAM API and update for users of the pci-host-common API
->> 2. Necessary fixes as the preparation for using driver on ARM64.
->> 3. Use new MCFG interface and implement generic ACPI based PCI host
->> controller driver.
->> 4. Enable above driver on ARM64
->>
->> Patches has been built on top of 4.6-rc7 and can be found here:
->> git@github.com:semihalf-nowicki-tomasz/linux.git (pci-acpi-v7)
->>
->> This has been tested on Cavium ThunderX server. Any help in reviewing
->> and
->> testing is very appreciated.
->>
->> v6 -> v7
->> - drop quirks handling
->
-> Maybe I missed something in the v6 discussion thread; when was it
-> decided to drop quirk handling?
+We're about to add support for Apple's nonstandard ACPI methods to power
+Thunderbolt controllers up and down.  To facilitate that, allocate a
+port service for every PCI bridge belonging to a Thunderbolt controller.
 
-I had such requests in previous series.
+This port service might come in handy for other use cases, e.g. device
+initialization of Thunderbolt controllers.
 
->
-> I think it is important to have this in place to accommodate different
-> vendors. If the intention is to keep this patchset "clean" maybe
-> we can add it as a separate patch on top later on...
->
-> What¡¯s your view?
+To understand when and how this port service will be allocated, consider
+the PCI devices exposed by a Thunderbolt host controller:
 
-Yes, keeping these things separated should help in review. Obviously I 
-agree that we need quirk handling but currently there is no 
-implementation which we all agree upon. For the test, you can use quirk 
-handling approach from the previous series until we sort out final solution.
+  (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
+                                     +-- Downstream Bridge 1 --
+                                     +-- Downstream Bridge 2 --
+                                     ...
 
-Thanks,
-Tomasz
+The upstream and downstream bridges represent the PCIe switch and a
+Thunderbolt port service will be allocated for each of them.  Hotplugged
+devices will appear behind the downstream bridges.  The NHI (Native Host
+Interface) is a virtual PCI device to manage the switch fabric and is
+not relevant here.  It uses class 0x88000, so it is not a PCIe port.
+
+Next, consider the PCI devices exposed by Thunderbolt controllers built
+into hotplugged devices:
+
+  -- Upstream Bridge ---- Downstream Bridge ---- Hotplugged device
+
+Again, Thunderbolt port services will be allocated for the upstream and
+downstream bridge, but not for the hotplugged device, which might use
+e.g. class 0x20000 if it's a Thunderbolt Ethernet adapter.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/pcie/portdrv.h      | 2 +-
+ drivers/pci/pcie/portdrv_core.c | 2 ++
+ include/linux/pcieport_if.h     | 2 ++
+ 3 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index 587aef3..a0d9973 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -11,7 +11,7 @@
+ 
+ #include <linux/compiler.h>
+ 
+-#define PCIE_PORT_DEVICE_MAXSERVICES   5
++#define PCIE_PORT_DEVICE_MAXSERVICES	6
+ /*
+  * According to the PCI Express Base Specification 2.0, the indices of
+  * the MSI-X table entries used by port services must not exceed 31
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index d04fb58..8cd9db8 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -310,6 +310,8 @@ static int get_port_device_capability(struct pci_dev *dev)
+ 	}
+ 	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC))
+ 		services |= PCIE_PORT_SERVICE_DPC;
++	if (dev->is_thunderbolt)
++		services |= PCIE_PORT_SERVICE_TBT;
+ 
+ 	return services;
+ }
+diff --git a/include/linux/pcieport_if.h b/include/linux/pcieport_if.h
+index afcd130..d205bd6 100644
+--- a/include/linux/pcieport_if.h
++++ b/include/linux/pcieport_if.h
+@@ -23,6 +23,8 @@
+ #define PCIE_PORT_SERVICE_VC		(1 << PCIE_PORT_SERVICE_VC_SHIFT)
+ #define PCIE_PORT_SERVICE_DPC_SHIFT	4	/* Downstream Port Containment */
+ #define PCIE_PORT_SERVICE_DPC		(1 << PCIE_PORT_SERVICE_DPC_SHIFT)
++#define PCIE_PORT_SERVICE_TBT_SHIFT	5	/* Thunderbolt */
++#define PCIE_PORT_SERVICE_TBT		(1 << PCIE_PORT_SERVICE_TBT_SHIFT)
+ 
+ struct pcie_device {
+ 	int		irq;	    /* Service IRQ/MSI/MSI-X Vector */
+-- 
+2.8.1
+
