@@ -1,52 +1,152 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-Id: <201605301304.u4UD4GKn004521@mx0a-001b2d01.pphosted.com>
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-doc@vger.kernel.org
-Cc: bhelgaas@google.com, alex.williamson@redhat.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	corbet@lwn.net, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	gwshan@linux.vnet.ibm.com
-Subject: [PATCH v2 0/4] PCI: Add support for enforcing all MMIO BARs not to share PAGE_SIZE
-Date: Mon, 30 May 2016 21:00:14 +0800
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+	David Laight <David.Laight@ACULAB.COM>,
+	"kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"aik@ozlabs.ru" <aik@ozlabs.ru>,
+	"benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+	"paulus@samba.org" <paulus@samba.org>,
+	"mpe@ellerman.id.au" <mpe@ellerman.id.au>,
+	"joro@8bytes.org" <joro@8bytes.org>,
+	"warrier@linux.vnet.ibm.com" <warrier@linux.vnet.ibm.com>,
+	"zhong@linux.vnet.ibm.com" <zhong@linux.vnet.ibm.com>,
+	"nikunj@linux.vnet.ibm.com" <nikunj@linux.vnet.ibm.com>,
+	"eric.auger@linaro.org" <eric.auger@linaro.org>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	"gwshan@linux.vnet.ibm.com" <gwshan@linux.vnet.ibm.com>,
+	"alistair@popple.id.au" <alistair@popple.id.au>,
+	"ruscur@russell.cc" <ruscur@russell.cc>
+Subject: RE: [PATCH 5/5] vfio-pci: Allow to mmap MSI-X table if interrupt
+ remapping is supported
+Date: Fri, 13 May 2016 06:50:25 +0000
+Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D15F854287@SHSMSX101.ccr.corp.intel.com>
+References: <1461761010-5452-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+	<f7d73ac3-470d-a0d2-0a97-05be630480dd@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F842653@SHSMSX101.ccr.corp.intel.com>
+	<e064a6a7-a8dc-f71f-1725-f31e03581b8d@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F847150@SHSMSX101.ccr.corp.intel.com>
+	<063D6719AE5E284EB5DD2968C1650D6D5F4B52B5@AcuExch.aculab.com>
+	<4be013bc-e81b-84c5-06d3-e1b3f46b3227@linux.vnet.ibm.com>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F8474A4@SHSMSX101.ccr.corp.intel.com>
+	<20160505090513.56886c12@t450s.home>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F84EEBA@SHSMSX101.ccr.corp.intel.com>
+	<20160511095331.18436241@t450s.home>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F850046@SHSMSX101.ccr.corp.intel.com>
+	<20160511202042.77593861@t450s.home>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F8507E8@SHSMSX101.ccr.corp.intel.com>
+	<20160512114735.7ec61bd3@t450s.home>
+	<AADFC41AFE54684AB9EE6CBC0274A5D15F853FA4@SHSMSX101.ccr.corp.intel.com>
+ <20160512233246.347b8b3c@t450s.home>
+In-Reply-To: <20160512233246.347b8b3c@t450s.home>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series aims to add an option for PCI resource allocator to  
-force BARs not to share PAGE_SIZE. This would make sense to VFIO 
-driver. Because current VFIO implementation disallows to mmap 
-sub-page(size < PAGE_SIZE) MMIO BARs which may share the same page 
-with other BARs for security reasons. Thus, we have to handle mmio 
-access to these BARs in QEMU emulation rather than in guest which 
-will cause some performance loss.
+> From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> Sent: Friday, May 13, 2016 1:33 PM
+> > >
+> > > As argued previously in this thread, there's nothing special about a
+> > > DMA write to memory versus a DMA write to a special address that
+> > > triggers an MSI vector.  If the device is DMA capable, which we assume
+> > > all are, it can be fooled into generating those DMA writes regardless
+> > > of whether we actively block access to the MSI-X vector table itself.
+> >
+> > But with DMA remapping above can be blocked.
+> 
+> How?  VT-d explicitly ignores DMA writes to 0xFEEx_xxxx, section 3.13:
+> 
+>   Write requests without PASID of DWORD length are treated as interrupt
+>   requests. Interrupt requests are not subjected to DMA remapping[...]
+>   Instead, remapping hardware can be enabled to subject such interrupt
+>   requests to interrupt remapping.
 
-To achieve that, we would like to make use of the existing 
-resource_alignment kernel parameter and force a minimum alignment 
-of PAGE_SIZE. It's flexible. And we can default to enable it on  
-some archs which may easily hit the performance issue because of  
-their 64K page.
+Thanks for catching this!
 
-In this series, patch 1 fixed a bug of resource_alignment; patch 2,3 
-tried to add a new option for resource_alignment to use 
-IORESOURCE_STARTALIGN to specify the alignment of PCI BARs; patch 4 
-modified resource_alignment to support syntax which can be used to  
-enforce the alignment of all MMIO BARs to be at least PAGE_SIZE.
+> 
+> > > MSI-X vector table access w/o interrupt remapping is to avoid obvious
+> > > collisions if it were to be programmed directly, it doesn't actually
+> > > prevent an identical DMA transaction from being generated by other
+> >
+> > Kernel can enable DMA remapping but disable IRQ remapping. In such
+> > case identical DMA transaction can be prevented.
+> 
+> Not according to the VT-d spec as quoted above.  If so, how?
 
-Changelog v2:
-- Ignore enforced alignment to VF BARs on pci_reassigndev_resource_alignment()
+So my argument on this is wrong. sorry.
 
-Yongji Xie (4):
-  PCI: Ignore resource_alignment if PCI_PROBE_ONLY was set
-  PCI: Do not Use IORESOURCE_STARTALIGN to identify bridge resources
-  PCI: Add a new option for resource_alignment to reassign alignment
-  PCI: Add support for enforcing all MMIO BARs to be page aligned
+> 
+> > Anyway my point is simple. Let's ignore how Linux kernel implements
+> > IRQ remapping on x86 (which may change time to time), and just
+> > focus on architectural possibility. Non-x86 platform may implement
+> > IRQ remapping completely separate from device side, then checking
+> > availability of IRQ remapping is enough to decide whether mmap
+> > MSI-X table is safe. x86 with VT-d can be configured to a mode
+> > requiring host control of both MSI-X entry and IRQ remapping hardware
+> > (without source id check). In such case it's insufficient to make
+> > decision simply based on IRQ remapping availability. We need a way
+> > to query from IRQ remapping module whether it's actually safe to
+> > mmap MSI-X.
+> 
+> We're going in circles here.  This patch is attempting to remove
+> protection from the MSI-X vector table that is really nothing more than
+> security theater already.  That "protection" only actually prevents
+> casual misuse of the API which is really only a problem when the
+> platform offers no form of interrupt isolation, such as VT-d with DMA
+> remapping but not interrupt remapping.  Disabling source-id checking in
+> VT-d should be handled as the equivalent of disabling interrupt
+> remapping altogether as far as the IOMMU API is concerned.  That's
+> a trivial gap that should be fixed.  There is no such thing as a secure
 
- Documentation/kernel-parameters.txt |    7 ++-
- arch/powerpc/include/asm/pci.h      |    2 +
- drivers/pci/pci.c                   |  109 ++++++++++++++++++++++++++++-------
- drivers/pci/setup-bus.c             |    9 ++-
- 4 files changed, 102 insertions(+), 25 deletions(-)
+That is the main change I'm asking against original patch, which has:
 
--- 
-1.7.9.5
++static void pci_check_msi_remapping(struct pci_dev *pdev,
++					const struct iommu_ops *ops)
++{
++	struct pci_bus *bus = pdev->bus;
++
++	if (ops->capable(IOMMU_CAP_INTR_REMAP) &&
++		!(bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP))
++		bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
++}
++
+
+Above flag should be cleared when source-id checking is disabled on x86. 
+Yes, VFIO is part of OS but any assumption we made about other parts
+needs to be reflected accurately in the code.
+
+> MSI-X vector table when untrusted userspace drivers are involved, we
+> must always assume that a device can generate DMA writes that are
+> indistinguishable from actual interrupt requests and if the platform
+> does not provide interrupt isolation we should require the user to
+> opt-in to an unsafe mode.
+> 
+> Simply denying direct writes to the vector table or preventing mapping
+> of the vector table into the user address space does not provide any
+> tangible form of protection.  Many devices make use of window registers
+> that allow backdoors to arbitrary device registers.  Some drivers even
+> use this as the primary means for configuring MSI-X, which makes them
+> incompatible with device assignment without device specific quirks to
+> enable virtualization of these paths.
+> 
+> If you have an objection to this patch, please show me how preventing
+> direct CPU access to the MSI-X vector table provides any kind of
+> security guarantee of the contents of the vector table and also prove
+> to me that a device cannot spoof a DMA write that is indistinguishable
+> from one associated with an actual interrupt, regardless of the
+> contents of the MSI-X vector table.  Thanks,
+> 
+
+I'm not object to the whole patch series. As replied above, my point
+is just that current condition of allowing mmap MSI-X in this patch is not 
+accurate, but my argument on security manner is not correct. Thanks
+for your elaboration to make it clear.
+
+Thanks
+Kevin
