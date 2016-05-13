@@ -1,94 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36313 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751969AbcEXXZE (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Tue, 24 May 2016 19:25:04 -0400
-Received: by mail-oi0-f65.google.com with SMTP id x130so7514598oia.3
-        for <linux-pci@vger.kernel.org>; Tue, 24 May 2016 16:25:03 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <E607265CB020454880711A6F96C05A0377FBD337@hasmsx107.ger.corp.intel.com>
-References: <1463993336-2750-1-git-send-email-amir.jer.levy@intel.com>
- <20160524105506.GB5396@wunner.de> <E607265CB020454880711A6F96C05A0377FBD337@hasmsx107.ger.corp.intel.com>
-From: Andreas Noever <andreas.noever@gmail.com>
-Date: Wed, 25 May 2016 01:24:43 +0200
-Message-ID: <CAMxnaaUz8nhqVc8ubaOVhSjkcwMUUYZjn5NvJ=mTkGk_SvD8Qg@mail.gmail.com>
-Subject: Re: [PATCH 0/6] thunderbolt: Introducing Thunderbolt(TM) networking
-To: "Levy, Amir (Jer)" <amir.jer.levy@intel.com>
-Cc: Lukas Wunner <lukas@wunner.de>,
-	"gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Jamet, Michael" <michael.jamet@intel.com>,
-	"Alloun, Dan" <dan.alloun@intel.com>,
-	"Westerberg, Mika" <mika.westerberg@intel.com>,
-	"Svahn, Kai" <kai.svahn@intel.com>,
-	"Shevchenko, Andriy" <andriy.shevchenko@intel.com>,
-	"Winkler, Tomas" <tomas.winkler@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from e28smtp04.in.ibm.com ([125.16.236.4]:39742 "EHLO
+	e28smtp04.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751741AbcEMLcX (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 May 2016 07:32:23 -0400
+Received: from localhost
+	by e28smtp04.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+	Fri, 13 May 2016 17:02:14 +0530
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: devicetree@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	geert@linux-m68k.org, robherring2@gmail.com,
+	benh@kernel.crashing.org, mpe@ellerman.id.au, aik@ozlabs.ru,
+	bhelgaas@google.com, grant.likely@linaro.org,
+	panto@antoniou-consulting.com, frowand.list@gmail.com,
+	Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH] drivers/of: Fix build warning in populate_node()
+Date: Fri, 13 May 2016 21:31:39 +1000
+Message-Id: <1463139099-23363-1-git-send-email-gwshan@linux.vnet.ibm.com>
+In-Reply-To: <CAMuHMdUnsDhTS5-C6_SvrqGb6hVTBZOz00=HBGhtqAQbwYv6hg@mail.gmail.com>
+References: <CAMuHMdUnsDhTS5-C6_SvrqGb6hVTBZOz00=HBGhtqAQbwYv6hg@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 24, 2016 at 3:58 PM, Levy, Amir (Jer)
-<amir.jer.levy@intel.com> wrote:
->> -----Original Message-----
->> From: Lukas Wunner [mailto:lukas@wunner.de]
->> Sent: Tuesday, May 24, 2016 13:55
->> To: Levy, Amir (Jer) <amir.jer.levy@intel.com>
->> Cc: andreas.noever@gmail.com; gregkh@linuxfoundation.org;
->> bhelgaas@google.com; linux-pci@vger.kernel.org; Jamet, Michael
->> <michael.jamet@intel.com>; Alloun, Dan <dan.alloun@intel.com>;
->> Westerberg, Mika <mika.westerberg@intel.com>; Svahn, Kai
->> <kai.svahn@intel.com>; Shevchenko, Andriy
->> <andriy.shevchenko@intel.com>; Winkler, Tomas
->> <tomas.winkler@intel.com>
->> Subject: Re: [PATCH 0/6] thunderbolt: Introducing Thunderbolt(TM)
->> networking
->>
->> Hi Amir,
->>
->> On Mon, May 23, 2016 at 11:48:50AM +0300, Amir Levy wrote:
->> > Thunderbolt(TM) networking, introduced in these patches, provides the
->> > capability of connecting hosts together by emulating an Ethernet adapter.
->>
->> Thank you for this contribution. I think it may take some time to review
->> everything, for now just some general observations:
->>
->> - Up until now this driver was Mac-only. IIUC the functionality you're
->>   adding will also be used on non-Macs. That's an important change that
->>   should probably be made more explicit in the commit messages. Did you
->>   test your patches on a Mac to see that nothing regresses?
->
-> Yes, we did some tests on MacBook Pro with Falcon Ridge.
-> Note that (as written in the cover letter), the functionality that we are adding is based on ICM (Intel Connection Manager, firmware).
-> These patches will keep the current functionality on Mac and will add the networking functionality on non-Macs.
+Function populate_node() is used to unflatten FDT blob to device
+tree. It supports maximal 64 level of device nodes. There is one
+array @fpsizes[64] tracking the full name length of last unflattened
+device node in the corresponding level (index of element in the
+array - 1). Build warning is seen with CONFIG_FRAME_WARN=1024 like
+below on ARM64 as Geert reported. The issue can be reproduced on
+PPC64 as well.
 
-Hi Amir,
+  $ make drivers/of/fdt.o
+  drivers/of/fdt.c:443:1: warning: the frame size of 1136 bytes is \
+  larger than 1024 bytes [-Wframe-larger-than=]
 
-First of all thanks for contributing this. It is certainly good to see
-Intel help out with the driver.
+This changes the data type of @fpsizes[i] from "unsigned long" to
+"unsigned int" to avoid the build warning. The return value type
+of populate_node() and its @fpsize argument is adjusted accordingly.
+With this applied, 256 bytes saved from the stack frame on ARM64 and
+PPC64 platforms and the above warning isn't seen.
 
-I only did a cursory read, but already have a few questions concerning
-the ICM and its relation to the rest of the driver:
-- Is the ICM only responsible for networking or does it also handle
-pci tunnels, DP, ...?
-- Your code only supports TB2,3. Afaik Apple supports IP over TB also
-on TB 1. What are the obstacles to support first generation chips?
-- Related to the above: if some of the registers are available only
-for some chips then please document this in nhi_regs.h (and other
-places).
-- Is it possible to use the ICM on Apple hardware?
+Fixes: 9ffa9eb ("drivers/of: Avoid recursively calling unflatten_dt_node()")
+Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ drivers/of/fdt.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Your patch essentially splits the driver into two. You add an if
-statement to nhi_probe which either runs your code or the old one.
-This is just silly (you might as well add a separate driver). At least
-parts of the functionality are already implemented. For example patch
-2 has large overlap with what is currently handled by nhi.c/ctl.c
-(reading/writing the ring buffer and handling communication with the
-PDF). I understand that the interface provided by ring_rx/ring_tx is
-not a good match for high speed networking introduced in the later
-patches. But then you should refactor it to provide what you need
-instead of reimplementing all the functionality.
+diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+index c95054c..34344a8 100644
+--- a/drivers/of/fdt.c
++++ b/drivers/of/fdt.c
+@@ -264,13 +264,13 @@ static void populate_properties(const void *blob,
+ 		*pprev = NULL;
+ }
+ 
+-static unsigned long populate_node(const void *blob,
+-				   int offset,
+-				   void **mem,
+-				   struct device_node *dad,
+-				   unsigned long fpsize,
+-				   struct device_node **pnp,
+-				   bool dryrun)
++static unsigned int populate_node(const void *blob,
++				  int offset,
++				  void **mem,
++				  struct device_node *dad,
++				  unsigned int fpsize,
++				  struct device_node **pnp,
++				  bool dryrun)
+ {
+ 	struct device_node *np;
+ 	const char *pathp;
+@@ -397,7 +397,7 @@ static int unflatten_dt_nodes(const void *blob,
+ 	struct device_node *root;
+ 	int offset = 0, depth = 0;
+ #define FDT_MAX_DEPTH	64
+-	unsigned long fpsizes[FDT_MAX_DEPTH];
++	unsigned int fpsizes[FDT_MAX_DEPTH];
+ 	struct device_node *nps[FDT_MAX_DEPTH];
+ 	void *base = mem;
+ 	bool dryrun = !base;
+-- 
+2.1.0
 
-Lastly, why do you need a user mode component? What does it do?
-
-Andreas
