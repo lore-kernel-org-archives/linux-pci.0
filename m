@@ -1,65 +1,138 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 2/2] pci: host: Add Broadcom STB PCIE RC controller
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1462475700-1654-1-git-send-email-f.fainelli@gmail.com>
- <1462475700-1654-3-git-send-email-f.fainelli@gmail.com>
- <8520D5D51A55D047800579B094147198258955D9@XAP-PVEXMBX01.xlnx.xilinx.com>
-From: Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <573A78D0.9090000@gmail.com>
-Date: Mon, 16 May 2016 18:50:08 -0700
-MIME-Version: 1.0
-In-Reply-To: <8520D5D51A55D047800579B094147198258955D9@XAP-PVEXMBX01.xlnx.xilinx.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "arnd@arndb.de" <arnd@arndb.de>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "jim2101024@gmail.com" <jim2101024@gmail.com>,
- "bcm-kernel-feedback-list@broadcom.com"
- <bcm-kernel-feedback-list@broadcom.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:41869 "EHLO
+	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752088AbcEMLXY (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 May 2016 07:23:24 -0400
+Message-Id: <cover.1463134231.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Fri, 13 May 2016 13:15:31 +0200
+Subject: [PATCH v2 00/13] Runtime PM for Thunderbolt on Macs
+To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Huang Ying <ying.huang@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/11/2016 07:47 AM, Bharat Kumar Gogada wrote:
+This series powers Thunderbolt controllers on Macs down when nothing is
+plugged in, saving 1.7 W on machines with a Light Ridge controller and
+reportedly 4 W on Cactus Ridge 4C and Falcon Ridge 4C.
 
-[snip]
+Briefly, a custom ACPI method provided by Apple is used to cut power to
+the controller.  A GPE is enabled while the controller is powered down
+which side-band signals a plug event, whereupon power is reinstated using
+the ACPI method.  Note that even though this mechanism is ACPI-based,
+it does not use _PSx methods and is thus entirely nonstandard.
 
->> +	/* Get the value for the log2 of the scb sizes. Subtract 15 from
->> +	 * each because the target register field has 0==disabled and 1==6KB.
->> +	 */
->> +	log2_scb_sizes = of_get_property(dn, "brcm,log2-scb-sizes", &rlen);
->> +	if (log2_scb_sizes) {
->> +		for (i = 0; i < rlen / sizeof(u32); i++) {
->> +			pcie->scb_size_vals[i]
->> +				= (int)of_read_number(log2_scb_sizes + i, 1)
->> +					- 15;
->> +			pcie->num_memc++;
->> +		}
->> +	}
-> In your device tree documentation this is required property, what if this property 
-> is missing ?
 
-If you look at the driver, you will see that it assumes a 1GB SCB window
-size if this property is absent.
+A Thunderbolt controller appears to the OS as a set of PCI devices:  One
+NHI (Native Host Interface) and multiple bridges.  Power is cut to the
+entire set of devices:
 
-PS: Do you mind trimming your replies in the future just to quote the
-relevant part? Pretty much like I just did, this greatly improves the
-ability to jump right to where the comments are. Thanks
+  (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
+                                     +-- Downstream Bridge 1 --
+                                     +-- Downstream Bridge 2 --
+                                     ...
+
+v1 of this series shoehorned power control into the NHI driver.  This
+violated the Linux pm model which assumes that a child cannot resume
+before its parent. As seen above, the NHI is a child, so the child cut
+power to the bridges above it.
+
+v2 resolves this by positioning power control on the controller's
+topmost device, which is the upstream bridge.  That is achieved by
+binding to it as a Thunderbolt port service driver.  portdrv already
+calls down to each service driver on ->suspend and ->resume and I
+extended that scheme to further PM callbacks.  E.g. when the upstream
+bridge is runtime suspended, portdrv invokes the ->runtime_suspend
+callback of each attached service driver, and the Thunderbolt service
+driver's callback in turn invokes the ACPI method to cut power to the
+controller.
+
+
+For such a nonstandard ACPI-based PM mechanism one would normally assign
+a dev_pm_domain to the upstream bridge which overrides the PCI subsystem
+PM callbacks.  But that's not an option here because dev_pm_domain_set()
+can only be called during driver probe.  The driver is portdrv and
+obviously loads earlier than the thunderbolt port service driver.
+So one has to make do with the PCI subsystem PM callbacks.
+
+The PCI core currently assumes that devices can only be put into D3cold
+by the platform, i.e. using the standard ACPI _PSx methods.  I extended
+the PCI core so that it can deal with devices which are put into D3cold
+by the driver callbacks.  It turns out only two changes are needed to
+make this work, and they are in patches [09/13] and [10/13].  Runtime
+suspend works out of the box, but runtime resume tries to set the device
+power state *before* invoking the driver callback, and this goes awry
+since the device is still in D3cold.  I solved this by returning an error
+in pci_raw_set_power_state() if the device's current_state is D3cold
+(patch [09/13]).
+
+Theoretically it would also be possible to patch the missing _PSx methods
+into the ACPI namespace at runtime but I suspect it wouldn't be pretty:
+I think I'd have to include pre-compiled AML methods in the kernel and
+modify those blobs at runtime (adjust GPE number etc) before patching
+them into the namespace.
+
+
+To make direct-complete work for such non-platform-power-managed devices,
+I also had to modify pci_target_state() (patch [10/13]).
+
+Finally, I wanted to avoid the mandatory runtime resume after direct-
+complete which was introduced by Rafael with 58a1fbbb2ee8 ("PM / PCI /
+ACPI: Kick devices that might have been reset by firmware"), so I added
+the possibility to opt out of it (patch [11/13]).
+
+
+I've pushed these patches to GitHub where they can be reviewed more
+comfortably with green/red highlighting:
+https://github.com/l1k/linux/commits/thunderbolt_runpm_v2
+
+For reference, here's a link to v1:
+http://thread.gmane.org/gmane.linux.power-management.general/73197
+
+Thanks in advance for your comments.
+
+Lukas
+
+
+Lukas Wunner (13):
+  PCI: Recognize Thunderbolt devices
+  PCI: Allow D3 for Thunderbolt ports
+  PCI: Add Thunderbolt portdrv service type
+  PCI: Generalize portdrv pm iterator
+  PCI: Use portdrv pm iterator on further callbacks
+  PCI: pciehp: Support runtime pm
+  PCI: pciehp: Ignore interrupts during D3cold
+  PCI: Allow runtime PM for Thunderbolt hotplug ports on Macs
+  PCI: Do not write to PM control register while in D3cold
+  PCI: Avoid going from D3cold to D3hot for system sleep
+  PM / sleep: Allow opt-out from runtime resume after direct-complete
+  thunderbolt: Support runtime pm on upstream bridge
+  thunderbolt: Support runtime pm on NHI
+
+ drivers/base/power/generic_ops.c  |   3 +-
+ drivers/pci/hotplug/pciehp_ctrl.c |   9 +-
+ drivers/pci/hotplug/pciehp_hpc.c  |   4 +
+ drivers/pci/pci.c                 |  50 ++----
+ drivers/pci/pci.h                 |   2 +
+ drivers/pci/pcie/portdrv.h        |   6 +-
+ drivers/pci/pcie/portdrv_core.c   |  47 +-----
+ drivers/pci/pcie/portdrv_pci.c    |  88 ++++++++--
+ drivers/pci/probe.c               |  17 ++
+ drivers/thunderbolt/Kconfig       |   4 +-
+ drivers/thunderbolt/Makefile      |   4 +-
+ drivers/thunderbolt/nhi.c         |  32 +++-
+ drivers/thunderbolt/switch.c      |   9 +
+ drivers/thunderbolt/tb.c          |  13 ++
+ drivers/thunderbolt/upstream.c    | 345 ++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h               |   1 +
+ include/linux/pcieport_if.h       |   7 +
+ include/linux/pm.h                |   1 +
+ 18 files changed, 539 insertions(+), 103 deletions(-)
+ create mode 100644 drivers/thunderbolt/upstream.c
+
 -- 
-Florian
+2.8.1
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
