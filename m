@@ -1,58 +1,160 @@
-Return-Path: <jeremy.linton@arm.com>
-Return-Path: <jeremy.linton@arm.com>
-Subject: Re: [PATCH V7 00/11] Support for generic ACPI based PCI host
- controller
-To: Tomasz Nowicki <tn@semihalf.com>, helgaas@kernel.org, arnd@arndb.de,
- will.deacon@arm.com, catalin.marinas@arm.com, rafael@kernel.org,
- hanjun.guo@linaro.org, Lorenzo.Pieralisi@arm.com, okaya@codeaurora.org,
- jchandra@broadcom.com
-References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
-Cc: robert.richter@caviumnetworks.com, mw@semihalf.com, Liviu.Dudau@arm.com,
- ddaney@caviumnetworks.com, wangyijing@huawei.com,
- Suravee.Suthikulpanit@amd.com, msalter@redhat.com,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linaro-acpi@lists.linaro.org, jcm@redhat.com, andrea.gallo@linaro.org,
- dhdang@apm.com, liudongdong3@huawei.com, cov@codeaurora.org
-From: Jeremy Linton <jeremy.linton@arm.com>
-Message-ID: <573E0388.7030203@arm.com>
-Date: Thu, 19 May 2016 13:18:48 -0500
-MIME-Version: 1.0
-In-Reply-To: <1462893601-8937-1-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.hostsharing.net ([176.9.242.54]:60487 "EHLO
+	mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752977AbcEMLSh (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Fri, 13 May 2016 07:18:37 -0400
+Message-Id: <748d6149352bc80d1931aaad00a3cbc841c0c65c.1463134232.git.lukas@wunner.de>
+In-Reply-To: <cover.1463134231.git.lukas@wunner.de>
+References: <cover.1463134231.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Fri, 13 May 2016 13:15:31 +0200
+Subject: [PATCH v2 13/13] thunderbolt: Support runtime pm on NHI
+To: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/10/2016 10:19 AM, Tomasz Nowicki wrote:
->  From the functionality point of view this series may be split into the
-> following logic parts:
-> 1. New ECAM API and update for users of the pci-host-common API
-> 2. Necessary fixes as the preparation for using driver on ARM64.
-> 3. Use new MCFG interface and implement generic ACPI based PCI host controller driver.
-> 4. Enable above driver on ARM64
+Runtime suspend the NHI when no Thunderbolt devices have been plugged in
+for 10 sec (user-configurable via autosuspend_delay_ms in sysfs).
 
-Thomasz,
+The NHI is not able to detect plug events while suspended, it relies on
+the upstream bridge to resume it on hotplug.
 
-Unless i'm doing something wrong, this patch causes a build break if 
-NUMA is enabled in a 4.6+ kernel.
+After the NHI resumes, it takes about 700 ms until a hotplug event
+appears on the RX ring.  In case autosuspend_delay_ms has been reduced
+to 0 by the user, we need to wait in tb_resume() to avoid going back to
+sleep before we had a chance to detect the hotplugged device.  A runtime
+pm ref is held for the duration of tb_handle_hotplug() to keep the NHI
+awake while the hotplug event is processed.
 
-Thanks,
+Apart from that we acquire a runtime pm ref for each newly allocated
+switch (except for the root switch) and drop one when a switch is freed,
+thereby ensuring the NHI stays active as long as devices are plugged in.
+This behaviour is identical to the OS X driver.
 
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/thunderbolt/nhi.c    | 11 +++++++++++
+ drivers/thunderbolt/switch.c |  9 +++++++++
+ drivers/thunderbolt/tb.c     | 13 +++++++++++++
+ 3 files changed, 33 insertions(+)
 
+diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+index d54666e..b44415c 100644
+--- a/drivers/thunderbolt/nhi.c
++++ b/drivers/thunderbolt/nhi.c
+@@ -606,6 +606,12 @@ static int nhi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	}
+ 	pci_set_drvdata(pdev, tb);
+ 
++	pm_runtime_allow(&pdev->dev);
++	pm_runtime_set_autosuspend_delay(&pdev->dev, 10000);
++	pm_runtime_use_autosuspend(&pdev->dev);
++	pm_runtime_mark_last_busy(&pdev->dev);
++	pm_runtime_put_autosuspend(&pdev->dev);
++
+ 	return 0;
+ }
+ 
+@@ -613,6 +619,9 @@ static void nhi_remove(struct pci_dev *pdev)
+ {
+ 	struct tb *tb = pci_get_drvdata(pdev);
+ 	struct tb_nhi *nhi = tb->nhi;
++
++	pm_runtime_get(&pdev->dev);
++	pm_runtime_forbid(&pdev->dev);
+ 	thunderbolt_shutdown_and_free(tb);
+ 	nhi_shutdown(nhi);
+ }
+@@ -630,6 +639,8 @@ static const struct dev_pm_ops nhi_pm_ops = {
+ 					    * pci-tunnels stay alive.
+ 					    */
+ 	.restore_noirq = nhi_resume_noirq,
++	.runtime_suspend = nhi_suspend_noirq,
++	.runtime_resume = nhi_resume_noirq,
+ };
+ 
+ struct pci_device_id nhi_ids[] = {
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index 1e116f5..89b4622 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include <linux/delay.h>
++#include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+ 
+ #include "tb.h"
+@@ -326,6 +327,11 @@ void tb_switch_free(struct tb_switch *sw)
+ 	if (!sw->is_unplugged)
+ 		tb_plug_events_active(sw, false);
+ 
++	if (sw != sw->tb->root_switch) {
++		pm_runtime_mark_last_busy(&sw->tb->nhi->pdev->dev);
++		pm_runtime_put_autosuspend(&sw->tb->nhi->pdev->dev);
++	}
++
+ 	kfree(sw->ports);
+ 	kfree(sw->drom);
+ 	kfree(sw);
+@@ -418,6 +424,9 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
+ 	if (tb_plug_events_active(sw, true))
+ 		goto err;
+ 
++	if (tb->root_switch)
++		pm_runtime_get(&tb->nhi->pdev->dev);
++
+ 	return sw;
+ err:
+ 	kfree(sw->ports);
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index 24b6d30..a3fedf9 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -7,6 +7,7 @@
+ #include <linux/slab.h>
+ #include <linux/errno.h>
+ #include <linux/delay.h>
++#include <linux/pm_runtime.h>
+ 
+ #include "tb.h"
+ #include "tb_regs.h"
+@@ -217,8 +218,11 @@ static void tb_handle_hotplug(struct work_struct *work)
+ {
+ 	struct tb_hotplug_event *ev = container_of(work, typeof(*ev), work);
+ 	struct tb *tb = ev->tb;
++	struct device *dev = &tb->nhi->pdev->dev;
+ 	struct tb_switch *sw;
+ 	struct tb_port *port;
++
++	pm_runtime_get(dev);
+ 	mutex_lock(&tb->lock);
+ 	if (!tb->hotplug_active)
+ 		goto out; /* during init, suspend or shutdown */
+@@ -274,6 +278,8 @@ static void tb_handle_hotplug(struct work_struct *work)
+ out:
+ 	mutex_unlock(&tb->lock);
+ 	kfree(ev);
++	pm_runtime_mark_last_busy(dev);
++	pm_runtime_put_autosuspend(dev);
+ }
+ 
+ /**
+@@ -433,4 +439,11 @@ void thunderbolt_resume(struct tb *tb)
+ 	tb->hotplug_active = true;
+ 	mutex_unlock(&tb->lock);
+ 	tb_info(tb, "resume finished\n");
++
++	/*
++	 * If runtime resuming due to a hotplug event (rather than resuming
++	 * from system sleep), wait for it to arrive. May take about 700 ms.
++	 */
++	if (tb->nhi->pdev->dev.power.runtime_status == RPM_RESUMING)
++		msleep(1000);
+ }
+-- 
+2.8.1
 
-drivers/built-in.o: In function `pci_device_add':
-/home/jlinton/linux-main/drivers/pci/probe.c:1744: undefined reference 
-to `pcibus_to_node'
-drivers/built-in.o: In function `pci_create_root_bus':
-/home/jlinton/linux-main/drivers/pci/probe.c:2163: undefined reference 
-to `pcibus_to_node'
-drivers/built-in.o: In function `cpulistaffinity_show':
-/home/jlinton/linux-main/drivers/pci/pci-sysfs.c:123: undefined 
-reference to `pcibus_to_node'
-/home/jlinton/linux-main/drivers/pci/pci-sysfs.c:123: undefined 
-reference to `pcibus_to_node'
-drivers/built-in.o: In function `cpuaffinity_show':
-/home/jlinton/linux-main/drivers/pci/pci-sysfs.c:114: undefined 
-reference to `pcibus_to_node'
-drivers/built-in.o:/home/jlinton/linux-main/drivers/pci/pci-sysfs.c:114: 
-more undefined references to `pcibus_to_node' follow
-Makefile:937: recipe for target 'vmlinux' failed
