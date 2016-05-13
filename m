@@ -1,74 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:65431 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S933158AbcE3NiC (ORCPT
-	<rfc822;linux-pci@vger.kernel.org>); Mon, 30 May 2016 09:38:02 -0400
-Received: from pps.filterd (m0049461.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u4UDY3kD026717
-	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:38:01 -0400
-Message-Id: <201605301338.u4UDY3kD026717@mx0a-001b2d01.pphosted.com>
-Received: from e28smtp05.in.ibm.com (e28smtp05.in.ibm.com [125.16.236.5])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 238jhvp7q2-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 30 May 2016 09:38:01 -0400
-Received: from localhost
-	by e28smtp05.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-	Mon, 30 May 2016 19:07:57 +0530
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: kvm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	iommu@lists.linux-foundation.org
-Cc: alex.williamson@redhat.com, bhelgaas@google.com, aik@ozlabs.ru,
-	benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au,
-	joro@8bytes.org, warrier@linux.vnet.ibm.com,
-	zhong@linux.vnet.ibm.com, nikunj@linux.vnet.ibm.com,
-	eric.auger@linaro.org, will.deacon@arm.com,
-	gwshan@linux.vnet.ibm.com, alistair@popple.id.au,
-	ruscur@russell.cc, kevin.tian@intel.com, David.Laight@ACULAB.COM
-Subject: [PATCH v2 5/6] pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
-Date: Mon, 30 May 2016 21:32:12 +0800
-In-Reply-To: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1464615133-12050-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <tn@semihalf.com>
+Return-Path: <tn@semihalf.com>
+Subject: Re: [PATCH V7 08/11] pci, acpi: Support for ACPI based generic PCI
+ host controller
+To: "Rafael J. Wysocki" <rafael@kernel.org>,
+ Jayachandran C <jchandra@broadcom.com>
+References: <1462893601-8937-1-git-send-email-tn@semihalf.com>
+ <1462893601-8937-9-git-send-email-tn@semihalf.com>
+ <CAKc_7PVJmhiD8x=zw4N3sSDPD-jZz-wh8TPTuuTYEdxn3v78og@mail.gmail.com>
+ <CAJZ5v0jov37JErfRqw1bAkJzkyoGn+BsZLNLR5N=J3ZYu203GQ@mail.gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+ Will Deacon <will.deacon@arm.com>, Catalin Marinas
+ <catalin.marinas@arm.com>, Hanjun Guo <hanjun.guo@linaro.org>,
+ Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+ Sinan Kaya <okaya@codeaurora.org>, robert.richter@caviumnetworks.com,
+ Marcin Wojtas <mw@semihalf.com>, Liviu.Dudau@arm.com,
+ David Daney <ddaney@caviumnetworks.com>, Wangyijing <wangyijing@huawei.com>,
+ Suravee Suthikulanit <Suravee.Suthikulpanit@amd.com>,
+ Mark Salter <msalter@redhat.com>, Linux PCI <linux-pci@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>,
+ Jon Masters <jcm@redhat.com>, Andrea Gallo <andrea.gallo@linaro.org>,
+ Duc Dang <dhdang@apm.com>, jeremy.linton@arm.com, liudongdong3@huawei.com,
+ Christopher Covington <cov@codeaurora.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <5735BD91.3020206@semihalf.com>
+Date: Fri, 13 May 2016 13:42:09 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAJZ5v0jov37JErfRqw1bAkJzkyoGn+BsZLNLR5N=J3ZYu203GQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Any IODA host bridge have the capability of IRQ remapping.
-So we set PCI_BUS_FLAGS_MSI_REMAP when this kind of host birdge
-is detected.
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
----
- arch/powerpc/platforms/powernv/pci-ioda.c |    8 ++++++++
- 1 file changed, 8 insertions(+)
 
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index c5baaf3..9011268 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -3094,6 +3094,12 @@ static void pnv_pci_ioda_fixup(void)
- 	pnv_npu_ioda_fixup();
- }
- 
-+int pnv_pci_ioda_root_bridge_prepare(struct pci_host_bridge *bridge)
-+{
-+	bridge->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
-+	return 0;
-+}
-+
- /*
-  * Returns the alignment for I/O or memory windows for P2P
-  * bridges. That actually depends on how PEs are segmented.
-@@ -3395,6 +3401,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 	 */
- 	ppc_md.pcibios_fixup = pnv_pci_ioda_fixup;
- 
-+	ppc_md.pcibios_root_bridge_prepare = pnv_pci_ioda_root_bridge_prepare;
-+
- 	if (phb->type == PNV_PHB_NPU)
- 		hose->controller_ops = pnv_npu_ioda_controller_ops;
- 	else
--- 
-1.7.9.5
+On 13.05.2016 13:31, Rafael J. Wysocki wrote:
+> On Fri, May 13, 2016 at 1:25 PM, Jayachandran C <jchandra@broadcom.com> wrote:
+>> On Tue, May 10, 2016 at 8:49 PM, Tomasz Nowicki <tn@semihalf.com> wrote:
+>>> This patch is going to implement generic PCI host controller for
+>>> ACPI world, similar to what pci-host-generic.c driver does for DT world.
+>>>
+>>> All such drivers, which we have seen so far, were implemented within
+>>> arch/ directory since they had some arch assumptions (x86 and ia64).
+>>> However, they all are doing similar thing, so it makes sense to find
+>>> some common code and abstract it into the generic driver.
+>>>
+>>> In order to handle PCI config space regions properly, we define new
+>>> MCFG interface which does sanity checks on MCFG table and keeps its
+>>> root pointer. User is able to lookup MCFG regions based on that root
+>>> pointer and specified domain:bus_start:bus_end touple. We are using
+>>> pci_mmcfg_late_init old prototype to avoid another function name.
+>>>
+>>> The implementation of pci_acpi_scan_root() looks up the MCFG entries
+>>> and sets up a new mapping (regions are not mapped until host controller ask
+>>> for it). Generic PCI functions are used for accessing config space.
+>>> Driver selects PCI_ECAM and uses functions from drivers/pci/ecam.h
+>>> to create and access ECAM mappings.
+>>>
+>>> As mentioned in Kconfig help section, ACPI_PCI_HOST_GENERIC choice
+>>> should be made on a per-architecture basis.
+>>>
+>>> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>>> Signed-off-by: Jayachandran C <jchandra@broadcom.com>
+>>> ---
+>> [....]
+>>
+>>> diff --git a/drivers/pci/ecam.h b/drivers/pci/ecam.h
+>>> index 1ad2176..1cccf57 100644
+>>> --- a/drivers/pci/ecam.h
+>>> +++ b/drivers/pci/ecam.h
+>>> @@ -45,6 +45,11 @@ struct pci_config_window {
+>>>                  void __iomem            *win;   /* 64-bit single mapping */
+>>>                  void __iomem            **winp; /* 32-bit per bus mapping */
+>>>          };
+>>> +#ifdef CONFIG_ACPI_PCI_HOST_GENERIC
+>>> +       struct acpi_device              *companion; /* ACPI companion device */
+>>> +#endif
+>>> +       int                             domain;
+>>> +
+>>>   };
+>>
+>> Using struct pci_config_window to pass along domain and
+>> companion looks bad.  I think there are two possible options
+>> to do this better:
+>>
+>> 1. add a 'struct fwnode_handle *' or 'struct device *parent_dev'
+>>     instead of the companion and domain fields above. In case of
+>>     ACPI either of them can be used to get the acpi_device and
+>>     both  domain and companion can be set from that.
+>>
+>> 2. make pci_config_window fully embeddable by moving allocation
+>>     out of pci_ecam_create to its callers. Then it can be embedded
+>>     into acpi_pci_generic_root_info, and container_of can be used
+>>     to get acpi info from ->sysdata.
+>>
+>> The first option should be easier to implement but the second may
+>> be better on long run. I would leave it to the Bjorn or Rafael to
+>> suggest which is preferred.
+>
+> Personally, I'd probably try to use fwnode_handle, but the second
+> option makes sense too in principle.
+>
 
+Thanks for suggestions. I will try to use fwnode_handle
+
+Tomasz
