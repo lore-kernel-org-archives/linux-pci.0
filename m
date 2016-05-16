@@ -1,102 +1,140 @@
-Return-Path: <mika.westerberg@linux.intel.com>
-Return-Path: <mika.westerberg@linux.intel.com>
-Date: Thu, 26 May 2016 13:25:20 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Peter Wu <peter@lekensteyn.nl>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pci@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	Valdis Kletnieks <valdis.kletnieks@vt.edu>,
-	Dave Airlie <airlied@gmail.com>,
-	Andreas Noever <andreas.noever@gmail.com>
-Subject: Re: [PATCH] PCI: Wait for 50ms after bridge is powered up
-Message-ID: <20160526102520.GV1789@lahna.fi.intel.com>
-References: <20160524162833.GA30762@localhost>
- <1464188696-25782-1-git-send-email-mika.westerberg@linux.intel.com>
- <20160526101006.GA6744@wunner.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f175.google.com ([209.85.220.175]:36735 "EHLO
+	mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753854AbcEPSCh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-pci@vger.kernel.org>); Mon, 16 May 2016 14:02:37 -0400
+Received: by mail-qk0-f175.google.com with SMTP id x7so101074349qkd.3
+        for <linux-pci@vger.kernel.org>; Mon, 16 May 2016 11:02:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160526101006.GA6744@wunner.de>
+In-Reply-To: <1463331375.6071.39.camel@users.sourceforge.net>
+References: <1463331375.6071.39.camel@users.sourceforge.net>
+Date: Mon, 16 May 2016 12:02:35 -0600
+Message-ID: <CAL-B5D19esStG0=nbUa-mJggtRDX94t542Vzz1=u_avq9qRgYQ@mail.gmail.com>
+Subject: Re: `pcilib: sysfs_read_vpd: read failed: Input/output error` on
+ ASRock E350M1
+From: Myron Stowe <myron.stowe@gmail.com>
+To: Paul Menzel <paulepanter@users.sourceforge.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 26, 2016 at 12:10:06PM +0200, Lukas Wunner wrote:
-> Hi,
-> 
-> On Wed, May 25, 2016 at 06:04:56PM +0300, Mika Westerberg wrote:
-> > The PCI PM 1.2 specification requires minimum of 50ms before function on a
-> > bus is accessed after the bus is transitioned from B2 to B0. Now that we
-> > actually power down bridges we should make sure the specification is
-> > followed accordingly.
-> 
-> This patch has the unfortunate side effect of increasing boot time on
-> Macs with Thunderbolt by 320 ms. Granted, it's not much, but still
-> noticeable:
+On Sun, May 15, 2016 at 10:56 AM, Paul Menzel
+<paulepanter@users.sourceforge.net> wrote:
+> Dear Bjorn,
+>
+>
+> running Linux 4.6.0-rc5-686-pae from Debian experimental, running
+> `lspci -vv` on the ASRock E350M1 gives the error below. This wasn’t
+> there with Linux 4.6-rc3.
+>
+> ```
+> $ sudo lspci -s 3:0 -vv
+> 03:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 06)
+>         Subsystem: ASRock Incorporation Motherboard (one of many)
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+>         Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+>         Latency: 0, Cache Line Size: 64 bytes
+>         Interrupt: pin A routed to IRQ 26
+>         Region 0: I/O ports at 1000 [size=256]
+>         Region 2: Memory at f0004000 (64-bit, prefetchable) [size=4K]
+>         Region 4: Memory at f0000000 (64-bit, prefetchable) [size=16K]
+>         Capabilities: [40] Power Management version 3
+>                 Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=375mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+>                 Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+>         Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>                 Address: 00000000fee0300c  Data: 41d1
+>         Capabilities: [70] Express (v2) Endpoint, MSI 01
+>                 DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
+>                         ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+>                 DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+>                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
+>                         MaxPayload 128 bytes, MaxReadReq 4096 bytes
+>                 DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+>                 LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <512ns, L1 <64us
+>                         ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp-
+>                 LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk+
+>                         ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+>                 LnkSta: Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+>                 DevCap2: Completion Timeout: Not Supported, TimeoutDis+, LTR-, OBFF Not Supported
+>                 DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
+>                 LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+>                          Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+>                          Compliance De-emphasis: -6dB
+>                 LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
+>                          EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+>         Capabilities: [b0] MSI-X: Enable- Count=4 Masked-
+>                 Vector table: BAR=4 offset=00000000
+>                 PBA: BAR=4 offset=00000800
+>         Capabilities: [d0] Vital Product Data
+> pcilib: sysfs_read_vpd: read failed: Input/output error
+>                 Not readable
 
-Yes, that's the drawback.
+It looks as if reading the first byte(s) of VPD to decode the
+"resource data types/tags" and "keywords" returned '0'.  Since that is
+invalid (i.e. does not conform to a properly formatted "tag") 'lspci'
+aborted any further accessing and returned "Not readable" (this sounds
+very similar to what happens on a Serial Attached SCSI controller: LSI
+Logic / Symbios Logic SAS2308 PCI-Express Fusion-MPT SAS-2 device
+which, while denoting it has VPD via the Express capability, doe not -
+the data area is all 0's.
 
-> [    2.358041] pcieport 0000:06:03.0: enabling device (0000 -> 0002)
-> [    2.358195] pcieport 0000:06:03.0: rpm_idle
-> [    2.358222] pcieport 0000:06:03.0: rpm_suspend
-> [    2.411664] pcieport 0000:06:04.0: enabling device (0000 -> 0003)
-> [    2.411821] pcieport 0000:06:04.0: rpm_idle
-> [    2.411848] pcieport 0000:06:04.0: rpm_suspend
-> [    2.467664] pcieport 0000:06:05.0: enabling device (0000 -> 0003)
-> [    2.467817] pcieport 0000:06:05.0: rpm_idle
-> [    2.467843] pcieport 0000:06:05.0: rpm_suspend
-> [    2.523664] pcieport 0000:06:06.0: enabling device (0000 -> 0002)
-> [    2.523822] pcieport 0000:06:06.0: rpm_idle
-> [    2.523848] pcieport 0000:06:06.0: rpm_suspend
-> [    2.579685] pci_hotplug: PCI Hot Plug PCI Core version: 0.5
-> [    2.579722] pcieport 0000:06:03.0: rpm_resume
-> [    2.635750] pciehp 0000:06:03.0:pcie204: Slot #3 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
-> [    2.635853] pciehp 0000:06:03.0:pcie204: service driver pciehp loaded
-> [    2.635858] pcieport 0000:06:03.0: rpm_idle
-> [    2.635886] pcieport 0000:06:04.0: rpm_resume
-> [    2.647645] pcieport 0000:06:03.0: rpm_suspend
-> [    2.691747] pciehp 0000:06:04.0:pcie204: Slot #4 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
-> [    2.691856] pciehp 0000:06:04.0:pcie204: service driver pciehp loaded
-> [    2.691859] pcieport 0000:06:04.0: rpm_idle
-> [    2.691888] pcieport 0000:06:05.0: rpm_resume
-> [    2.703649] pcieport 0000:06:04.0: rpm_suspend
-> [    2.747748] pciehp 0000:06:05.0:pcie204: Slot #5 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
-> [    2.747842] pciehp 0000:06:05.0:pcie204: service driver pciehp loaded
-> [    2.747845] pcieport 0000:06:06.0: rpm_resume
-> [    2.749213] pcieport 0000:06:05.0: rpm_idle
-> [    2.759650] pcieport 0000:06:05.0: rpm_suspend
-> [    2.805049] pciehp 0000:06:06.0:pcie204: Slot #6 AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
-> [    2.806464] pciehp 0000:06:06.0:pcie204: service driver pciehp loaded
-> [    2.806471] pciehp: PCI Express Hot Plug Controller Driver version: 0.4
-> [    2.807876] intel_idle: MWAIT substates: 0x21120
-> [    2.807878] intel_idle: v0.4.1 model 0x3A
-> [    2.808170] intel_idle: lapic_timer_reliable_states 0xffffffff
-> [    2.808201] GHES: HEST is not enabled!
-> [    2.809613] pcieport 0000:06:06.0: rpm_idle
-> [    2.809644] Serial: 8250/16550 driver, 4 ports, IRQ sharing enabled
-> [    2.810096] Linux agpgart interface v0.103
-> [    2.810158] AMD IOMMUv2 driver by Joerg Roedel <jroedel@suse.de>
-> [    2.810158] AMD IOMMUv2 functionality not available on this system
-> [    2.816468] pcieport 0000:06:06.0: rpm_suspend
-> 
-> I've added debug messages whenever ->runtime_idle / _suspend / _resume
-> is called for a device.
-> 
-> As can be seen, the PCI core now waits 50 ms after ->runtime_suspend.
-> Also, the ports are resumed when the pciehp service driver is loaded,
-> adding another 50 ms delay. For four hotplug ports, that's a total of
-> 400 ms (versus 80 ms without the patch).
-> 
-> I'm wondering if the delay after ->runtime_suspend is really needed. Is
-> this mandated by the spec? We could perhaps increase the autosuspend_delay
-> in pcie_portdrv_probe() slightly to prevent the port from going to sleep
-> between pci_enable_device() and loading the pciehp service driver.
+>         Capabilities: [100 v1] Advanced Error Reporting
+>                 UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                 UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+>                 UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+>                 CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+>                 CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+>                 AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+>         Capabilities: [140 v1] Virtual Channel
+>                 Caps:   LPEVC=0 RefClk=100ns PATEntryBits=1
+>                 Arb:    Fixed- WRR32- WRR64- WRR128-
+>                 Ctrl:   ArbSelect=Fixed
+>                 Status: InProgress-
+>                 VC0:    Caps:   PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+>                         Arb:    Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+>                         Ctrl:   Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+>                         Status: NegoPending- InProgress-
+>         Capabilities: [160 v1] Device Serial Number 01-00-00-00-68-4c-e0-00
+>         Kernel driver in use: r8169
+>         Kernel modules: r8169
+> ```
+>
+> Is that related to [1]?
+>
 
-The PCI PM specification version 1.2 says this in chapter 4.2 (page 37):
+There have been a number of recent kernel commits to work-around know
+buggy devices -
+  v4.6-rc5
+    67e6587  cxgb4: Set VPD size so we can read both VPD structures
+    cb92148  PCI: Add pci_set_vpd_size() to set VPD size
+  v4.6 -
+    7c20078  PCI: Prevent VPD access for buggy devices
+    c521b01  PCI: Sleep rather than busy-wait for VPD access completion
+    408641e  PCI: Fold struct pci_vpd_pci22 into struct pci_vpd
+    f1cd93f  PCI: Rename VPD symbols to remove unnecessary "pci22"
+    da00684  PCI: Remove struct pci_vpd_ops.release function pointer
+    6437907  PCI: Move pci_vpd_release() from header file to pci/access.c
+    fc0a407  PCI: Move pci_read_vpd() and pci_write_vpd() close to other code
+    104daa7  PCI: Determine actual VPD size on first access
+    c556388  PCI: Use bitfield instead of bool for struct pci_vpd_pci22.busy
+    f52e562  PCI: Allow access to VPD attributes with size 0
+    9eb45d5  PCI: Update VPD definitions
+  v4.3 -
+    da2d03e  PCI: Use function 0 VPD only for identical functions
+    9d92407  PCI: Fix devfn for VPD access through function 0
+    7aa6ca4  PCI: Add VPD function 0 quirk for Intel Ethernet devices
+    932c435  PCI: Add dev_flags bit to access VPD through function 0
 
-  There is a minimum time requirement of 50 ms which must be provided by
-  system software between when the bus is switched from B2 to B0 and
-  when a function on the bus is accessed to allow time for the clock to
-  start up and the bus to settle.
+What were you getting/seeing before?
 
-Not sure how much of that still applies to modern hardware.
+Myron
 
-I don't see why we cannot increase autosuspend delay time, though.
+>
+> Thanks,
+>
+> Paul
+>
+>
+> [1] https://lkml.org/lkml/2016/4/15/649
