@@ -1,158 +1,111 @@
-Return-Path: <peter@lekensteyn.nl>
-Return-Path: <peter@lekensteyn.nl>
-Date: Fri, 27 May 2016 23:31:23 +0200
-From: Peter Wu <peter@lekensteyn.nl>
-To: Emil Velikov <emil.l.velikov@gmail.com>
-Cc: ML nouveau <nouveau@lists.freedesktop.org>,
-	ML dri-devel <dri-devel@lists.freedesktop.org>,
-	Dave Airlie <airlied@redhat.com>, linux-pm@vger.kernel.org,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [Nouveau] [PATCH 4/4] drm/nouveau/acpi: fix lockup with PCIe
- runtime PM
-Message-ID: <20160527213123.GB1777@al>
-References: <1464130381-4797-1-git-send-email-peter@lekensteyn.nl>
- <1464130381-4797-5-git-send-email-peter@lekensteyn.nl>
- <CACvgo514AB=rkRGWrwmPHTX=hhEF8Jhzdg1hQkX1_C4A_zYkzg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACvgo514AB=rkRGWrwmPHTX=hhEF8Jhzdg1hQkX1_C4A_zYkzg@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.gw90.de ([188.40.100.199]:44209 "EHLO mail.gw90.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753856AbcEPUhj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+	Mon, 16 May 2016 16:37:39 -0400
+Message-ID: <1463431052.1983.57.camel@users.sourceforge.net>
+Subject: Re: `pcilib: sysfs_read_vpd: read failed: Input/output error` on
+ ASRock E350M1
+From: Paul Menzel <paulepanter@users.sourceforge.net>
+To: Myron Stowe <myron.stowe@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Date: Mon, 16 May 2016 22:37:32 +0200
+In-Reply-To: <CAL-B5D19esStG0=nbUa-mJggtRDX94t542Vzz1=u_avq9qRgYQ@mail.gmail.com>
+References: <1463331375.6071.39.camel@users.sourceforge.net>
+	 <CAL-B5D19esStG0=nbUa-mJggtRDX94t542Vzz1=u_avq9qRgYQ@mail.gmail.com>
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
+	boundary="=-/aOEU54DtYUAR1KdjAV8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 27, 2016 at 02:01:39PM +0100, Emil Velikov wrote:
-> Hi Peter,
-> 
-> On 24 May 2016 at 23:53, Peter Wu <peter@lekensteyn.nl> wrote:
-> > Since "PCI: Add runtime PM support for PCIe ports", the parent PCIe port
-> > can be runtime-suspended which disables power resources via ACPI. This
-> > is incompatible with DSM, resulting in a GPU device which is still in D3
-> > and locks up the kernel on resume.
-> >
-> > Mirror the behavior of Windows 8 and newer[1] (as observed via an AMLi
-> > debugger trace) and stop using the DSM functions for D3cold when power
-> > resources are available on the parent PCIe port.
-> >
-> >  [1]: https://msdn.microsoft.com/windows/hardware/drivers/bringup/firmware-requirements-for-d3cold
-> >
-> > Signed-off-by: Peter Wu <peter@lekensteyn.nl>
-> > ---
-> >  drivers/gpu/drm/nouveau/nouveau_acpi.c | 34 ++++++++++++++++++++++++++++++----
-> >  1 file changed, 30 insertions(+), 4 deletions(-)
-> >
-> > diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> > index df9f73e..e469df7 100644
-> > --- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> > +++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
-> > @@ -46,6 +46,7 @@ static struct nouveau_dsm_priv {
-> >         bool dsm_detected;
-> >         bool optimus_detected;
-> >         bool optimus_flags_detected;
-> > +       bool optimus_skip_dsm;
-> >         acpi_handle dhandle;
-> >         acpi_handle rom_handle;
-> >  } nouveau_dsm_priv;
-> > @@ -212,8 +213,26 @@ static const struct vga_switcheroo_handler nouveau_dsm_handler = {
-> >         .get_client_id = nouveau_dsm_get_client_id,
-> >  };
-> >
-> > +/* Firmware supporting Windows 8 or later do not use _DSM to put the device into
-> > + * D3cold, they instead rely on disabling power resources on the parent. */
-> > +static bool nouveau_pr3_present(struct pci_dev *pdev)
-> > +{
-> > +       struct pci_dev *parent_pdev = pci_upstream_bridge(pdev);
-> > +       struct acpi_device *ad;
-> > +
-> > +       if (!parent_pdev)
-> > +               return false;
-> > +
-> > +       ad = ACPI_COMPANION(&parent_pdev->dev);
-> > +       if (!ad)
-> > +               return false;
-> > +
-> > +       return ad->power.flags.power_resources;
-> > +}
-> > +
-> >  static void nouveau_dsm_pci_probe(struct pci_dev *pdev, bool *has_mux,
-> > -                                 bool *has_opt, bool *has_opt_flags)
-> > +                                 bool *has_opt, bool *has_opt_flags,
-> > +                                 bool *has_power_resources)
-> >  {
-> >         acpi_handle dhandle;
-> >         bool supports_mux;
-> > @@ -238,6 +257,7 @@ static void nouveau_dsm_pci_probe(struct pci_dev *pdev, bool *has_mux,
-> >         *has_mux = supports_mux;
-> >         *has_opt = !!optimus_funcs;
-> >         *has_opt_flags = optimus_funcs & (1 << NOUVEAU_DSM_OPTIMUS_FLAGS);
-> > +       *has_power_resources = false;
-> >
-> >         if (optimus_funcs) {
-> >                 uint32_t result;
-> > @@ -247,6 +267,8 @@ static void nouveau_dsm_pci_probe(struct pci_dev *pdev, bool *has_mux,
-> >                          (result & OPTIMUS_ENABLED) ? "enabled" : "disabled",
-> >                          (result & OPTIMUS_DYNAMIC_PWR_CAP) ? "dynamic power, " : "",
-> >                          (result & OPTIMUS_HDA_CODEC_MASK) ? "hda bios codec supported" : "");
-> > +
-> > +               *has_power_resources = nouveau_pr3_present(pdev);
-> >         }
-> >  }
-> >
-> > @@ -258,6 +280,7 @@ static bool nouveau_dsm_detect(void)
-> >         bool has_mux = false;
-> >         bool has_optimus = false;
-> >         bool has_optimus_flags = false;
-> > +       bool has_power_resources = false;
-> >         int vga_count = 0;
-> >         bool guid_valid;
-> >         bool ret = false;
-> > @@ -273,14 +296,14 @@ static bool nouveau_dsm_detect(void)
-> >                 vga_count++;
-> >
-> >                 nouveau_dsm_pci_probe(pdev, &has_mux, &has_optimus,
-> > -                                     &has_optimus_flags);
-> > +                                     &has_optimus_flags, &has_power_resources);
-> >         }
-> >
-> >         while ((pdev = pci_get_class(PCI_CLASS_DISPLAY_3D << 8, pdev)) != NULL) {
-> >                 vga_count++;
-> >
-> >                 nouveau_dsm_pci_probe(pdev, &has_mux, &has_optimus,
-> > -                                     &has_optimus_flags);
-> > +                                     &has_optimus_flags, &has_power_resources);
-> >         }
-> >
-> This and earlier patch break things in a subtle way.
-> 
-> Namely: upon the second (and any later) call into the
-> nouveau_dsm_pci_probe() function, the had_foo flags are reset. Thus
-> only the specifics of the _final_ device are being used (at a later
-> stage). IMHO one should change that to "_any_ device", which will
-> match the original code and the actual intent further down in the
-> file.
 
-The flags are only reset if any of the MUX or Optimus handles are found.
-If both are missing, the flags are not overridden. This is from patch 1:
+--=-/aOEU54DtYUAR1KdjAV8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-+       /* Does not look like a Nvidia device. */
-+       if (!supports_mux && !supports_opt)
-+               return;
+Dear Myron,
 
-The reason why later calls override early ones is because some Optimus
-laptops have the _DSM method on both the Intel GPU (00:02.0) and the
-Nvidia one (01:00.0).
 
-The previous detection method would fail in this scenario:
- 1. One device reports support for X and Y (has_x = 1, has_y = 1). Write
-    ACPI handle A to nouveau_dsm_priv.dhandle.
- 2. Another device reports support for X only (has_x = 1). Write
-    ACPI handle B to nouveau_dsm_priv.dhandle.
- 3. End result: has_x = 1, has_y = 1, dhandle = B. But ACPI handle B
-    does not really support Y!
-This is theoretical since I don't think that such firmware occurs in
-practice, but then imo it would be better to enforce in code that the
-case cannot occur (as is done in patch 1). Unless the MUX DSM has some
-magic I am not aware of.
--- 
-Kind regards,
-Peter Wu
-https://lekensteyn.nl
+thank you for your response.
+
+
+Am Montag, den 16.05.2016, 12:02 -0600 schrieb Myron Stowe:
+> On Sun, May 15, 2016 at 10:56 AM, Paul Menzel wrote:
+
+[=E2=80=A6]
+
+> > Is that related to [1]?
+>
+> There have been a number of recent kernel commits to work-around know
+> buggy devices -
+> =C2=A0 v4.6-rc5
+> =C2=A0=C2=A0=C2=A0=C2=A067e6587=C2=A0=C2=A0cxgb4: Set VPD size so we can =
+read both VPD structures
+> =C2=A0=C2=A0=C2=A0=C2=A0cb92148=C2=A0=C2=A0PCI: Add pci_set_vpd_size() to=
+ set VPD size
+> =C2=A0 v4.6 -
+> =C2=A0=C2=A0=C2=A0=C2=A07c20078=C2=A0=C2=A0PCI: Prevent VPD access for bu=
+ggy devices
+> =C2=A0=C2=A0=C2=A0=C2=A0c521b01=C2=A0=C2=A0PCI: Sleep rather than busy-wa=
+it for VPD access completion
+> =C2=A0=C2=A0=C2=A0=C2=A0408641e=C2=A0=C2=A0PCI: Fold struct pci_vpd_pci22=
+ into struct pci_vpd
+> =C2=A0=C2=A0=C2=A0=C2=A0f1cd93f=C2=A0=C2=A0PCI: Rename VPD symbols to rem=
+ove unnecessary "pci22"
+> =C2=A0=C2=A0=C2=A0=C2=A0da00684=C2=A0=C2=A0PCI: Remove struct pci_vpd_ops=
+.release function pointer
+> =C2=A0=C2=A0=C2=A0=C2=A06437907=C2=A0=C2=A0PCI: Move pci_vpd_release() fr=
+om header file to pci/access.c
+> =C2=A0=C2=A0=C2=A0=C2=A0fc0a407=C2=A0=C2=A0PCI: Move pci_read_vpd() and p=
+ci_write_vpd() close to other code
+> =C2=A0=C2=A0=C2=A0=C2=A0104daa7=C2=A0=C2=A0PCI: Determine actual VPD size=
+ on first access
+> =C2=A0=C2=A0=C2=A0=C2=A0c556388=C2=A0=C2=A0PCI: Use bitfield instead of b=
+ool for struct pci_vpd_pci22.busy
+> =C2=A0=C2=A0=C2=A0=C2=A0f52e562=C2=A0=C2=A0PCI: Allow access to VPD attri=
+butes with size 0
+> =C2=A0=C2=A0=C2=A0=C2=A09eb45d5=C2=A0=C2=A0PCI: Update VPD definitions
+> =C2=A0 v4.3 -
+> =C2=A0=C2=A0=C2=A0=C2=A0da2d03e=C2=A0=C2=A0PCI: Use function 0 VPD only f=
+or identical functions
+> =C2=A0=C2=A0=C2=A0=C2=A09d92407=C2=A0=C2=A0PCI: Fix devfn for VPD access =
+through function 0
+> =C2=A0=C2=A0=C2=A0=C2=A07aa6ca4=C2=A0=C2=A0PCI: Add VPD function 0 quirk =
+for Intel Ethernet devices
+> =C2=A0=C2=A0=C2=A0=C2=A0932c435=C2=A0=C2=A0PCI: Add dev_flags bit to acce=
+ss VPD through function 0
+>=20
+> What were you getting/seeing before?
+
+The error wasn=E2=80=99t shown. Sorry if that is not a helpful answer. If I
+provide more information, please tell me how I can get them.
+
+You can find a lot of lspci output for the ASRock E350M1 in coreboot=E2=80=
+=99s
+board status repository [2].
+
+
+Thanks,
+
+Paul
+
+
+> > [1] https://lkml.org/lkml/2016/4/15/649
+[2]=C2=A0http://review.coreboot.org/cgit/board-status.git/tree/asrock/e350m=
+1
+--=-/aOEU54DtYUAR1KdjAV8
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEABECAAYFAlc6L4wACgkQPX1aK2wOHViJ5gCbB/Tz4fnw7me1t8G6NpT7GS4V
+EugAnifgglH42SaZHqAy5hFkaF+qULFM
+=qqgU
+-----END PGP SIGNATURE-----
+
+--=-/aOEU54DtYUAR1KdjAV8--
+
